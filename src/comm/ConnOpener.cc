@@ -96,20 +96,6 @@ Comm::ConnOpener::getHost() const
 void
 Comm::ConnOpener::doneConnecting(comm_err_t status, int xerrno)
 {
-    /* remove handlers we don't want to happen anymore */
-    if (conn_ != NULL && conn_->isOpen()) {
-        if (calls_.earlyAbort_ != NULL) {
-            comm_remove_close_handler(conn_->fd, calls_.earlyAbort_);
-            calls_.earlyAbort_->cancel("Comm::ConnOpener completed.");
-            calls_.earlyAbort_ = NULL;
-        }
-        if (calls_.timeout_ != NULL) {
-            commSetTimeout(conn_->fd, -1, NULL, NULL);
-            calls_.timeout_->cancel("Comm::ConnOpener completed.");
-            calls_.timeout_ = NULL;
-        }
-    }
-
     if (callback_ != NULL) {
         typedef CommConnectCbParams Params;
         Params &params = GetCommParams<Params>(callback_);
@@ -124,9 +110,7 @@ Comm::ConnOpener::doneConnecting(comm_err_t status, int xerrno)
     conn_ = NULL;
 }
 
-/** Actual start opening a TCP connection. */
-void
-Comm::ConnOpener::start()
+void Comm::ConnOpener::start()
 {
     Must(conn_ != NULL);
 
@@ -148,21 +132,29 @@ Comm::ConnOpener::start()
             typedef CommCbMemFunT<Comm::ConnOpener, CommConnectCbParams> Dialer;
             calls_.earlyAbort_ = asyncCall(5, 4, "Comm::ConnOpener::earlyAbort",
                                          Dialer(this, &Comm::ConnOpener::earlyAbort));
+            comm_add_close_handler(conn_->fd, calls_.earlyAbort_);
         }
-        comm_add_close_handler(conn_->fd, calls_.earlyAbort_);
 
         if (calls_.timeout_ == NULL) {
             typedef CommCbMemFunT<Comm::ConnOpener, CommTimeoutCbParams> Dialer;
             calls_.timeout_ = asyncCall(5, 4, "Comm::ConnOpener::timeout",
                                       Dialer(this, &Comm::ConnOpener::timeout));
+            debugs(5, 3, HERE << "FD " << conn_->fd << " timeout " << connectTimeout_);
+            commSetTimeout(conn_->fd, connectTimeout_, calls_.timeout_);
         }
-        debugs(5, 3, HERE << "FD " << conn_->fd << " timeout " << connectTimeout_);
-        commSetTimeout(conn_->fd, connectTimeout_, calls_.timeout_);
 
         if (connStart_ == 0) {
             connStart_ = squid_curtime;
         }
     }
+
+    tryConnectiog();
+}
+
+void
+Comm::ConnOpener::tryConnecting()
+{
+    Must(conn_ != NULL);
 
     totalTries_++;
 
@@ -223,7 +215,7 @@ Comm::ConnOpener::start()
             debugs(5, 5, HERE << "FD " << conn_->fd << ": * - ERR took too long already.");
             doneConnecting(COMM_TIMEOUT, errno);
         } else if (failRetries_ < Config.connect_retries) {
-            start();
+            tryConnecting();
         } else {
             // send ERROR back to the upper layer.
             debugs(5, 5, HERE << "FD " << conn_->fd << ": * - ERR tried too many times already.");
@@ -248,7 +240,7 @@ Comm::ConnOpener::earlyAbort(const CommConnectCbParams &io)
 void
 Comm::ConnOpener::connect(const CommConnectCbParams &unused)
 {
-    start();
+    tryConnecting();
 }
 
 /**
@@ -258,7 +250,7 @@ Comm::ConnOpener::connect(const CommConnectCbParams &unused)
 void
 Comm::ConnOpener::timeout(const CommTimeoutCbParams &unused)
 {
-    start();
+    tryConnecting();
 }
 
 /* Legacy Wrapper for the retry event after COMM_INPROGRESS
@@ -268,7 +260,7 @@ void
 Comm::ConnOpener::ConnectRetry(int fd, void *data)
 {
     ConnOpener *cs = static_cast<Comm::ConnOpener *>(data);
-    cs->start();
+    cs->tryConnecting();
 
     // see if its done and delete Comm::ConnOpener? comm Writes are not yet a Job call.
     // so the automatic cleanup on call completion does not seem to happen

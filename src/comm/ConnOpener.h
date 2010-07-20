@@ -28,6 +28,7 @@ public:
 
     void setHost(const char *);    ///< set the hostname note for this connection
     const char * getHost() const;  ///< get the hostname noted for this connection
+    void tryConnecting();          ///< actually start opening a TCP connection.
 
 private:
     /* These objects may NOT be created without connections to act on. Do not define this operator. */
