@@ -148,7 +148,7 @@ void Comm::ConnOpener::start()
         }
     }
 
-    tryConnectiog();
+    tryConnecting();
 }
 
 void
