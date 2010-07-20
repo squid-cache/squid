@@ -110,7 +110,7 @@ else
 fi
 
 LT_INIT([dlopen])
-LTDL_INIT([recursive])
+LTDL_INIT
 
 dnl LibTool environment is now prepared for setup. Check that it is usable and initialize.
 LT_LIB_DLLOAD
