@@ -71,18 +71,9 @@ else
     AC_DISABLE_SHARED
 fi
 
-AC_LIBTOOL_DLOPEN
-if test $use_loadable_modules = yes;
-then
-    dnl Linux LTDL v3-v7 macros assume the autoconf 2.62 variable top_build_prefix is defined
-    dnl But from autoconf 2.64 its called ac_top_build_prefix and not automatically added to the Makefile
-    top_build_prefix=${ac_top_build_prefix}
-    AC_SUBST(top_build_prefix)
-
-    AC_LIBLTDL_CONVENIENCE
-fi
-AC_PROG_LIBTOOL
-AC_LTDL_DLLIB
+LT_INIT([dlopen])
+LTDL_INIT
+LT_LIB_DLLOAD
 
 # Do we need these unconditionally for "make distcheck" to work?
 AC_SUBST(INCLTDL)
@@ -90,7 +81,7 @@ AC_SUBST(LIBLTDL)
 
 if test $use_loadable_modules = yes;
 then
-    # Why is this needed? Should not libtool's AC_LIBTOOL_DLOPEN do that?
+    # Why is this needed? Should not LT_INIT (or LT_LIB_DLLOAD) from libtool do that?
     LIBADD_DL=${lt_cv_dlopen_libs}
     AC_SUBST([LIBADD_DL])
 fi
@@ -3981,6 +3972,6 @@ AC_CONFIG_FILES([\
 AC_CONFIG_SUBDIRS(lib/libTrie)
 
 # must configure libltdl subdir unconditionally for "make distcheck" to work
-AC_CONFIG_SUBDIRS(libltdl)
+#AC_CONFIG_SUBDIRS(libltdl)
 
 AC_OUTPUT
