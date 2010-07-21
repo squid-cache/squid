@@ -258,7 +258,7 @@ public:
     int fd;
 
 private:
-    bool acceptOne();
+    void acceptOne();
 
     AsyncCall::Pointer theCallback;
     bool mayAcceptMore;
@@ -2284,7 +2284,7 @@ AcceptFD::subscribe(AsyncCall::Pointer &call)
         commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
 }
 
-bool
+void
 AcceptFD::acceptOne()
 {
     // If there is no callback and we accept, we will leak the accepted FD.
@@ -2295,7 +2295,8 @@ AcceptFD::acceptOne()
         // either listen always or listen only when there is a callback?
         if (!AcceptLimiter::Instance().deferring())
             commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
-        return false;
+        mayAcceptMore = false;
+        return;
     }
 
     /*
@@ -2316,14 +2317,15 @@ AcceptFD::acceptOne()
         if (newfd == COMM_NOMESSAGE) {
             /* register interest again */
             debugs(5, 5, HERE << "try later: FD " << fd <<
-                   " handler: " << *theCallback);
+                   " handler: " << theCallback);
             commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
-            return false;
+            return;
         }
 
         // A non-recoverable error; notify the caller */
         notify(-1, COMM_ERROR, errno, connDetails);
-        return false;
+        mayAcceptMore = false;
+        return;
     }
 
     assert(theCallback != NULL);
@@ -2331,13 +2333,13 @@ AcceptFD::acceptOne()
            " newfd: " << newfd << " from: " << connDetails.peer <<
            " handler: " << *theCallback);
     notify(newfd, COMM_OK, 0, connDetails);
-    return true;
+    mayAcceptMore = true;
 }
 
 void
 AcceptFD::acceptNext()
 {
-    mayAcceptMore = acceptOne();
+    acceptOne();
 }
 
 void
