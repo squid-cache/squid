@@ -62,23 +62,23 @@
 
 /* ldap_t struct typedef */
 typedef struct {
-  LDAP *lp;
-  LDAPMessage *lm;
-  struct berval **val;
-  char basedn[MAXLEN];
-  char host[MAXLEN];
-  char dn[MAXLEN];
-  char passwd[MAXLEN];
-  char search_filter[MAXLEN];			/* search_group gets appended here by GroupLDAP */
-  char search_ip[MAXLEN];			/* Could be IPv4 or IPv6, set by ConvertIP */
-  char userid[MAXLEN];				/* Resulting cn */
-  unsigned int status;
-  unsigned int port;
-  unsigned long type;				/* Type of bind */
-  int ver;
-  int scope;
-  int num_ent;					/* Number of entry's found via search */
-  int num_val;					/* Number of value's found via getval */
+    LDAP *lp;
+    LDAPMessage *lm;
+    struct berval **val;
+    char basedn[MAXLEN];
+    char host[MAXLEN];
+    char dn[MAXLEN];
+    char passwd[MAXLEN];
+    char search_filter[MAXLEN];			/* search_group gets appended here by GroupLDAP */
+    char search_ip[MAXLEN];			/* Could be IPv4 or IPv6, set by ConvertIP */
+    char userid[MAXLEN];				/* Resulting cn */
+    unsigned int status;
+    unsigned int port;
+    unsigned long type;				/* Type of bind */
+    int ver;
+    int scope;
+    int num_ent;					/* Number of entry's found via search */
+    int num_val;					/* Number of value's found via getval */
 } ldap_t;
 
 /* iplookup.c - Functions */
