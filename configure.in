@@ -2647,9 +2647,10 @@ mingw|mingw32)
 	AC_MSG_NOTICE([Use MSVCRT for math functions.])
 	;;
 	*)
-	dnl rint() is only used in old C code for now.
+	dnl rint() and log() are only used in old C code for now.
 	AC_LANG_PUSH([C])
 	AC_SEARCH_LIBS([rint],[m])
+	AC_SEARCH_LIBS([log],[m])
 	AC_LANG_POP([C])
 	;;
 esac
