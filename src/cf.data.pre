@@ -1383,9 +1383,9 @@ DOC_START
 	The kernel patch can be downloaded from http://zph.bratcheda.org
 
 	disable-preserve-miss
-		If set, any HTTP response towards clients will
-		have the TOS value of the response comming from the
-		remote server masked with the value of miss-mask.
+		By default, the existing TOS value of the response coming
+		from the remote server will be retained and masked with
+		miss-mark. This option disables that feature.
 
 	miss-mask=0xFF
 		Allows you to mask certain bits in the TOS received from the
