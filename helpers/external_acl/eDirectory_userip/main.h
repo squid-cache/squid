@@ -61,16 +61,16 @@
 
 /* conf_t - Program configuration struct typedef */
 typedef struct {
-  char program[MAXLEN];
-  char basedn[MAXLEN];
-  char host[MAXLEN];
-  char dn[MAXLEN];
-  char passwd[MAXLEN];
-  char search_filter[MAXLEN];				/* Base search_filter that gets copied to ldap_t */
-  int ver;
-  int scope;
-  int port;
-  unsigned int mode;
+    char program[MAXLEN];
+    char basedn[MAXLEN];
+    char host[MAXLEN];
+    char dn[MAXLEN];
+    char passwd[MAXLEN];
+    char search_filter[MAXLEN];				/* Base search_filter that gets copied to ldap_t */
+    int ver;
+    int scope;
+    int port;
+    unsigned int mode;
 } conf_t;
 
 /* extern the struct */
