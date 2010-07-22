@@ -691,11 +691,6 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
                NULL,
                tunnelPeerSelectComplete,
                tunnelState);
-    /*
-     * Disable the client read handler until peer selection is complete
-     * Take control away from client_side.c.
-     */
-    commSetSelect(tunnelState->client.fd(), COMM_SELECT_READ, NULL, NULL, 0);
 }
 
 static void
