@@ -64,6 +64,17 @@ find_variant()
   echo $found
 }
 
+find_path()
+{
+  tool=$1
+  path=`which $tool`
+  if test $? -gt 0 ; then
+    echo "path for $tool not found. Not defining, and hoping for the best"
+    return
+  fi
+  echo $(dirname $path)
+}
+
 bootstrap() {
   if "$@"; then
     true # Everything OK
@@ -122,6 +133,9 @@ amversion=`show_version automake ${amversions}`
 acversion=`show_version autoconf ${acversions}`
 ltversion=`show_version libtool ${ltversions}`
 
+# Find the libtool path to get the right aclocal includes
+ltpath=`find_path libtool$ltver`
+
 # Set environment variable to tell automake which autoconf to use.
 AUTOCONF="autoconf${acver}" ; export AUTOCONF
 
@@ -142,9 +156,15 @@ do
 	elif [ ! -f $dir/configure ]; then
 	    # Make sure cfgaux exists
 	    mkdir -p cfgaux
+            
+            if test -n "$ltpath"; then
+              acincludeflag="-I $ltpath/../share/aclocal"
+            else
+              acincludeflag=""
+            fi
 
 	    # Bootstrap the autotool subsystems
-	    bootstrap aclocal$amver
+	    bootstrap aclocal$amver $acincludeflag
 	    bootstrap autoheader$acver
 	    bootstrap_libtoolize $ltver
 	    bootstrap automake$amver --foreign --add-missing --copy -f
