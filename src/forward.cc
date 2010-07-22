@@ -83,7 +83,7 @@ FwdState::abort(void* d)
     if (fwd->isServerConnectionOpen()) {
         comm_remove_close_handler(fwd->serverConnection()->fd, fwdServerClosedWrapper, fwd);
     }
-    fwd->paths.clean();
+    fwd->serverDestinations.clean();
     fwd->self = NULL;
 }
 
@@ -95,7 +95,7 @@ FwdState::FwdState(int fd, StoreEntry * e, HttpRequest * r)
     client_fd = fd;
     request = HTTPMSGLOCK(r);
     start_t = squid_curtime;
-
+    serverDestinations.reserve(Config.forward_max_tries);
     e->lock();
     EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
 }
@@ -113,7 +113,7 @@ void FwdState::start(Pointer aSelf)
     // Otherwise we are going to leak our object.
 
     entry->registerAbort(FwdState::abort, this);
-    peerSelect(&paths, request, entry, fwdStartCompleteWrapper, this);
+    peerSelect(&serverDestinations, request, entry, fwdStartCompleteWrapper, this);
 }
 
 void
@@ -173,10 +173,10 @@ FwdState::~FwdState()
     if (isServerConnectionOpen()) {
         comm_remove_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
         debugs(17, 3, HERE << "closing FD " << serverConnection()->fd);
-        serverConnection()->close();
+        serverConn->close();
     }
 
-    paths.clean();
+    serverDestinations.clean();
 
     debugs(17, 3, HERE << "FwdState destructor done");
 }
@@ -266,7 +266,7 @@ FwdState::startComplete()
 {
     debugs(17, 3, HERE << entry->url() );
 
-    if (paths.size() > 0) {
+    if (serverDestinations.size() > 0) {
         connectStart();
     } else {
         debugs(17, 3, HERE << entry->url()  );
@@ -295,12 +295,13 @@ FwdState::fail(ErrorState * errorState)
  * Frees fwdState without closing FD or generating an abort
  */
 void
-FwdState::unregister(Comm::ConnectionPointer conn)
+FwdState::unregister(Comm::ConnectionPointer &conn)
 {
     debugs(17, 3, HERE << entry->url() );
     assert(serverConnection() == conn);
     assert(conn->isOpen());
     comm_remove_close_handler(conn->fd, fwdServerClosedWrapper, this);
+    serverConn = NULL;
 }
 
 // Legacy method to be removed in favor of the above as soon as possible
@@ -309,9 +310,7 @@ FwdState::unregister(int fd)
 {
     debugs(17, 3, HERE << entry->url() );
     assert(fd == serverConnection()->fd);
-    assert(fd > -1);
-    comm_remove_close_handler(fd, fwdServerClosedWrapper, this);
-    serverConnection()->fd = -1;
+    unregister(serverConn);
 }
 
 /**
@@ -336,7 +335,7 @@ FwdState::complete()
         debugs(17, 3, HERE << "re-forwarding " << entry->getReply()->sline.status << " " << entry->url());
 
         if (isServerConnectionOpen())
-            unregister(serverConnection());
+            unregister(serverConn);
 
         entry->reset();
 
@@ -360,7 +359,7 @@ FwdState::complete()
 /**** CALLBACK WRAPPERS ************************************************************/
 
 static void
-fwdStartCompleteWrapper(Comm::Paths * unused, void *data)
+fwdStartCompleteWrapper(Comm::ConnectionList * unused, void *data)
 {
     FwdState *fwd = (FwdState *) data;
     fwd->startComplete();
@@ -502,9 +501,9 @@ FwdState::retryOrBail()
     if (checkRetry()) {
         debugs(17, 3, HERE << "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
 
-        paths.shift(); // last one failed. try another.
+        serverDestinations.shift(); // last one failed. try another.
 
-        if (paths.size() > 0) {
+        if (serverDestinations.size() > 0) {
             /* Ditch error page if it was created before.
              * A new one will be created if there's another problem */
             if (err) {
@@ -515,7 +514,7 @@ FwdState::retryOrBail()
             connectStart();
             return;
         }
-        // else bail. no more paths possible to try.
+        // else bail. no more serverDestinations possible to try.
     }
 
     if (!err && shutting_down) {
@@ -573,7 +572,7 @@ FwdState::negotiateSSL(int fd)
                 peerConnectFailed(serverConnection()->getPeer());
             }
 
-            serverConnection()->close();
+            serverConn->close();
             return;
         }
     }
@@ -662,15 +661,17 @@ FwdState::connectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerr
         fail(anErr);
 
         /* it might have been a timeout with a partially open link */
-        if (paths.size() > 0) {
-            if (serverConnection()->getPeer())
-                peerConnectFailed(serverConnection()->getPeer());
+        if (conn != NULL) {
+            if (conn->getPeer())
+                peerConnectFailed(conn->getPeer());
 
-            serverConnection()->close();
+            conn->close();
         }
         retryOrBail();
         return;
     }
+
+    serverConn = conn;
 
 #if REDUNDANT_NOW
     if (Config.onoff.log_ip_on_direct && serverConnection()->peerType == HIER_DIRECT)
@@ -712,13 +713,12 @@ FwdState::connectTimeout(int fd)
         fail(anErr);
 
         /* This marks the peer DOWN ... */
-        if (paths.size() > 0)
-            if (serverConnection()->getPeer())
+        if (serverConnection() != NULL && serverConnection()->getPeer())
                 peerConnectFailed(serverConnection()->getPeer());
     }
 
     if (isServerConnectionOpen()) {
-        serverConnection()->close();
+        serverConn->close();
     }
 }
 
@@ -756,26 +756,25 @@ FwdState::connectStart()
     if (serverConnection()->peerType == PINNED) {
         ConnStateData *pinned_connection = request->pinnedConnection();
         assert(pinned_connection);
-        serverConnection()->fd = pinned_connection->validatePinnedConnection(request, serverConnection()->getPeer());
+        serverConn->fd = pinned_connection->validatePinnedConnection(request, serverConnection()->getPeer());
         if (isServerConnectionOpen()) {
             pinned_connection->unpinConnection();
 #if 0
             if (!serverConnection()->getPeer())
-                serverConnection()->peerType = HIER_DIRECT;
+                serverConn->peerType = HIER_DIRECT;
 #endif
             n_tries++;
             request->flags.pinned = 1;
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = 1;
             updateHierarchyInfo();
-            Comm::ConnectionPointer conn = serverConnection();
-            FwdState::connectDone(conn, COMM_OK, 0);
+            FwdState::connectDone(serverConn, COMM_OK, 0);
             return;
         }
         /* Failure. Fall back on next path */
         debugs(17,2,HERE << " Pinned connection " << pinned_connection << " not valid. Releasing.");
         request->releasePinnedConnection();
-        paths.shift();
+        serverDestinations.shift();
         connectStart();
         return;
     }
@@ -791,16 +790,16 @@ FwdState::connectStart()
     if (serverConnection()->getPeer()) {
         host = serverConnection()->getPeer()->host;
         port = serverConnection()->getPeer()->http_port;
-        serverConnection()->fd = fwdPconnPool->pop(serverConnection()->getPeer()->name,
-                                                   serverConnection()->getPeer()->http_port,
-                                                   request->GetHost(), serverConnection()->local,
-                                                   checkRetriable());
+        serverConn->fd = fwdPconnPool->pop(serverConnection()->getPeer()->name,
+                                           serverConnection()->getPeer()->http_port,
+                                           request->GetHost(), serverConn->local,
+                                           checkRetriable());
     } else {
         host = request->GetHost();
         port = request->port;
-        serverConnection()->fd = fwdPconnPool->pop(host, port, NULL, serverConnection()->local, checkRetriable());
+        serverConn->fd = fwdPconnPool->pop(host, port, NULL, serverConn->local, checkRetriable());
     }
-    serverConnection()->remote.SetPort(port);
+    serverConn->remote.SetPort(port);
 
     if (isServerConnectionOpen()) {
         debugs(17, 3, HERE << "reusing pconn FD " << serverConnection()->fd);
@@ -822,8 +821,7 @@ FwdState::connectStart()
 #endif
 
     AsyncCall::Pointer call = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
-    Comm::ConnectionPointer conn = serverConnection();
-    Comm::ConnOpener *cs = new Comm::ConnOpener(conn, call, ctimeout);
+    Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], call, ctimeout);
     cs->setHost(host);
     AsyncJob::AsyncStart(cs);
 }
@@ -953,7 +951,7 @@ FwdState::dispatch()
              */
             flags.dont_retry = 1;
             if (isServerConnectionOpen()) {
-                serverConnection()->close();
+                serverConn->close();
             }
             break;
         }
@@ -996,9 +994,9 @@ FwdState::reforward()
     if (request->bodyNibbled())
         return 0;
 
-    paths.shift();
+    serverDestinations.shift();
 
-    if (paths.size() > 0) {
+    if (serverDestinations.size() > 0) {
         debugs(17, 3, HERE << "No alternative forwarding paths left");
         return 0;
     }
@@ -1073,7 +1071,7 @@ FwdState::reforwardableStatus(http_status s)
  *  -  address of the client for which we made the connection
  */
 void
-FwdState::pconnPush(Comm::ConnectionPointer conn, const peer *_peer, const HttpRequest *req, const char *domain, Ip::Address &client_addr)
+FwdState::pconnPush(Comm::ConnectionPointer &conn, const peer *_peer, const HttpRequest *req, const char *domain, Ip::Address &client_addr)
 {
     if (_peer) {
         fwdPconnPool->push(conn->fd, _peer->name, _peer->http_port, domain, client_addr);
@@ -1146,7 +1144,7 @@ FwdState::updateHierarchyInfo()
 {
     assert(request);
 
-    assert(paths.size() > 0);
+    assert(serverDestinations.size() > 0);
 
     char nextHop[256];
 
