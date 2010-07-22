@@ -22,7 +22,7 @@ public:
     static void fwdStart(int fd, StoreEntry *, HttpRequest *);
     void startComplete();
     void fail(ErrorState *err);
-    void unregister(Comm::ConnectionPointer conn);
+    void unregister(Comm::ConnectionPointer &conn);
     void unregister(int fd);
     void complete();
     void handleUnregisteredServerEnd();
@@ -30,14 +30,14 @@ public:
     bool reforwardableStatus(http_status s);
     void serverClosed(int fd);
     void connectStart();
-    void connectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno);
+    void connectDone(Comm::ConnectionPointer & conn, comm_err_t status, int xerrno);
     void connectTimeout(int fd);
     void initiateSSL();
     void negotiateSSL(int fd);
     bool checkRetry();
     bool checkRetriable();
     void dispatch();
-    void pconnPush(Comm::ConnectionPointer conn, const peer *_peer, const HttpRequest *req, const char *domain, Ip::Address &client_addr);
+    void pconnPush(Comm::ConnectionPointer & conn, const peer *_peer, const HttpRequest *req, const char *domain, Ip::Address &client_addr);
 
     bool dontRetry() { return flags.dont_retry; }
 
@@ -48,13 +48,13 @@ public:
     void ftpPasvFailed(bool val) { flags.ftp_pasv_failed = val; }
 
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
-    Comm::ConnectionPointer serverConnection() const { assert(paths.size() > 0); return paths[0]; };
+    Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
 
     /** test if the current server connection is open */
     bool isServerConnectionOpen() const {
-        if (paths.size() > 0 && serverConnection()->fd >= 0)
-            assert(fd_table[serverConnection()->fd].flags.open == serverConnection()->isOpen());
-        return (paths.size() > 0 && serverConnection()->isOpen());
+        if (serverConn != NULL && serverConn->isOpen())
+            assert(fd_table[serverConn->fd].flags.open == serverConn->isOpen());
+        return (serverConn != NULL && serverConn->isOpen());
     };
 
 private:
@@ -99,7 +99,9 @@ private:
     } flags;
 
     /** connections to open, in order, until successful */
-    Comm::Paths paths;
+    Comm::ConnectionList serverDestinations;
+
+    Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
 
     // NP: keep this last. It plays with private/public
     CBDATA_CLASS2(FwdState);

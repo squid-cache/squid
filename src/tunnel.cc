@@ -68,7 +68,7 @@ public:
     char *host;			/* either request->host or proxy host */
     u_short port;
     HttpRequest *request;
-    Comm::Paths paths;
+    Comm::ConnectionList serverDestinations;
 
     class Connection
     {
@@ -79,7 +79,7 @@ public:
         ~Connection();
         int const & fd() const { return fd_;}
 
-        void fd(int const newFD);
+        void fd(int newFd);
         int bytesWanted(int lower=0, int upper = INT_MAX) const;
         void bytesIn(int const &);
 #if DELAY_POOLS
@@ -176,7 +176,7 @@ tunnelStateFree(TunnelStateData * tunnelState)
     assert(tunnelState != NULL);
     assert(tunnelState->noConnections());
     safe_free(tunnelState->url);
-    tunnelState->paths.clean();
+    tunnelState->serverDestinations.clean();
     tunnelState->host = NULL;
     HTTPMSGUNLOCK(tunnelState->request);
     delete tunnelState;
@@ -543,11 +543,11 @@ tunnelConnectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, 
         /* At this point only the TCP handshake has failed. no data has been passed.
          * we are allowed to re-try the TCP-level connection to alternate IPs for CONNECT.
          */
-        tunnelState->paths.shift();
-        if (status != COMM_TIMEOUT && tunnelState->paths.size() > 0) {
+        tunnelState->serverDestinations.shift();
+        if (status != COMM_TIMEOUT && tunnelState->serverDestinations.size() > 0) {
             /* Try another IP of this destination host */
             AsyncCall::Pointer call = commCbCall(26,3, "tunnelConnectDone", CommConnectCbPtrFun(tunnelConnectDone, tunnelState));
-            Comm::ConnOpener *cs = new Comm::ConnOpener(tunnelState->paths[0], call, Config.Timeout.connect);
+            Comm::ConnOpener *cs = new Comm::ConnOpener(tunnelState->serverDestinations[0], call, Config.Timeout.connect);
             cs->setHost(tunnelState->url);
             AsyncJob::AsyncStart(cs);
         } else {
@@ -643,7 +643,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
                    tunnelTimeout,
                    tunnelState);
 
-    peerSelect(&(tunnelState->paths), request,
+    peerSelect(&(tunnelState->serverDestinations), request,
                NULL,
                tunnelPeerSelectComplete,
                tunnelState);
@@ -684,7 +684,7 @@ tunnelProxyConnected(int fd, void *data)
 }
 
 static void
-tunnelPeerSelectComplete(Comm::Paths *peer_paths, void *data)
+tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     HttpRequest *request = tunnelState->request;
@@ -700,7 +700,7 @@ tunnelPeerSelectComplete(Comm::Paths *peer_paths, void *data)
     }
 
     AsyncCall::Pointer call = commCbCall(26,3, "tunnelConnectDone", CommConnectCbPtrFun(tunnelConnectDone, tunnelState));
-    Comm::ConnOpener *cs = new Comm::ConnOpener(tunnelState->paths[0], call, Config.Timeout.connect);
+    Comm::ConnOpener *cs = new Comm::ConnOpener(tunnelState->serverDestinations[0], call, Config.Timeout.connect);
     cs->setHost(tunnelState->url);
     AsyncJob::AsyncStart(cs);
 }
