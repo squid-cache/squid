@@ -1,13 +1,13 @@
 //
 // $Id: copyout.cc,v 1.2 1999/06/16 13:05:26 voeckler Exp $
 //
-// Author:  Jens-S. Vöckler <voeckler@rvs.uni-hannover.de>
+// Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
 // File:    copyout.cc
 //          Tue Jun 15 1999
 //
 // (c) 1999 Lehrgebiet Rechnernetze und Verteilte Systeme
-//          Universität Hannover, Germany
+//          Universit?t Hannover, Germany
 //
 // Permission to use, copy, modify, distribute, and sell this software
 // and its documentation for any purpose is hereby granted without fee,
@@ -31,7 +31,6 @@
 // ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 // SOFTWARE.
 //
-// $Log: copyout.cc,v $
 // Revision 1.2  1999/06/16 13:05:26  voeckler
 // mmap file copying on Solaris.
 //
