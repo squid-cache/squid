@@ -69,7 +69,8 @@ find_path()
   tool=$1
   path=`which $tool`
   if test $? -gt 0 ; then
-    echo "path for $tool not found. Not defining, and hoping for the best"
+    # path for $tool not found. Not defining, and hoping for the best
+    echo 
     return
   fi
   echo $(dirname $path)
@@ -142,6 +143,7 @@ AUTOCONF="autoconf${acver}" ; export AUTOCONF
 echo "automake ($amversion) : automake$amver"
 echo "autoconf ($acversion) : autoconf$acver"
 echo "libtool  ($ltversion) : libtool$ltver"
+echo "libtool path : $ltpath"
 
 for dir in \
 	"" \
