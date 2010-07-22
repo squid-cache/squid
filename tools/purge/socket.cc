@@ -1,13 +1,13 @@
 //
 // $Id: socket.cc,v 1.3 1999/01/19 11:00:50 voeckler Exp $
 //
-// Author:  Jens-S. Vöckler <voeckler@rvs.uni-hannover.de>
+// Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
 // File:    socket.hh
 //          Sun May  3 1998
 //
 // (c) 1998 Lehrgebiet Rechnernetze und Verteilte Systeme
-//          Universität Hannover, Germany
+//          Universit?t Hannover, Germany
 //
 // Books:   W. Richard Steven, "Advanced Programming in the UNIX Environment",
 //          Addison-Wesley, 1992.
@@ -34,7 +34,6 @@
 // ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 // SOFTWARE.
 //
-// $Log: socket.cc,v $
 // Revision 1.3  1999/01/19 11:00:50  voeckler
 // Linux glibc2 fixes for socket size parameters.
 //
