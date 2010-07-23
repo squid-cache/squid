@@ -722,7 +722,8 @@ libDiskThreads_a_SOURCES = \
 		DiskIO/DiskThreads/DiskThreadsIOStrategy.cc \
 		DiskIO/DiskThreads/DiskThreadsIOStrategy.h
 
-DiskIO_DiskDaemon_diskd_SOURCES = DiskIO/DiskDaemon/diskd.cc 
+DiskIO_DiskDaemon_diskd_SOURCES = DiskIO/DiskDaemon/diskd.cc
+nodist_DiskIO_DiskDaemon_diskd_SOURCES = time.cc
 DiskIO_DiskDaemon_diskd_LDADD = $(COMPAT_LIB) $(XTRA_LIBS)
 
 

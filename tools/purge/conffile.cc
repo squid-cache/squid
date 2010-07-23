@@ -1,13 +1,13 @@
 //
 // $Id: conffile.cc,v 1.1 2000/09/21 09:44:53 voeckler Exp $
 //
-// Author:  Jens-S. Vöckler <voeckler@rvs.uni-hannover.de>
+// Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
 // File:    conffile.cc
 //          Fri Sep 15 2000
 //
 // (c) 2000 Lehrgebiet Rechnernetze und Verteilte Systeme
-//          Universität Hannover, Germany
+//          Universit?t Hannover, Germany
 //
 // Permission to use, copy, modify, distribute, and sell this software
 // and its documentation for any purpose is hereby granted without fee,
@@ -31,7 +31,6 @@
 // ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 // SOFTWARE.
 //
-// $Log: conffile.cc,v $
 // Revision 1.1  2000/09/21 09:44:53  voeckler
 // Initial revision
 //
