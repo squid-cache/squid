@@ -238,11 +238,11 @@ retrysrch:
                 }
             }
         } else if (userdnattr) {
-            snprintf(searchbase, 8192, "%s=%s, %s", userdnattr, login, userbasedn);
+            snprintf(filter,8192,"%s=%s",userdnattr,login);
 
 retrydnattr:
-            debug("searchbase '%s'\n", searchbase);
-            rc = ldap_search_s(ld, searchbase, searchscope, NULL, NULL, 0, &res);
+            debug("searchbase '%s'\n", userbasedn);
+            rc = ldap_search_s(ld, userbasedn, searchscope, filter, NULL, 0, &res);
         }
         if (rc == LDAP_SUCCESS) {
             entry = ldap_first_entry(ld, res);

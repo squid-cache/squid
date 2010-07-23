@@ -59,6 +59,11 @@
 
 #include "cf_gen_defines.cci"
 
+/* libmisc pulls in dependency on time.cc via new() / mem
+ * but for cross-compilers we cannot link to the available time.o
+ */
+#include "time.cc"
+
 #define MAX_LINE	1024	/* longest configuration line */
 #define _PATH_PARSER		"cf_parser.cci"
 #define _PATH_SQUID_CONF	"squid.conf.documented"
