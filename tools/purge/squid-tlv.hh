@@ -1,13 +1,13 @@
 //
 // $Id: squid-tlv.hh,v 1.1 1999/06/15 21:10:16 voeckler Exp $
 //
-// Author:  Jens-S. Vöckler <voeckler@rvs.uni-hannover.de>
+// Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
 // File:    squid-tlv.hh
 //          Tue Jun 15 1999
 //
 // (c) 1999 Lehrgebiet Rechnernetze und Verteilte Systeme
-//          Universität Hannover, Germany
+//          Universit?t Hannover, Germany
 //
 // Permission to use, copy, modify, distribute, and sell this software
 // and its documentation for any purpose is hereby granted without fee,
@@ -31,7 +31,6 @@
 // ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 // SOFTWARE.
 //
-// $Log: squid-tlv.hh,v $
 // Revision 1.1  1999/06/15 21:10:16  voeckler
 // Initial revision
 //

@@ -1,13 +1,13 @@
 //
 // $Id: purge.cc,v 1.17 2000/09/21 10:59:53 cached Exp $
 //
-// Author:  Jens-S. Vöckler <voeckler@rvs.uni-hannover.de>
+// Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
 // File:    purge.cc
 //          Wed Jan 13 1999
 //
 // (c) 1999 Lehrgebiet Rechnernetze und Verteilte Systeme
-//          Universität Hannover, Germany
+//          Universit?t Hannover, Germany
 //
 // Permission to use, copy, modify, distribute, and sell this software
 // and its documentation for any purpose is hereby granted without fee,
@@ -31,7 +31,6 @@
 // ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 // SOFTWARE.
 //
-// $Log: purge.cc,v $
 // Revision 1.17  2000/09/21 10:59:53  cached
 // *** empty log message ***
 //

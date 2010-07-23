@@ -1,13 +1,13 @@
 //
 // $Id: copyout.hh,v 1.1 1999/06/15 21:10:47 voeckler Exp $
 //
-// Author:  Jens-S. Vöckler <voeckler@rvs.uni-hannover.de>
+// Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
 // File:    copyout.hh
 //          Tue Jun 15 1999
 //
 // (c) 1999 Lehrgebiet Rechnernetze und Verteilte Systeme
-//          Universität Hannover, Germany
+//          Universit?t Hannover, Germany
 //
 // Permission to use, copy, modify, distribute, and sell this software
 // and its documentation for any purpose is hereby granted without fee,
@@ -31,7 +31,6 @@
 // ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 // SOFTWARE.
 //
-// $Log: copyout.hh,v $
 // Revision 1.1  1999/06/15 21:10:47  voeckler
 // Initial revision
 //
