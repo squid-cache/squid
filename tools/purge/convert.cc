@@ -1,13 +1,13 @@
 //
 // $Id: convert.cc,v 1.3 2000/06/20 09:43:01 voeckler Exp $
 //
-// Author:  Jens-S. Vöckler <voeckler@rvs.uni-hannover.de>
+// Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
 // File:    convert.cc
 //          Thu Oct 30 1997
 //
 // (c) 1997 Lehrgebiet Rechnernetze und Verteilte Systeme
-//          Universität Hannover, Germany
+//          Universit?t Hannover, Germany
 //
 // Permission to use, copy, modify, distribute, and sell this software
 // and its documentation for any purpose is hereby granted without fee,
@@ -31,7 +31,6 @@
 // ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 // SOFTWARE.
 //
-// $Log: convert.cc,v $
 // Revision 1.3  2000/06/20 09:43:01  voeckler
 // added FreeBSD related fixes and support.
 //

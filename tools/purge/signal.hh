@@ -1,7 +1,7 @@
 //
 // $Id: signal.hh,v 1.4 2000/09/21 10:59:27 cached Exp $
 //
-// Author:   Jens-S. Vöckler <voeckler@rvs.uni-hannover.de>
+// Author:   Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 // File:     signal.hh
 // Date:     Sat Feb 28 1998
 // Compiler: gcc 2.7.2.x series
@@ -10,7 +10,7 @@
 //           Addison-Wesley, 1992.
 // 
 // (c) 1998 Lehrgebiet Rechnernetze und Verteilte Systeme
-//          Universität Hannover, Germany
+//          Universit?t Hannover, Germany
 //
 // Permission to use, copy, modify, distribute, and sell this software
 // and its documentation for any purpose is hereby granted without fee,
@@ -34,7 +34,6 @@
 // ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 // SOFTWARE.
 //
-// $Log: signal.hh,v $
 // Revision 1.4  2000/09/21 10:59:27  cached
 // introduced extern "C" to function pointer type.
 //
