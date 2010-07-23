@@ -1,7 +1,7 @@
 //
 // $Id: signal.cc,v 1.3 1999/01/19 13:11:52 cached Exp $
 //
-// Author:   Jens-S. Vöckler <voeckler@rvs.uni-hannover.de>
+// Author:   Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 // File:     signal.cc
 // Date:     Sat Feb 28 1998
 // Compiler: gcc 2.7.2.x series
@@ -10,7 +10,7 @@
 //           Addison-Wesley, 1992.
 //
 // (c) 1998 Lehrgebiet Rechnernetze und Verteilte Systeme
-//          Universität Hannover, Germany
+//          Universit?t Hannover, Germany
 //
 // Permission to use, copy, modify, distribute, and sell this software
 // and its documentation for any purpose is hereby granted without fee,
@@ -34,7 +34,6 @@
 // ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 // SOFTWARE.
 //
-// $Log: signal.cc,v $
 // Revision 1.3  1999/01/19 13:11:52  cached
 // adaptations necessary for AIX.
 //
