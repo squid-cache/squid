@@ -37,6 +37,7 @@ MAKETEST="distcheck"
 #   --enable-epoll \
 #   --enable-kqueue \
 #   --enable-win32-service \
+#   --with-valgrind-debug \
 #
 #
 OPTS=" \
@@ -106,7 +107,6 @@ OPTS=" \
 	--with-large-files \
 	--with-pic \
 	--with-pthreads \
-	--with-valgrind-debug \
 	"
 
 # Fix the distclean testing.

@@ -1906,7 +1906,7 @@ AC_ARG_WITH(valgrind-debug,
     AC_CHECK_HEADERS(valgrind/memcheck.h,
       [ AC_DEFINE(WITH_VALGRIND, 1, [Valgrind memory debugger support])
 	AC_MSG_NOTICE([Valgrind debug support enabled]) ],
-      [ AC_MSG_WARN([Valgrind header not found. Valgrind support disabled.]) ]
+      [ AC_MSG_ERROR([Valgrind header not found. Valgrind support cannot be built.]) ]
     )
   fi
 ])
