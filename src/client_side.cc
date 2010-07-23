@@ -205,16 +205,14 @@ ConnStateData::readSomeData()
     if (reading())
         return;
 
-    reading(true);
-
     debugs(33, 4, "clientReadSomeData: FD " << fd << ": reading request...");
 
     makeSpaceAvailable();
 
     typedef CommCbMemFunT<ConnStateData, CommIoCbParams> Dialer;
-    AsyncCall::Pointer call = asyncCall(33, 5, "ConnStateData::clientReadRequest",
-                                        Dialer(this, &ConnStateData::clientReadRequest));
-    comm_read(fd, in.addressToReadInto(), getAvailableBufferLength(), call);
+    reader = asyncCall(33, 5, "ConnStateData::clientReadRequest",
+                       Dialer(this, &ConnStateData::clientReadRequest));
+    comm_read(fd, in.addressToReadInto(), getAvailableBufferLength(), reader);
 }
 
 
@@ -2669,7 +2667,8 @@ void
 ConnStateData::clientReadRequest(const CommIoCbParams &io)
 {
     debugs(33,5,HERE << "clientReadRequest FD " << io.fd << " size " << io.size);
-    reading(false);
+    Must(reading());
+    reader = NULL;
     bool do_next_read = 1; /* the default _is_ to read data! - adrian */
 
     assert (io.fd == fd);
@@ -3563,7 +3562,7 @@ clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 
 CBDATA_CLASS_INIT(ConnStateData);
 
-ConnStateData::ConnStateData() :AsyncJob("ConnStateData"), transparent_ (false), reading_ (false), closing_ (false)
+ConnStateData::ConnStateData() :AsyncJob("ConnStateData"), transparent_ (false), closing_ (false)
 {
     pinning.fd = -1;
     pinning.pinned = false;
@@ -3585,14 +3584,16 @@ ConnStateData::transparent(bool const anInt)
 bool
 ConnStateData::reading() const
 {
-    return reading_;
+    return reader != NULL;
 }
 
 void
-ConnStateData::reading(bool const newBool)
+ConnStateData::stopReading()
 {
-    assert (reading() != newBool);
-    reading_ = newBool;
+    if (reading()) {
+        comm_read_cancel(fd, reader);
+        reader = NULL;
+    }
 }
 
 

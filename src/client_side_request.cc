@@ -1114,6 +1114,7 @@ ClientHttpRequest::processRequest()
 
     if (request->method == METHOD_CONNECT && !redirect.status) {
         logType = LOG_TCP_MISS;
+        getConn()->stopReading(); // tunnels read for themselves
         tunnelStart(this, &out.size, &al.http.code);
         return;
     }
