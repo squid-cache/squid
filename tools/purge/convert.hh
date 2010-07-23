@@ -1,13 +1,13 @@
 //
 // $Id: convert.hh,v 1.2 1999/01/19 11:00:50 voeckler Exp $
 //
-// Author:  Jens-S. Vöckler <voeckler@rvs.uni-hannover.de>
+// Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
 // File:    convert.hh
 //          Thu Oct 30 1997
 //
 // (c) 1997 Lehrgebiet Rechnernetze und Verteilte Systeme
-//          Universität Hannover, Germany
+//          Universit?t Hannover, Germany
 //
 // Permission to use, copy, modify, distribute, and sell this software
 // and its documentation for any purpose is hereby granted without fee,
@@ -31,7 +31,6 @@
 // ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 // SOFTWARE.
 //
-// $Log: convert.hh,v $
 // Revision 1.2  1999/01/19 11:00:50  voeckler
 // added bool type workaround.
 //
