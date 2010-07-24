@@ -1,5 +1,5 @@
 //
-// $Id: convert.hh,v 1.2 1999/01/19 11:00:50 voeckler Exp $
+// $Id$
 //
 // Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //

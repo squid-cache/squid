@@ -1,5 +1,5 @@
 //
-// $Id: convert.cc,v 1.3 2000/06/20 09:43:01 voeckler Exp $
+// $Id$
 //
 // Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
@@ -58,7 +58,7 @@
 #endif
 
 static const char* RCS_ID =
-    "$Id: convert.cc,v 1.3 2000/06/20 09:43:01 voeckler Exp $";
+    "$Id$";
 
 const char*
 my_inet_ntoa( const struct in_addr& a, HostAddress output )
