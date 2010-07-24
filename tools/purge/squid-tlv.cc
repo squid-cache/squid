@@ -1,5 +1,5 @@
 //
-// $Id: squid-tlv.cc,v 1.1 1999/06/15 21:10:16 voeckler Exp $
+// $Id$
 //
 // Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
@@ -43,7 +43,7 @@
 #include "squid-tlv.hh"
 
 static const char* RCS_ID =
-    "$Id: squid-tlv.cc,v 1.1 1999/06/15 21:10:16 voeckler Exp $";
+    "$Id$";
 
 SquidTLV::SquidTLV( SquidMetaType _type, size_t _size, void* _data )
         :next(0),size(_size)

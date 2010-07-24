@@ -1,5 +1,5 @@
 //
-// $Id: signal.cc,v 1.3 1999/01/19 13:11:52 cached Exp $
+// $Id$
 //
 // Author:   Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 // File:     signal.cc
@@ -61,7 +61,7 @@
 #include "signal.hh"
 
 static const char* RCS_ID =
-    "$Id: signal.cc,v 1.3 1999/01/19 13:11:52 cached Exp $";
+    "$Id$";
 
 #ifndef HAS_PSIGNAL
 #ifdef AIX
