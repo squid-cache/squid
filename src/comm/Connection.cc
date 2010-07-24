@@ -3,6 +3,13 @@
 #include "comm.h"
 #include "comm/Connection.h"
 
+bool
+Comm::IsConnOpen(const Comm::ConnectionPointer &conn)
+{
+    return conn != NULL && conn->isOpen();
+}
+
+
 Comm::Connection::Connection() :
         local(),
         remote(),
