@@ -96,7 +96,6 @@ public:
         int64_t *size_ptr;		/* pointer to size in an ConnStateData for logging */
 
         Comm::ConnectionPointer conn;    ///< The currently connected connection.
-#define fd_closed(X) ((X) == NULL || !(X)->isOpen() || fd_table[(X)->fd].closing())
 
     private:
 #if DELAY_POOLS
@@ -309,7 +308,7 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
     cbdataInternalLock(this);	/* ??? should be locked by the caller... */
 
     /* Bump the server connection timeout on any activity */
-    if (!fd_closed(server.conn))
+    if (Comm::IsConnOpen(server.conn))
         commSetTimeout(server.conn->fd, Config.Timeout.read, tunnelTimeout, this);
 
     if (len < 0 || errcode)
@@ -318,7 +317,7 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
         from.conn->close();
         /* Only close the remote end if we've finished queueing data to it */
 
-        if (from.len == 0 && !fd_closed(to.conn) ) {
+        if (from.len == 0 && Comm::IsConnOpen(to.conn) ) {
             to.conn->close();
         }
     } else if (cbdataReferenceValid(this))
@@ -364,7 +363,7 @@ TunnelStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xer
     client.dataSent(len);
 
     /* If the other end has closed, so should we */
-    if (fd_closed(client.conn)) {
+    if (!Comm::IsConnOpen(client.conn)) {
         server.conn->close();
         return;
     }
@@ -424,7 +423,7 @@ TunnelStateData::writeClientDone(char *buf, size_t len, comm_err_t flag, int xer
     server.dataSent(len);
 
     /* If the other end has closed, so should we */
-    if (fd_closed(server.conn)) {
+    if (!Comm::IsConnOpen(server.conn)) {
         client.conn->close();
         return;
     }
@@ -453,7 +452,7 @@ tunnelTimeout(int fd, void *data)
 void
 TunnelStateData::Connection::closeIfOpen()
 {
-    if (!fd_closed(conn))
+    if (Comm::IsConnOpen(conn))
         conn->close();
 }
 
@@ -498,10 +497,10 @@ tunnelErrorComplete(int fdnotused, void *data, size_t sizenotused)
     /* temporary lock to save our own feets (comm_close -> tunnelClientClosed -> Free) */
     cbdataInternalLock(tunnelState);
 
-    if (!fd_closed(tunnelState->client.conn))
+    if (Comm::IsConnOpen(tunnelState->client.conn))
         tunnelState->client.conn->close();
 
-    if (!fd_closed(tunnelState->server.conn))
+    if (Comm::IsConnOpen(tunnelState->server.conn))
         tunnelState->server.conn->close();
 
     cbdataInternalUnlock(tunnelState);
@@ -712,7 +711,7 @@ TunnelStateData::operator delete (void *address)
 bool
 TunnelStateData::noConnections() const
 {
-    return fd_closed(server.conn) && fd_closed(client.conn);
+    return !Comm::IsConnOpen(server.conn) && !Comm::IsConnOpen(client.conn);
 }
 
 #if DELAY_POOLS
