@@ -32,7 +32,10 @@
 
 #include "config.h"
 #include "compat/tempnam.h"
+#include "getfullhostname.h"
+#include "ip/Address.h"
 #include "rfc1738.h"
+#include "util.h"
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -114,9 +117,6 @@ extern "C" {
 }
 #endif
 
-#include "util.h"
-#include "ip/Address.h"
-#include "getfullhostname.h"
 
 #ifndef DEFAULT_CACHEMGR_CONFIG
 #define DEFAULT_CACHEMGR_CONFIG "/etc/squid/cachemgr.conf"
