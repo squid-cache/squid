@@ -3126,14 +3126,20 @@ parse_http_port_specification(http_port_list * s, char *token)
     if (NULL == host) {
         s->s.SetAnyAddr();
         s->s.SetPort(port);
+        if (!Ip::EnableIpv6)
+            s->s.SetIPv4();
         debugs(3, 3, "http(s)_port: found Listen on wildcard address: *:" << s->s.GetPort() );
     } else if ( s->s = host ) { /* check/parse numeric IPA */
         s->s.SetPort(port);
+        if (!Ip::EnableIpv6)
+            s->s.SetIPv4();
         debugs(3, 3, "http(s)_port: Listen on Host/IP: " << host << " --> " << s->s);
     } else if ( s->s.GetHostByName(host) ) { /* check/parse for FQDN */
         /* dont use ipcache */
         s->defaultsite = xstrdup(host);
         s->s.SetPort(port);
+        if (!Ip::EnableIpv6)
+            s->s.SetIPv4();
         debugs(3, 3, "http(s)_port: found Listen as Host " << s->defaultsite << " on IP: " << s->s);
     } else {
         debugs(3, 0, "http(s)_port: failed to resolve Host/IP: " << host);
