@@ -39,6 +39,7 @@
 #include "compat/getaddrinfo.h"
 #include "Debug.h"
 #include "ip/Address.h"
+#include "ip/tools.h"
 #include "util.h"
 
 #if HAVE_ASSERT_H
@@ -52,22 +53,7 @@
 #include <arpa/inet.h>
 #endif
 
-#ifdef INET6
-#error "INET6 defined but has been deprecated! Try running bootstrap and configure again."
-#endif
-
-#if !USE_IPV6
-//  So there are some places where I will drop to using Macros too.
-//  At least I can restrict them to this file so they don't corrupt the app with C code.
-#  define sin6_addr	sin_addr
-#  define sin6_port	sin_port
-#  define sin6_family	sin_family
-#undef s6_addr
-#  define s6_addr	s_addr
-#endif
-
 /* Debugging only. Dump the address content when a fatal assert is encountered. */
-#if USE_IPV6
 #define IASSERT(a,b)  \
 	if(!(b)){	printf("assert \"%s\" at line %d\n", a, __LINE__); \
 		printf("Ip::Address invalid? with IsIPv4()=%c, IsIPv6()=%c\n",(IsIPv4()?'T':'F'),(IsIPv6()?'T':'F')); \
@@ -76,14 +62,6 @@
 			printf(" %x", m_SocketAddr.sin6_addr.s6_addr[i]); \
 		} printf("\n"); assert(b); \
 	}
-#else
-#define IASSERT(a,b)  \
-	if(!(b)){	printf("assert \"%s\" at line %d\n", a, __LINE__); \
-		printf("Ip::Address invalid? with IsIPv4()=%c, IsIPv6()=%c\n",(IsIPv4()?'T':'F'),(IsIPv6()?'T':'F')); \
-		printf("ADDRESS: %x\n", (unsigned int)m_SocketAddr.sin_addr.s_addr); \
-		assert(b); \
-	}
-#endif
 
 Ip::Address::Address()
 {
@@ -101,25 +79,18 @@ Ip::Address::GetCIDR() const
     uint8_t shift,byte;
     uint8_t bit,caught;
     int len = 0;
-#if USE_IPV6
     const uint8_t *ptr= m_SocketAddr.sin6_addr.s6_addr;
-#else
-    const uint8_t *ptr= (uint8_t *)&m_SocketAddr.sin_addr.s_addr;
-#endif
 
     /* Let's scan all the bits from Most Significant to Least */
     /* Until we find an "0" bit. Then, we return */
     shift=0;
 
-#if USE_IPV6
     /* return IPv4 CIDR for any Mapped address */
     /* Thus only check the mapped bit */
 
     if ( !IsIPv6() ) {
         shift = 12;
     }
-
-#endif
 
     for (; shift<sizeof(m_SocketAddr.sin6_addr) ; shift++) {
         byte= *(ptr+shift);
@@ -169,18 +140,6 @@ Ip::Address::ApplyMask(const unsigned int cidr, int mtype)
     uint8_t clearbits = 0;
     uint8_t* p = NULL;
 
-#if !USE_IPV6
-    IASSERT("mtype != AF_INET6", mtype != AF_INET6); /* using IPv6 in IPv4 is invalid. */
-
-    if (mtype == AF_UNSPEC)
-        mtype = AF_INET;
-
-#else
-    if (mtype == AF_UNSPEC)
-        mtype = AF_INET6;
-
-#endif
-
     // validation and short-cuts.
     if (cidr > 128)
         return false;
@@ -200,15 +159,7 @@ Ip::Address::ApplyMask(const unsigned int cidr, int mtype)
     if (clearbits == 0)
         return true;
 
-#if USE_IPV6
-
     p = (uint8_t*)(&m_SocketAddr.sin6_addr) + 15;
-
-#else
-
-    p = (uint8_t*)(&m_SocketAddr.sin_addr) + 3;
-
-#endif
 
     for (; clearbits>0 && p >= (uint8_t*)&m_SocketAddr.sin6_addr ; p-- ) {
         if (clearbits < 8) {
@@ -232,42 +183,26 @@ Ip::Address::IsSockAddr() const
 bool
 Ip::Address::IsIPv4() const
 {
-#if USE_IPV6
     return IsAnyAddr() || IsNoAddr() || IN6_IS_ADDR_V4MAPPED( &m_SocketAddr.sin6_addr );
-#else
-    return true; // enforce IPv4 in IPv4-only mode.
-#endif
 }
 
 bool
 Ip::Address::IsIPv6() const
 {
-#if USE_IPV6
     return IsAnyAddr() || IsNoAddr() || !IN6_IS_ADDR_V4MAPPED( &m_SocketAddr.sin6_addr );
-#else
-    return false; // enforce IPv4 in IPv4-only mode.
-#endif
 }
 
 bool
 Ip::Address::IsAnyAddr() const
 {
-#if USE_IPV6
     return IN6_IS_ADDR_UNSPECIFIED( &m_SocketAddr.sin6_addr );
-#else
-    return (INADDR_ANY == m_SocketAddr.sin_addr.s_addr);
-#endif
 }
 
 /// NOTE: Does NOT clear the Port stored. Ony the Address and Type.
 void
 Ip::Address::SetAnyAddr()
 {
-#if USE_IPV6
     memset(&m_SocketAddr.sin6_addr, 0, sizeof(struct in6_addr) );
-#else
-    memset(&m_SocketAddr.sin_addr, 0, sizeof(struct in_addr) );
-#endif
 }
 
 /// NOTE: completely empties the Ip::Address structure. Address, Port, Type, everything.
@@ -277,7 +212,6 @@ Ip::Address::SetEmpty()
     memset(&m_SocketAddr, 0, sizeof(m_SocketAddr) );
 }
 
-#if USE_IPV6
 const struct in6_addr Ip::Address::v4_localhost = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01 }}
 };
@@ -290,13 +224,11 @@ const struct in6_addr Ip::Address::v4_noaddr = {{{ 0x00, 0x00, 0x00, 0x00, 0x00,
 const struct in6_addr Ip::Address::v6_noaddr = {{{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }}
 };
-#endif
 
 
 bool
 Ip::Address::SetIPv4()
 {
-#if USE_IPV6
     if ( IsLocalhost() ) {
         m_SocketAddr.sin6_addr = v4_localhost;
         return true;
@@ -312,78 +244,53 @@ Ip::Address::SetIPv4()
 
     // anything non-IPv4 and non-convertable is BAD.
     return false;
-#else
-    return true; // Always IPv4 in IPv4-only builds.
-#endif
 }
 
 bool
 Ip::Address::IsLocalhost() const
 {
-#if USE_IPV6
     return IN6_IS_ADDR_LOOPBACK( &m_SocketAddr.sin6_addr ) || IN6_ARE_ADDR_EQUAL( &m_SocketAddr.sin6_addr, &v4_localhost );
-#else
-    return (htonl(0x7F000001) == m_SocketAddr.sin_addr.s_addr);
-#endif
 }
 
 void
 Ip::Address::SetLocalhost()
 {
-#if USE_IPV6
-    m_SocketAddr.sin6_addr = in6addr_loopback;
-    m_SocketAddr.sin6_family = AF_INET6;
-#else
-    m_SocketAddr.sin_addr.s_addr = htonl(0x7F000001);
-    m_SocketAddr.sin_family = AF_INET;
-#endif
+    if (Ip::EnableIpv6) {
+        m_SocketAddr.sin6_addr = in6addr_loopback;
+        m_SocketAddr.sin6_family = AF_INET6;
+    } else {
+        m_SocketAddr.sin6_addr = v4_localhost;
+        m_SocketAddr.sin6_family = AF_INET;
+    }
 }
 
 bool
 Ip::Address::IsSiteLocal6() const
 {
-#if USE_IPV6
     return IN6_IS_ADDR_SITELOCAL( &m_SocketAddr.sin6_addr );
-#else
-    return false;
-#endif
 }
 
 bool
 Ip::Address::IsSlaac() const
 {
-#if USE_IPV6
     return m_SocketAddr.sin6_addr.s6_addr[10] == htons(0xff) &&
            m_SocketAddr.sin6_addr.s6_addr[11] == htons(0xfe);
-#else
-    return false;
-#endif
 }
 
 bool
 Ip::Address::IsNoAddr() const
 {
     // IFF the address == 0xff..ff (all ones)
-#if USE_IPV6
     return IN6_ARE_ADDR_EQUAL( &m_SocketAddr.sin6_addr, &v6_noaddr );
-#else
-    return 0xFFFFFFFF == m_SocketAddr.sin_addr.s_addr;
-#endif
 }
 
 void
 Ip::Address::SetNoAddr()
 {
-#if USE_IPV6
     memset(&m_SocketAddr.sin6_addr, 0xFF, sizeof(struct in6_addr) );
     m_SocketAddr.sin6_family = AF_INET6;
-#else
-    memset(&m_SocketAddr.sin_addr, 0xFF, sizeof(struct in_addr) );
-    m_SocketAddr.sin_family = AF_INET;
-#endif
 }
 
-#if USE_IPV6
 bool
 Ip::Address::GetReverseString6(char buf[MAX_IPSTRLEN], const struct in6_addr &dat) const
 {
@@ -410,7 +317,6 @@ Ip::Address::GetReverseString6(char buf[MAX_IPSTRLEN], const struct in6_addr &da
 
     return true;
 }
-#endif
 
 bool
 Ip::Address::GetReverseString4(char buf[MAX_IPSTRLEN], const struct in_addr &dat) const
@@ -429,22 +335,14 @@ Ip::Address::GetReverseString(char buf[MAX_IPSTRLEN], int show_type) const
 {
 
     if (show_type == AF_UNSPEC) {
-#if USE_IPV6
         show_type = IsIPv6() ? AF_INET6 : AF_INET ;
-#else
-        show_type = AF_INET;
-#endif
     }
 
     if (show_type == AF_INET && IsIPv4()) {
-#if USE_IPV6
         struct in_addr* tmp = (struct in_addr*)&m_SocketAddr.sin6_addr.s6_addr[12];
         return GetReverseString4(buf, *tmp);
     } else if ( show_type == AF_INET6 && IsIPv6() ) {
         return GetReverseString6(buf, m_SocketAddr.sin6_addr);
-#else
-        return GetReverseString4(buf, m_SocketAddr.sin_addr);
-#endif
     }
 
     debugs(14,0, "Unable to convert '" << NtoA(buf,MAX_IPSTRLEN) << "' to the rDNS type requested.");
@@ -464,7 +362,7 @@ Ip::Address::operator =(const Ip::Address &s)
 Ip::Address::Address(const char*s)
 {
     SetEmpty();
-    operator=(s);
+    LookupHostIP(s, true);
 }
 
 bool
@@ -494,8 +392,9 @@ Ip::Address::LookupHostIP(const char *s, bool nodns)
     if (nodns) {
         want.ai_flags = AI_NUMERICHOST; // prevent actual DNS lookups!
     }
-#if !USE_IPV6
-    want.ai_family = AF_INET;
+#if 0
+    else if (!Ip::EnableIpv6)
+        want.ai_family = AF_INET;  // maybe prevent IPv6 DNS lookups.
 #endif
 
     if ( (err = getaddrinfo(s, NULL, &want, &res)) != 0) {
@@ -533,22 +432,15 @@ Ip::Address::Address(struct sockaddr_in const &s)
 Ip::Address &
 Ip::Address::operator =(struct sockaddr_in const &s)
 {
-#if USE_IPV6
     Map4to6((const in_addr)s.sin_addr, m_SocketAddr.sin6_addr);
     m_SocketAddr.sin6_port = s.sin_port;
     m_SocketAddr.sin6_family = AF_INET6;
-#else
-
-    memcpy(&m_SocketAddr, &s, sizeof(struct sockaddr_in));
-#endif
-
     return *this;
 };
 
 Ip::Address &
 Ip::Address::operator =(const struct sockaddr_storage &s)
 {
-#if USE_IPV6
     /* some AF_* magic to tell socket types apart and what we need to do */
     if (s.ss_family == AF_INET6) {
         memcpy(&m_SocketAddr, &s, sizeof(struct sockaddr_in));
@@ -557,13 +449,9 @@ Ip::Address::operator =(const struct sockaddr_storage &s)
         m_SocketAddr.sin6_port = sin->sin_port;
         Map4to6( sin->sin_addr, m_SocketAddr.sin6_addr);
     }
-#else
-    memcpy(&m_SocketAddr, &s, sizeof(struct sockaddr_in));
-#endif
     return *this;
 };
 
-#if USE_IPV6
 Ip::Address::Address(struct sockaddr_in6 const &s)
 {
     SetEmpty();
@@ -577,7 +465,6 @@ Ip::Address::operator =(struct sockaddr_in6 const &s)
 
     return *this;
 };
-#endif
 
 Ip::Address::Address(struct in_addr const &s)
 {
@@ -588,19 +475,11 @@ Ip::Address::Address(struct in_addr const &s)
 Ip::Address &
 Ip::Address::operator =(struct in_addr const &s)
 {
-#if USE_IPV6
     Map4to6((const in_addr)s, m_SocketAddr.sin6_addr);
     m_SocketAddr.sin6_family = AF_INET6;
-
-#else
-
-    memcpy(&m_SocketAddr.sin_addr, &s, sizeof(struct in_addr));
-
-#endif
     return *this;
 };
 
-#if USE_IPV6
 Ip::Address::Address(struct in6_addr const &s)
 {
     SetEmpty();
@@ -616,7 +495,6 @@ Ip::Address::operator =(struct in6_addr const &s)
 
     return *this;
 };
-#endif
 
 Ip::Address::Address(const Ip::Address &s)
 {
@@ -663,17 +541,8 @@ Ip::Address::operator =(const struct hostent &s)
 
     case AF_INET6:
         ipv6 = (in6_addr*)(s.h_addr_list[0]);
-#if USE_IPV6
         /* this */
         operator=(*ipv6);
-#else
-
-        debugs(14,1, HERE << "Discarded IPv6 Address. Protocol disabled.");
-
-        // FIXME see if there is another address in the list that might be usable ??
-        return false;
-#endif
-
         break;
 
     default:
@@ -720,22 +589,9 @@ Ip::Address::operator =(const struct addrinfo &s)
 
     case AF_INET6:
         ipv6 = (sockaddr_in6*)(s.ai_addr);
-#if USE_IPV6
         /* this */
         assert(ipv6);
         operator=(*ipv6);
-#else
-
-        debugs(14,1, HERE << "Discarded IPv6 Address. Protocol disabled.");
-
-        // see if there is another address in the list that might be usable ??
-
-        if (s.ai_next)
-            return operator=(*s.ai_next);
-        else
-            return false;
-
-#endif
         break;
 
     case AF_UNSPEC:
@@ -743,16 +599,13 @@ Ip::Address::operator =(const struct addrinfo &s)
         // attempt to handle partially initialised addrinfo.
         // such as those where data only comes from getsockopt()
         if (s.ai_addr != NULL) {
-#if USE_IPV6
             if (s.ai_addrlen == sizeof(struct sockaddr_in6)) {
                 operator=(*((struct sockaddr_in6*)s.ai_addr));
                 return true;
-            } else
-#endif
-                if (s.ai_addrlen == sizeof(struct sockaddr_in)) {
-                    operator=(*((struct sockaddr_in*)s.ai_addr));
-                    return true;
-                }
+            } else if (s.ai_addrlen == sizeof(struct sockaddr_in)) {
+                operator=(*((struct sockaddr_in*)s.ai_addr));
+                return true;
+            }
         }
         return false;
     }
@@ -783,8 +636,7 @@ Ip::Address::GetAddrInfo(struct addrinfo *&dst, int force) const
             && dst->ai_protocol == 0)
         dst->ai_protocol = IPPROTO_UDP;
 
-#if USE_IPV6
-    if ( force == AF_INET6 || (force == AF_UNSPEC && IsIPv6()) ) {
+    if (force == AF_INET6 || (force == AF_UNSPEC && IsIPv6()) ) {
         dst->ai_addr = (struct sockaddr*)new sockaddr_in6;
 
         memset(dst->ai_addr,0,sizeof(struct sockaddr_in6));
@@ -809,22 +661,20 @@ Ip::Address::GetAddrInfo(struct addrinfo *&dst, int force) const
         dst->ai_protocol = IPPROTO_IPV6;
 #endif
 
-    } else
-#endif
-        if ( force == AF_INET || (force == AF_UNSPEC && IsIPv4()) ) {
+    } else if ( force == AF_INET || (force == AF_UNSPEC && IsIPv4()) ) {
 
-            dst->ai_addr = (struct sockaddr*)new sockaddr_in;
+        dst->ai_addr = (struct sockaddr*)new sockaddr_in;
 
-            memset(dst->ai_addr,0,sizeof(struct sockaddr_in));
+        memset(dst->ai_addr,0,sizeof(struct sockaddr_in));
 
-            GetSockAddr(*((struct sockaddr_in*)dst->ai_addr));
+        GetSockAddr(*((struct sockaddr_in*)dst->ai_addr));
 
-            dst->ai_addrlen = sizeof(struct sockaddr_in);
+        dst->ai_addrlen = sizeof(struct sockaddr_in);
 
-            dst->ai_family = ((struct sockaddr_in*)dst->ai_addr)->sin_family;
-        } else {
-            IASSERT("false",false);
-        }
+        dst->ai_family = ((struct sockaddr_in*)dst->ai_addr)->sin_family;
+    } else {
+        IASSERT("false",false);
+    }
 }
 
 void
@@ -865,13 +715,8 @@ Ip::Address::FreeAddrInfo(struct addrinfo *&ai)
 int
 Ip::Address::matchIPAddr(const Ip::Address &rhs) const
 {
-#if USE_IPV6
     uint8_t *l = (uint8_t*)m_SocketAddr.sin6_addr.s6_addr;
     uint8_t *r = (uint8_t*)rhs.m_SocketAddr.sin6_addr.s6_addr;
-#else
-    uint8_t *l = (uint8_t*)&m_SocketAddr.sin_addr.s_addr;
-    uint8_t *r = (uint8_t*)&rhs.m_SocketAddr.sin_addr.s_addr;
-#endif
 
     // loop a byte-wise compare
     // NP: match MUST be R-to-L : L-to-R produces inconsistent gt/lt results at varying CIDR
@@ -977,11 +822,7 @@ Ip::Address::NtoA(char* buf, const unsigned int blen, int force) const
     /* some external code may have blindly memset a parent. */
     /* thats okay, our default is known */
     if ( IsAnyAddr() ) {
-#if USE_IPV6
         memcpy(buf,"::\0", min((const unsigned int)3,blen));
-#else
-        memcpy(buf,"0.0.0.0\0", min((const unsigned int)8,blen));
-#endif
         return buf;
     }
 
@@ -996,7 +837,6 @@ Ip::Address::NtoA(char* buf, const unsigned int blen, int force) const
         return buf;
     }
 
-#if USE_IPV6
     if ( force == AF_INET6 || (force == AF_UNSPEC && IsIPv6()) ) {
 
         inet_ntop(AF_INET6, &m_SocketAddr.sin6_addr, buf, blen);
@@ -1006,10 +846,6 @@ Ip::Address::NtoA(char* buf, const unsigned int blen, int force) const
         struct in_addr tmp;
         GetInAddr(tmp);
         inet_ntop(AF_INET, &tmp, buf, blen);
-#else
-    if ( force == AF_UNSPEC || (force == AF_INET && IsIPv4()) ) {
-        inet_ntop(AF_INET, &m_SocketAddr.sin_addr, buf, blen);
-#endif
     } else {
         debugs(14,0,"WARNING: Corrupt IP Address details OR required to display in unknown format (" <<
                force << "). accepted={" << AF_UNSPEC << "," << AF_INET << "," << AF_INET6 << "}");
@@ -1089,7 +925,6 @@ Ip::Address::GetSockAddr(struct sockaddr_storage &addr, const int family) const
         assert(false);
     }
 
-#if USE_IPV6
     if ( family == AF_INET6 || (family == AF_UNSPEC && IsIPv6()) ) {
         struct sockaddr_in6 *ss6 = (struct sockaddr_in6*)&addr;
         GetSockAddr(*ss6);
@@ -1099,17 +934,11 @@ Ip::Address::GetSockAddr(struct sockaddr_storage &addr, const int family) const
     } else {
         IASSERT("false",false);
     }
-#else /* not USE_IPV6 */
-    sin = (struct sockaddr_in*)&addr;
-    GetSockAddr(*sin);
-#endif /* USE_IPV6 */
 }
 
 void
 Ip::Address::GetSockAddr(struct sockaddr_in &buf) const
 {
-#if USE_IPV6
-
     if ( IsIPv4() ) {
         buf.sin_family = AF_INET;
         buf.sin_port = m_SocketAddr.sin6_port;
@@ -1121,24 +950,12 @@ Ip::Address::GetSockAddr(struct sockaddr_in &buf) const
         assert(false);
     }
 
-#else
-
-    memcpy(&buf, &m_SocketAddr, sizeof(struct sockaddr_in));
-
-    if (buf.sin_family == 0) {
-        buf.sin_family = AF_INET;
-    }
-
-#endif
-
 #if HAVE_SIN_LEN_IN_SAI
     /* not all OS have this field, BUT when they do it can be a problem if set wrong */
     buf.sin_len = sizeof(struct sockaddr_in);
 #endif
-
 }
 
-#if USE_IPV6
 void
 Ip::Address::GetSockAddr(struct sockaddr_in6 &buf) const
 {
@@ -1151,9 +968,7 @@ Ip::Address::GetSockAddr(struct sockaddr_in6 &buf) const
     buf.sin6_len = sizeof(struct sockaddr_in6);
 #endif
 }
-#endif
 
-#if USE_IPV6
 void
 Ip::Address::Map4to6(const struct in_addr &in, struct in6_addr &out) const
 {
@@ -1194,24 +1009,14 @@ Ip::Address::GetInAddr(in6_addr &buf) const
 {
     memcpy(&buf, &m_SocketAddr.sin6_addr, sizeof(struct in6_addr));
 }
-#endif
 
 bool
 Ip::Address::GetInAddr(struct in_addr &buf) const
 {
-
-#if USE_IPV6
     if ( IsIPv4() ) {
         Map6to4((const in6_addr)m_SocketAddr.sin6_addr, buf);
         return true;
     }
-#else
-
-    if ( IsIPv4() ) {
-        memcpy(&buf, &m_SocketAddr.sin_addr, sizeof(struct in_addr));
-        return true;
-    }
-#endif
 
     // default:
     // non-compatible IPv6 Pure Address
