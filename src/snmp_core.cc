@@ -1141,15 +1141,15 @@ addr2oid(Ip::Address &addr, oid * Dest)
 {
     u_int i ;
     u_char *cp = NULL;
-    struct in_addr iaddr;
+    struct in_addr i4addr;
     struct in6_addr i6addr;
     oid code = addr.IsIPv6()? INETADDRESSTYPE_IPV6  : INETADDRESSTYPE_IPV4 ;
     u_int size = (code == INETADDRESSTYPE_IPV4) ? sizeof(struct in_addr):sizeof(struct in6_addr);
     //  Dest[0] = code ;
     if ( code == INETADDRESSTYPE_IPV4 ) {
-        addr.GetInAddr(iaddr);
-        cp = (u_char *) &(iaddr.s_addr);
-    } else if (Ip::EnableIpv6) {
+        addr.GetInAddr(i4addr);
+        cp = (u_char *) &(i4addr.s_addr);
+    } else {
         addr.GetInAddr(i6addr);
         cp = (u_char *) &i6addr;
     }
@@ -1170,13 +1170,13 @@ addr2oid(Ip::Address &addr, oid * Dest)
 void
 oid2addr(oid * id, Ip::Address &addr, u_int size)
 {
-    struct in_addr iaddr;
+    struct in_addr i4addr;
+    struct in6_addr i6addr;
     u_int i;
     u_char *cp;
-    struct in6_addr i6addr;
     if ( size == sizeof(struct in_addr) )
-        cp = (u_char *) &(iaddr.s_addr);
-    else if (Ip::EnableIpv6)
+        cp = (u_char *) &(i4addr.s_addr);
+    else
         cp = (u_char *) &(i6addr);
     MemBuf tmp;
     debugs(49, 7, "oid2addr: id : " << snmpDebugOid(id, size, tmp) );
@@ -1184,8 +1184,8 @@ oid2addr(oid * id, Ip::Address &addr, u_int size)
         cp[i] = id[i];
     }
     if ( size == sizeof(struct in_addr) )
-        addr = iaddr;
-    else if (Ip::EnableIpv6)
+        addr = i4addr;
+    else
         addr = i6addr;
 }
 
