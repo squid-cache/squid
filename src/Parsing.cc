@@ -173,7 +173,6 @@ GetHostWithPort(char *token, Ip::Address *ipa)
     host = NULL;
     port = 0;
 
-#if USE_IPV6
     if (*token == '[') {
         /* [host]:port */
         host = token + 1;
@@ -184,22 +183,20 @@ GetHostWithPort(char *token, Ip::Address *ipa)
         if (*t != ':')
             return false;
         port = xatos(t + 1);
-    } else
-#endif
-        if ((t = strchr(token, ':'))) {
-            /* host:port */
-            host = token;
-            *t = '\0';
-            port = xatos(t + 1);
+    } else if ((t = strchr(token, ':'))) {
+        /* host:port */
+        host = token;
+        *t = '\0';
+        port = xatos(t + 1);
 
-            if (0 == port)
-                return false;
-        } else if ((port = strtol(token, &tmp, 10)), !*tmp) {
-            /* port */
-        } else {
-            host = token;
-            port = 0;
-        }
+        if (0 == port)
+            return false;
+    } else if ((port = strtol(token, &tmp, 10)), !*tmp) {
+        /* port */
+    } else {
+        host = token;
+        port = 0;
+    }
 
     if (NULL == host)
         ipa->SetAnyAddr();

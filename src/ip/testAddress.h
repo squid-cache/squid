@@ -12,13 +12,9 @@ class testIpAddress : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST_SUITE( testIpAddress );
     CPPUNIT_TEST( testDefaults );
     CPPUNIT_TEST( testInAddrConstructor );
-#if USE_IPV6
     CPPUNIT_TEST( testInAddr6Constructor );
-#endif
     CPPUNIT_TEST( testSockAddrConstructor );
-#if USE_IPV6
     CPPUNIT_TEST( testSockAddr6Constructor );
-#endif
     CPPUNIT_TEST( testHostentConstructor );
     CPPUNIT_TEST( testStringConstructor );
     CPPUNIT_TEST( testCopyConstructor );
@@ -40,13 +36,9 @@ protected:
     void testDefaults();
 
     void testInAddrConstructor();
-#if USE_IPV6
     void testInAddr6Constructor();
-#endif
     void testSockAddrConstructor();
-#if USE_IPV6
     void testSockAddr6Constructor();
-#endif
     void testHostentConstructor();
     void testStringConstructor();
     void testCopyConstructor();

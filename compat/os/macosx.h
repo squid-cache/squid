@@ -2,25 +2,16 @@
 #include "config.h"
 #endif
 
-#ifndef SQUID_OS_NETBSD_H
-#define SQUID_OS_NETBSD_H
+#ifndef SQUID_OS_MACOSX_H
+#define SQUID_OS_MACOSX_H
 
-#ifdef _SQUID_NETBSD_
+#ifdef _SQUID_APPLE_
 
 /****************************************************************************
  *--------------------------------------------------------------------------*
  * DO *NOT* MAKE ANY CHANGES below here unless you know what you're doing...*
  *--------------------------------------------------------------------------*
  ****************************************************************************/
-
-/* Exclude CPPUnit tests from the allocator restrictions. */
-/* BSD implementation uses these still */
-#if defined(SQUID_UNIT_TEST)
-#define SQUID_NO_ALLOC_PROTECT 1
-#endif
-
-/* NetBSD does not provide sys_errlist global for strerror */
-#define NEED_SYS_ERRLIST 1
 
 /*
  *   This OS has at least one version that defines these as private
@@ -31,5 +22,5 @@
 //#define s6_addr16 __u6_addr.__u6_addr16
 #define s6_addr32 __u6_addr.__u6_addr32
 
-#endif /* _SQUID_NETBSD_ */
-#endif /* SQUID_OS_NETBSD_H */
+#endif /* _SQUID_APPLE_ */
+#endif /* SQUID_OS_MACOSX_H */
