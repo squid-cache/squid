@@ -62,7 +62,7 @@ Ip::ProbeTransport()
 
     // Test for v4-mapping capability
     int tos = 0;
-    if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) < 0) {
+    if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) == 0) {
         debugs(3, 2, "Detected IPv6 hybrid or v4-mapping stack...");
         EnableIpv6 |= IPV6_SPECIAL_V4MAPPING;
     } else {
