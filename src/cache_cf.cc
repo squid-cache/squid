@@ -2969,7 +2969,7 @@ parse_http_port_specification(http_port_list * s, char *token)
     if (NULL == host) {
         s->s.SetAnyAddr();
         s->s.SetPort(port);
-        debugs(3, 3, "http(s)_port: found Listen on wildcard address: " << s->s);
+        debugs(3, 3, "http(s)_port: found Listen on wildcard address: *:" << s->s.GetPort() );
     } else if ( s->s = host ) { /* check/parse numeric IPA */
         s->s.SetPort(port);
         debugs(3, 3, "http(s)_port: Listen on Host/IP: " << host << " --> " << s->s);
@@ -3155,9 +3155,63 @@ void
 add_http_port(char *portspec)
 {
     http_port_list *s = create_http_port(portspec);
+    // we may need to merge better of the above returns a list with clones
+    assert(s->next == NULL);
     s->next = Config.Sockaddr.http;
     Config.Sockaddr.http = s;
 }
+
+#if IPV6_SPECIAL_SPLITSTACK
+http_port_list *
+clone_http_port_list(http_port_list *a)
+{
+    http_port_list *b = new http_port_list(a->protocol);
+
+    b->s = a->s;
+    if (a->name)
+        b->name = xstrdup(a->name);
+    if (a->defaultsite)
+        b->defaultsite = xstrdup(a->defaultsite);
+
+    b->intercepted = a->intercepted;
+    b->spoof_client_ip = a->spoof_client_ip;
+    b->accel = a->accel;
+    b->allow_direct = a->allow_direct;
+    b->vhost = a->vhost;
+    b->sslBump = a->sslBump;
+    b->vport = a->vport;
+    b->connection_auth_disabled = a->connection_auth_disabled;
+    b->disable_pmtu_discovery = a->disable_pmtu_discovery;
+
+    memcpy( &(b->tcp_keepalive), &(a->tcp_keepalive), sizeof(a->tcp_keepalive));
+
+#if 0
+    // AYJ: 2009-07-18: for now SSL does not clone. Configure separate ports with IPs and SSL settings
+
+#if USE_SSL
+    // XXX: temporary hack to ease move of SSL options to http_port
+    http_port_list &http;
+
+    char *cert;
+    char *key;
+    int version;
+    char *cipher;
+    char *options;
+    char *clientca;
+    char *cafile;
+    char *capath;
+    char *crlfile;
+    char *dhfile;
+    char *sslflags;
+    char *sslcontext;
+    SSL_CTX *sslContext;
+#endif
+
+#endif /*0*/
+
+    return b;
+}
+#endif
 
 static void
 parse_http_port_list(http_port_list ** head)
@@ -3175,6 +3229,15 @@ parse_http_port_list(http_port_list ** head)
     while ((token = strtok(NULL, w_space))) {
         parse_http_port_option(s, token);
     }
+
+#if IPV6_SPECIAL_SPLITSTACK
+    if (s->s.IsAnyAddr()) {
+        // clone the port options from *s to *(s->next)
+        s->next = clone_http_port_list(s);
+        s->next->s.SetIPv4();
+        debugs(3, 3, "http(s)_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
+    }
+#endif
 
     while (*head)
         head = &(*head)->next;

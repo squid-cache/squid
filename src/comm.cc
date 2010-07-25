@@ -562,6 +562,11 @@ comm_local_port(int fd)
     if (F->local_addr.GetPort())
         return F->local_addr.GetPort();
 
+#if USE_IPV6
+    if (F->sock_family == AF_INET)
+        temp.SetIPv4();
+#endif
+
     temp.InitAddrInfo(addr);
 
     if (getsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
@@ -575,14 +580,16 @@ comm_local_port(int fd)
 
     F->local_addr.SetPort(temp.GetPort());
 
+#if 0 // seems to undo comm_open actions on the FD ...
     // grab default socket information for this address
     temp.GetAddrInfo(addr);
 
     F->sock_family = addr->ai_family;
 
     temp.FreeAddrInfo(addr);
+#endif
 
-    debugs(5, 6, "comm_local_port: FD " << fd << ": port " << F->local_addr.GetPort());
+    debugs(5, 6, "comm_local_port: FD " << fd << ": port " << F->local_addr.GetPort() << "(family=" << F->sock_family << ")");
     return F->local_addr.GetPort();
 }
 
@@ -658,7 +665,7 @@ comm_set_v6only(int fd, int tos)
 {
 #ifdef IPV6_V6ONLY
     if (setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) < 0) {
-        debugs(50, 1, "comm_open: setsockopt(IPV6_V6ONLY) on FD " << fd << ": " << xstrerror());
+        debugs(50, 1, "comm_open: setsockopt(IPV6_V6ONLY) " << (tos?"ON":"OFF") << " for FD " << fd << ": " << xstrerror());
     }
 #else
     debugs(50, 0, "WARNING: comm_open: setsockopt(IPV6_V6ONLY) not supported on this platform");
@@ -759,7 +766,7 @@ comm_openex(int sock_type,
 #if IPV6_SPECIAL_SPLITSTACK
 
     if ( addr.IsIPv6() )
-        comm_set_v6only(new_socket, tos);
+        comm_set_v6only(new_socket, 1);
 
 #endif
 
@@ -1026,6 +1033,8 @@ ConnectStateData::commResetFD()
 
     debugs(50, 3, "commResetFD: Reset socket FD " << fd << "->" << fd2 << " : family=" << new_family );
 
+    debugs(50, 3, "commResetFD: Reset socket FD " << fd << "->" << fd2 << " : family=" << new_family );
+
     /* INET6: copy the new sockets family type to the FDE table */
     F->sock_family = new_family;
 
@@ -1052,10 +1061,8 @@ ConnectStateData::commResetFD()
         comm_set_tos(fd, F->tos);
 
 #if IPV6_SPECIAL_SPLITSTACK
-
     if ( F->local_addr.IsIPv6() )
-        comm_set_v6only(fd, F->tos);
-
+        comm_set_v6only(fd, 1);
 #endif
 
     copyFDFlags(fd, F);

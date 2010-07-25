@@ -100,7 +100,8 @@ extern "C" {
     extern int syslog_enable;	/* 0 */
     extern int theInIcpConnection;	/* -1 */
     extern int theOutIcpConnection;	/* -1 */
-    extern int DnsSocket;		/* -1 */
+    extern int DnsSocketA;		/* -1 */
+    extern int DnsSocketB;		/* -1 */
 #ifdef SQUID_SNMP
 
     extern int theInSnmpConnection;	/* -1 */
