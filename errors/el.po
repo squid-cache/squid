@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-13 03:02+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2009-02-25 14:35+1300\n"
 "Last-Translator: George Papamichelakis <george@step.gr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -66,7 +66,7 @@ msgstr ""
 "Κατά την προσπάθεια πρόσβασης στη διεύθυνση Προέκυψε σφάλμα εξακρίβωσης FTP: "
 "<a href=\"%U\">%U</a>"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -196,17 +196,14 @@ msgstr "ΣΦΑΛΜΑ: Αδύνατη η πρόσβαση στην αιτούμε
 msgid "ESI Processing failed."
 msgstr ""
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "Η εντολή FTP PUT ήταν επιτυχής: Το αρχείο δημιουργήθηκε"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-#, fuzzy
-msgid "FTP PUT Successful: File Updated"
-msgstr "Η εντολή FTP PUT ήταν επιτυχής Το αρχείο ανανεώθηκε"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "Η εντολή FTP PUT/upload απέτυχε"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -704,10 +701,6 @@ msgstr ""
 msgid "Web Browser Configuration"
 msgstr ""
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr "Κατα τη διάρκεια μεταφόρτωσης στη διεύθυνση: <a href=\"%U\">%U</a>"
-
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
 msgstr "Σφάλμα Εγγραφής"
@@ -763,3 +756,10 @@ msgstr "Απάντηση Μηδενικού Μεγέθους"
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "ΣΦΑΛΜΑ: Δεν βρέθηκε διεύθυνση για το ζητούμενο όνομα"
+
+#, fuzzy
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "Η εντολή FTP PUT ήταν επιτυχής Το αρχείο ανανεώθηκε"
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr "Κατα τη διάρκεια μεταφόρτωσης στη διεύθυνση: <a href=\"%U\">%U</a>"
