@@ -1,5 +1,5 @@
 //
-// $Id: squid-tlv.hh,v 1.1 1999/06/15 21:10:16 voeckler Exp $
+// $Id$
 //
 // Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //

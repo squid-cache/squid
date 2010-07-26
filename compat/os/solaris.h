@@ -67,6 +67,11 @@ SQUIDCEXTERN int gethostname(char *, int);
 #define SQUID_NO_STRING_BUFFER_PROTECT 1
 #endif
 
+/* Bug 2500: Solaris 10/11 require s6_addr* defines. */
+//#define s6_addr8   _S6_un._S6_u8
+//#define s6_addr16  _S6_un._S6_u16
+#define s6_addr32  _S6_un._S6_u32
+
 
 #endif /* _SQUID_SOLARIS_ */
 #endif /* SQUID_OS_SOALRIS_H */

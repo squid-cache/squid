@@ -10,7 +10,9 @@ libip_la_SOURCES = \
 	Intercept.h \
 	Intercept.cc \
 	QosConfig.h \
-	QosConfig.cc
+	QosConfig.cc \
+	tools.cc \
+	tools.h
 
 
 check_PROGRAMS += testIpAddress

@@ -267,11 +267,7 @@ Comm::ListenStateData::oldAccept(ConnectionDetail &details)
     details.peer.NtoA(F->ipaddr,MAX_IPSTRLEN);
     F->remote_port = details.peer.GetPort();
     F->local_addr.SetPort(details.me.GetPort());
-#if USE_IPV6
-    F->sock_family = AF_INET;
-#else
-    F->sock_family = details.me.IsIPv4()?AF_INET:AF_INET6;
-#endif
+    F->sock_family = details.me.IsIPv6()?AF_INET6:AF_INET;
     details.me.FreeAddrInfo(gai);
 
     commSetNonBlocking(sock);

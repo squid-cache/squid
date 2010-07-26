@@ -572,7 +572,6 @@ SQUIDCEXTERN void setSystemLimits(void);
 SQUIDCEXTERN void squid_signal(int sig, SIGHDLR *, int flags);
 SQUIDCEXTERN pid_t readPidFile(void);
 SQUIDCEXTERN void keepCapabilities(void);
-
 SQUIDCEXTERN void BroadcastSignalIfAny(int& sig);
 /// whether the current process is the parent of all other Squid processes
 SQUIDCEXTERN bool IamMasterProcess();

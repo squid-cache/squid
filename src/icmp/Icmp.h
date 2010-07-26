@@ -39,9 +39,7 @@
 
 #define MAX_PAYLOAD 256 // WAS: SQUIDHOSTNAMELEN
 #define MAX_PKT4_SZ (MAX_PAYLOAD + sizeof(struct timeval) + sizeof (char) + sizeof(struct icmphdr) + 1)
-#if USE_IPV6
 #define MAX_PKT6_SZ (MAX_PAYLOAD + sizeof(struct timeval) + sizeof (char) + sizeof(struct icmp6_hdr) + 1)
-#endif
 
 #if USE_ICMP
 

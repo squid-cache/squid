@@ -1,5 +1,5 @@
 //
-// $Id: socket.cc,v 1.3 1999/01/19 11:00:50 voeckler Exp $
+// $Id$
 //
 // Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
@@ -61,7 +61,7 @@
 #include "convert.hh"
 
 static const char* RCS_ID =
-    "$Id: socket.cc,v 1.3 1999/01/19 11:00:50 voeckler Exp $";
+    "$Id$";
 
 int
 setSocketBuffers( int sockfd, int size )
