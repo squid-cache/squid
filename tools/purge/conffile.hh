@@ -1,5 +1,5 @@
 //
-// $Id: conffile.hh,v 1.2 2000/09/21 10:17:17 cached Exp $
+// $Id$
 //
 // Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //

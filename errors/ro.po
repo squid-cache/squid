@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-13 03:02+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2010-03-20 16:29+0200\n"
 "Last-Translator: Arthur <arthur@psw.ro>\n"
 "Language-Team: Romanian <ro@li.org>\n"
@@ -76,7 +76,7 @@ msgstr ""
 "Autentificarea FTP a eşuat în timp ce se încerca accesarea URL-ului: <a href="
 "\"%U\">%U</a>"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -203,16 +203,14 @@ msgstr "EROARE: URL-ul cerut nu a putut fi accesat"
 msgid "ESI Processing failed."
 msgstr "Procesarea ESI a eşuat."
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTP PUT reuşit: fişierul a fost creat"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT reuşit: fişierul a fost actualizat"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "FTP PUT/încărcare eşuată"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -715,10 +713,6 @@ msgstr ""
 msgid "Web Browser Configuration"
 msgstr "Configurarea navigatorului de internet"
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr "În timp ce făceam PUT la următorul URL: <a href=\"%U\">%U</a>"
-
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
 msgstr "Eroare la scriere"
@@ -777,3 +771,9 @@ msgstr "Răspuns de lungime zero"
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "EROARE: URN-ul cerut nu a putut fi accesat"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP PUT reuşit: fişierul a fost actualizat"
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr "În timp ce făceam PUT la următorul URL: <a href=\"%U\">%U</a>"

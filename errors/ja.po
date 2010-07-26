@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-13 03:02+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2009-01-30 20:02+1300\n"
 "Last-Translator: Takahiro Kambe <taca@back-street.net>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -71,7 +71,7 @@ msgstr ""
 "FTP認証の失敗が、以下のURLから情報を得ようとしている間に発生しました: <a "
 "href=\"%U\">%U</a>"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -202,17 +202,14 @@ msgstr "エラー: 要求されたURLからデータを取り出せませんで�
 msgid "ESI Processing failed."
 msgstr "ESIの処理に失敗しました。"
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTPのPUTに成功: ファイルを作成しました。"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-#, fuzzy
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTPのPUTに成功: ファイルを更新しました。"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "ファイルのPUTやアップロードに失敗"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -692,10 +689,6 @@ msgstr ""
 msgid "Web Browser Configuration"
 msgstr ""
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr "以下の URL を PUT しようとした際に: <a href=\"%U\">%U</a>"
-
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
 msgstr "送信処理中にエラーが発生しました．"
@@ -750,3 +743,10 @@ msgstr "サイズがゼロの応答"
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "エラー: 要求されたURNからデータを取り出せませんでした。"
+
+#, fuzzy
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTPのPUTに成功: ファイルを更新しました。"
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr "以下の URL を PUT しようとした際に: <a href=\"%U\">%U</a>"

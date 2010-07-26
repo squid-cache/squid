@@ -1,5 +1,5 @@
 //
-// $Id: purge.cc,v 1.17 2000/09/21 10:59:53 cached Exp $
+// $Id$
 //
 // Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
@@ -158,7 +158,7 @@ static bool envelope = false;
 static bool no_fork  = false;
 static const char* programname = 0;
 static const char* RCS_ID =
-    "$Id: purge.cc,v 1.17 2000/09/21 10:59:53 cached Exp $";
+    "$Id$";
 
 // ----------------------------------------------------------------------
 
