@@ -24,7 +24,7 @@ fi
 #if we are on FreeBSD, let's try parallelizing
 if [ -z "$pjobs" -a -x /sbin/sysctl ]; then
     ncpus=`sysctl kern.smp.cpus | cut -f2 -d" "`
-    if [ $? -eq 0 -a -n $ncpus -a $ncpus -gt 1 ]; then
+    if [ $? -eq 0 -a -n "$ncpus" -a "$ncpus" -gt 1 ]; then
         pjobs="-j${ncpus}"
     fi
 fi

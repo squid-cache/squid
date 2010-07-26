@@ -1,5 +1,5 @@
 //
-// $Id: copyout.hh,v 1.1 1999/06/15 21:10:47 voeckler Exp $
+// $Id$
 //
 // Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //

@@ -420,12 +420,10 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
     *ErrP = SNMP_ERR_NOERROR;
     MemBuf tmp;
     debugs(49, 6, HERE << "Current : length=" << Var->name_length << ": " << snmpDebugOid(Var->name, Var->name_length, tmp));
-    if (Var->name_length == 16 ) {
+    if (Var->name_length == 16) {
         oid2addr(&(Var->name[12]), keyIp, 4);
-#if USE_IPV6
-    } else if (Var->name_length == 28 ) {
+    } else if (Var->name_length == 28) {
         oid2addr(&(Var->name[12]), keyIp, 16);
-#endif
     } else {
         *ErrP = SNMP_ERR_NOSUCHNAME;
         return NULL;

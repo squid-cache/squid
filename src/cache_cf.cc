@@ -58,6 +58,7 @@
 #include "ident/Config.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
+#include "ip/tools.h"
 #include "log/Config.h"
 #include "MemBuf.h"
 #include "Parsing.h"
@@ -3084,7 +3085,6 @@ parse_http_port_specification(http_port_list * s, char *token)
     s->name = xstrdup(token);
     s->connection_auth_disabled = false;
 
-#if USE_IPV6
     if (*token == '[') {
         /* [ipv6]:port */
         host = token + 1;
@@ -3098,23 +3098,25 @@ parse_http_port_specification(http_port_list * s, char *token)
             debugs(3, 0, "http(s)_port: missing Port in: " << token);
             self_destruct();
         }
-        port = xatos(t + 1);
-    } else
-#endif
-        if ((t = strchr(token, ':'))) {
-            /* host:port */
-            /* ipv4:port */
-            host = token;
-            *t = '\0';
-            port = xatos(t + 1);
-
-        } else if ((port = strtol(token, &junk, 10)), !*junk) {
-            /* port */
-            debugs(3, 3, "http(s)_port: found Listen on Port: " << port);
-        } else {
-            debugs(3, 0, "http(s)_port: missing Port: " << token);
+        if (!Ip::EnableIpv6) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 is not available.");
             self_destruct();
         }
+        port = xatos(t + 1);
+    } else if ((t = strchr(token, ':'))) {
+        /* host:port */
+        /* ipv4:port */
+        host = token;
+        *t = '\0';
+        port = xatos(t + 1);
+
+    } else if ((port = strtol(token, &junk, 10)), !*junk) {
+        /* port */
+        debugs(3, 3, "http(s)_port: found Listen on Port: " << port);
+    } else {
+        debugs(3, 0, "http(s)_port: missing Port: " << token);
+        self_destruct();
+    }
 
     if (port == 0) {
         debugs(3, 0, "http(s)_port: Port cannot be 0: " << token);
@@ -3124,14 +3126,20 @@ parse_http_port_specification(http_port_list * s, char *token)
     if (NULL == host) {
         s->s.SetAnyAddr();
         s->s.SetPort(port);
+        if (!Ip::EnableIpv6)
+            s->s.SetIPv4();
         debugs(3, 3, "http(s)_port: found Listen on wildcard address: *:" << s->s.GetPort() );
     } else if ( s->s = host ) { /* check/parse numeric IPA */
         s->s.SetPort(port);
+        if (!Ip::EnableIpv6)
+            s->s.SetIPv4();
         debugs(3, 3, "http(s)_port: Listen on Host/IP: " << host << " --> " << s->s);
     } else if ( s->s.GetHostByName(host) ) { /* check/parse for FQDN */
         /* dont use ipcache */
         s->defaultsite = xstrdup(host);
         s->s.SetPort(port);
+        if (!Ip::EnableIpv6)
+            s->s.SetIPv4();
         debugs(3, 3, "http(s)_port: found Listen as Host " << s->defaultsite << " on IP: " << s->s);
     } else {
         debugs(3, 0, "http(s)_port: failed to resolve Host/IP: " << host);
@@ -3161,14 +3169,13 @@ parse_http_port_option(http_port_list * s, char *token)
         debugs(3, DBG_IMPORTANT, "Starting Authentication on port " << s->s);
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (interception enabled)");
 
-#if USE_IPV6
         /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
-        debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
+        if (Ip::EnableIpv6)
+            debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
         if ( !s->s.SetIPv4() ) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
             self_destruct();
         }
-#endif
     } else if (strcmp(token, "tproxy") == 0) {
         if (s->intercepted || s->accel) {
             debugs(3,DBG_CRITICAL, "FATAL: http(s)_port: TPROXY option requires its own interception port. It cannot be shared with other modes.");
@@ -3251,12 +3258,10 @@ parse_http_port_option(http_port_list * s, char *token)
         else
             self_destruct();
     } else if (strcmp(token, "ipv4") == 0) {
-#if USE_IPV6
         if ( !s->s.SetIPv4() ) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot be used a IPv4-Only." << s->s );
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot be used as IPv4-Only. " << s->s );
             self_destruct();
         }
-#endif
     } else if (strcmp(token, "tcpkeepalive") == 0) {
         s->tcp_keepalive.enabled = 1;
     } else if (strncmp(token, "tcpkeepalive=", 13) == 0) {
@@ -3338,7 +3343,6 @@ add_http_port(char *portspec)
     Config.Sockaddr.http = s;
 }
 
-#if IPV6_SPECIAL_SPLITSTACK
 http_port_list *
 clone_http_port_list(http_port_list *a)
 {
@@ -3388,7 +3392,6 @@ clone_http_port_list(http_port_list *a)
 
     return b;
 }
-#endif
 
 static void
 parse_http_port_list(http_port_list ** head)
@@ -3407,14 +3410,12 @@ parse_http_port_list(http_port_list ** head)
         parse_http_port_option(s, token);
     }
 
-#if IPV6_SPECIAL_SPLITSTACK
-    if (s->s.IsAnyAddr()) {
+    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && s->s.IsAnyAddr()) {
         // clone the port options from *s to *(s->next)
         s->next = clone_http_port_list(s);
         s->next->s.SetIPv4();
         debugs(3, 3, "http(s)_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
     }
-#endif
 
     while (*head)
         head = &(*head)->next;
