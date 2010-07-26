@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-13 03:02+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2010-05-04 13:49+0200\n"
 "Last-Translator:  <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -71,7 +71,7 @@ msgstr ""
 "Une erreur d'authentification sur un FTP a eu lieu en tentant de charger "
 "l'URL : <a href=\"%U\">%U</a>"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -200,16 +200,14 @@ msgstr "ERREUR : L'URL demandée n'a pu être chargée"
 msgid "ESI Processing failed."
 msgstr "Le traitement ESI a échoué."
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTP PUT Réussi: Fichier Créé"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "La commande FTP PUT a réussie : Fichier envoyé"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "FTP PUT/échec de l'envoi"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -715,10 +713,6 @@ msgstr ""
 msgid "Web Browser Configuration"
 msgstr ""
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr "En essayant d'envoyer (PUT) l'URL suivante : <a href=\"%U\">%U</a>"
-
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
 msgstr "Erreur d'écriture"
@@ -774,3 +768,9 @@ msgstr "Réponse de taille nulle"
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "ERREUR : L'URN demandée n'a pu être chargée"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "La commande FTP PUT a réussie : Fichier envoyé"
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr "En essayant d'envoyer (PUT) l'URL suivante : <a href=\"%U\">%U</a>"

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-13 03:02+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2010-03-19 18:57+0100\n"
 "Last-Translator: Ivan Masár <helix84@centrum.sk>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -69,7 +69,7 @@ msgstr ""
 "Pri pokuse získať URL sa vyskytla chyba autentifikácie FTP: <a href=\"%U\">"
 "%U</a>"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -195,16 +195,14 @@ msgstr "CHYBA: Požadovaný URL nebolo možné získať"
 msgid "ESI Processing failed."
 msgstr "Spracovanie ESI zlyhalo."
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "operácia FTP PUT úspešná: Súbor vytvorený"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "operácia FTP PUT úspešná: Súbor aktualizovaný"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "FTP PUT/nahrávanie zlyhalo"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -700,10 +698,6 @@ msgstr ""
 msgid "Web Browser Configuration"
 msgstr "Konfigurácia webového prehliadača"
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr "Pri pokuse o operáciu PUT na nasledovný URL: <a href=\"%U\">%U</a>"
-
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
 msgstr "Chyba pri zápise"
@@ -762,3 +756,9 @@ msgstr "Odpoveď s nulovou veľkosťou"
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "CHYBA: Požadované URN nebolo možné získať"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "operácia FTP PUT úspešná: Súbor aktualizovaný"
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr "Pri pokuse o operáciu PUT na nasledovný URL: <a href=\"%U\">%U</a>"

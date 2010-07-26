@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-13 03:02+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2010-04-28 16:17+0200\n"
 "Last-Translator:  <clytie@riverland.net.au>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -62,7 +62,7 @@ msgid ""
 msgstr ""
 "Gặp lỗi xác thực FTP trong khi thử lấy địa chỉ URL: <a href=\"%U\">%U</a>"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -186,16 +186,14 @@ msgstr "LỖI: không thể lấy địa chỉ URL yêu cầu"
 msgid "ESI Processing failed."
 msgstr "Lỗi xử lý ESI."
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTP PUT thành công: tập tin đã được tạo"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT thành công: tập tin đã được cập nhật"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "Lỗi PUT hay tải lên qua FTP"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -643,10 +641,6 @@ msgstr ""
 msgid "Web Browser Configuration"
 msgstr ""
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr ""
-
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
 msgstr ""
@@ -697,3 +691,6 @@ msgstr ""
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "LỖI: không thể lấy URN yêu cầu"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP PUT thành công: tập tin đã được cập nhật"

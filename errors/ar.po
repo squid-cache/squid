@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-13 03:02+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2009-01-27 20:36+0000\n"
 "Last-Translator: MaXeR <Unknown>\n"
 "Language-Team: Arabic <ar@li.org>\n"
@@ -61,7 +61,7 @@ msgid ""
 "href=\"%U\">%U</a>"
 msgstr ""
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -181,16 +181,12 @@ msgstr ""
 msgid "ESI Processing failed."
 msgstr ""
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
-msgstr ""
-
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+msgid "FTP PUT Successful."
 msgstr ""
 
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+msgid "FTP PUT upload failed"
 msgstr ""
 
 #: templates/ERR_FTP_DISABLED:5
@@ -619,10 +615,6 @@ msgstr ""
 #: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
 #: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
 msgid "Web Browser Configuration"
-msgstr ""
-
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
 msgstr ""
 
 #: templates/ERR_WRITE_ERROR:5

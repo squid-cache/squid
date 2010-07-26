@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-13 03:02+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2010-01-02 23:51+0000\n"
 "Last-Translator: Jarosław Ogrodnik <nobodythere@gmail.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -66,7 +66,7 @@ msgid ""
 "href=\"%U\">%U</a>"
 msgstr ""
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -191,16 +191,14 @@ msgstr "BŁĄD: Żądany URL nie może zostać pobrany"
 msgid "ESI Processing failed."
 msgstr ""
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "Operacja FTP PUT udała się: plik został utworzony"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "Operacja FTP PUT udana: plik uaktualniony"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "Nieudany FTP PUT/upload"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -672,12 +670,6 @@ msgstr ""
 msgid "Web Browser Configuration"
 msgstr ""
 
-#: templates/ERR_FTP_PUT_ERROR:4
-#, fuzzy
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr ""
-"Podczas próby przesłania URL-a: <a href=\"%U\">%U</a> via FTP komendą PUT"
-
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
 msgstr "błąd zapisu"
@@ -731,3 +723,11 @@ msgstr "sprowadzony dokument ma zerowy rozmiar"
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "BŁĄD: Żądany URN nie może zostać sprowadzony"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "Operacja FTP PUT udana: plik uaktualniony"
+
+#, fuzzy
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr ""
+#~ "Podczas próby przesłania URL-a: <a href=\"%U\">%U</a> via FTP komendą PUT"
