@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-13 03:02+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2010-06-10 10:13+0200\n"
 "Last-Translator: Robert Förster <Dessa@gmake.de>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -70,7 +70,7 @@ msgstr ""
 "Die FTP Authentifizierung bei der URL <a href=\"%U\">%U</a> ist "
 "Fehlgeschlagen."
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -195,16 +195,14 @@ msgstr "FEHLER: Der angeforderte URN konnte nicht gefunden werden"
 msgid "ESI Processing failed."
 msgstr "ESI-Verarbeitung fehlgeschlagen."
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTP PUT erfolgreich: Datei erstellt"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT erfolgreich: Datei aktualisiert"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "FTP PUT/Upload fehlgeschlagen"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -700,12 +698,6 @@ msgstr ""
 msgid "Web Browser Configuration"
 msgstr "Webbrowserkonfiguration"
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr ""
-"Als versucht wurde eine PUT Anfrage an die folgende URL zu senden: <a href="
-"\"%U\">%U</a>"
-
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
 msgstr "Fehler beim Schreiben"
@@ -764,3 +756,11 @@ msgstr "Nullgrößenantwort"
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "FEHLER: Die angeforderte URN konnte nicht gefunden werden"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP PUT erfolgreich: Datei aktualisiert"
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr ""
+#~ "Als versucht wurde eine PUT Anfrage an die folgende URL zu senden: <a "
+#~ "href=\"%U\">%U</a>"
