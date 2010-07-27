@@ -53,6 +53,7 @@
 #if USE_IDENT
 #include "ident/AclIdent.h"
 #endif
+#include "ip/tools.h"
 #include "client_side.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
@@ -336,11 +337,9 @@ parse_externalAclHelper(external_acl ** list)
                 debugs(3, 0, "WARNING: Error converting " << a->local_addr << " to IPv4 in " << a->name );
             }
         } else if (strcmp(token, "ipv6") == 0) {
-#if !USE_IPV6
-            debugs(3, 0, "WARNING: --enable-ipv6 required for external ACL helpers to use IPv6: " << a->name );
-#else
-            (void)0;
-#endif
+            if (!Ip::EnableIpv6)
+                debugs(3, 0, "WARNING: --enable-ipv6 required for external ACL helpers to use IPv6: " << a->name );
+            // else nothing to do.
         } else {
             break;
         }

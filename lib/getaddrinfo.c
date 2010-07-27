@@ -224,12 +224,10 @@ xgetaddrinfo (const char *nodename, const char *servname,
         if (!(hints->ai_family == PF_UNSPEC || hints->ai_family == PF_INET))
             return EAI_FAMILY;
         break;
-#if USE_IPV6
     case AF_INET6:
         if (!(hints->ai_family == PF_UNSPEC || hints->ai_family == PF_INET6))
             return EAI_FAMILY;
         break;
-#endif
     default:
         return EAI_FAMILY;
     }
@@ -251,7 +249,6 @@ xgetaddrinfo (const char *nodename, const char *servname,
                     *addrs, hp->h_length);
             addrlen = sizeof (struct sockaddr_in);
             break;
-#if USE_IPV6
         case AF_INET6:
 #if SIN6_LEN
             ((struct sockaddr_in6 *) &sa)->sin6_len = hp->h_length;
@@ -261,7 +258,6 @@ xgetaddrinfo (const char *nodename, const char *servname,
                     *addrs, hp->h_length);
             addrlen = sizeof (struct sockaddr_in6);
             break;
-#endif
         default:
             continue;
         }

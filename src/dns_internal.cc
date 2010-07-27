@@ -41,6 +41,7 @@
 #include "Store.h"
 #include "comm.h"
 #include "fde.h"
+#include "ip/tools.h"
 #include "MemBuf.h"
 
 #include "wordlist.h"
@@ -814,11 +815,9 @@ idnsSendQuery(idns_query * q)
             idnsSendQueryVC(q, ns);
             x = y = 0;
         } else {
-#if IPV6_SPECIAL_SPLITSTACK
-            if (nameservers[ns].S.IsIPv6() && DnsSocketB > 0)
+            if (DnsSocketB >= 0 && nameservers[ns].S.IsIPv6())
                 y = comm_udp_sendto(DnsSocketB, nameservers[ns].S, q->buf, q->sz);
             else
-#endif
                 x = comm_udp_sendto(DnsSocketA, nameservers[ns].S, q->buf, q->sz);
         }
 
@@ -826,23 +825,17 @@ idnsSendQuery(idns_query * q)
 
         q->queue_t = q->sent_t = current_time;
 
-#if IPV6_SPECIAL_SPLITSTACK
         if (y < 0 && nameservers[ns].S.IsIPv6())
             debugs(50, 1, "idnsSendQuery: FD " << DnsSocketB << ": sendto: " << xstrerror());
         if (x < 0 && nameservers[ns].S.IsIPv4())
-#else
-        if (x < 0)
-#endif
             debugs(50, 1, "idnsSendQuery: FD " << DnsSocketA << ": sendto: " << xstrerror());
 
     } while ( (x<0 && y<0) && q->nsends % nns != 0);
 
-#if IPV6_SPECIAL_SPLITSTACK
     if (y >= 0) {
         fd_bytes(DnsSocketB, y, FD_WRITE);
         commSetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
     }
-#endif
 
     if (x >= 0) {
         fd_bytes(DnsSocketA, x, FD_WRITE);
@@ -1036,13 +1029,10 @@ idnsGrokReply(const char *buf, size_t sz)
             q->start_t = current_time;
             q->id = idnsQueryID();
             rfc1035SetQueryID(q->buf, q->id);
-#if USE_IPV6
-            if (q->query.qtype == RFC1035_TYPE_AAAA) {
+            if (Ip::EnableIpv6 && q->query.qtype == RFC1035_TYPE_AAAA) {
                 debugs(78, 3, "idnsGrokReply: Trying AAAA Query for " << q->name);
                 q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
-            } else
-#endif
-            {
+            } else {
                 debugs(78, 3, "idnsGrokReply: Trying A Query for " << q->name);
                 q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
             }
@@ -1052,7 +1042,6 @@ idnsGrokReply(const char *buf, size_t sz)
         }
     }
 
-#if USE_IPV6
     if (q->need_A && (Config.onoff.dns_require_A == 1 || n <= 0 ) ) {
         /* ERROR or NO AAAA exist. Failover to A records. */
         /*      Apparently its also a good idea to lookup and store the A records
@@ -1089,7 +1078,6 @@ idnsGrokReply(const char *buf, size_t sz)
         idnsSendQuery(q);
         return;
     }
-#endif
 
     /** If there are two result sets from preceeding AAAA and A lookups merge them with a preference for AAAA */
     if (q->initial_AAAA.count > 0 && n > 0) {
@@ -1172,12 +1160,7 @@ idnsRead(int fd, void *data)
             break;
         }
 
-#if IPV6_SPECIAL_SPLITSTACK
-        if ( from.IsIPv6() )
-            fd_bytes(DnsSocketB, len, FD_READ);
-        else
-#endif
-            fd_bytes(DnsSocketA, len, FD_READ);
+        fd_bytes(fd, len, FD_READ);
 
         assert(N);
         (*N)++;
@@ -1205,12 +1188,7 @@ idnsRead(int fd, void *data)
     }
 
     if (lru_list.head) {
-#if IPV6_SPECIAL_SPLITSTACK
-        if ( from.IsIPv6() )
-            commSetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
-        else
-#endif
-            commSetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
+        commSetSelect(fd, COMM_SELECT_READ, idnsRead, NULL, 0);
     }
 }
 
@@ -1361,42 +1339,33 @@ idnsInit(void)
     if (DnsSocketA < 0 && DnsSocketB < 0) {
         int port;
 
-        IpAddress addr; // since we don't want to alter Config.Addrs.udp_* and dont have one of our own.
+        IpAddress addrA; // since we don't want to alter Config.Addrs.udp_* and dont have one of our own.
 
         if (!Config.Addrs.udp_outgoing.IsNoAddr())
-            addr = Config.Addrs.udp_outgoing;
+            addrA = Config.Addrs.udp_outgoing;
         else
-            addr = Config.Addrs.udp_incoming;
+            addrA = Config.Addrs.udp_incoming;
 
-#if IPV6_SPECIAL_SPLITSTACK
-        IpAddress addr4 = addr;
+        IpAddress addrB = addrA;
+        addrA.SetIPv4();
 
-        if ( addr.IsAnyAddr() || addr.IsIPv6() ) {
-            debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addr);
+        if (Ip::EnableIpv6 && (addrB.IsAnyAddr() || addrB.IsIPv6())) {
+            debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addrB);
             DnsSocketB = comm_open_listener(SOCK_DGRAM,
                                             IPPROTO_UDP,
-                                            addr,
+                                            addrB,
                                             COMM_NONBLOCKING,
-                                            "DNS Socket v6");
+                                            "DNS Socket IPv6");
         }
 
-        if ( addr.IsAnyAddr() || addr.IsIPv4() ) {
-            addr4.SetIPv4();
-            debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addr4);
+        if (addrA.IsAnyAddr() || addrA.IsIPv4()) {
+            debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addrA);
             DnsSocketA = comm_open_listener(SOCK_DGRAM,
                                             IPPROTO_UDP,
-                                            addr4,
+                                            addrA,
                                             COMM_NONBLOCKING,
-                                            "DNS Socket v4");
+                                            "DNS Socket IPv4");
         }
-#else
-        DnsSocketA = comm_open_listener(SOCK_DGRAM,
-                                        IPPROTO_UDP,
-                                        addr,
-                                        COMM_NONBLOCKING,
-                                        "DNS Socket");
-        debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addr);
-#endif
 
         if (DnsSocketA < 0 && DnsSocketB < 0)
             fatal("Could not create a DNS socket");
@@ -1404,19 +1373,13 @@ idnsInit(void)
         /* Ouch... we can't call functions using debug from a debug
          * statement. Doing so messes up the internal Debug::level
          */
-#if IPV6_SPECIAL_SPLITSTACK
         if (DnsSocketB >= 0) {
             port = comm_local_port(DnsSocketB);
-            debugs(78, 1, "DNS Socket created at " << addr << ", FD " << DnsSocketB);
+            debugs(78, 1, "DNS Socket created at " << addrB << ", FD " << DnsSocketB);
         }
-#endif
         if (DnsSocketA >= 0) {
             port = comm_local_port(DnsSocketA);
-#if IPV6_SPECIAL_SPLITSTACK
-            debugs(78, 1, "DNS Socket created at " << addr4 << ", FD " << DnsSocketA);
-#else
-            debugs(78, 1, "DNS Socket created at " << addr << ", FD " << DnsSocketA);
-#endif
+            debugs(78, 1, "DNS Socket created at " << addrA << ", FD " << DnsSocketA);
         }
     }
 
@@ -1470,12 +1433,10 @@ idnsShutdown(void)
         DnsSocketA = -1;
     }
 
-#if IPV6_SPECIAL_SPLITSTACK
-    if (DnsSocketA >= 0 ) {
+    if (DnsSocketB >= 0 ) {
         comm_close(DnsSocketB);
         DnsSocketB = -1;
     }
-#endif
 
     for (int i = 0; i < nns; i++) {
         if (nsvc *vc = nameservers[i].vc) {
@@ -1552,13 +1513,13 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
         debugs(78, 3, "idnsALookup: searchpath used for " << q->name);
     }
 
-#if USE_IPV6
-    q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
-    q->need_A = true;
-#else
-    q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
-    q->need_A = false;
-#endif
+    if (Ip::EnableIpv6) {
+        q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
+        q->need_A = true;
+    } else {
+        q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
+        q->need_A = false;
+    }
 
     if (q->sz < 0) {
         /* problem with query data -- query not sent */
@@ -1594,14 +1555,11 @@ idnsPTRLookup(const IpAddress &addr, IDNSCB * callback, void *data)
 
     q->id = idnsQueryID();
 
-#if USE_IPV6
-    if ( addr.IsIPv6() ) {
+    if (Ip::EnableIpv6 && addr.IsIPv6()) {
         struct in6_addr addr6;
         addr.GetInAddr(addr6);
         q->sz = rfc3596BuildPTRQuery6(addr6, q->buf, sizeof(q->buf), q->id, &q->query);
-    } else
-#endif
-    {
+    } else {
         struct in_addr addr4;
         addr.GetInAddr(addr4);
         q->sz = rfc3596BuildPTRQuery4(addr4, q->buf, sizeof(q->buf), q->id, &q->query);

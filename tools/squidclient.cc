@@ -33,6 +33,9 @@
  */
 
 #include "config.h"
+#include "ip/IpAddress.h"
+#include "util.h"
+#include "squid_types.h"
 
 #ifdef _SQUID_MSWIN_
 /** \cond AUTODOCS-IGNORE */
@@ -83,11 +86,6 @@ using namespace Squid;
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-
-#include "squid_types.h"
-
-#include "util.h"
-#include "ip/IpAddress.h"
 
 #ifndef BUFSIZ
 #define BUFSIZ		8192

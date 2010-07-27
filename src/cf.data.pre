@@ -401,7 +401,7 @@ DOC_START
 	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers
 	  ipv4 / ipv6	IP-mode used to communicate to this helper.
 			For compatability with older configurations and helpers
-			the default is 'ipv4'.
+			the default is currently 'ipv4'.
 
 	FORMAT specifications
 
@@ -693,10 +693,8 @@ NOCOMMENT_START
 # Recommended minimum configuration:
 #
 acl manager proto cache_object
-acl localhost src 127.0.0.1/32
-@IPV6_ONLY_SETTING@acl localhost src ::1/128
-acl to_localhost dst 127.0.0.0/8 0.0.0.0/32
-@IPV6_ONLY_SETTING@acl to_localhost dst ::1/128
+acl localhost src 127.0.0.1/32 ::1
+acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
 
 # Example rule allowing access from your local networks.
 # Adapt to list your (internal) IP networks from where browsing
@@ -704,8 +702,8 @@ acl to_localhost dst 127.0.0.0/8 0.0.0.0/32
 acl localnet src 10.0.0.0/8	# RFC1918 possible internal network
 acl localnet src 172.16.0.0/12	# RFC1918 possible internal network
 acl localnet src 192.168.0.0/16	# RFC1918 possible internal network
-@IPV6_ONLY_SETTING@acl localnet src fc00::/7   # RFC 4193 local private network range
-@IPV6_ONLY_SETTING@acl localnet src fe80::/10  # RFC 4291 link-local (directly plugged) machines
+acl localnet src fc00::/7       # RFC 4193 local private network range
+acl localnet src fe80::/10      # RFC 4291 link-local (directly plugged) machines
 
 acl SSL_ports port 443
 acl Safe_ports port 80		# http

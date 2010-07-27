@@ -66,31 +66,6 @@
 #include <ostream>
 #endif
 
-/* FreeBSD hack:
- *   This OS has at least one version that defines these as private
- *   kernel macros commented as being 'non-standard'.
- *   We need to use them, much nicer than the OS-provided __u*_*[]
- * UPDATE: OpenBSD 4.3 has the same.
- * UPDATE: MacOSX has the same.
- */
-#if USE_IPV6 && ( defined(_SQUID_FREEBSD_) || defined(_SQUID_OPENBSD_) || defined(_SQUID_APPLE_) || defined(_SQUID_NETBSD_))
-//#define s6_addr8  __u6_addr.__u6_addr8
-//#define s6_addr16 __u6_addr.__u6_addr16
-#define s6_addr32 __u6_addr.__u6_addr32
-#endif
-
-/* OpenBSD also hide v6only socket option we need for comm layer. :-( */
-#if !defined(IPV6_V6ONLY) && defined(_SQUID_OPENBSD_)
-#define IPV6_V6ONLY		27 // from OpenBSD 4.3 headers. (NP: does not match non-BSD OS values)
-#endif
-
-/* Bug 2500: Solaris 10/11 require s6_addr* defines. */
-#if USE_IPV6 && defined(_SQUID_SOLARIS_)
-//#define s6_addr8   _S6_un._S6_u8
-//#define s6_addr16  _S6_un._S6_u16
-#define s6_addr32  _S6_un._S6_u32
-#endif
-
 /// Length of buffer that needs to be allocated to old a null-terminated IP-string
 // Yuck. But there are still structures that need it to be an 'integer constant'.
 #define MAX_IPSTRLEN  75
@@ -115,17 +90,10 @@ public:
      *           Prefer the by-reference (&) version instead.
      */
     IpAddress(IpAddress *);
-
     IpAddress(const struct in_addr &);
-
     IpAddress(const struct sockaddr_in &);
-#if USE_IPV6
-
     IpAddress(const struct in6_addr &);
-
     IpAddress(const struct sockaddr_in6 &);
-#endif
-
     IpAddress(const struct hostent &);
     IpAddress(const struct addrinfo &);
     IpAddress(const char*);
@@ -139,10 +107,8 @@ public:
     IpAddress& operator =(struct sockaddr_in const &s);
     IpAddress& operator =(struct sockaddr_storage const &s);
     IpAddress& operator =(struct in_addr const &s);
-#if USE_IPV6
     IpAddress& operator =(struct in6_addr const &s);
     IpAddress& operator =(struct sockaddr_in6 const &s);
-#endif
     bool operator =(const struct hostent &s);
     bool operator =(const struct addrinfo &s);
     bool operator =(const char *s);
@@ -258,7 +224,7 @@ public:
      \param cidr   CIDR Mask being applied. As an integer in host format.
      \param mtype  Type of CIDR mask being applied (AF_INET or AF_INET6)
      */
-    bool ApplyMask(const unsigned int cidr, int mtype = AF_UNSPEC);
+    bool ApplyMask(const unsigned int cidr, int mtype);
 
 
     /** Return the ASCII equivalent of the address
@@ -324,18 +290,11 @@ public:
      \par
      *  IpAddress allocated objects MUST be destructed by IpAddress::FreeAddrInfo
      *  System getaddrinfo() allocated objects MUST be freed with system freeaddrinfo()
-     \par
-     *  Some OS require that IPv4 addresses are pre-mapped by the client.
-     *  The configure option --with-ipv4-mapping=yes will enable this.
      *
      \param ai structure to be filled out.
      \param force a specific sockaddr type is needed. default: don't care.
      */
-#if IPV6_SPECIAL_V4MAPPING
-    void GetAddrInfo(struct addrinfo *&ai, int force = AF_INET6) const;
-#else
     void GetAddrInfo(struct addrinfo *&ai, int force = AF_UNSPEC) const;
-#endif
 
     /**
      *  Equivalent to the sysem call freeaddrinfo() but for IpAddress allocated data
@@ -376,40 +335,27 @@ public:
 
     /// \deprecated Deprecated for public use. Use IpAddress::GetAddrInfo()
     bool GetInAddr(struct in_addr &) const; /* false if could not convert IPv6 down to IPv4 */
-#if USE_IPV6
-
-    /// \deprecated Deprecated for public use. Use IpAddress::GetAddrInfo()
     void GetSockAddr(struct sockaddr_in6 &) const;
 
     /// \deprecated Deprecated for public use. Use IpAddress::GetAddrInfo()
     void GetInAddr(struct in6_addr &) const;
-#endif
 
 private:
     /* Conversion for dual-type internals */
 
     bool GetReverseString4(char buf[MAX_IPSTRLEN], const struct in_addr &dat) const;
 
-#if USE_IPV6
-
     bool GetReverseString6(char buf[MAX_IPSTRLEN], const struct in6_addr &dat) const;
 
     void Map4to6(const struct in_addr &src, struct in6_addr &dest) const;
 
     void Map6to4(const struct in6_addr &src, struct in_addr &dest) const;
-#endif
 
     // Worker behind GetHostName and char* converters
     bool LookupHostIP(const char *s, bool nodns);
 
     /* variables */
-#if USE_IPV6
-
     struct sockaddr_in6 m_SocketAddr;
-#else
-
-    struct sockaddr_in m_SocketAddr;
-#endif
 
 private:
     /* Internally used constants */
@@ -417,7 +363,6 @@ private:
     static const unsigned int STRLEN_IP4R = 28;              // ddd.ccc.bbb.aaa.in-addr.arpa.\0
     static const unsigned int STRLEN_IP4S = 21;              // ddd.ccc.bbb.aaa:ppppp\0
     static const unsigned int MAX_IP4_STRLEN = STRLEN_IP4R;
-#if USE_IPV6
     static const unsigned int STRLEN_IP6A = 42;           // [ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff]/0
     static const unsigned int STRLEN_IP6R = 75;           // f.f.f.f f.f.f.f f.f.f.f f.f.f.f f.f.f.f f.f.f.f f.f.f.f f.f.f.f ipv6.arpa./0
     static const unsigned int STRLEN_IP6S = 48;           // [ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff]:00000/0
@@ -426,7 +371,6 @@ private:
     static const struct in6_addr v4_anyaddr;
     static const struct in6_addr v4_noaddr;
     static const struct in6_addr v6_noaddr;
-#endif
 };
 
 

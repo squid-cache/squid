@@ -447,14 +447,14 @@ IpIntercept::ProbeForTproxy(IpAddress &test)
     debugs(3, 3, "Detect TPROXY support on port " << test);
 #if LINUX_TPROXY2
 
-#if USE_IPV6
-    /* TPROXYv2 is not IPv6 capable. Force wildcard sockets to IPv4. Die on IPv6 IPs */
-    debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << test << " (TPROXYv2 interception enabled)");
-    if ( test.IsIPv6() && !test.SetIPv4() ) {
-        debugs(3, DBG_CRITICAL, "IPv6 requires TPROXYv4 support. You only have TPROXYv2 for " << test );
-        return false;
+    if (Ip::EnableIpv6) {
+        /* TPROXYv2 is not IPv6 capable. Force wildcard sockets to IPv4. Die on IPv6 IPs */
+        debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << test << " (TPROXYv2 interception enabled)");
+        if ( test.IsIPv6() && !test.SetIPv4() ) {
+           debugs(3, DBG_CRITICAL, "IPv6 requires TPROXYv4 support. You only have TPROXYv2 for " << test );
+            return false;
+        }
     }
-#endif /* USE_IPV6 */
     return true;
 
 #else /* not LINUX_TPROXY2 */
@@ -464,7 +464,6 @@ IpIntercept::ProbeForTproxy(IpAddress &test)
     int tos = 1;
     int tmp_sock = -1;
 
-#if USE_IPV6
     /* Probe to see if the Kernel TPROXY support is IPv6-enabled */
     if (test.IsIPv6()) {
         debugs(3, 3, "...Probing for IPv6 TPROXY support.");
@@ -492,7 +491,6 @@ IpIntercept::ProbeForTproxy(IpAddress &test)
         debugs(3, DBG_CRITICAL, "TPROXY lacks IPv6 support for " << test );
         return false;
     }
-#endif
 
     /* Probe to see if the Kernel TPROXY support is IPv4-enabled (aka present) */
     if (test.IsIPv4()) {

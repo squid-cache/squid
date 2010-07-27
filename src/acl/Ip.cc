@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "acl/Ip.h"
 #include "acl/Checklist.h"
+#include "ip/tools.h"
 #include "MemBuf.h"
 #include "wordlist.h"
 
@@ -108,12 +109,8 @@ acl_ip_data::toStr(char *buf, int len) const
     if (!mask.IsNoAddr()) {
         b3[0] = '/';
         rlen++;
-#if USE_IPV6
         int cidr =  mask.GetCIDR() - (addr1.IsIPv4()?96:0);
         snprintf(&(b3[1]), (len-rlen), "%u", (unsigned int)(cidr<0?0:cidr) );
-#else
-        snprintf(&(b3[1]), (len-rlen), "%u", mask.GetCIDR() );
-#endif
     } else
         b3[0] = '\0';
 }
@@ -224,9 +221,7 @@ acl_ip_data::DecodeMask(const char *asc, IpAddress &mask, int ctype)
             /* this will completely crap out with a security fail-open if the admin is playing mask tricks */
             /* however, thats their fault, and we do warn. see bug 2601 for the effects if we don't do this. */
             unsigned int m = mask.GetCIDR();
-#if USE_IPV6
             debugs(28, DBG_CRITICAL, "WARNING: IPv4 netmasks are particularly nasty when used to compare IPv6 to IPv4 ranges.");
-#endif
             debugs(28, DBG_CRITICAL, "WARNING: For now we will assume you meant to write /" << m);
             /* reset the mask completely, and crop to the CIDR boundary back properly. */
             mask.SetNoAddr();
@@ -287,7 +282,6 @@ acl_ip_data::FactoryParse(const char *t)
         return q;
     }
 
-#if USE_IPV6
     /* Special ACL RHS "ipv4" matches IPv4 Internet
      * A nod to IANA; we include the entire class space in case
      * they manage to find a way to recover and use it */
@@ -362,7 +356,6 @@ acl_ip_data::FactoryParse(const char *t)
 
         return r;
     }
-#endif
 
 // IPv4
     if (sscanf(t, SCAN_ACL1_4, addr1, addr2, mask) == 3) {
@@ -421,8 +414,9 @@ acl_ip_data::FactoryParse(const char *t)
             hints.ai_flags |= AI_NUMERICHOST;
         }
 
-#if 0 && USE_IPV6 && !IPV6_SPECIAL_SPLITSTACK
-        hints.ai_flags |= AI_V4MAPPED | AI_ALL;
+#if 0
+        if (Ip::EnableIpv6&IPV6_SPECIAL_V4MAPPING)
+            hints.ai_flags |= AI_V4MAPPED | AI_ALL;
 #endif
 
         int errcode = xgetaddrinfo(addr1,NULL,&hints,&hp);
@@ -473,13 +467,11 @@ acl_ip_data::FactoryParse(const char *t)
         return q;
     }
 
-#if !USE_IPV6
     /* ignore IPv6 addresses when built with IPv4-only */
-    if ( iptype == AF_INET6 ) {
-        debugs(28, 0, "aclIpParseIpData: IPv6 has not been enabled. build with '--enable-ipv6'");
+    if ( iptype == AF_INET6 && !Ip::EnableIpv6) {
+        debugs(28, DBG_IMPORTANT, "aclIpParseIpData: IPv6 has not been enabled.");
         return NULL;
     }
-#endif
 
     /* Decode addr1 */
     if (!*addr1 || !(q->addr1 = addr1)) {

@@ -54,6 +54,7 @@
 #include "compat/os/freebsd.h"
 #include "compat/os/hpux.h"
 #include "compat/os/linux.h"
+#include "compat/os/macosx.h"
 #include "compat/os/mswin.h"
 #include "compat/os/next.h"
 #include "compat/os/openbsd.h"

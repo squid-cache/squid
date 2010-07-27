@@ -1110,12 +1110,8 @@ parseEtcHosts(void)
             *nt = '\0';
             debugs(1, 5, "etc_hosts: got hostname '" << lt << "'");
 
-#if USE_IPV6
             /* For IPV6 addresses also check for a colon */
             if (Config.appendDomain && !strchr(lt, '.') && !strchr(lt, ':')) {
-#else
-            if (Config.appendDomain && !strchr(lt, '.')) {
-#endif
                 /* I know it's ugly, but it's only at reconfig */
                 strncpy(buf2, lt, 512);
                 strncat(buf2, Config.appendDomain, 512 - strlen(lt) - 1);

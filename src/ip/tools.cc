@@ -1,6 +1,6 @@
 /*
- * DEBUG: section 37    ICMP Routines
- * AUTHOR: Duane Wessels, Amos Jeffries
+ * DEBUG: section 21    Misc Functions
+ * AUTHOR: Amos Jeffries
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -29,60 +29,51 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#ifndef _INCLUDE_ICMPV6_H
-#define _INCLUDE_ICMPV6_H
 
 #include "config.h"
+#include "Debug.h"
+#include "ip/tools.h"
 
-#include "Icmp.h"
-
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
-#if HAVE_NETINET_ICMP6_H
-#include <netinet/icmp6.h>
-#endif
-#if HAVE_NETINET_IP6_H
-#include <netinet/ip6.h>
+#if HAVE_NETINET_IN6_H
+#include <netinet/in6.h>
 #endif
 
-/* see RFC 4443 section 2.1 */
-#ifndef ICMP6_ECHOREQUEST
-#define ICMP6_ECHOREQUEST 128
-#endif
+int Ip::EnableIpv6 = IPV6_OFF;
 
-/* see RFC 4443 section 2.1 */
-#ifndef ICMP6_ECHOREPLY
-#define ICMP6_ECHOREPLY 129
-#endif
-
-/* see RFC 4443 section 2.1 */
-#ifndef IPPROTO_ICMPV6
-#define IPPROTO_ICMPV6 58
-#endif
-
-/**
- * Class partially implementing RFC 4443 - ICMPv6 for IP version 6.
- * Provides ECHO-REQUEST, ECHO-REPLY (secion 4)
- */
-class Icmp6 : public Icmp
+void
+Ip::ProbeTransport()
 {
-public:
-    Icmp6();
-    virtual ~Icmp6();
+#if USE_IPV6
+    // check for usable IPv6 sockets
+    int s = socket(PF_INET6, SOCK_STREAM, 0);
+    if (s < 0) {
+        debugs(3, 2, "IPv6 not supported on this machine. Auto-Disabled.");
+        EnableIpv6 = IPV6_OFF;
+        return;
+    }
 
-    virtual int Open();
+    // Test for v4-mapping capability
+    int tos = 0;
+    if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) == 0) {
+        debugs(3, 2, "Detected IPv6 hybrid or v4-mapping stack...");
+        EnableIpv6 |= IPV6_SPECIAL_V4MAPPING;
+    } else {
+        debugs(3, 2, "Detected split IPv4 and IPv6 stacks ...");
+        // EnableIpv6 |= IPV6_SPECIAL_SPLITSTACK;
+        // TODO: remove death when split-stack is supported.
+        EnableIpv6 = IPV6_OFF;
+    }
+    close(s);
 
-#if USE_ICMP
-    virtual void SendEcho(IpAddress &, int, const char*, int);
-    virtual void Recv(void);
+    debugs(3, 2, "IPv6 transport " << (EnableIpv6?"Enabled":"Disabled"));
+#else
+    debugs(3, 2, "IPv6 transport forced OFF by build parameters.");
+    EnableIpv6 = IPV6_OFF;
 #endif
-};
-
-#if USE_ICMP
-
-/// pinger helper contains one of these as a global object.
-SQUIDCEXTERN Icmp6 icmp6;
-
-#endif /* USE_ICMP && SQUID_HELPER */
-#endif /* _INCLUDE_ICMPV6_H */
+}

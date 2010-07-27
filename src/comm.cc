@@ -49,6 +49,7 @@
 #include "ip/IpAddress.h"
 #include "ip/IpIntercept.h"
 #include "protos.h"
+#include "ip/tools.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>
@@ -562,10 +563,8 @@ comm_local_port(int fd)
     if (F->local_addr.GetPort())
         return F->local_addr.GetPort();
 
-#if USE_IPV6
     if (F->sock_family == AF_INET)
         temp.SetIPv4();
-#endif
 
     temp.InitAddrInfo(addr);
 
@@ -722,10 +721,10 @@ comm_openex(int sock_type,
     debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
 
     new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
-#if USE_IPV6
+
     /* under IPv6 there is the possibility IPv6 is present but disabled. */
     /* try again as IPv4-native if possible */
-    if ( new_socket < 0 && addr.IsIPv6() && addr.SetIPv4() ) {
+    if ( new_socket < 0 && Ip::EnableIpv6 && addr.IsIPv6() && addr.SetIPv4() ) {
         /* attempt to open this IPv4-only. */
         addr.FreeAddrInfo(AI);
         /* Setup the socket addrinfo details for use */
@@ -736,7 +735,6 @@ comm_openex(int sock_type,
         new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
         debugs(50, 2, HERE << "attempt open " << note << " socket on: " << addr);
     }
-#endif
 
     if (new_socket < 0) {
         /* Increase the number of reserved fd's if calls to socket()
@@ -763,21 +761,13 @@ comm_openex(int sock_type,
         tos = TOS;
     }
 
-#if IPV6_SPECIAL_SPLITSTACK
-
-    if ( addr.IsIPv6() )
+    if ( Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && addr.IsIPv6() )
         comm_set_v6only(new_socket, 1);
-
-#endif
-
-#if IPV6_SPECIAL_V4MAPPED
 
     /* Windows Vista supports Dual-Sockets. BUT defaults them to V6ONLY. Turn it OFF. */
     /* Other OS may have this administratively disabled for general use. Same deal. */
-    if ( addr.IsIPv6() )
+    if ( Ip::EnableIpv6&IPV6_SPECIAL_V4MAPPING && addr.IsIPv6() )
         comm_set_v6only(new_socket, 0);
-
-#endif
 
     /* update fdstat */
     debugs(5, 5, "comm_open: FD " << new_socket << " is a new socket");
@@ -1060,10 +1050,8 @@ ConnectStateData::commResetFD()
     if (F->tos)
         comm_set_tos(fd, F->tos);
 
-#if IPV6_SPECIAL_SPLITSTACK
-    if ( F->local_addr.IsIPv6() )
+    if ( Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && F->local_addr.IsIPv6() )
         comm_set_v6only(fd, 1);
-#endif
 
     copyFDFlags(fd, F);
 
@@ -1441,11 +1429,7 @@ comm_old_accept(int fd, ConnectionDetail &details)
     details.peer.NtoA(F->ipaddr,MAX_IPSTRLEN);
     F->remote_port = details.peer.GetPort();
     F->local_addr.SetPort(details.me.GetPort());
-#if USE_IPV6
-    F->sock_family = details.me.IsIPv4()?AF_INET:AF_INET6;
-#else
-    F->sock_family = AF_INET;
-#endif
+    F->sock_family = details.me.IsIPv6()?AF_INET6:AF_INET;
     details.me.FreeAddrInfo(gai);
 
     commSetNonBlocking(sock);

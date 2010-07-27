@@ -344,16 +344,13 @@ networkFromInaddr(const IpAddress &in)
     IpAddress out;
 
     out = in;
-#if USE_IPV6
 
     /* in IPv6 the 'network' should be the routing section. */
-
     if ( in.IsIPv6() ) {
         out.ApplyMask(64, AF_INET6);
         debugs(14, 5, "networkFromInaddr : Masked IPv6 Address to " << in << "/64 routing part.");
         return out;
     }
-#endif
 
 #if USE_CLASSFUL
     struct in_addr b;

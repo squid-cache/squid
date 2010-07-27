@@ -11,6 +11,15 @@ AUTOMAKE_OPTIONS = subdir-objects
 ## we need our local files too (but avoid -I. at all costs)
 INCLUDES += -I$(srcdir)
 
+##  src/stub_debug.cc provides a usable stub debugs() API.
+stub_debug.cc: $(top_srcdir)/src/stub_debug.cc
+	cp $(top_srcdir)/src/stub_debug.cc .
+
+##  src/time.cc provides a usable time API.
+time.cc: $(top_srcdir)/src/time.cc
+	cp $(top_srcdir)/src/time.cc .
+
+CLEANFILES += stub_debug.cc time.cc
 
 SUBDIRS		= 
 
@@ -25,8 +34,9 @@ man_MANS = \
 
 DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
 
-squidclient_SOURCES = squidclient.cc
-cachemgr__CGIEXT__SOURCES = cachemgr.cc
+squidclient_SOURCES = squidclient.cc time.cc stub_debug.cc
+
+cachemgr__CGIEXT__SOURCES = cachemgr.cc time.cc stub_debug.cc
 cachemgr__CGIEXT__CXXFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CXXFLAGS)
 
 LDADD = \

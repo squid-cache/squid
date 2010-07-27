@@ -43,17 +43,13 @@ static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789-._"
-#if USE_IPV6
     "[:]"
-#endif
     ;
 static const char valid_hostname_chars[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789-."
-#if USE_IPV6
     "[:]"
-#endif
     ;
 
 void
@@ -291,7 +287,6 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         if (*host == '[') {
             /* strip any IPA brackets. valid under IPv6. */
             dst = host;
-#if USE_IPV6
             /* only for IPv6 sadly, pre-IPv6/URL code can't handle the clean result properly anyway. */
             src = host;
             src++;
@@ -303,10 +298,6 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
 
             /* we moved in-place, so truncate the actual hostname found */
             *(dst++) = '\0';
-#else
-            /* IPv4-pure needs to skip the whole hostname to ']' inclusive for now */
-            while (*dst != '\0' && *dst != ']') dst++;
-#endif
 
             /* skip ahead to either start of port, or original EOS */
             while (*dst != '\0' && *dst != ':') dst++;
@@ -351,12 +342,8 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         return NULL;
     }
 
-#if USE_IPV6
     /* For IPV6 addresses also check for a colon */
     if (Config.appendDomain && !strchr(host, '.') && !strchr(host, ':'))
-#else
-    if (Config.appendDomain && !strchr(host, '.'))
-#endif
         strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN - strlen(host) - 1);
 
     /* remove trailing dots from hostnames */
@@ -889,11 +876,8 @@ URLHostName::findHostStart()
     while (*hostStart != '\0' && *hostStart == '/')
         ++hostStart;
 
-#if USE_IPV6
     if (*hostStart == ']')
         ++hostStart;
-#endif
-
 }
 
 void
@@ -907,11 +891,8 @@ URLHostName::trimTrailingChars()
     if ((t = strrchr(Host, ':')))
         *t = '\0';
 
-#if USE_IPV6
     if ((t = strchr(Host, ']')))
         *t = '\0';
-#endif
-
 }
 
 void

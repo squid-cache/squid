@@ -101,25 +101,19 @@ internalRemoteUri(const char *host, u_short port, const char *dir, const char *n
     xstrncpy(lc_host, host, SQUIDHOSTNAMELEN);
     Tolower(lc_host);
 
-#if USE_IPV6
     /* check for an IP address and format appropriately if found */
     IpAddress test = lc_host;
     if ( !test.IsAnyAddr() ) {
         test.ToHostname(lc_host,SQUIDHOSTNAMELEN);
     }
-#endif
 
     /*
      * append the domain in order to mirror the requests with appended
      * domains
      */
 
-#if USE_IPV6
-    /* For IPV6 addresses also check for a colon */
+    /* For IPv6 addresses also check for a colon */
     if (Config.appendDomain && !strchr(lc_host, '.') && !strchr(lc_host, ':'))
-#else
-    if (Config.appendDomain && !strchr(lc_host, '.'))
-#endif
         strncat(lc_host, Config.appendDomain, SQUIDHOSTNAMELEN -
                 strlen(lc_host) - 1);
 
@@ -159,12 +153,8 @@ internalHostname(void)
     LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN + 1);
     xstrncpy(host, getMyHostname(), SQUIDHOSTNAMELEN);
 
-#if USE_IPV6
-    /* For IPV6 addresses also check for a colon */
+    /* For IPv6 addresses also check for a colon */
     if (Config.appendDomain && !strchr(host, '.') && !strchr(host, ':'))
-#else
-    if (Config.appendDomain && !strchr(host, '.'))
-#endif
         strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN -
                 strlen(host) - 1);
 

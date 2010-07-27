@@ -31,9 +31,10 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "cbdata.h"
 #include "event.h"
-#include "CacheManager.h"
+#include "ip/tools.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
@@ -497,8 +498,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
 
     for (k = 0; k < nr; k++) {
 
-#if USE_IPV6
-        if (answers[k].type == RFC1035_TYPE_AAAA) {
+        if (Ip::EnableIpv6 && answers[k].type == RFC1035_TYPE_AAAA) {
             if (answers[k].rdlength != sizeof(struct in6_addr)) {
                 debugs(14, 1, "ipcacheParse: Invalid IPv6 address in response to '" << name << "'");
                 continue;
@@ -507,7 +507,6 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
             IpcacheStats.rr_aaaa++;
             continue;
         }
-#endif
 
         if (answers[k].type == RFC1035_TYPE_A) {
             if (answers[k].rdlength != sizeof(struct in_addr)) {
@@ -579,8 +578,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
             debugs(14, 3, "ipcacheParse: " << name << " #" << j << " " << i->addrs.in_addrs[j]);
             j++;
 
-#if USE_IPV6
-        } else if (answers[k].type == RFC1035_TYPE_AAAA) {
+        } else if (Ip::EnableIpv6 && answers[k].type == RFC1035_TYPE_AAAA) {
             if (answers[k].rdlength != sizeof(struct in6_addr))
                 continue;
 
@@ -590,7 +588,6 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
 
             debugs(14, 3, "ipcacheParse: " << name << " #" << j << " " << i->addrs.in_addrs[j] );
             j++;
-#endif
         }
 #if DNS_CNAME
         else if (answers[k].type == RFC1035_TYPE_CNAME) {
@@ -977,16 +974,12 @@ ipcacheMergeIPLists(const IpAddress *aaddrs, const int alen,
     int fc=0, t=0, c=0;
 
     IpAddress const *ip4ptrs[255];
-#if USE_IPV6
     IpAddress const *ip6ptrs[255];
-#endif
     int num_ip4 = 0;
     int num_ip6 = 0;
 
     memset(ip4ptrs, 0, sizeof(IpAddress*)*255);
-#if USE_IPV6
     memset(ip6ptrs, 0, sizeof(IpAddress*)*255);
-#endif
 
     // for each unique address in list A - grab ptr
     for (t = 0; t < alen; t++) {
@@ -1000,7 +993,6 @@ ipcacheMergeIPLists(const IpAddress *aaddrs, const int alen,
                 num_ip4++;
             }
         }
-#if USE_IPV6
         else if (aaddrs[t].IsIPv6()) {
             debugs(14,8, HERE << "A[" << t << "]=IPv6 " << aaddrs[t]);
             // check against IPv6 pruned list
@@ -1012,7 +1004,6 @@ ipcacheMergeIPLists(const IpAddress *aaddrs, const int alen,
                 num_ip6++;
             }
         }
-#endif
     }
 
     // for each unique address in list B - grab ptr
@@ -1027,7 +1018,6 @@ ipcacheMergeIPLists(const IpAddress *aaddrs, const int alen,
                 num_ip4++;
             }
         }
-#if USE_IPV6
         else if (baddrs[t].IsIPv6()) {
             // check against IPv6 pruned list
             for (c = 0; c <= num_ip6; c++) {
@@ -1038,7 +1028,6 @@ ipcacheMergeIPLists(const IpAddress *aaddrs, const int alen,
                 num_ip6++;
             }
         }
-#endif
     }
 
     fc = num_ip6 + num_ip4;
@@ -1053,14 +1042,12 @@ ipcacheMergeIPLists(const IpAddress *aaddrs, const int alen,
 
     assert(out != NULL);
 
-#if USE_IPV6
     /* IPv6 are preferred (tried first) over IPv4 */
 
     for (int l = 0; outlen < num_ip6; l++, outlen++) {
         (*out)[outlen] = *ip6ptrs[l];
         debugs(14, 5, "ipcacheMergeIPLists:  #" << outlen << " " << (*out)[outlen] );
     }
-#endif /* USE_IPV6 */
 
     for (int l = 0; outlen < num_ip4; l++, outlen++) {
         (*out)[outlen] = *ip4ptrs[l];
@@ -1462,15 +1449,11 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
     IpAddress ip;
 
     if (!(ip = ipaddr)) {
-#if USE_IPV6
         if (strchr(ipaddr, ':') && strspn(ipaddr, "0123456789abcdefABCDEF:") == strlen(ipaddr)) {
             debugs(14, 3, "ipcacheAddEntryFromHosts: Skipping IPv6 address '" << ipaddr << "'");
         } else {
             debugs(14, 1, "ipcacheAddEntryFromHosts: Bad IP address '" << ipaddr << "'");
         }
-#else
-        debugs(14, 1, "ipcacheAddEntryFromHosts: Bad IP address '" << ipaddr << "'");
-#endif
 
         return 1;
     }

@@ -267,11 +267,9 @@ lookup(const char *buf)
                 case AF_INET:
                     xinet_ntop(aiptr->ai_family, &((struct sockaddr_in*)aiptr->ai_addr)->sin_addr, ntoabuf, MAX_IPSTRLEN);
                     break;
-#if USE_IPV6
                 case AF_INET6:
                     xinet_ntop(aiptr->ai_family, &((struct sockaddr_in6*)aiptr->ai_addr)->sin6_addr, ntoabuf, MAX_IPSTRLEN);
                     break;
-#endif
                 default:
                     aiptr = aiptr->ai_next;
                     continue;

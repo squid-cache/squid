@@ -1,6 +1,7 @@
 #include "config.h"
 #include "testIpAddress.h"
 #include "ip/IpAddress.h"
+#include "ip/tools.h"
 
 #if HAVE_CSTRING
 #include <cstring>
@@ -41,11 +42,7 @@ testIpAddress::testDefaults()
     CPPUNIT_ASSERT( anIPA.IsIPv4() );
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
     CPPUNIT_ASSERT_EQUAL( (u_short) 0 , anIPA.GetPort() );
-#if USE_IPV6
     CPPUNIT_ASSERT( anIPA.IsIPv6() );
-#else
-    CPPUNIT_ASSERT( !anIPA.IsIPv6() );
-#endif
 }
 
 void
@@ -70,7 +67,6 @@ testIpAddress::testInAddrConstructor()
     CPPUNIT_ASSERT( memcmp(&inval, &outval, sizeof(struct in_addr)) == 0 );
 }
 
-#if USE_IPV6
 void
 testIpAddress::testInAddr6Constructor()
 {
@@ -94,7 +90,6 @@ testIpAddress::testInAddr6Constructor()
     anIPA.GetInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &inval, &outval, sizeof(struct in6_addr)) == 0 );
 }
-#endif
 
 void
 testIpAddress::testSockAddrConstructor()
@@ -125,7 +120,6 @@ testIpAddress::testSockAddrConstructor()
     CPPUNIT_ASSERT( memcmp( &insock, &outsock, sizeof(struct sockaddr_in)) == 0 );
 }
 
-#if USE_IPV6
 void
 testIpAddress::testSockAddr6Constructor()
 {
@@ -157,7 +151,6 @@ testIpAddress::testSockAddr6Constructor()
     anIPA.GetSockAddr(outsock);
     CPPUNIT_ASSERT( memcmp( &insock, &outsock, sizeof(struct sockaddr_in6)) == 0 );
 }
-#endif
 
 
 void
@@ -236,7 +229,6 @@ testIpAddress::testStringConstructor()
     anIPA.GetInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
 
-#if USE_IPV6
     struct in6_addr expectv6;
     struct in6_addr outval6;
 
@@ -246,6 +238,10 @@ testIpAddress::testStringConstructor()
     expectv6.s6_addr32[3] = htonl(0x00000045);
 
     IpAddress bnIPA = "2000:800::45";
+
+//char test[256];
+//bnIPA.NtoA(test, 256);
+//printf("bnIPA: %s\n", test);
 
     /* test stored values */
     CPPUNIT_ASSERT( !bnIPA.IsAnyAddr() );
@@ -274,7 +270,6 @@ testIpAddress::testStringConstructor()
     CPPUNIT_ASSERT_EQUAL( (u_short) 0 , cnIPA.GetPort() );
     cnIPA.GetInAddr(outval6);
     CPPUNIT_ASSERT( memcmp( &expectv6, &outval6, sizeof(struct in6_addr)) == 0 );
-#endif
 }
 
 void
@@ -301,11 +296,7 @@ testIpAddress::testSetEmpty()
     CPPUNIT_ASSERT( anIPA.IsAnyAddr() );
     CPPUNIT_ASSERT( !anIPA.IsNoAddr() );
     CPPUNIT_ASSERT( anIPA.IsIPv4() );
-#if USE_IPV6
     CPPUNIT_ASSERT( anIPA.IsIPv6() );
-#else
-    CPPUNIT_ASSERT( !anIPA.IsIPv6() );
-#endif
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
     CPPUNIT_ASSERT_EQUAL( (u_short) 0 , anIPA.GetPort() );
 }
@@ -432,11 +423,7 @@ testIpAddress::testNtoA()
     anIPA.SetAnyAddr();
 
     /* test AnyAddr display values */
-#if USE_IPV6
     CPPUNIT_ASSERT( memcmp("::", anIPA.NtoA(buf,MAX_IPSTRLEN), 2) == 0 );
-#else
-    CPPUNIT_ASSERT( memcmp("0.0.0.0",anIPA.NtoA(buf,MAX_IPSTRLEN), 7) == 0 );
-#endif
 
     inval.s_addr = htonl(0xC0A8640C);
     anIPA = inval;
@@ -447,11 +434,7 @@ testIpAddress::testNtoA()
     anIPA.SetNoAddr();
 
     /* test NoAddr display values */
-#if USE_IPV6
     CPPUNIT_ASSERT( memcmp("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",anIPA.NtoA(buf,MAX_IPSTRLEN), 39) == 0 );
-#else
-    CPPUNIT_ASSERT( memcmp("255.255.255.255",anIPA.NtoA(buf,MAX_IPSTRLEN), 15) == 0 );
-#endif
 }
 
 void
@@ -469,8 +452,6 @@ testIpAddress::testToURL_fromInAddr()
     anIPA.ToURL(buf,MAX_IPSTRLEN);
     CPPUNIT_ASSERT( memcmp("192.168.100.12", buf, 14) == 0 );
 
-#if USE_IPV6
-
     /* test output when constructed from in6_addr with IPv6 */
     struct in6_addr ip6val;
 
@@ -483,8 +464,6 @@ testIpAddress::testToURL_fromInAddr()
 
     bnIPA.ToURL(buf,MAX_IPSTRLEN);
     CPPUNIT_ASSERT( memcmp("[c0a8:640c:ffff:ffff:ffff:ffff:ffff:ffff]", buf, 41) == 0 );
-
-#endif
 }
 
 void
@@ -505,8 +484,6 @@ testIpAddress::testToURL_fromSockAddr()
     anIPA.ToURL(buf,MAX_IPSTRLEN);
     CPPUNIT_ASSERT( memcmp("192.168.100.12:80", buf, 17) == 0 );
 
-#if USE_IPV6
-
     /* test output when constructed from in6_addr with IPv6 */
     struct sockaddr_in6 ip6val;
 
@@ -524,9 +501,6 @@ testIpAddress::testToURL_fromSockAddr()
 
     bnIPA.ToURL(buf,MAX_IPSTRLEN);
     CPPUNIT_ASSERT( memcmp("[c0a8:640c:ffff:ffff:ffff:ffff:ffff:ffff]:80", buf, 44) == 0 );
-
-#endif
-
 }
 
 void
@@ -549,8 +523,6 @@ testIpAddress::testGetReverseString()
     v4IPA.GetReverseString(buf,AF_INET6);
     CPPUNIT_ASSERT( memcmp("",buf, 1) == 0 );
 
-
-#if USE_IPV6
     struct in6_addr ip6val;
 
     ip6val.s6_addr32[0] = htonl(0xC0A8640C);
@@ -563,9 +535,6 @@ testIpAddress::testGetReverseString()
     /* test IPv6 output */
     v6IPA.GetReverseString(buf);
     CPPUNIT_ASSERT( memcmp("f.f.f.f.f.f.f.f.f.f.f.f.f.f.f.f.f.f.f.f.f.f.f.f.c.0.4.6.8.a.0.c.ip6.arpa.",buf,73) == 0 );
-
-#endif
-
 }
 
 void
@@ -580,37 +549,28 @@ testIpAddress::testMasking()
     CPPUNIT_ASSERT_EQUAL( 0 ,anIPA.GetCIDR() );
 
     anIPA.SetNoAddr();
-#if USE_IPV6
     CPPUNIT_ASSERT_EQUAL( 128 , anIPA.GetCIDR() );
-#else
-    CPPUNIT_ASSERT_EQUAL( 32 , anIPA.GetCIDR() );
-#endif
 
     /* Test Numeric ApplyCIDR */
     anIPA.SetNoAddr();
-    CPPUNIT_ASSERT( !anIPA.ApplyMask(129) );
-#if !USE_IPV6
-    CPPUNIT_ASSERT( !anIPA.ApplyMask(33) );
-#endif
-    CPPUNIT_ASSERT( anIPA.ApplyMask(31) );
-    CPPUNIT_ASSERT_EQUAL( 31 , anIPA.GetCIDR() );
+    CPPUNIT_ASSERT( !anIPA.ApplyMask(129,AF_INET6) );
+    CPPUNIT_ASSERT( !anIPA.ApplyMask(33,AF_INET) );
 
     anIPA.SetNoAddr();
-    anIPA.ApplyMask(31, AF_INET);
-#if USE_IPV6
+    CPPUNIT_ASSERT( anIPA.ApplyMask(31,AF_INET) );
     CPPUNIT_ASSERT_EQUAL( 127 , anIPA.GetCIDR() );
-#else
-    CPPUNIT_ASSERT_EQUAL( 31 , anIPA.GetCIDR() );
-#endif
 
-#if USE_IPV6
+    anIPA.SetNoAddr();
+    CPPUNIT_ASSERT( anIPA.ApplyMask(127,AF_INET6) );
+    CPPUNIT_ASSERT_EQUAL( 127 , anIPA.GetCIDR() );
+
     anIPA.SetNoAddr();
     anIPA.ApplyMask(80,AF_INET6);
     CPPUNIT_ASSERT_EQUAL( 80 , anIPA.GetCIDR() );
+
     /* BUG Check: test values by display. */
     CPPUNIT_ASSERT( anIPA.NtoA(buf,MAX_IPSTRLEN) != NULL );
     CPPUNIT_ASSERT( memcmp("ffff:ffff:ffff:ffff:ffff::", buf, 26) == 0 );
-#endif
 
     /* Test Network Bitmask from IpAddress */
     anIPA.SetNoAddr();
@@ -629,8 +589,6 @@ testIpAddress::testMasking()
     /* BUG Check failing test. Masked values for display. */
     CPPUNIT_ASSERT( memcmp("255.255.240.0",anIPA.NtoA(buf,MAX_IPSTRLEN), 13) == 0 );
 
-
-#if USE_IPV6
     anIPA.SetNoAddr();
     maskIPA.SetNoAddr();
 
@@ -658,8 +616,6 @@ testIpAddress::testMasking()
     CPPUNIT_ASSERT(  maskIPA.IsIPv4() );
     CPPUNIT_ASSERT( !maskIPA.IsIPv6() );
     CPPUNIT_ASSERT_EQUAL( 20 , anIPA.GetCIDR() );
-#endif
-
 }
 
 void
@@ -717,7 +673,6 @@ testIpAddress::testAddrInfo()
 #endif
 #endif /*0*/
 
-#if USE_IPV6
 #if HAVE_SS_LEN_IN_SS
     CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_storage*)expect->ai_addr)->ss_len,
                           ((struct sockaddr_storage*)ipval->ai_addr)->ss_len );
@@ -737,22 +692,6 @@ testIpAddress::testAddrInfo()
                           ((struct sockaddr_in6*)ipval->ai_addr)->sin6_family );
     CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in6*)expect->ai_addr)->sin6_port,
                           ((struct sockaddr_in6*)ipval->ai_addr)->sin6_port );
-#else
-#if HAVE_SS_LEN_IN_SS
-    CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_storage*)expect->ai_addr)->ss_len,
-                          ((struct sockaddr_storage*)ipval->ai_addr)->ss_len );
-    CPPUNIT_ASSERT_EQUAL( (socklen_t)((struct sockaddr_storage*)ipval->ai_addr)->ss_len, ipval->ai_addrlen );
-#endif
-#if HAVE_SIN_LEN_IN_SAI
-    CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in*)expect->ai_addr)->sin_len,
-                          ((struct sockaddr_in*)ipval->ai_addr)->sin_len );
-    CPPUNIT_ASSERT_EQUAL( (socklen_t)((struct sockaddr_in*)ipval->ai_addr)->sin_len, ipval->ai_addrlen );
-#endif
-    CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in*)expect->ai_addr)->sin_family,
-                          ((struct sockaddr_in*)ipval->ai_addr)->sin_family );
-    CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in*)expect->ai_addr)->sin_port,
-                          ((struct sockaddr_in*)ipval->ai_addr)->sin_port );
-#endif /* USE_IPV6 */
 
     CPPUNIT_ASSERT( memcmp( expect->ai_addr, ipval->ai_addr, expect->ai_addrlen ) == 0 );
 

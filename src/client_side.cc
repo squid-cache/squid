@@ -2990,7 +2990,7 @@ connStateCreate(const IpAddress &peer, const IpAddress &me, int fd, http_port_li
 
     result->peer = peer;
     result->log_addr = peer;
-    result->log_addr.ApplyMask(Config.Addrs.client_netmask.GetCIDR());
+    result->log_addr.ApplyMask(Config.Addrs.client_netmask);
     result->me = me;
     result->fd = fd;
     result->in.buf = (char *)memAllocBuf(CLIENT_REQ_BUF_SZ, &result->in.allocatedSize);

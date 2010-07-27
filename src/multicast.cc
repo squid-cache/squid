@@ -66,14 +66,12 @@ mcastJoinGroups(const ipcache_addrs *ia, const DnsLookupDetails &, void *datanot
     }
 
     for (i = 0; i < (int) ia->count; i++) {
-        debugs(7, 10, "Listening for ICP requests on " << ia->in_addrs[i] );
+        debugs(7, 9, "Listening for ICP requests on " << ia->in_addrs[i] );
 
-#if USE_IPV6
         if ( ! ia->in_addrs[i].IsIPv4() ) {
-            debugs(7, 10, "ERROR: IPv6 Multicast Listen has not been implemented!");
+            debugs(7, 9, "ERROR: IPv6 Multicast Listen has not been implemented!");
             continue;
         }
-#endif
 
         ia->in_addrs[i].GetInAddr(mr.imr_multiaddr);
 

@@ -55,6 +55,7 @@
 #include "StoreFileSystem.h"
 #include "DiskIO/DiskIOModule.h"
 #include "comm.h"
+#include "ip/tools.h"
 #if USE_EPOLL
 #include "comm_epoll.h"
 #endif
@@ -1280,6 +1281,8 @@ SquidMain(int argc, char **argv)
 
         /* we may want the parsing process to set this up in the future */
         Store::Root(new StoreController);
+
+        Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
 
         parse_err = parseConfigFile(ConfigFile);
 
