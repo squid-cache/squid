@@ -7,10 +7,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-08 00:04+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2009-03-06 00:14+0000\n"
 "Last-Translator: juancarlospaco <juancarlospaco@hotmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
+"Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -40,12 +41,12 @@ msgstr ""
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
-"A Timeout occurred while waiting to read data from the network.  The network "
-"or server may be down or congested.  Please retry your request."
+"A Timeout occurred while waiting to read data from the network. The network "
+"or server may be down or congested. Please retry your request."
 msgstr ""
-"Se acab&oacute; el tiempo m&aacute;ximo de lectura mientras se le&iacute;an "
-"datos de la red.  La red o el servidor pueden estar congestionados.  Por "
-"favor, int&eacute;ntelo de nuevo"
+"Un tiempo de espera se produjo mientras se esperaba leer datos de la red. La "
+"red o el servidor puede estar caído o congestionado. Por favor, inténtelo de "
+"nuevo."
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
@@ -58,12 +59,12 @@ msgstr "Acceso Denegado"
 #: templates/ERR_ACCESS_DENIED:6
 msgid ""
 "Access control configuration prevents your request from being allowed at "
-"this time.  Please contact your service provider if you feel this is "
+"this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
-"Las reglas de control de acceso impiden que su petici&oacute;n sea permitida "
-"en este momento.  Contacte con su proveedor de servicios si cree que esto es "
-"incorrecto."
+"La configuración de control de acceso evita que su solicitud sea permitida "
+"en este momento. Por favor, póngase en contacto con su proveedor de "
+"servicios si cree que esto es incorrecto."
 
 #: templates/ERR_FTP_FORBIDDEN:4
 msgid ""
@@ -73,7 +74,7 @@ msgstr ""
 "Ha ocurrido una falla de autenticaci&oacute;n cuando se trataba de conseguir "
 "el URL: <a href=\"%U\">%U</a>"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -87,19 +88,19 @@ msgstr "Se ha recibido una respuesta ilegal desde el servidor ICAP."
 
 #: templates/ERR_READ_ERROR:7
 msgid ""
-"An error condition occurred while reading data from the network.  Please "
+"An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr ""
-"Ha ocurrido alg&uacute;n problema mientras se le&iacute;an datos de la red.  "
-"Por favor, int&eacute;ntelo de nuevo."
+"Se ha producido un error al leer datos de la red. Por favor, inténtelo de "
+"nuevo."
 
 #: templates/ERR_WRITE_ERROR:7
 msgid ""
-"An error condition occurred while writing to the network.  Please retry your "
+"An error condition occurred while writing to the network. Please retry your "
 "request."
 msgstr ""
-"Se ha producido un error mientras se escrib&iacute;an datos en la red.  Por "
-"favor, int&eacute;ntelo de nuevo."
+"Se ha producido un error al escribir datos de la red. Por favor, inténtelo "
+"de nuevo."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
@@ -139,11 +140,11 @@ msgid "Directory: %U"
 msgstr "Directorio: %U"
 
 #: templates/ERR_DIR_LISTING:2
-#, fuzzy
 msgid "Directory: <a href=\"%U\">%U</a>/"
-msgstr "Directorio: <a href=\"/\">%U</a>/"
+msgstr "Directorio: <a href=\"%U\">%U</a>/"
 
-#: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
+#: templates/ERR_ACCESS_DENIED:2 templates/ERR_AGENT_CONFIGURE:2
+#: templates/ERR_AGENT_WPAD:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
 #: templates/ERR_CONNECT_FAIL:2 templates/ERR_DNS_FAIL:2 templates/ERR_ESI:2
 #: templates/ERR_FORWARDING_DENIED:2 templates/ERR_FTP_DISABLED:2
@@ -192,23 +193,21 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "ERROR: El URL solicitado no se ha podido conseguir"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr "ERROR: El URN solicitado no se ha podido conseguir"
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "ERROR: La URN requerida no pudo ser obtenida."
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
 msgstr "El procesado ESI falló"
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTP PUT Correcto: Archivo Creado"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT Correcto: Archivo actualizado"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "FTP PUT/envio fallido"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -227,11 +226,24 @@ msgstr "Archivo creado"
 msgid "File updated"
 msgstr "Archivo actualizado"
 
+#: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
+msgid "For Firefox browsers go to: <ul>"
+msgstr "Para navegadores basados en Firefox vaya a:"
+
+#: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
+msgid "For Internet Explorer browsers go to: <ul>"
+msgstr "Para navegadores Internet Explorer vaya a:"
+
+#: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
+msgid "For Opera browsers go to: <ul>"
+msgstr "Para navegadores Opera vaya a:"
+
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
 msgstr "Reenv&iacute;o denegado."
 
-#: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
+#: templates/ERR_ACCESS_DENIED:8 templates/ERR_AGENT_CONFIGURE:16
+#: templates/ERR_AGENT_WPAD:15 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
 #: templates/ERR_CONNECT_FAIL:9 templates/ERR_DIR_LISTING:7
 #: templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
@@ -253,12 +265,19 @@ msgid "Generated %T by %h (%s)"
 msgstr "Generado %T por %h (%s)"
 
 #: templates/ERR_INVALID_REQ:12
-msgid "HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software."
+msgid ""
+"HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
+"HTTP/1.1 <q>Esperado:</q> la característica ha sido requerida desde un "
+"software HTTP/1.0."
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
 msgstr "Hey, no espere mucho de URNs en %T :)"
+
+#: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
+msgid "How to find these settings in your browser:"
+msgstr "Como encontrar estas preferencias en su navegador:"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
@@ -289,6 +308,13 @@ msgstr ""
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
 msgstr "Hay un doble-escape ilegal en la ruta de la URL"
+
+#: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
+#: templates/ERR_AGENT_CONFIGURE:14
+msgid "In the HTTP proxy box type the proxy name %h and port 3128."
+msgstr ""
+"En la caja de entrada de HTTP proxy escriba el nombre del proxy %h y el "
+"puerto 3128"
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
@@ -366,6 +392,14 @@ msgstr ""
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
 msgstr "La petición es demasiado grande."
+
+#: templates/ERR_AGENT_WPAD:10
+msgid "Select Automatically detect settings"
+msgstr "Seleccione Detectar preferencias automáticamente"
+
+#: templates/ERR_AGENT_WPAD:13
+msgid "Select Use Automatic proxy configuration"
+msgstr "Seleccione Usar Configuración automática de Proxy"
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
@@ -489,10 +523,10 @@ msgstr ""
 "href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid "The remote host or network may be down.  Please try the request again."
+msgid "The remote host or network may be down. Please try the request again."
 msgstr ""
-"El equipo remoto o la red deben estar caídas.  Por favor intenta la petición "
-"de nuevo."
+"El host remoto o la red se ha caído. Por favor, inténtelo de nuevo la "
+"petición."
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
@@ -529,21 +563,21 @@ msgstr "El sistema ha devuelto: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
 msgid ""
-"There is no WAIS Relay host defined for this Cache!  Yell at the "
+"There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
-"Este cach&eacute; no tiene definido ninguna pasarela para el protocolo "
-"WAIS !!  &iexcl;Gr&iacute;tele al administrador del cach&eacute; !"
+"No esta definido el host wais relay para este cache. comentar con el "
+"administrador"
 
 #: templates/ERR_TOO_BIG:8
 msgid ""
 "These limits have been established by the Internet Service Provider who "
-"operates this cache.  Please contact them directly if you feel this is an "
+"operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
-"Estos l&iacute;mites fueron establecidos por el Proveedor de Servicios de "
-"Internet que opera este cach&eacute;.  Por favor, contacte con &eacute;l "
-"directamente si cree que esto es un error."
+"Estos límites han sido establecidos por el proveedor de servicios de "
+"Internet que opera este caché. Por favor, comuníquese con ellos directamente "
+"si cree que esto es un error"
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
@@ -556,20 +590,19 @@ msgstr "Esta caché no soporta FTP."
 #: templates/ERR_SHUTTING_DOWN:5
 msgid ""
 "This cache is in the process of shutting down and can not service your "
-"request at this time.  Please retry your request again soon."
+"request at this time. Please retry your request again soon."
 msgstr ""
-"Esta caché está en proceso de apagarse y no puede servir tu petición en este "
-"momento.  Por favor vuelve a intentar tu petición de nuevo pronto."
+"Este caché está en el proceso de apagado y no puede atender su solicitud en "
+"este momento. Por favor, inténtelo de nuevo pronto."
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
-"sibling relationship.  Perhaps the client at %i is a cache which has been "
+"sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
-"Este cach&eacute; no permite reenviar su petici&oacute;n porque trata de "
-"obligar a mantener una relaci&oacute;n de hermandad.  Quiz&aacute;s el "
-"cliente en %i es un cach&eacute; que ha sido mal configurado."
+"Este caché no transmitirá su solicitud, ya que intenta imponer una relación "
+"de conexión. Quizás el cliente en% i es un caché que se ha desconfigurado."
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
@@ -604,12 +637,12 @@ msgstr ""
 #: templates/ERR_FTP_NOT_FOUND:7
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
-"comply with RFC 1738).  If this is the cause, then the file can be found at "
+"comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
-"Esto puede ser causado por un URL FTP con un camino absoluto (y por lo tanto "
-"no cumple con RFC 1738).  Si esta es la causa, entonces el  archivo puede "
-"ser obtenido en <a href=\"%B\">%B</a>."
+"Esto podria ser causado por una URL del FTP con ruta absoluta (La cual no "
+"cumple con el RFC 1738). si esto es la causa, entonces el archivo puede ser "
+"buscado en <a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -626,16 +659,35 @@ msgstr ""
 #: templates/ERR_CANNOT_FORWARD:6
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches.  The most likely cause for this error is that the cache "
-"administrator does not allow this cache to make direct connections to origin "
-"servers, and all configured parent caches are currently unreachable."
+"caches. The most likely cause for this error is that the cache administrator "
+"does not allow this cache to make direct connections to origin servers, and "
+"all configured parent caches are currently unreachable."
 msgstr ""
-"La petici&oacute;n no ha podido ser enviada al servidor origen o a alguno de "
-"los cach&eacute;s padres.  Las razones m&aacute;s probables de que haya "
-"ocurrido este error son el administrador de lo cach&eacute; no permite que "
-"este cach&eacute; realice conexiones directas a los servidores origen, y "
-"todos los cach&eacute;s configurados como padres son inalcanzables en este "
-"momento."
+"Esta solicitud no ha podido comunicarse con el servidor de origen o de "
+"alguna de los cachés padres. La causa más probable de este error es que el "
+"administrador de caché no permite que este caché realice conexiones directas "
+"a los servidores de origen, y todos los cachés configurados como padres son "
+"inalcanzables en este momento."
+
+#: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
+msgid ""
+"Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
+msgstr ""
+"Herramientas -&gt; Opciones de Internet  -&gt; Conexión -&gt; Preferencias "
+"de RED -&gt;Proxy"
+
+#: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
+msgid ""
+"Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
+msgstr ""
+"Herramientas -&gt; Opciones -&gt; Avanzado -&gt; Red -&gt; Ajustes de "
+"conexión"
+
+#: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
+msgid ""
+"Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
+msgstr ""
+"Herramientas -&gt; Opciones -&gt; Avanzado -&gt; Red -&gt; Servidores Proxy"
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -663,10 +715,10 @@ msgstr ""
 "No se encontr&oacute; un documento v&aacute;lido en el cach&eacute; y se "
 "especific&oacute; la directiva <q>only-if-cached</q>."
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr ""
-"Mientras se intentaba hacer un PUT del siguiente URL: <a href=\"%U\">%U</a>"
+#: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
+#: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
+msgid "Web Browser Configuration"
+msgstr "Configuración del Navegador de Internet"
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
@@ -683,7 +735,15 @@ msgstr ""
 "<em>o</em> requiere revalidaci&oacute;n prohibida por la directiva <q>only-"
 "if-cached</q>"
 
-#: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
+#: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
+msgid ""
+"Your Web Browser configuration needs to be corrected to use this network."
+msgstr ""
+"Su configuración de Navegador de Internet necesita ser corregida para usar "
+"esta red."
+
+#: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
+#: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
 #: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
 #: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
@@ -716,3 +776,14 @@ msgstr "Su administrador web es <a href=\"mailto:%w\">%w</a>."
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr "Respuesta vac&iacute;a (tama&ntilde;o cero)"
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "ERROR: El URN solicitado no se ha podido conseguir"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP PUT Correcto: Archivo actualizado"
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr ""
+#~ "Mientras se intentaba hacer un PUT del siguiente URL: <a href=\"%U\">%U</"
+#~ "a>"

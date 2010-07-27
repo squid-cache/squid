@@ -7,10 +7,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-08 00:04+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2009-06-11 06:25+0000\n"
 "Last-Translator: Anon Sricharoenchai <Unknown>\n"
 "Language-Team: Thai <th@li.org>\n"
+"Language: th\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -34,10 +35,11 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_READ_TIMEOUT:7
+#, fuzzy
 msgid ""
-"A Timeout occurred while waiting to read data from the network.  The network "
-"or server may be down or congested.  Please retry your request."
-msgstr ""
+"A Timeout occurred while waiting to read data from the network. The network "
+"or server may be down or congested. Please retry your request."
+msgstr "มีภาวะข้อผิดผลาดระหว่างที่กำลังรับข้อมูลจากระบบเครือข่าย.  กรุณาเรียกดูใหม่อีกครั้ง."
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
@@ -50,7 +52,7 @@ msgstr ""
 #: templates/ERR_ACCESS_DENIED:6
 msgid ""
 "Access control configuration prevents your request from being allowed at "
-"this time.  Please contact your service provider if you feel this is "
+"this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
 
@@ -60,7 +62,7 @@ msgid ""
 "href=\"%U\">%U</a>"
 msgstr ""
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -71,14 +73,16 @@ msgid "An Illegal response was received from the ICAP server."
 msgstr ""
 
 #: templates/ERR_READ_ERROR:7
+#, fuzzy
 msgid ""
-"An error condition occurred while reading data from the network.  Please "
+"An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr "มีภาวะข้อผิดผลาดระหว่างที่กำลังรับข้อมูลจากระบบเครือข่าย.  กรุณาเรียกดูใหม่อีกครั้ง."
 
 #: templates/ERR_WRITE_ERROR:7
+#, fuzzy
 msgid ""
-"An error condition occurred while writing to the network.  Please retry your "
+"An error condition occurred while writing to the network. Please retry your "
 "request."
 msgstr "มีภาวะข้อผิดผลาดระหว่างที่กำลังส่งข้อมูลไปยังระบบเครือข่าย.  กรุณาเรียกดูใหม่อีกครั้ง."
 
@@ -123,7 +127,8 @@ msgstr ""
 msgid "Directory: <a href=\"%U\">%U</a>/"
 msgstr ""
 
-#: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
+#: templates/ERR_ACCESS_DENIED:2 templates/ERR_AGENT_CONFIGURE:2
+#: templates/ERR_AGENT_WPAD:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
 #: templates/ERR_CONNECT_FAIL:2 templates/ERR_DNS_FAIL:2 templates/ERR_ESI:2
 #: templates/ERR_FORWARDING_DENIED:2 templates/ERR_FTP_DISABLED:2
@@ -172,23 +177,22 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "ERROR: ไม่สามารถเรียกดู URL ที่ได้รับการร้องขอ"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr "ERROR: ไม่สามารถเรียกดู URN ที่ได้รับการร้องขอ"
+#, fuzzy
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "ERROR: ไม่สามารถเรียกดู URL ที่ได้รับการร้องขอ"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
 msgstr "การประมวลผล ESI ไม่สำเร็จ"
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTP PUT เสร็จสมบูรณ์: มีไฟล์ใหม่ถูกสร้างขึ้น"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT เสร็จสมบูรณ์: ไฟล์ถูกแทนที่ด้วยไฟล์ใหม่"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "FTP PUT/upload (ส่งไฟล์ขึ้น) ไม่สำเร็จ"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -207,11 +211,24 @@ msgstr "ไฟล์ใหม่ถูกสร้างขึ้น"
 msgid "File updated"
 msgstr "ไฟล์ถูกแทนที่ด้วยไฟล์ใหม่"
 
+#: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
+msgid "For Firefox browsers go to: <ul>"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
+msgid "For Internet Explorer browsers go to: <ul>"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
+msgid "For Opera browsers go to: <ul>"
+msgstr ""
+
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
 msgstr "การส่งต่อ (forwarding) ไม่ได้รับอนุญาต"
 
-#: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
+#: templates/ERR_ACCESS_DENIED:8 templates/ERR_AGENT_CONFIGURE:16
+#: templates/ERR_AGENT_WPAD:15 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
 #: templates/ERR_CONNECT_FAIL:9 templates/ERR_DIR_LISTING:7
 #: templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
@@ -233,12 +250,17 @@ msgid "Generated %T by %h (%s)"
 msgstr ""
 
 #: templates/ERR_INVALID_REQ:12
-msgid "HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software."
+msgid ""
+"HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
 msgstr "เฮ้, อย่าคาดหวังจาก URN บน %T มากเกินไปนัก :)"
+
+#: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
+msgid "How to find these settings in your browser:"
+msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
@@ -262,6 +284,11 @@ msgstr ""
 
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
+#: templates/ERR_AGENT_CONFIGURE:14
+msgid "In the HTTP proxy box type the proxy name %h and port 3128."
 msgstr ""
 
 #: templates/ERR_INVALID_URL:5
@@ -329,6 +356,14 @@ msgstr "การรอรับข้อมูลเกินเวลาที
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
 msgstr "คำสั่งหรือคำร้อง (request) ที่ส่ง มีขนาดใหญ่เกินไป"
+
+#: templates/ERR_AGENT_WPAD:10
+msgid "Select Automatically detect settings"
+msgstr ""
+
+#: templates/ERR_AGENT_WPAD:13
+msgid "Select Use Automatic proxy configuration"
+msgstr ""
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
@@ -433,7 +468,7 @@ msgid ""
 msgstr "พบความผิดพลาดดังต่อไปนี้ระหว่างที่พยายามเรียกดู URN: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid "The remote host or network may be down.  Please try the request again."
+msgid "The remote host or network may be down. Please try the request again."
 msgstr ""
 
 #: templates/ERR_TOO_BIG:5
@@ -471,14 +506,14 @@ msgstr "ระบบส่งค่าคืนดังนี้: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
 msgid ""
-"There is no WAIS Relay host defined for this Cache!  Yell at the "
+"There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
 
 #: templates/ERR_TOO_BIG:8
 msgid ""
 "These limits have been established by the Internet Service Provider who "
-"operates this cache.  Please contact them directly if you feel this is an "
+"operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
 
@@ -491,9 +526,10 @@ msgid "This cache does not support FTP."
 msgstr "ระบบแคชนี้ไม่รองรับ FTP"
 
 #: templates/ERR_SHUTTING_DOWN:5
+#, fuzzy
 msgid ""
 "This cache is in the process of shutting down and can not service your "
-"request at this time.  Please retry your request again soon."
+"request at this time. Please retry your request again soon."
 msgstr ""
 "ระบบแคชนี้กำลังเข้าสู่กระบวนการปิดระบบ และไม่สามารถให้บริการตามคำขอที่คุณเรียกใช้มา "
 "ในขณะนี้.  กรุณาเรียกใช้มาใหม่อีกครั้งในภายหลัง"
@@ -501,7 +537,7 @@ msgstr ""
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
-"sibling relationship.  Perhaps the client at %i is a cache which has been "
+"sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
 
@@ -530,7 +566,7 @@ msgstr ""
 #: templates/ERR_FTP_NOT_FOUND:7
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
-"comply with RFC 1738).  If this is the cause, then the file can be found at "
+"comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
 
@@ -545,9 +581,24 @@ msgstr ""
 #: templates/ERR_CANNOT_FORWARD:6
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches.  The most likely cause for this error is that the cache "
-"administrator does not allow this cache to make direct connections to origin "
-"servers, and all configured parent caches are currently unreachable."
+"caches. The most likely cause for this error is that the cache administrator "
+"does not allow this cache to make direct connections to origin servers, and "
+"all configured parent caches are currently unreachable."
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
+msgid ""
+"Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
+msgid ""
+"Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
+msgid ""
+"Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
 msgstr ""
 
 #: templates/ERR_DNS_FAIL:5
@@ -572,9 +623,10 @@ msgid ""
 "directive was specified."
 msgstr ""
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr "ระหว่างที่พยายาม PUT URL ต่อไปนี้: <a href=\"%U\">%U</a>"
+#: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
+#: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
+msgid "Web Browser Configuration"
+msgstr ""
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
@@ -587,7 +639,13 @@ msgid ""
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
 
-#: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
+#: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
+msgid ""
+"Your Web Browser configuration needs to be corrected to use this network."
+msgstr ""
+
+#: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
+#: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
 #: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
 #: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
@@ -617,3 +675,12 @@ msgstr "ผู้ดูแลเว็บของคุณคือ <a href=\"m
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr "สิ่งที่ตอบกลับมา ว่างเปล่า"
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "ERROR: ไม่สามารถเรียกดู URN ที่ได้รับการร้องขอ"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP PUT เสร็จสมบูรณ์: ไฟล์ถูกแทนที่ด้วยไฟล์ใหม่"
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr "ระหว่างที่พยายาม PUT URL ต่อไปนี้: <a href=\"%U\">%U</a>"

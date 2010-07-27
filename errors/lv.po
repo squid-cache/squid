@@ -7,10 +7,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-08 00:04+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2009-10-28 12:47+0000\n"
 "Last-Translator: Mārtiņš Bruņenieks <Unknown>\n"
 "Language-Team: Latvian <lv@li.org>\n"
+"Language: lv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -37,9 +38,10 @@ msgstr ""
 "<b>Nekorekta atbilde</b> notikusi kļūda mēģinot apstrādāt pieprasījumu:"
 
 #: templates/ERR_READ_TIMEOUT:7
+#, fuzzy
 msgid ""
-"A Timeout occurred while waiting to read data from the network.  The network "
-"or server may be down or congested.  Please retry your request."
+"A Timeout occurred while waiting to read data from the network. The network "
+"or server may be down or congested. Please retry your request."
 msgstr ""
 "Iestājusies noildze, gaidot datus no tīkla. Tīkls vai serveris nestrādā vai "
 "ir pārslogots."
@@ -53,9 +55,10 @@ msgid "Access Denied."
 msgstr "Pieeja liegta"
 
 #: templates/ERR_ACCESS_DENIED:6
+#, fuzzy
 msgid ""
 "Access control configuration prevents your request from being allowed at "
-"this time.  Please contact your service provider if you feel this is "
+"this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
 "Šobrīd pēc pieejas kontroles uzstādījumiem jūsu pieprasījums nav atļauts. Ja "
@@ -69,7 +72,7 @@ msgstr ""
 "Mēģinot atvērt vietrādi URL: <a href=\"%U\">%U</a> notikusi FTP "
 "autentifikācijas kļūda"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -82,16 +85,18 @@ msgid "An Illegal response was received from the ICAP server."
 msgstr "Saņemta nekorekta atbilde no ICAP servera"
 
 #: templates/ERR_READ_ERROR:7
+#, fuzzy
 msgid ""
-"An error condition occurred while reading data from the network.  Please "
+"An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr ""
 "Iestājusies kļūdas situācija saņemot datus no tīkla. Lūdzu atkārtojiet savu "
 "pieprasījumu."
 
 #: templates/ERR_WRITE_ERROR:7
+#, fuzzy
 msgid ""
-"An error condition occurred while writing to the network.  Please retry your "
+"An error condition occurred while writing to the network. Please retry your "
 "request."
 msgstr ""
 "Iestājusies kļūdas situācijanosūtot datus pa tīklu. Lūdzu atkārtojiet savu "
@@ -139,7 +144,8 @@ msgstr "Directorijs: %U"
 msgid "Directory: <a href=\"%U\">%U</a>/"
 msgstr "Direktorijs: <a href=\"/\">%U</a>/"
 
-#: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
+#: templates/ERR_ACCESS_DENIED:2 templates/ERR_AGENT_CONFIGURE:2
+#: templates/ERR_AGENT_WPAD:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
 #: templates/ERR_CONNECT_FAIL:2 templates/ERR_DNS_FAIL:2 templates/ERR_ESI:2
 #: templates/ERR_FORWARDING_DENIED:2 templates/ERR_FTP_DISABLED:2
@@ -188,23 +194,22 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "KĻŪDA: Pieprasītā adrese nav atrodama"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
+#, fuzzy
+msgid "ERROR: The requested URN could not be retrieved"
 msgstr "KĻŪDA: Pieprasītā adrese nav atrodama"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
 msgstr "Neveiksmīga ESI apstrāde."
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTP PUT komanda izpildīta: Datne izveidota"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT komanda izpildīta: Datne atjaunināta"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "FTP PUT/augšupielāde neveiksmīga"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -223,11 +228,24 @@ msgstr "Datne izveidota"
 msgid "File updated"
 msgstr "Datne augšupielādēta"
 
+#: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
+msgid "For Firefox browsers go to: <ul>"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
+msgid "For Internet Explorer browsers go to: <ul>"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
+msgid "For Opera browsers go to: <ul>"
+msgstr ""
+
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
 msgstr "Pārsūtīšana aizliegta."
 
-#: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
+#: templates/ERR_ACCESS_DENIED:8 templates/ERR_AGENT_CONFIGURE:16
+#: templates/ERR_AGENT_WPAD:15 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
 #: templates/ERR_CONNECT_FAIL:9 templates/ERR_DIR_LISTING:7
 #: templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
@@ -249,12 +267,17 @@ msgid "Generated %T by %h (%s)"
 msgstr "Ģenerēts %T by %h (%s)"
 
 #: templates/ERR_INVALID_REQ:12
-msgid "HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software."
+msgid ""
+"HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
 msgstr "Hi, neiaizraujies par daudz ar %T :)"
+
+#: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
+msgid "How to find these settings in your browser:"
+msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
@@ -283,6 +306,11 @@ msgstr "Neatļauts simbols adresē. Pasvītrojuma rakstzīme nav atļauta."
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
 msgstr "Adresē ir divas atsoļa rakstzīmes, kas ir aizliegtas"
+
+#: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
+#: templates/ERR_AGENT_CONFIGURE:14
+msgid "In the HTTP proxy box type the proxy name %h and port 3128."
+msgstr ""
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
@@ -356,6 +384,14 @@ msgstr "Lasīšanas noildze"
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
 msgstr "Pieprasījums ir par lielu."
+
+#: templates/ERR_AGENT_WPAD:10
+msgid "Select Automatically detect settings"
+msgstr ""
+
+#: templates/ERR_AGENT_WPAD:13
+msgid "Select Use Automatic proxy configuration"
+msgstr ""
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
@@ -470,7 +506,8 @@ msgstr ""
 "Iestājusies sekojoša kļūda mēģinot atvērt adresi: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid "The remote host or network may be down.  Please try the request again."
+#, fuzzy
+msgid "The remote host or network may be down. Please try the request again."
 msgstr "Serveris vai tīkls nestrādā. Lūdzu atkārtojiet pieprasījumu."
 
 #: templates/ERR_TOO_BIG:5
@@ -507,17 +544,19 @@ msgid "The system returned: <i>%E</i>"
 msgstr "Sistēma atbildēja: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
+#, fuzzy
 msgid ""
-"There is no WAIS Relay host defined for this Cache!  Yell at the "
+"There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
 "Šai kešatmiņai nav definēta WAIS retranslācija. Griezieties pie "
 "administratora."
 
 #: templates/ERR_TOO_BIG:8
+#, fuzzy
 msgid ""
 "These limits have been established by the Internet Service Provider who "
-"operates this cache.  Please contact them directly if you feel this is an "
+"operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
 "Šos limitus ir uzstādījis pakalpojuma sniedzējs, kurš uztur šo kešatmiņu. "
@@ -532,9 +571,10 @@ msgid "This cache does not support FTP."
 msgstr "Šī kešatmiņa neatbalsta FTP."
 
 #: templates/ERR_SHUTTING_DOWN:5
+#, fuzzy
 msgid ""
 "This cache is in the process of shutting down and can not service your "
-"request at this time.  Please retry your request again soon."
+"request at this time. Please retry your request again soon."
 msgstr ""
 "Šī kešatmiņa ir izslēgšanās procesā un nevar šobrīd apkalpot Jūsu "
 "pieprasījumu. Lūdzu atkārtojiet Jūsu pieprasījumu nedaudz vēlāk."
@@ -542,7 +582,7 @@ msgstr ""
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
-"sibling relationship.  Perhaps the client at %i is a cache which has been "
+"sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
 
@@ -573,9 +613,10 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_FTP_NOT_FOUND:7
+#, fuzzy
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
-"comply with RFC 1738).  If this is the cause, then the file can be found at "
+"comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
 "Šo var izsaukt FTP adrese ar absolūto ceļu (kas nav saderīgs RFC 1738).  Ja "
@@ -592,9 +633,24 @@ msgstr ""
 #: templates/ERR_CANNOT_FORWARD:6
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches.  The most likely cause for this error is that the cache "
-"administrator does not allow this cache to make direct connections to origin "
-"servers, and all configured parent caches are currently unreachable."
+"caches. The most likely cause for this error is that the cache administrator "
+"does not allow this cache to make direct connections to origin servers, and "
+"all configured parent caches are currently unreachable."
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
+msgid ""
+"Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
+msgid ""
+"Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
+msgid ""
+"Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
 msgstr ""
 
 #: templates/ERR_DNS_FAIL:5
@@ -621,9 +677,10 @@ msgstr ""
 "Kešatmiņā nav atrasts derīgs dokuments un tiek piemērota direktīva <q>only-"
 "if-cached</q> ."
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr "Mēģinot izpildīt operāciju PUT sekojošā adresē: <a href=\"%U\">%U</a>"
+#: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
+#: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
+msgid "Web Browser Configuration"
+msgstr ""
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
@@ -636,7 +693,13 @@ msgid ""
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
 
-#: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
+#: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
+msgid ""
+"Your Web Browser configuration needs to be corrected to use this network."
+msgstr ""
+
+#: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
+#: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
 #: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
 #: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
@@ -668,3 +731,13 @@ msgstr "Jūsu tīmekļa pārzinis ir <a href=\"mailto:%w\">%w</a>."
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr "Nulles izmēra atbilde"
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "KĻŪDA: Pieprasītā adrese nav atrodama"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP PUT komanda izpildīta: Datne atjaunināta"
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr ""
+#~ "Mēģinot izpildīt operāciju PUT sekojošā adresē: <a href=\"%U\">%U</a>"

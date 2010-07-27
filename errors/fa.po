@@ -2,10 +2,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-08 00:04+1300\n"
-"PO-Revision-Date: 2009-02-27 23:14+0330\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
+"PO-Revision-Date: 2010-06-07 23:05+0330\n"
 "Last-Translator: Mohsen Saeedi <mohsen.saeedi@gmail.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -28,9 +29,10 @@ msgid ""
 msgstr "<b>پاسخ نامعتبر</b> این خطا در زمان پردازش درخواست روی‌ داده بود:"
 
 #: templates/ERR_READ_TIMEOUT:7
+#, fuzzy
 msgid ""
-"A Timeout occurred while waiting to read data from the network.  The network "
-"or server may be down or congested.  Please retry your request."
+"A Timeout occurred while waiting to read data from the network. The network "
+"or server may be down or congested. Please retry your request."
 msgstr ""
 "زمان مجاز جهت خواندن اطلاعات از روی شبکه سپری شده است. شبکه یا سرور مورد نظر "
 "احتمالا از کار افتاده یا دارای بار زیاد است. لطفا دوباره تلاش کنید."
@@ -44,9 +46,10 @@ msgid "Access Denied."
 msgstr "دسترسی رد شد."
 
 #: templates/ERR_ACCESS_DENIED:6
+#, fuzzy
 msgid ""
 "Access control configuration prevents your request from being allowed at "
-"this time.  Please contact your service provider if you feel this is "
+"this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
 "تنظیمات سطح دسترسی هم‌اکنون به شما اجازه این درخواست را نمی‌دهد. در صورتی که "
@@ -60,7 +63,7 @@ msgstr ""
 "موقع تلاش جهت دسترسی به آدرس مورد نظر عمل شناسایی کاربر بر روی FTP با عدم "
 "موفقیت همراه بود. : <a href=\"%U\">%U</a>"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -73,15 +76,17 @@ msgid "An Illegal response was received from the ICAP server."
 msgstr "یک جواب نامعتبر از خادم ICAP دریافت شد. "
 
 #: templates/ERR_READ_ERROR:7
+#, fuzzy
 msgid ""
-"An error condition occurred while reading data from the network.  Please "
+"An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr ""
 "یک خطا در هنگام خواندن اطلاعات از روی شبکه روی داد. لطفا دوباره تلاش کنید. "
 
 #: templates/ERR_WRITE_ERROR:7
+#, fuzzy
 msgid ""
-"An error condition occurred while writing to the network.  Please retry your "
+"An error condition occurred while writing to the network. Please retry your "
 "request."
 msgstr ""
 "یک خطا در هنگام فرستادن اطلاعات در شبکه روی داد. لطفا دوباره تلاش کنید. "
@@ -101,7 +106,7 @@ msgstr "عدم توانایی در ترجمه URN."
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
-msgstr "زمان ارتباط منقضی شد."
+msgstr "دوره عمر ارتباط شما به پایان رسید."
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
@@ -109,27 +114,26 @@ msgstr "برقراری ارتباط به l% با عدم موفقیت همراه 
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
-msgstr ""
+msgstr "طول محتویات درخواست برای PUT  یا POST کم است."
 
 #: templates/ERR_DIR_LISTING:3
 msgid "Directory Content:"
 msgstr "محتویات مسیر:"
 
 #: templates/ERR_DIR_LISTING:4
-#, fuzzy
 msgid "Directory Listing"
-msgstr "محتویات مسیر:"
+msgstr "محتویات مسیر"
 
 #: templates/ERR_DIR_LISTING:1
-#, fuzzy
 msgid "Directory: %U"
-msgstr "محتویات مسیر:"
+msgstr "مسیر : U%"
 
 #: templates/ERR_DIR_LISTING:2
 msgid "Directory: <a href=\"%U\">%U</a>/"
-msgstr ""
+msgstr "مسیر: <a href=\"%U\">%U</a>/"
 
-#: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
+#: templates/ERR_ACCESS_DENIED:2 templates/ERR_AGENT_CONFIGURE:2
+#: templates/ERR_AGENT_WPAD:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
 #: templates/ERR_CONNECT_FAIL:2 templates/ERR_DNS_FAIL:2 templates/ERR_ESI:2
 #: templates/ERR_FORWARDING_DENIED:2 templates/ERR_FTP_DISABLED:2
@@ -154,7 +158,7 @@ msgstr "خطا: رد شدن دسترسی به نهانگاه"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:1
 msgid "ERROR: Cache Manager Access Denied"
-msgstr "خطا: رد شدن دسترسی برای مدیریت نهانگاه"
+msgstr "خطا: اجازه دسترسی به مدیریت Cache وجود ندارد."
 
 #: templates/ERR_FTP_PUT_ERROR:1
 msgid "ERROR: FTP upload failed"
@@ -178,46 +182,58 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "خطا: آدرس درخواست شده را نمی‌توانست دریافت شود"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr "خطا: URN درخواست شده نمی‌توانست دریافت شود"
+#, fuzzy
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "خطا: آدرس درخواست شده را نمی‌توانست دریافت شود"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
-msgstr ""
+msgstr "پردازش ESI با عدم موفقیت همراه بود."
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
-msgstr ""
-
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr ""
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
+msgstr "عمل بارگذاری روی FTP با موفقیت همراه بود: فایل ساخته شد."
 
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
-msgstr ""
+#, fuzzy
+msgid "FTP PUT upload failed"
+msgstr "باگذاری روی FTP/ بارگذاری با عدم موفقیت همراه بود."
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
-msgstr ""
+msgstr "FTP قابل دسترس نیست."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
-msgstr ""
+msgstr "ایجاد یک ارتباط امن به I% با عدم موفقیت همراه بود."
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
-msgstr ""
+msgstr "فایل ایجاد شد."
 
 #: templates/ERR_FTP_PUT_MODIFIED:3
 msgid "File updated"
+msgstr "فایل بروزرسانی شد."
+
+#: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
+msgid "For Firefox browsers go to: <ul>"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
+msgid "For Internet Explorer browsers go to: <ul>"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
+msgid "For Opera browsers go to: <ul>"
 msgstr ""
 
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
-msgstr ""
+msgstr "امکان Forward بسته شده است."
 
-#: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
+#: templates/ERR_ACCESS_DENIED:8 templates/ERR_AGENT_CONFIGURE:16
+#: templates/ERR_AGENT_WPAD:15 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
 #: templates/ERR_CONNECT_FAIL:9 templates/ERR_DIR_LISTING:7
 #: templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
@@ -236,76 +252,94 @@ msgstr ""
 #: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
 #: templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
-msgstr ""
+msgstr "%T توسط %h(%s) تولید شد."
 
 #: templates/ERR_INVALID_REQ:12
-msgid "HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software."
+#, fuzzy
+msgid ""
+"HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
+"انتظار برای HTTP/1.1 : این ویژگی از یک نرم افزار با HTTP/1.0 درخواست شده است."
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
+msgstr "آهای، انتظار زیادی از URNها بر روی T% نداشته باش :)"
+
+#: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
+msgid "How to find these settings in your browser:"
 msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
-msgstr ""
+msgstr "خطا در قرارداد ICAP"
 
 #: templates/ERR_TOO_BIG:7
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
 msgstr ""
+"اگر شما یک درخواست GET دارید، موردی که شما در تلاش برای دریافت آن هستید "
+"بسیار بزرگ است."
 
 #: templates/ERR_TOO_BIG:6
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
 msgstr ""
+"اگر شما یک درخواست PUT یا POST دارید، موردی که شما در تلاش برای بارگذاری "
+"هستید بسیار بزرگ است."
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
-msgstr ""
+msgstr "کاراکتر غیرمجاز در نام دستگاه، زیرین خط (ـ) اجازه داده نشده است."
 
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
+msgstr "۲ فاصله خالی غیر مجاز در مسیر نشانی اینترنتی"
+
+#: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
+#: templates/ERR_AGENT_CONFIGURE:14
+msgid "In the HTTP proxy box type the proxy name %h and port 3128."
 msgstr ""
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
-msgstr ""
+msgstr "نشانی اینترنتی نامعتبر"
 
 #: templates/ERR_INVALID_REQ:8
 msgid "Missing HTTP Identifier (HTTP/1.0)."
-msgstr ""
+msgstr "فقدان شناسه HTTP (نسخه 1.0)"
 
 #: templates/ERR_INVALID_REQ:7
 msgid "Missing URL."
-msgstr ""
+msgstr "فقدان نشانی اینترنتی"
 
 #: templates/ERR_INVALID_URL:9
 msgid "Missing hostname"
-msgstr ""
+msgstr "فقدان hostname"
 
 #: templates/ERR_INVALID_URL:8
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
 msgstr ""
+"فقدان یا ناصحیح بودن قرارداد دست‌یابی (باید به فرم<q>http://</q> یا شبیه آن "
+"باشد)"
 
 #: templates/ERR_INVALID_REQ:6
 msgid "Missing or unknown request method."
-msgstr ""
+msgstr "فقدان یا ناشناخته بودن روش درخواست."
 
 #: templates/ERR_NO_RELAY:5
 msgid "No Wais Relay"
-msgstr ""
+msgstr "عدم رله Wais"
 
 #: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
 msgid "Operation successful"
-msgstr ""
+msgstr "عملیات موفقیت‌آمیز"
 
 #: templates/ERR_DIR_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "شاخه والد"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
@@ -313,6 +347,9 @@ msgid ""
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
+"لطفا در صورت داشتن مشکلاتی در زمینه شناسایی خودتان با <a href=\"mailto:%w%W"
+"\">cache administrator</a> تماس حاصل فرمایید یا از طریق <a href=\"http://%h/"
+"cgi-bin/chpasswd.cgi\">تغییر</a> رمز خود مشکل را حل نمایید."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -324,28 +361,36 @@ msgstr ""
 
 #: templates/ERR_READ_ERROR:5
 msgid "Read Error"
-msgstr ""
+msgstr "خطا در خواندن"
 
 #: templates/ERR_READ_TIMEOUT:5
 msgid "Read Timeout"
-msgstr ""
+msgstr "سپری شدن زمان مجاز خواندن"
 
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
+msgstr "درخواست بسیار بزرگ است."
+
+#: templates/ERR_AGENT_WPAD:10
+msgid "Select Automatically detect settings"
+msgstr ""
+
+#: templates/ERR_AGENT_WPAD:13
+msgid "Select Use Automatic proxy configuration"
 msgstr ""
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
-msgstr ""
+msgstr "خرابی سوکت"
 
 #: templates/ERR_INVALID_URL:6
 msgid "Some aspect of the requested URL is incorrect."
-msgstr ""
+msgstr "برخی از صُور نشانی اینترنتی درخواست شده ناصحیح است."
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
 msgid "Some possible problems are:"
-msgstr ""
+msgstr "بعضی از مشکلات احتمالی:"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
 msgid ""
@@ -385,15 +430,15 @@ msgstr ""
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
 #: templates/ERR_FTP_UNAVAILABLE:5
 msgid "Squid sent the following FTP command:"
-msgstr ""
+msgstr "اسکویید  دستور  FTP روبرو را فرستاد:"
 
 #: templates/ERR_DNS_FAIL:6
 msgid "The DNS server returned:"
-msgstr ""
+msgstr "کارگزار DNS برگشت داده‌ : "
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
-msgstr ""
+msgstr "پردازش ESI برگشت داده:"
 
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
@@ -407,7 +452,7 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
-msgstr ""
+msgstr "کارگزار ICAP قابل دسترس نیست."
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
@@ -437,7 +482,7 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid "The remote host or network may be down.  Please try the request again."
+msgid "The remote host or network may be down. Please try the request again."
 msgstr ""
 
 #: templates/ERR_TOO_BIG:5
@@ -475,14 +520,14 @@ msgstr ""
 
 #: templates/ERR_NO_RELAY:6
 msgid ""
-"There is no WAIS Relay host defined for this Cache!  Yell at the "
+"There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
 
 #: templates/ERR_TOO_BIG:8
 msgid ""
 "These limits have been established by the Internet Service Provider who "
-"operates this cache.  Please contact them directly if you feel this is an "
+"operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
 
@@ -492,18 +537,18 @@ msgstr ""
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
-msgstr ""
+msgstr "این کارگزار Cache از قرارداد FTP پشتیبانی نمی‌کند."
 
 #: templates/ERR_SHUTTING_DOWN:5
 msgid ""
 "This cache is in the process of shutting down and can not service your "
-"request at this time.  Please retry your request again soon."
+"request at this time. Please retry your request again soon."
 msgstr ""
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
-"sibling relationship.  Perhaps the client at %i is a cache which has been "
+"sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
 
@@ -532,7 +577,7 @@ msgstr ""
 #: templates/ERR_FTP_NOT_FOUND:7
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
-"comply with RFC 1738).  If this is the cause, then the file can be found at "
+"comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
 
@@ -547,9 +592,24 @@ msgstr ""
 #: templates/ERR_CANNOT_FORWARD:6
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches.  The most likely cause for this error is that the cache "
-"administrator does not allow this cache to make direct connections to origin "
-"servers, and all configured parent caches are currently unreachable."
+"caches. The most likely cause for this error is that the cache administrator "
+"does not allow this cache to make direct connections to origin servers, and "
+"all configured parent caches are currently unreachable."
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
+msgid ""
+"Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
+msgid ""
+"Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
+msgid ""
+"Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
 msgstr ""
 
 #: templates/ERR_DNS_FAIL:5
@@ -562,11 +622,11 @@ msgstr ""
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
-msgstr ""
+msgstr "نسخه HTTP پشتیبانی نشده"
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
-msgstr ""
+msgstr "روش پشتیبانی‌نشده درخواست و قرارداد"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:5
 msgid ""
@@ -574,13 +634,14 @@ msgid ""
 "directive was specified."
 msgstr ""
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
+#: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
+msgid "Web Browser Configuration"
 msgstr ""
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
-msgstr ""
+msgstr "خطا در نوشتن"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:6
 msgid ""
@@ -589,7 +650,13 @@ msgid ""
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
 
-#: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
+#: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
+msgid ""
+"Your Web Browser configuration needs to be corrected to use this network."
+msgstr ""
+
+#: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
+#: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
 #: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
 #: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
@@ -619,3 +686,9 @@ msgstr ""
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr ""
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "خطا: URN درخواست شده نمی‌توانست دریافت شود"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "عمل بارگذاری روی FTP با موفقیت همراه بود. فایل بروزرسانی شد."

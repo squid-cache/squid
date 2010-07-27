@@ -2,7 +2,7 @@
 <html><head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>Directory: %U</title>
-<style type="text/css"><!-- 
+<style type="text/css"><!--
  %l
 
 body
@@ -16,10 +16,10 @@ body
 <hr>
 
 <div id="content">
-<p>Directory Content:</p>
+<h4>Directory Content:</h4>
 
 <blockquote id="data">
-<pre>%z</pre>
+<pre id="dirmsg">%z</pre>
 </blockquote>
 
 <table id="dirlisting" summary="Directory Listing">

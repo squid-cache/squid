@@ -7,16 +7,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-08 00:04+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2009-12-03 12:10+1300\n"
 "Last-Translator: Feshchuk Yuriy <swopster@meta.ua>\n"
 "Language-Team: Ukrainian <uk@li.org>\n"
+"Language: uk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: uk\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
-"10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Pootle 1.2.1\n"
 "X-Launchpad-Export-Date: 2008-09-25 11:56+0000\n"
 
@@ -39,9 +39,10 @@ msgid ""
 msgstr "<b>Невірна відповідь</b> виникла при обробці запиту:"
 
 #: templates/ERR_READ_TIMEOUT:7
+#, fuzzy
 msgid ""
-"A Timeout occurred while waiting to read data from the network.  The network "
-"or server may be down or congested.  Please retry your request."
+"A Timeout occurred while waiting to read data from the network. The network "
+"or server may be down or congested. Please retry your request."
 msgstr ""
 "Перевищено час очікування при отриманні даних з мережі. Мережа або сервер не "
 "працюють чи перенавантажені. Будь-ласка, повторіть запит."
@@ -55,9 +56,10 @@ msgid "Access Denied."
 msgstr "Доступ заборонено"
 
 #: templates/ERR_ACCESS_DENIED:6
+#, fuzzy
 msgid ""
 "Access control configuration prevents your request from being allowed at "
-"this time.  Please contact your service provider if you feel this is "
+"this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
 "Налаштування контролю доступу забороняє обробку Вашого запиту в даний час. "
@@ -71,7 +73,7 @@ msgid ""
 msgstr ""
 "При отриманні URL: <a href=\"%U\">%U</a> відбулася невдала FTP авторизація."
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -83,15 +85,17 @@ msgid "An Illegal response was received from the ICAP server."
 msgstr "Отримано некоректну відповідь від сервера ICAP."
 
 #: templates/ERR_READ_ERROR:7
+#, fuzzy
 msgid ""
-"An error condition occurred while reading data from the network.  Please "
+"An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr ""
 "Під час читання даних з мережі сталася помилка. Будь-ласка, повторіть запит."
 
 #: templates/ERR_WRITE_ERROR:7
+#, fuzzy
 msgid ""
-"An error condition occurred while writing to the network.  Please retry your "
+"An error condition occurred while writing to the network. Please retry your "
 "request."
 msgstr ""
 "Під час відправлення даних в мережу виникла помилка. Будь-ласка, повторіть "
@@ -138,7 +142,8 @@ msgstr "Директорія: %U"
 msgid "Directory: <a href=\"%U\">%U</a>/"
 msgstr "Директорія: <a href=\"%U\">%U</a>/"
 
-#: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
+#: templates/ERR_ACCESS_DENIED:2 templates/ERR_AGENT_CONFIGURE:2
+#: templates/ERR_AGENT_WPAD:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
 #: templates/ERR_CONNECT_FAIL:2 templates/ERR_DNS_FAIL:2 templates/ERR_ESI:2
 #: templates/ERR_FORWARDING_DENIED:2 templates/ERR_FTP_DISABLED:2
@@ -187,23 +192,22 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "ПОМИЛКА: Запитаний URL не може бути отриманий"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr "ПОМИЛКА: Запитаний URN не може бути отриманий"
+#, fuzzy
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "ПОМИЛКА: Запитаний URL не може бути отриманий"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
 msgstr "Збій опрацювання ESI інструкції"
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTP успішно помістив: Файл cтворено"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTP успішно помістив: Файл оновлено"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "Операцію PUT/Upload не виконано"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -222,11 +226,24 @@ msgstr "Файл створено"
 msgid "File updated"
 msgstr "Файл поновлено"
 
+#: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
+msgid "For Firefox browsers go to: <ul>"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
+msgid "For Internet Explorer browsers go to: <ul>"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
+msgid "For Opera browsers go to: <ul>"
+msgstr ""
+
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
 msgstr "Пересилку заборонено"
 
-#: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
+#: templates/ERR_ACCESS_DENIED:8 templates/ERR_AGENT_CONFIGURE:16
+#: templates/ERR_AGENT_WPAD:15 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
 #: templates/ERR_CONNECT_FAIL:9 templates/ERR_DIR_LISTING:7
 #: templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
@@ -248,13 +265,18 @@ msgid "Generated %T by %h (%s)"
 msgstr "Згенеровано %T на %h (%s)"
 
 #: templates/ERR_INVALID_REQ:12
-msgid "HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software."
+msgid ""
+"HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
 
 #: templates/ERR_URN_RESOLVE:6
 #, fuzzy
 msgid "Hey, don't expect too much from URNs on %T :)"
 msgstr "Не варто очікувати надто багато від URN'ів на %T."
+
+#: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
+msgid "How to find these settings in your browser:"
+msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
@@ -283,6 +305,11 @@ msgstr "Неприпустимий символ в імені сервера; с
 #, fuzzy
 msgid "Illegal double-escape in the URL-Path"
 msgstr "В шляху URL присутній зайвий символ <q>/</q>;"
+
+#: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
+#: templates/ERR_AGENT_CONFIGURE:14
+msgid "In the HTTP proxy box type the proxy name %h and port 3128."
+msgstr ""
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
@@ -356,6 +383,14 @@ msgstr "Час очікування на відповідь вийшов"
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
 msgstr "Запит завеликий"
+
+#: templates/ERR_AGENT_WPAD:10
+msgid "Select Automatically detect settings"
+msgstr ""
+
+#: templates/ERR_AGENT_WPAD:13
+msgid "Select Use Automatic proxy configuration"
+msgstr ""
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
@@ -471,7 +506,8 @@ msgid ""
 msgstr "При отриманні URN: <a href=\"%U\">%U</a> виникла помилка."
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid "The remote host or network may be down.  Please try the request again."
+#, fuzzy
+msgid "The remote host or network may be down. Please try the request again."
 msgstr ""
 "Віддалений вузел чи мережа не відповідають.  Будь-ласка, повторіть запит."
 
@@ -509,16 +545,18 @@ msgid "The system returned: <i>%E</i>"
 msgstr "Система повідомляє: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
+#, fuzzy
 msgid ""
-"There is no WAIS Relay host defined for this Cache!  Yell at the "
+"There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
 "Для даного кешу не визначено WAIS Relay вузол. Покричіть на Адміністратора."
 
 #: templates/ERR_TOO_BIG:8
+#, fuzzy
 msgid ""
 "These limits have been established by the Internet Service Provider who "
-"operates this cache.  Please contact them directly if you feel this is an "
+"operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
 "Ці ліміти встановлено Інтернет постачальником, котрий керує даним кешом. "
@@ -533,17 +571,19 @@ msgid "This cache does not support FTP."
 msgstr "FTP відключено"
 
 #: templates/ERR_SHUTTING_DOWN:5
+#, fuzzy
 msgid ""
 "This cache is in the process of shutting down and can not service your "
-"request at this time.  Please retry your request again soon."
+"request at this time. Please retry your request again soon."
 msgstr ""
 "Зараз кеш в процесі припинення роботи і не може виконати Ваш запит. Будь-"
 "ласка, повторіть запит через деякий час."
 
 #: templates/ERR_FORWARDING_DENIED:6
+#, fuzzy
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
-"sibling relationship.  Perhaps the client at %i is a cache which has been "
+"sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
 "Цей кеш не перешле Ваш запит, через намагання встановити родинні "
@@ -578,9 +618,10 @@ msgstr ""
 "про цю помилку Вебмайстра."
 
 #: templates/ERR_FTP_NOT_FOUND:7
+#, fuzzy
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
-"comply with RFC 1738).  If this is the cause, then the file can be found at "
+"comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
 "Це може бути викликано FTP адресою з абсолютним URL шляхом (який не "
@@ -599,16 +640,32 @@ msgstr ""
 "безпечні з'єднання, або кеш не задоволений сертифікатом безпечності вузла."
 
 #: templates/ERR_CANNOT_FORWARD:6
+#, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches.  The most likely cause for this error is that the cache "
-"administrator does not allow this cache to make direct connections to origin "
-"servers, and all configured parent caches are currently unreachable."
+"caches. The most likely cause for this error is that the cache administrator "
+"does not allow this cache to make direct connections to origin servers, and "
+"all configured parent caches are currently unreachable."
 msgstr ""
 "Даний запит не може бути пересланий ні до первинного сервера ні до будь-"
 "якого з батьківських кешів. Найбільш ймовірною причиною є те, що "
 "Адміністратор кешу заборонив здійснювати прямі з'єднання до первинних "
 "серверів, та всі визначені батьківські кеш-сервера зараз недосяжні."
+
+#: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
+msgid ""
+"Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
+msgid ""
+"Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
+msgid ""
+"Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
+msgstr ""
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -635,9 +692,10 @@ msgstr ""
 "Необхідний документ не знайдений в кеші і визначена директива <q>only-if-"
 "cached</q> (<q>тільки в кеші</q>)"
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr "При спробі помістити файл за адресою: <a href=\"%U\">%U</a> ."
+#: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
+#: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
+msgid "Web Browser Configuration"
+msgstr ""
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
@@ -655,7 +713,13 @@ msgstr ""
 "потребує оновлення, що заборонено директивою <q>only-if-cached</q> "
 "(<q>тільки в кеші</q>)."
 
-#: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
+#: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
+msgid ""
+"Your Web Browser configuration needs to be corrected to use this network."
+msgstr ""
+
+#: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
+#: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
 #: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
 #: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
@@ -687,3 +751,12 @@ msgstr "Вебмайстер <a href=\"mailto:%w\">%w</a>."
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr "Відповідь нульової довжини"
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "ПОМИЛКА: Запитаний URN не може бути отриманий"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP успішно помістив: Файл оновлено"
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr "При спробі помістити файл за адресою: <a href=\"%U\">%U</a> ."

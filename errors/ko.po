@@ -2,14 +2,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-08 00:04+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2009-06-05 17:23+1300\n"
 "Last-Translator: Jaeyeon Jung <jjung@cosmos.kaist.ac.kr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"Language: ko\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: ko\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 1.2.1\n"
 
@@ -30,9 +30,10 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_READ_TIMEOUT:7
+#, fuzzy
 msgid ""
-"A Timeout occurred while waiting to read data from the network.  The network "
-"or server may be down or congested.  Please retry your request."
+"A Timeout occurred while waiting to read data from the network. The network "
+"or server may be down or congested. Please retry your request."
 msgstr ""
 "데이터를 네트웍을 통해 읽어오려고 기다리던 중 시간이 경과하였습니다. 네트웍"
 "이 혼잡상태에 있거나 서버가 서비스 불능 상태일 수 있습니다. 다시 요청하십시"
@@ -47,9 +48,10 @@ msgid "Access Denied."
 msgstr "서버 이용 요구가 거절되었습니다."
 
 #: templates/ERR_ACCESS_DENIED:6
+#, fuzzy
 msgid ""
 "Access control configuration prevents your request from being allowed at "
-"this time.  Please contact your service provider if you feel this is "
+"this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
 "이 서버를 이용하기 위해서는 이용 허가가 필요합니다. 관리자에게 문의 하십시오."
@@ -61,7 +63,7 @@ msgid ""
 msgstr ""
 "다음 URL을 처리 하던 중 FTP 인증 문제가 발생했습니다: <a href=\"%U\">%U</a>"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -74,15 +76,17 @@ msgid "An Illegal response was received from the ICAP server."
 msgstr ""
 
 #: templates/ERR_READ_ERROR:7
+#, fuzzy
 msgid ""
-"An error condition occurred while reading data from the network.  Please "
+"An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr ""
 "데이터를 네트웍을 통해 읽어오는 동안 에러가 발생했습니다. 다시 요청하십시오."
 
 #: templates/ERR_WRITE_ERROR:7
+#, fuzzy
 msgid ""
-"An error condition occurred while writing to the network.  Please retry your "
+"An error condition occurred while writing to the network. Please retry your "
 "request."
 msgstr ""
 "네트웍을 통해서 데이터를 쓰던 중 에러가 발생했습니다. 다시 시도해 주십시오."
@@ -128,7 +132,8 @@ msgstr ""
 msgid "Directory: <a href=\"%U\">%U</a>/"
 msgstr ""
 
-#: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
+#: templates/ERR_ACCESS_DENIED:2 templates/ERR_AGENT_CONFIGURE:2
+#: templates/ERR_AGENT_WPAD:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
 #: templates/ERR_CONNECT_FAIL:2 templates/ERR_DNS_FAIL:2 templates/ERR_ESI:2
 #: templates/ERR_FORWARDING_DENIED:2 templates/ERR_FTP_DISABLED:2
@@ -179,23 +184,22 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "에러: 요청된 URL을 가져올 수 없습니다"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr ""
+#, fuzzy
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "에러: 요청된 URL을 가져올 수 없습니다"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
 msgstr ""
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTP PUT 수행 완료: 파일이 생성되었습니다"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT 수행 완료: 파일이 변경되었습니다"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "FTP PUT/upload 실패"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -214,11 +218,24 @@ msgstr "파일이 생성되었습니다"
 msgid "File updated"
 msgstr "파일이 변경되었습니다"
 
+#: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
+msgid "For Firefox browsers go to: <ul>"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
+msgid "For Internet Explorer browsers go to: <ul>"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
+msgid "For Opera browsers go to: <ul>"
+msgstr ""
+
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
 msgstr "포워딩 불가"
 
-#: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
+#: templates/ERR_ACCESS_DENIED:8 templates/ERR_AGENT_CONFIGURE:16
+#: templates/ERR_AGENT_WPAD:15 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
 #: templates/ERR_CONNECT_FAIL:9 templates/ERR_DIR_LISTING:7
 #: templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
@@ -240,12 +257,17 @@ msgid "Generated %T by %h (%s)"
 msgstr ""
 
 #: templates/ERR_INVALID_REQ:12
-msgid "HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software."
+msgid ""
+"HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
 msgstr "%T의 URN에 대해 너무 많은 것을 기대하지 마세요. :)"
+
+#: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
+msgid "How to find these settings in your browser:"
+msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
@@ -270,6 +292,11 @@ msgstr "호스트네임에 잘못 된 문자가 있다; 밑줄은 허용되지 �
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
 msgstr "URL-Path에 double-escape이 있다."
+
+#: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
+#: templates/ERR_AGENT_CONFIGURE:14
+msgid "In the HTTP proxy box type the proxy name %h and port 3128."
+msgstr ""
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
@@ -344,6 +371,14 @@ msgstr "읽기 시간 초과"
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
 msgstr "Request가 너무 크다."
+
+#: templates/ERR_AGENT_WPAD:10
+msgid "Select Automatically detect settings"
+msgstr ""
+
+#: templates/ERR_AGENT_WPAD:13
+msgid "Select Use Automatic proxy configuration"
+msgstr ""
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
@@ -460,7 +495,8 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid "The remote host or network may be down.  Please try the request again."
+#, fuzzy
+msgid "The remote host or network may be down. Please try the request again."
 msgstr "상대 호스트나 네트웍이 동작하지 않습니다. 다시 시도하십시오."
 
 #: templates/ERR_TOO_BIG:5
@@ -497,8 +533,9 @@ msgid "The system returned: <i>%E</i>"
 msgstr "시스템은 아래와 같은 메시지를 보내왔습니다: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
+#, fuzzy
 msgid ""
-"There is no WAIS Relay host defined for this Cache!  Yell at the "
+"There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
 "이 캐쉬는 WAIS Relay 호스트가 지정되어 있지 않습니다. 관리자 에게 요청하십시"
@@ -507,7 +544,7 @@ msgstr ""
 #: templates/ERR_TOO_BIG:8
 msgid ""
 "These limits have been established by the Internet Service Provider who "
-"operates this cache.  Please contact them directly if you feel this is an "
+"operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
 
@@ -520,21 +557,23 @@ msgid "This cache does not support FTP."
 msgstr "FTP 서비스가 불가능 합니다."
 
 #: templates/ERR_SHUTTING_DOWN:5
+#, fuzzy
 msgid ""
 "This cache is in the process of shutting down and can not service your "
-"request at this time.  Please retry your request again soon."
+"request at this time. Please retry your request again soon."
 msgstr ""
 "이 캐쉬는 서비스를 마치려고 하기 때문에 현재는 요청된 서비스를 수행할 수 없습"
 "니다. 조금 후 다시 시도해 주십시오."
 
 #: templates/ERR_FORWARDING_DENIED:6
+#, fuzzy
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
-"sibling relationship.  Perhaps the client at %i is a cache which has been "
+"sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
-"이 캐쉬는 sibling 관계로 설정되어 있기 때문에 이 요청을 처리할 수 없습니다. %"
-"i 의 client가 잘못 설정된 캐쉬일 수 있습니다."
+"이 캐쉬는 sibling 관계로 설정되어 있기 때문에 이 요청을 처리할 수 없습니다. "
+"%i 의 client가 잘못 설정된 캐쉬일 수 있습니다."
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
@@ -562,9 +601,10 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_FTP_NOT_FOUND:7
+#, fuzzy
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
-"comply with RFC 1738).  If this is the cause, then the file can be found at "
+"comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
 "FTP URL을 절대 경로로 지정하였을 때 (RFC 1738에 어긋납니다) 이러한 문제가 발"
@@ -583,13 +623,28 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches.  The most likely cause for this error is that the cache "
-"administrator does not allow this cache to make direct connections to origin "
-"servers, and all configured parent caches are currently unreachable."
+"caches. The most likely cause for this error is that the cache administrator "
+"does not allow this cache to make direct connections to origin servers, and "
+"all configured parent caches are currently unreachable."
 msgstr ""
 "이 요청을 origin server나 다른 parent cache로 진행 시킬 수 없습니다. 다음과 "
 "같은 원인이 있을 수 있습니다. 이 캐쉬는 origin server로 직접 연결이 불가능 하"
 "도록 캐쉬 관리자에 의해 설정되었다. 모든 parent cache로의 접속이 불가능 하다."
+
+#: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
+msgid ""
+"Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
+msgid ""
+"Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
+msgid ""
+"Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
+msgstr ""
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -613,9 +668,10 @@ msgid ""
 "directive was specified."
 msgstr "캐쉬에 유효한 문서가 없고 <q>only-if-cached</q> 가 지정되었습니다."
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr "다음 URL을 전송하던 중: <a href=\"%U\">%U</a>"
+#: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
+#: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
+msgid "Web Browser Configuration"
+msgstr ""
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
@@ -631,7 +687,13 @@ msgstr ""
 "<q>only-if-cached</q>가 지정되어 문서가 요청되었습니다. 요청된 문서가 캐쉬에 "
 "없거나, <em>혹은</em> 재확인을 해야 합니다."
 
-#: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
+#: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
+msgid ""
+"Your Web Browser configuration needs to be corrected to use this network."
+msgstr ""
+
+#: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
+#: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
 #: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
 #: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
@@ -661,3 +723,9 @@ msgstr ""
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr "크기가 0인 응답이 돌아왔습니다."
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP PUT 수행 완료: 파일이 변경되었습니다"
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr "다음 URL을 전송하던 중: <a href=\"%U\">%U</a>"

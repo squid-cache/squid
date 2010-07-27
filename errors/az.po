@@ -2,16 +2,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-08 00:04+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2009-10-05 17:49+0000\n"
 "Last-Translator: Elxan İsmayılov <elxan.i@gmail.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"Language: az\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Launchpad-Export-Date: 2009-11-07 08:13+0000\n"
 "X-Generator: Launchpad (build Unknown)\n"
-"Language: az\n"
 
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -30,9 +30,10 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_READ_TIMEOUT:7
+#, fuzzy
 msgid ""
-"A Timeout occurred while waiting to read data from the network.  The network "
-"or server may be down or congested.  Please retry your request."
+"A Timeout occurred while waiting to read data from the network. The network "
+"or server may be down or congested. Please retry your request."
 msgstr ""
 "Məlumatlar şəbəkədən oxunan zaman gözləmə müddəti bitmişdir. Şəbəkə və ya "
 "server işləmir, yaxud həddindən arıq yüklənmişdir. Xahiş edirik, sorğunu "
@@ -47,9 +48,10 @@ msgid "Access Denied."
 msgstr "Giriş qadağandır."
 
 #: templates/ERR_ACCESS_DENIED:6
+#, fuzzy
 msgid ""
 "Access control configuration prevents your request from being allowed at "
-"this time.  Please contact your service provider if you feel this is "
+"this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
 "Hal-hazirda giriş nəzarəti qaydaları sorğunuzun cavablandırılmasına qadağa "
@@ -64,7 +66,7 @@ msgstr ""
 "URL ilə əlaqə zamanı FTP protokolu uzrə aşağıdakı səhv baş vermişdir: <a "
 "href=\"%U\">%U</a>"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -77,16 +79,18 @@ msgid "An Illegal response was received from the ICAP server."
 msgstr ""
 
 #: templates/ERR_READ_ERROR:7
+#, fuzzy
 msgid ""
-"An error condition occurred while reading data from the network.  Please "
+"An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr ""
 "Məlumatlar şəbəkədən oxunan zaman səhv baş vermişdir. Xahiş edirik, "
 "sorğunuzu təkrar edin."
 
 #: templates/ERR_WRITE_ERROR:7
+#, fuzzy
 msgid ""
-"An error condition occurred while writing to the network.  Please retry your "
+"An error condition occurred while writing to the network. Please retry your "
 "request."
 msgstr ""
 "İnformasiya şəbəkəyə ötürülərkən xəta olmuşdur.Xahiş edirik, sorğunu təkrar "
@@ -133,7 +137,8 @@ msgstr ""
 msgid "Directory: <a href=\"%U\">%U</a>/"
 msgstr ""
 
-#: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
+#: templates/ERR_ACCESS_DENIED:2 templates/ERR_AGENT_CONFIGURE:2
+#: templates/ERR_AGENT_WPAD:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
 #: templates/ERR_CONNECT_FAIL:2 templates/ERR_DNS_FAIL:2 templates/ERR_ESI:2
 #: templates/ERR_FORWARDING_DENIED:2 templates/ERR_FTP_DISABLED:2
@@ -182,23 +187,22 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "SƏHV: Sorğulanan URL ilə əlaqə yaradılmadı"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr "SƏHV: Sorğulanan URN ilə əlaqə yaradılmadı"
+#, fuzzy
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "SƏHV: Sorğulanan URL ilə əlaqə yaradılmadı"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
 msgstr ""
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTP PUT müvəfəqiyyətlə başa çatdı: Fayl yarandı"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT müvəfəqiyyətlə başa çatdı: Fayl yeniləndi"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "FTP yükləmə uğursuzluqla başa çatdı"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -217,11 +221,24 @@ msgstr "Fayl yarandı"
 msgid "File updated"
 msgstr "Fayl yeniləndi"
 
+#: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
+msgid "For Firefox browsers go to: <ul>"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
+msgid "For Internet Explorer browsers go to: <ul>"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
+msgid "For Opera browsers go to: <ul>"
+msgstr ""
+
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
 msgstr "Yönləndirmə qadağandır."
 
-#: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
+#: templates/ERR_ACCESS_DENIED:8 templates/ERR_AGENT_CONFIGURE:16
+#: templates/ERR_AGENT_WPAD:15 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
 #: templates/ERR_CONNECT_FAIL:9 templates/ERR_DIR_LISTING:7
 #: templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
@@ -243,12 +260,17 @@ msgid "Generated %T by %h (%s)"
 msgstr ""
 
 #: templates/ERR_INVALID_REQ:12
-msgid "HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software."
+msgid ""
+"HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
 msgstr "%T texnologiyasından çox şey gözləməyə dəyməz :)"
+
+#: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
+msgid "How to find these settings in your browser:"
+msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
@@ -277,6 +299,11 @@ msgstr "Server adında qadağan edilmiş simvol; altxətt yol verilməzdir."
 
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
+#: templates/ERR_AGENT_CONFIGURE:14
+msgid "In the HTTP proxy box type the proxy name %h and port 3128."
 msgstr ""
 
 #: templates/ERR_INVALID_URL:5
@@ -352,6 +379,14 @@ msgstr "Gözləmə müddəti bitmişdir"
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
 msgstr "Sorğu həddən ziyadə böyükdür."
+
+#: templates/ERR_AGENT_WPAD:10
+msgid "Select Automatically detect settings"
+msgstr ""
+
+#: templates/ERR_AGENT_WPAD:13
+msgid "Select Use Automatic proxy configuration"
+msgstr ""
 
 #: templates/ERR_SOCKET_FAILURE:5
 #, fuzzy
@@ -475,7 +510,8 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid "The remote host or network may be down.  Please try the request again."
+#, fuzzy
+msgid "The remote host or network may be down. Please try the request again."
 msgstr ""
 "Hədəf server və ya şəbəkə cavab vermir. Xahiş edirik, sorğunu təkrarlayın."
 
@@ -513,17 +549,19 @@ msgid "The system returned: <i>%E</i>"
 msgstr "Sistemdən gələn cavab: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
+#, fuzzy
 msgid ""
-"There is no WAIS Relay host defined for this Cache!  Yell at the "
+"There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
 "Bu keş serveri üçün WAIS ötürücü təyin edilməyib. Administratora əlaqə "
 "saxlayın."
 
 #: templates/ERR_TOO_BIG:8
+#, fuzzy
 msgid ""
 "These limits have been established by the Internet Service Provider who "
-"operates this cache.  Please contact them directly if you feel this is an "
+"operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
 "Bu limitlər sizin keşi idarə edən Internet xidməti provayderi tərəfindən "
@@ -539,17 +577,19 @@ msgid "This cache does not support FTP."
 msgstr "Bu keş FTP protokolunu təmin etmir."
 
 #: templates/ERR_SHUTTING_DOWN:5
+#, fuzzy
 msgid ""
 "This cache is in the process of shutting down and can not service your "
-"request at this time.  Please retry your request again soon."
+"request at this time. Please retry your request again soon."
 msgstr ""
 "Keş hal-hazırda işini dayandırır və bu səbəbdən sizin sorğunuzu cavablandıra "
 "bilməyəcək. Xahiş edirik, sorğunuzu tezliklə bir daha təkrarlayın."
 
 #: templates/ERR_FORWARDING_DENIED:6
+#, fuzzy
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
-"sibling relationship.  Perhaps the client at %i is a cache which has been "
+"sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
 "Sibling tipli əlaqə yaratmaq cəhdinə görə keş sorğunuzu yönləndirməyəcəkdir. "
@@ -583,12 +623,12 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
-"comply with RFC 1738).  If this is the cause, then the file can be found at "
+"comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
 "Mümkün səbəblərdən biri sorğu zamanı istifadə olunan FTP adresin RFC 1738 "
-"standartlarına uyğun gəlməməsidir. Əgər səbəb budursa faylı <a href=\"%B\">%"
-"B</a> adresində tapa bilersiniz."
+"standartlarına uyğun gəlməməsidir. Əgər səbəb budursa faylı <a href=\"%B\">"
+"%B</a> adresində tapa bilersiniz."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -602,14 +642,29 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches.  The most likely cause for this error is that the cache "
-"administrator does not allow this cache to make direct connections to origin "
-"servers, and all configured parent caches are currently unreachable."
+"caches. The most likely cause for this error is that the cache administrator "
+"does not allow this cache to make direct connections to origin servers, and "
+"all configured parent caches are currently unreachable."
 msgstr ""
 "Sorğu hədəf serverə, və ya digər yuxarı səviyyəli keş serverələrə göndərilə "
 "bilməz.  Səhvin mümkün səbəbləri keş administratoru bu keşin hədəf "
 "serverləri birbaşa sorğulamasını qadağan etmişdir və ya bütün yuxarı "
 "səviyyəli keş-serverlər hal-hazırda əlçatmazdılar."
+
+#: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
+msgid ""
+"Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
+msgid ""
+"Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
+msgid ""
+"Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
+msgstr ""
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -633,8 +688,9 @@ msgid ""
 "directive was specified."
 msgstr "Obyekt keşdə tapılmadı və <q>only-if-cached</q> əmri təyin olunmuşdur."
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
+#: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
+msgid "Web Browser Configuration"
 msgstr ""
 
 #: templates/ERR_WRITE_ERROR:5
@@ -651,7 +707,13 @@ msgstr ""
 "tapılmadı, <em>və ya</em> <q>only-if-cached</q> əmri ilə qadağan olunmuş "
 "obyektin yenilənməsi tələb olunur."
 
-#: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
+#: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
+msgid ""
+"Your Web Browser configuration needs to be corrected to use this network."
+msgstr ""
+
+#: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
+#: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
 #: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
 #: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
@@ -684,3 +746,9 @@ msgstr ""
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr "Sıfır Uzunluqlu Cavab"
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "SƏHV: Sorğulanan URN ilə əlaqə yaradılmadı"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP PUT müvəfəqiyyətlə başa çatdı: Fayl yeniləndi"

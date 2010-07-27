@@ -1,53 +1,61 @@
-#, fuzzy
+# F Wolff <friedel@translate.org.za>, 2010.
 msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-08 00:04+1300\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
+"PO-Revision-Date: 2010-07-26 10:33+0200\n"
+"Last-Translator: F Wolff <friedel@translate.org.za>\n"
+"Language-Team: translate-discuss-af@lists.sourceforge.net\n"
+"Language: af\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Translate Toolkit 1.1.1\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Virtaal 0.7.0-beta1\n"
 
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
-msgstr ""
+msgstr "<a href=\"../\">Ouergids</a> (<a href=\"/\">Wortelgids</a>)"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
+"<b>Ongeldige versoek</b>-fout is teëgekom tydens verwerking van die navraag:"
 
 #: templates/ERR_INVALID_RESP:4
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
+"<b>Ongeldige antwoord</b>-fout is teëgekom tydens verwerking van die navraag:"
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
-"A Timeout occurred while waiting to read data from the network.  The network "
-"or server may be down or congested.  Please retry your request."
+"A Timeout occurred while waiting to read data from the network. The network "
+"or server may be down or congested. Please retry your request."
 msgstr ""
+"Die tyd het verstryk tydens die lees van data van die netwerk. Die netwerk "
+"of bediener is dalk af of verstop. Probeer die navraag gerus weer."
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
-msgstr ""
+msgstr "'n URL vir die aangevraagde URN kon nie verkry word nie"
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
-msgstr ""
+msgstr "Toegang geweier."
 
 #: templates/ERR_ACCESS_DENIED:6
 msgid ""
 "Access control configuration prevents your request from being allowed at "
-"this time.  Please contact your service provider if you feel this is "
+"this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
+"Die opstelling van toegangsbeheer keer dat u navraag nou toegelaat kan word. "
+"Kontak gerus u diensverskaffer indien u voel dit is verkeerd."
 
 #: templates/ERR_FTP_FORBIDDEN:4
 msgid ""
@@ -55,56 +63,62 @@ msgid ""
 "href=\"%U\">%U</a>"
 msgstr ""
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
+"'n FTP-protokolfout het voorgekom tydens verkryging van die URL: <a href=\"%U"
+"\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
-msgstr ""
+msgstr "'n Onwettige antwoord is ontvang vanaf die ICAP-bediener."
 
 #: templates/ERR_READ_ERROR:7
 msgid ""
-"An error condition occurred while reading data from the network.  Please "
+"An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr ""
+"'n Fouttoestand het voorgekom tydens lees van data van die netwerk. Probeer "
+"die versoek gerus weer."
 
 #: templates/ERR_WRITE_ERROR:7
 msgid ""
-"An error condition occurred while writing to the network.  Please retry your "
+"An error condition occurred while writing to the network. Please retry your "
 "request."
 msgstr ""
+"'n Fouttoestand het voorgekom tydens skryf van data van die netwerk. Probeer "
+"die versoek gerus weer."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
-msgstr ""
+msgstr "Toegang tot kasgeheue geweier."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:3
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:5
 msgid "Cache Manager Access Denied."
-msgstr ""
+msgstr "Toegang tot kasbestuur geweier."
 
 #: templates/ERR_URN_RESOLVE:5
 msgid "Cannot Resolve URN"
-msgstr ""
+msgstr "Kan nie URN oplos nie"
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
-msgstr ""
+msgstr "Verbinding se leeftyd het verstryk"
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
-msgstr ""
+msgstr "Verbinding na %I het misluk"
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
-msgstr ""
+msgstr "\"Content-Length\" ontbreek vir POST- of PUT-navrae."
 
 #: templates/ERR_DIR_LISTING:3
 msgid "Directory Content:"
-msgstr ""
+msgstr "Gidsinhoud:"
 
 #: templates/ERR_DIR_LISTING:4
 msgid "Directory Listing"
@@ -112,13 +126,14 @@ msgstr ""
 
 #: templates/ERR_DIR_LISTING:1
 msgid "Directory: %U"
-msgstr ""
+msgstr "Gids: %U"
 
 #: templates/ERR_DIR_LISTING:2
 msgid "Directory: <a href=\"%U\">%U</a>/"
-msgstr ""
+msgstr "Gids: <a href=\"%U\">%U</a>/"
 
-#: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
+#: templates/ERR_ACCESS_DENIED:2 templates/ERR_AGENT_CONFIGURE:2
+#: templates/ERR_AGENT_WPAD:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
 #: templates/ERR_CONNECT_FAIL:2 templates/ERR_DNS_FAIL:2 templates/ERR_ESI:2
 #: templates/ERR_FORWARDING_DENIED:2 templates/ERR_FTP_DISABLED:2
@@ -135,19 +150,19 @@ msgstr ""
 #: templates/ERR_URN_RESOLVE:2 templates/ERR_WRITE_ERROR:2
 #: templates/ERR_ZERO_SIZE_OBJECT:2
 msgid "ERROR"
-msgstr ""
+msgstr "FOUT"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:1
 msgid "ERROR: Cache Access Denied"
-msgstr ""
+msgstr "FOUT: Toegang tot kasgeheue geweier."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:1
 msgid "ERROR: Cache Manager Access Denied"
-msgstr ""
+msgstr "FOUT: Toegang tot kasbestuur geweier."
 
 #: templates/ERR_FTP_PUT_ERROR:1
 msgid "ERROR: FTP upload failed"
-msgstr ""
+msgstr "FOUT: Oplaai na FTP het misluk"
 
 #: templates/ERR_ACCESS_DENIED:1 templates/ERR_CANNOT_FORWARD:1
 #: templates/ERR_CONNECT_FAIL:1 templates/ERR_DNS_FAIL:1 templates/ERR_ESI:1
@@ -164,49 +179,60 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
 #: templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr ""
+msgstr "FOUT: Die aangevraagde URL kon nie verkry word nie"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr ""
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "FOUT: Die aangevraagde URN kon nie verkry word nie"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
-msgstr ""
+msgstr "ESI-verwerking het misluk."
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
-msgstr ""
-
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr ""
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
+msgstr "FTP PUT suksesvol: Lêer is geskep"
 
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
-msgstr ""
+#, fuzzy
+msgid "FTP PUT upload failed"
+msgstr "FTP PUT/oplaai het misluk"
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
-msgstr ""
+msgstr "FTP is gedeaktiveerd"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
-msgstr ""
+msgstr "Kon nie 'n beveiligde verbinding skep na %I nie"
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
-msgstr ""
+msgstr "Lêer is geskep"
 
 #: templates/ERR_FTP_PUT_MODIFIED:3
 msgid "File updated"
+msgstr "Lêer is opgedateer"
+
+#: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
+msgid "For Firefox browsers go to: <ul>"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
+msgid "For Internet Explorer browsers go to: <ul>"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
+msgid "For Opera browsers go to: <ul>"
 msgstr ""
 
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
-msgstr ""
+msgstr "Aanstuur geweier."
 
-#: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
+#: templates/ERR_ACCESS_DENIED:8 templates/ERR_AGENT_CONFIGURE:16
+#: templates/ERR_AGENT_WPAD:15 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
 #: templates/ERR_CONNECT_FAIL:9 templates/ERR_DIR_LISTING:7
 #: templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
@@ -225,64 +251,79 @@ msgstr ""
 #: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
 #: templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
-msgstr ""
+msgstr "Gegenereer op %T deur %h (%s)"
 
 #: templates/ERR_INVALID_REQ:12
-msgid "HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software."
+msgid ""
+"HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
+msgstr "Moet eerder nie te veel verwag van URN'e op %T nie :)"
+
+#: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
+msgid "How to find these settings in your browser:"
 msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
-msgstr ""
+msgstr "ICAP-protokolfout."
 
 #: templates/ERR_TOO_BIG:7
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
 msgstr ""
+"Indien u 'n GET-navraag maak, is die item wat u probeer aflaai te groot."
 
 #: templates/ERR_TOO_BIG:6
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
 msgstr ""
+"Indien u 'n POST- of PUT-navraag maak, is die item wat u probeer oplaai te "
+"groot."
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
-msgstr ""
+msgstr "Ongeldige karakter in gasheernaam; onderstreep word nie toegelaat nie."
 
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
 msgstr ""
 
+#: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
+#: templates/ERR_AGENT_CONFIGURE:14
+msgid "In the HTTP proxy box type the proxy name %h and port 3128."
+msgstr ""
+
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
-msgstr ""
+msgstr "Ongeldige URL"
 
 #: templates/ERR_INVALID_REQ:8
 msgid "Missing HTTP Identifier (HTTP/1.0)."
-msgstr ""
+msgstr "Ontbrekende HTTP-identifiseerder (HTTP/1.0)"
 
 #: templates/ERR_INVALID_REQ:7
 msgid "Missing URL."
-msgstr ""
+msgstr "Ontbrekende URL."
 
 #: templates/ERR_INVALID_URL:9
 msgid "Missing hostname"
-msgstr ""
+msgstr "Ontbrekende gasheernaam"
 
 #: templates/ERR_INVALID_URL:8
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
 msgstr ""
+"Ontbrekende of verkeerde toegangsprotokol (moet <q>http://</q> of soortgelyk "
+"wees)"
 
 #: templates/ERR_INVALID_REQ:6
 msgid "Missing or unknown request method."
-msgstr ""
+msgstr "Ontbrekende of onbekende navraagmetode."
 
 #: templates/ERR_NO_RELAY:5
 msgid "No Wais Relay"
@@ -290,11 +331,11 @@ msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
 msgid "Operation successful"
-msgstr ""
+msgstr "Bewerking suksesvol"
 
 #: templates/ERR_DIR_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "Ouergids"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
@@ -313,28 +354,36 @@ msgstr ""
 
 #: templates/ERR_READ_ERROR:5
 msgid "Read Error"
-msgstr ""
+msgstr "Leesfout"
 
 #: templates/ERR_READ_TIMEOUT:5
 msgid "Read Timeout"
-msgstr ""
+msgstr "Tyd verstreke tydens lees"
 
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
+msgstr "Navraag is te groot."
+
+#: templates/ERR_AGENT_WPAD:10
+msgid "Select Automatically detect settings"
+msgstr ""
+
+#: templates/ERR_AGENT_WPAD:13
+msgid "Select Use Automatic proxy configuration"
 msgstr ""
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
-msgstr ""
+msgstr "Sokfout"
 
 #: templates/ERR_INVALID_URL:6
 msgid "Some aspect of the requested URL is incorrect."
-msgstr ""
+msgstr "'n Sekere aspek van die aangevraagde URL is verkeerd."
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
 msgid "Some possible problems are:"
-msgstr ""
+msgstr "Enkele moontlike probleme is:"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
 msgid ""
@@ -350,57 +399,68 @@ msgstr ""
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
-msgstr ""
+msgstr "Squid het geen data vir hierdie navraag ontvang nie."
 
 #: templates/ERR_UNSUP_REQ:6
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
+"Squid ondersteun nie alle navraagmetodes vir alle toegangsprotokolle nie. "
+"Mens kan by voorbeeld nie 'n Gopher-navraag POST nie."
 
 #: templates/ERR_LIFETIME_EXP:6
 msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
 msgstr ""
+"Squid het die navraag afgesluit omdat dit die maksimumleeftyd vir 'n "
+"verbinding oorskry het."
 
 #: templates/ERR_SOCKET_FAILURE:7
+#, fuzzy
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
+"Squid kan nie 'n TCP-sok skep nie, vermoedelik weens hoë lading. Probeer die "
+"navraag gerus weer."
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
 #: templates/ERR_FTP_UNAVAILABLE:5
 msgid "Squid sent the following FTP command:"
-msgstr ""
+msgstr "Squid het die volgende FTP-opdrag gestuur:"
 
 #: templates/ERR_DNS_FAIL:6
 msgid "The DNS server returned:"
-msgstr ""
+msgstr "Die DNS-bediener het geantwoord:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
-msgstr ""
+msgstr "Die ESI-verwerker het geantwoord:"
 
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
+"Die FTP-bediener was te besig om die URL te verkry: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
+"Die ontvangde HTTP-antwoordboodskap van die bediener wat gekontak is, kon "
+"nie verstaan word nie of was op 'n ander manier misvormd. Kontak die "
+"werfoperateur."
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
-msgstr ""
+msgstr "Die ICAP-bediener is nie bereikbaar nie."
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
-msgstr ""
+msgstr "Die volgende URL kon nie opgespoor word nie: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ACCESS_DENIED:4 templates/ERR_CACHE_ACCESS_DENIED:4
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
@@ -418,20 +478,25 @@ msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
+"Die volgende fout is teëgekom tydens verkryging van die URL: <a href=\"%U\">"
+"%U</a>"
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
+"Die volgende fout is teëgekom tydens verkryging van die URN: <a href=\"%U\">"
+"%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid "The remote host or network may be down.  Please try the request again."
+msgid "The remote host or network may be down. Please try the request again."
 msgstr ""
+"Die afgeleë gasheer of netwerk is dalk af. Probeer die navraag gerus weer."
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
-msgstr ""
+msgstr "Die navraag of antwoord is te groot."
 
 #: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
 #: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
@@ -447,70 +512,79 @@ msgstr ""
 #: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
 #: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
 msgid "The requested URL could not be retrieved"
-msgstr ""
+msgstr "Die aangevraagde URL kon nie verkry word nie"
 
 #: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
 #: templates/ERR_FTP_UNAVAILABLE:6
 msgid "The server responded with:"
-msgstr ""
+msgstr "Die bediener het geantwoord met:"
 
 #: templates/ERR_CONNECT_FAIL:6 templates/ERR_ICAP_FAILURE:6
 #: templates/ERR_READ_ERROR:6 templates/ERR_READ_TIMEOUT:6
 #: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
 #: templates/ERR_WRITE_ERROR:6
 msgid "The system returned: <i>%E</i>"
-msgstr ""
+msgstr "Die stelsel het die volgende teruggestuur: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
 msgid ""
-"There is no WAIS Relay host defined for this Cache!  Yell at the "
+"There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
 
 #: templates/ERR_TOO_BIG:8
 msgid ""
 "These limits have been established by the Internet Service Provider who "
-"operates this cache.  Please contact them directly if you feel this is an "
+"operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
-msgstr ""
+msgstr "Hierdie Squid aanvaar nie die HTTP-weergawe wat u probeer gebruik nie."
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
-msgstr ""
+msgstr "Hierdie kasbediener ondersteun nie FTP nie."
 
 #: templates/ERR_SHUTTING_DOWN:5
 msgid ""
 "This cache is in the process of shutting down and can not service your "
-"request at this time.  Please retry your request again soon."
+"request at this time. Please retry your request again soon."
 msgstr ""
+"Hierdie kasbediener skakel tans af en kan nie nou u navraag bedien nie. "
+"Probeer gerus u navraag weer binnekort."
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
-"sibling relationship.  Perhaps the client at %i is a cache which has been "
+"sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
 msgstr ""
+"Dit beteken dat een of ander aspek van die ICAP-kommunikasie misluk het."
 
 #: templates/ERR_FTP_PUT_ERROR:7
 msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
+"Dit beteken dat die FTP-bediener dalk nie toestemming of ruimte het om die "
+"lêer te stoor nie. Kontroleer die pad, toestemmings, skyfspasie en probeer "
+"weer."
 
 #: templates/ERR_DNS_FAIL:7
+#, fuzzy
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
+"Dit beteken dat die kasbediener nie in staat was om die gasheernaam in die "
+"URL op te los nie. Kyk of die adres korrek is."
 
 #: templates/ERR_ESI:7
 msgid ""
@@ -521,7 +595,7 @@ msgstr ""
 #: templates/ERR_FTP_NOT_FOUND:7
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
-"comply with RFC 1738).  If this is the cause, then the file can be found at "
+"comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
 
@@ -536,22 +610,37 @@ msgstr ""
 #: templates/ERR_CANNOT_FORWARD:6
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches.  The most likely cause for this error is that the cache "
-"administrator does not allow this cache to make direct connections to origin "
-"servers, and all configured parent caches are currently unreachable."
+"caches. The most likely cause for this error is that the cache administrator "
+"does not allow this cache to make direct connections to origin servers, and "
+"all configured parent caches are currently unreachable."
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
+msgid ""
+"Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
+msgid ""
+"Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
+msgid ""
+"Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
 msgstr ""
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
-msgstr ""
+msgstr "Kan nie IP-adres vanaf gasheernaam <q>%H</q> bepaal nie"
 
 #: templates/ERR_CANNOT_FORWARD:5
 msgid "Unable to forward this request at this time."
-msgstr ""
+msgstr "Kan nie dié versoek nou aanstuur nie"
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
-msgstr ""
+msgstr "Niegesteunde HTTP-weergawe"
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
@@ -563,13 +652,14 @@ msgid ""
 "directive was specified."
 msgstr ""
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr ""
+#: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
+#: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
+msgid "Web Browser Configuration"
+msgstr "Webblaaier se opstelling"
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
-msgstr ""
+msgstr "Skryffout"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:6
 msgid ""
@@ -578,7 +668,13 @@ msgid ""
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
 
-#: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
+#: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
+msgid ""
+"Your Web Browser configuration needs to be corrected to use this network."
+msgstr ""
+
+#: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
+#: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
 #: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
 #: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
@@ -593,18 +689,23 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ:7 templates/ERR_URN_RESOLVE:7
 #: templates/ERR_WRITE_ERROR:8 templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
-msgstr ""
+msgstr "Die kasbediener se administrateur is <a href=\"mailto:%w%W\">%w</a>."
 
 #: templates/ERR_INVALID_RESP:6
 msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
+"Die kasbediener se administrateur kan dalk meer detail verskaf oor die "
+"presiese aard van die probleem indien nodig."
 
 #: templates/ERR_ESI:8
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
-msgstr ""
+msgstr "U webmeester is <a href=\"mailto:%w\">%w</a>."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr ""
+msgstr "Antwoord het nul-lengte"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP PUT suksesvol: Lêer is opgedateer"

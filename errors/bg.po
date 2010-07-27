@@ -2,16 +2,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-08 00:04+1300\n"
-"PO-Revision-Date: 2009-09-27 15:50+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
+"PO-Revision-Date: 2010-05-06 12:49+0200\n"
 "Last-Translator: Evgeni Gechev <etg@setcom.bg>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"Language: bg\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: bg\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Pootle 1.2.1\n"
+"X-Generator: Pootle 2.0.1\n"
 
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -36,8 +36,8 @@ msgstr ""
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
-"A Timeout occurred while waiting to read data from the network.  The network "
-"or server may be down or congested.  Please retry your request."
+"A Timeout occurred while waiting to read data from the network. The network "
+"or server may be down or congested. Please retry your request."
 msgstr ""
 "Изтече максимално допустимото време за четене на данни от мрежата. Мрежата "
 "или сървърът са недостъпни или претоварени. Моля, опитайте отново да "
@@ -54,7 +54,7 @@ msgstr "Отказан достъп"
 #: templates/ERR_ACCESS_DENIED:6
 msgid ""
 "Access control configuration prevents your request from being allowed at "
-"this time.  Please contact your service provider if you feel this is "
+"this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
 "Конфигурацията за контрол на достъпа не позволява да бъде изпълнена Вашата "
@@ -69,7 +69,7 @@ msgstr ""
 "Възникна грешка при ауторизация към отдалечения FTP сървър при доставката на "
 "URL:<a href=\"%U\">%U</a>"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -83,7 +83,7 @@ msgstr "Невалиден отговор от ICAP сървъра."
 
 #: templates/ERR_READ_ERROR:7
 msgid ""
-"An error condition occurred while reading data from the network.  Please "
+"An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr ""
 "Възникна грешка при четене на данни от мрежата. Моля, опитайте отново да "
@@ -91,7 +91,7 @@ msgstr ""
 
 #: templates/ERR_WRITE_ERROR:7
 msgid ""
-"An error condition occurred while writing to the network.  Please retry your "
+"An error condition occurred while writing to the network. Please retry your "
 "request."
 msgstr ""
 "Възникна грешка при изпращане на данни в мрежата. Моля, опитайте отново да "
@@ -138,7 +138,8 @@ msgstr "директория: %U"
 msgid "Directory: <a href=\"%U\">%U</a>/"
 msgstr "директория: <a href=\"%U\">%U</a>/"
 
-#: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
+#: templates/ERR_ACCESS_DENIED:2 templates/ERR_AGENT_CONFIGURE:2
+#: templates/ERR_AGENT_WPAD:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
 #: templates/ERR_CONNECT_FAIL:2 templates/ERR_DNS_FAIL:2 templates/ERR_ESI:2
 #: templates/ERR_FORWARDING_DENIED:2 templates/ERR_FTP_DISABLED:2
@@ -187,23 +188,21 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "ГРЕШКА: Заявената страница е недостъпна."
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr "ГРЕШКА: Заявеният адрес е недостъпен."
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "ГРЕШКА: Заявената страница не може да бъде изтеглена"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
 msgstr "Неуспешна обработка на ESI заявка."
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "Файлът е създаден успешно."
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT заявката е успешна: файлът е обновен"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "Заявката за качване на файл е неуспешна."
 
 #: templates/ERR_FTP_DISABLED:5
@@ -222,11 +221,24 @@ msgstr "Файлът е създаден"
 msgid "File updated"
 msgstr "Файлът е обновен"
 
+#: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
+msgid "For Firefox browsers go to: <ul>"
+msgstr "За браузер Firefox идете на: <ul>"
+
+#: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
+msgid "For Internet Explorer browsers go to: <ul>"
+msgstr "За браузер Internet Explorer идете на: <ul>"
+
+#: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
+msgid "For Opera browsers go to: <ul>"
+msgstr "За браузер Opera идете на: <ul>"
+
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
 msgstr "Пренасочването на заявката е отказано."
 
-#: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
+#: templates/ERR_ACCESS_DENIED:8 templates/ERR_AGENT_CONFIGURE:16
+#: templates/ERR_AGENT_WPAD:15 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
 #: templates/ERR_CONNECT_FAIL:9 templates/ERR_DIR_LISTING:7
 #: templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
@@ -248,12 +260,17 @@ msgid "Generated %T by %h (%s)"
 msgstr "Генерирано на %T от %h (%s)"
 
 #: templates/ERR_INVALID_REQ:12
-msgid "HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software."
+msgid ""
+"HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
 msgstr "Не очаквайте прекалено много на този етап :)"
+
+#: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
+msgid "How to find these settings in your browser:"
+msgstr "Как да намерите тези настройки на Вашия браузер:"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
@@ -284,6 +301,11 @@ msgstr ""
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
 msgstr "Невалиден double-escape символ в адреса"
+
+#: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
+#: templates/ERR_AGENT_CONFIGURE:14
+msgid "In the HTTP proxy box type the proxy name %h and port 3128."
+msgstr "В полето HTTP proxy напишете име на proxy сървър %h и порт 3128."
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
@@ -357,6 +379,14 @@ msgstr "Изтече максимално допустимото време за
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
 msgstr "Заявката е прекалено голяма."
+
+#: templates/ERR_AGENT_WPAD:10
+msgid "Select Automatically detect settings"
+msgstr "Изберете Автоматично откриване на настройките."
+
+#: templates/ERR_AGENT_WPAD:13
+msgid "Select Use Automatic proxy configuration"
+msgstr "Изберете Използване на Автоматично конфигуриране на прокси сървър."
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
@@ -432,8 +462,8 @@ msgstr "Обработката на ESI заявката върна следни
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"FTP сървърът е претоварен и не може да бъде изтеглен файлът: <a href=\"%U\">%"
-"U</a>"
+"FTP сървърът е претоварен и не може да бъде изтеглен файлът: <a href=\"%U\">"
+"%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
@@ -475,7 +505,7 @@ msgid ""
 msgstr "Възникна следната грешка при опит за достъп до: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid "The remote host or network may be down.  Please try the request again."
+msgid "The remote host or network may be down. Please try the request again."
 msgstr ""
 "Вероятно отдалеченият сървър или мрежа са недостъпни. Моля, опитайте отново "
 "да направите Вашата заявка."
@@ -515,7 +545,7 @@ msgstr "Операционната система даде следното съ
 
 #: templates/ERR_NO_RELAY:6
 msgid ""
-"There is no WAIS Relay host defined for this Cache!  Yell at the "
+"There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
 "Няма дефиниран WAIS Relay за този кеш сървър. Обърнете се към администратора."
@@ -523,7 +553,7 @@ msgstr ""
 #: templates/ERR_TOO_BIG:8
 msgid ""
 "These limits have been established by the Internet Service Provider who "
-"operates this cache.  Please contact them directly if you feel this is an "
+"operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
 "Тези ограничения са поставени от Интернет доставчика, който администрира "
@@ -543,7 +573,7 @@ msgstr "Този кеш сървър не поддържа FTP"
 #: templates/ERR_SHUTTING_DOWN:5
 msgid ""
 "This cache is in the process of shutting down and can not service your "
-"request at this time.  Please retry your request again soon."
+"request at this time. Please retry your request again soon."
 msgstr ""
 "Кеш сървърът е в процес на рестартиране и в момента не може да изпълни "
 "вашата заявка. Моля опитайте отново след няколко минути."
@@ -551,7 +581,7 @@ msgstr ""
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
-"sibling relationship.  Perhaps the client at %i is a cache which has been "
+"sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
 "Този кеш сървър няма да пренасочи Вашата заявка, защото не е висшестоящ кеш "
@@ -588,11 +618,11 @@ msgstr ""
 #: templates/ERR_FTP_NOT_FOUND:7
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
-"comply with RFC 1738).  If this is the cause, then the file can be found at "
+"comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
-"Това би могло да бъде причинено от заявка, в която е посочен абсолютен път "
-"(което е неправилно според документ RFC 1738). Ако това е причината, то "
+"Това би могло да бъде причинено от FTP заявка, в която е посочен абсолютен "
+"път (което е неправилно според документ RFC 1738). Ако това е причината, то "
 "файлът би могъл да бъде намерен на адрес <a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
@@ -610,14 +640,31 @@ msgstr ""
 #: templates/ERR_CANNOT_FORWARD:6
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches.  The most likely cause for this error is that the cache "
-"administrator does not allow this cache to make direct connections to origin "
-"servers, and all configured parent caches are currently unreachable."
+"caches. The most likely cause for this error is that the cache administrator "
+"does not allow this cache to make direct connections to origin servers, and "
+"all configured parent caches are currently unreachable."
 msgstr ""
 "Заявката не може да бъде пренасочена към сървъра източник или към някой от "
 "висшестоящите кеш сървъри.  Най-вероятно причината за тази грешка е, че "
 "администратора не позволява директни обръщения към сървъра източник, и "
 "всички кеш сървъри от по-горно ниво в момента са недостъпни."
+
+#: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
+msgid ""
+"Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
+msgstr ""
+"Инструменти -&gt; Опции за интернет -&gt; Връзки -&gt; LAN настройки -&gt; "
+"Прокси сървър"
+
+#: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
+msgid ""
+"Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
+msgid ""
+"Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
+msgstr ""
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -643,9 +690,10 @@ msgstr ""
 "Подадена е заявка за обект, който не се намира в кеша, а попада в обсега на "
 "директивата <q>only-if-cached</q>."
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr "При опит да бъде записан файлът: <a href=\"%U\">%U</a>"
+#: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
+#: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
+msgid "Web Browser Configuration"
+msgstr ""
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
@@ -662,7 +710,13 @@ msgstr ""
 "трябва да бъде изтеглен наново или да бъде проверена неговата валидност, "
 "което е недопустимо поради директивата <q>only-if-cached</q>."
 
-#: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
+#: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
+msgid ""
+"Your Web Browser configuration needs to be corrected to use this network."
+msgstr ""
+
+#: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
+#: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
 #: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
 #: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
@@ -694,3 +748,12 @@ msgstr "Вашият web администратор е <a href=\"mailto:%w\">%w<
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr "Отговор с нулева големина"
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "ГРЕШКА: Заявеният адрес е недостъпен."
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP PUT заявката е успешна: файлът е обновен"
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr "При опит да бъде записан файлът: <a href=\"%U\">%U</a>"

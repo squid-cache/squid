@@ -2,14 +2,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-08 00:04+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2009-01-30 20:02+1300\n"
 "Last-Translator: Takahiro Kambe <taca@back-street.net>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 1.2.0\n"
 
@@ -35,9 +35,10 @@ msgstr ""
 "生しました:"
 
 #: templates/ERR_READ_TIMEOUT:7
+#, fuzzy
 msgid ""
-"A Timeout occurred while waiting to read data from the network.  The network "
-"or server may be down or congested.  Please retry your request."
+"A Timeout occurred while waiting to read data from the network. The network "
+"or server may be down or congested. Please retry your request."
 msgstr ""
 "ネットワークからデータを読もうと待っている間にタイムアウトが発生しました。"
 "ネットワークもしくはサーバが稼働していないか、あるいは混雑しています。再度リ"
@@ -52,9 +53,10 @@ msgid "Access Denied."
 msgstr "アクセスを拒否されました。"
 
 #: templates/ERR_ACCESS_DENIED:6
+#, fuzzy
 msgid ""
 "Access control configuration prevents your request from being allowed at "
-"this time.  Please contact your service provider if you feel this is "
+"this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
 "設定されているアクセス制御の設定のため、今回はあなたからのリクエストは受けつ"
@@ -69,7 +71,7 @@ msgstr ""
 "FTP認証の失敗が、以下のURLから情報を得ようとしている間に発生しました: <a "
 "href=\"%U\">%U</a>"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -82,16 +84,18 @@ msgid "An Illegal response was received from the ICAP server."
 msgstr "ICAPサーバから不正な応答がありました。"
 
 #: templates/ERR_READ_ERROR:7
+#, fuzzy
 msgid ""
-"An error condition occurred while reading data from the network.  Please "
+"An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr ""
 "ネットワークからデータを受信している間にエラーが発生しました。再度、リクエス"
 "トしてください。"
 
 #: templates/ERR_WRITE_ERROR:7
+#, fuzzy
 msgid ""
-"An error condition occurred while writing to the network.  Please retry your "
+"An error condition occurred while writing to the network. Please retry your "
 "request."
 msgstr ""
 "ネットワークにデータを送信している間にエラーが発生しました。再度リクエストし"
@@ -140,7 +144,8 @@ msgstr "ディレクトリ: %U"
 msgid "Directory: <a href=\"%U\">%U</a>/"
 msgstr "ディレクトリ: <a href=\"/\">%U</a>/"
 
-#: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
+#: templates/ERR_ACCESS_DENIED:2 templates/ERR_AGENT_CONFIGURE:2
+#: templates/ERR_AGENT_WPAD:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
 #: templates/ERR_CONNECT_FAIL:2 templates/ERR_DNS_FAIL:2 templates/ERR_ESI:2
 #: templates/ERR_FORWARDING_DENIED:2 templates/ERR_FTP_DISABLED:2
@@ -189,24 +194,22 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "エラー: 要求されたURLからデータを取り出せませんでした。"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr "エラー: 要求されたURNからデータを取り出せませんでした。"
+#, fuzzy
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "エラー: 要求されたURLからデータを取り出せませんでした。"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
 msgstr "ESIの処理に失敗しました。"
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTPのPUTに成功: ファイルを作成しました。"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-#, fuzzy
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTPのPUTに成功: ファイルを更新しました。"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "ファイルのPUTやアップロードに失敗"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -225,11 +228,24 @@ msgstr "ファイルを作成しました。"
 msgid "File updated"
 msgstr "ファイルを更新しました。"
 
+#: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
+msgid "For Firefox browsers go to: <ul>"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
+msgid "For Internet Explorer browsers go to: <ul>"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
+msgid "For Opera browsers go to: <ul>"
+msgstr ""
+
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
 msgstr "転送は拒否されました。"
 
-#: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
+#: templates/ERR_ACCESS_DENIED:8 templates/ERR_AGENT_CONFIGURE:16
+#: templates/ERR_AGENT_WPAD:15 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
 #: templates/ERR_CONNECT_FAIL:9 templates/ERR_DIR_LISTING:7
 #: templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
@@ -251,12 +267,17 @@ msgid "Generated %T by %h (%s)"
 msgstr "%Tに%h (%s)が生成しました。"
 
 #: templates/ERR_INVALID_REQ:12
-msgid "HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software."
+msgid ""
+"HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
 msgstr "やあ、%Tの時点でURNには多くを期待しないでください。:)"
+
+#: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
+msgid "How to find these settings in your browser:"
+msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
@@ -283,6 +304,11 @@ msgstr "ホスト名に不正な文字が使われています: アンダース�
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
 msgstr "不正な二重のエスケープがURLパスにあります。"
+
+#: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
+#: templates/ERR_AGENT_CONFIGURE:14
+msgid "In the HTTP proxy box type the proxy name %h and port 3128."
+msgstr ""
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
@@ -355,6 +381,14 @@ msgstr "読み込みタイムアウト"
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
 msgstr "リクエストが長すぎます。"
+
+#: templates/ERR_AGENT_WPAD:10
+msgid "Select Automatically detect settings"
+msgstr ""
+
+#: templates/ERR_AGENT_WPAD:13
+msgid "Select Use Automatic proxy configuration"
+msgstr ""
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
@@ -469,7 +503,8 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid "The remote host or network may be down.  Please try the request again."
+#, fuzzy
+msgid "The remote host or network may be down. Please try the request again."
 msgstr ""
 "接続先のホストもしくはネットワークが稼働していません．しばらく待ってからもう"
 "一度試して下さい．"
@@ -508,8 +543,9 @@ msgid "The system returned: <i>%E</i>"
 msgstr "システムが以下のエラーを返しました: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
+#, fuzzy
 msgid ""
-"There is no WAIS Relay host defined for this Cache!  Yell at the "
+"There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr "WAIS リレー用ホストが定義されていません! 管理者に連絡してください．"
 
@@ -517,7 +553,7 @@ msgstr "WAIS リレー用ホストが定義されていません! 管理者に�
 #, fuzzy
 msgid ""
 "These limits have been established by the Internet Service Provider who "
-"operates this cache.  Please contact them directly if you feel this is an "
+"operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
 "これらの制限は、このキャッシュの運用者によって課されています。これがエラーだ"
@@ -532,17 +568,19 @@ msgid "This cache does not support FTP."
 msgstr "キャッシュは FTP をサポートしていません．"
 
 #: templates/ERR_SHUTTING_DOWN:5
+#, fuzzy
 msgid ""
 "This cache is in the process of shutting down and can not service your "
-"request at this time.  Please retry your request again soon."
+"request at this time. Please retry your request again soon."
 msgstr ""
 "このキャッシュは稼働停止の処理に入っていて、現在あなたのリクエストへのサービ"
 "スを提供できません。後で再度リクエストしてください．"
 
 #: templates/ERR_FORWARDING_DENIED:6
+#, fuzzy
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
-"sibling relationship.  Perhaps the client at %i is a cache which has been "
+"sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
 "キャッシュ間における関係を強制的に兄弟関係となるようにしているため，キャッ"
@@ -576,9 +614,10 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_FTP_NOT_FOUND:7
+#, fuzzy
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
-"comply with RFC 1738).  If this is the cause, then the file can be found at "
+"comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
 "これは(RFC 1738に従っていない)絶対パスを含んだFTPのURLによる可能性がありま"
@@ -597,14 +636,29 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches.  The most likely cause for this error is that the cache "
-"administrator does not allow this cache to make direct connections to origin "
-"servers, and all configured parent caches are currently unreachable."
+"caches. The most likely cause for this error is that the cache administrator "
+"does not allow this cache to make direct connections to origin servers, and "
+"all configured parent caches are currently unreachable."
 msgstr ""
 "あなたのリクエストは，元のサーバもしくは他の親キャッシュサーバへ転送できませ"
 "ん．これは次の理由により発生したと考えられますキャッシュ管理者が元のサーバに"
 "直接接続しないように設定した． 設定されている全ての親キャッシュサーバへ現在到"
 "達できない．"
+
+#: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
+msgid ""
+"Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
+msgid ""
+"Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
+msgstr ""
+
+#: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
+msgid ""
+"Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
+msgstr ""
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -630,9 +684,10 @@ msgstr ""
 "<q>only-if-cached</q> の指定がありましたが，その文書がキャッシュに存在してい"
 "ません．"
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr "以下の URL を PUT しようとした際に: <a href=\"%U\">%U</a>"
+#: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
+#: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
+msgid "Web Browser Configuration"
+msgstr ""
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
@@ -649,7 +704,13 @@ msgstr ""
 "(<q>only-if-cached</q> によって禁止されている)この文書が更新されているかどう"
 "かの再確認が必要です．"
 
-#: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
+#: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
+msgid ""
+"Your Web Browser configuration needs to be corrected to use this network."
+msgstr ""
+
+#: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
+#: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
 #: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
 #: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
@@ -679,3 +740,13 @@ msgstr ""
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr "サイズがゼロの応答"
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "エラー: 要求されたURNからデータを取り出せませんでした。"
+
+#, fuzzy
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTPのPUTに成功: ファイルを更新しました。"
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr "以下の URL を PUT しようとした際に: <a href=\"%U\">%U</a>"
