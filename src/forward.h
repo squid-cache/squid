@@ -20,7 +20,7 @@ public:
     static void initModule();
 
     static void fwdStart(int fd, StoreEntry *, HttpRequest *);
-    void startComplete();
+    void startConnectionOrFail();
     void fail(ErrorState *err);
     void unregister(Comm::ConnectionPointer &conn);
     void unregister(int fd);
@@ -49,13 +49,6 @@ public:
 
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
     Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
-
-    /** test if the current server connection is open */
-    bool isServerConnectionOpen() const {
-        if (serverConn != NULL && serverConn->isOpen())
-            assert(fd_table[serverConn->fd].flags.open == serverConn->isOpen());
-        return (serverConn != NULL && serverConn->isOpen());
-    };
 
 private:
     // hidden for safer management of self; use static fwdStart

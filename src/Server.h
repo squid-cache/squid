@@ -66,8 +66,8 @@ public:
     ServerStateData(FwdState *);
     virtual ~ServerStateData();
 
-    /// \return primary or "request data connection" fd
-    virtual int dataDescriptor() const = 0;
+    /// \return primary or "request data connection"
+    virtual const Comm::ConnectionPointer & dataDescriptor() const = 0;
 
     // BodyConsumer: consume request body or adapted response body.
     // The implementation just calls the corresponding HTTP or ICAP handle*()
@@ -128,8 +128,6 @@ protected:
     void handleRequestBodyProductionEnded();
     virtual void handleRequestBodyProducerAborted() = 0;
 
-    /// whether it is not too late to write to the server
-    bool canSend(int fd) const;
     // sending of the request body to the server
     void sendMoreRequestBody();
     // has body; kids overwrite to increment I/O stats counters

@@ -17,7 +17,8 @@ class ListenStateData
 {
 
 public:
-    ListenStateData(int fd, AsyncCall::Pointer &call, bool accept_many);
+    ListenStateData(int fd, AsyncCall::Pointer &call, bool accept_many); // Legacy
+    ListenStateData(Comm::ConnectionPointer &conn, AsyncCall::Pointer &call, bool accept_many, const char *note);
     ListenStateData(const ListenStateData &r); // not implemented.
     ~ListenStateData();
 

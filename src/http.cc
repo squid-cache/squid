@@ -165,15 +165,13 @@ HttpStateData::~HttpStateData()
 
     cbdataReferenceDone(_peer);
 
-    debugs(11,5, HERE << "HttpStateData " << this << " destroyed; FD " << dataDescriptor());
+    debugs(11,5, HERE << "HttpStateData " << this << " destroyed; FD " << (serverConnection!=NULL?serverConnection->fd:-1) );
 }
 
-int
+const Comm::ConnectionPointer &
 HttpStateData::dataDescriptor() const
 {
-    if (serverConnection == NULL)
-        return -1;
-    return serverConnection->fd;
+    return serverConnection;
 }
 
 /*
@@ -1987,7 +1985,7 @@ HttpStateData::sendRequest()
 
     debugs(11, 5, "httpSendRequest: FD " << serverConnection->fd << ", request " << request << ", this " << this << ".");
 
-    if (!canSend(serverConnection->fd)) {
+    if (!Comm::IsConnOpen(serverConnection)) {
         debugs(11,3, HERE << "cannot send request to closing FD " << serverConnection->fd);
         assert(closeHandler != NULL);
         return false;
@@ -2097,8 +2095,8 @@ HttpStateData::doneSendingRequestBody()
         } else {
             debugs(11, 2, "doneSendingRequestBody: matched brokenPosts");
 
-            if (!canSend(serverConnection->fd)) {
-                debugs(11,2, HERE << "cannot send CRLF to closing FD " << serverConnection->fd);
+            if (!Comm::IsConnOpen(serverConnection)) {
+                debugs(11,2, HERE << "cannot send CRLF to closing FD");
                 assert(closeHandler != NULL);
                 return;
             }
@@ -2123,7 +2121,7 @@ HttpStateData::doneSendingRequestBody()
 void
 HttpStateData::handleMoreRequestBodyAvailable()
 {
-    if (eof || !serverConnection->isOpen()) {
+    if (eof || !Comm::IsConnOpen(serverConnection)) {
         // XXX: we should check this condition in other callbacks then!
         // TODO: Check whether this can actually happen: We should unsubscribe
         // as a body consumer when the above condition(s) are detected.

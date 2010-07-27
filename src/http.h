@@ -54,7 +54,7 @@ public:
                                        HttpHeader * hdr_out,
                                        http_state_flags flags);
 
-    virtual int dataDescriptor() const;
+    virtual const Comm::ConnectionPointer & dataDescriptor() const;
     /* should be private */
     bool sendRequest();
     void processReplyHeader();
