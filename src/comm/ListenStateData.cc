@@ -94,6 +94,33 @@ Comm::ListenStateData::ListenStateData(int aFd, AsyncCall::Pointer &call, bool a
     commSetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
 }
 
+Comm::ListenStateData::ListenStateData(Comm::ConnectionPointer &conn, AsyncCall::Pointer &call, bool accept_many, const char *note) :
+        fd(conn->fd),
+        theCallback(call),
+        mayAcceptMore(accept_many)
+{
+    /* open teh conn if its not already open */
+    if (!IsConnOpen(conn)) {
+        conn->fd = comm_open(SOCK_STREAM,
+                             IPPROTO_TCP,
+                             conn->local,
+                             conn->flags,
+                             note);
+        debugs(9, 3, HERE << "Unconnected data socket created on FD " << conn->fd );
+
+        if (!conn->isOpen()) {
+            debugs(5, DBG_CRITICAL, HERE << "comm_open failed");
+            errcode = -1;
+            return;
+        }
+    }
+
+    assert(IsConnOpen(conn));
+    debugs(5, 5, HERE << "FD " << fd << " AsyncCall: " << call);
+    setListen();
+    commSetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
+}
+
 Comm::ListenStateData::~ListenStateData()
 {
     comm_close(fd);

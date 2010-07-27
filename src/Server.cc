@@ -34,9 +34,11 @@
 
 #include "squid.h"
 #include "base/TextException.h"
+#include "comm/Connection.h"
+#include "comm/forward.h"
 #include "Server.h"
 #include "Store.h"
-#include "fde.h" /* for fd_table[fd].closing */
+//#include "fde.h" /* for fd_table[fd].closing */
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "errorpage.h"
@@ -394,11 +396,13 @@ ServerStateData::sentRequestBody(const CommIoCbParams &io)
         sendMoreRequestBody();
 }
 
+#if 0
 bool
 ServerStateData::canSend(int fd) const
 {
     return fd >= 0 && !fd_table[fd].closing();
 }
+#endif
 
 void
 ServerStateData::sendMoreRequestBody()
@@ -406,10 +410,10 @@ ServerStateData::sendMoreRequestBody()
     assert(requestBodySource != NULL);
     assert(!requestSender);
 
-    const int fd = dataDescriptor();
+    const Comm::ConnectionPointer conn = dataDescriptor();
 
-    if (!canSend(fd)) {
-        debugs(9,3, HERE << "cannot send request body to closing FD " << fd);
+    if (!Comm::IsConnOpen(conn)) {
+        debugs(9,3, HERE << "cannot send request body to closing FD " << (conn != NULL?conn->fd:-1));
         return; // wait for the kid's close handler; TODO: assert(closer);
     }
 
@@ -419,7 +423,7 @@ ServerStateData::sendMoreRequestBody()
         typedef CommCbMemFunT<ServerStateData, CommIoCbParams> Dialer;
         requestSender = asyncCall(93,3, "ServerStateData::sentRequestBody",
                                   Dialer(this, &ServerStateData::sentRequestBody));
-        comm_write_mbuf(fd, &buf, requestSender);
+        comm_write_mbuf(conn->fd, &buf, requestSender);
     } else {
         debugs(9,3, HERE << "will wait for more request body bytes or eof");
         requestSender = NULL;
