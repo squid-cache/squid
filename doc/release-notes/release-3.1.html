@@ -1,11 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
- <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
- <TITLE>Squid 3.1.5 release notes</TITLE>
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.65">
+ <TITLE>Squid 3.1.5.1 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.5 release notes</H1>
+<H1>Squid 3.1.5.1 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -70,7 +70,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.5.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.5.1</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -89,17 +89,16 @@ While this release is not fully bug-free we believe it is ready for use in produ
 <P>
 <UL>
 <LI>The lack of some features available in Squid-2.x series. See the regression sections below for full details.</LI>
-<LI>The lack of IPv6 split-stack support for MacOSX, OpenBSD and maybe others.</LI>
+<LI>IPv6 split-stack support for Windows XP, MacOS X, OpenBSD and maybe others is still not complete.</LI>
 </UL>
 </P>
 
 <P>Currently known issues which only depends on available developer time and may still be resolved in a future 3.1 release are:</P>
 <P>
 <UL>
-<LI>IPv4 fall-back occasionally failing on dual IPv4/IPv6 websites.</LI>
 <LI>An ongoing slow FD leak introduced somewhere during the Squid-3.0 cycle.</LI>
 <LI>Windows support is still largely missing.</LI>
-<LI>Build status for the 3.x series is still largely unknown for Unix based OS and other less popular systems.</LI>
+<LI>AIX support for building with the IBM compiler is broken.</LI>
 </UL>
 </P>
 
@@ -231,7 +230,7 @@ Details can be found in the wiki
 
 <H3>Limitations of IPv6 Support</H3>
 
-<P>In this release there is no split-stack support. This means that OS which do not provide
+<P>In this release there is incomplete split-stack support. This means that OS which do not provide
 IP stacks based on the KAME stack with Hybrid extensions to do IPv4-mapping cannot use IPv6
 with Squid.</P>
 
@@ -1572,7 +1571,7 @@ proxies.</P>
 
 <DT><B>--disable-ipv6</B><DD>
 <P>Build without IPv6 support. The default is to auto-detect system capabilities
-and build with IPv6 when possible.</P>
+and use IPv6 when possible.</P>
 
 <DT><B>--disable-loadable-modules</B><DD>
 <P>Build without support for loadable modules.</P>
@@ -1615,10 +1614,6 @@ Use --without-libxml2 to prevent it being auto-detected.</P>
 
 <DT><B>--with-logdir=PATH</B><DD>
 <P>Allow build-time configuration of Default location for squid logs.</P>
-
-<DT><B>--with-ipv6-split-stack</B><DD>
-<P>Force enable special additions for IPv6 support in Windows XP and various BSD systems.
-see the IPv6 details above for a better description.</P>
 
 <DT><B>--with-pidfile=PATH</B><DD>
 <P>Allow build-time configuration of Default location and name of squid.pid file.</P>

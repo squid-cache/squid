@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.5 release notes</title>
+<title>Squid 3.1.5.1 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.5.
+The Squid Team are pleased to announce the release of Squid-3.1.5.1
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -30,16 +30,15 @@ Although this release is deemed good enough for use in many setups, please note 
 
 <itemize>
 	<item>The lack of some features available in Squid-2.x series. See the regression sections below for full details.
-	<item>The lack of IPv6 split-stack support for MacOSX, OpenBSD and maybe others.
+	<item>IPv6 split-stack support for Windows XP, MacOS X, OpenBSD and maybe others is still not complete.
 </itemize>
 
 <p>Currently known issues which only depends on available developer time and may still be resolved in a future 3.1 release are:
 
 <itemize>
-	<item>IPv4 fall-back occasionally failing on dual IPv4/IPv6 websites.
 	<item>An ongoing slow FD leak introduced somewhere during the Squid-3.0 cycle.
 	<item>Windows support is still largely missing.
-	<item>Build status for the 3.x series is still largely unknown for Unix based OS and other less popular systems.
+	<item>AIX support for building with the IBM compiler is broken.
 </itemize>
 
 
@@ -162,7 +161,7 @@ config options provided on a clean install.
 
 <sect2>Limitations of IPv6 Support
 
-<p>In this release there is no split-stack support. This means that OS which do not provide
+<p>In this release there is incomplete split-stack support. This means that OS which do not provide
   IP stacks based on the KAME stack with Hybrid extensions to do IPv4-mapping cannot use IPv6
   with Squid.
 
@@ -1375,7 +1374,7 @@ This section gives an account of those changes in three categories:
 
 	<tag>--disable-ipv6</tag>
 	<p>Build without IPv6 support. The default is to auto-detect system capabilities
-	   and build with IPv6 when possible.
+	   and use IPv6 when possible.
 
 	<tag>--disable-loadable-modules</tag>
 	<p>Build without support for loadable modules.
@@ -1418,10 +1417,6 @@ This section gives an account of those changes in three categories:
 
 	<tag>--with-logdir=PATH</tag>
 	<p>Allow build-time configuration of Default location for squid logs.
-
-        <tag>--with-ipv6-split-stack</tag>
-        <p>Force enable special additions for IPv6 support in Windows XP and various BSD systems.
-           see the IPv6 details above for a better description.
 
 	<tag>--with-pidfile=PATH</tag>
 	<p>Allow build-time configuration of Default location and name of squid.pid file.

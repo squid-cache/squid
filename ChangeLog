@@ -1,3 +1,17 @@
+Changes to squid-3.1.5.1 (28 Jul 2010):
+
+	- Update Libtool to 2.2.
+	- Bug 2985: search scope for digest_ldap_auth didn't work
+	- Bug 2972: LTDL 2.2.6b compile errors
+	- Bug 2963: Stop ignoring --with-valgrind-debug failures
+	- Bug 2885: AIX support: several fixes
+	- Bug 2651: crash handling NULL write callback
+	- Fixed several memory leaks related to Range requests
+	- Fixed Joomla DB auth handling
+	- Fixed SASL helper build checks
+	- Fixed several IPv6 portability problems
+	- Updated error page translations
+
 Changes to squid-3.1.5 (02 Jul 2010):
 
 	- Bug 2967: raw-IPv6 address URL with append_domain broken
