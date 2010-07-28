@@ -130,8 +130,6 @@ SQUID_CC_GUESS_VARIANT
 SQUID_CC_GUESS_OPTIONS
 
 
-REGEXLIB=''	# -lregex
-# LIBREGEX=''	# libregex.a
 
 dnl find out the exe extension for this platform.
 dnl If it is not empty, use it for CGI as well.
@@ -2477,7 +2475,6 @@ else
    esac
   fi
 
-AC_CHECK_LIB(regex, regexec, [REGEXLIB="-lregex"])
 case "$host_os" in
 mingw|mingw32)
 	AC_MSG_NOTICE([Use MSVCRT for math functions.])
@@ -2976,41 +2973,50 @@ if test "$enable_linux_netfilter" = "yes" && test "$with_libcap" != "yes" ; then
     # AC_DEFINEd later
 fi
 
+AC_CHECK_LIB(regex, regexec, [REGEXLIB="-lregex"],[REGEXLIB=''])
 AC_ARG_ENABLE(gnuregex,
   AS_HELP_STRING([--enable-gnuregex],
                  [Compile GNUregex.  Unless you have reason to use 
                  this option, you should not enable it.
                  This library file is usually only required on Windows and 
                  very old Unix boxes which do not have their own regex 
-                 library built in.]),
-[USE_GNUREGEX=$enableval])
-if test -z "$USE_GNUREGEX" ; then
+                 library built in.]), [
+SQUID_YESNO([$enableval],[unrecognized argument to --enable-gnuregex: $enableval])
+])
+if test "${enable_gnuregex:=auto}" = "auto" ; then
     case "$host" in
     *-sun-solaris2.[[0-4]])
-	  USE_GNUREGEX="yes"
+	  enable_gnuregex="yes"
 	  ;;
     *-next-nextstep*)
-	  USE_GNUREGEX="yes"
+	  enable_gnuregex="yes"
 	  ;;
     esac
 fi
 AC_MSG_CHECKING(if GNUregex needs to be compiled)
-if test -z "$USE_GNUREGEX"; then
-if test "$ac_cv_func_regcomp" = "no" || test "$USE_GNUREGEX" = "yes" ; then
-	USE_GNUREGEX="yes"
-else
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
-#include <regex.h>]], [[regex_t t; regcomp(&t,"",0);]])],[USE_GNUREGEX="no"],[USE_GNUREGEX="yes"])
+# gnuregex is autodetect, and we could not find the regexp calls
+if test "$enable_gnuregex" = "auto" -a "$ac_cv_func_regcomp" = "no"; then
+  enable_gnuregex="yes"
 fi
+# try detecting if it is needed
+if test "$enable_gnuregex" = "auto" ; then
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <sys/types.h>
+#include <regex.h> ]], [[
+regex_t t; regcomp(&t,"",0);]])],
+  [enable_gnuregex="no"],[enable_gnuregex="yes"])
 fi
-AC_MSG_RESULT($USE_GNUREGEX)
-if test "$USE_GNUREGEX" = "yes"; then
-	# override system regex with ours. Not good. But what was asked for.
-	REGEXLIB=""
-	AC_DEFINE(USE_GNUREGEX,1,[Define if we should use GNU regex])
+AC_MSG_RESULT($enable_gnuregex)
+if test "$enable_gnuregex" = "yes"; then
+  # for some reason (force-enable, test..) gnuregex was found as needed. Override any system lib
+  REGEXLIB=""
 fi
+#if no reason was found to enable gnuregex, disable it
+if test "$enable_gnuregex" = "auto" ; then
+  enable_gnuregex=no
+fi
+SQUID_DEFINE_BOOL(USE_GNUREGEX,$enable_gnuregex,[Define if we should use GNU regex])
 AC_SUBST(REGEXLIB)
-#AC_SUBST(LIBREGEX)
 
 dnl Not cached since people are likely to tune this
 AC_MSG_CHECKING(Default FD_SETSIZE value)
