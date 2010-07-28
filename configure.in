@@ -2385,9 +2385,9 @@ if test "x$with_libcap" != "xno"; then
 
   # if it can't be supported..
   if test "x$ac_cv_header_sys_capability_h" = "xno" -o \
-    "x$ac_cv_lib_cap_cap_clear_flag" = "xno"; then
+     "x$ac_cv_lib_cap_cap_clear_flag" = "xno"; then
     # and it was forced on: error
-    if "x$with_libcap" = "xyes" ; then
+    if test "x$with_libcap" = "xyes" ; then
       AC_MSG_ERROR([libcap forced enabled but not available or not usable, requires libcap-2.09 or later])
     else
       # with_libcap is "auto"; it can't be supported. Disable.
@@ -2452,44 +2452,32 @@ case "$host_os" in
     ;;
 esac
 
-dnl Ripped from the Samba sources
-AC_CACHE_CHECK([for unix domain sockets],squid_cv_unixsocket, [
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <sys/types.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <sys/socket.h>
-#include <sys/un.h>]], [[
-  struct sockaddr_un sunaddr; 
-  sunaddr.sun_family = AF_UNIX;
-]])],[squid_cv_unixsocket=yes],[squid_cv_unixsocket=no])])
-if test x"$squid_cv_unixsocket" = x"yes"; then
-   AC_DEFINE(HAVE_UNIXSOCKET,1,[Do we have unix sockets? (required for the winbind ntlm helper])
-fi
-dnl end rip
+# check that we have unix sockets
+SQUID_CHECK_UNIX_SOCKET
+SQUID_DEFINE_BOOL(HAVE_UNIXSOCKET,$squid_cv_unixsocket,[System supports unix sockets])
 
-  AC_CHECK_LIB(gnumalloc, main)
-  if test "$ac_cv_lib_gnumalloc_main" = "yes"; then
-		AC_MSG_NOTICE([Disabling extended malloc functions when using gnumalloc])
-		ac_cv_func_mallinfo=no
-		ac_cv_func_mallocblksize=no
-		ac_cv_func_mallopt=no
-  else
-		case "$host" in
-			*-sun-solaris*)
-			  AC_MSG_NOTICE([skipping libmalloc check for $host])
-				;;
-			i386-*-freebsd*)
-			  AC_MSG_NOTICE([skipping libmalloc check for $host])
-				;;
-			*)
-  
-				AC_CHECK_LIB(malloc, main)
-				;;
-		esac
+AC_CHECK_LIB(gnumalloc, malloc)
+if test "x$ac_cv_lib_gnumalloc_malloc" = "xyes"; then
+  AC_MSG_NOTICE([Disabling extended malloc functions when using gnumalloc])
+  ac_cv_func_mallinfo=no
+  ac_cv_func_mallocblksize=no
+  ac_cv_func_mallopt=no
+else
+  case "$squid_host_os" in
+    solaris)
+      AC_MSG_NOTICE([skipping libmalloc check for $host])
+      ;;
+    freebsd)
+      AC_MSG_NOTICE([skipping libmalloc check for $host])
+      ;;
+    *)
+      #used later. FIXME
+      AC_CHECK_LIB(malloc, main)
+      ;;
+   esac
   fi
 
-AC_CHECK_LIB(regex, main, [REGEXLIB="-lregex"])
+AC_CHECK_LIB(regex, regexec, [REGEXLIB="-lregex"])
 case "$host_os" in
 mingw|mingw32)
 	AC_MSG_NOTICE([Use MSVCRT for math functions.])
