@@ -25,6 +25,8 @@ MAKETEST="distcheck"
 #   --without-cppunit-basedir \
 #   --without-build-environment \
 #
+# deprecated helper encounters link failure for ipv6
+#	--disable-internal-dns \
 #
 OPTS=" \
 	--disable-loadable-modules \
@@ -67,7 +69,6 @@ OPTS=" \
 	--disable-leakfinder \
 	--disable-follow-x-forwarded-for \
 	--disable-ident-lookups \
-	--disable-internal-dns \
 	--disable-default-hostsfile \
 	--disable-auth \
 	--disable-basic-auth-helpers \

@@ -661,6 +661,7 @@ EXTRA_DIST = \
 	mk-string-arrays.pl \
 	mk-string-arrays.awk \
 	repl_modules.sh \
+	stub_debug.cc \
 	mib.txt \
 	mime.conf.default
 

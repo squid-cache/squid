@@ -19,6 +19,8 @@ stub_debug.cc: $(top_srcdir)/src/stub_debug.cc
 time.cc: $(top_srcdir)/src/time.cc
 	cp $(top_srcdir)/src/time.cc .
 
+# Neither of these should be disted from here.
+TESTSOURCES= stub_debug.cc time.cc
 CLEANFILES += stub_debug.cc time.cc
 
 SUBDIRS		= 
@@ -34,14 +36,16 @@ man_MANS = \
 
 DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
 
-squidclient_SOURCES = squidclient.cc time.cc stub_debug.cc
+squidclient_SOURCES = squidclient.cc
+nodist_squidclient_SOURCES=time.cc stub_debug.cc
 
-cachemgr__CGIEXT__SOURCES = cachemgr.cc time.cc stub_debug.cc
+cachemgr__CGIEXT__SOURCES = cachemgr.cc
+nodist_cachemgr__CGIEXT__SOURCES = time.cc stub_debug.cc
 cachemgr__CGIEXT__CXXFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CXXFLAGS)
 
 LDADD = \
-	../compat/libcompat.la \
 	../src/ip/libip.la \
+	../compat/libcompat.la \
 	-L../lib -lmiscutil \
 	$(XTRA_LIBS)
 
