@@ -154,3 +154,18 @@ AC_DEFUN([SQUID_CHECK_FUNCTIONAL_LIBCAP2],[
   )
 ])
 
+
+dnl Ripped from Samba. Thanks!
+dnl check that we have Unix sockets. Sets squid_cv_unixsocket to either yes or no depending on the check
+AC_DEFUN([SQUID_CHECK_UNIX_SOCKET],[
+  AC_CACHE_CHECK([for unix domain sockets],squid_cv_unixsocket, [
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <sys/types.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <sys/socket.h>
+#include <sys/un.h>]], [[
+  struct sockaddr_un sunaddr;
+  sunaddr.sun_family = AF_UNIX;
+  ]])],[squid_cv_unixsocket=yes],[squid_cv_unixsocket=no])])
+])
