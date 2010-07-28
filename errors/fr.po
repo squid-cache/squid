@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-07-26 21:21+1300\n"
-"PO-Revision-Date: 2010-05-04 13:49+0200\n"
+"PO-Revision-Date: 2010-07-28 01:03+0200\n"
 "Last-Translator:  <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
@@ -227,16 +227,19 @@ msgid "File updated"
 msgstr "Fichier mis à jour"
 
 #: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
+#, fuzzy
 msgid "For Firefox browsers go to: <ul>"
-msgstr ""
+msgstr "Pour Firefox, allez à : <ul>"
 
 #: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
+#, fuzzy
 msgid "For Internet Explorer browsers go to: <ul>"
-msgstr ""
+msgstr "Pour Internet Explorer, allez à : <ul>"
 
 #: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
+#, fuzzy
 msgid "For Opera browsers go to: <ul>"
-msgstr ""
+msgstr "Pour Opéra, allez à : <ul>"
 
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
@@ -265,17 +268,21 @@ msgid "Generated %T by %h (%s)"
 msgstr "Générée le %T par %h (%s)"
 
 #: templates/ERR_INVALID_REQ:12
+#, fuzzy
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
+"HTTP/1.1 <q>Attend:</ q> cette fonctionnalité est demandé à partir du "
+"programme HTTP/1.0."
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
 msgstr "Hé ! N'espérez pas trop des URNs de %T :)"
 
 #: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
+#, fuzzy
 msgid "How to find these settings in your browser:"
-msgstr ""
+msgstr "Comment trouver ces réglages dans votre navigateur :"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
@@ -309,8 +316,9 @@ msgstr "Double échappement illégal dans le chemin de l'URL"
 
 #: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
 #: templates/ERR_AGENT_CONFIGURE:14
+#, fuzzy
 msgid "In the HTTP proxy box type the proxy name %h and port 3128."
-msgstr ""
+msgstr "Dans l'onglet proxy HTTP le nom du proxy %h et le port 3128"
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
@@ -387,12 +395,14 @@ msgid "Request is too large."
 msgstr "La requête est peut-être trop volumineuse"
 
 #: templates/ERR_AGENT_WPAD:10
+#, fuzzy
 msgid "Select Automatically detect settings"
-msgstr ""
+msgstr "Sélectionnez automatiquement les paramètres détectés"
 
 #: templates/ERR_AGENT_WPAD:13
+#, fuzzy
 msgid "Select Use Automatic proxy configuration"
-msgstr ""
+msgstr "Utilisez la sélection automatique pour la configuration du proxy"
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
@@ -670,19 +680,25 @@ msgstr ""
 "configurés sont actuellement innacessibles."
 
 #: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
+#, fuzzy
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
 msgstr ""
+"Proxy; Outils -&gt; Options Internet -&gt; Connexion -&gt; Paramètres LAN "
+"-&gt "
 
 #: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
+#, fuzzy
 msgid ""
 "Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
 msgstr ""
+"Paramètres de connexion; Outils -&gt; Options -&gt; Avancé -&gt; Réseau -&gt"
 
 #: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
+#, fuzzy
 msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
-msgstr ""
+msgstr "Serveur Proxy; Outils -&gt; Préférences -&gt; Avancé -&gt; Réseau -&gt"
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -710,8 +726,9 @@ msgstr ""
 
 #: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
 #: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
+#, fuzzy
 msgid "Web Browser Configuration"
-msgstr ""
+msgstr "Configuration du navigateur Web"
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
@@ -728,9 +745,12 @@ msgstr ""
 "nécessite une revalidation, interdite par la directive <q>only-if-cached</q>."
 
 #: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
+#, fuzzy
 msgid ""
 "Your Web Browser configuration needs to be corrected to use this network."
 msgstr ""
+"Vous devez corriger votre configuration du navigateur Web , pour être "
+"utilisé dans ce réseau"
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
 #: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
