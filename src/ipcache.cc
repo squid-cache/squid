@@ -992,8 +992,7 @@ ipcacheMergeIPLists(const IpAddress *aaddrs, const int alen,
                 ip4ptrs[num_ip4] = &aaddrs[t];
                 num_ip4++;
             }
-        }
-        else if (aaddrs[t].IsIPv6()) {
+        } else if (aaddrs[t].IsIPv6()) {
             debugs(14,8, HERE << "A[" << t << "]=IPv6 " << aaddrs[t]);
             // check against IPv6 pruned list
             for (c = 0; c <= num_ip6; c++) {
@@ -1017,8 +1016,7 @@ ipcacheMergeIPLists(const IpAddress *aaddrs, const int alen,
                 ip4ptrs[num_ip4] = &baddrs[t];
                 num_ip4++;
             }
-        }
-        else if (baddrs[t].IsIPv6()) {
+        } else if (baddrs[t].IsIPv6()) {
             // check against IPv6 pruned list
             for (c = 0; c <= num_ip6; c++) {
                 if (ip6ptrs[c] && baddrs[t] == *ip6ptrs[c]) break; // duplicate.

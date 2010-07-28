@@ -2840,21 +2840,20 @@ parse_IpAddress_list_token(IpAddress_list ** head, char *token)
             debugs(3, DBG_CRITICAL, "FATAL: IPv6 is not enabled.");
             self_destruct();
         }
-    } else
-        if ((t = strchr(token, ':'))) {
-            /* host:port */
-            host = token;
-            *t = '\0';
-            port = xatos(t + 1);
+    } else if ((t = strchr(token, ':'))) {
+        /* host:port */
+        host = token;
+        *t = '\0';
+        port = xatos(t + 1);
 
-            if (0 == port)
-                self_destruct();
-        } else if ((port = strtol(token, &tmp, 10)), !*tmp) {
-            /* port */
-        } else {
-            host = token;
-            port = 0;
-        }
+        if (0 == port)
+            self_destruct();
+    } else if ((port = strtol(token, &tmp, 10)), !*tmp) {
+        /* port */
+    } else {
+        host = token;
+        port = 0;
+    }
 
     if (NULL == host)
         ipa.SetAnyAddr();

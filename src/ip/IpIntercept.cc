@@ -451,7 +451,7 @@ IpIntercept::ProbeForTproxy(IpAddress &test)
         /* TPROXYv2 is not IPv6 capable. Force wildcard sockets to IPv4. Die on IPv6 IPs */
         debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << test << " (TPROXYv2 interception enabled)");
         if ( test.IsIPv6() && !test.SetIPv4() ) {
-           debugs(3, DBG_CRITICAL, "IPv6 requires TPROXYv4 support. You only have TPROXYv2 for " << test );
+            debugs(3, DBG_CRITICAL, "IPv6 requires TPROXYv4 support. You only have TPROXYv2 for " << test );
             return false;
         }
     }
