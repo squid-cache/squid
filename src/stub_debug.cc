@@ -5,6 +5,10 @@
 #include "config.h"
 #include "Debug.h"
 
+#if HAVE_STDIO_H
+#include <stdio.h>
+#endif
+
 FILE *debug_log = NULL;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 int Debug::level;
