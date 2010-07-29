@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-07-26 21:21+1300\n"
-"PO-Revision-Date: 2010-07-28 01:03+0200\n"
+"PO-Revision-Date: 2010-07-28 22:32+0200\n"
 "Last-Translator:  <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
@@ -203,12 +203,12 @@ msgstr "Le traitement ESI a échoué."
 #: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
 #, fuzzy
 msgid "FTP PUT Successful."
-msgstr "FTP PUT Réussi: Fichier Créé"
+msgstr "FTP PUT envoi du fichier réussi."
 
 #: templates/ERR_FTP_PUT_ERROR:3
 #, fuzzy
 msgid "FTP PUT upload failed"
-msgstr "FTP PUT/échec de l'envoi"
+msgstr "FTP PUT échec sur l'envoi du fichier"
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
@@ -282,7 +282,7 @@ msgstr "Hé ! N'espérez pas trop des URNs de %T :)"
 #: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
 #, fuzzy
 msgid "How to find these settings in your browser:"
-msgstr "Comment trouver ces réglages dans votre navigateur :"
+msgstr "Comment trouver les paramètres de votre navigateur:"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
@@ -318,7 +318,9 @@ msgstr "Double échappement illégal dans le chemin de l'URL"
 #: templates/ERR_AGENT_CONFIGURE:14
 #, fuzzy
 msgid "In the HTTP proxy box type the proxy name %h and port 3128."
-msgstr "Dans l'onglet proxy HTTP le nom du proxy %h et le port 3128"
+msgstr ""
+"Dans l'onglet proxy HTTP vous indiquez le type de nom du proxy %h et le port "
+"3128"
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
@@ -397,12 +399,12 @@ msgstr "La requête est peut-être trop volumineuse"
 #: templates/ERR_AGENT_WPAD:10
 #, fuzzy
 msgid "Select Automatically detect settings"
-msgstr "Sélectionnez automatiquement les paramètres détectés"
+msgstr "Sélection automatiquement les paramètres détectés"
 
 #: templates/ERR_AGENT_WPAD:13
 #, fuzzy
 msgid "Select Use Automatic proxy configuration"
-msgstr "Utilisez la sélection automatique pour la configuration du proxy"
+msgstr "Utiliser la sélection automatique pour la configuration du proxy"
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
@@ -673,18 +675,18 @@ msgid ""
 "does not allow this cache to make direct connections to origin servers, and "
 "all configured parent caches are currently unreachable."
 msgstr ""
-"Cette requête ne peut pas être transférée au serveur d'origine ou à tous les "
+"Cette requête ne peut pas être transférée au serveur source ou à tous les "
 "caches parent. La cause la plus fréquente pour cette erreur est que "
 "l'administrateur du cache n'a pas donné les droits à ce cache pour créer des "
-"connexions directe vers les serveurs d'origine, et tous les caches parents "
-"configurés sont actuellement innacessibles."
+"connexions directe vers le serveur source, et tous les caches parents "
+"configurés sont actuellement inaccessibles."
 
 #: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
 #, fuzzy
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
 msgstr ""
-"Proxy; Outils -&gt; Options Internet -&gt; Connexion -&gt; Paramètres LAN "
+"Proxy, Outils -&gt; Options Internet -&gt; Connexion -&gt; Paramètres LAN "
 "-&gt "
 
 #: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
@@ -692,13 +694,13 @@ msgstr ""
 msgid ""
 "Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
 msgstr ""
-"Paramètres de connexion; Outils -&gt; Options -&gt; Avancé -&gt; Réseau -&gt"
+"Paramètres de connexion, Outils -&gt; Options -&gt; Avancé -&gt; Réseau -&gt"
 
 #: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
 #, fuzzy
 msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
-msgstr "Serveur Proxy; Outils -&gt; Préférences -&gt; Avancé -&gt; Réseau -&gt"
+msgstr "Serveur Proxy, Outils -&gt; Préférences -&gt; Avancé -&gt; Réseau -&gt"
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -749,8 +751,8 @@ msgstr ""
 msgid ""
 "Your Web Browser configuration needs to be corrected to use this network."
 msgstr ""
-"Vous devez corriger votre configuration du navigateur Web , pour être "
-"utilisé dans ce réseau"
+"Vous devez corriger la configuration de votre navigateur Web, pour qu'il "
+"soit utilisé dans ce réseau"
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
 #: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
