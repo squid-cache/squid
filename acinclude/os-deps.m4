@@ -136,8 +136,10 @@ int main(int argc, char **argv)
 
 ]) dnl SQUID_CHECK_EPOLL
 
+
 dnl check that we have functional libcap2 headers
 dnl sets squid_cv_sys_capability_works to "yes" or "no"
+
 AC_DEFUN([SQUID_CHECK_FUNCTIONAL_LIBCAP2],[
   AC_CACHE_CHECK([for operational libcap2 headers], 
                  squid_cv_sys_capability_works,
@@ -157,6 +159,7 @@ AC_DEFUN([SQUID_CHECK_FUNCTIONAL_LIBCAP2],[
 
 dnl Ripped from Samba. Thanks!
 dnl check that we have Unix sockets. Sets squid_cv_unixsocket to either yes or no depending on the check
+
 AC_DEFUN([SQUID_CHECK_UNIX_SOCKET],[
   AC_CACHE_CHECK([for unix domain sockets],squid_cv_unixsocket, [
       AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
@@ -169,3 +172,25 @@ AC_DEFUN([SQUID_CHECK_UNIX_SOCKET],[
   sunaddr.sun_family = AF_UNIX;
   ]])],[squid_cv_unixsocket=yes],[squid_cv_unixsocket=no])])
 ])
+
+
+dnl checks that the system provides struct mallinfo and mallinfo.mxfast.
+dnl AC_DEFINEs HAVE_STRUCT_MALLINFO  and HAVE_STRUCT_MALLINFO_MXFAST if so
+
+AC_DEFUN([SQUID_HAVE_STRUCT_MALLINFO],[
+AC_CHECK_TYPE(struct mallinfo,AC_DEFINE(HAVE_STRUCT_MALLINFO,1,[The system provides struct mallinfo]),,[
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_MALLOC_H
+#include <malloc.h>
+#endif])
+AC_CHECK_MEMBERS([struct mallinfo.mxfast],,,[
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_MALLOC_H
+#include <malloc.h>
+#endif])
+])
+
