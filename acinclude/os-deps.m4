@@ -325,3 +325,59 @@ if test `expr $squid_filedescriptors_num % 64` != 0; then
     AC_MSG_WARN([$squid_filedescriptors_num is not an multiple of 64. This may cause issues on certain platforms.])
 fi
 ])
+
+
+dnl Check whether this OS defines sin6_len as a member of sockaddr_in6 as a backup to ss_len
+dnl defines HAVE_SIN6_LEN_IN_SAI
+dnl TODO: move to AC_CHECK_MEMBER?
+
+AC_DEFUN([SQUID_CHECK_SIN6_LEN_IN_SAI],[
+AC_CACHE_CHECK([for sin6_len field in struct sockaddr_in6],
+                ac_cv_have_sin6_len_in_struct_sai, [
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+              ]], [[ struct sockaddr_in6 s; s.sin6_len = 1; ]])],[ ac_cv_have_sin6_len_in_struct_sai="yes" ],[ ac_cv_have_sin6_len_in_struct_sai="no" 
+      ])
+])
+SQUID_DEFINE_BOOL(HAVE_SIN6_LEN_IN_SAI,$ac_cv_have_sin6_len_in_struct_sai,
+      [Defined if struct sockaddr_in6 has sin6_len])
+])
+
+
+dnl Check whether this OS defines ss_len as a member of sockaddr_storage
+dnl defines HAVE_SS_LEN_IN_SS
+dnl TODO: move to AC_CHECK_MEMBER?
+
+AC_DEFUN([SQUID_CHECK_SS_LEN_IN_SOCKADDR_STORAGE],[
+AC_CACHE_CHECK([for ss_len field in struct sockaddr_storage],
+		ac_cv_have_ss_len_in_struct_ss, [
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+		]], [[ struct sockaddr_storage s; s.ss_len = 1; ]])],[ ac_cv_have_ss_len_in_struct_ss="yes" ],[ ac_cv_have_ss_len_in_struct_ss="no" 
+	])
+])
+SQUID_DEFINE_BOOL(HAVE_SS_LEN_IN_SS,$ac_cv_have_ss_len_in_struct_ss,
+   [Define if sockaddr_storage has field ss_len])
+])
+
+
+dnl Check whether this OS defines sin_len as a member of sockaddr_in as a backup to ss_len
+dnl defines HAVE_SIN_LEN_IN_SAI
+dnl TODO: move to AC_CHECK_MEMBER?
+
+AC_DEFUN([SQUID_CHECK_SIN_LEN_IN_SOCKADDR_IN],[
+AC_CACHE_CHECK([for sin_len field in struct sockaddr_in],
+                ac_cv_have_sin_len_in_struct_sai, [
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+                ]], [[ struct sockaddr_in s; s.sin_len = 1; ]])],[ ac_cv_have_sin_len_in_struct_sai="yes" ],[ ac_cv_have_sin_len_in_struct_sai="no" 
+        ])
+])
+SQUID_DEFINE_BOOL(HAVE_SIN_LEN_IN_SAI,$ac_cv_have_sin_len_in_struct_sai,[Define if sockaddr_in has field sin_len])
+])
