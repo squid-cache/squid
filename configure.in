@@ -2273,21 +2273,7 @@ AC_CHECK_MEMBERS([struct tm.tm_gmtoff],,,[
 #endif
 ])
 
-AC_CHECK_TYPE(struct mallinfo,AC_DEFINE(HAVE_STRUCT_MALLINFO,1,[The system provides struct mallinfo]),,[
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_MALLOC_H
-#include <malloc.h>
-#endif])
-
-AC_CHECK_MEMBERS([struct mallinfo.mxfast],,,[
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_MALLOC_H
-#include <malloc.h>
-#endif])
+SQUID_HAVE_STRUCT_MALLINFO
 
 dnl Override rusage() detect on MinGW because is emulated in source code
 case "$host_os" in
@@ -2456,7 +2442,7 @@ SQUID_DEFINE_BOOL(HAVE_UNIXSOCKET,$squid_cv_unixsocket,[System supports unix soc
 
 AC_CHECK_LIB(gnumalloc, malloc)
 if test "x$ac_cv_lib_gnumalloc_malloc" = "xyes"; then
-  AC_MSG_NOTICE([Disabling extended malloc functions when using gnumalloc])
+  AC_MSG_NOTICE([Disabling extended malloc functions when using bundled gnumalloc])
   ac_cv_func_mallinfo=no
   ac_cv_func_mallocblksize=no
   ac_cv_func_mallopt=no
