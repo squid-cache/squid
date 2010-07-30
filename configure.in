@@ -2977,107 +2977,12 @@ SQUID_CHECK_NEED_SYS_ERRLIST
 SQUID_CHECK_MAXPATHLEN
 
 SQUID_CHECK_LIBRESOLV_DNS_TTL_HACK
+SQUID_CHECK_RESOLVER_FIELDS
 
 if test "$ac_cv_header_sys_statvfs_h" = "yes" ; then
   SQUID_CHECK_WORKING_STATVFS
 fi
 
-dnl Detect what resolver fields we have available to use...
-AC_CACHE_CHECK(for _res_ext.nsaddr_list, ac_cv_have_res_ext_nsaddr_list,
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#if HAVE_ARPA_INET_H
-#include <arpa/inet.h>
-#endif
-#if HAVE_ARPA_NAMESER_H
-#include <arpa/nameser.h>
-#endif
-#if HAVE_RESOLV_H
-#include <resolv.h>
-#endif
-]], [[_res_ext.nsaddr_list[[0]].s_addr;]])],[ac_cv_have_res_ext_nsaddr_list="yes"],[ac_cv_have_res_ext_nsaddr_list="no"]))
-if test "$ac_cv_have_res_ext_nsaddr_list" = "yes" ; then
-  AC_DEFINE(_SQUID_RES_NSADDR6_LARRAY,_res_ext.nsaddr_list,[If _res_ext structure has nsaddr_list member])
-  AC_DEFINE(_SQUID_RES_NSADDR6_COUNT,ns6count,[Nameserver Counter for IPv6 _res_ext])
-fi
-
-if test "$_SQUID_RES_NSADDR6_LIST" = ""; then
-AC_CACHE_CHECK(for _res._u._ext.nsaddrs, ac_cv_have_res_ext_nsaddrs,
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#if HAVE_ARPA_INET_H
-#include <arpa/inet.h>
-#endif
-#if HAVE_ARPA_NAMESER_H
-#include <arpa/nameser.h>
-#endif
-#if HAVE_RESOLV_H
-#include <resolv.h>
-#endif
-]], [[_res._u._ext.nsaddrs[[0]]->sin6_addr;]])],[ac_cv_have_res_ext_nsaddrs="yes"],[ac_cv_have_res_ext_nsaddrs="no"]))
-if test "$ac_cv_have_res_ext_nsaddrs" = "yes" ; then
-  AC_DEFINE(_SQUID_RES_NSADDR6_LPTR,_res._u._ext.nsaddrs,[If _res structure has _ext.nsaddrs member])
-  AC_DEFINE(_SQUID_RES_NSADDR6_COUNT,_res._u._ext.nscount6,[Nameserver Counter for IPv6 _res])
-fi
-fi
-
-AC_CACHE_CHECK(for _res.nsaddr_list, ac_cv_have_res_nsaddr_list,
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#if HAVE_ARPA_INET_H
-#include <arpa/inet.h>
-#endif
-#if HAVE_ARPA_NAMESER_H
-#include <arpa/nameser.h>
-#endif
-#if HAVE_RESOLV_H
-#include <resolv.h>
-#endif
-]], [[_res.nsaddr_list[[0]];]])],[ac_cv_have_res_nsaddr_list="yes"],[ac_cv_have_res_nsaddr_list="no"]))
-if test $ac_cv_have_res_nsaddr_list = "yes" ; then
-  AC_DEFINE(_SQUID_RES_NSADDR_LIST,_res.nsaddr_list,[If _res structure has nsaddr_list member])
-  AC_DEFINE(_SQUID_RES_NSADDR_COUNT,_res.nscount,[Nameserver counter for IPv4 _res])
-fi
-
-if test "$_SQUID_RES_NSADDR_LIST" = ""; then
-AC_CACHE_CHECK(for _res.ns_list, ac_cv_have_res_ns_list,
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#if HAVE_ARPA_INET_H
-#include <arpa/inet.h>
-#endif
-#if HAVE_ARPA_NAMESER_H
-#include <arpa/nameser.h>
-#endif
-#if HAVE_RESOLV_H
-#include <resolv.h>
-#endif
-]], [[_res.ns_list[[0]].addr;]])],[ac_cv_have_res_ns_list="yes"],[ac_cv_have_res_ns_list="no"]))
-if test $ac_cv_have_res_ns_list = "yes" ; then
-  AC_DEFINE(_SQUID_RES_NSADDR_LIST,_res.ns_list,[If _res structure has ns_list member])
-  AC_DEFINE(_SQUID_RES_NSADDR_COUNT,_res.nscount,[Nameserver counter for IPv4 _res])
-fi
-fi
 
 dnl Squid will usually attempt to translate when packaging or building from VCS 
 use_translation="yes"
