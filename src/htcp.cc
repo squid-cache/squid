@@ -37,6 +37,7 @@
 #include "htcp.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Acl.h"
+#include "ip/tools.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -1503,6 +1504,11 @@ htcpInit(void)
     Ip::Address incomingAddr = Config.Addrs.udp_incoming;
     incomingAddr.SetPort(Config.Port.htcp);
 
+    if (!Ip::EnableIpv6 && !incomingAddr.SetIPv4()) {
+        debugs(31, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << incomingAddr << " is not an IPv4 address.");
+        fatal("HTCP port cannot be opened.");
+    }
+
     AsyncCall::Pointer call = asyncCall(31, 2,
                                         "htcpIncomingConnectionOpened",
                                         HtcpListeningStartedDialer(&htcpIncomingConnectionOpened));
@@ -1517,6 +1523,10 @@ htcpInit(void)
         Ip::Address outgoingAddr = Config.Addrs.udp_outgoing;
         outgoingAddr.SetPort(Config.Port.htcp);
 
+        if (!Ip::EnableIpv6 && !outgoingAddr.SetIPv4()) {
+            debugs(31, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << outgoingAddr << " is not an IPv4 address.");
+            fatal("HTCP port cannot be opened.");
+        }
         enter_suid();
         htcpOutSocket = comm_open_listener(SOCK_DGRAM,
                                            IPPROTO_UDP,
