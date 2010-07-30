@@ -2982,22 +2982,7 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern int _dns_ttl_;]], [[return _dns_ttl_;]]
 AC_DEFINE(LIBRESOLV_DNS_TTL_HACK,1,[If libresolv.a has been hacked to export _dns_ttl_])],[AC_MSG_RESULT(no)])
 
 if test "$ac_cv_header_sys_statvfs_h" = "yes" ; then
-AC_MSG_CHECKING(for working statvfs() interface)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/statvfs.h>
-]], [[
-struct statvfs sfs;
-sfs.f_blocks = sfs.f_bfree = sfs.f_frsize = 
-sfs.f_files = sfs.f_ffree = 0;
-statvfs("/tmp", &sfs);
-]])],[ac_cv_func_statvfs=yes],[ac_cv_func_statvfs=no])
-AC_MSG_RESULT($ac_cv_func_statvfs)
-if test "$ac_cv_func_statvfs" = "yes" ; then
-  AC_DEFINE(HAVE_STATVFS,1,[If your system has statvfs(), and if it actually works!])
-fi
+  SQUID_CHECK_WORKING_STATVFS
 fi
 
 dnl Detect what resolver fields we have available to use...

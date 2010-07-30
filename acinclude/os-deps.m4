@@ -610,7 +610,7 @@ dnl check if MAXPATHLEN is defined in the system headers
 dnl or define it ourselves
 
 AC_DEFUN([SQUID_CHECK_MAXPATHLEN],[
-AC_MSG_CHECKING(for MAXPATHLEN)
+AC_MSG_CHECKING(for system-provided MAXPATHLEN)
 AC_LINK_IFELSE([
   AC_LANG_PROGRAM([[
 #include <sys/param.h>]], [[
@@ -620,3 +620,19 @@ int i = MAXPATHLEN;]])], [
   AC_DEFINE(MAXPATHLEN,256,[If MAXPATHLEN has not been defined])])
 ])
 
+AC_DEFUN([SQUID_CHECK_WORKING_STATVFS],[
+AC_CACHE_CHECK(for working statvfs() interface,ac_cv_func_statvfs,[
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/statvfs.h>
+]], [[
+struct statvfs sfs;
+sfs.f_blocks = sfs.f_bfree = sfs.f_frsize = 
+sfs.f_files = sfs.f_ffree = 0;
+statvfs("/tmp", &sfs);
+]])],[ac_cv_func_statvfs=yes],[ac_cv_func_statvfs=no])
+])
+SQUID_DEFINE_BOOL(HAVE_STATVFS,$ac_cv_func_statvfs,[set to 1 if our system has statvfs(), and if it actually works])
+])
