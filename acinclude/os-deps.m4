@@ -620,6 +620,10 @@ int i = MAXPATHLEN;]])], [
   AC_DEFINE(MAXPATHLEN,256,[If MAXPATHLEN has not been defined])])
 ])
 
+
+dnl check that we have a working statvfs
+dnl sets the ac_cv_func_statvfs shell variable and defines HAVE_STATVFS
+
 AC_DEFUN([SQUID_CHECK_WORKING_STATVFS],[
 AC_CACHE_CHECK(for working statvfs() interface,ac_cv_func_statvfs,[
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
@@ -635,4 +639,16 @@ statvfs("/tmp", &sfs);
 ]])],[ac_cv_func_statvfs=yes],[ac_cv_func_statvfs=no])
 ])
 SQUID_DEFINE_BOOL(HAVE_STATVFS,$ac_cv_func_statvfs,[set to 1 if our system has statvfs(), and if it actually works])
+])
+
+
+dnl check that we can use the libresolv _dns_ttl_ hack
+dnl sets the ac_cv_libresolv_dns_ttl_hack shell variable and defines LIBRESOLV_DNS_TTL_HACK
+
+AC_DEFUN([SQUID_CHECK_LIBRESOLV_DNS_TTL_HACK],[
+  AC_CACHE_CHECK(for libresolv _dns_ttl_ hack, ac_cv_libresolv_dns_ttl_hack, [
+   AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern int _dns_ttl_;]], [[return _dns_ttl_;]])],
+     [ac_cv_libresolv_dns_ttl_hack=yes],[ac_cv_libresolv_dns_ttl_hack=no]) ])
+  SQUID_DEFINE_BOOL(LIBRESOLV_DNS_TTL_HACK,$ac_cv_libresolv_dns_ttl_hack,
+     [libresolv.a has been hacked to export _dns_ttl_])
 ])
