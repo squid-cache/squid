@@ -593,3 +593,30 @@ if test $SQUID_TCP_SO_RCVBUF -gt 65535; then
 fi
 AC_DEFINE_UNQUOTED(SQUID_TCP_SO_RCVBUF, $SQUID_TCP_SO_RCVBUF,[TCP receive buffer size])
 ])
+
+
+dnl check if we need to define sys_errlist as external
+dnl defines NEED_SYS_ERRLIST
+
+AC_DEFUN([SQUID_CHECK_NEED_SYS_ERRLIST],[
+AC_CACHE_CHECK(if sys_errlist is already defined, ac_cv_needs_sys_errlist,
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>]], [[char *s = sys_errlist;]])],[ac_cv_needs_sys_errlist="no"],[ac_cv_needs_sys_errlist="yes"])
+)
+SQUID_DEFINE_BOOL(NEED_SYS_ERRLIST,$ac_cv_needs_sys_errlist,[If we need to declare sys_errlist as extern])
+])
+
+
+dnl check if MAXPATHLEN is defined in the system headers
+dnl or define it ourselves
+
+AC_DEFUN([SQUID_CHECK_MAXPATHLEN],[
+AC_MSG_CHECKING(for MAXPATHLEN)
+AC_LINK_IFELSE([
+  AC_LANG_PROGRAM([[
+#include <sys/param.h>]], [[
+int i = MAXPATHLEN;]])], [
+  AC_MSG_RESULT(yes)], [
+  AC_MSG_RESULT(no)
+  AC_DEFINE(MAXPATHLEN,256,[If MAXPATHLEN has not been defined])])
+])
+
