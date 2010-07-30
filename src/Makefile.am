@@ -564,7 +564,7 @@ squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 
 if USE_LOADABLE_MODULES
 squid_SOURCES += $(LOADABLE_MODULES_SOURCES)
-squid_LDADD += $(LIBLTDL)
+squid_LDADD += -L$(top_builddir) $(LIBLTDL)
 squid_LDFLAGS = -export-dynamic -dlopen force
 ## when static module linking is supported and enabled:
 ## squid_LDFLAGS = -all-static -dlopen self
