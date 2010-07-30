@@ -2976,10 +2976,7 @@ SQUID_DETECT_TCP_RECV_BUFSIZE
 SQUID_CHECK_NEED_SYS_ERRLIST
 SQUID_CHECK_MAXPATHLEN
 
-dnl Not cached since people are likely to change this
-AC_MSG_CHECKING(for libresolv _dns_ttl_ hack)
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern int _dns_ttl_;]], [[return _dns_ttl_;]])],[AC_MSG_RESULT(yes)
-AC_DEFINE(LIBRESOLV_DNS_TTL_HACK,1,[If libresolv.a has been hacked to export _dns_ttl_])],[AC_MSG_RESULT(no)])
+SQUID_CHECK_LIBRESOLV_DNS_TTL_HACK
 
 if test "$ac_cv_header_sys_statvfs_h" = "yes" ; then
   SQUID_CHECK_WORKING_STATVFS
