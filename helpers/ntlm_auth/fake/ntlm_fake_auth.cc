@@ -147,7 +147,7 @@ process_options(int argc, char *argv[])
 int
 main(int argc, char *argv[])
 {
-    char buf[HELEPR_INPUT_BUFFER];
+    char buf[HELPER_INPUT_BUFFER];
     int buflen = 0;
     char user[NTLM_MAX_FIELD_LENGTH], domain[NTLM_MAX_FIELD_LENGTH];
     char *p;
