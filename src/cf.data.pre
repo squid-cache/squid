@@ -6320,7 +6320,7 @@ DOC_END
 
 NAME: memory_pools_limit
 COMMENT: (bytes)
-TYPE: b_size_t
+TYPE: b_int64_t
 DEFAULT: 5 MB
 LOC: Config.MemPools.limit
 DOC_START
@@ -6339,7 +6339,7 @@ DOC_START
 	will be no limit on the total amount of memory used for safe-keeping.
 
 	To disable memory allocation optimization, do not set
-	memory_pools_limit to 0. Set memory_pools to "off" instead.
+	memory_pools_limit to 0 or none. Set memory_pools to "off" instead.
 
 	An overhead for maintaining memory pools is not taken into account
 	when the limit is checked. This overhead is close to four bytes per

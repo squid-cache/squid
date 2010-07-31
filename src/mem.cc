@@ -346,7 +346,7 @@ Mem::CleanIdlePools(void *unused)
 void
 memConfigure(void)
 {
-    ssize_t new_pool_limit;
+    int64_t new_pool_limit;
 
     /** Set to configured value first */
     if (!Config.onoff.mem_pools)
