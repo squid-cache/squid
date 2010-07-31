@@ -1177,9 +1177,9 @@ DOC_START
 			the port specification (port or addr:port)
 
 	   tcpkeepalive[=idle,interval,timeout]
-			Enable TCP keepalive probes of idle connections
-			idle is the initial time before TCP starts probing
-			the connection, interval how often to probe, and
+			Enable TCP keepalive probes of idle connections.
+			In seconds; idle is the initial time before TCP starts
+			probing the connection, interval how often to probe, and
 			timeout the time before giving up.
 
 	If you run Squid on a dual-homed machine with an internal
