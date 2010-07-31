@@ -839,13 +839,13 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             break;
 
         case LFT_ICAP_BYTES_SENT:
-            outint = al->icap.bytesSent;
-            doint = 1;
+            outoff = al->icap.bytesSent;
+            dooff = 1;
             break;
 
         case LFT_ICAP_BYTES_READ:
-            outint = al->icap.bytesRead;
-            doint = 1;
+            outoff = al->icap.bytesRead;
+            dooff = 1;
             break;
 
         case LFT_ICAP_REQ_HEADER:
