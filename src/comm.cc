@@ -1878,8 +1878,8 @@ commSetCloseOnExec(int fd)
     int flags;
     int dummy = 0;
 
-    if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
-        debugs(50, 0, "FD " << fd << ": fcntl F_GETFL: " << xstrerror());
+    if ((flags = fcntl(fd, F_GETFD, dummy)) < 0) {
+        debugs(50, 0, "FD " << fd << ": fcntl F_GETFD: " << xstrerror());
         return;
     }
 
