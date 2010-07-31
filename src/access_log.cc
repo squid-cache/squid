@@ -1133,6 +1133,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
         case LFT_REPLY_SIZE_HEADERS:
             outint = al->cache.replyHeadersSize;
             doint = 1;
+            break;
             /*case LFT_REPLY_SIZE_BODY: */
             /*case LFT_REPLY_SIZE_BODY_NO_TE: */
 
