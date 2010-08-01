@@ -2034,20 +2034,20 @@ fi
 
 AC_ARG_WITH(cppunit-basedir,
   AS_HELP_STRING([--with-cppunit-basedir=PATH],
-                 [Path where the cppunit headers are libraries can be found ]),
-[ if test -f "$withval/include/cppunit/TestCase.h"; then
-	AC_MSG_NOTICE([Using cppunit includes from $withval])
-	SQUID_CPPUNIT_INC="-I${withval}/include"
-    else
-	AC_MSG_ERROR(Cannot find cppunit at $withval)
-    fi
-  if test -f "$withval/lib/libcppunit.la"; then
-	AC_MSG_NOTICE([Using cppunit lib from $withval])
-	SQUID_CPPUNIT_LA="${withval}/lib/libcppunit.la"
-	SQUID_CPPUNIT_LIBS='$(SQUID_CPPUNIT_LA)'
-    else
-	AC_MSG_ERROR(Cannot find cppunit at $withval)
-    fi
+              [Path where the cppunit headers are libraries can be found ]), [
+if test -f "$withval/include/cppunit/TestCase.h"; then
+  AC_MSG_NOTICE([Using cppunit includes from $withval])
+  SQUID_CPPUNIT_INC="-I${withval}/include"
+else
+  AC_MSG_ERROR(Cannot find cppunit at $withval)
+fi
+if test -f "$withval/lib/libcppunit.la"; then
+  AC_MSG_NOTICE([Using cppunit lib from $withval])
+  SQUID_CPPUNIT_LA="${withval}/lib/libcppunit.la"
+  SQUID_CPPUNIT_LIBS='$(SQUID_CPPUNIT_LA)'
+else
+  AC_MSG_ERROR(Cannot find cppunit at $withval)
+fi
 ])
 AC_SUBST(SQUID_CPPUNIT_LIBS)
 AC_SUBST(SQUID_CPPUNIT_LA)
@@ -2056,23 +2056,23 @@ AC_SUBST(SQUID_CPPUNIT_INC)
 # Force some compilers to use ANSI features
 #
 case "$host" in
-    *-hp-hpux*)
-	if test "x$ac_cv_prog_CC" = "xcc" ; then
-		AC_MSG_NOTICE([adding '-Ae' to cc args for $host])
-		CC="cc -Ae";
-		ac_cv_prog_CC="$CC"
-	fi
-	;;
+  *-hp-hpux*)
+    if test "x$ac_cv_prog_CC" = "xcc" ; then
+      AC_MSG_NOTICE([adding '-Ae' to cc args for $host])
+      CC="cc -Ae";
+      ac_cv_prog_CC="$CC"
+    fi
+    ;;
 esac
 
 
 dnl automake handles this AC_PATH_PROG(MAKEDEPEND, makedepend, $TRUE)
 
 case "$host" in
-    *hpux*)
-	AC_MSG_NOTICE([Disabling ranlib for HP-UX...])
-	RANLIB=":"
-	;;
+  *hpux*)
+    AC_MSG_NOTICE([Disabling ranlib for HP-UX...])
+    RANLIB=":"
+    ;;
 esac
 
 dnl Check for headers
@@ -2080,104 +2080,104 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 
 AC_CHECK_HEADERS( \
-	arpa/inet.h \
-	arpa/nameser.h \
-	assert.h \
-	bstring.h \
-	cassert \
-	crypt.h \
-	cstring \
-	ctype.h \
-	errno.h \
-	execinfo.h \
-	fcntl.h \
-	fnmatch.h \
-	getopt.h \
-	glob.h \
-	gnumalloc.h \
-	grp.h \
-	iosfwd \
-	iomanip \
-	iostream \
-	ip_compat.h \
-	ip_fil_compat.h \
-	ip_fil.h \
-	ip_nat.h \
-	ipl.h \
-	lber.h \
-	ldap.h \
-	libc.h \
-	limits.h \
-	linux/posix_types.h \
-	linux/types.h \
-	machine/byte_swap.h \
-	malloc.h \
-	map \
-	math.h \
-	memory.h \
-	mount.h \
-	netdb.h \
-	netinet/in.h \
-	netinet/in_systm.h \
-	netinet/ip_fil_compat.h \
-	openssl/err.h \
-	openssl/md5.h \
-	openssl/ssl.h \
-	openssl/x509v3.h \
-	netinet/tcp.h \
-	openssl/engine.h \
-	ostream \
-	paths.h \
-	poll.h \
-	pwd.h \
-	shadow.h \
-	regex.h \
-	sched.h \
-	security/pam_appl.h \
-	signal.h \
-	sstream \
-	stdarg.h \
-	stddef.h \
-	stdexcept \
-	stdio.h \
-	stdlib.h \
-	string \
-	string.h \
-	strings.h \
-	sys/bitypes.h \
-	sys/bswap.h \
-	sys/endian.h \
-	sys/file.h \
-	sys/ioctl.h \
-	sys/param.h \
-	sys/prctl.h \
-	sys/md5.h \
-	sys/msg.h \
-	sys/resource.h \
-	sys/select.h\
-	sys/socket.h \
-	sys/stat.h \
-	sys/statvfs.h \
-	syscall.h \
-	sys/syscall.h \
-	sys/time.h \
-	sys/types.h \
-	sys/uio.h \
-	sys/un.h \
-	sys/vfs.h \
-	sys/wait.h \
-	syslog.h \
-	time.h \
-	unistd.h \
-	utime.h \
-	varargs.h \
-	byteswap.h \
-	glib.h \
-	stdint.h \
-	inttypes.h \
-	grp.h \
-	db.h \
-	db_185.h
+  arpa/inet.h \
+  arpa/nameser.h \
+  assert.h \
+  bstring.h \
+  cassert \
+  crypt.h \
+  cstring \
+  ctype.h \
+  errno.h \
+  execinfo.h \
+  fcntl.h \
+  fnmatch.h \
+  getopt.h \
+  glob.h \
+  gnumalloc.h \
+  grp.h \
+  iosfwd \
+  iomanip \
+  iostream \
+  ip_compat.h \
+  ip_fil_compat.h \
+  ip_fil.h \
+  ip_nat.h \
+  ipl.h \
+  lber.h \
+  ldap.h \
+  libc.h \
+  limits.h \
+  linux/posix_types.h \
+  linux/types.h \
+  machine/byte_swap.h \
+  malloc.h \
+  map \
+  math.h \
+  memory.h \
+  mount.h \
+  netdb.h \
+  netinet/in.h \
+  netinet/in_systm.h \
+  netinet/ip_fil_compat.h \
+  openssl/err.h \
+  openssl/md5.h \
+  openssl/ssl.h \
+  openssl/x509v3.h \
+  netinet/tcp.h \
+  openssl/engine.h \
+  ostream \
+  paths.h \
+  poll.h \
+  pwd.h \
+  shadow.h \
+  regex.h \
+  sched.h \
+  security/pam_appl.h \
+  signal.h \
+  sstream \
+  stdarg.h \
+  stddef.h \
+  stdexcept \
+  stdio.h \
+  stdlib.h \
+  string \
+  string.h \
+  strings.h \
+  sys/bitypes.h \
+  sys/bswap.h \
+  sys/endian.h \
+  sys/file.h \
+  sys/ioctl.h \
+  sys/param.h \
+  sys/prctl.h \
+  sys/md5.h \
+  sys/msg.h \
+  sys/resource.h \
+  sys/select.h\
+  sys/socket.h \
+  sys/stat.h \
+  sys/statvfs.h \
+  syscall.h \
+  sys/syscall.h \
+  sys/time.h \
+  sys/types.h \
+  sys/uio.h \
+  sys/un.h \
+  sys/vfs.h \
+  sys/wait.h \
+  syslog.h \
+  time.h \
+  unistd.h \
+  utime.h \
+  varargs.h \
+  byteswap.h \
+  glib.h \
+  stdint.h \
+  inttypes.h \
+  grp.h \
+  db.h \
+  db_185.h
 )
 
 CHECK_STRUCT_PAM_CONV
