@@ -1377,7 +1377,7 @@ default|"")
 	CXXFLAGS="`getconf ${buildmodel}_CFLAGS` $CXXFLAGS"
 	LIBS="`getconf ${buildmodel}_LIBS` $LIBS"
 	LDFLAGS="`getconf ${buildmodel}_LDFLAGS` $LDFLAGS"
-	if "$squid_host_os" = "solaris" ; then
+	if test "$squid_host_os" = "solaris" ; then
 
 # On Solaris getconf returns for CFLAGS -xarch=generic64, -Xa and -Usun options, and
 # for LDFLAGS -xarch=generic64, but:
