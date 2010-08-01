@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.5.1 release notes</title>
+<title>Squid 3.1.6 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.5.1
+The Squid Team are pleased to announce the release of Squid-3.1.6
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -26,11 +26,12 @@ We welcome feedback and bug reports. If you find a new bug, please see <url url=
 <p>
 Although this release is deemed good enough for use in many setups, please note the existence of <url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&target_milestone=3.1&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&cmdtype=doit&order=bugs.bug_severity" name="open bugs against Squid-3.1">.
 
-<p>Some issues to note as currently known in this release which are not able to be fixed in this 3.1 series are:
+<p>Some issues to note as currently known in this release which are not able to be fixed in the 3.1 series are:
 
 <itemize>
 	<item>The lack of some features available in Squid-2.x series. See the regression sections below for full details.
-	<item>IPv6 split-stack support for Windows XP, MacOS X, OpenBSD and maybe others is still not complete.
+	<item>IPv6 split-stack support for Windows XP, MacOS X, OpenBSD and maybe others is not complete.
+	<item>CVE-2009-0801 : NAT interception vulnerability to malicious clients.
 </itemize>
 
 <p>Currently known issues which only depends on available developer time and may still be resolved in a future 3.1 release are:
@@ -91,7 +92,7 @@ Suitable for testing, but without any guarantees under production loads. This re
  To be frozen as stable the code must be compiling well and have passed a period of 14 days with no new bugs reported against
  the new code added in that release.
 
-<p>When one of these Squid-3.X.0.Z packages passes our bug-free standards a 3.X.Y numbered release will be made.
+<p>When one of these Squid-3.X.0.Z packages passes those criteria a 3.X.Y numbered release will be made.
 
 <p>We can only hope enough testing has been done to consider these ready for production use.
 As always we are fully dependent on people testing the previous packages and reporting all bugs.
@@ -117,7 +118,7 @@ As always we are fully dependent on people testing the previous packages and rep
 <p>squid.conf has undergone a facelift.
 
 <p>Don't worry, few operational changes have been made.
-Older configs from Squdi 2.x and 3.0 are still expected to run in 3.1 with only the usual minor
+Older configs from Squid 2.x and 3.0 are still expected to run in 3.1 with only the usual minor
 changes seen between major release. Details on those are listed below.
 
 <p>New users will be relieved to see a very short squid.conf on clean installs.
@@ -162,8 +163,15 @@ config options provided on a clean install.
 <sect2>Limitations of IPv6 Support
 
 <p>In this release there is incomplete split-stack support. This means that OS which do not provide
-  IP stacks based on the KAME stack with Hybrid extensions to do IPv4-mapping cannot use IPv6
-  with Squid.
+  IP stacks based on the KAME stack with Hybrid extensions to do IPv4-mapping cannot use full IPv6
+  with Squid. From 3.1.6 the automatic capability detection will enable these abilities:
+<itemize>
+    <item>open both IPv4 and IPv6 versions of http_port for client connections where applicable.
+    <item>perform DNS to both IPv4 and IPv6 DNS servers.
+    <item>permit IPv6-only snmp_incoming_address and snmp_outgoing_address to be configured.
+    <item>permit IPv6 server connection provided tcp_outgoing_address has been configured (see below).
+</itemize>
+<p><em>NOTE:</em> SNMP, ICP and HTCP are not yet opening double ports so they will only run as IPv4-only or IPv6-only.
 
 <p>Specify a specific tcp_outgoing_address and the clients who match its ACL are limited
  to the IPv4 or IPv6 network that address belongs to. They are not permitted over the
@@ -172,12 +180,12 @@ config options provided on a clean install.
  See the squid.conf documentation for further details.
 
 <p>WCCP is not available (neither version 1 or 2).
-   It remains built into squid for use with IPv4 traffic but IPv6 cannot use it.
+   It remains built into Squid for use with IPv4 traffic but IPv6 cannot use it.
 
 <p>Pseudo-Transparent Interception is done via NAT at the OS level and is not available in IPv6.
    Squid will ensure that any port set with transparent or intercept options be an IPv4-only
    listening address. Wildcard can still be used but will not open as an IPv6.
-   To ensure that squid can accept IPv6 traffic on its default port, an alternative should
+   To ensure that Squid can accept IPv6 traffic on its default port, an alternative should
    be chosen to handle transparently intercepted traffic.
 <verb>
    http_port 3128
@@ -202,14 +210,14 @@ config options provided on a clean install.
 
 <sect2>Localization
 
-<p>The error pages presented by squid may now be localized per-request to match the visitors local preferred language.
+<p>The error pages presented by Squid may now be localized per-request to match the visitors local preferred language.
 
 <p>The error_directory option in squid.conf needs to be removed.
 
 <p>For best coverage of languages, using the latest language pack of error files is recommended.
 Updates can be downloaded from <url url="http://www.squid-cache.org/Versions/langpack/" name="www.squid-cache.org/Versions/langpack/">
 
-<p>The squid developers are interested in making squid available in a wide variety of languages.
+<p>The Squid developers are interested in making Squid available in a wide variety of languages.
    Contribution of new languages is encouraged.
 
 <sect2>CSS Stylesheet controls
@@ -367,8 +375,9 @@ Microsoft NTLM Authentication instead of HTTP standard authentication through a 
 <p>Squid-2 contained a hack using the <em>update_http0.9</em> squid.conf option to work around the
   unusual replies. This option is now obsolete.
 
-<p>The <em>proto</em> ACL type matches <em>ICY</em> once the reply has been received, before that the processing
-  is only aware on an HTTP request. So the ACL will match <em>HTTP</em>.
+<p>The <em>proto</em> ACL type only matches <em>ICY</em> once the reply has been received, before that the processing
+  is only aware on an HTTP request. So the ACL will match <em>HTTP</em> in <em>http_access</em> and <em>ICY</em> in
+  <em>http_reply_access</em>.
 
 
 <sect>Changes to squid.conf since Squid-3.0
@@ -557,21 +566,21 @@ This section gives a thorough account of those changes in three categories:
 	</verb>
 
         <tag>dns_v4_fallback</tag>
-        <p>New option to prevent squid from always looking up IPv4 regardless of whether IPv6 addresses are found.
+        <p>New option to prevent Squid from always looking up IPv4 regardless of whether IPv6 addresses are found.
            Squid will follow a policy of prefering IPv6 links, keeping the IPv4 only as a safety net behind IPv6.
         <verb>
         Standard practice with DNS is to lookup either A or AAAA records
         and use the results if it succeeds. Only looking up the other if
         the first attempt fails or otherwise produces no results.
 
-        That policy however will cause squid to produce error pages for some
+        That policy however will cause Squid to produce error pages for some
         servers that advertise AAAA but are unreachable over IPv6.
 
-        If this is ON  squid will always lookup both AAAA and A, using both.
-        If this is OFF squid will lookup AAAA and only try A if none found.
+        If this is ON  Squid will always lookup both AAAA and A, using both.
+        If this is OFF Squid will lookup AAAA and only try A if none found.
 
         WARNING: There are some possibly unwanted side-effects with this on:
-                *) Doubles the load placed by squid on the DNS network.
+                *) Doubles the load placed by Squid on the DNS network.
                 *) May negatively impact connection delay times.
         </verb>
 
@@ -611,7 +620,7 @@ This section gives a thorough account of those changes in three categories:
         <p>New option to replace the old configure option --enable-default-err-language
 	   New translations can be downloaded from http://www.squid-cache.org/Versions/langpack/
         <verb>
-        Set the default language which squid will send error pages in
+        Set the default language which Squid will send error pages in
         if no existing translation matches the clients language
         preferences.
 
@@ -699,7 +708,7 @@ This section gives a thorough account of those changes in three categories:
 	translation of the data portion of the segments will never be needed.
 
 	When a client only expects to do two-way FTP transfers this may be useful.
-	If squid finds that it must do a three-way FTP transfer after issuing
+	If Squid finds that it must do a three-way FTP transfer after issuing
 	an EPSV ALL command, the FTP session will fail.
 
 	If you have any doubts about this option do not use it.
@@ -823,7 +832,7 @@ logformat icap_squid %ts.%03tu %6icap::tr %>a %icap::to/%03icap::Hs %icap::<size
 	options are order-specific within the config as a whole.
 
 	A few layers of include are allowed, but too many are confusing and
-	squid will enforce an include depth of 16 files.
+	Squid will enforce an include depth of 16 files.
 
 	Syntax:
 		include /path/to/file1 /path/to/file2
@@ -981,14 +990,14 @@ NOCOMMENT_START
 	   SMB LanManager authentication through the NTLM interface without the need for a domain controller. Thus the 
 	   new name is <em>ntlm_smb_lm_auth</em>.
 	<p>WARNING: due to the name clash with Samba helper, admin should be careful to only update their squid.conf if the
-	   squid bundled binary is used and needed. If the Samba helper is in use, the squid.conf should not be altered.
+	   Squid bundled binary is used and needed. If the Samba helper is in use, the squid.conf should not be altered.
 
         <tag>balance_on_multiple_ip</tag>
         <p>The previous default behavour (rotate per-request) of this setting causes failover clashes with IPv6 built-in mechanisms.
            It has thus been turned off by default. Making the 'best choice' IP continue in use for any hostname until it encounters a connection failure and failover drops to the next known IP.
         <verb>
-	Modern IP resolvers in squid sort lookup results by preferred access.
-	By default squid will use these IP in order and only rotates to
+	Modern IP resolvers in Squid sort lookup results by preferred access.
+	By default Squid will use these IP in order and only rotates to
 	the next listed when the most preffered fails.
 
 	Some load balancing servers based on round robin DNS have been
@@ -1065,7 +1074,7 @@ NOCOMMENT_START
 
 
         <tag>external_acl_type</tag>
-        <p>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between squid and its helpers.
+        <p>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between Squid and its helpers.
            Please be aware of some limits to these options. These options only affet the transport protocol used
 	   to send data to and from the helpers. Squid in IPv6-mode may still send %SRC addresses in IPv4 or IPv6
 	   format, so all helpers will need to be checked and converted to cope with such information cleanly.
@@ -1384,7 +1393,7 @@ This section gives an account of those changes in three categories:
 	   This only affects the building process, enabling it to complete despite some
 	   possibly serious issues.
 	   Please do not use lightly, and please report the build issues which make it needed
-	   to the squid developers before doing so.
+	   to the Squid developers before doing so.
 
 	<tag>--disable-translation</tag>
         <p>Prevent Squid generating localized error page templates and manuals when built.
@@ -1395,7 +1404,7 @@ This section gives an account of those changes in three categories:
 <url url="http://www.squid-cache.org/Versions/langpack/" name="http://www.squid-cache.org/Versions/langpack/">
 
 	<tag>--with-logdir=PATH</tag>
-	<p>Allow build-time configuration of Default location for squid logs.
+	<p>Allow build-time configuration of Default location for Squid logs.
 
 	<tag>--with-pidfile=PATH</tag>
 	<p>Allow build-time configuration of Default location and name of squid.pid file.
@@ -1419,7 +1428,7 @@ This section gives an account of those changes in three categories:
 
 	<tag>--enable-linux-netfilter</tag>
 	<p>This option now enables support for all three netfilter interception targets.
-	<p>Adding TPROXY version 4+ support to squid through the netfilter TPROXY target.
+	<p>Adding TPROXY version 4+ support to Squid through the netfilter TPROXY target.
 	   This options requires a linux kernel 2.6.25 or later for embeded netfilter TPROXY targets.
 	<p>Older REDIRECT and DNAT targets work as before on HTTP ports marked 'intercept'.
 
