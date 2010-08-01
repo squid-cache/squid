@@ -1,3 +1,13 @@
+Changes to squid-3.1.6 (02 Aug 2010):
+
+	- Bug 2994, 2995: IPv4-only regressions
+	- Bug 2991: Wrong parameters to fcntl() in commSetCloseOnExec()
+	- Bug 2975: chunked requests not supported after regular ones
+	- Fix: 32-bit overflow in reported bytes received from next hop
+	- Fix Libtool build regressions
+	- Limited split-stack IPv6 support.
+	- squid_db_auth support MD5 encrypted passwords
+
 Changes to squid-3.1.5.1 (28 Jul 2010):
 
 	- Update Libtool to 2.2.
