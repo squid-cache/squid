@@ -72,6 +72,14 @@ else
 fi
 
 LT_INIT([dlopen])
+if ! test "${ac_top_build_prefix}" = "";
+then
+	# LTDL v3-v7 macros assume the autoconf 2.62 variable top_build_prefix is defined
+	# But from autoconf 2.64 its called ac_top_build_prefix and not automatically added to the Makefile
+	# This fixes Linux LTDLv3-v7, and BSD LTDL v2.2
+	top_build_prefix=${ac_top_build_prefix}
+	AC_SUBST(top_build_prefix)
+fi
 LTDL_INIT
 LT_LIB_DLLOAD
 
