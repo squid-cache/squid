@@ -31,8 +31,6 @@
  */
 
 #include "config.h"
-//#include "compat/getaddrinfo.h"
-//#include "compat/getnameinfo.h"
 #include "Debug.h"
 #include "ip/tools.h"
 
@@ -67,9 +65,7 @@ Ip::ProbeTransport()
         EnableIpv6 |= IPV6_SPECIAL_V4MAPPING;
     } else {
         debugs(3, 2, "Detected split IPv4 and IPv6 stacks ...");
-        // EnableIpv6 |= IPV6_SPECIAL_SPLITSTACK;
-        // TODO: remove death when split-stack is supported.
-        EnableIpv6 = IPV6_OFF;
+        EnableIpv6 |= IPV6_SPECIAL_SPLITSTACK;
     }
     close(s);
 
