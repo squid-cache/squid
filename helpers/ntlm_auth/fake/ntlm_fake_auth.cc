@@ -54,6 +54,7 @@
 #define IGNORANCE_IS_BLISS
 
 #include "config.h"
+#include "helpers/defines.h"
 #include "libntlmauth/ntlmauth.h"
 #include "libntlmauth/support_bits.cci"
 #include "util.h"
@@ -84,11 +85,6 @@
 #define SEND2(X,Y) debug("sending '" X "' to squid\n",Y); printf(X "\n",Y);
 #define SEND3(X,Y,Z) debug("sending '" X "' to squid\n",Y,Z); printf(X "\n",Y,Z);
 #endif
-
-#define ERR    "ERR\n"
-#define OK     "OK\n"
-
-#define BUFFER_SIZE 10240
 
 const char *authenticate_ntlm_domain = "WORKGROUP";
 int strip_domain_enabled = 0;
@@ -151,7 +147,7 @@ process_options(int argc, char *argv[])
 int
 main(int argc, char *argv[])
 {
-    char buf[BUFFER_SIZE];
+    char buf[HELPER_INPUT_BUFFER];
     int buflen = 0;
     char user[NTLM_MAX_FIELD_LENGTH], domain[NTLM_MAX_FIELD_LENGTH];
     char *p;
@@ -169,7 +165,7 @@ main(int argc, char *argv[])
 
     debug("%s build " __DATE__ ", " __TIME__ " starting up...\n", my_program_name);
 
-    while (fgets(buf, BUFFER_SIZE, stdin) != NULL) {
+    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
         user[0] = '\0';		/*no user code */
         domain[0] = '\0';		/*no domain code */
 
