@@ -2425,7 +2425,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         request->setContentLength(conn->in.dechunked.contentSize());
         request->header.delById(HDR_TRANSFER_ENCODING);
         conn->finishDechunkingRequest(hp);
-    }
+    } else
+        conn->cleanDechunkingRequest();
 
     unsupportedTe = tePresent && !deChunked;
     if (!urlCheckRequest(request) || unsupportedTe) {
@@ -3655,9 +3656,6 @@ ConnStateData::finishDechunkingRequest(HttpParser *hp)
     debugs(33, 5, HERE << "finish dechunking; content: " << in.dechunked.contentSize());
 
     assert(in.dechunkingState == chunkReady);
-    assert(in.bodyParser);
-    delete in.bodyParser;
-    in.bodyParser = NULL;
 
     const mb_size_t headerSize = HttpParserRequestLen(hp);
 
@@ -3679,8 +3677,19 @@ ConnStateData::finishDechunkingRequest(HttpParser *hp)
 
     in.notYetUsed = end - in.buf;
 
-    in.chunked.clean();
-    in.dechunked.clean();
+    cleanDechunkingRequest();
+}
+
+/// cleanup dechunking state, get ready for the next request
+void
+ConnStateData::cleanDechunkingRequest()
+{
+    if (in.dechunkingState > chunkNone) {
+        delete in.bodyParser;
+        in.bodyParser = NULL;
+        in.chunked.clean();
+        in.dechunked.clean();
+    }
     in.dechunkingState = chunkUnknown;
 }
 
