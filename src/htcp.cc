@@ -37,6 +37,7 @@
 #include "htcp.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Acl.h"
+#include "ip/tools.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -1493,6 +1494,15 @@ htcpInit(void)
     IpAddress incomingAddr = Config.Addrs.udp_incoming;
     incomingAddr.SetPort(Config.Port.htcp);
 
+    if (!Ip::EnableIpv6 && !incomingAddr.SetIPv4()) {
+        debugs(31, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << incomingAddr << " is not an IPv4 address.");
+        fatal("HTCP port cannot be opened.");
+    }
+    /* split-stack for now requires default IPv4-only HTCP */
+    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && incomingAddr.IsAnyAddr()) {
+        incomingAddr.SetIPv4();
+    }
+
     enter_suid();
     htcpInSocket = comm_open_listener(SOCK_DGRAM,
                                       IPPROTO_UDP,
@@ -1511,6 +1521,15 @@ htcpInit(void)
     if (!Config.Addrs.udp_outgoing.IsNoAddr()) {
         IpAddress outgoingAddr = Config.Addrs.udp_outgoing;
         outgoingAddr.SetPort(Config.Port.htcp);
+
+        if (!Ip::EnableIpv6 && !outgoingAddr.SetIPv4()) {
+            debugs(31, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << outgoingAddr << " is not an IPv4 address.");
+            fatal("HTCP port cannot be opened.");
+        }
+        /* split-stack for now requires default IPv4-only HTCP */
+        if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && outgoingAddr.IsAnyAddr()) {
+            outgoingAddr.SetIPv4();
+        }
 
         enter_suid();
         htcpOutSocket = comm_open_listener(SOCK_DGRAM,
