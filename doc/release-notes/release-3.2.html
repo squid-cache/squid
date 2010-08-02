@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.65">
- <TITLE>Squid 3.2.0.0 release notes</TITLE>
+ <TITLE>Squid 3.2.0.1 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.2.0.0 release notes</H1>
+<H1>Squid 3.2.0.1 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -24,10 +24,14 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <H2><A NAME="toc2">2.</A> <A HREF="#s2">Major new features since Squid-3.1</A></H2>
 
 <UL>
-<LI><A NAME="toc2.1">2.1</A> <A HREF="#ss2.1">Helper Multiplexer</A>
-<LI><A NAME="toc2.2">2.2</A> <A HREF="#ss2.2">Helper Name Changes</A>
-<LI><A NAME="toc2.3">2.3</A> <A HREF="#ss2.3">Multi-Lingual manuals</A>
-<LI><A NAME="toc2.4">2.4</A> <A HREF="#ss2.4">Solaris 10 pthreads Support (Experimental)</A>
+<LI><A NAME="toc2.1">2.1</A> <A HREF="#ss2.1">SMP scalability</A>
+<LI><A NAME="toc2.2">2.2</A> <A HREF="#ss2.2">Helper Multiplexer</A>
+<LI><A NAME="toc2.3">2.3</A> <A HREF="#ss2.3">Helpers On-Demand</A>
+<LI><A NAME="toc2.4">2.4</A> <A HREF="#ss2.4">Helper Name Changes</A>
+<LI><A NAME="toc2.5">2.5</A> <A HREF="#ss2.5">Multi-Lingual manuals</A>
+<LI><A NAME="toc2.6">2.6</A> <A HREF="#ss2.6">Solaris 10 pthreads Support (Experimental)</A>
+<LI><A NAME="toc2.7">2.7</A> <A HREF="#ss2.7">Surrogate/1.0 protocol extensions to HTTP</A>
+<LI><A NAME="toc2.8">2.8</A> <A HREF="#ss2.8">Logging Infrastructure Updated</A>
 </UL>
 <P>
 <H2><A NAME="toc3">3.</A> <A HREF="#s3">Changes to squid.conf since Squid-3.1</A></H2>
@@ -64,7 +68,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.2.0.0 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.2.0.1 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.2/">http://www.squid-cache.org/Versions/v3/3.2/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -90,15 +94,64 @@ for Applied Network Research and members of the Web Caching community.</EM>
 
 <P>The most important of these new features are:
 <UL>
-<LI>Helper Multiplexer</LI>
+<LI>SMP scalability</LI>
+<LI>Helper Multiplexer and On-Demand</LI>
 <LI>Helper Name Changes</LI>
 <LI>Multi-Lingual manuals</LI>
 <LI>Solaris 10 pthreads Support (Experimental)</LI>
+<LI>Surrogate/1.0 protocol extensions to HTTP</LI>
+<LI>Logging Infrastructure Updated</LI>
 </UL>
 </P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
 
-<H2><A NAME="ss2.1">2.1</A> <A HREF="#toc2.1">Helper Multiplexer</A>
+
+<H2><A NAME="ss2.1">2.1</A> <A HREF="#toc2.1">SMP scalability</A>
+</H2>
+
+<P>The new "workers" squid.conf option can be used to launch multiple worker
+processes and utilize multiple CPU cores. The overall intent is to make
+multiple workers look like one to an outside observer, while providing
+knobs to customize each worker behavior if needed.</P>
+
+<P>By default, all worker processes are configured identically and do what a
+single Squid instance would have done. Squid.conf macro substitutions and
+conditionals (see below) can be used to customize individual worker
+configurations. In the paragraphs below, "can share" implies "will share by
+default".</P>
+
+<P>Workers can share HTTP, HTTPS, SNMP, ICP, and HTCP listening addresses.
+Configuration related to ICP and HTCP clients must be adjusted to avoid
+source address conflicts: Modify the IP address and/or the port used for
+the protocol. Workers do not share DNS addresses by default because the OS
+assigns each worker a unique DNS port.</P>
+
+<P>Workers can share logs.</P>
+
+<P>Workers cannot share caches, for now. Cache_dir options must be adjusted to
+point each disk-caching worker to its own disk area. ICP and HTCP responses
+are based on the responding worker cache state. Overall, SMP Squid behaves
+as a Squid farm behind a load-balancer with no cache affinity awareness.
+This is perfect for non-caching Squids but inappropriate for Squids that
+must coordinate caching activities (in-between environments are in a gray
+area requiring case-by-case analysis).</P>
+
+<P>Cache manager and SNMP statistics are reported from a worker point of
+view, for now.</P>
+
+<P>Startup, reconfiguration, shutdown, and log rotation are handled as for a
+monolithic Squid. Abnormally terminated workers are restarted while
+other workers continue serving traffic.</P>
+
+<H3>Squid.conf macros and conditionals</H3>
+
+<P>Added support for process_name and process_number macros as well as simple
+if-statement conditionals in squid.conf. These features allow individual
+worker customization in SMP mode. For details, search for "Conditional
+configuration" and "SMP-Related Macros" sections in squid.conf.documented.</P>
+
+
+<H2><A NAME="ss2.2">2.2</A> <A HREF="#toc2.2">Helper Multiplexer</A>
 </H2>
 
 <P>The helper multiplexer's purpose is to relieve some of the burden
@@ -145,7 +198,44 @@ the reduction in direct helper spawned by Squid can result in a great reduction 
 </UL>
 </P>
 
-<H2><A NAME="ss2.2">2.2</A> <A HREF="#toc2.2">Helper Name Changes</A>
+
+<H2><A NAME="ss2.3">2.3</A> <A HREF="#toc2.3">Helpers On-Demand</A>
+</H2>
+
+<P>Traditionally Squid has been configured with a fixed number of helpers and started them during
+it's start and reconfigure phases. This forces the hard configuration problem of how many helpers
+will be needed to be solved before starting Squid in production use.</P>
+
+<P>The on-demand helpers feature allows greater flexibility and resolves this problem by allowing
+maximum, initial and idle thresholds to be configured. Squid will start the initial set during
+start and reconfigure phases. However over the operational use new helpers up to the maxium will
+be started as load demands. The idle threshold determins how many more helpers to start if the
+currently running set is not enough to handle current request loads.</P>
+
+<P>For example, a traditional configration is
+<PRE>
+        auth_param ntlm /usr/libexec/squid/ntlm_auth
+        auth_param ntlm children 200
+   
+</PRE>
+
+the alternative on-demand configuration could be:
+<PRE>
+        auth_param ntlm /usr/libexec/squid/ntlm_auth
+        auth_param ntlm children 200 startup=10 idle=2
+   
+</PRE>
+</P>
+
+<P>The example still permits up to 200 helpers to be running at once under peak traffic loads.
+But only starts 10 when Squid is initialized resulting in a faster boot up.
+When client requests threaten to overload the running helpers an additional 2 will be started.</P>
+
+<P>NOTE: if no <EM>startup</EM> and <EM>idle</EM> values are specified the traditional behaviour
+of starting the maximum number of helpers will occur.</P>
+
+
+<H2><A NAME="ss2.4">2.4</A> <A HREF="#toc2.4">Helper Name Changes</A>
 </H2>
 
 <P>To improve the understanding of what each helper does and where it should be used the helper binaries
@@ -161,15 +251,15 @@ For several helpers the directory name used in --enable-X-helpers configure opti
 <LI>squid_db_auth - basic_db_auth - Retrieve authentication details from a simple SQL database table.</LI>
 <LI>getpwnam_auth - basic_getpwname_auth - Authenticate with local system user accounts.</LI>
 <LI>squid_ldap_auth - basic_ldap_auth - Authenticate with LDAP user accounts.</LI>
+<LI>MSNT-multi-domain - basic_msnt_multi_domain_auth - Authenticate with any one of multiple Windows Domain Controllers.</LI>
 <LI>ncsa_auth - basic_ncsa_auth - Authenticate with NCSA httpd-style password file.</LI>
+<LI>yp_auth - basic_nis_auth - Authenticate with NIS security system.</LI>
 <LI>pam_auth - basic_pam_auth - Authenticate with the system PAM infrastructure.</LI>
 <LI>pop3.pl - basic_pop3_auth - Authenticate with a mail server POP3/SMTP credentials</LI>
+<LI>squid_radius_auth - basic_radius_auth - Authenticate with RADIUS.</LI>
 <LI>squid_sasl_auth - basic_sasl_auth - Authenticate with SASL.</LI>
 <LI>smb_auth - basic_smb_auth - Authenticate with Samba SMB.</LI>
-<LI>yp_auth - basic_nis_auth - Authenticate with NIS security system.</LI>
 <LI>mswin_sspi - basic_sspi_auth - Authenticate with a Windows Domain Controller using SSPI.</LI>
-<LI>MSNT-multi-domain - basic_msnt_multi_domain_auth - Authenticate with any one of multiple Windows Domain Controllers.</LI>
-<LI>squid_radius_auth - basic_radius_auth - Authenticate with RADIUS.</LI>
 </UL>
 </P>
 
@@ -185,7 +275,13 @@ For several helpers the directory name used in --enable-X-helpers configure opti
 
 <P>
 <UL>
-<LI>(none yet converted)</LI>
+<LI>mswin_check_ad_group - ext_ad_group_acl - Check logged in users Group membership using Active Directory.</LI>
+<LI>ip_user_check - ext_file_userip_acl - Restrict users to cetain IP addresses, using a text file backend.</LI>
+<LI>squid_ldap_group - ext_ldap_group_acl - Check logged in users Group membership using LDAP.</LI>
+<LI>mswin_check_lm_group - ext_lm_group_acl - Check logged in users Group membership using LanManager.</LI>
+<LI>squid_session - ext_session_acl - Maintain a session cache of client identifiers (usually IP address).</LI>
+<LI>squid_unix_group - ext_unix_group_acl - Check logged in users Group membership using local UNIX groups.</LI>
+<LI>wbinfo_group.pl - ext_wbinfo_group_acl - Check logged in users Group membership using wbinfo.</LI>
 </UL>
 </P>
 
@@ -194,6 +290,7 @@ For several helpers the directory name used in --enable-X-helpers configure opti
 <P>
 <UL>
 <LI>squid_kerb_auth - negotiate_kerberos_auth - Authenticate with Kerberos servers.</LI>
+<LI>mswin_sspi - negotiate_sspi_auth - Authenticate with a Windows Domain Controller using SSPI.</LI>
 </UL>
 </P>
 
@@ -201,8 +298,10 @@ For several helpers the directory name used in --enable-X-helpers configure opti
 
 <P>
 <UL>
+<LI>no_check.pl - Deprecated. - Use the faster and less easily decrypted ntlm_fake_auth instead.</LI>
 <LI>fakeauth_auth - ntlm_fake_auth - Perform NTLMSSP to recover the username but don't verify the password.</LI>
 <LI>ntlm_auth - ntlm_smb_lm_auth - Perform SMB LanManager domain-less authentication over NTLM protocol.</LI>
+<LI>mswin_ntlm_auth - ntlm_sspi_auth - Perform NTLMSSP authentication using Windows native Security Support Provider Interface API.</LI>
 </UL>
 </P>
 
@@ -215,7 +314,7 @@ For several helpers the directory name used in --enable-X-helpers configure opti
 </P>
 
 
-<H2><A NAME="ss2.3">2.3</A> <A HREF="#toc2.3">Multi-Lingual manuals</A>
+<H2><A NAME="ss2.5">2.5</A> <A HREF="#toc2.5">Multi-Lingual manuals</A>
 </H2>
 
 <P>The man(8) and man(1) pages bundled with Squid are now provided online for all
@@ -228,10 +327,65 @@ versions and beginning with 3.2 they are available in languages other than engli
 This move begins the Localization of the internal administrator facing manuals.</P>
 
 
-<H2><A NAME="ss2.4">2.4</A> <A HREF="#toc2.4">Solaris 10 pthreads Support (Experimental)</A>
+<H2><A NAME="ss2.6">2.6</A> <A HREF="#toc2.6">Solaris 10 pthreads Support (Experimental)</A>
 </H2>
 
 <P>Automatic detection and use of the pthreads library available from Solaris 10</P>
+
+<P>The result of this addition means that faster more efficient AUFS cache storage mechanisims
+are now available in Solaris 10.</P>
+
+<P>Support is experimental at this stage due to lack of feedback on the results of enabling it.
+We recommend giving AUFS a try for faster disk storage and encourage feedback.</P>
+
+
+<H2><A NAME="ss2.7">2.7</A> <A HREF="#toc2.7">Surrogate/1.0 protocol extensions to HTTP</A>
+</H2>
+
+<P>The <EM>Surrogate</EM> extensions to HTTP protocol enable an origin web server to specify separate
+cache controls for a reverse proxy acting on its behalf. Previously this was closely tied with the ESI
+feature support in Squid. This release opens Surrogate support to all reverse proxies.</P>
+
+<P>Reverse proxy requests sent on to the web server include the HTTP header <EM>Surrogate-Capabilities:</EM>
+specifying the capabilities of the reverse proxy along with an ID which can be used to target reponses with
+a <EM>Surrogate-Control:</EM> HTTP header used instead of the <EM>Cache-Control:</EM> header.</P>
+
+<P>The default surrogate ID is generated automatically from the Squid site-unique hostname as found by the
+automatic detection or manual configuration of <EM>visible_hostname</EM> although can be configured
+separately with the <EM>httpd_accel_surrogate_id</EM> option.</P>
+
+<P><EM>Security Considerations:</EM> Websites sould be careful of accepting any surrogate ID.
+Older releases of Squid leak the Surrogate-Control headers to external servers.
+This 3.2 series of Squid will now prevent this leakage of its own ID destined responses, however it is possible
+and for some uses desirable to receive external reverse-proxies <EM>Surrogate-Capabilities:</EM> headers.</P>
+
+<P><EM>NOTE:</EM> Several operating system distributions historically package Squid with a forced value of
+<EM>visible_hostname localhost</EM>. If this is done on a Surrogate enabled install a manual re-configuration
+is required to prevent an unacceptable surrogate ID of 'localhost' being generated.</P>
+
+
+<H2><A NAME="ss2.8">2.8</A> <A HREF="#toc2.8">Logging Infrastructure Updated</A>
+</H2>
+
+<P>The advanced logging modules introduced in Squid-2.7 are now available from Squid-3.2.</P>
+
+<P>This feature is documented at http://wiki.squid-cache.org/Features/LogModules</P>
+
+<P>The new infrastructure currently supports several different channels types (modules) ranging from
+direct filesystem logging (stdio, daemon) to network logging (syslog, UDP and TCP). The daemon logging
+interface allows for a custom helper to be written to process logs in real-time.</P>
+
+<P>Upgrading: the <EM>access_log</EM> was previously logge via what is now called the <EM>stdio</EM> module.
+This is still supported and used by default if no module is named. For best performance particularly in SMP
+environments we recommend the <EM>daemon</EM> be used. The provided <EM>log_file_daemon</EM> helper
+performs the traditional logging to local filesystem.</P>
+
+<P>Additional to this the cache.log can now be limited to a smaller number of files stored.
+Traditionally cache.log.N has been fixed at the same number of rotated files as access.log.N through the
+<EM>logfile_rotate</EM> setting. The <EM>debug_options</EM> setting can now be used to configure the number
+of debug cache.log files to rotate through with a <EM>rotate=N</EM> option. This is particularly useful for
+logging a single cache.log at relatively high debug levels on a high-traffic system. Or one which is
+required to store a long period of access.log and needs to conserve disk space.</P>
 
 
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes to squid.conf since Squid-3.1</A></H2>
@@ -259,8 +413,20 @@ This move begins the Localization of the internal administrator facing manuals.<
 <P>Access control based on altered HTTP request following adaptation alterations (ICAP, eCAP, URL rewriter).
 An upgraded drop-in replacement for <EM>http_access2</EM> found in Squid-2.</P>
 
+<DT><B>else</B><DD>
+<P>Part of conditional SMP support syyntax. see <EM>if</EM></P>
+
+<DT><B>endif</B><DD>
+<P>Part of conditional SMP support syyntax. see <EM>if</EM></P>
+
 <DT><B>eui_lookup</B><DD>
 <P>Whether to lookup the EUI or MAC address of a connected client.</P>
+
+<DT><B>if</B><DD>
+<P>New conditional syntax for SMP multiple-worker. 
+If-statements can be used to make configuration directives depend on conditions.</P>
+<P>The else part is optional. The keywords <EM>if</EM>, <EM>else</EM> and <EM>endif</EM> 
+must be typed on their own lines, as if they were regular configuration directives.</P>
 
 <DT><B>memory_cache_mode</B><DD>
 <P>Controls which objects to keep in the memory cache (cache_mem)
@@ -284,6 +450,17 @@ An upgraded drop-in replacement for <EM>http_access2</EM> found in Squid-2.</P>
 header is used for spoofing instead of the directly connected client address.
 Requires both <EM>--enable-follow-x-forwarded-for</EM> and <EM>--enable-linux-netfilter</EM></P>
 
+<DT><B>workers</B><DD>
+<P>Number of main Squid processes or "workers" to fork and maintain.
+In SMP mode, each worker does nearly all what a single Squid daemon
+does (e.g., listen on http_port and forward HTTP requests).
+<PRE>
+        0: "no daemon" mode, like running "squid -N ..."
+        1: "no SMP" mode, start one main Squid process daemon (default)
+        N: start N main Squid process daemons (i.e., SMP mode)
+        
+</PRE>
+</P>
 </DL>
 </P>
 
