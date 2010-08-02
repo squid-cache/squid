@@ -793,3 +793,24 @@ AC_DEFUN([SQUID_CHECK_WINSOCK_LIB],[
   AC_CHECK_HEADERS(winsock2.h winsock.h)
   SQUID_STATE_ROLLBACK(winsock)
 ])
+
+
+dnl check that setresuid is properly implemented.
+dnl sets squid_cv_resuid_works to "yes" or "no"
+AC_DEFUN([SQUID_CHECK_SETRESUID_WORKS],[
+  AC_CACHE_CHECK(if setresuid is actually implemented, squid_cv_resuid_works,
+    AC_RUN_IFELSE([
+      AC_LANG_SOURCE([[
+#include <stdlib.h>
+  int main(int argc, char **argv) {
+    if(setresuid(-1,-1,-1)) {
+      perror("setresuid:");
+      return 1;
+    }
+    return 0;
+  }
+  ]])],[
+    squid_cv_resuid_works="yes" ],[
+    squid_cv_resuid_works="no" ],[])
+  )
+])
