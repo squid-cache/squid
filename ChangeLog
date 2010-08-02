@@ -1,3 +1,49 @@
+Changes to squid-3.2.0.1 (03 Aug 2010):
+
+	- Port from 2.7: Logging infrastructure updates
+	- Port from 2.7: Unique sequence number per log line
+	- Port from 2.6: STORE_META_OBJSIZE swapout storage type
+	- Bug 2792: tcp_outgoing_addr does not work with TPROXY
+	- Bug 2631: refresh_pattern store-stale option
+	- Bug 2305: Multiple leaks and assertion crashes in authentication
+	- Bug 1239: Much needed ACL type random
+	- Bug 7: (partial): Migrate on-disk objects to cache_mem on hit/refresh and update
+	- Support full Surrogate/1.0 protocol extensions to HTTP for reverse-proxies
+	- Support SMP for essential non-caching functionality
+	- Support logging over TCP
+	- Support Solaris 10 pthreads (experimental)
+	- Support Kerberos login to peers
+	- Support EUI / MAC in more environments
+	- Support format tags in deny_info URLs
+	- Support running helpers on-demand instead of all at startup
+	- Support fully transparent login=PASSTHRU of authentication headers to peers
+	- Support multi-lingual localised FTP directory listings
+	- Support TPROXYv4 spoofing of X-Forwarded-For client address
+	- Support ICAP 206 Partial Content extension
+	- Append the _ABORTED or _TIMEDOUT suffixes to the action access.log field
+	- Add ACL support to range_offset_limit
+	- Add helpers for url_rewrite
+	- Add helper multiplexer for concurrency emulation with legacy helpers
+	- Add Perl library which facilitates parsing access logfile entries.
+	- Add a simple script to summarise traffic use per user
+	- Add templates for captive portal proxy configuration instructions
+	- Add logging of the local TCP port used by transactions with HTTP servers
+	- Update mswin_check_ad_group to version 2.0
+	- Update squid_kerb_auth helper to version 3.0.2
+	- Remove double-language error page hack (replaced by locale auto-negotiation)
+	- Remove TPROXYv2 support (replaced by TPROXYv4)
+	- Remove no_check.pl NTLM helper (replaced by ntlm_fake_auth)
+	- Re-work ./configure script for smarter auto-detect and early error checks
+	- Auto-enable all features by default
+	- Workaround com_err.h C++ brokenness triggered by OpenSSL includes
+	- Helpers naming scheme
+	- Add support for write timeouts
+	- Modify icap_service_failure_limit option to forget old ICAP errors
+	- Updated man(8) manuals including several additions and translations
+	- ... and a great many code cleanups
+	- ... and a great many testing improvements
+	- ... and many documentation updates
+
 Changes to squid-3.1.6 (02 Aug 2010):
 
 	- Bug 2994, 2995: IPv4-only regressions
