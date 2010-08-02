@@ -1344,7 +1344,7 @@ if test "x$squid_opt_enable_large_files" = "xyes" -a "x$buildmodel" = "x"; then
     AC_MSG_WARN([No suitable build environment found for large files. Trying to use _FILE_OFFSET_BITS=64])
   fi
 fi
-if "x$buildmodel" = "xdefault" -o "x$buildmodel" = "x"; then
+if test "x$buildmodel" = "xdefault" -o "x$buildmodel" = "x"; then
   if test "x$squid_opt_enable_large_files" = "xyes" ; then
     AC_MSG_NOTICE([Enabling -D_FILE_OFFSET_BITS=64])
     CFLAGS="-D_FILE_OFFSET_BITS=64 $CFLAGS"
@@ -2179,7 +2179,7 @@ AC_CHECK_HEADERS( \
 CHECK_STRUCT_PAM_CONV
 
 AC_CHECK_HEADERS(
-	linux/netfilter_ipv4.h
+  linux/netfilter_ipv4.h
 ,,,
 SQUID_DEFAULT_INCLUDES
 #if HAVE_LIMITS_H
@@ -2194,22 +2194,22 @@ SQUID_DEFAULT_INCLUDES
 dnl *BSD dont include the depenencies for all their net/ and netinet/ files
 dnl We must include a few basic type headers for them to work.
 AC_CHECK_HEADERS( \
-	net/if.h \
-	netinet/if_ether.h\
-	netinet/icmp6.h \
-	netinet/in.h \
-	netinet/ip.h \
-	netinet/ip6.h \
-	netinet/ip_compat.h\
-	netinet/ip_fil_compat.h\
-	netinet/ip_fil.h\
-	netinet/ip_icmp.h \
-	netinet/ipl.h \
-	netinet/ip_nat.h\
-	net/pf/pfvar.h \
-	net/pfvar.h \
-	sys/mount.h\
-	resolv.h \
+  net/if.h \
+  netinet/if_ether.h\
+  netinet/icmp6.h \
+  netinet/in.h \
+  netinet/ip.h \
+  netinet/ip6.h \
+  netinet/ip_compat.h\
+  netinet/ip_fil_compat.h\
+  netinet/ip_fil.h\
+  netinet/ip_icmp.h \
+  netinet/ipl.h \
+  netinet/ip_nat.h\
+  net/pf/pfvar.h \
+  net/pfvar.h \
+  sys/mount.h\
+  resolv.h \
 ,,,
 SQUID_BSDNET_INCLUDES)
 
@@ -2359,32 +2359,9 @@ AC_SEARCH_LIBS([opcom_stack_trace],[opcom_stack])
 AC_SEARCH_LIBS([strlcpy], [bsd])
 AC_SEARCH_LIBS([yp_match], [nsl nss_nis nss_nisplus])
 dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
-case "$host_os" in
-  mingw|mingw32)
-    AC_MSG_CHECKING(for winsock)
-    save_LIBS="$LIBS"
-    for curlib in ws2_32 wsock32; do
-	LIBS="$LIBS -l$curlib"
-	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <winsock.h>]], [[
-			socket(0,0,0);
-			select(0,NULL,NULL,NULL,NULL);
-			closesocket(0);
-			gethostname(NULL,0);
-			]])],[have_winsock=yes],[have_winsock=no])
-
-	if test "x$have_winsock" = "xyes"; then
-		ac_cv_func_select='yes'
-		if test "x$curlib" = "xws2_32"; then
-			have_winsock=winsock2
-		fi
-		break
-	fi
-	LIBS="$save_LIBS"
-    done
-    AC_MSG_RESULT($have_winsock)
-    AC_CHECK_HEADERS(winsock2.h winsock.h)
-    ;;
-esac
+if test "x$squid_host_os" = "xmingw" ; then
+  SQUID_CHECK_WINSOCK_LIB
+fi
 
 # check that we have unix sockets
 SQUID_CHECK_UNIX_SOCKET
