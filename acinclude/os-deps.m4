@@ -768,3 +768,28 @@ fi
 ])
 
 
+dnl checks the winsock library to use (ws2_32 or wsock32)
+dnl may set ac_cv_func_select as a side effect
+AC_DEFUN([SQUID_CHECK_WINSOCK_LIB],[
+  SQUID_STATE_SAVE(winsock)
+  AC_SEARCH_LIBS([closesocket],[ws2_32 wsock32])
+  AC_MSG_CHECKING([for winsock library])
+  case "$ac_cv_search_closesocket" in
+    "no")
+      AC_MSG_RESULT([winsock library not found])
+      ;;
+    "none required")
+      AC_MSG_RESULT([winsock library already in LIBS])
+      ;;
+    "-lws2_32")
+      AC_MSG_RESULT([winsock2])
+      ac_cv_func_select='yes'
+      ;;
+    "-lwsock32")
+      AC_MSG_RESULT([winsock])
+      ac_cv_func_select='yes'
+      ;;
+  esac
+  AC_CHECK_HEADERS(winsock2.h winsock.h)
+  SQUID_STATE_ROLLBACK(winsock)
+])
