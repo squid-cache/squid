@@ -118,7 +118,7 @@ bootstrap_libtoolize() {
         # HACK: Make it backward-compatible by linking the bundled headers.
         for f in ltdl.h libltdl/lt_error.h libltdl/lt_system.h libltdl/lt_dlloader.h libltdl/slist.h; do
             echo "Fixing $f ..."
-            sed 's/<libltdl\/lt_system.h>/\"libltdl\/lt_system.h\"/g' $src/$fh |
+            sed 's/<libltdl\/lt_system.h>/\"libltdl\/lt_system.h\"/g' $src/$f |
                 sed 's/<libltdl\/lt__glibc.h>/\"libltdl\/lt__glibc.h\"/g' |
                 sed 's/<libltdl\/lt_error.h>/\"libltdl\/lt_error.h\"/g' |
                 sed 's/<libltdl\/lt_dlloader.h>/\"libltdl\/lt_dlloader.h\"/g' > $src/$f.new;
