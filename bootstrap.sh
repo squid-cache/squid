@@ -116,7 +116,7 @@ bootstrap_libtoolize() {
 
         # Libtool 2.2.6b we bundle is slightly broken with non-portable dependencies
         # HACK: Make it backward-compatible by linking the bundled headers.
-        for f in ltdl.h libltdl/lt_error.h libltdl/lt_system.h libltdl/lt_dlloader.h; do
+        for f in ltdl.h libltdl/lt_error.h libltdl/lt_system.h libltdl/lt_dlloader.h libltdl/slist.h; do
             echo "Fixing $f ..."
             sed 's/<libltdl\/lt_system.h>/\"libltdl\/lt_system.h\"/g' $src/$fh |
                 sed 's/<libltdl\/lt__glibc.h>/\"libltdl\/lt__glibc.h\"/g' |
