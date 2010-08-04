@@ -93,7 +93,7 @@ private:
 
 #endif /* __cplusplus */
 
-#ifdef _USE_INLINE_
+#if _USE_INLINE_
 #include "Trie.cci"
 #endif
 
