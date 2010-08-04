@@ -4398,7 +4398,7 @@ regex_t *preg;
     preg->translate = NULL;
 }
 #endif /* USE_GNUREGEX */
-
+
 /*
  * Local variables:
  * make-backup-files: t

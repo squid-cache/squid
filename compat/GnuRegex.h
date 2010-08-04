@@ -410,7 +410,7 @@ extern "C" {
 
 #endif /* USE_GNUREGEX */
 #endif /* SQUID_REGEXP_LIBRARY_H */
-
+
 /*
  * Local variables:
  * make-backup-files: t
