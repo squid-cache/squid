@@ -824,9 +824,27 @@ ServerStateData::adaptOrFinalizeReply()
     setFinalReply(virginReply());
 }
 
+/// initializes bodyBytesRead stats if needed and applies delta
+void
+ServerStateData::adjustBodyBytesRead(const int64_t delta)
+{
+    int64_t &bodyBytesRead = originalRequest()->hier.bodyBytesRead;
+
+    // if we got here, do not log a dash even if we got nothing from the server
+    if (bodyBytesRead < 0)
+        bodyBytesRead = 0;
+
+    bodyBytesRead += delta; // supports negative and zero deltas
+
+    // check for overflows ("infinite" response?) and undeflows (a bug)
+    Must(bodyBytesRead >= 0);
+}
+
 void
 ServerStateData::addVirginReplyBody(const char *data, ssize_t len)
 {
+    adjustBodyBytesRead(len);
+
 #if USE_ADAPTATION
     assert(!adaptationAccessCheckPending); // or would need to buffer while waiting
     if (startedAdaptation) {
