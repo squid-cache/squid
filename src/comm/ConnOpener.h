@@ -41,6 +41,7 @@ private:
     void timeout(const CommTimeoutCbParams &unused);
     void doneConnecting(comm_err_t status, int xerrno);
     static void ConnectRetry(int fd, void *data);
+    void lookupLocalAddress();
 
 private:
     char *host_;                         ///< domain name we are trying to connect to.
