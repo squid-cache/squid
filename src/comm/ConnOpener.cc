@@ -190,16 +190,15 @@ Comm::ConnOpener::connect(const CommConnectCbParams &unused)
         if (conn_->getPeer())
             conn_->getPeer()->stats.conn_open++;
 
+        lookupLocalAddress();
+
         /* TODO: remove these fd_table accesses. But old code still depends on fd_table flags to
          *       indicate the state of a raw fd object being passed around.
          *       Also, legacy code still depends on comm_local_port() with no access to Comm::Connection
          *       when those are done comm_local_port can become one of our member functions to do the below.
          */
         fd_table[conn_->fd].flags.open = 1;
-        conn_->local.SetPort(comm_local_port(conn_->fd));
-        if (conn_->local.IsAnyAddr()) {
-            conn_->local = fd_table[conn_->fd].local_addr;
-        }
+        fd_table[conn_->fd].local_addr = conn_->local;
 
         if (host_ != NULL)
             ipcacheMarkGoodAddr(host_, conn_->remote);
@@ -228,6 +227,27 @@ Comm::ConnOpener::connect(const CommConnectCbParams &unused)
             doneConnecting(COMM_ERR_CONNECT, errno);
         }
     }
+}
+
+/**
+ * Lookup local-end address and port of the TCP link just opened.
+ * This ensure the connection local details are set correctly
+ */
+void
+Comm::ConnOpener::lookupLocalAddress()
+{
+    struct addrinfo *addr = NULL;
+    conn_->local.InitAddrInfo(addr);
+
+    if (getsockname(conn_->fd, addr->ai_addr, &(addr->ai_addrlen)) != 0) {
+        debugs(50, DBG_IMPORTANT, "ERROR: Failed to retrieve TCP/UDP details for socket: FD " << conn_->fd << ": " << xstrerror());
+        conn_->local.FreeAddrInfo(addr);
+        return;
+    }
+
+    conn_->local = *addr;
+    conn_->local.FreeAddrInfo(addr);
+    debugs(5, 6, HERE << "FD " << conn_->fd << ": conn.local=" << conn_->local);
 }
 
 /** Abort connection attempt.
