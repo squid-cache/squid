@@ -526,7 +526,7 @@ struct SquidConfig {
     } retry;
 
     struct {
-        size_t limit;
+        int64_t limit;
     } MemPools;
 #if DELAY_POOLS
 

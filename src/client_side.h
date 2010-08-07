@@ -269,6 +269,7 @@ public:
     void startDechunkingRequest(HttpParser *hp);
     bool parseRequestChunks(HttpParser *hp);
     void finishDechunkingRequest(HttpParser *hp);
+    void cleanDechunkingRequest();
 
 private:
     int connReadWasError(comm_err_t flag, int size, int xerrno);

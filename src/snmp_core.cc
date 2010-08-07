@@ -34,7 +34,6 @@
 #include "cache_snmp.h"
 #include "comm.h"
 #include "ipc/StartListening.h"
-//#include "compat/strsep.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 
@@ -307,6 +306,15 @@ snmpConnectionOpen(void)
     if (Config.Port.snmp > 0) {
         Config.Addrs.snmp_incoming.SetPort(Config.Port.snmp);
 
+        if (!Ip::EnableIpv6 && !Config.Addrs.snmp_incoming.SetIPv4()) {
+            debugs(49, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << Config.Addrs.snmp_incoming << " is not an IPv4 address.");
+            fatal("SNMP port cannot be opened.");
+        }
+        /* split-stack for now requires IPv4-only SNMP */
+        if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && Config.Addrs.snmp_incoming.IsAnyAddr()) {
+            Config.Addrs.snmp_incoming.SetIPv4();
+        }
+
         AsyncCall::Pointer call = asyncCall(49, 2,
                                             "snmpIncomingConnectionOpened",
                                             SnmpListeningStartedDialer(&snmpIncomingConnectionOpened));
@@ -320,6 +328,14 @@ snmpConnectionOpen(void)
         if (!Config.Addrs.snmp_outgoing.IsNoAddr()) {
             Config.Addrs.snmp_outgoing.SetPort(Config.Port.snmp);
 
+            if (!Ip::EnableIpv6 && !Config.Addrs.snmp_outgoing.SetIPv4()) {
+                debugs(49, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << Config.Addrs.snmp_outgoing << " is not an IPv4 address.");
+                fatal("SNMP port cannot be opened.");
+            }
+            /* split-stack for now requires IPv4-only SNMP */
+            if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && Config.Addrs.snmp_outgoing.IsAnyAddr()) {
+                Config.Addrs.snmp_outgoing.SetIPv4();
+            }
             AsyncCall::Pointer call = asyncCall(49, 2,
                                                 "snmpOutgoingConnectionOpened",
                                                 SnmpListeningStartedDialer(&snmpOutgoingConnectionOpened));

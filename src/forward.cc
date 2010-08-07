@@ -48,6 +48,7 @@
 #include "Store.h"
 #include "icmp/net_db.h"
 #include "ip/Intercept.h"
+#include "ip/tools.h"
 
 static PSC fwdStartCompleteWrapper;
 static PF fwdServerClosedWrapper;
@@ -870,6 +871,24 @@ FwdState::connectStart()
 #endif
 
     outgoing = getOutgoingAddr(request, fs->_peer);
+
+    // if IPv6 is disabled try to force IPv4-only outgoing.
+    if (!Ip::EnableIpv6 && !outgoing.SetIPv4()) {
+        debugs(50, 4, "fwdConnectStart: " << xstrerror());
+        ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
+        anErr->xerrno = errno;
+        fail(anErr);
+        self = NULL;	// refcounted
+        return;
+    }
+
+    // if IPv6 is split-stack, prefer IPv4
+    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK) {
+        // NP: This is not a great choice of default,
+        // but with the current Internet being IPv4-majority has a higher success rate.
+        // if setting to IPv4 fails we dont care, that just means to use IPv6 outgoing.
+        outgoing.SetIPv4();
+    }
 
     tos = getOutgoingTOS(request);
 
