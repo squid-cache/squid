@@ -12,7 +12,7 @@
  */
 
 /* makes a null-terminated string upper-case. Changes CONTENTS! */
-static void
+inline void
 uc(char *string)
 {
     char *p = string, c;
@@ -23,7 +23,7 @@ uc(char *string)
 }
 
 /* makes a null-terminated string lower-case. Changes CONTENTS! */
-static void
+inline void
 lc(char *string)
 {
     char *p = string, c;
@@ -33,7 +33,7 @@ lc(char *string)
     }
 }
 
-static void
+inline void
 hex_dump(unsigned char *data, int size)
 {
     /* dumps size bytes of *data to stdout. Looks like:
