@@ -2451,10 +2451,10 @@ DOC_START
 	Instead, if you want Squid to use the entire disk drive,
 	subtract 20% and use that value.
 
-	'Level-1' is the number of first-level subdirectories which
+	'L1' is the number of first-level subdirectories which
 	will be created under the 'Directory'.  The default is 16.
 
-	'Level-2' is the number of second-level subdirectories which
+	'L2' is the number of second-level subdirectories which
 	will be created under each first-level directory.  The default
 	is 256.
 
