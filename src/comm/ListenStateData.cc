@@ -84,6 +84,8 @@ Comm::ListenStateData::setListen()
 
 Comm::ListenStateData::ListenStateData(int aFd, AsyncCall::Pointer &call, bool accept_many) :
         fd(aFd),
+        errcode(0),
+        isLimited(0),
         theCallback(call),
         mayAcceptMore(accept_many)
 {
@@ -95,11 +97,12 @@ Comm::ListenStateData::ListenStateData(int aFd, AsyncCall::Pointer &call, bool a
 }
 
 Comm::ListenStateData::ListenStateData(Comm::ConnectionPointer &conn, AsyncCall::Pointer &call, bool accept_many, const char *note) :
-        fd(conn->fd),
+        errcode(0),
+        isLimited(0),
         theCallback(call),
         mayAcceptMore(accept_many)
 {
-    /* open teh conn if its not already open */
+    /* open the conn if its not already open */
     if (!IsConnOpen(conn)) {
         conn->fd = comm_open(SOCK_STREAM,
                              IPPROTO_TCP,
@@ -116,9 +119,11 @@ Comm::ListenStateData::ListenStateData(Comm::ConnectionPointer &conn, AsyncCall:
     }
 
     assert(IsConnOpen(conn));
-    debugs(5, 5, HERE << "FD " << fd << " AsyncCall: " << call);
+    fd = conn->fd;
+    debugs(5, 5, HERE << "FD " << conn->fd << " AsyncCall: " << call);
     setListen();
-    commSetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
+    if (errcode == 0)
+        commSetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
 }
 
 Comm::ListenStateData::~ListenStateData()
