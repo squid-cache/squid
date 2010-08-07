@@ -2676,6 +2676,11 @@ DOC_START
 		[http::]ue	User name from external acl helper
 		[http::]>Hs	HTTP status code sent to the client
 		[http::]<Hs	HTTP status code received from the next hop
+		[http::]<bs	Number of HTTP-equivalent message body bytes 
+				received from the next hop, excluding chunked
+				transfer encoding and control messages.
+				Generated FTP/Gopher listings are treated as
+				received bodies.
 		[http::]Ss	Squid request status (TCP_MISS etc)
 		[http::]Sh	Squid hierarchy status (DEFAULT_PARENT etc)
 		[http::]mt	MIME content type
@@ -2850,6 +2855,13 @@ DOC_START
 		icap::<st	Bytes received from the ICAP server (TCP
 				payload only; i.e., what Squid reads from
 				the socket).
+
+		icap::<bs	Number of message body bytes received from the
+				ICAP server. ICAP message body, if any, usually
+				includes encapsulated HTTP message headers and
+				possibly encapsulated HTTP message body. The
+				HTTP body part is dechunked before its size is
+				computed.
 
 		icap::tr 	Transaction response time (in
 				milliseconds).  The timer starts when
