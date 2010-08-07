@@ -7,7 +7,7 @@ int debug_enabled = 0;
 /* under gcc a macro define in compat/debug.h is used instead */
 
 void
-debug(char *format,...)
+debug(const char *format,...)
 {
     if (!debug_enabled)
         return;

@@ -31,11 +31,12 @@
  */
 
 #include "config.h"
-//#include "compat/getaddrinfo.h"
-//#include "compat/getnameinfo.h"
 #include "Debug.h"
 #include "ip/tools.h"
 
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -61,16 +62,22 @@ Ip::ProbeTransport()
     }
 
     // Test for v4-mapping capability
+    // (AKA. the operating system supports RFC 3493 section 5.3)
+#if defined(IPV6_V6ONLY)
     int tos = 0;
     if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) == 0) {
         debugs(3, 2, "Detected IPv6 hybrid or v4-mapping stack...");
         EnableIpv6 |= IPV6_SPECIAL_V4MAPPING;
     } else {
         debugs(3, 2, "Detected split IPv4 and IPv6 stacks ...");
-        // EnableIpv6 |= IPV6_SPECIAL_SPLITSTACK;
-        // TODO: remove death when split-stack is supported.
-        EnableIpv6 = IPV6_OFF;
+        EnableIpv6 |= IPV6_SPECIAL_SPLITSTACK;
     }
+#else
+    // compliance here means they at least supply the option for compilers building code
+    // even if possibly to return hard-coded -1 on use.
+    debugs(3, 2, "Missing RFC 3493 compliance - attempting split IPv4 and IPv6 stacks ...");
+    EnableIpv6 |= IPV6_SPECIAL_SPLITSTACK;
+#endif
     close(s);
 
     debugs(3, 2, "IPv6 transport " << (EnableIpv6?"Enabled":"Disabled"));

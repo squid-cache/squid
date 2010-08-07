@@ -153,7 +153,7 @@ int main(int argc, char **argv)
         const char *user_key = strtok(request, " \n");
         const char *detail = strtok(NULL, "\n");
         const char *lastdetail = strrchr(detail, ' ');
-        size_t detail_len;
+        size_t detail_len = strlen(detail);
         if (lastdetail) {
             if (strcmp(lastdetail, " LOGIN") == 0) {
                 action = 1;
