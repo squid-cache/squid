@@ -822,9 +822,9 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
         IOStats.Gopher.read_hist[bin]++;
 
         HttpRequest *req = gopherState->fwd->request;
-        if (req->hier.bodyBytesRead < 0) 
+        if (req->hier.bodyBytesRead < 0)
             req->hier.bodyBytesRead = 0;
-        
+
         req->hier.bodyBytesRead += len;
 
     }
