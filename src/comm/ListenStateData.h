@@ -22,7 +22,7 @@ public:
     ListenStateData(const ListenStateData &r); // not implemented.
     ~ListenStateData();
 
-    void subscribe(AsyncCall::Pointer &call);
+    void subscribe(AsyncCall::Pointer &call) { theCallback = call; };
     void acceptNext();
     void notify(int newfd, comm_err_t, int xerrno, Comm::ConnectionPointer);
 
@@ -35,7 +35,7 @@ public:
     int32_t isLimited;
 
 private:
-    /// Method to test if there are enough file escriptors to open a new client connection
+    /// Method to test if there are enough file descriptors to open a new client connection
     /// if not the accept() will be postponed
     static bool okToAccept();
 
