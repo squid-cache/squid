@@ -44,6 +44,7 @@
 #include "icmp/net_db.h"
 #include "ICP.h"
 #include "ip/Address.h"
+#include "ip/tools.h"
 #include "ipc/StartListening.h"
 #include "rfc1738.h"
 #include "Store.h"
@@ -686,6 +687,15 @@ icpConnectionsOpen(void)
     addr = Config.Addrs.udp_incoming;
     addr.SetPort(port);
 
+    if (!Ip::EnableIpv6 && !addr.SetIPv4()) {
+        debugs(12, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << addr << " is not an IPv4 address.");
+        fatal("ICP port cannot be opened.");
+    }
+    /* split-stack for now requires default IPv4-only ICP */
+    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && addr.IsAnyAddr()) {
+        addr.SetIPv4();
+    }
+
     AsyncCall::Pointer call = asyncCall(12, 2,
                                         "icpIncomingConnectionOpened",
                                         IcpListeningStartedDialer(&icpIncomingConnectionOpened, addr));
@@ -701,6 +711,16 @@ icpConnectionsOpen(void)
     if ( !addr.IsNoAddr() ) {
         enter_suid();
         addr.SetPort(port);
+
+        if (!Ip::EnableIpv6 && !addr.SetIPv4()) {
+            debugs(49, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << addr << " is not an IPv4 address.");
+            fatal("ICP port cannot be opened.");
+        }
+        /* split-stack for now requires default IPv4-only ICP */
+        if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && addr.IsAnyAddr()) {
+            addr.SetIPv4();
+        }
+
         theOutIcpConnection = comm_open_listener(SOCK_DGRAM,
                               IPPROTO_UDP,
                               addr,

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-13 03:02+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2009-10-28 12:47+0000\n"
 "Last-Translator: Mārtiņš Bruņenieks <Unknown>\n"
 "Language-Team: Latvian <lv@li.org>\n"
@@ -72,7 +72,7 @@ msgstr ""
 "Mēģinot atvērt vietrādi URL: <a href=\"%U\">%U</a> notikusi FTP "
 "autentifikācijas kļūda"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -202,16 +202,14 @@ msgstr "KĻŪDA: Pieprasītā adrese nav atrodama"
 msgid "ESI Processing failed."
 msgstr "Neveiksmīga ESI apstrāde."
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTP PUT komanda izpildīta: Datne izveidota"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT komanda izpildīta: Datne atjaunināta"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "FTP PUT/augšupielāde neveiksmīga"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -684,10 +682,6 @@ msgstr ""
 msgid "Web Browser Configuration"
 msgstr ""
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr "Mēģinot izpildīt operāciju PUT sekojošā adresē: <a href=\"%U\">%U</a>"
-
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
 msgstr "Rakstīšanas kļūda"
@@ -740,3 +734,10 @@ msgstr "Nulles izmēra atbilde"
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "KĻŪDA: Pieprasītā adrese nav atrodama"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP PUT komanda izpildīta: Datne atjaunināta"
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr ""
+#~ "Mēģinot izpildīt operāciju PUT sekojošā adresē: <a href=\"%U\">%U</a>"

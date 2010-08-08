@@ -35,6 +35,7 @@
 #include "squid.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
+#include "ip/tools.h"
 #include "comm.h"
 #include "SquidTime.h"
 
@@ -253,9 +254,8 @@ IcmpSquid::Open(void)
     debugs(37, 1, HERE << "Pinger socket opened on FD " << icmp_sock);
 
     /* Tests the pinger immediately using localhost */
-#if USE_IPV6
-    SendEcho(localhost, S_ICMP_ECHO, "ip6-localhost");
-#endif
+    if (Ip::EnableIpv6)
+        SendEcho(localhost, S_ICMP_ECHO, "ip6-localhost");
     if (localhost.SetIPv4())
         SendEcho(localhost, S_ICMP_ECHO, "localhost");
 

@@ -171,9 +171,7 @@ IcmpPinger::Close(void)
 
     /* also shutdown the helper engines */
     icmp4.Close();
-#if USE_IPV6
     icmp6.Close();
-#endif
 }
 
 void
@@ -208,7 +206,6 @@ IcmpPinger::Recv(void)
         return;
     }
 
-#if USE_IPV6
     /* pass request for ICMPv6 handing */
     if (pecho.to.IsIPv6()) {
         debugs(42, 2, HERE << " Pass " << pecho.to << " off to ICMPv6 module.");
@@ -217,7 +214,6 @@ IcmpPinger::Recv(void)
                        pecho.payload,
                        pecho.psize);
     }
-#endif
 
     /* pass the packet for ICMP handling */
     else if (pecho.to.IsIPv4()) {

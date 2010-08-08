@@ -405,7 +405,6 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
     int tos = 1;
     int tmp_sock = -1;
 
-#if USE_IPV6
     /* Probe to see if the Kernel TPROXY support is IPv6-enabled */
     if (test.IsIPv6()) {
         debugs(3, 3, "...Probing for IPv6 TPROXY support.");
@@ -433,7 +432,6 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
         debugs(3, DBG_CRITICAL, "TPROXY lacks IPv6 support for " << test );
         return false;
     }
-#endif
 
     /* Probe to see if the Kernel TPROXY support is IPv4-enabled (aka present) */
     if (test.IsIPv4()) {

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-13 03:02+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2009-10-05 17:49+0000\n"
 "Last-Translator: Elxan İsmayılov <elxan.i@gmail.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -66,7 +66,7 @@ msgstr ""
 "URL ilə əlaqə zamanı FTP protokolu uzrə aşağıdakı səhv baş vermişdir: <a "
 "href=\"%U\">%U</a>"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -195,16 +195,14 @@ msgstr "SƏHV: Sorğulanan URL ilə əlaqə yaradılmadı"
 msgid "ESI Processing failed."
 msgstr ""
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTP PUT müvəfəqiyyətlə başa çatdı: Fayl yarandı"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT müvəfəqiyyətlə başa çatdı: Fayl yeniləndi"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "FTP yükləmə uğursuzluqla başa çatdı"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -695,10 +693,6 @@ msgstr "Obyekt keşdə tapılmadı və <q>only-if-cached</q> əmri təyin olunmu
 msgid "Web Browser Configuration"
 msgstr ""
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr ""
-
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
 msgstr "Yazma səhvi"
@@ -755,3 +749,6 @@ msgstr "Sıfır Uzunluqlu Cavab"
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "SƏHV: Sorğulanan URN ilə əlaqə yaradılmadı"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP PUT müvəfəqiyyətlə başa çatdı: Fayl yeniləndi"

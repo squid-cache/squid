@@ -109,9 +109,7 @@ Win32__WSAFDIsSet(int fd, fd_set FAR * set)
 // ICMP Engines are declared global here so they can call each other easily.
 IcmpPinger control;
 Icmp4 icmp4;
-#if USE_IPV6
 Icmp6 icmp6;
-#endif
 
 int icmp_pkts_sent = 0;
 
@@ -139,9 +137,7 @@ main(int argc, char *argv[])
      * drop privs
      */
     int icmp4_worker = -1;
-#if USE_IPV6
     int icmp6_worker = -1;
-#endif
     int squid_link = -1;
 
     /** start by initializing the pinger debug cache.log-pinger. */
@@ -169,22 +165,15 @@ main(int argc, char *argv[])
 #endif
 
     /** abort if neither worker could open a socket. */
-    if (icmp4_worker == -1) {
-#if USE_IPV6
-        if (icmp6_worker == -1)
-#endif
-        {
-            debugs(42, 0, "FATAL: pinger: Unable to open any ICMP sockets.");
-            exit(1);
-        }
+    if (icmp4_worker < 0 && icmp6_worker < 0) {
+        debugs(42, 0, "FATAL: pinger: Unable to open any ICMP sockets.");
+        exit(1);
     }
 
     if ( (squid_link = control.Open()) < 0) {
         debugs(42, 0, "FATAL: pinger: Unable to setup Pinger control sockets.");
         icmp4.Close();
-#if USE_IPV6
         icmp6.Close();
-#endif
         exit(1); // fatal error if the control channel fails.
     }
     max_fd = max(max_fd, squid_link);
@@ -201,12 +190,10 @@ main(int argc, char *argv[])
         if (icmp4_worker >= 0) {
             FD_SET(icmp4_worker, &R);
         }
-#if USE_IPV6
-
         if (icmp6_worker >= 0) {
             FD_SET(icmp6_worker, &R);
         }
-#endif
+
         FD_SET(squid_link, &R);
         x = select(10, &R, NULL, NULL, &tv);
         getCurrentTime();
@@ -221,12 +208,9 @@ main(int argc, char *argv[])
             control.Recv();
         }
 
-#if USE_IPV6
         if (icmp6_worker >= 0 && FD_ISSET(icmp6_worker, &R)) {
             icmp6.Recv();
         }
-#endif
-
         if (icmp4_worker >= 0 && FD_ISSET(icmp4_worker, &R)) {
             icmp4.Recv();
         }

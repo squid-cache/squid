@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.0.0 release notes</title>
+<title>Squid 3.2.0.1 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.0.0 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.0.1 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -35,13 +35,16 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 <p>The most important of these new features are:
 <itemize>
 	<item>SMP scalability
-	<item>Helper Multiplexer
+	<item>Helper Multiplexer and On-Demand
 	<item>Helper Name Changes
 	<item>Multi-Lingual manuals
 	<item>Solaris 10 pthreads Support (Experimental)
+	<item>Surrogate/1.0 protocol extensions to HTTP
+	<item>Logging Infrastructure Updated
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
+
 
 <sect1>SMP scalability
 <p>The new "workers" squid.conf option can be used to launch multiple worker
@@ -77,7 +80,6 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>Startup, reconfiguration, shutdown, and log rotation are handled as for a
    monolithic Squid. Abnormally terminated workers are restarted while
    other workers continue serving traffic.
-
 
 <sect2>Squid.conf macros and conditionals
 <p>Added support for process_name and process_number macros as well as simple
@@ -126,8 +128,38 @@ Most user-facing changes are reflected in squid.conf (see below).
 	<item>SIGHUP: dump the state of all helpers to STDERR
    </itemize>
 
-<sect1>Helper Name Changes
 
+<sect1>Helpers On-Demand
+<p>Traditionally Squid has been configured with a fixed number of helpers and started them during
+  it's start and reconfigure phases. This forces the hard configuration problem of how many helpers
+  will be needed to be solved before starting Squid in production use.
+
+<p>The on-demand helpers feature allows greater flexibility and resolves this problem by allowing
+  maximum, initial and idle thresholds to be configured. Squid will start the initial set during
+  start and reconfigure phases. However over the operational use new helpers up to the maxium will
+  be started as load demands. The idle threshold determins how many more helpers to start if the
+  currently running set is not enough to handle current request loads.
+
+<p>For example, a traditional configration is
+   <verb>
+	auth_param ntlm /usr/libexec/squid/ntlm_auth
+	auth_param ntlm children 200
+   </verb>
+   the alternative on-demand configuration could be:
+   <verb>
+	auth_param ntlm /usr/libexec/squid/ntlm_auth
+	auth_param ntlm children 200 startup=10 idle=2
+   </verb>
+
+<p>The example still permits up to 200 helpers to be running at once under peak traffic loads.
+  But only starts 10 when Squid is initialized resulting in a faster boot up.
+  When client requests threaten to overload the running helpers an additional 2 will be started.
+
+<p>NOTE: if no <em>startup</em> and <em>idle</em> values are specified the traditional behaviour
+  of starting the maximum number of helpers will occur.
+
+
+<sect1>Helper Name Changes
 <p>To improve the understanding of what each helper does and where it should be used the helper binaries
    which are bundled with Squid have undergone a naming change in this release.
 
@@ -188,7 +220,6 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>Multi-Lingual manuals
-
 <p>The man(8) and man(1) pages bundled with Squid are now provided online for all
    versions and beginning with 3.2 they are available in languages other than english.
 
@@ -199,8 +230,58 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 
 <sect1>Solaris 10 pthreads Support (Experimental)
-
 <p>Automatic detection and use of the pthreads library available from Solaris 10
+
+<p>The result of this addition means that faster more efficient AUFS cache storage mechanisims
+  are now available in Solaris 10.
+
+<p>Support is experimental at this stage due to lack of feedback on the results of enabling it.
+  We recommend giving AUFS a try for faster disk storage and encourage feedback.
+
+
+<sect1>Surrogate/1.0 protocol extensions to HTTP
+<p>The <em>Surrogate</em> extensions to HTTP protocol enable an origin web server to specify separate
+  cache controls for a reverse proxy acting on its behalf. Previously this was closely tied with the ESI
+  feature support in Squid. This release opens Surrogate support to all reverse proxies.
+
+<p>Reverse proxy requests sent on to the web server include the HTTP header <em>Surrogate-Capabilities:</em>
+  specifying the capabilities of the reverse proxy along with an ID which can be used to target reponses with
+  a <em>Surrogate-Control:</em> HTTP header used instead of the <em>Cache-Control:</em> header.
+
+<p>The default surrogate ID is generated automatically from the Squid site-unique hostname as found by the
+  automatic detection or manual configuration of <em>visible_hostname</em> although can be configured
+  separately with the <em>httpd_accel_surrogate_id</em> option.
+
+<p><em>Security Considerations:</em> Websites sould be careful of accepting any surrogate ID.
+  Older releases of Squid leak the Surrogate-Control headers to external servers.
+  This 3.2 series of Squid will now prevent this leakage of its own ID destined responses, however it is possible
+  and for some uses desirable to receive external reverse-proxies <em>Surrogate-Capabilities:</em> headers.
+
+<p><em>NOTE:</em> Several operating system distributions historically package Squid with a forced value of
+  <em>visible_hostname localhost</em>. If this is done on a Surrogate enabled install a manual re-configuration
+  is required to prevent an unacceptable surrogate ID of 'localhost' being generated.
+
+
+<sect1>Logging Infrastructure Updated
+<p>The advanced logging modules introduced in Squid-2.7 are now available from Squid-3.2.
+
+<p>This feature is documented at http://wiki.squid-cache.org/Features/LogModules
+
+<p>The new infrastructure currently supports several different channels types (modules) ranging from
+  direct filesystem logging (stdio, daemon) to network logging (syslog, UDP and TCP). The daemon logging
+  interface allows for a custom helper to be written to process logs in real-time.
+
+<p>Upgrading: the <em>access_log</em> was previously logge via what is now called the <em>stdio</em> module.
+  This is still supported and used by default if no module is named. For best performance particularly in SMP
+  environments we recommend the <em>daemon</em> be used. The provided <em>log_file_daemon</em> helper
+  performs the traditional logging to local filesystem.
+
+<p>Additional to this the cache.log can now be limited to a smaller number of files stored.
+  Traditionally cache.log.N has been fixed at the same number of rotated files as access.log.N through the
+  <em>logfile_rotate</em> setting. The <em>debug_options</em> setting can now be used to configure the number
+  of debug cache.log files to rotate through with a <em>rotate=N</em> option. This is particularly useful for
+  logging a single cache.log at relatively high debug levels on a high-traffic system. Or one which is
+  required to store a long period of access.log and needs to conserve disk space.
 
 
 <sect>Changes to squid.conf since Squid-3.1

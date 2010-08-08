@@ -35,7 +35,7 @@
 
 #include "squid.h"
 
-#if USE_ICMP && USE_IPV6
+#if USE_ICMP
 
 #include "SquidTime.h"
 #include "Debug.h"
@@ -338,4 +338,4 @@ Icmp6::Recv(void)
     control.SendResult(preply, (sizeof(pingerReplyData) - PINGER_PAYLOAD_SZ + preply.psize) );
 }
 
-#endif /* USE_ICMP && USE_IPV6 */
+#endif /* USE_ICMP */
