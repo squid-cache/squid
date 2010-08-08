@@ -893,7 +893,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
                 dooff = 1;
             }
             // else if icap.bodyBytesRead < 0, we do not have any http data,
-            // so just print a "-" (204 responses etc) 
+            // so just print a "-" (204 responses etc)
             break;
 
         case LFT_ICAP_REQ_HEADER:
@@ -1108,7 +1108,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
                 dooff = 1;
             }
             // else if hier.bodyBytesRead < 0 we did not have any data exchange with
-            // a peer server so just print a "-" (eg requests served from cache, 
+            // a peer server so just print a "-" (eg requests served from cache,
             // or internal error messages).
             break;
 

@@ -204,7 +204,7 @@ public:
         int64_t bytesSent;       ///< number of bytes sent to ICAP server so far
         int64_t bytesRead;       ///< number of bytes read from ICAP server so far
         /**
-         * number of ICAP body bytes read from ICAP server or -1 for no encapsulated 
+         * number of ICAP body bytes read from ICAP server or -1 for no encapsulated
          * message data in ICAP reply (eg 204 responses)
          */
         int64_t bodyBytesRead;
