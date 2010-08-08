@@ -103,6 +103,7 @@ struct _ftp_flags {
     bool pasv_supported;  ///< PASV command is allowed
     bool epsv_all_sent;   ///< EPSV ALL has been used. Must abort on failures.
     bool pasv_only;
+    bool pasv_failed;  // was FwdState::flags.ftp_pasv_failed
 
     /* authentication */
     bool authenticated;         ///< authentication success
@@ -171,7 +172,7 @@ public:
     void operator delete (void *);
     void *toCbdata() { return this; }
 
-    FtpStateData(FwdState *);
+    FtpStateData(FwdState *, const Comm::ConnectionPointer &conn);
     ~FtpStateData();
     char user[MAX_URL];
     char password[MAX_URL];
@@ -242,6 +243,7 @@ public:
     void completedListing(void);
     void dataComplete();
     void dataRead(const CommIoCbParams &io);
+    void switchTimeoutToDataChannel(); ///< ignore timeout on CTRL channel. set read timeout on DATA channel.
     int checkAuth(const HttpHeader * req_hdr);
     void checkUrlpath();
     void buildTitleUrl();
@@ -458,12 +460,12 @@ FtpStateData::dataClosed(const CommCloseCbParams &io)
     /* failed closes ctrl.conn and frees ftpState */
 
     /* NP: failure recovery may be possible when its only a data.conn failure.
-     *     is the ctrl.conn is still fine, we can send ABOR down it and retry.
+     *     if the ctrl.conn is still fine, we can send ABOR down it and retry.
      *     Just need to watch out for wider Squid states like shutting down or reconfigure.
      */
 }
 
-FtpStateData::FtpStateData(FwdState *theFwdState) : AsyncJob("FtpStateData"), ServerStateData(theFwdState)
+FtpStateData::FtpStateData(FwdState *theFwdState, const Comm::ConnectionPointer &conn) : AsyncJob("FtpStateData"), ServerStateData(theFwdState)
 {
     const char *url = entry->url();
     debugs(9, 3, HERE << "'" << url << "'" );
@@ -472,7 +474,7 @@ FtpStateData::FtpStateData(FwdState *theFwdState) : AsyncJob("FtpStateData"), Se
     theSize = -1;
     mdtm = -1;
 
-    if (Config.Ftp.passive && !theFwdState->ftpPasvFailed())
+    if (Config.Ftp.passive && !flags.pasv_failed)
         flags.pasv_supported = 1;
 
     flags.rest_supported = 1;
@@ -480,8 +482,7 @@ FtpStateData::FtpStateData(FwdState *theFwdState) : AsyncJob("FtpStateData"), Se
     typedef CommCbMemFunT<FtpStateData, CommCloseCbParams> Dialer;
     AsyncCall::Pointer closer = asyncCall(9, 5, "FtpStateData::ctrlClosed",
                                           Dialer(this, &FtpStateData::ctrlClosed));
-    Comm::ConnectionPointer c = theFwdState->serverConnection();
-    ctrl.opened(c, closer);
+    ctrl.opened(conn, closer);
 
     if (request->method == METHOD_PUT)
         flags.put = 1;
@@ -603,6 +604,22 @@ FtpStateData::loginParser(const char *login, int escaped)
     debugs(9, 9, HERE << ": OUT: login='" << login << "', escaped=" << escaped << ", user=" << user << ", password=" << password);
 }
 
+/**
+ * Cancel the timeout on the Control socket and establish one
+ * on the data socket
+ */
+void
+FtpStateData::switchTimeoutToDataChannel()
+{
+    AsyncCall::Pointer nullCall = NULL;
+    commSetTimeout(ctrl.conn->fd, -1, nullCall);
+
+    typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
+    AsyncCall::Pointer timeoutCall =  asyncCall(9, 5, "FtpStateData::ftpTimeout",
+                                      TimeoutDialer(this, &FtpStateData::ftpTimeout));
+    commSetTimeout(data.conn->fd, Config.Timeout.read, timeoutCall);
+}
+
 void
 FtpStateData::ftpTimeout(const CommTimeoutCbParams &io)
 {
@@ -611,7 +628,7 @@ FtpStateData::ftpTimeout(const CommTimeoutCbParams &io)
     if (SENT_PASV == state && io.fd == data.conn->fd) {
         /* stupid ftp.netscape.com */
         fwd->dontRetry(false);
-        fwd->ftpPasvFailed(true);
+        flags.pasv_failed = true;
         debugs(9, DBG_IMPORTANT, "ftpTimeout: timeout in SENT_PASV state" );
     }
 
@@ -1142,7 +1159,7 @@ FtpStateData::dataComplete()
 void
 FtpStateData::maybeReadVirginBody()
 {
-    if (Comm::IsConnOpen(data.conn))
+    if (!Comm::IsConnOpen(data.conn))
         return;
 
     if (data.read_pending)
@@ -1222,9 +1239,9 @@ FtpStateData::dataRead(const CommIoCbParams &io)
 
             maybeReadVirginBody();
         } else {
-            if (!flags.http_header_sent && !fwd->ftpPasvFailed() && flags.pasv_supported && !flags.listing) {
+            if (!flags.http_header_sent && !flags.pasv_failed && flags.pasv_supported && !flags.listing) {
                 fwd->dontRetry(false);	/* this is a retryable error */
-                fwd->ftpPasvFailed(true);
+                flags.pasv_failed = true;
             }
 
             failed(ERR_READ_ERROR, 0);
@@ -1445,7 +1462,7 @@ FtpStateData::buildTitleUrl()
 void
 ftpStart(FwdState * fwd)
 {
-    FtpStateData *ftpState = new FtpStateData(fwd);
+    FtpStateData *ftpState = new FtpStateData(fwd, fwd->serverConnection());
     ftpState->start();
 }
 
@@ -1462,9 +1479,8 @@ FtpStateData::start()
 
     checkUrlpath();
     buildTitleUrl();
-    debugs(9, 5, HERE << "host=" << request->GetHost() << ", path=" <<
-           request->urlpath << ", user=" << user << ", passwd=" <<
-           password);
+    debugs(9, 5, HERE << "FD " << ctrl.conn->fd << " : host=" << request->GetHost() <<
+           ", path=" << request->urlpath << ", user=" << user << ", passwd=" << password);
 
     state = BEGIN;
     ctrl.last_command = xstrdup("Connect to server");
@@ -1665,16 +1681,10 @@ FtpStateData::scheduleReadControlReply(int buffered_ok)
         /* We've already read some reply data */
         handleControlReply();
     } else {
-        /* XXX What about Config.Timeout.read? */
-        typedef CommCbMemFunT<FtpStateData, CommIoCbParams> Dialer;
-        AsyncCall::Pointer reader=asyncCall(9, 5, "FtpStateData::ftpReadControlReply",
-                                            Dialer(this, &FtpStateData::ftpReadControlReply));
-        comm_read(ctrl.conn->fd, ctrl.buf + ctrl.offset, ctrl.size - ctrl.offset, reader);
         /*
          * Cancel the timeout on the Data socket (if any) and
          * establish one on the control socket.
          */
-
         if (Comm::IsConnOpen(data.conn)) {
             AsyncCall::Pointer nullCall = NULL;
             commSetTimeout(data.conn->fd, -1, nullCall);
@@ -1685,6 +1695,11 @@ FtpStateData::scheduleReadControlReply(int buffered_ok)
                                           TimeoutDialer(this,&FtpStateData::ftpTimeout));
 
         commSetTimeout(ctrl.conn->fd, Config.Timeout.read, timeoutCall);
+
+        typedef CommCbMemFunT<FtpStateData, CommIoCbParams> Dialer;
+        AsyncCall::Pointer reader=asyncCall(9, 5, "FtpStateData::ftpReadControlReply",
+                                            Dialer(this, &FtpStateData::ftpReadControlReply));
+        comm_read(ctrl.conn->fd, ctrl.buf + ctrl.offset, ctrl.size - ctrl.offset, reader);
     }
 }
 
@@ -2026,7 +2041,7 @@ ftpReadType(FtpStateData * ftpState)
     int code = ftpState->ctrl.replycode;
     char *path;
     char *d, *p;
-    debugs(9, 3, HERE);
+    debugs(9, 3, HERE << "code=" << code);
 
     if (code == 200) {
         p = path = xstrdup(ftpState->request->urlpath.termedBuf());
@@ -2412,6 +2427,7 @@ ftpReadEPSV(FtpStateData* ftpState)
     // Generate a new data channel descriptor to be opened.
     Comm::ConnectionPointer conn = new Comm::Connection;
     conn->local = ftpState->ctrl.conn->local;
+    conn->local.SetPort(0);
     conn->remote = ftpState->ctrl.conn->remote;
     conn->remote.SetPort(port);
 
@@ -2533,25 +2549,6 @@ ftpSendPassive(FtpStateData * ftpState)
         break;
     }
 
-    /** Otherwise, Open data channel with the same local address as control channel (on a new random port!) */
-    Comm::ConnectionPointer data_conn= new Comm::Connection;
-    data_conn->local = ftpState->ctrl.conn->local;
-    data_conn->local.SetPort(0);
-    data_conn->fd = comm_openex(SOCK_STREAM,
-                       IPPROTO_TCP,
-                       data_conn->local,
-                       data_conn->flags,
-                       0,
-                       ftpState->entry->url());
-
-    debugs(9, 3, HERE << "Unconnected data socket created on FD " << data_conn->fd << " from " << data_conn->local);
-
-    if (!Comm::IsConnOpen(data_conn)) {
-        ftpFail(ftpState);
-        return;
-    }
-
-    ftpState->data.opened(data_conn, ftpState->dataCloser());
     ftpState->writeCommand(cbuf);
 
     /*
@@ -2562,7 +2559,7 @@ ftpSendPassive(FtpStateData * ftpState)
     AsyncCall::Pointer timeoutCall =  asyncCall(9, 5, "FtpStateData::ftpTimeout",
                                       TimeoutDialer(ftpState,&FtpStateData::ftpTimeout));
 
-    commSetTimeout(ftpState->data.conn->fd, 15, timeoutCall);
+    commSetTimeout(ftpState->ctrl.conn->fd, 15, timeoutCall);
 }
 
 void
@@ -2698,16 +2695,19 @@ FtpStateData::ftpPasvCallback(Comm::ConnectionPointer &conn, comm_err_t status, 
     debugs(9, 3, HERE);
 
     if (status != COMM_OK) {
-        debugs(9, 2, HERE << "Failed to connect. Retrying without PASV.");
+        debugs(9, 2, HERE << "Failed to connect. Retrying via another method.");
         ftpState->fwd->dontRetry(false);	/* this is a retryable error */
-        ftpState->fwd->ftpPasvFailed(true);
-        ftpState->failed(ERR_NONE, 0);
-        /* failed closes ctrl.conn and frees ftpState */
+
+        // ABORT on timeouts. server may be waiting on a broken TCP link.
+        if (status == COMM_TIMEOUT)
+            ftpState->writeCommand("ABOR");
+
+        // try another connection attempt with some other method
+        ftpSendPassive(ftpState);
         return;
     }
 
-    ftpState->data.conn = conn;
-
+    ftpState->data.opened(conn, ftpState->dataCloser());
     ftpRestOrList(ftpState);
 }
 
@@ -2715,8 +2715,6 @@ FtpStateData::ftpPasvCallback(Comm::ConnectionPointer &conn, comm_err_t status, 
 static Comm::ConnectionPointer
 ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
 {
-    int on = 1;
-
     /// Close old data channels, if any. We may open a new one below.
     ftpState->data.close();
 
@@ -2733,6 +2731,7 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
      * used for both control and data.
      */
     if (fallback) {
+        int on = 1;
         setsockopt(ftpState->ctrl.conn->fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
         ftpState->ctrl.conn->flags |= COMM_REUSEADDR;
         conn->flags |= COMM_REUSEADDR;
@@ -2746,7 +2745,7 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
                                     acceptDialer(ftpState, &FtpStateData::ftpAcceptDataConnection));
     ftpState->data.listener = new Comm::ListenStateData(conn, acceptCall, false, ftpState->entry->url());
 
-    if (!ftpState->data.listener || ftpState->data.listener->errcode < 0) {
+    if (!ftpState->data.listener || ftpState->data.listener->errcode != 0) {
         conn->close();
     } else {
 
@@ -2763,11 +2762,6 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
 static void
 ftpSendPORT(FtpStateData * ftpState)
 {
-    Ip::Address ipa;
-    struct addrinfo *AI = NULL;
-    unsigned char *addrptr;
-    unsigned char *portptr;
-
     /* check the server control channel is still available */
     if (!ftpState || !ftpState->haveControlChannel("ftpSendPort"))
         return;
@@ -2783,7 +2777,6 @@ ftpSendPORT(FtpStateData * ftpState)
 
     if (!Comm::IsConnOpen(listen_conn)) {
         if ( listen_conn != NULL && !listen_conn->local.IsIPv4() ) {
-            ipa.FreeAddrInfo(AI);
             /* non-IPv4 CANNOT send PORT command.                       */
             /* we got here by attempting and failing an EPRT            */
             /* using the same reply code should simulate a PORT failure */
@@ -2796,18 +2789,20 @@ ftpSendPORT(FtpStateData * ftpState)
         return;
     }
 
-// XXX: pull out the internal bytes to send in PORT command...
-//    source them from the listen_conn->local
+    // pull out the internal IP address bytes to send in PORT command...
+    // source them from the listen_conn->local
 
-    addrptr = (unsigned char *) &((struct sockaddr_in*)AI->ai_addr)->sin_addr;
-    portptr = (unsigned char *) &((struct sockaddr_in*)AI->ai_addr)->sin_port;
+    struct addrinfo *AI = NULL;
+    listen_conn->local.GetAddrInfo(AI, AF_INET);
+    unsigned char *addrptr = (unsigned char *) &((struct sockaddr_in*)AI->ai_addr)->sin_addr;
+    unsigned char *portptr = (unsigned char *) &((struct sockaddr_in*)AI->ai_addr)->sin_port;
     snprintf(cbuf, 1024, "PORT %d,%d,%d,%d,%d,%d\r\n",
              addrptr[0], addrptr[1], addrptr[2], addrptr[3],
              portptr[0], portptr[1]);
     ftpState->writeCommand(cbuf);
     ftpState->state = SENT_PORT;
 
-    ipa.FreeAddrInfo(AI);
+    listen_conn->local.FreeAddrInfo(AI);
 }
 
 /// \ingroup ServerProtocolFTPInternal
@@ -2875,7 +2870,8 @@ ftpReadEPRT(FtpStateData * ftpState)
  *
  \param io    comm accept(2) callback parameters
  */
-void FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
+void
+FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
 {
     char ntoapeer[MAX_IPSTRLEN];
     debugs(9, 3, "ftpAcceptDataConnection");
@@ -2896,11 +2892,12 @@ void FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
     if (Config.Ftp.sanitycheck) {
         io.details->remote.NtoA(ntoapeer,MAX_IPSTRLEN);
 
-        if (data.conn->remote != io.details->remote) {
+        // accept if either our data or ctrl connection is talking to this remote peer.
+        if (data.conn->remote != io.details->remote && ctrl.conn->remote != io.details->remote) {
             debugs(9, DBG_IMPORTANT,
                    "FTP data connection from unexpected server (" <<
                    io.details->remote << "), expecting " <<
-                   data.conn->remote);
+                   data.conn->remote << " or " << ctrl.conn->remote);
 
             /* drop the bad connection (io) by ignoring. */
 
@@ -3162,36 +3159,23 @@ ftpReadList(FtpStateData * ftpState)
     int code = ftpState->ctrl.replycode;
     debugs(9, 3, HERE);
 
-    if (code == 125 || (code == 150 && ftpState->data.host)) {
+    if (code == 125 || (code == 150 && Comm::IsConnOpen(ftpState->data.conn))) {
+        debugs(9, 3, HERE << "begin data transfer from " << ftpState->data.conn->remote);
         /* Begin data transfer */
-        /* XXX what about Config.Timeout.read? */
+        ftpState->switchTimeoutToDataChannel();
         ftpState->maybeReadVirginBody();
         ftpState->state = READING_DATA;
-        /*
-         * Cancel the timeout on the Control socket and establish one
-         * on the data socket
-         */
-        AsyncCall::Pointer nullCall = NULL;
-        commSetTimeout(ftpState->ctrl.conn->fd, -1, nullCall);
         return;
     } else if (code == 150) {
+        debugs(9, 3, HERE << "accept data channel from " << ftpState->ctrl.conn->remote);
+        ftpState->switchTimeoutToDataChannel();
+
         /* Accept data channel */
         typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;
         AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
                                         acceptDialer(ftpState, &FtpStateData::ftpAcceptDataConnection));
 
         ftpState->data.listener = new Comm::ListenStateData(ftpState->data.conn, acceptCall, false, ftpState->data.host);
-        /*
-         * Cancel the timeout on the Control socket and establish one
-         * on the data socket
-         */
-        AsyncCall::Pointer nullCall = NULL;
-        commSetTimeout(ftpState->ctrl.conn->fd, -1, nullCall);
-
-        typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
-        AsyncCall::Pointer timeoutCall =  asyncCall(9, 5, "FtpStateData::ftpTimeout",
-                                          TimeoutDialer(ftpState,&FtpStateData::ftpTimeout));
-        commSetTimeout(ftpState->data.conn->fd, Config.Timeout.read, timeoutCall);
         return;
     } else if (!ftpState->flags.tried_nlst && code > 300) {
         ftpSendNlst(ftpState);
@@ -3224,35 +3208,19 @@ ftpReadRetr(FtpStateData * ftpState)
     int code = ftpState->ctrl.replycode;
     debugs(9, 3, HERE);
 
-    if (code == 125 || (code == 150 && ftpState->data.host)) {
+    if (code == 125 || (code == 150 && Comm::IsConnOpen(ftpState->data.conn))) {
         /* Begin data transfer */
         debugs(9, 3, HERE << "reading data channel");
-        /* XXX what about Config.Timeout.read? */
+        ftpState->switchTimeoutToDataChannel();
         ftpState->maybeReadVirginBody();
         ftpState->state = READING_DATA;
-        /*
-         * Cancel the timeout on the Control socket and establish one
-         * on the data socket
-         */
-        AsyncCall::Pointer nullCall = NULL;
-        commSetTimeout(ftpState->ctrl.conn->fd, -1, nullCall);
     } else if (code == 150) {
         /* Accept data channel */
+        ftpState->switchTimeoutToDataChannel();
         typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;
         AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
                                         acceptDialer(ftpState, &FtpStateData::ftpAcceptDataConnection));
         ftpState->data.listener = new Comm::ListenStateData(ftpState->data.conn, acceptCall, false, ftpState->data.host);
-        /*
-         * Cancel the timeout on the Control socket and establish one
-         * on the data socket
-         */
-        AsyncCall::Pointer nullCall = NULL;
-        commSetTimeout(ftpState->ctrl.conn->fd, -1, nullCall);
-
-        typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
-        AsyncCall::Pointer timeoutCall =  asyncCall(9, 5, "FtpStateData::ftpTimeout",
-                                          TimeoutDialer(ftpState,&FtpStateData::ftpTimeout));
-        commSetTimeout(ftpState->data.conn->fd, Config.Timeout.read, timeoutCall);
     } else if (code >= 300) {
         if (!ftpState->flags.try_slash_hack) {
             /* Try this as a directory missing trailing slash... */
@@ -3822,8 +3790,12 @@ FtpStateData::closeServer()
         ctrl.close();
     }
 
-    debugs(9,3, HERE << "closing FTP data FD " << data.conn->fd << ", this " << this);
-    data.close();
+    if (Comm::IsConnOpen(data.conn)) {
+        debugs(9,3, HERE << "closing FTP data FD " << data.conn->fd << ", this " << this);
+        data.close();
+    }
+
+    debugs(9,3, HERE << "FTP ctrl and data connections closed. this " << this);
 }
 
 /**
@@ -3851,7 +3823,7 @@ FtpStateData::haveControlChannel(const char *caller_name) const
         return false;
 
     /* doneWithServer() only checks BOTH channels are closed. */
-    if (Comm::IsConnOpen(ctrl.conn)) {
+    if (!Comm::IsConnOpen(ctrl.conn)) {
         debugs(9, DBG_IMPORTANT, "WARNING! FTP Server Control channel is closed, but Data channel still active.");
         debugs(9, 2, caller_name << ": attempted on a closed FTP channel.");
         return false;

@@ -43,10 +43,6 @@ public:
 
     void dontRetry(bool val) { flags.dont_retry = val; }
 
-    bool ftpPasvFailed() { return flags.ftp_pasv_failed; }
-
-    void ftpPasvFailed(bool val) { flags.ftp_pasv_failed = val; }
-
     /** return a ConnectionPointer to the current server connection (may or may not be open) */
     Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
 
@@ -87,7 +83,6 @@ private:
 
     struct {
         unsigned int dont_retry:1;
-        unsigned int ftp_pasv_failed:1;
         unsigned int forward_completed:1;
     } flags;
 
