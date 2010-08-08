@@ -34,8 +34,6 @@
 
 #include "config.h"
 
-#if USE_IPV6
-
 #include "Icmp.h"
 
 #if HAVE_NETINET_IN_H
@@ -87,5 +85,4 @@ public:
 SQUIDCEXTERN Icmp6 icmp6;
 
 #endif /* USE_ICMP && SQUID_HELPER */
-#endif /* USE_IPV6 */
 #endif /* _INCLUDE_ICMPV6_H */

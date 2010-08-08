@@ -59,6 +59,7 @@
 #include "ipc/Kids.h"
 #include "ipc/Coordinator.h"
 #include "ipc/Strand.h"
+#include "ip/tools.h"
 #if USE_EPOLL
 #include "comm_epoll.h"
 #endif
@@ -1342,6 +1343,8 @@ SquidMain(int argc, char **argv)
         Store::Root(new StoreController);
 
         InitAuthSchemes();      /* required for config parsing */
+
+        Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
 
         parse_err = parseConfigFile(ConfigFile);
 

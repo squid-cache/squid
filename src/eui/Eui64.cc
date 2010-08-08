@@ -48,7 +48,6 @@ Eui::Eui64::lookup(Ip::Address &c)
 bool
 Eui::Eui64::lookupSlaac(Ip::Address &c)
 {
-#if USE_IPV6
     /* RFC 4291 Link-Local unicast addresses which contain SLAAC - usually trustable. */
     if (c.IsSiteLocal6() && c.IsSlaac() ) {
 
@@ -59,7 +58,6 @@ Eui::Eui64::lookupSlaac(Ip::Address &c)
 
         return true;
     }
-#endif
     return false;
 }
 
@@ -68,7 +66,6 @@ bool
 Eui::Eui64::lookupNdp(Ip::Address &c)
 {
 #if 0 /* no actual lookup coded yet */
-#if USE_IPV6
 
     /* no OS yet supported for NDP protocol lookup */
     debugs(28, 0, "ERROR: ARP / MAC / EUI-* operations not supported on this operating system.");
@@ -77,9 +74,6 @@ Eui::Eui64::lookupNdp(Ip::Address &c)
      * Address was not found on any interface
      */
     debugs(28, 3, HERE << c << " NOT found");
-#else
-    debugs(28, 0, "ERROR: IPv6 EUI-64 operations not supported on this operating system.");
-#endif
 #endif /* 0 */
 
     clear();

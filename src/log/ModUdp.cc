@@ -180,11 +180,9 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
     Ip::Address any_addr;
     any_addr.SetAnyAddr();
 
-#if USE_IPV6
     // require the sending UDP port to be of the right family for the destination address.
     if (addr.IsIPv4())
         any_addr.SetIPv4();
-#endif
 
     ll->fd = comm_open(SOCK_DGRAM, IPPROTO_UDP, any_addr, COMM_NONBLOCKING, "UDP log socket");
     if (ll->fd < 0) {

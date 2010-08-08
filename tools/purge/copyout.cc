@@ -1,5 +1,5 @@
 //
-// $Id: copyout.cc,v 1.2 1999/06/16 13:05:26 voeckler Exp $
+// $Id$
 //
 // Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //
@@ -59,7 +59,7 @@
 #include "copyout.hh"
 
 static const char* RCS_ID =
-    "$Id: copyout.cc,v 1.2 1999/06/16 13:05:26 voeckler Exp $";
+    "$Id$";
 
 int
 assert_copydir( const char* copydir )

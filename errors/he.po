@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-13 03:02+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2009-06-07 15:11+1300\n"
 "Last-Translator: yoav <yoavb@zavit.net.il>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -63,7 +63,7 @@ msgid ""
 msgstr ""
 "שגיאה בזיהוי משתמש FTP כאשר ניסיתי לגשת אל הכתובת: <a href=\"%U\">%U</a>"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -188,16 +188,14 @@ msgstr "שגיאה: הכתובת המבוקשת לא נגישה"
 msgid "ESI Processing failed."
 msgstr ""
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "פעולת FTP PUT עברה בהצלחה: הקובץ נוצר"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "פעולת FTP PUT עברה בהצלחה: הקובץ עודכן"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "העלאת קובץ ל-FTP נכשלה"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -665,10 +663,6 @@ msgstr ""
 msgid "Web Browser Configuration"
 msgstr ""
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr "שגיאה כאשר ניסיתי לשלוח את: <a href=\"%U\">%U</a>"
-
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
 msgstr "שגיאת כתיבה"
@@ -717,3 +711,9 @@ msgstr ""
 #, fuzzy
 msgid "Zero Sized Reply"
 msgstr "תשובה בגודל אפס"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "פעולת FTP PUT עברה בהצלחה: הקובץ עודכן"
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr "שגיאה כאשר ניסיתי לשלוח את: <a href=\"%U\">%U</a>"

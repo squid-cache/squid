@@ -481,7 +481,7 @@ DOC_START
 	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers
 	  ipv4 / ipv6	IP-mode used to communicate to this helper.
 			For compatability with older configurations and helpers
-			the default is 'ipv4'.
+			the default is currently 'ipv4'.
 
 	FORMAT specifications
 
@@ -786,10 +786,8 @@ NOCOMMENT_START
 # Recommended minimum configuration:
 #
 acl manager proto cache_object
-acl localhost src 127.0.0.1/32
-@IPV6_ONLY_SETTING@acl localhost src ::1/128
-acl to_localhost dst 127.0.0.0/8 0.0.0.0/32
-@IPV6_ONLY_SETTING@acl to_localhost dst ::1/128
+acl localhost src 127.0.0.1/32 ::1
+acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
 
 # Example rule allowing access from your local networks.
 # Adapt to list your (internal) IP networks from where browsing
@@ -797,8 +795,8 @@ acl to_localhost dst 127.0.0.0/8 0.0.0.0/32
 acl localnet src 10.0.0.0/8	# RFC1918 possible internal network
 acl localnet src 172.16.0.0/12	# RFC1918 possible internal network
 acl localnet src 192.168.0.0/16	# RFC1918 possible internal network
-@IPV6_ONLY_SETTING@acl localnet src fc00::/7   # RFC 4193 local private network range
-@IPV6_ONLY_SETTING@acl localnet src fe80::/10  # RFC 4291 link-local (directly plugged) machines
+acl localnet src fc00::/7       # RFC 4193 local private network range
+acl localnet src fe80::/10      # RFC 4291 link-local (directly plugged) machines
 
 acl SSL_ports port 443
 acl Safe_ports port 80		# http
@@ -1357,9 +1355,9 @@ DOC_START
 			the port specification (port or addr:port)
 
 	   tcpkeepalive[=idle,interval,timeout]
-			Enable TCP keepalive probes of idle connections
-			idle is the initial time before TCP starts probing
-			the connection, interval how often to probe, and
+			Enable TCP keepalive probes of idle connections.
+			In seconds; idle is the initial time before TCP starts
+			probing the connection, interval how often to probe, and
 			timeout the time before giving up.
 
 	If you run Squid on a dual-homed machine with an internal
@@ -1834,6 +1832,10 @@ DOC_START
 	when using encrypted SSL certificate keys. If not specified
 	keys must either be unencrypted, or Squid started with the -N
 	option to allow it to query interactively for the passphrase.
+
+	The key file name is given as argument to the program allowing
+	selection of the right password if you have multiple encrypted
+	keys.
 DOC_END
 
 COMMENT_START
@@ -2452,10 +2454,10 @@ DOC_START
 	Instead, if you want Squid to use the entire disk drive,
 	subtract 20% and use that value.
 
-	'Level-1' is the number of first-level subdirectories which
+	'L1' is the number of first-level subdirectories which
 	will be created under the 'Directory'.  The default is 16.
 
-	'Level-2' is the number of second-level subdirectories which
+	'L2' is the number of second-level subdirectories which
 	will be created under each first-level directory.  The default
 	is 256.
 
@@ -2677,6 +2679,11 @@ DOC_START
 		[http::]ue	User name from external acl helper
 		[http::]>Hs	HTTP status code sent to the client
 		[http::]<Hs	HTTP status code received from the next hop
+		[http::]<bs	Number of HTTP-equivalent message body bytes 
+				received from the next hop, excluding chunked
+				transfer encoding and control messages.
+				Generated FTP/Gopher listings are treated as
+				received bodies.
 		[http::]Ss	Squid request status (TCP_MISS etc)
 		[http::]Sh	Squid hierarchy status (DEFAULT_PARENT etc)
 		[http::]mt	MIME content type
@@ -2851,6 +2858,13 @@ DOC_START
 		icap::<st	Bytes received from the ICAP server (TCP
 				payload only; i.e., what Squid reads from
 				the socket).
+
+		icap::<bs	Number of message body bytes received from the
+				ICAP server. ICAP message body, if any, usually
+				includes encapsulated HTTP message headers and
+				possibly encapsulated HTTP message body. The
+				HTTP body part is dechunked before its size is
+				computed.
 
 		icap::tr 	Transaction response time (in
 				milliseconds).  The timer starts when
@@ -6700,7 +6714,7 @@ DOC_END
 
 NAME: memory_pools_limit
 COMMENT: (bytes)
-TYPE: b_size_t
+TYPE: b_int64_t
 DEFAULT: 5 MB
 LOC: Config.MemPools.limit
 DOC_START
@@ -6719,7 +6733,7 @@ DOC_START
 	will be no limit on the total amount of memory used for safe-keeping.
 
 	To disable memory allocation optimization, do not set
-	memory_pools_limit to 0. Set memory_pools to "off" instead.
+	memory_pools_limit to 0 or none. Set memory_pools to "off" instead.
 
 	An overhead for maintaining memory pools is not taken into account
 	when the limit is checked. This overhead is close to four bytes per

@@ -45,6 +45,7 @@
 #include "HttpHeader.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
+#include "ip/tools.h"
 #include "MemBuf.h"
 #include "rfc1738.h"
 #include "Server.h"
@@ -2336,6 +2337,7 @@ ftpReadEPSV(FtpStateData* ftpState)
         /* server response with list of supported methods   */
         /*   522 Network protocol not supported, use (1)    */
         /*   522 Network protocol not supported, use (1,2)  */
+        /*   522 Network protocol not supported, use (2)  */
         /* TODO: handle the (1,2) case. We might get it back after EPSV ALL
          * which means close data + control without self-destructing and re-open from scratch. */
         debugs(9, 5, HERE << "scanning: " << ftpState->ctrl.last_reply);
@@ -2351,20 +2353,19 @@ ftpReadEPSV(FtpStateData* ftpState)
             ftpState->state = SENT_EPSV_2; /* simulate having sent and failed EPSV 2 */
             ftpSendPassive(ftpState);
         } else if (strcmp(buf, "(2)") == 0) {
-#if USE_IPV6
-            /* If server only supports EPSV 2 and we have already tried that. Go straight to EPRT */
-            if (ftpState->state == SENT_EPSV_2) {
-                ftpSendEPRT(ftpState);
+            if (Ip::EnableIpv6) {
+                /* If server only supports EPSV 2 and we have already tried that. Go straight to EPRT */
+                if (ftpState->state == SENT_EPSV_2) {
+                    ftpSendEPRT(ftpState);
+                } else {
+                    /* or try the next Passive mode down the chain. */
+                    ftpSendPassive(ftpState);
+                }
             } else {
-                /* or try the next Passive mode down the chain. */
+                /* Server only accept EPSV in IPv6 traffic. */
+                ftpState->state = SENT_EPSV_1; /* simulate having sent and failed EPSV 1 */
                 ftpSendPassive(ftpState);
             }
-#else
-            /* We do not support IPv6. Remote server requires it.
-               So we must simulate having failed all EPSV methods. */
-            ftpState->state = SENT_EPSV_1;
-            ftpSendPassive(ftpState);
-#endif
         } else {
             /* handle broken server (RFC 2428 says MUST specify supported protocols in 522) */
             debugs(9, DBG_IMPORTANT, "WARNING: Server at " << ftpState->ctrl.conn->remote << " sent unknown protocol negotiation hint: " << buf);
@@ -2531,13 +2532,11 @@ ftpSendPassive(FtpStateData * ftpState)
             /* block other non-EPSV connections being attempted */
             ftpState->flags.epsv_all_sent = true;
         } else {
-#if USE_IPV6
             if (ftpState->ctrl.conn->local.IsIPv6()) {
                 debugs(9, 5, HERE << "FTP Channel (" << ftpState->ctrl.conn->remote << "). Sending default EPSV 2");
                 snprintf(cbuf, CTRL_BUFLEN, "EPSV 2\r\n");
                 ftpState->state = SENT_EPSV_2;
             }
-#endif
             if (ftpState->ctrl.conn->local.IsIPv4()) {
                 debugs(9, 5, HERE << "Channel (" << ftpState->ctrl.conn->remote <<"). Sending default EPSV 1");
                 snprintf(cbuf, CTRL_BUFLEN, "EPSV 1\r\n");

@@ -12,12 +12,12 @@ body
 </head><body>
 <div id="titles">
 <h1>ERROR</h1>
-<h2>FTP PUT/upload failed</h2>
+<h2>FTP PUT upload failed</h2>
 </div>
 <hr>
 
 <div id="content">
-<p>While trying to PUT the following URL: <a href="%U">%U</a></p>
+<p>An FTP protocol error occurred while trying to retrieve the URL: <a href="%U">%U</a></p>
 
 <p>Squid sent the following FTP command:</p>
 <blockquote id="data">

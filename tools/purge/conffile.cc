@@ -1,5 +1,5 @@
 //
-// $Id: conffile.cc,v 1.1 2000/09/21 09:44:53 voeckler Exp $
+// $Id$
 //
 // Author:  Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 //

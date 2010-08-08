@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-13 03:02+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2009-03-06 00:14+0000\n"
 "Last-Translator: juancarlospaco <juancarlospaco@hotmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -74,7 +74,7 @@ msgstr ""
 "Ha ocurrido una falla de autenticaci&oacute;n cuando se trataba de conseguir "
 "el URL: <a href=\"%U\">%U</a>"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -200,16 +200,14 @@ msgstr "ERROR: La URN requerida no pudo ser obtenida."
 msgid "ESI Processing failed."
 msgstr "El procesado ESI falló"
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTP PUT Correcto: Archivo Creado"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT Correcto: Archivo actualizado"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "FTP PUT/envio fallido"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -722,11 +720,6 @@ msgstr ""
 msgid "Web Browser Configuration"
 msgstr "Configuración del Navegador de Internet"
 
-#: templates/ERR_FTP_PUT_ERROR:4
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr ""
-"Mientras se intentaba hacer un PUT del siguiente URL: <a href=\"%U\">%U</a>"
-
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
 msgstr "Error de Escritura"
@@ -786,3 +779,11 @@ msgstr "Respuesta vac&iacute;a (tama&ntilde;o cero)"
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "ERROR: El URN solicitado no se ha podido conseguir"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP PUT Correcto: Archivo actualizado"
+
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr ""
+#~ "Mientras se intentaba hacer un PUT del siguiente URL: <a href=\"%U\">%U</"
+#~ "a>"

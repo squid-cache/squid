@@ -632,15 +632,14 @@ comm_select_dns_incoming(void)
     int nevents;
     dns_io_events = 0;
 
-    if (DnsSocketA < 0)
+    if (DnsSocketA < 0 && DnsSocketB < 0)
         return;
 
-    fds[nfds++] = DnsSocketA;
+    if (DnsSocketA >= 0)
+        fds[nfds++] = DnsSocketA;
 
-#if IPV6_SPECIAL_SPLITSTACK
-    if (DnsSocketB > 0)
+    if (DnsSocketB >= 0)
         fds[nfds++] = DnsSocketB;
-#endif
 
     nevents = comm_check_incoming_select_handlers(nfds, fds);
 

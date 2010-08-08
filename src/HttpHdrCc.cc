@@ -138,17 +138,16 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
             type = CC_OTHER;
         }
 
+        // ignore known duplicate directives
         if (EBIT_TEST(cc->mask, type)) {
-            if (type != CC_OTHER)
+            if (type != CC_OTHER) {
                 debugs(65, 2, "hdr cc: ignoring duplicate cache-directive: near '" << item << "' in '" << str << "'");
-
-            CcFieldsInfo[type].stat.repCount++;
-
-            continue;
+                CcFieldsInfo[type].stat.repCount++;
+                continue;
+            }
+        } else {
+            EBIT_SET(cc->mask, type);
         }
-
-        /* update mask */
-        EBIT_SET(cc->mask, type);
 
         /* post-processing special cases */
         switch (type) {

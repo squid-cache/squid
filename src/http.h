@@ -70,7 +70,7 @@ public:
     http_state_flags flags;
     size_t read_sz;
     int header_bytes_read;	// to find end of response,
-    int reply_bytes_read;	// without relying on StoreEntry
+    int64_t reply_bytes_read;	// without relying on StoreEntry
     int body_bytes_truncated; // positive when we read more than we wanted
     MemBuf *readBuf;
     bool ignoreCacheControl;
