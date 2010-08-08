@@ -46,7 +46,8 @@ CommAcceptCbParams::print(std::ostream &os) const
     CommCommonCbParams::print(os);
     if (nfd >= 0)
         os << ", newFD " << nfd;
-    os << ", " << details;
+    if (details != NULL)
+      os << ", conn.FD " << details->fd << ", conn.local=" << details->local << ", conn.remote=" << details->remote;
 }
 
 

@@ -271,6 +271,8 @@ Comm::ListenStateData::oldAccept(Comm::Connection &details)
         }
     }
 
+    assert(sock >= 0);
+    details.fd = sock;
     details.remote = *gai;
 
     if ( Config.client_ip_max_connections >= 0) {
@@ -281,15 +283,16 @@ Comm::ListenStateData::oldAccept(Comm::Connection &details)
         }
     }
 
+    // lookup the local-end details of this new connection
     details.local.InitAddrInfo(gai);
-
     details.local.SetEmpty();
     getsockname(sock, gai->ai_addr, &gai->ai_addrlen);
     details.local = *gai;
-
-    commSetCloseOnExec(sock);
+    details.local.FreeAddrInfo(gai);
 
     /* fdstat update */
+    // XXX : these are not all HTTP requests. use a note about type and ip:port details.
+    // so we end up with a uniform "(HTTP|FTP-data|HTTPS|...) remote-ip:remote-port"
     fd_open(sock, FD_SOCKET, "HTTP Request");
 
     fdd_table[sock].close_file = NULL;
@@ -298,14 +301,15 @@ Comm::ListenStateData::oldAccept(Comm::Connection &details)
     fde *F = &fd_table[sock];
     details.remote.NtoA(F->ipaddr,MAX_IPSTRLEN);
     F->remote_port = details.remote.GetPort();
-    F->local_addr.SetPort(details.local.GetPort());
+    F->local_addr = details.local;
 #if USE_IPV6
     F->sock_family = AF_INET;
 #else
     F->sock_family = details.local.IsIPv4()?AF_INET:AF_INET6;
 #endif
-    details.local.FreeAddrInfo(gai);
 
+    // set socket flags
+    commSetCloseOnExec(sock);
     commSetNonBlocking(sock);
 
     /* IFF the socket is (tproxy) transparent, pass the flag down to allow spoofing */
