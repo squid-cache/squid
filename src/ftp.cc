@@ -67,8 +67,9 @@
 /// \ingroup ServerProtocolFTPInternal
 static const char *const crlf = "\r\n";
 
+#define CTRL_BUFLEN 1024
 /// \ingroup ServerProtocolFTPInternal
-static char cbuf[1024];
+static char cbuf[CTRL_BUFLEN];
 
 /// \ingroup ServerProtocolFTPInternal
 typedef enum {
@@ -135,7 +136,7 @@ class FtpStateData;
 typedef void (FTPSM) (FtpStateData *);
 
 /// common code for FTP control and data channels
-// does not own the channel descriptor, which is managed by FtpStateData
+/// does not own the channel descriptor, which is managed by FtpStateData
 class FtpChannel
 {
 public:
@@ -158,6 +159,12 @@ public:
      * Use close() to properly close the channel.
      */
     Comm::ListenStateData *listener;
+
+    /** A temporary handle to the connection being listened on.
+     *  Data channel listeners die before handing the result conn over. If the conn is
+     *  a third-party attack we may need to resume listening for the genuine connect.
+     */
+    Comm::ConnectionPointer listen_conn;
 
 private:
     AsyncCall::Pointer closer; /// Comm close handler callback
@@ -1152,7 +1159,7 @@ FtpStateData::dataComplete()
      * status code after the data command.  FtpStateData was being
      * deleted in the middle of dataRead().
      */
-    scheduleReadControlReply(0);
+    scheduleReadControlReply(1);
 }
 
 void
@@ -1918,11 +1925,11 @@ ftpSendUser(FtpStateData * ftpState)
         return;
 
     if (ftpState->proxy_host != NULL)
-        snprintf(cbuf, 1024, "USER %s@%s\r\n",
+        snprintf(cbuf, CTRL_BUFLEN, "USER %s@%s\r\n",
                  ftpState->user,
                  ftpState->request->GetHost());
     else
-        snprintf(cbuf, 1024, "USER %s\r\n", ftpState->user);
+        snprintf(cbuf, CTRL_BUFLEN, "USER %s\r\n", ftpState->user);
 
     ftpState->writeCommand(cbuf);
 
@@ -1953,7 +1960,7 @@ ftpSendPass(FtpStateData * ftpState)
     if (!ftpState || !ftpState->haveControlChannel("ftpSendPass"))
         return;
 
-    snprintf(cbuf, 1024, "PASS %s\r\n", ftpState->password);
+    snprintf(cbuf, CTRL_BUFLEN, "PASS %s\r\n", ftpState->password);
     ftpState->writeCommand(cbuf);
     ftpState->state = SENT_PASS;
 }
@@ -2018,7 +2025,7 @@ ftpSendType(FtpStateData * ftpState)
     else
         ftpState->flags.binary = 0;
 
-    snprintf(cbuf, 1024, "TYPE %c\r\n", mode);
+    snprintf(cbuf, CTRL_BUFLEN, "TYPE %c\r\n", mode);
 
     ftpState->writeCommand(cbuf);
 
@@ -2122,7 +2129,7 @@ ftpSendCwd(FtpStateData * ftpState)
         ftpState->flags.no_dotdot = 0;
     }
 
-    snprintf(cbuf, 1024, "CWD %s\r\n", path);
+    snprintf(cbuf, CTRL_BUFLEN, "CWD %s\r\n", path);
 
     ftpState->writeCommand(cbuf);
 
@@ -2172,7 +2179,7 @@ ftpSendMkdir(FtpStateData * ftpState)
 
     path = ftpState->filepath;
     debugs(9, 3, HERE << "with path=" << path);
-    snprintf(cbuf, 1024, "MKD %s\r\n", path);
+    snprintf(cbuf, CTRL_BUFLEN, "MKD %s\r\n", path);
     ftpState->writeCommand(cbuf);
     ftpState->state = SENT_MKDIR;
 }
@@ -2230,7 +2237,7 @@ ftpSendMdtm(FtpStateData * ftpState)
         return;
 
     assert(*ftpState->filepath != '\0');
-    snprintf(cbuf, 1024, "MDTM %s\r\n", ftpState->filepath);
+    snprintf(cbuf, CTRL_BUFLEN, "MDTM %s\r\n", ftpState->filepath);
     ftpState->writeCommand(cbuf);
     ftpState->state = SENT_MDTM;
 }
@@ -2267,7 +2274,7 @@ ftpSendSize(FtpStateData * ftpState)
     if (ftpState->flags.binary) {
         assert(ftpState->filepath != NULL);
         assert(*ftpState->filepath != '\0');
-        snprintf(cbuf, 1024, "SIZE %s\r\n", ftpState->filepath);
+        snprintf(cbuf, CTRL_BUFLEN, "SIZE %s\r\n", ftpState->filepath);
         ftpState->writeCommand(cbuf);
         ftpState->state = SENT_SIZE;
     } else
@@ -2487,7 +2494,7 @@ ftpSendPassive(FtpStateData * ftpState)
         ftpState->flags.epsv_all_sent = true;
         if (ftpState->ctrl.conn->local.IsIPv6()) {
             debugs(9, 5, HERE << "FTP Channel is IPv6 (" << ftpState->ctrl.conn->remote << ") attempting EPSV 2 after EPSV ALL has failed.");
-            snprintf(cbuf, 1024, "EPSV 2\r\n");
+            snprintf(cbuf, CTRL_BUFLEN, "EPSV 2\r\n");
             ftpState->state = SENT_EPSV_2;
             break;
         }
@@ -2496,7 +2503,7 @@ ftpSendPassive(FtpStateData * ftpState)
     case SENT_EPSV_2: /* EPSV IPv6 failed. Try EPSV IPv4 */
         if (ftpState->ctrl.conn->local.IsIPv4()) {
             debugs(9, 5, HERE << "FTP Channel is IPv4 (" << ftpState->ctrl.conn->remote << ") attempting EPSV 1 after EPSV ALL has failed.");
-            snprintf(cbuf, 1024, "EPSV 1\r\n");
+            snprintf(cbuf, CTRL_BUFLEN, "EPSV 1\r\n");
             ftpState->state = SENT_EPSV_1;
             break;
         } else if (ftpState->flags.epsv_all_sent) {
@@ -2508,18 +2515,18 @@ ftpSendPassive(FtpStateData * ftpState)
 
     case SENT_EPSV_1: /* EPSV options exhausted. Try PASV now. */
         debugs(9, 5, HERE << "FTP Channel (" << ftpState->ctrl.conn->remote << ") rejects EPSV connection attempts. Trying PASV instead.");
-        snprintf(cbuf, 1024, "PASV\r\n");
+        snprintf(cbuf, CTRL_BUFLEN, "PASV\r\n");
         ftpState->state = SENT_PASV;
         break;
 
     default:
         if (!Config.Ftp.epsv) {
             debugs(9, 5, HERE << "EPSV support manually disabled. Sending PASV for FTP Channel (" << ftpState->ctrl.conn->remote <<")");
-            snprintf(cbuf, 1024, "PASV\r\n");
+            snprintf(cbuf, CTRL_BUFLEN, "PASV\r\n");
             ftpState->state = SENT_PASV;
         } else if (Config.Ftp.epsv_all) {
             debugs(9, 5, HERE << "EPSV ALL manually enabled. Attempting with FTP Channel (" << ftpState->ctrl.conn->remote <<")");
-            snprintf(cbuf, 1024, "EPSV ALL\r\n");
+            snprintf(cbuf, CTRL_BUFLEN, "EPSV ALL\r\n");
             ftpState->state = SENT_EPSV_ALL;
             /* block other non-EPSV connections being attempted */
             ftpState->flags.epsv_all_sent = true;
@@ -2527,13 +2534,13 @@ ftpSendPassive(FtpStateData * ftpState)
 #if USE_IPV6
             if (ftpState->ctrl.conn->local.IsIPv6()) {
                 debugs(9, 5, HERE << "FTP Channel (" << ftpState->ctrl.conn->remote << "). Sending default EPSV 2");
-                snprintf(cbuf, 1024, "EPSV 2\r\n");
+                snprintf(cbuf, CTRL_BUFLEN, "EPSV 2\r\n");
                 ftpState->state = SENT_EPSV_2;
             }
 #endif
             if (ftpState->ctrl.conn->local.IsIPv4()) {
                 debugs(9, 5, HERE << "Channel (" << ftpState->ctrl.conn->remote <<"). Sending default EPSV 1");
-                snprintf(cbuf, 1024, "EPSV 1\r\n");
+                snprintf(cbuf, CTRL_BUFLEN, "EPSV 1\r\n");
                 ftpState->state = SENT_EPSV_1;
             }
         }
@@ -2544,13 +2551,13 @@ ftpSendPassive(FtpStateData * ftpState)
 
     /*
      * ugly hack for ftp servers like ftp.netscape.com that sometimes
-     * dont acknowledge PASV commands.
+     * dont acknowledge PASV commands. Use connect timeout to be faster then read timeout (minutes).
      */
     typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  asyncCall(9, 5, "FtpStateData::ftpTimeout",
                                       TimeoutDialer(ftpState,&FtpStateData::ftpTimeout));
 
-    commSetTimeout(ftpState->ctrl.conn->fd, 15, timeoutCall);
+    commSetTimeout(ftpState->ctrl.conn->fd, Config.Timeout.connect, timeoutCall);
 }
 
 void
@@ -2702,7 +2709,7 @@ FtpStateData::ftpPasvCallback(Comm::ConnectionPointer &conn, comm_err_t status, 
 }
 
 /// \ingroup ServerProtocolFTPInternal
-static Comm::ConnectionPointer
+static void
 ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
 {
     /// Close old data channels, if any. We may open a new one below.
@@ -2742,10 +2749,9 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
         if (!fallback)
             conn->local.SetPort(comm_local_port(conn->fd));
         ftpState->data.host = NULL;
-        ftpState->data.opened(conn, ftpState->dataCloser());
     }
 
-    return conn;
+    ftpState->data.listen_conn = conn;
 }
 
 /// \ingroup ServerProtocolFTPInternal
@@ -2763,10 +2769,10 @@ ftpSendPORT(FtpStateData * ftpState)
 
     debugs(9, 3, HERE);
     ftpState->flags.pasv_supported = 0;
-    Comm::ConnectionPointer listen_conn = ftpOpenListenSocket(ftpState, 0);
+    ftpOpenListenSocket(ftpState, 0);
 
-    if (!Comm::IsConnOpen(listen_conn)) {
-        if ( listen_conn != NULL && !listen_conn->local.IsIPv4() ) {
+    if (!Comm::IsConnOpen(ftpState->data.listen_conn)) {
+        if ( ftpState->data.listen_conn != NULL && !ftpState->data.listen_conn->local.IsIPv4() ) {
             /* non-IPv4 CANNOT send PORT command.                       */
             /* we got here by attempting and failing an EPRT            */
             /* using the same reply code should simulate a PORT failure */
@@ -2783,16 +2789,16 @@ ftpSendPORT(FtpStateData * ftpState)
     // source them from the listen_conn->local
 
     struct addrinfo *AI = NULL;
-    listen_conn->local.GetAddrInfo(AI, AF_INET);
+    ftpState->data.listen_conn->local.GetAddrInfo(AI, AF_INET);
     unsigned char *addrptr = (unsigned char *) &((struct sockaddr_in*)AI->ai_addr)->sin_addr;
     unsigned char *portptr = (unsigned char *) &((struct sockaddr_in*)AI->ai_addr)->sin_port;
-    snprintf(cbuf, 1024, "PORT %d,%d,%d,%d,%d,%d\r\n",
+    snprintf(cbuf, CTRL_BUFLEN, "PORT %d,%d,%d,%d,%d,%d\r\n",
              addrptr[0], addrptr[1], addrptr[2], addrptr[3],
              portptr[0], portptr[1]);
     ftpState->writeCommand(cbuf);
     ftpState->state = SENT_PORT;
 
-    listen_conn->local.FreeAddrInfo(AI);
+    ftpState->data.listen_conn->local.FreeAddrInfo(AI);
 }
 
 /// \ingroup ServerProtocolFTPInternal
@@ -2824,14 +2830,20 @@ ftpSendEPRT(FtpStateData * ftpState)
 
     debugs(9, 3, HERE);
     ftpState->flags.pasv_supported = 0;
-    Comm::ConnectionPointer listen_conn = ftpOpenListenSocket(ftpState, 0);
+
+    ftpOpenListenSocket(ftpState, 0);
+    if (!Comm::IsConnOpen(ftpState->data.listen_conn)) {
+        /* XXX Need to set error message */
+        ftpFail(ftpState);
+        return;
+    }
 
     /* RFC 2428 defines EPRT as IPv6 equivalent to IPv4 PORT command. */
     /* Which can be used by EITHER protocol. */
-    snprintf(cbuf, 1024, "EPRT |%d|%s|%d|\r\n",
-             ( listen_conn->local.IsIPv6() ? 2 : 1 ),
-             listen_conn->local.NtoA(buf,MAX_IPSTRLEN),
-             listen_conn->local.GetPort() );
+    snprintf(cbuf, CTRL_BUFLEN, "EPRT |%d|%s|%d|\r\n",
+             ( ftpState->data.listen_conn->local.IsIPv6() ? 2 : 1 ),
+             ftpState->data.listen_conn->local.NtoA(buf,MAX_IPSTRLEN),
+             ftpState->data.listen_conn->local.GetPort() );
 
     ftpState->writeCommand(cbuf);
     ftpState->state = SENT_EPRT;
@@ -2874,6 +2886,13 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
         return;
     }
 
+    if (io.flag != COMM_OK) {
+        debugs(9, DBG_IMPORTANT, "ftpHandleDataAccept: FD " << io.details->fd << ": " << xstrerr(io.xerrno));
+        /** \todo XXX Need to set error message */
+        ftpFail(this);
+        return;
+    }
+
     /** \par
      * When squid.conf ftp_sanitycheck is enabled, check the new connection is actually being
      * made by the remote client which is connected to the FTP control socket.
@@ -2883,56 +2902,39 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
         io.details->remote.NtoA(ntoapeer,MAX_IPSTRLEN);
 
         // accept if either our data or ctrl connection is talking to this remote peer.
-        if (data.conn->remote != io.details->remote && ctrl.conn->remote != io.details->remote) {
+        if (data.listen_conn->remote != io.details->remote && ctrl.conn->remote != io.details->remote) {
             debugs(9, DBG_IMPORTANT,
                    "FTP data connection from unexpected server (" <<
                    io.details->remote << "), expecting " <<
-                   data.conn->remote << " or " << ctrl.conn->remote);
+                   data.listen_conn->remote << " or " << ctrl.conn->remote);
 
             /* drop the bad connection (io) by ignoring. */
 
-            /* we are ony accepting once, so need to re-open the listener socket. */
+            /* we are ony accepting once, so need to reset the listener socket. */
             typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;
             AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
                                             acceptDialer(this, &FtpStateData::ftpAcceptDataConnection));
-            data.listener = new Comm::ListenStateData(data.conn, acceptCall, false, data.host);
+            data.listener->subscribe(acceptCall);
+            data.listener->acceptNext();
             return;
         }
     }
 
-    if (io.flag != COMM_OK) {
-        debugs(9, DBG_IMPORTANT, "ftpHandleDataAccept: FD " << io.details->fd << ": " << xstrerr(io.xerrno));
-        /** \todo XXX Need to set error message */
-        ftpFail(this);
-        return;
-    }
-
-    /**\par
-     * Replace the Listen socket with the accepted data socket */
+    /** On COMM_OK start using the accepted data socket and discard the temporary listen socket. */
     data.close();
     data.opened(io.details, dataCloser());
     io.details->remote.NtoA(data.host,SQUIDHOSTNAMELEN);
+    data.listen_conn = NULL;
 
-    debugs(9, 3, "ftpAcceptDataConnection: Connected data socket on " <<
-           "FD " << io.nfd << " to " << io.details->remote << " FD table says: " <<
+    debugs(9, 3, HERE << "Connected data socket on " <<
+           "FD " << io.details->fd << " to " << io.details->remote << " FD table says: " <<
            "ctrl-peer= " << fd_table[ctrl.conn->fd].ipaddr << ", " <<
            "data-peer= " << fd_table[data.conn->fd].ipaddr);
 
+    assert(haveControlChannel("ftpAcceptDataConnection"));
+    assert(ctrl.message == NULL);
 
-    AsyncCall::Pointer nullCall = NULL;
-    commSetTimeout(ctrl.conn->fd, -1, nullCall);
-
-    typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  asyncCall(9, 5, "FtpStateData::ftpTimeout",
-                                      TimeoutDialer(this,&FtpStateData::ftpTimeout));
-    commSetTimeout(data.conn->fd, Config.Timeout.read, timeoutCall);
-
-    /*\todo XXX We should have a flag to track connect state...
-     *    host NULL -> not connected, port == local port
-     *    host set  -> connected, port == remote port
-     */
-    /* Restart state (SENT_NLST/LIST/RETR) */
-    FTP_SM_FUNCS[state] (this);
+    // Ctrl channel operations will determine what happens to this data connection
 }
 
 /// \ingroup ServerProtocolFTPInternal
@@ -2971,12 +2973,12 @@ ftpSendStor(FtpStateData * ftpState)
 
     if (ftpState->filepath != NULL) {
         /* Plain file upload */
-        snprintf(cbuf, 1024, "STOR %s\r\n", ftpState->filepath);
+        snprintf(cbuf, CTRL_BUFLEN, "STOR %s\r\n", ftpState->filepath);
         ftpState->writeCommand(cbuf);
         ftpState->state = SENT_STOR;
     } else if (ftpState->request->header.getInt64(HDR_CONTENT_LENGTH) > 0) {
         /* File upload without a filename. use STOU to generate one */
-        snprintf(cbuf, 1024, "STOU\r\n");
+        snprintf(cbuf, CTRL_BUFLEN, "STOU\r\n");
         ftpState->writeCommand(cbuf);
         ftpState->state = SENT_STOR;
     } else {
@@ -3035,7 +3037,7 @@ ftpSendRest(FtpStateData * ftpState)
 
     debugs(9, 3, HERE);
 
-    snprintf(cbuf, 1024, "REST %"PRId64"\r\n", ftpState->restart_offset);
+    snprintf(cbuf, CTRL_BUFLEN, "REST %"PRId64"\r\n", ftpState->restart_offset);
     ftpState->writeCommand(cbuf);
     ftpState->state = SENT_REST;
 }
@@ -3098,9 +3100,9 @@ ftpSendList(FtpStateData * ftpState)
     debugs(9, 3, HERE);
 
     if (ftpState->filepath) {
-        snprintf(cbuf, 1024, "LIST %s\r\n", ftpState->filepath);
+        snprintf(cbuf, CTRL_BUFLEN, "LIST %s\r\n", ftpState->filepath);
     } else {
-        snprintf(cbuf, 1024, "LIST\r\n");
+        snprintf(cbuf, CTRL_BUFLEN, "LIST\r\n");
     }
 
     ftpState->writeCommand(cbuf);
@@ -3120,9 +3122,9 @@ ftpSendNlst(FtpStateData * ftpState)
     ftpState->flags.tried_nlst = 1;
 
     if (ftpState->filepath) {
-        snprintf(cbuf, 1024, "NLST %s\r\n", ftpState->filepath);
+        snprintf(cbuf, CTRL_BUFLEN, "NLST %s\r\n", ftpState->filepath);
     } else {
-        snprintf(cbuf, 1024, "NLST\r\n");
+        snprintf(cbuf, CTRL_BUFLEN, "NLST\r\n");
     }
 
     ftpState->writeCommand(cbuf);
@@ -3173,7 +3175,7 @@ ftpSendRetr(FtpStateData * ftpState)
     debugs(9, 3, HERE);
 
     assert(ftpState->filepath != NULL);
-    snprintf(cbuf, 1024, "RETR %s\r\n", ftpState->filepath);
+    snprintf(cbuf, CTRL_BUFLEN, "RETR %s\r\n", ftpState->filepath);
     ftpState->writeCommand(cbuf);
     ftpState->state = SENT_RETR;
 }
@@ -3299,7 +3301,7 @@ ftpSendQuit(FtpStateData * ftpState)
     if (!ftpState || !ftpState->haveControlChannel("ftpSendQuit"))
         return;
 
-    snprintf(cbuf, 1024, "QUIT\r\n");
+    snprintf(cbuf, CTRL_BUFLEN, "QUIT\r\n");
     ftpState->writeCommand(cbuf);
     ftpState->state = SENT_QUIT;
 }
