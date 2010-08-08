@@ -627,8 +627,7 @@ FtpStateData::ftpTimeout(const CommTimeoutCbParams &io)
 
     if (SENT_PASV == state && io.fd == data.conn->fd) {
         /* stupid ftp.netscape.com */
-        fwd->dontRetry(false);
-        flags.pasv_failed = true;
+        flags.pasv_supported = false;
         debugs(9, DBG_IMPORTANT, "ftpTimeout: timeout in SENT_PASV state" );
     }
 
@@ -1239,11 +1238,6 @@ FtpStateData::dataRead(const CommIoCbParams &io)
 
             maybeReadVirginBody();
         } else {
-            if (!flags.http_header_sent && !flags.pasv_failed && flags.pasv_supported && !flags.listing) {
-                fwd->dontRetry(false);	/* this is a retryable error */
-                flags.pasv_failed = true;
-            }
-
             failed(ERR_READ_ERROR, 0);
             /* failed closes ctrl.conn and frees ftpState */
             return;
@@ -1822,9 +1816,6 @@ ftpReadWelcome(FtpStateData * ftpState)
 
     if (ftpState->flags.pasv_only)
         ftpState->login_att++;
-
-    /* Dont retry if the FTP server accepted the connection */
-    ftpState->fwd->dontRetry(true);
 
     if (code == 220) {
         if (ftpState->ctrl.message) {
@@ -2696,7 +2687,6 @@ FtpStateData::ftpPasvCallback(Comm::ConnectionPointer &conn, comm_err_t status, 
 
     if (status != COMM_OK) {
         debugs(9, 2, HERE << "Failed to connect. Retrying via another method.");
-        ftpState->fwd->dontRetry(false);	/* this is a retryable error */
 
         // ABORT on timeouts. server may be waiting on a broken TCP link.
         if (status == COMM_TIMEOUT)
@@ -3008,34 +2998,21 @@ void FtpStateData::readStor()
     int code = ctrl.replycode;
     debugs(9, 3, HERE);
 
-    if (code == 125 || (code == 150 && data.host)) {
+    if (code == 125 || (code == 150 && Comm::IsConnOpen(data.conn))) {
         if (!startRequestBodyFlow()) { // register to receive body data
             ftpFail(this);
             return;
         }
 
-        /*\par
-         * When client status is 125, or 150 without a hostname, Begin data transfer. */
+        /* When client status is 125, or 150 and the data connection is open, Begin data transfer. */
         debugs(9, 3, HERE << "starting data transfer");
+        switchTimeoutToDataChannel();
         sendMoreRequestBody();
-        /** \par
-         * Cancel the timeout on the Control socket and
-         * establish one on the data socket.
-         */
-        AsyncCall::Pointer nullCall = NULL;
-        commSetTimeout(ctrl.conn->fd, -1, nullCall);
-
-        typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
-        AsyncCall::Pointer timeoutCall =  asyncCall(9, 5, "FtpStateData::ftpTimeout",
-                                          TimeoutDialer(this,&FtpStateData::ftpTimeout));
-
-        commSetTimeout(data.conn->fd, Config.Timeout.read, timeoutCall);
-
+        fwd->dontRetry(true); // dont permit re-trying if the body was sent.
         state = WRITING_DATA;
         debugs(9, 3, HERE << "writing data channel");
     } else if (code == 150) {
-        /*\par
-         * When client code is 150 with a hostname, Accept data channel. */
+        /* When client code is 150 with no data channel, Accept data channel. */
         debugs(9, 3, "ftpReadStor: accepting data channel");
         typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;
         AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
