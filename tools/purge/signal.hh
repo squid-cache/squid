@@ -1,5 +1,5 @@
 //
-// $Id: signal.hh,v 1.4 2000/09/21 10:59:27 cached Exp $
+// $Id$
 //
 // Author:   Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
 // File:     signal.hh

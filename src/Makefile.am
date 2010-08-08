@@ -563,14 +563,13 @@ squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 
 if USE_LOADABLE_MODULES
 squid_SOURCES += $(LOADABLE_MODULES_SOURCES)
-squid_LDADD += \
-	$(LIBLTDL)
-squid_LDFLAGS = \
-	-export-dynamic -dlopen force
-# when static module linking is supported and enabled:
-# squid_LDFLAGS = \
-#         -all-static -dlopen self
-#
+squid_LDADD += -L$(top_builddir) $(LIBLTDL)
+squid_LDFLAGS = -export-dynamic -dlopen force
+## when static module linking is supported and enabled:
+## squid_LDFLAGS = -all-static -dlopen self
+##
+## LTDL headers require their local include path...
+INCLUDES += $(INCLTDL)
 endif
 
 ## Kerberos libraries require their include path...
@@ -818,7 +817,6 @@ cf.data: cf.data.pre Makefile
 	-e "s%[@]DEFAULT_CONFIG_DIR[@]%$(DEFAULT_CONFIG_DIR)%g" \
 	-e "s%[@]DEFAULT_PREFIX[@]%$(DEFAULT_PREFIX)%g" \
 	-e "s%[@]DEFAULT_HOSTS[@]%$(DEFAULT_HOSTS)%g" \
-	-e "s%[@]IPV6_ONLY_SETTING[@]%$(SET_IPV6_SETTINGS)%g" \
 	-e "s%[@]SQUID[@]%SQUID\ $(VERSION)%g" \
 	< $(srcdir)/cf.data.pre >$@
 

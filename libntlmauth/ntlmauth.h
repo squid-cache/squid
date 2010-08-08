@@ -130,7 +130,7 @@ extern "C" {
     } ntlmhdr;
 
     /** Validate the packet type matches one we want. */
-    int ntlm_validate_packet(const ntlmhdr *packet, const int type);
+    int ntlm_validate_packet(const ntlmhdr *packet, const int32_t type);
 
     /** Retrieve a string from the NTLM packet payload. */
     lstring ntlm_fetch_string(const ntlmhdr *packet,

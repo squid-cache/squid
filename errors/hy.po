@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-13 03:02+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2008-12-18 01:19+1300\n"
 "Last-Translator: Arthur Tumanyan <arthurtumanyan@yahoo.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -64,7 +64,7 @@ msgstr ""
 "URL ի առաքման ժամանակ տեղի ունեցավ FTP աութենտիֆիկացիայի սխալ: <a href=\"%U"
 "\">%U</a>"
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -191,16 +191,14 @@ msgstr "ՍԽԱԼ: Պահանջվող URL չի կարող առաքվել"
 msgid "ESI Processing failed."
 msgstr ""
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTP PUT Գործողությունը հաջողվեց: Ֆայլը ստեղծված է"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT գործողությունը հաջողվեց: Ֆայլը թարմացված "
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "FTP upload գործողությունը խափանվեց"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -683,13 +681,6 @@ msgstr "Օբյեկտը քեշում գտնված չէ; ձևավորվեց <q>onl
 msgid "Web Browser Configuration"
 msgstr ""
 
-#: templates/ERR_FTP_PUT_ERROR:4
-#, fuzzy
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr ""
-"URL-ի PUT գործողության իրականացման ժամանակ տեղի ունեցավ  սխալ: <a href=\"%U"
-"\">%U</a>"
-
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
 msgstr "Գրանցման սխալ "
@@ -744,3 +735,12 @@ msgstr "Զրոյական երկարությամբ պատասխան "
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "ՍԽԱԼ: Պահանջվող URN չի կարող առաքվել"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP PUT գործողությունը հաջողվեց: Ֆայլը թարմացված "
+
+#, fuzzy
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr ""
+#~ "URL-ի PUT գործողության իրականացման ժամանակ տեղի ունեցավ  սխալ: <a href="
+#~ "\"%U\">%U</a>"

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-13 03:02+1300\n"
+"POT-Creation-Date: 2010-07-26 21:21+1300\n"
 "PO-Revision-Date: 2009-01-29 22:14+0000\n"
 "Last-Translator: Tanel Kurvits <Unknown>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -67,7 +67,7 @@ msgid ""
 msgstr ""
 "URLi <a href=\"%U\">%U</a> lugemisel tekkis t&otilde;rge FTP autentimisel."
 
-#: templates/ERR_FTP_FAILURE:4
+#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 #, fuzzy
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
@@ -194,16 +194,14 @@ msgstr "VIGA: P&auml;ring URLile ei saa vastust"
 msgid "ESI Processing failed."
 msgstr ""
 
-#: templates/ERR_FTP_PUT_CREATED:1
-msgid "FTP PUT Successful: File Created"
+#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#, fuzzy
+msgid "FTP PUT Successful."
 msgstr "FTP PUT &Otilde;nnestus: fail loodi"
 
-#: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT &Otilde;nnestus: fail on uuendatud"
-
 #: templates/ERR_FTP_PUT_ERROR:3
-msgid "FTP PUT/upload failed"
+#, fuzzy
+msgid "FTP PUT upload failed"
 msgstr "FTP PUT eba&otilde;nnestus"
 
 #: templates/ERR_FTP_DISABLED:5
@@ -704,11 +702,6 @@ msgstr ""
 msgid "Web Browser Configuration"
 msgstr ""
 
-#: templates/ERR_FTP_PUT_ERROR:4
-#, fuzzy
-msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr "PUT operatsioon URLil <a href=\"%U\">%U</a>"
-
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
 msgstr "Viga kirjutamisel"
@@ -765,3 +758,10 @@ msgstr "Vastus on t&uuml;hi"
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "VIGA: P&auml;ring URNile ei saa vastust"
+
+#~ msgid "FTP PUT Successful: File Updated"
+#~ msgstr "FTP PUT &Otilde;nnestus: fail on uuendatud"
+
+#, fuzzy
+#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+#~ msgstr "PUT operatsioon URLil <a href=\"%U\">%U</a>"

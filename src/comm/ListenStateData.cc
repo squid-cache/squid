@@ -302,11 +302,7 @@ Comm::ListenStateData::oldAccept(Comm::Connection &details)
     details.remote.NtoA(F->ipaddr,MAX_IPSTRLEN);
     F->remote_port = details.remote.GetPort();
     F->local_addr = details.local;
-#if USE_IPV6
-    F->sock_family = AF_INET;
-#else
-    F->sock_family = details.local.IsIPv4()?AF_INET:AF_INET6;
-#endif
+    F->sock_family = details.local.IsIPv6()?AF_INET6:AF_INET;
 
     // set socket flags
     commSetCloseOnExec(sock);

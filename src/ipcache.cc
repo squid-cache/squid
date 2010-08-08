@@ -31,11 +31,13 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
 #include "cbdata.h"
 #include "CacheManager.h"
 #include "DnsLookupDetails.h"
 #include "event.h"
 #include "ip/Address.h"
+#include "ip/tools.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
@@ -481,8 +483,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
 
     for (k = 0; k < nr; k++) {
 
-#if USE_IPV6
-        if (answers[k].type == RFC1035_TYPE_AAAA) {
+        if (Ip::EnableIpv6 && answers[k].type == RFC1035_TYPE_AAAA) {
             if (answers[k].rdlength != sizeof(struct in6_addr)) {
                 debugs(14, 1, "ipcacheParse: Invalid IPv6 address in response to '" << name << "'");
                 continue;
@@ -491,7 +492,6 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
             IpcacheStats.rr_aaaa++;
             continue;
         }
-#endif
 
         if (answers[k].type == RFC1035_TYPE_A) {
             if (answers[k].rdlength != sizeof(struct in_addr)) {
@@ -539,8 +539,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
             debugs(14, 3, "ipcacheParse: " << name << " #" << j << " " << i->addrs.in_addrs[j]);
             j++;
 
-#if USE_IPV6
-        } else if (answers[k].type == RFC1035_TYPE_AAAA) {
+        } else if (Ip::EnableIpv6 && answers[k].type == RFC1035_TYPE_AAAA) {
             if (answers[k].rdlength != sizeof(struct in6_addr))
                 continue;
 
@@ -550,7 +549,6 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
 
             debugs(14, 3, "ipcacheParse: " << name << " #" << j << " " << i->addrs.in_addrs[j] );
             j++;
-#endif
         }
         if (ttl == 0 || (int) answers[k].ttl < ttl)
             ttl = answers[k].ttl;
@@ -1179,15 +1177,11 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
     Ip::Address ip;
 
     if (!(ip = ipaddr)) {
-#if USE_IPV6
         if (strchr(ipaddr, ':') && strspn(ipaddr, "0123456789abcdefABCDEF:") == strlen(ipaddr)) {
             debugs(14, 3, "ipcacheAddEntryFromHosts: Skipping IPv6 address '" << ipaddr << "'");
         } else {
             debugs(14, 1, "ipcacheAddEntryFromHosts: Bad IP address '" << ipaddr << "'");
         }
-#else
-        debugs(14, 1, "ipcacheAddEntryFromHosts: Bad IP address '" << ipaddr << "'");
-#endif
 
         return 1;
     }

@@ -81,7 +81,8 @@ TRANSLATE_LANGUAGES = \
 	ro.lang \
 	ru.lang \
 	sk.lang \
-	sr.lang \
+	sr-cyrl.lang \
+	sr-latn.lang \
 	sv.lang \
 	th.lang \
 	tr.lang \

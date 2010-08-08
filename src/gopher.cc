@@ -820,6 +820,13 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
             clen >>= 1;
 
         IOStats.Gopher.read_hist[bin]++;
+
+        HttpRequest *req = gopherState->fwd->request;
+        if (req->hier.bodyBytesRead < 0)
+            req->hier.bodyBytesRead = 0;
+
+        req->hier.bodyBytesRead += len;
+
     }
 
     if (flag != COMM_OK || len < 0) {
@@ -892,7 +899,7 @@ gopherSendComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrn
         ErrorState *err;
         err = errorCon(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE, gopherState->fwd->request);
         err->xerrno = errno;
-        err->port = gopherState->req->port;
+        err->port = gopherState->fwd->request->port;
         err->url = xstrdup(entry->url());
         gopherState->fwd->fail(err);
         comm_close(fd);
