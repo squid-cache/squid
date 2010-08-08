@@ -279,7 +279,7 @@ private:
      */
     int64_t replyHttpHeaderSize;
     /**
-     * size of dechunked HTTP body in ICAP reply or -1 if there is not any 
+     * size of dechunked HTTP body in ICAP reply or -1 if there is not any
      * encapsulated message data
      */
     int64_t replyHttpBodySize;
