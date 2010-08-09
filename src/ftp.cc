@@ -2768,7 +2768,7 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
                                     acceptDialer(ftpState, &FtpStateData::ftpAcceptDataConnection));
     ftpState->data.listener = new Comm::ListenStateData(fd, acceptCall, false);
 
-    if (!ftpState->data.listener || ftpState->data.listener->errcode < 0) {
+    if (!ftpState->data.listener || ftpState->data.listener->errcode != 0) {
         comm_close(fd);
         return -1;
     }
