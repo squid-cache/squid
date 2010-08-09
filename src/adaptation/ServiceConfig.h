@@ -33,6 +33,7 @@ public:
     VectPoint point; // where the adaptation happens (pre- or post-cache)
     bool bypass;
     bool routing; ///< whether this service may determine the next service(s)
+    bool ipv6;    ///< whether this service uses IPv6 transport (default IPv4)
 
 protected:
     Method parseMethod(const char *buf) const;
