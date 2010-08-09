@@ -8,7 +8,7 @@
 
 Adaptation::ServiceConfig::ServiceConfig():
         port(-1), method(methodNone), point(pointNone),
-        bypass(false), routing(false)
+        bypass(false), routing(false), ipv6(false)
 {}
 
 const char *
@@ -93,7 +93,9 @@ Adaptation::ServiceConfig::parse()
             grokked = grokBool(bypass, name, value);
         else if (strcmp(name, "routing") == 0)
             grokked = grokBool(routing, name, value);
-        else {
+        if (strcmp(name, "ipv6") == 0) {
+            grokked = grokBool(ipv6, name, value);
+        } else {
             debugs(3, 0, cfg_filename << ':' << config_lineno << ": " <<
                    "unknown adaptation service option: " << name << '=' << value);
         }
