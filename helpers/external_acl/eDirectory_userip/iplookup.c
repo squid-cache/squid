@@ -36,7 +36,7 @@
  */
 void InitLDAP(ldap_t *l)
 {
-    if (l == NULL) return;
+    if (l == NULL) return;			/* Duh! */
 
     l->lp = NULL;
     if (l->lm != NULL)
@@ -57,7 +57,9 @@ void InitLDAP(ldap_t *l)
     l->port = 0;
     l->scope = -1;
     l->type = 0;
+    l->err = -1;					/* Set error to LDAP_SUCCESS by default */
     l->ver = 0;
+    l->idle_time = 0;
     l->num_ent = 0;				/* Number of entries in l->lm */
     l->num_val = 0;				/* Number of entries in l->val */
 
@@ -89,8 +91,10 @@ void InitLDAP(ldap_t *l)
  */
 int OpenLDAP(ldap_t *l, char *h, unsigned int p)
 {
-    if ((l == NULL) || (h == NULL)) return -1;
-    if (!(l->status & LDAP_INIT_S)) return -2;		/* Not initalized, or might be in use */
+    if ((l == NULL) || (h == NULL)) return LDAP_ERR_NULL;
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;		/* Not initalized, or might be in use */
+    if (l->status & LDAP_OPEN_S) return LDAP_ERR_OPEN;		/* Already open */
+    if (l->status & LDAP_BIND_S) return LDAP_ERR_BIND;		/* Already bound */
 
     strncpy(l->host, h, sizeof(l->host));
     if (p > 0)
@@ -108,12 +112,16 @@ int OpenLDAP(ldap_t *l, char *h, unsigned int p)
 #else
     l->lp = ldap_open(l->host, l->port);
 #endif
-    if (l->lp == NULL) return -3;				/* Unable to connect */
-
-    /* set status */
-    l->status &= ~(LDAP_INIT_S);
-    l->status |= LDAP_OPEN_S;
-    return LDAP_SUCCESS;
+    if (l->lp == NULL) {
+        l->err = LDAP_CONNECT_ERROR;
+        return LDAP_ERR_CONNECT;				/* Unable to connect */
+    } else {
+        /* set status */
+//    l->status &= ~(LDAP_INIT_S);
+        l->status |= LDAP_OPEN_S;
+        l->err = LDAP_SUCCESS;
+        return LDAP_ERR_SUCCESS;
+    }
 }
 
 /* CloseLDAP() - <ldap_t>
@@ -124,16 +132,15 @@ int OpenLDAP(ldap_t *l, char *h, unsigned int p)
 int CloseLDAP(ldap_t *l)
 {
     int s;
-    if (l == NULL) return -1;
-    if (l->lp == NULL) return -2;
-    if (!(l->status & LDAP_OPEN_S)) return -3;		/* Connection not open */
-    if (l->lp == NULL) return -4;				/* Error */
+    if (l == NULL) return LDAP_ERR_NULL;
+    if (l->lp == NULL) return LDAP_ERR_NULL;
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;		/* Connection not initalized */
+    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;		/* Connection not open */
 
     if (l->lm != NULL) {
         ldap_msgfree(l->lm);
         l->lm = NULL;
     }
-
     if (l->val != NULL) {
         ldap_value_free_len(l->val);
         l->val = NULL;
@@ -141,9 +148,15 @@ int CloseLDAP(ldap_t *l)
 
     /* okay, so it's open, close it - No need to check other criteria */
     s = ldap_unbind(l->lp);
-    if (s == LDAP_SUCCESS)
+    if (s == LDAP_SUCCESS) {
         l->status &= ~(LDAP_OPEN_S | LDAP_BIND_S);
-    return s;						/* returns unbind result */
+        l->idle_time = 0;
+        l->err = s;							/* Set LDAP error code */
+        return LDAP_ERR_SUCCESS;
+    } else {
+        l->err = s;							/* Set LDAP error code */
+        return LDAP_ERR_FAILED;
+    }
 }
 
 /* SetVerLDAP() - <ldap_t> <version>
@@ -154,14 +167,23 @@ int CloseLDAP(ldap_t *l)
 int SetVerLDAP(ldap_t *l, int v)
 {
     int x;
-    if ((l == NULL) || (v > 3) || (v < 1)) return -1;
-    if (l->lp == NULL) return -2;
-    if (l->status & LDAP_BIND_S) return -3;		/* Already binded */
-    if (!(l->status & LDAP_OPEN_S)) return -4;		/* Not open */
+    if (l == NULL) return LDAP_ERR_NULL;
+    if ((v > 3) || (v < 1)) return LDAP_ERR_PARAM;
+    if (l->lp == NULL) return LDAP_ERR_POINTER;
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;		/* Not initalized */
+    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;		/* Not open */
+    if (l->status & LDAP_BIND_S) return LDAP_ERR_BIND;		/* Already bound */
 
     /* set version */
     x = ldap_set_option(l->lp, LDAP_OPT_PROTOCOL_VERSION, &v);
-    return x;						/* returns result code */
+    if (x == LDAP_SUCCESS) {
+        l->ver = v;
+        l->err = x;							/* Set LDAP error code */
+        return LDAP_ERR_SUCCESS;
+    } else {
+        l->err = x;							/* Set LDAP error code */
+        return LDAP_ERR_FAILED;
+    }
 }
 
 /* BindLDAP() - <ldap_t> <use-dn> <use-password> <type>
@@ -172,10 +194,11 @@ int SetVerLDAP(ldap_t *l, int v)
 int BindLDAP(ldap_t *l, char *dn, char *pw, unsigned int t)
 {
     int s;
-    if (l == NULL) return -1;
-    if (!(l->status & LDAP_OPEN_S)) return -2;		/* Not open */
-    if (l->status & LDAP_BIND_S) return -3;		/* Already binded */
-    if (l->lp == NULL) return -4;				/* Error */
+    if (l == NULL) return LDAP_ERR_NULL;
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;		/* Not initalized */
+    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;		/* Not open */
+    if (l->status & LDAP_BIND_S) return LDAP_ERR_BIND;		/* Already bound */
+    if (l->lp == NULL) return LDAP_ERR_POINTER;			/* Error */
 
     /* Copy details - dn and pw CAN be NULL for anonymous and/or TLS */
     if (dn != NULL) {
@@ -227,9 +250,14 @@ int BindLDAP(ldap_t *l, char *dn, char *pw, unsigned int t)
     else
 #endif
         s = ldap_bind_s(l->lp, l->dn, l->passwd, l->type);
-    if (s == LDAP_SUCCESS)
+    if (s == LDAP_SUCCESS) {
         l->status |= LDAP_BIND_S;				/* Success */
-    return s;						/* LDAP Error code */
+        l->err = s;						/* Set LDAP error code */
+        return LDAP_ERR_SUCCESS;
+    } else {
+        l->err = s;						/* Set LDAP error code */
+        return LDAP_ERR_FAILED;
+    }
 }
 
 /*
@@ -245,9 +273,12 @@ int ConvertIP(ldap_t *l, char *ip)
     char hexc[4], *p;
     size_t s;
     long x;
-    int i, j, t, swi;						/* IPv6 "::" cut over toggle */
-    if ((l == NULL) || (ip == NULL)) return -1;
-    if (!(l->status & LDAP_BIND_S)) return -2;			/* Not binded */
+    int i, j, t, swi;							/* IPv6 "::" cut over toggle */
+    if (l == NULL) return LDAP_ERR_NULL;
+    if (ip == NULL) return LDAP_ERR_PARAM;
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;			/* Not initalized */
+    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;			/* Not open */
+    if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;			/* Not bound */
 
     s = strlen(ip);
     memset(bufa, '\0', sizeof(bufa));
@@ -255,12 +286,12 @@ int ConvertIP(ldap_t *l, char *ip)
     memset(obj, '\0', sizeof(obj));
     /* SplitString() will zero out bufa & obj at each call */
     memset(l->search_ip, '\0', sizeof(l->search_ip));
-    strncpy(bufa, ip, s);						/* To avoid segfaults, use bufa instead of ip */
+    strncpy(bufa, ip, s);							/* To avoid segfaults, use bufa instead of ip */
     swi = 0;
 
     if ((conf.mode & MODE_IPV6) && (conf.mode & MODE_IPV4)) {
         if (strcasestr(bufa, ":FFFF:") == NULL)
-            return -3;						/* Unable to find IPv4-in-IPv6 notation */
+            return LDAP_ERR_INVALID;						/* Unable to find IPv4-in-IPv6 notation */
     }
     if (conf.mode & MODE_IPV6) {
         /* Search for :: in string */
@@ -268,13 +299,13 @@ int ConvertIP(ldap_t *l, char *ip)
             /* bufa starts with a ::, so just copy and clear */
             strncpy(bufb, bufa, sizeof(bufa));
             memset(bufa, '\0', strlen(bufa));
-            swi++;							/* Indicates that there is a bufb */
+            swi++;								/* Indicates that there is a bufb */
         } else if ((bufa[0] == ':') && (bufa[1] != ':')) {
             /* bufa starts with a :, a typo so just fill in a ':', cat and clear */
             bufb[0] = ':';
             strncat(bufb, bufa, sizeof(bufa));
             memset(bufa, '\0', strlen(bufa));
-            swi++;							/* Indicates that there is a bufb */
+            swi++;								/* Indicates that there is a bufb */
         } else {
             p = strstr(bufa, "::");
             if (p != NULL) {
@@ -284,7 +315,7 @@ int ConvertIP(ldap_t *l, char *ip)
                 memcpy(bufb, p, i);
                 *p = '\0';
                 bufb[i] = '\0';
-                swi++;							/* Indicates that there is a bufb */
+                swi++;								/* Indicates that there is a bufb */
             }
         }
     }
@@ -300,7 +331,7 @@ int ConvertIP(ldap_t *l, char *ip)
                     strcpy(hexc, "FFFF");
                     strncat(l->search_ip, hexc, sizeof(l->search_ip));
                 } else
-                    break;						/* reached end */
+                    break;							/* reached end */
             } else {
                 /* Break down IPv4 address nested in the IPv6 address */
                 t = SplitString(bufb, s, '.', obj, sizeof(obj));
@@ -308,12 +339,12 @@ int ConvertIP(ldap_t *l, char *ip)
                     errno = 0;
                     x = strtol(obj, (char **)NULL, 10);
                     if (((x < 0) || (x > 255)) || ((errno != 0) && (x == 0)) || ((obj[0] != '0') && (x == 0)))
-                        return -4;						/* Out of bounds -- Invalid address */
+                        return LDAP_ERR_OOB;					/* Out of bounds -- Invalid address */
                     memset(hexc, '\0', sizeof(hexc));
                     snprintf(hexc, sizeof(hexc), "%.2X", (int)x);
                     strncat(l->search_ip, hexc, sizeof(l->search_ip));
                 } else
-                    break;						/* reached end of octet */
+                    break;							/* reached end of octet */
             }
         } else if ((conf.mode & MODE_IPV4) && (swi == 0)) {
             /* Break down IPv4 address  */
@@ -322,39 +353,39 @@ int ConvertIP(ldap_t *l, char *ip)
                 errno = 0;
                 x = strtol(obj, (char **)NULL, 10);
                 if (((x < 0) || (x > 255)) || ((errno != 0) && (x == 0)) || ((obj[0] != '0') && (x == 0)))
-                    return -4;						/* Out of bounds -- Invalid address */
+                    return LDAP_ERR_OOB;						/* Out of bounds -- Invalid address */
                 memset(hexc, '\0', sizeof(hexc));
                 snprintf(hexc, sizeof(hexc), "%.2X", (int)x);
                 strncat(l->search_ip, hexc, sizeof(l->search_ip));
             } else
-                break;							/* reached end of octet */
+                break;								/* reached end of octet */
         } else if (conf.mode & MODE_IPV6) {
             /* Break down IPv6 address */
             if (swi > 1)
-                t = SplitString(bufb, s, ':', obj, sizeof(obj));	/* After "::" */
+                t = SplitString(bufb, s, ':', obj, sizeof(obj));		/* After "::" */
             else
-                t = SplitString(bufa, s, ':', obj, sizeof(obj));	/* Before "::" */
+                t = SplitString(bufa, s, ':', obj, sizeof(obj));		/* Before "::" */
             /* Convert octet by size (t) - and fill 0's */
-            switch (t) {						/* IPv6 is already in HEX, copy contents */
+            switch (t) {							/* IPv6 is already in HEX, copy contents */
             case 4:
                 hexc[0] = (char) toupper((int)obj[0]);
                 i = (int)hexc[0];
                 if (!isxdigit(i))
-                    return -5;						/* Out of bounds */
+                    return LDAP_ERR_OOB;					/* Out of bounds */
                 hexc[1] = (char) toupper((int)obj[1]);
                 i = (int)hexc[1];
                 if (!isxdigit(i))
-                    return -5;						/* Out of bounds */
+                    return LDAP_ERR_OOB;					/* Out of bounds */
                 hexc[2] = '\0';
                 strncat(l->search_ip, hexc, sizeof(l->search_ip));
                 hexc[0] = (char) toupper((int)obj[2]);
                 i = (int)hexc[0];
                 if (!isxdigit(i))
-                    return -5;						/* Out of bounds */
+                    return LDAP_ERR_OOB;					/* Out of bounds */
                 hexc[1] = (char) toupper((int)obj[3]);
                 i = (int)hexc[1];
                 if (!isxdigit(i))
-                    return -5;						/* Out of bounds */
+                    return LDAP_ERR_OOB;					/* Out of bounds */
                 hexc[2] = '\0';
                 strncat(l->search_ip, hexc, sizeof(l->search_ip));
                 break;
@@ -363,17 +394,17 @@ int ConvertIP(ldap_t *l, char *ip)
                 hexc[1] = (char) toupper((int)obj[0]);
                 i = (int)hexc[1];
                 if (!isxdigit(i))
-                    return -5;						/* Out of bounds */
+                    return LDAP_ERR_OOB;					/* Out of bounds */
                 hexc[2] = '\0';
                 strncat(l->search_ip, hexc, sizeof(l->search_ip));
                 hexc[0] = (char) toupper((int)obj[1]);
                 i = (int)hexc[0];
                 if (!isxdigit(i))
-                    return -5;						/* Out of bounds */
+                    return LDAP_ERR_OOB;					/* Out of bounds */
                 hexc[1] = (char) toupper((int)obj[2]);
                 i = (int)hexc[1];
                 if (!isxdigit(i))
-                    return -5;						/* Out of bounds */
+                    return LDAP_ERR_OOB;					/* Out of bounds */
                 hexc[2] = '\0';
                 strncat(l->search_ip, hexc, sizeof(l->search_ip));
                 break;
@@ -382,11 +413,11 @@ int ConvertIP(ldap_t *l, char *ip)
                 hexc[0] = (char) toupper((int)obj[0]);
                 i = (int)hexc[0];
                 if (!isxdigit(i))
-                    return -5;						/* Out of bounds */
+                    return LDAP_ERR_OOB;					/* Out of bounds */
                 hexc[1] = (char) toupper((int)obj[1]);
                 i = (int)hexc[1];
                 if (!isxdigit(i))
-                    return -5;						/* Out of bounds */
+                    return LDAP_ERR_OOB;					/* Out of bounds */
                 hexc[2] = '\0';
                 strncat(l->search_ip, hexc, sizeof(l->search_ip));
                 break;
@@ -396,13 +427,13 @@ int ConvertIP(ldap_t *l, char *ip)
                 hexc[1] = (char) toupper((int)obj[0]);
                 i = (int)hexc[1];
                 if (!isxdigit(i))
-                    return -5;						/* Out of bounds */
+                    return LDAP_ERR_OOB;					/* Out of bounds */
                 hexc[2] = '\0';
                 strncat(l->search_ip, hexc, sizeof(l->search_ip));
                 break;
             default:
                 if (t > 4)
-                    return -5;
+                    return LDAP_ERR_OOB;
                 break;
             }
             /* Code to pad the address with 0's between a '::' */
@@ -472,9 +503,12 @@ int SearchFilterLDAP(ldap_t *l, char *group)
     size_t i, j, s;
     int swi;
     char bufa[MAXLEN], bufb[MAXLEN], bufc[MAXLEN], bufd[MAXLEN], bufg[MAXLEN];
-    if (l == NULL) return -1;
-    if (!(l->status & LDAP_BIND_S)) return -2;			/* Must be Bound first */
-    if (l->search_ip[0] == '\0') return -3;			/* Search IP is required */
+    if (l == NULL) return LDAP_ERR_NULL;
+//  if (group == NULL) return LDAP_ERR_PARAM;
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;			/* Not initalized */
+    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;			/* Not open */
+    if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;			/* Not Bound */
+    if (l->search_ip[0] == '\0') return LDAP_ERR_DATA;			/* Search IP is required */
 
     /* Zero out if not already */
     memset(bufa, '\0', strlen(bufa));
@@ -514,7 +548,7 @@ int SearchFilterLDAP(ldap_t *l, char *group)
             strncat(bufb, bufd, sizeof(bufb));
         } else
             strncat(bufb, ")", sizeof(bufb));
-        debug("SearchFilterLDAP", "bufb: %s\n", bufb);
+//    debug("SearchFilterLDAP", "bufb: %s\n", bufb);
         strncat(bufa, bufb, sizeof(bufa));
         strncat(bufa, ")", sizeof(bufa));
     } else {
@@ -528,7 +562,7 @@ int SearchFilterLDAP(ldap_t *l, char *group)
             strncat(bufg, l->basedn, sizeof(bufg));
         }
         strncat(bufg, ")", sizeof(bufg));
-        debug("SearchFilterLDAP", "bufg: %s\n", bufg);
+//    debug("SearchFilterLDAP", "bufg: %s\n", bufg);
         strncat(bufa, bufg, sizeof(bufa));
         /* networkAddress */
         snprintf(bufb, sizeof(bufb), "(|(networkAddress=1\\23%s)(networkAddress=8\\23\\00\\00%s)(networkAddress=9\\23\\00\\00%s)", \
@@ -539,7 +573,7 @@ int SearchFilterLDAP(ldap_t *l, char *group)
             strncat(bufb, bufd, sizeof(bufb));
         } else
             strncat(bufb, ")", sizeof(bufb));
-        debug("SearchFilterLDAP", "bufb: %s\n", bufb);
+//    debug("SearchFilterLDAP", "bufb: %s\n", bufb);
         strncat(bufa, bufb, sizeof(bufa));
         strncat(bufa, "))", sizeof(bufa));
     }
@@ -559,18 +593,18 @@ int SearchLDAP(ldap_t *l, int scope, char *filter, char **attrs)
 {
     int s;
     char ft[MAXLEN];
-    if ((l == NULL) || (filter == NULL)) return -1;	/* If attrs is NULL, then all attrs will return */
-    if (scope < 0) return -2;				/* We require a scope */
-    if (l->lp == NULL) return -3;
-    if (!(l->status & LDAP_BIND_S)) return -4;		/* Must be bound */
-    if (l->status & LDAP_SEARCH_S) return -5;		/* Must not already be searching */
-    if (l->basedn[0] == '\0') return -6;			/* We require a basedn */
+    if (l == NULL) return LDAP_ERR_NULL;
+    if ((scope < 0) || (filter == NULL)) return LDAP_ERR_PARAM;		/* If attrs is NULL, then all attrs will return */
+    if (l->lp == NULL) return LDAP_ERR_POINTER;
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;			/* Not initalized */
+    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;			/* Not open */
+    if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;			/* Not bound */
+    if (l->status & LDAP_SEARCH_S) return LDAP_ERR_SEARCHED;		/* Already searching */
+    if (l->basedn[0] == '\0') return LDAP_ERR_DATA;			/* We require a basedn */
     if (l->lm != NULL)
-        ldap_msgfree(l->lm);				/* Make sure l->lm is empty */
+        ldap_msgfree(l->lm);						/* Make sure l->lm is empty */
 
-    /* FIX IT -- ?? Narrow results to include the IP Address ?? */
-
-    if (filter == NULL)					/* if filter is NULL, then return ALL networkAddress */
+    if (filter == NULL)							/* if filter is NULL, then return ALL networkAddress */
         strcpy(ft, "(&(objectClass=User)(networkAddress=*))");
     else
         strncpy(ft, filter, sizeof(ft));
@@ -591,15 +625,17 @@ int SearchLDAP(ldap_t *l, int scope, char *filter, char **attrs)
         s = ldap_search_s(l->lp, l->basedn, LDAP_SCOPE_BASE, ft, attrs, 0, &(l->lm));
         break;
     }
-
-    /* FIX IT -- ?? Narrow results to include the IP Address ?? */
-
     if (s == LDAP_SUCCESS) {
-        l->status |= (LDAP_SEARCH_S);			/* Mark as searched */
-        l->num_ent = ldap_count_entries(l->lp, l->lm);	/* Counted */
-    } else
+        l->status |= (LDAP_SEARCH_S);					/* Mark as searched */
+        l->err = s;
+        l->idle_time = 0;							/* Connection in use, reset idle timer */
+        l->num_ent = ldap_count_entries(l->lp, l->lm);			/* Counted */
+        return LDAP_ERR_SUCCESS;
+    } else {
+        l->err = s;
         l->num_ent = (-1);
-    return s;						/* Return search value */
+        return LDAP_ERR_FAILED;
+    }
 }
 
 /*
@@ -610,39 +646,47 @@ int SearchLDAP(ldap_t *l, int scope, char *filter, char **attrs)
  */
 int GetValLDAP(ldap_t *l, char *attr)
 {
-    ber_len_t i, j;
     ber_len_t x;
-    int c;
+    /*
+      ber_len_t i, j;
+      int c;
+    */
     LDAPMessage *ent;
-    if ((l == NULL) || (attr == NULL)) return -1;
-    if (l->lp == NULL) return -2;
-    if (!(l->status & LDAP_SEARCH_S)) return -3;		/* Not searched */
-    if (l->num_ent <= 0) return -4;			/* No entries found */
+    if (l == NULL) return LDAP_ERR_NULL;
+    if (attr == NULL) return LDAP_ERR_PARAM;
+    if (l->lp == NULL) return LDAP_ERR_POINTER;
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;			/* Not initalized */
+    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;			/* Not open */
+    if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;			/* Not bound */
+    if (!(l->status & LDAP_SEARCH_S)) return LDAP_ERR_NOT_SEARCHED;	/* Not searched */
+    if (l->num_ent <= 0) return LDAP_ERR_DATA;				/* No entries found */
     if (l->val != NULL)
-        ldap_value_free_len(l->val);			/* Clear data before populating */
+        ldap_value_free_len(l->val);					/* Clear data before populating */
     l->num_val = 0;
     if (l->status & LDAP_VAL_S)
-        l->status &= ~(LDAP_VAL_S);				/* Clear VAL bit */
+        l->status &= ~(LDAP_VAL_S);						/* Clear VAL bit */
 
     /* Sift through entries -- Look for matches */
     for (ent = ldap_first_entry(l->lp, l->lm); ent != NULL; ent = ldap_next_entry(l->lp, ent)) {
         l->val = ldap_get_values_len(l->lp, ent, attr);
         if (l->val != NULL) {
-            x = ldap_count_values_len(l->val);		/* We got x values ... */
+            x = ldap_count_values_len(l->val);				/* We got x values ... */
             l->num_val = x;
             if (x > 0) {
                 /* Display all values */
-                for (i = 0; i < x; i++) {
-                    debug("GetValLDAP", "value[%zd]: \"%s\"\n", i, l->val[i]->bv_val);
-                    debug("GetValLDAP", "value[%zd]: ", i);
-                    for (j = 0; j < (l->val[i]->bv_len); j++) {
-                        c = (int) l->val[i]->bv_val[j];
-                        if (c < 0)
-                            c = c + 256;
-                        debugx("%.2X", c);
-                    }
-                    debugx("\n");
-                }
+                /*
+                	for (i = 0; i < x; i++) {
+                	  debug("GetValLDAP", "value[%zd]: \"%s\"\n", i, l->val[i]->bv_val);
+                	  debug("GetValLDAP", "value[%zd]: ", i);
+                	  for (j = 0; j < (l->val[i]->bv_len); j++) {
+                	    c = (int) l->val[i]->bv_val[j];
+                	    if (c < 0)
+                	      c = c + 256;
+                	    debugx("%.2X", c);
+                	  }
+                	  debugx("\n");
+                	}
+                */
                 /*	CRASHES?!?!
                 	if (ent != NULL)
                 	  ldap_msgfree(ent);
@@ -654,7 +698,8 @@ int GetValLDAP(ldap_t *l, char *attr)
                 l->num_ent = 0;
                 l->status &= ~(LDAP_SEARCH_S);
                 l->status |= LDAP_VAL_S;
-                return LDAP_SUCCESS;					/* Found it */
+                l->err = LDAP_SUCCESS;
+                return LDAP_ERR_SUCCESS;					/* Found it */
             }
         }
         /* Attr not found, continue */
@@ -672,8 +717,9 @@ int GetValLDAP(ldap_t *l, char *attr)
     }
     l->num_ent = 0;
     l->num_val = 0;
+    l->err = LDAP_NO_SUCH_OBJECT;
     l->status &= ~(LDAP_SEARCH_S);
-    return -5;						/* Not found */
+    return LDAP_ERR_NOTFOUND;						/* Not found */
 }
 
 /*
@@ -692,22 +738,26 @@ int SearchIPLDAP(ldap_t *l, char *uid)
     char bufa[MAXLEN], bufb[MAXLEN], hexc[4];
     LDAPMessage *ent;
     struct berval **ber;
-    if ((l == NULL) || (uid == NULL)) return -1;
-    if (l->lp == NULL) return -2;
-    if (!(l->status & LDAP_SEARCH_S)) return -3;		/* Not searched */
-    if (l->num_ent <= 0) return -4;			/* No entries found */
+    if (l == NULL) return LDAP_ERR_NULL;
+    if (uid == NULL) return LDAP_ERR_PARAM;
+    if (l->lp == NULL) return LDAP_ERR_POINTER;
+    if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;			/* Not initalized */
+    if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;			/* Not open */
+    if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;			/* Not bound */
+    if (!(l->status & LDAP_SEARCH_S)) return LDAP_ERR_NOT_SEARCHED;	/* Not searched */
+    if (l->num_ent <= 0) return LDAP_ERR_DATA;				/* No entries found */
     if (l->val != NULL)
-        ldap_value_free_len(l->val);			/* Clear data before populating */
+        ldap_value_free_len(l->val);					/* Clear data before populating */
     l->num_val = 0;
     if (l->status & LDAP_VAL_S)
-        l->status &= ~(LDAP_VAL_S);				/* Clear VAL bit */
+        l->status &= ~(LDAP_VAL_S);						/* Clear VAL bit */
 
     /* Sift through entries */
     for (ent = ldap_first_entry(l->lp, l->lm); ent != NULL; ent = ldap_next_entry(l->lp, ent)) {
         l->val = ldap_get_values_len(l->lp, ent, "networkAddress");
-        ber = ldap_get_values_len(l->lp, ent, "cn");
+        ber = ldap_get_values_len(l->lp, ent, conf.attrib);			/* conf.attrib is the <userid> mapping */
         if (l->val != NULL) {
-            x = ldap_count_values_len(l->val);		/* We got x values ... */
+            x = ldap_count_values_len(l->val);				/* We got x values ... */
             l->num_val = x;
             if (x > 0) {
                 /* Display all values */
@@ -715,30 +765,32 @@ int SearchIPLDAP(ldap_t *l, char *uid)
                     j = l->val[i]->bv_len;
                     memcpy(bufa, l->val[i]->bv_val, j);
                     z = SplitString(bufa, j, '#', bufb, sizeof(bufb));
-                    debug("SearchIPLDAP", "value[%zd]: SplitString(", i);
-                    for (k = 0; k < z; k++) {
-                        c = (int) bufb[k];
-                        if (c < 0)
-                            c = c + 256;
-                        debugx("%.2X", c);
-                    }
-                    debugx(", ");
-                    for (k = 0; k < (j - z - 1); k++) {
-                        c = (int) bufa[k];
-                        if (c < 0)
-                            c = c + 256;
-                        debugx("%.2X", c);
-                    }
-                    debugx("): %zd\n", z);
+                    /*
+                    	  debug("SearchIPLDAP", "value[%zd]: SplitString(", i);
+                    	  for (k = 0; k < z; k++) {
+                    	    c = (int) bufb[k];
+                    	    if (c < 0)
+                    	      c = c + 256;
+                    	    debugx("%.2X", c);
+                    	  }
+                    	  debugx(", ");
+                    	  for (k = 0; k < (j - z - 1); k++) {
+                    	    c = (int) bufa[k];
+                    	    if (c < 0)
+                    	      c = c + 256;
+                    	    debugx("%.2X", c);
+                    	  }
+                    	  debugx("): %zd\n", z);
+                    */
                     z = j - z - 1;
                     j = atoi(bufb);
                     switch (j) {
-                    case 0:						/* IPX address (We don't support these right now) */
+                    case 0:							/* IPX address (We don't support these right now) */
                         break;
-                    case 1:						/* IPv4 address (eDirectory 8.7 and below) */
+                    case 1:							/* IPv4 address (eDirectory 8.7 and below) */
                         /* bufa is the address, just compare it */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
-                            break;						/* Not looking for IPv4 */
+                            break;							/* Not looking for IPv4 */
                         for (k = 0; k < z; k++) {
                             c = (int) bufa[k];
                             if (c < 0)
@@ -761,15 +813,16 @@ int SearchIPLDAP(ldap_t *l, char *uid)
                             ldap_value_free_len(ber);
                             ber = NULL;
                             l->num_val = 0;
+                            l->err = LDAP_SUCCESS;
                             l->status &= ~(LDAP_SEARCH_S);
-                            return LDAP_SUCCESS;				/* We got our userid */
+                            return LDAP_ERR_SUCCESS;				/* We got our userid */
                         }
                         /* Not matched, continue */
                         break;
-                    case 8:						/* IPv4 (UDP) address (eDirectory 8.8 and higher) */
+                    case 8:							/* IPv4 (UDP) address (eDirectory 8.8 and higher) */
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
-                            break;						/* Not looking for IPv4 */
+                            break;							/* Not looking for IPv4 */
                         for (k = 2; k < z; k++) {
                             c = (int) bufa[k];
                             if (c < 0)
@@ -792,15 +845,16 @@ int SearchIPLDAP(ldap_t *l, char *uid)
                             ldap_value_free_len(ber);
                             ber = NULL;
                             l->num_val = 0;
+                            l->err = LDAP_SUCCESS;
                             l->status &= ~(LDAP_SEARCH_S);
-                            return LDAP_SUCCESS;				/* We got our userid */
+                            return LDAP_ERR_SUCCESS;				/* We got our userid */
                         }
                         /* Not matched, continue */
                         break;
-                    case 9:						/* IPv4 (TCP) address (eDirectory 8.8 and higher) */
+                    case 9:							/* IPv4 (TCP) address (eDirectory 8.8 and higher) */
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
-                            break;						/* Not looking for IPv4 */
+                            break;							/* Not looking for IPv4 */
                         for (k = 2; k < z; k++) {
                             c = (int) bufa[k];
                             if (c < 0)
@@ -823,15 +877,16 @@ int SearchIPLDAP(ldap_t *l, char *uid)
                             ldap_value_free_len(ber);
                             ber = NULL;
                             l->num_val = 0;
+                            l->err = LDAP_SUCCESS;
                             l->status &= ~(LDAP_SEARCH_S);
-                            return LDAP_SUCCESS;				/* We got our userid */
+                            return LDAP_ERR_SUCCESS;				/* We got our userid */
                         }
                         /* Not matched, continue */
                         break;
-                    case 10:						/* IPv6 (UDP) address (eDirectory 8.8 and higher) */
+                    case 10:							/* IPv6 (UDP) address (eDirectory 8.8 and higher) */
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV6_S))
-                            break;						/* Not looking for IPv6 */
+                            break;							/* Not looking for IPv6 */
                         for (k = 2; k < z; k++) {
                             c = (int) bufa[k];
                             if (c < 0)
@@ -854,15 +909,16 @@ int SearchIPLDAP(ldap_t *l, char *uid)
                             ldap_value_free_len(ber);
                             ber = NULL;
                             l->num_val = 0;
+                            l->err = LDAP_SUCCESS;
                             l->status &= ~(LDAP_SEARCH_S);
-                            return LDAP_SUCCESS;				/* We got our userid */
+                            return LDAP_ERR_SUCCESS;				/* We got our userid */
                         }
                         /* Not matched, continue */
                         break;
-                    case 11:						/* IPv6 (TCP) address (eDirectory 8.8 and higher) */
+                    case 11:							/* IPv6 (TCP) address (eDirectory 8.8 and higher) */
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV6_S))
-                            break;						/* Not looking for IPv6 */
+                            break;							/* Not looking for IPv6 */
                         for (k = 2; k < z; k++) {
                             c = (int) bufa[k];
                             if (c < 0)
@@ -885,12 +941,13 @@ int SearchIPLDAP(ldap_t *l, char *uid)
                             ldap_value_free_len(ber);
                             ber = NULL;
                             l->num_val = 0;
+                            l->err = LDAP_SUCCESS;
                             l->status &= ~(LDAP_SEARCH_S);
-                            return LDAP_SUCCESS;				/* We gout our userid */
+                            return LDAP_ERR_SUCCESS;				/* We gout our userid */
                         }
                         /* Not matched, continue */
                         break;
-                    default:						/* Other, unsupported */
+                    default:							/* Other, unsupported */
                         break;
                     }
                 }
@@ -927,6 +984,49 @@ int SearchIPLDAP(ldap_t *l, char *uid)
     }
     l->num_ent = 0;
     l->num_val = 0;
+    l->err = LDAP_NO_SUCH_OBJECT;
     l->status &= ~(LDAP_SEARCH_S);
-    return -5;						/* Not found ... Sorry :) */
+    return LDAP_ERR_NOTFOUND;						/* Not found ... Sorry :) */
+}
+
+char *ErrLDAP(int e)
+{
+    switch (e) {
+    case LDAP_ERR_NULL:
+        return "Null pointer provided";
+    case LDAP_ERR_POINTER:
+        return "Null LDAP pointer";
+    case LDAP_ERR_PARAM:
+        return "Null or Missing paremeter(s)";
+    case LDAP_ERR_INIT:
+        return "LDAP data not initalized";
+    case LDAP_ERR_OPEN:
+        return "LDAP connection is not active";
+    case LDAP_ERR_CONNECT:
+        return "Unable to connect to LDAP host";
+    case LDAP_ERR_BIND:
+        return "LDAP connection is not bound";
+    case LDAP_ERR_SEARCHED:
+        return "LDAP connection has already been searched";
+    case LDAP_ERR_NOT_SEARCHED:
+        return "LDAP connection has not been searched";
+    case LDAP_ERR_INVALID:
+        return "Invalid paremeters";
+    case LDAP_ERR_OOB:
+        return "Paremeter is out of bounds";
+    case LDAP_ERR_PERSIST:
+        return "Persistent mode is not active";
+    case LDAP_ERR_DATA:
+        return "Required data has not been found";
+    case LDAP_ERR_NOTFOUND:
+        return "Item or object has not been found";
+    case LDAP_ERR_OTHER:
+        return "An unknown error has occured";
+    case LDAP_ERR_FAILED:
+        return "Operation has failed";
+    case LDAP_ERR_SUCCESS:
+        return "Operation is successful";
+    default:
+        return "An unknown error has occured";
+    }
 }
