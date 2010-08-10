@@ -161,7 +161,7 @@ public:
 
     int rtt;
     int src_rtt;
-    u_int32_t flags;
+    uint32_t flags;
 };
 
 ICP2State::~ICP2State()
@@ -265,7 +265,7 @@ _icp_common_t::createMessage(
     buf_len = sizeof(icp_common_t) + strlen(url) + 1;
 
     if (opcode == ICP_QUERY)
-        buf_len += sizeof(u_int32_t);
+        buf_len += sizeof(uint32_t);
 
     buf = (char *) xcalloc(buf_len, 1);
 
@@ -275,7 +275,7 @@ _icp_common_t::createMessage(
 
     headerp->version = ICP_VERSION_CURRENT;
 
-    headerp->length = (u_int16_t) htons(buf_len);
+    headerp->length = (uint16_t) htons(buf_len);
 
     headerp->reqnum = htonl(reqnum);
 
@@ -288,7 +288,7 @@ _icp_common_t::createMessage(
     urloffset = buf + sizeof(icp_common_t);
 
     if (opcode == ICP_QUERY)
-        urloffset += sizeof(u_int32_t);
+        urloffset += sizeof(uint32_t);
 
     xmemcpy(urloffset, url, strlen(url));
 
@@ -475,9 +475,9 @@ doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
 {
     int rtt = 0;
     int src_rtt = 0;
-    u_int32_t flags = 0;
+    uint32_t flags = 0;
     /* We have a valid packet */
-    char *url = buf + sizeof(icp_common_t) + sizeof(u_int32_t);
+    char *url = buf + sizeof(icp_common_t) + sizeof(uint32_t);
     HttpRequest *icp_request = icpGetRequest(url, header.reqnum, fd, from);
 
     if (!icp_request)
@@ -675,7 +675,7 @@ icpHandleUdp(int sock, void *data)
 void
 icpConnectionsOpen(void)
 {
-    u_int16_t port;
+    uint16_t port;
     Ip::Address addr;
 
     struct addrinfo *xai = NULL;

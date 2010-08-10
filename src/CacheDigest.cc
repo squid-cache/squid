@@ -51,7 +51,7 @@ typedef struct {
 static void cacheDigestHashKey(const CacheDigest * cd, const cache_key * key);
 
 /* static array used by cacheDigestHashKey for optimization purposes */
-static u_int32_t hashed_keys[4];
+static uint32_t hashed_keys[4];
 
 static void
 cacheDigestInit(CacheDigest * cd, int capacity, int bpe)
