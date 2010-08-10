@@ -1381,6 +1381,20 @@ peerProbeConnect(peer * p)
 
     Ip::Address temp(getOutgoingAddr(NULL,p));
 
+    // if IPv6 is disabled try to force IPv4-only outgoing.
+    if (!Ip::EnableIpv6 && !temp.SetIPv4()) {
+        debugs(50, DBG_IMPORTANT, "WARNING: IPv6 is disabled. Failed to use " << temp << " to probe " << p->host);
+        return ret;
+    }
+
+    // if IPv6 is split-stack, prefer IPv4
+    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK) {
+        // NP: This is not a great choice of default,
+        // but with the current Internet being IPv4-majority has a higher success rate.
+        // if setting to IPv4 fails we dont care, that just means to use IPv6 outgoing.
+        temp.SetIPv4();
+    }
+
     fd = comm_open(SOCK_STREAM, IPPROTO_TCP, temp, COMM_NONBLOCKING, p->host);
 
     if (fd < 0)
