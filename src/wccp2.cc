@@ -577,7 +577,7 @@ wccp2_get_service_by_id(int service, int service_id) {
 static char
 wccp2_update_md5_security(char *password, char *ptr, char *packet, int len)
 {
-    u_int8_t md5_digest[16];
+    uint8_t md5_digest[16];
     char pwd[WCCP2_PASSWORD_LEN];
     SquidMD5_CTX M;
 
@@ -631,7 +631,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 {
 
     struct wccp2_security_md5_t *ws = (struct wccp2_security_md5_t *) security;
-    u_int8_t md5_digest[16], md5_challenge[16];
+    uint8_t md5_digest[16], md5_challenge[16];
     char pwd[WCCP2_PASSWORD_LEN];
     SquidMD5_CTX M;
 

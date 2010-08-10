@@ -135,7 +135,7 @@ protected:
     int ipHops(int ttl);
 
     /// Log the packet.
-    void Log(const Ip::Address &addr, const u_int8_t type, const char* pkt_str, const int rtt, const int hops);
+    void Log(const Ip::Address &addr, const uint8_t type, const char* pkt_str, const int rtt, const int hops);
 
     /* no use wasting memory */
     int icmp_sock;
