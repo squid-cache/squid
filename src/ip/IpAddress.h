@@ -238,7 +238,7 @@ public:
      \param force (optional) require the IPA in a specific format.
      \return pointer to buffer received.
      */
-    char* NtoA(char *buf, unsigned int len, int force = AF_UNSPEC) const;
+    char* NtoA(char *buf, const unsigned int blen, int force = AF_UNSPEC) const;
 
     /** Return the ASCII equivalent of the address:port combination
      *  Provides a URL formatted version of the content.
