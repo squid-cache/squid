@@ -12,6 +12,11 @@ if USE_ECAP
 SUBDIRS += ecap
 endif
 
+if USE_LOADABLE_MODULES
+## LTDL headers require their local include path...
+INCLUDES += $(INCLTDL)
+endif
+
 noinst_LTLIBRARIES = libadaptation.la
 
 ## start with the code shared among all adaptation schemes
