@@ -114,8 +114,8 @@ static char identifier[MAXLINE] = "";
 static char svc_name[MAXLINE] = "radius";
 static int nasport = 111;
 static int nasporttype = 0;
-static u_int32_t nas_ipaddr;
-static u_int32_t auth_ipaddr;
+static uint32_t nas_ipaddr;
+static uint32_t auth_ipaddr;
 static int retries = 30;
 
 char progname[] = "basic_radius_auth";
@@ -165,7 +165,7 @@ md5_calc(uint8_t out[16], void *in, size_t len)
  *    Receive and verify the result.
  */
 static int
-result_recv(u_int32_t host, u_short udp_port, char *buffer, int length)
+result_recv(uint32_t host, u_short udp_port, char *buffer, int length)
 {
     AUTH_HDR *auth;
     int totallen;
@@ -287,7 +287,7 @@ authenticate(int socket_fd, const char *username, const char *passwd)
     int secretlen;
     u_char cbc[AUTH_VECTOR_LEN];
     int i, j;
-    u_int32_t ui;
+    uint32_t ui;
     struct sockaddr_in saremote;
     fd_set readfds;
     socklen_t salen;

@@ -102,37 +102,37 @@ static int good_ipaddr(char *addr)
  *	Return an IP address in host long notation from
  *	one supplied in standard dot notation.
  */
-static u_int32_t ipstr2long(char *ip_str)
+static uint32_t ipstr2long(char *ip_str)
 {
     char	buf[6];
     char	*ptr;
     int	i;
     int	count;
-    u_int32_t	ipaddr;
+    uint32_t	ipaddr;
     int	cur_byte;
 
-    ipaddr = (u_int32_t)0;
+    ipaddr = (uint32_t)0;
     for (i = 0; i < 4; i++) {
         ptr = buf;
         count = 0;
         *ptr = '\0';
         while (*ip_str != '.' && *ip_str != '\0' && count < 4) {
             if (!isdigit(*ip_str)) {
-                return((u_int32_t)0);
+                return((uint32_t)0);
             }
             *ptr++ = *ip_str++;
             count++;
         }
         if (count >= 4 || count == 0) {
-            return((u_int32_t)0);
+            return((uint32_t)0);
         }
         *ptr = '\0';
         cur_byte = atoi(buf);
         if (cur_byte < 0 || cur_byte > 255) {
-            return((u_int32_t)0);
+            return((uint32_t)0);
         }
         ip_str++;
-        ipaddr = ipaddr << 8 | (u_int32_t)cur_byte;
+        ipaddr = ipaddr << 8 | (uint32_t)cur_byte;
     }
     return(ipaddr);
 }
@@ -141,14 +141,14 @@ static u_int32_t ipstr2long(char *ip_str)
  *	Return an IP address in host long notation from a host
  *	name or address in dot notation.
  */
-u_int32_t get_ipaddr(char *host)
+uint32_t get_ipaddr(char *host)
 {
     struct hostent	*hp;
 
     if (good_ipaddr(host) == 0) {
         return(ipstr2long(host));
     } else if ((hp = gethostbyname(host)) == (struct hostent *)NULL) {
-        return((u_int32_t)0);
+        return((uint32_t)0);
     }
-    return(ntohl(*(u_int32_t *)hp->h_addr));
+    return(ntohl(*(uint32_t *)hp->h_addr));
 }

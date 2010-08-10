@@ -81,18 +81,18 @@ typedef struct _htcpStuff htcpStuff;
 typedef struct _htcpDetail htcpDetail;
 
 struct _Countstr {
-    u_int16_t length;
+    uint16_t length;
     char *text;
 };
 
 struct _htcpHeader {
-    u_int16_t length;
+    uint16_t length;
     u_char major;
     u_char minor;
 };
 
 struct _htcpDataHeaderSquid {
-    u_int16_t length;
+    uint16_t length;
 
 #if !WORDS_BIGENDIAN
     unsigned int opcode:4;
@@ -112,41 +112,41 @@ struct _htcpDataHeaderSquid {
     unsigned int reserved:6;
 #endif
 
-    u_int32_t msg_id;
+    uint32_t msg_id;
 };
 
 struct _htcpDataHeader {
-    u_int16_t length;
+    uint16_t length;
 
 #if WORDS_BIGENDIAN
-u_int8_t opcode:
+uint8_t opcode:
     4;
-u_int8_t response:
+uint8_t response:
     4;
 #else
-u_int8_t response:
+uint8_t response:
     4;
-u_int8_t opcode:
+uint8_t opcode:
     4;
 #endif
 
 #if WORDS_BIGENDIAN
-u_int8_t reserved:
+uint8_t reserved:
     6;
-u_int8_t F1:
+uint8_t F1:
     1;
-u_int8_t RR:
+uint8_t RR:
     1;
 #else
-u_int8_t RR:
+uint8_t RR:
     1;
-u_int8_t F1:
+uint8_t F1:
     1;
-u_int8_t reserved:
+uint8_t reserved:
     6;
 #endif
 
-    u_int32_t msg_id;
+    uint32_t msg_id;
 };
 
 /* RR == 0 --> F1 = RESPONSE DESIRED FLAG */
@@ -155,7 +155,7 @@ u_int8_t reserved:
 /* RR == 1 --> RESPONSE */
 
 struct _htcpAuthHeader {
-    u_int16_t length;
+    uint16_t length;
     time_t sig_time;
     time_t sig_expire;
     Countstr key_name;
@@ -201,7 +201,7 @@ struct _htcpStuff {
     int f1;
     int response;
     int reason;
-    u_int32_t msg_id;
+    uint32_t msg_id;
     htcpSpecifier S;
     htcpDetail D;
 };
@@ -245,12 +245,12 @@ enum {
 };
 
 static void htcpIncomingConnectionOpened(int fd, int errNo);
+static uint32_t msg_id_counter = 0;
 
-static u_int32_t msg_id_counter = 0;
 static int htcpInSocket = -1;
 static int htcpOutSocket = -1;
 #define N_QUERIED_KEYS 8192
-static u_int32_t queried_id[N_QUERIED_KEYS];
+static uint32_t queried_id[N_QUERIED_KEYS];
 static cache_key queried_keys[N_QUERIED_KEYS][SQUID_MD5_DIGEST_LENGTH];
 
 static Ip::Address queried_addr[N_QUERIED_KEYS];
@@ -327,7 +327,7 @@ htcpBuildAuth(char *buf, size_t buflen)
 {
     htcpAuthHeader auth;
     size_t copy_sz = 0;
-    assert(2 == sizeof(u_int16_t));
+    assert(2 == sizeof(uint16_t));
     auth.length = htons(2);
     copy_sz += 2;
     if (buflen < copy_sz)
@@ -339,7 +339,7 @@ htcpBuildAuth(char *buf, size_t buflen)
 static ssize_t
 htcpBuildCountstr(char *buf, size_t buflen, const char *s)
 {
-    u_int16_t length;
+    uint16_t length;
     size_t len;
     int off = 0;
 
@@ -355,7 +355,7 @@ htcpBuildCountstr(char *buf, size_t buflen, const char *s)
 
     debugs(31, 3, "htcpBuildCountstr: TEXT = {" << (s ? s : "<NULL>") << "}");
 
-    length = htons((u_int16_t) len);
+    length = htons((uint16_t) len);
 
     xmemcpy(buf + off, &length, 2);
 
@@ -530,7 +530,7 @@ htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
 
     debugs(31, 3, "htcpBuildData: hdr.length = " << off);
 
-    hdr.length = (u_int16_t) off;
+    hdr.length = (uint16_t) off;
 
     hdr.opcode = stuff->op;
 
@@ -597,7 +597,7 @@ htcpBuildPacket(char *buf, size_t buflen, htcpStuff * stuff)
     }
 
     off += s;
-    hdr.length = htons((u_int16_t) off);
+    hdr.length = htons((uint16_t) off);
     hdr.major = 0;
 
     if (old_squid_format)
@@ -674,7 +674,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     HttpRequestMethod method;
 
     /* Find length of METHOD */
-    u_int16_t l = ntohs(*(u_int16_t *) buf);
+    uint16_t l = ntohs(*(uint16_t *) buf);
     sz -= 2;
     buf += 2;
 
@@ -691,7 +691,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: METHOD (" << l << "/" << sz << ") '" << s->method << "'");
 
     /* Find length of URI */
-    l = ntohs(*(u_int16_t *) buf);
+    l = ntohs(*(uint16_t *) buf);
     sz -= 2;
 
     if (l > sz) {
@@ -711,7 +711,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: URI (" << l << "/" << sz << ") '" << s->uri << "'");
 
     /* Find length of VERSION */
-    l = ntohs(*(u_int16_t *) buf);
+    l = ntohs(*(uint16_t *) buf);
     sz -= 2;
 
     if (l > sz) {
@@ -731,7 +731,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     debugs(31, 6, "htcpUnpackSpecifier: VERSION (" << l << "/" << sz << ") '" << s->version << "'");
 
     /* Find length of REQ-HDRS */
-    l = ntohs(*(u_int16_t *) buf);
+    l = ntohs(*(uint16_t *) buf);
     sz -= 2;
 
     if (l > sz) {
@@ -782,7 +782,7 @@ htcpUnpackDetail(char *buf, int sz)
     htcpDetail *d = static_cast<htcpDetail *>(htcpDetailPool->alloc());
 
     /* Find length of RESP-HDRS */
-    u_int16_t l = ntohs(*(u_int16_t *) buf);
+    uint16_t l = ntohs(*(uint16_t *) buf);
     sz -= 2;
     buf += 2;
 
@@ -800,7 +800,7 @@ htcpUnpackDetail(char *buf, int sz)
     sz -= l;
 
     /* Find length of ENTITY-HDRS */
-    l = ntohs(*(u_int16_t *) buf);
+    l = ntohs(*(uint16_t *) buf);
 
     sz -= 2;
 
@@ -823,7 +823,7 @@ htcpUnpackDetail(char *buf, int sz)
     sz -= l;
 
     /* Find length of CACHE-HDRS */
-    l = ntohs(*(u_int16_t *) buf);
+    l = ntohs(*(uint16_t *) buf);
 
     sz -= 2;
 
