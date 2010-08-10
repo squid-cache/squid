@@ -1650,6 +1650,10 @@ DOC_START
 	when using encrypted SSL certificate keys. If not specified
 	keys must either be unencrypted, or Squid started with the -N
 	option to allow it to query interactively for the passphrase.
+
+	The key file name is given as argument to the program allowing
+	selection of the right password if you have multiple encrypted
+	keys.
 DOC_END
 
 COMMENT_START
