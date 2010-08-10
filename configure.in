@@ -73,6 +73,10 @@ AC_PATH_PROG(AR, ar, $FALSE)
 AR_R="$AR r"
 AC_SUBST(AR_R)
 
+# this needs to be before any test is run, to have more standard
+# functions available on some Unix sysems (e.g. Solaris)
+AC_USE_SYSTEM_EXTENSIONS
+
 AC_ARG_ENABLE(strict-error-checking,
   AS_HELP_STRING([--disable-strict-error-checking],[By default squid is compiled
                  with all possible static compiler error-checks enabled.
@@ -126,8 +130,6 @@ fi
 
 SQUID_CC_GUESS_VARIANT
 SQUID_CC_GUESS_OPTIONS
-
-
 
 dnl find out the exe extension for this platform.
 dnl If it is not empty, use it for CGI as well.
@@ -2151,7 +2153,8 @@ AC_CHECK_HEADERS( \
   stdint.h \
   inttypes.h \
   db.h \
-  db_185.h
+  db_185.h \
+  wchar.h
 )
 
 CHECK_STRUCT_PAM_CONV
