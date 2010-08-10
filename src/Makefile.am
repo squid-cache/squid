@@ -558,7 +558,7 @@ endif
 
 unlinkd_SOURCES = unlinkd_daemon.cc SquidNew.cc
 
-dnsserver_SOURCES = dnsserver.cc SquidNew.cc
+dnsserver_SOURCES = dnsserver.cc SquidNew.cc stub_debug.cc
 recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 
 ## What requires what..
