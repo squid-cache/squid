@@ -201,8 +201,13 @@ idnsAddNameserver(const char *buf)
 
     if (A.IsAnyAddr()) {
         debugs(78, 0, "WARNING: Squid does not accept " << A << " in DNS server specifications.");
-        A = "127.0.0.1";
+        A.SetLocalhost();
         debugs(78, 0, "Will be using " << A << " instead, assuming you meant that DNS is running on the same machine");
+    }
+
+    if (!Ip::EnableIpv6 && !A.SetIPv4()) {
+        debugs(78, DBG_IMPORTANT, "WARNING: IPv6 is disabled. Discarding " << A << " in DNS server specifications.");
+        return;
     }
 
     if (nns == nns_alloc) {
@@ -741,6 +746,12 @@ idnsInitVC(int ns)
         addr = Config.Addrs.udp_outgoing;
     else
         addr = Config.Addrs.udp_incoming;
+
+    if (nameservers[ns].S.IsIPv4() && !addr.SetIPv4()) {
+        debugs(31, DBG_CRITICAL, "ERROR: Cannot contact DNS nameserver " << nameservers[ns].S << " from " << addr);
+        addr.SetAnyAddr();
+        addr.SetIPv4();
+    }
 
     vc->queue = new MemBuf;
 

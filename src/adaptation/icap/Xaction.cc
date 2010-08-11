@@ -13,6 +13,7 @@
 #include "pconn.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
+#include "ip/tools.h"
 #include "acl/FilledChecklist.h"
 #include "icap_log.h"
 #include "fde.h"
@@ -116,6 +117,15 @@ void Adaptation::Icap::Xaction::openConnection()
     disableRetries(); // we only retry pconn failures
 
     IpAddress outgoing;
+    if (!Ip::EnableIpv6 && !outgoing.SetIPv4()) {
+        debugs(31, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << outgoing << " is not an IPv4 address.");
+        dieOnConnectionFailure(); // throws
+    }
+    /* split-stack for now requires default IPv4-only socket */
+    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && outgoing.IsAnyAddr() && !s.cfg().ipv6) {
+        outgoing.SetIPv4();
+    }
+
     connection = comm_open(SOCK_STREAM, 0, outgoing,
                            COMM_NONBLOCKING, s.cfg().uri.termedBuf());
 

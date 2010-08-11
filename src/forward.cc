@@ -870,9 +870,9 @@ FwdState::connectStart()
 
     // if IPv6 is disabled try to force IPv4-only outgoing.
     if (!Ip::EnableIpv6 && !outgoing.SetIPv4()) {
-        debugs(50, 4, "fwdConnectStart: " << xstrerror());
+        debugs(50, 4, "fwdConnectStart: IPv6 is Disabled. Cannot connect from " << outgoing);
         ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
-        anErr->xerrno = errno;
+        anErr->xerrno = EAFNOSUPPORT;
         fail(anErr);
         self = NULL;	// refcounted
         return;

@@ -5798,6 +5798,11 @@ DOC_START
 		Routing is not allowed by default: the ICAP X-Next-Services
 		response header is ignored.
 
+	ipv6=on|off
+		Only has effect on split-stack systems. The default on those systems
+		is to use IPv4-only connections. When set to 'on' this option will
+		make Squid use IPv6-only connections to contact this ICAP service.
+
 	Older icap_service format without optional named parameters is
 	deprecated but supported for backward compatibility.
 
