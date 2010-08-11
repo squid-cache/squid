@@ -11,7 +11,7 @@
 
 /*
  * ugly hack. System headers require wcsstr, but don't define it.
- */ 
+ */
 #include <wchar.h>
 #ifdef wcsstr
 #undef wcsstr
