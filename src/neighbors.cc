@@ -46,6 +46,7 @@
 #include "Store.h"
 #include "icmp/net_db.h"
 #include "ip/Address.h"
+#include "ip/tools.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
