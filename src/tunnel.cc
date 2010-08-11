@@ -648,8 +648,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
         debugs(50, 4, "tunnelStart: IPv6 is Disabled. Tunnel failed from " << temp);
         ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
         anErr->xerrno = EAFNOSUPPORT;
-        fail(anErr);
-        self = NULL;    // refcounted
+        errorSend(fd, anErr);
         return;
     }
 
