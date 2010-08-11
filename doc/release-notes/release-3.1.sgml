@@ -1158,8 +1158,8 @@ NOCOMMENT_START
 	<tag>https_port intercept sslbump connection-auth[=on|off]</tag>
 	<p>New port options. see http_port.
 
-	<tag>icap_service bypass=on|off|1|0 routing=on|off|1|0</tag>
-	<p>New options 'bypass=' and 'routing='.
+	<tag>icap_service bypass=on|off|1|0 routing=on|off|1|0 ipv6=on|off</tag>
+	<p>New options 'bypass=', 'routing=' and 'ipv6='.
 	<verb>
 	bypass=on|off|1|0
 		If set to 'on' or '1', the ICAP service is treated as
@@ -1186,6 +1186,11 @@ NOCOMMENT_START
 
 		Routing is not allowed by default: the ICAP X-Next-Services
 		response header is ignored.
+
+	ipv6=on|off
+		Only has effect on split-stack systems. The default on those systems
+		is to use IPv4-only connections. When set to 'on' this option will
+		make Squid use IPv6-only connections to contact this ICAP service.
 	</verb>
 
 	<tag>logfile_rotate</tag>
