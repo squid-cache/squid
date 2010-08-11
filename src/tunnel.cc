@@ -46,6 +46,7 @@
 #include "client_side.h"
 #include "MemBuf.h"
 #include "http.h"
+#include "ip/tools.h"
 
 class TunnelStateData
 {
