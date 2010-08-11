@@ -5,6 +5,7 @@
 #include "squid.h"
 #include "ConfigParser.h"
 #include "adaptation/ServiceConfig.h"
+#include "ip/tools.h"
 
 Adaptation::ServiceConfig::ServiceConfig():
         port(-1), method(methodNone), point(pointNone),
@@ -93,8 +94,10 @@ Adaptation::ServiceConfig::parse()
             grokked = grokBool(bypass, name, value);
         else if (strcmp(name, "routing") == 0)
             grokked = grokBool(routing, name, value);
-        if (strcmp(name, "ipv6") == 0) {
+        else if (strcmp(name, "ipv6") == 0) {
             grokked = grokBool(ipv6, name, value);
+            if (grokked && ipv6 && !Ip::EnableIpv6)
+                debugs(3, DBG_IMPORTANT, "WARNING: IPv6 is disabled. ICAP service option ignored.");
         } else {
             debugs(3, 0, cfg_filename << ':' << config_lineno << ": " <<
                    "unknown adaptation service option: " << name << '=' << value);
