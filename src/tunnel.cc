@@ -651,7 +651,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
         errorSend(fd, anErr);
         return;
     }
-    
+
     // if IPv6 is split-stack, prefer IPv4
     if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK) {
         // NP: This is not a great choice of default,
