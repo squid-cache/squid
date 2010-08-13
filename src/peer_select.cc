@@ -59,7 +59,6 @@ static const char *DirectStr[] = {
 
 static void peerSelectFoo(ps_state *);
 static void peerPingTimeout(void *data);
-static void peerSelectCallback(ps_state * psstate);
 static IRCB peerHandlePingReply;
 static void peerSelectStateFree(ps_state * psstate);
 static void peerIcpParentMiss(peer *, icp_common_t *, ps_state *);
@@ -83,6 +82,15 @@ CBDATA_CLASS_INIT(ps_state);
 static void
 peerSelectStateFree(ps_state * psstate)
 {
+    if (psstate->entry) {
+        debugs(44, 3, HERE << psstate->entry->url());
+
+        if (psstate->entry->ping_status == PING_WAITING)
+            eventDelete(peerPingTimeout, psstate);
+
+        psstate->entry->ping_status = PING_DONE;
+    }
+
     if (psstate->acl_checklist) {
         debugs(44, 1, "calling aclChecklistFree() from peerSelectStateFree");
         delete (psstate->acl_checklist);
@@ -183,32 +191,6 @@ peerCheckAlwaysDirectDone(int answer, void *data)
     peerSelectFoo(psstate);
 }
 
-static void
-peerSelectCallback(ps_state * psstate)
-{
-    StoreEntry *entry = psstate->entry;
-    FwdServer *fs = psstate->servers;
-
-    if (entry) {
-        debugs(44, 3, "peerSelectCallback: " << entry->url()  );
-
-        if (entry->ping_status == PING_WAITING)
-            eventDelete(peerPingTimeout, psstate);
-
-        entry->ping_status = PING_DONE;
-    }
-
-    if (fs == NULL) {
-        debugs(44, 1, "Failed to select source for '" << entry->url() << "'" );
-        debugs(44, 1, "  always_direct = " << psstate->always_direct  );
-        debugs(44, 1, "   never_direct = " << psstate->never_direct  );
-        debugs(44, 1, "       timedout = " << psstate->ping.timedout  );
-    }
-
-    psstate->ping.stop = current_time;
-    psstate->request->hier.ping = psstate->ping;
-}
-
 void
 peerSelectDnsPaths(ps_state *psstate)
 {
@@ -227,7 +209,17 @@ peerSelectDnsPaths(ps_state *psstate)
     PSC *callback = psstate->callback;
     psstate->callback = NULL;
 
-    debugs(44, 2, "Found IP destination for: " << psstate->entry->url() << "'");
+    if (psstate->paths->size() < 1) {
+        debugs(44, DBG_IMPORTANT, "Failed to select source for '" << psstate->entry->url() << "'" );
+        debugs(44, DBG_IMPORTANT, "  always_direct = " << psstate->always_direct  );
+        debugs(44, DBG_IMPORTANT, "   never_direct = " << psstate->never_direct  );
+        debugs(44, DBG_IMPORTANT, "       timedout = " << psstate->ping.timedout  );
+    } else {
+        debugs(44, 2, "Found IP destination for: " << psstate->entry->url() << "'");
+    }
+
+    psstate->ping.stop = current_time;
+    psstate->request->hier.ping = psstate->ping;
 
     void *cbdata;
     if (cbdataReferenceValidDone(psstate->callback_data, &cbdata)) {
