@@ -38,6 +38,7 @@
 #include "htcp.h"
 #include "HttpRequest.h"
 #include "ICP.h"
+#include "ip/tools.h"
 #include "MemObject.h"
 #include "PeerDigest.h"
 #include "PeerSelectState.h"

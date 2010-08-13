@@ -26,7 +26,7 @@
  */
 
 #include "main.h"
-#include "util.h"
+#include "edui_util.h"
 #include "iplookup.h"
 
 char *search_attrib[] = { "cn", "uid", "networkAddress", "groupMembership", NULL };
@@ -88,7 +88,7 @@ void InitConf()
     conf.mode = 0;
     conf.mode |= MODE_INIT;
 
-    /* Set defaults from config.h */
+    /* Set defaults from edui_config.h */
 #ifdef DEFAULT_BASE_DN
     strcpy(conf.basedn, DEFAULT_BASE_DN);
 #endif

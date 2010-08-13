@@ -29,7 +29,7 @@
 #define _HAVE_CONFIG_H
 
 /* Default program name */
-#define DEFAULT_PROGRAM_NAME	"squid_edir_iplookup"
+#define DEFAULT_PROGRAM_NAME	"ext_edirectory_userip_acl"
 
 /* Hostname or IP address of LDAP server, default is IPv4 localhost (127.0.0.1) */
 /* #define DEFAULT_LDAP_HOST */
