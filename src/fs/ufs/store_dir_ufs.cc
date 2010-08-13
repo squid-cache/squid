@@ -687,8 +687,8 @@ UFSSwapDir::addDiskRestore(const cache_key * key,
                            time_t timestamp,
                            time_t lastref,
                            time_t lastmod,
-                           u_int32_t refcount,
-                           u_int16_t newFlags,
+                           uint32_t refcount,
+                           uint16_t newFlags,
                            int clean)
 {
     StoreEntry *e = NULL;

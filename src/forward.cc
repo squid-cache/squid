@@ -52,7 +52,6 @@
 #include "Store.h"
 #include "icmp/net_db.h"
 #include "ip/Intercept.h"
-#include "ip/tools.h"
 
 
 static PSC fwdPeerSelectionCompleteWrapper;

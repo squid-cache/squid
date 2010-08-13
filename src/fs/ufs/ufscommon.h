@@ -96,8 +96,8 @@ public:
                                time_t timestamp,
                                time_t lastref,
                                time_t lastmod,
-                               u_int32_t refcount,
-                               u_int16_t flags,
+                               uint32_t refcount,
+                               uint16_t flags,
                                int clean);
     int validFileno(sfileno filn, int flag) const;
     int mapBitAllocate();

@@ -43,7 +43,7 @@
 
 /** Dumps NTLM flags to standard error for debugging purposes */
 void
-ntlm_dump_ntlmssp_flags(u_int32_t flags)
+ntlm_dump_ntlmssp_flags(uint32_t flags)
 {
     fprintf(stderr, "flags: %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
             (flags & NTLM_NEGOTIATE_UNICODE ? "Unicode " : ""),
@@ -113,7 +113,7 @@ ntlm_validate_packet(const ntlmhdr * hdr, const int32_t type)
  * String may be either ASCII or UNICODE depending on whether flags contains NTLM_NEGOTIATE_ASCII
  */
 lstring
-ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr * str, const u_int32_t flags)
+ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr * str, const uint32_t flags)
 {
     int16_t l;			/* length */
     int32_t o;			/* offset */
@@ -225,7 +225,7 @@ void
 ntlm_make_challenge(ntlm_challenge *ch,
                     const char *domain, const char *domain_controller_UNUSED,
                     const char *challenge_nonce, const int challenge_nonce_len,
-                    const u_int32_t flags)
+                    const uint32_t flags)
 {
     int pl = 0;
     memset(ch, 0, sizeof(ntlm_challenge));	/* reset */

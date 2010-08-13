@@ -505,7 +505,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
     }
 
     if (e->checkNegativeHit()
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
             && !r->flags.nocache_hack
 #endif
        ) {
@@ -1065,8 +1065,6 @@ clientHttpRequestStatus(int fd, ClientHttpRequest const *http)
         return 1;
     }
 
-#endif
-#if SIZEOF_INT64_T == 4
     if (http->out.offset > 0x7FFF0000) {
         debugs(88, 1, "WARNING: closing FD " << fd < " to prevent out.offset counter overflow");
         debugs(88, 1, "\tclient " << http->getConn()->peer);
@@ -1385,6 +1383,9 @@ clientReplyContext::buildReplyHeader()
     } else if (fdUsageHigh()&& !request->flags.must_keepalive) {
         debugs(88, 3, "clientBuildReplyHeader: Not many unused FDs, can't keep-alive");
         request->flags.proxy_keepalive = 0;
+    } else if (request->http_ver.major == 1 && request->http_ver.minor == 1) {
+        debugs(88, 3, "clientBuildReplyHeader: Client is HTTP/1.1, send keep-alive, no overriding reasons not to");
+        request->flags.proxy_keepalive = 1;
     }
 
 
@@ -1497,7 +1498,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     }
 
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
 
     else if (r->flags.nocache_hack) {
 
@@ -1513,7 +1514,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     }
 
-#endif /* HTTP_VIOLATIONS */
+#endif /* USE_HTTP_VIOLATIONS */
 #if USE_CACHE_DIGESTS
 
     lookup_type = http->storeEntry() ? "HIT" : "MISS";

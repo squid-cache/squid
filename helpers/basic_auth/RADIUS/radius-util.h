@@ -4,4 +4,4 @@
 #include "util.h"
 
 /* util.c */
-u_int32_t		get_ipaddr (char *);
+uint32_t		get_ipaddr (char *);

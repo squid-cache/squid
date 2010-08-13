@@ -32,11 +32,13 @@
 char *search_attrib[] = { "cn", "uid", "networkAddress", "groupMembership", NULL };
 conf_t conf;
 ldap_t ldap;
+time_t now;
+time_t elap;
 
 /* Displays version information */
 void DisplayVersion()
 {
-    printfx("Squid eDirectory IP Lookup Helper v1.2.  Copyright (C) 2009, 2010 Chad E. Naugle\n");
+    printfx("Squid eDirectory IP Lookup Helper v1.5.  Copyright (C) 2009, 2010 Chad E. Naugle\n");
 }
 
 /* Displays program usage information */
@@ -45,8 +47,8 @@ void DisplayUsage()
     DisplayVersion();
     printfx("\n");
     printfx("Usage: %s\n", conf.program);
-    printfx("		-H <host> -p <port> [-Z] [-2/3] -b <basedn> -s <scope>\n");
-    printfx("		-D <binddn> -W <bindpass> -F <search-filter> -G \n\n");
+    printfx("		-H <host> -p <port> [-Z] [-P] [-v 3] -b <basedn> -s <scope>\n");
+    printfx("		-D <binddn> -W <bindpass> -F <search-filter> [-G] \n\n");
     printfx("	-d	    : Debug Mode.\n");
     printfx("	-4	    : Address is IPv4 (127.0.0.1 format).\n");
     printfx("	-6	    : Address is IPv6 (::1 format).\n");
@@ -54,16 +56,17 @@ void DisplayUsage()
     printfx("	-H <host>   : Specify hostname/ip of server.\n");
     printfx("	-p <port>   : Specify port number. (Range 1-65535)\n");
     printfx("	-Z	    : Enable TLS security.\n");
-    printfx("	-1	    : Set LDAP version 1.\n");
-    printfx("	-2	    : Set LDAP version 2.\n");
-    printfx("	-3	    : Set LDAP version 3.\n");
-    printfx("	-b <base>   : Specify Base DN. (ie. o=ORG)\n");
+    printfx("	-P	    : Use persistent connections.\n");
+    printfx("	-t <sec>    : Timeout factor for persistent connections.  (Default is 60 sec, set to 0 for never timeout)\n");
+    printfx("	-v <1,2,3>  : Set LDAP version to 1, 2, or 3.\n");
+    printfx("	-b <base>   : Specify Base DN. (ie. \"o=ORG\")\n");
     printfx("	-s <scope>  : Specify LDAP Search Scope (base, one, sub; defaults to 'base').\n");
     printfx("	-D <dn>     : Specify Binding DN. (ie. cn=squid,o=ORG)\n");
     printfx("	-W <pass>   : Specify Binding password.\n");
+    printfx("	-u <attrib> : Set userid attribute (Defaults to \"cn\").\n");
     printfx("	-F <filter> : Specify LDAP search filter. (ie. \"(objectClass=User)\")\n");
-    printfx("	-G 	    : Specify if LDAP search group is required.\n");
-    printfx("	-v	    : Display version & exit.\n");
+    printfx("	-G 	    : Specify if LDAP search group is required. (ie. \"groupMembership=\")\n");
+    printfx("	-V	    : Display version & exit.\n");
     printfx("	-h	    : This screen & exit.\n");
     printfx("\n");
 }
@@ -74,12 +77,14 @@ void InitConf()
     memset(conf.program, '\0', sizeof(conf.program));
     memset(conf.basedn, '\0', sizeof(conf.basedn));
     memset(conf.host, '\0', sizeof(conf.host));
+    memset(conf.attrib, '\0', sizeof(conf.attrib));
     memset(conf.dn, '\0', sizeof(conf.dn));
     memset(conf.passwd, '\0', sizeof(conf.passwd));
     memset(conf.search_filter, '\0', sizeof(conf.search_filter));
     conf.scope = -1;
     conf.ver = -1;
     conf.port = -1;
+    conf.persist_timeout = -1;
     conf.mode = 0;
     conf.mode |= MODE_INIT;
 
@@ -96,11 +101,21 @@ void InitConf()
 #ifdef DEFAULT_BIND_PASS
     strcpy(conf.passwd, DEFAULT_BIND_PASS);
 #endif
+#ifdef DEFAULT_USER_ATTRIB
+    strcpy(conf.attrib, DEFAULT_USER_ATTRIB);
+#endif
 #ifdef DEFAULT_SEARCH_FILTER
     strcpy(conf.search_filter, DEFAULT_SEARCH_FILTER);
 #endif
 #ifdef DEFAULT_SEARCH_SCOPE
-    conf.scope = DEFAULT_SEARCH_SCOPE;
+    if (!strcmp(DEFAULT_SEARCH_SCOPE, "base"))
+        conf.scope = 0;
+    else if (!strcmp(DEFAULT_SEARCH_SCOPE, "one"))
+        conf.scope = 1;
+    else if (!strcmp(DEFAULT_SEARCH_SCOPE, "sub"))
+        conf.scope = 2;
+    else
+        conf.scope = 0;
 #endif
 #ifdef DEFAULT_LDAP_VERSION
     conf.ver = DEFAULT_LDAP_VERSION;
@@ -117,11 +132,17 @@ void InitConf()
 #ifdef DEFAULT_USE_TLS
     conf.mode |= MODE_TLS;
 #endif
-#ifdef DEFAULT_DEBUG
-    conf.mode |= MODE_DEBUG;
+#ifdef DEFAULT_USE_PERSIST
+    conf.mode |= MODE_PERSIST;
+#endif
+#ifdef DEFAULT_PERSIST_TIMEOUT
+    conf.persist_timeout = DEFAULT_PERSIST_TIMEOUT;
 #endif
 #ifdef DEFAULT_GROUP_REQUIRED
     conf.mode |= MODE_GROUP;
+#endif
+#ifdef DEFAULT_DEBUG
+    conf.mode |= MODE_DEBUG;
 #endif
 }
 
@@ -155,6 +176,14 @@ void DisplayConf()
         printfx("	TLS mode: ON\n");
     else
         printfx("	TLS mode: OFF\n");
+    if (conf.mode & MODE_PERSIST) {
+        printfx("	Persistent mode: ON\n");
+        if (conf.persist_timeout > 0)
+            printfx("	Persistent mode idle timeout: %d\n", conf.persist_timeout);
+        else
+            printfx("	Persistent mode idle timeout: OFF\n");
+    } else
+        printfx("	Persistent mode: OFF\n");
     printfx("	LDAP Version: %d\n", conf.ver);
     if (conf.basedn[0] != '\0')
         printfx("	Base DN: %s\n", conf.basedn);
@@ -215,6 +244,7 @@ int main(int argc, char **argv)
     char sfmod[MAXLEN];
     int x;
     size_t i, j, s, k;
+    time_t t;
     struct sigaction sv;
 
     /* Init */
@@ -225,6 +255,8 @@ int main(int argc, char **argv)
     memset(sfmod, '\0', sizeof(sfmod));
     InitConf(&conf);
     strncpy(conf.program, argv[0], sizeof(conf.program));
+    now = -1;
+    t = -1;
     debug("main", "InitConf() done.\n");
 
     /* Scan args */
@@ -244,8 +276,8 @@ int main(int argc, char **argv)
                 s = strlen(argv[i]);
                 for (j = 1; j < s; j++) {
                     switch (argv[i][j]) {
-                    case 'v':
-                        DisplayVersion();
+                    case 'h':
+                        DisplayUsage();
                         return 1;
                     case 'V':
                         DisplayVersion();
@@ -266,21 +298,42 @@ int main(int argc, char **argv)
                         if (!(conf.mode & MODE_TLS))
                             conf.mode |= MODE_TLS;			/* Don't set mode more than once */
                         break;
-                    case '1':
-                        conf.ver = 1;
+                    case 'P':
+                        if (!(conf.mode & MODE_PERSIST))
+                            conf.mode |= MODE_PERSIST;			/* Don't set mode more than once */
                         break;
-                    case '2':
-                        conf.ver = 2;
+                    case 'v':
+                        i++;
+                        if (argv[i] != NULL) {
+                            conf.ver = atoi(argv[i]);
+                            if (conf.ver < 1)
+                                conf.ver = 1;
+                            else if (conf.ver > 3)
+                                conf.ver = 3;
+                        } else {
+                            printfx("No parameters given for 'v'.\n");
+                            DisplayUsage();
+                            return 1;
+                        }
                         break;
-                    case '3':
-                        conf.ver = 3;
+                    case 't':
+                        i++;
+                        if (argv[i] != NULL) {
+                            conf.persist_timeout = atoi(argv[i]);
+                            if (conf.persist_timeout < 0)
+                                conf.persist_timeout = 0;
+                        } else {
+                            printfx("No parameters given for 't'.\n");
+                            DisplayUsage();
+                            return 1;
+                        }
                         break;
                     case 'b':
                         i++;					/* Set Base DN */
                         if (argv[i] != NULL)
                             strncpy(conf.basedn, argv[i], sizeof(conf.basedn));
                         else {
-                            printfx("No parameters given to 'b'.\n");
+                            printfx("No parameters given for 'b'.\n");
                             DisplayUsage();
                             return 1;
                         }
@@ -290,7 +343,7 @@ int main(int argc, char **argv)
                         if (argv[i] != NULL)
                             strncpy(conf.host, argv[i], sizeof(conf.host));
                         else {
-                            printfx("No parameters given to 'H'.\n");
+                            printfx("No parameters given for 'H'.\n");
                             DisplayUsage();
                             return 1;
                         }
@@ -300,7 +353,7 @@ int main(int argc, char **argv)
                         if (argv[i] != NULL)
                             conf.port = atoi(argv[i]);
                         else {
-                            printfx("No parameters given to 'p'.\n");
+                            printfx("No parameters given for 'p'.\n");
                             DisplayUsage();
                             return 1;
                         }
@@ -310,7 +363,7 @@ int main(int argc, char **argv)
                         if (argv[i] != NULL)
                             strncpy(conf.dn, argv[i], sizeof(conf.dn));
                         else {
-                            printfx("No parameters given to 'D'.\n");
+                            printfx("No parameters given for 'D'.\n");
                             DisplayUsage();
                             return 1;
                         }
@@ -320,7 +373,7 @@ int main(int argc, char **argv)
                         if (argv[i] != NULL)
                             strncpy(conf.passwd, argv[i], sizeof(conf.passwd));
                         else {
-                            printfx("No parameters given to 'W'.\n");
+                            printfx("No parameters given for 'W'.\n");
                             DisplayUsage();
                             return 1;
                         }
@@ -330,7 +383,7 @@ int main(int argc, char **argv)
                         if (argv[i] != NULL)
                             strncpy(conf.search_filter, argv[i], sizeof(conf.search_filter));
                         else {
-                            printfx("No parameters given to 'F'.\n");
+                            printfx("No parameters given for 'F'.\n");
                             DisplayUsage();
                             return 1;
                         }
@@ -342,24 +395,20 @@ int main(int argc, char **argv)
                     case 's':
                         i++;					/* Set Scope Level */
                         if (argv[i] != NULL) {
-                            strncpy(bufa, argv[i], sizeof(bufa));
-                            if (!strcmp(bufa, "base"))
+                            if (!strncmp(argv[i], "base", 4))
                                 conf.scope = 0;
-                            else if (!strcmp(bufa, "one"))
+                            else if (!strncmp(argv[i], "one", 4))
                                 conf.scope = 1;
-                            else if (!strcmp(bufa, "sub"))
+                            else if (!strncmp(argv[i], "sub", 4))
                                 conf.scope = 2;
                             else
-                                conf.scope = 0;
+                                conf.scope = 0;			/* Default is 'base' */
                         } else {
-                            printfx("No parameters given to 's'.\n");
+                            printfx("No parameters given for 's'.\n");
                             DisplayUsage();
                             return 1;
                         }
                         break;
-                    case 'h':
-                        DisplayUsage();
-                        return 1;
                     case '-':					/* We got a second '-' ... ignore */
                         break;
                     default:
@@ -386,6 +435,8 @@ int main(int argc, char **argv)
         conf.ver = 2;
     if ((conf.mode & MODE_TLS) && (conf.ver < 3))
         conf.ver = 3;					/* TLS requires version 3 */
+    if (conf.persist_timeout < 0)
+        conf.persist_timeout = 600;				/* Default: 600 seconds (10 minutes) */
     if (conf.scope < 0)
         conf.scope = 0;					/* Default: base */
     if (conf.search_filter[0] == '\0')
@@ -409,16 +460,30 @@ int main(int argc, char **argv)
     sigaction(SIGSEGV, &sv, NULL);
     debug("main", "Signals trapped.\n");
 
+    /* Set elap timer */
+    time(&now);
+    t = now;
+
     /* Main loop -- Waits for stdin input before action */
     while (fgets(bufa, sizeof(bufa), stdin) != NULL) {
         if (conf.mode & MODE_KILL)
             break;
+        time(&now);
+        if (t < now) {
+            /* Elapse seconds */
+            elap = now - t;
+//      debug("main", "while() -> %d seconds elapsed.\n", elap);
+            t = now;
+        } else
+            elap = 0;
         k = strlen(bufa);
-        debug("main", "while() bufa[%zd]: %s", k, bufa);
-        debug("main", "while() bufa[%zd]: ");
-        for (i = 0; i < k; i++)
-            debugx("%.2X", bufa[i]);
-        debugx("\n");
+        /*
+            debug("main", "while() -> bufa[%zd]: %s", k, bufa);
+            debug("main", "while() -> bufa[%zd]: ");
+            for (i = 0; i < k; i++)
+              debugx("%.2X", bufa[i]);
+            debugx("\n");
+        */
         /* Check for CRLF */
         p = strchr(bufa, '\n');
         if (p != NULL)
@@ -430,144 +495,180 @@ int main(int argc, char **argv)
 
         /* No space given, but group string is required --> ERR */
         if ((conf.mode & MODE_GROUP) && (p == NULL)) {
+            debug("main", "while() -> Search group is required.\n");
             printfx("ERR\n");
             continue;
         }
+        x = 0;
 
         /* Open LDAP connection */
-        InitLDAP(&ldap);
-        debug("main", "InitLDAP() done.\n");
-        x = OpenLDAP(&ldap, conf.host, conf.port);
-        if (x != LDAP_SUCCESS) {
-            /* Failed to connect */
-            debug("main", "Failed to connect.  Error: %d (%s)\n", x, ldap_err2string(x));
-        } else {
-            debug("main", "OpenLDAP(-, %s, %d) done. Result: %d\n", conf.host, conf.port, x);
-            x = SetVerLDAP(&ldap, conf.ver);
-            if (x != LDAP_SUCCESS) {
-                /* Failed to set version */
-                debug("main", "Failed to set version.  Error: %d (%s)\n", x, ldap_err2string(x));
+        if (!(ldap.status & LDAP_INIT_S)) {
+            InitLDAP(&ldap);
+            debug("main", "InitLDAP() -> %s\n", ErrLDAP(LDAP_ERR_SUCCESS));
+            if (conf.mode & MODE_PERSIST)					/* Setup persistant mode */
+                ldap.status |= LDAP_PERSIST_S;
+        }
+        if ((ldap.status & LDAP_IDLE_S) && (elap > 0)) {
+            ldap.idle_time = ldap.idle_time + elap;
+        }
+        if ((ldap.status & LDAP_PERSIST_S) && (ldap.status & LDAP_IDLE_S) && (ldap.idle_time > conf.persist_timeout)) {
+            debug("main", "while() -> Connection timed out after %u seconds\n", ldap.idle_time);
+            x = CloseLDAP(&ldap);
+            debug("main", "CloseLDAP(-) -> %s\n", ErrLDAP(x));
+        }
+        ldap.err = -1;
+        if (!(ldap.status & LDAP_OPEN_S)) {
+            x = OpenLDAP(&ldap, conf.host, conf.port);
+            if (x != LDAP_ERR_SUCCESS) {
+                /* Failed to connect */
+                debug("main", "OpenLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(ldap.err));
             } else {
-                debug("main", "SetVerLDAP(-, %d) done. Result: %d\n", conf.ver, x);
-                if (conf.mode & MODE_TLS) {
-                    /* TLS binding */
-                    x = BindLDAP(&ldap, conf.dn, conf.passwd, LDAP_AUTH_TLS);
-                    if (x != LDAP_SUCCESS) {
-                        /* Unable to bind */
-                        debug("main", "Failed to bind.  Error: %d (%s)\n", x, ldap_err2string(x));
-                    } else
-                        debug("main", "BindLDAP(-, %s, %s, %ul) done. Result: %d\n", conf.dn, conf.passwd, LDAP_AUTH_TLS, x);
-                } else if (conf.dn[0] != '\0') {
-                    /* Simple binding - using dn / passwd for authorization */
-                    x = BindLDAP(&ldap, conf.dn, conf.passwd, LDAP_AUTH_SIMPLE);
-                    if (x != LDAP_SUCCESS) {
-                        /* Unable to bind */
-                        debug("main", "Failed to bind.  Error: %d (%s)\n", x, ldap_err2string(x));
-                    } else
-                        debug("main", "BindLDAP(-, %s, %s, %ul) done. Result: %d\n", conf.dn, conf.passwd, LDAP_AUTH_SIMPLE, x);
-                } else {
-                    /* Anonymous binding */
-                    x = BindLDAP(&ldap, conf.dn, conf.passwd, LDAP_AUTH_NONE);
-                    if (x != LDAP_SUCCESS) {
-                        /* Unable to bind */
-                        debug("main", "Failed to bind.  Error: %d (%s)\n", x, ldap_err2string(x));
-                    } else
-                        debug("main", "BindLDAP(-, -, -, %ul) done. Result: %d\n", LDAP_AUTH_NONE, x);
-                }
+                debug("main", "OpenLDAP(-, %s, %d) -> %s\n", conf.host, conf.port, ErrLDAP(x));
+                x = SetVerLDAP(&ldap, conf.ver);
+                if (x != LDAP_ERR_SUCCESS) {
+                    /* Failed to set version */
+                    debug("main", "SetVerLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(ldap.err));
+                } else
+                    debug("main", "SetVerLDAP(-, %d) -> %s\n", conf.ver, ErrLDAP(x));
             }
         }
-        /* Everything failed --> ERR */
-        if (x != LDAP_SUCCESS) {
-            printfx("ERR\n");
-            memset(bufa, '\0', strlen(bufa));
-            CloseLDAP(&ldap);
-            continue;
-        } else {
-            /* We got a group string -- split it */
-            if (p != NULL) {
-                /* Split string */
-                debug("main", "SplitString(%s, %zd, ' ', %s, %zd)\n", bufa, strlen(bufa), bufb, sizeof(bufb));
-                i = SplitString(bufa, strlen(bufa), ' ', bufb, sizeof(bufb));
-                if (i > 0) {
-                    debug("main", "SplitString(%s, %s) done.  Result: %zd\n", bufa, bufb, i);
-                    /* Got a group to match against */
-                    x = ConvertIP(&ldap, bufb);
-                    if (x < 0) {
-                        debug("main", "Failed to ConvertIP().  Error: %d\n", x);
-                        printfx("ERR (ConvertIP %d)\n", x);
-                    } else {
-                        debug("main", "ConvertIP(-, %s) done.  Result[%zd]: %s\n", bufb, x, ldap.search_ip);
-                        x = SearchFilterLDAP(&ldap, bufa);
-                        if (x < 0) {
-                            debug("main", "Failed to SearchFilterLDAP().  Error: %d\n", x);
-                            printfx("ERR\n");
-                        } else {
-                            /* Do Search */
-                            debug("main", "IP: %s, Search Filter: %s\n", ldap.search_ip, ldap.search_filter);
-                            x = SearchLDAP(&ldap, ldap.scope, ldap.search_filter, search_attrib);
-                            if (x != LDAP_SUCCESS) {
-                                debug("main", "Failed to SearchLDAP().  Error: %d (%s)\n", x, ldap_err2string(x));
-                                printfx("ERR\n");
-                            } else {
-                                debug("main", "SearchLDAP(-, %d, %s, -) done. Result: %d\n", conf.scope, ldap.search_filter, x);
-                                x = SearchIPLDAP(&ldap, bufc);
-                                if (x != LDAP_SUCCESS) {
-                                    debug("main", "Failed to SearchIPLDAP().  Error: %d\n", x);
-                                    printfx("ERR\n");
-                                } else {
-                                    debug("main", "SearchIPLDAP(-, %s) done. Result: %d\n", bufc, x);
-                                    printfx("OK user=%s\n", bufc);			/* Got userid --> OK user=<userid> */
-                                }
-                            }
-
-                            /* Clear for next query */
-                            memset(bufc, '\0', strlen(bufc));
-                        }
-                    }
-                } else {
-                    debug("main", "Failed to SplitString().  Error: %d\n", i);
-                    printfx("ERR\n");
-                }
+        ldap.err = -1;
+        if (!(ldap.status & LDAP_BIND_S) && (conf.mode & MODE_TLS)) {
+            /* TLS binding */
+            x = BindLDAP(&ldap, conf.dn, conf.passwd, LDAP_AUTH_TLS);
+            if (x != LDAP_ERR_SUCCESS) {
+                /* Unable to bind */
+                debug("main", "BindLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(ldap.err));
+            } else
+                debug("main", "BindLDAP(-, %s, %s, %ul) -> %s\n", conf.dn, conf.passwd, LDAP_AUTH_TLS, ErrLDAP(x));
+        } else if (!(ldap.status & LDAP_BIND_S)) {
+            if (conf.dn[0] != '\0') {
+                /* Simple binding - using dn / passwd for authorization */
+                x = BindLDAP(&ldap, conf.dn, conf.passwd, LDAP_AUTH_SIMPLE);
+                if (x != LDAP_ERR_SUCCESS) {
+                    /* Unable to bind */
+                    debug("main", "BindLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(ldap.err));
+                } else
+                    debug("main", "BindLDAP(-, %s, %s, %ul) -> %s\n", conf.dn, conf.passwd, LDAP_AUTH_SIMPLE, ErrLDAP(x));
             } else {
-                /* No group to match against, only an IP */
-                x = ConvertIP(&ldap, bufa);
+                /* Anonymous binding */
+                x = BindLDAP(&ldap, conf.dn, conf.passwd, LDAP_AUTH_NONE);
+                if (x != LDAP_ERR_SUCCESS) {
+                    /* Unable to bind */
+                    debug("main", "BindLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(ldap.err));
+                } else
+                    debug("main", "BindLDAP(-, -, -, %ul) -> %s\n", LDAP_AUTH_NONE, ErrLDAP(x));
+            }
+        }
+        ldap.err = -1;
+        if (ldap.status & LDAP_PERSIST_S) {
+            x = ResetLDAP(&ldap);
+            if (x != LDAP_ERR_SUCCESS) {
+                /* Unable to reset */
+                debug("main", "ResetLDAP() -> %s\n", ErrLDAP(x));
+            } else
+                debug("main", "ResetLDAP() -> %s\n", ErrLDAP(x));
+        }
+        if (x != LDAP_ERR_SUCCESS) {
+            /* Everything failed --> ERR */
+            debug("main", "while() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(ldap.err));
+            CloseLDAP(&ldap);
+            printfx("ERR\n");
+            continue;
+        }
+        ldap.err = -1;
+        /* If we got a group string, split it */
+        if (p != NULL) {
+            /* Split string */
+            debug("main", "SplitString(%s, %zd, ' ', %s, %zd)\n", bufa, strlen(bufa), bufb, sizeof(bufb));
+            i = SplitString(bufa, strlen(bufa), ' ', bufb, sizeof(bufb));
+            if (i > 0) {
+                debug("main", "SplitString(%s, %s) done.  Result: %zd\n", bufa, bufb, i);
+                /* Got a group to match against */
+                x = ConvertIP(&ldap, bufb);
                 if (x < 0) {
-                    debug("main", "Failed to ConvertIP().  Error: %d\n", x);
-                    printfx("ERR (ConvertIP %d)\n", x);
+                    debug("main", "ConvertIP() -> %s\n", ErrLDAP(x));
+                    printfx("ERR\n");
                 } else {
-                    debug("main", "ConvertIP(-, %s) done.  Result[%zd]: %s\n", bufa, x, ldap.search_ip);
-                    /* Do search */
-                    x = SearchFilterLDAP(&ldap, NULL);
+                    ldap.err = -1;
+                    debug("main", "ConvertIP(-, %s) -> Result[%zd]: %s\n", bufb, x, ldap.search_ip);
+                    x = SearchFilterLDAP(&ldap, bufa);
                     if (x < 0) {
-                        debug("main", "Failed to SearchFilterLDAP().  Error: %d\n", x);
+                        debug("main", "SearchFilterLDAP() -> %s\n", ErrLDAP(x));
                         printfx("ERR\n");
                     } else {
-                        debug("main", "IP: %s, Search Filter: %s\n", ldap.search_ip, ldap.search_filter);
+                        /* Do Search */
+                        ldap.err = -1;
+                        debug("main", "SearchFilterLDAP(-, %s) -> Length: %u\n", bufa, x);
                         x = SearchLDAP(&ldap, ldap.scope, ldap.search_filter, search_attrib);
-                        if (x != LDAP_SUCCESS) {
-                            debug("main", "Failed to SearchLDAP().  Error: %d (%s)\n", x, ldap_err2string(x));
+                        if (x != LDAP_ERR_SUCCESS) {
+                            debug("main", "SearchLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(ldap.err));
                             printfx("ERR\n");
                         } else {
-                            debug("main", "SearchLDAP(-, %d, %s, -) done. Result: %d\n", conf.scope, ldap.search_filter, x);
+                            ldap.err = -1;
+                            debug("main", "SearchLDAP(-, %d, %s, -) -> %s\n", conf.scope, ldap.search_filter, ErrLDAP(x));
                             x = SearchIPLDAP(&ldap, bufc);
-                            if (x != LDAP_SUCCESS) {
-                                debug("main", "Failed to SearchIPLDAP().  Error: %d\n", x);
+                            if (x != LDAP_ERR_SUCCESS) {
+                                debug("main", "SearchIPLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(ldap.err));
                                 printfx("ERR\n");
                             } else {
-                                debug("main", "SearchIPLDAP(-, %s) done. Result: %d\n", bufc, x);
-                                printfx("OK user=%s\n", bufc);				/* Got a userid --> OK user=<userid> */
+                                debug("main", "SearchIPLDAP(-, %s) -> %s\n", bufc, ErrLDAP(x));
+                                printfx("OK user=%s\n", bufc);			/* Got userid --> OK user=<userid> */
                             }
                         }
+                        /* Clear for next query */
+                        memset(bufc, '\0', strlen(bufc));
                     }
-                    /* Clear for next query */
-                    memset(bufc, '\0', strlen(bufc));
                 }
+            } else {
+                debug("main", "SplitString() -> Error: %d\n", i);
+                printfx("ERR\n");
+            }
+        } else {
+            /* No group to match against, only an IP */
+            x = ConvertIP(&ldap, bufa);
+            if (x < 0) {
+                debug("main", "ConvertIP() -> %s\n", ErrLDAP(x));
+                printfx("ERR\n");
+            } else {
+                debug("main", "ConvertIP(-, %s) -> Result[%zd]: %s\n", bufa, x, ldap.search_ip);
+                /* Do search */
+                x = SearchFilterLDAP(&ldap, NULL);
+                if (x < 0) {
+                    debug("main", "SearchFilterLDAP() -> %s\n", ErrLDAP(x));
+                    printfx("ERR\n");
+                } else {
+                    ldap.err = -1;
+                    debug("main", "SearchFilterLDAP(-, NULL) -> Length: %u\n", x);
+                    x = SearchLDAP(&ldap, ldap.scope, ldap.search_filter, search_attrib);
+                    if (x != LDAP_ERR_SUCCESS) {
+                        debug("main", "SearchLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(x));
+                        printfx("ERR\n");
+                    } else {
+                        ldap.err = -1;
+                        debug("main", "SearchLDAP(-, %d, %s, -) -> %s\n", conf.scope, ldap.search_filter, ErrLDAP(x));
+                        x = SearchIPLDAP(&ldap, bufc);
+                        if (x != LDAP_ERR_SUCCESS) {
+                            debug("main", "SearchIPLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(ldap.err));
+                            printfx("ERR\n");
+                        } else {
+                            debug("main", "SearchIPLDAP(-, %s) -> %s\n", bufc, ErrLDAP(x));
+                            printfx("OK user=%s\n", bufc);				/* Got a userid --> OK user=<userid> */
+                        }
+                    }
+                }
+                /* Clear for next query */
+                memset(bufc, '\0', strlen(bufc));
             }
         }
 
-        /* Clear buffer and close for next data */
+        /* Clear buffer and close for next data, if not persistent */
+        ldap.err = -1;
         memset(bufa, '\0', strlen(bufa));
-        CloseLDAP(&ldap);
+        if (!(ldap.status & LDAP_PERSIST_S)) {
+            x = CloseLDAP(&ldap);
+            debug("main", "CloseLDAP(-) -> %s\n", ErrLDAP(x));
+        }
     }
 
     debug("main", "Terminating.\n");

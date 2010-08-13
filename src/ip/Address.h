@@ -44,6 +44,9 @@
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
+#if HAVE_NETINET_IP_H
+#include <netinet/ip.h>
+#endif
 #ifdef _SQUID_MSWIN_
 #include <ws2tcpip.h>
 #endif

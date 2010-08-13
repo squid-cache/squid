@@ -26,6 +26,17 @@
 /******************************************************/
 #include "compat/osdetect.h"
 
+/* ugly hack. But we need to set this REALLY soon in the header */
+#if _SQUID_SOLARIS_
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 1
+#endif
+#ifndef _XOPEN_SOURCE_EXTENDED
+#define _XOPEN_SOURCE_EXTENDED 1
+#endif
+#endif
+
+
 
 /*****************************************************/
 /* FDSETSIZE is messy and needs to be done before    */

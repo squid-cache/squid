@@ -96,6 +96,8 @@
 
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
+#elif HAVE_WINSOCK_H
+#include <winsock.h>
 #endif
 #include <process.h>
 
@@ -104,30 +106,30 @@
 /* IP Header */
 typedef struct iphdr {
 
-u_int8_t  ip_vhl:
+uint8_t  ip_vhl:
     4;          /* Length of the header in dwords */
 
-u_int8_t  version:
+uint8_t  version:
     4;  /* Version of IP                  */
-    u_int8_t  tos;              /* Type of service                */
-    u_int16_t total_len;        /* Length of the packet in dwords */
-    u_int16_t ident;            /* unique identifier              */
-    u_int16_t flags;            /* Flags                          */
-    u_int8_t  ip_ttl;           /* Time to live                   */
-    u_int8_t  proto;            /* Protocol number (TCP, UDP etc) */
-    u_int16_t checksum;         /* IP checksum                    */
-    u_int32_t source_ip;
-    u_int32_t dest_ip;
+    uint8_t  tos;              /* Type of service                */
+    uint16_t total_len;        /* Length of the packet in dwords */
+    uint16_t ident;            /* unique identifier              */
+    uint16_t flags;            /* Flags                          */
+    uint8_t  ip_ttl;           /* Time to live                   */
+    uint8_t  proto;            /* Protocol number (TCP, UDP etc) */
+    uint16_t checksum;         /* IP checksum                    */
+    uint32_t source_ip;
+    uint32_t dest_ip;
 } iphdr;
 
 /* ICMP header */
 typedef struct icmphdr {
-    u_int8_t  icmp_type;        /* ICMP packet type                 */
-    u_int8_t  icmp_code;        /* Type sub code                    */
-    u_int16_t icmp_cksum;
-    u_int16_t icmp_id;
-    u_int16_t icmp_seq;
-    u_int32_t timestamp;        /* not part of ICMP, but we need it */
+    uint8_t  icmp_type;        /* ICMP packet type                 */
+    uint8_t  icmp_code;        /* Type sub code                    */
+    uint16_t icmp_cksum;
+    uint16_t icmp_id;
+    uint16_t icmp_seq;
+    uint32_t timestamp;        /* not part of ICMP, but we need it */
 } icmphdr;
 
 #endif  /* _SQUID_MSWIN_ */

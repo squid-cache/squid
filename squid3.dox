@@ -1254,7 +1254,7 @@ INCLUDE_FILE_PATTERNS  =
 # instead of the = operator.
 
 PREDEFINED             = __cplusplus \
-                         HTTP_VIOLATIONS \
+                         USE_HTTP_VIOLATIONS \
                          WITH_VALGRIND \
                          DELAY_POOLS \
                          ICAP_CLIENT \

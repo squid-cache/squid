@@ -71,12 +71,14 @@ typedef struct {
     char passwd[MAXLEN];
     char search_filter[MAXLEN];			/* search_group gets appended here by GroupLDAP */
     char search_ip[MAXLEN];			/* Could be IPv4 or IPv6, set by ConvertIP */
-    char userid[MAXLEN];				/* Resulting cn */
+    char userid[MAXLEN];				/* Resulting userid */
     unsigned int status;
     unsigned int port;
     unsigned long type;				/* Type of bind */
     int ver;
     int scope;
+    int err;					/* LDAP error code */
+    time_t idle_time;
     int num_ent;					/* Number of entry's found via search */
     int num_val;					/* Number of value's found via getval */
 } ldap_t;

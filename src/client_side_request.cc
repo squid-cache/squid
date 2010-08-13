@@ -874,7 +874,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     }
 
     if (no_cache) {
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
 
         if (Config.onoff.reload_into_ims)
             request->flags.nocache_hack = 1;

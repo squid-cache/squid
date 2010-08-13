@@ -3683,7 +3683,7 @@ DOC_START
 DOC_END
 
 NAME: negative_ttl
-IFDEF: HTTP_VIOLATIONS
+IFDEF: USE_HTTP_VIOLATIONS
 COMMENT: time-units
 TYPE: time_t
 LOC: Config.negativeTtl
@@ -3876,7 +3876,7 @@ DOC_START
 DOC_END
 
 NAME: broken_posts
-IFDEF: HTTP_VIOLATIONS
+IFDEF: USE_HTTP_VIOLATIONS
 TYPE: acl_access
 DEFAULT: none
 LOC: Config.accessList.brokenPosts
@@ -3916,7 +3916,7 @@ DOC_START
 DOC_END
 
 NAME: via
-IFDEF: HTTP_VIOLATIONS
+IFDEF: USE_HTTP_VIOLATIONS
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: on
@@ -3983,7 +3983,7 @@ DOC_START
 DOC_END
 
 NAME: request_header_access
-IFDEF: HTTP_VIOLATIONS
+IFDEF: USE_HTTP_VIOLATIONS
 TYPE: http_header_access[]
 LOC: Config.request_header_access
 DEFAULT: none
@@ -4056,7 +4056,7 @@ DOC_START
 DOC_END
 
 NAME: reply_header_access
-IFDEF: HTTP_VIOLATIONS
+IFDEF: USE_HTTP_VIOLATIONS
 TYPE: http_header_access[]
 LOC: Config.reply_header_access
 DEFAULT: none
@@ -4132,7 +4132,7 @@ DOC_START
 DOC_END
 
 NAME: header_replace
-IFDEF: HTTP_VIOLATIONS
+IFDEF: USE_HTTP_VIOLATIONS
 TYPE: http_header_replace[]
 LOC: Config.request_header_access
 DEFAULT: none
@@ -4171,7 +4171,7 @@ DOC_END
 
 NAME: ignore_expect_100
 COMMENT: on|off
-IFDEF: HTTP_VIOLATIONS
+IFDEF: USE_HTTP_VIOLATIONS
 TYPE: onoff
 LOC: Config.onoff.ignore_expect_100
 DEFAULT: off
@@ -6171,6 +6171,11 @@ DOC_START
 		Routing is not allowed by default: the ICAP X-Next-Services
 		response header is ignored.
 
+	ipv6=on|off
+		Only has effect on split-stack systems. The default on those systems
+		is to use IPv4-only connections. When set to 'on' this option will
+		make Squid use IPv6-only connections to contact this ICAP service.
+
 	Older icap_service format without optional named parameters is
 	deprecated but supported for backward compatibility.
 
@@ -6857,7 +6862,7 @@ DOC_START
 DOC_END
 
 NAME: reload_into_ims
-IFDEF: HTTP_VIOLATIONS
+IFDEF: USE_HTTP_VIOLATIONS
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off
