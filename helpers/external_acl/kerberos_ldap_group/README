@@ -1,0 +1,119 @@
+--------------------------------------------------------------------------------
+readme.txt is the squid_kerb_ldap read-me file.
+
+Author: Markus Moeller (markus_moeller at compuserve.com)
+
+Copyright (C) 2007 Markus Moeller. All rights reserved.
+--------------------------------------------------------------------------------
+
+squid_kerb_ldap Read Me
+
+Markus Moeller
+June 2, 2007
+
+1 Introduction
+
+squid_kerb_ldap is a reference implementation that supports SASL/GSSAPI authentication 
+to an ldap server. It is mainly intended to connect to Active Directory or Openldap based 
+ldap servers.
+
+For AD it checks the memberof attribute to determine if a user is member of a group.
+For non AD it checks the memberuid attribute to determine if a user is member of a group and if not it checks if the primary group matches.
+Currently, squid_kerb_ldap supports Squid 2.6 on Linux. 
+
+squid_auth_ldap requires either MIT or Heimdal Kerberos libraries and header files.
+
+2 Building and Installation
+
+./configure
+make
+
+Copy the helper squid_kerb_ldap to an apropriate directory.
+
+3 Configuration
+
+a) Configure IE or Firefox to point to the squid proxy by using the fqdn. IE and Firefox will use the
+fqdn to query for a HTTP/fqdn Kerberos service principal. 
+
+b) Create a keytab which contains the HTTP/fqdn Kerberos service principal and place it into a directory
+where the squid run user can read the keytab. 
+
+c) Add the following line to squid.conf
+
+auth_param negotiate program /usr/sbin/squid_kerb_auth 
+auth_param negotiate children 10
+auth_param negotiate keep_alive on
+
+external_acl_type squid_kerb_ldap ttl=3600  negative_ttl=3600  %LOGIN /usr/sbin/squid_kerb_ldap -g GROUP@
+acl ldap_group_check external squid_kerb_ldap
+http_access allow ldap_group_check
+
+If a ntlm helper is used too add a -N option to map the netbios name to a Kerberos realm e.g.
+
+external_acl_type squid_kerb_ldap ttl=3600  negative_ttl=3600  %LOGIN /usr/sbin/squid_kerb_ldap -g GROUP@ -N NETBIOS@KERBEROS.REALM
+acl ldap_group_check external squid_kerb_ldap
+http_access allow ldap_group_check
+
+
+d) Modify squid startup file
+
+Add the following lines to the squid startup script to point squid to a keytab file which
+contains the HTTP/fqdn service principal for the default Kerberos domain. The fqdn must be 
+the proxy name set in IE or firefox. You can not use an IP address.
+
+KRB5_KTNAME=/etc/squid/HTTP.keytab
+export KRB5_KTNAME
+
+If you use a different Kerberos domain than the machine itself is in you can point squid to 
+the seperate Kerberos config file by setting the following environmnet variable in the startup 
+script.
+
+KRB5_CONFIG=/etc/krb5-squid.conf
+export KRB5_CONFIG
+
+4 Miscellaneous
+
+The -i options creates informational messages whereas -d creates full debug output 
+
+If squid_kerb_ldap doesn't determine for some reason the right service ldap server you can provide 
+it with -u BIND_DN -p BIND_PW -b BIND_PATH -l LDAP_URL
+
+STARTTLS/SSL is supported and the -a options disables server certificate checks 
+
+If you serve multiple Kerberos realms add a HTTP/fqdn@REALM service principal per realm to the 
+HTTP.keytab file and use the -s GSS_C_NO_NAME option with squid_kerb_auth.
+
+squid_kerb_ldap will determine automagically the right ldap server. The following method is used:
+
+1) For user@REALM
+   1) Query DNS for SRV record _ldap._tcp.REALM
+   2) Query DNS for A record REALM
+   3) Use LDAP_URL if given   
+
+2) For user
+   2) Use LDAP_URL if given
+   
+The Groups to check against are determined as follows:
+
+1 For user@REALM
+   1) Use values given by -g option which contain a @REALM e.g. -g GROUP1@REALM:GROUP2@REALM
+   2) Use values given by -g option which contain a @ only e.g. -g GROUP1@:GROUP2@
+   3) Use values given by -g option which do not contain a realm e.g. -g GROUP1:GROUP2
+
+1 For user
+   3) Use values given by -g option which do not contain a realm e.g. -g GROUP1:GROUP2
+
+
+To support Non-ASCII character use -t <GROUP>  or -t <GROUP>@<REALM> instead of -g where GROUP is the hex UTF-8 representation e.g. 
+
+   -t 6d61726b7573 instead of -g markus
+
+The REALM must still be based on the ASCII character set. If REALM contains also non ASCII characters use -T <GROUP>@<REALM> where GROUP and REALM are hex UTF-8 representation e.g.
+
+  -T 6d61726b7573@57494e3230303352322e484f4d45 instead of -g markus@WIN2003R2.HOME
+
+For a translation of hex UTF-8 see for example http://www.utf8-chartable.de/unicode-utf8-table.pl
+
+
+
+
