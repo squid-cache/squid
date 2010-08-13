@@ -84,7 +84,7 @@ public:
     /** Copy an existing connections IP and properties.
      * This excludes the FD. The new copy will be a closed connection.
      */
-    ConnectionPointer & copyDetails() const;
+    ConnectionPointer copyDetails() const;
 
     /** Close any open socket. */
     void close();

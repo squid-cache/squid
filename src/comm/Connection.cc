@@ -26,7 +26,7 @@ Comm::Connection::~Connection()
     cbdataReferenceDone(_peer);
 }
 
-Comm::ConnectionPointer &
+Comm::ConnectionPointer
 Comm::Connection::copyDetails() const
 {
     ConnectionPointer c = new Comm::Connection;
