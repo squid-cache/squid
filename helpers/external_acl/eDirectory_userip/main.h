@@ -28,12 +28,11 @@
 #ifndef _HAVE_MAIN_H
 #define _HAVE_MAIN_H
 
-#ifndef _HAVE_CONFIG_H
 #include "config.h"
-#endif
+#include "edui_config.h"
 
 #ifndef DEFAULT_PROGRAM_NAME
-#define DEFAULT_PROGRAM_NAME		"squid_edir_iplookup"
+#define DEFAULT_PROGRAM_NAME		"ext_edirectory_iuserp_acl"
 #endif
 
 /* Must ... include ... these ... */
