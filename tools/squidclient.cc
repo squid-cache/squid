@@ -427,17 +427,11 @@ main(int argc, char *argv[])
             strcat(msg, buf);
         }
 
-        /* HTTP/1.0 may need keep-alive */
-        if (strcmp(version, "1.0") == 0) {
-            if (keep_alive) {
-                if (strchr(url, ':')) {
-                    snprintf(buf, BUFSIZ, "Proxy-Connection: keep-alive\r\n");
-                    strcat(msg, buf);
-                } else
-                    strcat(msg, "Connection: keep-alive\r\n");
-            }
-        }
-        /* HTTP/1.1 may need close */
+        /* HTTP/1.0 may need keep-alive explicitly */
+        if (strcmp(version, "1.0") == 0 && keep_alive)
+            strcat(msg, "Connection: keep-alive\r\n");
+
+        /* HTTP/1.1 may need close explicitly */
         if (!keep_alive)
             strcat(msg, "Connection: close\r\n");
 
