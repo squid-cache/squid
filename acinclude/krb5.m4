@@ -104,22 +104,24 @@ dnl checks that gssapi is ok, and sets squid_cv_working_gssapi accordingly
 AC_DEFUN([SQUID_CHECK_WORKING_GSSAPI], [
   AC_CACHE_CHECK([for working gssapi], squid_cv_working_gssapi, [
     AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#ifdef HAVE_HEIMDAL_KERBEROS
 #ifdef HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
-#elif HAVE_GSSAPI_H
+#elif defined(HAVE_GSSAPI_H)
 #include <gssapi.h>
 #endif
-
-#ifdef HAVE_GSSAPI_GSSAPI_EXT_H
-#include <gssapi/gssapi_ext.h>
+#else
+#ifdef HAVE_GSSAPI_GSSAPI_H
+#include <gssapi/gssapi.h>
+#elif defined(HAVE_GSSAPI_H)
+#include <gssapi.h>
 #endif
-
 #ifdef HAVE_GSSAPI_GSSAPI_KRB5_H
 #include <gssapi/gssapi_krb5.h>
 #endif
-
 #ifdef HAVE_GSSAPI_GSSAPI_GENERIC_H
 #include <gssapi/gssapi_generic.h>
+#endif
 #endif
 int
 main(void)
