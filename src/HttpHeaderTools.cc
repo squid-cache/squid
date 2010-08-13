@@ -145,18 +145,18 @@ int
 httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive)
 {
     String list;
-    http_hdr_type ht;
     int res;
     /* what type of header do we have? */
 
+#if USE_HTTP_VIOLATIONS
     if (hdr->has(HDR_PROXY_CONNECTION))
-        ht = HDR_PROXY_CONNECTION;
-    else if (hdr->has(HDR_CONNECTION))
-        ht = HDR_CONNECTION;
+        list = hdr->getList(HDR_PROXY_CONNECTION);
+    else
+#endif
+    if (hdr->has(HDR_CONNECTION))
+        list = hdr->getList(HDR_CONNECTION);
     else
         return 0;
-
-    list = hdr->getList(ht);
 
     res = strListIsMember(&list, directive, ',');
 
