@@ -42,11 +42,21 @@
 
 #endif
 
+/* default values for listen ports. Usually specified in squid.conf really */
+#define CACHE_HTTP_PORT 3128
+#define CACHE_ICP_PORT 3130
+
 /* To keep API definitions clear */
 #ifdef __cplusplus
 #define SQUIDCEXTERN extern "C"
 #else
 #define SQUIDCEXTERN extern
+#endif
+
+#if _USE_INLINE_
+#define _SQUID_INLINE_ inline
+#else
+#define _SQUID_INLINE_
 #endif
 
 /****************************************************************************

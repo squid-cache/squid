@@ -223,12 +223,12 @@ make_challenge(char *domain, char *domain_controller)
         return NULL;
     }
     ntlm_challenge chal;
-    u_int32_t flags = NTLM_REQUEST_NON_NT_SESSION_KEY |
-                      NTLM_CHALLENGE_TARGET_IS_DOMAIN |
-                      NTLM_NEGOTIATE_ALWAYS_SIGN |
-                      NTLM_NEGOTIATE_USE_NTLM |
-                      NTLM_NEGOTIATE_USE_LM |
-                      NTLM_NEGOTIATE_ASCII;
+    uint32_t flags = NTLM_REQUEST_NON_NT_SESSION_KEY |
+                     NTLM_CHALLENGE_TARGET_IS_DOMAIN |
+                     NTLM_NEGOTIATE_ALWAYS_SIGN |
+                     NTLM_NEGOTIATE_USE_NTLM |
+                     NTLM_NEGOTIATE_USE_LM |
+                     NTLM_NEGOTIATE_ASCII;
     ntlm_make_challenge(&chal, my_domain, my_domain_controller, (char *)challenge, NTLM_NONCE_LEN, flags);
     int len = sizeof(chal) - sizeof(chal.payload) + le16toh(chal.target.maxlen);
     return base64_encode_bin((char *)&chal, len);

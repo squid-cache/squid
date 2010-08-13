@@ -56,23 +56,28 @@
 #define MODE_TLS	0x04
 #define MODE_IPV4	0x08
 #define MODE_IPV6	0x10
-#define MODE_KILL	0x20
-#define MODE_GROUP	0x40				/* Group is REQUIRED */
+#define MODE_GROUP	0x20				/* Group is REQUIRED */
+#define MODE_PERSIST	0x40				/* Persistent LDAP connections */
+#define MODE_KILL	0x80
 
 /* conf_t - Program configuration struct typedef */
 typedef struct {
     char program[MAXLEN];
     char basedn[MAXLEN];
     char host[MAXLEN];
+    char attrib[MAXLEN];
     char dn[MAXLEN];
     char passwd[MAXLEN];
     char search_filter[MAXLEN];				/* Base search_filter that gets copied to ldap_t */
     int ver;
     int scope;
     int port;
+    time_t persist_timeout;
     unsigned int mode;
 } conf_t;
 
 /* extern the struct */
 extern conf_t conf;					/* Main configuration struct */
+extern time_t now;					/* Now's time, according to time() */
+extern time_t elap;					/* Time elapsed since 'now' */
 #endif
