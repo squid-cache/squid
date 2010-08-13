@@ -293,7 +293,6 @@ fi
 SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cc_arg_pipe"
 SQUID_CFLAGS="$SQUID_CFLAGS $squid_cv_cc_arg_pipe"
 
-enable_inline="yes"
 AC_ARG_ENABLE(optimizations,
   AS_HELP_STRING([--disable-optimizations],
                  [Do not compile Squid with compiler optimizations enabled.
@@ -325,7 +324,7 @@ AC_ARG_ENABLE(inline,
 SQUID_YESNO([$enableval],
   [Unrecognized argument to --disable-inline: $enableval])
 ])
-AC_MSG_NOTICE([inlining optimizations enabled: $enable_inline])
+AC_MSG_NOTICE([inlining optimizations enabled: ${enable_inline:=yes}])
 SQUID_DEFINE_BOOL(_USE_INLINE_,$enable_inline,
   [Include inline methods into header file])
 # to be used by sub-commands
@@ -1341,7 +1340,7 @@ else
   CXXFLAGS="`getconf ${buildmodel}_CFLAGS` $CXXFLAGS"
   LIBS="`getconf ${buildmodel}_LIBS` $LIBS"
   LDFLAGS="`getconf ${buildmodel}_LDFLAGS` $LDFLAGS"
-  if "$squid_host_os" = "solaris" ; then
+  if test "x$squid_host_os" = "xsolaris" ; then
 
 # On Solaris getconf returns for CFLAGS -xarch=generic64, -Xa and -Usun options, and
 # for LDFLAGS -xarch=generic64, but:
