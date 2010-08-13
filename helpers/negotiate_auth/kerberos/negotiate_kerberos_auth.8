@@ -1,0 +1,132 @@
+.if !'po4a'hide' .TH negotiate_kerberos_auth 8
+.
+.SH NAME
+.if !'po4a'hide' .B negotiate_kerberos_auth
+.if !'po4a'hide' \-
+Squid kerberos based authentication helper
+.PP
+Version 3.0.3sq
+.
+.SH SYNOPSIS
+.if !'po4a'hide' .B negotiate_kerberos_auth
+.if !'po4a'hide' .B [\-h] [\-d] [\-i] [\-r] [\-s Service-Principal-Name] 
+.
+.SH DESCRIPTION
+.B negotiate_kerberos_auth
+is an installed binary and allows Squid to authenticate users via the Negotiate 
+protocol and Kerberos.  
+
+.SH OPTIONS
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-h
+Display the binary help and command line syntax info using stderr.
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-d
+Write debug messages to stderr.
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-i
+Write informational messages to stderr.
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-r 
+Remove realm from username before returning the username to squid.
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-s Service-Principal-name
+Provide Service Principal Name.
+.
+.SH CONFIGURATION
+.PP See FAQ wiki page for examples of how to write configuration snippets. (TBD)
+.PP 
+This helper is intended to be used as an
+.B external_acl_type
+helper in
+.B squid.conf.
+.if !'po4a'hide' .P
+.if !'po4a'hide' .ft CR
+.if !'po4a'hide' .nf
+.if !'po4a'hide' auth_param negotiate program /path/to/negotiate_kerberos_auth
+.if !'po4a'hide' .br
+.if !'po4a'hide' auth_param negotiate children 10
+.if !'po4a'hide' .br
+.if !'po4a'hide' auth_param negotiate keep_alive on
+.if !'po4a'hide' .fi
+.if !'po4a'hide' .ft
+.PP
+.B NOTE:
+The following squid startup file modification may be required:
+
+Add the following lines to the squid startup script to point squid to a keytab file which
+contains the HTTP/fqdn service principal for the default Kerberos domain. The fqdn must be
+the proxy name set in IE or firefox. You can not use an IP address.
+
+KRB5_KTNAME=/etc/squid/HTTP.keytab
+export KRB5_KTNAME
+
+If you use a different Kerberos domain than the machine itself is in you can point squid to
+the seperate Kerberos config file by setting the following environmnet variable in the startup
+script.
+
+KRB5_CONFIG=/etc/krb5-squid.conf
+export KRB5_CONFIG
+
+Kerberos can keep a replay cache to detect the reuse of Kerberos tickets (usually only possible 
+in a 5 minute window) . If squid is under high load with Negotiate(Kerberos) proxy authentication 
+requests the replay cache checks can create high CPU load. If the environment does not require 
+high security the replay cache check can be disabled for MIT based Kerberos implementations by 
+adding the following to the startup script 
+
+KRB5RCACHETYPE=none
+export KRB5RCACHETYPE
+
+If negotiate_kerberos_auth doesn't determine for some reason the right service principal you can provide
+it with -s HTTP/fqdn.
+
+If you serve multiple Kerberos realms add a HTTP/fqdn@REALM service principal per realm to the
+HTTP.keytab file and use the -s GSS_C_NO_NAME option with negotiate_kerberos_auth.
+
+.
+.SH AUTHOR
+This program was written by
+.if !'po4a'hide' .I Markus Moeller <markus_moeller@compuserve.com>
+.PP
+This manual was written by
+.if !'po4a'hide' .I Markus Moeller <markus_moeller@compuserve.com>
+.
+.SH COPYRIGHT
+This program and documentation is copyright to the authors named above.
+.PP
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
+.
+.SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
+.
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8) "
+.if !'po4a'hide' .BR ext_kerberos_ldap_group_acl "(8) "
+.br
+.BR RFC4559 " - SPNEGO-based Kerberos and NTLM HTTP Authentication in Microsoft Windows,"
+.br
+.BR RFC2478 " - The Simple and Protected GSS-API Negotiation Mechanism,"
+.br
+.BR RFC1964 " - The Kerberos Version 5 GSS-API Mechanism,"
+.br
+The Squid FAQ wiki
+.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.br
+The Squid Configuration Manual
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/
+.if !'po4a'hide' http://wiki.squid-cache.org/ConfigExamples/Authenticate/Kerberos
