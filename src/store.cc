@@ -1452,7 +1452,7 @@ void
 StoreEntry::negativeCache()
 {
     if (expires == 0)
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
         expires = squid_curtime + Config.negativeTtl;
 #else
         expires = squid_curtime;

@@ -24,11 +24,11 @@ public:
 
     void subscribe(AsyncCall::Pointer &call) { theCallback = call; };
     void acceptNext();
-    void notify(int newfd, comm_err_t, int xerrno, Comm::ConnectionPointer);
+    void notify(int newfd, comm_err_t flag, const Comm::ConnectionPointer &details);
 
     int fd;
 
-    /// errno code if any happened so far.
+    /// errno code of the last accept() or listen() action if one occurred.
     int errcode;
 
     /// whether this socket is delayed and on the AcceptLimiter queue.

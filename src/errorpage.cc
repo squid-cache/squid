@@ -1014,7 +1014,7 @@ ErrorState::BuildContent()
             bool invalid_byte = false;
             while (pos < hdr.size() && hdr[pos] != ';' && hdr[pos] != ',' && !xisspace(hdr[pos]) && dt < (dir+256) ) {
                 if (!invalid_byte) {
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
                     // if accepting violations we may as well accept some broken browsers
                     //  which may send us the right code, wrong ISO formatting.
                     if (hdr[pos] == '_')

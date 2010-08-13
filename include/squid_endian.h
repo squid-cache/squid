@@ -39,20 +39,20 @@
  * the following interface:
  *
  * // Byte-swap
- * u_int16_t bswap16(u_int16_t);
- * u_int32_t bswap32(u_int32_t);
+ * uint16_t bswap16(uint16_t);
+ * uint32_t bswap32(uint32_t);
  *
  * // Convert from host byte order to big-endian, and vice versa.
- * u_int16_t htobe16(u_int16_t); // equivalent to htons()
- * u_int32_t htobe32(u_int32_t); // equivalent to htonl()
- * u_int16_t be16toh(u_int16_t); // equivalent to ntohs()
- * u_int32_t be32toh(u_int32_t); // equivalent to ntohs()
+ * uint16_t htobe16(uint16_t); // equivalent to htons()
+ * uint32_t htobe32(uint32_t); // equivalent to htonl()
+ * uint16_t be16toh(uint16_t); // equivalent to ntohs()
+ * uint32_t be32toh(uint32_t); // equivalent to ntohs()
  *
  * // Convert from host byte order to little-endian, and vice versa.
- * u_int16_t htole16(u_int16_t);
- * u_int32_t htole32(u_int32_t);
- * u_int16_t le16toh(u_int16_t);
- * u_int32_t le32toh(u_int32_t);
+ * uint16_t htole16(uint16_t);
+ * uint32_t htole32(uint32_t);
+ * uint16_t le16toh(uint16_t);
+ * uint32_t le32toh(uint32_t);
  */
 
 #include "config.h"
@@ -86,7 +86,7 @@
 #    define bswap16(x) bswap_16(x)
 #  else
 #    define bswap16(x) \
-       (((((u_int16_t)(x)) >> 8) & 0xff) | ((((u_int16_t)(x)) & 0xff) << 8))
+       (((((uint16_t)(x)) >> 8) & 0xff) | ((((uint16_t)(x)) & 0xff) << 8))
 #  endif
 #endif /* ! HAVE_BSWAP16 && ! defined(bswap16) */
 #if ! HAVE_BSWAP32 && ! defined(bswap32)
@@ -94,10 +94,10 @@
 #    define bswap32(x) bswap_32(x)
 #  else
 #    define bswap32(x) \
-       (((((u_int32_t)(x)) & 0xff000000) >> 24) | \
-        ((((u_int32_t)(x)) & 0x00ff0000) >>  8) | \
-        ((((u_int32_t)(x)) & 0x0000ff00) <<  8) | \
-        ((((u_int32_t)(x)) & 0x000000ff) << 24))
+       (((((uint32_t)(x)) & 0xff000000) >> 24) | \
+        ((((uint32_t)(x)) & 0x00ff0000) >>  8) | \
+        ((((uint32_t)(x)) & 0x0000ff00) <<  8) | \
+        ((((uint32_t)(x)) & 0x000000ff) << 24))
 #  endif
 #endif /* ! HAVE_BSWAP32 && ! defined(bswap32) */
 
