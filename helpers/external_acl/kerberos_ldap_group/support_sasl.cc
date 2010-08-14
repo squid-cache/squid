@@ -102,7 +102,7 @@ lutil_sasl_defaults(
     defaults = (lutilSASLdefaults *) xmalloc(sizeof(lutilSASLdefaults));
 
     if (defaults == NULL)
-	return NULL;
+        return NULL;
 
     defaults->mech = mech ? xstrdup(mech) : NULL;
     defaults->realm = realm ? xstrdup(realm) : NULL;
@@ -111,16 +111,16 @@ lutil_sasl_defaults(
     defaults->authzid = authzid ? xstrdup(authzid) : NULL;
 
     if (defaults->mech == NULL) {
-	ldap_get_option(ld, LDAP_OPT_X_SASL_MECH, &defaults->mech);
+        ldap_get_option(ld, LDAP_OPT_X_SASL_MECH, &defaults->mech);
     }
     if (defaults->realm == NULL) {
-	ldap_get_option(ld, LDAP_OPT_X_SASL_REALM, &defaults->realm);
+        ldap_get_option(ld, LDAP_OPT_X_SASL_REALM, &defaults->realm);
     }
     if (defaults->authcid == NULL) {
-	ldap_get_option(ld, LDAP_OPT_X_SASL_AUTHCID, &defaults->authcid);
+        ldap_get_option(ld, LDAP_OPT_X_SASL_AUTHCID, &defaults->authcid);
     }
     if (defaults->authzid == NULL) {
-	ldap_get_option(ld, LDAP_OPT_X_SASL_AUTHZID, &defaults->authzid);
+        ldap_get_option(ld, LDAP_OPT_X_SASL_AUTHZID, &defaults->authzid);
     }
     defaults->resps = NULL;
     defaults->nresps = 0;
@@ -142,33 +142,33 @@ interaction(
     flags = flags;
     switch (interact->id) {
     case SASL_CB_GETREALM:
-	if (defaults)
-	    dflt = defaults->realm;
-	break;
+        if (defaults)
+            dflt = defaults->realm;
+        break;
     case SASL_CB_AUTHNAME:
-	if (defaults)
-	    dflt = defaults->authcid;
-	break;
+        if (defaults)
+            dflt = defaults->authcid;
+        break;
     case SASL_CB_PASS:
-	if (defaults)
-	    dflt = defaults->passwd;
-	noecho = 1;
-	break;
+        if (defaults)
+            dflt = defaults->passwd;
+        noecho = 1;
+        break;
     case SASL_CB_USER:
-	if (defaults)
-	    dflt = defaults->authzid;
-	break;
+        if (defaults)
+            dflt = defaults->authzid;
+        break;
     case SASL_CB_NOECHOPROMPT:
-	noecho = 1;
-	challenge = 1;
-	break;
+        noecho = 1;
+        challenge = 1;
+        break;
     case SASL_CB_ECHOPROMPT:
-	challenge = 1;
-	break;
+        challenge = 1;
+        break;
     }
 
     if (dflt && !*dflt)
-	dflt = NULL;
+        dflt = NULL;
 
     /* input must be empty */
     interact->result = (dflt && *dflt) ? dflt : "";
@@ -187,14 +187,14 @@ lutil_sasl_interact(
     sasl_interact_t *interact = (sasl_interact_t *) in;
 
     if (ld == NULL)
-	return LDAP_PARAM_ERROR;
+        return LDAP_PARAM_ERROR;
 
     while (interact->id != SASL_CB_LIST_END) {
-	int rc = interaction(flags, interact, (lutilSASLdefaults *) defaults);
+        int rc = interaction(flags, interact, (lutilSASLdefaults *) defaults);
 
-	if (rc)
-	    return rc;
-	interact++;
+        if (rc)
+            return rc;
+        interact++;
     }
 
     return LDAP_SUCCESS;
@@ -207,17 +207,17 @@ lutil_sasl_freedefs(
     lutilSASLdefaults *defs = (lutilSASLdefaults *) defaults;
 
     if (defs->mech)
-	xfree(defs->mech);
+        xfree(defs->mech);
     if (defs->realm)
-	xfree(defs->realm);
+        xfree(defs->realm);
     if (defs->authcid)
-	xfree(defs->authcid);
+        xfree(defs->authcid);
     if (defs->passwd)
-	xfree(defs->passwd);
+        xfree(defs->passwd);
     if (defs->authzid)
-	xfree(defs->authzid);
+        xfree(defs->authzid);
     if (defs->resps)
-	xfree(defs->resps);
+        xfree(defs->resps);
 
     xfree(defs);
 }
@@ -229,7 +229,7 @@ tool_sasl_bind(LDAP * ld, char *binddn, char *ssl)
      * unsigned sasl_flags = LDAP_SASL_AUTOMATIC;
      * unsigned sasl_flags = LDAP_SASL_QUIET;
      */
-    /* 
+    /*
      * Avoid SASL messages
      */
 #ifdef HAVE_SUN_LDAP_SDK
@@ -245,7 +245,7 @@ tool_sasl_bind(LDAP * ld, char *binddn, char *ssl)
 #else
     char *sasl_mech = NULL;
 #endif
-    /* 
+    /*
      * Force encryption
      */
     char *sasl_secprops;
@@ -253,40 +253,39 @@ tool_sasl_bind(LDAP * ld, char *binddn, char *ssl)
      * char  *sasl_secprops = (char *)"maxssf=56";
      * char  *sasl_secprops = NULL;
      */
-    struct berval passwd =
-    {0, NULL};
+    struct berval passwd = {0, NULL};
     void *defaults;
     int rc = LDAP_SUCCESS;
 
     if (ssl)
-	sasl_secprops = (char *) "maxssf=0";
+        sasl_secprops = (char *) "maxssf=0";
     else
-	sasl_secprops = (char *) "maxssf=56";
-/*      sasl_secprops = (char *)"maxssf=0"; */
-/*      sasl_secprops = (char *)"maxssf=56"; */
+        sasl_secprops = (char *) "maxssf=56";
+    /*      sasl_secprops = (char *)"maxssf=0"; */
+    /*      sasl_secprops = (char *)"maxssf=56"; */
 
     if (sasl_secprops != NULL) {
-	rc = ldap_set_option(ld, LDAP_OPT_X_SASL_SECPROPS,
-	    (void *) sasl_secprops);
-	if (rc != LDAP_SUCCESS) {
-	    error((char *) "%s| %s: ERROR: Could not set LDAP_OPT_X_SASL_SECPROPS: %s: %s\n", LogTime(), PROGRAM, sasl_secprops, ldap_err2string(rc));
-	    return rc;
-	}
+        rc = ldap_set_option(ld, LDAP_OPT_X_SASL_SECPROPS,
+                             (void *) sasl_secprops);
+        if (rc != LDAP_SUCCESS) {
+            error((char *) "%s| %s: ERROR: Could not set LDAP_OPT_X_SASL_SECPROPS: %s: %s\n", LogTime(), PROGRAM, sasl_secprops, ldap_err2string(rc));
+            return rc;
+        }
     }
     defaults = lutil_sasl_defaults(ld,
-	sasl_mech,
-	sasl_realm,
-	sasl_authc_id,
-	passwd.bv_val,
-	sasl_authz_id);
+                                   sasl_mech,
+                                   sasl_realm,
+                                   sasl_authc_id,
+                                   passwd.bv_val,
+                                   sasl_authz_id);
 
     rc = ldap_sasl_interactive_bind_s(ld, binddn,
-	sasl_mech, NULL, NULL,
-	sasl_flags, lutil_sasl_interact, defaults);
+                                      sasl_mech, NULL, NULL,
+                                      sasl_flags, lutil_sasl_interact, defaults);
 
     lutil_sasl_freedefs(defaults);
     if (rc != LDAP_SUCCESS) {
-	error((char *) "%s| %s: ERROR: ldap_sasl_interactive_bind_s error: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));
+        error((char *) "%s| %s: ERROR: ldap_sasl_interactive_bind_s error: %s\n", LogTime(), PROGRAM, ldap_err2string(rc));
     }
     return rc;
 }
