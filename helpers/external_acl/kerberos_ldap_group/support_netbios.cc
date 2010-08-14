@@ -32,8 +32,7 @@
 struct ndstruct *init_nd(void);
 
 struct ndstruct *
-init_nd(void)
-{
+init_nd(void) {
     struct ndstruct *ndsp;
     ndsp = (struct ndstruct *) xmalloc(sizeof(struct ndstruct));
     ndsp->netbios = NULL;
@@ -64,67 +63,67 @@ create_nd(struct main_args *margs)
     dp = NULL;
 
     if (!p) {
-	debug((char *) "%s| %s: DEBUG: No netbios names defined.\n", LogTime(), PROGRAM);
-	return (0);
+        debug((char *) "%s| %s: DEBUG: No netbios names defined.\n", LogTime(), PROGRAM);
+        return (0);
     }
     while (*p) {		/* loop over group list */
-	if (*p == '\n' || *p == '\r') {		/* Ignore CR and LF if exist */
-	    p++;
-	    continue;
-	}
-	if (*p == '@') {	/* end of group name - start of domain name */
-	    if (p == np) {	/* empty group name not allowed */
-		debug((char *) "%s| %s: DEBUG: No netbios name defined for domain %s\n", LogTime(), PROGRAM, p);
-		return (1);
-	    }
-	    *p = '\0';
-	    p++;
-	    ndsp = init_nd();
-	    ndsp->netbios = xstrdup(np);
-	    if (ndspn)		/* Have already an existing structure */
-		ndsp->next = ndspn;
-	    dp = p;		/* after @ starts new domain name */
-	} else if (*p == ':') {	/* end of group name or end of domain name */
-	    if (p == np) {	/* empty group name not allowed */
-		debug((char *) "%s| %s: DEBUG: No netbios name defined for domain %s\n", LogTime(), PROGRAM, p);
-		return (1);
-	    }
-	    *p = '\0';
-	    p++;
-	    if (dp) {		/* end of domain name */
-		ndsp->domain = xstrdup(dp);
-		dp = NULL;
-	    } else {		/* end of group name and no domain name */
-		ndsp = init_nd();
-		ndsp->netbios = xstrdup(np);
-		if (ndspn)	/* Have already an existing structure */
-		    ndsp->next = ndspn;
-	    }
-	    ndspn = ndsp;
-	    np = p;		/* after : starts new group name */
-	    if (!ndsp->domain || !strcmp(ndsp->domain, "")) {
-		debug((char *) "%s| %s: DEBUG: No domain defined for netbios name %s\n", LogTime(), PROGRAM, ndsp->netbios);
-		return (1);
-	    }
-	    debug((char *) "%s| %s: DEBUG: Netbios name %s  Domain %s\n", LogTime(), PROGRAM, ndsp->netbios, ndsp->domain);
-	} else
-	    p++;
+        if (*p == '\n' || *p == '\r') {		/* Ignore CR and LF if exist */
+            p++;
+            continue;
+        }
+        if (*p == '@') {	/* end of group name - start of domain name */
+            if (p == np) {	/* empty group name not allowed */
+                debug((char *) "%s| %s: DEBUG: No netbios name defined for domain %s\n", LogTime(), PROGRAM, p);
+                return (1);
+            }
+            *p = '\0';
+            p++;
+            ndsp = init_nd();
+            ndsp->netbios = xstrdup(np);
+            if (ndspn)		/* Have already an existing structure */
+                ndsp->next = ndspn;
+            dp = p;		/* after @ starts new domain name */
+        } else if (*p == ':') {	/* end of group name or end of domain name */
+            if (p == np) {	/* empty group name not allowed */
+                debug((char *) "%s| %s: DEBUG: No netbios name defined for domain %s\n", LogTime(), PROGRAM, p);
+                return (1);
+            }
+            *p = '\0';
+            p++;
+            if (dp) {		/* end of domain name */
+                ndsp->domain = xstrdup(dp);
+                dp = NULL;
+            } else {		/* end of group name and no domain name */
+                ndsp = init_nd();
+                ndsp->netbios = xstrdup(np);
+                if (ndspn)	/* Have already an existing structure */
+                    ndsp->next = ndspn;
+            }
+            ndspn = ndsp;
+            np = p;		/* after : starts new group name */
+            if (!ndsp->domain || !strcmp(ndsp->domain, "")) {
+                debug((char *) "%s| %s: DEBUG: No domain defined for netbios name %s\n", LogTime(), PROGRAM, ndsp->netbios);
+                return (1);
+            }
+            debug((char *) "%s| %s: DEBUG: Netbios name %s  Domain %s\n", LogTime(), PROGRAM, ndsp->netbios, ndsp->domain);
+        } else
+            p++;
     }
     if (p == np) {		/* empty group name not allowed */
-	debug((char *) "%s| %s: DEBUG: No netbios name defined for domain %s\n", LogTime(), PROGRAM, p);
-	return (1);
+        debug((char *) "%s| %s: DEBUG: No netbios name defined for domain %s\n", LogTime(), PROGRAM, p);
+        return (1);
     }
     if (dp) {			/* end of domain name */
-	ndsp->domain = xstrdup(dp);
+        ndsp->domain = xstrdup(dp);
     } else {			/* end of group name and no domain name */
-	ndsp = init_nd();
-	ndsp->netbios = xstrdup(np);
-	if (ndspn)		/* Have already an existing structure */
-	    ndsp->next = ndspn;
+        ndsp = init_nd();
+        ndsp->netbios = xstrdup(np);
+        if (ndspn)		/* Have already an existing structure */
+            ndsp->next = ndspn;
     }
     if (!ndsp->domain || !strcmp(ndsp->domain, "")) {
-	debug((char *) "%s| %s: DEBUG: No domain defined for netbios name %s\n", LogTime(), PROGRAM, ndsp->netbios);
-	return (1);
+        debug((char *) "%s| %s: DEBUG: No domain defined for netbios name %s\n", LogTime(), PROGRAM, ndsp->netbios);
+        return (1);
     }
     debug((char *) "%s| %s: DEBUG: Netbios name %s  Domain %s\n", LogTime(), PROGRAM, ndsp->netbios, ndsp->domain);
 
@@ -139,12 +138,12 @@ get_netbios_name(struct main_args *margs, char *netbios)
 
     nd = margs->ndoms;
     while (nd && netbios) {
-	debug((char *) "%s| %s: DEBUG: Netbios domain loop: netbios@domain %s@%s\n", LogTime(), PROGRAM, nd->netbios, nd->domain);
-	if (nd->netbios && !strcasecmp(nd->netbios, netbios)) {
-	    debug((char *) "%s| %s: DEBUG: Found netbios@domain %s@%s\n", LogTime(), PROGRAM, nd->netbios, nd->domain);
-	    return (nd->domain);
-	}
-	nd = nd->next;
+        debug((char *) "%s| %s: DEBUG: Netbios domain loop: netbios@domain %s@%s\n", LogTime(), PROGRAM, nd->netbios, nd->domain);
+        if (nd->netbios && !strcasecmp(nd->netbios, netbios)) {
+            debug((char *) "%s| %s: DEBUG: Found netbios@domain %s@%s\n", LogTime(), PROGRAM, nd->netbios, nd->domain);
+            return (nd->domain);
+        }
+        nd = nd->next;
     }
 
     return NULL;
