@@ -41,9 +41,9 @@ LogTime()
 
     gettimeofday(&now, NULL);
     if (now.tv_sec != last_t) {
-	tm = localtime(&now.tv_sec);
-	strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
-	last_t = now.tv_sec;
+        tm = localtime(&now.tv_sec);
+        strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
+        last_t = now.tv_sec;
     }
     return buf;
 }
@@ -57,7 +57,7 @@ void
 log(char *format,...)
 {
     if (!log_enabled)
-	return;
+        return;
     va_list args;
     va_start(args, format);
     vfprintf(stderr, format, args);
