@@ -1,6 +1,6 @@
 include $(top_srcdir)/src/Common.am
 
-EXTRA_DIST = README COPYING config.test
+EXTRA_DIST = README config.test
 SUBDIRS = 
 
 AM_CPPFLAGS = $(INCLUDES) -I$(srcdir)
