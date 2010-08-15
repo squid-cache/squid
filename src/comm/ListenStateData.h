@@ -2,7 +2,7 @@
 #define SQUID_LISTENERSTATEDATA_H
 
 #include "config.h"
-#include "base/AsyncCall.h"
+#include "CommCalls.h"
 #include "comm/comm_err_t.h"
 #include "comm/forward.h"
 
@@ -17,15 +17,38 @@ class ListenStateData
 {
 
 public:
+// old remove ASAP when subscribe is working.
     ListenStateData(int fd, AsyncCall::Pointer &call, bool accept_many); // Legacy
     ListenStateData(Comm::ConnectionPointer &conn, AsyncCall::Pointer &call, bool accept_many, const char *note);
+
+    ListenStateData(int fd, bool accept_many); // Legacy verion that uses new subscribe API.
+    ListenStateData(Comm::ConnectionPointer &conn, bool accept_many, const char *note);
     ListenStateData(const ListenStateData &r); // not implemented.
     ~ListenStateData();
 
+    // legacy. removing ASAP when below version works.
     void subscribe(AsyncCall::Pointer &call) { theCallback = call; };
+
+    /** Subscribe a handler to receive calls back about new connections.
+     * Replaces any existing subscribed handler.
+     */
+    void subscribe(int level, int section, const char *name, CommAcceptCbPtrFun *dialer);
+//    void subscribe(int level, int section, const char *name, CommAcceptMemFun *dialer);
+
+    /** Remove the currently waiting callback subscription.
+     * Pending calls will remain scheduled.
+     */
+    void unsubscribe();
+
+    /** Try and accept another connection.
+     * If any are pending it will be passed asynchronously to the subscribed callback.
+     */
     void acceptNext();
+
+    /// Call the subscribed callback handler with details about a new connection.
     void notify(int newfd, comm_err_t flag, const Comm::ConnectionPointer &details);
 
+    /// socket being listened on for new connections
     int fd;
 
     /// errno code of the last accept() or listen() action if one occurred.
@@ -33,6 +56,12 @@ public:
 
     /// whether this socket is delayed and on the AcceptLimiter queue.
     int32_t isLimited;
+
+private:
+    int callSection;        ///< debug section for subscribed callback.
+    int callLevel;          ///< debug level for subscribed callback.
+    char *callName;           ///< Name for the subscribed callback.
+    CommAcceptCbPtrFun *callDialer; ///< dialer to make the subscribed callback
 
 private:
     /// Method to test if there are enough file descriptors to open a new client connection
