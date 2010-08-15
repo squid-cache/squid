@@ -3142,6 +3142,9 @@ httpAccept(int sock, int newfd, Comm::ConnectionPointer &details,
     clientdbEstablished(details->remote, 1);
 
     incoming_sockets_accepted++;
+
+    // TODO: remove this when details conn is passed around properly.
+    details->fd = -1; // ConnStateData has assumed control of the FD now.
 }
 
 #if USE_SSL
@@ -3343,6 +3346,9 @@ httpsAccept(int sock, int newfd, Comm::ConnectionPointer& details,
     clientdbEstablished(details->remote, 1);
 
     incoming_sockets_accepted++;
+
+    // TODO: remove this when details conn is passed around properly.
+    details->fd = -1; // ConnStateData has assumed control of the FD now.
 }
 
 bool
@@ -3465,10 +3471,8 @@ clientHttpConnectionOpened(int fd, int, http_port_list *s)
 
     Must(s);
 
-    AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler(httpAccept)",
-                                         CommAcceptCbPtrFun(httpAccept, s));
-
-    s->listener = new Comm::ListenStateData(fd, call, true);
+    s->listener = new Comm::ListenStateData(fd, true);
+    s->listener->subscribe(5,5, "httpAccept", new CommAcceptCbPtrFun(httpAccept, s));
 
     debugs(1, 1, "Accepting " <<
            (s->intercepted ? " intercepted" : "") <<
@@ -3519,10 +3523,8 @@ clientHttpsConnectionOpened(int fd, int, http_port_list *s)
 
     Must(s);
 
-    AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler(httpsAccept)",
-                                         CommAcceptCbPtrFun(httpsAccept, s));
-
-    s->listener = new Comm::ListenStateData(fd, call, true);
+    s->listener = new Comm::ListenStateData(fd, true);
+    s->listener->subscribe(5,5, "httpsAccept", new CommAcceptCbPtrFun(httpsAccept, s));
 
     debugs(1, 1, "Accepting HTTPS connections at " << s->s << ", FD " << fd << ".");
 
