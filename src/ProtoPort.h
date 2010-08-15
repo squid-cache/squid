@@ -1,12 +1,8 @@
-/*
- * $Id$
- */
 #ifndef SQUID_PROTO_PORT_H
 #define SQUID_PROTO_PORT_H
 
-//#include "typedefs.h"
 #include "cbdata.h"
-#include "comm/ListenStateData.h"
+#include "comm/ConnAcceptor.h"
 
 struct http_port_list {
     http_port_list(const char *aProtocol);
@@ -43,7 +39,7 @@ struct http_port_list {
      * If not NULL we are actively listening for client requests.
      * delete to close the socket.
      */
-    Comm::ListenStateData *listener;
+    Comm::ConnAcceptor *listener;
 
 #if USE_SSL
     // XXX: temporary hack to ease move of SSL options to http_port

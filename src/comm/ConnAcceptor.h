@@ -1,5 +1,5 @@
-#ifndef SQUID_LISTENERSTATEDATA_H
-#define SQUID_LISTENERSTATEDATA_H
+#ifndef SQUID_COMM_CONNACCEPTOR_H
+#define SQUID_COMM_CONNACCEPTOR_H
 
 #include "config.h"
 #include "CommCalls.h"
@@ -13,14 +13,18 @@
 namespace Comm
 {
 
-class ListenStateData
+class ConnAcceptor : public AsyncJob
 {
+private:
+    void start();
+    bool doneAll() const;
+    void swanSong();
 
 public:
-    ListenStateData(int fd, bool accept_many); // Legacy verion that uses new subscribe API.
-    ListenStateData(Comm::ConnectionPointer &conn, bool accept_many, const char *note);
-    ListenStateData(const ListenStateData &r); // not implemented.
-    ~ListenStateData();
+    ConnAcceptor(int fd, bool accept_many); // Legacy verion that uses new subscribe API.
+    ConnAcceptor(Comm::ConnectionPointer &conn, bool accept_many, const char *note);
+    ConnAcceptor(const ConnAcceptor &r); // not implemented.
+    ~ConnAcceptor();
 
     /** Subscribe a handler to receive calls back about new connections.
      * Replaces any existing subscribed handler.
@@ -47,20 +51,24 @@ public:
     /// Call the subscribed callback handler with details about a new connection.
     void notify(int newfd, comm_err_t flag, const Comm::ConnectionPointer &details);
 
-    /// socket being listened on for new connections
-    int fd;
+    /// conn being listened on for new connections
+    /// Reserved for read-only use.
+    ConnectionPointer conn;
 
     /// errno code of the last accept() or listen() action if one occurred.
     int errcode;
 
     /// whether this socket is delayed and on the AcceptLimiter queue.
+    /// Reserved for read-only use outside of AcceptLimiter
     int32_t isLimited;
 
 private:
-    int callSection;        ///< debug section for subscribed callback.
-    int callLevel;          ///< debug level for subscribed callback.
-    char *callName;           ///< Name for the subscribed callback.
+    int callSection;                ///< debug section for subscribed callback.
+    int callLevel;                  ///< debug level for subscribed callback.
+    char *callName;                 ///< Name for the subscribed callback.
     CommAcceptCbPtrFun *callDialer; ///< dialer to make the subscribed callback
+
+    AsyncCall::Pointer theCallback; // TODO remove legacy pointer. Store dialer of members instead.
 
 private:
     /// Method to test if there are enough file descriptors to open a new client connection
@@ -73,12 +81,13 @@ private:
     void acceptOne();
     int oldAccept(Comm::Connection &details);
 
-    AsyncCall::Pointer theCallback;
     bool mayAcceptMore;
 
     void setListen();
+
+    CBDATA_CLASS2(ConnAcceptor);
 };
 
 }; // namespace Comm
 
-#endif /* SQUID_LISTENERSTATEDATA_H */
+#endif /* SQUID_COMM_CONNACCEPTOR_H */
