@@ -17,31 +17,30 @@ class ListenStateData
 {
 
 public:
-// old remove ASAP when subscribe is working.
-    ListenStateData(int fd, AsyncCall::Pointer &call, bool accept_many); // Legacy
-    ListenStateData(Comm::ConnectionPointer &conn, AsyncCall::Pointer &call, bool accept_many, const char *note);
-
     ListenStateData(int fd, bool accept_many); // Legacy verion that uses new subscribe API.
     ListenStateData(Comm::ConnectionPointer &conn, bool accept_many, const char *note);
     ListenStateData(const ListenStateData &r); // not implemented.
     ~ListenStateData();
 
-    // legacy. removing ASAP when below version works.
-    void subscribe(AsyncCall::Pointer &call) { theCallback = call; };
-
     /** Subscribe a handler to receive calls back about new connections.
      * Replaces any existing subscribed handler.
      */
     void subscribe(int level, int section, const char *name, CommAcceptCbPtrFun *dialer);
-//    void subscribe(int level, int section, const char *name, CommAcceptMemFun *dialer);
+
+    /** Subscribe a handler to receive calls back about new connections.
+     * Replaces any existing subscribed handler.
+     * Due to not being able to re-use calls, only permits one to be received.
+     */
+    void subscribe(const AsyncCall::Pointer &call);
 
     /** Remove the currently waiting callback subscription.
      * Pending calls will remain scheduled.
      */
     void unsubscribe();
 
-    /** Try and accept another connection.
-     * If any are pending it will be passed asynchronously to the subscribed callback.
+    /** Try and accept another connection (synchronous).
+     * If one is pending already the subscribed callback handler will be scheduled
+     * to handle it before this method returns.
      */
     void acceptNext();
 
