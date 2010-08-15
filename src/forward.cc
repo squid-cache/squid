@@ -798,10 +798,10 @@ FwdState::connectStart()
     if (serverDestinations[0]->getPeer()) {
         host = serverDestinations[0]->getPeer()->host;
         port = serverDestinations[0]->getPeer()->http_port;
-        serverConn->fd = fwdPconnPool->pop(serverDestinations[0]->getPeer()->name,
-                                           serverDestinations[0]->getPeer()->http_port,
-                                           request->GetHost(), serverDestinations[0]->local,
-                                           checkRetriable());
+        serverDestinations[0]->fd = fwdPconnPool->pop(serverDestinations[0]->getPeer()->name,
+                                                      serverDestinations[0]->getPeer()->http_port,
+                                                      request->GetHost(), serverDestinations[0]->local,
+                                                      checkRetriable());
     } else {
         host = request->GetHost();
         port = request->port;
