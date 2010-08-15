@@ -69,6 +69,8 @@ Comm::ConnOpener::swanSong()
         // inform the caller
         doneConnecting(COMM_ERR_CONNECT, 0);
     }
+
+    AsyncJob::swanSong();
 }
 
 void
