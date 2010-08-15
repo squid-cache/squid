@@ -9,8 +9,8 @@ noinst_LTLIBRARIES = libcomm.la
 libcomm_la_SOURCES= \
 	AcceptLimiter.cc \
 	AcceptLimiter.h \
-	ListenStateData.cc \
-	ListenStateData.h \
+	ConnAcceptor.cc \
+	ConnAcceptor.h \
 	\
 	ConnOpener.cc \
 	ConnOpener.h \

@@ -112,7 +112,8 @@ Comm::ConnOpener::doneConnecting(comm_err_t status, int xerrno)
     conn_ = NULL;
 }
 
-void Comm::ConnOpener::start()
+void
+Comm::ConnOpener::start()
 {
     Must(conn_ != NULL);
 

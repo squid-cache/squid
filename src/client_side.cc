@@ -94,7 +94,7 @@
 #include "clientStream.h"
 #include "comm.h"
 #include "comm/Connection.h"
-#include "comm/ListenStateData.h"
+#include "comm/ConnAcceptor.h"
 #include "eui/Config.h"
 #include "fde.h"
 #include "HttpHdrContRange.h"
@@ -3440,7 +3440,7 @@ clientHttpConnectionsOpen(void)
             ++bumpCount;
 #endif
 
-        /* AYJ: 2009-12-27: bit bumpy. new ListenStateData(...) should be doing all the Comm:: stuff ... */
+        /* AYJ: 2009-12-27: bit bumpy. new ConnAcceptor(...) should be doing all the Comm:: stuff ... */
 
         const int openFlags = COMM_NONBLOCKING |
                               (s->spoof_client_ip ? COMM_TRANSPARENT : 0);
@@ -3471,8 +3471,9 @@ clientHttpConnectionOpened(int fd, int, http_port_list *s)
 
     Must(s);
 
-    s->listener = new Comm::ListenStateData(fd, true);
+    s->listener = new Comm::ConnAcceptor(fd, true);
     s->listener->subscribe(5,5, "httpAccept", new CommAcceptCbPtrFun(httpAccept, s));
+    AsyncJob::AsyncStart(s->listener);
 
     debugs(1, 1, "Accepting " <<
            (s->intercepted ? " intercepted" : "") <<
@@ -3523,8 +3524,9 @@ clientHttpsConnectionOpened(int fd, int, http_port_list *s)
 
     Must(s);
 
-    s->listener = new Comm::ListenStateData(fd, true);
+    s->listener = new Comm::ConnAcceptor(fd, true);
     s->listener->subscribe(5,5, "httpsAccept", new CommAcceptCbPtrFun(httpsAccept, s));
+    AsyncJob::AsyncStart(s->listener);
 
     debugs(1, 1, "Accepting HTTPS connections at " << s->s << ", FD " << fd << ".");
 
@@ -3550,8 +3552,8 @@ clientHttpConnectionsClose(void)
 {
     for (http_port_list *s = Config.Sockaddr.http; s; s = s->next) {
         if (s->listener) {
-            debugs(1, 1, "FD " << s->listener->fd << " Closing HTTP connection");
-            delete s->listener;
+            debugs(1, 1, "Closing HTTP port " << s->s);
+            s->listener->unsubscribe();
             s->listener = NULL;
         }
     }
@@ -3559,8 +3561,8 @@ clientHttpConnectionsClose(void)
 #if USE_SSL
     for (http_port_list *s = Config.Sockaddr.https; s; s = s->next) {
         if (s->listener) {
-            debugs(1, 1, "FD " << s->listener->fd << " Closing HTTPS connection");
-            delete s->listener;
+            debugs(1, 1, "Closing HTTPS port " << s->s);
+            s->listener->unsubscribe();
             s->listener = NULL;
         }
     }

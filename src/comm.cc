@@ -41,7 +41,6 @@
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
 #include "comm/Connection.h"
-#include "comm/ListenStateData.h"
 #include "CommIO.h"
 #include "CommRead.h"
 #include "MemBuf.h"
