@@ -42,52 +42,6 @@
 #include "protos.h"
 #include "SquidTime.h"
 
-// TODO remove.
-Comm::ListenStateData::ListenStateData(int aFd, AsyncCall::Pointer &call, bool accept_many) :
-        fd(aFd),
-        errcode(0),
-        isLimited(0),
-        theCallback(call),
-        mayAcceptMore(accept_many)
-{
-    assert(aFd >= 0);
-    debugs(5, 5, HERE << "FD " << fd << " AsyncCall: " << call);
-    assert(isOpen(aFd));
-    setListen();
-    commSetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
-}
-
-// TODO remove.
-Comm::ListenStateData::ListenStateData(Comm::ConnectionPointer &conn, AsyncCall::Pointer &call, bool accept_many, const char *note) :
-        errcode(0),
-        isLimited(0),
-        theCallback(call),
-        mayAcceptMore(accept_many)
-{
-    /* open the conn if its not already open */
-    if (!IsConnOpen(conn)) {
-        conn->fd = comm_open(SOCK_STREAM,
-                             IPPROTO_TCP,
-                             conn->local,
-                             conn->flags,
-                             note);
-        debugs(9, 3, HERE << "Unconnected data socket created on FD " << conn->fd );
-
-        if (!conn->isOpen()) {
-            debugs(5, DBG_CRITICAL, HERE << "comm_open failed");
-            errcode = -1;
-            return;
-        }
-    }
-
-    assert(IsConnOpen(conn));
-    fd = conn->fd;
-    debugs(5, 5, HERE << "FD " << conn->fd << " AsyncCall: " << call);
-    setListen();
-    if (errcode == 0)
-        commSetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
-}
-
 Comm::ListenStateData::ListenStateData(int aFd, bool accept_many) :
         fd(aFd),
         errcode(0),
@@ -96,6 +50,7 @@ Comm::ListenStateData::ListenStateData(int aFd, bool accept_many) :
         callLevel(NULL),
         callName(NULL),
         callDialer(NULL),
+        theCallback(NULL),
         mayAcceptMore(accept_many)
 {
     assert(aFd >= 0);
@@ -109,6 +64,7 @@ Comm::ListenStateData::ListenStateData(Comm::ConnectionPointer &conn, bool accep
         callLevel(NULL),
         callName(NULL),
         callDialer(NULL),
+        theCallback(NULL),
         mayAcceptMore(accept_many)
 {
     /* open the conn if its not already open */
@@ -133,9 +89,9 @@ Comm::ListenStateData::ListenStateData(Comm::ConnectionPointer &conn, bool accep
 
 Comm::ListenStateData::~ListenStateData()
 {
+    unsubscribe();
     comm_close(fd);
     fd = -1;
-    delete callDialer;;
 }
 
 void
@@ -144,8 +100,11 @@ Comm::ListenStateData::subscribe(int section, int level, const char *name, CommA
     debugs(5, 5, HERE << "FD " << fd << " AsyncCall: " << name);
 
     // if this is the first subscription. start listening on the socket.
-    if (callDialer == NULL)
+    if (callDialer == NULL && theCallback == NULL)
         setListen();
+
+    // remove old subscription. if any.
+    unsubscribe();
 
     // store the subscribed handler details.
     callSection = section;
@@ -160,11 +119,32 @@ Comm::ListenStateData::subscribe(int section, int level, const char *name, CommA
 }
 
 void
+Comm::ListenStateData::subscribe(const AsyncCall::Pointer &call)
+{
+    debugs(5, 5, HERE << "FD " << fd << " AsyncCall: " << call);
+
+    // remove old subscription. if any.
+    unsubscribe();
+
+    // store new callback subscription
+    theCallback = call;
+
+    // start listening on the socket.
+    if (theCallback != NULL) {
+        setListen();
+        // if no error so far start accepting connections.
+        if (errcode == 0)
+            commSetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
+    }
+}
+
+void
 Comm::ListenStateData::unsubscribe()
 {
     safe_free(callName);
     delete callDialer;
     callDialer = NULL;
+    theCallback = NULL;
 }
 
 /**
@@ -320,8 +300,9 @@ Comm::ListenStateData::notify(int newfd, comm_err_t flag, const Comm::Connection
         params.flag = flag;
         params.xerrno = errcode;
         ScheduleCallHere(theCallback);
-        if (!mayAcceptMore)
-            theCallback = NULL;
+        // only permit the call to be scheduled once.
+        mayAcceptMore = false;
+        theCallback = NULL;
     }
 }
 
