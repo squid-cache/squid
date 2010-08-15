@@ -459,8 +459,10 @@ void
 FtpStateData::dataClosed(const CommCloseCbParams &io)
 {
     if (data.listener) {
+        data.listener->unsubscribe();
         delete data.listener;
         data.listener = NULL;
+        data.listen_conn = NULL;
         data.conn = NULL;
     }
     data.clear();
@@ -2739,7 +2741,8 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
     typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;
     AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
                                     acceptDialer(ftpState, &FtpStateData::ftpAcceptDataConnection));
-    ftpState->data.listener = new Comm::ListenStateData(conn, acceptCall, false, ftpState->entry->url());
+    ftpState->data.listener = new Comm::ListenStateData(conn, false, ftpState->entry->url());
+    ftpState->data.listener->subscribe(acceptCall);
 
     if (!ftpState->data.listener || ftpState->data.listener->errcode != 0) {
         conn->close();
@@ -2913,8 +2916,8 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
             typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;
             AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
                                             acceptDialer(this, &FtpStateData::ftpAcceptDataConnection));
+            data.listener = new Comm::ListenStateData(data.listen_conn, false, data.host);
             data.listener->subscribe(acceptCall);
-            data.listener->acceptNext();
             return;
         }
     }
@@ -3019,7 +3022,8 @@ void FtpStateData::readStor()
         AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
                                         acceptDialer(this, &FtpStateData::ftpAcceptDataConnection));
 
-        data.listener = new Comm::ListenStateData(data.conn, acceptCall, false, data.host);
+        data.listener = new Comm::ListenStateData(data.conn, false, data.host);
+        data.listener->subscribe(acceptCall);
     } else {
         debugs(9, DBG_IMPORTANT, HERE << "Unexpected reply code "<< std::setfill('0') << std::setw(3) << code);
         ftpFail(this);
@@ -3153,7 +3157,8 @@ ftpReadList(FtpStateData * ftpState)
         AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
                                         acceptDialer(ftpState, &FtpStateData::ftpAcceptDataConnection));
 
-        ftpState->data.listener = new Comm::ListenStateData(ftpState->data.conn, acceptCall, false, ftpState->data.host);
+        ftpState->data.listener = new Comm::ListenStateData(ftpState->data.conn, false, ftpState->data.host);
+        ftpState->data.listener->subscribe(acceptCall);
         return;
     } else if (!ftpState->flags.tried_nlst && code > 300) {
         ftpSendNlst(ftpState);
@@ -3198,7 +3203,8 @@ ftpReadRetr(FtpStateData * ftpState)
         typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;
         AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
                                         acceptDialer(ftpState, &FtpStateData::ftpAcceptDataConnection));
-        ftpState->data.listener = new Comm::ListenStateData(ftpState->data.conn, acceptCall, false, ftpState->data.host);
+        ftpState->data.listener = new Comm::ListenStateData(ftpState->data.conn, false, ftpState->data.host);
+        ftpState->data.listener->subscribe(acceptCall);
     } else if (code >= 300) {
         if (!ftpState->flags.try_slash_hack) {
             /* Try this as a directory missing trailing slash... */
@@ -3860,6 +3866,7 @@ FtpChannel::close()
 {
     // channels with active listeners will be closed when the listener handler dies.
     if (listener) {
+        listener->unsubscribe();
         delete listener;
         listener = NULL;
         comm_remove_close_handler(conn->fd, closer);
