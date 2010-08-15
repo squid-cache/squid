@@ -42,6 +42,131 @@
 #include "protos.h"
 #include "SquidTime.h"
 
+// TODO remove.
+Comm::ListenStateData::ListenStateData(int aFd, AsyncCall::Pointer &call, bool accept_many) :
+        fd(aFd),
+        errcode(0),
+        isLimited(0),
+        theCallback(call),
+        mayAcceptMore(accept_many)
+{
+    assert(aFd >= 0);
+    debugs(5, 5, HERE << "FD " << fd << " AsyncCall: " << call);
+    assert(isOpen(aFd));
+    setListen();
+    commSetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
+}
+
+// TODO remove.
+Comm::ListenStateData::ListenStateData(Comm::ConnectionPointer &conn, AsyncCall::Pointer &call, bool accept_many, const char *note) :
+        errcode(0),
+        isLimited(0),
+        theCallback(call),
+        mayAcceptMore(accept_many)
+{
+    /* open the conn if its not already open */
+    if (!IsConnOpen(conn)) {
+        conn->fd = comm_open(SOCK_STREAM,
+                             IPPROTO_TCP,
+                             conn->local,
+                             conn->flags,
+                             note);
+        debugs(9, 3, HERE << "Unconnected data socket created on FD " << conn->fd );
+
+        if (!conn->isOpen()) {
+            debugs(5, DBG_CRITICAL, HERE << "comm_open failed");
+            errcode = -1;
+            return;
+        }
+    }
+
+    assert(IsConnOpen(conn));
+    fd = conn->fd;
+    debugs(5, 5, HERE << "FD " << conn->fd << " AsyncCall: " << call);
+    setListen();
+    if (errcode == 0)
+        commSetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
+}
+
+Comm::ListenStateData::ListenStateData(int aFd, bool accept_many) :
+        fd(aFd),
+        errcode(0),
+        isLimited(0),
+        callSection(NULL),
+        callLevel(NULL),
+        callName(NULL),
+        callDialer(NULL),
+        mayAcceptMore(accept_many)
+{
+    assert(aFd >= 0);
+    assert(isOpen(aFd));
+}
+
+Comm::ListenStateData::ListenStateData(Comm::ConnectionPointer &conn, bool accept_many, const char *note) :
+        errcode(0),
+        isLimited(0),
+        callSection(NULL),
+        callLevel(NULL),
+        callName(NULL),
+        callDialer(NULL),
+        mayAcceptMore(accept_many)
+{
+    /* open the conn if its not already open */
+    if (!IsConnOpen(conn)) {
+        conn->fd = comm_open(SOCK_STREAM,
+                             IPPROTO_TCP,
+                             conn->local,
+                             conn->flags,
+                             note);
+        debugs(9, 3, HERE << "Unconnected data socket created on FD " << conn->fd );
+
+        if (!conn->isOpen()) {
+            debugs(5, DBG_CRITICAL, HERE << "comm_open failed");
+            errcode = -1;
+            return;
+        }
+    }
+
+    assert(IsConnOpen(conn));
+    fd = conn->fd;
+}
+
+Comm::ListenStateData::~ListenStateData()
+{
+    comm_close(fd);
+    fd = -1;
+    delete callDialer;;
+}
+
+void
+Comm::ListenStateData::subscribe(int section, int level, const char *name, CommAcceptCbPtrFun *dialer)
+{
+    debugs(5, 5, HERE << "FD " << fd << " AsyncCall: " << name);
+
+    // if this is the first subscription. start listening on the socket.
+    if (callDialer == NULL)
+        setListen();
+
+    // store the subscribed handler details.
+    callSection = section;
+    callLevel = level;
+    safe_free(callName);
+    callName = xstrdup(name);
+    callDialer = dialer;
+
+    // if no error so far start accepting connections.
+    if (errcode == 0)
+        commSetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
+}
+
+void
+Comm::ListenStateData::unsubscribe()
+{
+    safe_free(callName);
+    delete callDialer;
+    callDialer = NULL;
+}
+
 /**
  * New-style listen and accept routines
  *
@@ -77,56 +202,6 @@ Comm::ListenStateData::setListen()
         debugs(5, DBG_CRITICAL, "accept_filter not supported on your OS");
 #endif
     }
-}
-
-Comm::ListenStateData::ListenStateData(int aFd, AsyncCall::Pointer &call, bool accept_many) :
-        fd(aFd),
-        errcode(0),
-        isLimited(0),
-        theCallback(call),
-        mayAcceptMore(accept_many)
-{
-    assert(aFd >= 0);
-    debugs(5, 5, HERE << "FD " << fd << " AsyncCall: " << call);
-    assert(isOpen(aFd));
-    setListen();
-    commSetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
-}
-
-Comm::ListenStateData::ListenStateData(Comm::ConnectionPointer &conn, AsyncCall::Pointer &call, bool accept_many, const char *note) :
-        errcode(0),
-        isLimited(0),
-        theCallback(call),
-        mayAcceptMore(accept_many)
-{
-    /* open the conn if its not already open */
-    if (!IsConnOpen(conn)) {
-        conn->fd = comm_open(SOCK_STREAM,
-                             IPPROTO_TCP,
-                             conn->local,
-                             conn->flags,
-                             note);
-        debugs(9, 3, HERE << "Unconnected data socket created on FD " << conn->fd );
-
-        if (!conn->isOpen()) {
-            debugs(5, DBG_CRITICAL, HERE << "comm_open failed");
-            errcode = -1;
-            return;
-        }
-    }
-
-    assert(IsConnOpen(conn));
-    fd = conn->fd;
-    debugs(5, 5, HERE << "FD " << conn->fd << " AsyncCall: " << call);
-    setListen();
-    if (errcode == 0)
-        commSetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
-}
-
-Comm::ListenStateData::~ListenStateData()
-{
-    comm_close(fd);
-    fd = -1;
 }
 
 /**
@@ -188,13 +263,13 @@ Comm::ListenStateData::acceptOne()
 
         if (newfd == COMM_NOMESSAGE) {
             /* register interest again */
-            debugs(5, 5, HERE << "try later: FD " << fd << " handler: " << theCallback);
+            debugs(5, 5, HERE << "try later: FD " << fd << " handler: " << callName);
             commSetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
             return;
         }
 
         // A non-recoverable error; notify the caller */
-        debugs(5, 5, HERE << "non-recoverable error: FD " << fd << " handler: " << theCallback);
+        debugs(5, 5, HERE << "non-recoverable error: FD " << fd << " handler: " << callName);
         notify(-1, COMM_ERROR, connDetails);
         mayAcceptMore = false;
         return;
@@ -202,7 +277,7 @@ Comm::ListenStateData::acceptOne()
 
     debugs(5, 5, HERE << "accepted: FD " << fd <<
            " newfd: " << newfd << " from: " << connDetails->remote <<
-           " handler: " << theCallback);
+           " handler: " << callName);
     notify(newfd, COMM_OK, connDetails);
 }
 
@@ -223,7 +298,20 @@ Comm::ListenStateData::notify(int newfd, comm_err_t flag, const Comm::Connection
         return;
     }
 
-    if (theCallback != NULL) {
+    if (callDialer != NULL) {
+        AsyncCall::Pointer call = commCbCall(callSection, callLevel, callName, *callDialer);
+        typedef CommAcceptCbParams Params;
+        Params &params = GetCommParams<Params>(call);
+        params.fd = fd;
+        params.nfd = newfd;
+        params.details = connDetails;
+        params.flag = flag;
+        params.xerrno = errcode;
+        ScheduleCallHere(call);
+        if (!mayAcceptMore)
+            unsubscribe();
+    }
+    else if (theCallback != NULL) {
         typedef CommAcceptCbParams Params;
         Params &params = GetCommParams<Params>(theCallback);
         params.fd = fd;

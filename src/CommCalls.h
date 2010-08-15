@@ -183,6 +183,9 @@ public:
     CommAcceptCbPtrFun(IOACB *aHandler, const CommAcceptCbParams &aParams);
     void dial();
 
+    // yuck. But we can't store the PtrFun dialers without it.
+//    virtual bool canDial(AsyncCall &c) { return true; }
+
     virtual void print(std::ostream &os) const;
 
 public:
