@@ -3,18 +3,20 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-07-26 21:21+1300\n"
-"PO-Revision-Date: 2008-12-18 01:19+1300\n"
-"Last-Translator: Arthur Tumanyan <arthurtumanyan@yahoo.com>\n"
+"PO-Revision-Date: 2010-08-16 10:48+0200\n"
+"Last-Translator: Arthur <arthurtumanyan@yahoo.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: hy\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Pootle 1.2.0\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Pootle 2.0.1\n"
 
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
+"<a href=\"../\">Ծնողական դիրեկտորիա</a> (<a href=\"/\">Արմատական դիրեկտօրիա</a>)"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
