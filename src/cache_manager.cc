@@ -43,6 +43,9 @@
 #include "wordlist.h"
 #include "Debug.h"
 
+// for rotate_logs()
+#include "protos.h"
+
 /// \ingroup CacheManagerInternal
 #define MGR_PASSWD_SZ 128
 
