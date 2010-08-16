@@ -1114,6 +1114,7 @@ tests_testCacheManager_SOURCES = \
 	tests/testCacheManager.cc \
 	tests/testCacheManager.h \
 	tests/testMain.cc \
+	tests/stub_main_cc.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1298,6 +1299,7 @@ tests_testEvent_SOURCES = \
 	tests/testEvent.cc \
 	tests/testEvent.h \
 	tests/testMain.cc \
+	tests/stub_main_cc.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1453,6 +1455,7 @@ tests_testEventLoop_SOURCES = \
 	tests/testEventLoop.cc \
 	tests/testEventLoop.h \
 	tests/testMain.cc \
+	tests/stub_main_cc.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1615,6 +1618,7 @@ tests_test_http_range_SOURCES = \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
+	tests/stub_main_cc.cc \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
@@ -1757,6 +1761,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/testHttpRequestMethod.h \
 	tests/testHttpRequestMethod.cc \
 	tests/testMain.cc \
+	tests/stub_main_cc.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -2132,6 +2137,7 @@ tests_testURL_SOURCES = \
 	tests/testURLScheme.cc \
 	tests/testURLScheme.h \
 	tests/testMain.cc \
+	tests/stub_main_cc.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
