@@ -24,7 +24,7 @@
 #include "TrieNode.h"
 #include "TrieCharTransform.h"
 
-#ifndef _USE_INLINE_
+#if !_USE_INLINE_
 #include "Trie.cci"
 #endif
 
