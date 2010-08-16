@@ -364,7 +364,7 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nh, 
     }
     if (p != buffer + len) {
 #if (SIZEOF_LONG == 8)
-        errror("%s| %s: ERROR: Inconsistence message length: %ld!=0\n", LogTime(), PROGRAM, buffer + len - p);
+        error("%s| %s: ERROR: Inconsistence message length: %ld!=0\n", LogTime(), PROGRAM, buffer + len - p);
 #else
         error((char *) "%s| %s: ERROR: Inconsistence message length: %d!=0\n", LogTime(), PROGRAM, buffer + len - p);
 #endif
