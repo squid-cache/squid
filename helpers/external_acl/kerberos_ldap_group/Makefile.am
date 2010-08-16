@@ -1,14 +1,17 @@
 include $(top_srcdir)/src/Common.am
 
-EXTRA_DIST = README config.test
+EXTRA_DIST = README config.test cert_tool ext_kerberos_ldap_group_acl.8
 SUBDIRS = 
 
 AM_CPPFLAGS = $(INCLUDES) -I$(srcdir)
+
+libexec_SCRIPTS = cert_tool
 
 libexec_PROGRAMS = ext_kerberos_ldap_group_acl
 
 ext_kerberos_ldap_group_acl_SOURCES = \
 	kerberos_ldap_group.cc \
+	support.h \
 	support_group.cc \
 	support_netbios.cc \
 	support_member.cc \
