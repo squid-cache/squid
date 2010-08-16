@@ -17,17 +17,6 @@ public:
     bool doSanityCheckStartLine(MemBuf *b, const size_t h, http_status *e) { return sanityCheckStartLine(b,h,e); };
 };
 
-/* stub functions to link successfully */
-void
-shut_down(int)
-{}
-
-void
-reconfigure(int)
-{}
-
-/* end stubs */
-
 /* init memory pools */
 
 void
