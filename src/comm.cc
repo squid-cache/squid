@@ -2155,6 +2155,8 @@ checkTimeouts(void)
 
         if (writeTimedOut(fd)) {
             // We have an active write callback and we are timed out
+            debugs(5, 5, "checkTimeouts: FD " << fd << " auto write timeout");
+            commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
             commio_finish_callback(fd, COMMIO_FD_WRITECB(fd), COMM_ERROR, ETIMEDOUT);
         } else if (AlreadyTimedOut(F))
             continue;
