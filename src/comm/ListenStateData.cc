@@ -45,18 +45,17 @@
 /**
  * New-style listen and accept routines
  *
- * Listen simply registers our interest in an FD for listening,
- * and accept takes a callback to call when an FD has been
- * accept()ed.
+ * setListen simply registers our interest in an FD for listening.
+ * The constructor takes a callback to call when an FD has been
+ * accept()ed some time later.
  */
 void
 Comm::ListenStateData::setListen()
 {
-    int x;
-
-    if ((x = listen(fd, Squid_MaxFD >> 2)) < 0) {
+    errcode = 0; // reset local errno copy.
+    if (listen(fd, Squid_MaxFD >> 2) < 0) {
         debugs(50, 0, HERE << "listen(FD " << fd << ", " << (Squid_MaxFD >> 2) << "): " << xstrerror());
-        errcode = x;
+        errcode = errno;
         return;
     }
 
@@ -66,15 +65,13 @@ Comm::ListenStateData::setListen()
         bzero(&afa, sizeof(afa));
         debugs(5, DBG_IMPORTANT, "Installing accept filter '" << Config.accept_filter << "' on FD " << fd);
         xstrncpy(afa.af_name, Config.accept_filter, sizeof(afa.af_name));
-        x = setsockopt(fd, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof(afa));
-        if (x < 0)
+        if (setsockopt(fd, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof(afa)) < 0)
             debugs(5, DBG_CRITICAL, "SO_ACCEPTFILTER '" << Config.accept_filter << "': '" << xstrerror());
 #elif defined(TCP_DEFER_ACCEPT)
         int seconds = 30;
         if (strncmp(Config.accept_filter, "data=", 5) == 0)
             seconds = atoi(Config.accept_filter + 5);
-        x = setsockopt(fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &seconds, sizeof(seconds));
-        if (x < 0)
+        if (setsockopt(fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &seconds, sizeof(seconds)) < 0)
             debugs(5, DBG_CRITICAL, "TCP_DEFER_ACCEPT '" << Config.accept_filter << "': '" << xstrerror());
 #else
         debugs(5, DBG_CRITICAL, "accept_filter not supported on your OS");
@@ -166,7 +163,7 @@ Comm::ListenStateData::acceptOne()
 
         // A non-recoverable error; notify the caller */
         debugs(5, 5, HERE << "non-recoverable error: FD " << fd << " handler: " << theCallback);
-        notify(-1, COMM_ERROR, errno, connDetails);
+        notify(-1, COMM_ERROR, connDetails);
         mayAcceptMore = false;
         return;
     }
@@ -174,7 +171,7 @@ Comm::ListenStateData::acceptOne()
     debugs(5, 5, HERE << "accepted: FD " << fd <<
            " newfd: " << newfd << " from: " << connDetails.peer <<
            " handler: " << theCallback);
-    notify(newfd, COMM_OK, 0, connDetails);
+    notify(newfd, COMM_OK, connDetails);
 }
 
 void
@@ -186,11 +183,11 @@ Comm::ListenStateData::acceptNext()
 }
 
 void
-Comm::ListenStateData::notify(int newfd, comm_err_t errcode, int xerrno, const ConnectionDetail &connDetails)
+Comm::ListenStateData::notify(int newfd, comm_err_t flag, const ConnectionDetail &connDetails)
 {
     // listener socket handlers just abandon the port with COMM_ERR_CLOSING
     // it should only happen when this object is deleted...
-    if (errcode == COMM_ERR_CLOSING) {
+    if (flag == COMM_ERR_CLOSING) {
         return;
     }
 
@@ -200,8 +197,8 @@ Comm::ListenStateData::notify(int newfd, comm_err_t errcode, int xerrno, const C
         params.fd = fd;
         params.nfd = newfd;
         params.details = connDetails;
-        params.flag = errcode;
-        params.xerrno = xerrno;
+        params.flag = flag;
+        params.xerrno = errcode;
         ScheduleCallHere(theCallback);
         if (!mayAcceptMore)
             theCallback = NULL;
@@ -221,7 +218,9 @@ Comm::ListenStateData::oldAccept(ConnectionDetail &details)
     struct addrinfo *gai = NULL;
     details.me.InitAddrInfo(gai);
 
+    errcode = 0; // reset local errno copy.
     if ((sock = accept(fd, gai->ai_addr, &gai->ai_addrlen)) < 0) {
+        errcode = errno; // store last accept errno locally.
 
         details.me.FreeAddrInfo(gai);
 
