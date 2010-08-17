@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-07-26 21:21+1300\n"
-"PO-Revision-Date: 2010-08-16 10:48+0200\n"
+"PO-Revision-Date: 2010-08-17 10:37+0200\n"
 "Last-Translator: Arthur <arthurtumanyan@yahoo.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: hy\n"
@@ -16,22 +16,23 @@ msgstr ""
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
-"<a href=\"../\">Ծնողական դիրեկտորիա</a> (<a href=\"/\">Արմատական դիրեկտօրիա</a>)"
+"<a href=\"../\">Ծնողական դիրեկտորիա</a> (<a href=\"/\">Արմատական դիրեկտորիա</a>)"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
-msgstr ""
+msgstr "<b>Սխալ հարցում</b> հարցումն իրականացնելու ընթացքում տեղի ունեցավ սխալ:"
 
 #: templates/ERR_INVALID_RESP:4
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
+"<b>Անթույլատրելի պատասխան</b> հարցումն իրականացնելու ընթացքում տեղի ունեցավ "
+"սխալ:"
 
 #: templates/ERR_READ_TIMEOUT:7
-#, fuzzy
 msgid ""
 "A Timeout occurred while waiting to read data from the network. The network "
 "or server may be down or congested. Please retry your request."
@@ -42,7 +43,7 @@ msgstr ""
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
-msgstr "Պահանջվող URN չի կարող առաքվել"
+msgstr "Պահանջվող URN-ի համար URL-ն հնարավոր չէ ստանալ"
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
@@ -55,8 +56,8 @@ msgid ""
 "this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
-"Մուտքի կառավարման պարամետրերը թույլ չեն տալիս կատարել Ձեր հարցումը տվյալ "
-"պահին.Եթե Դուք սա սխալ եք համարում,խնդրվում է դիմել Ձեր ինտերնետ ապահովողին․"
+"Մուտքի կառավարման պարամետրերը թույլ չեն տալիս իրականացնել Ձեր հարցումը տվյալ "
+"պահին.Եթե Դուք սա սխալ եք համարում,ապա դիմեք Ձեր ինտերնետ կապ ապահովողին․"
 
 #: templates/ERR_FTP_FORBIDDEN:4
 msgid ""
@@ -79,20 +80,20 @@ msgid "An Illegal response was received from the ICAP server."
 msgstr ""
 
 #: templates/ERR_READ_ERROR:7
-#, fuzzy
 msgid ""
 "An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr ""
-"Ցանցից տվյալների ընթերցման ժամանակ առաջացավ սխալ.Խնդրվում է կրկնել հարցումը."
+"Ցանցից տվյալների ընթերցման ընթացքում  առաջացավ սխալ.Խնդրվում է կրկնել "
+"հարցումը."
 
 #: templates/ERR_WRITE_ERROR:7
-#, fuzzy
 msgid ""
 "An error condition occurred while writing to the network. Please retry your "
 "request."
 msgstr ""
-"Տվյալները ցանց ուղարկելու ժամանակ առաջացավ սխալ․ Խնդրվում է կրկնել հարցումը․"
+"Տվյալները ցանցում գրանցելու ընթացքում առաջացավ սխալ․ Խնդրվում է կրկնել "
+"հարցումը․"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
@@ -104,8 +105,9 @@ msgid "Cache Manager Access Denied."
 msgstr "Քեշի կառավառման մուտքն արգելված է."
 
 #: templates/ERR_URN_RESOLVE:5
+#, fuzzy
 msgid "Cannot Resolve URN"
-msgstr ""
+msgstr "Cannot Resolve URN"
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
