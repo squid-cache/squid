@@ -201,14 +201,12 @@ msgid "ESI Processing failed."
 msgstr "El procesado ESI falló"
 
 #: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
-#, fuzzy
 msgid "FTP PUT Successful."
-msgstr "FTP PUT Correcto: Archivo Creado"
+msgstr "PUT FTP realizado con éxito"
 
 #: templates/ERR_FTP_PUT_ERROR:3
-#, fuzzy
 msgid "FTP PUT upload failed"
-msgstr "FTP PUT/envio fallido"
+msgstr "FTP PUT fallido"
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
