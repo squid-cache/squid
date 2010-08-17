@@ -1221,7 +1221,7 @@ DOC_START
 	   accel	Accelerator mode. Also needs at least one of
 			vhost / vport / defaultsite.
 
-	   sslbump 	Intercept each CONNECT request matching ssl_bump ACL,
+	   ssl-bump 	Intercept each CONNECT request matching ssl_bump ACL,
 			establish secure connection with the client and with
 			the server, decrypt HTTP messages as they pass through
 			Squid, and treat them as unencrypted HTTP messages,
