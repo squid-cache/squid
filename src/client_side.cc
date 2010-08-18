@@ -735,18 +735,14 @@ static void
 clientSetKeepaliveFlag(ClientHttpRequest * http)
 {
     HttpRequest *request = http->request;
-    const HttpHeader *req_hdr = &request->header;
 
     debugs(33, 3, "clientSetKeepaliveFlag: http_ver = " <<
            request->http_ver.major << "." << request->http_ver.minor);
     debugs(33, 3, "clientSetKeepaliveFlag: method = " <<
            RequestMethodStr(request->method));
 
-    /* We are HTTP/1.1 facing clients now*/
-    HttpVersion http_ver(1,1);
-
-    if (httpMsgIsPersistent(http_ver, req_hdr))
-        request->flags.proxy_keepalive = 1;
+    // TODO: move to HttpRequest::hdrCacheInit, just like HttpReply.
+    request->flags.proxy_keepalive = request->persistent() ? 1 : 0;
 }
 
 static int
