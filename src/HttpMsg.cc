@@ -316,11 +316,10 @@ HttpMsg::setContentLength(int64_t clen)
     content_length = clen;
 }
 
-/* returns true if connection should be "persistent"
- * after processing this message */
-int
-httpMsgIsPersistent(HttpVersion const &http_ver, const HttpHeader * hdr)
+bool
+HttpMsg::persistent() const
 {
+    const HttpHeader *hdr = &header; // XXX: diff-minimizer; remove on commit
     if ((http_ver.major >= 1) && (http_ver.minor >= 1)) {
         /*
          * for modern versions of HTTP: persistent unless there is
