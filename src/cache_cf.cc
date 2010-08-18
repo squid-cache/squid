@@ -3158,7 +3158,7 @@ parse_http_port_option(http_port_list * s, char *token)
         s->sslcontext = xstrdup(token + 11);
     } else if (strcasecmp(token, "sslBump") == 0) {
         debugs(3, DBG_CRITICAL, "WARNING: '" << token << "' is deprecated " <<
-           "in http_port. Use 'ssl-bump' instead.");
+               "in http_port. Use 'ssl-bump' instead.");
         s->sslBump = 1; // accelerated when bumped, otherwise not
     } else if (strcmp(token, "ssl-bump") == 0) {
         s->sslBump = 1; // accelerated when bumped, otherwise not

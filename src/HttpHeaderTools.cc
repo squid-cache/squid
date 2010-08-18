@@ -153,10 +153,10 @@ httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive)
         list = hdr->getList(HDR_PROXY_CONNECTION);
     else
 #endif
-    if (hdr->has(HDR_CONNECTION))
-        list = hdr->getList(HDR_CONNECTION);
-    else
-        return 0;
+        if (hdr->has(HDR_CONNECTION))
+            list = hdr->getList(HDR_CONNECTION);
+        else
+            return 0;
 
     res = strListIsMember(&list, directive, ',');
 
