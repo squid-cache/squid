@@ -1720,11 +1720,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* maybe append Connection: keep-alive */
     if (flags.keepalive) {
-        if (flags.proxying) {
-            hdr_out->putStr(HDR_PROXY_CONNECTION, "keep-alive");
-        } else {
-            hdr_out->putStr(HDR_CONNECTION, "keep-alive");
-        }
+        hdr_out->putStr(HDR_CONNECTION, "keep-alive");
     }
 
     /* append Front-End-Https */
@@ -1870,12 +1866,13 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
         break;
 
-    case HDR_PROXY_CONNECTION:
+    case HDR_PROXY_CONNECTION: // SHOULD ignore. But doing so breaks things.
+        break;
 
     case HDR_X_FORWARDED_FOR:
 
     case HDR_CACHE_CONTROL:
-        /** \par Proxy-Connaction:, X-Forwarded-For:, Cache-Control:
+        /** \par X-Forwarded-For:, Cache-Control:
          * handled specially by Squid, so leave off for now.
          * append these after the loop if needed */
         break;

@@ -3747,7 +3747,6 @@ DOC_START
 		request_header_access Retry-After allow all
 		request_header_access Title allow all
 		request_header_access Connection allow all
-		request_header_access Proxy-Connection allow all
 		request_header_access All deny all
 
 	although many of those are HTTP reply headers, and so should be
@@ -3823,7 +3822,6 @@ DOC_START
 		reply_header_access Retry-After allow all
 		reply_header_access Title allow all
 		reply_header_access Connection allow all
-		reply_header_access Proxy-Connection allow all
 		reply_header_access All deny all
 
 	although the HTTP request headers won't be usefully controlled
