@@ -2327,6 +2327,16 @@ parse_refreshpattern(refresh_t ** head)
 
     i = GetInteger();		/* token: min */
 
+    /* catch negative and insanely huge values close to 32-bit wrap */
+    if (i < 0) {
+        debugs(3, DBG_IMPORTANT, "WARNING: refresh_pattern minimum age negative. Cropped back to zero.");
+        i = 0;
+    }
+    if (i > 60*24*365) {
+        debugs(3, DBG_IMPORTANT, "WARNING: refresh_pattern minimum age too high. Cropped back to 1 year.");
+        i = 60*24*365;
+    }
+
     min = (time_t) (i * 60);	/* convert minutes to seconds */
 
     i = GetInteger();		/* token: pct */
@@ -2334,6 +2344,16 @@ parse_refreshpattern(refresh_t ** head)
     pct = (double) i / 100.0;
 
     i = GetInteger();		/* token: max */
+
+    /* catch negative and insanely huge values close to 32-bit wrap */
+    if (i < 0) {
+        debugs(3, DBG_IMPORTANT, "WARNING: refresh_pattern maximum age negative. Cropped back to zero.");
+        i = 0;
+    }
+    if (i > 60*24*365) {
+        debugs(3, DBG_IMPORTANT, "WARNING: refresh_pattern maximum age too high. Cropped back to 1 year.");
+        i = 60*24*365;
+    }
 
     max = (time_t) (i * 60);	/* convert minutes to seconds */
 
