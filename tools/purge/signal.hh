@@ -47,8 +47,15 @@
 // Initial revision
 //
 //
+
 #ifndef _SIGNAL_HH
 #define _SIGNAL_HH
+
+#include "config.h"
+
+#if HAVE_SIGNAL_H
+#include <signal.h>
+#endif
 
 #if defined(__GNUC__) || defined(__GNUG__)
 #pragma interface
@@ -76,14 +83,6 @@ typedef int bool;
 extern "C" {
   typedef SIGRETTYPE SigFunc( SIGPARAM );
 }
-
-#ifndef HAS_PSIGNAL
-void
-psignal( int sig, const char* msg );
-  // purpose: print message, colon, space, signal name and LF.
-  // paramtr: sig (IN): signal number
-  //          msg (IN): message to prepend
-#endif // ! HAS_PSIGNAL
 
 SigFunc*
 Signal( int signo, SigFunc* newhandler, bool doInterrupt );
