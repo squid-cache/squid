@@ -60,9 +60,6 @@
 
 #include "convert.hh"
 
-static const char* RCS_ID =
-    "$Id$";
-
 int
 setSocketBuffers( int sockfd, int size )
 // purpose: set socket buffers for both directions to the specified size
@@ -95,7 +92,7 @@ getSocketNoDelay( int sockfd )
 //         -1, if an error occurred (e.g. datagram socket)
 {
     int delay = 0;
-    SOCKLEN len = sizeof(delay);
+    socklen_t len = sizeof(delay);
     if ( getsockopt( sockfd, IPPROTO_TCP, TCP_NODELAY,
                      (char*) &delay, &len ) == -1 ) {
         perror( "# getsockopt( TCP_NODELAY ) failed" );
