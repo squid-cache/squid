@@ -46,7 +46,6 @@ EXTRA_libmiscutil_a_SOURCES = \
 	md5.c \
 	Profiler.c \
 	win32lib.c
-
 libmiscutil_a_SOURCES = \
 	MemPool.cc \
 	MemPoolChunked.cc \

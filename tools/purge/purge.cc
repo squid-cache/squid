@@ -95,19 +95,22 @@
 //
 #if defined(__GNUC__) || defined(__GNUG__)
 #pragma implementation
+#else
+#ifndef HAS_BOOL
+#define HAS_BOOL
+typedef int bool;
+#define false 0
+#define true  1
+#endif
 #endif
 
-#include "config.h"
-// for xstrdup
-#include "util.h"
-
-//#include <assert.h>
+#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <dirent.h>
-//#include <ctype.h>
+#include <ctype.h>
 #include <string.h>
-//#include <sys/types.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <fcntl.h>
@@ -117,9 +120,9 @@
 #include <signal.h>
 #include <errno.h>
 
-#if HAVE_SIGINFO_H
+#if defined(HAS_PSIGNAL) && !defined(LINUX) && !defined(FREEBSD)
 #include <siginfo.h>
-#endif
+#endif // HAS_PSIGNAL
 
 #include <netinet/in.h>
 #include <netinet/tcp.h>  // TCP_NODELAY
@@ -154,7 +157,8 @@ static bool verbose  = false;
 static bool envelope = false;
 static bool no_fork  = false;
 static const char* programname = 0;
-static const char* RCS_ID = "$Id$";
+static const char* RCS_ID =
+    "$Id$";
 
 // ----------------------------------------------------------------------
 
@@ -169,7 +173,7 @@ struct REList {
 };
 
 REList::REList( const char* what, bool doCase )
-        :next(0),data(xstrdup(what))
+        :next(0),data(strdup(what))
 {
     int result = regcomp( &rexp, what,
                           REG_EXTENDED | REG_NOSUB | (doCase ? 0 : REG_ICASE) );
@@ -631,13 +635,13 @@ parseCommandline( int argc, char* argv[], REList*& head,
         case 'C':
             if ( optarg && *optarg ) {
                 if ( copydir ) free( (void*) copydir );
-                assert( (copydir = xstrdup(optarg)) );
+                assert( (copydir = strdup(optarg)) );
             }
             break;
         case 'c':
             if ( optarg && *optarg ) {
                 if ( *conffile ) free((void*) conffile );
-                assert( (conffile = xstrdup(optarg)) );
+                assert( (conffile = strdup(optarg)) );
             }
             break;
 
@@ -842,7 +846,7 @@ main( int argc, char* argv[] )
 {
     // setup variables
     REList* list = 0;
-    char* conffile = xstrdup( DEFAULT_SQUID_CONF );
+    char* conffile = strdup( DEFAULT_SQUID_CONF );
     serverPort = htons(DEFAULTPORT);
     if ( convertHostname(DEFAULTHOST,serverHost) == -1 ) {
         fprintf( stderr, "unable to resolve host %s!\n", DEFAULTHOST );
@@ -903,7 +907,7 @@ main( int argc, char* argv[] )
                 ::iamalive = false;
             }
 
-            for ( size_t i=0; i < cdv.size(); ++i ) {
+            for ( int i=0; i < cdv.size(); ++i ) {
                 if ( getpid() == getpgrp() ) {
                     // only parent == group leader may fork off new processes
                     if ( (child[i]=fork()) < 0 ) {
@@ -929,7 +933,7 @@ main( int argc, char* argv[] )
             // collect the garbase
             pid_t temp;
             int status;
-            for ( size_t i=0; i < cdv.size(); ++i ) {
+            for ( int i=0; i < cdv.size(); ++i ) {
                 while ( (temp=waitpid( (pid_t)-1, &status, 0 )) == -1 )
                     if ( errno == EINTR ) continue;
                 if ( ::debug ) printf( "collected child %d\n", (int) temp );
