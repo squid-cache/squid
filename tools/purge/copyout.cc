@@ -42,22 +42,24 @@
 #pragma implementation
 #endif
 
-#include "config.h"
-#include "copyout.hh"
-
-//#include <assert.h>
-//#include <sys/types.h>
+#include <assert.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
-#include <sys/mman.h>
 
+#include <sys/mman.h>
 #ifndef MAP_FILE
 #define MAP_FILE 0
 #endif // MAP_FILE
+
+#include "copyout.hh"
+
+static const char* RCS_ID =
+    "$Id$";
 
 int
 assert_copydir( const char* copydir )
