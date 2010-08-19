@@ -11,7 +11,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 ## we need our local files too (but avoid -I. at all costs)
 INCLUDES += -I$(srcdir)
 
-SUBDIRS = 
+SUBDIRS = purge
 EXTRA_DIST = 
 man_MANS = 
 DISTCLEANFILES = 
