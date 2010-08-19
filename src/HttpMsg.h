@@ -61,7 +61,7 @@ public:
     /// [re]sets Content-Length header and cached value
     void setContentLength(int64_t clen);
 
-    /** 
+    /**
      * \retval true  the message sender asks to keep the connection open.
      * \retval false the message sender will close the connection.
      *
