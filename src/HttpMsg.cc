@@ -319,22 +319,21 @@ HttpMsg::setContentLength(int64_t clen)
 bool
 HttpMsg::persistent() const
 {
-    const HttpHeader *hdr = &header; // XXX: diff-minimizer; remove on commit
     if ((http_ver.major >= 1) && (http_ver.minor >= 1)) {
         /*
          * for modern versions of HTTP: persistent unless there is
          * a "Connection: close" header.
          */
-        return !httpHeaderHasConnDir(hdr, "close");
+        return !httpHeaderHasConnDir(&header, "close");
     } else {
         /*
          * Persistent connections in Netscape 3.x are allegedly broken,
          * return false if it is a browser connection.  If there is a
          * VIA header, then we assume this is NOT a browser connection.
          */
-        const char *agent = hdr->getStr(HDR_USER_AGENT);
+        const char *agent = header.getStr(HDR_USER_AGENT);
 
-        if (agent && !hdr->has(HDR_VIA)) {
+        if (agent && !header.has(HDR_VIA)) {
             if (!strncasecmp(agent, "Mozilla/3.", 10))
                 return 0;
 
@@ -343,7 +342,7 @@ HttpMsg::persistent() const
         }
 
         /* for old versions of HTTP: persistent if has "keep-alive" */
-        return httpHeaderHasConnDir(hdr, "keep-alive");
+        return httpHeaderHasConnDir(&header, "keep-alive");
     }
 }
 

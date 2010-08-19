@@ -57,9 +57,6 @@
 #define SA struct sockaddr
 #endif
 
-static const char* RCS_ID =
-    "$Id$";
-
 const char*
 my_inet_ntoa( const struct in_addr& a, HostAddress output )
 // purpose: thread-safely convert IPv4 address -> ASCII representation
@@ -107,7 +104,7 @@ my_sock_fd2a( int fd, SockAddress buffer, bool peer )
 //          Refer to errno in case of error (usually unconnected fd...)
 {
     struct sockaddr_in socket;
-    SOCKLEN len = sizeof(socket);
+    socklen_t len = sizeof(socket);
 
     if ( (peer ? getpeername( fd, (SA*) &socket, &len ) :
             getsockname( fd, (SA*) &socket, &len )) == -1 )
