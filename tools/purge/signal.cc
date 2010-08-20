@@ -116,19 +116,19 @@ sigChild( int signo )
     while ( (pid = waitpid( -1, &status, WNOHANG )) > 0 ) {
         if ( WIFEXITED(status) ) {
             snprintf( line, 128, "child (pid=%ld) reaped, status %d\n%c",
-                     (long) pid, WEXITSTATUS(status), 0 );
+                      (long) pid, WEXITSTATUS(status), 0 );
         } else if ( WIFSIGNALED(status) ) {
             snprintf( line, 128, "child (pid=%ld) died on signal %d%s\n%c",
-                     (long) pid, WTERMSIG(status),
+                      (long) pid, WTERMSIG(status),
 #ifdef WCOREDUMP
-                     WCOREDUMP(status) ? " (core generated)" : "",
+                      WCOREDUMP(status) ? " (core generated)" : "",
 #else
-                     "",
+                      "",
 #endif
-                     0 );
+                      0 );
         } else {
             snprintf( line, 128, "detected dead child (pid=%ld), status %d\n%c",
-                     (long) pid, status, 0 );
+                      (long) pid, status, 0 );
         }
         write( STDERR_FILENO, line, strlen(line) );
     }
