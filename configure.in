@@ -192,7 +192,7 @@ esac
 )
 AC_SUBST(DEFAULT_LOG_DIR)
 
-DEFAULT_PIDFILE="$localstatedir/run/squid.pid"
+DEFAULT_PID_FILE="$localstatedir/run/squid.pid"
 AC_ARG_WITH(pidfile,
   AS_HELP_STRING([--with-pidfile=PATH],
     [Default location for squid pid file. Default: PREFIX/var/run/squid.pid]), [
@@ -201,11 +201,11 @@ case $withval in
    AC_MSG_ERROR( --with-pidfile requires a file PATH. --with-pidfile=PATH )
    ;;
  *)
-   DEFAULT_PIDFILE="$withval"
+   DEFAULT_PID_FILE="$withval"
    ;;
  esac
 ])
-AC_SUBST(DEFAULT_PIDFILE)
+AC_SUBST(DEFAULT_PID_FILE)
 
 if test "x$GCC" = "xyes"; then
   GCCVER=`$CC -v 2>&1 | awk '$2 ==  "version" {print $3}'`
