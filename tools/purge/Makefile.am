@@ -1,6 +1,6 @@
 include $(top_srcdir)/src/Common.am
 
-bin_PROGRAMS = purge hexd
+bin_PROGRAMS = purge
 
 purge_SOURCES = \
 	convert.cc \
@@ -22,10 +22,3 @@ purge_LDADD = \
 	$(XTRA_LIBS)
 
 EXTRA_DIST = README
-
-
-hexd_SOURCES = hexd.cc
-
-hexd_LDADD = \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
