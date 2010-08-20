@@ -1,4 +1,6 @@
 #include "config.h"
+// for xstrdup
+#include "util.h"
 
 #include <stdio.h>
 #include <sys/stat.h>
@@ -6,6 +8,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <string.h>
 
 class InputByByte
 {
@@ -55,7 +58,7 @@ int
 InputByByte::close()
 {
     xfree((void*) buffer);
-    return std::close(fd);
+    return ::close(fd);
 }
 
 int
