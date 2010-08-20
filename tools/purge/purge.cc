@@ -125,7 +125,7 @@
 #include <netinet/tcp.h>  // TCP_NODELAY
 #include <arpa/inet.h>
 #include <netdb.h>        // gethostbyname()
-#include <regex.h>
+//#include <regex.h>    //comes via compat.h
 
 #include "convert.hh"
 #include "socket.hh"
