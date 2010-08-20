@@ -24,7 +24,7 @@ int
 InputByByte::open(const char* fn, const size_t size )
 {
     if ( (fd = open( fn, O_RDONLY )) == -1 ) return -1;
-    if ( (buffer=(unsigned char*) malloc(size)) == 0 ) {
+    if ( (buffer=(unsigned char*) xmalloc(size)) == 0 ) {
         ::close(fd);
         return -1;
     }
@@ -54,8 +54,8 @@ InputByByte::get()
 int
 InputByByte::close()
 {
-    free((void*) buffer);
-    return close(fd);
+    xfree((void*) buffer);
+    return std::close(fd);
 }
 
 int
