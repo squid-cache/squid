@@ -184,7 +184,7 @@ REList::REList( const char* what, bool doCase )
 REList::~REList()
 {
     if ( next ) delete next;
-    if ( data ) free((void*) data);
+    if ( data ) xfree((void*) data);
     regfree(&rexp);
 }
 
@@ -273,7 +273,7 @@ log_extended( const char* fn, int code, long size, const SquidMetaList* meta )
         }
         md5[32] = '\0'; // terminate string
     } else {
-        sprintf( md5, "%-32s", "(no_md5_data_available)" );
+        snprintf( md5, sizeof(md5), "%-32s", "(no_md5_data_available)" );
     }
 
     char timeb[64];
@@ -281,18 +281,18 @@ log_extended( const char* fn, int code, long size, const SquidMetaList* meta )
         StoreMetaStd temp;
         // make data aligned, avoid SIGBUS on RISC machines (ARGH!)
         memcpy( &temp, findings->data, sizeof(StoreMetaStd) );
-        sprintf( timeb, "%08x %08x %08x %08x %04x %5hu ",
-                 temp.timestamp, temp.lastref,
-                 temp.expires, temp.lastmod, temp.flags, temp.refcount );
+        snprintf( timeb, sizeof(timeb), "%08lx %08lx %08lx %08lx %04x %5hu ",
+                 (unsigned long)temp.timestamp, (unsigned long)temp.lastref,
+                 (unsigned long)temp.expires, (unsigned long)temp.lastmod, temp.flags, temp.refcount );
     } else if ( meta && (findings = meta->search( STORE_META_STD_LFS )) ) {
         StoreMetaStdLFS temp;
         // make data aligned, avoid SIGBUS on RISC machines (ARGH!)
         memcpy( &temp, findings->data, sizeof(StoreMetaStd) );
-        sprintf( timeb, "%08x %08x %08x %08x %04x %5hu ",
-                 temp.timestamp, temp.lastref,
-                 temp.expires, temp.lastmod, temp.flags, temp.refcount );
+        snprintf( timeb, sizeof(timeb), "%08lx %08lx %08lx %08lx %04x %5hu ",
+                 (unsigned long)temp.timestamp, (unsigned long)temp.lastref,
+                 (unsigned long)temp.expires, (unsigned long)temp.lastmod, temp.flags, temp.refcount );
     } else {
-        sprintf( timeb, "%08x %08x %08x %08x %04x %5hu ", -1, -1, -1, -1, 0, 0 );
+        snprintf( timeb, sizeof(timeb), "%08lx %08lx %08lx %08lx %04x %5hu ", (unsigned long)-1, (unsigned long)-1, (unsigned long)-1, (unsigned long)-1, 0, 0 );
     }
 
     // make sure that there is just one printf()
@@ -341,7 +341,7 @@ action( int fd, size_t metasize,
         unsigned long bufsize = strlen(url) + strlen(schablone) + 4;
         char* buffer = new char[bufsize];
 
-        sprintf( buffer, schablone, url );
+        snprintf( buffer, bufsize, schablone, url );
         int sockfd = connectTo( serverHost, serverPort, true );
         if ( sockfd == -1 ) {
             fprintf( stderr, "unable to connect to server: %s\n", strerror(errno) );
@@ -630,13 +630,13 @@ parseCommandline( int argc, char* argv[], REList*& head,
             break;
         case 'C':
             if ( optarg && *optarg ) {
-                if ( copydir ) free( (void*) copydir );
+                if ( copydir ) xfree( (void*) copydir );
                 assert( (copydir = xstrdup(optarg)) );
             }
             break;
         case 'c':
             if ( optarg && *optarg ) {
-                if ( *conffile ) free((void*) conffile );
+                if ( *conffile ) xfree((void*) conffile );
                 assert( (conffile = xstrdup(optarg)) );
             }
             break;
@@ -881,7 +881,7 @@ main( int argc, char* argv[] )
                 if ( ! dirlevel(i->base,list) )
                     fprintf( stderr, "program terminated due to error: %s",
                              strerror(errno) );
-                free((void*) i->base);
+                xfree((void*) i->base);
             }
         } else {
             // parallel mode, all cache_dir in parallel
@@ -917,7 +917,7 @@ main( int argc, char* argv[] )
                         if ( ! dirlevel(cdv[i].base,list) )
                             fprintf( stderr, "program terminated due to error: %s\n",
                                      strerror(errno) );
-                        free((void*) cdv[i].base);
+                        xfree((void*) cdv[i].base);
                         return 0;
                     } else {
                         // parent mode
@@ -941,8 +941,8 @@ main( int argc, char* argv[] )
     }
 
     // clean up
-    if ( copydir ) free( (void*) copydir );
-    free((void*) conffile);
+    if ( copydir ) xfree( (void*) copydir );
+    xfree((void*) conffile);
     delete list;
     return 0;
 }
