@@ -282,15 +282,15 @@ log_extended( const char* fn, int code, long size, const SquidMetaList* meta )
         // make data aligned, avoid SIGBUS on RISC machines (ARGH!)
         memcpy( &temp, findings->data, sizeof(StoreMetaStd) );
         snprintf( timeb, sizeof(timeb), "%08lx %08lx %08lx %08lx %04x %5hu ",
-                 (unsigned long)temp.timestamp, (unsigned long)temp.lastref,
-                 (unsigned long)temp.expires, (unsigned long)temp.lastmod, temp.flags, temp.refcount );
+                  (unsigned long)temp.timestamp, (unsigned long)temp.lastref,
+                  (unsigned long)temp.expires, (unsigned long)temp.lastmod, temp.flags, temp.refcount );
     } else if ( meta && (findings = meta->search( STORE_META_STD_LFS )) ) {
         StoreMetaStdLFS temp;
         // make data aligned, avoid SIGBUS on RISC machines (ARGH!)
         memcpy( &temp, findings->data, sizeof(StoreMetaStd) );
         snprintf( timeb, sizeof(timeb), "%08lx %08lx %08lx %08lx %04x %5hu ",
-                 (unsigned long)temp.timestamp, (unsigned long)temp.lastref,
-                 (unsigned long)temp.expires, (unsigned long)temp.lastmod, temp.flags, temp.refcount );
+                  (unsigned long)temp.timestamp, (unsigned long)temp.lastref,
+                  (unsigned long)temp.expires, (unsigned long)temp.lastmod, temp.flags, temp.refcount );
     } else {
         snprintf( timeb, sizeof(timeb), "%08lx %08lx %08lx %08lx %04x %5hu ", (unsigned long)-1, (unsigned long)-1, (unsigned long)-1, (unsigned long)-1, 0, 0 );
     }
