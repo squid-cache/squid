@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-07-26 21:21+1300\n"
-"PO-Revision-Date: 2010-08-17 16:30+0200\n"
+"PO-Revision-Date: 2010-08-21 17:08+0200\n"
 "Last-Translator: Arthur <arthurtumanyan@yahoo.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: hy\n"
@@ -50,7 +50,6 @@ msgid "Access Denied."
 msgstr "Մուտքն արգելված է."
 
 #: templates/ERR_ACCESS_DENIED:6
-#, fuzzy
 msgid ""
 "Access control configuration prevents your request from being allowed at "
 "this time. Please contact your service provider if you feel this is "
@@ -84,7 +83,7 @@ msgid ""
 "An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr ""
-"Ցանցից տվյալների ընթերցման ընթացքում  առաջացավ սխալ.Խնդրվում է կրկնել "
+"Ցանցից տվյալների ընթերցման ընթացքում առաջացավ սխալ.Խնդրվում է կրկնել "
 "հարցումը."
 
 #: templates/ERR_WRITE_ERROR:7
@@ -111,7 +110,7 @@ msgstr "Cannot Resolve URN"
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
-msgstr "Կապի հաստատման ժամանակը սպառվեց "
+msgstr "Կապի հաստատման ժամանակը սպառվեց"
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
