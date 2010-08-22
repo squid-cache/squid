@@ -10,6 +10,11 @@
 #
 cc="${1}"
 shift
+for dir in /usr/bin /usr/local/bin /usr/gnu/bin
+do
+	test -x ${dir}/true && TRUE=${dir}/true
+done
+TRUE=${TRUE:-/bin/true}
 
 exitCode=0
 
@@ -34,5 +39,5 @@ EOF
 done
 
 #who ever said that the test program needs to be meaningful?
-test $exitCode -eq 0 && cp /bin/true testHeaders
+test $exitCode -eq 0 && cp ${TRUE} testHeaders
 exit $exitCode
