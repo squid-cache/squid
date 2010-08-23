@@ -3,33 +3,36 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-07-26 21:21+1300\n"
-"PO-Revision-Date: 2008-12-18 01:19+1300\n"
-"Last-Translator: Arthur Tumanyan <arthurtumanyan@yahoo.com>\n"
+"PO-Revision-Date: 2010-08-21 17:08+0200\n"
+"Last-Translator: Arthur <arthurtumanyan@yahoo.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: hy\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Pootle 1.2.0\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Pootle 2.0.1\n"
 
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
+"<a href=\"../\">Ծնողական դիրեկտորիա</a> (<a href=\"/\">Արմատական դիրեկտորիա</a>)"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
-msgstr ""
+msgstr "<b>Սխալ հարցում</b> հարցումն իրականացնելու ընթացքում տեղի ունեցավ սխալ:"
 
 #: templates/ERR_INVALID_RESP:4
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
+"<b>Անթույլատրելի պատասխան</b> հարցումն իրականացնելու ընթացքում տեղի ունեցավ "
+"սխալ:"
 
 #: templates/ERR_READ_TIMEOUT:7
-#, fuzzy
 msgid ""
 "A Timeout occurred while waiting to read data from the network. The network "
 "or server may be down or congested. Please retry your request."
@@ -40,36 +43,35 @@ msgstr ""
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
-msgstr "Պահանջվող URN չի կարող առաքվել"
+msgstr "Պահանջվող URN-ի համար URL-ն հնարավոր չէ ստանալ"
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
 msgstr "Մուտքն արգելված է."
 
 #: templates/ERR_ACCESS_DENIED:6
-#, fuzzy
 msgid ""
 "Access control configuration prevents your request from being allowed at "
 "this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
-"Մուտքի կառավարման պարամետրերը թույլ չեն տալիս կատարել Ձեր հարցումը տվյալ "
-"պահին.Եթե Դուք սա սխալ եք համարում,խնդրվում է դիմել Ձեր ինտերնետ ապահովողին․"
+"Մուտքի կառավարման պարամետրերը թույլ չեն տալիս իրականացնել Ձեր հարցումը տվյալ "
+"պահին.Եթե Դուք սա սխալ եք համարում,ապա դիմեք Ձեր ինտերնետ կապ ապահովողին․"
 
 #: templates/ERR_FTP_FORBIDDEN:4
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"URL ի առաքման ժամանակ տեղի ունեցավ FTP աութենտիֆիկացիայի սխալ: <a href=\"%U"
-"\">%U</a>"
+"URL -ի ստացման ընթացքում տեղի ունեցավ FTP աութենտիֆիկացիայի սխալ: <a href=\"%"
+"U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
-"URL ի առաքման ժամանակ տեղի ունեցավ FTP արձանագրության սխալ: <a href=\"%U\">"
+"URL -ի ստացման ընթացքում տեղի ունեցավ FTP արձանագրության սխալ: <a href=\"%U\">"
 "%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
@@ -77,20 +79,20 @@ msgid "An Illegal response was received from the ICAP server."
 msgstr ""
 
 #: templates/ERR_READ_ERROR:7
-#, fuzzy
 msgid ""
 "An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr ""
-"Ցանցից տվյալների ընթերցման ժամանակ առաջացավ սխալ.Խնդրվում է կրկնել հարցումը."
+"Ցանցից տվյալների ընթերցման ընթացքում առաջացավ սխալ.Խնդրվում է կրկնել "
+"հարցումը."
 
 #: templates/ERR_WRITE_ERROR:7
-#, fuzzy
 msgid ""
 "An error condition occurred while writing to the network. Please retry your "
 "request."
 msgstr ""
-"Տվյալները ցանց ուղարկելու ժամանակ առաջացավ սխալ․ Խնդրվում է կրկնել հարցումը․"
+"Տվյալները ցանցում գրանցելու ընթացքում առաջացավ սխալ․ Խնդրվում է կրկնել "
+"հարցումը․"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
@@ -102,12 +104,13 @@ msgid "Cache Manager Access Denied."
 msgstr "Քեշի կառավառման մուտքն արգելված է."
 
 #: templates/ERR_URN_RESOLVE:5
+#, fuzzy
 msgid "Cannot Resolve URN"
-msgstr ""
+msgstr "Cannot Resolve URN"
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
-msgstr "Կապ հաստատման ժամանակը սպառվեց "
+msgstr "Կապի հաստատման ժամանակը սպառվեց"
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
@@ -119,7 +122,7 @@ msgstr "POST կամ PUT հարցումների համար Content-Length չի ն
 
 #: templates/ERR_DIR_LISTING:3
 msgid "Directory Content:"
-msgstr ""
+msgstr "Դիրեկտորիայի պարունակությունը:"
 
 #: templates/ERR_DIR_LISTING:4
 msgid "Directory Listing"
@@ -127,11 +130,11 @@ msgstr ""
 
 #: templates/ERR_DIR_LISTING:1
 msgid "Directory: %U"
-msgstr ""
+msgstr "Դիրեկտորիա: %U"
 
 #: templates/ERR_DIR_LISTING:2
 msgid "Directory: <a href=\"%U\">%U</a>/"
-msgstr ""
+msgstr "Դիրեկտորիա: <a href=\"%U\">%U</a>/"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_AGENT_CONFIGURE:2
 #: templates/ERR_AGENT_WPAD:2 templates/ERR_CACHE_ACCESS_DENIED:2
@@ -159,11 +162,11 @@ msgstr "ՍԽԱԼ: Մուտքը քեշին արգելված է"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:1
 msgid "ERROR: Cache Manager Access Denied"
-msgstr "Սխալ: Քեշի կառավառման մուտքն արգելված է"
+msgstr "ՍԽԱԼ: Քեշի կառավառման մուտքն արգելված է"
 
 #: templates/ERR_FTP_PUT_ERROR:1
 msgid "ERROR: FTP upload failed"
-msgstr "ՍԽԱԼ: FTP upload գործողությունը խափանվեց"
+msgstr "ՍԽԱԼ; FTP upload գործողությունը խափանվեց"
 
 #: templates/ERR_ACCESS_DENIED:1 templates/ERR_CANNOT_FORWARD:1
 #: templates/ERR_CONNECT_FAIL:1 templates/ERR_DNS_FAIL:1 templates/ERR_ESI:1
@@ -180,24 +183,21 @@ msgstr "ՍԽԱԼ: FTP upload գործողությունը խափանվեց"
 #: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
 #: templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr "ՍԽԱԼ: Պահանջվող URL չի կարող առաքվել"
+msgstr "ՍԽԱԼ: Պահանջվող URL-ն հնարավոր չէ ստանալ"
 
 #: templates/ERR_URN_RESOLVE:1
-#, fuzzy
 msgid "ERROR: The requested URN could not be retrieved"
-msgstr "ՍԽԱԼ: Պահանջվող URL չի կարող առաքվել"
+msgstr "ՍԽԱԼ: Պահանջվող URL-ն հնարավոր չէ ստանալ"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
 msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
-#, fuzzy
 msgid "FTP PUT Successful."
 msgstr "FTP PUT Գործողությունը հաջողվեց: Ֆայլը ստեղծված է"
 
 #: templates/ERR_FTP_PUT_ERROR:3
-#, fuzzy
 msgid "FTP PUT upload failed"
 msgstr "FTP upload գործողությունը խափանվեց"
 
@@ -207,7 +207,7 @@ msgstr "FTP արձանագրությունն արգելված է"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
-msgstr ""
+msgstr "Չհաջողվեց անվտանգ կապ հաստատել %I"
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
@@ -219,15 +219,15 @@ msgstr "Ֆայլը թարմացված է"
 
 #: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
 msgid "For Firefox browsers go to: <ul>"
-msgstr ""
+msgstr "Firefox բրաուզերի համար այցելեք: <ul>"
 
 #: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
 msgid "For Internet Explorer browsers go to: <ul>"
-msgstr ""
+msgstr "Internet Explorer բրաուզերի համար այցելեք: <ul>"
 
 #: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
 msgid "For Opera browsers go to: <ul>"
-msgstr ""
+msgstr "Opera բրաուզերի համար այցելեք: <ul>"
 
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
@@ -253,12 +253,15 @@ msgstr "Վերահասցեագրումն արգելված է."
 #: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
 #: templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
-msgstr ""
+msgstr "Ստեղծված է %T by %h (%s)"
 
 #: templates/ERR_INVALID_REQ:12
+#, fuzzy
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
+"HTTP/1.1 <q>Expect:</q> հատկության համար հարցում է կատարվում HTTP/1.0 "
+"ծրագրային միջոցից"
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -266,40 +269,46 @@ msgstr "Չարժե շատ բան սպասել URN-ից %T -ի վրա :)"
 
 #: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
 msgid "How to find these settings in your browser:"
-msgstr ""
+msgstr "Ինչպես փնտրել այս կարգաբերումները քո բրաուզերում:"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
 msgstr ""
 
 #: templates/ERR_TOO_BIG:7
+#, fuzzy
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
 msgstr ""
+"Եթե Դուք GET հարցում եք ձևակերպում, ապա տարրը ,որը Դուք փորձում եք "
+"բեռնավորել, շատ մեծ ծավալ ունի."
 
 #: templates/ERR_TOO_BIG:6
+#, fuzzy
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
 msgstr ""
+"Եթե Դուք POST կամ PUT  հարցում եք ձևակերպում, ապա տարրը ,որը Դուք փորձում եք "
+"բեռնավորել, շատ մեծ ծավալ ունի"
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
-msgstr "Անթույլատրելի նիշ սերվերի անվան մեջ;ընդգծման նիշն անթույլատրելի է"
+msgstr "Անթույլատրելի նիշ սերվերի անվան մեջ; ընդգծման նիշն անթույլատրելի է"
 
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
-msgstr "Անթույլատրելի կրկնակի կառավարող նիշ URL ուղղում"
+msgstr "Անթույլատրելի կրկնակի կառավարող նիշ URL-ի ուղիում"
 
 #: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
 #: templates/ERR_AGENT_CONFIGURE:14
 msgid "In the HTTP proxy box type the proxy name %h and port 3128."
-msgstr ""
+msgstr "HTTP proxy դաշտում նշիր proxy name %h և port 3128."
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
-msgstr ""
+msgstr "Սխալ URL"
 
 #: templates/ERR_INVALID_REQ:8
 msgid "Missing HTTP Identifier (HTTP/1.0)."
@@ -326,7 +335,7 @@ msgstr "Հարցման մեթոդը բացակայում է կամ անհայտ 
 
 #: templates/ERR_NO_RELAY:5
 msgid "No Wais Relay"
-msgstr "Wais Relay որոշված չէ "
+msgstr "Wais Relay-ը որոշված չէ"
 
 #: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
 msgid "Operation successful"
@@ -334,7 +343,7 @@ msgstr "Գործողությունը հաջողվեց"
 
 #: templates/ERR_DIR_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "Ծնողական դիրեկտորիա"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
@@ -371,47 +380,42 @@ msgstr "Հարցման ծավալը շատ մեծ է"
 
 #: templates/ERR_AGENT_WPAD:10
 msgid "Select Automatically detect settings"
-msgstr ""
+msgstr "Ընտրեք Automatically detect settings"
 
 #: templates/ERR_AGENT_WPAD:13
 msgid "Select Use Automatic proxy configuration"
-msgstr ""
+msgstr "Ընտրեք Use Automatic proxy configuration"
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
-msgstr "Socket ձախողում "
+msgstr "Socket ձախողում"
 
 #: templates/ERR_INVALID_URL:6
-#, fuzzy
 msgid "Some aspect of the requested URL is incorrect."
 msgstr "URL-ի որոշ ասպեկտներ սխալ են."
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
-#, fuzzy
 msgid "Some possible problems are:"
 msgstr "Հնարավոր պատճառներն են:"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
-#, fuzzy
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 msgstr ""
-"Ներողություն,Դուք չեք կարող քեշի կառավարման համակարգից կատարել հետևյալ "
+"Ներողություն,Դուք չեք կարող քեշի կառավարման համակարգից իրականացնել հետևյալ "
 "հարցումը %U մինչև աութենտիֆիկացիան չանցնեք."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
-#, fuzzy
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
 msgstr ""
-"Ներողություն,Դուք չեք կարող կատարել հետևյալ հարցումը %U մինչև "
+"Ներողություն,Դուք չեք կարող իրականացնել հետևյալ հարցումը %U մինչև "
 "աութենտիֆիկացիան չանցնեք."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
-#, fuzzy
 msgid "Squid did not receive any data for this request."
 msgstr "Քեշը ի պատասխան այս հարցումի ոչ մի տվյալ չի ստացել."
 
@@ -420,9 +424,8 @@ msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
-"Squid-ը բոլոր արձանագրությունների համար բոլոր հարցման մեթոդները չի "
-"ուղեկցում . Օրինակ,Gopher արձանագրության համար չեք կարող POST հարցում "
-"կատարել. "
+"Squid-ը բոլոր արձանագրությունների համար բոլոր հարցման մեթոդները չի աջակցում. "
+"Օրինակ, Gopher արձանագրության համար չեք կարող POST հարցում կատարել."
 
 #: templates/ERR_LIFETIME_EXP:6
 msgid ""
@@ -430,53 +433,51 @@ msgid ""
 "connection lifetime."
 msgstr ""
 "Squid-ը ընդհատեց հարցումը կապ հաստատման առավելագույն ժամանակը գերազանցելու "
-"պատճառով․."
+"պատճառով"
 
 #: templates/ERR_SOCKET_FAILURE:7
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
-"Squid-ը չի կարող ստեղծել TCP Socket, հավանաբար գերբեռնվածության պատճառով․"
-"Խնդրվում է կրկնել հարցումը․ Եթե իրավիճակը կրկնվի, դիմեք քեշի կառավարիչին․ "
+"Squid-ը չի կարող ստեղծել TCP Socket, հավանաբար գերբեռնվածության պատճառով: "
+"Խնդրվում է կրկնել հարցումը: Եթե իրավիճակը կրկնվի, դիմեք քեշի կառավարիչին․:"
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
 #: templates/ERR_FTP_UNAVAILABLE:5
 msgid "Squid sent the following FTP command:"
-msgstr "Squid-ը ուղարկեց հետևյալ FTP հրամանը: "
+msgstr "Squid-ը ուղարկեց հետևյալ FTP հրամանը:"
 
 #: templates/ERR_DNS_FAIL:6
 msgid "The DNS server returned:"
-msgstr "DNS սերվերի պատասխանը: "
+msgstr "DNS սերվերի պատասխանը:"
 
 #: templates/ERR_ESI:6
+#, fuzzy
 msgid "The ESI processor returned:"
-msgstr ""
+msgstr "ESI պրոցեսորը պատասխանեց:"
 
 #: templates/ERR_FTP_UNAVAILABLE:4
-#, fuzzy
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
-msgstr ""
-"URL-ի առաքման ժամանակ FTP սերվերը շատ զբաղված էր: <a href=\"%U\">%U</a>"
+msgstr "URL-ի ստացման ընթացքում FTP սերվերը շատ զբաղված էր: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
-#, fuzzy
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
-"Սերվերից ստացվող պատասխանն անհասկանալի է կամ այլայլված․Դիմեք տվյալ կայքի "
-"կառավարիչներին։Ձեր քեշի կառավարիչը անհրաժեշտության դեպքում կարող է ավելի "
-"մանրակրկիտ նկարագրել խնդրի բնւյթը."
+"Սերվերից ստացվող պատասխանն անհասկանալի է կամ այլայլված: Դիմեք տվյալ կայքի "
+"կառավարիչներին։ Ձեր քեշի կառավարիչը անհրաժեշտության դեպքում կարող է ավելի "
+"մանրակրկիտ նկարագրել խնդրի բնւյթը:"
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
-msgstr ""
+msgstr "ICAP սերվերը անհասանելի է:"
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
-msgstr "Հետևյալ URL չի կարող առաքվել: <a href=\"%U\">%U</a>"
+msgstr "Հետևյալ URL-ն հնարավոր չէ ստանալ: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ACCESS_DENIED:4 templates/ERR_CACHE_ACCESS_DENIED:4
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
@@ -493,23 +494,21 @@ msgstr "Հետևյալ URL չի կարող առաքվել: <a href=\"%U\">%U</a>
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
-msgstr ""
+msgstr "URL-ի ստացման ընթացքում առաջացավ հետևյալ սխալը: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
-msgstr ""
+msgstr "URN-ի ստացման ընթացքում առաջացավ հետևյալ սխալը: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
-#, fuzzy
 msgid "The remote host or network may be down. Please try the request again."
-msgstr ""
-"Հեռակա հանգույցը կամ ցանցը չեն պատասխանում. Խնդրվում է կրկնել հարցումը. "
+msgstr "Հեռակա հանգույցը կամ ցանցը չեն պատասխանում: Խնդրվում է կրկնել հարցումը:"
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
-msgstr "Հարցումը կամ պատասխանը շատ մեծ ծավալ ունեն. "
+msgstr "Հարցումը կամ պատասխանը շատ մեծ ծավալ ունեն."
 
 #: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
 #: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
@@ -525,7 +524,7 @@ msgstr "Հարցումը կամ պատասխանը շատ մեծ ծավալ ու
 #: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
 #: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
 msgid "The requested URL could not be retrieved"
-msgstr "Պահանջվող URL չի կարող առաքվել"
+msgstr "Պահանջվող URL-ն հնարավոր չէ ստանալ"
 
 #: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
@@ -541,11 +540,10 @@ msgid "The system returned: <i>%E</i>"
 msgstr "Ստացված պատասխանը: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
-#, fuzzy
 msgid ""
 "There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
-msgstr "Այս քեշի համար WAIS Relay որոշված չէ! Հայտնեք կառավարիչին. "
+msgstr "Այս քեշի համար WAIS Relay-ը որոշված չէ! Հայտնեք կառավարիչին:"
 
 #: templates/ERR_TOO_BIG:8
 msgid ""
@@ -553,69 +551,74 @@ msgid ""
 "operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
+"Այս սահմանափակումը իրականացված է Ձեր ինտերնետ կապ ապահովողի կողմից: Եթե Դուք "
+"սա սխալ եք համարում, դիմեք նրան:"
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
 msgstr ""
+"HTTP արձանագրության այն տեսակը,որը Դուք փորձում եք օգտագործել,այս Squid-ը չի "
+"ընդունում:"
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
-msgstr ""
+msgstr "Այս քեշը FTP արձանագրություն չի աջակցում"
 
 #: templates/ERR_SHUTTING_DOWN:5
-#, fuzzy
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time. Please retry your request again soon."
 msgstr ""
 "Այս քեշը տվյալ պահին գտնվում է անջատման պրոցեսում և չի կարող սպասարկել Ձեր "
-"հարցումը․Կրկնեք հարցումը որոշ ժամանակ անց․"
+"հարցումը: Կրկնեք հարցումը որոշ ժամանակ անց:"
 
 #: templates/ERR_FORWARDING_DENIED:6
-#, fuzzy
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
 "sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
 "Այս քեշը անկարող է վերահասցեագրել Ձեր հարցումը sibling տիպի "
-"փոխհարաբերություններ հաստատելու պատճառով. Հավանական է,որ %i -ն սխալ "
+"փոխհարաբերություններ հաստատելու պատճառով: Հավանական է, որ %i -ն սխալ "
 "սարքաբերված քեշ է."
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
-msgstr ""
+msgstr "Սա նշանակում է, որ ICAP կոմունիկացիայի որոշ ասպեկտներ սխալ են:"
 
 #: templates/ERR_FTP_PUT_ERROR:7
 msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
+"Սա նշանակում է,որ FTP սերվերը ֆայլը պահպանելու համար բավարար հիշողության "
+"ծավալ կամ թույտվություն չունի: Ստուգեք ճանապարհը, հիշողության ծավալը, մուտքի "
+"իրավունքները և կրկին փորձեք:"
 
 #: templates/ERR_DNS_FAIL:7
-#, fuzzy
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
-"Սա նշանակում է Քեշը ի վիճակի չէ որոշել URL ում նշված սերվերի հասցեն. Ստուգեք "
-"հասցեի ներմուծման ճշտությունը. "
+"Սա նշանակում է, որ քեշը ի վիճակի չէ որոշել URL- ում նշված սերվերի հասցեն: "
+"Ստուգեք հասցեի ներմուծման ճշտությունը:"
 
 #: templates/ERR_ESI:7
 msgid ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 msgstr ""
+"Սա նշանակում է, որ փոխարինողը ի վիճակի չէ մշակել ESI կաղապարը:Խնդրվում է "
+"հայտնել այս մասին քեշի կառավարիչին:"
 
 #: templates/ERR_FTP_NOT_FOUND:7
-#, fuzzy
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
 "comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
-"Սա կարող է լինել FTP URL -ի բացարձակ ուղղով հարցման արդյունք (ինչը չի "
-"համապատասխանում RFC 1738-ին).  Եթե սա է սխալի պատճառը,ապա ֆայլը կարող է "
+"Սա կարող է լինել FTP URL -ի բացարձակ ուղիով հարցման արդյունք (ինչը չի "
+"համապատասխանում RFC 1738-ին). Եթե սա է սխալի պատճառը, ապա ֆայլը կարող է "
 "գնտվել այստեղ <a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
@@ -627,7 +630,6 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_CANNOT_FORWARD:6
-#, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches. The most likely cause for this error is that the cache administrator "
@@ -635,24 +637,30 @@ msgid ""
 "all configured parent caches are currently unreachable."
 msgstr ""
 "Այս հարցումը հնարավոր չէ վերահասցեագրել սկզբնաղբյուր սերվերին կամ ծնողական "
-"քեշերից որևէ մեկին․Սխալի ամենահավանական պատճառներն են Այս սերվերի կառավարիչը "
-"արգելել է բոլոր ուղիղ միացումները սկզբնաղբյուր սերվերների հետ Բոլոր ծնողական "
-"քեշերը տվյալ պահին անհասանելի են."
+"քեշերից որևէ մեկին: Սխալի ամենահավանական պատճառներն են` այս սերվերի "
+"կառավարիչը արգելել է բոլոր ուղիղ միացումները սկզբնաղբյուր սերվերների հետ կամ "
+"բոլոր ծնողական քեշերը տվյալ պահին անհասանելի են:"
 
 #: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
 msgstr ""
+"Գործիքներ -&gt; Ինտերնետ կարգաբերումներ -&gt; Կապ -&gt; LAN կարգաբերումներ "
+"-&gt;Պրոքսի"
 
 #: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
 msgid ""
 "Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
 msgstr ""
+"Գործիքներ -&gt; Կարգաբերումներ -&gt; Լրացուցիչ -&gt; Ցանց -&gt; Կապի "
+"կարգաբերումներ"
 
 #: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
 msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
 msgstr ""
+"Գործիքներ -&gt; Նախընտրություններ -&gt; Լրացուցիչ -&gt; Ցանց -&gt; Պրոքսի "
+"սերվերներ"
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -660,15 +668,15 @@ msgstr "Անհնար է որոշել <q>%H</q> հանգույցի IP հասցե�
 
 #: templates/ERR_CANNOT_FORWARD:5
 msgid "Unable to forward this request at this time."
-msgstr "Հնարավոր չէ վերահասցեագրել Ձեր հարցումը տվյալ պահին."
+msgstr "Ձեր հարցումը հնարավոր չէ վերահասցեագրել տվյալ պահին"
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
-msgstr ""
+msgstr "HTTP արձանագրության այս վարկածը չի աջակցվում"
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
-msgstr "Չուղեկցվող մեթոդ և հարցման արձանագրություն "
+msgstr "Հարցում իրականացնելու մեթոդը և արձանագրությունը չեն աջակցվում"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:5
 msgid ""
@@ -679,11 +687,11 @@ msgstr "Օբյեկտը քեշում գտնված չէ; ձևավորվեց <q>onl
 #: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
 #: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
 msgid "Web Browser Configuration"
-msgstr ""
+msgstr "Վեբ բրաուզերի կարգաբերումներ"
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
-msgstr "Գրանցման սխալ "
+msgstr "Գրանցման սխալ"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:6
 msgid ""
@@ -691,11 +699,14 @@ msgid ""
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
+"Դուք իրականացրեցիք հարցում <q>only-if-cached</q> քեշի կառավարման դիրեկտիվով: "
+"Փաստաթուղթը քեշում բացակայում է <em>կամ</em պահանջվում է <q>only-if-"
+"cached</q> դիրեկտիվի կողմից արգելված հաստատում:"
 
 #: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
 msgid ""
 "Your Web Browser configuration needs to be corrected to use this network."
-msgstr ""
+msgstr "Այս ցանցից օգտվելու համար Ձեր բրաուզերը անհրաժեշտ է կարգաբերել"
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
 #: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
@@ -716,22 +727,21 @@ msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
 msgstr "Ձեր քեշի կառավարիչը <a href=\"mailto:%w%W\">%w</a> է."
 
 #: templates/ERR_INVALID_RESP:6
-#, fuzzy
 msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
-"Սերվերից ստացվող պատասխանն անհասկանալի է կամ այլայլված․Դիմեք տվյալ կայքի "
+"Սերվերից ստացվող պատասխանն անհասկանալի է կամ այլայլված: Դիմեք տվյալ կայքի "
 "կառավարիչներին։ Ձեր քեշի կառավարիչը անհրաժեշտության դեպքում կարող է ավելի "
-"մանրակրկիտ նկարագրել խնդրի բնւյթը. "
+"մանրակրկիտ նկարագրել խնդրի բնւյթը:"
 
 #: templates/ERR_ESI:8
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
-msgstr ""
+msgstr "Ձեր կայքի կառավարիչը <a href=\"mailto:%w\">%w</a>"
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr "Զրոյական երկարությամբ պատասխան "
+msgstr "Զրոյական երկարությամբ պատասխան"
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "ՍԽԱԼ: Պահանջվող URN չի կարող առաքվել"

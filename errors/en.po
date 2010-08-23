@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-07-26 21:21+1300\n"
-"PO-Revision-Date: 2010-05-01 00:17+1300\n"
+"PO-Revision-Date: 2010-08-18 01:16+0200\n"
 "Last-Translator: Amos <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: en\n"
@@ -195,14 +195,12 @@ msgid "ESI Processing failed."
 msgstr "ESI Processing failed."
 
 #: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
-#, fuzzy
 msgid "FTP PUT Successful."
-msgstr "FTP PUT Successful: File Created"
+msgstr "FTP PUT Successful."
 
 #: templates/ERR_FTP_PUT_ERROR:3
-#, fuzzy
 msgid "FTP PUT upload failed"
-msgstr "FTP PUT/upload failed"
+msgstr "FTP PUT upload failed"
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
@@ -303,7 +301,7 @@ msgstr "Illegal double-escape in the URL-Path"
 #: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
 #: templates/ERR_AGENT_CONFIGURE:14
 msgid "In the HTTP proxy box type the proxy name %h and port 3128."
-msgstr ""
+msgstr "In the HTTP proxy box type the proxy name %h and port 3128."
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
