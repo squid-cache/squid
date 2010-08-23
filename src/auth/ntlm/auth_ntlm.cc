@@ -126,7 +126,7 @@ AuthNTLMConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
 
 }
 
-AuthNTLMConfig::AuthNTLMConfig() : authenticateChildren(5), keep_alive(1)
+AuthNTLMConfig::AuthNTLMConfig() : authenticateChildren(5), keep_alive(0)
 { }
 
 void

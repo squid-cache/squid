@@ -144,7 +144,7 @@ AuthNegotiateConfig::dump(StoreEntry * entry, const char *name, AuthConfig * sch
 
 }
 
-AuthNegotiateConfig::AuthNegotiateConfig() : authenticateChildren(5), keep_alive(1)
+AuthNegotiateConfig::AuthNegotiateConfig() : authenticateChildren(5), keep_alive(0)
 { }
 
 void

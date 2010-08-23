@@ -265,12 +265,12 @@ DOC_START
 	auth_param ntlm children 5
 
 	"keep_alive" on|off
-	If you experience problems with PUT/POST requests when using the
-	Negotiate authentication scheme then you can try setting this to
-	off. This will cause Squid to forcibly close the connection on
-	the initial requests where the browser asks which schemes are
-	supported by the proxy.
-
+	Whether to keep the connection open after the initial response where
+	Squid tells the browser which schemes are supported by the proxy.
+	Some browsers are known to present many login popups or to corrupt
+	POST/PUT requests transfer if the connection is not closed.
+	The default is currently OFF to avoid this, but may change.
+	
 	auth_param ntlm keep_alive on
 
 	=== Options for configuring the NEGOTIATE auth-scheme follow ===
@@ -299,15 +299,15 @@ DOC_START
 	auth_param negotiate children 5
 
 	"keep_alive" on|off
-	If you experience problems with PUT/POST requests when using the
-	Negotiate authentication scheme then you can try setting this to
-	off. This will cause Squid to forcibly close the connection on
-	the initial requests where the browser asks which schemes are
-	supported by the proxy.
-
+	Whether to keep the connection open after the initial response where
+	Squid tells the browser which schemes are supported by the proxy.
+	Some browsers are known to present many login popups or to corrupt
+	POST/PUT requests transfer if the connection is not closed.
+	The default is currently OFF to avoid this, but may change.
+	
 	auth_param negotiate keep_alive on
 
-	
+
 	Examples:
 
 #Recommended minimum configuration per scheme:
