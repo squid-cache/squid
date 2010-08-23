@@ -28,7 +28,7 @@ class XactionRep : public Adaptation::Initiate, public libecap::host::Xaction,
         public BodyConsumer, public BodyProducer
 {
 public:
-    XactionRep(Adaptation::Initiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, const Adaptation::ServicePointer &service);
+    XactionRep(HttpMsg *virginHeader, HttpRequest *virginCause, const Adaptation::ServicePointer &service);
     virtual ~XactionRep();
 
     typedef libecap::shared_ptr<libecap::adapter::Xaction> AdapterXaction;
