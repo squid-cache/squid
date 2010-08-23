@@ -95,7 +95,7 @@ public:
     virtual bool probed() const; // see comments above
     virtual bool up() const; // see comments above
 
-    virtual Adaptation::Initiate *makeXactLauncher(Adaptation::Initiator *, HttpMsg *virginHeader, HttpRequest *virginCause);
+    virtual Initiate *makeXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause);
 
     void callWhenReady(AsyncCall::Pointer &cb);
 
@@ -109,6 +109,7 @@ public:
 
     //AsyncJob virtual methods
     virtual bool doneAll() const { return Adaptation::Initiator::doneAll() && false;}
+    virtual void callException(const std::exception &e);
 
     virtual void detach();
     virtual bool detached() const;
@@ -133,7 +134,7 @@ private:
     Clients theClients; // all clients waiting for a call back
 
     Options *theOptions;
-    Adaptation::Initiate *theOptionsFetcher; // pending ICAP OPTIONS transaction
+    CbcPointer<Adaptation::Initiate> theOptionsFetcher; // pending ICAP OPTIONS transaction
     time_t theLastUpdate; // time the options were last updated
 
     FadingCounter theSessionFailures;

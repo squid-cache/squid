@@ -63,7 +63,7 @@ class Xaction: public Adaptation::Initiate
 {
 
 public:
-    Xaction(const char *aTypeName, Adaptation::Initiator *anInitiator, ServiceRep::Pointer &aService);
+    Xaction(const char *aTypeName, ServiceRep::Pointer &aService);
     virtual ~Xaction();
 
     void disableRetries();
@@ -125,10 +125,12 @@ protected:
     // useful for debugging
     virtual bool fillVirginHttpHeader(MemBuf&) const;
 
+public:
     // custom exception handling and end-of-call checks
     virtual void callException(const std::exception  &e);
     virtual void callEnd();
 
+protected:
     // logging
     void setOutcome(const XactOutcome &xo);
     virtual void finalizeLogInfo();
