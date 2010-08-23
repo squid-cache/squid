@@ -44,6 +44,23 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many testing improvements
 	- ... and many documentation updates
 
+Changes to squid-3.1.7 (23 Aug 2010):
+
+	- Regression Bug 3021: Large DNS reply causes crash
+	- Regression Bug 3011: ICAP, HTTPS, cache_peer probe IPv4-only port fixes
+	- Regression Bug 2997: visible_hostname directive no longer matches docs
+	- Bug 3012: deprecate sslBump and support ssl-bump spelling in http_port
+	- Bug 3006: handle IPV6_V6ONLY definition missing
+	- Bug 3004: Solaris 9 SunStudio 12 build failure
+	- Bug 3003: inconsistent concepts in documentation of cache_dir
+	- Bug 3001: dnsserver link issues
+	- HTTP/1.1: default keep-alive for 1.1 clients (bug 3016)
+	- HTTP/1.1: Improved Range header field validation
+	- HTTP/1.1: Forward multiple unknown Cache-Control directives
+	- HTTP/1.1: Stop sending Proxy-Connection header
+	- Fix 32-bit wrap in refresh_pattern min/max values
+	- ... and several documentation corrections.
+
 Changes to squid-3.1.6 (02 Aug 2010):
 
 	- Bug 2994, 2995: IPv4-only regressions

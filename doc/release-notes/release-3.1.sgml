@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.6 release notes</title>
+<title>Squid 3.1.7 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.6
+The Squid Team are pleased to announce the release of Squid-3.1.7
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -171,7 +171,7 @@ config options provided on a clean install.
     <item>permit IPv6-only snmp_incoming_address and snmp_outgoing_address to be configured.
     <item>permit IPv6 server connection provided tcp_outgoing_address has been configured (see below).
 </itemize>
-<p><em>NOTE:</em> SNMP, ICP and HTCP are not yet opening double ports so they will only run as IPv4-only or IPv6-only.
+<p><em>NOTE:</em> ICAP, SNMP, ICP and HTCP are not yet opening double ports so they will only run as IPv4-only or IPv6-only.
 
 <p>Specify a specific tcp_outgoing_address and the clients who match its ACL are limited
  to the IPv4 or IPv6 network that address belongs to. They are not permitted over the
@@ -880,8 +880,8 @@ logformat icap_squid %ts.%03tu %6icap::tr %>a %icap::to/%03icap::Hs %icap::<size
 
 	<tag>ssl_bump</tag>
 	<p>New Access control for which CONNECT requests to an http_port
-	marked with an sslBump flag are actually "bumped". Please
-	see the sslBump flag of an http_port option for more details
+	marked with an ssl-bump flag are actually "bumped". Please
+	see the ssl-bump flag of an http_port option for more details
 	about decoding proxied SSL connections.
 	DEFAULT: No requests are bumped.
 	<verb>
@@ -1111,7 +1111,7 @@ NOCOMMENT_START
 	X-Forwarded-For entries, and place itself as the sole entry.
 	</verb>
 
-	<tag>http_port transparent intercept sslbump connection-auth[=on|off] ignore-cc</tag>
+	<tag>http_port transparent intercept ssl-bump connection-auth[=on|off] ignore-cc</tag>
 	<p>Option 'transparent' is being deprecated in favour of 'intercept' which more clearly identifies what the option does.
 	For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy using TPROXY support.</p>
 	<p>New port options
@@ -1138,7 +1138,7 @@ NOCOMMENT_START
 	                Warning: This option violates HTTP specifications if
 	                used in non-accelerator setups.
 
-	   sslBump      Intercept each CONNECT request matching ssl_bump ACL,
+	   ssl-bump     Intercept each CONNECT request matching ssl_bump ACL,
 	                establish secure connection with the client and with
 	                the server, decrypt HTTP messages as they pass through
 	                Squid, and treat them as unencrypted HTTP messages,
@@ -1152,10 +1152,10 @@ NOCOMMENT_START
 	                for more information on these options.
 
 	                The ssl_bump option is required to fully enable
-	                the SslBump feature.
+	                the SSL Bump feature.
         </verb>
 
-	<tag>https_port intercept sslbump connection-auth[=on|off]</tag>
+	<tag>https_port intercept ssl-bump connection-auth[=on|off]</tag>
 	<p>New port options. see http_port.
 
 	<tag>icap_service bypass=on|off|1|0 routing=on|off|1|0 ipv6=on|off</tag>
@@ -1182,7 +1182,7 @@ NOCOMMENT_START
 		should have the same method and vectoring point as the current
 		ICAP transaction.  Services violating these rules are ignored.
 		An empty X-Next-Services value results in an empty plan which
-		ends the current adaptation. 
+		ends the current adaptation.
 
 		Routing is not allowed by default: the ICAP X-Next-Services
 		response header is ignored.
