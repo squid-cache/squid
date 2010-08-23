@@ -842,14 +842,16 @@ idnsSendQuery(idns_query * q)
 
     } while ( (x<0 && y<0) && q->nsends % nns != 0);
 
-    if (y >= 0) {
-        fd_bytes(DnsSocketB, y, FD_WRITE);
-        commSetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
-    }
+    if (!q->need_vc) {
+        if (y >= 0) {
+            fd_bytes(DnsSocketB, y, FD_WRITE);
+            commSetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
+        }
 
-    if (x >= 0) {
-        fd_bytes(DnsSocketA, x, FD_WRITE);
-        commSetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
+        if (x >= 0) {
+            fd_bytes(DnsSocketA, x, FD_WRITE);
+            commSetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
+        }
     }
 
     nameservers[ns].nqueries++;
