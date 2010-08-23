@@ -75,7 +75,9 @@ AC_SUBST(AR_R)
 
 # this needs to be before any test is run, to have more standard
 # functions available on some Unix sysems (e.g. Solaris)
-AC_USE_SYSTEM_EXTENSIONS
+if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
+	AC_USE_SYSTEM_EXTENSIONS
+fi
 
 AC_ARG_ENABLE(strict-error-checking,
   AS_HELP_STRING([--disable-strict-error-checking],[By default squid is compiled
@@ -1717,12 +1719,16 @@ if test "x$ac_krb5_config" = "xyes" ; then
     AC_CHECK_HEADERS(gssapi/gssapi_generic.h)
     AC_CHECK_HEADERS(profile.h)
   fi
-  AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
 
   SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
   if test "x$squid_cv_broken_krb5_h" = "xyes"; then
-     AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if krb5.h is broken for C++])
+    AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if krb5.h is broken for C++])
+    AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.])
+    AC_MSG_WARN([Please see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512])
+    AC_MSG_WARN([If you need Kerberos support you'll have to patch])
+    AC_MSG_WARN([your system. See contrib/solaris/solaris-krb5-include.patch])
   fi
+  AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
 
   ac_com_error_message=no
   if test "x$ac_cv_header_com_err_h" == "xyes" ; then
