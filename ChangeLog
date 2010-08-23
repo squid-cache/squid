@@ -44,10 +44,11 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many testing improvements
 	- ... and many documentation updates
 
-Changes to squid-3.1.7 (20 Aug 2010):
+Changes to squid-3.1.7 (23 Aug 2010):
 
-	- Regression Bug 2997: visible_hostname directive no longer matches docs
+	- Regression Bug 3021: Large DNS reply causes crash
 	- Regression Bug 3011: ICAP, HTTPS, cache_peer probe IPv4-only port fixes
+	- Regression Bug 2997: visible_hostname directive no longer matches docs
 	- Bug 3012: deprecate sslBump and support ssl-bump spelling in http_port
 	- Bug 3006: handle IPV6_V6ONLY definition missing
 	- Bug 3004: Solaris 9 SunStudio 12 build failure
