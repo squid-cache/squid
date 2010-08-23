@@ -75,6 +75,7 @@ TRANSLATE_LANGUAGES = \
 	lv.lang \
 	ms.lang \
 	nl.lang \
+	oc.lang \
 	pl.lang \
 	pt-br.lang \
 	pt.lang \
@@ -88,6 +89,7 @@ TRANSLATE_LANGUAGES = \
 	tr.lang \
 	uk.lang \
 	uz.lang \
+	vi.lang \
 	zh-cn.lang \
 	zh-tw.lang
 
