@@ -109,7 +109,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
             memset( &cd, 0, sizeof(cd) );
             if ( debug ) fprintf( debug, "# match from %d-%d on line %s",
                                       (int)subs[0].rm_so, (int)subs[0].rm_eo,
-																			line );
+                                      line );
 
             // terminate line after matched expression
             line[ subs[0].rm_eo ] = '\0';
@@ -125,7 +125,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
                 line[ subs[offset].rm_eo ] = '\0';
                 if ( debug ) fprintf( debug, "# match from %d-%d on \"%s\"\n",
                                           (int)subs[offset].rm_so,
-																					(int)subs[offset].rm_eo,
+                                          (int)subs[offset].rm_eo,
                                           line+subs[offset].rm_so );
                 if ( strcmp( line + subs[offset].rm_so, "ufs" ) == 0 )
                     cd.type = CacheDir::CDT_UFS;
@@ -142,7 +142,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
             line[ subs[offset].rm_eo ] = '\0';
             if ( debug ) fprintf( debug, "# match from %d-%d on \"%s\"\n",
                                       (int)subs[offset].rm_so,
-																			(int)subs[offset].rm_eo,
+                                      (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
             cd.base = strdup( line+subs[offset].rm_so );
             offset++;
@@ -151,7 +151,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
             line[ subs[offset].rm_eo ] = '\0';
             if ( debug ) fprintf( debug, "# match from %d-%d on \"%s\"\n",
                                       (int)subs[offset].rm_so,
-																			(int)subs[offset].rm_eo,
+                                      (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
             cd.size = strtoul( line+subs[offset].rm_so, 0, 10 );
             offset++;
@@ -160,7 +160,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
             line[ subs[offset].rm_eo ] = '\0';
             if ( debug ) fprintf( debug, "# match from %d-%d on \"%s\"\n",
                                       (int)subs[offset].rm_so,
-																			(int)subs[offset].rm_eo,
+                                      (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
             cd.level[0] = strtoul( line+subs[offset].rm_so, 0, 10 );
             offset++;
@@ -169,7 +169,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
             line[ subs[offset].rm_eo ] = '\0';
             if ( debug ) fprintf( debug, "# match from %d-%d on \"%s\"\n",
                                       (int)subs[offset].rm_so,
-																			(int)subs[offset].rm_eo,
+                                      (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
             cd.level[1] = strtoul( line+subs[offset].rm_so, 0, 10 );
             offset++;
