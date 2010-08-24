@@ -254,6 +254,7 @@ public:
     int hasListMember(http_hdr_type id, const char *member, const char separator) const;
     int hasByNameListMember(const char *name, const char *member, const char separator) const;
     void removeHopByHopEntries();
+    inline bool chunked() const; ///< whether message uses chunked Transfer-Encoding
 
     /* protected, do not use these, use interface functions instead */
     Vector<HttpHeaderEntry *> entries;		/**< parsed fields in raw format */
@@ -278,5 +279,12 @@ extern int httpHeaderParseQuotedString (const char *start, String *val);
 SQUIDCEXTERN int httpHeaderHasByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator);
 SQUIDCEXTERN void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask);
 SQUIDCEXTERN void httpHeaderCalcMask(HttpHeaderMask * mask, http_hdr_type http_hdr_type_enums[], size_t count);
+
+inline bool
+HttpHeader::chunked() const
+{
+    return has(HDR_TRANSFER_ENCODING) &&
+               hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',');
+}
 
 #endif /* SQUID_HTTPHEADER_H */
