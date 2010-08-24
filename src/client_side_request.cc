@@ -972,9 +972,6 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     }
 
 #endif
-    if (request->method == METHOD_TRACE || request->method == METHOD_OPTIONS) {
-        request->max_forwards = req_hdr->getInt64(HDR_MAX_FORWARDS);
-    }
 
     request->flags.cachable = http->request->cacheable();
 

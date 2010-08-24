@@ -2394,6 +2394,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     bool notedUseOfBuffer = false;
     bool tePresent = false;
     bool deChunked = false;
+    bool mustReplyToOptions = false;
     bool unsupportedTe = false;
 
     /* We have an initial client stream in place should it be needed */
@@ -2519,8 +2520,12 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     } else
         conn->cleanDechunkingRequest();
 
+    if (method == METHOD_TRACE || method == METHOD_OPTIONS)
+        request->max_forwards = request->header.getInt64(HDR_MAX_FORWARDS);
+
+    mustReplyToOptions = (method == METHOD_OPTIONS) && (request->max_forwards == 0);
     unsupportedTe = tePresent && !deChunked;
-    if (!urlCheckRequest(request) || unsupportedTe) {
+    if (!urlCheckRequest(request) || mustReplyToOptions || unsupportedTe) {
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
