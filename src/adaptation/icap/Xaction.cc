@@ -25,7 +25,7 @@ static PconnPool *icapPconnPool = new PconnPool("ICAP Servers");
 //CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, Xaction);
 
 Adaptation::Icap::Xaction::Xaction(const char *aTypeName,
-    Adaptation::Icap::ServiceRep::Pointer &aService):
+                                   Adaptation::Icap::ServiceRep::Pointer &aService):
         AsyncJob(aTypeName),
         Adaptation::Initiate(aTypeName),
         icapRequest(NULL),
@@ -139,18 +139,18 @@ void Adaptation::Icap::Xaction::openConnection()
     // TODO: service bypass status may differ from that of a transaction
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall = JobCallback(93, 5,
-        TimeoutDialer, this, Adaptation::Icap::Xaction::noteCommTimedout);
+                                     TimeoutDialer, this, Adaptation::Icap::Xaction::noteCommTimedout);
     commSetTimeout(connection, TheConfig.connect_timeout(
                        service().cfg().bypass), timeoutCall);
 
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommCloseCbParams> CloseDialer;
     closer = JobCallback(93, 5,
-         CloseDialer, this, Adaptation::Icap::Xaction::noteCommClosed);
+                         CloseDialer, this, Adaptation::Icap::Xaction::noteCommClosed);
     comm_add_close_handler(connection, closer);
 
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> ConnectDialer;
     connector = JobCallback(93,3,
-        ConnectDialer, this, Adaptation::Icap::Xaction::noteCommConnected);
+                            ConnectDialer, this, Adaptation::Icap::Xaction::noteCommConnected);
     commConnectStart(connection, s.cfg().host.termedBuf(), s.cfg().port, connector);
 }
 
@@ -234,7 +234,7 @@ void Adaptation::Icap::Xaction::scheduleWrite(MemBuf &buf)
     // comm module will free the buffer
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommIoCbParams> Dialer;
     writer = JobCallback(93,3,
-        Dialer, this, Adaptation::Icap::Xaction::noteCommWrote);
+                         Dialer, this, Adaptation::Icap::Xaction::noteCommWrote);
 
     comm_write_mbuf(connection, &buf, writer);
     updateTimeout();
@@ -316,7 +316,7 @@ void Adaptation::Icap::Xaction::updateTimeout()
         // TODO: service bypass status may differ from that of a transaction
         typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommTimeoutCbParams> TimeoutDialer;
         AsyncCall::Pointer call = JobCallback(93,5,
-            TimeoutDialer, this, Adaptation::Icap::Xaction::noteCommTimedout);
+                                              TimeoutDialer, this, Adaptation::Icap::Xaction::noteCommTimedout);
 
         commSetTimeout(connection,
                        TheConfig.io_timeout(service().cfg().bypass), call);
@@ -340,7 +340,7 @@ void Adaptation::Icap::Xaction::scheduleRead()
      */
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommIoCbParams> Dialer;
     reader = JobCallback(93,3,
-        Dialer, this, Adaptation::Icap::Xaction::noteCommRead);
+                         Dialer, this, Adaptation::Icap::Xaction::noteCommRead);
 
     comm_read(connection, commBuf, readBuf.spaceSize(), reader);
     updateTimeout();
@@ -474,11 +474,11 @@ void Adaptation::Icap::Xaction::tellQueryAborted()
 {
     if (theInitiator.set()) {
         Adaptation::Icap::XactAbortInfo abortInfo(icapRequest, icapReply,
-            retriable(), repeatable());
+                retriable(), repeatable());
         Launcher *launcher = dynamic_cast<Launcher*>(theInitiator.get());
         // launcher may be nil if initiator is invalid
         CallJobHere1(91,5, CbcPointer<Launcher>(launcher),
-            Launcher, noteXactAbort, abortInfo);
+                     Launcher, noteXactAbort, abortInfo);
         clearInitiator();
     }
 }

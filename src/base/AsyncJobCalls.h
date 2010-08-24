@@ -90,7 +90,7 @@ class NullaryMemFunT: public JobDialer<Job>
 public:
     typedef void (Job::*Method)();
     explicit NullaryMemFunT(const CbcPointer<Job> &aJob, Method aMethod):
-        JobDialer<Job>(aJob), method(aMethod) {}
+            JobDialer<Job>(aJob), method(aMethod) {}
 
     virtual void print(std::ostream &os) const {  os << "()"; }
 
@@ -107,7 +107,7 @@ class UnaryMemFunT: public JobDialer<Job>
 public:
     typedef void (Job::*Method)(Argument1);
     explicit UnaryMemFunT(const CbcPointer<Job> &aJob, Method aMethod,
-        const Argument1 &anArg1): JobDialer<Job>(aJob),
+                          const Argument1 &anArg1): JobDialer<Job>(aJob),
             method(aMethod), arg1(anArg1) {}
 
     virtual void print(std::ostream &os) const {  os << '(' << arg1 << ')'; }
@@ -137,7 +137,7 @@ JobMemFun(const CbcPointer<C> &job, typename NullaryMemFunT<C>::Method method)
 template <class C, class Argument1>
 UnaryMemFunT<C, Argument1>
 JobMemFun(const CbcPointer<C> &job, typename UnaryMemFunT<C, Argument1>::Method method,
-       Argument1 arg1)
+          Argument1 arg1)
 {
     return UnaryMemFunT<C, Argument1>(job, method, arg1);
 }

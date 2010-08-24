@@ -143,7 +143,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
      */
     typedef CommCbMemFunT<HttpStateData, CommCloseCbParams> Dialer;
     closeHandler = JobCallback(9, 5,
-        Dialer, this, HttpStateData::httpStateConnClosed);
+                               Dialer, this, HttpStateData::httpStateConnClosed);
     comm_add_close_handler(fd, closeHandler);
 }
 
@@ -1403,7 +1403,7 @@ HttpStateData::maybeReadVirginBody()
         flags.do_next_read = 0;
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
         entry->delayAwareRead(fd, readBuf->space(read_size), read_size,
-            JobCallback(11, 5, Dialer, this,  HttpStateData::readReply));
+                              JobCallback(11, 5, Dialer, this,  HttpStateData::readReply));
     }
 }
 
@@ -1447,7 +1447,7 @@ HttpStateData::sendComplete(const CommIoCbParams &io)
      */
     typedef CommCbMemFunT<HttpStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(11, 5,
-        TimeoutDialer, this, HttpStateData::httpTimeout);
+                                      TimeoutDialer, this, HttpStateData::httpTimeout);
 
     commSetTimeout(fd, Config.Timeout.read, timeoutCall);
 
@@ -1989,7 +1989,7 @@ HttpStateData::sendRequest()
 
     typedef CommCbMemFunT<HttpStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(11, 5,
-        TimeoutDialer, this, HttpStateData::httpTimeout);
+                                      TimeoutDialer, this, HttpStateData::httpTimeout);
     commSetTimeout(fd, Config.Timeout.lifetime, timeoutCall);
     flags.do_next_read = 1;
     maybeReadVirginBody();
@@ -1999,12 +1999,12 @@ HttpStateData::sendRequest()
             return false;
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
         requestSender = JobCallback(11,5,
-            Dialer, this, HttpStateData::sentRequestBody);
+                                    Dialer, this, HttpStateData::sentRequestBody);
     } else {
         assert(!requestBodySource);
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
         requestSender = JobCallback(11,5,
-            Dialer, this,  HttpStateData::sendComplete);
+                                    Dialer, this,  HttpStateData::sendComplete);
     }
 
     if (_peer != NULL) {
@@ -2099,7 +2099,7 @@ HttpStateData::doneSendingRequestBody()
 
             typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
             AsyncCall::Pointer call = JobCallback(11,5,
-                Dialer, this, HttpStateData::sendComplete);
+                                                  Dialer, this, HttpStateData::sendComplete);
             comm_write(fd, "\r\n", 2, call);
         }
         return;

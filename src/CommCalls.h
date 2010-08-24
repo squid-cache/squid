@@ -148,8 +148,8 @@ public:
     typedef void (C::*Method)(const Params &io);
 
     CommCbMemFunT(const CbcPointer<C> &job, Method meth): JobDialer<C>(job),
-        CommDialerParamsT<Params_>(job.get()),
-        method(meth) {}
+            CommDialerParamsT<Params_>(job.get()),
+            method(meth) {}
 
     virtual bool canDial(AsyncCall &c) {
         return JobDialer<C>::canDial(c) &&

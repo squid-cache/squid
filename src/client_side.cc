@@ -243,7 +243,7 @@ ConnStateData::readSomeData()
 
     typedef CommCbMemFunT<ConnStateData, CommIoCbParams> Dialer;
     reader = JobCallback(33, 5,
-                          Dialer, this, ConnStateData::clientReadRequest);
+                         Dialer, this, ConnStateData::clientReadRequest);
     comm_read(fd, in.addressToReadInto(), getAvailableBufferLength(), reader);
 }
 
@@ -1361,7 +1361,7 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
     // After sending Transfer-Encoding: chunked (at least), always send
     // the last-chunk if there was no error, ignoring responseFinishedOrFailed.
     const bool mustSendLastChunk = http->request->flags.chunked_reply &&
-        !http->request->flags.stream_error && !context->startOfOutput();
+                                   !http->request->flags.stream_error && !context->startOfOutput();
     if (responseFinishedOrFailed(rep, receivedData) && !mustSendLastChunk) {
         context->writeComplete(fd, NULL, 0, COMM_OK);
         PROF_stop(clientSocketRecipient);
@@ -1423,7 +1423,7 @@ ConnStateData::readNextRequest()
      */
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall = JobCallback(33, 5,
-        TimeoutDialer, this, ConnStateData::requestTimeout);
+                                     TimeoutDialer, this, ConnStateData::requestTimeout);
     commSetTimeout(fd, Config.Timeout.persistent_request, timeoutCall);
 
     readSomeData();
@@ -3123,7 +3123,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(33, 5,
-        Dialer, connState, ConnStateData::connStateClosed);
+                                          Dialer, connState, ConnStateData::connStateClosed);
     comm_add_close_handler(newfd, call);
 
     if (Config.onoff.log_fqdn)
@@ -3131,7 +3131,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
-        TimeoutDialer, connState, ConnStateData::requestTimeout);
+                                      TimeoutDialer, connState, ConnStateData::requestTimeout);
     commSetTimeout(newfd, Config.Timeout.read, timeoutCall);
 
 #if USE_IDENT
@@ -3334,7 +3334,7 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
                                newfd, &s->http);
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(33, 5,
-                              Dialer, connState, ConnStateData::connStateClosed);
+                                          Dialer, connState, ConnStateData::connStateClosed);
     comm_add_close_handler(newfd, call);
 
     if (Config.onoff.log_fqdn)
@@ -3922,7 +3922,7 @@ void ConnStateData::pinConnection(int pinning_fd, HttpRequest *request, struct p
 
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
     pinning.closeHandler = JobCallback(33, 5,
-        Dialer, this, ConnStateData::clientPinnedConnectionClosed);
+                                       Dialer, this, ConnStateData::clientPinnedConnectionClosed);
     comm_add_close_handler(pinning_fd, pinning.closeHandler);
 
 }

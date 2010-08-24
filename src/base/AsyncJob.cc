@@ -50,7 +50,7 @@ void AsyncJob::deleteThis(const char *aReason)
     debugs(93, 5, typeName << " will delete this, reason: " << stopReason);
     CbcPointer<AsyncJob> self(this);
     AsyncCall::Pointer fakeCall = asyncCall(93,4, "FAKE-deleteThis",
-        JobMemFun(self, &AsyncJob::deleteThis, aReason));
+                                            JobMemFun(self, &AsyncJob::deleteThis, aReason));
     inCall = fakeCall;
     callEnd();
 //    delete fakeCall;

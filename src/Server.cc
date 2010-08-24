@@ -418,7 +418,7 @@ ServerStateData::sendMoreRequestBody()
         debugs(9,3, HERE << "will write " << buf.contentSize() << " request body bytes");
         typedef CommCbMemFunT<ServerStateData, CommIoCbParams> Dialer;
         requestSender = JobCallback(93,3,
-            Dialer, this, ServerStateData::sentRequestBody);
+                                    Dialer, this, ServerStateData::sentRequestBody);
         comm_write_mbuf(fd, &buf, requestSender);
     } else {
         debugs(9,3, HERE << "will wait for more request body bytes or eof");
@@ -544,7 +544,7 @@ ServerStateData::startAdaptation(const Adaptation::ServiceGroupPointer &group, H
     }
 
     adaptedHeadSource = initiateAdaptation(
-        new Adaptation::Iterator(vrep, cause, group));
+                            new Adaptation::Iterator(vrep, cause, group));
     startedAdaptation = initiated(adaptedHeadSource);
     Must(startedAdaptation);
 }

@@ -38,7 +38,7 @@ Adaptation::Icap::ModXact::State::State()
 }
 
 Adaptation::Icap::ModXact::ModXact(HttpMsg *virginHeader,
-    HttpRequest *virginCause, Adaptation::Icap::ServiceRep::Pointer &aService):
+                                   HttpRequest *virginCause, Adaptation::Icap::ServiceRep::Pointer &aService):
         AsyncJob("Adaptation::Icap::ModXact"),
         Adaptation::Icap::Xaction("Adaptation::Icap::ModXact", aService),
         virginConsumed(0),
@@ -97,7 +97,7 @@ void Adaptation::Icap::ModXact::waitForService()
     state.serviceWaiting = true;
     typedef NullaryMemFunT<ModXact> Dialer;
     AsyncCall::Pointer call = JobCallback(93,5,
-        Dialer, this, Adaptation::Icap::ModXact::noteServiceReady);
+                                          Dialer, this, Adaptation::Icap::ModXact::noteServiceReady);
     service().callWhenReady(call);
 }
 
