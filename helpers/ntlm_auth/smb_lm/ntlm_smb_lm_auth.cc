@@ -15,6 +15,7 @@
  */
 #define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
+#include "compat/debug.h"
 #include "libntlmauth/ntlmauth.h"
 #include "libntlmauth/smb.h"
 #include "libntlmauth/rfcnb.h"
@@ -401,7 +402,7 @@ usage()
             my_program_name, my_program_name);
 }
 
-int debug_enabled=0;
+/* int debug_enabled=0; defined in libcompat */
 
 void
 process_options(int argc, char *argv[])

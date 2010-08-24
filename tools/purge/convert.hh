@@ -41,16 +41,18 @@
 #ifndef _CONVERT_HH
 #define _CONVERT_HH
 
+#if !defined(__cplusplus)
 #if defined(__GNUC__) || defined(__GNUG__)
 #pragma interface
 #else
-#ifndef HAS_BOOL
-#define HAS_BOOL
-typedef int bool;
+#ifndef HAVE_BOOL
+#define HAVE_BOOL 1
+typedef char bool;
 #define false 0
 #define true  1
 #endif
 #endif
+#endif /* __cplusplus */
 
 #include <sys/types.h>
 #include <sys/socket.h>
