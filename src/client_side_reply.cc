@@ -1372,7 +1372,7 @@ clientReplyContext::buildReplyHeader()
 #endif
 
     const bool maySendChunkedReply = !request->multipartRangeRequest() &&
-        (request->http_ver >= HttpVersion(1, 1));
+                                     (request->http_ver >= HttpVersion(1, 1));
 
     /* Check whether we should send keep-alive */
     if (!Config.onoff.error_pconns && reply->sline.status >= 400 && !request->flags.must_keepalive) {
@@ -1397,8 +1397,8 @@ clientReplyContext::buildReplyHeader()
 
     // Decide if we send chunked reply
     if (maySendChunkedReply &&
-        request->flags.proxy_keepalive &&
-        reply->bodySize(request->method) < 0) {
+            request->flags.proxy_keepalive &&
+            reply->bodySize(request->method) < 0) {
         debugs(88, 3, "clientBuildReplyHeader: chunked reply");
         request->flags.chunked_reply = 1;
         hdr->putStr(HDR_TRANSFER_ENCODING, "chunked");

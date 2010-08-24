@@ -339,7 +339,7 @@ void Adaptation::Icap::ServiceRep::callException(const std::exception &e)
 {
     clearAdaptation(theOptionsFetcher);
     debugs(93,2, "ICAP probably failed to fetch options (" << e.what() <<
-        ")" << status());
+           ")" << status());
     handleNewOptions(0);
 }
 
@@ -361,7 +361,7 @@ void Adaptation::Icap::ServiceRep::startGettingOptions()
 
     // XXX: "this" here is "self"; works until refcounting API changes
     theOptionsFetcher = initiateAdaptation(
-        new Adaptation::Icap::OptXactLauncher(this));
+                            new Adaptation::Icap::OptXactLauncher(this));
     // TODO: timeout in case Adaptation::Icap::OptXact never calls us back?
     // Such a timeout should probably be a generic AsyncStart feature.
 }
@@ -429,7 +429,7 @@ Adaptation::Icap::ServiceRep::optionsFetchTime() const
 
 Adaptation::Initiate *
 Adaptation::Icap::ServiceRep::makeXactLauncher(HttpMsg *virgin,
-    HttpRequest *cause)
+        HttpRequest *cause)
 {
     return new Adaptation::Icap::ModXactLauncher(virgin, cause, this);
 }

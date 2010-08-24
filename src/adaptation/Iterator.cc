@@ -15,8 +15,8 @@
 
 
 Adaptation::Iterator::Iterator(
-        HttpMsg *aMsg, HttpRequest *aCause,
-        const ServiceGroupPointer &aGroup):
+    HttpMsg *aMsg, HttpRequest *aCause,
+    const ServiceGroupPointer &aGroup):
         AsyncJob("Iterator"),
         Adaptation::Initiate("Iterator"),
         theGroup(aGroup),
@@ -69,7 +69,7 @@ void Adaptation::Iterator::step()
     debugs(93,5, HERE << "using adaptation service: " << service->cfg().key);
 
     theLauncher = initiateAdaptation(
-        service->makeXactLauncher(theMsg, theCause));
+                      service->makeXactLauncher(theMsg, theCause));
     Must(initiated(theLauncher));
     Must(!done());
 }

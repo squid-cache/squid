@@ -129,7 +129,8 @@ private:
 
 inline
 std::ostream &
-operator <<(std::ostream &os, const XactAbortInfo &xai) {
+operator <<(std::ostream &os, const XactAbortInfo &xai)
+{
     return xai.print(os);
 }
 
