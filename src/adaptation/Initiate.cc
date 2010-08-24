@@ -19,7 +19,7 @@ public:
     typedef UnaryMemFunT<Initiator, HttpMsg*> Parent;
 
     AnswerDialer(const Parent::JobPointer &job, Parent::Method meth,
-            HttpMsg *msg): Parent(job, meth, msg) { HTTPMSGLOCK(arg1); }
+                 HttpMsg *msg): Parent(job, meth, msg) { HTTPMSGLOCK(arg1); }
     AnswerDialer(const AnswerDialer &d): Parent(d) { HTTPMSGLOCK(arg1); }
     virtual ~AnswerDialer() { HTTPMSGUNLOCK(arg1); }
 
@@ -74,7 +74,7 @@ void Adaptation::Initiate::sendAnswer(HttpMsg *msg)
 {
     assert(msg);
     CallJob(93, 5, __FILE__, __LINE__, "Initiator::noteAdaptationAnswer",
-        AnswerDialer(theInitiator, &Initiator::noteAdaptationAnswer, msg));
+            AnswerDialer(theInitiator, &Initiator::noteAdaptationAnswer, msg));
     clearInitiator();
 }
 
@@ -82,7 +82,7 @@ void Adaptation::Initiate::sendAnswer(HttpMsg *msg)
 void Adaptation::Initiate::tellQueryAborted(bool final)
 {
     CallJobHere1(93, 5, theInitiator,
-        Initiator, noteAdaptationQueryAbort, final);
+                 Initiator, noteAdaptationQueryAbort, final);
     clearInitiator();
 }
 

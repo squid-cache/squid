@@ -105,7 +105,7 @@ void Ipc::UdsSender::write()
     debugs(54, 5, HERE);
     typedef CommCbMemFunT<UdsSender, CommIoCbParams> Dialer;
     AsyncCall::Pointer writeHandler = JobCallback(54, 5,
-                                                   Dialer, this, UdsSender::wrote);
+                                      Dialer, this, UdsSender::wrote);
     comm_write(fd(), message.raw(), message.size(), writeHandler);
     writing = true;
 }

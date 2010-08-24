@@ -11,7 +11,7 @@
 /**
  \ingroup CBDATAAPI
  *
- * Safely points to a cbdata-protected class (cbc), such as an AsyncJob. 
+ * Safely points to a cbdata-protected class (cbc), such as an AsyncJob.
  * When a cbc we communicate with disappears without
  * notice or a notice has not reached us yet, this class prevents
  * dereferencing the pointer to the gone cbc object.
@@ -66,7 +66,8 @@ private:
 
 template <class Cbc>
 inline
-std::ostream &operator <<(std::ostream &os, const CbcPointer<Cbc> &p) {
+std::ostream &operator <<(std::ostream &os, const CbcPointer<Cbc> &p)
+{
     return p.print(os);
 }
 
@@ -148,7 +149,8 @@ CbcPointer<Cbc>::operator ->() const
 }
 
 template <class Cbc>
-std::ostream &CbcPointer<Cbc>::print(std::ostream &os) const {
+std::ostream &CbcPointer<Cbc>::print(std::ostream &os) const
+{
     return os << cbc << '/' << lock;
 }
 
