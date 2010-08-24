@@ -373,6 +373,10 @@ This section gives a thorough account of those changes in three categories:
 	   <em>concurrency=N</em> previously called <em>auth_param ... concurrency</em> as a separate option.
 	<p>Removed Basic, Digest, NTLM, Negotiate <em>auth_param ... concurrency</em> setting option.
 
+	<tag>cache_peer</tag>
+	<p><em>htcp-*</em> options collapsed into <em>htcp=</em> taking an optional comma-separated list of flags.
+	   The old form is deprecated but still accepted.
+
 	<tag>deny_info</tag>
 	<p>Support URL format tags. For dynamically generated URL in denial redirect.
 
