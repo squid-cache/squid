@@ -146,7 +146,7 @@ volatile sig_atomic_t term_flag = 0; // 'terminate' is a gcc 2.8.x internal...
 char*  linebuffer = 0;
 size_t buffersize = 16834;
 static char* copydir = 0;
-static unsigned debug = 0;
+static unsigned debugFlag = 0;
 static unsigned purgeMode = 0;
 static bool iamalive = false;
 static bool reminder = false;
@@ -333,7 +333,7 @@ action( int fd, size_t metasize,
 
     // if we want to copy out the file, do that first of all.
     if ( ::copydir && *copydir && size > 0 )
-        copy_out( st.st_size, metasize, ::debug,
+        copy_out( st.st_size, metasize, ::debugFlag,
                   fn, url, ::copydir, ::envelope );
 
     // do we need to PURGE the file, yes, if purgemode bit#0 was set.
@@ -398,7 +398,7 @@ match( const char* fn, const REList* list )
     static const size_t addon = sizeof(unsigned char) + sizeof(unsigned int);
     bool flag = true;
 
-    if ( debug & 0x01 ) fprintf( stderr, "# [3] %s\n", fn );
+    if ( debugFlag & 0x01 ) fprintf( stderr, "# [3] %s\n", fn );
     int fd = open( fn, O_RDONLY );
     if ( fd != -1 ) {
         if ( read(fd,::linebuffer,::buffersize-1) > 60 ) {
@@ -481,7 +481,7 @@ filelevel( const char* directory, const REList* list )
 // returns: true, if every subdir && action was successful.
 {
     struct dirent* entry;
-    if ( debug & 0x01 )
+    if ( debugFlag & 0x01 )
         fprintf( stderr, "# [2] %s\n", directory );
 
     DIR* dir = opendir( directory );
@@ -523,7 +523,7 @@ dirlevel( const char* dirname, const REList* list, bool level=false )
 // warning: this function is once-recursive, no deeper.
 {
     struct dirent* entry;
-    if ( debug & 0x01 )
+    if ( debugFlag & 0x01 )
         fprintf( stderr, "# [%d] %s\n", (level ? 1 : 0), dirname );
 
     DIR* dir = opendir( dirname );
@@ -642,7 +642,7 @@ parseCommandline( int argc, char* argv[], REList*& head,
             break;
 
         case 'd':
-            ::debug = strtoul( optarg, 0, 0 );
+            ::debugFlag = strtoul( optarg, 0, 0 );
             break;
 
         case 'E':
@@ -738,7 +738,7 @@ parseCommandline( int argc, char* argv[], REList*& head,
     }
 
     // adjust
-    if ( ! isatty(fileno(stdout)) || (::debug & 0x01) ) ::iamalive = false;
+    if ( ! isatty(fileno(stdout)) || (::debugFlag & 0x01) ) ::iamalive = false;
     if ( head == 0 ) {
         fputs( "There was no regular expression defined. If you intend\n", stderr );
         fputs( "to match all possible URLs, use \"-e .\" instead.\n", stderr );
@@ -757,7 +757,7 @@ parseCommandline( int argc, char* argv[], REList*& head,
         printf( "#\n# Currently active values for %s:\n# %s\n",
                 ::programname, ::RCS_ID );
         printf( "# Debug level       : " );
-        if ( ::debug ) printf( "%#6.4hx", ::debug );
+        if ( ::debugFlag ) printf( "%#6.4hx", ::debugFlag );
         else printf( "production level" ); // printf omits 0x prefix for 0!
         printf( " + %s mode", ::no_fork ? "linear" : "parallel" );
         puts( ::verbose ? " + extra verbosity" : "" );
@@ -869,7 +869,7 @@ main( int argc, char* argv[] )
 
     // try to read squid.conf file to determine all cache_dir locations
     CacheDirVector cdv(0);
-    if ( readConfigFile( cdv, conffile, debug ? stderr : 0 ) > 0 ) {
+    if ( readConfigFile( cdv, conffile, debugFlag ? stderr : 0 ) > 0 ) {
         // there are some valid cache_dir entries.
         // unless forking was forbidden by cmdline option,
         // for a process for each cache_dir entry to remove files.
@@ -921,7 +921,7 @@ main( int argc, char* argv[] )
                         return 0;
                     } else {
                         // parent mode
-                        if ( ::debug ) printf( "forked child %d\n", (int) child[i] );
+                        if ( ::debugFlag ) printf( "forked child %d\n", (int) child[i] );
                     }
                 }
             }
@@ -932,7 +932,7 @@ main( int argc, char* argv[] )
             for ( size_t i=0; i < cdv.size(); ++i ) {
                 while ( (temp=waitpid( (pid_t)-1, &status, 0 )) == -1 )
                     if ( errno == EINTR ) continue;
-                if ( ::debug ) printf( "collected child %d\n", (int) temp );
+                if ( ::debugFlag ) printf( "collected child %d\n", (int) temp );
             }
             delete[] child;
         }
