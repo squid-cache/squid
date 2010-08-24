@@ -68,12 +68,12 @@ public:
 
     bool operator <(const HttpVersion& that) const {
         return (this->major < that.major ||
-                this->major == that.major && this->minor < that.minor);
+                (this->major == that.major && this->minor < that.minor));
     }
 
     bool operator >(const HttpVersion& that) const {
         return (this->major > that.major ||
-                this->major == that.major && this->minor > that.minor);
+                (this->major == that.major && this->minor > that.minor));
     }
 
     bool operator <=(const HttpVersion& that) const {
