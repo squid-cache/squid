@@ -126,6 +126,9 @@ static struct _ipcache_stats {
 /// \ingroup IPCacheInternal
 static dlink_list lru_list;
 
+// forward-decls
+static void stat_ipcache_get(StoreEntry *);
+
 static FREE ipcacheFreeEntry;
 #if USE_DNSSERVERS
 static HLPCB ipcacheHandleReply;

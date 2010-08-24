@@ -19,7 +19,7 @@ SQUIDCEXTERN void netdbInit(void);
 
 SQUIDCEXTERN void netdbHandlePingReply(const Ip::Address &from, int hops, int rtt);
 SQUIDCEXTERN void netdbPingSite(const char *hostname);
-SQUIDCEXTERN void netdbDump(StoreEntry *);
+void netdbDump(StoreEntry *);
 
 SQUIDCEXTERN void netdbFreeMemory(void);
 SQUIDCEXTERN int netdbHostHops(const char *host);

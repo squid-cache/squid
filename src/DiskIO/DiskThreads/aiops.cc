@@ -108,7 +108,7 @@ struct squidaio_thread_t {
 
 static void squidaio_queue_request(squidaio_request_t *);
 static void squidaio_cleanup_request(squidaio_request_t *);
-static void *squidaio_thread_loop(void *);
+SQUIDCEXTERN void *squidaio_thread_loop(void *);
 static void squidaio_do_open(squidaio_request_t *);
 static void squidaio_do_read(squidaio_request_t *);
 static void squidaio_do_write(squidaio_request_t *);
@@ -360,7 +360,7 @@ squidaio_shutdown(void)
     squidaio_initialised = 0;
 }
 
-static void *
+void *
 squidaio_thread_loop(void *ptr)
 {
     squidaio_thread_t *threadp = (squidaio_thread_t *)ptr;
