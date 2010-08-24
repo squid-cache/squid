@@ -1053,7 +1053,7 @@ DOC_START
 
 	NOTE: The default if no htcp_access lines are present is to
 	deny all traffic. This default may cause problems with peers
-	using the htcp or htcp-oldsquid options.
+	using the htcp option.
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
@@ -1904,22 +1904,23 @@ DOC_START
 	
 	htcp		Send HTCP, instead of ICP, queries to the neighbor.
 			You probably also want to set the "icp-port" to 4827
-			instead of 3130.
+			instead of 3130. This directive accepts a comma separated
+			list of options described below.
 	
-	htcp-oldsquid	Send HTCP to old Squid versions.
+	htcp=oldsquid	Send HTCP to old Squid versions (2.5 or earlier).
 	
-	htcp-no-clr	Send HTCP to the neighbor but without
+	htcp=no-clr	Send HTCP to the neighbor but without
 			sending any CLR requests.  This cannot be used with
-			htcp-only-clr.
+			only-clr.
 	
-	htcp-only-clr	Send HTCP to the neighbor but ONLY CLR requests.
-			This cannot be used with htcp-no-clr.
+	htcp=only-clr	Send HTCP to the neighbor but ONLY CLR requests.
+			This cannot be used with no-clr.
 	
-	htcp-no-purge-clr
+	htcp=no-purge-clr
 			Send HTCP to the neighbor including CLRs but only when
 			they do not result from PURGE requests.
 	
-	htcp-forward-clr
+	htcp=forward-clr
 			Forward any HTCP CLR requests this proxy receives to the peer.
 	
 	
