@@ -59,7 +59,7 @@ CallJob(int debugSection, int debugLevel, const char *fileName, int fileLine,
 #define CallJobHere1(debugSection, debugLevel, job, Class, method, arg1) \
     CallJob((debugSection), (debugLevel), __FILE__, __LINE__, \
         (#Class "::" #method), \
-        JobMemFun<Class>((job), &Class::method, (arg1)))
+        JobMemFun((job), &Class::method, (arg1)))
 
 
 /// Convenience macro to create a Dialer-based job callback
