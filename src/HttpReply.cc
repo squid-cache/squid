@@ -541,7 +541,7 @@ HttpReply::expectingBody(const HttpRequestMethod& req_method, int64_t& theSize) 
         expectBody = true;
 
     if (expectBody) {
-        if (header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ','))
+        if (header.chunked())
             theSize = -1;
         else if (content_length >= 0)
             theSize = content_length;
