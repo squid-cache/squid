@@ -827,7 +827,7 @@ idnsSendQuery(idns_query * q)
         } else {
             if (DnsSocketB >= 0 && nameservers[ns].S.IsIPv6())
                 y = comm_udp_sendto(DnsSocketB, nameservers[ns].S, q->buf, q->sz);
-            else
+            else if (DnsSocketA)
                 x = comm_udp_sendto(DnsSocketA, nameservers[ns].S, q->buf, q->sz);
         }
 
@@ -842,16 +842,11 @@ idnsSendQuery(idns_query * q)
 
     } while ( (x<0 && y<0) && q->nsends % nns != 0);
 
-    if (!q->need_vc) {
-        if (y >= 0) {
-            fd_bytes(DnsSocketB, y, FD_WRITE);
-            commSetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
-        }
-
-        if (x >= 0) {
-            fd_bytes(DnsSocketA, x, FD_WRITE);
-            commSetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
-        }
+    if (y > 0) {
+        fd_bytes(DnsSocketB, y, FD_WRITE);
+    }
+    if (x > 0) {
+        fd_bytes(DnsSocketA, x, FD_WRITE);
     }
 
     nameservers[ns].nqueries++;
@@ -1135,6 +1130,10 @@ idnsRead(int fd, void *data)
 
     debugs(78, 3, "idnsRead: starting with FD " << fd);
 
+    // Always keep reading. This stops (or at least makes harder) several
+    // attacks on the DNS client.
+    commSetSelect(fd, COMM_SELECT_READ, idnsRead, NULL, 0);
+
     /* BUG (UNRESOLVED)
      *  two code lines after returning from comm_udprecvfrom()
      *  something overwrites the memory behind the from parameter.
@@ -1181,7 +1180,14 @@ idnsRead(int fd, void *data)
 
         if (ns >= 0) {
             nameservers[ns].nreplies++;
-        } else if (Config.onoff.ignore_unknown_nameservers) {
+        }
+
+        // Before unknown_nameservers check to avoid flooding cache.log on attacks,
+        // but after the ++ above to keep statistics right.
+        if (!lru_list.head)
+            continue; // Don't process replies if there is no pending query.
+
+        if (ns < 0 && Config.onoff.ignore_unknown_nameservers) {
             static time_t last_warning = 0;
 
             if (squid_curtime - last_warning > 60) {
@@ -1194,10 +1200,6 @@ idnsRead(int fd, void *data)
         }
 
         idnsGrokReply(rbuf, len);
-    }
-
-    if (lru_list.head) {
-        commSetSelect(fd, COMM_SELECT_READ, idnsRead, NULL, 0);
     }
 }
 
@@ -1266,7 +1268,7 @@ idnsReadVC(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *dat
         return;
     }
 
-    vc->msg->size += len;	// XXX should not access -> size directly
+    vc->msg->size += len;       // XXX should not access -> size directly
 
     if (vc->msg->contentSize() < vc->msglen) {
         comm_read(fd, buf + len, vc->msglen - vc->msg->contentSize(), idnsReadVC, vc);
@@ -1385,10 +1387,12 @@ idnsInit(void)
         if (DnsSocketB >= 0) {
             port = comm_local_port(DnsSocketB);
             debugs(78, 1, "DNS Socket created at " << addrB << ", FD " << DnsSocketB);
+            commSetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
         }
         if (DnsSocketA >= 0) {
             port = comm_local_port(DnsSocketA);
             debugs(78, 1, "DNS Socket created at " << addrA << ", FD " << DnsSocketA);
+            commSetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
         }
     }
 
