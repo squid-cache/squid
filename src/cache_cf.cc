@@ -1917,7 +1917,7 @@ parse_peer(peer ** head)
             char *mode, *nextmode;
             for (mode = nextmode = tmp; mode; mode = nextmode) {
                 nextmode = strchr(mode, ',');
-		debugs(0,0,"HTCP mode '" << mode << "' next=" << nextmode);
+                debugs(0,0,"HTCP mode '" << mode << "' next=" << nextmode);
                 if (nextmode)
                     *nextmode++ = '\0';
                 if (!strcasecmp(mode, "no-clr")) {
