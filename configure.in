@@ -1749,6 +1749,7 @@ if test "x$ac_krb5_config" = "xyes" ; then
   AC_CHECK_LIB(krb5,krb5_get_error_message,
     AC_DEFINE(HAVE_KRB5_GET_ERROR_MESSAGE,1,
       [Define to 1 if you have krb5_get_error_message]),)
+  AC_CHECK_DECLS(krb5_kt_free_entry,,,[#include <krb5.h>])
   AC_CHECK_LIB(krb5,krb5_kt_free_entry,
     AC_DEFINE(HAVE_KRB5_KT_FREE_ENTRY,1,
       [Define to 1 if you have krb5_kt_free_entry]),)
@@ -1824,6 +1825,10 @@ if test "x$enable_external_acl_helpers" != "xno" ; then
     dir="$srcdir/helpers/external_acl/$helper"
     if test -f "$dir/config.test" && sh "$dir/config.test" "$@"; then
       EXTERNAL_ACL_HELPERS="$EXTERNAL_ACL_HELPERS $helper"
+      # special case
+      if test "x$helper" = "xkerberos_ldap_group" ; then
+        squid_require_sasl=yes
+      fi
     else
       AC_MSG_NOTICE([external acl helper $helper ... found but cannot be built])
     fi
@@ -1918,6 +1923,16 @@ if test "x$squid_require_sasl" = "xyes"; then
       AC_MSG_ERROR(Neither SASL nor SASL2 found)
     ])
   ])
+  case "$host_os" in
+    Darwin)
+      if test "$ac_cv_lib_sasl2_sasl_errstring" = "yes" ; then
+        AC_DEFINE(HAVE_SASL_DARWIN,1,[Define to 1 if Mac Darwin without sasl.h])
+        echo "checking for MAC Darwin without sasl.h ... yes"
+      else
+        echo "checking for MAC Darwin without sasl.h ... no"
+      fi
+      ;;
+  esac
   AC_SUBST(LIBSASL)
 fi
 
@@ -2471,16 +2486,219 @@ esac
 dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked 
 dnl only with Windows LDAP libraries using -lwldap32
 case "$host_os" in
-mingw|mingw32)
-	LDAPLIB="-lwldap32"
-	LBERLIB=""
-	;;
-*)
-	LDAPLIB="-lldap"
-	dnl LDAP helpers need to know if -llber is needed or not
-	AC_CHECK_LIB(lber, main, [LBERLIB="-llber"])
-	;;
+	mingw|mingw32)
+		LDAPLIB="-lwldap32"
+		LBERLIB=""
+		;;
+	*)
+		AC_CHECK_LIB(ldap, ldap_init, [LDAPLIB="-lldap"])
+		dnl LDAP helpers need to know if -llber is needed or not
+		AC_CHECK_LIB(lber, ber_init, [LBERLIB="-llber"])
+		dnl if no ldap lib found check for mozilla version
+		if test "x$ac_cv_lib_ldap_ldap_init" != x""yes; then
+		        oLIBS=$LIBS
+		        LIBS="$LIBPTHREADS"
+			AC_CHECK_LIB(ldap60, ldap_init, [LDAPLIB="-lldap60"])
+		        LIBS="$LDAPLIB $LIBPTHREADS"
+			AC_CHECK_LIB(prldap60, prldap_init, [LDAPLIB="-lprldap60 $LDAPLIB"])
+		        LIBS="$LDAPLIB $LIBPTHREADS"
+			AC_CHECK_LIB(ssldap60, ldapssl_init, [LDAPLIB="-lssldap60 $LDAPLIB"])
+		        LIBS=$oLIBS
+		fi
+
+		AC_CHECK_HEADERS(ldap.h lber.h)
+		AC_CHECK_HEADERS(mozldap/ldap.h)
+
+		dnl
+		dnl Check for LDAP_OPT_DEBUG_LEVEL
+		dnl
+		AC_MSG_CHECKING([for LDAP_OPT_DEBUG_LEVEL])
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#                   include <ldap.h>
+		]],[[
+                    int i=LDAP_OPT_DEBUG_LEVEL
+		]])],
+		[ AC_MSG_RESULT(yes) ],
+		[ AC_MSG_RESULT(no) ])
+
+		dnl
+		dnl Check for working ldap
+		dnl
+		oLIBS=$LIBS
+		LIBS="$LDAPLIB $LBERLIB $LIBPTHREADS"
+		AC_MSG_CHECKING([for working ldap])
+		AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#                   define  LDAP_DEPRECATED 1
+#                   if HAVE_LDAP_H
+#                   include <ldap.h>
+#                   elif HAVE_MOZLDAP_LDAP_H
+#                   include <mozldap/ldap.h>
+#                   endif
+                    int
+                    main(void)
+                    {
+                        char host[]="";
+                        int port;
+
+                        ldap_init((const char *)&host, port);
+
+                        return 0;
+                    }
+		]])], 
+		[ AC_DEFINE(HAVE_LDAP, 1, [LDAP support]) 
+		  AC_MSG_RESULT(yes) ],
+		[ AC_MSG_RESULT(no) ])
+		LIBS=$oLIBS
+
+		dnl
+		dnl Check for ldap vendor
+		dnl
+		AC_MSG_CHECKING([for OpenLDAP])
+		AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#                   if HAVE_LDAP_H
+#                   include <ldap.h>
+#                   endif
+#                   include <string.h>
+                    int
+                    main(void)
+                    {
+                        return strcmp(LDAP_VENDOR_NAME,"OpenLDAP");
+                    }
+		]])], 
+		[ AC_DEFINE(HAVE_OPENLDAP, 1, [OpenLDAP support]) 
+		  AC_MSG_RESULT(yes) ],
+		[ AC_MSG_RESULT(no) ])
+
+		AC_MSG_CHECKING([for Sun LDAP SDK])
+		AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#                   if HAVE_LDAP_H
+#                   include <ldap.h>
+#                   endif
+#                   include <string.h>
+                    int
+                    main(void)
+                    {
+                        return strcmp(LDAP_VENDOR_NAME,"Sun Microsystems Inc.");
+                    }
+		]])], 
+		[ AC_DEFINE(HAVE_SUN_LDAP_SDK, 1, [Sun LDAP SDK support])
+		  AC_MSG_RESULT(yes) ],
+		[ AC_MSG_RESULT(no) ])
+
+		AC_MSG_CHECKING([for Mozilla LDAP SDK])
+		AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#                   if HAVE_LDAP_H
+#                   include <ldap.h>
+#                   elif HAVE_MOZLDAP_LDAP_H
+#                   include <mozldap/ldap.h>
+#                   endif
+#                   include <string.h>
+                    int
+                    main(void)
+                    {
+                        return strcmp(LDAP_VENDOR_NAME,"mozilla.org");
+                    }
+		]])], 
+		[ AC_DEFINE(HAVE_MOZILLA_LDAP_SDK, 1, [Mozilla LDAP SDK support])
+		  AC_MSG_RESULT(yes) ],
+		[ AC_MSG_RESULT(no)])
+
+		dnl
+		dnl Check for LDAP_REBINDPROC_CALLBACK
+		dnl
+                AC_MSG_CHECKING([for LDAP_REBINDPROC_CALLBACK])
+                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#                   if HAVE_LDAP_H
+#                   include <ldap.h>
+#                   elif HAVE_MOZLDAP_LDAP_H
+#                   include <mozldap/ldap.h>
+#                   endif
+                ]],[[
+                    LDAP_REBINDPROC_CALLBACK ldap_rebind;
+                ]])],
+                [ AC_DEFINE(HAVE_LDAP_REBINDPROC_CALLBACK,1,[Define to 1 if you have LDAP_REBINDPROC_CALLBACK])
+                  AC_MSG_RESULT(yes) ],
+                [ AC_MSG_RESULT(no) ])
+
+		dnl
+		dnl Check for LDAP_REBIND_PROC
+		dnl
+                AC_MSG_CHECKING([for LDAP_REBIND_PROC])
+                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#                   if HAVE_LDAP_H
+#                   include <ldap.h>
+#                   elif HAVE_MOZLDAP_LDAP_H
+#                   include <mozldap/ldap.h>
+#                   endif
+                ]],[[
+                    LDAP_REBIND_PROC ldap_rebind;
+                ]])],
+                [ AC_DEFINE(HAVE_LDAP_REBIND_PROC,1,[Define to 1 if you have LDAP_REBIND_PROC])
+                  AC_MSG_RESULT(yes) ],
+                [ AC_MSG_RESULT(no) ])
+
+		dnl
+		dnl Check for LDAP_REBIND_FUNCTION
+		dnl
+                AC_MSG_CHECKING([for LDAP_REBIND_FUNCTION])
+                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#                   define LDAP_REFERRALS
+#                   if HAVE_LDAP_H
+#                   include <ldap.h>
+#                   elif HAVE_MOZLDAP_LDAP_H
+#                   include <mozldap/ldap.h>
+#                   endif
+                ]],[[
+                    LDAP_REBIND_FUNCTION ldap_rebind;
+                ]])],
+                [ AC_DEFINE(HAVE_LDAP_REBIND_FUNCTION,1,[Define to 1 if you have LDAP_REBIND_FUNCTION])
+                  AC_MSG_RESULT(yes) ],
+                [ AC_MSG_RESULT(no) ])
+
+		dnl
+		dnl Check for LDAP_SCOPE_DEFAULT
+		dnl
+                AC_MSG_CHECKING([for LDAP_SCOPE_DEFAULT])
+                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#                   if HAVE_LDAP_H
+#                   include <ldap.h>
+#                   elif HAVE_MOZLDAP_LDAP_H
+#                   include <mozldap/ldap.h>
+#                   endif
+                ]],[[
+                    int i=LDAP_SCOPE_DEFAULT;
+                ]])],
+                [ AC_DEFINE(HAVE_LDAP_SCOPE_DEFAULT,1,[Define to 1 if you have LDAP_SCOPE_DEFAULT])
+                  AC_MSG_RESULT(yes) ],
+                [ AC_MSG_RESULT(no) ])
+
+		dnl
+		dnl Check for ldap_url_desc.lud_scheme
+		dnl
+		AC_CHECK_MEMBER(struct ldap_url_desc.lud_scheme,
+		  AC_DEFINE(HAVE_LDAP_URL_LUD_SCHEME,1,
+		    [Define to 1 if you have LDAPURLDesc.lud_scheme]),,[#include <ldap.h>])
+
+		dnl
+		dnl Check for ldapssl_client_init
+		dnl
+		AC_CHECK_LIB(ldap,ldapssl_client_init,
+		  AC_DEFINE(HAVE_LDAPSSL_CLIENT_INIT,1,[Define to 1 if you have ldapssl_client_init]),)
+
+		dnl
+		dnl Check for ldap_url_desc2str
+		dnl
+		AC_CHECK_LIB(ldap,ldap_url_desc2str,
+		  AC_DEFINE(HAVE_LDAP_URL_DESC2STR,1,[Define to 1 if you have ldap_url_desc2str]),)
+
+		dnl
+		dnl Check for ldap_url_parse
+		dnl
+		AC_CHECK_LIB(ldap,ldap_url_parse,
+		  AC_DEFINE(HAVE_LDAP_URL_PARSE,1,[Define to 1 if you have ldap_url_parse]),)
+		;;
 esac
+
 AC_SUBST(LDAPLIB)
 AC_SUBST(LBERLIB)
 
@@ -3004,6 +3222,7 @@ AC_CONFIG_FILES([\
 	helpers/external_acl/Makefile \
 	helpers/external_acl/AD_group/Makefile \
 	helpers/external_acl/file_userip/Makefile \
+	helpers/external_acl/kerberos_ldap_group/Makefile \
 	helpers/external_acl/LDAP_group/Makefile \
 	helpers/external_acl/LM_group/Makefile \
 	helpers/external_acl/session/Makefile \
