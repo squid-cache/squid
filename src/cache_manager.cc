@@ -43,6 +43,9 @@
 #include "wordlist.h"
 #include "Debug.h"
 
+// for rotate_logs()
+#include "protos.h"
+
 /// \ingroup CacheManagerInternal
 #define MGR_PASSWD_SZ 128
 
@@ -56,6 +59,7 @@ CacheManager::CacheManager()
     registerAction(new OfflineToggleAction);
     registerAction(new ShutdownAction);
     registerAction(new ReconfigureAction);
+    registerAction(new RotateAction);
     registerAction(new MenuAction(this));
 }
 
@@ -371,6 +375,21 @@ CacheManager::ReconfigureAction::run(StoreEntry * sentry)
 }
 /// \ingroup CacheManagerInternal
 CacheManager::ReconfigureAction::ReconfigureAction() : CacheManagerAction("reconfigure","Reconfigure Squid", 1, 1) { }
+
+/// \ingroup CacheManagerInternal
+void
+CacheManager::RotateAction::run(StoreEntry * sentry)
+{
+    debugs(16, DBG_IMPORTANT, "Rotate Logs by Cache Manager command.");
+    storeAppendPrintf(sentry, "Rotating Squid Process Logs ....");
+#ifdef _SQUID_LINUX_THREADS_
+    rotate_logs(SIGQUIT);
+#else
+    rotate_logs(SIGUSR1);
+#endif
+}
+/// \ingroup CacheManagerInternal
+CacheManager::RotateAction::RotateAction() : CacheManagerAction("rotate","Rotate Squid Logs", 1, 1) { }
 
 /// \ingroup CacheManagerInternal
 void

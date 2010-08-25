@@ -13,17 +13,6 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testURL );
 
-/* stub functions to link successfully */
-void
-shut_down(int)
-{}
-
-void
-reconfigure(int)
-{}
-
-/* end stubs */
-
 /* init memory pools */
 
 void
