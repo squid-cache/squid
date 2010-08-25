@@ -546,7 +546,7 @@ memFree64K(void *p)
 static void
 cxx_xfree(void * ptr)
 {
-  xfree(ptr);
+    xfree(ptr);
 }
 
 FREE *
