@@ -479,8 +479,8 @@ FtpStateData::FtpStateData(FwdState *theFwdState) : AsyncJob("FtpStateData"), Se
     flags.rest_supported = 1;
 
     typedef CommCbMemFunT<FtpStateData, CommCloseCbParams> Dialer;
-    AsyncCall::Pointer closer = asyncCall(9, 5, "FtpStateData::ctrlClosed",
-                                          Dialer(this, &FtpStateData::ctrlClosed));
+    AsyncCall::Pointer closer = JobCallback(9, 5,
+                                            Dialer, this, FtpStateData::ctrlClosed);
     ctrl.opened(theFwdState->server_fd, closer);
 
     if (request->method == METHOD_PUT)
@@ -1158,16 +1158,15 @@ FtpStateData::maybeReadVirginBody()
     data.read_pending = true;
 
     typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  asyncCall(9, 5, "FtpStateData::ftpTimeout",
-                                      TimeoutDialer(this,&FtpStateData::ftpTimeout));
+    AsyncCall::Pointer timeoutCall =  JobCallback(9, 5,
+                                      TimeoutDialer, this, FtpStateData::ftpTimeout);
     commSetTimeout(data.fd, Config.Timeout.read, timeoutCall);
 
     debugs(9,5,HERE << "queueing read on FD " << data.fd);
 
     typedef CommCbMemFunT<FtpStateData, CommIoCbParams> Dialer;
     entry->delayAwareRead(data.fd, data.readBuf->space(), read_sz,
-                          asyncCall(9, 5, "FtpStateData::dataRead",
-                                    Dialer(this, &FtpStateData::dataRead)));
+                          JobCallback(9, 5, Dialer, this, FtpStateData::dataRead));
 }
 
 void
@@ -1216,8 +1215,8 @@ FtpStateData::dataRead(const CommIoCbParams &io)
 
         if (ignoreErrno(io.xerrno)) {
             typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
-            AsyncCall::Pointer timeoutCall =  asyncCall(9, 5, "FtpStateData::ftpTimeout",
-                                              TimeoutDialer(this,&FtpStateData::ftpTimeout));
+            AsyncCall::Pointer timeoutCall = JobCallback(9, 5,
+                                             TimeoutDialer, this, FtpStateData::ftpTimeout);
             commSetTimeout(io.fd, Config.Timeout.read, timeoutCall);
 
             maybeReadVirginBody();
@@ -1529,8 +1528,8 @@ FtpStateData::writeCommand(const char *buf)
     }
 
     typedef CommCbMemFunT<FtpStateData, CommIoCbParams> Dialer;
-    AsyncCall::Pointer call = asyncCall(9, 5, "FtpStateData::ftpWriteCommandCallback",
-                                        Dialer(this, &FtpStateData::ftpWriteCommandCallback));
+    AsyncCall::Pointer call = JobCallback(9, 5,
+                                          Dialer, this, FtpStateData::ftpWriteCommandCallback);
     comm_write(ctrl.fd,
                ctrl.last_command,
                strlen(ctrl.last_command),
@@ -1667,8 +1666,8 @@ FtpStateData::scheduleReadControlReply(int buffered_ok)
     } else {
         /* XXX What about Config.Timeout.read? */
         typedef CommCbMemFunT<FtpStateData, CommIoCbParams> Dialer;
-        AsyncCall::Pointer reader=asyncCall(9, 5, "FtpStateData::ftpReadControlReply",
-                                            Dialer(this, &FtpStateData::ftpReadControlReply));
+        AsyncCall::Pointer reader = JobCallback(9, 5,
+                                                Dialer, this, FtpStateData::ftpReadControlReply);
         comm_read(ctrl.fd, ctrl.buf + ctrl.offset, ctrl.size - ctrl.offset, reader);
         /*
          * Cancel the timeout on the Data socket (if any) and
@@ -1681,8 +1680,8 @@ FtpStateData::scheduleReadControlReply(int buffered_ok)
         }
 
         typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
-        AsyncCall::Pointer timeoutCall =  asyncCall(9, 5, "FtpStateData::ftpTimeout",
-                                          TimeoutDialer(this,&FtpStateData::ftpTimeout));
+        AsyncCall::Pointer timeoutCall = JobCallback(9, 5,
+                                         TimeoutDialer, this, FtpStateData::ftpTimeout);
 
         commSetTimeout(ctrl.fd, Config.Timeout.read, timeoutCall);
     }
@@ -2565,8 +2564,8 @@ ftpSendPassive(FtpStateData * ftpState)
      * dont acknowledge PASV commands.
      */
     typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  asyncCall(9, 5, "FtpStateData::ftpTimeout",
-                                      TimeoutDialer(ftpState,&FtpStateData::ftpTimeout));
+    AsyncCall::Pointer timeoutCall =  JobCallback(9, 5,
+                                      TimeoutDialer, ftpState, FtpStateData::ftpTimeout);
 
     commSetTimeout(ftpState->data.fd, 15, timeoutCall);
 }
@@ -2764,8 +2763,8 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
     }
 
     typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;
-    AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
-                                    acceptDialer(ftpState, &FtpStateData::ftpAcceptDataConnection));
+    AsyncCall::Pointer acceptCall = JobCallback(11, 5,
+                                    acceptDialer, ftpState, FtpStateData::ftpAcceptDataConnection);
     ftpState->data.listener = new Comm::ListenStateData(fd, acceptCall, false);
 
     if (!ftpState->data.listener || ftpState->data.listener->errcode != 0) {
@@ -2947,8 +2946,8 @@ void FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
 
             /* we are ony accepting once, so need to re-open the listener socket. */
             typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;
-            AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
-                                            acceptDialer(this, &FtpStateData::ftpAcceptDataConnection));
+            AsyncCall::Pointer acceptCall = JobCallback(11, 5,
+                                            acceptDialer, this, FtpStateData::ftpAcceptDataConnection);
             data.listener = new Comm::ListenStateData(data.fd, acceptCall, false);
             return;
         }
@@ -2978,8 +2977,8 @@ void FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
     commSetTimeout(ctrl.fd, -1, nullCall);
 
     typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  asyncCall(9, 5, "FtpStateData::ftpTimeout",
-                                      TimeoutDialer(this,&FtpStateData::ftpTimeout));
+    AsyncCall::Pointer timeoutCall =  JobCallback(9, 5,
+                                      TimeoutDialer, this, FtpStateData::ftpTimeout);
     commSetTimeout(data.fd, Config.Timeout.read, timeoutCall);
 
     /*\todo XXX We should have a flag to track connect state...
@@ -3071,8 +3070,8 @@ void FtpStateData::readStor()
         commSetTimeout(ctrl.fd, -1, nullCall);
 
         typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
-        AsyncCall::Pointer timeoutCall =  asyncCall(9, 5, "FtpStateData::ftpTimeout",
-                                          TimeoutDialer(this,&FtpStateData::ftpTimeout));
+        AsyncCall::Pointer timeoutCall =  JobCallback(9, 5,
+                                          TimeoutDialer, this, FtpStateData::ftpTimeout);
 
         commSetTimeout(data.fd, Config.Timeout.read, timeoutCall);
 
@@ -3083,8 +3082,8 @@ void FtpStateData::readStor()
          * When client code is 150 with a hostname, Accept data channel. */
         debugs(9, 3, "ftpReadStor: accepting data channel");
         typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;
-        AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
-                                        acceptDialer(this, &FtpStateData::ftpAcceptDataConnection));
+        AsyncCall::Pointer acceptCall = JobCallback(11, 5,
+                                        acceptDialer, this, FtpStateData::ftpAcceptDataConnection);
 
         data.listener = new Comm::ListenStateData(data.fd, acceptCall, false);
     } else {
@@ -3219,8 +3218,8 @@ ftpReadList(FtpStateData * ftpState)
     } else if (code == 150) {
         /* Accept data channel */
         typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;
-        AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
-                                        acceptDialer(ftpState, &FtpStateData::ftpAcceptDataConnection));
+        AsyncCall::Pointer acceptCall = JobCallback(11, 5,
+                                        acceptDialer, ftpState, FtpStateData::ftpAcceptDataConnection);
 
         ftpState->data.listener = new Comm::ListenStateData(ftpState->data.fd, acceptCall, false);
         /*
@@ -3231,8 +3230,8 @@ ftpReadList(FtpStateData * ftpState)
         commSetTimeout(ftpState->ctrl.fd, -1, nullCall);
 
         typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
-        AsyncCall::Pointer timeoutCall =  asyncCall(9, 5, "FtpStateData::ftpTimeout",
-                                          TimeoutDialer(ftpState,&FtpStateData::ftpTimeout));
+        AsyncCall::Pointer timeoutCall =  JobCallback(9, 5,
+                                          TimeoutDialer, ftpState,FtpStateData::ftpTimeout);
         commSetTimeout(ftpState->data.fd, Config.Timeout.read, timeoutCall);
         return;
     } else if (!ftpState->flags.tried_nlst && code > 300) {
@@ -3281,8 +3280,8 @@ ftpReadRetr(FtpStateData * ftpState)
     } else if (code == 150) {
         /* Accept data channel */
         typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;
-        AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
-                                        acceptDialer(ftpState, &FtpStateData::ftpAcceptDataConnection));
+        AsyncCall::Pointer acceptCall = JobCallback(11, 5,
+                                        acceptDialer, ftpState, FtpStateData::ftpAcceptDataConnection);
         ftpState->data.listener = new Comm::ListenStateData(ftpState->data.fd, acceptCall, false);
         /*
          * Cancel the timeout on the Control socket and establish one
@@ -3292,8 +3291,8 @@ ftpReadRetr(FtpStateData * ftpState)
         commSetTimeout(ftpState->ctrl.fd, -1, nullCall);
 
         typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
-        AsyncCall::Pointer timeoutCall =  asyncCall(9, 5, "FtpStateData::ftpTimeout",
-                                          TimeoutDialer(ftpState,&FtpStateData::ftpTimeout));
+        AsyncCall::Pointer timeoutCall =  JobCallback(9, 5,
+                                          TimeoutDialer, ftpState,FtpStateData::ftpTimeout);
         commSetTimeout(ftpState->data.fd, Config.Timeout.read, timeoutCall);
     } else if (code >= 300) {
         if (!ftpState->flags.try_slash_hack) {
@@ -3927,8 +3926,7 @@ AsyncCall::Pointer
 FtpStateData::dataCloser()
 {
     typedef CommCbMemFunT<FtpStateData, CommCloseCbParams> Dialer;
-    return asyncCall(9, 5, "FtpStateData::dataClosed",
-                     Dialer(this, &FtpStateData::dataClosed));
+    return JobCallback(9, 5, Dialer, this, FtpStateData::dataClosed);
 }
 
 /// configures the channel with a descriptor and registers a close handler

@@ -12,5 +12,6 @@ libbase_la_SOURCES = \
 	AsyncJobCalls.h \
 	AsyncCallQueue.cc \
 	AsyncCallQueue.h \
+	CbcPointer.h \
 	TextException.cc \
 	TextException.h

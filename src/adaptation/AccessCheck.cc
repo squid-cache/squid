@@ -23,8 +23,9 @@ Adaptation::AccessCheck::Start(Method method, VectPoint vp,
 
     if (Config::Enabled) {
         // the new check will call the callback and delete self, eventually
-        return AsyncStart(new AccessCheck(
-                              ServiceFilter(method, vp, req, rep), cb, cbdata));
+        AsyncJob::Start(new AccessCheck( // we do not store so not a CbcPointer
+                            ServiceFilter(method, vp, req, rep), cb, cbdata));
+        return true;
     }
 
     debugs(83, 3, HERE << "adaptation off, skipping");

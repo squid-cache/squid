@@ -142,8 +142,8 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
      * register the handler to free HTTP state data when the FD closes
      */
     typedef CommCbMemFunT<HttpStateData, CommCloseCbParams> Dialer;
-    closeHandler = asyncCall(9, 5, "httpStateData::httpStateConnClosed",
-                             Dialer(this,&HttpStateData::httpStateConnClosed));
+    closeHandler = JobCallback(9, 5,
+                               Dialer, this, HttpStateData::httpStateConnClosed);
     comm_add_close_handler(fd, closeHandler);
 }
 
@@ -1403,8 +1403,7 @@ HttpStateData::maybeReadVirginBody()
         flags.do_next_read = 0;
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
         entry->delayAwareRead(fd, readBuf->space(read_size), read_size,
-                              asyncCall(11, 5, "HttpStateData::readReply",
-                                        Dialer(this, &HttpStateData::readReply)));
+                              JobCallback(11, 5, Dialer, this,  HttpStateData::readReply));
     }
 }
 
@@ -1447,8 +1446,8 @@ HttpStateData::sendComplete(const CommIoCbParams &io)
      * request bodies.
      */
     typedef CommCbMemFunT<HttpStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  asyncCall(11, 5, "HttpStateData::httpTimeout",
-                                      TimeoutDialer(this,&HttpStateData::httpTimeout));
+    AsyncCall::Pointer timeoutCall =  JobCallback(11, 5,
+                                      TimeoutDialer, this, HttpStateData::httpTimeout);
 
     commSetTimeout(fd, Config.Timeout.read, timeoutCall);
 
@@ -1989,8 +1988,8 @@ HttpStateData::sendRequest()
     }
 
     typedef CommCbMemFunT<HttpStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  asyncCall(11, 5, "HttpStateData::httpTimeout",
-                                      TimeoutDialer(this,&HttpStateData::httpTimeout));
+    AsyncCall::Pointer timeoutCall =  JobCallback(11, 5,
+                                      TimeoutDialer, this, HttpStateData::httpTimeout);
     commSetTimeout(fd, Config.Timeout.lifetime, timeoutCall);
     flags.do_next_read = 1;
     maybeReadVirginBody();
@@ -1999,13 +1998,13 @@ HttpStateData::sendRequest()
         if (!startRequestBodyFlow()) // register to receive body data
             return false;
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-        Dialer dialer(this, &HttpStateData::sentRequestBody);
-        requestSender = asyncCall(11,5, "HttpStateData::sentRequestBody", dialer);
+        requestSender = JobCallback(11,5,
+                                    Dialer, this, HttpStateData::sentRequestBody);
     } else {
         assert(!requestBodySource);
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-        Dialer dialer(this, &HttpStateData::sendComplete);
-        requestSender = asyncCall(11,5, "HttpStateData::SendComplete", dialer);
+        requestSender = JobCallback(11,5,
+                                    Dialer, this,  HttpStateData::sendComplete);
     }
 
     if (_peer != NULL) {
@@ -2099,8 +2098,8 @@ HttpStateData::doneSendingRequestBody()
             }
 
             typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-            Dialer dialer(this, &HttpStateData::sendComplete);
-            AsyncCall::Pointer call= asyncCall(11,5, "HttpStateData::SendComplete", dialer);
+            AsyncCall::Pointer call = JobCallback(11,5,
+                                                  Dialer, this, HttpStateData::sendComplete);
             comm_write(fd, "\r\n", 2, call);
         }
         return;

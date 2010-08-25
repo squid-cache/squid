@@ -242,8 +242,8 @@ ConnStateData::readSomeData()
     makeSpaceAvailable();
 
     typedef CommCbMemFunT<ConnStateData, CommIoCbParams> Dialer;
-    reader = asyncCall(33, 5, "ConnStateData::clientReadRequest",
-                       Dialer(this, &ConnStateData::clientReadRequest));
+    reader = JobCallback(33, 5,
+                         Dialer, this, ConnStateData::clientReadRequest);
     comm_read(fd, in.addressToReadInto(), getAvailableBufferLength(), reader);
 }
 
@@ -1397,8 +1397,8 @@ ConnStateData::readNextRequest()
      * Set the timeout BEFORE calling clientReadRequest().
      */
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  asyncCall(33, 5, "ConnStateData::requestTimeout",
-                                      TimeoutDialer(this, &ConnStateData::requestTimeout));
+    AsyncCall::Pointer timeoutCall = JobCallback(33, 5,
+                                     TimeoutDialer, this, ConnStateData::requestTimeout);
     commSetTimeout(fd, Config.Timeout.persistent_request, timeoutCall);
 
     readSomeData();
@@ -2997,8 +2997,8 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
          * if we don't close() here, we still need a timeout handler!
          */
         typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-        AsyncCall::Pointer timeoutCall =  asyncCall(33, 5, "ConnStateData::requestTimeout",
-                                          TimeoutDialer(this,&ConnStateData::requestTimeout));
+        AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
+                                          TimeoutDialer, this, ConnStateData::requestTimeout);
         commSetTimeout(io.fd, 30, timeoutCall);
 
         /*
@@ -3097,16 +3097,16 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
     connState = connStateCreate(&details->peer, &details->me, newfd, s);
 
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
-    AsyncCall::Pointer call = asyncCall(33, 5, "ConnStateData::connStateClosed",
-                                        Dialer(connState, &ConnStateData::connStateClosed));
+    AsyncCall::Pointer call = JobCallback(33, 5,
+                                          Dialer, connState, ConnStateData::connStateClosed);
     comm_add_close_handler(newfd, call);
 
     if (Config.onoff.log_fqdn)
         fqdncache_gethostbyaddr(details->peer, FQDN_LOOKUP_IF_MISS);
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  asyncCall(33, 5, "ConnStateData::requestTimeout",
-                                      TimeoutDialer(connState,&ConnStateData::requestTimeout));
+    AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
+                                      TimeoutDialer, connState, ConnStateData::requestTimeout);
     commSetTimeout(newfd, Config.Timeout.read, timeoutCall);
 
 #if USE_IDENT
@@ -3308,16 +3308,16 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
     ConnStateData *connState = connStateCreate(details->peer, details->me,
                                newfd, &s->http);
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
-    AsyncCall::Pointer call = asyncCall(33, 5, "ConnStateData::connStateClosed",
-                                        Dialer(connState, &ConnStateData::connStateClosed));
+    AsyncCall::Pointer call = JobCallback(33, 5,
+                                          Dialer, connState, ConnStateData::connStateClosed);
     comm_add_close_handler(newfd, call);
 
     if (Config.onoff.log_fqdn)
         fqdncache_gethostbyaddr(details->peer, FQDN_LOOKUP_IF_MISS);
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  asyncCall(33, 5, "ConnStateData::requestTimeout",
-                                      TimeoutDialer(connState,&ConnStateData::requestTimeout));
+    AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
+                                      TimeoutDialer, connState, ConnStateData::requestTimeout);
     commSetTimeout(newfd, Config.Timeout.request, timeoutCall);
 
 #if USE_IDENT
@@ -3896,8 +3896,8 @@ void ConnStateData::pinConnection(int pinning_fd, HttpRequest *request, struct p
     fd_note(pinning_fd, desc);
 
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
-    pinning.closeHandler = asyncCall(33, 5, "ConnStateData::clientPinnedConnectionClosed",
-                                     Dialer(this, &ConnStateData::clientPinnedConnectionClosed));
+    pinning.closeHandler = JobCallback(33, 5,
+                                       Dialer, this, ConnStateData::clientPinnedConnectionClosed);
     comm_add_close_handler(pinning_fd, pinning.closeHandler);
 
 }

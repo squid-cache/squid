@@ -7,6 +7,9 @@
 
 #include "base/AsyncCall.h"
 
+template <class Cbc>
+class CbcPointer;
+
 /**
  \defgroup AsyncJobAPI Async-Jobs API
  \par
@@ -18,18 +21,20 @@
 // See AsyncJobs.dox for details.
 
 /// \ingroup AsyncJobAPI
+/// Base class for all asynchronous jobs
 class AsyncJob
 {
+public:
+    typedef CbcPointer<AsyncJob> Pointer;
 
 public:
-    /// starts the job (i.e., makes the job asynchronous)
-    static AsyncJob *AsyncStart(AsyncJob *job);
-
     AsyncJob(const char *aTypeName);
     virtual ~AsyncJob();
 
     virtual void *toCbdata() = 0;
-    void noteStart(); // calls virtual start
+
+    /// starts a freshly created job (i.e., makes the job asynchronous)
+    static Pointer Start(AsyncJob *job);
 
 protected:
     // XXX: temporary method to replace "delete this" in jobs-in-transition.
@@ -63,57 +68,5 @@ protected:
 private:
     static unsigned int TheLastId; ///< makes job IDs unique until it wraps
 };
-
-
-/**
- \ingroup AsyncJobAPI
- * This is a base class for all job call dialers. It does all the job
- * dialing logic (debugging, handling exceptions, etc.) except for calling
- * the job method. The latter is not possible without templates and we
- * want to keep this class simple and template-free. Thus, we add a dial()
- * virtual method that the JobCallT template below will implement for us,
- * calling the job.
- */
-class JobDialer: public CallDialer
-{
-public:
-    JobDialer(AsyncJob *aJob);
-    JobDialer(const JobDialer &d);
-    virtual ~JobDialer();
-
-    virtual bool canDial(AsyncCall &call);
-    void dial(AsyncCall &call);
-
-    AsyncJob *job;
-    void *lock; // job's cbdata
-
-protected:
-    virtual void doDial() = 0; // actually calls the job method
-
-private:
-    // not implemented and should not be needed
-    JobDialer &operator =(const JobDialer &);
-};
-
-#include "base/AsyncJobCalls.h"
-
-template <class Dialer>
-bool
-CallJob(int debugSection, int debugLevel, const char *fileName, int fileLine,
-        const char *callName, const Dialer &dialer)
-{
-    AsyncCall::Pointer call = asyncCall(debugSection, debugLevel, callName, dialer);
-    return ScheduleCall(fileName, fileLine, call);
-}
-
-
-#define CallJobHere(debugSection, debugLevel, job, method) \
-    CallJob((debugSection), (debugLevel), __FILE__, __LINE__, #method, \
-        MemFun((job), &method))
-
-#define CallJobHere1(debugSection, debugLevel, job, method, arg1) \
-    CallJob((debugSection), (debugLevel), __FILE__, __LINE__, #method, \
-        MemFun((job), &method, (arg1)))
-
 
 #endif /* SQUID_ASYNC_JOB_H */

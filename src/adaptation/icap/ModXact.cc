@@ -37,10 +37,10 @@ Adaptation::Icap::ModXact::State::State()
     memset(this, 0, sizeof(*this));
 }
 
-Adaptation::Icap::ModXact::ModXact(Adaptation::Initiator *anInitiator, HttpMsg *virginHeader,
+Adaptation::Icap::ModXact::ModXact(HttpMsg *virginHeader,
                                    HttpRequest *virginCause, Adaptation::Icap::ServiceRep::Pointer &aService):
         AsyncJob("Adaptation::Icap::ModXact"),
-        Adaptation::Icap::Xaction("Adaptation::Icap::ModXact", anInitiator, aService),
+        Adaptation::Icap::Xaction("Adaptation::Icap::ModXact", aService),
         virginConsumed(0),
         bodyParser(NULL),
         canStartBypass(false), // too early
@@ -94,8 +94,9 @@ void Adaptation::Icap::ModXact::waitForService()
     Must(!state.serviceWaiting);
     debugs(93, 7, HERE << "will wait for the ICAP service" << status());
     state.serviceWaiting = true;
-    AsyncCall::Pointer call = asyncCall(93,5, "Adaptation::Icap::ModXact::noteServiceReady",
-                                        MemFun(this, &Adaptation::Icap::ModXact::noteServiceReady));
+    typedef NullaryMemFunT<ModXact> Dialer;
+    AsyncCall::Pointer call = JobCallback(93,5,
+                                          Dialer, this, Adaptation::Icap::ModXact::noteServiceReady);
     service().callWhenReady(call);
 }
 
@@ -1792,9 +1793,9 @@ bool Adaptation::Icap::ModXact::fillVirginHttpHeader(MemBuf &mb) const
 
 /* Adaptation::Icap::ModXactLauncher */
 
-Adaptation::Icap::ModXactLauncher::ModXactLauncher(Adaptation::Initiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, Adaptation::ServicePointer aService):
+Adaptation::Icap::ModXactLauncher::ModXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, Adaptation::ServicePointer aService):
         AsyncJob("Adaptation::Icap::ModXactLauncher"),
-        Adaptation::Icap::Launcher("Adaptation::Icap::ModXactLauncher", anInitiator, aService)
+        Adaptation::Icap::Launcher("Adaptation::Icap::ModXactLauncher", aService)
 {
     virgin.setHeader(virginHeader);
     virgin.setCause(virginCause);
@@ -1806,7 +1807,7 @@ Adaptation::Icap::Xaction *Adaptation::Icap::ModXactLauncher::createXaction()
     Adaptation::Icap::ServiceRep::Pointer s =
         dynamic_cast<Adaptation::Icap::ServiceRep*>(theService.getRaw());
     Must(s != NULL);
-    return new Adaptation::Icap::ModXact(this, virgin.header, virgin.cause, s);
+    return new Adaptation::Icap::ModXact(virgin.header, virgin.cause, s);
 }
 
 void Adaptation::Icap::ModXactLauncher::swanSong()
