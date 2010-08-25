@@ -2524,7 +2524,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     if (request->header.has(HDR_EXPECT)) {
         int ignore = 0;
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
         if (Config.onoff.ignore_expect_100) {
             String expect = request->header.getList(HDR_EXPECT);
             if (expect.caseCmp("100-continue") == 0)

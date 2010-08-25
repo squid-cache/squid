@@ -63,6 +63,6 @@ TrieNode::add
     }
 }
 
-#ifndef _USE_INLINE_
+#if !_USE_INLINE_
 #include "TrieNode.cci"
 #endif

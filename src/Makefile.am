@@ -726,8 +726,8 @@ nodist_DiskIO_DiskDaemon_diskd_SOURCES = time.cc
 DiskIO_DiskDaemon_diskd_LDADD = $(COMPAT_LIB) $(XTRA_LIBS)
 
 
-DEFAULT_HTTP_PORT	= $(CACHE_HTTP_PORT)
-DEFAULT_ICP_PORT	= $(CACHE_ICP_PORT)
+DEFAULT_HTTP_PORT	= 3128
+DEFAULT_ICP_PORT	= 3130
 DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_DIR	= $(sysconfdir)
 DEFAULT_CONFIG_FILE     = $(DEFAULT_CONFIG_DIR)/squid.conf
@@ -737,7 +737,6 @@ DEFAULT_LOG_PREFIX	= $(DEFAULT_LOG_DIR)
 DEFAULT_CACHE_LOG       = $(DEFAULT_LOG_PREFIX)/cache.log
 DEFAULT_ACCESS_LOG      = $(DEFAULT_LOG_PREFIX)/access.log
 DEFAULT_STORE_LOG       = $(DEFAULT_LOG_PREFIX)/store.log
-DEFAULT_PID_FILE        = $(DEFAULT_PIDFILE)
 DEFAULT_NETDB_FILE      = $(DEFAULT_LOG_PREFIX)/netdb.state
 DEFAULT_SWAP_DIR        = $(localstatedir)/cache
 DEFAULT_PINGER		= $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`
@@ -746,7 +745,6 @@ DEFAULT_LOGFILED	= $(libexecdir)/`echo log_file_daemon | sed '$(transform);s/$$/
 DEFAULT_DISKD		= $(libexecdir)/`echo diskd | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_ICON_DIR	= $(datadir)/icons
 DEFAULT_ERROR_DIR	= $(datadir)/errors
-DEFAULT_HOSTS		= $(OPT_DEFAULT_HOSTS)
 
 # Make location configure settings available to the code
 DEFS += -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" -DDEFAULT_SQUID_DATA_DIR=\"$(datadir)\" -DDEFAULT_SQUID_CONFIG_DIR=\"$(sysconfdir)\"

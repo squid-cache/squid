@@ -144,11 +144,11 @@ sigChild( int signo )
             sprintf( line, "child (pid=%ld) died on signal %d%s\n%c",
                      (long) pid, WTERMSIG(status),
 #ifdef WCOREDUMP
-                     WCOREDUMP(status) ? " (core generated)" : "",
+                      WCOREDUMP(status) ? " (core generated)" : "",
 #else
-                     "",
+                      "",
 #endif
-                     0 );
+                      0 );
         } else {
             sprintf( line, "detected dead child (pid=%ld), status %d\n%c",
                      (long) pid, status, 0 );

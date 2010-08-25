@@ -350,13 +350,13 @@ HttpStateData::cacheableReply()
     HttpHeader const *hdr = &rep->header;
     const int cc_mask = (rep->cache_control) ? rep->cache_control->mask : 0;
     const char *v;
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
 
     const refresh_t *R = NULL;
 
     /* This strange looking define first looks up the refresh pattern
      * and then checks if the specified flag is set. The main purpose
-     * of this is to simplify the refresh pattern lookup and HTTP_VIOLATIONS
+     * of this is to simplify the refresh pattern lookup and USE_HTTP_VIOLATIONS
      * condition
      */
 #define REFRESH_OVERRIDE(flag) \
@@ -875,7 +875,7 @@ HttpStateData::haveParsedReplyHeaders()
 
     case -1:
 
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
         if (Config.negativeTtl > 0)
             entry->cacheNegatively();
         else
@@ -2080,7 +2080,7 @@ HttpStateData::doneSendingRequestBody()
 {
     debugs(11,5, HERE << "doneSendingRequestBody: FD " << fd);
 
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
     if (Config.accessList.brokenPosts) {
         ACLFilledChecklist ch(Config.accessList.brokenPosts, request, NULL);
         if (!ch.fastCheck()) {
@@ -2106,7 +2106,7 @@ HttpStateData::doneSendingRequestBody()
         return;
     }
     debugs(11, 5, "doneSendingRequestBody: No brokenPosts list");
-#endif /* HTTP_VIOLATIONS */
+#endif /* USE_HTTP_VIOLATIONS */
 
     CommIoCbParams io(NULL);
     io.fd=fd;

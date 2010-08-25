@@ -153,7 +153,7 @@ struct SquidConfig {
     int64_t readAheadGap;
     RemovalPolicySettings *replPolicy;
     RemovalPolicySettings *memPolicy;
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
     time_t negativeTtl;
 #endif
     time_t negativeDnsTtl;
@@ -390,7 +390,7 @@ struct SquidConfig {
         int test_reachability;
         int half_closed_clients;
         int refresh_all_ims;
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
 
         int reload_into_ims;
         int ignore_expect_100;
@@ -460,7 +460,7 @@ struct SquidConfig {
 
         acl_access *snmp;
 #endif
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
         acl_access *brokenPosts;
 #endif
         acl_access *redirector;
@@ -1004,7 +1004,7 @@ struct _iostats {
 
 struct request_flags {
     request_flags(): range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),accelerated(0),ignore_cc(0),intercepted(0),spoof_client_ip(0),internal(0),internalclient(0),must_keepalive(0),destinationIPLookedUp_(0) {
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
         nocache_hack = 0;
 #endif
 #if FOLLOW_X_FORWARDED_FOR
@@ -1025,7 +1025,7 @@ unsigned int proxying:
     unsigned int refresh:1;
     unsigned int redirected:1;
     unsigned int need_validation:1;
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
     unsigned int nocache_hack:1;	/* for changing/ignoring no-cache requests */
 #endif
     unsigned int accelerated:1;
@@ -1087,7 +1087,7 @@ struct _refresh_t {
         unsigned int icase:1;
         unsigned int refresh_ims:1;
         unsigned int store_stale:1;
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
         unsigned int override_expire:1;
         unsigned int override_lastmod:1;
         unsigned int reload_into_ims:1;
