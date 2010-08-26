@@ -123,7 +123,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Set-Cookie", HDR_SET_COOKIE, ftStr},
     {"TE", HDR_TE, ftStr},
     {"Title", HDR_TITLE, ftStr},
-    {"Trailers", HDR_TRAILERS, ftStr},
+    {"Trailer", HDR_TRAILER, ftStr},
     {"Transfer-Encoding", HDR_TRANSFER_ENCODING, ftStr},
     {"Translate", HDR_TRANSLATE, ftStr},	/* for now. may need to crop */
     {"Unless-Modified-Since", HDR_UNLESS_MODIFIED_SINCE, ftStr},  /* for now ignore. may need to crop */
@@ -249,7 +249,7 @@ static http_hdr_type RequestHeadersArr[] = {
 static HttpHeaderMask HopByHopHeadersMask;
 static http_hdr_type HopByHopHeadersArr[] = {
     HDR_CONNECTION, HDR_KEEP_ALIVE, /*HDR_PROXY_AUTHENTICATE,*/ HDR_PROXY_AUTHORIZATION,
-    HDR_TE, HDR_TRAILERS, HDR_TRANSFER_ENCODING, HDR_UPGRADE, HDR_PROXY_CONNECTION
+    HDR_TE, HDR_TRAILER, HDR_TRANSFER_ENCODING, HDR_UPGRADE, HDR_PROXY_CONNECTION
 };
 
 /* header accounting */
