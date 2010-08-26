@@ -975,6 +975,11 @@ clientReplyContext::checkTransferDone()
     if (http->flags.done_copying)
         return 1;
 
+    if (http->request->flags.chunked_reply && !flags.complete) {
+        // last-chunk was not sent
+        return 0;
+    }
+
     /*
      * Handle STORE_OK objects.
      * objectLen(entry) will be set proprely.
@@ -1119,7 +1124,9 @@ clientReplyContext::replyStatus()
         debugs(88, 5, "clientReplyStatus: transfer is DONE");
         /* Ok we're finished, but how? */
 
-        if (http->storeEntry()->getReply()->bodySize(http->request->method) < 0) {
+        const int64_t expectedBodySize =
+            http->storeEntry()->getReply()->bodySize(http->request->method);
+        if (!http->request->flags.proxy_keepalive && expectedBodySize < 0) {
             debugs(88, 5, "clientReplyStatus: closing, content_length < 0");
             return STREAM_FAILED;
         }
@@ -1129,7 +1136,7 @@ clientReplyContext::replyStatus()
             return STREAM_FAILED;
         }
 
-        if (!http->gotEnough()) {
+        if (expectedBodySize >= 0 && !http->gotEnough()) {
             debugs(88, 5, "clientReplyStatus: client didn't get all it expected");
             return STREAM_UNPLANNED_COMPLETE;
         }
@@ -1364,6 +1371,9 @@ clientReplyContext::buildReplyHeader()
 
 #endif
 
+    const bool maySendChunkedReply = !request->multipartRangeRequest() &&
+        (request->http_ver >= HttpVersion(1, 1));
+
     /* Check whether we should send keep-alive */
     if (!Config.onoff.error_pconns && reply->sline.status >= 400 && !request->flags.must_keepalive) {
         debugs(33, 3, "clientBuildReplyHeader: Error, don't keep-alive");
@@ -1377,7 +1387,7 @@ clientReplyContext::buildReplyHeader()
     } else if (request->flags.connection_auth && !reply->keep_alive) {
         debugs(33, 2, "clientBuildReplyHeader: Connection oriented auth but server side non-persistent");
         request->flags.proxy_keepalive = 0;
-    } else if (reply->bodySize(request->method) < 0) {
+    } else if (reply->bodySize(request->method) < 0 && !maySendChunkedReply) {
         debugs(88, 3, "clientBuildReplyHeader: can't keep-alive, unknown body size" );
         request->flags.proxy_keepalive = 0;
     } else if (fdUsageHigh()&& !request->flags.must_keepalive) {
@@ -1385,6 +1395,14 @@ clientReplyContext::buildReplyHeader()
         request->flags.proxy_keepalive = 0;
     }
 
+    // Decide if we send chunked reply
+    if (maySendChunkedReply &&
+        request->flags.proxy_keepalive &&
+        reply->bodySize(request->method) < 0) {
+        debugs(88, 3, "clientBuildReplyHeader: chunked reply");
+        request->flags.chunked_reply = 1;
+        hdr->putStr(HDR_TRANSFER_ENCODING, "chunked");
+    }
 
     /* Append VIA */
     if (Config.onoff.via) {
@@ -1727,6 +1745,7 @@ clientReplyContext::sendStreamError(StoreIOBuffer const &result)
     debugs(88, 5, "clientReplyContext::sendStreamError: A stream error has occured, marking as complete and sending no data.");
     StoreIOBuffer localTempBuffer;
     flags.complete = 1;
+    http->request->flags.stream_error = 1;
     localTempBuffer.flags.error = result.flags.error;
     clientStreamCallback((clientStreamNode*)http->client_stream.head->data, http, NULL,
                          localTempBuffer);
