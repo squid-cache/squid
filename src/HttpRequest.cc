@@ -498,7 +498,7 @@ HttpRequest::expectingBody(const HttpRequestMethod& unused, int64_t& theSize) co
         expectBody = Config.onoff.request_entities ? true : false;
     else if (method == METHOD_PUT || method == METHOD_POST)
         expectBody = true;
-    else if (header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ','))
+    else if (header.chunked())
         expectBody = true;
     else if (content_length >= 0)
         expectBody = true;
@@ -506,7 +506,7 @@ HttpRequest::expectingBody(const HttpRequestMethod& unused, int64_t& theSize) co
         expectBody = false;
 
     if (expectBody) {
-        if (header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ','))
+        if (header.chunked())
             theSize = -1;
         else if (content_length >= 0)
             theSize = content_length;
