@@ -2429,7 +2429,7 @@ ftpReadEPSV(FtpStateData* ftpState)
     AsyncCall::Pointer call = commCbCall(9,3, "FtpStateData::ftpPasvCallback", CommConnectCbPtrFun(FtpStateData::ftpPasvCallback, ftpState));
     Comm::ConnOpener *cs = new Comm::ConnOpener(conn, call, Config.Timeout.connect);
     cs->setHost(ftpState->data.host);
-    AsyncJob::AsyncStart(cs);
+    AsyncJob::Start(cs);
 }
 
 /** \ingroup ServerProtocolFTPInternal
@@ -2676,7 +2676,7 @@ ftpReadPasv(FtpStateData * ftpState)
     AsyncCall::Pointer call = commCbCall(9,3, "FtpStateData::ftpPasvCallback", CommConnectCbPtrFun(FtpStateData::ftpPasvCallback, ftpState));
     Comm::ConnOpener *cs = new Comm::ConnOpener(conn, call, Config.Timeout.connect);
     cs->setHost(ftpState->data.host);
-    AsyncJob::AsyncStart(cs);
+    AsyncJob::Start(cs);
 }
 
 void
@@ -2742,7 +2742,7 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
         if (!fallback)
             conn->local.SetPort(comm_local_port(conn->fd));
         ftpState->data.host = NULL;
-        AsyncJob::AsyncStart(ftpState->data.listener);
+        AsyncJob::Start(ftpState->data.listener);
     }
 
     ftpState->data.listen_conn = conn;
@@ -2909,7 +2909,7 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
             AsyncCall::Pointer acceptCall = JobCallback(11, 5, acceptDialer, this, FtpStateData::ftpAcceptDataConnection);
             data.listener = new Comm::ConnAcceptor(data.listen_conn, false, data.host);
             data.listener->subscribe(acceptCall);
-            AsyncJob::AsyncStart(data.listener);
+            AsyncJob::Start(data.listener);
             return;
         }
     }
@@ -3016,7 +3016,7 @@ void FtpStateData::readStor()
 
         data.listener = new Comm::ConnAcceptor(data.conn, false, data.host);
         data.listener->subscribe(acceptCall);
-        AsyncJob::AsyncStart(data.listener);
+        AsyncJob::Start(data.listener);
     } else {
         debugs(9, DBG_IMPORTANT, HERE << "Unexpected reply code "<< std::setfill('0') << std::setw(3) << code);
         ftpFail(this);
@@ -3152,7 +3152,7 @@ ftpReadList(FtpStateData * ftpState)
 
         ftpState->data.listener = new Comm::ConnAcceptor(ftpState->data.conn, false, ftpState->data.host);
         ftpState->data.listener->subscribe(acceptCall);
-        AsyncJob::AsyncStart(ftpState->data.listener);
+        AsyncJob::Start(ftpState->data.listener);
         return;
     } else if (!ftpState->flags.tried_nlst && code > 300) {
         ftpSendNlst(ftpState);
@@ -3199,7 +3199,7 @@ ftpReadRetr(FtpStateData * ftpState)
                                         acceptDialer, ftpState, FtpStateData::ftpAcceptDataConnection);
         ftpState->data.listener = new Comm::ConnAcceptor(ftpState->data.conn, false, ftpState->data.host);
         ftpState->data.listener->subscribe(acceptCall);
-        AsyncJob::AsyncStart(ftpState->data.listener);
+        AsyncJob::Start(ftpState->data.listener);
     } else if (code >= 300) {
         if (!ftpState->flags.try_slash_hack) {
             /* Try this as a directory missing trailing slash... */

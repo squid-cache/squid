@@ -26,7 +26,10 @@ class PconnPool;
 /// \ingroup PConnAPI
 #define PCONN_HIST_SZ (1<<16)
 
-/// \ingroup PConnAPI
+/** \ingroup PConnAPI
+ * A list of connections currently open to a particular destination end-point.
+ * We currently define the end-point by the FQDN it is serving.
+ */
 class IdleConnList
 {
 public:
@@ -65,7 +68,10 @@ class IdleConnLimit;
 /* for hash_table */
 #include "hash.h"
 
-/// \ingroup PConnAPI
+/** \ingroup PConnAPI
+ * A pool of persistent connections for a particular service type.
+ * HTTP servers being one such pool type, ICAP services another etc.
+ */
 class PconnPool
 {
 
@@ -95,7 +101,9 @@ private:
 class StoreEntry;
 class PconnPool;
 
-/// \ingroup PConnAPI
+/** \ingroup PConnAPI
+ * The global registry of persistent connection pools.
+ */
 class PconnModule
 {
 

@@ -3491,7 +3491,7 @@ clientHttpConnectionOpened(int fd, int, http_port_list *s)
 
     s->listener = new Comm::ConnAcceptor(fd, true);
     s->listener->subscribe(5,5, "httpAccept", new CommAcceptCbPtrFun(httpAccept, s));
-    AsyncJob::AsyncStart(s->listener);
+    AsyncJob::Start(s->listener);
 
     debugs(1, 1, "Accepting " <<
            (s->intercepted ? " intercepted" : "") <<
@@ -3544,7 +3544,7 @@ clientHttpsConnectionOpened(int fd, int, http_port_list *s)
 
     s->listener = new Comm::ConnAcceptor(fd, true);
     s->listener->subscribe(5,5, "httpsAccept", new CommAcceptCbPtrFun(httpsAccept, s));
-    AsyncJob::AsyncStart(s->listener);
+    AsyncJob::Start(s->listener);
 
     debugs(1, 1, "Accepting HTTPS connections at " << s->s << ", FD " << fd << ".");
 

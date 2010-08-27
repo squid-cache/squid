@@ -527,6 +527,9 @@ tunnelConnectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, 
     else
         hierarchyNote(&tunnelState->request->hier, conn->peerType, tunnelState->getHost());
 
+    // TODO: merge this into hierarchyNote with a conn parameter instead of peerType
+    request->hier.peer_local_port = conn->local.GetPort(); // for %<lp logging
+
     if (status != COMM_OK) {
         /* At this point only the TCP handshake has failed. no data has been passed.
          * we are allowed to re-try the TCP-level connection to alternate IPs for CONNECT.
@@ -537,7 +540,7 @@ tunnelConnectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, 
             AsyncCall::Pointer call = commCbCall(26,3, "tunnelConnectDone", CommConnectCbPtrFun(tunnelConnectDone, tunnelState));
             Comm::ConnOpener *cs = new Comm::ConnOpener(tunnelState->serverDestinations[0], call, Config.Timeout.connect);
             cs->setHost(tunnelState->url);
-            AsyncJob::AsyncStart(cs);
+            AsyncJob::Start(cs);
         } else {
             err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
             *tunnelState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
@@ -610,8 +613,6 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     statCounter.server.all.requests++;
     statCounter.server.other.requests++;
 
-    request->hier.peer_local_port = comm_local_port(sock); // for %<lp logging
-
     tunnelState = new TunnelStateData;
 #if DELAY_POOLS
     tunnelState->server.setDelayId(DelayId::DelayClient(http));
@@ -668,11 +669,10 @@ static void
 tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
-    HttpRequest *request = tunnelState->request;
 
     if (peer_paths == NULL || peer_paths->size() < 1) {
         ErrorState *err;
-        err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, request);
+        err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, tunnelState->request);
         *tunnelState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
         err->callback = tunnelErrorComplete;
         err->callback_data = tunnelState;
@@ -683,7 +683,7 @@ tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, void *data)
     AsyncCall::Pointer call = commCbCall(26,3, "tunnelConnectDone", CommConnectCbPtrFun(tunnelConnectDone, tunnelState));
     Comm::ConnOpener *cs = new Comm::ConnOpener(tunnelState->serverDestinations[0], call, Config.Timeout.connect);
     cs->setHost(tunnelState->url);
-    AsyncJob::AsyncStart(cs);
+    AsyncJob::Start(cs);
 }
 
 CBDATA_CLASS_INIT(TunnelStateData);

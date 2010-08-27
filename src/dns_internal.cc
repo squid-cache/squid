@@ -757,7 +757,7 @@ idnsInitVC(int ns)
 
     Comm::ConnOpener *cs = new Comm::ConnOpener(conn, call, Config.Timeout.connect);
     cs->setHost("DNS TCP Socket");
-    AsyncJob::AsyncStart(cs);
+    AsyncJob::Start(cs);
 }
 
 static void
