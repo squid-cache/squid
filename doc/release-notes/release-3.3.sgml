@@ -65,9 +65,7 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
-	<tag>logformat</tag>
-	<p><em>%&gt;bs</em> Number of HTTP-equivalent message body bytes received from the next hop.
-	<p><em>icap::%&gt;bs</em> Number of message body bytes received from the ICAP server.
+
 </descrip>
 
 
