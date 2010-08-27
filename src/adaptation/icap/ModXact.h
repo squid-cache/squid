@@ -272,7 +272,16 @@ private:
     bool canStartBypass; // enables bypass of transaction failures
     bool protectGroupBypass; // protects ServiceGroup-wide bypass of failures
 
-    uint64_t replyBodySize; ///< dechunked ICAP reply body size
+    /**
+     * size of HTTP header in ICAP reply or -1 if there is not any encapsulated
+     * message data
+     */
+    int64_t replyHttpHeaderSize;
+    /**
+     * size of dechunked HTTP body in ICAP reply or -1 if there is not any
+     * encapsulated message data
+     */
+    int64_t replyHttpBodySize;
 
     int adaptHistoryId; ///< adaptation history slot reservation
 

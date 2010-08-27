@@ -195,7 +195,7 @@ public:
     class IcapLogEntry
     {
     public:
-        IcapLogEntry():request(NULL),reply(NULL),outcome(Adaptation::Icap::xoUnknown),trTime(0),ioTime(0),resStatus(HTTP_STATUS_NONE) {}
+        IcapLogEntry():bodyBytesRead(-1),request(NULL),reply(NULL),outcome(Adaptation::Icap::xoUnknown),trTime(0),ioTime(0),resStatus(HTTP_STATUS_NONE) {}
 
         Ip::Address hostAddr; ///< ICAP server IP address
         String serviceName;        ///< ICAP service name
@@ -203,6 +203,11 @@ public:
         Adaptation::Icap::ICAP::Method reqMethod; ///< ICAP request method
         int64_t bytesSent;       ///< number of bytes sent to ICAP server so far
         int64_t bytesRead;       ///< number of bytes read from ICAP server so far
+        /**
+         * number of ICAP body bytes read from ICAP server or -1 for no encapsulated
+         * message data in ICAP reply (eg 204 responses)
+         */
+        int64_t bodyBytesRead;
         HttpRequest* request;    ///< ICAP request
         HttpReply* reply;        ///< ICAP reply
 

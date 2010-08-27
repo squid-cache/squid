@@ -379,6 +379,7 @@ typedef enum {
     LFT_HTTP_SENT_STATUS_CODE,
     LFT_HTTP_RECEIVED_STATUS_CODE,
     /*LFT_HTTP_STATUS, */
+    LFT_HTTP_BODY_BYTES_READ,
 
     LFT_SQUID_STATUS,
     /*LFT_SQUID_ERROR, */
@@ -430,6 +431,7 @@ typedef enum {
     LFT_ICAP_REQUEST_METHOD,
     LFT_ICAP_BYTES_SENT,
     LFT_ICAP_BYTES_READ,
+    LFT_ICAP_BODY_BYTES_READ,
 
     LFT_ICAP_REQ_HEADER,
     LFT_ICAP_REQ_HEADER_ELEM,
@@ -536,6 +538,7 @@ struct logformat_token_table_entry logformat_token_table[] = {
     {">Hs", LFT_HTTP_SENT_STATUS_CODE},
     {"<Hs", LFT_HTTP_RECEIVED_STATUS_CODE},
     /*{ "Ht", LFT_HTTP_STATUS }, */
+    {"<bs", LFT_HTTP_BODY_BYTES_READ},
 
     {"Ss", LFT_SQUID_STATUS},
     /*{ "Se", LFT_SQUID_ERROR }, */
@@ -586,6 +589,7 @@ struct logformat_token_table_entry logformat_token_table[] = {
     {"icap::rm",  LFT_ICAP_REQUEST_METHOD},
     {"icap::>st",  LFT_ICAP_BYTES_SENT},
     {"icap::<st",  LFT_ICAP_BYTES_READ},
+    {"icap::<bs", LFT_ICAP_BODY_BYTES_READ},
 
     {"icap::>h",  LFT_ICAP_REQ_HEADER},
     {"icap::<h",  LFT_ICAP_REP_HEADER},
@@ -883,6 +887,15 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             dooff = 1;
             break;
 
+        case LFT_ICAP_BODY_BYTES_READ:
+            if (al->icap.bodyBytesRead >= 0) {
+                outoff = al->icap.bodyBytesRead;
+                dooff = 1;
+            }
+            // else if icap.bodyBytesRead < 0, we do not have any http data,
+            // so just print a "-" (204 responses etc)
+            break;
+
         case LFT_ICAP_REQ_HEADER:
             if (NULL != al->icap.request) {
                 sb = al->icap.request->header.getByName(fmt->data.header.header);
@@ -1089,6 +1102,15 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
              *     quote = 1;
              *     break;
              */
+        case LFT_HTTP_BODY_BYTES_READ:
+            if (al->hier.bodyBytesRead >= 0) {
+                outoff = al->hier.bodyBytesRead;
+                dooff = 1;
+            }
+            // else if hier.bodyBytesRead < 0 we did not have any data exchange with
+            // a peer server so just print a "-" (eg requests served from cache,
+            // or internal error messages).
+            break;
 
         case LFT_SQUID_STATUS:
             if (al->http.timedout || al->http.aborted) {
@@ -2093,7 +2115,8 @@ HierarchyLogEntry::HierarchyLogEntry() :
         peer_reply_status(HTTP_STATUS_NONE),
         peer_response_time(-1),
         total_response_time(-1),
-        peer_local_port(0)
+        peer_local_port(0),
+        bodyBytesRead(-1)
 {
     memset(host, '\0', SQUIDHOSTNAMELEN);
     memset(cd_host, '\0', SQUIDHOSTNAMELEN);

@@ -171,6 +171,8 @@ protected:
     void storeReplyBody(const char *buf, ssize_t len);
     size_t replyBodySpace(const MemBuf &readBuf, const size_t minSpace) const;
 
+    void adjustBodyBytesRead(const int64_t delta);
+
     // These should be private
     int64_t currentOffset;	/**< Our current offset in the StoreEntry */
     MemBuf *responseBodyBuffer;	/**< Data temporarily buffered for ICAP */

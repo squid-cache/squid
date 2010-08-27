@@ -386,6 +386,8 @@ This section gives a thorough account of those changes in three categories:
 	<p>Deprecated <em>children=N</em> in favor of <em>children-max=N</em>.
 
 	<tag>logformat</tag>
+        <p><em>%&gt;bs</em> Number of HTTP-equivalent message body bytes received from the next hop.
+        <p><em>icap::%&gt;bs</em> Number of message body bytes received from the ICAP server.
 	<p><em>%&gt;lp</em> Local TCP port used by transactions with http servers.
 	<p><em>%sn</em> Unique sequence number per log line. Ported from 2.7
 	<p><em>%&lt;eui</em> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)

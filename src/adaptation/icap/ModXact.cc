@@ -45,7 +45,8 @@ Adaptation::Icap::ModXact::ModXact(HttpMsg *virginHeader,
         bodyParser(NULL),
         canStartBypass(false), // too early
         protectGroupBypass(true),
-        replyBodySize(0),
+        replyHttpHeaderSize(-1),
+        replyHttpBodySize(-1),
         adaptHistoryId(-1)
 {
     assert(virginHeader);
@@ -965,10 +966,14 @@ void Adaptation::Icap::ModXact::handleUnknownScode()
 void Adaptation::Icap::ModXact::parseHttpHead()
 {
     if (gotEncapsulated("res-hdr") || gotEncapsulated("req-hdr")) {
+        replyHttpHeaderSize = 0;
         maybeAllocateHttpMsg();
 
         if (!parseHead(adapted.header))
             return; // need more header data
+
+        if (adapted.header)
+            replyHttpHeaderSize = adapted.header->hdr_sz;
 
         if (dynamic_cast<HttpRequest*>(adapted.header)) {
             const HttpRequest *oldR = dynamic_cast<const HttpRequest*>(virgin.header);
@@ -1017,6 +1022,7 @@ void Adaptation::Icap::ModXact::decideOnParsingBody()
     if (gotEncapsulated("res-body") || gotEncapsulated("req-body")) {
         debugs(93, 5, HERE << "expecting a body");
         state.parsing = State::psBody;
+        replyHttpBodySize = 0;
         bodyParser = new ChunkedCodingParser;
         makeAdaptedBodyPipe("adapted response from the ICAP server");
         Must(state.sending == State::sendingAdapted);
@@ -1041,7 +1047,7 @@ void Adaptation::Icap::ModXact::parseBody()
 
     debugs(93, 5, HERE << "have " << readBuf.contentSize() << " body bytes after " <<
            "parse; parsed all: " << parsed);
-    replyBodySize += adapted.body_pipe->buf().contentSize();
+    replyHttpBodySize += adapted.body_pipe->buf().contentSize();
 
     // TODO: expose BodyPipe::putSize() to make this check simpler and clearer
     // TODO: do we really need this if we disable when sending headers?
@@ -1196,11 +1202,21 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
 #endif
     al.cache.code = h->logType;
     al.cache.requestSize = h->req_sz;
+
+    // leave al.icap.bodyBytesRead negative if no body
+    if (replyHttpHeaderSize >= 0 || replyHttpBodySize >= 0) {
+        const int64_t zero = 0; // to make max() argument types the same
+        al.icap.bodyBytesRead =
+            max(zero, replyHttpHeaderSize) + max(zero, replyHttpBodySize);
+    }
+
     if (reply_) {
         al.http.code = reply_->sline.status;
         al.http.content_type = reply_->content_type.termedBuf();
-        al.cache.replySize = replyBodySize + reply_->hdr_sz;
-        al.cache.highOffset = replyBodySize;
+        if (replyHttpBodySize >= 0) {
+            al.cache.replySize = replyHttpBodySize + reply_->hdr_sz;
+            al.cache.highOffset = replyHttpBodySize;
+        }
         //don't set al.cache.objectSize because it hasn't exist yet
 
         Packer p;
