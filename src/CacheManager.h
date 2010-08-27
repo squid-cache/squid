@@ -126,6 +126,12 @@ protected:
         virtual void run (StoreEntry *sentry);
         ReconfigureAction();
     };
+    class RotateAction : public CacheManagerAction
+    {
+    public:
+        virtual void run (StoreEntry *sentry);
+        RotateAction();
+    };
     class OfflineToggleAction : public CacheManagerAction
     {
     public:

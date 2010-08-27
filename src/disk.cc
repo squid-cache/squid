@@ -54,6 +54,12 @@ disk_init(void)
     (void) 0;
 }
 
+/* hack needed on SunStudio to avoid linkage convention mismatch */
+static void cxx_xfree(void *ptr)
+{
+    xfree(ptr);
+}
+
 /*
  * opens a disk file specified by 'path'.  This function always
  * blocks!  There is no callback.
@@ -188,7 +194,7 @@ diskCombineWrites(struct _fde_disk *fdd)
 
         wq->next = NULL;
 
-        wq->free_func = xfree;
+        wq->free_func = cxx_xfree;
 
         do {
             q = fdd->write_q;

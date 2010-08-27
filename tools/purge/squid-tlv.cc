@@ -39,11 +39,9 @@
 #pragma implementation
 #endif
 
-#include <assert.h>
+#include "config.h"
+//#include <assert.h>
 #include "squid-tlv.hh"
-
-static const char* RCS_ID =
-    "$Id$";
 
 SquidTLV::SquidTLV( SquidMetaType _type, size_t _size, void* _data )
         :next(0),size(_size)

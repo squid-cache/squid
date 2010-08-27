@@ -260,52 +260,6 @@ Example for verbose output in print-mode:
 /cache1/00/00/000000B7   0      406 7CFCB1D319F158ADC9CFD991BB8F6DCE 397d449b 39bf677b ffffffff 3820abfc 0460     1  http://www.netscape.com/images/nc_vera_tile.gif
 
 
-hexd
-====
-
-The hexd tool let's you conveniently hex dump a file both, in hex char and
-display char columns. Hexd only assumes that characters 0-31,127-159,255
-are not printable.
-
-
-$ ./hexd /cache1/00/00/000000B7 | less -r
-
-00000000: 03 00 00 00 6D 03 00 00-00 10 7C FC B1 D3 19 F1  ....m.....|???.?
-00000010: 58 AD C9 CF D9 91 BB 8F-6D CE 05 00 00 00 18 39  X????.?.m?.....9
-00000020: 7D 44 9B 39 BF 67 7B FF-FF FF FF 38 20 AB FC 00  }D.9?g{....8 ??.
-00000030: 00 00 00 00 01 04 60 04-00 00 00 30 68 74 74 70  ......`....0http
-00000040: 3A 2F 2F 77 77 77 2E 6E-65 74 73 63 61 70 65 2E  ://www.netscape.
-00000050: 63 6F 6D 2F 69 6D 61 67-65 73 2F 6E 63 5F 76 65  com/images/nc_ve
-00000060: 72 61 5F 74 69 6C 65 2E-67 69 66 00 08 48 54 54  ra_tile.gif..HTT
-00000070: 50 2F 31 2E 30 20 32 30-30 20 4F 4B 0D 0A 53 65  P/1.0 200 OK..Se
-00000080: 72 76 65 72 3A 20 4E 65-74 73 63 61 70 65 2D 45  rver: Netscape-E
-00000090: 6E 74 65 72 70 72 69 73-65 2F 33 2E 36 0D 0A 44  nterprise/3.6..D
-000000A0: 61 74 65 3A 20 54 75 65-2C 20 32 35 20 4A 75 6C  ate: Tue, 25 Jul
-000000B0: 20 32 30 30 30 20 30 37-3A 34 31 3A 31 35 20 47   2000 07:41:15 G
-000000C0: 4D 54 0D 0A 43 6F 6E 74-65 6E 74 2D 54 79 70 65  MT..Content-Type
-000000D0: 3A 20 69 6D 61 67 65 2F-67 69 66 0D 0A 4C 61 73  : image/gif..Las
-000000E0: 74 2D 4D 6F 64 69 66 69-65 64 3A 20 57 65 64 2C  t-Modified: Wed,
-000000F0: 20 30 33 20 4E 6F 76 20-31 39 39 39 20 32 31 3A   03 Nov 1999 21:
-00000100: 34 31 3A 31 36 20 47 4D-54 0D 0A 43 6F 6E 74 65  41:16 GMT..Conte
-00000110: 6E 74 2D 4C 65 6E 67 74-68 3A 20 36 37 0D 0A 41  nt-Length: 67..A
-00000120: 63 63 65 70 74 2D 52 61-6E 67 65 73 3A 20 62 79  ccept-Ranges: by
-00000130: 74 65 73 0D 0A 41 67 65-3A 20 31 38 32 37 31 33  tes..Age: 182713
-00000140: 0D 0A 58 2D 43 61 63 68-65 3A 20 48 49 54 20 66  ..X-Cache: HIT f
-00000150: 72 6F 6D 20 63 73 2D 68-61 6E 34 2E 77 69 6E 2D  rom cs-han4.win-
-00000160: 69 70 2E 64 66 6E 2E 64-65 0D 0A 58 2D 43 61 63  ip.dfn.de..X-Cac
-00000170: 68 65 2D 4C 6F 6F 6B 75-70 3A 20 48 49 54 20 66  he-Lookup: HIT f
-00000180: 72 6F 6D 20 63 73 2D 68-61 6E 34 2E 77 69 6E 2D  rom cs-han4.win-
-00000190: 69 70 2E 64 66 6E 2E 64-65 3A 38 30 38 31 0D 0A  ip.dfn.de:8081..
-000001A0: 50 72 6F 78 79 2D 43 6F-6E 6E 65 63 74 69 6F 6E  Proxy-Connection
-000001B0: 3A 20 6B 65 65 70 2D 61-6C 69 76 65 0D 0A 0D 0A  : keep-alive....
-000001C0: 47 49 46 38 39 61 01 00-26 00 A2 00 00 00 00 00  GIF89a..&.?.....
-000001D0: FF FF FF 00 33 66 33 66-99 FF FF FF 00 00 00 00  ....3f3f........
-000001E0: 00 00 00 00 00 21 F9 04-01 00 00 04 00 2C 00 00  .....!?......,..
-000001F0: 00 00 01 00 26 00 00 03-08 38 A2 BC DE F0 C9 A8  ....&....8??????
-00000200: 12 00 3B                                         ..;
-
-
-
 limitations
 ===========
 

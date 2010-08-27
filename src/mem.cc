@@ -543,6 +543,12 @@ memFree64K(void *p)
     memFree(p, MEM_64K_BUF);
 }
 
+static void
+cxx_xfree(void * ptr)
+{
+    xfree(ptr);
+}
+
 FREE *
 memFreeBufFunc(size_t size)
 {
@@ -569,7 +575,7 @@ memFreeBufFunc(size_t size)
     default:
         memMeterDec(HugeBufCountMeter);
         memMeterDel(HugeBufVolumeMeter, size);
-        return xfree;
+        return cxx_xfree;
     }
 }
 

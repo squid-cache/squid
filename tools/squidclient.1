@@ -23,6 +23,8 @@ Host header
 local host
 .if !'po4a'hide' .B "] [ \-m"
 method
+.if !'po4a'hide' .B "] [ \-n"
+.if !'po4a'hide' .B "] [ \-N"
 .if !'po4a'hide' .B "] [ \-p"
 port
 .if !'po4a'hide' .B "] [ \-P"
@@ -109,6 +111,18 @@ similar to
 .if !'po4a'hide'       acl purge method PURGE
 .if !'po4a'hide'       http_access deny purge !localhost
 .if !'po4a'hide' .fi
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-n"
+Proxy Negotiate(Kerberos) authentication.
+.if !'po4a'hide' .nf
+Use kinit username@DOMAIN first to get initial TGS.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-N"
+WWW Negotiate(Kerberos) authentication.
+.if !'po4a'hide' .nf
+Use kinit username@DOMAIN first to get initial TGS.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-p port"

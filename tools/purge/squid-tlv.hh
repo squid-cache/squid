@@ -37,16 +37,18 @@
 #ifndef _SQUID_TLV_HH
 #define _SQUID_TLV_HH
 
+#if !defined(__cplusplus)
 #if defined(__GNUC__) || defined(__GNUG__)
 #pragma interface
 #else
-#ifndef HAS_BOOL
-#define HAS_BOOL
+#ifndef HAVE_BOOL
+#define HAVE_BOOL
 typedef int bool;
 #define false 0
 #define true  1
 #endif
 #endif
+#endif /* __cplusplus */
 
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -66,7 +68,7 @@ enum SquidMetaType {
   STORE_META_VALID,
   STORE_META_VARY_HEADERS,	// Stores Vary request headers
   STORE_META_STD_LFS,		// standard metadata in lfs format
-  STORE_META_OBJSIZE,		// object size, if its known
+  STORE_META_OBJSIZE		// object size, if its known
 };
 
 // taken from Squid-2.x

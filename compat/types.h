@@ -116,6 +116,16 @@
 #endif
 #endif
 
+#ifndef PRIX64
+#ifdef _SQUID_MSWIN_		/* Windows native port using MSVCRT */
+#define PRIX64 "I64X"
+#elif SIZEOF_INT64_T > SIZEOF_LONG
+#define PRIX64 "llX"
+#else
+#define PRIX64 "lX"
+#endif
+#endif
+
 #ifndef HAVE_MODE_T
 typedef unsigned short mode_t;
 #endif

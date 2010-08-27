@@ -2,6 +2,7 @@
 #define SQUID_ADAPTATION__INITIATOR_H
 
 #include "base/AsyncJob.h"
+#include "base/CbcPointer.h"
 #include "adaptation/forward.h"
 
 /*
@@ -32,13 +33,17 @@ public:
     virtual void noteAdaptationQueryAbort(bool final) = 0;
 
 protected:
-    Initiate *initiateAdaptation(Initiate *x); // locks and returns x
+    ///< starts freshly created initiate and returns a safe pointer to it
+    CbcPointer<Initiate> initiateAdaptation(Initiate *x);
 
-    // done with x (and not calling announceInitiatorAbort)
-    void clearAdaptation(Initiate *&x); // unlocks x
+    /// clears the pointer (does not call announceInitiatorAbort)
+    void clearAdaptation(CbcPointer<Initiate> &x);
 
-    // inform the transaction about abnormal termination and clear it
-    void announceInitiatorAbort(Initiate *&x); // unlocks x
+    /// inform the transaction about abnormal termination and clear the pointer
+    void announceInitiatorAbort(CbcPointer<Initiate> &x);
+
+    /// Must(initiated(initiate)) instead of Must(initiate.set()), for clarity
+    bool initiated(const CbcPointer<AsyncJob> &job) const { return job.set(); }
 };
 
 } // namespace Adaptation
