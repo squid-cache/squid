@@ -5,27 +5,26 @@
 #include "squid.h"
 #include "adaptation/Initiate.h"
 #include "adaptation/Initiator.h"
+#include "base/AsyncJobCalls.h"
 
-Adaptation::Initiate *
-Adaptation::Initiator::initiateAdaptation(Adaptation::Initiate *x)
+CbcPointer<Adaptation::Initiate>
+Adaptation::Initiator::initiateAdaptation(Initiate *x)
 {
-    if ((x = dynamic_cast<Initiate*>(Initiate::AsyncStart(x))))
-        x = cbdataReference(x);
-    return x;
+    CbcPointer<Initiate> i(x);
+    x->initiator(this);
+    Start(x);
+    return i;
 }
 
 void
-Adaptation::Initiator::clearAdaptation(Initiate *&x)
+Adaptation::Initiator::clearAdaptation(CbcPointer<Initiate> &x)
 {
-    assert(x);
-    cbdataReferenceDone(x);
+    x.clear();
 }
 
 void
-Adaptation::Initiator::announceInitiatorAbort(Initiate *&x)
+Adaptation::Initiator::announceInitiatorAbort(CbcPointer<Initiate> &x)
 {
-    if (x) {
-        CallJobHere(93, 5, x, Initiate::noteInitiatorAborted);
-        clearAdaptation(x);
-    }
+    CallJobHere(93, 5, x, Initiate, noteInitiatorAborted);
+    clearAdaptation(x);
 }

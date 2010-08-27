@@ -46,6 +46,7 @@ EXTRA_libmiscutil_a_SOURCES = \
 	md5.c \
 	Profiler.c \
 	win32lib.c
+
 libmiscutil_a_SOURCES = \
 	MemPool.cc \
 	MemPoolChunked.cc \
@@ -107,7 +108,7 @@ tests_testAll_LDFLAGS = $(LIBADD_DL)
 ## Special Universal .h dependency test script
 ## aborts if error encountered
 testHeaders: $(top_srcdir)/include/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/include" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" $^ || exit 1
 
 TESTS += testHeaders
 CLEANFILES += testHeaders

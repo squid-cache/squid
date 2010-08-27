@@ -11,7 +11,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 ## we need our local files too (but avoid -I. at all costs)
 INCLUDES += -I$(srcdir)
 
-SUBDIRS = 
+SUBDIRS = purge
 EXTRA_DIST = 
 man_MANS = 
 DISTCLEANFILES = 
@@ -20,6 +20,7 @@ LDADD = \
 	$(top_builddir)/src/time.o \
 	$(top_builddir)/src/ip/libip.la \
 	$(COMPAT_LIB) \
+	$(KRB5LIBS) \
 	$(XTRA_LIBS)
 
 include $(top_srcdir)/doc/manuals/Substitute.am

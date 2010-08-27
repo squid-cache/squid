@@ -42,24 +42,22 @@
 #pragma implementation
 #endif
 
-#include <assert.h>
-#include <sys/types.h>
+#include "config.h"
+#include "copyout.hh"
+
+//#include <assert.h>
+//#include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
-
 #include <sys/mman.h>
+
 #ifndef MAP_FILE
 #define MAP_FILE 0
 #endif // MAP_FILE
-
-#include "copyout.hh"
-
-static const char* RCS_ID =
-    "$Id$";
 
 int
 assert_copydir( const char* copydir )
@@ -132,7 +130,7 @@ copy_out( size_t filesize, size_t metasize, unsigned debug,
     static const char* index = "index.html";
 
     // find hostname part after the scheme (okok, not counting port, etc.)
-    char* ptr = strstr( url, "://" );
+    const char* ptr = strstr( url, "://" );
     if ( ptr == 0 || strlen(ptr) < 4 ) return false;
 
     // create filename to store contents into
@@ -236,12 +234,14 @@ copy_out( size_t filesize, size_t metasize, unsigned debug,
     // seek end of output file ...
     off_t position = lseek( out, filesize-metasize-1, SEEK_SET );
     if ( position == -1 ) {
-        fprintf( stderr, "lseek(%s,%lu): %s\n", filename, filesize-metasize,
+        fprintf( stderr, "lseek(%s,%lu): %s\n", filename,
+                 (unsigned long)filesize-metasize,
                  strerror(errno) );
         BAUTZ(false);
     } else if ( debug & 0x02 ) {
         fprintf( stderr, "# filesize=%lu, metasize=%lu, filepos=%ld\n",
-                 filesize, metasize, position );
+                 (unsigned long)filesize, (unsigned long)metasize,
+                 (long)position );
     }
 
     // ...and write 1 byte there (create a file that length)

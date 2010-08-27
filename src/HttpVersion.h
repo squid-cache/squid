@@ -66,6 +66,23 @@ public:
         return ((this->major != that.major) || (this->minor != that.minor));
     }
 
+    bool operator <(const HttpVersion& that) const {
+        return (this->major < that.major ||
+                (this->major == that.major && this->minor < that.minor));
+    }
+
+    bool operator >(const HttpVersion& that) const {
+        return (this->major > that.major ||
+                (this->major == that.major && this->minor > that.minor));
+    }
+
+    bool operator <=(const HttpVersion& that) const {
+        return !(*this > that);
+    }
+
+    bool operator >=(const HttpVersion& that) const {
+        return !(*this < that);
+    }
 };
 
 #endif /* SQUID_HTTPVERSION_H */

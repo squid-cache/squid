@@ -6,6 +6,7 @@
 #include "HttpMsg.h"
 #include "adaptation/Initiator.h"
 #include "adaptation/Initiate.h"
+#include "base/AsyncJobCalls.h"
 
 namespace Adaptation
 {
@@ -17,11 +18,13 @@ class AnswerDialer: public UnaryMemFunT<Initiator, HttpMsg*>
 public:
     typedef UnaryMemFunT<Initiator, HttpMsg*> Parent;
 
-    AnswerDialer(Initiator *obj, Parent::Method meth, HttpMsg *msg):
-            Parent(obj, meth, msg) { HTTPMSGLOCK(arg1); }
-    AnswerDialer(const AnswerDialer &d):
-            Parent(d) { HTTPMSGLOCK(arg1); }
+    AnswerDialer(const Parent::JobPointer &job, Parent::Method meth,
+                 HttpMsg *msg): Parent(job, meth, msg) { HTTPMSGLOCK(arg1); }
+    AnswerDialer(const AnswerDialer &d): Parent(d) { HTTPMSGLOCK(arg1); }
     virtual ~AnswerDialer() { HTTPMSGUNLOCK(arg1); }
+
+private:
+    AnswerDialer &operator =(const AnswerDialer &); // not implemented
 };
 
 } // namespace Adaptation
@@ -29,10 +32,8 @@ public:
 
 /* Initiate */
 
-Adaptation::Initiate::Initiate(const char *aTypeName, Initiator *anInitiator):
-        AsyncJob(aTypeName), theInitiator(anInitiator)
+Adaptation::Initiate::Initiate(const char *aTypeName): AsyncJob(aTypeName)
 {
-    assert(theInitiator);
 }
 
 Adaptation::Initiate::~Initiate()
@@ -42,12 +43,21 @@ Adaptation::Initiate::~Initiate()
     // can assert(!(wasStarted && theInitiator)).
 }
 
+void
+Adaptation::Initiate::initiator(const CbcPointer<Initiator> &i)
+{
+    Must(!theInitiator);
+    Must(i.valid());
+    theInitiator = i;
+}
+
+
 // internal cleanup
 void Adaptation::Initiate::swanSong()
 {
     debugs(93, 5, HERE << "swan sings" << status());
 
-    if (theInitiator) {
+    if (theInitiator.set()) {
         debugs(93, 3, HERE << "fatal failure; sending abort notification");
         tellQueryAborted(true); // final by default
     }
@@ -57,85 +67,26 @@ void Adaptation::Initiate::swanSong()
 
 void Adaptation::Initiate::clearInitiator()
 {
-    if (theInitiator)
-        theInitiator.clear();
+    theInitiator.clear();
 }
 
 void Adaptation::Initiate::sendAnswer(HttpMsg *msg)
 {
     assert(msg);
-    if (theInitiator.isThere()) {
-        CallJob(93, 5, __FILE__, __LINE__, "Initiator::noteAdaptAnswer",
-                AnswerDialer(theInitiator.ptr(), &Initiator::noteAdaptationAnswer, msg));
-    }
+    CallJob(93, 5, __FILE__, __LINE__, "Initiator::noteAdaptationAnswer",
+            AnswerDialer(theInitiator, &Initiator::noteAdaptationAnswer, msg));
     clearInitiator();
 }
 
 
 void Adaptation::Initiate::tellQueryAborted(bool final)
 {
-    if (theInitiator.isThere()) {
-        CallJobHere1(93, 5, theInitiator.ptr(),
-                     Initiator::noteAdaptationQueryAbort, final);
-    }
+    CallJobHere1(93, 5, theInitiator,
+                 Initiator, noteAdaptationQueryAbort, final);
     clearInitiator();
 }
 
 const char *Adaptation::Initiate::status() const
 {
     return AsyncJob::status(); // for now
-}
-
-
-/* InitiatorHolder */
-
-Adaptation::InitiatorHolder::InitiatorHolder(Initiator *anInitiator):
-        prime(0), cbdata(0)
-{
-    if (anInitiator) {
-        cbdata = cbdataReference(anInitiator->toCbdata());
-        prime = anInitiator;
-    }
-}
-
-Adaptation::InitiatorHolder::InitiatorHolder(const InitiatorHolder &anInitiator):
-        prime(0), cbdata(0)
-{
-    if (anInitiator != NULL && cbdataReferenceValid(anInitiator.cbdata)) {
-        cbdata = cbdataReference(anInitiator.cbdata);
-        prime = anInitiator.prime;
-    }
-}
-
-Adaptation::InitiatorHolder::~InitiatorHolder()
-{
-    clear();
-}
-
-void Adaptation::InitiatorHolder::clear()
-{
-    if (prime) {
-        prime = NULL;
-        cbdataReferenceDone(cbdata);
-    }
-}
-
-Adaptation::Initiator *Adaptation::InitiatorHolder::ptr()
-{
-    assert(isThere());
-    return prime;
-}
-
-bool
-Adaptation::InitiatorHolder::isThere()
-{
-    return prime && cbdataReferenceValid(cbdata);
-}
-
-// should not be used
-Adaptation::InitiatorHolder &
-Adaptation::InitiatorHolder::operator =(const InitiatorHolder &anInitiator)
-{
-    assert(false);
-    return *this;
 }

@@ -1,0 +1,83 @@
+#!/bin/ksh
+#
+#  -----------------------------------------------------------------------------
+# 
+#  Author: Markus Moeller (markus_moeller at compuserve.com)
+# 
+#  Copyright (C) 2007 Markus Moeller. All rights reserved.
+# 
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+# 
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+# 
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
+# 
+#  -----------------------------------------------------------------------------
+#
+#
+# creates the following files: 
+# <server>.cert
+# secmod.db
+# key3.db
+# cert8.db
+# 
+#
+if [ -z "$1" ]; then 
+  echo "Usage: `basename $0` ldap-server port"
+  exit 0
+fi
+if [ -z "$2" ]; then
+  port=636
+else
+  port=$2
+fi
+
+server=$1
+
+#
+# Remove old files
+#
+rm  ${server}_[0-9]*.cert 2>/dev/null
+#
+# Get certs and store in .cert file
+#
+( openssl s_client -showcerts -connect $server:$port 2>/dev/null <<!
+QUIT
+!
+) | awk 'BEGIN{start=0;ostart=0}{if ( $0 ~ /BEGIN CERTIFICATE/ ) { start=start+1 };
+      if  ( start > ostart ) {print $0 >>"'$server'_"start".cert"};
+      if ( $0 ~ /END CERTIFICATE/) { ostart=start } }' 
+
+#
+# from mozilla-nss-tools
+# /usr/sfw/bin on Solaris
+# 
+#
+# Create database for Sun ldap and pem file for Openldap 
+#
+rm ${server}_[0-9]*.pem 2>/dev/null
+let i=0
+ ls ${server}_[0-9]*.cert | while read file; do
+ let i=i+1
+ cat  $file  >> ${server}_$i.pem
+ CA=`openssl x509 -noout -text -in  ${server}_$i.pem | grep -i "CA:.*true"`
+ if [ -n "$CA" ]; then
+   echo "CA is in ${server}_$i.pem"
+   certutil -A -a -n "${server}_$i" -i $file -t "C,," -d .
+ else
+   certutil -A -a -n "${server}_$i" -i $file -t "P,," -d .
+ fi
+ rm $file
+done
+echo "Certs:"
+certutil -d . -L
+echo "are in" 
+ls *.db

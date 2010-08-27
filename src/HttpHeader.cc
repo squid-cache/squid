@@ -123,7 +123,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Set-Cookie", HDR_SET_COOKIE, ftStr},
     {"TE", HDR_TE, ftStr},
     {"Title", HDR_TITLE, ftStr},
-    {"Trailers", HDR_TRAILERS, ftStr},
+    {"Trailer", HDR_TRAILER, ftStr},
     {"Transfer-Encoding", HDR_TRANSFER_ENCODING, ftStr},
     {"Translate", HDR_TRANSLATE, ftStr},	/* for now. may need to crop */
     {"Unless-Modified-Since", HDR_UNLESS_MODIFIED_SINCE, ftStr},  /* for now ignore. may need to crop */
@@ -249,7 +249,7 @@ static http_hdr_type RequestHeadersArr[] = {
 static HttpHeaderMask HopByHopHeadersMask;
 static http_hdr_type HopByHopHeadersArr[] = {
     HDR_CONNECTION, HDR_KEEP_ALIVE, /*HDR_PROXY_AUTHENTICATE,*/ HDR_PROXY_AUTHORIZATION,
-    HDR_TE, HDR_TRAILERS, HDR_TRANSFER_ENCODING, HDR_UPGRADE, HDR_PROXY_CONNECTION
+    HDR_TE, HDR_TRAILER, HDR_TRANSFER_ENCODING, HDR_UPGRADE, HDR_PROXY_CONNECTION
 };
 
 /* header accounting */
@@ -645,6 +645,11 @@ HttpHeader::parse(const char *header_start, const char *header_end)
         }
 
         addEntry(e);
+    }
+
+    if (chunked()) {
+        // RFC 2616 section 4.4: ignore Content-Length with Transfer-Encoding
+        delById(HDR_CONTENT_LENGTH);
     }
 
     PROF_stop(HttpHeaderParse);
@@ -1602,7 +1607,7 @@ httpHeaderNoteParsedEntry(http_hdr_type id, String const &context, int error)
 extern const HttpHeaderStat *dump_stat;		/* argh! */
 const HttpHeaderStat *dump_stat = NULL;
 
-static void
+void
 httpHeaderFieldStatDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
     const int id = (int) val;

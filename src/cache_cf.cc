@@ -1905,30 +1905,37 @@ parse_peer(peer ** head)
         } else if (!strcasecmp(token, "weighted-round-robin")) {
             p->options.weighted_roundrobin = 1;
 #if USE_HTCP
-
         } else if (!strcasecmp(token, "htcp")) {
             p->options.htcp = 1;
-        } else if (!strcasecmp(token, "htcp-oldsquid")) {
+        } else if (!strncasecmp(token, "htcp=", 5) || !strncasecmp(token, "htcp-", 5)) {
+            /* Note: The htcp- form is deprecated, replaced by htcp= */
             p->options.htcp = 1;
-            p->options.htcp_oldsquid = 1;
-        } else if (!strcasecmp(token, "htcp-no-clr")) {
-            if (p->options.htcp_only_clr)
-                fatalf("parse_peer: can't set htcp-no-clr and htcp-only-clr simultaneously");
-            p->options.htcp = 1;
-            p->options.htcp_no_clr = 1;
-        } else if (!strcasecmp(token, "htcp-no-purge-clr")) {
-            p->options.htcp = 1;
-            p->options.htcp_no_purge_clr = 1;
-        } else if (!strcasecmp(token, "htcp-only-clr")) {
-            if (p->options.htcp_no_clr)
-                fatalf("parse_peer: can't set htcp-no-clr and htcp-only-clr simultaneously");
-            p->options.htcp = 1;
-            p->options.htcp_only_clr = 1;
-        } else if (!strcasecmp(token, "htcp-forward-clr")) {
-            p->options.htcp = 1;
-            p->options.htcp_forward_clr = 1;
+            char *tmp = xstrdup(token+5);
+            char *mode, *nextmode;
+            for (mode = nextmode = tmp; mode; mode = nextmode) {
+                nextmode = strchr(mode, ',');
+                if (nextmode)
+                    *nextmode++ = '\0';
+                if (!strcasecmp(mode, "no-clr")) {
+                    if (p->options.htcp_only_clr)
+                        fatalf("parse_peer: can't set htcp-no-clr and htcp-only-clr simultaneously");
+                    p->options.htcp_no_clr = 1;
+                } else if (!strcasecmp(mode, "no-purge-clr")) {
+                    p->options.htcp_no_purge_clr = 1;
+                } else if (!strcasecmp(mode, "only-clr")) {
+                    if (p->options.htcp_no_clr)
+                        fatalf("parse_peer: can't set htcp no-clr and only-clr simultaneously");
+                    p->options.htcp_only_clr = 1;
+                } else if (!strcasecmp(mode, "forward-clr")) {
+                    p->options.htcp_forward_clr = 1;
+                } else if (!strcasecmp(mode, "oldsquid")) {
+                    p->options.htcp_oldsquid = 1;
+                } else {
+                    fatalf("invalid HTCP mode '%s'", mode);
+                }
+            }
+            safe_free(tmp);
 #endif
-
         } else if (!strcasecmp(token, "no-netdb-exchange")) {
             p->options.no_netdb_exchange = 1;
 
@@ -2475,6 +2482,16 @@ parse_refreshpattern(refresh_t ** head)
 
     i = GetInteger();		/* token: min */
 
+    /* catch negative and insanely huge values close to 32-bit wrap */
+    if (i < 0) {
+        debugs(3, DBG_IMPORTANT, "WARNING: refresh_pattern minimum age negative. Cropped back to zero.");
+        i = 0;
+    }
+    if (i > 60*24*365) {
+        debugs(3, DBG_IMPORTANT, "WARNING: refresh_pattern minimum age too high. Cropped back to 1 year.");
+        i = 60*24*365;
+    }
+
     min = (time_t) (i * 60);	/* convert minutes to seconds */
 
     i = GetInteger();		/* token: pct */
@@ -2482,6 +2499,16 @@ parse_refreshpattern(refresh_t ** head)
     pct = (double) i / 100.0;
 
     i = GetInteger();		/* token: max */
+
+    /* catch negative and insanely huge values close to 32-bit wrap */
+    if (i < 0) {
+        debugs(3, DBG_IMPORTANT, "WARNING: refresh_pattern maximum age negative. Cropped back to zero.");
+        i = 0;
+    }
+    if (i > 60*24*365) {
+        debugs(3, DBG_IMPORTANT, "WARNING: refresh_pattern maximum age too high. Cropped back to 1 year.");
+        i = 60*24*365;
+    }
 
     max = (time_t) (i * 60);	/* convert minutes to seconds */
 
@@ -3277,7 +3304,11 @@ parse_http_port_option(http_port_list * s, char *token)
             t = strchr(t, ',');
         }
 #if USE_SSL
-    } else if (strcmp(token, "sslBump") == 0) {
+    } else if (strcasecmp(token, "sslBump") == 0) {
+        debugs(3, DBG_CRITICAL, "WARNING: '" << token << "' is deprecated " <<
+               "in http_port. Use 'ssl-bump' instead.");
+        s->sslBump = 1; // accelerated when bumped, otherwise not
+    } else if (strcmp(token, "ssl-bump") == 0) {
         s->sslBump = 1; // accelerated when bumped, otherwise not
     } else if (strncmp(token, "cert=", 5) == 0) {
         safe_free(s->cert);

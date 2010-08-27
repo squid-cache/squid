@@ -1,0 +1,241 @@
+.if !'po4a'hide' .TH ext_kerberos_ldap_group_acl 8
+.
+.SH NAME
+.if !'po4a'hide' .B ext_kerberos_ldap_group_acl
+.if !'po4a'hide' \-
+Squid LDAP external acl group helper for Kerberos or NTLM credentials.
+.PP
+Version 1.2.2sq
+.
+.SH SYNOPSIS
+.if !'po4a'hide' .B ext_kerberos_ldap_group_acl
+.if !'po4a'hide' .B [\-h] [\-d] [\-i] [\-s] [\-a] [\-D Realm ] [\-N Netbios-Realm-List] [\-m Max-Depth] [\-u Ldap-User] [\-p Ldap-Password] [\-b Ldap-Bind-Path] [\-l Ldap-URL] \-g Group-Realm-List \-t  Hex-Group-Realm-List \-T Hex-Group-Hex-Realm-List 
+.
+.SH DESCRIPTION
+.B ext_kerberos_ldap_group_acl
+is an installed binary and allows Squid to connect to a LDAP directory to 
+authorize users via LDAP groups. Options are specified as parameters on the 
+command line, while the username (e.g. user, user@REALM, NDOMAIN\\user) to 
+be checked against the LDAP directory are specified on subsequent lines of 
+input to the helper, one username per line.
+.PP
+.B ext_kerberos_ldap_group_acl 
+will determine the ldap server name from DNS SRV and/or 
+A records or a local hosts file (e.g. for the Kerberos Realm SUSE.HOME it 
+will look for an SRV record _ldap._tcp.SUSE.HOME and an A record SUSE.HOME 
+or a SUSE.HOME hosts entry). If no domain information is available from the 
+username the ldap server will be determined through the command line options.
+.PP
+.B ext_kerberos_ldap_group_acl 
+requires as a minimum the \-g, \-t or \-T option which 
+provides the ldap group name the user has to belong too. For Active Directory 
+a recursive group lookup is implemented until a max depth specified by \-m depth. 
+For other Ldap servers a RFC2307bis schema of groups is assumed.
+.PP
+Different group names can be specified for different domains using a 
+group@domain syntax. 
+As expected by the
+.B external_acl_type
+construct of Squid, after
+specifying a username and group followed by a new line, this
+helper will produce either
+.B OK
+or
+.B ERR
+on the following line
+to show if the user is a member of the specified group.
+.
+.SH OPTIONS
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-h
+Display the binary help and command line syntax info using stderr.
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-d
+Write debug messages to stderr.
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-i
+Write informational messages to stderr.
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-s
+Use SSL for the ldap connection.
+.IP
+The CA certificate file can be set via the environment variable TLS_CACERTFILE (default /etc/ssl/certs/cert.pem) (OpenLDAP).
+.IP
+The SSL certificate database can be set via the environment variable SSL_CERTDBPATH (default /etc/certs) (Sun and Mozilla LDAP SDK).
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-a
+Allow SSL without certificate verification.
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-D Realm 
+Default Kerberos domain to use for usernames which do not contain domain 
+information (e.g. for users using basic authentication).
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-N Netbios-Realm-List
+A list of Netbios name mappings to Kerberos domain names of the form 
+Netbios-Name@Kerberos-Realm[:Netbios-Name@Kerberos-Realm] (e.g. for users 
+using NTLM authentication).
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-m Max-Depth
+Maximal depth of recursive group search.
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-u Ldap-User
+Username for LDAP server.
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-u Ldap-Password
+Password for LDAP server.
+.IP
+As the password needs to be printed in plain text in your Squid configuration
+it is strongly recommended to use a account with minimal associated privileges.  
+This to limit the damage in case someone could get hold of a copy of your Squid 
+configuration file or extracts the password used from a process listing.
+.
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-b Ldap-Bind-Path
+LDAP server bind path.
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-u Ldap-URL
+LDAP server URL in form ldap[s]://server:port
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-g Group-Realm-List
+A list of group name per Kerberos domain of the form 
+Group|Group@|Group@Realm[:Group@|Group@Realm]
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-t  Hex-Group-Realm-List
+A list of group name per Kerberos domain of the 
+form Group|Group@|Group@Realm[:Group@|Group@Realm] where group is in 
+UTF-8 hex format
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-T Hex-Group-Hex-Realm-List
+A list of group name per Kerberos domain of the form 
+Group|Group@|Group@Realm[:Group@|Group@Realm] where group and domain 
+is in UTF-8 hex format
+.
+.SH CONFIGURATION
+.PP See FAQ wiki page for examples of how to write configuration snippets. (TBD)
+.PP 
+This helper is intended to be used as an
+.B external_acl_type
+helper in
+.B squid.conf.
+.if !'po4a'hide' .P
+.if !'po4a'hide' .ft CR
+.if !'po4a'hide' .nf
+.if !'po4a'hide' external_acl_type kerberos_ldap_group1  ttl=3600  negative_ttl=3600 %LOGIN /path/to/ext_kerberos_ldap_group_acl -g GROUP1
+.if !'po4a'hide' .br
+.if !'po4a'hide' external_acl_type kerberos_ldap_group2  ttl=3600  negative_ttl=3600 %LOGIN /path/to/ext_kerberos_ldap_group_acl -g GROUP2
+.if !'po4a'hide' .br
+.if !'po4a'hide' acl group1 external kerberos_ldap_group1
+.if !'po4a'hide' .br
+.if !'po4a'hide' acl group2 external kerberos_ldap_group2
+.if !'po4a'hide' .fi
+.if !'po4a'hide' .ft
+.PP
+.B NOTE:
+The following squid startup file modification may be required:
+
+Add the following lines to the squid startup script to point squid to a keytab file which
+contains the HTTP/fqdn service principal for the default Kerberos domain. The fqdn must be
+the proxy name set in IE or firefox. You can not use an IP address.
+.if !'po4a'hide' .P
+.if !'po4a'hide' .ft CR
+.if !'po4a'hide' .nf
+.if !'po4a'hide' KRB5_KTNAME=/etc/squid/HTTP.keytab
+.if !'po4a'hide' export KRB5_KTNAME
+.if !'po4a'hide' .fi
+.if !'po4a'hide' .ft
+
+If you use a different Kerberos domain than the machine itself is in you can point squid to
+the seperate Kerberos config file by setting the following environmnet variable in the startup
+script.
+.if !'po4a'hide' .P
+.if !'po4a'hide' .ft CR
+.if !'po4a'hide' .nf
+.if !'po4a'hide' KRB5_CONFIG=/etc/krb5-squid.conf
+.if !'po4a'hide' export KRB5_CONFIG
+.if !'po4a'hide' .fi
+.if !'po4a'hide' .ft
+
+.B ext_kerberos_ldap_group_acl
+will determine automagically the right ldap server. The following method is used:
+
+1) For user@REALM
+   a) Query DNS for SRV record _ldap._tcp.REALM
+   b) Query DNS for A record REALM
+   c) Use LDAP_URL if given
+
+2) For user
+   a) Use domain -D REALM and follow step 1)
+   b) Use LDAP_URL if given
+
+The Groups to check against are determined as follows:
+
+1) For user@REALM
+   a) Use values given by -g option which contain a @REALM e.g. -g GROUP1@REALM:GROUP2@REALM
+   b) Use values given by -g option which contain a @ only e.g. -g GROUP1@:GROUP2@
+   c) Use values given by -g option which do not contain a realm e.g. -g GROUP1:GROUP2
+
+2) For user
+   a) Use values given by -g option which do not contain a realm e.g. -g GROUP1:GROUP2
+
+3) For NDOMAIN\\user
+   a) Use realm given by -N NDOMAIN@REALM and then use values given by -g option which contain a @REALM e.g. -g GROUP1@REALM:GROUP2@REALM
+
+To support Non-ASCII character use -t GROUP  or -t GROUP@REALM instead of -g where GROUP is the hex UTF-8 representation e.g.
+
+   -t 6d61726b7573 instead of -g markus
+
+The REALM must still be based on the ASCII character set. If REALM contains also non ASCII characters use -T GROUP@REALM where GROUP and REALM are hex UTF-8 representation e.g.
+
+  -T 6d61726b7573@57494e3230303352322e484f4d45 instead of -g markus@WIN2003R2.HOME
+
+For a translation of hex UTF-8 see for example http://www.utf8-chartable.de/unicode-utf8-table.pl
+
+.
+.SH AUTHOR
+This program was written by
+.if !'po4a'hide' .I Markus Moeller <markus_moeller@compuserve.com>
+.PP
+This manual was written by
+.if !'po4a'hide' .I Markus Moeller <markus_moeller@compuserve.com>
+.
+.SH COPYRIGHT
+This program and documentation is copyright to the authors named above.
+.PP
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
+.
+.SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
+.
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8) "
+.if !'po4a'hide' .BR negotiate_kerberos_auth "(8) "
+.br
+.BR RFC1035 " - Domain names - implementation and specification,"
+.br
+.BR RFC2782 " - A DNS RR for specifying the location of services (DNS SRV),"
+.br
+.BR RFC2254 " - The String Representation of LDAP Search Filters,"
+.br
+.BR RFC2307bis " - An Approach for Using LDAP as a Network Information Service
+http://www.padl.com/~lukeh/rfc2307bis.txt,"
+.br
+The Squid FAQ wiki
+.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.br
+The Squid Configuration Manual
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/

@@ -46,9 +46,9 @@ int Ipc::UdsOp::fd()
 
 void Ipc::UdsOp::setTimeout(int seconds, const char *handlerName)
 {
+    typedef CommCbMemFunT<UdsOp, CommTimeoutCbParams> Dialer;
     AsyncCall::Pointer handler = asyncCall(54,5, handlerName,
-                                           CommCbMemFunT<UdsOp, CommTimeoutCbParams>(this,
-                                                   &UdsOp::noteTimeout));
+                                           Dialer(CbcPointer<UdsOp>(this), &UdsOp::noteTimeout));
     commSetTimeout(fd(), seconds, handler);
 }
 
@@ -102,8 +102,9 @@ bool Ipc::UdsSender::doneAll() const
 void Ipc::UdsSender::write()
 {
     debugs(54, 5, HERE);
-    AsyncCall::Pointer writeHandler = asyncCall(54, 5, "Ipc::UdsSender::wrote",
-                                      CommCbMemFunT<UdsSender, CommIoCbParams>(this, &UdsSender::wrote));
+    typedef CommCbMemFunT<UdsSender, CommIoCbParams> Dialer;
+    AsyncCall::Pointer writeHandler = JobCallback(54, 5,
+                                      Dialer, this, UdsSender::wrote);
     comm_write(fd(), message.raw(), message.size(), writeHandler);
     writing = true;
 }
@@ -127,5 +128,5 @@ void Ipc::UdsSender::timedout()
 
 void Ipc::SendMessage(const String& toAddress, const TypedMsgHdr &message)
 {
-    AsyncJob::AsyncStart(new UdsSender(toAddress, message));
+    AsyncJob::Start(new UdsSender(toAddress, message));
 }

@@ -244,8 +244,7 @@ ConnStateData::readSomeData()
     makeSpaceAvailable();
 
     typedef CommCbMemFunT<ConnStateData, CommIoCbParams> Dialer;
-    reader = asyncCall(33, 5, "ConnStateData::clientReadRequest",
-                       Dialer(this, &ConnStateData::clientReadRequest));
+    reader = JobCallback(33, 5, Dialer, this, ConnStateData::clientReadRequest);
     comm_read(clientConn->fd, in.addressToReadInto(), getAvailableBufferLength(), reader);
 }
 
@@ -736,18 +735,14 @@ static void
 clientSetKeepaliveFlag(ClientHttpRequest * http)
 {
     HttpRequest *request = http->request;
-    const HttpHeader *req_hdr = &request->header;
 
     debugs(33, 3, "clientSetKeepaliveFlag: http_ver = " <<
            request->http_ver.major << "." << request->http_ver.minor);
     debugs(33, 3, "clientSetKeepaliveFlag: method = " <<
            RequestMethodStr(request->method));
 
-    /* We are HTTP/1.1 facing clients now*/
-    HttpVersion http_ver(1,1);
-
-    if (httpMsgIsPersistent(http_ver, req_hdr))
-        request->flags.proxy_keepalive = 1;
+    // TODO: move to HttpRequest::hdrCacheInit, just like HttpReply.
+    request->flags.proxy_keepalive = request->persistent() ? 1 : 0;
 }
 
 static int
@@ -897,7 +892,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
 {
     assert(rep == NULL);
 
-    if (!multipartRangeRequest()) {
+    if (!multipartRangeRequest() && !http->request->flags.chunked_reply) {
         size_t length = lengthToSend(bodyData.range());
         noteSentBodyBytes (length);
         AsyncCall::Pointer call = commCbCall(33, 5, "clientWriteBodyComplete",
@@ -908,7 +903,10 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
 
     MemBuf mb;
     mb.init();
-    packRange(bodyData, &mb);
+    if (multipartRangeRequest())
+        packRange(bodyData, &mb);
+    else
+        packChunk(bodyData, mb);
 
     if (mb.contentSize()) {
         /* write */
@@ -917,6 +915,22 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
         comm_write_mbuf(fd(), &mb, call);
     }  else
         writeComplete(fd(), NULL, 0, COMM_OK);
+}
+
+/**
+ * Packs bodyData into mb using chunked encoding. Packs the last-chunk
+ * if bodyData is empty.
+ */
+void
+ClientSocketContext::packChunk(const StoreIOBuffer &bodyData, MemBuf &mb)
+{
+    const uint64_t length =
+        static_cast<uint64_t>(lengthToSend(bodyData.range()));
+    noteSentBodyBytes(length);
+
+    mb.Printf("%"PRIX64"\r\n", length);
+    mb.append(bodyData.data, length);
+    mb.Printf("\r\n");
 }
 
 /** put terminating boundary for multiparts */
@@ -1287,13 +1301,15 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
 #endif
 
     if (bodyData.data && bodyData.length) {
-        if (!multipartRangeRequest()) {
+        if (multipartRangeRequest())
+            packRange(bodyData, mb);
+        else if (http->request->flags.chunked_reply) {
+            packChunk(bodyData, *mb);
+        } else {
             size_t length = lengthToSend(bodyData.range());
             noteSentBodyBytes (length);
 
             mb->append(bodyData.data, length);
-        } else {
-            packRange(bodyData, mb);
         }
     }
 
@@ -1342,7 +1358,11 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
         return;
     }
 
-    if (responseFinishedOrFailed(rep, receivedData)) {
+    // After sending Transfer-Encoding: chunked (at least), always send
+    // the last-chunk if there was no error, ignoring responseFinishedOrFailed.
+    const bool mustSendLastChunk = http->request->flags.chunked_reply &&
+                                   !http->request->flags.stream_error && !context->startOfOutput();
+    if (responseFinishedOrFailed(rep, receivedData) && !mustSendLastChunk) {
         context->writeComplete(fd, NULL, 0, COMM_OK);
         PROF_stop(clientSocketRecipient);
         return;
@@ -1402,8 +1422,8 @@ ConnStateData::readNextRequest()
      * Set the timeout BEFORE calling clientReadRequest().
      */
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  asyncCall(33, 5, "ConnStateData::requestTimeout",
-                                      TimeoutDialer(this, &ConnStateData::requestTimeout));
+    AsyncCall::Pointer timeoutCall = JobCallback(33, 5,
+                                     TimeoutDialer, this, ConnStateData::requestTimeout);
     commSetTimeout(clientConn->fd, Config.Timeout.persistent_request, timeoutCall);
 
     readSomeData();
@@ -1969,8 +1989,7 @@ isChunkedRequest(const HttpParser *hp)
     if (!request.parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp)))
         return false;
 
-    return request.header.has(HDR_TRANSFER_ENCODING) &&
-           request.header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',');
+    return request.header.chunked();
 }
 
 
@@ -2375,6 +2394,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     bool notedUseOfBuffer = false;
     bool tePresent = false;
     bool deChunked = false;
+    bool mustReplyToOptions = false;
     bool unsupportedTe = false;
 
     /* We have an initial client stream in place should it be needed */
@@ -2500,8 +2520,12 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     } else
         conn->cleanDechunkingRequest();
 
+    if (method == METHOD_TRACE || method == METHOD_OPTIONS)
+        request->max_forwards = request->header.getInt64(HDR_MAX_FORWARDS);
+
+    mustReplyToOptions = (method == METHOD_OPTIONS) && (request->max_forwards == 0);
     unsupportedTe = tePresent && !deChunked;
-    if (!urlCheckRequest(request) || unsupportedTe) {
+    if (!urlCheckRequest(request) || mustReplyToOptions || unsupportedTe) {
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
@@ -3002,8 +3026,8 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
          * if we don't close() here, we still need a timeout handler!
          */
         typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-        AsyncCall::Pointer timeoutCall =  asyncCall(33, 5, "ConnStateData::requestTimeout",
-                                          TimeoutDialer(this,&ConnStateData::requestTimeout));
+        AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
+                                          TimeoutDialer, this, ConnStateData::requestTimeout);
         commSetTimeout(io.fd, 30, timeoutCall);
 
         /*
@@ -3102,16 +3126,15 @@ httpAccept(int sock, int unused, Comm::ConnectionPointer &details,
     connState = connStateCreate(details, s);
 
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
-    AsyncCall::Pointer call = asyncCall(33, 5, "ConnStateData::connStateClosed",
-                                        Dialer(connState, &ConnStateData::connStateClosed));
+    AsyncCall::Pointer call = JobCallback(33, 5, Dialer, connState, ConnStateData::connStateClosed);
     comm_add_close_handler(details->fd, call);
 
     if (Config.onoff.log_fqdn)
         fqdncache_gethostbyaddr(details->remote, FQDN_LOOKUP_IF_MISS);
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  asyncCall(33, 5, "ConnStateData::requestTimeout",
-                                      TimeoutDialer(connState,&ConnStateData::requestTimeout));
+    AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
+                                      TimeoutDialer, connState, ConnStateData::requestTimeout);
     commSetTimeout(details->fd, Config.Timeout.read, timeoutCall);
 
 #if USE_IDENT
@@ -3312,16 +3335,15 @@ httpsAccept(int sock, int newfd, Comm::ConnectionPointer& details,
     fd_note(details->fd, "client https connect");
     ConnStateData *connState = connStateCreate(details, &s->http);
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
-    AsyncCall::Pointer call = asyncCall(33, 5, "ConnStateData::connStateClosed",
-                                        Dialer(connState, &ConnStateData::connStateClosed));
+    AsyncCall::Pointer call = JobCallback(33, 5, Dialer, connState, ConnStateData::connStateClosed);
     comm_add_close_handler(details->fd, call);
 
     if (Config.onoff.log_fqdn)
         fqdncache_gethostbyaddr(details->remote, FQDN_LOOKUP_IF_MISS);
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  asyncCall(33, 5, "ConnStateData::requestTimeout",
-                                      TimeoutDialer(connState,&ConnStateData::requestTimeout));
+    AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
+                                      TimeoutDialer, connState, ConnStateData::requestTimeout);
     commSetTimeout(details->fd, Config.Timeout.request, timeoutCall);
 
 #if USE_IDENT
@@ -3902,8 +3924,8 @@ void ConnStateData::pinConnection(int pinning_fd, HttpRequest *request, struct p
     fd_note(pinning_fd, desc);
 
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
-    pinning.closeHandler = asyncCall(33, 5, "ConnStateData::clientPinnedConnectionClosed",
-                                     Dialer(this, &ConnStateData::clientPinnedConnectionClosed));
+    pinning.closeHandler = JobCallback(33, 5,
+                                       Dialer, this, ConnStateData::clientPinnedConnectionClosed);
     comm_add_close_handler(pinning_fd, pinning.closeHandler);
 
 }

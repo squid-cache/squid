@@ -6,15 +6,15 @@
 
 - \b Job: an AsyncJob object.
 - \b Creator: the code creating the job. Usually the Initiator.
-- \b Start: the act of calling AsyncStart with a job pointer.
+- \b Start: the act of calling AsyncJob::Start with a job pointer.
 - \b Initiator: the code starting the job. Usually the Creator.
 
 \section Life Typical life cycle
 
 -# Creator creates and initializes a job.
--# Initiator starts the job. If Initiator expects
-to communicate with the started job, then it stores the job pointer
-returned by AsyncStart.
+-# If Initiator expects to communicate with the job after start,
+   then it stores the job pointer
+-# Initiator starts the job by calling AsyncJob::Start.
 -# The job's start() method is called. The method usually schedules
 some I/O or registers to receive some other callbacks.
 -# The job runs and does what it is supposed to do. This usually involves
@@ -27,7 +27,7 @@ then notifying Initiator of the final result.
 
 If you want to do something before starting the job, do it in the constructor
 or some custom method that the job creator will call _before_ calling
-AsyncStart():
+AsyncJob::Start():
 
     std::auto_ptr<MyJob> job(new MyJob(...)); // sync/blocking
     job->prepare(...); // sync/blocking
@@ -36,15 +36,16 @@ AsyncStart():
 
 If you do not need complex preparations, it is better to do this instead:
 
-    AsyncStart(new MyJob(...));
+    AsyncJob::Start(new MyJob(...));
 
 Keep in mind that you have no async debugging, cleanup, and protections until
-you call AsyncStart with a job pointer.
+you call AsyncJob::Start with a job pointer.
 
 
 \section Rules Basic rules
 
-- To start a job, use AsyncStart. Do not start the same job more than once.
+- To start a job, use AsyncJob::Start.
+  Do not start the same job more than once.
 
 - Never call start() directly. Treat this method as main() in C/C++.
 

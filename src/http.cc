@@ -142,8 +142,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
      * register the handler to free HTTP state data when the FD closes
      */
     typedef CommCbMemFunT<HttpStateData, CommCloseCbParams> Dialer;
-    closeHandler = asyncCall(9, 5, "httpStateData::httpStateConnClosed",
-                             Dialer(this,&HttpStateData::httpStateConnClosed));
+    closeHandler = JobCallback(9, 5, Dialer, this, HttpStateData::httpStateConnClosed);
     comm_add_close_handler(serverConnection->fd, closeHandler);
 }
 
@@ -729,7 +728,7 @@ HttpStateData::processReplyHeader()
     }
 
     flags.chunked = 0;
-    if (newrep->sline.protocol == PROTO_HTTP && newrep->header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',')) {
+    if (newrep->sline.protocol == PROTO_HTTP && newrep->header.chunked()) {
         flags.chunked = 1;
         httpChunkDecoder = new ChunkedCodingParser;
     }
@@ -1405,8 +1404,7 @@ HttpStateData::maybeReadVirginBody()
         flags.do_next_read = 0;
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
         entry->delayAwareRead(serverConnection->fd, readBuf->space(read_size), read_size,
-                              asyncCall(11, 5, "HttpStateData::readReply",
-                                        Dialer(this, &HttpStateData::readReply)));
+                              JobCallback(11, 5, Dialer, this,  HttpStateData::readReply));
     }
 }
 
@@ -1449,8 +1447,8 @@ HttpStateData::sendComplete(const CommIoCbParams &io)
      * request bodies.
      */
     typedef CommCbMemFunT<HttpStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  asyncCall(11, 5, "HttpStateData::httpTimeout",
-                                      TimeoutDialer(this,&HttpStateData::httpTimeout));
+    AsyncCall::Pointer timeoutCall =  JobCallback(11, 5,
+                                      TimeoutDialer, this, HttpStateData::httpTimeout);
 
     commSetTimeout(serverConnection->fd, Config.Timeout.read, timeoutCall);
 
@@ -1732,11 +1730,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* maybe append Connection: keep-alive */
     if (flags.keepalive) {
-        if (flags.proxying) {
-            hdr_out->putStr(HDR_PROXY_CONNECTION, "keep-alive");
-        } else {
-            hdr_out->putStr(HDR_CONNECTION, "keep-alive");
-        }
+        hdr_out->putStr(HDR_CONNECTION, "keep-alive");
     }
 
     /* append Front-End-Https */
@@ -1784,7 +1778,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case HDR_TE:                  /** \par TE: */
     case HDR_KEEP_ALIVE:          /** \par Keep-Alive: */
     case HDR_PROXY_AUTHENTICATE:  /** \par Proxy-Authenticate: */
-    case HDR_TRAILERS:            /** \par Trailers: */
+    case HDR_TRAILER:             /** \par Trailer: */
     case HDR_UPGRADE:             /** \par Upgrade: */
     case HDR_TRANSFER_ENCODING:   /** \par Transfer-Encoding: */
         break;
@@ -1881,12 +1875,13 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
         break;
 
-    case HDR_PROXY_CONNECTION:
+    case HDR_PROXY_CONNECTION: // SHOULD ignore. But doing so breaks things.
+        break;
 
     case HDR_X_FORWARDED_FOR:
 
     case HDR_CACHE_CONTROL:
-        /** \par Proxy-Connaction:, X-Forwarded-For:, Cache-Control:
+        /** \par X-Forwarded-For:, Cache-Control:
          * handled specially by Squid, so leave off for now.
          * append these after the loop if needed */
         break;
@@ -1992,9 +1987,9 @@ HttpStateData::sendRequest()
     }
 
     typedef CommCbMemFunT<HttpStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  asyncCall(11, 5, "HttpStateData::httpTimeout",
-                                      TimeoutDialer(this,&HttpStateData::httpTimeout));
-    commSetTimeout(serverConnection->fd, Config.Timeout.lifetime, timeoutCall);
+    AsyncCall::Pointer timeoutCall =  JobCallback(11, 5,
+                                      TimeoutDialer, this, HttpStateData::httpTimeout);
+    commSetTimeout(srverConnection->fd, Config.Timeout.lifetime, timeoutCall);
     flags.do_next_read = 1;
     maybeReadVirginBody();
 
@@ -2002,13 +1997,13 @@ HttpStateData::sendRequest()
         if (!startRequestBodyFlow()) // register to receive body data
             return false;
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-        Dialer dialer(this, &HttpStateData::sentRequestBody);
-        requestSender = asyncCall(11,5, "HttpStateData::sentRequestBody", dialer);
+        requestSender = JobCallback(11,5,
+                                    Dialer, this, HttpStateData::sentRequestBody);
     } else {
         assert(!requestBodySource);
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-        Dialer dialer(this, &HttpStateData::sendComplete);
-        requestSender = asyncCall(11,5, "HttpStateData::SendComplete", dialer);
+        requestSender = JobCallback(11,5,
+                                    Dialer, this,  HttpStateData::sendComplete);
     }
 
     if (_peer != NULL) {
@@ -2102,8 +2097,7 @@ HttpStateData::doneSendingRequestBody()
             }
 
             typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-            Dialer dialer(this, &HttpStateData::sendComplete);
-            AsyncCall::Pointer call= asyncCall(11,5, "HttpStateData::SendComplete", dialer);
+            AsyncCall::Pointer call = JobCallback(11, 5, Dialer, this, HttpStateData::sendComplete);
             comm_write(serverConnection->fd, "\r\n", 2, call);
         }
         return;

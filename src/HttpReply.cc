@@ -62,7 +62,7 @@ static HttpHeaderMask Denied304HeadersMask;
 static http_hdr_type Denied304HeadersArr[] = {
     // hop-by-hop headers
     HDR_CONNECTION, HDR_KEEP_ALIVE, HDR_PROXY_AUTHENTICATE, HDR_PROXY_AUTHORIZATION,
-    HDR_TE, HDR_TRAILERS, HDR_TRANSFER_ENCODING, HDR_UPGRADE,
+    HDR_TE, HDR_TRAILER, HDR_TRANSFER_ENCODING, HDR_UPGRADE,
     // entity headers
     HDR_ALLOW, HDR_CONTENT_ENCODING, HDR_CONTENT_LANGUAGE, HDR_CONTENT_LENGTH,
     HDR_CONTENT_MD5, HDR_CONTENT_RANGE, HDR_CONTENT_TYPE, HDR_LAST_MODIFIED
@@ -377,12 +377,13 @@ HttpReply::hdrCacheInit()
 {
     HttpMsg::hdrCacheInit();
 
+    http_ver = sline.version;
     content_length = header.getInt64(HDR_CONTENT_LENGTH);
     date = header.getTime(HDR_DATE);
     last_modified = header.getTime(HDR_LAST_MODIFIED);
     surrogate_control = header.getSc();
     content_range = header.getContRange();
-    keep_alive = httpMsgIsPersistent(sline.version, &header);
+    keep_alive = persistent() ? 1 : 0;
     const char *str = header.getStr(HDR_CONTENT_TYPE);
 
     if (str)
@@ -540,7 +541,7 @@ HttpReply::expectingBody(const HttpRequestMethod& req_method, int64_t& theSize) 
         expectBody = true;
 
     if (expectBody) {
-        if (header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ','))
+        if (header.chunked())
             theSize = -1;
         else if (content_length >= 0)
             theSize = content_length;
