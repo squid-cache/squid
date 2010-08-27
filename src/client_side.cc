@@ -1935,8 +1935,7 @@ isChunkedRequest(const HttpParser *hp)
     if (!request.parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp)))
         return false;
 
-    return request.header.has(HDR_TRANSFER_ENCODING) &&
-           request.header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',');
+    return request.header.chunked();
 }
 
 

@@ -647,6 +647,11 @@ HttpHeader::parse(const char *header_start, const char *header_end)
         addEntry(e);
     }
 
+    if (chunked()) {
+        // RFC 2616 section 4.4: ignore Content-Length with Transfer-Encoding
+        delById(HDR_CONTENT_LENGTH);
+    }
+
     PROF_stop(HttpHeaderParse);
     return 1;			/* even if no fields where found, it is a valid header */
 reset:
