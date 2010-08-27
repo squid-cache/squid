@@ -135,7 +135,7 @@ void Adaptation::Icap::ServiceRep::noteTimeToUpdate()
     if (!detached())
         updateScheduled = false;
 
-    if (detached() || theOptionsFetcher) {
+    if (detached() || theOptionsFetcher.set()) {
         debugs(93,5, HERE << "ignores options update " << status());
         return;
     }
@@ -188,7 +188,7 @@ void Adaptation::Icap::ServiceRep::callWhenReady(AsyncCall::Pointer &cb)
     i.callback = cb;
     theClients.push_back(i);
 
-    if (theOptionsFetcher || notifying)
+    if (theOptionsFetcher.set() || notifying)
         return; // do nothing, we will be picked up in noteTimeToNotify()
 
     if (needNewOptions())
@@ -200,7 +200,7 @@ void Adaptation::Icap::ServiceRep::callWhenReady(AsyncCall::Pointer &cb)
 void Adaptation::Icap::ServiceRep::scheduleNotification()
 {
     debugs(93,7, HERE << "will notify " << theClients.size() << " clients");
-    CallJobHere(93, 5, this, Adaptation::Icap::ServiceRep::noteTimeToNotify);
+    CallJobHere(93, 5, this, Adaptation::Icap::ServiceRep, noteTimeToNotify);
 }
 
 bool Adaptation::Icap::ServiceRep::needNewOptions() const
@@ -294,7 +294,7 @@ void Adaptation::Icap::ServiceRep::announceStatusChange(const char *downPhrase, 
 // we are receiving ICAP OPTIONS response headers here or NULL on failures
 void Adaptation::Icap::ServiceRep::noteAdaptationAnswer(HttpMsg *msg)
 {
-    Must(theOptionsFetcher);
+    Must(initiated(theOptionsFetcher));
     clearAdaptation(theOptionsFetcher);
 
     Must(msg);
@@ -314,10 +314,20 @@ void Adaptation::Icap::ServiceRep::noteAdaptationAnswer(HttpMsg *msg)
 
 void Adaptation::Icap::ServiceRep::noteAdaptationQueryAbort(bool)
 {
-    Must(theOptionsFetcher);
+    Must(initiated(theOptionsFetcher));
     clearAdaptation(theOptionsFetcher);
 
     debugs(93,3, HERE << "failed to fetch options " << status());
+    handleNewOptions(0);
+}
+
+// we (a) must keep trying to get OPTIONS and (b) are RefCounted so we
+// must keep our job alive (XXX: until nobody needs us)
+void Adaptation::Icap::ServiceRep::callException(const std::exception &e)
+{
+    clearAdaptation(theOptionsFetcher);
+    debugs(93,2, "ICAP probably failed to fetch options (" << e.what() <<
+           ")" << status());
     handleNewOptions(0);
 }
 
@@ -337,9 +347,9 @@ void Adaptation::Icap::ServiceRep::startGettingOptions()
     Must(!theOptionsFetcher);
     debugs(93,6, HERE << "will get new options " << status());
 
-    // XXX: second "this" is "self"; this works but may stop if API changes
-    theOptionsFetcher = initiateAdaptation(new Adaptation::Icap::OptXactLauncher(this, this));
-    Must(theOptionsFetcher);
+    // XXX: "this" here is "self"; works until refcounting API changes
+    theOptionsFetcher = initiateAdaptation(
+                            new Adaptation::Icap::OptXactLauncher(this));
     // TODO: timeout in case Adaptation::Icap::OptXact never calls us back?
     // Such a timeout should probably be a generic AsyncStart feature.
 }
@@ -406,10 +416,10 @@ Adaptation::Icap::ServiceRep::optionsFetchTime() const
 }
 
 Adaptation::Initiate *
-Adaptation::Icap::ServiceRep::makeXactLauncher(Adaptation::Initiator *initiator,
-        HttpMsg *virgin, HttpRequest *cause)
+Adaptation::Icap::ServiceRep::makeXactLauncher(HttpMsg *virgin,
+        HttpRequest *cause)
 {
-    return new Adaptation::Icap::ModXactLauncher(initiator, virgin, cause, this);
+    return new Adaptation::Icap::ModXactLauncher(virgin, cause, this);
 }
 
 // returns a temporary string depicting service status, for debugging
@@ -438,7 +448,7 @@ const char *Adaptation::Icap::ServiceRep::status() const
     if (detached())
         buf.append(",detached", 9);
 
-    if (theOptionsFetcher)
+    if (theOptionsFetcher.set())
         buf.append(",fetch", 6);
 
     if (notifying)

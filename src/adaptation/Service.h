@@ -31,7 +31,7 @@ public:
     virtual bool broken() const;
     virtual bool up() const = 0; // see comments above
 
-    virtual Initiate *makeXactLauncher(Initiator *, HttpMsg *virginHeader, HttpRequest *virginCause) = 0;
+    virtual Initiate *makeXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause) = 0;
 
     typedef void Callback(void *data, Pointer &service);
     void callWhenReady(Callback *cb, void *data);

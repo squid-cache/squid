@@ -14,11 +14,11 @@
 #include "adaptation/ServiceGroups.h"
 
 
-Adaptation::Iterator::Iterator(Adaptation::Initiator *anInitiator,
-                               HttpMsg *aMsg, HttpRequest *aCause,
-                               const ServiceGroupPointer &aGroup):
+Adaptation::Iterator::Iterator(
+    HttpMsg *aMsg, HttpRequest *aCause,
+    const ServiceGroupPointer &aGroup):
         AsyncJob("Iterator"),
-        Adaptation::Initiate("Iterator", anInitiator),
+        Adaptation::Initiate("Iterator"),
         theGroup(aGroup),
         theMsg(HTTPMSGLOCK(aMsg)),
         theCause(aCause ? HTTPMSGLOCK(aCause) : NULL),
@@ -69,8 +69,8 @@ void Adaptation::Iterator::step()
     debugs(93,5, HERE << "using adaptation service: " << service->cfg().key);
 
     theLauncher = initiateAdaptation(
-                      service->makeXactLauncher(this, theMsg, theCause));
-    Must(theLauncher);
+                      service->makeXactLauncher(theMsg, theCause));
+    Must(initiated(theLauncher));
     Must(!done());
 }
 
@@ -148,10 +148,10 @@ bool Adaptation::Iterator::doneAll() const
 
 void Adaptation::Iterator::swanSong()
 {
-    if (theInitiator)
+    if (theInitiator.set())
         tellQueryAborted(true); // abnormal condition that should not happen
 
-    if (theLauncher)
+    if (initiated(theLauncher))
         clearAdaptation(theLauncher);
 
     Adaptation::Initiate::swanSong();

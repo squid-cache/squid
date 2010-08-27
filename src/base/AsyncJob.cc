@@ -3,6 +3,7 @@
  */
 
 #include "squid.h"
+#include "base/AsyncJobCalls.h"
 #include "cbdata.h"
 #include "MemBuf.h"
 #include "TextException.h"
@@ -12,10 +13,10 @@
 
 unsigned int AsyncJob::TheLastId = 0;
 
-AsyncJob *AsyncJob::AsyncStart(AsyncJob *job)
+AsyncJob::Pointer AsyncJob::Start(AsyncJob *j)
 {
-    assert(job);
-    CallJobHere(93, 5, job, AsyncJob::noteStart);
+    AsyncJob::Pointer job(j);
+    CallJobHere(93, 5, job, AsyncJob, start);
     return job;
 }
 
@@ -27,11 +28,6 @@ AsyncJob::AsyncJob(const char *aTypeName): typeName(aTypeName), inCall(NULL), id
 
 AsyncJob::~AsyncJob()
 {
-}
-
-void AsyncJob::noteStart()
-{
-    start();
 }
 
 void AsyncJob::start()
@@ -52,8 +48,9 @@ void AsyncJob::deleteThis(const char *aReason)
 
     // there is no call wrapper waiting for our return, so we fake it
     debugs(93, 5, typeName << " will delete this, reason: " << stopReason);
+    CbcPointer<AsyncJob> self(this);
     AsyncCall::Pointer fakeCall = asyncCall(93,4, "FAKE-deleteThis",
-                                            MemFun(this, &AsyncJob::deleteThis, aReason));
+                                            JobMemFun(self, &AsyncJob::deleteThis, aReason));
     inCall = fakeCall;
     callEnd();
 //    delete fakeCall;
@@ -164,60 +161,3 @@ const char *AsyncJob::status() const
 }
 
 
-/* JobDialer */
-
-JobDialer::JobDialer(AsyncJob *aJob): job(NULL), lock(NULL)
-{
-    if (aJob) {
-        lock = cbdataReference(aJob->toCbdata());
-        job = aJob;
-    }
-}
-
-JobDialer::JobDialer(const JobDialer &d): CallDialer(d),
-        job(NULL), lock(NULL)
-{
-    if (d.lock && cbdataReferenceValid(d.lock)) {
-        lock = cbdataReference(d.lock);
-        Must(d.job);
-        job = d.job;
-    }
-}
-
-JobDialer::~JobDialer()
-{
-    cbdataReferenceDone(lock); // lock may be NULL
-}
-
-
-bool
-JobDialer::canDial(AsyncCall &call)
-{
-    if (!lock)
-        return call.cancel("job was gone before the call");
-
-    if (!cbdataReferenceValid(lock))
-        return call.cancel("job gone after the call");
-
-    Must(job);
-    return job->canBeCalled(call);
-}
-
-void
-JobDialer::dial(AsyncCall &call)
-{
-    Must(lock && cbdataReferenceValid(lock)); // canDial() checks for this
-    Must(job);
-
-    job->callStart(call);
-
-    try {
-        doDial();
-    } catch (const std::exception &e) {
-        debugs(call.debugSection, 3,
-               HERE << call.name << " threw exception: " << e.what());
-        job->callException(e);
-    }
-
-    job->callEnd(); // may delete job
-}

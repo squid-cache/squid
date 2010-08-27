@@ -186,7 +186,7 @@ protected:
 
 #if USE_ADAPTATION
     BodyPipe::Pointer virginBodyDestination;  /**< to provide virgin response body */
-    Adaptation::Initiate *adaptedHeadSource;  /**< to get adapted response headers */
+    CbcPointer<Adaptation::Initiate> adaptedHeadSource;  /**< to get adapted response headers */
     BodyPipe::Pointer adaptedBodySource;      /**< to consume adated response body */
 
     bool adaptationAccessCheckPending;

@@ -14,11 +14,11 @@
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Ecap::XactionRep, XactionRep);
 
 
-Adaptation::Ecap::XactionRep::XactionRep(Adaptation::Initiator *anInitiator,
-        HttpMsg *virginHeader, HttpRequest *virginCause,
-        const Adaptation::ServicePointer &aService):
+Adaptation::Ecap::XactionRep::XactionRep(
+    HttpMsg *virginHeader, HttpRequest *virginCause,
+    const Adaptation::ServicePointer &aService):
         AsyncJob("Adaptation::Ecap::XactionRep"),
-        Adaptation::Initiate("Adaptation::Ecap::XactionRep", anInitiator),
+        Adaptation::Initiate("Adaptation::Ecap::XactionRep"),
         theService(aService),
         theVirginRep(virginHeader), theCauseRep(NULL),
         proxyingVb(opUndecided), proxyingAb(opUndecided),

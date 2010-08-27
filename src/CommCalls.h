@@ -141,17 +141,18 @@ Params &GetCommParams(AsyncCall::Pointer &call)
 // All job dialers with comm parameters are merged into one since they
 // all have exactly one callback argument and differ in Params type only
 template <class C, class Params_>
-class CommCbMemFunT: public JobDialer, public CommDialerParamsT<Params_>
+class CommCbMemFunT: public JobDialer<C>, public CommDialerParamsT<Params_>
 {
 public:
     typedef Params_ Params;
     typedef void (C::*Method)(const Params &io);
 
-    CommCbMemFunT(C *obj, Method meth): JobDialer(obj),
-            CommDialerParamsT<Params>(obj), object(obj), method(meth) {}
+    CommCbMemFunT(const CbcPointer<C> &job, Method meth): JobDialer<C>(job),
+            CommDialerParamsT<Params_>(job.get()),
+            method(meth) {}
 
     virtual bool canDial(AsyncCall &c) {
-        return JobDialer::canDial(c) &&
+        return JobDialer<C>::canDial(c) &&
                this->params.syncWithComm();
     }
 
@@ -162,11 +163,10 @@ public:
     }
 
 public:
-    C *object;
     Method method;
 
 protected:
-    virtual void doDial() { (object->*method)(this->params); }
+    virtual void doDial() { ((&(*this->job))->*method)(this->params); }
 };
 
 

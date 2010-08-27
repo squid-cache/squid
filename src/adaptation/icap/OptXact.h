@@ -51,7 +51,7 @@ class OptXact: public Xaction
 {
 
 public:
-    OptXact(Adaptation::Initiator *anInitiator, ServiceRep::Pointer &aService);
+    OptXact(ServiceRep::Pointer &aService);
 
 protected:
     virtual void start();
@@ -76,7 +76,7 @@ private:
 class OptXactLauncher: public Launcher
 {
 public:
-    OptXactLauncher(Adaptation::Initiator *anInitiator, Adaptation::ServicePointer aService);
+    OptXactLauncher(Adaptation::ServicePointer aService);
 
 protected:
     virtual Xaction *createXaction();
