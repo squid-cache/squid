@@ -1372,7 +1372,7 @@ peerProbeConnect(peer * p)
         AsyncCall::Pointer call = commCbCall(15,3, "peerProbeConnectDone", CommConnectCbPtrFun(peerProbeConnectDone, p));
         Comm::ConnOpener *cs = new Comm::ConnOpener(conn, call, ctimeout);
         cs->setHost(p->host);
-        AsyncJob::AsyncStart(cs);
+        AsyncJob::Start(cs);
     }
 
     p->stats.last_connect_probe = squid_curtime;

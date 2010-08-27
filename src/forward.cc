@@ -831,7 +831,7 @@ FwdState::connectStart()
     AsyncCall::Pointer call = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
     Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], call, ctimeout);
     cs->setHost(host);
-    AsyncJob::AsyncStart(cs);
+    AsyncJob::Start(cs);
 }
 
 void
