@@ -36,6 +36,7 @@
 
 #include "squid.h"
 #include "Array.h"
+#include "comm/forward.h"
 
 /**
  \defgroup CacheManagerAPI Cache Manager API
@@ -104,7 +105,7 @@ public:
     void registerAction(CacheManagerAction *anAction);
     CacheManagerAction * findAction(char const * action);
 
-    void Start(int fd, HttpRequest * request, StoreEntry * entry);
+    void Start(const Comm::ConnectionPointer &client, HttpRequest * request, StoreEntry * entry);
 
     static CacheManager* GetInstance();
     const char *ActionProtection(const CacheManagerAction * at);

@@ -249,7 +249,8 @@ asnCacheStart(int as)
     if ((e = storeGetPublic(asres, METHOD_GET)) == NULL) {
         e = storeCreateEntry(asres, asres, request_flags(), METHOD_GET);
         asState->sc = storeClientListAdd(e, asState);
-        FwdState::fwdStart(-1, e, asState->request);
+        Comm::ConnectionPointer nul;
+        FwdState::fwdStart(nul, e, asState->request);
     } else {
 
         e->lock();

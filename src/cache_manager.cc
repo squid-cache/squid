@@ -32,8 +32,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
+#include "config.h"
 #include "CacheManager.h"
+#include "comm/Connection.h"
 #include "errorpage.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -259,7 +260,7 @@ CacheManager::StateFree(cachemgrStateData * mgr)
  * all needed internal work and renders the response.
  */
 void
-CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
+CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request, StoreEntry * entry)
 {
     cachemgrStateData *mgr = NULL;
     ErrorState *err = NULL;
@@ -279,7 +280,7 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
     entry->lock();
     entry->expires = squid_curtime;
 
-    debugs(16, 5, "CacheManager: " << fd_table[fd].ipaddr << " requesting '" << mgr->action << "'");
+    debugs(16, 5, "CacheManager: " << client << " requesting '" << mgr->action << "'");
 
     /* get additional info from request headers */
     ParseHeaders(mgr, request);
@@ -296,13 +297,13 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
         if (mgr->passwd)
             debugs(16, DBG_IMPORTANT, "CacheManager: " <<
                    (mgr->user_name ? mgr->user_name : "<unknown>") << "@" <<
-                   fd_table[fd].ipaddr << ": incorrect password for '" <<
+                   client << ": incorrect password for '" <<
                    mgr->action << "'" );
         else
             debugs(16, DBG_IMPORTANT, "CacheManager: " <<
                    (mgr->user_name ? mgr->user_name : "<unknown>") << "@" <<
-                   fd_table[fd].ipaddr << ": password needed for '" <<
-                   mgr->action << "'" );
+                   client << ": password needed for '" <<
+                   mgr->action << "'");
 
         rep = errState->BuildHttpReply();
 
@@ -328,7 +329,7 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
 
     debugs(16, 2, "CacheManager: " <<
            (mgr->user_name ? mgr->user_name : "<unknown>") << "@" <<
-           fd_table[fd].ipaddr << " requesting '" <<
+           client << " requesting '" <<
            mgr->action << "'" );
     /* retrieve object requested */
     a = findAction(mgr->action);

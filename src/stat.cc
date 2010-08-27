@@ -37,6 +37,7 @@
 #include "StoreClient.h"
 #include "auth/UserRequest.h"
 #include "CacheManager.h"
+#include "comm/Connection.h"
 #include "Store.h"
 #include "HttpRequest.h"
 #include "MemObject.h"
@@ -1611,7 +1612,6 @@ statClientRequests(StoreEntry * s)
     dlink_node *i;
     ClientHttpRequest *http;
     StoreEntry *e;
-    int fd;
     char buf[MAX_IPSTRLEN];
 
     for (i = ClientActiveRequests.head; i; i = i->next) {
@@ -1622,7 +1622,7 @@ statClientRequests(StoreEntry * s)
         storeAppendPrintf(s, "Connection: %p\n", conn);
 
         if (conn != NULL) {
-            fd = conn->fd;
+            const int fd = conn->clientConn->fd;
             storeAppendPrintf(s, "\tFD %d, read %"PRId64", wrote %"PRId64"\n", fd,
                               fd_table[fd].bytes_read, fd_table[fd].bytes_written);
             storeAppendPrintf(s, "\tFD desc: %s\n", fd_table[fd].desc);
@@ -1667,8 +1667,8 @@ statClientRequests(StoreEntry * s)
 
 #if USE_SSL
 
-        if (!p && conn != NULL)
-            p = sslGetUserEmail(fd_table[conn->fd].ssl);
+        if (!p && conn != NULL && Comm::IsConnOpen(conn->clientConn))
+            p = sslGetUserEmail(fd_table[conn->clientConn->fd].ssl);
 
 #endif
 
