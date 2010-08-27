@@ -1989,7 +1989,7 @@ HttpStateData::sendRequest()
     typedef CommCbMemFunT<HttpStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(11, 5,
                                       TimeoutDialer, this, HttpStateData::httpTimeout);
-    commSetTimeout(srverConnection->fd, Config.Timeout.lifetime, timeoutCall);
+    commSetTimeout(serverConnection->fd, Config.Timeout.lifetime, timeoutCall);
     flags.do_next_read = 1;
     maybeReadVirginBody();
 
