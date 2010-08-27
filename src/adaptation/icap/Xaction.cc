@@ -130,7 +130,7 @@ void Adaptation::Icap::Xaction::openConnection()
     connector = JobCallback(93,3, ConnectDialer, this, Adaptation::Icap::Xaction::noteCommConnected);
     Comm::ConnOpener *cs = new Comm::ConnOpener(connection, connector, TheConfig.connect_timeout(service().cfg().bypass));
     cs->setHost(s.cfg().host.termedBuf());
-    AsyncJob::AsyncStart(cs);
+    AsyncJob::Start(cs);
 }
 
 /*
