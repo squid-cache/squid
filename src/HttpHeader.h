@@ -104,7 +104,7 @@ typedef enum {
     HDR_SET_COOKIE,
     HDR_TE,
     HDR_TITLE,
-    HDR_TRAILERS,
+    HDR_TRAILER,
     HDR_TRANSFER_ENCODING,
     HDR_TRANSLATE,             /* IIS custom header we may need to cut off */
     HDR_UNLESS_MODIFIED_SINCE,             /* IIS custom header we may need to cut off */

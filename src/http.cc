@@ -1768,7 +1768,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case HDR_TE:                  /** \par TE: */
     case HDR_KEEP_ALIVE:          /** \par Keep-Alive: */
     case HDR_PROXY_AUTHENTICATE:  /** \par Proxy-Authenticate: */
-    case HDR_TRAILERS:            /** \par Trailers: */
+    case HDR_TRAILER:             /** \par Trailer: */
     case HDR_UPGRADE:             /** \par Upgrade: */
     case HDR_TRANSFER_ENCODING:   /** \par Transfer-Encoding: */
         break;
