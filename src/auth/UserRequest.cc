@@ -42,12 +42,9 @@
 #include "squid.h"
 #include "auth/UserRequest.h"
 #include "auth/User.h"
-/*#include "auth/Gadgets.h"
-#include "acl/Acl.h"
-#include "client_side.h"
-*/
 #include "auth/Config.h"
 #include "auth/Scheme.h"
+#include "comm/Connection.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 
@@ -345,7 +342,9 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
     debugs(29, 9, HERE << "header " << (proxy_auth ? proxy_auth : "-") << ".");
 
     if (*auth_user_request == NULL) {
-        debugs(29, 9, HERE << "This is a new checklist test on FD:" << (conn != NULL ? conn->fd : -1)  );
+        if (conn != NULL) {
+            debugs(29, 9, HERE << "This is a new checklist test on:" << conn->clientConn);
+        }
 
         if (proxy_auth && request->auth_user_request == NULL && conn != NULL && conn->auth_user_request != NULL) {
             AuthConfig * scheme = AuthConfig::Find(proxy_auth);

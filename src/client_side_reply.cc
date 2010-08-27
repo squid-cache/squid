@@ -265,11 +265,10 @@ clientReplyContext::processExpired()
      * A refcounted pointer so that FwdState stays around as long as
      * this clientReplyContext does
      */
-    FwdState::fwdStart(http->getConn() != NULL ? http->getConn()->fd : -1,
-                       http->storeEntry(),
-                       http->request);
-    /* Register with storage manager to receive updates when data comes in. */
+    Comm::ConnectionPointer conn = http->getConn() != NULL ? http->getConn()->clientConn : NULL;
+    FwdState::fwdStart(conn, http->storeEntry(), http->request);
 
+    /* Register with storage manager to receive updates when data comes in. */
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
         debugs(88, 0, "clientReplyContext::processExpired: Found ENTRY_ABORTED object");
 
@@ -681,9 +680,8 @@ clientReplyContext::processMiss()
             r->protocol = PROTO_INTERNAL;
 
         /** Start forwarding to get the new object from network */
-        FwdState::fwdStart(http->getConn() != NULL ? http->getConn()->fd : -1,
-                           http->storeEntry(),
-                           r);
+        Comm::ConnectionPointer conn = http->getConn() != NULL ? http->getConn()->clientConn : NULL;
+        FwdState::fwdStart(conn, http->storeEntry(), r);
     }
 }
 
@@ -1934,10 +1932,11 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     ConnStateData * conn = http->getConn();
 
-    int fd = conn != NULL ? conn->fd : -1;
-    if (fd >= 0 && fd_table[fd].closing()) { // too late, our conn is closing
-        // TODO: should we also quit when fd is negative?
-        debugs(33,3, HERE << "not sending more data to a closing FD " << fd);
+    // AYJ: this seems a bit weird to ignore CLOSED but drop on closing.
+    if (conn != NULL && Comm::IsConnOpen(conn->clientConn) && fd_table[conn->clientConn->fd].closing()) {
+        // too late, our conn is closing
+        // TODO: should we also quit?
+        debugs(33,3, HERE << "not sending more data to a closing " << conn->clientConn);
         return;
     }
 
@@ -1954,7 +1953,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
 #if USE_ZPH_QOS
     if (reqofs==0 && !logTypeIsATcpHit(http->logType)) {
-        assert(fd >= 0); // the beginning of this method implies fd may be -1
+        assert(conn != NULL && Comm::IsConnOpen(conn->clientConn)); // the beginning of this method implies FD may be closed.
         int tos = 0;
         if (Ip::Qos::TheConfig.tos_sibling_hit && http->request->hier.code==SIBLING_HIT ) {
             tos = Ip::Qos::TheConfig.tos_sibling_hit;
@@ -1963,10 +1962,10 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
             tos = Ip::Qos::TheConfig.tos_parent_hit;
             debugs(33, 2, "ZPH: Parent Peer hit with hier.code=" << http->request->hier.code << ", TOS=" << tos);
         } else if (Ip::Qos::TheConfig.preserve_miss_tos && Ip::Qos::TheConfig.preserve_miss_tos_mask) {
-            tos = fd_table[fd].upstreamTOS & Ip::Qos::TheConfig.preserve_miss_tos_mask;
+            tos = fd_table[conn->clientConn->fd].upstreamTOS & Ip::Qos::TheConfig.preserve_miss_tos_mask;
             debugs(33, 2, "ZPH: Preserving TOS on miss, TOS="<<tos);
         }
-        comm_set_tos(fd,tos);
+        comm_set_tos(conn->clientConn->fd,tos);
     }
 #endif
 
@@ -1989,7 +1988,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
            reqofs << " bytes (" << result.length <<
            " new bytes)");
     debugs(88, 5, "clientReplyContext::sendMoreData:"
-           " FD " << fd <<
+           << conn->clientConn <<
            " '" << entry->url() << "'" <<
            " out.offset=" << http->out.offset);
 
@@ -2024,8 +2023,6 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     processReplyAccess();
     return;
 }
-
-
 
 /* Using this breaks the client layering just a little!
  */

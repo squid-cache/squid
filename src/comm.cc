@@ -1130,14 +1130,27 @@ comm_lingering_close(int fd)
 
 #endif
 
-/*
+/**
  * enable linger with time of 0 so that when the socket is
  * closed, TCP generates a RESET
  */
 void
-comm_reset_close(int fd)
+comm_reset_close(Comm::ConnectionPointer &conn)
 {
+    struct linger L;
+    L.l_onoff = 1;
+    L.l_linger = 0;
 
+    if (setsockopt(conn->fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0)
+        debugs(50, DBG_CRITICAL, "ERROR: Closing FD " << conn->fd << " with TCP RST: " << xstrerror());
+
+    conn->close();
+}
+
+// Legacy close function.
+void
+old_comm_reset_close(int fd)
+{
     struct linger L;
     L.l_onoff = 1;
     L.l_linger = 0;
@@ -1759,7 +1772,7 @@ commCloseAllSockets(void)
             ScheduleCallHere(callback);
         } else {
             debugs(5, 5, "commCloseAllSockets: FD " << fd << ": calling comm_reset_close()");
-            comm_reset_close(fd);
+            old_comm_reset_close(fd);
         }
     }
 }

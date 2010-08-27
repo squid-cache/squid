@@ -227,7 +227,7 @@ TunnelStateData::ReadServer(int fd, char *buf, size_t len, comm_err_t errcode, i
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     assert (cbdataReferenceValid (tunnelState));
 
-    assert(fd == tunnelState->server.conn->fd);
+    assert(errcode == COMM_ERR_CLOSING || fd == tunnelState->server.conn->fd);
     tunnelState->readServer(buf, len, errcode, xerrno);
 }
 
@@ -579,7 +579,6 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     TunnelStateData *tunnelState = NULL;
     ErrorState *err = NULL;
     int answer;
-    int client_fd = http->getConn()->fd;
     HttpRequest *request = http->request;
     char *url = http->uri;
 
@@ -602,7 +601,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
         if (answer == 0) {
             err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN, request);
             *status_ptr = HTTP_FORBIDDEN;
-            errorSend(client_fd, err);
+            errorSend(http->getConn()->clientConn->fd, err);
             return;
         }
     }
@@ -619,13 +618,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     tunnelState->request = HTTPMSGLOCK(request);
     tunnelState->server.size_ptr = size_ptr;
     tunnelState->status_ptr = status_ptr;
-
-    /* TODO: when ClientHttpRequests is passing around the client Comm::Connection
-     *       we can grab that instead of copying the FD and address details here */
-    tunnelState->client.conn = new Comm::Connection;
-    tunnelState->client.conn->local = request->my_addr;
-    tunnelState->client.conn->remote = request->client_addr;
-    tunnelState->client.conn->fd = client_fd;
+    tunnelState->client.conn = http->getConn()->clientConn;
 
     comm_add_close_handler(tunnelState->client.conn->fd,
                            tunnelClientClosed,
