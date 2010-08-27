@@ -2122,6 +2122,7 @@ AC_CHECK_HEADERS( \
   regex.h \
   sched.h \
   security/pam_appl.h \
+  siginfo.h \
   signal.h \
   sstream \
   stdarg.h \
@@ -2142,7 +2143,7 @@ AC_CHECK_HEADERS( \
   sys/md5.h \
   sys/msg.h \
   sys/resource.h \
-  sys/select.h\
+  sys/select.h \
   sys/socket.h \
   sys/stat.h \
   sys/statvfs.h \
@@ -2913,6 +2914,7 @@ AC_REPLACE_FUNCS(\
 	initgroups \
 	getaddrinfo \
 	getnameinfo \
+	psignal \
 	strerror \
 	strsep \
 	strtoll \
@@ -3233,6 +3235,7 @@ AC_CONFIG_FILES([\
 	helpers/url_rewrite/Makefile \
 	helpers/url_rewrite/fake/Makefile \
 	tools/Makefile
+	tools/purge/Makefile
 ])
 
 AC_CONFIG_SUBDIRS(lib/libTrie)

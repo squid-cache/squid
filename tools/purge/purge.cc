@@ -95,22 +95,19 @@
 //
 #if defined(__GNUC__) || defined(__GNUG__)
 #pragma implementation
-#else
-#ifndef HAS_BOOL
-#define HAS_BOOL
-typedef int bool;
-#define false 0
-#define true  1
-#endif
 #endif
 
-#include <assert.h>
+#include "config.h"
+// for xstrdup
+#include "util.h"
+
+//#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <dirent.h>
-#include <ctype.h>
+//#include <ctype.h>
 #include <string.h>
-#include <sys/types.h>
+//#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <fcntl.h>
@@ -120,15 +117,15 @@ typedef int bool;
 #include <signal.h>
 #include <errno.h>
 
-#if defined(HAS_PSIGNAL) && !defined(LINUX) && !defined(FREEBSD)
+#if HAVE_SIGINFO_H
 #include <siginfo.h>
-#endif // HAS_PSIGNAL
+#endif
 
 #include <netinet/in.h>
 #include <netinet/tcp.h>  // TCP_NODELAY
 #include <arpa/inet.h>
 #include <netdb.h>        // gethostbyname()
-#include <regex.h>
+//#include <regex.h>    //comes via compat.h
 
 #include "convert.hh"
 #include "socket.hh"
@@ -157,8 +154,7 @@ static bool verbose  = false;
 static bool envelope = false;
 static bool no_fork  = false;
 static const char* programname = 0;
-static const char* RCS_ID =
-    "$Id$";
+static const char* RCS_ID = "$Id$";
 
 // ----------------------------------------------------------------------
 
@@ -173,7 +169,7 @@ struct REList {
 };
 
 REList::REList( const char* what, bool doCase )
-        :next(0),data(strdup(what))
+        :next(0),data(xstrdup(what))
 {
     int result = regcomp( &rexp, what,
                           REG_EXTENDED | REG_NOSUB | (doCase ? 0 : REG_ICASE) );
@@ -188,7 +184,7 @@ REList::REList( const char* what, bool doCase )
 REList::~REList()
 {
     if ( next ) delete next;
-    if ( data ) free((void*) data);
+    if ( data ) xfree((void*) data);
     regfree(&rexp);
 }
 
@@ -277,7 +273,7 @@ log_extended( const char* fn, int code, long size, const SquidMetaList* meta )
         }
         md5[32] = '\0'; // terminate string
     } else {
-        sprintf( md5, "%-32s", "(no_md5_data_available)" );
+        snprintf( md5, sizeof(md5), "%-32s", "(no_md5_data_available)" );
     }
 
     char timeb[64];
@@ -285,18 +281,18 @@ log_extended( const char* fn, int code, long size, const SquidMetaList* meta )
         StoreMetaStd temp;
         // make data aligned, avoid SIGBUS on RISC machines (ARGH!)
         memcpy( &temp, findings->data, sizeof(StoreMetaStd) );
-        sprintf( timeb, "%08x %08x %08x %08x %04x %5hu ",
-                 temp.timestamp, temp.lastref,
-                 temp.expires, temp.lastmod, temp.flags, temp.refcount );
+        snprintf( timeb, sizeof(timeb), "%08lx %08lx %08lx %08lx %04x %5hu ",
+                  (unsigned long)temp.timestamp, (unsigned long)temp.lastref,
+                  (unsigned long)temp.expires, (unsigned long)temp.lastmod, temp.flags, temp.refcount );
     } else if ( meta && (findings = meta->search( STORE_META_STD_LFS )) ) {
         StoreMetaStdLFS temp;
         // make data aligned, avoid SIGBUS on RISC machines (ARGH!)
         memcpy( &temp, findings->data, sizeof(StoreMetaStd) );
-        sprintf( timeb, "%08x %08x %08x %08x %04x %5hu ",
-                 temp.timestamp, temp.lastref,
-                 temp.expires, temp.lastmod, temp.flags, temp.refcount );
+        snprintf( timeb, sizeof(timeb), "%08lx %08lx %08lx %08lx %04x %5hu ",
+                  (unsigned long)temp.timestamp, (unsigned long)temp.lastref,
+                  (unsigned long)temp.expires, (unsigned long)temp.lastmod, temp.flags, temp.refcount );
     } else {
-        sprintf( timeb, "%08x %08x %08x %08x %04x %5hu ", -1, -1, -1, -1, 0, 0 );
+        snprintf( timeb, sizeof(timeb), "%08lx %08lx %08lx %08lx %04x %5hu ", (unsigned long)-1, (unsigned long)-1, (unsigned long)-1, (unsigned long)-1, 0, 0 );
     }
 
     // make sure that there is just one printf()
@@ -345,7 +341,7 @@ action( int fd, size_t metasize,
         unsigned long bufsize = strlen(url) + strlen(schablone) + 4;
         char* buffer = new char[bufsize];
 
-        sprintf( buffer, schablone, url );
+        snprintf( buffer, bufsize, schablone, url );
         int sockfd = connectTo( serverHost, serverPort, true );
         if ( sockfd == -1 ) {
             fprintf( stderr, "unable to connect to server: %s\n", strerror(errno) );
@@ -634,14 +630,14 @@ parseCommandline( int argc, char* argv[], REList*& head,
             break;
         case 'C':
             if ( optarg && *optarg ) {
-                if ( copydir ) free( (void*) copydir );
-                assert( (copydir = strdup(optarg)) );
+                if ( copydir ) xfree( (void*) copydir );
+                assert( (copydir = xstrdup(optarg)) );
             }
             break;
         case 'c':
             if ( optarg && *optarg ) {
-                if ( *conffile ) free((void*) conffile );
-                assert( (conffile = strdup(optarg)) );
+                if ( *conffile ) xfree((void*) conffile );
+                assert( (conffile = xstrdup(optarg)) );
             }
             break;
 
@@ -846,7 +842,7 @@ main( int argc, char* argv[] )
 {
     // setup variables
     REList* list = 0;
-    char* conffile = strdup( DEFAULT_SQUID_CONF );
+    char* conffile = xstrdup( DEFAULT_SQUID_CONF );
     serverPort = htons(DEFAULTPORT);
     if ( convertHostname(DEFAULTHOST,serverHost) == -1 ) {
         fprintf( stderr, "unable to resolve host %s!\n", DEFAULTHOST );
@@ -885,7 +881,7 @@ main( int argc, char* argv[] )
                 if ( ! dirlevel(i->base,list) )
                     fprintf( stderr, "program terminated due to error: %s",
                              strerror(errno) );
-                free((void*) i->base);
+                xfree((void*) i->base);
             }
         } else {
             // parallel mode, all cache_dir in parallel
@@ -907,7 +903,7 @@ main( int argc, char* argv[] )
                 ::iamalive = false;
             }
 
-            for ( int i=0; i < cdv.size(); ++i ) {
+            for ( size_t i=0; i < cdv.size(); ++i ) {
                 if ( getpid() == getpgrp() ) {
                     // only parent == group leader may fork off new processes
                     if ( (child[i]=fork()) < 0 ) {
@@ -921,7 +917,7 @@ main( int argc, char* argv[] )
                         if ( ! dirlevel(cdv[i].base,list) )
                             fprintf( stderr, "program terminated due to error: %s\n",
                                      strerror(errno) );
-                        free((void*) cdv[i].base);
+                        xfree((void*) cdv[i].base);
                         return 0;
                     } else {
                         // parent mode
@@ -933,7 +929,7 @@ main( int argc, char* argv[] )
             // collect the garbase
             pid_t temp;
             int status;
-            for ( int i=0; i < cdv.size(); ++i ) {
+            for ( size_t i=0; i < cdv.size(); ++i ) {
                 while ( (temp=waitpid( (pid_t)-1, &status, 0 )) == -1 )
                     if ( errno == EINTR ) continue;
                 if ( ::debug ) printf( "collected child %d\n", (int) temp );
@@ -945,8 +941,8 @@ main( int argc, char* argv[] )
     }
 
     // clean up
-    if ( copydir ) free( (void*) copydir );
-    free((void*) conffile);
+    if ( copydir ) xfree( (void*) copydir );
+    xfree((void*) conffile);
     delete list;
     return 0;
 }
