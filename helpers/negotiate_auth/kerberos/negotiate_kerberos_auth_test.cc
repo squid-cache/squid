@@ -85,7 +85,7 @@ LogTime()
 
     gettimeofday(&now, NULL);
     if (now.tv_sec != last_t) {
-        tm = localtime((const time_t*)&now.tv_sec);
+        tm = localtime((const time_t *) &now.tv_sec);
         strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
         last_t = now.tv_sec;
     }
@@ -93,7 +93,7 @@ LogTime()
 }
 
 #ifndef gss_mech_spnego
-static gss_OID_desc _gss_mech_spnego = { 6, (void *) "\x2b\x06\x01\x05\x05\x02" };
+static gss_OID_desc _gss_mech_spnego = {6, (void *) "\x2b\x06\x01\x05\x05\x02"};
 gss_OID gss_mech_spnego = &_gss_mech_spnego;
 #endif
 
@@ -116,7 +116,7 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
                                           GSS_C_GSS_CODE, GSS_C_NULL_OID, &msg_ctx, &status_string);
             if (maj_stat == GSS_S_COMPLETE) {
                 if (sizeof(buf) > len + status_string.length + 1) {
-                    snprintf(buf + len, (sizeof(buf)-len), "%s", (char *)status_string.value);
+                    snprintf(buf + len, (sizeof(buf) - len), "%s", (char *) status_string.value);
                     len += status_string.length;
                 }
                 gss_release_buffer(&min_stat, &status_string);
@@ -125,7 +125,7 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
             gss_release_buffer(&min_stat, &status_string);
         }
         if (sizeof(buf) > len + 2) {
-            snprintf(buf + len, (sizeof(buf)-len), "%s", ". ");
+            snprintf(buf + len, (sizeof(buf) - len), "%s", ". ");
             len += 2;
         }
         msg_ctx = 0;
@@ -135,7 +135,7 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
                                           GSS_C_MECH_CODE, GSS_C_NULL_OID, &msg_ctx, &status_string);
             if (maj_stat == GSS_S_COMPLETE) {
                 if (sizeof(buf) > len + status_string.length) {
-                    snprintf(buf + len, (sizeof(buf)-len), "%s", (char *) status_string.value);
+                    snprintf(buf + len, (sizeof(buf) - len), "%s", (char *) status_string.value);
                     len += status_string.length;
                 }
                 gss_release_buffer(&min_stat, &status_string);
@@ -169,9 +169,8 @@ squid_kerb_proxy_auth(char *proxy)
                 PROGRAM);
         return NULL;
     }
-
     service.value = xmalloc(strlen("HTTP") + strlen(proxy) + 2);
-    snprintf((char*)service.value, strlen("HTTP") + strlen(proxy) + 2, "%s@%s", "HTTP", proxy);
+    snprintf((char *) service.value, strlen("HTTP") + strlen(proxy) + 2, "%s@%s", "HTTP", proxy);
     service.length = strlen((char *) service.value);
 
     major_status = gss_import_name(&minor_status, &service,
@@ -192,12 +191,10 @@ squid_kerb_proxy_auth(char *proxy)
         goto cleanup;
 
     if (output_token.length) {
-        token = (char*)xmalloc(ska_base64_encode_len(output_token.length));
+        token = (char *) xmalloc(ska_base64_encode_len(output_token.length));
         ska_base64_encode(token, (const char *) output_token.value,
                           ska_base64_encode_len(output_token.length), output_token.length);
     }
-
-
 cleanup:
     gss_delete_sec_context(&minor_status, &gss_context, NULL);
     gss_release_buffer(&minor_status, &service);
@@ -235,6 +232,7 @@ main(int argc, char *argv[])
 
     exit(0);
 }
+
 #else
 #include <stdlib.h>
 int
@@ -242,4 +240,5 @@ main(int argc, char *argv[])
 {
     exit(-1);
 }
+
 #endif /* HAVE_GSSAPI */

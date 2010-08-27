@@ -21,8 +21,7 @@ namespace Adaptation
 class Iterator: public Initiate, public Initiator
 {
 public:
-    Iterator(Adaptation::Initiator *anInitiator,
-             HttpMsg *virginHeader, HttpRequest *virginCause,
+    Iterator(HttpMsg *virginHeader, HttpRequest *virginCause,
              const Adaptation::ServiceGroupPointer &aGroup);
     virtual ~Iterator();
 
@@ -52,7 +51,7 @@ protected:
     ServicePlan thePlan; ///< which services to use and in what order
     HttpMsg *theMsg; ///< the message being adapted (virgin for each step)
     HttpRequest *theCause; ///< the cause of the original virgin message
-    Adaptation::Initiate *theLauncher; ///< current transaction launcher
+    CbcPointer<Adaptation::Initiate> theLauncher; ///< current transaction launcher
     int iterations; ///< number of steps initiated
     bool adapted; ///< whether the virgin message has been replaced
 

@@ -1,5 +1,6 @@
 
 #include "squid.h"
+#include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
 #include "BodyPipe.h"
 
@@ -40,8 +41,9 @@ class BodyProducerDialer: public UnaryMemFunT<BodyProducer, BodyPipe::Pointer>
 public:
     typedef UnaryMemFunT<BodyProducer, BodyPipe::Pointer> Parent;
 
-    BodyProducerDialer(BodyProducer *aProducer, Parent::Method aHandler,
-                       BodyPipe::Pointer bp): Parent(aProducer, aHandler, bp) {}
+    BodyProducerDialer(const BodyProducer::Pointer &aProducer,
+                       Parent::Method aHandler, BodyPipe::Pointer bp):
+            Parent(aProducer, aHandler, bp) {}
 
     virtual bool canDial(AsyncCall &call);
 };
@@ -54,8 +56,9 @@ class BodyConsumerDialer: public UnaryMemFunT<BodyConsumer, BodyPipe::Pointer>
 public:
     typedef UnaryMemFunT<BodyConsumer, BodyPipe::Pointer> Parent;
 
-    BodyConsumerDialer(BodyConsumer *aConsumer, Parent::Method aHandler,
-                       BodyPipe::Pointer bp): Parent(aConsumer, aHandler, bp) {}
+    BodyConsumerDialer(const BodyConsumer::Pointer &aConsumer,
+                       Parent::Method aHandler, BodyPipe::Pointer bp):
+            Parent(aConsumer, aHandler, bp) {}
 
     virtual bool canDial(AsyncCall &call);
 };
@@ -66,7 +69,7 @@ BodyProducerDialer::canDial(AsyncCall &call)
     if (!Parent::canDial(call))
         return false;
 
-    BodyProducer *producer = object;
+    const BodyProducer::Pointer &producer = job;
     BodyPipe::Pointer pipe = arg1;
     if (!pipe->stillProducing(producer)) {
         debugs(call.debugSection, call.debugLevel, HERE << producer <<
@@ -83,7 +86,7 @@ BodyConsumerDialer::canDial(AsyncCall &call)
     if (!Parent::canDial(call))
         return false;
 
-    BodyConsumer *consumer = object;
+    const BodyConsumer::Pointer &consumer = job;
     BodyPipe::Pointer pipe = arg1;
     if (!pipe->stillConsuming(consumer)) {
         debugs(call.debugSection, call.debugLevel, HERE << consumer <<
@@ -192,9 +195,9 @@ void BodyPipe::expectProductionEndAfter(uint64_t size)
 void
 BodyPipe::clearProducer(bool atEof)
 {
-    if (theProducer) {
+    if (theProducer.set()) {
         debugs(91,7, HERE << "clearing BodyPipe producer" << status());
-        theProducer = NULL;
+        theProducer.clear();
         if (atEof) {
             if (!bodySizeKnown())
                 theBodySize = thePutSize;
@@ -224,10 +227,10 @@ BodyPipe::putMoreData(const char *aBuffer, size_t size)
 }
 
 bool
-BodyPipe::setConsumerIfNotLate(Consumer *aConsumer)
+BodyPipe::setConsumerIfNotLate(const Consumer::Pointer &aConsumer)
 {
     assert(!theConsumer);
-    assert(aConsumer);
+    assert(aConsumer.set()); // but might be invalid
 
     // TODO: convert this into an exception and remove IfNotLate suffix
     // If there is something consumed already, we are in an auto-consuming mode
@@ -256,9 +259,9 @@ BodyPipe::setConsumerIfNotLate(Consumer *aConsumer)
 void
 BodyPipe::clearConsumer()
 {
-    if (theConsumer) {
+    if (theConsumer.set()) {
         debugs(91,7, HERE << "clearing consumer" << status());
-        theConsumer = NULL;
+        theConsumer.clear();
         if (consumedSize() && !exhausted()) {
             AsyncCall::Pointer call= asyncCall(91, 7,
                                                "BodyProducer::noteBodyConsumerAborted",
@@ -386,7 +389,7 @@ BodyPipe::postAppend(size_t size)
 void
 BodyPipe::scheduleBodyDataNotification()
 {
-    if (theConsumer) {
+    if (theConsumer.valid()) { // TODO: allow asyncCall() to check this instead
         AsyncCall::Pointer call = asyncCall(91, 7,
                                             "BodyConsumer::noteMoreBodyDataAvailable",
                                             BodyConsumerDialer(theConsumer,
@@ -398,7 +401,7 @@ BodyPipe::scheduleBodyDataNotification()
 void
 BodyPipe::scheduleBodyEndNotification()
 {
-    if (theConsumer) {
+    if (theConsumer.valid()) { // TODO: allow asyncCall() to check this instead
         if (bodySizeKnown() && bodySize() == thePutSize) {
             AsyncCall::Pointer call = asyncCall(91, 7,
                                                 "BodyConsumer::noteBodyProductionEnded",
@@ -432,10 +435,10 @@ const char *BodyPipe::status() const
     outputBuffer.Printf(" %d+%d", (int)theBuf.contentSize(), (int)theBuf.spaceSize());
 
     outputBuffer.Printf(" pipe%p", this);
-    if (theProducer)
-        outputBuffer.Printf(" prod%p", theProducer);
-    if (theConsumer)
-        outputBuffer.Printf(" cons%p", theConsumer);
+    if (theProducer.set())
+        outputBuffer.Printf(" prod%p", theProducer.get());
+    if (theConsumer.set())
+        outputBuffer.Printf(" cons%p", theConsumer.get());
 
     if (mustAutoConsume)
         outputBuffer.append(" A", 2);

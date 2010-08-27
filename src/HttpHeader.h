@@ -40,7 +40,6 @@
 
 
 /* class forward declarations */
-class HttpVersion;
 class HttpHdrContRange;
 class HttpHdrCc;
 class HttpHdrSc;
@@ -104,7 +103,7 @@ typedef enum {
     HDR_SET_COOKIE,
     HDR_TE,
     HDR_TITLE,
-    HDR_TRAILERS,
+    HDR_TRAILER,
     HDR_TRANSFER_ENCODING,
     HDR_TRANSLATE,             /* IIS custom header we may need to cut off */
     HDR_UNLESS_MODIFIED_SINCE,             /* IIS custom header we may need to cut off */
@@ -255,6 +254,7 @@ public:
     int hasListMember(http_hdr_type id, const char *member, const char separator) const;
     int hasByNameListMember(const char *name, const char *member, const char separator) const;
     void removeHopByHopEntries();
+    inline bool chunked() const; ///< whether message uses chunked Transfer-Encoding
 
     /* protected, do not use these, use interface functions instead */
     Vector<HttpHeaderEntry *> entries;		/**< parsed fields in raw format */
@@ -278,8 +278,13 @@ private:
 extern int httpHeaderParseQuotedString (const char *start, String *val);
 SQUIDCEXTERN int httpHeaderHasByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator);
 SQUIDCEXTERN void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask);
-int httpMsgIsPersistent(HttpVersion const &http_ver, const HttpHeader * hdr);
-
 SQUIDCEXTERN void httpHeaderCalcMask(HttpHeaderMask * mask, http_hdr_type http_hdr_type_enums[], size_t count);
+
+inline bool
+HttpHeader::chunked() const
+{
+    return has(HDR_TRANSFER_ENCODING) &&
+           hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',');
+}
 
 #endif /* SQUID_HTTPHEADER_H */

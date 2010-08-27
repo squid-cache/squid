@@ -33,7 +33,7 @@ public:
     virtual bool probed() const;
     virtual bool up() const;
 
-    Adaptation::Initiate *makeXactLauncher(Adaptation::Initiator *, HttpMsg *virginHeader, HttpRequest *virginCause);
+    Adaptation::Initiate *makeXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause);
 
     // the methods below can only be called on an up() service
     virtual bool wantsUrl(const String &urlPath) const;

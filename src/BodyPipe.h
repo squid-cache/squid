@@ -2,8 +2,8 @@
 #define SQUID_BODY_PIPE_H
 
 #include "MemBuf.h"
-#include "base/AsyncCall.h"
 #include "base/AsyncJob.h"
+#include "base/CbcPointer.h"
 
 class BodyPipe;
 
@@ -14,6 +14,8 @@ class BodyPipe;
 class BodyProducer: virtual public AsyncJob
 {
 public:
+    typedef CbcPointer<BodyProducer> Pointer;
+
     BodyProducer():AsyncJob("BodyProducer") {}
     virtual ~BodyProducer() {}
 
@@ -32,6 +34,8 @@ protected:
 class BodyConsumer: virtual public AsyncJob
 {
 public:
+    typedef CbcPointer<BodyConsumer> Pointer;
+
     BodyConsumer():AsyncJob("BodyConsumer") {}
     virtual ~BodyConsumer() {}
 
@@ -103,17 +107,17 @@ public:
     bool mayNeedMoreData() const { return !bodySizeKnown() || needsMoreData(); }
     bool needsMoreData() const { return bodySizeKnown() && unproducedSize() > 0; }
     uint64_t unproducedSize() const; // size of still unproduced data
-    bool stillProducing(const Producer *producer) const { return theProducer == producer; }
+    bool stillProducing(const Producer::Pointer &producer) const { return theProducer == producer; }
     void expectProductionEndAfter(uint64_t extraSize); ///< sets or checks body size
 
     // called by consumers
-    bool setConsumerIfNotLate(Consumer *aConsumer);
+    bool setConsumerIfNotLate(const Consumer::Pointer &aConsumer);
     void clearConsumer(); // aborts if still piping
     size_t getMoreData(MemBuf &buf);
     void consume(size_t size);
     bool expectMoreAfter(uint64_t offset) const;
     bool exhausted() const; // saw eof/abort and all data consumed
-    bool stillConsuming(const Consumer *consumer) const { return theConsumer == consumer; }
+    bool stillConsuming(const Consumer::Pointer &consumer) const { return theConsumer == consumer; }
 
     // start or continue consuming when there is no consumer
     void enableAutoConsumption();
@@ -139,8 +143,8 @@ protected:
 
 private:
     int64_t  theBodySize;   // expected total content length, if known
-    Producer *theProducer; // content producer, if any
-    Consumer *theConsumer; // content consumer, if any
+    Producer::Pointer theProducer; // content producer, if any
+    Consumer::Pointer theConsumer; // content consumer, if any
 
     uint64_t thePutSize; // ever-increasing total
     uint64_t theGetSize; // ever-increasing total

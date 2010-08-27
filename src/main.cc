@@ -1460,9 +1460,9 @@ SquidMain(int argc, char **argv)
     mainLoop.setTimeService(&time_engine);
 
     if (IamCoordinatorProcess())
-        AsyncJob::AsyncStart(Ipc::Coordinator::Instance());
+        AsyncJob::Start(Ipc::Coordinator::Instance());
     else if (UsingSmp() && IamWorkerProcess())
-        AsyncJob::AsyncStart(new Ipc::Strand);
+        AsyncJob::Start(new Ipc::Strand);
 
     /* at this point we are finished the synchronous startup. */
     starting_up = 0;

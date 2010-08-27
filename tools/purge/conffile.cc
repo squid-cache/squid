@@ -108,7 +108,8 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
             // match, please record
             memset( &cd, 0, sizeof(cd) );
             if ( debug ) fprintf( debug, "# match from %d-%d on line %s",
-                                      subs[0].rm_so, subs[0].rm_eo, line );
+                                      (int)subs[0].rm_so, (int)subs[0].rm_eo,
+                                      line );
 
             // terminate line after matched expression
             line[ subs[0].rm_eo ] = '\0';
@@ -123,7 +124,8 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
                 // new version, disk type at position 2
                 line[ subs[offset].rm_eo ] = '\0';
                 if ( debug ) fprintf( debug, "# match from %d-%d on \"%s\"\n",
-                                          subs[offset].rm_so, subs[offset].rm_eo,
+                                          (int)subs[offset].rm_so,
+                                          (int)subs[offset].rm_eo,
                                           line+subs[offset].rm_so );
                 if ( strcmp( line + subs[offset].rm_so, "ufs" ) == 0 )
                     cd.type = CacheDir::CDT_UFS;
@@ -139,7 +141,8 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
             // extract base directory
             line[ subs[offset].rm_eo ] = '\0';
             if ( debug ) fprintf( debug, "# match from %d-%d on \"%s\"\n",
-                                      subs[offset].rm_so, subs[offset].rm_eo,
+                                      (int)subs[offset].rm_so,
+                                      (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
             cd.base = strdup( line+subs[offset].rm_so );
             offset++;
@@ -147,7 +150,8 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
             // extract size information
             line[ subs[offset].rm_eo ] = '\0';
             if ( debug ) fprintf( debug, "# match from %d-%d on \"%s\"\n",
-                                      subs[offset].rm_so, subs[offset].rm_eo,
+                                      (int)subs[offset].rm_so,
+                                      (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
             cd.size = strtoul( line+subs[offset].rm_so, 0, 10 );
             offset++;
@@ -155,7 +159,8 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
             // extract 1st level directories
             line[ subs[offset].rm_eo ] = '\0';
             if ( debug ) fprintf( debug, "# match from %d-%d on \"%s\"\n",
-                                      subs[offset].rm_so, subs[offset].rm_eo,
+                                      (int)subs[offset].rm_so,
+                                      (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
             cd.level[0] = strtoul( line+subs[offset].rm_so, 0, 10 );
             offset++;
@@ -163,7 +168,8 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
             // extract 2nd level directories
             line[ subs[offset].rm_eo ] = '\0';
             if ( debug ) fprintf( debug, "# match from %d-%d on \"%s\"\n",
-                                      subs[offset].rm_so, subs[offset].rm_eo,
+                                      (int)subs[offset].rm_so,
+                                      (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
             cd.level[1] = strtoul( line+subs[offset].rm_so, 0, 10 );
             offset++;

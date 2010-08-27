@@ -27,7 +27,7 @@ ska_base64_init(void)
 
     for (i = 0; i < 64; i++)
         base64_value[(int) base64_code[i]] = i;
-    base64_value[(int)'='] = 0;
+    base64_value[(int) '='] = 0;
 
     base64_initialized = 1;
 }
@@ -131,7 +131,7 @@ ska_base64_encode(char *result, const char *data, int result_size,
     }
 end:
     if (out_cnt >= result_size) {
-        result[result_size - 1] = '\0';	/* terminate */
+        result[result_size - 1] = '\0';		/* terminate */
     } else {
         result[out_cnt] = '\0';	/* terminate */
     }

@@ -19,17 +19,6 @@
 #define wcsstr wcswcs
 
 /*
- * we need some standard-based extensions
- */
-#ifndef _XOPEN_SOURCE
-#define _XOPEN_SOURCE 1
-#endif
-#ifndef _XOPEN_SOURCE_EXTENDED
-#define _XOPEN_SOURCE_EXTENDED 1
-#endif
-
-
-/*
  * On Solaris 9 x86, gcc may includes a "fixed" set of old system
  * include files that is incompatible with the updated Solaris
  * header files.

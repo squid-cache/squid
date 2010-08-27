@@ -116,7 +116,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
         if (rep) {
             if (rep->sline.status != HTTP_OK) {
                 rep = NULL;
-                esiStream->include->fail (esiStream);
+                esiStream->include->includeFail (esiStream);
                 esiStream->finished = 1;
                 httpRequestFree (http);
                 return;
@@ -168,7 +168,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
         /* XXX when reviewing ESI this is the first place to look */
         node->data = NULL;
         esiStream->finished = 1;
-        esiStream->include->fail (esiStream);
+        esiStream->include->includeFail (esiStream);
         return;
     };
 
@@ -185,7 +185,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
 
     case STREAM_FAILED:
         debugs(86, 1, "ESI subrequest failed transfer");
-        esiStream->include->fail (esiStream);
+        esiStream->include->includeFail (esiStream);
         esiStream->finished = 1;
         httpRequestFree (http);
         return;
@@ -472,7 +472,7 @@ ESIInclude::process (int dovars)
 }
 
 void
-ESIInclude::fail (ESIStreamContext::Pointer stream)
+ESIInclude::includeFail (ESIStreamContext::Pointer stream)
 {
     subRequestDone (stream, false);
 }

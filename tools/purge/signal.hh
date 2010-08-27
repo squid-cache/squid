@@ -47,19 +47,28 @@
 // Initial revision
 //
 //
+
 #ifndef _SIGNAL_HH
 #define _SIGNAL_HH
 
+#include "config.h"
+
+#if HAVE_SIGNAL_H
+#include <signal.h>
+#endif
+
+#if !defined(__cplusplus)
 #if defined(__GNUC__) || defined(__GNUG__)
 #pragma interface
 #else
-#ifndef HAS_BOOL
-#define HAS_BOOL
+#ifndef HAVE_BOOL
+#define HAVE_BOOL
 typedef int bool;
 #define false 0
 #define true  1
 #endif
 #endif
+#endif /* __cplusplus */
 
 #if 1 // so far, all systems I know use void
 # define SIGRETTYPE void
@@ -76,14 +85,6 @@ typedef int bool;
 extern "C" {
   typedef SIGRETTYPE SigFunc( SIGPARAM );
 }
-
-#ifndef HAS_PSIGNAL
-void
-psignal( int sig, const char* msg );
-  // purpose: print message, colon, space, signal name and LF.
-  // paramtr: sig (IN): signal number
-  //          msg (IN): message to prepend
-#endif // ! HAS_PSIGNAL
 
 SigFunc*
 Signal( int signo, SigFunc* newhandler, bool doInterrupt );

@@ -31,7 +31,7 @@ public:
     virtual bool broken() const;
     virtual bool up() const = 0; // see comments above
 
-    virtual Initiate *makeXactLauncher(Initiator *, HttpMsg *virginHeader, HttpRequest *virginCause) = 0;
+    virtual Initiate *makeXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause) = 0;
 
     bool wants(const ServiceFilter &filter) const;
 

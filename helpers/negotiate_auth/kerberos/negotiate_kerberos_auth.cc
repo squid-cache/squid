@@ -75,7 +75,7 @@
 #define MAX_AUTHTOKEN_LEN   65535
 #endif
 #ifndef SQUID_KERB_AUTH_VERSION
-#define SQUID_KERB_AUTH_VERSION "3.0.2sq"
+#define SQUID_KERB_AUTH_VERSION "3.0.3sq"
 #endif
 
 int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
@@ -83,7 +83,7 @@ int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
 char *gethost_name(void);
 static const char *LogTime(void);
 
-static const unsigned char ntlmProtocol[] = { 'N', 'T', 'L', 'M', 'S', 'S', 'P', 0 };
+static const unsigned char ntlmProtocol[] = {'N', 'T', 'L', 'M', 'S', 'S', 'P', 0};
 
 static const char *
 LogTime()
@@ -106,8 +106,8 @@ char *
 gethost_name(void)
 {
     /*
-        char hostname[sysconf(_SC_HOST_NAME_MAX)];
-    */
+     * char hostname[sysconf(_SC_HOST_NAME_MAX)];
+     */
     char hostname[1024];
     struct addrinfo *hres = NULL, *hres_list;
     int rc, count;
@@ -140,7 +140,6 @@ gethost_name(void)
         freeaddrinfo(hres);
         return NULL;
     }
-
     freeaddrinfo(hres);
     hostname[sysconf(_SC_HOST_NAME_MAX) - 1] = '\0';
     return (xstrdup(hostname));
@@ -165,7 +164,7 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
                                           GSS_C_GSS_CODE, GSS_C_NULL_OID, &msg_ctx, &status_string);
             if (maj_stat == GSS_S_COMPLETE) {
                 if (sizeof(buf) > len + status_string.length + 1) {
-                    snprintf(buf + len, (sizeof(buf)-len), "%s", (char *) status_string.value);
+                    snprintf(buf + len, (sizeof(buf) - len), "%s", (char *) status_string.value);
                     len += status_string.length;
                 }
                 gss_release_buffer(&min_stat, &status_string);
@@ -174,7 +173,7 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
             gss_release_buffer(&min_stat, &status_string);
         }
         if (sizeof(buf) > len + 2) {
-            snprintf(buf + len, (sizeof(buf)-len), "%s", ". ");
+            snprintf(buf + len, (sizeof(buf) - len), "%s", ". ");
             len += 2;
         }
         msg_ctx = 0;
@@ -184,7 +183,7 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
                                           GSS_C_MECH_CODE, GSS_C_NULL_OID, &msg_ctx, &status_string);
             if (maj_stat == GSS_S_COMPLETE) {
                 if (sizeof(buf) > len + status_string.length) {
-                    snprintf(buf + len,(sizeof(buf)-len), "%s", (char *) status_string.value);
+                    snprintf(buf + len, (sizeof(buf) - len), "%s", (char *) status_string.value);
                     len += status_string.length;
                 }
                 gss_release_buffer(&min_stat, &status_string);
@@ -192,7 +191,7 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
             }
             gss_release_buffer(&min_stat, &status_string);
         }
-        debug("%s| %s: ERROR: %s failed: %s\n", LogTime(), PROGRAM, function, buf);
+        debug((char *) "%s| %s: ERROR: %s failed: %s\n", LogTime(), PROGRAM, function, buf);
         fprintf(stdout, "BH %s failed: %s\n", function, buf);
         if (log)
             fprintf(stderr, "%s| %s: INFO: User not authenticated\n", LogTime(),
@@ -264,7 +263,7 @@ main(int argc, char *const argv[])
         }
     }
 
-    debug("%s| %s: INFO: Starting version %s\n", LogTime(), PROGRAM, SQUID_KERB_AUTH_VERSION);
+    debug((char *) "%s| %s: INFO: Starting version %s\n", LogTime(), PROGRAM, SQUID_KERB_AUTH_VERSION);
     if (service_principal && strcasecmp(service_principal, "GSS_C_NO_NAME")) {
         service.value = service_principal;
         service.length = strlen((char *) service.value);
@@ -278,7 +277,7 @@ main(int argc, char *const argv[])
             exit(-1);
         }
         service.value = xmalloc(strlen(service_name) + strlen(host_name) + 2);
-        snprintf((char*)service.value, strlen(service_name) + strlen(host_name) + 2,
+        snprintf((char *) service.value, strlen(service_name) + strlen(host_name) + 2,
                  "%s@%s", service_name, host_name);
         service.length = strlen((char *) service.value);
     }
@@ -286,7 +285,7 @@ main(int argc, char *const argv[])
     while (1) {
         if (fgets(buf, sizeof(buf) - 1, stdin) == NULL) {
             if (ferror(stdin)) {
-                debug("%s| %s: FATAL: fgets() failed! dying..... errno=%d (%s)\n",
+                debug((char *) "%s| %s: FATAL: fgets() failed! dying..... errno=%d (%s)\n",
                       LogTime(), PROGRAM, ferror(stdin),
                       strerror(ferror(stdin)));
 
@@ -296,8 +295,7 @@ main(int argc, char *const argv[])
             fprintf(stdout, "BH input error\n");
             exit(0);
         }
-
-        c = (char*)memchr(buf, '\n', sizeof(buf) - 1);
+        c = (char *) memchr(buf, '\n', sizeof(buf) - 1);
         if (c) {
             *c = '\0';
             length = c - buf;
@@ -305,26 +303,23 @@ main(int argc, char *const argv[])
             err = 1;
         }
         if (err) {
-            debug("%s| %s: ERROR: Oversized message\n", LogTime(), PROGRAM);
+            debug((char *) "%s| %s: ERROR: Oversized message\n", LogTime(), PROGRAM);
             fprintf(stdout, "BH Oversized message\n");
             err = 0;
             continue;
         }
-
-        debug("%s| %s: DEBUG: Got '%s' from squid (length: %d).\n", LogTime(), PROGRAM, buf, length);
+        debug((char *) "%s| %s: DEBUG: Got '%s' from squid (length: %d).\n", LogTime(), PROGRAM, buf, length);
 
         if (buf[0] == '\0') {
-            debug("%s| %s: ERROR: Invalid request\n", LogTime(), PROGRAM);
+            debug((char *) "%s| %s: ERROR: Invalid request\n", LogTime(), PROGRAM);
             fprintf(stdout, "BH Invalid request\n");
             continue;
         }
-
         if (strlen(buf) < 2) {
-            debug("%s| %s: ERROR: Invalid request [%s]\n", LogTime(), PROGRAM, buf);
+            debug((char *) "%s| %s: ERROR: Invalid request [%s]\n", LogTime(), PROGRAM, buf);
             fprintf(stdout, "BH Invalid request\n");
             continue;
         }
-
         if (!strncmp(buf, "QQ", 2)) {
             gss_release_buffer(&minor_status, &input_token);
             gss_release_buffer(&minor_status, &output_token);
@@ -359,9 +354,8 @@ main(int argc, char *const argv[])
             fprintf(stdout, "BH quit command\n");
             exit(0);
         }
-
         if (strncmp(buf, "YR", 2) && strncmp(buf, "KK", 2)) {
-            debug("%s| %s: ERROR: Invalid request [%s]\n", LogTime(), PROGRAM, buf);
+            debug((char *) "%s| %s: ERROR: Invalid request [%s]\n", LogTime(), PROGRAM, buf);
             fprintf(stdout, "BH Invalid request\n");
             continue;
         }
@@ -370,24 +364,22 @@ main(int argc, char *const argv[])
                 gss_delete_sec_context(&minor_status, &gss_context, NULL);
             gss_context = GSS_C_NO_CONTEXT;
         }
-
         if (strlen(buf) <= 3) {
-            debug("%s| %s: ERROR: Invalid negotiate request [%s]\n", LogTime(), PROGRAM, buf);
+            debug((char *) "%s| %s: ERROR: Invalid negotiate request [%s]\n", LogTime(), PROGRAM, buf);
             fprintf(stdout, "BH Invalid negotiate request\n");
             continue;
         }
-
         input_token.length = ska_base64_decode_len(buf + 3);
-        debug("%s| %s: DEBUG: Decode '%s' (decoded length: %d).\n",
+        debug((char *) "%s| %s: DEBUG: Decode '%s' (decoded length: %d).\n",
               LogTime(), PROGRAM, buf + 3, (int) input_token.length);
         input_token.value = xmalloc(input_token.length);
 
-        ska_base64_decode((char*)input_token.value, buf + 3, input_token.length);
+        ska_base64_decode((char *) input_token.value, buf + 3, input_token.length);
 
 
         if ((input_token.length >= sizeof ntlmProtocol + 1) &&
                 (!memcmp(input_token.value, ntlmProtocol, sizeof ntlmProtocol))) {
-            debug("%s| %s: WARNING: received type %d NTLM token\n",
+            debug((char *) "%s| %s: WARNING: received type %d NTLM token\n",
                   LogTime(), PROGRAM,
                   (int) *((unsigned char *) input_token.value +
                           sizeof ntlmProtocol));
@@ -396,7 +388,6 @@ main(int argc, char *const argv[])
                             sizeof ntlmProtocol));
             goto cleanup;
         }
-
         if (service_principal) {
             if (strcasecmp(service_principal, "GSS_C_NO_NAME")) {
                 major_status = gss_import_name(&minor_status, &service,
@@ -429,22 +420,21 @@ main(int argc, char *const argv[])
 
 
         if (output_token.length) {
-            spnegoToken = (const unsigned char*)output_token.value;
+            spnegoToken = (const unsigned char *) output_token.value;
             spnegoTokenLength = output_token.length;
-            token = (char*)xmalloc(ska_base64_encode_len(spnegoTokenLength));
+            token = (char *) xmalloc(ska_base64_encode_len(spnegoTokenLength));
             if (token == NULL) {
-                debug("%s| %s: ERROR: Not enough memory\n", LogTime(), PROGRAM);
+                debug((char *) "%s| %s: ERROR: Not enough memory\n", LogTime(), PROGRAM);
                 fprintf(stdout, "BH Not enough memory\n");
                 goto cleanup;
             }
-
             ska_base64_encode(token, (const char *) spnegoToken,
                               ska_base64_encode_len(spnegoTokenLength), spnegoTokenLength);
 
             if (check_gss_err(major_status, minor_status, "gss_accept_sec_context()", log))
                 goto cleanup;
             if (major_status & GSS_S_CONTINUE_NEEDED) {
-                debug("%s| %s: INFO: continuation needed\n", LogTime(), PROGRAM);
+                debug((char *) "%s| %s: INFO: continuation needed\n", LogTime(), PROGRAM);
                 fprintf(stdout, "TT %s\n", token);
                 goto cleanup;
             }
@@ -455,9 +445,9 @@ main(int argc, char *const argv[])
 
             if (check_gss_err(major_status, minor_status, "gss_display_name()", log))
                 goto cleanup;
-            user = (char*)xmalloc(output_token.length + 1);
+            user = (char *) xmalloc(output_token.length + 1);
             if (user == NULL) {
-                debug("%s| %s: ERROR: Not enough memory\n", LogTime(), PROGRAM);
+                debug((char *) "%s| %s: ERROR: Not enough memory\n", LogTime(), PROGRAM);
                 fprintf(stdout, "BH Not enough memory\n");
                 goto cleanup;
             }
@@ -467,7 +457,7 @@ main(int argc, char *const argv[])
                 *p = '\0';
             }
             fprintf(stdout, "AF %s %s\n", token, user);
-            debug("%s| %s: DEBUG: AF %s %s\n", LogTime(), PROGRAM, token, user);
+            debug((char *) "%s| %s: DEBUG: AF %s %s\n", LogTime(), PROGRAM, token, user);
             if (log)
                 fprintf(stderr, "%s| %s: INFO: User %s authenticated\n", LogTime(),
                         PROGRAM, user);
@@ -476,7 +466,7 @@ main(int argc, char *const argv[])
             if (check_gss_err(major_status, minor_status, "gss_accept_sec_context()", log))
                 goto cleanup;
             if (major_status & GSS_S_CONTINUE_NEEDED) {
-                debug("%s| %s: INFO: continuation needed\n", LogTime(), PROGRAM);
+                debug((char *) "%s| %s: INFO: continuation needed\n", LogTime(), PROGRAM);
                 fprintf(stdout, "NA %s\n", token);
                 goto cleanup;
             }
@@ -490,9 +480,9 @@ main(int argc, char *const argv[])
             /*
              *  Return dummy token AA. May need an extra return tag then AF
              */
-            user = (char*)xmalloc(output_token.length + 1);
+            user = (char *) xmalloc(output_token.length + 1);
             if (user == NULL) {
-                debug("%s| %s: ERROR: Not enough memory\n", LogTime(), PROGRAM);
+                debug((char *) "%s| %s: ERROR: Not enough memory\n", LogTime(), PROGRAM);
                 fprintf(stdout, "BH Not enough memory\n");
                 goto cleanup;
             }
@@ -502,7 +492,7 @@ main(int argc, char *const argv[])
                 *p = '\0';
             }
             fprintf(stdout, "AF %s %s\n", "AA==", user);
-            debug("%s| %s: DEBUG: AF %s %s\n", LogTime(), PROGRAM, "AA==", user);
+            debug((char *) "%s| %s: DEBUG: AF %s %s\n", LogTime(), PROGRAM, "AA==", user);
             if (log)
                 fprintf(stderr, "%s| %s: INFO: User %s authenticated\n", LogTime(),
                         PROGRAM, user);

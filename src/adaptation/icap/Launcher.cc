@@ -15,9 +15,9 @@
 
 
 Adaptation::Icap::Launcher::Launcher(const char *aTypeName,
-                                     Adaptation::Initiator *anInitiator, Adaptation::ServicePointer &aService):
+                                     Adaptation::ServicePointer &aService):
         AsyncJob(aTypeName),
-        Adaptation::Initiate(aTypeName, anInitiator),
+        Adaptation::Initiate(aTypeName),
         theService(aService), theXaction(0), theLaunches(0)
 {
 }
@@ -31,7 +31,7 @@ void Adaptation::Icap::Launcher::start()
 {
     Adaptation::Initiate::start();
 
-    Must(theInitiator);
+    Must(theInitiator.set());
     launchXaction("first");
 }
 
@@ -47,7 +47,7 @@ void Adaptation::Icap::Launcher::launchXaction(const char *xkind)
     if (theLaunches >= TheConfig.repeat_limit)
         x->disableRepeats("over icap_retry_limit");
     theXaction = initiateAdaptation(x);
-    Must(theXaction);
+    Must(initiated(theXaction));
 }
 
 void Adaptation::Icap::Launcher::noteAdaptationAnswer(HttpMsg *message)
@@ -76,7 +76,7 @@ void Adaptation::Icap::Launcher::noteAdaptationQueryAbort(bool final)
     Must(done()); // swanSong will notify the initiator
 }
 
-void Adaptation::Icap::Launcher::noteXactAbort(XactAbortInfo &info)
+void Adaptation::Icap::Launcher::noteXactAbort(XactAbortInfo info)
 {
     debugs(93,5, HERE << "theXaction:" << theXaction << " launches: " << theLaunches);
 
@@ -102,10 +102,10 @@ bool Adaptation::Icap::Launcher::doneAll() const
 
 void Adaptation::Icap::Launcher::swanSong()
 {
-    if (theInitiator)
+    if (theInitiator.set())
         tellQueryAborted(true); // always final here because abnormal
 
-    if (theXaction)
+    if (theXaction.set())
         clearAdaptation(theXaction);
 
     Adaptation::Initiate::swanSong();

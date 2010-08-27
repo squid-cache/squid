@@ -26,7 +26,7 @@
  */
 
 #include "main.h"
-#include "util.h"
+#include "edui_util.h"
 
 /* debug() -
  *

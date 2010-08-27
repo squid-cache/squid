@@ -177,7 +177,7 @@ private:
     void endRequestSatisfaction();
 
 private:
-    Adaptation::Initiate *virginHeadSource;
+    CbcPointer<Adaptation::Initiate> virginHeadSource;
     BodyPipe::Pointer adaptedBodySource;
 
     bool request_satisfaction_mode;
