@@ -145,7 +145,8 @@ public:
     int getConcurrentRequestCount() const;
     bool isOpen() const;
 
-    int fd;
+    // Client TCP connection details from comm layer.
+    Comm::ConnectionPointer clientConn;
 
     /// chunk buffering and parsing algorithm state
     typedef enum { chunkUnknown, chunkNone, chunkParsing, chunkReady, chunkError } DechunkingState;

@@ -89,10 +89,10 @@ FwdState::abort(void* d)
 
 /**** PUBLIC INTERFACE ********************************************************/
 
-FwdState::FwdState(int fd, StoreEntry * e, HttpRequest * r)
+FwdState::FwdState(Comm::ConnectionPointer &client, StoreEntry * e, HttpRequest * r)
 {
     entry = e;
-    client_fd = fd;
+    clientConn = client;
     request = HTTPMSGLOCK(r);
     start_t = squid_curtime;
     serverDestinations.reserve(Config.forward_max_tries);
@@ -187,7 +187,7 @@ FwdState::~FwdState()
  * allocate a FwdState.
  */
 void
-FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
+FwdState::fwdStart(Comm::ConnectionPointer &clientConn, StoreEntry *entry, HttpRequest *request)
 {
     /** \note
      * client_addr == no_addr indicates this is an "internal" request
@@ -245,7 +245,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
         return;
 
     case PROTO_CACHEOBJ:
-        CacheManager::GetInstance()->Start(client_fd, request, entry);
+        CacheManager::GetInstance()->Start(clientConn, request, entry);
         return;
 
     case PROTO_URN:
@@ -253,7 +253,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
         return;
 
     default:
-        FwdState::Pointer fwd = new FwdState(client_fd, entry, request);
+        FwdState::Pointer fwd = new FwdState(clientConn, entry, request);
         fwd->start(fwd);
         return;
     }
@@ -837,7 +837,7 @@ FwdState::connectStart()
 void
 FwdState::dispatch()
 {
-    debugs(17, 3, "fwdDispatch: FD " << client_fd << ": Fetching '" << RequestMethodStr(request->method) << " " << entry->url() << "'" );
+    debugs(17, 3, HERE << clientConn << ": Fetching '" << RequestMethodStr(request->method) << " " << entry->url() << "'");
     /*
      * Assert that server_fd is set.  This is to guarantee that fwdState
      * is attached to something and will be deallocated when server_fd
@@ -865,7 +865,7 @@ FwdState::dispatch()
      * original client request FD object. It is later used to forward
      * remote server's TOS in the response to the client in case of a MISS.
      */
-    fde * clientFde = &fd_table[client_fd];
+    fde * clientFde = &fd_table[clientConn->fd];
     if (clientFde) {
         int tos = 1;
         int tos_len = sizeof(tos);

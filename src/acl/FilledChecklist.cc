@@ -5,6 +5,8 @@
 #include "auth/UserRequest.h"
 #include "auth/AclProxyAuth.h"
 #include "acl/FilledChecklist.h"
+#include "comm/Connection.h"
+#include "comm/forward.h"
 
 CBDATA_CLASS_INIT(ACLFilledChecklist);
 
@@ -106,13 +108,13 @@ ACLFilledChecklist::conn(ConnStateData *aConn)
 int
 ACLFilledChecklist::fd() const
 {
-    return conn_ != NULL ? conn_->fd : fd_;
+    return (conn_ != NULL && conn_->clientConn != NULL) ? conn_->clientConn->fd : fd_;
 }
 
 void
 ACLFilledChecklist::fd(int aDescriptor)
 {
-    assert(!conn() || conn()->fd == aDescriptor);
+    assert(!conn() || conn()->clientConn == NULL || conn()->clientConn->fd == aDescriptor);
     fd_ = aDescriptor;
 }
 

@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "auth/UserRequest.h"
 #include "CacheManager.h"
+#include "comm/Connection.h"
 #include "Store.h"
 #include "fde.h"
 #include "client_side_request.h"
@@ -147,8 +148,8 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
 
 #if USE_SSL
 
-    if (!r->client_ident && conn != NULL)
-        r->client_ident = sslGetUserEmail(fd_table[conn->fd].ssl);
+    if (!r->client_ident && conn != NULL && Comm::IsConnOpen(conn->clientConn))
+        r->client_ident = sslGetUserEmail(fd_table[conn->clientConn->fd].ssl);
 
 #endif
 

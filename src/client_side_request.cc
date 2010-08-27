@@ -59,6 +59,7 @@
 #include "client_side_reply.h"
 #include "client_side_request.h"
 #include "ClientRequestContext.h"
+#include "comm/Connection.h"
 #include "compat/inet_pton.h"
 #include "fde.h"
 #include "HttpReply.h"
@@ -663,7 +664,8 @@ ClientRequestContext::adaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
         if (http->getConn() != NULL) {
             ih->rfc931 = http->getConn()->rfc931;
 #if USE_SSL
-            ih->ssluser = sslGetUserEmail(fd_table[http->getConn()->fd].ssl);
+            assert(http->getConn()->clientConn != NULL);
+            ih->ssluser = sslGetUserEmail(fd_table[http->getConn()->clientConn->fd].ssl);
 #endif
         }
         ih->log_uri = http->log_uri;
@@ -1059,8 +1061,8 @@ ClientRequestContext::clientRedirectDone(char *result)
 
     /* FIXME PIPELINE: This is innacurate during pipelining */
 
-    if (http->getConn() != NULL)
-        fd_note(http->getConn()->fd, http->uri);
+    if (http->getConn() != NULL && Comm::IsConnOpen(http->getConn()->clientConn))
+        fd_note(http->getConn()->clientConn->fd, http->uri);
 
     assert(http->uri);
 
@@ -1189,16 +1191,14 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
 void
 ClientHttpRequest::sslBumpStart()
 {
-    debugs(85, 5, HERE << "ClientHttpRequest::sslBumpStart");
-
+    debugs(85, 5, HERE << "Confirming CONNECT tunnel on FD " << getConn()->clientConn);
     // send an HTTP 200 response to kick client SSL negotiation
-    const int fd = getConn()->fd;
-    debugs(33, 7, HERE << "Confirming CONNECT tunnel on FD " << fd);
+    debugs(33, 7, HERE << "Confirming CONNECT tunnel on FD " << getConn()->clientConn);
 
     // TODO: Unify with tunnel.cc and add a Server(?) header
     static const char *const conn_established =
         "HTTP/1.0 200 Connection established\r\n\r\n";
-    comm_write(fd, conn_established, strlen(conn_established),
+    comm_write(getConn()->clientConn->fd, conn_established, strlen(conn_established),
                &SslBumpEstablish, this, NULL);
 }
 
@@ -1333,13 +1333,13 @@ ClientHttpRequest::doCallouts()
 
     if (!calloutContext->clientside_tos_done) {
         calloutContext->clientside_tos_done = true;
-        if (getConn() != NULL) {
+        if (getConn() != NULL && Comm::IsConnOpen(getConn()->clientConn)) {
             ACLFilledChecklist ch(NULL, request, NULL);
             ch.src_addr = request->client_addr;
             ch.my_addr = request->my_addr;
             int tos = aclMapTOS(Config.accessList.clientside_tos, &ch);
             if (tos)
-                comm_set_tos(getConn()->fd, tos);
+                comm_set_tos(getConn()->clientConn->fd, tos);
         }
     }
 

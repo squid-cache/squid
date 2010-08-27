@@ -37,10 +37,18 @@
 #ifndef _SQUIDCONNECTIONDETAIL_H_
 #define _SQUIDCONNECTIONDETAIL_H_
 
+#include "config.h"
 #include "comm/forward.h"
 #include "hier_code.h"
 #include "ip/Address.h"
 #include "RefCount.h"
+
+#if HAVE_IOSFWD
+#include <iosfwd>
+#endif
+#if HAVE_OSTREAM
+#include <ostream>
+#endif
 
 struct peer;
 
@@ -135,5 +143,26 @@ private:
 };
 
 }; // namespace Comm
+
+
+// NP: Order and namespace here is very important.
+//     * The second define inlines the first.
+//     * Stream inheritance overloading is searched in the global scope first.
+
+inline std::ostream &
+operator << (std::ostream &os, const Comm::Connection &conn)
+{
+    os << "FD " << conn.fd << " local=" << conn.local <<
+        " remote=" << conn.remote << " flags=" << conn.flags;
+    return os;
+}
+
+inline std::ostream &
+operator << (std::ostream &os, const Comm::ConnectionPointer &conn)
+{
+    if (conn != NULL)
+        os << *conn;
+    return os;
+}
 
 #endif
