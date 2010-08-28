@@ -127,8 +127,8 @@ static PF tunnelClientClosed;
 static PF tunnelTimeout;
 static PSC tunnelPeerSelectComplete;
 static void tunnelStateFree(TunnelStateData * tunnelState);
-static void tunnelConnected(Comm::ConnectionPointer &server, void *);
-static void tunnelRelayConnectRequest(Comm::ConnectionPointer &server, void *);
+static void tunnelConnected(const Comm::ConnectionPointer &server, void *);
+static void tunnelRelayConnectRequest(const Comm::ConnectionPointer &server, void *);
 
 static void
 tunnelServerClosed(int fd, void *data)
@@ -475,10 +475,10 @@ tunnelConnectedWriteDone(int fd, char *buf, size_t size, comm_err_t flag, int xe
 }
 
 static void
-tunnelConnected(Comm::ConnectionPointer &server, void *data)
+tunnelConnected(const Comm::ConnectionPointer &server, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
-    debugs(26, 3, HERE << "FD " << server->fd << " tunnelState=" << tunnelState);
+    debugs(26, 3, HERE << server << ", tunnelState=" << tunnelState);
     *tunnelState->status_ptr = HTTP_OK;
     comm_write(tunnelState->client.conn->fd, conn_established, strlen(conn_established),
                tunnelConnectedWriteDone, tunnelState, NULL);
@@ -503,7 +503,7 @@ tunnelErrorComplete(int fdnotused, void *data, size_t sizenotused)
 
 
 static void
-tunnelConnectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
+tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     HttpRequest *request = tunnelState->request;
@@ -633,13 +633,13 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
 }
 
 static void
-tunnelRelayConnectRequest(Comm::ConnectionPointer &server, void *data)
+tunnelRelayConnectRequest(const Comm::ConnectionPointer &server, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     HttpHeader hdr_out(hoRequest);
     Packer p;
     http_state_flags flags;
-    debugs(26, 3, HERE << "FD " << server->fd << " tunnelState=" << tunnelState);
+    debugs(26, 3, HERE << server << ", tunnelState=" << tunnelState);
     memset(&flags, '\0', sizeof(flags));
     flags.proxying = tunnelState->request->flags.proxying;
     MemBuf mb;
@@ -656,8 +656,8 @@ tunnelRelayConnectRequest(Comm::ConnectionPointer &server, void *data)
     packerClean(&p);
     mb.append("\r\n", 2);
 
-    comm_write_mbuf(tunnelState->server.conn->fd, &mb, tunnelConnectedWriteDone, tunnelState);
-    commSetTimeout(tunnelState->server.conn->fd, Config.Timeout.read, tunnelTimeout, tunnelState);
+    comm_write_mbuf(server->fd, &mb, tunnelConnectedWriteDone, tunnelState);
+    commSetTimeout(server->fd, Config.Timeout.read, tunnelTimeout, tunnelState);
 }
 
 static void

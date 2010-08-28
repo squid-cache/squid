@@ -1381,7 +1381,7 @@ peerProbeConnect(peer * p)
 }
 
 static void
-peerProbeConnectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
+peerProbeConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     peer *p = (peer*)data;
 
@@ -1391,7 +1391,6 @@ peerProbeConnectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrn
         peerConnectFailedSilent(p);
     }
 
-    conn->close();
     p->testing_now--;
     return;
 }
