@@ -288,18 +288,18 @@ TunnelStateData::readClient(char *buf, size_t len, comm_err_t errcode, int xerrn
     if (errcode == COMM_ERR_CLOSING)
         return;
 
-    debugs(26, 3, "tunnelReadClient: FD " << client.conn->fd << ", read " << len << " bytes");
+    debugs(26, 3, "tunnelReadClient: FD " << client.conn << ", read " << len << " bytes");
 
     if (len > 0) {
         client.bytesIn(len);
         kb_incr(&statCounter.client_http.kbytes_in, len);
     }
 
-    copy (len, errcode, xerrno, client, server, WriteServerDone);
+    copy(len, errcode, xerrno, client, server, WriteServerDone);
 }
 
 void
-TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, IOCB *completion)
+TunnelStateData::copy(size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, IOCB *completion)
 {
     /* I think this is to prevent free-while-in-a-callback behaviour
      * - RBC 20030229
@@ -307,16 +307,16 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
      */
     cbdataInternalLock(this);	/* ??? should be locked by the caller... */
 
-    /* Bump the server connection timeout on any activity */
-    if (Comm::IsConnOpen(server.conn))
-        commSetTimeout(server.conn->fd, Config.Timeout.read, tunnelTimeout, this);
+    /* Bump the source connection read timeout on any activity */
+    if (Comm::IsConnOpen(from.conn))
+        commSetTimeout(from.conn->fd, Config.Timeout.read, tunnelTimeout, this);
 
     if (len < 0 || errcode)
         from.error (xerrno);
-    else if (len == 0 || to.conn->fd) {
+    else if (len == 0 || !Comm::IsConnOpen(to.conn)) {
         from.conn->close();
-        /* Only close the remote end if we've finished queueing data to it */
 
+        /* Only close the remote end if we've finished queueing data to it */
         if (from.len == 0 && Comm::IsConnOpen(to.conn) ) {
             to.conn->close();
         }
