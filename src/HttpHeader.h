@@ -287,7 +287,7 @@ inline bool
 HttpHeader::chunked() const
 {
     return has(HDR_TRANSFER_ENCODING) &&
-               hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',');
+           hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',');
 }
 
 #endif /* SQUID_HTTPHEADER_H */
