@@ -273,7 +273,6 @@ TunnelStateData::ReadClient(int fd, char *buf, size_t len, comm_err_t errcode, i
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     assert (cbdataReferenceValid (tunnelState));
 
-    assert(fd == tunnelState->client.conn->fd);
     tunnelState->readClient(buf, len, errcode, xerrno);
 }
 
