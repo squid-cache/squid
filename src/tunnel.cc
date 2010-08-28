@@ -227,13 +227,14 @@ TunnelStateData::ReadServer(int fd, char *buf, size_t len, comm_err_t errcode, i
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     assert (cbdataReferenceValid (tunnelState));
 
-    assert(errcode == COMM_ERR_CLOSING || fd == tunnelState->server.conn->fd);
     tunnelState->readServer(buf, len, errcode, xerrno);
 }
 
 void
 TunnelStateData::readServer(char *buf, size_t len, comm_err_t errcode, int xerrno)
 {
+    debugs(26, 3, HERE << server.conn << ", read   " << len << " bytes");
+
     /*
      * Bail out early on COMM_ERR_CLOSING
      * - close handlers will tidy up for us
@@ -241,8 +242,6 @@ TunnelStateData::readServer(char *buf, size_t len, comm_err_t errcode, int xerrn
 
     if (errcode == COMM_ERR_CLOSING)
         return;
-
-    debugs(26, 3, "tunnelReadServer: FD " << server.conn->fd << ", read   " << len << " bytes");
 
     if (len > 0) {
         server.bytesIn(len);
@@ -279,15 +278,14 @@ TunnelStateData::ReadClient(int fd, char *buf, size_t len, comm_err_t errcode, i
 void
 TunnelStateData::readClient(char *buf, size_t len, comm_err_t errcode, int xerrno)
 {
+    debugs(26, 3, HERE << client.conn << ", read " << len << " bytes");
+
     /*
      * Bail out early on COMM_ERR_CLOSING
      * - close handlers will tidy up for us
      */
-
     if (errcode == COMM_ERR_CLOSING)
         return;
-
-    debugs(26, 3, "tunnelReadClient: FD " << client.conn << ", read " << len << " bytes");
 
     if (len > 0) {
         client.bytesIn(len);
@@ -332,14 +330,13 @@ TunnelStateData::WriteServerDone(int fd, char *buf, size_t len, comm_err_t flag,
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     assert (cbdataReferenceValid (tunnelState));
 
-    assert(fd == tunnelState->server.conn->fd);
     tunnelState->writeServerDone(buf, len, flag, xerrno);
 }
 
 void
 TunnelStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xerrno)
 {
-    debugs(26, 3, "tunnelWriteServer: FD " << server.conn->fd << ", " << len << " bytes written");
+    debugs(26, 3, HERE  << server.conn << ", " << len << " bytes written");
 
     if (flag == COMM_ERR_CLOSING)
         return;
@@ -382,7 +379,6 @@ TunnelStateData::WriteClientDone(int fd, char *buf, size_t len, comm_err_t flag,
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     assert (cbdataReferenceValid (tunnelState));
 
-    assert(fd == tunnelState->client.conn->fd);
     tunnelState->writeClientDone(buf, len, flag, xerrno);
 }
 
@@ -400,7 +396,7 @@ TunnelStateData::Connection::dataSent (size_t amount)
 void
 TunnelStateData::writeClientDone(char *buf, size_t len, comm_err_t flag, int xerrno)
 {
-    debugs(26, 3, "tunnelWriteClient: FD " << client.conn->fd << ", " << len << " bytes written");
+    debugs(26, 3, HERE << client.conn << ", " << len << " bytes written");
 
     if (flag == COMM_ERR_CLOSING)
         return;
