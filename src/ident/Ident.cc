@@ -118,7 +118,7 @@ Ident::Timeout(int fd, void *data)
 }
 
 void
-Ident::ConnectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
+Ident::ConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
 
@@ -142,7 +142,8 @@ Ident::ConnectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno,
 
     if (c == NULL) {
         /* no clients care */
-        conn->close();
+        Comm::ConnectionPointer nonConst = conn;
+        nonConst->close();
         return;
     }
 

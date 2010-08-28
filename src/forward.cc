@@ -395,7 +395,7 @@ fwdNegotiateSSLWrapper(int fd, void *data)
 #endif
 
 void
-fwdConnectDoneWrapper(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
+fwdConnectDoneWrapper(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     FwdState *fwd = (FwdState *) data;
     fwd->connectDone(conn, status, xerrno);
@@ -519,10 +519,13 @@ FwdState::retryOrBail()
             return;
         }
         // else bail. no more serverDestinations possible to try.
+
+        // AYJ: cannot-forward error ??
     }
 
     if (!err && shutting_down) {
-        errorCon(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE, request);
+        ErrorState *anErr = errorCon(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE, request);
+        errorAppendEntry(entry, anErr);
     }
 
     self = NULL;	// refcounted
@@ -657,7 +660,7 @@ FwdState::initiateSSL()
 #endif
 
 void
-FwdState::connectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno)
+FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno)
 {
     if (status != COMM_OK) {
         ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
@@ -669,7 +672,8 @@ FwdState::connectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerr
             if (conn->getPeer())
                 peerConnectFailed(conn->getPeer());
 
-            conn->close();
+            Comm::ConnectionPointer nonConst = conn;
+            nonConst->close();
         }
         retryOrBail();
         return;
@@ -682,7 +686,7 @@ FwdState::connectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerr
         updateHierarchyInfo();
 #endif
 
-    debugs(17, 3, "FD " << serverConnection()->fd << ": '" << entry->url() << "'" );
+    debugs(17, 3, HERE << serverConnection() << ": '" << entry->url() << "'" );
 
     comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
 

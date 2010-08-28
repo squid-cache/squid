@@ -2680,7 +2680,7 @@ ftpReadPasv(FtpStateData * ftpState)
 }
 
 void
-FtpStateData::ftpPasvCallback(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
+FtpStateData::ftpPasvCallback(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
     debugs(9, 3, HERE);
