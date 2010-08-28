@@ -90,7 +90,7 @@ public:
     ESISegment::Pointer altcontent;
     ESIVarState *varState;
     char *srcurl, *alturl;
-    void fail(ESIStreamContext::Pointer);
+    void includeFail(ESIStreamContext::Pointer);
     void finish();
 
 private:

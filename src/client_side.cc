@@ -1361,7 +1361,7 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
     // After sending Transfer-Encoding: chunked (at least), always send
     // the last-chunk if there was no error, ignoring responseFinishedOrFailed.
     const bool mustSendLastChunk = http->request->flags.chunked_reply &&
-        !http->request->flags.stream_error && !context->startOfOutput();
+                                   !http->request->flags.stream_error && !context->startOfOutput();
     if (responseFinishedOrFailed(rep, receivedData) && !mustSendLastChunk) {
         context->writeComplete(fd, NULL, 0, COMM_OK);
         PROF_stop(clientSocketRecipient);

@@ -73,6 +73,12 @@ AC_PATH_PROG(AR, ar, $FALSE)
 AR_R="$AR r"
 AC_SUBST(AR_R)
 
+# this needs to be before any test is run, to have more standard
+# functions available on some Unix sysems (e.g. Solaris)
+if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
+	AC_USE_SYSTEM_EXTENSIONS
+fi
+
 AC_ARG_ENABLE(strict-error-checking,
   AS_HELP_STRING([--disable-strict-error-checking],[By default squid is compiled
                  with all possible static compiler error-checks enabled.
@@ -126,8 +132,6 @@ fi
 
 SQUID_CC_GUESS_VARIANT
 SQUID_CC_GUESS_OPTIONS
-
-
 
 dnl find out the exe extension for this platform.
 dnl If it is not empty, use it for CGI as well.
@@ -277,7 +281,7 @@ fi
 
 if test "x$enable_strict_error_checking" != "xno"; then
   SQUID_CFLAGS="$SQUID_CFLAGS $squid_cv_cc_option_werror"
-  SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cc_option_werror"
+  SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cxx_option_werror"
 fi
 
 AC_SUBST(SQUID_CFLAGS)
@@ -1715,12 +1719,16 @@ if test "x$ac_krb5_config" = "xyes" ; then
     AC_CHECK_HEADERS(gssapi/gssapi_generic.h)
     AC_CHECK_HEADERS(profile.h)
   fi
-  AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
 
   SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
   if test "x$squid_cv_broken_krb5_h" = "xyes"; then
-     AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if krb5.h is broken for C++])
+    AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if krb5.h is broken for C++])
+    AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.])
+    AC_MSG_WARN([Please see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512])
+    AC_MSG_WARN([If you need Kerberos support you'll have to patch])
+    AC_MSG_WARN([your system. See contrib/solaris/solaris-krb5-include.patch])
   fi
+  AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
 
   ac_com_error_message=no
   if test "x$ac_cv_header_com_err_h" == "xyes" ; then
@@ -2165,7 +2173,8 @@ AC_CHECK_HEADERS( \
   stdint.h \
   inttypes.h \
   db.h \
-  db_185.h
+  db_185.h \
+  wchar.h
 )
 
 CHECK_STRUCT_PAM_CONV
@@ -2272,6 +2281,7 @@ AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
 AC_TYPE_OFF_T
 AC_TYPE_UID_T
+AC_CHECK_TYPE([bool])
 #need the defines for PRId64
 AC_CHECK_SIZEOF(int64_t)
 AC_CHECK_SIZEOF(long)

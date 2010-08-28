@@ -157,14 +157,14 @@ SQUIDCEXTERN void fqdncache_nbgethostbyaddr(const Ip::Address &, FQDNH *, void *
 
 SQUIDCEXTERN const char *fqdncache_gethostbyaddr(const Ip::Address &, int flags);
 SQUIDCEXTERN void fqdncache_init(void);
-SQUIDCEXTERN void fqdnStats(StoreEntry *);
+void fqdnStats(StoreEntry *);
 SQUIDCEXTERN void fqdncacheReleaseInvalid(const char *);
 
 SQUIDCEXTERN const char *fqdnFromAddr(const Ip::Address &);
 SQUIDCEXTERN int fqdncacheQueueDrain(void);
 SQUIDCEXTERN void fqdncacheFreeMemory(void);
 SQUIDCEXTERN void fqdncache_restart(void);
-SQUIDCEXTERN void fqdncache_purgelru(void *);
+void fqdncache_purgelru(void *);
 SQUIDCEXTERN void fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames);
 
 class FwdState;
@@ -250,7 +250,7 @@ SQUIDCEXTERN void httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p);
 SQUIDCEXTERN void httpHdrCcSetMaxAge(HttpHdrCc * cc, int max_age);
 SQUIDCEXTERN void httpHdrCcSetSMaxAge(HttpHdrCc * cc, int s_maxage);
 SQUIDCEXTERN void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
-SQUIDCEXTERN void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
+void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
 /* Http Header Tools */
 class HttpHeaderFieldInfo;
@@ -276,7 +276,7 @@ SQUIDCEXTERN void httpHeaderInitModule(void);
 SQUIDCEXTERN void httpHeaderCleanModule(void);
 
 /* store report about current header usage and other stats */
-SQUIDCEXTERN void httpHeaderStoreReport(StoreEntry * e);
+void httpHeaderStoreReport(StoreEntry * e);
 SQUIDCEXTERN void httpHdrMangleList(HttpHeader *, HttpRequest *, int req_or_rep);
 SQUIDCEXTERN int httpReqHdrManglersConfigured();
 
@@ -321,15 +321,14 @@ extern void wccp2ConnectionOpen(void);
 extern void wccp2ConnectionClose(void);
 #endif /* USE_WCCPv2 */
 
+void ipcache_purgelru(void *);
 SQUIDCEXTERN void ipcache_nbgethostbyname(const char *name,
         IPH * handler,
         void *handlerData);
-SQUIDCEXTERN void ipcache_purgelru(void *);
 SQUIDCEXTERN const ipcache_addrs *ipcache_gethostbyname(const char *, int flags);
 SQUIDCEXTERN void ipcacheInvalidate(const char *);
 SQUIDCEXTERN void ipcacheInvalidateNegative(const char *);
 SQUIDCEXTERN void ipcache_init(void);
-SQUIDCEXTERN void stat_ipcache_get(StoreEntry *);
 SQUIDCEXTERN void ipcacheCycleAddr(const char *name, ipcache_addrs *);
 SQUIDCEXTERN void ipcacheMarkBadAddr(const char *name, const Ip::Address &);
 SQUIDCEXTERN void ipcacheMarkGoodAddr(const char *name, const Ip::Address &);
@@ -556,12 +555,12 @@ SQUIDCEXTERN int storeClientIsThisAClient(store_client * sc, void *someClient);
 SQUIDCEXTERN const char *getMyHostname(void);
 SQUIDCEXTERN const char *uniqueHostname(void);
 SQUIDCEXTERN void safeunlink(const char *path, int quiet);
-SQUIDCEXTERN void death(int sig);
+void death(int sig);
 SQUIDCEXTERN void fatal(const char *message);
 SQUIDCEXTERN void fatalf(const char *fmt,...) PRINTF_FORMAT_ARG1;
 SQUIDCEXTERN void fatal_dump(const char *message);
-SQUIDCEXTERN void sigusr2_handle(int sig);
-SQUIDCEXTERN void sig_child(int sig);
+void sigusr2_handle(int sig);
+void sig_child(int sig);
 SQUIDCEXTERN void leave_suid(void);
 SQUIDCEXTERN void enter_suid(void);
 SQUIDCEXTERN void no_suid(void);

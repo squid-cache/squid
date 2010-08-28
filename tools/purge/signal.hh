@@ -57,16 +57,18 @@
 #include <signal.h>
 #endif
 
+#if !defined(__cplusplus)
 #if defined(__GNUC__) || defined(__GNUG__)
 #pragma interface
 #else
-#ifndef HAS_BOOL
-#define HAS_BOOL
+#ifndef HAVE_BOOL
+#define HAVE_BOOL
 typedef int bool;
 #define false 0
 #define true  1
 #endif
 #endif
+#endif /* __cplusplus */
 
 #if 1 // so far, all systems I know use void
 # define SIGRETTYPE void

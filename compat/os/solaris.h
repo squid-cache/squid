@@ -8,6 +8,16 @@
 
 #if _SQUID_SOLARIS_
 
+
+/*
+ * ugly hack. System headers require wcsstr, but don't define it.
+ */
+#include <wchar.h>
+#ifdef wcsstr
+#undef wcsstr
+#endif /* wcsstr */
+#define wcsstr wcswcs
+
 /*
  * On Solaris 9 x86, gcc may includes a "fixed" set of old system
  * include files that is incompatible with the updated Solaris

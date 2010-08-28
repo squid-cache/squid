@@ -1607,7 +1607,7 @@ httpHeaderNoteParsedEntry(http_hdr_type id, String const &context, int error)
 extern const HttpHeaderStat *dump_stat;		/* argh! */
 const HttpHeaderStat *dump_stat = NULL;
 
-static void
+void
 httpHeaderFieldStatDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
     const int id = (int) val;
