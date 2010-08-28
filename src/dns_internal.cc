@@ -705,14 +705,13 @@ idnsDoSendQueryVC(nsvc *vc)
 }
 
 static void
-idnsInitVCConnected(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
+idnsInitVCConnected(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
     if (status != COMM_OK || !conn) {
         char buf[MAX_IPSTRLEN];
         debugs(78, DBG_IMPORTANT, "Failed to connect to nameserver " << nameservers[vc->ns].S.NtoA(buf,MAX_IPSTRLEN) << " using TCP!");
-        conn = NULL;
         return;
     }
 
