@@ -430,9 +430,8 @@ Adaptation::Ecap::XactionRep::status() const
         const BodyPipePointer &vp = theVirginRep.raw().body_pipe;
         if (!canAccessVb)
             buf.append("x", 1);
-        if (vp != NULL && vp->stillConsuming(this)) {
+        if (vp != NULL) { // XXX: but may not be stillConsuming()
             buf.append("Vb", 2);
-            buf.append(vp->status(), strlen(vp->status())); // XXX
         } else
             buf.append("V.", 2);
     }
@@ -441,9 +440,8 @@ Adaptation::Ecap::XactionRep::status() const
         MessageRep *rep = dynamic_cast<MessageRep*>(theAnswerRep.get());
         Must(rep);
         const BodyPipePointer &ap = rep->raw().body_pipe;
-        if (ap != NULL && ap->stillProducing(this)) {
+        if (ap != NULL) { // XXX: but may not be stillProducing()
             buf.append(" Ab", 3);
-            buf.append(ap->status(), strlen(ap->status())); // XXX
         } else
             buf.append(" A.", 3);
     }
