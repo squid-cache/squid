@@ -79,6 +79,31 @@ using namespace Squid;
 #include <getopt.h>
 #endif
 
+#if HAVE_GSSAPI
+#if HAVE_GSSAPI_GSSAPI_H
+#include <gssapi/gssapi.h>
+#elif HAVE_GSSAPI_H
+#include <gssapi.h>
+#endif                          /* HAVE_GSSAPI_H */
+#if HAVE_GSSAPI_GSSAPI_EXT_H
+#include <gssapi/gssapi_ext.h>
+#endif                          /* HAVE_GSSAPI_GSSAPI_EXT_H */
+#if HAVE_GSSAPI_GSSAPI_KRB5_H
+#include <gssapi/gssapi_krb5.h>
+#endif                          /* HAVE_GSSAPI_GSSAPI_KRB5_H */
+#if HAVE_GSSAPI_GSSAPI_GENERIC_H
+#include <gssapi/gssapi_generic.h>
+#endif                          /* HAVE_GSSAPI_GSSAPI_GENERIC_H */
+
+#ifndef gss_nt_service_name
+#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
+#endif
+
+#ifndef gss_mech_spnego
+static gss_OID_desc _gss_mech_spnego = {6, (void *) "\x2b\x06\x01\x05\x05\x02"};
+gss_OID gss_mech_spnego = &_gss_mech_spnego;
+#endif
+#endif /* HAVE_GSSAPI */
 
 #ifndef BUFSIZ
 #define BUFSIZ		8192
@@ -104,6 +129,13 @@ static SIGHDLR pipe_handler;
 static void set_our_signal(void);
 static ssize_t myread(int fd, void *buf, size_t len);
 static ssize_t mywrite(int fd, void *buf, size_t len);
+
+
+#if HAVE_GSSAPI
+static int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status, const char *function);
+static char *GSSAPI_token(const char *server);
+#endif
+
 static int put_fd;
 static char *put_file = NULL;
 
@@ -126,7 +158,11 @@ usage(const char *progname)
     fprintf(stderr,
             "Version: %s\n"
             "Usage: %s [-arsv] [-g count] [-h remote host] [-H 'string'] [-i IMS] [-I ping-interval] [-j 'Host-header']"
-            "[-k] [-l local-host] [-m method] [-p port] [-P file] [-t count] [-T timeout] [-u proxy-user] [-U www-user] "
+            "[-k] [-l local-host] [-m method] "
+#if HAVE_GSSAPI
+            "[-n] [-N] "
+#endif
+            "[-p port] [-P file] [-t count] [-T timeout] [-u proxy-user] [-U www-user] "
             "[-V version] [-w proxy-password] [-W www-password] url\n"
             "\n"
             "Options:\n"
@@ -140,6 +176,10 @@ usage(const char *progname)
             "    -k           Keep the connection active. Default is to do only one request then close.\n"
             "    -l host      Specify a local IP address to bind to.  Default is none.\n"
             "    -m method    Request method, default is GET.\n"
+#if HAVE_GSSAPI
+            "    -n           Proxy Negotiate(Kerberos) authentication\n"
+            "    -N           WWW Negotiate(Kerberos) authentication\n"
+#endif
             "    -p port      Port number of cache.  Default is %d.\n"
             "    -P file      PUT request. Using the named file\n"
             "    -r           Force cache to reload URL.\n"
@@ -149,9 +189,9 @@ usage(const char *progname)
             "    -u user      Proxy authentication username\n"
             "    -U user      WWW authentication username\n"
             "    -v           Verbose. Print outgoing message to stderr.\n"
-            "    -V version   HTTP Version. Use '-' for HTTP/0.9 omitted case\n",
+            "    -V version   HTTP Version. Use '-' for HTTP/0.9 omitted case\n"
             "    -w password  Proxy authentication password\n"
-            "    -W password  WWW authentication password\n"
+            "    -W password  WWW authentication password\n",
             VERSION, progname, CACHE_HTTP_PORT);
     exit(1);
 }
@@ -166,6 +206,7 @@ main(int argc, char *argv[])
     int keep_alive = 0;
     int opt_noaccept = 0;
     int opt_verbose = 0;
+    int www_neg, proxy_neg;
     const char *hostname, *localhost;
     Ip::Address iaddr;
     char url[BUFSIZ], msg[MESSAGELEN], buf[BUFSIZ];
@@ -196,6 +237,8 @@ main(int argc, char *argv[])
     ping = 0;
     pcount = 0;
     ping_int = 1 * 1000;
+    www_neg = 0;
+    proxy_neg = 0;
 
     if (argc < 2) {
         usage(argv[0]);		/* need URL */
@@ -205,8 +248,11 @@ main(int argc, char *argv[])
 
         if (url[0] == '-')
             usage(argv[0]);
-
+#if HAVE_GSSAPI
+        while ((c = getopt(argc, argv, "ah:j:V:l:P:i:km:p:rsvt:g:p:I:H:T:u:U:w:W:nN?")) != -1)
+#else
         while ((c = getopt(argc, argv, "ah:j:V:l:P:i:km:p:rsvt:g:p:I:H:T:u:U:w:W:?")) != -1)
+#endif
             switch (c) {
 
             case 'a':
@@ -307,6 +353,15 @@ main(int argc, char *argv[])
                 www_password = optarg;
                 break;
 
+#if HAVE_GSSAPI
+            case 'n':
+                proxy_neg = 1;
+                break;
+
+            case 'N':
+                www_neg = 1;
+                break;
+#endif
             case 'v':
                 /* undocumented: may increase verb-level by giving more -v's */
                 opt_verbose++;
@@ -426,6 +481,22 @@ main(int argc, char *argv[])
             snprintf(buf, BUFSIZ, "Authorization: Basic %s\r\n", base64_encode(buf));
             strcat(msg, buf);
         }
+#if HAVE_GSSAPI
+        if (www_neg) {
+            if (host) {
+                snprintf(buf, BUFSIZ, "Authorization: Negotiate %s\r\n", GSSAPI_token(host));
+                strcat(msg, buf);
+            } else
+                fprintf(stderr, "ERROR: server host missing\n");
+        }
+        if (proxy_neg) {
+            if (hostname) {
+                snprintf(buf, BUFSIZ, "Proxy-Authorization: Negotiate %s\r\n", GSSAPI_token(hostname));
+                strcat(msg, buf);
+            } else
+                fprintf(stderr, "ERROR: proxy server host missing\n");
+        }
+#endif
 
         /* HTTP/1.0 may need keep-alive explicitly */
         if (strcmp(version, "1.0") == 0 && keep_alive)
@@ -730,3 +801,127 @@ mywrite(int fd, void *buf, size_t len)
     return send(fd, buf, len, 0);
 #endif
 }
+
+#if HAVE_GSSAPI
+/*
+ * Check return valuse major_status, minor_status for error and print error description
+ * in case of an error.
+ * Returns 1 in case of gssapi error
+ *         0 in case of no gssapi error
+ */
+#define BUFFER_SIZE 8192
+static int
+check_gss_err(OM_uint32 major_status, OM_uint32 minor_status, const char *function)
+{
+    if (GSS_ERROR(major_status)) {
+        OM_uint32 maj_stat, min_stat;
+        OM_uint32 msg_ctx = 0;
+        gss_buffer_desc status_string;
+        char buf[BUFFER_SIZE];
+        size_t len;
+
+        len = 0;
+        msg_ctx = 0;
+        while (!msg_ctx) {
+            /* convert major status code (GSS-API error) to text */
+            maj_stat = gss_display_status(&min_stat, major_status,
+                                          GSS_C_GSS_CODE,
+                                          GSS_C_NULL_OID,
+                                          &msg_ctx, &status_string);
+            if (maj_stat == GSS_S_COMPLETE) {
+                snprintf(buf + len, BUFFER_SIZE-len, "%s", (char *) status_string.value);
+                len += status_string.length;
+                gss_release_buffer(&min_stat, &status_string);
+                break;
+            }
+            gss_release_buffer(&min_stat, &status_string);
+        }
+        snprintf(buf + len, BUFFER_SIZE-len, "%s", ". ");
+        len += 2;
+        msg_ctx = 0;
+        while (!msg_ctx) {
+            /* convert minor status code (underlying routine error) to text */
+            maj_stat = gss_display_status(&min_stat, minor_status,
+                                          GSS_C_MECH_CODE,
+                                          GSS_C_NULL_OID,
+                                          &msg_ctx, &status_string);
+            if (maj_stat == GSS_S_COMPLETE) {
+                snprintf(buf + len, BUFFER_SIZE-len,"%s", (char *) status_string.value);
+                len += status_string.length;
+                gss_release_buffer(&min_stat, &status_string);
+                break;
+            }
+            gss_release_buffer(&min_stat, &status_string);
+        }
+        fprintf(stderr, "%s failed: %s\n", function, buf);
+        return (1);
+    }
+    return (0);
+}
+
+/*
+ * Get gssapi token for service HTTP/<server>
+ * User has to initiate a kinit user@DOMAIN on commandline first for the
+ * function to be successful
+ * Returns base64 encoded token if successful
+ *         string "ERROR" if unsuccessful
+ */
+static char *
+GSSAPI_token(const char *server)
+{
+    OM_uint32 major_status, minor_status;
+    gss_ctx_id_t gss_context = GSS_C_NO_CONTEXT;
+    gss_name_t server_name = GSS_C_NO_NAME;
+    gss_buffer_desc service = GSS_C_EMPTY_BUFFER;
+    gss_buffer_desc input_token = GSS_C_EMPTY_BUFFER;
+    gss_buffer_desc output_token = GSS_C_EMPTY_BUFFER;
+    char *token = NULL;
+
+    setbuf(stdout, NULL);
+    setbuf(stdin, NULL);
+
+    if (!server) {
+        fprintf(stderr, "Error: No server name\n");
+        return (char *)"ERROR";
+    }
+    service.value = xmalloc(strlen("HTTP") + strlen(server) + 2);
+    snprintf((char *) service.value, strlen("HTTP") + strlen(server) + 2, "%s@%s", "HTTP", server);
+    service.length = strlen((char *) service.value);
+
+    major_status = gss_import_name(&minor_status, &service,
+                                   gss_nt_service_name, &server_name);
+
+    if (!check_gss_err(major_status, minor_status, "gss_import_name()")) {
+
+        major_status = gss_init_sec_context(&minor_status,
+                                            GSS_C_NO_CREDENTIAL,
+                                            &gss_context,
+                                            server_name,
+                                            gss_mech_spnego,
+                                            0,
+                                            0,
+                                            GSS_C_NO_CHANNEL_BINDINGS,
+                                            &input_token,
+                                            NULL,
+                                            &output_token,
+                                            NULL,
+                                            NULL);
+
+        if (!check_gss_err(major_status, minor_status, "gss_init_sec_context()")) {
+
+            if (output_token.length)
+                token = (char *) base64_encode_bin((const char *) output_token.value, output_token.length);
+        }
+    }
+
+    if (!output_token.length)
+        token = (char *) "ERROR";
+    gss_delete_sec_context(&minor_status, &gss_context, NULL);
+    gss_release_buffer(&minor_status, &service);
+    gss_release_buffer(&minor_status, &input_token);
+    gss_release_buffer(&minor_status, &output_token);
+    gss_release_name(&minor_status, &server_name);
+
+    return token;
+}
+#endif

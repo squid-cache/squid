@@ -20,6 +20,7 @@ LDADD = \
 	$(top_builddir)/src/time.o \
 	$(top_builddir)/src/ip/libip.la \
 	$(COMPAT_LIB) \
+	$(KRB5LIBS) \
 	$(XTRA_LIBS)
 
 include $(top_srcdir)/doc/manuals/Substitute.am
