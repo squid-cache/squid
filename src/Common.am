@@ -20,6 +20,12 @@ INCLUDES = \
 	-I$(top_builddir)/include \
 	$(SQUID_CPPUNIT_INC)
 
+## Loadable Modules requires LTDL include paths.
+## Because we need this to use the libray linking headers...
+if USE_LOADABLE_MODULES
+INCLUDES += $(INCLTDL)
+endif
+
 ## make all compiled sources depend on generated files
 ## XXX: Do we really need this? Does auto-dependency tracking work?
 $(OBJS): $(top_srcdir)/include/version.h $(top_builddir)/include/autoconf.h
