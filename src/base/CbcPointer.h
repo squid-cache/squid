@@ -48,10 +48,12 @@ public:
     /// support assigning a child cbc pointer to a parent cbc pointer
     template <typename Other>
     CbcPointer &operator =(const CbcPointer<Other> &o) {
+        if (this != &o) { // assignment to self
         clear();
         cbc = o.raw(); // so that set() is accurate
         if (o.valid())
             lock = cbdataReference(o->toCbdata());
+        }
         return *this;
     }
 
@@ -101,10 +103,12 @@ CbcPointer<Cbc>::~CbcPointer()
 template<class Cbc>
 CbcPointer<Cbc> &CbcPointer<Cbc>::operator =(const CbcPointer &d)
 {
+    if (this != &d) { // assignment to self
     clear();
     cbc = d.cbc;
     if (d.lock && cbdataReferenceValid(d.lock))
         lock = cbdataReference(d.lock);
+    }
     return *this;
 }
 
