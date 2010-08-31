@@ -73,6 +73,9 @@ private:
 private:
     bool mayContinue() const;
 
+    void parseChunkSize();
+    void parseUnusedChunkExtension();
+    void parseLastChunkExtension();
     void parseChunkBeg();
     void parseChunkBody();
     void parseChunkEnd();
@@ -80,11 +83,13 @@ private:
     void parseTrailerHeader();
     void parseMessageEnd();
 
-    void parseChunkExtension(const char *, const char * );
     bool findCrlf(size_t &crlfBeg, size_t &crlfEnd);
+    bool findCrlf(size_t &crlfBeg, size_t &crlfEnd, bool &quoted, bool &slashed);
 
 private:
-    static Step psChunkBeg;
+    static Step psChunkSize;
+    static Step psUnusedChunkExtension;
+    static Step psLastChunkExtension;
     static Step psChunkBody;
     static Step psChunkEnd;
     static Step psTrailer;
@@ -97,6 +102,8 @@ private:
     uint64_t theChunkSize;
     uint64_t theLeftBodySize;
     bool doNeedMoreData;
+    bool inQuoted; ///< stores parsing state for incremental findCrlf
+    bool inSlashed; ///< stores parsing state for incremental findCrlf
 
 public:
     int64_t useOriginBody;
