@@ -179,7 +179,7 @@ public:
 
     HttpMsgPointerT(const HttpMsgPointerT &p): msg(p.msg) { lock(); }
     HttpMsgPointerT &operator =(const HttpMsgPointerT &p)
-        { if (msg != p.msg) { unlock(); msg = p.msg; lock(); } return *this; }
+    { if (msg != p.msg) { unlock(); msg = p.msg; lock(); } return *this; }
 
     Msg &operator *() { return *msg; }
     const Msg &operator *() const { return *msg; }
