@@ -189,6 +189,7 @@ public:
     operator const Msg *() const { return msg; }
     // add more as needed
 
+protected:
     void lock() { if (msg) HTTPMSGLOCK(msg); } ///< prevent msg destruction
     void unlock() { HTTPMSGUNLOCK(msg); } ///< allows/causes msg destruction
 
