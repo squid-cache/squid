@@ -704,13 +704,15 @@ idnsDoSendQueryVC(nsvc *vc)
 }
 
 static void
-idnsInitVCConnected(int fd, const DnsLookupDetails &, comm_err_t status, int xerrno, void *data)
+idnsInitVCConnected(int fd, const DnsLookupDetails &details, comm_err_t status, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
     if (status != COMM_OK) {
-        char buf[MAX_IPSTRLEN];
-        debugs(78, 1, "idnsInitVCConnected: Failed to connect to nameserver " << nameservers[vc->ns].S.NtoA(buf,MAX_IPSTRLEN) << " using TCP!");
+        char buf[MAX_IPSTRLEN] = "";
+        if (vc->ns < nns)
+            nameservers[vc->ns].S.NtoA(buf,MAX_IPSTRLEN);
+        debugs(78, 1, HERE << "Failed to connect to nameserver " << buf << " using TCP: " << details);
         comm_close(fd);
         return;
     }
@@ -726,7 +728,8 @@ idnsVCClosed(int fd, void *data)
     nsvc * vc = (nsvc *)data;
     delete vc->queue;
     delete vc->msg;
-    nameservers[vc->ns].vc = NULL;
+    if (vc->ns < nns) // XXX: idnsShutdown may have freed nameservers[]
+        nameservers[vc->ns].vc = NULL;
     cbdataFree(vc);
 }
 
@@ -736,6 +739,7 @@ idnsInitVC(int ns)
     char buf[MAX_IPSTRLEN];
 
     nsvc *vc = cbdataAlloc(nsvc);
+    assert(ns < nns);
     nameservers[ns].vc = vc;
     vc->ns = ns;
 
@@ -775,6 +779,7 @@ idnsInitVC(int ns)
 static void
 idnsSendQueryVC(idns_query * q, int ns)
 {
+    assert(ns < nns);
     if (nameservers[ns].vc == NULL)
         idnsInitVC(ns);
 
@@ -1275,6 +1280,7 @@ idnsReadVC(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *dat
         return;
     }
 
+    assert(vc->ns < nns);
     debugs(78, 3, "idnsReadVC: FD " << fd << ": received " <<
            (int) vc->msg->contentSize() << " bytes via tcp from " <<
            nameservers[vc->ns].S << ".");
@@ -1458,6 +1464,7 @@ idnsShutdown(void)
         }
     }
 
+    // XXX: vcs are not closed/freed yet and may try to access nameservers[]
     idnsFreeNameservers();
     idnsFreeSearchpath();
 }
