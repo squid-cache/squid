@@ -127,6 +127,8 @@ public:
 #endif
 
 private:
+    _SQUID_INLINE_ bool nilCmp(bool, bool, int &) const;
+
     /* never reference these directly! */
     unsigned short int size_; /* buffer size; 64K limit */
 
