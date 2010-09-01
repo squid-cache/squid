@@ -88,19 +88,31 @@ String::operator [](unsigned int aPos) const
 }
 
 
+/// compare NULL and empty strings because str*cmp() may fail on NULL strings
+/// and because we need to return consistent results for strncmp(count == 0).
+bool
+String::nilCmp(const bool thisIsNilOrEmpty, const bool otherIsNilOrEmpty, int &result) const
+{
+    if (!thisIsNilOrEmpty && !otherIsNilOrEmpty)
+        return false; // result does not matter
+
+    if (thisIsNilOrEmpty && otherIsNilOrEmpty)
+        result = 0;
+    else if (thisIsNilOrEmpty)
+        result = -1;
+    else // otherIsNilOrEmpty
+        result = +1;
+
+    return true;
+}
+
+
 int
 String::cmp (char const *aString) const
 {
-    /* strcmp fails on NULLS */
-
-    if (size() == 0 && (aString == NULL || aString[0] == '\0'))
-        return 0;
-
-    if (size() == 0)
-        return -1;
-
-    if (aString == NULL || aString[0] == '\0')
-        return 1;
+    int result = 0;
+    if (nilCmp(!size(), (!aString || !*aString), result))
+        return result;
 
     return strcmp(termedBuf(), aString);
 }
@@ -108,19 +120,9 @@ String::cmp (char const *aString) const
 int
 String::cmp (char const *aString, String::size_type count) const
 {
-    /* always the same at length 0 */
-
-    if (count == 0)
-        return 0;
-
-    if (size() == 0 && (aString == NULL || aString[0] == '\0'))
-        return 0;
-
-    if (size() == 0)
-        return -1;
-
-    if (aString == NULL || aString[0] == '\0')
-        return 1;
+    int result = 0;
+    if (nilCmp((!size() || !count), (!aString || !*aString || !count), result))
+        return result;
 
     return strncmp(termedBuf(), aString, count);
 }
@@ -128,16 +130,9 @@ String::cmp (char const *aString, String::size_type count) const
 int
 String::cmp (String const &aString) const
 {
-    /* strcmp fails on NULLS */
-
-    if (size() == 0 && aString.size() == 0)
-        return 0;
-
-    if (size() == 0)
-        return -1;
-
-    if (aString.size() == 0)
-        return 1;
+    int result = 0;
+    if (nilCmp(!size(), !aString.size(), result))
+        return result;
 
     return strcmp(termedBuf(), aString.termedBuf());
 }
@@ -145,12 +140,20 @@ String::cmp (String const &aString) const
 int
 String::caseCmp(char const *aString) const
 {
+    int result = 0;
+    if (nilCmp(!size(), (!aString || !*aString), result))
+        return result;
+
     return strcasecmp(termedBuf(), aString);
 }
 
 int
 String::caseCmp(char const *aString, String::size_type count) const
 {
+    int result = 0;
+    if (nilCmp((!size() || !count), (!aString || !*aString || !count), result))
+        return result;
+
     return strncasecmp(termedBuf(), aString, count);
 }
 

@@ -167,6 +167,8 @@ private:
     void allocBuffer(size_type sz);
     void setBuffer(char *buf, size_type sz);
 
+    _SQUID_INLINE_ bool nilCmp(bool, bool, int &) const;
+
     /* never reference these directly! */
     size_type size_; /* buffer size; 64K limit */
 
