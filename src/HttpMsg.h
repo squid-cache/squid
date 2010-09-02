@@ -130,6 +130,24 @@ protected:
 class HttpParser
 {
 public:
+    /**
+     * Attempt to parse the first line of a new request message.
+     *
+     * Governed by:
+     *  RFC 1945 section 5.1
+     *  RFC 2616 section 5.1
+     *
+     * Parsing state is stored between calls. However the current implementation
+     * begins parsing from scratch on every call.
+     * The return value tells you whether the parsing state fields are valid or not.
+     *
+     * \retval -1  an error occurred. request_parse_status indicates HTTP status result.
+     * \retval  1  successful parse
+     * \retval  0  more data is needed to complete the parse
+     */
+    int parseRequestFirstLine();
+
+public:
     char state;
     const char *buf;
     int bufsiz;
