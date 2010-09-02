@@ -796,6 +796,8 @@ urlCheckRequest(const HttpRequest * r)
     if (r->method == METHOD_CONNECT)
         return 1;
 
+    // we support OPTIONS and TRACE directed at us (with a 501 reply, for now)
+    // we also support forwarding OPTIONS and TRACE, except for the *-URI ones
     if (r->method == METHOD_OPTIONS || r->method == METHOD_TRACE)
         return (r->max_forwards == 0 || r->urlpath != "*");
 
