@@ -401,6 +401,10 @@ HttpParserInit(HttpParser *hdr, const char *buf, int bufsiz)
     hdr->req_start = hdr->req_end = -1;
     hdr->hdr_start = hdr->hdr_end = -1;
     debugs(74, 5, "httpParseInit: Request buffer is " << buf);
+    hdr->m_start = hdr->m_end = -1;
+    hdr->u_start = hdr->u_end = -1;
+    hdr->v_start = hdr->v_end = -1;
+    hdr->v_maj = hdr->v_min = 0;
 }
 
 #if MSGDODEBUG
@@ -445,190 +449,225 @@ HttpParserRequestLen(HttpParser *hp)
 }
 #endif
 
-/**
- * Attempt to parse the request line.
- *
- * This will set the values in hmsg that it determines. One may end up
- * with a partially-parsed buffer; the return value tells you whether
- * the values are valid or not.
- *
- * \retval	1 if parsed correctly
- * \retval	0 if more is needed
- * \retval	-1 if error
- *
- * TODO:
- *   * have it indicate "error" and "not enough" as two separate conditions!
- *   * audit this code as off-by-one errors are probably everywhere!
- */
 int
-HttpParserParseReqLine(HttpParser *hmsg)
+HttpParser::parseRequestFirstLine()
 {
-    int i = 0;
-    int retcode = 0;
-    unsigned int maj = 0, min = 0;
-    int last_whitespace = -1, line_end = -1;
+    int second_word = -1; // track the suspected URI start
+    int first_whitespace = -1, last_whitespace = -1; // track the first and last SP byte
+    int line_end = -1; // tracks the last byte BEFORE terminal \r\n or \n sequence
 
-    debugs(74, 5, "httpParserParseReqLine: parsing " << hmsg->buf);
+    debugs(74, 5, HERE << "parsing possible request: " << buf);
 
-    PROF_start(HttpParserParseReqLine);
-    /* Find \r\n - end of URL+Version (and the request) */
-    hmsg->req_end = -1;
-    for (i = 0; i < hmsg->bufsiz; i++) {
-        if (hmsg->buf[i] == '\n') {
-            hmsg->req_end = i;
-            break;
-        }
-        if (i < hmsg->bufsiz - 1 && hmsg->buf[i] == '\r' && hmsg->buf[i + 1] == '\n') {
-            hmsg->req_end = i + 1;
-            break;
-        }
+    // Single-pass parse: (provided we have the whole line anyways)
+
+    req_start = 0;
+    if (Config.onoff.relaxed_header_parser) {
+        if (Config.onoff.relaxed_header_parser < 0 && buf[req_start] == ' ')
+            debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " <<
+                   "Whitespace bytes received ahead of method. " <<
+                   "Ignored due to relaxed_header_parser.");
+        // Be tolerant of prefix spaces (other bytes are valid method values)
+        for (; req_start < bufsiz && buf[req_start] == ' '; req_start++);
     }
-    if (hmsg->req_end == -1) {
-        retcode = 0;
-        goto finish;
-    }
-    assert(hmsg->buf[hmsg->req_end] == '\n');
-    /* Start at the beginning again */
-    i = 0;
-
-    /* Find first non-whitespace - beginning of method */
-    for (; i < hmsg->req_end && (xisspace(hmsg->buf[i])); i++);
-    if (i >= hmsg->req_end) {
-        retcode = 0;
-        goto finish;
-    }
-    hmsg->m_start = i;
-    hmsg->req_start = i;
-
-    /* Find first whitespace - end of method */
-    for (; i < hmsg->req_end && (! xisspace(hmsg->buf[i])); i++);
-    if (i >= hmsg->req_end) {
-        retcode = 0;
-        goto finish;
-    }
-    hmsg->m_end = i - 1;
-
-    /* Find first non-whitespace - beginning of URL+Version */
-    for (; i < hmsg->req_end && (xisspace(hmsg->buf[i])); i++);
-    if (i >= hmsg->req_end) {
-        retcode = 0;
-        goto finish;
-    }
-    hmsg->u_start = i;
-
-    /* Find \r\n or \n - thats the end of the line. Keep track of the last whitespace! */
-    for (; i <= hmsg->req_end; i++) {
-        /* If \n - its end of line */
-        if (hmsg->buf[i] == '\n') {
-            line_end = i;
-            break;
-        }
-        /* XXX could be off-by-one wrong! */
-        if (hmsg->buf[i] == '\r' && (i + 1) <= hmsg->req_end && hmsg->buf[i+1] == '\n') {
-            line_end = i;
-            break;
-        }
-        /* If its a whitespace, note it as it'll delimit our version */
-        if (hmsg->buf[i] == ' ' || hmsg->buf[i] == '\t') {
+    req_end = -1;
+    for (int i = 0; i < bufsiz; i++) {
+        // track first and last whitespace (SP only)
+        if (buf[i] == ' ') {
             last_whitespace = i;
+            if (first_whitespace < req_start)
+                first_whitespace = i;
+        }
+
+        // track next non-SP/non-HT byte after first_whitespace
+        if (second_word < first_whitespace && buf[i] != ' ' && buf[i] != '\t') {
+            second_word = i;
+        }
+
+        // locate line terminator
+        if (buf[i] == '\n') {
+            req_end = i;
+            line_end = i - 1;
+            break;
+        }
+        if (i < bufsiz - 1 && buf[i] == '\r') {
+            if (Config.onoff.relaxed_header_parser) {
+                if (Config.onoff.relaxed_header_parser < 0 && buf[i + 1] == '\r')
+                    debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " <<
+                           "Series of carriage-return bytes received prior to line terminator. " <<
+                           "Ignored due to relaxed_header_parser.");
+
+                // Be tolerant of invalid multiple \r prior to terminal \n
+                if (buf[i + 1] == '\n' || buf[i + 1] == '\r')
+                    line_end = i - 1;
+                while (i < bufsiz - 1 && buf[i + 1] == '\r')
+                    i++;
+
+                if (buf[i + 1] == '\n') {
+                    req_end = i + 1;
+                    break;
+                }
+            } else {
+                if (buf[i + 1] == '\n') {
+                    req_end = i + 1;
+                    line_end = i - 1;
+                    break;
+                }
+            }
+
+            // RFC 2616 section 5.1
+            // "No CR or LF is allowed except in the final CRLF sequence"
+            request_parse_status = HTTP_BAD_REQUEST;
+            return -1;
         }
     }
-    if (i > hmsg->req_end) {
-        retcode = 0;
-        goto finish;
+    if (req_end == -1) {
+        debugs(74, 5, "Parser: retval 0: from " << req_start <<
+               "->" << req_end << ": needs more data to complete first line.");
+        return 0;
     }
 
-    /* At this point we don't need the 'i' value; so we'll recycle it for version parsing */
+    // NP: we have now seen EOL, more-data (0) cannot occur.
+    //     From here on any failure is -1, success is 1
 
-    /*
-     * At this point: line_end points to the first eol char (\r or \n);
-     * last_whitespace points to the last whitespace char in the URL.
-     * We know we have a full buffer here!
-     */
-    if (last_whitespace == -1) {
-        maj = 0;
-        min = 9;
-        hmsg->u_end = line_end - 1;
-        assert(hmsg->u_end >= hmsg->u_start);
+
+    // Input Validation:
+
+    // Process what we now know about the line structure into field offsets
+    // generating HTTP status for any aborts as we go.
+
+    // First non-whitespace = beginning of method
+    if (req_start > line_end) {
+        request_parse_status = HTTP_BAD_REQUEST;
+        return -1;
+    }
+    m_start = req_start;
+
+    // First whitespace = end of method
+    if (first_whitespace > line_end || first_whitespace < req_start) {
+        request_parse_status = HTTP_BAD_REQUEST; // no method
+        return -1;
+    }
+    m_end = first_whitespace - 1;
+    if (m_end < m_start) {
+        request_parse_status = HTTP_BAD_REQUEST; // missing URI?
+        return -1;
+    }
+
+    // First non-whitespace after first SP = beginning of URL+Version
+    if (second_word > line_end || second_word < req_start) {
+        request_parse_status = HTTP_BAD_REQUEST; // missing URI
+        return -1;
+    }
+    u_start = second_word;
+
+    // RFC 1945: SP and version following URI are optional, marking version 0.9
+    // we identify this by the last whitespace being earlier than URI start
+    if (last_whitespace < second_word && last_whitespace >= req_start) {
+        v_maj = 0;
+        v_min = 9;
+        u_end = line_end;
+        request_parse_status = HTTP_OK; // HTTP/0.9
+        return 1;
     } else {
-        /* Find the first non-whitespace after last_whitespace */
-        /* XXX why <= vs < ? I do need to really re-audit all of this ..*/
-        for (i = last_whitespace; i <= hmsg->req_end && xisspace(hmsg->buf[i]); i++);
-        if (i > hmsg->req_end) {
-            retcode = 0;
-            goto finish;
-        }
-
-        /* is it http/ ? if so, we try parsing. If not, the URL is the whole line; version is 0.9 */
-        if (i + 5 >= hmsg->req_end || (strncasecmp(&hmsg->buf[i], "HTTP/", 5) != 0)) {
-            maj = 0;
-            min = 9;
-            hmsg->u_end = line_end - 1;
-            assert(hmsg->u_end >= hmsg->u_start);
-        } else {
-            /* Ok, lets try parsing! Yes, this needs refactoring! */
-            hmsg->v_start = i;
-            i += 5;
-
-            /* next should be 1 or more digits */
-            maj = 0;
-            for (; i < hmsg->req_end && (isdigit(hmsg->buf[i])) && maj < 65536; i++) {
-                maj = maj * 10;
-                maj = maj + (hmsg->buf[i]) - '0';
-            }
-            if (maj >= 65536) {
-                retcode = -1;
-                goto finish;
-            }
-            if (i >= hmsg->req_end) {
-                retcode = 0;
-                goto finish;
-            }
-
-            /* next should be .; we -have- to have this as we have a whole line.. */
-            if (hmsg->buf[i] != '.') {
-                retcode = 0;
-                goto finish;
-            }
-            if (i + 1 >= hmsg->req_end) {
-                retcode = 0;
-                goto finish;
-            }
-
-            /* next should be one or more digits */
-            i++;
-            min = 0;
-            for (; i < hmsg->req_end && (isdigit(hmsg->buf[i])) && min < 65536; i++) {
-                min = min * 10;
-                min = min + (hmsg->buf[i]) - '0';
-            }
-
-            if (min >= 65536) {
-                retcode = -1;
-                goto finish;
-            }
-
-            /* Find whitespace, end of version */
-            hmsg->v_end = i;
-            hmsg->u_end = last_whitespace - 1;
-        }
+        // otherwise last whitespace is somewhere after end of URI.
+        u_end = last_whitespace;
+        // crop any trailing whitespace in the area we think of as URI
+        for (; u_end >= u_start && xisspace(buf[u_end]); u_end--);
     }
+    if (u_end < u_start) {
+        request_parse_status = HTTP_BAD_REQUEST; // missing URI
+        return -1;
+    }
+
+    // Last whitespace SP = before start of protocol/version
+    if (last_whitespace >= line_end) {
+        request_parse_status = HTTP_BAD_REQUEST; // missing version
+        return -1;
+    }
+    v_start = last_whitespace + 1;
+    v_end = line_end;
+
+    // We only accept HTTP protocol requests right now.
+    // TODO: accept other protocols; RFC 2326 (RTSP protocol) etc
+    if ((v_end - v_start +1) < 5 || strncasecmp(&buf[v_start], "HTTP/", 5) != 0) {
+#if USE_HTTP_VIOLATIONS
+        // being lax; old parser accepted strange versions
+        // there is a LOT of cases which are ambiguous, therefore we cannot use relaxed_header_parser here.
+        v_maj = 0;
+        v_min = 9;
+        u_end = line_end;
+        request_parse_status = HTTP_OK; // treat as HTTP/0.9
+        return 1;
+#else
+        request_parse_status = HTTP_HTTP_VERSION_NOT_SUPPORTED; // protocol not supported / implemented.
+        return -1;
+#endif
+    }
+
+    int i = v_start + sizeof("HTTP/") -1;
+
+    /* next should be 1 or more digits */
+    if (!isdigit(buf[i])) {
+        request_parse_status = HTTP_HTTP_VERSION_NOT_SUPPORTED;
+        return -1;
+    }
+    int maj = 0;
+    for (; i <= line_end && (isdigit(buf[i])) && maj < 65536; i++) {
+        maj = maj * 10;
+        maj = maj + (buf[i]) - '0';
+    }
+    // catch too-big values or missing remainders
+    if (maj >= 65536 || i > line_end) {
+        request_parse_status = HTTP_HTTP_VERSION_NOT_SUPPORTED;
+        return -1;
+    }
+    v_maj = maj;
+
+    /* next should be .; we -have- to have this as we have a whole line.. */
+    if (buf[i] != '.') {
+        request_parse_status = HTTP_HTTP_VERSION_NOT_SUPPORTED;
+        return -1;
+    }
+    // catch missing minor part
+    if (++i > line_end) {
+        request_parse_status = HTTP_HTTP_VERSION_NOT_SUPPORTED;
+        return -1;
+    }
+
+    /* next should be one or more digits */
+    if (!isdigit(buf[i])) {
+        request_parse_status = HTTP_HTTP_VERSION_NOT_SUPPORTED;
+        return -1;
+    }
+    int min = 0;
+    for (; i <= line_end && (isdigit(buf[i])) && min < 65536; i++) {
+        min = min * 10;
+        min = min + (buf[i]) - '0';
+    }
+    // catch too-big values or trailing garbage
+    if (min >= 65536 || i < line_end) {
+        request_parse_status = HTTP_HTTP_VERSION_NOT_SUPPORTED;
+        return -1;
+    }
+    v_min = min;
 
     /*
      * Rightio - we have all the schtuff. Return true; we've got enough.
      */
-    retcode = 1;
+    request_parse_status = HTTP_OK;
+    return 1;
+}
 
-finish:
-    hmsg->v_maj = maj;
-    hmsg->v_min = min;
+int
+HttpParserParseReqLine(HttpParser *hmsg)
+{
     PROF_stop(HttpParserParseReqLine);
+    int retcode = hmsg->parseRequestFirstLine();
     debugs(74, 5, "Parser: retval " << retcode << ": from " << hmsg->req_start <<
            "->" << hmsg->req_end << ": method " << hmsg->m_start << "->" <<
            hmsg->m_end << "; url " << hmsg->u_start << "->" << hmsg->u_end <<
-           "; version " << hmsg->v_start << "->" << hmsg->v_end << " (" << maj <<
-           "/" << min << ")");
-
+           "; version " << hmsg->v_start << "->" << hmsg->v_end << " (" << hmsg->v_maj <<
+           "/" << hmsg->v_min << ")");
+    PROF_stop(HttpParserParseReqLine);
     return retcode;
 }
-
