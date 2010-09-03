@@ -661,7 +661,7 @@ HttpParser::parseRequestFirstLine()
 int
 HttpParserParseReqLine(HttpParser *hmsg)
 {
-    PROF_stop(HttpParserParseReqLine);
+    PROF_start(HttpParserParseReqLine);
     int retcode = hmsg->parseRequestFirstLine();
     debugs(74, 5, "Parser: retval " << retcode << ": from " << hmsg->req_start <<
            "->" << hmsg->req_end << ": method " << hmsg->m_start << "->" <<
