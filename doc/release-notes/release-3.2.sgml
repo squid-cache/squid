@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.0.1 release notes</title>
+<title>Squid 3.2.0.2 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.0.1 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.0.2 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -191,6 +191,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p><itemize>
 	<item>mswin_check_ad_group - ext_ad_group_acl - Check logged in users Group membership using Active Directory.
 	<item>ip_user_check - ext_file_userip_acl - Restrict users to cetain IP addresses, using a text file backend.
+	<item>squid_kerb_ldap - ext_kerberos_ldap_group_acl - Check logged in Kerberos or NTLM users Group membership using LDAP.
 	<item>squid_ldap_group - ext_ldap_group_acl - Check logged in users Group membership using LDAP.
 	<item>mswin_check_lm_group - ext_lm_group_acl - Check logged in users Group membership using LanManager.
 	<item>squid_session - ext_session_acl - Maintain a session cache of client identifiers (usually IP address).
