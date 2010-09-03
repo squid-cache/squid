@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.65">
- <TITLE>Squid 3.2.0.1 release notes</TITLE>
+ <TITLE>Squid 3.2.0.2 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.2.0.1 release notes</H1>
+<H1>Squid 3.2.0.2 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -68,7 +68,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.2.0.1 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.2.0.2 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.2/">http://www.squid-cache.org/Versions/v3/3.2/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -277,6 +277,7 @@ For several helpers the directory name used in --enable-X-helpers configure opti
 <UL>
 <LI>mswin_check_ad_group - ext_ad_group_acl - Check logged in users Group membership using Active Directory.</LI>
 <LI>ip_user_check - ext_file_userip_acl - Restrict users to cetain IP addresses, using a text file backend.</LI>
+<LI>squid_kerb_ldap - ext_kerberos_ldap_group_acl - Check logged in Kerberos or NTLM users Group membership using LDAP.</LI>
 <LI>squid_ldap_group - ext_ldap_group_acl - Check logged in users Group membership using LDAP.</LI>
 <LI>mswin_check_lm_group - ext_lm_group_acl - Check logged in users Group membership using LanManager.</LI>
 <LI>squid_session - ext_session_acl - Maintain a session cache of client identifiers (usually IP address).</LI>
@@ -489,6 +490,10 @@ New installs, or installs with no logs configured explicitly will use this modul
 <EM>concurrency=N</EM> previously called <EM>auth_param ... concurrency</EM> as a separate option.</P>
 <P>Removed Basic, Digest, NTLM, Negotiate <EM>auth_param ... concurrency</EM> setting option.</P>
 
+<DT><B>cache_peer</B><DD>
+<P><EM>htcp-*</EM> options collapsed into <EM>htcp=</EM> taking an optional comma-separated list of flags.
+The old form is deprecated but still accepted.</P>
+
 <DT><B>deny_info</B><DD>
 <P>Support URL format tags. For dynamically generated URL in denial redirect.</P>
 
@@ -502,6 +507,8 @@ New installs, or installs with no logs configured explicitly will use this modul
 <P>Deprecated <EM>children=N</EM> in favor of <EM>children-max=N</EM>.</P>
 
 <DT><B>logformat</B><DD>
+<P><EM>%&gt;bs</EM> Number of HTTP-equivalent message body bytes received from the next hop.</P>
+<P><EM>icap::%&gt;bs</EM> Number of message body bytes received from the ICAP server.</P>
 <P><EM>%&gt;lp</EM> Local TCP port used by transactions with http servers.</P>
 <P><EM>%sn</EM> Unique sequence number per log line. Ported from 2.7</P>
 <P><EM>%&lt;eui</EM> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
