@@ -467,7 +467,7 @@ HttpParser::parseRequestFirstLine()
                    "Whitespace bytes received ahead of method. " <<
                    "Ignored due to relaxed_header_parser.");
         // Be tolerant of prefix spaces (other bytes are valid method values)
-        for(;req_start < bufsiz && buf[req_start] == ' '; req_start++);
+        for (; req_start < bufsiz && buf[req_start] == ' '; req_start++);
     }
     req_end = -1;
     for (int i = 0; i < bufsiz; i++) {
@@ -492,14 +492,14 @@ HttpParser::parseRequestFirstLine()
         if (i < bufsiz - 1 && buf[i] == '\r') {
             if (Config.onoff.relaxed_header_parser) {
                 if (Config.onoff.relaxed_header_parser < 0 && buf[i + 1] == '\r')
-                    debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " << 
+                    debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " <<
                            "Series of carriage-return bytes received prior to line terminator. " <<
                            "Ignored due to relaxed_header_parser.");
 
                 // Be tolerant of invalid multiple \r prior to terminal \n
                 if (buf[i + 1] == '\n' || buf[i + 1] == '\r')
                     line_end = i - 1;
-                while(i < bufsiz - 1 && buf[i + 1] == '\r')
+                while (i < bufsiz - 1 && buf[i + 1] == '\r')
                     i++;
 
                 if (buf[i + 1] == '\n') {
@@ -572,7 +572,7 @@ HttpParser::parseRequestFirstLine()
         // otherwise last whitespace is somewhere after end of URI.
         u_end = last_whitespace;
         // crop any trailing whitespace in the area we think of as URI
-        for(;u_end >= u_start && xisspace(buf[u_end]); u_end--);
+        for (; u_end >= u_start && xisspace(buf[u_end]); u_end--);
     }
     if (u_end < u_start) {
         request_parse_status = HTTP_BAD_REQUEST; // missing URI
