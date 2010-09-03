@@ -1314,8 +1314,8 @@ DOC_START
 	Example where normal_service_net uses the TOS value 0x00
 	and good_service_net uses 0x20
 
-	acl normal_service_net src 10.0.0.0/255.255.255.0
-	acl good_service_net src 10.0.1.0/255.255.255.0
+	acl normal_service_net src 10.0.0.0/24
+	acl good_service_net src 10.0.1.0/24
 	tcp_outgoing_tos 0x00 normal_service_net
 	tcp_outgoing_tos 0x20 good_service_net
 
@@ -1325,8 +1325,8 @@ DOC_START
 
 	The TOS/DSCP byte must be exactly that - a octet value  0 - 255, or
 	"default" to use whatever default your host has. Note that in
-	practice often only values 0 - 63 is usable as the two highest bits
-	have been redefined for use by ECN (RFC3168).
+	practice often only multiples of 4 is usable as the two rightmost bits
+	have been redefined for use by ECN (RFC 3168 section 23.1).
 
 	Processing proceeds in the order specified, and stops at first fully
 	matching line.
