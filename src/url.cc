@@ -38,6 +38,13 @@
 #include "URLScheme.h"
 #include "rfc1738.h"
 
+static HttpRequest *urlParseFinish(const HttpRequestMethod& method,
+                                   const protocol_t protocol,
+                                   const char *const urlpath,
+                                   const char *const host,
+                                   const char *const login,
+                                   const int port,
+                                   HttpRequest *request);
 static HttpRequest *urnParse(const HttpRequestMethod& method, char *urn);
 static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -222,6 +229,11 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
             if (sscanf(url, "%[^:]:%d", host, &port) < 1)
                 return NULL;
 
+    } else if ((method == METHOD_OPTIONS || method == METHOD_TRACE) &&
+               strcmp(url, "*") == 0) {
+        protocol = PROTO_HTTP;
+        port = urlDefaultPort(protocol);
+        return urlParseFinish(method, protocol, url, host, login, port, request);
     } else if (!strncmp(url, "urn:", 4)) {
         return urnParse(method, url);
     } else {
@@ -402,6 +414,23 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         }
     }
 
+    return urlParseFinish(method, protocol, urlpath, host, login, port, request);
+}
+
+/**
+ * Update request with parsed URI data.  If the request arg is
+ * non-NULL, put parsed values there instead of allocating a new
+ * HttpRequest.
+ */
+static HttpRequest *
+urlParseFinish(const HttpRequestMethod& method,
+               const protocol_t protocol,
+               const char *const urlpath,
+               const char *const host,
+               const char *const login,
+               const int port,
+               HttpRequest *request)
+{
     if (NULL == request)
         request = new HttpRequest(method, protocol, urlpath);
     else {
@@ -767,8 +796,10 @@ urlCheckRequest(const HttpRequest * r)
     if (r->method == METHOD_CONNECT)
         return 1;
 
-    if (r->method == METHOD_TRACE)
-        return 1;
+    // we support OPTIONS and TRACE directed at us (with a 501 reply, for now)
+    // we also support forwarding OPTIONS and TRACE, except for the *-URI ones
+    if (r->method == METHOD_OPTIONS || r->method == METHOD_TRACE)
+        return (r->max_forwards == 0 || r->urlpath != "*");
 
     if (r->method == METHOD_PURGE)
         return 1;
