@@ -517,7 +517,6 @@ HttpParser::parseRequestFirstLine()
 
             // RFC 2616 section 5.1
             // "No CR or LF is allowed except in the final CRLF sequence"
-            request_parse_status = HTTP_BAD_REQUEST;
             return -1;
         }
     }
@@ -538,25 +537,21 @@ HttpParser::parseRequestFirstLine()
 
     // First non-whitespace = beginning of method
     if (req_start > line_end) {
-        request_parse_status = HTTP_BAD_REQUEST;
         return -1;
     }
     m_start = req_start;
 
     // First whitespace = end of method
     if (first_whitespace > line_end || first_whitespace < req_start) {
-        request_parse_status = HTTP_BAD_REQUEST; // no method
         return -1;
     }
     m_end = first_whitespace - 1;
     if (m_end < m_start) {
-        request_parse_status = HTTP_BAD_REQUEST; // missing URI?
         return -1;
     }
 
     // First non-whitespace after first SP = beginning of URL+Version
     if (second_word > line_end || second_word < req_start) {
-        request_parse_status = HTTP_BAD_REQUEST; // missing URI
         return -1;
     }
     u_start = second_word;
@@ -567,7 +562,6 @@ HttpParser::parseRequestFirstLine()
         v_maj = 0;
         v_min = 9;
         u_end = line_end;
-        request_parse_status = HTTP_OK; // HTTP/0.9
         return 1;
     } else {
         // otherwise last whitespace is somewhere after end of URI.
@@ -576,13 +570,11 @@ HttpParser::parseRequestFirstLine()
         for (; u_end >= u_start && xisspace(buf[u_end]); u_end--);
     }
     if (u_end < u_start) {
-        request_parse_status = HTTP_BAD_REQUEST; // missing URI
         return -1;
     }
 
     // Last whitespace SP = before start of protocol/version
     if (last_whitespace >= line_end) {
-        request_parse_status = HTTP_BAD_REQUEST; // missing version
         return -1;
     }
     v_start = last_whitespace + 1;
@@ -597,10 +589,8 @@ HttpParser::parseRequestFirstLine()
         v_maj = 0;
         v_min = 9;
         u_end = line_end;
-        request_parse_status = HTTP_OK; // treat as HTTP/0.9
         return 1;
 #else
-        request_parse_status = HTTP_HTTP_VERSION_NOT_SUPPORTED; // protocol not supported / implemented.
         return -1;
 #endif
     }
@@ -609,7 +599,6 @@ HttpParser::parseRequestFirstLine()
 
     /* next should be 1 or more digits */
     if (!isdigit(buf[i])) {
-        request_parse_status = HTTP_HTTP_VERSION_NOT_SUPPORTED;
         return -1;
     }
     int maj = 0;
@@ -619,25 +608,21 @@ HttpParser::parseRequestFirstLine()
     }
     // catch too-big values or missing remainders
     if (maj >= 65536 || i > line_end) {
-        request_parse_status = HTTP_HTTP_VERSION_NOT_SUPPORTED;
         return -1;
     }
     v_maj = maj;
 
     /* next should be .; we -have- to have this as we have a whole line.. */
     if (buf[i] != '.') {
-        request_parse_status = HTTP_HTTP_VERSION_NOT_SUPPORTED;
         return -1;
     }
     // catch missing minor part
     if (++i > line_end) {
-        request_parse_status = HTTP_HTTP_VERSION_NOT_SUPPORTED;
         return -1;
     }
 
     /* next should be one or more digits */
     if (!isdigit(buf[i])) {
-        request_parse_status = HTTP_HTTP_VERSION_NOT_SUPPORTED;
         return -1;
     }
     int min = 0;
@@ -647,7 +632,6 @@ HttpParser::parseRequestFirstLine()
     }
     // catch too-big values or trailing garbage
     if (min >= 65536 || i < line_end) {
-        request_parse_status = HTTP_HTTP_VERSION_NOT_SUPPORTED;
         return -1;
     }
     v_min = min;
@@ -655,7 +639,6 @@ HttpParser::parseRequestFirstLine()
     /*
      * Rightio - we have all the schtuff. Return true; we've got enough.
      */
-    request_parse_status = HTTP_OK;
     return 1;
 }
 
