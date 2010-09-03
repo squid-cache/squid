@@ -855,7 +855,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
 {
     assert(rep == NULL);
 
-    if (!multipartRangeRequest() && !http->request->flags.chunked_reply) {
+    if (!multipartRangeRequest()) {
         size_t length = lengthToSend(bodyData.range());
         noteSentBodyBytes (length);
         AsyncCall::Pointer call = commCbCall(33, 5, "clientWriteBodyComplete",
@@ -866,10 +866,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
 
     MemBuf mb;
     mb.init();
-    if (multipartRangeRequest())
-        packRange(bodyData, &mb);
-    else
-        packChunk(bodyData, mb);
+    packRange(bodyData, &mb);
 
     if (mb.contentSize()) {
         /* write */
@@ -878,22 +875,6 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
         comm_write_mbuf(fd(), &mb, call);
     }  else
         writeComplete(fd(), NULL, 0, COMM_OK);
-}
-
-/**
- * Packs bodyData into mb using chunked encoding. Packs the last-chunk
- * if bodyData is empty.
- */
-void
-ClientSocketContext::packChunk(const StoreIOBuffer &bodyData, MemBuf &mb)
-{
-    const uint64_t length =
-        static_cast<uint64_t>(lengthToSend(bodyData.range()));
-    noteSentBodyBytes(length);
-
-    mb.Printf("%"PRIX64"\r\n", length);
-    mb.append(bodyData.data, length);
-    mb.Printf("\r\n");
 }
 
 /** put terminating boundary for multiparts */
@@ -1262,15 +1243,13 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
 #endif
 
     if (bodyData.data && bodyData.length) {
-        if (multipartRangeRequest())
-            packRange(bodyData, mb);
-        else if (http->request->flags.chunked_reply) {
-            packChunk(bodyData, *mb);
-        } else {
+        if (!multipartRangeRequest()) {
             size_t length = lengthToSend(bodyData.range());
             noteSentBodyBytes (length);
 
             mb->append(bodyData.data, length);
+        } else {
+            packRange(bodyData, mb);
         }
     }
 
@@ -1319,11 +1298,7 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
         return;
     }
 
-    // After sending Transfer-Encoding: chunked (at least), always send
-    // the last-chunk if there was no error, ignoring responseFinishedOrFailed.
-    const bool mustSendLastChunk = http->request->flags.chunked_reply &&
-                                   !http->request->flags.stream_error && !context->startOfOutput();
-    if (responseFinishedOrFailed(rep, receivedData) && !mustSendLastChunk) {
+    if (responseFinishedOrFailed(rep, receivedData)) {
         context->writeComplete(fd, NULL, 0, COMM_OK);
         PROF_stop(clientSocketRecipient);
         return;
