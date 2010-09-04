@@ -1,11 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
- <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
- <TITLE>Squid 3.1.7 release notes</TITLE>
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.65">
+ <TITLE>Squid 3.1.8 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.7 release notes</H1>
+<H1>Squid 3.1.8 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -70,7 +70,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.7</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.8</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -89,7 +89,6 @@ While this release is not fully bug-free we believe it is ready for use in produ
 <P>
 <UL>
 <LI>The lack of some features available in Squid-2.x series. See the regression sections below for full details.</LI>
-<LI>IPv6 split-stack support for Windows XP, MacOS X, OpenBSD and maybe others is not complete.</LI>
 <LI>CVE-2009-0801 : NAT interception vulnerability to malicious clients.</LI>
 </UL>
 </P>
@@ -97,7 +96,6 @@ While this release is not fully bug-free we believe it is ready for use in produ
 <P>Currently known issues which only depends on available developer time and may still be resolved in a future 3.1 release are:</P>
 <P>
 <UL>
-<LI>An ongoing slow FD leak introduced somewhere during the Squid-3.0 cycle.</LI>
 <LI>Windows support is still largely missing.</LI>
 <LI>AIX support for building with the IBM compiler is broken.</LI>
 </UL>
@@ -1337,8 +1335,8 @@ For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy
 <DT><B>https_port intercept ssl-bump connection-auth[=on|off]</B><DD>
 <P>New port options. see http_port.</P>
 
-<DT><B>icap_service bypass=on|off|1|0 routing=on|off|1|0</B><DD>
-<P>New options 'bypass=' and 'routing='.
+<DT><B>icap_service bypass=on|off|1|0 routing=on|off|1|0 ipv6=on|off</B><DD>
+<P>New options 'bypass=', 'routing=' and 'ipv6='.
 <PRE>
         bypass=on|off|1|0
                 If set to 'on' or '1', the ICAP service is treated as
@@ -1365,6 +1363,11 @@ For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy
 
                 Routing is not allowed by default: the ICAP X-Next-Services
                 response header is ignored.
+
+        ipv6=on|off
+                Only has effect on split-stack systems. The default on those systems
+                is to use IPv4-only connections. When set to 'on' this option will
+                make Squid use IPv6-only connections to contact this ICAP service.
         
 </PRE>
 </P>

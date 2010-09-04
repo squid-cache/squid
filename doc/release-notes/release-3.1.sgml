@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.7 release notes</title>
+<title>Squid 3.1.8 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.7
+The Squid Team are pleased to announce the release of Squid-3.1.8
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -30,14 +30,12 @@ Although this release is deemed good enough for use in many setups, please note 
 
 <itemize>
 	<item>The lack of some features available in Squid-2.x series. See the regression sections below for full details.
-	<item>IPv6 split-stack support for Windows XP, MacOS X, OpenBSD and maybe others is not complete.
 	<item>CVE-2009-0801 : NAT interception vulnerability to malicious clients.
 </itemize>
 
 <p>Currently known issues which only depends on available developer time and may still be resolved in a future 3.1 release are:
 
 <itemize>
-	<item>An ongoing slow FD leak introduced somewhere during the Squid-3.0 cycle.
 	<item>Windows support is still largely missing.
 	<item>AIX support for building with the IBM compiler is broken.
 </itemize>
