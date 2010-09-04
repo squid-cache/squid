@@ -1683,7 +1683,7 @@ clientReplyContext::doGetMoreData()
 #if USE_ZPH_QOS
         if (Ip::Qos::TheConfig.tos_local_hit) {
             debugs(33, 2, "ZPH Local hit, TOS=" << Ip::Qos::TheConfig.tos_local_hit);
-            comm_set_tos(http->getConn()->fd, Ip::Qos::TheConfig.tos_local_hit);
+            comm_set_tos(http->getConn()->clientConn->fd, Ip::Qos::TheConfig.tos_local_hit);
         }
 #endif /* USE_ZPH_QOS */
         localTempBuffer.offset = reqofs;

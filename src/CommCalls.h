@@ -54,7 +54,8 @@ public:
 
 public:
     void *data; // cbdata-protected
-    int fd;
+    Comm::ConnectionPointer conn;
+    int fd; // raw FD from legacy calls. use conn instead.
     int xerrno;
     comm_err_t flag;
 
@@ -83,11 +84,6 @@ public:
     CommConnectCbParams(void *aData);
 
     bool syncWithComm(); // see CommCommonCbParams::syncWithComm
-
-    void print(std::ostream &os) const;
-
-public:
-    Comm::ConnectionPointer conn;
 };
 
 // read/write (I/O) parameters
