@@ -23,7 +23,11 @@ CommCommonCbParams::~CommCommonCbParams()
 void
 CommCommonCbParams::print(std::ostream &os) const
 {
-    os << "FD " << fd;
+    if (conn != NULL)
+        os << conn;
+    else
+        os << "FD " << fd;
+
     if (xerrno)
         os << ", errno=" << xerrno;
     if (flag != COMM_OK)
@@ -68,14 +72,6 @@ CommConnectCbParams::syncWithComm()
         return false;
     }
     return true; // now we are in sync and can handle the call
-}
-
-void
-CommConnectCbParams::print(std::ostream &os) const
-{
-    CommCommonCbParams::print(os);
-    if (conn != NULL)
-        os << ", " << conn;
 }
 
 /* CommIoCbParams */
@@ -123,7 +119,6 @@ CommTimeoutCbParams::CommTimeoutCbParams(void *aData):
         CommCommonCbParams(aData)
 {
 }
-
 
 /* CommAcceptCbPtrFun */
 
@@ -231,6 +226,16 @@ CommTimeoutCbPtrFun::CommTimeoutCbPtrFun(PF *aHandler,
 void
 CommTimeoutCbPtrFun::dial()
 {
+    // AYJ NP: since the old code is still used by pipes and IPC
+    // we cant discard the params.fd functions entirely for old callbacks.
+    // new callers supposed to only set conn.
+    // sync FD and conn fields at this single failure point before dialing.
+    if (params.conn != NULL) {
+        if (params.fd < 0 && params.conn->fd > 0)
+            params.fd = params.conn->fd;
+        assert(params.fd == params.conn->fd); // Must() ?
+    }
+
     handler(params.fd, params.data);
 }
 

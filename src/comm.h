@@ -70,6 +70,13 @@ extern void comm_write_mbuf(int fd, MemBuf *mb, AsyncCall::Pointer &callback);
 SQUIDCEXTERN void commCallCloseHandlers(int fd);
 SQUIDCEXTERN int commSetTimeout(int fd, int, PF *, void *);
 extern int commSetTimeout(int fd, int, AsyncCall::Pointer &calback);
+
+/**
+ * Set or clear the timeout for some action on an active connection.
+ * API to replace commSetTimeout() when a Comm::ConnectionPointer is available.
+ */
+extern int commSetConnTimeout(const Comm::ConnectionPointer &conn, int seconds, AsyncCall::Pointer &calback);
+
 SQUIDCEXTERN int ignoreErrno(int);
 SQUIDCEXTERN void commCloseAllSockets(void);
 SQUIDCEXTERN void checkTimeouts(void);
