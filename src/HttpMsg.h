@@ -130,6 +130,24 @@ protected:
 class HttpParser
 {
 public:
+    /**
+     * Attempt to parse the first line of a new request message.
+     *
+     * Governed by:
+     *  RFC 1945 section 5.1
+     *  RFC 2616 section 5.1
+     *
+     * Parsing state is stored between calls. However the current implementation
+     * begins parsing from scratch on every call.
+     * The return value tells you whether the parsing state fields are valid or not.
+     *
+     * \retval -1  an error occurred. request_parse_status indicates HTTP status result.
+     * \retval  1  successful parse
+     * \retval  0  more data is needed to complete the parse
+     */
+    int parseRequestFirstLine();
+
+public:
     char state;
     const char *buf;
     int bufsiz;
@@ -166,5 +184,43 @@ SQUIDCEXTERN int httpMsgIsolateHeaders(const char **parse_start, int len, const 
 
 #define HTTPMSGUNLOCK(a) if(a){(a)->_unlock();(a)=NULL;}
 #define HTTPMSGLOCK(a) (a)->_lock()
+
+// TODO: replace HTTPMSGLOCK with general RefCounting and delete this class
+/// safe HttpMsg pointer wrapper that locks and unlocks the message
+template <class Msg>
+class HttpMsgPointerT
+{
+public:
+    HttpMsgPointerT(): msg(NULL) {}
+    explicit HttpMsgPointerT(Msg *m): msg(m) { lock(); }
+    virtual ~HttpMsgPointerT() { unlock(); }
+
+    HttpMsgPointerT(const HttpMsgPointerT &p): msg(p.msg) { lock(); }
+    HttpMsgPointerT &operator =(const HttpMsgPointerT &p)
+    { if (msg != p.msg) { unlock(); msg = p.msg; lock(); } return *this; }
+
+    Msg &operator *() { return *msg; }
+    const Msg &operator *() const { return *msg; }
+    Msg *operator ->() { return msg; }
+    const Msg *operator ->() const { return msg; }
+    operator Msg *() { return msg; }
+    operator const Msg *() const { return msg; }
+    // add more as needed
+
+protected:
+    void lock() { if (msg) HTTPMSGLOCK(msg); } ///< prevent msg destruction
+    void unlock() { HTTPMSGUNLOCK(msg); } ///< allows/causes msg destruction
+
+private:
+    Msg *msg;
+};
+
+/// convenience wrapper to create HttpMsgPointerT<> object based on msg type
+template <class Msg>
+inline
+HttpMsgPointerT<Msg> HttpMsgPointer(Msg *msg)
+{
+    return HttpMsgPointerT<Msg>(msg);
+}
 
 #endif /* SQUID_HTTPMSG_H */

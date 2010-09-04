@@ -345,7 +345,7 @@ AC_MSG_NOTICE([cbdata debugging enabled: $enable_debug_cbdata])
 
 dnl Nasty hack to get autoconf 2.64 on Linux to run.
 dnl all other uses of RUN_IFELSE are wrapped inside CACHE_CHECK which breaks on 2.64
-AC_RUN_IFELSE([AC_LANG_SOURCE([[ int main(int argc, char **argv) { return 0; } ]])],[],[],[])
+AC_RUN_IFELSE([AC_LANG_SOURCE([[ int main(int argc, char **argv) { return 0; } ]])],[],[],[:])
 
 dnl This is a developer only option.. developers know how to set defines
 dnl
@@ -2285,6 +2285,8 @@ AC_CHECK_TYPE([bool])
 #need the defines for PRId64
 AC_CHECK_SIZEOF(int64_t)
 AC_CHECK_SIZEOF(long)
+#need the define for overflow checks
+AC_CHECK_SIZEOF(off_t)
 
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.
@@ -2558,7 +2560,8 @@ case "$host_os" in
 		]])], 
 		[ AC_DEFINE(HAVE_LDAP, 1, [LDAP support]) 
 		  AC_MSG_RESULT(yes) ],
-		[ AC_MSG_RESULT(no) ])
+		[ AC_MSG_RESULT(no) ],
+		[ AC_MSG_RESULT(cross-compiler cant tell) ])
 		LIBS=$oLIBS
 
 		dnl
@@ -2578,7 +2581,8 @@ case "$host_os" in
 		]])], 
 		[ AC_DEFINE(HAVE_OPENLDAP, 1, [OpenLDAP support]) 
 		  AC_MSG_RESULT(yes) ],
-		[ AC_MSG_RESULT(no) ])
+		[ AC_MSG_RESULT(no) ],
+		[ AC_MSG_RESULT(cross-compiler cant tell) ])
 
 		AC_MSG_CHECKING([for Sun LDAP SDK])
 		AC_RUN_IFELSE([AC_LANG_SOURCE([[
@@ -2594,7 +2598,8 @@ case "$host_os" in
 		]])], 
 		[ AC_DEFINE(HAVE_SUN_LDAP_SDK, 1, [Sun LDAP SDK support])
 		  AC_MSG_RESULT(yes) ],
-		[ AC_MSG_RESULT(no) ])
+		[ AC_MSG_RESULT(no) ],
+		[ AC_MSG_RESULT(cross-compiler cant tell) ])
 
 		AC_MSG_CHECKING([for Mozilla LDAP SDK])
 		AC_RUN_IFELSE([AC_LANG_SOURCE([[
@@ -2612,7 +2617,8 @@ case "$host_os" in
 		]])], 
 		[ AC_DEFINE(HAVE_MOZILLA_LDAP_SDK, 1, [Mozilla LDAP SDK support])
 		  AC_MSG_RESULT(yes) ],
-		[ AC_MSG_RESULT(no)])
+		[ AC_MSG_RESULT(no)],
+		[ AC_MSG_RESULT(cross-compiler cant tell) ])
 
 		dnl
 		dnl Check for LDAP_REBINDPROC_CALLBACK

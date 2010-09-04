@@ -95,7 +95,7 @@ main()
     return krb5_cc_resolve(context, "MEMORY:test_cache", &cc);
 }
       ]])
-    ], [ squid_cv_memory_cache=yes ], [ squid_cv_memory_cache=no ])
+    ], [ squid_cv_memory_cache=yes ], [ squid_cv_memory_cache=no ], [:])
   ])
 ])
 
@@ -133,7 +133,7 @@ main(void)
 
         return 0;
 }
-  ]])],  [ squid_cv_working_gssapi=yes ], [ squid_cv_working_gssapi=no ])])
+  ]])],  [ squid_cv_working_gssapi=yes ], [ squid_cv_working_gssapi=no ], [:])])
 ])
 
 
@@ -180,7 +180,7 @@ gss_OID gss_mech_spnego = &_gss_mech_spnego;
  return 1;
 }
   ]])],  
-  [ squid_cv_have_spnego=yes ], [ squid_cv_have_spnego=no ])])
+  [ squid_cv_have_spnego=yes ], [ squid_cv_have_spnego=no ],[:])])
 ])
 
 dnl checks that krb5 is functional. Sets squid_cv_working_krb5
@@ -207,5 +207,5 @@ main(void)
 
         return 0;
 }
-  ]])], [ squid_cv_working_krb5=yes ], [ squid_cv_working_krb5=no ])])
+  ]])], [ squid_cv_working_krb5=yes ], [ squid_cv_working_krb5=no ],[:])])
 ])

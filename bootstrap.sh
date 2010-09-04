@@ -7,9 +7,9 @@
 # Autotool versions preferred. To override either edit the script
 # to match the versions you want to use, or set the variables on
 # the command line like "env acver=.. amver=... ./bootstrap.sh"
-acversions="${acver:-2.63 2.62 2.61}"
+acversions="${acver:-2.64 2.63 2.62 2.61}"
 amversions="${amver:-1.11 1.10 1.9}"
-ltversions="${ltver:-2.2 1.5 1.4}"
+ltversions="${ltver:-2.2}"
 
 check_version()
 {
@@ -113,19 +113,6 @@ bootstrap_libtoolize() {
         chmod u+w $makefile
         mv $makefile.new $makefile
         chmod u-w $makefile
-
-        # Libtool 2.2.6b we bundle is slightly broken with non-portable dependencies
-        # HACK: Make it backward-compatible by linking the bundled headers.
-        for f in ltdl.h libltdl/lt_error.h libltdl/lt_system.h libltdl/lt_dlloader.h libltdl/slist.h; do
-            echo "Fixing $f ..."
-            sed 's/<libltdl\/lt_system.h>/\"libltdl\/lt_system.h\"/g' $src/$f |
-                sed 's/<libltdl\/lt__glibc.h>/\"libltdl\/lt__glibc.h\"/g' |
-                sed 's/<libltdl\/lt_error.h>/\"libltdl\/lt_error.h\"/g' |
-                sed 's/<libltdl\/lt_dlloader.h>/\"libltdl\/lt_dlloader.h\"/g' > $src/$f.new;
-            chmod u+w $src/$f
-            mv $src/$f.new $src/$f
-            chmod u-w $src/$f
-        done
     fi
 }
 

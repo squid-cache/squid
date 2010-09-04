@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     strnstr(str, "fubar", size);
     return 0;
 }
-  ]])],[squid_cv_func_strnstr="yes"],[squid_cv_func_strnstr="no"],[])
+  ]])],[squid_cv_func_strnstr="yes"],[squid_cv_func_strnstr="no"],[:])
 )
 if test "$squid_cv_func_strnstr" = "yes" ; then
   AC_DEFINE(HAVE_STRNSTR,1)
@@ -79,7 +79,7 @@ AC_CACHE_CHECK(if va_copy is implemented, squid_cv_func_va_copy,
          return 0;
       }
       int main(int argc, char **argv) { return f (0, 42); }
-      ]])],[squid_cv_func_va_copy="yes"],[squid_cv_func_va_copy="no"],[])
+      ]])],[squid_cv_func_va_copy="yes"],[squid_cv_func_va_copy="no"],[:])
 )
 if test "$squid_cv_func_va_copy" = "yes" ; then
   AC_DEFINE(HAVE_VA_COPY, 1)
@@ -106,7 +106,7 @@ AC_CACHE_CHECK(if __va_copy is implemented, squid_cv_func___va_copy,
          return 0;
       }
       int main(int argc, char **argv) { return f (0, 42); }
-      ]])],[squid_cv_func___va_copy="yes"],[squid_cv_func___va_copy="no"],[])
+      ]])],[squid_cv_func___va_copy="yes"],[squid_cv_func___va_copy="no"],[:])
 )
 if test "$squid_cv_func___va_copy" = "yes" ; then
   AC_DEFINE(HAVE___VA_COPY, 1)
@@ -132,7 +132,7 @@ int main(int argc, char **argv)
     }
     return 0;
 }
-      ]])],[squid_cv_epoll_works=yes],[squid_cv_epoll_works=no],[]))
+      ]])],[squid_cv_epoll_works=yes],[squid_cv_epoll_works=no],[:]))
 
 ]) dnl SQUID_CHECK_EPOLL
 
@@ -811,6 +811,6 @@ AC_DEFUN([SQUID_CHECK_SETRESUID_WORKS],[
   }
   ]])],[
     squid_cv_resuid_works="yes" ],[
-    squid_cv_resuid_works="no" ],[])
+    squid_cv_resuid_works="no" ],[:])
   )
 ])

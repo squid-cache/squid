@@ -542,12 +542,19 @@ HttpHeader::parse(const char *header_start, const char *header_end)
 
             if (field_end > this_line && field_end[-1] == '\r') {
                 field_end--;	/* Ignore CR LF */
-                /* Ignore CR CR LF in relaxed mode */
 
-                if (Config.onoff.relaxed_header_parser && field_end > this_line + 1 && field_end[-1] == '\r') {
-                    debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
-                           "WARNING: Double CR characters in HTTP header {" << getStringPrefix(field_start, field_end) << "}");
-                    field_end--;
+                if (owner == hoRequest && field_end > this_line) {
+                    bool cr_only = true;
+                    for (const char *p = this_line; p < field_end && cr_only; ++p) {
+                        if (*p != '\r')
+                            cr_only = false;
+                    }
+                    if (cr_only) {
+                        debugs(55, 1, "WARNING: Rejecting HTTP request with a CR+ "
+                               "header field to prevent request smuggling attacks: {" <<
+                               getStringPrefix(header_start, header_end) << "}");
+                        goto reset;
+                    }
                 }
             }
 
