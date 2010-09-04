@@ -80,50 +80,30 @@ using namespace Squid;
 #endif
 
 #if HAVE_GSSAPI
-#ifdef HAVE_HEIMDAL_KERBEROS
-#ifdef HAVE_GSSAPI_GSSAPI_H
+#if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
-#elif defined(HAVE_GSSAPI_H)
+#elif HAVE_GSSAPI_H
 #include <gssapi.h>
-#else
-#error "GSSAPI header required"
-#endif
-#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
-#else
-#ifdef HAVE_SEAM_KERBEROS
-#ifdef HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif defined(HAVE_GSSAPI_H)
-#include <gssapi.h>
-#else
-#error "GSSAPI header required"
-#endif
-#ifdef HAVE_GSSAPI_GSSAPI_EXT_H
+#endif                          /* HAVE_GSSAPI_H */
+#if HAVE_GSSAPI_GSSAPI_EXT_H
 #include <gssapi/gssapi_ext.h>
-#endif
-#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
-#else /*MIT */
-#ifdef HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif defined(HAVE_GSSAPI_H)
-#include <gssapi.h>
-#else
-#error "GSSAPI header required"
-#endif
-#ifdef HAVE_GSSAPI_GSSAPI_KRB5_H
+#endif                          /* HAVE_GSSAPI_GSSAPI_EXT_H */
+#if HAVE_GSSAPI_GSSAPI_KRB5_H
 #include <gssapi/gssapi_krb5.h>
-#endif
-#ifdef HAVE_GSSAPI_GSSAPI_GENERIC_H
+#endif                          /* HAVE_GSSAPI_GSSAPI_KRB5_H */
+#if HAVE_GSSAPI_GSSAPI_GENERIC_H
 #include <gssapi/gssapi_generic.h>
-#endif
-#endif
+#endif                          /* HAVE_GSSAPI_GSSAPI_GENERIC_H */
+
+#ifndef gss_nt_service_name
+#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
 #endif
 
 #ifndef gss_mech_spnego
 static gss_OID_desc _gss_mech_spnego = {6, (void *) "\x2b\x06\x01\x05\x05\x02"};
 gss_OID gss_mech_spnego = &_gss_mech_spnego;
 #endif
-#endif
+#endif /* HAVE_GSSAPI */
 
 #ifndef BUFSIZ
 #define BUFSIZ		8192

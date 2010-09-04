@@ -1,3 +1,17 @@
+Changes to squid-3.2.0.2 (04 Sep 2010):
+
+	- Bug 3015: assertion failed: comm.cc:143: "ccb->active()"
+	- Support rotating logs from cachemgr and squidclient
+	- Support Kerberos authentication in squidclient
+	- Add manual page for negotiate_kerberos_auth
+	- Add helper ext_kerberos_ldap_group_acl to lookup Kerberos/NTLM group via LDAP
+	- Add tool 'purge' for management of UFS/AUFS/DiskD caches (experimental)
+	- Added log options %http::<bs and %icap::<bs
+	- Collapse HTCP cache_peer options into one setting
+	- Improved request smuggling attack detection. Tolerating valid benign HTTP
+	- ... and several HTTP/1.1 compliance improvements
+	- ... and all improvements in 3.1.7 and 3.1.8
+
 Changes to squid-3.2.0.1 (03 Aug 2010):
 
 	- Port from 2.7: Logging infrastructure updates
@@ -43,6 +57,19 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many code cleanups
 	- ... and a great many testing improvements
 	- ... and many documentation updates
+
+Changes to squid-3.1.8 (04 Sep 2010):
+
+	- Bug 3033: incorrect information regarding TOS
+	- Bug 3020: Segmentation fault: nameservers[vc->ns].vc = NULL
+	- Bug 3005,2972: Locate LTDL headers correctly (again)
+	- Bug 2872: leaking file descriptors
+	- Bug 2583: pure virtual method called
+	- Hardened DNS client against packet queue attacks
+	- Hardened HTTP request-line parser
+	- Several HTTP/1.1 support improvements
+	- Improved cross-compile support
+	- .. and several internal pointer safety fixes
 
 Changes to squid-3.1.7 (23 Aug 2010):
 

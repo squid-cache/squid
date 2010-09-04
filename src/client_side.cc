@@ -2104,16 +2104,6 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
 
     debugs(33, 3, "parseHttpRequest: end = {" << end << "}");
 
-    /*
-     * Check that the headers don't have double-CR.
-     * NP: strnstr is required so we don't search any possible binary body blobs.
-     */
-    if ( squid_strnstr(req_hdr, "\r\r\n", req_sz) ) {
-        debugs(33, 1, "WARNING: suspicious HTTP request contains double CR");
-        hp->request_parse_status = HTTP_BAD_REQUEST;
-        return parseHttpRequestAbort(conn, "error:double-CR");
-    }
-
     debugs(33, 3, "parseHttpRequest: prefix_sz = " <<
            (int) HttpParserRequestLen(hp) << ", req_line_sz = " <<
            HttpParserReqSz(hp));
@@ -2408,7 +2398,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         assert (repContext);
         switch (hp->request_parse_status) {
         case HTTP_HEADER_TOO_LARGE:
-            repContext->setReplyToError(ERR_TOO_BIG, HTTP_HEADER_TOO_LARGE, method, http->uri, conn->peer, NULL, conn->in.buf, NULL);
+            repContext->setReplyToError(ERR_TOO_BIG, HTTP_BAD_REQUEST, method, http->uri, conn->peer, NULL, conn->in.buf, NULL);
             break;
         case HTTP_METHOD_NOT_ALLOWED:
             repContext->setReplyToError(ERR_UNSUP_REQ, HTTP_METHOD_NOT_ALLOWED, method, http->uri, conn->peer, NULL, conn->in.buf, NULL);

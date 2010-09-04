@@ -52,6 +52,10 @@ typedef enum {
     HTTP_GATEWAY_TIMEOUT = 504,
     HTTP_HTTP_VERSION_NOT_SUPPORTED = 505,
     HTTP_INSUFFICIENT_STORAGE = 507,    /**< RFC2518 section 10.6 */
+
+    // The 6xx codes below are for internal use only: Bad requests result
+    // in HTTP_BAD_REQUEST; bad responses in HTTP_GATEWAY_TIMEOUT.
+
     HTTP_INVALID_HEADER = 600,          /**< Squid header parsing error */
     HTTP_HEADER_TOO_LARGE = 601         /* Header too large to process */
 } http_status;
