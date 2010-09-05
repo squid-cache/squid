@@ -105,7 +105,7 @@ else
   AC_DISABLE_SHARED
 fi
 
-LT_INIT([dlopen])
+LT_INIT([dlopen],[disable-shared])
 if ! test "${ac_top_build_prefix}" = "";
 then
 	# LTDL v3-v7 macros assume the autoconf 2.62 variable top_build_prefix is defined
