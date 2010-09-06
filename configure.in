@@ -209,6 +209,21 @@ case $withval in
 ])
 AC_SUBST(DEFAULT_PID_FILE)
 
+DEFAULT_SWAP_DIR="$localstatedir/cache/squid"
+AC_ARG_WITH(swapdir,
+  AS_HELP_STRING([--with-swapdir=PATH],
+    [Default location for squid cache directories. Default: PREFIX/var/cache/squid]), [
+case $withval in
+ yes|no)
+   AC_MSG_ERROR( --with-swapdir requires a directory PATH. --with-swapdir=PATH )
+   ;;
+ *)
+   DEFAULT_SWAP_DIR="$withval"
+   ;;
+ esac
+])
+AC_SUBST(DEFAULT_SWAP_DIR)
+
 if test "x$GCC" = "xyes"; then
   GCCVER=`$CC -v 2>&1 | awk '$2 ==  "version" {print $3}'`
   GCCVER2=`echo $GCCVER | awk '{print $1 * 100}'`
