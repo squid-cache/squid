@@ -99,6 +99,7 @@ public:
     bool bodySizeKnown() const { return theBodySize >= 0; }
     uint64_t bodySize() const;
     uint64_t consumedSize() const { return theGetSize; }
+    uint64_t producedSize() const { return thePutSize; }
     bool productionEnded() const { return !theProducer; }
 
     // called by producers
