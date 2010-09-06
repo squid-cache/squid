@@ -479,6 +479,13 @@ This section gives an account of those changes in three categories:
 	   Currently one demo helper <em>fake</em> is provided in shell and C++ forms to demonstrate
 	   the helper protocol usage and provide exemplar code.
 
+	<tag>--with-swapdir=PATH</tag>
+	<p>Location to display in documentation for the default cache.
+	   Updated to indicate /var/cache/squid in accordance with the filesystem layout standards.
+	   Squid-3 no longer builds an implicit disk cache at this location, so the change is not expected
+	   to have any effect on existing builds other than fixing some mysterious lack of core dumps.
+	   The old /var/cache location was often non-writable which blocked core dumps creation.
+
 </descrip>
 
 <sect1>Changes to existing options<label id="modifiedoptions">
