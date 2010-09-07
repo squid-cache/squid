@@ -15,19 +15,34 @@ void
 Comm::AcceptLimiter::defer(Comm::ConnAcceptor *afd)
 {
     afd->isLimited++;
-    debugs(5, 5, HERE << "FD " << afd->conn->fd << " x" << afd->isLimited);
+    debugs(5, 5, HERE << afd->conn << " x" << afd->isLimited);
     deferred.push_back(afd);
+}
+
+void
+Comm::AcceptLimiter::removeDead(Comm::ConnAcceptor *afd)
+{
+    for (unsigned int i = 0; i < deferred.size() && afd->isLimited > 0; i++) {
+        if (deferred[i] == afd) {
+            deferred[i] = NULL;
+            afd->isLimited--;
+            debugs(5, 5, HERE << afd->conn << " x" << afd->isLimited);
+        }
+    }
 }
 
 void
 Comm::AcceptLimiter::kick()
 {
     debugs(5, 5, HERE << " size=" << deferred.size());
-    if (deferred.size() > 0 && fdNFree() >= RESERVED_FD) {
-        debugs(5, 5, HERE << " doing one.");
+    while (deferred.size() > 0 && fdNFree() >= RESERVED_FD) {
         /* NP: shift() is equivalent to pop_front(). Giving us a FIFO queue. */
         ConnAcceptor *temp = deferred.shift();
-        temp->isLimited--;
-        temp->acceptNext();
+        if (temp != NULL) {
+            debugs(5, 5, HERE << " doing one.");
+            temp->isLimited--;
+            temp->acceptNext();
+            break;
+        }
     }
 }
