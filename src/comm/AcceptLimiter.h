@@ -15,6 +15,7 @@ class ConnAcceptor;
  * new connection. These handlers are awaiting some FD to become free.
  *
  * defer - used only by Comm layer ConnAcceptor adding themselves when FD are limited.
+ * removeDead - used only by Comm layer ConnAcceptor to remove themselves when dying.
  * kick - used by Comm layer when FD are closed.
  */
 class AcceptLimiter
@@ -26,6 +27,9 @@ public:
 
     /** delay accepting a new client connection. */
     void defer(Comm::ConnAcceptor *afd);
+
+    /** remove all records of an acceptor. Only to be called by the ConnAcceptor::swanSong() */
+    void removeDead(Comm::ConnAcceptor *afd);
 
     /** try to accept and begin processing any delayed client connections. */
     void kick();
