@@ -5,7 +5,7 @@ MAKETEST="check installcheck uninstallcheck"
 #
 # Configure options currently supported by MinGW environment
 #
-OPTS=" \
+SQUID_CONFIGURE_FLAGS=" \
 	--prefix=c:/squid \
 	--enable-storeio="ufs,aufs" \
 	--enable-removal-policies="lru,heap" \
