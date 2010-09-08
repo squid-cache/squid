@@ -51,7 +51,10 @@ fi
 # above command currently encounters dependancy problems on cleanup.
 #
 # do not build any of the install's ...
-	$base/../configure ${OPTS} ${configcache} 2>&1 &&
+#
+# eval is need to correctly handle quoted arguments
+	eval "$base/../configure ${SQUID_CONFIGURE_FLAGS} ${configcache}" \
+		2>&1 && \
 	make ${pjobs} ${MAKETEST} 2>&1
 
 # Remember and then explicitly return the result of the last command
