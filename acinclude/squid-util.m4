@@ -179,3 +179,42 @@ if test "$1" != "yes" -a "$1" != "no" ; then
   AC_MSG_ERROR([$2])
 fi
 ])
+
+AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
+  AC_ARG_ENABLE([build-info],
+    AS_HELP_STRING([--enable-build-info="build info string"],
+      [Add an additional string in the output of "string -v".
+       Default is not to add anything. If the string is not specified,
+       tries to determine nick and revision number of the current 
+       bazaar branch]),[
+  case "$enableval" in
+    no) ${TRUE}
+        ;;
+    yes)
+      if test -d "${srcdir}/.bzr"; then
+        AC_PATH_PROG(BZR,bzr,$FALSE)
+        squid_bzr_branch_nick=`${BZR} nick 2>/dev/null`
+        if test $? -eq 0 -a "x$squid_bzr_branch_nick" != "x"; then
+          squid_bzr_branch_revno=`${BZR} revno 2>/dev/null | sed 's/\"//g'`
+        fi
+        if test $? -eq 0 -a "x$squid_bzr_branch_revno" != "x"; then
+          ${BZR} diff 2>&1 >/dev/null
+          if test $? -eq 1; then
+              squid_bzr_branch_revno="$squid_bzr_branch_revno+changes"
+          fi
+        fi
+        if test "x$squid_bzr_branch_revno" != "x"; then
+          squid_build_info="Built branch: ${squid_bzr_branch_nick}-r${squid_bzr_branch_revno}"
+        fi
+      fi
+      ;;
+    *)
+      squid_build_info=$enableval
+      ;;
+  esac
+  ])
+  if test "x${squid_build_info:=no}" != "xno"; then
+    AC_DEFINE_UNQUOTED([SQUID_BUILD_INFO],["$squid_build_info"],
+       [Squid extended build info field for "squid -v" output])
+  fi
+])
