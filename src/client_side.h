@@ -40,6 +40,7 @@
 #include "CommCalls.h"
 #include "eui/Eui48.h"
 #include "eui/Eui64.h"
+#include "HttpControlMsg.h"
 #include "RefCount.h"
 #include "StoreIOBuffer.h"
 
@@ -112,6 +113,13 @@ public:
     void registerWithConn();
     void noteIoError(const int xerrno); ///< update state to reflect I/O error
 
+    /// starts writing 1xx control message to the client
+    void writeControlMsg(HttpControlMsg &msg);
+
+protected:
+    static void WroteControlMsg(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data);
+    void wroteControlMsg(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno);
+
 private:
     CBDATA_CLASS(ClientSocketContext);
     void prepareReply(HttpReply * rep);
@@ -120,6 +128,9 @@ private:
     void deRegisterWithConn();
     void doClose();
     void initiateClose(const char *reason);
+
+    AsyncCall::Pointer cbControlMsgSent; ///< notifies HttpControlMsg Source
+
     bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
     bool connRegistered_;
 };
@@ -128,7 +139,7 @@ private:
 class ConnectionDetail;
 
 /** A connection to a socket */
-class ConnStateData : public BodyProducer/*, public RefCountable*/
+class ConnStateData : public BodyProducer, public HttpControlMsgSink
 {
 
 public:
@@ -148,6 +159,9 @@ public:
     int getConcurrentRequestCount() const;
     bool isOpen() const;
     void checkHeaderLimits();
+
+    // HttpControlMsgSink API
+    virtual void sendControlMsg(HttpControlMsg msg);
 
     int fd;
 
