@@ -97,6 +97,7 @@ private:
     void truncateVirginBody();
 
     virtual void haveParsedReplyHeaders();
+    virtual bool getMoreRequestBody(MemBuf &buf);
     virtual void closeServer(); // end communication with the server
     virtual bool doneWithServer() const; // did we end communication?
     virtual void abortTransaction(const char *reason); // abnormal termination
@@ -107,10 +108,13 @@ private:
 
     void writeReplyBody();
     bool decodeAndWriteReplyBody();
+    bool finishingBrokenPost();
+    bool finishingChunkedRequest();
     void doneSendingRequestBody();
     void requestBodyHandler(MemBuf &);
     virtual void sentRequestBody(const CommIoCbParams &io);
-    void sendComplete(const CommIoCbParams &io);
+    void wroteLast(const CommIoCbParams &io);
+    void sendComplete();
     void httpStateConnClosed(const CommCloseCbParams &params);
     void httpTimeout(const CommTimeoutCbParams &params);
 
