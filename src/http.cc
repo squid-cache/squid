@@ -707,6 +707,8 @@ HttpStateData::processReplyHeader()
         readBuf->consume(header_bytes_read);
     }
 
+    newrep->removeStaleWarnings();
+
     if (newrep->sline.protocol == PROTO_HTTP && newrep->sline.status >= 100 && newrep->sline.status < 200) {
         handle1xx(newrep);
         ctx_exit(ctx);
