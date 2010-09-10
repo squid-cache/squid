@@ -81,6 +81,10 @@ public:
 protected:
     virtual HttpRequest *originalRequest();
 
+    void processReply();
+    void proceedAfter1xx();
+    void handle1xx(HttpReply *msg);
+
 private:
     AsyncCall::Pointer closeHandler;
     enum ConnectionStatus {

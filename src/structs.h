@@ -393,7 +393,6 @@ struct SquidConfig {
 #if USE_HTTP_VIOLATIONS
 
         int reload_into_ims;
-        int ignore_expect_100;
 #endif
 
         int offline;
@@ -760,6 +759,7 @@ struct _http_state_flags {
     unsigned int proxying:1;
     unsigned int keepalive:1;
     unsigned int only_if_cached:1;
+    unsigned int handling1xx:1; ///< we are ignoring or forwarding 1xx response
     unsigned int headers_parsed:1;
     unsigned int front_end_https:2;
     unsigned int originpeer:1;
