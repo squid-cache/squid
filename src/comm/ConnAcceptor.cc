@@ -36,8 +36,8 @@
 #include "base/TextException.h"
 #include "CommCalls.h"
 #include "comm/AcceptLimiter.h"
-#include "comm/Connection.h"
 #include "comm/comm_internal.h"
+#include "comm/Connection.h"
 #include "comm/ConnAcceptor.h"
 #include "fde.h"
 #include "protos.h"
@@ -47,101 +47,49 @@ namespace Comm {
     CBDATA_CLASS_INIT(ConnAcceptor);
 };
 
-Comm::ConnAcceptor::ConnAcceptor(int aFd, bool accept_many) :
-        AsyncJob("Legacy_Comm::ConnAcceptor"),
-        errcode(0),
-        isLimited(0),
-        callSection(NULL),
-        callLevel(NULL),
-        callName(NULL),
-        callDialer(NULL),
-        theCallback(NULL),
-        mayAcceptMore(accept_many)
-{
-    assert(aFd >= 0);
-    assert(isOpen(aFd));
-    conn = new Connection;
-    conn->fd = aFd;
-    // TODO: figure out what the new FD local address is/was/should be.
-}
-
-Comm::ConnAcceptor::ConnAcceptor(Comm::ConnectionPointer &newConn, bool accept_many, const char *note) :
+Comm::ConnAcceptor::ConnAcceptor(const Comm::ConnectionPointer &newConn, const char *note, const Subscription::Pointer &aSub) :
         AsyncJob("Comm::ConnAcceptor"),
         errcode(0),
         isLimited(0),
-        callSection(NULL),
-        callLevel(NULL),
-        callName(NULL),
-        callDialer(NULL),
-        theCallback(NULL),
-        mayAcceptMore(accept_many)
+        theCallSub(aSub),
+        conn(newConn)
 {
-    /* open the conn if its not already open */
-    if (!IsConnOpen(newConn)) {
-        newConn->fd = comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn->local, conn->flags, note);
-        debugs(9, 3, HERE << "Unconnected data socket created on FD " << newConn->fd );
+    assert(newConn != NULL);
 
-        if (!newConn->isOpen()) {
-            debugs(5, DBG_CRITICAL, HERE << "comm_open failed");
-            errcode = -1;
+    /* open the conn if its not already open */
+    if (!IsConnOpen(conn)) {
+        conn->fd = comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn->local, conn->flags, note);
+        errcode = errno;
+
+        if (!conn->isOpen()) {
+            debugs(5, DBG_CRITICAL, HERE << "comm_open failed: " << conn << " error: " << errcode);
+            conn = NULL;
             return;
         }
+        debugs(9, 3, HERE << "Unconnected data socket created on " << conn);
     }
-
     assert(IsConnOpen(newConn));
-    conn = newConn;
-}
-
-Comm::ConnAcceptor::~ConnAcceptor()
-{
-    swanSong();
 }
 
 void
-Comm::ConnAcceptor::subscribe(int section, int level, const char *name, CommAcceptCbPtrFun *dialer)
+Comm::ConnAcceptor::subscribe(const Subscription::Pointer &aSub)
 {
-    debugs(5, 5, HERE << "FD " << conn->fd << " AsyncCall: " << name);
-
-    // if this is the first subscription. start listening on the socket.
-    if (callDialer == NULL && theCallback == NULL)
-        setListen();
-
-    // remove old subscription. if any.
-    unsubscribe();
-
-    // store the subscribed handler details.
-    callSection = section;
-    callLevel = level;
-    safe_free(callName);
-    callName = xstrdup(name);
-    callDialer = dialer;
+    debugs(5, 5, HERE << conn << " AsyncCall Subscription: " << aSub);
+    unsubscribe("subscription change");
+    theCallSub = aSub;
 }
 
 void
-Comm::ConnAcceptor::subscribe(const AsyncCall::Pointer &call)
+Comm::ConnAcceptor::unsubscribe(const char *reason)
 {
-    debugs(5, 5, HERE << "FD " << conn->fd << " AsyncCall: " << call);
-
-    // remove old subscription. if any.
-    unsubscribe();
-
-    // store new callback subscription
-    theCallback = call;
-}
-
-void
-Comm::ConnAcceptor::unsubscribe()
-{
-    safe_free(callName);
-    delete callDialer;
-    callDialer = NULL;
-    theCallback = NULL;
+    debugs(5, 5, HERE << conn << " AsyncCall Subscription " << theCallSub << " removed: " << reason);
+    theCallSub = NULL;
 }
 
 void
 Comm::ConnAcceptor::start()
 {
-    debugs(5, 5, HERE << "FD " << conn->fd << " AsyncCall: " << callName);
+    debugs(5, 5, HERE << conn << " AsyncCall: " << theCallSub);
 
     Must(IsConnOpen(conn));
 
@@ -155,16 +103,17 @@ Comm::ConnAcceptor::start()
 bool
 Comm::ConnAcceptor::doneAll() const
 {
+    // stio when FD is closed
     if (!IsConnOpen(conn)) {
-        debugs(5,5, HERE << "Done? maybe. FD is closed." << (conn==NULL?"conn=NULL":"") << ", FD " << (conn!=NULL?conn->fd:-999));
         return AsyncJob::doneAll();
     }
 
-    if (callDialer == NULL && theCallback == NULL) {
-        debugs(5,5, HERE << "Done? maybe: handlers are gone.");
+    // stop when handlers are gone
+    if (theCallSub == NULL) {
         return AsyncJob::doneAll();
     }
 
+    // open FD with handlers...keep accepting.
     return false;
 }
 
@@ -172,8 +121,9 @@ void
 Comm::ConnAcceptor::swanSong()
 {
     debugs(5,5, HERE);
-    unsubscribe();
+    unsubscribe("swanSong");
     conn = NULL;
+    AcceptLimiter::Instance().removeDead(this);
     AsyncJob::swanSong();
 }
 
@@ -189,7 +139,7 @@ Comm::ConnAcceptor::setListen()
 {
     errcode = 0; // reset local errno copy.
     if (listen(conn->fd, Squid_MaxFD >> 2) < 0) {
-        debugs(50, 0, HERE << "listen(FD " << conn->fd << ", " << (Squid_MaxFD >> 2) << "): " << xstrerror());
+        debugs(50, DBG_CRITICAL, "ERROR: listen(" << conn << ", " << (Squid_MaxFD >> 2) << "): " << xstrerror());
         errcode = errno;
         return;
     }
@@ -198,18 +148,18 @@ Comm::ConnAcceptor::setListen()
 #ifdef SO_ACCEPTFILTER
         struct accept_filter_arg afa;
         bzero(&afa, sizeof(afa));
-        debugs(5, DBG_IMPORTANT, "Installing accept filter '" << Config.accept_filter << "' on FD " << conn->fd);
+        debugs(5, DBG_IMPORTANT, "Installing accept filter '" << Config.accept_filter << "' on " << conn);
         xstrncpy(afa.af_name, Config.accept_filter, sizeof(afa.af_name));
         if (setsockopt(conn->fd, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof(afa)) < 0)
-            debugs(5, DBG_CRITICAL, "SO_ACCEPTFILTER '" << Config.accept_filter << "': '" << xstrerror());
+            debugs(5, DBG_CRITICAL, "WARNING: SO_ACCEPTFILTER '" << Config.accept_filter << "': '" << xstrerror());
 #elif defined(TCP_DEFER_ACCEPT)
         int seconds = 30;
         if (strncmp(Config.accept_filter, "data=", 5) == 0)
             seconds = atoi(Config.accept_filter + 5);
         if (setsockopt(conn->fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &seconds, sizeof(seconds)) < 0)
-            debugs(5, DBG_CRITICAL, "TCP_DEFER_ACCEPT '" << Config.accept_filter << "': '" << xstrerror());
+            debugs(5, DBG_CRITICAL, "WARNING: TCP_DEFER_ACCEPT '" << Config.accept_filter << "': '" << xstrerror());
 #else
-        debugs(5, DBG_CRITICAL, "accept_filter not supported on your OS");
+        debugs(5, DBG_CRITICAL, "WARNING: accept_filter not supported on your OS");
 #endif
     }
 }
@@ -226,17 +176,24 @@ Comm::ConnAcceptor::setListen()
 void
 Comm::ConnAcceptor::doAccept(int fd, void *data)
 {
-    debugs(5, 2, HERE << "New connection on FD " << fd);
+    try {
+        debugs(5, 2, HERE << "New connection on FD " << fd);
 
-    Must(isOpen(fd));
-    ConnAcceptor *afd = static_cast<ConnAcceptor*>(data);
+        Must(isOpen(fd));
+        ConnAcceptor *afd = static_cast<ConnAcceptor*>(data);
 
-    if (!okToAccept()) {
-        AcceptLimiter::Instance().defer(afd);
-    } else {
-        afd->acceptNext();
+        if (!okToAccept()) {
+            AcceptLimiter::Instance().defer(afd);
+        } else {
+            afd->acceptNext();
+        }
+        commSetSelect(fd, COMM_SELECT_READ, Comm::ConnAcceptor::doAccept, afd, 0);
+
+    } catch(TextException &e) {
+        fatalf("FATAL: error while accepting new client connection: %s\n", e.message);
+    } catch(...) {
+        fatal("FATAL: error while accepting new client connection: [unkown]\n");
     }
-    commSetSelect(fd, COMM_SELECT_READ, Comm::ConnAcceptor::doAccept, afd, 0);
 }
 
 bool
@@ -265,42 +222,43 @@ Comm::ConnAcceptor::acceptOne()
      */
 
     /* Accept a new connection */
-    Connection *newConnDetails = new Connection();
-    int newfd = oldAccept(*newConnDetails);
+    ConnectionPointer newConnDetails = new Connection();
+    comm_err_t status = oldAccept(newConnDetails);
 
     /* Check for errors */
-    if (newfd < 0) {
+    if (!newConnDetails->isOpen()) {
 
-        if (newfd == COMM_NOMESSAGE) {
+        if (status == COMM_NOMESSAGE) {
             /* register interest again */
-            debugs(5, 5, HERE << "try later: FD " << conn->fd << " handler: " << callName);
+            debugs(5, 5, HERE << "try later: " << conn << " handler: " << theCallSub);
             commSetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
             return;
         }
 
         // A non-recoverable error; notify the caller */
-        debugs(5, 5, HERE << "non-recoverable error: FD " << conn->fd << " handler: " << callName);
-        notify(-1, COMM_ERROR, newConnDetails);
-        mayAcceptMore = false;
+        debugs(5, 5, HERE << "non-recoverable error: " << conn << " handler: " << theCallSub);
+        notify(status, newConnDetails);
+        mustStop("Listener socket closed");
         return;
     }
 
-    debugs(5, 5, HERE << "accepted: FD " << conn->fd <<
-           " newfd: " << newfd << " from: " << newConnDetails->remote <<
-           " handler: " << callName);
-    notify(newfd, COMM_OK, newConnDetails);
+    debugs(5, 5, HERE << "Listener: " << conn <<
+           " accepted new connection " << newConnDetails <<
+           " handler: " << theCallSub);
+    notify(status, newConnDetails);
 }
 
 void
 Comm::ConnAcceptor::acceptNext()
 {
     Must(IsConnOpen(conn));
-    debugs(5, 2, HERE << "connection on FD " << conn->fd);
+    debugs(5, 2, HERE << "connection on " << conn);
     acceptOne();
 }
 
+// NP: can't be a const function because syncWithComm() side effects hit theCallSub->callback().
 void
-Comm::ConnAcceptor::notify(int newfd, comm_err_t flag, const Comm::ConnectionPointer &newConnDetails)
+Comm::ConnAcceptor::notify(comm_err_t flag, const Comm::ConnectionPointer &newConnDetails)
 {
     // listener socket handlers just abandon the port with COMM_ERR_CLOSING
     // it should only happen when this object is deleted...
@@ -308,86 +266,76 @@ Comm::ConnAcceptor::notify(int newfd, comm_err_t flag, const Comm::ConnectionPoi
         return;
     }
 
-    if (callDialer != NULL) {
-        AsyncCall::Pointer call = commCbCall(callSection, callLevel, callName, *callDialer);
-        typedef CommAcceptCbParams Params;
-        Params &params = GetCommParams<Params>(call);
+    if (theCallSub != NULL) {
+        AsyncCall::Pointer call = theCallSub->callback();
+        CommAcceptCbParams &params = GetCommParams<CommAcceptCbParams>(call);
         params.fd = conn->fd;
-        params.nfd = newfd;
-        params.details = newConnDetails;
+        params.conn = newConnDetails;
         params.flag = flag;
         params.xerrno = errcode;
         ScheduleCallHere(call);
-    }
-    else if (theCallback != NULL) {
-        typedef CommAcceptCbParams Params;
-        Params &params = GetCommParams<Params>(theCallback);
-        params.fd = conn->fd;
-        params.nfd = newfd;
-        params.details = newConnDetails;
-        params.flag = flag;
-        params.xerrno = errcode;
-        ScheduleCallHere(theCallback);
-        // only permit the call to be scheduled once.
-        mayAcceptMore = false;
-        theCallback = NULL;
     }
 }
 
 /**
  * accept() and process
- * Wait for an incoming connection on FD.
+ * Wait for an incoming connection on our listener socket.
+ *
+ * \retval COMM_OK         success. details parameter filled.
+ * \retval COMM_NOMESSAGE  attempted accept() but nothing useful came in.
+ * \retval COMM_ERROR      an outright failure occured.
+ *                         Or if this client has too many connections already.
  */
-int
-Comm::ConnAcceptor::oldAccept(Comm::Connection &details)
+comm_err_t
+Comm::ConnAcceptor::oldAccept(Comm::ConnectionPointer &details)
 {
     PROF_start(comm_accept);
     statCounter.syscalls.sock.accepts++;
     int sock;
     struct addrinfo *gai = NULL;
-    details.local.InitAddrInfo(gai);
+    details->local.InitAddrInfo(gai);
 
     errcode = 0; // reset local errno copy.
     if ((sock = accept(conn->fd, gai->ai_addr, &gai->ai_addrlen)) < 0) {
         errcode = errno; // store last accept errno locally.
 
-        details.local.FreeAddrInfo(gai);
+        details->local.FreeAddrInfo(gai);
 
         PROF_stop(comm_accept);
 
         if (ignoreErrno(errno)) {
-            debugs(50, 5, HERE << "FD " << conn->fd << ": " << xstrerror());
+            debugs(50, 5, HERE << conn << ": " << xstrerror());
             return COMM_NOMESSAGE;
         } else if (ENFILE == errno || EMFILE == errno) {
-            debugs(50, 3, HERE << "FD " << conn->fd << ": " << xstrerror());
+            debugs(50, 3, HERE << conn << ": " << xstrerror());
             return COMM_ERROR;
         } else {
-            debugs(50, 1, HERE << "FD " << conn->fd << ": " << xstrerror());
+            debugs(50, 1, HERE << conn << ": " << xstrerror());
             return COMM_ERROR;
         }
     }
 
     Must(sock >= 0);
-    details.fd = sock;
-    details.remote = *gai;
+    details->fd = sock;
+    details->remote = *gai;
 
     if ( Config.client_ip_max_connections >= 0) {
-        if (clientdbEstablished(details.remote, 0) > Config.client_ip_max_connections) {
-            debugs(50, DBG_IMPORTANT, "WARNING: " << details.remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
-            details.local.FreeAddrInfo(gai);
+        if (clientdbEstablished(details->remote, 0) > Config.client_ip_max_connections) {
+            debugs(50, DBG_IMPORTANT, "WARNING: " << details->remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
+            details->local.FreeAddrInfo(gai);
             return COMM_ERROR;
         }
     }
 
     // lookup the local-end details of this new connection
-    details.local.InitAddrInfo(gai);
-    details.local.SetEmpty();
+    details->local.InitAddrInfo(gai);
+    details->local.SetEmpty();
     getsockname(sock, gai->ai_addr, &gai->ai_addrlen);
-    details.local = *gai;
-    details.local.FreeAddrInfo(gai);
+    details->local = *gai;
+    details->local.FreeAddrInfo(gai);
 
     /* fdstat update */
-    // XXX : these are not all HTTP requests. use a note about type and ip:port details.
+    // XXX : these are not all HTTP requests. use a note about type and ip:port details->
     // so we end up with a uniform "(HTTP|FTP-data|HTTPS|...) remote-ip:remote-port"
     fd_open(sock, FD_SOCKET, "HTTP Request");
 
@@ -395,10 +343,10 @@ Comm::ConnAcceptor::oldAccept(Comm::Connection &details)
     fdd_table[sock].close_line = 0;
 
     fde *F = &fd_table[sock];
-    details.remote.NtoA(F->ipaddr,MAX_IPSTRLEN);
-    F->remote_port = details.remote.GetPort();
-    F->local_addr = details.local;
-    F->sock_family = details.local.IsIPv6()?AF_INET6:AF_INET;
+    details->remote.NtoA(F->ipaddr,MAX_IPSTRLEN);
+    F->remote_port = details->remote.GetPort();
+    F->local_addr = details->local;
+    F->sock_family = details->local.IsIPv6()?AF_INET6:AF_INET;
 
     // set socket flags
     commSetCloseOnExec(sock);
@@ -408,5 +356,5 @@ Comm::ConnAcceptor::oldAccept(Comm::Connection &details)
     F->flags.transparent = fd_table[conn->fd].flags.transparent;
 
     PROF_stop(comm_accept);
-    return sock;
+    return COMM_OK;
 }

@@ -22,18 +22,15 @@ protected:
 public:
     virtual bool doneAll() const;
 
-    /** attempt to open a connection. */
     ConnOpener(Comm::ConnectionPointer &, AsyncCall::Pointer &handler, time_t connect_timeout);
     ~ConnOpener();
 
     void setHost(const char *);    ///< set the hostname note for this connection
     const char * getHost() const;  ///< get the hostname noted for this connection
-    void tryConnecting();          ///< actually start opening a TCP connection.
 
 private:
-    /* These objects may NOT be created without connections to act on. Do not define this operator. */
+    // Undefined because two openers cannot share a connection
     ConnOpener(const ConnOpener &);
-    /* These objects may NOT be copied. Do not define this operator. */
     ConnOpener & operator =(const ConnOpener &c);
 
     void connect(const CommConnectCbParams &unused);
