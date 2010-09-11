@@ -142,7 +142,7 @@ Comm::ConnOpener::start()
             typedef CommCbMemFunT<Comm::ConnOpener, CommTimeoutCbParams> Dialer;
             calls_.timeout_ = asyncCall(5, 4, "Comm::ConnOpener::timeout",
                                       Dialer(this, &Comm::ConnOpener::timeout));
-            debugs(5, 3, HERE << "FD " << conn_->fd << " timeout " << connectTimeout_);
+            debugs(5, 3, HERE << conn_ << " timeout " << connectTimeout_);
             commSetTimeout(conn_->fd, connectTimeout_, calls_.timeout_);
         }
 
@@ -172,17 +172,17 @@ Comm::ConnOpener::connect(const CommConnectCbParams &unused)
     case COMM_INPROGRESS:
         // check for timeout FIRST.
         if(squid_curtime - connStart_ > connectTimeout_) {
-            debugs(5, 5, HERE << "FD " << conn_->fd << ": * - ERR took too long already.");
+            debugs(5, 5, HERE << conn_ << ": * - ERR took too long already.");
             doneConnecting(COMM_TIMEOUT, errno);
             return;
         } else {
-            debugs(5, 5, HERE << "FD " << conn_->fd << ": COMM_INPROGRESS");
+            debugs(5, 5, HERE << conn_ << ": COMM_INPROGRESS");
             commSetSelect(conn_->fd, COMM_SELECT_WRITE, Comm::ConnOpener::ConnectRetry, this, 0);
         }
         break;
 
     case COMM_OK:
-        debugs(5, 5, HERE << "FD " << conn_->fd << ": COMM_OK - connected");
+        debugs(5, 5, HERE << conn_ << ": COMM_OK - connected");
 
         /*
          * stats.conn_open is used to account for the number of
@@ -209,7 +209,7 @@ Comm::ConnOpener::connect(const CommConnectCbParams &unused)
         break;
 
     default:
-        debugs(5, 5, HERE "FD " << conn_->fd << ": * - try again");
+        debugs(5, 5, HERE << conn_ << ": * - try again");
         failRetries_++;
         if (host_ != NULL)
             ipcacheMarkBadAddr(host_, conn_->remote);
@@ -220,13 +220,13 @@ Comm::ConnOpener::connect(const CommConnectCbParams &unused)
 
         // check for timeout FIRST.
         if(squid_curtime - connStart_ > connectTimeout_) {
-            debugs(5, 5, HERE << "FD " << conn_->fd << ": * - ERR took too long already.");
+            debugs(5, 5, HERE << conn_ << ": * - ERR took too long already.");
             doneConnecting(COMM_TIMEOUT, errno);
         } else if (failRetries_ < Config.connect_retries) {
             ScheduleCallHere(calls_.connect_);
         } else {
             // send ERROR back to the upper layer.
-            debugs(5, 5, HERE << "FD " << conn_->fd << ": * - ERR tried too many times already.");
+            debugs(5, 5, HERE << conn_ << ": * - ERR tried too many times already.");
             doneConnecting(COMM_ERR_CONNECT, errno);
         }
     }
@@ -243,14 +243,14 @@ Comm::ConnOpener::lookupLocalAddress()
     conn_->local.InitAddrInfo(addr);
 
     if (getsockname(conn_->fd, addr->ai_addr, &(addr->ai_addrlen)) != 0) {
-        debugs(50, DBG_IMPORTANT, "ERROR: Failed to retrieve TCP/UDP details for socket: FD " << conn_->fd << ": " << xstrerror());
+        debugs(50, DBG_IMPORTANT, "ERROR: Failed to retrieve TCP/UDP details for socket: " << conn_ << ": " << xstrerror());
         conn_->local.FreeAddrInfo(addr);
         return;
     }
 
     conn_->local = *addr;
     conn_->local.FreeAddrInfo(addr);
-    debugs(5, 6, HERE << "FD " << conn_->fd << ": conn.local=" << conn_->local);
+    debugs(5, 6, HERE << conn_);
 }
 
 /** Abort connection attempt.
@@ -259,7 +259,7 @@ Comm::ConnOpener::lookupLocalAddress()
 void
 Comm::ConnOpener::earlyAbort(const CommConnectCbParams &io)
 {
-    debugs(5, 3, HERE << "FD " << io.conn->fd);
+    debugs(5, 3, HERE << io.conn);
     doneConnecting(COMM_ERR_CLOSING, io.xerrno); // NP: is closing or shutdown better?
 }
 
