@@ -2321,7 +2321,7 @@ ConnStateData::checkHeaderLimits()
         return; // can accumulte more header data
 
     debugs(33, 3, "Request header is too large (" << in.notYetUsed << " > " <<
-        Config.maxRequestHeaderSize << " bytes)");
+           Config.maxRequestHeaderSize << " bytes)");
 
     ClientSocketContext *context = parseHttpRequestAbort(this, "error:request-too-large");
     clientStreamNode *node = context->getClientReplyContext();
@@ -2487,7 +2487,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         // HTTP/1.1 requires chunking to be the last encoding if there is one
         unsupportedTe = te.size() && te != "identity";
     } // else implied identity coding
-        
+
     if (method == METHOD_TRACE || method == METHOD_OPTIONS)
         request->max_forwards = request->header.getInt64(HDR_MAX_FORWARDS);
 
@@ -2544,7 +2544,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     expectBody = chunked || request->content_length > 0;
     if (!context->mayUseConnection() && expectBody) {
         request->body_pipe = conn->expectRequestBody(
-            chunked ? -1 : request->content_length);
+                                 chunked ? -1 : request->content_length);
 
         // consume header early so that body pipe gets just the body
         connNoteUseOfBuffer(conn, http->req_sz);
@@ -2552,7 +2552,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
         /* Is it too large? */
         if (!chunked && // if chunked, we will check as we accumulate
-            clientIsRequestBodyTooLargeForPolicy(request->content_length)) {
+                clientIsRequestBodyTooLargeForPolicy(request->content_length)) {
             clientStreamNode *node = context->getClientReplyContext();
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
@@ -2567,7 +2567,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         // We may stop producing, comm_close, and/or call setReplyToError()
         // below, so quit on errors to avoid http->doCallouts()
         if (!conn->handleRequestBodyData())
-            goto finish; 
+            goto finish;
 
         if (!request->body_pipe->productionEnded())
             conn->readSomeData();
@@ -2643,7 +2643,7 @@ clientParseRequest(ConnStateData * conn, bool &do_next_read)
     // Loop while we have read bytes that are not needed for producing the body
     // On errors, bodyPipe may become nil, but readMoreRequests will be cleared
     while (conn->in.notYetUsed > 0 && !conn->bodyPipe &&
-        conn->flags.readMoreRequests) {
+            conn->flags.readMoreRequests) {
         connStripBufferWhitespace (conn);
 
         /* Don't try to parse if the buffer is empty */
@@ -2925,7 +2925,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
         clientReplyContext *repContext = dynamic_cast<clientReplyContext*>(node->data.getRaw());
         assert(repContext);
         const http_status scode = (error == ERR_TOO_BIG) ?
-            HTTP_REQUEST_ENTITY_TOO_LARGE : HTTP_BAD_REQUEST;
+                                  HTTP_REQUEST_ENTITY_TOO_LARGE : HTTP_BAD_REQUEST;
         repContext->setReplyToError(error, scode,
                                     repContext->http->request->method,
                                     repContext->http->uri,
@@ -2935,7 +2935,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
         context->pullData();
     } else {
         // close or otherwise we may get stuck as nobody will notice the error?
-        comm_reset_close(fd); 
+        comm_reset_close(fd);
     }
 #else
     debugs(33, 3, HERE << "aborting chunked request without error " << error);
