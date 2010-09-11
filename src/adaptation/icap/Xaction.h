@@ -40,8 +40,8 @@
 #include "adaptation/icap/ServiceRep.h"
 #include "adaptation/Initiate.h"
 #include "AccessLogEntry.h"
+#include "HttpReply.h"
 
-class HttpMsg;
 class CommConnectCbParams;
 
 namespace Adaptation
@@ -80,7 +80,7 @@ public:
 
     // TODO: create these only when actually sending/receiving
     HttpRequest *icapRequest; ///< sent (or at least created) ICAP request
-    HttpReply *icapReply; ///< received ICAP reply, if any
+    HttpReply::Pointer icapReply; ///< received ICAP reply, if any
 
     /// the number of times we tried to get to the service, including this time
     int attempts;

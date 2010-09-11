@@ -137,6 +137,7 @@ class ModXact: public Xaction, public BodyProducer, public BodyConsumer
 
 public:
     ModXact(HttpMsg *virginHeader, HttpRequest *virginCause, ServiceRep::Pointer &s);
+    virtual ~ModXact();
 
     // BodyProducer methods
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
