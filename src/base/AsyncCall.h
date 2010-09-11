@@ -44,6 +44,8 @@ public:
     friend class AsyncCallQueue;
 
     AsyncCall(int aDebugSection, int aDebugLevel, const char *aName);
+    AsyncCall();
+    AsyncCall(const AsyncCall &);
     virtual ~AsyncCall();
 
     void make(); // fire if we can; handles general call debugging

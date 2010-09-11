@@ -77,4 +77,3 @@ ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call)
     AsyncCallQueue::Instance().schedule(call);
     return true;
 }
-
