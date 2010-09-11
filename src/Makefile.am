@@ -352,6 +352,7 @@ squid_SOURCES = \
 	HttpHeaderRange.h \
 	HttpHeaderTools.cc \
 	HttpBody.cc \
+	HttpControlMsg.h \
 	HttpMsg.cc \
 	HttpMsg.h \
 	HttpReply.cc \
@@ -939,6 +940,7 @@ tests_testHttpReply_SOURCES=\
 	HttpHeader.cc \
 	HttpHeaderMask.h \
 	HttpHeaderTools.cc \
+	HttpControlMsg.h \
 	HttpMsg.h \
 	HttpMsg.cc \
 	HttpReply.h \
