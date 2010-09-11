@@ -10,14 +10,14 @@
 
 class HttpControlMsg;
 
-/* 
+/*
  * This API exists to throttle forwarding of 1xx messages from the server
  * side (Source == HttpStateData) to the client side (Sink == ConnStateData).
  *
  * Without throttling, Squid would have to drop some 1xx responses to
  * avoid DoS attacks that send many 1xx responses without reading them.
  * Dropping 1xx responses without violating HTTP is as complex as throttling.
- */ 
+ */
 
 /// sends a single control message, notifying the Sink
 class HttpControlMsgSink: public virtual AsyncJob
@@ -34,10 +34,10 @@ class HttpControlMsg
 {
 public:
     typedef HttpMsgPointerT<HttpReply> MsgPtr;
-	typedef AsyncCall::Pointer Callback;
+    typedef AsyncCall::Pointer Callback;
 
     HttpControlMsg(const MsgPtr &aReply, const Callback &aCallback):
-        reply(aReply), cbSuccess(aCallback) {}
+            reply(aReply), cbSuccess(aCallback) {}
 
 public:
     MsgPtr reply; ///< the 1xx message being forwarded

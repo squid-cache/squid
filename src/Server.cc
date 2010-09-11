@@ -393,8 +393,7 @@ ServerStateData::sentRequestBody(const CommIoCbParams &io)
 
     if (!requestBodySource->exhausted())
         sendMoreRequestBody();
-    else
-    if (receivedWholeRequestBody)
+    else if (receivedWholeRequestBody)
         doneSendingRequestBody();
     else
         debugs(9,3, HERE << "waiting for body production end or abort");
