@@ -121,6 +121,10 @@ public:
                const Dialer &aDialer): AsyncCall(aDebugSection, aDebugLevel, aName),
             dialer(aDialer) {}
 
+    AsyncCallT(const RefCount<AsyncCallT<Dialer> > &o):
+            AsyncCall(o->debugSection, o->debugLevel, o->name),
+            dialer(o->dialer) {}
+
     CallDialer *getDialer() { return &dialer; }
 
 protected:
