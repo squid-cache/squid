@@ -39,19 +39,9 @@ CommCommonCbParams::print(std::ostream &os) const
 
 /* CommAcceptCbParams */
 
-CommAcceptCbParams::CommAcceptCbParams(void *aData): CommCommonCbParams(aData),
-        nfd(-1)
+CommAcceptCbParams::CommAcceptCbParams(void *aData):
+        CommCommonCbParams(aData)
 {
-}
-
-void
-CommAcceptCbParams::print(std::ostream &os) const
-{
-    CommCommonCbParams::print(os);
-    if (nfd >= 0)
-        os << ", newFD " << nfd;
-    if (details != NULL)
-        os << ", " << details;
 }
 
 
@@ -129,10 +119,16 @@ CommAcceptCbPtrFun::CommAcceptCbPtrFun(IOACB *aHandler,
 {
 }
 
+CommAcceptCbPtrFun::CommAcceptCbPtrFun(const CommAcceptCbPtrFun &o):
+        CommDialerParamsT<CommAcceptCbParams>(o.params),
+        handler(o.handler)
+{
+}
+
 void
 CommAcceptCbPtrFun::dial()
 {
-    handler(params.fd, params.nfd, params.details, params.flag, params.xerrno, params.data);
+    handler(params.fd, params.conn, params.flag, params.xerrno, params.data);
 }
 
 void

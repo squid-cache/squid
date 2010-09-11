@@ -21,7 +21,7 @@
  *     - I/O (IOCB).
  */
 
-typedef void IOACB(int fd, int nfd, Comm::ConnectionPointer &details, comm_err_t flag, int xerrno, void *data);
+typedef void IOACB(int fd, const Comm::ConnectionPointer &details, comm_err_t flag, int xerrno, void *data);
 typedef void CNCB(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data);
 typedef void IOCB(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data);
 
@@ -69,12 +69,6 @@ class CommAcceptCbParams: public CommCommonCbParams
 {
 public:
     CommAcceptCbParams(void *aData);
-
-    void print(std::ostream &os) const;
-
-public:
-    Comm::ConnectionPointer details;
-    int nfd; // TODO: rename to fdNew or somesuch
 };
 
 // connect parameters
@@ -175,10 +169,12 @@ class CommAcceptCbPtrFun: public CallDialer,
 {
 public:
     typedef CommAcceptCbParams Params;
+    typedef RefCount<CommAcceptCbPtrFun> Pointer;
 
     CommAcceptCbPtrFun(IOACB *aHandler, const CommAcceptCbParams &aParams);
-    void dial();
+    CommAcceptCbPtrFun(const CommAcceptCbPtrFun &o);
 
+    void dial();
     virtual void print(std::ostream &os) const;
 
 public:
@@ -258,10 +254,15 @@ template <class Dialer>
 class CommCbFunPtrCallT: public AsyncCall
 {
 public:
+    typedef RefCount<CommCbFunPtrCallT<Dialer> > Pointer;
     typedef typename Dialer::Params Params;
 
     inline CommCbFunPtrCallT(int debugSection, int debugLevel,
                              const char *callName, const Dialer &aDialer);
+
+    // parameter cannot be const because getDialer() cannot be const
+    // getDialer() cannot because Comm IO syncWithComm() alters the object params data
+    inline CommCbFunPtrCallT(Pointer &p) : dialer(*dynamic_cast<Dialer*>(p->getDialer())) {}
 
     virtual CallDialer* getDialer() { return &dialer; }
 
