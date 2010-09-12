@@ -13,7 +13,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
 #include "compat/debug.h"
 #include "libntlmauth/ntlmauth.h"
