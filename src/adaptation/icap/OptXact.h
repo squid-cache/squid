@@ -63,11 +63,15 @@ protected:
     bool parseResponse();
 
     void startReading();
+    virtual bool doneReading() const { return commEof || readAll; }
 
     virtual void swanSong();
 
 private:
     virtual void finalizeLogInfo();
+
+    bool readAll; ///< read the entire OPTIONS response
+
     CBDATA_CLASS2(OptXact);
 };
 
