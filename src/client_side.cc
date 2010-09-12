@@ -656,9 +656,9 @@ ClientHttpRequest::logRequest()
         }
 
         delete checklist;
-
-        accessLogFreeMemory(&al);
     }
+
+    accessLogFreeMemory(&al);
 }
 
 void
