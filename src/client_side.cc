@@ -85,6 +85,7 @@
 
 #include "acl/FilledChecklist.h"
 #include "auth/UserRequest.h"
+#include "base/Subscription.h"
 #include "base/TextException.h"
 #include "ChunkedCodingParser.h"
 #include "client_side.h"
@@ -3100,8 +3101,7 @@ connStateCreate(const Comm::ConnectionPointer &conn, http_port_list *port)
 
 /** Handle a new connection on HTTP socket. */
 void
-httpAccept(int sock, int unused, Comm::ConnectionPointer &details,
-           comm_err_t flag, int xerrno, void *data)
+httpAccept(int sock, const Comm::ConnectionPointer &details, comm_err_t flag, int xerrno, void *data)
 {
     http_port_list *s = (http_port_list *)data;
     ConnStateData *connState = NULL;
@@ -3162,14 +3162,15 @@ httpAccept(int sock, int unused, Comm::ConnectionPointer &details,
 
 /** Create SSL connection structure and update fd_table */
 static SSL *
-httpsCreate(Comm::ConnectionPointer &details, SSL_CTX *sslContext)
+httpsCreate(const Comm::ConnectionPointer &details, SSL_CTX *sslContext)
 {
     SSL *ssl = SSL_new(sslContext);
 
     if (!ssl) {
         const int ssl_error = ERR_get_error();
         debugs(83, 1, "httpsAccept: Error allocating handle: " << ERR_error_string(ssl_error, NULL)  );
-        details->close();
+        Comm::ConnectionPointer nonConst = details;
+        nonConst->close();
         return NULL;
     }
 
@@ -3305,8 +3306,7 @@ clientNegotiateSSL(int fd, void *data)
 
 /** handle a new HTTPS connection */
 static void
-httpsAccept(int sock, int newfd, Comm::ConnectionPointer& details,
-            comm_err_t flag, int xerrno, void *data)
+httpsAccept(int sock, const Comm::ConnectionPointer& details, comm_err_t flag, int xerrno, void *data)
 {
     https_port_list *s = (https_port_list *)data;
     SSL_CTX *sslContext = s->sslContext;
@@ -3479,17 +3479,22 @@ clientHttpConnectionOpened(int fd, int, http_port_list *s)
 
     Must(s);
 
-    s->listener = new Comm::ConnAcceptor(fd, true);
-    s->listener->subscribe(5,5, "httpAccept", new CommAcceptCbPtrFun(httpAccept, s));
-    AsyncJob::Start(s->listener);
+    s->listenConn = new Comm::Connection();
+    s->listenConn->local = s->s;
+    s->listenConn->fd = fd;
 
-    debugs(1, 1, "Accepting " <<
+    // TODO: hide most of this subscription stuff away.
+    typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
+    RefCount<AcceptCall> call = commCbCall(5, 5, "httpAccept", CommAcceptCbPtrFun(httpAccept, s));
+    Subscription::Pointer sub = new CallSubscription<AcceptCall>(call);
+    AsyncJob::Start(new Comm::ConnAcceptor(s->listenConn, "HTTP Listener", sub));
+
+    debugs(1, 1, "Accepting" <<
            (s->intercepted ? " intercepted" : "") <<
            (s->spoof_client_ip ? " spoofing" : "") <<
            (s->sslBump ? " bumpy" : "") <<
            (s->accel ? " accelerated" : "")
-           << " HTTP connections at " << s->s
-           << ", FD " << fd << "." );
+           << " HTTP connections at " << s->s << ", FD " << fd << ".");
 
     Must(AddOpenedHttpSocket(fd)); // otherwise, we have received a fd we did not ask for
 }
@@ -3532,9 +3537,15 @@ clientHttpsConnectionOpened(int fd, int, http_port_list *s)
 
     Must(s);
 
-    s->listener = new Comm::ConnAcceptor(fd, true);
-    s->listener->subscribe(5,5, "httpsAccept", new CommAcceptCbPtrFun(httpsAccept, s));
-    AsyncJob::Start(s->listener);
+    s->listenConn = new Comm::Connection();
+    s->listenConn->local = s->s;
+    s->listenConn->fd = fd;
+
+    // TODO: hide most of this subscription stuff away.
+    typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
+    RefCount<AcceptCall> call = commCbCall(5, 5, "httpsAccept", CommAcceptCbPtrFun(httpsAccept, s));
+    Subscription::Pointer sub = new CallSubscription<AcceptCall>(call);
+    AsyncJob::Start(new Comm::ConnAcceptor(s->listenConn, "HTTPS Listener", sub));
 
     debugs(1, 1, "Accepting HTTPS connections at " << s->s << ", FD " << fd << ".");
 
@@ -3559,19 +3570,19 @@ void
 clientHttpConnectionsClose(void)
 {
     for (http_port_list *s = Config.Sockaddr.http; s; s = s->next) {
-        if (s->listener) {
+        if (s->listenConn != NULL) {
             debugs(1, 1, "Closing HTTP port " << s->s);
-            s->listener->unsubscribe();
-            s->listener = NULL;
+            s->listenConn->close();
+            s->listenConn = NULL;
         }
     }
 
 #if USE_SSL
     for (http_port_list *s = Config.Sockaddr.https; s; s = s->next) {
-        if (s->listener) {
+        if (s->listenConn != NULL) {
             debugs(1, 1, "Closing HTTPS port " << s->s);
-            s->listener->unsubscribe();
-            s->listener = NULL;
+            s->listenConn->close();
+            s->listenConn = NULL;
         }
     }
 #endif

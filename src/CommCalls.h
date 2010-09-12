@@ -262,7 +262,10 @@ public:
 
     // parameter cannot be const because getDialer() cannot be const
     // getDialer() cannot because Comm IO syncWithComm() alters the object params data
-    inline CommCbFunPtrCallT(Pointer &p) : dialer(*dynamic_cast<Dialer*>(p->getDialer())) {}
+    inline CommCbFunPtrCallT(const Pointer &p) :
+            AsyncCall(p->debugSection, p->debugLevel, p->name),
+            dialer(p->dialer)
+        {}
 
     virtual CallDialer* getDialer() { return &dialer; }
 
