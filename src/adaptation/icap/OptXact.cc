@@ -19,7 +19,8 @@ CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, OptXactLauncher);
 
 Adaptation::Icap::OptXact::OptXact(Adaptation::Icap::ServiceRep::Pointer &aService):
         AsyncJob("Adaptation::Icap::OptXact"),
-        Adaptation::Icap::Xaction("Adaptation::Icap::OptXact", aService)
+        Adaptation::Icap::Xaction("Adaptation::Icap::OptXact", aService),
+        readAll(false)
 {
 }
 
@@ -69,6 +70,13 @@ void Adaptation::Icap::OptXact::handleCommWrote(size_t size)
 void Adaptation::Icap::OptXact::handleCommRead(size_t)
 {
     if (parseResponse()) {
+        Must(icapReply != NULL);
+        // We read everything if there is no response body. If there is a body,
+        // we cannot parse it because we do not support any opt-body-types, so
+        // we leave readAll false which forces connection closure.
+        readAll = !icapReply->header.getByNameListMember("Encapsulated",
+            "opt-body", ',').size();
+        debugs(93, 7, HERE << "readAll=" << readAll);
         icap_tio_finish = current_time;
         setOutcome(xoOpt);
         sendAnswer(icapReply);
