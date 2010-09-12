@@ -127,7 +127,7 @@ struct _idns_query {
 
 struct _nsvc {
     int ns;
-    int fd;
+    Comm::ConnectionPointer conn;
     unsigned short msglen;
     int read_msglen;
     MemBuf *msg;
@@ -177,6 +177,7 @@ static void idnsParseWIN32SearchList(const char *);
 static void idnsCacheQuery(idns_query * q);
 static void idnsSendQuery(idns_query * q);
 static CNCB idnsInitVCConnected;
+
 static IOCB idnsReadVCHeader;
 static void idnsDoSendQueryVC(nsvc *vc);
 
@@ -697,15 +698,15 @@ idnsDoSendQueryVC(nsvc *vc)
 
     vc->busy = 1;
 
-    commSetTimeout(vc->fd, Config.Timeout.idns_query, NULL, NULL);
+    commSetTimeout(vc->conn->fd, Config.Timeout.idns_query, NULL, NULL);
 
-    comm_write_mbuf(vc->fd, mb, idnsSentQueryVC, vc);
+    comm_write_mbuf(vc->conn->fd, mb, idnsSentQueryVC, vc);
 
     delete mb;
 }
 
 static void
-idnsInitVCConnected(const Comm::ConnectionPointer &conn, const DnsLookupDetails &details, comm_err_t status, int xerrno, void *data)
+idnsInitVCConnected(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
@@ -713,13 +714,11 @@ idnsInitVCConnected(const Comm::ConnectionPointer &conn, const DnsLookupDetails 
         char buf[MAX_IPSTRLEN] = "";
         if (vc->ns < nns)
             nameservers[vc->ns].S.NtoA(buf,MAX_IPSTRLEN);
-        debugs(78, 1, HERE << "Failed to connect to nameserver " << buf << " using TCP: " << details);
-        Comm::ConnectionPOinter nonConst = conn;
-        nonConst->close();
+        debugs(78, 1, HERE << "Failed to connect to nameserver " << buf << " using TCP.");
         return;
     }
 
-    vc->fd = conn->fd; // TODO: make the vc store the conn instead?
+    vc->conn = conn;
 
     comm_add_close_handler(conn->fd, idnsVCClosed, vc);
     comm_read(conn->fd, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
@@ -733,6 +732,7 @@ idnsVCClosed(int fd, void *data)
     nsvc * vc = (nsvc *)data;
     delete vc->queue;
     delete vc->msg;
+    vc->conn = NULL;
     if (vc->ns < nns) // XXX: idnsShutdown may have freed nameservers[]
         nameservers[vc->ns].vc = NULL;
     cbdataFree(vc);
@@ -743,13 +743,14 @@ idnsInitVC(int ns)
 {
     nsvc *vc = cbdataAlloc(nsvc);
     assert(ns < nns);
+    assert(vc->conn == NULL); // MUST be NULL from the construction process!
     nameservers[ns].vc = vc;
     vc->ns = ns;
     vc->queue = new MemBuf;
     vc->msg = new MemBuf;
     vc->busy = 1;
 
-    Comm::ConnectionPointer conn = new Comm::Connection;
+    Comm::ConnectionPointer conn = new Comm::Connection();
 
     if (!Config.Addrs.udp_outgoing.IsNoAddr())
         conn->local = Config.Addrs.udp_outgoing;
@@ -1448,8 +1449,8 @@ idnsShutdown(void)
 
     for (int i = 0; i < nns; i++) {
         if (nsvc *vc = nameservers[i].vc) {
-            if (vc->fd >= 0)
-                comm_close(vc->fd);
+            if (Comm::IsConnOpen(vc->conn))
+                vc->conn->close();
         }
     }
 

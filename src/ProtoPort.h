@@ -2,7 +2,7 @@
 #define SQUID_PROTO_PORT_H
 
 #include "cbdata.h"
-#include "comm/ConnAcceptor.h"
+#include "comm/Connection.h"
 
 struct http_port_list {
     http_port_list(const char *aProtocol);
@@ -34,12 +34,7 @@ struct http_port_list {
         unsigned int timeout;
     } tcp_keepalive;
 
-    /**
-     * The FD listening socket handler.
-     * If not NULL we are actively listening for client requests.
-     * delete to close the socket.
-     */
-    Comm::ConnAcceptor *listener;
+    Comm::ConnectionPointer listenConn;   ///< Socket used by a ConnAcceptor for incoming clients.
 
 #if USE_SSL
     // XXX: temporary hack to ease move of SSL options to http_port

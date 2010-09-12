@@ -219,7 +219,7 @@ CBDATA_TYPE(IdentStateData);
  * start a TCP connection to the peer host on port 113
  */
 void
-Ident::Start(Comm::ConnectionPointer &conn, IDCB * callback, void *data)
+Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
 {
     IdentStateData *state;
     char key1[IDENT_KEY_SZ];

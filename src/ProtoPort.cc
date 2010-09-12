@@ -12,8 +12,8 @@ http_port_list::http_port_list(const char *aProtocol)
 
 http_port_list::~http_port_list()
 {
-    listener->unsubscribe(); // trigger self-close
-    listener = NULL;
+    if (Comm::IsConnOpen(listenConn))
+        listenConn->close();
 
     safe_free(name);
     safe_free(defaultsite);
