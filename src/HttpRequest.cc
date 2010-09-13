@@ -53,6 +53,8 @@ HttpRequest::HttpRequest() : HttpMsg(hoRequest)
 
 HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath) : HttpMsg(hoRequest)
 {
+    static unsigned int id = 1;
+    debugs(93,7, HERE << "constructed, this=" << this << " id=" << ++id);
     init();
     initHTTP(aMethod, aProtocol, aUrlpath);
 }
@@ -60,6 +62,7 @@ HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, protocol_t aProtocol,
 HttpRequest::~HttpRequest()
 {
     clean();
+    debugs(93,7, HERE << "destructed, this=" << this);
 }
 
 void
@@ -644,4 +647,16 @@ HttpRequest::getRangeOffsetLimit()
     }
 
     return rangeOffsetLimit;
+}
+
+bool
+HttpRequest::canHandle1xx() const
+{
+    // old clients do not support 1xx unless they sent Expect: 100-continue
+    // (we reject all other HDR_EXPECT values so just check for HDR_EXPECT)
+    if (http_ver <= HttpVersion(1,0) && !header.has(HDR_EXPECT))
+        return false;
+
+    // others must support 1xx control messages
+    return true;
 }

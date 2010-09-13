@@ -41,6 +41,7 @@
 #if ICAP_CLIENT
 #include "adaptation/icap/History.h"
 #endif
+#include "base/CbcPointer.h"
 #include "client_side.h"
 #if USE_SQUID_EUI
 #include "eui/Eui48.h"
@@ -70,6 +71,8 @@ class HttpRequest: public HttpMsg
 {
 
 public:
+    typedef HttpMsgPointerT<HttpRequest> Pointer;
+
     MEMPROXY_CLASS(HttpRequest);
     HttpRequest();
     HttpRequest(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath);
@@ -87,6 +90,9 @@ public:
 
     /* are responses to this request potentially cachable */
     bool cacheable() const;
+
+    /// whether the client is likely to be able to handle a 1xx reply
+    bool canHandle1xx() const;
 
     /* Now that we care what host contains it is better off being protected. */
     /* HACK: These two methods are only inline to get around Makefile dependancies */
@@ -247,6 +253,9 @@ public:
     void releasePinnedConnection() {
         cbdataReferenceDone(pinned_connection);
     }
+
+    /// client-side conn manager, if known; used for 1xx response forwarding
+    CbcPointer<ConnStateData> clientConnection;
 
     int64_t getRangeOffsetLimit(); /* the result of this function gets cached in rangeOffsetLimit */
 

@@ -40,6 +40,7 @@
 #include "CommCalls.h"
 #include "eui/Eui48.h"
 #include "eui/Eui64.h"
+#include "HttpControlMsg.h"
 #include "RefCount.h"
 #include "StoreIOBuffer.h"
 
@@ -112,6 +113,13 @@ public:
     void registerWithConn();
     void noteIoError(const int xerrno); ///< update state to reflect I/O error
 
+    /// starts writing 1xx control message to the client
+    void writeControlMsg(HttpControlMsg &msg);
+
+protected:
+    static void WroteControlMsg(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data);
+    void wroteControlMsg(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno);
+
 private:
     CBDATA_CLASS(ClientSocketContext);
     void prepareReply(HttpReply * rep);
@@ -120,13 +128,16 @@ private:
     void deRegisterWithConn();
     void doClose();
     void initiateClose(const char *reason);
+
+    AsyncCall::Pointer cbControlMsgSent; ///< notifies HttpControlMsg Source
+
     bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
     bool connRegistered_;
 };
 
 
 /** A connection to a socket */
-class ConnStateData : public BodyProducer/*, public RefCountable*/
+class ConnStateData : public BodyProducer, public HttpControlMsgSink
 {
 
 public:
@@ -145,12 +156,13 @@ public:
     void addContextToQueue(ClientSocketContext * context);
     int getConcurrentRequestCount() const;
     bool isOpen() const;
+    void checkHeaderLimits();
+
+    // HttpControlMsgSink API
+    virtual void sendControlMsg(HttpControlMsg msg);
 
     // Client TCP connection details from comm layer.
     Comm::ConnectionPointer clientConn;
-
-    /// chunk buffering and parsing algorithm state
-    typedef enum { chunkUnknown, chunkNone, chunkParsing, chunkReady, chunkError } DechunkingState;
 
     struct In {
         In();
@@ -158,16 +170,18 @@ public:
         char *addressToReadInto() const;
 
         ChunkedCodingParser *bodyParser; ///< parses chunked request body
-        MemBuf chunked; ///< contains unparsed raw (chunked) body data
-        MemBuf dechunked; ///< accumulates parsed (dechunked) content
         char *buf;
         size_t notYetUsed;
         size_t allocatedSize;
-        size_t chunkedSeen; ///< size of processed or ignored raw read data
-        DechunkingState dechunkingState; ///< request dechunking state
     } in;
 
-    int64_t bodySizeLeft();
+    /** number of body bytes we need to comm_read for the "current" request
+     *
+     * \retval 0         We do not need to read any [more] body bytes
+     * \retval negative  May need more but do not know how many; could be zero!
+     * \retval positive  Need to read exactly that many more body bytes
+     */
+    int64_t mayNeedToReadMoreBody() const;
 
     /**
      * note this is ONLY connection based because NTLM and Negotiate is against HTTP spec.
@@ -222,8 +236,8 @@ public:
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
     virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
 
-    void handleReadData(char *buf, size_t size);
-    void handleRequestBodyData();
+    bool handleReadData(char *buf, size_t size);
+    bool handleRequestBodyData();
 
     /**
      * Correlate the current ConnStateData object with the pinning_fd socket descriptor.
@@ -266,10 +280,11 @@ public:
     bool switchedToHttps() const { return false; }
 #endif
 
-    void startDechunkingRequest(HttpParser *hp);
-    bool parseRequestChunks(HttpParser *hp);
-    void finishDechunkingRequest(HttpParser *hp);
-    void cleanDechunkingRequest();
+protected:
+    void startDechunkingRequest();
+    void finishDechunkingRequest(bool withSuccess);
+    void abortChunkedRequestBody(const err_type error);
+    err_type handleChunkedRequestBody(size_t &putSize);
 
 private:
     int connReadWasError(comm_err_t flag, int size, int xerrno);
