@@ -160,11 +160,14 @@ void Adaptation::Icap::ModXact::handleCommWroteHeaders()
     Must(state.writing == State::writingHeaders);
 
     // determine next step
-    if (preview.enabled())
-        state.writing = preview.done() ? State::writingPaused : State::writingPreview;
-    else if (virginBody.expected())
+    if (preview.enabled()) {
+        if (preview.done())
+            decideWritingAfterPreview("zero-size");
+        else
+            state.writing = State::writingPreview;
+    } else if (virginBody.expected()) {
         state.writing = State::writingPrime;
-    else {
+    } else {
         stopWriting(true);
         return;
     }
@@ -223,14 +226,23 @@ void Adaptation::Icap::ModXact::writePreviewBody()
 
     // change state once preview is written
 
-    if (preview.done()) {
-        debugs(93, 7, HERE << "wrote entire Preview body" << status());
+    if (preview.done())
+        decideWritingAfterPreview("body");
+}
 
-        if (preview.ieof())
-            stopWriting(true);
-        else
-            state.writing = State::writingPaused;
-    }
+/// determine state.writing after we wrote the entire preview
+void Adaptation::Icap::ModXact::decideWritingAfterPreview(const char *kind)
+{
+    if (preview.ieof()) // nothing more to write
+        stopWriting(true);
+    else
+    if (state.parsing == State::psIcapHeader) // did not get a reply yet
+        state.writing = State::writingPaused; // wait for the ICAP server reply
+    else
+        stopWriting(true); // ICAP server reply implies no post-preview writing
+
+    debugs(93, 6, HERE << "decided on writing after " << kind << " preview" <<
+        status());
 }
 
 void Adaptation::Icap::ModXact::writePrimeBody()
