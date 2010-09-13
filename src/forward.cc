@@ -521,6 +521,8 @@ FwdState::retryOrBail()
         // else bail. no more serverDestinations possible to try.
 
         // AYJ: cannot-forward error ??
+        ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
+        errorAppendEntry(entry, anErr);
     }
 
     if (!err && shutting_down) {
