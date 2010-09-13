@@ -3810,14 +3810,14 @@ ConnStateData::In::~In()
 void
 ConnStateData::sendControlMsg(HttpControlMsg msg)
 {
-    ClientSocketContext::Pointer context = getCurrentContext();
-    if (context != NULL) {
-        context->writeControlMsg(msg); // will call msg.cbSuccess
+    if (!isOpen()) {
+        debugs(33, 3, HERE << "ignoring 1xx due to earlier closure");
         return;
     }
 
-    if (!isOpen()) {
-        debugs(33, 3, HERE << "ignoring 1xx due to earlier closure");
+    ClientSocketContext::Pointer context = getCurrentContext();
+    if (context != NULL) {
+        context->writeControlMsg(msg); // will call msg.cbSuccess
         return;
     }
 
