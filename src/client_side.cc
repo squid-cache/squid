@@ -762,13 +762,13 @@ ConnStateData::isOpen() const
 ConnStateData::~ConnStateData()
 {
     assert(this != NULL);
-    debugs(33, 3, "ConnStateData::~ConnStateData: FD " << (clientConn!=NULL?clientConn->fd:-1) );
+    debugs(33, 3, HERE << clientConn );
 
     if (isOpen())
-        debugs(33, 1, "BUG: ConnStateData did not close FD " << clientConn->fd);
+        debugs(33, 1, "BUG: ConnStateData did not close " << clientConn);
 
     if (!flags.swanSang)
-        debugs(33, 1, "BUG: ConnStateData was not destroyed properly; FD " << (clientConn!=NULL?clientConn->fd:-1));
+        debugs(33, 1, "BUG: ConnStateData was not destroyed properly; " << clientConn);
 
     cbdataReferenceDone(port);
 
@@ -1391,7 +1391,6 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
     ClientSocketContext::Pointer context = dynamic_cast<ClientSocketContext *>(node->data.getRaw());
     assert(context != NULL);
     assert(connIsUsable(http->getConn()));
-    int fd = http->getConn()->clientConn->fd;
 
     /* TODO: check offset is what we asked for */
 
@@ -1406,7 +1405,7 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
     const bool mustSendLastChunk = http->request->flags.chunked_reply &&
                                    !http->request->flags.stream_error && !context->startOfOutput();
     if (responseFinishedOrFailed(rep, receivedData) && !mustSendLastChunk) {
-        context->writeComplete(fd, NULL, 0, COMM_OK);
+        context->writeComplete(http->getConn()->clientConn->fd, NULL, 0, COMM_OK);
         PROF_stop(clientSocketRecipient);
         return;
     }
@@ -1458,7 +1457,7 @@ clientWriteBodyComplete(int fd, char *buf, size_t size, comm_err_t errflag, int 
 void
 ConnStateData::readNextRequest()
 {
-    debugs(33, 5, "ConnStateData::readNextRequest: FD " << clientConn->fd << " reading next req");
+    debugs(33, 5, HERE << clientConn << " reading next req");
 
     fd_note(clientConn->fd, "Waiting for next request");
     /**
@@ -1749,7 +1748,7 @@ ClientSocketContext::noteIoError(const int xerrno)
 void
 ClientSocketContext::doClose()
 {
-    comm_close(fd());
+    http->getConn()->clientConn->close();
 }
 
 /** Called to initiate (and possibly complete) closing of the context.
@@ -2349,8 +2348,8 @@ void
 ConnStateData::clientAfterReadingRequests(int do_next_read)
 {
     // Were we expecting to read more request body from half-closed connection?
-    if (mayNeedToReadMoreBody() && commIsHalfClosed(fd)) {
-        debugs(33, 3, HERE << "truncated body: closing half-closed FD " << clientConn);
+    if (mayNeedToReadMoreBody() && commIsHalfClosed(clientConn->fd)) {
+        debugs(33, 3, HERE << "truncated body: closing half-closed " << clientConn);
         clientConn->close();
         return;
     }
@@ -3035,10 +3034,11 @@ static void
 clientLifetimeTimeout(int fd, void *data)
 {
     ClientHttpRequest *http = (ClientHttpRequest *)data;
-    debugs(33, 1, "WARNING: Closing client " << " connection due to lifetime timeout");
-    debugs(33, 1, "\t" << http->uri);
+    debugs(33, DBG_IMPORTANT, "WARNING: Closing client connection due to lifetime timeout");
+    debugs(33, DBG_IMPORTANT, "\t" << http->uri);
     http->al.http.timedout = true;
-    comm_close(fd); // XXX: this breaks ConnStateData::clientConn.
+    if (http->getConn() && Comm::IsConnOpen(http->getConn()->clientConn))
+        http->getConn()->clientConn->close();
 }
 
 ConnStateData *
@@ -3833,7 +3833,7 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
     }
 
     debugs(33, 3, HERE << " closing due to missing context for 1xx");
-    comm_close(fd);
+    clientConn->close();
 }
 
 /* This is a comm call normally scheduled by comm_close() */
