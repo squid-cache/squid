@@ -184,6 +184,7 @@ private:
     void writePreviewBody();
     void writePrimeBody();
     void writeSomeBody(const char *label, size_t size);
+    void decideWritingAfterPreview(const char *previewKind);
 
     void startReading();
     void readMore();
