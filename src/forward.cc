@@ -159,8 +159,6 @@ FwdState::~FwdState()
     if (! flags.forward_completed)
         completed();
 
-    serversFree(&servers);
-
     doneWithRetries();
 
     HTTPMSGUNLOCK(request);
