@@ -26,7 +26,8 @@ MAKETEST="distcheck"
 #   --without-build-environment \
 #
 #
-OPTS=" \
+SQUID_CONFIGURE_FLAGS=" \
+	--disable-build-info \
 	--disable-loadable-modules \
 	--disable-gnuregex \
 	--disable-optimizations \
@@ -99,4 +100,4 @@ OPTS=" \
 	"
 
 # Fix the distclean testing.
-export DISTCHECK_CONFIGURE_FLAGS="${OPTS}"
+export SQUID_CONFIGURE_FLAGS

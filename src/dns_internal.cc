@@ -1096,6 +1096,7 @@ idnsGrokReply(const char *buf, size_t sz)
         safe_free(message->answer);
 
         message->answer = result;
+        message->ancount += q->initial_AAAA.count;
         n += q->initial_AAAA.count;
         q->initial_AAAA.count=0;
     } else if (q->initial_AAAA.count > 0 && n <= 0) {

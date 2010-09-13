@@ -52,6 +52,8 @@ class HttpReply: public HttpMsg
 {
 
 public:
+    typedef HttpMsgPointerT<HttpReply> Pointer;
+
     MEMPROXY_CLASS(HttpReply);
     HttpReply();
     ~HttpReply();
@@ -138,6 +140,9 @@ public:
      */
     HttpReply *clone() const;
 
+    /// Remove Warnings with warn-date different from Date value
+    void removeStaleWarnings();
+
 private:
     /** initialize */
     void init();
@@ -159,6 +164,8 @@ private:
      * Used by receivedBodyTooLarge() and expectedBodyTooLarge().
      */
     void calcMaxBodySize(HttpRequest& request);
+
+    String removeStaleWarningValues(const String &value);
 
     mutable int64_t bodySizeMax; /**< cached result of calcMaxBodySize */
 

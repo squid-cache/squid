@@ -65,7 +65,12 @@ struct arpreq {
 #include <Iphlpapi.h>
 #endif
 
-
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
 #if HAVE_SYS_SOCKIO_H
 /* required by Solaris */
 #include <sys/sockio.h>

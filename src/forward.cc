@@ -159,6 +159,10 @@ FwdState::~FwdState()
     if (! flags.forward_completed)
         completed();
 
+    serversFree(&servers);
+
+    doneWithRetries();
+
     HTTPMSGUNLOCK(request);
 
     if (err)
@@ -416,6 +420,12 @@ FwdState::checkRetry()
     if (shutting_down)
         return false;
 
+    if (!self) { // we have aborted before the server called us back
+        debugs(17, 5, HERE << "not retrying because of earlier abort");
+        // we will be destroyed when the server clears its Pointer to us
+        return false;
+    }
+
     if (entry->store_status != STORE_PENDING)
         return false;
 
@@ -496,12 +506,6 @@ FwdState::serverClosed(int fd)
 void
 FwdState::retryOrBail()
 {
-    if (!self) { // we have aborted before the server called us back
-        debugs(17, 5, HERE << "not retrying because of earlier abort");
-        // we will be destroyed when the server clears its Pointer to us
-        return;
-    }
-
     if (checkRetry()) {
         debugs(17, 3, HERE << "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
 
@@ -521,16 +525,30 @@ FwdState::retryOrBail()
         // else bail. no more serverDestinations possible to try.
 
         // AYJ: cannot-forward error ??
-        ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
-        errorAppendEntry(entry, anErr);
+// is this hack needed since we now have doneWithRetries() below?
+//        ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
+//        errorAppendEntry(entry, anErr);
     }
 
-    if (!err && shutting_down) {
+    // TODO: should we call completed() here and move doneWithRetries there?
+    doneWithRetries();
+
+    if (self != NULL && !err && shutting_down) {
         ErrorState *anErr = errorCon(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE, request);
         errorAppendEntry(entry, anErr);
     }
 
     self = NULL;	// refcounted
+}
+
+// If the Server quits before nibbling at the request body, the body sender
+// will not know (so that we can retry). Call this if we will not retry. We
+// will notify the sender so that it does not get stuck waiting for space.
+void
+FwdState::doneWithRetries()
+{
+    if (request && request->body_pipe != NULL)
+        request->body_pipe->expectNoConsumption();
 }
 
 // called by the server that failed after calling unregister()

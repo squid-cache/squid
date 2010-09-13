@@ -42,6 +42,7 @@
 
 #include "acl/FilledChecklist.h"
 #include "auth/UserRequest.h"
+#include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
 #if DELAY_POOLS
@@ -50,6 +51,7 @@
 #include "errorpage.h"
 #include "fde.h"
 #include "http.h"
+#include "HttpControlMsg.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
 #include "HttpHdrScTarget.h"
@@ -164,7 +166,7 @@ HttpStateData::~HttpStateData()
 
     cbdataReferenceDone(_peer);
 
-    debugs(11,5, HERE << "HttpStateData " << this << " destroyed; FD " << (serverConnection!=NULL?serverConnection->fd:-1) );
+    debugs(11,5, HERE << "HttpStateData " << this << " destroyed; " << serverConnection);
 }
 
 const Comm::ConnectionPointer &
@@ -205,7 +207,7 @@ httpCachable(const HttpRequestMethod& method)
 void
 HttpStateData::httpTimeout(const CommTimeoutCbParams &params)
 {
-    debugs(11, 4, "httpTimeout: FD " << serverConnection->fd << ": '" << entry->url() << "'" );
+    debugs(11, 4, HERE << serverConnection << ": '" << entry->url() << "'" );
 
     if (entry->store_status == STORE_PENDING) {
         fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, fwd->request));
@@ -707,23 +709,11 @@ HttpStateData::processReplyHeader()
         readBuf->consume(header_bytes_read);
     }
 
-    /* Skip 1xx messages for now. Advertised in Via as an internal 1.0 hop */
-    if (newrep->sline.protocol == PROTO_HTTP && newrep->sline.status >= 100 && newrep->sline.status < 200) {
+    newrep->removeStaleWarnings();
 
-#if WHEN_HTTP11_EXPECT_HANDLED
-        /* When HTTP/1.1 check if the client is expecting a 1xx reply and maybe pass it on */
-        if (orig_request->header.has(HDR_EXPECT)) {
-            // TODO: pass to the client anyway?
-        }
-#endif
-        delete newrep;
-        debugs(11, 2, HERE << "1xx headers consume " << header_bytes_read << " bytes header.");
-        header_bytes_read = 0;
-        if (reply_bytes_read > 0)
-            debugs(11, 2, HERE << "1xx headers consume " << reply_bytes_read << " bytes reply.");
-        reply_bytes_read = 0;
+    if (newrep->sline.protocol == PROTO_HTTP && newrep->sline.status >= 100 && newrep->sline.status < 200) {
+        handle1xx(newrep);
         ctx_exit(ctx);
-        processReplyHeader();
         return;
     }
 
@@ -753,6 +743,64 @@ HttpStateData::processReplyHeader()
 
     ctx_exit(ctx);
 }
+
+/// ignore or start forwarding the 1xx response (a.k.a., control message)
+void
+HttpStateData::handle1xx(HttpReply *reply)
+{
+    HttpMsgPointerT<HttpReply> msg(reply); // will destroy reply if unused
+
+    // one 1xx at a time: we must not be called while waiting for previous 1xx
+    Must(!flags.handling1xx);
+    flags.handling1xx = true;
+
+    if (!orig_request->canHandle1xx()) {
+        debugs(11, 2, HERE << "ignoring client-unsupported 1xx");
+        proceedAfter1xx();
+        return;
+    }
+
+#if USE_HTTP_VIOLATIONS
+    // check whether the 1xx response forwarding is allowed by squid.conf
+    if (Config.accessList.reply) {
+        ACLFilledChecklist ch(Config.accessList.reply, request, NULL);
+        ch.reply = HTTPMSGLOCK(reply);
+        if (!ch.fastCheck()) { // TODO: support slow lookups?
+            debugs(11, 3, HERE << "ignoring denied 1xx");
+            proceedAfter1xx();
+            return;
+        }
+    }
+#endif // USE_HTTP_VIOLATIONS
+
+    debugs(11, 2, HERE << "forwarding 1xx to client");
+
+    // the Sink will use this to call us back after writing 1xx to the client
+    typedef NullaryMemFunT<HttpStateData> CbDialer;
+    const AsyncCall::Pointer cb = JobCallback(11, 3, CbDialer, this,
+                                  HttpStateData::proceedAfter1xx);
+    CallJobHere1(11, 4, orig_request->clientConnection, ConnStateData,
+                 ConnStateData::sendControlMsg, HttpControlMsg(msg, cb));
+    // If the call is not fired, then the Sink is gone, and HttpStateData
+    // will terminate due to an aborted store entry or another similar error.
+    // If we get stuck, it is not handle1xx fault if we could get stuck
+    // for similar reasons without a 1xx response.
+}
+
+/// restores state and resumes processing after 1xx is ignored or forwarded
+void
+HttpStateData::proceedAfter1xx()
+{
+    Must(flags.handling1xx);
+
+    debugs(11, 2, HERE << "consuming " << header_bytes_read <<
+           " header and " << reply_bytes_read << " body bytes read after 1xx");
+    header_bytes_read = 0;
+    reply_bytes_read = 0;
+
+    CallJobHere(11, 3, this, HttpStateData, HttpStateData::processReply);
+}
+
 
 /**
  * returns true if the peer can support connection pinning
@@ -956,7 +1004,7 @@ HttpStateData::statusIfComplete() const
 HttpStateData::ConnectionStatus
 HttpStateData::persistentConnStatus() const
 {
-    debugs(11, 3, "persistentConnStatus: FD " << serverConnection->fd << " eof=" << eof);
+    debugs(11, 3, HERE << serverConnection << " eof=" << eof);
     const HttpReply *vrep = virginReply();
     debugs(11, 5, "persistentConnStatus: content_length=" << vrep->content_length);
 
@@ -1030,7 +1078,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
     int clen;
     int len = io.size;
 
-    assert(serverConnection->fd == io.fd);
+//    assert(serverConnection->fd == io.fd); // XXX: false when closing. serverConnection-> will already be -1.
 
     flags.do_next_read = 0;
 
@@ -1133,6 +1181,21 @@ HttpStateData::readReply(const CommIoCbParams &io)
         }
     }
 
+    processReply();
+}
+
+/// processes the already read and buffered response data, possibly after
+/// waiting for asynchronous 1xx control message processing
+void
+HttpStateData::processReply()
+{
+
+    if (flags.handling1xx) { // we came back after handling a 1xx response
+        debugs(11, 5, HERE << "done with 1xx handling");
+        flags.handling1xx = false;
+        Must(!flags.headers_parsed);
+    }
+
     if (!flags.headers_parsed) { // have not parsed headers yet?
         PROF_start(HttpStateData_processReplyHeader);
         processReplyHeader();
@@ -1156,6 +1219,12 @@ HttpStateData::readReply(const CommIoCbParams &io)
 bool
 HttpStateData::continueAfterParsingHeader()
 {
+    if (flags.handling1xx) {
+        debugs(11, 5, HERE << "wait for 1xx handling");
+        Must(!flags.headers_parsed);
+        return false;
+    }
+
     if (!flags.headers_parsed && !eof) {
         debugs(11, 9, HERE << "needs more at " << readBuf->contentSize());
         flags.do_next_read = 1;
@@ -1387,7 +1456,7 @@ HttpStateData::maybeReadVirginBody()
     const int read_size = replyBodySpace(*readBuf, minRead);
 
     debugs(11,9, HERE << (flags.do_next_read ? "may" : "wont") <<
-           " read up to " << read_size << " bytes from FD " << serverConnection->fd);
+           " read up to " << read_size << " bytes from " << serverConnection);
 
     /*
      * why <2? Because delayAwareRead() won't actually read if
@@ -1408,13 +1477,11 @@ HttpStateData::maybeReadVirginBody()
     }
 }
 
-/*
- * This will be called when request write is complete.
- */
+/// called after writing the very last request byte (body, last-chunk, etc)
 void
-HttpStateData::sendComplete(const CommIoCbParams &io)
+HttpStateData::wroteLast(const CommIoCbParams &io)
 {
-    debugs(11, 5, "httpSendComplete: FD " << serverConnection->fd << ": size " << io.size << ": errflag " << io.flag << ".");
+    debugs(11, 5, HERE << serverConnection << ": size " << io.size << ": errflag " << io.flag << ".");
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
@@ -1438,6 +1505,13 @@ HttpStateData::sendComplete(const CommIoCbParams &io)
         return;
     }
 
+    sendComplete();
+}
+
+/// successfully wrote the entire request (including body, last-chunk, etc.)
+void
+HttpStateData::sendComplete()
+{
     /*
      * Set the read timeout here because it hasn't been set yet.
      * We only set the read timeout after the request has been
@@ -1461,9 +1535,9 @@ HttpStateData::sendComplete(const CommIoCbParams &io)
 void
 HttpStateData::closeServer()
 {
-    debugs(11,5, HERE << "closing HTTP server FD " << serverConnection->fd << " this " << this);
+    debugs(11,5, HERE << "closing HTTP server " << serverConnection << " this " << this);
 
-    if (serverConnection->isOpen()) {
+    if (Comm::IsConnOpen(serverConnection)) {
         fwd->unregister(serverConnection);
         comm_remove_close_handler(serverConnection->fd, closeHandler);
         closeHandler = NULL;
@@ -1474,7 +1548,7 @@ HttpStateData::closeServer()
 bool
 HttpStateData::doneWithServer() const
 {
-    return serverConnection == NULL || !serverConnection->isOpen();
+    return !Comm::IsConnOpen(serverConnection);
 }
 
 /*
@@ -1739,6 +1813,14 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             hdr_out->putStr(HDR_FRONT_END_HTTPS, "On");
     }
 
+    if (orig_request->header.chunked() && orig_request->content_length <= 0) {
+        /* Preserve original chunked encoding unless we learned the length.
+         * Do not just copy the original value so that if the client-side
+         * starts decode other encodings, this code may remain valid.
+         */
+        hdr_out->putStr(HDR_TRANSFER_ENCODING, "chunked");
+    }
+
     /* Now mangle the headers. */
     if (Config2.onoff.mangle_request_headers)
         httpHdrMangleList(hdr_out, request, ROR_REQUEST);
@@ -1978,10 +2060,10 @@ HttpStateData::sendRequest()
 {
     MemBuf mb;
 
-    debugs(11, 5, "httpSendRequest: FD " << serverConnection->fd << ", request " << request << ", this " << this << ".");
+    debugs(11, 5, HERE << serverConnection << ", request " << request << ", this " << this << ".");
 
     if (!Comm::IsConnOpen(serverConnection)) {
-        debugs(11,3, HERE << "cannot send request to closing FD " << serverConnection->fd);
+        debugs(11,3, HERE << "cannot send request to closing " << serverConnection);
         assert(closeHandler != NULL);
         return false;
     }
@@ -2003,7 +2085,7 @@ HttpStateData::sendRequest()
         assert(!requestBodySource);
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
         requestSender = JobCallback(11,5,
-                                    Dialer, this,  HttpStateData::sendComplete);
+                                    Dialer, this,  HttpStateData::wroteLast);
     }
 
     if (_peer != NULL) {
@@ -2045,8 +2127,42 @@ HttpStateData::sendRequest()
     mb.init();
     request->peer_host=_peer?_peer->host:NULL;
     buildRequestPrefix(request, orig_request, entry, &mb, flags);
-    debugs(11, 6, "httpSendRequest: FD " << serverConnection->fd << ":\n" << mb.buf);
+    debugs(11, 6, HERE << serverConnection << ":\n" << mb.buf);
     comm_write_mbuf(serverConnection->fd, &mb, requestSender);
+
+    return true;
+}
+
+bool
+HttpStateData::getMoreRequestBody(MemBuf &buf)
+{
+    // parent's implementation can handle the no-encoding case
+    if (!request->header.chunked())
+        return ServerStateData::getMoreRequestBody(buf);
+
+    MemBuf raw;
+
+    Must(requestBodySource != NULL);
+    if (!requestBodySource->getMoreData(raw))
+        return false; // no request body bytes to chunk yet
+
+    // optimization: pre-allocate buffer size that should be enough
+    const mb_size_t rawDataSize = raw.contentSize();
+    // we may need to send: hex-chunk-size CRLF raw-data CRLF last-chunk
+    buf.init(16 + 2 + rawDataSize + 2 + 5, raw.max_capacity);
+
+    buf.Printf("%x\r\n", static_cast<unsigned int>(rawDataSize));
+    buf.append(raw.content(), rawDataSize);
+    buf.Printf("\r\n");
+
+    Must(rawDataSize > 0); // we did not accidently created last-chunk above
+
+    // Do not send last-chunk unless we successfully received everything
+    if (receivedWholeRequestBody) {
+        Must(!flags.sentLastChunk);
+        flags.sentLastChunk = true;
+        buf.append("0\r\n\r\n", 5);
+    }
 
     return true;
 }
@@ -2073,42 +2189,72 @@ httpStart(FwdState *fwd)
      */
 }
 
+/// if broken posts are enabled for the request, try to fix and return true
+bool
+HttpStateData::finishingBrokenPost()
+{
+#if USE_HTTP_VIOLATIONS
+    if (!Config.accessList.brokenPosts) {
+        debugs(11, 5, HERE << "No brokenPosts list");
+        return false;
+    }
+
+    ACLFilledChecklist ch(Config.accessList.brokenPosts, request, NULL);
+    if (!ch.fastCheck()) {
+        debugs(11, 5, HERE << "didn't match brokenPosts");
+        return false;
+    }
+
+    if (!Comm::IsConnOpen(serverConnection)) {
+        debugs(11,2, HERE << "ignoring broken POST for closed " << serverConnection);
+        assert(closeHandler != NULL);
+        return true; // prevent caller from proceeding as if nothing happened
+    }
+
+    debugs(11, 2, "finishingBrokenPost: fixing broken POST");
+    typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
+    requestSender = JobCallback(11,5,
+                                Dialer, this, HttpStateData::wroteLast);
+    comm_write(serverConnection->fd, "\r\n", 2, requestSender);
+    return true;
+#else
+    return false;
+#endif /* USE_HTTP_VIOLATIONS */
+}
+
+/// if needed, write last-chunk to end the request body and return true
+bool
+HttpStateData::finishingChunkedRequest()
+{
+    if (flags.sentLastChunk) {
+        debugs(11, 5, HERE << "already sent last-chunk");
+        return false;
+    }
+
+    Must(receivedWholeRequestBody); // or we should not be sending last-chunk
+    flags.sentLastChunk = true;
+
+    typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
+    requestSender = JobCallback(11,5,
+                                Dialer, this, HttpStateData::wroteLast);
+    comm_write(serverConnection->fd, "0\r\n\r\n", 5, requestSender);
+    return true;
+}
+
 void
 HttpStateData::doneSendingRequestBody()
 {
-    debugs(11,5, HERE << "doneSendingRequestBody: FD " << serverConnection->fd);
+    ServerStateData::doneSendingRequestBody();
+    debugs(11,5, HERE << serverConnection);
 
-#if USE_HTTP_VIOLATIONS
-    if (Config.accessList.brokenPosts) {
-        ACLFilledChecklist ch(Config.accessList.brokenPosts, request, NULL);
-        if (!ch.fastCheck()) {
-            debugs(11, 5, "doneSendingRequestBody: didn't match brokenPosts");
-            CommIoCbParams io(NULL);
-            io.fd = serverConnection->fd;
-            io.flag = COMM_OK;
-            sendComplete(io);
-        } else {
-            debugs(11, 2, "doneSendingRequestBody: matched brokenPosts");
-
-            if (!Comm::IsConnOpen(serverConnection)) {
-                debugs(11,2, HERE << "cannot send CRLF to closing FD");
-                assert(closeHandler != NULL);
-                return;
-            }
-
-            typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-            AsyncCall::Pointer call = JobCallback(11, 5, Dialer, this, HttpStateData::sendComplete);
-            comm_write(serverConnection->fd, "\r\n", 2, call);
-        }
+    // do we need to write something after the last body byte?
+    const bool chunked = request->header.chunked();
+    if (chunked && finishingChunkedRequest())
         return;
-    }
-    debugs(11, 5, "doneSendingRequestBody: No brokenPosts list");
-#endif /* USE_HTTP_VIOLATIONS */
+    if (!chunked && finishingBrokenPost())
+        return;
 
-    CommIoCbParams io(NULL);
-    io.fd = serverConnection->fd;
-    io.flag = COMM_OK;
-    sendComplete(io);
+    sendComplete();
 }
 
 // more origin request body data is available
@@ -2147,11 +2293,7 @@ void
 HttpStateData::handleRequestBodyProducerAborted()
 {
     ServerStateData::handleRequestBodyProducerAborted();
-    // XXX: SendComplete(COMM_ERR_CLOSING) does little. Is it enough?
-    CommIoCbParams io(NULL);
-    io.fd = serverConnection->fd;
-    io.flag = COMM_ERR_CLOSING;
-    sendComplete(io);
+    abortTransaction("request body producer aborted");
 }
 
 // called when we wrote request headers(!) or a part of the body
@@ -2171,7 +2313,7 @@ void
 HttpStateData::abortTransaction(const char *reason)
 {
     debugs(11,5, HERE << "aborting transaction for " << reason <<
-           "; FD " << serverConnection->fd << ", this " << this);
+           "; " << serverConnection << ", this " << this);
 
     if (serverConnection->isOpen()) {
         serverConnection->close();

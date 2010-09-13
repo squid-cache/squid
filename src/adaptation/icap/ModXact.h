@@ -137,6 +137,7 @@ class ModXact: public Xaction, public BodyProducer, public BodyConsumer
 
 public:
     ModXact(HttpMsg *virginHeader, HttpRequest *virginCause, ServiceRep::Pointer &s);
+    virtual ~ModXact();
 
     // BodyProducer methods
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
@@ -183,6 +184,7 @@ private:
     void writePreviewBody();
     void writePrimeBody();
     void writeSomeBody(const char *label, size_t size);
+    void decideWritingAfterPreview(const char *previewKind);
 
     void startReading();
     void readMore();

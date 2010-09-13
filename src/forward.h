@@ -53,6 +53,7 @@ private:
 
     static void logReplyStatus(int tries, http_status status);
     void updateHierarchyInfo();
+    void doneWithRetries();
     void completed();
     void retryOrBail();
     static void RegisterWithCacheManager(void);
