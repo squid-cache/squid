@@ -6,7 +6,7 @@ MAKETEST="check installcheck uninstallcheck"
 #
 # This is to test any release build against what the package maintainers are seeing
 #
-OPTS=" \
+SQUID_CONFIGURE_FLAGS=" \
 	--build=i486-linux-gnu \
 	--prefix=/usr \
 	--includedir="\${prefix}/include" \

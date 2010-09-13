@@ -52,7 +52,6 @@ Adaptation::Icap::Xaction::~Xaction()
     debugs(93,3, typeName << " destructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
     HTTPMSGUNLOCK(icapRequest);
-    HTTPMSGUNLOCK(icapReply);
 }
 
 Adaptation::Icap::ServiceRep &
@@ -259,7 +258,9 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
            theService->cfg().methodStr() << " " <<
            theService->cfg().uri << status());
     reuseConnection = false;
-    throw TexcHere(connector != NULL ?
+    const bool whileConnecting = connector != NULL;
+    closeConnection(); // so that late Comm callbacks do not disturb bypass
+    throw TexcHere(whileConnecting ?
                    "timed out while connecting to the ICAP service" :
                    "timed out while talking to the ICAP service");
 }
@@ -342,23 +343,31 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
     Must(io.flag == COMM_OK);
     Must(io.size >= 0);
 
-    al.icap.bytesRead+=io.size;
+    if (!io.size) {
+        commEof = true;
+        reuseConnection = false;
 
-    updateTimeout();
+        // detect a pconn race condition: eof on the first pconn read
+        if (!al.icap.bytesRead && retriable()) {
+            setOutcome(xoRace);
+            mustStop("pconn race");
+            return;
+        }
+    } else {
 
-    debugs(93, 3, HERE << "read " << io.size << " bytes");
+        al.icap.bytesRead+=io.size;
 
-    /*
-     * See comments in Adaptation::Icap::Xaction.h about why we use commBuf
-     * here instead of reading directly into readBuf.buf.
-     */
+        updateTimeout();
 
-    if (io.size > 0) {
+        debugs(93, 3, HERE << "read " << io.size << " bytes");
+
+        /*
+         * See comments in Adaptation::Icap::Xaction.h about why we use commBuf
+         * here instead of reading directly into readBuf.buf.
+         */
+
         readBuf.append(commBuf, io.size);
         disableRetries(); // because pconn did not fail
-    } else {
-        reuseConnection = false;
-        commEof = true;
     }
 
     handleCommRead(io.size);

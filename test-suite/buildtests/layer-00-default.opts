@@ -6,7 +6,7 @@ MAKETEST="distcheck"
 # Default configuration options.
 #  - Nothing special configured. Just whatever is found by "./configure"
 #
-OPTS=""
+SQUID_CONFIGURE_FLAGS=""
 
 # Fix the distclean testing.
-export DISTCHECK_CONFIGURE_FLAGS="${OPTS}"
+export SQUID_CONFIGURE_FLAGS

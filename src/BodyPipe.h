@@ -99,6 +99,7 @@ public:
     bool bodySizeKnown() const { return theBodySize >= 0; }
     uint64_t bodySize() const;
     uint64_t consumedSize() const { return theGetSize; }
+    uint64_t producedSize() const { return thePutSize; }
     bool productionEnded() const { return !theProducer; }
 
     // called by producers
@@ -113,6 +114,7 @@ public:
     // called by consumers
     bool setConsumerIfNotLate(const Consumer::Pointer &aConsumer);
     void clearConsumer(); // aborts if still piping
+    void expectNoConsumption(); ///< there will be no more setConsumer() calls
     size_t getMoreData(MemBuf &buf);
     void consume(size_t size);
     bool expectMoreAfter(uint64_t offset) const;
@@ -152,6 +154,7 @@ private:
     MemBuf theBuf; // produced but not yet consumed content, if any
 
     bool mustAutoConsume; // consume when there is no consumer
+    bool abortedConsumption; ///< called BodyProducer::noteBodyConsumerAborted
     bool isCheckedOut; // to keep track of checkout violations
 
     CBDATA_CLASS2(BodyPipe);
