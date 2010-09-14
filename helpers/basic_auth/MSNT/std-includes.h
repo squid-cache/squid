@@ -24,7 +24,6 @@
  */
 
 /* the types are provided by squid's configure preocess */
-#define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
 
 #define BOOL int16_t
