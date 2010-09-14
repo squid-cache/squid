@@ -8,7 +8,6 @@
  * The code originated from denyusers.c.
  */
 
-#define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
 #include "util.h"
 

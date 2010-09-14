@@ -34,7 +34,6 @@
  * as published by the Free Software Foundation; either version 2,
  * or (at your option) any later version.
  */
-#define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
 #include "helpers/defines.h"
 #include "rfc1738.h"
