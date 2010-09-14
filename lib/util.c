@@ -34,9 +34,6 @@
 
 #define _etext etext
 
-/* NP: this file is where the memory allocators are defined. */
-#define SQUID_NO_ALLOC_PROTECT 1
-
 #include "config.h"
 #include "profiling.h"
 
