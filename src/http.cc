@@ -1814,11 +1814,9 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             hdr_out->putStr(HDR_FRONT_END_HTTPS, "On");
     }
 
-    if (orig_request->header.chunked() && orig_request->content_length <= 0) {
-        /* Preserve original chunked encoding unless we learned the length.
-         * Do not just copy the original value so that if the client-side
-         * starts decode other encodings, this code may remain valid.
-         */
+    if (flags.chunked_request) {
+        // Do not just copy the original value so that if the client-side
+        // starts decode other encodings, this code may remain valid.
         hdr_out->putStr(HDR_TRANSFER_ENCODING, "chunked");
     }
 
@@ -2081,6 +2079,11 @@ HttpStateData::sendRequest()
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
         requestSender = JobCallback(11,5,
                                     Dialer, this, HttpStateData::sentRequestBody);
+
+        Must(!flags.chunked_request);
+        // Preserve original chunked encoding unless we learned the length.
+        if (orig_request->header.chunked() && orig_request->content_length < 0)
+            flags.chunked_request = 1;
     } else {
         assert(!requestBodySource);
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
@@ -2137,7 +2140,7 @@ bool
 HttpStateData::getMoreRequestBody(MemBuf &buf)
 {
     // parent's implementation can handle the no-encoding case
-    if (!request->header.chunked())
+    if (!flags.chunked_request)
         return ServerStateData::getMoreRequestBody(buf);
 
     MemBuf raw;
@@ -2248,10 +2251,9 @@ HttpStateData::doneSendingRequestBody()
     debugs(11,5, HERE << "doneSendingRequestBody: FD " << fd);
 
     // do we need to write something after the last body byte?
-    const bool chunked = request->header.chunked();
-    if (chunked && finishingChunkedRequest())
+    if (flags.chunked_request && finishingChunkedRequest())
         return;
-    if (!chunked && finishingBrokenPost())
+    if (!flags.chunked_request && finishingBrokenPost())
         return;
 
     sendComplete();
