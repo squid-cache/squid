@@ -5630,7 +5630,7 @@ DOC_START
 	by specifying TCP_RESET.
 
 	Or you can specify an error URL or URL pattern. The browsers will
-	get redirected (302) to the specified URL after formattgin tags have
+	get redirected (302) to the specified URL after formatting tags have
 	been replaced.
 
 	URL FORMAT TAGS:

@@ -105,7 +105,7 @@ configuration file without getting the secretfile.
 .if !'po4a'hide' .BI \-E certpath
 Enable LDAP over SSL (requires Netscape LDAP API libraries)
 .
-.TP
+.if !'po4a'hide' .TP
 .if !'po4a'hide' .BI "\-f " filter
 LDAP search filter used to search the LDAP directory for any
 matching group memberships.
@@ -200,7 +200,9 @@ are supported.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .BI \-v " 2|3"
-LDAP protocol version. Defaults to 3 if not specified.
+LDAP protocol version. Defaults to 
+.B 3
+ if not specified.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .BI \-Z
@@ -210,21 +212,19 @@ Use TLS encryption
 This helper is intended to be used as an
 .B external_acl_type
 helper in
-.B squid.conf.
-.if !'po4a'hide' .P
-.if !'po4a'hide' .ft CR
-.if !'po4a'hide' .nf
-.if !'po4a'hide' external_acl_type ldap_group %LOGIN /path/to/ext_ldap_group_acl ...
+.B squid.conf .
+.
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B external_acl_type ldap_group %LOGIN /path/to/ext_ldap_group_acl ...
 .if !'po4a'hide' .br
-.if !'po4a'hide' acl group1 external ldap_group Group1
+.if !'po4a'hide' .B acl group1 external ldap_group Group1
 .if !'po4a'hide' .br
-.if !'po4a'hide' acl group2 external ldap_group Group2
-.if !'po4a'hide' .fi
-.if !'po4a'hide' .ft
+.if !'po4a'hide' .B acl group2 external ldap_group Group2
+.if !'po4a'hide' .RE
+.
 .PP
 .B NOTE:
-When constructing search filters it is recommended to first test the filter
-using
+When constructing search filters it is recommended to first test the filter using
 .B ldapsearch
 to verify that the filter matches what you expect before you attempt to use
 .B ext_ldap_group_acl

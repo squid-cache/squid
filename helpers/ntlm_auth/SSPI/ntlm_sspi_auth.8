@@ -24,19 +24,28 @@ It has automatic support for NTLM NEGOTIATE packets.
 .
 .SH OPTIONS
 .if !'po4a'hide' .TP 12
-.if !'po4a'hide' .B \-d
-Write debug info to stderr.
-.if !'po4a'hide' .B \-h
-Display the binary help and command line syntax info using stderr.
-.if !'po4a'hide' .B \-v
-Enables verbose NTLM packet debugging.
 .if !'po4a'hide' .B \-A
 Specify a Windows Local Group name allowed to authenticate.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-d
+Write debug info to stderr.
+.
+.if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-D
 Specify a Windows Local Group name which is to be denied authentication.
 .
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-h
+Display the binary help and command line syntax info using stderr.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-v
+Enables verbose NTLM packet debugging.
+.
 .SH CONFIGURATION
-.PP Allowing Users
+.PP
+.B Allowing Users
 .PP
 Users that are allowed to access the web proxy must have the Windows NT
 User Rights "logon from the network".
@@ -49,19 +58,21 @@ This can be accomplished creating a local user group on the NT machine,
 grant the privilege, and adding users to it, it works only with MACHINE
 Local Groups, not Domain Local Groups.
 .PP
-Better group checking is available with External Acl, see mswin_check_group
+Better group checking is available with external ACL, see 
+.B ext_ad_group_acl.exe
 documentation.
 .PP
 .B squid.conf
 typical minimal required changes:
 .if !'po4a'hide' .RS
-.if !'po4a'hide' auth_param ntlm program c:/squid/libexec/mswin_ntlm_auth.exe
-.if !'po4a'hide' auth_param ntlm children 5
-.if !'po4a'hide' 
-.if !'po4a'hide' acl password proxy_auth REQUIRED
-.if !'po4a'hide' 
-.if !'po4a'hide' http_access allow password
-.if !'po4a'hide' http_access deny all
+.if !'po4a'hide' .B auth_param ntlm program c:/squid/libexec/ntlm_sspi_auth.exe
+.if !'po4a'hide' .B auth_param ntlm children 5
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl password proxy_auth REQUIRED
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access allow password
+.if !'po4a'hide' .B http_access deny all
+.if !'po4a'hide' .RE
 .
 .PP Refer to Squid documentation for more details.
 .
@@ -73,9 +84,10 @@ The following
 .B squid.conf 
 ACL works around this when placed before the authentication ACL:
 .if !'po4a'hide' .RS
-.if !'po4a'hide' acl internal_icons urlpath_regex -i /squid-internal-static/icons/
-.if !'po4a'hide' 
-.if !'po4a'hide' http_access allow our_networks internal_icons
+.if !'po4a'hide' .B acl internal_icons urlpath_regex \-i /squid-internal-static/icons/
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access allow our_networks internal_icons
+.if !'po4a'hide' .RE
 .
 .SH AUTHOR
 This program was written by

@@ -46,18 +46,21 @@ matches users in
 .I group2
 or
 .I group3
+.
 .if !'po4a'hide' .RS
-.if !'po4a'hide' .IP external_acl_type unix_group %LOGIN /usr/local/squid/libexec/ext_unix_group_acl -p
-.if !'po4a'hide' .IP acl usergroup1 external unix_group group1
-.if !'po4a'hide' .IP acl usergroup2 external unix_group group2 group3
+.if !'po4a'hide' .B external_acl_type unix_group %LOGIN /usr/local/squid/libexec/ext_unix_group_acl -p
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl usergroup1 external unix_group group1
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl usergroup2 external unix_group group2 group3
 .if !'po4a'hide' .RE
 .PP
-By default up to 11 groups can be matched in one acl (including commandline specified
-groups). This limit is defined by
+By default up to 11 groups can be matched in one acl (including commandline specified groups). This limit is defined by
 .B MAX_GROUPS
 in the source code.
 .
 .SH KNOWN ISSUES
+.PP
 Does not understand GID aliased groups sometimes used to work around groups size
 limitations. If you are using GID aliased groups then you must specify each alias
 by name.
