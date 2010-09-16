@@ -24,8 +24,14 @@ on STDIN and matching it against a configuration file.
 .if !'po4a'hide' .TP 12
 .if !'po4a'hide' .B \-d
 Write debug info to stderr.
-.if !'po4a'hide' .B \-f
-Configuration file to load.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-f file
+Configuration 
+.B file
+ to load.
+.
+.if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-h
 Display the binary help and command line syntax info using stderr.
 .
@@ -34,9 +40,9 @@ Display the binary help and command line syntax info using stderr.
 The 
 .B squid.conf 
 configuration for the external ACL should be:
-.if !'po4a'hide' .
-.if !'po4a'hide' external_acl_type type-name %SRC %LOGIN /path/to/ext_file_userip_acl -f /path/to/config.file
-.if !'po4a'hide' .
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B external_acl_type type-name %SRC %LOGIN /path/to/ext_file_userip_acl -f /path/to/config.file
+.if !'po4a'hide' .RE
 .PP
 If the helper program finds a matching username/ip in the configuration file, it returns
 .B OK
@@ -44,8 +50,9 @@ If the helper program finds a matching username/ip in the configuration file, it
 .B ERR .
 .PP
 The configuration file format is as follows:
-.
-ip_addr[/netmask]		username|@group|ALL|NONE
+.if !'po4a'hide' .RS
+.if !'po4a'hide' ip_addr[/netmask]	username|@group|ALL|NONE
+.if !'po4a'hide' .RE
 .PP
 Where 
 .B ip_addr 
