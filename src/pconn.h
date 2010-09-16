@@ -38,7 +38,12 @@ public:
     int numIdle() { return nfds; }
 
     int findFDIndex(int fd); ///< search from the end of array
-    void removeFD(int fd);
+
+    /// If false the FD does not currently exist in the list.
+    /// We seem to have hit and lost a race condition.
+    /// Nevermind, but MUST NOT do anything with the raw FD.
+    bool removeFD(int fd);
+
     void push(int fd);
     int findUseableFD();     ///< find first from the end not pending read fd.
     void clearHandlers(int fd);
