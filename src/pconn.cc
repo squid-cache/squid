@@ -81,13 +81,13 @@ IdleConnList::findFDIndex (int fd)
     return -1;
 }
 
-void
+bool
 IdleConnList::removeFD(int fd)
 {
     int index = findFDIndex(fd);
     if (index < 0) {
         debugs(48, 2, "IdleConnList::removeFD: FD " << fd << " NOT FOUND!");
-        return;
+        return false;
     }
     debugs(48, 3, "IdleConnList::removeFD: found FD " << fd << " at index " << index);
 
@@ -98,6 +98,7 @@ IdleConnList::removeFD(int fd)
         debugs(48, 3, "IdleConnList::removeFD: deleting " << hashKeyStr(&hash));
         delete this;
     }
+    return true;
 }
 
 void
@@ -161,8 +162,8 @@ IdleConnList::read(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, v
     }
 
     IdleConnList *list = (IdleConnList *) data;
-    list->removeFD(fd);	/* might delete list */
-    comm_close(fd);
+    if (list->removeFD(fd))	/* might delete list */
+        comm_close(fd);
 }
 
 void
@@ -170,8 +171,8 @@ IdleConnList::timeout(int fd, void *data)
 {
     debugs(48, 3, "IdleConnList::timeout: FD " << fd);
     IdleConnList *list = (IdleConnList *) data;
-    list->removeFD(fd);	/* might delete list */
-    comm_close(fd);
+    if (list->removeFD(fd))	/* might delete list */
+        comm_close(fd);
 }
 
 /* ========== PconnPool PRIVATE FUNCTIONS ============================================ */
@@ -309,9 +310,9 @@ PconnPool::pop(const char *host, u_short port, const char *domain, Ip::Address &
 
     if (fd >= 0) {
         list->clearHandlers(fd);
-        list->removeFD(fd);	/* might delete list */
 
-        if (!isRetriable) {
+        /* might delete list */
+        if (list->removeFD(fd) && !isRetriable) {
             comm_close(fd);
             return -1;
         }
