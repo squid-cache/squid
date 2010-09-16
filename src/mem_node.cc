@@ -48,7 +48,7 @@ static ptrdiff_t
 makeMemNodeDataOffset()
 {
     mem_node *p = 0L;
-    return &p->data;
+    return ptrdiff_t(&p->data);
 }
 
 /*
