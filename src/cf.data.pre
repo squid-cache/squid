@@ -397,7 +397,7 @@ DOC_START
 #auth_param digest nonce_max_count 50
 #
 #auth_param basic program <uncomment and complete this line>
-#auth_param basic children 5 stratup=5 idle=1
+#auth_param basic children 5 startup=5 idle=1
 #auth_param basic realm Squid proxy-caching web server
 #auth_param basic credentialsttl 2 hours
 DOC_END
