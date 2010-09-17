@@ -8,7 +8,7 @@ Squid PAM Basic authentication helper
 .SH SYNOPSIS
 .if !'po4a'hide' .B "basic_pam_auth [\-n \""
 service name
-.if !'po4a'hide'.B "\"] [\-t "
+.if !'po4a'hide' .B "\"] [\-t "
 TTL
 .if !'po4a'hide' .B "] [\-o] [\-1]"
 .
@@ -20,12 +20,12 @@ authentication.
 .
 .SH OPTIONS
 .if !'po4a'hide' .TP 12
-.if !'po4a'hide' .BI "\-s " "service\-name"
+.if !'po4a'hide' .B "\-s " "service\-name"
 Specifies the PAM service name Squid uses, defaults to
 .B squid
 .
 .if !'po4a'hide' .TP
-.if !'po4a'hide' .BI "\-t " TTL
+.if !'po4a'hide' .B "\-t " TTL
 Enables persistent PAM connections where the connection to the PAM
 database is kept open and reused for new logins. The TTL specifies
 how long the connection will be kept open (in seconds).  Default is
@@ -34,7 +34,7 @@ persistent PAM connections is slightly outside the PAM
 specification and may not work with all PAM configurations.
 .
 .if !'po4a'hide' .TP
-.if !'po4a'hide' .BI \-o
+.if !'po4a'hide' .B \-o
 Do not perform the PAM account management group (account
 expiration etc)
 .
