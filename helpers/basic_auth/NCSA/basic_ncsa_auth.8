@@ -22,7 +22,9 @@ The only parameter is the password file.
 It must have permissions to be read by the user that Squid is running as.
 .
 .SH CONFIGURATION
-.if !'po4a'hide'  .B basic_ncsa_auth /etc/squid/squid.pass
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B basic_ncsa_auth /etc/squid/squid.pass
+.if !'po4a'hide' .RE
 .PP
 .B basic_ncsa_auth
 must have access to the password file to be executed.
@@ -35,17 +37,17 @@ Based on original documentation by
 .if !'po4a'hide' .I Rodrigo Rubira Branco <rrbranco@br.ibm.com>
 .
 .SH COPYRIGHT
-.RS
+.PP
 This file is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See
 the GNU General Public License for more details.
 .
+.PP
 You should have received a copy of the GNU General Public License
 along with this file; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA 02111\-1307 USA
-.RE
 .
 .SH QUESTIONS
 Questions on the usage of this program can be sent to the
