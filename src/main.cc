@@ -113,6 +113,10 @@ void WINAPI WIN32_svcHandler(DWORD);
 
 #endif
 
+#ifndef SQUID_BUILD_INFO
+#define SQUID_BUILD_INFO ""
+#endif
+
 /** for error reporting from xmalloc and friends */
 SQUIDCEXTERN void (*failure_notify) (const char *);
 
@@ -531,7 +535,10 @@ mainParseOptions(int argc, char *argv[])
         case 'v':
             /** \par v
              * Display squid version and build information. Then exit. */
-            printf("Squid Cache: Version %s\nconfigure options: %s\n", version_string, SQUID_CONFIGURE_OPTIONS);
+            printf("Squid Cache: Version %s\n" ,version_string);
+            if (strlen(SQUID_BUILD_INFO))
+                printf("%s\n",SQUID_BUILD_INFO);
+            printf( "configure options: %s\n", SQUID_CONFIGURE_OPTIONS);
 
 #if USE_WIN32_SERVICE
 

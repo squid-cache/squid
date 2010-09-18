@@ -40,7 +40,7 @@ MAKETEST="distcheck"
 #   --with-valgrind-debug \
 #
 #
-OPTS=" \
+SQUID_CONFIGURE_FLAGS=" \
 	--enable-loadable-modules \
 	--enable-gnuregex \
 	--enable-optimizations \
@@ -94,7 +94,6 @@ OPTS=" \
 	--enable-translation \
 	--enable-zph-qos \
 	--enable-esi \
- \
 	--with-aio \
 	--with-build-environment=default \
 	--with-dl \
@@ -104,7 +103,8 @@ OPTS=" \
 	--with-large-files \
 	--with-pic \
 	--with-pthreads \
+	--enable-build-info=squid\ test\ build \
 	"
 
 # Fix the distclean testing.
-export DISTCHECK_CONFIGURE_FLAGS="${OPTS}"
+export SQUID_CONFIGURE_FLAGS

@@ -310,6 +310,9 @@ fi
 SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cc_arg_pipe"
 SQUID_CFLAGS="$SQUID_CFLAGS $squid_cv_cc_arg_pipe"
 
+# possibly include some build info tag into squid -v
+SQUID_EMBED_BUILD_INFO
+
 AC_ARG_ENABLE(optimizations,
   AS_HELP_STRING([--disable-optimizations],
                  [Do not compile Squid with compiler optimizations enabled.
