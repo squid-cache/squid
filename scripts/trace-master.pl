@@ -35,6 +35,9 @@ while (<STDIN>) {
 		&enterJob($inside);
 		&updateJob($inside, $entering) if defined $entering;
 		undef $entering;
+	} 
+	elsif (!$inside && /\b(?:async|job|icapx)(\d+)\b/o) {
+		updateJob($1, "$_\n"); # isolated line
 	}
 
 	next unless $inside;	
