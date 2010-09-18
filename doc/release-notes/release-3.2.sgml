@@ -447,23 +447,26 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>--enable-auth-basic[=HELPERS]</tag>
 	<p>Specified without any parameters all helpers will be auto-built.
-	<p>With an explicit empty list <em>=""</em> protocol suport will be built but no helpers.
+	<p>With an explicit empty list <em>=""</em> protocol support will be built but no helpers.
 	<p>With an explicit list protocol support and just those helpers will be built.
 
 	<tag>--enable-auth-digest[=HELPERS]</tag>
 	<p>Specified without any parameters all helpers will be auto-built.
-	<p>With an explicit empty list <em>=""</em> protocol suport will be built but no helpers.
+	<p>With an explicit empty list <em>=""</em> protocol support will be built but no helpers.
 	<p>With an explicit list protocol support and just those helpers will be built.
 
 	<tag>--enable-auth-negotiate</tag>
 	<p>Specified without any parameters all helpers will be auto-built.
-	<p>With an explicit empty list <em>=""</em> protocol suport will be built but no helpers.
+	<p>With an explicit empty list <em>=""</em> protocol support will be built but no helpers.
 	<p>With an explicit list protocol support and just those helpers will be built.
 
 	<tag>--enable-auth-ntlm</tag>
 	<p>Specified without any parameters all helpers will be auto-built.
-	<p>With an explicit empty list <em>=""</em> protocol suport will be built but no helpers.
+	<p>With an explicit empty list <em>=""</em> protocol support will be built but no helpers.
 	<p>With an explicit list protocol support and just those helpers will be built.
+
+	<tag>--enable-build-info</tag>
+	<p>Add an additional string in the output of "squid -v".
 
 	<tag>--enable-eui</tag>
 	<p>Enable Support for handling EUI operations.

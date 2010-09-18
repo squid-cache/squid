@@ -183,7 +183,7 @@ fi
 AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
   AC_ARG_ENABLE([build-info],
     AS_HELP_STRING([--enable-build-info="build info string"],
-      [Add an additional string in the output of "string -v".
+      [Add an additional string in the output of "squid -v".
        Default is not to add anything. If the string is not specified,
        tries to determine nick and revision number of the current 
        bazaar branch]),[
