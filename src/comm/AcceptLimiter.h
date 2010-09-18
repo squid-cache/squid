@@ -29,7 +29,7 @@ public:
     void defer(Comm::ConnAcceptor *afd);
 
     /** remove all records of an acceptor. Only to be called by the ConnAcceptor::swanSong() */
-    void removeDead(Comm::ConnAcceptor *afd);
+    void removeDead(const Comm::ConnAcceptor *afd);
 
     /** try to accept and begin processing any delayed client connections. */
     void kick();
