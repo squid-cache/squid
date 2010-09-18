@@ -89,7 +89,7 @@ Comm::ConnAcceptor::unsubscribe(const char *reason)
 void
 Comm::ConnAcceptor::start()
 {
-    debugs(5, 5, HERE << conn << " AsyncCall: " << theCallSub);
+    debugs(5, 5, HERE << conn << " AsyncCall Subscription: " << theCallSub);
 
     Must(IsConnOpen(conn));
 
@@ -103,7 +103,7 @@ Comm::ConnAcceptor::start()
 bool
 Comm::ConnAcceptor::doneAll() const
 {
-    // stio when FD is closed
+    // stop when FD is closed
     if (!IsConnOpen(conn)) {
         return AsyncJob::doneAll();
     }
@@ -230,13 +230,13 @@ Comm::ConnAcceptor::acceptOne()
 
         if (status == COMM_NOMESSAGE) {
             /* register interest again */
-            debugs(5, 5, HERE << "try later: " << conn << " handler: " << theCallSub);
+            debugs(5, 5, HERE << "try later: " << conn << " handler Subscription: " << theCallSub);
             commSetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
             return;
         }
 
         // A non-recoverable error; notify the caller */
-        debugs(5, 5, HERE << "non-recoverable error: " << conn << " handler: " << theCallSub);
+        debugs(5, 5, HERE << "non-recoverable error: " << conn << " handler Subscription: " << theCallSub);
         notify(status, newConnDetails);
         mustStop("Listener socket closed");
         return;
@@ -244,7 +244,7 @@ Comm::ConnAcceptor::acceptOne()
 
     debugs(5, 5, HERE << "Listener: " << conn <<
            " accepted new connection " << newConnDetails <<
-           " handler: " << theCallSub);
+           " handler Subscription: " << theCallSub);
     notify(status, newConnDetails);
 }
 
