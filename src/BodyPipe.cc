@@ -346,7 +346,7 @@ BodyPipe::undoCheckOut(Checkout &checkout)
     // raw buffers should always check them in (possibly unchanged)
     // instead of relying on the automated undo mechanism of Checkout.
     // The code can always use a temporary buffer to accomplish that.
-    assert(checkout.checkedOutSize == currentSize);
+    Must(checkout.checkedOutSize == currentSize);
 }
 
 // TODO: Optimize: inform consumer/producer about more data/space only if
@@ -463,8 +463,13 @@ BodyPipeCheckout::BodyPipeCheckout(BodyPipe &aPipe): pipe(aPipe),
 
 BodyPipeCheckout::~BodyPipeCheckout()
 {
-    if (!checkedIn)
-        pipe.undoCheckOut(*this);
+    if (!checkedIn) {
+        // Do not pipe.undoCheckOut(*this) because it asserts or throws
+        // TODO: consider implementing the long-term solution discussed at
+        // http://www.mail-archive.com/squid-dev@squid-cache.org/msg07910.html
+        debugs(91,2, HERE << "Warning: cannot undo BodyPipeCheckout");
+        pipe.checkIn(*this);
+    }
 }
 
 void
