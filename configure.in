@@ -1040,12 +1040,24 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
   esac
   AC_CHECK_HEADERS( \
     Iphlpapi.h \
-    net/if_arp.h \
     net/if_dl.h \
-    net/route.h \
     sys/sockio.h \
-    sys/sysctl.h
+    sys/param.h
   )
+  AC_CHECK_HEADERS( \
+    net/if_arp.h \
+    net/route.h, 
+  [], [], [[
+#include <sys/types.h>
+#include <sys/socket.h>
+]])
+
+  # openbsd requires sys/param.h to be included before sysctl.h
+  AC_CHECK_HEADERS(sys/sysctl.h, [], [],
+  [[#if HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
+  ]])
 fi
 AC_MSG_NOTICE([EUI (MAC address) controls enabled: $enable_eui])
 SQUID_DEFINE_BOOL(USE_SQUID_EUI,$enable_eui,
