@@ -11,4 +11,6 @@ ext_edirectory_userip_acl_LDADD = \
 	$(LBERLIB) \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = config.test
+man_MANS = ext_edirectory_userip_acl.8
+
+EXTRA_DIST = config.test ext_edirectory_userip_acl.8
