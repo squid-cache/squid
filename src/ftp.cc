@@ -1847,7 +1847,9 @@ FtpStateData::loginFailed()
         } else if (ctrl.replycode == 421) {
             err = errorCon(ERR_FTP_UNAVAILABLE, HTTP_SERVICE_UNAVAILABLE, fwd->request);
         }
-    } else {
+    }
+
+    if (err) {
         ftpFail(this);
         return;
     }
