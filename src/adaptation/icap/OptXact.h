@@ -60,7 +60,7 @@ protected:
     virtual void handleCommRead(size_t size);
 
     void makeRequest(MemBuf &buf);
-    HttpMsg *parseResponse();
+    bool parseResponse();
 
     void startReading();
 
