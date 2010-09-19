@@ -124,13 +124,13 @@ private:
         sock_family = 0;
         memset(ipaddr, '\0', MAX_IPSTRLEN);
         memset(desc,'\0',FD_DESC_SZ);
-        memset(flags,0,sizeof(_fde_flags));
+        memset(&flags,0,sizeof(_fde_flags));
         bytes_read = 0;
         bytes_written = 0;
         pconn.uses = 0;
         pconn.pool = NULL;
         epoll_state = 0;
-        memset(disk, 0, sizeof(_fde_disk));
+        memset(&disk, 0, sizeof(_fde_disk));
         read_handler = NULL;
         read_data = NULL;
         write_handler = NULL;
