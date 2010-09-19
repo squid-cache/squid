@@ -1407,13 +1407,11 @@ HttpStateData::maybeReadVirginBody()
     }
 }
 
-/*
- * This will be called when request write is complete.
- */
+/// called after writing the very last request byte (body, last-chunk, etc)
 void
-HttpStateData::sendComplete(const CommIoCbParams &io)
+HttpStateData::wroteLast(const CommIoCbParams &io)
 {
-    debugs(11, 5, "httpSendComplete: FD " << fd << ": size " << io.size << ": errflag " << io.flag << ".");
+    debugs(11, 5, HERE << "FD " << fd << ": size " << io.size << ": errflag " << io.flag << ".");
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
@@ -1437,6 +1435,13 @@ HttpStateData::sendComplete(const CommIoCbParams &io)
         return;
     }
 
+    sendComplete();
+}
+
+/// successfully wrote the entire request (including body, last-chunk, etc.)
+void
+HttpStateData::sendComplete()
+{
     /*
      * Set the read timeout here because it hasn't been set yet.
      * We only set the read timeout after the request has been
@@ -1740,6 +1745,12 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             hdr_out->putStr(HDR_FRONT_END_HTTPS, "On");
     }
 
+    if (flags.chunked_request) {
+        // Do not just copy the original value so that if the client-side
+        // starts decode other encodings, this code may remain valid.
+        hdr_out->putStr(HDR_TRANSFER_ENCODING, "chunked");
+    }
+
     /* Now mangle the headers. */
     if (Config2.onoff.mangle_request_headers)
         httpHdrMangleList(hdr_out, request, ROR_REQUEST);
@@ -2000,11 +2011,16 @@ HttpStateData::sendRequest()
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
         requestSender = JobCallback(11,5,
                                     Dialer, this, HttpStateData::sentRequestBody);
+
+        Must(!flags.chunked_request);
+        // Preserve original chunked encoding unless we learned the length.
+        if (orig_request->header.chunked() && orig_request->content_length < 0)
+            flags.chunked_request = 1;
     } else {
         assert(!requestBodySource);
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
         requestSender = JobCallback(11,5,
-                                    Dialer, this,  HttpStateData::sendComplete);
+                                    Dialer, this,  HttpStateData::wroteLast);
     }
 
     if (_peer != NULL) {
@@ -2052,6 +2068,40 @@ HttpStateData::sendRequest()
     return true;
 }
 
+bool
+HttpStateData::getMoreRequestBody(MemBuf &buf)
+{
+    // parent's implementation can handle the no-encoding case
+    if (!flags.chunked_request)
+        return ServerStateData::getMoreRequestBody(buf);
+
+    MemBuf raw;
+
+    Must(requestBodySource != NULL);
+    if (!requestBodySource->getMoreData(raw))
+        return false; // no request body bytes to chunk yet
+
+    // optimization: pre-allocate buffer size that should be enough
+    const mb_size_t rawDataSize = raw.contentSize();
+    // we may need to send: hex-chunk-size CRLF raw-data CRLF last-chunk
+    buf.init(16 + 2 + rawDataSize + 2 + 5, raw.max_capacity);
+
+    buf.Printf("%x\r\n", static_cast<unsigned int>(rawDataSize));
+    buf.append(raw.content(), rawDataSize);
+    buf.Printf("\r\n");
+
+    Must(rawDataSize > 0); // we did not accidently created last-chunk above
+
+    // Do not send last-chunk unless we successfully received everything
+    if (receivedWholeRequestBody) {
+        Must(!flags.sentLastChunk);
+        flags.sentLastChunk = true;
+        buf.append("0\r\n\r\n", 5);    
+    }
+
+    return true;
+}
+
 void
 httpStart(FwdState *fwd)
 {
@@ -2074,43 +2124,71 @@ httpStart(FwdState *fwd)
      */
 }
 
+/// if broken posts are enabled for the request, try to fix and return true
+bool
+HttpStateData::finishingBrokenPost()
+{
+#if USE_HTTP_VIOLATIONS
+    if (!Config.accessList.brokenPosts) {
+        debugs(11, 5, HERE << "No brokenPosts list");
+        return false;
+    }
+
+    ACLFilledChecklist ch(Config.accessList.brokenPosts, request, NULL);
+    if (!ch.fastCheck()) {
+        debugs(11, 5, HERE << "didn't match brokenPosts");
+        return false;
+    }
+
+    if (!canSend(fd)) {
+        debugs(11,2, HERE << "ignoring broken POST for closing FD " << fd);
+        assert(closeHandler != NULL);
+        return true; // prevent caller from proceeding as if nothing happened
+    }
+
+    debugs(11, 2, "finishingBrokenPost: fixing broken POST");
+    typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
+    requestSender = JobCallback(11,5,
+                                Dialer, this, HttpStateData::wroteLast);
+    comm_write(fd, "\r\n", 2, requestSender);
+    return true;
+#else
+    return false;
+#endif /* USE_HTTP_VIOLATIONS */
+}
+
+/// if needed, write last-chunk to end the request body and return true
+bool
+HttpStateData::finishingChunkedRequest()
+{
+    if (flags.sentLastChunk) {
+        debugs(11, 5, HERE << "already sent last-chunk");
+        return false;
+    }
+
+    Must(receivedWholeRequestBody); // or we should not be sending last-chunk
+    flags.sentLastChunk = true;
+
+    typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
+    requestSender = JobCallback(11,5,
+                                Dialer, this, HttpStateData::wroteLast);
+    comm_write(fd, "0\r\n\r\n", 5, requestSender);
+    return true;
+}
+
 void
 HttpStateData::doneSendingRequestBody()
 {
+    ServerStateData::doneSendingRequestBody();
     debugs(11,5, HERE << "doneSendingRequestBody: FD " << fd);
 
-#if USE_HTTP_VIOLATIONS
-    if (Config.accessList.brokenPosts) {
-        ACLFilledChecklist ch(Config.accessList.brokenPosts, request, NULL);
-        if (!ch.fastCheck()) {
-            debugs(11, 5, "doneSendingRequestBody: didn't match brokenPosts");
-            CommIoCbParams io(NULL);
-            io.fd=fd;
-            io.flag=COMM_OK;
-            sendComplete(io);
-        } else {
-            debugs(11, 2, "doneSendingRequestBody: matched brokenPosts");
-
-            if (!canSend(fd)) {
-                debugs(11,2, HERE << "cannot send CRLF to closing FD " << fd);
-                assert(closeHandler != NULL);
-                return;
-            }
-
-            typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-            AsyncCall::Pointer call = JobCallback(11,5,
-                                                  Dialer, this, HttpStateData::sendComplete);
-            comm_write(fd, "\r\n", 2, call);
-        }
+    // do we need to write something after the last body byte?
+    if (flags.chunked_request && finishingChunkedRequest())
         return;
-    }
-    debugs(11, 5, "doneSendingRequestBody: No brokenPosts list");
-#endif /* USE_HTTP_VIOLATIONS */
+    if (!flags.chunked_request && finishingBrokenPost())
+        return;
 
-    CommIoCbParams io(NULL);
-    io.fd=fd;
-    io.flag=COMM_OK;
-    sendComplete(io);
+    sendComplete();
 }
 
 // more origin request body data is available
@@ -2149,11 +2227,7 @@ void
 HttpStateData::handleRequestBodyProducerAborted()
 {
     ServerStateData::handleRequestBodyProducerAborted();
-    // XXX: SendComplete(COMM_ERR_CLOSING) does little. Is it enough?
-    CommIoCbParams io(NULL);
-    io.fd=fd;
-    io.flag=COMM_ERR_CLOSING;
-    sendComplete(io);
+    abortTransaction("request body producer aborted");
 }
 
 // called when we wrote request headers(!) or a part of the body

@@ -768,7 +768,9 @@ struct _http_state_flags {
     unsigned int request_sent:1;
     unsigned int do_next_read:1;
     unsigned int consume_body_data:1;
-    unsigned int chunked:1;
+    unsigned int chunked:1; ///< reading a chunked response; TODO: rename
+    unsigned int chunked_request:1; ///< writing a chunked request
+    unsigned int sentLastChunk:1; ///< do not try to write last-chunk again
 };
 
 struct _ipcache_addrs {

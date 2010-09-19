@@ -51,12 +51,14 @@
 extern void purgeEntriesByUrl(HttpRequest * req, const char *url);
 
 
-ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateData"),requestSender(NULL)
+ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateData"),
+        requestSender(NULL),
 #if USE_ADAPTATION
-        , adaptedHeadSource(NULL)
-        , adaptationAccessCheckPending(false)
-        , startedAdaptation(false)
+        adaptedHeadSource(NULL),
+        adaptationAccessCheckPending(false),
+        startedAdaptation(false),
 #endif
+        receivedWholeRequestBody(false)
 {
     fwd = theFwdState;
     entry = fwd->entry;
@@ -320,6 +322,7 @@ ServerStateData::handleMoreRequestBodyAvailable()
 void
 ServerStateData::handleRequestBodyProductionEnded()
 {
+    receivedWholeRequestBody = true;
     if (!requestSender)
         doneSendingRequestBody();
     else
@@ -388,10 +391,13 @@ ServerStateData::sentRequestBody(const CommIoCbParams &io)
         return;
     }
 
-    if (requestBodySource->exhausted())
+    if (!requestBodySource->exhausted())
+        sendMoreRequestBody();
+    else
+    if (receivedWholeRequestBody)
         doneSendingRequestBody();
     else
-        sendMoreRequestBody();
+        debugs(9,3, HERE << "waiting for body production end or abort");
 }
 
 bool
@@ -414,7 +420,7 @@ ServerStateData::sendMoreRequestBody()
     }
 
     MemBuf buf;
-    if (requestBodySource->getMoreData(buf)) {
+    if (getMoreRequestBody(buf) && buf.contentSize() > 0) {
         debugs(9,3, HERE << "will write " << buf.contentSize() << " request body bytes");
         typedef CommCbMemFunT<ServerStateData, CommIoCbParams> Dialer;
         requestSender = JobCallback(93,3,
@@ -424,6 +430,15 @@ ServerStateData::sendMoreRequestBody()
         debugs(9,3, HERE << "will wait for more request body bytes or eof");
         requestSender = NULL;
     }
+}
+
+/// either fill buf with available [encoded] request body bytes or return false
+bool
+ServerStateData::getMoreRequestBody(MemBuf &buf)
+{
+    // default implementation does not encode request body content
+    Must(requestBodySource != NULL);
+    return requestBodySource->getMoreData(buf);
 }
 
 // Compares hosts in urls, returns false if different, no sheme, or no host.

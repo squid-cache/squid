@@ -97,6 +97,7 @@ public:
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer );
     virtual void noteBodyConsumerAborted(BodyPipe::Pointer );
 #endif
+    virtual bool getMoreRequestBody(MemBuf &buf);
     virtual void processReplyBody() = 0;
 
 //AsyncJob virtual methods
@@ -194,6 +195,7 @@ protected:
     bool adaptationAccessCheckPending;
     bool startedAdaptation;
 #endif
+    bool receivedWholeRequestBody; ///< handleRequestBodyProductionEnded called
 
 private:
     void quitIfAllDone();            /**< successful termination */
