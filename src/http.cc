@@ -42,6 +42,7 @@
 
 #include "acl/FilledChecklist.h"
 #include "auth/UserRequest.h"
+#include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
@@ -49,6 +50,7 @@
 #include "errorpage.h"
 #include "fde.h"
 #include "http.h"
+#include "HttpControlMsg.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
 #include "HttpHdrScTarget.h"
@@ -705,23 +707,9 @@ HttpStateData::processReplyHeader()
         readBuf->consume(header_bytes_read);
     }
 
-    /* Skip 1xx messages for now. Advertised in Via as an internal 1.0 hop */
     if (newrep->sline.protocol == PROTO_HTTP && newrep->sline.status >= 100 && newrep->sline.status < 200) {
-
-#if WHEN_HTTP11_EXPECT_HANDLED
-        /* When HTTP/1.1 check if the client is expecting a 1xx reply and maybe pass it on */
-        if (orig_request->header.has(HDR_EXPECT)) {
-            // TODO: pass to the client anyway?
-        }
-#endif
-        delete newrep;
-        debugs(11, 2, HERE << "1xx headers consume " << header_bytes_read << " bytes header.");
-        header_bytes_read = 0;
-        if (reply_bytes_read > 0)
-            debugs(11, 2, HERE << "1xx headers consume " << reply_bytes_read << " bytes reply.");
-        reply_bytes_read = 0;
+        handle1xx(newrep);
         ctx_exit(ctx);
-        processReplyHeader();
         return;
     }
 
@@ -751,6 +739,64 @@ HttpStateData::processReplyHeader()
 
     ctx_exit(ctx);
 }
+
+/// ignore or start forwarding the 1xx response (a.k.a., control message)
+void
+HttpStateData::handle1xx(HttpReply *reply)
+{
+    HttpMsgPointerT<HttpReply> msg(reply); // will destroy reply if unused
+
+    // one 1xx at a time: we must not be called while waiting for previous 1xx
+    Must(!flags.handling1xx);
+    flags.handling1xx = true;
+
+    if (!orig_request->canHandle1xx()) {
+        debugs(11, 2, HERE << "ignoring client-unsupported 1xx");
+        proceedAfter1xx();
+        return;
+    }
+
+#if USE_HTTP_VIOLATIONS
+    // check whether the 1xx response forwarding is allowed by squid.conf
+    if (Config.accessList.reply) {
+        ACLFilledChecklist ch(Config.accessList.reply, request, NULL);
+        ch.reply = HTTPMSGLOCK(reply);
+        if (!ch.fastCheck()) { // TODO: support slow lookups?
+            debugs(11, 3, HERE << "ignoring denied 1xx");
+            proceedAfter1xx();
+            return;
+		}
+    }
+#endif // USE_HTTP_VIOLATIONS
+
+    debugs(11, 2, HERE << "forwarding 1xx to client");
+
+    // the Sink will use this to call us back after writing 1xx to the client
+    typedef NullaryMemFunT<HttpStateData> CbDialer;
+    const AsyncCall::Pointer cb = JobCallback(11, 3, CbDialer, this,
+                                              HttpStateData::proceedAfter1xx);
+    CallJobHere1(11, 4, orig_request->clientConnection, ConnStateData,
+                 ConnStateData::sendControlMsg, HttpControlMsg(msg, cb));
+    // If the call is not fired, then the Sink is gone, and HttpStateData
+    // will terminate due to an aborted store entry or another similar error.
+    // If we get stuck, it is not handle1xx fault if we could get stuck
+    // for similar reasons without a 1xx response.
+}
+
+/// restores state and resumes processing after 1xx is ignored or forwarded
+void
+HttpStateData::proceedAfter1xx()
+{
+    Must(flags.handling1xx);
+
+    debugs(11, 2, HERE << "consuming " << header_bytes_read <<
+        " header and " << reply_bytes_read << " body bytes read after 1xx");
+    header_bytes_read = 0;
+    reply_bytes_read = 0;
+
+    CallJobHere(11, 3, this, HttpStateData, HttpStateData::processReply);
+}
+
 
 /**
  * returns true if the peer can support connection pinning
@@ -1132,6 +1178,20 @@ HttpStateData::readReply(const CommIoCbParams &io)
         }
     }
 
+    processReply();
+}
+
+/// processes the already read and buffered response data, possibly after
+/// waiting for asynchronous 1xx control message processing
+void
+HttpStateData::processReply() {
+
+    if (flags.handling1xx) { // we came back after handling a 1xx response
+        debugs(11, 5, HERE << "done with 1xx handling");
+        flags.handling1xx = false;
+        Must(!flags.headers_parsed);
+    }
+
     if (!flags.headers_parsed) { // have not parsed headers yet?
         PROF_start(HttpStateData_processReplyHeader);
         processReplyHeader();
@@ -1155,6 +1215,12 @@ HttpStateData::readReply(const CommIoCbParams &io)
 bool
 HttpStateData::continueAfterParsingHeader()
 {
+    if (flags.handling1xx) {
+        debugs(11, 5, HERE << "wait for 1xx handling");
+        Must(!flags.headers_parsed);
+        return false;
+    }
+
     if (!flags.headers_parsed && !eof) {
         debugs(11, 9, HERE << "needs more at " << readBuf->contentSize());
         flags.do_next_read = 1;
