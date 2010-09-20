@@ -1583,11 +1583,13 @@ _comm_close(int fd, char const *file, int line)
         commStopHalfClosedMonitor(fd);
     commSetTimeout(fd, -1, NULL, NULL);
 
-    // notify read/write handlers
+    // notify read/write handlers after canceling select reservations, if any
     if (commio_has_callback(fd, IOCB_WRITE, COMMIO_FD_WRITECB(fd))) {
+        commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
         commio_finish_callback(fd, COMMIO_FD_WRITECB(fd), COMM_ERR_CLOSING, errno);
     }
     if (commio_has_callback(fd, IOCB_READ, COMMIO_FD_READCB(fd))) {
+        commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
         commio_finish_callback(fd, COMMIO_FD_READCB(fd), COMM_ERR_CLOSING, errno);
     }
 
