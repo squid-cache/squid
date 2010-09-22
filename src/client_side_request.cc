@@ -1030,7 +1030,7 @@ ClientRequestContext::clientRedirectDone(char *result)
             if (!(new_request = HttpRequest::CreateFromUrlAndMethod(result, old_request->method)))
                 debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
                        old_request->method << " " << result << " HTTP/1.1");
-       }
+        }
     }
 
     if (new_request) {
