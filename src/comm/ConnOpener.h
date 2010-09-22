@@ -57,7 +57,7 @@ private:
     time_t connectTimeout_;
 
     /// time at which this series of connection attempts was started.
-    time_t connStart_;
+    time_t connectStart_;
 
     /// handles to calls which we may need to cancel.
     struct Calls {

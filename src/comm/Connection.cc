@@ -23,7 +23,8 @@ Comm::Connection::Connection() :
 Comm::Connection::~Connection()
 {
     close();
-    cbdataReferenceDone(getPeer());
+    if (getPeer())
+        cbdataReferenceDone(_peer);
 }
 
 Comm::ConnectionPointer
@@ -36,7 +37,7 @@ Comm::Connection::copyDetails() const
     c->peerType = peerType;
     c->tos = tos;
     c->flags = flags;
- 
+
     // ensure FD is not open in the new copy.
     c->fd = -1;
 
@@ -57,7 +58,7 @@ Comm::Connection::close()
     }
 }
 
-peer *
+peer * const
 Comm::Connection::getPeer() const
 {
     if (cbdataReferenceValid(_peer))
