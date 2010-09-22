@@ -136,14 +136,12 @@ Comm::ConnOpener::start()
         }
     }
 
-    typedef CommCbMemFunT<Comm::ConnOpener, CommConnectCbParams> Dialer;
-    calls_.earlyAbort_ = asyncCall(5, 4, "Comm::ConnOpener::earlyAbort",
-                                   Dialer(this, &Comm::ConnOpener::earlyAbort));
+    typedef CommCbMemFunT<Comm::ConnOpener, CommConnectCbParams> abortDialer;
+    calls_.earlyAbort_ = JobCallback(5, 4, abortDialer, this, Comm::ConnOpener::earlyAbort);
     comm_add_close_handler(conn_->fd, calls_.earlyAbort_);
 
-    typedef CommCbMemFunT<Comm::ConnOpener, CommTimeoutCbParams> Dialer;
-    calls_.timeout_ = asyncCall(5, 4, "Comm::ConnOpener::timeout",
-                                Dialer(this, &Comm::ConnOpener::timeout));
+    typedef CommCbMemFunT<Comm::ConnOpener, CommTimeoutCbParams> timeoutDialer;
+    calls_.timeout_ = JobCallback(5, 4, timeoutDialer, this, Comm::ConnOpener::timeout);
     debugs(5, 3, HERE << conn_ << " timeout " << connectTimeout_);
     commSetTimeout(conn_->fd, connectTimeout_, calls_.timeout_);
 
