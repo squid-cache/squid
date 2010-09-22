@@ -41,7 +41,8 @@ Comm::AcceptLimiter::kick()
     debugs(5, 5, HERE << " size=" << deferred.size());
     while (deferred.size() > 0 && fdNFree() >= RESERVED_FD) {
         /* NP: shift() is equivalent to pop_front(). Giving us a FIFO queue. */
-        if ((ConnAcceptor *temp = deferred.shift()) != NULL) {
+        ConnAcceptor *temp = deferred.shift();
+        if (temp != NULL) {
             debugs(5, 5, HERE << " doing one.");
             temp->isLimited--;
             temp->acceptNext();

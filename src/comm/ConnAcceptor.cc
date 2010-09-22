@@ -259,7 +259,7 @@ Comm::ConnAcceptor::acceptNext()
 // XXX: obsolete comment?
 // NP: can't be a const function because syncWithComm() side effects hit theCallSub->callback().
 void
-Comm::ConnAcceptor::notify(comm_err_t flag, const Comm::ConnectionPointer &newConnDetails) const
+Comm::ConnAcceptor::notify(comm_err_t flag, const Comm::ConnectionPointer &newConnDetails)
 {
     // listener socket handlers just abandon the port with COMM_ERR_CLOSING
     // it should only happen when this object is deleted...
