@@ -23,7 +23,7 @@ Comm::Connection::Connection() :
 Comm::Connection::~Connection()
 {
     close();
-    cbdataReferenceDone(_peer);
+    cbdataReferenceDone(getPeer());
 }
 
 Comm::ConnectionPointer
@@ -41,7 +41,7 @@ Comm::Connection::copyDetails() const
     c->fd = -1;
 
     // ensure we have a cbdata reference to _peer not a straight ptr copy.
-    c->_peer = cbdataReference(_peer);
+    c->_peer = cbdataReference(getPeer());
 
     return c;
 }
@@ -52,23 +52,30 @@ Comm::Connection::close()
     if (isOpen()) {
         comm_close(fd);
         fd = -1;
-        if (_peer)
-            _peer->stats.conn_open--;
+        if (getPeer())
+            getPeer()->stats.conn_open--;
     }
+}
+
+peer *
+Comm::Connection::getPeer() const
+{
+    if (cbdataReferenceValid(_peer))
+        return _peer;
+
+    return NULL;
 }
 
 void
 Comm::Connection::setPeer(peer *p)
 {
     /* set to self. nothing to do. */
-    if (_peer == p)
+    if (getPeer() == p)
         return;
 
     /* clear any previous ptr */
-    if (_peer) {
+    if (getPeer())
         cbdataReferenceDone(_peer);
-        _peer = NULL;
-    }
 
     /* set the new one (unless it is NULL */
     if (p) {
