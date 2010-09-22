@@ -33,11 +33,13 @@ private:
     ConnOpener(const ConnOpener &);
     ConnOpener & operator =(const ConnOpener &c);
 
-    void connect(const CommConnectCbParams &unused);
     void earlyAbort(const CommConnectCbParams &);
-    void timeout(const CommTimeoutCbParams &unused);
+    void timeout(const CommTimeoutCbParams &);
     void doneConnecting(comm_err_t status, int xerrno);
-    static void ConnectRetry(int fd, void *data);
+    static void InProgressConnectRetry(int fd, void *data);
+    static void DelayedConnectRetry(void *data);
+    void connect();
+    void connected();
     void lookupLocalAddress();
 
 private:
@@ -59,7 +61,6 @@ private:
 
     /// handles to calls which we may need to cancel.
     struct Calls {
-        AsyncCall::Pointer connect_;
         AsyncCall::Pointer earlyAbort_;
         AsyncCall::Pointer timeout_;
     } calls_;

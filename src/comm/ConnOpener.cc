@@ -3,7 +3,7 @@
  */
 
 #include "config.h"
-#include "base/TextException.h"
+//#include "base/TextException.h"
 #include "comm/ConnOpener.h"
 #include "comm/Connection.h"
 #include "comm.h"
@@ -23,7 +23,7 @@ Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &c, AsyncCall::Pointer &han
         totalTries_(0),
         failRetries_(0),
         connectTimeout_(ctimeout),
-        connStart_(0)
+        connectStart_(0)
 {}
 
 Comm::ConnOpener::~ConnOpener()
@@ -64,9 +64,13 @@ Comm::ConnOpener::swanSong()
     // recover what we can from the job
     if (conn_ != NULL && conn_->isOpen()) {
         // it never reached fully open, so abort the FD
+        commSetSelect(conn_->fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+        commSetTimeout(conn_->fd, -1, NULL, NULL);
         conn_->close();
-        fd_table[conn_->fd].flags.open = 0;
-        // inform the caller
+    }
+
+    if (callback_ != NULL) {
+        // inform the still-waiting caller we are dying
         doneConnecting(COMM_ERR_CONNECT, 0);
     }
 
@@ -130,38 +134,51 @@ Comm::ConnOpener::start()
             doneConnecting(COMM_ERR_CONNECT, 0);
             return;
         }
-
-        if (calls_.earlyAbort_ == NULL) {
-            typedef CommCbMemFunT<Comm::ConnOpener, CommConnectCbParams> Dialer;
-            calls_.earlyAbort_ = asyncCall(5, 4, "Comm::ConnOpener::earlyAbort",
-                                         Dialer(this, &Comm::ConnOpener::earlyAbort));
-            comm_add_close_handler(conn_->fd, calls_.earlyAbort_);
-        }
-
-        if (calls_.timeout_ == NULL) {
-            typedef CommCbMemFunT<Comm::ConnOpener, CommTimeoutCbParams> Dialer;
-            calls_.timeout_ = asyncCall(5, 4, "Comm::ConnOpener::timeout",
-                                      Dialer(this, &Comm::ConnOpener::timeout));
-            debugs(5, 3, HERE << conn_ << " timeout " << connectTimeout_);
-            commSetTimeout(conn_->fd, connectTimeout_, calls_.timeout_);
-        }
-
-        if (connStart_ == 0) {
-            connStart_ = squid_curtime;
-        }
     }
 
     typedef CommCbMemFunT<Comm::ConnOpener, CommConnectCbParams> Dialer;
-    calls_.connect_ = asyncCall(5, 4, "Comm::ConnOpener::connect",
-                                Dialer(this, &Comm::ConnOpener::connect));
-    ScheduleCallHere(calls_.connect_);
+    calls_.earlyAbort_ = asyncCall(5, 4, "Comm::ConnOpener::earlyAbort",
+                                   Dialer(this, &Comm::ConnOpener::earlyAbort));
+    comm_add_close_handler(conn_->fd, calls_.earlyAbort_);
+
+    typedef CommCbMemFunT<Comm::ConnOpener, CommTimeoutCbParams> Dialer;
+    calls_.timeout_ = asyncCall(5, 4, "Comm::ConnOpener::timeout",
+                                Dialer(this, &Comm::ConnOpener::timeout));
+    debugs(5, 3, HERE << conn_ << " timeout " << connectTimeout_);
+    commSetTimeout(conn_->fd, connectTimeout_, calls_.timeout_);
+
+    connectStart_ = squid_curtime;
+    connect();
+}
+
+void
+Comm::ConnOpener::connected()
+{
+    /*
+     * stats.conn_open is used to account for the number of
+     * connections that we have open to the peer, so we can limit
+     * based on the max-conn option.  We need to increment here,
+     * even if the connection may fail.
+     */
+    if (conn_->getPeer())
+        conn_->getPeer()->stats.conn_open++;
+
+    lookupLocalAddress();
+
+    /* TODO: remove these fd_table accesses. But old code still depends on fd_table flags to
+     *       indicate the state of a raw fd object being passed around.
+     *       Also, legacy code still depends on comm_local_port() with no access to Comm::Connection
+     *       when those are done comm_local_port can become one of our member functions to do the below.
+     */
+    fd_table[conn_->fd].flags.open = 1;
+    fd_table[conn_->fd].local_addr = conn_->local;
 }
 
 /** Make an FD connection attempt.
  * Handles the case(s) when a partially setup connection gets closed early.
  */
 void
-Comm::ConnOpener::connect(const CommConnectCbParams &unused)
+Comm::ConnOpener::connect()
 {
     Must(conn_ != NULL);
 
@@ -171,37 +188,21 @@ Comm::ConnOpener::connect(const CommConnectCbParams &unused)
 
     case COMM_INPROGRESS:
         // check for timeout FIRST.
-        if(squid_curtime - connStart_ > connectTimeout_) {
+        if (squid_curtime - connectStart_ > connectTimeout_) {
             debugs(5, 5, HERE << conn_ << ": * - ERR took too long already.");
+            conn_->close();
             doneConnecting(COMM_TIMEOUT, errno);
             return;
         } else {
             debugs(5, 5, HERE << conn_ << ": COMM_INPROGRESS");
-            commSetSelect(conn_->fd, COMM_SELECT_WRITE, Comm::ConnOpener::ConnectRetry, this, 0);
+            commSetSelect(conn_->fd, COMM_SELECT_WRITE, Comm::ConnOpener::InProgressConnectRetry, this, 0);
         }
         break;
 
     case COMM_OK:
         debugs(5, 5, HERE << conn_ << ": COMM_OK - connected");
 
-        /*
-         * stats.conn_open is used to account for the number of
-         * connections that we have open to the peer, so we can limit
-         * based on the max-conn option.  We need to increment here,
-         * even if the connection may fail.
-         */
-        if (conn_->getPeer())
-            conn_->getPeer()->stats.conn_open++;
-
-        lookupLocalAddress();
-
-        /* TODO: remove these fd_table accesses. But old code still depends on fd_table flags to
-         *       indicate the state of a raw fd object being passed around.
-         *       Also, legacy code still depends on comm_local_port() with no access to Comm::Connection
-         *       when those are done comm_local_port can become one of our member functions to do the below.
-         */
-        fd_table[conn_->fd].flags.open = 1;
-        fd_table[conn_->fd].local_addr = conn_->local;
+        connected();
 
         if (host_ != NULL)
             ipcacheMarkGoodAddr(host_, conn_->remote);
@@ -219,14 +220,16 @@ Comm::ConnOpener::connect(const CommConnectCbParams &unused)
 #endif
 
         // check for timeout FIRST.
-        if(squid_curtime - connStart_ > connectTimeout_) {
+        if(squid_curtime - connectStart_ > connectTimeout_) {
             debugs(5, 5, HERE << conn_ << ": * - ERR took too long already.");
+            conn_->close();
             doneConnecting(COMM_TIMEOUT, errno);
         } else if (failRetries_ < Config.connect_retries) {
-            ScheduleCallHere(calls_.connect_);
+            eventAdd("Comm::ConnOpener::DelayedConnectRetry", Comm::ConnOpener::DelayedConnectRetry, this, 0.05, 0);
         } else {
             // send ERROR back to the upper layer.
             debugs(5, 5, HERE << conn_ << ": * - ERR tried too many times already.");
+            conn_->close();
             doneConnecting(COMM_ERR_CONNECT, errno);
         }
     }
@@ -268,23 +271,39 @@ Comm::ConnOpener::earlyAbort(const CommConnectCbParams &io)
  * NP: When commSetTimeout accepts generic CommCommonCbParams this can die.
  */
 void
-Comm::ConnOpener::timeout(const CommTimeoutCbParams &unused)
+Comm::ConnOpener::timeout(const CommTimeoutCbParams &)
 {
-    ScheduleCallHere(calls_.connect_);
+    connect();
 }
 
 /* Legacy Wrapper for the retry event after COMM_INPROGRESS
- * TODO: As soon as comm IO accepts Async calls we can use a ConnOpener::connect call
+ * XXX: As soon as comm commSetSelect() accepts Async calls we can use a ConnOpener::connect call
  */
 void
-Comm::ConnOpener::ConnectRetry(int fd, void *data)
+Comm::ConnOpener::InProgressConnectRetry(int fd, void *data)
 {
     ConnOpener *cs = static_cast<Comm::ConnOpener *>(data);
+    assert(cs);
 
     // Ew. we are now outside the all AsyncJob protections.
     // get back inside by scheduling another call...
-    typedef CommCbMemFunT<Comm::ConnOpener, CommConnectCbParams> Dialer;
-    AsyncCall::Pointer call = asyncCall(5, 4, "Comm::ConnOpener::connect",
-                                        Dialer(cs, &Comm::ConnOpener::connect));
+    typedef NullaryMemFunT<Comm::ConnOpener> Dialer;
+    AsyncCall::Pointer call = JobCallback(5, 4, Dialer, cs, Comm::ConnOpener::connect);
+    ScheduleCallHere(call);
+}
+
+/* Legacy Wrapper for the retry event with small delay after errors.
+ * XXX: As soon as eventAdd() accepts Async calls we can use a ConnOpener::connect call
+ */
+void
+Comm::ConnOpener::DelayedConnectRetry(void *data)
+{
+    ConnOpener *cs = static_cast<Comm::ConnOpener *>(data);
+    assert(cs);
+
+    // Ew. we are now outside the all AsyncJob protections.
+    // get back inside by scheduling another call...
+    typedef NullaryMemFunT<Comm::ConnOpener> Dialer;
+    AsyncCall::Pointer call = JobCallback(5, 4, Dialer, cs, Comm::ConnOpener::connect);
     ScheduleCallHere(call);
 }

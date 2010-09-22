@@ -104,7 +104,7 @@ public:
      * The caller is responsible for all CBDATA operations regarding the
      * used of the pointer returned.
      */
-    peer * const getPeer() const { return _peer; }
+    peer * const getPeer() const;
 
     /** alter the stored peer pointer.
      * Perform appropriate CBDATA operations for locking the peer pointer
@@ -138,6 +138,10 @@ public:
     int flags;
 
 private:
+    // XXX: we need to call this member peer_ but the struct peer_ global type
+    //      behind peer* clashes despite our private Comm:: namespace
+    //      (it being global gets inherited here too).
+
     /** cache_peer data object (if any) */
     peer *_peer;
 };
