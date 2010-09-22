@@ -189,7 +189,7 @@ Comm::ConnAcceptor::doAccept(int fd, void *data)
         }
         commSetSelect(fd, COMM_SELECT_READ, Comm::ConnAcceptor::doAccept, afd, 0);
 
-    } catch(TextException &e) {
+    } catch(const TextException &e) {
         fatalf("FATAL: error while accepting new client connection: %s\n", e.message);
     } catch(...) {
         fatal("FATAL: error while accepting new client connection: [unkown]\n");
@@ -256,9 +256,10 @@ Comm::ConnAcceptor::acceptNext()
     acceptOne();
 }
 
+// XXX: obsolete comment?
 // NP: can't be a const function because syncWithComm() side effects hit theCallSub->callback().
 void
-Comm::ConnAcceptor::notify(comm_err_t flag, const Comm::ConnectionPointer &newConnDetails)
+Comm::ConnAcceptor::notify(comm_err_t flag, const Comm::ConnectionPointer &newConnDetails) const
 {
     // listener socket handlers just abandon the port with COMM_ERR_CLOSING
     // it should only happen when this object is deleted...
