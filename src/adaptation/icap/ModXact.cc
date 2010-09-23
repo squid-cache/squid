@@ -61,7 +61,7 @@ Adaptation::Icap::ModXact::ModXact(HttpMsg *virginHeader,
     // nothing to do because we are using temporary buffers
 
     // parsing; TODO: do not set until we parse, see ICAPOptXact
-    icapReply = HTTPMSGLOCK(new HttpReply);
+    icapReply = new HttpReply;
     icapReply->protoPrefix = "ICAP/"; // TODO: make an IcapReply class?
 
     debugs(93,7, HERE << "initialized." << status());
@@ -93,11 +93,11 @@ void Adaptation::Icap::ModXact::waitForService()
 {
     Must(!state.serviceWaiting);
     debugs(93, 7, HERE << "will wait for the ICAP service" << status());
-    state.serviceWaiting = true;
     typedef NullaryMemFunT<ModXact> Dialer;
     AsyncCall::Pointer call = JobCallback(93,5,
                                           Dialer, this, Adaptation::Icap::ModXact::noteServiceReady);
     service().callWhenReady(call);
+    state.serviceWaiting = true; // after callWhenReady() which may throw
 }
 
 void Adaptation::Icap::ModXact::noteServiceReady()
@@ -159,11 +159,14 @@ void Adaptation::Icap::ModXact::handleCommWroteHeaders()
     Must(state.writing == State::writingHeaders);
 
     // determine next step
-    if (preview.enabled())
-        state.writing = preview.done() ? State::writingPaused : State::writingPreview;
-    else if (virginBody.expected())
+    if (preview.enabled()) {
+        if (preview.done())
+            decideWritingAfterPreview("zero-size");
+        else
+            state.writing = State::writingPreview;
+    } else if (virginBody.expected()) {
         state.writing = State::writingPrime;
-    else {
+    } else {
         stopWriting(true);
         return;
     }
@@ -222,14 +225,22 @@ void Adaptation::Icap::ModXact::writePreviewBody()
 
     // change state once preview is written
 
-    if (preview.done()) {
-        debugs(93, 7, HERE << "wrote entire Preview body" << status());
+    if (preview.done())
+        decideWritingAfterPreview("body");
+}
 
-        if (preview.ieof())
-            stopWriting(true);
-        else
-            state.writing = State::writingPaused;
-    }
+/// determine state.writing after we wrote the entire preview
+void Adaptation::Icap::ModXact::decideWritingAfterPreview(const char *kind)
+{
+    if (preview.ieof()) // nothing more to write
+        stopWriting(true);
+    else if (state.parsing == State::psIcapHeader) // did not get a reply yet
+        state.writing = State::writingPaused; // wait for the ICAP server reply
+    else
+        stopWriting(true); // ICAP server reply implies no post-preview writing
+
+    debugs(93, 6, HERE << "decided on writing after " << kind << " preview" <<
+           status());
 }
 
 void Adaptation::Icap::ModXact::writePrimeBody()
@@ -850,32 +861,34 @@ void Adaptation::Icap::ModXact::prepEchoing()
 
     // allocate the adapted message and copy metainfo
     Must(!adapted.header);
-    HttpMsg *newHead = NULL;
+    {
+    HttpMsg::Pointer newHead;
     if (const HttpRequest *oldR = dynamic_cast<const HttpRequest*>(oldHead)) {
-        HttpRequest *newR = new HttpRequest;
+        HttpRequest::Pointer newR(new HttpRequest);
         newR->canonical = oldR->canonical ?
                           xstrdup(oldR->canonical) : NULL; // parse() does not set it
         newHead = newR;
     } else if (dynamic_cast<const HttpReply*>(oldHead)) {
-        HttpReply *newRep = new HttpReply;
-        newHead = newRep;
+        newHead = new HttpReply;
     }
-    Must(newHead);
+    Must(newHead != NULL);
+
     newHead->inheritProperties(oldHead);
 
     adapted.setHeader(newHead);
+    }
 
     // parse the buffer back
     http_status error = HTTP_STATUS_NONE;
 
-    Must(newHead->parse(&httpBuf, true, &error));
+    Must(adapted.header->parse(&httpBuf, true, &error));
 
-    Must(newHead->hdr_sz == httpBuf.contentSize()); // no leftovers
+    Must(adapted.header->hdr_sz == httpBuf.contentSize()); // no leftovers
 
     httpBuf.clean();
 
     debugs(93, 7, HERE << "cloned virgin message " << oldHead << " to " <<
-           newHead);
+           adapted.header);
 
     // setup adapted body pipe if needed
     if (oldHead->body_pipe != NULL) {
@@ -1083,6 +1096,11 @@ void Adaptation::Icap::ModXact::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 void Adaptation::Icap::ModXact::noteBodyConsumerAborted(BodyPipe::Pointer)
 {
     mustStop("adapted body consumer aborted");
+}
+
+Adaptation::Icap::ModXact::~ModXact()
+{
+    delete bodyParser;
 }
 
 // internal cleanup
@@ -1296,21 +1314,20 @@ void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *sec
     icapBuf.Printf("%s=%d, ", section, (int) httpBuf.contentSize());
 
     // begin cloning
-    HttpMsg *headClone = NULL;
+    HttpMsg::Pointer headClone;
 
     if (const HttpRequest* old_request = dynamic_cast<const HttpRequest*>(head)) {
-        HttpRequest* new_request = new HttpRequest;
-        assert(old_request->canonical);
+        HttpRequest::Pointer new_request(new HttpRequest);
+        Must(old_request->canonical);
         urlParse(old_request->method, old_request->canonical, new_request);
         new_request->http_ver = old_request->http_ver;
         headClone = new_request;
     } else if (const HttpReply *old_reply = dynamic_cast<const HttpReply*>(head)) {
-        HttpReply* new_reply = new HttpReply;
+        HttpReply::Pointer new_reply(new HttpReply);
         new_reply->sline = old_reply->sline;
         headClone = new_reply;
     }
-
-    Must(headClone);
+    Must(headClone != NULL);
     headClone->inheritProperties(head);
 
     HttpHeaderPos pos = HttpHeaderInitPos;
@@ -1327,7 +1344,7 @@ void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *sec
     // pack polished HTTP header
     packHead(httpBuf, headClone);
 
-    delete headClone;
+    // headClone unlocks and, hence, deletes the message we packed
 }
 
 void Adaptation::Icap::ModXact::packHead(MemBuf &httpBuf, const HttpMsg *head)

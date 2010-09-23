@@ -65,11 +65,10 @@ void Adaptation::Icap::OptXact::handleCommWrote(size_t size)
 // comm module read a portion of the ICAP response for us
 void Adaptation::Icap::OptXact::handleCommRead(size_t)
 {
-    if (HttpMsg *r = parseResponse()) {
+    if (parseResponse()) {
         icap_tio_finish = current_time;
         setOutcome(xoOpt);
-        sendAnswer(r);
-        icapReply = HTTPMSGLOCK(dynamic_cast<HttpReply*>(r));
+        sendAnswer(icapReply);
         Must(done()); // there should be nothing else to do
         return;
     }
@@ -77,24 +76,23 @@ void Adaptation::Icap::OptXact::handleCommRead(size_t)
     scheduleRead();
 }
 
-HttpMsg *Adaptation::Icap::OptXact::parseResponse()
+bool Adaptation::Icap::OptXact::parseResponse()
 {
     debugs(93, 5, HERE << "have " << readBuf.contentSize() << " bytes to parse" <<
            status());
     debugs(93, 5, HERE << "\n" << readBuf.content());
 
-    HttpReply *r = HTTPMSGLOCK(new HttpReply);
+    HttpReply::Pointer r(new HttpReply);
     r->protoPrefix = "ICAP/"; // TODO: make an IcapReply class?
 
-    if (!parseHttpMsg(r)) { // throws on errors
-        HTTPMSGUNLOCK(r);
-        return 0;
-    }
+    if (!parseHttpMsg(r)) // throws on errors
+        return false;
 
     if (httpHeaderHasConnDir(&r->header, "close"))
         reuseConnection = false;
 
-    return r;
+    icapReply = r;
+    return true;
 }
 
 void Adaptation::Icap::OptXact::swanSong()

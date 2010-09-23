@@ -52,7 +52,6 @@ Adaptation::Icap::Xaction::~Xaction()
     debugs(93,3, typeName << " destructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
     HTTPMSGUNLOCK(icapRequest);
-    HTTPMSGUNLOCK(icapReply);
 }
 
 Adaptation::Icap::ServiceRep &
