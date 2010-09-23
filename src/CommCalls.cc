@@ -74,10 +74,18 @@ CommIoCbParams::CommIoCbParams(void *aData): CommCommonCbParams(aData),
 bool
 CommIoCbParams::syncWithComm()
 {
+    // transition only: read/write legacy code does not know about conn, it just sets FD
+    if (fd >= 0) {
+        if (conn == NULL)
+            conn = new Comm::Connection;
+        if (conn->fd != fd)
+            conn->fd = fd;
+    }
+
     // change parameters if the call was scheduled before comm_close but
     // is being fired after comm_close
-    if (fd >= 0 && fd_table[fd].closing() && flag != COMM_ERR_CLOSING) {
-        debugs(5, 3, HERE << "converting late call to COMM_ERR_CLOSING: FD " << fd);
+    if (conn->fd >= 0 && fd_table[conn->fd].closing() && flag != COMM_ERR_CLOSING) {
+        debugs(5, 3, HERE << "converting late call to COMM_ERR_CLOSING: " << conn);
         flag = COMM_ERR_CLOSING;
         size = 0;
     }
@@ -175,7 +183,7 @@ CommIoCbPtrFun::CommIoCbPtrFun(IOCB *aHandler, const CommIoCbParams &aParams):
 void
 CommIoCbPtrFun::dial()
 {
-    handler(params.fd, params.buf, params.size, params.flag, params.xerrno, params.data);
+    handler(params.conn, params.buf, params.size, params.flag, params.xerrno, params.data);
 }
 
 void
