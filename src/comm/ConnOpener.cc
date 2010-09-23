@@ -61,11 +61,12 @@ Comm::ConnOpener::swanSong()
         calls_.timeout_ = NULL;
     }
 
-    // recover what we can from the job
+    // rollback what we can from the job state
     if (conn_ != NULL && conn_->isOpen()) {
-        // it never reached fully open, so abort the FD
+        // drop any handlers now to save a lot of cycles later
         commSetSelect(conn_->fd, COMM_SELECT_WRITE, NULL, NULL, 0);
         commSetTimeout(conn_->fd, -1, NULL, NULL);
+        // it never reached fully open, so abort the FD
         conn_->close();
     }
 

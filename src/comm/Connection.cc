@@ -23,8 +23,7 @@ Comm::Connection::Connection() :
 Comm::Connection::~Connection()
 {
     close();
-    if (getPeer())
-        cbdataReferenceDone(_peer);
+    cbdataReferenceDone(_peer);
 }
 
 Comm::ConnectionPointer
@@ -74,11 +73,7 @@ Comm::Connection::setPeer(peer *p)
     if (getPeer() == p)
         return;
 
-    /* clear any previous ptr */
-    if (getPeer())
-        cbdataReferenceDone(_peer);
-
-    /* set the new one (unless it is NULL */
+    cbdataReferenceDone(_peer);
     if (p) {
         _peer = cbdataReference(p);
     }
