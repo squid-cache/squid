@@ -36,6 +36,7 @@ class CallSubscription: public Subscription
 public:
     CallSubscription(const RefCount<Call_> &aCall) : call(aCall) {};
 
+// XXX: obsolete comment?
     // cant be const sometimes because CommCbFunPtrCallT cant provide a const overload.
     // CommCbFunPtrCallT lists why. boils down to Comm IO syncWithComm() existence
     // NP: we still treat it as const though.

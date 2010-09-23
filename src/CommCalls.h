@@ -23,7 +23,7 @@
 
 typedef void IOACB(int fd, const Comm::ConnectionPointer &details, comm_err_t flag, int xerrno, void *data);
 typedef void CNCB(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data);
-typedef void IOCB(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data);
+typedef void IOCB(const Comm::ConnectionPointer &conn, char *, size_t size, comm_err_t flag, int xerrno, void *data);
 
 /*
  * TODO: When there are no function-pointer-based callbacks left, all
@@ -260,6 +260,7 @@ public:
     inline CommCbFunPtrCallT(int debugSection, int debugLevel,
                              const char *callName, const Dialer &aDialer);
 
+// XXX: obsolete comment?
     // parameter cannot be const because getDialer() cannot be const
     // getDialer() cannot because Comm IO syncWithComm() alters the object params data
     inline CommCbFunPtrCallT(const Pointer &p) :
