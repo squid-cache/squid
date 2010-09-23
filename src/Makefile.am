@@ -291,6 +291,12 @@ squid_SOURCES = \
 	ConfigParser.cc \
 	ConfigParser.h \
 	ConnectionDetail.h \
+	CpuAffinity.cc \
+	CpuAffinity.h \
+	CpuAffinityMap.cc \
+	CpuAffinityMap.h \
+	CpuAffinitySet.cc \
+	CpuAffinitySet.h \
 	debug.cc \
 	Debug.h \
 	defines.h \
@@ -1135,6 +1141,10 @@ tests_testCacheManager_SOURCES = \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
+	CpuAffinityMap.cc \
+	CpuAffinityMap.h \
+	CpuAffinitySet.cc \
+	CpuAffinitySet.h \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
 	dlink.h \
@@ -1320,6 +1330,10 @@ tests_testEvent_SOURCES = \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
+	CpuAffinityMap.cc \
+	CpuAffinityMap.h \
+	CpuAffinitySet.cc \
+	CpuAffinitySet.h \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
 	dlink.h \
@@ -1476,6 +1490,10 @@ tests_testEventLoop_SOURCES = \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
+	CpuAffinityMap.cc \
+	CpuAffinityMap.h \
+	CpuAffinitySet.cc \
+	CpuAffinitySet.h \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
 	dlink.h \
@@ -1619,6 +1637,10 @@ tests_test_http_range_SOURCES = \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
+	CpuAffinityMap.cc \
+	CpuAffinityMap.h \
+	CpuAffinitySet.cc \
+	CpuAffinitySet.h \
 	tests/stub_main_cc.cc \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
@@ -1782,6 +1804,10 @@ tests_testHttpRequest_SOURCES = \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
+	CpuAffinityMap.cc \
+	CpuAffinityMap.h \
+	CpuAffinitySet.cc \
+	CpuAffinitySet.h \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
 	dlink.h \
@@ -2158,6 +2184,10 @@ tests_testURL_SOURCES = \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
+	CpuAffinityMap.cc \
+	CpuAffinityMap.h \
+	CpuAffinitySet.cc \
+	CpuAffinitySet.h \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
 	dlink.h \
