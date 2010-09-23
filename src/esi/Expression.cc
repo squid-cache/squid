@@ -707,6 +707,7 @@ getsymbol (const char *s, char const **endptr)
     rv.eval = NULL;		/* A literal */
     rv.valuetype = ESI_EXPR_INVALID;
     rv.valuestored = ESI_LITERAL_INVALID;
+    rv.precedence = 1; /* A literal */
 
     if (('0' <= *s && *s <= '9') || *s == '-') {
         size_t length = strspn (s, "0123456789.");
