@@ -130,6 +130,7 @@ struct relist {
 
 /* forward decl for SquidConfig, see RemovalPolicy.h */
 
+class CpuAffinityMap;
 class RemovalPolicySettings;
 class external_acl;
 class Store;
@@ -611,6 +612,7 @@ struct SquidConfig {
     int umask;
     int max_filedescriptors;
     int workers;
+    CpuAffinityMap *cpuAffinityMap;
 
 #if USE_LOADABLE_MODULES
     wordlist *loadable_module_names;

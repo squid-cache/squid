@@ -14,6 +14,7 @@ libcompat_la_SOURCES = \
 	assert.h \
 	compat.h \
 	compat_shared.h \
+	cpu.h \
 	debug.h \
 	drand48.h \
 	eui64_aton.h \
