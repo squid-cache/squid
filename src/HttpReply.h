@@ -52,6 +52,8 @@ class HttpReply: public HttpMsg
 {
 
 public:
+    typedef HttpMsgPointerT<HttpReply> Pointer;
+
     MEMPROXY_CLASS(HttpReply);
     HttpReply();
     ~HttpReply();

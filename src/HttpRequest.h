@@ -65,6 +65,8 @@ class HttpRequest: public HttpMsg
 {
 
 public:
+    typedef HttpMsgPointerT<HttpRequest> Pointer;
+
     MEMPROXY_CLASS(HttpRequest);
     HttpRequest();
     HttpRequest(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath);

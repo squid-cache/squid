@@ -42,10 +42,16 @@
 
 // common parts of HttpRequest and HttpReply
 
+template <class Msg>
+class HttpMsgPointerT;
+
+
 class HttpMsg
 {
 
 public:
+    typedef HttpMsgPointerT<HttpMsg> Pointer;
+
     HttpMsg(http_hdr_owner_type owner);
     virtual ~HttpMsg();
 
@@ -186,6 +192,17 @@ public:
     HttpMsgPointerT(const HttpMsgPointerT &p): msg(p.msg) { lock(); }
     HttpMsgPointerT &operator =(const HttpMsgPointerT &p)
     { if (msg != p.msg) { unlock(); msg = p.msg; lock(); } return *this; }
+    HttpMsgPointerT &operator =(Msg *newM)
+    { if (msg != newM) { unlock(); msg = newM; lock(); } return *this; }
+
+    /// support converting a child msg pointer into a parent msg pointer
+    template <typename Other>
+    HttpMsgPointerT(const HttpMsgPointerT<Other> &o): msg(o.raw()) { lock(); }
+
+    /// support assigning a child msg pointer to a parent msg pointer
+    template <typename Other>
+    HttpMsgPointerT &operator =(const HttpMsgPointerT<Other> &o)
+    { if (msg != o.raw()) { unlock(); msg = o.raw(); lock(); } return *this; }
 
     Msg &operator *() { return *msg; }
     const Msg &operator *() const { return *msg; }
@@ -194,6 +211,9 @@ public:
     operator Msg *() { return msg; }
     operator const Msg *() const { return msg; }
     // add more as needed
+
+    /// public access for HttpMsgPointerT copying and assignment; avoid
+    Msg *raw() const { return msg; }
 
 protected:
     void lock() { if (msg) HTTPMSGLOCK(msg); } ///< prevent msg destruction
