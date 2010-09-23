@@ -824,6 +824,12 @@ IamWorkerProcess()
 }
 
 bool
+InDaemonMode()
+{
+    return !opt_no_daemon && Config.workers > 0;
+}
+
+bool
 UsingSmp()
 {
     return !opt_no_daemon && Config.workers > 1;
@@ -849,6 +855,20 @@ IamPrimaryProcess()
 
     // in SMP mode, multiple kids delegate primary functions to the coordinator
     return IamCoordinatorProcess();
+}
+
+int
+NumberOfKids()
+{
+    // no kids in no-daemon mode
+    if (!InDaemonMode())
+        return 0;
+
+    // workers + the coordinator process
+    if (UsingSmp())
+        return Config.workers + 1;
+
+    return Config.workers;
 }
 
 void

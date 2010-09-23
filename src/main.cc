@@ -40,6 +40,7 @@
 #include "auth/Gadgets.h"
 #include "base/TextException.h"
 #include "ConfigParser.h"
+#include "CpuAffinity.h"
 #include "errorpage.h"
 #include "event.h"
 #include "EventLoop.h"
@@ -770,6 +771,10 @@ mainReconfigureFinish(void *)
         Config.workers = oldWorkers;
     }
 
+    if (IamPrimaryProcess())
+        CpuAffinityCheck();
+    CpuAffinityReconfigure();
+
     setUmask(Config.umask);
     Mem::Report();
     setEffectiveUser();
@@ -1409,6 +1414,10 @@ SquidMain(int argc, char **argv)
 
         return 0;
     }
+
+    if (IamPrimaryProcess())
+        CpuAffinityCheck();
+    CpuAffinityInit();
 
     if (!opt_no_daemon && Config.workers > 0)
         watch_child(argv);
