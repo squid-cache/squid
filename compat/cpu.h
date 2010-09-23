@@ -61,6 +61,7 @@ typedef struct
 #define CPU_COUNT(set) 0
 #define CPU_AND(destset, srcset1, srcset2) (void)0
 #define CPU_ZERO(set) (void)0
+#define CPU_SET(set) (void)0
 inline int sched_setaffinity(int, size_t, cpu_set_t *) { return ENOTSUP; }
 inline int sched_getaffinity(int, size_t, cpu_set_t *) { return ENOTSUP; }
 
