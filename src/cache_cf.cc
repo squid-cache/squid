@@ -3871,7 +3871,8 @@ parseNamedIntList(const char *data, const String &name, Vector<int> &list)
 }
 
 static void
-parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap) {
+parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap)
+{
 #if !HAVE_CPU_AFFINITY
     debugs(3, DBG_CRITICAL, "FATAL: Squid built with no CPU affinity " <<
            "support, do not set 'cpu_affinity_map'");
@@ -3901,7 +3902,8 @@ parse_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap) {
 }
 
 static void
-dump_CpuAffinityMap(StoreEntry *const entry, const char *const name, const CpuAffinityMap *const cpuAffinityMap) {
+dump_CpuAffinityMap(StoreEntry *const entry, const char *const name, const CpuAffinityMap *const cpuAffinityMap)
+{
     if (cpuAffinityMap) {
         storeAppendPrintf(entry, "%s process_numbers=", name);
         for (size_t i = 0; i < cpuAffinityMap->processes().size(); ++i) {
@@ -3918,7 +3920,8 @@ dump_CpuAffinityMap(StoreEntry *const entry, const char *const name, const CpuAf
 }
 
 static void
-free_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap) {
+free_CpuAffinityMap(CpuAffinityMap **const cpuAffinityMap)
+{
     delete *cpuAffinityMap;
     *cpuAffinityMap = NULL;
 }
