@@ -53,8 +53,7 @@ CpuAnd(cpu_set_t *destset, const cpu_set_t *srcset1, const cpu_set_t *srcset2)
 #endif
 
 /* failing replacements to minimize the number of if-HAVE_CPU_AFFINITYs */
-typedef struct
-{
+typedef struct {
     int bits;
 } cpu_set_t;
 #define CPU_SETSIZE 0

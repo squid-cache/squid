@@ -37,8 +37,7 @@ CpuAffinityMap::calculateSet(const int targetProcess) const
     int core = 0;
     for (size_t i = 0; i < theProcesses.size(); ++i) {
         const int process = theProcesses[i];
-        if (process == targetProcess)
-        {
+        if (process == targetProcess) {
             if (core > 0) {
                 debugs(54, DBG_CRITICAL, "WARNING: conflicting "
                        "'cpu_affinity_map' for process number " << process <<
