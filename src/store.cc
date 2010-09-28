@@ -1505,14 +1505,7 @@ StoreEntry::timestampsSet()
     const HttpReply *reply = getReply();
     time_t served_date = reply->date;
     int age = reply->header.getInt(HDR_AGE);
-    /*
-     * The timestamp calculations below tries to mimic the properties
-     * of the age calculation in RFC2616 section 13.2.3. The implementaion
-     * isn't complete, and the most notable exception from the RFC is that
-     * this does not account for response_delay, but it probably does
-     * not matter much as this is calculated immediately when the headers
-     * are received, not when the whole response has been received.
-     */
+    /* Compute the timestamp, mimicking RFC2616 section 13.2.3. */
     /* make sure that 0 <= served_date <= squid_curtime */
 
     if (served_date < 0 || served_date > squid_curtime)
@@ -1527,6 +1520,14 @@ StoreEntry::timestampsSet()
     if (age > squid_curtime - served_date)
         if (squid_curtime > age)
             served_date = squid_curtime - age;
+
+    // compensate for Squid-to-server and server-to-Squid delays
+    if (mem_obj && mem_obj->request) {
+        const time_t request_sent =
+            mem_obj->request->hier.peer_http_request_sent.tv_sec;
+        if (0 < request_sent && request_sent < squid_curtime)
+            served_date -= (squid_curtime - request_sent);
+    }
 
     if (reply->expires > 0 && reply->date > -1)
         expires = served_date + (reply->expires - reply->date);
