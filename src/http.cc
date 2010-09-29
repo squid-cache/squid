@@ -943,8 +943,8 @@ no_cache:
 
     if (!ignoreCacheControl && rep->cache_control) {
         if (EBIT_TEST(rep->cache_control->mask, CC_PROXY_REVALIDATE) ||
-            EBIT_TEST(rep->cache_control->mask, CC_MUST_REVALIDATE) ||
-            EBIT_TEST(rep->cache_control->mask, CC_S_MAXAGE))
+                EBIT_TEST(rep->cache_control->mask, CC_MUST_REVALIDATE) ||
+                EBIT_TEST(rep->cache_control->mask, CC_S_MAXAGE))
             EBIT_SET(entry->flags, ENTRY_REVALIDATE);
     }
 
