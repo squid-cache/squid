@@ -457,7 +457,9 @@ errorSend(int fd, ErrorState * err)
 
     rep = err->BuildHttpReply();
 
-    comm_write_mbuf(fd, rep->pack(), errorSendComplete, err);
+    MemBuf *mb = rep->pack();
+    comm_write_mbuf(fd, mb, errorSendComplete, err);
+    delete mb;
 
     delete rep;
 }
