@@ -72,7 +72,8 @@ const char *log_tags[] = {
     "TCP_HIT",
     "TCP_MISS",
     "TCP_REFRESH_UNMODIFIED",
-    "TCP_REFRESH_FAIL",
+    "TCP_REFRESH_FAIL", // same tag logged for LOG_TCP_REFRESH_FAIL_OLD and
+    "TCP_REFRESH_FAIL", // LOG_TCP_REFRESH_FAIL_ERR for backward-compatibility
     "TCP_REFRESH_MODIFIED",
     "TCP_CLIENT_REFRESH_MISS",
     "TCP_IMS_HIT",
@@ -2485,7 +2486,7 @@ logTypeIsATcpHit(log_type code)
     if (code == LOG_TCP_IMS_HIT)
         return 1;
 
-    if (code == LOG_TCP_REFRESH_FAIL)
+    if (code == LOG_TCP_REFRESH_FAIL_OLD)
         return 1;
 
     if (code == LOG_TCP_REFRESH_UNMODIFIED)
