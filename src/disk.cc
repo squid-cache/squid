@@ -166,12 +166,8 @@ file_close(int fd)
  * select() loop.       --SLF
  */
 static void
-
 diskCombineWrites(struct _fde_disk *fdd)
 {
-    int len = 0;
-    dwrite_q *q = NULL;
-    dwrite_q *wq = NULL;
     /*
      * We need to combine multiple write requests on an FD's write
      * queue But only if we don't need to seek() in between them, ugh!
@@ -179,12 +175,12 @@ diskCombineWrites(struct _fde_disk *fdd)
      */
 
     if (fdd->write_q != NULL && fdd->write_q->next != NULL) {
-        len = 0;
+        int len = 0;
 
-        for (q = fdd->write_q; q != NULL; q = q->next)
+        for (dwrite_q *q = fdd->write_q; q != NULL; q = q->next)
             len += q->len - q->buf_offset;
 
-        wq = (dwrite_q *)memAllocate(MEM_DWRITE_Q);
+        dwrite_q *wq = (dwrite_q *)memAllocate(MEM_DWRITE_Q);
 
         wq->buf = (char *)xmalloc(len);
 
@@ -196,8 +192,9 @@ diskCombineWrites(struct _fde_disk *fdd)
 
         wq->free_func = cxx_xfree;
 
-        do {
-            q = fdd->write_q;
+        while (fdd->write_q != NULL) {
+            dwrite_q *q = fdd->write_q;
+
             len = q->len - q->buf_offset;
             xmemcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
             wq->len += len;
@@ -206,11 +203,8 @@ diskCombineWrites(struct _fde_disk *fdd)
             if (q->free_func)
                 (q->free_func) (q->buf);
 
-            if (q) {
-                memFree(q, MEM_DWRITE_Q);
-                q = NULL;
-            }
-        } while (fdd->write_q != NULL);
+            memFree(q, MEM_DWRITE_Q);
+        };
 
         fdd->write_q_tail = wq;
 

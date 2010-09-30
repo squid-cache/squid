@@ -1204,17 +1204,15 @@ peerDestroy(void *data)
 {
     peer *p = (peer *)data;
 
-    struct _domain_ping *l = NULL;
-
-    struct _domain_ping *nl = NULL;
-
     if (p == NULL)
         return;
 
-    for (l = p->peer_domain; l; l = nl) {
+    struct _domain_ping *nl = NULL;
+
+    for (struct _domain_ping *l = p->peer_domain; l; l = nl) {
         nl = l->next;
         safe_free(l->domain);
-        safe_free(l);
+        xfree(l);
     }
 
     safe_free(p->host);
