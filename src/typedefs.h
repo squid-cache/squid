@@ -36,7 +36,7 @@
 #ifndef SQUID_TYPEDEFS_H
 #define SQUID_TYPEDEFS_H
 
-typedef signed int sfileno;
+typedef int32_t sfileno;
 typedef signed int sdirno;
 
 typedef struct {
