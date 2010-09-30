@@ -681,6 +681,7 @@ HttpStateData::processReplyHeader()
         tmprep->header.putExt("X-Transformed-From", "HTTP/0.9");
         mb = tmprep->pack();
         newrep->parse(mb, eof, &error);
+        delete mb;
         delete tmprep;
     } else {
         if (!parsed && error > 0) { // unrecoverable parsing error
