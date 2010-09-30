@@ -3867,7 +3867,7 @@ parseNamedIntList(const char *data, const String &name, Vector<int> &list)
             }
         }
     }
-    return *data == '\0';
+    return data && *data == '\0';
 }
 
 static void
