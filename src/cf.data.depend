@@ -11,6 +11,7 @@ b_int64_t
 b_size_t
 cachedir		cache_replacement_policy
 cachemgrpasswd
+CpuAffinityMap
 debug
 delay_pool_access	acl	delay_class
 delay_pool_class	delay_pools
