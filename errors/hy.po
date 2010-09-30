@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-26 21:21+1300\n"
+"POT-Creation-Date: 2010-09-30 15:46+1300\n"
 "PO-Revision-Date: 2010-08-21 17:08+0200\n"
 "Last-Translator: Arthur <arthurtumanyan@yahoo.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -16,13 +16,15 @@ msgstr ""
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
-"<a href=\"../\">Ծնողական դիրեկտորիա</a> (<a href=\"/\">Արմատական դիրեկտորիա</a>)"
+"<a href=\"../\">Ծնողական դիրեկտորիա</a> (<a href=\"/\">Արմատական դիրեկտորիա</"
+"a>)"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
-msgstr "<b>Սխալ հարցում</b> հարցումն իրականացնելու ընթացքում տեղի ունեցավ սխալ:"
+msgstr ""
+"<b>Սխալ հարցում</b> հարցումն իրականացնելու ընթացքում տեղի ունեցավ սխալ:"
 
 #: templates/ERR_INVALID_RESP:4
 msgid ""
@@ -63,16 +65,16 @@ msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"URL -ի ստացման ընթացքում տեղի ունեցավ FTP աութենտիֆիկացիայի սխալ: <a href=\"%"
-"U\">%U</a>"
+"URL -ի ստացման ընթացքում տեղի ունեցավ FTP աութենտիֆիկացիայի սխալ: <a href="
+"\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
-"URL -ի ստացման ընթացքում տեղի ունեցավ FTP արձանագրության սխալ: <a href=\"%U\">"
-"%U</a>"
+"URL -ի ստացման ընթացքում տեղի ունեցավ FTP արձանագրության սխալ: <a href=\"%U"
+"\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
@@ -460,7 +462,8 @@ msgstr "ESI պրոցեսորը պատասխանեց:"
 
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
-msgstr "URL-ի ստացման ընթացքում FTP սերվերը շատ զբաղված էր: <a href=\"%U\">%U</a>"
+msgstr ""
+"URL-ի ստացման ընթացքում FTP սերվերը շատ զբաղված էր: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
@@ -504,7 +507,8 @@ msgstr "URN-ի ստացման ընթացքում առաջացավ հետևյալ
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down. Please try the request again."
-msgstr "Հեռակա հանգույցը կամ ցանցը չեն պատասխանում: Խնդրվում է կրկնել հարցումը:"
+msgstr ""
+"Հեռակա հանգույցը կամ ցանցը չեն պատասխանում: Խնդրվում է կրկնել հարցումը:"
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
@@ -645,8 +649,8 @@ msgstr ""
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
 msgstr ""
-"Գործիքներ -&gt; Ինտերնետ կարգաբերումներ -&gt; Կապ -&gt; LAN կարգաբերումներ "
-"-&gt;Պրոքսի"
+"Գործիքներ -&gt; Ինտերնետ կարգաբերումներ -&gt; Կապ -&gt; LAN կարգաբերումներ -"
+"&gt;Պրոքսի"
 
 #: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
 msgid ""
@@ -700,8 +704,8 @@ msgid ""
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
 "Դուք իրականացրեցիք հարցում <q>only-if-cached</q> քեշի կառավարման դիրեկտիվով: "
-"Փաստաթուղթը քեշում բացակայում է <em>կամ</em պահանջվում է <q>only-if-"
-"cached</q> դիրեկտիվի կողմից արգելված հաստատում:"
+"Փաստաթուղթը քեշում բացակայում է <em>կամ</em պահանջվում է <q>only-if-cached</"
+"q> դիրեկտիվի կողմից արգելված հաստատում:"
 
 #: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
 msgid ""
