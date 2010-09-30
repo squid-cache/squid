@@ -23,7 +23,7 @@ We welcome feedback and bug reports. If you find a bug, please see <url url="htt
 
 <sect>Known issues
 <p>
-Although this release is deemed good enough for use in many setups, please note the existence of <url url="http://www.squid-cache.org/bugs/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.0&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=" name="open bugs against Squid-3.0">.
+Although this release is deemed good enough for use in many setups, please note the existence of <url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.0&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=" name="open bugs against Squid-3.0">.
 
 <sect>Changes since earlier STABLE releases of Squid-3.0
 <p>
@@ -158,8 +158,8 @@ In the following example the command line of the "squidsvc" Squid service is set
 <tag>PSAPI.DLL (Process Status Helper) Considerations</tag>
 
 The process status helper functions make it easier for you to obtain information about
-processes and device drivers running on Microsoft® Windows NT®/Windows® 2000. These
-functions are available in PSAPI.DLL, which is distributed in the Microsoft® Platform
+processes and device drivers running on Microsoft? Windows NT?/Windows? 2000. These
+functions are available in PSAPI.DLL, which is distributed in the Microsoft? Platform
 Software Development Kit (SDK). The same information is generally available through the
 performance data in the registry, but it is more difficult to get to it. PSAPI.DLL is
 freely redistributable.

@@ -23,7 +23,7 @@ We welcome feedback and bug reports. If you find a bug, please see <url url="htt
 
 <sect1>Known issues
 <p>
-Although this release is deemed good enough for use in many setups, please note the existence of <url url="http://www.squid-cache.org/bugs/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.2&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=" name="open bugs against Squid-3.2">.
+Although this release is deemed good enough for use in many setups, please note the existence of <url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.2&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=" name="open bugs against Squid-3.2">.
 
 <sect1>Changes since earlier releases of Squid-3.2
 <p>
@@ -447,23 +447,26 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>--enable-auth-basic[=HELPERS]</tag>
 	<p>Specified without any parameters all helpers will be auto-built.
-	<p>With an explicit empty list <em>=""</em> protocol suport will be built but no helpers.
+	<p>With an explicit empty list <em>=""</em> protocol support will be built but no helpers.
 	<p>With an explicit list protocol support and just those helpers will be built.
 
 	<tag>--enable-auth-digest[=HELPERS]</tag>
 	<p>Specified without any parameters all helpers will be auto-built.
-	<p>With an explicit empty list <em>=""</em> protocol suport will be built but no helpers.
+	<p>With an explicit empty list <em>=""</em> protocol support will be built but no helpers.
 	<p>With an explicit list protocol support and just those helpers will be built.
 
 	<tag>--enable-auth-negotiate</tag>
 	<p>Specified without any parameters all helpers will be auto-built.
-	<p>With an explicit empty list <em>=""</em> protocol suport will be built but no helpers.
+	<p>With an explicit empty list <em>=""</em> protocol support will be built but no helpers.
 	<p>With an explicit list protocol support and just those helpers will be built.
 
 	<tag>--enable-auth-ntlm</tag>
 	<p>Specified without any parameters all helpers will be auto-built.
-	<p>With an explicit empty list <em>=""</em> protocol suport will be built but no helpers.
+	<p>With an explicit empty list <em>=""</em> protocol support will be built but no helpers.
 	<p>With an explicit list protocol support and just those helpers will be built.
+
+	<tag>--enable-build-info</tag>
+	<p>Add an additional string in the output of "squid -v".
 
 	<tag>--enable-eui</tag>
 	<p>Enable Support for handling EUI operations.
