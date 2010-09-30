@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-26 21:21+1300\n"
-"PO-Revision-Date: 2010-07-28 22:32+0200\n"
+"POT-Creation-Date: 2010-09-30 15:46+1300\n"
+"PO-Revision-Date: 2010-09-22 18:03+0200\n"
 "Last-Translator:  <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
@@ -34,6 +34,8 @@ msgstr ""
 "Une erreur <b>Réponse Invalide</b> a été rencontrée en essayant de traiter "
 "la requête :"
 
+# suggestion2 OK
+# bernard
 #: templates/ERR_READ_TIMEOUT:7
 #, fuzzy
 msgid ""
@@ -83,6 +85,10 @@ msgstr ""
 msgid "An Illegal response was received from the ICAP server."
 msgstr "Une réponse illégale a été reçue du serveur ICAP."
 
+# "réitérer" pas très utiliser en Français, il vaut mieux utiliser "recommencer" "renouveler" "répéter" plus familier.
+# Quand pensez-vous?
+# Bernard
+#  
 #: templates/ERR_READ_ERROR:7
 #, fuzzy
 msgid ""
@@ -279,6 +285,8 @@ msgstr ""
 msgid "Hey, don't expect too much from URNs on %T :)"
 msgstr "Hé ! N'espérez pas trop des URNs de %T :)"
 
+# Suggestion2 OK
+# Bernard
 #: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
 #, fuzzy
 msgid "How to find these settings in your browser:"
@@ -686,8 +694,8 @@ msgstr ""
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
 msgstr ""
-"Proxy, Outils -&gt; Options Internet -&gt; Connexion -&gt; Paramètres LAN "
-"-&gt "
+"Proxy, Outils -&gt; Options Internet -&gt; Connexion -&gt; Paramètres LAN -"
+"&gt "
 
 #: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
 #, fuzzy

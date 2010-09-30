@@ -28,29 +28,47 @@ username.
 .if !'po4a'hide' .TP 12
 .if !'po4a'hide' .B \-c
 Use case insensitive compare.
+.
+.if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-d
 Write debug info to stderr.
+.
+.if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-D domain
 Specify the default user's domain.
+.
+.if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-G
 Start helper in Domain Global Group mode.
+.
+.if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-h
 Display the binary help and command line syntax info using stderr.
+.
+.if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-P
 Use ONLY PDCs for group validation.
 .
 .SH CONFIGURATION
-.
-.if !'po4a'hide' external_acl_type NT_global_group %LOGIN c:/squid/libexec/ext_lm_group_acl.exe -G
-.if !'po4a'hide' external_acl_type NT_local_group %LOGIN c:/squid/libexec/ext_lm_group_acl.exe
-.if !'po4a'hide' .
-.if !'po4a'hide' acl GProxyUsers external NT_global_group GProxyUsers
-.if !'po4a'hide' acl LProxyUsers external NT_local_group LProxyUsers
-.if !'po4a'hide' acl password proxy_auth REQUIRED
-.if !'po4a'hide' .
-.if !'po4a'hide' http_access allow password GProxyUsers
-.if !'po4a'hide' http_access allow password LProxyUsers
-.if !'po4a'hide' http_access deny all
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B external_acl_type NT_global_group %LOGIN c:/squid/libexec/ext_lm_group_acl.exe -G
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B external_acl_type NT_local_group %LOGIN c:/squid/libexec/ext_lm_group_acl.exe
+.if !'po4a'hide' .br
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl GProxyUsers external NT_global_group GProxyUsers
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl LProxyUsers external NT_local_group LProxyUsers
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl password proxy_auth REQUIRED
+.if !'po4a'hide' .br
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access allow password GProxyUsers
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access allow password LProxyUsers
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access deny all
+.if !'po4a'hide' .RE
 .
 .PP
 In the previous example all validated NT users member of GProxyUsers Global
@@ -66,22 +84,27 @@ Groups with spaces in name, for example
 .B "/path/to/file"
 .
 The previous example will be:
-.
+.if !'po4a'hide' .RS
 .if !'po4a'hide' acl ProxyUsers external NT_global_group "c:/squid/etc/DomainUsers.txt"
+.if !'po4a'hide' .RE
 .
-and the 
+The 
 .B DomainUsers.txt 
-files will contain only the following line:
+file will contain only the following line:
+.if !'po4a'hide' .RS
 .B "Domain Users"
+.if !'po4a'hide' .RE
 .
-.PP NOTE:
+.PP
+.B NOTE:
 The standard group name comparison is case sensitive, so group name
 must be specified with same case as in the NT/2000 Domain.
 It's possible to enable case insensitive group name comparison (
 .B \-c
 ), but on some not-english locales, the results can be unexpected.
 .
-.PP NOTE: 
+.PP
+.B NOTE: 
 Native WIN32 NTLM and Basic Helpers must be used without the
 .B \-A
 and 
@@ -94,8 +117,7 @@ Refer to Squid documentation for the more details on squid.conf.
 .PP
 I strongly recommend that 
 .B ext_lm_group_acl 
-is tested prior to being used in a
-production environment. It may behave differently on different platforms.
+is tested prior to being used in a production environment. It may behave differently on different platforms.
 .
 .PP
 To test it, run it from the command line. Enter username and group
