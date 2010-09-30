@@ -885,20 +885,20 @@ void Adaptation::Icap::ModXact::prepEchoing()
     // allocate the adapted message and copy metainfo
     Must(!adapted.header);
     {
-    HttpMsg::Pointer newHead;
-    if (const HttpRequest *oldR = dynamic_cast<const HttpRequest*>(oldHead)) {
-        HttpRequest::Pointer newR(new HttpRequest);
-        newR->canonical = oldR->canonical ?
-                          xstrdup(oldR->canonical) : NULL; // parse() does not set it
-        newHead = newR;
-    } else if (dynamic_cast<const HttpReply*>(oldHead)) {
-        newHead = new HttpReply;
-    }
-    Must(newHead != NULL);
+        HttpMsg::Pointer newHead;
+        if (const HttpRequest *oldR = dynamic_cast<const HttpRequest*>(oldHead)) {
+            HttpRequest::Pointer newR(new HttpRequest);
+            newR->canonical = oldR->canonical ?
+                              xstrdup(oldR->canonical) : NULL; // parse() does not set it
+            newHead = newR;
+        } else if (dynamic_cast<const HttpReply*>(oldHead)) {
+            newHead = new HttpReply;
+        }
+        Must(newHead != NULL);
 
-    newHead->inheritProperties(oldHead);
+        newHead->inheritProperties(oldHead);
 
-    adapted.setHeader(newHead);
+        adapted.setHeader(newHead);
     }
 
     // parse the buffer back

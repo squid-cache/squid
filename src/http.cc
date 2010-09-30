@@ -767,7 +767,7 @@ HttpStateData::handle1xx(HttpReply *reply)
             debugs(11, 3, HERE << "ignoring denied 1xx");
             proceedAfter1xx();
             return;
-		}
+        }
     }
 #endif // USE_HTTP_VIOLATIONS
 
@@ -776,7 +776,7 @@ HttpStateData::handle1xx(HttpReply *reply)
     // the Sink will use this to call us back after writing 1xx to the client
     typedef NullaryMemFunT<HttpStateData> CbDialer;
     const AsyncCall::Pointer cb = JobCallback(11, 3, CbDialer, this,
-                                              HttpStateData::proceedAfter1xx);
+                                  HttpStateData::proceedAfter1xx);
     CallJobHere1(11, 4, orig_request->clientConnection, ConnStateData,
                  ConnStateData::sendControlMsg, HttpControlMsg(msg, cb));
     // If the call is not fired, then the Sink is gone, and HttpStateData
@@ -792,7 +792,7 @@ HttpStateData::proceedAfter1xx()
     Must(flags.handling1xx);
 
     debugs(11, 2, HERE << "consuming " << header_bytes_read <<
-        " header and " << reply_bytes_read << " body bytes read after 1xx");
+           " header and " << reply_bytes_read << " body bytes read after 1xx");
     header_bytes_read = 0;
     reply_bytes_read = 0;
 
@@ -1186,7 +1186,8 @@ HttpStateData::readReply(const CommIoCbParams &io)
 /// processes the already read and buffered response data, possibly after
 /// waiting for asynchronous 1xx control message processing
 void
-HttpStateData::processReply() {
+HttpStateData::processReply()
+{
 
     if (flags.handling1xx) { // we came back after handling a 1xx response
         debugs(11, 5, HERE << "done with 1xx handling");
@@ -2163,7 +2164,7 @@ HttpStateData::getMoreRequestBody(MemBuf &buf)
     if (receivedWholeRequestBody) {
         Must(!flags.sentLastChunk);
         flags.sentLastChunk = true;
-        buf.append("0\r\n\r\n", 5);    
+        buf.append("0\r\n\r\n", 5);
     }
 
     return true;
