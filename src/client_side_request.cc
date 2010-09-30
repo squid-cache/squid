@@ -1009,11 +1009,18 @@ ClientRequestContext::clientRedirectDone(char *result)
             if ((t = strchr(result, ':')) != NULL) {
                 http->redirect.status = status;
                 http->redirect.location = xstrdup(t + 1);
+                // TODO: validate the URL produced here is RFC 2616 compliant absolute URI
             } else {
-                debugs(85, 1, "clientRedirectDone: bad input: " << result);
+                if (old_request->http_ver < HttpVersion(1,1))
+                    debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid 302 redirect Location: " << result);
+                else
+                    debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid 303 redirect Location: " << result);
             }
-        } else if (strcmp(result, http->uri))
-            new_request = HttpRequest::CreateFromUrlAndMethod(result, old_request->method);
+        } else if (strcmp(result, http->uri)) {
+            if (!(new_request = HttpRequest::CreateFromUrlAndMethod(result, old_request->method)))
+                debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
+                       old_request->method << " " << result << " HTTP/1.1");
+        }
     }
 
     if (new_request) {
