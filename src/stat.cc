@@ -451,7 +451,7 @@ info_get(StoreEntry * sentry)
 #elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
 
     struct mallinfo mp;
-    int t;
+    long t;
 #endif
 
     runtime = tvSubDsec(squid_start, current_time);
@@ -545,7 +545,7 @@ info_get(StoreEntry * sentry)
 
 
     storeAppendPrintf(sentry, "\tStorage Mem size:\t%lu KB\n",
-                      (unsigned long)mem_node::StoreMemSize() >> 10);
+                      (unsigned long)(mem_node::StoreMemSize() >> 10));
 
     storeAppendPrintf(sentry, "\tStorage Mem capacity:\t%4.1f%% used, %4.1f%% free\n",
                       Math::doublePercent(mem_node::InUseCount(), store_pages_max),
@@ -554,8 +554,8 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\tMean Object Size:\t%0.2f KB\n",
                       n_disk_objects ? (double) store_swap_size / n_disk_objects : 0.0);
 
-    storeAppendPrintf(sentry, "\tRequests given to unlinkd:\t%d\n",
-                      statCounter.unlink.requests);
+    storeAppendPrintf(sentry, "\tRequests given to unlinkd:\t%ld\n",
+                      (long)statCounter.unlink.requests);
 
     storeAppendPrintf(sentry, "Median Service Times (seconds)  5 min    60 min:\n");
 
@@ -613,11 +613,11 @@ info_get(StoreEntry * sentry)
 
 #endif
 
-    storeAppendPrintf(sentry, "\tMaximum Resident Size: %d KB\n",
-                      rusage_maxrss(&rusage));
+    storeAppendPrintf(sentry, "\tMaximum Resident Size: %ld KB\n",
+                      (long)rusage_maxrss(&rusage));
 
-    storeAppendPrintf(sentry, "\tPage faults with physical i/o: %d\n",
-                      rusage_pagefaults(&rusage));
+    storeAppendPrintf(sentry, "\tPage faults with physical i/o: %ld\n",
+                      (long)rusage_pagefaults(&rusage));
 
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
 
@@ -625,11 +625,11 @@ info_get(StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "Memory usage for %s via mstats():\n",APP_SHORTNAME);
 
-    storeAppendPrintf(sentry, "\tTotal space in arena:  %6d KB\n",
-                      ms.bytes_total >> 10);
+    storeAppendPrintf(sentry, "\tTotal space in arena:  %6ld KB\n",
+                      (long)(ms.bytes_total >> 10));
 
-    storeAppendPrintf(sentry, "\tTotal free:            %6d KB %d%%\n",
-                      ms.bytes_free >> 10, Math::intPercent(ms.bytes_free, ms.bytes_total));
+    storeAppendPrintf(sentry, "\tTotal free:            %6ld KB %d%%\n",
+                      (long)(ms.bytes_free >> 10), Math::intPercent(ms.bytes_free, ms.bytes_total));
 
 #elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
 
@@ -638,55 +638,55 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Memory usage for %s via mallinfo():\n",APP_SHORTNAME);
 
     storeAppendPrintf(sentry, "\tTotal space in arena:  %6ld KB\n",
-                      (long)mp.arena >> 10);
+                      (long)(mp.arena >> 10));
 
     storeAppendPrintf(sentry, "\tOrdinary blocks:       %6ld KB %6ld blks\n",
-                      (long)mp.uordblks >> 10, (long)mp.ordblks);
+                      (long)(mp.uordblks >> 10), (long)mp.ordblks);
 
     storeAppendPrintf(sentry, "\tSmall blocks:          %6ld KB %6ld blks\n",
-                      (long)mp.usmblks >> 10, (long)mp.smblks);
+                      (long)(mp.usmblks >> 10), (long)mp.smblks);
 
     storeAppendPrintf(sentry, "\tHolding blocks:        %6ld KB %6ld blks\n",
-                      (long)mp.hblkhd >> 10, (long)mp.hblks);
+                      (long)(mp.hblkhd >> 10), (long)mp.hblks);
 
     storeAppendPrintf(sentry, "\tFree Small blocks:     %6ld KB\n",
-                      (long)mp.fsmblks >> 10);
+                      (long)(mp.fsmblks >> 10));
 
     storeAppendPrintf(sentry, "\tFree Ordinary blocks:  %6ld KB\n",
-                      (long)mp.fordblks >> 10);
+                      (long)(mp.fordblks >> 10));
 
     t = mp.uordblks + mp.usmblks + mp.hblkhd;
 
-    storeAppendPrintf(sentry, "\tTotal in use:          %6d KB %d%%\n",
-                      t >> 10, Math::intPercent(t, mp.arena + mp.hblkhd));
+    storeAppendPrintf(sentry, "\tTotal in use:          %6ld KB %d%%\n",
+                      (long)(t >> 10), Math::intPercent(t, mp.arena + mp.hblkhd));
 
     t = mp.fsmblks + mp.fordblks;
 
-    storeAppendPrintf(sentry, "\tTotal free:            %6d KB %d%%\n",
-                      t >> 10, Math::intPercent(t, mp.arena + mp.hblkhd));
+    storeAppendPrintf(sentry, "\tTotal free:            %6ld KB %d%%\n",
+                      (long)(t >> 10), Math::intPercent(t, mp.arena + mp.hblkhd));
 
     t = mp.arena + mp.hblkhd;
 
-    storeAppendPrintf(sentry, "\tTotal size:            %6d KB\n",
-                      t >> 10);
+    storeAppendPrintf(sentry, "\tTotal size:            %6ld KB\n",
+                      (long)(t >> 10));
 
 #if HAVE_STRUCT_MALLINFO_MXFAST
 
     storeAppendPrintf(sentry, "\tmax size of small blocks:\t%d\n", mp.mxfast);
 
-    storeAppendPrintf(sentry, "\tnumber of small blocks in a holding block:\t%d\n",
-                      mp.nlblks);
+    storeAppendPrintf(sentry, "\tnumber of small blocks in a holding block:\t%ld\n",
+                      (long)mp.nlblks);
 
-    storeAppendPrintf(sentry, "\tsmall block rounding factor:\t%d\n", mp.grain);
+    storeAppendPrintf(sentry, "\tsmall block rounding factor:\t%ld\n", (long)mp.grain);
 
-    storeAppendPrintf(sentry, "\tspace (including overhead) allocated in ord. blks:\t%d\n"
-                      ,mp.uordbytes);
+    storeAppendPrintf(sentry, "\tspace (including overhead) allocated in ord. blks:\t%ld\n",
+                      (long)mp.uordbytes);
 
-    storeAppendPrintf(sentry, "\tnumber of ordinary blocks allocated:\t%d\n",
-                      mp.allocated);
+    storeAppendPrintf(sentry, "\tnumber of ordinary blocks allocated:\t%ld\n",
+                      (long)mp.allocated);
 
-    storeAppendPrintf(sentry, "\tbytes used in maintaining the free tree:\t%d\n",
-                      mp.treeoverhead);
+    storeAppendPrintf(sentry, "\tbytes used in maintaining the free tree:\t%ld\n",
+                      (long)mp.treeoverhead);
 
 #endif /* HAVE_STRUCT_MALLINFO_MXFAST */
 #endif /* HAVE_MALLINFO */
@@ -695,13 +695,13 @@ info_get(StoreEntry * sentry)
 
 #if !(HAVE_MSTATS && HAVE_GNUMALLOC_H) && HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
 
-    storeAppendPrintf(sentry, "\tTotal accounted:       %6d KB %3d%%\n",
-                      statMemoryAccounted() >> 10, Math::intPercent(statMemoryAccounted(), t));
+    storeAppendPrintf(sentry, "\tTotal accounted:       %6ld KB %3d%%\n",
+                      (long)(statMemoryAccounted() >> 10), Math::intPercent(statMemoryAccounted(), t));
 
 #else
 
-    storeAppendPrintf(sentry, "\tTotal accounted:       %6d KB\n",
-                      statMemoryAccounted() >> 10);
+    storeAppendPrintf(sentry, "\tTotal accounted:       %6ld KB\n",
+                      (long)(statMemoryAccounted() >> 10));
 
 #endif
     {
@@ -709,11 +709,11 @@ info_get(StoreEntry * sentry)
         memPoolGetGlobalStats(&mp_stats);
 #if !(HAVE_MSTATS && HAVE_GNUMALLOC_H) && HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
 
-        storeAppendPrintf(sentry, "\tmemPool accounted:     %6d KB %3d%%\n",
-                          (int) mp_stats.TheMeter->alloc.level >> 10,
+        storeAppendPrintf(sentry, "\tmemPool accounted:     %6ld KB %3d%%\n",
+                          (long)(mp_stats.TheMeter->alloc.level >> 10),
                           Math::intPercent(mp_stats.TheMeter->alloc.level, t));
-        storeAppendPrintf(sentry, "\tmemPool unaccounted:   %6d KB %3d%%\n",
-                          (t - (int) mp_stats.TheMeter->alloc.level) >> 10,
+        storeAppendPrintf(sentry, "\tmemPool unaccounted:   %6ld KB %3d%%\n",
+                          (long)((t - mp_stats.TheMeter->alloc.level) >> 10),
                           Math::intPercent((t - mp_stats.TheMeter->alloc.level), t));
 #endif
 
@@ -744,10 +744,10 @@ info_get(StoreEntry * sentry)
                       (unsigned long)StoreEntry::inUseCount());
     storeAppendPrintf(sentry, "\t%6lu StoreEntries with MemObjects\n",
                       (unsigned long)MemObject::inUseCount());
-    storeAppendPrintf(sentry, "\t%6d Hot Object Cache Items\n",
-                      hot_obj_count);
-    storeAppendPrintf(sentry, "\t%6d on-disk objects\n",
-                      n_disk_objects);
+    storeAppendPrintf(sentry, "\t%6ld Hot Object Cache Items\n",
+                      (long)hot_obj_count);
+    storeAppendPrintf(sentry, "\t%6ld on-disk objects\n",
+                      (long)n_disk_objects);
 
 #if XMALLOC_STATISTICS
 
@@ -1269,122 +1269,122 @@ statCountersDump(StoreEntry * sentry)
                       (int) f->timestamp.tv_sec,
                       (int) f->timestamp.tv_usec,
                       mkrfc1123(f->timestamp.tv_sec));
-    storeAppendPrintf(sentry, "client_http.requests = %d\n",
-                      f->client_http.requests);
-    storeAppendPrintf(sentry, "client_http.hits = %d\n",
-                      f->client_http.hits);
-    storeAppendPrintf(sentry, "client_http.errors = %d\n",
-                      f->client_http.errors);
-    storeAppendPrintf(sentry, "client_http.kbytes_in = %d\n",
-                      (int) f->client_http.kbytes_in.kb);
-    storeAppendPrintf(sentry, "client_http.kbytes_out = %d\n",
-                      (int) f->client_http.kbytes_out.kb);
-    storeAppendPrintf(sentry, "client_http.hit_kbytes_out = %d\n",
-                      (int) f->client_http.hit_kbytes_out.kb);
+    storeAppendPrintf(sentry, "client_http.requests = %ld\n",
+                      (long)f->client_http.requests);
+    storeAppendPrintf(sentry, "client_http.hits = %ld\n",
+                      (long)f->client_http.hits);
+    storeAppendPrintf(sentry, "client_http.errors = %ld\n",
+                      (long)f->client_http.errors);
+    storeAppendPrintf(sentry, "client_http.kbytes_in = %ld\n",
+                      (long)f->client_http.kbytes_in.kb);
+    storeAppendPrintf(sentry, "client_http.kbytes_out = %ld\n",
+                      (long)f->client_http.kbytes_out.kb);
+    storeAppendPrintf(sentry, "client_http.hit_kbytes_out = %ld\n",
+                      (long)f->client_http.hit_kbytes_out.kb);
 
-    storeAppendPrintf(sentry, "server.all.requests = %d\n",
-                      (int) f->server.all.requests);
-    storeAppendPrintf(sentry, "server.all.errors = %d\n",
-                      (int) f->server.all.errors);
-    storeAppendPrintf(sentry, "server.all.kbytes_in = %d\n",
-                      (int) f->server.all.kbytes_in.kb);
-    storeAppendPrintf(sentry, "server.all.kbytes_out = %d\n",
-                      (int) f->server.all.kbytes_out.kb);
+    storeAppendPrintf(sentry, "server.all.requests = %ld\n",
+                      (long)f->server.all.requests);
+    storeAppendPrintf(sentry, "server.all.errors = %ld\n",
+                      (long) f->server.all.errors);
+    storeAppendPrintf(sentry, "server.all.kbytes_in = %ld\n",
+                      (long) f->server.all.kbytes_in.kb);
+    storeAppendPrintf(sentry, "server.all.kbytes_out = %ld\n",
+                      (long) f->server.all.kbytes_out.kb);
 
-    storeAppendPrintf(sentry, "server.http.requests = %d\n",
-                      (int) f->server.http.requests);
-    storeAppendPrintf(sentry, "server.http.errors = %d\n",
-                      (int) f->server.http.errors);
-    storeAppendPrintf(sentry, "server.http.kbytes_in = %d\n",
-                      (int) f->server.http.kbytes_in.kb);
-    storeAppendPrintf(sentry, "server.http.kbytes_out = %d\n",
-                      (int) f->server.http.kbytes_out.kb);
+    storeAppendPrintf(sentry, "server.http.requests = %ld\n",
+                      (long) f->server.http.requests);
+    storeAppendPrintf(sentry, "server.http.errors = %ld\n",
+                      (long) f->server.http.errors);
+    storeAppendPrintf(sentry, "server.http.kbytes_in = %ld\n",
+                      (long) f->server.http.kbytes_in.kb);
+    storeAppendPrintf(sentry, "server.http.kbytes_out = %ld\n",
+                      (long) f->server.http.kbytes_out.kb);
 
-    storeAppendPrintf(sentry, "server.ftp.requests = %d\n",
-                      (int) f->server.ftp.requests);
-    storeAppendPrintf(sentry, "server.ftp.errors = %d\n",
-                      (int) f->server.ftp.errors);
-    storeAppendPrintf(sentry, "server.ftp.kbytes_in = %d\n",
-                      (int) f->server.ftp.kbytes_in.kb);
-    storeAppendPrintf(sentry, "server.ftp.kbytes_out = %d\n",
-                      (int) f->server.ftp.kbytes_out.kb);
+    storeAppendPrintf(sentry, "server.ftp.requests = %ld\n",
+                      (long) f->server.ftp.requests);
+    storeAppendPrintf(sentry, "server.ftp.errors = %ld\n",
+                      (long) f->server.ftp.errors);
+    storeAppendPrintf(sentry, "server.ftp.kbytes_in = %ld\n",
+                      (long) f->server.ftp.kbytes_in.kb);
+    storeAppendPrintf(sentry, "server.ftp.kbytes_out = %ld\n",
+                      (long) f->server.ftp.kbytes_out.kb);
 
-    storeAppendPrintf(sentry, "server.other.requests = %d\n",
-                      (int) f->server.other.requests);
-    storeAppendPrintf(sentry, "server.other.errors = %d\n",
-                      (int) f->server.other.errors);
-    storeAppendPrintf(sentry, "server.other.kbytes_in = %d\n",
-                      (int) f->server.other.kbytes_in.kb);
-    storeAppendPrintf(sentry, "server.other.kbytes_out = %d\n",
-                      (int) f->server.other.kbytes_out.kb);
+    storeAppendPrintf(sentry, "server.other.requests = %ld\n",
+                      (long) f->server.other.requests);
+    storeAppendPrintf(sentry, "server.other.errors = %ld\n",
+                      (long) f->server.other.errors);
+    storeAppendPrintf(sentry, "server.other.kbytes_in = %ld\n",
+                      (long) f->server.other.kbytes_in.kb);
+    storeAppendPrintf(sentry, "server.other.kbytes_out = %ld\n",
+                      (long) f->server.other.kbytes_out.kb);
 
-    storeAppendPrintf(sentry, "icp.pkts_sent = %d\n",
-                      f->icp.pkts_sent);
-    storeAppendPrintf(sentry, "icp.pkts_recv = %d\n",
-                      f->icp.pkts_recv);
-    storeAppendPrintf(sentry, "icp.queries_sent = %d\n",
-                      f->icp.queries_sent);
-    storeAppendPrintf(sentry, "icp.replies_sent = %d\n",
-                      f->icp.replies_sent);
-    storeAppendPrintf(sentry, "icp.queries_recv = %d\n",
-                      f->icp.queries_recv);
-    storeAppendPrintf(sentry, "icp.replies_recv = %d\n",
-                      f->icp.replies_recv);
-    storeAppendPrintf(sentry, "icp.query_timeouts = %d\n",
-                      f->icp.query_timeouts);
-    storeAppendPrintf(sentry, "icp.replies_queued = %d\n",
-                      f->icp.replies_queued);
-    storeAppendPrintf(sentry, "icp.kbytes_sent = %d\n",
-                      (int) f->icp.kbytes_sent.kb);
-    storeAppendPrintf(sentry, "icp.kbytes_recv = %d\n",
-                      (int) f->icp.kbytes_recv.kb);
-    storeAppendPrintf(sentry, "icp.q_kbytes_sent = %d\n",
-                      (int) f->icp.q_kbytes_sent.kb);
-    storeAppendPrintf(sentry, "icp.r_kbytes_sent = %d\n",
-                      (int) f->icp.r_kbytes_sent.kb);
-    storeAppendPrintf(sentry, "icp.q_kbytes_recv = %d\n",
-                      (int) f->icp.q_kbytes_recv.kb);
-    storeAppendPrintf(sentry, "icp.r_kbytes_recv = %d\n",
-                      (int) f->icp.r_kbytes_recv.kb);
+    storeAppendPrintf(sentry, "icp.pkts_sent = %ld\n",
+                      (long)f->icp.pkts_sent);
+    storeAppendPrintf(sentry, "icp.pkts_recv = %ld\n",
+                      (long)f->icp.pkts_recv);
+    storeAppendPrintf(sentry, "icp.queries_sent = %ld\n",
+                      (long)f->icp.queries_sent);
+    storeAppendPrintf(sentry, "icp.replies_sent = %ld\n",
+                      (long)f->icp.replies_sent);
+    storeAppendPrintf(sentry, "icp.queries_recv = %ld\n",
+                      (long)f->icp.queries_recv);
+    storeAppendPrintf(sentry, "icp.replies_recv = %ld\n",
+                      (long)f->icp.replies_recv);
+    storeAppendPrintf(sentry, "icp.query_timeouts = %ld\n",
+                      (long)f->icp.query_timeouts);
+    storeAppendPrintf(sentry, "icp.replies_queued = %ld\n",
+                      (long)f->icp.replies_queued);
+    storeAppendPrintf(sentry, "icp.kbytes_sent = %ld\n",
+                      (long) f->icp.kbytes_sent.kb);
+    storeAppendPrintf(sentry, "icp.kbytes_recv = %ld\n",
+                      (long) f->icp.kbytes_recv.kb);
+    storeAppendPrintf(sentry, "icp.q_kbytes_sent = %ld\n",
+                      (long) f->icp.q_kbytes_sent.kb);
+    storeAppendPrintf(sentry, "icp.r_kbytes_sent = %ld\n",
+                      (long) f->icp.r_kbytes_sent.kb);
+    storeAppendPrintf(sentry, "icp.q_kbytes_recv = %ld\n",
+                      (long) f->icp.q_kbytes_recv.kb);
+    storeAppendPrintf(sentry, "icp.r_kbytes_recv = %ld\n",
+                      (long) f->icp.r_kbytes_recv.kb);
 
 #if USE_CACHE_DIGESTS
 
-    storeAppendPrintf(sentry, "icp.times_used = %d\n",
-                      f->icp.times_used);
-    storeAppendPrintf(sentry, "cd.times_used = %d\n",
-                      f->cd.times_used);
-    storeAppendPrintf(sentry, "cd.msgs_sent = %d\n",
-                      f->cd.msgs_sent);
-    storeAppendPrintf(sentry, "cd.msgs_recv = %d\n",
-                      f->cd.msgs_recv);
-    storeAppendPrintf(sentry, "cd.memory = %d\n",
-                      (int) f->cd.memory.kb);
-    storeAppendPrintf(sentry, "cd.local_memory = %d\n",
-                      (int) (store_digest ? store_digest->mask_size / 1024 : 0));
-    storeAppendPrintf(sentry, "cd.kbytes_sent = %d\n",
-                      (int) f->cd.kbytes_sent.kb);
-    storeAppendPrintf(sentry, "cd.kbytes_recv = %d\n",
-                      (int) f->cd.kbytes_recv.kb);
+    storeAppendPrintf(sentry, "icp.times_used = %ld\n",
+                      (long)f->icp.times_used);
+    storeAppendPrintf(sentry, "cd.times_used = %ld\n",
+                      (long)f->cd.times_used);
+    storeAppendPrintf(sentry, "cd.msgs_sent = %ld\n",
+                      (long)f->cd.msgs_sent);
+    storeAppendPrintf(sentry, "cd.msgs_recv = %ld\n",
+                      (long)f->cd.msgs_recv);
+    storeAppendPrintf(sentry, "cd.memory = %ld\n",
+                      (long) f->cd.memory.kb);
+    storeAppendPrintf(sentry, "cd.local_memory = %ld\n",
+                      (long) (store_digest ? store_digest->mask_size / 1024 : 0));
+    storeAppendPrintf(sentry, "cd.kbytes_sent = %ld\n",
+                      (long) f->cd.kbytes_sent.kb);
+    storeAppendPrintf(sentry, "cd.kbytes_recv = %ld\n",
+                      (long) f->cd.kbytes_recv.kb);
 #endif
 
-    storeAppendPrintf(sentry, "unlink.requests = %d\n",
-                      f->unlink.requests);
-    storeAppendPrintf(sentry, "page_faults = %d\n",
-                      f->page_faults);
+    storeAppendPrintf(sentry, "unlink.requests = %ld\n",
+                      (long)f->unlink.requests);
+    storeAppendPrintf(sentry, "page_faults = %ld\n",
+                      (long)f->page_faults);
     storeAppendPrintf(sentry, "select_loops = %ld\n",
-                      f->select_loops);
+                      (long)f->select_loops);
     storeAppendPrintf(sentry, "cpu_time = %f\n",
                       f->cputime);
     storeAppendPrintf(sentry, "wall_time = %f\n",
                       tvSubDsec(f->timestamp, current_time));
-    storeAppendPrintf(sentry, "swap.outs = %d\n",
-                      f->swap.outs);
-    storeAppendPrintf(sentry, "swap.ins = %d\n",
-                      f->swap.ins);
-    storeAppendPrintf(sentry, "swap.files_cleaned = %d\n",
-                      f->swap.files_cleaned);
-    storeAppendPrintf(sentry, "aborted_requests = %d\n",
-                      f->aborted_requests);
+    storeAppendPrintf(sentry, "swap.outs = %ld\n",
+                      (long)f->swap.outs);
+    storeAppendPrintf(sentry, "swap.ins = %ld\n",
+                      (long)f->swap.ins);
+    storeAppendPrintf(sentry, "swap.files_cleaned = %ld\n",
+                      (long)f->swap.files_cleaned);
+    storeAppendPrintf(sentry, "aborted_requests = %ld\n",
+                      (long)f->aborted_requests);
 }
 
 void
