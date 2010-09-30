@@ -817,7 +817,6 @@ NAME: follow_x_forwarded_for
 TYPE: acl_access
 IFDEF: FOLLOW_X_FORWARDED_FOR
 LOC: Config.accessList.followXFF
-DEFAULT: none
 DEFAULT_IF_NONE: deny all
 DOC_START
 	Allowing or Denying the X-Forwarded-For header to be followed to
@@ -924,7 +923,6 @@ DOC_END
 NAME: http_access
 TYPE: acl_access
 LOC: Config.accessList.http
-DEFAULT: none
 DEFAULT_IF_NONE: deny all
 DOC_START
 	Allowing or Denying access based on defined access lists
@@ -1019,7 +1017,6 @@ DOC_END
 NAME: icp_access
 TYPE: acl_access
 LOC: Config.accessList.icp
-DEFAULT: none
 DEFAULT_IF_NONE: deny all
 DOC_START
 	Allowing or Denying access to the ICP port based on defined
@@ -1041,7 +1038,6 @@ NAME: htcp_access
 IFDEF: USE_HTCP
 TYPE: acl_access
 LOC: Config.accessList.htcp
-DEFAULT: none
 DEFAULT_IF_NONE: deny all
 DOC_START
 	Allowing or Denying access to the HTCP port based on defined
@@ -1067,7 +1063,6 @@ NAME: htcp_clr_access
 IFDEF: USE_HTCP
 TYPE: acl_access
 LOC: Config.accessList.htcp_clr
-DEFAULT: none
 DEFAULT_IF_NONE: deny all
 DOC_START
 	Allowing or Denying access to purge content using HTCP based
@@ -1110,7 +1105,6 @@ DOC_END
 NAME: ident_lookup_access
 TYPE: acl_access
 IFDEF: USE_IDENT
-DEFAULT: none
 DEFAULT_IF_NONE: deny all
 LOC: Ident::TheConfig.identLookup
 DOC_START
@@ -2758,7 +2752,6 @@ DOC_END
 NAME: access_log cache_access_log
 TYPE: access_log
 LOC: Config.Log.accesslogs
-DEFAULT: none
 DEFAULT_IF_NONE: daemon:@DEFAULT_ACCESS_LOG@ squid
 DOC_START
 	These files log client request activities. Has a line every HTTP or
@@ -3166,7 +3159,6 @@ COMMENT_END
 
 NAME: cache_log
 TYPE: string
-DEFAULT: none
 DEFAULT_IF_NONE: @DEFAULT_CACHE_LOG@
 LOC: Debug::cache_log
 DOC_START
@@ -3197,7 +3189,6 @@ DOC_END
 NAME: coredump_dir
 TYPE: string
 LOC: Config.coredump_dir
-DEFAULT: none
 DEFAULT_IF_NONE: none
 DOC_START
 	By default Squid leaves core files in the directory from where
@@ -4861,7 +4852,6 @@ DOC_END
 NAME: wccp2_service
 TYPE: wccp2_service
 LOC: Config.Wccp2.info
-DEFAULT: none
 DEFAULT_IF_NONE: standard 0
 IFDEF: USE_WCCPv2
 DOC_START
@@ -5090,7 +5080,6 @@ DOC_END
 NAME: snmp_access
 TYPE: acl_access
 LOC: Config.accessList.snmp
-DEFAULT: none
 DEFAULT_IF_NONE: deny all
 IFDEF: SQUID_SNMP
 DOC_START
@@ -6423,7 +6412,6 @@ NAME: icap_retry
 TYPE: acl_access
 IFDEF: ICAP_CLIENT
 LOC: Adaptation::Icap::TheConfig.repeat
-DEFAULT: none
 DEFAULT_IF_NONE: deny all
 DOC_START
 	This ACL determines which retriable ICAP transactions are
@@ -6890,7 +6878,6 @@ NAME: as_whois_server
 TYPE: string
 LOC: Config.as_whois_server
 DEFAULT: whois.ra.net
-DEFAULT_IF_NONE: whois.ra.net
 DOC_START
 	WHOIS server to query for AS numbers.  NOTE: AS numbers are
 	queried only when Squid starts up, not for every request.
