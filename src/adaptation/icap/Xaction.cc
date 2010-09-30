@@ -268,7 +268,9 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
            theService->cfg().methodStr() << " " <<
            theService->cfg().uri << status());
     reuseConnection = false;
-    throw TexcHere(connector != NULL ?
+    const bool whileConnecting = connector != NULL;
+    closeConnection(); // so that late Comm callbacks do not disturb bypass
+    throw TexcHere(whileConnecting ?
                    "timed out while connecting to the ICAP service" :
                    "timed out while talking to the ICAP service");
 }
@@ -354,6 +356,18 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
     Must(io.flag == COMM_OK);
     Must(io.size >= 0);
 
+    if (!io.size) {
+        commEof = true;
+        reuseConnection = false;
+
+        // detect a pconn race condition: eof on the first pconn read
+        if (!al.icap.bytesRead && retriable()) {
+            setOutcome(xoRace);
+            mustStop("pconn race");
+            return;
+        }
+    } else {
+
     al.icap.bytesRead+=io.size;
 
     updateTimeout();
@@ -365,12 +379,8 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
      * here instead of reading directly into readBuf.buf.
      */
 
-    if (io.size > 0) {
         readBuf.append(commBuf, io.size);
         disableRetries(); // because pconn did not fail
-    } else {
-        reuseConnection = false;
-        commEof = true;
     }
 
     handleCommRead(io.size);
