@@ -40,6 +40,13 @@
  * field-value that maybe used in many http fields.
  */
 
+/// whether etag strings match
+static bool
+etagStringsMatch(const ETag &tag1, const ETag &tag2)
+{
+    return !strcmp(tag1.str, tag2.str);
+}
+
 /* parses a string as weak or strong entity-tag; returns true on success */
 /* note: we do not duplicate "str"! */
 int
@@ -62,11 +69,14 @@ etagParseInit(ETag * etag, const char *str)
     return etag->str != NULL;
 }
 
-/* returns true if etags are equal */
-int
-etagIsEqual(const ETag * tag1, const ETag * tag2)
+bool
+etagIsStrongEqual(const ETag &tag1, const ETag &tag2)
 {
-    assert(tag1 && tag2);
-    assert(!tag1->weak && !tag2->weak);		/* weak comparison not implemented yet */
-    return !strcmp(tag1->str, tag2->str);
+    return !tag1.weak && !tag2.weak && etagStringsMatch(tag1, tag2);
+}
+
+bool
+etagIsWeakEqual(const ETag &tag1, const ETag &tag2)
+{
+    return etagStringsMatch(tag1, tag2);
 }
