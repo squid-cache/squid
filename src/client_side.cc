@@ -1173,7 +1173,7 @@ clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
             return 0;		/* must use strong validator for sub-range requests */
         }
 
-        return etagIsEqual(&rep_tag, &spec.tag);
+        return etagIsStrongEqual(rep_tag, spec.tag);
     }
 
     /* got modification time? */
