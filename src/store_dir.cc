@@ -344,8 +344,8 @@ StoreController::updateSize(int64_t size, int sign)
 void
 SwapDir::updateSize(int64_t size, int sign)
 {
-    int blks = (size + fs.blksize - 1) / fs.blksize;
-    int k = (blks * fs.blksize >> 10) * sign;
+    int64_t blks = (size + fs.blksize - 1) / fs.blksize;
+    int64_t k = ((blks * fs.blksize) >> 10) * sign;
     cur_size += k;
     store_swap_size += k;
 
@@ -365,6 +365,7 @@ StoreController::stat(StoreEntry &output) const
                       (long int) maxSize());
     storeAppendPrintf(&output, "Current Store Swap Size: %8lu KB\n",
                       store_swap_size);
+    // XXX : below capacity display calculation breaks with int overflow on 64-bit systems
     storeAppendPrintf(&output, "Current Capacity       : %d%% used, %d%% free\n",
                       Math::intPercent((int) store_swap_size, (int) maxSize()),
                       Math::intPercent((int) (maxSize() - store_swap_size), (int) maxSize()));
