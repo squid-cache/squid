@@ -6,9 +6,9 @@
  */
 
 #include "config.h"
-#include <map>
-#include "comm.h"
 #include "base/TextException.h"
+#include "comm.h"
+#include "comm/Connection.h"
 #include "ipc/Port.h"
 #include "ipc/Messages.h"
 #include "ipc/Kids.h"
@@ -16,6 +16,7 @@
 #include "ipc/StartListening.h"
 #include "ipc/SharedListen.h"
 
+#include <map>
 
 /// holds information necessary to handle JoinListen response
 class PendingOpenRequest
@@ -80,22 +81,24 @@ void Ipc::SharedListenRequest::pack(TypedMsgHdr &hdrMsg) const
 }
 
 
-Ipc::SharedListenResponse::SharedListenResponse(int aFd, int anErrNo, int aMapId):
-        fd(aFd), errNo(anErrNo), mapId(aMapId)
+Ipc::SharedListenResponse::SharedListenResponse(const Comm::ConnectionPointer &c, int anErrNo, int aMapId):
+        conn(c), errNo(anErrNo), mapId(aMapId)
 {
 }
 
 Ipc::SharedListenResponse::SharedListenResponse(const TypedMsgHdr &hdrMsg):
-        fd(-1), errNo(0), mapId(-1)
+        conn(NULL), errNo(0), mapId(-1)
 {
     hdrMsg.getData(mtSharedListenResponse, this, sizeof(*this));
-    fd = hdrMsg.getFd();
+    conn = new Comm::Connection;
+    conn->fd = hdrMsg.getFd();
+    // other conn details are passed in OpenListenerParams and filled out by SharedListenJoin()
 }
 
 void Ipc::SharedListenResponse::pack(TypedMsgHdr &hdrMsg) const
 {
     hdrMsg.putData(mtSharedListenResponse, this, sizeof(*this));
-    hdrMsg.putFd(fd);
+    hdrMsg.putFd(conn->fd);
 }
 
 
@@ -121,9 +124,10 @@ void Ipc::JoinSharedListen(const OpenListenerParams &params,
 
 void Ipc::SharedListenJoined(const SharedListenResponse &response)
 {
-    const int fd = response.fd;
+    Comm::ConnectionPointer c = response.conn;
 
-    debugs(54, 3, HERE << "got listening FD " << fd << " errNo=" <<
+    // Dont debugs c fully since only FD is filled right now.
+    debugs(54, 3, HERE << "got listening FD " << c->fd << " errNo=" <<
            response.errNo << " mapId=" << response.mapId);
 
     Must(TheSharedListenRequestMap.find(response.mapId) != TheSharedListenRequestMap.end());
@@ -131,20 +135,23 @@ void Ipc::SharedListenJoined(const SharedListenResponse &response)
     Must(por.callback != NULL);
     TheSharedListenRequestMap.erase(response.mapId);
 
-    if (fd >= 0) {
+    if (Comm::IsConnOpen(c)) {
         OpenListenerParams &p = por.params;
+        c->local = p.addr;
+        c->flags = p.flags;
+        // XXX: leave the comm AI stuff to comm_import_opened()?
         struct addrinfo *AI = NULL;
         p.addr.GetAddrInfo(AI);
         AI->ai_socktype = p.sock_type;
         AI->ai_protocol = p.proto;
-        comm_import_opened(fd, p.addr, p.flags, FdNote(p.fdNote), AI);
+        comm_import_opened(c, FdNote(p.fdNote), AI);
         p.addr.FreeAddrInfo(AI);
     }
 
-    StartListeningCb *cbd =
-        dynamic_cast<StartListeningCb*>(por.callback->getDialer());
+    StartListeningCb *cbd = dynamic_cast<StartListeningCb*>(por.callback->getDialer());
     Must(cbd);
-    cbd->fd = fd;
+    cbd->conn = c;
     cbd->errNo = response.errNo;
+    cbd->handlerSubscription = por.params.handlerSubscription;
     ScheduleCallHere(por.callback);
 }

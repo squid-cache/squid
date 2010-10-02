@@ -1544,23 +1544,18 @@ FtpStateData::writeCommand(const char *buf)
         ebuf = xstrdup(buf);
 
     safe_free(ctrl.last_command);
-
     safe_free(ctrl.last_reply);
-
     ctrl.last_command = ebuf;
 
     if (!Comm::IsConnOpen(ctrl.conn)) {
-        debugs(9, 2, HERE << "cannot send to closing ctrl FD " << ctrl.conn->fd);
+        debugs(9, 2, HERE << "cannot send to closing ctrl " << ctrl.conn);
         // TODO: assert(ctrl.closer != NULL);
         return;
     }
 
     typedef CommCbMemFunT<FtpStateData, CommIoCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(9, 5, Dialer, this, FtpStateData::ftpWriteCommandCallback);
-    comm_write(ctrl.conn->fd,
-               ctrl.last_command,
-               strlen(ctrl.last_command),
-               call);
+    comm_write(ctrl.conn, ctrl.last_command, strlen(ctrl.last_command), call);
 
     scheduleReadControlReply(0);
 }
@@ -1581,7 +1576,7 @@ FtpStateData::ftpWriteCommandCallback(const CommIoCbParams &io)
         return;
 
     if (io.flag) {
-        debugs(9, DBG_IMPORTANT, "ftpWriteCommandCallback: FD " << io.fd << ": " << xstrerr(io.xerrno));
+        debugs(9, DBG_IMPORTANT, "ftpWriteCommandCallback: " << io.conn << ": " << xstrerr(io.xerrno));
         failed(ERR_WRITE_ERROR, io.xerrno);
         /* failed closes ctrl.conn and frees ftpState */
         return;
@@ -1685,7 +1680,7 @@ FtpStateData::ftpParseControlReply(char *buf, size_t len, int *codep, size_t *us
 void
 FtpStateData::scheduleReadControlReply(int buffered_ok)
 {
-    debugs(9, 3, HERE << "FD " << ctrl.conn->fd);
+    debugs(9, 3, HERE << ctrl.conn);
 
     if (buffered_ok && ctrl.offset > 0) {
         /* We've already read some reply data */

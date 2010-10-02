@@ -78,7 +78,7 @@ CacheManager::registerAction(char const * action, char const * desc, OBJH * hand
 }
 
 /**
- \ingroup CacheManagerAPI
+ * \ingroup CacheManagerAPI
  * Registers a C++-style action, via a poiner to a subclass of
  * a CacheManagerAction object, whose run() method will be invoked when
  * CacheManager identifies that the user has requested the action.

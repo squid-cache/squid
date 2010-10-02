@@ -1,7 +1,6 @@
 #ifndef _SQUID_BASE_SUBSCRIPTION_H
 #define _SQUID_BASE_SUBSCRIPTION_H
 
-#include "RefCount.h"
 #include "base/AsyncCall.h"
 
 /**

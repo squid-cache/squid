@@ -116,34 +116,32 @@
 #define comm_close comm_lingering_close
 #endif
 
-/// dials clientHttpConnectionOpened or clientHttpsConnectionOpened call
+/// dials clientListenerConnectionOpened call
 class ListeningStartedDialer: public CallDialer, public Ipc::StartListeningCb
 {
 public:
-    typedef void (*Handler)(int fd, int errNo, http_port_list *portCfg);
-    ListeningStartedDialer(Handler aHandler, http_port_list *aPortCfg):
-            handler(aHandler), portCfg(aPortCfg) {}
+    typedef void (*Handler)(int errNo, http_port_list *portCfg, bool uses_ssl);
+    ListeningStartedDialer(Handler aHandler, http_port_list *aPortCfg, bool aSslFlag):
+            handler(aHandler), portCfg(aPortCfg), uses_ssl(aSslFlag) {}
 
     virtual void print(std::ostream &os) const {
         startPrint(os) <<
-        ", port=" << (void*)portCfg << ')';
+        ", " << (uses_ssl? "SSL " :"") << "port=" << (void*)portCfg << ')';
     }
 
     virtual bool canDial(AsyncCall &) const { return true; }
-    virtual void dial(AsyncCall &) { (handler)(fd, errNo, portCfg); }
+    virtual void dial(AsyncCall &) { (handler)(errNo, portCfg, uses_ssl); }
 
 public:
     Handler handler;
 
 private:
     http_port_list *portCfg; ///< from Config.Sockaddr.http
+    bool uses_ssl;
 };
 
 
-static void clientHttpConnectionOpened(int fd, int errNo, http_port_list *s);
-#if USE_SSL
-static void clientHttpsConnectionOpened(int fd, int errNo, http_port_list *s);
-#endif
+static void clientListenerConnectionOpened(int errNo, http_port_list *s, bool uses_ssl);
 
 /* our socket-related context */
 
@@ -171,6 +169,8 @@ static ClientSocketContext *ClientSocketContextNew(ClientHttpRequest *);
 /* other */
 static IOCB clientWriteComplete;
 static IOCB clientWriteBodyComplete;
+static IOACB httpAccept;
+static IOACB httpsAccept;
 static bool clientParseRequest(ConnStateData * conn, bool &do_next_read);
 static PF clientLifetimeTimeout;
 static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
@@ -202,14 +202,13 @@ static void connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount);
 static ConnStateData *connStateCreate(const Comm::ConnectionPointer &details, http_port_list *port);
 
 
-// TODO make this return the conn for use instead.
-int
-ClientSocketContext::fd() const
+const Comm::ConnectionPointer &
+ClientSocketContext::clientConn() const
 {
     assert (http);
     assert (http->getConn() != NULL);
     assert (http->getConn()->clientConn != NULL);
-    return http->getConn()->clientConn->fd;
+    return http->getConn()->clientConn;
 }
 
 clientStreamNode *
@@ -360,14 +359,14 @@ ClientSocketContext::writeControlMsg(HttpControlMsg &msg)
 
     AsyncCall::Pointer call = commCbCall(33, 5, "ClientSocketContext::wroteControlMsg",
                                          CommIoCbPtrFun(&WroteControlMsg, this));
-    comm_write_mbuf(fd(), mb, call);
+    comm_write_mbuf(clientConn(), mb, call);
 
     delete mb;
 }
 
 /// called when we wrote the 1xx response
 void
-ClientSocketContext::wroteControlMsg(int fd, char *, size_t, comm_err_t errflag, int xerrno)
+ClientSocketContext::wroteControlMsg(const Comm::ConnectionPointer &conn, char *, size_t, comm_err_t errflag, int xerrno)
 {
     if (errflag == COMM_ERR_CLOSING)
         return;
@@ -383,15 +382,16 @@ ClientSocketContext::wroteControlMsg(int fd, char *, size_t, comm_err_t errflag,
 
     // close on 1xx errors to be conservative and to simplify the code
     // (if we do not close, we must notify the source of a failure!)
-    comm_close(fd);
+    Comm::ConnectionPointer nonConst = conn;
+    nonConst->close();
 }
 
 /// wroteControlMsg() wrapper: ClientSocketContext is not an AsyncJob
 void
-ClientSocketContext::WroteControlMsg(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
+ClientSocketContext::WroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     ClientSocketContext *context = static_cast<ClientSocketContext*>(data);
-    context->wroteControlMsg(fd, bufnotused, size, errflag, xerrno);
+    context->wroteControlMsg(conn, bufnotused, size, errflag, xerrno);
 }
 
 #if USE_IDENT
@@ -940,7 +940,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
         noteSentBodyBytes (length);
         AsyncCall::Pointer call = commCbCall(33, 5, "clientWriteBodyComplete",
                                              CommIoCbPtrFun(clientWriteBodyComplete, this));
-        comm_write(fd(), bodyData.data, length, call );
+        comm_write(clientConn(), bodyData.data, length, call );
         return;
     }
 
@@ -955,9 +955,9 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
         /* write */
         AsyncCall::Pointer call = commCbCall(33, 5, "clientWriteComplete",
                                              CommIoCbPtrFun(clientWriteComplete, this));
-        comm_write_mbuf(fd(), &mb, call);
+        comm_write_mbuf(clientConn(), &mb, call);
     }  else
-        writeComplete(fd(), NULL, 0, COMM_OK);
+        writeComplete(clientConn(), NULL, 0, COMM_OK);
 }
 
 /**
@@ -1360,7 +1360,7 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
     debugs(33,7, HERE << "sendStartOfMessage schedules clientWriteComplete");
     AsyncCall::Pointer call = commCbCall(33, 5, "clientWriteComplete",
                                          CommIoCbPtrFun(clientWriteComplete, this));
-    comm_write_mbuf(fd(), mb, call);
+    comm_write_mbuf(clientConn(), mb, call);
 
     delete mb;
 }
@@ -1405,7 +1405,7 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
     const bool mustSendLastChunk = http->request->flags.chunked_reply &&
                                    !http->request->flags.stream_error && !context->startOfOutput();
     if (responseFinishedOrFailed(rep, receivedData) && !mustSendLastChunk) {
-        context->writeComplete(http->getConn()->clientConn->fd, NULL, 0, COMM_OK);
+        context->writeComplete(http->getConn()->clientConn, NULL, 0, COMM_OK);
         PROF_stop(clientSocketRecipient);
         return;
     }
@@ -1448,10 +1448,10 @@ clientSocketDetach(clientStreamNode * node, ClientHttpRequest * http)
 }
 
 static void
-clientWriteBodyComplete(int fd, char *buf, size_t size, comm_err_t errflag, int xerrno, void *data)
+clientWriteBodyComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     debugs(33,7, HERE << "clientWriteBodyComplete schedules clientWriteComplete");
-    clientWriteComplete(fd, NULL, size, errflag, xerrno, data);
+    clientWriteComplete(conn, NULL, size, errflag, xerrno, data);
 }
 
 void
@@ -1580,7 +1580,7 @@ ClientSocketContext::canPackMoreRanges() const
     /** first update iterator "i" if needed */
 
     if (!http->range_iter.debt()) {
-        debugs(33, 5, "ClientSocketContext::canPackMoreRanges: At end of current range spec for FD " << fd());
+        debugs(33, 5, "ClientSocketContext::canPackMoreRanges: At end of current range spec for FD " << clientConn());
 
         if (http->range_iter.pos.incrementable())
             ++http->range_iter.pos;
@@ -1638,7 +1638,7 @@ ClientSocketContext::getNextRangeOffset() const
 void
 ClientSocketContext::pullData()
 {
-    debugs(33, 5, "ClientSocketContext::pullData: FD " << fd() <<
+    debugs(33, 5, "ClientSocketContext::pullData: FD " << clientConn() <<
            " attempting to pull upstream data");
 
     /* More data will be coming from the stream. */
@@ -1667,7 +1667,7 @@ ClientSocketContext::socketState()
 
             if (!canPackMoreRanges()) {
                 debugs(33, 5, HERE << "Range request at end of returnable " <<
-                       "range sequence on FD " << fd());
+                       "range sequence on " << clientConn());
 
                 if (http->request->flags.proxy_keepalive)
                     return STREAM_COMPLETE;
@@ -1726,10 +1726,10 @@ ClientSocketContext::socketState()
  * no more data to send.
  */
 void
-clientWriteComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
+clientWriteComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     ClientSocketContext *context = (ClientSocketContext *)data;
-    context->writeComplete (fd, bufnotused, size, errflag);
+    context->writeComplete(conn, bufnotused, size, errflag);
 }
 
 /// remembers the abnormal connection termination for logging purposes
@@ -1792,12 +1792,12 @@ ClientSocketContext::initiateClose(const char *reason)
 }
 
 void
-ClientSocketContext::writeComplete(int aFileDescriptor, char *bufnotused, size_t size, comm_err_t errflag)
+ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag)
 {
     StoreEntry *entry = http->storeEntry();
     http->out.size += size;
-    assert(aFileDescriptor > -1);
-    debugs(33, 5, "clientWriteComplete: FD " << aFileDescriptor << ", sz " << size <<
+    assert(Comm::IsConnOpen(conn));
+    debugs(33, 5, HERE << conn << ", sz " << size <<
            ", err " << errflag << ", off " << http->out.size << ", len " <<
            entry ? entry->objectLen() : 0);
     clientUpdateSocketStats(http->logType, size);
@@ -1807,9 +1807,9 @@ ClientSocketContext::writeComplete(int aFileDescriptor, char *bufnotused, size_t
     if (errflag == COMM_ERR_CLOSING)
         return;
 
-    assert (Comm::IsConnOpen(http->getConn()->clientConn) && this->fd() == aFileDescriptor);
+    assert(Comm::IsConnOpen(clientConn()) && clientConn()->fd == conn->fd);
 
-    if (errflag || clientHttpRequestStatus(aFileDescriptor, http)) {
+    if (errflag || clientHttpRequestStatus(conn->fd, http)) {
         initiateClose("failure or true request status");
         /* Do we leak here ? */
         return;
@@ -1822,7 +1822,7 @@ ClientSocketContext::writeComplete(int aFileDescriptor, char *bufnotused, size_t
         break;
 
     case STREAM_COMPLETE:
-        debugs(33, 5, "clientWriteComplete: FD " << aFileDescriptor << " Keeping Alive");
+        debugs(33, 5, HERE << conn << " Keeping Alive");
         keepaliveNextRequest();
         return;
 
@@ -3384,9 +3384,9 @@ ConnStateData::switchToHttps()
 
 /// check FD after clientHttp[s]ConnectionOpened, adjust HttpSockets as needed
 static bool
-OpenedHttpSocket(int fd, const char *msgIfFail)
+OpenedHttpSocket(const Comm::ConnectionPointer &clientConn, const char *msgIfFail)
 {
-    if (fd < 0) {
+    if (!Comm::IsConnOpen(clientConn)) {
         Must(NHttpSockets > 0); // we tried to open some
         --NHttpSockets; // there will be fewer sockets than planned
         Must(HttpSockets[NHttpSockets] < 0); // no extra fds received
@@ -3401,12 +3401,12 @@ OpenedHttpSocket(int fd, const char *msgIfFail)
 
 /// find any unused HttpSockets[] slot and store fd there or return false
 static bool
-AddOpenedHttpSocket(int fd)
+AddOpenedHttpSocket(const Comm::ConnectionPointer &conn)
 {
     bool found = false;
     for (int i = 0; i < NHttpSockets && !found; i++) {
         if ((found = HttpSockets[i] < 0))
-            HttpSockets[i] = fd;
+            HttpSockets[i] = conn->fd;
     }
     return found;
 }
@@ -3436,18 +3436,26 @@ clientHttpConnectionsOpen(void)
             ++bumpCount;
 #endif
 
-        /* AYJ: 2009-12-27: bit bumpy. new ConnAcceptor(...) should be doing all the Comm:: stuff ... */
+// NOTE: would the design here be better if we opened both the ConnAcceptor and IPC informative messages now?
+//	that way we have at least one worker listening on the socket immediately with others joining in as
+//	they receive the IPC message.
 
-        const int openFlags = COMM_NONBLOCKING |
-                              (s->spoof_client_ip ? COMM_TRANSPARENT : 0);
+        // Fill out a Comm::Connection which IPC will open as a listener for us
+        //  then pass back so we can start a ConnAcceptor subscription.
+        s->listenConn = new Comm::Connection;
+        s->listenConn->local = s->s;
+        s->listenConn->flags = COMM_NONBLOCKING | (s->spoof_client_ip ? COMM_TRANSPARENT : 0);
 
-        AsyncCall::Pointer callback = asyncCall(33,2,
-                                                "clientHttpConnectionOpened",
-                                                ListeningStartedDialer(&clientHttpConnectionOpened, s));
-        Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->s, openFlags,
-                            Ipc::fdnHttpSocket, callback);
+        // setup the subscriptions such that new connections accepted by listenConn are handled by HTTP
+        typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
+        RefCount<AcceptCall> subCall = commCbCall(5, 5, "httpAccept", CommAcceptCbPtrFun(httpAccept, s));
+        Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
 
-        HttpSockets[NHttpSockets++] = -1; // set in clientHttpConnectionOpened
+        AsyncCall::Pointer listenCall = asyncCall(33,2, "clientListenerConnectionOpened",
+                                                  ListeningStartedDialer(&clientListenerConnectionOpened, s, false));
+        Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpSocket, listenCall, sub);
+
+        HttpSockets[NHttpSockets++] = -1; // set in clientListenerHttpConnectionOpened
     }
 
 #if USE_SSL
@@ -3458,39 +3466,12 @@ clientHttpConnectionsOpen(void)
 #endif
 }
 
-/// process clientHttpConnectionsOpen result
-static void
-clientHttpConnectionOpened(int fd, int, http_port_list *s)
-{
-    if (!OpenedHttpSocket(fd, "Cannot open HTTP Port"))
-        return;
-
-    Must(s);
-
-    s->listenConn = new Comm::Connection();
-    s->listenConn->local = s->s;
-    s->listenConn->fd = fd;
-
-    // TODO: hide most of this subscription stuff away.
-    typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
-    RefCount<AcceptCall> call = commCbCall(5, 5, "httpAccept", CommAcceptCbPtrFun(httpAccept, s));
-    Subscription::Pointer sub = new CallSubscription<AcceptCall>(call);
-    AsyncJob::Start(new Comm::ConnAcceptor(s->listenConn, "HTTP Listener", sub));
-
-    debugs(1, 1, "Accepting" <<
-           (s->intercepted ? " intercepted" : "") <<
-           (s->spoof_client_ip ? " spoofing" : "") <<
-           (s->sslBump ? " bumpy" : "") <<
-           (s->accel ? " accelerated" : "")
-           << " HTTP connections at " << s->s << ", FD " << fd << ".");
-
-    Must(AddOpenedHttpSocket(fd)); // otherwise, we have received a fd we did not ask for
-}
-
 #if USE_SSL
 static void
 clientHttpsConnectionsOpen(void)
 {
+// XXX: de-dupe clientHttpConnectionsOpened and clientHttpsConnectionsOpened
+
     https_port_list *s;
 
     for (s = Config.Sockaddr.https; s; s = (https_port_list *)s->http.next) {
@@ -3506,41 +3487,45 @@ clientHttpsConnectionsOpen(void)
             continue;
         }
 
-        AsyncCall::Pointer call = asyncCall(33, 2, "clientHttpsConnectionOpened",
-                                            ListeningStartedDialer(&clientHttpsConnectionOpened, &s->http));
+        // Fill out a Comm::Connection which IPC will open as a listener for us
+        s->http.listenConn = new Comm::Connection;
+        s->http.listenConn->local = s->http.s;
+        s->http.listenConn->flags = COMM_NONBLOCKING | (s->http.spoof_client_ip ? COMM_TRANSPARENT : 0);
 
-        Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->http.s, COMM_NONBLOCKING,
-                            Ipc::fdnHttpsSocket, call);
+        // setup the subscriptions such that new connections accepted by listenConn are handled by HTTPS
+        typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
+        RefCount<AcceptCall> subCall = commCbCall(5, 5, "httpsAccept", CommAcceptCbPtrFun(httpsAccept, s));
+        Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
+
+        AsyncCall::Pointer listenCall = asyncCall(33, 2, "clientListenerConnectionOpened",
+                                                  ListeningStartedDialer(&clientListenerConnectionOpened, &s->http, true));
+
+        Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpsSocket, listenCall, sub);
 
         HttpSockets[NHttpSockets++] = -1;
     }
 }
+#endif
 
-/// process clientHttpsConnectionsOpen result
+/// process clientHttpConnectionsOpen result
 static void
-clientHttpsConnectionOpened(int fd, int, http_port_list *s)
+clientListenerConnectionOpened(int, http_port_list *s, bool uses_ssl)
 {
-    if (!OpenedHttpSocket(fd, "Cannot open HTTPS Port"))
+    if (!OpenedHttpSocket(s->listenConn, (uses_ssl?"Cannot open HTTP Port":"Cannot open HTTPS Port")))
         return;
 
     Must(s);
+    Must(Comm::IsConnOpen(s->listenConn));
 
-    s->listenConn = new Comm::Connection();
-    s->listenConn->local = s->s;
-    s->listenConn->fd = fd;
+    debugs(1, 1, "Accepting" <<
+           (s->intercepted ? " intercepted" : "") <<
+           (s->spoof_client_ip ? " spoofing" : "") <<
+           (s->sslBump ? " bumpy" : "") <<
+           (s->accel ? " accelerated" : "")
+           << " HTTP" << (uses_ssl?"S":"") << " connections at " << s->listenConn << ".");
 
-    // TODO: hide most of this subscription stuff away.
-    typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
-    RefCount<AcceptCall> call = commCbCall(5, 5, "httpsAccept", CommAcceptCbPtrFun(httpsAccept, s));
-    Subscription::Pointer sub = new CallSubscription<AcceptCall>(call);
-    AsyncJob::Start(new Comm::ConnAcceptor(s->listenConn, "HTTPS Listener", sub));
-
-    debugs(1, 1, "Accepting HTTPS connections at " << s->s << ", FD " << fd << ".");
-
-    Must(AddOpenedHttpSocket(fd)); // otherwise, we have received a fd we did not ask for
+    Must(AddOpenedHttpSocket(s->listenConn)); // otherwise, we have received a fd we did not ask for
 }
-
-#endif
 
 void
 clientOpenListenSockets(void)
@@ -3559,7 +3544,7 @@ clientHttpConnectionsClose(void)
 {
     for (http_port_list *s = Config.Sockaddr.http; s; s = s->next) {
         if (s->listenConn != NULL) {
-            debugs(1, 1, "Closing HTTP port " << s->s);
+            debugs(1, 1, "Closing HTTP port " << s->listenConn->local);
             s->listenConn->close();
             s->listenConn = NULL;
         }
@@ -3568,7 +3553,7 @@ clientHttpConnectionsClose(void)
 #if USE_SSL
     for (http_port_list *s = Config.Sockaddr.https; s; s = s->next) {
         if (s->listenConn != NULL) {
-            debugs(1, 1, "Closing HTTPS port " << s->s);
+            debugs(1, 1, "Closing HTTPS port " << s->listenConn->local);
             s->listenConn->close();
             s->listenConn = NULL;
         }

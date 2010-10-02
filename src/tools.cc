@@ -33,18 +33,22 @@
  */
 
 #include "squid.h"
-#include "compat/initgroups.h"
-#include "compat/getaddrinfo.h"
-#include "compat/getnameinfo.h"
-#include "compat/tempnam.h"
+// XXX: these should be already pulled in...
+//#include "compat/initgroups.h"
+//#include "compat/getaddrinfo.h"
+//#include "compat/getnameinfo.h"
+//#include "compat/tempnam.h"
+
+#include "base/Subscription.h"
 #include "fde.h"
+#include "ICP.h"
 #include "ip/Intercept.h"
+#include "ipc/Coordinator.h"
+#include "ipc/Kids.h"
 #include "MemBuf.h"
 #include "ProtoPort.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
-#include "ipc/Kids.h"
-#include "ipc/Coordinator.h"
 #include "SwapDir.h"
 #include "wordlist.h"
 
@@ -90,19 +94,18 @@ SQUIDCEXTERN void (*failure_notify) (const char *);
 void
 releaseServerSockets(void)
 {
-    int i;
     /* Release the main ports as early as possible */
 
-    for (i = 0; i < NHttpSockets; i++) {
+    // clear both http_port and https_port lists.
+    for (int i = 0; i < NHttpSockets; i++) {
         if (HttpSockets[i] >= 0)
             close(HttpSockets[i]);
     }
 
-    if (theInIcpConnection >= 0)
-        close(theInIcpConnection);
+    // clear icp_port's
+    icpConnectionClose();
 
-    if (theOutIcpConnection >= 0 && theOutIcpConnection != theInIcpConnection)
-        close(theOutIcpConnection);
+    // XXX: Why not the HTCP, SNMP, DNS ports as well?
 }
 
 static char *

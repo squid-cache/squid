@@ -401,14 +401,6 @@ ServerStateData::sentRequestBody(const CommIoCbParams &io)
         debugs(9,3, HERE << "waiting for body production end or abort");
 }
 
-#if 0
-bool
-ServerStateData::canSend(int fd) const
-{
-    return fd >= 0 && !fd_table[fd].closing();
-}
-#endif
-
 void
 ServerStateData::sendMoreRequestBody()
 {
@@ -418,7 +410,7 @@ ServerStateData::sendMoreRequestBody()
     const Comm::ConnectionPointer conn = dataDescriptor();
 
     if (!Comm::IsConnOpen(conn)) {
-        debugs(9,3, HERE << "cannot send request body to closing FD " << (conn != NULL?conn->fd:-1));
+        debugs(9,3, HERE << "cannot send request body to closing " << conn);
         return; // wait for the kid's close handler; TODO: assert(closer);
     }
 
@@ -426,9 +418,8 @@ ServerStateData::sendMoreRequestBody()
     if (getMoreRequestBody(buf) && buf.contentSize() > 0) {
         debugs(9,3, HERE << "will write " << buf.contentSize() << " request body bytes");
         typedef CommCbMemFunT<ServerStateData, CommIoCbParams> Dialer;
-        requestSender = JobCallback(93,3,
-                                    Dialer, this, ServerStateData::sentRequestBody);
-        comm_write_mbuf(conn->fd, &buf, requestSender);
+        requestSender = JobCallback(93,3, Dialer, this, ServerStateData::sentRequestBody);
+        comm_write_mbuf(conn, &buf, requestSender);
     } else {
         debugs(9,3, HERE << "will wait for more request body bytes or eof");
         requestSender = NULL;

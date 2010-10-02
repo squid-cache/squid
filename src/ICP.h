@@ -38,6 +38,8 @@
  \ingroup ServerProtocol
  */
 
+#include "comm/forward.h"
+#include "ip/Address.h"
 #include "StoreClient.h"
 
 /**
@@ -120,6 +122,10 @@ struct icpUdpData {
 
     struct timeval queue_time;
 };
+
+extern Comm::ConnectionPointer icpIncomingConn;
+extern Comm::ConnectionPointer icpOutgoingConn;
+extern Ip::Address theIcpPublicHostID;
 
 /// \ingroup ServerProtocolICPAPI
 HttpRequest* icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from);

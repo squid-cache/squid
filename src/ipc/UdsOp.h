@@ -11,6 +11,7 @@
 
 #include "SquidString.h"
 #include "base/AsyncJob.h"
+#include "comm/forward.h"
 #include "ipc/TypedMsgHdr.h"
 
 class CommTimeoutCbParams;
@@ -33,7 +34,7 @@ public:
 protected:
     virtual void timedout() {} ///< called after setTimeout() if timed out
 
-    int fd(); ///< creates if needed and returns raw UDS socket descriptor
+    Comm::ConnectionPointer &conn(); ///< creates if needed and returns raw UDS socket descriptor
 
     /// call timedout() if no UDS messages in a given number of seconds
     void setTimeout(int seconds, const char *handlerName);
@@ -47,7 +48,7 @@ private:
 
 private:
     int options; ///< UDS options
-    int fd_; ///< UDS descriptor
+    Comm::ConnectionPointer conn_; ///< UDS descriptor
 
 private:
     UdsOp(const UdsOp &); // not implemented

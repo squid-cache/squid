@@ -63,7 +63,7 @@ public:
     ClientSocketContext();
     ~ClientSocketContext();
     bool startOfOutput() const;
-    void writeComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag);
+    void writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag);
     void keepaliveNextRequest();
     ClientHttpRequest *http;	/* we own this */
     HttpReply *reply;
@@ -103,7 +103,7 @@ public:
     size_t lengthToSend(Range<int64_t> const &available);
     void noteSentBodyBytes(size_t);
     void buildRangeHeader(HttpReply * rep);
-    int fd() const;
+    const Comm::ConnectionPointer & clientConn() const;
     clientStreamNode * getTail() const;
     clientStreamNode * getClientReplyContext() const;
     void connIsFinished();
@@ -117,8 +117,8 @@ public:
     void writeControlMsg(HttpControlMsg &msg);
 
 protected:
-    static void WroteControlMsg(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data);
-    void wroteControlMsg(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno);
+    static IOCB WroteControlMsg;  //(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data);
+    void wroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno);
 
 private:
     CBDATA_CLASS(ClientSocketContext);

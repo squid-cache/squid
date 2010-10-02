@@ -547,7 +547,7 @@ neighborsRegisterWithCacheManager()
                             "Peer Cache Statistics",
                             neighborDumpPeers, 0, 1);
 
-    if (theInIcpConnection >= 0) {
+    if (Comm::IsConnOpen(icpIncomingConn)) {
         manager->registerAction("non_peers",
                                 "List of Unknown sites sending ICP messages",
                                 neighborDumpNonPeers, 0, 1);
@@ -557,23 +557,14 @@ neighborsRegisterWithCacheManager()
 void
 neighbors_init(void)
 {
-    Ip::Address nul;
-    struct addrinfo *AI = NULL;
     struct servent *sep = NULL;
     const char *me = getMyHostname();
     peer *thisPeer = NULL;
     peer *next = NULL;
-    int fd = theInIcpConnection;
 
     neighborsRegisterWithCacheManager();
 
-    /* setup addrinfo for use */
-    nul.InitAddrInfo(AI);
-
-    if (fd >= 0) {
-
-        if (getsockname(fd, AI->ai_addr, &AI->ai_addrlen) < 0)
-            debugs(15, 1, "getsockname(" << fd << "," << AI->ai_addr << "," << &AI->ai_addrlen << ") failed.");
+    if (Comm::IsConnOpen(icpIncomingConn)) {
 
         for (thisPeer = Config.peers; thisPeer; thisPeer = next) {
             http_port_list *s = NULL;
@@ -586,9 +577,9 @@ neighbors_init(void)
                 if (thisPeer->http_port != s->s.GetPort())
                     continue;
 
-                debugs(15, 1, "WARNING: Peer looks like this host");
+                debugs(15, DBG_IMPORTANT, "WARNING: Peer looks like this host");
 
-                debugs(15, 1, "         Ignoring " <<
+                debugs(15, DBG_IMPORTANT, "         Ignoring " <<
                        neighborTypeStr(thisPeer) << " " << thisPeer->host <<
                        "/" << thisPeer->http_port << "/" <<
                        thisPeer->icp.port);
@@ -600,21 +591,19 @@ neighbors_init(void)
 
     peerRefreshDNS((void *) 1);
 
-    if (ICP_INVALID == echo_hdr.opcode) {
+    if (echo_hdr.opcode == ICP_INVALID) {
         echo_hdr.opcode = ICP_SECHO;
         echo_hdr.version = ICP_VERSION_CURRENT;
         echo_hdr.length = 0;
         echo_hdr.reqnum = 0;
         echo_hdr.flags = 0;
         echo_hdr.pad = 0;
-        nul = *AI;
-        nul.GetInAddr( *((struct in_addr*)&echo_hdr.shostid) );
+        theIcpPublicHostID.GetInAddr( *((struct in_addr*)&echo_hdr.shostid) );
         sep = getservbyname("echo", "udp");
         echo_port = sep ? ntohs((u_short) sep->s_port) : 7;
     }
 
     first_ping = Config.peers;
-    nul.FreeAddrInfo(AI);
 }
 
 int
@@ -680,19 +669,19 @@ neighborsUdpPing(HttpRequest * request,
         } else
 #endif
         {
-            if (Config.Port.icp <= 0 || theOutIcpConnection <= 0) {
+            if (Config.Port.icp <= 0 || !Comm::IsConnOpen(icpOutgoingConn)) {
                 debugs(15, DBG_CRITICAL, "ICP is disabled! Cannot send ICP request to peer.");
                 continue;
             } else {
 
                 if (p->type == PEER_MULTICAST)
-                    mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
+                    mcastSetTtl(icpOutgoingConn->fd, p->mcast.ttl);
 
                 if (p->icp.port == echo_port) {
                     debugs(15, 4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping");
                     echo_hdr.reqnum = reqnum;
                     query = _icp_common_t::createMessage(ICP_DECHO, 0, url, reqnum, 0);
-                    icpUdpSend(theOutIcpConnection,p->in_addr,query,LOG_ICP_QUERY,0);
+                    icpUdpSend(icpOutgoingConn->fd, p->in_addr, query, LOG_ICP_QUERY, 0);
                 } else {
                     flags = 0;
 
@@ -702,7 +691,7 @@ neighborsUdpPing(HttpRequest * request,
 
                     query = _icp_common_t::createMessage(ICP_QUERY, flags, url, reqnum, 0);
 
-                    icpUdpSend(theOutIcpConnection, p->in_addr, query, LOG_ICP_QUERY, 0);
+                    icpUdpSend(icpOutgoingConn->fd, p->in_addr, query, LOG_ICP_QUERY, 0);
                 }
             }
         }
@@ -1437,15 +1426,11 @@ peerCountMcastPeersStart(void *data)
     mem->start_ping = current_time;
     mem->ping_reply_callback = peerCountHandleIcpReply;
     mem->ircb_data = psstate;
-    mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
+    mcastSetTtl(icpOutgoingConn->fd, p->mcast.ttl);
     p->mcast.id = mem->id;
     reqnum = icpSetCacheKey((const cache_key *)fake->key);
     query = _icp_common_t::createMessage(ICP_QUERY, 0, url, reqnum, 0);
-    icpUdpSend(theOutIcpConnection,
-               p->in_addr,
-               query,
-               LOG_ICP_QUERY,
-               0);
+    icpUdpSend(icpOutgoingConn->fd, p->in_addr, query, LOG_ICP_QUERY, 0);
     fake->ping_status = PING_WAITING;
     eventAdd("peerCountMcastPeersDone",
              peerCountMcastPeersDone,

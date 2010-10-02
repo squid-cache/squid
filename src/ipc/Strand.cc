@@ -6,12 +6,13 @@
  */
 
 #include "config.h"
+#include "base/Subscription.h"
 #include "base/TextException.h"
+#include "comm/Connection.h"
 #include "ipc/Strand.h"
 #include "ipc/Messages.h"
 #include "ipc/SharedListen.h"
 #include "ipc/Kids.h"
-
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Strand);
 

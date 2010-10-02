@@ -34,16 +34,16 @@
 #ifndef SQUID_SERVER_H
 #define SQUID_SERVER_H
 
-#include "StoreIOBuffer.h"
-#include "forward.h"
-#include "BodyPipe.h"
-#include "base/AsyncJob.h"
-#include "CommCalls.h"
-
+#include "config.h"
 #if USE_ADAPTATION
 #include "adaptation/forward.h"
 #include "adaptation/Initiator.h"
 #endif
+#include "base/AsyncJob.h"
+#include "BodyPipe.h"
+#include "CommCalls.h"
+#include "forward.h"
+#include "StoreIOBuffer.h"
 
 /**
  * ServerStateData is a common base for server-side classes such as
@@ -52,7 +52,7 @@
  * virgin responses using ICAP, and provide the client-side consumer with
  * responses.
  *
- \todo TODO: Rename to ServerStateDataInfoRecordHandler.
+ * \todo TODO: Rename to something clearer.
  */
 class ServerStateData:
 #if USE_ADAPTATION

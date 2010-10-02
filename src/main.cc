@@ -34,32 +34,22 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "acl/Acl.h"
+#include "acl/Asn.h"
+#if USE_ADAPTATION
+#include "adaptation/Config.h"
+#endif
+#if USE_ECAP
+#include "adaptation/ecap/Config.h"
+#endif
 #if ICAP_CLIENT
+#include "adaptation/icap/Config.h"
 #include "adaptation/icap/icap_log.h"
 #endif
 #include "auth/Gadgets.h"
+#include "base/Subscription.h"
 #include "base/TextException.h"
-#include "ConfigParser.h"
-#include "errorpage.h"
-#include "event.h"
-#include "EventLoop.h"
-#include "ExternalACL.h"
-#include "Store.h"
-#include "ICP.h"
-#include "ident/Ident.h"
-#include "HttpReply.h"
-#include "pconn.h"
-#include "Mem.h"
-#include "acl/Asn.h"
-#include "acl/Acl.h"
-#include "htcp.h"
-#include "StoreFileSystem.h"
-#include "DiskIO/DiskIOModule.h"
 #include "comm.h"
-#include "ipc/Kids.h"
-#include "ipc/Coordinator.h"
-#include "ipc/Strand.h"
-#include "ip/tools.h"
 #if USE_EPOLL
 #include "comm_epoll.h"
 #endif
@@ -72,32 +62,39 @@
 #if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
 #include "comm_select.h"
 #endif
-#include "SquidTime.h"
-#include "SwapDir.h"
-#include "forward.h"
-#include "MemPool.h"
-#include "icmp/IcmpSquid.h"
-#include "icmp/net_db.h"
-#include "PeerSelectState.h"
-#if USE_LOADABLE_MODULES
-#include "LoadableModules.h"
-#endif
-
-#if ICAP_CLIENT
-#include "adaptation/icap/Config.h"
-#endif
-#if USE_ECAP
-#include "adaptation/ecap/Config.h"
-#endif
-#if USE_ADAPTATION
-#include "adaptation/Config.h"
-#endif
-
+#include "ConfigParser.h"
+#include "DiskIO/DiskIOModule.h"
+#include "errorpage.h"
 #if USE_SQUID_ESI
 #include "esi/Module.h"
 #endif
-
+#include "event.h"
+#include "EventLoop.h"
+#include "ExternalACL.h"
+#include "forward.h"
 #include "fs/Module.h"
+#include "htcp.h"
+#include "HttpReply.h"
+#include "icmp/IcmpSquid.h"
+#include "icmp/net_db.h"
+#include "ICP.h"
+#include "ident/Ident.h"
+#include "ip/tools.h"
+#include "ipc/Coordinator.h"
+#include "ipc/Kids.h"
+#include "ipc/Strand.h"
+#if USE_LOADABLE_MODULES
+#include "LoadableModules.h"
+#endif
+#include "Mem.h"
+#include "MemPool.h"
+#include "pconn.h"
+#include "PeerSelectState.h"
+#include "SquidTime.h"
+#include "Store.h"
+#include "StoreFileSystem.h"
+#include "SwapDir.h"
+
 
 #if USE_WIN32_SERVICE
 
