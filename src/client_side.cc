@@ -1174,7 +1174,7 @@ clientIfRangeMatch(ClientHttpRequest * http, HttpReply * rep)
             return 0;		/* must use strong validator for sub-range requests */
         }
 
-        return etagIsEqual(&rep_tag, &spec.tag);
+        return etagIsStrongEqual(rep_tag, spec.tag);
     }
 
     /* got modification time? */
@@ -1262,8 +1262,6 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         debugs(33, 3, "clientBuildRangeHeader: range spec count: " <<
                spec_count << " virgin clen: " << rep->content_length);
         assert(spec_count > 0);
-        /* ETags should not be returned with Partial Content replies? */
-        hdr->delById(HDR_ETAG);
         /* append appropriate header(s) */
 
         if (spec_count == 1) {

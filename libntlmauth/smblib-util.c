@@ -22,7 +22,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
 #include "libntlmauth/rfcnb.h"
 #include "libntlmauth/smblib-priv.h"

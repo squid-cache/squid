@@ -2934,6 +2934,8 @@ AC_CHECK_FUNCS(\
 	__res_init \
 	rint \
 	sbrk \
+	sched_getaffinity \
+	sched_setaffinity \
 	select \
 	seteuid \
 	setgroups \
@@ -3007,6 +3009,10 @@ case $squid_opt_io_loop_engine in
   select_win32) AC_DEFINE(USE_SELECT_WIN32,1,[Use Winsock select() for the IO loop]) ;;
   select) AC_DEFINE(USE_SELECT,1,[Use select() for the IO loop]) ;;
 esac
+
+if test "x$ac_cv_func_sched_getaffinity" = "xyes" -a "x$ac_cv_func_sched_setaffinity" = "xyes" ; then
+  AC_DEFINE(HAVE_CPU_AFFINITY,1,[Support setting CPU affinity for workers])
+fi
 
 SQUID_CHECK_SETRESUID_WORKS
 if test "x$squid_cv_resuid_works" = "xyes" ; then

@@ -54,11 +54,9 @@ public:
     virtual int callback();
     virtual void create();
 
-    virtual StoreEntry * get
-    (const cache_key *);
+    virtual StoreEntry * get(const cache_key *);
 
-    virtual void get
-    (String const, STOREGETCLIENT, void * cbdata);
+    virtual void get(String const, STOREGETCLIENT, void * cbdata);
 
     virtual void init();
 
@@ -115,7 +113,7 @@ class SwapDir : public Store
 {
 
 public:
-    SwapDir(char const *aType) : theType (aType), cur_size (0), max_size(0), max_objsize (-1), cleanLog(NULL) {
+    SwapDir(char const *aType) : theType (aType), cur_size(0), max_size(0), max_objsize (-1), cleanLog(NULL) {
         fs.blksize = 1024;
         path = NULL;
     }
@@ -127,11 +125,9 @@ public:
     /* official Store interface functions */
     virtual void diskFull();
 
-    virtual StoreEntry * get
-    (const cache_key *);
+    virtual StoreEntry * get(const cache_key *);
 
-    virtual void get
-    (String const, STOREGETCLIENT, void * cbdata);
+    virtual void get(String const, STOREGETCLIENT, void * cbdata);
 
     virtual size_t maxSize() const { return max_size;}
 
@@ -157,8 +153,8 @@ private:
     char const *theType;
 
 public:
-    int cur_size;
-    int max_size;
+    size_t cur_size;
+    size_t max_size;
     char *path;
     int index;			/* This entry's index into the swapDirs array */
     int64_t max_objsize;
