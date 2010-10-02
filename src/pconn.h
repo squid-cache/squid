@@ -37,16 +37,18 @@ public:
     ~IdleConnList();
     int numIdle() { return nfds; }
 
-    int findFDIndex(int fd); ///< search from the end of array
+    int findIndex(const Comm::ConnectionPointer &conn); ///< search from the end of array
 
-    /// If false the FD does not currently exist in the list.
-    /// We seem to have hit and lost a race condition.
-    /// Nevermind, but MUST NOT do anything with the raw FD.
-    bool removeFD(int fd);
+    /**
+     * \retval false  The connection does not currently exist in the list.
+     *                We seem to have hit and lost a race condition.
+     *                Nevermind, but MUST NOT do anything with the raw FD.
+     */
+    bool remove(const Comm::ConnectionPointer &conn);
 
-    void push(int fd);
-    int findUseableFD();     ///< find first from the end not pending read fd.
-    void clearHandlers(int fd);
+    void push(const Comm::ConnectionPointer &conn);
+    Comm::ConnectionPointer findUseable();     ///< find first from the end not pending read fd.
+    void clearHandlers(const Comm::ConnectionPointer &conn);
 
 private:
     static IOCB read;
@@ -56,11 +58,11 @@ public:
     hash_link hash;             /** must be first */
 
 private:
-    int *fds;
+    Comm::ConnectionPointer *theList;
     int nfds_alloc;
     int nfds;
     PconnPool *parent;
-    char fakeReadBuf[4096];
+    char fakeReadBuf[4096]; // TODO: kill magic number.
     CBDATA_CLASS2(IdleConnList);
 };
 
@@ -85,21 +87,29 @@ public:
     ~PconnPool();
 
     void moduleInit();
-    void push(int fd, const char *host, u_short port, const char *domain, Ip::Address &client_address);
-    int pop(const char *host, u_short port, const char *domain, Ip::Address &client_address, bool retriable);
+    void push(const Comm::ConnectionPointer &serverConn, const char *domain);
+
+    /**
+     * Updates destLink to point at an existing open connection if available and retriable.
+     * Otherwise, return false.
+     *
+     * We close available persistent connection if the caller transaction is not
+     * retriable to avoid having a growing number of open connections when many
+     * transactions create persistent connections but are not retriable.
+     */
+    bool pop(Comm::ConnectionPointer &serverConn, const char *domain, bool retriable);
     void count(int uses);
-    void dumpHist(StoreEntry *e);
-    void dumpHash(StoreEntry *e);
+    void dumpHist(StoreEntry *e) const;
+    void dumpHash(StoreEntry *e) const;
     void unlinkList(IdleConnList *list) const;
 
 private:
 
-    static const char *key(const char *host, u_short port, const char *domain, Ip::Address &client_address);
+    static const char *key(const Comm::ConnectionPointer &destLink, const char *domain);
 
     int hist[PCONN_HIST_SZ];
     hash_table *table;
     const char *descr;
-
 };
 
 
