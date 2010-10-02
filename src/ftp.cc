@@ -1701,7 +1701,7 @@ FtpStateData::scheduleReadControlReply(int buffered_ok)
 
         typedef CommCbMemFunT<FtpStateData, CommIoCbParams> Dialer;
         AsyncCall::Pointer reader = JobCallback(9, 5, Dialer, this, FtpStateData::ftpReadControlReply);
-        comm_read(ctrl.conn->fd, ctrl.buf + ctrl.offset, ctrl.size - ctrl.offset, reader);
+        comm_read(ctrl.conn, ctrl.buf + ctrl.offset, ctrl.size - ctrl.offset, reader);
     }
 }
 

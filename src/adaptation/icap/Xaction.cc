@@ -330,7 +330,7 @@ void Adaptation::Icap::Xaction::scheduleRead()
      */
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommIoCbParams> Dialer;
     reader = JobCallback(93, 3, Dialer, this, Adaptation::Icap::Xaction::noteCommRead);
-    comm_read(connection->fd, commBuf, readBuf.spaceSize(), reader);
+    comm_read(connection, commBuf, readBuf.spaceSize(), reader);
     updateTimeout();
 }
 

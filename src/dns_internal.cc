@@ -724,7 +724,7 @@ idnsInitVCConnected(const Comm::ConnectionPointer &conn, comm_err_t status, int 
     vc->conn = conn;
 
     comm_add_close_handler(conn->fd, idnsVCClosed, vc);
-    comm_read(conn->fd, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
+    comm_read(conn, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
     vc->busy = 0;
     idnsDoSendQueryVC(vc);
 }
@@ -1273,7 +1273,7 @@ idnsReadVC(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_
     vc->msg->size += len;       // XXX should not access -> size directly
 
     if (vc->msg->contentSize() < vc->msglen) {
-        comm_read(conn->fd, buf + len, vc->msglen - vc->msg->contentSize(), idnsReadVC, vc);
+        comm_read(conn, buf + len, vc->msglen - vc->msg->contentSize(), idnsReadVC, vc);
         return;
     }
 
@@ -1282,7 +1282,7 @@ idnsReadVC(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_
 
     idnsGrokReply(vc->msg->buf, vc->msg->contentSize());
     vc->msg->clean();
-    comm_read(conn->fd, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
+    comm_read(conn, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
 }
 
 static void
@@ -1306,7 +1306,7 @@ idnsReadVCHeader(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
     assert(vc->read_msglen <= 2);
 
     if (vc->read_msglen < 2) {
-        comm_read(conn->fd, buf + len, 2 - vc->read_msglen, idnsReadVCHeader, vc);
+        comm_read(conn, buf + len, 2 - vc->read_msglen, idnsReadVCHeader, vc);
         return;
     }
 
@@ -1315,7 +1315,7 @@ idnsReadVCHeader(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
     vc->msglen = ntohs(vc->msglen);
 
     vc->msg->init(vc->msglen, vc->msglen);
-    comm_read(conn->fd, vc->msg->buf, vc->msglen, idnsReadVC, vc);
+    comm_read(conn, vc->msg->buf, vc->msglen, idnsReadVC, vc);
 }
 
 /*
