@@ -18,7 +18,6 @@
 * Author: Rodrigo Campos (rodrigo@geekbunker.org)
 *
 */
-#define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
 #include "helpers/defines.h"
 #include "rfc1738.h"
@@ -65,7 +64,7 @@ int dict_lookup(struct ip_user_dict *, char *, char *);
 /** This function parses the dictionary file and loads it
  * in memory. All IP addresses are processed with a bitwise AND
  * with their netmasks before they are stored.
- * If there´s no netmask (no /) in the in the lhs , a mask
+ * If there?s no netmask (no /) in the in the lhs , a mask
  * 255.255.255.255 is assumed.
  * It returns a pointer to the first entry of the linked list
  */
@@ -149,7 +148,7 @@ dict_lookup(struct ip_user_dict *first_entry, char *username,
 
         if ((inet_addr (address) & (unsigned long) current_entry->
                 netmask) == current_entry->address) {
-            /* If the username contains an @ we assume it´s a group and
+            /* If the username contains an @ we assume it?s a group and
                call the corresponding function */
             if ((strchr (current_entry->username, '@')) == NULL) {
                 if ((match_user (current_entry->username, username)) == 1)

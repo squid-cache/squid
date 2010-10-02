@@ -457,9 +457,9 @@ errorSend(const Comm::ConnectionPointer &conn, ErrorState * err)
     err->flags.flag_cbdata = 1;
 
     rep = err->BuildHttpReply();
-
-    comm_write_mbuf(conn, rep->pack(), errorSendComplete, err);
-
+    MemBuf *mb = rep->pack();
+    comm_write_mbuf(conn, mb, errorSendComplete, err);
+    delete mb;
     delete rep;
 }
 

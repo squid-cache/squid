@@ -222,7 +222,10 @@ SQUIDCEXTERN const char *httpMakeVaryMark(HttpRequest * request, HttpReply const
 
 /* ETag */
 SQUIDCEXTERN int etagParseInit(ETag * etag, const char *str);
-SQUIDCEXTERN int etagIsEqual(const ETag * tag1, const ETag * tag2);
+/// whether etags are strong-equal
+SQUIDCEXTERN bool etagIsStrongEqual(const ETag &tag1, const ETag &tag2);
+/// whether etags are weak-equal
+SQUIDCEXTERN bool etagIsWeakEqual(const ETag &tag1, const ETag &tag2);
 
 #include "HttpStatusCode.h"
 SQUIDCEXTERN const char *httpStatusString(http_status status);
@@ -581,8 +584,12 @@ SQUIDCEXTERN bool IamPrimaryProcess();
 SQUIDCEXTERN bool IamCoordinatorProcess();
 /// whether the current process handles HTTP transactions and such
 SQUIDCEXTERN bool IamWorkerProcess();
+/// Whether we are running in daemon mode
+SQUIDCEXTERN bool InDaemonMode(); // try using specific Iam*() checks above first
 /// Whether there should be more than one worker process running
 SQUIDCEXTERN bool UsingSmp(); // try using specific Iam*() checks above first
+/// number of Kid processes as defined in src/ipc/Kid.h
+SQUIDCEXTERN int NumberOfKids();
 SQUIDCEXTERN int DebugSignal;
 
 /* AYJ debugs function to show locations being reset with memset() */

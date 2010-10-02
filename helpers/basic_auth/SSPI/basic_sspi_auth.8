@@ -1,14 +1,14 @@
-.if !'po4a'hide' .TH basic_sspi_auth 8
+.if !'po4a'hide' .TH basic_sspi_auth.exe 8
 .
 .SH NAME
-.if !'po4a'hide' .B basic_sspi_auth
+.if !'po4a'hide' .B basic_sspi_auth.exe
 .if !'po4a'hide' \-
 Basic authentication protocol 
 .PP
 Version 2.0
 .
 .SH SYNOPSIS
-.if !'po4a'hide' .B basic_sspi_auth
+.if !'po4a'hide' .B basic_sspi_auth.exe
 .if !'po4a'hide' .B "[\-d] [\-A "
 Group Name
 .if !'po4a'hide' .B "] [\-D "
@@ -18,7 +18,7 @@ Default Domain
 .if !'po4a'hide' .B "]"
 .
 .SH DESCRIPTION
-.B basic_sspi_auth 
+.B basic_sspi_auth.exe 
 is a simple authentication module for the Squid proxy server running on Windows NT
 to authenticate users on an NT domain in native WIN32 mode.
 .
@@ -30,13 +30,19 @@ It's possible to authenticate against NT trusted domains specifyng the username
 in the domain\\username Microsoft notation.
 .
 .SH OPTIONS
-.if !'po4a'hide' .B basic_sspi_auth
-.if !'po4a'hide' .B \-d
-Write debug info to stderr.
+.if !'po4a'hide' .TP 12
 .if !'po4a'hide' .B \-A
 A Windows Local Group name allowed to authenticate.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-d
+Write debug info to stderr.
+.
+.if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-D
 A Windows Local Group name not allowed to authenticate.
+.
+.if !'po4a'hide' .TP
 .if !'po4a'hide' .B \-O
 The default Domain against to authenticate.
 .
@@ -54,21 +60,22 @@ You will need to set the following line in
 .B squid.conf 
 to enable the authenticator:
 .if !'po4a'hide' .RS
-.if !'po4a'hide' auth_param basic program c:/squid/libexec/basic_sspi_auth.exe [options]
+.if !'po4a'hide' .B auth_param basic program c:/squid/libexec/basic_sspi_auth.exe [options]
 .if !'po4a'hide' .RE
 .
 .PP
 You will need to set the following lines in 
 .B squid.conf 
-to enable authentication for your access list -
+to enable authentication for your access list:
 .if !'po4a'hide' .RS
-.if !'po4a'hide' acl aclName proxy_auth REQUIRED
-.if !'po4a'hide' http_access allow aclName
+.if !'po4a'hide' .B acl aclName proxy_auth REQUIRED
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access allow aclName
 .if !'po4a'hide' .RE
 .
 .PP
 You will need to specify the absolute path to 
-.B basic_sspi_auth 
+.B basic_sspi_auth.exe 
 in the 
 .B "auth_param basic program" 
 directive.
@@ -76,7 +83,7 @@ directive.
 .SH TESTING
 .PP
 I strongly urge that 
-.B basic_sspi_auth 
+.B basic_sspi_auth.exe 
 is tested prior to being used in a 
 production environment. It may behave differently on different platforms.
 To test it, run it from the command line. Enter username and password
@@ -88,15 +95,25 @@ Make sure pressing
 .B CTRL-C
  aborts the program.
 .PP
-Test that entering no details does not result in an OK or ERR message.
-.
-Test that entering an invalid username and password results in an ERR message.
-.
-Note that if NT guest user access is allowed on the PDC, an OK message 
-may be returned instead of ERR.
-.
-Test that entering an valid username and password results in an OK message.
-.
+Test that entering no details does not result in an 
+.B OK 
+or 
+.B ERR 
+message.
+.PP
+Test that entering an invalid username and password results in an 
+.B ERR 
+message.
+.PP
+Note that if NT guest user access is allowed on the PDC, an 
+.B OK 
+message may be returned instead of 
+.B ERR
+.PP
+Test that entering an valid username and password results in an 
+.B OK 
+message.
+.PP
 Test that entering a guest username and password returns the correct 
 response for the site's access policy.
 .

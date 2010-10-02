@@ -40,7 +40,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
-#define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
 #include "helpers/defines.h"
 #include "rfc1738.h"

@@ -28,7 +28,6 @@
  *
  * Copyright (c) 2003  Robert Collins  <robertc@squid-cache.org>
  */
-#define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
 
 #include "text_backend.h"

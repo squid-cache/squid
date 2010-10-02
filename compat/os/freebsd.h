@@ -27,12 +27,6 @@
 
 #define _etext etext
 
-/* Exclude CPPUnit tests from the allocator restrictions. */
-/* BSD implementation uses these still */
-#if defined(SQUID_UNIT_TEST)
-#define SQUID_NO_ALLOC_PROTECT 1
-#endif
-
 /*
  *   This OS has at least one version that defines these as private
  *   kernel macros commented as being 'non-standard'.
