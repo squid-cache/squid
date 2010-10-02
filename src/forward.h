@@ -37,7 +37,7 @@ public:
     bool checkRetry();
     bool checkRetriable();
     void dispatch();
-    void pconnPush(Comm::ConnectionPointer & conn, const peer *_peer, const HttpRequest *req, const char *domain, Ip::Address &client_addr);
+    void pconnPush(Comm::ConnectionPointer & conn, const char *domain);
 
     bool dontRetry() { return flags.dont_retry; }
 

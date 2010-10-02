@@ -86,10 +86,9 @@ void Adaptation::Icap::Xaction::start()
 }
 
 // TODO: obey service-specific, OPTIONS-reported connection limit
-void Adaptation::Icap::Xaction::openConnection()
+void
+Adaptation::Icap::Xaction::openConnection()
 {
-    Ip::Address client_addr;
-
     Must(!haveConnection());
 
     const Adaptation::Service &s = service();
@@ -106,16 +105,16 @@ void Adaptation::Icap::Xaction::openConnection()
     connection->remote.SetPort(s.cfg().port);
 
     // TODO: check whether NULL domain is appropriate here
-    connection->fd = icapPconnPool->pop(s.cfg().host.termedBuf(), s.cfg().port, NULL, client_addr, isRetriable);
+    icapPconnPool->pop(connection, NULL, isRetriable);
     if (connection->isOpen()) {
-        debugs(93,3, HERE << "reused pconn FD " << connection->fd);
+        debugs(93,3, HERE << "reused pconn " << connection);
 
         // fake the connect callback
         // TODO: can we sync call Adaptation::Icap::Xaction::noteCommConnected here instead?
         typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> Dialer;
         CbcPointer<Xaction> self(this);
         Dialer dialer(self, &Adaptation::Icap::Xaction::noteCommConnected);
-        dialer.params.fd = connection->fd;
+        dialer.params.conn = connection;
         dialer.params.flag = COMM_OK;
         // fake other parameters by copying from the existing connection
         connector = asyncCall(93,3, "Adaptation::Icap::Xaction::noteCommConnected", dialer);
@@ -164,19 +163,15 @@ void Adaptation::Icap::Xaction::closeConnection()
         }
 
         if (reuseConnection) {
-            Ip::Address client_addr;
             //status() adds leading spaces.
             debugs(93,3, HERE << "pushing pconn" << status());
-            AsyncCall::Pointer call = NULL;
-            commSetTimeout(connection->fd, -1, call);
-            icapPconnPool->push(connection->fd, theService->cfg().host.termedBuf(),
-                                theService->cfg().port, NULL, client_addr);
+            AsyncCall::Pointer nul;
+            commSetTimeout(connection->fd, -1, nul);
+            icapPconnPool->push(connection, NULL);
             disableRetries();
-            connection->fd = -1; // prevent premature real closing.
         } else {
             //status() adds leading spaces.
             debugs(93,3, HERE << "closing pconn" << status());
-            // comm_close will clear timeout
             connection->close();
         }
 
