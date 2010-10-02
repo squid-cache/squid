@@ -76,8 +76,21 @@ int
 IdleConnList::findIndex(const Comm::ConnectionPointer &conn)
 {
     for (int index = nfds - 1; index >= 0; --index) {
-        if (theList[index]->fd == conn->fd)
-            return index;
+
+        // remote IPs dont match.
+        if (conn->remote != theList[index]->remote)
+            continue;
+
+        // local end port is required, but dont match.
+        if (conn->local.GetPort() > 0 && conn->local.GetPort() != theList[index]->local.GetPort())
+            continue;
+
+        // local address is required, but does not match.
+        if (!conn->local.IsAnyAddr() && conn->local != theList[index]->local)
+            continue;
+
+        // finally, a match
+        return index;
     }
 
     return -1;
