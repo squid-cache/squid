@@ -454,7 +454,7 @@ void
 TunnelStateData::copyRead(Connection &from, IOCB *completion)
 {
     assert(from.len == 0);
-    comm_read(from.conn->fd, from.buf, from.bytesWanted(1, SQUID_TCP_SO_RCVBUF), completion, this);
+    comm_read(from.conn, from.buf, from.bytesWanted(1, SQUID_TCP_SO_RCVBUF), completion, this);
 }
 
 static void

@@ -101,7 +101,7 @@ whoisStart(FwdState * fwd)
     snprintf(buf, l, SQUIDSTRINGPH"\r\n", SQUIDSTRINGPRINT(str_print));
 
     comm_write(fwd->serverConnection(), buf, strlen(buf), whoisWriteComplete, p, NULL);
-    comm_read(fwd->serverConnection()->fd, p->buf, BUFSIZ, whoisReadReply, p);
+    comm_read(fwd->serverConnection(), p->buf, BUFSIZ, whoisReadReply, p);
     commSetTimeout(fwd->serverConnection()->fd, Config.Timeout.read, whoisTimeout, p);
 }
 
@@ -194,7 +194,7 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
     }
 
     if (do_next_read)
-        comm_read(conn->fd, aBuffer, BUFSIZ, whoisReadReply, this);
+        comm_read(conn, aBuffer, BUFSIZ, whoisReadReply, this);
 }
 
 static void

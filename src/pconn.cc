@@ -126,8 +126,10 @@ IdleConnList::push(int fd)
     }
 
     fds[nfds++] = fd;
-    comm_read(fd, fakeReadBuf, sizeof(fakeReadBuf), IdleConnList::read, this);
-    commSetTimeout(fd, Config.Timeout.pconn, IdleConnList::timeout, this);
+    Comm::ConnectionPointer temp = new Comm::Connection; // XXX: transition. until pconn's converted to store Comm::Connection
+    temp->fd = fd; // assume control of the fd.
+    comm_read(temp, fakeReadBuf, sizeof(fakeReadBuf), IdleConnList::read, this);
+    commSetTimeout(temp->fd, Config.Timeout.pconn, IdleConnList::timeout, this);
 }
 
 /*

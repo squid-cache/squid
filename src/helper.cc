@@ -233,7 +233,7 @@ helperOpenServers(helper * hlp)
 
         comm_add_close_handler(rfd, helperServerFree, srv);
 
-        comm_read(srv->readPipe->fd, srv->rbuf, srv->rbuf_sz - 1, helperHandleRead, srv);
+        comm_read(srv->readPipe, srv->rbuf, srv->rbuf_sz - 1, helperHandleRead, srv);
     }
 
     hlp->last_restart = squid_curtime;
@@ -351,7 +351,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
 
         comm_add_close_handler(rfd, helperStatefulServerFree, srv);
 
-        comm_read(srv->readPipe->fd, srv->rbuf, srv->rbuf_sz - 1, helperStatefulHandleRead, srv);
+        comm_read(srv->readPipe, srv->rbuf, srv->rbuf_sz - 1, helperStatefulHandleRead, srv);
     }
 
     hlp->last_restart = squid_curtime;
@@ -896,7 +896,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
     }
 
     if (Comm::IsConnOpen(srv->readPipe))
-        comm_read(srv->readPipe->fd, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1, helperHandleRead, srv);
+        comm_read(srv->readPipe, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1, helperHandleRead, srv);
 }
 
 static void
@@ -976,7 +976,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
     }
 
     if (Comm::IsConnOpen(srv->readPipe))
-        comm_read(srv->readPipe->fd, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1,
+        comm_read(srv->readPipe, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1,
                   helperStatefulHandleRead, srv);
 }
 

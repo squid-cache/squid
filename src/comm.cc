@@ -273,35 +273,35 @@ commHandleRead(int fd, void *data)
  * completes, on error, or on file descriptor close.
  */
 void
-comm_read(int fd, char *buf, int size, IOCB *handler, void *handler_data)
+comm_read(const Comm::ConnectionPointer &conn, char *buf, int size, IOCB *handler, void *handler_data)
 {
     AsyncCall::Pointer call = commCbCall(5,4, "SomeCommReadHandler",
                                          CommIoCbPtrFun(handler, handler_data));
-    comm_read(fd, buf, size, call);
+    comm_read(conn, buf, size, call);
 }
 
 void
-comm_read(int fd, char *buf, int size, AsyncCall::Pointer &callback)
+comm_read(const Comm::ConnectionPointer &conn, char *buf, int size, AsyncCall::Pointer &callback)
 {
-    debugs(5, 5, "comm_read, queueing read for FD " << fd << "; asynCall " << callback);
+    debugs(5, 5, "comm_read, queueing read for " << conn << "; asynCall " << callback);
 
     /* Make sure we are open and not closing */
-    assert(isOpen(fd));
-    assert(!fd_table[fd].closing());
-    comm_io_callback_t *ccb = COMMIO_FD_READCB(fd);
+    assert(Comm::IsConnOpen(conn));
+    assert(!fd_table[conn->fd].closing());
+    comm_io_callback_t *ccb = COMMIO_FD_READCB(conn->fd);
 
     // Make sure we are either not reading or just passively monitoring.
     // Active/passive conflicts are OK and simply cancel passive monitoring.
     if (ccb->active()) {
         // if the assertion below fails, we have an active comm_read conflict
-        assert(fd_table[fd].halfClosedReader != NULL);
-        commStopHalfClosedMonitor(fd);
+        assert(fd_table[conn->fd].halfClosedReader != NULL);
+        commStopHalfClosedMonitor(conn->fd);
         assert(!ccb->active());
     }
 
     /* Queue the read */
-    commio_set_callback(fd, IOCB_READ, ccb, callback, (char *)buf, NULL, size);
-    commSetSelect(fd, COMM_SELECT_READ, commHandleRead, ccb, 0);
+    commio_set_callback(conn->fd, IOCB_READ, ccb, callback, (char *)buf, NULL, size);
+    commSetSelect(conn->fd, COMM_SELECT_READ, commHandleRead, ccb, 0);
 }
 
 /**
@@ -1973,13 +1973,15 @@ commHalfClosedCheck(void *)
     typedef DescriptorSet::const_iterator DSCI;
     const DSCI end = TheHalfClosed->end();
     for (DSCI i = TheHalfClosed->begin(); i != end; ++i) {
-        const int fd = *i;
-        if (!fd_table[fd].halfClosedReader) { // not reading already
+        Comm::ConnectionPointer c = new Comm::Connection; // XXX: temporary. make HalfClosed a list of these.
+        c->fd = *i;
+        if (!fd_table[c->fd].halfClosedReader) { // not reading already
             AsyncCall::Pointer call = commCbCall(5,4, "commHalfClosedReader",
                                                  CommIoCbPtrFun(&commHalfClosedReader, NULL));
-            comm_read(fd, NULL, 0, call);
-            fd_table[fd].halfClosedReader = call;
-        }
+            comm_read(c, NULL, 0, call);
+            fd_table[c->fd].halfClosedReader = call;
+        } else
+            c->fd = -1; // XXX: temporary. prevent c replacement erase closing listed FD
     }
 
     WillCheckHalfClosed = false; // as far as we know

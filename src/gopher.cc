@@ -866,7 +866,7 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
     }
 
     if (do_next_read)
-        comm_read(conn->fd, buf, read_sz, gopherReadReply, gopherState);
+        comm_read(conn, buf, read_sz, gopherReadReply, gopherState);
 
     return;
 }

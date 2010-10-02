@@ -34,7 +34,7 @@ void Ipc::Port::listen()
     typedef CommCbMemFunT<Port, CommIoCbParams> Dialer;
     AsyncCall::Pointer readHandler = JobCallback(54, 6,
                                      Dialer, this, Port::noteRead);
-    comm_read(conn()->fd, buf.raw(), buf.size(), readHandler);
+    comm_read(conn(), buf.raw(), buf.size(), readHandler);
 }
 
 bool Ipc::Port::doneAll() const
