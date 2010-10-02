@@ -154,11 +154,11 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &key)
             continue;
 
         // local end port is required, but dont match.
-        if (conn->local.GetPort() > 0 && conn->local.GetPort() != theList[index]->local.GetPort())
+        if (key->local.GetPort() > 0 && key->local.GetPort() != theList[i]->local.GetPort())
             continue;
 
         // local address is required, but does not match.
-        if (!conn->local.IsAnyAddr() && conn->local.matchIPAddr(theList[index]->local) != 0)
+        if (!key->local.IsAnyAddr() && key->local.matchIPAddr(theList[i]->local) != 0)
             continue;
 
         // finally, a match
