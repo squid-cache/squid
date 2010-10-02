@@ -65,7 +65,6 @@
  *
  * Compile this program with: gcc -o basic_pam_auth basic_pam_auth.cc -lpam -ldl
  */
-#define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
 #include "helpers/defines.h"
 #include "rfc1738.h"

@@ -63,6 +63,7 @@
 #include "comm_select.h"
 #endif
 #include "ConfigParser.h"
+#include "CpuAffinity.h"
 #include "DiskIO/DiskIOModule.h"
 #include "errorpage.h"
 #if USE_SQUID_ESI
@@ -767,6 +768,10 @@ mainReconfigureFinish(void *)
         Config.workers = oldWorkers;
     }
 
+    if (IamPrimaryProcess())
+        CpuAffinityCheck();
+    CpuAffinityReconfigure();
+
     setUmask(Config.umask);
     Mem::Report();
     setEffectiveUser();
@@ -1406,6 +1411,10 @@ SquidMain(int argc, char **argv)
 
         return 0;
     }
+
+    if (IamPrimaryProcess())
+        CpuAffinityCheck();
+    CpuAffinityInit();
 
     if (!opt_no_daemon && Config.workers > 0)
         watch_child(argv);

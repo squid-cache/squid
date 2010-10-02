@@ -3,8 +3,7 @@ include $(top_srcdir)/src/Common.am
 libexec_PROGRAMS = ext_edirectory_userip_acl
 
 ext_edirectory_userip_acl_SOURCES = \
-	edui_config.h main.h edui_util.h iplookup.h \
-	main.c edui_util.c iplookup.c
+	ext_edirectory_userip_acl.c
 
 ext_edirectory_userip_acl_LDADD = \
 	$(COMPAT_LIB) \
@@ -12,4 +11,6 @@ ext_edirectory_userip_acl_LDADD = \
 	$(LBERLIB) \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = config.test README ISSUES INSTALL
+man_MANS = ext_edirectory_userip_acl.8
+
+EXTRA_DIST = config.test ext_edirectory_userip_acl.8

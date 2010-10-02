@@ -13,12 +13,6 @@
  *--------------------------------------------------------------------------*
  ****************************************************************************/
 
-/* Exclude CPPUnit tests from the allocator restrictions. */
-/* BSD implementation uses these still */
-#if defined(SQUID_UNIT_TEST)
-#define SQUID_NO_ALLOC_PROTECT 1
-#endif
-
 /* NetBSD does not provide sys_errlist global for strerror */
 #define NEED_SYS_ERRLIST 1
 

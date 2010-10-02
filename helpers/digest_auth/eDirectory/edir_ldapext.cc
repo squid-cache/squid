@@ -22,7 +22,6 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
 */
-#define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
 
 #include "digest_common.h"

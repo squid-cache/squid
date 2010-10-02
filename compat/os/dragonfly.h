@@ -20,11 +20,5 @@
 #undef HAVE_MALLOC_H
 #endif
 
-/* Exclude CPPUnit tests from the allocator restrictions. */
-/* BSD implementation uses these still */
-#if defined(SQUID_UNIT_TEST)
-#define SQUID_NO_ALLOC_PROTECT 1
-#endif
-
 #endif /* _SQUID_DRAGONFLY_ */
 #endif /* SQUID_OS_DRAGONFLY_H */

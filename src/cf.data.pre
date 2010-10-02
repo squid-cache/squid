@@ -397,7 +397,7 @@ DOC_START
 #auth_param digest nonce_max_count 50
 #
 #auth_param basic program <uncomment and complete this line>
-#auth_param basic children 5 stratup=5 idle=1
+#auth_param basic children 5 startup=5 idle=1
 #auth_param basic realm Squid proxy-caching web server
 #auth_param basic credentialsttl 2 hours
 DOC_END
@@ -817,7 +817,6 @@ NAME: follow_x_forwarded_for
 TYPE: acl_access
 IFDEF: FOLLOW_X_FORWARDED_FOR
 LOC: Config.accessList.followXFF
-DEFAULT: none
 DEFAULT_IF_NONE: deny all
 DOC_START
 	Allowing or Denying the X-Forwarded-For header to be followed to
@@ -924,7 +923,6 @@ DOC_END
 NAME: http_access
 TYPE: acl_access
 LOC: Config.accessList.http
-DEFAULT: none
 DEFAULT_IF_NONE: deny all
 DOC_START
 	Allowing or Denying access based on defined access lists
@@ -1019,7 +1017,6 @@ DOC_END
 NAME: icp_access
 TYPE: acl_access
 LOC: Config.accessList.icp
-DEFAULT: none
 DEFAULT_IF_NONE: deny all
 DOC_START
 	Allowing or Denying access to the ICP port based on defined
@@ -1041,7 +1038,6 @@ NAME: htcp_access
 IFDEF: USE_HTCP
 TYPE: acl_access
 LOC: Config.accessList.htcp
-DEFAULT: none
 DEFAULT_IF_NONE: deny all
 DOC_START
 	Allowing or Denying access to the HTCP port based on defined
@@ -1067,7 +1063,6 @@ NAME: htcp_clr_access
 IFDEF: USE_HTCP
 TYPE: acl_access
 LOC: Config.accessList.htcp_clr
-DEFAULT: none
 DEFAULT_IF_NONE: deny all
 DOC_START
 	Allowing or Denying access to purge content using HTCP based
@@ -1110,7 +1105,6 @@ DOC_END
 NAME: ident_lookup_access
 TYPE: acl_access
 IFDEF: USE_IDENT
-DEFAULT: none
 DEFAULT_IF_NONE: deny all
 LOC: Ident::TheConfig.identLookup
 DOC_START
@@ -2761,7 +2755,6 @@ DOC_END
 NAME: access_log cache_access_log
 TYPE: access_log
 LOC: Config.Log.accesslogs
-DEFAULT: none
 DEFAULT_IF_NONE: daemon:@DEFAULT_ACCESS_LOG@ squid
 DOC_START
 	These files log client request activities. Has a line every HTTP or
@@ -3169,7 +3162,6 @@ COMMENT_END
 
 NAME: cache_log
 TYPE: string
-DEFAULT: none
 DEFAULT_IF_NONE: @DEFAULT_CACHE_LOG@
 LOC: Debug::cache_log
 DOC_START
@@ -3200,7 +3192,6 @@ DOC_END
 NAME: coredump_dir
 TYPE: string
 LOC: Config.coredump_dir
-DEFAULT: none
 DEFAULT_IF_NONE: none
 DOC_START
 	By default Squid leaves core files in the directory from where
@@ -4864,7 +4855,6 @@ DOC_END
 NAME: wccp2_service
 TYPE: wccp2_service
 LOC: Config.Wccp2.info
-DEFAULT: none
 DEFAULT_IF_NONE: standard 0
 IFDEF: USE_WCCPv2
 DOC_START
@@ -5093,7 +5083,6 @@ DOC_END
 NAME: snmp_access
 TYPE: acl_access
 LOC: Config.accessList.snmp
-DEFAULT: none
 DEFAULT_IF_NONE: deny all
 IFDEF: SQUID_SNMP
 DOC_START
@@ -5633,7 +5622,7 @@ DOC_START
 	by specifying TCP_RESET.
 
 	Or you can specify an error URL or URL pattern. The browsers will
-	get redirected (302) to the specified URL after formattgin tags have
+	get redirected (302) to the specified URL after formatting tags have
 	been replaced.
 
 	URL FORMAT TAGS:
@@ -6426,7 +6415,6 @@ NAME: icap_retry
 TYPE: acl_access
 IFDEF: ICAP_CLIENT
 LOC: Adaptation::Icap::TheConfig.repeat
-DEFAULT: none
 DEFAULT_IF_NONE: deny all
 DOC_START
 	This ACL determines which retriable ICAP transactions are
@@ -6896,7 +6884,6 @@ NAME: as_whois_server
 TYPE: string
 LOC: Config.as_whois_server
 DEFAULT: whois.ra.net
-DEFAULT_IF_NONE: whois.ra.net
 DOC_START
 	WHOIS server to query for AS numbers.  NOTE: AS numbers are
 	queried only when Squid starts up, not for every request.
@@ -7076,6 +7063,28 @@ DOC_START
 
 	In SMP mode, each worker does nearly all what a single Squid daemon
 	does (e.g., listen on http_port and forward HTTP requests).
+DOC_END
+
+NAME: cpu_affinity_map
+TYPE: CpuAffinityMap
+LOC: Config.cpuAffinityMap
+DEFAULT: none
+DOC_START
+	Usage: cpu_affinity_map process_numbers=P1,P2,... cores=C1,C2,...
+
+	Sets 1:1 mapping between Squid processes and CPU cores. For example,
+
+	    cpu_affinity_map process_numbers=1,2,3,4 cores=1,3,5,7
+
+	affects processes 1 through 4 only and places them on the first
+	four even cores, starting with core #1.
+
+	CPU cores are numbered starting from 1. Requires support for
+	sched_getaffinity(2) and sched_setaffinity(2) system calls.
+
+	Multiple cpu_affinity_map options are merged.
+
+	See also: workers
 DOC_END
 
 EOF

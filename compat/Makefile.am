@@ -14,6 +14,7 @@ libcompat_la_SOURCES = \
 	assert.h \
 	compat.h \
 	compat_shared.h \
+	cpu.h \
 	debug.h \
 	drand48.h \
 	eui64_aton.h \
@@ -24,6 +25,7 @@ libcompat_la_SOURCES = \
 	inet_pton.h \
 	initgroups.h \
 	osdetect.h \
+	psignal.h \
 	stdvarargs.h \
 	strsep.h \
 	strtoll.h \
@@ -54,6 +56,8 @@ libcompat_la_SOURCES = \
 	debug.cc \
 	GnuRegex.h \
 	GnuRegex.c
+
+libcompat_la_LIBADD= $(LIBOBJS)
 
 check_PROGRAMS += testPreCompiler
 TESTS += testPreCompiler

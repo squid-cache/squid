@@ -52,6 +52,7 @@ public:
     bool readPending(int);
     void noteUse(PconnPool *);
 
+public:
     unsigned int type;
     u_short remote_port;
 
@@ -61,7 +62,7 @@ public:
     char ipaddr[MAX_IPSTRLEN];            /* dotted decimal address of peer */
     char desc[FD_DESC_SZ];
 
-    struct {
+    struct _fde_flags {
         unsigned int open:1;
         unsigned int close_request:1; // file_ or comm_close has been called
         unsigned int write_daemon:1;
@@ -116,14 +117,43 @@ public:
 private:
     /** Clear the fde class back to NULL equivalent. */
     inline void clear() {
+        type = 0;
+        remote_port = 0;
+        local_addr.SetEmpty();
+        tos = '\0';
+        sock_family = 0;
+        memset(ipaddr, '\0', MAX_IPSTRLEN);
+        memset(desc,'\0',FD_DESC_SZ);
+        memset(&flags,0,sizeof(_fde_flags));
+        bytes_read = 0;
+        bytes_written = 0;
+        pconn.uses = 0;
+        pconn.pool = NULL;
+        epoll_state = 0;
+        memset(&disk, 0, sizeof(_fde_disk));
+        read_handler = NULL;
+        read_data = NULL;
+        write_handler = NULL;
+        write_data = NULL;
         timeoutHandler = NULL;
+        timeout = 0;
+        writeStart = 0;
+        lifetime_data = NULL;
         closeHandler = NULL;
         halfClosedReader = NULL;
-        // XXX: the following memset may corrupt or leak new or changed members
-        memset(this, 0, sizeof(fde));
-        local_addr.SetEmpty(); // Ip::Address likes to be setup nicely.
+        wstate = NULL;
+        read_method = NULL;
+        write_method = NULL;
+#if USE_SSL
+        ssl = NULL;
+#endif
+#ifdef _SQUID_MSWIN_
+        win32.handle = NULL;
+#endif
+#if USE_ZPH_QOS
+        upstreamTOS = 0;
+#endif
     }
-
 };
 
 SQUIDCEXTERN int fdNFree(void);

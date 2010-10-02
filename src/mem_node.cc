@@ -36,19 +36,19 @@
 #include "squid.h"
 #include "mem_node.h"
 
-static int makeMemNodeDataOffset();
+static ptrdiff_t makeMemNodeDataOffset();
 
-static int _mem_node_data_offset = makeMemNodeDataOffset();
+static ptrdiff_t _mem_node_data_offset = makeMemNodeDataOffset();
 
 /*
  * Calculate the offset between the start of a mem_node and
  * its 'data' member
  */
-static int
+static ptrdiff_t
 makeMemNodeDataOffset()
 {
     mem_node *p = 0L;
-    return int(ptrdiff_t(&p->data));
+    return ptrdiff_t(&p->data);
 }
 
 /*

@@ -682,6 +682,7 @@ HttpStateData::processReplyHeader()
         tmprep->header.putExt("X-Transformed-From", "HTTP/0.9");
         mb = tmprep->pack();
         newrep->parse(mb, eof, &error);
+        delete mb;
         delete tmprep;
     } else {
         if (!parsed && error > 0) { // unrecoverable parsing error
@@ -943,9 +944,9 @@ HttpStateData::haveParsedReplyHeaders()
 no_cache:
 
     if (!ignoreCacheControl && rep->cache_control) {
-        if (EBIT_TEST(rep->cache_control->mask, CC_PROXY_REVALIDATE))
-            EBIT_SET(entry->flags, ENTRY_REVALIDATE);
-        else if (EBIT_TEST(rep->cache_control->mask, CC_MUST_REVALIDATE))
+        if (EBIT_TEST(rep->cache_control->mask, CC_PROXY_REVALIDATE) ||
+                EBIT_TEST(rep->cache_control->mask, CC_MUST_REVALIDATE) ||
+                EBIT_TEST(rep->cache_control->mask, CC_S_MAXAGE))
             EBIT_SET(entry->flags, ENTRY_REVALIDATE);
     }
 
@@ -1646,7 +1647,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                                       HttpRequest * orig_request,
                                       StoreEntry * entry,
                                       HttpHeader * hdr_out,
-                                      http_state_flags flags)
+                                      const http_state_flags flags)
 {
     /* building buffer for complex strings */
 #define BBUF_SZ (MAX_URL+32)
@@ -1813,11 +1814,9 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             hdr_out->putStr(HDR_FRONT_END_HTTPS, "On");
     }
 
-    if (orig_request->header.chunked() && orig_request->content_length <= 0) {
-        /* Preserve original chunked encoding unless we learned the length.
-         * Do not just copy the original value so that if the client-side
-         * starts decode other encodings, this code may remain valid.
-         */
+    if (flags.chunked_request) {
+        // Do not just copy the original value so that if the client-side
+        // starts decode other encodings, this code may remain valid.
         hdr_out->putStr(HDR_TRANSFER_ENCODING, "chunked");
     }
 
@@ -2024,8 +2023,7 @@ mb_size_t
 HttpStateData::buildRequestPrefix(HttpRequest * aRequest,
                                   HttpRequest * original_request,
                                   StoreEntry * sentry,
-                                  MemBuf * mb,
-                                  http_state_flags stateFlags)
+                                  MemBuf * mb)
 {
     const int offset = mb->size;
     HttpVersion httpver(1,1);
@@ -2037,7 +2035,7 @@ HttpStateData::buildRequestPrefix(HttpRequest * aRequest,
     {
         HttpHeader hdr(hoRequest);
         Packer p;
-        httpBuildRequestHeader(aRequest, original_request, sentry, &hdr, stateFlags);
+        httpBuildRequestHeader(aRequest, original_request, sentry, &hdr, flags);
 
         if (aRequest->flags.pinned && aRequest->flags.connection_auth)
             aRequest->flags.auth_sent = 1;
@@ -2081,6 +2079,11 @@ HttpStateData::sendRequest()
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
         requestSender = JobCallback(11,5,
                                     Dialer, this, HttpStateData::sentRequestBody);
+
+        Must(!flags.chunked_request);
+        // Preserve original chunked encoding unless we learned the length.
+        if (orig_request->header.chunked() && orig_request->content_length < 0)
+            flags.chunked_request = 1;
     } else {
         assert(!requestBodySource);
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
@@ -2126,10 +2129,9 @@ HttpStateData::sendRequest()
 
     mb.init();
     request->peer_host=_peer?_peer->host:NULL;
-    buildRequestPrefix(request, orig_request, entry, &mb, flags);
+    buildRequestPrefix(request, orig_request, entry, &mb);
     debugs(11, 6, HERE << serverConnection << ":\n" << mb.buf);
     comm_write_mbuf(serverConnection, &mb, requestSender);
-
     return true;
 }
 
@@ -2137,7 +2139,7 @@ bool
 HttpStateData::getMoreRequestBody(MemBuf &buf)
 {
     // parent's implementation can handle the no-encoding case
-    if (!request->header.chunked())
+    if (!flags.chunked_request)
         return ServerStateData::getMoreRequestBody(buf);
 
     MemBuf raw;
@@ -2247,10 +2249,9 @@ HttpStateData::doneSendingRequestBody()
     debugs(11,5, HERE << serverConnection);
 
     // do we need to write something after the last body byte?
-    const bool chunked = request->header.chunked();
-    if (chunked && finishingChunkedRequest())
+    if (flags.chunked_request && finishingChunkedRequest())
         return;
-    if (!chunked && finishingBrokenPost())
+    if (!flags.chunked_request && finishingBrokenPost())
         return;
 
     sendComplete();

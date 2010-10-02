@@ -52,7 +52,7 @@ public:
                                        HttpRequest * orig_request,
                                        StoreEntry * entry,
                                        HttpHeader * hdr_out,
-                                       http_state_flags flags);
+                                       const http_state_flags flags);
 
     virtual const Comm::ConnectionPointer & dataDescriptor() const;
     /* should be private */
@@ -131,8 +131,7 @@ private:
     mb_size_t buildRequestPrefix(HttpRequest * request,
                                  HttpRequest * orig_request,
                                  StoreEntry * entry,
-                                 MemBuf * mb,
-                                 http_state_flags flags);
+                                 MemBuf * mb);
     static bool decideIfWeDoRanges (HttpRequest * orig_request);
     bool peerSupportsConnectionPinning() const;
 

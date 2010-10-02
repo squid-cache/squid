@@ -51,14 +51,18 @@ the first request.
 .PP
 Configuration example using the default automatic mode
 .if !'po4a'hide' .RS
-.if !'po4a'hide' external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 %LOGIN /usr/local/squid/libexec/ext_session_acl
-.if !'po4a'hide' acl session external session
-.if !'po4a'hide' http_access deny !session
-.if !'po4a'hide' deny_info http://your.server.example.com/bannerpage?url=%s session
+.if !'po4a'hide' .B external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 %LOGIN /usr/local/squid/libexec/ext_session_acl
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl session external session
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access deny !session
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B deny_info http://your.server.example.com/bannerpage?url=%s session
 .if !'po4a'hide' .RE
 .PP
-Then set up http://your.server.example.com/bannerpage to display a session startup
-page and then redirect the user back to the requested URL given in the url query parameter.
+Then set up 
+.B http://your.server.example.com/bannerpage 
+to display a session startup page and then redirect the user back to the requested URL given in the url query parameter.
 .
 .SH AUTHOR
 This program and documentation was written by

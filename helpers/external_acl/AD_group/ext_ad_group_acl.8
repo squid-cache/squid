@@ -1,20 +1,20 @@
-.if !'po4a'hide' .TH ext_ad_group_acl 8
+.if !'po4a'hide' .TH ext_ad_group_acl.exe 8
 .
 .SH NAME
-.if !'po4a'hide' .B ext_ad_group_acl
+.if !'po4a'hide' .B ext_ad_group_acl.exe 
 .if !'po4a'hide' \-
 Squid external ACL helper to check Windows users group membership.
 .PP
 Version 2.0
 .
 .SH SYNOPSIS
-.if !'po4a'hide' .B ext_ad_group_acl
+.if !'po4a'hide' .B ext_ad_group_acl.exe
 .if !'po4a'hide' .B "[\-D "
 domain
-.if !'po4a'hide' .B "[\-cdGh]"
+.if !'po4a'hide' .B "] [\-cdGh]"
 .
 .SH DESCRIPTION
-.B ext_ad_group_acl
+.B ext_ad_group_acl.exe
 is an installed binary in Squid for Windows builds.
 .PP
 This helper must be used in with an authentication scheme (typically
@@ -29,32 +29,45 @@ Two running mode are available:
 .B "\- Local mode:"
 membership is checked against machine's local groups, cannot be used when
 running on a Domain Controller.
+.PP
+.if !'po4a'hide' .TP 12
 .B "\- Active Directory Global mode:"
 membership is checked against the whole Active Directory Forest of the
 machine where Squid is running.
 .PP
-The minimal Windows version needed to run ext_ad_group_acl is
-a Windows 2000 SP4 member of an Active Directory Domain.
+The minimal Windows version needed to run 
+.B ext_ad_group_acl.exe 
+is a Windows 2000 SP4 member of an Active Directory Domain.
 .PP
 When running in Active Directory Global mode, all types of Active Directory
 security groups are supported:
-.if !'po4a'hide' .TP 12
-.B \- Domain Global
-.B \- Domain Local from user's domain
-.B \- Universal
+.B "Domain Global"
+,
+.B "Domain Local"
+from user's domain, 
+.B "Universal"
 and Active Directory group nesting is fully supported.
 .
 .SH OPTIONS
 .if !'po4a'hide' .TP 12
-.if !'po4a'hide' .B \-c
+.if !'po4a'hide' .B "\-c"
 Use case insensitive compare (local mode only).
-.if !'po4a'hide' .B \-d
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-d"
 Write debug info to stderr.
-.if !'po4a'hide' .B \-D domain
-Specify the default user's domain.
-.if !'po4a'hide' .B \-G
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-D" domain
+Specify the default user's 
+.B domain
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-G"
 Start helper in Active Directory Global mode.
-.if !'po4a'hide' .B \-h
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-h"
 Display the binary help and command line syntax info using stderr.
 .
 .SH CONFIGURATION
@@ -63,31 +76,48 @@ When running in Active Directory Global mode, the AD Group can be specified usin
 following syntax:
 .
 .if !'po4a'hide' .TP 5
-.PP 1. Plain NT4 Group Name
-.PP 2. Full NT4 Group Name
-.PP 3. Active Directory Canonical name
+.B "1." Plain NT4 Group Name
 .
-.PP As Example:
+.if !'po4a'hide' .TP
+.B "2." Full NT4 Group Name
+.
+.if !'po4a'hide' .TP
+.B "3." Active Directory Canonical name
+.
+.PP As Exampled:
 .if !'po4a'hide' .TP 5
-.if !'po4a'hide' .PP 1. Proxy-Users
-.if !'po4a'hide' .PP 2. MYDOMAIN\Proxy-Users
-.if !'po4a'hide' .PP 3. mydomain.local/Groups/Proxy-Users
+.if !'po4a'hide' .B "1." Proxy-Users
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "2." MYDOMAIN\Proxy-Users
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "3." mydomain.local/Groups/Proxy-Users
 .PP
 When using Plain NT4 Group Name, the Group is searched in the user's domain.
-.if !'po4a'hide' .
-.if !'po4a'hide' external_acl_type AD_global_group %LOGIN c:/squid/libexec/ext_ad_group_acl.exe -G
-.if !'po4a'hide' external_acl_type NT_local_group %LOGIN c:/squid/libexec/ext_ad_group_acl.exe
-.if !'po4a'hide' .
-.if !'po4a'hide' acl GProxyUsers external AD_global_group MYDOMAIN\GProxyUsers
-.if !'po4a'hide' acl LProxyUsers external NT_local_group LProxyUsers
-.if !'po4a'hide' acl password proxy_auth REQUIRED
-.if !'po4a'hide' .
-.if !'po4a'hide' http_access allow password GProxyUsers
-.if !'po4a'hide' http_access allow password LProxyUsers
-.if !'po4a'hide' http_access deny all
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B external_acl_type AD_global_group %LOGIN c:/squid/libexec/ext_ad_group_acl.exe -G
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B external_acl_type NT_local_group %LOGIN c:/squid/libexec/ext_ad_group_acl.exe
+.if !'po4a'hide' .br
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B "acl GProxyUsers external AD_global_group MYDOMAIN\GProxyUsers"
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl LProxyUsers external NT_local_group LProxyUsers
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl password proxy_auth REQUIRED
+.if !'po4a'hide' .br
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access allow password GProxyUsers
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access allow password LProxyUsers
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access deny all
+.if !'po4a'hide' .RE
+.
 .PP
 In the previous example all validated AD users member of 
-.I MYDOMAIN\GProxyUsers
+.I "MYDOMAIN\GProxyUsers"
 domain group or member of 
 .I LProxyUsers 
 machine local group are allowed to
@@ -101,16 +131,22 @@ Groups with spaces in name, for example
 by specifying 
 .B "/path/to/file" .
 The previous example will be:
-.if !'po4a'hide' .
-.if !'po4a'hide' acl ProxyUsers external NT_global_group "c:/squid/etc/DomainUsers"
-.if !'po4a'hide' .
+.if !'po4a'hide' .RS
+.if !'po4a'hide' acl ProxyUsers external NT_global_group \"c:/squid/etc/DomainUsers\"
+.if !'po4a'hide' .RE
 and the DomainUsers files will contain only the following line:
+.if !'po4a'hide' .RS
 "Domain Users"
-.PP NOTE:
+.if !'po4a'hide' .RE
+.
+.PP
+.B NOTE 1:
 When running in Active Directory Global mode, for better performance,
 all Domain Controllers of the Active Directory forest should be configured
 as Global Catalog.
-.PP NOTE:
+.
+.PP
+.B NOTE 2:
 When running in local mode, the standard group name comparison is case
 sensitive, so group name must be specified with same case as in the
 local SAM database.
@@ -119,19 +155,23 @@ It is possible to enable case insensitive group name comparison (
 .B \-c
 ),
 but on some non\-english locales, the results can be unexpected.
-.PP NOTE:
-Native WIN32 NTLM and Basic Helpers must be used without the
+.
+.PP
+.B NOTE 3:
+Native WIN32 NTLM and Basic helpers must be used without the
 .B \-A 
 and 
 .B \-D 
 switches.
+.
 .PP
-Refer to Squid documentation for the more details on squid.conf.
+Refer to Squid documentation for more details on 
+.B squid.conf
 .
 .SH TESTING
 .PP
 I strongly recommend that
-.B ext_lm_group_acl
+.B ext_ad_group_acl.exe
 is tested prior to being used in a
 production environment. It may behave differently on different platforms.
 .
