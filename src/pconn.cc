@@ -76,21 +76,8 @@ int
 IdleConnList::findIndex(const Comm::ConnectionPointer &conn)
 {
     for (int index = nfds - 1; index >= 0; --index) {
-
-        // remote IPs dont match.
-        if (conn->remote != theList[index]->remote)
-            continue;
-
-        // local end port is required, but dont match.
-        if (conn->local.GetPort() > 0 && conn->local.GetPort() != theList[index]->local.GetPort())
-            continue;
-
-        // local address is required, but does not match.
-        if (!conn->local.IsAnyAddr() && conn->local != theList[index]->local)
-            continue;
-
-        // finally, a match
-        return index;
+        if (conn->fd == theList[index]->fd)
+            return index;
     }
 
     return -1;
@@ -156,17 +143,29 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
  * quite a bit of CPU. Just keep it in mind.
  */
 Comm::ConnectionPointer
-IdleConnList::findUseable()
+IdleConnList::findUseable(const Comm::ConnectionPointer &key)
 {
     assert(nfds);
 
     for (int i=nfds-1; i>=0; i--) {
-        if (!comm_has_pending_read_callback(theList[i]->fd)) {
-            return theList[i];
-        }
+
+        // callback pending indicates that remote end of the conn has just closed.
+        if (comm_has_pending_read_callback(theList[i]->fd))
+            continue;
+
+        // local end port is required, but dont match.
+        if (conn->local.GetPort() > 0 && conn->local.GetPort() != theList[index]->local.GetPort())
+            continue;
+
+        // local address is required, but does not match.
+        if (!conn->local.IsAnyAddr() && conn->local.matchIPAddr(theList[index]->local) != 0)
+            continue;
+
+        // finally, a match
+        return theList[i];
     }
 
-    return Comm::ConnectionPointer();
+    return key;
 }
 
 void
@@ -314,7 +313,7 @@ PconnPool::pop(Comm::ConnectionPointer &destLink, const char *domain, bool isRet
         debugs(48, 3, "PconnPool::pop: found " << hashKeyStr(&list->hash) << (isRetriable?"(to use)":"(to kill)") );
     }
 
-    Comm::ConnectionPointer temp = list->findUseable(); // search from the end. skip pending reads.
+    Comm::ConnectionPointer temp = list->findUseable(destLink);
 
     if (Comm::IsConnOpen(temp)) {
         list->clearHandlers(temp);
