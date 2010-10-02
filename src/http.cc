@@ -2128,7 +2128,7 @@ HttpStateData::sendRequest()
     request->peer_host=_peer?_peer->host:NULL;
     buildRequestPrefix(request, orig_request, entry, &mb, flags);
     debugs(11, 6, HERE << serverConnection << ":\n" << mb.buf);
-    comm_write_mbuf(serverConnection->fd, &mb, requestSender);
+    comm_write_mbuf(serverConnection, &mb, requestSender);
 
     return true;
 }
@@ -2215,7 +2215,7 @@ HttpStateData::finishingBrokenPost()
     typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
     requestSender = JobCallback(11,5,
                                 Dialer, this, HttpStateData::wroteLast);
-    comm_write(serverConnection->fd, "\r\n", 2, requestSender);
+    comm_write(serverConnection, "\r\n", 2, requestSender);
     return true;
 #else
     return false;
@@ -2235,9 +2235,8 @@ HttpStateData::finishingChunkedRequest()
     flags.sentLastChunk = true;
 
     typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-    requestSender = JobCallback(11,5,
-                                Dialer, this, HttpStateData::wroteLast);
-    comm_write(serverConnection->fd, "0\r\n\r\n", 5, requestSender);
+    requestSender = JobCallback(11,5, Dialer, this, HttpStateData::wroteLast);
+    comm_write(serverConnection, "0\r\n\r\n", 5, requestSender);
     return true;
 }
 

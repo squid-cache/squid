@@ -58,10 +58,10 @@ public:
     class Connection;
     void *operator new(size_t);
     void operator delete (void *);
-    static void ReadClient(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data);
-    static void ReadServer(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data);
-    static void WriteClientDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data);
-    static void WriteServerDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data);
+    static void ReadClient(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data);
+    static void ReadServer(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data);
+    static void WriteClientDone(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t flag, int xerrno, void *data);
+    static void WriteServerDone(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t flag, int xerrno, void *data);
 
     bool noConnections() const;
     char *url;
@@ -222,10 +222,10 @@ TunnelStateData::Connection::debugLevelForError(int const xerrno) const
 
 /* Read from server side and queue it for writing to the client */
 void
-TunnelStateData::ReadServer(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data)
+TunnelStateData::ReadServer(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
-    assert (cbdataReferenceValid (tunnelState));
+    assert(cbdataReferenceValid(tunnelState));
 
     tunnelState->readServer(buf, len, errcode, xerrno);
 }
@@ -233,7 +233,7 @@ TunnelStateData::ReadServer(int fd, char *buf, size_t len, comm_err_t errcode, i
 void
 TunnelStateData::readServer(char *buf, size_t len, comm_err_t errcode, int xerrno)
 {
-    debugs(26, 3, HERE << server.conn << ", read   " << len << " bytes");
+    debugs(26, 3, HERE << server.conn << ", read " << len << " bytes");
 
     /*
      * Bail out early on COMM_ERR_CLOSING
@@ -249,7 +249,7 @@ TunnelStateData::readServer(char *buf, size_t len, comm_err_t errcode, int xerrn
         kb_incr(&statCounter.server.other.kbytes_in, len);
     }
 
-    copy (len, errcode, xerrno, server, client, WriteClientDone);
+    copy(len, errcode, xerrno, server, client, WriteClientDone);
 }
 
 void
@@ -258,8 +258,7 @@ TunnelStateData::Connection::error(int const xerrno)
     /* XXX fixme xstrerror and xerrno... */
     errno = xerrno;
 
-    debugs(50, debugLevelForError(xerrno), "TunnelStateData::Connection::error: FD " << conn->fd <<
-           ": read/write failure: " << xstrerror());
+    debugs(50, debugLevelForError(xerrno), HERE << conn << ": read/write failure: " << xstrerror());
 
     if (!ignoreErrno(xerrno))
         conn->close();
@@ -267,10 +266,10 @@ TunnelStateData::Connection::error(int const xerrno)
 
 /* Read from client side and queue it for writing to the server */
 void
-TunnelStateData::ReadClient(int fd, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data)
+TunnelStateData::ReadClient(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
-    assert (cbdataReferenceValid (tunnelState));
+    assert(cbdataReferenceValid(tunnelState));
 
     tunnelState->readClient(buf, len, errcode, xerrno);
 }
@@ -318,17 +317,17 @@ TunnelStateData::copy(size_t len, comm_err_t errcode, int xerrno, Connection &fr
             to.conn->close();
         }
     } else if (cbdataReferenceValid(this))
-        comm_write(to.conn->fd, from.buf, len, completion, this, NULL);
+        comm_write(to.conn, from.buf, len, completion, this, NULL);
 
     cbdataInternalUnlock(this);	/* ??? */
 }
 
 /* Writes data from the client buffer to the server side */
 void
-TunnelStateData::WriteServerDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+TunnelStateData::WriteServerDone(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
-    assert (cbdataReferenceValid (tunnelState));
+    assert(cbdataReferenceValid(tunnelState));
 
     tunnelState->writeServerDone(buf, len, flag, xerrno);
 }
@@ -374,16 +373,16 @@ TunnelStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xer
 
 /* Writes data from the server buffer to the client side */
 void
-TunnelStateData::WriteClientDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+TunnelStateData::WriteClientDone(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
-    assert (cbdataReferenceValid (tunnelState));
+    assert(cbdataReferenceValid(tunnelState));
 
     tunnelState->writeClientDone(buf, len, flag, xerrno);
 }
 
 void
-TunnelStateData::Connection::dataSent (size_t amount)
+TunnelStateData::Connection::dataSent(size_t amount)
 {
     assert(amount == (size_t)len);
     len =0;
@@ -459,12 +458,12 @@ TunnelStateData::copyRead(Connection &from, IOCB *completion)
 }
 
 static void
-tunnelConnectedWriteDone(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
+tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
 
     if (flag != COMM_OK) {
-        tunnelErrorComplete(fd, data, 0);
+        tunnelErrorComplete(conn->fd, data, 0);
         return;
     }
 
@@ -480,12 +479,12 @@ tunnelConnected(const Comm::ConnectionPointer &server, void *data)
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, HERE << server << ", tunnelState=" << tunnelState);
     *tunnelState->status_ptr = HTTP_OK;
-    comm_write(tunnelState->client.conn->fd, conn_established, strlen(conn_established),
+    comm_write(tunnelState->client.conn, conn_established, strlen(conn_established),
                tunnelConnectedWriteDone, tunnelState, NULL);
 }
 
 static void
-tunnelErrorComplete(int fdnotused, void *data, size_t sizenotused)
+tunnelErrorComplete(int /*const Comm::ConnectionPointer &*/, void *data, size_t)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     assert(tunnelState != NULL);
@@ -544,7 +543,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
             err->port = conn->remote.GetPort();
             err->callback = tunnelErrorComplete;
             err->callback_data = tunnelState;
-            errorSend(tunnelState->client.conn->fd, err);
+            errorSend(tunnelState->client.conn, err);
         }
         return;
     }
@@ -599,7 +598,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
         if (answer == 0) {
             err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN, request);
             *status_ptr = HTTP_FORBIDDEN;
-            errorSend(http->getConn()->clientConn->fd, err);
+            errorSend(http->getConn()->clientConn, err);
             return;
         }
     }
@@ -656,7 +655,7 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &server, void *data)
     packerClean(&p);
     mb.append("\r\n", 2);
 
-    comm_write_mbuf(server->fd, &mb, tunnelConnectedWriteDone, tunnelState);
+    comm_write_mbuf(server, &mb, tunnelConnectedWriteDone, tunnelState);
     commSetTimeout(server->fd, Config.Timeout.read, tunnelTimeout, tunnelState);
 }
 
@@ -671,7 +670,7 @@ tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, void *data)
         *tunnelState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
         err->callback = tunnelErrorComplete;
         err->callback_data = tunnelState;
-        errorSend(tunnelState->client.conn->fd, err);
+        errorSend(tunnelState->client.conn, err);
         return;
     }
 

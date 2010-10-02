@@ -33,12 +33,13 @@
  */
 
 #include "squid.h"
+#include "comm.h"
+#include "comm/Connection.h"
 #include "helper.h"
+#include "MemBuf.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "comm.h"
-#include "MemBuf.h"
 #include "wordlist.h"
 
 #define HELPER_MAX_ARGS 64
@@ -72,6 +73,62 @@ CBDATA_CLASS_INIT(helper);
 CBDATA_TYPE(helper_server);
 CBDATA_CLASS_INIT(statefulhelper);
 CBDATA_TYPE(helper_stateful_server);
+
+void
+HelperServerBase::closePipesSafely()
+{
+#ifdef _SQUID_MSWIN_
+    int no = index + 1;
+
+    shutdown(writePipe->fd, SD_BOTH);
+#endif
+
+    flags.closing = 1;
+    if (readPipe->fd == writePipe->fd)
+        readPipe->fd = -1;
+    else
+        readPipe->close();
+    writePipe->close();
+
+#ifdef _SQUID_MSWIN_
+        if (hIpc) {
+            if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
+                getCurrentTime();
+                debugs(84, DBG_IMPORTANT, "WARNING: " << hlp->id_name <<
+                       " #" << no << " (" << hlp->cmdline->key << "," <<
+                       (long int)pid << ") didn't exit in 5 seconds");
+            }
+            CloseHandle(hIpc);
+        }
+#endif
+}
+
+void
+HelperServerBase::closeWritePipeSafely()
+{
+#ifdef _SQUID_MSWIN_
+    int no = index + 1;
+
+    shutdown(writePipe->fd, (readPipe->fd == writePipe->fd ? SD_BOTH : SD_SEND));
+#endif
+
+    flags.closing = 1;
+    if (readPipe->fd == writePipe->fd)
+        readPipe->fd = -1;
+    writePipe->close();
+
+#ifdef _SQUID_MSWIN_
+        if (hIpc) {
+            if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
+                getCurrentTime();
+                debugs(84, DBG_IMPORTANT, "WARNING: " << hlp->id_name <<
+                       " #" << no << " (" << hlp->cmdline->key << "," <<
+                       (long int)pid << ") didn't exit in 5 seconds");
+            }
+            CloseHandle(hIpc);
+        }
+#endif
+}
 
 void
 helperOpenServers(helper * hlp)
@@ -148,8 +205,10 @@ helperOpenServers(helper * hlp)
         srv->pid = pid;
         srv->index = k;
         srv->addr = hlp->addr;
-        srv->rfd = rfd;
-        srv->wfd = wfd;
+        srv->readPipe = new Comm::Connection;
+        srv->readPipe->fd = rfd;
+        srv->writePipe = new Comm::Connection;
+        srv->writePipe->fd = wfd;
         srv->rbuf = (char *)memAllocBuf(BUF_8KB, &srv->rbuf_sz);
         srv->wqueue = new MemBuf;
         srv->roffset = 0;
@@ -174,7 +233,7 @@ helperOpenServers(helper * hlp)
 
         comm_add_close_handler(rfd, helperServerFree, srv);
 
-        comm_read(srv->rfd, srv->rbuf, srv->rbuf_sz - 1, helperHandleRead, srv);
+        comm_read(srv->readPipe->fd, srv->rbuf, srv->rbuf_sz - 1, helperHandleRead, srv);
     }
 
     hlp->last_restart = squid_curtime;
@@ -262,8 +321,10 @@ helperStatefulOpenServers(statefulhelper * hlp)
         srv->stats.releases = 0;
         srv->index = k;
         srv->addr = hlp->addr;
-        srv->rfd = rfd;
-        srv->wfd = wfd;
+        srv->readPipe = new Comm::Connection;
+        srv->readPipe->fd = rfd;
+        srv->writePipe = new Comm::Connection;
+        srv->writePipe->fd = wfd;
         srv->rbuf = (char *)memAllocBuf(BUF_8KB, &srv->rbuf_sz);
         srv->roffset = 0;
         srv->parent = cbdataReference(hlp);
@@ -290,7 +351,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
 
         comm_add_close_handler(rfd, helperStatefulServerFree, srv);
 
-        comm_read(srv->rfd, srv->rbuf, srv->rbuf_sz - 1, helperStatefulHandleRead, srv);
+        comm_read(srv->readPipe->fd, srv->rbuf, srv->rbuf_sz - 1, helperStatefulHandleRead, srv);
     }
 
     hlp->last_restart = squid_curtime;
@@ -431,7 +492,7 @@ helperStats(StoreEntry * sentry, helper * hlp, const char *label)
         double tt = 0.001 * (srv->requests[0] ? tvSubMsec(srv->requests[0]->dispatch_time, current_time) : tvSubMsec(srv->dispatch_time, srv->answer_time));
         storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index + 1,
-                          srv->rfd,
+                          srv->readPipe->fd,
                           srv->pid,
                           srv->stats.uses,
                           srv->stats.pending ? 'B' : ' ',
@@ -484,7 +545,7 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
         double tt = 0.001 * tvSubMsec(srv->dispatch_time, srv->flags.busy ? current_time : srv->answer_time);
         storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index + 1,
-                          srv->rfd,
+                          srv->readPipe->fd,
                           srv->pid,
                           srv->stats.uses,
                           srv->flags.busy ? 'B' : ' ',
@@ -509,12 +570,6 @@ void
 helperShutdown(helper * hlp)
 {
     dlink_node *link = hlp->servers.head;
-#ifdef _SQUID_MSWIN_
-
-    HANDLE hIpc;
-    pid_t pid;
-    int no;
-#endif
 
     while (link) {
         helper_server *srv;
@@ -540,36 +595,11 @@ helperShutdown(helper * hlp)
             continue;
         }
 
-        srv->flags.closing = 1;
-#ifdef _SQUID_MSWIN_
-
-        hIpc = srv->hIpc;
-        pid = srv->pid;
-        no = srv->index + 1;
-        shutdown(srv->wfd, SD_BOTH);
-#endif
-
         debugs(84, 3, "helperShutdown: " << hlp->id_name << " #" << srv->index + 1 << " shutting down.");
         /* the rest of the details is dealt with in the helperServerFree
          * close handler
          */
-        comm_close(srv->rfd);
-#ifdef _SQUID_MSWIN_
-
-        if (hIpc) {
-            if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
-                getCurrentTime();
-                debugs(84, 1, "helperShutdown: WARNING: " << hlp->id_name <<
-                       " #" << no << " (" << hlp->cmdline->key << "," <<
-                       (long int)pid << ") didn't exit in 5 seconds");
-
-            }
-
-            CloseHandle(hIpc);
-        }
-
-#endif
-
+        srv->closePipesSafely();
     }
 }
 
@@ -578,12 +608,6 @@ helperStatefulShutdown(statefulhelper * hlp)
 {
     dlink_node *link = hlp->servers.head;
     helper_stateful_server *srv;
-#ifdef _SQUID_MSWIN_
-
-    HANDLE hIpc;
-    pid_t pid;
-    int no;
-#endif
 
     while (link) {
         srv = (helper_stateful_server *)link->data;
@@ -617,36 +641,12 @@ helperStatefulShutdown(statefulhelper * hlp)
             }
         }
 
-        srv->flags.closing = 1;
-#ifdef _SQUID_MSWIN_
-
-        hIpc = srv->hIpc;
-        pid = srv->pid;
-        no = srv->index + 1;
-        shutdown(srv->wfd, SD_BOTH);
-#endif
-
         debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " shutting down.");
 
         /* the rest of the details is dealt with in the helperStatefulServerFree
          * close handler
          */
-        comm_close(srv->rfd);
-#ifdef _SQUID_MSWIN_
-
-        if (hIpc) {
-            if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
-                getCurrentTime();
-                debugs(84, 1, "helperShutdown: WARNING: " << hlp->id_name <<
-                       " #" << no << " (" << hlp->cmdline->key << "," <<
-                       (long int)pid << ") didn't exit in 5 seconds");
-            }
-
-            CloseHandle(hIpc);
-        }
-
-#endif
-
+        srv->closePipesSafely();
     }
 }
 
@@ -702,8 +702,8 @@ helperServerFree(int fd, void *data)
 
     safe_free(srv->requests);
 
-    if (srv->wfd != srv->rfd && srv->wfd != -1)
-        comm_close(srv->wfd);
+    if (Comm::IsConnOpen(srv->writePipe))
+        srv->closeWritePipeSafely();
 
     dlinkDelete(&srv->link, &hlp->servers);
 
@@ -761,8 +761,8 @@ helperStatefulServerFree(int fd, void *data)
     }
 
     /* TODO: walk the local queue of requests and carry them all out */
-    if (srv->wfd != srv->rfd && srv->wfd != -1)
-        comm_close(srv->wfd);
+    if (Comm::IsConnOpen(srv->writePipe))
+        srv->closeWritePipeSafely();
 
     dlinkDelete(&srv->link, &hlp->servers);
 
@@ -795,7 +795,7 @@ helperStatefulServerFree(int fd, void *data)
 
 
 static void
-helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     char *t = NULL;
     helper_server *srv = (helper_server *)data;
@@ -808,16 +808,15 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         return;
     }
 
-    assert(fd == srv->rfd);
+    assert(conn->fd == srv->readPipe->fd);
 
     debugs(84, 5, "helperHandleRead: " << len << " bytes from " << hlp->id_name << " #" << srv->index + 1);
 
     if (flag != COMM_OK || len <= 0) {
         if (len < 0)
-            debugs(84, 1, "helperHandleRead: FD " << fd << " read: " << xstrerror());
+            debugs(84, 1, "helperHandleRead: FD " << conn->fd << " read: " << xstrerror());
 
-        comm_close(fd);
-
+        srv->closePipesSafely();
         return;
     }
 
@@ -891,22 +890,17 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         if (!srv->flags.shutdown) {
             helperKickQueue(hlp);
         } else if (!srv->flags.closing && !srv->stats.pending) {
-            int wfd = srv->wfd;
-            srv->wfd = -1;
-            if (srv->rfd == wfd)
-                srv->rfd = -1;
-            srv->flags.closing=1;
-            comm_close(wfd);
+            srv->closeWritePipeSafely();
             return;
         }
     }
 
-    if (srv->rfd != -1)
-        comm_read(fd, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1, helperHandleRead, srv);
+    if (Comm::IsConnOpen(srv->readPipe))
+        comm_read(srv->readPipe->fd, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1, helperHandleRead, srv);
 }
 
 static void
-helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     char *t = NULL;
     helper_stateful_server *srv = (helper_stateful_server *)data;
@@ -920,7 +914,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
         return;
     }
 
-    assert(fd == srv->rfd);
+    assert(conn->fd == srv->readPipe->fd);
 
     debugs(84, 5, "helperStatefulHandleRead: " << len << " bytes from " <<
            hlp->id_name << " #" << srv->index + 1);
@@ -928,10 +922,9 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
 
     if (flag != COMM_OK || len <= 0) {
         if (len < 0)
-            debugs(84, 1, "helperStatefulHandleRead: FD " << fd << " read: " << xstrerror());
+            debugs(84, 1, "helperStatefulHandleRead: FD " << conn->fd << " read: " << xstrerror());
 
-        comm_close(fd);
-
+        srv->closePipesSafely();
         return;
     }
 
@@ -982,8 +975,8 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
             helperStatefulReleaseServer(srv);
     }
 
-    if (srv->rfd != -1)
-        comm_read(srv->rfd, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1,
+    if (Comm::IsConnOpen(srv->readPipe))
+        comm_read(srv->readPipe->fd, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1,
                   helperStatefulHandleRead, srv);
 }
 
@@ -1161,7 +1154,7 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
 
 
 static void
-helperDispatchWriteDone(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+helperDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     helper_server *srv = (helper_server *)data;
 
@@ -1180,7 +1173,7 @@ helperDispatchWriteDone(int fd, char *buf, size_t len, comm_err_t flag, int xerr
         srv->writebuf = srv->wqueue;
         srv->wqueue = new MemBuf;
         srv->flags.writing = 1;
-        comm_write(srv->wfd,
+        comm_write(srv->writePipe,
                    srv->writebuf->content(),
                    srv->writebuf->contentSize(),
                    helperDispatchWriteDone,	/* Handler */
@@ -1226,7 +1219,7 @@ helperDispatch(helper_server * srv, helper_request * r)
         srv->writebuf = srv->wqueue;
         srv->wqueue = new MemBuf;
         srv->flags.writing = 1;
-        comm_write(srv->wfd,
+        comm_write(srv->writePipe,
                    srv->writebuf->content(),
                    srv->writebuf->contentSize(),
                    helperDispatchWriteDone,	/* Handler */
@@ -1240,7 +1233,7 @@ helperDispatch(helper_server * srv, helper_request * r)
 }
 
 static void
-helperStatefulDispatchWriteDone(int fd, char *buf, size_t len, comm_err_t flag,
+helperStatefulDispatchWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag,
                                 int xerrno, void *data)
 {
     /* nothing! */
@@ -1281,7 +1274,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
     srv->flags.reserved = 1;
     srv->request = r;
     srv->dispatch_time = current_time;
-    comm_write(srv->wfd,
+    comm_write(srv->writePipe,
                r->buf,
                strlen(r->buf),
                helperStatefulDispatchWriteDone,	/* Handler */
@@ -1321,12 +1314,7 @@ helperStatefulServerDone(helper_stateful_server * srv)
     if (!srv->flags.shutdown) {
         helperStatefulKickQueue(srv->parent);
     } else if (!srv->flags.closing && !srv->flags.reserved && !srv->flags.busy) {
-        int wfd = srv->wfd;
-        srv->wfd = -1;
-        if (srv->rfd == wfd)
-            srv->rfd = -1;
-        srv->flags.closing=1;
-        comm_close(wfd);
+        srv->closeWritePipeSafely();
         return;
     }
 }

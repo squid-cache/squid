@@ -41,13 +41,13 @@ protected:
     void handleSharedListenRequest(const SharedListenRequest& request);
 
     /// calls comm_open_listener()
-    int openListenSocket(const SharedListenRequest& request, int &errNo);
+    Comm::ConnectionPointer openListenSocket(const SharedListenRequest& request, int &errNo);
 
 private:
     typedef Vector<StrandCoord> Strands; ///< unsorted strands
     Strands strands; ///< registered processes and threads
 
-    typedef std::map<OpenListenerParams, int> Listeners; ///< params:fd map
+    typedef std::map<OpenListenerParams, Comm::ConnectionPointer> Listeners; ///< params:fd map
     Listeners listeners; ///< cached comm_open_listener() results
 
     static Coordinator* TheInstance; ///< the only class instance in existence

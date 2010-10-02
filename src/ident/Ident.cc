@@ -64,7 +64,7 @@ typedef struct _IdentStateData {
     char buf[4096];
 } IdentStateData;
 
-// TODO: make these all a series of Async jobs. They are self-contained callbacks now.
+// TODO: make these all a series of Async job calls. They are self-contained callbacks now.
 static IOCB ReadReply;
 static PF Close;
 static PF Timeout;
@@ -154,20 +154,20 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int x
     mb.Printf("%d, %d\r\n",
               conn->remote.GetPort(),
               conn->local.GetPort());
-    comm_write_mbuf(conn->fd, &mb, NULL, state);
+    comm_write_mbuf(conn, &mb, NULL, state);
     comm_read(conn->fd, state->buf, BUFSIZ, Ident::ReadReply, state);
     commSetTimeout(conn->fd, Ident::TheConfig.timeout, Ident::Timeout, state);
 }
 
 void
-Ident::ReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+Ident::ReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
     char *ident = NULL;
     char *t = NULL;
 
     assert(buf == state->buf);
-    assert(fd == state->conn->fd);
+    assert(conn->fd == state->conn->fd);
 
     if (flag != COMM_OK || len <= 0) {
         state->conn->close();
@@ -187,7 +187,7 @@ Ident::ReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
     if ((t = strchr(buf, '\n')))
         *t = '\0';
 
-    debugs(30, 5, HERE << "FD " << fd << ": Read '" << buf << "'");
+    debugs(30, 5, HERE << conn << ": Read '" << buf << "'");
 
     if (strstr(buf, "USERID")) {
         if ((ident = strrchr(buf, ':'))) {

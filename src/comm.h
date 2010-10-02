@@ -36,7 +36,7 @@ SQUIDCEXTERN void comm_exit(void);
 SQUIDCEXTERN int comm_open(int, int, Ip::Address &, int, const char *note);
 SQUIDCEXTERN int comm_open_uds(int sock_type, int proto, struct sockaddr_un* addr, int flags);
 /// update Comm state after getting a comm_open() FD from another process
-SQUIDCEXTERN void comm_import_opened(int fd, Ip::Address &addr, int flags, const char *note, struct addrinfo *AI);
+SQUIDCEXTERN void comm_import_opened(const Comm::ConnectionPointer &, const char *note, struct addrinfo *AI);
 
 /**
  * Open a port specially bound for listening or sending through a specific port.
@@ -53,7 +53,8 @@ SQUIDCEXTERN void comm_import_opened(int fd, Ip::Address &addr, int flags, const
  * (in debugs or cachemgr) will occur in Native IPv4 format.
  * A reconfigure is needed to reset the stored IP in most cases and attempt a port re-open.
  */
-SQUIDCEXTERN int comm_open_listener(int sock_type, int proto, Ip::Address &addr, int flags, const char *note);
+extern int comm_open_listener(int sock_type, int proto, Ip::Address &addr, int flags, const char *note);
+extern void comm_open_listener(int sock_type, int proto, Comm::ConnectionPointer &conn, const char *note);
 
 SQUIDCEXTERN int comm_openex(int, int, Ip::Address &, int, unsigned char TOS, const char *);
 SQUIDCEXTERN u_short comm_local_port(int fd);
@@ -63,13 +64,13 @@ SQUIDCEXTERN void commSetSelect(int, unsigned int, PF *, void *, time_t);
 SQUIDCEXTERN void commResetSelect(int);
 
 SQUIDCEXTERN int comm_udp_sendto(int sock, const Ip::Address &to, const void *buf, int buflen);
-extern void comm_write(int fd, const char *buf, int len, IOCB *callback, void *callback_data, FREE *func);
-extern void comm_write(int fd, const char *buf, int size, AsyncCall::Pointer &callback, FREE * free_func = NULL);
-SQUIDCEXTERN void comm_write_mbuf(int fd, MemBuf *mb, IOCB * handler, void *handler_data);
-extern void comm_write_mbuf(int fd, MemBuf *mb, AsyncCall::Pointer &callback);
+extern void comm_write(const Comm::ConnectionPointer &conn, const char *buf, int len, IOCB *callback, void *callback_data, FREE *func);
+extern void comm_write(const Comm::ConnectionPointer &conn, const char *buf, int size, AsyncCall::Pointer &callback, FREE * free_func = NULL);
+SQUIDCEXTERN void comm_write_mbuf(const Comm::ConnectionPointer &conn, MemBuf *mb, IOCB * handler, void *handler_data);
+extern void comm_write_mbuf(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Pointer &callback);
 SQUIDCEXTERN void commCallCloseHandlers(int fd);
 SQUIDCEXTERN int commSetTimeout(int fd, int, PF *, void *);
-extern int commSetTimeout(int fd, int, AsyncCall::Pointer &calback);
+extern int commSetTimeout(int fd, int, AsyncCall::Pointer &callback);
 
 /**
  * Set or clear the timeout for some action on an active connection.
