@@ -809,32 +809,23 @@ FwdState::connectStart()
         return;
     }
 
-// TODO: now that we are dealing with actual IP->IP links. should we still anchor pconn on hostname?
-//	or on the remote IP+port?
-// that could reduce the pconns per virtual server a fair amount
-// but would prevent crossover between servers hosting the one domain
-// this currently opens the possibility that conn will lie about where the FD goes.
-
+    // Use pconn to avoid opening a new connection.
     const char *host;
     int port;
     if (serverDestinations[0]->getPeer()) {
         host = serverDestinations[0]->getPeer()->host;
         port = serverDestinations[0]->getPeer()->http_port;
-        serverDestinations[0]->fd = fwdPconnPool->pop(serverDestinations[0]->getPeer()->name,
-                                                      serverDestinations[0]->getPeer()->http_port,
-                                                      request->GetHost(), serverDestinations[0]->local,
-                                                      checkRetriable());
     } else {
         host = request->GetHost();
         port = request->port;
-        serverDestinations[0]->fd = fwdPconnPool->pop(host, port, NULL, serverDestinations[0]->local, checkRetriable());
     }
     serverDestinations[0]->remote.SetPort(port);
+    fwdPconnPool->pop(serverDestinations[0], host, checkRetriable());
 
     // if we found an open persistent connection to use. use it.
     if (Comm::IsConnOpen(serverDestinations[0])) {
         serverConn = serverDestinations[0];
-        debugs(17, 3, HERE << "reusing pconn FD " << serverConnection()->fd);
+        debugs(17, 3, HERE << "reusing pconn " << serverConnection());
         n_tries++;
 
         if (!serverConnection()->getPeer())
@@ -1095,27 +1086,17 @@ FwdState::reforwardableStatus(http_status s)
 /**
  * Decide where details need to be gathered to correctly describe a persistent connection.
  * What is needed:
- *  -  host name of server at other end of this link (either peer or requested host)
- *  -  port to which we connected the other end of this link (for peer or request)
- *  -  domain for which the connection is supposed to be used
- *  -  address of the client for which we made the connection
+ *  -  the address/port details about this link
+ *  -  domain name of server at other end of this link (either peer or requested host)
  */
 void
-FwdState::pconnPush(Comm::ConnectionPointer &conn, const peer *_peer, const HttpRequest *req, const char *domain, Ip::Address &client_addr)
+FwdState::pconnPush(Comm::ConnectionPointer &conn, const char *domain)
 {
-    if (_peer) {
-        fwdPconnPool->push(conn->fd, _peer->name, _peer->http_port, domain, client_addr);
+    if (conn->getPeer()) {
+        fwdPconnPool->push(conn, conn->getPeer()->name);
     } else {
-        /* small performance improvement, using NULL for domain instead of listing it twice */
-        /* although this will leave a gap open for url-rewritten domains to share a link */
-        fwdPconnPool->push(conn->fd, req->GetHost(), req->port, NULL, client_addr);
+        fwdPconnPool->push(conn, domain);
     }
-
-    /* XXX: remove this when Comm::Connection are stored in the pool
-     * this only prevents the persistent FD being closed when the
-     * Comm::Connection currently using it is destroyed.
-     */
-    conn->fd = -1;
 }
 
 void
