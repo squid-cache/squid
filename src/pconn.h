@@ -40,6 +40,8 @@ public:
     int findIndex(const Comm::ConnectionPointer &conn); ///< search from the end of array
 
     /**
+     * Search the list for an existing connection. Matches by FD.
+     *
      * \retval false  The connection does not currently exist in the list.
      *                We seem to have hit and lost a race condition.
      *                Nevermind, but MUST NOT do anything with the raw FD.
@@ -47,7 +49,13 @@ public:
     bool remove(const Comm::ConnectionPointer &conn);
 
     void push(const Comm::ConnectionPointer &conn);
-    Comm::ConnectionPointer findUseable();     ///< find first from the end not pending read fd.
+
+    /** Search the list for a connection which matches the 'key' details.
+     * The list is created based on remote IP:port hash. This further filters
+     * the choices based on specific local-end details requested.
+     * If nothing usable is found the key is returned unchanged.
+     */
+    Comm::ConnectionPointer findUseable(const Comm::ConnectionPointer &key);
     void clearHandlers(const Comm::ConnectionPointer &conn);
 
 private:
