@@ -176,10 +176,11 @@ static void idnsParseWIN32SearchList(const char *);
 #endif
 static void idnsCacheQuery(idns_query * q);
 static void idnsSendQuery(idns_query * q);
-static CNCB idnsInitVCConnected;
-
-static IOCB idnsReadVCHeader;
 static void idnsDoSendQueryVC(nsvc *vc);
+static CNCB idnsInitVCConnected;
+static IOCB idnsReadVCHeader;
+static IOCB idnsReadVC;
+static IOCB idnsSentQueryVC;
 
 static int idnsFromKnownNameserver(Ip::Address const &from);
 static idns_query *idnsFindQuery(unsigned short id);
@@ -664,18 +665,20 @@ idnsTickleQueue(void)
 }
 
 static void
-idnsSentQueryVC(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
+idnsSentQueryVC(const Comm::ConnectionPointer &conn, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
     if (flag == COMM_ERR_CLOSING)
         return;
 
-    if (fd_table[fd].closing())
+    // XXX: irrelevant now that we have conn pointer?
+    if (!Comm::IsConnOpen(conn) || fd_table[conn->fd].closing())
         return;
 
     if (flag != COMM_OK || size <= 0) {
-        comm_close(fd);
+        Comm::ConnectionPointer nonConst = conn;
+        nonConst->close();
         return;
     }
 
@@ -700,7 +703,7 @@ idnsDoSendQueryVC(nsvc *vc)
 
     commSetTimeout(vc->conn->fd, Config.Timeout.idns_query, NULL, NULL);
 
-    comm_write_mbuf(vc->conn->fd, mb, idnsSentQueryVC, vc);
+    comm_write_mbuf(vc->conn, mb, idnsSentQueryVC, vc);
 
     delete mb;
 }
@@ -1252,7 +1255,7 @@ idnsCheckQueue(void *unused)
 }
 
 static void
-idnsReadVC(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+idnsReadVC(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
@@ -1260,29 +1263,30 @@ idnsReadVC(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *dat
         return;
 
     if (flag != COMM_OK || len <= 0) {
-        comm_close(fd);
+        if (Comm::IsConnOpen(conn)) {
+            Comm::ConnectionPointer nonConst = conn;
+            nonConst->close();
+        }
         return;
     }
 
     vc->msg->size += len;       // XXX should not access -> size directly
 
     if (vc->msg->contentSize() < vc->msglen) {
-        comm_read(fd, buf + len, vc->msglen - vc->msg->contentSize(), idnsReadVC, vc);
+        comm_read(conn->fd, buf + len, vc->msglen - vc->msg->contentSize(), idnsReadVC, vc);
         return;
     }
 
     assert(vc->ns < nns);
-    debugs(78, 3, "idnsReadVC: FD " << fd << ": received " <<
-           (int) vc->msg->contentSize() << " bytes via tcp from " <<
-           nameservers[vc->ns].S << ".");
+    debugs(78, 3, HERE << conn << ": received " << vc->msg->contentSize() << " bytes via TCP from " << nameservers[vc->ns].S << ".");
 
     idnsGrokReply(vc->msg->buf, vc->msg->contentSize());
     vc->msg->clean();
-    comm_read(fd, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
+    comm_read(conn->fd, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
 }
 
 static void
-idnsReadVCHeader(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+idnsReadVCHeader(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
@@ -1290,7 +1294,10 @@ idnsReadVCHeader(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         return;
 
     if (flag != COMM_OK || len <= 0) {
-        comm_close(fd);
+        if (Comm::IsConnOpen(conn)) {
+            Comm::ConnectionPointer nonConst = conn;
+            nonConst->close();
+        }
         return;
     }
 
@@ -1299,7 +1306,7 @@ idnsReadVCHeader(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
     assert(vc->read_msglen <= 2);
 
     if (vc->read_msglen < 2) {
-        comm_read(fd, buf + len, 2 - vc->read_msglen, idnsReadVCHeader, vc);
+        comm_read(conn->fd, buf + len, 2 - vc->read_msglen, idnsReadVCHeader, vc);
         return;
     }
 
@@ -1308,7 +1315,7 @@ idnsReadVCHeader(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
     vc->msglen = ntohs(vc->msglen);
 
     vc->msg->init(vc->msglen, vc->msglen);
-    comm_read(fd, vc->msg->buf, vc->msglen, idnsReadVC, vc);
+    comm_read(conn->fd, vc->msg->buf, vc->msglen, idnsReadVC, vc);
 }
 
 /*

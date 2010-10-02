@@ -34,10 +34,11 @@
 
 #include "squid.h"
 #include "CacheManager.h"
-#include "Store.h"
 #include "comm.h"
-#include "pconn.h"
+#include "comm/Connection.h"
 #include "fde.h"
+#include "pconn.h"
+#include "Store.h"
 
 #define PCONN_FDS_SZ	8	/* pconn set size, increase for better memcache hit rate */
 
@@ -69,7 +70,7 @@ IdleConnList::~IdleConnList()
 }
 
 int
-IdleConnList::findFDIndex (int fd)
+IdleConnList::findFDIndex(int fd)
 {
     int index;
 
@@ -152,9 +153,9 @@ IdleConnList::findUseableFD()
 }
 
 void
-IdleConnList::read(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+IdleConnList::read(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
-    debugs(48, 3, "IdleConnList::read: " << len << " bytes from FD " << fd);
+    debugs(48, 3, "IdleConnList::read: " << len << " bytes from " << conn);
 
     if (flag == COMM_ERR_CLOSING) {
         /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
@@ -162,8 +163,10 @@ IdleConnList::read(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, v
     }
 
     IdleConnList *list = (IdleConnList *) data;
-    if (list->removeFD(fd))	/* might delete list */
-        comm_close(fd);
+    if (list && list->removeFD(conn->fd)) {	/* might delete list */
+        Comm::ConnectionPointer nonConst = conn;
+        nonConst->close();
+    }
 }
 
 void

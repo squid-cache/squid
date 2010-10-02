@@ -34,7 +34,7 @@ void Ipc::Port::listen()
     typedef CommCbMemFunT<Port, CommIoCbParams> Dialer;
     AsyncCall::Pointer readHandler = JobCallback(54, 6,
                                      Dialer, this, Port::noteRead);
-    comm_read(fd(), buf.raw(), buf.size(), readHandler);
+    comm_read(conn()->fd, buf.raw(), buf.size(), readHandler);
 }
 
 bool Ipc::Port::doneAll() const
@@ -54,7 +54,7 @@ String Ipc::Port::MakeAddr(const char* pathAddr, int id)
 
 void Ipc::Port::noteRead(const CommIoCbParams& params)
 {
-    debugs(54, 6, HERE << "FD " << params.fd << " flag " << params.flag <<
+    debugs(54, 6, HERE << params.conn << " flag " << params.flag <<
            " [" << this << ']');
     if (params.flag == COMM_OK) {
         assert(params.buf == buf.raw());

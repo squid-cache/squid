@@ -15,8 +15,7 @@
 Ipc::UdsOp::UdsOp(const String& pathAddr):
         AsyncJob("Ipc::UdsOp"),
         address(PathToAddress(pathAddr)),
-        options(COMM_NONBLOCKING),
-        fd_(-1)
+        options(COMM_NONBLOCKING)
 {
     debugs(54, 5, HERE << '[' << this << "] pathAddr=" << pathAddr);
 }
@@ -24,8 +23,9 @@ Ipc::UdsOp::UdsOp(const String& pathAddr):
 Ipc::UdsOp::~UdsOp()
 {
     debugs(54, 5, HERE << '[' << this << ']');
-    if (fd_ >= 0)
-        comm_close(fd_);
+    if (Comm::IsConnOpen(conn_))
+        conn_->close();
+    conn_ = NULL;
 }
 
 void Ipc::UdsOp::setOptions(int newOptions)
@@ -33,15 +33,18 @@ void Ipc::UdsOp::setOptions(int newOptions)
     options = newOptions;
 }
 
-int Ipc::UdsOp::fd()
+Comm::ConnectionPointer &
+Ipc::UdsOp::conn()
 {
-    if (fd_ < 0) {
+    if (!Comm::IsConnOpen(conn_)) {
         if (options & COMM_DOBIND)
             unlink(address.sun_path);
-        fd_ = comm_open_uds(SOCK_DGRAM, 0, &address, options);
-        Must(fd_ >= 0);
+        if (conn_ == NULL)
+            conn_ = new Comm::Connection;
+        conn_->fd = comm_open_uds(SOCK_DGRAM, 0, &address, options);
+        Must(Comm::IsConnOpen(conn_));
     }
-    return fd_;
+    return conn_;
 }
 
 void Ipc::UdsOp::setTimeout(int seconds, const char *handlerName)
@@ -49,12 +52,12 @@ void Ipc::UdsOp::setTimeout(int seconds, const char *handlerName)
     typedef CommCbMemFunT<UdsOp, CommTimeoutCbParams> Dialer;
     AsyncCall::Pointer handler = asyncCall(54,5, handlerName,
                                            Dialer(CbcPointer<UdsOp>(this), &UdsOp::noteTimeout));
-    commSetTimeout(fd(), seconds, handler);
+    commSetTimeout(conn()->fd, seconds, handler);
 }
 
 void Ipc::UdsOp::clearTimeout()
 {
-    commSetTimeout(fd(), -1, NULL, NULL); // TODO: add Comm::ClearTimeout(fd)
+    commSetTimeout(conn()->fd, -1, NULL, NULL); // TODO: add Comm::ClearTimeout(fd)
 }
 
 void Ipc::UdsOp::noteTimeout(const CommTimeoutCbParams &)
@@ -105,17 +108,17 @@ void Ipc::UdsSender::write()
     typedef CommCbMemFunT<UdsSender, CommIoCbParams> Dialer;
     AsyncCall::Pointer writeHandler = JobCallback(54, 5,
                                       Dialer, this, UdsSender::wrote);
-    comm_write(fd(), message.raw(), message.size(), writeHandler);
+    comm_write(conn(), message.raw(), message.size(), writeHandler);
     writing = true;
 }
 
 void Ipc::UdsSender::wrote(const CommIoCbParams& params)
 {
-    debugs(54, 5, HERE << "FD " << params.fd << " flag " << params.flag << " [" << this << ']');
+    debugs(54, 5, HERE << params.conn << " flag " << params.flag << " [" << this << ']');
     writing = false;
     if (params.flag != COMM_OK && retries-- > 0) {
         sleep(1); // do not spend all tries at once; XXX: use an async timed event instead of blocking here; store the time when we started writing so that we do not sleep if not needed?
-        write(); // XXX: should we close on error so that fd() reopens?
+        write(); // XXX: should we close on error so that conn() reopens?
     }
 }
 

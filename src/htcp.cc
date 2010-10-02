@@ -54,13 +54,12 @@ class HtcpListeningStartedDialer: public CallDialer,
         public Ipc::StartListeningCb
 {
 public:
-    typedef void (*Handler)(int fd, int errNo);
+    typedef void (*Handler)(int errNo);
     HtcpListeningStartedDialer(Handler aHandler): handler(aHandler) {}
 
     virtual void print(std::ostream &os) const { startPrint(os) << ')'; }
-
     virtual bool canDial(AsyncCall &) const { return true; }
-    virtual void dial(AsyncCall &) { (handler)(fd, errNo); }
+    virtual void dial(AsyncCall &) { (handler)(errNo); }
 
 public:
     Handler handler;
@@ -244,11 +243,11 @@ enum {
     RR_RESPONSE
 };
 
-static void htcpIncomingConnectionOpened(int fd, int errNo);
+static void htcpIncomingConnectionOpened(int errNo);
 static uint32_t msg_id_counter = 0;
 
-static int htcpInSocket = -1;
-static int htcpOutSocket = -1;
+static Comm::ConnectionPointer htcpOutgoingConn = NULL;
+static Comm::ConnectionPointer htcpIncomingConn = NULL;
 #define N_QUERIED_KEYS 8192
 static uint32_t queried_id[N_QUERIED_KEYS];
 static cache_key queried_keys[N_QUERIED_KEYS][SQUID_MD5_DIGEST_LENGTH];
@@ -613,21 +612,13 @@ htcpBuildPacket(char *buf, size_t buflen, htcpStuff * stuff)
 }
 
 static void
-
 htcpSend(const char *buf, int len, Ip::Address &to)
 {
-    int x;
-
-    debugs(31, 3, "htcpSend: " << to );
+    debugs(31, 3, HERE << to);
     htcpHexdump("htcpSend", buf, len);
 
-    x = comm_udp_sendto(htcpOutSocket,
-                        to,
-                        buf,
-                        len);
-
-    if (x < 0)
-        debugs(31, 3, "htcpSend: FD " << htcpOutSocket << " sendto: " << xstrerror());
+    if (comm_udp_sendto(htcpOutgoingConn->fd, to, buf, len) < 0)
+        debugs(31, 3, HERE << htcpOutgoingConn << " sendto: " << xstrerror());
     else
         statCounter.htcp.pkts_sent++;
 }
@@ -637,7 +628,6 @@ htcpSend(const char *buf, int len, Ip::Address &to)
  */
 
 void
-
 htcpSpecifier::setFrom(Ip::Address &aSocket)
 {
     from = aSocket;
@@ -1497,20 +1487,21 @@ void
 htcpInit(void)
 {
     if (Config.Port.htcp <= 0) {
-        debugs(31, 1, "HTCP Disabled.");
+        debugs(31, DBG_IMPORTANT, "HTCP Disabled.");
         return;
     }
 
-    Ip::Address incomingAddr = Config.Addrs.udp_incoming;
-    incomingAddr.SetPort(Config.Port.htcp);
+    htcpIncomingConn = new Comm::Connection;
+    htcpIncomingConn->local = Config.Addrs.udp_incoming;
+    htcpIncomingConn->local.SetPort(Config.Port.htcp);
 
-    if (!Ip::EnableIpv6 && !incomingAddr.SetIPv4()) {
-        debugs(31, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << incomingAddr << " is not an IPv4 address.");
+    if (!Ip::EnableIpv6 && !htcpIncomingConn->local.SetIPv4()) {
+        debugs(31, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << htcpIncomingConn->local << " is not an IPv4 address.");
         fatal("HTCP port cannot be opened.");
     }
     /* split-stack for now requires default IPv4-only HTCP */
-    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && incomingAddr.IsAnyAddr()) {
-        incomingAddr.SetIPv4();
+    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && htcpIncomingConn->local.IsAnyAddr()) {
+        htcpIncomingConn->local.SetIPv4();
     }
 
     AsyncCall::Pointer call = asyncCall(31, 2,
@@ -1519,39 +1510,33 @@ htcpInit(void)
 
     Ipc::StartListening(SOCK_DGRAM,
                         IPPROTO_UDP,
-                        incomingAddr,
-                        COMM_NONBLOCKING,
-                        Ipc::fdnInHtcpSocket, call);
+                        htcpIncomingConn,
+                        Ipc::fdnInHtcpSocket, call, Subscription::Pointer());
 
     if (!Config.Addrs.udp_outgoing.IsNoAddr()) {
-        Ip::Address outgoingAddr = Config.Addrs.udp_outgoing;
-        outgoingAddr.SetPort(Config.Port.htcp);
+        htcpOutgoingConn = new Comm::Connection;
+        htcpOutgoingConn->local = Config.Addrs.udp_outgoing;
+        htcpOutgoingConn->local.SetPort(Config.Port.htcp);
 
-        if (!Ip::EnableIpv6 && !outgoingAddr.SetIPv4()) {
-            debugs(31, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << outgoingAddr << " is not an IPv4 address.");
+        if (!Ip::EnableIpv6 && !htcpOutgoingConn->local.SetIPv4()) {
+            debugs(31, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << htcpOutgoingConn->local << " is not an IPv4 address.");
             fatal("HTCP port cannot be opened.");
         }
         /* split-stack for now requires default IPv4-only HTCP */
-        if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && outgoingAddr.IsAnyAddr()) {
-            outgoingAddr.SetIPv4();
+        if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && htcpOutgoingConn->local.IsAnyAddr()) {
+            htcpOutgoingConn->local.SetIPv4();
         }
 
         enter_suid();
-        htcpOutSocket = comm_open_listener(SOCK_DGRAM,
-                                           IPPROTO_UDP,
-                                           outgoingAddr,
-                                           COMM_NONBLOCKING,
-                                           "Outgoing HTCP Socket");
+        comm_open_listener(SOCK_DGRAM, IPPROTO_UDP, htcpOutgoingConn, "Outgoing HTCP Socket");
         leave_suid();
 
-        if (htcpOutSocket < 0)
+        if (!Comm::IsConnOpen(htcpOutgoingConn))
             fatal("Cannot open Outgoing HTCP Socket");
 
-        commSetSelect(htcpOutSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
+        commSetSelect(htcpOutgoingConn->fd, COMM_SELECT_READ, htcpRecv, NULL, 0);
 
-        debugs(31, 1, "Outgoing HTCP messages on port " << Config.Port.htcp << ", FD " << htcpOutSocket << ".");
-
-        fd_note(htcpInSocket, "Incoming HTCP socket");
+        debugs(31, DBG_IMPORTANT, "Sending HTCP messages from " << htcpOutgoingConn->local);
     }
 
     if (!htcpDetailPool) {
@@ -1560,19 +1545,19 @@ htcpInit(void)
 }
 
 static void
-htcpIncomingConnectionOpened(int fd, int errNo)
+htcpIncomingConnectionOpened(int)
 {
-    htcpInSocket = fd;
-
-    if (htcpInSocket < 0)
+    if (!Comm::IsConnOpen(htcpIncomingConn))
         fatal("Cannot open HTCP Socket");
 
-    commSetSelect(htcpInSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
+    commSetSelect(htcpIncomingConn->fd, COMM_SELECT_READ, htcpRecv, NULL, 0);
 
-    debugs(31, 1, "Accepting HTCP messages on port " << Config.Port.htcp << ", FD " << htcpInSocket << ".");
+    debugs(31, DBG_CRITICAL, "Accepting HTCP messages on " << htcpIncomingConn->local);
 
-    if (Config.Addrs.udp_outgoing.IsNoAddr())
-        htcpOutSocket = htcpInSocket;
+    if (Config.Addrs.udp_outgoing.IsNoAddr()) {
+        htcpOutgoingConn = htcpIncomingConn;
+        debugs(31, DBG_IMPORTANT, "Sending HTCP messages from " << htcpOutgoingConn->local);
+    }
 }
 
 int
@@ -1588,7 +1573,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
     MemBuf mb;
     http_state_flags flags;
 
-    if (htcpInSocket < 0)
+    if (!Comm::IsConnOpen(htcpIncomingConn))
         return 0;
 
     old_squid_format = p->options.htcp_oldsquid;
@@ -1643,7 +1628,7 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     MemBuf mb;
     http_state_flags flags;
 
-    if (htcpInSocket < 0)
+    if (!Comm::IsConnOpen(htcpIncomingConn))
         return;
 
     old_squid_format = p->options.htcp_oldsquid;
@@ -1706,21 +1691,17 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
 void
 htcpSocketShutdown(void)
 {
-    if (htcpInSocket < 0)
+    if (!Comm::IsConnOpen(htcpIncomingConn))
         return;
 
-    if (htcpInSocket != htcpOutSocket) {
-        debugs(12, 1, "FD " << htcpInSocket << " Closing HTCP socket");
-        comm_close(htcpInSocket);
-    }
-
+    debugs(12, DBG_IMPORTANT, "Stop accepting HTCP on " << htcpIncomingConn->local);
     /*
-     * Here we set 'htcpInSocket' to -1 even though the HTCP 'in'
+     * Here we just unlink htcpIncomingConn because the HTCP 'in'
      * and 'out' sockets might be just one FD.  This prevents this
      * function from executing repeatedly.  When we are really ready to
      * exit or restart, main will comm_close the 'out' descriptor.
      */
-    htcpInSocket = -1;
+    htcpIncomingConn = NULL;
 
     /*
      * Normally we only write to the outgoing HTCP socket, but
@@ -1731,9 +1712,9 @@ htcpSocketShutdown(void)
     /* XXX Don't we need this handler to read replies while shutting down?
      * I think there should be a separate hander for reading replies..
      */
-    assert(htcpOutSocket > -1);
+    assert(Comm::IsConnOpen(htcpOutgoingConn));
 
-    commSetSelect(htcpOutSocket, COMM_SELECT_READ, NULL, NULL, 0);
+    commSetSelect(htcpOutgoingConn->fd, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
 void
@@ -1741,10 +1722,9 @@ htcpSocketClose(void)
 {
     htcpSocketShutdown();
 
-    if (htcpOutSocket > -1) {
-        debugs(12, 1, "FD " << htcpOutSocket << " Closing HTCP socket");
-        comm_close(htcpOutSocket);
-        htcpOutSocket = -1;
+    if (htcpOutgoingConn != NULL) {
+        debugs(12, DBG_IMPORTANT, "Stop sending HTCP from " << htcpOutgoingConn->local);
+        htcpOutgoingConn = NULL;
     }
 }
 

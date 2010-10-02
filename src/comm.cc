@@ -72,7 +72,7 @@ typedef enum {
 
 static void commStopHalfClosedMonitor(int fd);
 static IOCB commHalfClosedReader;
-static void comm_init_opened(int new_socket, Ip::Address &addr, unsigned char TOS, const char *note, struct addrinfo *AI);
+static void comm_init_opened(const Comm::ConnectionPointer &conn, unsigned char TOS, const char *note, struct addrinfo *AI);
 static int comm_apply_flags(int new_socket, Ip::Address &addr, int flags, struct addrinfo *AI);
 
 
@@ -558,6 +558,19 @@ comm_open(int sock_type,
     return comm_openex(sock_type, proto, addr, flags, 0, note);
 }
 
+void
+comm_open_listener(int sock_type,
+                   int proto,
+                   Comm::ConnectionPointer &conn,
+                   const char *note)
+{
+    /* all listener sockets require bind() */
+    conn->flags |= COMM_DOBIND;
+
+    /* attempt native enabled port. */
+    conn->fd = comm_openex(sock_type, proto, conn->local, conn->flags, 0, note);
+}
+
 int
 comm_open_listener(int sock_type,
                    int proto,
@@ -703,7 +716,11 @@ comm_openex(int sock_type,
     if ( Ip::EnableIpv6&IPV6_SPECIAL_V4MAPPING && addr.IsIPv6() )
         comm_set_v6only(new_socket, 0);
 
-    comm_init_opened(new_socket, addr, TOS, note, AI);
+    // temporary for te transition. comm_openex will eventually have a conn to play with.
+    Comm::ConnectionPointer temp = new Comm::Connection;
+    temp->fd = new_socket;
+    temp->local = addr;
+    comm_init_opened(temp, TOS, note, AI);
     new_socket = comm_apply_flags(new_socket, addr, flags, AI);
 
     addr.FreeAddrInfo(AI);
@@ -715,33 +732,26 @@ comm_openex(int sock_type,
 
 /// update FD tables after a local or remote (IPC) comm_openex();
 void
-comm_init_opened(int new_socket,
-                 Ip::Address &addr,
+comm_init_opened(const Comm::ConnectionPointer &conn,
                  unsigned char TOS,
                  const char *note,
                  struct addrinfo *AI)
 {
-    assert(new_socket >= 0);
+    assert(Comm::IsConnOpen(conn));
     assert(AI);
 
-    fde *F = NULL;
-
     /* update fdstat */
-    debugs(5, 5, "comm_open: FD " << new_socket << " is a new socket");
+    debugs(5, 5, HERE << conn << " is a new socket");
 
-    assert(!isOpen(new_socket));
-    fd_open(new_socket, FD_SOCKET, note);
+    assert(!isOpen(conn->fd)); // NP: global isOpen checks the fde entry for openness not the Comm::Connection
+    fd_open(conn->fd, FD_SOCKET, note);
 
-    fdd_table[new_socket].close_file = NULL;
+    fdd_table[conn->fd].close_file = NULL;
+    fdd_table[conn->fd].close_line = 0;
 
-    fdd_table[new_socket].close_line = 0;
-
-    F = &fd_table[new_socket];
-
-    F->local_addr = addr;
-
+    fde *F = &fd_table[conn->fd];
+    F->local_addr = conn->local;
     F->tos = TOS;
-
     F->sock_family = AI->ai_family;
 }
 
@@ -809,37 +819,35 @@ comm_apply_flags(int new_socket,
 }
 
 void
-comm_import_opened(int fd,
-                   Ip::Address &addr,
-                   int flags,
+comm_import_opened(const Comm::ConnectionPointer &conn,
                    const char *note,
                    struct addrinfo *AI)
 {
-    debugs(5, 2, HERE << " FD " << fd << " at " << addr);
-    assert(fd >= 0);
+    debugs(5, 2, HERE << conn);
+    assert(Comm::IsConnOpen(conn));
     assert(AI);
 
-    comm_init_opened(fd, addr, 0, note, AI);
+    comm_init_opened(conn, 0, note, AI);
 
-    if (!(flags & COMM_NOCLOEXEC))
-        fd_table[fd].flags.close_on_exec = 1;
+    if (!(conn->flags & COMM_NOCLOEXEC))
+        fd_table[conn->fd].flags.close_on_exec = 1;
 
-    if (addr.GetPort() > (u_short) 0) {
+    if (conn->local.GetPort() > (u_short) 0) {
 #ifdef _SQUID_MSWIN_
-        if (sock_type != SOCK_DGRAM)
+        if (AI->ai_socktype != SOCK_DGRAM)
 #endif
-            fd_table[fd].flags.nolinger = 1;
+            fd_table[conn->fd].flags.nolinger = 1;
     }
 
-    if ((flags & COMM_TRANSPARENT))
-        fd_table[fd].flags.transparent = 1;
+    if ((conn->flags & COMM_TRANSPARENT))
+        fd_table[conn->fd].flags.transparent = 1;
 
-    if (flags & COMM_NONBLOCKING)
-        fd_table[fd].flags.nonblocking = 1;
+    if (conn->flags & COMM_NONBLOCKING)
+        fd_table[conn->fd].flags.nonblocking = 1;
 
 #ifdef TCP_NODELAY
     if (AI->ai_socktype == SOCK_STREAM)
-        fd_table[fd].flags.nodelay = 1;
+        fd_table[conn->fd].flags.nodelay = 1;
 #endif
 
     /* no fd_table[fd].flags. updates needed for these conditions:
@@ -1699,34 +1707,35 @@ commHandleWrite(int fd, void *data)
  * free_func is used to free the passed buffer when the write has completed.
  */
 void
-comm_write(int fd, const char *buf, int size, IOCB * handler, void *handler_data, FREE * free_func)
+comm_write(const Comm::ConnectionPointer &conn, const char *buf, int size, IOCB * handler, void *handler_data, FREE * free_func)
 {
     AsyncCall::Pointer call = commCbCall(5,5, "SomeCommWriteHander",
                                          CommIoCbPtrFun(handler, handler_data));
 
-    comm_write(fd, buf, size, call, free_func);
+    comm_write(conn, buf, size, call, free_func);
 }
 
 void
-comm_write(int fd, const char *buf, int size, AsyncCall::Pointer &callback, FREE * free_func)
+comm_write(const Comm::ConnectionPointer &conn, const char *buf, int size, AsyncCall::Pointer &callback, FREE * free_func)
 {
-    debugs(5, 5, "comm_write: FD " << fd << ": sz " << size << ": asynCall " << callback);
+    debugs(5, 5, HERE << conn << ": sz " << size << ": asynCall " << callback);
 
     /* Make sure we are open, not closing, and not writing */
-    assert(isOpen(fd));
-    assert(!fd_table[fd].closing());
-    comm_io_callback_t *ccb = COMMIO_FD_WRITECB(fd);
+    assert(Comm::IsConnOpen(conn));
+    assert(!fd_table[conn->fd].closing());
+    comm_io_callback_t *ccb = COMMIO_FD_WRITECB(conn->fd);
     assert(!ccb->active());
 
-    fd_table[fd].writeStart = squid_curtime;
+    fd_table[conn->fd].writeStart = squid_curtime;
     /* Queue the write */
-    commio_set_callback(fd, IOCB_WRITE, ccb, callback,
+    commio_set_callback(conn->fd, IOCB_WRITE, ccb, callback,
                         (char *)buf, free_func, size);
-    commSetSelect(fd, COMM_SELECT_WRITE, commHandleWrite, ccb, 0);
+    commSetSelect(conn->fd, COMM_SELECT_WRITE, commHandleWrite, ccb, 0);
 }
 
 
 /* a wrapper around comm_write to allow for MemBuf to be comm_written in a snap */
+#if 0
 void
 comm_write_mbuf(int fd, MemBuf *mb, IOCB * handler, void *handler_data)
 {
@@ -1737,6 +1746,19 @@ void
 comm_write_mbuf(int fd, MemBuf *mb, AsyncCall::Pointer &callback)
 {
     comm_write(fd, mb->buf, mb->size, callback, mb->freeFunc());
+}
+#endif
+
+void
+comm_write_mbuf(const Comm::ConnectionPointer &conn, MemBuf *mb, IOCB * handler, void *handler_data)
+{
+    comm_write(conn, mb->buf, mb->size, handler, handler_data, mb->freeFunc());
+}
+
+void
+comm_write_mbuf(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Pointer &callback)
+{
+    comm_write(conn, mb->buf, mb->size, callback, mb->freeFunc());
 }
 
 
@@ -1989,13 +2011,14 @@ commStopHalfClosedMonitor(int const fd)
 
 /// I/O handler for the possibly half-closed connection monitoring code
 static void
-commHalfClosedReader(int fd, char *, size_t size, comm_err_t flag, int, void *)
+commHalfClosedReader(const Comm::ConnectionPointer &conn, char *, size_t size, comm_err_t flag, int, void *)
 {
     // there cannot be more data coming in on half-closed connections
     assert(size == 0);
-    assert(commHasHalfClosedMonitor(fd)); // or we would have canceled the read
+    assert(conn != NULL);
+    assert(commHasHalfClosedMonitor(conn->fd)); // or we would have canceled the read
 
-    fd_table[fd].halfClosedReader = NULL; // done reading, for now
+    fd_table[conn->fd].halfClosedReader = NULL; // done reading, for now
 
     // nothing to do if fd is being closed
     if (flag == COMM_ERR_CLOSING)
@@ -2003,8 +2026,9 @@ commHalfClosedReader(int fd, char *, size_t size, comm_err_t flag, int, void *)
 
     // if read failed, close the connection
     if (flag != COMM_OK) {
-        debugs(5, 3, "commHalfClosedReader: closing FD " << fd);
-        comm_close(fd);
+        debugs(5, 3, HERE << "closing " << conn);
+        Comm::ConnectionPointer nonConst = conn;
+        nonConst->close();
         return;
     }
 

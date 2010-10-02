@@ -1161,7 +1161,7 @@ ClientHttpRequest::sslBumpNeeded() const
 
 // called when comm_write has completed
 static void
-SslBumpEstablish(int, char *, size_t, comm_err_t errflag, int, void *data)
+SslBumpEstablish(const Comm::ConnectionPointer &, char *, size_t, comm_err_t errflag, int, void *data)
 {
     ClientHttpRequest *r = static_cast<ClientHttpRequest*>(data);
     debugs(85, 5, HERE << "responded to CONNECT: " << r << " ? " << errflag);
@@ -1193,10 +1193,8 @@ ClientHttpRequest::sslBumpStart()
     debugs(33, 7, HERE << "Confirming CONNECT tunnel on FD " << getConn()->clientConn);
 
     // TODO: Unify with tunnel.cc and add a Server(?) header
-    static const char *const conn_established =
-        "HTTP/1.0 200 Connection established\r\n\r\n";
-    comm_write(getConn()->clientConn->fd, conn_established, strlen(conn_established),
-               &SslBumpEstablish, this, NULL);
+    static const char *const conn_established = "HTTP/1.0 200 Connection established\r\n\r\n";
+    comm_write(getConn()->clientConn, conn_established, strlen(conn_established), &SslBumpEstablish, this, NULL);
 }
 
 #endif

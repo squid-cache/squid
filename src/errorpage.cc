@@ -33,16 +33,17 @@
  */
 #include "config.h"
 
-#include "errorpage.h"
 #include "auth/UserRequest.h"
-#include "SquidTime.h"
-#include "Store.h"
+#include "comm/Connection.h"
+#include "errorpage.h"
+#include "fde.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "MemObject.h"
-#include "fde.h"
 #include "MemBuf.h"
+#include "MemObject.h"
 #include "rfc1738.h"
+#include "SquidTime.h"
+#include "Store.h"
 #include "URLScheme.h"
 #include "wordlist.h"
 
@@ -439,11 +440,11 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
 }
 
 void
-errorSend(int fd, ErrorState * err)
+errorSend(const Comm::ConnectionPointer &conn, ErrorState * err)
 {
     HttpReply *rep;
-    debugs(4, 3, "errorSend: FD " << fd << ", err=" << err);
-    assert(fd >= 0);
+    debugs(4, 3, HERE << conn << ", err=" << err);
+    assert(Comm::IsConnOpen(conn));
     /*
      * ugh, this is how we make sure error codes get back to
      * the client side for logging and error tracking.
@@ -457,7 +458,7 @@ errorSend(int fd, ErrorState * err)
 
     rep = err->BuildHttpReply();
 
-    comm_write_mbuf(fd, rep->pack(), errorSendComplete, err);
+    comm_write_mbuf(conn, rep->pack(), errorSendComplete, err);
 
     delete rep;
 }
@@ -472,18 +473,19 @@ errorSend(int fd, ErrorState * err)
  *     closing the FD, otherwise we do it ourselves.
  */
 static void
-errorSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
+errorSendComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     ErrorState *err = static_cast<ErrorState *>(data);
-    debugs(4, 3, "errorSendComplete: FD " << fd << ", size=" << size);
+    debugs(4, 3, HERE << conn << ", size=" << size);
 
     if (errflag != COMM_ERR_CLOSING) {
         if (err->callback) {
             debugs(4, 3, "errorSendComplete: callback");
-            err->callback(fd, err->callback_data, size);
+            err->callback(conn->fd, err->callback_data, size);
         } else {
-            comm_close(fd);
             debugs(4, 3, "errorSendComplete: comm_close");
+            Comm::ConnectionPointer nonConst = conn;
+            nonConst->close();
         }
     }
 
