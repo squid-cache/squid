@@ -76,7 +76,7 @@ extern int commSetTimeout(int fd, int, AsyncCall::Pointer &callback);
  * Set or clear the timeout for some action on an active connection.
  * API to replace commSetTimeout() when a Comm::ConnectionPointer is available.
  */
-extern int commSetConnTimeout(const Comm::ConnectionPointer &conn, int seconds, AsyncCall::Pointer &calback);
+extern int commSetConnTimeout(const Comm::ConnectionPointer &conn, int seconds, AsyncCall::Pointer &callback);
 
 SQUIDCEXTERN int ignoreErrno(int);
 SQUIDCEXTERN void commCloseAllSockets(void);
@@ -99,8 +99,8 @@ extern void comm_remove_close_handler(int fd, AsyncCall::Pointer &);
 
 extern int comm_has_pending_read_callback(int fd);
 extern bool comm_monitors_read(int fd);
-extern void comm_read(int fd, char *buf, int len, IOCB *handler, void *data);
-extern void comm_read(int fd, char *buf, int len, AsyncCall::Pointer &callback);
+extern void comm_read(const Comm::ConnectionPointer &conn, char *buf, int len, IOCB *handler, void *data);
+extern void comm_read(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer &callback);
 extern void comm_read_cancel(int fd, IOCB *callback, void *data);
 extern void comm_read_cancel(int fd, AsyncCall::Pointer &callback);
 extern int comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, Ip::Address &from);

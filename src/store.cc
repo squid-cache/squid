@@ -34,24 +34,25 @@
  */
 
 #include "squid.h"
-#include "event.h"
-#include "fde.h"
-#include "Store.h"
 #include "CacheManager.h"
-#include "StoreClient.h"
-#include "stmem.h"
-#include "HttpReply.h"
-#include "HttpRequest.h"
-#include "MemObject.h"
-#include "mem_node.h"
-#include "StoreMeta.h"
-#include "SwapDir.h"
+#include "comm/Connection.h"
+#include "event.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
-#include "Stack.h"
+#include "fde.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "mem_node.h"
+#include "MemObject.h"
 #include "SquidTime.h"
+#include "Stack.h"
+#include "stmem.h"
+#include "Store.h"
+#include "StoreClient.h"
+#include "StoreMeta.h"
 #include "swap_log_op.h"
+#include "SwapDir.h"
 
 static STMCB storeWriteComplete;
 
@@ -257,11 +258,13 @@ StoreEntry::delayAwareRead(int fd, char *buf, int len, AsyncCall::Pointer callba
 
     }
 
-    comm_read(fd, buf, amountToRead, callback);
+    Comm::ConnectionPointer temp = new Comm::Connection; // XXX: transition. until conn passed in.
+    temp->fd = fd;
+    comm_read(temp, buf, amountToRead, callback);
 }
 
 size_t
-StoreEntry::bytesWanted (Range<size_t> const aRange) const
+StoreEntry::bytesWanted(Range<size_t> const aRange) const
 {
     assert (aRange.size());
 

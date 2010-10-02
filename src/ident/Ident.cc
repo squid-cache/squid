@@ -155,7 +155,7 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int x
               conn->remote.GetPort(),
               conn->local.GetPort());
     comm_write_mbuf(conn, &mb, NULL, state);
-    comm_read(conn->fd, state->buf, BUFSIZ, Ident::ReadReply, state);
+    comm_read(conn, state->buf, BUFSIZ, Ident::ReadReply, state);
     commSetTimeout(conn->fd, Ident::TheConfig.timeout, Ident::Timeout, state);
 }
 

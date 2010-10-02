@@ -60,13 +60,13 @@ DeferredReadManager::kickReads(int const count)
 }
 
 void
-comm_read(int fd, char *buf, int size, IOCB *handler, void *handler_data)
+comm_read(const Comm::ConnectionPointer &conn, char *buf, int size, IOCB *handler, void *handler_data)
 {
     fatal ("Not implemented");
 }
 
 void
-comm_read(int, char*, int, AsyncCall::Pointer &callback)
+comm_read(const Comm::ConnectionPointer &conn, char*, int, AsyncCall::Pointer &callback)
 {
     fatal ("Not implemented");
 }
