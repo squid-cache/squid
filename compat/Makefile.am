@@ -9,8 +9,8 @@ include $(top_srcdir)/src/Common.am
 
 # Port Specific Configurations
 
-noinst_LTLIBRARIES = libcompat.la
-libcompat_la_SOURCES = \
+noinst_LIBRARIES = libcompat-squid.a
+libcompat_squid_a_SOURCES = \
 	assert.h \
 	compat.h \
 	compat_shared.h \
@@ -57,7 +57,7 @@ libcompat_la_SOURCES = \
 	GnuRegex.h \
 	GnuRegex.c
 
-libcompat_la_LIBADD= $(LIBOBJS)
+libcompat_squid_a_LIBADD= $(LIBOBJS)
 
 check_PROGRAMS += testPreCompiler
 TESTS += testPreCompiler

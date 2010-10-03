@@ -38,7 +38,7 @@ $(OBJS): $(top_srcdir)/include/version.h $(top_builddir)/include/autoconf.h
 ## NP: libmisc util.cc depends on rint from math library
 COMPAT_LIB = \
 	-L$(top_builddir)/lib -lmiscutil \
-	$(top_builddir)/compat/libcompat.la
+	-L$(top_builddir)/compat -lcompat-squid
 
 ## Some helpers are written in Perl and need the local shell defined properly
 subst_perlshell = sed -e 's,[@]PERL[@],$(PERL),g' <$(srcdir)/$@.pl.in >$@ || ($(RM) -f $@ ; exit 1)
