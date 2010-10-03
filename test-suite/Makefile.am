@@ -12,8 +12,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 INCLUDES += -I$(srcdir)
 
 LDADD = \
-	$(top_builddir)/compat/libcompat.la \
-	-L$(top_builddir)/lib -lmiscutil \
+	$(COMPAT_LIB) \
 	$(top_builddir)/src/globals.o \
 	$(top_builddir)/src/time.o
 
