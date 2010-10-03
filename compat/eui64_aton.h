@@ -46,6 +46,9 @@
  */
 #ifndef _SYS_EUI64_H
 #define _SYS_EUI64_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * Size of the ASCII representation of an EUI-64.
@@ -64,10 +67,10 @@ struct eui64 {
     u_char octet[EUI64_LEN];
 };
 
-#ifdef __cplusplus
-extern "C"
-#endif
 int eui64_aton(const char *a, struct eui64 *e);
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !_SYS_EUI64_H */
 #endif /* HAVE_SYS_EUI64_H */
