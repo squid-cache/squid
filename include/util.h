@@ -49,21 +49,15 @@
 SQUIDCEXTERN const char *mkhttpdlogtime(const time_t *);
 SQUIDCEXTERN const char *mkrfc1123(time_t);
 SQUIDCEXTERN char *uudecode(const char *);
-SQUIDCEXTERN char *xstrdup(const char *);
-SQUIDCEXTERN char *xstrndup(const char *, size_t);
 SQUIDCEXTERN const char *xstrerr(int xerrno);
 SQUIDCEXTERN const char *xstrerror(void);
 SQUIDCEXTERN int tvSubMsec(struct timeval, struct timeval);
 SQUIDCEXTERN int tvSubUsec(struct timeval, struct timeval);
 SQUIDCEXTERN double tvSubDsec(struct timeval, struct timeval);
-SQUIDCEXTERN char *xstrncpy(char *, const char *, size_t);
 SQUIDCEXTERN size_t xcountws(const char *str);
 SQUIDCEXTERN time_t parse_rfc1123(const char *str);
-SQUIDCEXTERN void *xcalloc(size_t, size_t);
-SQUIDCEXTERN void *xmalloc(size_t);
 SQUIDCEXTERN void *xrealloc(void *, size_t);
 SQUIDCEXTERN void Tolower(char *);
-SQUIDCEXTERN void xfree(void *);
 SQUIDCEXTERN void xxfree(const void *);
 #ifdef __cplusplus
 /*
