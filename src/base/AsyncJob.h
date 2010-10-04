@@ -6,6 +6,7 @@
 #define SQUID_ASYNC_JOB_H
 
 #include "base/AsyncCall.h"
+#include "base/InstanceId.h"
 
 template <class Cbc>
 class CbcPointer;
@@ -63,10 +64,7 @@ protected:
     const char *stopReason; ///< reason for forcing done() to be true
     const char *typeName; ///< kid (leaf) class name, for debugging
     AsyncCall::Pointer inCall; ///< the asynchronous call being handled, if any
-    const unsigned int id; ///< unique ID across all strand jobs, unless wraps
-
-private:
-    static unsigned int TheLastId; ///< makes job IDs unique until it wraps
+    const InstanceId<AsyncJob> id; ///< job identifier
 };
 
 #endif /* SQUID_ASYNC_JOB_H */
