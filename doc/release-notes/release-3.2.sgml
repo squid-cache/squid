@@ -301,18 +301,21 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
-	<tag>adapted_http_access</tag>
-	<p>Access control based on altered HTTP request following adaptation alterations (ICAP, eCAP, URL rewriter).
-	An upgraded drop-in replacement for <em>http_access2</em> found in Squid-2.
+	<tag>cpu_affinity_map</tag>
+	<p>New setting for SMP support to map Squid processes onto specific CPU cores.
 
 	<tag>else</tag>
-	<p>Part of conditional SMP support syyntax. see <em>if</em>
+	<p>Part of conditional SMP support syntax. see <em>if</em>
 
 	<tag>endif</tag>
-	<p>Part of conditional SMP support syyntax. see <em>if</em>
+	<p>Part of conditional SMP support syntax. see <em>if</em>
 
 	<tag>eui_lookup</tag>
 	<p>Whether to lookup the EUI or MAC address of a connected client.
+
+	<tag>icap_206_enable</tag>
+	<p>New option to toggle whether the ICAP 206 (Partial Content) responses extension.
+	   Default is on.
 
 	<tag>if</tag>
 	<p>New conditional syntax for SMP multiple-worker. 
@@ -349,6 +352,10 @@ This section gives a thorough account of those changes in three categories:
 	1: "no SMP" mode, start one main Squid process daemon (default)
 	N: start N main Squid process daemons (i.e., SMP mode)
 	</verb>
+
+	<tag>write_timeout</tag>
+	<p>New setting to limit time spent waiting for data writes to be confirmed.
+
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
@@ -421,6 +428,9 @@ This section gives a thorough account of those changes in three categories:
 <p>
 <descrip>
 	<tag>ftp_list_width</tag>
+	<p>Obsolete.
+
+	<tag>ignore_expect_100</tag>
 	<p>Obsolete.
 
 	<tag>url_rewrite_concurrency</tag>
