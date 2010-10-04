@@ -98,6 +98,7 @@ typedef enum {
     CC_MAX_AGE,
     CC_S_MAXAGE,
     CC_MAX_STALE,
+    CC_MIN_FRESH,
     CC_ONLY_IF_CACHED,
     CC_OTHER,
     CC_ENUM_END
