@@ -515,7 +515,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
        ) {
         http->logType = LOG_TCP_NEGATIVE_HIT;
         sendMoreData(result);
-    } else if (!Config.onoff.offline && refreshCheckHTTP(e, r) && !http->flags.internal) {
+    } else if (!http->flags.internal && refreshCheckHTTP(e, r)) {
         debugs(88, 5, "clientCacheHit: in refreshCheck() block");
         /*
          * We hold a stale copy; it needs to be validated
@@ -1304,6 +1304,13 @@ clientReplyContext::buildReplyHeader()
             debugs(88,1,"WARNING: An error inside Squid has caused an HTTP reply without Date:. Please report this");
             /* TODO: dump something useful about the problem */
         }
+    }
+
+    // add Warnings required by RFC 2616 if serving a stale hit
+    if (http->request->flags.stale_if_hit && logTypeIsATcpHit(http->logType)) {
+        hdr->putWarning(110, "Response is stale");
+        if (http->request->flags.need_validation)
+            hdr->putWarning(111, "Revalidation failed");
     }
 
     /* Filter unproxyable authentication types */
