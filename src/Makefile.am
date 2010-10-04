@@ -554,6 +554,7 @@ squid_LDADD = \
 	$(SNMPLIB) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
+	-L$(top_srcdir)/lib -lmiscutil \
 	$(COMPAT_LIB) \
 	$(SSLLIB) \
 	$(EPOLL_LIBS) \
@@ -671,8 +672,7 @@ data_DATA = \
 	mib.txt
 
 LDADD = $(COMMON_LIBS) \
-	-L../lib \
-	-lmiscutil \
+	-L../lib -lmiscutil \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
 	$(XTRA_LIBS)
@@ -730,7 +730,10 @@ libDiskThreads_a_SOURCES = \
 
 DiskIO_DiskDaemon_diskd_SOURCES = DiskIO/DiskDaemon/diskd.cc
 nodist_DiskIO_DiskDaemon_diskd_SOURCES = time.cc
-DiskIO_DiskDaemon_diskd_LDADD = $(COMPAT_LIB) $(XTRA_LIBS)
+DiskIO_DiskDaemon_diskd_LDADD = \
+	-L$(top_builddir)/lib -lmiscutil \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 
 DEFAULT_HTTP_PORT	= 3128
@@ -920,7 +923,8 @@ TESTS += $(check_PROGRAMS)
 #tests_testX_LDADD=\
 #	$(SQUID_CPPUNIT_LIBS) \
 #	$(SQUID_CPPUNIT_LA) \
-#	-L../lib -lmiscutil
+#	$(COMPAT_LIB) \
+#	$(XTRA_LIBS)
 #tests_testX_DEPENDENCIES= $(SQUID_CPPUNIT_LA) \
 #	$(top_builddir)/lib/libmiscutil.a
 
@@ -1258,7 +1262,7 @@ tests_testCacheManager_LDADD = \
 	$(ESI_LIBS) \
 	$(REGEXLIB) \
 	$(SNMPLIB) \
-	-L../lib -lmiscutil \
+	$(COMPAT_LIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -1445,7 +1449,7 @@ tests_testEvent_LDADD = \
 	$(ESI_LIBS) \
 	$(REGEXLIB) \
 	$(SNMPLIB) \
-	-L../lib -lmiscutil \
+	$(COMPAT_LIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -1605,7 +1609,7 @@ tests_testEventLoop_LDADD = \
 	$(ESI_LIBS) \
 	$(REGEXLIB) \
 	$(SNMPLIB) \
-	-L../lib -lmiscutil \
+	$(COMPAT_LIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -1920,7 +1924,7 @@ tests_testHttpRequest_LDADD = \
 	$(ESI_LIBS) \
 	$(REGEXLIB) \
 	$(SNMPLIB) \
-	-L../lib -lmiscutil \
+	$(COMPAT_LIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -2002,7 +2006,7 @@ nodist_tests_testStore_SOURCES= \
 
 tests_testStore_LDADD= \
 	$(COMMON_LIBS) \
-	-L../lib -lmiscutil \
+	$(COMPAT_LIB) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
@@ -2028,7 +2032,7 @@ nodist_tests_testString_SOURCES = \
 	$(TESTSOURCES)
 tests_testString_LDADD = \
 	$(COMMON_LIBS) \
-	-L../lib -lmiscutil \
+	$(COMPAT_LIB) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
@@ -2078,8 +2082,8 @@ SWAP_TEST_LDADD = \
 	$(REPL_OBJS) \
 	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
-	-L../lib -lmiscutil \
 	acl/libapi.la \
+	$(COMPAT_LIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(XTRA_LIBS)
 SWAP_TEST_DS =\
@@ -2297,7 +2301,7 @@ tests_testURL_LDADD = \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
 	$(SNMPLIB) \
-	-L../lib -lmiscutil \
+	$(COMPAT_LIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
