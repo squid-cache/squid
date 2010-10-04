@@ -437,6 +437,20 @@ refreshIsCachable(const StoreEntry * entry)
     return 1;
 }
 
+/// whether reply is stale if it is a hit
+static bool
+refreshIsStaleIfHit(const int reason)
+{
+    switch (reason) {
+    case FRESH_MIN_RULE:
+    case FRESH_LMFACTOR_RULE:
+    case FRESH_EXPIRES:
+        return false;
+    default:
+        return true;
+    }
+}
+
 /* refreshCheck... functions below are protocol-specific wrappers around
  * refreshCheck() function above */
 
@@ -446,7 +460,8 @@ refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
     int reason = refreshCheck(entry, request, 0);
     refreshCounts[rcHTTP].total++;
     refreshCounts[rcHTTP].status[reason]++;
-    return (reason < 200) ? 0 : 1;
+    request->flags.stale_if_hit = refreshIsStaleIfHit(reason);
+    return (Config.onoff.offline || reason < 200) ? 0 : 1;
 }
 
 int
