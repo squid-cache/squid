@@ -118,6 +118,7 @@ CommTimeoutCbParams::CommTimeoutCbParams(void *aData):
 {
 }
 
+
 /* CommAcceptCbPtrFun */
 
 CommAcceptCbPtrFun::CommAcceptCbPtrFun(IOACB *aHandler,

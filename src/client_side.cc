@@ -382,8 +382,7 @@ ClientSocketContext::wroteControlMsg(const Comm::ConnectionPointer &conn, char *
 
     // close on 1xx errors to be conservative and to simplify the code
     // (if we do not close, we must notify the source of a failure!)
-    Comm::ConnectionPointer nonConst = conn;
-    nonConst->close();
+    conn->close();
 }
 
 /// wroteControlMsg() wrapper: ClientSocketContext is not an AsyncJob
@@ -3155,8 +3154,7 @@ httpsCreate(const Comm::ConnectionPointer &details, SSL_CTX *sslContext)
     if (!ssl) {
         const int ssl_error = ERR_get_error();
         debugs(83, 1, "httpsAccept: Error allocating handle: " << ERR_error_string(ssl_error, NULL)  );
-        Comm::ConnectionPointer nonConst = details;
-        nonConst->close();
+        details->close();
         return NULL;
     }
 

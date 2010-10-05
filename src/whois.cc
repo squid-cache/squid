@@ -172,8 +172,7 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
             err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, fwd->request);
             err->xerrno = errno;
             fwd->fail(err);
-            Comm::ConnectionPointer nonConst = conn;
-            nonConst->close();
+            conn->close();
             do_next_read = 0;
         }
     } else {
@@ -184,12 +183,8 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
             entry->setPublicKey();
 
         fwd->complete();
-
         debugs(75, 3, "whoisReadReply: Done: " << entry->url()  );
-
-        Comm::ConnectionPointer nonConst = conn;
-        nonConst->close();
-
+        conn->close();
         do_next_read = 0;
     }
 

@@ -484,8 +484,7 @@ errorSendComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t 
             err->callback(conn->fd, err->callback_data, size);
         } else {
             debugs(4, 3, "errorSendComplete: comm_close");
-            Comm::ConnectionPointer nonConst = conn;
-            nonConst->close();
+            conn->close();
         }
     }
 

@@ -677,8 +677,7 @@ idnsSentQueryVC(const Comm::ConnectionPointer &conn, char *buf, size_t size, com
         return;
 
     if (flag != COMM_OK || size <= 0) {
-        Comm::ConnectionPointer nonConst = conn;
-        nonConst->close();
+        conn->close();
         return;
     }
 
@@ -1263,10 +1262,8 @@ idnsReadVC(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_
         return;
 
     if (flag != COMM_OK || len <= 0) {
-        if (Comm::IsConnOpen(conn)) {
-            Comm::ConnectionPointer nonConst = conn;
-            nonConst->close();
-        }
+        if (Comm::IsConnOpen(conn))
+            conn->close();
         return;
     }
 
@@ -1294,10 +1291,8 @@ idnsReadVCHeader(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
         return;
 
     if (flag != COMM_OK || len <= 0) {
-        if (Comm::IsConnOpen(conn)) {
-            Comm::ConnectionPointer nonConst = conn;
-            nonConst->close();
-        }
+        if (Comm::IsConnOpen(conn))
+            conn->close();
         return;
     }
 
