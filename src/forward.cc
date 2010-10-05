@@ -690,8 +690,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
             if (conn->getPeer())
                 peerConnectFailed(conn->getPeer());
 
-            Comm::ConnectionPointer nonConst = conn;
-            nonConst->close();
+            conn->close();
         }
         retryOrBail();
         return;
@@ -820,11 +819,11 @@ FwdState::connectStart()
         port = request->port;
     }
     serverDestinations[0]->remote.SetPort(port);
-    fwdPconnPool->pop(serverDestinations[0], host, checkRetriable());
+    Comm::ConnectionPointer temp = fwdPconnPool->pop(serverDestinations[0], host, checkRetriable());
 
     // if we found an open persistent connection to use. use it.
-    if (Comm::IsConnOpen(serverDestinations[0])) {
-        serverConn = serverDestinations[0];
+    if (temp != NULL && Comm::IsConnOpen(temp)) {
+        serverConn = temp;
         debugs(17, 3, HERE << "reusing pconn " << serverConnection());
         n_tries++;
 
