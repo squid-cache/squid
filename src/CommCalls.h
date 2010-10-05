@@ -175,6 +175,7 @@ public:
     CommAcceptCbPtrFun(const CommAcceptCbPtrFun &o);
 
     void dial();
+
     virtual void print(std::ostream &os) const;
 
 public:

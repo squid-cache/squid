@@ -2031,8 +2031,7 @@ commHalfClosedReader(const Comm::ConnectionPointer &conn, char *, size_t size, c
     // if read failed, close the connection
     if (flag != COMM_OK) {
         debugs(5, 3, HERE << "closing " << conn);
-        Comm::ConnectionPointer nonConst = conn;
-        nonConst->close();
+        conn->close();
         return;
     }
 

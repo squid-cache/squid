@@ -142,8 +142,7 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int x
 
     if (c == NULL) {
         /* no clients care */
-        Comm::ConnectionPointer nonConst = conn;
-        nonConst->close();
+        conn->close();
         return;
     }
 
