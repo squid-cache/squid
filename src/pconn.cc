@@ -49,25 +49,25 @@ CBDATA_CLASS_INIT(IdleConnList);
 /* ========== IdleConnList ============================================ */
 
 IdleConnList::IdleConnList(const char *key, PconnPool *thePool) :
-        nfds_alloc(PCONN_FDS_SZ),
-        nfds(0),
-        parent(thePool)
+        capacity_(PCONN_FDS_SZ),
+        size_(0),
+        parent_(thePool)
 {
     hash.key = xstrdup(key);
-    theList = new Comm::ConnectionPointer[nfds_alloc];
-// TODO: re-attach to MemPools. WAS: fds = (int *)pconn_fds_pool->alloc();
+    theList_ = new Comm::ConnectionPointer[capacity_];
+// TODO: re-attach to MemPools. WAS: theList = (?? *)pconn_fds_pool->alloc();
 }
 
 IdleConnList::~IdleConnList()
 {
-    parent->unlinkList(this);
+    parent_->unlinkList(this);
 
 /* TODO: re-attach to MemPools.
-    if (nfds_alloc == PCONN_FDS_SZ)
-        pconn_fds_pool->freeOne(theList);
+    if (capacity_ == PCONN_FDS_SZ)
+        pconn_fds_pool->freeOne(theList_);
     else
 */
-    delete[] theList;
+    delete[] theList_;
 
     xfree(hash.key);
 }
@@ -81,8 +81,8 @@ IdleConnList::~IdleConnList()
 int
 IdleConnList::findIndexOf(const Comm::ConnectionPointer &conn) const
 {
-    for (int index = nfds - 1; index >= 0; --index) {
-        if (conn->fd == theList[index]->fd) {
+    for (int index = size_ - 1; index >= 0; --index) {
+        if (conn->fd == theList_[index]->fd) {
             debugs(48, 3, HERE << "found " << conn << " at index " << index);
             return index;
         }
@@ -98,14 +98,15 @@ IdleConnList::findIndexOf(const Comm::ConnectionPointer &conn) const
 bool
 IdleConnList::removeAt(int index)
 {
-    if (index < 0 || index >= nfds)
+    if (index < 0 || index >= size_)
         return false;
 
     // shuffle the remaining entries to fill the new gap.
-    for (; index < nfds - 1; index++)
-        theList[index] = theList[index + 1];
+    for (; index < size_ - 1; index++)
+        theList_[index] = theList_[index + 1];
+    theList_[size_] = NULL;
 
-    if (--nfds == 0) {
+    if (--size_ == 0) {
         debugs(48, 3, HERE << "deleting " << hashKeyStr(&hash));
         delete this;
     }
@@ -122,24 +123,24 @@ IdleConnList::clearHandlers(const Comm::ConnectionPointer &conn)
 void
 IdleConnList::push(const Comm::ConnectionPointer &conn)
 {
-    if (nfds == nfds_alloc) {
-        debugs(48, 3, "IdleConnList::push: growing FD array");
-        nfds_alloc <<= 1;
-        const Comm::ConnectionPointer *oldList = theList;
-        theList = new Comm::ConnectionPointer[nfds_alloc];
-        for (int index = 0; index < nfds; index++)
-            theList[index] = oldList[index];
+    if (size_ == capacity_) {
+        debugs(48, 3, HERE << "growing idle Connection array");
+        capacity_ <<= 1;
+        const Comm::ConnectionPointer *oldList = theList_;
+        theList_ = new Comm::ConnectionPointer[capacity_];
+        for (int index = 0; index < size_; index++)
+            theList_[index] = oldList[index];
 
 /* TODO: re-attach to MemPools.
-        if (nfds == PCONN_FDS_SZ)
+        if (size_ == PCONN_FDS_SZ)
             pconn_fds_pool->freeOne(oldList);
         else
 */
         delete[] oldList;
     }
 
-    theList[nfds++] = conn;
-    comm_read(conn, fakeReadBuf, sizeof(fakeReadBuf), IdleConnList::Read, this);
+    theList_[size_++] = conn;
+    comm_read(conn, fakeReadBuf_, sizeof(fakeReadBuf_), IdleConnList::Read, this);
     commSetTimeout(conn->fd, Config.Timeout.pconn, IdleConnList::Timeout, this);
 }
 
@@ -154,24 +155,24 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
 Comm::ConnectionPointer
 IdleConnList::findUseable(const Comm::ConnectionPointer &key)
 {
-    assert(nfds);
+    assert(size_);
 
-    for (int i=nfds-1; i>=0; i--) {
+    for (int i=size_-1; i>=0; i--) {
 
         // callback pending indicates that remote end of the conn has just closed.
-        if (comm_has_pending_read_callback(theList[i]->fd))
+        if (comm_has_pending_read_callback(theList_[i]->fd))
             continue;
 
         // local end port is required, but dont match.
-        if (key->local.GetPort() > 0 && key->local.GetPort() != theList[i]->local.GetPort())
+        if (key->local.GetPort() > 0 && key->local.GetPort() != theList_[i]->local.GetPort())
             continue;
 
         // local address is required, but does not match.
-        if (!key->local.IsAnyAddr() && key->local.matchIPAddr(theList[i]->local) != 0)
+        if (!key->local.IsAnyAddr() && key->local.matchIPAddr(theList_[i]->local) != 0)
             continue;
 
         // finally, a match. pop and return it.
-        Comm::ConnectionPointer result = theList[i];
+        Comm::ConnectionPointer result = theList_[i];
         /* may delete this */
         removeAt(i);
         return result;
