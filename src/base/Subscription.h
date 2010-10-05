@@ -8,7 +8,7 @@
  *
  * The emitter class needs to accept and store a Subscription::Pointer.
  * The callback() function will spawn AsyncCalls to be filled out and
- * scheduled wth every event happening.
+ * scheduled with every event happening.
  */
 class Subscription: public RefCountable
 {
@@ -16,8 +16,7 @@ public:
     typedef RefCount<Subscription> Pointer;
 
     /// returns a call object to be used for the next call back
-    virtual AsyncCall::Pointer callback() = 0;
-//    virtual AsyncCall::Pointer callback() const = 0;
+    virtual AsyncCall::Pointer callback() const = 0;
 };
 
 /**
@@ -34,8 +33,7 @@ class CallSubscription: public Subscription
 {
 public:
     CallSubscription(const RefCount<Call_> &aCall) : call(aCall) {};
-    virtual AsyncCall::Pointer callback() { return new Call_(call); };
-//    virtual AsyncCall::Pointer callback() const { return new Call_(call); };
+    virtual AsyncCall::Pointer callback() const { return new Call_(call); };
 
 private:
     RefCount<Call_> call; ///< gets copied to create callback calls
