@@ -261,9 +261,6 @@ public:
     inline CommCbFunPtrCallT(int debugSection, int debugLevel,
                              const char *callName, const Dialer &aDialer);
 
-// XXX: obsolete comment?
-    // parameter cannot be const because getDialer() cannot be const
-    // getDialer() cannot because Comm IO syncWithComm() alters the object params data
     inline CommCbFunPtrCallT(const Pointer &p) :
             AsyncCall(p->debugSection, p->debugLevel, p->name),
             dialer(p->dialer)
