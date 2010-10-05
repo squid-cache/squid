@@ -34,7 +34,6 @@ class IdleConnList
 public:
     IdleConnList(const char *key, PconnPool *parent);
     ~IdleConnList();
-    int numIdle() const { return nfds; }
 
     /// Pass control of the connection to the idle list.
     void push(const Comm::ConnectionPointer &conn);
@@ -64,21 +63,21 @@ private:
      * The worst-case pop() and scans occur on timeout and link closure events
      * where timing is less critical. Occasional slow additions are okay.
      */
-    Comm::ConnectionPointer *theList;
+    Comm::ConnectionPointer *theList_;
 
     /// Number of entries theList can currently hold without re-allocating (capacity).
-    int nfds_alloc;
+    int capacity_;
     ///< Number of in-use entries in theList
-    int nfds;
+    int size_;
 
     /** The pool containing this sub-list.
      * The parent performs all stats accounting, and
      * will delete us when it dies. It persists for the
      * full duration of our existence.
      */
-    PconnPool *parent;
+    PconnPool *parent_;
 
-    char fakeReadBuf[4096]; // TODO: kill magic number.
+    char fakeReadBuf_[4096]; // TODO: kill magic number.
 
     CBDATA_CLASS2(IdleConnList);
 };
