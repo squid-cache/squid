@@ -10,6 +10,19 @@ class HttpRequest;
 #include "hier_code.h"
 #include "ip/Address.h"
 
+/**
+ * Returns the TOS value that we should be setting on the connection
+ * to the server, based on the ACL.
+ */
+tos_t GetTosToServer(HttpRequest * request);
+
+/**
+ * Returns the Netfilter mark value that we should be setting on the
+ * connection to the server, based on the ACL.
+ */
+nfmark_t GetNfmarkToServer(HttpRequest * request);
+
+
 class FwdServer
 {
 public:

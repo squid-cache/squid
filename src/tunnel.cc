@@ -602,6 +602,9 @@ tunnelConnectDone(int fdnotused, const DnsLookupDetails &dns, comm_err_t status,
     }
 }
 
+extern tos_t GetTosToServer(HttpRequest * request);
+extern nfmark_t GetNfmarkToServer(HttpRequest * request);
+
 void
 tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
 {
@@ -668,7 +671,8 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
                        IPPROTO_TCP,
                        temp,
                        flags,
-                       getOutgoingTOS(request),
+                       GetTosToServer(request),
+                       GetNfmarkToServer(request),
                        url);
 
     if (sock == COMM_ERROR) {

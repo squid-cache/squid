@@ -50,7 +50,8 @@ public:
     bool redirect_done;
     bool no_cache_done;
     bool interpreted_req_hdrs;
-    bool clientside_tos_done;
+    bool tosToClientDone;
+    bool nfmarkToClientDone;
 
 private:
     CBDATA_CLASS(ClientRequestContext);
