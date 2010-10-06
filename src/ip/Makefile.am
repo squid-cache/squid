@@ -9,8 +9,8 @@ libip_la_SOURCES = \
 	Address.cc \
 	Intercept.h \
 	Intercept.cc \
-	Qos.h \
-	Qos.cc \
+	QosConfig.h \
+	QosConfig.cc \
 	Qos.cci \
 	tools.cc \
 	tools.h

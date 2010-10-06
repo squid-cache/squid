@@ -32,6 +32,7 @@ namespace Qos
     /**
     * Function to retrieve the TOS value of the inbound packet.
     * Called by FwdState::dispatch if QOS options are enabled.
+    * Bug 2537: This part of ZPH only applies to patched Linux kernels
     * @param server_fd Server side descriptor of connection to get TOS for
     * @param clientFde Pointer to client side fde instance to set tosFromServer in
     */ 

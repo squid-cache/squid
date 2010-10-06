@@ -1301,6 +1301,8 @@ free_acl_tos(acl_tos ** head)
     }
 }
 
+#if defined(SO_MARK)
+
 CBDATA_TYPE(acl_nfmark);
 
 static void
@@ -1369,6 +1371,7 @@ free_acl_nfmark(acl_nfmark ** head)
         cbdataFree(l);
     }
 }
+#endif /* SO_MARK */
 
 CBDATA_TYPE(acl_size_t);
 
