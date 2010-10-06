@@ -39,6 +39,7 @@
 #include "compat/tempnam.h"
 #include "fde.h"
 #include "ip/Intercept.h"
+#include "ip/QosConfig.h"
 #include "MemBuf.h"
 #include "ProtoPort.h"
 #include "SquidMath.h"
@@ -1326,8 +1327,7 @@ restoreCapabilities(int keep)
         int rc = 0;
         cap_value_t cap_list[10];
         cap_list[ncaps++] = CAP_NET_BIND_SERVICE;
-
-        if (Ip::Interceptor.TransparentActive()) {
+        if (Ip::Interceptor.TransparentActive() || Ip::Qos::TheConfig.isHitNfmarkActive() || Ip::Qos::TheConfig.isAclNfmarkActive()) {
             cap_list[ncaps++] = CAP_NET_ADMIN;
         }
 

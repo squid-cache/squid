@@ -1689,12 +1689,15 @@ clientReplyContext::doGetMoreData()
         /* guarantee nothing has been sent yet! */
         assert(http->out.size == 0);
         assert(http->out.offset == 0);
-#if USE_ZPH_QOS
-        if (Ip::Qos::TheConfig.tos_local_hit) {
-            debugs(33, 2, "ZPH Local hit, TOS=" << Ip::Qos::TheConfig.tos_local_hit);
-            comm_set_tos(http->getConn()->fd, Ip::Qos::TheConfig.tos_local_hit);
+
+        if (Ip::Qos::TheConfig.isHitTosActive()) {
+            Ip::Qos::doTosLocalHit(http->getConn()->fd);
         }
-#endif /* USE_ZPH_QOS */
+
+        if (Ip::Qos::TheConfig.isHitNfmarkActive()) {
+            Ip::Qos::doNfmarkLocalHit(http->getConn()->fd);
+        }
+
         localTempBuffer.offset = reqofs;
         localTempBuffer.length = getNextNode()->readBuffer.length;
         localTempBuffer.data = getNextNode()->readBuffer.data;
@@ -1974,23 +1977,15 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         body_buf = buf;
     }
 
-#if USE_ZPH_QOS
     if (reqofs==0 && !logTypeIsATcpHit(http->logType)) {
         assert(fd >= 0); // the beginning of this method implies fd may be -1
-        int tos = 0;
-        if (Ip::Qos::TheConfig.tos_sibling_hit && http->request->hier.code==SIBLING_HIT ) {
-            tos = Ip::Qos::TheConfig.tos_sibling_hit;
-            debugs(33, 2, "ZPH: Sibling Peer hit with hier.code=" << http->request->hier.code << ", TOS=" << tos);
-        } else if (Ip::Qos::TheConfig.tos_parent_hit && http->request->hier.code==PARENT_HIT) {
-            tos = Ip::Qos::TheConfig.tos_parent_hit;
-            debugs(33, 2, "ZPH: Parent Peer hit with hier.code=" << http->request->hier.code << ", TOS=" << tos);
-        } else if (Ip::Qos::TheConfig.preserve_miss_tos && Ip::Qos::TheConfig.preserve_miss_tos_mask) {
-            tos = fd_table[fd].upstreamTOS & Ip::Qos::TheConfig.preserve_miss_tos_mask;
-            debugs(33, 2, "ZPH: Preserving TOS on miss, TOS="<<tos);
+        if (Ip::Qos::TheConfig.isHitTosActive()) {
+            Ip::Qos::doTosLocalMiss(fd, http->request->hier.code);
         }
-        comm_set_tos(fd,tos);
+        if (Ip::Qos::TheConfig.isHitNfmarkActive()) {
+            Ip::Qos::doNfmarkLocalMiss(fd, http->request->hier.code);
+        }
     }
-#endif
 
     /* We've got the final data to start pushing... */
     flags.storelogiccomplete = 1;
