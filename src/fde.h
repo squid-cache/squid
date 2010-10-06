@@ -130,7 +130,8 @@ private:
         type = 0;
         remote_port = 0;
         local_addr.SetEmpty();
-        tos = '\0';
+        tosToServer = '\0';
+        nfmarkToServer = 0;
         sock_family = 0;
         memset(ipaddr, '\0', MAX_IPSTRLEN);
         memset(desc,'\0',FD_DESC_SZ);
@@ -160,9 +161,8 @@ private:
 #ifdef _SQUID_MSWIN_
         win32.handle = NULL;
 #endif
-#if USE_ZPH_QOS
-        upstreamTOS = 0;
-#endif
+        tosFromServer = '\0';
+        nfmarkFromServer = 0;
     }
 };
 

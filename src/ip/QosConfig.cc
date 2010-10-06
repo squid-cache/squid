@@ -1,18 +1,20 @@
+#include "squid.h"
+
 #include "acl/Gadgets.h"
 #include "ConfigParser.h"
 #include "fde.h"
 #include "hier_code.h"
 #include "ip/tools.h"
-#include "Qos.h"
+#include "ip/QosConfig.h"
 #include "Parsing.h"
-#include "squid.h"
 
 /* Qos namespace */
 
 void
 Ip::Qos::getTosFromServer(const int server_fd, fde *clientFde)
 {
-#if USE_QOS_TOS 
+#if USE_QOS_TOS && _SQUID_LINUX_
+    /* Bug 2537: This part of ZPH only applies to patched Linux kernels. */
     tos_t tos = 1;
     int tos_len = sizeof(tos); 
     clientFde->tosFromServer = 0;
