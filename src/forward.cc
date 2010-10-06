@@ -42,6 +42,7 @@
 #include "hier_code.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "ip/QosConfig.h"
 #include "MemObject.h"
 #include "pconn.h"
 #include "SquidTime.h"
@@ -793,7 +794,6 @@ FwdState::connectStart()
     int ftimeout = Config.Timeout.forward - (squid_curtime - start_t);
 
     Ip::Address outgoing;
-    unsigned short tos;
     Ip::Address client_addr;
     assert(fs);
     assert(server_fd == -1);
@@ -905,9 +905,16 @@ FwdState::connectStart()
         outgoing.SetIPv4();
     }
 
-    tos = getOutgoingTOS(request);
+    tos_t tos = GetTosToServer(request);
 
-    debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << tos);
+#if SO_MARK
+    nfmark_t mark = GetNfmarkToServer(request);
+    debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << int(tos)
+                    << ", netfilter mark " << mark);
+#else
+    nfmark_t mark = 0;
+    debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << int(tos));
+#endif
 
     int commFlags = COMM_NONBLOCKING;
     if (request->flags.spoof_client_ip) {
@@ -916,7 +923,7 @@ FwdState::connectStart()
         // else no tproxy today ...
     }
 
-    fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, commFlags, tos, url);
+    fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, commFlags, tos, mark, url);
 
     debugs(17, 3, "fwdConnectStart: got TCP FD " << fd);
 
@@ -1005,44 +1012,40 @@ FwdState::dispatch()
 
     netdbPingSite(request->GetHost());
 
-#if USE_ZPH_QOS && defined(_SQUID_LINUX_)
-    /* Bug 2537: This part of ZPH only applies to patched Linux kernels. */
+    /* Update server side TOS and Netfilter mark if using persistent connections. */
+    if (Config.onoff.server_pconns) {
+        if (Ip::Qos::TheConfig.isAclTosActive()) {
+            tos_t tos = GetTosToServer(request);
+            Ip::Qos::setSockTos(server_fd, tos);
+        }
+#if SO_MARK
+        if (Ip::Qos::TheConfig.isAclNfmarkActive()) {
+            nfmark_t mark = GetNfmarkToServer(request);
+            Ip::Qos::setSockNfmark(server_fd, mark);
+        }
+#endif
+    }
 
-    /* Retrieves remote server TOS value, and stores it as part of the
+    /* Retrieves remote server TOS or MARK value, and stores it as part of the
      * original client request FD object. It is later used to forward
-     * remote server's TOS in the response to the client in case of a MISS.
+     * remote server's TOS/MARK in the response to the client in case of a MISS.
      */
-    fde * clientFde = &fd_table[client_fd];
-    if (clientFde) {
-        int tos = 1;
-        int tos_len = sizeof(tos);
-        clientFde->upstreamTOS = 0;
-        if (setsockopt(server_fd,SOL_IP,IP_RECVTOS,&tos,tos_len)==0) {
-            unsigned char buf[512];
-            int len = 512;
-            if (getsockopt(server_fd,SOL_IP,IP_PKTOPTIONS,buf,(socklen_t*)&len) == 0) {
-                /* Parse the PKTOPTIONS structure to locate the TOS data message
-                 * prepared in the kernel by the ZPH incoming TCP TOS preserving
-                 * patch.
-                 */
-                unsigned char * pbuf = buf;
-                while (pbuf-buf < len) {
-                    struct cmsghdr *o = (struct cmsghdr*)pbuf;
-                    if (o->cmsg_len<=0)
-                        break;
+    if (Ip::Qos::TheConfig.isHitNfmarkActive()) {
+        fde * clientFde = &fd_table[client_fd];
+        fde * servFde = &fd_table[server_fd];
+        if (clientFde && servFde) {
+            /* Get the netfilter mark for the connection */
+            Ip::Qos::getNfmarkFromServer(server_fd, servFde, clientFde);
+        }
+    }
 
-                    if (o->cmsg_level == SOL_IP && o->cmsg_type == IP_TOS) {
-                        int *tmp = (int*)CMSG_DATA(o);
-                        clientFde->upstreamTOS = (unsigned char)*tmp;
-                        break;
-                    }
-                    pbuf += CMSG_LEN(o->cmsg_len);
-                }
-            } else {
-                debugs(33, 1, "ZPH: error in getsockopt(IP_PKTOPTIONS) on FD "<<server_fd<<" "<<xstrerror());
-            }
-        } else {
-            debugs(33, 1, "ZPH: error in setsockopt(IP_RECVTOS) on FD "<<server_fd<<" "<<xstrerror());
+#if _SQUID_LINUX_
+    /* Bug 2537: The TOS forward part of QOS only applies to patched Linux kernels. */
+    if (Ip::Qos::TheConfig.isHitTosActive()) {
+        fde * clientFde = &fd_table[client_fd];
+        if (clientFde) {
+            /* Get the TOS value for the packet */
+            Ip::Qos::getTosFromServer(server_fd, clientFde);
         }
     }
 #endif
@@ -1376,7 +1379,8 @@ aclMapAddr(acl_address * head, ACLChecklist * ch)
  * DPW 2007-05-19
  * Formerly static, but now used by client_side_request.cc
  */
-int
+/// Checks for a TOS value to apply depending on the ACL
+tos_t
 aclMapTOS(acl_tos * head, ACLChecklist * ch)
 {
     acl_tos *l;
@@ -1384,6 +1388,20 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
     for (l = head; l; l = l->next) {
         if (!l->aclList || ch->matchAclListFast(l->aclList))
             return l->tos;
+    }
+
+    return 0;
+}
+
+/// Checks for a netfilter mark value to apply depending on the ACL
+nfmark_t
+aclMapNfmark(acl_nfmark * head, ACLChecklist * ch)
+{
+    acl_nfmark *l;
+
+    for (l = head; l; l = l->next) {
+        if (!l->aclList || ch->matchAclListFast(l->aclList))
+            return l->nfmark;
     }
 
     return 0;
@@ -1424,8 +1442,8 @@ getOutgoingAddr(HttpRequest * request, struct peer *dst_peer)
     return aclMapAddr(Config.accessList.outgoing_address, &ch);
 }
 
-unsigned long
-getOutgoingTOS(HttpRequest * request)
+tos_t
+GetTosToServer(HttpRequest * request)
 {
     ACLFilledChecklist ch(NULL, request, NULL);
 
@@ -1434,7 +1452,20 @@ getOutgoingTOS(HttpRequest * request)
         ch.my_addr = request->my_addr;
     }
 
-    return aclMapTOS(Config.accessList.outgoing_tos, &ch);
+    return aclMapTOS(Ip::Qos::TheConfig.tosToServer, &ch);
+}
+
+nfmark_t
+GetNfmarkToServer(HttpRequest * request)
+{
+    ACLFilledChecklist ch(NULL, request, NULL);
+
+    if (request) {
+        ch.src_addr = request->client_addr;
+        ch.my_addr = request->my_addr;
+    }
+
+    return aclMapNfmark(Ip::Qos::TheConfig.nfmarkToServer, &ch);
 }
 
 

@@ -98,7 +98,13 @@ struct acl_address {
 struct acl_tos {
     acl_tos *next;
     ACLList *aclList;
-    int tos;
+    tos_t tos;
+};
+
+struct acl_nfmark {
+    acl_nfmark *next;
+    ACLList *aclList;
+    nfmark_t nfmark;
 };
 
 struct acl_size_t {
@@ -466,8 +472,6 @@ struct SquidConfig {
         acl_access *redirector;
         acl_access *reply;
         acl_address *outgoing_address;
-        acl_tos *outgoing_tos;
-        acl_tos *clientside_tos;
 #if USE_HTCP
 
         acl_access *htcp;

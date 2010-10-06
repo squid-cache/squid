@@ -411,7 +411,6 @@ SQUIDCEXTERN void peerDigestNotePeerGone(PeerDigest * pd);
 SQUIDCEXTERN void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
 
 extern Ip::Address getOutgoingAddr(HttpRequest * request, struct peer *dst_peer);
-unsigned long getOutgoingTOS(HttpRequest * request);
 
 SQUIDCEXTERN void urnStart(HttpRequest *, StoreEntry *);
 

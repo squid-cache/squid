@@ -63,6 +63,7 @@
 #include "fde.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "ip/QosConfig.h"
 #include "MemObject.h"
 #include "ProtoPort.h"
 #include "Store.h"
@@ -1272,7 +1273,8 @@ ClientHttpRequest::loggingEntry(StoreEntry *newEntry)
  * the callout.  This is strictly for convenience.
  */
 
-extern int aclMapTOS (acl_tos * head, ACLChecklist * ch);
+extern tos_t aclMapTOS (acl_tos * head, ACLChecklist * ch);
+extern nfmark_t aclMapNfmark (acl_nfmark * head, ACLChecklist * ch);
 
 void
 ClientHttpRequest::doCallouts()
@@ -1335,15 +1337,27 @@ ClientHttpRequest::doCallouts()
         }
     }
 
-    if (!calloutContext->clientside_tos_done) {
-        calloutContext->clientside_tos_done = true;
+    if (!calloutContext->tosToClientDone) {
+        calloutContext->tosToClientDone = true;
         if (getConn() != NULL) {
             ACLFilledChecklist ch(NULL, request, NULL);
             ch.src_addr = request->client_addr;
             ch.my_addr = request->my_addr;
-            int tos = aclMapTOS(Config.accessList.clientside_tos, &ch);
+            tos_t tos = aclMapTOS(Ip::Qos::TheConfig.tosToClient, &ch);
             if (tos)
-                comm_set_tos(getConn()->fd, tos);
+                Ip::Qos::setSockTos(getConn()->fd, tos);
+        }
+    }
+
+    if (!calloutContext->nfmarkToClientDone) {
+        calloutContext->nfmarkToClientDone = true;
+        if (getConn() != NULL) {
+            ACLFilledChecklist ch(NULL, request, NULL);
+            ch.src_addr = request->client_addr;
+            ch.my_addr = request->my_addr;
+            nfmark_t mark = aclMapNfmark(Ip::Qos::TheConfig.nfmarkToClient, &ch);
+            if (mark)
+                Ip::Qos::setSockNfmark(getConn()->fd, mark);
         }
     }
 

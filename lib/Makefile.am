@@ -71,6 +71,7 @@ libmiscutil_a_SOURCES = \
 	stub_memaccount.c \
 	util.c \
 	uudecode.c \
+	xstrto.cc \
 	xusleep.c \
 	$(XPROF_STATS_SOURCE) \
 	$(WIN32SRC)

@@ -385,6 +385,11 @@ This section gives a thorough account of those changes in three categories:
 	<p><em>htcp-*</em> options collapsed into <em>htcp=</em> taking an optional comma-separated list of flags.
 	   The old form is deprecated but still accepted.
 
+	<tag>clientside_mark</tag>
+	<p>New configuration parameter <em>clientside_mark</em>
+	<p>Allows packets leaving Squid on the client side to be marked with a Netfilter mark value in the same way as the existing clientside_tos feature.
+	<p>This feature is only available for Netfilter environments.
+
 	<tag>deny_info</tag>
 	<p>Support URL format tags. For dynamically generated URL in denial redirect.
 
@@ -409,6 +414,25 @@ This section gives a thorough account of those changes in three categories:
 	<p>Memory limits have been revised and corrected from 3.1.4 onwards.
 	<p>Please check and update your squid.conf to use the text <em>none</em> for no limit instead of the old 0 (zero).
 	<p>All users upgrading need to be aware that from Squid-3.3 setting this option to 0 (zero) will mean zero bytes of memory get pooled.
+
+	<tag>qos_flows</tag>
+	<p>New options <em>mark</em> and <em>tos</em> and <em>miss</em>
+	<p><em>tos</em> retains the original QOS functionality of the IP header TOS field.
+	<p><em>mark</em> offers the same functionality, but with a netfilter mark value.
+	<p>These options should be placed immediately after qos_flows.
+	<p>The <em>tos</em> value is optional in order to maintain backwards compatability.
+	<p>The preserve-miss functionality is available with the <em>mark</em> option and requires no kernel patching.
+	   It does, however, require libnetfilter_conntrack.
+	   This will be included by default if available (see the --without-netfilter-conntrack configure option for more details).
+	<p><em>miss</em> sets a value for a cache miss. It is available for both the tos and mark options and takes precedence over the preserve-miss feature.
+
+	<tag>tcp_outgoing_mark</tag>
+	<p>New configuration parameter <em>tcp_outgoing_mark</em>
+	<p>Allows packets leaving Squid on the server side to be marked with a Netfilter mark value in the same way as the existing tcp_outgoing_tos feature.
+	<p>This feature is only available for Netfilter environments.
+
+	<tag>tcp_outgoing_tos</tag>
+	<p>This parameter is now compatible with persistent server connections.
 
 	<tag>windows_ipaddrchangemonitor</tag>
 	<p>Now only available to be set in Windows builds.
@@ -498,6 +522,10 @@ This section gives an account of those changes in three categories:
 	   Squid-3 no longer builds an implicit disk cache at this location, so the change is not expected
 	   to have any effect on existing builds other than fixing some mysterious lack of core dumps.
 	   The old /var/cache location was often non-writable which blocked core dumps creation.
+
+	<tag>--without-netfiler-conntrack</tag>
+	<p>Disables the libnetfilter_conntrack library being used for the new qos_flows option <em>mark</em>.
+	   default is to auto-detect the library and use where available.
 
 </descrip>
 
