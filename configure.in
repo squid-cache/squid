@@ -1316,29 +1316,35 @@ AC_ARG_WITH(netfilter-conntrack,
                  [Do not use Netfilter conntrack libraries for packet marking.
                   A path to alternative library location may be specified by
                   using --with-netfilter-conntrack=PATH. Default: auto-detect.]), [
-    case "$withval" in
-      yes|no) with_netfilter_conntrack=$withval ;;
-      *)   squid_opt_netfilterconntrackpath=$withval
-           with_netfilter_conntrack=yes ;;
-    esac], [
-    with_netfilter_conntrack=yes
-])
-if test x"$with_netfilter_conntrack" = "xyes"; then
-    if test "x$squid_opt_netfilterconntrackpath" != "x"; then
-        if ! test -d "$squid_opt_netfilterconntrackpath"; then
-            AC_MSG_ERROR([--with-netfilter-conntrack path '$squid_opt_netfilterconntrackpath' does not exist])
-        fi
-        LDFLAGS="-L$squid_opt_netfilterconntrackpath/lib $LDFLAGS"
-        CPPFLAGS="-I$squid_opt_netfilterconntrackpath/include $CPPFLAGS"
+case "$with_netfilter_conntrack" in
+  yes|no)
+    : # Nothing special to do here
+    ;;
+  *)
+    if test ! -d "$withval" ; then
+      AC_MSG_ERROR([--without-netfilter-conntrack path does not point to a directory])
     fi
-    AC_SEARCH_LIBS([nfct_query], [netfilter_conntrack],,
-        with_netfilter_conntrack=no
-        if test x"$withval" = "xyes"; then
-            AC_MSG_ERROR([--with-netfilter-conntrack specified but libnetfilter-conntrack libraries not found])
-        fi )
+    squid_opt_netfilterconntrackpath=$withval
+    LDFLAGS="-L$squid_opt_netfilterconntrackpath/lib $LDFLAGS"
+    CPPFLAGS="-I$squid_opt_netfilterconntrackpath/include $CPPFLAGS"
+    with_netfilter_conntrack=yes
+  esac
+])
+AC_MSG_NOTICE([Linux Netfilter Conntrack support requested: ${with_netfilter_conntrack:=auto}])
+if test "x$with_netfilter_conntrack" != "xno"; then
+    AC_SEARCH_LIBS([nfct_query], [netfilter_conntrack],,[
+        if test x"$with_netfilter_conntrack" = "xyes"; then
+            AC_MSG_ERROR([--with-netfilter-conntrack specified but libnetfilter-conntrack library not found])
+        fi
+        with_netfilter_conntrack=no])
     AC_CHECK_HEADERS([libnetfilter_conntrack/libnetfilter_conntrack.h \
-        libnetfilter_conntrack/libnetfilter_conntrack_tcp.h],,with_netfilter_conntrack=no)
+        libnetfilter_conntrack/libnetfilter_conntrack_tcp.h],,[
+        if test x"$with_netfilter_conntrack" = "xyes"; then
+            AC_MSG_ERROR([--with-netfilter-conntrack specified but libnetfilter-conntrack headers not found])
+        fi
+        with_netfilter_conntrack=no])
 fi
+AC_MSG_NOTICE([Linux Netfilter Conntrack support enabled: ${with_netfilter_conntrack} ${squid_opt_netfilterconntrackpath}])
 
 
 dnl Enable Large file support
