@@ -356,8 +356,8 @@ _heap_ify_down(heap * hp, heap_node * elm)
 {
     heap_node *kid;
     int left = 0, right = 0;
-    int true = 1;
-    while (true) {
+    int isTrue = 1;
+    while (isTrue) {
         left = Left(elm->id);
         right = Right(elm->id);
         if (!_heap_node_exist(hp, left)) {
