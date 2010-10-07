@@ -1401,6 +1401,9 @@ SquidMain(int argc, char **argv)
         /* NOTREACHED */
     }
 
+    if (!opt_no_daemon && Config.workers > 0)
+        watch_child(argv);
+
     if (opt_create_swap_dirs) {
         /* chroot if configured to run inside chroot */
 
@@ -1418,9 +1421,6 @@ SquidMain(int argc, char **argv)
     if (IamPrimaryProcess())
         CpuAffinityCheck();
     CpuAffinityInit();
-
-    if (!opt_no_daemon && Config.workers > 0)
-        watch_child(argv);
 
     setMaxFD();
 
