@@ -3,40 +3,49 @@
 
 #include "base/AsyncCall.h"
 
-/**
- * API for classes needing to emit multiple event-driven AsyncCalls.
+/** API for creating a series of AsyncCalls.
+ * This is necessary because the same AsyncCall callback must not be
+ * fired multiple times.
  *
- * The emitter class needs to accept and store a Subscription::Pointer.
- * The callback() function will spawn AsyncCalls to be filled out and
- * scheduled with every event happening.
+ * The call producer needs to accept and store a Subscription::Pointer.
+ * It also should provide some mechanism for adding/removing/changing
+ * the stored Subscription::Pointer.
+ *
+ * The callback() method of Subscription::Pointer will spawn AsyncCall
+ * to be filled out and scheduled as needed.
  */
 class Subscription: public RefCountable
 {
 public:
     typedef RefCount<Subscription> Pointer;
 
-    /// returns a call object to be used for the next call back
+    /** returns a call object to be used for the next call back.
+     * Child implementations must ensure the Call pointer produced
+     * is not NULL.
+     */
     virtual AsyncCall::Pointer callback() const = 0;
 };
 
-/**
- * Implements Subscription API using Call's copy constructor.
+/** Implements Subscription API using Call's copy constructor.
  *
- * A receiver class allocates one of these templated from the Call type
- * to be received (usually AsyncCallT) and passes it to the emitter class
- * which will use it to spawn event calls.
+ * The subscriber creates one of these using a specific callback
+ * type and instance. The subscription object is then passed to a
+ * producer/factory which will use this API to generate calls.
+ * A subscription may be passed to multiple producers.
  *
- * To be a subscriber the AsyncCall child must implement a copy constructor.
+ * Call_ must have a copy constructor.
+ * A pointer to Call_ must be convertable to AsyncCall::Pointer
  */
 template<class Call_>
 class CallSubscription: public Subscription
 {
 public:
-    CallSubscription(const RefCount<Call_> &aCall) : call(aCall) {};
-    virtual AsyncCall::Pointer callback() const { return new Call_(call); };
+    /// Must be passed an object. nil pointers are not permitted.
+    explicit CallSubscription(const RefCount<Call_> &aCall) : call(aCall) { assert(aCall != NULL); }
+    virtual AsyncCall::Pointer callback() const { return new Call_(call); }
 
 private:
-    RefCount<Call_> call; ///< gets copied to create callback calls
+    const RefCount<Call_> call; ///< gets copied to create callback calls
 };
 
 #endif /* _SQUID_BASE_SUBSCRIPTION_H */
