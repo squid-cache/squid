@@ -65,7 +65,13 @@ class IdleConnLimit;
 /* for hash_table */
 #include "hash.h"
 
-/// \ingroup PConnAPI
+/** \ingroup PConnAPI
+ * Manages idle persistent connections to a caller-defined set of
+ * servers (e.g., all HTTP servers). Uses a collection of IdleConnLists
+ * internally to list the individual open connections to each server.
+ * Controls lists existence and limits the total number of
+ * idle connections across the collection.
+ */
 class PconnPool
 {
 
