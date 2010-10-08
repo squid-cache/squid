@@ -30,8 +30,9 @@ BEGIN {
 	define["USE_USERAGENT_LOG"]="--enable-useragent-log"
 	define["USE_WCCP"]="--enable-wccp"
 	define["USE_WCCPv2"]="--enable-wccpv2"
-	define["USE_ZPH_QOS"]="--enable-zph-qos"
+	define["USE_QOS_TOS"]="--enable-zph-qos"
 	define["_SQUID_MSWIN_"]="MS Windows"
+	define["SO_MARK"]="Packet MARK (Linux)"
 }
 /^IFDEF:/ {
 	if (define[$2] != "")

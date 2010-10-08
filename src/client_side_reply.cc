@@ -514,7 +514,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
        ) {
         http->logType = LOG_TCP_NEGATIVE_HIT;
         sendMoreData(result);
-    } else if (!Config.onoff.offline && refreshCheckHTTP(e, r) && !http->flags.internal) {
+    } else if (!http->flags.internal && refreshCheckHTTP(e, r)) {
         debugs(88, 5, "clientCacheHit: in refreshCheck() block");
         /*
          * We hold a stale copy; it needs to be validated
@@ -1245,12 +1245,6 @@ clientReplyContext::buildReplyHeader()
          * This adds the calculated object age. Note that the details of the
          * age calculation is performed by adjusting the timestamp in
          * StoreEntry::timestampsSet(), not here.
-         *
-         * BROWSER WORKAROUND: IE sometimes hangs when receiving a 0 Age
-         * header, so don't use it unless there is a age to report. Please
-         * note that Age is only used to make a conservative estimation of
-         * the objects age, so a Age: 0 header does not add any useful
-         * information to the reply in any case.
          */
 #if DEAD_CODE
         // XXX: realy useless? or is there a bug now that this is detatched from the below if-sequence ?
@@ -1264,7 +1258,7 @@ clientReplyContext::buildReplyHeader()
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
             hdr->delById(HDR_DATE);
             hdr->insertTime(HDR_DATE, squid_curtime);
-        } else if (http->storeEntry()->timestamp < squid_curtime) {
+        } else if (http->storeEntry()->timestamp <= squid_curtime) {
             hdr->putInt(HDR_AGE,
                         squid_curtime - http->storeEntry()->timestamp);
             /* Signal old objects.  NB: rfc 2616 is not clear,
@@ -1302,6 +1296,13 @@ clientReplyContext::buildReplyHeader()
             debugs(88,1,"WARNING: An error inside Squid has caused an HTTP reply without Date:. Please report this");
             /* TODO: dump something useful about the problem */
         }
+    }
+
+    // add Warnings required by RFC 2616 if serving a stale hit
+    if (http->request->flags.stale_if_hit && logTypeIsATcpHit(http->logType)) {
+        hdr->putWarning(110, "Response is stale");
+        if (http->request->flags.need_validation)
+            hdr->putWarning(111, "Revalidation failed");
     }
 
     /* Filter unproxyable authentication types */
@@ -1686,12 +1687,15 @@ clientReplyContext::doGetMoreData()
         /* guarantee nothing has been sent yet! */
         assert(http->out.size == 0);
         assert(http->out.offset == 0);
-#if USE_ZPH_QOS
-        if (Ip::Qos::TheConfig.tos_local_hit) {
-            debugs(33, 2, "ZPH Local hit, TOS=" << Ip::Qos::TheConfig.tos_local_hit);
-            comm_set_tos(http->getConn()->clientConn->fd, Ip::Qos::TheConfig.tos_local_hit);
+
+        if (Ip::Qos::TheConfig.isHitTosActive()) {
+            Ip::Qos::doTosLocalHit(http->getConn()->fd);
         }
-#endif /* USE_ZPH_QOS */
+
+        if (Ip::Qos::TheConfig.isHitNfmarkActive()) {
+            Ip::Qos::doNfmarkLocalHit(http->getConn()->fd);
+        }
+
         localTempBuffer.offset = reqofs;
         localTempBuffer.length = getNextNode()->readBuffer.length;
         localTempBuffer.data = getNextNode()->readBuffer.data;
@@ -1972,23 +1976,15 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         body_buf = buf;
     }
 
-#if USE_ZPH_QOS
     if (reqofs==0 && !logTypeIsATcpHit(http->logType)) {
         assert(conn != NULL && Comm::IsConnOpen(conn->clientConn)); // the beginning of this method implies FD may be closed.
-        int tos = 0;
-        if (Ip::Qos::TheConfig.tos_sibling_hit && http->request->hier.code==SIBLING_HIT ) {
-            tos = Ip::Qos::TheConfig.tos_sibling_hit;
-            debugs(33, 2, "ZPH: Sibling Peer hit with hier.code=" << http->request->hier.code << ", TOS=" << tos);
-        } else if (Ip::Qos::TheConfig.tos_parent_hit && http->request->hier.code==PARENT_HIT) {
-            tos = Ip::Qos::TheConfig.tos_parent_hit;
-            debugs(33, 2, "ZPH: Parent Peer hit with hier.code=" << http->request->hier.code << ", TOS=" << tos);
-        } else if (Ip::Qos::TheConfig.preserve_miss_tos && Ip::Qos::TheConfig.preserve_miss_tos_mask) {
-            tos = fd_table[conn->clientConn->fd].upstreamTOS & Ip::Qos::TheConfig.preserve_miss_tos_mask;
-            debugs(33, 2, "ZPH: Preserving TOS on miss, TOS="<<tos);
+        if (Ip::Qos::TheConfig.isHitTosActive()) {
+            Ip::Qos::doTosLocalMiss(conn->clientConn, http->request->hier.code);
         }
-        comm_set_tos(conn->clientConn->fd,tos);
+        if (Ip::Qos::TheConfig.isHitNfmarkActive()) {
+            Ip::Qos::doNfmarkLocalMiss(conn->clientConn, http->request->hier.code);
+        }
     }
-#endif
 
     /* We've got the final data to start pushing... */
     flags.storelogiccomplete = 1;

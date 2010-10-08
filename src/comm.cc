@@ -51,6 +51,7 @@
 #include "icmp/net_db.h"
 #include "ip/Address.h"
 #include "ip/Intercept.h"
+#include "ip/QosConfig.h"
 #include "ip/tools.h"
 
 #if defined(_SQUID_CYGWIN_)
@@ -72,7 +73,7 @@ typedef enum {
 
 static void commStopHalfClosedMonitor(int fd);
 static IOCB commHalfClosedReader;
-static void comm_init_opened(const Comm::ConnectionPointer &conn, unsigned char TOS, const char *note, struct addrinfo *AI);
+static void comm_init_opened(const Comm::ConnectionPointer &conn, tos_t tos, nfmark_t nfmark, const char *note, struct addrinfo *AI);
 static int comm_apply_flags(int new_socket, Ip::Address &addr, int flags, struct addrinfo *AI);
 
 
@@ -555,7 +556,7 @@ comm_open(int sock_type,
           int flags,
           const char *note)
 {
-    return comm_openex(sock_type, proto, addr, flags, 0, note);
+    return comm_openex(sock_type, proto, addr, flags, 0, 0, note);
 }
 
 void
@@ -584,7 +585,7 @@ comm_open_listener(int sock_type,
     flags |= COMM_DOBIND;
 
     /* attempt native enabled port. */
-    sock = comm_openex(sock_type, proto, addr, flags, 0, note);
+    sock = comm_openex(sock_type, proto, addr, flags, 0, 0, note);
 
     return sock;
 }
@@ -593,20 +594,6 @@ static bool
 limitError(int const anErrno)
 {
     return anErrno == ENFILE || anErrno == EMFILE;
-}
-
-int
-comm_set_tos(int fd, int tos)
-{
-#ifdef IP_TOS
-    int x = setsockopt(fd, IPPROTO_IP, IP_TOS, (char *) &tos, sizeof(int));
-    if (x < 0)
-        debugs(50, 1, "comm_set_tos: setsockopt(IP_TOS) on FD " << fd << ": " << xstrerror());
-    return x;
-#else
-    debugs(50, 0, "WARNING: setsockopt(IP_TOS) not supported on this platform");
-    return -1;
-#endif
 }
 
 void
@@ -649,11 +636,11 @@ comm_openex(int sock_type,
             int proto,
             Ip::Address &addr,
             int flags,
-            unsigned char TOS,
+            tos_t tos,
+            nfmark_t nfmark,
             const char *note)
 {
     int new_socket;
-    int tos = 0;
     struct addrinfo *AI = NULL;
 
     PROF_start(comm_open);
@@ -704,9 +691,12 @@ comm_openex(int sock_type,
     debugs(50, 3, "comm_openex: Opened socket FD " << new_socket << " : family=" << AI->ai_family << ", type=" << AI->ai_socktype << ", protocol=" << AI->ai_protocol );
 
     /* set TOS if needed */
-    if (TOS && comm_set_tos(new_socket, TOS) ) {
-        tos = TOS;
-    }
+    if (tos)
+        Ip::Qos::setSockTos(new_socket, tos);
+
+    /* set netfilter mark if needed */
+    if (nfmark)
+        Ip::Qos::setSockNfmark(new_socket, nfmark);
 
     if ( Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && addr.IsIPv6() )
         comm_set_v6only(new_socket, 1);
@@ -720,7 +710,7 @@ comm_openex(int sock_type,
     Comm::ConnectionPointer temp = new Comm::Connection;
     temp->fd = new_socket;
     temp->local = addr;
-    comm_init_opened(temp, TOS, note, AI);
+    comm_init_opened(temp, tos, nfmark, note, AI);
     new_socket = comm_apply_flags(new_socket, addr, flags, AI);
 
     addr.FreeAddrInfo(AI);
@@ -733,7 +723,8 @@ comm_openex(int sock_type,
 /// update FD tables after a local or remote (IPC) comm_openex();
 void
 comm_init_opened(const Comm::ConnectionPointer &conn,
-                 unsigned char TOS,
+                 tos_t tos,
+                 nfmark_t nfmark,
                  const char *note,
                  struct addrinfo *AI)
 {
@@ -751,7 +742,8 @@ comm_init_opened(const Comm::ConnectionPointer &conn,
 
     fde *F = &fd_table[conn->fd];
     F->local_addr = conn->local;
-    F->tos = TOS;
+    F->tosToServer = tos;
+    F->nfmarkToServer = nfmark;
     F->sock_family = AI->ai_family;
 }
 
@@ -827,7 +819,7 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
     assert(Comm::IsConnOpen(conn));
     assert(AI);
 
-    comm_init_opened(conn, 0, note, AI);
+    comm_init_opened(conn, 0, 0, note, AI);
 
     if (!(conn->flags & COMM_NOCLOEXEC))
         fd_table[conn->fd].flags.close_on_exec = 1;

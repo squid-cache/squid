@@ -1475,11 +1475,10 @@ DOC_END
 NAME: tcp_outgoing_tos tcp_outgoing_ds tcp_outgoing_dscp
 TYPE: acl_tos
 DEFAULT: none
-LOC: Config.accessList.outgoing_tos
+LOC: Ip::Qos::TheConfig.tosToServer
 DOC_START
-	Allows you to select a TOS/Diffserv value to mark outgoing
-	connections with, based on the username or source address
-	making the request.
+	Allows you to select a TOS/Diffserv value for packets outgoing
+	on the server side, based on an ACL.
 
 	tcp_outgoing_tos ds-field [!]aclname ...
 
@@ -1502,42 +1501,97 @@ DOC_START
 
 	Processing proceeds in the order specified, and stops at first fully
 	matching line.
-
-	Note: The use of this directive using client dependent ACLs is
-	incompatible with the use of server side persistent connections. To
-	ensure correct results it is best to set server_persisten_connections
-	to off when using this directive in such configurations.
 DOC_END
 
 NAME: clientside_tos
 TYPE: acl_tos
 DEFAULT: none
-LOC: Config.accessList.clientside_tos
+LOC: Ip::Qos::TheConfig.tosToClient
 DOC_START
-	Allows you to select a TOS/Diffserv value to mark client-side
-	connections with, based on the username or source address
-	making the request.
+	Allows you to select a TOS/Diffserv value for packets being transmitted
+	on the client-side, based on an ACL.
+
+	clientside_tos ds-field [!]aclname ...
+
+	Example where normal_service_net uses the TOS value 0x00
+	and good_service_net uses 0x20
+
+	acl normal_service_net src 10.0.0.0/24
+	acl good_service_net src 10.0.1.0/24
+	clientside_tos 0x00 normal_service_net
+	clientside_tos 0x20 good_service_net
+
+	Note: This feature is incompatible with qos_flows. Any TOS values set here
+	will be overwritten by TOS values in qos_flows.
+DOC_END
+
+NAME: tcp_outgoing_mark
+TYPE: acl_nfmark
+IFDEF: SO_MARK
+DEFAULT: none
+LOC: Ip::Qos::TheConfig.nfmarkToServer
+DOC_START
+	Allows you to apply a Netfilter mark value to outgoing packets
+	on the server side, based on an ACL.
+
+	tcp_outgoing_mark mark-value [!]aclname ...
+
+	Example where normal_service_net uses the mark value 0x00
+	and good_service_net uses 0x20
+
+	acl normal_service_net src 10.0.0.0/24
+	acl good_service_net src 10.0.1.0/24
+	tcp_outgoing_mark 0x00 normal_service_net
+	tcp_outgoing_mark 0x20 good_service_net
+DOC_END
+
+NAME: clientside_mark
+TYPE: acl_nfmark
+IFDEF: SO_MARK
+DEFAULT: none
+LOC: Ip::Qos::TheConfig.nfmarkToClient
+DOC_START
+	Allows you to apply a Netfilter mark value to packets being transmitted
+	on the client-side, based on an ACL.
+
+	clientside_mark mark-value [!]aclname ...
+
+	Example where normal_service_net uses the mark value 0x00
+	and good_service_net uses 0x20
+
+	acl normal_service_net src 10.0.0.0/24
+	acl good_service_net src 10.0.1.0/24
+	clientside_mark 0x00 normal_service_net
+	clientside_mark 0x20 good_service_net
+
+	Note: This feature is incompatible with qos_flows. Any mark values set here
+	will be overwritten by mark values in qos_flows.
 DOC_END
 
 NAME: qos_flows
 TYPE: QosConfig
-IFDEF: USE_ZPH_QOS
+IFDEF: USE_QOS_TOS
 DEFAULT: none
 LOC: Ip::Qos::TheConfig
 DOC_START
 	Allows you to select a TOS/DSCP value to mark outgoing
-	connections with, based on where the reply was sourced.
+	connections with, based on where the reply was sourced.	For
+	platforms using netfilter, allows you to set a netfilter mark
+	value instead of, or in addition to, a TOS value.
 
 	TOS values really only have local significance - so you should
 	know what you're specifying. For more information, see RFC2474,
 	RFC2475, and RFC3260.
 
-	The TOS/DSCP byte must be exactly that - octet value 0x00-0xFF.
-	Note that in practice often only values up to 0x3F are usable
-	as the two highest bits have been redefined for use by ECN
-	(RFC3168).
+	The TOS/DSCP byte must be exactly that - a octet value  0 - 255. Note that
+	in practice often only multiples of 4 is usable as the two rightmost bits
+	have been redefined for use by ECN (RFC 3168 section 23.1).
 
-	This setting is configured by setting the source TOS values:
+	Mark values can be any unsigned 32-bit integer value.
+
+	This setting is configured by setting the following values:
+
+	tos|mark                Whether to set TOS or netfilter mark values
 
 	local-hit=0xFF		Value to mark local cache hits.
 
@@ -1545,23 +1599,35 @@ DOC_START
 
 	parent-hit=0xFF		Value to mark hits from parent peers.
 
+	miss=0xFF		Value to mark cache misses. Takes precedence
+				over the preserve-miss feature (see below).
 
-	NOTE: 'miss' preserve feature is only possible on Linux at this time.
-
-	For the following to work correctly, you will need to patch your
-	linux kernel with the TOS preserving ZPH patch.
-	The kernel patch can be downloaded from http://zph.bratcheda.org
+	The TOS variant of the following features are only possible on Linux
+	and require your kernel to be patched with the TOS preserving ZPH
+	patch, available from http://zph.bratcheda.org
+	No patch is needed to preserve the netfilter mark, which will work
+	with all variants of netfilter.
 
 	disable-preserve-miss
-		By default, the existing TOS value of the response coming
-		from the remote server will be retained and masked with
-		miss-mark. This option disables that feature.
+		This option disables the preservation of the TOS or netfilter
+		mark. By default, the existing TOS or netfilter mark value of
+		the response coming from the remote server will be retained
+		and masked with miss-mark.
+		NOTE: in the case of a netfilter mark, the mark must be set on
+		the connection (using the CONNMARK target) not on the packet
+		(MARK target).
 
 	miss-mask=0xFF
-		Allows you to mask certain bits in the TOS received from the
-		remote server, before copying the value to the TOS sent
-		towards clients.
-		Default: 0xFF (TOS from server is not changed).
+		Allows you to mask certain bits in the TOS or mark value
+		received from the remote server, before copying the value to
+		the TOS sent towards clients.
+		Default for tos: 0xFF (TOS from server is not changed).
+		Default for mark: 0xFFFFFFFF (mark from server is not changed).
+
+	All of these features require the --enable-zph-qos compilation flag
+	(enabled by default). Netfilter marking also requires the
+	libnetfilter_conntrack libraries (--with-netfilter-conntrack) and
+	libcap 2.09+ (--with-libcap).
 
 DOC_END
 

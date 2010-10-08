@@ -1309,6 +1309,44 @@ AC_ARG_ENABLE(linux-netfilter,
 AC_MSG_NOTICE([Linux Netfilter support requested: ${enable_linux_netfilter:=auto}])
 #will be AC_DEFINEd later, after checking for appropriate infrastructure
 
+
+dnl Look for libnetfilter_conntrack options (needed for QOS netfilter marking)
+AC_ARG_WITH(netfilter-conntrack,
+  AS_HELP_STRING([--without-netfilter-conntrack],
+                 [Do not use Netfilter conntrack libraries for packet marking.
+                  A path to alternative library location may be specified by
+                  using --with-netfilter-conntrack=PATH. Default: auto-detect.]), [
+case "$with_netfilter_conntrack" in
+  yes|no)
+    : # Nothing special to do here
+    ;;
+  *)
+    if test ! -d "$withval" ; then
+      AC_MSG_ERROR([--without-netfilter-conntrack path does not point to a directory])
+    fi
+    squid_opt_netfilterconntrackpath=$withval
+    LDFLAGS="-L$squid_opt_netfilterconntrackpath/lib $LDFLAGS"
+    CPPFLAGS="-I$squid_opt_netfilterconntrackpath/include $CPPFLAGS"
+    with_netfilter_conntrack=yes
+  esac
+])
+AC_MSG_NOTICE([Linux Netfilter Conntrack support requested: ${with_netfilter_conntrack:=auto}])
+if test "x$with_netfilter_conntrack" != "xno"; then
+    AC_SEARCH_LIBS([nfct_query], [netfilter_conntrack],,[
+        if test x"$with_netfilter_conntrack" = "xyes"; then
+            AC_MSG_ERROR([--with-netfilter-conntrack specified but libnetfilter-conntrack library not found])
+        fi
+        with_netfilter_conntrack=no])
+    AC_CHECK_HEADERS([libnetfilter_conntrack/libnetfilter_conntrack.h \
+        libnetfilter_conntrack/libnetfilter_conntrack_tcp.h],,[
+        if test x"$with_netfilter_conntrack" = "xyes"; then
+            AC_MSG_ERROR([--with-netfilter-conntrack specified but libnetfilter-conntrack headers not found])
+        fi
+        with_netfilter_conntrack=no])
+fi
+AC_MSG_NOTICE([Linux Netfilter Conntrack support enabled: ${with_netfilter_conntrack} ${squid_opt_netfilterconntrackpath}])
+
+
 dnl Enable Large file support
 buildmodel=""
 squid_opt_enable_large_files=no
@@ -2039,10 +2077,15 @@ AC_ARG_ENABLE(zph-qos,
 SQUID_YESNO([$enableval],
             [unrecognized argument to --enable-zph-qos: $enableval])
 ])
-SQUID_DEFINE_BOOL(USE_ZPH_QOS,${enable_zph_qos:=no},
+SQUID_DEFINE_BOOL(USE_QOS_TOS,${enable_zph_qos:=yes},
           [Enable Zero Penalty Hit QOS. When set, Squid will alter the
            TOS field of HIT responses to help policing network traffic])
 AC_MSG_NOTICE([ZPH QOS enabled: $enable_zph_qos])
+if test x"$enable_zph_qos" = "xyes" ; then
+        AC_MSG_NOTICE([QOS netfilter mark preservation enabled: $with_netfilter_conntrack])
+        SQUID_DEFINE_BOOL(USE_LIBNETFILTERCONNTRACK,${with_netfilter_conntrack:=no},
+                      [Enable support for QOS netfilter mark preservation])
+fi
 
 if $CPPUNITCONFIG --help >/dev/null; then
   squid_cv_cppunit_version="`$CPPUNITCONFIG --version`"
@@ -2133,6 +2176,7 @@ AC_CHECK_HEADERS( \
   lber.h \
   ldap.h \
   libc.h \
+  limits \
   limits.h \
   linux/posix_types.h \
   linux/types.h \
@@ -2164,6 +2208,7 @@ AC_CHECK_HEADERS( \
   signal.h \
   sstream \
   stdarg.h \
+  stdbool.h \
   stddef.h \
   stdexcept \
   stdio.h \
