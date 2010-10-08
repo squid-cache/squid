@@ -98,7 +98,13 @@ struct acl_address {
 struct acl_tos {
     acl_tos *next;
     ACLList *aclList;
-    int tos;
+    tos_t tos;
+};
+
+struct acl_nfmark {
+    acl_nfmark *next;
+    ACLList *aclList;
+    nfmark_t nfmark;
 };
 
 struct acl_size_t {
@@ -467,8 +473,6 @@ struct SquidConfig {
         acl_access *redirector;
         acl_access *reply;
         acl_address *outgoing_address;
-        acl_tos *outgoing_tos;
-        acl_tos *clientside_tos;
 #if USE_HTCP
 
         acl_access *htcp;
@@ -717,6 +721,7 @@ public:
     int max_age;
     int s_maxage;
     int max_stale;
+    int min_fresh;
     String other;
 };
 
@@ -1007,7 +1012,7 @@ struct _iostats {
 
 
 struct request_flags {
-    request_flags(): range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),fail_on_validation_err(0),accelerated(0),ignore_cc(0),intercepted(0),spoof_client_ip(0),internal(0),internalclient(0),must_keepalive(0),chunked_reply(0),stream_error(0),destinationIPLookedUp_(0) {
+    request_flags(): range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),fail_on_validation_err(0),stale_if_hit(0),accelerated(0),ignore_cc(0),intercepted(0),spoof_client_ip(0),internal(0),internalclient(0),must_keepalive(0),chunked_reply(0),stream_error(0),destinationIPLookedUp_(0) {
 #if USE_HTTP_VIOLATIONS
         nocache_hack = 0;
 #endif
@@ -1030,6 +1035,7 @@ unsigned int proxying:
     unsigned int redirected:1;
     unsigned int need_validation:1;
     unsigned int fail_on_validation_err:1; ///< whether we should fail if validation fails
+    unsigned int stale_if_hit:1; ///< reply is stale if it is a hit
 #if USE_HTTP_VIOLATIONS
     unsigned int nocache_hack:1;	/* for changing/ignoring no-cache requests */
 #endif

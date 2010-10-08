@@ -45,6 +45,7 @@
 #include "hier_code.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "ip/QosConfig.h"
 #include "MemObject.h"
 #include "pconn.h"
 #include "PeerSelectState.h"
@@ -582,7 +583,7 @@ FwdState::negotiateSSL(int fd)
             debugs(81, 1, "fwdNegotiateSSL: Error negotiating SSL connection on FD " << fd <<
                    ": " << ERR_error_string(ERR_get_error(), NULL) << " (" << ssl_error <<
                    "/" << ret << "/" << errno << ")");
-            ErrorState *anErr = errorCon(ERR_SECURE_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
+            ErrorState *const anErr = makeConnectingError(ERR_SECURE_CONNECT_FAIL);
 #ifdef EPROTO
 
             anErr->xerrno = EPROTO;
@@ -681,7 +682,7 @@ void
 FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno)
 {
     if (status != COMM_OK) {
-        ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
+        ErrorState *const anErr = makeConnectingError(ERR_CONNECT_FAIL);
         anErr->xerrno = xerrno;
         fail(anErr);
 
@@ -857,6 +858,17 @@ FwdState::dispatch()
      */
     assert(Comm::IsConnOpen(serverConn));
 
+    tos_t tos = GetTosToServer(request);
+
+#if SO_MARK
+    nfmark_t mark = GetNfmarkToServer(request);
+    debugs(17, 3, HERE << "got outgoing addr " << serverConn << ", tos " << int(tos)
+                    << ", netfilter mark " << mark);
+#else
+    nfmark_t mark = 0;
+    debugs(17, 3, HERE << "got outgoing addr " << serverConn << ", tos " << int(tos));
+#endif
+
     fd_note(serverConnection()->fd, entry->url());
 
     fd_table[serverConnection()->fd].noteUse(fwdPconnPool);
@@ -870,44 +882,40 @@ FwdState::dispatch()
 
     netdbPingSite(request->GetHost());
 
-#if USE_ZPH_QOS && defined(_SQUID_LINUX_)
-    /* Bug 2537: This part of ZPH only applies to patched Linux kernels. */
+    /* Update server side TOS and Netfilter mark if using persistent connections. */
+    if (Config.onoff.server_pconns) {
+        if (Ip::Qos::TheConfig.isAclTosActive()) {
+            tos_t tos = GetTosToServer(request);
+            Ip::Qos::setSockTos(server_fd, tos);
+        }
+#if SO_MARK
+        if (Ip::Qos::TheConfig.isAclNfmarkActive()) {
+            nfmark_t mark = GetNfmarkToServer(request);
+            Ip::Qos::setSockNfmark(server_fd, mark);
+        }
+#endif
+    }
 
-    /* Retrieves remote server TOS value, and stores it as part of the
+    /* Retrieves remote server TOS or MARK value, and stores it as part of the
      * original client request FD object. It is later used to forward
-     * remote server's TOS in the response to the client in case of a MISS.
+     * remote server's TOS/MARK in the response to the client in case of a MISS.
      */
-    fde * clientFde = &fd_table[clientConn->fd];
-    if (clientFde) {
-        int tos = 1;
-        int tos_len = sizeof(tos);
-        clientFde->upstreamTOS = 0;
-        if (setsockopt(serverConnection()->fd, SOL_IP, IP_RECVTOS, &tos, tos_len)==0) {
-            unsigned char buf[512];
-            int len = 512;
-            if (getsockopt(serverConnection()->fd, SOL_IP, IP_PKTOPTIONS, buf, (socklen_t*)&len) == 0) {
-                /* Parse the PKTOPTIONS structure to locate the TOS data message
-                 * prepared in the kernel by the ZPH incoming TCP TOS preserving
-                 * patch.
-                 */
-                unsigned char * pbuf = buf;
-                while (pbuf-buf < len) {
-                    struct cmsghdr *o = (struct cmsghdr*)pbuf;
-                    if (o->cmsg_len<=0)
-                        break;
+    if (Ip::Qos::TheConfig.isHitNfmarkActive()) {
+        fde * clientFde = &fd_table[clientConn->fd]; // XXX: move the fd_table access into Ip::Qos
+        fde * servFde = &fd_table[serverConnection()->fd];
+        if (clientFde && servFde) {
+            /* Get the netfilter mark for the connection */
+            Ip::Qos::getNfmarkFromServer(serverConnection()->fd, servFde, clientFde);
+        }
+    }
 
-                    if (o->cmsg_level == SOL_IP && o->cmsg_type == IP_TOS) {
-                        int *tmp = (int*)CMSG_DATA(o);
-                        clientFde->upstreamTOS = (unsigned char)*tmp;
-                        break;
-                    }
-                    pbuf += CMSG_LEN(o->cmsg_len);
-                }
-            } else {
-                debugs(33, DBG_IMPORTANT, "ZPH: error in getsockopt(IP_PKTOPTIONS) on FD " << serverConnection()->fd << " " << xstrerror());
-            }
-        } else {
-            debugs(33, DBG_IMPORTANT, "ZPH: error in setsockopt(IP_RECVTOS) on FD " << serverConnection()->fd << " " << xstrerror());
+#if _SQUID_LINUX_
+    /* Bug 2537: The TOS forward part of QOS only applies to patched Linux kernels. */
+    if (Ip::Qos::TheConfig.isHitTosActive()) {
+        fde * clientFde = &fd_table[clientConn->fd]; // XXX: move the fd_table access into Ip::Qos
+        if (clientFde) {
+            /* Get the TOS value for the packet */
+            Ip::Qos::getTosFromServer(serverConnection()->fd, clientFde);
         }
     }
 #endif
@@ -1024,6 +1032,19 @@ FwdState::reforward()
     s = e->getReply()->sline.status;
     debugs(17, 3, HERE << "status " << s);
     return reforwardableStatus(s);
+}
+
+/**
+ * Create "503 Service Unavailable" or "504 Gateway Timeout" error depending
+ * on whether this is a validation request. RFC 2616 says that we MUST reply
+ * with "504 Gateway Timeout" if validation fails and cached reply has
+ * proxy-revalidate, must-revalidate or s-maxage Cache-Control directive.
+ */
+ErrorState *
+FwdState::makeConnectingError(const err_type type) const
+{
+    return errorCon(type, request->flags.need_validation ?
+                    HTTP_GATEWAY_TIMEOUT : HTTP_SERVICE_UNAVAILABLE, request);
 }
 
 static void
@@ -1182,7 +1203,8 @@ FwdState::updateHierarchyInfo()
  * DPW 2007-05-19
  * Formerly static, but now used by client_side_request.cc
  */
-int
+/// Checks for a TOS value to apply depending on the ACL
+tos_t
 aclMapTOS(acl_tos * head, ACLChecklist * ch)
 {
     acl_tos *l;
@@ -1190,6 +1212,20 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
     for (l = head; l; l = l->next) {
         if (!l->aclList || ch->matchAclListFast(l->aclList))
             return l->tos;
+    }
+
+    return 0;
+}
+
+/// Checks for a netfilter mark value to apply depending on the ACL
+nfmark_t
+aclMapNfmark(acl_nfmark * head, ACLChecklist * ch)
+{
+    acl_nfmark *l;
+
+    for (l = head; l; l = l->next) {
+        if (!l->aclList || ch->matchAclListFast(l->aclList))
+            return l->nfmark;
     }
 
     return 0;
@@ -1253,8 +1289,8 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
     }
 }
 
-unsigned long
-getOutgoingTOS(HttpRequest * request)
+tos_t
+GetTosToServer(HttpRequest * request)
 {
     ACLFilledChecklist ch(NULL, request, NULL);
 
@@ -1263,7 +1299,20 @@ getOutgoingTOS(HttpRequest * request)
         ch.my_addr = request->my_addr;
     }
 
-    return aclMapTOS(Config.accessList.outgoing_tos, &ch);
+    return aclMapTOS(Ip::Qos::TheConfig.tosToServer, &ch);
+}
+
+nfmark_t
+GetNfmarkToServer(HttpRequest * request)
+{
+    ACLFilledChecklist ch(NULL, request, NULL);
+
+    if (request) {
+        ch.src_addr = request->client_addr;
+        ch.my_addr = request->my_addr;
+    }
+
+    return aclMapNfmark(Ip::Qos::TheConfig.nfmarkToServer, &ch);
 }
 
 

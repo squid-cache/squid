@@ -39,6 +39,9 @@
 typedef int32_t sfileno;
 typedef signed int sdirno;
 
+typedef uint32_t nfmark_t;
+typedef unsigned char tos_t;
+
 typedef struct {
     size_t bytes;
     size_t kb;

@@ -6,6 +6,7 @@
 #define SQUID_ASYNCCALL_H
 
 //#include "cbdata.h"
+#include "base/InstanceId.h"
 #include "event.h"
 //#include "TextException.h"
 
@@ -71,7 +72,7 @@ public:
     const char *const name;
     const int debugSection;
     const int debugLevel;
-    const unsigned int id;
+    const InstanceId<AsyncCall> id;
 
 protected:
     virtual bool canFire();
@@ -82,7 +83,6 @@ protected:
 
 private:
     const char *isCanceled; // set to the cancelation reason by cancel()
-    static unsigned int TheLastId;
 };
 
 inline
