@@ -5,12 +5,14 @@ acl_access		acl
 acl_address		acl
 acl_b_size_t		acl
 acl_tos			acl
+acl_nfmark		acl
 address
 authparam
 b_int64_t
 b_size_t
 cachedir		cache_replacement_policy
 cachemgrpasswd
+ConfigAclTos
 CpuAffinityMap
 debug
 delay_pool_access	acl	delay_class

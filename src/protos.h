@@ -409,7 +409,7 @@ SQUIDCEXTERN void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
 
 #include "comm/forward.h"
 extern void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
-unsigned long getOutgoingTOS(HttpRequest * request);
+extern Ip::Address getOutgoingAddr(HttpRequest * request, struct peer *dst_peer);
 
 SQUIDCEXTERN void urnStart(HttpRequest *, StoreEntry *);
 

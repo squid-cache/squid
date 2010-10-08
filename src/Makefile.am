@@ -671,10 +671,10 @@ data_DATA = \
 	mib.txt
 
 LDADD = $(COMMON_LIBS) \
-	-L../lib \
-	-lmiscutil \
+	-L../lib -lmiscutil \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
 EXTRA_DIST = \
@@ -921,6 +921,7 @@ TESTS += $(check_PROGRAMS)
 #	$(SQUID_CPPUNIT_LIBS) \
 #	$(SQUID_CPPUNIT_LA) \
 #	-L../lib -lmiscutil
+#	$(COMPAT_LIB) \
 #tests_testX_DEPENDENCIES= $(SQUID_CPPUNIT_LA) \
 #	$(top_builddir)/lib/libmiscutil.a
 
@@ -1022,6 +1023,7 @@ tests_testAuth_LDADD= \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testAuth_LDFLAGS = $(LIBADD_DL)
 tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
@@ -1087,6 +1089,7 @@ tests_testACLMaxUserIP_LDADD= \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
 tests_testACLMaxUserIP_DEPENDENCIES = \
@@ -1105,6 +1108,7 @@ tests_testBoilerplate_LDADD= \
 	-L../lib -lmiscutil \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
 tests_testBoilerplate_DEPENDENCIES = \
@@ -1263,6 +1267,7 @@ tests_testCacheManager_LDADD = \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -1450,6 +1455,7 @@ tests_testEvent_LDADD = \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testEvent_LDFLAGS = $(LIBADD_DL)
 tests_testEvent_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -1610,6 +1616,7 @@ tests_testEventLoop_LDADD = \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -1765,6 +1772,7 @@ tests_test_http_range_LDADD = \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_test_http_range_LDFLAGS = $(LIBADD_DL)
 tests_test_http_range_DEPENDENCIES = \
@@ -1925,6 +1933,7 @@ tests_testHttpRequest_LDADD = \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -2006,6 +2015,7 @@ tests_testStore_LDADD= \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testStore_LDFLAGS = $(LIBADD_DL)
 tests_testStore_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
@@ -2032,6 +2042,7 @@ tests_testString_LDADD = \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testString_LDFLAGS = $(LIBADD_DL)
 tests_testString_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
@@ -2081,6 +2092,7 @@ SWAP_TEST_LDADD = \
 	-L../lib -lmiscutil \
 	acl/libapi.la \
 	$(SQUID_CPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 SWAP_TEST_DS =\
 	$(top_builddir)/lib/libmiscutil.a \
@@ -2302,6 +2314,7 @@ tests_testURL_LDADD = \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
 	$(KRB5LIBS) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testURL_LDFLAGS = $(LIBADD_DL)
 tests_testURL_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \

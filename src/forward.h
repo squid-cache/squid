@@ -12,6 +12,19 @@ class HttpRequest;
 #include "ip/Address.h"
 #include "Array.h"
 
+/**
+ * Returns the TOS value that we should be setting on the connection
+ * to the server, based on the ACL.
+ */
+tos_t GetTosToServer(HttpRequest * request);
+
+/**
+ * Returns the Netfilter mark value that we should be setting on the
+ * connection to the server, based on the ACL.
+ */
+nfmark_t GetNfmarkToServer(HttpRequest * request);
+
+
 class FwdState : public RefCountable
 {
 public:
@@ -56,6 +69,7 @@ private:
     void doneWithRetries();
     void completed();
     void retryOrBail();
+    ErrorState *makeConnectingError(const err_type type) const;
     static void RegisterWithCacheManager(void);
 
 #if WIP_FWD_LOG

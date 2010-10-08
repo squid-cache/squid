@@ -13,6 +13,7 @@ libbase_la_SOURCES = \
 	AsyncCallQueue.cc \
 	AsyncCallQueue.h \
 	CbcPointer.h \
+	InstanceId.h \
 	Subscription.h \
 	TextException.cc \
 	TextException.h

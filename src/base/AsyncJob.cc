@@ -10,8 +10,7 @@
 #include "cbdata.h"
 #include "MemBuf.h"
 
-
-unsigned int AsyncJob::TheLastId = 0;
+InstanceIdDefinitions(AsyncJob, "job");
 
 AsyncJob::Pointer AsyncJob::Start(AsyncJob *j)
 {
@@ -20,16 +19,16 @@ AsyncJob::Pointer AsyncJob::Start(AsyncJob *j)
     return job;
 }
 
-AsyncJob::AsyncJob(const char *aTypeName): typeName(aTypeName), inCall(NULL), id(++TheLastId)
+AsyncJob::AsyncJob(const char *aTypeName): typeName(aTypeName), inCall(NULL)
 {
     debugs(93,5, "AsyncJob constructed, this=" << this <<
-           " type=" << typeName << " [job" << id << ']');
+           " type=" << typeName << " [" << id << ']');
 }
 
 AsyncJob::~AsyncJob()
 {
     debugs(93,5, "AsyncJob destructed, this=" << this <<
-           " type=" << typeName << " [job" << id << ']');
+           " type=" << typeName << " [" << id << ']');
 }
 
 void AsyncJob::start()
@@ -156,7 +155,7 @@ const char *AsyncJob::status() const
         buf.Printf("Stopped, reason:");
         buf.Printf("%s",stopReason);
     }
-    buf.Printf(" job%d]", id);
+    buf.Printf(" %s%u]", id.Prefix, id.value);
     buf.terminate();
 
     return buf.content();

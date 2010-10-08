@@ -57,7 +57,10 @@ public:
     u_short remote_port;
 
     Ip::Address local_addr;
-    unsigned char tos;
+    tos_t tosToServer;          /**< The TOS value for packets going towards the server.
+                                        See also tosFromServer. */
+    nfmark_t nfmarkToServer;    /**< The netfilter mark for packets going towards the server.
+                                        See also nfmarkFromServer. */
     int sock_family;
     char ipaddr[MAX_IPSTRLEN];            /* dotted decimal address of peer */
     char desc[FD_DESC_SZ];
@@ -110,9 +113,16 @@ public:
         long handle;
     } win32;
 #endif
-#if USE_ZPH_QOS
-    unsigned char upstreamTOS;			/* see FwdState::dispatch()  */
-#endif
+    tos_t tosFromServer;                /**< Stores the TOS flags of the packets from the remote server.
+                                            See FwdState::dispatch(). Note that this differs to
+                                            tosToServer in that this is the value we *receive* from the,
+                                            connection, whereas tosToServer is the value to set on packets
+                                            *leaving* Squid.  */
+    unsigned int nfmarkFromServer;      /**< Stores the Netfilter mark value of the connection from the remote
+                                            server. See FwdState::dispatch(). Note that this differs to
+                                            nfmarkToServer in that this is the value we *receive* from the,
+                                            connection, whereas nfmarkToServer is the value to set on packets
+                                            *leaving* Squid.   */
 
 private:
     /** Clear the fde class back to NULL equivalent. */
@@ -120,7 +130,8 @@ private:
         type = 0;
         remote_port = 0;
         local_addr.SetEmpty();
-        tos = '\0';
+        tosToServer = '\0';
+        nfmarkToServer = 0;
         sock_family = 0;
         memset(ipaddr, '\0', MAX_IPSTRLEN);
         memset(desc,'\0',FD_DESC_SZ);
@@ -150,9 +161,8 @@ private:
 #ifdef _SQUID_MSWIN_
         win32.handle = NULL;
 #endif
-#if USE_ZPH_QOS
-        upstreamTOS = 0;
-#endif
+        tosFromServer = '\0';
+        nfmarkFromServer = 0;
     }
 };
 

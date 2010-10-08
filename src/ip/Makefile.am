@@ -11,6 +11,7 @@ libip_la_SOURCES = \
 	Intercept.cc \
 	QosConfig.h \
 	QosConfig.cc \
+	Qos.cci \
 	tools.cc \
 	tools.h
 
