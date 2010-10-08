@@ -728,21 +728,6 @@ helperServerFree(int fd, void *data)
         srv->writebuf = NULL;
     }
 
-    for (i = 0; i < concurrency; i++) {
-        if ((r = srv->requests[i])) {
-            void *cbdata;
-
-            if (cbdataReferenceValidDone(r->data, &cbdata))
-                r->callback(cbdata, NULL);
-
-            helperRequestFree(r);
-
-            srv->requests[i] = NULL;
-        }
-    }
-
-    safe_free(srv->requests);
-
     if (srv->wfd != srv->rfd && srv->wfd != -1)
         comm_close(srv->wfd);
 
@@ -770,6 +755,20 @@ helperServerFree(int fd, void *data)
         }
     }
 
+    for (i = 0; i < concurrency; i++) {
+        if ((r = srv->requests[i])) {
+            void *cbdata;
+
+            if (cbdataReferenceValidDone(r->data, &cbdata))
+                r->callback(cbdata, NULL);
+
+            helperRequestFree(r);
+
+            srv->requests[i] = NULL;
+        }
+    }
+    safe_free(srv->requests);
+
     cbdataReferenceDone(srv->parent);
     cbdataFree(srv);
 }
@@ -792,17 +791,6 @@ helperStatefulServerFree(int fd, void *data)
     delete srv->wqueue;
 
 #endif
-
-    if ((r = srv->request)) {
-        void *cbdata;
-
-        if (cbdataReferenceValidDone(r->data, &cbdata))
-            r->callback(cbdata, srv, NULL);
-
-        helperStatefulRequestFree(r);
-
-        srv->request = NULL;
-    }
 
     /* TODO: walk the local queue of requests and carry them all out */
     if (srv->wfd != srv->rfd && srv->wfd != -1)
@@ -829,6 +817,17 @@ helperStatefulServerFree(int fd, void *data)
 
             helperStatefulOpenServers(hlp);
         }
+    }
+
+    if ((r = srv->request)) {
+        void *cbdata;
+
+        if (cbdataReferenceValidDone(r->data, &cbdata))
+            r->callback(cbdata, srv, NULL);
+
+        helperStatefulRequestFree(r);
+
+        srv->request = NULL;
     }
 
     if (srv->data != NULL)
