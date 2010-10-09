@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-09-30 15:46+1300\n"
-"PO-Revision-Date: 2010-09-22 18:03+0200\n"
+"PO-Revision-Date: 2010-10-09 23:34+0200\n"
 "Last-Translator:  <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
@@ -232,16 +232,19 @@ msgstr "Fichier créé"
 msgid "File updated"
 msgstr "Fichier mis à jour"
 
+# Suggestion2 ok
 #: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
 #, fuzzy
 msgid "For Firefox browsers go to: <ul>"
 msgstr "Pour Firefox, allez à : <ul>"
 
+# Suggestion2 ok
 #: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
 #, fuzzy
 msgid "For Internet Explorer browsers go to: <ul>"
 msgstr "Pour Internet Explorer, allez à : <ul>"
 
+# Suggestion2 ok
 #: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
 #, fuzzy
 msgid "For Opera browsers go to: <ul>"
