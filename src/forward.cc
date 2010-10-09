@@ -833,12 +833,35 @@ FwdState::connectStart()
 
         updateHierarchyInfo();
         comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
+
+        /* Update server side TOS and Netfilter mark on the connection. */
+        if (Ip::Qos::TheConfig.isAclTosActive()) {
+            temp->tos = GetTosToServer(request);
+            Ip::Qos::setSockTos(temp, temp->tos);
+        }
+#if SO_MARK
+        if (Ip::Qos::TheConfig.isAclNfmarkActive()) {
+            temp->nfmark = GetNfmarkToServer(request);
+            Ip::Qos::setSockNfmark(temp, temp->nfmark);
+        }
+#endif
+
         dispatch();
         return;
     }
 
 #if URL_CHECKSUM_DEBUG
     entry->mem_obj->checkUrlChecksum();
+#endif
+
+    /* Get the server side TOS and Netfilter mark to be set on the connection. */
+    if (Ip::Qos::TheConfig.isAclTosActive()) {
+        serverDestinations[0]->tos = GetTosToServer(request);
+    }
+#if SO_MARK
+    if (Ip::Qos::TheConfig.isAclNfmarkActive()) {
+        serverDestinations[0]->nfmark = GetNfmarkToServer(request);
+    }
 #endif
 
     AsyncCall::Pointer call = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
@@ -858,17 +881,6 @@ FwdState::dispatch()
      */
     assert(Comm::IsConnOpen(serverConn));
 
-    tos_t tos = GetTosToServer(request);
-
-#if SO_MARK
-    nfmark_t mark = GetNfmarkToServer(request);
-    debugs(17, 3, HERE << "got outgoing addr " << serverConn << ", tos " << int(tos)
-                    << ", netfilter mark " << mark);
-#else
-    nfmark_t mark = 0;
-    debugs(17, 3, HERE << "got outgoing addr " << serverConn << ", tos " << int(tos));
-#endif
-
     fd_note(serverConnection()->fd, entry->url());
 
     fd_table[serverConnection()->fd].noteUse(fwdPconnPool);
@@ -882,40 +894,25 @@ FwdState::dispatch()
 
     netdbPingSite(request->GetHost());
 
-    /* Update server side TOS and Netfilter mark if using persistent connections. */
-    if (Config.onoff.server_pconns) {
-        if (Ip::Qos::TheConfig.isAclTosActive()) {
-            tos_t tos = GetTosToServer(request);
-            Ip::Qos::setSockTos(server_fd, tos);
-        }
-#if SO_MARK
-        if (Ip::Qos::TheConfig.isAclNfmarkActive()) {
-            nfmark_t mark = GetNfmarkToServer(request);
-            Ip::Qos::setSockNfmark(server_fd, mark);
-        }
-#endif
-    }
-
     /* Retrieves remote server TOS or MARK value, and stores it as part of the
      * original client request FD object. It is later used to forward
      * remote server's TOS/MARK in the response to the client in case of a MISS.
      */
     if (Ip::Qos::TheConfig.isHitNfmarkActive()) {
-        fde * clientFde = &fd_table[clientConn->fd]; // XXX: move the fd_table access into Ip::Qos
-        fde * servFde = &fd_table[serverConnection()->fd];
-        if (clientFde && servFde) {
+        if (Comm::IsConnOpen(clientConn) && Comm::IsConnOpen(serverConnection())) {
+            fde * clientFde = &fd_table[clientConn->fd]; // XXX: move the fd_table access into Ip::Qos
             /* Get the netfilter mark for the connection */
-            Ip::Qos::getNfmarkFromServer(serverConnection()->fd, servFde, clientFde);
+            Ip::Qos::getNfmarkFromServer(serverConnection(), clientFde);
         }
     }
 
 #if _SQUID_LINUX_
     /* Bug 2537: The TOS forward part of QOS only applies to patched Linux kernels. */
     if (Ip::Qos::TheConfig.isHitTosActive()) {
-        fde * clientFde = &fd_table[clientConn->fd]; // XXX: move the fd_table access into Ip::Qos
-        if (clientFde) {
+        if (Comm::IsConnOpen(clientConn)) {
+            fde * clientFde = &fd_table[clientConn->fd]; // XXX: move the fd_table access into Ip::Qos
             /* Get the TOS value for the packet */
-            Ip::Qos::getTosFromServer(serverConnection()->fd, clientFde);
+            Ip::Qos::getTosFromServer(serverConnection(), clientFde);
         }
     }
 #endif
@@ -1289,6 +1286,7 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
     }
 }
 
+// XXX: convert this to accepting a serverConn and migrate to QosConfig.cc
 tos_t
 GetTosToServer(HttpRequest * request)
 {
@@ -1302,6 +1300,7 @@ GetTosToServer(HttpRequest * request)
     return aclMapTOS(Ip::Qos::TheConfig.tosToServer, &ch);
 }
 
+// XXX: convert this to accepting a serverConn and migrate to QosConfig.cc
 nfmark_t
 GetNfmarkToServer(HttpRequest * request)
 {

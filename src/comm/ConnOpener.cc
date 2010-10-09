@@ -130,7 +130,7 @@ Comm::ConnOpener::start()
             conn_->local.SetIPv4();
         }
 #endif
-        conn_->fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, conn_->local, conn_->flags, conn_->tos, host_);
+        conn_->fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, conn_->local, conn_->flags, conn_->tos, conn_->nfmark, host_);
         if (!conn_->isOpen()) {
             doneConnecting(COMM_ERR_CONNECT, 0);
             return;

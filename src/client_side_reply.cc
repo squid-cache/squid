@@ -1689,11 +1689,11 @@ clientReplyContext::doGetMoreData()
         assert(http->out.offset == 0);
 
         if (Ip::Qos::TheConfig.isHitTosActive()) {
-            Ip::Qos::doTosLocalHit(http->getConn()->fd);
+            Ip::Qos::doTosLocalHit(http->getConn()->clientConn);
         }
 
         if (Ip::Qos::TheConfig.isHitNfmarkActive()) {
-            Ip::Qos::doNfmarkLocalHit(http->getConn()->fd);
+            Ip::Qos::doNfmarkLocalHit(http->getConn()->clientConn);
         }
 
         localTempBuffer.offset = reqofs;

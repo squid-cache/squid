@@ -569,7 +569,7 @@ comm_open_listener(int sock_type,
     conn->flags |= COMM_DOBIND;
 
     /* attempt native enabled port. */
-    conn->fd = comm_openex(sock_type, proto, conn->local, conn->flags, 0, note);
+    conn->fd = comm_openex(sock_type, proto, conn->local, conn->flags, 0, 0, note);
 }
 
 int
@@ -643,6 +643,10 @@ comm_openex(int sock_type,
     int new_socket;
     struct addrinfo *AI = NULL;
 
+    // temporary for the transition. comm_openex will eventually have a conn to play with.
+    Comm::ConnectionPointer conn = new Comm::Connection;
+    conn->local = addr;
+
     PROF_start(comm_open);
     /* Create socket for accepting new connections. */
     statCounter.syscalls.sock.sockets++;
@@ -652,8 +656,7 @@ comm_openex(int sock_type,
     AI->ai_socktype = sock_type;
     AI->ai_protocol = proto;
 
-    debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
-
+    debugs(50, 3, "comm_openex: Attempt open socket for: " << conn );
     new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
 
     /* under IPv6 there is the possibility IPv6 is present but disabled. */
@@ -688,35 +691,35 @@ comm_openex(int sock_type,
         return -1;
     }
 
-    debugs(50, 3, "comm_openex: Opened socket FD " << new_socket << " : family=" << AI->ai_family << ", type=" << AI->ai_socktype << ", protocol=" << AI->ai_protocol );
+    conn->fd = new_socket;
+
+    debugs(50, 3, "comm_openex: Opened socket " << conn << " : family=" << AI->ai_family << ", type=" << AI->ai_socktype << ", protocol=" << AI->ai_protocol );
 
     /* set TOS if needed */
     if (tos)
-        Ip::Qos::setSockTos(new_socket, tos);
+        Ip::Qos::setSockTos(conn, tos);
 
     /* set netfilter mark if needed */
     if (nfmark)
-        Ip::Qos::setSockNfmark(new_socket, nfmark);
+        Ip::Qos::setSockNfmark(conn, nfmark);
 
     if ( Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && addr.IsIPv6() )
-        comm_set_v6only(new_socket, 1);
+        comm_set_v6only(conn->fd, 1);
 
     /* Windows Vista supports Dual-Sockets. BUT defaults them to V6ONLY. Turn it OFF. */
     /* Other OS may have this administratively disabled for general use. Same deal. */
     if ( Ip::EnableIpv6&IPV6_SPECIAL_V4MAPPING && addr.IsIPv6() )
-        comm_set_v6only(new_socket, 0);
+        comm_set_v6only(conn->fd, 0);
 
-    // temporary for te transition. comm_openex will eventually have a conn to play with.
-    Comm::ConnectionPointer temp = new Comm::Connection;
-    temp->fd = new_socket;
-    temp->local = addr;
-    comm_init_opened(temp, tos, nfmark, note, AI);
-    new_socket = comm_apply_flags(new_socket, addr, flags, AI);
+    comm_init_opened(conn, tos, nfmark, note, AI);
+    new_socket = comm_apply_flags(conn->fd, addr, flags, AI);
 
     addr.FreeAddrInfo(AI);
 
     PROF_stop(comm_open);
 
+    // XXX transition only. prevent conn from closing the new FD on functio exit.
+    conn->fd = -1;
     return new_socket;
 }
 
