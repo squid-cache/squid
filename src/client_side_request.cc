@@ -1343,7 +1343,7 @@ ClientHttpRequest::doCallouts()
             ch.my_addr = request->my_addr;
             tos_t tos = aclMapTOS(Ip::Qos::TheConfig.tosToClient, &ch);
             if (tos)
-                Ip::Qos::setSockTos(getConn()->clientConn->fd, tos);
+                Ip::Qos::setSockTos(getConn()->clientConn, tos);
         }
     }
 
@@ -1355,7 +1355,7 @@ ClientHttpRequest::doCallouts()
             ch.my_addr = request->my_addr;
             nfmark_t mark = aclMapNfmark(Ip::Qos::TheConfig.nfmarkToClient, &ch);
             if (mark)
-                Ip::Qos::setSockNfmark(getConn()->clientConn->fd, mark);
+                Ip::Qos::setSockNfmark(getConn()->clientConn, mark);
         }
     }
 

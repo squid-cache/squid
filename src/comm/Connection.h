@@ -132,7 +132,10 @@ public:
     int fd;
 
     /** Quality of Service TOS values currently sent on this connection */
-    int tos;
+    tos_t tos;
+
+    /** Netfilter MARK values currently sent on this connection */
+    nfmark_t nfmark;
 
     /** COMM flags set on this connection */
     int flags;
