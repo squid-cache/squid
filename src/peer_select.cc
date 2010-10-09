@@ -270,8 +270,6 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
 
             // check for a configured outgoing address for this destination...
             getOutgoingAddress(psstate->request, p);
-            p->tos = getOutgoingTOS(psstate->request);
-
             psstate->paths->push_back(p);
         }
     } else {
