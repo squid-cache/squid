@@ -26,7 +26,10 @@ MAKETEST="distcheck"
 #   --without-build-environment \
 #
 #
-SQUID_CONFIGURE_FLAGS=" \
+# NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the 
+#     distcheck target recursive tests beteen scripted runs.
+#     we use it to perform the same duty between our nested scripts.
+DISTCHECK_CONFIGURE_FLAGS=" \
 	--disable-build-info \
 	--disable-loadable-modules \
 	--disable-gnuregex \
@@ -100,4 +103,4 @@ SQUID_CONFIGURE_FLAGS=" \
 	"
 
 # Fix the distclean testing.
-export SQUID_CONFIGURE_FLAGS
+export DISTCHECK_CONFIGURE_FLAGS
