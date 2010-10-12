@@ -1247,12 +1247,6 @@ clientReplyContext::buildReplyHeader()
          * This adds the calculated object age. Note that the details of the
          * age calculation is performed by adjusting the timestamp in
          * StoreEntry::timestampsSet(), not here.
-         *
-         * BROWSER WORKAROUND: IE sometimes hangs when receiving a 0 Age
-         * header, so don't use it unless there is a age to report. Please
-         * note that Age is only used to make a conservative estimation of
-         * the objects age, so a Age: 0 header does not add any useful
-         * information to the reply in any case.
          */
 #if DEAD_CODE
         // XXX: realy useless? or is there a bug now that this is detatched from the below if-sequence ?
@@ -1266,7 +1260,7 @@ clientReplyContext::buildReplyHeader()
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
             hdr->delById(HDR_DATE);
             hdr->insertTime(HDR_DATE, squid_curtime);
-        } else if (http->storeEntry()->timestamp < squid_curtime) {
+        } else if (http->storeEntry()->timestamp <= squid_curtime) {
             hdr->putInt(HDR_AGE,
                         squid_curtime - http->storeEntry()->timestamp);
             /* Signal old objects.  NB: rfc 2616 is not clear,
