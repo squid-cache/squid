@@ -22,6 +22,13 @@ fi
 
 ROOT=`bzr root`
 
+ASVER=`astyle --version 2>&1 | grep -o -E "[0-9.]+"`
+if test "${ASVER}" != "1.23" ; then
+	echo "Astyle version problem. You have ${ASVER} instead of 1.23.";
+else
+	echo "Found astyle ${ASVER}. Formatting..."
+fi
+
 srcformat ()
 {
 PWD=`pwd`
@@ -36,19 +43,21 @@ for FILENAME in `ls -1`; do
 	#
 	# Code Style formatting maintenance
 	#
-	${ROOT}/scripts/formater.pl ${FILENAME}
-	if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
-		md51=`cat  $FILENAME| tr -d "\n \t\r" | $MD5`;
-		md52=`cat  $FILENAME.astylebak| tr -d "\n \t\r" | $MD5`;
+        if test "${ASVER}" = "1.23"; then
+		${ROOT}/scripts/formater.pl ${FILENAME}
+		if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
+			md51=`cat  $FILENAME| tr -d "\n \t\r" | $MD5`;
+			md52=`cat  $FILENAME.astylebak| tr -d "\n \t\r" | $MD5`;
 
-		if test "$md51" != "$md52" ; then
-			echo "ERROR: File $PWD/$FILENAME not formating well";
-			mv $FILENAME $FILENAME.astylebad
-			mv $FILENAME.astylebak $FILENAME
-		else
-			rm -f $FILENAME.astylebak
-		fi
-        fi
+			if test "$md51" != "$md52" ; then
+				echo "ERROR: File $PWD/$FILENAME not formating well";
+				mv $FILENAME $FILENAME.astylebad
+				mv $FILENAME.astylebak $FILENAME
+			else
+				rm -f $FILENAME.astylebak
+			fi
+        	fi
+	fi
 
 	#
 	# DEBUG Section list maintenance
