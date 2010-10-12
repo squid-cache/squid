@@ -69,13 +69,9 @@ public:
 
     bool operator !() const { return !p_; }
 
-    C const * operator-> () const {return p_; }
+    C * operator-> () const {return const_cast<C *>(p_); }
 
-    C * operator-> () {return const_cast<C *>(p_); }
-
-    C const & operator * () const {return *p_; }
-
-    C & operator * () {return *const_cast<C *>(p_); }
+    C & operator * () const {return *const_cast<C *>(p_); }
 
     C const * getRaw() const {return p_; }
 
