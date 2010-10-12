@@ -1,0 +1,75 @@
+/* Inline QOS functions */
+
+int
+Ip::Qos::setSockTos(int fd, tos_t tos)
+{
+#ifdef IP_TOS
+    int x = setsockopt(fd, IPPROTO_IP, IP_TOS, &tos, sizeof(tos_t));
+    if (x < 0)
+        debugs(50, 2, "Ip::Qos::setSockTos: setsockopt(IP_TOS) on FD " << fd << ": " << xstrerror());
+    return x;
+#else
+    debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(IP_TOS) not supported on this platform");
+    return -1;
+#endif
+}
+
+int
+Ip::Qos::setSockNfmark(int fd, nfmark_t mark)
+{
+#if SO_MARK
+    int x = setsockopt(fd, SOL_SOCKET, SO_MARK, &mark, sizeof(nfmark_t));
+    if (x < 0)
+        debugs(50, 2, "setSockNfmark: setsockopt(SO_MARK) on FD " << fd << ": " << xstrerror());
+    return x;
+#else
+    debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(SO_MARK) not supported on this platform");
+    return -1;
+#endif
+}
+
+bool
+Ip::Qos::Config::isHitTosActive() const
+{
+    return (tosLocalHit || tosSiblingHit || tosParentHit || tosMiss || preserveMissTos);
+}
+
+bool
+Ip::Qos::Config::isHitNfmarkActive() const
+{
+    return (markLocalHit || markSiblingHit || markParentHit || markMiss || preserveMissMark);
+}
+
+bool
+Ip::Qos::Config::isAclNfmarkActive() const
+{
+    acl_nfmark * nfmarkAcls [] = { nfmarkToServer, nfmarkToClient };
+ 
+    for (int i=0; i<2; i++) {
+        while (nfmarkAcls[i]) {
+            acl_nfmark *l = nfmarkAcls[i];
+            if (l->nfmark > 0)
+                return true; 
+            nfmarkAcls[i] = l->next;
+        }
+    }
+
+    return false;
+}
+
+bool
+Ip::Qos::Config::isAclTosActive() const
+{
+    acl_tos * tosAcls [] = { tosToServer, tosToClient };
+
+    for (int i=0; i<2; i++) {
+        while (tosAcls[i]) {
+            acl_tos *l = tosAcls[i];
+            if (l->tos > 0)
+                return true;
+            tosAcls[i] = l->next;
+        }
+    }
+
+    return false;
+}

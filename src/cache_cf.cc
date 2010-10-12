@@ -78,6 +78,10 @@
 #include <glob.h>
 #endif
 
+#if HAVE_LIMITS_H
+#include <limits>
+#endif
+
 #if USE_ADAPTATION
 static void parse_adaptation_service_set_type();
 static void parse_adaptation_service_chain_type();
@@ -1104,7 +1108,7 @@ free_acl(ACL ** ae)
     aclDestroyAcls(ae);
 }
 
-static void
+void
 dump_acl_list(StoreEntry * entry, ACLList * head)
 {
     ACLList *l;
@@ -1259,8 +1263,7 @@ parse_acl_tos(acl_tos ** head)
 {
     acl_tos *l;
     acl_tos **tail = head;	/* sane name below */
-    int tos;
-    char junk;
+    unsigned int tos;           /* Initially uint for strtoui. Casted to tos_t before return */
     char *token = strtok(NULL, w_space);
 
     if (!token) {
@@ -1268,12 +1271,7 @@ parse_acl_tos(acl_tos ** head)
         return;
     }
 
-    if (sscanf(token, "0x%x%c", &tos, &junk) != 1) {
-        self_destruct();
-        return;
-    }
-
-    if (tos < 0 || tos > 255) {
+    if (!xstrtoui(token, NULL, &tos, 0, std::numeric_limits<tos_t>::max())) {
         self_destruct();
         return;
     }
@@ -1282,7 +1280,7 @@ parse_acl_tos(acl_tos ** head)
 
     l = cbdataAlloc(acl_tos);
 
-    l->tos = tos;
+    l->tos = (tos_t)tos;
 
     aclParseAclList(LegacyParser, &l->aclList);
 
@@ -1302,6 +1300,78 @@ free_acl_tos(acl_tos ** head)
         cbdataFree(l);
     }
 }
+
+#if defined(SO_MARK)
+
+CBDATA_TYPE(acl_nfmark);
+
+static void
+dump_acl_nfmark(StoreEntry * entry, const char *name, acl_nfmark * head)
+{
+    acl_nfmark *l;
+
+    for (l = head; l; l = l->next) {
+        if (l->nfmark > 0)
+            storeAppendPrintf(entry, "%s 0x%02X", name, l->nfmark);
+        else
+            storeAppendPrintf(entry, "%s none", name);
+
+        dump_acl_list(entry, l->aclList);
+
+        storeAppendPrintf(entry, "\n");
+    }
+}
+
+static void
+freed_acl_nfmark(void *data)
+{
+    acl_nfmark *l = static_cast<acl_nfmark *>(data);
+    aclDestroyAclList(&l->aclList);
+}
+
+static void
+parse_acl_nfmark(acl_nfmark ** head)
+{
+    acl_nfmark *l;
+    acl_nfmark **tail = head;	/* sane name below */
+    nfmark_t mark;
+    char *token = strtok(NULL, w_space);
+
+    if (!token) {
+        self_destruct();
+        return;
+    }
+
+    if (!xstrtoui(token, NULL, &mark, 0, std::numeric_limits<nfmark_t>::max())) {
+        self_destruct();
+        return;
+    }
+
+    CBDATA_INIT_TYPE_FREECB(acl_nfmark, freed_acl_nfmark);
+
+    l = cbdataAlloc(acl_nfmark);
+
+    l->nfmark = mark;
+
+    aclParseAclList(LegacyParser, &l->aclList);
+
+    while (*tail)
+        tail = &(*tail)->next;
+
+    *tail = l;
+}
+
+static void
+free_acl_nfmark(acl_nfmark ** head)
+{
+    while (*head) {
+        acl_nfmark *l = *head;
+        *head = l->next;
+        l->next = NULL;
+        cbdataFree(l);
+    }
+}
+#endif /* SO_MARK */
 
 CBDATA_TYPE(acl_size_t);
 
