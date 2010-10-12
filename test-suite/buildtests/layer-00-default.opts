@@ -6,7 +6,11 @@ MAKETEST="distcheck"
 # Default configuration options.
 #  - Nothing special configured. Just whatever is found by "./configure"
 #
-SQUID_CONFIGURE_FLAGS=""
+# NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the
+#     distcheck target recursive tests beteen scripted runs.
+#     we use it to perform the same duty between our nested scripts.
+DISTCHECK_CONFIGURE_FLAGS=""
 
 # Fix the distclean testing.
-export SQUID_CONFIGURE_FLAGS
+export DISTCHECK_CONFIGURE_FLAGS
+
