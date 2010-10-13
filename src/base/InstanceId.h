@@ -52,7 +52,8 @@ private:
 /// print the id
 template <class Class>
 inline
-std::ostream &operator <<(std::ostream &os, const InstanceId<Class> &id) {
+std::ostream &operator <<(std::ostream &os, const InstanceId<Class> &id)
+{
     return id.print(os);
 }
 
