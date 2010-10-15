@@ -1712,6 +1712,18 @@ find_fstype(char *type)
 static void
 parse_cachedir(SquidConfig::_cacheSwap * swap)
 {
+    // The workers option must preceed cache_dir for the IamWorkerProcess check
+    // below to work. TODO: Redo IamWorkerProcess to work w/o Config and remove
+    if (KidIdentifier > 1 && Config.workers == 1) {
+        debugs(3, DBG_CRITICAL,
+               "FATAL: cache_dir found before the workers option. Reorder.");
+        self_destruct();
+    }
+
+    // Among all processes, only workers may need and can handle cache_dir.
+    if (!IamWorkerProcess())
+        return;
+
     char *type_str;
     char *path_str;
     RefCount<SwapDir> sd;
