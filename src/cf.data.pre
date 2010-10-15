@@ -2499,6 +2499,10 @@ DOC_START
 	The directory must exist and be writable by the Squid
 	process.  Squid will NOT create this directory for you.
 
+	In SMP configurations, cache_dir must not precede the workers option
+	and should use configuration macros or conditionals to give each
+	worker interested in disk caching a dedicated cache directory.
+
 	The ufs store type:
 
 	"ufs" is the old well-known Squid storage format that has always
