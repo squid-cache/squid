@@ -15,11 +15,11 @@
  */
 #include "config.h"
 #include "compat/debug.h"
-#include "libntlmauth/ntlmauth.h"
-#include "libntlmauth/smb.h"
-#include "libntlmauth/rfcnb.h"
-#include "libntlmauth/support_bits.cci"
-#include "util.h"		/* from Squid */
+#include "ntlmauth/ntlmauth.h"
+#include "ntlmauth/support_bits.cci"
+#include "rfcnb/rfcnb.h"
+#include "smblib/smblib.h"
+#include "util.h"
 
 #if HAVE_STRING_H
 #include <string.h>
@@ -94,33 +94,6 @@ void process_options(int argc, char *argv[]);
 const char * obtain_challenge(void);
 void manage_request(void);
 
-/* these are part of rfcnb-priv.h and smblib-priv.h */
-extern int SMB_Get_Error_Msg(int msg, char *msgbuf, int len);
-extern int SMB_Get_Last_Error();
-extern int RFCNB_Get_Last_Errno();
-extern int RFCNB_Get_Last_Error(void);
-extern int SMB_Get_Last_SMB_Err(void);
-
-
-/* a few forward-declarations. Hackish, but I don't care right now */
-SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle, char *server, char *NTdomain);
-
-/* this one is reallllly haackiish. We really should be using anything from smblib-priv.h
- */
-static char const *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0",
-                                  "MICROSOFT NETWORKS 1.03",
-                                  "MICROSOFT NETWORKS 3.0",
-                                  "DOS LANMAN1.0",
-                                  "LANMAN1.0",
-                                  "DOS LM1.2X002",
-                                  "LM1.2X002",
-                                  "DOS LANMAN2.1",
-                                  "LANMAN2.1",
-                                  "Samba",
-                                  "NT LM 0.12",
-                                  "NT LANMAN 1.0",
-                                  NULL
-                                 };
 
 #define ENCODED_PASS_LEN 24
 #define MAX_USERNAME_LEN 255
