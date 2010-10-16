@@ -4,10 +4,12 @@ libexec_PROGRAMS = ntlm_fake_auth
 ntlm_fake_auth_SOURCES	= ntlm_fake_auth.cc
 
 ntlm_fake_auth_LDADD = \
-	-L$(top_builddir)/libntlmauth -lntlmauth \
+	$(top_builddir)/lib/ntlmauth/libntlmauth.la \
 	$(COMPAT_LIB) \
 	$(CRYPTLIB) \
 	$(XTRA_LIBS)
+
+INCLUDES += -I$(top_srcdir)/lib
 
 ## Demo using perl.
 ## ntlm_fake_auth.pl: ntlm_fake_auth.pl.in

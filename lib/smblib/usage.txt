@@ -1,0 +1,229 @@
+Using SMBlib
+Richard Sharpe
+
+This file describes how to use the SMBlib routines. It takes the form of a 
+program that might use many of thr routines with text describing the routines 
+used.
+
+I wrote it in an attempt to understand more about the SMB protocol and
+the RFCNB (NBT) protocol underlying it. My manager approved my posting this
+as long as there was no suggestion that Digital is responsible for this code 
+not that any warranties are offered by Digital. So, I put a GPL on the code.
+
+DISCLAIMER
+
+To restate, this code is offered as is, and no warranties are implied, either 
+by Digital Equipment Corporation or by Richard Sharpe. Neither 
+Digital Equipment Corporation nor Richard Sharpe can be held liable for 
+any consequences resulting from the use of this code.
+
+END Disclaimer
+
+I have pulled this code from other test routines, and I make no guarantee that
+what I have here will actually compile. It is simply meant to show you how to
+use SMBlib.
+
+STARING A PROGRAM
+
+You will need some includes ...
+
+#include <sys/types.h>
+#include <unistd.h>
+
+#include "SMBlib-SOURCE-DIR/smblib.h"
+
+INITIALIZING SMBlib
+
+  SMB_Init()
+
+This initializes the SMBlib routines.
+
+CONNECTING TO A SERVER
+
+First, you have to connect to a share on a server. There are a couple of ways 
+of doing this. The easiest is:
+
+                    P1    P2            P3       P4
+
+  con = SMB_Connect(NULL, service_name, "Guest", password);
+
+where:
+
+  P1 is a handle to a connection structure you might already have. NULL
+     if you want SMB_Connect to create one.
+
+  P2 is the name of the service you want to connect to, in the form of:
+
+     \\server-name\share
+
+  P3 is the account name to log on as. This is really ignored by SMB_Connect
+     at the moment.
+
+  P4 is the password to use in connecting to the share.
+
+SMB_Connect connects to the server, negotiates the Core Protocol, and connects
+to the tree represented by the share that is specified.
+
+If a problem occurs, it returns NULL. You can check for errors doing the 
+following.
+
+  void *con;
+
+  if (con == NULL) { /* Error ... */
+
+    fprintf(stderr, "Unable to connect ... \n");
+
+    error = SMB_Get_Last_Error();                  /* Find out the problem */
+
+Pick up the error from SMBlib and decode it.
+
+    if (error == SMBlibE_Remote) {  /* Pick up the class and code */
+
+      SMB_Error = SMB_Get_Last_SMB_Err();
+
+      fprintf(stderr, "\tError Class = %i, Error Code = %i\n",
+	      SMBlib_Error_Class(SMB_Error), SMBlib_Error_Code(SMB_Error));
+
+    }
+    else { /* Some error code from SMBlib ... */
+
+      SMB_Get_Error_Msg(error, error_message, sizeof(error_message) - 1);
+
+      fprintf(stderr, "%s\n", error_message);
+
+    }
+
+    exit(1);    /* Or whatever else you want to do ... */
+
+  }
+
+If you want to connect the hard way, you will need to call three routines, 
+SMB_Connect_Server, SMB_Negotiate, and SMB_TreeConnect. An example is:
+
+  char *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0", 
+			    "MICROSOFT NETWORKS 1.03",
+			    "MICROSOFT NETWORKS 3.0",
+			    "LANMAN1.0",
+			    "LM1.2X002",
+			    "Samba",
+			    "NT LM 0.12",
+			    "NT LANMAN 1.0",
+			    NULL};
+
+Here we connect to the server, whose name is in the variable server.
+
+  con = SMB_Connect_Server(NULL, server);
+
+Here we do some primitive error checking. Use the example above for better
+error checking.
+
+  if (con == NULL) { /* Error ... */
+
+    fprintf(stderr, "Unable to connect to server \"%s\" ... \n", server);
+    RFCNB_Get_Error(err_string, sizeof(err_string));
+    printf("Error in calling: %s ...\n", err_string);
+    exit(1);
+
+  }
+
+Here we negotiate a protocol. We pass a list of the protocol strings we will
+accepty as the second parameter.
+
+  /* Now do a negotiate ... */
+
+  fprintf(stderr, "Now we negotiate a protocol ... \n");
+
+  if (SMB_Negotiate(con, SMB_Prots) < 0) { /* An error */
+
+    fprintf(stderr, "Unable to negotiate a protocol ...\n");
+    RFCNB_Get_Error(err_string, sizeof(err_string));
+    printf("Error in calling: %s ...\n", err_string);
+    exit(1);
+
+  }
+
+If we wnat to find out the protocol that was negotiated then we can do the 
+following:
+
+  protocol = SMB_Get_Protocol_IDX(con);
+
+This returns us the index of the protocol in SMB_Prots that was accepted, or 
+0xFFFF if connection handle is invalid.
+
+  /* Now we do a logon ... */
+
+  fprintf(stderr, "Now try to logon as %s ...\n", user);
+
+  if (SMB_Logon_Server(con, user, password) < 0) {
+
+This code will logon to an NT 3.51 server or to Samba or to a LAN Manager for
+UNIX 2.2 server. It is the only part of SMBlib that knows about NT LM 0.12 
+or LM1.2X002 at this stage.
+
+    fprintf(stderr, "Unable to logon to server ...\n");
+    RFCNB_Get_Error(err_string, sizeof(err_string));
+    printf("Error in logging on: %s ...\n", err_string);
+    exit(1);
+
+  }
+
+  sprintf(service_unc, "\\\\%s\\%s", server, service);
+
+Now we connect to a tree. This takes the connection handle, a service name, a 
+password, and a service type (A:, LPT:, etc). If you want a Microsoft
+developed server to connect you, you better use A: for the service type for a 
+disk service.
+
+  void *tree;
+
+  if (tree = SMB_TreeConnect(con, service, password, service_type) == NULL) {
+
+    fprintf(stderr, "Unable to connect to the tree ...\n");
+    RFCNB_Get_Error(err_string, sizeof(err_string));
+    fprintf(stderr, "  Error trying to connect: %s \n", err_string);
+  }
+
+OPENING FILES
+
+To open a file on the server, use the following call, which gives back a file 
+handle:
+
+                  P1    P2    P3         P4                P5
+
+  file = SMB_Open(tree, NULL, file_name, SMB_AMODE_OPENRW, SMB_FA_ORD);
+
+where:
+
+  P1 is the tree handle from an earlier SMB_TreeConnect
+
+  P2 is a file handle or NULL. If NULL is passed, a new file handle will be
+     created
+
+  P3 is the file you want opened.
+
+  P4 is the mode that you want it opened under. See smblib-common.h for the
+     defines.
+
+  P5 is the type of file, whether an ordinary (normal), hidden, system, etc.
+
+If SMB_Open returns NULL, an error has occurred, so use the sort of error
+handling code shown for SMB_Connect above.
+
+There are many more things that can be done. See the program test_smblib.c for
+examples of doing all of the following:
+
+CLOSING FILES
+
+  READING FILES
+
+  WRITING FILES
+
+  DELETING FILES
+
+  CREATING FILES
+
+  CREATING DIRECTORIES
+
+  DELETING DIRECTORIES
+
+  SEARCHING DIRECTORIES
