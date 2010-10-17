@@ -68,6 +68,7 @@ libmiscutil_a_SOURCES = \
 	rfc1123.c \
 	rfc1738.c \
 	rfc2617.c \
+	rfc2671.c \
 	rfc3596.c \
 	$(SNPRINTFSOURCE) \
 	Splay.cc \

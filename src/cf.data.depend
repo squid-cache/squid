@@ -10,6 +10,7 @@ address
 authparam
 b_int64_t
 b_size_t
+b_ssize_t
 cachedir		cache_replacement_policy
 cachemgrpasswd
 ConfigAclTos

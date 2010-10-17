@@ -67,6 +67,7 @@
 #endif
 
 #include "rfc1035.h"
+#include "rfc2671.h"
 
 #define RFC1035_MAXLABELSZ 63
 #define rfc1035_unpack_error 15
@@ -342,6 +343,50 @@ rfc1035NameUnpack(const char *buf, size_t sz, unsigned int *off, unsigned short 
     /* make sure we didn't allow someone to overflow the name buffer */
     assert(no <= ns);
     return 0;
+}
+
+/*
+ * rfc1035RRPack()
+ *
+ * Packs a RFC1035 Resource Record into a message buffer from 'RR'.
+ * The caller must allocate and free RR->rdata and RR->name!
+ *
+ * Updates the new message buffer.
+ *
+ * Returns the number of bytes added to the buffer or 0 for error.
+ */
+int
+rfc1035RRPack(char *buf, const size_t sz, const rfc1035_rr * RR)
+{
+    unsigned int off;
+    uint16_t s;
+    uint32_t i;
+
+    off = rfc1035NamePack(buf, sz, RR->name);
+
+    /*
+     * Make sure the remaining message has enough octets for the
+     * rest of the RR fields.
+     */
+    if ((off + sizeof(s)*3 + sizeof(i) + RR->rdlength) > sz) {
+        return 0;
+    }
+    s = htons(RR->type);
+    memcpy(buf + off, &s, sizeof(s));
+    off += sizeof(s);
+    s = htons(RR->_class);
+    memcpy(buf + off, &s, sizeof(s));
+    off += sizeof(s);
+    i = htonl(RR->ttl);
+    memcpy(buf + off, &i, sizeof(i));
+    off += sizeof(i);
+    s = htons(RR->rdlength);
+    memcpy(buf + off, &s, sizeof(s));
+    off += sizeof(s);
+    memcpy(buf + off, &(RR->rdata), RR->rdlength);
+    off += RR->rdlength;
+    assert(off <= sz);
+    return off;
 }
 
 /*
@@ -647,7 +692,7 @@ rfc1035MessageUnpack(const char *buf,
  * Returns the size of the query
  */
 ssize_t
-rfc1035BuildAQuery(const char *hostname, char *buf, size_t sz, unsigned short qid, rfc1035_query * query)
+rfc1035BuildAQuery(const char *hostname, char *buf, size_t sz, unsigned short qid, rfc1035_query * query, ssize_t edns_sz)
 {
     static rfc1035_message h;
     size_t offset = 0;
@@ -657,12 +702,15 @@ rfc1035BuildAQuery(const char *hostname, char *buf, size_t sz, unsigned short qi
     h.rd = 1;
     h.opcode = 0;		/* QUERY */
     h.qdcount = (unsigned int) 1;
+    h.arcount = (edns_sz > 0 ? 1 : 0);
     offset += rfc1035HeaderPack(buf + offset, sz - offset, &h);
     offset += rfc1035QuestionPack(buf + offset,
                                   sz - offset,
                                   hostname,
                                   RFC1035_TYPE_A,
                                   RFC1035_CLASS_IN);
+    if (edns_sz > 0)
+        offset += rfc2671RROptPack(buf + offset, sz - offset, edns_sz);
     if (query) {
         query->qtype = RFC1035_TYPE_A;
         query->qclass = RFC1035_CLASS_IN;
@@ -683,7 +731,7 @@ rfc1035BuildAQuery(const char *hostname, char *buf, size_t sz, unsigned short qi
  * Returns the size of the query
  */
 ssize_t
-rfc1035BuildPTRQuery(const struct in_addr addr, char *buf, size_t sz, unsigned short qid, rfc1035_query * query)
+rfc1035BuildPTRQuery(const struct in_addr addr, char *buf, size_t sz, unsigned short qid, rfc1035_query * query, ssize_t edns_sz)
 {
     static rfc1035_message h;
     size_t offset = 0;
@@ -701,12 +749,15 @@ rfc1035BuildPTRQuery(const struct in_addr addr, char *buf, size_t sz, unsigned s
     h.rd = 1;
     h.opcode = 0;		/* QUERY */
     h.qdcount = (unsigned int) 1;
+    h.arcount = (edns_sz > 0 ? 1 : 0);
     offset += rfc1035HeaderPack(buf + offset, sz - offset, &h);
     offset += rfc1035QuestionPack(buf + offset,
                                   sz - offset,
                                   rev,
                                   RFC1035_TYPE_PTR,
                                   RFC1035_CLASS_IN);
+    if (edns_sz > 0)
+        offset += rfc2671RROptPack(buf + offset, sz - offset, edns_sz);
     if (query) {
         query->qtype = RFC1035_TYPE_PTR;
         query->qclass = RFC1035_CLASS_IN;
@@ -733,10 +784,10 @@ rfc1035SetQueryID(char *buf, unsigned short qid)
 int
 main(int argc, char *argv[])
 {
-    char input[512];
-    char buf[512];
-    char rbuf[512];
-    size_t sz = 512;
+    char input[SQUID_DNS_BUFSZ];
+    char buf[SQUID_DNS_BUFSZ];
+    char rbuf[SQUID_DNS_BUFSZ];
+    size_t sz = SQUID_DNS_BUFSZ;
     unsigned short sid;
     int s;
     int rl;
@@ -756,11 +807,11 @@ main(int argc, char *argv[])
     S.sin_family = AF_INET;
     S.sin_port = htons(atoi(argv[2]));
     S.sin_addr.s_addr = inet_addr(argv[1]);
-    while (fgets(input, 512, stdin)) {
+    while (fgets(input, RFC1035_DEFAULT_PACKET_SZ, stdin)) {
         struct in_addr junk;
         strtok(input, "\r\n");
-        memset(buf, '\0', 512);
-        sz = 512;
+        memset(buf, '\0', RFC1035_DEFAULT_PACKET_SZ);
+        sz = RFC1035_DEFAULT_PACKET_SZ;
         if (inet_pton(AF_INET, input, &junk)) {
             sid = rfc1035BuildPTRQuery(junk, buf, &sz);
         } else {
@@ -780,8 +831,8 @@ main(int argc, char *argv[])
             printf("TIMEOUT\n");
             continue;
         }
-        memset(rbuf, '\0', 512);
-        rl = recv(s, rbuf, 512, 0);
+        memset(rbuf, '\0', RFC1035_DEFAULT_PACKET_SZ);
+        rl = recv(s, rbuf, RFC1035_DEFAULT_PACKET_SZ, 0);
         {
             unsigned short rid = 0;
             int i;

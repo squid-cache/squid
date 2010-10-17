@@ -145,6 +145,9 @@ static void default_all(void);
 static void defaults_if_none(void);
 static int parse_line(char *);
 static void parseBytesLine(size_t * bptr, const char *units);
+#if !USE_DNSSERVERS
+static void parseBytesLineSigned(ssize_t * bptr, const char *units);
+#endif
 static size_t parseBytesUnits(const char *unit);
 static void free_all(void);
 void requirePathnameExists(const char *name, const char *path);
@@ -1045,6 +1048,52 @@ parseBytesLine(size_t * bptr, const char *units)
     if (static_cast<double>(*bptr) * 2 != m * d / u * 2)
         self_destruct();
 }
+
+#if !USE_DNSSERVERS
+static void
+parseBytesLineSigned(ssize_t * bptr, const char *units)
+{
+    char *token;
+    double d;
+    int m;
+    int u;
+
+    if ((u = parseBytesUnits(units)) == 0) {
+        self_destruct();
+        return;
+    }
+
+    if ((token = strtok(NULL, w_space)) == NULL) {
+        self_destruct();
+        return;
+    }
+
+    if (strcmp(token, "none") == 0 || token[0] == '-' /* -N */) {
+        *bptr = -1;
+        return;
+    }
+
+    d = xatof(token);
+
+    m = u;			/* default to 'units' if none specified */
+
+    if (0.0 == d)
+        (void) 0;
+    else if ((token = strtok(NULL, w_space)) == NULL)
+        debugs(3, 0, "WARNING: No units on '" <<
+               config_input_line << "', assuming " <<
+               d << " " <<  units  );
+    else if ((m = parseBytesUnits(token)) == 0) {
+        self_destruct();
+        return;
+    }
+
+    *bptr = static_cast<size_t>(m * d / u);
+
+    if (static_cast<double>(*bptr) * 2 != m * d / u * 2)
+        self_destruct();
+}
+#endif
 
 static size_t
 parseBytesUnits(const char *unit)
@@ -2824,6 +2873,14 @@ dump_b_size_t(StoreEntry * entry, const char *name, size_t var)
     storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
 }
 
+#if !USE_DNSSERVERS
+static void
+dump_b_ssize_t(StoreEntry * entry, const char *name, ssize_t var)
+{
+    storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
+}
+#endif
+
 #if UNUSED_CODE
 static void
 dump_kb_size_t(StoreEntry * entry, const char *name, size_t var)
@@ -2860,6 +2917,14 @@ parse_b_size_t(size_t * var)
     parseBytesLine(var, B_BYTES_STR);
 }
 
+#if !USE_DNSSERVERS
+static void
+parse_b_ssize_t(ssize_t * var)
+{
+    parseBytesLineSigned(var, B_BYTES_STR);
+}
+#endif
+
 #if UNUSED_CODE
 static void
 parse_kb_size_t(size_t * var)
@@ -2886,6 +2951,14 @@ free_size_t(size_t * var)
     *var = 0;
 }
 
+#if !USE_DNSSERVERS
+static void
+free_ssize_t(ssize_t * var)
+{
+    *var = 0;
+}
+#endif
+
 static void
 free_b_int64_t(int64_t * var)
 {
@@ -2893,6 +2966,7 @@ free_b_int64_t(int64_t * var)
 }
 
 #define free_b_size_t free_size_t
+#define free_b_ssize_t free_ssize_t
 #define free_kb_size_t free_size_t
 #define free_mb_size_t free_size_t
 #define free_gb_size_t free_size_t
