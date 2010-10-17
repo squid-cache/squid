@@ -1254,6 +1254,39 @@ if test "x$enable_epoll" != "xno" ; then
   fi
 fi
 
+dnl Enable /dev/poll
+AC_ARG_ENABLE(devpoll,
+  AS_HELP_STRING([--disable-devpoll],[Disable Solaris /dev/poll support.]),
+[
+SQUID_YESNO($enableval,[--disable-devpoll takes no extra argument])
+test "x$enableval" = "xyes" && squid_opt_io_loop_engine="devpoll"
+])
+AC_MSG_NOTICE([enabling /dev/poll for net I/O: ${enable_devpoll:=auto}])
+
+## auto-detect and verify devpoll header and library present and working
+if test "x$enable_devpoll" != "xno"; then
+
+  # /dev/poll requires ioctl() and write()
+  AC_CHECK_FUNCS(ioctl)
+  AC_CHECK_FUNCS(write)
+
+  # /dev/poll requires sys/devpoll.h
+  AC_CHECK_HEADERS([sys/devpoll.h],,[
+        if test "x$enable_devpoll" = "xyes"; then
+            AC_MSG_ERROR([--enable-devpoll specified but /dev/poll headers not found])
+        fi
+        enable_devpoll=no])
+
+  # Verify that /dev/poll really works
+  if test "x$enable_devpoll" != 'xno' ; then
+    SQUID_CHECK_DEVPOLL
+  fi
+
+  if test "x$enable_devpoll" = "xyes" -a "x$squid_cv_devpoll_works" = "xno" ; then
+    AC_MSG_ERROR([/dev/poll does not work. Force-enabling it is not going to help.])
+  fi
+fi
+
 
 AC_ARG_ENABLE(http-violations,
   AS_HELP_STRING([--disable-http-violations],
@@ -3024,6 +3057,8 @@ elif test "x$enable_epoll" != "xno" -a "x$squid_cv_epoll_works" = "xyes" ; then
   squid_opt_io_loop_engine="epoll"
 elif test "x$enable_kqueue" != "xno" -a "x$ac_cv_func_kqueue" = "xyes" ; then
   squid_opt_io_loop_engine="kqueue"
+elif test "x$enable_devpoll" != "xno" ; then
+  squid_opt_io_loop_engine="devpoll"
 elif test "x$enable_poll" != "xno" -a "x$ac_cv_func_poll" = "xyes" ; then
   squid_opt_io_loop_engine="poll"
 elif test "x$enable_select" != "xno" -a "x$ac_cv_func_select" = "xyes" ; then
@@ -3032,7 +3067,7 @@ elif test "x$enable_select" != "xno" -a "x$ac_cv_func_select" = "xyes" ; then
     squid_opt_io_loop_engine="select_win32"
   fi
 else
-  AC_MSG_WARN([Eep!  Cannot find poll, kqueue, epoll, or select!])
+  AC_MSG_WARN([Eep!  Cannot find epoll, kqueue, /dev/poll, poll or select!])
   AC_MSG_WARN([Will try select and hope for the best.])
   squid_opt_io_loop_engine="select"
 fi
@@ -3049,6 +3084,7 @@ AM_CONDITIONAL([USE_DEVPOLL], [test $squid_opt_io_loop_engine = devpoll])
 
 case $squid_opt_io_loop_engine in
   epoll) AC_DEFINE(USE_EPOLL,1,[Use epoll() for the IO loop]) ;;
+  devpoll) AC_DEFINE(USE_DEVPOLL,1,[Use /dev/poll for the IO loop]) ;;
   poll) AC_DEFINE(USE_POLL,1,[Use poll() for the IO loop]) ;;
   kqueue) AC_DEFINE(USE_KQUEUE,1,[Use kqueue() for the IO loop]) ;;
   select_win32) AC_DEFINE(USE_SELECT_WIN32,1,[Use Winsock select() for the IO loop]) ;;
