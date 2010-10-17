@@ -33,20 +33,20 @@
 #include <string.h>
 #endif
 
-static int SMB_Types[] = {SMB_P_Core,
-                          SMB_P_CorePlus,
-                          SMB_P_DOSLanMan1,
-                          SMB_P_DOSLanMan1,
-                          SMB_P_LanMan1,
-                          SMB_P_DOSLanMan2,
-                          SMB_P_LanMan2,
-                          SMB_P_LanMan2_1,
-                          SMB_P_LanMan2_1,
-                          SMB_P_NT1,
-                          SMB_P_NT1,
-                          SMB_P_NT1,
-                          -1
-                         };
+int SMB_Types[] = {SMB_P_Core,
+                   SMB_P_CorePlus,
+                   SMB_P_DOSLanMan1,
+                   SMB_P_DOSLanMan1,
+                   SMB_P_LanMan1,
+                   SMB_P_DOSLanMan2,
+                   SMB_P_LanMan2,
+                   SMB_P_LanMan2_1,
+                   SMB_P_LanMan2_1,
+                   SMB_P_NT1,
+                   SMB_P_NT1,
+                   SMB_P_NT1,
+                   -1
+                  };
 
 char *SMB_DOSTimToStr(int DOS_time);
 char *SMB_AtrToStr(int attribs, BOOL verbose);
