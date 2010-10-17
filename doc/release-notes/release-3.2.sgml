@@ -305,6 +305,10 @@ This section gives a thorough account of those changes in three categories:
 	<tag>cpu_affinity_map</tag>
 	<p>New setting for SMP support to map Squid processes onto specific CPU cores.
 
+	<tag>dns_packet_max</tag>
+	<p>New setting to configure maximum number of bytes packet size to advertise via EDNS.
+	   Set to "none" (the initial default) to disable EDNS large packet support.
+
 	<tag>else</tag>
 	<p>Part of conditional SMP support syntax. see <em>if</em>
 
