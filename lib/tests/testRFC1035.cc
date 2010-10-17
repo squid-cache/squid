@@ -9,6 +9,7 @@
 
 /* Being a C library code it is best bodily included and tested with C++ type-safe techniques. */
 #include "lib/rfc1035.c"
+#include "lib/rfc2671.c"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testRFC1035 );
 
