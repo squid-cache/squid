@@ -69,7 +69,7 @@ unlinkdUnlink(const char *path)
      * time.
      */
     if (queuelen >= UNLINKD_QUEUE_LIMIT) {
-#if defined(USE_EPOLL) || defined(USE_KQUEUE)
+#if defined(USE_EPOLL) || defined(USE_KQUEUE) || defined(USE_DEVPOLL)
         /*
          * DPW 2007-04-23
          * We can't use fd_set when using epoll() or kqueue().  In

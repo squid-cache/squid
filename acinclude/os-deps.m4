@@ -136,6 +136,29 @@ int main(int argc, char **argv)
 
 ]) dnl SQUID_CHECK_EPOLL
 
+dnl check that /dev/poll actually works
+dnl sets squid_cv_devpoll_works to "yes" or "no"
+AC_DEFUN([SQUID_CHECK_DEVPOLL],[
+
+    AC_CACHE_CHECK(if /dev/poll works, squid_cv_devpoll_works,
+      AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#include <sys/devpoll.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <stdio.h>
+int main(int argc, char **argv)
+{
+    int fd = open("/dev/poll", O_RDWR);
+    if (fd < 0) {
+       perror("devpoll_create:");
+       return 1;
+    }
+    return 0;
+}
+      ]])],[squid_cv_devpoll_works=yes],[squid_cv_devpoll_works=no],[:]))
+
+]) dnl SQUID_CHECK_DEVPOLL
+
 
 dnl check that we have functional libcap2 headers
 dnl sets squid_cv_sys_capability_works to "yes" or "no"
