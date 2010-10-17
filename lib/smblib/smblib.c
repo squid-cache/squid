@@ -41,19 +41,19 @@ int SMBlib_SMB_Error;
 SMB_State_Types SMBlib_State;
 
 const char *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0",
-                            "MICROSOFT NETWORKS 1.03",
-                            "MICROSOFT NETWORKS 3.0",
-                            "DOS LANMAN1.0",
-                            "LANMAN1.0",  
-                            "DOS LM1.2X002",
-                            "LM1.2X002",
-                            "DOS LANMAN2.1",
-                            "LANMAN2.1",
-                            "Samba",
-                            "NT LM 0.12",
-                            "NT LANMAN 1.0",
-                            NULL
-                           };
+                           "MICROSOFT NETWORKS 1.03",
+                           "MICROSOFT NETWORKS 3.0",
+                           "DOS LANMAN1.0",
+                           "LANMAN1.0",
+                           "DOS LM1.2X002",
+                           "LM1.2X002",
+                           "DOS LANMAN2.1",
+                           "LANMAN2.1",
+                           "Samba",
+                           "NT LM 0.12",
+                           "NT LANMAN 1.0",
+                           NULL
+                          };
 
 int SMB_Term(void);
 int SMBlib_Set_Sock_NoDelay(SMB_Handle_Type Con_Handle, BOOL yn);

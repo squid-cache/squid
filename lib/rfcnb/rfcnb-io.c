@@ -100,7 +100,7 @@ int RFCNB_Set_Timeout(int seconds)
 #else
     struct sigvec invec, outvec;
 #endif
-  
+
     RFCNB_Timeout = seconds;
 
     if (RFCNB_Timeout > 0) {    /* Set up handler to ignore but not restart */
@@ -113,12 +113,12 @@ int RFCNB_Set_Timeout(int seconds)
         if (sigaction(SIGALRM, &inact, &outact) < 0)
             return (-1);
 #else
-        invec.sv_handler = (void (*)()) rfcnb_alarm;
-        invec.sv_mask = 0;
-        invec.sv_flags = SV_INTERRUPT;
+    invec.sv_handler = (void (*)()) rfcnb_alarm;
+    invec.sv_mask = 0;
+    invec.sv_flags = SV_INTERRUPT;
 
-        if (sigvec(SIGALRM, &invec, &outvec) < 0)
-            return (-1);
+    if (sigvec(SIGALRM, &invec, &outvec) < 0)
+        return (-1);
 #endif
 
 #endif
