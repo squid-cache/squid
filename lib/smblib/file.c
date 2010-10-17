@@ -1,3 +1,4 @@
+#include "config.h"
 /* UNIX SMBlib NetBIOS implementation
 
    Version 1.0
@@ -23,9 +24,12 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "smblib-priv.h"
+#include "smblib/smblib-priv.h"
+#include "rfcnb/rfcnb.h"
 
-#include "../rfcnb/rfcnb.h"
+#if HAVE_STRING_H
+#include <string.h>
+#endif
 
 /* Open a file with file_name using desired mode and search attr  */
 /* If File_Handle is null, then create and populate a file handle */
@@ -82,7 +86,7 @@ SMB_File *SMB_Open(SMB_Tree_Handle Tree_Handle,
 
     /* Now plug in the bits we need */
 
-    bzero(SMB_Hdr(pkt), SMB_open_len);
+    memset(SMB_Hdr(pkt), 0, SMB_open_len);
     SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);  /* Plunk in IDF */
     *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBopen;
     SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, Tree_Handle -> con -> pid);
@@ -206,7 +210,7 @@ int SMB_Close(SMB_File *File_Handle)
 
     /* Now plug in the bits we need */
 
-    bzero(SMB_Hdr(pkt), SMB_clos_len);
+    memset(SMB_Hdr(pkt), 0, SMB_clos_len);
     SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);  /* Plunk in IDF */
     *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBclose;
     SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, File_Handle -> tree -> con -> pid);
@@ -335,7 +339,7 @@ int SMB_Read(SMB_File *File_Handle, char *data, int numbytes)
 
     /* Now build the read request and the receive packet etc ... */
 
-    bzero(SMB_Hdr(snd_pkt), SMB_read_len);
+    memset(SMB_Hdr(snd_pkt), 0, SMB_read_len);
     SIVAL(SMB_Hdr(snd_pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);  /* Plunk in IDF */
     *(SMB_Hdr(snd_pkt) + SMB_hdr_com_offset) = SMBread;
     SSVAL(SMB_Hdr(snd_pkt), SMB_hdr_pid_offset, File_Handle -> tree -> con -> pid);
@@ -502,7 +506,7 @@ int SMB_Write(SMB_File *File_Handle, char *data, int numbytes)
     /* Now init the things that will be the same across the possibly multiple
        packets to write this data.                                           */
 
-    bzero(SMB_Hdr(pkt), SMB_write_len);
+    memset(SMB_Hdr(pkt), 0, SMB_write_len);
     SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);  /* Plunk in IDF */
     *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBwrite;
     SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, File_Handle -> tree -> con -> pid);
@@ -672,7 +676,7 @@ SMB_File *SMB_Create(SMB_Tree_Handle Tree_Handle,
 
     /* Now plug in the bits we need */
 
-    bzero(SMB_Hdr(pkt), SMB_creat_len);
+    memset(SMB_Hdr(pkt), 0, SMB_creat_len);
     SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);  /* Plunk in IDF */
     *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBcreate;
     SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, Tree_Handle -> con -> pid);
@@ -788,7 +792,7 @@ int SMB_Delete(SMB_Tree_Handle tree, char *file_name, WORD search)
 
     /* Now plug in the bits we need */
 
-    bzero(SMB_Hdr(pkt), SMB_delet_len);
+    memset(SMB_Hdr(pkt), 0, SMB_delet_len);
     SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);  /* Plunk in IDF */
     *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBunlink;
     SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, tree -> con -> pid);
@@ -885,7 +889,7 @@ int SMB_Create_Dir(SMB_Tree_Handle tree, char *dir_name)
 
     /* Now plug in the bits we need */
 
-    bzero(SMB_Hdr(pkt), SMB_creatdir_len);
+    memset(SMB_Hdr(pkt), 0, SMB_creatdir_len);
     SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);  /* Plunk in IDF */
     *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBmkdir;
     SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, tree -> con -> pid);
@@ -981,7 +985,7 @@ int SMB_Delete_Dir(SMB_Tree_Handle tree, char *dir_name)
 
     /* Now plug in the bits we need */
 
-    bzero(SMB_Hdr(pkt), SMB_deletdir_len);
+    memset(SMB_Hdr(pkt), 0, SMB_deletdir_len);
     SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);  /* Plunk in IDF */
     *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBrmdir;
     SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, tree -> con -> pid);
@@ -1077,7 +1081,7 @@ int SMB_Check_Dir(SMB_Tree_Handle tree, char *dir_name)
 
     /* Now plug in the bits we need */
 
-    bzero(SMB_Hdr(pkt), SMB_checkdir_len);
+    memset(SMB_Hdr(pkt), 0, SMB_checkdir_len);
     SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);  /* Plunk in IDF */
     *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBchkpth;
     SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, tree -> con -> pid);
@@ -1194,7 +1198,7 @@ int SMB_Search(SMB_Tree_Handle tree,
 
     /* Now plug in the bits we need */
 
-    bzero(SMB_Hdr(pkt), SMB_search_len);
+    memset(SMB_Hdr(pkt), 0, SMB_search_len);
     SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);  /* Plunk in IDF */
     *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBsearch;
     SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, tree -> con -> pid);

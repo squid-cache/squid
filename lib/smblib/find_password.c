@@ -1,3 +1,4 @@
+#include "config.h"
 /* Find passwords ... */
 /* We do it in a brute force way ... Cycle through all the possible passwords
    sending a logon to see if all it works ... We have to wait for any timeout
@@ -8,8 +9,11 @@
 
 #include <sys/types.h>
 #include <unistd.h>
+#if HAVE_STRING_H
+#include <string.h>
+#endif
 
-#include "smblib.h"
+#include "smblib/smblib.h"
 
 int verbose = FALSE;
 int lotc = FALSE;
@@ -43,7 +47,7 @@ int next_password(char *pw, int pwlen)
     if (pwinit == FALSE) {
 
         pwinit = TRUE;
-        bzero(pw, pwlen + 1);
+        memset(pw, 0, pwlen + 1);
         pwpos = 0;
 
     }
@@ -228,7 +232,7 @@ main(int argc, char *argv[])
 
     /* Now loop through all password possibilities ... */
 
-    bzero(password, sizeof(password));
+    memset(password, 0, sizeof(password));
 
     while (next_password(password, pwlen) == TRUE) {
 
