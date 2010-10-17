@@ -41,7 +41,7 @@
 extern void (*Prot_Print_Routine)(); /* Pointer to protocol print routine */
 
 const char *RFCNB_Error_Strings[] = {
-  
+
     "RFCNBE_OK: Routine completed successfully.",
     "RFCNBE_NoSpace: No space available for a malloc call.",
     "RFCNBE_BadName: NetBIOS name could not be translated to IP address.",
@@ -59,8 +59,8 @@ const char *RFCNB_Error_Strings[] = {
     "RFCNBE_CallRejUnSpec: Call rejected. Unspecified error.",
     "RFCNBE_BadParam: Bad parameters passed to a routine.",
     "RFCNBE_Timeout: IO Operation timed out ..."
-    
-};  
+
+};
 
 /* Convert name and pad to 16 chars as needed */
 /* Name 1 is a C string with null termination, name 2 may not be */

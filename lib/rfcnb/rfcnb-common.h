@@ -30,15 +30,15 @@
 extern "C" {
 #endif
 
-/* A data structure we need */
+    /* A data structure we need */
 
-typedef struct RFCNB_Pkt {
+    typedef struct RFCNB_Pkt {
 
-    char * data;			/* The data in this portion */
-    int len;
-    struct RFCNB_Pkt *next;
+        char * data;			/* The data in this portion */
+        int len;
+        struct RFCNB_Pkt *next;
 
-} RFCNB_Pkt;
+    } RFCNB_Pkt;
 
 #ifdef __cplusplus
 }
