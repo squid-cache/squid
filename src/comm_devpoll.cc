@@ -135,7 +135,7 @@ comm_flush_updates(void)
             (devpoll_update.cur + 1) * sizeof(struct pollfd) /* bytes to process */
         );
     assert(i > 0);
-    assert(i == sizeof(struct pollfd) * (devpoll_update.cur + 1));
+    assert(static_cast<size_t>(i) == (sizeof(struct pollfd) * (devpoll_update.cur + 1)));
     devpoll_update.cur = -1; /* reset size of array, no elements remain */
 }
 
