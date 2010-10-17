@@ -1,3 +1,4 @@
+#include "config.h"
 /* UNIX SMBlib NetBIOS implementation
 
    Version 1.0
@@ -23,12 +24,13 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "smblib-priv.h"
-
-#include "../rfcnb/rfcnb.h"
+#include "smblib/smblib-priv.h"
+#include "rfcnb/rfcnb.h"
 
 #include <signal.h>
-
+#if HAVE_STRING_H
+#include <string.h>
+#endif
 
 /* Logon and tree connect to the server. If a tree handle was given to us, */
 /* we use it and return it, otherwise we create one ...                    */
@@ -115,7 +117,7 @@ SMB_Tree_Handle SMB_Logon_And_TCon(SMB_Handle_Type Con_Handle,
 
         }
 
-        bzero(SMB_Hdr(pkt), SMB_ssetpLM_len);
+        memset(SMB_Hdr(pkt), 0, SMB_ssetpLM_len);
         SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);  /* Plunk in IDF */
         *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBsesssetupX;
         SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, Con_Handle -> pid);
@@ -187,7 +189,7 @@ SMB_Tree_Handle SMB_Logon_And_TCon(SMB_Handle_Type Con_Handle,
 
         }
 
-        bzero(SMB_Hdr(pkt), SMB_ssetpNTLM_len);
+        memset(SMB_Hdr(pkt), 0, SMB_ssetpNTLM_len);
         SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);  /* Plunk in IDF */
         *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBsesssetupX;
         SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, Con_Handle -> pid);
@@ -448,7 +450,7 @@ int SMB_Logon_TCon_Open(SMB_Handle_Type Con_Handle, char *UserName,
 
         }
 
-        bzero(SMB_Hdr(pkt), SMB_ssetpLM_len);
+        memset(SMB_Hdr(pkt), 0, SMB_ssetpLM_len);
         SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);  /* Plunk in IDF */
         *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBsesssetupX;
         SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, Con_Handle -> pid);
@@ -519,7 +521,7 @@ int SMB_Logon_TCon_Open(SMB_Handle_Type Con_Handle, char *UserName,
 
         }
 
-        bzero(SMB_Hdr(pkt), SMB_ssetpNTLM_len);
+        memset(SMB_Hdr(pkt), 0, SMB_ssetpNTLM_len);
         SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);  /* Plunk in IDF */
         *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBsesssetupX;
         SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, Con_Handle -> pid);
