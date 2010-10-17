@@ -6602,6 +6602,34 @@ DOC_START
 	are assumed to be unavailable.
 DOC_END
 
+NAME: dns_packet_max
+TYPE: b_ssize_t
+DEFAULT: none
+LOC: Config.dns.packet_max
+IFDEF: !USE_DNSSERVERS
+DOC_START
+	Maximum number of bytes packet size to advertise via EDNS.
+	Set to "none" to disable EDNS large packet support.
+	
+	For legacy reasons DNS UDP replies will default to 512 bytes which
+	is too small for many responses. EDNS provides a means for Squid to
+	negotiate receiving larger responses back immediately without having
+	to failover with repeat requests. Responses larger than this limit
+	will retain the old behaviour of failover to TCP DNS.
+	
+	Squid has no real fixed limit internally, but allowing packet sizes
+	over 1500 bytes requires network jumbogram support and is usually not
+	necessary.
+	
+	WARNING: The RFC also indicates that some older resolvers will reply
+	with failure of the whole request if the extension is added. Some
+	resolvers have already been identified which will reply with mangled
+	EDNS response on occasion. Usually in response to many-KB jumbogram
+	sizes being advertised by Squid.
+	Squid will currently treat these both as an unable-to-resolve domain
+	even if it would be resolvable without EDNS.
+DOC_END
+
 NAME: dns_defnames
 COMMENT: on|off
 TYPE: onoff
