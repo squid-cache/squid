@@ -1,3 +1,4 @@
+#include "config.h"
 /* UNIX SMBlib NetBIOS implementation
 
    Version 1.0
@@ -23,8 +24,12 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "smblib-priv.h"
-#include "../rfcnb/rfcnb.h"
+#include "smblib/smblib-priv.h"
+#include "rfcnb/rfcnb.h"
+
+#if HAVE_STRING_H
+#include <string.h>
+#endif
 
 SMB_Tree_Handle SMBapi_Tree = NULL;
 
@@ -75,7 +80,7 @@ int SMBapi_NetUserPasswordSet(SMB_Tree_Handle tree, char *user,
 
     }
 
-    bzero(SMB_Hdr(pkt), SMB_trans_len);
+    memset(SMB_Hdr(pkt), 0, SMB_trans_len);
     SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);  /* Plunk in IDF */
     *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBtrans;
     SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, tree -> con -> pid);
@@ -247,7 +252,7 @@ int SMBapi_NetSetUserInfo(SMB_Tree_Handle tree, char *user,
 
     }
 
-    bzero(SMB_Hdr(pkt), SMB_trans_len);
+    memset(SMB_Hdr(pkt), 0, SMB_trans_len);
     SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);  /* Plunk in IDF */
     *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBtrans;
     SSVAL(SMB_Hdr(pkt), SMB_hdr_pid_offset, tree -> con -> pid);
