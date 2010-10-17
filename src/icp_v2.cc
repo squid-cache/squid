@@ -85,6 +85,9 @@ static void icpHandleIcpV2(int, Ip::Address &, char *, int);
 /// \ingroup ServerProtocolICPInternal2
 static void icpCount(void *, int, size_t, int);
 
+/// \ingroup ServerProtocolICPInternal2
+static void icpGetOutgoingIpAddress();
+
 /**
  \ingroup ServerProtocolICPInternal2
  * IcpQueueHead is global so comm_incoming() knows whether or not
