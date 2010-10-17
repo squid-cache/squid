@@ -265,23 +265,21 @@ main(int argc, char *argv[])
 
         if ( ! inet_pton(AF_INET6, argv[var], &((struct sockaddr_in6 *)S)->sin6_addr.s_addr) ) {
             perror("listen address");
+            return 1;
+        }
+
+        s = socket(PF_INET6, SOCK_DGRAM, 0);
+    } else {
+        S = (struct sockaddr *) new sockaddr_in;
+        memset(S,0,sizeof(struct sockaddr_in));
+
+        ((struct sockaddr_in *)S)->sin_family = AF_INET;
+        ((struct sockaddr_in *)S)->sin_port = htons(atoi(argv[var+1]));
+
+        if ( ! inet_pton(AF_INET, argv[var], &((struct sockaddr_in *)S)->sin_addr.s_addr) )
+            perror("listen address");
         return 1;
     }
-
-    s = socket(PF_INET6, SOCK_DGRAM, 0);
-}
-else
-{
-    S = (struct sockaddr *) new sockaddr_in;
-    memset(S,0,sizeof(struct sockaddr_in));
-
-    ((struct sockaddr_in *)S)->sin_family = AF_INET;
-    ((struct sockaddr_in *)S)->sin_port = htons(atoi(argv[var+1]));
-
-    if ( ! inet_pton(AF_INET, argv[var], &((struct sockaddr_in *)S)->sin_addr.s_addr) )
-        perror("listen address");
-    return 1;
-}
 }
 
 while (fgets(input, PACKET_BUFSZ, stdin))
@@ -374,6 +372,6 @@ while (fgets(input, PACKET_BUFSZ, stdin))
 }
 
 return 0;
-       }
+}
 
 #endif

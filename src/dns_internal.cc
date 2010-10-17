@@ -90,24 +90,24 @@
 static int RcodeMatrix[MAX_RCODE][MAX_ATTEMPT];
 // NP: see http://www.iana.org/assignments/dns-parameters
 static const char *Rcodes[] = {
- /* RFC 1035 */
-         "Success",
-         "Packet Format Error",
-         "DNS Server Failure",
-         "Non-Existent Domain",
-         "Not Implemented",
-         "Query Refused",
- /* RFC 2136 */
-         "Name Exists when it should not",
-         "RR Set Exists when it should not",
-         "RR Set that should exist does not",
-         "Server Not Authoritative for zone",
-         "Name not contained in zone",
- /* unassigned */
-         "","","","","",
- /* RFC 2671 */
-         "Bad OPT Version or TSIG Signature Failure"
- };
+    /* RFC 1035 */
+    "Success",
+    "Packet Format Error",
+    "DNS Server Failure",
+    "Non-Existent Domain",
+    "Not Implemented",
+    "Query Refused",
+    /* RFC 2136 */
+    "Name Exists when it should not",
+    "RR Set Exists when it should not",
+    "RR Set that should exist does not",
+    "Server Not Authoritative for zone",
+    "Name not contained in zone",
+    /* unassigned */
+    "","","","","",
+    /* RFC 2671 */
+    "Bad OPT Version or TSIG Signature Failure"
+};
 
 typedef struct _idns_query idns_query;
 
