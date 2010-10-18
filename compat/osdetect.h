@@ -67,9 +67,24 @@
 
 #elif defined(__CYGWIN32__)  || defined(__CYGWIN__)
 #define _SQUID_CYGWIN_ 1
+#define _SQUID_WINDOWS_ 1
+
+// the legacy OS-type define (TODO: remove from use)
 #define _SQUID_WIN32_ 1
 
+#elif defined(__MINGW32__)
+#define _SQUID_MINGW_ 1
+#define _SQUID_WINDOWS_ 1
+
+#error Test: MinGW build detection.
+
 #elif defined(WIN32) || defined(WINNT) || defined(__WIN32__) || defined(__WIN32)
+#define _SQUID_WINDOWS_ 1
+
+// TODO: isolate this section better so only Visual Studio build environment
+//       gets detected and a macro defined for it.
+
+// the legacy OS-type defines (TODO: remove from use)
 /* We are using _SQUID_MSWIN_ define in cf.data.pre, so
    it must be defined to 1 to avoid the build failure of cfgen.
  */
