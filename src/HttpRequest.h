@@ -205,6 +205,8 @@ public:
 
     char *peer_domain;		/* Configured peer forceddomain */
 
+    String myportname; // Internal tag name= value from port this requests arrived in.
+
     String tag;			/* Internal tag for this request */
 
     String extacl_user;		/* User name returned by extacl lookup */
