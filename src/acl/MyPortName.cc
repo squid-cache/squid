@@ -38,18 +38,18 @@
 #include "acl/MyPortName.h"
 #include "acl/StringData.h"
 #include "acl/Checklist.h"
+#include "HttpRequest.h"
 
 /* for ConnStateData */
 #include "client_side.h"
 
-
-
-
 int
-ACLMyPortNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
+ACLMyPortNameStrategy::match(ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     if (checklist->conn() != NULL)
-        return data->match (checklist->conn()->port->name);
+        return data->match(checklist->conn()->port->name);
+    if (checklist->request != NULL)
+        return data->match(checklist->request->myportname.termedBuf());
     return 0;
 }
 
