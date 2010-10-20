@@ -20,6 +20,7 @@ use File::Basename;
 # IFDEF: <the ifdef bit>
 # TYPE: <the config type>
 # DEFAULT: <the default value>
+# DEFAULT_IF_NONE: <alternative default value>
 # LOC: <location in the Config struct>
 # DOC_START
 #   documentation goes here
@@ -252,6 +253,8 @@ while (<>) {
 		} else {
 		    $data->{"default"} = "$name $1";
 		}
+	} elsif ($_ =~ /^DEFAULT_IF_NONE: (.*)$/) {
+		$data->{"default"} = "$name $1";
 	} elsif ($_ =~ /^LOC:(.*)$/) {
 		$data->{"loc"} = $1;
 		$data->{"loc"} =~ s/^[\s\t]*//;
