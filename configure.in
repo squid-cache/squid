@@ -3265,7 +3265,9 @@ AC_CONFIG_FILES([\
 	Makefile \
 	compat/Makefile \
 	lib/Makefile \
-	libntlmauth/Makefile \
+	lib/ntlmauth/Makefile \
+	lib/rfcnb/Makefile \
+	lib/smblib/Makefile \
 	scripts/Makefile \
 	src/Makefile \
 	src/base/Makefile \

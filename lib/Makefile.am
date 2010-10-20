@@ -5,8 +5,12 @@
 
 include $(top_srcdir)/src/Common.am
 
-SUBDIRS =
+DIST_SUBDIRS = ntlmauth rfcnb smblib libTrie
 
+SUBDIRS = rfcnb smblib
+if ENABLE_AUTH_NTLM
+SUBDIRS += ntlmauth
+endif
 if USE_ESI
 SUBDIRS += libTrie
 endif

@@ -1,0 +1,52 @@
+RFCNB
+Richard Sharpe,
+Digital Equipment
+
+I wrote it in an attempt to understand more about the SMB protocol and
+the RFCNB (NBT) protocol underlying it. My manager approved my posting this
+as long as there was no suggestion that Digital is responsible for this code 
+not that any warranties are offered by Digital. So, I put a GPL on the code.
+
+DISCLAIMER
+
+To restate, this code is offered as is, and no warranties are implied, either 
+by Digital Equipment Corporation or by Richard Sharpe. Neither 
+Digital Equipment Corporation nor Richard Sharpe can be held liable for 
+any consequences resulting from the use of this code.
+
+END Disclaimer
+
+The directory rfcnb contains the following:
+
+Makefile:             a small makefile to build things in this dir
+
+notes:                some notes I made about things ...
+
+rfcnb.h:              defines of the interface routines
+
+rfcnb-error.h:        rfcnb error return definitions etc
+
+rfcnb-io.h:           definitions for routines that do IO to the network
+
+rfcnb-util.h:         definitions of utility routines
+
+rfcnb-common.h:       common defines needed in rfcnb.h and rfcnb-priv.h
+
+rfcnb-priv.h:         defines private to the implementation
+
+std-includes.h:       standard includes and defines
+
+name-service.c:       name service routines. Not implemented yet.
+
+rfcnb-util.c:         utility routines used by session.c and others.
+
+rfcnb-io.c:           all IO to network occurs here
+
+test_rfcnb.c:         a small test program
+
+session.c:            all session routine code is here
+
+todo:                 a list of things I would like to do ...
+
+
+

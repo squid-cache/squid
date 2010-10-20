@@ -1,0 +1,25 @@
+Oct 2010 - Imported into Squid.
+           Many build fixes for modern compilers.
+           Shuffled several private functions (error display and logon) to
+           to public API file for external use without using rfcnb-priv.h.
+
+Aug-1996
+
+Added #define of INADDR_NONE if not already defined, as Suns do not seem
+to define it.
+
+6-Sep-1996
+
+Fixed bug in rfcnb-priv.h where we were getting the packet length wrong
+(byte reversed on Suns ...) ... At least I think it is fixed. Will
+test.
+
+6-Sep-1996
+
+Use siganction on machines where SA_RESTART is defined, otherwise use
+sigvec. This allows the code to compile on Sun, and maybe on HP-UX.
+
+13-Sep-1996
+
+Fixed that bug in rfcnb-priv.h again in RFCNB_Pkt_Len. We were not
+shifting the second length byte into the right place.

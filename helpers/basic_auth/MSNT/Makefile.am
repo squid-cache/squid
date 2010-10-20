@@ -2,16 +2,18 @@ include $(top_srcdir)/src/Common.am
 
 MSNTAUTH_CONF = $(sysconfdir)/msntauth.conf
 
-libexec_PROGRAMS = msnt_auth
+libexec_PROGRAMS = basic_msnt_auth
 
-msnt_auth_SOURCES = md4.c rfcnb-io.c rfcnb-util.c session.c msntauth.c \
-		msntauth.h smbdes.c smbencrypt.c smblib-util.c smblib.c \
-		valid.c denyusers.c allowusers.c confload.c \
-		usersfile.c \
-		byteorder.h rfcnb-common.h rfcnb-error.h rfcnb.h \
-		rfcnb-io.h rfcnb-priv.h rfcnb-util.h smblib-common.h \
-		smblib.h smblib-priv.h std-defines.h std-includes.h valid.h \
-		md4.h  smbdes.h smbencrypt.h usersfile.h
+basic_msnt_auth_SOURCES = \
+	allowusers.cc \
+	confload.cc \
+	denyusers.cc \
+	msntauth.cc \
+	msntauth.h \
+	usersfile.cc \
+	usersfile.h \
+	valid.cc \
+	valid.h
 
 EXTRA_DIST = \
 	msntauth.conf.default \
@@ -22,13 +24,17 @@ EXTRA_DIST = \
 sysconf_DATA = \
 	msntauth.conf.default
 
-LDADD = $(COMPAT_LIB) $(XTRA_LIBS)
+CFLAGS += -DSYSCONFDIR=\"$(sysconfdir)\"
+CXXFLAGS += -DSYSCONFDIR=\"$(sysconfdir)\"
+LDADD = \
+	$(top_builddir)/lib/smblib/libsmblib.la \
+	$(top_builddir)/lib/rfcnb/librfcnb.la \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 ## we need our local files too (but avoid -I. at all costs)
-INCLUDES += -I$(srcdir)
+INCLUDES += -I$(srcdir) -I$(top_srcdir)/lib
 
-confload.o: confload.c
-	$(COMPILE) -DSYSCONFDIR=\"$(sysconfdir)\" -c $(srcdir)/confload.c -o $@
 
 install-data-local: msntauth.conf.default
 	@if test -f $(DESTDIR)$(MSNTAUTH_CONF) ; then \

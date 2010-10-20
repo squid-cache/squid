@@ -1,0 +1,85 @@
+SMBlib 0.20
+Richard Sharpe
+Digital Equipment Corporation 
+
+This is a first attempt at an SMBlibrary, and is incomplete. 
+
+I wrote it in an attempt to understand more about the SMB protocol and
+the RFCNB (NBT) protocol underlying it. My manager approved my posting this
+as long as there was no suggestion that Digital is responsible for this code 
+not that any warranties are offered by Digital. So, I put a GPL on the code.
+
+DISCLAIMER
+
+To restate, this code is offered as is, and no warranties are implied, either 
+by Digital Equipment Corporation or by Richard Sharpe. Neither 
+Digital Equipment Corporation nor Richard Sharpe can be held liable for 
+any consequences resulting from the use of this code.
+
+END Disclaimer
+
+At the moment, it can connect to Windows NT servers, Windows 95 servers, 
+PATHWORKS 4 VMS and PATHWORKS 4 Ultrix servers, as well as Samba.
+
+It can Connect, Negotiate a protocol, logon to a Samba Server, Logon to
+Windows NT, Logon to LAN Manager 2.2 (for UNIX) server, connect to a tree, 
+open a file, create a file, read a file, write a file, delete a file,
+close a file, disconnect a tree connection, create a directory, delete a 
+directory, check a directory. 
+This represents about 75% of the core protocol.
+
+It has a number of deficiencies:
+
+a. It does not do any more than the Core Protocol (except for logon).
+
+b. Because of the structure of the code, it is not going to be easy to use 
+   the And_X commands properly.
+
+c. It will not be easy to use OPLOCKS (if I understand them well) as they 
+   will result in unsolicited SMBs from the server to break locks.
+
+d. It does not check that SMBs received are in response to SMBs sent. This
+   is a lack of defensive programming.
+
+e. It is not thread safe.
+
+It is offered as an example for those who might want to take things
+further. I am unhappy about the way that some things have panned out,
+and may tinker with this some more over time. I am also happy to answer
+questions, time permitting.
+
+The files here are:
+
+Makefile:             a small makefile to build things in this dir ...
+
+smblib.h:             include file of interface routines for SMBlib
+
+smblib-priv.h:        include file of internal stuff to SMBlib
+
+std-defines.h:        some standard defines I needed.
+
+smblib.c:             the beginnings of routines that connect and logon
+
+file.c:               the beginings of routines that do SMB file ops
+
+smblib-util.c:        utility routines for SMBlib
+
+test_smblib.c:        a small test program
+
+test_perf.c:          the beginings of a performance test routine ...
+
+usage.txt:            some documentation on using all the routines ...
+
+Testing:
+
+This has been compiled and tested on ULTRIX and Digital UNIX, and some 
+testing has been done on Linux, but I have not tested it on any other 
+versions of UNIX.
+
+Regards
+Richard Sharpe
+sharpe@nmesis.enet.dec.com
+
+
+
+
