@@ -75,15 +75,11 @@ libmiscutil_a_SOURCES = \
 	xusleep.c \
 	$(XPROF_STATS_SOURCE) \
 	$(WIN32SRC)
-libmiscutil_a_LIBADD = $(LIBOBJS)
 
 # $(top_srcdir)/include/version.h should be a dependency
 libsspwin32_a_SOURCES = \
 	base64.c \
 	sspwin32.c
-libsspwin32_a_LIBADD = \
-	$(LIBOBJS)
-
 
 TESTS += tests/testAll
 
