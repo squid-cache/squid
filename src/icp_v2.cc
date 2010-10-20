@@ -85,6 +85,9 @@ static void icpHandleIcpV2(int, Ip::Address &, char *, int);
 /// \ingroup ServerProtocolICPInternal2
 static void icpCount(void *, int, size_t, int);
 
+/// \ingroup ServerProtocolICPInternal2
+static void icpGetOutgoingIpAddress();
+
 /**
  \ingroup ServerProtocolICPInternal2
  * IcpQueueHead is global so comm_incoming() knows whether or not
@@ -676,9 +679,6 @@ icpConnectionsOpen(void)
     uint16_t port;
     Ip::Address addr;
 
-    struct addrinfo *xai = NULL;
-    int x;
-
     if ((port = Config.Port.icp) <= 0)
         return;
 
@@ -738,15 +738,18 @@ icpConnectionsOpen(void)
         debugs(12, 1, "Outgoing ICP messages on port " << addr.GetPort() << ", FD " << theOutIcpConnection << ".");
 
         fd_note(theOutIcpConnection, "Outgoing ICP socket");
+        icpGetOutgoingIpAddress();
     }
+}
 
+static void
+icpGetOutgoingIpAddress()
+{
+    struct addrinfo *xai = NULL;
     theOutICPAddr.SetEmpty();
-
     theOutICPAddr.InitAddrInfo(xai);
 
-    x = getsockname(theOutIcpConnection, xai->ai_addr, &xai->ai_addrlen);
-
-    if (x < 0)
+    if (getsockname(theOutIcpConnection, xai->ai_addr, &xai->ai_addrlen) < 0)
         debugs(50, 1, "theOutIcpConnection FD " << theOutIcpConnection << ": getsockname: " << xstrerror());
     else
         theOutICPAddr = *xai;
@@ -775,8 +778,10 @@ icpIncomingConnectionOpened(int fd, int errNo, Ip::Address& addr)
 
     fd_note(theInIcpConnection, "Incoming ICP socket");
 
-    if (Config.Addrs.udp_outgoing.IsNoAddr())
+    if (Config.Addrs.udp_outgoing.IsNoAddr()) {
         theOutIcpConnection = theInIcpConnection;
+        icpGetOutgoingIpAddress();
+    }
 }
 
 /**
