@@ -63,3 +63,85 @@ testPreCompiler::testIfDef()
     CPPUNIT_ASSERT(undefinedFalse);
     CPPUNIT_ASSERT(!undefinedTrue);
 }
+
+/**
+ * Test several ways of defining pre-compiler directives.
+ * Squid-3 uses #if FOO syntax for precompiler directives.
+ * These tests ensure that the inputs will work as expected
+ * when undefined macros are used in && conditions
+ */
+void
+testPreCompiler::testIfDefAnd()
+{
+    /* Not Defined to exist at all == false - when used in a compound if */
+#undef UNDEFINED_FOO
+#define ONE_FOO 1
+
+#if UNDEFINED_FOO && ONE_FOO
+    bool undefinedAndTrueA = true;
+#else
+    bool undefinedAndTrueA = false;
+#endif
+#if !UNDEFINED_FOO && ONE_FOO
+    bool undefinedAndFalseA = true;
+#else
+    bool undefinedAndFalseA = false;
+#endif
+    CPPUNIT_ASSERT(undefinedAndFalseA);
+    CPPUNIT_ASSERT(!undefinedAndTrueA);
+
+#if ONE_FOO && UNDEFINED_FOO
+    bool undefinedAndTrueB = true;
+#else
+    bool undefinedAndTrueB = false;
+#endif
+#if ONE_FOO && !UNDEFINED_FOO
+    bool undefinedAndFalseB = true;
+#else
+    bool undefinedAndFalseB = false;
+#endif
+    CPPUNIT_ASSERT(undefinedAndFalseB);
+    CPPUNIT_ASSERT(!undefinedAndTrueB);
+}
+
+/**
+ * Test several ways of defining pre-compiler directives.
+ * Squid-3 uses #if FOO syntax for precompiler directives.
+ * These tests ensure that the inputs will work as expected
+ * when undefined macros are used in || conditions
+ */
+void
+testPreCompiler::testIfDefOr()
+{
+    /* Not Defined to exist at all == false - when used in a compound if */
+#undef UNDEFINED_FOO
+#define ZERO_FOO 0
+
+#if UNDEFINED_FOO || ZERO_FOO
+    bool undefinedOrTrueA = true;
+#else
+    bool undefinedOrTrueA = false;
+#endif
+#if !UNDEFINED_FOO || ZERO_FOO
+    bool undefinedOrFalseA = true;
+#else
+    bool undefinedOrFalseA = false;
+#endif
+    CPPUNIT_ASSERT(undefinedOrFalseA);
+    CPPUNIT_ASSERT(!undefinedOrTrueA);
+
+#if ZERO_FOO || UNDEFINED_FOO
+    bool undefinedOrTrueB = true;
+#else
+    bool undefinedOrTrueB = false;
+#endif
+#if ZERO_FOO || !UNDEFINED_FOO
+    bool undefinedOrFalseB = true;
+#else
+    bool undefinedOrFalseB = false;
+#endif
+    CPPUNIT_ASSERT(undefinedOrFalseB);
+    CPPUNIT_ASSERT(!undefinedOrTrueB);
+
+}
+
