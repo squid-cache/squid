@@ -22,12 +22,14 @@ AsyncJob::Pointer AsyncJob::Start(AsyncJob *j)
 
 AsyncJob::AsyncJob(const char *aTypeName): typeName(aTypeName), inCall(NULL), id(++TheLastId)
 {
-    debugs(93,3, "AsyncJob of type " << typeName << " constructed, this=" << this <<
-           " [async" << id << ']');
+    debugs(93,5, "AsyncJob constructed, this=" << this <<
+           " type=" << typeName << " [job" << id << ']');
 }
 
 AsyncJob::~AsyncJob()
 {
+    debugs(93,5, "AsyncJob destructed, this=" << this <<
+           " type=" << typeName << " [job" << id << ']');
 }
 
 void AsyncJob::start()
