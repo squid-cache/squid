@@ -57,6 +57,7 @@
  */
 #define RFC1035_MAXHOSTNAMESZ RFC2181_MAXHOSTNAMELEN
 
+#define RFC1035_DEFAULT_PACKET_SZ 512
 
 typedef struct _rfc1035_rr rfc1035_rr;
 struct _rfc1035_rr {
@@ -97,12 +98,14 @@ SQUIDCEXTERN ssize_t rfc1035BuildAQuery(const char *hostname,
                                         char *buf,
                                         size_t sz,
                                         unsigned short qid,
-                                        rfc1035_query * query);
+                                        rfc1035_query * query,
+                                        ssize_t edns_sz);
 SQUIDCEXTERN ssize_t rfc1035BuildPTRQuery(const struct in_addr,
         char *buf,
         size_t sz,
         unsigned short qid,
-        rfc1035_query * query);
+        rfc1035_query * query,
+        ssize_t edns_sz);
 SQUIDCEXTERN void rfc1035SetQueryID(char *, unsigned short qid);
 SQUIDCEXTERN int rfc1035MessageUnpack(const char *buf,
                                       size_t sz,
@@ -131,5 +134,6 @@ SQUIDCEXTERN int rfc1035QuestionPack(char *buf,
                                      const char *name,
                                      const unsigned short type,
                                      const unsigned short _class);
+SQUIDCEXTERN int rfc1035RRPack(char *buf, size_t sz, const rfc1035_rr * RR);
 
 #endif /* SQUID_RFC1035_H */

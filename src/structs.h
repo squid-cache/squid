@@ -623,6 +623,10 @@ struct SquidConfig {
 #endif
 
     int client_ip_max_connections;
+
+    struct {
+        ssize_t packet_max; ///< maximum size EDNS advertised for DNS replies.
+    } dns;
 };
 
 SQUIDCEXTERN SquidConfig Config;

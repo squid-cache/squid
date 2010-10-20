@@ -85,9 +85,29 @@
 #endif
 
 #define IDNS_MAX_TRIES 20
-#define MAX_RCODE 6
+#define MAX_RCODE 17
 #define MAX_ATTEMPT 3
 static int RcodeMatrix[MAX_RCODE][MAX_ATTEMPT];
+// NP: see http://www.iana.org/assignments/dns-parameters
+static const char *Rcodes[] = {
+    /* RFC 1035 */
+    "Success",
+    "Packet Format Error",
+    "DNS Server Failure",
+    "Non-Existent Domain",
+    "Not Implemented",
+    "Query Refused",
+    /* RFC 2136 */
+    "Name Exists when it should not",
+    "RR Set Exists when it should not",
+    "RR Set that should exist does not",
+    "Server Not Authoritative for zone",
+    "Name not contained in zone",
+    /* unassigned */
+    "","","","","",
+    /* RFC 2671 */
+    "Bad OPT Version or TSIG Signature Failure"
+};
 
 typedef struct _idns_query idns_query;
 
@@ -140,6 +160,9 @@ struct _ns {
     Ip::Address S;
     int nqueries;
     int nreplies;
+#if WHEN_EDNS_RESPONSES_ARE_PARSED
+    int last_seen_edns;
+#endif
     nsvc *vc;
 };
 
@@ -162,6 +185,34 @@ static dlink_list lru_list;
 static int event_queued = 0;
 static hash_table *idns_lookup_hash = NULL;
 
+/*
+ * Notes on EDNS:
+ *
+ * IPv4:
+ *   EDNS as specified may be sent as an additional record for any request.
+ *   early testing has revealed that it works on common devices, but cannot
+ *   be reliably used on any A or PTR requet done for IPv4 addresses.
+ *
+ * As such the IPv4 packets are still hard-coded not to contain EDNS (0)
+ *
+ * Squid design:
+ *   Squid is optimized to generate one packet and re-send it to all NS
+ *   due to this we cannot customize the EDNS size per NS.
+ *
+ * As such we take the configuration option value as fixed.
+ *
+ * FUTURE TODO:
+ *   This may not be worth doing, but if/when additional-records are parsed
+ *   we will be able to recover the OPT value specific to any one NS and
+ *   cache it. Effectively automating the tuning of EDNS advertised to the
+ *   size our active NS are capable.
+ * Default would need to start with 512 bytes RFC1035 says every NS must accept.
+ * Responses from the configured NS may cause this to be raised or turned off.
+ */
+#if WHEN_EDNS_RESPONSES_ARE_PARSED
+static int max_shared_edns = RFC1035_DEFAULT_PACKET_SZ;
+#endif
+
 static OBJH idnsStats;
 static void idnsAddNameserver(const char *buf);
 static void idnsAddPathComponent(const char *buf);
@@ -182,7 +233,7 @@ static void idnsDoSendQueryVC(nsvc *vc);
 
 static int idnsFromKnownNameserver(Ip::Address const &from);
 static idns_query *idnsFindQuery(unsigned short id);
-static void idnsGrokReply(const char *buf, size_t sz);
+static void idnsGrokReply(const char *buf, size_t sz, int from_ns);
 static PF idnsRead;
 static EVH idnsCheckQueue;
 static void idnsTickleQueue(void);
@@ -230,6 +281,10 @@ idnsAddNameserver(const char *buf)
     assert(nns < nns_alloc);
     A.SetPort(NS_DEFAULTPORT);
     nameservers[nns].S = A;
+#if WHEN_EDNS_RESPONSES_ARE_PARSED
+    nameservers[nns].last_seen_edns = RFC1035_DEFAULT_PACKET_SZ;
+    // TODO generate a test packet to probe this NS from EDNS size and ability.
+#endif
     debugs(78, 3, "idnsAddNameserver: Added nameserver #" << nns << " (" << A << ")");
     nns++;
 }
@@ -609,6 +664,11 @@ idnsStats(StoreEntry * sentry)
                           tvSubDsec(q->sent_t, current_time));
     }
 
+    if (Config.dns.packet_max > 0)
+        storeAppendPrintf(sentry, "DNS jumbo-grams: %Zd Bytes\n", Config.dns.packet_max);
+    else
+        storeAppendPrintf(sentry, "DNS jumbo-grams: not working\n");
+
     storeAppendPrintf(sentry, "\nNameservers:\n");
     storeAppendPrintf(sentry, "IP ADDRESS                                     # QUERIES # REPLIES\n");
     storeAppendPrintf(sentry, "---------------------------------------------- --------- ---------\n");
@@ -626,15 +686,18 @@ idnsStats(StoreEntry * sentry)
     for (i = 0; i < MAX_ATTEMPT; i++)
         storeAppendPrintf(sentry, " ATTEMPT%d", i + 1);
 
-    storeAppendPrintf(sentry, "\n");
+    storeAppendPrintf(sentry, " PROBLEM\n");
 
     for (j = 0; j < MAX_RCODE; j++) {
+        if (j > 10 && j < 16)
+            continue; // unassigned by IANA.
+
         storeAppendPrintf(sentry, "%5d", j);
 
         for (i = 0; i < MAX_ATTEMPT; i++)
             storeAppendPrintf(sentry, " %8d", RcodeMatrix[j][i]);
 
-        storeAppendPrintf(sentry, "\n");
+        storeAppendPrintf(sentry, " : %s\n",Rcodes[j]);
     }
 
     if (npc) {
@@ -953,7 +1016,7 @@ idnsDropMessage(rfc1035_message *message, idns_query *q)
 }
 
 static void
-idnsGrokReply(const char *buf, size_t sz)
+idnsGrokReply(const char *buf, size_t sz, int from_ns)
 {
     int n;
     rfc1035_message *message = NULL;
@@ -981,6 +1044,30 @@ idnsGrokReply(const char *buf, size_t sz)
         rfc1035MessageDestroy(&message);
         return;
     }
+
+#if WHEN_EDNS_RESPONSES_ARE_PARSED
+// TODO: actually gr the message right here.
+//	pull out the DNS meta data we need (A records, AAAA records and EDNS OPT) and store in q
+//	this is overall better than force-feeding A response with AAAA an section later anyway.
+//	AND allows us to merge AN+AR sections from both responses (one day)
+
+    if (q->edns_seen >= 0) {
+        if (max_shared_edns == nameservers[from_ns].last_seen_edns && max_shared_edns < q->edns_seen) {
+            nameservers[from_ns].last_seen_edns = q->edns_seen;
+            // the altered NS was limiting the whole group.
+            max_shared_edns = q->edns_seen;
+            // may be limited by one of the others still
+            for (int i = 0; i < nns; i++)
+                max_shared_edns = min(max_shared_edns, nameservers[i].last_seen_edns);
+        } else {
+            nameservers[from_ns].last_seen_edns = q->edns_seen;
+            // maybe reduce the global limit downwards to accomodate this NS
+            max_shared_edns = min(max_shared_edns, q->edns_seen);
+        }
+        if (max_shared_edns < RFC1035_DEFAULT_PACKET_SZ)
+            max_shared_edns = -1;
+    }
+#endif
 
     if (message->tc) {
         debugs(78, 3, HERE << "Resolver requested TC (" << q->query.name << ")");
@@ -1040,10 +1127,11 @@ idnsGrokReply(const char *buf, size_t sz)
             rfc1035SetQueryID(q->buf, q->id);
             if (Ip::EnableIpv6 && q->query.qtype == RFC1035_TYPE_AAAA) {
                 debugs(78, 3, "idnsGrokReply: Trying AAAA Query for " << q->name);
-                q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
+                q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query, Config.dns.packet_max);
             } else {
                 debugs(78, 3, "idnsGrokReply: Trying A Query for " << q->name);
-                q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
+                // see EDNS notes at top of file why this sends 0
+                q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query, 0);
             }
             idnsCacheQuery(q);
             idnsSendQuery(q);
@@ -1081,7 +1169,8 @@ idnsGrokReply(const char *buf, size_t sz)
         q->start_t = current_time;
         q->id = idnsQueryID();
         rfc1035SetQueryID(q->buf, q->id);
-        q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
+        // see EDNS notes at top of file why this sends 0
+        q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query, 0);
         q->need_A = false;
         idnsCacheQuery(q);
         idnsSendQuery(q);
@@ -1205,7 +1294,7 @@ idnsRead(int fd, void *data)
             continue;
         }
 
-        idnsGrokReply(rbuf, len);
+        idnsGrokReply(rbuf, len, ns);
     }
 }
 
@@ -1286,7 +1375,7 @@ idnsReadVC(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *dat
            (int) vc->msg->contentSize() << " bytes via tcp from " <<
            nameservers[vc->ns].S << ".");
 
-    idnsGrokReply(vc->msg->buf, vc->msg->contentSize());
+    idnsGrokReply(vc->msg->buf, vc->msg->contentSize(), vc->ns);
     vc->msg->clean();
     comm_read(fd, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
 }
@@ -1439,6 +1528,13 @@ idnsInit(void)
         init++;
     }
 
+#if WHEN_EDNS_RESPONSES_ARE_PARSED
+    if (Config.onoff.ignore_unknown_nameservers && max_shared_edns > 0) {
+        debugs(0, DBG_IMPORTANT, "ERROR: cannot negotiate EDNS with unknown nameservers. Disabling");
+        max_shared_edns = -1; // disable if we might receive random replies.
+    }
+#endif
+
     idnsRegisterWithCacheManager();
 }
 
@@ -1535,10 +1631,11 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     }
 
     if (Ip::EnableIpv6) {
-        q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
+        q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query, Config.dns.packet_max);
         q->need_A = true;
     } else {
-        q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
+        // see EDNS notes at top of file why this sends 0
+        q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query, 0);
         q->need_A = false;
     }
 
@@ -1579,11 +1676,12 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
     if (Ip::EnableIpv6 && addr.IsIPv6()) {
         struct in6_addr addr6;
         addr.GetInAddr(addr6);
-        q->sz = rfc3596BuildPTRQuery6(addr6, q->buf, sizeof(q->buf), q->id, &q->query);
+        q->sz = rfc3596BuildPTRQuery6(addr6, q->buf, sizeof(q->buf), q->id, &q->query, Config.dns.packet_max);
     } else {
         struct in_addr addr4;
         addr.GetInAddr(addr4);
-        q->sz = rfc3596BuildPTRQuery4(addr4, q->buf, sizeof(q->buf), q->id, &q->query);
+        // see EDNS notes at top of file why this sends 0
+        q->sz = rfc3596BuildPTRQuery4(addr4, q->buf, sizeof(q->buf), q->id, &q->query, 0);
     }
 
     /* PTR does not do inbound A/AAAA */
