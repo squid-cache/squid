@@ -124,7 +124,7 @@ parse_date_elements(const char *day, const char *month, const char *year,
     char *t;
     memset(&tm, 0, sizeof(tm));
 
-    if (!day || !month || !year || !aTime)
+    if (!day || !month || !year || !aTime || (zone && strcmp(zone, "GMT")))
         return NULL;
     tm.tm_mday = atoi(day);
     tm.tm_mon = make_month(month);
@@ -181,12 +181,16 @@ parse_date(const char *str) {
                 timestr = t;
             else if (!year)
                 year = t;
+            else
+                return NULL;
         } else if (!wday)
             wday = t;
         else if (!month)
             month = t;
         else if (!zone)
             zone = t;
+        else
+            return NULL;
     }
     tm = parse_date_elements(day, month, year, timestr, zone);
 
