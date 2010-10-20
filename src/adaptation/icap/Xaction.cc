@@ -369,16 +369,16 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
         }
     } else {
 
-    al.icap.bytesRead+=io.size;
+        al.icap.bytesRead+=io.size;
 
-    updateTimeout();
+        updateTimeout();
 
-    debugs(93, 3, HERE << "read " << io.size << " bytes");
+        debugs(93, 3, HERE << "read " << io.size << " bytes");
 
-    /*
-     * See comments in Adaptation::Icap::Xaction.h about why we use commBuf
-     * here instead of reading directly into readBuf.buf.
-     */
+        /*
+         * See comments in Adaptation::Icap::Xaction.h about why we use commBuf
+         * here instead of reading directly into readBuf.buf.
+         */
 
         readBuf.append(commBuf, io.size);
         disableRetries(); // because pconn did not fail
