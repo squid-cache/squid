@@ -709,6 +709,8 @@ HttpStateData::processReplyHeader()
         readBuf->consume(header_bytes_read);
     }
 
+    newrep->removeStaleWarnings();
+
     /* Skip 1xx messages for now. Advertised in Via as an internal 1.0 hop */
     if (newrep->sline.protocol == PROTO_HTTP && newrep->sline.status >= 100 && newrep->sline.status < 200) {
 

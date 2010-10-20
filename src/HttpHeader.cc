@@ -184,7 +184,7 @@ static http_hdr_type ListHeadersArr[] = {
     HDR_UPGRADE,
     HDR_VARY,
     HDR_VIA,
-    /* HDR_WARNING, */
+    HDR_WARNING,
     HDR_WWW_AUTHENTICATE,
     HDR_AUTHENTICATION_INFO,
     HDR_PROXY_AUTHENTICATION_INFO,
