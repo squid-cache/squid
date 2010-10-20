@@ -1493,7 +1493,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                                       HttpRequest * orig_request,
                                       StoreEntry * entry,
                                       HttpHeader * hdr_out,
-                                      http_state_flags flags)
+                                      const http_state_flags flags)
 {
     /* building buffer for complex strings */
 #define BBUF_SZ (MAX_URL+32)
@@ -1933,8 +1933,7 @@ mb_size_t
 HttpStateData::buildRequestPrefix(HttpRequest * aRequest,
                                   HttpRequest * original_request,
                                   StoreEntry * sentry,
-                                  MemBuf * mb,
-                                  http_state_flags stateFlags)
+                                  MemBuf * mb)
 {
     const int offset = mb->size;
     HttpVersion httpver(1,1);
@@ -1946,7 +1945,7 @@ HttpStateData::buildRequestPrefix(HttpRequest * aRequest,
     {
         HttpHeader hdr(hoRequest);
         Packer p;
-        httpBuildRequestHeader(aRequest, original_request, sentry, &hdr, stateFlags);
+        httpBuildRequestHeader(aRequest, original_request, sentry, &hdr, flags);
 
         if (aRequest->flags.pinned && aRequest->flags.connection_auth)
             aRequest->flags.auth_sent = 1;
@@ -2034,7 +2033,7 @@ HttpStateData::sendRequest()
     }
 
     mb.init();
-    buildRequestPrefix(request, orig_request, entry, &mb, flags);
+    buildRequestPrefix(request, orig_request, entry, &mb);
     debugs(11, 6, "httpSendRequest: FD " << fd << ":\n" << mb.buf);
     comm_write_mbuf(fd, &mb, requestSender);
 
