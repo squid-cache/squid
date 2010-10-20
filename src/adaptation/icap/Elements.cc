@@ -8,6 +8,7 @@ namespace Icap
 {
 
 const XactOutcome xoUnknown = "ICAP_ERR_UNKNOWN";
+const XactOutcome xoRace = "ICAP_ERR_RACE";
 const XactOutcome xoError = "ICAP_ERR_OTHER";
 const XactOutcome xoOpt = "ICAP_OPT";
 const XactOutcome xoEcho = "ICAP_ECHO";

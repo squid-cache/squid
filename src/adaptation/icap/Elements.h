@@ -64,6 +64,7 @@ using Adaptation::vectPointStr;
 
 typedef const char *XactOutcome; ///< transaction result for logging
 extern const XactOutcome xoUnknown; ///< initial value: outcome was not set
+extern const XactOutcome xoRace; ///< ICAP server closed pconn when we started
 extern const XactOutcome xoError; ///< all kinds of transaction errors
 extern const XactOutcome xoOpt; ///< OPTION transaction
 extern const XactOutcome xoEcho; ///< preserved virgin message (ICAP 204)
