@@ -126,6 +126,9 @@ public:
 
     void recordLookup(const DnsLookupDetails &detail);
 
+    /// sets error detail if no earlier detail was available
+    void detailError(err_type aType, int aDetail);
+
 protected:
     void clean();
 
@@ -194,6 +197,7 @@ public:
     int dnsWait; ///< sum of DNS lookup delays in milliseconds, for %dt
 
     err_type errType;
+    int errDetail; ///< errType-specific detail about the transaction error
 
     char *peer_login;		/* Configured peer login:password */
 

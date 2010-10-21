@@ -18,6 +18,7 @@
 #include "icap_log.h"
 #include "fde.h"
 #include "SquidTime.h"
+#include "err_detail_type.h"
 
 static PconnPool *icapPconnPool = new PconnPool("ICAP Servers");
 
@@ -225,6 +226,7 @@ void Adaptation::Icap::Xaction::dieOnConnectionFailure()
 {
     debugs(93, 2, HERE << typeName <<
            " failed to connect to " << service().cfg().uri);
+    detailError(ERR_DETAIL_ICAP_XACT_START);
     throw TexcHere("cannot connect to the ICAP service");
 }
 
@@ -284,6 +286,7 @@ void Adaptation::Icap::Xaction::noteCommClosed(const CommCloseCbParams &io)
 
 void Adaptation::Icap::Xaction::handleCommClosed()
 {
+    detailError(ERR_DETAIL_ICAP_XACT_CLOSE);
     mustStop("ICAP service connection externally closed");
 }
 
@@ -441,6 +444,7 @@ void Adaptation::Icap::Xaction::noteInitiatorAborted()
 
     if (theInitiator.set()) {
         clearInitiator();
+        detailError(ERR_DETAIL_ICAP_INIT_GONE);
         mustStop("initiator aborted");
     }
 
