@@ -76,8 +76,6 @@
 #define _SQUID_MINGW_ 1
 #define _SQUID_WINDOWS_ 1
 
-#error Test: MinGW build detection.
-
 #elif defined(WIN32) || defined(WINNT) || defined(__WIN32__) || defined(__WIN32)
 #define _SQUID_WINDOWS_ 1
 
