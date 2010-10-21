@@ -165,6 +165,9 @@ public:
     // bypasses exceptions if needed and possible
     virtual void callException(const std::exception &e);
 
+    /// record error detail in the virgin request if possible
+    virtual void detailError(int errDetail);
+
 private:
     virtual void start();
 
