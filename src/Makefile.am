@@ -309,6 +309,7 @@ squid_SOURCES = \
 	$(DNSSOURCE) \
 	enums.h \
 	err_type.h \
+	err_detail_type.h \
 	errorpage.cc \
 	errorpage.h \
 	ETag.cc \
