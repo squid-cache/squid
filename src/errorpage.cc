@@ -45,6 +45,7 @@
 #include "rfc1738.h"
 #include "URLScheme.h"
 #include "wordlist.h"
+#include "err_detail_type.h"
 
 /**
  \defgroup ErrorPageInternal Error Page Internals
@@ -368,7 +369,7 @@ errorReservePageId(const char *page_name)
 }
 
 /// \ingroup ErrorPageInternal
-static const char *
+const char *
 errorPageName(int pageId)
 {
     if (pageId >= ERR_NONE && pageId < ERR_MAX)		/* common case */
@@ -392,6 +393,7 @@ errorCon(err_type type, http_status status, HttpRequest * request)
     if (request != NULL) {
         err->request = HTTPMSGLOCK(request);
         err->src_addr = request->client_addr;
+        request->detailError(type, ERR_DETAIL_NONE);
     }
 
     return err;
@@ -450,7 +452,7 @@ errorSend(int fd, ErrorState * err)
      */
 
     if (err->request)
-        err->request->errType = err->type;
+        err->request->detailError(err->type, err->xerrno);
 
     /* moved in front of errorBuildBuf @?@ */
     err->flags.flag_cbdata = 1;
