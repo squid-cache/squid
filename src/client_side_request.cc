@@ -69,6 +69,7 @@
 #include "Store.h"
 #include "SquidTime.h"
 #include "wordlist.h"
+#include "err_detail_type.h"
 
 
 #if LINGERING_CLOSE
@@ -1455,7 +1456,7 @@ ClientHttpRequest::noteAdaptationQueryAbort(bool final)
 {
     clearAdaptation(virginHeadSource);
     assert(!adaptedBodySource);
-    handleAdaptationFailure(!final);
+    handleAdaptationFailure(ERR_DETAIL_ICAP_REQMOD_ABORT, !final);
 }
 
 void
@@ -1508,11 +1509,11 @@ ClientHttpRequest::noteBodyProducerAborted(BodyPipe::Pointer)
 {
     assert(!virginHeadSource);
     stopConsumingFrom(adaptedBodySource);
-    handleAdaptationFailure();
+    handleAdaptationFailure(ERR_DETAIL_ICAP_RESPMOD_CLT_SIDE_BODY);
 }
 
 void
-ClientHttpRequest::handleAdaptationFailure(bool bypassable)
+ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
 {
     debugs(85,3, HERE << "handleAdaptationFailure(" << bypassable << ")");
 
@@ -1544,6 +1545,8 @@ ClientHttpRequest::handleAdaptationFailure(bool bypassable)
                                 (c != NULL ? c->peer : noAddr), request, NULL,
                                 (c != NULL && c->auth_user_request != NULL ?
                                  c->auth_user_request : request->auth_user_request));
+
+    request->detailError(ERR_ICAP_FAILURE, errDetail);
 
     node = (clientStreamNode *)client_stream.tail->data;
     clientStreamRead(node, this, node->readBuffer);

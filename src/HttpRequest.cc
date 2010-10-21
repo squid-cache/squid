@@ -44,6 +44,7 @@
 #include "adaptation/icap/icap_log.h"
 #endif
 #include "acl/FilledChecklist.h"
+#include "err_detail_type.h"
 
 HttpRequest::HttpRequest() : HttpMsg(hoRequest)
 {
@@ -101,6 +102,7 @@ HttpRequest::init()
     // hier
     dnsWait = -1;
     errType = ERR_NONE;
+    errDetail = ERR_DETAIL_NONE;
     peer_login = NULL;		// not allocated/deallocated by this class
     peer_domain = NULL;		// not allocated/deallocated by this class
     vary_headers = NULL;
@@ -467,6 +469,20 @@ HttpRequest::bodyNibbled() const
     return body_pipe != NULL && body_pipe->consumedSize() > 0;
 }
 
+void
+HttpRequest::detailError(err_type aType, int aDetail)
+{
+    if (errType || errDetail)
+        debugs(11, 5, HERE << "old error details: " << errType << '/' << errDetail);
+    debugs(11, 5, HERE << "current error details: " << aType << '/' << aDetail);
+    // checking type and detail separately may cause inconsistency, but
+    // may result in more details available if they only become available later
+    if (!errType)
+        errType = aType;
+    if (!errDetail)
+        errDetail = aDetail;
+}
+
 const char *HttpRequest::packableURI(bool full_uri) const
 {
     if (full_uri)
@@ -606,6 +622,9 @@ bool HttpRequest::inheritProperties(const HttpMsg *aMsg)
     // This may be too conservative for the 204 No Content case
     // may eventually need cloneNullAdaptationImmune() for that.
     flags = aReq->flags.cloneAdaptationImmune();
+
+    errType = aReq->errType;
+    errDetail = aReq->errDetail;
 
     auth_user_request = aReq->auth_user_request;
 

@@ -162,7 +162,7 @@ public:
     void startAdaptation(const Adaptation::ServiceGroupPointer &g);
 
     // private but exposed for ClientRequestContext
-    void handleAdaptationFailure(bool bypassable = false);
+    void handleAdaptationFailure(int errDetail, bool bypassable = false);
 
 private:
     // Adaptation::Initiator API
