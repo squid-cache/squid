@@ -12,12 +12,12 @@ TextException::TextException()
 }
 
 TextException::TextException(const TextException& right) :
-    message((right.message?xstrdup(right.message):NULL)), theFileName(right.theFileName), theLineNo(right.theLineNo), theId(right.theId)
+        message((right.message?xstrdup(right.message):NULL)), theFileName(right.theFileName), theLineNo(right.theLineNo), theId(right.theId)
 {
 }
 
 TextException::TextException(const char *aMsg, const char *aFileName, int aLineNo, unsigned int anId):
-    message(xstrdup(aMsg)), theFileName(aFileName), theLineNo(aLineNo), theId(anId)
+        message(xstrdup(aMsg)), theFileName(aFileName), theLineNo(aLineNo), theId(anId)
 {}
 
 TextException::~TextException() throw()
@@ -43,13 +43,13 @@ const char *TextException::what() const throw()
 }
 
 unsigned int TextException::FileNameHash(const char *fname)
-{    
+{
     const char *s = NULL;
     unsigned int n = 0;
     unsigned int j = 0;
     unsigned int i = 0;
     s = strrchr(fname, '/');
-    
+
     if (s)
         s++;
     else

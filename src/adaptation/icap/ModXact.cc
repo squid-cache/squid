@@ -1841,7 +1841,7 @@ bool Adaptation::Icap::ModXact::fillVirginHttpHeader(MemBuf &mb) const
 void Adaptation::Icap::ModXact::detailError(int errDetail)
 {
     if (HttpRequest *request = virgin.cause ?
-        virgin.cause : dynamic_cast<HttpRequest*>(virgin.header)) {
+                               virgin.cause : dynamic_cast<HttpRequest*>(virgin.header)) {
         request->detailError(ERR_ICAP_FAILURE, errDetail);
     }
 }
