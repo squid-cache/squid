@@ -299,9 +299,6 @@ if test "x$enable_strict_error_checking" != "xno"; then
   SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cxx_option_werror"
 fi
 
-AC_SUBST(SQUID_CFLAGS)
-AC_SUBST(SQUID_CXXFLAGS)
-
 SQUID_CXX_CHECK_ARG_FHUGEOBJECTS
 if test "x$squid_cv_cxx_arg_fhugeobjects" = "xyes"; then
   SQUID_CXXFLAGS="$SQUID_CXXFLAGS -fhuge-objects"
@@ -3293,6 +3290,10 @@ if test "x$XTRA_LIBS" = "x"; then
 	LIBS=''
 fi
 AC_SUBST(XTRA_LIBS)
+
+AC_SUBST(SQUID_CFLAGS)
+AC_SUBST(SQUID_CXXFLAGS)
+
 
 dnl Clean up after OSF/1 core dump bug
 rm -f core 
