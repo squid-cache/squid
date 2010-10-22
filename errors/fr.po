@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-09-30 15:46+1300\n"
-"PO-Revision-Date: 2010-10-09 23:34+0200\n"
+"PO-Revision-Date: 2010-10-22 18:31+0200\n"
 "Last-Translator:  <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
@@ -34,17 +34,14 @@ msgstr ""
 "Une erreur <b>Réponse Invalide</b> a été rencontrée en essayant de traiter "
 "la requête :"
 
-# suggestion2 OK
-# bernard
 #: templates/ERR_READ_TIMEOUT:7
-#, fuzzy
 msgid ""
 "A Timeout occurred while waiting to read data from the network. The network "
 "or server may be down or congested. Please retry your request."
 msgstr ""
-"Un délai critique s'est écoulé en attendant des données du réseau. Le réseau "
-"ou le serveur sont peut-être hors service ou défaillants. Veuillez réitérer "
-"votre requête."
+"Le délai a été dépassé lors de la lecture de données sur le réseau. Le "
+"réseau ou le serveur sont peut-être hors service ou surchargés. Merci de "
+"réitérer votre requête"
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
@@ -126,19 +123,19 @@ msgstr "Durée de vie de la connexion dépassée"
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
-msgstr "La connexion à %I a échouée."
+msgstr "La connexion %I a échouée."
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
-msgstr "Champ Content-Length absent pour les requêtes POST ou PUT"
+msgstr "Le champ Content-Length est absent pour les requêtes POST ou PUT"
 
 #: templates/ERR_DIR_LISTING:3
 msgid "Directory Content:"
-msgstr "Contenu du Répertoir:"
+msgstr "Contenu du Répertoire :"
 
 #: templates/ERR_DIR_LISTING:4
 msgid "Directory Listing"
-msgstr "Listing du Répertoir"
+msgstr "Listing du Répertoire"
 
 #: templates/ERR_DIR_LISTING:1
 msgid "Directory: %U"
@@ -195,30 +192,27 @@ msgstr "ERREUR: envoi FTP défectueux"
 #: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
 #: templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr "ERREUR : L'URL demandée n'a pu être chargée"
+msgstr "ERREUR : L'URL demandée n'a pas pu être chargée"
 
 #: templates/ERR_URN_RESOLVE:1
-#, fuzzy
 msgid "ERROR: The requested URN could not be retrieved"
-msgstr "ERREUR : L'URL demandée n'a pu être chargée"
+msgstr "ERREUR : L'URN demandée n'a pas pu être chargée"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
 msgstr "Le traitement ESI a échoué."
 
 #: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
-#, fuzzy
 msgid "FTP PUT Successful."
 msgstr "FTP PUT envoi du fichier réussi."
 
 #: templates/ERR_FTP_PUT_ERROR:3
-#, fuzzy
 msgid "FTP PUT upload failed"
-msgstr "FTP PUT échec sur l'envoi du fichier"
+msgstr "FTP PUT échec à l'envoi du fichier"
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
-msgstr "Le FTP est désactivé"
+msgstr "FTP est désactivé"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
@@ -234,19 +228,16 @@ msgstr "Fichier mis à jour"
 
 # Suggestion2 ok
 #: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
-#, fuzzy
 msgid "For Firefox browsers go to: <ul>"
 msgstr "Pour Firefox, allez à : <ul>"
 
 # Suggestion2 ok
 #: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
-#, fuzzy
 msgid "For Internet Explorer browsers go to: <ul>"
 msgstr "Pour Internet Explorer, allez à : <ul>"
 
 # Suggestion2 ok
 #: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
-#, fuzzy
 msgid "For Opera browsers go to: <ul>"
 msgstr "Pour Opéra, allez à : <ul>"
 
@@ -277,12 +268,10 @@ msgid "Generated %T by %h (%s)"
 msgstr "Générée le %T par %h (%s)"
 
 #: templates/ERR_INVALID_REQ:12
-#, fuzzy
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
-"HTTP/1.1 <q>Attend:</ q> cette fonctionnalité est demandé à partir du "
-"programme HTTP/1.0."
+"HTTP/1.1 <q>En attente:</ q> cette fonction demande le programme HTTP/1.0."
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -291,9 +280,8 @@ msgstr "Hé ! N'espérez pas trop des URNs de %T :)"
 # Suggestion2 OK
 # Bernard
 #: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
-#, fuzzy
 msgid "How to find these settings in your browser:"
-msgstr "Comment trouver les paramètres de votre navigateur:"
+msgstr "Comment trouver ces réglages dans votre navigateur :"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
@@ -327,11 +315,9 @@ msgstr "Double échappement illégal dans le chemin de l'URL"
 
 #: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
 #: templates/ERR_AGENT_CONFIGURE:14
-#, fuzzy
 msgid "In the HTTP proxy box type the proxy name %h and port 3128."
 msgstr ""
-"Dans l'onglet proxy HTTP vous indiquez le type de nom du proxy %h et le port "
-"3128"
+"Dans l'onglet proxy HTTP vous indiquez le nom du proxy %h et le port 3128"
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
@@ -408,12 +394,10 @@ msgid "Request is too large."
 msgstr "La requête est peut-être trop volumineuse"
 
 #: templates/ERR_AGENT_WPAD:10
-#, fuzzy
 msgid "Select Automatically detect settings"
 msgstr "Sélection automatiquement les paramètres détectés"
 
 #: templates/ERR_AGENT_WPAD:13
-#, fuzzy
 msgid "Select Use Automatic proxy configuration"
 msgstr "Utiliser la sélection automatique pour la configuration du proxy"
 
@@ -561,7 +545,7 @@ msgstr "La requête ou la réponse est trop grosse."
 #: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
 #: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
 msgid "The requested URL could not be retrieved"
-msgstr "L'URL demandée n'a pu être chargée"
+msgstr "L'URL demandée n'a pas pu être chargée"
 
 #: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
@@ -693,25 +677,22 @@ msgstr ""
 "configurés sont actuellement inaccessibles."
 
 #: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
-#, fuzzy
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
 msgstr ""
-"Proxy, Outils -&gt; Options Internet -&gt; Connexion -&gt; Paramètres LAN -"
-"&gt "
+"Outils -&gt; Options Internet -&gt; Connexion -&gt; Paramètres LAN -&gt; "
+"Proxy "
 
 #: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
-#, fuzzy
 msgid ""
 "Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
 msgstr ""
-"Paramètres de connexion, Outils -&gt; Options -&gt; Avancé -&gt; Réseau -&gt"
+"Outils -&gt; Options -&gt; Avancé -&gt; Réseau -&gt; Paramètres de Connexion"
 
 #: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
-#, fuzzy
 msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
-msgstr "Serveur Proxy, Outils -&gt; Préférences -&gt; Avancé -&gt; Réseau -&gt"
+msgstr "Outils -&gt; Préférences -&gt; Avancé -&gt; Réseau -&gt; Serveur Proxy"
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -739,7 +720,6 @@ msgstr ""
 
 #: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
 #: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
-#, fuzzy
 msgid "Web Browser Configuration"
 msgstr "Configuration du navigateur Web"
 
@@ -758,12 +738,11 @@ msgstr ""
 "nécessite une revalidation, interdite par la directive <q>only-if-cached</q>."
 
 #: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
-#, fuzzy
 msgid ""
 "Your Web Browser configuration needs to be corrected to use this network."
 msgstr ""
-"Vous devez corriger la configuration de votre navigateur Web, pour qu'il "
-"soit utilisé dans ce réseau"
+"Vous devez corriger la configuration de votre navigateur Web, pour être "
+"utilisé dans ce réseau"
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
 #: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
