@@ -22,7 +22,7 @@ public:
 
     // unique exception ID for transaction error detail logging
     unsigned int id() const { return theId; }
-    
+
     virtual const char *what() const throw();
 
     TextException& operator=(const TextException &right);
@@ -38,7 +38,7 @@ protected:
     const char *theFileName;
     int theLineNo;
     unsigned int theId;
-    
+
     friend unsigned int FileNameHashCached(const char *fname);
 };
 
@@ -62,7 +62,8 @@ FileNameHashCached(const char *fname)
 }
 
 ///  Avoids "defined but not used" warnings for FileNameHashCached
-class FileNameHashCacheUser {
+class FileNameHashCacheUser
+{
     bool use(void *ptr=NULL) { return ptr != &FileNameHashCached;}
 };
 

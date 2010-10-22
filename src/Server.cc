@@ -770,8 +770,7 @@ ServerStateData::handleAdaptationAborted(bool bypassable)
         err->xerrno = ERR_DETAIL_ICAP_RESPMOD_EARLY;
         fwd->fail(err);
         fwd->dontRetry(true);
-    }
-    else if (request) { // update logged info directly
+    } else if (request) { // update logged info directly
         request->detailError(ERR_ICAP_FAILURE, ERR_DETAIL_ICAP_RESPMOD_LATE);
     }
 
