@@ -385,8 +385,8 @@ typedef enum {
     LFT_HTTP_BODY_BYTES_READ,
 
     LFT_SQUID_STATUS,
-    LFT_SQUID_ERROR, 
-    LFT_SQUID_ERROR_DETAIL, 
+    LFT_SQUID_ERROR,
+    LFT_SQUID_ERROR_DETAIL,
     LFT_SQUID_HIERARCHY,
 
     LFT_MIME_TYPE,
@@ -1136,7 +1136,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
         case LFT_SQUID_ERROR_DETAIL:
             if (al->request && al->request->errDetail != ERR_DETAIL_NONE) {
                 if (al->request->errDetail > ERR_DETAIL_START  &&
-                    al->request->errDetail < ERR_DETAIL_MAX)
+                        al->request->errDetail < ERR_DETAIL_MAX)
                     out = errorDetailName(al->request->errDetail);
                 else {
                     if (al->request->errDetail >= ERR_DETAIL_EXCEPTION_START)
