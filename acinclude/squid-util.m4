@@ -77,7 +77,7 @@ CXX="${$1_CXX}"
 for squid_util_var_tosave in $$1_squid_saved_vars
 do
     squid_util_var_tosave2="$1_${squid_util_var_tosave}"
-    eval "${squid_util_var_tosave}=\$${squid_util_var_tosave2}"
+    eval "${squid_util_var_tosave}=\"${${squid_util_var_tosave2}}\""
 done
 SQUID_STATE_COMMIT($1)
 ])
