@@ -2411,6 +2411,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->indirect_client_addr = conn->peer;
 #endif /* FOLLOW_X_FORWARDED_FOR */
     request->my_addr = conn->me;
+    request->myportname = conn->port->name;
     request->http_ver = http_ver;
 
     tePresent = request->header.has(HDR_TRANSFER_ENCODING);
