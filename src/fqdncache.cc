@@ -850,6 +850,7 @@ fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
 
     while (hostnames) {
         fce->names[j] = xstrdup(hostnames->key);
+        Tolower(fce->names[j]);
         j++;
         hostnames = hostnames->next;
 
