@@ -175,7 +175,7 @@ tunnelStateFree(TunnelStateData * tunnelState)
     assert(tunnelState->noConnections());
     safe_free(tunnelState->url);
     FwdState::serversFree(&tunnelState->servers);
-    tunnelState->host = NULL;
+    safe_free(tunnelState->host);
     HTTPMSGUNLOCK(tunnelState->request);
     delete tunnelState;
 }
@@ -758,7 +758,7 @@ tunnelPeerSelectComplete(FwdServer * fs, void *data)
     }
 
     tunnelState->servers = fs;
-    tunnelState->host = fs->_peer ? fs->_peer->host : xstrdup(request->GetHost());
+    tunnelState->host = fs->_peer ? xstrdup(fs->_peer->host) : xstrdup(request->GetHost());
 
     if (fs->_peer == NULL) {
         tunnelState->port = request->port;
