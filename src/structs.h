@@ -723,6 +723,7 @@ public:
     int max_age;
     int s_maxage;
     int max_stale;
+    int min_fresh;
     String other;
 };
 
