@@ -1915,7 +1915,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
     int vhost = conn->port->vhost;
     int vport = conn->port->vport;
     char *host;
-    char ntoabuf[MAX_IPSTRLEN];
+    char ipbuf[MAX_IPSTRLEN];
 
     http->flags.accel = 1;
 
@@ -1973,19 +1973,19 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         /* Put the local socket IP address as the hostname.  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
+        http->getConn()->me.ToHostname(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  http->getConn()->port->protocol,
-                 http->getConn()->me.NtoA(ntoabuf,MAX_IPSTRLEN),
-                 http->getConn()->me.GetPort(), url);
+                 ipbuf, http->getConn()->me.GetPort(), url);
         debugs(33, 5, "ACCEL VPORT REWRITE: '" << http->uri << "'");
     } else if (vport > 0) {
         /* Put the local socket IP address as the hostname, but static port  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
+        http->getConn()->me.ToHostname(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  http->getConn()->port->protocol,
-                 http->getConn()->me.NtoA(ntoabuf,MAX_IPSTRLEN),
-                 vport, url);
+                 ipbuf, vport, url);
         debugs(33, 5, "ACCEL VPORT REWRITE: '" << http->uri << "'");
     }
 }
@@ -1994,7 +1994,7 @@ static void
 prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, const char *req_hdr)
 {
     char *host;
-    char ntoabuf[MAX_IPSTRLEN];
+    char ipbuf[MAX_IPSTRLEN];
 
     if (*url != '/')
         return; /* already in good shape */
@@ -2012,10 +2012,10 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         /* Put the local socket IP address as the hostname.  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
+        http->getConn()->me.ToHostname(ipbuf,MAX_IPSTRLEN),
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  http->getConn()->port->protocol,
-                 http->getConn()->me.NtoA(ntoabuf,MAX_IPSTRLEN),
-                 http->getConn()->me.GetPort(), url);
+                 ipbuf, http->getConn()->me.GetPort(), url);
         debugs(33, 5, "TRANSPARENT REWRITE: '" << http->uri << "'");
     }
 }
