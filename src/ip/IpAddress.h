@@ -256,7 +256,7 @@ public:
      *  eg. 127.0.0.1 (IPv4) or [::1] (IPv6)
      \param buf Allocated buffer to write address to
      \param len byte length of buffer available for writing.
-     \return pointer to buffer received.
+     \return amount of buffer filled.
      */
     unsigned int ToHostname(char *buf, const unsigned int len) const;
 
