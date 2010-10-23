@@ -372,6 +372,12 @@ HttpStateData::cacheableReply()
     if (surrogateNoStore)
         return 0;
 
+    // RFC 2616: do not cache replies to responses with no-store CC directive
+    if (request && request->cache_control &&
+        EBIT_TEST(request->cache_control->mask, CC_NO_STORE) &&
+        !REFRESH_OVERRIDE(ignore_no_store))
+        return 0;
+
     if (!ignoreCacheControl) {
         if (EBIT_TEST(cc_mask, CC_PRIVATE)) {
             if (!REFRESH_OVERRIDE(ignore_private))
