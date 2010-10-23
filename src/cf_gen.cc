@@ -556,6 +556,9 @@ gen_default(Entry * head, FILE * fp)
         if (!strcmp(entry->name, "comment"))
             continue;
 
+        if (!strcmp(entry->type, "obsolete"))
+            continue;
+
         if (entry->loc == NULL) {
             fprintf(stderr, "NO LOCATION FOR %s\n", entry->name);
             rc |= 1;
@@ -601,7 +604,9 @@ gen_default_if_none(Entry * head, FILE * fp)
 
     for (entry = head; entry != NULL; entry = entry->next) {
         assert(entry->name);
-        assert(entry->loc);
+
+        if (!entry->loc)
+            continue;
 
         if (entry->default_if_none == NULL)
             continue;
@@ -636,7 +641,14 @@ gen_parse_alias(char *name, EntryAlias *alias, Entry *entry, FILE *fp)
 {
     fprintf(fp, "\tif (!strcmp(token, \"%s\")) {\n", name);
 
-    if (strcmp(entry->loc, "none") == 0) {
+    if (strcmp(entry->type,"obsolete") == 0) {
+        fprintf(fp, "\t\tdebugs(0, DBG_CRITICAL, \"ERROR: Directive '%s' is obsolete.\");\n", name);
+        for (Line *line = entry->doc; line != NULL; line = line->next) {
+            // offset line to strip initial whitespace tab byte
+            fprintf(fp, "\t\tdebugs(0, opt_parse_cfg_only?0:1, \"%s : %s\");\n", name, &line->data[1]);
+        }
+        fprintf(fp, "\t\tparse_obsolete(token);\n");
+    } else if (!entry->loc || strcmp(entry->loc, "none") == 0) {
         fprintf(fp,
                 "\t\tparse_%s();\n",
                 entry->type
@@ -665,8 +677,6 @@ gen_parse_entry(Entry *entry, FILE *fp)
     char *name = entry->name;
 
     EntryAlias *alias = entry->alias;
-
-    assert (entry->loc);
 
     bool more;
 
@@ -718,9 +728,8 @@ gen_dump(Entry * head, FILE * fp)
            );
 
     for (entry = head; entry != NULL; entry = entry->next) {
-        assert(entry->loc);
 
-        if (strcmp(entry->loc, "none") == 0)
+        if (!entry->loc || strcmp(entry->loc, "none") == 0)
             continue;
 
         if (strcmp(entry->name, "comment") == 0)
@@ -753,9 +762,7 @@ gen_free(Entry * head, FILE * fp)
            );
 
     for (entry = head; entry != NULL; entry = entry->next) {
-        assert(entry->loc);
-
-        if (strcmp(entry->loc, "none") == 0)
+        if (!entry->loc || strcmp(entry->loc, "none") == 0)
             continue;
 
         if (strcmp(entry->name, "comment") == 0)
@@ -815,6 +822,8 @@ gen_conf(Entry * head, FILE * fp, bool verbose_output)
         int enabled = 1;
 
         if (!strcmp(entry->name, "comment"))
+            (void) 0;
+        else if (!strcmp(entry->name, "obsolete"))
             (void) 0;
         else if (verbose_output) {
             fprintf(fp, "#  TAG: %s", entry->name);
