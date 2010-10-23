@@ -277,6 +277,8 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 #endif
        ) {
         debugs(22, 3, "refreshCheck: YES: Must revalidate stale response");
+        if (request)
+            request->flags.fail_on_validation_err = 1;
         return STALE_MUST_REVALIDATE;
     }
 

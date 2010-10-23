@@ -350,7 +350,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     // request to origin was aborted
     if (EBIT_TEST(http->storeEntry()->flags, ENTRY_ABORTED)) {
         debugs(88, 3, "handleIMSReply: request to origin aborted '" << http->storeEntry()->url() << "', sending old entry to client" );
-        http->logType = LOG_TCP_REFRESH_FAIL;
+        http->logType = LOG_TCP_REFRESH_FAIL_OLD;
         sendClientOldEntry();
     }
 
@@ -387,9 +387,14 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     }
 
     // origin replied with an error
-    else {
+    else if (http->request->flags.fail_on_validation_err) {
+        http->logType = LOG_TCP_REFRESH_FAIL_ERR;
+        debugs(88, 3, "handleIMSReply: origin replied with error " << status <<
+               ", forwarding to client due to fail_on_validation_err");
+        sendClientUpstreamResponse();
+    } else {
         // ignore and let client have old entry
-        http->logType = LOG_TCP_REFRESH_FAIL;
+        http->logType = LOG_TCP_REFRESH_FAIL_OLD;
         debugs(88, 3, "handleIMSReply: origin replied with error " <<
                status << ", sending old entry (" << old_rep->sline.status << ") to client");
         sendClientOldEntry();
