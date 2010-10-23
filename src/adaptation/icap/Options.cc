@@ -89,8 +89,12 @@ void Adaptation::Icap::Options::configure(const HttpReply *reply)
 
     istag = h->getByName("ISTag");
 
-    if (h->getByName("Opt-body-type").size())
-        error = "ICAP service returns unsupported OPTIONS body";
+    if (h->getByName("Opt-body-type").size()) {
+        // TODO: add a class to rate-limit such warnings using FadingCounter
+        debugs(93,DBG_IMPORTANT, "WARNING: Ignoring unsupported ICAP " <<
+            "OPTIONS body; type: " << h->getByName("Opt-body-type"));
+        // Do not set error, assuming the response headers are valid.
+    }
 
     cfgIntHeader(h, "Max-Connections", max_connections);
 
