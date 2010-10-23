@@ -62,7 +62,7 @@ struct addrinfo {
     int ai_family; 	  	/* PF_xxx */
     int ai_socktype;	 	/* SOCK_xxx */
     int ai_protocol;	 	/* 0 or IPPROTO_xxx for IPv4 and IPv6 */
-    size_t ai_addrlen;	  	/* length of ai_addr */
+    socklen_t ai_addrlen;	/* length of ai_addr */
     char *ai_canonname;		/* canonical name for nodename */
     struct sockaddr *ai_addr;	/* binary address */
     struct addrinfo *ai_next;	/* next structure in linked list */
