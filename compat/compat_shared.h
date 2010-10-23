@@ -68,7 +68,7 @@
 /* Limited due to delay pools */
 # define SQUID_MAXFD_LIMIT    ((signed int)FD_SETSIZE)
 
-#elif defined(USE_KQUEUE) || defined(USE_EPOLL)
+#elif defined(USE_KQUEUE) || defined(USE_EPOLL) || defined(USE_DEVPOLL)
 # define SQUID_FDSET_NOUSE 1
 
 #else
