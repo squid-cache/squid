@@ -116,7 +116,7 @@ void ChunkedCodingParser::parseChunkEnd()
 
     if (findCrlf(crlfBeg, crlfEnd)) {
         if (crlfBeg != 0) {
-            throw TexcHere("found data bewteen chunk end and CRLF");
+            throw TexcHere("found data between chunk end and CRLF");
             return;
         }
 
