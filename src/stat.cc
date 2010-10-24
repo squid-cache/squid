@@ -547,9 +547,12 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\tStorage Mem size:\t%lu KB\n",
                       (unsigned long)(mem_node::StoreMemSize() >> 10));
 
+    double mFree = 0.0;
+    if (mem_node::InUseCount() <= store_pages_max)
+        mFree = Math::doublePercent((store_pages_max - mem_node::InUseCount()), store_pages_max);
     storeAppendPrintf(sentry, "\tStorage Mem capacity:\t%4.1f%% used, %4.1f%% free\n",
                       Math::doublePercent(mem_node::InUseCount(), store_pages_max),
-                      Math::doublePercent((store_pages_max - mem_node::InUseCount()), store_pages_max));
+                      mFree);
 
     storeAppendPrintf(sentry, "\tMean Object Size:\t%0.2f KB\n",
                       n_disk_objects ? (double) store_swap_size / n_disk_objects : 0.0);
@@ -712,9 +715,12 @@ info_get(StoreEntry * sentry)
         storeAppendPrintf(sentry, "\tmemPool accounted:     %6ld KB %3d%%\n",
                           (long)(mp_stats.TheMeter->alloc.level >> 10),
                           Math::intPercent(mp_stats.TheMeter->alloc.level, t));
+
+        int iFree = 0;
+        if (t >= mp_stats.TheMeter->alloc.level)
+            iFree = Math::intPercent((t - mp_stats.TheMeter->alloc.level), t);
         storeAppendPrintf(sentry, "\tmemPool unaccounted:   %6ld KB %3d%%\n",
-                          (long)((t - mp_stats.TheMeter->alloc.level) >> 10),
-                          Math::intPercent((t - mp_stats.TheMeter->alloc.level), t));
+                          (long)((t - mp_stats.TheMeter->alloc.level) >> 10), iFree);
 #endif
 
         storeAppendPrintf(sentry, "\tmemPoolAlloc calls: %9.0f\n",
