@@ -937,7 +937,6 @@ testHttpRequest::testParseRequestLine()
     //printf("TEST: '%s'\n",input.content());
     HttpParserInit(&output, input.content(), input.contentSize());
     CPPUNIT_ASSERT_EQUAL(-1, HttpParserParseReqLine(&output));
-    CPPUNIT_ASSERT_EQUAL(HTTP_HTTP_VERSION_NOT_SUPPORTED, output.request_parse_status);
     CPPUNIT_ASSERT_EQUAL(0, output.req_start);
     CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req_end);
     CPPUNIT_ASSERT(memcmp("GET / HTTP/-999999.1\n", &output.buf[output.req_start],(output.req_end-output.req_start+1)) == 0);
@@ -980,7 +979,6 @@ testHttpRequest::testParseRequestLine()
     //printf("TEST: '%s'\n",input.content());
     HttpParserInit(&output, input.content(), input.contentSize());
     CPPUNIT_ASSERT_EQUAL(-1, HttpParserParseReqLine(&output));
-    CPPUNIT_ASSERT_EQUAL(HTTP_HTTP_VERSION_NOT_SUPPORTED, output.request_parse_status);
     CPPUNIT_ASSERT_EQUAL(0, output.req_start);
     CPPUNIT_ASSERT_EQUAL((int)input.contentSize()-1, output.req_end);
     CPPUNIT_ASSERT(memcmp("GET / HTTP/1.-999999\n", &output.buf[output.req_start],(output.req_end-output.req_start+1)) == 0);
