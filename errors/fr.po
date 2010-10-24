@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-09-30 15:46+1300\n"
-"PO-Revision-Date: 2010-10-24 18:57+0200\n"
+"PO-Revision-Date: 2010-10-24 19:02+0200\n"
 "Last-Translator:  <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
@@ -765,7 +765,7 @@ msgstr "Votre webmaster est <a href=\"mailto:%w\">%w</a>."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr "Réponse de taille nulle"
+msgstr "Réponse de longueur nulle"
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "ERREUR : L'URN demandée n'a pu être chargée"
