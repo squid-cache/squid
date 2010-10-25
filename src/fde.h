@@ -146,7 +146,9 @@ private:
         bytes_written = 0;
         pconn.uses = 0;
         pconn.pool = NULL;
+#if DELAY_POOLS
         clientInfo = NULL;
+#endif
         epoll_state = 0;
         memset(&disk, 0, sizeof(_fde_disk));
         read_handler = NULL;
