@@ -305,6 +305,7 @@ print $index "<hr />\n" if $format eq "singlehtml";
 # and now, build the option pages
 my (@names) = keys %option;
 foreach $name (@names) {
+	next if $option{$name}->{'type'} eq "obsolete";
 	generate_page("${top}/${pagetemplate}", $option{$name});
 }
 
@@ -350,6 +351,7 @@ print $fh "<ul>\n";
 
 foreach $name (sort keys %all_names) {
 	my ($data) = $all_names{$name};
+	next if $data->{'type'} eq "obsolete";
 	print $fh '    <li><a href="' . uriescape($data->{'name'}) . '.html" name="toc_' . htmlescape($name) . '">' . htmlescape($name) . "</a></li>\n";
 }
 

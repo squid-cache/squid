@@ -96,6 +96,75 @@ COMMENT_START
 	across all Squid processes.
 COMMENT_END
 
+# Options Removed in 3.2
+NAME: ignore_expect_100
+TYPE: obsolete
+DOC_START
+	Remove this line. The HTTP/1.1 feature is now fully supported by default.
+DOC_END
+
+NAME: ftp_list_width
+TYPE: obsolete
+DOC_START
+	Remove this line. Configure FTP page display using the CSS controls in errorpages.css instead.
+DOC_END
+
+NAME: url_rewrite_concurrency
+TYPE: obsolete
+DOC_START
+	Remove this line. Set the 'concurrency=' option of url_rewrite_children instead.
+DOC_END
+
+# Options Removed in 3.1
+NAME: dns_testnames
+TYPE: obsolete
+DOC_START
+	Remove this line. DNS is no longer tested on startup.
+DOC_END
+
+NAME: extension_methods
+TYPE: obsolete
+DOC_START
+	Remove this line. All valid methods for HTTP are accepted by default.
+DOC_END
+
+# 2.7 Options Removed/Replaced in 3.1
+NAME: incoming_rate
+TYPE: obsolete
+DOC_NONE
+
+NAME: server_http11
+TYPE: obsolete
+DOC_START
+	Remove this line. HTTP/1.1 is supported by default.
+DOC_END
+
+NAME: upgrade_http0.9
+TYPE: obsolete
+DOC_START
+	Remove this line. ICY/1.0 streaming protocol is supported by default.
+DOC_END
+
+NAME: zph_local zph_mode zph_option zph_parent zph_sibling
+TYPE: obsolete
+DOC_START
+	Alter these entries. Use the qos_flows directive instead.
+DOC_END
+
+# Options Removed in 3.0
+NAME: header_access
+TYPE: obsolete
+DOC_START
+	Since squid-3.0 replace with request_header_access or reply_header_access
+	depending on whether you wish to match client requests or server replies.
+DOC_END
+
+NAME: httpd_accel_no_pmtu_disc
+TYPE: obsolete
+DOC_START
+	Since squid-3.0 use the 'disable-pmtu-discovery' flag on http_port instead.
+DOC_END
+
 COMMENT_START
  OPTIONS FOR AUTHENTICATION
  -----------------------------------------------------------------------------

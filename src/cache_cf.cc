@@ -144,6 +144,7 @@ static void parse_string(char **);
 static void default_all(void);
 static void defaults_if_none(void);
 static int parse_line(char *);
+static void parse_obsolete(const char *);
 static void parseBytesLine(size_t * bptr, const char *units);
 #if !USE_DNSSERVERS
 static void parseBytesLineSigned(ssize_t * bptr, const char *units);
@@ -891,6 +892,24 @@ configDoConfigure(void)
     }
 
 #endif
+}
+
+/** Parse a line containing an obsolete directive.
+ * To upgrade it where possible instead of just "Bungled config" for
+ * directives which cannot be marked as simply aliases of the some name.
+ * For example if the parameter order and content has changed.
+ * Or if the directive has been completely removed.
+ */
+void
+parse_obsolete(const char *name)
+{
+    // Directives which have been radically changed rather than removed
+    if (!strcmp(name, "url_rewrite_concurrency")) {
+        int cval;
+        parse_int(&cval);
+        debugs(3, DBG_CRITICAL, "WARNING: url_rewrite_concurrency upgrade overriding url_rewrite_children settings.");
+        Config.redirectChildren.concurrency = cval;
+    }
 }
 
 /* Parse a time specification from the config file.  Store the
