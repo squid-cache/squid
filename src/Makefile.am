@@ -75,7 +75,10 @@ DELAY_POOL_ALL_SOURCE = \
 	DelayVector.cc \
 	DelayVector.h \
 	NullDelayId.cc \
-	NullDelayId.h
+	NullDelayId.h \
+	ClientDelayConfig.cc \
+	ClientDelayConfig.h
+	
 if USE_DELAY_POOLS
 DELAY_POOL_SOURCE = $(DELAY_POOL_ALL_SOURCE)
 else

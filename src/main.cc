@@ -80,6 +80,10 @@
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
 
+#if DELAY_POOLS
+#include "ClientDelayConfig.h"
+#endif
+
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
 #endif
@@ -838,6 +842,10 @@ mainReconfigureFinish(void *)
 
     mimeInit(Config.mimeTablePathname);
 
+#if DELAY_POOLS
+    Config.ClientDelay.finalize();
+#endif
+
     if (Config.onoff.announce) {
         if (!eventFind(start_announce, NULL))
             eventAdd("start_announce", start_announce, NULL, 3600.0, 1);
@@ -1158,6 +1166,10 @@ mainInitialize(void)
 
 #if USE_SQUID_ESI
     Esi::Init();
+#endif
+
+#if DELAY_POOLS
+    Config.ClientDelay.finalize();
 #endif
 
     debugs(1, 1, "Ready to serve requests.");
