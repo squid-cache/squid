@@ -214,8 +214,10 @@ lookup(const char *buf)
     hints.ai_flags = AI_CANONNAME;
 
     for (;;) {
-        xfreeaddrinfo(AI);
-        AI = NULL;
+        if (AI != NULL) {
+            xfreeaddrinfo(AI);
+            AI = NULL;
+        }
 
         if ( 0 == (res = xgetaddrinfo(buf,NULL,&hints,&AI)) )
             break;
