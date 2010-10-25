@@ -201,8 +201,10 @@ lookup(const char *buf)
     hints.ai_flags = AI_CANONNAME;
 
     for (;;) {
-        freeaddrinfo(AI);
-        AI = NULL;
+        if (AI != NULL) {
+            freeaddrinfo(AI);
+            AI = NULL;
+        }
 
         if ( 0 == (res = getaddrinfo(buf,NULL,&hints,&AI)) )
             break;
