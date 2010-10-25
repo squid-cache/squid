@@ -126,6 +126,7 @@ struct relist {
 
 #if DELAY_POOLS
 #include "DelayConfig.h"
+#include "ClientDelayConfig.h"
 #endif
 
 #if USE_ICMP
@@ -535,6 +536,7 @@ struct SquidConfig {
 #if DELAY_POOLS
 
     DelayConfig Delay;
+    ClientDelayConfig ClientDelay;
 #endif
 
     struct {

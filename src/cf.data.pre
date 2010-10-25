@@ -4871,6 +4871,101 @@ DOC_START
 DOC_END
 
 COMMENT_START
+ CLIENT DELAY POOL PARAMETERS
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: client_delay_pools
+TYPE: client_delay_pool_count
+DEFAULT: 0
+IFDEF: DELAY_POOLS
+LOC: Config.ClientDelay
+DOC_START
+	This option specifies the number of client delay pools used. It must
+	preceed other client_delay_* options.
+
+Example:
+ client_delay_pools 2
+DOC_END
+
+NAME: client_delay_initial_bucket_level
+COMMENT: (percent, 0-no_limit)
+TYPE: ushort
+DEFAULT: 50
+IFDEF: DELAY_POOLS
+LOC: Config.ClientDelay.initial
+DOC_START
+	This option determines the initial bucket size as a percentage of
+	max_bucket_size from client_delay_parameters. Buckets are created
+	at the time of the "first" connection from the matching IP. Idle
+	buckets are periodically deleted up.
+
+	You can specify more than 100 percent but note that such "oversized"
+	buckets are not refilled until their size goes down to max_bucket_size
+	from client_delay_parameters.
+
+Example:
+ client_delay_initial_bucket_level 50
+DOC_END
+
+NAME: client_delay_parameters
+TYPE: client_delay_pool_rates
+DEFAULT: none
+IFDEF: DELAY_POOLS
+LOC: Config.ClientDelay
+DOC_START
+
+	This option configures client-side bandwidth limits using the
+	following format:
+
+	    client_delay_parameters pool speed_limit max_bucket_size
+
+	pool is an integer ID used for client_delay_access matching.
+
+	speed_limit is bytes added to the bucket per second.
+
+	max_bucket_size is the maximum size of a bucket, enforced after any
+	speed_limit additions.
+
+	Please see the delay_parameters option for more information and
+	examples.
+
+Example:
+ client_delay_parameters 1 1024 2048
+ client_delay_parameters 2 51200 16384
+DOC_END
+
+NAME: client_delay_access
+TYPE: client_delay_pool_access
+DEFAULT: none
+IFDEF: DELAY_POOLS
+LOC: Config.ClientDelay
+DOC_START
+
+	This option determines the client-side delay pool for the
+	request:
+
+	    client_delay_access pool_ID allow|deny acl_name
+
+	All client_delay_access options are checked in their pool ID
+	order, starting with pool 1. The first checked pool with allowed
+	request is selected for the request. If no ACL matches or there
+	are no client_delay_access options, the request bandwidth is not
+	limited.
+
+	The ACL-selected pool is then used to find the
+	client_delay_parameters for the request. Client-side pools are
+	not used to aggregate clients. Clients are always aggregated
+	based on their source IP addresses (one bucket per source IP).
+
+	Please see delay_access for more examples.
+
+Example:
+ client_delay_access 1 allow low_rate_network
+ client_delay_access 2 allow vips_network
+DOC_END
+
+COMMENT_START
  WCCPv1 AND WCCPv2 CONFIGURATION OPTIONS
  -----------------------------------------------------------------------------
 COMMENT_END
