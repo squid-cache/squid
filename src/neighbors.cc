@@ -320,7 +320,7 @@ getRoundRobinParent(HttpRequest * request)
             if (p->weight == q->weight) {
                 if (q->rr_count < p->rr_count)
                     continue;
-            } else if ( (double) q->rr_count / q->weight < (double) p->rr_count / p->weight) {
+            } else if ( ((double) q->rr_count / q->weight) < ((double) p->rr_count / p->weight)) {
                 continue;
             }
         }
