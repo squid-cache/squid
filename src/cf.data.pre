@@ -96,6 +96,75 @@ COMMENT_START
 	across all Squid processes.
 COMMENT_END
 
+# Options Removed in 3.2
+NAME: ignore_expect_100
+TYPE: obsolete
+DOC_START
+	Remove this line. The HTTP/1.1 feature is now fully supported by default.
+DOC_END
+
+NAME: ftp_list_width
+TYPE: obsolete
+DOC_START
+	Remove this line. Configure FTP page display using the CSS controls in errorpages.css instead.
+DOC_END
+
+NAME: url_rewrite_concurrency
+TYPE: obsolete
+DOC_START
+	Remove this line. Set the 'concurrency=' option of url_rewrite_children instead.
+DOC_END
+
+# Options Removed in 3.1
+NAME: dns_testnames
+TYPE: obsolete
+DOC_START
+	Remove this line. DNS is no longer tested on startup.
+DOC_END
+
+NAME: extension_methods
+TYPE: obsolete
+DOC_START
+	Remove this line. All valid methods for HTTP are accepted by default.
+DOC_END
+
+# 2.7 Options Removed/Replaced in 3.1
+NAME: incoming_rate
+TYPE: obsolete
+DOC_NONE
+
+NAME: server_http11
+TYPE: obsolete
+DOC_START
+	Remove this line. HTTP/1.1 is supported by default.
+DOC_END
+
+NAME: upgrade_http0.9
+TYPE: obsolete
+DOC_START
+	Remove this line. ICY/1.0 streaming protocol is supported by default.
+DOC_END
+
+NAME: zph_local zph_mode zph_option zph_parent zph_sibling
+TYPE: obsolete
+DOC_START
+	Alter these entries. Use the qos_flows directive instead.
+DOC_END
+
+# Options Removed in 3.0
+NAME: header_access
+TYPE: obsolete
+DOC_START
+	Since squid-3.0 replace with request_header_access or reply_header_access
+	depending on whether you wish to match client requests or server replies.
+DOC_END
+
+NAME: httpd_accel_no_pmtu_disc
+TYPE: obsolete
+DOC_START
+	Since squid-3.0 use the 'disable-pmtu-discovery' flag on http_port instead.
+DOC_END
+
 COMMENT_START
  OPTIONS FOR AUTHENTICATION
  -----------------------------------------------------------------------------
@@ -4799,6 +4868,101 @@ DOC_START
 	a host accessing it (in class 2 and class 3, individual hosts and
 	networks only have buckets associated with them once they have been
 	"seen" by squid).
+DOC_END
+
+COMMENT_START
+ CLIENT DELAY POOL PARAMETERS
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: client_delay_pools
+TYPE: client_delay_pool_count
+DEFAULT: 0
+IFDEF: DELAY_POOLS
+LOC: Config.ClientDelay
+DOC_START
+	This option specifies the number of client delay pools used. It must
+	preceed other client_delay_* options.
+
+Example:
+ client_delay_pools 2
+DOC_END
+
+NAME: client_delay_initial_bucket_level
+COMMENT: (percent, 0-no_limit)
+TYPE: ushort
+DEFAULT: 50
+IFDEF: DELAY_POOLS
+LOC: Config.ClientDelay.initial
+DOC_START
+	This option determines the initial bucket size as a percentage of
+	max_bucket_size from client_delay_parameters. Buckets are created
+	at the time of the "first" connection from the matching IP. Idle
+	buckets are periodically deleted up.
+
+	You can specify more than 100 percent but note that such "oversized"
+	buckets are not refilled until their size goes down to max_bucket_size
+	from client_delay_parameters.
+
+Example:
+ client_delay_initial_bucket_level 50
+DOC_END
+
+NAME: client_delay_parameters
+TYPE: client_delay_pool_rates
+DEFAULT: none
+IFDEF: DELAY_POOLS
+LOC: Config.ClientDelay
+DOC_START
+
+	This option configures client-side bandwidth limits using the
+	following format:
+
+	    client_delay_parameters pool speed_limit max_bucket_size
+
+	pool is an integer ID used for client_delay_access matching.
+
+	speed_limit is bytes added to the bucket per second.
+
+	max_bucket_size is the maximum size of a bucket, enforced after any
+	speed_limit additions.
+
+	Please see the delay_parameters option for more information and
+	examples.
+
+Example:
+ client_delay_parameters 1 1024 2048
+ client_delay_parameters 2 51200 16384
+DOC_END
+
+NAME: client_delay_access
+TYPE: client_delay_pool_access
+DEFAULT: none
+IFDEF: DELAY_POOLS
+LOC: Config.ClientDelay
+DOC_START
+
+	This option determines the client-side delay pool for the
+	request:
+
+	    client_delay_access pool_ID allow|deny acl_name
+
+	All client_delay_access options are checked in their pool ID
+	order, starting with pool 1. The first checked pool with allowed
+	request is selected for the request. If no ACL matches or there
+	are no client_delay_access options, the request bandwidth is not
+	limited.
+
+	The ACL-selected pool is then used to find the
+	client_delay_parameters for the request. Client-side pools are
+	not used to aggregate clients. Clients are always aggregated
+	based on their source IP addresses (one bucket per source IP).
+
+	Please see delay_access for more examples.
+
+Example:
+ client_delay_access 1 allow low_rate_network
+ client_delay_access 2 allow vips_network
 DOC_END
 
 COMMENT_START

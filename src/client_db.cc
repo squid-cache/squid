@@ -49,12 +49,21 @@ static FREE clientdbFreeItem;
 static void clientdbStartGC(void);
 static void clientdbScheduledGC(void *);
 
+#if DELAY_POOLS
+static int max_clients = 32768;
+#else
 static int max_clients = 32;
+#endif
+
 static int cleanup_running = 0;
 static int cleanup_scheduled = 0;
 static int cleanup_removed;
 
+#if DELAY_POOLS
+#define CLIENT_DB_HASH_SIZE 65357
+#else
 #define CLIENT_DB_HASH_SIZE 467
+#endif
 
 static ClientInfo *
 
@@ -65,6 +74,22 @@ clientdbAdd(const Ip::Address &addr)
     c = (ClientInfo *)memAllocate(MEM_CLIENT_INFO);
     c->hash.key = addr.NtoA(buf,MAX_IPSTRLEN);
     c->addr = addr;
+#if DELAY_POOLS
+    /* setup default values for client write limiter */
+    c->writeLimitingActive=false;
+    c->writeSpeedLimit=0;
+    c->bucketSize = 0;
+    c->firstTimeConnection=true;
+    c->quotaQueue = NULL;
+    c->rationedQuota = 0;
+    c->rationedCount = 0;
+    c->selectWaiting = false;
+    c->eventWaiting = false;
+
+    /* get current time */
+    getCurrentTime();
+    c->prevTime=current_dtime;/* put current time to have something sensible here */
+#endif
     hash_join(client_table, &c->hash);
     statCounter.client_http.clients++;
 
@@ -92,9 +117,31 @@ clientdbInit(void)
         return;
 
     client_table = hash_create((HASHCMP *) strcmp, CLIENT_DB_HASH_SIZE, hash_string);
-
 }
 
+#if DELAY_POOLS
+/* returns ClientInfo for given IP addr
+   Returns NULL if no such client (or clientdb turned off)
+   (it is assumed that clientdbEstablished will be called before and create client record if needed)
+*/
+ClientInfo * clientdbGetInfo(const Ip::Address &addr)
+{
+    char key[MAX_IPSTRLEN];
+    ClientInfo *c;
+
+    if (!Config.onoff.client_db)
+        return NULL;
+
+    addr.NtoA(key,MAX_IPSTRLEN);
+
+    c = (ClientInfo *) hash_lookup(client_table, key);
+    if (c==NULL) {
+        debugs(77,1,"Client db does not contain information for given IP address "<<(const char*)key);
+        return NULL;
+    }
+    return c;
+}
+#endif
 void
 clientdbUpdate(const Ip::Address &addr, log_type ltype, protocol_t p, size_t size)
 {
@@ -299,6 +346,15 @@ clientdbFreeItem(void *data)
 {
     ClientInfo *c = (ClientInfo *)data;
     safe_free(c->hash.key);
+
+#if DELAY_POOLS
+    if (CommQuotaQueue *q = c->quotaQueue) {
+        q->clientInfo = NULL;
+        delete q; // invalidates cbdata, cancelling any pending kicks
+        cbdataReferenceDone(q);
+    }
+#endif
+
     memFree(c, MEM_CLIENT_INFO);
 }
 

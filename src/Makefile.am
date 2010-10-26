@@ -75,7 +75,10 @@ DELAY_POOL_ALL_SOURCE = \
 	DelayVector.cc \
 	DelayVector.h \
 	NullDelayId.cc \
-	NullDelayId.h
+	NullDelayId.h \
+	ClientDelayConfig.cc \
+	ClientDelayConfig.h
+	
 if USE_DELAY_POOLS
 DELAY_POOL_SOURCE = $(DELAY_POOL_ALL_SOURCE)
 else
@@ -863,7 +866,7 @@ install-data-local: install-sysconfDATA install-dataDATA
 	$(INSTALL_DATA) squid.conf.documented $(DESTDIR)$(DEFAULT_CONFIG_FILE).documented; \
 	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX); \
 	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_SWAP_DIR); \
-	$(mkinstalldirs) $(DESTDIR)`dirname $(DEFAULT_PIDFILE)`
+	$(mkinstalldirs) $(DESTDIR)`dirname $(DEFAULT_PID_FILE)`
 
 uninstall-local: squid.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_MIME_TABLE) $(srcdir)/mime.conf.default

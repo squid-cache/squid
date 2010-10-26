@@ -144,6 +144,7 @@ static void parse_string(char **);
 static void default_all(void);
 static void defaults_if_none(void);
 static int parse_line(char *);
+static void parse_obsolete(const char *);
 static void parseBytesLine(size_t * bptr, const char *units);
 #if !USE_DNSSERVERS
 static void parseBytesLineSigned(ssize_t * bptr, const char *units);
@@ -893,6 +894,24 @@ configDoConfigure(void)
 #endif
 }
 
+/** Parse a line containing an obsolete directive.
+ * To upgrade it where possible instead of just "Bungled config" for
+ * directives which cannot be marked as simply aliases of the some name.
+ * For example if the parameter order and content has changed.
+ * Or if the directive has been completely removed.
+ */
+void
+parse_obsolete(const char *name)
+{
+    // Directives which have been radically changed rather than removed
+    if (!strcmp(name, "url_rewrite_concurrency")) {
+        int cval;
+        parse_int(&cval);
+        debugs(3, DBG_CRITICAL, "WARNING: url_rewrite_concurrency upgrade overriding url_rewrite_children settings.");
+        Config.redirectChildren.concurrency = cval;
+    }
+}
+
 /* Parse a time specification from the config file.  Store the
  * result in 'tptr', after converting it to 'units' */
 static void
@@ -1529,6 +1548,48 @@ parse_delay_pool_access(DelayConfig * cfg)
     cfg->parsePoolAccess(LegacyParser);
 }
 
+#endif
+
+#if DELAY_POOLS
+#include "ClientDelayConfig.h"
+/* do nothing - free_client_delay_pool_count is the magic free function.
+ * this is why client_delay_pool_count isn't just marked TYPE: ushort
+ */
+
+#define free_client_delay_pool_access(X)
+#define free_client_delay_pool_rates(X)
+#define dump_client_delay_pool_access(X, Y, Z)
+#define dump_client_delay_pool_rates(X, Y, Z)
+
+static void
+free_client_delay_pool_count(ClientDelayConfig * cfg)
+{
+    cfg->freePoolCount();
+}
+
+static void
+dump_client_delay_pool_count(StoreEntry * entry, const char *name, ClientDelayConfig &cfg)
+{
+    cfg.dumpPoolCount (entry, name);
+}
+
+static void
+parse_client_delay_pool_count(ClientDelayConfig * cfg)
+{
+    cfg->parsePoolCount();
+}
+
+static void
+parse_client_delay_pool_rates(ClientDelayConfig * cfg)
+{
+    cfg->parsePoolRates();
+}
+
+static void
+parse_client_delay_pool_access(ClientDelayConfig * cfg)
+{
+    cfg->parsePoolAccess(LegacyParser);
+}
 #endif
 
 #if USE_HTTP_VIOLATIONS

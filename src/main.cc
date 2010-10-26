@@ -80,6 +80,10 @@
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
 
+#if DELAY_POOLS
+#include "ClientDelayConfig.h"
+#endif
+
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
 #endif
@@ -121,7 +125,6 @@ void WINAPI WIN32_svcHandler(DWORD);
 /** for error reporting from xmalloc and friends */
 SQUIDCEXTERN void (*failure_notify) (const char *);
 
-static int opt_parse_cfg_only = 0;
 static char *opt_syslog_facility = NULL;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 static int configured_once = 0;
@@ -839,6 +842,10 @@ mainReconfigureFinish(void *)
 
     mimeInit(Config.mimeTablePathname);
 
+#if DELAY_POOLS
+    Config.ClientDelay.finalize();
+#endif
+
     if (Config.onoff.announce) {
         if (!eventFind(start_announce, NULL))
             eventAdd("start_announce", start_announce, NULL, 3600.0, 1);
@@ -1159,6 +1166,10 @@ mainInitialize(void)
 
 #if USE_SQUID_ESI
     Esi::Init();
+#endif
+
+#if DELAY_POOLS
+    Config.ClientDelay.finalize();
 #endif
 
     debugs(1, 1, "Ready to serve requests.");
