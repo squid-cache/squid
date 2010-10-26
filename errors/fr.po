@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-09-30 15:46+1300\n"
-"PO-Revision-Date: 2010-10-26 19:00+0200\n"
+"PO-Revision-Date: 2010-10-26 19:38+0200\n"
 "Last-Translator:  <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
@@ -80,7 +80,7 @@ msgstr ""
 msgid "An Illegal response was received from the ICAP server."
 msgstr "Une réponse illégale a été reçue par le serveur ICAP."
 
-# "réitérer" pas très utiliser en Français, il vaut mieux utiliser "recommencer" "renouveler" "répéter" plus familier.
+# 
 # Quand pensez-vous?
 # Bernard
 #  
@@ -564,7 +564,7 @@ msgid ""
 "There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
-"Sur ce cache Il n'y a pas d'hôte définie pour un relais WAIS! Adressez-vous "
+"Sur ce proxy Il n'y a pas d'hôte définie pour un relais WAIS! Adressez-vous "
 "à votre administrateur."
 
 #: templates/ERR_TOO_BIG:8
@@ -574,7 +574,7 @@ msgid ""
 "error."
 msgstr ""
 "Ces limites ont été fixées par le Fournisseur d'Accès Internet et agissent "
-"sur ce cache. Si vous pensez que c'est une erreur, contactez le fournisseur "
+"sur ce proxy. Si vous pensez que c'est une erreur, contactez le fournisseur "
 "d'accès."
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
@@ -621,8 +621,8 @@ msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
-"Cela signifie que le proxy ne peut pas résoudre le nom de l'hôte présent "
-"dans l'URL. Vérifier si l'adresse est correcte."
+"Cela signifie que le proxy ne peut pas résoudre le nom d'hôte présent dans "
+"l'URL. Vérifier si l'adresse est correcte."
 
 #: templates/ERR_ESI:7
 msgid ""
@@ -690,7 +690,7 @@ msgstr "Impossible de déterminer l'adresse IP du nom d'hôte <q>%H</q>"
 
 #: templates/ERR_CANNOT_FORWARD:5
 msgid "Unable to forward this request at this time."
-msgstr "En ce moment, il est impossible de transmettre cette requête."
+msgstr "En ce moment, il est impossible de retransmettre cette requête."
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
@@ -732,8 +732,8 @@ msgstr ""
 msgid ""
 "Your Web Browser configuration needs to be corrected to use this network."
 msgstr ""
-"Vous devez corriger la configuration de votre navigateur Web, pour être "
-"utilisé dans ce réseau"
+"Vous devez corriger la configuration de votre navigateur Web, pour qu'il "
+"soit utilisé dans ce réseau"
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
 #: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
@@ -758,8 +758,8 @@ msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
-"Si nécessaire, votre administrateur de cache peut vous fournir plus de "
-"détails sur la nature exacte du problème."
+"Si nécessaire, votre administrateur proxy peut vous fournir plus de détails "
+"sur la nature exacte du problème."
 
 #: templates/ERR_ESI:8
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
