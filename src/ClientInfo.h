@@ -35,11 +35,11 @@ public:
     int n_established;          /* number of current established connections */
     time_t last_seen;
 #if DELAY_POOLS
-    double writeSpeedLimit;///< Write speed limit in bytes per second, can be less than 1, if too close to zero this could result in timeouts from client 
-    double prevTime; ///< previous time when we checked 
+    double writeSpeedLimit;///< Write speed limit in bytes per second, can be less than 1, if too close to zero this could result in timeouts from client
+    double prevTime; ///< previous time when we checked
     double bucketSize; ///< how much can be written now
     double bucketSizeLimit;  ///< maximum bucket size
-    bool writeLimitingActive; ///< Is write limiter active 
+    bool writeLimitingActive; ///< Is write limiter active
     bool firstTimeConnection;///< is this first time connection for this client
 
     CommQuotaQueue *quotaQueue; ///< clients waiting for more write quota
@@ -60,17 +60,17 @@ public:
     void refillBucket(); ///< adds bytes to bucket based on rate and time
 
     void quotaDumpQueue(); ///< dumps quota queue for debugging
-   
-/**
- * Configure client write limiting (note:"client" here means - IP). It is called
- * by httpAccept in client_side.cc, where the initial bucket size (anInitialBurst)
- * computed, using the configured maximum bucket vavlue and configured initial 
- * bucket value(50% by default).
- *
- * \param  writeSpeedLimit is speed limit configured in config for this pool
- * \param  initialBurst is initial bucket size to use for this client(i.e. client can burst at first)
- *  \param highWatermark is maximum bucket value
- */
+
+    /**
+     * Configure client write limiting (note:"client" here means - IP). It is called
+     * by httpAccept in client_side.cc, where the initial bucket size (anInitialBurst)
+     * computed, using the configured maximum bucket vavlue and configured initial
+     * bucket value(50% by default).
+     *
+     * \param  writeSpeedLimit is speed limit configured in config for this pool
+     * \param  initialBurst is initial bucket size to use for this client(i.e. client can burst at first)
+     *  \param highWatermark is maximum bucket value
+     */
     void setWriteLimiter(const int aWriteSpeedLimit, const double anInitialBurst, const double aHighWatermark);
 #endif
 };
@@ -88,7 +88,7 @@ public:
     int front() const { return fds.front(); }
     unsigned int enqueue(int fd);
     void dequeue();
-    
+
     ClientInfo *clientInfo; ///< bucket responsible for quota maintenance
 
     // these counters might overflow; that is OK because they are for IDs only

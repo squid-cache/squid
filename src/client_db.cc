@@ -135,8 +135,7 @@ ClientInfo * clientdbGetInfo(const Ip::Address &addr)
     addr.NtoA(key,MAX_IPSTRLEN);
 
     c = (ClientInfo *) hash_lookup(client_table, key);
-    if (c==NULL)
-    {
+    if (c==NULL) {
         debugs(77,1,"Client db does not contain information for given IP address "<<(const char*)key);
         return NULL;
     }
@@ -353,7 +352,7 @@ clientdbFreeItem(void *data)
         q->clientInfo = NULL;
         delete q; // invalidates cbdata, cancelling any pending kicks
         cbdataReferenceDone(q);
-	}
+    }
 #endif
 
     memFree(c, MEM_CLIENT_INFO);
