@@ -1617,7 +1617,7 @@ _comm_close(int fd, char const *file, int line)
             // kick queue or it will get stuck as commWriteHandle is not called
             clientInfo->kickQuotaQueue();
         }
-     }
+    }
 #endif
 
     commCallCloseHandlers(fd);
@@ -1977,7 +1977,7 @@ commHandleWriteHelper(void * data)
     ClientInfo *clientInfo = queue->clientInfo;
     // ClientInfo invalidates queue if freed, so if we got here through,
     // evenAdd cbdata protections, everything should be valid and consistent
-    assert(clientInfo); 
+    assert(clientInfo);
     assert(clientInfo->hasQueue());
     assert(clientInfo->hasQueue(queue));
     assert(!clientInfo->selectWaiting);
@@ -1990,17 +1990,17 @@ commHandleWriteHelper(void * data)
         comm_io_callback_t *ccb = COMMIO_FD_WRITECB(head);
 
         if (fd_table[head].clientInfo == clientInfo &&
-            clientInfo->quotaPeekReserv() == ccb->quotaQueueReserv &&
-            !fd_table[head].closing()) {
+                clientInfo->quotaPeekReserv() == ccb->quotaQueueReserv &&
+                !fd_table[head].closing()) {
 
             // wait for the head descriptor to become ready for writing
             commSetSelect(head, COMM_SELECT_WRITE, commHandleWrite, ccb, 0);
             clientInfo->selectWaiting = true;
             return;
-         }
+        }
 
-         clientInfo->quotaDequeue(); // remove the no longer relevant descriptor
-         // and continue looking for a relevant one
+        clientInfo->quotaDequeue(); // remove the no longer relevant descriptor
+        // and continue looking for a relevant one
     } while (clientInfo->hasQueue());
 
     debugs(77,3, HERE << "emptied queue");
@@ -2059,7 +2059,7 @@ ClientInfo::kickQuotaQueue()
         // wait at least a second if the bucket is empty
         const double delay = (bucketSize < 1.0) ? 1.0 : 0.0;
         eventAdd("commHandleWriteHelper", &commHandleWriteHelper,
-            quotaQueue, delay, 0, true);
+                 quotaQueue, delay, 0, true);
         eventWaiting = true;
     }
 }
@@ -2084,12 +2084,12 @@ ClientInfo::quotaForDequed()
         // negative bucket sizes after write with rationedCount=1.
         rationedQuota = static_cast<int>(floor(bucketSize/rationedCount));
         debugs(77,5, HERE << "new rationedQuota: " << rationedQuota <<
-            '*' << rationedCount);
+               '*' << rationedCount);
     }
 
     --rationedCount;
     debugs(77,7, HERE << "rationedQuota: " << rationedQuota <<
-        " rations remaining: " << rationedCount);
+           " rations remaining: " << rationedCount);
 
     // update 'last seen' time to prevent clientdb GC from dropping us
     last_seen = squid_curtime;
@@ -2104,27 +2104,27 @@ ClientInfo::refillBucket()
     const double currTime = current_dtime;
     const double timePassed = currTime - prevTime;
 
-    // Calculate allowance for the time passed. Use double to avoid 
+    // Calculate allowance for the time passed. Use double to avoid
     // accumulating rounding errors for small intervals. For example, always
     // adding 1 byte instead of 1.4 results in 29% bandwidth allocation error.
     const double gain = timePassed * writeSpeedLimit;
 
     debugs(77,5, HERE << currTime << " clt" << (const char*)hash.key << ": " <<
-        bucketSize << " + (" << timePassed << " * " << writeSpeedLimit <<
-        " = " << gain << ')');
+           bucketSize << " + (" << timePassed << " * " << writeSpeedLimit <<
+           " = " << gain << ')');
 
     // to further combat error accumulation during micro updates,
     // quit before updating time if we cannot add at least one byte
     if (gain < 1.0)
-       return;
+        return;
 
     prevTime = currTime;
 
     // for "first" connections, drain initial fat before refilling but keep
     // updating prevTime to avoid bursts after the fat is gone
     if (bucketSize > bucketSizeLimit) {
-       debugs(77,4, HERE << "not refilling while draining initial fat");
-       return;
+        debugs(77,4, HERE << "not refilling while draining initial fat");
+        return;
     }
 
     bucketSize += gain;
@@ -2134,12 +2134,12 @@ ClientInfo::refillBucket()
         bucketSize = bucketSizeLimit;
 }
 
-void 
+void
 ClientInfo::setWriteLimiter(const int aWriteSpeedLimit, const double anInitialBurst, const double aHighWatermark)
 {
-    debugs(77,5, HERE << "Write limits for " << (const char*)hash.key << 
-        " speed=" << aWriteSpeedLimit << " burst=" << anInitialBurst <<
-        " highwatermark=" << aHighWatermark);
+    debugs(77,5, HERE << "Write limits for " << (const char*)hash.key <<
+           " speed=" << aWriteSpeedLimit << " burst=" << anInitialBurst <<
+           " highwatermark=" << aHighWatermark);
 
     // set or possibly update traffic shaping parameters
     writeLimitingActive = true;
@@ -2161,7 +2161,7 @@ ClientInfo::setWriteLimiter(const int aWriteSpeedLimit, const double anInitialBu
 }
 
 CommQuotaQueue::CommQuotaQueue(ClientInfo *info): clientInfo(info),
-    ins(0), outs(0)
+        ins(0), outs(0)
 {
     assert(clientInfo);
 }
@@ -2176,7 +2176,7 @@ unsigned int
 CommQuotaQueue::enqueue(int fd)
 {
     debugs(77,5, HERE << "clt" << (const char*)clientInfo->hash.key <<
-        ": FD " << fd << " with qqid" << (ins+1) << ' ' << fds.size());
+           ": FD " << fd << " with qqid" << (ins+1) << ' ' << fds.size());
     fds.push_back(fd);
     return ++ins;
 }
@@ -2187,8 +2187,8 @@ CommQuotaQueue::dequeue()
 {
     assert(!fds.empty());
     debugs(77,5, HERE << "clt" << (const char*)clientInfo->hash.key <<
-        ": FD " << fds.front() << " with qqid" << (outs+1) << ' ' <<
-        fds.size());
+           ": FD " << fds.front() << " with qqid" << (outs+1) << ' ' <<
+           fds.size());
     fds.pop_front();
     ++outs;
 }
@@ -2237,7 +2237,7 @@ commHandleWrite(int fd, void *data)
             const int nleft_corrected = min(nleft, quota);
             if (nleft != nleft_corrected) {
                 debugs(5, 5, HERE << "FD " << fd << " writes only " <<
-                    nleft_corrected << " out of " << nleft);
+                       nleft_corrected << " out of " << nleft);
                 nleft = nleft_corrected;
             }
 
@@ -2255,15 +2255,14 @@ commHandleWrite(int fd, void *data)
         if (len > 0) {
             /* we wrote data - drain them from bucket */
             clientInfo->bucketSize -= len;
-            if (clientInfo->bucketSize < 0.0)
-            {
+            if (clientInfo->bucketSize < 0.0) {
                 debugs(5,1, HERE << "drained too much"); // should not happen
                 clientInfo->bucketSize = 0;
             }
-         }
+        }
 
-         // even if we wrote nothing, we were served; give others a chance
-         clientInfo->kickQuotaQueue();
+        // even if we wrote nothing, we were served; give others a chance
+        clientInfo->kickQuotaQueue();
     }
 #endif
 
