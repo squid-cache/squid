@@ -3155,8 +3155,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 #if DELAY_POOLS
     fd_table[newfd].clientInfo = NULL;
 
-    if (Config.onoff.client_db)
-    {
+    if (Config.onoff.client_db) {
         /* it was said several times that client write limiter does not work if client_db is disabled */
 
         ClientDelayPools& pools(Config.ClientDelay.pools);
@@ -3168,7 +3167,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
             ACLFilledChecklist ch(pools[pool].access, NULL, NULL);
 
-            // TODO: we check early to limit error response bandwith but we 
+            // TODO: we check early to limit error response bandwith but we
             // should recheck when we can honor delay_pool_uses_indirect
 
             ch.src_addr = details->peer;
@@ -3186,7 +3185,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
                 /* setup write limiter for this request */
                 const double burst = floor(0.5 +
-                    (pools[pool].highwatermark * Config.ClientDelay.initial)/100.0);
+                                           (pools[pool].highwatermark * Config.ClientDelay.initial)/100.0);
                 cli->setWriteLimiter(pools[pool].rate, burst, pools[pool].highwatermark);
                 break;
             }

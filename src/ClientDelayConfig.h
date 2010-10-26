@@ -13,8 +13,7 @@ class ClientDelayPool
 {
 public:
     ClientDelayPool()
-    :   access(NULL), rate(0), highwatermark(0)
-    {}
+            :   access(NULL), rate(0), highwatermark(0) {}
     void dump (StoreEntry * entry, unsigned int poolNumberMinusOne) const;
     acl_access *access;
     int rate;
@@ -28,8 +27,7 @@ class ClientDelayConfig
 {
 public:
     ClientDelayConfig()
-        :   initial(50)
-    {}
+            :   initial(50) {}
     void freePoolCount();
     void dumpPoolCount(StoreEntry * entry, const char *name) const;
     /* parsing of client_delay_pools - number of pools */
