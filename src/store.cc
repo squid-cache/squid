@@ -1904,6 +1904,51 @@ StoreEntry::modifiedSince(HttpRequest * request) const
     }
 }
 
+bool
+StoreEntry::hasIfMatchEtag(const HttpRequest &request) const
+{
+    const String reqETags = request.header.getList(HDR_IF_MATCH);
+    return hasOneOfEtags(reqETags, false);
+}
+
+bool
+StoreEntry::hasIfNoneMatchEtag(const HttpRequest &request) const
+{
+    const String reqETags = request.header.getList(HDR_IF_NONE_MATCH);
+    // weak comparison is allowed only for HEAD or full-body GET requests
+    const bool allowWeakMatch = !request.flags.range &&
+        (request.method == METHOD_GET || request.method == METHOD_HEAD);
+    return hasOneOfEtags(reqETags, allowWeakMatch);
+}
+
+/// whether at least one of the request ETags matches entity ETag
+bool
+StoreEntry::hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) const
+{
+    const ETag repETag = getReply()->header.getETag(HDR_ETAG);
+    if (!repETag.str)
+        return strListIsMember(&reqETags, "*", ',');
+
+    bool matched = false;
+    const char *pos = NULL;
+    const char *item;
+    int ilen;
+    while (!matched && strListGetItem(&reqETags, ',', &item, &ilen, &pos)) {
+        if (!strncmp(item, "*", ilen))
+            matched = true;
+        else {
+            String str;
+            str.append(item, ilen);
+            ETag reqETag;
+            if (etagParseInit(&reqETag, str.termedBuf())) {
+                matched = allowWeakMatch ? etagIsWeakEqual(repETag, reqETag) :
+                    etagIsStrongEqual(repETag, reqETag);
+            }
+        }
+    }
+    return matched;
+}
+
 StorePointer
 StoreEntry::store() const
 {
