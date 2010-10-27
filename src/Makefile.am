@@ -19,6 +19,11 @@ DNSSOURCE += \
 	DnsLookupDetails.h \
 	DnsLookupDetails.cc
 
+SBUF_SOURCE= \
+	base/InstanceId.h \
+	MemBlob.h \
+	MemBlob.cc
+
 SNMP_ALL_SOURCE = \
 	snmp_core.cc \
 	snmp_agent.cc
@@ -418,6 +423,7 @@ squid_SOURCES = \
 	RemovalPolicy.cc \
 	RemovalPolicy.h \
 	send-announce.cc \
+	$(SBUF_SOURCE) \
 	$(SNMP_SOURCE) \
 	squid.h \
 	SquidMath.h \

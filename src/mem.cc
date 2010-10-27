@@ -51,6 +51,7 @@
 #endif
 
 /* module globals */
+const size_t squidSystemPageSize=getpagesize();
 
 /* local prototypes */
 static void memStringStats(std::ostream &);

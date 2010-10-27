@@ -2198,6 +2198,7 @@ AC_CHECK_HEADERS( \
   iosfwd \
   iomanip \
   iostream \
+  climits \
   ip_compat.h \
   ip_fil_compat.h \
   ip_fil.h \
