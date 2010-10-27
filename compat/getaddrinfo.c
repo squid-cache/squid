@@ -73,10 +73,14 @@
 #if HAVE_NETDB_H
 #include <netdb.h>
 #endif
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_ || _SQUID_MINGW_
+#include "squid_windows.h"
+#ifdef HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
 #undef IN_ADDR
 #include <ws2tcpip.h>
-#endif
+#endif /* _SQUID_MSWIN_ */
 
 static struct addrinfo *
 dup_addrinfo (struct addrinfo *info, void *addr, size_t addrlen) {

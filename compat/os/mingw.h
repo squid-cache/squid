@@ -16,5 +16,9 @@
 // Nothing ported out of compat/os/mswin.h and compat/ow/windows.h
 // TODO: build and see what needs to be copied in here.
 
+typedef unsigned char boolean;
+typedef unsigned char u_char;
+typedef unsigned int u_int;
+
 #endif /* _SQUID_MINGW_ */
 #endif /* SQUID_OS_MSWIN_H */
