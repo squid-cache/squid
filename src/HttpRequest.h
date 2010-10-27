@@ -91,6 +91,8 @@ public:
     /* are responses to this request potentially cachable */
     bool cacheable() const;
 
+    bool conditional() const; ///< has at least one recognized If-* header
+
     /// whether the client is likely to be able to handle a 1xx reply
     bool canHandle1xx() const;
 
