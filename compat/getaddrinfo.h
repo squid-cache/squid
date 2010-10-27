@@ -5,6 +5,16 @@
 #ifndef _getaddrinfo_h
 #define _getaddrinfo_h
 
+#if _SQUID_MSWIN_ || _SQUID_MINGW_
+#include "squid_windows.h"
+#ifdef HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
+#undef IN_ADDR
+#include <ws2tcpip.h>
+#endif /* _SQUID_MSWIN_ */
+
+
 /*
  *  Shamelessly duplicated from the fetchmail public sources
  *  for use by the Squid Project under GNU Public License.
@@ -106,7 +116,9 @@ SQUIDCEXTERN void xfreeaddrinfo (struct addrinfo *ai);
 
 /* Convert error return from getaddrinfo() to string */
 SQUIDCEXTERN const char *xgai_strerror (int code);
+#ifndef gai_strerror
 #define gai_strerror	xgai_strerror
+#endif
 
 #endif /* HAVE_GETADDRINFO */
 #endif /* _getaddrinfo_h */

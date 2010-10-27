@@ -29,8 +29,18 @@
 #include "rfcnb/rfcnb-priv.h"
 #include "rfcnb/rfcnb-util.h"
 #include "rfcnb/rfcnb-io.h"
+#if HAVE_SYS_UIO_H
 #include <sys/uio.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
+#if HAVE_WS2TCPIP_H
+#include <ws2tcpip.h>
+#endif
+#if HAVE_SYS_SIGNAL_H
 #include <sys/signal.h>
+#endif
 
 #if HAVE_STRING_H
 #include <string.h>

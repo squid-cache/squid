@@ -29,17 +29,44 @@
 #define BOOL int
 typedef short int16;
 
-#include <netdb.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <signal.h>
-#include <errno.h>
-#include <stdio.h>
-#include <unistd.h>
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
+#if HAVE_WS2TCPIP_H
+#include <ws2tcpip.h>
+#endif
 
+#if HAVE_NETDB_H
+#include <netdb.h>
+#endif
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#if HAVE_SIGNAL_H
+#include <signal.h>
+#endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+#if HAVE_STDIO_H
+#include <stdio.h>
+#endif
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#ifndef TRUE
 #define TRUE 1
+#endif
+#ifndef FALSE
 #define FALSE 0
+#endif
 
 /* Pick up define for INADDR_NONE */
 

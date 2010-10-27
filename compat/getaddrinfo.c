@@ -73,14 +73,6 @@
 #if HAVE_NETDB_H
 #include <netdb.h>
 #endif
-#if _SQUID_MSWIN_ || _SQUID_MINGW_
-#include "squid_windows.h"
-#ifdef HAVE_WINSOCK2_H
-#include <winsock2.h>
-#endif
-#undef IN_ADDR
-#include <ws2tcpip.h>
-#endif /* _SQUID_MSWIN_ */
 
 static struct addrinfo *
 dup_addrinfo (struct addrinfo *info, void *addr, size_t addrlen) {
@@ -189,7 +181,10 @@ xgetaddrinfo (const char *nodename, const char *servname,
         return (*res == NULL) ? EAI_MEMORY : 0;
     }
 
+#if HAVE_H_ERRNO
+    // on Windows it's not a global but a function
     h_errno = 0;
+#endif
     errno = 0;
     hp = gethostbyname(nodename);
     if (hp == NULL) {
