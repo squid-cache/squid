@@ -35,7 +35,7 @@
 
 #include "StoreFileSystem.h"
 #include "StoreFScoss.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "CossSwapDir.h"
 #include "store_coss.h"
@@ -86,7 +86,7 @@ StoreFScoss::setup()
 void
 StoreFScoss::registerWithCacheManager()
 {
-    CacheManager::GetInstance()->registerAction("coss", "COSS Stats", Stats, 0, 1);
+    Mgr::RegisterAction("coss", "COSS Stats", Stats, 0, 1);
 }
 
 void

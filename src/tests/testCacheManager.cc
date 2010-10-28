@@ -2,6 +2,7 @@
 
 #include "squid.h"
 #include <cppunit/TestAssert.h>
+#include "mgr/Action.h"
 
 #include "Mem.h"
 #include "testCacheManager.h"
@@ -41,16 +42,21 @@ void
 testCacheManager::testRegister()
 {
     CacheManager *manager=CacheManager::GetInstance();
+    CPPUNIT_ASSERT(manager != NULL);
 
-    manager->registerAction("sample", "my sample", &dummy_action, false, false);
-    CacheManagerAction *anAction = manager->findAction("sample");
+    manager->registerProfile("sample", "my sample", &dummy_action, false, false);
+    Mgr::Action::Pointer action = manager->createNamedAction("sample");
+    CPPUNIT_ASSERT(action != NULL);
 
-    CPPUNIT_ASSERT_EQUAL(0, (int)anAction->flags.pw_req);
-    CPPUNIT_ASSERT_EQUAL(0, (int)anAction->flags.atomic);
-    CPPUNIT_ASSERT_EQUAL(String("sample"), String(anAction->action));
+    const Mgr::ActionProfile::Pointer profile = action->command().profile;
+    CPPUNIT_ASSERT(profile != NULL);
+    CPPUNIT_ASSERT(profile->creator != NULL);
+    CPPUNIT_ASSERT_EQUAL(false, profile->isPwReq);
+    CPPUNIT_ASSERT_EQUAL(false, profile->isAtomic);
+    CPPUNIT_ASSERT_EQUAL(String("sample"), String(action->name()));
 
     StoreEntry *sentry=new StoreEntry();
     sentry->flags=0x25; //arbitrary test value
-    anAction->run(sentry);
+    action->run(sentry, false);
     CPPUNIT_ASSERT_EQUAL(1,(int)sentry->flags);
 }
