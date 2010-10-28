@@ -56,7 +56,7 @@ public:
 
 /** Refcountable, fixed-size, content-agnostic memory buffer.
  *
- * Allocated memory block is divided into two sequential areas: 
+ * Allocated memory block is divided into two sequential areas:
  * "used memory" and "available space". The used area can be filled during
  * construction, grows via the append() call, and can be clear()ed.
  *
@@ -91,8 +91,7 @@ public:
      * \param off    the end of the blob area currently used by the caller
      * \param n      the total number of bytes the caller wants to append
      */
-    bool canAppend(const size_type off, const size_type n) const
-    {
+    bool canAppend(const size_type off, const size_type n) const {
         // TODO: ignore offset (and adjust size) when the blob is not shared?
         return isAppendOffset(off) && willFit(n);
     }
