@@ -102,8 +102,8 @@ MemBlob::~MemBlob()
 
     debugs(MEMBLOB_DEBUGSECTION,9, HERE << "destructed, this="
            << static_cast<void*>(this) << " id=" << id
-            << " capacity=" << capacity
-            << " size=" << size);
+           << " capacity=" << capacity
+           << " size=" << size);
 }
 
 /**
@@ -159,7 +159,7 @@ MemBlob::memAlloc(const size_type minSize)
 
 void
 MemBlob::append(const char *source, const size_type n)
-{   
+{
     if (n > 0) { // appending zero bytes is allowed but only affects the stats
         Must(willFit(n));
         Must(source);
