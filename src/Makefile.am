@@ -309,6 +309,7 @@ squid_SOURCES = \
 	$(DNSSOURCE) \
 	enums.h \
 	err_type.h \
+	err_detail_type.h \
 	errorpage.cc \
 	errorpage.h \
 	ETag.cc \
@@ -526,6 +527,7 @@ BUILT_SOURCES = \
 	cf_gen_defines.cci \
 	cf_parser.cci \
 	err_type.cc \
+	err_detail_type.cc \
 	globals.cc \
 	hier_code.cc \
 	icp_opcode.cc \
@@ -768,6 +770,9 @@ hier_code.cc: hier_code.h mk-string-arrays.awk
 
 err_type.cc: err_type.h mk-string-arrays.awk
 	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/err_type.h > $@ || ($(RM) -f $@ && exit 1)
+
+err_detail_type.cc: err_detail_type.h mk-string-arrays.awk
+	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/err_detail_type.h | sed 's/ERR_DETAIL_//' > $@ || ($(RM) -f $@ && exit 1)
 
 lookup_t.cc: lookup_t.h mk-string-arrays.awk
 	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/lookup_t.h > $@ || ($(RM) -f $@ && exit 1)

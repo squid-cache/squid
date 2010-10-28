@@ -20,6 +20,7 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "SquidTime.h"
+#include "err_detail_type.h"
 
 // flow and terminology:
 //     HTTP| --> receive --> encode --> write --> |network
@@ -605,6 +606,12 @@ void Adaptation::Icap::ModXact::parseMore()
 void Adaptation::Icap::ModXact::callException(const std::exception &e)
 {
     if (!canStartBypass || isRetriable) {
+        if (!isRetriable) {
+            if (const TextException *te = dynamic_cast<const TextException *>(&e))
+                detailError(ERR_DETAIL_EXCEPTION_START + te->id());
+            else
+                detailError(ERR_DETAIL_EXCEPTION_OTHER);
+        }
         Adaptation::Icap::Xaction::callException(e);
         return;
     }
@@ -613,7 +620,11 @@ void Adaptation::Icap::ModXact::callException(const std::exception &e)
         debugs(93, 3, HERE << "bypassing " << inCall << " exception: " <<
                e.what() << ' ' << status());
         bypassFailure();
+    } catch (const TextException &bypassTe) {
+        detailError(ERR_DETAIL_EXCEPTION_START + bypassTe.id());
+        Adaptation::Icap::Xaction::callException(bypassTe);
     } catch (const std::exception &bypassE) {
+        detailError(ERR_DETAIL_EXCEPTION_OTHER);
         Adaptation::Icap::Xaction::callException(bypassE);
     }
 }
@@ -1161,6 +1172,7 @@ void Adaptation::Icap::ModXact::noteMoreBodySpaceAvailable(BodyPipe::Pointer)
 // adapted body consumer aborted
 void Adaptation::Icap::ModXact::noteBodyConsumerAborted(BodyPipe::Pointer)
 {
+    detailError(ERR_DETAIL_ICAP_XACT_BODY_CONSUMER_ABORT);
     mustStop("adapted body consumer aborted");
 }
 
@@ -1176,6 +1188,9 @@ void Adaptation::Icap::ModXact::swanSong()
 
     stopWriting(false);
     stopSending(false);
+
+    if (theInitiator.set()) // we have not sent the answer to the initiator
+        detailError(ERR_DETAIL_ICAP_XACT_OTHER);
 
     // update adaptation history if start was called and we reserved a slot
     Adaptation::History::Pointer ah = virginRequest().adaptLogHistory();
@@ -1823,6 +1838,13 @@ bool Adaptation::Icap::ModXact::fillVirginHttpHeader(MemBuf &mb) const
     return true;
 }
 
+void Adaptation::Icap::ModXact::detailError(int errDetail)
+{
+    if (HttpRequest *request = virgin.cause ?
+                               virgin.cause : dynamic_cast<HttpRequest*>(virgin.header)) {
+        request->detailError(ERR_ICAP_FAILURE, errDetail);
+    }
+}
 
 /* Adaptation::Icap::ModXactLauncher */
 

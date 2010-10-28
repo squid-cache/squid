@@ -225,5 +225,6 @@ SQUIDCEXTERN err_type errorReservePageId(const char *page_name);
  * This function creates a ErrorState object.
  */
 SQUIDCEXTERN ErrorState *errorCon(err_type type, http_status, HttpRequest * request);
+SQUIDCEXTERN const char *errorPageName(int pageId); ///< error ID to string
 
 #endif /* SQUID_ERRORPAGE_H */

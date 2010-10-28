@@ -2794,6 +2794,9 @@ DOC_START
 				default %d/%b/%Y:%H:%M:%S %z
 		tr	Response time (milliseconds)
 		dt	Total time spent making DNS lookups (milliseconds)
+		err_code    The ID of an error response served by Squid or
+				a similar internal error identifier.
+		err_detail  Additional err_code-dependent error information.
 
 	HTTP cache related format codes:
 

@@ -3637,6 +3637,9 @@ ftpSendReply(FtpStateData * ftpState)
         http_code = HTTP_INTERNAL_SERVER_ERROR;
     }
 
+    if (ftpState->request)
+        ftpState->request->detailError(err_code, code);
+
     err = errorCon(err_code, http_code, ftpState->request);
 
     if (ftpState->old_request)

@@ -585,6 +585,11 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
 
 // WTF??        request->auth_user_request = NULL;
     }
+
+    if (aLogEntry->request) {
+        aLogEntry->request->errType = request->errType;
+        aLogEntry->request->errDetail = request->errDetail;
+    }
 }
 
 void

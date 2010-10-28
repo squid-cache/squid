@@ -290,6 +290,8 @@ FwdState::fail(ErrorState * errorState)
 
     if (!errorState->request)
         errorState->request = HTTPMSGLOCK(request);
+
+    request->detailError(errorState->type, errorState->xerrno);
 }
 
 /**

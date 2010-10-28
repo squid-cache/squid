@@ -40,6 +40,7 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "errorpage.h"
+#include "err_detail_type.h"
 #include "SquidTime.h"
 
 #if USE_ADAPTATION
@@ -766,9 +767,11 @@ ServerStateData::handleAdaptationAborted(bool bypassable)
     if (entry->isEmpty()) {
         debugs(11,9, HERE << "creating ICAP error entry after ICAP failure");
         ErrorState *err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
-        err->xerrno = errno;
+        err->xerrno = ERR_DETAIL_ICAP_RESPMOD_EARLY;
         fwd->fail(err);
         fwd->dontRetry(true);
+    } else if (request) { // update logged info directly
+        request->detailError(ERR_ICAP_FAILURE, ERR_DETAIL_ICAP_RESPMOD_LATE);
     }
 
     abortTransaction("ICAP failure");
