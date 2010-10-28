@@ -34,9 +34,9 @@
 
 #include "squid.h"
 #include "event.h"
-#include "CacheManager.h"
 #include "ClientInfo.h"
 #include "ip/Address.h"
+#include "mgr/Registration.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -104,8 +104,7 @@ clientdbAdd(const Ip::Address &addr)
 static void
 clientdbRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("client_list", "Cache Client List", clientdbDump, 0, 1);
+    Mgr::RegisterAction("client_list", "Cache Client List", clientdbDump, 0, 1);
 }
 
 void

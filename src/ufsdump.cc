@@ -37,6 +37,8 @@
 #include "StoreMetaUnpacker.h"
 #include "Store.h"
 #include "Generic.h"
+#include "mgr/Registration.h"
+
 #undef malloc
 #undef free
 
@@ -70,16 +72,8 @@ storeAppendPrintf(StoreEntry * e, const char *fmt,...)
     va_end(args);
 }
 
-#include "CacheManager.h"
-CacheManager*
-CacheManager::GetInstance()
-{
-    assert(false);
-    return NULL;
-}
-
 void
-CacheManager::registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic) {}
+Mgr::RegisterAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic) {}
 
 /* MinGW needs also a stub of death() */
 void

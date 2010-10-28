@@ -35,7 +35,7 @@
 
 #include "squid.h"
 #include "auth/UserRequest.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "fde.h"
 #include "client_side_request.h"
@@ -179,8 +179,7 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
 static void
 redirectRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("redirector", "URL Redirector Stats", redirectStats, 0, 1);
+    Mgr::RegisterAction("redirector", "URL Redirector Stats", redirectStats, 0, 1);
 }
 
 void
