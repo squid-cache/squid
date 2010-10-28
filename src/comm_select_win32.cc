@@ -33,7 +33,7 @@
 
 #include "squid.h"
 #include "comm_select.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "SquidTime.h"
 
 #if USE_SELECT_WIN32
@@ -685,8 +685,7 @@ comm_select_dns_incoming(void)
 static void
 commSelectRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("comm_select_incoming",
+    Mgr::RegisterAction("comm_select_incoming",
                    "comm_incoming() stats",
                    commIncomingStats, 0, 1);
 }
