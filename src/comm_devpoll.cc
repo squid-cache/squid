@@ -55,9 +55,9 @@
 
 #if USE_DEVPOLL
 
-#include "CacheManager.h"
 #include "Store.h"
 #include "fde.h"
+#include "mgr/Registration.h"
 #include "SquidTime.h"
 
 #if HAVE_SYS_DEVPOLL_H
@@ -181,8 +181,7 @@ static void commIncomingStats(StoreEntry *sentry)
 static void
 commDevPollRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction(
+    Mgr::RegisterAction(
         "comm_devpoll_incoming",
         "comm_incoming() stats",
         commIncomingStats,
