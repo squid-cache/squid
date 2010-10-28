@@ -47,10 +47,10 @@ public:
     std::ostream& dump(std::ostream& os) const;
 
 public:
-    u_int64_t alloc;     ///< number of MemBlob instances created so far
-    u_int64_t live;      ///< number of MemBlob instances currently alive
-    u_int64_t append;    ///< number of MemBlob::append() calls
-    u_int64_t liveBytes; ///< the total size of currently allocated storage
+    uint64_t alloc;     ///< number of MemBlob instances created so far
+    uint64_t live;      ///< number of MemBlob instances currently alive
+    uint64_t append;    ///< number of MemBlob::append() calls
+    uint64_t liveBytes; ///< the total size of currently allocated storage
 };
 
 
