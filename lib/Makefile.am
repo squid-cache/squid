@@ -7,10 +7,6 @@ include $(top_srcdir)/src/Common.am
 
 DIST_SUBDIRS = ntlmauth rfcnb smblib libTrie
 
-SUBDIRS = rfcnb smblib
-if ENABLE_AUTH_NTLM
-SUBDIRS += ntlmauth
-endif
 if USE_ESI
 SUBDIRS += libTrie
 endif
@@ -26,13 +22,23 @@ else
 XPROF_STATS_SOURCE = 
 endif
 
-if ENABLE_WIN32SPECIFIC
-LIBSSPWIN32=libsspwin32.a
-WIN32SRC = win32lib.c
-else
 LIBSSPWIN32=
 WIN32SRC=
+
+#
+# Some librares are only available on Windows
+# and others are unable to be built.
+#
+if ENABLE_WIN32SPECIFIC
+LIBSSPWIN32 += libsspwin32.a
+WIN32SRC += win32lib.c
+else
+SUBDIRS = rfcnb smblib
+if ENABLE_AUTH_NTLM
+SUBDIRS += ntlmauth
 endif
+endif
+
 
 EXTRA_LIBRARIES = \
 	libsspwin32.a
