@@ -15,12 +15,12 @@
 namespace Mgr
 {
 
-/// cache manager request 
+/// cache manager request
 class Request
 {
 public:
     Request(int aRequestorId, unsigned int aRequestId, int aFd,
-        const ActionParams &aParams);
+            const ActionParams &aParams);
 
     explicit Request(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
     void pack(Ipc::TypedMsgHdr& msg) const; ///< prepare for sendmsg()

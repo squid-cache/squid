@@ -61,7 +61,7 @@ DiskdAction::Create(const Mgr::CommandPointer &aCmd)
 }
 
 DiskdAction::DiskdAction(const Mgr::CommandPointer &aCmd):
-    Action(aCmd), data()
+        Action(aCmd), data()
 {
     debugs(79, 5, HERE);
 }

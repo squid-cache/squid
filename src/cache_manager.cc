@@ -67,8 +67,7 @@ public:
 public:
     ClassActionCreator(Handler *aHandler): handler(aHandler) {}
 
-    virtual Mgr::Action::Pointer create(const Mgr::Command::Pointer &cmd) const
-    {
+    virtual Mgr::Action::Pointer create(const Mgr::Command::Pointer &cmd) const {
         return handler(cmd);
     }
 
@@ -101,17 +100,17 @@ CacheManager::registerProfile(char const * action, char const * desc, OBJH * han
 {
     debugs(16, 3, HERE << "registering legacy " << action);
     const Mgr::ActionProfile::Pointer profile = new Mgr::ActionProfile(action,
-        desc, pw_req_flag, atomic, new Mgr::FunActionCreator(handler));
+            desc, pw_req_flag, atomic, new Mgr::FunActionCreator(handler));
     registerProfile(profile);
 }
 
 void
 CacheManager::registerProfile(char const * action, char const * desc,
-                             ClassActionCreator::Handler *handler,
-                             int pw_req_flag, int atomic)
+                              ClassActionCreator::Handler *handler,
+                              int pw_req_flag, int atomic)
 {
     const Mgr::ActionProfile::Pointer profile = new Mgr::ActionProfile(action,
-        desc, pw_req_flag, atomic, new ClassActionCreator(handler));
+            desc, pw_req_flag, atomic, new ClassActionCreator(handler));
     registerProfile(profile);
 }
 
@@ -245,7 +244,7 @@ CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &param
 
     /* warning: this prints decoded password which maybe not what you want to do @?@ @?@ */
     debugs(16, 9, "CacheManager::ParseHeaders: got user: '" <<
-        params.userName << "' passwd: '" << params.password << "'");
+           params.userName << "' passwd: '" << params.password << "'");
 }
 
 /**
@@ -310,7 +309,7 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
     ParseHeaders(request, cmd->params);
 
     const char *userName = cmd->params.userName.size() ?
-        cmd->params.userName.termedBuf() : "unknown";
+                           cmd->params.userName.termedBuf() : "unknown";
 
     /* Check password */
 

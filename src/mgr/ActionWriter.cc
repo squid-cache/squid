@@ -14,8 +14,8 @@
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, ActionWriter);
 
 Mgr::ActionWriter::ActionWriter(const Action::Pointer &anAction, int aFd):
-    StoreToCommWriter(aFd, anAction->createStoreEntry()),
-    action(anAction)
+        StoreToCommWriter(aFd, anAction->createStoreEntry()),
+        action(anAction)
 {
     debugs(16, 5, HERE << "FD " << aFd << " action: " << action);
 }

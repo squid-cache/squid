@@ -96,7 +96,7 @@ private:
     } ctrl; ///< same as .msg_control
 
     /// data offset for the next get/put*() to start with
-    mutable unsigned int offset; 
+    mutable unsigned int offset;
 };
 
 } // namespace Ipc

@@ -545,8 +545,8 @@ void
 AuthBasicConfig::registerWithCacheManager(void)
 {
     Mgr::RegisterAction("basicauthenticator",
-                   "Basic User Authenticator Stats",
-                   authenticateBasicStats, 0, 1);
+                        "Basic User Authenticator Stats",
+                        authenticateBasicStats, 0, 1);
 }
 
 void

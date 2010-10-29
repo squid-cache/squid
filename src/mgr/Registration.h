@@ -15,12 +15,12 @@ namespace Mgr
 {
 
 void RegisterAction(char const * action, char const * desc,
-    OBJH * handler,
-	int pw_req_flag, int atomic);
+                    OBJH * handler,
+                    int pw_req_flag, int atomic);
 
 void RegisterAction(char const * action, char const * desc,
-    ClassActionCreationHandler *handler,
-    int pw_req_flag, int atomic);
+                    ClassActionCreationHandler *handler,
+                    int pw_req_flag, int atomic);
 
 } // namespace Mgr
 

@@ -564,9 +564,9 @@ parseConfigFile(const char *file_name)
 
     if (opt_send_signal == -1) {
         Mgr::RegisterAction("config",
-                                "Current Squid Configuration",
-                                dump_config,
-                                1, 1);
+                            "Current Squid Configuration",
+                            dump_config,
+                            1, 1);
     }
 
     return err_count;

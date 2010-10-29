@@ -21,7 +21,7 @@ Mgr::FunAction::Create(const Command::Pointer &aCmd, OBJH* aHandler)
 }
 
 Mgr::FunAction::FunAction(const Command::Pointer &aCmd, OBJH* aHandler):
-    Action(aCmd), handler(aHandler)
+        Action(aCmd), handler(aHandler)
 {
     Must(handler != NULL);
     debugs(16, 5, HERE);

@@ -282,7 +282,7 @@ StringRegistry::StringRegistry()
 {
 #if DEBUGSTRINGS
     Mgr::RegisterAction("strings",
-            "Strings in use in squid", Stat, 0, 1);
+                        "Strings in use in squid", Stat, 0, 1);
 #endif
 }
 

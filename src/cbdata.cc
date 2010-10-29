@@ -272,13 +272,13 @@ void
 cbdataRegisterWithCacheManager(void)
 {
     Mgr::RegisterAction("cbdata",
-                            "Callback Data Registry Contents",
-                            cbdataDump, 0, 1);
+                        "Callback Data Registry Contents",
+                        cbdataDump, 0, 1);
 #if CBDATA_DEBUG
 
     Mgr::RegisterAction("cbdatahistory",
-                            "Detailed call history for all current cbdata contents",
-                            cbdataDumpHistory, 0, 1);
+                        "Detailed call history for all current cbdata contents",
+                        cbdataDumpHistory, 0, 1);
 #endif
 }
 

@@ -187,8 +187,8 @@ void
 AuthNTLMConfig::registerWithCacheManager(void)
 {
     Mgr::RegisterAction("ntlmauthenticator",
-                   "NTLM User Authenticator Stats",
-                   authenticateNTLMStats, 0, 1);
+                        "NTLM User Authenticator Stats",
+                        authenticateNTLMStats, 0, 1);
 }
 
 bool

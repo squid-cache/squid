@@ -62,11 +62,11 @@ public:
     typedef std::vector<Mgr::ActionProfilePointer> Menu;
 
     void registerProfile(char const * action, char const * desc,
-        OBJH * handler,
-        int pw_req_flag, int atomic);
+                         OBJH * handler,
+                         int pw_req_flag, int atomic);
     void registerProfile(char const * action, char const * desc,
-        Mgr::ClassActionCreationHandler *handler,
-        int pw_req_flag, int atomic);
+                         Mgr::ClassActionCreationHandler *handler,
+                         int pw_req_flag, int atomic);
     Mgr::ActionProfilePointer findAction(char const * action) const;
     Mgr::Action::Pointer createNamedAction(const char *actionName);
     Mgr::Action::Pointer createRequestedAction(const Mgr::ActionParams &);

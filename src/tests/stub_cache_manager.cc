@@ -62,7 +62,7 @@ Mgr::RegisterAction(char const*, char const*, OBJH, int, int)
 
 void
 Mgr::RegisterAction(char const * action, char const * desc,
-    Mgr::ClassActionCreationHandler *handler,
-    int pw_req_flag, int atomic)
+                    Mgr::ClassActionCreationHandler *handler,
+                    int pw_req_flag, int atomic)
 {
 }

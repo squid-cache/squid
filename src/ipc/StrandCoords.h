@@ -9,7 +9,8 @@
 #include "ipc/StrandCoord.h"
 #include <vector>
 
-namespace Ipc {
+namespace Ipc
+{
 
 /// a collection of strand coordinates; the order, if any, is owner-dependent
 typedef std::vector<StrandCoord> StrandCoords;

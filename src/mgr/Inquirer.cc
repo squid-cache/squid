@@ -27,18 +27,19 @@ unsigned int Mgr::Inquirer::LastRequestId = 0;
 
 /// compare Ipc::StrandCoord using kidId, for std::sort() below
 static bool
-LesserStrandByKidId(const Ipc::StrandCoord &c1, const Ipc::StrandCoord &c2) {
+LesserStrandByKidId(const Ipc::StrandCoord &c1, const Ipc::StrandCoord &c2)
+{
     return c1.kidId < c2.kidId;
 }
 
-Mgr::Inquirer::Inquirer(Action::Pointer anAction, int aFd, 
-    const Request &aCause, const Ipc::StrandCoords &coords):
-    AsyncJob("Mgr::Inquirer"),
-    aggrAction(anAction),
-    cause(aCause),
-    fd(aFd),
-    strands(coords), pos(strands.begin()),
-    requestId(0), closer(NULL), timeout(aggrAction->atomic() ? 10 : 100)
+Mgr::Inquirer::Inquirer(Action::Pointer anAction, int aFd,
+                        const Request &aCause, const Ipc::StrandCoords &coords):
+        AsyncJob("Mgr::Inquirer"),
+        aggrAction(anAction),
+        cause(aCause),
+        fd(aFd),
+        strands(coords), pos(strands.begin()),
+        requestId(0), closer(NULL), timeout(aggrAction->atomic() ? 10 : 100)
 {
     debugs(16, 5, HERE << "FD " << aFd << " action: " << aggrAction);
 
@@ -46,7 +47,7 @@ Mgr::Inquirer::Inquirer(Action::Pointer anAction, int aFd,
     std::sort(strands.begin(), strands.end(), LesserStrandByKidId);
 
     closer = asyncCall(16, 5, "Mgr::Inquirer::noteCommClosed",
-        CommCbMemFunT<Inquirer, CommCloseCbParams>(this, &Inquirer::noteCommClosed));
+                       CommCbMemFunT<Inquirer, CommCloseCbParams>(this, &Inquirer::noteCommClosed));
     comm_add_close_handler(fd, closer);
 }
 
@@ -58,7 +59,8 @@ Mgr::Inquirer::~Inquirer()
 
 /// closes our copy of the client HTTP connection socket
 void
-Mgr::Inquirer::close() {
+Mgr::Inquirer::close()
+{
     if (fd >= 0) {
         removeCloseHandler();
         comm_close(fd);
@@ -87,7 +89,7 @@ Mgr::Inquirer::start()
     reply->header.putStr(HDR_CONNECTION, "close"); // until we chunk response
     std::auto_ptr<MemBuf> replyBuf(reply->pack());
     writer = asyncCall(16, 5, "Mgr::Inquirer::noteWroteHeader",
-        CommCbMemFunT<Inquirer, CommIoCbParams>(this, &Inquirer::noteWroteHeader));
+                       CommCbMemFunT<Inquirer, CommIoCbParams>(this, &Inquirer::noteWroteHeader));
     comm_write_mbuf(fd, replyBuf.get(), writer);
 }
 
@@ -114,7 +116,7 @@ Mgr::Inquirer::inquire()
 
     Must(requestId == 0);
     AsyncCall::Pointer callback = asyncCall(16, 5, "Mgr::Inquirer::handleRemoteAck",
-        HandleAckDialer(this, &Inquirer::handleRemoteAck, Response()));
+                                            HandleAckDialer(this, &Inquirer::handleRemoteAck, Response()));
     if (++LastRequestId == 0) // don't use zero value as requestId
         ++LastRequestId;
     requestId = LastRequestId;
@@ -122,12 +124,12 @@ Mgr::Inquirer::inquire()
     debugs(16, 4, HERE << "inquire kid: " << kidId << status());
     TheRequestsMap[requestId] = callback;
     Request mgrRequest(KidIdentifier, requestId, fd,
-        aggrAction->command().params);
+                       aggrAction->command().params);
     Ipc::TypedMsgHdr message;
     mgrRequest.pack(message);
     Ipc::SendMessage(Ipc::Port::MakeAddr(Ipc::strandAddrPfx, kidId), message);
     eventAdd("Mgr::Inquirer::requestTimedOut", &Inquirer::RequestTimedOut,
-        this, timeout, 0, false);
+             this, timeout, 0, false);
 }
 
 /// called when a strand is done writing its output

@@ -36,7 +36,7 @@ Mgr::StoreIoAction::Create(const CommandPointer &cmd)
 }
 
 Mgr::StoreIoAction::StoreIoAction(const CommandPointer &cmd):
-    Action(cmd), data()
+        Action(cmd), data()
 {
     debugs(16, 5, HERE);
 }

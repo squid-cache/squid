@@ -73,7 +73,7 @@ protected:
     /// calculate and keep local action-specific information
     virtual void collect() {}
 
-    /** start writing action-specific info to Store entry; 
+    /** start writing action-specific info to Store entry;
      * may collect info during dump, especially if collect() did nothing
      * non-atomic() actions may continue writing asynchronously after returning
      */

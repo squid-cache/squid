@@ -18,12 +18,12 @@ CBDATA_NAMESPACED_CLASS_INIT(Mgr, StoreToCommWriter);
 
 
 Mgr::StoreToCommWriter::StoreToCommWriter(int aFd, StoreEntry* anEntry):
-    AsyncJob("Mgr::StoreToCommWriter"),
-    fd(aFd), entry(anEntry), sc(NULL), writeOffset(0), closer(NULL)
+        AsyncJob("Mgr::StoreToCommWriter"),
+        fd(aFd), entry(anEntry), sc(NULL), writeOffset(0), closer(NULL)
 {
     debugs(16, 6, HERE << "FD " << fd);
     closer = asyncCall(16, 5, "Mgr::StoreToCommWriter::noteCommClosed",
-        CommCbMemFunT<StoreToCommWriter, CommCloseCbParams>(this, &StoreToCommWriter::noteCommClosed));
+                       CommCbMemFunT<StoreToCommWriter, CommCloseCbParams>(this, &StoreToCommWriter::noteCommClosed));
     comm_add_close_handler(fd, closer);
 }
 
@@ -82,7 +82,7 @@ Mgr::StoreToCommWriter::NoteStoreCopied(void* data, StoreIOBuffer ioBuf)
     typedef UnaryMemFunT<StoreToCommWriter, StoreIOBuffer> MyDialer;
     AsyncCall::Pointer call =
         asyncCall(16, 5, "Mgr::StoreToCommWriter::noteStoreCopied",
-            MyDialer(writer, &StoreToCommWriter::noteStoreCopied, ioBuf));
+                  MyDialer(writer, &StoreToCommWriter::noteStoreCopied, ioBuf));
     ScheduleCallHere(call);
 }
 
@@ -107,7 +107,7 @@ Mgr::StoreToCommWriter::scheduleCommWrite(const StoreIOBuffer& ioBuf)
     typedef CommCbMemFunT<StoreToCommWriter, CommIoCbParams> MyDialer;
     AsyncCall::Pointer writer =
         asyncCall(16, 5, "Mgr::StoreToCommWriter::noteCommWrote",
-            MyDialer(this, &StoreToCommWriter::noteCommWrote));
+                  MyDialer(this, &StoreToCommWriter::noteCommWrote));
     comm_write(fd, ioBuf.data, ioBuf.length, writer);
 }
 
@@ -152,8 +152,8 @@ bool
 Mgr::StoreToCommWriter::doneAll() const
 {
     return entry &&
-        entry->store_status == STORE_OK && // the action is over
-        writeOffset >= entry->objectLen(); // we wrote all the results
+           entry->store_status == STORE_OK && // the action is over
+           writeOffset >= entry->objectLen(); // we wrote all the results
 }
 
 void
