@@ -25,10 +25,10 @@ Mgr::Forwarder::RequestsMap Mgr::Forwarder::TheRequestsMap;
 unsigned int Mgr::Forwarder::LastRequestId = 0;
 
 Mgr::Forwarder::Forwarder(int aFd, const ActionParams &aParams,
-    HttpRequest* aRequest, StoreEntry* anEntry):
-    AsyncJob("Mgr::Forwarder"),
-    params(aParams),
-    request(aRequest), entry(anEntry), fd(aFd), requestId(0), closer(NULL)
+                          HttpRequest* aRequest, StoreEntry* anEntry):
+        AsyncJob("Mgr::Forwarder"),
+        params(aParams),
+        request(aRequest), entry(anEntry), fd(aFd), requestId(0), closer(NULL)
 {
     debugs(16, 5, HERE << "FD " << aFd);
     Must(fd >= 0);
@@ -40,7 +40,7 @@ Mgr::Forwarder::Forwarder(int aFd, const ActionParams &aParams,
     EBIT_SET(entry->flags, ENTRY_FWD_HDR_WAIT);
 
     closer = asyncCall(16, 5, "Mgr::Forwarder::noteCommClosed",
-        CommCbMemFunT<Forwarder, CommCloseCbParams>(this, &Forwarder::noteCommClosed));
+                       CommCbMemFunT<Forwarder, CommCloseCbParams>(this, &Forwarder::noteCommClosed));
     comm_add_close_handler(fd, closer);
 }
 
@@ -59,7 +59,8 @@ Mgr::Forwarder::~Forwarder()
 
 /// closes our copy of the client HTTP connection socket
 void
-Mgr::Forwarder::close() {
+Mgr::Forwarder::close()
+{
     if (fd >= 0) {
         if (closer != NULL) {
             comm_remove_close_handler(fd, closer);
@@ -76,30 +77,29 @@ Mgr::Forwarder::start()
     debugs(16, 3, HERE);
     entry->registerAbort(&Forwarder::Abort, this);
 
-        typedef NullaryMemFunT<Mgr::Forwarder> Dialer;
-        AsyncCall::Pointer callback = JobCallback(16, 5, Dialer, this,
-                                                  Forwarder::handleRemoteAck);
-        if (++LastRequestId == 0) // don't use zero value as requestId
-            ++LastRequestId;
-        requestId = LastRequestId;
-        TheRequestsMap[requestId] = callback;
-        Request mgrRequest(KidIdentifier, requestId, fd, params);
-        Ipc::TypedMsgHdr message;
+    typedef NullaryMemFunT<Mgr::Forwarder> Dialer;
+    AsyncCall::Pointer callback = JobCallback(16, 5, Dialer, this,
+                                  Forwarder::handleRemoteAck);
+    if (++LastRequestId == 0) // don't use zero value as requestId
+        ++LastRequestId;
+    requestId = LastRequestId;
+    TheRequestsMap[requestId] = callback;
+    Request mgrRequest(KidIdentifier, requestId, fd, params);
+    Ipc::TypedMsgHdr message;
 
     try {
         mgrRequest.pack(message);
-    } 
-    catch (...) {
+    } catch (...) {
         // assume the pack() call failed because the message did not fit
         // TODO: add a more specific exception?
         debugs(16, DBG_CRITICAL, "ERROR: uri " << entry->url() << " exceeds buffer size");
         quitOnError("long URI", errorCon(ERR_INVALID_URL, HTTP_REQUEST_URI_TOO_LARGE, request));
     }
 
-        Ipc::SendMessage(Ipc::coordinatorAddr, message);
-        const double timeout = 10; // in seconds
-        eventAdd("Mgr::Forwarder::requestTimedOut", &Forwarder::RequestTimedOut,
-            this, timeout, 0, false);
+    Ipc::SendMessage(Ipc::coordinatorAddr, message);
+    const double timeout = 10; // in seconds
+    eventAdd("Mgr::Forwarder::requestTimedOut", &Forwarder::RequestTimedOut,
+             this, timeout, 0, false);
 }
 
 void

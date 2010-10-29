@@ -139,7 +139,7 @@ Mgr::InfoAction::Create(const CommandPointer &cmd)
 }
 
 Mgr::InfoAction::InfoAction(const CommandPointer &cmd):
-    Action(cmd), data()
+        Action(cmd), data()
 {
     debugs(16, 5, HERE);
 }

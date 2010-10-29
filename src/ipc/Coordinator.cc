@@ -124,7 +124,7 @@ Ipc::Coordinator::handleCacheMgrRequest(const Mgr::Request& request)
     Mgr::Action::Pointer action =
         CacheManager::GetInstance()->createRequestedAction(request.params);
     AsyncJob::Start(new Mgr::Inquirer(action,
-        Mgr::ImportHttpFdIntoComm(request.fd), request, strands_));
+                                      Mgr::ImportHttpFdIntoComm(request.fd), request, strands_));
 }
 
 void

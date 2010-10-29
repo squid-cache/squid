@@ -46,8 +46,7 @@ public:
     explicit FunActionCreator(OBJH *aHandler): handler(aHandler) {}
 
     /* ActionCreator API */
-    virtual Action::Pointer create(const CommandPointer &cmd) const
-    {
+    virtual Action::Pointer create(const CommandPointer &cmd) const {
         return FunAction::Create(cmd, handler);
     }
 

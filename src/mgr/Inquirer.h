@@ -28,7 +28,7 @@ class Inquirer: public AsyncJob
 {
 public:
     Inquirer(Action::Pointer anAction, int aFd, const Request &aCause,
-        const Ipc::StrandCoords &coords);
+             const Ipc::StrandCoords &coords);
     virtual ~Inquirer();
 
     /// finds and calls the right Inquirer upon strand's response

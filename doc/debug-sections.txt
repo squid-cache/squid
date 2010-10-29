@@ -30,6 +30,7 @@ section 13    High Level Memory Pool Management
 section 14    IP Cache
 section 14    IP Storage and Handling
 section 15    Neighbor Routines
+section 16    Cache Manager API
 section 16    Cache Manager Objects
 section 17    Request Forwarding
 section 18    Cache Manager Statistics

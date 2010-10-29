@@ -67,7 +67,7 @@ Mgr::ReconfigureAction::Create(const Command::Pointer &cmd)
 }
 
 Mgr::ReconfigureAction::ReconfigureAction(const Command::Pointer &cmd):
-    Action(cmd)
+        Action(cmd)
 {
     debugs(16, 5, HERE);
 }
@@ -110,7 +110,7 @@ Mgr::OfflineToggleAction::Create(const Command::Pointer &cmd)
 }
 
 Mgr::OfflineToggleAction::OfflineToggleAction(const Command::Pointer &cmd):
-    Action(cmd)
+        Action(cmd)
 {
     debugs(16, 5, HERE);
 }
