@@ -29,7 +29,7 @@ class Forwarder: public AsyncJob
 {
 public:
     Forwarder(int aFd, const ActionParams &aParams, HttpRequest* aRequest,
-        StoreEntry* anEntry);
+              StoreEntry* anEntry);
     virtual ~Forwarder();
 
     /// finds and calls the right Forwarder upon Coordinator's response

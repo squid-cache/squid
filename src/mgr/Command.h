@@ -15,7 +15,8 @@ namespace Mgr
 {
 
 /// combined hard-coded action profile with user-supplied action parameters
-class Command: public RefCountable {
+class Command: public RefCountable
+{
 public:
     typedef RefCount<Command> Pointer;
 

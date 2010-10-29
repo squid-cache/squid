@@ -16,9 +16,9 @@ CBDATA_NAMESPACED_CLASS_INIT(Mgr, Filler);
 
 Mgr::Filler::Filler(const Action::Pointer &anAction, int aFd,
                     unsigned int aRequestId):
-    StoreToCommWriter(aFd, anAction->createStoreEntry()),
-    action(anAction),
-    requestId(aRequestId)
+        StoreToCommWriter(aFd, anAction->createStoreEntry()),
+        action(anAction),
+        requestId(aRequestId)
 {
     debugs(16, 5, HERE << "FD " << aFd << " action: " << action);
 }

@@ -201,8 +201,8 @@ void
 AuthNegotiateConfig::registerWithCacheManager(void)
 {
     Mgr::RegisterAction("negotiateauthenticator",
-                   "Negotiate User Authenticator Stats",
-                   authenticateNegotiateStats, 0, 1);
+                        "Negotiate User Authenticator Stats",
+                        authenticateNegotiateStats, 0, 1);
 }
 
 bool

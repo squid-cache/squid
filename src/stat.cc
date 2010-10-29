@@ -234,10 +234,10 @@ DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry)
 
     for (i = 0; i < _iostats::histSize; i++) {
         storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
-            i ? (1 << (i - 1)) + 1 : 1,
-            1 << i,
-            stats.http_read_hist[i],
-            Math::doublePercent(stats.http_read_hist[i], stats.http_reads));
+                          i ? (1 << (i - 1)) + 1 : 1,
+                          1 << i,
+                          stats.http_read_hist[i],
+                          Math::doublePercent(stats.http_read_hist[i], stats.http_reads));
     }
 
     storeAppendPrintf(sentry, "\n");
@@ -247,10 +247,10 @@ DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry)
 
     for (i = 0; i < _iostats::histSize; i++) {
         storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
-            i ? (1 << (i - 1)) + 1 : 1,
-            1 << i,
-            stats.ftp_read_hist[i],
-            Math::doublePercent(stats.ftp_read_hist[i], stats.ftp_reads));
+                          i ? (1 << (i - 1)) + 1 : 1,
+                          1 << i,
+                          stats.ftp_read_hist[i],
+                          Math::doublePercent(stats.ftp_read_hist[i], stats.ftp_reads));
     }
 
     storeAppendPrintf(sentry, "\n");
@@ -260,10 +260,10 @@ DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry)
 
     for (i = 0; i < _iostats::histSize; i++) {
         storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
-            i ? (1 << (i - 1)) + 1 : 1,
-            1 << i,
-            stats.gopher_read_hist[i],
-            Math::doublePercent(stats.gopher_read_hist[i], stats.gopher_reads));
+                          i ? (1 << (i - 1)) + 1 : 1,
+                          1 << i,
+                          stats.gopher_read_hist[i],
+                          Math::doublePercent(stats.gopher_read_hist[i], stats.gopher_reads));
     }
 
     storeAppendPrintf(sentry, "\n");
@@ -1099,15 +1099,15 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
     stats.client_http_kbytes_out = XAVG(client_http.kbytes_out.kb);
 
     stats.client_http_all_median_svc_time = statHistDeltaMedian(&l->client_http.all_svc_time,
-        &f->client_http.all_svc_time) / 1000.0;
+                                            &f->client_http.all_svc_time) / 1000.0;
     stats.client_http_miss_median_svc_time = statHistDeltaMedian(&l->client_http.miss_svc_time,
-        &f->client_http.miss_svc_time) / 1000.0;
+            &f->client_http.miss_svc_time) / 1000.0;
     stats.client_http_nm_median_svc_time = statHistDeltaMedian(&l->client_http.nm_svc_time,
-        &f->client_http.nm_svc_time) / 1000.0;
+                                           &f->client_http.nm_svc_time) / 1000.0;
     stats.client_http_nh_median_svc_time = statHistDeltaMedian(&l->client_http.nh_svc_time,
-        &f->client_http.nh_svc_time) / 1000.0;
+                                           &f->client_http.nh_svc_time) / 1000.0;
     stats.client_http_hit_median_svc_time = statHistDeltaMedian(&l->client_http.hit_svc_time,
-        &f->client_http.hit_svc_time) / 1000.0;
+                                            &f->client_http.hit_svc_time) / 1000.0;
 
     stats.server_all_requests = XAVG(server.all.requests);
     stats.server_all_errors = XAVG(server.all.errors);
@@ -1145,18 +1145,18 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
     stats.icp_r_kbytes_recv = XAVG(icp.r_kbytes_recv.kb);
 
     stats.icp_query_median_svc_time = statHistDeltaMedian(&l->icp.query_svc_time,
-        &f->icp.query_svc_time) / 1000000.0;
+                                      &f->icp.query_svc_time) / 1000000.0;
     stats.icp_reply_median_svc_time = statHistDeltaMedian(&l->icp.reply_svc_time,
-        &f->icp.reply_svc_time) / 1000000.0;
+                                      &f->icp.reply_svc_time) / 1000000.0;
     stats.dns_median_svc_time = statHistDeltaMedian(&l->dns.svc_time,
-        &f->dns.svc_time) / 1000.0;
+                                &f->dns.svc_time) / 1000.0;
 
     stats.unlink_requests = XAVG(unlink.requests);
     stats.page_faults = XAVG(page_faults);
     stats.select_loops = XAVG(select_loops);
     stats.select_fds = XAVG(select_fds);
     stats.average_select_fd_period = f->select_fds > l->select_fds ?
-        (f->select_time - l->select_time) / (f->select_fds - l->select_fds) : 0.0;
+                                     (f->select_time - l->select_time) / (f->select_fds - l->select_fds) : 0.0;
 
     stats.median_select_fds = statHistDeltaMedian(&l->select_fds_hist, &f->select_fds_hist);
     stats.swap_outs = XAVG(swap.outs);
@@ -1342,43 +1342,43 @@ static void
 statRegisterWithCacheManager(void)
 {
     Mgr::RegisterAction("info", "General Runtime Information",
-                            &Mgr::InfoAction::Create, 0, 1);
+                        &Mgr::InfoAction::Create, 0, 1);
     Mgr::RegisterAction("service_times", "Service Times (Percentiles)",
-                            &Mgr::ServiceTimesAction::Create, 0, 1);
+                        &Mgr::ServiceTimesAction::Create, 0, 1);
     Mgr::RegisterAction("filedescriptors", "Process Filedescriptor Allocation",
-                            fde::DumpStats, 0, 1);
+                        fde::DumpStats, 0, 1);
     Mgr::RegisterAction("objects", "All Cache Objects", stat_objects_get, 0, 0);
     Mgr::RegisterAction("vm_objects", "In-Memory and In-Transit Objects",
-                            stat_vmobjects_get, 0, 0);
+                        stat_vmobjects_get, 0, 0);
     Mgr::RegisterAction("io", "Server-side network read() size histograms",
-                            &Mgr::IoAction::Create, 0, 1);
+                        &Mgr::IoAction::Create, 0, 1);
     Mgr::RegisterAction("counters", "Traffic and Resource Counters",
-                            &Mgr::CountersAction::Create, 0, 1);
+                        &Mgr::CountersAction::Create, 0, 1);
     Mgr::RegisterAction("peer_select", "Peer Selection Algorithms",
-                            statPeerSelect, 0, 1);
+                        statPeerSelect, 0, 1);
     Mgr::RegisterAction("digest_stats", "Cache Digest and ICP blob",
-                            statDigestBlob, 0, 1);
+                        statDigestBlob, 0, 1);
     Mgr::RegisterAction("5min", "5 Minute Average of Counters",
-                            &Mgr::IntervalAction::Create5min, 0, 1);
+                        &Mgr::IntervalAction::Create5min, 0, 1);
     Mgr::RegisterAction("60min", "60 Minute Average of Counters",
-                            &Mgr::IntervalAction::Create60min, 0, 1);
+                        &Mgr::IntervalAction::Create60min, 0, 1);
     Mgr::RegisterAction("utilization", "Cache Utilization",
-                            statUtilization, 0, 1);
+                        statUtilization, 0, 1);
     Mgr::RegisterAction("histograms", "Full Histogram Counts",
-                            statCountersHistograms, 0, 1);
+                        statCountersHistograms, 0, 1);
     Mgr::RegisterAction("active_requests",
-                            "Client-side Active Requests",
-                            statClientRequests, 0, 1);
+                        "Client-side Active Requests",
+                        statClientRequests, 0, 1);
     Mgr::RegisterAction("username_cache",
-                            "Active Cached Usernames",
-                            AuthUser::UsernameCacheStats, 0, 1);
+                        "Active Cached Usernames",
+                        AuthUser::UsernameCacheStats, 0, 1);
 #if DEBUG_OPENFD
     Mgr::RegisterAction("openfd_objects", "Objects with Swapout files open",
-                            statOpenfdObj, 0, 0);
+                        statOpenfdObj, 0, 0);
 #endif
 #if STAT_GRAPHS
     Mgr::RegisterAction("graph_variables", "Display cache metrics graphically",
-                            statGraphDump, 0, 1);
+                        statGraphDump, 0, 1);
 #endif
 }
 

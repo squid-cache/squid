@@ -664,8 +664,8 @@ static void
 commSelectRegisterWithCacheManager(void)
 {
     Mgr::RegisterAction("comm_select_incoming",
-                   "comm_incoming() stats",
-                   commIncomingStats, 0, 1);
+                        "comm_incoming() stats",
+                        commIncomingStats, 0, 1);
 }
 
 void

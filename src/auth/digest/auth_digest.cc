@@ -674,8 +674,8 @@ void
 AuthDigestConfig::registerWithCacheManager(void)
 {
     Mgr::RegisterAction("digestauthenticator",
-                   "Digest User Authenticator Stats",
-                   authenticateDigestStats, 0, 1);
+                        "Digest User Authenticator Stats",
+                        authenticateDigestStats, 0, 1);
 }
 
 /* free any allocated configuration details */

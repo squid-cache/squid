@@ -13,9 +13,9 @@
 
 
 Mgr::Request::Request(int aRequestorId, unsigned int aRequestId, int aFd,
-    const ActionParams &aParams):
-    requestorId(aRequestorId), requestId(aRequestId),
-    fd(aFd), params(aParams)
+                      const ActionParams &aParams):
+        requestorId(aRequestorId), requestId(aRequestId),
+        fd(aFd), params(aParams)
 {
     Must(requestorId > 0);
     Must(requestId != 0);

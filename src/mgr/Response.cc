@@ -22,7 +22,7 @@ std::ostream& Mgr::operator << (std::ostream &os, const Response& response)
 }
 
 Mgr::Response::Response(unsigned int aRequestId, Action::Pointer anAction):
-    requestId(aRequestId), action(anAction)
+        requestId(aRequestId), action(anAction)
 {
     Must(!action || action->name()); // if there is an action, it must be named
 }

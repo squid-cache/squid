@@ -10,7 +10,8 @@
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/ActionParams.h"
 
-Mgr::ActionParams::ActionParams(): httpMethod(METHOD_NONE) {
+Mgr::ActionParams::ActionParams(): httpMethod(METHOD_NONE)
+{
 }
 
 Mgr::ActionParams::ActionParams(const Ipc::TypedMsgHdr &msg)
