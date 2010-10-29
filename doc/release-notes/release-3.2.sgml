@@ -41,6 +41,7 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 	<item>Solaris 10 pthreads Support (Experimental)
 	<item>Surrogate/1.0 protocol extensions to HTTP
 	<item>Logging Infrastructure Updated
+	<item>Client Bandwidth Limits
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -286,6 +287,36 @@ Most user-facing changes are reflected in squid.conf (see below).
   required to store a long period of access.log and needs to conserve disk space.
 
 
+<sect1> Client Bandwidth Limits
+<p>In mobile environments, Squid may need to limit Squid-to-client bandwidth
+   available to individual users, identified by their IP addresses. The IP
+   address pool can be as large as a /10 IPv4 network (4 million unique IP
+   addresses) and even larger in IPv6 environments. On the other hand, the code
+   should support thousands of connections coming from a single IP (e.g.,
+   a child proxy).
+
+<p>The implementation is based on storing bandwidth-related "bucket" information
+   in the existing "client database" hash (client_db.cc). The old code already
+   assigned each client IP a single ClientInfo object, which satisfies the
+   client-side IP-based bandwidth pooling requirements. The old hash size is
+   increased to support up to 32K concurrent clients if needed.
+
+<p>Client-side pools are configured similarly to server-side ones, but there is
+   only one pool class. See client_delay_pools,
+   client_delay_initial_bucket_level, client_delay_parameters, and
+   client_delay_access in squid.conf. The client_delay_access matches the client
+   with delay parameters. It does not pool clients from different IP addresses
+   together.
+
+<p>Special care is taken to provide fair distribution of bandwidth among clients
+   sharing the same bucket (i.e., clients coming from the same IP address).
+   Multiple same-IP clients competing for bandwidth are queued using FIFO
+   algorithm. If a bucket becomes empty, the first client among those sharing 
+   the bucket is delayed by 1 second before it can attempt to receive more
+   response data from Squid.  This delay may need to be lowered in 
+   high-bandwidth environments.
+
+
 <sect>Changes to squid.conf since Squid-3.1
 <p>
 There have been changes to Squid's configuration file since Squid-3.1.
@@ -302,6 +333,23 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
+	<tag>client_delay_pools</tag>
+	<p>New setting for client bandwith limits to specifies the number 
+	  of client delay pools used.
+
+	<tag>client_delay_initial_bucket_level</tag>
+	<p>New setting for client bandwith limits to determine the initial 
+	  bucket size as a percentage of  max_bucket_size from 
+	  client_delay_parameters.
+            
+	<tag>client_delay_parameters</tag>
+	<p>New setting for client bandwith limits to configures client-side 
+	   bandwidth limits.
+
+	<tag>client_delay_access</tag>
+	<p>New setting for client bandwith limits to determines the 
+	  client-side delay pool for the request.
+
 	<tag>cpu_affinity_map</tag>
 	<p>New setting for SMP support to map Squid processes onto specific CPU cores.
 
