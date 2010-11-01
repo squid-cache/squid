@@ -13,7 +13,7 @@
  *--------------------------------------------------------------------------*
  ****************************************************************************/
 
-// Nothing ported out of compat/os/mswin.h and compat/ow/windows.h
+// Nothing ported out of compat/os/mswin.h and compat/os/windows.h
 // TODO: build and see what needs to be copied in here.
 
 typedef unsigned char boolean;
