@@ -33,7 +33,7 @@ if ENABLE_WIN32SPECIFIC
 LIBSSPWIN32 += libsspwin32.a
 WIN32SRC += win32lib.c
 else
-SUBDIRS = rfcnb smblib
+SUBDIRS += rfcnb smblib
 if ENABLE_AUTH_NTLM
 SUBDIRS += ntlmauth
 endif
