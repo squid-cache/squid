@@ -3071,10 +3071,10 @@ elif test -z "$disable_epoll" && test "$ac_cv_epoll_works" = "yes" ; then
 	SELECT_TYPE="epoll"
 elif test -z "$disable_kqueue" && test "$ac_cv_func_kqueue" = "yes" ; then
 	SELECT_TYPE="kqueue"
-elif test -z "$disable_poll" && test "$ac_cv_func_poll" = "yes" ; then
-        SELECT_TYPE="poll"
 elif test "x$enable_devpoll" != "xno" && test "x$ac_cv_devpoll_works" = "xyes"; then
         SELECT_TYPE="devpoll"
+elif test -z "$disable_poll" && test "$ac_cv_func_poll" = "yes" ; then
+        SELECT_TYPE="poll"
 elif test -z "$disable_select" && test "$ac_cv_func_select" = "yes" ; then
 	case "$host_os" in
 	mingw|mingw32)
