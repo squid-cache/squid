@@ -115,7 +115,7 @@ httpHdrScParseInit(HttpHdrSc * sc, const String * str)
     const char *target = NULL; /* ;foo */
     const char *temp = NULL; /* temp buffer */
     int type;
-    int ilen;
+    int ilen, vlen;
     int initiallen;
     HttpHdrScTarget *sct;
     assert(sc && str);
@@ -124,10 +124,13 @@ httpHdrScParseInit(HttpHdrSc * sc, const String * str)
 
     while (strListGetItem(str, ',', &item, &ilen, &pos)) {
         initiallen = ilen;
+        vlen = 0;
         /* decrease ilen to still match the token for  '=' statements */
 
-        if ((p = strchr(item, '=')) && (p - item < ilen))
-            ilen = p++ - item;
+        if ((p = strchr(item, '=')) && (p - item < ilen)) {
+            vlen = ilen - (++p - item);
+            ilen = p - item;
+        }
 
         /* decrease ilen to still match the token for ';' qualified non '=' statments */
         else if ((p = strchr(item, ';')) && (p - item < ilen))
@@ -194,7 +197,7 @@ httpHdrScParseInit(HttpHdrSc * sc, const String * str)
 
         case SC_CONTENT:
 
-            if (!p || !httpHeaderParseQuotedString(p, &sct->content)) {
+            if (!p || !httpHeaderParseQuotedString(p, vlen, &sct->content)) {
                 debugs(90, 2, "sc: invalid content= quoted string near '" << item << "'");
                 sct->content.clean();
                 EBIT_CLR(sct->mask, type);

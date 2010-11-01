@@ -327,11 +327,11 @@ httpHeaderParseOffset(const char *start, int64_t * value)
 /**
  * Parses a quoted-string field (RFC 2616 section 2.2), complains if
  * something went wrong, returns non-zero on success.
+ * Un-escapes quoted-pair characters found within the string.
  * start should point at the first double-quote.
- * RC TODO: This is too looose. We should honour the BNF and exclude CTL's
  */
 int
-httpHeaderParseQuotedString(const char *start, String *val)
+httpHeaderParseQuotedString(const char *start, const int len, String *val)
 {
     const char *end, *pos;
     val->clean();
@@ -341,16 +341,24 @@ httpHeaderParseQuotedString(const char *start, String *val)
     }
     pos = start + 1;
 
-    while (*pos != '"') {
+    while (*pos != '"' && len > (pos-start)) {
         bool quoted = (*pos == '\\');
         if (quoted)
             pos++;
-        if (!*pos) {
+        if (!*pos || (pos-start) > len) {
             debugs(66, 2, "failed to parse a quoted-string header field near '" << start << "'");
             val->clean();
             return 0;
         }
-        end = pos + strcspn(pos + quoted, "\"\\") + quoted;
+        end = pos;
+        while(end <= (start+len) && *end != '\\' && *end != '\"' && *end > 0x1F && *end != 0x7F)
+            end++;
+        if (*end <= 0x1F || *end == 0x7F) {
+            debugs(66, 2, "failed to parse a quoted-string header field with CTL octet " << (start-pos)
+                   << " bytes into '" << start << "'");
+            val->clean();
+            return 0;
+        }
         val->append(pos, end-pos);
         pos = end;
     }
