@@ -6,11 +6,11 @@
 include $(top_srcdir)/src/Common.am
 
 DIST_SUBDIRS = ntlmauth rfcnb smblib libTrie
+SUBDIRS=
 
 if USE_ESI
 SUBDIRS += libTrie
 endif
-
 
 install: all
 install-strip: all
