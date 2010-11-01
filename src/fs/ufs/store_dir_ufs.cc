@@ -658,8 +658,9 @@ UFSSwapDir::closeLog()
 
     assert(NumberOfUFSDirs >= 0);
 
-    if (0 == NumberOfUFSDirs)
+    if (0 == NumberOfUFSDirs) {
         safe_free(UFSDirToGlobalDirMapping);
+    }
 }
 
 bool
