@@ -989,3 +989,11 @@ gb_to_str(const gb_t * g)
 
     return buf;
 }
+
+/**
+ * rounds num to the next upper integer multiple of what
+ */
+unsigned int RoundTo(const unsigned int num, const unsigned int what)
+{
+    return what * ((num + what -1)/what);
+}

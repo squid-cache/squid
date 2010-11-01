@@ -141,6 +141,8 @@ extern void gb_flush(gb_t *);  /* internal, do not use this */
  */
 int statMemoryAccounted(void);
 
+SQUIDCEXTERN unsigned int RoundTo(const unsigned int num, const unsigned int what);
+
 /* Windows Port */
 /* win32lib.c */
 #ifdef _SQUID_MSWIN_
