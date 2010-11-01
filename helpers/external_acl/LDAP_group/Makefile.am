@@ -7,6 +7,7 @@ man_MANS 			= ext_ldap_group_acl.8
 EXTRA_DIST			= ext_ldap_group_acl.8 config.test
 
 LDADD = \
+	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(LDAPLIB) \
 	$(LBERLIB) \
