@@ -887,7 +887,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
         String value;
         if (vlen > 0) {
             if (*p == '"') {
-                if (!httpHeaderParseQuotedString(p, &value)) {
+                if (!httpHeaderParseQuotedString(p, vlen, &value)) {
                     debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << item << "' in '" << temp << "'");
                     continue;
                 }
