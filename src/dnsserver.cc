@@ -31,9 +31,11 @@
  */
 
 #include "config.h"
-#include "compat/inet_ntop.h"
-#include "compat/getaddrinfo.h"
-#include "compat/getnameinfo.h"
+//#include "compat/inet_ntop.h"
+//#include "compat/getaddrinfo.h"
+//#include "compat/getnameinfo.h"
+#include "ip/Address.h"
+//#include "util.h"
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -123,8 +125,6 @@
 #include <resolv.h>
 #endif
 
-#include "util.h"
-
 /**
  \defgroup dnsserver dnsserver
  \ingroup ExternalPrograms
@@ -149,8 +149,6 @@ usage: dnsserver -Dhv -s nameserver
 	               must be an IP address, -s option may be repeated
  \endverbatim
  */
-
-#include "ip/Address.h"
 
 #if LIBRESOLV_DNS_TTL_HACK
 /// \ingroup dnsserver

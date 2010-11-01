@@ -6,5 +6,6 @@ EXTRA_DIST			= ext_unix_group_acl.8 config.test
 ext_unix_group_acl_SOURCES	= check_group.cc
 
 LDADD = \
+	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)

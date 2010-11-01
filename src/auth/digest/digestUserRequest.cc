@@ -2,6 +2,7 @@
 #include "auth/digest/auth_digest.h"
 #include "auth/digest/digestUserRequest.h"
 #include "auth/State.h"
+#include "charset.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "SquidTime.h"

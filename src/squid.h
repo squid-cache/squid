@@ -166,7 +166,7 @@ using namespace Squid;
 #include "enums.h"
 #include "typedefs.h"
 #include "util.h"
-#include "profiling.h"
+#include "profiler/Profiler.h"
 #include "MemPool.h"
 #include "ip/Address.h"
 #include "structs.h"

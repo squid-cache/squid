@@ -6,8 +6,6 @@
 
 /* dlink are Mem-pooled */
 #include "MemPool.h"
-/* for xstrdup() */
-#include "util.h"
 
 
 dlink_list ClientActiveRequests;

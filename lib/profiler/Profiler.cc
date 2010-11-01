@@ -54,7 +54,7 @@
  *     ...  section of code measured ...
  *    PROF_stop(probename);
  *
- *   probename must be added to profiling.h into xprof_type enum list
+ *   probename must be added to the xprof_type.h enum list
  *   with prepended "XPROF_" string.
  *
  * \section description Description.
@@ -114,9 +114,7 @@
  */
 
 #include "config.h"
-
-/* This include needs to be BELOW config, as it may undef USE_XPROF_STATS */
-#include "profiling.h"
+#include "profiler/Profiler.h"
 
 #if USE_XPROF_STATS
 
@@ -175,7 +173,7 @@ xprof_InitLib(void)
     if (xprof_inited)
         return;
 
-    xprof_Timers = calloc(XPROF_LAST + 2, sizeof(xprof_stats_node));
+    xprof_Timers = static_cast<TimersArray *>(calloc(XPROF_LAST + 2, sizeof(xprof_stats_node)));
 
     xprof_Timers[XPROF_PROF_UNACCOUNTED]->name = "PROF_UNACCOUNTED";
     xprof_Timers[XPROF_PROF_UNACCOUNTED]->accu.start = get_tick();
