@@ -53,7 +53,9 @@
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
+#include "ClientInfo.h"
 
+#include "cbdata.h"
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>
 #endif
@@ -76,6 +78,13 @@ static IOCB commHalfClosedReader;
 static void comm_init_opened(int new_socket, Ip::Address &addr, tos_t tos, nfmark_t nfmark, const char *note, struct addrinfo *AI);
 static int comm_apply_flags(int new_socket, Ip::Address &addr, int flags, struct addrinfo *AI);
 
+#if DELAY_POOLS
+CBDATA_CLASS_INIT(CommQuotaQueue);
+
+static void commHandleWriteHelper(void * data);
+#endif
+
+static void commSelectOrQueueWrite(const int fd);
 
 struct comm_io_callback_t {
     iocb_type type;
@@ -87,6 +96,10 @@ struct comm_io_callback_t {
     int offset;
     comm_err_t errcode;
     int xerrno;
+#if DELAY_POOLS
+    unsigned int quotaQueueReserv; ///< reservation ID from CommQuotaQueue
+#endif
+
 
     bool active() const { return callback != NULL; }
 };
@@ -146,6 +159,10 @@ commio_finish_callback(int fd, comm_io_callback_t *ccb, comm_err_t code, int xer
     ccb->errcode = code;
     ccb->xerrno = xerrno;
 
+#if DELAY_POOLS
+    ccb->quotaQueueReserv = 0;
+#endif
+
     comm_io_callback_t cb = *ccb;
 
     /* We've got a copy; blow away the real one */
@@ -187,6 +204,10 @@ commio_cancel_callback(int fd, comm_io_callback_t *ccb)
 
     ccb->xerrno = 0;
     ccb->callback = NULL;
+
+#if DELAY_POOLS
+    ccb->quotaQueueReserv = 0;
+#endif
 }
 
 /*
@@ -1589,6 +1610,16 @@ _comm_close(int fd, char const *file, int line)
         commio_finish_callback(fd, COMMIO_FD_READCB(fd), COMM_ERR_CLOSING, errno);
     }
 
+#if DELAY_POOLS
+    if (ClientInfo *clientInfo = F->clientInfo) {
+        if (clientInfo->selectWaiting) {
+            clientInfo->selectWaiting = false;
+            // kick queue or it will get stuck as commWriteHandle is not called
+            clientInfo->kickQuotaQueue();
+        }
+    }
+#endif
+
     commCallCloseHandlers(fd);
 
     if (F->pconn.uses)
@@ -1935,6 +1966,235 @@ comm_exit(void)
     safe_free(commfd_table);
 }
 
+#if DELAY_POOLS
+// called when the queue is done waiting for the client bucket to fill
+static void
+commHandleWriteHelper(void * data)
+{
+    CommQuotaQueue *queue = static_cast<CommQuotaQueue*>(data);
+    assert(queue);
+
+    ClientInfo *clientInfo = queue->clientInfo;
+    // ClientInfo invalidates queue if freed, so if we got here through,
+    // evenAdd cbdata protections, everything should be valid and consistent
+    assert(clientInfo);
+    assert(clientInfo->hasQueue());
+    assert(clientInfo->hasQueue(queue));
+    assert(!clientInfo->selectWaiting);
+    assert(clientInfo->eventWaiting);
+    clientInfo->eventWaiting = false;
+
+    do {
+        // check that the head descriptor is still relevant
+        const int head = clientInfo->quotaPeekFd();
+        comm_io_callback_t *ccb = COMMIO_FD_WRITECB(head);
+
+        if (fd_table[head].clientInfo == clientInfo &&
+                clientInfo->quotaPeekReserv() == ccb->quotaQueueReserv &&
+                !fd_table[head].closing()) {
+
+            // wait for the head descriptor to become ready for writing
+            commSetSelect(head, COMM_SELECT_WRITE, commHandleWrite, ccb, 0);
+            clientInfo->selectWaiting = true;
+            return;
+        }
+
+        clientInfo->quotaDequeue(); // remove the no longer relevant descriptor
+        // and continue looking for a relevant one
+    } while (clientInfo->hasQueue());
+
+    debugs(77,3, HERE << "emptied queue");
+}
+
+bool
+ClientInfo::hasQueue() const
+{
+    assert(quotaQueue);
+    return !quotaQueue->empty();
+}
+
+bool
+ClientInfo::hasQueue(const CommQuotaQueue *q) const
+{
+    assert(quotaQueue);
+    return quotaQueue == q;
+}
+
+/// returns the first descriptor to be dequeued
+int
+ClientInfo::quotaPeekFd() const
+{
+    assert(quotaQueue);
+    return quotaQueue->front();
+}
+
+/// returns the reservation ID of the first descriptor to be dequeued
+unsigned int
+ClientInfo::quotaPeekReserv() const
+{
+    assert(quotaQueue);
+    return quotaQueue->outs + 1;
+}
+
+/// queues a given fd, creating the queue if necessary; returns reservation ID
+unsigned int
+ClientInfo::quotaEnqueue(int fd)
+{
+    assert(quotaQueue);
+    return quotaQueue->enqueue(fd);
+}
+
+/// removes queue head
+void
+ClientInfo::quotaDequeue()
+{
+    assert(quotaQueue);
+    quotaQueue->dequeue();
+}
+
+void
+ClientInfo::kickQuotaQueue()
+{
+    if (!eventWaiting && !selectWaiting && hasQueue()) {
+        // wait at least a second if the bucket is empty
+        const double delay = (bucketSize < 1.0) ? 1.0 : 0.0;
+        eventAdd("commHandleWriteHelper", &commHandleWriteHelper,
+                 quotaQueue, delay, 0, true);
+        eventWaiting = true;
+    }
+}
+
+/// calculates how much to write for a single dequeued client
+int
+ClientInfo::quotaForDequed()
+{
+    /* If we have multiple clients and give full bucketSize to each client then
+     * clt1 may often get a lot more because clt1->clt2 time distance in the
+     * select(2) callback order may be a lot smaller than cltN->clt1 distance.
+     * We divide quota evenly to be more fair. */
+
+    if (!rationedCount) {
+        rationedCount = quotaQueue->size() + 1;
+
+        // The delay in ration recalculation _temporary_ deprives clients from
+        // bytes that should have trickled in while rationedCount was positive.
+        refillBucket();
+
+        // Rounding errors do not accumulate here, but we round down to avoid
+        // negative bucket sizes after write with rationedCount=1.
+        rationedQuota = static_cast<int>(floor(bucketSize/rationedCount));
+        debugs(77,5, HERE << "new rationedQuota: " << rationedQuota <<
+               '*' << rationedCount);
+    }
+
+    --rationedCount;
+    debugs(77,7, HERE << "rationedQuota: " << rationedQuota <<
+           " rations remaining: " << rationedCount);
+
+    // update 'last seen' time to prevent clientdb GC from dropping us
+    last_seen = squid_curtime;
+    return rationedQuota;
+}
+
+///< adds bytes to the quota bucket based on the rate and passed time
+void
+ClientInfo::refillBucket()
+{
+    // all these times are in seconds, with double precision
+    const double currTime = current_dtime;
+    const double timePassed = currTime - prevTime;
+
+    // Calculate allowance for the time passed. Use double to avoid
+    // accumulating rounding errors for small intervals. For example, always
+    // adding 1 byte instead of 1.4 results in 29% bandwidth allocation error.
+    const double gain = timePassed * writeSpeedLimit;
+
+    debugs(77,5, HERE << currTime << " clt" << (const char*)hash.key << ": " <<
+           bucketSize << " + (" << timePassed << " * " << writeSpeedLimit <<
+           " = " << gain << ')');
+
+    // to further combat error accumulation during micro updates,
+    // quit before updating time if we cannot add at least one byte
+    if (gain < 1.0)
+        return;
+
+    prevTime = currTime;
+
+    // for "first" connections, drain initial fat before refilling but keep
+    // updating prevTime to avoid bursts after the fat is gone
+    if (bucketSize > bucketSizeLimit) {
+        debugs(77,4, HERE << "not refilling while draining initial fat");
+        return;
+    }
+
+    bucketSize += gain;
+
+    // obey quota limits
+    if (bucketSize > bucketSizeLimit)
+        bucketSize = bucketSizeLimit;
+}
+
+void
+ClientInfo::setWriteLimiter(const int aWriteSpeedLimit, const double anInitialBurst, const double aHighWatermark)
+{
+    debugs(77,5, HERE << "Write limits for " << (const char*)hash.key <<
+           " speed=" << aWriteSpeedLimit << " burst=" << anInitialBurst <<
+           " highwatermark=" << aHighWatermark);
+
+    // set or possibly update traffic shaping parameters
+    writeLimitingActive = true;
+    writeSpeedLimit = aWriteSpeedLimit;
+    bucketSizeLimit = aHighWatermark;
+
+    // but some members should only be set once for a newly activated bucket
+    if (firstTimeConnection) {
+        firstTimeConnection = false;
+
+        assert(!selectWaiting);
+        assert(!quotaQueue);
+        quotaQueue = new CommQuotaQueue(this);
+        cbdataReference(quotaQueue);
+
+        bucketSize = anInitialBurst;
+        prevTime = current_dtime;
+    }
+}
+
+CommQuotaQueue::CommQuotaQueue(ClientInfo *info): clientInfo(info),
+        ins(0), outs(0)
+{
+    assert(clientInfo);
+}
+
+CommQuotaQueue::~CommQuotaQueue()
+{
+    assert(!clientInfo); // ClientInfo should clear this before destroying us
+}
+
+/// places the given fd at the end of the queue; returns reservation ID
+unsigned int
+CommQuotaQueue::enqueue(int fd)
+{
+    debugs(77,5, HERE << "clt" << (const char*)clientInfo->hash.key <<
+           ": FD " << fd << " with qqid" << (ins+1) << ' ' << fds.size());
+    fds.push_back(fd);
+    return ++ins;
+}
+
+/// removes queue head
+void
+CommQuotaQueue::dequeue()
+{
+    assert(!fds.empty());
+    debugs(77,5, HERE << "clt" << (const char*)clientInfo->hash.key <<
+           ": FD " << fds.front() << " with qqid" << (outs+1) << ' ' <<
+           fds.size());
+    fds.pop_front();
+    ++outs;
+}
+
+#endif
+
 /* Write to FD. */
 static void
 commHandleWrite(int fd, void *data)
@@ -1950,8 +2210,62 @@ commHandleWrite(int fd, void *data)
            (long int) state->offset << ", sz " << (long int) state->size << ".");
 
     nleft = state->size - state->offset;
+
+#if DELAY_POOLS
+    ClientInfo * clientInfo=fd_table[fd].clientInfo;
+
+    if (clientInfo && !clientInfo->writeLimitingActive)
+        clientInfo = NULL; // we only care about quota limits here
+
+    if (clientInfo) {
+        assert(clientInfo->selectWaiting);
+        clientInfo->selectWaiting = false;
+
+        assert(clientInfo->hasQueue());
+        assert(clientInfo->quotaPeekFd() == fd);
+        clientInfo->quotaDequeue(); // we will write or requeue below
+
+        if (nleft > 0) {
+            const int quota = clientInfo->quotaForDequed();
+            if (!quota) {  // if no write quota left, queue this fd
+                state->quotaQueueReserv = clientInfo->quotaEnqueue(fd);
+                clientInfo->kickQuotaQueue();
+                PROF_stop(commHandleWrite);
+                return;
+            }
+
+            const int nleft_corrected = min(nleft, quota);
+            if (nleft != nleft_corrected) {
+                debugs(5, 5, HERE << "FD " << fd << " writes only " <<
+                       nleft_corrected << " out of " << nleft);
+                nleft = nleft_corrected;
+            }
+
+        }
+    }
+
+#endif
+
+    /* actually WRITE data */
     len = FD_WRITE_METHOD(fd, state->buf + state->offset, nleft);
     debugs(5, 5, "commHandleWrite: write() returns " << len);
+
+#if DELAY_POOLS
+    if (clientInfo) {
+        if (len > 0) {
+            /* we wrote data - drain them from bucket */
+            clientInfo->bucketSize -= len;
+            if (clientInfo->bucketSize < 0.0) {
+                debugs(5,1, HERE << "drained too much"); // should not happen
+                clientInfo->bucketSize = 0;
+            }
+        }
+
+        // even if we wrote nothing, we were served; give others a chance
+        clientInfo->kickQuotaQueue();
+    }
+#endif
+
     fd_bytes(fd, len, FD_WRITE);
     statCounter.syscalls.sock.writes++;
     // After each successful partial write,
@@ -1974,11 +2288,7 @@ commHandleWrite(int fd, void *data)
             commio_finish_callback(fd, COMMIO_FD_WRITECB(fd), nleft ? COMM_ERROR : COMM_OK, errno);
         } else if (ignoreErrno(errno)) {
             debugs(50, 10, "commHandleWrite: FD " << fd << ": write failure: " << xstrerror() << ".");
-            commSetSelect(fd,
-                          COMM_SELECT_WRITE,
-                          commHandleWrite,
-                          state,
-                          0);
+            commSelectOrQueueWrite(fd);
         } else {
             debugs(50, 2, "commHandleWrite: FD " << fd << ": write failure: " << xstrerror() << ".");
             commio_finish_callback(fd, COMMIO_FD_WRITECB(fd), nleft ? COMM_ERROR : COMM_OK, errno);
@@ -1989,11 +2299,7 @@ commHandleWrite(int fd, void *data)
 
         if (state->offset < state->size) {
             /* Not done, reinstall the write handler and write some more */
-            commSetSelect(fd,
-                          COMM_SELECT_WRITE,
-                          commHandleWrite,
-                          state,
-                          0);
+            commSelectOrQueueWrite(fd);
         } else {
             commio_finish_callback(fd, COMMIO_FD_WRITECB(fd), nleft ? COMM_OK : COMM_ERROR, errno);
         }
@@ -2032,6 +2338,27 @@ comm_write(int fd, const char *buf, int size, AsyncCall::Pointer &callback, FREE
     /* Queue the write */
     commio_set_callback(fd, IOCB_WRITE, ccb, callback,
                         (char *)buf, free_func, size);
+
+    commSelectOrQueueWrite(fd);
+}
+
+// called when fd needs to write but may need to wait in line for its quota
+static void
+commSelectOrQueueWrite(const int fd)
+{
+    comm_io_callback_t *ccb = COMMIO_FD_WRITECB(fd);
+
+#if DELAY_POOLS
+    // stand in line if there is one
+    if (ClientInfo *clientInfo = fd_table[fd].clientInfo) {
+        if (clientInfo->writeLimitingActive) {
+            ccb->quotaQueueReserv = clientInfo->quotaEnqueue(fd);
+            clientInfo->kickQuotaQueue();
+            return;
+        }
+    }
+#endif
+
     commSetSelect(fd, COMM_SELECT_WRITE, commHandleWrite, ccb, 0);
 }
 

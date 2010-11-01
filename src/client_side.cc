@@ -111,6 +111,10 @@
 #include "SquidTime.h"
 #include "Store.h"
 
+#if DELAY_POOLS
+#include "ClientInfo.h"
+#endif
+
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
 #endif
@@ -3148,6 +3152,46 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
     clientdbEstablished(details->peer, 1);
 
+#if DELAY_POOLS
+    fd_table[newfd].clientInfo = NULL;
+
+    if (Config.onoff.client_db) {
+        /* it was said several times that client write limiter does not work if client_db is disabled */
+
+        ClientDelayPools& pools(Config.ClientDelay.pools);
+        for (unsigned int pool = 0; pool < pools.size(); pool++) {
+
+            /* pools require explicit 'allow' to assign a client into them */
+            if (!pools[pool].access)
+                continue; // warned in ClientDelayConfig::Finalize()
+
+            ACLFilledChecklist ch(pools[pool].access, NULL, NULL);
+
+            // TODO: we check early to limit error response bandwith but we
+            // should recheck when we can honor delay_pool_uses_indirect
+
+            ch.src_addr = details->peer;
+            ch.my_addr = details->me;
+
+            if (ch.fastCheck()) {
+
+                /*  request client information from db after we did all checks
+                    this will save hash lookup if client failed checks */
+                ClientInfo * cli = clientdbGetInfo(details->peer);
+                assert(cli);
+
+                /* put client info in FDE */
+                fd_table[newfd].clientInfo = cli;
+
+                /* setup write limiter for this request */
+                const double burst = floor(0.5 +
+                                           (pools[pool].highwatermark * Config.ClientDelay.initial)/100.0);
+                cli->setWriteLimiter(pools[pool].rate, burst, pools[pool].highwatermark);
+                break;
+            }
+        }
+    }
+#endif
     incoming_sockets_accepted++;
 }
 

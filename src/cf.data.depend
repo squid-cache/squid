@@ -20,6 +20,9 @@ delay_pool_access	acl	delay_class
 delay_pool_class	delay_pools
 delay_pool_count
 delay_pool_rates	delay_class
+client_delay_pool_access	acl
+client_delay_pool_count
+client_delay_pool_rates
 denyinfo		acl
 eol
 externalAclHelper	auth_param
