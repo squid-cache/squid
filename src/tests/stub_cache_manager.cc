@@ -30,30 +30,14 @@
  */
 
 #include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "squid.h"
 
-static CacheManager *cm=0;
-
-CacheManager::CacheManager()
+Mgr::Action::Pointer
+CacheManager::createNamedAction(char const* action)
 {
-}
-
-void
-CacheManager::registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic)
-{
-    return;
-}
-
-void
-CacheManager::registerAction(CacheManagerAction *anAction)
-{
-    return;
-}
-
-CacheManagerAction *
-CacheManager::findAction(char const * action)
-{
-    return 0;
+    fatal ("Not implemented");
+    return NULL;
 }
 
 void
@@ -65,8 +49,20 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
 CacheManager*
 CacheManager::GetInstance(void)
 {
-    if (!cm)
-        cm=new CacheManager();
-    return cm;
+    static CacheManager *instance = 0;
+    if (!instance)
+        instance = new CacheManager();
+    return instance;
 }
 
+void
+Mgr::RegisterAction(char const*, char const*, OBJH, int, int)
+{
+}
+
+void
+Mgr::RegisterAction(char const * action, char const * desc,
+                    Mgr::ClassActionCreationHandler *handler,
+                    int pw_req_flag, int atomic)
+{
+}

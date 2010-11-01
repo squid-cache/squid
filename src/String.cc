@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "base/TextException.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 
 int
@@ -280,8 +281,8 @@ ptrcmp(C const &lhs, C const &rhs)
 StringRegistry::StringRegistry()
 {
 #if DEBUGSTRINGS
-    CacheManager::GetInstance()->registerAction("strings",
-            "Strings in use in squid", Stat, 0, 1);
+    Mgr::RegisterAction("strings",
+                        "Strings in use in squid", Stat, 0, 1);
 #endif
 }
 

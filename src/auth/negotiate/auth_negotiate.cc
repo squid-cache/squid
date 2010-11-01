@@ -41,7 +41,7 @@
 #include "auth/negotiate/auth_negotiate.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "client_side.h"
 #include "HttpReply.h"
@@ -200,10 +200,9 @@ AuthNegotiateConfig::init(AuthConfig * scheme)
 void
 AuthNegotiateConfig::registerWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("negotiateauthenticator",
-                   "Negotiate User Authenticator Stats",
-                   authenticateNegotiateStats, 0, 1);
+    Mgr::RegisterAction("negotiateauthenticator",
+                        "Negotiate User Authenticator Stats",
+                        authenticateNegotiateStats, 0, 1);
 }
 
 bool

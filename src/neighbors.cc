@@ -34,7 +34,6 @@
 #include "ProtoPort.h"
 #include "acl/FilledChecklist.h"
 #include "event.h"
-#include "CacheManager.h"
 #include "htcp.h"
 #include "HttpRequest.h"
 #include "ICP.h"
@@ -47,6 +46,7 @@
 #include "icmp/net_db.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
+#include "mgr/Registration.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
@@ -540,15 +540,14 @@ neighborRemove(peer * target)
 static void
 neighborsRegisterWithCacheManager()
 {
-    CacheManager *manager = CacheManager::GetInstance();
-    manager->registerAction("server_list",
-                            "Peer Cache Statistics",
-                            neighborDumpPeers, 0, 1);
+    Mgr::RegisterAction("server_list",
+                        "Peer Cache Statistics",
+                        neighborDumpPeers, 0, 1);
 
     if (theInIcpConnection >= 0) {
-        manager->registerAction("non_peers",
-                                "List of Unknown sites sending ICP messages",
-                                neighborDumpNonPeers, 0, 1);
+        Mgr::RegisterAction("non_peers",
+                            "List of Unknown sites sending ICP messages",
+                            neighborDumpNonPeers, 0, 1);
     }
 }
 

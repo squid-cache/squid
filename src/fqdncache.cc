@@ -35,7 +35,7 @@
 #include "squid.h"
 #include "cbdata.h"
 #include "event.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
@@ -586,9 +586,8 @@ fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handle
 static void
 fqdncacheRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("fqdncache", "FQDN Cache Stats and Contents",
-                   fqdnStats, 0, 1);
+    Mgr::RegisterAction("fqdncache", "FQDN Cache Stats and Contents",
+                        fqdnStats, 0, 1);
 
 }
 

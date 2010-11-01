@@ -34,12 +34,12 @@
  */
 
 #include "squid.h"
-#include "CacheManager.h"
-#include "Store.h"
-#include "HttpHeader.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
+#include "HttpHeader.h"
 #include "MemBuf.h"
+#include "mgr/Registration.h"
+#include "Store.h"
 
 /*
  * On naming conventions:
@@ -283,10 +283,9 @@ static void httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e);
 static void
 httpHeaderRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("http_headers",
-                   "HTTP Header Statistics",
-                   httpHeaderStoreReport, 0, 1);
+    Mgr::RegisterAction("http_headers",
+                        "HTTP Header Statistics",
+                        httpHeaderStoreReport, 0, 1);
 }
 
 void

@@ -33,7 +33,7 @@
  */
 
 #include "squid.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "comm.h"
 #include "pconn.h"
@@ -361,10 +361,9 @@ PconnModule::GetInstance()
 void
 PconnModule::registerWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("pconn",
-                   "Persistent Connection Utilization Histograms",
-                   DumpWrapper, 0, 1);
+    Mgr::RegisterAction("pconn",
+                        "Persistent Connection Utilization Histograms",
+                        DumpWrapper, 0, 1);
 }
 
 void

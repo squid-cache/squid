@@ -10,10 +10,13 @@
 
 
 #include "Array.h"
-#include <map>
-#include "ipc/Port.h"
 #include "ipc/Messages.h"
+#include "ipc/Port.h"
 #include "ipc/SharedListen.h"
+#include "ipc/StrandCoords.h"
+#include "mgr/forward.h"
+
+#include <map>
 
 namespace Ipc
 {
@@ -29,6 +32,8 @@ public:
 
     void broadcastSignal(int sig) const; ///< send sig to registered strands
 
+    const StrandCoords &strands() const; ///< currently registered strands
+
 protected:
     virtual void start(); // Port (AsyncJob) API
     virtual void receive(const TypedMsgHdr& message); // Port API
@@ -39,13 +44,14 @@ protected:
 
     /// returns cached socket or calls openListenSocket()
     void handleSharedListenRequest(const SharedListenRequest& request);
+    void handleCacheMgrRequest(const Mgr::Request& request);
+    void handleCacheMgrResponse(const Mgr::Response& response);
 
     /// calls comm_open_listener()
     int openListenSocket(const SharedListenRequest& request, int &errNo);
 
 private:
-    typedef Vector<StrandCoord> Strands; ///< unsorted strands
-    Strands strands; ///< registered processes and threads
+    StrandCoords strands_; ///< registered processes and threads
 
     typedef std::map<OpenListenerParams, int> Listeners; ///< params:fd map
     Listeners listeners; ///< cached comm_open_listener() results

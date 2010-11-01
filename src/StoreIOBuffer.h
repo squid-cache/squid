@@ -76,4 +76,12 @@ public:
     char *data;
 };
 
+inline
+std::ostream &
+operator <<(std::ostream &os, const StoreIOBuffer &b)
+{
+    return os << "ioBuf(@" << b.offset << ", len=" << b.length << ", " <<
+           (void*)b.data << (b.flags.error ? ", ERR" : "") << ')';
+}
+
 #endif /* SQUID_STOREIOBUFFER_H */

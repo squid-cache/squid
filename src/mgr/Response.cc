@@ -1,0 +1,68 @@
+/*
+ * $Id$
+ *
+ * DEBUG: section 16    Cache Manager API
+ *
+ */
+
+#include "config.h"
+#include "base/TextException.h"
+#include "CacheManager.h"
+#include "ipc/Messages.h"
+#include "ipc/TypedMsgHdr.h"
+#include "mgr/ActionCreator.h"
+#include "mgr/ActionProfile.h"
+#include "mgr/Response.h"
+
+
+std::ostream& Mgr::operator << (std::ostream &os, const Response& response)
+{
+    os << "response: {requestId: " << response.requestId << '}';
+    return os;
+}
+
+Mgr::Response::Response(unsigned int aRequestId, Action::Pointer anAction):
+        requestId(aRequestId), action(anAction)
+{
+    Must(!action || action->name()); // if there is an action, it must be named
+}
+
+Mgr::Response::Response(const Ipc::TypedMsgHdr& msg)
+{
+    msg.checkType(Ipc::mtCacheMgrResponse);
+    msg.getPod(requestId);
+    Must(requestId != 0);
+
+    if (msg.hasMoreData()) {
+        String actionName;
+        msg.getString(actionName);
+        action = CacheManager::GetInstance()->createNamedAction(actionName.termedBuf());
+        Must(hasAction());
+        action->unpack(msg);
+    }
+}
+
+void
+Mgr::Response::pack(Ipc::TypedMsgHdr& msg) const
+{
+    Must(requestId != 0);
+    msg.setType(Ipc::mtCacheMgrResponse);
+    msg.putPod(requestId);
+    if (hasAction()) {
+        msg.putString(action->name());
+        action->pack(msg);
+    }
+}
+
+bool
+Mgr::Response::hasAction() const
+{
+    return action != NULL;
+}
+
+const Mgr::Action&
+Mgr::Response::getAction() const
+{
+    Must(hasAction());
+    return *action;
+}

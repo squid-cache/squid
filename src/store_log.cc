@@ -33,10 +33,10 @@
  */
 
 #include "squid.h"
-#include "CacheManager.h"
 #include "HttpReply.h"
 #include "log/File.h"
 #include "MemObject.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "SquidTime.h"
 
@@ -139,9 +139,8 @@ storeLogClose(void)
 static void
 storeLogRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("store_log_tags", "Histogram of store.log tags",
-                   storeLogTagsHist, 0, 1);
+    Mgr::RegisterAction("store_log_tags", "Histogram of store.log tags",
+                        storeLogTagsHist, 0, 1);
 }
 
 void

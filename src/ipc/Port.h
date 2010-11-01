@@ -22,11 +22,10 @@ class Port: public UdsOp
 {
 public:
     Port(const String &aListenAddr);
-
-protected:
     /// calculates IPC message address for strand #id at path
     static String MakeAddr(const char *path, int id);
 
+protected:
     virtual void start() = 0; // UdsOp (AsyncJob) API; has body
     virtual bool doneAll() const; // UdsOp (AsyncJob) API
 

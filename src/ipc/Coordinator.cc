@@ -7,10 +7,16 @@
 
 
 #include "config.h"
+#include "base/TextException.h"
+#include "CacheManager.h"
 #include "comm.h"
 #include "ipc/Coordinator.h"
 #include "ipc/FdNotes.h"
 #include "ipc/SharedListen.h"
+#include "mgr/Inquirer.h"
+#include "mgr/Request.h"
+#include "mgr/Response.h"
+#include "mgr/StoreToCommWriter.h"
 
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
@@ -29,8 +35,8 @@ void Ipc::Coordinator::start()
 
 Ipc::StrandCoord* Ipc::Coordinator::findStrand(int kidId)
 {
-    typedef Strands::iterator SI;
-    for (SI iter = strands.begin(); iter != strands.end(); ++iter) {
+    typedef StrandCoords::iterator SI;
+    for (SI iter = strands_.begin(); iter != strands_.end(); ++iter) {
         if (iter->kidId == kidId)
             return &(*iter);
     }
@@ -42,7 +48,7 @@ void Ipc::Coordinator::registerStrand(const StrandCoord& strand)
     if (StrandCoord* found = findStrand(strand.kidId))
         *found = strand;
     else
-        strands.push_back(strand);
+        strands_.push_back(strand);
 }
 
 void Ipc::Coordinator::receive(const TypedMsgHdr& message)
@@ -56,6 +62,16 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
     case mtSharedListenRequest:
         debugs(54, 6, HERE << "Shared listen request");
         handleSharedListenRequest(SharedListenRequest(message));
+        break;
+
+    case mtCacheMgrRequest:
+        debugs(54, 6, HERE << "Cache manager request");
+        handleCacheMgrRequest(Mgr::Request(message));
+        break;
+
+    case mtCacheMgrResponse:
+        debugs(54, 6, HERE << "Cache manager response");
+        handleCacheMgrResponse(Mgr::Response(message));
         break;
 
     default:
@@ -94,6 +110,29 @@ Ipc::Coordinator::handleSharedListenRequest(const SharedListenRequest& request)
     SendMessage(MakeAddr(strandAddrPfx, request.requestorId), message);
 }
 
+void
+Ipc::Coordinator::handleCacheMgrRequest(const Mgr::Request& request)
+{
+    debugs(54, 4, HERE);
+
+    // Let the strand know that we are now responsible for handling the request
+    Mgr::Response response(request.requestId);
+    TypedMsgHdr message;
+    response.pack(message);
+    SendMessage(MakeAddr(strandAddrPfx, request.requestorId), message);
+
+    Mgr::Action::Pointer action =
+        CacheManager::GetInstance()->createRequestedAction(request.params);
+    AsyncJob::Start(new Mgr::Inquirer(action,
+                                      Mgr::ImportHttpFdIntoComm(request.fd), request, strands_));
+}
+
+void
+Ipc::Coordinator::handleCacheMgrResponse(const Mgr::Response& response)
+{
+    Mgr::Inquirer::HandleRemoteAck(response);
+}
+
 int
 Ipc::Coordinator::openListenSocket(const SharedListenRequest& request,
                                    int &errNo)
@@ -120,8 +159,8 @@ Ipc::Coordinator::openListenSocket(const SharedListenRequest& request,
 
 void Ipc::Coordinator::broadcastSignal(int sig) const
 {
-    typedef Strands::const_iterator SCI;
-    for (SCI iter = strands.begin(); iter != strands.end(); ++iter) {
+    typedef StrandCoords::const_iterator SCI;
+    for (SCI iter = strands_.begin(); iter != strands_.end(); ++iter) {
         debugs(54, 5, HERE << "signal " << sig << " to kid" << iter->kidId <<
                ", PID=" << iter->pid);
         kill(iter->pid, sig);
@@ -136,4 +175,10 @@ Ipc::Coordinator* Ipc::Coordinator::Instance()
     // we could make Coordinator death fatal, except during exit, but since
     // Strands do not re-register, even process death would be pointless.
     return TheInstance;
+}
+
+const Ipc::StrandCoords&
+Ipc::Coordinator::strands() const
+{
+    return strands_;
 }

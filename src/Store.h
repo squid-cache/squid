@@ -60,6 +60,18 @@ class MemObject;
 class Store;
 class StoreSearch;
 
+typedef struct {
+
+    struct {
+        int calls;
+        int select_fail;
+        int create_fail;
+        int success;
+    } create;
+} StoreIoStats;
+
+extern StoreIoStats store_io_stats;
+
 /**
  \ingroup StoreAPI
  */

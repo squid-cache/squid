@@ -8,9 +8,14 @@
 #include "config.h"
 #include "base/TextException.h"
 #include "ipc/Strand.h"
+#include "ipc/StrandCoord.h"
 #include "ipc/Messages.h"
 #include "ipc/SharedListen.h"
 #include "ipc/Kids.h"
+#include "mgr/Request.h"
+#include "mgr/Response.h"
+#include "mgr/Forwarder.h"
+#include "CacheManager.h"
 
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Strand);
@@ -51,6 +56,14 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         SharedListenJoined(SharedListenResponse(message));
         break;
 
+    case mtCacheMgrRequest:
+        handleCacheMgrRequest(Mgr::Request(message));
+        break;
+
+    case mtCacheMgrResponse:
+        handleCacheMgrResponse(Mgr::Response(message));
+        break;
+
     default:
         debugs(54, 1, HERE << "Unhandled message type: " << message.type());
         break;
@@ -68,6 +81,18 @@ void Ipc::Strand::handleRegistrationResponse(const StrandCoord &strand)
         debugs(54, 6, "kid" << KidIdentifier << " is not yet registered");
         // keep listening, with a timeout
     }
+}
+
+void Ipc::Strand::handleCacheMgrRequest(const Mgr::Request& request)
+{
+    Mgr::Action::Pointer action =
+        CacheManager::GetInstance()->createRequestedAction(request.params);
+    action->respond(request);
+}
+
+void Ipc::Strand::handleCacheMgrResponse(const Mgr::Response& response)
+{
+    Mgr::Forwarder::HandleRemoteAck(response.requestId);
 }
 
 void Ipc::Strand::timedout()

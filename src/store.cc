@@ -37,7 +37,7 @@
 #include "event.h"
 #include "fde.h"
 #include "Store.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "StoreClient.h"
 #include "stmem.h"
 #include "HttpReply.h"
@@ -52,6 +52,7 @@
 #include "Stack.h"
 #include "SquidTime.h"
 #include "swap_log_op.h"
+#include "mgr/StoreIoAction.h"
 
 static STMCB storeWriteComplete;
 
@@ -83,8 +84,6 @@ const char *swapStatusStr[] = {
     "SWAPOUT_WRITING",
     "SWAPOUT_DONE"
 };
-
-extern OBJH storeIOStats;
 
 
 /*
@@ -1378,11 +1377,10 @@ StoreEntry::validLength() const
 static void
 storeRegisterWithCacheManager(void)
 {
-    CacheManager *manager=CacheManager::GetInstance();
-    manager->registerAction("storedir", "Store Directory Stats", Store::Stats, 0, 1);
-    manager->registerAction("store_io", "Store IO Interface Stats", storeIOStats, 0, 1);
-    manager->registerAction("store_check_cachable_stats", "storeCheckCachable() Stats",
-                            storeCheckCachableStats, 0, 1);
+    Mgr::RegisterAction("storedir", "Store Directory Stats", Store::Stats, 0, 1);
+    Mgr::RegisterAction("store_io", "Store IO Interface Stats", &Mgr::StoreIoAction::Create, 0, 1);
+    Mgr::RegisterAction("store_check_cachable_stats", "storeCheckCachable() Stats",
+                        storeCheckCachableStats, 0, 1);
 }
 
 void

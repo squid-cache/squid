@@ -36,13 +36,13 @@
 #include "config.h"
 #include "squid.h"
 #include "event.h"
-#include "CacheManager.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "comm.h"
 #include "fde.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
+#include "mgr/Registration.h"
 #include "util.h"
 #include "wordlist.h"
 
@@ -1432,8 +1432,7 @@ idnsRcodeCount(int rcode, int attempt)
 static void
 idnsRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("idns", "Internal DNS Statistics", idnsStats, 0, 1);
+    Mgr::RegisterAction("idns", "Internal DNS Statistics", idnsStats, 0, 1);
 }
 
 void

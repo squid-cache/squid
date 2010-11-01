@@ -41,7 +41,7 @@
  */
 
 #include "squid.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "ExternalACL.h"
 #include "ExternalACLEntry.h"
 #include "auth/UserRequest.h"
@@ -1420,10 +1420,9 @@ externalAclStats(StoreEntry * sentry)
 static void
 externalAclRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("external_acl",
-                   "External ACL stats",
-                   externalAclStats, 0, 1);
+    Mgr::RegisterAction("external_acl",
+                        "External ACL stats",
+                        externalAclStats, 0, 1);
 }
 
 void

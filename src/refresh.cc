@@ -38,7 +38,7 @@
 #endif
 
 #include "squid.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "MemObject.h"
 #include "HttpRequest.h"
@@ -610,8 +610,7 @@ refreshStats(StoreEntry * sentry)
 static void
 refreshRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("refresh", "Refresh Algorithm Statistics", refreshStats, 0, 1);
+    Mgr::RegisterAction("refresh", "Refresh Algorithm Statistics", refreshStats, 0, 1);
 }
 
 void
