@@ -17,8 +17,11 @@ man_MANS =
 DISTCLEANFILES = 
 
 LDADD = \
+	$(top_builddir)/src/tests/stub_debug.o \
 	$(top_builddir)/src/time.o \
 	$(top_builddir)/src/ip/libip.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
 	$(COMPAT_LIB) \
 	$(KRB5LIBS) \
 	$(XTRA_LIBS)

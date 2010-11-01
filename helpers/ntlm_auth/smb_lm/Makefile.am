@@ -7,6 +7,7 @@ ntlm_smb_lm_auth_LDADD = \
 	$(top_builddir)/lib/smblib/libsmblib.la \
 	$(top_builddir)/lib/rfcnb/librfcnb.la \
 	$(top_builddir)/lib/ntlmauth/libntlmauth.la \
+	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(CRYPTLIB) \
 	$(XTRA_LIBS)

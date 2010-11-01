@@ -43,10 +43,12 @@
 #include "auth/basic/basicUserRequest.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
+#include "charset.h"
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "HttpReply.h"
 #include "rfc1738.h"
+#include "uudecode.h"
 #include "wordlist.h"
 #include "SquidTime.h"
 

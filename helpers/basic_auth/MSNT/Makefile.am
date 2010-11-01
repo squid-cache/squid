@@ -29,6 +29,7 @@ CXXFLAGS += -DSYSCONFDIR=\"$(sysconfdir)\"
 LDADD = \
 	$(top_builddir)/lib/smblib/libsmblib.la \
 	$(top_builddir)/lib/rfcnb/librfcnb.la \
+	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 

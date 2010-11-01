@@ -2152,8 +2152,8 @@ ClientInfo::setWriteLimiter(const int aWriteSpeedLimit, const double anInitialBu
 
         assert(!selectWaiting);
         assert(!quotaQueue);
-        quotaQueue = new CommQuotaQueue(this);
-        cbdataReference(quotaQueue);
+        CommQuotaQueue *tmp = new CommQuotaQueue(this);
+        quotaQueue = cbdataReference(tmp);
 
         bucketSize = anInitialBurst;
         prevTime = current_dtime;

@@ -1,9 +1,9 @@
 #ifndef _SQUID_INCLUDE_RFC1738_H
 #define _SQUID_INCLUDE_RFC1738_H
 
-/* for SQUIDCEXTERN */
-#include "config.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Encoder rfc1738_do_escape flag values. */
 #define RFC1738_ESCAPE_UNSAFE     0
@@ -27,7 +27,7 @@
  * \param flags  RFC1738_ESCAPE_RESERVED  Encode all unsafe and reserved characters.
  * \param flags  RFC1738_ESCAPE_UNESCAPED Encode all unsafe characters which have not already been encoded.
  */
-SQUIDCEXTERN char *rfc1738_do_escape(const char *url, int flags);
+extern char *rfc1738_do_escape(const char *url, int flags);
 
 /* Old API functions */
 #define rfc1738_escape(x)  rfc1738_do_escape(x, RFC1738_ESCAPE_UNSAFE)
@@ -39,7 +39,9 @@ SQUIDCEXTERN char *rfc1738_do_escape(const char *url, int flags);
  * Unescape a URL string according to RFC 1738 specification.
  * String is unescaped in-place
  */
-SQUIDCEXTERN void rfc1738_unescape(char *url);
+extern void rfc1738_unescape(char *url);
 
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* _SQUID_INCLUDE_RFC1738_H */

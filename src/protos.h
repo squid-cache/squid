@@ -104,14 +104,6 @@ extern void clientAccessCheck(void *);
 
 #include "Debug.h"
 
-/* see debug.c for info on context-based debugging */
-SQUIDCEXTERN Ctx ctx_enter(const char *descr);
-SQUIDCEXTERN void ctx_exit(Ctx ctx);
-
-SQUIDCEXTERN void _db_set_syslog(const char *facility);
-SQUIDCEXTERN void _db_init(const char *logfile, const char *options);
-SQUIDCEXTERN void _db_rotate_log(void);
-
 /* packs, then prints an object using debugs() */
 SQUIDCEXTERN void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm);
 
