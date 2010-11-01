@@ -97,15 +97,16 @@
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
 #endif
-
 #if USE_SQUID_ESI
 #include "esi/Module.h"
 #endif
-
 #include "fs/Module.h"
 
-#if USE_WIN32_SERVICE
+#if HAVE_PATHS_H
+#include <paths.h>
+#endif
 
+#if USE_WIN32_SERVICE
 #include "squid_windows.h"
 #include <process.h>
 

@@ -41,6 +41,7 @@
 #include "rfc2617.h"
 #include "auth/digest/auth_digest.h"
 #include "auth/Gadgets.h"
+#include "base64.h"
 #include "event.h"
 #include "mgr/Registration.h"
 #include "Store.h"

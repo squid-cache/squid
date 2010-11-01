@@ -33,8 +33,10 @@
  */
 
 #include "config.h"
+#include "base64.h"
 #include "ip/Address.h"
-#include "util.h"
+#include "rfc1123.h"
+#include "SquidTime.h"
 
 #ifdef _SQUID_MSWIN_
 /** \cond AUTODOCS-IGNORE */

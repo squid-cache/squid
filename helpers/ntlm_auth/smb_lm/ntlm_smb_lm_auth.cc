@@ -14,12 +14,13 @@
  *
  */
 #include "config.h"
+#include "base64.h"
 #include "compat/debug.h"
 #include "ntlmauth/ntlmauth.h"
 #include "ntlmauth/support_bits.cci"
 #include "rfcnb/rfcnb.h"
 #include "smblib/smblib.h"
-#include "util.h"
+//#include "util.h"
 
 #if HAVE_STRING_H
 #include <string.h>

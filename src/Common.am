@@ -16,6 +16,7 @@ TESTS =
 INCLUDES = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/lib \
 	-I$(top_srcdir)/src \
 	-I$(top_builddir)/include \
 	$(SQUID_CPPUNIT_INC)
@@ -34,11 +35,15 @@ endif
 ## XXX: Do we really need this? Does auto-dependency tracking work?
 $(OBJS): $(top_srcdir)/include/version.h $(top_builddir)/include/autoconf.h
 
+## Internal profiler is used even by some of the compat library stuff.
+if ENABLE_XPROF_STATS
+LIBPROFILER = $(top_builddir)/lib/profiler/libprofiler.la
+else
+LIBPROFILER=
+endif
+
 ## Because compatibility is almost universal. And the link order is important.
-## NP: libmisc util.cc depends on rint from math library
-COMPAT_LIB = \
-	-L$(top_builddir)/lib -lmiscutil \
-	-L$(top_builddir)/compat -lcompat-squid
+COMPAT_LIB = -L$(top_builddir)/compat -lcompat-squid $(LIBPROFILER)
 
 ## Some helpers are written in Perl and need the local shell defined properly
 subst_perlshell = sed -e 's,[@]PERL[@],$(PERL),g' <$(srcdir)/$@.pl.in >$@ || ($(RM) -f $@ ; exit 1)

@@ -34,6 +34,8 @@
  */
 
 #include "config.h"
+#include "hash.h"
+#include "profiler/Profiler.h"
 
 #if HAVE_STDIO_H
 #include <stdio.h>
@@ -58,10 +60,6 @@
 #if HAVE_MATH_H
 #include <math.h>
 #endif
-
-#include "hash.h"
-#include "util.h"
-#include "profiling.h"
 
 static void hash_next_bucket(hash_table * hid);
 

@@ -167,9 +167,4 @@
  */
 #include "strnstr.h"
 
-/*
- * xstrtoul() and xstrtoui() are strtoul() and strtoui() with limits.
- */
-#include "xstrto.h"
-
 #endif /* SQUID_CONFIG_H */

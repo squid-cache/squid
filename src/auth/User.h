@@ -122,7 +122,7 @@ private:
      * The username_ memory will be allocated via
      * xstrdup().  It is our responsibility.
      */
-    char const *username_;
+    const char *username_;
 
     /** what ip addresses has this user been seen at?, plus a list length cache */
     dlink_list ip_list;

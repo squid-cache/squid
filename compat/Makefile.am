@@ -11,16 +11,21 @@ include $(top_srcdir)/src/Common.am
 
 noinst_LIBRARIES = libcompat-squid.a
 libcompat_squid_a_SOURCES = \
+	assert.cc \
 	assert.h \
+	compat.cc \
 	compat.h \
 	compat_shared.h \
 	cpu.h \
+	debug.cc \
 	debug.h \
 	drand48.h \
 	eui64_aton.h \
 	fdsetsize.h \
 	getaddrinfo.h \
 	getnameinfo.h \
+	GnuRegex.c \
+	GnuRegex.h \
 	inet_ntop.h \
 	inet_pton.h \
 	initgroups.h \
@@ -33,6 +38,14 @@ libcompat_squid_a_SOURCES = \
 	types.h \
 	unsafe.h \
 	valgrind.h \
+	xalloc.cc \
+	xalloc.h \
+	xstrerror.cc \
+	xstrerror.h \
+	xstring.cc \
+	xstring.h \
+	xstrto.cc \
+	xstrto.h \
 	\
 	os/aix.h \
 	os/dragonfly.h \
@@ -49,13 +62,7 @@ libcompat_squid_a_SOURCES = \
 	os/sgi.h \
 	os/solaris.h \
 	os/sunos.h \
-	os/windows.h \
-	\
-	assert.cc \
-	compat.cc \
-	debug.cc \
-	GnuRegex.h \
-	GnuRegex.c
+	os/windows.h
 
 libcompat_squid_a_LIBADD= $(LIBOBJS)
 

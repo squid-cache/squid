@@ -33,7 +33,7 @@
  */
 
 #include "config.h"
-
+#include "rfc1123.h"
 
 /*
  *  Adapted from HTSUtils.c in CERN httpd 3.0 (http://info.cern.ch/httpd/)
@@ -51,7 +51,6 @@
 #if HAVE_TIME_H
 #include <time.h>
 #endif
-#include "util.h"
 
 #define RFC850_STRFTIME "%A, %d-%b-%y %H:%M:%S GMT"
 #define RFC1123_STRFTIME "%a, %d %b %Y %H:%M:%S GMT"
