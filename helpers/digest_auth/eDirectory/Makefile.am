@@ -13,11 +13,12 @@ digest_edirectory_auth_SOURCES = digest_pw_auth.cc \
 	edir_ldapext.h
 
 digest_edirectory_auth_LDADD = \
+	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(LDAPLIB) \
 	$(LBERLIB) \
 	$(CRYPTLIB) \
-	$(XTRA_LIBS) \
-	$(SSLLIB)
+	$(SSLLIB) \
+	$(XTRA_LIBS)
 
 EXTRA_DIST = config.test
