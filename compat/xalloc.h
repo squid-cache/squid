@@ -60,7 +60,7 @@ void free_const(const void *s);
  * Define failure_notify to receive error message.
  * otherwise perror() is used to display it.
  */
-#define safe_free(x)    if ((x)) { xxfree((x)); (x) = NULL; } else (void)0
+#define safe_free(x)    while (x) { xxfree(x); (x) = NULL; }
 
 
 #if XMALLOC_STATISTICS
