@@ -351,7 +351,7 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
             return 0;
         }
         end = pos;
-        while(end <= (start+len) && *end != '\\' && *end != '\"' && *end > 0x1F && *end != 0x7F)
+        while (end <= (start+len) && *end != '\\' && *end != '\"' && *end > 0x1F && *end != 0x7F)
             end++;
         if (*end <= 0x1F || *end == 0x7F) {
             debugs(66, 2, "failed to parse a quoted-string header field with CTL octet " << (start-pos)
