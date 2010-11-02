@@ -44,7 +44,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:7
 msgid "Local Users auth helper for Squid"
-msgstr ""
+msgstr "Pomocník autorizace  místních uživatelů pro Squid"
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:8
@@ -219,7 +219,7 @@ msgstr ""
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:89
 #: helpers/ntlm_auth/SSPI/ntlm_sspi_auth.8:94
 msgid "This program was written by"
-msgstr ""
+msgstr "Tento program byl napsán"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:72
@@ -243,7 +243,7 @@ msgstr ""
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:92
 #: helpers/ntlm_auth/SSPI/ntlm_sspi_auth.8:101
 msgid "This manual was written by"
-msgstr ""
+msgstr "Tento manuál byl napsán"
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:77
@@ -267,7 +267,7 @@ msgstr ""
 #: tools/cachemgr.cgi.8.in:57 tools/squidclient.1:183
 #, no-wrap
 msgid "COPYRIGHT"
-msgstr ""
+msgstr "AUTORSKÁ PRÁVA"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:79
@@ -335,7 +335,7 @@ msgstr ""
 #: tools/cachemgr.cgi.8.in:60 tools/squidclient.1:186
 #, no-wrap
 msgid "QUESTIONS"
-msgstr ""
+msgstr "DOTAZY"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:85
@@ -384,7 +384,7 @@ msgstr ""
 #: tools/cachemgr.cgi.8.in:65 tools/squidclient.1:191
 #, no-wrap
 msgid "REPORTING BUGS"
-msgstr ""
+msgstr "OZNAMOVÁNÍ CHYB"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:90
@@ -505,7 +505,7 @@ msgstr ""
 #: tools/cachemgr.cgi.8.in:77 tools/squidclient.1:203
 #, no-wrap
 msgid "SEE ALSO"
-msgstr ""
+msgstr "VIZ TAKÉ"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:114
@@ -580,7 +580,7 @@ msgstr ""
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:33
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:20
 msgid "LDAP server name"
-msgstr ""
+msgstr "název LDAP serveru"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:20
@@ -590,20 +590,20 @@ msgstr ""
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:22 src/squid.8.in:17
 #: tools/squidclient.1:30
 msgid "port"
-msgstr ""
+msgstr "port"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:22
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:37
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:24
 msgid "URI"
-msgstr ""
+msgstr "URI"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:29
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:16
 msgid "LDAP search filter"
-msgstr ""
+msgstr "LDAP vyhledávací filtr"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:47
