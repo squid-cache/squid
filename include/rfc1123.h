@@ -5,9 +5,9 @@
 extern "C" {
 #endif
 
-extern const char *mkhttpdlogtime(const time_t *);
-extern const char *mkrfc1123(time_t);
-extern time_t parse_rfc1123(const char *str);
+    extern const char *mkhttpdlogtime(const time_t *);
+    extern const char *mkrfc1123(time_t);
+    extern time_t parse_rfc1123(const char *str);
 
 #ifdef __cplusplus
 }
