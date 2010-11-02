@@ -128,8 +128,9 @@ httpHdrScParseInit(HttpHdrSc * sc, const String * str)
         /* decrease ilen to still match the token for  '=' statements */
 
         if ((p = strchr(item, '=')) && (p - item < ilen)) {
-            vlen = ilen - (++p - item);
+            vlen = ilen - (p + 1 - item);
             ilen = p - item;
+            p++;
         }
 
         /* decrease ilen to still match the token for ';' qualified non '=' statments */
