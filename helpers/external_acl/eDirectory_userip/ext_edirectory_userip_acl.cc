@@ -36,8 +36,12 @@
 #ifdef HAVE_STDIO_H
 #include <stdio.h>
 #endif
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+#ifndef __USE_GNU
 #define __USE_GNU
+#endif
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -2038,7 +2042,7 @@ int main(int argc, char **argv)
                     local_printfx("ERR (ConvertIP: %s)\n", ErrLDAP(x));
                 } else {
                     edui_ldap.err = -1;
-                    debug("ConvertIP(-, %s) -> Result[%zd]: %s\n", bufb, x, edui_ldap.search_ip);
+                    debug("ConvertIP(-, %s) -> Result[%d]: %s\n", bufb, x, edui_ldap.search_ip);
                     x = SearchFilterLDAP(&edui_ldap, bufa);
                     if (x < 0) {
                         debug("SearchFilterLDAP() -> %s\n", ErrLDAP(x));
@@ -2068,7 +2072,7 @@ int main(int argc, char **argv)
                     }
                 }
             } else {
-                debug("SplitString() -> Error: %d\n", i);
+                debug("SplitString() -> Error: %Zu\n", i);
                 local_printfx("ERR (SplitString Error %d)\n", i);
             }
         } else {
@@ -2078,7 +2082,7 @@ int main(int argc, char **argv)
                 debug("ConvertIP() -> %s\n", ErrLDAP(x));
                 local_printfx("ERR (ConvertIP: %s)\n", ErrLDAP(x));
             } else {
-                debug("ConvertIP(-, %s) -> Result[%zd]: %s\n", bufa, x, edui_ldap.search_ip);
+                debug("ConvertIP(-, %s) -> Result[%d]: %s\n", bufa, x, edui_ldap.search_ip);
                 /* Do search */
                 x = SearchFilterLDAP(&edui_ldap, NULL);
                 if (x < 0) {
