@@ -1002,15 +1002,16 @@ struct _netdbEntry {
     int n_peers;
 };
 
-
 struct _iostats {
+
+    enum { histSize = 16 };
 
     struct {
         int reads;
         int reads_deferred;
-        int read_hist[16];
+        int read_hist[histSize];
         int writes;
-        int write_hist[16];
+        int write_hist[histSize];
     }
 
     Http, Ftp, Gopher;

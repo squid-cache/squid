@@ -34,7 +34,7 @@
  */
 
 #include "squid.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "radix.h"
 #include "HttpRequest.h"
 #include "StoreClient.h"
@@ -189,7 +189,7 @@ ACLASN::prepareForUse()
 static void
 asnRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->registerAction("asndb", "AS Number Database", asnStats, 0, 1);
+    Mgr::RegisterAction("asndb", "AS Number Database", asnStats, 0, 1);
 }
 
 /* initialize the radix tree structure */

@@ -34,6 +34,7 @@ typedef enum {
     ERR_UNSUP_REQ,
     ERR_INVALID_URL,
     ERR_ZERO_SIZE_OBJECT,
+    ERR_PRECONDITION_FAILED,
 
     /* FTP Errors */
     ERR_FTP_DISABLED,

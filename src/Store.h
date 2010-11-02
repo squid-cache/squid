@@ -60,6 +60,18 @@ class MemObject;
 class Store;
 class StoreSearch;
 
+typedef struct {
+
+    struct {
+        int calls;
+        int select_fail;
+        int create_fail;
+        int success;
+    } create;
+} StoreIoStats;
+
+extern StoreIoStats store_io_stats;
+
 /**
  \ingroup StoreAPI
  */
@@ -123,6 +135,10 @@ public:
 
     void setNoDelay (bool const);
     bool modifiedSince(HttpRequest * request) const;
+    /// has ETag matching at least one of the If-Match etags
+    bool hasIfMatchEtag(const HttpRequest &request) const;
+    /// has ETag matching at least one of the If-None-Match etags
+    bool hasIfNoneMatchEtag(const HttpRequest &request) const;
 
     /** What store does this entry belong too ? */
     virtual RefCount<Store> store() const;
@@ -189,6 +205,7 @@ private:
     static MemAllocator *pool;
 
     bool validLength() const;
+    bool hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) const;
 };
 
 /// \ingroup StoreAPI

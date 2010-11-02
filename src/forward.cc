@@ -50,6 +50,7 @@
 #include "icmp/net_db.h"
 #include "ip/Intercept.h"
 #include "ip/tools.h"
+#include "mgr/Registration.h"
 
 static PSC fwdStartCompleteWrapper;
 static PF fwdServerClosedWrapper;
@@ -1280,8 +1281,7 @@ FwdState::initModule()
 void
 FwdState::RegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("forward", "Request Forwarding Statistics", fwdStats, 0, 1);
+    Mgr::RegisterAction("forward", "Request Forwarding Statistics", fwdStats, 0, 1);
 }
 
 void

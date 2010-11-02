@@ -48,7 +48,6 @@
 #endif
 #include "auth/Config.h"
 #include "auth/Scheme.h"
-#include "CacheManager.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
 #include "eui/Config.h"
@@ -62,6 +61,7 @@
 #include "ip/tools.h"
 #include "log/Config.h"
 #include "MemBuf.h"
+#include "mgr/Registration.h"
 #include "Parsing.h"
 #include "ProtoPort.h"
 #include "rfc1738.h"
@@ -536,7 +536,6 @@ int
 parseConfigFile(const char *file_name)
 {
     int err_count = 0;
-    CacheManager *manager=CacheManager::GetInstance();
 
     debugs(5, 4, HERE);
 
@@ -564,10 +563,10 @@ parseConfigFile(const char *file_name)
     }
 
     if (opt_send_signal == -1) {
-        manager->registerAction("config",
-                                "Current Squid Configuration",
-                                dump_config,
-                                1, 1);
+        Mgr::RegisterAction("config",
+                            "Current Squid Configuration",
+                            dump_config,
+                            1, 1);
     }
 
     return err_count;

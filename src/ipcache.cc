@@ -31,11 +31,11 @@
  */
 
 #include "squid.h"
-#include "CacheManager.h"
 #include "cbdata.h"
 #include "event.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
+#include "mgr/Registration.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
@@ -700,10 +700,9 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
 static void
 ipcacheRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("ipcache",
-                   "IP Cache Stats and Contents",
-                   stat_ipcache_get, 0, 1);
+    Mgr::RegisterAction("ipcache",
+                        "IP Cache Stats and Contents",
+                        stat_ipcache_get, 0, 1);
 }
 
 

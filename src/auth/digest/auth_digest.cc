@@ -42,7 +42,7 @@
 #include "auth/digest/auth_digest.h"
 #include "auth/Gadgets.h"
 #include "event.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
@@ -673,10 +673,9 @@ AuthDigestConfig::init(AuthConfig * scheme)
 void
 AuthDigestConfig::registerWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("digestauthenticator",
-                   "Digest User Authenticator Stats",
-                   authenticateDigestStats, 0, 1);
+    Mgr::RegisterAction("digestauthenticator",
+                        "Digest User Authenticator Stats",
+                        authenticateDigestStats, 0, 1);
 }
 
 /* free any allocated configuration details */

@@ -19,6 +19,11 @@ DNSSOURCE += \
 	DnsLookupDetails.h \
 	DnsLookupDetails.cc
 
+SBUF_SOURCE= \
+	base/InstanceId.h \
+	MemBlob.h \
+	MemBlob.cc
+
 SNMP_ALL_SOURCE = \
 	snmp_core.cc \
 	snmp_agent.cc
@@ -34,7 +39,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= base comm eui acl fs repl auth ip icmp ident log ipc
+SUBDIRS	= base comm eui acl fs repl auth ip icmp ident log ipc mgr
 
 if USE_ADAPTATION
 SUBDIRS += adaptation
@@ -168,7 +173,8 @@ COMMON_LIBS = \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
-	ipc/libipc.la
+	ipc/libipc.la \
+	mgr/libmgr.la
 
 EXTRA_PROGRAMS = \
 	DiskIO/DiskDaemon/diskd \
@@ -418,6 +424,7 @@ squid_SOURCES = \
 	RemovalPolicy.cc \
 	RemovalPolicy.h \
 	send-announce.cc \
+	$(SBUF_SOURCE) \
 	$(SNMP_SOURCE) \
 	squid.h \
 	SquidMath.h \
@@ -721,7 +728,9 @@ libDiskDaemon_a_SOURCES = \
 		DiskIO/DiskDaemon/DiskdIOStrategy.h \
 		DiskIO/DiskDaemon/diomsg.h \
 		DiskIO/DiskDaemon/DiskDaemonDiskIOModule.cc \
-		DiskIO/DiskDaemon/DiskDaemonDiskIOModule.h
+		DiskIO/DiskDaemon/DiskDaemonDiskIOModule.h \
+		DiskIO/DiskDaemon/DiskdAction.cc \
+		DiskIO/DiskDaemon/DiskdAction.h
 
 libDiskThreads_a_SOURCES = \
 		$(AIOPS_SOURCE) \
@@ -1289,7 +1298,10 @@ tests_testDiskIO_SOURCES = \
 	tests/testDiskIO.h \
 	tests/testMain.cc \
 	tests/stub_cache_manager.cc \
-	tests/stub_HelperChildConfig.cc
+	tests/stub_HelperChildConfig.cc \
+	tests/stub_Port.cc \
+        tests/stub_TypedMsgHdr.cc \
+	tests/stub_UdsOp.cc
 nodist_tests_testDiskIO_SOURCES= \
 	$(SWAP_TEST_GEN_SOURCES) \
 	SquidMath.cc \
@@ -1301,6 +1313,8 @@ tests_testDiskIO_LDADD = \
 	$(DISK_OS_LIBS) \
 	$(COMMON_LIBS) \
 	SquidConfig.o \
+	CommCalls.o \
+	DnsLookupDetails.o \
 	$(XTRA_LIBS)
 
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
@@ -2009,6 +2023,9 @@ tests_testStore_SOURCES= \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_Port.cc \
+	tests/stub_TypedMsgHdr.cc \
+	tests/stub_UdsOp.cc \
 	$(STORE_TEST_SOURCES) \
 	tests/stub_fd.cc
 
@@ -2024,6 +2041,8 @@ tests_testStore_LDADD= \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
+	CommCalls.o \
+	DnsLookupDetails.o \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testStore_LDFLAGS = $(LIBADD_DL)
@@ -2117,6 +2136,9 @@ tests_testUfs_SOURCES = \
 	tests/testUfs.h \
 	tests/stub_cache_manager.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_Port.cc \
+	tests/stub_TypedMsgHdr.cc \
+	tests/stub_UdsOp.cc \
 	$(SWAP_TEST_SOURCES)
 nodist_tests_testUfs_SOURCES = \
 	$(SWAP_TEST_GEN_SOURCES) \
@@ -2127,6 +2149,8 @@ tests_testUfs_LDADD = \
 	$(SWAP_TEST_LDADD) \
 	$(COMMON_LIBS) \
 	$(SSLLIB) \
+	CommCalls.o \
+	DnsLookupDetails.o \
 	$(XTRA_LIBS)
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
 tests_testUfs_DEPENDENCIES = \

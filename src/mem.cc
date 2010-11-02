@@ -34,7 +34,7 @@
 
 #include "squid.h"
 #include "event.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "ClientInfo.h"
 #include "Mem.h"
 #include "memMeter.h"
@@ -51,6 +51,7 @@
 #endif
 
 /* module globals */
+const size_t squidSystemPageSize=getpagesize();
 
 /* local prototypes */
 static void memStringStats(std::ostream &);
@@ -454,8 +455,7 @@ Mem::Report()
 void
 Mem::RegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->registerAction("mem", "Memory Utilization",
-            Mem::Stats, 0, 1);
+    Mgr::RegisterAction("mem", "Memory Utilization", Mem::Stats, 0, 1);
 }
 
 mem_type &operator++ (mem_type &aMem)

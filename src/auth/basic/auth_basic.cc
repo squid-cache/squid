@@ -43,7 +43,7 @@
 #include "auth/basic/basicUserRequest.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "HttpReply.h"
 #include "rfc1738.h"
@@ -544,10 +544,9 @@ AuthBasicConfig::init(AuthConfig * schemeCfg)
 void
 AuthBasicConfig::registerWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("basicauthenticator",
-                   "Basic User Authenticator Stats",
-                   authenticateBasicStats, 0, 1);
+    Mgr::RegisterAction("basicauthenticator",
+                        "Basic User Authenticator Stats",
+                        authenticateBasicStats, 0, 1);
 }
 
 void

@@ -42,7 +42,7 @@
 #include "errorpage.h"
 #include "err_detail_type.h"
 #include "acl/Checklist.h"
-#include "CacheManager.h"
+#include "errorpage.h"
 #if USE_SQUID_EUI
 #include "eui/Eui48.h"
 #include "eui/Eui64.h"
@@ -52,6 +52,7 @@
 #include "HttpRequest.h"
 #include "log/File.h"
 #include "MemBuf.h"
+#include "mgr/Registration.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
 
@@ -2290,10 +2291,9 @@ fvdbInit(void)
 static void
 fvdbRegisterWithCacheManager(void)
 {
-    CacheManager *manager=CacheManager::GetInstance();
-    manager->registerAction("via_headers", "Via Request Headers", fvdbDumpVia, 0, 1);
-    manager->registerAction("forw_headers", "X-Forwarded-For Request Headers",
-                            fvdbDumpForw, 0, 1);
+    Mgr::RegisterAction("via_headers", "Via Request Headers", fvdbDumpVia, 0, 1);
+    Mgr::RegisterAction("forw_headers", "X-Forwarded-For Request Headers",
+                        fvdbDumpForw, 0, 1);
 }
 
 static void
