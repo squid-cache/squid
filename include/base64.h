@@ -5,9 +5,9 @@
 extern "C" {
 #endif
 
-extern char *base64_decode(const char *coded);
-extern const char *base64_encode(const char *decoded);
-extern const char *base64_encode_bin(const char *data, int len);
+    extern char *base64_decode(const char *coded);
+    extern const char *base64_encode(const char *decoded);
+    extern const char *base64_encode_bin(const char *data, int len);
 
 #ifdef __cplusplus
 }

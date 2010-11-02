@@ -21,7 +21,7 @@ XMS_DBG_INDEX(int sz)
 
     if (sz <= XMS_DBG_SPLIT)
         return (sz + XMS_DBG_GRAIN_SM - 1) / XMS_DBG_GRAIN_SM;
-        
+
     return (sz + XMS_DBG_GRAIN - 1) / XMS_DBG_GRAIN + XMS_DBG_OFFSET;
 }
 
@@ -30,16 +30,16 @@ stat_init(void)
 {
     for (int i = 0; i <= XMS_DBG_MAXINDEX; i++)
         malloc_sizes[i] = malloc_histo[i] = 0;
-        
+
     dbg_stat_init = 1;
 }
- 
+
 static int
 malloc_stat(int sz)
 {
     if (!dbg_stat_init)
-        stat_init();   
-        
+        stat_init();
+
     return malloc_sizes[XMS_DBG_INDEX(sz)] += 1;
 }
 
@@ -146,16 +146,16 @@ xmalloc(size_t sz)
 }
 
 void *
-xrealloc(void *s, size_t sz)   
+xrealloc(void *s, size_t sz)
 {
     PROF_start(xrealloc);
 #if XMALLOC_TRACE
     xmalloc_show_trace(s, -1);
-#endif   
- 
-    if (sz < 1) 
+#endif
+
+    if (sz < 1)
         sz = 1;
- 
+
 #if XMALLOC_DEBUG
     if (s != NULL)
         check_free(s);
@@ -172,15 +172,15 @@ xrealloc(void *s, size_t sz)
         } else {
             perror("realloc");
         }
-         
+
         exit(1);
     }
-     
+
 #if XMALLOC_DEBUG
     check_malloc(p, sz);
 #endif
 #if XMALLOC_STATISTICS
-    malloc_stat(sz);  
+    malloc_stat(sz);
 #endif
 #if XMALLOC_TRACE
     xmalloc_show_trace(p, 1);
@@ -209,7 +209,7 @@ free_const(const void *s_const)
 
     PROF_start(free_const);
 #if XMALLOC_TRACE
-      xmalloc_show_trace(s, -1);
+    xmalloc_show_trace(s, -1);
 #endif
 
 #if XMALLOC_DEBUG
