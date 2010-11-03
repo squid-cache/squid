@@ -147,10 +147,10 @@ fi
 AC_SUBST(CGIEXT)
 
 AM_CONDITIONAL(ENABLE_WIN32SPECIFIC,
-               [test "x$squid_host_os" = "xmingw" -o "x$squid_host_os" = "xcygwin"])
-AM_CONDITIONAL(USE_IPC_WIN32,[test "x$squid_host_os" = "xmingw"])
+               [test "x$squid_host_os" = "xmingw$squid_host_os_version" -o "x$squid_host_os" = "xcygwin$squid_host_os_version"])
+AM_CONDITIONAL(USE_IPC_WIN32,[test "x$squid_host_os" = "xmingw$squid_host_os_version"])
 
-if test "x$squid_host_os" = "xmingw"; then
+if test "x$squid_host_os" = "xmingw$squid_host_os_version"; then
   AC_PATH_PROG(WIN32_PSAPI, psapi.dll, none)
   CFLAGS="$CFLAGS -mthreads"
   CXXFLAGS="$CXXFLAGS -mthreads"
