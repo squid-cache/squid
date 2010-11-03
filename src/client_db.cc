@@ -350,7 +350,6 @@ clientdbFreeItem(void *data)
     if (CommQuotaQueue *q = c->quotaQueue) {
         q->clientInfo = NULL;
         delete q; // invalidates cbdata, cancelling any pending kicks
-        cbdataReferenceDone(q);
     }
 #endif
 
