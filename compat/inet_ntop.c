@@ -14,6 +14,8 @@
  *
  *    28-Oct-2007: drop some dead code. now tested working without.
  *
+ *    04-Nov-2010: drop SPRINTF casting macro
+ *
  * Squid CVS $Id$
  *
  *  Original License and code follows.
@@ -82,12 +84,6 @@ static const char rcsid[] = "inet_ntop.c,v 1.1.2.1.8.2 2005/11/03 23:08:40 marka
 #endif
 #endif
 
-#ifdef SPRINTF_CHAR
-# define SPRINTF(x) strlen(sprintf/**/x)
-#else
-# define SPRINTF(x) ((size_t)sprintf x)
-#endif
-
 #if ! defined(NS_INADDRSZ)
 #define NS_INADDRSZ      4
 #endif
@@ -153,7 +149,7 @@ size_t size;
     static const char fmt[] = "%u.%u.%u.%u";
     char tmp[sizeof "255.255.255.255"];
 
-    if (SPRINTF((tmp, fmt, src[0], src[1], src[2], src[3])) >= size) {
+    if (snprintf(tmp, min(sizeof("255.255.255.255"),size), fmt, src[0], src[1], src[2], src[3]) >= size) {
         errno = ENOSPC;
         return (NULL);
     }
@@ -242,7 +238,7 @@ size_t size;
             tp += strlen(tp);
             break;
         }
-        tp += SPRINTF((tp, "%x", words[i]));
+        tp += snprintf(tp, (tmp + sizeof("ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255") - tp), "%x", words[i]);
     }
     /* Was it a trailing run of 0x00's? */
     if (best.base != -1 && (best.base + best.len) ==
