@@ -32,7 +32,7 @@ public:
     ~FwdState();
     static void initModule();
 
-    static void fwdStart(Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *);
+    static void fwdStart(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *);
     void startConnectionOrFail();
     void fail(ErrorState *err);
     void unregister(Comm::ConnectionPointer &conn);
@@ -61,7 +61,7 @@ public:
 
 private:
     // hidden for safer management of self; use static fwdStart
-    FwdState(Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *);
+    FwdState(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *);
     void start(Pointer aSelf);
 
     static void logReplyStatus(int tries, http_status status);

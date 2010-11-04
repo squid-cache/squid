@@ -161,6 +161,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 {
     start_time = current_time;
     setConn(aConn);
+    clientConnection = aConn->clientConn;
     dlinkAdd(this, &active, &ClientActiveRequests);
 #if USE_ADAPTATION
     request_satisfaction_mode = false;
@@ -274,6 +275,8 @@ ClientHttpRequest::~ClientHttpRequest()
 
     if (calloutContext)
         delete calloutContext;
+
+    clientConnection = NULL;
 
     if (conn_)
         cbdataReferenceDone(conn_);
@@ -622,7 +625,7 @@ ClientRequestContext::clientAccessCheckDone(int answer)
         tmpnoaddr.SetNoAddr();
         repContext->setReplyToError(page_id, status,
                                     http->request->method, NULL,
-                                    http->getConn() != NULL ? http->getConn()->peer : tmpnoaddr,
+                                    http->getConn() != NULL ? http->getConn()->clientConn->remote : tmpnoaddr,
                                     http->request,
                                     NULL,
                                     http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
@@ -1539,7 +1542,7 @@ ClientHttpRequest::handleAdaptationFailure(bool bypassable)
     ConnStateData * c = getConn();
     repContext->setReplyToError(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR,
                                 request->method, NULL,
-                                (c != NULL ? c->peer : noAddr), request, NULL,
+                                (c != NULL ? c->clientConn->remote : noAddr), request, NULL,
                                 (c != NULL && c->auth_user_request != NULL ?
                                  c->auth_user_request : request->auth_user_request));
 

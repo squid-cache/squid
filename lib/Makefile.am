@@ -5,6 +5,8 @@
 
 include $(top_srcdir)/src/Common.am
 
+DIST_SUBDIRS = libTrie
+EXTRA_DIST=
 SUBDIRS =
 
 if USE_ESI
