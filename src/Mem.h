@@ -59,4 +59,6 @@ protected:
     static void RegisterWithCacheManager(void);
 };
 
+extern const size_t squidSystemPageSize;
+
 #endif /* SQUID_MEM */

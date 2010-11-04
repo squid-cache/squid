@@ -126,6 +126,7 @@ struct relist {
 
 #if DELAY_POOLS
 #include "DelayConfig.h"
+#include "ClientDelayConfig.h"
 #endif
 
 #if USE_ICMP
@@ -535,6 +536,7 @@ struct SquidConfig {
 #if DELAY_POOLS
 
     DelayConfig Delay;
+    ClientDelayConfig ClientDelay;
 #endif
 
     struct {
@@ -623,6 +625,10 @@ struct SquidConfig {
 #endif
 
     int client_ip_max_connections;
+
+    struct {
+        ssize_t packet_max; ///< maximum size EDNS advertised for DNS replies.
+    } dns;
 };
 
 SQUIDCEXTERN SquidConfig Config;
@@ -996,15 +1002,16 @@ struct _netdbEntry {
     int n_peers;
 };
 
-
 struct _iostats {
+
+    enum { histSize = 16 };
 
     struct {
         int reads;
         int reads_deferred;
-        int read_hist[16];
+        int read_hist[histSize];
         int writes;
-        int write_hist[16];
+        int write_hist[histSize];
     }
 
     Http, Ftp, Gopher;

@@ -37,7 +37,7 @@
 #include "Store.h"
 #include "wordlist.h"
 #include "SquidTime.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "helper.h"
 
 /* MS VisualStudio Projects are monolitich, so we need the following
@@ -58,8 +58,7 @@ dnsStats(StoreEntry * sentry)
 static void
 dnsRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("dns", "Dnsserver Statistics", dnsStats, 0, 1);
+    Mgr::RegisterAction("dns", "Dnsserver Statistics", dnsStats, 0, 1);
 }
 
 void

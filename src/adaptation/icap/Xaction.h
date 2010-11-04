@@ -96,6 +96,9 @@ protected:
     virtual void handleCommTimedout();
     virtual void handleCommClosed();
 
+    /// record error detail if possible
+    virtual void detailError(int errDetail) {}
+
     void openConnection();
     void closeConnection();
     void dieOnConnectionFailure();

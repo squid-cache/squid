@@ -23,13 +23,14 @@ public:
     operator Value() const { return value; }
     bool operator ==(const InstanceId &o) const { return value == o.value; }
     bool operator !=(const InstanceId &o) const { return !(*this == o); }
+    void change() {value = ++Last ? Last : ++Last;}
 
     /// prints Prefix followed by ID value; \todo: use HEX for value printing?
     std::ostream &print(std::ostream &os) const;
 
 public:
     static const char *Prefix; ///< Class shorthand string for debugging
-    const Value value; ///< instance identifier
+    Value value; ///< instance identifier
 
 private:
     InstanceId(const InstanceId& right); ///< not implemented; IDs are unique
@@ -52,7 +53,8 @@ private:
 /// print the id
 template <class Class>
 inline
-std::ostream &operator <<(std::ostream &os, const InstanceId<Class> &id) {
+std::ostream &operator <<(std::ostream &os, const InstanceId<Class> &id)
+{
     return id.print(os);
 }
 

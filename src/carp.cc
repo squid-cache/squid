@@ -35,7 +35,7 @@
  */
 
 #include "squid.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
@@ -55,8 +55,7 @@ peerSortWeight(const void *a, const void *b)
 static void
 carpRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("carp", "CARP information", carpCachemgr, 0, 1);
+    Mgr::RegisterAction("carp", "CARP information", carpCachemgr, 0, 1);
 }
 
 void

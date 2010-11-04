@@ -53,7 +53,7 @@
 
 #include "squid.h"
 #include "comm_epoll.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "fde.h"
 #include "SquidTime.h"
@@ -221,10 +221,9 @@ static void commIncomingStats(StoreEntry * sentry);
 static void
 commEPollRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("comm_epoll_incoming",
-                   "comm_incoming() stats",
-                   commIncomingStats, 0, 1);
+    Mgr::RegisterAction("comm_epoll_incoming",
+                        "comm_incoming() stats",
+                        commIncomingStats, 0, 1);
 }
 
 static void

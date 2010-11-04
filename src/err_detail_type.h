@@ -1,0 +1,38 @@
+#ifndef _SQUID_ERR_DETAIL_H
+#define  _SQUID_ERR_DETAIL_H
+
+typedef enum {
+    ERR_DETAIL_NONE,
+    ERR_DETAIL_START = 100000, // to avoid clashes with most OS error numbers
+    ERR_DETAIL_ICAP_REQMOD_ABORT = ERR_DETAIL_START, // transaction abort
+    ERR_DETAIL_ICAP_RESPMOD_CLT_SIDE_BODY, // client-side detected body abort
+    ERR_DETAIL_ICAP_RESPMOD_EARLY, // RESPMOD failed w/o store entry
+    ERR_DETAIL_ICAP_RESPMOD_LATE,  // RESPMOD failed with a store entry
+    ERR_DETAIL_ICAP_XACT_START, // transaction start failure
+    ERR_DETAIL_ICAP_XACT_BODY_CONSUMER_ABORT, // transaction body consumer gone
+    ERR_DETAIL_ICAP_INIT_GONE, // initiator gone
+    ERR_DETAIL_ICAP_XACT_CLOSE, // ICAP connection closed unexpectedly
+    ERR_DETAIL_ICAP_XACT_OTHER, // other ICAP transaction errors
+    ERR_DETAIL_EXCEPTION_OTHER, //other errors ( eg std C++ lib errors)
+    ERR_DETAIL_MAX,
+    ERR_DETAIL_EXCEPTION_START = 110000 // offset for exception ID details
+} err_detail_type;
+
+extern const char *err_detail_type_str[];
+
+inline
+const char *errorDetailName(int errDetailId)
+{
+    if (errDetailId < ERR_DETAIL_START)
+        return "SYSERR";
+
+    if (errDetailId < ERR_DETAIL_MAX)
+        return err_detail_type_str[errDetailId-ERR_DETAIL_START+2];
+
+    if (errDetailId >=ERR_DETAIL_EXCEPTION_START)
+        return "EXCEPTION";
+
+    return "UNKNOWN";
+}
+
+#endif

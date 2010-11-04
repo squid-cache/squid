@@ -33,7 +33,7 @@
  */
 
 #include "squid.h"
-#include "CacheManager.h"
+#include "base/InstanceId.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm.h"
@@ -43,6 +43,8 @@
 #include "MemBuf.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "mgr/Registration.h"
+#include "util.h"
 #include "wordlist.h"
 
 #if HAVE_ARPA_NAMESER_H
@@ -84,9 +86,29 @@
 #endif
 
 #define IDNS_MAX_TRIES 20
-#define MAX_RCODE 6
+#define MAX_RCODE 17
 #define MAX_ATTEMPT 3
 static int RcodeMatrix[MAX_RCODE][MAX_ATTEMPT];
+// NP: see http://www.iana.org/assignments/dns-parameters
+static const char *Rcodes[] = {
+    /* RFC 1035 */
+    "Success",
+    "Packet Format Error",
+    "DNS Server Failure",
+    "Non-Existent Domain",
+    "Not Implemented",
+    "Query Refused",
+    /* RFC 2136 */
+    "Name Exists when it should not",
+    "RR Set Exists when it should not",
+    "RR Set that should exist does not",
+    "Server Not Authoritative for zone",
+    "Name not contained in zone",
+    /* unassigned */
+    "","","","","",
+    /* RFC 2671 */
+    "Bad OPT Version or TSIG Signature Failure"
+};
 
 typedef struct _idns_query idns_query;
 
@@ -103,7 +125,9 @@ struct _idns_query {
     char name[NS_MAXDNAME + 1];
     char orig[NS_MAXDNAME + 1];
     size_t sz;
-    unsigned short id;
+    unsigned short msg_id; /// random query ID sent to server; changes with every query sent
+    InstanceId<idns_query> xact_id; /// identifies our "transaction", stays constant when query is retried
+
     int nsends;
     int need_vc;
 
@@ -124,6 +148,7 @@ struct _idns_query {
         rfc1035_rr *answers;
     } initial_AAAA;
 };
+InstanceIdDefinitions(idns_query,  "dns");
 
 struct _nsvc {
     int ns;
@@ -139,6 +164,9 @@ struct _ns {
     Ip::Address S;
     int nqueries;
     int nreplies;
+#if WHEN_EDNS_RESPONSES_ARE_PARSED
+    int last_seen_edns;
+#endif
     nsvc *vc;
 };
 
@@ -160,6 +188,34 @@ static int ndots = 1;
 static dlink_list lru_list;
 static int event_queued = 0;
 static hash_table *idns_lookup_hash = NULL;
+
+/*
+ * Notes on EDNS:
+ *
+ * IPv4:
+ *   EDNS as specified may be sent as an additional record for any request.
+ *   early testing has revealed that it works on common devices, but cannot
+ *   be reliably used on any A or PTR requet done for IPv4 addresses.
+ *
+ * As such the IPv4 packets are still hard-coded not to contain EDNS (0)
+ *
+ * Squid design:
+ *   Squid is optimized to generate one packet and re-send it to all NS
+ *   due to this we cannot customize the EDNS size per NS.
+ *
+ * As such we take the configuration option value as fixed.
+ *
+ * FUTURE TODO:
+ *   This may not be worth doing, but if/when additional-records are parsed
+ *   we will be able to recover the OPT value specific to any one NS and
+ *   cache it. Effectively automating the tuning of EDNS advertised to the
+ *   size our active NS are capable.
+ * Default would need to start with 512 bytes RFC1035 says every NS must accept.
+ * Responses from the configured NS may cause this to be raised or turned off.
+ */
+#if WHEN_EDNS_RESPONSES_ARE_PARSED
+static int max_shared_edns = RFC1035_DEFAULT_PACKET_SZ;
+#endif
 
 static OBJH idnsStats;
 static void idnsAddNameserver(const char *buf);
@@ -184,12 +240,13 @@ static IOCB idnsSentQueryVC;
 
 static int idnsFromKnownNameserver(Ip::Address const &from);
 static idns_query *idnsFindQuery(unsigned short id);
-static void idnsGrokReply(const char *buf, size_t sz);
+static void idnsGrokReply(const char *buf, size_t sz, int from_ns);
 static PF idnsRead;
 static EVH idnsCheckQueue;
 static void idnsTickleQueue(void);
 static void idnsRcodeCount(int, int);
 static void idnsVCClosed(int fd, void *data);
+static unsigned short idnsQueryID(void);
 
 static void
 idnsAddNameserver(const char *buf)
@@ -233,6 +290,10 @@ idnsAddNameserver(const char *buf)
     assert(nns < nns_alloc);
     A.SetPort(NS_DEFAULTPORT);
     nameservers[nns].S = A;
+#if WHEN_EDNS_RESPONSES_ARE_PARSED
+    nameservers[nns].last_seen_edns = RFC1035_DEFAULT_PACKET_SZ;
+    // TODO generate a test packet to probe this NS from EDNS size and ability.
+#endif
     debugs(78, 3, "idnsAddNameserver: Added nameserver #" << nns << " (" << A << ")");
     nns++;
 }
@@ -260,6 +321,7 @@ idnsAddPathComponent(const char *buf)
 
     assert(npc < npc_alloc);
     strcpy(searchpath[npc].domain, buf);
+    Tolower(searchpath[npc].domain);
     debugs(78, 3, "idnsAddPathComponent: Added domain #" << npc << ": " << searchpath[npc].domain);
     npc++;
 }
@@ -607,10 +669,15 @@ idnsStats(StoreEntry * sentry)
     for (n = lru_list.head; n; n = n->next) {
         q = (idns_query *)n->data;
         storeAppendPrintf(sentry, "%#06x %4d %5d %10.3f %9.3f\n",
-                          (int) q->id, (int) q->sz, q->nsends,
+                          (int) q->msg_id, (int) q->sz, q->nsends,
                           tvSubDsec(q->start_t, current_time),
                           tvSubDsec(q->sent_t, current_time));
     }
+
+    if (Config.dns.packet_max > 0)
+        storeAppendPrintf(sentry, "DNS jumbo-grams: %Zd Bytes\n", Config.dns.packet_max);
+    else
+        storeAppendPrintf(sentry, "DNS jumbo-grams: not working\n");
 
     storeAppendPrintf(sentry, "\nNameservers:\n");
     storeAppendPrintf(sentry, "IP ADDRESS                                     # QUERIES # REPLIES\n");
@@ -629,15 +696,18 @@ idnsStats(StoreEntry * sentry)
     for (i = 0; i < MAX_ATTEMPT; i++)
         storeAppendPrintf(sentry, " ATTEMPT%d", i + 1);
 
-    storeAppendPrintf(sentry, "\n");
+    storeAppendPrintf(sentry, " PROBLEM\n");
 
     for (j = 0; j < MAX_RCODE; j++) {
+        if (j > 10 && j < 16)
+            continue; // unassigned by IANA.
+
         storeAppendPrintf(sentry, "%5d", j);
 
         for (i = 0; i < MAX_ATTEMPT; i++)
             storeAppendPrintf(sentry, " %8d", RcodeMatrix[j][i]);
 
-        storeAppendPrintf(sentry, "\n");
+        storeAppendPrintf(sentry, " : %s\n",Rcodes[j]);
     }
 
     if (npc) {
@@ -815,6 +885,10 @@ idnsSendQuery(idns_query * q)
     int x = -1, y = -1;
     int ns;
 
+    q->start_t = current_time;
+    q->msg_id = idnsQueryID();
+    rfc1035SetQueryID(q->buf, q->msg_id);
+
     do {
         ns = q->nsends % nns;
 
@@ -879,7 +953,7 @@ idnsFindQuery(unsigned short id)
     for (n = lru_list.tail; n; n = n->prev) {
         q = (idns_query*)n->data;
 
-        if (q->id == id)
+        if (q->msg_id == id)
             return q;
     }
 
@@ -945,7 +1019,7 @@ idnsDropMessage(rfc1035_message *message, idns_query *q)
 }
 
 static void
-idnsGrokReply(const char *buf, size_t sz)
+idnsGrokReply(const char *buf, size_t sz, int from_ns)
 {
     int n;
     rfc1035_message *message = NULL;
@@ -958,7 +1032,7 @@ idnsGrokReply(const char *buf, size_t sz)
         return;
     }
 
-    debugs(78, 3, "idnsGrokReply: ID 0x" << std::hex << message->id << ", " << std::dec << n << " answers");
+    debugs(78, 3, "idnsGrokReply: QID 0x" << std::hex <<   message->id << ", " << std::dec << n << " answers");
 
     q = idnsFindQuery(message->id);
 
@@ -974,6 +1048,30 @@ idnsGrokReply(const char *buf, size_t sz)
         return;
     }
 
+#if WHEN_EDNS_RESPONSES_ARE_PARSED
+// TODO: actually gr the message right here.
+//	pull out the DNS meta data we need (A records, AAAA records and EDNS OPT) and store in q
+//	this is overall better than force-feeding A response with AAAA an section later anyway.
+//	AND allows us to merge AN+AR sections from both responses (one day)
+
+    if (q->edns_seen >= 0) {
+        if (max_shared_edns == nameservers[from_ns].last_seen_edns && max_shared_edns < q->edns_seen) {
+            nameservers[from_ns].last_seen_edns = q->edns_seen;
+            // the altered NS was limiting the whole group.
+            max_shared_edns = q->edns_seen;
+            // may be limited by one of the others still
+            for (int i = 0; i < nns; i++)
+                max_shared_edns = min(max_shared_edns, nameservers[i].last_seen_edns);
+        } else {
+            nameservers[from_ns].last_seen_edns = q->edns_seen;
+            // maybe reduce the global limit downwards to accomodate this NS
+            max_shared_edns = min(max_shared_edns, q->edns_seen);
+        }
+        if (max_shared_edns < RFC1035_DEFAULT_PACKET_SZ)
+            max_shared_edns = -1;
+    }
+#endif
+
     if (message->tc) {
         debugs(78, 3, HERE << "Resolver requested TC (" << q->query.name << ")");
         dlinkDelete(&q->lru, &lru_list);
@@ -983,6 +1081,12 @@ idnsGrokReply(const char *buf, size_t sz)
             q->need_vc = 1;
             q->nsends--;
             idnsSendQuery(q);
+        } else {
+            // Strange: A TCP DNS response with the truncation bit (TC) set.
+            // Return an error and cleanup; no point in trying TCP again.
+            debugs(78, 3, HERE << "TCP DNS response");
+            idnsCallback(q, NULL, 0, "Truncated TCP DNS response");
+            cbdataFree(q);
         }
 
         return;
@@ -1003,9 +1107,6 @@ idnsGrokReply(const char *buf, size_t sz)
              */
             debugs(78, 3, "idnsGrokReply: Query result: SERV_FAIL");
             rfc1035MessageDestroy(&message);
-            q->start_t = current_time;
-            q->id = idnsQueryID();
-            rfc1035SetQueryID(q->buf, q->id);
             idnsSendQuery(q);
             return;
         }
@@ -1027,15 +1128,13 @@ idnsGrokReply(const char *buf, size_t sz)
 
             idnsDropMessage(message, q);
 
-            q->start_t = current_time;
-            q->id = idnsQueryID();
-            rfc1035SetQueryID(q->buf, q->id);
             if (Ip::EnableIpv6 && q->query.qtype == RFC1035_TYPE_AAAA) {
                 debugs(78, 3, "idnsGrokReply: Trying AAAA Query for " << q->name);
-                q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
+                q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), 0, &q->query, Config.dns.packet_max);
             } else {
                 debugs(78, 3, "idnsGrokReply: Trying A Query for " << q->name);
-                q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
+                // see EDNS notes at top of file why this sends 0
+                q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), 0, &q->query, 0);
             }
             idnsCacheQuery(q);
             idnsSendQuery(q);
@@ -1070,10 +1169,8 @@ idnsGrokReply(const char *buf, size_t sz)
 
         // reset the query as an A query
         q->nsends = 0;
-        q->start_t = current_time;
-        q->id = idnsQueryID();
-        rfc1035SetQueryID(q->buf, q->id);
-        q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
+        // see EDNS notes at top of file why this sends 0
+        q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), 0, &q->query, 0);
         q->need_A = false;
         idnsCacheQuery(q);
         idnsSendQuery(q);
@@ -1197,7 +1294,7 @@ idnsRead(int fd, void *data)
             continue;
         }
 
-        idnsGrokReply(rbuf, len);
+        idnsGrokReply(rbuf, len, ns);
     }
 }
 
@@ -1230,15 +1327,18 @@ idnsCheckQueue(void *unused)
             continue;
         }
 
-        debugs(78, 3, "idnsCheckQueue: ID 0x" << std::hex << std::setfill('0') << std::setw(4) << q->id << "timeout" );
+        debugs(78, 3, "idnsCheckQueue: ID " << q->xact_id <<
+               " QID 0x"  << std::hex << std::setfill('0')  <<
+               std::setw(4) << q->msg_id << ": timeout" );
 
         dlinkDelete(&q->lru, &lru_list);
 
         if (tvSubDsec(q->start_t, current_time) < Config.Timeout.idns_query) {
             idnsSendQuery(q);
         } else {
-            debugs(78, 2, "idnsCheckQueue: ID " << std::hex << q->id <<
-                   ": giving up after " << std::dec << q->nsends << " tries and " <<
+            debugs(78, 2, "idnsCheckQueue: ID " << q->xact_id <<
+                   " QID 0x" << std::hex << q->msg_id <<
+                   " : giving up after " << std::dec << q->nsends << " tries and " <<
                    std::setw(5)<< std::setprecision(2) << tvSubDsec(q->start_t, current_time) << " seconds");
 
             if (q->rcode != 0)
@@ -1277,7 +1377,7 @@ idnsReadVC(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_
     assert(vc->ns < nns);
     debugs(78, 3, HERE << conn << ": received " << vc->msg->contentSize() << " bytes via TCP from " << nameservers[vc->ns].S << ".");
 
-    idnsGrokReply(vc->msg->buf, vc->msg->contentSize());
+    idnsGrokReply(vc->msg->buf, vc->msg->contentSize(), vc->ns);
     vc->msg->clean();
     comm_read(conn, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
 }
@@ -1334,8 +1434,7 @@ idnsRcodeCount(int rcode, int attempt)
 static void
 idnsRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("idns", "Internal DNS Statistics", idnsStats, 0, 1);
+    Mgr::RegisterAction("idns", "Internal DNS Statistics", idnsStats, 0, 1);
 }
 
 void
@@ -1431,6 +1530,13 @@ idnsInit(void)
         init++;
     }
 
+#if WHEN_EDNS_RESPONSES_ARE_PARSED
+    if (Config.onoff.ignore_unknown_nameservers && max_shared_edns > 0) {
+        debugs(0, DBG_IMPORTANT, "ERROR: cannot negotiate EDNS with unknown nameservers. Disabling");
+        max_shared_edns = -1; // disable if we might receive random replies.
+    }
+#endif
+
     idnsRegisterWithCacheManager();
 }
 
@@ -1473,6 +1579,8 @@ idnsCachedLookup(const char *key, IDNSCB * callback, void *data)
         return 0;
 
     q = cbdataAlloc(idns_query);
+    // idns_query is POD so no constructors are called after allocation
+    q->xact_id.change();
 
     q->callback = callback;
 
@@ -1503,8 +1611,8 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
         return;
 
     q = cbdataAlloc(idns_query);
-
-    q->id = idnsQueryID();
+    // idns_query is POD so no constructors are called after allocation
+    q->xact_id.change();
 
     for (i = 0; i < strlen(name); i++)
         if (name[i] == '.')
@@ -1527,10 +1635,11 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     }
 
     if (Ip::EnableIpv6) {
-        q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
+        q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), 0, &q->query, Config.dns.packet_max);
         q->need_A = true;
     } else {
-        q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
+        // see EDNS notes at top of file why this sends 0
+        q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), 0, &q->query, 0);
         q->need_A = false;
     }
 
@@ -1542,13 +1651,11 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     }
 
     debugs(78, 3, "idnsALookup: buf is " << q->sz << " bytes for " << q->name <<
-           ", id = 0x" << std::hex << q->id);
+           ", id = 0x" << std::hex << q->msg_id);
 
     q->callback = callback;
 
     q->callback_data = cbdataReference(data);
-
-    q->start_t = current_time;
 
     idnsCacheQuery(q);
 
@@ -1566,16 +1673,18 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
 
     q = cbdataAlloc(idns_query);
 
-    q->id = idnsQueryID();
+    // idns_query is POD so no constructors are called after allocation
+    q->xact_id.change();
 
     if (Ip::EnableIpv6 && addr.IsIPv6()) {
         struct in6_addr addr6;
         addr.GetInAddr(addr6);
-        q->sz = rfc3596BuildPTRQuery6(addr6, q->buf, sizeof(q->buf), q->id, &q->query);
+        q->sz = rfc3596BuildPTRQuery6(addr6, q->buf, sizeof(q->buf), 0, &q->query, Config.dns.packet_max);
     } else {
         struct in_addr addr4;
         addr.GetInAddr(addr4);
-        q->sz = rfc3596BuildPTRQuery4(addr4, q->buf, sizeof(q->buf), q->id, &q->query);
+        // see EDNS notes at top of file why this sends 0
+        q->sz = rfc3596BuildPTRQuery4(addr4, q->buf, sizeof(q->buf), 0, &q->query, 0);
     }
 
     /* PTR does not do inbound A/AAAA */
@@ -1594,13 +1703,11 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
     }
 
     debugs(78, 3, "idnsPTRLookup: buf is " << q->sz << " bytes for " << ip <<
-           ", id = 0x" << std::hex << q->id);
+           ", id = 0x" << std::hex << q->msg_id);
 
     q->callback = callback;
 
     q->callback_data = cbdataReference(data);
-
-    q->start_t = current_time;
 
     idnsCacheQuery(q);
 

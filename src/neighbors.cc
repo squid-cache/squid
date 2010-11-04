@@ -35,7 +35,6 @@
 #include "acl/FilledChecklist.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
-#include "CacheManager.h"
 #include "event.h"
 #include "htcp.h"
 #include "HttpRequest.h"
@@ -49,6 +48,8 @@
 #include "Store.h"
 #include "icmp/net_db.h"
 #include "ip/Address.h"
+#include "ip/tools.h"
+#include "mgr/Registration.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
@@ -322,7 +323,7 @@ getRoundRobinParent(HttpRequest * request)
             if (p->weight == q->weight) {
                 if (q->rr_count < p->rr_count)
                     continue;
-            } else if ( (double) q->rr_count / q->weight < (double) p->rr_count / p->weight) {
+            } else if ( ((double) q->rr_count / q->weight) < ((double) p->rr_count / p->weight)) {
                 continue;
             }
         }
@@ -542,15 +543,14 @@ neighborRemove(peer * target)
 static void
 neighborsRegisterWithCacheManager()
 {
-    CacheManager *manager = CacheManager::GetInstance();
-    manager->registerAction("server_list",
-                            "Peer Cache Statistics",
-                            neighborDumpPeers, 0, 1);
+    Mgr::RegisterAction("server_list",
+                        "Peer Cache Statistics",
+                        neighborDumpPeers, 0, 1);
 
     if (Comm::IsConnOpen(icpIncomingConn)) {
-        manager->registerAction("non_peers",
-                                "List of Unknown sites sending ICP messages",
-                                neighborDumpNonPeers, 0, 1);
+        Mgr::RegisterAction("non_peers",
+                            "List of Unknown sites sending ICP messages",
+                            neighborDumpNonPeers, 0, 1);
     }
 }
 

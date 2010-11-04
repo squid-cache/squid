@@ -49,7 +49,7 @@
  */
 
 #include "cbdata.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #if CBDATA_DEBUG
 #include "Stack.h"
@@ -271,15 +271,14 @@ cbdataInternalAddType(cbdata_type type, const char *name, int size, FREE * free_
 void
 cbdataRegisterWithCacheManager(void)
 {
-    CacheManager *manager=CacheManager::GetInstance();
-    manager->registerAction("cbdata",
-                            "Callback Data Registry Contents",
-                            cbdataDump, 0, 1);
+    Mgr::RegisterAction("cbdata",
+                        "Callback Data Registry Contents",
+                        cbdataDump, 0, 1);
 #if CBDATA_DEBUG
 
-    manager->registerAction("cbdatahistory",
-                            "Detailed call history for all current cbdata contents",
-                            cbdataDumpHistory, 0, 1);
+    Mgr::RegisterAction("cbdatahistory",
+                        "Detailed call history for all current cbdata contents",
+                        cbdataDumpHistory, 0, 1);
 #endif
 }
 

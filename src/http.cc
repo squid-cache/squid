@@ -44,6 +44,7 @@
 #include "auth/UserRequest.h"
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
+#include "base64.h"
 #include "comm/Connection.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
@@ -375,8 +376,8 @@ HttpStateData::cacheableReply()
 
     // RFC 2616: do not cache replies to responses with no-store CC directive
     if (request && request->cache_control &&
-        EBIT_TEST(request->cache_control->mask, CC_NO_STORE) &&
-        !REFRESH_OVERRIDE(ignore_no_store))
+            EBIT_TEST(request->cache_control->mask, CC_NO_STORE) &&
+            !REFRESH_OVERRIDE(ignore_no_store))
         return 0;
 
     if (!ignoreCacheControl) {
@@ -2299,6 +2300,14 @@ void
 HttpStateData::handleRequestBodyProducerAborted()
 {
     ServerStateData::handleRequestBodyProducerAborted();
+    if (entry->isEmpty()) {
+        debugs(11, 3, "request body aborted: FD " << fd);
+        ErrorState *err;
+        err = errorCon(ERR_READ_ERROR, HTTP_BAD_GATEWAY, fwd->request);
+        err->xerrno = errno;
+        fwd->fail(err);
+    }
+
     abortTransaction("request body producer aborted");
 }
 

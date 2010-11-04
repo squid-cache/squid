@@ -23,6 +23,7 @@ testIpAddress_SOURCES= \
 	testAddress.cc \
 	testAddress.h
 nodist_testIpAddress_SOURCES= \
+	$(top_srcdir)/src/tests/stub_debug.cc \
 	$(top_srcdir)/src/tests/testMain.cc \
 	$(top_srcdir)/test-suite/test_tools.cc
 testIpAddress_LDADD= \

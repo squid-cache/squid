@@ -6,7 +6,10 @@ MAKETEST="check installcheck uninstallcheck"
 #
 # This is to test any release build against what the package maintainers are seeing
 #
-SQUID_CONFIGURE_FLAGS=" \
+# NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the 
+#     distcheck target recursive tests beteen scripted runs.
+#     we use it to perform the same duty between our nested scripts.
+DISTCHECK_CONFIGURE_FLAGS=" \
 	--build=i486-linux-gnu \
 	--prefix=/usr \
 	--includedir="\${prefix}/include" \

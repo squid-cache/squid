@@ -33,7 +33,7 @@
 
 #include "squid.h"
 #include "comm_poll.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "fde.h"
@@ -625,10 +625,9 @@ comm_poll_dns_incoming(void)
 static void
 commPollRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("comm_poll_incoming",
-                   "comm_incoming() stats",
-                   commIncomingStats, 0, 1);
+    Mgr::RegisterAction("comm_poll_incoming",
+                        "comm_incoming() stats",
+                        commIncomingStats, 0, 1);
 }
 
 void
