@@ -655,7 +655,7 @@ clientReplyContext::processMiss()
     if (r->flags.loopdetect &&
             (http->flags.accel || http->flags.intercepted)) {
         http->al.http.code = HTTP_FORBIDDEN;
-        err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->peer, http->request);
+        err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->clientConn->remote, http->request);
         createStoreEntry(r->method, request_flags());
         errorAppendEntry(http->storeEntry(), err);
         triggerInitialStoreRead();
@@ -700,11 +700,11 @@ clientReplyContext::processMiss()
 void
 clientReplyContext::processOnlyIfCachedMiss()
 {
-    ErrorState *err = NULL;
     debugs(88, 4, "clientProcessOnlyIfCachedMiss: '" <<
            RequestMethodStr(http->request->method) << " " << http->uri << "'");
     http->al.http.code = HTTP_GATEWAY_TIMEOUT;
-    err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, HTTP_GATEWAY_TIMEOUT, NULL, http->getConn()->peer, http->request);
+    ErrorState *err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, HTTP_GATEWAY_TIMEOUT, NULL,
+                                       http->getConn()->clientConn->remote, http->request);
     removeClientStoreReference(&sc, http);
     startError(err);
 }
@@ -804,7 +804,8 @@ clientReplyContext::purgeFoundObject(StoreEntry *entry)
 
     if (EBIT_TEST(entry->flags, ENTRY_SPECIAL)) {
         http->logType = LOG_TCP_DENIED;
-        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->peer, http->request);
+        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL,
+                                           http->getConn()->clientConn->remote, http->request);
         startError(err);
         return;
     }
@@ -842,7 +843,7 @@ clientReplyContext::purgeRequest()
 
     if (!Config2.onoff.enable_purge) {
         http->logType = LOG_TCP_DENIED;
-        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->peer, http->request);
+        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->clientConn->remote, http->request);
         startError(err);
         return;
     }
@@ -1794,7 +1795,7 @@ clientReplyContext::sendBodyTooLargeError()
     tmp_noaddr.SetNoAddr(); // TODO: make a global const
     http->logType = LOG_TCP_DENIED_REPLY;
     ErrorState *err = clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
-                                       http->getConn() != NULL ? http->getConn()->peer : tmp_noaddr,
+                                       http->getConn() != NULL ? http->getConn()->clientConn->remote : tmp_noaddr,
                                        http->request);
     removeClientStoreReference(&(sc), http);
     HTTPMSGUNLOCK(reply);
@@ -1867,16 +1868,12 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
         Ip::Address tmp_noaddr;
         tmp_noaddr.SetNoAddr();
         err = clientBuildError(page_id, HTTP_FORBIDDEN, NULL,
-                               http->getConn() != NULL ? http->getConn()->peer : tmp_noaddr,
+                               http->getConn() != NULL ? http->getConn()->clientConn->remote : tmp_noaddr,
                                http->request);
 
         removeClientStoreReference(&sc, http);
-
         HTTPMSGUNLOCK(reply);
-
         startError(err);
-
-
         return;
     }
 

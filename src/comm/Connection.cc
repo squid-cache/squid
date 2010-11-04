@@ -2,13 +2,14 @@
 #include "cbdata.h"
 #include "comm.h"
 #include "comm/Connection.h"
+#include "fde.h"
+#include "SquidTime.h"
 
 bool
 Comm::IsConnOpen(const Comm::ConnectionPointer &conn)
 {
     return conn != NULL && conn->isOpen();
 }
-
 
 Comm::Connection::Connection() :
         local(),
@@ -20,8 +21,13 @@ Comm::Connection::Connection() :
         _peer(NULL)
 {}
 
+static int64_t lost_conn = 0;
 Comm::Connection::~Connection()
 {
+    if (fd >= 0) {
+        debugs(5, 8, "NOTE: Orphaned Comm::Connections: " << ++lost_conn);
+    }
+
     close();
     cbdataReferenceDone(_peer);
 }

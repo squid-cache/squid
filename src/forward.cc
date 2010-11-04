@@ -90,8 +90,9 @@ FwdState::abort(void* d)
 
 /**** PUBLIC INTERFACE ********************************************************/
 
-FwdState::FwdState(Comm::ConnectionPointer &client, StoreEntry * e, HttpRequest * r)
+FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRequest * r)
 {
+    debugs(17, 1, HERE << "Forwarding client request " << client << ", url=" << e->url() );
     entry = e;
     clientConn = client;
     request = HTTPMSGLOCK(r);
@@ -190,7 +191,7 @@ FwdState::~FwdState()
  * allocate a FwdState.
  */
 void
-FwdState::fwdStart(Comm::ConnectionPointer &clientConn, StoreEntry *entry, HttpRequest *request)
+FwdState::fwdStart(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, HttpRequest *request)
 {
     /** \note
      * client_addr == no_addr indicates this is an "internal" request
