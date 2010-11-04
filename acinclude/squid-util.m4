@@ -33,6 +33,7 @@ dnl Saved variables are:
 dnl CFLAGS, CXXFLAGS, LDFLAGS, LIBS plus any variables specified as
 dnl second argument
 AC_DEFUN([SQUID_STATE_SAVE],[
+# save state, key is $1
 $1_CFLAGS="${CFLAGS}"
 $1_CXXFLAGS="${CXXFLAGS}"
 $1_LDFLAGS="${LDFLAGS}"
@@ -51,6 +52,7 @@ dnl commit the state changes: deleting the temporary state defined in SQUID_STAT
 dnl with the same prefix. It's not necessary to specify the extra variables passed
 dnl to SQUID_STATE_SAVE again, they will be automatically reclaimed.
 AC_DEFUN([SQUID_STATE_COMMIT],[
+# commit state, key is $1
 unset $1_CFLAGS
 unset $1_CXXFLAGS
 unset $1_LDFLAGS
@@ -59,7 +61,7 @@ unset $1_CC
 unset $1_CXX
 for squid_util_var_tosave in $$1_squid_saved_vars
 do
-    unset ${squid_util_var_tosave2}
+    unset ${squid_util_var_tosave}
 done
 ])
 
@@ -68,6 +70,7 @@ dnl all temporary state will be cleared, including the custom variables specifie
 dnl at call time. It's not necessary to explicitly name them, they will be automatically
 dnl cleared.
 AC_DEFUN([SQUID_STATE_ROLLBACK],[
+# rollback state, key is $1
 CFLAGS="${$1_CFLAGS}"
 CXXFLAGS="${$1_CXXFLAGS}"
 LDFLAGS="${$1_LDFLAGS}"
@@ -76,8 +79,8 @@ CC="${$1_CC}"
 CXX="${$1_CXX}"
 for squid_util_var_tosave in $$1_squid_saved_vars
 do
-    squid_util_var_tosave2="$1_${squid_util_var_tosave}"
-    eval "${squid_util_var_tosave}=\$${squid_util_var_tosave2}"
+    squid_util_var_tosave2="\$$1_${squid_util_var_tosave}"
+    eval "$squid_util_var_tosave=\"${squid_util_var_tosave2}\""
 done
 SQUID_STATE_COMMIT($1)
 ])

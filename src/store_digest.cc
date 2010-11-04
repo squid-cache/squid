@@ -42,7 +42,7 @@
 
 #include "squid.h"
 #include "event.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #if USE_CACHE_DIGESTS
 
 #include "Store.h"
@@ -103,8 +103,7 @@ static void storeDigestAdd(const StoreEntry *);
 static void
 storeDigestRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("store_digest", "Store Digest", storeDigestReport, 0, 1);
+    Mgr::RegisterAction("store_digest", "Store Digest", storeDigestReport, 0, 1);
 }
 
 /*

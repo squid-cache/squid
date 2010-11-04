@@ -16,6 +16,9 @@ libexec_SCRIPTS	= $(SMB_AUTH_HELPER)
 libexec_PROGRAMS = basic_smb_auth
 basic_smb_auth_SOURCES= basic_smb_auth.cc
 basic_smb_auth_CXXFLAGS = -DSAMBAPREFIX=\"$(SAMBAPREFIX)\" -DHELPERSCRIPT=\"$(SMB_AUTH_HELPER_PATH)\"
-basic_smb_auth_LDADD = $(COMPAT_LIB) $(XTRA_LIBS)
+basic_smb_auth_LDADD = \
+		$(top_builddir)/lib/libmiscencoding.la \
+		$(COMPAT_LIB) \
+		$(XTRA_LIBS)
 
 EXTRA_DIST = basic_smb_auth.sh COPYING-2.0 config.test

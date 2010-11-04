@@ -1,5 +1,5 @@
 #include "config.h"
-#include "profiling.h"
+#include "profiler/Profiler.h"
 #include "xusleep.h"
 
 #if HAVE_UNISTD_H

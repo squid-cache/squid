@@ -33,6 +33,7 @@
 #define   SQUID_TIME_H
 
 #include "config.h"
+#include "rfc1123.h"
 
 #if HAVE_TIME_H
 #include <time.h>
@@ -42,10 +43,10 @@
 /* globals for accessing time */
 extern struct timeval current_time;
 extern double current_dtime;
-
-extern time_t squid_curtime;	/* 0 */
+extern time_t squid_curtime;
 
 time_t getCurrentTime(void);
+int tvSubMsec(struct timeval, struct timeval);
 
 /** event class for doing synthetic time etc */
 class TimeEngine

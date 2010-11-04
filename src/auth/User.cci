@@ -35,11 +35,6 @@
 
 #include "config.h"
 
-/* for xstrdup() */
-#include "util.h"
-/* for safe_free() */
-#include "defines.h"
-
 char const *
 AuthUser::username () const
 {

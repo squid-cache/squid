@@ -137,7 +137,7 @@ public:
 
     /// Whether we should modify TOS flags based on cache hits and misses.
     _SQUID_INLINE_ bool isHitTosActive() const;
-    
+
     /// Whether we should modify netfilter marks based on cache hits and misses.
     _SQUID_INLINE_ bool isHitNfmarkActive() const;
 

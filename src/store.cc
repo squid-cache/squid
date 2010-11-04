@@ -45,11 +45,13 @@
 #include "HttpRequest.h"
 #include "mem_node.h"
 #include "MemObject.h"
+#include "mgr/Registration.h"
 #include "SquidTime.h"
 #include "Stack.h"
 #include "stmem.h"
 #include "Store.h"
 #include "StoreClient.h"
+#include "mgr/StoreIoAction.h"
 #include "StoreMeta.h"
 #include "swap_log_op.h"
 #include "SwapDir.h"
@@ -84,8 +86,6 @@ const char *swapStatusStr[] = {
     "SWAPOUT_WRITING",
     "SWAPOUT_DONE"
 };
-
-extern OBJH storeIOStats;
 
 
 /*
@@ -1381,11 +1381,10 @@ StoreEntry::validLength() const
 static void
 storeRegisterWithCacheManager(void)
 {
-    CacheManager *manager=CacheManager::GetInstance();
-    manager->registerAction("storedir", "Store Directory Stats", Store::Stats, 0, 1);
-    manager->registerAction("store_io", "Store IO Interface Stats", storeIOStats, 0, 1);
-    manager->registerAction("store_check_cachable_stats", "storeCheckCachable() Stats",
-                            storeCheckCachableStats, 0, 1);
+    Mgr::RegisterAction("storedir", "Store Directory Stats", Store::Stats, 0, 1);
+    Mgr::RegisterAction("store_io", "Store IO Interface Stats", &Mgr::StoreIoAction::Create, 0, 1);
+    Mgr::RegisterAction("store_check_cachable_stats", "storeCheckCachable() Stats",
+                        storeCheckCachableStats, 0, 1);
 }
 
 void
@@ -1905,6 +1904,51 @@ StoreEntry::modifiedSince(HttpRequest * request) const
         debugs(88, 3, "--> YES: same LMT, different length");
         return true;
     }
+}
+
+bool
+StoreEntry::hasIfMatchEtag(const HttpRequest &request) const
+{
+    const String reqETags = request.header.getList(HDR_IF_MATCH);
+    return hasOneOfEtags(reqETags, false);
+}
+
+bool
+StoreEntry::hasIfNoneMatchEtag(const HttpRequest &request) const
+{
+    const String reqETags = request.header.getList(HDR_IF_NONE_MATCH);
+    // weak comparison is allowed only for HEAD or full-body GET requests
+    const bool allowWeakMatch = !request.flags.range &&
+                                (request.method == METHOD_GET || request.method == METHOD_HEAD);
+    return hasOneOfEtags(reqETags, allowWeakMatch);
+}
+
+/// whether at least one of the request ETags matches entity ETag
+bool
+StoreEntry::hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) const
+{
+    const ETag repETag = getReply()->header.getETag(HDR_ETAG);
+    if (!repETag.str)
+        return strListIsMember(&reqETags, "*", ',');
+
+    bool matched = false;
+    const char *pos = NULL;
+    const char *item;
+    int ilen;
+    while (!matched && strListGetItem(&reqETags, ',', &item, &ilen, &pos)) {
+        if (!strncmp(item, "*", ilen))
+            matched = true;
+        else {
+            String str;
+            str.append(item, ilen);
+            ETag reqETag;
+            if (etagParseInit(&reqETag, str.termedBuf())) {
+                matched = allowWeakMatch ? etagIsWeakEqual(repETag, reqETag) :
+                          etagIsStrongEqual(repETag, reqETag);
+            }
+        }
+    }
+    return matched;
 }
 
 StorePointer

@@ -62,7 +62,13 @@
 #define COMM_SELECT_READ   (0x1)
 #define COMM_SELECT_WRITE  (0x2)
 
-#define safe_free(x)	if (x) { xxfree(x); x = NULL; }
+/*
+#define COMM_NONBLOCKING	0x01
+#define COMM_NOCLOEXEC		0x02
+#define COMM_REUSEADDR		0x04
+#define COMM_TRANSPARENT	0x08
+#define COMM_DOBIND		0x10
+*/
 
 #define DISK_OK                   (0)
 #define DISK_ERROR               (-1)
@@ -248,14 +254,6 @@
 #define URI_WHITESPACE_ENCODE 2
 #define URI_WHITESPACE_CHOP 3
 #define URI_WHITESPACE_DENY 4
-
-#ifndef _PATH_DEVNULL
-#ifdef _SQUID_MSWIN_
-#define _PATH_DEVNULL "NUL"
-#else
-#define _PATH_DEVNULL "/dev/null"
-#endif
-#endif
 
 #ifndef O_TEXT
 #define O_TEXT 0

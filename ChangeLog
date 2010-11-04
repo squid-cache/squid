@@ -58,6 +58,39 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many testing improvements
 	- ... and many documentation updates
 
+Changes to squid-3.1.9 (25 Oct 2010):
+
+	- Bug 3088: dnsserver is segfaulting
+	- Bug 3084: IPv6 without Host: header in request causes connection to hang
+	- Bug 3082: Typo in error message
+	- Bug 3073: tunnelStateFree memory leak of host member
+	- Bug 3058: errorSend and ICY leak MemBuf object
+	- Bug 3057: 64-bit Solaris 9 Squid unable to determine peer IP and port
+	- Bug 3056: comm.cc "!fd_table[fd].closing()" assertion crash when a helper dies
+	- Bug 3053: cache version 1 LFS support detection broken
+	- Bug 3051: integer display overflow
+	- Bug 3040: Lower-case domain entries from hosts and resolv.conf files
+	- Bug 3036: adaptation_access acls cannot see myportname
+	- Bug 3023: url_rewrite_program silently fails to rewrite on broken URLs
+	- Bug 2964: Prevent memory leaks when ICAP transactions fail
+	- Bug 2808: getRoundRobinParent not handling weights correctly
+	- Bug 2793: memory statistics sometimes display wrong
+	- Bug 2356: Port from 2.7: Solaris /dev/poll event ports support
+	- Bug 2311: crashes with ICAP RESPMOD for HTTP body size greater than 100kb
+	- Ensure /var/cache or jail equivalent exists on install
+	- HTTP/1.1: delete Warnings that have warning-date different from Date
+	- HTTP/1.1: do not remove ETag header from partial responses
+	- HTTP/1.1: make date parser stricter to better handle malformed Expires
+	- HTTP/1.1: improve age calculation
+	- HTTP/1.1: reply with a 504 error if required validation fails
+	- HTTP/1.1: add appropriate Warnings if serving a stale hit
+	- HTTP/1.1: support requests with Cache-Control: min-fresh
+	- HTTP/1.1: do not cache replies to requests with Cache-Control: no-store
+	- squidclient: Display IP(s) connected to in verbose (-v) display
+	- Fixes several issues with ICAP persistent connections
+	- Fixes small leaks in Netdb, DNS, ICAP, ICY, HTTPS
+	- ... and some cosmetic polishing
+
 Changes to squid-3.1.8 (04 Sep 2010):
 
 	- Bug 3033: incorrect information regarding TOS

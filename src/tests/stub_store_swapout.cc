@@ -35,6 +35,8 @@
 #include "squid.h"
 #include "Store.h"
 
+StoreIoStats store_io_stats;
+
 void
 StoreEntry::swapOutFileClose()
 {
@@ -60,14 +62,6 @@ storeUnlink(StoreEntry * e)
 {
     fatal ("Not implemented");
 }
-
-
-void
-storeIOStats(StoreEntry *)
-{
-    fatal ("Not implemented");
-}
-
 
 #include "StoreMeta.h"
 

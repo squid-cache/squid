@@ -37,6 +37,9 @@
 #if HAVE_CRYPT_H
 #include <crypt.h>
 #endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 static hash_table *hash = NULL;
 static HASHFREE my_free;

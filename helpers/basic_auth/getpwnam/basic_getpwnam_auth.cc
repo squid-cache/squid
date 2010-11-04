@@ -27,7 +27,7 @@
 #include "config.h"
 #include "helpers/defines.h"
 #include "rfc1738.h"
-#include "util.h"
+//#include "util.h"
 
 #if HAVE_STDIO_H
 #include <stdio.h>

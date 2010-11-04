@@ -72,12 +72,14 @@ Ipc::SharedListenRequest::SharedListenRequest(): requestorId(-1), mapId(-1)
 
 Ipc::SharedListenRequest::SharedListenRequest(const TypedMsgHdr &hdrMsg)
 {
-    hdrMsg.getData(mtSharedListenRequest, this, sizeof(*this));
+    hdrMsg.checkType(mtSharedListenRequest);
+    hdrMsg.getPod(*this);
 }
 
 void Ipc::SharedListenRequest::pack(TypedMsgHdr &hdrMsg) const
 {
-    hdrMsg.putData(mtSharedListenRequest, this, sizeof(*this));
+    hdrMsg.setType(mtSharedListenRequest);
+    hdrMsg.putPod(*this);
 }
 
 
@@ -89,7 +91,8 @@ Ipc::SharedListenResponse::SharedListenResponse(const Comm::ConnectionPointer &c
 Ipc::SharedListenResponse::SharedListenResponse(const TypedMsgHdr &hdrMsg):
         conn(NULL), errNo(0), mapId(-1)
 {
-    hdrMsg.getData(mtSharedListenResponse, this, sizeof(*this));
+    hdrMsg.checkType(mtSharedListenResponse);
+    hdrMsg.getPod(*this);
     conn = new Comm::Connection;
     conn->fd = hdrMsg.getFd();
     // other conn details are passed in OpenListenerParams and filled out by SharedListenJoin()
@@ -97,7 +100,8 @@ Ipc::SharedListenResponse::SharedListenResponse(const TypedMsgHdr &hdrMsg):
 
 void Ipc::SharedListenResponse::pack(TypedMsgHdr &hdrMsg) const
 {
-    hdrMsg.putData(mtSharedListenResponse, this, sizeof(*this));
+    hdrMsg.setType(mtSharedListenResponse);
+    hdrMsg.putPod(*this);
     hdrMsg.putFd(conn->fd);
 }
 

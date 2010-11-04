@@ -31,12 +31,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
+#include "config.h"
 #include "SquidTime.h"
 
 struct timeval current_time;
 double current_dtime;
-
 time_t squid_curtime = 0;
 
 time_t
@@ -52,6 +51,13 @@ getCurrentTime(void)
     current_dtime = (double) current_time.tv_sec +
                     (double) current_time.tv_usec / 1000000.0;
     return squid_curtime = current_time.tv_sec;
+}
+
+int
+tvSubMsec(struct timeval t1, struct timeval t2)
+{
+    return (t2.tv_sec - t1.tv_sec) * 1000 +
+           (t2.tv_usec - t1.tv_usec) / 1000;
 }
 
 TimeEngine::~TimeEngine()

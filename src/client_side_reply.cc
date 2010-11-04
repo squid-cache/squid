@@ -556,41 +556,9 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
             http->logType = LOG_TCP_MISS;
             processMiss();
         }
-    } else if (r->flags.ims) {
-        /*
-         * Handle If-Modified-Since requests from the client
-         */
-
-        if (e->getReply()->sline.status != HTTP_OK) {
-            debugs(88, 4, "clientCacheHit: Reply code " <<
-                   e->getReply()->sline.status << " != 200");
-            http->logType = LOG_TCP_MISS;
-            processMiss();
-        } else if (e->modifiedSince(http->request)) {
-            http->logType = LOG_TCP_IMS_HIT;
-            sendMoreData(result);
-        } else {
-            time_t const timestamp = e->timestamp;
-            HttpReply *temprep = e->getReply()->make304();
-            http->logType = LOG_TCP_IMS_HIT;
-            removeClientStoreReference(&sc, http);
-            createStoreEntry(http->request->method,
-                             request_flags());
-            e = http->storeEntry();
-            /*
-             * Copy timestamp from the original entry so the 304
-             * reply has a meaningful Age: header.
-             */
-            e->timestamp = timestamp;
-            e->replaceHttpReply(temprep);
-            e->complete();
-            /* TODO: why put this in the store and then serialise it and then parse it again.
-             * Simply mark the request complete in our context and
-             * write the reply struct to the client side
-             */
-            triggerInitialStoreRead();
-        }
-    } else {
+    } else if (r->conditional())
+        processConditional(result);
+    else {
         /*
          * plain ol' cache hit
          */
@@ -707,6 +675,87 @@ clientReplyContext::processOnlyIfCachedMiss()
                                        http->getConn()->clientConn->remote, http->request);
     removeClientStoreReference(&sc, http);
     startError(err);
+}
+
+/// process conditional request from client
+void
+clientReplyContext::processConditional(StoreIOBuffer &result)
+{
+    StoreEntry *e = http->storeEntry();
+
+    if (e->getReply()->sline.status != HTTP_OK) {
+        debugs(88, 4, "clientReplyContext::processConditional: Reply code " <<
+               e->getReply()->sline.status << " != 200");
+        http->logType = LOG_TCP_MISS;
+        processMiss();
+        return;
+    }
+
+    HttpRequest &r = *http->request;
+
+    if (r.header.has(HDR_IF_MATCH) && !e->hasIfMatchEtag(r)) {
+        // RFC 2616: reply with 412 Precondition Failed if If-Match did not match
+        sendPreconditionFailedError();
+        return;
+    }
+
+    bool matchedIfNoneMatch = false;
+    if (r.header.has(HDR_IF_NONE_MATCH)) {
+        if (!e->hasIfNoneMatchEtag(r)) {
+            // RFC 2616: ignore IMS if If-None-Match did not match
+            r.flags.ims = 0;
+            r.ims = -1;
+            r.imslen = 0;
+            r.header.delById(HDR_IF_MODIFIED_SINCE);
+            http->logType = LOG_TCP_MISS;
+            sendMoreData(result);
+            return;
+        }
+
+        if (!r.flags.ims) {
+            // RFC 2616: if If-None-Match matched and there is no IMS,
+            // reply with 412 Precondition Failed
+            sendPreconditionFailedError();
+            return;
+        }
+
+        // otherwise check IMS below to decide if we reply with 412
+        matchedIfNoneMatch = true;
+    }
+
+    if (r.flags.ims) {
+        // handle If-Modified-Since requests from the client
+        if (e->modifiedSince(&r)) {
+            http->logType = LOG_TCP_IMS_HIT;
+            sendMoreData(result);
+            return;
+        }
+
+        if (matchedIfNoneMatch) {
+            // If-None-Match matched, reply with 412 Precondition Failed
+            sendPreconditionFailedError();
+            return;
+        }
+
+        // otherwise reply with 304 Not Modified
+        const time_t timestamp = e->timestamp;
+        HttpReply *const temprep = e->getReply()->make304();
+        http->logType = LOG_TCP_IMS_HIT;
+        removeClientStoreReference(&sc, http);
+        createStoreEntry(http->request->method, request_flags());
+        e = http->storeEntry();
+        // Copy timestamp from the original entry so the 304
+        // reply has a meaningful Age: header.
+        e->timestamp = timestamp;
+        e->replaceHttpReply(temprep);
+        e->complete();
+        /*
+         * TODO: why put this in the store and then serialise it and
+         * then parse it again. Simply mark the request complete in
+         * our context and write the reply struct to the client side.
+         */
+        triggerInitialStoreRead();
+    }
 }
 
 void
@@ -1221,6 +1270,7 @@ clientReplyContext::buildReplyHeader()
 
     if (is_hit)
         hdr->delById(HDR_SET_COOKIE);
+    // TODO: RFC 2965 : Must honour Cache-Control: no-cache="set-cookie2" and remove header.
 
     // if there is not configured a peer proxy with login=PASS option enabled
     // remove the Proxy-Authenticate header
@@ -1801,6 +1851,19 @@ clientReplyContext::sendBodyTooLargeError()
     HTTPMSGUNLOCK(reply);
     startError(err);
 
+}
+
+/// send 412 (Precondition Failed) to client
+void
+clientReplyContext::sendPreconditionFailedError()
+{
+    http->logType = LOG_TCP_HIT;
+    ErrorState *const err =
+        clientBuildError(ERR_PRECONDITION_FAILED, HTTP_PRECONDITION_FAILED,
+                         NULL, http->getConn()->peer, http->request);
+    removeClientStoreReference(&sc, http);
+    HTTPMSGUNLOCK(reply);
+    startError(err);
 }
 
 void

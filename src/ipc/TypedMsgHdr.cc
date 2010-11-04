@@ -57,6 +57,7 @@ void Ipc::TypedMsgHdr::sync()
     } else {
         Must(!msg_controllen && !msg_control);
     }
+    offset = 0;
 }
 
 
@@ -78,21 +79,98 @@ Ipc::TypedMsgHdr::address(const struct sockaddr_un& addr)
 }
 
 void
-Ipc::TypedMsgHdr::getData(int destType, void *raw, size_t size) const
+Ipc::TypedMsgHdr::checkType(int destType) const
 {
     Must(type() == destType);
-    Must(size == data.size);
-    xmemcpy(raw, data.raw, size);
 }
 
 void
-Ipc::TypedMsgHdr::putData(int aType, const void *raw, size_t size)
+Ipc::TypedMsgHdr::setType(int aType)
 {
-    Must(size <= sizeof(data.raw));
-    allocData();
-    data.type_ = aType;
-    data.size = size;
-    xmemcpy(data.raw, raw, size);
+    if (data.type_) {
+        Must(data.type_ == aType);
+    } else {
+        allocData();
+        data.type_ = aType;
+    }
+}
+
+int
+Ipc::TypedMsgHdr::getInt() const
+{
+    int n = 0;
+    getPod(n);
+    return n;
+}
+
+void
+Ipc::TypedMsgHdr::putInt(const int n)
+{
+    putPod(n);
+}
+
+void
+Ipc::TypedMsgHdr::getString(String &s) const
+{
+    const int length = getInt();
+    Must(length >= 0);
+    // String uses memcpy uncoditionally; TODO: SBuf eliminates this check
+    if (!length) {
+        s.clean();
+        return;
+    }
+
+    Must(length <= maxSize);
+    // TODO: use SBuf.reserve() instead of a temporary buffer
+    char buf[length];
+    getRaw(&buf, length);
+    s.limitInit(buf, length);
+}
+
+void
+Ipc::TypedMsgHdr::putString(const String &s)
+{
+    Must(s.psize() <= maxSize);
+    putInt(s.psize());
+    putRaw(s.rawBuf(), s.psize());
+}
+
+void
+Ipc::TypedMsgHdr::getFixed(void *raw, size_t size) const
+{
+    // no need to load size because it is constant
+    getRaw(raw, size);
+}
+
+void
+Ipc::TypedMsgHdr::putFixed(const void *raw, size_t size)
+{
+    // no need to store size because it is constant
+    putRaw(raw, size);
+}
+
+/// low-level loading of exactly size bytes of raw data
+void
+Ipc::TypedMsgHdr::getRaw(void *raw, size_t size) const
+{
+    Must(size >= 0);
+    if (size > 0) {
+        Must(size <= data.size - offset);
+        xmemcpy(raw, data.raw + offset, size);
+        offset += size;
+    }
+}
+
+/// low-level storage of exactly size bytes of raw data
+void
+Ipc::TypedMsgHdr::putRaw(const void *raw, size_t size)
+{
+    Must(size >= 0);
+    if (size > 0) {
+        Must(size <= sizeof(data.raw) - data.size);
+        xmemcpy(data.raw + data.size, raw, size);
+        data.size += size;
+    }
 }
 
 void

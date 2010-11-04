@@ -38,7 +38,7 @@
 #endif
 
 #include "squid.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "MemObject.h"
 #include "HttpRequest.h"
@@ -289,7 +289,8 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 #endif
        ) {
         debugs(22, 3, "refreshCheck: YES: Must revalidate stale response");
-        request->flags.fail_on_validation_err = 1;
+        if (request)
+            request->flags.fail_on_validation_err = 1;
         return STALE_MUST_REVALIDATE;
     }
 
@@ -325,17 +326,16 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
         if (NULL != cc) {
             if (cc->max_age > -1) {
 #if USE_HTTP_VIOLATIONS
-                if (R->flags.ignore_reload && cc->max_age == 0) {} else
+                if (R->flags.ignore_reload && cc->max_age == 0) {
+                    debugs(22, 3, "refreshCheck: MAYBE: client-max-age = 0 and ignore-reload");
+                } else
 #endif
                 {
-#if 0
-
                     if (cc->max_age == 0) {
                         debugs(22, 3, "refreshCheck: YES: client-max-age = 0");
                         return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
                     }
 
-#endif
                     if (age > cc->max_age) {
                         debugs(22, 3, "refreshCheck: YES: age > client-max-age");
                         return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
@@ -609,8 +609,7 @@ refreshStats(StoreEntry * sentry)
 static void
 refreshRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("refresh", "Refresh Algorithm Statistics", refreshStats, 0, 1);
+    Mgr::RegisterAction("refresh", "Refresh Algorithm Statistics", refreshStats, 0, 1);
 }
 
 void

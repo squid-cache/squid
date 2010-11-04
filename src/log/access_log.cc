@@ -39,8 +39,10 @@
 // Store.h Required by configuration directives parsing/dumping only
 #include "Store.h"
 
+#include "errorpage.h"
+#include "err_detail_type.h"
 #include "acl/Checklist.h"
-#include "CacheManager.h"
+#include "errorpage.h"
 #if USE_SQUID_EUI
 #include "eui/Eui48.h"
 #include "eui/Eui64.h"
@@ -50,6 +52,7 @@
 #include "HttpRequest.h"
 #include "log/File.h"
 #include "MemBuf.h"
+#include "mgr/Registration.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
 
@@ -383,7 +386,8 @@ typedef enum {
     LFT_HTTP_BODY_BYTES_READ,
 
     LFT_SQUID_STATUS,
-    /*LFT_SQUID_ERROR, */
+    LFT_SQUID_ERROR,
+    LFT_SQUID_ERROR_DETAIL,
     LFT_SQUID_HIERARCHY,
 
     LFT_MIME_TYPE,
@@ -542,7 +546,8 @@ struct logformat_token_table_entry logformat_token_table[] = {
     {"<bs", LFT_HTTP_BODY_BYTES_READ},
 
     {"Ss", LFT_SQUID_STATUS},
-    /*{ "Se", LFT_SQUID_ERROR }, */
+    { "err_code", LFT_SQUID_ERROR },
+    { "err_detail", LFT_SQUID_ERROR_DETAIL },
     {"Sh", LFT_SQUID_HIERARCHY},
 
     {"mt", LFT_MIME_TYPE},
@@ -1124,7 +1129,27 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
             break;
 
-            /* case LFT_SQUID_ERROR: */
+        case LFT_SQUID_ERROR:
+            if (al->request && al->request->errType != ERR_NONE)
+                out = errorPageName(al->request->errType);
+            break;
+
+        case LFT_SQUID_ERROR_DETAIL:
+            if (al->request && al->request->errDetail != ERR_DETAIL_NONE) {
+                if (al->request->errDetail > ERR_DETAIL_START  &&
+                        al->request->errDetail < ERR_DETAIL_MAX)
+                    out = errorDetailName(al->request->errDetail);
+                else {
+                    if (al->request->errDetail >= ERR_DETAIL_EXCEPTION_START)
+                        snprintf(tmp, sizeof(tmp), "%s=0x%X",
+                                 errorDetailName(al->request->errDetail), (uint32_t) al->request->errDetail);
+                    else
+                        snprintf(tmp, sizeof(tmp), "%s=%d",
+                                 errorDetailName(al->request->errDetail), al->request->errDetail);
+                    out = tmp;
+                }
+            }
+            break;
 
         case LFT_SQUID_HIERARCHY:
             if (al->hier.ping.timedout)
@@ -2266,10 +2291,9 @@ fvdbInit(void)
 static void
 fvdbRegisterWithCacheManager(void)
 {
-    CacheManager *manager=CacheManager::GetInstance();
-    manager->registerAction("via_headers", "Via Request Headers", fvdbDumpVia, 0, 1);
-    manager->registerAction("forw_headers", "X-Forwarded-For Request Headers",
-                            fvdbDumpForw, 0, 1);
+    Mgr::RegisterAction("via_headers", "Via Request Headers", fvdbDumpVia, 0, 1);
+    Mgr::RegisterAction("forw_headers", "X-Forwarded-For Request Headers",
+                        fvdbDumpForw, 0, 1);
 }
 
 static void

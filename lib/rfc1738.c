@@ -34,7 +34,7 @@
 
 #include "config.h"
 #include "rfc1738.h"
-#include "util.h"
+//#include "util.h"
 
 #if HAVE_STDIO_H
 #include <stdio.h>

@@ -54,10 +54,11 @@
 #define IGNORANCE_IS_BLISS
 
 #include "config.h"
+#include "base64.h"
 #include "helpers/defines.h"
-#include "libntlmauth/ntlmauth.h"
-#include "libntlmauth/support_bits.cci"
-#include "util.h"
+#include "ntlmauth/ntlmauth.h"
+#include "ntlmauth/support_bits.cci"
+//#include "util.h"
 
 #if HAVE_CTYPE_H
 #include <ctype.h>

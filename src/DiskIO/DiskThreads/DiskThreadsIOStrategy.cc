@@ -36,12 +36,13 @@
 
 #include "squid.h"
 
-#include "CacheManager.h"
-#include "DiskThreadsIOStrategy.h"
 #include "DiskThreadsDiskFile.h"
+#include "DiskThreadsIOStrategy.h"
+#include "fde.h"
+#include "mgr/Registration.h"
 /* for statfs */
 #include "Store.h"
-#include "fde.h"
+
 
 void
 DiskThreadsIOStrategy::init(void)
@@ -65,9 +66,8 @@ DiskThreadsIOStrategy::init(void)
 void
 DiskThreadsIOStrategy::registerWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("squidaio_counts", "Async IO Function Counters",
-                   aioStats, 0, 1);
+    Mgr::RegisterAction("squidaio_counts", "Async IO Function Counters",
+                        aioStats, 0, 1);
 }
 
 void

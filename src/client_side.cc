@@ -112,6 +112,10 @@
 #include "SquidTime.h"
 #include "Store.h"
 
+#if DELAY_POOLS
+#include "ClientInfo.h"
+#endif
+
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
 #endif
@@ -584,6 +588,11 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
             aLogEntry->cache.authuser = xstrdup(request->auth_user_request->username());
 
 // WTF??        request->auth_user_request = NULL;
+    }
+
+    if (aLogEntry->request) {
+        aLogEntry->request->errType = request->errType;
+        aLogEntry->request->errDetail = request->errDetail;
     }
 }
 
@@ -1914,7 +1923,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
     int vhost = conn->port->vhost;
     int vport = conn->port->vport;
     char *host;
-    char ntoabuf[MAX_IPSTRLEN];
+    char ipbuf[MAX_IPSTRLEN];
 
     http->flags.accel = 1;
 
@@ -1972,19 +1981,19 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         /* Put the local socket IP address as the hostname.  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
+        http->getConn()->clientConn->local.ToHostname(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  http->getConn()->port->protocol,
-                 http->getConn()->clientConn->local.NtoA(ntoabuf,MAX_IPSTRLEN),
-                 http->getConn()->clientConn->local.GetPort(), url);
+                 ipbuf, http->getConn()->clientConn->local.GetPort(), url);
         debugs(33, 5, "ACCEL VPORT REWRITE: '" << http->uri << "'");
     } else if (vport > 0) {
         /* Put the local socket IP address as the hostname, but static port  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
+        http->getConn()->clientConn->local.ToHostname(ipbuf,MAX_IPSTRLEN);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  http->getConn()->port->protocol,
-                 http->getConn()->clientConn->local.NtoA(ntoabuf,MAX_IPSTRLEN),
-                 vport, url);
+                 ipbuf, vport, url);
         debugs(33, 5, "ACCEL VPORT REWRITE: '" << http->uri << "'");
     }
 }
@@ -1993,7 +2002,7 @@ static void
 prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, const char *req_hdr)
 {
     char *host;
-    char ntoabuf[MAX_IPSTRLEN];
+    char ipbuf[MAX_IPSTRLEN];
 
     if (*url != '/')
         return; /* already in good shape */
@@ -2011,10 +2020,10 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         /* Put the local socket IP address as the hostname.  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
+        http->getConn()->clientConn->local.ToHostname(ipbuf,MAX_IPSTRLEN),
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  http->getConn()->port->protocol,
-                 http->getConn()->clientConn->local.NtoA(ntoabuf,MAX_IPSTRLEN),
-                 http->getConn()->clientConn->local.GetPort(), url);
+                 ipbuf, http->getConn()->clientConn->local.GetPort(), url);
         debugs(33, 5, "TRANSPARENT REWRITE: '" << http->uri << "'");
     }
 }
@@ -2478,6 +2487,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->indirect_client_addr = conn->clientConn->remote;
 #endif /* FOLLOW_X_FORWARDED_FOR */
     request->my_addr = conn->clientConn->local;
+    request->myportname = conn->port->name;
     request->http_ver = http_ver;
 
     if (request->header.chunked()) {
@@ -3138,6 +3148,46 @@ httpAccept(int sock, const Comm::ConnectionPointer &details, comm_err_t flag, in
 
     clientdbEstablished(details->remote, 1);
 
+#if DELAY_POOLS
+    fd_table[newfd].clientInfo = NULL;
+
+    if (Config.onoff.client_db) {
+        /* it was said several times that client write limiter does not work if client_db is disabled */
+
+        ClientDelayPools& pools(Config.ClientDelay.pools);
+        for (unsigned int pool = 0; pool < pools.size(); pool++) {
+
+            /* pools require explicit 'allow' to assign a client into them */
+            if (!pools[pool].access)
+                continue; // warned in ClientDelayConfig::Finalize()
+
+            ACLFilledChecklist ch(pools[pool].access, NULL, NULL);
+
+            // TODO: we check early to limit error response bandwith but we
+            // should recheck when we can honor delay_pool_uses_indirect
+
+            ch.src_addr = details->peer;
+            ch.my_addr = details->me;
+
+            if (ch.fastCheck()) {
+
+                /*  request client information from db after we did all checks
+                    this will save hash lookup if client failed checks */
+                ClientInfo * cli = clientdbGetInfo(details->peer);
+                assert(cli);
+
+                /* put client info in FDE */
+                fd_table[newfd].clientInfo = cli;
+
+                /* setup write limiter for this request */
+                const double burst = floor(0.5 +
+                                           (pools[pool].highwatermark * Config.ClientDelay.initial)/100.0);
+                cli->setWriteLimiter(pools[pool].rate, burst, pools[pool].highwatermark);
+                break;
+            }
+        }
+    }
+#endif
     incoming_sockets_accepted++;
 }
 

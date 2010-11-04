@@ -41,6 +41,7 @@
 #endif
 #include "auth/UserRequest.h"
 #include "DnsLookupDetails.h"
+#include "err_detail_type.h"
 #include "HttpRequest.h"
 #include "HttpHeaderRange.h"
 #include "MemBuf.h"
@@ -102,9 +103,11 @@ HttpRequest::init()
     // hier
     dnsWait = -1;
     errType = ERR_NONE;
+    errDetail = ERR_DETAIL_NONE;
     peer_login = NULL;		// not allocated/deallocated by this class
     peer_domain = NULL;		// not allocated/deallocated by this class
     vary_headers = NULL;
+    myportname = null_string;
     tag = null_string;
     extacl_user = null_string;
     extacl_passwd = null_string;
@@ -152,6 +155,8 @@ HttpRequest::clean()
 
     if (pinned_connection)
         cbdataReferenceDone(pinned_connection);
+
+    myportname.clean();
 
     tag.clean();
 
@@ -212,6 +217,7 @@ HttpRequest::clone() const
     copy->vary_headers = vary_headers ? xstrdup(vary_headers) : NULL;
     // XXX: what to do with copy->peer_domain?
 
+    copy->myportname = myportname;
     copy->tag = tag;
     copy->extacl_user = extacl_user;
     copy->extacl_passwd = extacl_passwd;
@@ -464,6 +470,20 @@ HttpRequest::bodyNibbled() const
     return body_pipe != NULL && body_pipe->consumedSize() > 0;
 }
 
+void
+HttpRequest::detailError(err_type aType, int aDetail)
+{
+    if (errType || errDetail)
+        debugs(11, 5, HERE << "old error details: " << errType << '/' << errDetail);
+    debugs(11, 5, HERE << "current error details: " << aType << '/' << aDetail);
+    // checking type and detail separately may cause inconsistency, but
+    // may result in more details available if they only become available later
+    if (!errType)
+        errType = aType;
+    if (!errDetail)
+        errDetail = aDetail;
+}
+
 const char *HttpRequest::packableURI(bool full_uri) const
 {
     if (full_uri)
@@ -575,6 +595,14 @@ HttpRequest::cacheable() const
     return true;
 }
 
+bool
+HttpRequest::conditional() const
+{
+    return flags.ims ||
+           header.has(HDR_IF_MATCH) ||
+           header.has(HDR_IF_NONE_MATCH);
+}
+
 bool HttpRequest::inheritProperties(const HttpMsg *aMsg)
 {
     const HttpRequest* aReq = dynamic_cast<const HttpRequest*>(aMsg);
@@ -603,6 +631,9 @@ bool HttpRequest::inheritProperties(const HttpMsg *aMsg)
     // This may be too conservative for the 204 No Content case
     // may eventually need cloneNullAdaptationImmune() for that.
     flags = aReq->flags.cloneAdaptationImmune();
+
+    errType = aReq->errType;
+    errDetail = aReq->errDetail;
 
     auth_user_request = aReq->auth_user_request;
 

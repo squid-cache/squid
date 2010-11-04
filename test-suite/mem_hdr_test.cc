@@ -38,10 +38,17 @@
 #include "stmem.h"
 #include "mem_node.h"
 #include "Generic.h"
+#include "base/TextException.h"
 
 #if HAVE_IOSTREAM
 #include <iostream>
 #endif
+
+/*For  a reason required on some platforms */
+unsigned int TextException::FileNameHash(const char *fname)
+{
+    return 0;
+}
 
 void
 testLowAndHigh()

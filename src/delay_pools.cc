@@ -43,7 +43,7 @@
 
 #if DELAY_POOLS
 #include "squid.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "DelaySpec.h"
 #include "DelayPools.h"
 #include "event.h"
@@ -543,8 +543,7 @@ unsigned short DelayPools::pools_ (0);
 void
 DelayPools::RegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("delay", "Delay Pool Levels", Stats, 0, 1);
+    Mgr::RegisterAction("delay", "Delay Pool Levels", Stats, 0, 1);
 }
 
 void

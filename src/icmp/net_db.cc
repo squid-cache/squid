@@ -43,7 +43,7 @@
 #include "log/File.h"
 #include "cbdata.h"
 #include "event.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "SwapDir.h"
 #include "HttpRequest.h"
@@ -882,8 +882,7 @@ netdbExchangeDone(void *data)
 static void
 netdbRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("netdb", "Network Measurement Database", netdbDump, 0, 1);
+    Mgr::RegisterAction("netdb", "Network Measurement Database", netdbDump, 0, 1);
 }
 
 #endif /* USE_ICMP */

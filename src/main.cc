@@ -84,6 +84,9 @@
 #include "ipc/Coordinator.h"
 #include "ipc/Kids.h"
 #include "ipc/Strand.h"
+#if DELAY_POOLS
+#include "ClientDelayConfig.h"
+#endif
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
 #endif
@@ -96,9 +99,11 @@
 #include "StoreFileSystem.h"
 #include "SwapDir.h"
 
+#if HAVE_PATHS_H
+#include <paths.h>
+#endif
 
 #if USE_WIN32_SERVICE
-
 #include "squid_windows.h"
 #include <process.h>
 
@@ -118,7 +123,6 @@ void WINAPI WIN32_svcHandler(DWORD);
 /** for error reporting from xmalloc and friends */
 SQUIDCEXTERN void (*failure_notify) (const char *);
 
-static int opt_parse_cfg_only = 0;
 static char *opt_syslog_facility = NULL;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 static int configured_once = 0;
@@ -836,6 +840,10 @@ mainReconfigureFinish(void *)
 
     mimeInit(Config.mimeTablePathname);
 
+#if DELAY_POOLS
+    Config.ClientDelay.finalize();
+#endif
+
     if (Config.onoff.announce) {
         if (!eventFind(start_announce, NULL))
             eventAdd("start_announce", start_announce, NULL, 3600.0, 1);
@@ -1156,6 +1164,10 @@ mainInitialize(void)
 
 #if USE_SQUID_ESI
     Esi::Init();
+#endif
+
+#if DELAY_POOLS
+    Config.ClientDelay.finalize();
 #endif
 
     debugs(1, 1, "Ready to serve requests.");
