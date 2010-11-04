@@ -165,7 +165,7 @@ ClientSocketContext::operator delete (void *address)
 
 /* Local functions */
 /* ClientSocketContext */
-static ClientSocketContext *ClientSocketContextNew(ClientHttpRequest *);
+static ClientSocketContext *ClientSocketContextNew(const Comm::ConnectionPointer &clientConn, ClientHttpRequest *);
 /* other */
 static IOCB clientWriteComplete;
 static IOCB clientWriteBodyComplete;
@@ -199,16 +199,14 @@ static void clientUpdateSocketStats(log_type logType, size_t size);
 char *skipLeadingSpace(char *aString);
 static void connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount);
 
-static ConnStateData *connStateCreate(const Comm::ConnectionPointer &details, http_port_list *port);
+static ConnStateData *connStateCreate(const Comm::ConnectionPointer &client, http_port_list *port);
 
 
 const Comm::ConnectionPointer &
 ClientSocketContext::clientConn() const
 {
-    assert (http);
-    assert (http->getConn() != NULL);
-    assert (http->getConn()->clientConn != NULL);
-    return http->getConn()->clientConn;
+    assert (clientConnection != NULL);
+    return clientConnection;
 }
 
 clientStreamNode *
@@ -331,12 +329,13 @@ ClientSocketContext::ClientSocketContext() : http(NULL), reply(NULL), next(NULL)
 }
 
 ClientSocketContext *
-ClientSocketContextNew(ClientHttpRequest * http)
+ClientSocketContextNew(const Comm::ConnectionPointer &client, ClientHttpRequest * http)
 {
     ClientSocketContext *newContext;
     assert(http != NULL);
     newContext = new ClientSocketContext;
     newContext->http = http;
+    newContext->clientConnection = client;
     return newContext;
 }
 
@@ -652,8 +651,8 @@ ClientHttpRequest::logRequest()
             accessLogLog(&al, checklist);
             updateCounters();
 
-            if (getConn() != NULL)
-                clientdbUpdate(getConn()->peer, logType, PROTO_HTTP, out.size);
+            if (getConn() != NULL && getConn()->clientConn != NULL)
+                clientdbUpdate(getConn()->clientConn->remote, logType, PROTO_HTTP, out.size);
         }
 
         delete checklist;
@@ -731,10 +730,10 @@ void ConnStateData::connStateClosed(const CommCloseCbParams &io)
 void
 ConnStateData::swanSong()
 {
-    debugs(33, 2, "ConnStateData::swanSong: FD " << (clientConn!=NULL?clientConn->fd:-1));
+    debugs(33, 2, HERE << clientConn);
     clientConn = NULL;
     flags.readMoreRequests = false;
-    clientdbEstablished(peer, -1);	/* decrement */
+    clientdbEstablished(clientConn->remote, -1);	/* decrement */
     assert(areAllContextsForThisConnection());
     freeAllContexts();
 
@@ -1841,16 +1840,16 @@ extern "C" CSS clientReplyStatus;
 extern "C" CSD clientReplyDetach;
 
 static ClientSocketContext *
-parseHttpRequestAbort(ConnStateData * conn, const char *uri)
+parseHttpRequestAbort(ConnStateData * csd, const char *uri)
 {
     ClientHttpRequest *http;
     ClientSocketContext *context;
     StoreIOBuffer tempBuffer;
-    http = new ClientHttpRequest(conn);
-    http->req_sz = conn->in.notYetUsed;
+    http = new ClientHttpRequest(csd);
+    http->req_sz = csd->in.notYetUsed;
     http->uri = xstrdup(uri);
     setLogUri (http, uri);
-    context = ClientSocketContextNew(http);
+    context = ClientSocketContextNew(csd->clientConn, http);
     tempBuffer.data = context->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
     clientStreamInit(&http->client_stream, clientGetMoreData, clientReplyDetach,
@@ -1975,8 +1974,8 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         http->uri = (char *)xcalloc(url_sz, 1);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  http->getConn()->port->protocol,
-                 http->getConn()->me.NtoA(ntoabuf,MAX_IPSTRLEN),
-                 http->getConn()->me.GetPort(), url);
+                 http->getConn()->clientConn->local.NtoA(ntoabuf,MAX_IPSTRLEN),
+                 http->getConn()->clientConn->local.GetPort(), url);
         debugs(33, 5, "ACCEL VPORT REWRITE: '" << http->uri << "'");
     } else if (vport > 0) {
         /* Put the local socket IP address as the hostname, but static port  */
@@ -1984,7 +1983,7 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         http->uri = (char *)xcalloc(url_sz, 1);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  http->getConn()->port->protocol,
-                 http->getConn()->me.NtoA(ntoabuf,MAX_IPSTRLEN),
+                 http->getConn()->clientConn->local.NtoA(ntoabuf,MAX_IPSTRLEN),
                  vport, url);
         debugs(33, 5, "ACCEL VPORT REWRITE: '" << http->uri << "'");
     }
@@ -2014,8 +2013,8 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         http->uri = (char *)xcalloc(url_sz, 1);
         snprintf(http->uri, url_sz, "%s://%s:%d%s",
                  http->getConn()->port->protocol,
-                 http->getConn()->me.NtoA(ntoabuf,MAX_IPSTRLEN),
-                 http->getConn()->me.GetPort(), url);
+                 http->getConn()->clientConn->local.NtoA(ntoabuf,MAX_IPSTRLEN),
+                 http->getConn()->clientConn->local.GetPort(), url);
         debugs(33, 5, "TRANSPARENT REWRITE: '" << http->uri << "'");
     }
 }
@@ -2030,7 +2029,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
  *  Sets result->flags.parsed_ok to 1 if we have a good request.
  */
 static ClientSocketContext *
-parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method_p, HttpVersion *http_ver)
+parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_p, HttpVersion *http_ver)
 {
     char *req_hdr = NULL;
     char *end;
@@ -2051,7 +2050,7 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
     } else if ( (size_t)hp->bufsiz >= Config.maxRequestHeaderSize && headersEnd(hp->buf, Config.maxRequestHeaderSize) == 0) {
         debugs(33, 5, "parseHttpRequest: Too large request");
         hp->request_parse_status = HTTP_HEADER_TOO_LARGE;
-        return parseHttpRequestAbort(conn, "error:request-too-large");
+        return parseHttpRequestAbort(csd, "error:request-too-large");
     }
 
     /* Attempt to parse the first line; this'll define the method, url, version and header begin */
@@ -2063,7 +2062,7 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
     }
 
     if (r == -1) {
-        return parseHttpRequestAbort(conn, "error:invalid-request");
+        return parseHttpRequestAbort(csd, "error:invalid-request");
     }
 
     /* Request line is valid here .. */
@@ -2096,26 +2095,26 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
     if (req_sz >= Config.maxRequestHeaderSize) {
         debugs(33, 5, "parseHttpRequest: Too large request");
         hp->request_parse_status = HTTP_HEADER_TOO_LARGE;
-        return parseHttpRequestAbort(conn, "error:request-too-large");
+        return parseHttpRequestAbort(csd, "error:request-too-large");
     }
 
     /* Set method_p */
     *method_p = HttpRequestMethod(&hp->buf[hp->m_start], &hp->buf[hp->m_end]+1);
 
     /* deny CONNECT via accelerated ports */
-    if (*method_p == METHOD_CONNECT && conn && conn->port && conn->port->accel) {
-        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << conn->port->protocol << " Accelerator port " << conn->port->s.GetPort() );
+    if (*method_p == METHOD_CONNECT && csd && csd->port && csd->port->accel) {
+        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << csd->port->protocol << " Accelerator port " << csd->port->s.GetPort() );
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
         hp->request_parse_status = HTTP_METHOD_NOT_ALLOWED;
-        return parseHttpRequestAbort(conn, "error:method-not-allowed");
+        return parseHttpRequestAbort(csd, "error:method-not-allowed");
     }
 
     if (*method_p == METHOD_NONE) {
         /* XXX need a way to say "this many character length string" */
         debugs(33, 1, "clientParseRequestMethod: Unsupported method in request '" << hp->buf << "'");
         hp->request_parse_status = HTTP_METHOD_NOT_ALLOWED;
-        return parseHttpRequestAbort(conn, "error:unsupported-request-method");
+        return parseHttpRequestAbort(csd, "error:unsupported-request-method");
     }
 
     /*
@@ -2136,10 +2135,10 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
            HttpParserReqSz(hp));
 
     /* Ok, all headers are received */
-    http = new ClientHttpRequest(conn);
+    http = new ClientHttpRequest(csd);
 
     http->req_sz = HttpParserRequestLen(hp);
-    result = ClientSocketContextNew(http);
+    result = ClientSocketContextNew(csd->clientConn, http);
     tempBuffer.data = result->reqbuf;
     tempBuffer.length = HTTP_REQBUF_SZ;
 
@@ -2180,19 +2179,19 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
      *  - internal URL
      *  - mixed combos of the above with internal URL
      */
-    if (conn->transparent()) {
+    if (csd->transparent()) {
         /* intercept or transparent mode, properly working with no failures */
-        http->flags.intercepted = conn->port->intercepted;
-        http->flags.spoof_client_ip = conn->port->spoof_client_ip;
-        prepareTransparentURL(conn, http, url, req_hdr);
+        http->flags.intercepted = csd->port->intercepted;
+        http->flags.spoof_client_ip = csd->port->spoof_client_ip;
+        prepareTransparentURL(csd, http, url, req_hdr);
 
-    } else if (conn->port->intercepted || conn->port->spoof_client_ip) {
+    } else if (csd->port->intercepted || csd->port->spoof_client_ip) {
         /* transparent or intercept mode with failures */
-        prepareTransparentURL(conn, http, url, req_hdr);
+        prepareTransparentURL(csd, http, url, req_hdr);
 
-    } else if (conn->port->accel || conn->switchedToHttps()) {
+    } else if (csd->port->accel || csd->switchedToHttps()) {
         /* accelerator mode */
-        prepareAcceleratedURL(conn, http, url, req_hdr);
+        prepareAcceleratedURL(csd, http, url, req_hdr);
 
     } else if (internalCheck(url)) {
         /* internal URL mode */
@@ -2327,7 +2326,7 @@ ConnStateData::checkHeaderLimits()
     assert (repContext);
     repContext->setReplyToError(ERR_TOO_BIG,
                                 HTTP_BAD_REQUEST, METHOD_NONE, NULL,
-                                peer, NULL, NULL, NULL);
+                                clientConn->remote, NULL, NULL, NULL);
     context->registerWithConn();
     context->pullData();
 }
@@ -2376,13 +2375,15 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         assert (repContext);
         switch (hp->request_parse_status) {
         case HTTP_HEADER_TOO_LARGE:
-            repContext->setReplyToError(ERR_TOO_BIG, HTTP_BAD_REQUEST, method, http->uri, conn->peer, NULL, conn->in.buf, NULL);
+            repContext->setReplyToError(ERR_TOO_BIG, HTTP_BAD_REQUEST, method, http->uri, conn->clientConn->remote, NULL, conn->in.buf, NULL);
             break;
         case HTTP_METHOD_NOT_ALLOWED:
-            repContext->setReplyToError(ERR_UNSUP_REQ, HTTP_METHOD_NOT_ALLOWED, method, http->uri, conn->peer, NULL, conn->in.buf, NULL);
+            repContext->setReplyToError(ERR_UNSUP_REQ, HTTP_METHOD_NOT_ALLOWED, method, http->uri,
+                                        conn->clientConn->remote, NULL, conn->in.buf, NULL);
             break;
         default:
-            repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, http->uri, conn->peer, NULL, conn->in.buf, NULL);
+            repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, http->uri,
+                                        conn->clientConn->remote, NULL, conn->in.buf, NULL);
         }
         assert(context->http->out.offset == 0);
         context->pullData();
@@ -2395,7 +2396,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         debugs(33, 5, "Invalid URL: " << http->uri);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri, conn->peer, NULL, NULL, NULL);
+        repContext->setReplyToError(ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri, conn->clientConn->remote, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
@@ -2412,7 +2413,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         debugs(33, 5, "Unsupported HTTP version discovered. :\n" << HttpParserHdrBuf(hp));
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, HTTP_HTTP_VERSION_NOT_SUPPORTED, method, http->uri, conn->peer, NULL, HttpParserHdrBuf(hp), NULL);
+        repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, HTTP_HTTP_VERSION_NOT_SUPPORTED, method, http->uri,
+                                    conn->clientConn->remote, NULL, HttpParserHdrBuf(hp), NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
@@ -2427,7 +2429,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         debugs(33, 5, "Failed to parse request headers:\n" << HttpParserHdrBuf(hp));
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, http->uri, conn->peer, NULL, NULL, NULL);
+        repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, http->uri, conn->clientConn->remote, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
@@ -2467,15 +2469,15 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request));
-    request->client_addr = conn->peer;
+    request->client_addr = conn->clientConn->remote; // XXX: remove reuest->client_addr member.
 #if USE_SQUID_EUI
     request->client_eui48 = conn->peer_eui48;
     request->client_eui64 = conn->peer_eui64;
 #endif
 #if FOLLOW_X_FORWARDED_FOR
-    request->indirect_client_addr = conn->peer;
+    request->indirect_client_addr = conn->clientConn->remote;
 #endif /* FOLLOW_X_FORWARDED_FOR */
-    request->my_addr = conn->me;
+    request->my_addr = conn->clientConn->local;
     request->http_ver = http_ver;
 
     if (request->header.chunked()) {
@@ -2494,9 +2496,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_UNSUP_REQ,
-                                    HTTP_NOT_IMPLEMENTED, request->method, NULL,
-                                    conn->peer, request, NULL, NULL);
+        repContext->setReplyToError(ERR_UNSUP_REQ, HTTP_NOT_IMPLEMENTED, request->method, NULL,
+                                    conn->clientConn->remote, request, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
@@ -2510,7 +2511,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         assert (repContext);
         repContext->setReplyToError(ERR_INVALID_REQ,
                                     HTTP_LENGTH_REQUIRED, request->method, NULL,
-                                    conn->peer, request, NULL, NULL);
+                                    conn->clientConn->remote, request, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
@@ -2524,7 +2525,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             clientStreamNode *node = context->getClientReplyContext();
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
-            repContext->setReplyToError(ERR_INVALID_REQ, HTTP_EXPECTATION_FAILED, request->method, http->uri, conn->peer, request, NULL, NULL);
+            repContext->setReplyToError(ERR_INVALID_REQ, HTTP_EXPECTATION_FAILED, request->method, http->uri,
+                                        conn->clientConn->remote, request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
             goto finish;
@@ -2556,7 +2558,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             assert (repContext);
             repContext->setReplyToError(ERR_TOO_BIG,
                                         HTTP_REQUEST_ENTITY_TOO_LARGE, METHOD_NONE, NULL,
-                                        conn->peer, http->request, NULL, NULL);
+                                        conn->clientConn->remote, http->request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
             goto finish;
@@ -2701,7 +2703,7 @@ clientParseRequest(ConnStateData * conn, bool &do_next_read)
 void
 ConnStateData::clientReadRequest(const CommIoCbParams &io)
 {
-    debugs(33,5,HERE << "clientReadRequest FD " << io.fd << " size " << io.size);
+    debugs(33,5,HERE << io.conn << " size " << io.size);
     Must(reading());
     reader = NULL;
     bool do_next_read = 1; /* the default _is_ to read data! - adrian */
@@ -2709,12 +2711,12 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
     /* Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up */
 
     if (io.flag == COMM_ERR_CLOSING) {
-        debugs(33,5, HERE  << " FD " << io.fd << " closing Bailout.");
+        debugs(33,5, HERE << io.conn << " closing Bailout.");
         return;
     }
 
     assert(Comm::IsConnOpen(clientConn));
-    assert(io.fd == clientConn->fd);
+    assert(io.conn == clientConn);
 
     /*
      * Don't reset the timeout value here.  The timeout value will be
@@ -2725,7 +2727,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
      */
     if (connReadWasError(io.flag, io.size, io.xerrno)) {
         notifyAllContexts(io.xerrno);
-        clientConn->close();
+        io.conn->close();
         return;
     }
 
@@ -2738,7 +2740,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
                 return;
 
         } else if (io.size == 0) {
-            debugs(33, 5, "clientReadRequest: FD " << io.fd << " closed?");
+            debugs(33, 5, HERE << io.conn << " closed?");
 
             if (connFinishedWithConn(io.size)) {
                 clientConn->close();
@@ -2746,13 +2748,13 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
             }
 
             /* It might be half-closed, we can't tell */
-            fd_table[io.fd].flags.socket_eof = 1;
+            fd_table[io.conn->fd].flags.socket_eof = 1;
 
-            commMarkHalfClosed(io.fd);
+            commMarkHalfClosed(io.conn->fd);
 
             do_next_read = 0;
 
-            fd_note(io.fd, "half-closed");
+            fd_note(io.conn->fd, "half-closed");
 
             /* There is one more close check at the end, to detect aborted
              * (partial) requests. At this point we can't tell if the request
@@ -2778,7 +2780,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
          * XXX: This duplicates ClientSocketContext::keepaliveNextRequest
          */
         if (getConcurrentRequestCount() == 0 && commIsHalfClosed(io.fd)) {
-            debugs(33, 5, "clientReadRequest: FD " << io.fd << ": half-closed connection, no completed request parsed, connection closing.");
+            debugs(33, 5, HERE << io.conn << ": half-closed connection, no completed request parsed, connection closing.");
             clientConn->close();
             return;
         }
@@ -3039,24 +3041,23 @@ clientLifetimeTimeout(int fd, void *data)
 }
 
 ConnStateData *
-connStateCreate(const Comm::ConnectionPointer &conn, http_port_list *port)
+connStateCreate(const Comm::ConnectionPointer &client, http_port_list *port)
 {
     ConnStateData *result = new ConnStateData;
 
-    result->peer = conn->remote;
-    result->log_addr = conn->remote;
+    result->clientConn = client;
+    result->log_addr = client->remote;
     result->log_addr.ApplyMask(Config.Addrs.client_netmask);
-    result->me = conn->local;
-    result->clientConn = conn;
     result->in.buf = (char *)memAllocBuf(CLIENT_REQ_BUF_SZ, &result->in.allocatedSize);
     result->port = cbdataReference(port);
 
+    // XXX: move the NAT and TPROXY stuff into ConnAcceptor
     if (port->intercepted || port->spoof_client_ip) {
-        Ip::Address client, dst;
+        Ip::Address cl, dst;
 
-        if (Ip::Interceptor.NatLookup(conn->fd, conn->local, conn->remote, client, dst) == 0) {
-            result->me = client;
-            result->peer = dst;
+        if (Ip::Interceptor.NatLookup(client->fd, client->local, client->remote, cl, dst) == 0) {
+            result->clientConn->local = cl;
+            result->clientConn->remote = dst;
             result->transparent(true);
         }
     }
@@ -3065,7 +3066,7 @@ connStateCreate(const Comm::ConnectionPointer &conn, http_port_list *port)
             (result->transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
         int i = IP_PMTUDISC_DONT;
-        setsockopt(conn->fd, SOL_IP, IP_MTU_DISCOVER, &i, sizeof i);
+        setsockopt(client->fd, SOL_IP, IP_MTU_DISCOVER, &i, sizeof i);
 
 #else
 
@@ -3091,10 +3092,7 @@ httpAccept(int sock, const Comm::ConnectionPointer &details, comm_err_t flag, in
     http_port_list *s = (http_port_list *)data;
     ConnStateData *connState = NULL;
 
-    if (flag != COMM_OK) {
-        debugs(33, 1, "httpAccept: FD " << sock << ": accept failure: " << xstrerr(xerrno));
-        return;
-    }
+    assert(flag == COMM_OK); // acceptor does not call us for anything bad.
 
     debugs(33, 4, HERE << details << ": accepted");
     fd_note(details->fd, "client http connect");
@@ -3295,11 +3293,7 @@ httpsAccept(int sock, const Comm::ConnectionPointer& details, comm_err_t flag, i
     https_port_list *s = (https_port_list *)data;
     SSL_CTX *sslContext = s->sslContext;
 
-    if (flag != COMM_OK) {
-        errno = xerrno;
-        debugs(33, 1, "httpsAccept: FD " << sock << ": accept failure: " << xstrerr(xerrno));
-        return;
-    }
+    assert(flag != COMM_OK); // Acceptor does not call un unless successful.
 
     SSL *ssl = NULL;
     if (!(ssl = httpsCreate(details, sslContext)))
