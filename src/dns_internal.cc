@@ -125,8 +125,8 @@ struct _idns_query {
     char name[NS_MAXDNAME + 1];
     char orig[NS_MAXDNAME + 1];
     size_t sz;
-    unsigned short msg_id; /// random query ID sent to server; changes with every query sent 
-    InstanceId<idns_query> xact_id; /// identifies our "transaction", stays constant when query is retried 
+    unsigned short msg_id; /// random query ID sent to server; changes with every query sent
+    InstanceId<idns_query> xact_id; /// identifies our "transaction", stays constant when query is retried
 
     int nsends;
     int need_vc;
@@ -1094,7 +1094,7 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
             debugs(78, 3, HERE << "TCP DNS response");
             idnsCallback(q, NULL, 0, "Truncated TCP DNS response");
             cbdataFree(q);
-         }
+        }
 
         return;
     }
