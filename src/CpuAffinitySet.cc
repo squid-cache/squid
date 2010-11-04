@@ -11,8 +11,11 @@
 #include "Debug.h"
 #include "util.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 #if HAVE_STRING_H
-#include <string.h> /* for memcpy() */
+#include <string.h>
 #endif
 
 

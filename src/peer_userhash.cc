@@ -35,7 +35,7 @@
  */
 
 #include "squid.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "HttpRequest.h"
 #include "auth/UserRequest.h"
@@ -159,9 +159,8 @@ peerUserHashInit(void)
 static void
 peerUserHashRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("userhash", "peer userhash information", peerUserHashCachemgr,
-                   0, 1);
+    Mgr::RegisterAction("userhash", "peer userhash information", peerUserHashCachemgr,
+                        0, 1);
 }
 
 peer *

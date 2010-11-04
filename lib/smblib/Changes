@@ -1,0 +1,19 @@
+Change Log.
+
+Oct 2010 - Imported into Squid.
+           Many build fixes for modern compilers.
+           Shuffled several private functions (error display and logon) to
+           to public API file for external use without using smblib-priv.h.
+           Patched to permit pre-encrypted password blobs.
+           Patched to pass-thru of unicode binary blobs (logon).
+           Patched to permit selective domain logon.
+
+Aug 96 - Fixed problems with test_perf using strcpy and strcat while passing
+         arguments for strncpy and strncat
+
+Aug 96 - Moved to gcc as compiler in Makefile
+
+Aug 96 - Fixed the macro that handes Error code extraction and added Invalid 
+         API and Password has expired to the error messages
+
+Aug 96 - Added first API call, SetUserPassword

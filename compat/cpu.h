@@ -38,10 +38,11 @@ CpuCount(const cpu_set_t *set)
 inline void
 CpuAnd(cpu_set_t *destset, const cpu_set_t *srcset1, const cpu_set_t *srcset2)
 {
-    CPU_ZERO(destset);
     for (int i = 0; i < CPU_SETSIZE; ++i) {
         if (CPU_ISSET(i, srcset1) && CPU_ISSET(i, srcset2))
             CPU_SET(i, destset);
+        else
+            CPU_CLR(i, destset);
     }
 }
 #endif /* CPU_AND */
@@ -61,6 +62,7 @@ typedef struct {
 #define CPU_AND(destset, srcset1, srcset2) (void)0
 #define CPU_ZERO(set) (void)0
 #define CPU_SET(cpu, set) (void)0
+#define CPU_CLR(cpu, set) (void)0
 inline int sched_setaffinity(int, size_t, cpu_set_t *) { return ENOTSUP; }
 inline int sched_getaffinity(int, size_t, cpu_set_t *) { return ENOTSUP; }
 

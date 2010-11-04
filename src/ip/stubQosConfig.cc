@@ -22,8 +22,8 @@ void Ip::Qos::getNfmarkFromServer(const fde *clientFde, const fde *servFde, cons
 #if USE_QOS_NFMARK
 int
 Ip::Qos::GetNfMarkCallback(enum nf_conntrack_msg_type type,
-              struct nf_conntrack *ct,
-              void *data)
+                           struct nf_conntrack *ct,
+                           void *data)
 {
     fatal ("Not implemented");
 }
@@ -46,7 +46,7 @@ Ip::Qos::doTosLocalHit(const int fd) const
 {
     fatal ("Not implemented");
 }
- 
+
 int
 Ip::Qos::doNfmarkLocalHit(const int fd) const
 {

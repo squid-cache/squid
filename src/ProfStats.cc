@@ -37,8 +37,8 @@
 
 #if USE_XPROF_STATS
 
-#include "CacheManager.h"
 #include "event.h"
+#include "mgr/Registration.h"
 #include "SquidMath.h"
 #include "Store.h"
 
@@ -270,8 +270,7 @@ xprof_chk_overhead(int samples)
 static void
 xprofRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("cpu_profile", "CPU Profiling Stats", xprof_summary, 0, 1);
+    Mgr::RegisterAction("cpu_profile", "CPU Profiling Stats", xprof_summary, 0, 1);
 }
 
 // FIXME:

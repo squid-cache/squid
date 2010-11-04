@@ -45,6 +45,9 @@
 
 
 class HttpRequestMethod;
+#if DELAY_POOLS
+class ClientInfo;
+#endif
 
 
 #if USE_FORW_VIA_DB
@@ -89,6 +92,10 @@ void clientdbDump(StoreEntry *);
 SQUIDCEXTERN void clientdbFreeMemory(void);
 
 SQUIDCEXTERN int clientdbEstablished(const Ip::Address &, int);
+#if DELAY_POOLS
+SQUIDCEXTERN void clientdbSetWriteLimiter(ClientInfo * info, const int writeSpeedLimit,const double initialBurst,const double highWatermark);
+SQUIDCEXTERN ClientInfo * clientdbGetInfo(const Ip::Address &addr);
+#endif
 SQUIDCEXTERN void clientOpenListenSockets(void);
 SQUIDCEXTERN void clientHttpConnectionsClose(void);
 SQUIDCEXTERN void httpRequestFree(void *);
@@ -96,14 +103,6 @@ SQUIDCEXTERN void httpRequestFree(void *);
 extern void clientAccessCheck(void *);
 
 #include "Debug.h"
-
-/* see debug.c for info on context-based debugging */
-SQUIDCEXTERN Ctx ctx_enter(const char *descr);
-SQUIDCEXTERN void ctx_exit(Ctx ctx);
-
-SQUIDCEXTERN void _db_set_syslog(const char *facility);
-SQUIDCEXTERN void _db_init(const char *logfile, const char *options);
-SQUIDCEXTERN void _db_rotate_log(void);
 
 /* packs, then prints an object using debugs() */
 SQUIDCEXTERN void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm);

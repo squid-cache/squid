@@ -34,7 +34,6 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
-#include "CacheManager.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "CommCalls.h"
@@ -53,7 +52,8 @@
 #include "Store.h"
 #include "icmp/net_db.h"
 #include "ip/Intercept.h"
-
+#include "ip/tools.h"
+#include "mgr/Registration.h"
 
 static PSC fwdPeerSelectionCompleteWrapper;
 static PF fwdServerClosedWrapper;
@@ -293,6 +293,8 @@ FwdState::fail(ErrorState * errorState)
 
     if (!errorState->request)
         errorState->request = HTTPMSGLOCK(request);
+
+    request->detailError(errorState->type, errorState->xerrno);
 }
 
 /**
@@ -860,9 +862,12 @@ FwdState::connectStart()
         serverDestinations[0]->tos = GetTosToServer(request);
     }
 #if SO_MARK
-    if (Ip::Qos::TheConfig.isAclNfmarkActive()) {
-        serverDestinations[0]->nfmark = GetNfmarkToServer(request);
-    }
+    serverDestinations[0]->nfmark = GetNfmarkToServer(request);
+    debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << int(tos)
+           << ", netfilter mark " << serverDestinations[0]->nfmark);
+#else
+    serverDestinations[0]->nfmark = 0;
+    debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << int(tos));
 #endif
 
     AsyncCall::Pointer call = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
@@ -1137,8 +1142,7 @@ FwdState::initModule()
 void
 FwdState::RegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("forward", "Request Forwarding Statistics", fwdStats, 0, 1);
+    Mgr::RegisterAction("forward", "Request Forwarding Statistics", fwdStats, 0, 1);
 }
 
 void

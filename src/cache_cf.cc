@@ -48,7 +48,6 @@
 #endif
 #include "auth/Config.h"
 #include "auth/Scheme.h"
-#include "CacheManager.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
 #include "eui/Config.h"
@@ -62,6 +61,7 @@
 #include "ip/tools.h"
 #include "log/Config.h"
 #include "MemBuf.h"
+#include "mgr/Registration.h"
 #include "Parsing.h"
 #include "ProtoPort.h"
 #include "rfc1738.h"
@@ -144,7 +144,11 @@ static void parse_string(char **);
 static void default_all(void);
 static void defaults_if_none(void);
 static int parse_line(char *);
+static void parse_obsolete(const char *);
 static void parseBytesLine(size_t * bptr, const char *units);
+#if !USE_DNSSERVERS
+static void parseBytesLineSigned(ssize_t * bptr, const char *units);
+#endif
 static size_t parseBytesUnits(const char *unit);
 static void free_all(void);
 void requirePathnameExists(const char *name, const char *path);
@@ -532,7 +536,6 @@ int
 parseConfigFile(const char *file_name)
 {
     int err_count = 0;
-    CacheManager *manager=CacheManager::GetInstance();
 
     debugs(5, 4, HERE);
 
@@ -560,10 +563,10 @@ parseConfigFile(const char *file_name)
     }
 
     if (opt_send_signal == -1) {
-        manager->registerAction("config",
-                                "Current Squid Configuration",
-                                dump_config,
-                                1, 1);
+        Mgr::RegisterAction("config",
+                            "Current Squid Configuration",
+                            dump_config,
+                            1, 1);
     }
 
     return err_count;
@@ -887,6 +890,24 @@ configDoConfigure(void)
 #endif
 }
 
+/** Parse a line containing an obsolete directive.
+ * To upgrade it where possible instead of just "Bungled config" for
+ * directives which cannot be marked as simply aliases of the some name.
+ * For example if the parameter order and content has changed.
+ * Or if the directive has been completely removed.
+ */
+void
+parse_obsolete(const char *name)
+{
+    // Directives which have been radically changed rather than removed
+    if (!strcmp(name, "url_rewrite_concurrency")) {
+        int cval;
+        parse_int(&cval);
+        debugs(3, DBG_CRITICAL, "WARNING: url_rewrite_concurrency upgrade overriding url_rewrite_children settings.");
+        Config.redirectChildren.concurrency = cval;
+    }
+}
+
 /* Parse a time specification from the config file.  Store the
  * result in 'tptr', after converting it to 'units' */
 static void
@@ -1042,6 +1063,52 @@ parseBytesLine(size_t * bptr, const char *units)
     if (static_cast<double>(*bptr) * 2 != m * d / u * 2)
         self_destruct();
 }
+
+#if !USE_DNSSERVERS
+static void
+parseBytesLineSigned(ssize_t * bptr, const char *units)
+{
+    char *token;
+    double d;
+    int m;
+    int u;
+
+    if ((u = parseBytesUnits(units)) == 0) {
+        self_destruct();
+        return;
+    }
+
+    if ((token = strtok(NULL, w_space)) == NULL) {
+        self_destruct();
+        return;
+    }
+
+    if (strcmp(token, "none") == 0 || token[0] == '-' /* -N */) {
+        *bptr = -1;
+        return;
+    }
+
+    d = xatof(token);
+
+    m = u;			/* default to 'units' if none specified */
+
+    if (0.0 == d)
+        (void) 0;
+    else if ((token = strtok(NULL, w_space)) == NULL)
+        debugs(3, 0, "WARNING: No units on '" <<
+               config_input_line << "', assuming " <<
+               d << " " <<  units  );
+    else if ((m = parseBytesUnits(token)) == 0) {
+        self_destruct();
+        return;
+    }
+
+    *bptr = static_cast<size_t>(m * d / u);
+
+    if (static_cast<double>(*bptr) * 2 != m * d / u * 2)
+        self_destruct();
+}
+#endif
 
 static size_t
 parseBytesUnits(const char *unit)
@@ -1479,6 +1546,48 @@ parse_delay_pool_access(DelayConfig * cfg)
 
 #endif
 
+#if DELAY_POOLS
+#include "ClientDelayConfig.h"
+/* do nothing - free_client_delay_pool_count is the magic free function.
+ * this is why client_delay_pool_count isn't just marked TYPE: ushort
+ */
+
+#define free_client_delay_pool_access(X)
+#define free_client_delay_pool_rates(X)
+#define dump_client_delay_pool_access(X, Y, Z)
+#define dump_client_delay_pool_rates(X, Y, Z)
+
+static void
+free_client_delay_pool_count(ClientDelayConfig * cfg)
+{
+    cfg->freePoolCount();
+}
+
+static void
+dump_client_delay_pool_count(StoreEntry * entry, const char *name, ClientDelayConfig &cfg)
+{
+    cfg.dumpPoolCount (entry, name);
+}
+
+static void
+parse_client_delay_pool_count(ClientDelayConfig * cfg)
+{
+    cfg->parsePoolCount();
+}
+
+static void
+parse_client_delay_pool_rates(ClientDelayConfig * cfg)
+{
+    cfg->parsePoolRates();
+}
+
+static void
+parse_client_delay_pool_access(ClientDelayConfig * cfg)
+{
+    cfg->parsePoolAccess(LegacyParser);
+}
+#endif
+
 #if USE_HTTP_VIOLATIONS
 static void
 dump_http_header_access(StoreEntry * entry, const char *name, header_mangler header[])
@@ -1709,6 +1818,18 @@ find_fstype(char *type)
 static void
 parse_cachedir(SquidConfig::_cacheSwap * swap)
 {
+    // The workers option must preceed cache_dir for the IamWorkerProcess check
+    // below to work. TODO: Redo IamWorkerProcess to work w/o Config and remove
+    if (KidIdentifier > 1 && Config.workers == 1) {
+        debugs(3, DBG_CRITICAL,
+               "FATAL: cache_dir found before the workers option. Reorder.");
+        self_destruct();
+    }
+
+    // Among all processes, only workers may need and can handle cache_dir.
+    if (!IamWorkerProcess())
+        return;
+
     char *type_str;
     char *path_str;
     RefCount<SwapDir> sd;
@@ -2809,6 +2930,14 @@ dump_b_size_t(StoreEntry * entry, const char *name, size_t var)
     storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
 }
 
+#if !USE_DNSSERVERS
+static void
+dump_b_ssize_t(StoreEntry * entry, const char *name, ssize_t var)
+{
+    storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
+}
+#endif
+
 #if UNUSED_CODE
 static void
 dump_kb_size_t(StoreEntry * entry, const char *name, size_t var)
@@ -2845,6 +2974,14 @@ parse_b_size_t(size_t * var)
     parseBytesLine(var, B_BYTES_STR);
 }
 
+#if !USE_DNSSERVERS
+static void
+parse_b_ssize_t(ssize_t * var)
+{
+    parseBytesLineSigned(var, B_BYTES_STR);
+}
+#endif
+
 #if UNUSED_CODE
 static void
 parse_kb_size_t(size_t * var)
@@ -2871,6 +3008,14 @@ free_size_t(size_t * var)
     *var = 0;
 }
 
+#if !USE_DNSSERVERS
+static void
+free_ssize_t(ssize_t * var)
+{
+    *var = 0;
+}
+#endif
+
 static void
 free_b_int64_t(int64_t * var)
 {
@@ -2878,6 +3023,7 @@ free_b_int64_t(int64_t * var)
 }
 
 #define free_b_size_t free_size_t
+#define free_b_ssize_t free_ssize_t
 #define free_kb_size_t free_size_t
 #define free_mb_size_t free_size_t
 #define free_gb_size_t free_size_t

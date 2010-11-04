@@ -10,10 +10,12 @@ libipc_la_SOURCES = \
 	Kid.h \
 	Kids.cc \
 	Kids.h \
-	Messages.cc \
 	Messages.h \
 	StartListening.cc \
 	StartListening.h \
+	StrandCoord.cc \
+	StrandCoord.h \
+	StrandCoords.h \
 	SharedListen.cc \
 	SharedListen.h \
 	TypedMsgHdr.cc \
@@ -25,6 +27,8 @@ libipc_la_SOURCES = \
 	Port.cc \
 	Port.h \
 	Strand.cc \
-	Strand.h
+	Strand.h \
+	\
+	forward.h
 
 DEFS += -DDEFAULT_PREFIX=\"$(prefix)\"

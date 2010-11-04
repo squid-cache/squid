@@ -43,7 +43,7 @@
 #include "auth/ntlm/ntlmScheme.h"
 #include "auth/ntlm/ntlmUserRequest.h"
 #include "auth/State.h"
-#include "CacheManager.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "client_side.h"
 #include "HttpReply.h"
@@ -186,10 +186,9 @@ AuthNTLMConfig::init(AuthConfig * scheme)
 void
 AuthNTLMConfig::registerWithCacheManager(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("ntlmauthenticator",
-                   "NTLM User Authenticator Stats",
-                   authenticateNTLMStats, 0, 1);
+    Mgr::RegisterAction("ntlmauthenticator",
+                        "NTLM User Authenticator Stats",
+                        authenticateNTLMStats, 0, 1);
 }
 
 bool

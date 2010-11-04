@@ -1,9 +1,3 @@
-#
-#  Makefile for the Squid Object Cache server
-#
-#  $Id$
-#
-
 include $(top_srcdir)/src/Common.am
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -12,9 +6,11 @@ AUTOMAKE_OPTIONS = subdir-objects
 INCLUDES += -I$(srcdir)
 
 LDADD = \
-	$(COMPAT_LIB) \
 	$(top_builddir)/src/globals.o \
-	$(top_builddir)/src/time.o
+	$(top_builddir)/src/time.o \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2
 
@@ -54,24 +50,42 @@ check_PROGRAMS += debug \
 		VirtualDeleteOperator
 
 
-tcp_banger2_LDADD = -L$(top_builddir)/lib -lmiscutil
-DEBUG_SOURCE = test_tools.cc
+tcp_banger2_LDADD = $(top_builddir)/lib/libmiscutil.la
+
+
+DEBUG_SOURCE = test_tools.cc stub_debug.cc
+
+stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
+	cp $(top_srcdir)/src/tests/stub_debug.cc .
+
+CLEANFILES += stub_debug.cc
+
+## XXX: somewhat broken. Its meant to test our debugs() implementation.
+## but it has never been linked to the actual src/debug.cc implementation !!
+## all it tests are the stream operators and macro in src/Debug.h
 debug_SOURCES = debug.cc $(DEBUG_SOURCE)
+
 ESIExpressions_SOURCES = ESIExpressions.cc $(DEBUG_SOURCE)
 ESIExpressions_LDADD = $(top_builddir)/src/esi/Expression.o \
 		$(LDADD)
+
 mem_node_test_SOURCES = mem_node_test.cc
 mem_node_test_LDADD = $(top_builddir)/src/mem_node.o $(LDADD)
+
 mem_hdr_test_SOURCES = mem_hdr_test.cc $(DEBUG_SOURCE)
 mem_hdr_test_LDADD = $(top_builddir)/src/stmem.o \
 		     $(top_builddir)/src/mem_node.o $(LDADD)
+
 MemPoolTest_SOURCES = MemPoolTest.cc
+
 refcount_SOURCES = refcount.cc
 
 splay_SOURCES = splay.cc
 
 StackTest_SOURCES = StackTest.cc $(DEBUG_SOURCE)
+
 syntheticoperators_SOURCES = syntheticoperators.cc $(DEBUG_SOURCE)
+
 VirtualDeleteOperator_SOURCES = VirtualDeleteOperator.cc $(DEBUG_SOURCE)
 
 ## membanger won't link today. Bitrot..

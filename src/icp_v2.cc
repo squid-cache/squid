@@ -80,6 +80,9 @@ static void icpHandleIcpV2(int, Ip::Address &, char *, int);
 /// \ingroup ServerProtocolICPInternal2
 static void icpCount(void *, int, size_t, int);
 
+/// \ingroup ServerProtocolICPInternal2
+static void icpGetOutgoingIpAddress();
+
 /**
  \ingroup ServerProtocolICPInternal2
  * IcpQueueHead is global so comm_incoming() knows whether or not
@@ -686,7 +689,6 @@ void
 icpConnectionsOpen(void)
 {
     uint16_t port;
-//    Ip::Address addr;
 
     if ((port = Config.Port.icp) <= 0)
         return;
@@ -737,11 +739,18 @@ icpConnectionsOpen(void)
         debugs(12, DBG_CRITICAL, "Sending ICP messages from " << icpOutgoingConn->local);
 
         commSetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
+        fd_note(theOutIcpConnection, "Outgoing ICP socket");
+        icpGetOutgoingIpAddress();
     }
+}
 
-    // Ensure that we have the IP address(es) to use for Host ID.
-    // The outgoing address is used as 'private' host ID used only on packets we send
+// Ensure that we have the IP address(es) to use for Host ID.
+// The outgoing address is used as 'private' host ID used only on packets we send
+static void
+icpGetOutgoingIpAddress()
+{
     struct addrinfo *xai = NULL;
+    theOutICPAddr.SetEmpty();
     theIcpPrivateHostID.InitAddrInfo(xai);
     if (getsockname(icpOutgoingConn->fd, xai->ai_addr, &xai->ai_addrlen) < 0)
         debugs(50, DBG_IMPORTANT, "ERROR: Unable to identify ICP host ID to use for " << icpOutgoingConn
@@ -769,6 +778,7 @@ icpIncomingConnectionOpened(int errNo)
     if (Config.Addrs.udp_outgoing.IsNoAddr()) {
         icpOutgoingConn = icpIncomingConn;
         debugs(12, DBG_IMPORTANT, "Sending ICP messages from " << icpOutgoingConn->local);
+        icpGetOutgoingIpAddress();
     }
 
     // Ensure that we have the IP address(es) to use for Host ID.

@@ -34,8 +34,8 @@
 
 #include "config.h"
 #include "compat/drand48.h"
-#include "CacheManager.h"
 #include "event.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "SquidTime.h"
 
@@ -154,8 +154,7 @@ eventDelete(EVH * func, void *arg)
 void
 eventInit(void)
 {
-    CacheManager::GetInstance()->
-    registerAction("events", "Event Queue", eventDump, 0, 1);
+    Mgr::RegisterAction("events", "Event Queue", eventDump, 0, 1);
 }
 
 static void

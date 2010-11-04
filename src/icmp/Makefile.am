@@ -1,11 +1,9 @@
-
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
 # TODO: get rid of this when config filename is no longer a global constant.
 #	its only here so the testIcmp will link .
 DEFS += -DDEFAULT_CONFIG_FILE=NULL
-
 
 
 # ICMP Specific Configurations
@@ -62,12 +60,8 @@ pinger_LDFLAGS = $(LIBADD_DL)
 pinger_LDADD=\
 	libicmp-core.la \
 	../ip/libip.la \
-	$(XTRA_LIBS) \
-	$(top_builddir)/lib/libmiscutil.a
-pinger_DEPENDENCIES= \
-	libicmp-core.la \
-	$(top_builddir)/lib/libmiscutil.a
-
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 
 ##install-pinger:
@@ -96,6 +90,7 @@ testIcmp_SOURCES = \
 nodist_testIcmp_SOURCES = \
 	$(top_srcdir)/src/tests/testMain.cc \
 	$(top_srcdir)/src/SquidTime.h \
+	$(top_srcdir)/src/tests/stub_debug.cc \
 	$(top_srcdir)/src/time.cc \
 	$(top_srcdir)/test-suite/test_tools.cc \
 	$(top_builddir)/src/globals.cc
@@ -105,8 +100,6 @@ testIcmp_LDADD=\
 	$(SQUID_CPPUNIT_LA) \
 	libicmp-core.la \
 	../ip/libip.la \
-	$(XTRA_LIBS) \
-	$(top_builddir)/lib/libmiscutil.a
-testIcmp_DEPENDENCIES= $(SQUID_CPPUNIT_LA) \
-	libicmp-core.la \
-	$(top_builddir)/lib/libmiscutil.a
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+testIcmp_DEPENDENCIES= $(SQUID_CPPUNIT_LA)

@@ -1,0 +1,10 @@
+Notes on RFCNB Impl by R J Sharpe. CopyRight 1996.
+
+1. Microsoft implementations do not seem to like a 0x00 as char 16
+   of the called name, but will work with either a space as char 16 of
+   the calling name or a 0x00 as char 16. I have not tried any other
+   combinations.
+
+2. SAMBA does not seem to care what is in char 16. It certainly works
+   with either a space or a 0x00. (becomes 'AA' for 0x00 or 'CA' for
+   0x20.

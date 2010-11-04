@@ -43,7 +43,7 @@ for FILENAME in `ls -1`; do
 	#
 	# Code Style formatting maintenance
 	#
-        if test "${ASVER}" = "1.22"; then
+        if test "${ASVER}" = "1.23"; then
 		${ROOT}/scripts/formater.pl ${FILENAME}
 		if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
 			md51=`cat  $FILENAME| tr -d "\n \t\r" | $MD5`;

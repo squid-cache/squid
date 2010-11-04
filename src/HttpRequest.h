@@ -91,6 +91,8 @@ public:
     /* are responses to this request potentially cachable */
     bool cacheable() const;
 
+    bool conditional() const; ///< has at least one recognized If-* header
+
     /// whether the client is likely to be able to handle a 1xx reply
     bool canHandle1xx() const;
 
@@ -125,6 +127,9 @@ public:
 #endif
 
     void recordLookup(const DnsLookupDetails &detail);
+
+    /// sets error detail if no earlier detail was available
+    void detailError(err_type aType, int aDetail);
 
 protected:
     void clean();
@@ -194,6 +199,7 @@ public:
     int dnsWait; ///< sum of DNS lookup delays in milliseconds, for %dt
 
     err_type errType;
+    int errDetail; ///< errType-specific detail about the transaction error
 
     char *peer_login;		/* Configured peer login:password */
 
@@ -204,6 +210,8 @@ public:
     const char *vary_headers;	/* Used when varying entities are detected. Changes how the store key is calculated */
 
     char *peer_domain;		/* Configured peer forceddomain */
+
+    String myportname; // Internal tag name= value from port this requests arrived in.
 
     String tag;			/* Internal tag for this request */
 

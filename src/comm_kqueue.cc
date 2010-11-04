@@ -58,7 +58,6 @@
 #if USE_KQUEUE
 
 #include "comm_kqueue.h"
-#include "CacheManager.h"
 #include "Store.h"
 #include "fde.h"
 #include "SquidTime.h"

@@ -34,14 +34,12 @@ The 3.3 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 
 <p>The most important of these new features are:
 <itemize>
-	<item>...
+	<item>
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
 
-<sect1>...
-<p>...
-
+<sect1>
 
 <sect>Changes to squid.conf since Squid-3.2
 <p>
@@ -59,7 +57,6 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
-
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
