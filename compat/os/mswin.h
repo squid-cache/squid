@@ -38,7 +38,7 @@
 #ifndef SQUID_OS_MSWIN_H
 #define SQUID_OS_MSWIN_H
 
-#ifdef _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_
 
 #define ACL WindowsACL
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
