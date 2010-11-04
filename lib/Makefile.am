@@ -26,7 +26,7 @@ LIBSSPWIN32=
 WIN32SRC=
 
 #
-# Some librares are only available on Windows
+# Some libraries are only available on Windows
 # and others are unable to be built.
 #
 if ENABLE_WIN32SPECIFIC
