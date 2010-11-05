@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-09-30 15:46+1300\n"
+"POT-Creation-Date: 2010-11-06 03:26+1300\n"
 "PO-Revision-Date: 2010-08-21 17:08+0200\n"
 "Last-Translator: Arthur <arthurtumanyan@yahoo.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -96,6 +96,12 @@ msgstr ""
 "Տվյալները ցանցում գրանցելու ընթացքում առաջացավ սխալ․ Խնդրվում է կրկնել "
 "հարցումը․"
 
+#: templates/ERR_PRECONDITION_FAILED:7
+msgid ""
+"At least one precondition specified by the HTTP client in the request header "
+"has failed."
+msgstr ""
+
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
 msgstr "Մուտքը քեշին արգելված է."
@@ -149,12 +155,12 @@ msgstr "Դիրեկտորիա: <a href=\"%U\">%U</a>/"
 #: templates/ERR_INVALID_REQ:2 templates/ERR_INVALID_RESP:2
 #: templates/ERR_INVALID_URL:2 templates/ERR_LIFETIME_EXP:2
 #: templates/ERR_NO_RELAY:2 templates/ERR_ONLY_IF_CACHED_MISS:2
-#: templates/ERR_READ_ERROR:2 templates/ERR_READ_TIMEOUT:2
-#: templates/ERR_SECURE_CONNECT_FAIL:2 templates/ERR_SHUTTING_DOWN:2
-#: templates/ERR_SOCKET_FAILURE:2 templates/ERR_TOO_BIG:2
-#: templates/ERR_UNSUP_HTTPVERSION:2 templates/ERR_UNSUP_REQ:2
-#: templates/ERR_URN_RESOLVE:2 templates/ERR_WRITE_ERROR:2
-#: templates/ERR_ZERO_SIZE_OBJECT:2
+#: templates/ERR_PRECONDITION_FAILED:2 templates/ERR_READ_ERROR:2
+#: templates/ERR_READ_TIMEOUT:2 templates/ERR_SECURE_CONNECT_FAIL:2
+#: templates/ERR_SHUTTING_DOWN:2 templates/ERR_SOCKET_FAILURE:2
+#: templates/ERR_TOO_BIG:2 templates/ERR_UNSUP_HTTPVERSION:2
+#: templates/ERR_UNSUP_REQ:2 templates/ERR_URN_RESOLVE:2
+#: templates/ERR_WRITE_ERROR:2 templates/ERR_ZERO_SIZE_OBJECT:2
 msgid "ERROR"
 msgstr "ՍԽԱԼ"
 
@@ -178,12 +184,12 @@ msgstr "ՍԽԱԼ; FTP upload գործողությունը խափանվեց"
 #: templates/ERR_ICAP_FAILURE:1 templates/ERR_INVALID_REQ:1
 #: templates/ERR_INVALID_RESP:1 templates/ERR_INVALID_URL:1
 #: templates/ERR_LIFETIME_EXP:1 templates/ERR_NO_RELAY:1
-#: templates/ERR_ONLY_IF_CACHED_MISS:1 templates/ERR_READ_ERROR:1
-#: templates/ERR_READ_TIMEOUT:1 templates/ERR_SECURE_CONNECT_FAIL:1
-#: templates/ERR_SHUTTING_DOWN:1 templates/ERR_SOCKET_FAILURE:1
-#: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_HTTPVERSION:1
-#: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
-#: templates/ERR_ZERO_SIZE_OBJECT:1
+#: templates/ERR_ONLY_IF_CACHED_MISS:1 templates/ERR_PRECONDITION_FAILED:1
+#: templates/ERR_READ_ERROR:1 templates/ERR_READ_TIMEOUT:1
+#: templates/ERR_SECURE_CONNECT_FAIL:1 templates/ERR_SHUTTING_DOWN:1
+#: templates/ERR_SOCKET_FAILURE:1 templates/ERR_TOO_BIG:1
+#: templates/ERR_UNSUP_HTTPVERSION:1 templates/ERR_UNSUP_REQ:1
+#: templates/ERR_WRITE_ERROR:1 templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
 msgstr "ՍԽԱԼ: Պահանջվող URL-ն հնարավոր չէ ստանալ"
 
@@ -248,12 +254,12 @@ msgstr "Վերահասցեագրումն արգելված է."
 #: templates/ERR_INVALID_REQ:14 templates/ERR_INVALID_RESP:8
 #: templates/ERR_INVALID_URL:13 templates/ERR_LIFETIME_EXP:8
 #: templates/ERR_NO_RELAY:8 templates/ERR_ONLY_IF_CACHED_MISS:8
-#: templates/ERR_READ_ERROR:9 templates/ERR_READ_TIMEOUT:9
-#: templates/ERR_SECURE_CONNECT_FAIL:9 templates/ERR_SHUTTING_DOWN:7
-#: templates/ERR_SOCKET_FAILURE:9 templates/ERR_TOO_BIG:10
-#: templates/ERR_UNSUP_HTTPVERSION:8 templates/ERR_UNSUP_REQ:8
-#: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
-#: templates/ERR_ZERO_SIZE_OBJECT:8
+#: templates/ERR_PRECONDITION_FAILED:8 templates/ERR_READ_ERROR:9
+#: templates/ERR_READ_TIMEOUT:9 templates/ERR_SECURE_CONNECT_FAIL:9
+#: templates/ERR_SHUTTING_DOWN:7 templates/ERR_SOCKET_FAILURE:9
+#: templates/ERR_TOO_BIG:10 templates/ERR_UNSUP_HTTPVERSION:8
+#: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
+#: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
 msgstr "Ստեղծված է %T by %h (%s)"
 
@@ -367,6 +373,10 @@ msgid ""
 msgstr ""
 "Աութենտիֆիկացիայի հետ խնդիրներ առաջանալու դեպքում խնդրվում է դիմել<a href="
 "\"mailto:%w%W\">քեշի կառավարիչին</a>."
+
+#: templates/ERR_PRECONDITION_FAILED:5
+msgid "Precondition Failed."
+msgstr ""
 
 #: templates/ERR_READ_ERROR:5
 msgid "Read Error"
@@ -488,12 +498,12 @@ msgstr "Հետևյալ URL-ն հնարավոր չէ ստանալ: <a href=\"%U\"
 #: templates/ERR_FORWARDING_DENIED:4 templates/ERR_FTP_DISABLED:4
 #: templates/ERR_ICAP_FAILURE:4 templates/ERR_INVALID_URL:4
 #: templates/ERR_LIFETIME_EXP:4 templates/ERR_NO_RELAY:4
-#: templates/ERR_ONLY_IF_CACHED_MISS:4 templates/ERR_READ_ERROR:4
-#: templates/ERR_READ_TIMEOUT:4 templates/ERR_SECURE_CONNECT_FAIL:4
-#: templates/ERR_SHUTTING_DOWN:4 templates/ERR_SOCKET_FAILURE:4
-#: templates/ERR_TOO_BIG:4 templates/ERR_UNSUP_HTTPVERSION:4
-#: templates/ERR_UNSUP_REQ:4 templates/ERR_WRITE_ERROR:4
-#: templates/ERR_ZERO_SIZE_OBJECT:4
+#: templates/ERR_ONLY_IF_CACHED_MISS:4 templates/ERR_PRECONDITION_FAILED:4
+#: templates/ERR_READ_ERROR:4 templates/ERR_READ_TIMEOUT:4
+#: templates/ERR_SECURE_CONNECT_FAIL:4 templates/ERR_SHUTTING_DOWN:4
+#: templates/ERR_SOCKET_FAILURE:4 templates/ERR_TOO_BIG:4
+#: templates/ERR_UNSUP_HTTPVERSION:4 templates/ERR_UNSUP_REQ:4
+#: templates/ERR_WRITE_ERROR:4 templates/ERR_ZERO_SIZE_OBJECT:4
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
@@ -522,11 +532,12 @@ msgstr "Հարցումը կամ պատասխանը շատ մեծ ծավալ ու
 #: templates/ERR_ICAP_FAILURE:3 templates/ERR_INVALID_REQ:3
 #: templates/ERR_INVALID_RESP:3 templates/ERR_INVALID_URL:3
 #: templates/ERR_LIFETIME_EXP:3 templates/ERR_NO_RELAY:3
-#: templates/ERR_ONLY_IF_CACHED_MISS:3 templates/ERR_READ_ERROR:3
-#: templates/ERR_READ_TIMEOUT:3 templates/ERR_SECURE_CONNECT_FAIL:3
-#: templates/ERR_SHUTTING_DOWN:3 templates/ERR_SOCKET_FAILURE:3
-#: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
-#: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
+#: templates/ERR_ONLY_IF_CACHED_MISS:3 templates/ERR_PRECONDITION_FAILED:3
+#: templates/ERR_READ_ERROR:3 templates/ERR_READ_TIMEOUT:3
+#: templates/ERR_SECURE_CONNECT_FAIL:3 templates/ERR_SHUTTING_DOWN:3
+#: templates/ERR_SOCKET_FAILURE:3 templates/ERR_TOO_BIG:3
+#: templates/ERR_UNSUP_REQ:3 templates/ERR_WRITE_ERROR:3
+#: templates/ERR_ZERO_SIZE_OBJECT:3
 msgid "The requested URL could not be retrieved"
 msgstr "Պահանջվող URL-ն հնարավոր չէ ստանալ"
 
@@ -614,6 +625,10 @@ msgid ""
 msgstr ""
 "Սա նշանակում է, որ փոխարինողը ի վիճակի չէ մշակել ESI կաղապարը:Խնդրվում է "
 "հայտնել այս մասին քեշի կառավարիչին:"
+
+#: templates/ERR_PRECONDITION_FAILED:6
+msgid "This means:"
+msgstr ""
 
 #: templates/ERR_FTP_NOT_FOUND:7
 msgid ""
