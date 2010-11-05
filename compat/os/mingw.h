@@ -2,8 +2,8 @@
 #include "config.h"
 #endif
 
-#ifndef SQUID_OS_MSWIN_H
-#define SQUID_OS_MSWIN_H
+#ifndef SQUID_OS_MINGW_H
+#define SQUID_OS_MINGW_H
 
 #if _SQUID_MINGW_
 
@@ -21,4 +21,4 @@ typedef unsigned char u_char;
 typedef unsigned int u_int;
 
 #endif /* _SQUID_MINGW_ */
-#endif /* SQUID_OS_MSWIN_H */
+#endif /* SQUID_OS_MINGW_H */
