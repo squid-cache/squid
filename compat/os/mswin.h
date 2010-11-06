@@ -166,7 +166,7 @@ typedef unsigned long ino_t;
 #define SIGUSR2 31	/* user defined signal 2 */
 
 typedef unsigned short int ushort;
-#if !_SQUID_CYGWIN_
+#if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 typedef int uid_t;
 typedef int gid_t;
 #endif
