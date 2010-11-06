@@ -33,7 +33,7 @@
 #ifndef SQUID_NEW_H
 #define SQUID_NEW_H
 
-#include "util.h"
+#include "config.h"
 
 #ifndef __SUNPRO_CC
 /* Any code using libstdc++ must have externally resolvable overloads
@@ -50,7 +50,7 @@ _SQUID_EXTERNNEW_ void *operator new(size_t size) throw (std::bad_alloc)
 }
 _SQUID_EXTERNNEW_ void operator delete (void *address) throw()
 {
-    xfree (address);
+    xfree(address);
 }
 _SQUID_EXTERNNEW_ void *operator new[] (size_t size) throw (std::bad_alloc)
 {
@@ -58,7 +58,7 @@ _SQUID_EXTERNNEW_ void *operator new[] (size_t size) throw (std::bad_alloc)
 }
 _SQUID_EXTERNNEW_ void operator delete[] (void *address) throw()
 {
-    xfree (address);
+    xfree(address);
 }
 
 

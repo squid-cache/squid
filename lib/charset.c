@@ -26,7 +26,7 @@
  */
 
 #include "config.h"
-#include "util.h"
+#include "charset.h"
 
 /** Convert ISO-LATIN-1 to UTF-8 */
 char *

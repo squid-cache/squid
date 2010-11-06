@@ -13,6 +13,7 @@ basic_radius_auth_SOURCES = \
 			radius-util.h
 
 basic_radius_auth_LDADD = \
+	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(SSLLIB) \
 	$(XTRA_LIBS)

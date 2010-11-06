@@ -2,12 +2,12 @@
 #
 
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5 foreign
-DIST_SUBDIRS	= compat lib libltdl snmplib scripts src icons errors contrib doc helpers test-suite tools
+DIST_SUBDIRS	= compat lib libltdl snmplib scripts icons errors contrib doc helpers src test-suite tools
 SUBDIRS		= compat lib $(makesnmplib)
 if USE_LOADABLE_MODULES
 SUBDIRS += libltdl
 endif
-SUBDIRS += scripts src icons errors doc helpers test-suite tools
+SUBDIRS += scripts icons errors doc helpers src tools test-suite
 
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
 DEFAULT_PINGER		= $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`

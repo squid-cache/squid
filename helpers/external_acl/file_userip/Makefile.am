@@ -11,5 +11,6 @@ EXTRA_DIST = \
 	config.test
 
 LDADD = \
+	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)

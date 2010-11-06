@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -35,7 +34,11 @@
 
 #define SQUID_HELPER 1
 
-#include "squid.h"
+#include "config.h"
+
+#if HAVE_PATHS_H
+#include <paths.h>
+#endif
 
 /**
  \defgroup unlinkd unlinkd
@@ -88,5 +91,5 @@ main(int argc, char *argv[])
             printf("OK\n");
     }
 
-    exit(0);
+    return 0;
 }

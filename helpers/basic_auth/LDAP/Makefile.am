@@ -6,6 +6,7 @@ EXTRA_DIST		= basic_ldap_auth.8 config.test
 basic_ldap_auth_SOURCES	= basic_ldap_auth.cc
 
 LDADD = \
+	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(LDAPLIB) \
 	$(LBERLIB)

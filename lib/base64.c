@@ -3,7 +3,7 @@
  */
 
 #include "config.h"
-#include "util.h"
+#include "base64.h"
 
 #if HAVE_STDIO_H
 #include <stdio.h>

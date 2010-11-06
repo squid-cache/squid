@@ -14,6 +14,7 @@
 #include "adaptation/Initiator.h"
 #include "auth/UserRequest.h"
 #include "base/TextException.h"
+#include "base64.h"
 #include "ChunkedCodingParser.h"
 #include "comm.h"
 #include "HttpMsg.h"

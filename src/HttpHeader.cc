@@ -34,11 +34,13 @@
  */
 
 #include "squid.h"
+#include "base64.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
 #include "HttpHeader.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
+#include "rfc1123.h"
 #include "Store.h"
 
 /*
@@ -92,6 +94,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Content-Range", HDR_CONTENT_RANGE, ftPContRange},
     {"Content-Type", HDR_CONTENT_TYPE, ftStr},
     {"Cookie", HDR_COOKIE, ftStr},
+    {"Cookie2", HDR_COOKIE2, ftStr},
     {"Date", HDR_DATE, ftDate_1123},
     {"ETag", HDR_ETAG, ftETag},
     {"Expires", HDR_EXPIRES, ftDate_1123},
@@ -121,6 +124,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Retry-After", HDR_RETRY_AFTER, ftStr},	/* for now (ftDate_1123 or ftInt!) */
     {"Server", HDR_SERVER, ftStr},
     {"Set-Cookie", HDR_SET_COOKIE, ftStr},
+    {"Set-Cookie2", HDR_SET_COOKIE2, ftStr},
     {"TE", HDR_TE, ftStr},
     {"Title", HDR_TITLE, ftStr},
     {"Trailer", HDR_TRAILER, ftStr},
@@ -222,7 +226,7 @@ static http_hdr_type ReplyHeadersArr[] = {
     HDR_ACCEPT, HDR_ACCEPT_CHARSET, HDR_ACCEPT_ENCODING, HDR_ACCEPT_LANGUAGE,
     HDR_ACCEPT_RANGES, HDR_AGE,
     HDR_LOCATION, HDR_MAX_FORWARDS,
-    HDR_MIME_VERSION, HDR_PUBLIC, HDR_RETRY_AFTER, HDR_SERVER, HDR_SET_COOKIE,
+    HDR_MIME_VERSION, HDR_PUBLIC, HDR_RETRY_AFTER, HDR_SERVER, HDR_SET_COOKIE, HDR_SET_COOKIE2,
     HDR_VARY,
     HDR_WARNING, HDR_PROXY_CONNECTION, HDR_X_CACHE,
     HDR_X_CACHE_LOOKUP,

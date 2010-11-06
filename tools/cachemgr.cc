@@ -31,9 +31,11 @@
  */
 
 #include "config.h"
-#include "compat/tempnam.h"
+#include "base64.h"
 #include "getfullhostname.h"
+#include "html_quote.h"
 #include "ip/Address.h"
+#include "rfc1123.h"
 #include "rfc1738.h"
 #include "util.h"
 
@@ -143,7 +145,6 @@ static time_t now;
 /*
  * Function prototypes
  */
-#define safe_free(str) { if (str) { xfree(str); (str) = NULL; } }
 static const char *safe_str(const char *str);
 static const char *xstrtok(char **str, char del);
 static void print_trailer(void);

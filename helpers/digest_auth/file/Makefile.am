@@ -11,6 +11,8 @@ digest_file_auth_SOURCES = digest_file_auth.cc \
 	text_backend.h
 
 LDADD = \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(CRYPTLIB) \
 	$(SSLLIB) \
