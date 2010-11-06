@@ -278,7 +278,7 @@ private:
 };
 
 
-extern int httpHeaderParseQuotedString (const char *start, String *val);
+extern int httpHeaderParseQuotedString(const char *start, const int len, String *val);
 SQUIDCEXTERN int httpHeaderHasByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator);
 SQUIDCEXTERN void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask);
 SQUIDCEXTERN void httpHeaderCalcMask(HttpHeaderMask * mask, http_hdr_type http_hdr_type_enums[], size_t count);
