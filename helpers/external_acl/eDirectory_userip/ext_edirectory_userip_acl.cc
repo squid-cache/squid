@@ -785,15 +785,21 @@ int BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
     case LDAP_AUTH_SASL:
         l->type = t;
         break;
+#ifdef LDAP_AUTH_KRBV4
     case LDAP_AUTH_KRBV4:
         l->type = t;
         break;
+#endif
+#ifdef LDAP_AUTH_KRBV41
     case LDAP_AUTH_KRBV41:
         l->type = t;
         break;
+#endif
+#ifdef LDAP_AUTH_KRBV42
     case LDAP_AUTH_KRBV42:
         l->type = t;
         break;
+#endif
 #ifdef LDAP_AUTH_TLS
     case LDAP_AUTH_TLS:					/* Added for chicken switch to TLS-enabled without using SSL */
         l->type = t;
@@ -805,7 +811,7 @@ int BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
     }
 
     /* Bind */
-#ifdef NETSCAPE_SSL
+#if defined(LDAP_AUTH_TLS) && defined(NETSCAPE_SSL)
     if (l->type == LDAP_AUTH_TLS)
         s = ldap_start_tls_s(l->lp, NULL, NULL);
     else
@@ -1417,7 +1423,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                         }
                         y = strlen(bufb);
                         /* Compare value with IP */
-                        if (bcmp(l->search_ip, bufb, y) == 0) {
+                        if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
@@ -1449,7 +1455,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                         }
                         y = strlen(bufb);
                         /* Compare value with IP */
-                        if (bcmp(l->search_ip, bufb, y) == 0) {
+                        if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
@@ -1481,7 +1487,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                         }
                         y = strlen(bufb);
                         /* Compare value with IP */
-                        if (bcmp(l->search_ip, bufb, y) == 0) {
+                        if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
@@ -1513,7 +1519,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                         }
                         y = strlen(bufb);
                         /* Compare value with IP */
-                        if (bcmp(l->search_ip, bufb, y) == 0) {
+                        if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
@@ -1545,7 +1551,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                         }
                         y = strlen(bufb);
                         /* Compare value with IP */
-                        if (bcmp(l->search_ip, bufb, y) == 0) {
+                        if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
