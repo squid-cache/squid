@@ -1,6 +1,7 @@
 include $(top_srcdir)/src/Common.am
 
 DIST_SUBDIRS = ntlmauth profiler rfcnb smblib libTrie
+SUBDIRS=
 EXTRA_DIST=
 
 if USE_ESI
@@ -13,7 +14,11 @@ endif
 install: all
 install-strip: all
 
-LIBSSPWIN32=
+noinst_LTLIBRARIES = \
+	libmiscencoding.la \
+	libmisccontainers.la \
+	libmiscutil.la
+
 WIN32SRC=
 
 #
@@ -21,20 +26,15 @@ WIN32SRC=
 # and others are unable to be built.
 #
 if ENABLE_WIN32SPECIFIC
-LIBSSPWIN32 += libsspwin32.a
+noinst_LTLIBRARIES += libsspwin32.a
 WIN32SRC += win32lib.c
 else
 SUBDIRS += rfcnb smblib
 if ENABLE_AUTH_NTLM
 SUBDIRS += ntlmauth
 endif
+EXTRA_DIST += win32lib.c sspwin32.c
 endif
-
-noinst_LTLIBRARIES = \
-	libmiscencoding.la \
-	libmisccontainers.la \
-	libmiscutil.la \
-	$(LIBSSPWIN32)
 
 #
 # dirent.c, encrypt.c and getopt.c are needed for native Windows support.
@@ -42,8 +42,7 @@ noinst_LTLIBRARIES = \
 EXTRA_libmiscutil_la_SOURCES = \
 	dirent.c \
 	encrypt.c \
-	getopt.c \
-	win32lib.c
+	getopt.c
 
 libmiscencoding_la_SOURCES = \
 	base64.c \
