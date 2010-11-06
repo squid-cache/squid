@@ -2820,6 +2820,12 @@ case "$host_os" in
 		dnl
 		AC_CHECK_LIB(ldap,ldap_url_parse,
 		  AC_DEFINE(HAVE_LDAP_URL_PARSE,1,[Define to 1 if you have ldap_url_parse]),)
+
+		dnl
+		dnl Check for ldap_start_tls_s
+		dnl
+		AC_CHECK_LIB(ldap,ldap_start_tls_s,
+		  AC_DEFINE(HAVE_LDAP_START_TLS_S,1,[Define to 1 if you have ldap_start_tls_s]),)
 		;;
 esac
 
