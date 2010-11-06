@@ -34,11 +34,13 @@
  */
 
 #include "squid.h"
+#include "base64.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
 #include "HttpHeader.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
+#include "rfc1123.h"
 #include "Store.h"
 
 /*

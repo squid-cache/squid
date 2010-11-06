@@ -11,6 +11,7 @@ basic_nis_auth_SOURCES = \
 	nis_support.cc
 
 basic_nis_auth_LDADD = \
+	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(CRYPTLIB) \
 	$(XTRA_LIBS)

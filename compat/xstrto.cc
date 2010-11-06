@@ -29,7 +29,7 @@
  */
 
 #include "config.h"
-#include "xstrto.h"
+#include "compat/xstrto.h"
 
 /* 
  * (C) 2000-2006 by the netfilter coreteam <coreteam@netfilter.org>: 

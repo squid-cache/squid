@@ -567,13 +567,16 @@ squid_LDADD = \
 	$(SNMPLIB) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
-	$(COMPAT_LIB) \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
 	$(SSLLIB) \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
 	$(KRB5LIBS) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
+squid_DEPENDENCIES = \
 	$(DISK_LIBS) \
 	$(DISK_LINKOBJS) \
 	$(REPL_OBJS) \
@@ -597,10 +600,9 @@ endif
 INCLUDES += $(KRB5INCS)
 
 
-unlinkd_SOURCES = unlinkd_daemon.cc SquidNew.cc
-
-dnsserver_SOURCES = dnsserver.cc SquidNew.cc test_tools.cc time.cc
-recv_announce_SOURCES = recv-announce.cc SquidNew.cc
+unlinkd_SOURCES = unlinkd_daemon.cc
+dnsserver_SOURCES = dnsserver.cc SquidNew.cc tests/stub_debug.cc test_tools.cc time.cc
+recv_announce_SOURCES = recv-announce.cc
 
 ## What requires what..
 ## many things want ACLChecklist.cc
@@ -666,7 +668,7 @@ ufsdump_LDADD = \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
 	$(XTRA_LIBS)
-ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
+ufsdump_DEPENDENCIES = \
 	$(COMMON_LIBS) \
 	$(DISK_LIBS) \
 	$(DISK_LINKOBJS) \
@@ -684,7 +686,6 @@ data_DATA = \
 	mib.txt
 
 LDADD = $(COMMON_LIBS) \
-	-L../lib -lmiscutil \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
 	$(COMPAT_LIB) \
@@ -745,7 +746,12 @@ libDiskThreads_a_SOURCES = \
 
 DiskIO_DiskDaemon_diskd_SOURCES = DiskIO/DiskDaemon/diskd.cc
 nodist_DiskIO_DiskDaemon_diskd_SOURCES = time.cc
-DiskIO_DiskDaemon_diskd_LDADD = $(COMPAT_LIB) $(XTRA_LIBS)
+DiskIO_DiskDaemon_diskd_LDADD = \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 
 DEFAULT_HTTP_PORT	= 3128
@@ -938,10 +944,8 @@ TESTS += $(check_PROGRAMS)
 #tests_testX_LDADD=\
 #	$(SQUID_CPPUNIT_LIBS) \
 #	$(SQUID_CPPUNIT_LA) \
-#	-L../lib -lmiscutil
 #	$(COMPAT_LIB) \
-#tests_testX_DEPENDENCIES= $(SQUID_CPPUNIT_LA) \
-#	$(top_builddir)/lib/libmiscutil.a
+#tests_testX_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 
 
 # - add other component .(h|cc) files needed to link and run tests
@@ -980,6 +984,7 @@ tests_testHttpReply_SOURCES=\
 	Packer.h \
 	Packer.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_StatHist.cc \
 	tests/stub_store.cc \
@@ -996,12 +1001,13 @@ tests_testHttpReply_LDADD=\
 	auth/libauth.la \
 	ip/libip.la \
 	base/libbase.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA) \
-	$(top_builddir)/lib/libmiscutil.a
+tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 
 tests_testAuth_SOURCES = \
 	tests/testAuth.cc tests/testMain.cc  tests/testAuth.h \
@@ -1009,6 +1015,7 @@ tests_testAuth_SOURCES = \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
+	tests/stub_debug.cc \
 	tests/stub_helper.cc cbdata.cc String.cc \
 	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc mem.cc ClientInfo.h \
 	MemBuf.cc HttpHdrContRange.cc Packer.cc HttpHdrCc.cc HttpHdrSc.cc \
@@ -1028,23 +1035,21 @@ tests_testAuth_SOURCES = \
 	URLScheme.cc \
 	$(TEST_CALL_SOURCES) \
 	wordlist.cc
-##	acl.cc cache_cf.cc tools.cc \
-##	helper.cc String.cc cbdata.cc HttpHeaderTools.cc store.cc cache_manager.cc \
-##	HttpHeader.cc url.cc mem.cc HttpRequest.cc Packer.cc \
-##	MemBuf.cc StatHist.cc
 nodist_tests_testAuth_SOURCES = \
 	$(TESTSOURCES)
 
 tests_testAuth_LDADD= \
 	$(COMMON_LIBS) \
-	-L../lib -lmiscutil \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testAuth_LDFLAGS = $(LIBADD_DL)
-tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
+tests_testAuth_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 
 ## Tests for the ACLMaxUserIP class
@@ -1088,6 +1093,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	$(TEST_CALL_SOURCES) \
 	tests/stub_cache_cf.cc \
 	tests/stub_comm.cc \
+	tests/stub_debug.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_store.cc \
@@ -1103,7 +1109,9 @@ nodist_tests_testACLMaxUserIP_SOURCES= \
 	$(TESTSOURCES)
 tests_testACLMaxUserIP_LDADD= \
 	$(COMMON_LIBS) \
-	-L../lib -lmiscutil \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
@@ -1123,7 +1131,6 @@ tests_testBoilerplate_SOURCES = \
 nodist_tests_testBoilerplate_SOURCES = \
 	$(TESTSOURCES)
 tests_testBoilerplate_LDADD= \
-	-L../lib -lmiscutil \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
@@ -1278,9 +1285,11 @@ tests_testCacheManager_LDADD = \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
 	$(SNMPLIB) \
-	-L../lib -lmiscutil \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -1288,7 +1297,7 @@ tests_testCacheManager_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
-tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
+tests_testCacheManager_DEPENDENCIES = \
 	$(REPL_OBJS) \
 	$(SQUID_CPPUNIT_LA)
 
@@ -1308,17 +1317,25 @@ nodist_tests_testDiskIO_SOURCES= \
 	SquidMath.h \
 	swap_log_op.cc
 tests_testDiskIO_LDADD = \
-	$(SWAP_TEST_LDADD) \
-	$(DISK_LIBS) \
-	$(DISK_OS_LIBS) \
-	$(COMMON_LIBS) \
 	SquidConfig.o \
 	CommCalls.o \
 	DnsLookupDetails.o \
+	$(COMMON_LIBS) \
+	$(REPL_OBJS) \
+	$(DISK_LIBS) \
+	$(DISK_OS_LIBS) \
+	acl/libapi.la \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(REGEXLIB) \
+	$(SQUID_CPPUNIT_LIBS) \
+	$(SSLLIB) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
-tests_testDiskIO_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
+tests_testDiskIO_DEPENDENCIES = \
 	$(DISK_LIBS) \
 	$(SWAP_TEST_DS) \
 	$(SQUID_CPPUNIT_LA)
@@ -1471,9 +1488,11 @@ tests_testEvent_LDADD = \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
 	$(SNMPLIB) \
-	-L../lib -lmiscutil \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -1481,7 +1500,7 @@ tests_testEvent_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testEvent_LDFLAGS = $(LIBADD_DL)
-tests_testEvent_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
+tests_testEvent_DEPENDENCIES = \
 	$(REPL_OBJS) \
 	$(SQUID_CPPUNIT_LA)
 
@@ -1632,9 +1651,11 @@ tests_testEventLoop_LDADD = \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
 	$(SNMPLIB) \
-	-L../lib -lmiscutil \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -1642,7 +1663,7 @@ tests_testEventLoop_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
-tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
+tests_testEventLoop_DEPENDENCIES = \
 	$(REPL_OBJS) \
 	$(SQUID_CPPUNIT_LA)
 
@@ -1788,9 +1809,11 @@ tests_test_http_range_LDADD = \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
 	$(SNMPLIB) \
-	-L../lib -lmiscutil \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -1805,7 +1828,6 @@ tests_test_http_range_DEPENDENCIES = \
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
-	debug.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	mem.cc \
@@ -1820,6 +1842,7 @@ tests_testHttpRequest_SOURCES = \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
+	debug.cc \
 	ProtoPort.cc \
 	ProtoPort.h \
 	CacheDigest.cc \
@@ -1949,9 +1972,11 @@ tests_testHttpRequest_LDADD = \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
 	$(SNMPLIB) \
-	-L../lib -lmiscutil \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -1959,7 +1984,7 @@ tests_testHttpRequest_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
-tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
+tests_testHttpRequest_DEPENDENCIES = \
 	$(REPL_OBJS) \
 	$(SQUID_CPPUNIT_LA)
 
@@ -1984,6 +2009,7 @@ STORE_TEST_SOURCES=\
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
 	tests/stub_helper.cc cbdata.cc String.cc \
 	tests/stub_comm.cc \
+	tests/stub_debug.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_http.cc \
 	mem_node.cc \
@@ -2037,7 +2063,9 @@ nodist_tests_testStore_SOURCES= \
 
 tests_testStore_LDADD= \
 	$(COMMON_LIBS) \
-	-L../lib -lmiscutil \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
@@ -2046,7 +2074,7 @@ tests_testStore_LDADD= \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testStore_LDFLAGS = $(LIBADD_DL)
-tests_testStore_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
+tests_testStore_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 
 ## string needs mem.cc.
@@ -2060,20 +2088,21 @@ tests_testString_SOURCES = \
 	tests/testString.cc \
 	tests/testString.h \
 	tests/stub_cache_manager.cc \
+	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
 	time.cc
 nodist_tests_testString_SOURCES = \
 	$(TESTSOURCES)
 tests_testString_LDADD = \
 	$(COMMON_LIBS) \
-	-L../lib -lmiscutil \
+	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testString_LDFLAGS = $(LIBADD_DL)
-tests_testString_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
+tests_testString_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 
 SWAP_TEST_SOURCES = \
@@ -2111,19 +2140,7 @@ SWAP_TEST_GEN_SOURCES = \
 	$(TESTSOURCES) \
 	$(DISKIO_GEN_SOURCE)
 
-SWAP_TEST_LDADD = \
-	$(REGEXLIB) \
-	$(COMMON_LIBS) \
-	$(REPL_OBJS) \
-	$(DISK_LIBS) \
-	$(DISK_OS_LIBS) \
-	-L../lib -lmiscutil \
-	acl/libapi.la \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
 SWAP_TEST_DS =\
-	$(top_builddir)/lib/libmiscutil.a \
 	repl_modules.o \
 	$(DISK_LIBS) \
 	$(COMMON_LIBS) \
@@ -2146,11 +2163,20 @@ nodist_tests_testUfs_SOURCES = \
 	SquidMath.h \
 	swap_log_op.cc
 tests_testUfs_LDADD = \
-	$(SWAP_TEST_LDADD) \
-	$(COMMON_LIBS) \
-	$(SSLLIB) \
 	CommCalls.o \
 	DnsLookupDetails.o \
+	$(COMMON_LIBS) \
+	$(REPL_OBJS) \
+	$(DISK_LIBS) \
+	$(DISK_OS_LIBS) \
+	acl/libapi.la \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(REGEXLIB) \
+	$(SQUID_CPPUNIT_LIBS) \
+	$(SSLLIB) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
 tests_testUfs_DEPENDENCIES = \
@@ -2161,6 +2187,7 @@ tests_testCoss_SOURCES = \
 	tests/testMain.cc \
 	tests/testCoss.h \
 	tests/stub_cache_manager.cc \
+	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
 	$(SWAP_TEST_SOURCES)
 nodist_tests_testCoss_SOURCES = \
@@ -2170,8 +2197,18 @@ nodist_tests_testCoss_SOURCES = \
 	$(SWAP_TEST_GEN_SOURCES)
 tests_testCoss_LDADD = \
 	libsquid.la \
-	$(SWAP_TEST_LDADD) \
+	$(REGEXLIB) \
+	$(COMMON_LIBS) \
+	$(REPL_OBJS) \
+	$(DISK_LIBS) \
+	$(DISK_OS_LIBS) \
+	acl/libapi.la \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testCoss_LDFLAGS = $(LIBADD_DL)
 tests_testCoss_DEPENDENCIES = \
@@ -2185,8 +2222,18 @@ tests_testNull_SOURCES = \
 nodist_tests_testNull_SOURCES = \
 	$(SWAP_TEST_GEN_SOURCES)
 tests_testNull_LDADD = \
-	$(SWAP_TEST_LDADD) \
+	$(REGEXLIB) \
+	$(COMMON_LIBS) \
+	$(REPL_OBJS) \
+	$(DISK_LIBS) \
+	$(DISK_OS_LIBS) \
+	acl/libapi.la \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testNull_LDFLAGS = $(LIBADD_DL)
 tests_testNull_DEPENDENCIES = \
@@ -2196,7 +2243,6 @@ tests_testNull_DEPENDENCIES = \
 ## TODO: Trim this down once the insanity is over.
 tests_testURL_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
-	debug.cc \
 	url.cc \
 	URLScheme.cc \
 	HttpRequest.cc \
@@ -2209,6 +2255,7 @@ tests_testURL_SOURCES = \
 	tests/testURLScheme.cc \
 	tests/testURLScheme.h \
 	tests/testMain.cc \
+	tests/stub_debug.cc \
 	tests/stub_main_cc.cc \
 	time.cc \
 	BodyPipe.cc \
@@ -2342,7 +2389,10 @@ tests_testURL_LDADD = \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
 	$(SNMPLIB) \
-	-L../lib -lmiscutil \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(COMPAT_LIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -2350,7 +2400,7 @@ tests_testURL_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testURL_LDFLAGS = $(LIBADD_DL)
-tests_testURL_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
+tests_testURL_DEPENDENCIES = \
 	$(REPL_OBJS) \
 	$(SQUID_CPPUNIT_LA)
 

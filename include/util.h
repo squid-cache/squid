@@ -46,25 +46,10 @@
 #include <arpa/inet.h>
 #endif
 
-SQUIDCEXTERN const char *mkhttpdlogtime(const time_t *);
-SQUIDCEXTERN const char *mkrfc1123(time_t);
-SQUIDCEXTERN char *uudecode(const char *);
-SQUIDCEXTERN char *xstrdup(const char *);
-SQUIDCEXTERN char *xstrndup(const char *, size_t);
-SQUIDCEXTERN const char *xstrerr(int xerrno);
-SQUIDCEXTERN const char *xstrerror(void);
-SQUIDCEXTERN int tvSubMsec(struct timeval, struct timeval);
 SQUIDCEXTERN int tvSubUsec(struct timeval, struct timeval);
 SQUIDCEXTERN double tvSubDsec(struct timeval, struct timeval);
-SQUIDCEXTERN char *xstrncpy(char *, const char *, size_t);
 SQUIDCEXTERN size_t xcountws(const char *str);
-SQUIDCEXTERN time_t parse_rfc1123(const char *str);
-SQUIDCEXTERN void *xcalloc(size_t, size_t);
-SQUIDCEXTERN void *xmalloc(size_t);
-SQUIDCEXTERN void *xrealloc(void *, size_t);
 SQUIDCEXTERN void Tolower(char *);
-SQUIDCEXTERN void xfree(void *);
-SQUIDCEXTERN void xxfree(const void *);
 #ifdef __cplusplus
 /*
  * Any code using libstdc++ must have externally resolvable overloads
@@ -83,13 +68,7 @@ SQUIDCEXTERN void xxfree(const void *);
 #include "SquidNew.h"
 #endif
 
-/* charset.c */
-SQUIDCEXTERN char *latin1_to_utf8(char *out, size_t size, const char *in);
-
-/* html.c */
-SQUIDCEXTERN char *html_quote(const char *);
-
-#if XMALLOC_STATISTICS
+#if 0 && XMALLOC_STATISTICS
 SQUIDCEXTERN void malloc_statistics(void (*)(int, int, int, void *), void *);
 #endif
 
@@ -109,9 +88,6 @@ extern void xmalloc_find_leaks(void);
 #endif
 
 SQUIDCEXTERN time_t parse_iso3307_time(const char *buf);
-SQUIDCEXTERN char *base64_decode(const char *coded);
-SQUIDCEXTERN const char *base64_encode(const char *decoded);
-SQUIDCEXTERN const char *base64_encode_bin(const char *data, int len);
 
 SQUIDCEXTERN double xpercent(double part, double whole);
 SQUIDCEXTERN int xpercentInt(double part, double whole);

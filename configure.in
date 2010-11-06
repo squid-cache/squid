@@ -2185,6 +2185,7 @@ AC_CHECK_HEADERS( \
   bstring.h \
   cassert \
   crypt.h \
+  cstdlib \
   cstring \
   ctype.h \
   errno.h \
@@ -3304,6 +3305,7 @@ AC_CONFIG_FILES([\
 	compat/Makefile \
 	lib/Makefile \
 	lib/ntlmauth/Makefile \
+	lib/profiler/Makefile \
 	lib/rfcnb/Makefile \
 	lib/smblib/Makefile \
 	scripts/Makefile \

@@ -17,6 +17,17 @@
  * of the requirements for wrapping your hack for safe portability.
  */
 
+/*
+ * Define an error display handler override.
+ * If error_notify is set by the linked program it will be used by the local
+ * portability functions. Otherwise perror() will be used.
+ */
+#ifdef __cplusplus
+extern "C"
+#else
+extern
+#endif
+void (*failure_notify) (const char *);
 
 /*
  * sys/resource.h and sys/time.h are apparently order-dependant.
@@ -193,6 +204,14 @@ extern "C" {
 }
 #endif
 #endif
+
+/*
+ * Several function definitions which we provide for security and code safety.
+ */
+#include "compat/xalloc.h"
+#include "compat/xstrerror.h"
+#include "compat/xstring.h"
+#include "compat/xstrto.h"
 
 
 #endif /* _SQUID_COMPAT_SHARED_H */

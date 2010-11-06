@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "errorpage.h"
 #include "Store.h"
+#include "html_quote.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "comm.h"

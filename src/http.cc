@@ -44,6 +44,7 @@
 #include "auth/UserRequest.h"
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
+#include "base64.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif

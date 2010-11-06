@@ -74,7 +74,9 @@ SOFTWARE.
 #if HAVE_ASSERT_H
 #include <assert.h>
 #endif
-
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 #include "asn1.h"
 #include "snmp_vars.h"
