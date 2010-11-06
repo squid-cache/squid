@@ -1152,11 +1152,11 @@ int SearchFilterLDAP(edui_ldap_t *l, char *group)
         snprintf(bufb, sizeof(bufb), "(|(networkAddress=1\\23%s)", bufc);
         if (l->status & LDAP_IPV4_S) {
             int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=8\\23\\00\\00%s)(networkAddress=9\\23\\00\\00%s))", \
-                     bufc, bufc);
+                              bufc, bufc);
             strncat(bufb, bufd, ln);
         } else if (l->status & LDAP_IPV6_S) {
             int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=10\\23\\00\\00%s)(networkAddress=11\\23\\00\\00%s))", \
-                     bufc, bufc);
+                              bufc, bufc);
             strncat(bufb, bufd, ln);
         } else
             strncat(bufb, ")", 1);
@@ -1178,11 +1178,11 @@ int SearchFilterLDAP(edui_ldap_t *l, char *group)
         snprintf(bufb, sizeof(bufb), "(|(networkAddress=1\\23%s)", bufc);
         if (l->status & LDAP_IPV4_S) {
             int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=8\\23\\00\\00%s)(networkAddress=9\\23\\00\\00%s))", \
-                     bufc, bufc);
+                              bufc, bufc);
             strncat(bufb, bufd, ln);
         } else if (l->status & LDAP_IPV6_S) {
             int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=10\\23\\00\\00%s)(networkAddress=11\\23\\00\\00%s))", \
-                     bufc, bufc);
+                              bufc, bufc);
             strncat(bufb, bufd, ln);
         } else
             strncat(bufb, ")", 1);
