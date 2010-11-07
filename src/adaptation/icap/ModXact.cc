@@ -639,6 +639,8 @@ void Adaptation::Icap::ModXact::bypassFailure()
         if (!doneWithIo())
             debugs(93, 7, HERE << "Warning: bypass failed to stop I/O" << status());
     }
+
+    service().noteFailure(); // we are bypassing, but this is still a failure
 }
 
 void Adaptation::Icap::ModXact::disableBypass(const char *reason, bool includingGroupBypass)
