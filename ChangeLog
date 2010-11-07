@@ -1,9 +1,10 @@
-Changes to squid-3.2.0.3 (06 Nov 2010):
+Changes to squid-3.2.0.3 (07 Nov 2010):
 
 	- Regression fix: SMP broke ICP outgoing IP lookup if no udp_outgoing_addr set
 	- Regression fix: ESI processing of Surrogate filter
+	- Bug 3091: bypassed ICAP errors are not counted as service failures
 	- Bug 3048: "commio_has_callback(fd, IOCB_READ, ccb)" assertion.
-	- Bug #3038: Detatch libmisc from libcompat
+	- Bug 3038: Detatch libmisc from libcompat
 	- Bug 3028: Permit wbinfo_group.pl to authenticate Kerberos users with NT domain
 	- Bug 3002: store initialization (-z) does not work with SMP configs
 	- Bug 2999: v2.0 of ext_edirectory_userip_acl
