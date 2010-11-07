@@ -811,7 +811,7 @@ int BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
     }
 
     /* Bind */
-#if defined(LDAP_AUTH_TLS) && defined(NETSCAPE_SSL)
+#if defined(LDAP_AUTH_TLS) && defined(NETSCAPE_SSL) && HAVE_LDAP_START_TLS_S
     if (l->type == LDAP_AUTH_TLS)
         s = ldap_start_tls_s(l->lp, NULL, NULL);
     else
