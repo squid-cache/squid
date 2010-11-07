@@ -758,15 +758,15 @@ DEFAULT_HTTP_PORT	= 3128
 DEFAULT_ICP_PORT	= 3130
 DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_DIR	= $(sysconfdir)
-DEFAULT_CONFIG_FILE     = $(DEFAULT_CONFIG_DIR)/squid.conf
+DEFAULT_CONFIG_FILE	= $(DEFAULT_CONFIG_DIR)/squid.conf
 DEFAULT_MIME_TABLE	= $(DEFAULT_CONFIG_DIR)/mime.conf
-DEFAULT_DNSSERVER       = $(libexecdir)/`echo dnsserver | sed '$(transform);s/$$/$(EXEEXT)/'`
+DEFAULT_DNSSERVER	= $(libexecdir)/`echo dnsserver | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_LOG_PREFIX	= $(DEFAULT_LOG_DIR)
-DEFAULT_CACHE_LOG       = $(DEFAULT_LOG_PREFIX)/cache.log
-DEFAULT_ACCESS_LOG      = $(DEFAULT_LOG_PREFIX)/access.log
-DEFAULT_STORE_LOG       = $(DEFAULT_LOG_PREFIX)/store.log
-DEFAULT_NETDB_FILE      = $(DEFAULT_LOG_PREFIX)/netdb.state
-DEFAULT_SWAP_DIR        = $(localstatedir)/cache
+DEFAULT_CACHE_LOG	= $(DEFAULT_LOG_PREFIX)/cache.log
+DEFAULT_ACCESS_LOG	= $(DEFAULT_LOG_PREFIX)/access.log
+DEFAULT_STORE_LOG	= $(DEFAULT_LOG_PREFIX)/store.log
+DEFAULT_NETDB_FILE	= $(DEFAULT_LOG_PREFIX)/netdb.state
+DEFAULT_SWAP_DIR	= $(localstatedir)/cache
 DEFAULT_PINGER		= $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_UNLINKD		= $(libexecdir)/`echo unlinkd | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_LOGFILED	= $(libexecdir)/`echo log_file_daemon | sed '$(transform);s/$$/$(EXEEXT)/'`
@@ -864,16 +864,16 @@ CLEANFILES += squid.8
 
 install-data-local: install-sysconfDATA install-dataDATA
 	@if test -f $(DESTDIR)$(DEFAULT_MIME_TABLE) ; then \
-	        echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_MIME_TABLE)" ; \
+	  echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_MIME_TABLE)" ; \
 	else \
-	        echo "$(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(DEFAULT_MIME_TABLE)" ;\
-	        $(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(DEFAULT_MIME_TABLE); \
+	  echo "$(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(DEFAULT_MIME_TABLE)" ;\
+	  $(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(DEFAULT_MIME_TABLE); \
 	fi
 	@if test -f $(DESTDIR)$(DEFAULT_CONFIG_FILE) ; then \
-	        echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_CONFIG_FILE)" ; \
+	  echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_CONFIG_FILE)" ; \
 	else \
-	        echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
-	        $(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
+	  echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
+	  $(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
 	fi
 	echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE).default"; \
 	$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE).default; \
@@ -1309,7 +1309,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_cache_manager.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_Port.cc \
-        tests/stub_TypedMsgHdr.cc \
+	tests/stub_TypedMsgHdr.cc \
 	tests/stub_UdsOp.cc
 nodist_tests_testDiskIO_SOURCES= \
 	$(SWAP_TEST_GEN_SOURCES) \
