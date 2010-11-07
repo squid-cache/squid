@@ -1355,7 +1355,6 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
     int c;
     char bufa[EDUI_MAXLEN], bufb[EDUI_MAXLEN], hexc[4];
     LDAPMessage *ent;
-    struct berval **ber;
     if (l == NULL) return LDAP_ERR_NULL;
     if (uid == NULL) return LDAP_ERR_PARAM;
     if (l->lp == NULL) return LDAP_ERR_POINTER;
@@ -1373,6 +1372,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
         xstrncpy(edui_conf.attrib, "cn", sizeof(edui_conf.attrib));		/* Make sure edui_conf.attrib is set */
 
     /* Sift through entries */
+    struct berval **ber = NULL;
     for (ent = ldap_first_entry(l->lp, l->lm); ent != NULL; ent = ldap_next_entry(l->lp, ent)) {
         l->val = ldap_get_values_len(l->lp, ent, "networkAddress");
         ber = ldap_get_values_len(l->lp, ent, edui_conf.attrib);			/* edui_conf.attrib is the <userid> mapping */
