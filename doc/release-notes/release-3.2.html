@@ -1,11 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
- <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.65">
- <TITLE>Squid 3.2.0.2 release notes</TITLE>
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
+ <TITLE>Squid 3.2.0.3 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.2.0.2 release notes</H1>
+<H1>Squid 3.2.0.3 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -32,6 +32,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <LI><A NAME="toc2.6">2.6</A> <A HREF="#ss2.6">Solaris 10 pthreads Support (Experimental)</A>
 <LI><A NAME="toc2.7">2.7</A> <A HREF="#ss2.7">Surrogate/1.0 protocol extensions to HTTP</A>
 <LI><A NAME="toc2.8">2.8</A> <A HREF="#ss2.8">Logging Infrastructure Updated</A>
+<LI><A NAME="toc2.9">2.9</A> <A HREF="#ss2.9">Client Bandwidth Limits</A>
 </UL>
 <P>
 <H2><A NAME="toc3">3.</A> <A HREF="#s3">Changes to squid.conf since Squid-3.1</A></H2>
@@ -68,7 +69,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.2.0.2 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.2.0.3 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.2/">http://www.squid-cache.org/Versions/v3/3.2/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -80,7 +81,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 </H2>
 
 <P>Although this release is deemed good enough for use in many setups, please note the existence of 
-<A HREF="http://www.squid-cache.org/bugs/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.2&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=">open bugs against Squid-3.2</A>.</P>
+<A HREF="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.2&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=">open bugs against Squid-3.2</A>.</P>
 
 <H2><A NAME="ss1.2">1.2</A> <A HREF="#toc1.2">Changes since earlier releases of Squid-3.2</A>
 </H2>
@@ -101,6 +102,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <LI>Solaris 10 pthreads Support (Experimental)</LI>
 <LI>Surrogate/1.0 protocol extensions to HTTP</LI>
 <LI>Logging Infrastructure Updated</LI>
+<LI>Client Bandwidth Limits</LI>
 </UL>
 </P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
@@ -252,10 +254,11 @@ For several helpers the directory name used in --enable-X-helpers configure opti
 <LI>getpwnam_auth - basic_getpwname_auth - Authenticate with local system user accounts.</LI>
 <LI>squid_ldap_auth - basic_ldap_auth - Authenticate with LDAP user accounts.</LI>
 <LI>MSNT-multi-domain - basic_msnt_multi_domain_auth - Authenticate with any one of multiple Windows Domain Controllers.</LI>
+<LI>msnt_auth - basic_msnt_auth - Authenticate with Windows Domain Controllers selected by username.</LI>
 <LI>ncsa_auth - basic_ncsa_auth - Authenticate with NCSA httpd-style password file.</LI>
 <LI>yp_auth - basic_nis_auth - Authenticate with NIS security system.</LI>
 <LI>pam_auth - basic_pam_auth - Authenticate with the system PAM infrastructure.</LI>
-<LI>pop3.pl - basic_pop3_auth - Authenticate with a mail server POP3/SMTP credentials</LI>
+<LI>pop3.pl - basic_pop3_auth - Authenticate with a mail server POP3/SMTP credentials.</LI>
 <LI>squid_radius_auth - basic_radius_auth - Authenticate with RADIUS.</LI>
 <LI>squid_sasl_auth - basic_sasl_auth - Authenticate with SASL.</LI>
 <LI>smb_auth - basic_smb_auth - Authenticate with Samba SMB.</LI>
@@ -389,6 +392,38 @@ logging a single cache.log at relatively high debug levels on a high-traffic sys
 required to store a long period of access.log and needs to conserve disk space.</P>
 
 
+<H2><A NAME="ss2.9">2.9</A> <A HREF="#toc2.9">Client Bandwidth Limits</A>
+</H2>
+
+<P>In mobile environments, Squid may need to limit Squid-to-client bandwidth
+available to individual users, identified by their IP addresses. The IP
+address pool can be as large as a /10 IPv4 network (4 million unique IP
+addresses) and even larger in IPv6 environments. On the other hand, the code
+should support thousands of connections coming from a single IP (e.g.,
+a child proxy).</P>
+
+<P>The implementation is based on storing bandwidth-related "bucket" information
+in the existing "client database" hash (client_db.cc). The old code already
+assigned each client IP a single ClientInfo object, which satisfies the
+client-side IP-based bandwidth pooling requirements. The old hash size is
+increased to support up to 32K concurrent clients if needed.</P>
+
+<P>Client-side pools are configured similarly to server-side ones, but there is
+only one pool class. See client_delay_pools,
+client_delay_initial_bucket_level, client_delay_parameters, and
+client_delay_access in squid.conf. The client_delay_access matches the client
+with delay parameters. It does not pool clients from different IP addresses
+together.</P>
+
+<P>Special care is taken to provide fair distribution of bandwidth among clients
+sharing the same bucket (i.e., clients coming from the same IP address).
+Multiple same-IP clients competing for bandwidth are queued using FIFO
+algorithm. If a bucket becomes empty, the first client among those sharing 
+the bucket is delayed by 1 second before it can attempt to receive more
+response data from Squid.  This delay may need to be lowered in 
+high-bandwidth environments.</P>
+
+
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes to squid.conf since Squid-3.1</A></H2>
 
 <P>There have been changes to Squid's configuration file since Squid-3.1.</P>
@@ -410,18 +445,42 @@ required to store a long period of access.log and needs to conserve disk space.<
 
 <P>
 <DL>
-<DT><B>adapted_http_access</B><DD>
-<P>Access control based on altered HTTP request following adaptation alterations (ICAP, eCAP, URL rewriter).
-An upgraded drop-in replacement for <EM>http_access2</EM> found in Squid-2.</P>
+<DT><B>client_delay_pools</B><DD>
+<P>New setting for client bandwith limits to specifies the number 
+of client delay pools used.</P>
+
+<DT><B>client_delay_initial_bucket_level</B><DD>
+<P>New setting for client bandwith limits to determine the initial 
+bucket size as a percentage of  max_bucket_size from 
+client_delay_parameters.</P>
+
+<DT><B>client_delay_parameters</B><DD>
+<P>New setting for client bandwith limits to configures client-side 
+bandwidth limits.</P>
+
+<DT><B>client_delay_access</B><DD>
+<P>New setting for client bandwith limits to determines the 
+client-side delay pool for the request.</P>
+
+<DT><B>cpu_affinity_map</B><DD>
+<P>New setting for SMP support to map Squid processes onto specific CPU cores.</P>
+
+<DT><B>dns_packet_max</B><DD>
+<P>New setting to configure maximum number of bytes packet size to advertise via EDNS.
+Set to "none" (the initial default) to disable EDNS large packet support.</P>
 
 <DT><B>else</B><DD>
-<P>Part of conditional SMP support syyntax. see <EM>if</EM></P>
+<P>Part of conditional SMP support syntax. see <EM>if</EM></P>
 
 <DT><B>endif</B><DD>
-<P>Part of conditional SMP support syyntax. see <EM>if</EM></P>
+<P>Part of conditional SMP support syntax. see <EM>if</EM></P>
 
 <DT><B>eui_lookup</B><DD>
 <P>Whether to lookup the EUI or MAC address of a connected client.</P>
+
+<DT><B>icap_206_enable</B><DD>
+<P>New option to toggle whether the ICAP 206 (Partial Content) responses extension.
+Default is on.</P>
 
 <DT><B>if</B><DD>
 <P>New conditional syntax for SMP multiple-worker. 
@@ -462,6 +521,10 @@ does (e.g., listen on http_port and forward HTTP requests).
         
 </PRE>
 </P>
+
+<DT><B>write_timeout</B><DD>
+<P>New setting to limit time spent waiting for data writes to be confirmed.</P>
+
 </DL>
 </P>
 
@@ -494,6 +557,11 @@ New installs, or installs with no logs configured explicitly will use this modul
 <P><EM>htcp-*</EM> options collapsed into <EM>htcp=</EM> taking an optional comma-separated list of flags.
 The old form is deprecated but still accepted.</P>
 
+<DT><B>clientside_mark</B><DD>
+<P>New configuration parameter <EM>clientside_mark</EM></P>
+<P>Allows packets leaving Squid on the client side to be marked with a Netfilter mark value in the same way as the existing clientside_tos feature.</P>
+<P>This feature is only available for Netfilter environments.</P>
+
 <DT><B>deny_info</B><DD>
 <P>Support URL format tags. For dynamically generated URL in denial redirect.</P>
 
@@ -519,6 +587,25 @@ Both EUI forms are logged in the same field. Type can be identified by length or
 <P>Please check and update your squid.conf to use the text <EM>none</EM> for no limit instead of the old 0 (zero).</P>
 <P>All users upgrading need to be aware that from Squid-3.3 setting this option to 0 (zero) will mean zero bytes of memory get pooled.</P>
 
+<DT><B>qos_flows</B><DD>
+<P>New options <EM>mark</EM> and <EM>tos</EM> and <EM>miss</EM></P>
+<P><EM>tos</EM> retains the original QOS functionality of the IP header TOS field.</P>
+<P><EM>mark</EM> offers the same functionality, but with a netfilter mark value.</P>
+<P>These options should be placed immediately after qos_flows.</P>
+<P>The <EM>tos</EM> value is optional in order to maintain backwards compatability.</P>
+<P>The preserve-miss functionality is available with the <EM>mark</EM> option and requires no kernel patching.
+It does, however, require libnetfilter_conntrack.
+This will be included by default if available (see the --without-netfilter-conntrack configure option for more details).</P>
+<P><EM>miss</EM> sets a value for a cache miss. It is available for both the tos and mark options and takes precedence over the preserve-miss feature.</P>
+
+<DT><B>tcp_outgoing_mark</B><DD>
+<P>New configuration parameter <EM>tcp_outgoing_mark</EM></P>
+<P>Allows packets leaving Squid on the server side to be marked with a Netfilter mark value in the same way as the existing tcp_outgoing_tos feature.</P>
+<P>This feature is only available for Netfilter environments.</P>
+
+<DT><B>tcp_outgoing_tos</B><DD>
+<P>This parameter is now compatible with persistent server connections.</P>
+
 <DT><B>windows_ipaddrchangemonitor</B><DD>
 <P>Now only available to be set in Windows builds.</P>
 
@@ -541,6 +628,9 @@ Both EUI forms are logged in the same field. Type can be identified by length or
 <P>
 <DL>
 <DT><B>ftp_list_width</B><DD>
+<P>Obsolete.</P>
+
+<DT><B>ignore_expect_100</B><DD>
 <P>Obsolete.</P>
 
 <DT><B>url_rewrite_concurrency</B><DD>
@@ -573,23 +663,26 @@ Both EUI forms are logged in the same field. Type can be identified by length or
 <DL>
 <DT><B>--enable-auth-basic[=HELPERS]</B><DD>
 <P>Specified without any parameters all helpers will be auto-built.</P>
-<P>With an explicit empty list <EM>=""</EM> protocol suport will be built but no helpers.</P>
+<P>With an explicit empty list <EM>=""</EM> protocol support will be built but no helpers.</P>
 <P>With an explicit list protocol support and just those helpers will be built.</P>
 
 <DT><B>--enable-auth-digest[=HELPERS]</B><DD>
 <P>Specified without any parameters all helpers will be auto-built.</P>
-<P>With an explicit empty list <EM>=""</EM> protocol suport will be built but no helpers.</P>
+<P>With an explicit empty list <EM>=""</EM> protocol support will be built but no helpers.</P>
 <P>With an explicit list protocol support and just those helpers will be built.</P>
 
 <DT><B>--enable-auth-negotiate</B><DD>
 <P>Specified without any parameters all helpers will be auto-built.</P>
-<P>With an explicit empty list <EM>=""</EM> protocol suport will be built but no helpers.</P>
+<P>With an explicit empty list <EM>=""</EM> protocol support will be built but no helpers.</P>
 <P>With an explicit list protocol support and just those helpers will be built.</P>
 
 <DT><B>--enable-auth-ntlm</B><DD>
 <P>Specified without any parameters all helpers will be auto-built.</P>
-<P>With an explicit empty list <EM>=""</EM> protocol suport will be built but no helpers.</P>
+<P>With an explicit empty list <EM>=""</EM> protocol support will be built but no helpers.</P>
 <P>With an explicit list protocol support and just those helpers will be built.</P>
+
+<DT><B>--enable-build-info</B><DD>
+<P>Add an additional string in the output of "squid -v".</P>
 
 <DT><B>--enable-eui</B><DD>
 <P>Enable Support for handling EUI operations.
@@ -604,6 +697,17 @@ If omitted or set to =all then all bundled helpers that are able to build will b
 If set to a specific list of helpers then only those helpers will build.
 Currently one demo helper <EM>fake</EM> is provided in shell and C++ forms to demonstrate
 the helper protocol usage and provide exemplar code.</P>
+
+<DT><B>--with-swapdir=PATH</B><DD>
+<P>Location to display in documentation for the default cache.
+Updated to indicate /var/cache/squid in accordance with the filesystem layout standards.
+Squid-3 no longer builds an implicit disk cache at this location, so the change is not expected
+to have any effect on existing builds other than fixing some mysterious lack of core dumps.
+The old /var/cache location was often non-writable which blocked core dumps creation.</P>
+
+<DT><B>--without-netfiler-conntrack</B><DD>
+<P>Disables the libnetfilter_conntrack library being used for the new qos_flows option <EM>mark</EM>.
+default is to auto-detect the library and use where available.</P>
 
 </DL>
 </P>

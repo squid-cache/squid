@@ -1,3 +1,34 @@
+Changes to squid-3.2.0.3 (07 Nov 2010):
+
+	- Regression fix: SMP broke ICP outgoing IP lookup if no udp_outgoing_addr set
+	- Regression fix: ESI processing of Surrogate filter
+	- Bug 3091: bypassed ICAP errors are not counted as service failures
+	- Bug 3048: "commio_has_callback(fd, IOCB_READ, ccb)" assertion.
+	- Bug 3038: Detatch libmisc from libcompat
+	- Bug 3028: Permit wbinfo_group.pl to authenticate Kerberos users with NT domain
+	- Bug 3002: store initialization (-z) does not work with SMP configs
+	- Bug 2999: v2.0 of ext_edirectory_userip_acl
+	- Bug 2785: DNS needs to set EDNS options advertising Squid capabilities
+	- Bug 595: Add %err_code and %err_detail logformat codes for transaction failures
+	- HTTP/1.1: support If-Match and If-None-Match requests
+	- HTTP/1.1: forward 1xx control messages to clients that support them
+	- HTTP/1.1: send Age:0 header even if it may break IE5
+	- HTTP/1.1: dechunk incoming requests and chunk outgoing requests
+	- HTTP/1.1: entry is stale if request has max-age=0
+	- HTTP/1.1: harden quoted-string parser
+	- Add --enable-build-info for extra "squid -v" display
+	- Add --with-swapdir=PATH to override default /var/cache/squid
+	- Add cpu_affinity_map directive to bind workers to CPU cores
+	- Add Netfilter MARK support for QoS
+	- Add upgrade process for obsolete options
+	- Add support for RFC 2965 Set-Cookie2 / Cookie2 headers
+	- Add support for client send bandwidth limits (a.k.a., quota or delay pool)
+	- Fixes Eui48 support on OpenBSD
+	- Fixes cache manager support with SMP configs
+	- ... several documentation updates
+	- ... all bug and feature fixes included in 3.1.9 release.
+	- ... many more code polishes and leak removals
+
 Changes to squid-3.2.0.2 (04 Sep 2010):
 
 	- Bug 3015: assertion failed: comm.cc:143: "ccb->active()"
