@@ -26,8 +26,9 @@ WIN32SRC=
 # and others are unable to be built.
 #
 if ENABLE_WIN32SPECIFIC
-noinst_LTLIBRARIES += libsspwin32.a
+noinst_LTLIBRARIES += libsspwin32.la
 WIN32SRC += win32lib.c
+libsspwin32_la_SOURCES = sspwin32.c
 else
 SUBDIRS += rfcnb smblib
 if ENABLE_AUTH_NTLM
@@ -75,10 +76,6 @@ libmiscutil_la_SOURCES = \
 	util.c \
 	xusleep.c \
 	$(WIN32SRC)
-
-# $(top_srcdir)/include/version.h should be a dependency
-libsspwin32_la_SOURCES = \
-	sspwin32.c
 
 TESTS += tests/testAll
 
