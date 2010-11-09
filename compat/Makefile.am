@@ -3,7 +3,7 @@
 #
 
 include $(top_srcdir)/src/Common.am
-
+include $(top_srcdir)/src/TestHeaders.am
 
 # Ideally this would be 100% inline functions and macro wrappers.
 
@@ -51,17 +51,3 @@ testPreCompiler_SOURCES= \
 	$(top_srcdir)/src/tests/testMain.cc
 testPreCompiler_LDADD= $(SQUID_CPPUNIT_LA) $(SQUID_CPPUNIT_LIBS)
 testPreCompiler_LDFLAGS=
-
-# os/ subdir prevents us using src/TestHeaders.am
-#
-TESTS += testHeaders
-
-## Special Universal .h dependency test script
-## aborts if error encountered
-testHeaders: $(srcdir)/*.h $(srcdir)/os/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)/os" || exit 1
-
-CLEANFILES += testHeaders
-
-.PHONY: testHeaders
