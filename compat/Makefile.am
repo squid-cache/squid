@@ -29,6 +29,7 @@ libcompat_la_SOURCES = \
 	os/macosx.h \
 	os/next.h \
 	os/openbsd.h \
+	os/opensolaris_10_netdb.h \
 	os/os2.h \
 	os/qnx.h \
 	os/sgi.h \
