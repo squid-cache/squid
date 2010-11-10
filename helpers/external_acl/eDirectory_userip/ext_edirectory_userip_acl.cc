@@ -1427,7 +1427,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
-                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),ber[j]->bv_len));
+                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),static_cast<size_t>(ber[j]->bv_len)));
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1459,7 +1459,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
-                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),ber[j]->bv_len));
+                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),static_cast<size_t>(ber[j]->bv_len)));
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1491,7 +1491,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
-                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),ber[j]->bv_len));
+                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),static_cast<size_t>(ber[j]->bv_len)));
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1523,7 +1523,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
-                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),ber[j]->bv_len));
+                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),static_cast<size_t>(ber[j]->bv_len)));
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1555,7 +1555,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
-                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),ber[j]->bv_len));
+                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),static_cast<size_t>(ber[j]->bv_len)));
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
