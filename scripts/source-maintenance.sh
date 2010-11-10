@@ -32,7 +32,7 @@ fi
 srcformat ()
 {
 PWD=`pwd`
-echo "FORMAT: ${PWD}..."
+#echo "FORMAT: ${PWD}..."
 
 for FILENAME in `ls -1`; do
 
@@ -58,6 +58,24 @@ for FILENAME in `ls -1`; do
 			fi
         	fi
 	fi
+
+	#
+	# REQUIRE config.h/squid.h as first #include
+	#
+	case ${FILENAME} in
+	*.c|*.cc)
+		FI=`grep "#include" ${FILENAME} | head -1`;
+		if test "${FI}" != "#include \"config.h\"" -a "${FI}" != "#include \"squid.h\"" ; then
+			echo "ERROR: ${PWD}/${FILENAME} does not include config.h or squid.h first!"
+		fi
+		;;
+	*.h|*.cci)
+		FI=`grep "#include \"config.h\"" ${FILENAME}`;
+		if test "x${FI}" != "x" ; then
+			echo "ERROR: ${PWD}/${FILENAME} duplicate include of config.h"
+		fi
+		;;
+	esac
 
 	#
 	# DEBUG Section list maintenance
