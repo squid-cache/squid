@@ -349,8 +349,20 @@ SQUIDCEXTERN int _free_osfhnd(int);
 
 SQUIDCEXTERN THREADLOCAL int ws32_result;
 
-#define strerror(e) WIN32_strerror(e)
+#if !defined(strerror)
+inline const char *
+strerror(int err)
+{
+    static char xbstrerror_buf[BUFSIZ];
+
+    if (err < 0 || err >= sys_nerr)
+        strncpy(xbstrerror_buf, wsastrerror(err), BUFSIZ);
+    else
+        strncpy(xbstrerror_buf, strerror(err), BUFSIZ);
+    return xbstrerror_buf;
+}
 #define HAVE_STRERROR 1
+#endif
 
 #ifdef __cplusplus
 
@@ -748,9 +760,59 @@ struct rusage {
 
 #undef ACL
 
+inline int
+chroot(const char *dirname)
+{
+    if (SetCurrentDirectory(dirname))
+        return 0;
+    else
+        return GetLastError();
+}
+
+SQUIDCEXTERN int ftruncate(int, off_t);
+#if !HAVE_GETTIMEOFDAY
+SQUIDCEXTERN int gettimeofday(struct timeval * ,void *);
+#endif
+SQUIDCEXTERN int kill(pid_t, int);
+SQUIDCEXTERN int statfs(const char *, struct statfs *);
+SQUIDCEXTERN int truncate(const char *, off_t);
+SQUIDCEXTERN const char * wsastrerror(int);
+
+inline struct passwd *
+getpwnam(char *unused) {
+    static struct passwd pwd = {NULL, NULL, 100, 100, NULL, NULL, NULL};
+    return &pwd;
+}
+
+inline struct group *
+getgrnam(char *unused) {
+    static struct group grp = {NULL, NULL, 100, NULL};
+    return &grp;
+}
+
+#define geteuid(X)  static_cast<uid_t>(100)
+#define seteuid(X)  (void)0
+#define getuid(X)   static_cast<uid_t>(100)
+#define setuid(X)   (void)0
+#define getegid(X)  static_cast<gid_t>(100)
+#define setegid(X)  (void)0
+#define getgid(X)   static_cast<gid_t>(100)
+#define setgid(X)   (void)0
+
 #if !defined(getpagesize)
 /* Windows may lack getpagesize() prototype */
-SQUIDCEXTERN size_t getpagesize(void);
+inline size_t
+getpagesize()
+{
+    static DWORD system_pagesize = 0;
+    if (!system_pagesize) {
+        SYSTEM_INFO system_info;
+        GetSystemInfo(&system_info);
+        system_pagesize = system_info.dwPageSize;
+    }
+    return system_pagesize;
+}
+#define HAVE_GETPAGESIZE 1
 #endif
 
 #endif /* _SQUID_WINDOWS_ */

@@ -119,29 +119,4 @@ int statMemoryAccounted(void);
 
 SQUIDCEXTERN unsigned int RoundTo(const unsigned int num, const unsigned int what);
 
-/* Windows Port */
-/* win32lib.c */
-#ifdef _SQUID_MSWIN_
-SQUIDCEXTERN int chroot (const char *);
-SQUIDCEXTERN int ftruncate(int, off_t);
-#if !HAVE_GETTIMEOFDAY
-SQUIDCEXTERN int gettimeofday(struct timeval * ,void *);
-#endif
-SQUIDCEXTERN int kill(pid_t, int);
-SQUIDCEXTERN int statfs(const char *, struct statfs *);
-SQUIDCEXTERN int truncate(const char *, off_t);
-SQUIDCEXTERN const char * wsastrerror(int);
-SQUIDCEXTERN struct passwd *getpwnam(char *);
-SQUIDCEXTERN struct group *getgrnam(char *);
-SQUIDCEXTERN uid_t geteuid(void);
-SQUIDCEXTERN uid_t getuid(void);
-SQUIDCEXTERN int setuid(uid_t);
-SQUIDCEXTERN int seteuid(uid_t);
-SQUIDCEXTERN gid_t getgid(void);
-SQUIDCEXTERN gid_t getegid(void);
-SQUIDCEXTERN int setgid(gid_t);
-SQUIDCEXTERN int setegid(gid_t);
-SQUIDCEXTERN const char *WIN32_strerror(int);
-SQUIDCEXTERN void WIN32_maperror(unsigned long);
-#endif
 #endif /* SQUID_UTIL_H */

@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -34,13 +33,13 @@
  *
  */
 
-#include "util.h"
+#include "config.h"
 
 /* The following code section is part of an EXPERIMENTAL native */
 /* Windows NT/2000 Squid port - Compiles only on MS Visual C++  */
-#if defined(_SQUID_MSWIN_)
+#if _SQUID_WINDOWS_
 
-#undef strerror
+//#undef strerror
 #define sys_nerr _sys_nerr
 
 #undef assert
@@ -58,77 +57,6 @@ THREADLOCAL int ws32_result;
 LPCRITICAL_SECTION dbg_mutex = NULL;
 
 void GetProcessName(pid_t, char *);
-
-#if defined(_MSC_VER)		/* Microsoft C Compiler ONLY */
-size_t
-getpagesize()
-{
-    static DWORD system_pagesize = 0;
-    if (!system_pagesize) {
-        SYSTEM_INFO system_info;
-        GetSystemInfo(&system_info);
-        system_pagesize = system_info.dwPageSize;
-    }
-    return system_pagesize;
-}
-#endif
-
-uid_t
-geteuid(void)
-{
-    return 100;
-}
-
-uid_t
-getuid(void)
-{
-    return 100;
-}
-
-int
-setuid(uid_t uid)
-{
-    return 0;
-}
-
-int
-seteuid(uid_t euid)
-{
-    return 0;
-}
-
-gid_t
-getegid(void)
-{
-    return 100;
-}
-
-gid_t
-getgid(void)
-{
-    return 100;
-}
-
-int
-setgid(gid_t gid)
-{
-    return 0;
-}
-
-int
-setegid(gid_t egid)
-{
-    return 0;
-}
-
-int
-chroot(const char *dirname)
-{
-    if (SetCurrentDirectory(dirname))
-        return 0;
-    else
-        return GetLastError();
-}
 
 void
 GetProcessName(pid_t pid, char *ProcessName)
@@ -489,34 +417,7 @@ wsastrerror(int err)
     return xwsaerror_buf;
 }
 
-struct passwd *
-getpwnam(char *unused) {
-    static struct passwd pwd = {NULL, NULL, 100, 100, NULL, NULL, NULL};
-    return &pwd;
-}
-
-struct group *
-getgrnam(char *unused) {
-    static struct group grp = {NULL, NULL, 100, NULL};
-    return &grp;
-}
-
-/*
- * WIN32_strerror with argument for late notification */
-
-const char *
-WIN32_strerror(int err)
-{
-    static char xbstrerror_buf[BUFSIZ];
-
-    if (err < 0 || err >= sys_nerr)
-        strncpy(xbstrerror_buf, wsastrerror(err), BUFSIZ);
-    else
-        strncpy(xbstrerror_buf, strerror(err), BUFSIZ);
-    return xbstrerror_buf;
-}
-
-#if defined(__MINGW32__)	/* MinGW environment */
+#if _SQUID_MINGW_	/* MinGW environment */
 int
 _free_osfhnd(int filehandle)
 {

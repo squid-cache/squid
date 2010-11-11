@@ -55,6 +55,7 @@ libcompat_squid_a_SOURCES = \
 	os/macosx.h \
 	os/mingw.h \
 	os/mswin.h \
+	mswin.cc \
 	os/netbsd.h \
 	os/next.h \
 	os/openbsd.h \
