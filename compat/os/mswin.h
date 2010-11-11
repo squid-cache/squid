@@ -206,6 +206,23 @@ struct timezone {
     int	tz_minuteswest;	/* minutes west of Greenwich */
     int	tz_dsttime;	/* type of dst correction */
 };
+
+inline int
+gettimeofday(struct timeval *pcur_time, void *tzp)
+{
+    struct _timeb current;
+    struct timezone *tz = (struct timezone *) tzp;
+
+    _ftime(&current);
+
+    pcur_time->tv_sec = current.time;
+    pcur_time->tv_usec = current.millitm * 1000L;
+    if (tz) {
+        tz->tz_minuteswest = current.timezone;  /* minutes west of Greenwich  */
+        tz->tz_dsttime = current.dstflag;       /* type of dst correction  */
+    }
+    return 0;
+}
 #endif
 
 #define CHANGE_FD_SETSIZE 1
@@ -350,6 +367,10 @@ SQUIDCEXTERN int _free_osfhnd(int);
 SQUIDCEXTERN THREADLOCAL int ws32_result;
 
 #if !defined(strerror)
+#if HAVE_STDIO_H
+#include <stdio.h>
+#undef HAVE_STDIO_H
+#endif
 inline const char *
 strerror(int err)
 {
@@ -769,14 +790,26 @@ chroot(const char *dirname)
         return GetLastError();
 }
 
+inline int
+WIN32_truncate(const char *pathname, off_t length)
+{
+    int res = -1;
+    int fd = open(pathname, O_RDWR);
+
+    if (fd == -1)
+        errno = EBADF;
+    else {
+        res = WIN32_ftruncate(fd, length);
+        _close(fd);
+    }
+
+    return res;
+}
+
 SQUIDCEXTERN int ftruncate(int, off_t);
-#if !HAVE_GETTIMEOFDAY
-SQUIDCEXTERN int gettimeofday(struct timeval * ,void *);
-#endif
 SQUIDCEXTERN int kill(pid_t, int);
 SQUIDCEXTERN int statfs(const char *, struct statfs *);
-SQUIDCEXTERN int truncate(const char *, off_t);
-SQUIDCEXTERN const char * wsastrerror(int);
+SQUDICEXTERN const char *wsastrerror(int);
 
 inline struct passwd *
 getpwnam(char *unused) {

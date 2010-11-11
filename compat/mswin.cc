@@ -110,25 +110,6 @@ kill(pid_t pid, int sig)
         return 0;
 }
 
-#if !HAVE_GETTIMEOFDAY
-int
-gettimeofday(struct timeval *pcur_time, void *tzp)
-{
-    struct _timeb current;
-    struct timezone *tz = (struct timezone *) tzp;
-
-    _ftime(&current);
-
-    pcur_time->tv_sec = current.time;
-    pcur_time->tv_usec = current.millitm * 1000L;
-    if (tz) {
-        tz->tz_minuteswest = current.timezone;	/* minutes west of Greenwich  */
-        tz->tz_dsttime = current.dstflag;	/* type of dst correction  */
-    }
-    return 0;
-}
-#endif
-
 int
 statfs(const char *path, struct statfs *sfs)
 {
@@ -191,24 +172,6 @@ WIN32_ftruncate(int fd, off_t size)
         return -1;
     }
     return 0;
-}
-
-int
-WIN32_truncate(const char *pathname, off_t length)
-{
-    int fd;
-    int res = -1;
-
-    fd = open(pathname, O_RDWR);
-
-    if (fd == -1)
-        errno = EBADF;
-    else {
-        res = WIN32_ftruncate(fd, length);
-        _close(fd);
-    }
-
-    return res;
 }
 
 static struct _wsaerrtext {
@@ -393,10 +356,10 @@ static struct _wsaerrtext {
     }
 };
 
-/*
+/**
  * wsastrerror() - description of WSAGetLastError()
  */
-const char *
+inline const char *
 wsastrerror(int err)
 {
     static char xwsaerror_buf[BUFSIZ];
