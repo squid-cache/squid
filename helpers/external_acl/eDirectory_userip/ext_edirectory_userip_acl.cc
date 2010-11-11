@@ -2076,7 +2076,7 @@ int main(int argc, char **argv)
                     }
                 }
             } else {
-                debug("SplitString() -> Error: %Zu\n", i);
+                debug("SplitString() -> Error: %"PRIuSIZE"\n", i);
                 local_printfx("ERR (SplitString Error %d)\n", i);
             }
         } else {

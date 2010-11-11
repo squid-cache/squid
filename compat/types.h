@@ -126,6 +126,16 @@
 #endif
 #endif
 
+#ifndef PRIuSIZE
+#if _SQUID_MINGW_ && SIZEOF_SIZE_T == 4
+#define PRIuSIZE "I32u"
+#elif _SQUID_MINGW_ && SIZEOF_SIZE_T == 8
+#define PRIuSIZE "I64u"
+#elif !_SQUID_MINGW_
+#define PRIuSIZE "zu"
+#endif
+#endif
+
 #ifndef HAVE_MODE_T
 typedef unsigned short mode_t;
 #endif
