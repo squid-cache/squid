@@ -366,6 +366,8 @@ SQUIDCEXTERN int _free_osfhnd(int);
 
 SQUIDCEXTERN THREADLOCAL int ws32_result;
 
+SQUIDCEXTERN const char *wsastrerror(int);
+
 #if !defined(strerror)
 #if HAVE_STDIO_H
 #include <stdio.h>
@@ -809,7 +811,6 @@ WIN32_truncate(const char *pathname, off_t length)
 SQUIDCEXTERN int ftruncate(int, off_t);
 SQUIDCEXTERN int kill(pid_t, int);
 SQUIDCEXTERN int statfs(const char *, struct statfs *);
-SQUDICEXTERN const char *wsastrerror(int);
 
 inline struct passwd *
 getpwnam(char *unused) {
