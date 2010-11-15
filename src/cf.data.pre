@@ -244,8 +244,8 @@ DOC_START
 	authenticator processes.
 
 	The startup= and idle= options permit some skew in the exact amount
-	run. A minimum of startup=N will begin during startup and reconfigure
-	and Squid will start more in groups of up to idle=N in an attempt to meet
+	run. A minimum of startup=N will begin during startup and reconfigure.
+	Squid will start more in groups of up to idle=N in an attempt to meet
 	traffic needs and to keep idle=N free above those traffic needs up to
 	the maximum.
 
@@ -317,8 +317,8 @@ DOC_START
 	you are likely to need lots of authenticator processes.
 
 	The startup= and idle= options permit some skew in the exact amount
-	run. A minimum of startup=N will begin during startup and reconfigure
-	and Squid will start more in groups of up to idle=N in an attempt to meet
+	run. A minimum of startup=N will begin during startup and reconfigure.
+	Squid will start more in groups of up to idle=N in an attempt to meet
 	traffic needs and to keep idle=N free above those traffic needs up to
 	the maximum.
 
@@ -389,8 +389,8 @@ DOC_START
 	processes.
 
 	The startup= and idle= options permit some skew in the exact amount
-	run. A minimum of startup=N will begin during startup and reconfigure
-	and Squid will start more in groups of up to idle=N in an attempt to meet
+	run. A minimum of startup=N will begin during startup and reconfigure.
+	Squid will start more in groups of up to idle=N in an attempt to meet
 	traffic needs and to keep idle=N free above those traffic needs up to
 	the maximum.
 
@@ -430,8 +430,8 @@ DOC_START
 	processes.
 
 	The startup= and idle= options permit some skew in the exact amount
-	run. A minimum of startup=N will begin during startup and reconfigure
-	and Squid will start more in groups of up to idle=N in an attempt to meet
+	run. A minimum of startup=N will begin during startup and reconfigure.
+	Squid will start more in groups of up to idle=N in an attempt to meet
 	traffic needs and to keep idle=N free above those traffic needs up to
 	the maximum.
 
