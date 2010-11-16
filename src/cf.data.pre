@@ -2908,7 +2908,7 @@ DOC_START
 	
 	===== Modules Currently available =====
 	
-	none	Do not log any requests matchign these ACL.
+	none	Do not log any requests matching these ACL.
 		Do not specify Place or logformat name.
 	
 	stdio	Write each log line to disk immediately at the completion of
@@ -5073,7 +5073,7 @@ DOC_START
 	Valid values are as follows:
 
 	hash - Hash assignment
-	mask  - Mask assignment
+	mask - Mask assignment
 
 	As a general rule, cisco routers support the hash assignment method
 	and cisco switches support the mask assignment method.
