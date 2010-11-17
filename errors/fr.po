@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-11-06 03:26+1300\n"
-"PO-Revision-Date: 2010-11-11 17:52+0200\n"
+"PO-Revision-Date: 2010-11-17 19:36+0200\n"
 "Last-Translator: Bernard <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
@@ -101,13 +101,12 @@ msgstr ""
 "Veuillez renouveler votre requête."
 
 #: templates/ERR_PRECONDITION_FAILED:7
-#, fuzzy
 msgid ""
 "At least one precondition specified by the HTTP client in the request header "
 "has failed."
 msgstr ""
-"Au moins une précondition indiquée par le client HTTP dans l'en-tête de la "
-"requête a échoué."
+"Au moins une précondition indiquée dans l'en-tête de la requête du client "
+"HTTP  a échoué."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
@@ -389,7 +388,6 @@ msgstr ""
 "cache pour analyser en détails les messages d'erreurs."
 
 #: templates/ERR_PRECONDITION_FAILED:5
-#, fuzzy
 msgid "Precondition Failed."
 msgstr "La précondition a échouée."
 
