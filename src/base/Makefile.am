@@ -12,6 +12,7 @@ libbase_la_SOURCES = \
 	AsyncJobCalls.h \
 	AsyncCallQueue.cc \
 	AsyncCallQueue.h \
+	TidyPointer.h \
 	CbcPointer.h \
 	InstanceId.h \
 	Subscription.h \

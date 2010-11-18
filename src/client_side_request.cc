@@ -1190,7 +1190,7 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
         return;
     }
 
-    getConn()->switchToHttps();
+    getConn()->switchToHttps(request->GetHost());
 }
 
 void

@@ -42,6 +42,7 @@
 
 #include "fde.h"
 #include "acl/FilledChecklist.h"
+#include "ssl/gadgets.h"
 
 /**
  \defgroup ServerProtocolSSLInternal Server-Side SSL Internals
@@ -1204,6 +1205,60 @@ sslGetUserCertificateChainPEM(SSL *ssl)
     BIO_free(mem);
 
     return str;
+}
+
+/// \ingroup ServerProtocolSSLInternal
+/// Create SSL context and apply ssl certificate and private key to it.
+static SSL_CTX * createSSLContext(Ssl::X509_Pointer & x509, Ssl::EVP_PKEY_Pointer & pkey)
+{
+    Ssl::SSL_CTX_Pointer sslContext(SSL_CTX_new(SSLv23_server_method()));
+
+    if (!SSL_CTX_use_certificate(sslContext.get(), x509.get()))
+        return NULL;
+
+    if (!SSL_CTX_use_PrivateKey(sslContext.get(), pkey.get()))
+        return NULL;
+    return sslContext.release();
+}
+
+SSL_CTX * Ssl::generateSslContextUsingPkeyAndCertFromMemory(const char * data)
+{
+    Ssl::X509_Pointer cert;
+    Ssl::EVP_PKEY_Pointer pkey;
+    if (!readCertAndPrivateKeyFromMemory(cert, pkey, data))
+        return NULL;
+
+    if (!cert || !pkey)
+        return NULL;
+
+    return createSSLContext(cert, pkey);
+}
+
+SSL_CTX * Ssl::generateSslContext(char const *host, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey)
+{
+    Ssl::X509_Pointer cert;
+    Ssl::EVP_PKEY_Pointer pkey;
+    if (!generateSslCertificateAndPrivateKey(host, signedX509, signedPkey, cert, pkey, NULL)) {
+        return NULL;
+    }
+    if (!cert)
+        return NULL;
+
+    if (!pkey)
+        return NULL;
+
+    return createSSLContext(cert, pkey);
+}
+
+bool Ssl::verifySslCertificateDate(SSL_CTX * sslContext)
+{
+    // Temporary ssl for getting X509 certificate from SSL_CTX.
+    Ssl::SSL_Pointer ssl(SSL_new(sslContext));
+    X509 * cert = SSL_get_certificate(ssl.get());
+    ASN1_TIME * time_notBefore = X509_get_notBefore(cert);
+    ASN1_TIME * time_notAfter = X509_get_notAfter(cert);
+    bool ret = (X509_cmp_current_time(time_notBefore) < 0 && X509_cmp_current_time(time_notAfter) > 0);
+    return ret;
 }
 
 #endif /* USE_SSL */
