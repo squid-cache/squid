@@ -3460,7 +3460,7 @@ ConnStateData::getSslContextStart()
             debugs(33, 5, HERE << "SSL certificate for " << host << " haven't found in cache");
         }
 
-#ifdef USE_SSL_CRTD
+#if USE_SSL_CRTD
         debugs(33, 5, HERE << "Generating SSL certificate for " << host << " using ssl_crtd.");
         Ssl::CrtdMessage request_message;
         request_message.setCode(Ssl::CrtdMessage::code_new_certificate);
@@ -3473,7 +3473,7 @@ ConnStateData::getSslContextStart()
         return true;
 #else
         debugs(33, 5, HERE << "Generating SSL certificate for " << host);
-        dynCtx = generateSslContext(host, port->signingCert, port->signPkey);
+        dynCtx = Ssl::generateSslContext(host, port->signingCert, port->signPkey);
         return getSslContextDone(dynCtx, true);
 #endif //USE_SSL_CRTD
     }
