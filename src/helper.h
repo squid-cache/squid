@@ -69,6 +69,8 @@ public:
         int queue_size;
         int avg_svc_time;
     } stats;
+    /// True if callback expects the whole helper output, as a c-string.
+    bool return_full_reply;
 
 private:
     CBDATA_CLASS2(helper);

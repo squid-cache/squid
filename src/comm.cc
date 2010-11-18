@@ -1540,6 +1540,10 @@ comm_close_complete(int fd, void *data)
         F->ssl = NULL;
     }
 
+    if (F->dynamicSslContext) {
+        SSL_CTX_free(F->dynamicSslContext);
+        F->dynamicSslContext = NULL;
+    }
 #endif
     fd_close(fd);		/* update fdstat */
 
