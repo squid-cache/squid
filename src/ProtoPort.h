@@ -8,6 +8,10 @@
 #include "cbdata.h"
 #include "comm/ListenStateData.h"
 
+#if USE_SSL
+#include "ssl/gadgets.h"
+#endif
+
 struct http_port_list {
     http_port_list(const char *aProtocol);
     ~http_port_list();
@@ -60,8 +64,13 @@ struct http_port_list {
     char *crlfile;
     char *dhfile;
     char *sslflags;
-    char *sslcontext;
-    SSL_CTX *sslContext;
+    char *sslContextSessionId; ///< "session id context" for staticSslContext
+    bool generateHostCertificates; ///< dynamically make host cert for sslBump
+    size_t dynamicCertMemCacheSize; ///< max size of generated certificates memory cache
+
+    Ssl::SSL_CTX_Pointer staticSslContext; ///< for HTTPS accelerator or static sslBump
+    Ssl::X509_Pointer signingCert; ///< x509 certificate for signing generated certificates
+    Ssl::EVP_PKEY_Pointer signPkey; ///< private key for sighing generated certificates
 #endif
 
     CBDATA_CLASS2(http_port_list);
