@@ -177,8 +177,6 @@ public:
 
     int imslen;
 
-    int64_t max_forwards;
-
     Ip::Address client_addr;
 
 #if FOLLOW_X_FORWARDED_FOR
