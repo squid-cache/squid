@@ -91,7 +91,6 @@ HttpRequest::init()
     ims = -1;
     imslen = 0;
     lastmod = -1;
-    max_forwards = -1;
     client_addr.SetEmpty();
 #if USE_SQUID_EUI
     client_eui48.clear();
@@ -205,7 +204,6 @@ HttpRequest::clone() const
     // range handled in hdrCacheInit()
     copy->ims = ims;
     copy->imslen = imslen;
-    copy->max_forwards = max_forwards;
     copy->hier = hier; // Is it safe to copy? Should we?
 
     copy->errType = errType;
