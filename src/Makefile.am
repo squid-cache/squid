@@ -1004,6 +1004,7 @@ tests_testHttpReply_LDADD=\
 	auth/libauth.la \
 	ip/libip.la \
 	base/libbase.la \
+	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SQUID_CPPUNIT_LIBS) \
