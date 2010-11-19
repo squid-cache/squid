@@ -36,5 +36,5 @@ libexec_PROGRAMS = \
 
 if USE_SSL_CRTD
 ssl_crtd_SOURCES = ssl_crtd.cc certificate_db.cc certificate_db.h
-ssl_crtd_LDADD = @SSLLIB@ -lsslutil $(COMPAT_LIB)
+ssl_crtd_LDADD = $(SSLLIB) -lsslutil $(COMPAT_LIB)
 endif
