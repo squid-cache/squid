@@ -29,9 +29,9 @@
  *
  */
 
+#include "squid.h"
 #include "CacheManager.h"
 #include "mgr/Registration.h"
-#include "squid.h"
 
 Mgr::Action::Pointer
 CacheManager::createNamedAction(char const* action)

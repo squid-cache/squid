@@ -17,6 +17,7 @@
  *
  */
 
+#include "config.h"
 #include "Trie.h"
 #include "TrieCharTransform.h"
 

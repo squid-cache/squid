@@ -33,6 +33,7 @@
  *
  */
 
+#include "config.h"
 #include "URL.h"
 #include "HttpRequest.h"
 #include "URLScheme.h"
