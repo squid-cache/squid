@@ -32,6 +32,7 @@
  *
  */
 
+#include "config.h"
 #include "StoreSwapLogData.h"
 #include "swap_log_op.h"
 

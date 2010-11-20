@@ -1,3 +1,4 @@
+#include "config.h"
 
 /*
  * allowusers.c

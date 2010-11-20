@@ -17,6 +17,7 @@
  *
  */
 
+#include "config.h"
 #include "TrieNode.h"
 #include "TrieCharTransform.h"
 #if HAVE_UNISTD_H

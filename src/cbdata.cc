@@ -48,6 +48,7 @@
  * when finished.
  */
 
+#include "config.h"
 #include "cbdata.h"
 #include "mgr/Registration.h"
 #include "Store.h"
