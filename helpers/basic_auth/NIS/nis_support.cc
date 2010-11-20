@@ -1,7 +1,7 @@
 /*
  * Written By Rabellino Sergio (rabellino@di.unito.it) For Solaris 2.x
  */
-
+#include "config.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

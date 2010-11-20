@@ -33,7 +33,9 @@
  *
  */
 
+#include "config.h"
 #include "RemovalPolicy.h"
+
 CBDATA_CLASS_INIT(RemovalPolicy);
 CBDATA_CLASS_INIT(RemovalPolicyWalker);
 CBDATA_CLASS_INIT(RemovalPurgeWalker);

@@ -33,6 +33,7 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
+#include "config.h"
 #include "StoreFileSystem.h"
 #include "StoreFScoss.h"
 #include "mgr/Registration.h"

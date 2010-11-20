@@ -1,3 +1,5 @@
+#include "config.h"
+
 /*
  * Unix SMB/Netbios implementation.
  * Version 1.9.

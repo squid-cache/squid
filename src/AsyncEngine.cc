@@ -31,4 +31,5 @@
  *
  */
 
+#include "config.h"
 #include "AsyncEngine.h"
