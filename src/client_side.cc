@@ -2511,7 +2511,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     } // else implied identity coding
 
     mustReplyToOptions = (method == METHOD_OPTIONS) &&
-        (request->header.getInt64(HDR_MAX_FORWARDS) == 0);
+                         (request->header.getInt64(HDR_MAX_FORWARDS) == 0);
     if (!urlCheckRequest(request) || mustReplyToOptions || unsupportedTe) {
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
