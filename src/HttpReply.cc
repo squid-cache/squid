@@ -186,7 +186,7 @@ HttpReply::make304() const
     /* rv->content_range */
     /* rv->keep_alive */
     HttpVersion ver(1,1);
-    httpStatusLineSet(&rv->sline, ver, HTTP_NOT_MODIFIED, "");
+    httpStatusLineSet(&rv->sline, ver, HTTP_NOT_MODIFIED, NULL);
 
     for (t = 0; ImsEntries[t] != HDR_OTHER; ++t)
         if ((e = header.findEntry(ImsEntries[t])))
