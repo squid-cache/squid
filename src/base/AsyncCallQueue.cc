@@ -6,6 +6,7 @@
  *
  */
 
+#include "config.h"
 #include "base/AsyncCallQueue.h"
 #include "base/AsyncCall.h"
 

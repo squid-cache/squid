@@ -1,7 +1,3 @@
-#ifndef SQUID_CONFIG_H
-#include "config.h"
-#endif
-
 /* If we have this system file use it. Otherwise use the below definitions. */
 #if HAVE_SYS_EUI64_H
 #include <sys/eui64.h>
@@ -50,24 +46,24 @@
 extern "C" {
 #endif
 
-/**
- * Size of the ASCII representation of an EUI-64.
- */
+    /**
+     * Size of the ASCII representation of an EUI-64.
+     */
 #define EUI64_SIZ       24
 
-/**
- * The number of bytes in an EUI-64.
- */
+    /**
+     * The number of bytes in an EUI-64.
+     */
 #define EUI64_LEN       8
 
-/**
- * Structure of an IEEE EUI-64.
- */
-struct eui64 {
-    u_char octet[EUI64_LEN];
-};
+    /**
+     * Structure of an IEEE EUI-64.
+     */
+    struct eui64 {
+        u_char octet[EUI64_LEN];
+    };
 
-int eui64_aton(const char *a, struct eui64 *e);
+    int eui64_aton(const char *a, struct eui64 *e);
 #ifdef __cplusplus
 }
 #endif

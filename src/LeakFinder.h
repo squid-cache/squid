@@ -1,8 +1,6 @@
 #ifndef SQUID_LEAKFINDER_H
 #define SQUID_LEAKFINDER_H
 
-#include "config.h"
-
 #if USE_LEAKFINDER
 
 #include "hash.h"

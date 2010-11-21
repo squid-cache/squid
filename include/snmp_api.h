@@ -1,8 +1,6 @@
 #ifndef SQUID_SNMP_API_H
 #define SQUID_SNMP_API_H
 
-#include "config.h"
-
 /***********************************************************
 	Copyright 1989 by Carnegie Mellon University
 

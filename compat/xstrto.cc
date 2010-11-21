@@ -31,8 +31,8 @@
 #include "config.h"
 #include "compat/xstrto.h"
 
-/* 
- * (C) 2000-2006 by the netfilter coreteam <coreteam@netfilter.org>: 
+/*
+ * (C) 2000-2006 by the netfilter coreteam <coreteam@netfilter.org>:
  *
  *      This program is free software; you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@
  *
  *      You should have received a copy of the GNU General Public License
  *      along with this program; if not, write to the Free Software
- *      Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.   
+ *      Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 #if HAVE_ERRNO_H
@@ -58,7 +58,7 @@ xstrtoul(const char *s, char **end, unsigned long *value,
          unsigned long min, unsigned long max)
 {
     unsigned long v;
-    char *my_end;   
+    char *my_end;
 
     errno = 0;
     v = strtoul(s, &my_end, 0);
@@ -71,7 +71,7 @@ xstrtoul(const char *s, char **end, unsigned long *value,
     if (errno != ERANGE && min <= v && (max == 0 || v <= max)) {
         if (value != NULL)
             *value = v;
-        if (end == NULL)   
+        if (end == NULL)
             return *my_end == '\0';
         return true;
     }

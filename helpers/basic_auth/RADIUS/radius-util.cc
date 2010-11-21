@@ -36,7 +36,7 @@ char util_sccsid[] =
     "@(#)util.c	1.5 Copyright 1992 Livingston Enterprises Inc\n"
     "		2.1 Copyright 1997 Cistron Internet Services B.V.";
 
-#include	"config.h"
+#include "config.h"
 
 #if HAVE_SYS_SOCKET_H
 #include	<sys/socket.h>

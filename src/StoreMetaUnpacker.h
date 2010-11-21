@@ -35,9 +35,6 @@
 class StoreMeta;
 class StoreEntry;
 
-/* for ssize_t, SQUIDCEXTERN */
-#include "config.h"
-
 class StoreMetaUnpacker
 {
 

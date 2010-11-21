@@ -16,7 +16,7 @@ Ip::Qos::getTosFromServer(const int server_fd, fde *clientFde)
 #if USE_QOS_TOS && _SQUID_LINUX_
     /* Bug 2537: This part of ZPH only applies to patched Linux kernels. */
     tos_t tos = 1;
-    int tos_len = sizeof(tos); 
+    int tos_len = sizeof(tos);
     clientFde->tosFromServer = 0;
     if (setsockopt(server_fd,SOL_IP,IP_RECVTOS,&tos,tos_len)==0) {
         unsigned char buf[512];
@@ -76,12 +76,12 @@ void Ip::Qos::getNfmarkFromServer(const int server_fd, const fde *servFde, const
             struct in6_addr serv_fde_remote_ip6;
             inet_pton(AF_INET6,servFde->ipaddr,(struct in6_addr*)&serv_fde_remote_ip6);
             nfct_set_attr(ct, ATTR_IPV6_DST, serv_fde_remote_ip6.s6_addr);
-            nfct_set_attr(ct, ATTR_IPV6_SRC, serv_fde_local_ip6.s6_addr); 
+            nfct_set_attr(ct, ATTR_IPV6_SRC, serv_fde_local_ip6.s6_addr);
         } else {
             serv_fde_local_ip = ((struct sockaddr_in*)addr->ai_addr)->sin_addr;
             nfct_set_attr_u8(ct, ATTR_L3PROTO, AF_INET);
             nfct_set_attr_u32(ct, ATTR_IPV4_DST, inet_addr(servFde->ipaddr));
-            nfct_set_attr_u32(ct, ATTR_IPV4_SRC, serv_fde_local_ip.s_addr);  
+            nfct_set_attr_u32(ct, ATTR_IPV4_SRC, serv_fde_local_ip.s_addr);
         }
 
         nfct_set_attr_u8(ct, ATTR_L4PROTO, IPPROTO_TCP);
@@ -91,15 +91,15 @@ void Ip::Qos::getNfmarkFromServer(const int server_fd, const fde *servFde, const
         /* Open a handle to the conntrack */
         if (struct nfct_handle *h = nfct_open(CONNTRACK, 0)) {
             /* Register the callback. The callback function will record the mark value. */
-            nfct_callback_register(h, NFCT_T_ALL, getNfMarkCallback, (void *)clientFde);  
+            nfct_callback_register(h, NFCT_T_ALL, getNfMarkCallback, (void *)clientFde);
             /* Query the conntrack table using the data previously set */
             int x = nfct_query(h, NFCT_Q_GET, ct);
             if (x == -1) {
                 debugs(17, 2, "QOS: Failed to retrieve connection mark: (" << x << ") " << strerror(errno)
-                  << " (Destination " << servFde->ipaddr << ":" << servFde->remote_port
-                  << ", source " << serv_fde_local_conn << ")" );
+                       << " (Destination " << servFde->ipaddr << ":" << servFde->remote_port
+                       << ", source " << serv_fde_local_conn << ")" );
             }
-             
+
             nfct_close(h);
         } else {
             debugs(17, 2, "QOS: Failed to open conntrack handle for upstream netfilter mark retrieval.");
@@ -116,14 +116,14 @@ void Ip::Qos::getNfmarkFromServer(const int server_fd, const fde *servFde, const
 #if USE_LIBNETFILTERCONNTRACK
 int
 Ip::Qos::getNfMarkCallback(enum nf_conntrack_msg_type type,
-              struct nf_conntrack *ct,
-              void *data)
+                           struct nf_conntrack *ct,
+                           void *data)
 {
-        fde *clientFde = (fde *)data;
-        clientFde->nfmarkFromServer = nfct_get_attr_u32(ct, ATTR_MARK);
-        debugs(17, 3, "QOS: Retrieved connection mark value: " << clientFde->nfmarkFromServer);
+    fde *clientFde = (fde *)data;
+    clientFde->nfmarkFromServer = nfct_get_attr_u32(ct, ATTR_MARK);
+    debugs(17, 3, "QOS: Retrieved connection mark value: " << clientFde->nfmarkFromServer);
 
-        return NFCT_CB_CONTINUE;
+    return NFCT_CB_CONTINUE;
 }
 #endif
 
@@ -229,11 +229,11 @@ Ip::Qos::Config::parseConfigLine()
 # else // USE_LIBNETFILTERCONNTRACK
                 preserveMissMark = false;
                 debugs(3, DBG_IMPORTANT, "WARNING: Squid not compiled with Netfilter conntrack library. "
-                                            << "Netfilter mark preservation not available.");
+                       << "Netfilter mark preservation not available.");
 #endif // USE_LIBNETFILTERCONNTRACK
 #else // SO_MARK
                 debugs(3, DBG_CRITICAL, "ERROR: Invalid parameter 'mark' in qos_flows option. "
-                                            << "Linux Netfilter marking not available.");
+                       << "Linux Netfilter marking not available.");
                 self_destruct();
 #endif // SO_MARK
             } else if (strncmp(token, "tos",3) == 0) {
@@ -249,14 +249,14 @@ Ip::Qos::Config::parseConfigLine()
 
             if (mark) {
                 if (!xstrtoui(&token[10], NULL, &markLocalHit, 0, std::numeric_limits<nfmark_t>::max())) {
-                        debugs(3, DBG_CRITICAL, "ERROR: Bad mark local-hit value " << &token[10]);
-                        self_destruct();
+                    debugs(3, DBG_CRITICAL, "ERROR: Bad mark local-hit value " << &token[10]);
+                    self_destruct();
                 }
             } else {
                 unsigned int v = 0;
                 if (!xstrtoui(&token[10], NULL, &v, 0, std::numeric_limits<tos_t>::max())) {
-                        debugs(3, DBG_CRITICAL, "ERROR: Bad TOS local-hit value " << &token[10]);
-                        self_destruct();
+                    debugs(3, DBG_CRITICAL, "ERROR: Bad TOS local-hit value " << &token[10]);
+                    self_destruct();
                 }
                 tosLocalHit = (tos_t)v;
             }
@@ -265,14 +265,14 @@ Ip::Qos::Config::parseConfigLine()
 
             if (mark) {
                 if (!xstrtoui(&token[12], NULL, &markSiblingHit, 0, std::numeric_limits<nfmark_t>::max())) {
-                        debugs(3, DBG_CRITICAL, "ERROR: Bad mark sibling-hit value " << &token[12]);
-                        self_destruct();
+                    debugs(3, DBG_CRITICAL, "ERROR: Bad mark sibling-hit value " << &token[12]);
+                    self_destruct();
                 }
             } else {
                 unsigned int v = 0;
                 if (!xstrtoui(&token[12], NULL, &v, 0, std::numeric_limits<tos_t>::max())) {
-                        debugs(3, DBG_CRITICAL, "ERROR: Bad TOS sibling-hit value " << &token[12]);
-                        self_destruct();
+                    debugs(3, DBG_CRITICAL, "ERROR: Bad TOS sibling-hit value " << &token[12]);
+                    self_destruct();
                 }
                 tosSiblingHit = (tos_t)v;
             }
@@ -281,14 +281,14 @@ Ip::Qos::Config::parseConfigLine()
 
             if (mark) {
                 if (!xstrtoui(&token[11], NULL, &markParentHit, 0, std::numeric_limits<nfmark_t>::max())) {
-                        debugs(3, DBG_CRITICAL, "ERROR: Bad mark parent-hit value " << &token[11]);
-                        self_destruct();
+                    debugs(3, DBG_CRITICAL, "ERROR: Bad mark parent-hit value " << &token[11]);
+                    self_destruct();
                 }
             } else {
                 unsigned int v = 0;
                 if (!xstrtoui(&token[11], NULL, &v, 0, std::numeric_limits<tos_t>::max())) {
-                        debugs(3, DBG_CRITICAL, "ERROR: Bad TOS parent-hit value " << &token[11]);
-                        self_destruct();
+                    debugs(3, DBG_CRITICAL, "ERROR: Bad TOS parent-hit value " << &token[11]);
+                    self_destruct();
                 }
                 tosParentHit = (tos_t)v;
             }
@@ -297,14 +297,14 @@ Ip::Qos::Config::parseConfigLine()
 
             if (mark) {
                 if (!xstrtoui(&token[5], NULL, &markMiss, 0, std::numeric_limits<nfmark_t>::max())) {
-                        debugs(3, DBG_CRITICAL, "ERROR: Bad mark miss value " << &token[5]);
-                        self_destruct();
+                    debugs(3, DBG_CRITICAL, "ERROR: Bad mark miss value " << &token[5]);
+                    self_destruct();
                 }
             } else {
                 unsigned int v = 0;
                 if (!xstrtoui(&token[5], NULL, &v, 0, std::numeric_limits<tos_t>::max())) {
-                        debugs(3, DBG_CRITICAL, "ERROR: Bad TOS miss value " << &token[5]);
-                        self_destruct();
+                    debugs(3, DBG_CRITICAL, "ERROR: Bad TOS miss value " << &token[5]);
+                    self_destruct();
                 }
                 tosMiss = (tos_t)v;
             }
@@ -327,14 +327,14 @@ Ip::Qos::Config::parseConfigLine()
 
             if (mark && preserveMissMark) {
                 if (!xstrtoui(&token[10], NULL, &preserveMissMarkMask, 0, std::numeric_limits<nfmark_t>::max())) {
-                        debugs(3, DBG_CRITICAL, "ERROR: Bad mark miss-mark value " << &token[10]);
-                        self_destruct();
+                    debugs(3, DBG_CRITICAL, "ERROR: Bad mark miss-mark value " << &token[10]);
+                    self_destruct();
                 }
             } else if (preserveMissTos) {
                 unsigned int v = 0;
                 if (!xstrtoui(&token[10], NULL, &v, 0, std::numeric_limits<tos_t>::max())) {
-                        debugs(3, DBG_CRITICAL, "ERROR: Bad TOS miss-mark value " << &token[10]);
-                        self_destruct();
+                    debugs(3, DBG_CRITICAL, "ERROR: Bad TOS miss-mark value " << &token[10]);
+                    self_destruct();
                 }
                 preserveMissTosMask = (tos_t)v;
             } else {
@@ -380,7 +380,7 @@ Ip::Qos::Config::dumpConfigLine(char *entry, const char *name) const
         }
         p += snprintf(p, 2, "\n");
     }
-    
+
     if (isHitNfmarkActive()) {
         p += snprintf(p, 11, "%s", name); // strlen("qos_flows ");
         p += snprintf(p, 5, "%s", "mark");

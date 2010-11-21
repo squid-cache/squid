@@ -44,12 +44,12 @@ bool
 Ip::Qos::Config::isAclNfmarkActive() const
 {
     acl_nfmark * nfmarkAcls [] = { nfmarkToServer, nfmarkToClient };
- 
+
     for (int i=0; i<2; i++) {
         while (nfmarkAcls[i]) {
             acl_nfmark *l = nfmarkAcls[i];
             if (l->nfmark > 0)
-                return true; 
+                return true;
             nfmarkAcls[i] = l->next;
         }
     }

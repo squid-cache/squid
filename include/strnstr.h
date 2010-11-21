@@ -1,5 +1,3 @@
-#include "config.h"
-
 #if HAVE_STRNSTR
 
 /* Is strnstr exists and is usable we do so. */

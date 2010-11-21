@@ -35,7 +35,6 @@
 #ifndef SQUID_SSL_SUPPORT_H
 #define SQUID_SSL_SUPPORT_H
 
-#include "config.h"
 #if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
 #endif
@@ -49,13 +48,13 @@
 #include <openssl/engine.h>
 #endif
 
-/**
- \defgroup ServerProtocolSSLAPI Server-Side SSL API
- \ingroup ServerProtocol
- */
+    /**
+     \defgroup ServerProtocolSSLAPI Server-Side SSL API
+     \ingroup ServerProtocol
+     */
 
 /// \ingroup ServerProtocolSSLAPI
-SSL_CTX *sslCreateServerContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *clientCA, const char *CAfile, const char *CApath, const char *CRLfile, const char *dhpath, const char *context);
+    SSL_CTX *sslCreateServerContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *clientCA, const char *CAfile, const char *CApath, const char *CRLfile, const char *dhpath, const char *context);
 
 /// \ingroup ServerProtocolSSLAPI
 SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile);

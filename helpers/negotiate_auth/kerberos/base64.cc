@@ -2,10 +2,11 @@
  * Markus Moeller has modified the following code from Squid
  */
 
+#include "config.h"
+#include "base64.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "base64.h"
 
 
 static void ska_base64_init(void);

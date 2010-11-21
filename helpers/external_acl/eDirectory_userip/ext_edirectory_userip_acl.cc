@@ -303,10 +303,10 @@ void local_printfx(const char *msg,...)
 
     if ((msg == NULL) || (strlen(prog) > 256)) {
         /* FAIL */
-/*
-        snprintf(dbuf, sizeof(dbuf), "%s: local_printfx() EPIC FAILURE.\n", prog);
-        fputs(dbuf, stderr);
-*/
+        /*
+                snprintf(dbuf, sizeof(dbuf), "%s: local_printfx() EPIC FAILURE.\n", prog);
+                fputs(dbuf, stderr);
+        */
         debug("local_printfx() EPIC FAIL.\n");
         return;
     }
@@ -321,10 +321,10 @@ void local_printfx(const char *msg,...)
         memset(dbuf, '\0', sizeof(dbuf));
     } else {
         /* FAIL */
-/*
-        snprintf(bbuf, sz, "%s: local_printfx(%s) FAILURE: %zd\n", prog, dbuf, x);
-        fputs(bbuf, stderr);
-*/
+        /*
+                snprintf(bbuf, sz, "%s: local_printfx(%s) FAILURE: %zd\n", prog, dbuf, x);
+                fputs(bbuf, stderr);
+        */
         debug("local_printfx() FAILURE: %zd\n", x);
     }
 
@@ -1842,7 +1842,7 @@ int main(int argc, char **argv)
                     case 'u':
                         i++;						/* Set Search Attribute */
                         if (argv[i] != NULL) {
-			    xstrncpy(edui_conf.attrib, argv[i], sizeof(edui_conf.attrib));
+                            xstrncpy(edui_conf.attrib, argv[i], sizeof(edui_conf.attrib));
                         } else {
                             local_printfx("No parameters given for 'u'.\n");
                             DisplayUsage();
@@ -1988,8 +1988,8 @@ int main(int argc, char **argv)
             if (x != LDAP_ERR_SUCCESS) {
                 /* Unable to bind */
                 debug("BindLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
-		local_printfx("ERR (BindLDAP: %s - %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
-		continue;
+                local_printfx("ERR (BindLDAP: %s - %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
+                continue;
             } else
                 debug("BindLDAP(-, %s, %s, (LDAP_AUTH_TLS)) -> %s\n", edui_conf.dn, edui_conf.passwd, ErrLDAP(x));
         } else if (!(edui_ldap.status & LDAP_BIND_S)) {
@@ -1999,8 +1999,8 @@ int main(int argc, char **argv)
                 if (x != LDAP_ERR_SUCCESS) {
                     /* Unable to bind */
                     debug("BindLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
-		    local_printfx("ERR (BindLDAP: %s - %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
-		    continue;
+                    local_printfx("ERR (BindLDAP: %s - %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
+                    continue;
                 } else
                     debug("BindLDAP(-, %s, %s, (LDAP_AUTH_SIMPLE)) -> %s\n", edui_conf.dn, edui_conf.passwd, ErrLDAP(x));
             } else {
@@ -2009,8 +2009,8 @@ int main(int argc, char **argv)
                 if (x != LDAP_ERR_SUCCESS) {
                     /* Unable to bind */
                     debug("BindLDAP() -> %s (LDAP: %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
-		    local_printfx("ERR (BindLDAP: %s - %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
-		    continue;
+                    local_printfx("ERR (BindLDAP: %s - %s)\n", ErrLDAP(x), ldap_err2string(edui_ldap.err));
+                    continue;
                 } else
                     debug("BindLDAP(-, -, -, (LDAP_AUTH_NONE)) -> %s\n", ErrLDAP(x));
             }

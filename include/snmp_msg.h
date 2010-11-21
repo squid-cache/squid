@@ -2,8 +2,6 @@
 #ifndef SQUID_SNMP_MSG_H
 #define SQUID_SNMP_MSG_H
 
-#include "config.h"
-
 /**********************************************************************
  *
  *           Copyright 1997 by Carnegie Mellon University

@@ -33,8 +33,6 @@
  */
 #ifndef _INCLUDE_ICMPPINGER_H
 #define _INCLUDE_ICMPPINGER_H
-
-#include "config.h"
 #include "Icmp.h"
 
 /**

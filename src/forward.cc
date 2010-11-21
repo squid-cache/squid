@@ -913,7 +913,7 @@ FwdState::connectStart()
 #if SO_MARK
     nfmark_t mark = GetNfmarkToServer(request);
     debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << int(tos)
-                    << ", netfilter mark " << mark);
+           << ", netfilter mark " << mark);
 #else
     nfmark_t mark = 0;
     debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << int(tos));

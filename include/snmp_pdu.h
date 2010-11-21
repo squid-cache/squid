@@ -1,7 +1,6 @@
 #ifndef SQUID_SNMP_PDU_H
 #define SQUID_SNMP_PDU_H
 
-#include "config.h"
 /* required for oid typedef */
 #include "asn1.h"
 

@@ -32,6 +32,7 @@
  */
 
 #define SQUID_UNIT_TEST 1
+#include "config.h"
 #include "testStoreSupport.h"
 #include "event.h"
 #include "EventLoop.h"

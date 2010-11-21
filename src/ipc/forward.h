@@ -8,8 +8,6 @@
 #ifndef SQUID_IPC_FORWARD_H
 #define SQUID_IPC_FORWARD_H
 
-#include "config.h"
-
 namespace Ipc
 {
 

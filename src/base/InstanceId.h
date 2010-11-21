@@ -1,7 +1,6 @@
 #ifndef SQUID_BASE_INSTANCE_ID_H
 #define SQUID_BASE_INSTANCE_ID_H
 
-#include "config.h"
 #include <iosfwd>
 
 /** Identifier for class instances
@@ -53,7 +52,8 @@ private:
 /// print the id
 template <class Class>
 inline
-std::ostream &operator <<(std::ostream &os, const InstanceId<Class> &id) {
+std::ostream &operator <<(std::ostream &os, const InstanceId<Class> &id)
+{
     return id.print(os);
 }
 

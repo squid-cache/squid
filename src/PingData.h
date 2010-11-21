@@ -33,8 +33,6 @@
 #ifndef SQUID_PINGDATA_H
 #define SQUID_PINGDATA_H
 
-#include "config.h"
-
 class ping_data
 {
 

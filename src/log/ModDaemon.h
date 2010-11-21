@@ -32,8 +32,6 @@
 #ifndef _SQUID_SRC_LOG_MODDAEMON_H
 #define _SQUID_SRC_LOG_MODDAEMON_H
 
-#include "config.h"
-
 class Logfile;
 
 extern int logfile_mod_daemon_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag);

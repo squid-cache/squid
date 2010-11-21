@@ -1,7 +1,3 @@
-#ifndef SQUID_CONFIG_H
-#include "config.h"
-#endif
-
 #ifndef SQUID_VALGRIND_H
 #define SQUID_VALGRIND_H
 

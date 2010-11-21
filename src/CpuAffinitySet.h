@@ -6,7 +6,6 @@
 #ifndef SQUID_CPU_AFFINITY_SET_H
 #define SQUID_CPU_AFFINITY_SET_H
 
-#include "config.h"
 #include "compat/cpu.h"
 
 /// cpu affinity management for a single process

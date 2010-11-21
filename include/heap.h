@@ -43,9 +43,6 @@
 #ifndef	SQUID_HEAP_H
 #define	SQUID_HEAP_H
 
-/* Squid autoconf definitions */
-#include "config.h"
-
 /*
  * Function for generating heap keys.  The first argument will typically be
  * a dws_md_p passed in as a void *.  Should find a way to get type safety

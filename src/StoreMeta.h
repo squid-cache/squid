@@ -37,9 +37,6 @@ class StoreEntry;
 // WTF?
 typedef class StoreMeta tlv;
 
-/* for size_t, SQUIDCEXTERN */
-#include "config.h"
-
 /**
  \ingroup SwapStoreAPI
  \todo AYJ: for critical lists like this we should use A=64,B=65 etc to enforce and reserve values.

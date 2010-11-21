@@ -11,7 +11,6 @@
 #ifndef   _SQUID_DIGEST_COMMON_H_
 #define   _SQUID_DIGEST_COMMON_H_
 
-#include "config.h"
 #include "hash.h"
 #include "rfc2617.h"
 #include "util.h"
