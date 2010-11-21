@@ -510,6 +510,9 @@ This section gives a thorough account of those changes in three categories:
 	<tag>ignore_expect_100</tag>
 	<p>Obsolete.
 
+	<tag>log_fqdn</tag>
+	<p>Obsolete. Replaced by automatic detection of the %>A logformat tag.
+
 	<tag>url_rewrite_concurrency</tag>
 	<p>Replaced by url_rewrite_children ... concurrency=N option.
 

@@ -3234,16 +3234,9 @@ DOC_START
 DOC_END
 
 NAME: log_fqdn
-COMMENT: on|off
-TYPE: onoff
-DEFAULT: off
-LOC: Config.onoff.log_fqdn
+TYPE: obsolete
 DOC_START
-	Turn this on if you wish to log fully qualified domain names
-	in the access.log. To do this Squid does a DNS lookup of all
-	IP's connecting to it. This can (in some situations) increase
-	latency, which makes your cache seem slower for interactive
-	browsing.
+	Remove this option from your config. To log FQDN use %>A in the log format.
 DOC_END
 
 NAME: client_netmask
