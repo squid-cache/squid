@@ -1,8 +1,6 @@
 #ifndef __ASYNC_IO_H__
 #define __ASYNC_IO_H__
 
-#include "config.h"
-
 #if USE_DISKIO_AIO
 
 #ifdef _SQUID_WIN32_

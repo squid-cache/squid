@@ -40,8 +40,6 @@
 #ifndef SQUID_ESILIBXML2PARSER_H
 #define SQUID_ESILIBXML2PARSER_H
 
-#include "config.h"
-
 #if USE_SQUID_ESI && HAVE_LIBXML2
 
 #include "esi/Parser.h"

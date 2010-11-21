@@ -5,7 +5,6 @@
 #ifndef SQUID_SSL_CONFIG_H
 #define SQUID_SSL_CONFIG_H
 
-#include "config.h"
 #include "HelperChildConfig.h"
 
 namespace Ssl

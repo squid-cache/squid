@@ -1,11 +1,6 @@
 /*
  * $Id$
  */
-
-#ifndef SQUID_CONFIG_H
-#include "config.h"
-#endif
-
 #ifndef SQUID_COMPAT_CPU_H
 #define SQUID_COMPAT_CPU_H
 

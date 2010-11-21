@@ -34,8 +34,6 @@
 #ifndef SQUID_DEBUG_H
 #define SQUID_DEBUG_H
 
-#include "config.h"
-
 #if HAVE_IOSTREAM
 #include <iostream>
 #endif

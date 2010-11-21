@@ -1,7 +1,6 @@
 #ifndef SQUID_QOSCONFIG_H
 #define SQUID_QOSCONFIG_H
 
-#include "config.h"
 #include "hier_code.h"
 
 #if HAVE_LIBNETFILTER_CONNTRACK_LIBNETFILTER_CONNTRACK_H

@@ -1,7 +1,3 @@
-#ifndef SQUID_CONFIG_H
-#include "config.h"
-#endif
-
 #ifndef SQUID_OS_NETBSD_H
 #define SQUID_OS_NETBSD_H
 

@@ -55,8 +55,6 @@
  * uint32_t le32toh(uint32_t);
  */
 
-#include "config.h"
-
 /*
  * Some systems define bswap_16() and bswap_32() in <byteswap.h>
  *

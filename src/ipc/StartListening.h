@@ -8,7 +8,6 @@
 #ifndef SQUID_IPC_START_LISTENING_H
 #define SQUID_IPC_START_LISTENING_H
 
-#include "config.h"
 #include "ip/forward.h"
 #include "ipc/FdNotes.h"
 #include "base/AsyncCall.h"
