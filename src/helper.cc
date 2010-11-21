@@ -792,6 +792,55 @@ helperStatefulServerFree(int fd, void *data)
     cbdataFree(srv);
 }
 
+/// Calls back with a pointer to the buffer with the helper output
+static void helperReturnBuffer(int request_number, helper_server * srv, helper * hlp, char * msg, char * msg_end)
+{
+    helper_request *r = srv->requests[request_number];
+    if (r) {
+        HLPCB *callback = r->callback;
+
+        srv->requests[request_number] = NULL;
+
+        r->callback = NULL;
+
+        void *cbdata = NULL;
+        if (cbdataReferenceValidDone(r->data, &cbdata))
+            callback(cbdata, msg);
+
+        srv->stats.pending--;
+
+        hlp->stats.replies++;
+
+        srv->answer_time = current_time;
+
+        srv->dispatch_time = r->dispatch_time;
+
+        hlp->stats.avg_svc_time =
+            Math::intAverage(hlp->stats.avg_svc_time,
+                             tvSubMsec(r->dispatch_time, current_time),
+                             hlp->stats.replies, REDIRECT_AV_FACTOR);
+
+        helperRequestFree(r);
+    } else {
+        debugs(84, 1, "helperHandleRead: unexpected reply on channel " <<
+               request_number << " from " << hlp->id_name << " #" << srv->index + 1 <<
+               " '" << srv->rbuf << "'");
+    }
+    srv->roffset -= (msg_end - srv->rbuf);
+    memmove(srv->rbuf, msg_end, srv->roffset + 1);
+
+    if (!srv->flags.shutdown) {
+        helperKickQueue(hlp);
+    } else if (!srv->flags.closing && !srv->stats.pending) {
+        int wfd = srv->wfd;
+        srv->wfd = -1;
+        if (srv->rfd == wfd)
+            srv->rfd = -1;
+        srv->flags.closing=1;
+        comm_close(wfd);
+        return;
+    }
+}
 
 static void
 helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
@@ -834,69 +883,29 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         srv->rbuf[0] = '\0';
     }
 
-    while ((t = strchr(srv->rbuf, '\n'))) {
-        /* end of reply found */
-        helper_request *r;
-        char *msg = srv->rbuf;
-        int i = 0;
-        debugs(84, 3, "helperHandleRead: end of reply found");
+    if (hlp->return_full_reply) {
+        debugs(84, 3, HERE << "Return entire buffer");
+        helperReturnBuffer(0, srv, hlp, srv->rbuf, srv->rbuf + srv->roffset);
+    } else {
+        while ((t = strchr(srv->rbuf, '\n'))) {
+            /* end of reply found */
+            char *msg = srv->rbuf;
+            int i = 0;
+            debugs(84, 3, "helperHandleRead: end of reply found");
 
-        if (t > srv->rbuf && t[-1] == '\r')
-            t[-1] = '\0';
+            if (t > srv->rbuf && t[-1] == '\r')
+                t[-1] = '\0';
 
-        *t++ = '\0';
+            *t++ = '\0';
 
-        if (hlp->childs.concurrency) {
-            i = strtol(msg, &msg, 10);
+            if (hlp->childs.concurrency) {
+                i = strtol(msg, &msg, 10);
 
-            while (*msg && xisspace(*msg))
-                msg++;
-        }
+                while (*msg && xisspace(*msg))
+                    msg++;
+            }
 
-        r = srv->requests[i];
-
-        if (r) {
-            HLPCB *callback = r->callback;
-            void *cbdata;
-
-            srv->requests[i] = NULL;
-
-            r->callback = NULL;
-
-            if (cbdataReferenceValidDone(r->data, &cbdata))
-                callback(cbdata, msg);
-
-            srv->stats.pending--;
-
-            hlp->stats.replies++;
-
-            srv->answer_time = current_time;
-
-            srv->dispatch_time = r->dispatch_time;
-
-            hlp->stats.avg_svc_time = Math::intAverage(hlp->stats.avg_svc_time, tvSubMsec(r->dispatch_time, current_time), hlp->stats.replies, REDIRECT_AV_FACTOR);
-
-            helperRequestFree(r);
-        } else {
-            debugs(84, 1, "helperHandleRead: unexpected reply on channel " <<
-                   i << " from " << hlp->id_name << " #" << srv->index + 1 <<
-                   " '" << srv->rbuf << "'");
-
-        }
-
-        srv->roffset -= (t - srv->rbuf);
-        memmove(srv->rbuf, t, srv->roffset + 1);
-
-        if (!srv->flags.shutdown) {
-            helperKickQueue(hlp);
-        } else if (!srv->flags.closing && !srv->stats.pending) {
-            int wfd = srv->wfd;
-            srv->wfd = -1;
-            if (srv->rfd == wfd)
-                srv->rfd = -1;
-            srv->flags.closing=1;
-            comm_close(wfd);
-            return;
+            helperReturnBuffer(i, srv, hlp, msg, t);
         }
     }
 

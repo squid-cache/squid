@@ -1513,6 +1513,21 @@ SQUID_DEFINE_BOOL(USE_DNSSERVERS,$squid_opt_use_dnsserver,
 AM_CONDITIONAL([USE_DNSSERVER],[test "x$squid_opt_use_dnsserver" = "xyes" ])
 
 
+AM_CONDITIONAL(USE_SSL_CRTD, false)
+AC_ARG_ENABLE(ssl-crtd,
+  AC_HELP_STRING([--enable-ssl-crtd],
+                 [Prevent Squid from directly generation of SSL private key and 
+                  certificate request and instead enables the ssl_crtd processes.]), [
+  SQUID_YESNO([$enableval],
+  [unrecogized argument to --enable-ssl-crtd: $enableval])
+])
+
+if test "x$enable_ssl_crtd" = "xyes" -a "x$enable_ssl" = "xno" ; then
+   AC_MSG_ERROR([You need to enable ssl gatewaying support to use ssl_crtd feature. Try to use --enable-ssl. ])
+fi
+SQUID_DEFINE_BOOL(USE_SSL_CRTD, ${enable_ssl_crtd:=no},[Use ssl_crtd daemon])
+AM_CONDITIONAL(USE_SSL_CRTD, [test "x$enable_ssl_crtd" = "xyes"])
+
 dnl Select Default hosts file location
 AC_ARG_ENABLE(default-hostsfile,
   AS_HELP_STRING([--enable-default-hostsfile=path],
@@ -2187,6 +2202,7 @@ AC_CHECK_HEADERS( \
   crypt.h \
   cstdlib \
   cstring \
+  list \
   ctype.h \
   errno.h \
   execinfo.h \
@@ -2199,6 +2215,7 @@ AC_CHECK_HEADERS( \
   iosfwd \
   iomanip \
   iostream \
+  fstream \
   climits \
   ip_compat.h \
   ip_fil_compat.h \
@@ -2217,6 +2234,7 @@ AC_CHECK_HEADERS( \
   map \
   math.h \
   memory.h \
+  memory \
   mount.h \
   netdb.h \
   netinet/in.h \
@@ -2228,6 +2246,7 @@ AC_CHECK_HEADERS( \
   openssl/x509v3.h \
   netinet/tcp.h \
   openssl/engine.h \
+  openssl/txt_db.h \
   ostream \
   paths.h \
   poll.h \
@@ -3332,6 +3351,7 @@ AC_CONFIG_FILES([\
 	src/ip/Makefile \
 	src/log/Makefile \
 	src/ipc/Makefile \
+	src/ssl/Makefile \
 	src/mgr/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \

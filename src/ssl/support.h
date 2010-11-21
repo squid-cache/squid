@@ -35,6 +35,8 @@
 #ifndef SQUID_SSL_SUPPORT_H
 #define SQUID_SSL_SUPPORT_H
 
+#include "ssl/gadgets.h"
+
 #if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
 #endif
@@ -48,13 +50,13 @@
 #include <openssl/engine.h>
 #endif
 
-    /**
-     \defgroup ServerProtocolSSLAPI Server-Side SSL API
-     \ingroup ServerProtocol
-     */
+/**
+ \defgroup ServerProtocolSSLAPI Server-Side SSL API
+ \ingroup ServerProtocol
+ */
 
 /// \ingroup ServerProtocolSSLAPI
-    SSL_CTX *sslCreateServerContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *clientCA, const char *CAfile, const char *CApath, const char *CRLfile, const char *dhpath, const char *context);
+SSL_CTX *sslCreateServerContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *clientCA, const char *CAfile, const char *CApath, const char *CRLfile, const char *dhpath, const char *context);
 
 /// \ingroup ServerProtocolSSLAPI
 SSL_CTX *sslCreateClientContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *CAfile, const char *CApath, const char *CRLfile);
@@ -90,6 +92,30 @@ const char *sslGetUserCertificateChainPEM(SSL *ssl);
 typedef int ssl_error_t;
 ssl_error_t sslParseErrorString(const char *name);
 const char *sslFindErrorString(ssl_error_t value);
+
+namespace Ssl
+{
+/**
+  \ingroup ServerProtocolSSLAPI
+  * Decide on the kind of certificate and generate a CA- or self-signed one
+*/
+SSL_CTX *generateSslContext(char const *host, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey);
+
+/**
+  \ingroup ServerProtocolSSLAPI
+  * Check date of certificate signature. If there is out of date error fucntion
+  * returns false, true otherwise.
+ */
+bool verifySslCertificateDate(SSL_CTX * sslContext);
+
+/**
+  \ingroup ServerProtocolSSLAPI
+  * Read private key and certificate from memory and generate SSL context
+  * using their.
+ */
+SSL_CTX * generateSslContextUsingPkeyAndCertFromMemory(const char * data);
+
+} //namespace Ssl
 
 // Custom SSL errors; assumes all official errors are positive
 #define SQUID_X509_V_ERR_DOMAIN_MISMATCH -1
