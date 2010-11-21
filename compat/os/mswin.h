@@ -40,6 +40,10 @@
 
 #if _SQUID_WINDOWS_
 
+#if HAVE_STRING_H
+#include <string.h>
+#endif
+
 #define ACL WindowsACL
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 #if _MSC_VER == 1400
