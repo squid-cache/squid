@@ -13,17 +13,14 @@
  * of the requirements for wrapping your hack for safe portability.
  */
 
+#ifdef __cplusplus
 /*
  * Define an error display handler override.
  * If error_notify is set by the linked program it will be used by the local
  * portability functions. Otherwise perror() will be used.
  */
-#ifdef __cplusplus
-extern "C"
-#else
-extern
+extern void (*failure_notify) (const char *);
 #endif
-void (*failure_notify) (const char *);
 
 /*
  * sys/resource.h and sys/time.h are apparently order-dependant.
