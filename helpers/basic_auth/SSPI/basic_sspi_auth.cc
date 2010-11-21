@@ -36,7 +36,7 @@
 #endif
 
 /* Check if we try to compile on a Windows Platform */
-#if defined(_SQUID_CYGWIN_) || defined(_SQUID_MSWIN_)
+#if _SQUID_WINDOWS_
 
 #include "valid.h"
 

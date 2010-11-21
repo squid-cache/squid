@@ -142,7 +142,7 @@ unlinkdUnlink(const char *path)
 
 void
 unlinkdClose(void)
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 {
 
     if (unlinkd_wfd > -1) {
@@ -202,7 +202,7 @@ unlinkdInit(void)
 #if USE_POLL && defined(_SQUID_OSF_)
               /* pipes and poll() don't get along on DUNIX -DW */
               IPC_STREAM,
-#elif defined(_SQUID_MSWIN_)
+#elif _SQUID_MSWIN_
               /* select() will fail on a pipe */
               IPC_TCP_SOCKET,
 #else
@@ -244,7 +244,7 @@ unlinkdInit(void)
 
     debugs(2, 1, "Unlinkd pipe opened on FD " << unlinkd_wfd);
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
     debugs(2, 4, "Unlinkd handle: 0x" << std::hex << hIpc << std::dec << ", PID: " << pid);
 

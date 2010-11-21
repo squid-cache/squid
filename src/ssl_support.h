@@ -98,7 +98,7 @@ const char *sslFindErrorString(ssl_error_t value);
 #define SQUID_SSL_ERROR_MIN SQUID_X509_V_ERR_DOMAIN_MISMATCH
 #define SQUID_SSL_ERROR_MAX INT_MAX
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
 #ifdef __cplusplus
 

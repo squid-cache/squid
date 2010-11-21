@@ -509,7 +509,7 @@ void
 helperShutdown(helper * hlp)
 {
     dlink_node *link = hlp->servers.head;
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
     HANDLE hIpc;
     pid_t pid;
@@ -541,7 +541,7 @@ helperShutdown(helper * hlp)
         }
 
         srv->flags.closing = 1;
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
         hIpc = srv->hIpc;
         pid = srv->pid;
@@ -554,7 +554,7 @@ helperShutdown(helper * hlp)
          * close handler
          */
         comm_close(srv->rfd);
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
         if (hIpc) {
             if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
@@ -578,7 +578,7 @@ helperStatefulShutdown(statefulhelper * hlp)
 {
     dlink_node *link = hlp->servers.head;
     helper_stateful_server *srv;
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
     HANDLE hIpc;
     pid_t pid;
@@ -618,7 +618,7 @@ helperStatefulShutdown(statefulhelper * hlp)
         }
 
         srv->flags.closing = 1;
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
         hIpc = srv->hIpc;
         pid = srv->pid;
@@ -632,7 +632,7 @@ helperStatefulShutdown(statefulhelper * hlp)
          * close handler
          */
         comm_close(srv->rfd);
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
         if (hIpc) {
             if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {

@@ -97,7 +97,7 @@
  * "%lx" instead of "%llx"
  */
 #ifndef PRId64
-#ifdef _SQUID_MSWIN_		/* Windows native port using MSVCRT */
+#if _SQUID_MSWIN_		/* Windows native port using MSVCRT */
 #define PRId64 "I64d"
 #elif SIZEOF_INT64_T > SIZEOF_LONG
 #define PRId64 "lld"
@@ -107,7 +107,7 @@
 #endif
 
 #ifndef PRIu64
-#ifdef _SQUID_MSWIN_		/* Windows native port using MSVCRT */
+#if _SQUID_MSWIN_		/* Windows native port using MSVCRT */
 #define PRIu64 "I64u"
 #elif SIZEOF_INT64_T > SIZEOF_LONG
 #define PRIu64 "llu"
@@ -117,7 +117,7 @@
 #endif
 
 #ifndef PRIX64
-#ifdef _SQUID_MSWIN_		/* Windows native port using MSVCRT */
+#if _SQUID_MSWIN_		/* Windows native port using MSVCRT */
 #define PRIX64 "I64X"
 #elif SIZEOF_INT64_T > SIZEOF_LONG
 #define PRIX64 "llX"

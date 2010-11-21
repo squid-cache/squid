@@ -138,7 +138,7 @@
  * the compile fail, so we must disable the check on native Windows.
  */
 
-#if __GNUC__ && !defined(_SQUID_MSWIN_)
+#if __GNUC__ && !_SQUID_MSWIN_
 #define PRINTF_FORMAT_ARG1 __attribute__ ((format (printf, 1, 2)))
 #define PRINTF_FORMAT_ARG2 __attribute__ ((format (printf, 2, 3)))
 #define PRINTF_FORMAT_ARG3 __attribute__ ((format (printf, 3, 4)))

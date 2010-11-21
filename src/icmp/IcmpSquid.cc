@@ -259,7 +259,7 @@ IcmpSquid::Open(void)
     if (localhost.SetIPv4())
         SendEcho(localhost, S_ICMP_ECHO, "localhost");
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
     debugs(37, 4, HERE << "Pinger handle: 0x" << std::hex << hIpc << std::dec << ", PID: " << pid);
 
@@ -280,7 +280,7 @@ IcmpSquid::Close(void)
 
     debugs(37, 1, HERE << "Closing Pinger socket on FD " << icmp_sock);
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
     send(icmp_sock, (const void *) "$shutdown\n", 10, 0);
 
@@ -288,7 +288,7 @@ IcmpSquid::Close(void)
 
     comm_close(icmp_sock);
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 12000) != WAIT_OBJECT_0) {

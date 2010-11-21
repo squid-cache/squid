@@ -56,7 +56,7 @@ IcmpPinger::~IcmpPinger()
     Close();
 }
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 void
 Win32SockCleanup(void)
 {
@@ -68,7 +68,7 @@ Win32SockCleanup(void)
 int
 IcmpPinger::Open(void)
 {
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
     WSADATA wsaData;
     WSAPROTOCOL_INFO wpi;
@@ -162,7 +162,7 @@ IcmpPinger::Open(void)
 void
 IcmpPinger::Close(void)
 {
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
     shutdown(icmp_sock, SD_BOTH);
     close(icmp_sock);

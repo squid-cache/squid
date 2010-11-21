@@ -114,7 +114,7 @@ public:
 #if USE_SSL
     SSL *ssl;
 #endif
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     struct {
         long handle;
     } win32;
@@ -167,7 +167,7 @@ private:
 #if USE_SSL
         ssl = NULL;
 #endif
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
         win32.handle = NULL;
 #endif
         tosFromServer = '\0';

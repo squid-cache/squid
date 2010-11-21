@@ -72,7 +72,7 @@
 #include "Icmp6.h"
 #include "IcmpPinger.h"
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>

@@ -160,7 +160,7 @@ static void SquidShutdown(void);
 static void mainSetCwd(void);
 static int checkRunningPid(void);
 
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
 static const char *squid_start_script = "squid_start";
 #endif
 
@@ -583,11 +583,8 @@ rotate_logs(int sig)
 {
     do_rotate = 1;
     RotateSignal = sig;
-#ifndef _SQUID_MSWIN_
-#if !HAVE_SIGACTION
-
+#if !_SQUID_MSWIN_ && !HAVE_SIGACTION
     signal(sig, rotate_logs);
-#endif
 #endif
 }
 
@@ -597,11 +594,8 @@ reconfigure(int sig)
 {
     do_reconfigure = 1;
     ReconfigureSignal = sig;
-#ifndef _SQUID_MSWIN_
-#if !HAVE_SIGACTION
-
+#if !_SQUID_MSWIN_ && !HAVE_SIGACTION
     signal(sig, reconfigure);
-#endif
 #endif
 }
 
@@ -616,7 +610,7 @@ shut_down(int sig)
         shutdown_status = 1;
 
 #endif
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
 #if KILL_PARENT_OPT
 
     if (getppid() > 1) {
@@ -990,7 +984,7 @@ mainInitialize(void)
     setSystemLimits();
     debugs(1, 1, "With " << Squid_MaxFD << " file descriptors available");
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
     debugs(1, 1, "With " << _getmaxstdio() << " CRT stdio descriptors available");
 
@@ -1526,7 +1520,7 @@ sendSignal(void)
             WIN32_sendSignal(opt_send_signal);
             exit(0);
         } else
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
         {
             fprintf(stderr, "%s: ERROR: Could not send ", APP_SHORTNAME);
             fprintf(stderr, "signal to Squid Service:\n");
@@ -1561,7 +1555,7 @@ sendSignal(void)
     exit(0);
 }
 
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
 /*
  * This function is run when Squid is in daemon mode, just
  * before the parent forks and starts up the child process.
@@ -1634,7 +1628,7 @@ checkRunningPid(void)
 static void
 watch_child(char *argv[])
 {
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
     char *prog;
 #ifdef _SQUID_NEXT_
 

@@ -816,7 +816,7 @@ comm_apply_flags(int new_socket,
         commSetReuseAddr(new_socket);
 
     if (addr.GetPort() > (u_short) 0) {
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
         if (sock_type != SOCK_DGRAM)
 #endif
             commSetNoLinger(new_socket);
@@ -877,7 +877,7 @@ comm_import_opened(int fd,
         fd_table[fd].flags.close_on_exec = 1;
 
     if (addr.GetPort() > (u_short) 0) {
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
         if (sock_type != SOCK_DGRAM)
 #endif
             fd_table[fd].flags.nolinger = 1;
@@ -1055,7 +1055,7 @@ ConnectStateData::commResetFD()
         return 0;
     }
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
     /* On Windows dup2() can't work correctly on Sockets, the          */
     /* workaround is to close the destination Socket before call them. */
@@ -1793,7 +1793,7 @@ commSetTcpRcvbuf(int fd, int size)
 int
 commSetNonBlocking(int fd)
 {
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
     int flags;
     int dummy = 0;
 #endif
@@ -1801,7 +1801,7 @@ commSetNonBlocking(int fd)
 
     int nonblocking = TRUE;
 
-#ifdef _SQUID_CYGWIN_
+#if _SQUID_CYGWIN_
 
     if (fd_table[fd].type != FD_PIPE) {
 #endif
@@ -1811,12 +1811,12 @@ commSetNonBlocking(int fd)
             return COMM_ERROR;
         }
 
-#ifdef _SQUID_CYGWIN_
+#if _SQUID_CYGWIN_
 
     } else {
 #endif
 #endif
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
 
         if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
             debugs(50, 0, "FD " << fd << ": fcntl F_GETFL: " << xstrerror());
@@ -1829,7 +1829,7 @@ commSetNonBlocking(int fd)
         }
 
 #endif
-#ifdef _SQUID_CYGWIN_
+#if _SQUID_CYGWIN_
 
     }
 
@@ -1842,7 +1842,7 @@ commSetNonBlocking(int fd)
 int
 commUnsetNonBlocking(int fd)
 {
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     int nonblocking = FALSE;
 
     if (ioctlsocket(fd, FIONBIO, (unsigned long *) &nonblocking) < 0) {

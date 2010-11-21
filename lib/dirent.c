@@ -51,7 +51,7 @@
 #include "util.h"
 
 /* The following code section is part of the native Windows Squid port */
-#if defined(_SQUID_MSWIN_)
+#if _SQUID_MSWIN_
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
