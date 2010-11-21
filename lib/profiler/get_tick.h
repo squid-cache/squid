@@ -1,8 +1,6 @@
 #ifndef _PROFILER_GET_TICK_H_
 #define _PROFILER_GET_TICK_H_
 
-#include "config.h"
-
 #if USE_XPROF_STATS
 
 #if !_SQUID_SOLARIS_

@@ -32,8 +32,6 @@
 #ifndef SQUID_DLINK_H
 #define SQUID_DLINK_H
 
-#include "config.h"
-
 class dlink_node
 {
 

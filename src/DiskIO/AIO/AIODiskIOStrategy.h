@@ -33,8 +33,6 @@
 #ifndef SQUID_AIODISKIOSTRATEGY_H
 #define SQUID_AIODISKIOSTRATEGY_H
 
-#include "config.h"
-
 #if USE_DISKIO_AIO
 
 #include "DiskIO/DiskIOStrategy.h"

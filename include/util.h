@@ -34,8 +34,6 @@
 #ifndef SQUID_UTIL_H
 #define SQUID_UTIL_H
 
-#include "config.h"
-
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif

@@ -1,8 +1,6 @@
 #ifndef _SMBLIB_STD_DEFINES_H
 #define _SMBLIB_STD_DEFINES_H
 
-#include "config.h"
-
 /* RFCNB Standard includes ... */
 /*
 

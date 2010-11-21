@@ -33,7 +33,6 @@
 #ifndef SQUID_AUTHSCHEME_H
 #define SQUID_AUTHSCHEME_H
 
-#include "config.h"
 #include "Array.h"
 #include "RefCount.h"
 

@@ -1,7 +1,6 @@
 #ifndef SQUID_BASE_INSTANCE_ID_H
 #define SQUID_BASE_INSTANCE_ID_H
 
-#include "config.h"
 #include <iosfwd>
 
 /** Identifier for class instances

@@ -33,8 +33,6 @@
 #ifndef SQUID_HTTPREQUEST_H
 #define SQUID_HTTPREQUEST_H
 
-#include "config.h"
-
 #if USE_ADAPTATION
 #include "adaptation/History.h"
 #endif

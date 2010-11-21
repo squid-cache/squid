@@ -35,8 +35,6 @@
 #ifndef SQUID_IDENT_ACLIDENT_H
 #define SQUID_IDENT_ACLIDENT_H
 
-#include "config.h"
-
 #if USE_IDENT
 
 #include "acl/Checklist.h"
