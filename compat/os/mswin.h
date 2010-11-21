@@ -99,6 +99,7 @@ typedef unsigned long ino_t;
 #define fstat _fstati64
 #endif
 #define ftruncate WIN32_ftruncate
+extern int WIN32_ftruncate(int fd, off_t size);
 #define getcwd _getcwd
 #define getpid _getpid
 #define getrusage WIN32_getrusage
