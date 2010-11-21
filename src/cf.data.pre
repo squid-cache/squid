@@ -244,8 +244,8 @@ DOC_START
 	authenticator processes.
 
 	The startup= and idle= options permit some skew in the exact amount
-	run. A minimum of startup=N will begin during startup and reconfigure
-	and Squid will start more in groups of up to idle=N in an attempt to meet
+	run. A minimum of startup=N will begin during startup and reconfigure.
+	Squid will start more in groups of up to idle=N in an attempt to meet
 	traffic needs and to keep idle=N free above those traffic needs up to
 	the maximum.
 
@@ -317,8 +317,8 @@ DOC_START
 	you are likely to need lots of authenticator processes.
 
 	The startup= and idle= options permit some skew in the exact amount
-	run. A minimum of startup=N will begin during startup and reconfigure
-	and Squid will start more in groups of up to idle=N in an attempt to meet
+	run. A minimum of startup=N will begin during startup and reconfigure.
+	Squid will start more in groups of up to idle=N in an attempt to meet
 	traffic needs and to keep idle=N free above those traffic needs up to
 	the maximum.
 
@@ -389,8 +389,8 @@ DOC_START
 	processes.
 
 	The startup= and idle= options permit some skew in the exact amount
-	run. A minimum of startup=N will begin during startup and reconfigure
-	and Squid will start more in groups of up to idle=N in an attempt to meet
+	run. A minimum of startup=N will begin during startup and reconfigure.
+	Squid will start more in groups of up to idle=N in an attempt to meet
 	traffic needs and to keep idle=N free above those traffic needs up to
 	the maximum.
 
@@ -430,8 +430,8 @@ DOC_START
 	processes.
 
 	The startup= and idle= options permit some skew in the exact amount
-	run. A minimum of startup=N will begin during startup and reconfigure
-	and Squid will start more in groups of up to idle=N in an attempt to meet
+	run. A minimum of startup=N will begin during startup and reconfigure.
+	Squid will start more in groups of up to idle=N in an attempt to meet
 	traffic needs and to keep idle=N free above those traffic needs up to
 	the maximum.
 
@@ -2778,6 +2778,13 @@ DOC_START
 	Format codes:
 
 		%	a literal % character
+		sn	Unique sequence number per log line entry
+		err_code    The ID of an error response served by Squid or
+				a similar internal error identifier.
+		err_detail  Additional err_code-dependent error information.
+
+	Connection related format codes:
+
 		>a	Client source IP address
 		>A	Client FQDN
 		>p	Client source port
@@ -2785,7 +2792,9 @@ DOC_START
 		la	Local IP address (http_port)
 		lp	Local port number (http_port)
 		<lp     Local port number of the last server or peer connection
-		sn	Unique sequence number per log line entry
+
+	Time related format codes:
+
 		ts	Seconds since epoch
 		tu	subsecond time (milliseconds)
 		tl	Local time. Optional strftime format argument
@@ -2794,9 +2803,6 @@ DOC_START
 				default %d/%b/%Y:%H:%M:%S %z
 		tr	Response time (milliseconds)
 		dt	Total time spent making DNS lookups (milliseconds)
-		err_code    The ID of an error response served by Squid or
-				a similar internal error identifier.
-		err_detail  Additional err_code-dependent error information.
 
 	HTTP cache related format codes:
 
@@ -2908,7 +2914,7 @@ DOC_START
 	
 	===== Modules Currently available =====
 	
-	none	Do not log any requests matchign these ACL.
+	none	Do not log any requests matching these ACL.
 		Do not specify Place or logformat name.
 	
 	stdio	Write each log line to disk immediately at the completion of
@@ -5080,7 +5086,7 @@ DOC_START
 	Valid values are as follows:
 
 	hash - Hash assignment
-	mask  - Mask assignment
+	mask - Mask assignment
 
 	As a general rule, cisco routers support the hash assignment method
 	and cisco switches support the mask assignment method.
