@@ -32,8 +32,6 @@
 #ifndef _INCLUDE_ICMPV6_H
 #define _INCLUDE_ICMPV6_H
 
-#include "config.h"
-
 #include "Icmp.h"
 
 #if HAVE_NETINET_IN_H

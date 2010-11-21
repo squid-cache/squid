@@ -1,7 +1,3 @@
-#ifndef SQUID_CONFIG_H
-#include "config.h"
-#endif
-
 #ifndef _INC_INET_NTOP_H
 #define _INC_INET_NTOP_H
 

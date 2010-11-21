@@ -32,7 +32,6 @@
  *
  */
 
-#include "config.h"
 #include <cstring>
 
 #if HAVE_STDINT_H

@@ -90,7 +90,7 @@ my_sock_ntoa( const struct sockaddr_in& a, SockAddress buffer )
 {
     HostAddress host;
     snprintf( buffer, sizeof(SockAddress), "%s:%u",
-             my_inet_ntoa(a.sin_addr,host), ntohs(a.sin_port) );
+              my_inet_ntoa(a.sin_addr,host), ntohs(a.sin_port) );
     return buffer;
 }
 

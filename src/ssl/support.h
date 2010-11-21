@@ -35,7 +35,6 @@
 #ifndef SQUID_SSL_SUPPORT_H
 #define SQUID_SSL_SUPPORT_H
 
-#include "config.h"
 #include "ssl/gadgets.h"
 
 #if HAVE_OPENSSL_SSL_H

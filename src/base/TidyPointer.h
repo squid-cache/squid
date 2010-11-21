@@ -5,8 +5,6 @@
 #ifndef SQUID_BASE_TIDYPOINTER_H
 #define SQUID_BASE_TIDYPOINTER_H
 
-#include "config.h"
-
 /**
  * A pointer that deletes the object it points to when the pointer's owner or
  * context is gone. Similar to std::auto_ptr but without confusing assignment

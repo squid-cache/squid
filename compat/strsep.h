@@ -1,7 +1,3 @@
-#ifndef SQUID_CONFIG_H
-#include "config.h"
-#endif
-
 /* Copyright (C) 2004 Free Software Foundation, Inc.
  * Written by Yoann Vandoorselaere <yoann@prelude-ids.org>
  *

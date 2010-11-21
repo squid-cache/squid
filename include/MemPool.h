@@ -20,7 +20,6 @@
  *     might be the way to go.
  */
 
-#include "config.h"
 #include "util.h"
 
 #include "memMeter.h"

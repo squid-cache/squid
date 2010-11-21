@@ -6,7 +6,6 @@
 #ifndef SQUID__ECAP__MESSAGE_REP_H
 #define SQUID__ECAP__MESSAGE_REP_H
 
-#include "config.h"
 #include "HttpHeader.h"
 #include "BodyPipe.h"
 #include "adaptation/forward.h"

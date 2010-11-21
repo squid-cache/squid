@@ -35,8 +35,6 @@
 #ifndef _SQUID_REFCOUNT_H_
 #define _SQUID_REFCOUNT_H_
 
-#include "config.h"
-
 #if HAVE_IOSTREAM
 #include <iostream>
 #endif

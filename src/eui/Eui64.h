@@ -1,8 +1,6 @@
 #ifndef _SQUID_EUI_EUI64_H
 #define _SQUID_EUI_EUI64_H
 
-#include "config.h"
-
 #if USE_SQUID_EUI
 
 namespace Ip

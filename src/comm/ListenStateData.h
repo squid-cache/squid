@@ -1,7 +1,6 @@
 #ifndef SQUID_LISTENERSTATEDATA_H
 #define SQUID_LISTENERSTATEDATA_H
 
-#include "config.h"
 #include "base/AsyncCall.h"
 #include "comm.h"
 #if HAVE_MAP

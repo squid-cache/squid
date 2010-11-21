@@ -36,9 +36,6 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
-#include "config.h"
-
 #ifndef DELAYPOOL_H
 #define DELAYPOOL_H
 

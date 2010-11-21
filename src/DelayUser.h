@@ -36,8 +36,6 @@
 #ifndef DELAYUSER_H
 #define DELAYUSER_H
 
-#include "config.h"
-
 #if DELAY_POOLS
 
 #include "squid.h"

@@ -29,7 +29,6 @@
 #ifndef SQUID_STRUCTS_H
 #define SQUID_STRUCTS_H
 
-#include "config.h"
 #include "RefCount.h"
 #include "cbdata.h"
 #include "dlink.h"

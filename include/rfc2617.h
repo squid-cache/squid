@@ -49,8 +49,6 @@
 #ifndef SQUID_RFC2617_H
 #define SQUID_RFC2617_H
 
-#include "config.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

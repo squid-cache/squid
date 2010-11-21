@@ -2,8 +2,6 @@
 #ifndef SQUID_SNMP_SESSION_H
 #define SQUID_SNMP_SESSION_H
 
-#include "config.h"
-
 /**********************************************************************
  *
  *           Copyright 1997 by Carnegie Mellon University
