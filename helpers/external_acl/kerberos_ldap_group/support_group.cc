@@ -50,7 +50,7 @@ utf8dup(struct main_args *margs)
     int c = 0, s;
     size_t n;
     char *src;
-    unsigned char *p, *dup;
+    unsigned char *p, *dupp;
 
     src = margs->glist;
     if (!src)
@@ -60,7 +60,7 @@ utf8dup(struct main_args *margs)
             c++;
     if (c != 0) {
         p = (unsigned char *) xmalloc(strlen(src) + c);
-        dup = p;
+        dupp = p;
         for (n = 0; n < strlen(src); n++) {
             s = (unsigned char) src[n];
             if (s > 127 && s < 192) {
@@ -76,8 +76,8 @@ utf8dup(struct main_args *margs)
             p++;
         }
         *p = '\0';
-        debug((char *) "%s| %s: INFO: Group %s as UTF-8: %s\n", LogTime(), PROGRAM, src, dup);
-        return (char *) dup;
+        debug((char *) "%s| %s: INFO: Group %s as UTF-8: %s\n", LogTime(), PROGRAM, src, dupp);
+        return (char *) dupp;
     } else
         return xstrdup(src);
 }
