@@ -221,17 +221,17 @@ void local_debug(const char *func, const char *msg,...)
         return;
 
     if (edui_conf.program[0] == '\0')
-        xstrncpy(prog, EDUI_PROGRAM_NAME, strlen(EDUI_PROGRAM_NAME));
+        xstrncpy(prog, EDUI_PROGRAM_NAME, sizeof(prog));
     else
-        xstrncpy(prog, edui_conf.program, strlen(edui_conf.program));
+        xstrncpy(prog, edui_conf.program, sizeof(prog));
     if ((func == NULL) || (msg == NULL) || (strlen(prog) > 256)) {
         snprintf(dbuf, sizeof(dbuf), "%s: local_debug() EPIC FAILURE.\n", prog);
         fputs(dbuf, stderr);
         return;
     }
     sz = sizeof(dbuf);
-    memset(cbuf, '\0', strlen(cbuf));
-    xstrncpy(cbuf, prog, strlen(prog));
+    memset(cbuf, '\0', sizeof(cbuf));
+    xstrncpy(cbuf, prog, sizeof(cbuf));
     strncat(cbuf, ": [DB] ", 7);
     strncat(cbuf, func, strlen(func));
     strncat(cbuf, "() - ", 5);
@@ -241,7 +241,7 @@ void local_debug(const char *func, const char *msg,...)
     if (x > 0) {
         strncat(cbuf, dbuf, x);
         fputs(cbuf, stderr);
-        memset(dbuf, '\0', strlen(dbuf));
+        memset(dbuf, '\0', sizeof(dbuf));
     } else {
         snprintf(bbuf, sz, "%s: local_debug(%s) FAILURE: %zd\n", prog, dbuf, x);
         fputs(bbuf, stderr);
@@ -263,9 +263,9 @@ void local_debugx(const char *msg,...)
         return;
 
     if (edui_conf.program[0] == '\0')
-        xstrncpy(prog, EDUI_PROGRAM_NAME, strlen(EDUI_PROGRAM_NAME));
+        xstrncpy(prog, EDUI_PROGRAM_NAME, sizeof(prog));
     else
-        xstrncpy(prog, edui_conf.program, strlen(edui_conf.program));
+        xstrncpy(prog, edui_conf.program, sizeof(prog));
     if ((msg == NULL) || (strlen(prog) > 256)) {
         snprintf(dbuf, sizeof(dbuf), "%s: local_debugx() EPIC FAILURE.\n", prog);
         fputs(dbuf, stderr);
@@ -277,7 +277,7 @@ void local_debugx(const char *msg,...)
     va_end(ap);
     if (x > 0) {
         fputs(dbuf, stderr);
-        memset(dbuf, '\0', strlen(dbuf));
+        memset(dbuf, '\0', sizeof(dbuf));
     } else {
         snprintf(bbuf, sz, "%s: local_debugx(%s) FAILURE: %zd\n", prog, dbuf, x);
         fputs(bbuf, stderr);
@@ -297,9 +297,9 @@ void local_printfx(const char *msg,...)
     va_list ap;
 
     if (edui_conf.program[0] == '\0')
-        xstrncpy(prog, EDUI_PROGRAM_NAME, strlen(EDUI_PROGRAM_NAME));
+        xstrncpy(prog, EDUI_PROGRAM_NAME, sizeof(prog));
     else
-        xstrncpy(prog, edui_conf.program, strlen(edui_conf.program));
+        xstrncpy(prog, edui_conf.program, sizeof(prog));
 
     if ((msg == NULL) || (strlen(prog) > 256)) {
         /* FAIL */
@@ -318,7 +318,7 @@ void local_printfx(const char *msg,...)
         dbuf[x] = '\0';
         x++;
         fputs(dbuf, stdout);
-        memset(dbuf, '\0', strlen(dbuf));
+        memset(dbuf, '\0', sizeof(dbuf));
     } else {
         /* FAIL */
 /*
@@ -895,7 +895,7 @@ int ConvertIP(edui_ldap_t *l, char *ip)
         /* Search for :: in string */
         if ((bufa[0] == ':') && (bufa[1] == ':')) {
             /* bufa starts with a ::, so just copy and clear */
-            xstrncpy(bufb, bufa, sizeof(bufa));
+            xstrncpy(bufb, bufa, sizeof(bufb));
             memset(bufa, '\0', strlen(bufa));
             swi++;								/* Indicates that there is a bufb */
         } else if ((bufa[0] == ':') && (bufa[1] != ':')) {
@@ -1152,7 +1152,7 @@ int SearchFilterLDAP(edui_ldap_t *l, char *group)
     }
     if (group == NULL) {
         /* No groupMembership= to add, yay! */
-        xstrncpy(bufa, "(&", 2);
+        xstrncpy(bufa, "(&", sizeof(bufa));
         strncat(bufa, edui_conf.search_filter, strlen(edui_conf.search_filter));
         /* networkAddress */
         snprintf(bufb, sizeof(bufb), "(|(networkAddress=1\\23%s)", bufc);
@@ -1170,7 +1170,7 @@ int SearchFilterLDAP(edui_ldap_t *l, char *group)
         strncat(bufa, ")", 1);
     } else {
         /* Needs groupMembership= to add... */
-        xstrncpy(bufa, "(&(&", 4);
+        xstrncpy(bufa, "(&(&", sizeof(bufa));
         strncat(bufa, edui_conf.search_filter, strlen(edui_conf.search_filter));
         /* groupMembership -- NOTE: Squid *MUST* provide "cn=" from squid.conf */
         snprintf(bufg, sizeof(bufg), "(groupMembership=%s", group);
@@ -1196,7 +1196,7 @@ int SearchFilterLDAP(edui_ldap_t *l, char *group)
         strncat(bufa, "))", 2);
     }
     s = strlen(bufa);
-    xstrncpy(l->search_filter, bufa, s);
+    xstrncpy(l->search_filter, bufa, sizeof(l->search_filter));
     return s;
 }
 
@@ -1417,7 +1417,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                                 c = c + 256;
                             int hlen = snprintf(hexc, sizeof(hexc), "%.2X", c);
                             if (k == 0)
-                                xstrncpy(bufb, hexc, hlen);
+                                xstrncpy(bufb, hexc, sizeof(bufb));
                             else
                                 strncat(bufb, hexc, hlen);
                         }
@@ -1427,7 +1427,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
-                                xstrncpy(uid, ber[j]->bv_val, ber[j]->bv_len);
+                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),static_cast<size_t>(ber[j]->bv_len)));
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1449,7 +1449,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                                 c = c + 256;
                             int hlen = snprintf(hexc, sizeof(hexc), "%.2X", c);
                             if (k == 2)
-                                xstrncpy(bufb, hexc, hlen);
+                                xstrncpy(bufb, hexc, sizeof(bufb));
                             else
                                 strncat(bufb, hexc, hlen);
                         }
@@ -1459,7 +1459,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
-                                xstrncpy(uid, ber[j]->bv_val, ber[j]->bv_len);
+                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),static_cast<size_t>(ber[j]->bv_len)));
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1481,7 +1481,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                                 c = c + 256;
                             int hlen = snprintf(hexc, sizeof(hexc), "%.2X", c);
                             if (k == 2)
-                                xstrncpy(bufb, hexc, hlen);
+                                xstrncpy(bufb, hexc, sizeof(bufb));
                             else
                                 strncat(bufb, hexc, hlen);
                         }
@@ -1491,7 +1491,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
-                                xstrncpy(uid, ber[j]->bv_val, ber[j]->bv_len);
+                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),static_cast<size_t>(ber[j]->bv_len)));
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1513,7 +1513,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                                 c = c + 256;
                             int hlen = snprintf(hexc, sizeof(hexc), "%.2X", c);
                             if (k == 2)
-                                xstrncpy(bufb, hexc, hlen);
+                                xstrncpy(bufb, hexc, sizeof(bufb));
                             else
                                 strncat(bufb, hexc, hlen);
                         }
@@ -1523,7 +1523,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
-                                xstrncpy(uid, ber[j]->bv_val, ber[j]->bv_len);
+                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),static_cast<size_t>(ber[j]->bv_len)));
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1545,7 +1545,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                                 c = c + 256;
                             int hlen = snprintf(hexc, sizeof(hexc), "%.2X", c);
                             if (k == 2)
-                                xstrncpy(bufb, hexc, hlen);
+                                xstrncpy(bufb, hexc, sizeof(bufb));
                             else
                                 strncat(bufb, hexc, hlen);
                         }
@@ -1555,7 +1555,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
-                                xstrncpy(uid, ber[j]->bv_val, ber[j]->bv_len);
+                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),static_cast<size_t>(ber[j]->bv_len)));
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
