@@ -42,6 +42,7 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 	<item>Surrogate/1.0 protocol extensions to HTTP
 	<item>Logging Infrastructure Updated
 	<item>Client Bandwidth Limits
+        <item> Dynamic SSL Certificate Generation
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -316,6 +317,25 @@ Most user-facing changes are reflected in squid.conf (see below).
    response data from Squid.  This delay may need to be lowered in 
    high-bandwidth environments.
 
+<sect1> Dynamic SSL Certificate Generation
+<p> SslBump users know how many certificate warnings a single complex site 
+(using dedicated image, style, and/or advertisement servers for embedded content)
+can generate. The warnings are legitimate and are caused by Squid-provided site
+certificate. Two things may be wrong with that certificate:
+<itemize>
+   <item> Squid certificate is not signed by a trusted authority.
+   <item> Squid certificate name does not match the site domain name. 
+</itemize>
+Squid can do nothing about (A), but in most targeted environments, users will 
+trust the "man in the middle" authority and install the corresponding root
+certificate.
+
+<p>To avoid mismatch (B), the DynamicSslCert feature concentrates on generating
+site certificates that match the requested site domain name. Please note that
+the browser site name check does not really add much security in an SslBump
+environment where the user already trusts the "man in the middle". The check
+only adds warnings and creates page rendering problems in browsers that try to
+reduce the number of warnings by blocking some embedded content. 
 
 <sect>Changes to squid.conf since Squid-3.1
 <p>
@@ -409,6 +429,11 @@ This section gives a thorough account of those changes in three categories:
 	<tag>write_timeout</tag>
 	<p>New setting to limit time spent waiting for data writes to be confirmed.
 
+        <tag>sslcrtd_program</tag>
+        <p>Specify the location and options of the executable for ssl_crtd process.
+
+        <tag>sslcrtd_children</tag>
+        <p> Configures the number of sslcrtd processes to spawn
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
@@ -583,6 +608,9 @@ This section gives an account of those changes in three categories:
 	<p>Disables the libnetfilter_conntrack library being used for the new qos_flows option <em>mark</em>.
 	   default is to auto-detect the library and use where available.
 
+        <tag>--enable-ssl-crtd</tag>
+        <p>  Prevent Squid from directly generation of SSL private key and 
+        certificate request and instead enables the ssl_crtd processes.
 </descrip>
 
 <sect1>Changes to existing options<label id="modifiedoptions">
