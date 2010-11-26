@@ -366,7 +366,7 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
            actionName << "'" );
 
     if (UsingSmp() && IamWorkerProcess()) {
-        AsyncJob::Start(new Mgr::Forwarder(fd, cmd->params, request, entry));
+        AsyncJob::Start(new Mgr::Forwarder(client, cmd->params, request, entry));
         return;
     }
 

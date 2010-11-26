@@ -34,6 +34,7 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#include "CacheManager.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "CommCalls.h"
@@ -863,11 +864,11 @@ FwdState::connectStart()
     }
 #if SO_MARK
     serverDestinations[0]->nfmark = GetNfmarkToServer(request);
-    debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << int(tos)
+    debugs(17, 3, "fwdConnectStart: got outgoing addr " << serverDestinations[0]->local << ", tos " << int(serverDestinations[0]->tos)
            << ", netfilter mark " << serverDestinations[0]->nfmark);
 #else
     serverDestinations[0]->nfmark = 0;
-    debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << int(tos));
+    debugs(17, 3, "fwdConnectStart: got outgoing addr " << serverDestinations[0]->local << ", tos " << int(serverDestinations[0]->tos));
 #endif
 
     AsyncCall::Pointer call = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));

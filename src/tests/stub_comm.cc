@@ -176,8 +176,3 @@ comm_write(int fd, const char *buf, int size, AsyncCall::Pointer &callback, FREE
 {
     fatal ("Not implemented");
 }
-
-ConnectionDetail::ConnectionDetail() : me(), peer()
-{
-    fatal ("Not implemented");
-}

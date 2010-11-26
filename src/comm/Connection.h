@@ -42,6 +42,7 @@
 #include "hier_code.h"
 #include "ip/Address.h"
 #include "RefCount.h"
+#include "typedefs.h"
 
 #if HAVE_IOSFWD
 #include <iosfwd>

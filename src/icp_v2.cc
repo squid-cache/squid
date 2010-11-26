@@ -739,7 +739,7 @@ icpConnectionsOpen(void)
         debugs(12, DBG_CRITICAL, "Sending ICP messages from " << icpOutgoingConn->local);
 
         commSetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
-        fd_note(theOutIcpConnection, "Outgoing ICP socket");
+        fd_note(icpOutgoingConn->fd, "Outgoing ICP socket");
         icpGetOutgoingIpAddress();
     }
 }
@@ -750,7 +750,7 @@ static void
 icpGetOutgoingIpAddress()
 {
     struct addrinfo *xai = NULL;
-    theOutICPAddr.SetEmpty();
+    theIcpPrivateHostID.SetEmpty();
     theIcpPrivateHostID.InitAddrInfo(xai);
     if (getsockname(icpOutgoingConn->fd, xai->ai_addr, &xai->ai_addrlen) < 0)
         debugs(50, DBG_IMPORTANT, "ERROR: Unable to identify ICP host ID to use for " << icpOutgoingConn

@@ -2053,7 +2053,6 @@ commSelectOrQueueWrite(const int fd)
 #endif
 
     commSetSelect(fd, COMM_SELECT_WRITE, commHandleWrite, ccb, 0);
->>>>>>> MERGE-SOURCE
 }
 
 
