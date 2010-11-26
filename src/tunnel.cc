@@ -117,7 +117,7 @@ private:
 
 #define fd_closed(fd) (fd == -1 || fd_table[fd].closing())
 
-static const char *const conn_established = "HTTP/1.0 200 Connection established\r\n\r\n";
+static const char *const conn_established = "HTTP/1.1 200 Connection established\r\n\r\n";
 
 static CNCB tunnelConnectDone;
 static ERCB tunnelErrorComplete;
