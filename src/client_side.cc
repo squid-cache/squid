@@ -740,9 +740,9 @@ void
 ConnStateData::swanSong()
 {
     debugs(33, 2, HERE << clientConn);
-    clientConn = NULL;
     flags.readMoreRequests = false;
     clientdbEstablished(clientConn->remote, -1);	/* decrement */
+    clientConn = NULL;
     assert(areAllContextsForThisConnection());
     freeAllContexts();
 
@@ -2726,7 +2726,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
     }
 
     assert(Comm::IsConnOpen(clientConn));
-    assert(io.conn == clientConn);
+    assert(io.conn->fd == clientConn->fd);
 
     /*
      * Don't reset the timeout value here.  The timeout value will be

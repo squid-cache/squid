@@ -1860,7 +1860,7 @@ clientReplyContext::sendPreconditionFailedError()
     http->logType = LOG_TCP_HIT;
     ErrorState *const err =
         clientBuildError(ERR_PRECONDITION_FAILED, HTTP_PRECONDITION_FAILED,
-                         NULL, http->getConn()->peer, http->request);
+                         NULL, http->getConn()->clientConn->remote, http->request);
     removeClientStoreReference(&sc, http);
     HTTPMSGUNLOCK(reply);
     startError(err);

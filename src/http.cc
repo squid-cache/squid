@@ -2301,7 +2301,7 @@ HttpStateData::handleRequestBodyProducerAborted()
 {
     ServerStateData::handleRequestBodyProducerAborted();
     if (entry->isEmpty()) {
-        debugs(11, 3, "request body aborted: FD " << fd);
+        debugs(11, 3, "request body aborted: " << serverConnection);
         ErrorState *err;
         err = errorCon(ERR_READ_ERROR, HTTP_BAD_GATEWAY, fwd->request);
         err->xerrno = errno;
