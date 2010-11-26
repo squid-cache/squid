@@ -25,10 +25,11 @@ static int64_t lost_conn = 0;
 Comm::Connection::~Connection()
 {
     if (fd >= 0) {
-        debugs(5, 8, "NOTE: Orphaned Comm::Connections: " << ++lost_conn);
+        debugs(5, 0, "NOTE: Orphan Comm::Connection: " << *this);
+        debugs(5, 0, "NOTE: Orphaned Comm::Connections: " << ++lost_conn);
+        close();
     }
 
-    close();
     cbdataReferenceDone(_peer);
 }
 
