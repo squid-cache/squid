@@ -8,6 +8,7 @@
 #include "config.h"
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
+#include "comm/Connection.h"
 #include "CommCalls.h"
 #include "errorpage.h"
 #include "HttpReply.h"
@@ -24,14 +25,14 @@ CBDATA_NAMESPACED_CLASS_INIT(Mgr, Forwarder);
 Mgr::Forwarder::RequestsMap Mgr::Forwarder::TheRequestsMap;
 unsigned int Mgr::Forwarder::LastRequestId = 0;
 
-Mgr::Forwarder::Forwarder(int aFd, const ActionParams &aParams,
+Mgr::Forwarder::Forwarder(const Comm::ConnectionPointer &conn, const ActionParams &aParams,
                           HttpRequest* aRequest, StoreEntry* anEntry):
         AsyncJob("Mgr::Forwarder"),
         params(aParams),
-        request(aRequest), entry(anEntry), fd(aFd), requestId(0), closer(NULL)
+        request(aRequest), entry(anEntry), clientConnection(conn), requestId(0), closer(NULL)
 {
-    debugs(16, 5, HERE << "FD " << aFd);
-    Must(fd >= 0);
+    debugs(16, 5, HERE << clientConnection);
+    Must(Comm::IsConnOpen(clientConnection));
     Must(request != NULL);
     Must(entry != NULL);
 
@@ -41,7 +42,7 @@ Mgr::Forwarder::Forwarder(int aFd, const ActionParams &aParams,
 
     closer = asyncCall(16, 5, "Mgr::Forwarder::noteCommClosed",
                        CommCbMemFunT<Forwarder, CommCloseCbParams>(this, &Forwarder::noteCommClosed));
-    comm_add_close_handler(fd, closer);
+    comm_add_close_handler(clientConnection->fd, closer);
 }
 
 Mgr::Forwarder::~Forwarder()
@@ -61,13 +62,12 @@ Mgr::Forwarder::~Forwarder()
 void
 Mgr::Forwarder::close()
 {
-    if (fd >= 0) {
+    if (Comm::IsConnOpen(clientConnection)) {
         if (closer != NULL) {
-            comm_remove_close_handler(fd, closer);
+            comm_remove_close_handler(clientConnection->fd, closer);
             closer = NULL;
         }
-        comm_close(fd);
-        fd = -1;
+        clientConnection->close();
     }
 }
 
@@ -84,7 +84,7 @@ Mgr::Forwarder::start()
         ++LastRequestId;
     requestId = LastRequestId;
     TheRequestsMap[requestId] = callback;
-    Request mgrRequest(KidIdentifier, requestId, fd, params);
+    Request mgrRequest(KidIdentifier, requestId, clientConnection, params);
     Ipc::TypedMsgHdr message;
 
     try {
@@ -126,8 +126,7 @@ void
 Mgr::Forwarder::noteCommClosed(const CommCloseCbParams& params)
 {
     debugs(16, 5, HERE);
-    Must(fd == params.fd);
-    fd = -1;
+    Must(!Comm::IsConnOpen(clientConnection));
     mustStop("commClosed");
 }
 
@@ -187,7 +186,7 @@ void
 Mgr::Forwarder::callException(const std::exception& e)
 {
     try {
-        if (entry != NULL && request != NULL && fd >= 0)
+        if (entry != NULL && request != NULL && Comm::IsConnOpen(clientConnection))
             quitOnError("exception", errorCon(ERR_INVALID_RESP, HTTP_INTERNAL_SERVER_ERROR, request));
     } catch (const std::exception& ex) {
         debugs(16, DBG_CRITICAL, HERE << ex.what());
@@ -235,6 +234,6 @@ void
 Mgr::Forwarder::Abort(void* param)
 {
     Forwarder* mgrFwdr = static_cast<Forwarder*>(param);
-    if (mgrFwdr->fd >= 0)
-        comm_close(mgrFwdr->fd);
+    if (Comm::IsConnOpen(mgrFwdr->clientConnection))
+        mgrFwdr->clientConnection->close();
 }

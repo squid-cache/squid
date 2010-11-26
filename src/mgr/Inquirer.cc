@@ -7,7 +7,9 @@
 
 #include "config.h"
 #include "base/TextException.h"
+#include "comm.h"
 #include "CommCalls.h"
+#include "comm/Connection.h"
 #include "HttpReply.h"
 #include "ipc/Coordinator.h"
 #include "mgr/ActionWriter.h"
@@ -32,23 +34,23 @@ LesserStrandByKidId(const Ipc::StrandCoord &c1, const Ipc::StrandCoord &c2)
     return c1.kidId < c2.kidId;
 }
 
-Mgr::Inquirer::Inquirer(Action::Pointer anAction, int aFd,
+Mgr::Inquirer::Inquirer(Action::Pointer anAction, const Comm::ConnectionPointer &conn,
                         const Request &aCause, const Ipc::StrandCoords &coords):
         AsyncJob("Mgr::Inquirer"),
         aggrAction(anAction),
         cause(aCause),
-        fd(aFd),
+        clientConnection(conn),
         strands(coords), pos(strands.begin()),
         requestId(0), closer(NULL), timeout(aggrAction->atomic() ? 10 : 100)
 {
-    debugs(16, 5, HERE << "FD " << aFd << " action: " << aggrAction);
+    debugs(16, 5, HERE << conn << " action: " << aggrAction);
 
     // order by ascending kid IDs; useful for non-aggregatable stats
     std::sort(strands.begin(), strands.end(), LesserStrandByKidId);
 
     closer = asyncCall(16, 5, "Mgr::Inquirer::noteCommClosed",
                        CommCbMemFunT<Inquirer, CommCloseCbParams>(this, &Inquirer::noteCommClosed));
-    comm_add_close_handler(fd, closer);
+    comm_add_close_handler(clientConnection->fd, closer);
 }
 
 Mgr::Inquirer::~Inquirer()
@@ -61,10 +63,9 @@ Mgr::Inquirer::~Inquirer()
 void
 Mgr::Inquirer::close()
 {
-    if (fd >= 0) {
+    if (Comm::IsConnOpen(clientConnection)) {
         removeCloseHandler();
-        comm_close(fd);
-        fd = -1;
+        clientConnection->close();
     }
 }
 
@@ -72,7 +73,7 @@ void
 Mgr::Inquirer::removeCloseHandler()
 {
     if (closer != NULL) {
-        comm_remove_close_handler(fd, closer);
+        comm_remove_close_handler(clientConnection->fd, closer);
         closer = NULL;
     }
 }
@@ -81,7 +82,7 @@ void
 Mgr::Inquirer::start()
 {
     debugs(16, 5, HERE);
-    Must(fd >= 0);
+    Must(Comm::IsConnOpen(clientConnection));
     Must(aggrAction != NULL);
 
     std::auto_ptr<HttpReply> reply(new HttpReply);
@@ -90,7 +91,7 @@ Mgr::Inquirer::start()
     std::auto_ptr<MemBuf> replyBuf(reply->pack());
     writer = asyncCall(16, 5, "Mgr::Inquirer::noteWroteHeader",
                        CommCbMemFunT<Inquirer, CommIoCbParams>(this, &Inquirer::noteWroteHeader));
-    comm_write_mbuf(fd, replyBuf.get(), writer);
+    comm_write_mbuf(clientConnection, replyBuf.get(), writer);
 }
 
 /// called when we wrote the response header
@@ -100,7 +101,7 @@ Mgr::Inquirer::noteWroteHeader(const CommIoCbParams& params)
     debugs(16, 5, HERE);
     writer = NULL;
     Must(params.flag == COMM_OK);
-    Must(params.fd == fd);
+    Must(clientConnection != NULL && params.fd == clientConnection->fd);
     Must(params.size != 0);
     // start inquiries at the initial pos
     inquire();
@@ -123,7 +124,7 @@ Mgr::Inquirer::inquire()
     const int kidId = pos->kidId;
     debugs(16, 4, HERE << "inquire kid: " << kidId << status());
     TheRequestsMap[requestId] = callback;
-    Request mgrRequest(KidIdentifier, requestId, fd,
+    Request mgrRequest(KidIdentifier, requestId, clientConnection,
                        aggrAction->command().params);
     Ipc::TypedMsgHdr message;
     mgrRequest.pack(message);
@@ -151,8 +152,8 @@ void
 Mgr::Inquirer::noteCommClosed(const CommCloseCbParams& params)
 {
     debugs(16, 5, HERE);
-    Must(fd < 0 || fd == params.fd);
-    fd = -1;
+    Must(!Comm::IsConnOpen(clientConnection) || clientConnection->fd == params.fd);
+    clientConnection = NULL; // AYJ: Do we actually have to NULL it?
     mustStop("commClosed");
 }
 
@@ -167,8 +168,8 @@ Mgr::Inquirer::swanSong()
     }
     if (aggrAction->aggregatable()) {
         removeCloseHandler();
-        AsyncJob::Start(new ActionWriter(aggrAction, fd));
-        fd = -1; // should not close fd because we passed it to ActionWriter
+        AsyncJob::Start(new ActionWriter(aggrAction, clientConnection));
+        clientConnection = NULL; // should not close fd because we passed it to ActionWriter
     }
     close();
 }
@@ -246,7 +247,7 @@ Mgr::Inquirer::status() const
 {
     static MemBuf buf;
     buf.reset();
-    buf.Printf(" [FD %d, requestId %u]", fd, requestId);
+    buf.Printf(" [FD %d, requestId %u]", clientConnection->fd, requestId);
     buf.terminate();
     return buf.content();
 }

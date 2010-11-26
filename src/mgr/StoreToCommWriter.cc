@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "base/TextException.h"
+#include "comm/Connection.h"
 #include "CommCalls.h"
 #include "ipc/FdNotes.h"
 #include "mgr/StoreToCommWriter.h"
@@ -17,14 +18,14 @@
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, StoreToCommWriter);
 
 
-Mgr::StoreToCommWriter::StoreToCommWriter(int aFd, StoreEntry* anEntry):
+Mgr::StoreToCommWriter::StoreToCommWriter(const Comm::ConnectionPointer &conn, StoreEntry* anEntry):
         AsyncJob("Mgr::StoreToCommWriter"),
-        fd(aFd), entry(anEntry), sc(NULL), writeOffset(0), closer(NULL)
+        clientConnection(conn), entry(anEntry), sc(NULL), writeOffset(0), closer(NULL)
 {
-    debugs(16, 6, HERE << "FD " << fd);
+    debugs(16, 6, HERE << clientConnection);
     closer = asyncCall(16, 5, "Mgr::StoreToCommWriter::noteCommClosed",
                        CommCbMemFunT<StoreToCommWriter, CommCloseCbParams>(this, &StoreToCommWriter::noteCommClosed));
-    comm_add_close_handler(fd, closer);
+    comm_add_close_handler(clientConnection->fd, closer);
 }
 
 Mgr::StoreToCommWriter::~StoreToCommWriter()
@@ -39,13 +40,12 @@ Mgr::StoreToCommWriter::~StoreToCommWriter()
 void
 Mgr::StoreToCommWriter::close()
 {
-    if (fd >= 0) {
+    if (Comm::IsConnOpen(clientConnection)) {
         if (closer != NULL) {
-            comm_remove_close_handler(fd, closer);
+            comm_remove_close_handler(clientConnection->fd, closer);
             closer = NULL;
         }
-        comm_close(fd);
-        fd = -1;
+        clientConnection->close();
     }
 }
 
@@ -53,7 +53,7 @@ void
 Mgr::StoreToCommWriter::start()
 {
     debugs(16, 6, HERE);
-    Must(fd >= 0);
+    Must(Comm::IsConnOpen(clientConnection));
     Must(entry != NULL);
     entry->registerAbort(&StoreToCommWriter::Abort, this);
     sc = storeClientListAdd(entry, this);
@@ -101,14 +101,14 @@ void
 Mgr::StoreToCommWriter::scheduleCommWrite(const StoreIOBuffer& ioBuf)
 {
     debugs(16, 6, HERE);
-    Must(fd >= 0);
+    Must(Comm::IsConnOpen(clientConnection));
     Must(ioBuf.data != NULL);
     // write filled buffer
     typedef CommCbMemFunT<StoreToCommWriter, CommIoCbParams> MyDialer;
     AsyncCall::Pointer writer =
         asyncCall(16, 5, "Mgr::StoreToCommWriter::noteCommWrote",
                   MyDialer(this, &StoreToCommWriter::noteCommWrote));
-    comm_write(fd, ioBuf.data, ioBuf.length, writer);
+    comm_write(clientConnection, ioBuf.data, ioBuf.length, writer);
 }
 
 void
@@ -116,7 +116,7 @@ Mgr::StoreToCommWriter::noteCommWrote(const CommIoCbParams& params)
 {
     debugs(16, 6, HERE);
     Must(params.flag == COMM_OK);
-    Must(params.fd == fd);
+    Must(clientConnection != NULL && params.fd == clientConnection->fd);
     Must(params.size != 0);
     writeOffset += params.size;
     if (!doneAll())
@@ -127,8 +127,7 @@ void
 Mgr::StoreToCommWriter::noteCommClosed(const CommCloseCbParams& params)
 {
     debugs(16, 6, HERE);
-    Must(fd == params.fd);
-    fd = -1;
+    Must(!Comm::IsConnOpen(clientConnection));
     mustStop("commClosed");
 }
 
@@ -160,28 +159,29 @@ void
 Mgr::StoreToCommWriter::Abort(void* param)
 {
     StoreToCommWriter* mgrWriter = static_cast<StoreToCommWriter*>(param);
-    if (mgrWriter->fd >= 0)
-        comm_close(mgrWriter->fd);
+    if (Comm::IsConnOpen(mgrWriter->clientConnection))
+        mgrWriter->clientConnection->close();
 }
 
-
-int
+Comm::ConnectionPointer
 Mgr::ImportHttpFdIntoComm(int fd)
 {
+    Comm::ConnectionPointer result = new Comm::Connection();
     struct sockaddr_in addr;
     socklen_t len = sizeof(addr);
     if (getsockname(fd, reinterpret_cast<sockaddr*>(&addr), &len) == 0) {
-        Ip::Address ipAddr(addr);
+        result->fd = fd;
+        result->local = addr;
         struct addrinfo* addr_info = NULL;
-        ipAddr.GetAddrInfo(addr_info);
+        result->local.GetAddrInfo(addr_info);
         addr_info->ai_socktype = SOCK_STREAM;
         addr_info->ai_protocol = IPPROTO_TCP;
-        comm_import_opened(fd, ipAddr, COMM_NONBLOCKING, Ipc::FdNote(Ipc::fdnHttpSocket), addr_info);
-        ipAddr.FreeAddrInfo(addr_info);
+        comm_import_opened(result, Ipc::FdNote(Ipc::fdnHttpSocket), addr_info);
+        result->local.FreeAddrInfo(addr_info);
     } else {
         debugs(16, DBG_CRITICAL, HERE << "ERROR: FD " << fd << ' ' << xstrerror());
         ::close(fd);
         fd = -1;
     }
-    return fd;
+    return result;
 }

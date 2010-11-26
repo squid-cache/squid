@@ -7,15 +7,17 @@
 
 #include "config.h"
 #include "base/TextException.h"
+#include "comm/Connection.h"
 #include "ipc/Messages.h"
 #include "mgr/ActionParams.h"
 #include "mgr/Request.h"
 
 
-Mgr::Request::Request(int aRequestorId, unsigned int aRequestId, int aFd,
+Mgr::Request::Request(int aRequestorId, unsigned int aRequestId, const Comm::ConnectionPointer &conn,
                       const ActionParams &aParams):
         requestorId(aRequestorId), requestId(aRequestId),
-        fd(aFd), params(aParams)
+        fd(conn->fd),
+        params(aParams)
 {
     Must(requestorId > 0);
     Must(requestId != 0);
