@@ -9,6 +9,7 @@
 #define SQUID_MGR_FORWARDER_H
 
 #include "base/AsyncJob.h"
+#include "comm/forward.h"
 #include "mgr/ActionParams.h"
 #include <map>
 
@@ -28,7 +29,7 @@ namespace Mgr
 class Forwarder: public AsyncJob
 {
 public:
-    Forwarder(int aFd, const ActionParams &aParams, HttpRequest* aRequest,
+    Forwarder(const Comm::ConnectionPointer &conn, const ActionParams &aParams, HttpRequest* aRequest,
               StoreEntry* anEntry);
     virtual ~Forwarder();
 
@@ -59,7 +60,7 @@ private:
     ActionParams params; ///< action parameters to pass to the other side
     HttpRequest* request; ///< HTTP client request for detailing errors
     StoreEntry* entry; ///< Store entry expecting the response
-    int fd; ///< HTTP client connection descriptor
+    Comm::ConnectionPointer clientConnection; ///< HTTP client connection descriptor
     unsigned int requestId; ///< request id
     AsyncCall::Pointer closer; ///< comm_close handler for the HTTP connection
 

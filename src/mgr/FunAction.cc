@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "base/TextException.h"
+#include "comm/Connection.h"
 #include "mgr/Command.h"
 #include "mgr/Filler.h"
 #include "mgr/FunAction.h"
@@ -31,10 +32,10 @@ void
 Mgr::FunAction::respond(const Request& request)
 {
     debugs(16, 5, HERE);
-    const int fd = ImportHttpFdIntoComm(request.fd);
-    Must(fd >= 0);
+    const Comm::ConnectionPointer client = ImportHttpFdIntoComm(request.fd);
+    Must(Comm::IsConnOpen(client));
     Must(request.requestId != 0);
-    AsyncJob::Start(new Mgr::Filler(this, fd, request.requestId));
+    AsyncJob::Start(new Mgr::Filler(this, client, request.requestId));
 }
 
 void
