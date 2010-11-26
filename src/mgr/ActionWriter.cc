@@ -7,17 +7,18 @@
 
 #include "config.h"
 #include "base/TextException.h"
+#include "comm/Connection.h"
 #include "mgr/ActionWriter.h"
 #include "Store.h"
 
 
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, ActionWriter);
 
-Mgr::ActionWriter::ActionWriter(const Action::Pointer &anAction, int aFd):
-        StoreToCommWriter(aFd, anAction->createStoreEntry()),
+Mgr::ActionWriter::ActionWriter(const Action::Pointer &anAction, const Comm::ConnectionPointer &conn):
+        StoreToCommWriter(conn, anAction->createStoreEntry()),
         action(anAction)
 {
-    debugs(16, 5, HERE << "FD " << aFd << " action: " << action);
+    debugs(16, 5, HERE << conn << " action: " << action);
 }
 
 void

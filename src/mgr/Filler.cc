@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "base/TextException.h"
+#include "comm/Connection.h"
 #include "mgr/Filler.h"
 #include "mgr/Response.h"
 #include "Store.h"
@@ -14,13 +15,13 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, Filler);
 
-Mgr::Filler::Filler(const Action::Pointer &anAction, int aFd,
+Mgr::Filler::Filler(const Action::Pointer &anAction, const Comm::ConnectionPointer &conn,
                     unsigned int aRequestId):
-        StoreToCommWriter(aFd, anAction->createStoreEntry()),
+        StoreToCommWriter(conn, anAction->createStoreEntry()),
         action(anAction),
         requestId(aRequestId)
 {
-    debugs(16, 5, HERE << "FD " << aFd << " action: " << action);
+    debugs(16, 5, HERE << conn << " action: " << action);
 }
 
 void

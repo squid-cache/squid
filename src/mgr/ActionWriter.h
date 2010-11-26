@@ -8,6 +8,7 @@
 #ifndef SQUID_MGR_ACTION_WRITER_H
 #define SQUID_MGR_ACTION_WRITER_H
 
+#include "comm/forward.h"
 #include "HttpRequestMethod.h"
 #include "mgr/StoreToCommWriter.h"
 
@@ -20,7 +21,7 @@ namespace Mgr
 class ActionWriter: public StoreToCommWriter
 {
 public:
-    ActionWriter(const Action::Pointer &anAction, int aFd);
+    ActionWriter(const Action::Pointer &anAction, const Comm::ConnectionPointer &conn);
 
 protected:
     /* AsyncJob API */

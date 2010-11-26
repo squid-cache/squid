@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "base/TextException.h"
+#include "comm/Connection.h"
 #include "HttpReply.h"
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
@@ -155,10 +156,10 @@ void
 Mgr::InfoAction::respond(const Request& request)
 {
     debugs(16, 5, HERE);
-    int fd = ImportHttpFdIntoComm(request.fd);
-    Must(fd >= 0);
+    Comm::ConnectionPointer client = ImportHttpFdIntoComm(request.fd);
+    Must(Comm::IsConnOpen(client));
     Must(request.requestId != 0);
-    AsyncJob::Start(new Mgr::Filler(this, fd, request.requestId));
+    AsyncJob::Start(new Mgr::Filler(this, client, request.requestId));
 }
 
 void

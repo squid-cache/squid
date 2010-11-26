@@ -10,6 +10,7 @@
 
 #include "base/AsyncJobCalls.h"
 #include "base/AsyncJob.h"
+#include "comm/forward.h"
 #include "ipc/StrandCoords.h"
 #include "MemBuf.h"
 #include "mgr/Action.h"
@@ -27,7 +28,7 @@ namespace Mgr
 class Inquirer: public AsyncJob
 {
 public:
-    Inquirer(Action::Pointer anAction, int aFd, const Request &aCause,
+    Inquirer(Action::Pointer anAction, const Comm::ConnectionPointer &conn, const Request &aCause,
              const Ipc::StrandCoords &coords);
     virtual ~Inquirer();
 
@@ -63,7 +64,7 @@ private:
     Action::Pointer aggrAction; //< action to aggregate
 
     Request cause; ///< cache manager request received from HTTP client
-    int fd; ///< HTTP client socket descriptor
+    Comm::ConnectionPointer clientConnection; ///< HTTP client socket descriptor
 
     Ipc::StrandCoords strands; ///< all strands we want to query, in order
     Ipc::StrandCoords::const_iterator pos; ///< strand we should query now

@@ -19,7 +19,7 @@ namespace Mgr
 class Request
 {
 public:
-    Request(int aRequestorId, unsigned int aRequestId, int aFd,
+    Request(int aRequestorId, unsigned int aRequestId, const Comm::ConnectionPointer &conn,
             const ActionParams &aParams);
 
     explicit Request(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
