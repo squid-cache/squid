@@ -9,6 +9,7 @@
 #define SQUID_IPC_SHARED_LISTEN_H
 
 #include "base/AsyncCall.h"
+#include "base/Subscription.h"
 
 namespace Ipc
 {

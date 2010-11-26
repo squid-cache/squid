@@ -9,6 +9,7 @@
 #include "config.h"
 #include "base/Subscription.h"
 #include "base/TextException.h"
+#include "CacheManager.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "ipc/Coordinator.h"
@@ -18,7 +19,6 @@
 #include "mgr/Request.h"
 #include "mgr/Response.h"
 #include "mgr/StoreToCommWriter.h"
-
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
 Ipc::Coordinator* Ipc::Coordinator::TheInstance = NULL;
@@ -124,8 +124,8 @@ Ipc::Coordinator::handleCacheMgrRequest(const Mgr::Request& request)
 
     Mgr::Action::Pointer action =
         CacheManager::GetInstance()->createRequestedAction(request.params);
-    AsyncJob::Start(new Mgr::Inquirer(action,
-                                      Mgr::ImportHttpFdIntoComm(request.fd), request, strands_));
+    Comm::ConnectionPointer ir = Mgr::ImportHttpFdIntoComm(request.fd);
+    AsyncJob::Start(new Mgr::Inquirer(action, ir, request, strands_));
 }
 
 void
