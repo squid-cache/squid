@@ -1555,7 +1555,7 @@ free_acl_b_size_t(acl_size_t ** head)
     }
 }
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 
 #include "DelayPools.h"
 #include "DelayConfig.h"
@@ -1607,7 +1607,7 @@ parse_delay_pool_access(DelayConfig * cfg)
 
 #endif
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "ClientDelayConfig.h"
 /* do nothing - free_client_delay_pool_count is the magic free function.
  * this is why client_delay_pool_count isn't just marked TYPE: ushort
@@ -2216,12 +2216,12 @@ parse_peer(peer ** head)
 
             p->options.sourcehash = 1;
 
-#if DELAY_POOLS
-
         } else if (!strcasecmp(token, "no-delay")) {
+#if USE_DELAY_POOLS
             p->options.no_delay = 1;
+#else
+            debugs(0, DBG_CRITICAL, "WARNING: cache_peer option 'no-delay' requires --enable-delay-pools");
 #endif
-
         } else if (!strncasecmp(token, "login=", 6)) {
             p->login = xstrdup(token + 6);
             rfc1738_unescape(p->login);

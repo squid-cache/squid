@@ -45,7 +45,7 @@
 
 
 class HttpRequestMethod;
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 class ClientInfo;
 #endif
 
@@ -92,7 +92,7 @@ void clientdbDump(StoreEntry *);
 SQUIDCEXTERN void clientdbFreeMemory(void);
 
 SQUIDCEXTERN int clientdbEstablished(const Ip::Address &, int);
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 SQUIDCEXTERN void clientdbSetWriteLimiter(ClientInfo * info, const int writeSpeedLimit,const double initialBurst,const double highWatermark);
 SQUIDCEXTERN ClientInfo * clientdbGetInfo(const Ip::Address &addr);
 #endif

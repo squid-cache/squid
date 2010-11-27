@@ -52,7 +52,7 @@
 #include "cbdata.h"
 #include "mgr/Registration.h"
 #include "Store.h"
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 #include "Stack.h"
 #endif
 #include "Generic.h"
@@ -62,11 +62,11 @@
 #endif
 
 static int cbdataCount = 0;
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 dlink_list cbdataEntries;
 #endif
 
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 
 class CBDataCall
 {
@@ -94,7 +94,7 @@ public:
     hash_link hash;	// Must be first
 #endif
 
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 
     void dump(StoreEntry *)const;
 #endif
@@ -110,7 +110,7 @@ public:
     int valid;
     int locks;
     cbdata_type type;
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 
     void addHistory(char const *label, char const *aFile, int aLine) {
         if (calls.size() > 1000)
@@ -174,7 +174,7 @@ MEMPROXY_CLASS_INLINE(cbdata);
 #endif
 
 static OBJH cbdataDump;
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 static OBJH cbdataDumpHistory;
 #endif
 
@@ -207,7 +207,7 @@ cbdata_hash(const void *p, unsigned int mod)
 
 cbdata::~cbdata()
 {
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
     CBDataCall *aCall;
 
     while ((aCall = calls.pop()))
@@ -275,7 +275,7 @@ cbdataRegisterWithCacheManager(void)
     Mgr::RegisterAction("cbdata",
                         "Callback Data Registry Contents",
                         cbdataDump, 0, 1);
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 
     Mgr::RegisterAction("cbdatahistory",
                         "Detailed call history for all current cbdata contents",
@@ -284,7 +284,7 @@ cbdataRegisterWithCacheManager(void)
 }
 
 void *
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 cbdataInternalAllocDbg(cbdata_type type, const char *file, int line)
 #else
 cbdataInternalAlloc(cbdata_type type)
@@ -311,7 +311,7 @@ cbdataInternalAlloc(cbdata_type type)
     c->locks = 0;
     c->cookie = (long) c ^ cbdata::Cookie;
     cbdataCount++;
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 
     c->file = file;
     c->line = line;
@@ -325,7 +325,7 @@ cbdataInternalAlloc(cbdata_type type)
 }
 
 void *
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 cbdataInternalFreeDbg(void *p, const char *file, int line)
 #else
 cbdataInternalFree(void *p)
@@ -337,7 +337,7 @@ cbdataInternalFree(void *p)
 #else
     c = (cbdata *) (((char *) p) - cbdata::Offset);
 #endif
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 
     debugs(45, 3, "cbdataFree: " << p << " " << file << ":" << line);
 #else
@@ -348,7 +348,7 @@ cbdataInternalFree(void *p)
     c->check(__LINE__);
     assert(c->valid);
     c->valid = 0;
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 
     c->addHistory("Free", file, line);
 #endif
@@ -360,7 +360,7 @@ cbdataInternalFree(void *p)
 
     cbdataCount--;
     debugs(45, 9, "cbdataFree: Freeing " << p);
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 
     dlinkDelete(&c->link, &cbdataEntries);
 #endif
@@ -388,7 +388,7 @@ cbdataInternalFree(void *p)
 }
 
 void
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 cbdataInternalLockDbg(const void *p, const char *file, int line)
 #else
 cbdataInternalLock(const void *p)
@@ -405,7 +405,7 @@ cbdataInternalLock(const void *p)
     c = (cbdata *) (((char *) p) - cbdata::Offset);
 #endif
 
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 
     debugs(45, 3, "cbdataLock: " << p << "=" << (c ? c->locks + 1 : -1) << " " << file << ":" << line);
 
@@ -425,7 +425,7 @@ cbdataInternalLock(const void *p)
 }
 
 void
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 cbdataInternalUnlockDbg(const void *p, const char *file, int line)
 #else
 cbdataInternalUnlock(const void *p)
@@ -442,7 +442,7 @@ cbdataInternalUnlock(const void *p)
     c = (cbdata *) (((char *) p) - cbdata::Offset);
 #endif
 
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 
     debugs(45, 3, "cbdataUnlock: " << p << "=" << (c ? c->locks - 1 : -1) << " " << file << ":" << line);
 
@@ -469,7 +469,7 @@ cbdataInternalUnlock(const void *p)
 
     debugs(45, 9, "cbdataUnlock: Freeing " << p);
 
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 
     dlinkDelete(&c->link, &cbdataEntries);
 
@@ -520,7 +520,7 @@ cbdataReferenceValid(const void *p)
 }
 
 int
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 cbdataInternalReferenceDoneValidDbg(void **pp, void **tp, const char *file, int line)
 #else
 cbdataInternalReferenceDoneValid(void **pp, void **tp)
@@ -529,7 +529,7 @@ cbdataInternalReferenceDoneValid(void **pp, void **tp)
     void *p = (void *) *pp;
     int valid = cbdataReferenceValid(p);
     *pp = NULL;
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 
     cbdataInternalUnlockDbg(p, file, line);
 #else
@@ -546,7 +546,7 @@ cbdataInternalReferenceDoneValid(void **pp, void **tp)
     }
 }
 
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 void
 cbdata::dump(StoreEntry *sentry) const
 {
@@ -575,7 +575,7 @@ static void
 cbdataDump(StoreEntry * sentry)
 {
     storeAppendPrintf(sentry, "%d cbdata entries\n", cbdataCount);
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 
     storeAppendPrintf(sentry, "Pointer\tType\tLocks\tAllocated by\n");
     CBDataDumper dumper(sentry);
@@ -597,7 +597,7 @@ cbdataDump(StoreEntry * sentry)
     }
 
 #else
-    storeAppendPrintf(sentry, "detailed allocation information only available when compiled with CBDATA_DEBUG\n");
+    storeAppendPrintf(sentry, "detailed allocation information only available when compiled with --enable-debug-cbdata\n");
 
 #endif
 
@@ -606,7 +606,7 @@ cbdataDump(StoreEntry * sentry)
 
 CBDATA_CLASS_INIT(generic_cbdata);
 
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 
 struct CBDataCallDumper : public unary_function<CBDataCall, void> {
     CBDataCallDumper (StoreEntry *anEntry):where(anEntry) {}

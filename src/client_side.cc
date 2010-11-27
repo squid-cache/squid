@@ -112,7 +112,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "ClientInfo.h"
 #endif
 
@@ -3165,7 +3165,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
     clientdbEstablished(details->peer, 1);
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     fd_table[newfd].clientInfo = NULL;
 
     if (Config.onoff.client_db) {

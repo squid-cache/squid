@@ -39,7 +39,7 @@
 
 #include "config.h"
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "squid.h"
 #include "DelayConfig.h"
 #include "ConfigParser.h"
@@ -142,4 +142,4 @@ DelayConfig::dumpPoolCount(StoreEntry * entry, const char *name) const
         DelayPools::delay_data[i].dump (entry, i);
 }
 
-#endif
+#endif /* USE_DELAY_POOLS */

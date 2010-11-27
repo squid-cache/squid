@@ -39,8 +39,14 @@
 #endif
 #include "auth/Gadgets.h"
 #include "base/TextException.h"
+#if USE_DELAY_POOLS
+#include "ClientDelayConfig.h"
+#endif
 #include "ConfigParser.h"
 #include "CpuAffinity.h"
+#if USE_DELAY_POOLS
+#include "DelayPools.h"
+#endif
 #include "errorpage.h"
 #include "event.h"
 #include "EventLoop.h"
@@ -79,10 +85,6 @@
 #include "MemPool.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
-
-#if DELAY_POOLS
-#include "ClientDelayConfig.h"
-#endif
 
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
@@ -857,7 +859,7 @@ mainReconfigureFinish(void *)
 
     mimeInit(Config.mimeTablePathname);
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
 #endif
 
@@ -951,10 +953,6 @@ mainSetCwd(void)
         debugs(50, 0, "WARNING: Can't find current directory, getcwd: " << xstrerror());
     }
 }
-
-#if DELAY_POOLS
-#include "DelayPools.h"
-#endif
 
 static void
 mainInitialize(void)
@@ -1086,8 +1084,7 @@ mainInitialize(void)
         do_mallinfo = 1;
         mimeInit(Config.mimeTablePathname);
         refreshInit();
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
         DelayPools::Init();
 #endif
 
@@ -1183,7 +1180,7 @@ mainInitialize(void)
     Esi::Init();
 #endif
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
 #endif
 
@@ -1856,8 +1853,7 @@ SquidShutdown()
     Esi::Clean();
 #endif
 
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
     DelayPools::FreePools();
 #endif
 

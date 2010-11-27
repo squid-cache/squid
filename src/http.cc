@@ -46,7 +46,7 @@
 #include "base/TextException.h"
 #include "base64.h"
 #include "comm/Write.h"
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
 #include "errorpage.h"
@@ -134,10 +134,8 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
         if (_peer->options.proxy_only)
             entry->releaseRequest();
 
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
         entry->setNoDelay(_peer->options.no_delay);
-
 #endif
     }
 
@@ -1123,8 +1121,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
     if (len > 0) {
         readBuf->appended(len);
         reply_bytes_read += len;
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
         DelayId delayId = entry->mem_obj->mostBytesAllowed();
         delayId.bytesIn(len);
 #endif

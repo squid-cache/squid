@@ -57,7 +57,7 @@
 #include "URLScheme.h"
 #include "wordlist.h"
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "DelayPools.h"
 #include "MemObject.h"
 #endif
@@ -1199,7 +1199,7 @@ FtpStateData::dataRead(const CommIoCbParams &io)
     if (io.flag == COMM_OK && io.size > 0) {
         debugs(9,5,HERE << "appended " << io.size << " bytes to readBuf");
         data.readBuf->appended(io.size);
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
         DelayId delayId = entry->mem_obj->mostBytesAllowed();
         delayId.bytesIn(io.size);
 #endif

@@ -44,7 +44,7 @@
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "clientStream.h"
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
 #include "errorpage.h"
@@ -251,7 +251,7 @@ clientReplyContext::processExpired()
                              http->log_uri, http->request->flags, http->request->method);
     /* NOTE, don't call StoreEntry->lock(), storeCreateEntry() does it */
     sc = storeClientListAdd(entry, this);
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     /* delay_id is already set on original store client */
     sc->setDelayId(DelayId::DelayClient(http));
 #endif
@@ -564,7 +564,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
          * plain ol' cache hit
          */
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
         if (e->store_status != STORE_OK)
             http->logType = LOG_TCP_MISS;
         else
@@ -1728,8 +1728,7 @@ clientReplyContext::doGetMoreData()
         }
 
         sc = storeClientListAdd(http->storeEntry(), this);
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
         sc->setDelayId(DelayId::DelayClient(http));
 #endif
 
@@ -2124,10 +2123,8 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, request_flags r
 
     sc = storeClientListAdd(e, this);
 
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
     sc->setDelayId(DelayId::DelayClient(http));
-
 #endif
 
     reqofs = 0;
