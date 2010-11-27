@@ -12,6 +12,6 @@ public:
 
 extern LogConfig TheConfig;
 
-}; // namespace Log
+} // namespace Log
 
 #endif

@@ -57,6 +57,7 @@ libcompat_squid_a_SOURCES = \
 	os/netbsd.h \
 	os/next.h \
 	os/openbsd.h \
+	os/opensolaris_10_netdb.h \
 	os/os2.h \
 	os/qnx.h \
 	os/sgi.h \

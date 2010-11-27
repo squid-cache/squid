@@ -2,6 +2,7 @@
  * $Id$
  */
 
+#include "config.h"
 // just for the global definition of Config and Config2
 #include "structs.h"
 

@@ -37,8 +37,6 @@
 #ifndef ICMPCONFIG_H
 #define ICMPCONFIG_H
 
-#include "config.h"
-
 /**
  * Squid pinger Configuration settings
  *

@@ -221,6 +221,10 @@ Comm::ConnOpener::connect()
         // check for timeout FIRST.
         if(squid_curtime - connectStart_ > connectTimeout_) {
             debugs(5, 5, HERE << conn_ << ": * - ERR took too long already.");
+            if (calls_.earlyAbort_ != NULL) {
+                calls_.earlyAbort_->cancel("Comm::ConnOpener::connect timed out");
+                calls_.earlyAbort_ = NULL;
+            }
             conn_->close();
             doneConnecting(COMM_TIMEOUT, errno);
         } else if (failRetries_ < Config.connect_retries) {
@@ -228,6 +232,10 @@ Comm::ConnOpener::connect()
         } else {
             // send ERROR back to the upper layer.
             debugs(5, 5, HERE << conn_ << ": * - ERR tried too many times already.");
+            if (calls_.earlyAbort_ != NULL) {
+                calls_.earlyAbort_->cancel("Comm::ConnOpener::connect failed");
+                calls_.earlyAbort_ = NULL;
+            }
             conn_->close();
             doneConnecting(COMM_ERR_CONNECT, errno);
         }

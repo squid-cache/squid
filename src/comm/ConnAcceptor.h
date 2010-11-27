@@ -1,10 +1,10 @@
 #ifndef SQUID_COMM_CONNACCEPTOR_H
 #define SQUID_COMM_CONNACCEPTOR_H
 
-#include "config.h"
+#include "base/AsyncCall.h"
 #include "base/Subscription.h"
 #include "CommCalls.h"
-#include "comm/comm_err_t.h"
+#include "comm_err_t.h"
 #include "comm/forward.h"
 
 #if HAVE_MAP
@@ -85,6 +85,6 @@ private:
     CBDATA_CLASS2(ConnAcceptor);
 };
 
-}; // namespace Comm
+} // namespace Comm
 
 #endif /* SQUID_COMM_CONNACCEPTOR_H */

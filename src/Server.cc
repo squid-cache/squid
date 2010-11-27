@@ -36,6 +36,7 @@
 #include "base/TextException.h"
 #include "comm/Connection.h"
 #include "comm/forward.h"
+#include "comm/Write.h"
 #include "Server.h"
 #include "Store.h"
 //#include "fde.h" /* for fd_table[fd].closing */
@@ -420,7 +421,7 @@ ServerStateData::sendMoreRequestBody()
         debugs(9,3, HERE << "will write " << buf.contentSize() << " request body bytes");
         typedef CommCbMemFunT<ServerStateData, CommIoCbParams> Dialer;
         requestSender = JobCallback(93,3, Dialer, this, ServerStateData::sentRequestBody);
-        comm_write_mbuf(conn, &buf, requestSender);
+        Comm::Write(conn, &buf, requestSender);
     } else {
         debugs(9,3, HERE << "will wait for more request body bytes or eof");
         requestSender = NULL;

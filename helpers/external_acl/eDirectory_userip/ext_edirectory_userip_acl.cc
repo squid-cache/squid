@@ -230,18 +230,18 @@ void local_debug(const char *func, const char *msg,...)
         return;
     }
     sz = sizeof(dbuf);
-    memset(cbuf, '\0', strlen(cbuf));
+    memset(cbuf, '\0', sizeof(cbuf));
     xstrncpy(cbuf, prog, sizeof(cbuf));
-    strncat(cbuf, ": [DB] ", sizeof(cbuf));
-    strncat(cbuf, func, sizeof(cbuf));
-    strncat(cbuf, "() - ", sizeof(cbuf));
+    strncat(cbuf, ": [DB] ", 7);
+    strncat(cbuf, func, strlen(func));
+    strncat(cbuf, "() - ", 5);
     va_start(ap, msg);
     x = vsnprintf(dbuf, sz, msg, ap);
     va_end(ap);
     if (x > 0) {
         strncat(cbuf, dbuf, x);
         fputs(cbuf, stderr);
-        memset(dbuf, '\0', strlen(dbuf));
+        memset(dbuf, '\0', sizeof(dbuf));
     } else {
         snprintf(bbuf, sz, "%s: local_debug(%s) FAILURE: %zd\n", prog, dbuf, x);
         fputs(bbuf, stderr);
@@ -277,7 +277,7 @@ void local_debugx(const char *msg,...)
     va_end(ap);
     if (x > 0) {
         fputs(dbuf, stderr);
-        memset(dbuf, '\0', strlen(dbuf));
+        memset(dbuf, '\0', sizeof(dbuf));
     } else {
         snprintf(bbuf, sz, "%s: local_debugx(%s) FAILURE: %zd\n", prog, dbuf, x);
         fputs(bbuf, stderr);
@@ -318,7 +318,7 @@ void local_printfx(const char *msg,...)
         dbuf[x] = '\0';
         x++;
         fputs(dbuf, stdout);
-        memset(dbuf, '\0', strlen(dbuf));
+        memset(dbuf, '\0', sizeof(dbuf));
     } else {
         /* FAIL */
         /*
@@ -766,8 +766,8 @@ int BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
         if ((l->basedn[0] != '\0') && (strstr(dn, l->basedn) == NULL)) {
             /* We got a basedn, but it's not part of dn */
             xstrncpy(l->dn, dn, sizeof(l->dn));
-            strncat(l->dn, ",", sizeof(l->dn));
-            strncat(l->dn, l->basedn, sizeof(l->dn));
+            strncat(l->dn, ",", 1);
+            strncat(l->dn, l->basedn, strlen(l->basedn));
         } else
             xstrncpy(l->dn, dn, sizeof(l->dn));
     }
@@ -785,15 +785,21 @@ int BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
     case LDAP_AUTH_SASL:
         l->type = t;
         break;
+#ifdef LDAP_AUTH_KRBV4
     case LDAP_AUTH_KRBV4:
         l->type = t;
         break;
+#endif
+#ifdef LDAP_AUTH_KRBV41
     case LDAP_AUTH_KRBV41:
         l->type = t;
         break;
+#endif
+#ifdef LDAP_AUTH_KRBV42
     case LDAP_AUTH_KRBV42:
         l->type = t;
         break;
+#endif
 #ifdef LDAP_AUTH_TLS
     case LDAP_AUTH_TLS:					/* Added for chicken switch to TLS-enabled without using SSL */
         l->type = t;
@@ -805,7 +811,7 @@ int BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
     }
 
     /* Bind */
-#ifdef NETSCAPE_SSL
+#if defined(LDAP_AUTH_TLS) && defined(NETSCAPE_SSL) && HAVE_LDAP_START_TLS_S
     if (l->type == LDAP_AUTH_TLS)
         s = ldap_start_tls_s(l->lp, NULL, NULL);
     else
@@ -883,19 +889,19 @@ int ConvertIP(edui_ldap_t *l, char *ip)
     memset(obj, '\0', sizeof(obj));
     /* SplitString() will zero out bufa & obj at each call */
     memset(l->search_ip, '\0', sizeof(l->search_ip));
-    xstrncpy(bufa, ip, sizeof(bufa));							/* To avoid segfaults, use bufa instead of ip */
+    xstrncpy(bufa, ip, sizeof(bufa));						/* To avoid segfaults, use bufa instead of ip */
     swi = 0;
     if (l->status & LDAP_IPV6_S) {
         /* Search for :: in string */
         if ((bufa[0] == ':') && (bufa[1] == ':')) {
             /* bufa starts with a ::, so just copy and clear */
-            xstrncpy(bufb, bufa, sizeof(bufa));
+            xstrncpy(bufb, bufa, sizeof(bufb));
             memset(bufa, '\0', strlen(bufa));
             swi++;								/* Indicates that there is a bufb */
         } else if ((bufa[0] == ':') && (bufa[1] != ':')) {
             /* bufa starts with a :, a typo so just fill in a ':', cat and clear */
             bufb[0] = ':';
-            strncat(bufb, bufa, sizeof(bufb));
+            strncat(bufb, bufa, strlen(bufa));
             memset(bufa, '\0', strlen(bufa));
             swi++;								/* Indicates that there is a bufb */
         } else {
@@ -924,8 +930,8 @@ int ConvertIP(edui_ldap_t *l, char *ip)
                 if (((x < 0) || (x > 255)) || ((errno != 0) && (x == 0)) || ((obj[0] != '0') && (x == 0)))
                     return LDAP_ERR_OOB;						/* Out of bounds -- Invalid address */
                 memset(hexc, '\0', sizeof(hexc));
-                snprintf(hexc, sizeof(hexc), "%.2X", (int)x);
-                strncat(l->search_ip, hexc, sizeof(l->search_ip));
+                int hlen = snprintf(hexc, sizeof(hexc), "%.2X", (int)x);
+                strncat(l->search_ip, hexc, hlen);
             } else
                 break;								/* reached end of octet */
         } else if (l->status & LDAP_IPV6_S) {
@@ -946,7 +952,7 @@ int ConvertIP(edui_ldap_t *l, char *ip)
                 if (!isxdigit(i))
                     return LDAP_ERR_OOB;					/* Out of bounds */
                 hexc[2] = '\0';
-                strncat(l->search_ip, hexc, sizeof(l->search_ip));
+                strncat(l->search_ip, hexc, 2);
                 hexc[0] = (char) toupper((int)obj[2]);
                 i = (int)hexc[0];
                 if (!isxdigit(i))
@@ -956,7 +962,7 @@ int ConvertIP(edui_ldap_t *l, char *ip)
                 if (!isxdigit(i))
                     return LDAP_ERR_OOB;					/* Out of bounds */
                 hexc[2] = '\0';
-                strncat(l->search_ip, hexc, sizeof(l->search_ip));
+                strncat(l->search_ip, hexc, 2);
                 break;
             case 3:
                 hexc[0] = '0';
@@ -965,7 +971,7 @@ int ConvertIP(edui_ldap_t *l, char *ip)
                 if (!isxdigit(i))
                     return LDAP_ERR_OOB;					/* Out of bounds */
                 hexc[2] = '\0';
-                strncat(l->search_ip, hexc, sizeof(l->search_ip));
+                strncat(l->search_ip, hexc, 2);
                 hexc[0] = (char) toupper((int)obj[1]);
                 i = (int)hexc[0];
                 if (!isxdigit(i))
@@ -975,10 +981,10 @@ int ConvertIP(edui_ldap_t *l, char *ip)
                 if (!isxdigit(i))
                     return LDAP_ERR_OOB;					/* Out of bounds */
                 hexc[2] = '\0';
-                strncat(l->search_ip, hexc, sizeof(l->search_ip));
+                strncat(l->search_ip, hexc, 2);
                 break;
             case 2:
-                strncat(l->search_ip, "00", sizeof(l->search_ip));
+                strncat(l->search_ip, "00", 2);
                 hexc[0] = (char) toupper((int)obj[0]);
                 i = (int)hexc[0];
                 if (!isxdigit(i))
@@ -988,17 +994,17 @@ int ConvertIP(edui_ldap_t *l, char *ip)
                 if (!isxdigit(i))
                     return LDAP_ERR_OOB;					/* Out of bounds */
                 hexc[2] = '\0';
-                strncat(l->search_ip, hexc, sizeof(l->search_ip));
+                strncat(l->search_ip, hexc, 2);
                 break;
             case 1:
-                strncat(l->search_ip, "00", sizeof(l->search_ip));
+                strncat(l->search_ip, "00", 2);
                 hexc[0] = '0';
                 hexc[1] = (char) toupper((int)obj[0]);
                 i = (int)hexc[1];
                 if (!isxdigit(i))
                     return LDAP_ERR_OOB;					/* Out of bounds */
                 hexc[2] = '\0';
-                strncat(l->search_ip, hexc, sizeof(l->search_ip));
+                strncat(l->search_ip, hexc, 2);
                 break;
             default:
                 if (t > 4)
@@ -1019,7 +1025,7 @@ int ConvertIP(edui_ldap_t *l, char *ip)
                 t = 8 - (strlen(l->search_ip) / 4) - j;			/* Remainder */
                 if (t > 0) {
                     for (i = 0; i < t; i++)
-                        strncat(l->search_ip, "0000", sizeof(l->search_ip));
+                        strncat(l->search_ip, "0000", 4);
                 }
             }
         }
@@ -1034,7 +1040,7 @@ int ConvertIP(edui_ldap_t *l, char *ip)
     /* CHECK sizes of address, truncate or pad */
     /* if "::" is at end of ip, then pad another block or two */
     while ((l->status & LDAP_IPV6_S) && (s < 32)) {
-        strncat(l->search_ip, "0000", sizeof(l->search_ip));
+        strncat(l->search_ip, "0000", 4);
         s = strlen(l->search_ip);
     }
     if ((l->status & LDAP_IPV6_S) && (s > 32)) {
@@ -1044,7 +1050,7 @@ int ConvertIP(edui_ldap_t *l, char *ip)
     }
     /* If at end of ip, and its not long enough, then pad another block or two */
     while ((l->status & LDAP_IPV4_S) && (s < 8)) {
-        strncat(l->search_ip, "00", sizeof(l->search_ip));
+        strncat(l->search_ip, "00", 2);
         s = strlen(l->search_ip);
     }
     if ((l->status & LDAP_IPV4_S) && (s > 8)) {
@@ -1147,49 +1153,47 @@ int SearchFilterLDAP(edui_ldap_t *l, char *group)
     if (group == NULL) {
         /* No groupMembership= to add, yay! */
         xstrncpy(bufa, "(&", sizeof(bufa));
-        strncat(bufa, edui_conf.search_filter, sizeof(bufa));
+        strncat(bufa, edui_conf.search_filter, strlen(edui_conf.search_filter));
         /* networkAddress */
-        snprintf(bufb, sizeof(bufb), "(|(networkAddress=1\\23%s)", \
-                 bufc);
+        snprintf(bufb, sizeof(bufb), "(|(networkAddress=1\\23%s)", bufc);
         if (l->status & LDAP_IPV4_S) {
-            snprintf(bufd, sizeof(bufd), "(networkAddress=8\\23\\00\\00%s)(networkAddress=9\\23\\00\\00%s))", \
-                     bufc, bufc);
-            strncat(bufb, bufd, sizeof(bufb));
+            int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=8\\23\\00\\00%s)(networkAddress=9\\23\\00\\00%s))", \
+                              bufc, bufc);
+            strncat(bufb, bufd, ln);
         } else if (l->status & LDAP_IPV6_S) {
-            snprintf(bufd, sizeof(bufd), "(networkAddress=10\\23\\00\\00%s)(networkAddress=11\\23\\00\\00%s))", \
-                     bufc, bufc);
-            strncat(bufb, bufd, sizeof(bufb));
+            int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=10\\23\\00\\00%s)(networkAddress=11\\23\\00\\00%s))", \
+                              bufc, bufc);
+            strncat(bufb, bufd, ln);
         } else
-            strncat(bufb, ")", sizeof(bufb));
-        strncat(bufa, bufb, sizeof(bufa));
-        strncat(bufa, ")", sizeof(bufa));
+            strncat(bufb, ")", 1);
+        strncat(bufa, bufb, strlen(bufb));
+        strncat(bufa, ")", 1);
     } else {
         /* Needs groupMembership= to add... */
         xstrncpy(bufa, "(&(&", sizeof(bufa));
-        strncat(bufa, edui_conf.search_filter, sizeof(bufa));
+        strncat(bufa, edui_conf.search_filter, strlen(edui_conf.search_filter));
         /* groupMembership -- NOTE: Squid *MUST* provide "cn=" from squid.conf */
         snprintf(bufg, sizeof(bufg), "(groupMembership=%s", group);
         if ((l->basedn[0] != '\0') && (strstr(group, l->basedn) == NULL)) {
-            strncat(bufg, ",", sizeof(bufg));
-            strncat(bufg, l->basedn, sizeof(bufg));
+            strncat(bufg, ",", 1);
+            strncat(bufg, l->basedn, strlen(l->basedn));
         }
-        strncat(bufg, ")", sizeof(bufg));
-        strncat(bufa, bufg, sizeof(bufa));
+        strncat(bufg, ")", 1);
+        strncat(bufa, bufg, strlen(bufg));
         /* networkAddress */
-        snprintf(bufb, sizeof(bufb), "(|(networkAddress=1\\23%s)", \
-                 bufc);
+        snprintf(bufb, sizeof(bufb), "(|(networkAddress=1\\23%s)", bufc);
         if (l->status & LDAP_IPV4_S) {
-            snprintf(bufd, sizeof(bufd), "(networkAddress=8\\23\\00\\00%s)(networkAddress=9\\23\\00\\00%s))", \
-                     bufc, bufc);
-            strncat(bufb, bufd, sizeof(bufb));
+            int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=8\\23\\00\\00%s)(networkAddress=9\\23\\00\\00%s))", \
+                              bufc, bufc);
+            strncat(bufb, bufd, ln);
         } else if (l->status & LDAP_IPV6_S) {
-            snprintf(bufd, sizeof(bufd), "(networkAddress=10\\23\\00\\00%s)(networkAddress=11\\23\\00\\00%s))", \
-                     bufc, bufc);
-            strncat(bufb, bufd, sizeof(bufb));
+            int ln = snprintf(bufd, sizeof(bufd), "(networkAddress=10\\23\\00\\00%s)(networkAddress=11\\23\\00\\00%s))", \
+                              bufc, bufc);
+            strncat(bufb, bufd, ln);
         } else
-            strncat(bufb, ")", sizeof(bufb));
-        strncat(bufa, bufb, sizeof(bufa));
-        strncat(bufa, "))", sizeof(bufa));
+            strncat(bufb, ")", 1);
+        strncat(bufa, bufb, strlen(bufb));
+        strncat(bufa, "))", 2);
     }
     s = strlen(bufa);
     xstrncpy(l->search_filter, bufa, sizeof(l->search_filter));
@@ -1351,7 +1355,6 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
     int c;
     char bufa[EDUI_MAXLEN], bufb[EDUI_MAXLEN], hexc[4];
     LDAPMessage *ent;
-    struct berval **ber;
     if (l == NULL) return LDAP_ERR_NULL;
     if (uid == NULL) return LDAP_ERR_PARAM;
     if (l->lp == NULL) return LDAP_ERR_POINTER;
@@ -1369,6 +1372,7 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
         xstrncpy(edui_conf.attrib, "cn", sizeof(edui_conf.attrib));		/* Make sure edui_conf.attrib is set */
 
     /* Sift through entries */
+    struct berval **ber = NULL;
     for (ent = ldap_first_entry(l->lp, l->lm); ent != NULL; ent = ldap_next_entry(l->lp, ent)) {
         l->val = ldap_get_values_len(l->lp, ent, "networkAddress");
         ber = ldap_get_values_len(l->lp, ent, edui_conf.attrib);			/* edui_conf.attrib is the <userid> mapping */
@@ -1411,19 +1415,19 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                             c = (int) bufa[k];
                             if (c < 0)
                                 c = c + 256;
-                            snprintf(hexc, sizeof(hexc), "%.2X", c);
+                            int hlen = snprintf(hexc, sizeof(hexc), "%.2X", c);
                             if (k == 0)
                                 xstrncpy(bufb, hexc, sizeof(bufb));
                             else
-                                strncat(bufb, hexc, sizeof(bufb));
+                                strncat(bufb, hexc, hlen);
                         }
                         y = strlen(bufb);
                         /* Compare value with IP */
-                        if (bcmp(l->search_ip, bufb, y) == 0) {
+                        if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
-                                xstrncpy(uid, ber[j]->bv_val, ber[j]->bv_len);
+                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),static_cast<size_t>(ber[j]->bv_len)));
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1443,19 +1447,19 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                             c = (int) bufa[k];
                             if (c < 0)
                                 c = c + 256;
-                            snprintf(hexc, sizeof(hexc), "%.2X", c);
+                            int hlen = snprintf(hexc, sizeof(hexc), "%.2X", c);
                             if (k == 2)
                                 xstrncpy(bufb, hexc, sizeof(bufb));
                             else
-                                strncat(bufb, hexc, sizeof(bufb));
+                                strncat(bufb, hexc, hlen);
                         }
                         y = strlen(bufb);
                         /* Compare value with IP */
-                        if (bcmp(l->search_ip, bufb, y) == 0) {
+                        if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
-                                xstrncpy(uid, ber[j]->bv_val, ber[j]->bv_len);
+                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),static_cast<size_t>(ber[j]->bv_len)));
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1475,19 +1479,19 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                             c = (int) bufa[k];
                             if (c < 0)
                                 c = c + 256;
-                            snprintf(hexc, sizeof(hexc), "%.2X", c);
+                            int hlen = snprintf(hexc, sizeof(hexc), "%.2X", c);
                             if (k == 2)
                                 xstrncpy(bufb, hexc, sizeof(bufb));
                             else
-                                strncat(bufb, hexc, sizeof(bufb));
+                                strncat(bufb, hexc, hlen);
                         }
                         y = strlen(bufb);
                         /* Compare value with IP */
-                        if (bcmp(l->search_ip, bufb, y) == 0) {
+                        if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
-                                xstrncpy(uid, ber[j]->bv_val, ber[j]->bv_len);
+                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),static_cast<size_t>(ber[j]->bv_len)));
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1507,19 +1511,19 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                             c = (int) bufa[k];
                             if (c < 0)
                                 c = c + 256;
-                            snprintf(hexc, sizeof(hexc), "%.2X", c);
+                            int hlen = snprintf(hexc, sizeof(hexc), "%.2X", c);
                             if (k == 2)
                                 xstrncpy(bufb, hexc, sizeof(bufb));
                             else
-                                strncat(bufb, hexc, sizeof(bufb));
+                                strncat(bufb, hexc, hlen);
                         }
                         y = strlen(bufb);
                         /* Compare value with IP */
-                        if (bcmp(l->search_ip, bufb, y) == 0) {
+                        if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
-                                xstrncpy(uid, ber[j]->bv_val, ber[j]->bv_len);
+                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),static_cast<size_t>(ber[j]->bv_len)));
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1539,19 +1543,19 @@ int SearchIPLDAP(edui_ldap_t *l, char *uid)
                             c = (int) bufa[k];
                             if (c < 0)
                                 c = c + 256;
-                            snprintf(hexc, sizeof(hexc), "%.2X", c);
+                            int hlen = snprintf(hexc, sizeof(hexc), "%.2X", c);
                             if (k == 2)
                                 xstrncpy(bufb, hexc, sizeof(bufb));
                             else
-                                strncat(bufb, hexc, sizeof(bufb));
+                                strncat(bufb, hexc, hlen);
                         }
                         y = strlen(bufb);
                         /* Compare value with IP */
-                        if (bcmp(l->search_ip, bufb, y) == 0) {
+                        if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
                             for (j = 0; j < z; j++)
-                                xstrncpy(uid, ber[j]->bv_val, ber[j]->bv_len);
+                                xstrncpy(uid, ber[j]->bv_val, min(sizeof(uid),static_cast<size_t>(ber[j]->bv_len)));
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);

@@ -46,11 +46,11 @@
 #include "base/TextException.h"
 #include "base64.h"
 #include "comm/Connection.h"
+#include "comm/Write.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
 #include "errorpage.h"
-#include "fde.h"
 #include "http.h"
 #include "HttpControlMsg.h"
 #include "HttpHdrContRange.h"
@@ -2138,7 +2138,8 @@ HttpStateData::sendRequest()
     request->peer_host=_peer?_peer->host:NULL;
     buildRequestPrefix(request, orig_request, entry, &mb);
     debugs(11, 6, HERE << serverConnection << ":\n" << mb.buf);
-    comm_write_mbuf(serverConnection, &mb, requestSender);
+    Comm::Write(serverConnection, &mb, requestSender);
+
     return true;
 }
 
@@ -2224,7 +2225,7 @@ HttpStateData::finishingBrokenPost()
     typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
     requestSender = JobCallback(11,5,
                                 Dialer, this, HttpStateData::wroteLast);
-    comm_write(serverConnection, "\r\n", 2, requestSender);
+    Comm::Write(serverConnection, "\r\n", 2, requestSender, NULL);
     return true;
 #else
     return false;
@@ -2245,7 +2246,7 @@ HttpStateData::finishingChunkedRequest()
 
     typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
     requestSender = JobCallback(11,5, Dialer, this, HttpStateData::wroteLast);
-    comm_write(serverConnection, "0\r\n\r\n", 5, requestSender);
+    Comm::Write(serverConnection, "0\r\n\r\n", 5, requestSender, NULL);
     return true;
 }
 

@@ -32,9 +32,6 @@
 #ifndef SQUID_HTTPHEADERMASK_H
 #define SQUID_HTTPHEADERMASK_H
 
-/* for SQUIDCEXTERN */
-#include "config.h"
-
 /* big mask for http headers */
 typedef char HttpHeaderMask[12];
 

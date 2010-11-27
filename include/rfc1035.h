@@ -33,8 +33,6 @@
 #ifndef SQUID_RFC1035_H
 #define SQUID_RFC1035_H
 
-#include "config.h"
-
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif

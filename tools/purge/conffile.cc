@@ -1,3 +1,5 @@
+#include "config.h"
+
 //
 // $Id$
 //
@@ -46,7 +48,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <regex.h>
 
 int
 readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )

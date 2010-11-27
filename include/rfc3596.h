@@ -38,8 +38,6 @@
 #ifndef SQUID_RFC3596_H
 #define SQUID_RFC3596_H
 
-#include "config.h"
-
 /* RFC 3596 extends RFC 1035 */
 #include "rfc1035.h"
 

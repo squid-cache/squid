@@ -32,9 +32,9 @@
  *
  */
 #include "config.h"
-
 #include "auth/UserRequest.h"
 #include "comm/Connection.h"
+#include "comm/Write.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
 #include "fde.h"
@@ -461,7 +461,9 @@ errorSend(const Comm::ConnectionPointer &conn, ErrorState * err)
 
     rep = err->BuildHttpReply();
     MemBuf *mb = rep->pack();
-    comm_write_mbuf(conn, mb, errorSendComplete, err);
+    AsyncCall::Pointer call = commCbCall(78, 5, "errorSendComplete",
+                                         CommIoCbPtrFun(&errorSendComplete, err));
+    Comm::Write(conn, mb, call);
     delete mb;
     delete rep;
 }

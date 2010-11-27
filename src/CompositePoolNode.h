@@ -33,9 +33,6 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
-#include "config.h"
-
 #ifndef COMPOSITEPOOLNODE_H
 #define COMPOSITEPOOLNODE_H
 

@@ -35,7 +35,8 @@
 #ifndef SQUID_SSL_SUPPORT_H
 #define SQUID_SSL_SUPPORT_H
 
-#include "config.h"
+#include "ssl/gadgets.h"
+
 #if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
 #endif
@@ -91,6 +92,30 @@ const char *sslGetUserCertificateChainPEM(SSL *ssl);
 typedef int ssl_error_t;
 ssl_error_t sslParseErrorString(const char *name);
 const char *sslFindErrorString(ssl_error_t value);
+
+namespace Ssl
+{
+/**
+  \ingroup ServerProtocolSSLAPI
+  * Decide on the kind of certificate and generate a CA- or self-signed one
+*/
+SSL_CTX *generateSslContext(char const *host, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey);
+
+/**
+  \ingroup ServerProtocolSSLAPI
+  * Check date of certificate signature. If there is out of date error fucntion
+  * returns false, true otherwise.
+ */
+bool verifySslCertificateDate(SSL_CTX * sslContext);
+
+/**
+  \ingroup ServerProtocolSSLAPI
+  * Read private key and certificate from memory and generate SSL context
+  * using their.
+ */
+SSL_CTX * generateSslContextUsingPkeyAndCertFromMemory(const char * data);
+
+} //namespace Ssl
 
 // Custom SSL errors; assumes all official errors are positive
 #define SQUID_X509_V_ERR_DOMAIN_MISMATCH -1

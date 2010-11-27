@@ -32,7 +32,6 @@
 #ifndef   SQUID_TIME_H
 #define   SQUID_TIME_H
 
-#include "config.h"
 #include "rfc1123.h"
 
 #if HAVE_TIME_H

@@ -1,7 +1,3 @@
-#ifndef SQUID_CONFIG_H
-#include "config.h"
-#endif
-
 #ifndef SQUID_OS_SOLARIS_H
 #define SQUID_OS_SOLARIS_H
 
@@ -88,6 +84,14 @@ SQUIDCEXTERN int gethostname(char *, int);
  */
 #if defined(__sparcv9)
 #include "compat/os/opensolaris_10_netdb.h"
+#endif
+
+/* Solaris lacks paths.h by default */
+#if HAVE_PATHS_H
+#include <paths.h>
+#endif
+#if !defined(_PATH_DEVNULL)
+#define _PATH_DEVNULL "/dev/null"
 #endif
 
 #endif /* _SQUID_SOLARIS_ */

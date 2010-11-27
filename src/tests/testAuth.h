@@ -2,8 +2,6 @@
 #ifndef SQUID_SRC_TEST_AUTH_H
 #define SQUID_SRC_TEST_AUTH_H
 
-#include "config.h"
-
 #include <cppunit/extensions/HelperMacros.h>
 
 /*

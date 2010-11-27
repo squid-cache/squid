@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
-"POT-Creation-Date: 2010-09-30 15:47+1200\n"
+"POT-Creation-Date: 2010-11-06 03:27+1400\n"
 "PO-Revision-Date: 2010-06-06 10:48+0200\n"
 "Last-Translator: Robert Förster <Dessa@gmake.de>\n"
 "Language-Team: German <de@li.org>\n"
@@ -218,7 +218,7 @@ msgstr ""
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:120
 #: helpers/digest_auth/file/digest_file_auth.8:59
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:228
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:186
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:187
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:75
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:194
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:232
@@ -238,7 +238,7 @@ msgstr "AUTOR"
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:122
 #: helpers/digest_auth/file/digest_file_auth.8:61
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:230
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:188
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:189
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:77
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:196
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:234
@@ -262,7 +262,7 @@ msgstr "Basiert auf Originalcode von"
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:131
 #: helpers/digest_auth/file/digest_file_auth.8:68
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:236
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:191
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:192
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:80
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:199
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:243
@@ -283,7 +283,7 @@ msgstr "Dieses Handbuch wurde geschrieben von"
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:134
 #: helpers/digest_auth/file/digest_file_auth.8:71
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:239
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:194
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:195
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:83
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:201
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:245
@@ -305,7 +305,7 @@ msgstr "COPYRIGHT"
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:136
 #: helpers/digest_auth/file/digest_file_auth.8:73
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:241
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:196
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:197
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:85
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:203
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:247
@@ -328,7 +328,7 @@ msgstr ""
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:138
 #: helpers/digest_auth/file/digest_file_auth.8:75
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:243
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:198
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:199
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:87
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:205
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:249
@@ -355,7 +355,7 @@ msgstr ""
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:139
 #: helpers/digest_auth/file/digest_file_auth.8:76
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:244
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:199
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:200
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:88
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:206
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:250
@@ -379,7 +379,7 @@ msgstr "FRAGEN"
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:142
 #: helpers/digest_auth/file/digest_file_auth.8:79
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:247
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:202
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:203
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:91
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:209
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:253
@@ -406,7 +406,7 @@ msgstr ""
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:144
 #: helpers/digest_auth/file/digest_file_auth.8:81
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:249
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:204
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:205
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:93
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:211
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:258
@@ -430,7 +430,7 @@ msgstr "BUGS MELDEN"
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:147
 #: helpers/digest_auth/file/digest_file_auth.8:84
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:252
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:213
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:215
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:96
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:214
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:261
@@ -458,7 +458,7 @@ msgstr ""
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:149
 #: helpers/digest_auth/file/digest_file_auth.8:86
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:254
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:215
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:217
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:98
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:216
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:263
@@ -481,7 +481,7 @@ msgstr "Melden sie Bugs oder Bugfixes unter http://bugs.squid-cache.org/"
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:152
 #: helpers/digest_auth/file/digest_file_auth.8:89
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:257
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:218
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:220
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:101
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:219
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:266
@@ -508,7 +508,7 @@ msgstr ""
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:155
 #: helpers/digest_auth/file/digest_file_auth.8:92
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:260
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:221
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:223
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:104
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:222
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:269
@@ -534,7 +534,7 @@ msgstr ""
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:157
 #: helpers/digest_auth/file/digest_file_auth.8:94
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:262
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:223
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:225
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:106
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:224
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:271
@@ -558,7 +558,7 @@ msgstr "SIEHE AUCH"
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:162
 #: helpers/digest_auth/file/digest_file_auth.8:99
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:267
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:229
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:231
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:111
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:238
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:282
@@ -580,7 +580,7 @@ msgstr ""
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:165
 #: helpers/digest_auth/file/digest_file_auth.8:102
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:270
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:232
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:234
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:114
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:241
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:285
@@ -2036,22 +2036,24 @@ msgid "Enable TLS security."
 msgstr ""
 
 #. type: Plain text
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:161
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:162
 msgid ""
 "In this example, the B<Internet_Allowed> and B<Internet_Denied> are Groups "
 "that users may be used to control internet access, which can also be stacked "
-"against other ACL's.  Use of the groups is optional."
+"against other ACL's.  Use of the groups is optional, unless the '-G' option "
+"has been passed.  Please note that you need to specify the full LDAP object "
+"for this, as shown above."
 msgstr ""
 
 #. type: SH
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:162
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:163
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:62
 #, no-wrap
 msgid "KNOWN ISSUES"
 msgstr ""
 
 #. type: Plain text
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:167
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:168
 msgid ""
 "IPv6 support has yet to be tested in a real IPv6 environment, but the code "
 "is in place to read IPv6 networkAddress fields, please attempt this in a "
@@ -2060,7 +2062,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:172
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:173
 msgid ""
 "There is a known issue regarding Novell's Client for Windows, that is mostly "
 "fixed by using version 4.91 SP3+, with the 'Auto-Reconnect' feature not re-"
@@ -2068,7 +2070,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:178
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:179
 msgid ""
 "I have also experienced an issue related to using NetWare 6.5 (SP6 and "
 "lower?) and connection licensing.  It appears that whenever a server runs "
@@ -2077,7 +2079,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:185
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:186
 msgid ""
 "Majority of Proxy Authentication issues can be resolved by having the users' "
 "B<reboot> if their networkAddress is not correct, or using "
@@ -2086,11 +2088,12 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:209
+#: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:211
 msgid ""
 "I *STRONGLY RECOMMEND* using the latest version of the Novell Client in all "
 "situations B<before> seeking support! You may also need to make sure your "
-"servers have the latest service packs."
+"servers have the latest service packs installed, and that your servers are "
+"properly synchronizing partitions."
 msgstr ""
 
 #. type: Plain text

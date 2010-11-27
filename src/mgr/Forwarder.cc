@@ -123,7 +123,7 @@ Mgr::Forwarder::doneAll() const
 
 /// called when the client socket gets closed by some external force
 void
-Mgr::Forwarder::noteCommClosed(const CommCloseCbParams& params)
+Mgr::Forwarder::noteCommClosed(const CommCloseCbParams &io)
 {
     debugs(16, 5, HERE);
     Must(!Comm::IsConnOpen(clientConnection));

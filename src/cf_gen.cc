@@ -45,9 +45,7 @@
  *			 administrator.
  *****************************************************************************/
 
-//#include "squid.h"
 #include "config.h"
-//#include "SquidTime.h"
 #include "util.h"
 
 #if HAVE_STRING_H

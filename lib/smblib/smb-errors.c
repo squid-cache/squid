@@ -1,3 +1,5 @@
+#include "config.h"
+
 /* UNIX SMBlib NetBIOS implementation
 
    Version 1.0

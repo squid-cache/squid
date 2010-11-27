@@ -1,4 +1,3 @@
-
 /*
  * MSNT - Microsoft Windows NT domain squid authenticator module
  * Version 2.0 by Stellar-X Pty Ltd, Antonino Iannella
@@ -30,7 +29,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
+#include "config.h"
 #include "rfc1738.h"
 #include "util.h"
 

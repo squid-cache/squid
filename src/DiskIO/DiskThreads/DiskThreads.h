@@ -7,7 +7,6 @@
 #ifndef __DISKTHREADS_H__
 #define __DISKTHREADS_H__
 
-#include "config.h"
 #include "dlink.h"
 #include "typedefs.h"
 

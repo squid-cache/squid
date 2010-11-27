@@ -1,3 +1,5 @@
+#include "config.h"
+
 /* encrypt.c - providing 56 bit DES encryption
  * Copyright (C) 1991 Jochen Obalek
  *

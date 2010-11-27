@@ -17,10 +17,6 @@
  * Cambridge, MA 02139, USA.
  */
 
-#ifndef SQUID_CONFIG_H
-#include "config.h"
-#endif
-
 #ifndef SQUID_TEMPNAM_H
 #define SQUID_TEMPNAM_H
 

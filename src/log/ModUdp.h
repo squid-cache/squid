@@ -34,8 +34,6 @@
 #ifndef _SQUID_SRC_LOG_MODUDP_H
 #define _SQUID_SRC_LOG_MODUDP_H
 
-#include "config.h"
-
 class Logfile;
 
 extern int logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag);

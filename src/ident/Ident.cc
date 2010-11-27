@@ -40,6 +40,7 @@
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "CommCalls.h"
+#include "comm/Write.h"
 #include "ident/Config.h"
 #include "ident/Ident.h"
 #include "MemBuf.h"
@@ -73,7 +74,7 @@ static hash_table *ident_hash = NULL;
 static void ClientAdd(IdentStateData * state, IDCB * callback, void *callback_data);
 static void identCallback(IdentStateData * state, char *result);
 
-}; // namespace Ident
+} // namespace Ident
 
 Ident::IdentConfig Ident::TheConfig;
 
@@ -153,7 +154,8 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int x
     mb.Printf("%d, %d\r\n",
               conn->remote.GetPort(),
               conn->local.GetPort());
-    comm_write_mbuf(conn, &mb, NULL, state);
+    AsyncCall::Pointer nil;
+    Comm::Write(conn, &mb, nil);
     comm_read(conn, state->buf, BUFSIZ, Ident::ReadReply, state);
     commSetTimeout(conn->fd, Ident::TheConfig.timeout, Ident::Timeout, state);
 }
