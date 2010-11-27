@@ -1,8 +1,6 @@
 #ifndef ICMP_NET_DB_H
 #define ICMP_NET_DB_H
 
-#include "config.h"
-
 namespace Ip
 {
 class Address;

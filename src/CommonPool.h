@@ -35,9 +35,6 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
-#include "config.h"
-
 #ifndef COMMONPOOL_H
 #define COMMONPOOL_H
 #if DELAY_POOLS

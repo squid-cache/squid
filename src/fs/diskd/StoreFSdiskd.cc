@@ -35,6 +35,7 @@
 
 /* TODO: remove this file as unused */
 
+#include "config.h"
 #if 0
 #include "StoreFileSystem.h"
 #include "DiskIO/DiskIOModule.h"

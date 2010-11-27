@@ -6,6 +6,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
+#include "comm/Write.h"
 #include "CommCalls.h"
 #include "HttpMsg.h"
 #include "adaptation/icap/Xaction.h"
@@ -222,7 +223,7 @@ void Adaptation::Icap::Xaction::scheduleWrite(MemBuf &buf)
     // comm module will free the buffer
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommIoCbParams> Dialer;
     writer = JobCallback(93, 3, Dialer, this, Adaptation::Icap::Xaction::noteCommWrote);
-    comm_write_mbuf(connection, &buf, writer);
+    Comm::Write(connection, &buf, writer);
     updateTimeout();
 }
 

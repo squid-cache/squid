@@ -32,7 +32,6 @@
 #ifndef _INCLUDE_ICMPSQUID_H
 #define _INCLUDE_ICMPSQUID_H
 
-#include "config.h"
 #include "Icmp.h"
 
 /**

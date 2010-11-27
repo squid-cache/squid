@@ -34,8 +34,6 @@
 #ifndef SQUID_MEM
 #define SQUID_MEM
 
-#include "config.h"
-
 #if HAVE_OSTREAM
 #include <ostream>
 #endif

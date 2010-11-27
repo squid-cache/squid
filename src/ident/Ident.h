@@ -9,8 +9,6 @@
  \ingroup SquidComponents
  */
 
-#include "config.h"
-
 #if USE_IDENT
 
 #include "cbdata.h"

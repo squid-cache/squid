@@ -55,8 +55,6 @@
 #ifndef SQUID_NTLMAUTH_H
 #define SQUID_NTLMAUTH_H
 
-#include "config.h"
-
 /* NP: All of this cruft is little endian */
 
 #ifdef __cplusplus

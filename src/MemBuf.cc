@@ -41,7 +41,7 @@
  * Rationale:
  * ----------
  *
- * Here is how one would comm_write an object without MemBuffer:
+ * Here is how one would Comm::Write an object without MemBuffer:
  *
  * {
  * -- allocate:
@@ -53,7 +53,7 @@
  * ...
  *
  * -- write
- * comm_write(buf, free, ...);
+ * Comm::Write(buf, free, ...);
  * }
  *
  * The whole "packing" idea is quite messy: We are given a buffer of fixed
@@ -91,7 +91,7 @@
  * ...
  *
  * -- write
- * comm_write_mbuf(fd, buf, handler, data);
+ * Comm::Write(fd, buf, callback);
  *
  * -- *iff* you did not give the buffer away, free it yourself
  * -- buf.clean();

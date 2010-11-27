@@ -1,7 +1,3 @@
-#ifndef SQUID_CONFIG_H
-#include "config.h"
-#endif
-
 #ifndef _getnameinfo_h
 #define _getnameinfo_h
 /*

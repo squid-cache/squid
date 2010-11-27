@@ -1,7 +1,6 @@
 #ifndef SQUID_SRC_LOG_FILE_H
 #define SQUID_SRC_LOG_FILE_H
 
-#include "config.h"
 #include "dlink.h"
 
 #if HAVE_SYS_PARAM_H

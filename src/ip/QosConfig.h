@@ -1,7 +1,6 @@
 #ifndef SQUID_QOSCONFIG_H
 #define SQUID_QOSCONFIG_H
 
-#include "config.h"
 #include "hier_code.h"
 #include "ip/forward.h"
 
@@ -188,9 +187,9 @@ extern Config TheConfig;
 	        storeAppendPrintf(e, "%s", temp); \
 	} while(0);
 
-}; // namespace Qos
+} // namespace Qos
 
-}; // namespace Ip
+} // namespace Ip
 
 #if _USE_INLINE_
 #include "Qos.cci"

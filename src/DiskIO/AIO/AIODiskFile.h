@@ -33,8 +33,6 @@
 #ifndef SQUID_AIODISKFILE_H
 #define SQUID_AIODISKFILE_H
 
-#include "config.h"
-
 #if USE_DISKIO_AIO
 
 #include "DiskIO/DiskFile.h"

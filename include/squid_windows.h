@@ -33,8 +33,6 @@
 #ifndef _INC_SQUID_WINDOWS_H
 #define _INC_SQUID_WINDOWS_H
 
-#include "config.h"
-
 #ifdef _SQUID_WIN32_
 
 #ifndef ACL

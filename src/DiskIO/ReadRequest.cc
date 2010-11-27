@@ -31,6 +31,7 @@
  * Copyright (c) 2003 Robert Collins <robertc@squid-cache.org>
  */
 
+#include "config.h"
 #include "ReadRequest.h"
 
 CBDATA_CLASS_INIT(ReadRequest);

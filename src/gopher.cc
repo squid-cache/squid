@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "comm/Write.h"
 #include "errorpage.h"
 #include "Store.h"
 #include "html_quote.h"
@@ -978,7 +979,9 @@ gopherSendRequest(int fd, void *data)
     }
 
     debugs(10, 5, HERE << gopherState->serverConn);
-    comm_write(gopherState->serverConn, buf, strlen(buf), gopherSendComplete, gopherState, NULL);
+    AsyncCall::Pointer call = commCbCall(5,5, "gopherSendComplete",
+                                         CommIoCbPtrFun(gopherSendComplete, gopherState));
+    Comm::Write(gopherState->serverConn, buf, strlen(buf), call, NULL);
 
     if (EBIT_TEST(gopherState->entry->flags, ENTRY_CACHABLE))
         gopherState->entry->setPublicKey();	/* Make it public */

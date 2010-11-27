@@ -38,6 +38,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
+#include "comm/Write.h"
 #include "client_side.h"
 #include "client_side_request.h"
 #if DELAY_POOLS
@@ -118,7 +119,7 @@ private:
     void writeServerDone(char *buf, size_t len, comm_err_t flag, int xerrno);
 };
 
-static const char *const conn_established = "HTTP/1.0 200 Connection established\r\n\r\n";
+static const char *const conn_established = "HTTP/1.1 200 Connection established\r\n\r\n";
 
 static CNCB tunnelConnectDone;
 static ERCB tunnelErrorComplete;
@@ -316,8 +317,11 @@ TunnelStateData::copy(size_t len, comm_err_t errcode, int xerrno, Connection &fr
         if (from.len == 0 && Comm::IsConnOpen(to.conn) ) {
             to.conn->close();
         }
-    } else if (cbdataReferenceValid(this))
-        comm_write(to.conn, from.buf, len, completion, this, NULL);
+    } else if (cbdataReferenceValid(this)) {
+        AsyncCall::Pointer call = commCbCall(5,5, "SomeTunnelWriteHandler",
+                                         CommIoCbPtrFun(completion, this));
+        Comm::Write(to.conn, from.buf, len, call, NULL);
+    }
 
     cbdataInternalUnlock(this);	/* ??? */
 }
@@ -457,6 +461,10 @@ TunnelStateData::copyRead(Connection &from, IOCB *completion)
     comm_read(from.conn, from.buf, from.bytesWanted(1, SQUID_TCP_SO_RCVBUF), completion, this);
 }
 
+/**
+ * All the pieces we need to write to client and/or server connection
+ * Have been written. Start the blind pump.
+ */
 static void
 tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
 {
@@ -479,8 +487,9 @@ tunnelConnected(const Comm::ConnectionPointer &server, void *data)
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, HERE << server << ", tunnelState=" << tunnelState);
     *tunnelState->status_ptr = HTTP_OK;
-    comm_write(tunnelState->client.conn, conn_established, strlen(conn_established),
-               tunnelConnectedWriteDone, tunnelState, NULL);
+    AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
+                                         CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
+    Comm::Write(tunnelState->client.conn, conn_established, strlen(conn_established), call, NULL);
 }
 
 static void
@@ -635,13 +644,13 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
 }
 
 static void
-tunnelRelayConnectRequest(const Comm::ConnectionPointer &server, void *data)
+tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     HttpHeader hdr_out(hoRequest);
     Packer p;
     http_state_flags flags;
-    debugs(26, 3, HERE << server << ", tunnelState=" << tunnelState);
+    debugs(26, 3, HERE << srv << ", tunnelState=" << tunnelState);
     memset(&flags, '\0', sizeof(flags));
     flags.proxying = tunnelState->request->flags.proxying;
     MemBuf mb;
@@ -658,8 +667,10 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &server, void *data)
     packerClean(&p);
     mb.append("\r\n", 2);
 
-    comm_write_mbuf(server, &mb, tunnelConnectedWriteDone, tunnelState);
-    commSetTimeout(server->fd, Config.Timeout.read, tunnelTimeout, tunnelState);
+    AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
+                                         CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
+    Comm::Write(srv, &mb, call);
+    commSetTimeout(srv->fd, Config.Timeout.read, tunnelTimeout, tunnelState);
 }
 
 static void

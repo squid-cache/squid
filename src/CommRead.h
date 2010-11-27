@@ -33,9 +33,6 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
-#include "config.h"
-
 #ifndef COMMREAD_H
 #define COMMREAD_H
 

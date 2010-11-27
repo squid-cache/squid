@@ -36,6 +36,7 @@
 #include "base/InstanceId.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
+#include "comm/Write.h"
 #include "comm.h"
 #include "event.h"
 #include "fde.h"
@@ -772,7 +773,9 @@ idnsDoSendQueryVC(nsvc *vc)
 
     commSetTimeout(vc->conn->fd, Config.Timeout.idns_query, NULL, NULL);
 
-    comm_write_mbuf(vc->conn, mb, idnsSentQueryVC, vc);
+    AsyncCall::Pointer call = commCbCall(78, 5, "idnsSentQueryVC",
+                                         CommIoCbPtrFun(&idnsSentQueryVC, vc));
+    Comm::Write(vc->conn, mb, call);
 
     delete mb;
 }

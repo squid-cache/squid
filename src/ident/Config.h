@@ -1,8 +1,6 @@
 #ifndef SQUID_IDENT_CONFIG_H
 #define SQUID_IDENT_CONFIG_H
 
-#include "config.h"
-
 #if USE_IDENT
 
 #include "acl/Acl.h"
@@ -19,7 +17,7 @@ public:
 
 extern IdentConfig TheConfig;
 
-}; // namespace Ident
+} // namespace Ident
 
 #endif /* USE_IDENT */
 #endif /* SQUID_IDENT_CONFIG_H */

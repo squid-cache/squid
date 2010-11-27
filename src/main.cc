@@ -99,6 +99,29 @@
 #include "StoreFileSystem.h"
 #include "SwapDir.h"
 
+#if USE_SSL_CRTD
+#include "ssl/helper.h"
+#include "ssl/certificate_db.h"
+#endif
+
+#if USE_SSL
+#include "ssl/context_storage.h"
+#endif
+
+#if ICAP_CLIENT
+#include "adaptation/icap/Config.h"
+#endif
+#if USE_ECAP
+#include "adaptation/ecap/Config.h"
+#endif
+#if USE_ADAPTATION
+#include "adaptation/Config.h"
+#endif
+#if USE_SQUID_ESI
+#include "esi/Module.h"
+#endif
+#include "fs/Module.h"
+
 #if HAVE_PATHS_H
 #include <paths.h>
 #endif
@@ -119,9 +142,6 @@ void WINAPI WIN32_svcHandler(DWORD);
 #ifndef SQUID_BUILD_INFO
 #define SQUID_BUILD_INFO ""
 #endif
-
-/** for error reporting from xmalloc and friends */
-SQUIDCEXTERN void (*failure_notify) (const char *);
 
 static char *opt_syslog_facility = NULL;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
@@ -730,7 +750,12 @@ mainReconfigureStart(void)
 
     idnsShutdown();
 #endif
-
+#if USE_SSL_CRTD
+    Ssl::Helper::GetInstance()->Shutdown();
+#endif
+#if USE_SSL
+    Ssl::TheGlobalContextStorage.reconfigureStart();
+#endif
     redirectShutdown();
     authenticateReset();
     externalAclShutdown();
@@ -815,6 +840,9 @@ mainReconfigureFinish(void *)
 #else
 
     idnsInit();
+#endif
+#if USE_SSL_CRTD
+    Ssl::Helper::GetInstance()->Init();
 #endif
 
     redirectInit();
@@ -1809,7 +1837,9 @@ SquidShutdown()
 
     idnsShutdown();
 #endif
-
+#if USE_SSL_CRTD
+    Ssl::Helper::GetInstance()->Shutdown();
+#endif
     redirectShutdown();
     externalAclShutdown();
     icpConnectionClose();

@@ -5,14 +5,9 @@
 #include "AsyncEngine.h"
 #include "base/AsyncCall.h"
 #include "CommCalls.h"
-#include "comm/comm_err_t.h"
-#include "comm/forward.h"
-#include "ip/Address.h"
+#include "comm_err_t.h"
+#include "comm/IoCallback.h"
 #include "StoreIOBuffer.h"
-
-#define COMMIO_FD_READCB(fd)    (&commfd_table[(fd)].readcb)
-#define COMMIO_FD_WRITECB(fd)   (&commfd_table[(fd)].writecb)
-
 
 /* comm.c */
 extern bool comm_iocallbackpending(void); /* inline candidate */
@@ -63,10 +58,6 @@ SQUIDCEXTERN void commSetSelect(int, unsigned int, PF *, void *, time_t);
 SQUIDCEXTERN void commResetSelect(int);
 
 SQUIDCEXTERN int comm_udp_sendto(int sock, const Ip::Address &to, const void *buf, int buflen);
-extern void comm_write(const Comm::ConnectionPointer &conn, const char *buf, int len, IOCB *callback, void *callback_data, FREE *func);
-extern void comm_write(const Comm::ConnectionPointer &conn, const char *buf, int size, AsyncCall::Pointer &callback, FREE * free_func = NULL);
-SQUIDCEXTERN void comm_write_mbuf(const Comm::ConnectionPointer &conn, MemBuf *mb, IOCB * handler, void *handler_data);
-extern void comm_write_mbuf(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Pointer &callback);
 SQUIDCEXTERN void commCallCloseHandlers(int fd);
 SQUIDCEXTERN int commSetTimeout(int fd, int, PF *, void *);
 extern int commSetTimeout(int fd, int, AsyncCall::Pointer &callback);

@@ -4,8 +4,6 @@
 #ifndef SQUID_SNMP_UTIL_H
 #define SQUID_SNMP_UTIL_H
 
-#include "config.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
