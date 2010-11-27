@@ -49,6 +49,6 @@ private:
     void setListen();
 };
 
-}; // namespace Comm
+} // namespace Comm
 
 #endif /* SQUID_LISTENERSTATEDATA_H */

@@ -181,6 +181,6 @@ private:
  */
 extern Intercept Interceptor;
 
-}; // namespace Ip
+} // namespace Ip
 
 #endif /* SQUID_IP_IPINTERCEPT_H */
