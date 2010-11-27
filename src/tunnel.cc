@@ -41,7 +41,7 @@
 #include "comm/Write.h"
 #include "client_side_request.h"
 #include "acl/FilledChecklist.h"
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif
 #include "client_side.h"
@@ -81,7 +81,7 @@ public:
         void fd(int const newFD);
         int bytesWanted(int lower=0, int upper = INT_MAX) const;
         void bytesIn(int const &);
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 
         void setDelayId(DelayId const &);
 #endif
@@ -96,7 +96,7 @@ public:
 
     private:
         int fd_;
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 
         DelayId delayId;
 #endif
@@ -189,7 +189,7 @@ TunnelStateData::Connection::~Connection()
 int
 TunnelStateData::Connection::bytesWanted(int lowerbound, int upperbound) const
 {
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     return delayId.bytesWanted(lowerbound, upperbound);
 #else
 
@@ -200,7 +200,7 @@ TunnelStateData::Connection::bytesWanted(int lowerbound, int upperbound) const
 void
 TunnelStateData::Connection::bytesIn(int const &count)
 {
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     delayId.bytesIn(count);
 #endif
 
@@ -692,7 +692,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     request->hier.peer_local_port = comm_local_port(sock); // for %<lp logging
 
     tunnelState = new TunnelStateData;
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 
     tunnelState->server.setDelayId(DelayId::DelayClient(http));
 #endif
@@ -793,7 +793,7 @@ tunnelPeerSelectComplete(FwdServer * fs, void *data)
         tunnelState->request->flags.proxying = 0;
     }
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
     if (g && g->options.no_delay)
         tunnelState->server.setDelayId(DelayId());
@@ -836,7 +836,7 @@ TunnelStateData::noConnections() const
     return fd_closed(server.fd()) && fd_closed(client.fd());
 }
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 void
 TunnelStateData::Connection::setDelayId(DelayId const &newDelay)
 {

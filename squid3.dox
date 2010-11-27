@@ -1256,7 +1256,6 @@ INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = __cplusplus \
                          USE_HTTP_VIOLATIONS \
                          WITH_VALGRIND \
-                         DELAY_POOLS \
                          ICAP_CLIENT \
                          FORW_VIA_DB \
                          SQUID_SNMP \
@@ -1265,6 +1264,7 @@ PREDEFINED             = __cplusplus \
                          USE_ASYNC_IO \
                          USE_CACHE_DIGESTS \
                          USE_CLASSFUL \
+                         USE_DELAY_POOLS \
                          USE_DLMALLOC \
                          USE_DNSSERVERS \
                          USE_EPOLL \

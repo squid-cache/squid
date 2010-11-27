@@ -35,7 +35,7 @@
 #include "squid.h"
 #include "MemObject.h"
 #include "HttpReply.h"
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
 
@@ -112,7 +112,7 @@ MemObject::mostBytesWanted(int max) const
     return -1;
 }
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 DelayId
 MemObject::mostBytesAllowed() const
 {
@@ -120,7 +120,6 @@ MemObject::mostBytesAllowed() const
     fatal ("Not implemented");
     return result;
 }
-
 #endif
 
 void

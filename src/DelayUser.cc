@@ -37,7 +37,7 @@
 
 #include "config.h"
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "squid.h"
 #include "DelayUser.h"
 #include "auth/UserRequest.h"

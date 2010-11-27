@@ -41,7 +41,7 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "comm.h"
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "DelayPools.h"
 #include "MemObject.h"
 #endif
@@ -777,8 +777,7 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
     int bin;
     size_t read_sz = BUFSIZ;
     int do_next_read = 0;
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
     DelayId delayId = entry->mem_obj->mostBytesAllowed();
 #endif
 
@@ -796,15 +795,14 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
     }
 
     errno = 0;
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
     read_sz = delayId.bytesWanted(1, read_sz);
 #endif
 
     /* leave one space for \0 in gopherToHTML */
 
     if (flag == COMM_OK && len > 0) {
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
         delayId.bytesIn(len);
 #endif
 

@@ -34,9 +34,7 @@
 
 #include "config.h"
 
-
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
 #include "squid.h"
 #include "DelayId.h"
 
@@ -48,4 +46,4 @@ DelayId::delayRead(DeferredRead const&)
 
 DelayId::~DelayId() {}
 
-#endif
+#endif /* USE_DELAY_POOLS */

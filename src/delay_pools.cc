@@ -41,7 +41,7 @@
 
 #include "config.h"
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "squid.h"
 #include "mgr/Registration.h"
 #include "DelaySpec.h"
@@ -1034,5 +1034,4 @@ ClassCHostPool::Id::bytesIn(int qty)
     theClassCHost->buckets.values[theNet].individuals.values[theHost].bytesIn (qty);
 }
 
-#endif
-
+#endif /* USE_DELAY_POOLS */

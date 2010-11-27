@@ -43,7 +43,7 @@
 typedef void STMCB (void *data, StoreIOBuffer wroteBuffer);
 
 class store_client;
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif
 
@@ -79,8 +79,7 @@ public:
     bool isContiguous() const;
     int mostBytesWanted(int max) const;
     void setNoDelay(bool const newValue);
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
     DelayId mostBytesAllowed() const;
 #endif
 

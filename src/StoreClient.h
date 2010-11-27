@@ -50,7 +50,7 @@ public:
     virtual void created (StoreEntry *newEntry) = 0;
 };
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif
 
@@ -88,8 +88,8 @@ public:
         unsigned int store_copying:1;
         unsigned int copy_event_pending:1;
     } flags;
-#if DELAY_POOLS
 
+#if USE_DELAY_POOLS
     DelayId delayId;
     void setDelayId(DelayId delay_id);
 #endif
