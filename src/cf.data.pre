@@ -2173,8 +2173,8 @@ DOC_START
 			which parent to fectch from. If the rtt is less than the
 			base time the rtt is set to a minimal value.
 	
-	ttl=N		Specify a IP multicast TTL to use when sending an ICP
-			queries to this address.
+	ttl=N		Specify a TTL to use when sending multicast ICP queries
+			to this address.
 			Only useful when sending to a multicast group.
 			Because we don't accept ICP replies from random
 			hosts, you must configure other group members as
