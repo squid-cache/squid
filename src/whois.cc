@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "comm/Write.h"
 #include "errorpage.h"
 #include "Store.h"
 #include "HttpReply.h"
@@ -101,7 +102,10 @@ whoisStart(FwdState * fwd)
     String str_print=p->request->urlpath.substr(1,p->request->urlpath.size());
     snprintf(buf, l, SQUIDSTRINGPH"\r\n", SQUIDSTRINGPRINT(str_print));
 
-    comm_write(fd, buf, strlen(buf), whoisWriteComplete, p, NULL);
+    AsyncCall::Pointer call = commCbCall(5,5, "whoisWriteComplete",
+                                         CommIoCbPtrFun(whoisWriteComplete, p));
+
+    Comm::Write(fd, buf, strlen(buf), call, NULL);
     comm_read(fd, p->buf, BUFSIZ, whoisReadReply, p);
     commSetTimeout(fd, Config.Timeout.read, whoisTimeout, p);
 }

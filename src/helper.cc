@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "comm/Write.h"
 #include "helper.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
@@ -1188,11 +1189,9 @@ helperDispatchWriteDone(int fd, char *buf, size_t len, comm_err_t flag, int xerr
         srv->writebuf = srv->wqueue;
         srv->wqueue = new MemBuf;
         srv->flags.writing = 1;
-        comm_write(srv->wfd,
-                   srv->writebuf->content(),
-                   srv->writebuf->contentSize(),
-                   helperDispatchWriteDone,	/* Handler */
-                   srv, NULL);			/* Handler-data, freefunc */
+        AsyncCall::Pointer call = commCbCall(5,5, "helperDispatchWriteDone",
+                                             CommIoCbPtrFun(helperDispatchWriteDone, srv));
+        Comm::Write(srv->wfd, srv->writebuf->content(), srv->writebuf->contentSize(), call, NULL);
     }
 }
 
@@ -1234,11 +1233,9 @@ helperDispatch(helper_server * srv, helper_request * r)
         srv->writebuf = srv->wqueue;
         srv->wqueue = new MemBuf;
         srv->flags.writing = 1;
-        comm_write(srv->wfd,
-                   srv->writebuf->content(),
-                   srv->writebuf->contentSize(),
-                   helperDispatchWriteDone,	/* Handler */
-                   srv, NULL);			/* Handler-data, free func */
+        AsyncCall::Pointer call = commCbCall(5,5, "helperDispatchWriteDone",
+                                             CommIoCbPtrFun(helperDispatchWriteDone, srv));
+        Comm::Write(srv->wfd, srv->writebuf->content(), srv->writebuf->contentSize(), call, NULL);
     }
 
     debugs(84, 5, "helperDispatch: Request sent to " << hlp->id_name << " #" << srv->index + 1 << ", " << strlen(r->buf) << " bytes");
@@ -1289,11 +1286,9 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
     srv->flags.reserved = 1;
     srv->request = r;
     srv->dispatch_time = current_time;
-    comm_write(srv->wfd,
-               r->buf,
-               strlen(r->buf),
-               helperStatefulDispatchWriteDone,	/* Handler */
-               hlp, NULL);				/* Handler-data, free func */
+    AsyncCall::Pointer call = commCbCall(5,5, "helperStatefulDispatchWriteDone",
+                                         CommIoCbPtrFun(helperStatefulDispatchWriteDone, hlp));
+    Comm::Write(srv->wfd, r->buf, strlen(r->buf), call, NULL);
     debugs(84, 5, "helperStatefulDispatch: Request sent to " <<
            hlp->id_name << " #" << srv->index + 1 << ", " <<
            (int) strlen(r->buf) << " bytes");

@@ -92,6 +92,7 @@
 #include "ClientRequestContext.h"
 #include "clientStream.h"
 #include "comm.h"
+#include "comm/Write.h"
 #include "comm/ListenStateData.h"
 #include "base/TextException.h"
 #include "ConnectionDetail.h"
@@ -376,7 +377,7 @@ ClientSocketContext::writeControlMsg(HttpControlMsg &msg)
 
     AsyncCall::Pointer call = commCbCall(33, 5, "ClientSocketContext::wroteControlMsg",
                                          CommIoCbPtrFun(&WroteControlMsg, this));
-    comm_write_mbuf(fd(), mb, call);
+    Comm::Write(fd(), mb, call);
 
     delete mb;
 }
@@ -962,7 +963,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
         noteSentBodyBytes (length);
         AsyncCall::Pointer call = commCbCall(33, 5, "clientWriteBodyComplete",
                                              CommIoCbPtrFun(clientWriteBodyComplete, this));
-        comm_write(fd(), bodyData.data, length, call );
+        Comm::Write(fd(), bodyData.data, length, call, NULL);
         return;
     }
 
@@ -977,7 +978,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
         /* write */
         AsyncCall::Pointer call = commCbCall(33, 5, "clientWriteComplete",
                                              CommIoCbPtrFun(clientWriteComplete, this));
-        comm_write_mbuf(fd(), &mb, call);
+        Comm::Write(fd(), &mb, call);
     }  else
         writeComplete(fd(), NULL, 0, COMM_OK);
 }
@@ -1380,7 +1381,7 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
     debugs(33,7, HERE << "sendStartOfMessage schedules clientWriteComplete");
     AsyncCall::Pointer call = commCbCall(33, 5, "clientWriteComplete",
                                          CommIoCbPtrFun(clientWriteComplete, this));
-    comm_write_mbuf(fd(), mb, call);
+    Comm::Write(fd(), mb, call);
 
     delete mb;
 }

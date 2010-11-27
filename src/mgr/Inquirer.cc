@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "base/TextException.h"
+#include "comm/Write.h"
 #include "CommCalls.h"
 #include "HttpReply.h"
 #include "ipc/Coordinator.h"
@@ -90,7 +91,7 @@ Mgr::Inquirer::start()
     std::auto_ptr<MemBuf> replyBuf(reply->pack());
     writer = asyncCall(16, 5, "Mgr::Inquirer::noteWroteHeader",
                        CommCbMemFunT<Inquirer, CommIoCbParams>(this, &Inquirer::noteWroteHeader));
-    comm_write_mbuf(fd, replyBuf.get(), writer);
+    Comm::Write(fd, replyBuf.get(), writer);
 }
 
 /// called when we wrote the response header

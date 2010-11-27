@@ -39,6 +39,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "comm.h"
+#include "comm/Write.h"
 #include "fde.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
@@ -767,7 +768,10 @@ idnsDoSendQueryVC(nsvc *vc)
 
     commSetTimeout(vc->fd, Config.Timeout.idns_query, NULL, NULL);
 
-    comm_write_mbuf(vc->fd, mb, idnsSentQueryVC, vc);
+    AsyncCall::Pointer call = commCbCall(78, 5, "idnsSentQueryVC",
+                                         CommIoCbPtrFun(&idnsSentQueryVC, vc));
+
+    Comm::Write(vc->fd, mb, call);
 
     delete mb;
 }
