@@ -1,7 +1,3 @@
-#ifndef SQUID_CONFIG_H
-#include "config.h"
-#endif
-
 #ifndef SQUID_INITGROUPS_H
 #define SQUID_INITGROUPS_H
 

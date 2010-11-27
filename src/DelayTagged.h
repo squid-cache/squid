@@ -36,8 +36,6 @@
 #ifndef DELAYTAGGED_H
 #define DELAYTAGGED_H
 
-#include "config.h"
-
 #if DELAY_POOLS
 
 #include "squid.h"

@@ -36,6 +36,7 @@
 #include "comm.h"
 #include "comm/ConnOpener.h"
 #include "comm/ConnAcceptor.h"
+#include "comm/Write.h"
 #include "compat/strtoll.h"
 #include "errorpage.h"
 #include "fde.h"
@@ -1556,7 +1557,7 @@ FtpStateData::writeCommand(const char *buf)
 
     typedef CommCbMemFunT<FtpStateData, CommIoCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(9, 5, Dialer, this, FtpStateData::ftpWriteCommandCallback);
-    comm_write(ctrl.conn, ctrl.last_command, strlen(ctrl.last_command), call);
+    Comm::Write(ctrl.conn, ctrl.last_command, strlen(ctrl.last_command), call, NULL);
 
     scheduleReadControlReply(0);
 }

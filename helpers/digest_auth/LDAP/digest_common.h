@@ -11,7 +11,6 @@
 #ifndef   _SQUID_DIGEST_COMMON_H_
 #define   _SQUID_DIGEST_COMMON_H_
 
-#include "config.h"
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif

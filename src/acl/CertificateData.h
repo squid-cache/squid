@@ -38,7 +38,7 @@
 #include "splay.h"
 #include "acl/Acl.h"
 #include "acl/Data.h"
-#include "ssl_support.h"
+#include "ssl/support.h"
 #include "acl/StringData.h"
 
 /// \ingroup ACLAPI

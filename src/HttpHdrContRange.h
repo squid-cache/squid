@@ -34,9 +34,6 @@
 
 class HttpHeader;
 
-/* for SQUIDCEXTERN */
-#include "config.h"
-
 /* for HttpHdrRangeSpec */
 #include "HttpHeaderRange.h"
 

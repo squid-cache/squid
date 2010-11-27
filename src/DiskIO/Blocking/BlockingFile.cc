@@ -32,7 +32,7 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
+#include "config.h"
 #include "BlockingFile.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"

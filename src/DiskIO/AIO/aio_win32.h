@@ -34,8 +34,6 @@
 #ifndef __WIN32_AIO_H__
 #define __WIN32_AIO_H__
 
-#include "config.h"
-
 #if USE_DISKIO_AIO
 
 #ifdef _SQUID_CYGWIN_

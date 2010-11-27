@@ -6,8 +6,6 @@
 #ifndef SQUID_CPU_AFFINITY_H
 #define SQUID_CPU_AFFINITY_H
 
-#include "config.h"
-
 /// set CPU affinity for this process on startup
 SQUIDCEXTERN void CpuAffinityInit();
 

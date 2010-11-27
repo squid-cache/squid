@@ -34,8 +34,6 @@
 #ifndef SQUID_DELAYVECTOR_H
 #define SQUID_DELAYVECTOR_H
 
-#include "config.h"
-
 #if DELAY_POOLS
 
 #include "CompositePoolNode.h"

@@ -9,6 +9,7 @@
 #include "base/TextException.h"
 #include "comm/Connection.h"
 #include "CommCalls.h"
+#include "comm/Write.h"
 #include "ipc/FdNotes.h"
 #include "mgr/StoreToCommWriter.h"
 #include "StoreClient.h"
@@ -108,7 +109,7 @@ Mgr::StoreToCommWriter::scheduleCommWrite(const StoreIOBuffer& ioBuf)
     AsyncCall::Pointer writer =
         asyncCall(16, 5, "Mgr::StoreToCommWriter::noteCommWrote",
                   MyDialer(this, &StoreToCommWriter::noteCommWrote));
-    comm_write(clientConnection, ioBuf.data, ioBuf.length, writer);
+    Comm::Write(clientConnection, ioBuf.data, ioBuf.length, writer, NULL);
 }
 
 void

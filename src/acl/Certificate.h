@@ -38,7 +38,7 @@
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "acl/Checklist.h"
-#include "ssl_support.h"
+#include "ssl/support.h"
 #include "acl/Strategised.h"
 
 /// \ingroup ACLAPI

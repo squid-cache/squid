@@ -1,3 +1,5 @@
+#include "config.h"
+
 //
 // $Id$
 //
@@ -74,7 +76,7 @@ my_inet_ntoa( const struct in_addr& a, HostAddress output )
         unsigned char s[sizeof(a.s_addr)];
         memcpy( s, &a.s_addr, sizeof(a.s_addr) );
 
-        sprintf( output, "%d.%d.%d.%d", s[0], s[1], s[2], s[3] );
+        snprintf(output, sizeof(HostAddress), "%d.%d.%d.%d", s[0], s[1], s[2], s[3] );
     }
     return output;
 }
@@ -87,8 +89,8 @@ my_sock_ntoa( const struct sockaddr_in& a, SockAddress buffer )
 // returns: pointer to buffer
 {
     HostAddress host;
-    sprintf( buffer, "%s:%u",
-             my_inet_ntoa(a.sin_addr,host), ntohs(a.sin_port) );
+    snprintf( buffer, sizeof(SockAddress), "%s:%u",
+              my_inet_ntoa(a.sin_addr,host), ntohs(a.sin_port) );
     return buffer;
 }
 

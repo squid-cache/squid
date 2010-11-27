@@ -1,8 +1,6 @@
 #ifndef _SQUID_XSTRTO_H
 #define _SQUID_XSTRTO_H
 
-#include "config.h"
-
 #if HAVE_STDBOOL_H
 #include <stdbool.h>
 #endif

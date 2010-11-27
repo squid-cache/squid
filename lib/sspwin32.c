@@ -33,6 +33,7 @@
  *
  */
 
+#include "config.h"
 #include "util.h"
 
 #include "libntlmauth/ntlmauth.h"

@@ -3,7 +3,7 @@
  *
  * DEBUG: section 05    Comm
  */
-
+#include "config.h"
 #include "DescriptorSet.h"
 
 // pre-allocates descriptor store and index for Squid_MaxFD descriptors

@@ -9,6 +9,7 @@
 #include "comm.h"
 #include "CommCalls.h"
 #include "comm/Connection.h"
+#include "comm/Write.h"
 #include "ipc/UdsOp.h"
 
 
@@ -108,7 +109,7 @@ void Ipc::UdsSender::write()
     typedef CommCbMemFunT<UdsSender, CommIoCbParams> Dialer;
     AsyncCall::Pointer writeHandler = JobCallback(54, 5,
                                       Dialer, this, UdsSender::wrote);
-    comm_write(conn(), message.raw(), message.size(), writeHandler);
+    Comm::Write(conn(), message.raw(), message.size(), writeHandler, NULL);
     writing = true;
 }
 

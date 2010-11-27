@@ -16,6 +16,6 @@ extern void ProbeTransport(void);
 /// Whether IPv6 is supported and type of support.
 extern int EnableIpv6;
 
-}; // namespace Ip
+} // namespace Ip
 
 #endif /* _SQUID_SRC_IP_TOOLS_H */

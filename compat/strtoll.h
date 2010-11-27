@@ -1,7 +1,3 @@
-#ifndef SQUID_CONFIG_H
-#include "config.h"
-#endif
-
 #ifndef _SQUID_COMPAT_STRTOLL_H
 #define _SQUID_COMPAT_STRTOLL_H
 

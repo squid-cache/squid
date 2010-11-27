@@ -1,4 +1,4 @@
-
+#include "config.h"
 
 /* borrowed from libc/misc/drand48.c in Linux libc-5.4.46 this quick
  * hack by Martin Hamilton <martinh@gnu.org> to make Squid build on
