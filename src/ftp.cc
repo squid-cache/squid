@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "comm.h"
+#include "comm/Write.h"
 #include "comm/ListenStateData.h"
 #include "compat/strtoll.h"
 #include "ConnectionDetail.h"
@@ -1531,10 +1532,7 @@ FtpStateData::writeCommand(const char *buf)
     typedef CommCbMemFunT<FtpStateData, CommIoCbParams> Dialer;
     AsyncCall::Pointer call = JobCallback(9, 5,
                                           Dialer, this, FtpStateData::ftpWriteCommandCallback);
-    comm_write(ctrl.fd,
-               ctrl.last_command,
-               strlen(ctrl.last_command),
-               call);
+    Comm::Write(ctrl.fd, ctrl.last_command, strlen(ctrl.last_command), call, NULL);
 
     scheduleReadControlReply(0);
 }

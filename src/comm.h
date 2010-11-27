@@ -4,27 +4,11 @@
 #include "squid.h"
 #include "AsyncEngine.h"
 #include "base/AsyncCall.h"
+#include "comm_err_t.h"
+#include "comm/IoCallback.h"
 #include "StoreIOBuffer.h"
 #include "Array.h"
 #include "ip/Address.h"
-
-#define COMMIO_FD_READCB(fd)    (&commfd_table[(fd)].readcb)
-#define COMMIO_FD_WRITECB(fd)   (&commfd_table[(fd)].writecb)
-
-typedef enum {
-    COMM_OK = 0,
-    COMM_ERROR = -1,
-    COMM_NOMESSAGE = -3,
-    COMM_TIMEOUT = -4,
-    COMM_SHUTDOWN = -5,
-    COMM_IDLE = -6, /* there are no active fds and no pending callbacks. */
-    COMM_INPROGRESS = -7,
-    COMM_ERR_CONNECT = -8,
-    COMM_ERR_DNS = -9,
-    COMM_ERR_CLOSING = -10,
-    COMM_ERR_PROTOCOL = -11, /* IPv4 or IPv6 cannot be used on the fd socket */
-    COMM_ERR__END__ = -999999 /* Dummy entry to make syntax valid (comma on line above), do not use. New entries added above */
-} comm_err_t;
 
 class DnsLookupDetails;
 typedef void CNCB(int fd, const DnsLookupDetails &dns, comm_err_t status, int xerrno, void *data);
@@ -81,10 +65,6 @@ SQUIDCEXTERN void commSetSelect(int, unsigned int, PF *, void *, time_t);
 SQUIDCEXTERN void commResetSelect(int);
 
 SQUIDCEXTERN int comm_udp_sendto(int sock, const Ip::Address &to, const void *buf, int buflen);
-extern void comm_write(int fd, const char *buf, int len, IOCB *callback, void *callback_data, FREE *func);
-extern void comm_write(int fd, const char *buf, int size, AsyncCall::Pointer &callback, FREE * free_func = NULL);
-SQUIDCEXTERN void comm_write_mbuf(int fd, MemBuf *mb, IOCB * handler, void *handler_data);
-extern void comm_write_mbuf(int fd, MemBuf *mb, AsyncCall::Pointer &callback);
 SQUIDCEXTERN void commCallCloseHandlers(int fd);
 SQUIDCEXTERN int commSetTimeout(int fd, int, PF *, void *);
 extern int commSetTimeout(int fd, int, AsyncCall::Pointer &calback);

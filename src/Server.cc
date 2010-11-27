@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "base/TextException.h"
+#include "comm/Write.h"
 #include "Server.h"
 #include "Store.h"
 #include "fde.h" /* for fd_table[fd].closing */
@@ -425,7 +426,7 @@ ServerStateData::sendMoreRequestBody()
         typedef CommCbMemFunT<ServerStateData, CommIoCbParams> Dialer;
         requestSender = JobCallback(93,3,
                                     Dialer, this, ServerStateData::sentRequestBody);
-        comm_write_mbuf(fd, &buf, requestSender);
+        Comm::Write(fd, &buf, requestSender);
     } else {
         debugs(9,3, HERE << "will wait for more request body bytes or eof");
         requestSender = NULL;
