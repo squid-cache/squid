@@ -54,7 +54,7 @@ Comm::IoCallback::setCallback(Comm::iocb_type t, AsyncCall::Pointer &cb, char *b
 void
 Comm::IoCallback::selectOrQueueWrite()
 {
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     // stand in line if there is one
     if (ClientInfo *clientInfo = fd_table[fd].clientInfo) {
         if (clientInfo->writeLimitingActive) {
@@ -89,7 +89,7 @@ Comm::IoCallback::reset()
     }
     xerrno = 0;
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     quotaQueueReserv = 0;
 #endif
 }

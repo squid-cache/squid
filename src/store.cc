@@ -46,7 +46,7 @@
 #include "mem_node.h"
 #include "StoreMeta.h"
 #include "SwapDir.h"
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
 #include "Stack.h"
@@ -237,14 +237,12 @@ StoreEntry::delayAwareRead(int fd, char *buf, int len, AsyncCall::Pointer callba
         assert (mem_obj);
         /* read ahead limit */
         /* Perhaps these two calls should both live in MemObject */
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
         if (!mem_obj->readAheadPolicyCanRead()) {
 #endif
             mem_obj->delayRead(DeferredRead(DeferReader, this, CommRead(fd, buf, len, callback)));
             return;
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
         }
 
         /* delay id limit */
