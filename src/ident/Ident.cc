@@ -74,7 +74,7 @@ static hash_table *ident_hash = NULL;
 static void ClientAdd(IdentStateData * state, IDCB * callback, void *callback_data);
 static void identCallback(IdentStateData * state, char *result);
 
-}; // namespace Ident
+} // namespace Ident
 
 Ident::IdentConfig Ident::TheConfig;
 

@@ -15,6 +15,6 @@ namespace Ipc
 /// a collection of strand coordinates; the order, if any, is owner-dependent
 typedef std::vector<StrandCoord> StrandCoords;
 
-}; // namespace Ipc
+} // namespace Ipc
 
 #endif /* SQUID_IPC_STRAND_COORDS_H */

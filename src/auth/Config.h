@@ -140,6 +140,6 @@ typedef Vector<AuthConfig *> authConfig;
 
 extern authConfig TheConfig;
 
-}; // namespace Auth
+} // namespace Auth
 
 #endif /* SQUID_AUTHCONFIG_H */
