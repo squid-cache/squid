@@ -3,7 +3,8 @@
 
 #include "base/AsyncCall.h"
 
-namespace Comm {
+namespace Comm
+{
 
 /**
  * Queue a write. callback is scheduled when the write

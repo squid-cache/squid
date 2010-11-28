@@ -324,7 +324,7 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
         }
     } else if (cbdataReferenceValid(this)) {
         AsyncCall::Pointer call = commCbCall(5,5, "SomeTunnelWriteHandler",
-                                         CommIoCbPtrFun(completion, this));
+                                             CommIoCbPtrFun(completion, this));
         Comm::Write(to.fd(), from.buf, len, call, NULL);
     }
 
