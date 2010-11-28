@@ -65,7 +65,7 @@ Comm::HandleWrite(int fd, void *data)
         assert(clientInfo->quotaPeekFd() == fd);
         clientInfo->quotaDequeue(); // we will write or requeue below
 
-       if (nleft > 0) {
+        if (nleft > 0) {
             const int quota = clientInfo->quotaForDequed();
             if (!quota) {  // if no write quota left, queue this fd
                 state->quotaQueueReserv = clientInfo->quotaEnqueue(fd);

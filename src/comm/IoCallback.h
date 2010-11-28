@@ -5,7 +5,8 @@
 #include "base/AsyncCall.h"
 #include "comm_err_t.h"
 
-namespace Comm {
+namespace Comm
+{
 
 /// Type of IO callbacks the Comm layer deals with.
 typedef enum {
@@ -15,7 +16,8 @@ typedef enum {
 } iocb_type;
 
 /// Details about a particular Comm IO callback event.
-class IoCallback {
+class IoCallback
+{
 public:
     iocb_type type;
     int fd;
@@ -48,7 +50,8 @@ private:
 
 /// Entry nodes for the IO callback table: iocb_table
 /// Keyed off the FD which the event applies to.
-class CbEntry {
+class CbEntry
+{
 public:
     int fd;
     IoCallback  readcb;
