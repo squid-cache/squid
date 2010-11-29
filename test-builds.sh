@@ -58,7 +58,9 @@ buildtest() {
     btlayer="bt${layer}"
     log=${btlayer}.log
     echo "TESTING: ${layer}"
-    chmod -R 777 ${btlayer}
+    if test -e ${btlayer}; then
+	chmod -R 777 ${btlayer};
+    fi
     rm -f -r ${btlayer} || ( echo "FATAL: Failed to prepare test build sandpit." ; exit 1 )
     mkdir ${btlayer}
     if test "${verbose}" = "yes" ; then
