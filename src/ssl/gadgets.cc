@@ -14,7 +14,11 @@ static bool addCnToRequest(Ssl::X509_REQ_Pointer & request, char const * cn)
     Ssl::X509_NAME_Pointer name(X509_REQ_get_subject_name(request.get()));
     if (!name)
         return false;
-    if (!X509_NAME_add_entry_by_txt(name.get(), "CN", MBSTRING_ASC, (unsigned char *)cn, -1, -1, 0))
+
+    // The second argument of the X509_NAME_add_entry_by_txt declared as
+    // "char *" on some OS. Use cn_name to avoid compile warnings.
+    static char cn_name[3] = "CN"; 
+    if (!X509_NAME_add_entry_by_txt(name.get(), cn_name, MBSTRING_ASC, (unsigned char *)cn, -1, -1, 0))
         return false;
     name.release();
     return true;
