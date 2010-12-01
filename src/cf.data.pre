@@ -2714,8 +2714,8 @@ DOC_START
 
 	no-store, no new objects should be stored to this cache_dir
 
-	max-size=n, refers to the max object size this storedir supports.
-	It is used to initially choose the storedir to dump the object.
+	max-size=n, refers to the max object size in bytes this cache_dir
+	supports.  It is used to select the cache_dir to store the object.
 	Note: To make optimal use of the max-size limits you should order
 	the cache_dir lines with the smallest max-size value first and the
 	ones with no max-size specification last.
