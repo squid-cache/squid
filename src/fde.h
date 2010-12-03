@@ -33,7 +33,7 @@
 #include "comm.h"
 #include "ip/Address.h"
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 class ClientInfo;
 #endif
 class PconnPool;
@@ -92,7 +92,7 @@ public:
         PconnPool *pool;
     } pconn;
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     ClientInfo * clientInfo;/* pointer to client info used in client write limiter or NULL if not present */
 #endif
     unsigned epoll_state;
@@ -147,7 +147,7 @@ private:
         bytes_written = 0;
         pconn.uses = 0;
         pconn.pool = NULL;
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
         clientInfo = NULL;
 #endif
         epoll_state = 0;

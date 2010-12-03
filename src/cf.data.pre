@@ -948,7 +948,7 @@ DOC_END
 NAME: delay_pool_uses_indirect_client
 COMMENT: on|off
 TYPE: onoff
-IFDEF: FOLLOW_X_FORWARDED_FOR&&DELAY_POOLS
+IFDEF: FOLLOW_X_FORWARDED_FOR&&USE_DELAY_POOLS
 DEFAULT: on
 LOC: Config.onoff.delay_pool_uses_indirect_client
 DOC_START
@@ -2173,8 +2173,8 @@ DOC_START
 			which parent to fectch from. If the rtt is less than the
 			base time the rtt is set to a minimal value.
 	
-	ttl=N		Specify a IP multicast TTL to use when sending an ICP
-			queries to this address.
+	ttl=N		Specify a TTL to use when sending multicast ICP queries
+			to this address.
 			Only useful when sending to a multicast group.
 			Because we don't accept ICP replies from random
 			hosts, you must configure other group members as
@@ -2717,8 +2717,8 @@ DOC_START
 
 	no-store, no new objects should be stored to this cache_dir
 
-	max-size=n, refers to the max object size this storedir supports.
-	It is used to initially choose the storedir to dump the object.
+	max-size=n, refers to the max object size in bytes this cache_dir
+	supports.  It is used to select the cache_dir to store the object.
 	Note: To make optimal use of the max-size limits you should order
 	the cache_dir lines with the smallest max-size value first and the
 	ones with no max-size specification last.
@@ -4761,7 +4761,7 @@ COMMENT_END
 NAME: delay_pools
 TYPE: delay_pool_count
 DEFAULT: 0
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.Delay
 DOC_START
 	This represents the number of delay pools to be used.  For example,
@@ -4772,7 +4772,7 @@ DOC_END
 NAME: delay_class
 TYPE: delay_pool_class
 DEFAULT: none
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.Delay
 DOC_START
 	This defines the class of each delay pool.  There must be exactly one
@@ -4823,7 +4823,7 @@ DOC_END
 NAME: delay_access
 TYPE: delay_pool_access
 DEFAULT: none
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.Delay
 DOC_START
 	This is used to determine which delay pool a request falls into.
@@ -4847,7 +4847,7 @@ DOC_END
 NAME: delay_parameters
 TYPE: delay_pool_rates
 DEFAULT: none
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.Delay
 DOC_START
 	This defines the parameters for a delay pool.  Each delay pool has
@@ -4928,7 +4928,7 @@ NAME: delay_initial_bucket_level
 COMMENT: (percent, 0-100)
 TYPE: ushort
 DEFAULT: 50
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.Delay.initial
 DOC_START
 	The initial bucket percentage is used to determine how much is put
@@ -4946,7 +4946,7 @@ COMMENT_END
 NAME: client_delay_pools
 TYPE: client_delay_pool_count
 DEFAULT: 0
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.ClientDelay
 DOC_START
 	This option specifies the number of client delay pools used. It must
@@ -4960,7 +4960,7 @@ NAME: client_delay_initial_bucket_level
 COMMENT: (percent, 0-no_limit)
 TYPE: ushort
 DEFAULT: 50
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.ClientDelay.initial
 DOC_START
 	This option determines the initial bucket size as a percentage of
@@ -4979,7 +4979,7 @@ DOC_END
 NAME: client_delay_parameters
 TYPE: client_delay_pool_rates
 DEFAULT: none
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.ClientDelay
 DOC_START
 
@@ -5006,7 +5006,7 @@ DOC_END
 NAME: client_delay_access
 TYPE: client_delay_pool_access
 DEFAULT: none
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.ClientDelay
 DOC_START
 
