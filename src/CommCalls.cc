@@ -6,12 +6,12 @@
 /* CommCommonCbParams */
 
 CommCommonCbParams::CommCommonCbParams(void *aData):
-        data(cbdataReference(aData)), fd(-1), xerrno(0), flag(COMM_OK)
+        data(cbdataReference(aData)), conn(), flag(COMM_OK), xerrno(0), fd(-1)
 {
 }
 
 CommCommonCbParams::CommCommonCbParams(const CommCommonCbParams &p):
-        data(cbdataReference(p.data)), fd(p.fd), xerrno(p.xerrno), flag(p.flag)
+        data(cbdataReference(p.data)), conn(p.conn), flag(p.flag), xerrno(p.xerrno), fd(p.fd)
 {
 }
 

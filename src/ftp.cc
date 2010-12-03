@@ -1201,7 +1201,7 @@ FtpStateData::maybeReadVirginBody()
     debugs(9,5,HERE << "queueing read on FD " << data.conn->fd);
 
     typedef CommCbMemFunT<FtpStateData, CommIoCbParams> Dialer;
-    entry->delayAwareRead(data.conn->fd, data.readBuf->space(), read_sz,
+    entry->delayAwareRead(data.conn, data.readBuf->space(), read_sz,
                           JobCallback(9, 5, Dialer, this, FtpStateData::dataRead));
 }
 

@@ -1088,7 +1088,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
 
     flags.do_next_read = 0;
 
-    debugs(11, 5, "httpReadReply: FD " << io.fd << ": len " << len << ".");
+    debugs(11, 5, HERE << io.conn << ": len " << len << ".");
 
     // Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us
     if (io.flag == COMM_ERR_CLOSING) {
@@ -1103,7 +1103,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
 
     // handle I/O errors
     if (io.flag != COMM_OK || len < 0) {
-        debugs(11, 2, "httpReadReply: FD " << io.fd << ": read failure: " << xstrerror() << ".");
+        debugs(11, 2, HERE << io.conn << ": read failure: " << xstrerror() << ".");
 
         if (ignoreErrno(io.xerrno)) {
             flags.do_next_read = 1;
@@ -1398,7 +1398,7 @@ HttpStateData::processReplyBody()
     } else
         switch (persistentConnStatus()) {
         case INCOMPLETE_MSG:
-            debugs(11, 5, "processReplyBody: INCOMPLETE_MSG");
+            debugs(11, 5, "processReplyBody: INCOMPLETE_MSG from " << serverConnection);
             /* Wait for more data or EOF condition */
             if (flags.keepalive_broken) {
                 call = NULL;
@@ -1412,7 +1412,7 @@ HttpStateData::processReplyBody()
             break;
 
         case COMPLETE_PERSISTENT_MSG:
-            debugs(11, 5, "processReplyBody: COMPLETE_PERSISTENT_MSG");
+            debugs(11, 5, "processReplyBody: COMPLETE_PERSISTENT_MSG from " << serverConnection);
             /* yes we have to clear all these! */
             call = NULL;
             commSetTimeout(serverConnection->fd, -1, call);
@@ -1440,12 +1440,11 @@ HttpStateData::processReplyBody()
             }
 
             serverConnection = NULL;
-
             serverComplete();
             return;
 
         case COMPLETE_NONPERSISTENT_MSG:
-            debugs(11, 5, "processReplyBody: COMPLETE_NONPERSISTENT_MSG");
+            debugs(11, 5, "processReplyBody: COMPLETE_NONPERSISTENT_MSG from " << serverConnection);
             serverComplete();
             return;
         }
@@ -1477,7 +1476,7 @@ HttpStateData::maybeReadVirginBody()
     if (flags.do_next_read) {
         flags.do_next_read = 0;
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-        entry->delayAwareRead(serverConnection->fd, readBuf->space(read_size), read_size,
+        entry->delayAwareRead(serverConnection, readBuf->space(read_size), read_size,
                               JobCallback(11, 5, Dialer, this,  HttpStateData::readReply));
     }
 }
