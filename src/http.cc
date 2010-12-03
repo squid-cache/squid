@@ -1009,9 +1009,6 @@ HttpStateData::ConnectionStatus
 HttpStateData::persistentConnStatus() const
 {
     debugs(11, 3, "persistentConnStatus: FD " << fd << " eof=" << eof);
-    const HttpReply *vrep = virginReply();
-    debugs(11, 5, "persistentConnStatus: content_length=" << vrep->content_length);
-
     if (eof) // already reached EOF
         return COMPLETE_NONPERSISTENT_MSG;
 
@@ -1022,6 +1019,9 @@ HttpStateData::persistentConnStatus() const
      */
     if (lastChunk && flags.chunked)
         return statusIfComplete();
+
+    const HttpReply *vrep = virginReply();
+    debugs(11, 5, "persistentConnStatus: content_length=" << vrep->content_length);
 
     const int64_t clen = vrep->bodySize(request->method);
 
