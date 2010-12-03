@@ -6,7 +6,8 @@
 #include "comm_err_t.h"
 #include "comm/forward.h"
 
-namespace Comm {
+namespace Comm
+{
 
 /// Type of IO callbacks the Comm layer deals with.
 typedef enum {
@@ -16,7 +17,8 @@ typedef enum {
 } iocb_type;
 
 /// Details about a particular Comm IO callback event.
-class IoCallback {
+class IoCallback
+{
 public:
     iocb_type type;
     Comm::ConnectionPointer conn;
@@ -27,7 +29,7 @@ public:
     int offset;
     comm_err_t errcode;
     int xerrno;
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     unsigned int quotaQueueReserv; ///< reservation ID from CommQuotaQueue
 #endif
 
@@ -49,7 +51,8 @@ private:
 
 /// Entry nodes for the IO callback table: iocb_table
 /// Keyed off the FD which the event applies to.
-class CbEntry {
+class CbEntry
+{
 public:
     int fd;
     IoCallback  readcb;

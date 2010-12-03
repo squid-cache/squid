@@ -74,7 +74,7 @@ static IOCB commHalfClosedReader;
 static void comm_init_opened(const Comm::ConnectionPointer &conn, tos_t tos, nfmark_t nfmark, const char *note, struct addrinfo *AI);
 static int comm_apply_flags(int new_socket, Ip::Address &addr, int flags, struct addrinfo *AI);
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 CBDATA_CLASS_INIT(CommQuotaQueue);
 
 static void commHandleWriteHelper(void * data);
@@ -1171,7 +1171,7 @@ _comm_close(int fd, char const *file, int line)
         COMMIO_FD_READCB(fd)->finish(COMM_ERR_CLOSING, errno);
     }
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     if (ClientInfo *clientInfo = F->clientInfo) {
         if (clientInfo->selectWaiting) {
             clientInfo->selectWaiting = false;
@@ -1276,8 +1276,8 @@ comm_remove_close_handler(int fd, PF * handler, void *data)
     debugs(5, 5, "comm_remove_close_handler: FD " << fd << ", handler=" <<
            handler << ", data=" << data);
 
-    AsyncCall::Pointer p;
-    for (p = fd_table[fd].closeHandler; p != NULL; p = p->Next()) {
+    AsyncCall::Pointer p, prev = NULL;
+    for (p = fd_table[fd].closeHandler; p != NULL; prev = p, p = p->Next()) {
         typedef CommCbFunPtrCallT<CommCloseCbPtrFun> Call;
         const Call *call = dynamic_cast<const Call*>(p.getRaw());
         if (!call) // method callbacks have their own comm_remove_close_handler
@@ -1290,9 +1290,10 @@ comm_remove_close_handler(int fd, PF * handler, void *data)
     }
 
     // comm_close removes all close handlers so our handler may be gone
-    if (p != NULL)
+    if (p != NULL) {
+        p->dequeue(fd_table[fd].closeHandler, prev);
         p->cancel("comm_remove_close_handler");
-    // TODO: should we remove the handler from the close handlers list?
+    }
 }
 
 // remove method-based close handler
@@ -1303,15 +1304,11 @@ comm_remove_close_handler(int fd, AsyncCall::Pointer &call)
     debugs(5, 5, "comm_remove_close_handler: FD " << fd << ", AsyncCall=" << call);
 
     // comm_close removes all close handlers so our handler may be gone
-    // TODO: should we remove the handler from the close handlers list?
-#if 0
-    // Check to see if really exist  the given AsyncCall in comm_close handlers
-    // TODO: optimize: this slow code is only needed for the assert() below
-    AsyncCall::Pointer p;
-    for (p = fd_table[fd].closeHandler; p != NULL && p != call; p = p->Next());
-    assert(p == call);
-#endif
+    AsyncCall::Pointer p, prev = NULL;
+    for (p = fd_table[fd].closeHandler; p != NULL && p != call; prev = p, p = p->Next());
 
+    if (p != NULL)
+        p->dequeue(fd_table[fd].closeHandler, prev);
     call->cancel("comm_remove_close_handler");
 }
 
@@ -1521,7 +1518,7 @@ comm_exit(void)
     Comm::CallbackTableDestruct();
 }
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 // called when the queue is done waiting for the client bucket to fill
 void
 commHandleWriteHelper(void * data)

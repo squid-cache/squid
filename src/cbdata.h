@@ -238,7 +238,7 @@ typedef enum {
 /// \ingroup CBDATAAPI
 extern void cbdataRegisterWithCacheManager(void);
 
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 extern void *cbdataInternalAllocDbg(cbdata_type type, const char *, int);
 extern void *cbdataInternalFreeDbg(void *p, const char *, int);
 extern void cbdataInternalLockDbg(const void *p, const char *, int);
@@ -278,7 +278,7 @@ extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, in
 
 
 /* cbdata macros */
-#if CBDATA_DEBUG
+#if USE_CBDATA_DEBUG
 #define cbdataAlloc(type)	((type *)cbdataInternalAllocDbg(CBDATA_##type,__FILE__,__LINE__))
 #define cbdataFree(var)		do {if (var) {cbdataInternalFreeDbg(var,__FILE__,__LINE__); var = NULL;}} while(0)
 #define cbdataInternalLock(a)		cbdataInternalLockDbg(a,__FILE__,__LINE__)
@@ -297,7 +297,7 @@ extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, in
 		  if (address) cbdataInternalFreeDbg(address,__FILE__,__LINE__); \
 		} \
                 void *toCbdata() { return this; }
-#else /* CBDATA_DEBUG */
+#else /* USE_CBDATA_DEBUG */
 
 /**
  \ingroup CBDATAAPI

@@ -39,7 +39,7 @@
 
 #include "config.h"
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "squid.h"
 #include "NullDelayId.h"
 #include "DelayPools.h"
@@ -58,5 +58,4 @@ NullDelayId::operator delete (void *address)
     ::operator delete (address);
 }
 
-#endif
-
+#endif /* USE_DELAY_POOLS */

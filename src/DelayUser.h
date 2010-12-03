@@ -36,7 +36,7 @@
 #ifndef DELAYUSER_H
 #define DELAYUSER_H
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 
 #include "squid.h"
 #include "auth/Gadgets.h"
@@ -106,5 +106,5 @@ private:
     Splay<DelayUserBucket::Pointer> buckets;
 };
 
-#endif /* DELAY_POOLS */
+#endif /* USE_DELAY_POOLS */
 #endif /* DELAYUSER_H */

@@ -36,7 +36,7 @@
 #ifndef COMPOSITEPOOLNODE_H
 #define COMPOSITEPOOLNODE_H
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "squid.h"
 #include "auth/UserRequest.h"
 #include "DelayPools.h"
@@ -82,5 +82,5 @@ protected:
     DeferredReadManager deferredReads;
 };
 
-#endif /* DELAY_POOLS */
+#endif /* USE_DELAY_POOLS */
 #endif /* COMPOSITEPOOLNODE_H */
