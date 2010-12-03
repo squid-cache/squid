@@ -2021,10 +2021,10 @@ commHalfClosedReader(const Comm::ConnectionPointer &conn, char *, size_t size, c
 }
 
 
-CommRead::CommRead() : fd(-1), buf(NULL), len(0), callback(NULL) {}
+CommRead::CommRead() : conn(NULL), buf(NULL), len(0), callback(NULL) {}
 
-CommRead::CommRead(int fd_, char *buf_, int len_, AsyncCall::Pointer &callback_)
-        : fd(fd_), buf(buf_), len(len_), callback(callback_) {}
+CommRead::CommRead(const Comm::ConnectionPointer &c, char *buf_, int len_, AsyncCall::Pointer &callback_)
+        : conn(c), buf(buf_), len(len_), callback(callback_) {}
 
 DeferredRead::DeferredRead () : theReader(NULL), theContext(NULL), theRead(), cancelled(false) {}
 
@@ -2045,7 +2045,7 @@ template cbdata_type CbDataList<DeferredRead>::CBDATA_CbDataList;
 void
 DeferredReadManager::delayRead(DeferredRead const &aRead)
 {
-    debugs(5, 3, "Adding deferred read on FD " << aRead.theRead.fd);
+    debugs(5, 3, "Adding deferred read on " << aRead.theRead.conn);
     CbDataList<DeferredRead> *temp = deferredReads.push_back(aRead);
 
     // We have to use a global function as a closer and point to temp
@@ -2054,7 +2054,7 @@ DeferredReadManager::delayRead(DeferredRead const &aRead)
     AsyncCall::Pointer closer = commCbCall(5,4,
                                            "DeferredReadManager::CloseHandler",
                                            CommCloseCbPtrFun(&CloseHandler, temp));
-    comm_add_close_handler(aRead.theRead.fd, closer);
+    comm_add_close_handler(aRead.theRead.conn->fd, closer);
     temp->element.closer = closer; // remeber so that we can cancel
 }
 
@@ -2077,7 +2077,7 @@ DeferredReadManager::popHead(CbDataListContainer<DeferredRead> &deferredReads)
 
     DeferredRead &read = deferredReads.head->element;
     if (!read.cancelled) {
-        comm_remove_close_handler(read.theRead.fd, read.closer);
+        comm_remove_close_handler(read.theRead.conn->fd, read.closer);
         read.closer = NULL;
     }
 
@@ -2127,10 +2127,10 @@ DeferredReadManager::kickARead(DeferredRead const &aRead)
     if (aRead.cancelled)
         return;
 
-    if (aRead.theRead.fd>=0 && fd_table[aRead.theRead.fd].closing())
+    if (Comm::IsConnOpen(aRead.theRead.conn) && fd_table[aRead.theRead.conn->fd].closing())
         return;
 
-    debugs(5, 3, "Kicking deferred read on FD " << aRead.theRead.fd);
+    debugs(5, 3, "Kicking deferred read on " << aRead.theRead.conn);
 
     aRead.theReader(aRead.theContext, aRead.theRead);
 }

@@ -42,6 +42,7 @@
 #include "Range.h"
 #include "RefCount.h"
 #include "CommRead.h"
+#include "comm/forward.h"
 #include "Packer.h"
 #include "RemovalPolicy.h"
 
@@ -131,7 +132,7 @@ public:
     void destroyMemObject();
     int checkTooSmall();
 
-    void delayAwareRead(int fd, char *buf, int len, AsyncCall::Pointer callback);
+    void delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer callback);
 
     void setNoDelay (bool const);
     bool modifiedSince(HttpRequest * request) const;

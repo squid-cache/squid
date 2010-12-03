@@ -221,14 +221,14 @@ void
 StoreEntry::DeferReader(void *theContext, CommRead const &aRead)
 {
     StoreEntry *anEntry = (StoreEntry *)theContext;
-    anEntry->delayAwareRead(aRead.fd,
+    anEntry->delayAwareRead(aRead.conn,
                             aRead.buf,
                             aRead.len,
                             aRead.callback);
 }
 
 void
-StoreEntry::delayAwareRead(int fd, char *buf, int len, AsyncCall::Pointer callback)
+StoreEntry::delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer callback)
 {
     size_t amountToRead = bytesWanted(Range<size_t>(0, len));
     /* sketch: readdeferer* = getdeferer.
@@ -242,23 +242,18 @@ StoreEntry::delayAwareRead(int fd, char *buf, int len, AsyncCall::Pointer callba
 #if USE_DELAY_POOLS
         if (!mem_obj->readAheadPolicyCanRead()) {
 #endif
-            mem_obj->delayRead(DeferredRead(DeferReader, this, CommRead(fd, buf, len, callback)));
+            mem_obj->delayRead(DeferredRead(DeferReader, this, CommRead(conn, buf, len, callback)));
             return;
 #if USE_DELAY_POOLS
         }
 
         /* delay id limit */
-        mem_obj->mostBytesAllowed().delayRead(DeferredRead(DeferReader, this, CommRead(fd, buf, len, callback)));
-
+        mem_obj->mostBytesAllowed().delayRead(DeferredRead(DeferReader, this, CommRead(conn, buf, len, callback)));
         return;
-
 #endif
-
     }
 
-    Comm::ConnectionPointer temp = new Comm::Connection; // XXX: transition. until conn passed in.
-    temp->fd = fd;
-    comm_read(temp, buf, amountToRead, callback);
+    comm_read(conn, buf, amountToRead, callback);
 }
 
 size_t

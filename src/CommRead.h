@@ -39,15 +39,16 @@
 #include "squid.h"
 #include "comm.h"
 #include "CommCalls.h"
+#include "comm/forward.h"
 #include "CbDataList.h"
 
 class CommRead
 {
 
 public:
-    CommRead ();
-    CommRead (int fd, char *buf, int len, AsyncCall::Pointer &callback);
-    int fd;
+    CommRead();
+    CommRead(const Comm::ConnectionPointer &c, char *buf, int len, AsyncCall::Pointer &callback);
+    Comm::ConnectionPointer conn;
     char *buf;
     int len;
     AsyncCall::Pointer callback;
