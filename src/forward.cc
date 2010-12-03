@@ -175,6 +175,11 @@ FwdState::~FwdState()
 
     entry = NULL;
 
+    if (calls.connector != NULL) {
+        calls.connector->cancel("FwdState destructed");
+        calls.connector = NULL;
+    }
+
     if (Comm::IsConnOpen(serverConn)) {
         comm_remove_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
         debugs(17, 3, HERE << "closing FD " << serverConnection()->fd);
@@ -789,13 +794,12 @@ FwdState::connectStart()
     if (serverDestinations[0]->peerType == PINNED) {
         ConnStateData *pinned_connection = request->pinnedConnection();
         assert(pinned_connection);
-        serverDestinations[0]->fd = pinned_connection->validatePinnedConnection(request, serverDestinations[0]->getPeer());
-        if (Comm::IsConnOpen(serverDestinations[0])) {
-            serverConn = serverDestinations[0];
-            pinned_connection->unpinConnection();
+        serverConn = pinned_connection->validatePinnedConnection(request, serverDestinations[0]->getPeer());
+        if (Comm::IsConnOpen(serverConn)) {
+            pinned_connection->unpinConnection(); // XXX: this should be just remove the pinning close handler ??
 #if 0
-            if (!serverDestinations[0]->getPeer())
-                serverDestinations[0]->peerType = HIER_DIRECT;
+            if (!serverConn->getPeer())
+                serverConn->peerType = HIER_DIRECT;
 #endif
             n_tries++;
             request->flags.pinned = 1;
@@ -806,7 +810,7 @@ FwdState::connectStart()
             return;
         }
         /* Failure. Fall back on next path */
-        debugs(17,2,HERE << " Pinned connection " << pinned_connection << " not valid. Releasing.");
+        debugs(17, 2, HERE << " Pinned connection " << pinned_connection << " not valid. Releasing.");
         request->releasePinnedConnection();
         serverDestinations.shift();
         startConnectionOrFail();
@@ -871,8 +875,8 @@ FwdState::connectStart()
     debugs(17, 3, "fwdConnectStart: got outgoing addr " << serverDestinations[0]->local << ", tos " << int(serverDestinations[0]->tos));
 #endif
 
-    AsyncCall::Pointer call = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
-    Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], call, ctimeout);
+    calls.connector = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
+    Comm::ConnOpener *cs = new Comm::ConnOpener(serverDestinations[0], calls.connector, ctimeout);
     cs->setHost(host);
     AsyncJob::Start(cs);
 }

@@ -780,7 +780,7 @@ clientCheckPinning(ClientHttpRequest * http)
 
     request->flags.connection_auth_disabled = http_conn->port->connection_auth_disabled;
     if (!request->flags.connection_auth_disabled) {
-        if (http_conn->pinning.fd != -1) {
+        if (Comm::IsConnOpen(http_conn->pinning.serverConn)) {
             if (http_conn->pinning.auth) {
                 request->flags.connection_auth = 1;
                 request->flags.auth = 1;
