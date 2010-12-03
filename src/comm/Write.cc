@@ -1,5 +1,5 @@
 #include "config.h"
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "ClientInfo.h"
 #endif
 #include "comm/Connection.h"
@@ -53,7 +53,7 @@ Comm::HandleWrite(int fd, void *data)
 
     nleft = state->size - state->offset;
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     ClientInfo * clientInfo=fd_table[fd].clientInfo;
 
     if (clientInfo && !clientInfo->writeLimitingActive)
@@ -67,7 +67,7 @@ Comm::HandleWrite(int fd, void *data)
         assert(clientInfo->quotaPeekFd() == fd);
         clientInfo->quotaDequeue(); // we will write or requeue below
 
-       if (nleft > 0) {
+        if (nleft > 0) {
             const int quota = clientInfo->quotaForDequed();
             if (!quota) {  // if no write quota left, queue this fd
                 state->quotaQueueReserv = clientInfo->quotaEnqueue(fd);
@@ -85,13 +85,13 @@ Comm::HandleWrite(int fd, void *data)
 
         }
     }
-#endif
+#endif /* USE_DELAY_POOLS */
 
     /* actually WRITE data */
     len = FD_WRITE_METHOD(fd, state->buf + state->offset, nleft);
     debugs(5, 5, HERE << "write() returns " << len);
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     if (clientInfo) {
         if (len > 0) {
             /* we wrote data - drain them from bucket */
@@ -105,7 +105,7 @@ Comm::HandleWrite(int fd, void *data)
         // even if we wrote nothing, we were served; give others a chance
         clientInfo->kickQuotaQueue();
     }
-#endif
+#endif /* USE_DELAY_POOLS */
 
     fd_bytes(fd, len, FD_WRITE);
     statCounter.syscalls.sock.writes++;

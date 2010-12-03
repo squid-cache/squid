@@ -41,7 +41,7 @@
 #include "comm/Write.h"
 #include "client_side.h"
 #include "client_side_request.h"
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif
 #include "errorpage.h"
@@ -83,7 +83,7 @@ public:
 
         int bytesWanted(int lower=0, int upper = INT_MAX) const;
         void bytesIn(int const &);
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 
         void setDelayId(DelayId const &);
 #endif
@@ -99,8 +99,7 @@ public:
         Comm::ConnectionPointer conn;    ///< The currently connected connection.
 
     private:
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
         DelayId delayId;
 #endif
 
@@ -187,7 +186,7 @@ TunnelStateData::Connection::~Connection()
 int
 TunnelStateData::Connection::bytesWanted(int lowerbound, int upperbound) const
 {
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     return delayId.bytesWanted(lowerbound, upperbound);
 #else
 
@@ -198,7 +197,7 @@ TunnelStateData::Connection::bytesWanted(int lowerbound, int upperbound) const
 void
 TunnelStateData::Connection::bytesIn(int const &count)
 {
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     delayId.bytesIn(count);
 #endif
 
@@ -319,7 +318,7 @@ TunnelStateData::copy(size_t len, comm_err_t errcode, int xerrno, Connection &fr
         }
     } else if (cbdataReferenceValid(this)) {
         AsyncCall::Pointer call = commCbCall(5,5, "SomeTunnelWriteHandler",
-                                         CommIoCbPtrFun(completion, this));
+                                             CommIoCbPtrFun(completion, this));
         Comm::Write(to.conn, from.buf, len, call, NULL);
     }
 
@@ -517,7 +516,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
     HttpRequest *request = tunnelState->request;
     ErrorState *err = NULL;
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
     if (conn->getPeer() && conn->getPeer()->options.no_delay)
         tunnelState->server.setDelayId(DelayId());
@@ -620,7 +619,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     statCounter.server.other.requests++;
 
     tunnelState = new TunnelStateData;
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     tunnelState->server.setDelayId(DelayId::DelayClient(http));
 #endif
     tunnelState->url = xstrdup(url);
@@ -717,7 +716,7 @@ TunnelStateData::noConnections() const
     return !Comm::IsConnOpen(server.conn) && !Comm::IsConnOpen(client.conn);
 }
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 void
 TunnelStateData::Connection::setDelayId(DelayId const &newDelay)
 {

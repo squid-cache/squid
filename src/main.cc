@@ -49,6 +49,33 @@
 #include "auth/Gadgets.h"
 #include "base/Subscription.h"
 #include "base/TextException.h"
+#if USE_DELAY_POOLS
+#include "ClientDelayConfig.h"
+#endif
+#include "ConfigParser.h"
+#include "CpuAffinity.h"
+#if USE_DELAY_POOLS
+#include "DelayPools.h"
+#endif
+#include "errorpage.h"
+#include "event.h"
+#include "EventLoop.h"
+#include "ExternalACL.h"
+#include "Store.h"
+#include "ICP.h"
+#include "ident/Ident.h"
+#include "ip/tools.h"
+#include "ipc/Coordinator.h"
+#include "ipc/Kids.h"
+#include "ipc/Strand.h"
+#include "HttpReply.h"
+#include "pconn.h"
+#include "Mem.h"
+#include "acl/Asn.h"
+#include "acl/Acl.h"
+#include "htcp.h"
+#include "StoreFileSystem.h"
+#include "DiskIO/DiskIOModule.h"
 #include "comm.h"
 #if USE_EPOLL
 #include "comm_epoll.h"
@@ -78,15 +105,6 @@
 #include "HttpReply.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
-#include "ICP.h"
-#include "ident/Ident.h"
-#include "ip/tools.h"
-#include "ipc/Coordinator.h"
-#include "ipc/Kids.h"
-#include "ipc/Strand.h"
-#if DELAY_POOLS
-#include "ClientDelayConfig.h"
-#endif
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
 #endif
@@ -868,7 +886,7 @@ mainReconfigureFinish(void *)
 
     mimeInit(Config.mimeTablePathname);
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
 #endif
 
@@ -962,10 +980,6 @@ mainSetCwd(void)
         debugs(50, 0, "WARNING: Can't find current directory, getcwd: " << xstrerror());
     }
 }
-
-#if DELAY_POOLS
-#include "DelayPools.h"
-#endif
 
 static void
 mainInitialize(void)
@@ -1097,8 +1111,7 @@ mainInitialize(void)
         do_mallinfo = 1;
         mimeInit(Config.mimeTablePathname);
         refreshInit();
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
         DelayPools::Init();
 #endif
 
@@ -1194,7 +1207,7 @@ mainInitialize(void)
     Esi::Init();
 #endif
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
 #endif
 
@@ -1867,8 +1880,7 @@ SquidShutdown()
     Esi::Clean();
 #endif
 
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
     DelayPools::FreePools();
 #endif
 

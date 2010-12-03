@@ -4,7 +4,8 @@
 #include "base/AsyncCall.h"
 #include "comm/forward.h"
 
-namespace Comm {
+namespace Comm
+{
 
 /**
  * Queue a write. callback is scheduled when the write

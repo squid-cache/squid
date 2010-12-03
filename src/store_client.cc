@@ -42,7 +42,7 @@
 #include "MemObject.h"
 #include "StoreMeta.h"
 #include "StoreMetaUnpacker.h"
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
 #include "HttpRequest.h"
@@ -181,7 +181,7 @@ storeClientCopyEvent(void *data)
 }
 
 store_client::store_client(StoreEntry *e) : entry (e)
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
         , delayId()
 #endif
         , type (e->storeClientType())
@@ -889,11 +889,10 @@ store_client::Callback::pending() const
 
 store_client::Callback::Callback(STCB *function, void *data) : callback_handler(function), callback_data (data) {}
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 void
 store_client::setDelayId(DelayId delay_id)
 {
     delayId = delay_id;
 }
-
 #endif

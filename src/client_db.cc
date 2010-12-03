@@ -49,7 +49,7 @@ static FREE clientdbFreeItem;
 static void clientdbStartGC(void);
 static void clientdbScheduledGC(void *);
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 static int max_clients = 32768;
 #else
 static int max_clients = 32;
@@ -59,7 +59,7 @@ static int cleanup_running = 0;
 static int cleanup_scheduled = 0;
 static int cleanup_removed;
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #define CLIENT_DB_HASH_SIZE 65357
 #else
 #define CLIENT_DB_HASH_SIZE 467
@@ -74,7 +74,7 @@ clientdbAdd(const Ip::Address &addr)
     c = (ClientInfo *)memAllocate(MEM_CLIENT_INFO);
     c->hash.key = addr.NtoA(buf,MAX_IPSTRLEN);
     c->addr = addr;
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     /* setup default values for client write limiter */
     c->writeLimitingActive=false;
     c->writeSpeedLimit=0;
@@ -118,7 +118,7 @@ clientdbInit(void)
     client_table = hash_create((HASHCMP *) strcmp, CLIENT_DB_HASH_SIZE, hash_string);
 }
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 /* returns ClientInfo for given IP addr
    Returns NULL if no such client (or clientdb turned off)
    (it is assumed that clientdbEstablished will be called before and create client record if needed)
@@ -346,7 +346,7 @@ clientdbFreeItem(void *data)
     ClientInfo *c = (ClientInfo *)data;
     safe_free(c->hash.key);
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     if (CommQuotaQueue *q = c->quotaQueue) {
         q->clientInfo = NULL;
         delete q; // invalidates cbdata, cancelling any pending kicks

@@ -36,7 +36,7 @@
 #ifndef DELAYTAGGED_H
 #define DELAYTAGGED_H
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 
 #include "squid.h"
 #include "auth/Gadgets.h"
@@ -106,5 +106,5 @@ private:
     Splay<DelayTaggedBucket::Pointer> buckets;
 };
 
-#endif /* DELAY_POOLS */
+#endif /* USE_DELAY_POOLS */
 #endif /* DELAYTAGGED_H */
