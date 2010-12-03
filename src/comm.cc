@@ -212,6 +212,7 @@ comm_empty_os_read_buffers(int fd)
 
 /**
  * Return whether the FD has a pending completed callback.
+ * NP: does not work.
  */
 int
 comm_has_pending_read_callback(int fd)
@@ -526,10 +527,6 @@ comm_openex(int sock_type,
     int new_socket;
     struct addrinfo *AI = NULL;
 
-    // temporary for the transition. comm_openex will eventually have a conn to play with.
-    Comm::ConnectionPointer conn = new Comm::Connection;
-    conn->local = addr;
-
     PROF_start(comm_open);
     /* Create socket for accepting new connections. */
     statCounter.syscalls.sock.sockets++;
@@ -539,7 +536,7 @@ comm_openex(int sock_type,
     AI->ai_socktype = sock_type;
     AI->ai_protocol = proto;
 
-    debugs(50, 3, "comm_openex: Attempt open socket for: " << conn );
+    debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
     new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
 
     /* under IPv6 there is the possibility IPv6 is present but disabled. */
@@ -574,6 +571,9 @@ comm_openex(int sock_type,
         return -1;
     }
 
+    // temporary for the transition. comm_openex will eventually have a conn to play with.
+    Comm::ConnectionPointer conn = new Comm::Connection;
+    conn->local = addr;
     conn->fd = new_socket;
 
     debugs(50, 3, "comm_openex: Opened socket " << conn << " : family=" << AI->ai_family << ", type=" << AI->ai_socktype << ", protocol=" << AI->ai_protocol );

@@ -157,18 +157,29 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &key)
 {
     assert(size_);
 
+    // small optimization: do the constant bool tests only once.
+    const bool keyCheckAddr = !key->local.IsAnyAddr();
+    const bool keyCheckPort = key->local.GetPort() > 0;
+
     for (int i=size_-1; i>=0; i--) {
 
-        // callback pending indicates that remote end of the conn has just closed.
-        if (comm_has_pending_read_callback(theList_[i]->fd))
+        // Is the FD pending completion of the closure callback?
+        // this flag is set while our early-read/close handler is
+        // waiting for a remote response. It gets unset when the
+        // handler is scheduled.
+        if (!fd_table[theList_[i]->fd].flags.read_pending)
+            continue;
+
+        // connection already closed. useless.
+        if (!Comm::IsConnOpen(theList_[i]))
             continue;
 
         // local end port is required, but dont match.
-        if (key->local.GetPort() > 0 && key->local.GetPort() != theList_[i]->local.GetPort())
+        if (keyCheckPort && key->local.GetPort() != theList_[i]->local.GetPort())
             continue;
 
         // local address is required, but does not match.
-        if (!key->local.IsAnyAddr() && key->local.matchIPAddr(theList_[i]->local) != 0)
+        if (keyCheckAddr && key->local.matchIPAddr(theList_[i]->local) != 0)
             continue;
 
         // finally, a match. pop and return it.
@@ -196,8 +207,11 @@ IdleConnList::Read(const Comm::ConnectionPointer &conn, char *buf, size_t len, c
     if (index >= 0) {
         /* might delete list */
         list->removeAt(index);
-        conn->close();
     }
+    // else we lost a race.
+    // Somebody started using the pconn since the remote end disconnected.
+    // pass the closure info on!
+    conn->close();
 }
 
 void
@@ -330,7 +344,7 @@ PconnPool::pop(const Comm::ConnectionPointer &destLink, const char *domain, bool
 
     /* may delete list */
     Comm::ConnectionPointer temp = list->findUseable(destLink);
-    if (Comm::IsConnOpen(temp) && !isRetriable)
+    if (!isRetriable && Comm::IsConnOpen(temp))
         temp->close();
 
     return temp;
