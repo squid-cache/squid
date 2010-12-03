@@ -36,7 +36,7 @@
 Mgr::Action::Pointer
 CacheManager::createNamedAction(char const* action)
 {
-    fatal ("Not implemented");
+    fatal("Not implemented");
     return NULL;
 }
 
@@ -46,12 +46,12 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
     return;
 }
 
+CacheManager* CacheManager::instance=0;
+
 CacheManager*
-CacheManager::GetInstance(void)
+CacheManager::GetInstance()
 {
-    static CacheManager *instance = 0;
-    if (!instance)
-        instance = new CacheManager();
+    fatal("Not implemented");
     return instance;
 }
 
