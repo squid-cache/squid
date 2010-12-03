@@ -164,8 +164,9 @@ public:
      */
     Comm::ConnectionPointer listenConn;
 
+    AsyncCall::Pointer opener; ///< Comm opener handler callback.
 private:
-    AsyncCall::Pointer closer; /// Comm close handler callback
+    AsyncCall::Pointer closer; ///< Comm close handler callback
 };
 
 /// \ingroup ServerProtocolFTPInternal
@@ -293,6 +294,7 @@ public:
     virtual bool doneWithServer() const;
     virtual bool haveControlChannel(const char *caller_name) const;
     AsyncCall::Pointer dataCloser(); /// creates a Comm close callback
+    AsyncCall::Pointer dataOpener(); /// creates a Comm connect callback
 
 private:
     // BodyConsumer for HTTP: consume request body.
@@ -506,11 +508,15 @@ FtpStateData::~FtpStateData()
         reply_hdr = NULL;
     }
 
+    if (data.opener != NULL) {
+        data.opener->cancel("FtpStateData destructed");
+        data.opener = NULL;
+    }
     data.close();
 
     if (Comm::IsConnOpen(ctrl.conn)) {
         debugs(9, DBG_IMPORTANT, HERE << "Internal bug: FtpStateData left " <<
-               "control FD " << ctrl.conn->fd << " open");
+               "open control channel " << ctrl.conn);
     }
 
     if (ctrl.buf) {
@@ -2442,8 +2448,8 @@ ftpReadEPSV(FtpStateData* ftpState)
 
     debugs(9, 3, HERE << "connecting to " << conn->remote);
 
-    AsyncCall::Pointer call = commCbCall(9,3, "FtpStateData::ftpPasvCallback", CommConnectCbPtrFun(FtpStateData::ftpPasvCallback, ftpState));
-    Comm::ConnOpener *cs = new Comm::ConnOpener(conn, call, Config.Timeout.connect);
+    ftpState->data.opener = commCbCall(9,3, "FtpStateData::ftpPasvCallback", CommConnectCbPtrFun(FtpStateData::ftpPasvCallback, ftpState));
+    Comm::ConnOpener *cs = new Comm::ConnOpener(conn, ftpState->data.opener, Config.Timeout.connect);
     cs->setHost(ftpState->data.host);
     AsyncJob::Start(cs);
 }
@@ -2689,8 +2695,8 @@ ftpReadPasv(FtpStateData * ftpState)
 
     debugs(9, 3, HERE << "connecting to " << conn->remote);
 
-    AsyncCall::Pointer call = commCbCall(9,3, "FtpStateData::ftpPasvCallback", CommConnectCbPtrFun(FtpStateData::ftpPasvCallback, ftpState));
-    Comm::ConnOpener *cs = new Comm::ConnOpener(conn, call, Config.Timeout.connect);
+    ftpState->data.opener = commCbCall(9,3, "FtpStateData::ftpPasvCallback", CommConnectCbPtrFun(FtpStateData::ftpPasvCallback, ftpState));
+    Comm::ConnOpener *cs = new Comm::ConnOpener(conn, ftpState->data.opener, Config.Timeout.connect);
     cs->setHost(ftpState->data.host);
     AsyncJob::Start(cs);
 }
@@ -2700,6 +2706,7 @@ FtpStateData::ftpPasvCallback(const Comm::ConnectionPointer &conn, comm_err_t st
 {
     FtpStateData *ftpState = (FtpStateData *)data;
     debugs(9, 3, HERE);
+    ftpState->data.opener = NULL;
 
     if (status != COMM_OK) {
         debugs(9, 2, HERE << "Failed to connect. Retrying via another method.");
