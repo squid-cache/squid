@@ -99,10 +99,24 @@ Comm::ConnOpener::getHost() const
 /**
  * Connection attempt are completed. One way or the other.
  * Pass the results back to the external handler.
+ * NP: on connection errors the connection close() must be called first.
  */
 void
 Comm::ConnOpener::doneConnecting(comm_err_t status, int xerrno)
 {
+    // only mark the address good/bad AFTER connect is finished.
+    if (host_ != NULL) {
+        if (xerrno == 0)
+            ipcacheMarkGoodAddr(host_, conn_->remote);
+        else {
+            ipcacheMarkBadAddr(host_, conn_->remote);
+#if USE_ICMP
+            if (Config.onoff.test_reachability)
+                netdbDeleteAddrNetwork(conn_->remote);
+#endif
+        }
+    }
+
     if (callback_ != NULL) {
         typedef CommConnectCbParams Params;
         Params &params = GetCommParams<Params>(callback_);
@@ -189,6 +203,8 @@ Comm::ConnOpener::connect()
         // check for timeout FIRST.
         if (squid_curtime - connectStart_ > connectTimeout_) {
             debugs(5, 5, HERE << conn_ << ": * - ERR took too long already.");
+            calls_.earlyAbort_->cancel("Comm::ConnOpener::connect timed out");
+            calls_.earlyAbort_ = NULL;
             conn_->close();
             doneConnecting(COMM_TIMEOUT, errno);
             return;
@@ -200,42 +216,29 @@ Comm::ConnOpener::connect()
 
     case COMM_OK:
         debugs(5, 5, HERE << conn_ << ": COMM_OK - connected");
-
         connected();
-
-        if (host_ != NULL)
-            ipcacheMarkGoodAddr(host_, conn_->remote);
         doneConnecting(COMM_OK, 0);
         break;
 
     default:
-        debugs(5, 5, HERE << conn_ << ": * - try again");
         failRetries_++;
-        if (host_ != NULL)
-            ipcacheMarkBadAddr(host_, conn_->remote);
-#if USE_ICMP
-        if (Config.onoff.test_reachability)
-            netdbDeleteAddrNetwork(conn_->remote);
-#endif
 
         // check for timeout FIRST.
         if(squid_curtime - connectStart_ > connectTimeout_) {
-            debugs(5, 5, HERE << conn_ << ": * - ERR took too long already.");
-            if (calls_.earlyAbort_ != NULL) {
-                calls_.earlyAbort_->cancel("Comm::ConnOpener::connect timed out");
-                calls_.earlyAbort_ = NULL;
-            }
+            debugs(5, 5, HERE << conn_ << ": * - ERR took too long to receive response.");
+            calls_.earlyAbort_->cancel("Comm::ConnOpener::connect timed out");
+            calls_.earlyAbort_ = NULL;
             conn_->close();
             doneConnecting(COMM_TIMEOUT, errno);
         } else if (failRetries_ < Config.connect_retries) {
+            debugs(5, 5, HERE << conn_ << ": * - try again");
             eventAdd("Comm::ConnOpener::DelayedConnectRetry", Comm::ConnOpener::DelayedConnectRetry, this, 0.05, 0);
+            return;
         } else {
             // send ERROR back to the upper layer.
             debugs(5, 5, HERE << conn_ << ": * - ERR tried too many times already.");
-            if (calls_.earlyAbort_ != NULL) {
-                calls_.earlyAbort_->cancel("Comm::ConnOpener::connect failed");
-                calls_.earlyAbort_ = NULL;
-            }
+            calls_.earlyAbort_->cancel("Comm::ConnOpener::connect failed");
+            calls_.earlyAbort_ = NULL;
             conn_->close();
             doneConnecting(COMM_ERR_CONNECT, errno);
         }
