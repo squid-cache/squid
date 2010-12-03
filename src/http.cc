@@ -1012,6 +1012,13 @@ HttpStateData::persistentConnStatus() const
     if (eof) // already reached EOF
         return COMPLETE_NONPERSISTENT_MSG;
 
+    /* If server fd is closing (but we have not been notified yet), stop Comm
+       I/O to avoid assertions. TODO: Change Comm API to handle callers that
+       want more I/O after async closing (usually initiated by others). */
+    // XXX: add canReceive or s/canSend/canTalkToServer/
+    if (!canSend(fd))
+        return COMPLETE_NONPERSISTENT_MSG;
+
     /** \par
      * In chunked response we do not know the content length but we are absolutely
      * sure about the end of response, so we are calling the statusIfComplete to
