@@ -940,7 +940,7 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, 
     /* Schedule read reply. */
     AsyncCall::Pointer call =  commCbCall(10,5, "gopherReadReply",
                                           CommIoCbPtrFun(gopherReadReply, gopherState));
-    entry->delayAwareRead(conn->fd, gopherState->replybuf, BUFSIZ, call);
+    entry->delayAwareRead(conn, gopherState->replybuf, BUFSIZ, call);
 
     if (buf)
         memFree(buf, MEM_4K_BUF);	/* Allocated by gopherSendRequest. */

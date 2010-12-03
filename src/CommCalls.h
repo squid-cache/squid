@@ -54,11 +54,22 @@ public:
 
 public:
     void *data; // cbdata-protected
-    Comm::ConnectionPointer conn;
-    int fd; // raw FD from legacy calls. use conn instead.
-    int xerrno;
-    comm_err_t flag;
 
+    /** The connection which this call pertains to.
+     * \itemize On accept() calls this is the new client connection.
+     * \itemize On connect() finished calls this is the newely opened connection.
+     * \itemize On write calls this is the connection just written to.
+     * \itemize On read calls this is the connection just read from.
+     * \itemize On close calls this describes the connection which is now closed.
+     * \itemize On timeouts this is the connection whose operation timed out.
+     *          NP: timeouts should now return to the connect/read/write handler with COMM_ERR_TIMEOUT.
+     */
+    Comm::ConnectionPointer conn;
+
+    comm_err_t flag;  ///< comm layer result status.
+    int xerrno;      ///< The last errno to occur. non-zero if flag is COMM_ERR.
+
+    int fd; // raw FD which the call was about. use conn instead for new code.
 private:
     // should not be needed and not yet implemented
     CommCommonCbParams &operator =(const CommCommonCbParams &params);
