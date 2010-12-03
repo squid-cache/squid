@@ -1,0 +1,96 @@
+/**
+\defgroup compat Portability Library
+
+\title Squid Portability
+
+
+\section 1 Aim
+
+\par 
+Squid aims to build and run on many modern systems. To do this we have traditionally
+added small hacks and wrappers all over the code whenever one was needed.
+The final result of that is a vast amount of code duplication, dodgy licensing on
+some older hacks, and some cases of obsolete algorithms sitting side by side with their
+current equivalent.
+
+\par
+The Portability library libcompat-squid.la has been created to correct the three issues of
+stable build portability, code cleanliness, and clearer licensing.
+
+
+\section 2 Requirements
+
+\par
+The system calls used by Squid are not required to be standard. Often we depend on
+some non-standard call which can give great performance benefits.
+But they are required to meet several other criteria:
+ \li  They must be of actual benefit to Squid during its operation.
+ \li  A better alternative must not exist.
+ \li  If not available on all OS an open-source GPLv2+ implementation must be available
+      to be included with the Squid sources and used when required.
+
+\par
+To be built into the libcompat-squid.la as a layer below all Squid-bundled binaries. The code
+must also qualify by being provided natively by some OS where Squid builds. \br
+Code and Algorithms which do not meet this final criteria are relegated to the slightly
+higher level of basic component, rather than portability.
+
+
+\section 3 Component Types
+
+\par Macro re-definition
+Where the only difference between systems is their naming scheme. One of the schemes is
+chosen by the developers for use and mappings are created in the form of Macros.
+
+\par Inline Functions
+
+\par Algorithm Templates and Inline functions
+Being C++ we are able to use templates in place of inline functions where that is more
+convenient. Care is taken to provide no additional requirements upon the callers when
+using the template as to when using the native constructs.
+
+\par Emulators
+As mentioned above if a useful library function calls or global is not available on all
+operating systems a GPLv2+ alternative may be added to the compat layer. As an emulator
+it retains the exact naming and definition of the source systems. Thus being able to be
+used seamlessly across all platforms by the main code.
+
+\par Wrappers
+Sometimes common and useful library functions are not always as safe as they could be.
+An alternative which wraps the original in extra safety checks is provided under the
+same name with an 'x' pre-pended. Currently these extra protections are added on string
+handling and memory allocation.
+
+
+\section 4 Layout
+The internal code structure of libcompat-squid.la files has a hierarchy. The API has a flat
+global scope separate from the file layout. The API is pulled in by including compat/compat.h.
+The strict dependency requirements which exist within the compat API make including
+individual part separately a risky operation.
+
+\par
+Squid coding guidelines require each .c and .cc file to include config.h or squid.h first
+in their included files. config.h begin with an order-specific sequence of defines and
+includes compat/compat.h to incorporate the compat layer appropriately in every soure file.
+squid.h begins by including config.h to prepare for its sub-includes and definitions.
+
+\par
+Internally the compat/ directory contains the public API file compat/compat.h which structures
+order-specific includes as documented inside that file. Included by that is compat/osdetect.h
+which determines which operating system and in some cases compiler is being used.
+
+\par
+The compat/os/ directory contains separate files for each supported system which requires
+special compat layer handling. Hacks for specific systems should be restricted to these files
+as much as possible.
+
+\par
+compat/compat_shared.h file contains the shared portability definitions which are shared
+across a great many systems. These should be written with protective macros to prevent any
+symbols or code being defined which is not necessary. Protections here must not be system-specific.
+
+\par
+Also in compat/ directory are the .h and .c files for emulators detected by autoconf. These
+are added by autoconf to the build objects as required.
+
+*/
