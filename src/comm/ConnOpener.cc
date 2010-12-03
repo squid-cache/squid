@@ -35,16 +35,16 @@ bool
 Comm::ConnOpener::doneAll() const
 {
     // is the conn_ to be opened still waiting?
-    if (conn_ != NULL) {
-        return false;
+    if (conn_ == NULL) {
+        return AsyncJob::doneAll();
     }
 
     // is the callback still to be called?
-    if (callback_ != NULL) {
-        return false;
+    if (callback_ == NULL || callback_->canceled()) {
+        return AsyncJob::doneAll();
     }
 
-    return AsyncJob::doneAll();
+    return false;
 }
 
 void
@@ -71,8 +71,11 @@ Comm::ConnOpener::swanSong()
     }
 
     if (callback_ != NULL) {
-        // inform the still-waiting caller we are dying
-        doneConnecting(COMM_ERR_CONNECT, 0);
+        if (callback_->canceled())
+            callback_ = NULL;
+        else
+            // inform the still-waiting caller we are dying
+            doneConnecting(COMM_ERR_CONNECT, 0);
     }
 
     AsyncJob::swanSong();

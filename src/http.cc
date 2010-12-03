@@ -1433,7 +1433,7 @@ HttpStateData::processReplyBody()
             }
 
             if (orig_request->pinnedConnection() && ispinned) {
-                orig_request->pinnedConnection()->pinConnection(serverConnection->fd, orig_request, _peer,
+                orig_request->pinnedConnection()->pinConnection(serverConnection, orig_request, _peer,
                         (request->flags.connection_auth != 0));
             } else {
                 fwd->pconnPush(serverConnection, request->GetHost());

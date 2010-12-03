@@ -249,7 +249,7 @@ public:
         bool swanSang; // XXX: temporary flag to check proper cleanup
     } flags;
     struct {
-        int fd;                 /* pinned server side connection */
+        Comm::ConnectionPointer serverConn; /* pinned server side connection */
         char *host;             /* host name of pinned connection */
         int port;               /* port of pinned connection */
         bool pinned;             /* this connection was pinned */
@@ -278,7 +278,7 @@ public:
     /**
      * Correlate the current ConnStateData object with the pinning_fd socket descriptor.
      */
-    void pinConnection(int fd, HttpRequest *request, struct peer *peer, bool auth);
+    void pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, struct peer *peer, bool auth);
     /**
      * Decorrelate the ConnStateData object from its pinned peer
      */
@@ -288,9 +288,9 @@ public:
      * if pinned info is not valid.
      \param request   if it is not NULL also checks if the pinning info refers to the request client side HttpRequest
      \param peer      if it is not NULL also check if the peer is the pinning peer
-     \return          The fd of the server side connection or -1 if fails.
+     \return          The details of the server side connection (may be closed if failures were present).
      */
-    int validatePinnedConnection(HttpRequest *request, const struct peer *peer);
+    const Comm::ConnectionPointer validatePinnedConnection(HttpRequest *request, const struct peer *peer);
     /**
      * returts the pinned peer if exists, NULL otherwise
      */

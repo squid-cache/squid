@@ -95,6 +95,10 @@ private:
 
     http_status last_status;
 #endif
+    // AsyncCalls which we set and may need cancelling.
+    struct {
+        AsyncCall::Pointer connector;  ///< a call linking us to the ConnOpener producing serverConn.
+    } calls;
 
     struct {
         unsigned int dont_retry:1;

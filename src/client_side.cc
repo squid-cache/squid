@@ -757,7 +757,6 @@ ConnStateData::swanSong()
     debugs(33, 2, HERE << clientConn);
     flags.readMoreRequests = false;
     clientdbEstablished(clientConn->remote, -1);	/* decrement */
-    clientConn = NULL;
     assert(areAllContextsForThisConnection());
     freeAllContexts();
 
@@ -766,8 +765,13 @@ ConnStateData::swanSong()
         auth_user_request->onConnectionClose(this);
     }
 
-    if (pinning.fd >= 0)
-        comm_close(pinning.fd);
+    if (Comm::IsConnOpen(pinning.serverConn))
+        pinning.serverConn->close();
+    pinning.serverConn = NULL;
+
+    if (Comm::IsConnOpen(clientConn))
+        clientConn->close();
+    clientConn = NULL;
 
     BodyProducer::swanSong();
     flags.swanSang = true;
@@ -1522,7 +1526,7 @@ ClientSocketContext::keepaliveNextRequest()
     debugs(33, 3, HERE << conn->clientConn);
     connIsFinished();
 
-    if (conn->pinning.pinned && conn->pinning.fd == -1) {
+    if (conn->pinning.pinned && !Comm::IsConnOpen(conn->pinning.serverConn)) {
         debugs(33, 2, HERE << conn->clientConn << " Connection was pinned but server side gone. Terminating client connection");
         conn->clientConn->close();
         return;
@@ -3818,7 +3822,6 @@ ConnStateData::ConnStateData() :
         closing_(false),
         switchedToHttps_(false)
 {
-    pinning.fd = -1;
     pinning.pinned = false;
     pinning.auth = false;
 }
@@ -3980,54 +3983,47 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
 void
 ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
 {
-    pinning.fd = -1;
-    if (pinning.peer) {
-        cbdataReferenceDone(pinning.peer);
-    }
-    safe_free(pinning.host);
-    /* NOTE: pinning.pinned should be kept. This combined with fd == -1 at the end of a request indicates that the host
-     * connection has gone away */
+    unpinConnection();
 }
 
-void ConnStateData::pinConnection(int pinning_fd, HttpRequest *request, struct peer *aPeer, bool auth)
+void
+ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, struct peer *aPeer, bool auth)
 {
     char desc[FD_DESC_SZ];
 
-    if (pinning.fd == pinning_fd)
-        return;
-    else if (pinning.fd != -1)
-        comm_close(pinning.fd);
+    if (Comm::IsConnOpen(pinning.serverConn)) {
+        if (pinning.serverConn->fd == pinServerConn->fd)
+            return;
 
-    if (pinning.host)
-        safe_free(pinning.host);
+        unpinConnection(); // clears fields ready for re-use. Prevent close() scheduling our close handler.
+        pinning.serverConn->close();
+    } else
+        unpinConnection(); // clears fields ready for re-use.
 
-    pinning.fd = pinning_fd;
+    pinning.serverConn = pinServerConn;
     pinning.host = xstrdup(request->GetHost());
     pinning.port = request->port;
     pinning.pinned = true;
-    if (pinning.peer)
-        cbdataReferenceDone(pinning.peer);
     if (aPeer)
         pinning.peer = cbdataReference(aPeer);
     pinning.auth = auth;
-    snprintf(desc, FD_DESC_SZ, "%s pinned connection for %s:%d (%d)",
-             (auth || !aPeer) ? request->GetHost() : aPeer->name, fd_table[clientConn->fd].ipaddr,
-             clientConn->remote.GetPort(), clientConn->fd);
-    fd_note(pinning_fd, desc);
+    char stmp[MAX_IPSTRLEN];
+    snprintf(desc, FD_DESC_SZ, "%s pinned connection for %s (%d)",
+             (auth || !aPeer) ? request->GetHost() : aPeer->name, clientConn->remote.ToURL(stmp,MAX_IPSTRLEN), clientConn->fd);
+    fd_note(pinning.serverConn->fd, desc);
 
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
     pinning.closeHandler = JobCallback(33, 5,
                                        Dialer, this, ConnStateData::clientPinnedConnectionClosed);
-    comm_add_close_handler(pinning_fd, pinning.closeHandler);
-
+    comm_add_close_handler(pinning.serverConn->fd, pinning.closeHandler);
 }
 
-int ConnStateData::validatePinnedConnection(HttpRequest *request, const struct peer *aPeer)
+const Comm::ConnectionPointer
+ConnStateData::validatePinnedConnection(HttpRequest *request, const struct peer *aPeer)
 {
     bool valid = true;
-    if (pinning.fd < 0)
-        return -1;
-
+    if (!Comm::IsConnOpen(pinning.serverConn))
+        valid = false;
     if (pinning.auth && request && strcasecmp(pinning.host, request->GetHost()) != 0) {
         valid = false;
     }
@@ -4042,29 +4038,32 @@ int ConnStateData::validatePinnedConnection(HttpRequest *request, const struct p
     }
 
     if (!valid) {
-        int pinning_fd=pinning.fd;
         /* The pinning info is not safe, remove any pinning info*/
         unpinConnection();
 
         /* also close the server side socket, we should not use it for invalid/unauthenticated
            requests...
          */
-        comm_close(pinning_fd);
-        return -1;
+        if (Comm::IsConnOpen(pinning.serverConn))
+            pinning.serverConn->close();
     }
 
-    return pinning.fd;
+    return pinning.serverConn;
 }
 
-void ConnStateData::unpinConnection()
+void
+ConnStateData::unpinConnection()
 {
     if (pinning.peer)
         cbdataReferenceDone(pinning.peer);
 
     if (pinning.closeHandler != NULL) {
-        comm_remove_close_handler(pinning.fd, pinning.closeHandler);
+        comm_remove_close_handler(pinning.serverConn->fd, pinning.closeHandler);
         pinning.closeHandler = NULL;
     }
-    pinning.fd = -1;
+
     safe_free(pinning.host);
+
+    /* NOTE: pinning.pinned should be kept. This combined with fd == -1 at the end of a request indicates that the host
+     * connection has gone away */
 }
