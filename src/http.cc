@@ -1012,12 +1012,6 @@ HttpStateData::persistentConnStatus() const
     const HttpReply *vrep = virginReply();
     debugs(11, 5, "persistentConnStatus: content_length=" << vrep->content_length);
 
-    /* If we haven't seen the end of reply headers, we are not done */
-    debugs(11, 5, "persistentConnStatus: flags.headers_parsed=" << flags.headers_parsed);
-
-    if (!flags.headers_parsed)
-        return INCOMPLETE_MSG;
-
     if (eof) // already reached EOF
         return COMPLETE_NONPERSISTENT_MSG;
 
