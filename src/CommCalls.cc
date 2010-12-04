@@ -74,13 +74,15 @@ CommIoCbParams::CommIoCbParams(void *aData): CommCommonCbParams(aData),
 bool
 CommIoCbParams::syncWithComm()
 {
+#if 0 // transition past??
     // transition only: read/write legacy code does not know about conn, it just sets FD
     if (fd >= 0) {
-        if (conn == NULL)
+        if (conn == NULL) {
             conn = new Comm::Connection;
-        if (conn->fd != fd)
             conn->fd = fd;
+        }
     }
+#endif
 
     // change parameters if the call was scheduled before comm_close but
     // is being fired after comm_close
@@ -221,7 +223,7 @@ CommCloseCbPtrFun::print(std::ostream &os) const
 
 /* CommTimeoutCbPtrFun */
 
-CommTimeoutCbPtrFun::CommTimeoutCbPtrFun(PF *aHandler,
+CommTimeoutCbPtrFun::CommTimeoutCbPtrFun(CTCB *aHandler,
         const CommTimeoutCbParams &aParams):
         CommDialerParamsT<CommTimeoutCbParams>(aParams),
         handler(aHandler)
@@ -231,17 +233,7 @@ CommTimeoutCbPtrFun::CommTimeoutCbPtrFun(PF *aHandler,
 void
 CommTimeoutCbPtrFun::dial()
 {
-    // AYJ NP: since the old code is still used by pipes and IPC
-    // we cant discard the params.fd functions entirely for old callbacks.
-    // new callers supposed to only set conn.
-    // sync FD and conn fields at this single failure point before dialing.
-    if (params.conn != NULL) {
-        if (params.fd < 0 && params.conn->fd > 0)
-            params.fd = params.conn->fd;
-        assert(params.fd == params.conn->fd); // Must() ?
-    }
-
-    handler(params.fd, params.data);
+    handler(params);
 }
 
 void

@@ -771,7 +771,8 @@ idnsDoSendQueryVC(nsvc *vc)
 
     vc->busy = 1;
 
-    commSetTimeout(vc->conn->fd, Config.Timeout.idns_query, NULL, NULL);
+    AsyncCall::Pointer nil;
+    commSetConnTimeout(vc->conn, Config.Timeout.idns_query, nil);
 
     AsyncCall::Pointer call = commCbCall(78, 5, "idnsSentQueryVC",
                                          CommIoCbPtrFun(&idnsSentQueryVC, vc));

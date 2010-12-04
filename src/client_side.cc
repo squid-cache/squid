@@ -191,7 +191,7 @@ static IOCB clientWriteBodyComplete;
 static IOACB httpAccept;
 static IOACB httpsAccept;
 static bool clientParseRequest(ConnStateData * conn, bool &do_next_read);
-static PF clientLifetimeTimeout;
+static CTCB clientLifetimeTimeout;
 static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
 static ClientSocketContext *parseHttpRequest(ConnStateData *, HttpParser *, HttpRequestMethod *, HttpVersion *);
 #if USE_IDENT
@@ -1489,7 +1489,7 @@ ConnStateData::readNextRequest()
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall = JobCallback(33, 5,
                                      TimeoutDialer, this, ConnStateData::requestTimeout);
-    commSetTimeout(clientConn->fd, Config.Timeout.persistent_request, timeoutCall);
+    commSetConnTimeout(clientConn, Config.Timeout.persistent_request, timeoutCall);
 
     readSomeData();
     /** Please don't do anything with the FD past here! */
@@ -2706,8 +2706,9 @@ clientParseRequest(ConnStateData * conn, bool &do_next_read)
         /* status -1 or 1 */
         if (context) {
             debugs(33, 5, HERE << conn->clientConn << ": parsed a request");
-            commSetTimeout(conn->clientConn->fd, Config.Timeout.lifetime, clientLifetimeTimeout,
-                           context->http);
+            AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "clientLifetimeTimeout",
+                                                        CommTimeoutCbPtrFun(clientLifetimeTimeout, context->http));
+            commSetConnTimeout(conn->clientConn, Config.Timeout.lifetime, timeoutCall);
 
             clientProcessRequest(conn, &hp, context, method, http_ver);
 
@@ -3031,7 +3032,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
         typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
         AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
                                           TimeoutDialer, this, ConnStateData::requestTimeout);
-        commSetTimeout(io.fd, 30, timeoutCall);
+        commSetConnTimeout(io.conn, 30, timeoutCall);
 
         /*
          * Aha, but we don't want a read handler!
@@ -3049,21 +3050,19 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
     * connection)
     */
     debugs(33, 3, "requestTimeout: FD " << io.fd << ": lifetime is expired.");
-
-    clientConn->close();
-
+    io.conn->close();
 #endif
 }
 
 static void
-clientLifetimeTimeout(int fd, void *data)
+clientLifetimeTimeout(const CommTimeoutCbParams &io)
 {
-    ClientHttpRequest *http = (ClientHttpRequest *)data;
+    ClientHttpRequest *http = static_cast<ClientHttpRequest *>(io.data);
     debugs(33, DBG_IMPORTANT, "WARNING: Closing client connection due to lifetime timeout");
     debugs(33, DBG_IMPORTANT, "\t" << http->uri);
     http->al.http.timedout = true;
-    if (http->getConn() && Comm::IsConnOpen(http->getConn()->clientConn))
-        http->getConn()->clientConn->close();
+    if (Comm::IsConnOpen(io.conn))
+        io.conn->close();
 }
 
 ConnStateData *
@@ -3134,7 +3133,7 @@ httpAccept(int sock, const Comm::ConnectionPointer &details, comm_err_t flag, in
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
                                       TimeoutDialer, connState, ConnStateData::requestTimeout);
-    commSetTimeout(details->fd, Config.Timeout.read, timeoutCall);
+    commSetConnTimeout(details, Config.Timeout.read, timeoutCall);
 
 #if USE_IDENT
     if (Ident::TheConfig.identLookup) {
@@ -3378,7 +3377,7 @@ httpsAccept(int sock, const Comm::ConnectionPointer& details, comm_err_t flag, i
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
                                       TimeoutDialer, connState, ConnStateData::requestTimeout);
-    commSetTimeout(details->fd, Config.Timeout.request, timeoutCall);
+    commSetConnTimeout(details, Config.Timeout.request, timeoutCall);
 
 #if USE_IDENT
     if (Ident::TheConfig.identLookup) {
@@ -3503,7 +3502,7 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
     if (!(ssl = httpsCreate(clientConn, sslContext)))
         return false;
 
-    // commSetTimeout() was called for this request before we switched.
+    // commSetConnTimeout() was called for this request before we switched.
 
     // Disable the client read handler until peer selection is complete
     commSetSelect(clientConn->fd, COMM_SELECT_READ, NULL, NULL, 0);

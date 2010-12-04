@@ -59,7 +59,7 @@ SQUIDCEXTERN void commResetSelect(int);
 
 SQUIDCEXTERN int comm_udp_sendto(int sock, const Ip::Address &to, const void *buf, int buflen);
 SQUIDCEXTERN void commCallCloseHandlers(int fd);
-SQUIDCEXTERN int commSetTimeout(int fd, int, PF *, void *);
+SQUIDCEXTERN int commSetTimeout(int fd, int, CTCB *, void *);
 extern int commSetTimeout(int fd, int, AsyncCall::Pointer &callback);
 
 /**
@@ -67,6 +67,7 @@ extern int commSetTimeout(int fd, int, AsyncCall::Pointer &callback);
  * API to replace commSetTimeout() when a Comm::ConnectionPointer is available.
  */
 extern int commSetConnTimeout(const Comm::ConnectionPointer &conn, int seconds, AsyncCall::Pointer &callback);
+extern int commUnsetConnTimeout(const Comm::ConnectionPointer &conn);
 
 SQUIDCEXTERN int ignoreErrno(int);
 SQUIDCEXTERN void commCloseAllSockets(void);

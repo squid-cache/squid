@@ -1357,7 +1357,6 @@ HttpStateData::decodeAndWriteReplyBody()
 void
 HttpStateData::processReplyBody()
 {
-    AsyncCall::Pointer call;
     Ip::Address client_addr;
     bool ispinned = false;
 
@@ -1398,24 +1397,24 @@ HttpStateData::processReplyBody()
     } else
         switch (persistentConnStatus()) {
         case INCOMPLETE_MSG:
+            {
             debugs(11, 5, "processReplyBody: INCOMPLETE_MSG from " << serverConnection);
             /* Wait for more data or EOF condition */
+            AsyncCall::Pointer nil;
             if (flags.keepalive_broken) {
-                call = NULL;
-                commSetTimeout(serverConnection->fd, 10, call);
+                commSetConnTimeout(serverConnection, 10, nil);
             } else {
-                call = NULL;
-                commSetTimeout(serverConnection->fd, Config.Timeout.read, call);
+                commSetConnTimeout(serverConnection, Config.Timeout.read, nil);
             }
 
             flags.do_next_read = 1;
+            }
             break;
 
         case COMPLETE_PERSISTENT_MSG:
             debugs(11, 5, "processReplyBody: COMPLETE_PERSISTENT_MSG from " << serverConnection);
             /* yes we have to clear all these! */
-            call = NULL;
-            commSetTimeout(serverConnection->fd, -1, call);
+            commUnsetConnTimeout(serverConnection);
             flags.do_next_read = 0;
 
             comm_remove_close_handler(serverConnection->fd, closeHandler);
@@ -1528,7 +1527,7 @@ HttpStateData::sendComplete()
     AsyncCall::Pointer timeoutCall =  JobCallback(11, 5,
                                       TimeoutDialer, this, HttpStateData::httpTimeout);
 
-    commSetTimeout(serverConnection->fd, Config.Timeout.read, timeoutCall);
+    commSetConnTimeout(serverConnection, Config.Timeout.read, timeoutCall);
 
     flags.request_sent = 1;
 
@@ -2072,7 +2071,7 @@ HttpStateData::sendRequest()
     typedef CommCbMemFunT<HttpStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(11, 5,
                                       TimeoutDialer, this, HttpStateData::httpTimeout);
-    commSetTimeout(serverConnection->fd, Config.Timeout.lifetime, timeoutCall);
+    commSetConnTimeout(serverConnection, Config.Timeout.lifetime, timeoutCall);
     flags.do_next_read = 1;
     maybeReadVirginBody();
 
