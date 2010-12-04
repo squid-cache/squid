@@ -132,9 +132,6 @@ void WINAPI WIN32_svcHandler(DWORD);
 #define SQUID_BUILD_INFO ""
 #endif
 
-/** for error reporting from xmalloc and friends */
-SQUIDCEXTERN void (*failure_notify) (const char *);
-
 static char *opt_syslog_facility = NULL;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
 static int configured_once = 0;
