@@ -81,11 +81,10 @@ SwapDir::statfs(StoreEntry &)const {}
 void
 SwapDir::maintain() {}
 
-size_t
+uint64_t
 SwapDir::minSize() const
 {
-    return (size_t) (((float) maxSize() *
-                      (float) Config.Swap.lowWaterMark) / 100.0);
+    return ((maxSize() * Config.Swap.lowWaterMark) / 100);
 }
 
 void

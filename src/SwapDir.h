@@ -54,19 +54,17 @@ public:
     virtual int callback();
     virtual void create();
 
-    virtual StoreEntry * get
-    (const cache_key *);
+    virtual StoreEntry * get(const cache_key *);
 
-    virtual void get
-    (String const, STOREGETCLIENT, void * cbdata);
+    virtual void get(String const, STOREGETCLIENT, void * cbdata);
 
     virtual void init();
 
     virtual void maintain(); /* perform regular maintenance should be private and self registered ... */
 
-    virtual size_t maxSize() const;
+    virtual uint64_t maxSize() const;
 
-    virtual size_t minSize() const;
+    virtual uint64_t minSize() const;
 
     virtual void stat(StoreEntry &) const;
 
@@ -115,7 +113,7 @@ class SwapDir : public Store
 {
 
 public:
-    SwapDir(char const *aType) : theType (aType), cur_size (0), max_size(0), max_objsize (-1), cleanLog(NULL) {
+    SwapDir(char const *aType) : theType (aType), cur_size(0), max_size(0), max_objsize (-1), cleanLog(NULL) {
         fs.blksize = 1024;
         path = NULL;
     }
@@ -127,15 +125,13 @@ public:
     /* official Store interface functions */
     virtual void diskFull();
 
-    virtual StoreEntry * get
-    (const cache_key *);
+    virtual StoreEntry * get(const cache_key *);
 
-    virtual void get
-    (String const, STOREGETCLIENT, void * cbdata);
+    virtual void get(String const, STOREGETCLIENT, void * cbdata);
 
-    virtual size_t maxSize() const { return max_size;}
+    virtual uint64_t maxSize() const { return max_size;}
 
-    virtual size_t minSize() const;
+    virtual uint64_t minSize() const;
     virtual void stat (StoreEntry &anEntry) const;
     virtual StoreSearch *search(String const url, HttpRequest *) = 0;
 
@@ -157,8 +153,8 @@ private:
     char const *theType;
 
 public:
-    int cur_size;
-    int max_size;
+    uint64_t cur_size;
+    uint64_t max_size;
     char *path;
     int index;			/* This entry's index into the swapDirs array */
     int64_t max_objsize;
