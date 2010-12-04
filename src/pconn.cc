@@ -140,7 +140,9 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
     }
 
     theList_[size_++] = conn;
-    comm_read(conn, fakeReadBuf_, sizeof(fakeReadBuf_), IdleConnList::Read, this);
+    AsyncCall::Pointer call = commCbCall(5,4, "IdleConnList::Read",
+                                         CommIoCbPtrFun(IdleConnList::Read, this));
+    comm_read(conn, fakeReadBuf_, sizeof(fakeReadBuf_), call);
     commSetTimeout(conn->fd, Config.Timeout.pconn, IdleConnList::Timeout, this);
 }
 

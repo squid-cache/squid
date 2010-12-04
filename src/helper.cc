@@ -234,7 +234,9 @@ helperOpenServers(helper * hlp)
 
         comm_add_close_handler(rfd, helperServerFree, srv);
 
-        comm_read(srv->readPipe, srv->rbuf, srv->rbuf_sz - 1, helperHandleRead, srv);
+        AsyncCall::Pointer call = commCbCall(5,4, "helperHandleRead",
+                                             CommIoCbPtrFun(helperHandleRead, srv));
+        comm_read(srv->readPipe, srv->rbuf, srv->rbuf_sz - 1, call);
     }
 
     hlp->last_restart = squid_curtime;
@@ -352,7 +354,9 @@ helperStatefulOpenServers(statefulhelper * hlp)
 
         comm_add_close_handler(rfd, helperStatefulServerFree, srv);
 
-        comm_read(srv->readPipe, srv->rbuf, srv->rbuf_sz - 1, helperStatefulHandleRead, srv);
+        AsyncCall::Pointer call = commCbCall(5,4, "helperStatefulHandleRead",
+                                             CommIoCbPtrFun(helperStatefulHandleRead, srv));
+        comm_read(srv->readPipe, srv->rbuf, srv->rbuf_sz - 1, call);
     }
 
     hlp->last_restart = squid_curtime;
@@ -905,8 +909,11 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
         }
     }
 
-    if (Comm::IsConnOpen(srv->readPipe))
-        comm_read(srv->readPipe, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1, helperHandleRead, srv);
+    if (Comm::IsConnOpen(srv->readPipe)) {
+        AsyncCall::Pointer call = commCbCall(5,4, "helperHandleRead",
+                                             CommIoCbPtrFun(helperHandleRead, srv));
+        comm_read(srv->readPipe, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1, call);
+    }
 }
 
 static void
@@ -985,9 +992,11 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
             helperStatefulReleaseServer(srv);
     }
 
-    if (Comm::IsConnOpen(srv->readPipe))
-        comm_read(srv->readPipe, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1,
-                  helperStatefulHandleRead, srv);
+    if (Comm::IsConnOpen(srv->readPipe)) {
+        AsyncCall::Pointer call = commCbCall(5,4, "helperStatefulHandleRead",
+                                             CommIoCbPtrFun(helperStatefulHandleRead, srv));
+        comm_read(srv->readPipe, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1, call);
+    }
 }
 
 static void
