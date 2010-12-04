@@ -70,7 +70,7 @@ private:
     unsigned char eui[SZ_EUI48_BUF];
 };
 
-}; // namespace Eui
+} // namespace Eui
 
 #endif /* USE_SQUID_EUI */
 #endif /* _SQUID_EUI_EUI48_H */

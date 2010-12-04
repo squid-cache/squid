@@ -68,6 +68,6 @@ extern void CallbackTableDestruct();
 #define COMMIO_FD_READCB(fd)    (&Comm::iocb_table[(fd)].readcb)
 #define COMMIO_FD_WRITECB(fd)   (&Comm::iocb_table[(fd)].writecb)
 
-}; // namespace Comm
+} // namespace Comm
 
 #endif /* _SQUID_COMM_IOCALLBACK_H */

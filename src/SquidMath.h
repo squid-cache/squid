@@ -11,6 +11,6 @@ extern double doublePercent(const double, const double);
 extern int intAverage(const int, const int, int, const int);
 extern double doubleAverage(const double, const double, int, const int);
 
-}; // namespace Math
+} // namespace Math
 
 #endif /* _SQUID_SRC_SQUIDMATH_H */

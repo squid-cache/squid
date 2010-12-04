@@ -17,7 +17,7 @@ public:
 
 extern IdentConfig TheConfig;
 
-}; // namespace Ident
+} // namespace Ident
 
 #endif /* USE_IDENT */
 #endif /* SQUID_IDENT_CONFIG_H */

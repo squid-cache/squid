@@ -26,6 +26,6 @@ void WriteCancel(int fd, const char *reason);
 // callback handler to process an FD which is available for writing.
 extern PF HandleWrite;
 
-}; // namespace Comm
+} // namespace Comm
 
 #endif /* _SQUID_COMM_IOWRITE_H */
