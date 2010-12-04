@@ -198,6 +198,10 @@ Comm::ConnOpener::connect()
 {
     Must(conn_ != NULL);
 
+    // our parent Jobs signal abort by cancelling their callbacks.
+    if (callback_ == NULL || callback_->canceled())
+        return;
+
     totalTries_++;
 
     switch (comm_connect_addr(conn_->fd, conn_->remote) ) {
