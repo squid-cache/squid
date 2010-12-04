@@ -1,5 +1,5 @@
 #include "config.h"
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "ClientInfo.h"
 #endif
 #include "comm/IoCallback.h"
@@ -51,7 +51,7 @@ Comm::HandleWrite(int fd, void *data)
 
     nleft = state->size - state->offset;
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     ClientInfo * clientInfo=fd_table[fd].clientInfo;
 
     if (clientInfo && !clientInfo->writeLimitingActive)
@@ -83,13 +83,13 @@ Comm::HandleWrite(int fd, void *data)
 
         }
     }
-#endif
+#endif /* USE_DELAY_POOLS */
 
     /* actually WRITE data */
     len = FD_WRITE_METHOD(fd, state->buf + state->offset, nleft);
     debugs(5, 5, HERE << "write() returns " << len);
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     if (clientInfo) {
         if (len > 0) {
             /* we wrote data - drain them from bucket */
@@ -103,7 +103,7 @@ Comm::HandleWrite(int fd, void *data)
         // even if we wrote nothing, we were served; give others a chance
         clientInfo->kickQuotaQueue();
     }
-#endif
+#endif /* USE_DELAY_POOLS */
 
     fd_bytes(fd, len, FD_WRITE);
     statCounter.syscalls.sock.writes++;

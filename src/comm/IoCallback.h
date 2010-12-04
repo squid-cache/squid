@@ -28,7 +28,7 @@ public:
     int offset;
     comm_err_t errcode;
     int xerrno;
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     unsigned int quotaQueueReserv; ///< reservation ID from CommQuotaQueue
 #endif
 

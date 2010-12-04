@@ -74,7 +74,7 @@ static IOCB commHalfClosedReader;
 static void comm_init_opened(int new_socket, Ip::Address &addr, tos_t tos, nfmark_t nfmark, const char *note, struct addrinfo *AI);
 static int comm_apply_flags(int new_socket, Ip::Address &addr, int flags, struct addrinfo *AI);
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 CBDATA_CLASS_INIT(CommQuotaQueue);
 
 static void commHandleWriteHelper(void * data);
@@ -1473,7 +1473,7 @@ _comm_close(int fd, char const *file, int line)
         COMMIO_FD_READCB(fd)->finish(COMM_ERR_CLOSING, errno);
     }
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     if (ClientInfo *clientInfo = F->clientInfo) {
         if (clientInfo->selectWaiting) {
             clientInfo->selectWaiting = false;
@@ -1823,7 +1823,7 @@ comm_exit(void)
     Comm::CallbackTableDestruct();
 }
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 // called when the queue is done waiting for the client bucket to fill
 void
 commHandleWriteHelper(void * data)

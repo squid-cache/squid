@@ -353,7 +353,7 @@ AC_ARG_ENABLE(debug-cbdata,
 SQUID_YESNO([$enableval],
     [unrecognized argument to --enable-debug-cbdata: $enableval])
 ])
-SQUID_DEFINE_BOOL(CBDATA_DEBUG,${enable_debug_cbdata:=no},
+SQUID_DEFINE_BOOL(USE_CBDATA_DEBUG,${enable_debug_cbdata:=no},
     [Enable support for cbdata debug information])
 AC_MSG_NOTICE([cbdata debugging enabled: $enable_debug_cbdata])
 
@@ -770,13 +770,13 @@ AC_ARG_ENABLE(icmp,
   fi
 ])
 
-AM_CONDITIONAL(USE_DELAY_POOLS, false)
+AM_CONDITIONAL(ENABLE_DELAY_POOLS, false)
 AC_ARG_ENABLE(delay-pools,
   AS_HELP_STRING([--enable-delay-pools],[Enable delay pools to limit bandwidth usage]),
 [ if test "x$enableval" = "xyes" ; then
     AC_MSG_NOTICE([Delay pools enabled])
-    AC_DEFINE([DELAY_POOLS],1,[Traffic management via "delay pools".])
-    AM_CONDITIONAL(USE_DELAY_POOLS, true,)
+    AC_DEFINE([USE_DELAY_POOLS],1,[Traffic management via "delay pools".])
+    AM_CONDITIONAL(ENABLE_DELAY_POOLS, true,)
   fi
 ])
 
