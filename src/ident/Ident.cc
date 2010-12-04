@@ -69,7 +69,7 @@ typedef struct _IdentStateData {
 // TODO: make these all a series of Async job calls. They are self-contained callbacks now.
 static IOCB ReadReply;
 static PF Close;
-static PF Timeout;
+static CTCB Timeout;
 static CNCB ConnectDone;
 static hash_table *ident_hash = NULL;
 static void ClientAdd(IdentStateData * state, IDCB * callback, void *callback_data);
@@ -112,11 +112,10 @@ Ident::Close(int fdnotused, void *data)
 }
 
 void
-Ident::Timeout(int fd, void *data)
+Ident::Timeout(const CommTimeoutCbParams &io)
 {
-    IdentStateData *state = (IdentStateData *)data;
-    debugs(30, 3, HERE << "FD " << fd << ", " << state->conn->remote);
-    state->conn->close();
+    debugs(30, 3, HERE << io.conn);
+    io.conn->close();
 }
 
 void
@@ -157,10 +156,12 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int x
               conn->local.GetPort());
     AsyncCall::Pointer nil;
     Comm::Write(conn, &mb, nil);
-    AsyncCall::Pointer call = commCbCall(5,4, "Ident::ReadReply",
-                                         CommIoCbPtrFun(Ident::ReadReply, state));
-    comm_read(conn, state->buf, IDENT_BUFSIZE, call);
-    commSetTimeout(conn->fd, Ident::TheConfig.timeout, Ident::Timeout, state);
+    AsyncCall::Pointer readCall = commCbCall(5,4, "Ident::ReadReply",
+                                             CommIoCbPtrFun(Ident::ReadReply, state));
+    comm_read(conn, state->buf, IDENT_BUFSIZE, readCall);
+    AsyncCall::Pointer timeoutCall = commCbCall(5,4, "Ident::Timeout",
+                                                CommTimeoutCbPtrFun(Ident::Timeout, state));
+    commSetConnTimeout(conn, Ident::TheConfig.timeout, timeoutCall);
 }
 
 void

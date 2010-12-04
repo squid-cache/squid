@@ -124,7 +124,7 @@ static CNCB tunnelConnectDone;
 static ERCB tunnelErrorComplete;
 static PF tunnelServerClosed;
 static PF tunnelClientClosed;
-static PF tunnelTimeout;
+static CTCB tunnelTimeout;
 static PSC tunnelPeerSelectComplete;
 static void tunnelStateFree(TunnelStateData * tunnelState);
 static void tunnelConnected(const Comm::ConnectionPointer &server, void *);
@@ -304,8 +304,11 @@ TunnelStateData::copy(size_t len, comm_err_t errcode, int xerrno, Connection &fr
     cbdataInternalLock(this);	/* ??? should be locked by the caller... */
 
     /* Bump the source connection read timeout on any activity */
-    if (Comm::IsConnOpen(from.conn))
-        commSetTimeout(from.conn->fd, Config.Timeout.read, tunnelTimeout, this);
+    if (Comm::IsConnOpen(from.conn)) {
+        AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
+                                                    CommTimeoutCbPtrFun(tunnelTimeout, this));
+        commSetConnTimeout(from.conn, Config.Timeout.read, timeoutCall);
+    }
 
     if (len < 0 || errcode)
         from.error (xerrno);
@@ -434,10 +437,10 @@ TunnelStateData::writeClientDone(char *buf, size_t len, comm_err_t flag, int xer
 }
 
 static void
-tunnelTimeout(int fd, void *data)
+tunnelTimeout(const CommTimeoutCbParams &io)
 {
-    TunnelStateData *tunnelState = (TunnelStateData *)data;
-    debugs(26, 3, "tunnelTimeout: FD " << fd);
+    TunnelStateData *tunnelState = static_cast<TunnelStateData *>(io.data);
+    debugs(26, 3, HERE << io.conn);
     /* Temporary lock to protect our own feets (comm_close -> tunnelClientClosed -> Free) */
     cbdataInternalLock(tunnelState);
 
@@ -576,7 +579,9 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
         tunnelConnected(conn, tunnelState);
     }
 
-    commSetTimeout(conn->fd, Config.Timeout.read, tunnelTimeout, tunnelState);
+    AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
+                                                CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
+    commSetConnTimeout(conn, Config.Timeout.read, timeoutCall);
 }
 
 extern tos_t GetTosToServer(HttpRequest * request);
@@ -633,10 +638,10 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     comm_add_close_handler(tunnelState->client.conn->fd,
                            tunnelClientClosed,
                            tunnelState);
-    commSetTimeout(tunnelState->client.conn->fd,
-                   Config.Timeout.lifetime,
-                   tunnelTimeout,
-                   tunnelState);
+
+    AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
+                                                CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
+    commSetConnTimeout(tunnelState->client.conn, Config.Timeout.lifetime, timeoutCall);
 
     peerSelect(&(tunnelState->serverDestinations), request,
                NULL,
@@ -668,10 +673,13 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     packerClean(&p);
     mb.append("\r\n", 2);
 
-    AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
-                                         CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
-    Comm::Write(srv, &mb, call);
-    commSetTimeout(srv->fd, Config.Timeout.read, tunnelTimeout, tunnelState);
+    AsyncCall::Pointer writeCall = commCbCall(5,5, "tunnelConnectedWriteDone",
+                                              CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
+    Comm::Write(srv, &mb, writeCall);
+
+    AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
+                                                CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
+    commSetConnTimeout(srv, Config.Timeout.read, timeoutCall);
 }
 
 static void

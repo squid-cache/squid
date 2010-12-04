@@ -60,7 +60,7 @@ public:
 };
 
 static PF whoisClose;
-static PF whoisTimeout;
+static CTCB whoisTimeout;
 static IOCB whoisReadReply;
 
 /* PUBLIC */
@@ -107,17 +107,19 @@ whoisStart(FwdState * fwd)
     AsyncCall::Pointer readCall = commCbCall(5,4, "whoisReadReply",
                                              CommIoCbPtrFun(whoisReadReply, p));
     comm_read(fwd->serverConnection(), p->buf, BUFSIZ, readCall);
-    commSetTimeout(fwd->serverConnection()->fd, Config.Timeout.read, whoisTimeout, p);
+    AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "whoisTimeout",
+                                                CommTimeoutCbPtrFun(whoisTimeout, p));
+    commSetConnTimeout(fwd->serverConnection(), Config.Timeout.read, timeoutCall);
 }
 
 /* PRIVATE */
 
 static void
-whoisTimeout(int fd, void *data)
+whoisTimeout(const CommTimeoutCbParams &io)
 {
-    WhoisState *p = (WhoisState *)data;
-    debugs(75, 1, "whoisTimeout: " << p->entry->url()  );
-    whoisClose(fd, p);
+    WhoisState *p = static_cast<WhoisState *>(io.data);
+    debugs(75, 3, HERE << io.conn << ", URL " << p->entry->url());
+    io.conn->close();
 }
 
 static void

@@ -738,7 +738,7 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
 
 #if 0
 int
-commSetTimeout_old(int fd, int timeout, PF * handler, void *data)
+commSetTimeout_old(int fd, int timeout, CTCB * handler, void *data)
 {
     debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
     assert(fd >= 0);
@@ -766,7 +766,7 @@ commSetTimeout_old(int fd, int timeout, PF * handler, void *data)
 
 // Legacy pre-AsyncCalls API for FD timeouts.
 int
-commSetTimeout(int fd, int timeout, PF * handler, void *data)
+commSetTimeout(int fd, int timeout, CTCB * handler, void *data)
 {
     AsyncCall::Pointer call;
     debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
@@ -829,6 +829,14 @@ commSetConnTimeout(const Comm::ConnectionPointer &conn, int timeout, AsyncCall::
     }
 
     return F->timeout;
+}
+
+int
+commUnsetConnTimeout(const Comm::ConnectionPointer &conn)
+{
+    debugs(5, 3, HERE << "Remove timeout for " << conn);
+    AsyncCall::Pointer nil;
+    return commSetConnTimeout(conn, -1, nil);
 }
 
 int

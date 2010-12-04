@@ -148,7 +148,7 @@ static void gopher_request_parse(const HttpRequest * req,
                                  char *request);
 static void gopherEndHTML(GopherStateData *);
 static void gopherToHTML(GopherStateData *, char *inbuf, int len);
-static PF gopherTimeout;
+static CTCB gopherTimeout;
 static IOCB gopherReadReply;
 static IOCB gopherSendComplete;
 static PF gopherSendRequest;
@@ -752,15 +752,15 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
 /// \ingroup ServerProtocolGopherInternal
 static void
-gopherTimeout(int fd, void *data)
+gopherTimeout(const CommTimeoutCbParams &io)
 {
-    GopherStateData *gopherState = (GopherStateData *)data;
-    debugs(10, 4, HERE << gopherState->serverConn << ": '" << gopherState->entry->url() << "'" );
+    GopherStateData *gopherState = static_cast<GopherStateData *>(io.data);
+    debugs(10, 4, HERE << io.conn << ": '" << gopherState->entry->url() << "'" );
 
     gopherState->fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, gopherState->fwd->request));
 
-    if (Comm::IsConnOpen(gopherState->serverConn))
-        gopherState->serverConn->close();
+    if (Comm::IsConnOpen(io.conn))
+        io.conn->close();
 }
 
 /**
@@ -811,7 +811,8 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
         kb_incr(&statCounter.server.all.kbytes_in, len);
         kb_incr(&statCounter.server.other.kbytes_in, len);
 
-        commSetTimeout(conn->fd, Config.Timeout.read, NULL, NULL);
+        AsyncCall::Pointer nil;
+        commSetConnTimeout(conn, Config.Timeout.read, nil);
         IOStats.Gopher.reads++;
 
         for (clen = len - 1, bin = 0; clen; bin++)
@@ -940,7 +941,7 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, 
     }
 
     /* Schedule read reply. */
-    AsyncCall::Pointer call =  commCbCall(10,5, "gopherReadReply",
+    AsyncCall::Pointer call =  commCbCall(5,5, "gopherReadReply",
                                           CommIoCbPtrFun(gopherReadReply, gopherState));
     entry->delayAwareRead(conn, gopherState->replybuf, BUFSIZ, call);
 
@@ -1040,5 +1041,7 @@ gopherStart(FwdState * fwd)
 
     gopherState->serverConn = fwd->serverConnection();
     gopherSendRequest(fwd->serverConnection()->fd, gopherState);
-    commSetTimeout(fwd->serverConnection()->fd, Config.Timeout.read, gopherTimeout, gopherState);
+    AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "gopherTimeout",
+                                                CommTimeoutCbPtrFun(gopherTimeout, gopherState));
+    commSetConnTimeout(fwd->serverConnection(), Config.Timeout.read, timeoutCall);
 }
