@@ -185,7 +185,7 @@ public: // should not be
 
 protected:
     BodyPipe::Pointer requestBodySource;  /**< to consume request body */
-    AsyncCall::Pointer requestSender;     /**< set if we are expecting comm_write to call us back */
+    AsyncCall::Pointer requestSender;     /**< set if we are expecting Comm::Write to call us back */
 
 #if USE_ADAPTATION
     BodyPipe::Pointer virginBodyDestination;  /**< to provide virgin response body */

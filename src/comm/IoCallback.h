@@ -1,0 +1,73 @@
+#ifndef _SQUID_COMM_IOCALLBACK_H
+#define _SQUID_COMM_IOCALLBACK_H
+
+#include "config.h"
+#include "base/AsyncCall.h"
+#include "comm_err_t.h"
+
+namespace Comm
+{
+
+/// Type of IO callbacks the Comm layer deals with.
+typedef enum {
+    IOCB_NONE,
+    IOCB_READ,
+    IOCB_WRITE
+} iocb_type;
+
+/// Details about a particular Comm IO callback event.
+class IoCallback
+{
+public:
+    iocb_type type;
+    int fd;
+    AsyncCall::Pointer callback;
+    char *buf;
+    FREE *freefunc;
+    int size;
+    int offset;
+    comm_err_t errcode;
+    int xerrno;
+#if DELAY_POOLS
+    unsigned int quotaQueueReserv; ///< reservation ID from CommQuotaQueue
+#endif
+
+    bool active() const { return callback != NULL; }
+    void setCallback(iocb_type type, AsyncCall::Pointer &cb, char *buf, FREE *func, int sz);
+
+    /// called when fd needs to write but may need to wait in line for its quota
+    void selectOrQueueWrite();
+
+    /// Actively cancel the given callback
+    void cancel(const char *reason);
+
+    /// finish the IO operation imediately and schedule the callback with the current state.
+    void finish(comm_err_t code, int xerrn);
+
+private:
+    void reset();
+};
+
+/// Entry nodes for the IO callback table: iocb_table
+/// Keyed off the FD which the event applies to.
+class CbEntry
+{
+public:
+    int fd;
+    IoCallback  readcb;
+    IoCallback  writecb;
+};
+
+/// Table of scheduled IO events which have yet to be processed ??
+/// Callbacks which might be scheduled in future are stored in fd_table.
+extern CbEntry *iocb_table;
+
+extern void CallbackTableInit();
+extern void CallbackTableDestruct();
+
+#define COMMIO_FD_READCB(fd)    (&Comm::iocb_table[(fd)].readcb)
+#define COMMIO_FD_WRITECB(fd)   (&Comm::iocb_table[(fd)].writecb)
+
+}; // namespace Comm
+
+#endif /* _SQUID_COMM_IOCALLBACK_H */

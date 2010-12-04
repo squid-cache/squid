@@ -32,7 +32,7 @@
  *
  */
 #include "config.h"
-
+#include "comm/Write.h"
 #include "errorpage.h"
 #include "auth/UserRequest.h"
 #include "SquidTime.h"
@@ -461,7 +461,9 @@ errorSend(int fd, ErrorState * err)
     rep = err->BuildHttpReply();
 
     MemBuf *mb = rep->pack();
-    comm_write_mbuf(fd, mb, errorSendComplete, err);
+    AsyncCall::Pointer call = commCbCall(78, 5, "errorSendComplete",
+                                         CommIoCbPtrFun(&errorSendComplete, err));
+    Comm::Write(fd, mb, call);
     delete mb;
 
     delete rep;

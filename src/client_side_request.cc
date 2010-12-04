@@ -59,6 +59,7 @@
 #include "client_side_reply.h"
 #include "client_side_request.h"
 #include "ClientRequestContext.h"
+#include "comm/Write.h"
 #include "compat/inet_pton.h"
 #include "fde.h"
 #include "HttpReply.h"
@@ -1205,8 +1206,9 @@ ClientHttpRequest::sslBumpStart()
     // TODO: Unify with tunnel.cc and add a Server(?) header
     static const char *const conn_established =
         "HTTP/1.1 200 Connection established\r\n\r\n";
-    comm_write(fd, conn_established, strlen(conn_established),
-               &SslBumpEstablish, this, NULL);
+    AsyncCall::Pointer call = commCbCall(85, 5, "ClientSocketContext::sslBumpEstablish",
+                                         CommIoCbPtrFun(&SslBumpEstablish, this));
+    Comm::Write(fd, conn_established, strlen(conn_established), call, NULL);
 }
 
 #endif

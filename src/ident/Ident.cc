@@ -37,6 +37,7 @@
 #if USE_IDENT
 
 #include "comm.h"
+#include "comm/Write.h"
 #include "ident/Config.h"
 #include "ident/Ident.h"
 #include "MemBuf.h"
@@ -149,7 +150,9 @@ Ident::ConnectDone(int fd, const DnsLookupDetails &, comm_err_t status, int xerr
     mb.Printf("%d, %d\r\n",
               state->my_peer.GetPort(),
               state->me.GetPort());
-    comm_write_mbuf(fd, &mb, NULL, state);
+
+    AsyncCall::Pointer nil;
+    Comm::Write(fd, &mb, nil);
     comm_read(fd, state->buf, BUFSIZ, Ident::ReadReply, state);
     commSetTimeout(fd, Ident::TheConfig.timeout, Ident::Timeout, state);
 }

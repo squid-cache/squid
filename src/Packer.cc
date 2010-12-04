@@ -45,7 +45,7 @@
  * Comm.c lacks commAppend[Printf] because comm does not handle its own
  * buffers (no mem_obj equivalent for comm.c).
  *
- * Thus, if one wants to be able to store _and_ comm_write an object, s/he
+ * Thus, if one wants to be able to store _and_ Comm::Write an object, s/he
  * has to implement two almost identical functions.
  *
  * Packer
@@ -55,10 +55,10 @@
  * Packer has its own append and printf routines that "know" where to send
  * incoming data. In case of store interface, Packer sends data to
  * storeAppend.  Otherwise, Packer uses a MemBuf that can be flushed later to
- * comm_write.
+ * Comm::Write.
  *
  * Thus, one can write just one function that will either "pack" things for
- * comm_write or "append" things to store, depending on actual packer
+ * Comm::Write or "append" things to store, depending on actual packer
  * supplied.
  *
  * It is amazing how much work a tiny object can save. :)

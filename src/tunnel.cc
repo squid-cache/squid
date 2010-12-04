@@ -38,6 +38,7 @@
 #include "HttpRequest.h"
 #include "fde.h"
 #include "comm.h"
+#include "comm/Write.h"
 #include "client_side_request.h"
 #include "acl/FilledChecklist.h"
 #if DELAY_POOLS
@@ -321,8 +322,11 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
         if (from.len == 0 && !fd_closed(to.fd()) ) {
             comm_close(to.fd());
         }
-    } else if (cbdataReferenceValid(this))
-        comm_write(to.fd(), from.buf, len, completion, this, NULL);
+    } else if (cbdataReferenceValid(this)) {
+        AsyncCall::Pointer call = commCbCall(5,5, "SomeTunnelWriteHandler",
+                                             CommIoCbPtrFun(completion, this));
+        Comm::Write(to.fd(), from.buf, len, call, NULL);
+    }
 
     cbdataInternalUnlock(this);	/* ??? */
 }
@@ -531,8 +535,9 @@ tunnelConnected(int fd, void *data)
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, "tunnelConnected: FD " << fd << " tunnelState=" << tunnelState);
     *tunnelState->status_ptr = HTTP_OK;
-    comm_write(tunnelState->client.fd(), conn_established, strlen(conn_established),
-               tunnelConnectedWriteDone, tunnelState, NULL);
+    AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
+                                         CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
+    Comm::Write(tunnelState->client.fd(), conn_established, strlen(conn_established), call, NULL);
 }
 
 static void
@@ -742,7 +747,10 @@ tunnelProxyConnected(int fd, void *data)
     packerClean(&p);
     mb.append("\r\n", 2);
 
-    comm_write_mbuf(tunnelState->server.fd(), &mb, tunnelProxyConnectedWriteDone, tunnelState);
+    AsyncCall::Pointer call = commCbCall(5,5, "tunnelProxyConnectedWriteDone",
+                                         CommIoCbPtrFun(tunnelProxyConnectedWriteDone, tunnelState));
+
+    Comm::Write(tunnelState->server.fd(), &mb, call);
     commSetTimeout(tunnelState->server.fd(), Config.Timeout.read, tunnelTimeout, tunnelState);
 }
 

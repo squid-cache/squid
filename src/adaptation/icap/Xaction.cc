@@ -4,6 +4,7 @@
 
 #include "squid.h"
 #include "comm.h"
+#include "comm/Write.h"
 #include "CommCalls.h"
 #include "HttpMsg.h"
 #include "adaptation/icap/Xaction.h"
@@ -237,7 +238,7 @@ void Adaptation::Icap::Xaction::scheduleWrite(MemBuf &buf)
     writer = JobCallback(93,3,
                          Dialer, this, Adaptation::Icap::Xaction::noteCommWrote);
 
-    comm_write_mbuf(connection, &buf, writer);
+    Comm::Write(connection, &buf, writer);
     updateTimeout();
 }
 
