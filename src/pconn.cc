@@ -207,6 +207,7 @@ IdleConnList::Read(const Comm::ConnectionPointer &conn, char *buf, size_t len, c
     if (index >= 0) {
         /* might delete list */
         list->removeAt(index);
+        list->clearHandlers(conn);
     }
     // else we lost a race.
     // Somebody started using the pconn since the remote end disconnected.
