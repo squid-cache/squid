@@ -167,8 +167,8 @@ void Adaptation::Icap::Xaction::closeConnection()
         if (reuseConnection) {
             //status() adds leading spaces.
             debugs(93,3, HERE << "pushing pconn" << status());
-            AsyncCall::Pointer nul;
-            commSetTimeout(connection->fd, -1, nul);
+            AsyncCall::Pointer nil;
+            commUnsetConnTimeout(connection);
             icapPconnPool->push(connection, NULL);
             disableRetries();
         } else {
@@ -308,12 +308,11 @@ void Adaptation::Icap::Xaction::updateTimeout()
         // TODO: service bypass status may differ from that of a transaction
         typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommTimeoutCbParams> TimeoutDialer;
         AsyncCall::Pointer call = JobCallback(93, 5, TimeoutDialer, this, Adaptation::Icap::Xaction::noteCommTimedout);
-        commSetTimeout(connection->fd, TheConfig.io_timeout(service().cfg().bypass), call);
+        commSetConnTimeout(connection, TheConfig.io_timeout(service().cfg().bypass), call);
     } else {
         // clear timeout when there is no I/O
         // Do we need a lifetime timeout?
-        AsyncCall::Pointer call = NULL;
-        commSetTimeout(connection->fd, -1, call);
+        commUnsetConnTimeout(connection);
     }
 }
 

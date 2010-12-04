@@ -626,12 +626,11 @@ FtpStateData::loginParser(const char *login, int escaped)
 void
 FtpStateData::switchTimeoutToDataChannel()
 {
-    AsyncCall::Pointer nullCall = NULL;
-    commSetTimeout(ctrl.conn->fd, -1, nullCall);
+    commUnsetConnTimeout(ctrl.conn);
 
     typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall = JobCallback(9, 5, TimeoutDialer, this, FtpStateData::ftpTimeout);
-    commSetTimeout(data.conn->fd, Config.Timeout.read, timeoutCall);
+    commSetConnTimeout(data.conn, Config.Timeout.read, timeoutCall);
 }
 
 void
@@ -649,9 +648,9 @@ FtpStateData::listenForDataChannel(const Comm::ConnectionPointer &conn, const ch
 void
 FtpStateData::ftpTimeout(const CommTimeoutCbParams &io)
 {
-    debugs(9, 4, "ftpTimeout: FD " << io.fd << ": '" << entry->url() << "'" );
+    debugs(9, 4, HERE << io.conn << ": '" << entry->url() << "'" );
 
-    if (SENT_PASV == state && io.fd == data.conn->fd) {
+    if (SENT_PASV == state && io.conn->fd == data.conn->fd) {
         /* stupid ftp.netscape.com */
         flags.pasv_supported = false;
         debugs(9, DBG_IMPORTANT, "ftpTimeout: timeout in SENT_PASV state" );
@@ -1202,7 +1201,7 @@ FtpStateData::maybeReadVirginBody()
     typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(9, 5,
                                       TimeoutDialer, this, FtpStateData::ftpTimeout);
-    commSetTimeout(data.conn->fd, Config.Timeout.read, timeoutCall);
+    commSetConnTimeout(data.conn, Config.Timeout.read, timeoutCall);
 
     debugs(9,5,HERE << "queueing read on FD " << data.conn->fd);
 
@@ -1259,7 +1258,7 @@ FtpStateData::dataRead(const CommIoCbParams &io)
             typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
             AsyncCall::Pointer timeoutCall = JobCallback(9, 5,
                                              TimeoutDialer, this, FtpStateData::ftpTimeout);
-            commSetTimeout(io.fd, Config.Timeout.read, timeoutCall);
+            commSetConnTimeout(io.conn, Config.Timeout.read, timeoutCall);
 
             maybeReadVirginBody();
         } else {
@@ -1699,13 +1698,12 @@ FtpStateData::scheduleReadControlReply(int buffered_ok)
          * establish one on the control socket.
          */
         if (Comm::IsConnOpen(data.conn)) {
-            AsyncCall::Pointer nullCall = NULL;
-            commSetTimeout(data.conn->fd, -1, nullCall);
+            commUnsetConnTimeout(data.conn);
         }
 
         typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
         AsyncCall::Pointer timeoutCall = JobCallback(9, 5, TimeoutDialer, this, FtpStateData::ftpTimeout);
-        commSetTimeout(ctrl.conn->fd, Config.Timeout.read, timeoutCall);
+        commSetConnTimeout(ctrl.conn, Config.Timeout.read, timeoutCall);
 
         typedef CommCbMemFunT<FtpStateData, CommIoCbParams> Dialer;
         AsyncCall::Pointer reader = JobCallback(9, 5, Dialer, this, FtpStateData::ftpReadControlReply);
@@ -2571,8 +2569,7 @@ ftpSendPassive(FtpStateData * ftpState)
     typedef CommCbMemFunT<FtpStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(9, 5,
                                       TimeoutDialer, ftpState, FtpStateData::ftpTimeout);
-
-    commSetTimeout(ftpState->ctrl.conn->fd, Config.Timeout.connect, timeoutCall);
+    commSetConnTimeout(ftpState->ctrl.conn, Config.Timeout.connect, timeoutCall);
 }
 
 void

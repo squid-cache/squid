@@ -53,12 +53,12 @@ void Ipc::UdsOp::setTimeout(int seconds, const char *handlerName)
     typedef CommCbMemFunT<UdsOp, CommTimeoutCbParams> Dialer;
     AsyncCall::Pointer handler = asyncCall(54,5, handlerName,
                                            Dialer(CbcPointer<UdsOp>(this), &UdsOp::noteTimeout));
-    commSetTimeout(conn()->fd, seconds, handler);
+    commSetConnTimeout(conn(), seconds, handler);
 }
 
 void Ipc::UdsOp::clearTimeout()
 {
-    commSetTimeout(conn()->fd, -1, NULL, NULL); // TODO: add Comm::ClearTimeout(fd)
+    commUnsetConnTimeout(conn());
 }
 
 void Ipc::UdsOp::noteTimeout(const CommTimeoutCbParams &)

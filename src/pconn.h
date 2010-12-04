@@ -52,7 +52,7 @@ private:
     bool removeAt(int index);
     int findIndexOf(const Comm::ConnectionPointer &conn) const;
     static IOCB Read;
-    static PF Timeout;
+    static CTCB Timeout;
 
 public:
     hash_link hash;             /** must be first */

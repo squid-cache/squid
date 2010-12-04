@@ -65,7 +65,7 @@ Comm::ConnOpener::swanSong()
     if (conn_ != NULL && conn_->isOpen()) {
         // drop any handlers now to save a lot of cycles later
         commSetSelect(conn_->fd, COMM_SELECT_WRITE, NULL, NULL, 0);
-        commSetTimeout(conn_->fd, -1, NULL, NULL);
+        commUnsetConnTimeout(conn_);
         // it never reached fully open, so abort the FD
         conn_->close();
     }
@@ -161,7 +161,7 @@ Comm::ConnOpener::start()
     typedef CommCbMemFunT<Comm::ConnOpener, CommTimeoutCbParams> timeoutDialer;
     calls_.timeout_ = JobCallback(5, 4, timeoutDialer, this, Comm::ConnOpener::timeout);
     debugs(5, 3, HERE << conn_ << " timeout " << connectTimeout_);
-    commSetTimeout(conn_->fd, connectTimeout_, calls_.timeout_);
+    commSetConnTimeout(conn_, connectTimeout_, calls_.timeout_);
 
     connectStart_ = squid_curtime;
     connect();
@@ -285,7 +285,7 @@ Comm::ConnOpener::earlyAbort(const CommConnectCbParams &io)
 
 /**
  * Handles the case(s) when a partially setup connection gets timed out.
- * NP: When commSetTimeout accepts generic CommCommonCbParams this can die.
+ * NP: When commSetConnTimeout accepts generic CommCommonCbParams this can die.
  */
 void
 Comm::ConnOpener::timeout(const CommTimeoutCbParams &)

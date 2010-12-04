@@ -15,15 +15,19 @@
  * The classes cover two call dialer kinds:
  *     - A C-style call using a function pointer (depricated);
  *     - A C++-style call to an AsyncJob child.
- * and three comm_* callback kinds:
- *     - accept (IOACB),
- *     - connect (CNCB),
- *     - I/O (IOCB).
+ * and several comm_* callback kinds:
+ *     - accept (IOACB)
+ *     - connect (CNCB)
+ *     - I/O (IOCB)
+ *     - timeout (CTCB)
  */
 
 typedef void IOACB(int fd, const Comm::ConnectionPointer &details, comm_err_t flag, int xerrno, void *data);
 typedef void CNCB(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data);
 typedef void IOCB(const Comm::ConnectionPointer &conn, char *, size_t size, comm_err_t flag, int xerrno, void *data);
+
+class CommTimeoutCbParams;
+typedef void CTCB(const CommTimeoutCbParams &params);
 
 /*
  * TODO: When there are no function-pointer-based callbacks left, all
@@ -62,7 +66,7 @@ public:
      * \itemize On read calls this is the connection just read from.
      * \itemize On close calls this describes the connection which is now closed.
      * \itemize On timeouts this is the connection whose operation timed out.
-     *          NP: timeouts should now return to the connect/read/write handler with COMM_ERR_TIMEOUT.
+     *          NP: timeouts might also return to the connect/read/write handler with COMM_ERR_TIMEOUT.
      */
     Comm::ConnectionPointer conn;
 
@@ -249,13 +253,13 @@ class CommTimeoutCbPtrFun:public CallDialer,
 public:
     typedef CommTimeoutCbParams Params;
 
-    CommTimeoutCbPtrFun(PF *aHandler, const Params &aParams);
+    CommTimeoutCbPtrFun(CTCB *aHandler, const Params &aParams);
     void dial();
 
     virtual void print(std::ostream &os) const;
 
 public:
-    PF *handler;
+    CTCB *handler;
 };
 
 // AsyncCall to comm handlers implemented as global functions.

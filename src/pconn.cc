@@ -118,7 +118,7 @@ IdleConnList::clearHandlers(const Comm::ConnectionPointer &conn)
 {
     debugs(48, 3, HERE << "removing close handler for " << conn);
     comm_read_cancel(conn->fd, IdleConnList::Read, this);
-    commSetTimeout(conn->fd, -1, NULL, NULL);
+    commUnsetConnTimeout(conn);
 }
 
 void
@@ -141,10 +141,12 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
     }
 
     theList_[size_++] = conn;
-    AsyncCall::Pointer call = commCbCall(5,4, "IdleConnList::Read",
-                                         CommIoCbPtrFun(IdleConnList::Read, this));
-    comm_read(conn, fakeReadBuf_, sizeof(fakeReadBuf_), call);
-    commSetTimeout(conn->fd, Config.Timeout.pconn, IdleConnList::Timeout, this);
+    AsyncCall::Pointer readCall = commCbCall(5,4, "IdleConnList::Read",
+                                             CommIoCbPtrFun(IdleConnList::Read, this));
+    comm_read(conn, fakeReadBuf_, sizeof(fakeReadBuf_), readCall);
+    AsyncCall::Pointer timeoutCall = commCbCall(5,4, "IdleConnList::Read",
+                                                CommTimeoutCbPtrFun(IdleConnList::Timeout, this));
+    commSetConnTimeout(conn, Config.Timeout.pconn, timeoutCall);
 }
 
 /*
@@ -219,19 +221,16 @@ IdleConnList::Read(const Comm::ConnectionPointer &conn, char *buf, size_t len, c
 }
 
 void
-IdleConnList::Timeout(int fd, void *data)
+IdleConnList::Timeout(const CommTimeoutCbParams &io)
 {
-    debugs(48, 3, HERE << "FD " << fd);
-    IdleConnList *list = (IdleConnList *) data;
-    Comm::ConnectionPointer temp = new Comm::Connection; // XXX: transition. make timeouts pass conn in
-    temp->fd = fd;
-    int index = list->findIndexOf(temp);
+    debugs(48, 3, HERE << io.conn);
+    IdleConnList *list = static_cast<IdleConnList *>(io.data);
+    int index = list->findIndexOf(io.conn);
     if (index >= 0) {
         /* might delete list */
         list->removeAt(index);
-        temp->close();
-    } else
-        temp->fd = -1; // XXX: transition. prevent temp erasure double-closing FD until timeout CB passess conn in.
+        io.conn->close();
+    }
 }
 
 /* ========== PconnPool PRIVATE FUNCTIONS ============================================ */
