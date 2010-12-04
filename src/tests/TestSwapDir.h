@@ -12,7 +12,7 @@ public:
 
     bool statsCalled;
 
-    virtual size_t maxSize() const;
+    virtual uint64_t maxSize() const;
     virtual void stat(StoreEntry &) const; /* output stats to the provided store entry */
 
     virtual void reconfigure(int, char*);
