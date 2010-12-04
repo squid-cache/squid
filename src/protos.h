@@ -294,21 +294,21 @@ SQUIDCEXTERN void addr2oid(Ip::Address &addr, oid *Dest);
 SQUIDCEXTERN void oid2addr(oid *Dest, Ip::Address &addr, u_int code);
 
 SQUIDCEXTERN Ip::Address *client_entry(Ip::Address *current);
-SQUIDCEXTERN variable_list *snmp_basicFn(variable_list *, snint *);
-SQUIDCEXTERN variable_list *snmp_confFn(variable_list *, snint *);
-SQUIDCEXTERN variable_list *snmp_sysFn(variable_list *, snint *);
-SQUIDCEXTERN variable_list *snmp_prfSysFn(variable_list *, snint *);
-SQUIDCEXTERN variable_list *snmp_prfProtoFn(variable_list *, snint *);
-SQUIDCEXTERN variable_list *snmp_prfPeerFn(variable_list *, snint *);
-SQUIDCEXTERN variable_list *snmp_netIpFn(variable_list *, snint *);
-SQUIDCEXTERN variable_list *snmp_netFqdnFn(variable_list *, snint *);
+extern variable_list *snmp_basicFn(variable_list *, snint *);
+extern variable_list *snmp_confFn(variable_list *, snint *);
+extern variable_list *snmp_sysFn(variable_list *, snint *);
+extern variable_list *snmp_prfSysFn(variable_list *, snint *);
+extern variable_list *snmp_prfProtoFn(variable_list *, snint *);
+extern variable_list *snmp_prfPeerFn(variable_list *, snint *);
+extern variable_list *snmp_netIpFn(variable_list *, snint *);
+extern variable_list *snmp_netFqdnFn(variable_list *, snint *);
 #if USE_DNSSERVERS
-SQUIDCEXTERN variable_list *snmp_netDnsFn(variable_list *, snint *);
+extern variable_list *snmp_netDnsFn(variable_list *, snint *);
 #else
-SQUIDCEXTERN variable_list *snmp_netIdnsFn(variable_list *, snint *);
+extern variable_list *snmp_netIdnsFn(variable_list *, snint *);
 #endif /* USE_DNSSERVERS */
-SQUIDCEXTERN variable_list *snmp_meshPtblFn(variable_list *, snint *);
-SQUIDCEXTERN variable_list *snmp_meshCtblFn(variable_list *, snint *);
+extern variable_list *snmp_meshPtblFn(variable_list *, snint *);
+extern variable_list *snmp_meshCtblFn(variable_list *, snint *);
 #endif /* SQUID_SNMP */
 
 #if USE_WCCP
@@ -526,7 +526,7 @@ SQUIDCEXTERN void storeDigestInit(void);
 SQUIDCEXTERN void storeDigestNoteStoreReady(void);
 SQUIDCEXTERN void storeDigestScheduleRebuild(void);
 SQUIDCEXTERN void storeDigestDel(const StoreEntry * entry);
-SQUIDCEXTERN void storeDigestReport(StoreEntry *);
+extern void storeDigestReport(StoreEntry *);
 
 /*
  * store_rebuild.c
@@ -556,10 +556,9 @@ SQUIDCEXTERN int storeClientIsThisAClient(store_client * sc, void *someClient);
 SQUIDCEXTERN const char *getMyHostname(void);
 SQUIDCEXTERN const char *uniqueHostname(void);
 SQUIDCEXTERN void safeunlink(const char *path, int quiet);
+
+#include "fatal.h"
 void death(int sig);
-SQUIDCEXTERN void fatal(const char *message);
-SQUIDCEXTERN void fatalf(const char *fmt,...) PRINTF_FORMAT_ARG1;
-SQUIDCEXTERN void fatal_dump(const char *message);
 void sigusr2_handle(int sig);
 void sig_child(int sig);
 SQUIDCEXTERN void leave_suid(void);
@@ -569,7 +568,7 @@ SQUIDCEXTERN void writePidFile(void);
 SQUIDCEXTERN void setSocketShutdownLifetimes(int);
 SQUIDCEXTERN void setMaxFD(void);
 SQUIDCEXTERN void setSystemLimits(void);
-SQUIDCEXTERN void squid_signal(int sig, SIGHDLR *, int flags);
+extern void squid_signal(int sig, SIGHDLR *, int flags);
 SQUIDCEXTERN pid_t readPidFile(void);
 SQUIDCEXTERN void keepCapabilities(void);
 SQUIDCEXTERN void BroadcastSignalIfAny(int& sig);

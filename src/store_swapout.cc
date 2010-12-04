@@ -47,6 +47,12 @@ static void storeSwapOutStart(StoreEntry * e);
 static StoreIOState::STIOCB storeSwapOutFileClosed;
 static StoreIOState::STFNCB storeSwapOutFileNotify;
 
+// wrapper to cross C/C++ ABI boundary. xfree is extern "C" for libraries.
+static void xfree_cppwrapper(void *x)
+{
+    xfree(x);
+}
+
 /* start swapping object to disk */
 static void
 storeSwapOutStart(StoreEntry * e)
@@ -96,7 +102,7 @@ storeSwapOutStart(StoreEntry * e)
     e->swap_dirn = mem->swapout.sio->swap_dirn;
 
     /* write out the swap metadata */
-    storeIOWrite(mem->swapout.sio, buf, mem->swap_hdr_sz, 0, xfree);
+    storeIOWrite(mem->swapout.sio, buf, mem->swap_hdr_sz, 0, xfree_cppwrapper);
 }
 
 static void

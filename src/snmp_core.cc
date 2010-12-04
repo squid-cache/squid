@@ -99,7 +99,7 @@ static oid_ParseFn *snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, s
 static oid_ParseFn *snmpTreeGet(oid * Current, snint CurrentLen);
 static mib_tree_entry *snmpTreeEntry(oid entry, snint len, mib_tree_entry * current);
 static mib_tree_entry *snmpTreeSiblingEntry(oid entry, snint len, mib_tree_entry * current);
-static void snmpSnmplibDebug(int lvl, char *buf);
+extern "C" void snmpSnmplibDebug(int lvl, char *buf);
 
 /*
  * The functions used during startup:
@@ -1138,7 +1138,7 @@ snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf)
     return outbuf.content();
 }
 
-static void
+void
 snmpSnmplibDebug(int lvl, char *buf)
 {
     debugs(49, lvl, buf);
