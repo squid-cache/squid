@@ -89,7 +89,7 @@ extern void comm_remove_close_handler(int fd, AsyncCall::Pointer &);
 
 extern int comm_has_pending_read_callback(int fd);
 extern bool comm_monitors_read(int fd);
-extern void comm_read(const Comm::ConnectionPointer &conn, char *buf, int len, IOCB *handler, void *data);
+//extern void comm_read(const Comm::ConnectionPointer &conn, char *buf, int len, IOCB *handler, void *data);
 extern void comm_read(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer &callback);
 extern void comm_read_cancel(int fd, IOCB *callback, void *data);
 extern void comm_read_cancel(int fd, AsyncCall::Pointer &callback);
