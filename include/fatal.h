@@ -3,6 +3,6 @@
 
 SQUIDCEXTERN void fatal(const char *message);
 SQUIDCEXTERN void fatalf(const char *fmt,...) PRINTF_FORMAT_ARG1;
-SQUIDCEXTERN void fatal_dump(const char *message);
+extern void fatal_dump(const char *message);
 
-#endif
+#endif /* SQUID_FATAL_H */
