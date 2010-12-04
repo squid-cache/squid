@@ -151,10 +151,7 @@ commHandleRead(int fd, void *data)
     commSetSelect(fd, COMM_SELECT_READ, commHandleRead, data, 0);
 }
 
-/**
- * Queue a read. handler/handler_data are called when the read
- * completes, on error, or on file descriptor close.
- */
+#if 0 // obsolete wrapper.
 void
 comm_read(const Comm::ConnectionPointer &conn, char *buf, int size, IOCB *handler, void *handler_data)
 {
@@ -162,7 +159,12 @@ comm_read(const Comm::ConnectionPointer &conn, char *buf, int size, IOCB *handle
                                          CommIoCbPtrFun(handler, handler_data));
     comm_read(conn, buf, size, call);
 }
+#endif
 
+/**
+ * Queue a read. handler/handler_data are called when the read
+ * completes, on error, or on file descriptor close.
+ */
 void
 comm_read(const Comm::ConnectionPointer &conn, char *buf, int size, AsyncCall::Pointer &callback)
 {

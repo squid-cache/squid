@@ -50,6 +50,7 @@ namespace Ident
 
 #define IDENT_PORT 113
 #define IDENT_KEY_SZ 50
+#define IDENT_BUFSIZE 4096
 
 typedef struct _IdentClient {
     IDCB *callback;
@@ -62,7 +63,7 @@ typedef struct _IdentStateData {
     hash_link hash;		/* must be first */
     Comm::ConnectionPointer conn;
     IdentClient *clients;
-    char buf[4096];
+    char buf[IDENT_BUFSIZE];
 } IdentStateData;
 
 // TODO: make these all a series of Async job calls. They are self-contained callbacks now.
@@ -156,7 +157,9 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int x
               conn->local.GetPort());
     AsyncCall::Pointer nil;
     Comm::Write(conn, &mb, nil);
-    comm_read(conn, state->buf, BUFSIZ, Ident::ReadReply, state);
+    AsyncCall::Pointer call = commCbCall(5,4, "Ident::ReadReply",
+                                         CommIoCbPtrFun(Ident::ReadReply, state));
+    comm_read(conn, state->buf, IDENT_BUFSIZE, call);
     commSetTimeout(conn->fd, Ident::TheConfig.timeout, Ident::Timeout, state);
 }
 

@@ -101,11 +101,12 @@ whoisStart(FwdState * fwd)
     String str_print=p->request->urlpath.substr(1,p->request->urlpath.size());
     snprintf(buf, l, SQUIDSTRINGPH"\r\n", SQUIDSTRINGPRINT(str_print));
 
-    AsyncCall::Pointer call = commCbCall(5,5, "whoisWriteComplete",
-                                         CommIoCbPtrFun(whoisWriteComplete, p));
-
-    Comm::Write(fwd->serverConnection(), buf, strlen(buf), call, NULL);
-    comm_read(fwd->serverConnection(), p->buf, BUFSIZ, whoisReadReply, p);
+    AsyncCall::Pointer writeCall = commCbCall(5,5, "whoisWriteComplete",
+                                              CommIoCbPtrFun(whoisWriteComplete, p));
+    Comm::Write(fwd->serverConnection(), buf, strlen(buf), writeCall, NULL);
+    AsyncCall::Pointer readCall = commCbCall(5,4, "whoisReadReply",
+                                             CommIoCbPtrFun(whoisReadReply, p));
+    comm_read(fwd->serverConnection(), p->buf, BUFSIZ, readCall);
     commSetTimeout(fwd->serverConnection()->fd, Config.Timeout.read, whoisTimeout, p);
 }
 
@@ -192,8 +193,11 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
         do_next_read = 0;
     }
 
-    if (do_next_read)
-        comm_read(conn, aBuffer, BUFSIZ, whoisReadReply, this);
+    if (do_next_read) {
+        AsyncCall::Pointer call = commCbCall(5,4, "whoisReadReply",
+                                             CommIoCbPtrFun(whoisReadReply, this));
+        comm_read(conn, aBuffer, BUFSIZ, call);
+    }
 }
 
 static void
