@@ -72,14 +72,11 @@ UFSSwapDir::canStore(StoreEntry const &e)const
 void
 UFSSwapDir::parseSizeL1L2()
 {
-    int i;
-    int size;
-
-    i = GetInteger();
-    size = i << 10;		/* Mbytes to kbytes */
-
-    if (size <= 0)
+    int i = GetInteger();
+    if (i <= 0)
         fatal("UFSSwapDir::parseSizeL1L2: invalid size value");
+
+    size_t size = i << 10;		/* Mbytes to kbytes */
 
     /* just reconfigure it */
     if (reconfiguring) {
@@ -315,10 +312,10 @@ UFSSwapDir::statfs(StoreEntry & sentry) const
     int x;
     storeAppendPrintf(&sentry, "First level subdirectories: %d\n", l1);
     storeAppendPrintf(&sentry, "Second level subdirectories: %d\n", l2);
-    storeAppendPrintf(&sentry, "Maximum Size: %d KB\n", max_size);
-    storeAppendPrintf(&sentry, "Current Size: %d KB\n", cur_size);
+    storeAppendPrintf(&sentry, "Maximum Size: %"PRIu64" KB\n", max_size);
+    storeAppendPrintf(&sentry, "Current Size: %"PRIu64" KB\n", cur_size);
     storeAppendPrintf(&sentry, "Percent Used: %0.2f%%\n",
-                      100.0 * cur_size / max_size);
+                      (double)(100.0 * cur_size) / (double)max_size);
     storeAppendPrintf(&sentry, "Filemap bits in use: %d of %d (%d%%)\n",
                       map->n_files_in_map, map->max_n_files,
                       Math::intPercent(map->n_files_in_map, map->max_n_files));
@@ -381,7 +378,7 @@ UFSSwapDir::maintain()
     walker = repl->PurgeInit(repl, max_scan);
 
     while (1) {
-        if (cur_size < (int) minSize()) /* cur_size should be unsigned */
+        if (cur_size < minSize())
             break;
 
         if (removed >= max_remove)
@@ -1326,10 +1323,7 @@ UFSSwapDir::replacementRemove(StoreEntry * e)
 void
 UFSSwapDir::dump(StoreEntry & entry) const
 {
-    storeAppendPrintf(&entry, " %d %d %d",
-                      max_size >> 10,
-                      l1,
-                      l2);
+    storeAppendPrintf(&entry, " %"PRIu64" %d %d", (max_size >> 10), l1, l2);
     dumpOptions(&entry);
 }
 
