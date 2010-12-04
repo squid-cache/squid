@@ -589,7 +589,12 @@ HttpReply::calcMaxBodySize(HttpRequest& request)
     bodySizeMax = -1;
 
     ACLFilledChecklist ch(NULL, &request, NULL);
-    ch.src_addr = request.client_addr;
+#if FOLLOW_X_FORWARDED_FOR
+    if (Config.onoff.acl_uses_indirect_client)
+        ch.src_addr = request.indirect_client_addr;
+    else
+#endif
+        ch.src_addr = request.client_addr;
     ch.my_addr = request.my_addr;
     ch.reply = HTTPMSGLOCK(this); // XXX: this lock makes method non-const
     for (acl_size_t *l = Config.ReplyBodySize; l; l = l -> next) {
