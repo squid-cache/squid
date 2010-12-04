@@ -126,8 +126,8 @@ static int client_comm_connect(int, const Ip::Address &, struct timeval *);
 static void usage(const char *progname);
 
 static int Now(struct timeval *);
-static SIGHDLR catchSignal;
-static SIGHDLR pipe_handler;
+SIGHDLR catchSignal;
+SIGHDLR pipe_handler;
 static void set_our_signal(void);
 static ssize_t myread(int fd, void *buf, size_t len);
 static ssize_t mywrite(int fd, void *buf, size_t len);
@@ -758,14 +758,14 @@ Now(struct timeval *tp)
 #endif
 }				/* ARGSUSED */
 
-static void
+void
 catchSignal(int sig)
 {
     interrupted = 1;
     fprintf(stderr, "Interrupted.\n");
 }
 
-static void
+void
 pipe_handler(int sig)
 {
     fprintf(stderr, "SIGPIPE received.\n");
