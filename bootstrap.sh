@@ -1,5 +1,5 @@
 #!/bin/sh
-# Used to setup the configure.in, autoheader and Makefile.in's if configure
+# Used to setup the configure.ac, autoheader and Makefile.in's if configure
 # has not been generated. This script is only needed for developers when
 # configure has not been run, or if a Makefile.am in a non-configured directory
 # has been updated
@@ -76,7 +76,7 @@ bootstrap_libtoolize() {
 
     # TODO: when we have libtool2, tell libtoolize where to put its files
     # instead of manualy moving files from ltdl to lib/libLtdl
-    if egrep -q '^[[:space:]]*AC_LIBLTDL_' configure.in
+    if egrep -q '^[[:space:]]*AC_LIBLTDL_' configure.ac
     then
 	ltdl="--ltdl"
     else
