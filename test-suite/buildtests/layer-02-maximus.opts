@@ -39,6 +39,8 @@ MAKETEST="distcheck"
 #   --enable-win32-service \
 #   --with-valgrind-debug \
 #
+#   --enable-cpu-profiling \  Requires CPU support.
+#
 #
 # NP: DISTCHECK_CONFIGURE_FLAGS is a magic automake macro for the 
 #     distcheck target recursive tests beteen scripted runs.
@@ -89,7 +91,6 @@ DISTCHECK_CONFIGURE_FLAGS=" \
 	--enable-mempools \
 	--enable-unlinkd \
 	--enable-stacktraces \
-	--enable-cpu-profiling \
 	--enable-vary \
 	--enable-x-accelerator-vary \
 	--enable-ipv6 \

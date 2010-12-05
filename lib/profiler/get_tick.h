@@ -3,6 +3,10 @@
 
 #if USE_XPROF_STATS
 
+/*
+ * Ensure that any changes here are synchronised with SQUID_CHECK_FUNCTIONAL_CPU_PROFILER
+ */
+
 #if !_SQUID_SOLARIS_
 typedef int64_t  hrtime_t;
 #endif
@@ -57,9 +61,8 @@ get_tick(void)
 
 #else
 /* This CPU is unsupported. Short-circuit, no profiling here */
-#define get_tick() 0
-#undef USE_XPROF_STATS
-#define USE_XPROF_STATS 0
+// #error for configure tests to prevent library construction
+#error This CPU is unsupported. No profiling available here.
 #endif
 
 #endif /* USE_XPROF_STATS */
