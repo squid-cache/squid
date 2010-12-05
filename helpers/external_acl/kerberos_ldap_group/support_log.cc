@@ -41,7 +41,8 @@ LogTime()
 
     gettimeofday(&now, NULL);
     if (now.tv_sec != last_t) {
-        tm = localtime(&now.tv_sec);
+        time_t tmp = now.tv_sec;
+        tm = localtime(&tmp);
         strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
         last_t = now.tv_sec;
     }
