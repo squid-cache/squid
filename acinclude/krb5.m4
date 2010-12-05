@@ -51,6 +51,42 @@ int i;
 ]) dnl SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
 
 
+AC_DEFUN([SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H], [
+  AC_CACHE_CHECK([for broken Heimdal krb5.h],squid_cv_broken_heimdal_krb5_h, [
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#include <krb5.h>
+int
+main(void)
+{
+        krb5_context context;
+
+        krb5_init_context(&context);
+
+        return 0;
+}
+]])], [ squid_cv_broken_heimdal_krb5_h=no ], [
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#if defined(__cplusplus)
+extern "C" {
+#endif
+#include <krb5.h>
+#if defined(__cplusplus)
+}
+#endif
+int
+main(void)
+{
+        krb5_context context;
+
+        krb5_init_context(&context);
+
+        return 0;
+}
+]])], [ squid_cv_broken_heimdal_krb5_h=yes ], [ squid_cv_broken_heimdal_krb5_h=no ])
+    ])
+  ])
+]) dnl SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
+
 dnl check the max skew in the krb5 context, and sets squid_cv_max_skew_context
 AC_DEFUN([SQUID_CHECK_MAX_SKEW_IN_KRB5_CONTEXT],[
   AC_CACHE_CHECK([for max_skew in struct krb5_context],
@@ -195,7 +231,13 @@ AC_DEFUN([SQUID_CHECK_WORKING_KRB5],[
 KRB5INT_BEGIN_DECLS
 #endif
 #endif
+#if HAVE_BROKEN_HEIMDAL_KRB5_H
+extern "C" {
 #include <krb5.h>
+}
+#else
+#include <krb5.h>
+#endif
 #endif
 
 int
