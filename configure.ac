@@ -284,6 +284,12 @@ dnl TODO: check if the problem will be present in any other newer MinGW release.
   mingw|mingw32)
     SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments"
     ;;
+  freebsd*)
+    # FreeBSD places local libraries and packages in /usr/local
+    CFLAGS="$CFLAGS -I/usr/local/include"
+    CXXFLAGS="$CXXFLAGS -I/usr/local/include"
+    LDFLAGS="$LDFLAGS -L/usr/local/lib -Wl,-R/usr/local/lib"
+    ;;
   *)
     SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
     ;;
