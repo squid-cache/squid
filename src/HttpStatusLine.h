@@ -36,9 +36,6 @@
 class Packer;
 class String;
 
-/* for SQUIDCEXTERN */
-#include "config.h"
-
 /* for http_status and protocol_t */
 #include "enums.h"
 

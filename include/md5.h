@@ -1,8 +1,6 @@
 #ifndef SQUID_MD5_H
 #define SQUID_MD5_H
 
-#include "config.h"
-
 /*
  * This is the header file for the MD5 message-digest algorithm.
  * The algorithm is due to Ron Rivest.  This code was

@@ -32,6 +32,7 @@
  *
  */
 
+#include "config.h"
 #include "EventLoop.h"
 #include "base/AsyncCallQueue.h"
 

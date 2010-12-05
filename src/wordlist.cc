@@ -33,6 +33,7 @@
  *
  */
 
+#include "config.h"
 #include "wordlist.h"
 #include "MemBuf.h"
 

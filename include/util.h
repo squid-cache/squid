@@ -34,8 +34,6 @@
 #ifndef SQUID_UTIL_H
 #define SQUID_UTIL_H
 
-#include "config.h"
-
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif
@@ -66,10 +64,6 @@ SQUIDCEXTERN void Tolower(char *);
 #endif
 #endif
 #include "SquidNew.h"
-#endif
-
-#if 0 && XMALLOC_STATISTICS
-SQUIDCEXTERN void malloc_statistics(void (*)(int, int, int, void *), void *);
 #endif
 
 #if XMALLOC_TRACE

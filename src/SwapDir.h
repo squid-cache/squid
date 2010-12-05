@@ -62,9 +62,9 @@ public:
 
     virtual void maintain(); /* perform regular maintenance should be private and self registered ... */
 
-    virtual size_t maxSize() const;
+    virtual uint64_t maxSize() const;
 
-    virtual size_t minSize() const;
+    virtual uint64_t minSize() const;
 
     virtual void stat(StoreEntry &) const;
 
@@ -129,9 +129,9 @@ public:
 
     virtual void get(String const, STOREGETCLIENT, void * cbdata);
 
-    virtual size_t maxSize() const { return max_size;}
+    virtual uint64_t maxSize() const { return max_size;}
 
-    virtual size_t minSize() const;
+    virtual uint64_t minSize() const;
     virtual void stat (StoreEntry &anEntry) const;
     virtual StoreSearch *search(String const url, HttpRequest *) = 0;
 
@@ -153,8 +153,8 @@ private:
     char const *theType;
 
 public:
-    size_t cur_size;
-    size_t max_size;
+    uint64_t cur_size;        ///< currently used space in the storage area
+    uint64_t max_size;        ///< maximum allocatable size of the storage area
     char *path;
     int index;			/* This entry's index into the swapDirs array */
     int64_t max_objsize;

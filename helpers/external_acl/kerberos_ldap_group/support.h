@@ -28,53 +28,49 @@
 #include <string.h>
 #endif
 
-#if HAVE_HEIMDAL_KERBEROS
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
 #include <gssapi.h>
 #endif /* HAVE_GSSAPI_GSSAPI_H/HAVE_GSSAPI_H */
-#if HAVE_KRB5_H
-#if HAVE_BROKEN_SOLARIS_KRB5_H
-#warn "Warning! You have a broken Solaris <krb5.h> fsystem header"
-#warn "http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512"
-#endif /* HAVE_BROKEN_SOLARIS_KRB5_H */
-#include <krb5.h>
-#endif /* HAVE_KRB5_H */
-#if HAVE_COM_ERR_H
-#include <com_err.h>
-#else
-#define error_message(code) krb5_get_err_text(kparam.context,code)
-#endif /* HAVE_COM_ERR_H */
-#else /*MIT */
-#ifdef HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif defined(HAVE_GSSAPI_H)
-#include <gssapi.h>
-#endif
-#ifdef HAVE_GSSAPI_GSSAPI_KRB5_H
+
+#if !HAVE_HEIMDAL_KERBEROS
+#if HAVE_GSSAPI_GSSAPI_KRB5_H
 #include <gssapi/gssapi_krb5.h>
 #endif
-#ifdef HAVE_GSSAPI_GSSAPI_GENERIC_H
+#if HAVE_GSSAPI_GSSAPI_GENERIC_H
 #include <gssapi/gssapi_generic.h>
 #endif
-#ifdef HAVE_GSSAPI_GSSAPI_EXT_H
+#if HAVE_GSSAPI_GSSAPI_EXT_H
 #include <gssapi/gssapi_ext.h>
 #endif
-#ifdef HAVE_KRB5_H
+#endif
+
+#if HAVE_KRB5_H
 #if HAVE_BROKEN_SOLARIS_KRB5_H
+#warn "Warning! You have a broken Solaris <krb5.h> system header"
+#warn "http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512"
 #if defined(__cplusplus)
 #define KRB5INT_BEGIN_DECLS     extern "C" {
 #define KRB5INT_END_DECLS
 KRB5INT_BEGIN_DECLS
 #endif
-#endif
+#endif /* HAVE_BROKEN_SOLARIS_KRB5_H */
+#if HAVE_BROKEN_HEIMDAL_KRB5_H
+extern "C" {
+#include <krb5.h>
+}
+#else
 #include <krb5.h>
 #endif
-#ifdef HAVE_COM_ERR_H
+#endif /* HAVE_KRB5_H */
+
+#if HAVE_COM_ERR_H
 #include <com_err.h>
-#endif
-#endif
+#elif HAVE_HEIMDAL_KERBEROS
+#define error_message(code) krb5_get_err_text(kparam.context,code)
+#endif /* HAVE_COM_ERR_H */
+
 #ifndef gss_nt_service_name
 #define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
 #endif

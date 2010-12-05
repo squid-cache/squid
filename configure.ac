@@ -284,6 +284,12 @@ dnl TODO: check if the problem will be present in any other newer MinGW release.
   mingw|mingw32)
     SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments"
     ;;
+  freebsd*)
+    # FreeBSD places local libraries and packages in /usr/local
+    CFLAGS="$CFLAGS -I/usr/local/include"
+    CXXFLAGS="$CXXFLAGS -I/usr/local/include"
+    LDFLAGS="$LDFLAGS -L/usr/local/lib -Wl,-R/usr/local/lib"
+    ;;
   *)
     SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
     ;;
@@ -353,7 +359,7 @@ AC_ARG_ENABLE(debug-cbdata,
 SQUID_YESNO([$enableval],
     [unrecognized argument to --enable-debug-cbdata: $enableval])
 ])
-SQUID_DEFINE_BOOL(CBDATA_DEBUG,${enable_debug_cbdata:=no},
+SQUID_DEFINE_BOOL(USE_CBDATA_DEBUG,${enable_debug_cbdata:=no},
     [Enable support for cbdata debug information])
 AC_MSG_NOTICE([cbdata debugging enabled: $enable_debug_cbdata])
 
@@ -770,13 +776,13 @@ AC_ARG_ENABLE(icmp,
   fi
 ])
 
-AM_CONDITIONAL(USE_DELAY_POOLS, false)
+AM_CONDITIONAL(ENABLE_DELAY_POOLS, false)
 AC_ARG_ENABLE(delay-pools,
   AS_HELP_STRING([--enable-delay-pools],[Enable delay pools to limit bandwidth usage]),
 [ if test "x$enableval" = "xyes" ; then
     AC_MSG_NOTICE([Delay pools enabled])
-    AC_DEFINE([DELAY_POOLS],1,[Traffic management via "delay pools".])
-    AM_CONDITIONAL(USE_DELAY_POOLS, true,)
+    AC_DEFINE([USE_DELAY_POOLS],1,[Traffic management via "delay pools".])
+    AM_CONDITIONAL(ENABLE_DELAY_POOLS, true)
   fi
 ])
 
@@ -1519,6 +1525,21 @@ SQUID_DEFINE_BOOL(USE_DNSSERVERS,$squid_opt_use_dnsserver,
 AM_CONDITIONAL([USE_DNSSERVER],[test "x$squid_opt_use_dnsserver" = "xyes" ])
 
 
+AM_CONDITIONAL(USE_SSL_CRTD, false)
+AC_ARG_ENABLE(ssl-crtd,
+  AC_HELP_STRING([--enable-ssl-crtd],
+                 [Prevent Squid from directly generation of SSL private key and 
+                  certificate request and instead enables the ssl_crtd processes.]), [
+  SQUID_YESNO([$enableval],
+  [unrecogized argument to --enable-ssl-crtd: $enableval])
+])
+
+if test "x$enable_ssl_crtd" = "xyes" -a "x$enable_ssl" = "xno" ; then
+   AC_MSG_ERROR([You need to enable ssl gatewaying support to use ssl_crtd feature. Try to use --enable-ssl. ])
+fi
+SQUID_DEFINE_BOOL(USE_SSL_CRTD, ${enable_ssl_crtd:=no},[Use ssl_crtd daemon])
+AM_CONDITIONAL(USE_SSL_CRTD, [test "x$enable_ssl_crtd" = "xyes"])
+
 dnl Select Default hosts file location
 AC_ARG_ENABLE(default-hostsfile,
   AS_HELP_STRING([--enable-default-hostsfile=path],
@@ -1826,11 +1847,15 @@ if test "x$ac_krb5_config" = "xyes" ; then
 
   SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
   if test "x$squid_cv_broken_krb5_h" = "xyes"; then
-    AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if krb5.h is broken for C++])
+    AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if Solaris krb5.h is broken for C++])
     AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.])
     AC_MSG_WARN([Please see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512])
     AC_MSG_WARN([If you need Kerberos support you'll have to patch])
     AC_MSG_WARN([your system. See contrib/solaris/solaris-krb5-include.patch])
+  fi
+  SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
+  if test "x$squid_cv_broken_heimdal_krb5_h" = "xyes"; then
+    AC_DEFINE(HAVE_BROKEN_HEIMDAL_KRB5_H, 1, [Define to 1 if Heimdal krb5.h is broken for C++])
   fi
   AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
 
@@ -2193,6 +2218,7 @@ AC_CHECK_HEADERS( \
   crypt.h \
   cstdlib \
   cstring \
+  list \
   ctype.h \
   errno.h \
   execinfo.h \
@@ -2205,6 +2231,7 @@ AC_CHECK_HEADERS( \
   iosfwd \
   iomanip \
   iostream \
+  fstream \
   climits \
   ip_compat.h \
   ip_fil_compat.h \
@@ -2223,6 +2250,7 @@ AC_CHECK_HEADERS( \
   map \
   math.h \
   memory.h \
+  memory \
   mount.h \
   netdb.h \
   netinet/in.h \
@@ -2234,6 +2262,7 @@ AC_CHECK_HEADERS( \
   openssl/x509v3.h \
   netinet/tcp.h \
   openssl/engine.h \
+  openssl/txt_db.h \
   ostream \
   paths.h \
   poll.h \
@@ -2828,6 +2857,12 @@ case "$squid_host_os" in
 		dnl
 		AC_CHECK_LIB(ldap,ldap_url_parse,
 		  AC_DEFINE(HAVE_LDAP_URL_PARSE,1,[Define to 1 if you have ldap_url_parse]),)
+
+		dnl
+		dnl Check for ldap_start_tls_s
+		dnl
+		AC_CHECK_LIB(ldap,ldap_start_tls_s,
+		  AC_DEFINE(HAVE_LDAP_START_TLS_S,1,[Define to 1 if you have ldap_start_tls_s]),)
 		;;
 esac
 
@@ -3332,6 +3367,7 @@ AC_CONFIG_FILES([\
 	src/ip/Makefile \
 	src/log/Makefile \
 	src/ipc/Makefile \
+	src/ssl/Makefile \
 	src/mgr/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \

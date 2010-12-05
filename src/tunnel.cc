@@ -38,9 +38,10 @@
 #include "HttpRequest.h"
 #include "fde.h"
 #include "comm.h"
+#include "comm/Write.h"
 #include "client_side_request.h"
 #include "acl/FilledChecklist.h"
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif
 #include "client_side.h"
@@ -80,7 +81,7 @@ public:
         void fd(int const newFD);
         int bytesWanted(int lower=0, int upper = INT_MAX) const;
         void bytesIn(int const &);
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 
         void setDelayId(DelayId const &);
 #endif
@@ -95,7 +96,7 @@ public:
 
     private:
         int fd_;
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 
         DelayId delayId;
 #endif
@@ -117,7 +118,7 @@ private:
 
 #define fd_closed(fd) (fd == -1 || fd_table[fd].closing())
 
-static const char *const conn_established = "HTTP/1.0 200 Connection established\r\n\r\n";
+static const char *const conn_established = "HTTP/1.1 200 Connection established\r\n\r\n";
 
 static CNCB tunnelConnectDone;
 static ERCB tunnelErrorComplete;
@@ -188,7 +189,7 @@ TunnelStateData::Connection::~Connection()
 int
 TunnelStateData::Connection::bytesWanted(int lowerbound, int upperbound) const
 {
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     return delayId.bytesWanted(lowerbound, upperbound);
 #else
 
@@ -199,7 +200,7 @@ TunnelStateData::Connection::bytesWanted(int lowerbound, int upperbound) const
 void
 TunnelStateData::Connection::bytesIn(int const &count)
 {
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     delayId.bytesIn(count);
 #endif
 
@@ -321,8 +322,11 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
         if (from.len == 0 && !fd_closed(to.fd()) ) {
             comm_close(to.fd());
         }
-    } else if (cbdataReferenceValid(this))
-        comm_write(to.fd(), from.buf, len, completion, this, NULL);
+    } else if (cbdataReferenceValid(this)) {
+        AsyncCall::Pointer call = commCbCall(5,5, "SomeTunnelWriteHandler",
+                                             CommIoCbPtrFun(completion, this));
+        Comm::Write(to.fd(), from.buf, len, call, NULL);
+    }
 
     cbdataInternalUnlock(this);	/* ??? */
 }
@@ -531,8 +535,9 @@ tunnelConnected(int fd, void *data)
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, "tunnelConnected: FD " << fd << " tunnelState=" << tunnelState);
     *tunnelState->status_ptr = HTTP_OK;
-    comm_write(tunnelState->client.fd(), conn_established, strlen(conn_established),
-               tunnelConnectedWriteDone, tunnelState, NULL);
+    AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
+                                         CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
+    Comm::Write(tunnelState->client.fd(), conn_established, strlen(conn_established), call, NULL);
 }
 
 static void
@@ -687,7 +692,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     request->hier.peer_local_port = comm_local_port(sock); // for %<lp logging
 
     tunnelState = new TunnelStateData;
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 
     tunnelState->server.setDelayId(DelayId::DelayClient(http));
 #endif
@@ -742,7 +747,10 @@ tunnelProxyConnected(int fd, void *data)
     packerClean(&p);
     mb.append("\r\n", 2);
 
-    comm_write_mbuf(tunnelState->server.fd(), &mb, tunnelProxyConnectedWriteDone, tunnelState);
+    AsyncCall::Pointer call = commCbCall(5,5, "tunnelProxyConnectedWriteDone",
+                                         CommIoCbPtrFun(tunnelProxyConnectedWriteDone, tunnelState));
+
+    Comm::Write(tunnelState->server.fd(), &mb, call);
     commSetTimeout(tunnelState->server.fd(), Config.Timeout.read, tunnelTimeout, tunnelState);
 }
 
@@ -785,7 +793,7 @@ tunnelPeerSelectComplete(FwdServer * fs, void *data)
         tunnelState->request->flags.proxying = 0;
     }
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
     if (g && g->options.no_delay)
         tunnelState->server.setDelayId(DelayId());
@@ -828,7 +836,7 @@ TunnelStateData::noConnections() const
     return fd_closed(server.fd()) && fd_closed(client.fd());
 }
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 void
 TunnelStateData::Connection::setDelayId(DelayId const &newDelay)
 {

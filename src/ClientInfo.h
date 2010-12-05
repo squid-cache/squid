@@ -8,7 +8,7 @@
 #include "cbdata.h"
 #include <deque>
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 class CommQuotaQueue;
 #endif
 
@@ -34,7 +34,7 @@ public:
     } cutoff;
     int n_established;          /* number of current established connections */
     time_t last_seen;
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     double writeSpeedLimit;///< Write speed limit in bytes per second, can be less than 1, if too close to zero this could result in timeouts from client
     double prevTime; ///< previous time when we checked
     double bucketSize; ///< how much can be written now
@@ -72,10 +72,10 @@ public:
      *  \param highWatermark is maximum bucket value
      */
     void setWriteLimiter(const int aWriteSpeedLimit, const double anInitialBurst, const double aHighWatermark);
-#endif
+#endif /* USE_DELAY_POOLS */
 };
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 // a queue of Comm clients waiting for I/O quota controlled by delay pools
 class CommQuotaQueue
 {
@@ -102,6 +102,6 @@ private:
 
     CBDATA_CLASS2(CommQuotaQueue);
 };
-#endif /* DELAY_POOLS */
+#endif /* USE_DELAY_POOLS */
 
 #endif

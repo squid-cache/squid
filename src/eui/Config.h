@@ -12,6 +12,6 @@ public:
 
 extern EuiConfig TheConfig;
 
-}; // namespace Eui
+} // namespace Eui
 
 #endif /* SQUID_EUI_CONFIG_H */

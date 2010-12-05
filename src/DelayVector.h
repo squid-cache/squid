@@ -34,9 +34,7 @@
 #ifndef SQUID_DELAYVECTOR_H
 #define SQUID_DELAYVECTOR_H
 
-#include "config.h"
-
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 
 #include "CompositePoolNode.h"
 
@@ -88,5 +86,5 @@ private:
     typedef Vector<CompositePoolNode::Pointer>::const_iterator const_iterator;
 };
 
-#endif /* DELAY_POOLS */
+#endif /* USE_DELAY_POOLS */
 #endif /* SQUID_DELAYVECTOR_H */

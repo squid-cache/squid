@@ -33,8 +33,6 @@
 #ifndef SQUID_NEW_H
 #define SQUID_NEW_H
 
-#include "config.h"
-
 #ifndef __SUNPRO_CC
 /* Any code using libstdc++ must have externally resolvable overloads
  * for void * operator new - which means in the .o for the binary,

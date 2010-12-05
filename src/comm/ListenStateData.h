@@ -1,7 +1,6 @@
 #ifndef SQUID_LISTENERSTATEDATA_H
 #define SQUID_LISTENERSTATEDATA_H
 
-#include "config.h"
 #include "base/AsyncCall.h"
 #include "comm.h"
 #if HAVE_MAP
@@ -50,6 +49,6 @@ private:
     void setListen();
 };
 
-}; // namespace Comm
+} // namespace Comm
 
 #endif /* SQUID_LISTENERSTATEDATA_H */

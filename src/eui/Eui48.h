@@ -1,8 +1,6 @@
 #ifndef _SQUID_EUI_EUI48_H
 #define _SQUID_EUI_EUI48_H
 
-#include "config.h"
-
 #if USE_SQUID_EUI
 
 /* EUI-48 is 6 bytes. */
@@ -72,7 +70,7 @@ private:
     unsigned char eui[SZ_EUI48_BUF];
 };
 
-}; // namespace Eui
+} // namespace Eui
 
 #endif /* USE_SQUID_EUI */
 #endif /* _SQUID_EUI_EUI48_H */

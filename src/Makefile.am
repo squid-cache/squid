@@ -41,6 +41,15 @@ LOADABLE_MODULES_SOURCES = \
 
 SUBDIRS	= base comm eui acl fs repl auth ip icmp ident log ipc mgr
 
+if ENABLE_SSL
+SUBDIRS += ssl
+SSL_LIBS = \
+	ssl/libsslutil.la \
+	ssl/libsslsquid.la
+else
+SSL_LOCAL_LIBS =
+endif
+
 if USE_ADAPTATION
 SUBDIRS += adaptation
 endif
@@ -84,7 +93,7 @@ DELAY_POOL_ALL_SOURCE = \
 	ClientDelayConfig.cc \
 	ClientDelayConfig.h
 	
-if USE_DELAY_POOLS
+if ENABLE_DELAY_POOLS
 DELAY_POOL_SOURCE = $(DELAY_POOL_ALL_SOURCE)
 else
 DELAY_POOL_SOURCE = 
@@ -112,16 +121,6 @@ UNLINKD = unlinkd
 else
 UNLINKDSOURCE = 
 UNLINKD = 
-endif
-
-SSL_ALL_SOURCE = \
-	ssl_support.cc \
-	ssl_support.h
-
-if ENABLE_SSL
-SSL_SOURCE = $(SSL_ALL_SOURCE)
-else
-SSL_SOURCE = 
 endif
 
 WIN32_ALL_SOURCE = \
@@ -256,6 +255,7 @@ squid_COMMSOURCES = \
 libsquid_la_SOURCES = \
 	comm.cc \
 	comm.h \
+	comm_err_t.h \
 	CommCalls.cc \
 	CommCalls.h \
 	DescriptorSet.cc \
@@ -430,7 +430,6 @@ squid_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	SquidNew.cc \
-	$(SSL_SOURCE) \
 	stat.cc \
 	StatHist.cc \
 	String.cc \
@@ -517,7 +516,6 @@ EXTRA_squid_SOURCES = \
 	LeakFinder.h \
 	$(SNMP_ALL_SOURCE) \
 	$(UNLINKDSOURCE) \
-	$(SSL_ALL_SOURCE) \
 	$(WIN32_ALL_SOURCE) \
 	$(LOADABLE_MODULES_SOURCES) \
 	DiskIO/DiskThreads/aiops.cc \
@@ -553,7 +551,7 @@ nodist_squid_SOURCES = \
 
 squid_LDADD = \
 	$(COMMON_LIBS) \
-	comm/libcomm-listener.la \
+	comm/libcomm.la \
 	eui/libeui.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	log/liblog.la \
@@ -567,6 +565,7 @@ squid_LDADD = \
 	$(SNMPLIB) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
+	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -583,6 +582,7 @@ squid_DEPENDENCIES = \
 	$(SNMPLIB) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LOCAL_LIBS) \
+	$(SSL_LIBS) \
 	$(COMMON_LIBS)
 
 if USE_LOADABLE_MODULES
@@ -758,15 +758,17 @@ DEFAULT_HTTP_PORT	= 3128
 DEFAULT_ICP_PORT	= 3130
 DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_DIR	= $(sysconfdir)
-DEFAULT_CONFIG_FILE     = $(DEFAULT_CONFIG_DIR)/squid.conf
+DEFAULT_CONFIG_FILE	= $(DEFAULT_CONFIG_DIR)/squid.conf
 DEFAULT_MIME_TABLE	= $(DEFAULT_CONFIG_DIR)/mime.conf
-DEFAULT_DNSSERVER       = $(libexecdir)/`echo dnsserver | sed '$(transform);s/$$/$(EXEEXT)/'`
+DEFAULT_DNSSERVER	= $(libexecdir)/`echo dnsserver | sed '$(transform);s/$$/$(EXEEXT)/'`
+DEFAULT_SSL_CRTD	= $(libexecdir)/`echo ssl_crtd  | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_LOG_PREFIX	= $(DEFAULT_LOG_DIR)
-DEFAULT_CACHE_LOG       = $(DEFAULT_LOG_PREFIX)/cache.log
-DEFAULT_ACCESS_LOG      = $(DEFAULT_LOG_PREFIX)/access.log
-DEFAULT_STORE_LOG       = $(DEFAULT_LOG_PREFIX)/store.log
-DEFAULT_NETDB_FILE      = $(DEFAULT_LOG_PREFIX)/netdb.state
-DEFAULT_SWAP_DIR        = $(localstatedir)/cache
+DEFAULT_CACHE_LOG	= $(DEFAULT_LOG_PREFIX)/cache.log
+DEFAULT_ACCESS_LOG	= $(DEFAULT_LOG_PREFIX)/access.log
+DEFAULT_STORE_LOG	= $(DEFAULT_LOG_PREFIX)/store.log
+DEFAULT_NETDB_FILE	= $(DEFAULT_LOG_PREFIX)/netdb.state
+DEFAULT_SWAP_DIR	= $(localstatedir)/cache
+DEFAULT_SSL_DB_DIR	= $(localstatedir)/lib/ssl_db
 DEFAULT_PINGER		= $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_UNLINKD		= $(libexecdir)/`echo unlinkd | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_LOGFILED	= $(libexecdir)/`echo log_file_daemon | sed '$(transform);s/$$/$(EXEEXT)/'`
@@ -833,6 +835,7 @@ cf.data: cf.data.pre Makefile
 	-e "s%[@]DEFAULT_CACHE_EFFECTIVE_USER[@]%${CACHE_EFFECTIVE_USER}%g" \
 	-e "s%[@]DEFAULT_MIME_TABLE[@]%$(DEFAULT_MIME_TABLE)%g" \
 	-e "s%[@]DEFAULT_DNSSERVER[@]%$(DEFAULT_DNSSERVER)%g" \
+	-e "s%[@]DEFAULT_SSL_CRTD[@]%$(DEFAULT_SSL_CRTD)%g" \
 	-e "s%[@]DEFAULT_UNLINKD[@]%$(DEFAULT_UNLINKD)%g" \
 	-e "s%[@]DEFAULT_PINGER[@]%$(DEFAULT_PINGER)%g" \
 	-e "s%[@]DEFAULT_DISKD[@]%$(DEFAULT_DISKD)%g" \
@@ -843,6 +846,7 @@ cf.data: cf.data.pre Makefile
 	-e "s%[@]DEFAULT_PID_FILE[@]%$(DEFAULT_PID_FILE)%g" \
 	-e "s%[@]DEFAULT_NETDB_FILE[@]%$(DEFAULT_NETDB_FILE)%g" \
 	-e "s%[@]DEFAULT_SWAP_DIR[@]%$(DEFAULT_SWAP_DIR)%g" \
+	-e "s%[@]DEFAULT_SSL_DB_DIR[@]%$(DEFAULT_SSL_DB_DIR)%g" \
 	-e "s%[@]DEFAULT_ICON_DIR[@]%$(DEFAULT_ICON_DIR)%g" \
 	-e "s%[@]DEFAULT_CONFIG_DIR[@]%$(DEFAULT_CONFIG_DIR)%g" \
 	-e "s%[@]DEFAULT_PREFIX[@]%$(DEFAULT_PREFIX)%g" \
@@ -864,16 +868,16 @@ CLEANFILES += squid.8
 
 install-data-local: install-sysconfDATA install-dataDATA
 	@if test -f $(DESTDIR)$(DEFAULT_MIME_TABLE) ; then \
-	        echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_MIME_TABLE)" ; \
+	  echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_MIME_TABLE)" ; \
 	else \
-	        echo "$(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(DEFAULT_MIME_TABLE)" ;\
-	        $(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(DEFAULT_MIME_TABLE); \
+	  echo "$(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(DEFAULT_MIME_TABLE)" ;\
+	  $(INSTALL_DATA) $(srcdir)/mime.conf.default $(DESTDIR)$(DEFAULT_MIME_TABLE); \
 	fi
 	@if test -f $(DESTDIR)$(DEFAULT_CONFIG_FILE) ; then \
-	        echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_CONFIG_FILE)" ; \
+	  echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_CONFIG_FILE)" ; \
 	else \
-	        echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
-	        $(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
+	  echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
+	  $(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
 	fi
 	echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE).default"; \
 	$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE).default; \
@@ -1001,6 +1005,7 @@ tests_testHttpReply_LDADD=\
 	auth/libauth.la \
 	ip/libip.la \
 	base/libbase.la \
+	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SQUID_CPPUNIT_LIBS) \
@@ -1234,7 +1239,6 @@ tests_testCacheManager_SOURCES = \
 	RemovalPolicy.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
-	$(SSL_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
@@ -1276,15 +1280,16 @@ tests_testCacheManager_SOURCES = \
 	wordlist.cc
 nodist_tests_testCacheManager_SOURCES = \
 	$(BUILT_SOURCES)
-# comm.cc only requires comm/libcomm-listener.la until fdc_table is dead.
+# comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
 	$(COMMON_LIBS) \
-	comm/libcomm-listener.la \
+	comm/libcomm.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
+	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1309,7 +1314,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_cache_manager.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_Port.cc \
-        tests/stub_TypedMsgHdr.cc \
+	tests/stub_TypedMsgHdr.cc \
 	tests/stub_UdsOp.cc
 nodist_tests_testDiskIO_SOURCES= \
 	$(SWAP_TEST_GEN_SOURCES) \
@@ -1438,7 +1443,6 @@ tests_testEvent_SOURCES = \
 	refresh.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
-	$(SSL_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
@@ -1483,11 +1487,12 @@ nodist_tests_testEvent_SOURCES = \
 tests_testEvent_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	comm/libcomm-listener.la \
+	comm/libcomm.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
+	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1601,7 +1606,6 @@ tests_testEventLoop_SOURCES = \
 	refresh.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
-	$(SSL_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
@@ -1646,11 +1650,12 @@ nodist_tests_testEventLoop_SOURCES = \
 tests_testEventLoop_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	comm/libcomm-listener.la \
+	comm/libcomm.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
+	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1755,7 +1760,6 @@ tests_test_http_range_SOURCES = \
 	RemovalPolicy.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
-	$(SSL_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
@@ -1804,11 +1808,12 @@ nodist_tests_test_http_range_SOURCES = \
 tests_test_http_range_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	comm/libcomm-listener.la \
+	comm/libcomm.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
+	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1922,7 +1927,6 @@ tests_testHttpRequest_SOURCES = \
 	RemovalPolicy.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
-	$(SSL_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
@@ -1967,11 +1971,12 @@ nodist_tests_testHttpRequest_SOURCES = \
 tests_testHttpRequest_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	comm/libcomm-listener.la \
+	comm/libcomm.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
+	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2339,7 +2344,6 @@ tests_testURL_SOURCES = \
 	refresh.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
-	$(SSL_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
@@ -2382,12 +2386,13 @@ nodist_tests_testURL_SOURCES = \
 tests_testURL_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	comm/libcomm-listener.la \
+	comm/libcomm.la \
 	log/liblog.la \
 	$(REGEXLIB) \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
+	$(SSL_LIBS) \
 	$(SNMPLIB) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \

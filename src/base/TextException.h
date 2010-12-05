@@ -3,7 +3,6 @@
 
 // Origin: xstd/TextException
 
-#include "config.h"
 #include <exception>
 
 static unsigned int FileNameHashCached(const char *fname);

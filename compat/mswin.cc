@@ -34,6 +34,7 @@
  */
 
 #include "config.h"
+#include "util.h"
 
 /* The following code section is part of an EXPERIMENTAL native */
 /* Windows NT/2000 Squid port - Compiles only on MS Visual C++  */

@@ -35,8 +35,6 @@
 #ifndef SQUID_STRING_H
 #define SQUID_STRING_H
 
-#include "config.h"
-
 #if HAVE_OSTREAM
 #include <ostream>
 #endif

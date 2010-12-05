@@ -59,6 +59,7 @@
 #include "client_side_reply.h"
 #include "client_side_request.h"
 #include "ClientRequestContext.h"
+#include "comm/Write.h"
 #include "compat/inet_pton.h"
 #include "fde.h"
 #include "HttpReply.h"
@@ -931,7 +932,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     if (req_hdr->has(HDR_VIA)) {
         String s = req_hdr->getList(HDR_VIA);
         /*
-         * ThisCache cannot be a member of Via header, "1.0 ThisCache" can.
+         * ThisCache cannot be a member of Via header, "1.1 ThisCache" can.
          * Note ThisCache2 has a space prepended to the hostname so we don't
          * accidentally match super-domains.
          */
@@ -1052,7 +1053,8 @@ ClientRequestContext::clientRedirectDone(char *result)
         if (old_request->body_pipe != NULL) {
             new_request->body_pipe = old_request->body_pipe;
             old_request->body_pipe = NULL;
-            debugs(0,0,HERE << "redirecting body_pipe " << new_request->body_pipe << " from request " << old_request << " to " << new_request);
+            debugs(61,2, HERE << "URL-rewriter diverts body_pipe " << new_request->body_pipe <<
+                   " from request " << old_request << " to " << new_request);
         }
 
         new_request->content_length = old_request->content_length;
@@ -1189,7 +1191,7 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
         return;
     }
 
-    getConn()->switchToHttps();
+    getConn()->switchToHttps(request->GetHost());
 }
 
 void
@@ -1203,9 +1205,10 @@ ClientHttpRequest::sslBumpStart()
 
     // TODO: Unify with tunnel.cc and add a Server(?) header
     static const char *const conn_established =
-        "HTTP/1.0 200 Connection established\r\n\r\n";
-    comm_write(fd, conn_established, strlen(conn_established),
-               &SslBumpEstablish, this, NULL);
+        "HTTP/1.1 200 Connection established\r\n\r\n";
+    AsyncCall::Pointer call = commCbCall(85, 5, "ClientSocketContext::sslBumpEstablish",
+                                         CommIoCbPtrFun(&SslBumpEstablish, this));
+    Comm::Write(fd, conn_established, strlen(conn_established), call, NULL);
 }
 
 #endif

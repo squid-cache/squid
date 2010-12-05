@@ -1,14 +1,12 @@
 #ifndef _SQUID_EUI_EUI64_H
 #define _SQUID_EUI_EUI64_H
 
-#include "config.h"
-
 #if USE_SQUID_EUI
 
 namespace Ip
 {
 class Address;
-};
+}
 
 #if HAVE_CSTRING
 #include <cstring>
@@ -85,7 +83,7 @@ private:
     unsigned char eui[SZ_EUI64_BUF];
 };
 
-}; // namespace Eui
+} // namespace Eui
 
 #endif /* USE_SQUID_EUI */
 #endif /* _SQUID_EUI_EUI64_H */

@@ -30,11 +30,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
-#ifndef SQUID_CONFIG_H
-#include "config.h"
-#endif
-
 #ifndef SQUID_ASSERT_H
 #define SQUID_ASSERT_H
 

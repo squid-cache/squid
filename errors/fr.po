@@ -3,15 +3,15 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-11-06 03:26+1300\n"
-"PO-Revision-Date: 2010-10-26 19:38+0200\n"
-"Last-Translator:  <fli4l.charrier@free.fr>\n"
+"PO-Revision-Date: 2010-11-17 19:36+0200\n"
+"Last-Translator: Bernard <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Pootle 2.0.1\n"
+"X-Generator: Pootle 2.0.5\n"
 
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -105,6 +105,8 @@ msgid ""
 "At least one precondition specified by the HTTP client in the request header "
 "has failed."
 msgstr ""
+"Au moins une précondition indiquée dans l'en-tête de la requête du client "
+"HTTP  a échoué."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
@@ -387,7 +389,7 @@ msgstr ""
 
 #: templates/ERR_PRECONDITION_FAILED:5
 msgid "Precondition Failed."
-msgstr ""
+msgstr "La précondition a échouée."
 
 #: templates/ERR_READ_ERROR:5
 msgid "Read Error"
@@ -644,7 +646,7 @@ msgstr ""
 
 #: templates/ERR_PRECONDITION_FAILED:6
 msgid "This means:"
-msgstr ""
+msgstr "Cela signifie :"
 
 #: templates/ERR_FTP_NOT_FOUND:7
 msgid ""

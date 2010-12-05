@@ -997,8 +997,8 @@ void
 CossSwapDir::statfs(StoreEntry & sentry) const
 {
     storeAppendPrintf(&sentry, "\n");
-    storeAppendPrintf(&sentry, "Maximum Size: %"PRIuSIZE" KB\n", max_size);
-    storeAppendPrintf(&sentry, "Current Size: %"PRIuSIZE" KB\n", cur_size);
+    storeAppendPrintf(&sentry, "Maximum Size: %"PRIu64" KB\n", max_size);
+    storeAppendPrintf(&sentry, "Current Size: %"PRIu64" KB\n", cur_size);
     storeAppendPrintf(&sentry, "Percent Used: %0.2f%%\n",
                       (100.0 * (double)cur_size / (double)max_size) );
     storeAppendPrintf(&sentry, "Number of object collisions: %d\n", (int) numcollisions);
@@ -1096,7 +1096,7 @@ CossSwapDir::reconfigure(int index, char *path)
 void
 CossSwapDir::dump(StoreEntry &entry)const
 {
-    storeAppendPrintf(&entry, " %"PRIuSIZE, (max_size >> 10));
+    storeAppendPrintf(&entry, " %"PRIu64, (max_size >> 10));
     dumpOptions(&entry);
 }
 

@@ -1,3 +1,4 @@
+#include "config.h"
 #include "compat/debug.h"
 
 /* default off */

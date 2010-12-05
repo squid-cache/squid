@@ -39,8 +39,14 @@
 #endif
 #include "auth/Gadgets.h"
 #include "base/TextException.h"
+#if USE_DELAY_POOLS
+#include "ClientDelayConfig.h"
+#endif
 #include "ConfigParser.h"
 #include "CpuAffinity.h"
+#if USE_DELAY_POOLS
+#include "DelayPools.h"
+#endif
 #include "errorpage.h"
 #include "event.h"
 #include "EventLoop.h"
@@ -80,12 +86,17 @@
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
 
-#if DELAY_POOLS
-#include "ClientDelayConfig.h"
-#endif
-
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
+#endif
+
+#if USE_SSL_CRTD
+#include "ssl/helper.h"
+#include "ssl/certificate_db.h"
+#endif
+
+#if USE_SSL
+#include "ssl/context_storage.h"
 #endif
 
 #if ICAP_CLIENT
@@ -122,9 +133,6 @@ void WINAPI WIN32_svcHandler(DWORD);
 #ifndef SQUID_BUILD_INFO
 #define SQUID_BUILD_INFO ""
 #endif
-
-/** for error reporting from xmalloc and friends */
-SQUIDCEXTERN void (*failure_notify) (const char *);
 
 static char *opt_syslog_facility = NULL;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
@@ -727,7 +735,12 @@ mainReconfigureStart(void)
 
     idnsShutdown();
 #endif
-
+#if USE_SSL_CRTD
+    Ssl::Helper::GetInstance()->Shutdown();
+#endif
+#if USE_SSL
+    Ssl::TheGlobalContextStorage.reconfigureStart();
+#endif
     redirectShutdown();
     authenticateReset();
     externalAclShutdown();
@@ -813,6 +826,9 @@ mainReconfigureFinish(void *)
 
     idnsInit();
 #endif
+#if USE_SSL_CRTD
+    Ssl::Helper::GetInstance()->Init();
+#endif
 
     redirectInit();
     authenticateInit(&Auth::TheConfig);
@@ -837,7 +853,7 @@ mainReconfigureFinish(void *)
 
     mimeInit(Config.mimeTablePathname);
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
 #endif
 
@@ -931,10 +947,6 @@ mainSetCwd(void)
         debugs(50, 0, "WARNING: Can't find current directory, getcwd: " << xstrerror());
     }
 }
-
-#if DELAY_POOLS
-#include "DelayPools.h"
-#endif
 
 static void
 mainInitialize(void)
@@ -1066,8 +1078,7 @@ mainInitialize(void)
         do_mallinfo = 1;
         mimeInit(Config.mimeTablePathname);
         refreshInit();
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
         DelayPools::Init();
 #endif
 
@@ -1163,7 +1174,7 @@ mainInitialize(void)
     Esi::Init();
 #endif
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
 #endif
 
@@ -1806,7 +1817,9 @@ SquidShutdown()
 
     idnsShutdown();
 #endif
-
+#if USE_SSL_CRTD
+    Ssl::Helper::GetInstance()->Shutdown();
+#endif
     redirectShutdown();
     externalAclShutdown();
     icpConnectionClose();
@@ -1834,8 +1847,7 @@ SquidShutdown()
     Esi::Clean();
 #endif
 
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
     DelayPools::FreePools();
 #endif
 

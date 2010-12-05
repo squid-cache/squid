@@ -33,8 +33,6 @@
 #ifndef SQUID_HTTPREQUEST_H
 #define SQUID_HTTPREQUEST_H
 
-#include "config.h"
-
 #if USE_ADAPTATION
 #include "adaptation/History.h"
 #endif
@@ -176,8 +174,6 @@ public:
     time_t ims;
 
     int imslen;
-
-    int64_t max_forwards;
 
     Ip::Address client_addr;
 

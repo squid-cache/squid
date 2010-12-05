@@ -33,13 +33,6 @@
 
 class MemBuf;
 
-#if 0
-#include "RefCount.h"
-#endif
-
-/* for size_t */
-#include "config.h"
-
 /**
  \ingroup ChunkEncodingAPI Chunked Encoding API
  \par

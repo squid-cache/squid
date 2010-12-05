@@ -155,7 +155,7 @@ using namespace Squid;
 
 #include "md5.h"
 #if USE_SSL
-#include "ssl_support.h"
+#include "ssl/support.h"
 #endif
 #if SQUID_SNMP
 #include "cache_snmp.h"

@@ -46,6 +46,9 @@
 #if USE_ECAP
 #include "adaptation/ecap/Config.h"
 #endif
+#if USE_SSL
+#include "ssl/Config.h"
+#endif
 #include "auth/Config.h"
 #include "auth/Scheme.h"
 #include "ConfigParser.h"
@@ -80,6 +83,10 @@
 
 #if HAVE_LIMITS_H
 #include <limits>
+#endif
+
+#if USE_SSL
+#include "ssl/gadgets.h"
 #endif
 
 #if USE_ADAPTATION
@@ -146,6 +153,9 @@ static void defaults_if_none(void);
 static int parse_line(char *);
 static void parse_obsolete(const char *);
 static void parseBytesLine(size_t * bptr, const char *units);
+#if USE_SSL
+static void parseBytesOptionValue(size_t * bptr, const char *units, char const * value);
+#endif
 #if !USE_DNSSERVERS
 static void parseBytesLineSigned(ssize_t * bptr, const char *units);
 #endif
@@ -875,7 +885,13 @@ configDoConfigure(void)
 
             debugs(3, 1, "Initializing http_port " << s->http.s << " SSL context");
 
-            s->sslContext = sslCreateServerContext(s->cert, s->key, s->version, s->cipher, s->options, s->sslflags, s->clientca, s->cafile, s->capath, s->crlfile, s->dhfile, s->sslcontext);
+            s->staticSslContext.reset(
+                sslCreateServerContext(s->cert, s->key,
+                                       s->version, s->cipher, s->options, s->sslflags, s->clientca,
+                                       s->cafile, s->capath, s->crlfile, s->dhfile,
+                                       s->sslContextSessionId));
+
+            Ssl::readCertAndPrivateKeyFromFiles(s->signingCert, s->signPkey, s->cert, s->key);
         }
     }
 
@@ -886,7 +902,11 @@ configDoConfigure(void)
         for (s = Config.Sockaddr.https; s != NULL; s = (https_port_list *) s->http.next) {
             debugs(3, 1, "Initializing https_port " << s->http.s << " SSL context");
 
-            s->sslContext = sslCreateServerContext(s->cert, s->key, s->version, s->cipher, s->options, s->sslflags, s->clientca, s->cafile, s->capath, s->crlfile, s->dhfile, s->sslcontext);
+            s->staticSslContext.reset(
+                sslCreateServerContext(s->cert, s->key,
+                                       s->version, s->cipher, s->options, s->sslflags, s->clientca,
+                                       s->cafile, s->capath, s->crlfile, s->dhfile,
+                                       s->sslContextSessionId));
         }
     }
 
@@ -1108,6 +1128,44 @@ parseBytesLineSigned(ssize_t * bptr, const char *units)
 
     *bptr = static_cast<size_t>(m * d / u);
 
+    if (static_cast<double>(*bptr) * 2 != m * d / u * 2)
+        self_destruct();
+}
+#endif
+
+#if USE_SSL
+/**
+ * Parse bytes from a string.
+ * Similar to the parseBytesLine function but parses the string value instead of
+ * the current token value.
+ */
+static void parseBytesOptionValue(size_t * bptr, const char *units, char const * value)
+{
+    int u;
+    if ((u = parseBytesUnits(units)) == 0) {
+        self_destruct();
+        return;
+    }
+
+    // Find number from string beginning.
+    char const * number_begin = value;
+    char const * number_end = value;
+
+    while ((*number_end >= '0' && *number_end <= '9')) {
+        number_end++;
+    }
+
+    String number;
+    number.limitInit(number_begin, number_end - number_begin);
+
+    int d = xatoi(number.termedBuf());
+    int m;
+    if ((m = parseBytesUnits(number_end)) == 0) {
+        self_destruct();
+        return;
+    }
+
+    *bptr = static_cast<size_t>(m * d / u);
     if (static_cast<double>(*bptr) * 2 != m * d / u * 2)
         self_destruct();
 }
@@ -1497,7 +1555,7 @@ free_acl_b_size_t(acl_size_t ** head)
     }
 }
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 
 #include "DelayPools.h"
 #include "DelayConfig.h"
@@ -1549,7 +1607,7 @@ parse_delay_pool_access(DelayConfig * cfg)
 
 #endif
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "ClientDelayConfig.h"
 /* do nothing - free_client_delay_pool_count is the magic free function.
  * this is why client_delay_pool_count isn't just marked TYPE: ushort
@@ -2158,12 +2216,12 @@ parse_peer(peer ** head)
 
             p->options.sourcehash = 1;
 
-#if DELAY_POOLS
-
         } else if (!strcasecmp(token, "no-delay")) {
+#if USE_DELAY_POOLS
             p->options.no_delay = 1;
+#else
+            debugs(0, DBG_CRITICAL, "WARNING: cache_peer option 'no-delay' requires --enable-delay-pools");
 #endif
-
         } else if (!strncasecmp(token, "login=", 6)) {
             p->login = xstrdup(token + 6);
             rfc1738_unescape(p->login);
@@ -3571,8 +3629,16 @@ parse_http_port_option(http_port_list * s, char *token)
         safe_free(s->sslflags);
         s->sslflags = xstrdup(token + 9);
     } else if (strncmp(token, "sslcontext=", 11) == 0) {
-        safe_free(s->sslcontext);
-        s->sslcontext = xstrdup(token + 11);
+        safe_free(s->sslContextSessionId);
+        s->sslContextSessionId = xstrdup(token + 11);
+    } else if (strcmp(token, "generate-host-certificates") == 0) {
+        s->generateHostCertificates = true;
+    } else if (strcmp(token, "generate-host-certificates=on") == 0) {
+        s->generateHostCertificates = true;
+    } else if (strcmp(token, "generate-host-certificates=off") == 0) {
+        s->generateHostCertificates = false;
+    } else if (strncmp(token, "dynamic_cert_mem_cache_size=", 28) == 0) {
+        parseBytesOptionValue(&s->dynamicCertMemCacheSize, B_BYTES_STR, token + 28);
 #endif
     } else {
         self_destruct();
@@ -3638,7 +3704,7 @@ clone_http_port_list(http_port_list *a)
     char *crlfile;
     char *dhfile;
     char *sslflags;
-    char *sslcontext;
+    char *sslContextSessionId;
     SSL_CTX *sslContext;
 #endif
 
@@ -3686,23 +3752,47 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
                       n,
                       s->s.ToURL(buf,MAX_IPSTRLEN));
 
+    // MODES and specific sub-options.
     if (s->intercepted)
         storeAppendPrintf(e, " intercept");
 
-    if (s->spoof_client_ip)
+    else if (s->spoof_client_ip)
         storeAppendPrintf(e, " tproxy");
 
-    if (s->accel)
+    else if (s->accel) {
         storeAppendPrintf(e, " accel");
 
-    if (s->vhost)
-        storeAppendPrintf(e, " vhost");
+        if (s->vhost)
+            storeAppendPrintf(e, " vhost");
 
-    if (s->vport)
-        storeAppendPrintf(e, " vport");
+        if (s->vport < 0)
+            storeAppendPrintf(e, " vport");
+        else if (s->vport > 0)
+            storeAppendPrintf(e, " vport=%d", s->vport);
 
-    if (s->defaultsite)
-        storeAppendPrintf(e, " defaultsite=%s", s->defaultsite);
+        if (s->defaultsite)
+            storeAppendPrintf(e, " defaultsite=%s", s->defaultsite);
+
+        if (s->protocol && strcmp(s->protocol,"http") != 0)
+            storeAppendPrintf(e, " protocol=%s", s->protocol);
+
+        if (s->allow_direct)
+            storeAppendPrintf(e, " allow-direct");
+
+        if (s->ignore_cc)
+            storeAppendPrintf(e, " ignore-cc");
+
+    }
+
+    // Generic independent options
+
+    if (s->name)
+        storeAppendPrintf(e, " name=%s", s->name);
+
+#if !USE_HTTP_VIOLATIONS
+    if (!s->accel && s->ignore_cc)
+        storeAppendPrintf(e, " ignore-cc");
+#endif
 
     if (s->connection_auth_disabled)
         storeAppendPrintf(e, " connection-auth=off");
@@ -3720,6 +3810,9 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
         storeAppendPrintf(e, " disable-pmtu-discovery=%s", pmtu);
     }
 
+    if (s->s.IsAnyAddr() && !s->s.IsIPv6())
+        storeAppendPrintf(e, " ipv4");
+
     if (s->tcp_keepalive.enabled) {
         if (s->tcp_keepalive.idle || s->tcp_keepalive.interval || s->tcp_keepalive.timeout) {
             storeAppendPrintf(e, " tcpkeepalive=%d,%d,%d", s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
@@ -3730,7 +3823,7 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
 
 #if USE_SSL
     if (s->sslBump)
-        storeAppendPrintf(e, " sslBump");
+        storeAppendPrintf(e, " ssl-bump");
 
     if (s->cert)
         storeAppendPrintf(e, " cert=%s", s->cert);
@@ -3762,8 +3855,14 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
     if (s->sslflags)
         storeAppendPrintf(e, " sslflags=%s", s->sslflags);
 
-    if (s->sslcontext)
-        storeAppendPrintf(e, " sslcontext=%s", s->sslcontext);
+    if (s->sslContextSessionId)
+        storeAppendPrintf(e, " sslcontext=%s", s->sslContextSessionId);
+
+    if (s->generateHostCertificates)
+        storeAppendPrintf(e, " generate-host-certificates");
+
+    if (s->dynamicCertMemCacheSize != std::numeric_limits<size_t>::max())
+        storeAppendPrintf(e, "dynamic_cert_mem_cache_size=%lu%s\n", (unsigned long)s->dynamicCertMemCacheSize, B_BYTES_STR);
 #endif
 }
 

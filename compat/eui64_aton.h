@@ -1,7 +1,3 @@
-#ifndef SQUID_CONFIG_H
-#include "config.h"
-#endif
-
 /* If we have this system file use it. Otherwise use the below definitions. */
 #if HAVE_SYS_EUI64_H
 #include <sys/eui64.h>

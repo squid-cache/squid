@@ -40,7 +40,7 @@
 #include "Store.h"
 #include "StoreClient.h"
 #include "Generic.h"
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
 #include "MemBuf.h"
@@ -377,7 +377,7 @@ MemObject::isContiguous() const
 int
 MemObject::mostBytesWanted(int max) const
 {
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     /* identify delay id with largest allowance */
     DelayId largestAllowance = mostBytesAllowed ();
     return largestAllowance.bytesWanted(0, max);
@@ -390,7 +390,7 @@ MemObject::mostBytesWanted(int max) const
 void
 MemObject::setNoDelay(bool const newValue)
 {
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 
     for (dlink_node *node = clients.head; node; node = node->next) {
         store_client *sc = (store_client *) node->data;
@@ -412,7 +412,7 @@ MemObject::kickReads()
     deferredReads.kickReads(-1);
 }
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 DelayId
 MemObject::mostBytesAllowed() const
 {

@@ -4,7 +4,6 @@
 class ACLChecklist;
 class ClientHttpRequest;
 
-#include "config.h"
 /* for RefCountable */
 #include "RefCount.h"
 /* for CBDATA_CLASS() */

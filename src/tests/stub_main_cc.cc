@@ -33,6 +33,8 @@
  *
  */
 
+#include "config.h"
+
 void
 shut_down(int)
 { /* stub */ }

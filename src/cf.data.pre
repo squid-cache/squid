@@ -244,8 +244,8 @@ DOC_START
 	authenticator processes.
 
 	The startup= and idle= options permit some skew in the exact amount
-	run. A minimum of startup=N will begin during startup and reconfigure
-	and Squid will start more in groups of up to idle=N in an attempt to meet
+	run. A minimum of startup=N will begin during startup and reconfigure.
+	Squid will start more in groups of up to idle=N in an attempt to meet
 	traffic needs and to keep idle=N free above those traffic needs up to
 	the maximum.
 
@@ -317,8 +317,8 @@ DOC_START
 	you are likely to need lots of authenticator processes.
 
 	The startup= and idle= options permit some skew in the exact amount
-	run. A minimum of startup=N will begin during startup and reconfigure
-	and Squid will start more in groups of up to idle=N in an attempt to meet
+	run. A minimum of startup=N will begin during startup and reconfigure.
+	Squid will start more in groups of up to idle=N in an attempt to meet
 	traffic needs and to keep idle=N free above those traffic needs up to
 	the maximum.
 
@@ -389,8 +389,8 @@ DOC_START
 	processes.
 
 	The startup= and idle= options permit some skew in the exact amount
-	run. A minimum of startup=N will begin during startup and reconfigure
-	and Squid will start more in groups of up to idle=N in an attempt to meet
+	run. A minimum of startup=N will begin during startup and reconfigure.
+	Squid will start more in groups of up to idle=N in an attempt to meet
 	traffic needs and to keep idle=N free above those traffic needs up to
 	the maximum.
 
@@ -430,8 +430,8 @@ DOC_START
 	processes.
 
 	The startup= and idle= options permit some skew in the exact amount
-	run. A minimum of startup=N will begin during startup and reconfigure
-	and Squid will start more in groups of up to idle=N in an attempt to meet
+	run. A minimum of startup=N will begin during startup and reconfigure.
+	Squid will start more in groups of up to idle=N in an attempt to meet
 	traffic needs and to keep idle=N free above those traffic needs up to
 	the maximum.
 
@@ -948,7 +948,7 @@ DOC_END
 NAME: delay_pool_uses_indirect_client
 COMMENT: on|off
 TYPE: onoff
-IFDEF: FOLLOW_X_FORWARDED_FOR&&DELAY_POOLS
+IFDEF: FOLLOW_X_FORWARDED_FOR&&USE_DELAY_POOLS
 DEFAULT: on
 LOC: Config.onoff.delay_pool_uses_indirect_client
 DOC_START
@@ -1390,6 +1390,24 @@ DOC_START
 
 	   sslcontext=	SSL session ID context identifier.
 
+	   generate-host-certificates[=<on|off>]
+			Dynamically create SSL server certificates for the
+			destination hosts of bumped CONNECT requests.When 
+			enabled, the cert and key options are used to sign
+			generated certificates. Otherwise generated
+			certificate will be selfsigned.
+			If there is CA certificate life time of generated 
+			certificate equals lifetime of CA certificate. If
+			generated certificate is selfsigned lifetime is three 
+			years.
+			This option is enabled by default when SslBump is used.
+			See the sslBump option above for more information.
+			
+	   dynamic_cert_mem_cache_size=SIZE
+			Approximate total RAM size spent on cached generated
+			certificates. If set to zero, caching is disabled. The
+			default value is 4MB. An average XXX-bit certificate
+			consumes about XXX bytes of RAM.
 
 	Other Options:
 
@@ -1968,6 +1986,54 @@ DOC_START
 DOC_END
 
 COMMENT_START
+ OPTIONS RELATING TO EXTERNAL SSL_CRTD 
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: sslcrtd_program
+TYPE: eol 
+IFDEF: USE_SSL_CRTD
+DEFAULT: @DEFAULT_SSL_CRTD@ -s @DEFAULT_SSL_DB_DIR@ -M 4MB
+LOC: Ssl::TheConfig.ssl_crtd
+DOC_START
+	Specify the location and options of the executable for ssl_crtd process.
+	@DEFAULT_SSL_CRTD@ program requires -s and -M parameters
+	For more information use:
+		@DEFAULT_SSL_CRTD@ -h
+DOC_END
+
+NAME: sslcrtd_children
+TYPE: HelperChildConfig
+IFDEF: USE_SSL_CRTD
+DEFAULT: 32 startup=5 idle=1
+LOC: Ssl::TheConfig.ssl_crtdChildren
+DOC_START
+	The maximum number of processes spawn to service ssl server.
+	The maximum this may be safely set to is 32.
+	
+	The startup= and idle= options allow some measure of skew in your
+	tuning.
+	
+		startup=N
+	
+	Sets the minimum number of processes to spawn when Squid
+	starts or reconfigures. When set to zero the first request will
+	cause spawning of the first child process to handle it.
+	
+	Starting too few children temporary slows Squid under load while it
+	tries to spawn enough additional processes to cope with traffic.
+	
+		idle=N
+	
+	Sets a minimum of how many processes Squid is to try and keep available
+	at all times. When traffic begins to rise above what the existing
+	processes can handle this many more will be spawned up to the maximum
+	configured. A minimum setting of 1 is required.
+	
+	You must have at least one ssl_crtd process.
+DOC_END
+
+COMMENT_START
  OPTIONS WHICH AFFECT THE NEIGHBOR SELECTION ALGORITHM
  -----------------------------------------------------------------------------
 COMMENT_END
@@ -2107,8 +2173,8 @@ DOC_START
 			which parent to fectch from. If the rtt is less than the
 			base time the rtt is set to a minimal value.
 	
-	ttl=N		Specify a IP multicast TTL to use when sending an ICP
-			queries to this address.
+	ttl=N		Specify a TTL to use when sending multicast ICP queries
+			to this address.
 			Only useful when sending to a multicast group.
 			Because we don't accept ICP replies from random
 			hosts, you must configure other group members as
@@ -2648,8 +2714,8 @@ DOC_START
 
 	no-store, no new objects should be stored to this cache_dir
 
-	max-size=n, refers to the max object size this storedir supports.
-	It is used to initially choose the storedir to dump the object.
+	max-size=n, refers to the max object size in bytes this cache_dir
+	supports.  It is used to select the cache_dir to store the object.
 	Note: To make optimal use of the max-size limits you should order
 	the cache_dir lines with the smallest max-size value first and the
 	ones with no max-size specification last.
@@ -2778,6 +2844,13 @@ DOC_START
 	Format codes:
 
 		%	a literal % character
+		sn	Unique sequence number per log line entry
+		err_code    The ID of an error response served by Squid or
+				a similar internal error identifier.
+		err_detail  Additional err_code-dependent error information.
+
+	Connection related format codes:
+
 		>a	Client source IP address
 		>A	Client FQDN
 		>p	Client source port
@@ -2785,7 +2858,9 @@ DOC_START
 		la	Local IP address (http_port)
 		lp	Local port number (http_port)
 		<lp     Local port number of the last server or peer connection
-		sn	Unique sequence number per log line entry
+
+	Time related format codes:
+
 		ts	Seconds since epoch
 		tu	subsecond time (milliseconds)
 		tl	Local time. Optional strftime format argument
@@ -2794,9 +2869,6 @@ DOC_START
 				default %d/%b/%Y:%H:%M:%S %z
 		tr	Response time (milliseconds)
 		dt	Total time spent making DNS lookups (milliseconds)
-		err_code    The ID of an error response served by Squid or
-				a similar internal error identifier.
-		err_detail  Additional err_code-dependent error information.
 
 	HTTP cache related format codes:
 
@@ -2908,7 +2980,7 @@ DOC_START
 	
 	===== Modules Currently available =====
 	
-	none	Do not log any requests matchign these ACL.
+	none	Do not log any requests matching these ACL.
 		Do not specify Place or logformat name.
 	
 	stdio	Write each log line to disk immediately at the completion of
@@ -3228,16 +3300,9 @@ DOC_START
 DOC_END
 
 NAME: log_fqdn
-COMMENT: on|off
-TYPE: onoff
-DEFAULT: off
-LOC: Config.onoff.log_fqdn
+TYPE: obsolete
 DOC_START
-	Turn this on if you wish to log fully qualified domain names
-	in the access.log. To do this Squid does a DNS lookup of all
-	IP's connecting to it. This can (in some situations) increase
-	latency, which makes your cache seem slower for interactive
-	browsing.
+	Remove this option from your config. To log FQDN use %>A in the log format.
 DOC_END
 
 NAME: client_netmask
@@ -4693,7 +4758,7 @@ COMMENT_END
 NAME: delay_pools
 TYPE: delay_pool_count
 DEFAULT: 0
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.Delay
 DOC_START
 	This represents the number of delay pools to be used.  For example,
@@ -4704,7 +4769,7 @@ DOC_END
 NAME: delay_class
 TYPE: delay_pool_class
 DEFAULT: none
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.Delay
 DOC_START
 	This defines the class of each delay pool.  There must be exactly one
@@ -4755,7 +4820,7 @@ DOC_END
 NAME: delay_access
 TYPE: delay_pool_access
 DEFAULT: none
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.Delay
 DOC_START
 	This is used to determine which delay pool a request falls into.
@@ -4779,7 +4844,7 @@ DOC_END
 NAME: delay_parameters
 TYPE: delay_pool_rates
 DEFAULT: none
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.Delay
 DOC_START
 	This defines the parameters for a delay pool.  Each delay pool has
@@ -4860,7 +4925,7 @@ NAME: delay_initial_bucket_level
 COMMENT: (percent, 0-100)
 TYPE: ushort
 DEFAULT: 50
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.Delay.initial
 DOC_START
 	The initial bucket percentage is used to determine how much is put
@@ -4878,7 +4943,7 @@ COMMENT_END
 NAME: client_delay_pools
 TYPE: client_delay_pool_count
 DEFAULT: 0
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.ClientDelay
 DOC_START
 	This option specifies the number of client delay pools used. It must
@@ -4892,7 +4957,7 @@ NAME: client_delay_initial_bucket_level
 COMMENT: (percent, 0-no_limit)
 TYPE: ushort
 DEFAULT: 50
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.ClientDelay.initial
 DOC_START
 	This option determines the initial bucket size as a percentage of
@@ -4911,7 +4976,7 @@ DOC_END
 NAME: client_delay_parameters
 TYPE: client_delay_pool_rates
 DEFAULT: none
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.ClientDelay
 DOC_START
 
@@ -4938,7 +5003,7 @@ DOC_END
 NAME: client_delay_access
 TYPE: client_delay_pool_access
 DEFAULT: none
-IFDEF: DELAY_POOLS
+IFDEF: USE_DELAY_POOLS
 LOC: Config.ClientDelay
 DOC_START
 
@@ -5080,7 +5145,7 @@ DOC_START
 	Valid values are as follows:
 
 	hash - Hash assignment
-	mask  - Mask assignment
+	mask - Mask assignment
 
 	As a general rule, cisco routers support the hash assignment method
 	and cisco switches support the mask assignment method.

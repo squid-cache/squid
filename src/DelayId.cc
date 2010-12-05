@@ -42,7 +42,7 @@
 /* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the delay pools code from compile process when not needed.
  */
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 
 #include "squid.h"
 #include "DelayId.h"
@@ -196,4 +196,4 @@ DelayId::delayRead(DeferredRead const &aRead)
 
 }
 
-#endif /* DELAY_POOLS */
+#endif /* USE_DELAY_POOLS */

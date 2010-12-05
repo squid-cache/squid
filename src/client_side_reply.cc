@@ -44,7 +44,7 @@
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "clientStream.h"
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
 #include "errorpage.h"
@@ -251,7 +251,7 @@ clientReplyContext::processExpired()
                              http->log_uri, http->request->flags, http->request->method);
     /* NOTE, don't call StoreEntry->lock(), storeCreateEntry() does it */
     sc = storeClientListAdd(entry, this);
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
     /* delay_id is already set on original store client */
     sc->setDelayId(DelayId::DelayClient(http));
 #endif
@@ -564,7 +564,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
          * plain ol' cache hit
          */
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
         if (e->store_status != STORE_OK)
             http->logType = LOG_TCP_MISS;
         else
@@ -683,7 +683,7 @@ clientReplyContext::processOnlyIfCachedMiss()
 void
 clientReplyContext::processConditional(StoreIOBuffer &result)
 {
-    StoreEntry *e = http->storeEntry();
+    StoreEntry *const e = http->storeEntry();
 
     if (e->getReply()->sline.status != HTTP_OK) {
         debugs(88, 4, "clientReplyContext::processConditional: Reply code " <<
@@ -716,12 +716,12 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
 
         if (!r.flags.ims) {
             // RFC 2616: if If-None-Match matched and there is no IMS,
-            // reply with 412 Precondition Failed
-            sendPreconditionFailedError();
+            // reply with 304 Not Modified or 412 Precondition Failed
+            sendNotModifiedOrPreconditionFailedError();
             return;
         }
 
-        // otherwise check IMS below to decide if we reply with 412
+        // otherwise check IMS below to decide if we reply with 304 or 412
         matchedIfNoneMatch = true;
     }
 
@@ -734,29 +734,14 @@ clientReplyContext::processConditional(StoreIOBuffer &result)
         }
 
         if (matchedIfNoneMatch) {
-            // If-None-Match matched, reply with 412 Precondition Failed
-            sendPreconditionFailedError();
+            // If-None-Match matched, reply with 304 Not Modified or
+            // 412 Precondition Failed
+            sendNotModifiedOrPreconditionFailedError();
             return;
         }
 
         // otherwise reply with 304 Not Modified
-        const time_t timestamp = e->timestamp;
-        HttpReply *const temprep = e->getReply()->make304();
-        http->logType = LOG_TCP_IMS_HIT;
-        removeClientStoreReference(&sc, http);
-        createStoreEntry(http->request->method, request_flags());
-        e = http->storeEntry();
-        // Copy timestamp from the original entry so the 304
-        // reply has a meaningful Age: header.
-        e->timestamp = timestamp;
-        e->replaceHttpReply(temprep);
-        e->complete();
-        /*
-         * TODO: why put this in the store and then serialise it and
-         * then parse it again. Simply mark the request complete in
-         * our context and write the reply struct to the client side.
-         */
-        triggerInitialStoreRead();
+        sendNotModified();
     }
 }
 
@@ -997,7 +982,6 @@ clientReplyContext::traceReply(clientStreamNode * node)
 {
     clientStreamNode *nextNode = (clientStreamNode *)node->node.next->data;
     StoreIOBuffer localTempBuffer;
-    assert(http->request->max_forwards == 0);
     createStoreEntry(http->request->method, request_flags());
     localTempBuffer.offset = nextNode->readBuffer.offset + headers_sz;
     localTempBuffer.length = nextNode->readBuffer.length;
@@ -1693,7 +1677,7 @@ clientGetMoreData(clientStreamNode * aNode, ClientHttpRequest * http)
     // OPTIONS with Max-Forwards:0 handled in clientProcessRequest()
 
     if (context->http->request->method == METHOD_TRACE) {
-        if (context->http->request->max_forwards == 0) {
+        if (context->http->request->header.getInt64(HDR_MAX_FORWARDS) == 0) {
             context->traceReply(aNode);
             return;
         }
@@ -1729,8 +1713,7 @@ clientReplyContext::doGetMoreData()
         }
 
         sc = storeClientListAdd(http->storeEntry(), this);
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
         sc->setDelayId(DelayId::DelayClient(http));
 #endif
 
@@ -1865,6 +1848,42 @@ clientReplyContext::sendPreconditionFailedError()
     removeClientStoreReference(&sc, http);
     HTTPMSGUNLOCK(reply);
     startError(err);
+}
+
+/// send 304 (Not Modified) to client
+void
+clientReplyContext::sendNotModified()
+{
+    StoreEntry *e = http->storeEntry();
+    const time_t timestamp = e->timestamp;
+    HttpReply *const temprep = e->getReply()->make304();
+    http->logType = LOG_TCP_IMS_HIT;
+    removeClientStoreReference(&sc, http);
+    createStoreEntry(http->request->method, request_flags());
+    e = http->storeEntry();
+    // Copy timestamp from the original entry so the 304
+    // reply has a meaningful Age: header.
+    e->timestamp = timestamp;
+    e->replaceHttpReply(temprep);
+    e->complete();
+    /*
+     * TODO: why put this in the store and then serialise it and
+     * then parse it again. Simply mark the request complete in
+     * our context and write the reply struct to the client side.
+     */
+    triggerInitialStoreRead();
+}
+
+/// send 304 (Not Modified) or 412 (Precondition Failed) to client
+/// depending on request method
+void
+clientReplyContext::sendNotModifiedOrPreconditionFailedError()
+{
+    if (http->request->method == METHOD_GET ||
+        http->request->method == METHOD_HEAD)
+        sendNotModified();
+    else
+        sendPreconditionFailedError();
 }
 
 void
@@ -2125,10 +2144,8 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, request_flags r
 
     sc = storeClientListAdd(e, this);
 
-#if DELAY_POOLS
-
+#if USE_DELAY_POOLS
     sc->setDelayId(DelayId::DelayClient(http));
-
 #endif
 
     reqofs = 0;

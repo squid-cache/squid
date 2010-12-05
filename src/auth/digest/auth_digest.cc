@@ -1067,7 +1067,8 @@ AuthDigestConfig::decode(char const *proxy_auth)
     if (!nonce) {
         /* we couldn't find a matching nonce! */
         debugs(29, 2, "authenticateDigestDecode: Unexpected or invalid nonce received");
-        digest_request->user()->credentials(AuthUser::Failed);
+        if (digest_request->user() != NULL)
+            digest_request->user()->credentials(AuthUser::Failed);
         return authDigestLogUsername(username, digest_request);
     }
 

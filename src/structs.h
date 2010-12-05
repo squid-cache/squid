@@ -29,7 +29,6 @@
 #ifndef SQUID_STRUCTS_H
 #define SQUID_STRUCTS_H
 
-#include "config.h"
 #include "RefCount.h"
 #include "cbdata.h"
 #include "dlink.h"
@@ -124,7 +123,7 @@ struct relist {
     relist *next;
 };
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "DelayConfig.h"
 #include "ClientDelayConfig.h"
 #endif
@@ -533,7 +532,7 @@ struct SquidConfig {
     struct {
         int64_t limit;
     } MemPools;
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 
     DelayConfig Delay;
     ClientDelayConfig ClientDelay;
@@ -886,7 +885,7 @@ struct peer {
         unsigned int htcp_forward_clr:1;
 #endif
         unsigned int no_netdb_exchange:1;
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
         unsigned int no_delay:1;
 #endif
         unsigned int allow_miss:1;

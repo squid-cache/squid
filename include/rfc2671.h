@@ -38,8 +38,6 @@
 #ifndef SQUID_RFC2671_H
 #define SQUID_RFC2671_H
 
-#include "config.h"
-
 /* RFC2671 section 7 defines new RR type OPT as 41 */
 #define RFC1035_TYPE_OPT 41
 

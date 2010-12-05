@@ -36,8 +36,6 @@
 #ifndef _SQUID_IP_IPADDRESS_H
 #define _SQUID_IP_IPADDRESS_H
 
-#include "config.h"
-
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -407,7 +405,7 @@ public:
     Address_list *next;
 };
 
-}; // namespace Ip
+} // namespace Ip
 
 extern void parse_IpAddress_list_token(Ip::Address_list **, char *);
 

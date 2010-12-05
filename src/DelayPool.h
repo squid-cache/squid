@@ -36,13 +36,10 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
-#include "config.h"
-
 #ifndef DELAYPOOL_H
 #define DELAYPOOL_H
 
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "squid.h"
 #include "CompositePoolNode.h"
 
@@ -74,5 +71,5 @@ private:
     CompositePoolNode::Pointer theComposite_;
 };
 
-#endif
+#endif /* USE_DELAY_POOLS */
 #endif /* DELAYPOOL_H */

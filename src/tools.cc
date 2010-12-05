@@ -86,8 +86,6 @@ SQUIDCEXTERN int setresuid(uid_t, uid_t, uid_t);
 
 #endif /* _SQUID_LINUX */
 
-SQUIDCEXTERN void (*failure_notify) (const char *);
-
 void
 releaseServerSockets(void)
 {

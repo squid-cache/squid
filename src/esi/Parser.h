@@ -32,9 +32,6 @@
 #ifndef SQUID_ESIPARSER_H
 #define SQUID_ESIPARSER_H
 
-/* for size_t */
-#include "config.h"
-
 class ESIParserClient
 {
 public:

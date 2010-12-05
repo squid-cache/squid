@@ -36,12 +36,9 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
-#include "config.h"
-
 #ifndef NULLDELAYID_H
 #define NULLDELAYID_H
-#if DELAY_POOLS
+#if USE_DELAY_POOLS
 #include "squid.h"
 #include "RefCount.h"
 #include "DelayIdComposite.h"

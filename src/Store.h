@@ -290,10 +290,10 @@ public:
      * The maximum size the store will support in normal use. Inaccuracy is permitted,
      * but may throw estimates for memory etc out of whack.
      */
-    virtual size_t maxSize() const = 0;
+    virtual uint64_t maxSize() const = 0;
 
     /** The minimum size the store will shrink to via normal housekeeping */
-    virtual size_t minSize() const = 0;
+    virtual uint64_t minSize() const = 0;
 
     /**
      * Output stats to the provided store entry.
@@ -364,7 +364,7 @@ SQUIDCEXTERN int expiresMoreThan(time_t, time_t);
 SQUIDCEXTERN void storeAppendPrintf(StoreEntry *, const char *,...) PRINTF_FORMAT_ARG2;
 
 /// \ingroup StoreAPI
-SQUIDCEXTERN void storeAppendVPrintf(StoreEntry *, const char *, va_list ap);
+extern void storeAppendVPrintf(StoreEntry *, const char *, va_list ap);
 
 /// \ingroup StoreAPI
 SQUIDCEXTERN int storeTooManyDiskFilesOpen(void);

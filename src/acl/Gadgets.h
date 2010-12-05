@@ -1,7 +1,6 @@
 #ifndef SQUID_ACL_GADGETS_H
 #define SQUID_ACL_GADGETS_H
 
-#include "config.h"
 #include "err_type.h"
 
 struct dlink_list;

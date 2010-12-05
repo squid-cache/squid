@@ -1,4 +1,4 @@
-/* $Id$
+#include "config.h"
 
 /*
  * From:    richard@hekkihek.hacom.nl (Richard Huveneers)
