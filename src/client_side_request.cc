@@ -71,6 +71,9 @@
 #include "SquidTime.h"
 #include "wordlist.h"
 #include "err_detail_type.h"
+#if USE_SSL
+#include "ssl/support.h"
+#endif
 
 
 #if LINGERING_CLOSE
