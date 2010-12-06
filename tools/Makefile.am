@@ -17,8 +17,6 @@ man_MANS =
 DISTCLEANFILES = 
 
 LDADD = \
-	$(top_builddir)/src/tests/stub_debug.o \
-	$(top_builddir)/src/time.o \
 	$(top_builddir)/src/ip/libip.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -28,15 +26,23 @@ LDADD = \
 
 include $(top_srcdir)/doc/manuals/Substitute.am
 
+## Several files need to be shared but we cannot depend on the other
+## directories to be built.
 test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
 	cp $(top_srcdir)/test-suite/test_tools.cc .
+
+stub_debug.cc: $(top_srcdir)/src/tests/stub_debug.cc
+	cp $(top_srcdir)/src/tests/stub_debug.cc .
+
+time.cc: $(top_srcdir)/src/time.cc
+	cp $(top_srcdir)/src/time.cc .
 
 # stock tools for unit tests - library independent versions of dlink_list
 # etc.
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
 TESTSOURCES= test_tools.cc
-CLEANFILES += test_tools.cc
+CLEANFILES += test_tools.cc stub_debug.cc time.cc
 
 ## ##### helper-mux #####
 
@@ -51,7 +57,9 @@ EXTRA_DIST += helper-ok-dying.pl helper-ok.pl
 bin_PROGRAMS = squidclient
 
 squidclient_SOURCES = squidclient.cc \
-	test_tools.cc
+	stub_debug.cc \
+	test_tools.cc \
+	time.cc
 
 EXTRA_DIST += squidclient.1
 man_MANS += squidclient.1
@@ -65,7 +73,9 @@ DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
 libexec_PROGRAMS = cachemgr$(CGIEXT)
 
 cachemgr__CGIEXT__SOURCES = cachemgr.cc \
-	test_tools.cc
+	stub_debug.cc \
+	test_tools.cc \
+	time.cc
 
 cachemgr__CGIEXT__CXXFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CXXFLAGS)
 
