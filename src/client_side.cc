@@ -119,6 +119,7 @@
 #if USE_SSL
 #include "ssl/context_storage.h"
 #include "ssl/helper.h"
+#include "ssl/support.h"
 #include "ssl/gadgets.h"
 #endif
 #if USE_SSL_CRTD
