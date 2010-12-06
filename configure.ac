@@ -2095,6 +2095,15 @@ AC_ARG_ENABLE(cpu-profiling,
 SQUID_YESNO([$enableval],
             [unrecognized argument to --enable-cpu-profiling: $enableval])
 ])
+if test "x$enable_cpu_profiling" != "xno"; then
+  SQUID_CHECK_FUNCTIONAL_CPU_PROFILER
+  if test "x$enable_cpu_profiling" = "xyes" -a "x$squid_cv_cpu_profiler_works" = "xno"; then
+    AC_MSG_ERROR([CPU profiling will not be functional in this build.])
+  elif test "x$squid_cv_cpu_profiler_works" = "xno"; then
+    AC_MSG_NOTICE([CPU profiling will not be functional in this build.])
+  fi
+  enable_cpu_profiling="$squid_cv_cpu_profiler_works"
+fi
 SQUID_DEFINE_BOOL(USE_XPROF_STATS,${enable_cpu_profiling:=no},
                       [Define to enable CPU profiling within Squid])
 AM_CONDITIONAL(ENABLE_XPROF_STATS,
