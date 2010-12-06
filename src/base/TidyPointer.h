@@ -17,7 +17,7 @@ public:
     /// Delete callback.
     typedef void DCB (T *t);
     TidyPointer(T *t = NULL)
-            :   raw(t), deAllocator(DeAllocator) {}
+            :   raw(t) {}
 public:
     bool operator !() const { return !raw; }
     /// Returns raw and possibly NULL pointer
@@ -48,12 +48,11 @@ private:
     /// Deallocate raw pointer. Become a nil pointer.
     void deletePointer() {
         if (raw) {
-            deAllocator(raw);
+            DeAllocator(raw);
         }
         raw = NULL;
     }
     T *raw; ///< pointer to T object or NULL
-    DCB *deAllocator; ///< cleanup function
 };
 
 /// DeAllocator for pointers that need free(3) from the std C library
