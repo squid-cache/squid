@@ -1721,8 +1721,8 @@ comm_remove_close_handler(int fd, PF * handler, void *data)
     debugs(5, 5, "comm_remove_close_handler: FD " << fd << ", handler=" <<
            handler << ", data=" << data);
 
-    AsyncCall::Pointer p;
-    for (p = fd_table[fd].closeHandler; p != NULL; p = p->Next()) {
+    AsyncCall::Pointer p, prev = NULL;
+    for (p = fd_table[fd].closeHandler; p != NULL; prev = p, p = p->Next()) {
         typedef CommCbFunPtrCallT<CommCloseCbPtrFun> Call;
         const Call *call = dynamic_cast<const Call*>(p.getRaw());
         if (!call) // method callbacks have their own comm_remove_close_handler
@@ -1735,9 +1735,10 @@ comm_remove_close_handler(int fd, PF * handler, void *data)
     }
 
     // comm_close removes all close handlers so our handler may be gone
-    if (p != NULL)
+    if (p != NULL) {
+        p->dequeue(fd_table[fd].closeHandler, prev);
         p->cancel("comm_remove_close_handler");
-    // TODO: should we remove the handler from the close handlers list?
+    }
 }
 
 // remove method-based close handler
@@ -1748,15 +1749,11 @@ comm_remove_close_handler(int fd, AsyncCall::Pointer &call)
     debugs(5, 5, "comm_remove_close_handler: FD " << fd << ", AsyncCall=" << call);
 
     // comm_close removes all close handlers so our handler may be gone
-    // TODO: should we remove the handler from the close handlers list?
-#if 0
-    // Check to see if really exist  the given AsyncCall in comm_close handlers
-    // TODO: optimize: this slow code is only needed for the assert() below
-    AsyncCall::Pointer p;
-    for (p = fd_table[fd].closeHandler; p != NULL && p != call; p = p->Next());
-    assert(p == call);
-#endif
+    AsyncCall::Pointer p, prev = NULL;
+    for (p = fd_table[fd].closeHandler; p != NULL && p != call; prev = p, p = p->Next());
 
+    if (p != NULL)
+        p->dequeue(fd_table[fd].closeHandler, prev);
     call->cancel("comm_remove_close_handler");
 }
 

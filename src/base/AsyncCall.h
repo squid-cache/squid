@@ -57,6 +57,9 @@ public:
 
     void print(std::ostream &os);
 
+    /// remove us from the queue; we are head unless we are queued after prev
+    void dequeue(AsyncCall::Pointer &head, AsyncCall::Pointer &prev);
+
     void setNext(AsyncCall::Pointer aNext) {
         theNext = aNext;
     }
