@@ -37,8 +37,9 @@ AC_LANG([C++])
 AC_CANONICAL_HOST
 
 AC_MSG_CHECKING([simplified host os])
-squid_host_os=`echo $host_os|sed 's/[0-9].*//;s/-.*//g'`
+simple_host_os=`echo $host_os|sed 's/[0-9].*//g;s/-.*//g'`
 squid_host_os_version=`echo $host_os|tr -d "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"`
+squid_host_os=`echo $simple_host_os| sed s/$squid_host_os_version//g`
 AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 # on windows squid_host_os is either mingw or cygwin, version is 32
 
@@ -276,15 +277,15 @@ fi
 
 dnl set squid required flags
 if test "x$GCC" = "xyes"; then
+  case "$squid_host_os" in
+  mingw)
 dnl Guido Serassio (serassio@squid-cache.org) 20070811
 dnl Using the latest MinGW (gcc 3.4.5 + mingw-runtime 3.13) cannot build with
 dnl -Werror -Wmissing-prototypes -Wmissing-declarations
 dnl TODO: check if the problem will be present in any other newer MinGW release.
-  case "$host_os" in
-  mingw|mingw32)
     SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments"
     ;;
-  freebsd*)
+  freebsd)
     # FreeBSD places local libraries and packages in /usr/local
     CFLAGS="$CFLAGS -I/usr/local/include"
     CXXFLAGS="$CXXFLAGS -I/usr/local/include"
@@ -579,8 +580,8 @@ for module in $squid_disk_module_candidates none; do
         else
           dnl Windows does things differently. We provide wrappers.
           dnl TODO: Windows really needs its own DiskIO module or its Overlaped IO
-          case "$host_os" in
-            mingw|mingw32)
+          case "$squid_host_os" in
+            mingw)
               squid_opt_use_aio="yes"
               AC_MSG_NOTICE([Windows being built. Maybe-enable POSIX AIO.])
               ;;
@@ -600,8 +601,8 @@ for module in $squid_disk_module_candidates none; do
         DISK_MODULES="$DISK_MODULES AIO"
         DISK_LIBS="$DISK_LIBS libAIO.a"
         DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/AIO/AIODiskIOModule.o"
-        case "$host_os" in
-          mingw|mingw32)
+        case "$squid_host_os" in
+          mingw)
             USE_AIO_WIN32=1
             AC_MSG_NOTICE([Replacing AIO DiskIO module with: Windows overlapped I/O support])
             ;;
@@ -2376,8 +2377,8 @@ AC_CHECK_MEMBERS([struct tm.tm_gmtoff],,,[
 SQUID_HAVE_STRUCT_MALLINFO
 
 dnl Override rusage() detect on MinGW because is emulated in source code
-case "$host_os" in
-  mingw|mingw32)
+case "$squid_host_os" in
+  mingw)
     AC_DEFINE(HAVE_STRUCT_RUSAGE)
     ac_cv_func_getrusage='yes'
     AC_MSG_NOTICE([Using own rusage on Windows.])
@@ -2538,17 +2539,17 @@ else
   esac
 fi
 
-case "$host_os" in
-mingw|mingw32)
-	AC_MSG_NOTICE([Use MSVCRT for math functions.])
-	;;
-	*)
-	dnl rint() and log() are only used in old C code for now.
-	AC_LANG_PUSH([C])
-	AC_SEARCH_LIBS([rint],[m])
-	AC_SEARCH_LIBS([log],[m])
-	AC_LANG_POP([C])
-	;;
+case "$squid_host_os" in
+  mingw)
+    AC_MSG_NOTICE([Use MSVCRT for math functions.])
+    ;;
+  *)
+    dnl rint() and log() are only used in old C code for now.
+    AC_LANG_PUSH([C])
+    AC_SEARCH_LIBS([rint],[m])
+    AC_SEARCH_LIBS([log],[m])
+    AC_LANG_POP([C])
+    ;;
 esac
 
 
@@ -2643,8 +2644,8 @@ esac
 
 dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked 
 dnl only with Windows LDAP libraries using -lwldap32
-case "$host_os" in
-	mingw|mingw32)
+case "$squid_host_os" in
+	mingw)
 		LDAPLIB="-lwldap32"
 		LBERLIB=""
 		;;
@@ -3003,12 +3004,10 @@ if test "x$ac_cv_func_poll" = "x" ; then
   esac
 fi
 
-dnl Override statfs() detect on MinGW becasue is emulated in source code
-case "$host_os" in
-mingw|mingw32)
+dnl Override statfs() detect on MinGW because it is emulated in source code
+if test "x$squid_host_os" = "xmingw" ; then
   ac_cv_func_statfs='yes'
-  ;;
-esac
+fi
 
 dnl Check for library functions
 AC_CHECK_FUNCS(\
