@@ -113,7 +113,7 @@ class SwapDir : public Store
 {
 
 public:
-    SwapDir(char const *aType) : theType (aType), cur_size(0), max_size(0), min_objsize(-1), max_objsize(-1), cleanLog(NULL) {
+    SwapDir(char const *aType) : theType (aType), cur_size(0), max_size(0), min_objsize(0), max_objsize(-1), cleanLog(NULL) {
         fs.blksize = 1024;
         path = NULL;
     }

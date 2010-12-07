@@ -262,7 +262,7 @@ SwapDir::optionObjectSizeParse(char const *option, const char *value, int isaRec
 void
 SwapDir::optionObjectSizeDump(StoreEntry * e) const
 {
-    if (min_objsize != -1)
+    if (min_objsize != 0)
         storeAppendPrintf(e, " min-size=%"PRId64, min_objsize);
 
     if (max_objsize != -1)
