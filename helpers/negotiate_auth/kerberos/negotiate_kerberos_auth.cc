@@ -58,7 +58,7 @@
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
 #include <gssapi.h>
-#endif 
+#endif
 
 #if !HAVE_HEIMDAL_KERBEROS
 #if HAVE_GSSAPI_GSSAPI_KRB5_H
