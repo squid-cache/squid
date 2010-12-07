@@ -459,6 +459,9 @@ This section gives a thorough account of those changes in three categories:
 	   <em>concurrency=N</em> previously called <em>auth_param ... concurrency</em> as a separate option.
 	<p>Removed Basic, Digest, NTLM, Negotiate <em>auth_param ... concurrency</em> setting option.
 
+	<tag>cache_dir</tag>
+	<p><em>min-size</em> option ported from Squid-2
+
 	<tag>cache_peer</tag>
 	<p><em>htcp-*</em> options collapsed into <em>htcp=</em> taking an optional comma-separated list of flags.
 	   The old form is deprecated but still accepted.
@@ -792,7 +795,6 @@ This section gives an account of those changes in three categories:
 	<p>Not yet ported from 2.6
 
 	<tag>cache_dir</tag>
-	<p><em>min-size</em> option not yet ported from Squid-2
 	<p><em>COSS</em> storage type is lacking stability fixes from 2.6
 	<p>COSS <em>overwrite-percent=</em> option not yet ported from 2.6
 	<p>COSS <em>max-stripe-waste=</em> option not yet ported from 2.6
