@@ -8,6 +8,9 @@
 #include "base/TextException.h"
 #include "adaptation/ecap/ServiceRep.h"
 #include "adaptation/ecap/Host.h"
+#include "adaptation/ecap/MessageRep.h"
+#include "HttpRequest.h"
+#include "HttpReply.h"
 
 const libecap::Name Adaptation::Ecap::protocolInternal("internal", libecap::Name::NextId());
 const libecap::Name Adaptation::Ecap::protocolCacheObj("cache_object", libecap::Name::NextId());
@@ -92,6 +95,19 @@ Adaptation::Ecap::Host::closeDebug(std::ostream *debug)
 {
     if (debug)
         Debug::finishDebug();
+}
+
+
+Adaptation::Ecap::Host::MessagePtr
+Adaptation::Ecap::Host::newRequest() const
+{
+    return MessagePtr(new Adaptation::Ecap::MessageRep(new HttpRequest));
+}
+
+Adaptation::Ecap::Host::MessagePtr
+Adaptation::Ecap::Host::newResponse() const
+{
+    return MessagePtr(new Adaptation::Ecap::MessageRep(new HttpReply));
 }
 
 void
