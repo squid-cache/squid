@@ -113,7 +113,7 @@ class SwapDir : public Store
 {
 
 public:
-    SwapDir(char const *aType) : theType (aType), cur_size(0), max_size(0), max_objsize (-1), cleanLog(NULL) {
+    SwapDir(char const *aType) : theType (aType), cur_size(0), max_size(0), min_objsize(0), max_objsize(-1), cleanLog(NULL) {
         fs.blksize = 1024;
         path = NULL;
     }
@@ -148,8 +148,8 @@ protected:
 private:
     bool optionReadOnlyParse(char const *option, const char *value, int reconfiguring);
     void optionReadOnlyDump(StoreEntry * e) const;
-    bool optionMaxSizeParse(char const *option, const char *value, int reconfiguring);
-    void optionMaxSizeDump(StoreEntry * e) const;
+    bool optionObjectSizeParse(char const *option, const char *value, int reconfiguring);
+    void optionObjectSizeDump(StoreEntry * e) const;
     char const *theType;
 
 public:
@@ -157,6 +157,7 @@ public:
     uint64_t max_size;        ///< maximum allocatable size of the storage area
     char *path;
     int index;			/* This entry's index into the swapDirs array */
+    int64_t min_objsize;
     int64_t max_objsize;
     RemovalPolicy *repl;
     int removals;
