@@ -158,7 +158,7 @@ bool
 SwapDir::objectSizeIsAcceptable(int64_t objsize) const
 {
     // If the swapdir has no range limits, then it definitely can
-    if (min_objsize == -1 && max_objsize == -1)
+    if (min_objsize <= 0 && max_objsize == -1)
         return true;
 
     /*
