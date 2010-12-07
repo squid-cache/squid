@@ -104,7 +104,7 @@ IdleConnList::removeAt(int index)
     // shuffle the remaining entries to fill the new gap.
     for (; index < size_ - 1; index++)
         theList_[index] = theList_[index + 1];
-    theList_[size_] = NULL;
+    theList_[size_-1] = NULL;
 
     if (--size_ == 0) {
         debugs(48, 3, HERE << "deleting " << hashKeyStr(&hash));
