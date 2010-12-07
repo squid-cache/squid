@@ -56,6 +56,9 @@
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "ClientInfo.h"
+#if USE_SSL
+#include "ssl/support.h"
+#endif
 
 #include "cbdata.h"
 #if defined(_SQUID_CYGWIN_)

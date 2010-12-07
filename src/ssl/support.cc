@@ -42,6 +42,7 @@
 
 #include "fde.h"
 #include "acl/FilledChecklist.h"
+#include "ssl/support.h"
 #include "ssl/gadgets.h"
 
 /**

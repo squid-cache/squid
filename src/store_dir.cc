@@ -146,35 +146,30 @@ StoreController::create()
 #endif
 }
 
-/*
+/**
  * Determine whether the given directory can handle this object
  * size
  *
  * Note: if the object size is -1, then the only swapdirs that
- * will return true here are ones that have max_obj_size = -1,
+ * will return true here are ones that have min and max unset,
  * ie any-sized-object swapdirs. This is a good thing.
  */
 bool
 SwapDir::objectSizeIsAcceptable(int64_t objsize) const
 {
-    /*
-     * If the swapdir's max_obj_size is -1, then it definitely can
-     */
-
-    if (max_objsize == -1)
+    // If the swapdir has no range limits, then it definitely can
+    if (min_objsize <= 0 && max_objsize == -1)
         return true;
 
     /*
-     * If the object size is -1, then if the storedir isn't -1 we
-     * can't store it
+     * If the object size is -1 and the storedir has limits we
+     * can't store it there.
      */
-    if ((objsize == -1) && (max_objsize != -1))
+    if (objsize == -1)
         return false;
 
-    /*
-     * Else, make sure that the max object size is larger than objsize
-     */
-    return max_objsize > objsize;
+    // Else, make sure that the object size will fit.
+    return min_objsize <= objsize && max_objsize > objsize;
 }
 
 

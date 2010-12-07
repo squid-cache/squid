@@ -9,6 +9,9 @@ if [ -f /usr/include/ldap.h -o -f /usr/local/include/ldap.h ]; then
 		if [ -f /usr/lib/libsasl.la -o -f /usr/lib/libsasl2.la ]; then
 			exit 0
 		fi
+		if [ -f /usr/lib/libsasl.so -o -f /usr/lib/libsasl2.so ]; then
+			exit 0
+		fi
 		if [ -f  /usr/local/lib/libsasl.so -o -f  /usr/local/lib/libsasl2.so ]; then
 			exit 0
 		fi

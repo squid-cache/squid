@@ -41,11 +41,6 @@ static bool makeRequest(Ssl::X509_REQ_Pointer & request, Ssl::EVP_PKEY_Pointer c
     return true;
 }
 
-void Ssl::BIO_free_wrapper(BIO * bio)
-{
-    BIO_free(bio);
-}
-
 EVP_PKEY * Ssl::createSslPrivateKey()
 {
     Ssl::EVP_PKEY_Pointer pkey(EVP_PKEY_new());

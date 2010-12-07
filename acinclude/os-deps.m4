@@ -837,3 +837,27 @@ AC_DEFUN([SQUID_CHECK_SETRESUID_WORKS],[
     squid_cv_resuid_works="no" ],[:])
   )
 ])
+
+dnl check that we have functional CPU clock access for the profiler
+dnl sets squid_cv_profiler_works to "yes" or "no"
+
+AC_DEFUN([SQUID_CHECK_FUNCTIONAL_CPU_PROFILER],[
+  AC_CACHE_CHECK([for operational CPU clock access], 
+                 squid_cv_cpu_profiler_works,
+    AC_PREPROC_IFELSE([AC_LANG_SOURCE([[
+#if defined(__GNUC__) && ( defined(__i386) || defined(__i386__) )
+// okay
+#elif defined(__GNUC__) && ( defined(__x86_64) || defined(__x86_64__) )
+// okay
+#elif defined(__GNUC__) && defined(__alpha)
+// okay
+#elif defined(_M_IX86) && defined(_MSC_VER) /* x86 platform on Microsoft C Compiler ONLY */
+// okay
+#else
+#error This CPU is unsupported. No profiling available here.
+#endif
+  ]])],[
+  squid_cv_cpu_profiler_works=yes],[
+  squid_cv_cpu_profiler_works=no])
+  )
+])
