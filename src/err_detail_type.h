@@ -4,8 +4,9 @@
 typedef enum {
     ERR_DETAIL_NONE,
     ERR_DETAIL_START = 100000, // to avoid clashes with most OS error numbers
-    ERR_DETAIL_ICAP_REQMOD_ABORT = ERR_DETAIL_START, // transaction abort
-    ERR_DETAIL_ICAP_RESPMOD_CLT_SIDE_BODY, // client-side detected body abort
+    ERR_DETAIL_CLT_REQMOD_ABORT = ERR_DETAIL_START, // client-side detected transaction abort
+    ERR_DETAIL_CLT_REQMOD_REQ_BODY, // client-side detected REQMOD request body adaptation failure
+    ERR_DETAIL_CLT_REQMOD_RESP_BODY, // client-side detected REQMOD satisfaction reply body failure
     ERR_DETAIL_ICAP_RESPMOD_EARLY, // RESPMOD failed w/o store entry
     ERR_DETAIL_ICAP_RESPMOD_LATE,  // RESPMOD failed with a store entry
     ERR_DETAIL_ICAP_XACT_START, // transaction start failure

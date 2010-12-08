@@ -45,6 +45,9 @@
 #include "client_side.h"
 #include "helper.h"
 #include "rfc1738.h"
+#if USE_SSL
+#include "ssl/support.h"
+#endif
 
 typedef struct {
     void *data;

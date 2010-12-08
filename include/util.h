@@ -66,10 +66,6 @@ SQUIDCEXTERN void Tolower(char *);
 #include "SquidNew.h"
 #endif
 
-#if 0 && XMALLOC_STATISTICS
-SQUIDCEXTERN void malloc_statistics(void (*)(int, int, int, void *), void *);
-#endif
-
 #if XMALLOC_TRACE
 #define xmalloc(size) (xmalloc_func="xmalloc",xmalloc_line=__LINE__,xmalloc_file=__FILE__,xmalloc(size))
 #define xfree(ptr) (xmalloc_func="xfree",xmalloc_line=__LINE__,xmalloc_file=__FILE__,xfree(ptr))

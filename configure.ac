@@ -37,8 +37,9 @@ AC_LANG([C++])
 AC_CANONICAL_HOST
 
 AC_MSG_CHECKING([simplified host os])
-squid_host_os=`echo $host_os|sed 's/[0-9].*//;s/-.*//g'`
+simple_host_os=`echo $host_os|sed 's/[0-9].*//g;s/-.*//g'`
 squid_host_os_version=`echo $host_os|tr -d "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"`
+squid_host_os=`echo $simple_host_os| sed s/$squid_host_os_version//g`
 AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 # on windows squid_host_os is either mingw or cygwin, version is 32
 
@@ -276,13 +277,19 @@ fi
 
 dnl set squid required flags
 if test "x$GCC" = "xyes"; then
+  case "$squid_host_os" in
+  mingw)
 dnl Guido Serassio (serassio@squid-cache.org) 20070811
 dnl Using the latest MinGW (gcc 3.4.5 + mingw-runtime 3.13) cannot build with
 dnl -Werror -Wmissing-prototypes -Wmissing-declarations
 dnl TODO: check if the problem will be present in any other newer MinGW release.
-  case "$host_os" in
-  mingw|mingw32)
     SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments"
+    ;;
+  freebsd)
+    # FreeBSD places local libraries and packages in /usr/local
+    CFLAGS="$CFLAGS -I/usr/local/include"
+    CXXFLAGS="$CXXFLAGS -I/usr/local/include"
+    LDFLAGS="$LDFLAGS -L/usr/local/lib -Wl,-R/usr/local/lib"
     ;;
   *)
     SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
@@ -503,10 +510,15 @@ for module in $squid_disk_module_candidates none; do
             AC_MSG_NOTICE([Windows threads support automatically enabled])
             ;;
           freebsd)
-            SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
-            SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
-            if test "x$GCC" = "xyes" -a "x$PRESET_LDFLAGS" = "x" ; then
-              LDFLAGS="$LDFLAGS -pthread"
+            if test $squid_host_os_version -lt 7 ; then
+                AC_MSG_NOTICE(pthread library requires FreeBSD 7 or later)
+                squid_opt_use_diskthreads="no"
+            else
+              SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
+              SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
+              if test "x$GCC" = "xyes" -a "x$PRESET_LDFLAGS" = "x" ; then
+                LDFLAGS="$LDFLAGS -pthread"
+              fi
             fi
             ;;
           solaris)
@@ -573,8 +585,8 @@ for module in $squid_disk_module_candidates none; do
         else
           dnl Windows does things differently. We provide wrappers.
           dnl TODO: Windows really needs its own DiskIO module or its Overlaped IO
-          case "$host_os" in
-            mingw|mingw32)
+          case "$squid_host_os" in
+            mingw)
               squid_opt_use_aio="yes"
               AC_MSG_NOTICE([Windows being built. Maybe-enable POSIX AIO.])
               ;;
@@ -594,8 +606,8 @@ for module in $squid_disk_module_candidates none; do
         DISK_MODULES="$DISK_MODULES AIO"
         DISK_LIBS="$DISK_LIBS libAIO.a"
         DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/AIO/AIODiskIOModule.o"
-        case "$host_os" in
-          mingw|mingw32)
+        case "$squid_host_os" in
+          mingw)
             USE_AIO_WIN32=1
             AC_MSG_NOTICE([Replacing AIO DiskIO module with: Windows overlapped I/O support])
             ;;
@@ -776,7 +788,7 @@ AC_ARG_ENABLE(delay-pools,
 [ if test "x$enableval" = "xyes" ; then
     AC_MSG_NOTICE([Delay pools enabled])
     AC_DEFINE([USE_DELAY_POOLS],1,[Traffic management via "delay pools".])
-    AM_CONDITIONAL(ENABLE_DELAY_POOLS, true,)
+    AM_CONDITIONAL(ENABLE_DELAY_POOLS, true)
   fi
 ])
 
@@ -819,16 +831,26 @@ AC_ARG_WITH(libxml2, AS_HELP_STRING([--without-libxml2],[Do not use libxml2 for 
 if test "x$squid_opt_use_esi" = "xyes" -a "x$with_libxml2" != "xno" ; then
   AC_CHECK_LIB([xml2], [main], [XMLLIB="-lxml2"; HAVE_LIBXML2=1])
   dnl Find the main header and include path...
+  ac_cv_libxml2_include='no'
   AC_CHECK_HEADERS([libxml/parser.h], [], [
+      AC_MSG_NOTICE([Testing in /usr/include/libxml2])
       SAVED_CPPFLAGS="$CPPFLAGS"
       CPPFLAGS="-I/usr/include/libxml2 $CPPFLAGS"
       unset ac_cv_header_libxml_parser_h
-      AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include=yes], [])
+      AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include="/usr/include/libxml2"], [])
       CPPFLAGS="$SAVED_CPPFLAGS"
+      if test "x$ac_cv_libxml2_include" = "xno"; then
+          AC_MSG_NOTICE([Testing in /usr/local/include/libxml2])
+          SAVED_CPPFLAGS="$CPPFLAGS"
+          CPPFLAGS="-I/usr/local/include/libxml2 $CPPFLAGS"
+          unset ac_cv_header_libxml_parser_h
+          AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include="/usr/local/include/libxml2"], [])
+          CPPFLAGS="$SAVED_CPPFLAGS"
+      fi
       ])
-  if test "x$ac_cv_libxml2_include" = "xyes"; then
-      SQUID_CXXFLAGS="-I/usr/include/libxml2 $SQUID_CXXFLAGS"
-      CPPFLAGS="-I/usr/include/libxml2 $CPPFLAGS"
+  if test "x$ac_cv_libxml2_include" != "xno"; then
+      SQUID_CXXFLAGS="-I$ac_cv_libxml2_include $SQUID_CXXFLAGS"
+      CPPFLAGS="-I$ac_cv_libxml2_include $CPPFLAGS"
   fi
   dnl Now that we know where to look find the other headers...
   AC_CHECK_HEADERS(libxml/HTMLparser.h libxml/HTMLtree.h)
@@ -1835,11 +1857,15 @@ if test "x$ac_krb5_config" = "xyes" ; then
 
   SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
   if test "x$squid_cv_broken_krb5_h" = "xyes"; then
-    AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if krb5.h is broken for C++])
+    AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if Solaris krb5.h is broken for C++])
     AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.])
     AC_MSG_WARN([Please see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512])
     AC_MSG_WARN([If you need Kerberos support you'll have to patch])
     AC_MSG_WARN([your system. See contrib/solaris/solaris-krb5-include.patch])
+  fi
+  SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
+  if test "x$squid_cv_broken_heimdal_krb5_h" = "xyes"; then
+    AC_DEFINE(HAVE_BROKEN_HEIMDAL_KRB5_H, 1, [Define to 1 if Heimdal krb5.h is broken for C++])
   fi
   AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
 
@@ -2095,6 +2121,15 @@ AC_ARG_ENABLE(cpu-profiling,
 SQUID_YESNO([$enableval],
             [unrecognized argument to --enable-cpu-profiling: $enableval])
 ])
+if test "x$enable_cpu_profiling" != "xno"; then
+  SQUID_CHECK_FUNCTIONAL_CPU_PROFILER
+  if test "x$enable_cpu_profiling" = "xyes" -a "x$squid_cv_cpu_profiler_works" = "xno"; then
+    AC_MSG_ERROR([CPU profiling will not be functional in this build.])
+  elif test "x$squid_cv_cpu_profiler_works" = "xno"; then
+    AC_MSG_NOTICE([CPU profiling will not be functional in this build.])
+  fi
+  enable_cpu_profiling="$squid_cv_cpu_profiler_works"
+fi
 SQUID_DEFINE_BOOL(USE_XPROF_STATS,${enable_cpu_profiling:=no},
                       [Define to enable CPU profiling within Squid])
 AM_CONDITIONAL(ENABLE_XPROF_STATS,
@@ -2357,8 +2392,8 @@ AC_CHECK_MEMBERS([struct tm.tm_gmtoff],,,[
 SQUID_HAVE_STRUCT_MALLINFO
 
 dnl Override rusage() detect on MinGW because is emulated in source code
-case "$host_os" in
-  mingw|mingw32)
+case "$squid_host_os" in
+  mingw)
     AC_DEFINE(HAVE_STRUCT_RUSAGE)
     ac_cv_func_getrusage='yes'
     AC_MSG_NOTICE([Using own rusage on Windows.])
@@ -2519,17 +2554,17 @@ else
   esac
 fi
 
-case "$host_os" in
-mingw|mingw32)
-	AC_MSG_NOTICE([Use MSVCRT for math functions.])
-	;;
-	*)
-	dnl rint() and log() are only used in old C code for now.
-	AC_LANG_PUSH([C])
-	AC_SEARCH_LIBS([rint],[m])
-	AC_SEARCH_LIBS([log],[m])
-	AC_LANG_POP([C])
-	;;
+case "$squid_host_os" in
+  mingw)
+    AC_MSG_NOTICE([Use MSVCRT for math functions.])
+    ;;
+  *)
+    dnl rint() and log() are only used in old C code for now.
+    AC_LANG_PUSH([C])
+    AC_SEARCH_LIBS([rint],[m])
+    AC_SEARCH_LIBS([log],[m])
+    AC_LANG_POP([C])
+    ;;
 esac
 
 
@@ -2624,8 +2659,8 @@ esac
 
 dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked 
 dnl only with Windows LDAP libraries using -lwldap32
-case "$host_os" in
-	mingw|mingw32)
+case "$squid_host_os" in
+	mingw)
 		LDAPLIB="-lwldap32"
 		LBERLIB=""
 		;;
@@ -2984,12 +3019,10 @@ if test "x$ac_cv_func_poll" = "x" ; then
   esac
 fi
 
-dnl Override statfs() detect on MinGW becasue is emulated in source code
-case "$host_os" in
-mingw|mingw32)
+dnl Override statfs() detect on MinGW because it is emulated in source code
+if test "x$squid_host_os" = "xmingw" ; then
   ac_cv_func_statfs='yes'
-  ;;
-esac
+fi
 
 dnl Check for library functions
 AC_CHECK_FUNCS(\

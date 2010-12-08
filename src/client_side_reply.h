@@ -138,6 +138,8 @@ private:
 
     void sendBodyTooLargeError();
     void sendPreconditionFailedError();
+    void sendNotModified();
+    void sendNotModifiedOrPreconditionFailedError();
 
     StoreEntry *old_entry;
     store_client *old_sc;	/* ... for entry to be validated */

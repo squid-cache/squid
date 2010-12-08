@@ -63,9 +63,9 @@ public:
 
     virtual void sync();
 
-    virtual size_t maxSize() const;
+    virtual uint64_t maxSize() const;
 
-    virtual size_t minSize() const;
+    virtual uint64_t minSize() const;
 
     virtual void stat(StoreEntry&) const;
 
