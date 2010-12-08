@@ -1,5 +1,5 @@
 #!/bin/sh
-# Used to setup the configure.in, autoheader and Makefile.in's if configure
+# Used to setup the configure.ac, autoheader and Makefile.in's if configure
 # has not been generated. This script is only needed for developers when
 # configure has not been run, or if a Makefile.am in a non-configured directory
 # has been updated
@@ -7,9 +7,9 @@
 # Autotool versions preferred. To override either edit the script
 # to match the versions you want to use, or set the variables on
 # the command line like "env acver=.. amver=... ./bootstrap.sh"
-acversions="${acver:-2.64 2.63 2.62 2.61}"
-amversions="${amver:-1.11 1.10 1.9}"
-ltversions="${ltver:-2.2}"
+acversions="${acver:-.}" # 2.68 2.67 2.66 2.65 2.64 2.63 2.62 2.61}"
+amversions="${amver:-.}" # 1.11 1.10 1.9}"
+ltversions="${ltver:-.}" # 2.2}"
 
 check_version()
 {
@@ -19,24 +19,8 @@ check_version()
 show_version()
 {
   tool=$1
-  found="NOT_FOUND"
-  shift
-  versions="$*"
-  for version in $versions; do
-    for variant in "" "-${version}" "`echo $version | sed -e 's/\.//g'`"; do
-      if check_version $tool ${tool}${variant} $version; then
-	found="${version}"
-	break
-      fi
-    done
-    if [ "x$found" != "xNOT_FOUND" ]; then
-      break
-    fi
-  done
-  if [ "x$found" = "xNOT_FOUND" ]; then
-    found="??"
-  fi
-  echo $found
+  variant=$2
+  ${tool}${variant} --version 2>/dev/null | head -1 | sed -e 's/.*) //'
 }
 
 find_variant()
@@ -92,7 +76,7 @@ bootstrap_libtoolize() {
 
     # TODO: when we have libtool2, tell libtoolize where to put its files
     # instead of manualy moving files from ltdl to lib/libLtdl
-    if egrep -q '^[[:space:]]*AC_LIBLTDL_' configure.in
+    if egrep -q '^[[:space:]]*AC_LIBLTDL_' configure.ac
     then
 	ltdl="--ltdl"
     else
@@ -122,9 +106,9 @@ acver=`find_variant autoconf ${acversions}`
 ltver=`find_variant libtool ${ltversions}`
 
 # Produce debug output about what version actually found.
-amversion=`show_version automake ${amversions}`
-acversion=`show_version autoconf ${acversions}`
-ltversion=`show_version libtool ${ltversions}`
+amversion=`show_version automake "${amver}"`
+acversion=`show_version autoconf "${acver}"`
+ltversion=`show_version libtool "${ltver}"`
 
 # Find the libtool path to get the right aclocal includes
 ltpath=`find_path libtool$ltver`

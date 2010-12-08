@@ -106,13 +106,16 @@
 static char *password = NULL;	/* Workaround for Solaris 2.6 brokenness */
 #endif
 
+extern "C" int password_conversation(int num_msg, PAM_CONV_FUNC_CONST_PARM struct pam_message **msg,
+                                     struct pam_response **resp, void *appdata_ptr);
+
 /**
  * A simple "conversation" function returning the supplied password.
  * Has a bit to much error control, but this is my first PAM application
  * so I'd rather check everything than make any mistakes. The function
  * expects a single converstation message of type PAM_PROMPT_ECHO_OFF.
  */
-static int
+int
 password_conversation(int num_msg, PAM_CONV_FUNC_CONST_PARM struct pam_message **msg, struct pam_response **resp, void *appdata_ptr)
 {
     if (num_msg != 1 || msg[0]->msg_style != PAM_PROMPT_ECHO_OFF) {

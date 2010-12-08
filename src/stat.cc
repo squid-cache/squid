@@ -57,6 +57,9 @@
 #include "mgr/IoAction.h"
 #include "mgr/Registration.h"
 #include "mgr/ServiceTimesAction.h"
+#if USE_SSL
+#include "ssl/support.h"
+#endif
 
 /* these are included because they expose stats calls */
 /* TODO: provide a self registration mechanism for those classes

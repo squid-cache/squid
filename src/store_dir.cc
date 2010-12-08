@@ -146,35 +146,30 @@ StoreController::create()
 #endif
 }
 
-/*
+/**
  * Determine whether the given directory can handle this object
  * size
  *
  * Note: if the object size is -1, then the only swapdirs that
- * will return true here are ones that have max_obj_size = -1,
+ * will return true here are ones that have min and max unset,
  * ie any-sized-object swapdirs. This is a good thing.
  */
 bool
 SwapDir::objectSizeIsAcceptable(int64_t objsize) const
 {
-    /*
-     * If the swapdir's max_obj_size is -1, then it definitely can
-     */
-
-    if (max_objsize == -1)
+    // If the swapdir has no range limits, then it definitely can
+    if (min_objsize <= 0 && max_objsize == -1)
         return true;
 
     /*
-     * If the object size is -1, then if the storedir isn't -1 we
-     * can't store it
+     * If the object size is -1 and the storedir has limits we
+     * can't store it there.
      */
-    if ((objsize == -1) && (max_objsize != -1))
+    if (objsize == -1)
         return false;
 
-    /*
-     * Else, make sure that the max object size is larger than objsize
-     */
-    return max_objsize > objsize;
+    // Else, make sure that the object size will fit.
+    return min_objsize <= objsize && max_objsize > objsize;
 }
 
 
@@ -361,14 +356,13 @@ StoreController::stat(StoreEntry &output) const
     storeAppendPrintf(&output, "Store Directory Statistics:\n");
     storeAppendPrintf(&output, "Store Entries          : %lu\n",
                       (unsigned long int)StoreEntry::inUseCount());
-    storeAppendPrintf(&output, "Maximum Swap Size      : %8ld KB\n",
-                      (long int) maxSize());
+    storeAppendPrintf(&output, "Maximum Swap Size      : %"PRIu64" KB\n",
+                      maxSize());
     storeAppendPrintf(&output, "Current Store Swap Size: %8lu KB\n",
                       store_swap_size);
-    // XXX : below capacity display calculation breaks with int overflow on 64-bit systems
-    storeAppendPrintf(&output, "Current Capacity       : %d%% used, %d%% free\n",
-                      Math::intPercent((int) store_swap_size, (int) maxSize()),
-                      Math::intPercent((int) (maxSize() - store_swap_size), (int) maxSize()));
+    storeAppendPrintf(&output, "Current Capacity       : %"PRId64"%% used, %"PRId64"%% free\n",
+                      Math::int64Percent(store_swap_size, maxSize()),
+                      Math::int64Percent((maxSize() - store_swap_size), maxSize()));
     /* FIXME Here we should output memory statistics */
 
     /* now the swapDir */
@@ -376,14 +370,14 @@ StoreController::stat(StoreEntry &output) const
 }
 
 /* if needed, this could be taught to cache the result */
-size_t
+uint64_t
 StoreController::maxSize() const
 {
     /* TODO: include memory cache ? */
     return swapDir->maxSize();
 }
 
-size_t
+uint64_t
 StoreController::minSize() const
 {
     /* TODO: include memory cache ? */
@@ -829,22 +823,21 @@ StoreHashIndex::init()
     }
 }
 
-size_t
+uint64_t
 StoreHashIndex::maxSize() const
 {
-    int i;
-    size_t result = 0;
+    uint64_t result = 0;
 
-    for (i = 0; i < Config.cacheSwap.n_configured; i++)
+    for (int i = 0; i < Config.cacheSwap.n_configured; i++)
         result += store(i)->maxSize();
 
     return result;
 }
 
-size_t
+uint64_t
 StoreHashIndex::minSize() const
 {
-    size_t result = 0;
+    uint64_t result = 0;
 
     for (int i = 0; i < Config.cacheSwap.n_configured; i++)
         result += store(i)->minSize();

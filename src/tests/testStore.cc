@@ -31,13 +31,13 @@ void
 TestStore::init()
 {}
 
-size_t
+uint64_t
 TestStore::maxSize() const
 {
     return 3;
 }
 
-size_t
+uint64_t
 TestStore::minSize() const
 {
     return 1;
