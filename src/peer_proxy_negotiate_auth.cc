@@ -25,8 +25,9 @@
  * Hosted at http://sourceforge.net/projects/squidkerbauth
  */
 
-#include "squid.h"
+#include "config.h"
 #include "base64.h"
+#include "Debug.h"
 
 #if HAVE_KRB5 && HAVE_GSSAPI
 #ifdef __cplusplus

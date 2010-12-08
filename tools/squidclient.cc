@@ -86,16 +86,18 @@ using namespace Squid;
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
 #include <gssapi.h>
-#endif                          /* HAVE_GSSAPI_H */
-#if HAVE_GSSAPI_GSSAPI_EXT_H
-#include <gssapi/gssapi_ext.h>
-#endif                          /* HAVE_GSSAPI_GSSAPI_EXT_H */
+#endif /* HAVE_GSSAPI_GSSAPI_H/HAVE_GSSAPI_H */
+#if !HAVE_HEIMDAL_KERBEROS
 #if HAVE_GSSAPI_GSSAPI_KRB5_H
 #include <gssapi/gssapi_krb5.h>
-#endif                          /* HAVE_GSSAPI_GSSAPI_KRB5_H */
+#endif
 #if HAVE_GSSAPI_GSSAPI_GENERIC_H
 #include <gssapi/gssapi_generic.h>
-#endif                          /* HAVE_GSSAPI_GSSAPI_GENERIC_H */
+#endif
+#if HAVE_GSSAPI_GSSAPI_EXT_H
+#include <gssapi/gssapi_ext.h>
+#endif
+#endif
 
 #ifndef gss_nt_service_name
 #define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
@@ -126,8 +128,8 @@ static int client_comm_connect(int, const Ip::Address &, struct timeval *);
 static void usage(const char *progname);
 
 static int Now(struct timeval *);
-static SIGHDLR catchSignal;
-static SIGHDLR pipe_handler;
+SIGHDLR catchSignal;
+SIGHDLR pipe_handler;
 static void set_our_signal(void);
 static ssize_t myread(int fd, void *buf, size_t len);
 static ssize_t mywrite(int fd, void *buf, size_t len);
@@ -758,14 +760,14 @@ Now(struct timeval *tp)
 #endif
 }				/* ARGSUSED */
 
-static void
+void
 catchSignal(int sig)
 {
     interrupted = 1;
     fprintf(stderr, "Interrupted.\n");
 }
 
-static void
+void
 pipe_handler(int sig)
 {
     fprintf(stderr, "SIGPIPE received.\n");

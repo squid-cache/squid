@@ -317,10 +317,12 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     return credentials;
 }
 
-/* signal handler to be invoked when the authentication operation
- * times out */
+extern "C" void timeout_during_auth(int signum);
+
 static char got_timeout = 0;
-static void
+/** signal handler to be invoked when the authentication operation
+ * times out */
+void
 timeout_during_auth(int signum)
 {
     dc_disconnect();

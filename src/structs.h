@@ -40,6 +40,10 @@
 /* for ICP_END */
 #include "icp_opcode.h"
 
+#if USE_SSL
+#include <openssl/ssl.h>
+#endif
+
 #define PEER_MULTICAST_SIBLINGS 1
 
 struct acl_name_list {

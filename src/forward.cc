@@ -55,6 +55,9 @@
 #include "ip/Intercept.h"
 #include "ip/tools.h"
 #include "mgr/Registration.h"
+#if USE_SSL
+#include "ssl/support.h"
+#endif
 
 static PSC fwdPeerSelectionCompleteWrapper;
 static PF fwdServerClosedWrapper;

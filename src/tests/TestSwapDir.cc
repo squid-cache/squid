@@ -3,7 +3,7 @@
 #include "squid.h"
 #include "TestSwapDir.h"
 
-size_t
+uint64_t
 TestSwapDir::maxSize() const
 {
     return 3;

@@ -113,18 +113,18 @@ MemBlob::~MemBlob()
  * by MemPools via memAllocString.
  */
 MemBlob::size_type
-MemBlob::calcAllocSize(const size_type size) const
+MemBlob::calcAllocSize(const size_type sz) const
 {
-    if (size <= 36) return 36;
-    if (size <= 128) return 128;
-    if (size <= 512) return 512;
-    if (size <= 4096) return RoundTo(size, 512);
+    if (sz <= 36) return 36;
+    if (sz <= 128) return 128;
+    if (sz <= 512) return 512;
+    if (sz <= 4096) return RoundTo(sz, 512);
     // XXX: recover squidSystemPageSize functionality. It's easy for
     //      the main squid, harder for tests
 #if 0
-    return RoundTo(size, squidSystemPageSize);
+    return RoundTo(sz, squidSystemPageSize);
 #else
-    return RoundTo(size, 4096);
+    return RoundTo(sz, 4096);
 #endif
 }
 

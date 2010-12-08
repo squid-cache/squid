@@ -62,13 +62,12 @@ extern "C" {
      */
 #define safe_free(x)    while (x) { xxfree(x); (x) = NULL; }
 
-
-#if XMALLOC_STATISTICS
-    void malloc_statistics(void (*func) (int, int, int, void *), void *data);
-#endif
-
 #ifdef __cplusplus
 }
+#endif
+
+#if XMALLOC_STATISTICS
+extern void malloc_statistics(void (*func) (int, int, int, void *), void *data);
 #endif
 
 #endif /* _SQUID_COMPAT_XALLOC_H */

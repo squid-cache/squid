@@ -197,7 +197,7 @@ int SearchLDAP(edui_ldap_t *, int, char *, char **);
 int GetValLDAP(edui_ldap_t *, char *);
 int SearchIPLDAP(edui_ldap_t *, char *);
 const char *ErrLDAP(int);
-void SigTrap(int);
+extern "C" void SigTrap(int);
 
 /* Global variables */
 const char *search_attrib[] = { "cn", "uid", "networkAddress", "groupMembership", NULL };
