@@ -63,10 +63,10 @@
  \par
  * The storage types live in \em src/fs/. Each subdirectory corresponds
  * to the name of the storage type. When a new storage type is implemented
- * configure.in must be updated to autogenerate a Makefile in
+ * configure.ac must be updated to autogenerate a Makefile in
  * \em src/fs/foo/ from a Makefile.in file.
  *
- \todo DOCS: add template addition to configure.in for storage module addition.
+ \todo DOCS: add template addition to configure.ac for storage module addition.
  \todo DOCS: add template Makefile.am for storage module addition.
  *
  \par
