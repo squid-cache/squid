@@ -648,7 +648,7 @@ GetInfo(Mgr::InfoActionData& stats)
         stats.mem_pool_allocated = mp_stats.TheMeter->alloc.level;
 #endif
 
-        stats.gb_freed_count = mp_stats.TheMeter->gb_saved.count;
+        stats.gb_saved_count = mp_stats.TheMeter->gb_saved.count;
         stats.gb_freed_count = mp_stats.TheMeter->gb_freed.count;
     }
 
