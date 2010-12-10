@@ -1092,7 +1092,6 @@ authDigestLogUsername(char *username, AuthDigestUserRequest *auth_user_request)
     /* set the auth_user type */
     digest_user->auth_type = AUTH_BROKEN;
     /* link the request to the user */
-    auth_user_request->authUser(digest_user);
     auth_user_request->user(digest_user);
     digest_user->addRequest (auth_user_request);
     return auth_user_request;
@@ -1375,8 +1374,6 @@ AuthDigestConfig::decode(char const *proxy_auth)
     /*link the request and the user */
     assert(digest_request != NULL);
 
-    digest_request->authUser (digest_user);
-
     digest_request->user(digest_user);
 
     digest_user->addRequest (digest_request);
@@ -1432,14 +1429,6 @@ AuthUser *
 AuthDigestUserRequest::authUser() const
 {
     return const_cast<AuthUser *>(user());
-}
-
-void
-AuthDigestUserRequest::authUser(AuthUser *aUser)
-{
-    assert(!authUser());
-    user(aUser);
-    user()->lock();
 }
 
 AuthDigestUserRequest::CredentialsState

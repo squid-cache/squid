@@ -79,7 +79,6 @@ public:
     CredentialsState credentials() const;
     void credentials(CredentialsState);
 
-    void authUser(AuthUser *);
     AuthUser *authUser() const;
 
     char *nonceb64;		/* "dcd98b7102dd2f0e8b11d0f600bfb0c093" */
