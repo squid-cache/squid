@@ -53,7 +53,7 @@ if [ ${name} != ${PACKAGE}-${VERSION} ]; then
 	exit 1
 fi
 RELEASE=`echo $VERSION | cut -d. -f1,2 | cut -d- -f1`
-ed -s configure.in <<EOS
+ed -s configure.ac <<EOS
 g/${VERSION}-BZR/ s//${VERSION}/
 w
 EOS
