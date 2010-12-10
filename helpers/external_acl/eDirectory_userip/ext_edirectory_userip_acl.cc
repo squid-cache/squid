@@ -232,7 +232,7 @@ void local_printfx(const char *msg,...)
         dbuf[x] = '\0';
         x++;
         fputs(dbuf, stdout);
-	*(dbuf) = '\0';
+        *(dbuf) = '\0';
     } else {
         /* FAIL */
         debug("local_printfx() FAILURE: %zd\n", x);
@@ -273,7 +273,7 @@ int StringSplit(char *In_Str, char chr, char *Out_Str, size_t Out_Sz)
             p = &(aBuf[i]);
             p++;
             xstrncpy(Out_Str, bBuf, Out_Sz);
-	    Out_Len = strlen(bBuf);
+            Out_Len = strlen(bBuf);
             Out_Str[Out_Len + 1] = '\0';
             xstrncpy(In_Str, p, ((In_Len - Out_Len) + 1));
             return i;
@@ -287,8 +287,7 @@ int StringSplit(char *In_Str, char chr, char *Out_Str, size_t Out_Sz)
         Out_Str[Out_Len + 1] = '\0';
         In_Str[0] = '\0';
         return Out_Len;
-    }
-    else
+    } else
         return (-3);
 }
 
@@ -819,19 +818,19 @@ int ConvertIP(edui_ldap_t *l, char *ip)
         if ((bufa[0] == ':') && (bufa[1] == ':')) {
             /* bufa starts with a ::, so just copy and clear */
             xstrncpy(bufb, bufa, sizeof(bufb));
-	    *(bufa) = '\0';
+            *(bufa) = '\0';
             swi++;								/* Indicates that there is a bufb */
         } else if ((bufa[0] == ':') && (bufa[1] != ':')) {
             /* bufa starts with a :, a typo so just fill in a ':', cat and clear */
             bufb[0] = ':';
             strncat(bufb, bufa, strlen(bufa));
-	    *(bufa) = '\0';
+            *(bufa) = '\0';
             swi++;								/* Indicates that there is a bufb */
         } else {
             p = strstr(bufa, "::");
             if (p != NULL) {
                 /* Found it, break bufa down and split into bufb here */
-		*(bufb) = '\0';
+                *(bufb) = '\0';
                 i = strlen(p);
                 memcpy(bufb, p, i);
                 *p = '\0';
@@ -1196,10 +1195,9 @@ int SearchIPLDAP(edui_ldap_t *l)
     if (!(l->status & LDAP_OPEN_S)) return LDAP_ERR_OPEN;				/* Not open */
     if (!(l->status & LDAP_BIND_S)) return LDAP_ERR_BIND;				/* Not bound */
     if (!(l->status & LDAP_SEARCH_S)) return LDAP_ERR_NOT_SEARCHED;			/* Not searched */
-    if (l->num_ent <= 0)
-    {
-	debug("l->num_ent: %d\n", l->num_ent);
-	return LDAP_ERR_DATA;								/* No entries found */
+    if (l->num_ent <= 0) {
+        debug("l->num_ent: %d\n", l->num_ent);
+        return LDAP_ERR_DATA;								/* No entries found */
     }
     if (l->val != NULL)
         ldap_value_free_len(l->val);							/* Clear data before populating */
@@ -1223,27 +1221,27 @@ int SearchIPLDAP(edui_ldap_t *l)
                     j = l->val[i]->bv_len;
                     memcpy(bufa, l->val[i]->bv_val, j);
                     z = BinarySplit(bufa, j, '#', bufb, sizeof(bufb));
-/* BINARY DEBUGGING *
-                    	  local_printfx("value[%zd]: BinarySplit(", (size_t) i);
-                    	  for (k = 0; k < z; k++) {
-                    	    c = (int) bufb[k];
-                    	    if (c < 0)
-                    	      c = c + 256;
-                    	    local_printfx("%02X", c);
-                    	  }
-                    	  local_printfx(", ");
-                    	  for (k = 0; k < (j - z - 1); k++) {
-                    	    c = (int) bufa[k];
-                    	    if (c < 0)
-                    	      c = c + 256;
-                    	    local_printfx("%02X", c);
-                    	  }
-                    	  local_printfx("): %zd\n", (size_t) z);
-* BINARY DEBUGGING */
+                    /* BINARY DEBUGGING *
+                                        	  local_printfx("value[%zd]: BinarySplit(", (size_t) i);
+                                        	  for (k = 0; k < z; k++) {
+                                        	    c = (int) bufb[k];
+                                        	    if (c < 0)
+                                        	      c = c + 256;
+                                        	    local_printfx("%02X", c);
+                                        	  }
+                                        	  local_printfx(", ");
+                                        	  for (k = 0; k < (j - z - 1); k++) {
+                                        	    c = (int) bufa[k];
+                                        	    if (c < 0)
+                                        	      c = c + 256;
+                                        	    local_printfx("%02X", c);
+                                        	  }
+                                        	  local_printfx("): %zd\n", (size_t) z);
+                    * BINARY DEBUGGING */
                     z = j - z - 1;
-		    j = atoi(bufb);
+                    j = atoi(bufb);
                     if (j == 1) {
- 			/* IPv4 address (eDirectory 8.7 and below) */
+                        /* IPv4 address (eDirectory 8.7 and below) */
                         /* bufa is the address, just compare it */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
                             break;							/* Not looking for IPv4 */
@@ -1265,8 +1263,8 @@ int SearchIPLDAP(edui_ldap_t *l)
                             for (j = 0; j < z; j++) {
 // broken?                        xstrncpy(l->userid, ber[j]->bv_val, min(sizeof(l->userid),static_cast<size_t>(ber[j]->bv_len)));
                                 xstrncpy(l->userid, ber[j]->bv_val, sizeof(l->userid));
-				/* Using bv_len of min() breaks the result by 2 chars */
-			    }
+                                /* Using bv_len of min() breaks the result by 2 chars */
+                            }
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1277,9 +1275,8 @@ int SearchIPLDAP(edui_ldap_t *l)
                             return LDAP_ERR_SUCCESS;				/* We got our userid */
                         }
                         /* Not matched, continue */
-		    }
-		    else if ((j == 8) || (j == 9)) {
-                    	/* IPv4 (UDP/TCP) address (eDirectory 8.8 and higher) */
+                    } else if ((j == 8) || (j == 9)) {
+                        /* IPv4 (UDP/TCP) address (eDirectory 8.8 and higher) */
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
                             break;							/* Not looking for IPv4 */
@@ -1311,8 +1308,7 @@ int SearchIPLDAP(edui_ldap_t *l)
                             return LDAP_ERR_SUCCESS;				/* We got our userid */
                         }
                         /* Not matched, continue */
-		    }
-		    else if ((j == 10) || (j == 11)) {
+                    } else if ((j == 10) || (j == 11)) {
                         /* IPv6 (UDP/TCP) address (eDirectory 8.8 and higher) */
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV6_S))
@@ -1345,9 +1341,9 @@ int SearchIPLDAP(edui_ldap_t *l)
                             return LDAP_ERR_SUCCESS;				/* We got our userid */
                         }
                         /* Not matched, continue */
-		    }
+                    }
 //		    else {
-                        /* Others are unsupported */
+                    /* Others are unsupported */
 //                    }
                 }
                 if (ber != NULL) {
@@ -1700,12 +1696,12 @@ int main(int argc, char **argv)
         } else
             edui_elap = 0;
         k = strlen(bufa);
-/* BINARY DEBUGGING *
-            local_printfx("while() -> bufa[%zd]: %s", k, bufa);
-            for (i = 0; i < k; i++)
-              local_printfx("%02X", bufa[i]);
-            local_printfx("\n");
-* BINARY DEBUGGING */
+        /* BINARY DEBUGGING *
+                    local_printfx("while() -> bufa[%zd]: %s", k, bufa);
+                    for (i = 0; i < k; i++)
+                      local_printfx("%02X", bufa[i]);
+                    local_printfx("\n");
+        * BINARY DEBUGGING */
         /* Check for CRLF */
         p = strchr(bufa, '\n');
         if (p != NULL)
