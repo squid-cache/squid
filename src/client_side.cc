@@ -1662,8 +1662,7 @@ ClientSocketContext::getNextRangeOffset() const
 void
 ClientSocketContext::pullData()
 {
-    debugs(33, 5, "ClientSocketContext::pullData: FD " << clientConn() <<
-           " attempting to pull upstream data");
+    debugs(33, 5, HERE << clientConn() << " attempting to pull upstream data");
 
     /* More data will be coming from the stream. */
     StoreIOBuffer readBuffer;
@@ -1820,7 +1819,6 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bu
 {
     StoreEntry *entry = http->storeEntry();
     http->out.size += size;
-    assert(Comm::IsConnOpen(conn));
     debugs(33, 5, HERE << conn << ", sz " << size <<
            ", err " << errflag << ", off " << http->out.size << ", len " <<
            entry ? entry->objectLen() : 0);
@@ -1828,10 +1826,8 @@ ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bu
 
     /* Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up */
 
-    if (errflag == COMM_ERR_CLOSING)
+    if (errflag == COMM_ERR_CLOSING || !Comm::IsConnOpen(conn))
         return;
-
-    assert(Comm::IsConnOpen(clientConn()) && clientConn()->fd == conn->fd);
 
     if (errflag || clientHttpRequestStatus(conn->fd, http)) {
         initiateClose("failure or true request status");
