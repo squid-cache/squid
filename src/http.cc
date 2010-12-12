@@ -906,10 +906,6 @@ HttpStateData::haveParsedReplyHeaders()
         entry->mem_obj->vary_headers = xstrdup(vary);
     }
 
-#if WIP_FWD_LOG
-    fwdStatus(fwd, s);
-
-#endif
     /*
      * If its not a reply that we will re-forward, then
      * allow the client to get it.

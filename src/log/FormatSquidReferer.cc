@@ -1,8 +1,9 @@
 /*
  * $Id$
  *
- * DEBUG: section 40    User-Agent Logging
- * AUTHOR: Joe Ramey <ramey@csc.ti.com>
+ * DEBUG: section 46    Access Log - Squid referer format
+ * AUTHOR: Joe Ramey <ramey@csc.ti.com> (useragent)
+ *         Jens-S. V?ckler <voeckler@rvs.uni-hannover.de> (mod 4 referer)
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -32,77 +33,28 @@
  *
  */
 
-#include "squid.h"
+#include "config.h"
+#include "AccessLogEntry.h"
+#include "HttpRequest.h"
 #include "log/File.h"
+#include "log/Formats.h"
 #include "SquidTime.h"
 
-#if USE_USERAGENT_LOG
-static Logfile *useragentlog = NULL;
-#endif
-
 void
-useragentOpenLog(void)
+Log::Format::SquidReferer(AccessLogEntry *al, Logfile *logfile)
 {
-#if USE_USERAGENT_LOG
-    assert(NULL == useragentlog);
+    const char *referer = al->request->header.getStr(HDR_REFERER);
 
-    if (!Config.Log.useragent || (0 == strcmp(Config.Log.useragent, "none"))) {
-        debugs(40, 1, "User-Agent logging is disabled.");
-        return;
-    }
-
-    useragentlog = logfileOpen(Config.Log.useragent, 0, 1);
-#endif
-}
-
-void
-useragentRotateLog(void)
-{
-#if USE_USERAGENT_LOG
-
-    if (NULL == useragentlog)
+    // do not log unless there is something to be displayed
+    if (!referer || *referer == '\0')
         return;
 
-    logfileRotate(useragentlog);
+    char clientip[MAX_IPSTRLEN];
 
-#endif
-}
-
-void
-logUserAgent(const char *client, const char *agent)
-{
-#if USE_USERAGENT_LOG
-    static time_t last_time = 0;
-    static char time_str[128];
-    const char *s;
-
-    if (NULL == useragentlog)
-        return;
-
-    if (squid_curtime != last_time) {
-        s = mkhttpdlogtime(&squid_curtime);
-        strcpy(time_str, s);
-        last_time = squid_curtime;
-    }
-
-    logfilePrintf(useragentlog, "%s [%s] \"%s\"\n",
-                  client,
-                  time_str,
-                  agent);
-#endif
-}
-
-void
-useragentLogClose(void)
-{
-#if USE_USERAGENT_LOG
-
-    if (NULL == useragentlog)
-        return;
-
-    logfileClose(useragentlog);
-
-    useragentlog = NULL;
-
-#endif
+    logfilePrintf(logfile, "%9ld.%03d %s %s %s\n",
+                  (long int) current_time.tv_sec,
+                  (int) current_time.tv_usec / 1000,
+                  al->cache.caddr.NtoA(clientip, MAX_IPSTRLEN),
+                  referer,
+                  al->url ? al->url : "-");
 }

@@ -1,9 +1,8 @@
 /*
  * $Id$
  *
- * DEBUG: section 40    Referer Logging
- * AUTHOR: Joe Ramey <ramey@csc.ti.com> (useragent)
- *         Jens-S. Vöckler <voeckler@rvs.uni-hannover.de> (mod 4 referer)
+ * DEBUG: section 46    Access Log - Apache common format
+ * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,71 +32,43 @@
  *
  */
 
-#include "squid.h"
+#include "config.h"
+#include "AccessLogEntry.h"
 #include "log/File.h"
+#include "log/Formats.h"
+#include "log/Gadgets.h"
 #include "SquidTime.h"
 
-#if USE_REFERER_LOG
-static Logfile *refererlog = NULL;
-#endif
-
 void
-refererOpenLog(void)
+Log::Format::HttpdCommon(AccessLogEntry * al, Logfile * logfile)
 {
-#if USE_REFERER_LOG
-    assert(NULL == refererlog);
+    char clientip[MAX_IPSTRLEN];
+    const char *user_auth = FormatName(al->cache.authuser);
+    const char *user_ident = FormatName(al->cache.rfc931);
 
-    if (!Config.Log.referer || (0 == strcmp(Config.Log.referer, "none"))) {
-        debugs(40, 1, "Referer logging is disabled.");
-        return;
+    logfilePrintf(logfile, "%s %s %s [%s] \"%s %s HTTP/%d.%d\" %d %"PRId64" %s%s:%s%s",
+                  al->cache.caddr.NtoA(clientip,MAX_IPSTRLEN),
+                  user_ident ? user_ident : dash_str,
+                  user_auth ? user_auth : dash_str,
+                  Time::FormatHttpd(squid_curtime),
+                  al->_private.method_str,
+                  al->url,
+                  al->http.version.major, al->http.version.minor,
+                  al->http.code,
+                  al->cache.replySize,
+                  log_tags[al->cache.code],
+                  al->http.statusSfx(),
+                  hier_code_str[al->hier.code],
+                  (Config.onoff.log_mime_hdrs?"":"\n"));
+
+    safe_free(user_auth);
+    safe_free(user_ident);
+
+    if (Config.onoff.log_mime_hdrs) {
+        char *ereq = QuoteMimeBlob(al->headers.request);
+        char *erep = QuoteMimeBlob(al->headers.reply);
+        logfilePrintf(logfile, " [%s] [%s]\n", ereq, erep);
+        safe_free(ereq);
+        safe_free(erep);
     }
-
-    refererlog = logfileOpen(Config.Log.referer, 0, 1);
-#endif
-}
-
-void
-refererRotateLog(void)
-{
-#if USE_REFERER_LOG
-
-    if (NULL == refererlog)
-        return;
-
-    logfileRotate(refererlog);
-
-#endif
-}
-
-void
-logReferer(const char *client, const char *referer, const char *uri)
-{
-#if USE_REFERER_LOG
-
-    if (NULL == refererlog)
-        return;
-
-    logfilePrintf(refererlog, "%9d.%03d %s %s %s\n",
-                  (int) current_time.tv_sec,
-                  (int) current_time.tv_usec / 1000,
-                  client,
-                  referer,
-                  uri ? uri : "-");
-
-#endif
-}
-
-void
-refererCloseLog(void)
-{
-#if USE_REFERER_LOG
-
-    if (NULL == refererlog)
-        return;
-
-    logfileClose(refererlog);
-
-    refererlog = NULL;
-
-#endif
 }

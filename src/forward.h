@@ -81,13 +81,6 @@ private:
     ErrorState *makeConnectingError(const err_type type) const;
     static void RegisterWithCacheManager(void);
 
-#if WIP_FWD_LOG
-
-    void uninit                /**DOCS_NOSEMI*/
-    static void logRotate      /**DOCS_NOSEMI*/
-    void status()              /**DOCS_NOSEMI*/
-#endif
-
 public:
     StoreEntry *entry;
     HttpRequest *request;
@@ -102,10 +95,6 @@ private:
     time_t start_t;
     int n_tries;
     int origin_tries;
-#if WIP_FWD_LOG
-
-    http_status last_status;
-#endif
 
     struct {
         unsigned int dont_retry:1;

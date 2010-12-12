@@ -57,7 +57,6 @@ SQUIDCEXTERN void fvdbCountForw(const char *key);
 #if HEADERS_LOG
 SQUIDCEXTERN void headersLog(int cs, int pq, const HttpRequestMethod& m, void *data);
 #endif
-SQUIDCEXTERN char *log_quote(const char *header);
 SQUIDCEXTERN int logTypeIsATcpHit(log_type);
 
 /*
@@ -631,14 +630,6 @@ SQUIDCEXTERN int urlDefaultPort(protocol_t p);
 SQUIDCEXTERN char *urlHostname(const char *url);
 SQUIDCEXTERN void urlExtMethodConfigure(void);
 
-SQUIDCEXTERN void useragentOpenLog(void);
-SQUIDCEXTERN void useragentRotateLog(void);
-SQUIDCEXTERN void logUserAgent(const char *, const char *);
-SQUIDCEXTERN void useragentLogClose(void);
-SQUIDCEXTERN void refererOpenLog(void);
-SQUIDCEXTERN void refererRotateLog(void);
-SQUIDCEXTERN void logReferer(const char *, const char *, const char *);
-SQUIDCEXTERN void refererCloseLog(void);
 SQUIDCEXTERN peer_t parseNeighborType(const char *s);
 
 /* tools.c */
