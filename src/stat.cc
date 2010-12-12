@@ -721,10 +721,10 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
                       stats.request_failure_ratio / fct);
 
     storeAppendPrintf(sentry, "\tAverage HTTP requests per minute since start:\t%.1f\n",
-                      stats.avg_client_http_requests / fct);
+                      stats.avg_client_http_requests);
 
     storeAppendPrintf(sentry, "\tAverage ICP messages per minute since start:\t%.1f\n",
-                      stats.avg_icp_messages / fct);
+                      stats.avg_icp_messages);
 
     storeAppendPrintf(sentry, "\tSelect loop called: %.0f times, %0.3f ms avg\n",
                       stats.select_loops, stats.avg_loop_time / fct);
