@@ -27,10 +27,6 @@
  * For C bindings see Trie.h
  */
 
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 /* C bindings */
 #ifndef   __cplusplus
 

@@ -1,7 +1,6 @@
 #ifndef _SQUID_COMM_IOCALLBACK_H
 #define _SQUID_COMM_IOCALLBACK_H
 
-#include "config.h"
 #include "base/AsyncCall.h"
 #include "comm_err_t.h"
 
