@@ -38,6 +38,7 @@
 #include "log/File.h"
 #include "log/Formats.h"
 #include "log/Gadgets.h"
+#include "log/Tokens.h"
 #include "SquidTime.h"
 
 void

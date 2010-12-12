@@ -39,6 +39,7 @@
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "HttpRequest.h"
+#include "log/Tokens.h"
 #include "MemObject.h"
 #include "fde.h"
 #include "mem_node.h"
