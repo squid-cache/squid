@@ -2817,7 +2817,7 @@ COMMENT_END
 
 NAME: logformat
 TYPE: logformat
-LOC: Config.Log.logformats
+LOC: Log::TheConfig
 DEFAULT: none
 DOC_START
 	Usage:
@@ -2962,10 +2962,18 @@ DOC_START
 
 	The default formats available (which do not need re-defining) are:
 
-logformat squid %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %un %Sh/%<A %mt
-logformat squidmime %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %un %Sh/%<A %mt [%>h] [%<h]
-logformat common %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
-logformat combined %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
+logformat squid      %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %un %Sh/%<A %mt
+logformat common     %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
+logformat combined   %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
+logformat referrer   %ts.%03tu %>a %{Referer}>h %ru
+logformat useragent  %>a [%tl] "%{User-Agent}>h"
+
+	When the log_mime_hdrs directive is set to ON. The squid, common and combined
+	formats have a safely encoded copy of the mime headers appended to each line
+	within a pair of brackets.
+
+	The common and combined formats are not quite true to the Apache definition.
+	The logs from Squid contain an extra status and hierarchy code appended.
 DOC_END
 
 NAME: access_log cache_access_log
@@ -3226,16 +3234,9 @@ DOC_START
 DOC_END
 
 NAME: emulate_httpd_log
-COMMENT: on|off
-TYPE: onoff
-DEFAULT: off
-LOC: Config.onoff.common_log
+TYPE: obsolete
 DOC_START
-	The Cache can emulate the log file format which many 'httpd'
-	programs use.  To disable/enable this emulation, set
-	emulate_httpd_log to 'off' or 'on'.  The default
-	is to use the native log format since it includes useful
-	information Squid-specific log analyzers use.
+	Replace this with an access_log directive using the format 'common' or 'combined'.
 DOC_END
 
 NAME: log_ip_on_direct
@@ -3273,27 +3274,15 @@ DOC_START
 DOC_END
 
 NAME: useragent_log
-TYPE: string
-LOC: Config.Log.useragent
-DEFAULT: none
-IFDEF: USE_USERAGENT_LOG
+TYPE: obsolete
 DOC_START
-	Squid will write the User-Agent field from HTTP requests
-	to the filename specified here.  By default useragent_log
-	is disabled.
+	Replace this with an access_log directive using the format 'useragent'.
 DOC_END
 
 NAME: referer_log referrer_log
-TYPE: string
-LOC: Config.Log.referer
-DEFAULT: none
-IFDEF: USE_REFERER_LOG
+TYPE: obsolete
 DOC_START
-	Squid will write the Referer field from HTTP requests to the
-	filename specified here.  By default referer_log is disabled.
-	Note that "referer" is actually a misspelling of "referrer"
-	however the misspelt version has been accepted into the HTTP RFCs
-	and we accept both.
+	Replace this with an access_log directive using the format 'referrer'.
 DOC_END
 
 NAME: pid_filename
@@ -3322,14 +3311,9 @@ DOC_START
 DOC_END
 
 NAME: forward_log
-IFDEF: WIP_FWD_LOG
-TYPE: string
-DEFAULT: none
-LOC: Config.Log.forward
+TYPE: obsolete
 DOC_START
-	Logs the server-side requests.
-
-	This is currently work in progress.
+	Use a regular access.log with ACL limiting it to MISS events.
 DOC_END
 
 NAME: strip_query_terms

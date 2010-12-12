@@ -756,8 +756,6 @@ mainReconfigureStart(void)
 #if ICAP_CLIENT
     icapLogClose();
 #endif
-    useragentLogClose();
-    refererCloseLog();
 
     eventAdd("mainReconfigureFinish", &mainReconfigureFinish, NULL, 0, 1,
              false);
@@ -823,8 +821,6 @@ mainReconfigureFinish(void *)
     icapLogOpen();
 #endif
     storeLogOpen();
-    useragentOpenLog();
-    refererOpenLog();
 #if USE_DNSSERVERS
 
     dnsInit();
@@ -893,15 +889,9 @@ mainRotate(void)
     storeDirWriteCleanLogs(1);
     storeLogRotate();		/* store.log */
     accessLogRotate();		/* access.log */
-    useragentRotateLog();	/* useragent.log */
-    refererRotateLog();		/* referer.log */
 #if ICAP_CLIENT
     icapLogRotate();               /*icap.log*/
 #endif
-#if WIP_FWD_LOG
-    fwdLogRotate();
-#endif
-
     icmpEngine.Open();
 #if USE_DNSSERVERS
     dnsInit();
@@ -1039,10 +1029,6 @@ mainInitialize(void)
     authenticateInit(&Auth::TheConfig);
 
     externalAclInit();
-
-    useragentOpenLog();
-
-    refererOpenLog();
 
     httpHeaderInitModule();	/* must go before any header processing (e.g. the one in errorInitialize) */
 
@@ -1875,13 +1861,6 @@ SquidShutdown()
     Store::Root().sync();		/* Flush log writes */
     storeLogClose();
     accessLogClose();
-    useragentLogClose();
-    refererCloseLog();
-#if WIP_FWD_LOG
-
-    fwdUninit();
-#endif
-
     Store::Root().sync();		/* Flush log close */
     StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();
