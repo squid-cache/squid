@@ -58,9 +58,12 @@ static StatHistBinDumper statHistBinDumper;
  * HP-UX and GCC (2.8?) give strange errors when these simple
  * functions are static.
  */
+namespace Math
+{
 static hbase_f Log;
 static hbase_f Exp;
 static hbase_f Null;
+};
 #endif
 
 /* low level init, higher level functions has less params */
@@ -278,7 +281,7 @@ statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd)
 static
 #endif
 double
-Log(double x)
+Math::Log(double x)
 {
     assert((x + 1.0) >= 0.0);
     return log(x + 1.0);
@@ -288,7 +291,7 @@ Log(double x)
 static
 #endif
 double
-Exp(double x)
+Math::Exp(double x)
 {
     return exp(x) - 1.0;
 }
@@ -296,7 +299,7 @@ Exp(double x)
 void
 statHistLogInit(StatHist * H, int capacity, double min, double max)
 {
-    statHistInit(H, capacity, Log, Exp, min, max);
+    statHistInit(H, capacity, Math::Log, Math::Exp, min, max);
 }
 
 /* linear histogram for enums */
@@ -305,7 +308,7 @@ statHistLogInit(StatHist * H, int capacity, double min, double max)
 static
 #endif
 double
-Null(double x)
+Math::Null(double x)
 {
     return x;
 }
@@ -313,7 +316,7 @@ Null(double x)
 void
 statHistEnumInit(StatHist * H, int last_enum)
 {
-    statHistInit(H, last_enum + 3, Null, Null, (double) -1, (double) (last_enum + 1 + 1));
+    statHistInit(H, last_enum + 3, Math::Null, Math::Null, (double) -1, (double) (last_enum + 1 + 1));
 }
 
 void
@@ -327,7 +330,7 @@ statHistEnumDumper(StoreEntry * sentry, int idx, double val, double size, int co
 void
 statHistIntInit(StatHist * H, int n)
 {
-    statHistInit(H, n, Null, Null, (double) 0, (double) n - 1);
+    statHistInit(H, n, Math::Null, Math::Null, (double) 0, (double) n - 1);
 }
 
 void

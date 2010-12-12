@@ -260,27 +260,10 @@ struct SquidConfig {
     struct {
         char *store;
         char *swap;
-#if USE_USERAGENT_LOG
-
-        char *useragent;
-#endif
-#if USE_REFERER_LOG
-
-        char *referer;
-#endif
-#if WIP_FWD_LOG
-
-        char *forward;
-#endif
-
-        logformat *logformats;
-
         customlog *accesslogs;
-
 #if ICAP_CLIENT
         customlog *icaplogs;
 #endif
-
         int rotateNumber;
     } Log;
     char *adminEmail;
@@ -1314,23 +1297,17 @@ struct _store_rebuild_data {
     int zero_object_sz;
 };
 
-class logformat_token;
-
-struct _logformat {
-    char *name;
-    logformat_token *format;
-    logformat *next;
-};
-
 class Logfile;
+class logformat;
 
+#include "log/Formats.h"
 struct _customlog {
     char *filename;
     ACLList *aclList;
     logformat *logFormat;
     Logfile *logfile;
     customlog *next;
-    customlog_type type;
+    Log::Format::log_type type;
 };
 
 #endif /* SQUID_STRUCTS_H */

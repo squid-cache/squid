@@ -169,8 +169,6 @@ typedef struct _Version Version;
 
 typedef struct _link_list link_list;
 
-typedef struct _logformat logformat;
-
 typedef struct _customlog customlog;
 
 #if SQUID_SNMP

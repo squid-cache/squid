@@ -1,6 +1,9 @@
 /*
- * DEBUG: section 21    Time Functions
- * AUTHOR: Harvest Derived
+ * $Id$
+ *
+ * DEBUG: section 46    Access Log - Squid useragent format
+ * AUTHOR: Joe Ramey <ramey@csc.ti.com>
+ * AUTHOR: Amos Jeffries <amosjeffries@squid-cache.org>
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -29,54 +32,27 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#ifndef   SQUID_TIME_H
-#define   SQUID_TIME_H
 
-#include "rfc1123.h"
+#include "config.h"
+#include "AccessLogEntry.h"
+#include "HttpRequest.h"
+#include "log/File.h"
+#include "log/Formats.h"
+#include "SquidTime.h"
 
-#if HAVE_TIME_H
-#include <time.h>
-#endif
-/* NP: sys/time.h is provided by libcompat */
-
-/* globals for accessing time */
-extern struct timeval current_time;
-extern double current_dtime;
-extern time_t squid_curtime;
-
-time_t getCurrentTime(void);
-int tvSubMsec(struct timeval, struct timeval);
-
-/** event class for doing synthetic time etc */
-class TimeEngine
+void
+Log::Format::SquidUserAgent(AccessLogEntry * al, Logfile * logfile)
 {
+    char clientip[MAX_IPSTRLEN];
 
-public:
-    virtual ~TimeEngine();
+    const char *agent = al->request->header.getStr(HDR_USER_AGENT);
 
-    /** tick the clock - update from the OS or other time source, */
-    virtual void tick();
-};
+    // do not log unless there is something to be displayed.
+    if (!agent || *agent == '\0')
+        return;
 
-namespace Time
-{
-
-/** Display time as a formatted human-readable string.
- * Time syntax is
- * "YYYY/MM/DD hh:mm:ss"
- *
- * Output is only valid until next call to this function.
- */
-const char *FormatStrf(time_t t);
-
-/** Display time as a formatted human-readable string.
- * Time string syntax used is that of Apache httpd.
- * "DD/MMM/YYYY:hh:mm:ss zzzz"
- *
- * Output is only valid until next call to this function.
- */
-const char *FormatHttpd(time_t t);
-
-} // namespace Time
-
-#endif /* SQUID_TIME_H */
+    logfilePrintf(logfile, "%s [%s] \"%s\"\n",
+                  al->cache.caddr.NtoA(clientip,MAX_IPSTRLEN),
+                  Time::FormatHttpd(squid_curtime),
+                  agent);
+}

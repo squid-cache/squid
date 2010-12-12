@@ -342,20 +342,7 @@ enum {
     _WIN_OS_WINLON,
     _WIN_OS_WIN7
 };
-
 #endif
-
-typedef enum {
-    CLF_UNKNOWN,
-    CLF_AUTO,
-    CLF_CUSTOM,
-    CLF_SQUID,
-    CLF_COMMON,
-#if ICAP_CLIENT
-    CLF_ICAP_SQUID,
-#endif
-    CLF_NONE
-} customlog_type;
 
 enum {
     DISABLE_PMTU_OFF,

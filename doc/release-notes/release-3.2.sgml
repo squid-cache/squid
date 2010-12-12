@@ -287,6 +287,8 @@ Most user-facing changes are reflected in squid.conf (see below).
   logging a single cache.log at relatively high debug levels on a high-traffic system. Or one which is
   required to store a long period of access.log and needs to conserve disk space.
 
+<p>The referer_log and useragent_log directives have been converted to built-in log formats.
+  These logs are now created using an access_log line with the format "referrer" or "useragent".
 
 <sect1> Client Bandwidth Limits
 <p>In mobile environments, Squid may need to limit Squid-to-client bandwidth
@@ -448,6 +450,8 @@ This section gives a thorough account of those changes in three categories:
 	New installs, or installs with no logs configured explicitly will use this module by default.
 	<p>New <em>tcp</em> module to send each log line as text data to a TCP receiver.
 	<p>New <em>udp</em> module to send each log line as text data to a UDP receiver.
+	<p>New format <em>referrer</em> to log with the format prevously used by referer_log directive.
+	<p>New format <em>useragent</em> to log with the format prevously used by useragent_log directive.
 
 	<tag>acl random</tag>
 	<p>New type <em>random</em>. Pseudo-randomly match requests based on a configured probability.
@@ -535,6 +539,12 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Removed tags<label id="removedtags">
 <p>
 <descrip>
+	<tag>emulate_httpd_log</tag>
+	<p>Replaced by <em>common</em> format option on an <em>access_log</em> directive.
+
+	<tag>forward_log</tag>
+	<p>Obsolete.
+
 	<tag>ftp_list_width</tag>
 	<p>Obsolete.
 
@@ -544,9 +554,14 @@ This section gives a thorough account of those changes in three categories:
 	<tag>log_fqdn</tag>
 	<p>Obsolete. Replaced by automatic detection of the %>A logformat tag.
 
+	<tag>referer_log</tag>
+	<p>Replaced by the <em>referrer</em> format option on an <em>access_log</em> directive.
+
 	<tag>url_rewrite_concurrency</tag>
 	<p>Replaced by url_rewrite_children ... concurrency=N option.
 
+	<tag>useragent_log</tag>
+	<p>Replaced by the <em>useragent</em> format option on an <em>access_log</em> directive.
 </descrip>
 
 
@@ -646,6 +661,12 @@ This section gives an account of those changes in three categories:
 
 	<tag>--enable-auth-ntlm-helpers</tag>
 	<p>replaced by <em>--enable-auth-ntlm</em>.
+
+	<tag>--enable-referer-log</tag>
+	<p>Obsolete.
+
+	<tag>--enable-useragent-log</tag>
+	<p>Obsolete.
 
 </descrip>
 
