@@ -15,9 +15,6 @@ icapLogOpen()
         if (log->type == Log::Format::CLF_NONE)
             continue;
 
-        if (log->type == Log::Format::CLF_AUTO)
-            log->type = Log::Format::CLF_ICAP_SQUID;
-
         log->logfile = logfileOpen(log->filename, MAX_URL << 1, 1);
 
         IcapLogfileStatus = LOG_ENABLE;
