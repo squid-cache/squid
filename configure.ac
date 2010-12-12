@@ -777,7 +777,7 @@ AC_ARG_ENABLE(delay-pools,
 [ if test "x$enableval" = "xyes" ; then
     AC_MSG_NOTICE([Delay pools enabled])
     AC_DEFINE([USE_DELAY_POOLS],1,[Traffic management via "delay pools".])
-    AM_CONDITIONAL(ENABLE_DELAY_POOLS, true,)
+    AM_CONDITIONAL(ENABLE_DELAY_POOLS, true)
   fi
 ])
 
@@ -1836,11 +1836,15 @@ if test "x$ac_krb5_config" = "xyes" ; then
 
   SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
   if test "x$squid_cv_broken_krb5_h" = "xyes"; then
-    AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if krb5.h is broken for C++])
+    AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if Solaris krb5.h is broken for C++])
     AC_MSG_WARN([You have a broken Solaris <krb5.h> system include.])
     AC_MSG_WARN([Please see http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6837512])
     AC_MSG_WARN([If you need Kerberos support you'll have to patch])
     AC_MSG_WARN([your system. See contrib/solaris/solaris-krb5-include.patch])
+  fi
+  SQUID_CHECK_KRB5_HEIMDAL_BROKEN_KRB5_H
+  if test "x$squid_cv_broken_heimdal_krb5_h" = "xyes"; then
+    AC_DEFINE(HAVE_BROKEN_HEIMDAL_KRB5_H, 1, [Define to 1 if Heimdal krb5.h is broken for C++])
   fi
   AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
 
