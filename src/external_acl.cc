@@ -64,6 +64,9 @@
 #include "rfc1738.h"
 #include "URLScheme.h"
 #include "wordlist.h"
+#if USE_SSL
+#include "ssl/support.h"
+#endif
 
 #ifndef DEFAULT_EXTERNAL_ACL_TTL
 #define DEFAULT_EXTERNAL_ACL_TTL 1 * 60 * 60

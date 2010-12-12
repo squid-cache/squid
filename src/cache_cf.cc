@@ -47,6 +47,7 @@
 #include "adaptation/ecap/Config.h"
 #endif
 #if USE_SSL
+#include "ssl/support.h"
 #include "ssl/Config.h"
 #endif
 #include "auth/Config.h"
