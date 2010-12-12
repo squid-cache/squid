@@ -88,7 +88,7 @@ Adaptation::Ecap::XactionRep::swanSong()
         }
     }
 
-    {
+    if (proxyingVb == opOn) {
         BodyPipe::Pointer body_pipe = theVirginRep.raw().body_pipe;
         if (body_pipe != NULL) {
             Must(body_pipe->stillConsuming(this));
