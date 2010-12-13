@@ -38,6 +38,9 @@
 #include "auth/UserRequest.h"
 #include "cbdata.h"
 #include "ip/Address.h"
+#if USE_SSL
+#include "ssl/ErrorDetail.h"
+#endif
 
 /**
  \defgroup ErrorPageAPI Error Pages API
@@ -49,6 +52,7 @@
    B - URL with FTP %2f hack                    x
    c - Squid error code                         x
    d - seconds elapsed since request received   x
+   D - Error details                            x
    e - errno                                    x
    E - strerror()                               x
    f - FTP request line                         x
@@ -99,6 +103,14 @@ private:
     MemBuf *BuildContent(void);
 
     /**
+     * Convert the given template string into textual output
+     *
+     * \param text            The string to be converted
+     * \param allowRecursion  Whether to convert codes which output may contain codes
+     */
+    MemBuf *ConvertText(const char *text, bool allowRecursion);
+
+    /**
      * Generates the Location: header value for a deny_info error page
      * to be used for this error.
      */
@@ -112,8 +124,9 @@ private:
      *
      * \param token                    The token following % which need to be converted
      * \param building_deny_info_url   Perform special deny_info actions, such as URL-encoding and token skipping.
+     * \ allowRecursion   True if the codes which do recursions should converted
      */
-    const char *Convert(char token, bool building_deny_info_url);
+    const char *Convert(char token, bool building_deny_info_url, bool allowRecursion);
 
     /**
      * CacheManager / Debug dump of the ErrorState object.
@@ -155,6 +168,9 @@ public:
     char *request_hdrs;
     char *err_msg; /* Preformatted error message from the cache */
 
+#if USE_SSL
+    Ssl::ErrorDetail *detail;
+#endif
 private:
     CBDATA_CLASS2(ErrorState);
 };
