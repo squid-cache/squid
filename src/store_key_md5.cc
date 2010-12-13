@@ -155,14 +155,14 @@ cache_key *
 storeKeyDup(const cache_key * key)
 {
     cache_key *dup = (cache_key *)memAllocate(MEM_MD5_DIGEST);
-    xmemcpy(dup, key, SQUID_MD5_DIGEST_LENGTH);
+    memcpy(dup, key, SQUID_MD5_DIGEST_LENGTH);
     return dup;
 }
 
 cache_key *
 storeKeyCopy(cache_key * dst, const cache_key * src)
 {
-    xmemcpy(dst, src, SQUID_MD5_DIGEST_LENGTH);
+    memcpy(dst, src, SQUID_MD5_DIGEST_LENGTH);
     return dst;
 }
 

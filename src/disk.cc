@@ -196,7 +196,7 @@ diskCombineWrites(struct _fde_disk *fdd)
             dwrite_q *q = fdd->write_q;
 
             len = q->len - q->buf_offset;
-            xmemcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
+            memcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
             wq->len += len;
             fdd->write_q = q->next;
 

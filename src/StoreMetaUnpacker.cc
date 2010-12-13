@@ -63,7 +63,7 @@ StoreMetaUnpacker::isBufferSane()
 void
 StoreMetaUnpacker::getBufferLength()
 {
-    xmemcpy(hdr_len, &buf[1], sizeof(int));
+    memcpy(hdr_len, &buf[1], sizeof(int));
 }
 
 StoreMetaUnpacker::StoreMetaUnpacker (char const *aBuffer, ssize_t aLen, int *anInt) : buf (aBuffer), buflen(aLen), hdr_len(anInt), position(1 + sizeof(int))
@@ -80,7 +80,7 @@ StoreMetaUnpacker::getType()
 void
 StoreMetaUnpacker::getLength()
 {
-    xmemcpy(&length, &buf[position], sizeof(int));
+    memcpy(&length, &buf[position], sizeof(int));
     position += sizeof(int);
 }
 

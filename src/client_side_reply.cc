@@ -2056,7 +2056,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     if (buf != result.data) {
         /* we've got to copy some data */
         assert(result.length <= next()->readBuffer.length);
-        xmemcpy(buf, result.data, result.length);
+        memcpy(buf, result.data, result.length);
         body_buf = buf;
     }
 

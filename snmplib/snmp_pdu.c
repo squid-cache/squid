@@ -150,7 +150,7 @@ snmp_pdu_clone(struct snmp_pdu *Src) {
         snmp_set_api_error(SNMPERR_OS_ERR);
         return (NULL);
     }
-    xmemcpy((char *) Dest, (char *) Src, sizeof(struct snmp_pdu));
+    memcpy((char *) Dest, (char *) Src, sizeof(struct snmp_pdu));
 
 #if DEBUG_PDU
     snmplib_debug(8, "PDU %x:  Created %x\n", (unsigned int) Src, (unsigned int) Dest);
@@ -518,7 +518,7 @@ snmp_pdu_decode(u_char * Packet,	/* data */
             snmp_set_api_error(SNMPERR_OS_ERR);
             return (NULL);
         }
-        xmemcpy((char *) PDU->enterprise, (char *) objid,
+        memcpy((char *) PDU->enterprise, (char *) objid,
                 PDU->enterprise_length * sizeof(oid));
 
         /* Agent-addr */

@@ -221,7 +221,7 @@ CossSwapDir::openStoreIO(StoreEntry & e, StoreIOState::STFNCB * file_callback,
 
     if (p) {
         cstate->readbuffer = (char *)xmalloc(cstate->st_size);
-        xmemcpy(cstate->readbuffer, p, cstate->st_size);
+        memcpy(cstate->readbuffer, p, cstate->st_size);
         StoreFScoss::GetInstance().stats.open_mem_hits++;
     } else {
         /* Do the allocation */
@@ -344,7 +344,7 @@ CossState::write(char const *buf, size_t size, off_t offset, FREE * free_func)
     CossSwapDir *SD = (CossSwapDir *)INDEXSD(swap_dirn);
     dest = SD->storeCossMemPointerFromDiskOffset(diskoffset, &membuf);
     assert(dest != NULL);
-    xmemcpy(dest, buf, size);
+    memcpy(dest, buf, size);
     offset_ += size;
 
     if (free_func)

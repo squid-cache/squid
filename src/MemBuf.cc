@@ -217,7 +217,7 @@ void MemBuf::consume(mb_size_t shiftSize)
     PROF_start(MemBuf_consume);
     if (shiftSize > 0) {
         if (shiftSize < cSize)
-            xmemmove(buf, buf + shiftSize, cSize - shiftSize);
+            memmove(buf, buf + shiftSize, cSize - shiftSize);
 
         size -= shiftSize;
 
@@ -251,9 +251,7 @@ void MemBuf::append(const char *newContent, mb_size_t sz)
             grow(size + sz + 1);
 
         assert(size + sz <= capacity); /* paranoid */
-
-        xmemcpy(space(), newContent, sz);
-
+        memcpy(space(), newContent, sz);
         appended(sz);
     }
     PROF_stop(MemBuf_append);

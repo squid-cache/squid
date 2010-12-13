@@ -2332,8 +2332,7 @@ connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount)
      */
 
     if (conn->in.notYetUsed > 0)
-        xmemmove(conn->in.buf, conn->in.buf + byteCount,
-                 conn->in.notYetUsed);
+        memmove(conn->in.buf, conn->in.buf + byteCount, conn->in.notYetUsed);
 }
 
 /// respond with ERR_TOO_BIG if request header exceeds request_header_max_size
@@ -2624,7 +2623,7 @@ static void
 connStripBufferWhitespace (ConnStateData * conn)
 {
     while (conn->in.notYetUsed > 0 && xisspace(conn->in.buf[0])) {
-        xmemmove(conn->in.buf, conn->in.buf + 1, conn->in.notYetUsed - 1);
+        memmove(conn->in.buf, conn->in.buf + 1, conn->in.notYetUsed - 1);
         --conn->in.notYetUsed;
     }
 }
@@ -2827,7 +2826,7 @@ ConnStateData::handleReadData(char *buf, size_t size)
     char *current_buf = in.addressToReadInto();
 
     if (buf != current_buf)
-        xmemmove(current_buf, buf, size);
+        memmove(current_buf, buf, size);
 
     in.notYetUsed += size;
 

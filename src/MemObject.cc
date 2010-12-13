@@ -57,7 +57,7 @@ url_checksum(const char *url)
     SquidMD5Init(&M);
     SquidMD5Update(&M, (unsigned char *) url, strlen(url));
     SquidMD5Final(digest, &M);
-    xmemcpy(&ck, digest, sizeof(ck));
+    memcpy(&ck, digest, sizeof(ck));
     return ck;
 }
 

@@ -354,7 +354,7 @@ wccpAssignBuckets(void)
 
     for (loop = 0; loop < number_caches; loop++) {
         int i;
-        xmemcpy(&caches[loop],
+        memcpy(&caches[loop],
                 &wccp_i_see_you.wccp_cache_entry[loop].ip_addr,
                 sizeof(*caches));
 
