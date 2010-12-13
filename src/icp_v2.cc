@@ -112,7 +112,7 @@ _icp_common_t::_icp_common_t(char *buf, unsigned int len)
         return;
     }
 
-    xmemcpy(this, buf, sizeof(icp_common_t));
+    memcpy(this, buf, sizeof(icp_common_t));
     /*
      * Convert network order sensitive fields
      */
@@ -291,7 +291,7 @@ _icp_common_t::createMessage(
     if (opcode == ICP_QUERY)
         urloffset += sizeof(uint32_t);
 
-    xmemcpy(urloffset, url, strlen(url));
+    memcpy(urloffset, url, strlen(url));
 
     return (icp_common_t *)buf;
 }

@@ -278,7 +278,7 @@ idnsAddNameserver(const char *buf)
         nameservers = (ns *)xcalloc(nns_alloc, sizeof(*nameservers));
 
         if (oldptr && oldalloc)
-            xmemcpy(nameservers, oldptr, oldalloc * sizeof(*nameservers));
+            memcpy(nameservers, oldptr, oldalloc * sizeof(*nameservers));
 
         if (oldptr)
             safe_free(oldptr);
@@ -310,7 +310,7 @@ idnsAddPathComponent(const char *buf)
         searchpath = (sp *)xcalloc(npc_alloc, sizeof(*searchpath));
 
         if (oldptr && oldalloc)
-            xmemcpy(searchpath, oldptr, oldalloc * sizeof(*searchpath));
+            memcpy(searchpath, oldptr, oldalloc * sizeof(*searchpath));
 
         if (oldptr)
             safe_free(oldptr);

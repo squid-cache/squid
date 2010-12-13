@@ -624,7 +624,7 @@ allocate_new_swapdir(SquidConfig::_cacheSwap * swap)
         StorePointer *tmp;
         swap->n_allocated <<= 1;
         tmp = static_cast<StorePointer *>(xcalloc(swap->n_allocated, sizeof(StorePointer)));
-        xmemcpy(tmp, swap->swapDirs, swap->n_configured * sizeof(SwapDir *));
+        memcpy(tmp, swap->swapDirs, swap->n_configured * sizeof(SwapDir *));
         xfree(swap->swapDirs);
         swap->swapDirs = tmp;
     }

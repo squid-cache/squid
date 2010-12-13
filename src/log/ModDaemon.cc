@@ -191,7 +191,7 @@ logfile_mod_daemon_append(Logfile * lf, const char *buf, int len)
         b = static_cast<logfile_buffer_t*>(ll->bufs.tail->data);
         debugs(50, 3, "logfile_mod_daemon_append: current buffer has " << b->len << " of " << b->size << " bytes before append");
         s = min(len, (b->size - b->len));
-        xmemcpy(b->buf + b->len, buf, s);
+        memcpy(b->buf + b->len, buf, s);
         len = len - s;
         buf = buf + s;
         b->len = b->len + s;

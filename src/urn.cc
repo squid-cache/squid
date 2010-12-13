@@ -482,7 +482,7 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
             old = list;
             n <<= 2;
             list = (url_entry *)xcalloc(n + 1, sizeof(*list));
-            xmemcpy(list, old, i * sizeof(*list));
+            memcpy(list, old, i * sizeof(*list));
             safe_free(old);
         }
 

@@ -1425,7 +1425,7 @@ statAvgTick(void *notused)
     c->timestamp = current_time;
     /* even if NCountHist is small, we already Init()ed the tail */
     statCountersClean(CountHist + N_COUNT_HIST - 1);
-    xmemmove(p, t, (N_COUNT_HIST - 1) * sizeof(StatCounters));
+    memmove(p, t, (N_COUNT_HIST - 1) * sizeof(StatCounters));
     statCountersCopy(t, c);
     NCountHist++;
 
@@ -1435,7 +1435,7 @@ statAvgTick(void *notused)
         StatCounters *p2 = &CountHourHist[1];
         StatCounters *c2 = &CountHist[N_COUNT_HIST - 1];
         statCountersClean(CountHourHist + N_COUNT_HOUR_HIST - 1);
-        xmemmove(p2, t2, (N_COUNT_HOUR_HIST - 1) * sizeof(StatCounters));
+        memmove(p2, t2, (N_COUNT_HOUR_HIST - 1) * sizeof(StatCounters));
         statCountersCopy(t2, c2);
         NCountHourHist++;
     }
@@ -1545,7 +1545,7 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
 {
     assert(dest && orig);
     /* this should take care of all the fields, but "special" ones */
-    xmemcpy(dest, orig, sizeof(*dest));
+    memcpy(dest, orig, sizeof(*dest));
     /* prepare space where to copy special entries */
     statCountersInitSpecial(dest);
     /* now handle special cases */

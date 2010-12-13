@@ -535,7 +535,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
                 continue;
 
             struct in_addr temp;
-            xmemcpy(&temp, answers[k].rdata, sizeof(struct in_addr));
+            memcpy(&temp, answers[k].rdata, sizeof(struct in_addr));
             i->addrs.in_addrs[j] = temp;
 
             debugs(14, 3, "ipcacheParse: " << name << " #" << j << " " << i->addrs.in_addrs[j]);
@@ -546,7 +546,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
                 continue;
 
             struct in6_addr temp;
-            xmemcpy(&temp, answers[k].rdata, sizeof(struct in6_addr));
+            memcpy(&temp, answers[k].rdata, sizeof(struct in6_addr));
             i->addrs.in_addrs[j] = temp;
 
             debugs(14, 3, "ipcacheParse: " << name << " #" << j << " " << i->addrs.in_addrs[j] );

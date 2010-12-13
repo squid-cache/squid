@@ -128,7 +128,7 @@ statHistCopy(StatHist * Dest, const StatHist * Orig)
            (long int) (Dest->capacity * sizeof(*Dest->bins)) << " bytes to " <<
            Dest->bins << " from " << Orig->bins);
 
-    xmemcpy(Dest->bins, Orig->bins, Dest->capacity * sizeof(*Dest->bins));
+    memcpy(Dest->bins, Orig->bins, Dest->capacity * sizeof(*Dest->bins));
 }
 
 /*

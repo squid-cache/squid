@@ -1767,8 +1767,7 @@ FtpStateData::handleControlReply()
         /* Got some data past the complete reply */
         assert(bytes_used < ctrl.offset);
         ctrl.offset -= bytes_used;
-        xmemmove(ctrl.buf, ctrl.buf + bytes_used,
-                 ctrl.offset);
+        memmove(ctrl.buf, ctrl.buf + bytes_used, ctrl.offset);
     }
 
     /* Move the last line of the reply message to ctrl.last_reply */
