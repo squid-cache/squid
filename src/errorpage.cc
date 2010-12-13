@@ -513,6 +513,9 @@ errorStateFree(ErrorState * err)
     if (err->err_language != Config.errorDefaultLanguage)
 #endif
         safe_free(err->err_language);
+#if USE_SSL
+    delete err->detail;
+#endif
     cbdataFree(err);
 }
 
@@ -602,7 +605,7 @@ ErrorState::Dump(MemBuf * mb)
 #define CVT_BUF_SZ 512
 
 const char *
-ErrorState::Convert(char token, bool building_deny_info_url)
+ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion)
 {
     static MemBuf mb;
     const char *p = NULL;	/* takes priority over mb if set */
@@ -629,6 +632,22 @@ ErrorState::Convert(char token, bool building_deny_info_url)
     case 'c':
         if (building_deny_info_url) break;
         p = errorPageName(type);
+        break;
+
+    case 'D':
+        if (!allowRecursion)
+            p = "%D";  // if recursion is not allowed, do not convert
+#if USE_SSL
+        // currently only SSL error details implemented
+        else if (detail) {
+            const String &errDetail = detail->toString();
+            MemBuf *detail_mb  = ConvertText(errDetail.termedBuf(), false);
+            mb.append(detail_mb->content(), detail_mb->contentSize());
+            delete detail_mb;
+            do_quote = 0;
+        } else
+#endif
+            mb.Printf("[No Error Detail]");
         break;
 
     case 'e':
@@ -898,7 +917,7 @@ ErrorState::DenyInfoLocation(const char *name, HttpRequest *aRequest, MemBuf &re
 
     while ((p = strchr(m, '%'))) {
         result.append(m, p - m);       /* copy */
-        t = Convert(*++p, true);       /* convert */
+        t = Convert(*++p, true, true);       /* convert */
         result.Printf("%s", t);        /* copy */
         m = p + 1;                     /* advance */
     }
@@ -976,10 +995,7 @@ ErrorState::BuildHttpReply()
 MemBuf *
 ErrorState::BuildContent()
 {
-    MemBuf *content = new MemBuf;
     const char *m = NULL;
-    const char *p;
-    const char *t;
 
     assert(page_id > ERR_NONE && page_id < error_page_count);
 
@@ -1096,12 +1112,20 @@ ErrorState::BuildContent()
         debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
     }
 
+    return ConvertText(m, true);
+}
+
+MemBuf *ErrorState::ConvertText(const char *text, bool allowRecursion)
+{
+    MemBuf *content = new MemBuf;
+    const char *p;
+    const char *m = text;
     assert(m);
     content->init();
 
     while ((p = strchr(m, '%'))) {
         content->append(m, p - m);	/* copy */
-        t = Convert(*++p, false);	/* convert */
+        const char *t = Convert(*++p, false, allowRecursion);	/* convert */
         content->Printf("%s", t);	/* copy */
         m = p + 1;			/* advance */
     }
