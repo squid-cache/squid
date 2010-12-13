@@ -1,10 +1,14 @@
 
+section --    CGI Cache Manager
 section --    External DISKD process implementation.
+section --    Refcount allocator
 section --    Unlink Daemon
+section --    WWW Client
 section 00    Announcement Server
 section 00    Client Database
 section 00    DNS Resolver Daemon
 section 00    Debug Routines
+section 00    Hash Tables
 section 00    UFS Store Dump Tool
 section 01    Main Loop
 section 01    Startup and Main Loop
@@ -90,6 +94,7 @@ section 50    Log file handling
 section 51    Filedescriptor Functions
 section 52    URN Parsing
 section 53    AS Number handling
+section 53    Radix Tree data structure implementation
 section 54    Interprocess Communication
 section 54    Windows Interprocess Communication
 section 55    HTTP Header
@@ -100,6 +105,7 @@ section 59    auto-growing Memory Buffer with printf
 section 60    Packer: A uniform interface to store-like modules
 section 61    Redirector
 section 62    Generic Histogram
+section 63    Low Level Memory Pool Management
 section 64    HTTP Range Header
 section 65    HTTP Cache Control Header
 section 66    HTTP Header Tools
@@ -129,6 +135,7 @@ section 82    External ACL
 section 83    SSL accelerator support
 section 84    Helper process maintenance
 section 85    Client-side Request Routines
+section 86    ESI Expressions
 section 86    ESI processing
 section 87    Client-side Stream routines.
 section 88    Client-side Reply Routines
