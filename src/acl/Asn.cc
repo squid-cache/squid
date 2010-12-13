@@ -341,7 +341,7 @@ asHandleReply(void *data, StoreIOBuffer result)
      * Next, copy the left over data, from s to s + leftoversz to the
      * beginning of the buffer
      */
-    xmemmove(buf, s, leftoversz);
+    memmove(buf, s, leftoversz);
 
     /*
      * Next, update our offset and reqofs, and kick off a copy if required

@@ -201,11 +201,11 @@ CossSwapDir::readCompleted(const char *buf, int len, int errflag, RefCount<ReadR
             cstate->readbuffer = (char *)xmalloc(cstate->st_size);
             p = storeCossMemPointerFromDiskOffset(storeCossFilenoToDiskOffset(sio->swap_filen),
                                                   NULL);
-            xmemcpy(cstate->readbuffer, p, cstate->st_size);
+            memcpy(cstate->readbuffer, p, cstate->st_size);
         }
 
         sio->offset_ += len;
-        xmemcpy(cstate->requestbuf, &cstate->readbuffer[cstate->requestoffset],
+        memcpy(cstate->requestbuf, &cstate->readbuffer[cstate->requestoffset],
                 cstate->requestlen);
         rlen = (size_t) cstate->requestlen;
     }
@@ -785,8 +785,8 @@ CossCleanLog::write(StoreEntry const &e)
     s.swap_file_sz = e.swap_file_sz;
     s.refcount = e.refcount;
     s.flags = e.flags;
-    xmemcpy(&s.key, e.key, SQUID_MD5_DIGEST_LENGTH);
-    xmemcpy(outbuf + outbuf_offset, &s, ss);
+    memcpy(&s.key, e.key, SQUID_MD5_DIGEST_LENGTH);
+    memcpy(outbuf + outbuf_offset, &s, ss);
     outbuf_offset += ss;
     /* buffered write */
 
@@ -890,7 +890,7 @@ CossSwapDir::logEntry(const StoreEntry & e, int op) const
     s->swap_file_sz = e.swap_file_sz;
     s->refcount = e.refcount;
     s->flags = e.flags;
-    xmemcpy(s->key, e.key, SQUID_MD5_DIGEST_LENGTH);
+    memcpy(s->key, e.key, SQUID_MD5_DIGEST_LENGTH);
     file_write(swaplog_fd,
                -1,
                s,

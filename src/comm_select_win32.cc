@@ -380,11 +380,11 @@ comm_select(int msec)
 
         maxfd = Biggest_FD + 1;
 
-        xmemcpy(&readfds, &global_readfds, sizeof(global_readfds));
+        memcpy(&readfds, &global_readfds, sizeof(global_readfds));
 
-        xmemcpy(&writefds, &global_writefds, sizeof(global_writefds));
+        memcpy(&writefds, &global_writefds, sizeof(global_writefds));
 
-        xmemcpy(&errfds, &global_writefds, sizeof(global_writefds));
+        memcpy(&errfds, &global_writefds, sizeof(global_writefds));
 
         /* remove stalled FDs, and deal with pending descriptors */
         pending = 0;

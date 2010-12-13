@@ -77,8 +77,7 @@ ACLTimeData::match(time_t when)
 
     if (when != last_when) {
         last_when = when;
-
-        xmemcpy(&tm, localtime(&when), sizeof(struct tm));
+        memcpy(&tm, localtime(&when), sizeof(struct tm));
     }
 
     t = (time_t) (tm.tm_hour * 60 + tm.tm_min);

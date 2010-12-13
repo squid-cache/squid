@@ -38,7 +38,7 @@ CpuAffinitySet::apply()
                "this process: " << xstrerror());
     } else {
         cpu_set_t cpuSet;
-        xmemcpy(&cpuSet, &theCpuSet, sizeof(cpuSet));
+        memcpy(&cpuSet, &theCpuSet, sizeof(cpuSet));
         CPU_AND(&cpuSet, &cpuSet, &theOrigCpuSet);
         if (CPU_COUNT(&cpuSet) <= 0) {
             debugs(54, DBG_IMPORTANT, "ERROR: invalid CPU affinity for process "
@@ -76,5 +76,5 @@ CpuAffinitySet::applied() const
 void
 CpuAffinitySet::set(const cpu_set_t &aCpuSet)
 {
-    xmemcpy(&theCpuSet, &aCpuSet, sizeof(theCpuSet));
+    memcpy(&theCpuSet, &aCpuSet, sizeof(theCpuSet));
 }

@@ -934,7 +934,7 @@ URLHostName::trimAuth()
 
     if ((t = strrchr(Host, '@'))) {
         t++;
-        xmemmove(Host, t, strlen(t) + 1);
+        memmove(Host, t, strlen(t) + 1);
     }
 }
 

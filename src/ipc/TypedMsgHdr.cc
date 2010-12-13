@@ -20,14 +20,14 @@ Ipc::TypedMsgHdr::TypedMsgHdr()
 
 Ipc::TypedMsgHdr::TypedMsgHdr(const TypedMsgHdr &tmh)
 {
-    xmemcpy(this, &tmh, sizeof(*this));
+    memcpy(this, &tmh, sizeof(*this));
     sync();
 }
 
 Ipc::TypedMsgHdr &Ipc::TypedMsgHdr::operator =(const TypedMsgHdr &tmh)
 {
     if (this != &tmh) { // skip assignment to self
-        xmemcpy(this, &tmh, sizeof(*this));
+        memcpy(this, &tmh, sizeof(*this));
         sync();
     }
     return *this;
@@ -156,7 +156,7 @@ Ipc::TypedMsgHdr::getRaw(void *raw, size_t size) const
     Must(size >= 0);
     if (size > 0) {
         Must(size <= data.size - offset);
-        xmemcpy(raw, data.raw + offset, size);
+        memcpy(raw, data.raw + offset, size);
         offset += size;
     }
 }
@@ -168,7 +168,7 @@ Ipc::TypedMsgHdr::putRaw(const void *raw, size_t size)
     Must(size >= 0);
     if (size > 0) {
         Must(size <= sizeof(data.raw) - data.size);
-        xmemcpy(data.raw + data.size, raw, size);
+        memcpy(data.raw + data.size, raw, size);
         data.size += size;
     }
 }
@@ -187,7 +187,7 @@ Ipc::TypedMsgHdr::putFd(int fd)
     cmsg->cmsg_len = CMSG_LEN(sizeof(int) * fdCount);
 
     int *fdStore = reinterpret_cast<int*>(CMSG_DATA(cmsg));
-    xmemcpy(fdStore, &fd, fdCount * sizeof(int));
+    memcpy(fdStore, &fd, fdCount * sizeof(int));
     msg_controllen = cmsg->cmsg_len;
 }
 
@@ -203,7 +203,7 @@ Ipc::TypedMsgHdr::getFd() const
     const int fdCount = 1;
     const int *fdStore = reinterpret_cast<const int*>(CMSG_DATA(cmsg));
     int fd = -1;
-    xmemcpy(&fd, fdStore, fdCount * sizeof(int));
+    memcpy(&fd, fdStore, fdCount * sizeof(int));
     return fd;
 }
 

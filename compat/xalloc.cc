@@ -56,7 +56,7 @@ malloc_statistics(void (*func) (int, int, int, void *), void *data)
     for (; i <= XMS_DBG_MAXSIZE; i += XMS_DBG_GRAIN)
         func(i, malloc_sizes[XMS_DBG_INDEX(i)], malloc_histo[XMS_DBG_INDEX(i)], data);
 
-    xmemcpy(&malloc_histo, &malloc_sizes, sizeof(malloc_sizes));
+    memcpy(&malloc_histo, &malloc_sizes, sizeof(malloc_sizes));
 }
 #endif /* XMALLOC_STATISTICS */
 

@@ -141,7 +141,7 @@ snmp_var_new(oid * Name, int Len) {
 
     /* Only copy a name if it was specified. */
     if (Name)
-        xmemcpy((char *) New->name, (char *) Name, Len * sizeof(oid));
+        memcpy((char *) New->name, (char *) Name, Len * sizeof(oid));
 
     return (New);
 }
@@ -179,7 +179,7 @@ snmp_var_clone(struct variable_list *Src) {
            sizeof(struct variable_list));
 #endif
 
-    xmemcpy((char *) Dest, (char *) Src, sizeof(struct variable_list));
+    memcpy((char *) Dest, (char *) Src, sizeof(struct variable_list));
 
     if (Src->name != NULL) {
         Dest->name = (oid *) xmalloc(Src->name_length * sizeof(oid));
@@ -191,7 +191,7 @@ snmp_var_clone(struct variable_list *Src) {
 #if DEBUG_VARS
         printf("VARS: Copying name OID. (Size %d)\n", Src->name_length);
 #endif
-        xmemcpy((char *) Dest->name, (char *) Src->name,
+        memcpy((char *) Dest->name, (char *) Src->name,
                 Src->name_length * sizeof(oid));
     }
     /* CISCO Catalyst 2900 returns NULL strings as data of length 0. */
@@ -207,7 +207,7 @@ snmp_var_clone(struct variable_list *Src) {
 #if DEBUG_VARS
         printf("VARS: Copying value (Size %d)\n", Src->val_len);
 #endif
-        xmemcpy((char *) Dest->val.string, (char *) Src->val.string, Src->val_len);
+        memcpy((char *) Dest->val.string, (char *) Src->val.string, Src->val_len);
     }
 #if DEBUG_VARS
     printf("VARS: Cloned %x.\n", (unsigned int) Dest);
@@ -530,7 +530,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
             }
             /* Only copy if we successfully decoded something */
             if (bufp) {
-                xmemcpy((char *) Var->val.objid, (char *) TmpBuf, Var->val_len);
+                memcpy((char *) Var->val.objid, (char *) TmpBuf, Var->val_len);
             }
 #if DEBUG_VARS_DECODE
             printf("VARS: Decoded OBJID (length %d) (%d bytes left)\n",

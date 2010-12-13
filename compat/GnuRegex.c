@@ -214,7 +214,7 @@ char *alloca();
 /* Assumes a `char *destination' variable.  */
 #define REGEX_REALLOCATE(source, osize, nsize)				\
   (destination = (char *) alloca (nsize),				\
-   xmemcpy (destination, source, osize),				\
+   memcpy (destination, source, osize),				\
    destination)
 
 #endif /* not REGEX_MALLOC */

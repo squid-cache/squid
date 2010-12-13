@@ -102,7 +102,7 @@ cacheDigestClone(const CacheDigest * cd)
     clone->count = cd->count;
     clone->del_count = cd->del_count;
     assert(cd->mask_size == clone->mask_size);
-    xmemcpy(clone->mask, cd->mask, cd->mask_size);
+    memcpy(clone->mask, cd->mask, cd->mask_size);
     return clone;
 }
 
@@ -328,7 +328,7 @@ cacheDigestHashKey(const CacheDigest * cd, const cache_key * key)
     const unsigned int bit_count = cd->mask_size * 8;
     unsigned int tmp_keys[4];
     /* we must memcpy to ensure alignment */
-    xmemcpy(tmp_keys, key, sizeof(tmp_keys));
+    memcpy(tmp_keys, key, sizeof(tmp_keys));
     hashed_keys[0] = htonl(tmp_keys[0]) % bit_count;
     hashed_keys[1] = htonl(tmp_keys[1]) % bit_count;
     hashed_keys[2] = htonl(tmp_keys[2]) % bit_count;

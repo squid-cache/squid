@@ -105,7 +105,7 @@ IcmpSquid::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     pecho.psize = len;
 
     if (len > 0)
-        xmemcpy(pecho.payload, payload, len);
+        memcpy(pecho.payload, payload, len);
 
     slen = sizeof(pingerEchoData) - PINGER_PAYLOAD_SZ + pecho.psize;
 
