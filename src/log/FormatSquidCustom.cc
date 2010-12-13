@@ -760,7 +760,7 @@ Log::Format::SquidCustom(AccessLogEntry * al, customlog * log)
                     newout = rfc1738_escape_unescaped(out);
                     break;
 
-                case LOG_QUOTE_QUOTES:
+                case LOG_QUOTE_QUOTES: {
                     size_t out_len = static_cast<size_t>(strlen(out)) * 2 + 1;
                     if (out_len >= sizeof(tmp)) {
                         newout = (char *)xmalloc(out_len);
@@ -768,7 +768,8 @@ Log::Format::SquidCustom(AccessLogEntry * al, customlog * log)
                     } else
                         newout = tmp;
                     log_quoted_string(out, newout);
-                    break;
+                }
+                break;
 
                 case LOG_QUOTE_MIMEBLOB:
                     newout = Log::QuoteMimeBlob(out);
