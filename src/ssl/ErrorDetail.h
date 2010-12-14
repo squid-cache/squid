@@ -18,19 +18,19 @@
 namespace Ssl
 {
 /// Squid defined error code (<0),  an error code returned by SSL X509 api, or SSL_ERROR_NONE
-typedef int error_t;
+typedef int ssl_error_t;
 
 /**
    \ingroup ServerProtocolSSLAPI
- * The error_t representation of the error described by "name".
+ * The ssl_error_t representation of the error described by "name".
  */
-error_t parseErrorString(const char *name);
+ssl_error_t parseErrorString(const char *name);
 
 /**
    \ingroup ServerProtocolSSLAPI
  * The string representation of the SSL error "value"
  */
-const char *getErrorName(error_t value);
+const char *getErrorName(ssl_error_t value);
 
 /**
    \ingroup ServerProtocolSSLAPI
@@ -40,7 +40,7 @@ const char *getErrorName(error_t value);
 class ErrorDetail
 {
 public:
-    ErrorDetail(error_t err_no, X509 *cert);
+    ErrorDetail(ssl_error_t err_no, X509 *cert);
     ErrorDetail(ErrorDetail const &);
     const String &toString() const;  ///< An error detail string to embed in squid error pages
 
@@ -68,7 +68,7 @@ private:
     void buildDetail() const;
 
     mutable String errDetailStr; ///< Caches the error detail message
-    error_t error_no;   ///< The error code
+    ssl_error_t error_no;   ///< The error code
     X509_Pointer peer_cert; ///< A pointer to the peer certificate
 };
 

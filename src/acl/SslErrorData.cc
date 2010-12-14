@@ -22,7 +22,7 @@ ACLSslErrorData::~ACLSslErrorData()
 }
 
 bool
-ACLSslErrorData::match(Ssl::error_t toFind)
+ACLSslErrorData::match(Ssl::ssl_error_t toFind)
 {
     return values->findAndTune (toFind);
 }
@@ -30,14 +30,14 @@ ACLSslErrorData::match(Ssl::error_t toFind)
 /* explicit instantiation required for some systems */
 /** \cond AUTODOCS-IGNORE */
 // AYJ: 2009-05-20 : Removing. clashes with template <int> instantiation for other ACLs.
-// template cbdata_type CbDataList<Ssl::error_t>::CBDATA_CbDataList;
+// template cbdata_type CbDataList<Ssl::ssl_error_t>::CBDATA_CbDataList;
 /** \endcond */
 
 wordlist *
 ACLSslErrorData::dump()
 {
     wordlist *W = NULL;
-    CbDataList<Ssl::error_t> *data = values;
+    CbDataList<Ssl::ssl_error_t> *data = values;
 
     while (data != NULL) {
         wordlistAdd(&W, Ssl::getErrorName(data->element));
@@ -50,12 +50,12 @@ ACLSslErrorData::dump()
 void
 ACLSslErrorData::parse()
 {
-    CbDataList<Ssl::error_t> **Tail;
+    CbDataList<Ssl::ssl_error_t> **Tail;
     char *t = NULL;
 
     for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-        CbDataList<Ssl::error_t> *q = new CbDataList<Ssl::error_t>(Ssl::parseErrorString(t));
+        CbDataList<Ssl::ssl_error_t> *q = new CbDataList<Ssl::ssl_error_t>(Ssl::parseErrorString(t));
         *(Tail) = q;
         Tail = &q->next;
     }
@@ -67,7 +67,7 @@ ACLSslErrorData::empty() const
     return values == NULL;
 }
 
-ACLData<Ssl::error_t> *
+ACLData<Ssl::ssl_error_t> *
 ACLSslErrorData::clone() const
 {
     /* Splay trees don't clone yet. */
