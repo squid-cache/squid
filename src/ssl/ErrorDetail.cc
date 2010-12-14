@@ -2,7 +2,7 @@
 #include "ssl/ErrorDetail.h"
 
 struct SslErrorDetailEntry {
-    Ssl::error_t value;
+    Ssl::ssl_error_t value;
     const char *name;
     const char *detail;
 };
@@ -37,7 +37,7 @@ static SslErrorDetailEntry TheSslDetailMap[] = {
     {SSL_ERROR_NONE, NULL, NULL }
 };
 
-Ssl::error_t
+Ssl::ssl_error_t
 Ssl::parseErrorString(const char *name)
 {
     assert(name);
@@ -59,7 +59,7 @@ Ssl::parseErrorString(const char *name)
 }
 
 const char *
-Ssl::getErrorName(Ssl::error_t value)
+Ssl::getErrorName(Ssl::ssl_error_t value)
 {
 
     for (int i = 0; TheSslDetailMap[i].name; ++i) {
@@ -70,7 +70,7 @@ Ssl::getErrorName(Ssl::error_t value)
     return NULL;
 }
 
-static const char *getErrorDetail(Ssl::error_t value)
+static const char *getErrorDetail(Ssl::ssl_error_t value)
 {
     for (int i = 0; TheSslDetailMap[i].name; ++i) {
         if (TheSslDetailMap[i].value == value)
@@ -247,7 +247,7 @@ const String &Ssl::ErrorDetail::toString() const
    CRYPTO_add(&(cert->references),1,CRYPTO_LOCK_X509);
    peer_cert.reset(cert);
 */
-Ssl::ErrorDetail::ErrorDetail( error_t err_no, X509 *cert): error_no (err_no)
+Ssl::ErrorDetail::ErrorDetail( Ssl::ssl_error_t err_no, X509 *cert): error_no (err_no)
 {
     peer_cert.reset(X509_dup(cert));
 }
