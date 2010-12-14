@@ -240,6 +240,10 @@ const char * squid_strnstr(const char *s, const char *find, size_t slen);
 #if !defined(PRINTF_FORMAT_ARG3)
 #define PRINTF_FORMAT_ARG3 __attribute__ ((format (printf, 3, 4)))
 #endif
+#else /* !__GNU__ */
+#define PRINTF_FORMAT_ARG1
+#define PRINTF_FORMAT_ARG2
+#define PRINTF_FORMAT_ARG3
 #endif
 
 #endif /* _SQUID_COMPAT_SHARED_H */
