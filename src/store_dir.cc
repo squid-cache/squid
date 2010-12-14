@@ -689,19 +689,14 @@ StoreController::dereference(StoreEntry & e)
 }
 
 StoreEntry *
-
-StoreController::get
-(const cache_key *key)
+StoreController::get(const cache_key *key)
 {
 
-    return swapDir->get
-           (key);
+    return swapDir->get(key);
 }
 
 void
-
-StoreController::get
-(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
+StoreController::get(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
 {
     fatal("not implemented");
 }
@@ -764,9 +759,7 @@ StoreHashIndex::create()
 /* Lookup an object in the cache.
  * return just a reference to object, don't start swapping in yet. */
 StoreEntry *
-
-StoreHashIndex::get
-(const cache_key *key)
+StoreHashIndex::get(const cache_key *key)
 {
     PROF_start(storeGet);
     debugs(20, 3, "storeGet: looking up " << storeKeyText(key));
@@ -776,9 +769,7 @@ StoreHashIndex::get
 }
 
 void
-
-StoreHashIndex::get
-(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
+StoreHashIndex::get(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
 {
     fatal("not implemented");
 }
