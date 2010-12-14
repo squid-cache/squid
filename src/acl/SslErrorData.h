@@ -11,7 +11,7 @@
 #include "ssl/support.h"
 #include "ssl/ErrorDetail.h"
 
-class ACLSslErrorData : public ACLData<Ssl::error_t>
+class ACLSslErrorData : public ACLData<Ssl::ssl_error_t>
 {
 
 public:
@@ -21,13 +21,13 @@ public:
     ACLSslErrorData(ACLSslErrorData const &);
     ACLSslErrorData &operator= (ACLSslErrorData const &);
     virtual ~ACLSslErrorData();
-    bool match(Ssl::error_t);
+    bool match(Ssl::ssl_error_t);
     wordlist *dump();
     void parse();
     bool empty() const;
-    virtual ACLData<Ssl::error_t> *clone() const;
+    virtual ACLData<Ssl::ssl_error_t> *clone() const;
 
-    CbDataList<Ssl::error_t> *values;
+    CbDataList<Ssl::ssl_error_t> *values;
 };
 
 MEMPROXY_CLASS_INLINE(ACLSslErrorData);

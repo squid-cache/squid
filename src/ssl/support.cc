@@ -211,7 +211,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     void *dont_verify_domain = SSL_CTX_get_ex_data(sslctx, ssl_ctx_ex_index_dont_verify_domain);
     ACLChecklist *check = (ACLChecklist*)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
     X509 *peer_cert = ctx->cert;
-    Ssl::error_t error_no = SSL_ERROR_NONE;
+    Ssl::ssl_error_t error_no = SSL_ERROR_NONE;
 
     X509_NAME_oneline(X509_get_subject_name(peer_cert), buffer,
                       sizeof(buffer));
