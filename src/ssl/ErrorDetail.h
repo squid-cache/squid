@@ -15,10 +15,10 @@
 #define SQUID_SSL_ERROR_MIN SQUID_X509_V_ERR_DOMAIN_MISMATCH
 #define SQUID_SSL_ERROR_MAX INT_MAX
 
-namespace Ssl 
+namespace Ssl
 {
-    /// Squid defined error code (<0),  an error code returned by SSL X509 api, or SSL_ERROR_NONE
-    typedef int error_t;
+/// Squid defined error code (<0),  an error code returned by SSL X509 api, or SSL_ERROR_NONE
+typedef int error_t;
 
 /**
    \ingroup ServerProtocolSSLAPI
@@ -30,14 +30,15 @@ error_t parseErrorString(const char *name);
    \ingroup ServerProtocolSSLAPI
  * The string representation of the SSL error "value"
  */
-const char *getErrorName(error_t value); 
+const char *getErrorName(error_t value);
 
 /**
    \ingroup ServerProtocolSSLAPI
  * Used to pass SSL error details to the error pages returned to the
  * end user.
  */
-class ErrorDetail {
+class ErrorDetail
+{
 public:
     ErrorDetail(error_t err_no, X509 *cert);
     ErrorDetail(ErrorDetail const &);
@@ -48,7 +49,8 @@ private:
     /**
      * Holds a formating code and its conversion method
      */
-    class err_frm_code {
+    class err_frm_code
+    {
     public:
         const char *code;             ///< The formating code
         fmt_action_t fmt_action; ///< A pointer to the conversion method
@@ -64,10 +66,10 @@ private:
 
     int convert(const char *code, const char **value) const;
     void buildDetail() const;
-    
+
     mutable String errDetailStr; ///< Caches the error detail message
     error_t error_no;   ///< The error code
-    X509_Pointer peer_cert; ///< A pointer to the peer certificate 
+    X509_Pointer peer_cert; ///< A pointer to the peer certificate
 };
 
 }//namespace Ssl

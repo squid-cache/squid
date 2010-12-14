@@ -144,9 +144,9 @@ int Ssl::asn1timeToString(ASN1_TIME *tm, char *buf, int len)
     int write = 0;
     bio = BIO_new(BIO_s_mem());
     if (bio) {
-	if (ASN1_TIME_print(bio, tm))
-	    write = BIO_read(bio, buf, len-1);
-	BIO_free(bio);
+        if (ASN1_TIME_print(bio, tm))
+            write = BIO_read(bio, buf, len-1);
+        BIO_free(bio);
     }
     buf[write]='\0';
     return write;
@@ -159,7 +159,7 @@ int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_fun
     X509_NAME *name = X509_get_subject_name(peer_cert);
 
     for (int i = X509_NAME_get_index_by_NID(name, NID_commonName, -1); i >= 0; i = X509_NAME_get_index_by_NID(name, NID_commonName, i)) {
-       
+
         ASN1_STRING *cn_data = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(name, i));
 
         if ( (*check_func)(check_data, cn_data) == 0)
@@ -177,7 +177,7 @@ int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_fun
                 continue;
             }
             ASN1_STRING *cn_data = check->d.dNSName;
-            
+
             if ( (*check_func)(check_data, cn_data) == 0)
                 return 1;
         }
@@ -191,7 +191,7 @@ static int check_domain( void *check_data, ASN1_STRING *cn_data)
     char cn[1024];
     const char *server = (const char *)check_data;
 
-    if (cn_data->length > (int)sizeof(cn) - 1) { 
+    if (cn_data->length > (int)sizeof(cn) - 1) {
         return 1; //if does not fit our buffer just ignore
     }
     memcpy(cn, cn_data->data, cn_data->length);
@@ -219,7 +219,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     if (ok) {
         debugs(83, 5, "SSL Certificate signature OK: " << buffer);
 
-        if (server) {            
+        if (server) {
             int found = Ssl::matchX509CommonNames(peer_cert, (void *)server, check_domain);
 
             if (!found) {
@@ -261,7 +261,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
             debugs(83, 5, "SSL Certificate is self signed: " << buffer);
             break;
-            
+
         default:
             debugs(83, 1, "SSL unknown certificate error " << ctx->error << " in " << buffer);
             break;
@@ -284,7 +284,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 
     if (error_no != SSL_ERROR_NONE && !SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail) ) {
         Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail(error_no, peer_cert);
-        if(!SSL_set_ex_data(ssl, ssl_ex_index_ssl_error_detail,  errDetail)) {
+        if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_error_detail,  errDetail)) {
             debugs(83, 2, "Failed to set Ssl::ErrorDetail in ssl_verify_cb: Certificate " << buffer);
             delete errDetail;
         }

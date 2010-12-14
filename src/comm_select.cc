@@ -381,10 +381,10 @@ comm_select(int msec)
         maxfd = Biggest_FD + 1;
 
         memcpy(&readfds, &global_readfds,
-                howmany(maxfd, FD_MASK_BITS) * FD_MASK_BYTES);
+               howmany(maxfd, FD_MASK_BITS) * FD_MASK_BYTES);
 
         memcpy(&writefds, &global_writefds,
-                howmany(maxfd, FD_MASK_BITS) * FD_MASK_BYTES);
+               howmany(maxfd, FD_MASK_BITS) * FD_MASK_BYTES);
 
         /* remove stalled FDs, and deal with pending descriptors */
         pending = 0;
