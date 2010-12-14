@@ -510,10 +510,15 @@ for module in $squid_disk_module_candidates none; do
             AC_MSG_NOTICE([Windows threads support automatically enabled])
             ;;
           freebsd)
-            SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
-            SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
-            if test "x$GCC" = "xyes" -a "x$PRESET_LDFLAGS" = "x" ; then
-              LDFLAGS="$LDFLAGS -pthread"
+            if test `echo "$squid_host_os_version" | cut -b1` -lt 7 ; then
+                AC_MSG_NOTICE(pthread library requires FreeBSD 7 or later)
+                squid_opt_use_diskthreads="no"
+            else
+              SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
+              SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
+              if test "x$GCC" = "xyes" -a "x$PRESET_LDFLAGS" = "x" ; then
+                LDFLAGS="$LDFLAGS -pthread"
+              fi
             fi
             ;;
           solaris)
