@@ -287,17 +287,13 @@ StringRegistry::StringRegistry()
 }
 
 void
-
-StringRegistry::add
-(String const *entry)
+StringRegistry::add(String const *entry)
 {
     entries.insert(entry, ptrcmp);
 }
 
 void
-
-StringRegistry::remove
-(String const *entry)
+StringRegistry::remove(String const *entry)
 {
     entries.remove(entry, ptrcmp);
 }

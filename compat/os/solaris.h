@@ -42,7 +42,6 @@ typedef union {
 #include <sys/resource.h>
 SQUIDCEXTERN int getrusage(int, struct rusage *);
 
-
 /**
  * prototypes for system function missing from system includes
  * on some Solaris systems.

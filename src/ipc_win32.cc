@@ -690,8 +690,7 @@ ipc_thread_1(void *in_params)
     else
         thread_params.rfd = prfd_ipc;
 
-    thread =
-        (HANDLE) _beginthreadex(NULL, 0, ipc_thread_2, &thread_params, 0, NULL);
+    thread = (HANDLE)_beginthreadex(NULL, 0, ipc_thread_2, &thread_params, 0, NULL);
 
     if (!thread) {
         debugs(54, 0, "ipcCreate: CHILD: _beginthreadex: " << xstrerror());
