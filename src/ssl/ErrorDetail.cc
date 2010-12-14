@@ -9,9 +9,9 @@ struct SslErrorDetailEntry {
 
 // TODO: optimize by replacing with std::map or similar
 static SslErrorDetailEntry TheSslDetailMap[] = {
-    {  SQUID_X509_V_ERR_DOMAIN_MISMATCH, 
-       "SQUID_X509_V_ERR_DOMAIN_MISMATCH", 
-       "%err_name: The hostname you are connecting to (%H),  does not match any of the Certificate valid names: %ssl_cn"},
+    {  SQUID_X509_V_ERR_DOMAIN_MISMATCH,
+        "SQUID_X509_V_ERR_DOMAIN_MISMATCH",
+        "%err_name: The hostname you are connecting to (%H),  does not match any of the Certificate valid names: %ssl_cn"},
     { X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
       "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT",
       "%err_name: SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name" },
@@ -80,8 +80,7 @@ static const char *getErrorDetail(Ssl::error_t value)
     return NULL;
 }
 
-Ssl::ErrorDetail::err_frm_code Ssl::ErrorDetail::ErrorFormatingCodes[] = 
-{
+Ssl::ErrorDetail::err_frm_code Ssl::ErrorDetail::ErrorFormatingCodes[] = {
     {"ssl_subject", &Ssl::ErrorDetail::subject},
     {"ssl_ca_name", &Ssl::ErrorDetail::ca_name},
     {"ssl_cn", &Ssl::ErrorDetail::cn},
@@ -101,8 +100,8 @@ const char  *Ssl::ErrorDetail::subject() const
 
     static char tmpBuffer[256]; // A temporary buffer
     X509_NAME_oneline(X509_get_subject_name(peer_cert.get()), tmpBuffer,
-                       sizeof(tmpBuffer));
-     return tmpBuffer;
+                      sizeof(tmpBuffer));
+    return tmpBuffer;
 }
 
 // helper function to be used with Ssl::matchX509CommonNames
@@ -204,13 +203,13 @@ int Ssl::ErrorDetail::convert(const char *code, const char **value) const
             *value = (this->*action)();
             return len;
         }
-    }    
+    }
     return 0;
 }
 
 /**
- * It uses the convert method to build the string errDetailStr using 
- * a template message for the current SSL error. The template messages 
+ * It uses the convert method to build the string errDetailStr using
+ * a template message for the current SSL error. The template messages
  * can also contain normal error pages formating codes.
  * Currently the error template messages are hard-coded
  */
@@ -236,16 +235,16 @@ void Ssl::ErrorDetail::buildDetail() const
     errDetailStr.append(s, strlen(s));
 }
 
-const String &Ssl::ErrorDetail::toString() const 
-{ 
+const String &Ssl::ErrorDetail::toString() const
+{
     if (!errDetailStr.defined())
         buildDetail();
     return errDetailStr;
 }
 
-/* We may do not want to use X509_dup but instead 
+/* We may do not want to use X509_dup but instead
    internal SSL locking:
-   CRYPTO_add(&(cert->references),1,CRYPTO_LOCK_X509); 
+   CRYPTO_add(&(cert->references),1,CRYPTO_LOCK_X509);
    peer_cert.reset(cert);
 */
 Ssl::ErrorDetail::ErrorDetail( error_t err_no, X509 *cert): error_no (err_no)
