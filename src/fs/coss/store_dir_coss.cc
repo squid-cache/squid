@@ -206,7 +206,7 @@ CossSwapDir::readCompleted(const char *buf, int len, int errflag, RefCount<ReadR
 
         sio->offset_ += len;
         memcpy(cstate->requestbuf, &cstate->readbuffer[cstate->requestoffset],
-                cstate->requestlen);
+               cstate->requestlen);
         rlen = (size_t) cstate->requestlen;
     }
 

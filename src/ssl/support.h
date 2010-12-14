@@ -114,7 +114,7 @@ SSL_CTX * generateSslContextUsingPkeyAndCertFromMemory(const char * data);
 /**
    \ingroup ServerProtocolSSLAPI
    * Iterates over the X509 common and alternate names and to see if  matches with given data
-   * using the check_func.  
+   * using the check_func.
    \param peer_cert  The X509 cert to check
    \param check_data The data with which the X509 CNs compared
    \param check_func The function used to match X509 CNs. The CN data passed as ASN1_STRING data

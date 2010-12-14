@@ -519,7 +519,7 @@ snmp_pdu_decode(u_char * Packet,	/* data */
             return (NULL);
         }
         memcpy((char *) PDU->enterprise, (char *) objid,
-                PDU->enterprise_length * sizeof(oid));
+               PDU->enterprise_length * sizeof(oid));
 
         /* Agent-addr */
         four = 4;
