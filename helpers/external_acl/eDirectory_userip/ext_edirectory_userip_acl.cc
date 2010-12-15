@@ -249,46 +249,46 @@ void local_printfx(const char *msg,...)
  * Will not exceed size tolerances.
  *
  */
-int StringSplit(char *In_Str, char chr, char *Out_Str, size_t Out_Sz)
+int
+StringSplit(char *In_Str, char chr, char *Out_Str, size_t Out_Sz)
 {
-    char aBuf[EDUI_MAXLEN + (EDUI_MAXLEN / 4)], bBuf[Out_Sz], *p = NULL;
-    size_t In_Len, Out_Len, i;
+    if ((In_Str == NULL) || (Out_Str == NULL))
+        return (-1);
 
-    if ((In_Str == NULL) || (Out_Str == NULL)) return (-1);
-    In_Len = strlen(In_Str) + 1;
-    if (In_Len > sizeof(aBuf)) return (-2);
-    /* Fully-Zero out everything, and copy Input to aBuf */
-    memset(aBuf, '\0', sizeof(aBuf));
-    memset(bBuf, '\0', sizeof(bBuf));
-    xstrncpy(aBuf, In_Str, In_Len);					/* Should be safe, '\0' padded buf */
-    memset(In_Str, '\0', In_Len);
-    memset(Out_Str, '\0', Out_Sz);
+    size_t In_Len = strlen(In_Str) + 1;
 
-    /* We need to use 'for' to get array-position information */
-    for (i = 0; i < In_Len; i++) {
-        if (aBuf[i] != (int) chr)
-            bBuf[i] = aBuf[i];
-        else {
-            /* Set pointer to current position, copy bBuf to Output */
-            p = &(aBuf[i]);
-            p++;
-            xstrncpy(Out_Str, bBuf, Out_Sz);
-            Out_Len = strlen(bBuf);
-            Out_Str[Out_Len + 1] = '\0';
-            xstrncpy(In_Str, p, ((In_Len - Out_Len) + 1));
-            return i;
-        }
+    // find the char delimiter position...
+    char *p = In_Str;
+    while (*p != chr && *p != '\0' && (In_Str+In_Len) > p) {
+        p++;
     }
-    /* char not found */
-    Out_Len = strlen(bBuf);
-    if (Out_Len > 0) {
-        /* String without char remains */
-        xstrncpy(Out_Str, bBuf, Out_Sz);
-        Out_Str[Out_Len + 1] = '\0';
-        In_Str[0] = '\0';
-        return Out_Len;
-    } else
+
+    size_t i = (p-In_Str);
+
+    // token to big for the output buffer
+    if (i >= Out_Sz)
+        return (-2);
+
+    // wipe the unused Out_Obj area
+    memset(Out_Str+i, 0, Out_Sz-i);
+    // copy token from In_Str to Out_Str
+    memcpy(Out_Str, In_Str, i);
+
+    // omit the delimiter
+    if (*p == chr) {
+        p++;
+        i++;
+    } else {
+        // chr not found (or \0 found first). Wipe whole input buffer.
+        memset(In_Str, 0, In_Len);
         return (-3);
+    }
+
+    // move the unused In_Str forward
+    memmove(In_Str, p, In_Len-i);
+    // wipe the end of In_Str
+    memset(In_Str+In_Len-i, 0, i);
+    return (i-1);
 }
 
 /*
@@ -298,37 +298,50 @@ int StringSplit(char *In_Str, char chr, char *Out_Str, size_t Out_Sz)
  * Will not exceed size tolerances.
  *
  */
-int BinarySplit(void *In_Obj, size_t In_Sz, char chr, void *Out_Obj, size_t Out_Sz)
+int
+BinarySplit(void *In_Obj, size_t In_Sz, char chr, void *Out_Obj, size_t Out_Sz)
 {
-    char aBuf[In_Sz + (In_Sz / 2)], bBuf[Out_Sz], *p = NULL;
-    size_t i;
+    // check tolerances
+    if ((In_Obj == NULL) || (Out_Obj == NULL))
+        return (-1);
 
-    if ((In_Obj == NULL) || (Out_Obj == NULL)) return (-1);
-    if ((In_Sz > sizeof(aBuf)) || (Out_Sz > sizeof(bBuf))) return (-2);
-    /* Fully-Zero out everything, and copy Input to aBuf */
-    memset(aBuf, '\0', sizeof(aBuf));
-    memset(bBuf, '\0', sizeof(bBuf));
-    memcpy(aBuf, In_Obj, In_Sz);
-    memset(In_Obj, '\0', In_Sz);
-    memset(Out_Obj, '\0', Out_Sz);
+    char *in = static_cast<char*>(In_Obj);
+    char *out = static_cast<char*>(Out_Obj);
 
-    /* We need to use 'for' to get array-position information */
-    for (i = 0; i < In_Sz; i++) {
-        if (aBuf[i] != (int) chr)
-            bBuf[i] = aBuf[i];
-        else {
-            /* Set pointer to current position, copy bBuf to Output */
-            p = &(aBuf[i]);
-            p++;
-            memcpy(Out_Obj, bBuf, Out_Sz);
-            memcpy(In_Obj, p, In_Sz);
-            return i;
-        }
+    // find the char delimiter position...
+    char *p = static_cast<char*>(In_Obj);
+    while (*p != chr && (in+In_Sz) > p) {
+        p++;
     }
-    /* char not found */
-    memcpy(Out_Obj, bBuf, Out_Sz);				/* Data remainder */
-    return (-3);
+
+    size_t i = (p-in);
+
+    // token to big for the output buffer
+    if (i > Out_Sz)
+        return (-2);
+
+    // wipe the unused Out_Obj area
+    memset(out+i, 0, Out_Sz-i);
+    // copy token from In_Obj to Out_Obj
+    memcpy(Out_Obj, In_Obj, i);
+
+    // omit the delimiter
+    if (*p == chr) {
+        p++;
+        i++;
+    } else {
+        // chr not found
+        memset(In_Obj, 0, In_Sz);
+        return (-3);
+    }
+
+    // move the unused In_Obj forward
+    memmove(In_Obj, p, In_Sz-i);
+    // wipe the end of In_Obj
+    memset(in+In_Sz-i, 0, i);
+    return (i-1);
 }
+
 /* Displays version information */
 static void DisplayVersion()
 {
