@@ -65,6 +65,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
+#include "log/Tokens.h"
 #include "MemObject.h"
 #include "ProtoPort.h"
 #include "Store.h"
@@ -954,21 +955,6 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         s.clean();
     }
 
-    /**
-     \todo  --enable-useragent-log and --enable-referer-log. We should
-            probably drop those two as the custom log formats accomplish pretty much the same thing..
-    */
-#if USE_USERAGENT_LOG
-    if ((str = req_hdr->getStr(HDR_USER_AGENT)))
-        logUserAgent(fqdnFromAddr(http->getConn()->log_addr), str);
-
-#endif
-#if USE_REFERER_LOG
-
-    if ((str = req_hdr->getStr(HDR_REFERER)))
-        logReferer(fqdnFromAddr(http->getConn()->log_addr), str, http->log_uri);
-
-#endif
 #if USE_FORW_VIA_DB
 
     if (req_hdr->has(HDR_X_FORWARDED_FOR)) {

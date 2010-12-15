@@ -419,7 +419,6 @@ squid_SOURCES = \
 	PingData.h \
 	protos.h \
 	redirect.cc \
-	referer.cc \
 	refresh.cc \
 	RemovalPolicy.cc \
 	RemovalPolicy.h \
@@ -488,7 +487,6 @@ squid_SOURCES = \
 	URLScheme.cc \
 	URLScheme.h \
 	urn.cc \
-	useragent.cc \
 	wccp.cc \
 	wccp2.cc \
 	whois.cc \
@@ -1234,7 +1232,6 @@ tests_testCacheManager_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
-	referer.cc \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
@@ -1272,7 +1269,6 @@ tests_testCacheManager_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
-	useragent.cc \
 	wccp2.cc \
 	whois.cc \
 	FadingCounter.cc \
@@ -1439,7 +1435,6 @@ tests_testEvent_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
-	referer.cc \
 	refresh.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
@@ -1476,7 +1471,6 @@ tests_testEvent_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
-	useragent.cc \
 	wccp2.cc \
 	whois.cc \
 	FadingCounter.cc \
@@ -1602,7 +1596,6 @@ tests_testEventLoop_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
-	referer.cc \
 	refresh.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
@@ -1639,7 +1632,6 @@ tests_testEventLoop_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
-	useragent.cc \
 	wccp2.cc \
 	whois.cc \
 	FadingCounter.cc \
@@ -1755,7 +1747,6 @@ tests_test_http_range_SOURCES = \
 	peer_userhash.cc \
 	pconn.cc \
 	redirect.cc \
-	referer.cc \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
@@ -1795,7 +1786,6 @@ tests_test_http_range_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
-	useragent.cc \
 	wccp2.cc \
 	whois.cc \
 	FadingCounter.cc \
@@ -1922,7 +1912,6 @@ tests_testHttpRequest_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
-	referer.cc \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
@@ -1960,7 +1949,6 @@ tests_testHttpRequest_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
-	useragent.cc \
 	wccp2.cc \
 	whois.cc \
 	FadingCounter.cc \
@@ -2340,7 +2328,6 @@ tests_testURL_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
-	referer.cc \
 	refresh.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
@@ -2375,7 +2362,6 @@ tests_testURL_SOURCES = \
 	tunnel.cc \
 	SwapDir.cc \
 	urn.cc \
-	useragent.cc \
 	wccp2.cc \
 	whois.cc \
 	FadingCounter.cc \

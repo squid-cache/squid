@@ -133,13 +133,9 @@ static const char *const B_GBYTES_STR = "GB";
 
 static const char *const list_sep = ", \t\n\r";
 
-static void parse_logformat(logformat ** logformat_definitions);
 static void parse_access_log(customlog ** customlog_definitions);
 static int check_null_access_log(customlog *customlog_definitions);
-
-static void dump_logformat(StoreEntry * entry, const char *name, logformat * definitions);
 static void dump_access_log(StoreEntry * entry, const char *name, customlog * definitions);
-static void free_logformat(logformat ** definitions);
 static void free_access_log(customlog ** definitions);
 
 static void update_maxobjsize(void);
@@ -3975,36 +3971,6 @@ strtokFile(void)
 }
 
 #include "AccessLogEntry.h"
-/* TODO: split out parsing somehow ...*/
-static void
-parse_logformat(logformat ** logformat_definitions)
-{
-    logformat *nlf;
-    char *name, *def;
-
-    if ((name = strtok(NULL, w_space)) == NULL)
-        self_destruct();
-
-    if ((def = strtok(NULL, "\r\n")) == NULL) {
-        self_destruct();
-        return;
-    }
-
-    debugs(3, 2, "Logformat for '" << name << "' is '" << def << "'");
-
-    nlf = (logformat *)xcalloc(1, sizeof(logformat));
-
-    nlf->name = xstrdup(name);
-
-    if (!accessLogParseLogFormat(&nlf->format, def)) {
-        self_destruct();
-        return;
-    }
-
-    nlf->next = *logformat_definitions;
-
-    *logformat_definitions = nlf;
-}
 
 static void
 parse_access_log(customlog ** logs)
@@ -4021,19 +3987,19 @@ parse_access_log(customlog ** logs)
     }
 
     if (strcmp(filename, "none") == 0) {
-        cl->type = CLF_NONE;
+        cl->type = Log::Format::CLF_NONE;
         goto done;
     }
 
     if ((logdef_name = strtok(NULL, w_space)) == NULL)
-        logdef_name = "auto";
+        logdef_name = "squid";
 
     debugs(3, 9, "Log definition name '" << logdef_name << "' file '" << filename << "'");
 
     cl->filename = xstrdup(filename);
 
     /* look for the definition pointer corresponding to this name */
-    lf = Config.Log.logformats;
+    lf = Log::TheConfig.logformats;
 
     while (lf != NULL) {
         debugs(3, 9, "Comparing against '" << lf->name << "'");
@@ -4045,18 +4011,25 @@ parse_access_log(customlog ** logs)
     }
 
     if (lf != NULL) {
-        cl->type = CLF_CUSTOM;
+        cl->type = Log::Format::CLF_CUSTOM;
         cl->logFormat = lf;
     } else if (strcmp(logdef_name, "auto") == 0) {
-        cl->type = CLF_AUTO;
+        debugs(0,0, "WARNING: Log format 'auto' no longer exists. Using 'squid' instead.");
+        cl->type = Log::Format::CLF_SQUID;
     } else if (strcmp(logdef_name, "squid") == 0) {
-        cl->type = CLF_SQUID;
+        cl->type = Log::Format::CLF_SQUID;
     } else if (strcmp(logdef_name, "common") == 0) {
-        cl->type = CLF_COMMON;
+        cl->type = Log::Format::CLF_COMMON;
+    } else if (strcmp(logdef_name, "combined") == 0) {
+        cl->type = Log::Format::CLF_COMBINED;
 #if ICAP_CLIENT
     } else if (strcmp(logdef_name, "icap_squid") == 0) {
-        cl->type = CLF_ICAP_SQUID;
+        cl->type = Log::Format::CLF_ICAP_SQUID;
 #endif
+    } else if (strcmp(logdef_name, "useragent") == 0) {
+        cl->type = Log::Format::CLF_USERAGENT;
+    } else if (strcmp(logdef_name, "referrer") == 0) {
+        cl->type = Log::Format::CLF_REFERER;
     } else {
         debugs(3, 0, "Log format '" << logdef_name << "' is not defined");
         self_destruct();
@@ -4079,12 +4052,6 @@ check_null_access_log(customlog *customlog_definitions)
 }
 
 static void
-dump_logformat(StoreEntry * entry, const char *name, logformat * definitions)
-{
-    accessLogDumpLogFormat(entry, name, definitions);
-}
-
-static void
 dump_access_log(StoreEntry * entry, const char *name, customlog * logs)
 {
     customlog *log;
@@ -4094,36 +4061,40 @@ dump_access_log(StoreEntry * entry, const char *name, customlog * logs)
 
         switch (log->type) {
 
-        case CLF_CUSTOM:
+        case Log::Format::CLF_CUSTOM:
             storeAppendPrintf(entry, "%s %s", log->filename, log->logFormat->name);
             break;
 
-        case CLF_NONE:
+        case Log::Format::CLF_NONE:
             storeAppendPrintf(entry, "none");
             break;
 
-        case CLF_SQUID:
+        case Log::Format::CLF_SQUID:
             storeAppendPrintf(entry, "%s squid", log->filename);
             break;
 
-        case CLF_COMMON:
-            storeAppendPrintf(entry, "%s squid", log->filename);
+        case Log::Format::CLF_COMBINED:
+            storeAppendPrintf(entry, "%s combined", log->filename);
             break;
+
+        case Log::Format::CLF_COMMON:
+            storeAppendPrintf(entry, "%s common", log->filename);
+            break;
+
 #if ICAP_CLIENT
-        case CLF_ICAP_SQUID:
+        case Log::Format::CLF_ICAP_SQUID:
             storeAppendPrintf(entry, "%s icap_squid", log->filename);
             break;
 #endif
-        case CLF_AUTO:
-
-            if (log->aclList)
-                storeAppendPrintf(entry, "%s auto", log->filename);
-            else
-                storeAppendPrintf(entry, "%s", log->filename);
-
+        case Log::Format::CLF_USERAGENT:
+            storeAppendPrintf(entry, "%s useragent", log->filename);
             break;
 
-        case CLF_UNKNOWN:
+        case Log::Format::CLF_REFERER:
+            storeAppendPrintf(entry, "%s referrer", log->filename);
+            break;
+
+        case Log::Format::CLF_UNKNOWN:
             break;
         }
 
@@ -4135,18 +4106,6 @@ dump_access_log(StoreEntry * entry, const char *name, customlog * logs)
 }
 
 static void
-free_logformat(logformat ** definitions)
-{
-    while (*definitions) {
-        logformat *format = *definitions;
-        *definitions = format->next;
-        safe_free(format->name);
-        accessLogFreeLogFormat(&format->format);
-        xfree(format);
-    }
-}
-
-static void
 free_access_log(customlog ** definitions)
 {
     while (*definitions) {
@@ -4154,7 +4113,7 @@ free_access_log(customlog ** definitions)
         *definitions = log->next;
 
         log->logFormat = NULL;
-        log->type = CLF_UNKNOWN;
+        log->type = Log::Format::CLF_UNKNOWN;
 
         if (log->aclList)
             aclDestroyAclList(&log->aclList);

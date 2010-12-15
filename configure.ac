@@ -954,28 +954,6 @@ dnl   fi
 dnl ])
 
 
-AC_ARG_ENABLE(useragent-log,
-  AS_HELP_STRING([--enable-useragent-log],
-                 [Enable logging of User-Agent header]), [ 
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-useragent-log: $enableval])
-  enable_useragent_log=$enableval
-])
-SQUID_DEFINE_BOOL(USE_USERAGENT_LOG,${enable_useragent_log:=no},
-    [If you want to log User-Agent request header values, define this.])
-AC_MSG_NOTICE([User-Agent logging enabled: $enable_useragent_log])
-
-AC_ARG_ENABLE(referer-log,
-  AS_HELP_STRING([--enable-referer-log],[Enable logging of Referer header]), [ 
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-referer-log: $enableval])
-])
-SQUID_DEFINE_BOOL(USE_REFERER_LOG,${enable_referer_log:=no},
-       [If you want to log Referer request header values, define this.
-        By default, they are written to referer.log in the Squid logdir.
-        This feature is deprecated in favour of custom log formats])
-AC_MSG_NOTICE([Referer logging enabled: $enable_referer_log])
-
 AC_ARG_ENABLE(wccp,
   AS_HELP_STRING([--disable-wccp],[Disable Web Cache Coordination Protocol]), [
 SQUID_YESNO([$enableval],[unrecognized argument to --disable-wccp: $enableval])
