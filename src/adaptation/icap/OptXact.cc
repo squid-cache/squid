@@ -79,7 +79,7 @@ void Adaptation::Icap::OptXact::handleCommRead(size_t)
         debugs(93, 7, HERE << "readAll=" << readAll);
         icap_tio_finish = current_time;
         setOutcome(xoOpt);
-        sendAnswer(icapReply);
+        sendAnswer(Answer::Forward(icapReply));
         Must(done()); // there should be nothing else to do
         return;
     }

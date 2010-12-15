@@ -9,6 +9,7 @@
 #include "HttpReply.h"
 #include "SquidTime.h"
 #include "adaptation/ecap/XactionRep.h"
+#include "adaptation/Initiator.h"
 #include "base/TextException.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Ecap::XactionRep, XactionRep);
@@ -158,14 +159,21 @@ void
 Adaptation::Ecap::XactionRep::dropVirgin(const char *reason)
 {
     debugs(93,4, HERE << "because " << reason << "; status:" << status());
-    Must(proxyingVb = opOn);
 
     BodyPipePointer &p = theVirginRep.raw().body_pipe;
     Must(p != NULL);
-    Must(p->stillConsuming(this));
-    stopConsumingFrom(p);
     p->enableAutoConsumption();
-    proxyingVb = opComplete;
+
+    if (proxyingVb == opOn) {
+        Must(p->stillConsuming(this));
+        stopConsumingFrom(p);
+        proxyingVb = opComplete;
+    } else {
+        Must(!p->stillConsuming(this));
+        if (proxyingVb == opUndecided)
+            proxyingVb = opNever;
+    }
+
     canAccessVb = false;
 
     // called from adapter handler so does not inform adapter
@@ -196,7 +204,7 @@ Adaptation::Ecap::XactionRep::useVirgin()
         proxyingVb = opNever;
     }
 
-    sendAnswer(clone);
+    sendAnswer(Answer::Forward(clone));
     Must(done());
 }
 
@@ -211,7 +219,7 @@ Adaptation::Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Mess
     HttpMsg *msg = answer().header;
     if (!theAnswerRep->body()) { // final, bodyless answer
         proxyingAb = opNever;
-        sendAnswer(msg);
+        sendAnswer(Answer::Forward(msg));
     } else { // got answer headers but need to handle body
         proxyingAb = opOn;
         Must(!msg->body_pipe); // only host can set body pipes
@@ -220,11 +228,24 @@ Adaptation::Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Mess
         rep->tieBody(this); // sets us as a producer
         Must(msg->body_pipe != NULL); // check tieBody
 
-        sendAnswer(msg);
+        sendAnswer(Answer::Forward(msg));
 
         debugs(93,4, HERE << "adapter will produce body" << status());
         theMaster->abMake(); // libecap will produce
     }
+}
+
+void
+Adaptation::Ecap::XactionRep::blockVirgin()
+{
+    debugs(93,3, HERE << status());
+    Must(proxyingAb == opUndecided);
+    proxyingAb = opNever;
+
+    dropVirgin("blockVirgin");
+
+    sendAnswer(Answer::Block(service().cfg().key));
+    Must(done());
 }
 
 void
@@ -250,8 +271,7 @@ void
 Adaptation::Ecap::XactionRep::vbStopMaking()
 {
     // if adapter does not need vb, we do not need to receive it
-    if (proxyingVb == opOn)
-        dropVirgin("vbStopMaking");
+    dropVirgin("vbStopMaking");
     Must(proxyingVb == opComplete);
 }
 

@@ -8,29 +8,6 @@
 #include "adaptation/Initiate.h"
 #include "base/AsyncJobCalls.h"
 
-namespace Adaptation
-{
-
-// AdaptInitiator::noteAdaptionAnswer Dialer locks/unlocks the message in transit
-// TODO: replace HTTPMSGLOCK with general RefCounting and delete this class
-class AnswerDialer: public UnaryMemFunT<Initiator, HttpMsg*>
-{
-public:
-    typedef UnaryMemFunT<Initiator, HttpMsg*> Parent;
-
-    AnswerDialer(const Parent::JobPointer &job, Parent::Method meth,
-                 HttpMsg *msg): Parent(job, meth, msg) { HTTPMSGLOCK(arg1); }
-    AnswerDialer(const AnswerDialer &d): Parent(d) { HTTPMSGLOCK(arg1); }
-    virtual ~AnswerDialer() { HTTPMSGUNLOCK(arg1); }
-
-private:
-    AnswerDialer &operator =(const AnswerDialer &); // not implemented
-};
-
-} // namespace Adaptation
-
-
-/* Initiate */
 
 Adaptation::Initiate::Initiate(const char *aTypeName): AsyncJob(aTypeName)
 {
@@ -70,20 +47,18 @@ void Adaptation::Initiate::clearInitiator()
     theInitiator.clear();
 }
 
-void Adaptation::Initiate::sendAnswer(HttpMsg *msg)
+void Adaptation::Initiate::sendAnswer(const Answer &answer)
 {
-    assert(msg);
+    typedef UnaryMemFunT<Initiator, Answer, const Answer &> MyDialer;
     CallJob(93, 5, __FILE__, __LINE__, "Initiator::noteAdaptationAnswer",
-            AnswerDialer(theInitiator, &Initiator::noteAdaptationAnswer, msg));
+            MyDialer(theInitiator, &Initiator::noteAdaptationAnswer, answer));
     clearInitiator();
 }
 
 
 void Adaptation::Initiate::tellQueryAborted(bool final)
 {
-    CallJobHere1(93, 5, theInitiator,
-                 Initiator, noteAdaptationQueryAbort, final);
-    clearInitiator();
+    sendAnswer(Answer::Error(final));
 }
 
 const char *Adaptation::Initiate::status() const
