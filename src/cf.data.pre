@@ -3129,7 +3129,7 @@ DOC_START
 	  L<data>\n - logfile data
 	  R\n - rotate file
 	  T\n - truncate file
-	  O\n - repoen file
+	  O\n - reopen file
 	  F\n - flush file
 	  r<n>\n - set rotate count to <n>
 	  b<n>\n - 1 = buffer output, 0 = don't buffer output
@@ -7067,7 +7067,7 @@ DOC_START
 	X-Forwarded-For header.
 
 	If set to "truncate", Squid will remove all existing
-	X-Forwarded-For entries, and place itself as the sole entry.
+	X-Forwarded-For entries, and place the client IP as the sole entry.
 DOC_END
 
 NAME: cachemgr_passwd
