@@ -1462,7 +1462,7 @@ ClientHttpRequest::noteAdaptationQueryAbort(bool final)
 {
     clearAdaptation(virginHeadSource);
     assert(!adaptedBodySource);
-    handleAdaptationFailure(ERR_DETAIL_ICAP_REQMOD_ABORT, !final);
+    handleAdaptationFailure(ERR_DETAIL_CLT_REQMOD_ABORT, !final);
 }
 
 void
@@ -1515,7 +1515,16 @@ ClientHttpRequest::noteBodyProducerAborted(BodyPipe::Pointer)
 {
     assert(!virginHeadSource);
     stopConsumingFrom(adaptedBodySource);
-    handleAdaptationFailure(ERR_DETAIL_ICAP_RESPMOD_CLT_SIDE_BODY);
+
+    debugs(85,3, HERE << "REQMOD body production failed");
+    if (request_satisfaction_mode) { // too late to recover or serve an error
+        request->detailError(ERR_ICAP_FAILURE, ERR_DETAIL_CLT_REQMOD_RESP_BODY);
+        const int fd = getConn()->fd;
+        Must(fd >= 0);
+        comm_close(fd); // drastic, but we may be writing a response already
+    } else {
+        handleAdaptationFailure(ERR_DETAIL_CLT_REQMOD_REQ_BODY);
+    }
 }
 
 void
