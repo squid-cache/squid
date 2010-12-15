@@ -5917,6 +5917,8 @@ DOC_START
 	  the first authentication related acl encountered
 	- When none of the http_access lines matches. It's then the last
 	  acl processed on the last http_access line.
+	- When the decision to deny access was made by an adaptation service,
+	  the acl name is the corresponding eCAP or ICAP service_name.
 
 	NP: If providing your own custom error pages with error_directory
 	    you may also specify them by your custom file name:

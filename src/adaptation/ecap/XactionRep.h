@@ -40,6 +40,7 @@ public:
     virtual libecap::Message &adapted();
     virtual void useVirgin();
     virtual void useAdapted(const libecap::shared_ptr<libecap::Message> &msg);
+    virtual void blockVirgin();
     virtual void adaptationDelayed(const libecap::Delay &);
     virtual void adaptationAborted();
     virtual void vbDiscard();
