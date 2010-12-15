@@ -81,7 +81,7 @@ cacheEntryCreate(const StoreSwapLogData * s)
     CacheEntry *e = xcalloc(1, sizeof(CacheEntry));
     assert(s);
     /* e->s = *s; */
-    xmemcpy(e->key_arr, s->key, SQUID_MD5_DIGEST_LENGTH);
+    memcpy(e->key_arr, s->key, SQUID_MD5_DIGEST_LENGTH);
     e->key = &e->key_arr[0];
     return e;
 }

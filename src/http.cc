@@ -1149,7 +1149,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
         /* Skip whitespace between replies */
 
         while (len > 0 && xisspace(*buf))
-            xmemmove(buf, buf + 1, len--);
+            memmove(buf, buf + 1, len--);
 
         if (len == 0) {
             /* Continue to read... */

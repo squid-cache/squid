@@ -89,7 +89,7 @@ public:
         swapData.swap_file_sz = readData.swap_file_sz;
         swapData.refcount = readData.refcount;
         swapData.flags = readData.flags;
-        xmemcpy(swapData.key, readData.key, SQUID_MD5_DIGEST_LENGTH);
+        memcpy(swapData.key, readData.key, SQUID_MD5_DIGEST_LENGTH);
         return true;
     }
 };
@@ -137,7 +137,7 @@ public:
         swapData.swap_file_sz = readData.swap_file_sz;
         swapData.refcount = readData.refcount;
         swapData.flags = readData.flags;
-        xmemcpy(swapData.key, readData.key, SQUID_MD5_DIGEST_LENGTH);
+        memcpy(swapData.key, readData.key, SQUID_MD5_DIGEST_LENGTH);
         return true;
     }
 };
@@ -186,7 +186,7 @@ public:
         swapData.swap_file_sz = readData.swap_file_sz;
         swapData.refcount = readData.refcount;
         swapData.flags = readData.flags;
-        xmemcpy(swapData.key, readData.key, SQUID_MD5_DIGEST_LENGTH);
+        memcpy(swapData.key, readData.key, SQUID_MD5_DIGEST_LENGTH);
         return true;
     }
 };
@@ -370,7 +370,7 @@ struct InitStoreEntry : public unary_function<StoreMeta, void> {
 
         case STORE_META_KEY:
             assert(x.length == SQUID_MD5_DIGEST_LENGTH);
-            xmemcpy(index, x.value, SQUID_MD5_DIGEST_LENGTH);
+            memcpy(index, x.value, SQUID_MD5_DIGEST_LENGTH);
             break;
 
         case STORE_META_STD:
@@ -396,7 +396,7 @@ struct InitStoreEntry : public unary_function<StoreMeta, void> {
 
         case STORE_META_STD_LFS:
             assert(x.length == STORE_HDR_METASIZE);
-            xmemcpy(&what->timestamp, x.value, STORE_HDR_METASIZE);
+            memcpy(&what->timestamp, x.value, STORE_HDR_METASIZE);
             break;
 
         default:

@@ -101,7 +101,7 @@ logfile_mod_tcp_writeline(Logfile * lf, const char *buf, size_t len)
         return;
     }
     /* buffer it */
-    xmemcpy(ll->buf + ll->offset, buf, len);
+    memcpy(ll->buf + ll->offset, buf, len);
 
     ll->offset += len;
 
