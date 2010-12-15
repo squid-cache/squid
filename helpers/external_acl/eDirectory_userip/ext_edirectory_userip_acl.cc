@@ -19,7 +19,7 @@
  *
  ********************************************************************************
  *
- * ext_edirectory_userip_acl.cc -- Rev 2010-12-06
+ * ext_edirectory_userip_acl.cc -- Rev 2010-12-15
  *
  */
 
@@ -281,7 +281,9 @@ StringSplit(char *In_Str, char chr, char *Out_Str, size_t Out_Sz)
     } else {
         // chr not found (or \0 found first). Wipe whole input buffer.
         memset(In_Str, 0, In_Len);
-        return (-3);
+//        return (-3);
+// Returning <0 breaks current ConvertIP() code for last object
+	return (i);
     }
 
     // move the unused In_Str forward
@@ -332,7 +334,9 @@ BinarySplit(void *In_Obj, size_t In_Sz, char chr, void *Out_Obj, size_t Out_Sz)
     } else {
         // chr not found
         memset(In_Obj, 0, In_Sz);
-        return (-3);
+//        return (-3);
+// Returning <0 breaks current code for last object
+	return (i);
     }
 
     // move the unused In_Obj forward
