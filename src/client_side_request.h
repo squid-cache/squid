@@ -166,8 +166,9 @@ public:
 
 private:
     // Adaptation::Initiator API
-    virtual void noteAdaptationAnswer(HttpMsg *message);
-    virtual void noteAdaptationQueryAbort(bool final);
+    virtual void noteAdaptationAnswer(const Adaptation::Answer &answer);
+    void handleAdaptedHeader(HttpMsg *msg);
+    void handleAdaptationBlock(const Adaptation::Answer &answer);
 
     // BodyConsumer API, called by BodyPipe
     virtual void noteMoreBodyDataAvailable(BodyPipe::Pointer);

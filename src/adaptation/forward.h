@@ -25,6 +25,7 @@ class ServiceGroup;
 class ServicePlan;
 class ServiceFilter;
 class Message;
+class Answer;
 
 typedef RefCount<Service> ServicePointer;
 typedef RefCount<ServiceGroup> ServiceGroupPointer;
