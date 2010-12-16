@@ -145,6 +145,7 @@ statfs(const char *path, struct statfs *sfs)
     return 0;
 }
 
+#if !_SQUID_MINGW_
 int
 WIN32_ftruncate(int fd, off_t size)
 {
@@ -174,6 +175,7 @@ WIN32_ftruncate(int fd, off_t size)
     }
     return 0;
 }
+#endif
 
 static struct _wsaerrtext {
     int err;

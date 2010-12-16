@@ -42,6 +42,9 @@
 #if HAVE_STRING_H
 #include <string.h>
 #endif
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 #define ACL WindowsACL
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
@@ -98,7 +101,9 @@ typedef unsigned long ino_t;
 #define fstat _fstati64
 #endif
 #define ftruncate WIN32_ftruncate
+#if !_SQUID_MINGW_
 extern int WIN32_ftruncate(int fd, off_t size);
+#endif
 #define getcwd _getcwd
 #define getpid _getpid
 #define getrusage WIN32_getrusage
