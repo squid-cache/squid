@@ -41,6 +41,8 @@ public:
     virtual void add(const Name &name, const Value &value);
     virtual void removeAny(const Name &name);
 
+    virtual void visitEach(libecap::NamedValueVisitor &visitor) const;
+
     virtual Area image() const;
     virtual void parse(const Area &buf); // throws on failures
 
