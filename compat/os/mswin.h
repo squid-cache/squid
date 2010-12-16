@@ -369,7 +369,7 @@ SQUIDCEXTERN THREADLOCAL int ws32_result;
 
 SQUIDCEXTERN const char *wsastrerror(int);
 
-#if !defined(strerror)
+#if !HAVE_STRERROR
 #if HAVE_STDIO_H
 #include <stdio.h>
 #undef HAVE_STDIO_H
