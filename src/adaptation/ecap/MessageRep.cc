@@ -8,6 +8,7 @@
 #include <libecap/common/names.h>
 #include <libecap/common/area.h>
 #include <libecap/common/version.h>
+#include <libecap/common/named_values.h>
 #include "adaptation/ecap/MessageRep.h"
 #include "adaptation/ecap/XactionRep.h"
 #include "adaptation/ecap/Host.h" /* for protocol constants */
@@ -58,6 +59,17 @@ Adaptation::Ecap::HeaderRep::removeAny(const Name &name)
         theHeader.delByName(name.image().c_str());
     else
         theHeader.delById(squidId);
+}
+
+void
+Adaptation::Ecap::HeaderRep::visitEach(libecap::NamedValueVisitor &visitor) const
+{
+    HttpHeaderPos pos = HttpHeaderInitPos;
+    while (HttpHeaderEntry *e = theHeader.getEntry(&pos)) {
+        const Name name(e->name.termedBuf()); // optimize: find std Names
+        name.assignHostId(e->id);
+        visitor.visit(name, Value(e->value.rawBuf(), e->value.size()));
+    }
 }
 
 libecap::Area
