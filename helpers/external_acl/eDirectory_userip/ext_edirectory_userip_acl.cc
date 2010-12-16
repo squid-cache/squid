@@ -283,7 +283,7 @@ StringSplit(char *In_Str, char chr, char *Out_Str, size_t Out_Sz)
         memset(In_Str, 0, In_Len);
 //        return (-3);
 // Returning <0 breaks current ConvertIP() code for last object
-	return (i);
+        return (i);
     }
 
     // move the unused In_Str forward
@@ -336,7 +336,7 @@ BinarySplit(void *In_Obj, size_t In_Sz, char chr, void *Out_Obj, size_t Out_Sz)
         memset(In_Obj, 0, In_Sz);
 //        return (-3);
 // Returning <0 breaks current code for last object
-	return (i);
+        return (i);
     }
 
     // move the unused In_Obj forward
