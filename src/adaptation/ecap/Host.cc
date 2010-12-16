@@ -73,7 +73,7 @@ SquidLogLevel(libecap::LogVerbosity lv)
         return DBG_DATA; // is it a good idea to ignore other flags?
 
     if (lv.application())
-        return DBG_DATA; // is it a good idea to ignore other flags?
+        return DBG_IMPORTANT; // is it a good idea to ignore other flags?
 
     return 2 + 2*lv.debugging() + 3*lv.operation() + 2*lv.xaction();
 }
