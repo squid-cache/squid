@@ -36,6 +36,9 @@
 
 #if _SQUID_WINDOWS_
 
+#if HAVE_FCNTL_H
+#include <fcntl.h>
+#endif
 #if HAVE_STRING_H
 #include <string.h>
 #endif
@@ -120,7 +123,6 @@ extern int WIN32_ftruncate(int fd, off_t size);
 #define strncasecmp _strnicmp
 #define tempnam _tempnam
 #endif
-#define truncate WIN32_truncate
 #define umask _umask
 #define unlink _unlink
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
@@ -808,8 +810,8 @@ WIN32_truncate(const char *pathname, off_t length)
 
     return res;
 }
+#define truncate(x,y) WIN32_truncate((x),(y))
 
-SQUIDCEXTERN int ftruncate(int, off_t);
 SQUIDCEXTERN int kill(pid_t, int);
 SQUIDCEXTERN int statfs(const char *, struct statfs *);
 
