@@ -42,9 +42,6 @@
 #if HAVE_STRING_H
 #include <string.h>
 #endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 
 #define ACL WindowsACL
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
@@ -100,10 +97,12 @@ typedef unsigned long ino_t;
 #define fileno _fileno
 #define fstat _fstati64
 #endif
+#if 0
 #define ftruncate WIN32_ftruncate
 #if !_SQUID_MINGW_
 extern int WIN32_ftruncate(int fd, off_t size);
 #endif
+#endif /* 0 */
 #define getcwd _getcwd
 #define getpid _getpid
 #define getrusage WIN32_getrusage
@@ -800,6 +799,7 @@ chroot(const char *dirname)
         return GetLastError();
 }
 
+#if 0
 inline int
 WIN32_truncate(const char *pathname, off_t length)
 {
@@ -816,6 +816,7 @@ WIN32_truncate(const char *pathname, off_t length)
     return res;
 }
 #define truncate(x,y) WIN32_truncate((x),(y))
+#endif
 
 SQUIDCEXTERN int kill(pid_t, int);
 SQUIDCEXTERN int statfs(const char *, struct statfs *);
