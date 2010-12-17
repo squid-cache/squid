@@ -1216,6 +1216,7 @@ clientReplyContext::buildReplyHeader()
 
     if (is_hit)
         hdr->delById(HDR_SET_COOKIE);
+    // TODO: RFC 2965 : Must honour Cache-Control: no-cache="set-cookie2" and remove header.
 
     // if there is not configured a peer proxy with login=PASS option enabled
     // remove the Proxy-Authenticate header
