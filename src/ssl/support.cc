@@ -42,6 +42,7 @@
 
 #include "fde.h"
 #include "acl/FilledChecklist.h"
+#include "ssl/ErrorDetail.h"
 #include "ssl/support.h"
 #include "ssl/gadgets.h"
 
@@ -137,6 +138,68 @@ ssl_temp_rsa_cb(SSL * ssl, int anInt, int keylen)
     return rsa;
 }
 
+int Ssl::asn1timeToString(ASN1_TIME *tm, char *buf, int len)
+{
+    BIO *bio;
+    int write = 0;
+    bio = BIO_new(BIO_s_mem());
+    if (bio) {
+        if (ASN1_TIME_print(bio, tm))
+            write = BIO_read(bio, buf, len-1);
+        BIO_free(bio);
+    }
+    buf[write]='\0';
+    return write;
+}
+
+int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data))
+{
+    assert(peer_cert);
+
+    X509_NAME *name = X509_get_subject_name(peer_cert);
+
+    for (int i = X509_NAME_get_index_by_NID(name, NID_commonName, -1); i >= 0; i = X509_NAME_get_index_by_NID(name, NID_commonName, i)) {
+
+        ASN1_STRING *cn_data = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(name, i));
+
+        if ( (*check_func)(check_data, cn_data) == 0)
+            return 1;
+    }
+
+    STACK_OF(GENERAL_NAME) * altnames;
+    altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(peer_cert, NID_subject_alt_name, NULL, NULL);
+
+    if (altnames) {
+        int numalts = sk_GENERAL_NAME_num(altnames);
+        for (int i = 0; i < numalts; i++) {
+            const GENERAL_NAME *check = sk_GENERAL_NAME_value(altnames, i);
+            if (check->type != GEN_DNS) {
+                continue;
+            }
+            ASN1_STRING *cn_data = check->d.dNSName;
+
+            if ( (*check_func)(check_data, cn_data) == 0)
+                return 1;
+        }
+        sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
+    }
+    return 0;
+}
+
+static int check_domain( void *check_data, ASN1_STRING *cn_data)
+{
+    char cn[1024];
+    const char *server = (const char *)check_data;
+
+    if (cn_data->length > (int)sizeof(cn) - 1) {
+        return 1; //if does not fit our buffer just ignore
+    }
+    memcpy(cn, cn_data->data, cn_data->length);
+    cn[cn_data->length] = '\0';
+    debugs(83, 4, "Verifying server domain " << server << " to certificate name/subjectAltName " << cn);
+    return matchDomainName(server, cn[0] == '*' ? cn + 1 : cn);
+}
+
 /// \ingroup ServerProtocolSSLInternal
 static int
 ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
@@ -148,6 +211,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     void *dont_verify_domain = SSL_CTX_get_ex_data(sslctx, ssl_ctx_ex_index_dont_verify_domain);
     ACLChecklist *check = (ACLChecklist*)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
     X509 *peer_cert = ctx->cert;
+    Ssl::ssl_error_t error_no = SSL_ERROR_NONE;
 
     X509_NAME_oneline(X509_get_subject_name(peer_cert), buffer,
                       sizeof(buffer));
@@ -156,65 +220,22 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         debugs(83, 5, "SSL Certificate signature OK: " << buffer);
 
         if (server) {
-            int i;
-            int found = 0;
-            char cn[1024];
-
-            STACK_OF(GENERAL_NAME) * altnames;
-            altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(peer_cert, NID_subject_alt_name, NULL, NULL);
-            if (altnames) {
-                int numalts = sk_GENERAL_NAME_num(altnames);
-                debugs(83, 3, "Verifying server domain " << server << " to certificate subjectAltName");
-                for (i = 0; i < numalts; i++) {
-                    const GENERAL_NAME *check = sk_GENERAL_NAME_value(altnames, i);
-                    if (check->type != GEN_DNS) {
-                        continue;
-                    }
-                    ASN1_STRING *data = check->d.dNSName;
-                    if (data->length > (int)sizeof(cn) - 1) {
-                        continue;
-                    }
-                    memcpy(cn, data->data, data->length);
-                    cn[data->length] = '\0';
-                    debugs(83, 4, "Verifying server domain " << server << " to certificate name " << cn);
-                    if (matchDomainName(server, cn[0] == '*' ? cn + 1 : cn) == 0) {
-                        found = 1;
-                        break;
-                    }
-                }
-            }
-
-            X509_NAME *name = X509_get_subject_name(peer_cert);
-            debugs(83, 3, "Verifying server domain " << server << " to certificate dn " << buffer);
-
-            for (i = X509_NAME_get_index_by_NID(name, NID_commonName, -1); i >= 0; i = X509_NAME_get_index_by_NID(name, NID_commonName, i)) {
-                ASN1_STRING *data = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(name, i));
-
-                if (data->length > (int)sizeof(cn) - 1)
-                    continue;
-
-                memcpy(cn, data->data, data->length);
-
-                cn[data->length] = '\0';
-
-                debugs(83, 4, "Verifying server domain " << server << " to certificate cn " << cn);
-
-                if (matchDomainName(server, cn[0] == '*' ? cn + 1 : cn) == 0) {
-                    found = 1;
-                    break;
-                }
-            }
+            int found = Ssl::matchX509CommonNames(peer_cert, (void *)server, check_domain);
 
             if (!found) {
                 debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << buffer << " does not match domainname " << server);
                 ok = 0;
+                error_no = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
+
                 if (check)
                     Filled(check)->ssl_error = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
             }
         }
     } else {
+        error_no = ctx->error;
         switch (ctx->error) {
 
+        case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY:
         case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT:
             debugs(83, 5, "SSL Certficate error: CA not known: " << buffer);
             break;
@@ -237,6 +258,10 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             debugs(83, 5, "SSL Certificate has invalid \'not after\' field: " << buffer);
             break;
 
+        case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
+            debugs(83, 5, "SSL Certificate is self signed: " << buffer);
+            break;
+
         default:
             debugs(83, 1, "SSL unknown certificate error " << ctx->error << " in " << buffer);
             break;
@@ -256,6 +281,14 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     }
 
     if (!dont_verify_domain && server) {}
+
+    if (error_no != SSL_ERROR_NONE && !SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail) ) {
+        Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail(error_no, peer_cert);
+        if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_error_detail,  errDetail)) {
+            debugs(83, 2, "Failed to set Ssl::ErrorDetail in ssl_verify_cb: Certificate " << buffer);
+            delete errDetail;
+        }
+    }
 
     return ok;
 }
@@ -526,55 +559,6 @@ ssl_parse_flags(const char *flags)
     return fl;
 }
 
-struct SslErrorMapEntry {
-    const char *name;
-    ssl_error_t value;
-};
-
-static SslErrorMapEntry TheSslErrorMap[] = {
-    { "SQUID_X509_V_ERR_DOMAIN_MISMATCH", SQUID_X509_V_ERR_DOMAIN_MISMATCH },
-    { "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT", X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT },
-    { "X509_V_ERR_CERT_NOT_YET_VALID", X509_V_ERR_CERT_NOT_YET_VALID },
-    { "X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD", X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD },
-    { "X509_V_ERR_CERT_HAS_EXPIRED", X509_V_ERR_CERT_HAS_EXPIRED },
-    { "X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD", X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD },
-    { "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY", X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY },
-    { "SSL_ERROR_NONE", SSL_ERROR_NONE },
-    { NULL, SSL_ERROR_NONE }
-};
-
-ssl_error_t
-sslParseErrorString(const char *name)
-{
-    assert(name);
-
-    for (int i = 0; TheSslErrorMap[i].name; ++i) {
-        if (strcmp(name, TheSslErrorMap[i].name) == 0)
-            return TheSslErrorMap[i].value;
-    }
-
-    if (xisdigit(*name)) {
-        const long int value = strtol(name, NULL, 0);
-        if (SQUID_SSL_ERROR_MIN <= value && value <= SQUID_SSL_ERROR_MAX)
-            return value;
-        fatalf("Too small or too bug SSL error code '%s'", name);
-    }
-
-    fatalf("Unknown SSL error name '%s'", name);
-    return SSL_ERROR_SSL; // not reached
-}
-
-const char *
-sslFindErrorString(ssl_error_t value)
-{
-    for (int i = 0; TheSslErrorMap[i].name; ++i) {
-        if (TheSslErrorMap[i].value == value)
-            return TheSslErrorMap[i].name;
-    }
-
-    return NULL;
-}
-
 // "dup" function for SSL_get_ex_new_index("cert_err_check")
 static int
 ssl_dupAclChecklist(CRYPTO_EX_DATA *, CRYPTO_EX_DATA *, void *,
@@ -592,6 +576,15 @@ ssl_freeAclChecklist(void *, void *ptr, CRYPTO_EX_DATA *,
                      int, long, void *)
 {
     delete static_cast<ACLChecklist *>(ptr); // may be NULL
+}
+
+// "free" function for SSL_get_ex_new_index("ssl_error_detail")
+static void
+ssl_free_ErrorDetail(void *, void *ptr, CRYPTO_EX_DATA *,
+                     int, long, void *)
+{
+    Ssl::ErrorDetail  *errDetail = static_cast <Ssl::ErrorDetail *>(ptr);
+    delete errDetail;
 }
 
 /// \ingroup ServerProtocolSSLInternal
@@ -632,6 +625,7 @@ ssl_initialize(void)
     ssl_ex_index_server = SSL_get_ex_new_index(0, (void *) "server", NULL, NULL, NULL);
     ssl_ctx_ex_index_dont_verify_domain = SSL_CTX_get_ex_new_index(0, (void *) "dont_verify_domain", NULL, NULL, NULL);
     ssl_ex_index_cert_error_check = SSL_get_ex_new_index(0, (void *) "cert_error_check", NULL, &ssl_dupAclChecklist, &ssl_freeAclChecklist);
+    ssl_ex_index_ssl_error_detail = SSL_get_ex_new_index(0, (void *) "ssl_error_detail", NULL, NULL, &ssl_free_ErrorDetail);
 }
 
 /// \ingroup ServerProtocolSSLInternal

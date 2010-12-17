@@ -20,11 +20,13 @@ libsslsquid_la_SOURCES = \
 	context_storage.cc \
 	context_storage.h \
 	Config.cc \
-	Config.h
+	Config.h \
+	ErrorDetail.cc \
+	ErrorDetail.h \
+	support.cc \
+	support.h
 
 libsslutil_la_SOURCES = \
-	support.cc \
-	support.h \
 	gadgets.cc \
 	gadgets.h \
 	crtd_message.cc \
