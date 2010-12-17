@@ -3,96 +3,87 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-11-06 03:26+1300\n"
-"PO-Revision-Date: 2009-01-29 22:14+0000\n"
-"Last-Translator: Tanel Kurvits <Unknown>\n"
+"PO-Revision-Date: 2010-04-28 16:17+0200\n"
+"Last-Translator:  <clytie@riverland.net.au>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
-"Language: \n"
+"Language: vi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2009-02-18 03:32+0000\n"
-"X-Generator: Launchpad (build Unknown)\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Pootle 2.0.1\n"
 
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
-msgstr ""
+msgstr "<a href=\"../\">Thư mục cấp trên</a> (<a href=\"/\">Thư mục gốc</a>)"
 
 #: templates/ERR_INVALID_REQ:4
-#, fuzzy
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
-msgstr "<b>Vigane p&auml;ring</b> j&auml;rgnev viga sooritades p&auml;ringut:"
+msgstr "Gặp một lỗi <b>Sai Yêu Cầu</b> trong khi thử xử lý yêu cầu :"
 
 #: templates/ERR_INVALID_RESP:4
-#, fuzzy
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
-msgstr "<b>Vigane vastus</b> j&auml;rgnev viga sooritades p&auml;ringut:"
+msgstr "Gặp một lỗi <b>Sai Đáp Ứng</b> trong khi thử xử lý yêu cầu :"
 
 #: templates/ERR_READ_TIMEOUT:7
-#, fuzzy
 msgid ""
 "A Timeout occurred while waiting to read data from the network. The network "
 "or server may be down or congested. Please retry your request."
 msgstr ""
-"Lugejal katkes v&otilde;rgust andmeid lugedes kannatus. V&otilde;rk v&otilde;"
-"iserver v&otilde;ib olla maas v&otilde;i umbes. Proovige uuesti."
+"Quá hạn trong khi đợi đọc dữ liệu từ mạng. Có thể là mạng không chạy được "
+"hoặc bị tắc nghẽn. Hãy thử lại gửi yêu cầu."
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
-msgstr "P&auml;ring URNile ei saa vastust"
+msgstr "Không thể lấy được một địa chỉ URL cho URN yêu cầu"
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
-msgstr "Juurdep&auml;&auml;s keelatud."
+msgstr "Truy cập bị từ chối."
 
 #: templates/ERR_ACCESS_DENIED:6
-#, fuzzy
 msgid ""
 "Access control configuration prevents your request from being allowed at "
 "this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
-"Juurdep&auml;&auml;su kontrolli konfiguratsioon blokeerib teie p&auml;ringut."
-"Kui te arvate, et blokeering pole &otilde;ige, kontakteeruge palun teenuse "
-"pakkujaga."
+"Cấu hình điều khiển truy cập không cho phép bạn yêu cầu vào lúc này. Hãy "
+"liên lạc với nhà cung cấp dịch vụ nếu bạn thấy rằng trường hợp này không "
+"đúng."
 
 #: templates/ERR_FTP_FORBIDDEN:4
-#, fuzzy
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"URLi <a href=\"%U\">%U</a> lugemisel tekkis t&otilde;rge FTP autentimisel."
+"Gặp lỗi xác thực FTP trong khi thử lấy địa chỉ URL: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
-#, fuzzy
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
-"Sooritades p&auml;ringut URLile <a href=\"%U\">%U</a>, tekkisFTP protokolli "
-"viga."
+"Gặp lỗi giao thức FTP trong khi thử lấy địa chỉ URL: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
-msgstr ""
+msgstr "Nhận được một đáp ứng cấm từ máy phục vụ ICAP."
 
 #: templates/ERR_READ_ERROR:7
-#, fuzzy
 msgid ""
 "An error condition occurred while reading data from the network. Please "
 "retry your request."
-msgstr "Andmete lugemisel tekkis veasituatsioon. Palun korrake p&auml;ringut."
+msgstr "Gặp lỗi trong khi đọc dữ liệu từ mạng. Hãy thử lại gửi yêu cầu."
 
 #: templates/ERR_WRITE_ERROR:7
-#, fuzzy
 msgid ""
 "An error condition occurred while writing to the network. Please retry your "
 "request."
-msgstr "V&otilde;rku kirjutades tekkis viga. Palun korrake p&auml;ringut."
+msgstr "Gặp lỗi trong khi ghi vào mạng. Hãy thử lại gửi yêu cầu."
 
 #: templates/ERR_PRECONDITION_FAILED:7
 msgid ""
@@ -102,45 +93,46 @@ msgstr ""
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
-msgstr "Vahemälu serveri kasutamine keelatud."
+msgstr "Truy cập đến vùng nhớ tạm bị từ chối."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:3
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:5
 msgid "Cache Manager Access Denied."
-msgstr "Vahemälu serveri haldaja kasutamine keelatud."
+msgstr "Truy cập đến trình quản lý vùng nhớ tạm bị từ chối."
 
 #: templates/ERR_URN_RESOLVE:5
 msgid "Cannot Resolve URN"
-msgstr "Ei suuda lahendada URN"
+msgstr "Không tìm thấy URN"
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
-msgstr "&Uuml;henduse eluaeg l&otilde;ppes"
+msgstr "Quá hạn kết nối"
 
 #: templates/ERR_CONNECT_FAIL:5
-#, fuzzy
 msgid "Connection to %I failed."
-msgstr "&Uuml;hendus %I eba&otilde;nnestus."
+msgstr "Kết nối đến %I bị lỗi."
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
-msgstr "POST v&otilde;i PUT p&auml;ringutel puudub Content-Length"
+msgstr ""
+"Dòng đầu chiều dài nội dung (Content-Length) bị thiếu trong yêu cầu POST hay "
+"PUT."
 
 #: templates/ERR_DIR_LISTING:3
 msgid "Directory Content:"
-msgstr ""
+msgstr "Nội dung thư mục:"
 
 #: templates/ERR_DIR_LISTING:4
 msgid "Directory Listing"
-msgstr ""
+msgstr "Danh sách thư mục"
 
 #: templates/ERR_DIR_LISTING:1
 msgid "Directory: %U"
-msgstr ""
+msgstr "Thư mục: %U"
 
 #: templates/ERR_DIR_LISTING:2
 msgid "Directory: <a href=\"%U\">%U</a>/"
-msgstr ""
+msgstr "Thư mục: <a href=\"%U\">%U</a>/"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_AGENT_CONFIGURE:2
 #: templates/ERR_AGENT_WPAD:2 templates/ERR_CACHE_ACCESS_DENIED:2
@@ -160,19 +152,19 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ:2 templates/ERR_URN_RESOLVE:2
 #: templates/ERR_WRITE_ERROR:2 templates/ERR_ZERO_SIZE_OBJECT:2
 msgid "ERROR"
-msgstr "VIGA"
+msgstr "LỖI"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:1
 msgid "ERROR: Cache Access Denied"
-msgstr "VIGA: Vahemälu serveri kasutamine blokeeritud"
+msgstr "LỖI: truy cập đến vùng nhớ tạm bị từ chối"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:1
 msgid "ERROR: Cache Manager Access Denied"
-msgstr "VIGA: Vahemälu serveri haldaja kasutamine blokeeritud"
+msgstr "LỖI: truy cập đến trình quản lý vùng nhớ tạm bị từ chối"
 
 #: templates/ERR_FTP_PUT_ERROR:1
 msgid "ERROR: FTP upload failed"
-msgstr "VIGA: FTP PUT eba&otilde;nnestus"
+msgstr "LỖI: không tải lên được qua FTP"
 
 #: templates/ERR_ACCESS_DENIED:1 templates/ERR_CANNOT_FORWARD:1
 #: templates/ERR_CONNECT_FAIL:1 templates/ERR_DNS_FAIL:1 templates/ERR_ESI:1
@@ -189,58 +181,58 @@ msgstr "VIGA: FTP PUT eba&otilde;nnestus"
 #: templates/ERR_UNSUP_HTTPVERSION:1 templates/ERR_UNSUP_REQ:1
 #: templates/ERR_WRITE_ERROR:1 templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr "VIGA: P&auml;ring URLile ei saa vastust"
+msgstr "LỖI: không thể lấy địa chỉ URL yêu cầu"
 
 #: templates/ERR_URN_RESOLVE:1
 #, fuzzy
 msgid "ERROR: The requested URN could not be retrieved"
-msgstr "VIGA: P&auml;ring URLile ei saa vastust"
+msgstr "LỖI: không thể lấy địa chỉ URL yêu cầu"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
-msgstr ""
+msgstr "Lỗi xử lý ESI."
 
 #: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
 #, fuzzy
 msgid "FTP PUT Successful."
-msgstr "FTP PUT &Otilde;nnestus: fail loodi"
+msgstr "FTP PUT thành công: tập tin đã được tạo"
 
 #: templates/ERR_FTP_PUT_ERROR:3
 #, fuzzy
 msgid "FTP PUT upload failed"
-msgstr "FTP PUT eba&otilde;nnestus"
+msgstr "Lỗi PUT hay tải lên qua FTP"
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
-msgstr "FTP on blokeeritud"
+msgstr "Chức năng FTP bị tắt"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
-msgstr ""
+msgstr "Không thiết lập được một kết nối bảo mật đến %I"
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
-msgstr "Fail on loodud"
+msgstr "Tập tin đã được tạo"
 
 #: templates/ERR_FTP_PUT_MODIFIED:3
 msgid "File updated"
-msgstr "Fail on uuendatud"
+msgstr "Tập tin đã được cập nhật"
 
 #: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
 msgid "For Firefox browsers go to: <ul>"
-msgstr ""
+msgstr "Đối với trình duyệt Firefox thì thăm: <ul>"
 
 #: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
 msgid "For Internet Explorer browsers go to: <ul>"
-msgstr ""
+msgstr "Đối với trình duyệt Internet Explorer (IE) thì thăm: <ul>"
 
 #: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
 msgid "For Opera browsers go to: <ul>"
-msgstr ""
+msgstr "Đối với trình duyệt Opera thì thăm: <ul>"
 
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
-msgstr "Edastamine keelatud."
+msgstr "Chuyển tiếp bị từ chối."
 
 #: templates/ERR_ACCESS_DENIED:8 templates/ERR_AGENT_CONFIGURE:16
 #: templates/ERR_AGENT_WPAD:15 templates/ERR_CACHE_ACCESS_DENIED:8
@@ -262,94 +254,89 @@ msgstr "Edastamine keelatud."
 #: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
 #: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
-msgstr ""
+msgstr "Tạo %T bởi %h (%s)"
 
 #: templates/ERR_INVALID_REQ:12
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
-msgstr ""
+msgstr "HTTP/1.1 <q>Mong đợi:</q> tính năng được yêu cầu từ phần mềm HTTP/1.0."
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
-msgstr "Hei, mida sa ootad URNidelt %T peal:)"
+msgstr "URN trên %T không có nhiều khả năng."
 
 #: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
 msgid "How to find these settings in your browser:"
-msgstr ""
+msgstr "Cách tìm thiết lập này trong trình duyệt:"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
-msgstr ""
+msgstr "Lỗi giao thức ICAP."
 
 #: templates/ERR_TOO_BIG:7
-#, fuzzy
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
-msgstr ""
-"Kui te sooritate GET päringut, siis on vastuse keha asi, mida te serverist "
-"laete liiga suur."
+msgstr "Gửi một yêu cầu GET (lấy) thì bạn đang thử tải về một mục quá lớn."
 
 #: templates/ERR_TOO_BIG:6
-#, fuzzy
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
 msgstr ""
-"Kui te sooritate POST või PUT päringut, siis teie päringu keha see asi, mida "
-"te serverisse laete on liiga suur."
+"Gửi một yêu cầu POST (gửi) hay PUT (để) thì bạn đang thử tải lên một mục quá "
+"lớn."
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
-msgstr "keelatud s&uuml;mbolid hosti nimes; alakriipsud pole lubatud"
+msgstr "Gặp ký tự cấm trong tên máy: không cho phép dùng dấu gạch dưới."
 
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
-msgstr "Vigane topelt-kaldkriips URLi teel"
+msgstr "Gặp ký tự thoát đôi cấm trong đường dẫn URL"
 
 #: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
 #: templates/ERR_AGENT_CONFIGURE:14
 msgid "In the HTTP proxy box type the proxy name %h and port 3128."
-msgstr ""
+msgstr "Trong hộp ủy nhiệm HTTP, gõ tên ủy nhiệm %h và cổng 3128."
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
-msgstr "Vigane URL"
+msgstr "URL sai"
 
 #: templates/ERR_INVALID_REQ:8
 msgid "Missing HTTP Identifier (HTTP/1.0)."
-msgstr "Puudub HTTP identifikaator (HTTP/1.0)"
+msgstr "Thiếu dấu nhận diện HTTP (HTTP/1.0)."
 
 #: templates/ERR_INVALID_REQ:7
 msgid "Missing URL."
-msgstr "Puudub URL"
+msgstr "URL còn thiếu."
 
 #: templates/ERR_INVALID_URL:9
 msgid "Missing hostname"
-msgstr "Puuduv hosti nimi"
+msgstr "Tên máy còn thiếu"
 
 #: templates/ERR_INVALID_URL:8
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
 msgstr ""
-"Puuduv v&otilde;i vigane protokoll (peaks olema <q>http://</q> v&otilde;i "
-"sarnane)"
+"Giao thức truy cập còn thiếu hay sai (nên là <q>http://</q> hay tương tự)"
 
 #: templates/ERR_INVALID_REQ:6
 msgid "Missing or unknown request method."
-msgstr "Puudub v&otilde;i tundmatu p&auml;ringu meetod (GET, POST)"
+msgstr "Phương pháp truy cập còn thiếu hay không rõ."
 
 #: templates/ERR_NO_RELAY:5
 msgid "No Wais Relay"
-msgstr "Wais edastaja puudub"
+msgstr "Không có bộ tiếp lại WAIS"
 
 #: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
 msgid "Operation successful"
-msgstr "Operation &otilde;nnestus"
+msgstr "Thao tác thành công"
 
 #: templates/ERR_DIR_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "Thư mục cấp trên"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
@@ -357,9 +344,9 @@ msgid ""
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
-"Palun kontakteeruge <a href=\"mailto:%w%W\">vahemälu serveri "
-"administraatoriga</a>, kui teil on probleeme autoriseerimisega v&otilde;i<a "
-"href=\"http://%h/cgi-bin/chpasswd.cgi\">vahetage</a> oma parool."
+"Hãy liên lạc với <a href=\"mailto:%w%W\">quản trị vùng nhớ tạm</a> nếu bạn "
+"gặp khó khăn trong việc tự xác thực, hoặc bạn <a href=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">thay đổi</a> mật khẩu mặc định của mình."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -368,11 +355,10 @@ msgid ""
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 msgstr ""
-"Palun kontakteeruge <a href=\"mailto:%w%W\">vahemälu serveri "
-"administraatoriga</a>,kui teil on probleeme autoriseerimisega v&otilde;i kui "
-"te <em>olete</em>administraator, lugege Squidi dokumentatsiooni vahemälu "
-"serveri haldaja interfeisi kohtaja kontrollige vahemälu serveri logi t&auml;"
-"psema veakirjelduse saamiseks."
+"Hãy liên lạc với <a href=\"mailto:%w%W\">quản trị vùng nhớ tạm</a> nếu bạn "
+"gặp khó khăn trong việc tự xác thực, hoặc nếu bạn <em>có phải</em> là quản "
+"trị thì đọc tài liệu hướng dẫn Squid về giao diện quản lý vùng nhớ tạm và "
+"kiểm tra lại sổ theo dõi vùng nhớ tạm có thông điệp lỗi chi tiết hơn không."
 
 #: templates/ERR_PRECONDITION_FAILED:5
 msgid "Precondition Failed."
@@ -380,118 +366,109 @@ msgstr ""
 
 #: templates/ERR_READ_ERROR:5
 msgid "Read Error"
-msgstr "Viga lugemisel"
+msgstr "Lỗi đọc"
 
 #: templates/ERR_READ_TIMEOUT:5
 msgid "Read Timeout"
-msgstr "Lugeja kannatus katkes"
+msgstr "Quá hạn đọc"
 
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
-msgstr "P&auml;ring v&otilde;ib olla liiga suur"
+msgstr "Yêu cầu quá lớn."
 
 #: templates/ERR_AGENT_WPAD:10
 msgid "Select Automatically detect settings"
-msgstr ""
+msgstr "Bật tùy chọn Tự động phát hiện thiết lập"
 
 #: templates/ERR_AGENT_WPAD:13
 msgid "Select Use Automatic proxy configuration"
-msgstr ""
+msgstr "Bật tùy chọn Dùng tự động cấu hình ủy nhiệm"
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
-msgstr "Pistiku viga"
+msgstr "Lỗi ổ cắm"
 
 #: templates/ERR_INVALID_URL:6
 msgid "Some aspect of the requested URL is incorrect."
-msgstr "M&otilde;ni osa URList on vigane."
+msgstr "Địa chỉ URL yêu cầu có một phần không đúng."
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
-#, fuzzy
 msgid "Some possible problems are:"
-msgstr "M&otilde;ni v&otilde;imalikud probleemid:"
+msgstr "Một số vấn đề có thể gặp:"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 msgstr ""
-"Vabandust, teil pole &otilde;igust p&auml;ringule %U sellele vahemälu "
-"serveri haldajale, kuni te pole l&auml;binud autoriseerimist."
+"Để yêu cầu %U từ trình quản lý vùng nhớ tạm này thì trước tiên bạn cần phải "
+"tự xác thực."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
 msgstr ""
-"abandust, teil pole &otilde;igust p&auml;ringule %U kuni te pole l&auml;"
-"binud autoriseerimist."
+"Để yêu cầu %U từ vùng nhớ tạm này thì trước tiên bạn cần phải tự xác thực."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
-msgstr "Squid ei saanud selle p&auml;ringu vastuseks midagi."
+msgstr "Squid chưa nhận dữ liệu cho yêu cầu này."
 
 #: templates/ERR_UNSUP_REQ:6
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
-"Squid ei toeta k&otilde;iki p&auml;ringu meetodeid k&otilde;ikide "
-"protokollidega. N&auml;iteks, te ei saa teha POST operatsiooni Gopher p&auml;"
-"ringus."
+"Squid không hỗ trợ tất cả các phương pháp yêu cầu cho mỗi giao thức truy "
+"cập. Chẳng hạn, bạn không có khả năng POST một yêu cầu Gopher."
 
 #: templates/ERR_LIFETIME_EXP:6
 msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
-msgstr "Squid katkestas p&auml;ringu, kuna see kestis liiga kaua."
+msgstr "Squid đã chấm dứt yêu cầu vì nó vượt quá thời gian kết nối tối đa."
 
 #: templates/ERR_SOCKET_FAILURE:7
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
-"Squid ei suuda tekitada TCP pistikut, ilmselt &uuml;lekoormuse t&otilde;ttu. "
-"Palun korrake p&auml;ringut."
+"Squid không thể tạo một ổ cắm TCP, giả sử do trọng tải quá lớn. Hãy thử lại "
+"gửi yêu cầu."
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
 #: templates/ERR_FTP_UNAVAILABLE:5
 msgid "Squid sent the following FTP command:"
-msgstr "Squid saatis j&auml;rgneva FTP k&auml;su:"
+msgstr "Squid đã gửi lệnh FTP theo đây:"
 
 #: templates/ERR_DNS_FAIL:6
 msgid "The DNS server returned:"
-msgstr "DNS server vastas:"
+msgstr "Máy phục vụ DNS trả lại:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
-msgstr ""
+msgstr "Bộ xử lý ESI trả lại:"
 
 #: templates/ERR_FTP_UNAVAILABLE:4
-#, fuzzy
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
-msgstr ""
-"FTP server oli j&auml;rgneva URLi lugemise ajal liiga koormatud: <a href=\"%U"
-"\">%U</a>"
+msgstr "Máy phục vụ FTP quá bận để lấy địa chỉ URL: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
-"Vasti võetud HTTP vastus on tundmatu või muidu katki. Palun kontakteeruge "
-"saidi operaatoriga."
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
 msgstr ""
 
 #: templates/ERR_FTP_NOT_FOUND:4
-#, fuzzy
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
-msgstr "URLi <a href=\"%U\">%U</a> ei &otilde;nnestu lugeda"
+msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:4 templates/ERR_CACHE_ACCESS_DENIED:4
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
@@ -505,33 +482,24 @@ msgstr "URLi <a href=\"%U\">%U</a> ei &otilde;nnestu lugeda"
 #: templates/ERR_SOCKET_FAILURE:4 templates/ERR_TOO_BIG:4
 #: templates/ERR_UNSUP_HTTPVERSION:4 templates/ERR_UNSUP_REQ:4
 #: templates/ERR_WRITE_ERROR:4 templates/ERR_ZERO_SIZE_OBJECT:4
-#, fuzzy
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"Tekkis j&auml;rgnev viga sooritades p&auml;ringut URLile <a href=\"%U\">%U</"
-"a>"
 
 #: templates/ERR_URN_RESOLVE:4
-#, fuzzy
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"Tekkis j&auml;rgnev viga Sooritades p&auml;ringut URNile <a href=\"%U\">%U</"
-"a>"
 
 #: templates/ERR_CONNECT_FAIL:7
-#, fuzzy
 msgid "The remote host or network may be down. Please try the request again."
 msgstr ""
-"Server v&otilde;i arvutiv&otilde;rk ei t&ouml;&ouml;ta. Palun korrake p&auml;"
-"ringut."
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
-msgstr "Päring või vastus on liiga suur."
+msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
 #: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
@@ -548,7 +516,7 @@ msgstr "Päring või vastus on liiga suur."
 #: templates/ERR_UNSUP_REQ:3 templates/ERR_WRITE_ERROR:3
 #: templates/ERR_ZERO_SIZE_OBJECT:3
 msgid "The requested URL could not be retrieved"
-msgstr "P&auml;ring URLile ei saa vastust"
+msgstr ""
 
 #: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
@@ -561,27 +529,20 @@ msgstr ""
 #: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
 #: templates/ERR_WRITE_ERROR:6
 msgid "The system returned: <i>%E</i>"
-msgstr "S&uuml;steem vastas: <i>%E</i>"
+msgstr ""
 
 #: templates/ERR_NO_RELAY:6
-#, fuzzy
 msgid ""
 "There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
-"Selles vahemälu serveris on WAISi edastav host kirjeldamata!  Kontakteeruge "
-"administraatoriga."
 
 #: templates/ERR_TOO_BIG:8
-#, fuzzy
 msgid ""
 "These limits have been established by the Internet Service Provider who "
 "operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
-"Need piirangus on seadnud teie teenusepakkuja, keshaldab seda vahemälu "
-"serverit. Kui te arvate, et tegemist on veaga, kontakteeruge palun otse oma "
-"teenusepakkujaga."
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
@@ -589,28 +550,20 @@ msgstr ""
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
-msgstr "See vahemälu server ei toeta FTPd."
+msgstr ""
 
 #: templates/ERR_SHUTTING_DOWN:5
-#, fuzzy
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time. Please retry your request again soon."
 msgstr ""
-"Meie server on saanud k&auml;su t&ouml;&ouml; l&otilde;petada ja ei saa teie "
-"p&auml;ringut hetkel teenindada. Palun korrake oma p&auml;ringut motilde;ne "
-"aja p&auml;rast."
 
 #: templates/ERR_FORWARDING_DENIED:6
-#, fuzzy
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
 "sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
-"Meie vahemälu server ei edasta teie p&auml;ringut, kuna ta kasutab andmete "
-"edastamisel ainult naaber vahemälu serverite meetodit. Ilmselt on %i "
-"vigaselt konfigureeritud vahemälu server."
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
@@ -627,8 +580,6 @@ msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
-"Mis t&auml;hendab vahemälu server ei suutnud lahendada URLis antud hosti "
-"nime. Palun kontrollige aadressi korrektsust."
 
 #: templates/ERR_ESI:7
 msgid ""
@@ -641,15 +592,11 @@ msgid "This means:"
 msgstr ""
 
 #: templates/ERR_FTP_NOT_FOUND:7
-#, fuzzy
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
 "comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
-"See olukord v&otilde;ib olla tekkinud, kui FTP URL on antud absoluutse teega "
-"(mis on vastuolus RFC 1738-ga).  Kui see on nii, siis saab faili aadressilt "
-"<a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -660,18 +607,12 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_CANNOT_FORWARD:6
-#, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches. The most likely cause for this error is that the cache administrator "
 "does not allow this cache to make direct connections to origin servers, and "
 "all configured parent caches are currently unreachable."
 msgstr ""
-"P&auml;ringut ei &otilde;nnestunud edastada ei originaali serverile ega "
-"&uuml;helegi vanem vahemälu serverile. Ilmselt on p&otilde;hjus vahemälu "
-"serveri administraator ei v&otilde;imalda teha otseseid p&auml;ringuid "
-"originaali serverile ja k&otilde;ik kirjeldatud vanem vahemälu serverid on "
-"hetkel k&auml;ttesaamatud."
 
 #: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
 msgid ""
@@ -690,11 +631,11 @@ msgstr ""
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
-msgstr "Ei &otilde;nnestu saada hosti <q>%H</q> nimele vastavat IP aadressi"
+msgstr ""
 
 #: templates/ERR_CANNOT_FORWARD:5
 msgid "Unable to forward this request at this time."
-msgstr "P&auml;ringu edastamine eba&otilde;nnestus."
+msgstr ""
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
@@ -702,15 +643,13 @@ msgstr ""
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
-msgstr "Tundmatu p&auml;ringu meetod ja protokoll"
+msgstr ""
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:5
 msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
 msgstr ""
-"Kehtiv dokument puudub vahemälu serverist ja p&auml;ring sisaldas <q>only-if-"
-"cached</q> direktiivi."
 
 #: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
 #: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
@@ -719,7 +658,7 @@ msgstr ""
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
-msgstr "Viga kirjutamisel"
+msgstr ""
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:6
 msgid ""
@@ -727,10 +666,6 @@ msgid ""
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
-"Te edastasite p&auml;ringu <q>only-if-cached</q> vahemälu kontrolli "
-"direktiiviga. Dokumenti ei leitud vahemälu serverist <em>v&otilde;i</em>ta "
-"n&otilde;udis uuendamist, mis on aga keelatud <q>only-if-cached</q> "
-"direktiiviga."
 
 #: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
 msgid ""
@@ -753,15 +688,13 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ:7 templates/ERR_URN_RESOLVE:7
 #: templates/ERR_WRITE_ERROR:8 templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
-msgstr "Teie teenusepakkuja aadress on <a href=\"mailto:%w%W\">%w</a>."
+msgstr ""
 
 #: templates/ERR_INVALID_RESP:6
 msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
-"Teie vehemälu serveri administraator võib saada anda täiendavat infot selle "
-"vea detailide kohta."
 
 #: templates/ERR_ESI:8
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
@@ -769,14 +702,10 @@ msgstr ""
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr "Vastus on t&uuml;hi"
+msgstr ""
 
 #~ msgid "ERROR: The requested URN not be retrieved"
-#~ msgstr "VIGA: P&auml;ring URNile ei saa vastust"
+#~ msgstr "LỖI: không thể lấy URN yêu cầu"
 
 #~ msgid "FTP PUT Successful: File Updated"
-#~ msgstr "FTP PUT &Otilde;nnestus: fail on uuendatud"
-
-#, fuzzy
-#~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-#~ msgstr "PUT operatsioon URLil <a href=\"%U\">%U</a>"
+#~ msgstr "FTP PUT thành công: tập tin đã được cập nhật"

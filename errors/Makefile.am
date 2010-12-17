@@ -75,18 +75,21 @@ TRANSLATE_LANGUAGES = \
 	lv.lang \
 	ms.lang \
 	nl.lang \
+	oc.lang \
 	pl.lang \
 	pt-br.lang \
 	pt.lang \
 	ro.lang \
 	ru.lang \
 	sk.lang \
+	sr-cyrl.lang \
 	sr-latn.lang \
 	sv.lang \
 	th.lang \
 	tr.lang \
 	uk.lang \
 	uz.lang \
+	vi.lang \
 	zh-cn.lang \
 	zh-tw.lang
 
