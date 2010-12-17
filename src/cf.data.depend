@@ -36,6 +36,7 @@ int
 kb_int64_t
 kb_size_t
 logformat
+obsolete
 onoff
 peer
 peer_access		cache_peer acl
