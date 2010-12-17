@@ -563,6 +563,10 @@ This section gives a thorough account of those changes in three categories:
 	direct client address in delay pools.
 	</verb>
 
+	<tag>client_request_buffer_max_size</tag>
+	<p>New directive added with squid-3.1.10 to set limits on the amount of buffer space allocated
+	for receiving upload and request data from clients.
+
         <tag>dns_v4_fallback</tag>
         <p>New option to prevent Squid from always looking up IPv4 regardless of whether IPv6 addresses are found.
            Squid will follow a policy of prefering IPv6 links, keeping the IPv4 only as a safety net behind IPv6.
