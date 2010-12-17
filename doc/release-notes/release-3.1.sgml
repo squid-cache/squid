@@ -1110,7 +1110,7 @@ NOCOMMENT_START
 	X-Forwarded-For header.
 
 	If set to "truncate", Squid will remove all existing
-	X-Forwarded-For entries, and place itself as the sole entry.
+	X-Forwarded-For entries, and place the client IP as the sole entry.
 	</verb>
 
 	<tag>http_port transparent intercept ssl-bump connection-auth[=on|off] ignore-cc</tag>
