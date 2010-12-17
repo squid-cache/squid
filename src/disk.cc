@@ -201,7 +201,7 @@ diskCombineWrites(struct _fde_disk *fdd)
             fdd->write_q = q->next;
 
             if (q->free_func)
-                (q->free_func) (q->buf);
+                q->free_func(q->buf);
 
             memFree(q, MEM_DWRITE_Q);
         };
@@ -285,7 +285,7 @@ diskHandleWrite(int fd, void *notused)
                 fdd->write_q = q->next;
 
                 if (q->free_func)
-                    (q->free_func) (q->buf);
+                    q->free_func(q->buf);
 
                 if (q) {
                     memFree(q, MEM_DWRITE_Q);
@@ -314,7 +314,7 @@ diskHandleWrite(int fd, void *notused)
             fdd->write_q = q->next;
 
             if (q->free_func)
-                (q->free_func) (q->buf);
+                q->free_func(q->buf);
 
             if (q) {
                 memFree(q, MEM_DWRITE_Q);
@@ -522,10 +522,7 @@ xrename(const char *from, const char *to)
 {
     debugs(21, 2, "xrename: renaming " << from << " to " << to);
 #if defined (_SQUID_OS2_) || defined (_SQUID_WIN32_)
-
-    remove
-    (to);
-
+    remove(to);
 #endif
 
     if (0 == rename(from, to))

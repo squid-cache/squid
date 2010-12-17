@@ -355,8 +355,8 @@ wccpAssignBuckets(void)
     for (loop = 0; loop < number_caches; loop++) {
         int i;
         memcpy(&caches[loop],
-                &wccp_i_see_you.wccp_cache_entry[loop].ip_addr,
-                sizeof(*caches));
+               &wccp_i_see_you.wccp_cache_entry[loop].ip_addr,
+               sizeof(*caches));
 
         for (i = 0; i < buckets_per_cache; i++) {
             assert(bucket < WCCP_BUCKETS);

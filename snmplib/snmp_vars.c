@@ -192,7 +192,7 @@ snmp_var_clone(struct variable_list *Src) {
         printf("VARS: Copying name OID. (Size %d)\n", Src->name_length);
 #endif
         memcpy((char *) Dest->name, (char *) Src->name,
-                Src->name_length * sizeof(oid));
+               Src->name_length * sizeof(oid));
     }
     /* CISCO Catalyst 2900 returns NULL strings as data of length 0. */
     if ((Src->val.string != NULL) &&
