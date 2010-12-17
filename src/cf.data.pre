@@ -3541,6 +3541,17 @@ DOC_START
 	be no limit imposed.
 DOC_END
 
+NAME: client_request_buffer_max_size
+COMMENT: (bytes)
+TYPE: b_size_t
+DEFAULT: 512 KB
+LOC: Config.maxRequestBufferSize
+DOC_START
+	This specifies the maximum buffer size of a client request.
+	It prevents squid eating too much memory when somebody uploads
+	a large file.
+DOC_END
+
 NAME: chunked_request_body_max_size
 COMMENT: (bytes)
 TYPE: b_int64_t

@@ -186,6 +186,7 @@ struct SquidConfig {
     size_t maxRequestHeaderSize;
     int64_t maxRequestBodySize;
     int64_t maxChunkedRequestBodySize;
+    size_t maxRequestBufferSize;
     size_t maxReplyHeaderSize;
     acl_size_t *ReplyBodySize;
 

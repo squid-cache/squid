@@ -207,7 +207,8 @@ ConnStateData::readSomeData()
 
     debugs(33, 4, "clientReadSomeData: FD " << fd << ": reading request...");
 
-    makeSpaceAvailable();
+    if (!maybeMakeSpaceAvailable())
+        return;
 
     typedef CommCbMemFunT<ConnStateData, CommIoCbParams> Dialer;
     reader = JobCallback(33, 5,
@@ -2153,13 +2154,22 @@ ConnStateData::getAvailableBufferLength() const
     return result;
 }
 
-void
-ConnStateData::makeSpaceAvailable()
+bool
+ConnStateData::maybeMakeSpaceAvailable()
 {
     if (getAvailableBufferLength() < 2) {
-        in.buf = (char *)memReallocBuf(in.buf, in.allocatedSize * 2, &in.allocatedSize);
+        size_t newSize;
+        if (in.allocatedSize >= Config.maxRequestBufferSize) {
+            debugs(33, 4, "request buffer full: client_request_buffer_max_size=" << Config.maxRequestBufferSize);
+            return false;
+        }
+        if ((newSize=in.allocatedSize * 2) > Config.maxRequestBufferSize) {
+            newSize=Config.maxRequestBufferSize;
+        }
+        in.buf = (char *)memReallocBuf(in.buf, newSize, &in.allocatedSize);
         debugs(33, 2, "growing request buffer: notYetUsed=" << in.notYetUsed << " size=" << in.allocatedSize);
     }
+    return true;
 }
 
 void
@@ -2873,7 +2883,10 @@ ConnStateData::handleRequestBodyData()
 void
 ConnStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer )
 {
-    handleRequestBodyData();
+    if (!handleRequestBodyData())
+        return;
+
+    readSomeData();
 }
 
 void

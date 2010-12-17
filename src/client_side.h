@@ -139,7 +139,7 @@ public:
     bool areAllContextsForThisConnection() const;
     void freeAllContexts();
     void readNextRequest();
-    void makeSpaceAvailable();
+    bool maybeMakeSpaceAvailable();
     ClientSocketContext::Pointer getCurrentContext() const;
     void addContextToQueue(ClientSocketContext * context);
     int getConcurrentRequestCount() const;
