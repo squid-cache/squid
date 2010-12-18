@@ -78,7 +78,10 @@ protected:
 
     Adaptation::Message &answer();
 
-    void dropVirgin(const char *reason);
+    void sinkVb(const char *reason);
+    void preserveVb(const char *reason);
+    void forgetVb(const char *reason);
+
     void moveAbContent();
 
     void terminateMaster();
@@ -95,10 +98,10 @@ private:
     MessagePtr theAnswerRep;
 
     typedef enum { opUndecided, opOn, opComplete, opNever } OperationState;
-    OperationState proxyingVb; // delivering virgin body from core to adapter
+    OperationState makingVb; //< delivering virgin body from pipe to adapter
     OperationState proxyingAb; // delivering adapted body from adapter to core
     int adaptHistoryId;        ///< adaptation history slot reservation
-    bool canAccessVb;          // virgin BodyPipe content is accessible
+    bool vbProductionFinished; // whether there can be no more vb bytes
     bool abProductionFinished; // whether adapter has finished producing ab
     bool abProductionAtEnd;    // whether adapter produced a complete ab
 
