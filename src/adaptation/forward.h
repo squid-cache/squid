@@ -28,6 +28,7 @@ class Message;
 class Answer;
 
 typedef RefCount<Service> ServicePointer;
+typedef RefCount<ServiceConfig> ServiceConfigPointer;
 typedef RefCount<ServiceGroup> ServiceGroupPointer;
 
 } // namespace Adaptation

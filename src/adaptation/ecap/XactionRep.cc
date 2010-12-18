@@ -22,9 +22,9 @@ Adaptation::Ecap::XactionRep::XactionRep(
         Adaptation::Initiate("Adaptation::Ecap::XactionRep"),
         theService(aService),
         theVirginRep(virginHeader), theCauseRep(NULL),
-        proxyingVb(opUndecided), proxyingAb(opUndecided),
+        makingVb(opUndecided), proxyingAb(opUndecided),
         adaptHistoryId(-1),
-        canAccessVb(false),
+        vbProductionFinished(false),
         abProductionFinished(false), abProductionAtEnd(false)
 {
     if (virginCause)
@@ -58,10 +58,8 @@ Adaptation::Ecap::XactionRep::start()
 {
     Must(theMaster);
 
-    if (theVirginRep.raw().body_pipe != NULL)
-        canAccessVb = true; /// assumes nobody is consuming; \todo check
-    else
-        proxyingVb = opNever;
+    if (!theVirginRep.raw().body_pipe)
+        makingVb = opNever; // there is nothing to deliver
 
     const HttpRequest *request = dynamic_cast<const HttpRequest*> (theCauseRep ?
                                  theCauseRep->raw().header : theVirginRep.raw().header);
@@ -89,13 +87,9 @@ Adaptation::Ecap::XactionRep::swanSong()
         }
     }
 
-    if (proxyingVb == opOn) {
-        BodyPipe::Pointer body_pipe = theVirginRep.raw().body_pipe;
-        if (body_pipe != NULL) {
-            Must(body_pipe->stillConsuming(this));
-            stopConsumingFrom(body_pipe);
-        }
-    }
+    BodyPipe::Pointer &body_pipe = theVirginRep.raw().body_pipe;
+    if (body_pipe != NULL && body_pipe->stillConsuming(this))
+        stopConsumingFrom(body_pipe);
 
     terminateMaster();
 
@@ -150,33 +144,54 @@ Adaptation::Ecap::XactionRep::terminateMaster()
 bool
 Adaptation::Ecap::XactionRep::doneAll() const
 {
-    return proxyingVb >= opComplete && proxyingAb >= opComplete &&
+    return makingVb >= opComplete && proxyingAb >= opComplete &&
            Adaptation::Initiate::doneAll();
 }
 
-// stops receiving virgin and enables auto-consumption
+// stops receiving virgin and enables auto-consumption, dropping any vb bytes
 void
-Adaptation::Ecap::XactionRep::dropVirgin(const char *reason)
+Adaptation::Ecap::XactionRep::sinkVb(const char *reason)
 {
-    debugs(93,4, HERE << "because " << reason << "; status:" << status());
+    debugs(93,4, HERE << "sink for " << reason << "; status:" << status());
 
-    BodyPipePointer &p = theVirginRep.raw().body_pipe;
-    Must(p != NULL);
-    p->enableAutoConsumption();
+    // we reset raw().body_pipe when we are done, so use this one for checking
+    const BodyPipePointer &permPipe = theVirginRep.raw().header->body_pipe;
+    if (permPipe != NULL)
+        permPipe->enableAutoConsumption();
 
-    if (proxyingVb == opOn) {
-        Must(p->stillConsuming(this));
-        stopConsumingFrom(p);
-        proxyingVb = opComplete;
-    } else {
-        Must(!p->stillConsuming(this));
-        if (proxyingVb == opUndecided)
-            proxyingVb = opNever;
+    forgetVb(reason);
+}
+
+// stops receiving virgin but preserves it for others to use
+void
+Adaptation::Ecap::XactionRep::preserveVb(const char *reason)
+{
+    debugs(93,4, HERE << "preserve for " << reason << "; status:" << status());
+
+    // we reset raw().body_pipe when we are done, so use this one for checking
+    const BodyPipePointer &permPipe = theVirginRep.raw().header->body_pipe;
+    if (permPipe != NULL) {
+        // if libecap consumed, we cannot preserve
+        Must(!permPipe->consumedSize());
     }
 
-    canAccessVb = false;
+    forgetVb(reason);
+}
 
-    // called from adapter handler so does not inform adapter
+// disassociates us from vb; the last step of sinking or preserving vb
+void
+Adaptation::Ecap::XactionRep::forgetVb(const char *reason)
+{
+    debugs(93,9, HERE << "forget vb " << reason << "; status:" << status());
+
+    BodyPipePointer &p = theVirginRep.raw().body_pipe;
+    if (p != NULL && p->stillConsuming(this))
+        stopConsumingFrom(p);
+
+    if (makingVb == opUndecided)
+        makingVb = opNever;
+    else if (makingVb == opOn)
+        makingVb = opComplete;
 }
 
 void
@@ -186,23 +201,11 @@ Adaptation::Ecap::XactionRep::useVirgin()
     Must(proxyingAb == opUndecided);
     proxyingAb = opNever;
 
-    BodyPipePointer &vbody_pipe = theVirginRep.raw().body_pipe;
+    preserveVb("useVirgin");
 
     HttpMsg *clone = theVirginRep.raw().header->clone();
     // check that clone() copies the pipe so that we do not have to
-    Must(!vbody_pipe == !clone->body_pipe);
-
-    if (proxyingVb == opOn) {
-        Must(vbody_pipe->stillConsuming(this));
-        // if libecap consumed, we cannot shortcircuit
-        Must(!vbody_pipe->consumedSize());
-        stopConsumingFrom(vbody_pipe);
-        canAccessVb = false;
-        proxyingVb = opComplete;
-    } else if (proxyingVb == opUndecided) {
-        vbody_pipe = NULL; // it is not our pipe anymore
-        proxyingVb = opNever;
-    }
+    Must(!theVirginRep.raw().header->body_pipe == !clone->body_pipe);
 
     sendAnswer(Answer::Forward(clone));
     Must(done());
@@ -242,7 +245,7 @@ Adaptation::Ecap::XactionRep::blockVirgin()
     Must(proxyingAb == opUndecided);
     proxyingAb = opNever;
 
-    dropVirgin("blockVirgin");
+    sinkVb("blockVirgin");
 
     sendAnswer(Answer::Block(service().cfg().key));
     Must(done());
@@ -251,43 +254,45 @@ Adaptation::Ecap::XactionRep::blockVirgin()
 void
 Adaptation::Ecap::XactionRep::vbDiscard()
 {
-    Must(proxyingVb == opUndecided);
+    Must(makingVb == opUndecided);
     // if adapter does not need vb, we do not need to send it
-    dropVirgin("vbDiscard");
-    Must(proxyingVb == opNever);
+    sinkVb("vbDiscard");
+    Must(makingVb == opNever);
 }
 
 void
 Adaptation::Ecap::XactionRep::vbMake()
 {
-    Must(proxyingVb == opUndecided);
+    Must(makingVb == opUndecided);
     BodyPipePointer &p = theVirginRep.raw().body_pipe;
     Must(p != NULL);
-    Must(p->setConsumerIfNotLate(this)); // to make vb, we must receive vb
-    proxyingVb = opOn;
+    Must(p->setConsumerIfNotLate(this)); // to deliver vb, we must receive vb
+    makingVb = opOn;
 }
 
 void
 Adaptation::Ecap::XactionRep::vbStopMaking()
 {
+    Must(makingVb == opOn);
     // if adapter does not need vb, we do not need to receive it
-    dropVirgin("vbStopMaking");
-    Must(proxyingVb == opComplete);
+    sinkVb("vbStopMaking");
+    Must(makingVb == opComplete);
 }
 
 void
 Adaptation::Ecap::XactionRep::vbMakeMore()
 {
-    Must(proxyingVb == opOn); // cannot make more if done proxying
+    Must(makingVb == opOn); // cannot make more if done proxying
     // we cannot guarantee more vb, but we can check that there is a chance
-    Must(!theVirginRep.raw().body_pipe->exhausted());
+    const BodyPipePointer &p = theVirginRep.raw().body_pipe;
+    Must(p != NULL && p->stillConsuming(this)); // we are plugged in
+    Must(!p->productionEnded() && p->mayNeedMoreData()); // and may get more
 }
 
 libecap::Area
 Adaptation::Ecap::XactionRep::vbContent(libecap::size_type o, libecap::size_type s)
 {
-    Must(canAccessVb);
-    // We may not be proxyingVb yet. It should be OK, but see vbContentShift().
+    // We may not be makingVb yet. It should be OK, but see vbContentShift().
 
     const BodyPipePointer &p = theVirginRep.raw().body_pipe;
     Must(p != NULL);
@@ -311,8 +316,7 @@ Adaptation::Ecap::XactionRep::vbContent(libecap::size_type o, libecap::size_type
 void
 Adaptation::Ecap::XactionRep::vbContentShift(libecap::size_type n)
 {
-    Must(canAccessVb);
-    // We may not be proxyingVb yet. It should be OK now, but if BodyPipe
+    // We may not be makingVb yet. It should be OK now, but if BodyPipe
     // consume() requirements change, we would have to return empty vbContent
     // until the adapter registers as a consumer
 
@@ -392,7 +396,7 @@ Adaptation::Ecap::XactionRep::noteBodyConsumerAborted(RefCount<BodyPipe> bp)
 void
 Adaptation::Ecap::XactionRep::noteMoreBodyDataAvailable(RefCount<BodyPipe> bp)
 {
-    Must(proxyingVb == opOn);
+    Must(makingVb == opOn); // or we would not be registered as a consumer
     Must(theMaster);
     theMaster->noteVbContentAvailable();
 }
@@ -400,19 +404,19 @@ Adaptation::Ecap::XactionRep::noteMoreBodyDataAvailable(RefCount<BodyPipe> bp)
 void
 Adaptation::Ecap::XactionRep::noteBodyProductionEnded(RefCount<BodyPipe> bp)
 {
-    Must(proxyingVb == opOn);
+    Must(makingVb == opOn); // or we would not be registered as a consumer
     Must(theMaster);
     theMaster->noteVbContentDone(true);
-    proxyingVb = opComplete;
+    vbProductionFinished = true;
 }
 
 void
 Adaptation::Ecap::XactionRep::noteBodyProducerAborted(RefCount<BodyPipe> bp)
 {
-    Must(proxyingVb == opOn);
+    Must(makingVb == opOn); // or we would not be registered as a consumer
     Must(theMaster);
     theMaster->noteVbContentDone(false);
-    proxyingVb = opComplete;
+    vbProductionFinished = true;
 }
 
 void
@@ -446,24 +450,34 @@ Adaptation::Ecap::XactionRep::status() const
 
     buf.append(" [", 2);
 
-    if (proxyingVb == opOn) {
-        const BodyPipePointer &vp = theVirginRep.raw().body_pipe;
-        if (!canAccessVb)
-            buf.append("x", 1);
-        if (vp != NULL) { // XXX: but may not be stillConsuming()
-            buf.append("Vb", 2);
-        } else
-            buf.append("V.", 2);
-    }
+    if (makingVb)
+        buf.Printf("M%d", static_cast<int>(makingVb));
+
+    const BodyPipePointer &vp = theVirginRep.raw().body_pipe;
+    if (!vp)
+        buf.append(" !V", 3);
+    else
+    if (vp->stillConsuming(const_cast<XactionRep*>(this)))
+        buf.append(" Vc", 3);
+    else
+        buf.append(" V?", 3);
+
+    if (vbProductionFinished)
+        buf.append(".", 1);
+
+
+    buf.Printf(" A%d", static_cast<int>(proxyingAb));
 
     if (proxyingAb == opOn) {
         MessageRep *rep = dynamic_cast<MessageRep*>(theAnswerRep.get());
         Must(rep);
         const BodyPipePointer &ap = rep->raw().body_pipe;
-        if (ap != NULL) { // XXX: but may not be stillProducing()
-            buf.append(" Ab", 3);
-        } else
-            buf.append(" A.", 3);
+        if (!ap)
+            buf.append(" !A", 3);
+        else if (ap->stillProducing(const_cast<XactionRep*>(this)))
+            buf.append(" Ap", 3);
+        else
+            buf.append(" A?", 3);
     }
 
     buf.Printf(" %s%u]", id.Prefix, id.value);

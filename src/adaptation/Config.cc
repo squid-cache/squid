@@ -48,10 +48,17 @@ bool Adaptation::Config::Enabled = false;
 char *Adaptation::Config::masterx_shared_name = NULL;
 int Adaptation::Config::service_iteration_limit = 16;
 
+
+Adaptation::ServiceConfig*
+Adaptation::Config::newServiceConfig() const
+{
+    return new ServiceConfig();
+}
+
 void
 Adaptation::Config::parseService()
 {
-    ServiceConfig *cfg = new ServiceConfig;
+    ServiceConfigPointer cfg = newServiceConfig();
     if (!cfg->parse()) {
         fatalf("%s:%d: malformed adaptation service configuration",
                cfg_filename, config_lineno);
@@ -67,10 +74,7 @@ Adaptation::Config::freeService()
 
     DetachServices();
 
-    while (!serviceConfigs.empty()) {
-        delete serviceConfigs.back();
-        serviceConfigs.pop_back();
-    }
+    serviceConfigs.clean();
 }
 
 void
@@ -91,23 +95,28 @@ void
 Adaptation::Config::finalize()
 {
     // create service reps from service configs
-    typedef Vector<ServiceConfig*>::const_iterator VISCI;
-    const Vector<ServiceConfig*> &configs = serviceConfigs;
-    debugs(93,3, HERE << "Found " << configs.size() << " service configs.");
+    int created = 0;
+
+    typedef ServiceConfigs::const_iterator VISCI;
+    const ServiceConfigs &configs = serviceConfigs;
     for (VISCI i = configs.begin(); i != configs.end(); ++i) {
-        const ServiceConfig &cfg = **i;
-        if (FindService(cfg.key) != NULL) {
+        const ServiceConfigPointer cfg = *i;
+        if (FindService(cfg->key) != NULL) {
             debugs(93,0, "ERROR: Duplicate adaptation service name: " <<
-                   cfg.key);
+                   cfg->key);
             continue; // TODO: make fatal
         }
-        ServicePointer s = createService(**i);
-        if (s != NULL)
+        ServicePointer s = createService(cfg);
+        if (s != NULL) {
             AllServices().push_back(s);
+            created++;
+        }
     }
 
-    debugs(93,3, HERE << "Created " << configs.size() <<
-           " message adaptation services.");
+    debugs(93,3, HERE << "Created " << created << " adaptation services");
+
+    // services remember their configs; we do not have to
+    serviceConfigs.clean();
 }
 
 // poor man for_each

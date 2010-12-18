@@ -42,7 +42,8 @@ public:
     int service_revival_delay;
     int icap_uses_indirect_client;
 
-    Vector<ServiceConfig*> serviceConfigs;
+    typedef Vector<ServiceConfigPointer> ServiceConfigs;
+    ServiceConfigs serviceConfigs;
 
     Config();
     virtual ~Config();
@@ -54,11 +55,15 @@ public:
 
     virtual void finalize();
 
+protected:
+    /// creates service configuration object that will parse and keep cfg info
+    virtual ServiceConfig *newServiceConfig() const;
+
 private:
     Config(const Config &); // unsupported
     Config &operator =(const Config &); // unsupported
 
-    virtual ServicePointer createService(const ServiceConfig &cfg) = 0;
+    virtual ServicePointer createService(ServiceConfigPointer cfg) = 0;
 
     static void ParseServiceGroup(ServiceGroupPointer group);
     static void FreeServiceGroups(void);
