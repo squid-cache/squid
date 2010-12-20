@@ -2788,7 +2788,7 @@ ConnStateData::handleReadData(char *buf, size_t size)
  * called when new request body data has been buffered in in.buf
  * may close the connection if we were closing and piped everything out
  */
-void
+bool
 ConnStateData::handleRequestBodyData()
 {
     assert(bodyPipe != NULL);
@@ -2874,8 +2874,10 @@ ConnStateData::handleRequestBodyData()
              * because mayNeedMoreData is true if request size is not known.
              */
             comm_close(fd);
+            return false;
         }
     }
+    return true;
 }
 
 void

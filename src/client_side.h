@@ -222,7 +222,7 @@ public:
     virtual void noteBodyConsumerAborted(BodyPipe::Pointer);
 
     void handleReadData(char *buf, size_t size);
-    void handleRequestBodyData();
+    bool handleRequestBodyData();
 
     /**
      * Correlate the current ConnStateData object with the pinning_fd socket descriptor.
