@@ -3794,7 +3794,7 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
     if (s->name)
         storeAppendPrintf(e, " name=%s", s->name);
 
-#if !USE_HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
     if (!s->accel && s->ignore_cc)
         storeAppendPrintf(e, " ignore-cc");
 #endif
