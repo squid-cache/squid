@@ -2429,7 +2429,7 @@ esiEnableProcessing (HttpReply *rep)
 {
     int rv = 0;
 
-    if (rep->header.has(HDR_SURROGATE_CONTROL)) {
+    if (rep->surrogate_control) {
         HttpHdrScTarget *sctusable = httpHdrScGetMergedTarget (rep->surrogate_control,
                                      Config.Accel.surrogate_id);
 
