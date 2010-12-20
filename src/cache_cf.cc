@@ -757,12 +757,6 @@ void
 parse_obsolete(const char *name)
 {
     // Directives which have been radically changed rather than removed
-    if (!strcmp(name, "url_rewrite_concurrency")) {
-        int cval;
-        parse_int(&cval);
-        debugs(3, DBG_CRITICAL, "WARNING: url_rewrite_concurrency upgrade overriding url_rewrite_children settings.");
-        Config.redirectChildren.concurrency = cval;
-    }
 }
 
 /* Parse a time specification from the config file.  Store the
