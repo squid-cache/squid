@@ -12,6 +12,9 @@
 #   Jerry Murdock <jmurdock@itraktech.com>
 #
 # Version history:
+#   2010-08-27 Hank Hampel <hh@nr-city.net>
+#               Add Kerberos to NTLM conversion of credentials (-K)
+#
 #   2005-12-26 Guido Serassio <guido.serassio@acmeconsulting.it>
 #               Add '-d' command line debugging option
 #
@@ -26,7 +29,6 @@
 #
 #   2002-07-05 Jerry Murdock <jmurdock@itraktech.com>
 #		Initial release
-
 
 #
 # Globals
@@ -45,6 +47,10 @@ sub debug {
 #
 sub check {
         local($user, $group) = @_;
+	if ($opt{K} && ($user =~ m/\@/)) {
+		@tmpuser = split(/\@/, $user);
+		$user = "$tmpuser[1]\\$tmpuser[0]";
+	}
         $groupSID = `wbinfo -n "$group" | cut -d" " -f1`;
         chop  $groupSID;
         $groupGID = `wbinfo -Y "$groupSID"`;
@@ -62,7 +68,7 @@ sub check {
 sub init()
 {
     use Getopt::Std;
-    my $opt_string = 'hd';
+    my $opt_string = 'hdK';
     getopts( "$opt_string", \%opt ) or usage();
     usage() if $opt{h};
 }
@@ -75,6 +81,7 @@ sub usage()
 	print "Usage: wbinfo_group.pl -dh\n";
 	print "\t-d enable debugging\n";
 	print "\t-h print the help\n";
+	print "\t-K downgrade Kerberos credentials to NTLM.\n";
 	exit;
 }
 
