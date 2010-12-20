@@ -947,7 +947,6 @@ clientReplyContext::traceReply(clientStreamNode * node)
 {
     clientStreamNode *nextNode = (clientStreamNode *)node->node.next->data;
     StoreIOBuffer localTempBuffer;
-    assert(http->request->max_forwards == 0);
     createStoreEntry(http->request->method, request_flags());
     localTempBuffer.offset = nextNode->readBuffer.offset + headers_sz;
     localTempBuffer.length = nextNode->readBuffer.length;
@@ -1625,7 +1624,7 @@ clientGetMoreData(clientStreamNode * aNode, ClientHttpRequest * http)
     // OPTIONS with Max-Forwards:0 handled in clientProcessRequest()
 
     if (context->http->request->method == METHOD_TRACE) {
-        if (context->http->request->max_forwards == 0) {
+        if (context->http->request->header.getInt64(HDR_MAX_FORWARDS) == 0) {
             context->traceReply(aNode);
             return;
         }

@@ -163,8 +163,6 @@ public:
 
     int imslen;
 
-    int64_t max_forwards;
-
     IpAddress client_addr;
 
 #if FOLLOW_X_FORWARDED_FOR

@@ -2434,10 +2434,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     } else
         conn->cleanDechunkingRequest();
 
-    if (method == METHOD_TRACE || method == METHOD_OPTIONS)
-        request->max_forwards = request->header.getInt64(HDR_MAX_FORWARDS);
-
-    mustReplyToOptions = (method == METHOD_OPTIONS) && (request->max_forwards == 0);
+    mustReplyToOptions = (method == METHOD_OPTIONS) &&
+                         (request->header.getInt64(HDR_MAX_FORWARDS) == 0);
     unsupportedTe = tePresent && !deChunked;
     if (!urlCheckRequest(request) || mustReplyToOptions || unsupportedTe) {
         clientStreamNode *node = context->getClientReplyContext();
