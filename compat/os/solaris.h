@@ -72,5 +72,13 @@ SQUIDCEXTERN int gethostname(char *, int);
 #include "compat/os/opensolaris_10_netdb.h"
 #endif
 
+/* Solaris lacks paths.h by default */
+#if HAVE_PATHS_H
+#include <paths.h>
+#endif
+#if !defined(_PATH_DEVNULL)
+#define _PATH_DEVNULL "/dev/null"
+#endif
+
 #endif /* _SQUID_SOLARIS_ */
 #endif /* SQUID_OS_SOALRIS_H */
