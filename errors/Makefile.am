@@ -36,6 +36,7 @@ ERROR_TEMPLATES =  \
 	templates/ERR_LIFETIME_EXP \
 	templates/ERR_NO_RELAY \
 	templates/ERR_ONLY_IF_CACHED_MISS \
+	templates/ERR_PRECONDITION_FAILED \
 	templates/ERR_READ_ERROR \
 	templates/ERR_READ_TIMEOUT \
 	templates/ERR_SECURE_CONNECT_FAIL \

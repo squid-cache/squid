@@ -128,6 +128,7 @@ private:
     bool alwaysAllowResponse(http_status sline) const;
     int checkTransferDone();
     void processOnlyIfCachedMiss();
+    void processConditional(StoreIOBuffer &result);
     void cacheHit(StoreIOBuffer result);
     void handleIMSReply(StoreIOBuffer result);
     void sendMoreData(StoreIOBuffer result);
@@ -136,6 +137,9 @@ private:
     void purgeAllCached();
 
     void sendBodyTooLargeError();
+    void sendPreconditionFailedError();
+    void sendNotModified();
+    void sendNotModifiedOrPreconditionFailedError();
 
     StoreEntry *old_entry;
     store_client *old_sc;	/* ... for entry to be validated */

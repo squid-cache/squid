@@ -123,6 +123,10 @@ public:
 
     void setNoDelay (bool const);
     bool modifiedSince(HttpRequest * request) const;
+    /// has ETag matching at least one of the If-Match etags
+    bool hasIfMatchEtag(const HttpRequest &request) const;
+    /// has ETag matching at least one of the If-None-Match etags
+    bool hasIfNoneMatchEtag(const HttpRequest &request) const;
 
     /** What store does this entry belong too ? */
     virtual RefCount<Store> store() const;
@@ -189,6 +193,7 @@ private:
     static MemAllocator *pool;
 
     bool validLength() const;
+    bool hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) const;
 };
 
 /// \ingroup StoreAPI

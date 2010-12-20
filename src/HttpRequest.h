@@ -85,6 +85,8 @@ public:
     /* are responses to this request potentially cachable */
     bool cacheable() const;
 
+    bool conditional() const; ///< has at least one recognized If-* header
+
     /* Now that we care what host contains it is better off being protected. */
     /* HACK: These two methods are only inline to get around Makefile dependancies */
     /*      caused by HttpRequest being used in places it really shouldn't.        */
