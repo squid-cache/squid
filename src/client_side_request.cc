@@ -1044,7 +1044,8 @@ ClientRequestContext::clientRedirectDone(char *result)
         if (old_request->body_pipe != NULL) {
             new_request->body_pipe = old_request->body_pipe;
             old_request->body_pipe = NULL;
-            debugs(0,0,HERE << "redirecting body_pipe " << new_request->body_pipe << " from request " << old_request << " to " << new_request);
+            debugs(61,2, HERE << "URL-rewriter diverts body_pipe " << new_request->body_pipe <<
+                   " from request " << old_request << " to " << new_request);
         }
 
         new_request->content_length = old_request->content_length;
