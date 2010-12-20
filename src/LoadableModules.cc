@@ -6,11 +6,11 @@
 static void
 LoadModule(const char *fname)
 {
-    debugs(1, 1, "loading Squid module from '" << fname << "'");
+    debugs(1, 1, "Loading Squid module from '" << fname << "'");
 
     LoadableModule *m = new LoadableModule(fname);
     m->load();
-    debugs(1, 2, "loaded Squid module from '" << fname << "'");
+    debugs(1, 2, "Loaded Squid module from '" << fname << "'");
 
     //TODO: TheModules.push_back(m);
 }
@@ -21,5 +21,5 @@ LoadableModulesConfigure(const wordlist *names)
     int count = 0;
     for (const wordlist *i = names; i; i = i->next, ++count)
         LoadModule(i->key);
-    debugs(1, 1, "Squid modules loaded: " << count);
+    debugs(1, 1, "Squid plugin modules loaded: " << count);
 }
