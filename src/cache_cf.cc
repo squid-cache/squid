@@ -3301,17 +3301,45 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
                       n,
                       s->s.ToURL(buf,MAX_IPSTRLEN));
 
-    if (s->defaultsite)
-        storeAppendPrintf(e, " defaultsite=%s", s->defaultsite);
-
+    // MODES and specific sub-options.
     if (s->intercepted)
         storeAppendPrintf(e, " intercept");
 
-    if (s->vhost)
-        storeAppendPrintf(e, " vhost");
+    else if (s->spoof_client_ip)
+        storeAppendPrintf(e, " tproxy");
 
-    if (s->vport)
-        storeAppendPrintf(e, " vport");
+    else if (s->accel) {
+        if (s->vhost)
+            storeAppendPrintf(e, " vhost");
+
+        if (s->vport < 0)
+            storeAppendPrintf(e, " vport");
+        else if (s->vport > 0)
+            storeAppendPrintf(e, " vport=%d", s->vport);
+
+        if (s->defaultsite)
+            storeAppendPrintf(e, " defaultsite=%s", s->defaultsite);
+
+        if (s->protocol && strcmp(s->protocol,"http") != 0)
+            storeAppendPrintf(e, " protocol=%s", s->protocol);
+
+        if (s->allow_direct)
+            storeAppendPrintf(e, " allow-direct");
+
+        if (s->ignore_cc)
+            storeAppendPrintf(e, " ignore-cc");
+
+    }
+
+    // Generic independent options
+
+    if (s->name)
+        storeAppendPrintf(e, " name=%s", s->name);
+
+#if USE_HTTP_VIOLATIONS
+    if (!s->accel && s->ignore_cc)
+        storeAppendPrintf(e, " ignore-cc");
+#endif
 
     if (s->connection_auth_disabled)
         storeAppendPrintf(e, " connection-auth=off");
@@ -3338,6 +3366,9 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
     }
 
 #if USE_SSL
+    if (s->sslBump)
+        storeAppendPrintf(e, " ssl-bump");
+
     if (s->cert)
         storeAppendPrintf(e, " cert=%s", s->cert);
 
@@ -3370,9 +3401,6 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
 
     if (s->sslcontext)
         storeAppendPrintf(e, " sslcontext=%s", s->sslcontext);
-
-    if (s->sslBump)
-        storeAppendPrintf(e, " sslBump");
 #endif
 }
 
