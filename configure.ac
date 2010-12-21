@@ -27,6 +27,18 @@ AC_PROG_CXX
 AC_LANG([C++])
 AC_CANONICAL_HOST
 
+AC_MSG_CHECKING([simplified host os])
+simple_host_os=`echo $host_os|sed 's/[0-9].*//g;s/-.*//g'`
+squid_host_os_version=`echo $host_os|tr -d "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"`
+if test -n "$squid_host_os_version"; then
+        squid_host_os="`echo $simple_host_os| sed s/$squid_host_os_version//g`"
+else
+        squid_host_os="$simple_host_os"
+fi 
+AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
+# on windows squid_host_os is either mingw or cygwin, version is 32
+
+
 dnl Make the squid top srcdir available to sub-packages as --with-squid=PATH
 new_configure_args="$ac_configure_args --with-squid=$ac_abs_confdir"
 ac_configure_args="$new_configure_args"
