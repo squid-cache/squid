@@ -533,7 +533,7 @@ for module in $MAYBE_DISK_MODULES none; do
 		i386-unknown-freebsd*)
 		        if test `echo "$squid_host_os_version" | cut -b1` -lt 7 ; then
 		          AC_MSG_NOTICE(pthread library requires FreeBSD 7 or later)
-		          squid_opt_use_diskthreads="no"
+		          use_diskthreads="no"
 		        else
 		          SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
 		          SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
