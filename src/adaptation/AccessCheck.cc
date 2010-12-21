@@ -124,7 +124,15 @@ Adaptation::AccessCheck::AccessCheckCallbackWrapper(int answer, void *data)
      * we should be kicking off an authentication before continuing
      * with this request. see bug 2400 for details.
      */
-    ac->noteAnswer(answer==ACCESS_ALLOWED);
+
+    // convert to async call to get async call protections and features
+    typedef UnaryMemFunT<AccessCheck, int> MyDialer;
+    AsyncCall::Pointer call =
+        asyncCall(93,7, "Adaptation::AccessCheck::noteAnswer",
+                  MyDialer(ac, &Adaptation::AccessCheck::noteAnswer,
+                           answer==ACCESS_ALLOWED));
+    ScheduleCallHere(call);
+
 }
 
 /// process the results of the ACL check
