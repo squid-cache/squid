@@ -1895,7 +1895,7 @@ StoreEntry::hasIfNoneMatchEtag(const HttpRequest &request) const
     const String reqETags = request.header.getList(HDR_IF_NONE_MATCH);
     // weak comparison is allowed only for HEAD or full-body GET requests
     const bool allowWeakMatch = !request.flags.range &&
-        (request.method == METHOD_GET || request.method == METHOD_HEAD);
+                                (request.method == METHOD_GET || request.method == METHOD_HEAD);
     return hasOneOfEtags(reqETags, allowWeakMatch);
 }
 
@@ -1920,7 +1920,7 @@ StoreEntry::hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) con
             ETag reqETag;
             if (etagParseInit(&reqETag, str.termedBuf())) {
                 matched = allowWeakMatch ? etagIsWeakEqual(repETag, reqETag) :
-                    etagIsStrongEqual(repETag, reqETag);
+                          etagIsStrongEqual(repETag, reqETag);
             }
         }
     }
