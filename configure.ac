@@ -285,6 +285,12 @@ dnl TODO: check if the problem will be present in any other newer MinGW release.
     mingw|mingw32)
         SQUID_CFLAGS="-Wall -Wpointer-arith -Wwrite-strings -Wcomments"
 	;;
+    *-freebsd*)
+	# FreeBSD places local libraries and packages in /usr/local
+	CFLAGS="$CFLAGS -I/usr/local/include"
+	CXXFLAGS="$CXXFLAGS -I/usr/local/include"
+	LDFLAGS="$LDFLAGS -L/usr/local/lib -Wl,-R/usr/local/lib"
+	;;
     *)
         SQUID_CFLAGS="-Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
 	;;
@@ -893,16 +899,26 @@ if test "$use_esi" = "yes" ; then
   if test "$with_libxml2" != "no" ; then
     AC_CHECK_LIB([xml2], [main], [XMLLIB="-lxml2"; HAVE_LIBXML2=1])
     dnl Find the main header and include path...
+    ac_cv_libxml2_include='no'
     AC_CHECK_HEADERS([libxml/parser.h], [], [
+        AC_MSG_NOTICE([Testing in /usr/include/libxml2])
         SAVED_CPPFLAGS="$CPPFLAGS"
         CPPFLAGS="-I/usr/include/libxml2 $CPPFLAGS"
         unset ac_cv_header_libxml_parser_h
-        AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include=yes], [])
+        AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include="/usr/include/libxml2"], [])
         CPPFLAGS="$SAVED_CPPFLAGS"
+        if test "x$ac_cv_libxml2_include" = "xno"; then
+            AC_MSG_NOTICE([Testing in /usr/local/include/libxml2])
+            SAVED_CPPFLAGS="$CPPFLAGS"
+            CPPFLAGS="-I/usr/local/include/libxml2 $CPPFLAGS"
+            unset ac_cv_header_libxml_parser_h
+            AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include="/usr/local/include/libxml2"], [])
+            CPPFLAGS="$SAVED_CPPFLAGS"
+        fi
         ])
-    if test "x$ac_cv_libxml2_include" = "xyes"; then
-        SQUID_CXXFLAGS="-I/usr/include/libxml2 $SQUID_CXXFLAGS"
-        CPPFLAGS="-I/usr/include/libxml2 $CPPFLAGS"
+    if test "x$ac_cv_libxml2_include" != "xno"; then
+        SQUID_CXXFLAGS="-I$ac_cv_libxml2_include $SQUID_CXXFLAGS"
+        CPPFLAGS="-I$ac_cv_libxml2_include $CPPFLAGS"
     fi
     dnl Now that we know where to look find the other headers...
     AC_CHECK_HEADERS(libxml/HTMLparser.h libxml/HTMLtree.h)
