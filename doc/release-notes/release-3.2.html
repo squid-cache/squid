@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
- <TITLE>Squid 3.2.0.3 release notes</TITLE>
+ <TITLE>Squid 3.2.0.4 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.2.0.3 release notes</H1>
+<H1>Squid 3.2.0.4 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -33,6 +33,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <LI><A NAME="toc2.7">2.7</A> <A HREF="#ss2.7">Surrogate/1.0 protocol extensions to HTTP</A>
 <LI><A NAME="toc2.8">2.8</A> <A HREF="#ss2.8">Logging Infrastructure Updated</A>
 <LI><A NAME="toc2.9">2.9</A> <A HREF="#ss2.9">Client Bandwidth Limits</A>
+<LI><A NAME="toc2.10">2.10</A> <A HREF="#ss2.10">Dynamic SSL Certificate Generation</A>
 </UL>
 <P>
 <H2><A NAME="toc3">3.</A> <A HREF="#s3">Changes to squid.conf since Squid-3.1</A></H2>
@@ -69,7 +70,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.2.0.3 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.2.0.4 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.2/">http://www.squid-cache.org/Versions/v3/3.2/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -103,6 +104,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <LI>Surrogate/1.0 protocol extensions to HTTP</LI>
 <LI>Logging Infrastructure Updated</LI>
 <LI>Client Bandwidth Limits</LI>
+<LI> Dynamic SSL Certificate Generation</LI>
 </UL>
 </P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
@@ -391,6 +393,8 @@ of debug cache.log files to rotate through with a <EM>rotate=N</EM> option. This
 logging a single cache.log at relatively high debug levels on a high-traffic system. Or one which is
 required to store a long period of access.log and needs to conserve disk space.</P>
 
+<P>The referer_log and useragent_log directives have been converted to built-in log formats.
+These logs are now created using an access_log line with the format "referrer" or "useragent".</P>
 
 <H2><A NAME="ss2.9">2.9</A> <A HREF="#toc2.9">Client Bandwidth Limits</A>
 </H2>
@@ -423,6 +427,28 @@ the bucket is delayed by 1 second before it can attempt to receive more
 response data from Squid.  This delay may need to be lowered in 
 high-bandwidth environments.</P>
 
+<H2><A NAME="ss2.10">2.10</A> <A HREF="#toc2.10">Dynamic SSL Certificate Generation</A>
+</H2>
+
+<P> SslBump users know how many certificate warnings a single complex site 
+(using dedicated image, style, and/or advertisement servers for embedded content)
+can generate. The warnings are legitimate and are caused by Squid-provided site
+certificate. Two things may be wrong with that certificate:
+<UL>
+<LI> Squid certificate is not signed by a trusted authority.</LI>
+<LI> Squid certificate name does not match the site domain name. </LI>
+</UL>
+
+Squid can do nothing about (A), but in most targeted environments, users will 
+trust the "man in the middle" authority and install the corresponding root
+certificate.</P>
+
+<P>To avoid mismatch (B), the DynamicSslCert feature concentrates on generating
+site certificates that match the requested site domain name. Please note that
+the browser site name check does not really add much security in an SslBump
+environment where the user already trusts the "man in the middle". The check
+only adds warnings and creates page rendering problems in browsers that try to
+reduce the number of warnings by blocking some embedded content. </P>
 
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes to squid.conf since Squid-3.1</A></H2>
 
@@ -525,6 +551,11 @@ does (e.g., listen on http_port and forward HTTP requests).
 <DT><B>write_timeout</B><DD>
 <P>New setting to limit time spent waiting for data writes to be confirmed.</P>
 
+<DT><B>sslcrtd_program</B><DD>
+<P>Specify the location and options of the executable for ssl_crtd process.</P>
+
+<DT><B>sslcrtd_children</B><DD>
+<P> Configures the number of sslcrtd processes to spawn</P>
 </DL>
 </P>
 
@@ -542,6 +573,8 @@ It is recommended to upgrade logging to the faster <EM>daemon:</EM> module.</P>
 New installs, or installs with no logs configured explicitly will use this module by default.</P>
 <P>New <EM>tcp</EM> module to send each log line as text data to a TCP receiver.</P>
 <P>New <EM>udp</EM> module to send each log line as text data to a UDP receiver.</P>
+<P>New format <EM>referrer</EM> to log with the format prevously used by referer_log directive.</P>
+<P>New format <EM>useragent</EM> to log with the format prevously used by useragent_log directive.</P>
 
 <DT><B>acl random</B><DD>
 <P>New type <EM>random</EM>. Pseudo-randomly match requests based on a configured probability.</P>
@@ -552,6 +585,9 @@ New installs, or installs with no logs configured explicitly will use this modul
 <EM>idle=N</EM> determines how many helper to retain as buffer against sudden traffic loads.
 <EM>concurrency=N</EM> previously called <EM>auth_param ... concurrency</EM> as a separate option.</P>
 <P>Removed Basic, Digest, NTLM, Negotiate <EM>auth_param ... concurrency</EM> setting option.</P>
+
+<DT><B>cache_dir</B><DD>
+<P><EM>min-size</EM> option ported from Squid-2</P>
 
 <DT><B>cache_peer</B><DD>
 <P><EM>htcp-*</EM> options collapsed into <EM>htcp=</EM> taking an optional comma-separated list of flags.
@@ -581,6 +617,9 @@ The old form is deprecated but still accepted.</P>
 <P><EM>%sn</EM> Unique sequence number per log line. Ported from 2.7</P>
 <P><EM>%&lt;eui</EM> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
 Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.</P>
+<P><EM>%err_code</EM> The ID of an error response served by Squid or
+a similar internal error identifier</P>
+<P><EM>%err_detail</EM> Additional err_code-dependent error information.</P>
 
 <DT><B>memory_pools_limit</B><DD>
 <P>Memory limits have been revised and corrected from 3.1.4 onwards.</P>
@@ -627,15 +666,29 @@ This will be included by default if available (see the --without-netfilter-connt
 
 <P>
 <DL>
+<DT><B>emulate_httpd_log</B><DD>
+<P>Replaced by <EM>common</EM> format option on an <EM>access_log</EM> directive.</P>
+
+<DT><B>forward_log</B><DD>
+<P>Obsolete.</P>
+
 <DT><B>ftp_list_width</B><DD>
 <P>Obsolete.</P>
 
 <DT><B>ignore_expect_100</B><DD>
 <P>Obsolete.</P>
 
+<DT><B>log_fqdn</B><DD>
+<P>Obsolete. Replaced by automatic detection of the %>A logformat tag.</P>
+
+<DT><B>referer_log</B><DD>
+<P>Replaced by the <EM>referrer</EM> format option on an <EM>access_log</EM> directive.</P>
+
 <DT><B>url_rewrite_concurrency</B><DD>
 <P>Replaced by url_rewrite_children ... concurrency=N option.</P>
 
+<DT><B>useragent_log</B><DD>
+<P>Replaced by the <EM>useragent</EM> format option on an <EM>access_log</EM> directive.</P>
 </DL>
 </P>
 
@@ -709,6 +762,9 @@ The old /var/cache location was often non-writable which blocked core dumps crea
 <P>Disables the libnetfilter_conntrack library being used for the new qos_flows option <EM>mark</EM>.
 default is to auto-detect the library and use where available.</P>
 
+<DT><B>--enable-ssl-crtd</B><DD>
+<P>  Prevent Squid from directly generation of SSL private key and 
+certificate request and instead enables the ssl_crtd processes.</P>
 </DL>
 </P>
 
@@ -742,6 +798,12 @@ default is to auto-detect the library and use where available.</P>
 
 <DT><B>--enable-auth-ntlm-helpers</B><DD>
 <P>replaced by <EM>--enable-auth-ntlm</EM>.</P>
+
+<DT><B>--enable-referer-log</B><DD>
+<P>Obsolete.</P>
+
+<DT><B>--enable-useragent-log</B><DD>
+<P>Obsolete.</P>
 
 </DL>
 </P>
@@ -903,7 +965,6 @@ default is to auto-detect the library and use where available.</P>
 <P>Not yet ported from 2.6</P>
 
 <DT><B>cache_dir</B><DD>
-<P><EM>min-size</EM> option not yet ported from Squid-2</P>
 <P><EM>COSS</EM> storage type is lacking stability fixes from 2.6</P>
 <P>COSS <EM>overwrite-percent=</EM> option not yet ported from 2.6</P>
 <P>COSS <EM>max-stripe-waste=</EM> option not yet ported from 2.6</P>
