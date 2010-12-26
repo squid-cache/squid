@@ -1,0 +1,453 @@
+#!@PERL@
+use strict;
+use warnings;
+use DBI;
+use English qw( -no_match_vars );
+use Getopt::Long;
+use Pod::Usage;
+
+$|=1;
+
+=pod
+
+=head1 NAME
+
+log_db_daemon - Database logging daemon for Squid
+
+=head1 SYNOPSIS
+
+log_db_daemon DSN [options]
+
+=head1 DESCRIPTOIN
+
+This program writes Squid access.log entries to a database.
+Presently only accepts the B<squid> native format
+
+=over 8
+
+=item   B<DSN>
+
+Database DSN encoded as a path. This is sent as the access_log file path.
+
+Sample configuration:
+  access_log daemon:/host/database/table/username/password squid
+
+  to leave a parameter unspecified use a double slash:
+  access_log daemon://database/table/username/password squid
+
+Default "DBI:mysql:database=squid"
+
+=item   B<--debug>
+
+Write debug messages to Squid stderr or cache.log
+
+=cut
+
+# the first argument to this script is the log file path describing the DSN
+my $log_file = shift;
+
+# others may be options
+my $debug = 0;
+GetOptions(
+        'debug' => \$debug,
+        );
+
+
+# utility routine to print messages on stderr (so they appear in cache log)
+# without using warn, which would clutter the log with source line numbers
+sub log_info {
+    my $msg = shift;
+    print STDERR "$msg\n";
+}
+
+# we use logfile to pass database access information to this script
+# sample configuration:
+# access_log daemon:/host/database/table/username/password squid
+# to let a parmeter unspecified, e.g. the database host, use a double slash:
+# access_log daemon://database/table/username/password squid
+my ( $host, $database, $table, $user, $pass ) = $log_file =~ / \/(.*?)\/(.*?)\/(.*?)\/(.*?)\/(.*?) \z /xms;
+
+if ( !$host ) {
+    $host = 'localhost';
+    log_info("Database host not specified. Using $host.");
+}
+
+if ( !$database ) {
+    $database = 'squid_log';
+    log_info("Database name not specified. Using $database.");
+}
+
+if ( !$table ) {
+    $table = 'access_log';
+    log_info("Table parameter not specified. Using $table.");
+}
+
+if ( !$user ) {
+    $user = 'squid';
+    log_info("User parameter not specified. Using $user.");
+}
+
+if ( !$pass ) {
+    log_info('No password specified. Connecting with NO password.');
+}
+
+# fields that we should have in the table
+# Order here must match the order of fields in the Log format and parse() output array.
+my @db_fields = qw(
+    id
+    time_since_epoch
+    time_response
+    ip_client
+    squid_request_status
+    http_status_code
+    http_reply_size
+    http_method
+    http_url
+    http_username
+    squid_hier_status
+    ip_server
+    http_mime_type
+);
+
+# perform db connection
+my $dsn = "DBI:mysql:database=$database" . ($host ne "localhost" ? ":$host" : "");
+my $dbh;
+my $sth;
+eval {
+    warn "Connecting... dsn='$dsn', username='$user', password='...'";
+    $dbh = DBI->connect($dsn, $user, $pass, { AutoCommit => 1, RaiseError => 1, PrintError => 1 });
+};
+if ($EVAL_ERROR) {
+    die "Cannot connect to database: $DBI::errstr";
+}
+
+
+# a simple test to assure the specified table exists
+eval {
+    my $q = 'SELECT ' . join(',',@db_fields) . " FROM $table LIMIT 1";
+    my $sth = $dbh->prepare($q);
+    $sth->execute;
+};
+if ($EVAL_ERROR) {
+    # run a query to create the table of required syntax
+    my $create_query = 'CREATE TABLE ' . $table . ' (' .
+    " id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY," .
+    " time_since_epoch     DECIMAL(15,3)," .
+    " time_response        INTEGER," .
+    " ip_client            CHAR(15)," .
+    " ip_server            CHAR(15)," .
+    " http_status_code     VARCHAR(10)," .
+    " http_reply_size      INTEGER," .
+    " http_method          VARCHAR(20)," .
+    " http_url             TEXT," .
+    " http_username        VARCHAR(20)," .
+    " http_mime_type       VARCHAR(50)," .
+    " squid_request_status VARCHAR(50)," .
+    " squid_hier_status    VARCHAR(20)" .
+    ");" ;
+
+    $sth = $dbh->prepare($create_query);
+    $sth->execute;
+    # test again and fail hard if it is still broken.
+    eval {
+        my $q = 'SELECT ' . join(',',@db_fields) . " FROM $table LIMIT 1";
+        my $sth = $dbh->prepare($q);
+        $sth->execute;
+    };
+    if ($EVAL_ERROR) {
+        die "Error initializing database table: $EVAL_ERROR";
+    };
+}
+# test 
+
+# for better performance, prepare the statement at startup
+eval {
+    my $q = "INSERT INTO $table (" . join(',',@db_fields) . ") VALUES(NULL" . ',?' x (scalar(@db_fields)-1) . ')';
+    #$sth = $dbh->prepare("INSERT INTO $table VALUES(NULL,?,?,?,?,?,?,?,?,?,?,?,?)");
+    $sth = $dbh->prepare($q);
+};
+if ($EVAL_ERROR) {
+    die "Error while preparing sql statement: $EVAL_ERROR";
+}
+
+sub parse($) {
+    my ($line) = @_;
+    my (@t) = $line =~ /^L(\d+\.\d+) *(\d+?) (.*?) (.*?)\/(\d+?) (\d+?) (.*?) (.*?) (.*?) (.*?)\/(.*?) (.*)$/;
+}
+
+# main loop
+while (my $line = <>) {
+    chomp $line;
+
+    my $cmd = substr($line, 0, 1);      # extract command byte
+
+    if ( $cmd eq 'L' ) {
+        my @log_entry = parse($line);
+        eval {                  # we catch db errors to avoid crashing squid in case something goes wrong...
+            $sth->execute(@log_entry) or die $sth->errstr
+        };
+        if ( $EVAL_ERROR ) {    # leave a trace of the error in the logs
+            warn $EVAL_ERROR . " values=(" . join(', ', @log_entry) . ')';
+        }
+    }
+}
+
+$dbh->disconnect();
+
+__END__
+
+=head1 DESCRIPTION
+
+This module exploits the new logfile daemon support available in squid 2.7 and 3.2 to store access log entries in a MySQL database.
+
+=head1 CONFIGURATION
+
+=head2 Squid configuration
+
+=head3 access_log directive
+
+The path to the access log file is used to provide the database connection parameters.
+
+  access_log daemon:/mysql_host:port/database/table/username/password squid
+
+The 'daemon' prefix is mandatory and tells squid that the B<logfile_daemon> helper is to be used instead of the normal file logging.
+
+The last parameter tells squid which log format to use when writing lines to the log daemon.
+Presently B<squid> format is supported.
+
+=over 4
+
+=item mysql_host:port
+
+Host where the mysql server is running. If left empty, 'localhost' is assumed.
+
+=item database
+
+Name of the database to connect to. If left empty, 'squid_log' is assumed.
+
+=item table
+
+Name of the database table where log lines are stored. If left empty, 'access_log' is assumed.
+
+=item username
+
+Username to use when connecting to the database. If left empty, 'squid' is assumed.
+
+=item password
+
+Password to use when connecting to the database. If left empty, no password is used.
+
+=back
+
+To leave all fields to their default values, you can use a single slash:
+
+  access_log daemon:/ squid
+
+To specify only the database password, which by default is empty, you must leave unspecified all the other parameters by using null strings:
+
+  access_log daemon://///password squid
+
+=head3 logfile_daemon directive
+
+This is the current way of telling squid where the logfile daemon resides.
+
+  logfile_daemon /path/to/squid/libexec/logfile-daemon_mysql.pl
+
+The script must be copied to the location specified in the directive.
+
+=head2 Database configuration
+
+Let's call the database 'squid_log' and the log table 'access_log'. The username and password for the db connection will be both 'squid'.
+
+=head3 Database
+
+Create the database:
+
+  CREATE DATABASE squid_log;
+
+=head3 User
+
+Create the user:
+
+  GRANT INSERT,SELECT,CREATE ON squid_log.* TO 'squid'@'localhost' IDENTIFIED BY 'squid';
+  FLUSH PRIVILEGES;
+
+Note that only CREATE, INSERT and SELECT privileges are granted to the 'squid' user. This ensures that the logfile daemon script cannot change or modify the log entries.
+
+=head3 Table
+
+The Daemon will attempt to initialize this table if none exists when it starts.
+
+The table created should look like:
+
+  CREATE TABLE access_log (
+    id                   INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    time_since_epoch     DECIMAL(15,3),
+    time_response        INTEGER,
+    ip_client            CHAR(15),
+    ip_server            CHAR(15),
+    http_status_code     VARCHAR(10),
+    http_reply_size      INTEGER,
+    http_method          VARCHAR(20),
+    http_url             TEXT,
+    http_username        VARCHAR(20),
+    http_mime_type       VARCHAR(50),
+    squid_hier_status    VARCHAR(20),
+    squid_request_status VARCHAR(20)
+  );
+
+=head1 VERSION INFORMATION
+
+This document refers to C<log_db_daemon> script version 0.5.
+
+The script has been developed and tested in the following environment:
+
+=over 4
+
+=item squid-2.7 Squid-3.2
+
+=item mysql 5.0.26 and 5.1
+
+=item perl 5.8.8
+
+=item OpenSUSE 10.2
+
+=back
+
+=head1 DATA EXTRACTION
+
+=head2 Sample queries.
+
+=over 4
+
+=item Clients accessing the cache
+
+  SELECT DISTINCT ip_client FROM access_log;
+
+=item Number of request per day
+
+  SELECT
+    DATE(FROM_UNIXTIME(time_since_epoch)) AS date_day,
+    COUNT(*) AS num_of_requests
+  FROM access_log
+  GROUP BY 1
+  ORDER BY 1;
+
+=item Request status count
+
+To obtain the raw count of each request status:
+
+  SELECT squid_request_status, COUNT(*) AS n
+  FROM access_log
+  GROUP BY squid_request_status
+  ORDER BY 2 DESC;
+
+To calculate the percentage of each request status:
+
+  SELECT
+    squid_request_status,
+    (COUNT(*)/(SELECT COUNT(*) FROM access_log)*100) AS percentage
+  FROM access_log
+  GROUP BY squid_request_status
+  ORDER BY 2 DESC;
+
+To distinguish only between HITs and MISSes:
+
+  SELECT
+    'hits',
+    (SELECT COUNT(*)
+    FROM access_log
+    WHERE squid_request_status LIKE '%HIT%')
+    /
+    (SELECT COUNT(*) FROM access_log)*100
+    AS percentage
+  UNION
+  SELECT
+    'misses',
+    (SELECT COUNT(*)
+    FROM access_log
+    WHERE squid_request_status LIKE '%MISS%')
+    /
+    (SELECT COUNT(*) FROM access_log)*100
+    AS pecentage;
+
+=item Response time ranges
+
+  SELECT
+    '0..500',
+    COUNT(*)/(SELECT COUNT(*) FROM access_log)*100 AS percentage
+  FROM access_log
+  WHERE time_response >= 0 AND time_response < 500
+  UNION
+  SELECT
+    '500..1000',
+    COUNT(*)/(SELECT COUNT(*) FROM access_log)*100 AS percentage
+  FROM access_log
+  WHERE time_response >= 500 AND time_response < 1000
+  UNION
+  SELECT
+    '1000..2000',
+    COUNT(*)/(SELECT COUNT(*) FROM access_log)*100 AS percentage
+  FROM access_log
+  WHERE time_response >= 1000 AND time_response < 2000
+  UNION
+  SELECT
+    '>= 2000',
+    COUNT(*)/(SELECT COUNT(*) FROM access_log)*100 AS percentage
+  FROM access_log
+  WHERE time_response >= 2000;
+
+=item Traffic by mime type
+
+  SELECT
+    http_mime_type,
+    SUM(http_reply_size) as total_bytes
+  FROM access_log
+  GROUP BY http_mime_type
+  ORDER BY 2 DESC;
+
+=item Traffic by client
+
+  SELECT
+    ip_client,
+    SUM(http_reply_size) AS total_bytes
+  FROM access_log
+  GROUP BY 1
+  ORDER BY 2 DESC;
+
+=back
+
+=head2 Speed issues
+
+The MyISAM storage engine is known to be faster than the InnoDB one, so although it doesn't support transactions and referential integrity, it might be more appropriate in this scenario. You might want to append "ENGINE=MYISAM" at the end of the table creation code in the above SQL script.
+
+Indexes should be created according to the queries that are more frequently run. The DDL script only creates an implicit index for the primary key column.
+
+=head1 TODO
+
+=head2 Table cleanup
+
+This script currently implements only the C<L> (i.e. "append a line to the log") command, therefore the log lines are never purged from the table. This approach has an obvious scalability problem.
+
+One solution would be to implement e.g. the "rotate log" command in a way that would calculate some summary values, put them in a "summary table" and then delete the lines used to caluclate those values.
+
+Similar cleanup code could be implemented in an external script and run periodically independently from squid log commands.
+
+=head2 Testing
+
+This script has only been tested in low-volume scenarios (single client, less than 10 req/s). Tests in high volume environments could reveal performance bottlenecks and bugs.
+
+=head1 AUTHOR
+
+Marcello Romani, marcello.romani@libero.it
+Amos Jeffries, amosjeffries@squid-cache.org
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2008 by Marcello Romani
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.8 or,
+at your option, any later version of Perl 5 you may have available.
+
+=cut
