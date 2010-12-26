@@ -3411,6 +3411,7 @@ AC_CONFIG_FILES([\
 	helpers/external_acl/unix_group/Makefile \
 	helpers/external_acl/wbinfo_group/Makefile \
 	helpers/log_daemon/Makefile \
+	helpers/log_daemon/DB/Makefile \
 	helpers/log_daemon/file/Makefile \
 	helpers/url_rewrite/Makefile \
 	helpers/url_rewrite/fake/Makefile \
