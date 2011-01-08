@@ -86,6 +86,7 @@ enum {
     STALE_EXPIRES,
     STALE_MAX_RULE,
     STALE_LMFACTOR_RULE,
+    STALE_MAX_STALE,
     STALE_DEFAULT = 299
 };
 
@@ -388,7 +389,16 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     /*
      * At this point the response is stale, unless one of
      * the override options kicks in.
+     * NOTE: max-stale config blocks the overrides.
      */
+    int max_stale = (R->max_stale >= 0 ? R->max_stale : Config.maxStale);
+    if ( max_stale >= 0 && staleness < max_stale) {
+        debugs(22, 3, "refreshCheck: YES: max-stale limit");
+        if (request)
+            request->flags.fail_on_validation_err = 1;
+        return STALE_MAX_STALE;
+    }
+
     if (sf.expires) {
 #if USE_HTTP_VIOLATIONS
 
