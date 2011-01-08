@@ -167,6 +167,7 @@ struct SquidConfig {
 #if USE_HTTP_VIOLATIONS
     time_t negativeTtl;
 #endif
+    time_t maxStale;
     time_t negativeDnsTtl;
     time_t positiveDnsTtl;
     time_t shutdownLifetime;
@@ -1107,6 +1108,7 @@ struct _refresh_t {
         unsigned int ignore_auth:1;
 #endif
     } flags;
+    int max_stale;
 };
 
 /*

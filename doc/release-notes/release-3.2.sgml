@@ -398,6 +398,9 @@ This section gives a thorough account of those changes in three categories:
 	<p>The else part is optional. The keywords <em>if</em>, <em>else</em> and <em>endif</em> 
 	must be typed on their own lines, as if they were regular configuration directives.
 
+	<tag>max_stale</tag>
+	<p>Places an upper limit on how stale content Squid will serve from the cache if cache validation fails
+
 	<tag>memory_cache_mode</tag>
 	<p>Controls which objects to keep in the memory cache (cache_mem)
 	<verb>
@@ -513,6 +516,10 @@ This section gives a thorough account of those changes in three categories:
 	   It does, however, require libnetfilter_conntrack.
 	   This will be included by default if available (see the --without-netfilter-conntrack configure option for more details).
 	<p><em>miss</em> sets a value for a cache miss. It is available for both the tos and mark options and takes precedence over the preserve-miss feature.
+
+	<tag>refresh_pattern</tag>
+	<p>New option <em>max-stale=</em> to provide a maximum staleness factor. Squid won't
+	   serve objects more stale than this even if it failed to validate the object.
 
 	<tag>tcp_outgoing_mark</tag>
 	<p>New configuration parameter <em>tcp_outgoing_mark</em>
@@ -867,13 +874,9 @@ This section gives an account of those changes in three categories:
 	<tag>logformat</tag>
 	<p><em>%oa</em> tag not yet ported from 2.7
 
-	<tag>max_stale</tag>
-	<p>Not yet ported from 2.7
-
 	<tag>refresh_pattern</tag>
 	<p><em>stale-while-revalidate=</em> not yet ported from 2.7
 	<p><em>ignore-stale-while-revalidate=</em> not yet ported from 2.7
-	<p><em>max-stale=</em> not yet ported from 2.7
 	<p><em>negative-ttl=</em> not yet ported from 2.7
 
 	<tag>refresh_stale_hit</tag>
