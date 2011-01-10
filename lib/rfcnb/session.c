@@ -44,10 +44,6 @@ int RFCNB_Stats[RFCNB_MAX_STATS];
 
 RFCNB_Prot_Print_Routine *Prot_Print_Routine = NULL;   /* Pointer to protocol print routine */
 
-int RFCNB_Get_Last_Errno(void);
-int RFCNB_Get_Error_Msg(int code, char *msg_buf, int len);
-void RFCNB_Register_Print_Routine(RFCNB_Prot_Print_Routine * fn);
-
 /* Set up a session with a remote name. We are passed Called_Name as a
  * string which we convert to a NetBIOS name, ie space terminated, up to
  * 16 characters only if we need to. If Called_Address is not empty, then
@@ -324,25 +320,4 @@ int
 RFCNB_Get_Last_Error()
 {
     return (RFCNB_errno);
-}
-
-/* Pick up saved errno as well */
-int
-RFCNB_Get_Last_Errno()
-{
-    return (RFCNB_saved_errno);
-}
-
-/* Pick up the last error response and return in string ...             */
-int
-RFCNB_Get_Error_Msg(int code, char *msg_buf, int len)
-{
-    return (strncpy(msg_buf, RFCNB_Error_Strings[abs(code)], len) != NULL);
-}
-
-/* Register a higher level protocol print routine */
-void
-RFCNB_Register_Print_Routine(RFCNB_Prot_Print_Routine * fn)
-{
-    Prot_Print_Routine = fn;
 }
