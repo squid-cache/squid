@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -33,13 +32,13 @@
  *
  */
 
-#include "config.h"
 #include "squid.h"
+#include "comm.h"
+#include "comm/Loops.h"
+#include "comm/Write.h"
 #include "event.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "comm.h"
-#include "comm/Write.h"
 #include "fde.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
@@ -1238,7 +1237,7 @@ idnsRead(int fd, void *data)
 
     // Always keep reading. This stops (or at least makes harder) several
     // attacks on the DNS client.
-    commSetSelect(fd, COMM_SELECT_READ, idnsRead, NULL, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, idnsRead, NULL, 0);
 
     /* BUG (UNRESOLVED)
      *  two code lines after returning from comm_udprecvfrom()
@@ -1496,12 +1495,12 @@ idnsInit(void)
         if (DnsSocketB >= 0) {
             port = comm_local_port(DnsSocketB);
             debugs(78, 1, "DNS Socket created at " << addrB << ", FD " << DnsSocketB);
-            commSetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
+            Comm::SetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
         }
         if (DnsSocketA >= 0) {
             port = comm_local_port(DnsSocketA);
             debugs(78, 1, "DNS Socket created at " << addrA << ", FD " << DnsSocketA);
-            commSetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
+            Comm::SetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
         }
     }
 

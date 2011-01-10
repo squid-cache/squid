@@ -34,20 +34,21 @@
  */
 
 #include "squid.h"
-#include "htcp.h"
+#include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Acl.h"
+#include "comm.h"
+#include "comm/Loops.h"
+#include "htcp.h"
+#include "http.h"
+#include "HttpRequest.h"
+#include "icmp/net_db.h"
+#include "ipc/StartListening.h"
 #include "ip/tools.h"
+#include "MemBuf.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
-#include "HttpRequest.h"
-#include "comm.h"
-#include "MemBuf.h"
-#include "http.h"
-#include "icmp/net_db.h"
-#include "AccessLogEntry.h"
-#include "ipc/StartListening.h"
 
 /// dials htcpIncomingConnectionOpened call
 class HtcpListeningStartedDialer: public CallDialer,
@@ -1484,7 +1485,7 @@ htcpRecv(int fd, void *data)
 
     htcpHandleMsg(buf, len, from);
 
-    commSetSelect(fd, COMM_SELECT_READ, htcpRecv, NULL, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, htcpRecv, NULL, 0);
 }
 
 /*
@@ -1547,7 +1548,7 @@ htcpInit(void)
         if (htcpOutSocket < 0)
             fatal("Cannot open Outgoing HTCP Socket");
 
-        commSetSelect(htcpOutSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
+        Comm::SetSelect(htcpOutSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
 
         debugs(31, 1, "Outgoing HTCP messages on port " << Config.Port.htcp << ", FD " << htcpOutSocket << ".");
 
@@ -1567,7 +1568,7 @@ htcpIncomingConnectionOpened(int fd, int errNo)
     if (htcpInSocket < 0)
         fatal("Cannot open HTCP Socket");
 
-    commSetSelect(htcpInSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
+    Comm::SetSelect(htcpInSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
 
     debugs(31, 1, "Accepting HTCP messages on port " << Config.Port.htcp << ", FD " << htcpInSocket << ".");
 
@@ -1733,7 +1734,7 @@ htcpSocketShutdown(void)
      */
     assert(htcpOutSocket > -1);
 
-    commSetSelect(htcpOutSocket, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(htcpOutSocket, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
 void

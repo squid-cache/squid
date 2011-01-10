@@ -236,19 +236,6 @@ DiskIO/DiskIOModules_gen.cc: Makefile
 	$(SHELL) $(srcdir)/DiskIO/modules.sh $(DISK_MODULES) > DiskIO/DiskIOModules_gen.cc
 
 
-squid_COMMSOURCES = \
-	comm_select.cc \
-	comm_select.h \
-	comm_select_win32.cc \
-	comm_poll.cc \
-	comm_poll.h \
-	comm_devpoll.cc \
-	comm_epoll.cc \
-	comm_epoll.h \
-	comm_kqueue.cc \
-	comm_kqueue.h
-
-
 # common library for all the binaries and tests. This is kindof a catch all
 # and smaller libraries split from this are encouraged. Using lt convenience
 # libraries, dependencies should not be a problem either.
@@ -295,7 +282,6 @@ squid_SOURCES = \
 	CommIO.h \
 	CompletionDispatcher.cc \
 	CompletionDispatcher.h \
-	$(squid_COMMSOURCES) \
 	CommRead.h \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -1170,7 +1156,6 @@ tests_testCacheManager_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
-	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -1373,7 +1358,6 @@ tests_testEvent_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
-	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -1534,7 +1518,6 @@ tests_testEventLoop_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
-	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -1682,7 +1665,6 @@ tests_test_http_range_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
-	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -1850,7 +1832,6 @@ tests_testHttpRequest_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
-	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -2266,7 +2247,6 @@ tests_testURL_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
-	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \

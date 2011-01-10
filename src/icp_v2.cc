@@ -38,6 +38,7 @@
 #include "squid.h"
 #include "Store.h"
 #include "comm.h"
+#include "comm/Loops.h"
 #include "ICP.h"
 #include "HttpRequest.h"
 #include "acl/FilledChecklist.h"
@@ -337,7 +338,7 @@ icpUdpSend(int fd,
             IcpQueueTail = queue;
         }
 
-        commSetSelect(fd, COMM_SELECT_WRITE, icpUdpSendQueue, NULL, 0);
+        Comm::SetSelect(fd, COMM_SELECT_WRITE, icpUdpSendQueue, NULL, 0);
         statCounter.icp.replies_queued++;
     } else {
         /* don't queue it */
@@ -616,7 +617,7 @@ icpHandleUdp(int sock, void *data)
     int len;
     int icp_version;
     int max = INCOMING_ICP_MAX;
-    commSetSelect(sock, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
+    Comm::SetSelect(sock, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
 
     while (max--) {
         len = comm_udp_recvfrom(sock,
@@ -729,11 +730,7 @@ icpConnectionsOpen(void)
         if (theOutIcpConnection < 0)
             fatal("Cannot open Outgoing ICP Port");
 
-        commSetSelect(theOutIcpConnection,
-                      COMM_SELECT_READ,
-                      icpHandleUdp,
-                      NULL,
-                      0);
+        Comm::SetSelect(theOutIcpConnection, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
 
         debugs(12, 1, "Outgoing ICP messages on port " << addr.GetPort() << ", FD " << theOutIcpConnection << ".");
 
@@ -765,11 +762,7 @@ icpIncomingConnectionOpened(int fd, int errNo, Ip::Address& addr)
     if (theInIcpConnection < 0)
         fatal("Cannot open ICP Port");
 
-    commSetSelect(theInIcpConnection,
-                  COMM_SELECT_READ,
-                  icpHandleUdp,
-                  NULL,
-                  0);
+    Comm::SetSelect(theInIcpConnection, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
 
     for (const wordlist *s = Config.mcast_group_list; s; s = s->next)
         ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL);
@@ -815,7 +808,7 @@ icpConnectionShutdown(void)
      */
     assert(theOutIcpConnection > -1);
 
-    commSetSelect(theOutIcpConnection, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(theOutIcpConnection, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
 void

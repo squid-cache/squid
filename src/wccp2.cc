@@ -35,6 +35,7 @@
 #if USE_WCCPv2
 
 #include "comm.h"
+#include "comm/Loops.h"
 #include "compat/strsep.h"
 #include "event.h"
 #include "ip/Address.h"
@@ -1009,11 +1010,7 @@ wccp2ConnectionOpen(void)
     }
 
 #endif
-    commSetSelect(theWccp2Connection,
-                  COMM_SELECT_READ,
-                  wccp2HandleUdp,
-                  NULL,
-                  0);
+    Comm::SetSelect(theWccp2Connection, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
 
     debugs(80, 1, "Accepting WCCPv2 messages on port " << WCCP_PORT << ", FD " << theWccp2Connection << ".");
     debugs(80, 1, "Initialising all WCCPv2 lists");
@@ -1174,7 +1171,7 @@ wccp2HandleUdp(int sock, void *not_used)
 
     debugs(80, 6, "wccp2HandleUdp: Called.");
 
-    commSetSelect(sock, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
+    Comm::SetSelect(sock, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
 
     /* FIXME INET6 : drop conversion boundary */
     Ip::Address from_tmp;

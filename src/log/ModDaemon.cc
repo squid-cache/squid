@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "cbdata.h"
+#include "comm/Loops.h"
 #include "fde.h"
 #include "log/Config.h"
 #include "log/File.h"
@@ -151,7 +152,7 @@ logfileHandleWrite(int fd, void *data)
     /* there is, so schedule more */
 
 reschedule:
-    commSetSelect(ll->wfd, COMM_SELECT_WRITE, logfileHandleWrite, lf, 0);
+    Comm::SetSelect(ll->wfd, COMM_SELECT_WRITE, logfileHandleWrite, lf, 0);
     ll->flush_pending = 1;
 finish:
     return;
@@ -171,7 +172,7 @@ logfileQueueWrite(Logfile * lf)
             logfile_mod_daemon_append(lf, "F\n", 2);
     }
     /* Ok, schedule a write-event */
-    commSetSelect(ll->wfd, COMM_SELECT_WRITE, logfileHandleWrite, lf, 0);
+    Comm::SetSelect(ll->wfd, COMM_SELECT_WRITE, logfileHandleWrite, lf, 0);
 }
 
 static void
