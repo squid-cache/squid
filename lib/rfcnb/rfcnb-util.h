@@ -45,3 +45,6 @@ int RFCNB_Session_Req(struct RFCNB_Con *con,
                       BOOL * redirect,
                       struct in_addr *Dest_IP,
                       int *port);
+
+typedef void RFCNB_Prot_Print_Routine(FILE * fd, int dir, struct RFCNB_Pkt *pkt, int header, int payload);
+extern RFCNB_Prot_Print_Routine *Prot_Print_Routine;

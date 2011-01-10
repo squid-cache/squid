@@ -42,7 +42,6 @@ int RFCNB_saved_errno = 0;
 
 int RFCNB_Stats[RFCNB_MAX_STATS];
 
-typedef void RFCNB_Prot_Print_Routine(FILE * fd, int dir, struct RFCNB_Pkt *pkt, int header, int payload);
 RFCNB_Prot_Print_Routine *Prot_Print_Routine = NULL;   /* Pointer to protocol print routine */
 
 int RFCNB_Get_Last_Errno(void);

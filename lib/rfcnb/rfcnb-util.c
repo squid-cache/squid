@@ -38,8 +38,6 @@
 #include <string.h>
 #endif
 
-extern void (*Prot_Print_Routine) (FILE * fd, int dir, struct RFCNB_Pkt * pkt, int header, int payload);   /* Pointer to protocol print routine */
-
 const char *RFCNB_Error_Strings[] = {
     "RFCNBE_OK: Routine completed successfully.",
     "RFCNBE_NoSpace: No space available for a malloc call.",

@@ -38,7 +38,7 @@
 
 int RFCNB_Timeout = 0;          /* Timeout in seconds ... */
 
-int RFCNB_Discard_Rest(struct RFCNB_Con *con, int len);
+static int RFCNB_Discard_Rest(struct RFCNB_Con *con, int len);
 
 #ifdef NOT_USED
 void
