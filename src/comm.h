@@ -61,9 +61,6 @@ SQUIDCEXTERN int comm_open_listener(int sock_type, int proto, Ip::Address &addr,
 SQUIDCEXTERN int comm_openex(int, int, Ip::Address &, int, tos_t tos, nfmark_t nfmark, const char *);
 SQUIDCEXTERN u_short comm_local_port(int fd);
 
-SQUIDCEXTERN void commSetSelect(int, unsigned int, PF *, void *, time_t);
-SQUIDCEXTERN void commResetSelect(int);
-
 SQUIDCEXTERN int comm_udp_sendto(int sock, const Ip::Address &to, const void *buf, int buflen);
 SQUIDCEXTERN void commCallCloseHandlers(int fd);
 SQUIDCEXTERN int commSetTimeout(int fd, int, PF *, void *);
@@ -72,13 +69,6 @@ SQUIDCEXTERN int ignoreErrno(int);
 SQUIDCEXTERN void commCloseAllSockets(void);
 SQUIDCEXTERN void checkTimeouts(void);
 
-
-/*
- * comm_select.c
- */
-SQUIDCEXTERN void comm_select_init(void);
-SQUIDCEXTERN comm_err_t comm_select(int);
-SQUIDCEXTERN void comm_quick_poll_required(void);
 
 class ConnectionDetail;
 typedef void IOACB(int fd, int nfd, ConnectionDetail *details, comm_err_t flag, int xerrno, void *data);

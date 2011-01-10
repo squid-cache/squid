@@ -9,6 +9,13 @@ libcomm_la_SOURCES= \
 	AcceptLimiter.h \
 	ListenStateData.cc \
 	ListenStateData.h \
+	Loops.h \
+	ModDevPoll.cc \
+	ModEpoll.cc \
+	ModKqueue.cc \
+	ModPoll.cc \
+	ModSelect.cc \
+	ModSelectWin32.cc \
 	\
 	IoCallback.cc \
 	IoCallback.h \

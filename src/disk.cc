@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "comm/Loops.h"
 #include "fde.h"
 #include "MemBuf.h"
 
@@ -329,7 +330,7 @@ diskHandleWrite(int fd, void *notused)
     } else {
         /* another block is queued */
         diskCombineWrites(fdd);
-        commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
+        Comm::SetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
         F->flags.write_daemon = 1;
     }
 
@@ -458,7 +459,7 @@ diskHandleRead(int fd, void *data)
 
     if (len < 0) {
         if (ignoreErrno(errno)) {
-            commSetSelect(fd, COMM_SELECT_READ, diskHandleRead, ctrl_dat, 0);
+            Comm::SetSelect(fd, COMM_SELECT_READ, diskHandleRead, ctrl_dat, 0);
             PROF_stop(diskHandleRead);
             return;
         }

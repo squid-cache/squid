@@ -37,6 +37,7 @@
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
 #include "comm/ListenStateData.h"
+#include "comm/Loops.h"
 #include "ConnectionDetail.h"
 #include "fde.h"
 #include "protos.h"
@@ -88,7 +89,7 @@ Comm::ListenStateData::ListenStateData(int aFd, AsyncCall::Pointer &call, bool a
     debugs(5, 5, HERE << "FD " << fd << " AsyncCall: " << call);
     assert(isOpen(aFd));
     setListen();
-    commSetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
+    SetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
 }
 
 Comm::ListenStateData::~ListenStateData()
@@ -119,7 +120,7 @@ Comm::ListenStateData::doAccept(int fd, void *data)
     } else {
         afd->acceptNext();
     }
-    commSetSelect(fd, COMM_SELECT_READ, Comm::ListenStateData::doAccept, afd, 0);
+    SetSelect(fd, COMM_SELECT_READ, Comm::ListenStateData::doAccept, afd, 0);
 }
 
 bool
@@ -157,7 +158,7 @@ Comm::ListenStateData::acceptOne()
         if (newfd == COMM_NOMESSAGE) {
             /* register interest again */
             debugs(5, 5, HERE << "try later: FD " << fd << " handler: " << theCallback);
-            commSetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
+            SetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
             return;
         }
 
