@@ -32,11 +32,14 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#include "squid.h"
-#include "comm.h"
-#include "event.h"
+#include "config.h"
 
 #if USE_WCCP
+
+#include "squid.h"
+#include "comm.h"
+#include "comm/Loops.h"
+#include "event.h"
 
 #define WCCP_PORT 2048
 #define WCCP_REVISION 0
@@ -157,11 +160,7 @@ wccpConnectionOpen(void)
     if (theWccpConnection < 0)
         fatal("Cannot open WCCP Port");
 
-    commSetSelect(theWccpConnection,
-                  COMM_SELECT_READ,
-                  wccpHandleUdp,
-                  NULL,
-                  0);
+    Comm::SetSelect(theWccpConnection, COMM_SELECT_READ, wccpHandleUdp, NULL, 0);
 
     debugs(80, 1, "Accepting WCCPv1 messages on " << Config.Wccp.address << ", FD " << theWccpConnection << ".");
 
@@ -208,7 +207,7 @@ wccpHandleUdp(int sock, void *not_used)
 
     debugs(80, 6, "wccpHandleUdp: Called.");
 
-    commSetSelect(sock, COMM_SELECT_READ, wccpHandleUdp, NULL, 0);
+    Comm::SetSelect(sock, COMM_SELECT_READ, wccpHandleUdp, NULL, 0);
 
     memset(&wccp_i_see_you, '\0', sizeof(wccp_i_see_you));
 

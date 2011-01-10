@@ -31,16 +31,18 @@
  *
  */
 
-#include "squid.h"
-#include "comm_select.h"
-#include "mgr/Registration.h"
-#include "SquidTime.h"
+#include "config.h"
 
 #if USE_SELECT_WIN32
-#include "Store.h"
-#include "fde.h"
 
-static int MAX_POLL_TIME = 1000;	/* see also comm_quick_poll_required() */
+#include "squid.h"
+#include "comm/Loops.h"
+#include "fde.h"
+#include "mgr/Registration.h"
+#include "SquidTime.h"
+#include "Store.h"
+
+static int MAX_POLL_TIME = 1000;	/* see also Comm::QuickPollRequired() */
 
 #ifndef        howmany
 #define howmany(x, y)   (((x)+((y)-1))/(y))
@@ -131,8 +133,7 @@ static int incoming_http_interval = 16 << INCOMING_FACTOR;
 #define commCheckHTTPIncoming (++http_io_events > (incoming_http_interval>> INCOMING_FACTOR))
 
 void
-commSetSelect(int fd, unsigned int type, PF * handler, void *client_data,
-              time_t timeout)
+Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
 {
     fde *F = &fd_table[fd];
     assert(fd >= 0);
@@ -156,7 +157,7 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data,
 }
 
 void
-commResetSelect(int fd)
+Comm::ResetSelect(int fd)
 {
 }
 
@@ -336,7 +337,7 @@ comm_select_http_incoming(void)
 #define DEBUG_FDBITS 0
 /* Select on all sockets; call handlers for those that are ready. */
 comm_err_t
-comm_select(int msec)
+Comm::DoSelect(int msec)
 {
     fd_set readfds;
     fd_set pendingfds;
@@ -682,16 +683,8 @@ comm_select_dns_incoming(void)
     statHistCount(&statCounter.comm_dns_incoming, nevents);
 }
 
-static void
-commSelectRegisterWithCacheManager(void)
-{
-    Mgr::RegisterAction("comm_select_incoming",
-                        "comm_incoming() stats",
-                        commIncomingStats, 0, 1);
-}
-
 void
-comm_select_init(void)
+Comm::SelectLoopInit(void)
 {
     zero_tv.tv_sec = 0;
     zero_tv.tv_usec = 0;
@@ -699,7 +692,9 @@ comm_select_init(void)
     FD_ZERO(&global_writefds);
     nreadfds = nwritefds = 0;
 
-    commSelectRegisterWithCacheManager();
+    Mgr::RegisterAction("comm_select_incoming",
+                        "comm_incoming() stats",
+                        commIncomingStats, 0, 1);
 }
 
 /*
@@ -820,7 +815,7 @@ commUpdateWriteBits(int fd, PF * handler)
 
 /* Called by async-io or diskd to speed up the polling */
 void
-comm_quick_poll_required(void)
+Comm::QuickPollRequired(void)
 {
     MAX_POLL_TIME = 10;
 }

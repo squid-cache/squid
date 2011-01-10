@@ -51,14 +51,16 @@
  *
  */
 
-#include "squid.h"
-#include "comm_epoll.h"
-#include "mgr/Registration.h"
-#include "Store.h"
-#include "fde.h"
-#include "SquidTime.h"
+#include "config.h"
 
 #if USE_EPOLL
+
+#include "squid.h"
+#include "comm/Loops.h"
+#include "fde.h"
+#include "mgr/Registration.h"
+#include "SquidTime.h"
+#include "Store.h"
 
 #define DEBUG_EPOLL 0
 
@@ -79,15 +81,12 @@ static void commEPollRegisterWithCacheManager(void);
 
 
 /*
- * comm_select_init
- *
  * This is a needed exported function which will be called to initialise
  * the network loop code.
  */
 void
-comm_select_init(void)
+Comm::SelectLoopInit(void)
 {
-
     pevents = (struct epoll_event *) xmalloc(SQUID_MAXFD * sizeof(struct epoll_event));
 
     if (!pevents) {
@@ -121,25 +120,21 @@ static const char* epolltype_atoi(int x)
     }
 }
 
-/*
- * comm_setselect
- *
+/**
  * This is a needed exported function which will be called to register
  * and deregister interest in a pending IO state for a given FD.
- *
  */
 void
-commSetSelect(int fd, unsigned int type, PF * handler,
-              void *client_data, time_t timeout)
+Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
 {
     fde *F = &fd_table[fd];
     int epoll_ctl_type = 0;
 
     struct epoll_event ev;
     assert(fd >= 0);
-    debugs(5, DEBUG_EPOLL ? 0 : 8, "commSetSelect(FD " << fd << ",type=" << type <<
-           ",handler=" << handler << ",client_data=" << client_data <<
-           ",timeout=" << timeout << ")");
+    debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "FD " << fd << ", type=" << type <<
+           ", handler=" << handler << ", client_data=" << client_data <<
+           ", timeout=" << timeout);
 
     if (RUNNING_ON_VALGRIND) {
         /* Keep valgrind happy.. complains about uninitialized bytes otherwise */
@@ -198,7 +193,7 @@ commSetSelect(int fd, unsigned int type, PF * handler,
         F->epoll_state = ev.events;
 
         if (epoll_ctl(kdpfd, epoll_ctl_type, fd, &ev) < 0) {
-            debugs(5, DEBUG_EPOLL ? 0 : 8, "commSetSelect: epoll_ctl(," << epolltype_atoi(epoll_ctl_type) <<
+            debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "epoll_ctl(," << epolltype_atoi(epoll_ctl_type) <<
                    ",,): failed on FD " << fd << ": " << xstrerror());
         }
     }
@@ -208,11 +203,11 @@ commSetSelect(int fd, unsigned int type, PF * handler,
 }
 
 void
-commResetSelect(int fd)
+Comm::ResetSelect(int fd)
 {
     fde *F = &fd_table[fd];
     F->epoll_state = 0;
-    commSetSelect(fd, 0, NULL, NULL, 0);
+    SetSelect(fd, 0, NULL, NULL, 0);
 }
 
 
@@ -235,8 +230,7 @@ commIncomingStats(StoreEntry * sentry)
     statHistDump(&f->select_fds_hist, sentry, statHistIntDumper);
 }
 
-/*
- * comm_select
+/**
  * Check all connections for new connections and input data that is to be
  * processed. Also check for connections with data queued and whether we can
  * write it out.
@@ -246,9 +240,8 @@ commIncomingStats(StoreEntry * sentry)
  * comm_setselect and fd_table[] and calls callbacks for IO ready
  * events.
  */
-
 comm_err_t
-comm_select(int msec)
+Comm::DoSelect(int msec)
 {
     int num, i,fd;
     fde *F;
@@ -291,7 +284,7 @@ comm_select(int msec)
     for (i = 0, cevents = pevents; i < num; i++, cevents++) {
         fd = cevents->data.fd;
         F = &fd_table[fd];
-        debugs(5, DEBUG_EPOLL ? 0 : 8, "comm_select(): got FD " << fd << " events=" <<
+        debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "got FD " << fd << " events=" <<
                std::hex << cevents->events << " monitoring=" << F->epoll_state <<
                " F->read_handler=" << F->read_handler << " F->write_handler=" << F->write_handler);
 
@@ -299,7 +292,7 @@ comm_select(int msec)
 
         if (cevents->events & (EPOLLIN|EPOLLHUP|EPOLLERR) || F->flags.read_pending) {
             if ((hdl = F->read_handler) != NULL) {
-                debugs(5, DEBUG_EPOLL ? 0 : 8, "comm_select(): Calling read handler on FD " << fd);
+                debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "Calling read handler on FD " << fd);
                 PROF_start(comm_write_handler);
                 F->flags.read_pending = 0;
                 F->read_handler = NULL;
@@ -307,24 +300,24 @@ comm_select(int msec)
                 PROF_stop(comm_write_handler);
                 statCounter.select_fds++;
             } else {
-                debugs(5, DEBUG_EPOLL ? 0 : 8, "comm_select(): no read handler for FD " << fd);
+                debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "no read handler for FD " << fd);
                 // remove interest since no handler exist for this event.
-                commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+                SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
             }
         }
 
         if (cevents->events & (EPOLLOUT|EPOLLHUP|EPOLLERR)) {
             if ((hdl = F->write_handler) != NULL) {
-                debugs(5, DEBUG_EPOLL ? 0 : 8, "comm_select(): Calling write handler on FD " << fd);
+                debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "Calling write handler on FD " << fd);
                 PROF_start(comm_read_handler);
                 F->write_handler = NULL;
                 hdl(fd, F->write_data);
                 PROF_stop(comm_read_handler);
                 statCounter.select_fds++;
             } else {
-                debugs(5, DEBUG_EPOLL ? 0 : 8, "comm_select(): no write handler for FD " << fd);
+                debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "no write handler for FD " << fd);
                 // remove interest since no handler exist for this event.
-                commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+                SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
             }
         }
     }
@@ -335,7 +328,7 @@ comm_select(int msec)
 }
 
 void
-comm_quick_poll_required(void)
+Comm::QuickPollRequired(void)
 {
     max_poll_time = 10;
 }

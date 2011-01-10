@@ -42,6 +42,7 @@
 #include "comm/IoCallback.h"
 #include "comm/Write.h"
 #include "comm/ListenStateData.h"
+#include "comm/Loops.h"
 #include "CommIO.h"
 #include "CommRead.h"
 #include "ConnectionDetail.h"
@@ -183,7 +184,7 @@ commHandleRead(int fd, void *data)
     }
 
     /* Nope, register for some more IO */
-    commSetSelect(fd, COMM_SELECT_READ, commHandleRead, data, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, commHandleRead, data, 0);
 }
 
 /**
@@ -219,7 +220,7 @@ comm_read(int fd, char *buf, int size, AsyncCall::Pointer &callback)
 
     /* Queue the read */
     ccb->setCallback(Comm::IOCB_READ, callback, (char *)buf, NULL, size);
-    commSetSelect(fd, COMM_SELECT_READ, commHandleRead, ccb, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, commHandleRead, ccb, 0);
 }
 
 /**
@@ -319,7 +320,7 @@ comm_read_cancel(int fd, IOCB *callback, void *data)
     cb->cancel("old comm_read_cancel");
 
     /* And the IO event */
-    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
 void
@@ -349,7 +350,7 @@ comm_read_cancel(int fd, AsyncCall::Pointer &callback)
     cb->cancel("comm_read_cancel");
 
     /* And the IO event */
-    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
 
@@ -936,7 +937,7 @@ ConnectStateData::commResetFD()
         F->local_addr.FreeAddrInfo(AI);
         return 0;
     }
-    commResetSelect(fd);
+    Comm::ResetSelect(fd);
 
     close(fd2);
 
@@ -1036,7 +1037,7 @@ ConnectStateData::connect()
 
     case COMM_INPROGRESS:
         debugs(5, 5, HERE << "FD " << fd << ": COMM_INPROGRESS");
-        commSetSelect(fd, COMM_SELECT_WRITE, ConnectStateData::Connect, this, 0);
+        Comm::SetSelect(fd, COMM_SELECT_WRITE, ConnectStateData::Connect, this, 0);
         break;
 
     case COMM_OK:
@@ -1356,7 +1357,7 @@ comm_lingering_close(int fd)
 
     fd_note(fd, "lingering close");
     commSetTimeout(fd, 10, commLingerTimeout, NULL);
-    commSetSelect(fd, COMM_SELECT_READ, commLingerClose, NULL, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, commLingerClose, NULL, 0);
 }
 
 #endif
@@ -1468,11 +1469,11 @@ _comm_close(int fd, char const *file, int line)
 
     // notify read/write handlers after canceling select reservations, if any
     if (COMMIO_FD_WRITECB(fd)->active()) {
-        commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+        Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
         COMMIO_FD_WRITECB(fd)->finish(COMM_ERR_CLOSING, errno);
     }
     if (COMMIO_FD_READCB(fd)->active()) {
-        commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+        Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
         COMMIO_FD_READCB(fd)->finish(COMM_ERR_CLOSING, errno);
     }
 
@@ -1810,6 +1811,9 @@ comm_init(void)
     conn_close_pool = memPoolCreate("close_handler", sizeof(close_handler));
 
     TheHalfClosed = new DescriptorSet;
+
+    /* setup the select loop module */
+    Comm::SelectLoopInit();
 }
 
 void
@@ -1851,7 +1855,7 @@ commHandleWriteHelper(void * data)
                 !fd_table[head].closing()) {
 
             // wait for the head descriptor to become ready for writing
-            commSetSelect(head, COMM_SELECT_WRITE, Comm::HandleWrite, ccb, 0);
+            Comm::SetSelect(head, COMM_SELECT_WRITE, Comm::HandleWrite, ccb, 0);
             clientInfo->selectWaiting = true;
             return;
         }
@@ -2154,7 +2158,7 @@ checkTimeouts(void)
         if (writeTimedOut(fd)) {
             // We have an active write callback and we are timed out
             debugs(5, 5, "checkTimeouts: FD " << fd << " auto write timeout");
-            commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+            Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
             COMMIO_FD_WRITECB(fd)->finish(COMM_ERROR, ETIMEDOUT);
         } else if (AlreadyTimedOut(F))
             continue;
@@ -2184,7 +2188,7 @@ void CommIO::Initialise()
     fd_open(DoneFD, FD_PIPE, "async-io completetion event: threads");
     commSetNonBlocking(DoneReadFD);
     commSetNonBlocking(DoneFD);
-    commSetSelect(DoneReadFD, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
+    Comm::SetSelect(DoneReadFD, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
     Initialised = true;
 }
 
@@ -2215,7 +2219,7 @@ void
 CommIO::NULLFDHandler(int fd, void *data)
 {
     FlushPipe();
-    commSetSelect(fd, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
 }
 
 void
@@ -2458,7 +2462,7 @@ CommSelectEngine::checkEvents(int timeout)
         checkTimeouts();
     }
 
-    switch (comm_select(timeout)) {
+    switch (Comm::DoSelect(timeout)) {
 
     case COMM_OK:
 

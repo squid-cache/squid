@@ -85,16 +85,20 @@
 
 #include "acl/FilledChecklist.h"
 #include "auth/UserRequest.h"
+#include "base/TextException.h"
 #include "ChunkedCodingParser.h"
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
+#if USE_DELAY_POOLS
+#include "ClientInfo.h"
+#endif
 #include "ClientRequestContext.h"
 #include "clientStream.h"
 #include "comm.h"
 #include "comm/Write.h"
 #include "comm/ListenStateData.h"
-#include "base/TextException.h"
+#include "comm/Loops.h"
 #include "ConnectionDetail.h"
 #include "eui/Config.h"
 #include "fde.h"
@@ -110,12 +114,6 @@
 #include "ProtoPort.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
-#include "Store.h"
-
-#if USE_DELAY_POOLS
-#include "ClientInfo.h"
-#endif
-
 #if USE_SSL
 #include "ssl/context_storage.h"
 #include "ssl/helper.h"
@@ -126,6 +124,7 @@
 #include "ssl/crtd_message.h"
 #include "ssl/certificate_db.h"
 #endif
+#include "Store.h"
 
 #if HAVE_LIMITS
 #include <limits>
@@ -3045,7 +3044,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
         /*
          * Aha, but we don't want a read handler!
          */
-        commSetSelect(io.fd, COMM_SELECT_READ, NULL, NULL, 0);
+        Comm::SetSelect(io.fd, COMM_SELECT_READ, NULL, NULL, 0);
     }
 
 #else
@@ -3262,11 +3261,11 @@ clientNegotiateSSL(int fd, void *data)
         switch (ssl_error) {
 
         case SSL_ERROR_WANT_READ:
-            commSetSelect(fd, COMM_SELECT_READ, clientNegotiateSSL, conn, 0);
+            Comm::SetSelect(fd, COMM_SELECT_READ, clientNegotiateSSL, conn, 0);
             return;
 
         case SSL_ERROR_WANT_WRITE:
-            commSetSelect(fd, COMM_SELECT_WRITE, clientNegotiateSSL, conn, 0);
+            Comm::SetSelect(fd, COMM_SELECT_WRITE, clientNegotiateSSL, conn, 0);
             return;
 
         case SSL_ERROR_SYSCALL:
@@ -3415,7 +3414,7 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
         commSetTcpKeepalive(newfd, s->http.tcp_keepalive.idle, s->http.tcp_keepalive.interval, s->http.tcp_keepalive.timeout);
     }
 
-    commSetSelect(newfd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
+    Comm::SetSelect(newfd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
 
     clientdbEstablished(details->peer, 1);
 
@@ -3532,10 +3531,8 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
     // commSetTimeout() was called for this request before we switched.
 
     // Disable the client read handler until peer selection is complete
-    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
-
-    commSetSelect(fd, COMM_SELECT_READ, clientNegotiateSSL, this, 0);
-
+    Comm::SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, clientNegotiateSSL, this, 0);
     switchedToHttps_ = true;
     return true;
 }

@@ -33,10 +33,11 @@
  */
 
 #include "squid.h"
+#include "comm.h"
+#include "comm/Loops.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
 #include "ip/tools.h"
-#include "comm.h"
 #include "SquidTime.h"
 
 // Instance global to be available in main() and elsewhere.
@@ -144,7 +145,7 @@ IcmpSquid::Recv()
     pingerReplyData preply;
     static Ip::Address F;
 
-    commSetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, NULL, 0);
+    Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, NULL, 0);
     memset(&preply, '\0', sizeof(pingerReplyData));
     n = comm_udp_recv(icmp_sock,
                       (char *) &preply,
@@ -247,7 +248,7 @@ IcmpSquid::Open(void)
 
     fd_note(icmp_sock, "pinger");
 
-    commSetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, NULL, 0);
+    Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, NULL, 0);
 
     commSetTimeout(icmp_sock, -1, NULL, NULL);
 
