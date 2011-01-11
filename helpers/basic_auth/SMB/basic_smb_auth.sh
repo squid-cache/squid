@@ -47,13 +47,13 @@ else
   addropt=""
 fi
 echo "Query address options: $addropt"
-dcip=`$SAMBAPREFIX/bin/nmblookup $addropt "$PASSTHROUGH#1c" | awk '/^[0-9.]+ / { print $1 ; exit }'`
+dcip=`nmblookup $addropt "$PASSTHROUGH#1c" | awk '/^[0-9.]+ / { print $1 ; exit }'`
 echo "Domain controller IP address: $dcip"
 [ -n "$dcip" ] || exit 1
 
 # All right, we have the IP address of a domain controller,
 # but we need its name too
-dcname=`$SAMBAPREFIX/bin/nmblookup -A $dcip | awk '$2 == "<00>" { print $1 ; exit }'`
+dcname=`nmblookup -A $dcip | awk '$2 == "<00>" { print $1 ; exit }'`
 echo "Domain controller NETBIOS name: $dcname"
 [ -n "$dcname" ] || exit 1
 
@@ -63,7 +63,7 @@ export USER
 
 # Read the contents of the file $AUTHFILE on the $AUTHSHARE share
 authfilebs=`echo "$AUTHFILE" | tr / '\\\\'`
-authinfo=`$SAMBAPREFIX/bin/smbclient "//$dcname/$AUTHSHARE" -I $dcip -d 0 -E -W "$DOMAINNAME" -c "get $authfilebs -" 2>/dev/null`
+authinfo=`smbclient "//$dcname/$AUTHSHARE" -I $dcip -d 0 -E -W "$DOMAINNAME" -c "get $authfilebs -" 2>/dev/null`
 echo "Contents of //$dcname/$AUTHSHARE/$AUTHFILE: $authinfo"
 
 # Allow for both \n and \r\n end-of-line termination
