@@ -121,7 +121,7 @@ echo "/* AUTO-GENERATED FILE */" >>${ROOT}/lib/profiler/list
 echo "#if USE_XPROF_STATS" >>${ROOT}/lib/profiler/list
 echo "typedef enum {" >>${ROOT}/lib/profiler/list
 echo "XPROF_PROF_UNACCOUNTED," >>${ROOT}/lib/profiler/list
-grep -R -h "PROF_start.*" ./* | sed -e 's/ //g; s/PROF_start(/XPROF_/; s/);/,/' | sort -u >>${ROOT}/lib/profiler/list
+grep -R -h "PROF_start.*" ./* | grep -v probename | sed -e 's/ //g; s/PROF_start(/XPROF_/; s/);/,/' | sort -u >>${ROOT}/lib/profiler/list
 echo "  XPROF_LAST } xprof_type;" >>${ROOT}/lib/profiler/list
 echo "#endif" >>${ROOT}/lib/profiler/list
 echo "#endif" >>${ROOT}/lib/profiler/list
