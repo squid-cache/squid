@@ -55,8 +55,6 @@ const char *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0",
                            NULL
                           };
 
-int SMB_Term(void);
-int SMBlib_Set_Sock_NoDelay(SMB_Handle_Type Con_Handle, BOOL yn);
 
 /* Initialize the SMBlib package     */
 
@@ -79,20 +77,6 @@ int SMB_Init()
 
 }
 
-int SMB_Term()
-
-{
-
-#ifdef SMBLIB_INSTRUMENT
-
-    SMBlib_Instrument_Term();       /* Clean up and print results */
-
-#endif
-
-    return 0;
-
-}
-
 /* SMB_Create: Create a connection structure and return for later use */
 /* We have other helper routines to set variables                     */
 
@@ -102,24 +86,6 @@ SMB_Handle_Type SMB_Create_Con_Handle()
 
     SMBlib_errno = SMBlibE_NotImpl;
     return(NULL);
-
-}
-
-int SMBlib_Set_Sock_NoDelay(SMB_Handle_Type Con_Handle, BOOL yn)
-
-{
-
-
-    if (RFCNB_Set_Sock_NoDelay(Con_Handle -> Trans_Connect, yn) < 0) {
-
-#ifdef DEBUG
-#endif
-
-        fprintf(stderr, "Setting no-delay on TCP socket failed ...\n");
-
-    }
-
-    return(0);
 
 }
 
