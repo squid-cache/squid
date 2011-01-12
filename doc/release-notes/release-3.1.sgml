@@ -685,39 +685,17 @@ This section gives a thorough account of those changes in three categories:
 		follow_x_forwarded_for allow my_other_proxy
 	</verb>
 
+	<tag>ftp_eprt</tag>
+	<p>New directive to control whether Squid uses EPRT extension for
+	   efficient NAT handling and IPv6 protocol support in FTP.
+
 	<tag>ftp_epsv</tag>
-	<verb>
-	FTP Protocol extensions permit the use of a special "EPSV" command.
-
-	NATs may be able to put the connection on a "fast path" through the
-	translator using EPSV, as the EPRT command will never be used and therefore,
-	translation of the data portion of the segments will never be needed.
-
-	Turning this OFF will prevent EPSV being attempted.
-
-	WARNING: Doing so will convert Squid back to the old behavior with all
-	the related problems with external NAT devices/layers.
-
-	Requires ftp_passive to be ON (default) for any effect.
-	</verb>
+	<p>New directive to control whether Squid uses EPSV extension for
+	   efficient NAT handling and IPv6 protocol support in FTP.
 
 	<tag>ftp_epsv_all</tag>
-	<verb>
-	FTP Protocol extensions permit the use of a special "EPSV ALL" command.
-
-	NATs may be able to put the connection on a "fast path" through the
-	translator, as the EPRT command will never be used and therefore,
-	translation of the data portion of the segments will never be needed.
-
-	When a client only expects to do two-way FTP transfers this may be useful.
-	If Squid finds that it must do a three-way FTP transfer after issuing
-	an EPSV ALL command, the FTP session will fail.
-
-	If you have any doubts about this option do not use it.
-	Squid will nicely attempt all other connection methods.
-
-	Requires ftp_passive to be ON (default)
-	</verb>
+	<p>New directive to control whether Squid uses "EPSV ALL" extension for
+	   efficient NAT handling and IPv6 protocol support in FTP.
 
 	<tag>forward_max_tries</tag>
 	<p>Controls how many different forward paths Squid will try
