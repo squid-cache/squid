@@ -1377,6 +1377,10 @@ if test "x$with_netfilter_conntrack" != "xno"; then
             AC_MSG_ERROR([--with-netfilter-conntrack specified but libnetfilter-conntrack headers not found])
         fi
         with_netfilter_conntrack=no])
+  # If nothing is broken; enable the libraries usage.
+  if test "x$with_netfilter_conntrack" != "xno"; then
+    with_netfilter_conntrack=yes
+  fi
 fi
 AC_MSG_NOTICE([Linux Netfilter Conntrack support enabled: ${with_netfilter_conntrack} ${squid_opt_netfilterconntrackpath}])
 
