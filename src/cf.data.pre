@@ -3686,6 +3686,17 @@ DOC_START
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
+NAME: max_stale
+COMMENT: time-units
+TYPE: time_t
+LOC: Config.maxStale
+DEFAULT: 1 week
+DOC_START
+	This option puts an upper limit on how stale content Squid
+	will serve from the cache if cache validation fails.
+	Can be overriden by the refresh_pattern max-stale option.
+DOC_END
+
 NAME: refresh_pattern
 TYPE: refreshpattern
 LOC: Config.Refresh
@@ -3718,6 +3729,7 @@ DOC_START
 		 ignore-must-revalidate
 		 ignore-private
 		 ignore-auth
+		 max-stale=NN
 		 refresh-ims
 		 store-stale
 
@@ -3782,6 +3794,10 @@ DOC_START
 		present, or if they're already stale. By default, Squid will 
 		not cache such responses because they usually can't be
 		reused. Note that such responses will be stale by default.
+
+		max-stale=NN provide a maximum staleness factor. Squid won't
+		serve objects more stale than this even if it failed to
+		validate the object. Default: use the max_stale global limit.
 
 	Basically a cached object is:
 

@@ -2651,6 +2651,9 @@ dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
                           (int) (100.0 * head->pct + 0.5),
                           (int) head->max / 60);
 
+        if (head->max_stale >= 0)
+            storeAppendPrintf(entry, " max-stale=%d", head->max_stale);
+
         if (head->flags.refresh_ims)
             storeAppendPrintf(entry, " refresh-ims");
 
@@ -2704,6 +2707,7 @@ parse_refreshpattern(refresh_t ** head)
     time_t max = 0;
     int refresh_ims = 0;
     int store_stale = 0;
+    int max_stale = -1;
 
 #if USE_HTTP_VIOLATIONS
 
@@ -2782,6 +2786,8 @@ parse_refreshpattern(refresh_t ** head)
             refresh_ims = 1;
         } else if (!strcmp(token, "store-stale")) {
             store_stale = 1;
+        } else if (!strncmp(token, "max-stale=", 10)) {
+            max_stale = atoi(token + 10);
 #if USE_HTTP_VIOLATIONS
 
         } else if (!strcmp(token, "override-expire"))
@@ -2809,7 +2815,7 @@ parse_refreshpattern(refresh_t ** head)
 #endif
 
         } else
-            debugs(22, 0, "redreshAddToList: Unknown option '" << pattern << "': " << token);
+            debugs(22, 0, "refreshAddToList: Unknown option '" << pattern << "': " << token);
     }
 
     if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
@@ -2837,6 +2843,8 @@ parse_refreshpattern(refresh_t ** head)
 
     if (store_stale)
         t->flags.store_stale = 1;
+
+    t->max_stale = max_stale;
 
 #if USE_HTTP_VIOLATIONS
 
