@@ -5381,7 +5381,7 @@ DOC_START
 	    Example: deny_info ERR_CUSTOM_ACCESS_DENIED bad_guys
 
 	Alternatively you can specify an error URL. The browsers will
-	get redirected (302) to the specified URL. %s in the redirection
+	get redirected (302 or 307) to the specified URL. %s in the redirection
 	URL will be replaced by the requested URL.
 
 	Alternatively you can tell Squid to reset the TCP connection

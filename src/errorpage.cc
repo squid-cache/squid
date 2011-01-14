@@ -870,7 +870,10 @@ ErrorState::BuildHttpReply()
 
     if (strchr(name, ':')) {
         /* Redirection */
-        rep->setHeaders(HTTP_MOVED_TEMPORARILY, NULL, "text/html", 0, 0, -1);
+        if (request->method != METHOD_GET && request->method != METHOD_HEAD && request->http_ver >= HttpVersion(1,1))
+            rep->setHeaders(HTTP_TEMPORARY_REDIRECT, NULL, "text/html", 0, 0, -1);
+        else
+            rep->setHeaders(HTTP_MOVED_TEMPORARILY, NULL, "text/html", 0, 0, -1);
 
         if (request) {
             char *quoted_url = rfc1738_escape_part(urlCanonical(request));
