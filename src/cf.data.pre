@@ -5957,12 +5957,18 @@ DOC_START
 	    you may also specify them by your custom file name:
 	    Example: deny_info ERR_CUSTOM_ACCESS_DENIED bad_guys
 
+	By defaut Squid will send "403 Forbidden". A different 4xx or 5xx
+	may be specified by prefixing the file name with the code and a colon.
+	e.g. 404:ERR_CUSTOM_ACCESS_DENIED
+
 	Alternatively you can tell Squid to reset the TCP connection
 	by specifying TCP_RESET.
 
 	Or you can specify an error URL or URL pattern. The browsers will
-	get redirected (302) to the specified URL after formatting tags have
-	been replaced.
+	get redirected to the specified URL after formatting tags have
+	been replaced. Redirect will be done with 302 or 307 according to
+	HTTP/1.1 specs. A different 3xx code may be specified by prefixing
+	the URL. e.g. 303:http://example.com/
 
 	URL FORMAT TAGS:
 		%a	- username (if available. Password NOT included)
