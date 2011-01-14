@@ -681,12 +681,12 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'g':
         if (building_deny_info_url) break;
-        /* FTP SERVER MESSAGE */
-        if (ftp.server_msg)
-            wordlistCat(ftp.server_msg, &mb);
-        else if (ftp.listing) {
+        /* FTP SERVER RESPONSE */
+        if (ftp.listing) {
             mb.append(ftp.listing->content(), ftp.listing->contentSize());
             do_quote = 0;
+        } else if (ftp.server_msg) {
+            wordlistCat(ftp.server_msg, &mb);
         }
         break;
 
