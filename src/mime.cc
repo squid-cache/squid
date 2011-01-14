@@ -49,6 +49,7 @@ class MimeIcon : public StoreClient
 
 public:
     MimeIcon ();
+    ~MimeIcon ();
     void setName (char const *);
     char const * getName () const;
     void _free();
@@ -136,6 +137,11 @@ mimeGetEntry(const char *fn, int skip_encodings)
 
 MimeIcon::MimeIcon () : icon (NULL), url (NULL)
 {}
+
+MimeIcon::~MimeIcon ()
+{
+    _free();
+}
 
 void
 MimeIcon::setName (char const *aString)
