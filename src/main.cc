@@ -42,6 +42,7 @@
 #if USE_DELAY_POOLS
 #include "ClientDelayConfig.h"
 #endif
+#include "comm.h"
 #include "ConfigParser.h"
 #include "CpuAffinity.h"
 #if USE_DELAY_POOLS
@@ -62,23 +63,10 @@
 #include "htcp.h"
 #include "StoreFileSystem.h"
 #include "DiskIO/DiskIOModule.h"
-#include "comm.h"
 #include "ipc/Kids.h"
 #include "ipc/Coordinator.h"
 #include "ipc/Strand.h"
 #include "ip/tools.h"
-#if USE_EPOLL
-#include "comm_epoll.h"
-#endif
-#if USE_KQUEUE
-#include "comm_kqueue.h"
-#endif
-#if USE_POLL
-#include "comm_poll.h"
-#endif
-#if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
-#include "comm_select.h"
-#endif
 #include "SquidTime.h"
 #include "SwapDir.h"
 #include "forward.h"
@@ -1383,8 +1371,6 @@ SquidMain(int argc, char **argv)
 
     comm_init();
 
-    comm_select_init();
-
     mainInitialize();
 
     test_access();
@@ -1435,8 +1421,6 @@ SquidMain(int argc, char **argv)
 
     /* init comm module */
     comm_init();
-
-    comm_select_init();
 
     if (opt_no_daemon) {
         /* we have to init fdstat here. */

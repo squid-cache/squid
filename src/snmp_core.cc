@@ -33,6 +33,7 @@
 #include "acl/FilledChecklist.h"
 #include "cache_snmp.h"
 #include "comm.h"
+#include "comm/Loops.h"
 #include "ipc/StartListening.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
@@ -356,8 +357,7 @@ snmpIncomingConnectionOpened(int fd, int errNo)
     if (theInSnmpConnection < 0)
         fatal("Cannot open Incoming SNMP Port");
 
-    commSetSelect(theInSnmpConnection, COMM_SELECT_READ, snmpHandleUdp, NULL,
-                  0);
+    Comm::SetSelect(theInSnmpConnection, COMM_SELECT_READ, snmpHandleUdp, NULL, 0);
 
     debugs(1, 1, "Accepting SNMP messages on " << Config.Addrs.snmp_incoming <<
            ", FD " << theInSnmpConnection << ".");
@@ -373,8 +373,7 @@ snmpOutgoingConnectionOpened(int fd, int errNo)
     if (theOutSnmpConnection < 0)
         fatal("Cannot open Outgoing SNMP Port");
 
-    commSetSelect(theOutSnmpConnection, COMM_SELECT_READ, snmpHandleUdp, NULL,
-                  0);
+    Comm::SetSelect(theOutSnmpConnection, COMM_SELECT_READ, snmpHandleUdp, NULL, 0);
 
     debugs(1, 1, "Outgoing SNMP messages on " << Config.Addrs.snmp_outgoing <<
            ", FD " << theOutSnmpConnection << ".");
@@ -426,7 +425,7 @@ snmpConnectionShutdown(void)
      */
     assert(theOutSnmpConnection > -1);
 
-    commSetSelect(theOutSnmpConnection, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(theOutSnmpConnection, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
 void
@@ -459,7 +458,7 @@ snmpHandleUdp(int sock, void *not_used)
 
     debugs(49, 5, "snmpHandleUdp: Called.");
 
-    commSetSelect(sock, COMM_SELECT_READ, snmpHandleUdp, NULL, 0);
+    Comm::SetSelect(sock, COMM_SELECT_READ, snmpHandleUdp, NULL, 0);
 
     memset(buf, '\0', SNMP_REQUEST_SIZE);
 

@@ -36,6 +36,7 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "CacheManager.h"
+#include "comm/Loops.h"
 #include "event.h"
 #include "errorpage.h"
 #include "fde.h"
@@ -585,11 +586,11 @@ FwdState::negotiateSSL(int fd)
         switch (ssl_error) {
 
         case SSL_ERROR_WANT_READ:
-            commSetSelect(fd, COMM_SELECT_READ, fwdNegotiateSSLWrapper, this, 0);
+            Comm::SetSelect(fd, COMM_SELECT_READ, fwdNegotiateSSLWrapper, this, 0);
             return;
 
         case SSL_ERROR_WANT_WRITE:
-            commSetSelect(fd, COMM_SELECT_WRITE, fwdNegotiateSSLWrapper, this, 0);
+            Comm::SetSelect(fd, COMM_SELECT_WRITE, fwdNegotiateSSLWrapper, this, 0);
             return;
 
         default:

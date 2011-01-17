@@ -52,14 +52,14 @@
  * so deferred reads aren't required.
  *  -- adrian
  */
-
-#include "squid.h"
+#include "config.h"
 
 #if USE_KQUEUE
 
-#include "comm_kqueue.h"
-#include "Store.h"
+#include "squid.h"
+#include "comm/Loops.h"
 #include "fde.h"
+#include "Store.h"
 #include "SquidTime.h"
 
 #if HAVE_SYS_EVENT_H
@@ -165,7 +165,7 @@ kq_update_events(int fd, short filter, PF * handler)
  * the network loop code.
  */
 void
-comm_select_init(void)
+Comm::SelectLoopInit(void)
 {
     kq = kqueue();
 
@@ -189,8 +189,7 @@ comm_select_init(void)
  * and deregister interest in a pending IO state for a given FD.
  */
 void
-commSetSelect(int fd, unsigned int type, PF * handler,
-              void *client_data, time_t timeout)
+Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
 {
     fde *F = &fd_table[fd];
     assert(fd >= 0);
@@ -214,7 +213,7 @@ commSetSelect(int fd, unsigned int type, PF * handler,
 }
 
 void
-commResetSelect(int fd)
+Comm::ResetSelect(int fd)
 {
     fde *F = &fd_table[fd];
     if (F->read_handler) {
@@ -241,7 +240,7 @@ commResetSelect(int fd)
  */
 
 comm_err_t
-comm_select(int msec)
+Comm::Select(int msec)
 {
     int num, i;
 
@@ -322,7 +321,7 @@ comm_select(int msec)
 }
 
 void
-comm_quick_poll_required(void)
+Comm::QuickPollRequired(void)
 {
     max_poll_time = 10;
 }
