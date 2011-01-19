@@ -11,12 +11,13 @@
 #include "CacheManager.h"
 #include "comm.h"
 #include "ipc/Coordinator.h"
-#include "ipc/FdNotes.h"
 #include "ipc/SharedListen.h"
 #include "mgr/Inquirer.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
-#include "mgr/StoreToCommWriter.h"
+#include "snmpx/Inquirer.h"
+#include "snmpx/Request.h"
+#include "snmpx/Response.h"
 
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
@@ -74,6 +75,16 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
         handleCacheMgrResponse(Mgr::Response(message));
         break;
 
+    case mtSnmpRequest:
+        debugs(54, 6, HERE << "SNMP request");
+        handleSnmpRequest(Snmp::Request(message));
+        break;
+
+    case mtSnmpResponse:
+        debugs(54, 6, HERE << "SNMP response");
+        handleSnmpResponse(Snmp::Response(message));
+        break;
+
     default:
         debugs(54, 1, HERE << "Unhandled message type: " << message.type());
         break;
@@ -123,14 +134,33 @@ Ipc::Coordinator::handleCacheMgrRequest(const Mgr::Request& request)
 
     Mgr::Action::Pointer action =
         CacheManager::GetInstance()->createRequestedAction(request.params);
-    AsyncJob::Start(new Mgr::Inquirer(action,
-                                      Mgr::ImportHttpFdIntoComm(request.fd), request, strands_));
+    AsyncJob::Start(new Mgr::Inquirer(action, request, strands_));
 }
 
 void
 Ipc::Coordinator::handleCacheMgrResponse(const Mgr::Response& response)
 {
     Mgr::Inquirer::HandleRemoteAck(response);
+}
+
+void
+Ipc::Coordinator::handleSnmpRequest(const Snmp::Request& request)
+{
+    debugs(54, 4, HERE);
+
+    Snmp::Response response(request.requestId);
+    TypedMsgHdr message;
+    response.pack(message);
+    SendMessage(MakeAddr(strandAddrPfx, request.requestorId), message);
+
+    AsyncJob::Start(new Snmp::Inquirer(request, strands_));
+}
+
+void
+Ipc::Coordinator::handleSnmpResponse(const Snmp::Response& response)
+{
+    debugs(54, 4, HERE);
+    Snmp::Inquirer::HandleRemoteAck(response);
 }
 
 int

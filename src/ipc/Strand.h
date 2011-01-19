@@ -10,6 +10,7 @@
 
 #include "ipc/Port.h"
 #include "mgr/forward.h"
+#include "snmpx/forward.h"
 
 
 namespace Ipc
@@ -34,6 +35,8 @@ private:
     void handleRegistrationResponse(const StrandCoord &strand);
     void handleCacheMgrRequest(const Mgr::Request& request);
     void handleCacheMgrResponse(const Mgr::Response& response);
+    void handleSnmpRequest(const Snmp::Request& request);
+    void handleSnmpResponse(const Snmp::Response& response);
 
 private:
     bool isRegistered; ///< whether Coordinator ACKed registration (unused)

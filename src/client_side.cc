@@ -1060,7 +1060,7 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
              * intersection of "have" and "need" ranges must not be empty
              */
             assert(http->out.offset < i->currentSpec()->offset + i->currentSpec()->length);
-            assert(http->out.offset + available.size() > i->currentSpec()->offset);
+            assert(http->out.offset + available.size() > (uint64_t)i->currentSpec()->offset);
 
             /*
              * put boundary and headers at the beginning of a range in a
@@ -1118,7 +1118,7 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
         /* adjust for not to be transmitted bytes */
         http->out.offset = nextOffset;
 
-        if (available.size() <= skip)
+        if (available.size() <= (uint64_t)skip)
             return;
 
         available.start += skip;

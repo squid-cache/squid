@@ -52,7 +52,7 @@ public:
     C start;
     C end;
     Range intersection (Range const &) const;
-    C size() const;
+    size_t size() const;
 };
 
 template <class C>
@@ -77,7 +77,7 @@ Range<C>::intersection (Range const &rhs) const
 }
 
 template<class C>
-C
+size_t
 Range<C>::size() const
 {
     return end > start ? end - start : 0;
