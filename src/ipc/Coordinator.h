@@ -15,6 +15,7 @@
 #include "ipc/SharedListen.h"
 #include "ipc/StrandCoords.h"
 #include "mgr/forward.h"
+#include "snmpx/forward.h"
 
 #include <map>
 
@@ -46,6 +47,8 @@ protected:
     void handleSharedListenRequest(const SharedListenRequest& request);
     void handleCacheMgrRequest(const Mgr::Request& request);
     void handleCacheMgrResponse(const Mgr::Response& response);
+    void handleSnmpRequest(const Snmp::Request& request);
+    void handleSnmpResponse(const Snmp::Response& response);
 
     /// calls comm_open_listener()
     int openListenSocket(const SharedListenRequest& request, int &errNo);

@@ -3370,6 +3370,7 @@ AC_CONFIG_FILES([\
 	src/ipc/Makefile \
 	src/ssl/Makefile \
 	src/mgr/Makefile \
+	src/snmpx/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \
 	icons/Makefile \
