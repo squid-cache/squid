@@ -25,6 +25,7 @@ SBUF_SOURCE= \
 	MemBlob.cc
 
 SNMP_ALL_SOURCE = \
+	snmp_core.h \
 	snmp_core.cc \
 	snmp_agent.cc
 if USE_SNMP
@@ -48,6 +49,11 @@ SSL_LIBS = \
 	ssl/libsslsquid.la
 else
 SSL_LOCAL_LIBS =
+endif
+
+if USE_SNMP
+SUBDIRS += snmpx
+SNMPXLIB = snmpx/libsnmpx.la
 endif
 
 if USE_ADAPTATION
@@ -547,6 +553,7 @@ squid_LDADD = \
 	$(CRYPTLIB) \
 	$(REGEXLIB) \
 	$(SNMPLIB) \
+	$(SNMPXLIB) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \

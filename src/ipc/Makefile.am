@@ -28,7 +28,13 @@ libipc_la_SOURCES = \
 	Port.h \
 	Strand.cc \
 	Strand.h \
-	\
-	forward.h
+	forward.h \
+	Forwarder.cc \
+	Forwarder.h \
+	Inquirer.cc \
+	Inquirer.h \
+	Request.h \
+	Response.cc \
+	Response.h
 
 DEFS += -DDEFAULT_PREFIX=\"$(prefix)\"
