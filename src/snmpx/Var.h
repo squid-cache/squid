@@ -45,7 +45,7 @@ public:
     unsigned int asGauge() const; ///< returns variable value as unsigned int
     int asCounter() const; ///< returns variable value as Counter32
     long long int asCounter64() const; ///< returns variable value as Counter64
-    time_t asTimeTicks() const; ///< returns variable value as time ticks
+    unsigned int asTimeTicks() const; ///< returns variable value as time ticks
     Range<const oid*> asObject() const; ///< returns variable value as object oid
     Range<const u_char*> asString() const; ///< returns variable value as chars string
     ipaddr asIpAddress() const; ///< returns variable value as ip address
@@ -55,7 +55,7 @@ public:
     void setGauge(unsigned int value); ///< assign unsigned int value to variable
     void setString(const Range<const u_char*>& string); ///< assign string to variable
     void setObject(const Range<const oid*>& object); ///< assign object oid to variable
-    void setTimeTicks(time_t ticks); ///<assign time_t value to variable
+    void setTimeTicks(unsigned int ticks); ///<assign unsigned int (time) value to variable
     void setIpAddress(ipaddr addr); ///< assign sockaddr_in to variable
     void setCounter64(long long int counter); ///< assign Counter64 value to variable
 
