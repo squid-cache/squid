@@ -228,12 +228,12 @@ Snmp::Var::asCounter64() const
     return *reinterpret_cast<long long int*>(val.integer);
 }
 
-time_t
+unsigned int
 Snmp::Var::asTimeTicks() const
 {
     Must(type == SMI_TIMETICKS);
-    Must(val.integer != NULL && val_len == sizeof(time_t));
-    return *reinterpret_cast<time_t*>(val.integer);
+    Must(val.integer != NULL && val_len == sizeof(unsigned int));
+    return *reinterpret_cast<unsigned int*>(val.integer);
 }
 
 Range<const oid*>
@@ -299,7 +299,7 @@ Snmp::Var::setCounter64(long long int counter)
 }
 
 void
-Snmp::Var::setTimeTicks(time_t ticks)
+Snmp::Var::setTimeTicks(unsigned int ticks)
 {
     setValue(&ticks, sizeof(ticks), SMI_TIMETICKS);
 }
