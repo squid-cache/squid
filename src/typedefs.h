@@ -47,12 +47,6 @@ typedef struct {
     size_t kb;
 } kb_t;
 
-//UNUSED		typedef struct _acl_time_data acl_time_data;
-//UNUSED		typedef struct _acl_name_list acl_name_list;
-//UNUSED		typedef struct _acl_deny_info_list acl_deny_info_list;
-//UNUSED		typedef class AuthUser auth_user_t;
-
-
 /// \ingroup AuthAPI
 /// \deprecated Use AuthUserHashPointer instead.
 typedef struct AuthUserHashPointer auth_user_hash_pointer;
@@ -63,20 +57,8 @@ typedef struct AuthUserHashPointer auth_user_hash_pointer;
 class AuthConfig;
 typedef Vector<AuthConfig *> authConfig;
 
-//UNUSED		typedef struct _acl_snmp_comm acl_snmp_comm;
-//UNUSED		typedef class ACLList acl_list;
-//UNUSED		typedef struct _acl_address acl_address;
-//UNUSED		typedef struct _acl_tos acl_tos;
-//UNUSED		typedef struct _acl_size_t acl_size_t;
-//UNUSED		class ACLChecklist;
-//UNUSED		typedef struct _ushortlist ushortlist;
-//UNUSED		typedef struct _relist relist;
-
 struct http_port_list;
 struct https_port_list;
-
-//UNUSED	typedef struct _SquidConfig SquidConfig;
-//UNUSED	typedef struct _SquidConfig2 SquidConfig2;
 
 typedef struct _close_handler close_handler;
 
@@ -86,25 +68,15 @@ typedef struct _dwrite_q dwrite_q;
 
 typedef struct _ETag ETag;
 
-//UNUSED		class fde;
-
 typedef struct _fileMap fileMap;
 
 typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;
 
-//UNUSED		class HttpHeaderFieldInfo;
-//UNUSED		class HttpHeader;
-//UNUSED		class HttpHdrCc;
-
 typedef struct _TimeOrTag TimeOrTag;
-
-//UNUSED		class HttpHeaderFieldStat;
 
 typedef struct _HttpHeaderStat HttpHeaderStat;
 
 typedef struct _HttpBody HttpBody;
-
-//UNUSED		class HttpReply;
 
 typedef struct _ConnCloseHelperData ConnCloseHelperData;
 
@@ -118,10 +90,6 @@ typedef struct _DynPool DynPool;
 
 typedef struct _DigestFetchState DigestFetchState;
 
-//UNUSED		class PeerDigest;
-
-//UNUSED typedef struct _peer peer;
-
 typedef struct _net_db_name net_db_name;
 
 typedef struct _net_db_peer net_db_peer;
@@ -134,19 +102,11 @@ typedef struct _Meta_data Meta_data;
 
 typedef struct _iostats iostats;
 
-//UNUSED		class MemBuf;
-
-//UNUSED		class store_client;
-
-//UNUSED		class SwapDir;
-
 typedef struct _http_state_flags http_state_flags;
 
 typedef struct _header_mangler header_mangler;
 
 typedef struct _body_size body_size;
-
-//UNUSED		class HttpRequest;
 
 typedef struct _cachemgr_passwd cachemgr_passwd;
 
@@ -156,7 +116,6 @@ typedef struct _CommWriteStateData CommWriteStateData;
 
 typedef struct _StatCounters StatCounters;
 
-/// \todo DROP: deprecated and no longer used.
 typedef struct _storeSwapLogData storeSwapLogData;
 
 typedef struct _StatHist StatHist;
