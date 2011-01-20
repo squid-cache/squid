@@ -69,7 +69,7 @@ Snmp::Inquirer::aggregate(Response::Pointer aResponse)
     } else {
         aggrPdu.aggregate(response.pdu);
     }
-    return error;
+    return !error;
 }
 
 /// called when the some external force closed our socket
