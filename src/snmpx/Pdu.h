@@ -28,6 +28,7 @@ public:
     ~Pdu();
 
     void aggregate(const Pdu& pdu);
+    void fixAggregate();
     void pack(Ipc::TypedMsgHdr& msg) const; ///< prepare for sendmsg()
     void unpack(const Ipc::TypedMsgHdr& msg); ///< restore struct from the message
     int  varCount() const; ///< size of variables list
@@ -41,6 +42,7 @@ public:
 private:
     void init(); ///< initialize members
     void assign(const Pdu& pdu); ///< perform full assignment
+    int aggrCount;  ///< The number of other Pdus merged into
 };
 
 } // namespace Snmp
