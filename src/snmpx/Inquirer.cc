@@ -92,6 +92,7 @@ void
 Snmp::Inquirer::sendResponse()
 {
     debugs(49, 5, HERE);
+    aggrPdu.fixAggregate();
     aggrPdu.command = SNMP_PDU_RESPONSE;
     u_char buffer[SNMP_REQUEST_SIZE];
     int len = sizeof(buffer);
