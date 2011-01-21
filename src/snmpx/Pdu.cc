@@ -44,7 +44,6 @@ Snmp::Pdu::init()
     xmemset(this, 0, sizeof(*this));
     errstat = SNMP_DEFAULT_ERRSTAT;
     errindex = SNMP_DEFAULT_ERRINDEX;
-    aggrCount = 0;
 }
 
 void
