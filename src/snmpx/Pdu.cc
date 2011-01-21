@@ -44,12 +44,14 @@ Snmp::Pdu::init()
     xmemset(this, 0, sizeof(*this));
     errstat = SNMP_DEFAULT_ERRSTAT;
     errindex = SNMP_DEFAULT_ERRINDEX;
+    aggrCount = 0;
 }
 
 void
 Snmp::Pdu::aggregate(const Pdu& pdu)
 {
     Must(varCount() == pdu.varCount());
+    aggrCount++;
     for (variable_list* p_aggr = variables, *p_var = pdu.variables; p_var != NULL;
          p_aggr = p_aggr->next_variable, p_var = p_var->next_variable)
     {
@@ -103,6 +105,7 @@ Snmp::Pdu::assign(const Pdu& pdu)
     trap_type = pdu.trap_type;
     specific_type = pdu.specific_type;
     time = pdu.time;
+    aggrCount = pdu.aggrCount;
     setSystemOid(pdu.getSystemOid());
     setVars(pdu.variables);
 }
@@ -218,4 +221,18 @@ Snmp::Pdu::varCount() const
     for (variable_list* var = variables; var != NULL; var = var->next_variable)
         ++count;
     return count;
+}
+
+void 
+Snmp::Pdu::fixAggregate()
+{
+    if (!aggrCount)
+        return;
+    for (variable_list* p_aggr = variables; p_aggr != NULL; p_aggr = p_aggr->next_variable) {
+        Var& aggr = static_cast<Var&>(*p_aggr);
+        if(snmpAggrType(aggr.name, aggr.name_length) == atAverage) {
+            aggr /= aggrCount;
+        }
+    }
+    aggrCount = 0;
 }
