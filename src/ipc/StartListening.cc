@@ -29,7 +29,7 @@ void
 Ipc::StartListening(int sock_type, int proto, Ip::Address &addr, int flags,
                     FdNoteId fdNote, AsyncCall::Pointer &callback)
 {
-   if (UsingSmp()) { // if SMP is on, share
+    if (UsingSmp()) { // if SMP is on, share
         OpenListenerParams p;
         p.sock_type = sock_type;
         p.proto = proto;
