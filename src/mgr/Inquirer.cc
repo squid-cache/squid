@@ -13,6 +13,7 @@
 #include "ipc/Coordinator.h"
 #include "mgr/ActionWriter.h"
 #include "mgr/Command.h"
+#include "mgr/IntParam.h"
 #include "mgr/Inquirer.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
@@ -39,13 +40,10 @@ Mgr::Inquirer::Inquirer(Action::Pointer anAction, int aFd,
         aggrAction(anAction),
         cause(aCause),
         fd(aFd),
-        strands(coords), pos(strands.begin()),
+        strands(applyQueryParams(coords, aCause.params.queryParams)), pos(strands.begin()),
         requestId(0), closer(NULL), timeout(aggrAction->atomic() ? 10 : 100)
 {
     debugs(16, 5, HERE << "FD " << aFd << " action: " << aggrAction);
-
-    // order by ascending kid IDs; useful for non-aggregatable stats
-    std::sort(strands.begin(), strands.end(), LesserStrandByKidId);
 
     closer = asyncCall(16, 5, "Mgr::Inquirer::noteCommClosed",
                        CommCbMemFunT<Inquirer, CommCloseCbParams>(this, &Inquirer::noteCommClosed));
@@ -86,7 +84,7 @@ Mgr::Inquirer::start()
     Must(aggrAction != NULL);
 
     std::auto_ptr<HttpReply> reply(new HttpReply);
-    reply->setHeaders(HTTP_OK, NULL, "text/plain", -1, squid_curtime, squid_curtime);
+    reply->setHeaders(strands.empty() ? HTTP_BAD_REQUEST : HTTP_OK, NULL, "text/plain", -1, squid_curtime, squid_curtime);
     reply->header.putStr(HDR_CONNECTION, "close"); // until we chunk response
     std::auto_ptr<MemBuf> replyBuf(reply->pack());
     writer = asyncCall(16, 5, "Mgr::Inquirer::noteWroteHeader",
@@ -166,7 +164,7 @@ Mgr::Inquirer::swanSong()
         DequeueRequest(requestId);
         requestId = 0;
     }
-    if (aggrAction->aggregatable()) {
+    if (!strands.empty() && aggrAction->aggregatable()) {
         removeCloseHandler();
         AsyncJob::Start(new ActionWriter(aggrAction, fd));
         fd = -1; // should not close fd because we passed it to ActionWriter
@@ -250,4 +248,50 @@ Mgr::Inquirer::status() const
     buf.Printf(" [FD %d, requestId %u]", fd, requestId);
     buf.terminate();
     return buf.content();
+}
+
+Ipc::StrandCoords
+Mgr::Inquirer::applyQueryParams(const Ipc::StrandCoords& aStrands, const QueryParams& aParams)
+{
+    Ipc::StrandCoords strands;
+
+    QueryParam::Pointer processesParam = cause.params.queryParams.get("processes");
+    QueryParam::Pointer workersParam = cause.params.queryParams.get("workers");
+
+    if (processesParam == NULL || workersParam == NULL) {
+        if (processesParam != NULL) {
+            IntParam* param = dynamic_cast<IntParam*>(processesParam.getRaw());
+            if (param != NULL && param->type == QueryParam::ptInt) {
+                const std::vector<int>& processes = param->value();
+                for (Ipc::StrandCoords::const_iterator iter = aStrands.begin();
+                     iter != aStrands.end(); ++iter)
+                {
+                    if (std::find(processes.begin(), processes.end(), iter->kidId) != processes.end())
+                        strands.push_back(*iter);
+                }
+            }
+        } else if (workersParam != NULL) {
+            IntParam* param = dynamic_cast<IntParam*>(workersParam.getRaw());
+            if (param != NULL && param->type == QueryParam::ptInt) {
+                const std::vector<int>& workers = param->value();
+                for (size_t i = 0; i < aStrands.size(); ++i)
+                {
+                    if (std::find(workers.begin(), workers.end(), i + 1) != workers.end())
+                        strands.push_back(aStrands[i]);
+                }
+            }
+        } else {
+            strands = aStrands;
+        }
+
+        // order by ascending kid IDs; useful for non-aggregatable stats
+        std::sort(strands.begin(), strands.end(), LesserStrandByKidId);
+    }
+
+    debugs(0, 0, HERE << "strands kid IDs = ");
+    for (Ipc::StrandCoords::const_iterator iter = strands.begin(); iter != strands.end(); ++iter) {
+        debugs(0, 0, HERE << iter->kidId);
+    }
+
+    return strands;
 }
