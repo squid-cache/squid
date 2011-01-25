@@ -1765,14 +1765,18 @@ DOC_START
 	an additional ACL needs to be used which ensures the IPv6-bound traffic
 	is never forced or permitted out the IPv4 interface.
 
+	# IPv6 destination test along with a dummy access control to perofrm the required DNS
+	# This MUST be place before any ALLOW rules.
 	acl to_ipv6 dst ipv6
-	tcp_outgoing_address 2002::c001 good_service_net to_ipv6
+	http_access deny ipv6 !all
+
+	tcp_outgoing_address 2001:db8::c001 good_service_net to_ipv6
 	tcp_outgoing_address 10.1.0.2 good_service_net !to_ipv6
 
-	tcp_outgoing_address 2002::beef normal_service_net to_ipv6
+	tcp_outgoing_address 2001:db8::beef normal_service_net to_ipv6
 	tcp_outgoing_address 10.1.0.1 normal_service_net !to_ipv6
 
-	tcp_outgoing_address 2002::1 to_ipv6
+	tcp_outgoing_address 2001:db8::1 to_ipv6
 	tcp_outgoing_address 10.1.0.3 !to_ipv6
 
 	WARNING:
