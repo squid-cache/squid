@@ -1168,7 +1168,9 @@ ErrorState::BuildContent()
         debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
     }
 
+#if USE_ERR_LOCALES
     safe_free(freePage);
+#endif
 
     return ConvertText(m, true);
 }
