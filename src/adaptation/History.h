@@ -4,6 +4,7 @@
 #include "RefCount.h"
 #include "Array.h"
 #include "SquidString.h"
+#include "adaptation/DynamicGroupCfg.h"
 
 namespace Adaptation
 {
@@ -41,6 +42,12 @@ public:
     /// returns true, fills the value, and resets iff next services were set
     bool extractNextServices(String &value);
 
+    /// sets future services for the Adaptation::AccessCheck to notice
+    void setFutureServices(const DynamicGroupCfg &services);
+
+    /// returns true, fills the value, and resets iff future services were set
+    bool extractFutureServices(DynamicGroupCfg &services);
+
 private:
     /// single Xaction stats (i.e., a historical record entry)
     class Entry
@@ -70,6 +77,7 @@ private:
     String theXxValue; ///< value part of the cross-xactional database record
 
     String theNextServices; ///< services Adaptation::Iterator must use next
+    DynamicGroupCfg theFutureServices; ///< services AccessCheck must use
 };
 
 } // namespace Adaptation
