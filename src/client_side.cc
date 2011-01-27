@@ -3622,7 +3622,7 @@ clientHttpConnectionsOpen(void)
         Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
 
         AsyncCall::Pointer listenCall = asyncCall(33,2, "clientListenerConnectionOpened",
-                                                  ListeningStartedDialer(&clientListenerConnectionOpened, openFlags, s, Ipc::fdnHttpSocket, sub));
+                                        ListeningStartedDialer(&clientListenerConnectionOpened, openFlags, s, Ipc::fdnHttpSocket, sub));
         Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->s, openFlags, Ipc::fdnHttpSocket, listenCall);
 
         HttpSockets[NHttpSockets++] = -1; // set in clientListenerConnectionOpened
@@ -3689,8 +3689,8 @@ clientHttpsConnectionsOpen(void)
         Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
 
         AsyncCall::Pointer listenCall = asyncCall(33, 2, "clientListenerConnectionOpened",
-                                                  ListeningStartedDialer(&clientListenerConnectionOpened, openFlags,
-                                                                         &s->http, Ipc::fdnHttpsSocket, sub));
+                                        ListeningStartedDialer(&clientListenerConnectionOpened, openFlags,
+                                                               &s->http, Ipc::fdnHttpsSocket, sub));
 
         Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->s, openFlags, Ipc::fdnHttpsSocket, listenCall);
 

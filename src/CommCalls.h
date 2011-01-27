@@ -268,8 +268,7 @@ public:
 
     inline CommCbFunPtrCallT(const CommCbFunPtrCallT &o) :
             AsyncCall(o.debugSection, o.debugLevel, o.name),
-            dialer(o.dialer)
-        {}
+            dialer(o.dialer) {}
 
     ~CommCbFunPtrCallT() {}
 

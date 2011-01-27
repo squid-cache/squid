@@ -44,8 +44,9 @@
 #include "protos.h"
 #include "SquidTime.h"
 
-namespace Comm {
-    CBDATA_CLASS_INIT(TcpAcceptor);
+namespace Comm
+{
+CBDATA_CLASS_INIT(TcpAcceptor);
 };
 
 Comm::TcpAcceptor::TcpAcceptor(const int listenFd, const Ip::Address &laddr, int flags,
@@ -193,9 +194,9 @@ Comm::TcpAcceptor::doAccept(int fd, void *data)
         }
         SetSelect(fd, COMM_SELECT_READ, Comm::TcpAcceptor::doAccept, afd, 0);
 
-    } catch(const std::exception &e) {
+    } catch (const std::exception &e) {
         fatalf("FATAL: error while accepting new client connection: %s\n", e.what());
-    } catch(...) {
+    } catch (...) {
         fatal("FATAL: error while accepting new client connection: [unkown]\n");
     }
 }
