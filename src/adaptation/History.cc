@@ -136,3 +136,22 @@ bool Adaptation::History::extractNextServices(String &value)
     theNextServices = TheNullServices; // prevents resetting the plan twice
     return true;
 }
+
+void
+Adaptation::History::setFutureServices(const DynamicGroupCfg &services)
+{
+    if (!theFutureServices.empty())
+        debugs(93,3, HERE << "old future services: " << theFutureServices);
+    debugs(93,3, HERE << "new future services: " << services);
+    theFutureServices = services; // may be empty
+}
+
+bool Adaptation::History::extractFutureServices(DynamicGroupCfg &value)
+{
+    if (theFutureServices.empty())
+        return false;
+
+    value = theFutureServices;
+    theFutureServices.clear();
+    return true;
+}

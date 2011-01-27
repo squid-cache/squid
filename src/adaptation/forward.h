@@ -16,6 +16,7 @@ namespace Adaptation
 
 class Service;
 class ServiceConfig;
+class DynamicGroupCfg;
 class Class;
 class Initiate;
 class Initiator;
