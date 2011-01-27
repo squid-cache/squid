@@ -535,6 +535,12 @@ SQUIDCEXTERN void storeRebuildStart(void);
 SQUIDCEXTERN void storeRebuildComplete(struct _store_rebuild_data *);
 SQUIDCEXTERN void storeRebuildProgress(int sd_index, int total, int sofar);
 
+/// tries to load and validate entry metadata; returns tmp entry on success
+SQUIDCEXTERN bool storeRebuildLoadEntry(int fd, StoreEntry &e, cache_key *key, struct _store_rebuild_data &counts, uint64_t expectedSize);
+/// checks whether the loaded entry should be kept; updates counters
+SQUIDCEXTERN bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, struct _store_rebuild_data &counts);
+
+
 /*
  * store_swapin.c
  */

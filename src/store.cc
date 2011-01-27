@@ -317,6 +317,7 @@ StoreEntry::storeClientType() const
 
         if (mem_obj->inmem_lo == 0 && !isEmpty()) {
             if (swap_status == SWAPOUT_DONE) {
+                debugs(20,7, HERE << mem_obj << " lo: " << mem_obj->inmem_lo << " hi: " << mem_obj->endOffset() << " size: " << mem_obj->object_sz);
                 if (mem_obj->endOffset() == mem_obj->object_sz) {
                     /* hot object fully swapped in */
                     return STORE_MEM_CLIENT;
@@ -352,7 +353,8 @@ StoreEntry::storeClientType() const
     return STORE_DISK_CLIENT;
 }
 
-StoreEntry::StoreEntry()
+StoreEntry::StoreEntry():
+        swap_file_sz(0)
 {
     debugs(20, 3, HERE << "new StoreEntry " << this);
     mem_obj = NULL;
@@ -363,7 +365,8 @@ StoreEntry::StoreEntry()
     swap_dirn = -1;
 }
 
-StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl)
+StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl):
+        swap_file_sz(0)
 {
     debugs(20, 3, HERE << "new StoreEntry " << this);
     mem_obj = new MemObject(aUrl, aLogUrl);
@@ -1594,7 +1597,7 @@ StoreEntry::setMemStatus(mem_status_t new_status)
             debugs(20, 4, "StoreEntry::setMemStatus: not inserting special " << mem_obj->url << " into policy");
         } else {
             mem_policy->Add(mem_policy, this, &mem_obj->repl);
-            debugs(20, 4, "StoreEntry::setMemStatus: inserted mem node " << mem_obj->url);
+            debugs(20, 4, "StoreEntry::setMemStatus: inserted mem node " << mem_obj->url << " key: " << getMD5Text());
         }
 
         hot_obj_count++;
@@ -1802,13 +1805,43 @@ StoreEntry::replaceHttpReply(HttpReply *rep)
 char const *
 StoreEntry::getSerialisedMetaData()
 {
+    const size_t swap_hdr_sz0 = storeSwapMetaSize(this);
+    assert (swap_hdr_sz0 >= 0);
+    mem_obj->swap_hdr_sz = (size_t) swap_hdr_sz0;
+    // now we can use swap_hdr_sz to calculate swap_file_sz
+    // so that storeSwapMetaBuild/Pack can pack corrent swap_file_sz
+    swap_file_sz = objectLen() + mem_obj->swap_hdr_sz;
+
     StoreMeta *tlv_list = storeSwapMetaBuild(this);
     int swap_hdr_sz;
     char *result = storeSwapMetaPack(tlv_list, &swap_hdr_sz);
+    assert(static_cast<int>(swap_hdr_sz0) == swap_hdr_sz);
     storeSwapTLVFree(tlv_list);
-    assert (swap_hdr_sz >= 0);
-    mem_obj->swap_hdr_sz = (size_t) swap_hdr_sz;
     return result;
+}
+
+/*
+ * Calculate TLV list size for a StoreEntry
+ * XXX: Must match the actual storeSwapMetaBuild result size
+ */
+size_t
+storeSwapMetaSize(const StoreEntry * e)
+{
+    size_t size = 0;
+    ++size; // STORE_META_OK
+    size += sizeof(int); // size of header to follow
+
+    const size_t pfx = sizeof(char) + sizeof(int); // in the start of list entries
+
+    size += pfx + SQUID_MD5_DIGEST_LENGTH;
+    size += pfx + STORE_HDR_METASIZE;
+    size += pfx + strlen(e->url()) + 1;
+
+    if (const char *vary = e->mem_obj->vary_headers)
+        size += pfx + strlen(vary) + 1;
+
+    debugs(20, 3, "storeSwapMetaSize(" << e->url() << "): " << size);
+    return size;
 }
 
 bool
