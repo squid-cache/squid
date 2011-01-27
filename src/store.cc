@@ -254,6 +254,16 @@ StoreEntry::delayAwareRead(int fd, char *buf, int len, AsyncCall::Pointer callba
 
     }
 
+    if (fd_table[fd].closing()) {
+        // Readers must have closing callbacks if they want to be notified. No
+        // readers appeared to care around 2009/12/14 as they skipped reading
+        // for other reasons. Closing may already be true at the delyaAwareRead
+        // call time or may happen while we wait after delayRead() above.
+        debugs(20, 3, HERE << "wont read from closing FD " << fd << " for " <<
+               callback);
+        return; // the read callback will never be called
+    }
+
     comm_read(fd, buf, amountToRead, callback);
 }
 

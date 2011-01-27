@@ -615,7 +615,10 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
 void
 ClientHttpRequest::logRequest()
 {
-    if (out.size || logType) {
+    if (!out.size && !logType)
+        debugs(33,2, HERE << "logging half-baked transaction: " << log_uri);
+
+    if (true) {
         al.icp.opcode = ICP_INVALID;
         al.url = log_uri;
         debugs(33, 9, "clientLogRequest: al.url='" << al.url << "'");
@@ -2244,8 +2247,10 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
 int
 ConnStateData::getAvailableBufferLength() const
 {
-    int result = in.allocatedSize - in.notYetUsed - 1;
-    assert (result >= 0);
+    assert (in.allocatedSize > in.notYetUsed); // allocated more than used
+    const size_t result = in.allocatedSize - in.notYetUsed - 1;
+    // huge request_header_max_size may lead to more than INT_MAX unused space
+    assert (static_cast<ssize_t>(result) <= INT_MAX);
     return result;
 }
 
