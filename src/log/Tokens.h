@@ -189,8 +189,8 @@ public:
         } header;
         char *timespec;
     } data;
-    unsigned char width;
-    unsigned char precision;
+    unsigned int width;
+    unsigned int precision;
     enum log_quote quote;
     unsigned int left:1;
     unsigned int space:1;
