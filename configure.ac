@@ -3,7 +3,7 @@ dnl  $Id$
 dnl
 dnl
 dnl
-AC_INIT([Squid Web Proxy],[3.HEAD-BZR],[http://www.squid-cache.org/bugs/],[squid])
+AC_INIT([Squid Web Proxy],[3.2-rock-BZR],[http://www.squid-cache.org/bugs/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
@@ -626,6 +626,13 @@ for module in $squid_disk_module_candidates none; do
       fi
       ;;
 
+    Mmapped)
+      AC_MSG_NOTICE([Enabling Mmapped DiskIO module])
+      DISK_LIBS="$DISK_LIBS libMmapped.a"
+      DISK_MODULES="$DISK_MODULES Mmapped"
+      DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/Mmapped/MmappedDiskIOModule.o"
+      ;;
+
     Blocking)
       AC_MSG_NOTICE([Enabling Blocking DiskIO module])
       DISK_LIBS="$DISK_LIBS libBlocking.a"
@@ -713,6 +720,12 @@ for fs in $squid_storeio_module_candidates none; do
       # for STORE_TESTS substition
       STORE_TESTS="$STORE_TESTS tests/testCoss$EXEEXT"
       ;;
+    rock)
+	if ! test "x$squid_disk_module_candidates_Mmapped" = "xyes"; then
+	  AC_MSG_ERROR([Storage modeule Rock requires Mmapped DiskIO module])
+	fi
+	STORE_TESTS="$STORE_TESTS tests/testRock$EXEEXT"
+	;;
     ufs)
       STORE_TESTS="$STORE_TESTS tests/testUfs$EXEEXT"
     esac
@@ -724,6 +737,7 @@ AH_TEMPLATE(HAVE_FS_UFS, "Define to 1 if ufs filesystem module is build")
 AH_TEMPLATE(HAVE_FS_AUFS, "Define to 1 if aufs filesystem module is build")
 AH_TEMPLATE(HAVE_FS_DISKD, "Define to 1 if diskd filesystem module is build")
 AH_TEMPLATE(HAVE_FS_COSS, "Define to 1 if coss filesystem module is build")
+AH_TEMPLATE(HAVE_FS_ROCK, "Define to 1 if rock filesystem module is build")
 
 
 dnl got final squid_storeio_module_candidates, build library lists

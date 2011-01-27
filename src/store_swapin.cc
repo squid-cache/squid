@@ -50,6 +50,9 @@ storeSwapInStart(store_client * sc)
         return;
     }
 
+    if (e->mem_status != NOT_IN_MEMORY)
+        debugs(20, 3, HERE << "already IN_MEMORY");
+
     debugs(20, 3, "storeSwapInStart: called for : " << e->swap_dirn << " " <<
            std::hex << std::setw(8) << std::setfill('0') << std::uppercase <<
            e->swap_filen << " " <<  e->getMD5Text());
