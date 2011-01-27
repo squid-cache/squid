@@ -352,6 +352,9 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
         debugs(20, 3, "storeSwapOutFileClosed: SwapOut complete: '" << e->url() << "' to " <<
                e->swap_dirn  << ", " << std::hex << std::setw(8) << std::setfill('0') <<
                std::uppercase << e->swap_filen);
+        debugs(20, 3, "storeSwapOutFileClosed: Should be:" <<
+               e->swap_file_sz << " = " << e->objectLen() << " + " <<
+               mem->swap_hdr_sz);
         e->swap_file_sz = e->objectLen() + mem->swap_hdr_sz;
         e->swap_status = SWAPOUT_DONE;
         e->store()->updateSize(e->swap_file_sz, 1);

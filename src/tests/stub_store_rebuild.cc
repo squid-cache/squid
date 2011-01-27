@@ -45,3 +45,16 @@ void
 storeRebuildComplete(struct _store_rebuild_data *dc)
 {}
 
+bool
+storeRebuildLoadEntry(int fd, StoreEntry &tmpe, cache_key *key,
+    struct _store_rebuild_data &counts, uint64_t expectedSize)
+{
+    return false;
+}
+
+bool
+storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key,
+    struct _store_rebuild_data &counts)
+{
+   return false;
+}

@@ -238,12 +238,14 @@ diskHandleWrite(int fd, void *notused)
 
     assert(fdd->write_q->len > fdd->write_q->buf_offset);
 
-    debugs(6, 3, "diskHandleWrite: FD " << fd << " writing " << (fdd->write_q->len - fdd->write_q->buf_offset) << " bytes");
+    debugs(6, 3, "diskHandleWrite: FD " << fd << " writing " <<
+           (fdd->write_q->len - fdd->write_q->buf_offset) << " bytes at " <<
+           fdd->write_q->file_offset);
 
     errno = 0;
 
     if (fdd->write_q->file_offset != -1)
-        lseek(fd, fdd->write_q->file_offset, SEEK_SET);
+        lseek(fd, fdd->write_q->file_offset, SEEK_SET); /* XXX ignore return? */
 
     len = FD_WRITE_METHOD(fd,
                           fdd->write_q->buf + fdd->write_q->buf_offset,

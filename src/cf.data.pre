@@ -2692,6 +2692,16 @@ DOC_START
 	higher hit ratio at the expense of an increase in response
 	time.
 
+        The rock store type:
+
+	    cache_dir rock Directory-Name Mbytes <max-size=bytes>
+
+        The Rock Store type is a database-style storage. All cached
+	entries are stored in a "database" file, using fixed-size slots,
+	one entry per slot. The database size is specified in MB. The
+	slot size is specified in bytes using the max-size option. See
+	below for more info on the max-size option.
+
 	The coss store type:
 
 	NP: COSS filesystem in Squid-3 has been deemed too unstable for
@@ -2842,8 +2852,9 @@ DOC_START
 		'	output as-is
 
 		-	left aligned
-		width	field width. If starting with 0 the
-			output is zero padded
+		width	minimum and/or maximum field width: [min][.max]
+			When minimum starts with 0, the field is zero-padded.
+			String values exceeding maximum width are truncated.
 		{arg}	argument such as header name etc
 
 	Format codes:
@@ -6480,11 +6491,12 @@ DOC_START
 		returning a chain of services to be used next. The services
 		are specified using the X-Next-Services ICAP response header
 		value, formatted as a comma-separated list of service names.
-		Each named service should be configured in squid.conf and
-		should have the same method and vectoring point as the current
-		ICAP transaction.  Services violating these rules are ignored.
-		An empty X-Next-Services value results in an empty plan which
-		ends the current adaptation. 
+		Each named service should be configured in squid.conf. Other
+		services are ignored. An empty X-Next-Services value results
+		in an empty plan which ends the current adaptation.
+
+		Dynamic adaptation plan may cross or cover multiple supported
+		vectoring points in their natural processing order.
 
 		Routing is not allowed by default: the ICAP X-Next-Services
 		response header is ignored.

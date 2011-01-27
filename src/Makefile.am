@@ -155,7 +155,8 @@ else
 AIOPS_SOURCE = DiskIO/DiskThreads/aiops.cc
 endif
 
-EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a
+EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a \
+	libMmapped.a
 noinst_LIBRARIES = $(DISK_LIBS)
 noinst_LTLIBRARIES = libsquid.la
 
@@ -182,6 +183,7 @@ EXTRA_PROGRAMS = \
 	recv-announce \
 	tests/testUfs \
 	tests/testCoss \
+	tests/testRock \
 	tests/testNull \
 	ufsdump
 
@@ -705,6 +707,14 @@ libBlocking_a_SOURCES = \
 		DiskIO/Blocking/BlockingIOStrategy.h \
 		DiskIO/Blocking/BlockingDiskIOModule.cc \
 		DiskIO/Blocking/BlockingDiskIOModule.h 
+
+libMmapped_a_SOURCES = \
+		DiskIO/Mmapped/MmappedFile.cc \
+		DiskIO/Mmapped/MmappedFile.h \
+		DiskIO/Mmapped/MmappedIOStrategy.cc \
+		DiskIO/Mmapped/MmappedIOStrategy.h \
+		DiskIO/Mmapped/MmappedDiskIOModule.cc \
+		DiskIO/Mmapped/MmappedDiskIOModule.h 
 
 libDiskDaemon_a_SOURCES = \
 		DiskIO/DiskDaemon/DiskdFile.cc \
@@ -2154,6 +2164,39 @@ tests_testUfs_LDADD = \
 	$(XTRA_LIBS)
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
 tests_testUfs_DEPENDENCIES = \
+	$(SWAP_TEST_DS)
+
+tests_testRock_SOURCES = \
+	tests/testRock.cc \
+	tests/testMain.cc \
+	tests/testRock.h \
+	tests/stub_cache_manager.cc \
+	tests/stub_HelperChildConfig.cc \
+	tests/stub_Port.cc \
+	tests/stub_TypedMsgHdr.cc \
+	tests/stub_UdsOp.cc \
+	$(SWAP_TEST_SOURCES)
+nodist_tests_testRock_SOURCES = \
+	swap_log_op.cc \
+	$(SWAP_TEST_GEN_SOURCES) \
+	SquidMath.cc \
+	SquidMath.h
+tests_testRock_LDADD = \
+	$(COMMON_LIBS) \
+        $(REPL_OBJS) \
+        $(DISK_LIBS) \
+        $(DISK_OS_LIBS) \
+        acl/libapi.la \
+	$(top_builddir)/lib/libmisccontainers.la \
+	$(top_builddir)/lib/libmiscencoding.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(REGEXLIB) \
+        $(SQUID_CPPUNIT_LIBS) \
+	$(SSLLIB) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testRock_LDFLAGS = $(LIBADD_DL)
+tests_testRock_DEPENDENCIES = \
 	$(SWAP_TEST_DS)
 
 tests_testCoss_SOURCES = \
