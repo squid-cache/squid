@@ -196,10 +196,14 @@ void Adaptation::Icap::Xaction::closeConnection()
                                 theService->cfg().port, NULL, client_addr);
             disableRetries();
         } else {
-            //status() adds leading spaces.
-            debugs(93,3, HERE << "closing pconn" << status());
+            const bool reset = al.icap.outcome == xoGone || al.icap.outcome == xoError;
+            debugs(93,3, HERE << (reset ? "RST" : "FIN") << "-closing" <<
+                   status());
             // comm_close will clear timeout
-            comm_close(connection);
+            if (reset)
+                comm_reset_close(connection);
+            else
+                comm_close(connection);
         }
 
         writer = NULL;
@@ -444,8 +448,10 @@ void Adaptation::Icap::Xaction::noteInitiatorAborted()
 {
 
     if (theInitiator.set()) {
+        debugs(93,4, HERE << "Initiator gone before ICAP transaction ended");
         clearInitiator();
         detailError(ERR_DETAIL_ICAP_INIT_GONE);
+        setOutcome(xoGone);
         mustStop("initiator aborted");
     }
 
