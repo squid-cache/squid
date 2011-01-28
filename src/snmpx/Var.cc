@@ -254,14 +254,6 @@ Snmp::Var::asString() const
     return Range<const u_char*>(val.string, val.string + val_len);
 }
 
-ipaddr
-Snmp::Var::asIpAddress() const
-{
-    Must(type == SMI_IPADDRESS);
-    Must(val.string != NULL && val_len == sizeof(ipaddr));
-    return *reinterpret_cast<ipaddr*>(val.string);
-}
-
 void
 Snmp::Var::setInt(int value)
 {
@@ -302,12 +294,6 @@ void
 Snmp::Var::setTimeTicks(unsigned int ticks)
 {
     setValue(&ticks, sizeof(ticks), SMI_TIMETICKS);
-}
-
-void
-Snmp::Var::setIpAddress(ipaddr addr)
-{
-    setValue(&addr, sizeof(addr), SMI_IPADDRESS);
 }
 
 void

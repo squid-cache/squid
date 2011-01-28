@@ -36,7 +36,13 @@ public:
     unsigned int requestId; ///< ID of request we are responding to
 };
 
-extern std::ostream& operator <<(std::ostream &os, const Response &response);
+inline
+std::ostream& operator << (std::ostream &os, const Response& response)
+{
+    os << "[response.requestId %u]" << response.requestId << '}';
+    return os;
+}
+
 
 } // namespace Ipc
 

@@ -28,7 +28,7 @@ SNMP_ALL_SOURCE = \
 	snmp_core.h \
 	snmp_core.cc \
 	snmp_agent.cc
-if USE_SNMP
+if ENABLE_SNMP
 SNMP_SOURCE = $(SNMP_ALL_SOURCE)
 else
 SNMP_SOURCE = 
@@ -51,9 +51,9 @@ else
 SSL_LOCAL_LIBS =
 endif
 
-if USE_SNMP
+if ENABLE_SNMP
 SUBDIRS += snmpx
-SNMPXLIB = snmpx/libsnmpx.la
+SNMPX_LIBS = snmpx/libsnmpx.la
 endif
 
 if USE_ADAPTATION
@@ -553,7 +553,7 @@ squid_LDADD = \
 	$(CRYPTLIB) \
 	$(REGEXLIB) \
 	$(SNMPLIB) \
-	$(SNMPXLIB) \
+	$(SNMPX_LIBS) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \

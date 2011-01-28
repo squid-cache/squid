@@ -65,6 +65,8 @@ Snmp::Pdu::aggregate(const Pdu& pdu)
             {
             case atSum:
             case atAverage:
+                // The mean-average division is done later
+                // when the Snmp::Pdu::fixAggregate() called
                 aggr += var;
                 break;
             case atMax:
@@ -225,7 +227,7 @@ Snmp::Pdu::varCount() const
 void 
 Snmp::Pdu::fixAggregate()
 {
-    if (!aggrCount)
+    if (aggrCount < 2)
         return;
     for (variable_list* p_aggr = variables; p_aggr != NULL; p_aggr = p_aggr->next_variable) {
         Var& aggr = static_cast<Var&>(*p_aggr);

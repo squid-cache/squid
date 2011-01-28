@@ -34,7 +34,6 @@ libipc_la_SOURCES = \
 	Inquirer.cc \
 	Inquirer.h \
 	Request.h \
-	Response.cc \
 	Response.h
 
 DEFS += -DDEFAULT_PREFIX=\"$(prefix)\"
