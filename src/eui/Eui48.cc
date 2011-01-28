@@ -41,11 +41,6 @@
 #include "globals.h"
 #include "ip/Address.h"
 
-
-#if _SQUID_CYGWIN_
-#include <squid_windows.h>
-#endif
-
 /* START Legacy includes pattern */
 /* TODO: clean this up so we dont have per-OS requirements.
          The files are checked for existence individually

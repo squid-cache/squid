@@ -2,7 +2,6 @@
 #define _getaddrinfo_h
 
 #if _SQUID_MSWIN_ || _SQUID_MINGW_
-#include "squid_windows.h"
 #ifdef HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif

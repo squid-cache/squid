@@ -35,9 +35,6 @@
  */
 
 #include "config.h"
-#if _SQUID_CYGWIN_
-#include <squid_windows.h>
-#endif
 #include "squid.h"
 
 #include "acl/HttpStatus.h"

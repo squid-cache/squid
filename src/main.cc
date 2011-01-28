@@ -106,7 +106,6 @@
 #endif
 
 #if USE_WIN32_SERVICE
-#include "squid_windows.h"
 #include <process.h>
 
 static int opt_install_service = FALSE;
