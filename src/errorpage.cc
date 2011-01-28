@@ -76,6 +76,7 @@ CBDATA_CLASS_INIT(ErrorState);
 typedef struct {
     int id;
     char *page_name;
+    http_status page_redirect;
 } ErrorDynamicPageInfo;
 
 /* local constant and vars */
@@ -179,9 +180,13 @@ errorInitialize(void)
             ErrorDynamicPageInfo *info = ErrorDynamicPages.items[i - ERR_MAX];
             assert(info && info->id == i && info->page_name);
 
-            if (strchr(info->page_name, ':') == NULL) {
+            const char *pg = info->page_name;
+            if (info->page_redirect != HTTP_STATUS_NONE)
+                pg = info->page_name +4;
+
+            if (strchr(pg, ':') == NULL) {
                 /** But only if they are not redirection URL. */
-                error_text[i] = errorLoadText(info->page_name);
+                error_text[i] = errorLoadText(pg);
             }
         }
     }
@@ -325,6 +330,40 @@ errorDynamicPageInfoCreate(int id, const char *page_name)
     ErrorDynamicPageInfo *info = new ErrorDynamicPageInfo;
     info->id = id;
     info->page_name = xstrdup(page_name);
+    info->page_redirect = static_cast<http_status>(atoi(page_name));
+
+    /* WARNING on redirection status:
+     * 2xx are permitted, but not documented officially.
+     * - might be useful for serving static files (PAC etc) in special cases
+     * 3xx require a URL suitable for Location: header.
+     * - the current design does not allow for a Location: URI as well as a local file template
+     *   although this possibility is explicitly permitted in the specs.
+     * 4xx-5xx require a local file template.
+     * - sending Location: on these codes with no body is invalid by the specs.
+     * - current result is Squid crashing or XSS problems as dynamic deny_info load random disk files.
+     * - a future redesign of the file loading may result in loading remote objects sent inline as local body.
+     */
+    if (info->page_redirect == HTTP_STATUS_NONE)
+        ; // special case okay.
+    else if (info->page_redirect < 200 || info->page_redirect > 599) {
+        // out of range
+        debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " is not valid on '" << page_name << "'");
+        self_destruct();
+    } else if ( /* >= 200 && */ info->page_redirect < 300 && strchr(&(page_name[4]), ':')) {
+        // 2xx require a local template file
+        debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " is not valid on '" << page_name << "'");
+        self_destruct();
+    } else if (/* >= 300 && */ info->page_redirect <= 399 && !strchr(&(page_name[4]), ':')) {
+        // 3xx require an absolute URL
+        debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " is not valid on '" << page_name << "'");
+        self_destruct();
+    } else if (info->page_redirect >= 400 /* && <= 599 */ && strchr(&(page_name[4]), ':')) {
+        // 4xx/5xx require a local template file
+        debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " is not valid on '" << page_name << "'");
+        self_destruct();
+    }
+    // else okay.
+
     return info;
 }
 
@@ -390,6 +429,8 @@ errorCon(err_type type, http_status status, HttpRequest * request)
     err->err_language = NULL;
     err->type = type;
     err->httpStatus = status;
+    if (err->page_id >= ERR_MAX && ErrorDynamicPages.items[err->page_id - ERR_MAX]->page_redirect != HTTP_STATUS_NONE)
+        err->httpStatus = ErrorDynamicPages.items[err->page_id - ERR_MAX]->page_redirect;
 
     if (request != NULL) {
         err->request = HTTPMSGLOCK(request);
@@ -513,6 +554,9 @@ errorStateFree(ErrorState * err)
     if (err->err_language != Config.errorDefaultLanguage)
 #endif
         safe_free(err->err_language);
+#if USE_SSL
+    delete err->detail;
+#endif
     cbdataFree(err);
 }
 
@@ -602,7 +646,7 @@ ErrorState::Dump(MemBuf * mb)
 #define CVT_BUF_SZ 512
 
 const char *
-ErrorState::Convert(char token, bool building_deny_info_url)
+ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion)
 {
     static MemBuf mb;
     const char *p = NULL;	/* takes priority over mb if set */
@@ -629,6 +673,22 @@ ErrorState::Convert(char token, bool building_deny_info_url)
     case 'c':
         if (building_deny_info_url) break;
         p = errorPageName(type);
+        break;
+
+    case 'D':
+        if (!allowRecursion)
+            p = "%D";  // if recursion is not allowed, do not convert
+#if USE_SSL
+        // currently only SSL error details implemented
+        else if (detail) {
+            const String &errDetail = detail->toString();
+            MemBuf *detail_mb  = ConvertText(errDetail.termedBuf(), false);
+            mb.append(detail_mb->content(), detail_mb->contentSize());
+            delete detail_mb;
+            do_quote = 0;
+        } else
+#endif
+            mb.Printf("[No Error Detail]");
         break;
 
     case 'e':
@@ -662,12 +722,12 @@ ErrorState::Convert(char token, bool building_deny_info_url)
 
     case 'g':
         if (building_deny_info_url) break;
-        /* FTP SERVER MESSAGE */
-        if (ftp.server_msg)
-            wordlistCat(ftp.server_msg, &mb);
-        else if (ftp.listing) {
+        /* FTP SERVER RESPONSE */
+        if (ftp.listing) {
             mb.append(ftp.listing->content(), ftp.listing->contentSize());
             do_quote = 0;
+        } else if (ftp.server_msg) {
+            wordlistCat(ftp.server_msg, &mb);
         }
         break;
 
@@ -804,7 +864,7 @@ ErrorState::Convert(char token, bool building_deny_info_url)
         break;
 
     case 't':
-        mb.Printf("%s", mkhttpdlogtime(&squid_curtime));
+        mb.Printf("%s", Time::FormatHttpd(squid_curtime));
         break;
 
     case 'T':
@@ -896,9 +956,12 @@ ErrorState::DenyInfoLocation(const char *name, HttpRequest *aRequest, MemBuf &re
     char const *p = m;
     char const *t;
 
+    if (m[0] == '3')
+        m += 4; // skip "3xx:"
+
     while ((p = strchr(m, '%'))) {
         result.append(m, p - m);       /* copy */
-        t = Convert(*++p, true);       /* convert */
+        t = Convert(*++p, true, true);       /* convert */
         result.Printf("%s", t);        /* copy */
         m = p + 1;                     /* advance */
     }
@@ -916,9 +979,19 @@ ErrorState::BuildHttpReply()
     const char *name = errorPageName(page_id);
     /* no LMT for error pages; error pages expire immediately */
 
-    if (strchr(name, ':')) {
+    if (name[0] == '3' || (name[0] != '4' && name[0] != '5' && strchr(name, ':'))) {
         /* Redirection */
-        rep->setHeaders(HTTP_MOVED_TEMPORARILY, NULL, "text/html", 0, 0, -1);
+        http_status status = HTTP_MOVED_TEMPORARILY;
+        // Use configured 3xx reply status if set.
+        if (name[0] == '3')
+            status = httpStatus;
+        else {
+            // Use 307 for HTTP/1.1 non-GET/HEAD requests.
+            if (request->method != METHOD_GET && request->method != METHOD_HEAD && request->http_ver >= HttpVersion(1,1))
+                status = HTTP_TEMPORARY_REDIRECT;
+        }
+
+        rep->setHeaders(status, NULL, "text/html", 0, 0, -1);
 
         if (request) {
             MemBuf redirect_location;
@@ -976,10 +1049,7 @@ ErrorState::BuildHttpReply()
 MemBuf *
 ErrorState::BuildContent()
 {
-    MemBuf *content = new MemBuf;
     const char *m = NULL;
-    const char *p;
-    const char *t;
 
     assert(page_id > ERR_NONE && page_id < error_page_count);
 
@@ -987,6 +1057,7 @@ ErrorState::BuildContent()
     String hdr;
     char dir[256];
     int l = 0;
+    const char *freePage = NULL;
 
     /** error_directory option in squid.conf overrides translations.
      * Custom errors are always found either in error_directory or the templates directory.
@@ -1060,6 +1131,7 @@ ErrorState::BuildContent()
                 if (m) {
                     /* store the language we found for the Content-Language reply header */
                     err_language = xstrdup(reset);
+                    freePage = m;
                     break;
                 } else if (Config.errorLogMissingLanguages) {
                     debugs(4, DBG_IMPORTANT, "WARNING: Error Pages Missing Language: " << reset);
@@ -1096,12 +1168,24 @@ ErrorState::BuildContent()
         debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
     }
 
+#if USE_ERR_LOCALES
+    safe_free(freePage);
+#endif
+
+    return ConvertText(m, true);
+}
+
+MemBuf *ErrorState::ConvertText(const char *text, bool allowRecursion)
+{
+    MemBuf *content = new MemBuf;
+    const char *p;
+    const char *m = text;
     assert(m);
     content->init();
 
     while ((p = strchr(m, '%'))) {
         content->append(m, p - m);	/* copy */
-        t = Convert(*++p, false);	/* convert */
+        const char *t = Convert(*++p, false, allowRecursion);	/* convert */
         content->Printf("%s", t);	/* copy */
         m = p + 1;			/* advance */
     }

@@ -61,17 +61,9 @@ xstrndup(const char *s, size_t n)
         }
         exit(1);
     }
-    if (n < 0) {
-        errno = EINVAL;
-        if (failure_notify) {
-            (*failure_notify) ("xstrndup: tried to dup a negative length string!\n");
-        } else {
-            perror("xstrndup: tried to dup a negative length string!");
-        }
-        exit(1);
-    }
 
     sz = strlen(s) + 1;
+    // size_t is unsigned, as mandated by c99 and c++ standards.
     if (sz > n)
         sz = n;
 

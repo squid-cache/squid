@@ -42,6 +42,7 @@
 #if USE_DELAY_POOLS
 #include "ClientDelayConfig.h"
 #endif
+#include "comm.h"
 #include "ConfigParser.h"
 #include "CpuAffinity.h"
 #if USE_DELAY_POOLS
@@ -62,23 +63,10 @@
 #include "htcp.h"
 #include "StoreFileSystem.h"
 #include "DiskIO/DiskIOModule.h"
-#include "comm.h"
 #include "ipc/Kids.h"
 #include "ipc/Coordinator.h"
 #include "ipc/Strand.h"
 #include "ip/tools.h"
-#if USE_EPOLL
-#include "comm_epoll.h"
-#endif
-#if USE_KQUEUE
-#include "comm_kqueue.h"
-#endif
-#if USE_POLL
-#include "comm_poll.h"
-#endif
-#if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
-#include "comm_select.h"
-#endif
 #include "SquidTime.h"
 #include "SwapDir.h"
 #include "forward.h"
@@ -750,8 +738,6 @@ mainReconfigureStart(void)
 #if ICAP_CLIENT
     icapLogClose();
 #endif
-    useragentLogClose();
-    refererCloseLog();
 
     eventAdd("mainReconfigureFinish", &mainReconfigureFinish, NULL, 0, 1,
              false);
@@ -817,8 +803,6 @@ mainReconfigureFinish(void *)
     icapLogOpen();
 #endif
     storeLogOpen();
-    useragentOpenLog();
-    refererOpenLog();
 #if USE_DNSSERVERS
 
     dnsInit();
@@ -887,15 +871,9 @@ mainRotate(void)
     storeDirWriteCleanLogs(1);
     storeLogRotate();		/* store.log */
     accessLogRotate();		/* access.log */
-    useragentRotateLog();	/* useragent.log */
-    refererRotateLog();		/* referer.log */
 #if ICAP_CLIENT
     icapLogRotate();               /*icap.log*/
 #endif
-#if WIP_FWD_LOG
-    fwdLogRotate();
-#endif
-
     icmpEngine.Open();
 #if USE_DNSSERVERS
     dnsInit();
@@ -982,14 +960,12 @@ mainInitialize(void)
 
     debugs(1, 0, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
 
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
         debugs(1, 0, "Running as " << WIN32_Service_name << " Windows System Service on " << WIN32_OS_string);
         debugs(1, 0, "Service command line is: " << WIN32_Service_Command_Line);
     } else
         debugs(1, 0, "Running on " << WIN32_OS_string);
-
 #endif
 
     debugs(1, 1, "Process ID " << getpid());
@@ -1033,10 +1009,6 @@ mainInitialize(void)
     authenticateInit(&Auth::TheConfig);
 
     externalAclInit();
-
-    useragentOpenLog();
-
-    refererOpenLog();
 
     httpHeaderInitModule();	/* must go before any header processing (e.g. the one in errorInitialize) */
 
@@ -1260,8 +1232,7 @@ SquidMain(int argc, char **argv)
 {
     ConfigureCurrentKid(argv[0]);
 
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     int WIN32_init_err;
 #endif
 
@@ -1280,11 +1251,9 @@ SquidMain(int argc, char **argv)
 
 #endif
 
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     if ((WIN32_init_err = WIN32_Subsystem_Init(&argc, &argv)))
         return WIN32_init_err;
-
 #endif
 
     /* call mallopt() before anything else */
@@ -1391,8 +1360,6 @@ SquidMain(int argc, char **argv)
 
     comm_init();
 
-    comm_select_init();
-
     mainInitialize();
 
     test_access();
@@ -1443,8 +1410,6 @@ SquidMain(int argc, char **argv)
 
     /* init comm module */
     comm_init();
-
-    comm_select_init();
 
     if (opt_no_daemon) {
         /* we have to init fdstat here. */
@@ -1869,13 +1834,6 @@ SquidShutdown()
     Store::Root().sync();		/* Flush log writes */
     storeLogClose();
     accessLogClose();
-    useragentLogClose();
-    refererCloseLog();
-#if WIP_FWD_LOG
-
-    fwdUninit();
-#endif
-
     Store::Root().sync();		/* Flush log close */
     StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();

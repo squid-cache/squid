@@ -121,7 +121,7 @@ main(int argc, char *argv[])
             exit(2);
         }
 
-        xmemcpy(ip, &R.sin_addr.s_addr, 4);
+        memcpy(ip, &R.sin_addr.s_addr, 4);
         hp = gethostbyaddr(ip, 4, AF_INET);
         ipa = R.sin_addr;
         printf("==============================================================================\n");

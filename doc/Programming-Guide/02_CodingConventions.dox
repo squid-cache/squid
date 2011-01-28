@@ -176,7 +176,7 @@ fubar(char *g, int glen, void *state) {
      * then passes the state off to FUBAR.
      * No check for null-termination is done.
      */
-   xmemcpy(g, glen, state->foo_end_ptr );
+   memcpy(g, glen, state->foo_end_ptr );
    state->foo_end_ptr += glen;
    fubar(state);
 }

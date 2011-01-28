@@ -906,10 +906,6 @@ HttpStateData::haveParsedReplyHeaders()
         entry->mem_obj->vary_headers = xstrdup(vary);
     }
 
-#if WIP_FWD_LOG
-    fwdStatus(fwd, s);
-
-#endif
     /*
      * If its not a reply that we will re-forward, then
      * allow the client to get it.
@@ -1153,7 +1149,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
         /* Skip whitespace between replies */
 
         while (len > 0 && xisspace(*buf))
-            xmemmove(buf, buf + 1, len--);
+            memmove(buf, buf + 1, len--);
 
         if (len == 0) {
             /* Continue to read... */

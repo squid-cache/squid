@@ -89,10 +89,6 @@ const char *sslGetUserCertificatePEM(SSL *ssl);
 /// \ingroup ServerProtocolSSLAPI
 const char *sslGetUserCertificateChainPEM(SSL *ssl);
 
-typedef int ssl_error_t;
-ssl_error_t sslParseErrorString(const char *name);
-const char *sslFindErrorString(ssl_error_t value);
-
 namespace Ssl
 {
 /**
@@ -114,6 +110,27 @@ bool verifySslCertificateDate(SSL_CTX * sslContext);
   * using their.
  */
 SSL_CTX * generateSslContextUsingPkeyAndCertFromMemory(const char * data);
+
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Iterates over the X509 common and alternate names and to see if  matches with given data
+   * using the check_func.
+   \param peer_cert  The X509 cert to check
+   \param check_data The data with which the X509 CNs compared
+   \param check_func The function used to match X509 CNs. The CN data passed as ASN1_STRING data
+   \return   1 if any of the certificate CN matches, 0 if none matches.
+ */
+int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data));
+
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Convert a given ASN1_TIME to a string form.
+   \param tm the time in ASN1_TIME form
+   \param buf the buffer to write the output
+   \param len write at most len bytes
+   \return The number of bytes written
+ */
+int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
 
 } //namespace Ssl
 

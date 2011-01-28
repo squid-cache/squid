@@ -202,13 +202,14 @@ my ($name, $data);
 my (@chained);
 
 my $in_options = 0;
-sub start_option($)
+sub start_option($$)
 {
-    my ($name) = @_;
+    my ($name, $type) = @_;
     if (!$in_options) {
 	print $index "<ul>\n";
 	$in_options = 1;
     }
+    return if $type eq "obsolete";
     print $index '    <li><a href="' . htmlescape(section_link($name)) . '" name="toc_' . htmlescape($name) . '">' . htmlescape($name) . "</a></li>\n";
 }
 sub end_options()
@@ -241,12 +242,12 @@ while (<>) {
 		$data->{'name'} = $name;
 		$data->{'aliases'} = \@aliases;
 
-		start_option($name);
 		print "DEBUG: new option: $name\n" if $verbose;
 	} elsif ($_ =~ /^COMMENT: (.*)$/) {
 		$data->{"comment"} = $1;
 	} elsif ($_ =~ /^TYPE: (.*)$/) {
 		$data->{"type"} = $1;
+		start_option($data->{"name"}, $data->{"type"});
 	} elsif ($_ =~ /^DEFAULT: (.*)$/) {
 		if ($1 eq "none") {
 		    $data->{"default"} = "$1";

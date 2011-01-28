@@ -153,7 +153,7 @@ public:
     void freeAllContexts();
     void notifyAllContexts(const int xerrno); ///< tell everybody about the err
     void readNextRequest();
-    void makeSpaceAvailable();
+    bool maybeMakeSpaceAvailable();
     ClientSocketContext::Pointer getCurrentContext() const;
     void addContextToQueue(ClientSocketContext * context);
     int getConcurrentRequestCount() const;

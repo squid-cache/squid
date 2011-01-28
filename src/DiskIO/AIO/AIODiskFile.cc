@@ -86,7 +86,7 @@ void
 AIODiskFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 {
     /* Simulate async calls */
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
     fd = aio_open(path.termedBuf(), flags);
 #else
     fd = file_open(path.termedBuf() , flags);
@@ -232,11 +232,9 @@ void
 AIODiskFile::close ()
 {
     assert (!closed);
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     aio_close(fd);
 #else
-
     file_close(fd);
 #endif
 

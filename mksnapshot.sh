@@ -25,7 +25,7 @@ trap "echo FAIL-BUILD_${VERSION} ; rm -rf ${tmpdir}" 0
 
 rm -f ${tag}.out
 bzr export ${tmpdir} ${BZRROOT}/${module}/${branchpath} || exit 1
-if [ ! -f ${tmpdir}/configure ] && [ -f ${tmpdir}/configure.in ]; then
+if [ ! -f ${tmpdir}/configure ] && [ -f ${tmpdir}/configure.ac ]; then
 	sh -c "cd ${tmpdir} && ./bootstrap.sh"
 fi
 if [ ! -f ${tmpdir}/configure ]; then
@@ -35,7 +35,7 @@ fi
 cd ${tmpdir}
 eval `grep "^ *PACKAGE_VERSION=" configure | sed -e 's/-BZR//' | sed -e 's/PACKAGE_//'`
 eval `grep "^ *PACKAGE_TARNAME=" configure | sed -e 's/_TARNAME//'`
-ed -s configure.in <<EOS
+ed -s configure.ac <<EOS
 g/${VERSION}-[A-Z]*/ s//${VERSION}-${date}/
 w
 EOS

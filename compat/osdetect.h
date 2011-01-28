@@ -65,19 +65,13 @@
 #elif defined(__DragonFly__)
 #define _SQUID_DRAGONFLY_ 1
 
-#elif defined(__CYGWIN32__)  || defined(__CYGWIN__)
+#elif defined(__CYGWIN32__) || defined(__CYGWIN__)
 #define _SQUID_CYGWIN_ 1
 #define _SQUID_WINDOWS_ 1
 
-// The old name for _SQUID_WINDOWS_ (TODO: remove from use)
-#define _SQUID_WIN32_ 1
-
-#elif defined(__MINGW32__)
+#elif defined(__MINGW32__) || defined(__MINGW__)
 #define _SQUID_MINGW_ 1
 #define _SQUID_WINDOWS_ 1
-
-// The old name for _SQUID_WINDOWS_ (TODO: remove from use)
-#define _SQUID_WIN32_ 1
 
 #elif defined(WIN32) || defined(WINNT) || defined(__WIN32__) || defined(__WIN32)
 #define _SQUID_WINDOWS_ 1
@@ -87,9 +81,6 @@
 
 // the old name for MSVC *and* MingW (TODO: remove from use)
 #define _SQUID_MSWIN_ 1
-
-// The old name for _SQUID_WINDOWS_ (TODO: remove from use)
-#define _SQUID_WIN32_ 1
 
 #elif defined(__APPLE__)
 #define _SQUID_APPLE_ 1

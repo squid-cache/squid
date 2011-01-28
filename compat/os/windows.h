@@ -33,7 +33,7 @@
 #ifndef SQUID_OS_WINDOWS_H
 #define SQUID_OS_WINDOWS_H
 
-#ifdef _SQUID_WINDOWS_
+#if _SQUID_WINDOWS_
 
 #ifndef ACL
 #define ACL WindowsACL

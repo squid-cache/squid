@@ -35,6 +35,7 @@
 #if USE_WCCPv2
 
 #include "comm.h"
+#include "comm/Loops.h"
 #include "compat/strsep.h"
 #include "event.h"
 #include "ip/Address.h"
@@ -744,13 +745,11 @@ wccp2Init(void)
         service_list_ptr->security_info = (struct wccp2_security_md5_t *) ptr;
 
         if (service_list_ptr->wccp2_security_type == WCCP2_MD5_SECURITY) {
-
-            xmemcpy(ptr, &wccp2_security_md5, sizeof(struct wccp2_security_md5_t));
-
+            memcpy(ptr, &wccp2_security_md5, sizeof(struct wccp2_security_md5_t));
             ptr += sizeof(struct wccp2_security_md5_t);
         } else {
             /* assume NONE, and XXX I hate magic length numbers */
-            xmemcpy(ptr, &wccp2_security_md5, 8);
+            memcpy(ptr, &wccp2_security_md5, 8);
             ptr += 8;
         }
 
@@ -760,7 +759,7 @@ wccp2Init(void)
 
         assert(wccp2_here_i_am_header.length <= WCCP_RESPONSE_SIZE);
 
-        xmemcpy(ptr, &service_list_ptr->info, sizeof(struct wccp2_service_info_t));
+        memcpy(ptr, &service_list_ptr->info, sizeof(struct wccp2_service_info_t));
 
         service_list_ptr->service_info = (struct wccp2_service_info_t *) ptr;
 
@@ -783,7 +782,7 @@ wccp2Init(void)
             wccp2_identity_info.cache_identity.weight = htons(Config.Wccp2.weight);
             memset(&wccp2_identity_info.cache_identity.status, '\0', sizeof(wccp2_identity_info.cache_identity.status));
 
-            xmemcpy(ptr, &wccp2_identity_info, sizeof(struct wccp2_identity_info_t));
+            memcpy(ptr, &wccp2_identity_info, sizeof(struct wccp2_identity_info_t));
             service_list_ptr->wccp2_identity_info_ptr = ptr;
 
             ptr += sizeof(struct wccp2_identity_info_t);
@@ -817,7 +816,7 @@ wccp2Init(void)
             wccp2_mask_identity_info.cache_identity.weight = 0;
             wccp2_mask_identity_info.cache_identity.status = 0;
 
-            xmemcpy(ptr, &wccp2_mask_identity_info, sizeof(struct wccp2_mask_identity_info_t));
+            memcpy(ptr, &wccp2_mask_identity_info, sizeof(struct wccp2_mask_identity_info_t));
             service_list_ptr->wccp2_identity_info_ptr = ptr;
 
             ptr += sizeof(struct wccp2_mask_identity_info_t);
@@ -839,7 +838,7 @@ wccp2Init(void)
 
         wccp2_cache_view_header.cache_view_version = htonl(1);
 
-        xmemcpy(ptr, &wccp2_cache_view_header, sizeof(wccp2_cache_view_header));
+        memcpy(ptr, &wccp2_cache_view_header, sizeof(wccp2_cache_view_header));
 
         ptr += sizeof(wccp2_cache_view_header);
 
@@ -850,7 +849,7 @@ wccp2Init(void)
 
         service_list_ptr->num_routers = htonl(wccp2_numrouters);
 
-        xmemcpy(ptr, &service_list_ptr->num_routers, sizeof(service_list_ptr->num_routers));
+        memcpy(ptr, &service_list_ptr->num_routers, sizeof(service_list_ptr->num_routers));
 
         ptr += sizeof(service_list_ptr->num_routers);
 
@@ -890,7 +889,7 @@ wccp2Init(void)
 
         wccp2_cache_view_info.num_caches = htonl(0);
 
-        xmemcpy(ptr, &wccp2_cache_view_info.num_caches, sizeof(wccp2_cache_view_info.num_caches));
+        memcpy(ptr, &wccp2_cache_view_info.num_caches, sizeof(wccp2_cache_view_info.num_caches));
 
         ptr += sizeof(wccp2_cache_view_info.num_caches);
 
@@ -903,7 +902,7 @@ wccp2Init(void)
 
         wccp2_capability_info_header.capability_info_length = htons(3 * sizeof(wccp2_capability_element));
 
-        xmemcpy(ptr, &wccp2_capability_info_header, sizeof(wccp2_capability_info_header));
+        memcpy(ptr, &wccp2_capability_info_header, sizeof(wccp2_capability_info_header));
 
         ptr += sizeof(wccp2_capability_info_header);
 
@@ -918,7 +917,7 @@ wccp2Init(void)
 
         wccp2_capability_element.capability_value = htonl(Config.Wccp2.forwarding_method);
 
-        xmemcpy(ptr, &wccp2_capability_element, sizeof(wccp2_capability_element));
+        memcpy(ptr, &wccp2_capability_element, sizeof(wccp2_capability_element));
 
         ptr += sizeof(wccp2_capability_element);
 
@@ -933,7 +932,7 @@ wccp2Init(void)
 
         wccp2_capability_element.capability_value = htonl(Config.Wccp2.assignment_method);
 
-        xmemcpy(ptr, &wccp2_capability_element, sizeof(wccp2_capability_element));
+        memcpy(ptr, &wccp2_capability_element, sizeof(wccp2_capability_element));
 
         ptr += sizeof(wccp2_capability_element);
 
@@ -948,7 +947,7 @@ wccp2Init(void)
 
         wccp2_capability_element.capability_value = htonl(Config.Wccp2.return_method);
 
-        xmemcpy(ptr, &wccp2_capability_element, sizeof(wccp2_capability_element));
+        memcpy(ptr, &wccp2_capability_element, sizeof(wccp2_capability_element));
 
         ptr += sizeof(wccp2_capability_element);
 
@@ -1011,11 +1010,7 @@ wccp2ConnectionOpen(void)
     }
 
 #endif
-    commSetSelect(theWccp2Connection,
-                  COMM_SELECT_READ,
-                  wccp2HandleUdp,
-                  NULL,
-                  0);
+    Comm::SetSelect(theWccp2Connection, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
 
     debugs(80, 1, "Accepting WCCPv2 messages on port " << WCCP_PORT << ", FD " << theWccp2Connection << ".");
     debugs(80, 1, "Initialising all WCCPv2 lists");
@@ -1176,7 +1171,7 @@ wccp2HandleUdp(int sock, void *not_used)
 
     debugs(80, 6, "wccp2HandleUdp: Called.");
 
-    commSetSelect(sock, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
+    Comm::SetSelect(sock, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
 
     /* FIXME INET6 : drop conversion boundary */
     Ip::Address from_tmp;
@@ -1766,7 +1761,7 @@ wccp2AssignBuckets(void *voidnotused)
         offset += sizeof(struct assignment_key_t);
 
         /* Number of routers */
-        xmemcpy(&wccp_packet[offset], &service_list_ptr->num_routers, sizeof(service_list_ptr->num_routers));
+        memcpy(&wccp_packet[offset], &service_list_ptr->num_routers, sizeof(service_list_ptr->num_routers));
 
         offset += sizeof(service_list_ptr->num_routers);
 
@@ -1795,7 +1790,7 @@ wccp2AssignBuckets(void *voidnotused)
 
             case WCCP2_ASSIGNMENT_METHOD_HASH:
                 /* Number of caches */
-                xmemcpy(&wccp_packet[offset], &router_list_ptr->num_caches, sizeof(router_list_ptr->num_caches));
+                memcpy(&wccp_packet[offset], &router_list_ptr->num_caches, sizeof(router_list_ptr->num_caches));
                 offset += sizeof(router_list_ptr->num_caches);
 
                 if (num_caches) {
@@ -1806,7 +1801,7 @@ wccp2AssignBuckets(void *voidnotused)
 
                         cache_address = (struct in_addr *) &wccp_packet[offset];
 
-                        xmemcpy(cache_address, &cache_list_ptr->cache_ip, sizeof(struct in_addr));
+                        memcpy(cache_address, &cache_list_ptr->cache_ip, sizeof(struct in_addr));
                         total_weight += cache_list_ptr->weight << 12;
                         weight[cache] = cache_list_ptr->weight << 12;
 
@@ -1865,7 +1860,7 @@ wccp2AssignBuckets(void *voidnotused)
 
             case WCCP2_ASSIGNMENT_METHOD_MASK:
                 num_maskval = htonl(1);
-                xmemcpy(&wccp_packet[offset], &num_maskval, sizeof(int));
+                memcpy(&wccp_packet[offset], &num_maskval, sizeof(int));
                 offset += sizeof(int);
 
                 mask_element = (struct wccp2_mask_element_t *) &wccp_packet[offset];

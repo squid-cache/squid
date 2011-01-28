@@ -236,19 +236,6 @@ DiskIO/DiskIOModules_gen.cc: Makefile
 	$(SHELL) $(srcdir)/DiskIO/modules.sh $(DISK_MODULES) > DiskIO/DiskIOModules_gen.cc
 
 
-squid_COMMSOURCES = \
-	comm_select.cc \
-	comm_select.h \
-	comm_select_win32.cc \
-	comm_poll.cc \
-	comm_poll.h \
-	comm_devpoll.cc \
-	comm_epoll.cc \
-	comm_epoll.h \
-	comm_kqueue.cc \
-	comm_kqueue.h
-
-
 # common library for all the binaries and tests. This is kindof a catch all
 # and smaller libraries split from this are encouraged. Using lt convenience
 # libraries, dependencies should not be a problem either.
@@ -295,7 +282,6 @@ squid_SOURCES = \
 	CommIO.h \
 	CompletionDispatcher.cc \
 	CompletionDispatcher.h \
-	$(squid_COMMSOURCES) \
 	CommRead.h \
 	ConfigOption.cc \
 	ConfigParser.cc \
@@ -419,7 +405,6 @@ squid_SOURCES = \
 	PingData.h \
 	protos.h \
 	redirect.cc \
-	referer.cc \
 	refresh.cc \
 	RemovalPolicy.cc \
 	RemovalPolicy.h \
@@ -488,7 +473,6 @@ squid_SOURCES = \
 	URLScheme.cc \
 	URLScheme.h \
 	urn.cc \
-	useragent.cc \
 	wccp.cc \
 	wccp2.cc \
 	whois.cc \
@@ -1172,7 +1156,6 @@ tests_testCacheManager_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
-	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -1234,7 +1217,6 @@ tests_testCacheManager_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
-	referer.cc \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
@@ -1272,7 +1254,6 @@ tests_testCacheManager_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
-	useragent.cc \
 	wccp2.cc \
 	whois.cc \
 	FadingCounter.cc \
@@ -1377,7 +1358,6 @@ tests_testEvent_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
-	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -1439,7 +1419,6 @@ tests_testEvent_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
-	referer.cc \
 	refresh.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
@@ -1476,7 +1455,6 @@ tests_testEvent_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
-	useragent.cc \
 	wccp2.cc \
 	whois.cc \
 	FadingCounter.cc \
@@ -1540,7 +1518,6 @@ tests_testEventLoop_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
-	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -1602,7 +1579,6 @@ tests_testEventLoop_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
-	referer.cc \
 	refresh.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
@@ -1639,7 +1615,6 @@ tests_testEventLoop_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
-	useragent.cc \
 	wccp2.cc \
 	whois.cc \
 	FadingCounter.cc \
@@ -1690,7 +1665,6 @@ tests_test_http_range_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
-	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -1755,7 +1729,6 @@ tests_test_http_range_SOURCES = \
 	peer_userhash.cc \
 	pconn.cc \
 	redirect.cc \
-	referer.cc \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
@@ -1795,7 +1768,6 @@ tests_test_http_range_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
-	useragent.cc \
 	wccp2.cc \
 	whois.cc \
 	FadingCounter.cc \
@@ -1860,7 +1832,6 @@ tests_testHttpRequest_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
-	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -1922,7 +1893,6 @@ tests_testHttpRequest_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
-	referer.cc \
 	refresh.cc \
 	RemovalPolicy.cc \
 	Server.cc \
@@ -1960,7 +1930,6 @@ tests_testHttpRequest_SOURCES = \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
-	useragent.cc \
 	wccp2.cc \
 	whois.cc \
 	FadingCounter.cc \
@@ -2278,7 +2247,6 @@ tests_testURL_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
-	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	CpuAffinityMap.cc \
@@ -2340,7 +2308,6 @@ tests_testURL_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	redirect.cc \
-	referer.cc \
 	refresh.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
@@ -2375,7 +2342,6 @@ tests_testURL_SOURCES = \
 	tunnel.cc \
 	SwapDir.cc \
 	urn.cc \
-	useragent.cc \
 	wccp2.cc \
 	whois.cc \
 	FadingCounter.cc \

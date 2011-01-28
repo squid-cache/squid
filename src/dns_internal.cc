@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -33,13 +32,13 @@
  *
  */
 
-#include "config.h"
 #include "squid.h"
+#include "comm.h"
+#include "comm/Loops.h"
+#include "comm/Write.h"
 #include "event.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "comm.h"
-#include "comm/Write.h"
 #include "fde.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
@@ -60,7 +59,7 @@
    using external DNS process.
  */
 #if !USE_DNSSERVERS
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 #include "squid_windows.h"
 #define REG_TCPIP_PARA_INTERFACES "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces"
 #define REG_TCPIP_PARA "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"
@@ -227,7 +226,7 @@ static void idnsParseNameservers(void);
 #ifndef _SQUID_MSWIN_
 static void idnsParseResolvConf(void);
 #endif
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 static void idnsParseWIN32Registry(void);
 static void idnsParseWIN32SearchList(const char *);
 #endif
@@ -278,7 +277,7 @@ idnsAddNameserver(const char *buf)
         nameservers = (ns *)xcalloc(nns_alloc, sizeof(*nameservers));
 
         if (oldptr && oldalloc)
-            xmemcpy(nameservers, oldptr, oldalloc * sizeof(*nameservers));
+            memcpy(nameservers, oldptr, oldalloc * sizeof(*nameservers));
 
         if (oldptr)
             safe_free(oldptr);
@@ -310,7 +309,7 @@ idnsAddPathComponent(const char *buf)
         searchpath = (sp *)xcalloc(npc_alloc, sizeof(*searchpath));
 
         if (oldptr && oldalloc)
-            xmemcpy(searchpath, oldptr, oldalloc * sizeof(*searchpath));
+            memcpy(searchpath, oldptr, oldalloc * sizeof(*searchpath));
 
         if (oldptr)
             safe_free(oldptr);
@@ -365,9 +364,8 @@ idnsParseResolvConf(void)
         return;
     }
 
-#if defined(_SQUID_CYGWIN_)
+#if _SQUID_CYGWIN_
     setmode(fileno(fp), O_TEXT);
-
 #endif
 
     while (fgets(buf, RESOLV_BUFSZ, fp)) {
@@ -435,7 +433,7 @@ idnsParseResolvConf(void)
 
 #endif
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 static void
 idnsParseWIN32SearchList(const char * Separator)
 {
@@ -1238,7 +1236,7 @@ idnsRead(int fd, void *data)
 
     // Always keep reading. This stops (or at least makes harder) several
     // attacks on the DNS client.
-    commSetSelect(fd, COMM_SELECT_READ, idnsRead, NULL, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, idnsRead, NULL, 0);
 
     /* BUG (UNRESOLVED)
      *  two code lines after returning from comm_udprecvfrom()
@@ -1496,12 +1494,12 @@ idnsInit(void)
         if (DnsSocketB >= 0) {
             port = comm_local_port(DnsSocketB);
             debugs(78, 1, "DNS Socket created at " << addrB << ", FD " << DnsSocketB);
-            commSetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
+            Comm::SetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
         }
         if (DnsSocketA >= 0) {
             port = comm_local_port(DnsSocketA);
             debugs(78, 1, "DNS Socket created at " << addrA << ", FD " << DnsSocketA);
-            commSetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
+            Comm::SetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
         }
     }
 
@@ -1513,20 +1511,16 @@ idnsInit(void)
         idnsParseResolvConf();
 
 #endif
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     if (0 == nns)
         idnsParseWIN32Registry();
-
 #endif
 
     if (0 == nns) {
         debugs(78, 1, "Warning: Could not find any nameservers. Trying to use localhost");
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
         debugs(78, 1, "Please check your TCP-IP settings or /etc/resolv.conf file");
 #else
-
         debugs(78, 1, "Please check your /etc/resolv.conf file");
 #endif
 

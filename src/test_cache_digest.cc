@@ -225,7 +225,7 @@ cacheEntryCreate(const storeSwapLogData * s)
     CacheEntry *e = (CacheEntry *)xcalloc(1, sizeof(CacheEntry));
     assert(s);
     /* e->s = *s; */
-    xmemcpy(e->key_arr, s->key, SQUID_MD5_DIGEST_LENGTH);
+    memcpy(e->key_arr, s->key, SQUID_MD5_DIGEST_LENGTH);
     e->key = &e->key_arr[0];
     return e;
 }
@@ -491,7 +491,7 @@ accessLogReader(FileIterator * fi)
      * strcmp(hier, "SSL_PARENT_MISS") &&
      * strcmp(hier, "DEFAULT_PARENT");
      */
-    xmemcpy(entry->key, storeKeyPublic(url, method_id), sizeof(entry->key));
+    memcpy(entry->key, storeKeyPublic(url, method_id), sizeof(entry->key));
 
     /*fprintf(stdout, "%s:%d: %s %s %s %s\n",
      * fname, count, method, storeKeyText(entry->key), url, hier); */

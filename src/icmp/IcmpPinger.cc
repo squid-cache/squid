@@ -93,7 +93,7 @@ IcmpPinger::Open(void)
         return -1;
     }
 
-    xmemcpy(&wpi, buf, sizeof(wpi));
+    memcpy(&wpi, buf, sizeof(wpi));
 
     write(1, "OK\n", 3);
     x = read(0, buf, sizeof(PS));
@@ -105,7 +105,7 @@ IcmpPinger::Open(void)
         return -1;
     }
 
-    xmemcpy(&PS, buf, sizeof(PS));
+    memcpy(&PS, buf, sizeof(PS));
 
     icmp_sock = WSASocket(FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, &wpi, 0, 0);
 

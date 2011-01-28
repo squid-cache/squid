@@ -114,7 +114,7 @@ ESISegment::listToChar() const
     size_t pos = 0;
 
     while (temp.getRaw()) {
-        xmemcpy (&rv[pos], temp->buf, temp->len);
+        memcpy(&rv[pos], temp->buf, temp->len);
         pos += temp->len;
         temp = temp->next;
     }
@@ -179,7 +179,7 @@ size_t
 ESISegment::append(char const *appendBuffer, size_t appendLength)
 {
     size_t toCopy = min(appendLength, space());
-    xmemcpy (&buf[len], appendBuffer, toCopy);
+    memcpy(&buf[len], appendBuffer, toCopy);
     len += toCopy;
     return toCopy;
 }

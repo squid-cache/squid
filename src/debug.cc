@@ -255,9 +255,8 @@ debugOpenLog(const char *logfile)
         debug_log = stderr;
     }
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
     setmode(fileno(debug_log), O_TEXT);
-
 #endif
 }
 

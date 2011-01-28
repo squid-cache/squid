@@ -33,6 +33,7 @@
 #include "acl/FilledChecklist.h"
 #include "cache_snmp.h"
 #include "comm.h"
+#include "comm/Loops.h"
 #include "ipc/StartListening.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
@@ -356,8 +357,7 @@ snmpIncomingConnectionOpened(int fd, int errNo)
     if (theInSnmpConnection < 0)
         fatal("Cannot open Incoming SNMP Port");
 
-    commSetSelect(theInSnmpConnection, COMM_SELECT_READ, snmpHandleUdp, NULL,
-                  0);
+    Comm::SetSelect(theInSnmpConnection, COMM_SELECT_READ, snmpHandleUdp, NULL, 0);
 
     debugs(1, 1, "Accepting SNMP messages on " << Config.Addrs.snmp_incoming <<
            ", FD " << theInSnmpConnection << ".");
@@ -373,8 +373,7 @@ snmpOutgoingConnectionOpened(int fd, int errNo)
     if (theOutSnmpConnection < 0)
         fatal("Cannot open Outgoing SNMP Port");
 
-    commSetSelect(theOutSnmpConnection, COMM_SELECT_READ, snmpHandleUdp, NULL,
-                  0);
+    Comm::SetSelect(theOutSnmpConnection, COMM_SELECT_READ, snmpHandleUdp, NULL, 0);
 
     debugs(1, 1, "Outgoing SNMP messages on " << Config.Addrs.snmp_outgoing <<
            ", FD " << theOutSnmpConnection << ".");
@@ -426,7 +425,7 @@ snmpConnectionShutdown(void)
      */
     assert(theOutSnmpConnection > -1);
 
-    commSetSelect(theOutSnmpConnection, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(theOutSnmpConnection, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
 void
@@ -459,7 +458,7 @@ snmpHandleUdp(int sock, void *not_used)
 
     debugs(49, 5, "snmpHandleUdp: Called.");
 
-    commSetSelect(sock, COMM_SELECT_READ, snmpHandleUdp, NULL, 0);
+    Comm::SetSelect(sock, COMM_SELECT_READ, snmpHandleUdp, NULL, 0);
 
     memset(buf, '\0', SNMP_REQUEST_SIZE);
 
@@ -763,7 +762,7 @@ static_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
     oid *instance = NULL;
     if (*len <= current->len) {
         instance = (oid *)xmalloc(sizeof(name) * (*len + 1));
-        xmemcpy(instance, name, (sizeof(name) * *len));
+        memcpy(instance, name, (sizeof(name) * *len));
         instance[*len] = 0;
         *len += 1;
     }
@@ -780,7 +779,7 @@ time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 
     if (*len <= current->len) {
         instance = (oid *)xmalloc(sizeof(name) * (*len + 1));
-        xmemcpy(instance, name, (sizeof(name) * *len));
+        memcpy(instance, name, (sizeof(name) * *len));
         instance[*len] = *index;
         *len += 1;
     } else {
@@ -791,7 +790,7 @@ time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 
         if (loop < (TIME_INDEX_LEN - 1)) {
             instance = (oid *)xmalloc(sizeof(name) * (*len));
-            xmemcpy(instance, name, (sizeof(name) * *len));
+            memcpy(instance, name, (sizeof(name) * *len));
             instance[*len - 1] = index[++loop];
         }
     }
@@ -817,7 +816,7 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
     } else if (*len <= current->len) {
         debugs(49, 6, "snmp peer_Inst: *len <= current->len ???");
         instance = (oid *)xmalloc(sizeof(name) * ( *len + 1));
-        xmemcpy(instance, name, (sizeof(name) * *len));
+        memcpy(instance, name, (sizeof(name) * *len));
         instance[*len] = 1 ;
         *len += 1;
     } else {
@@ -829,7 +828,7 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
         if (peers) {
             debugs(49, 6, "snmp peer_Inst: Encode peer #" << i);
             instance = (oid *)xmalloc(sizeof(name) * (current->len + 1 ));
-            xmemcpy(instance, name, (sizeof(name) * current->len ));
+            memcpy(instance, name, (sizeof(name) * current->len ));
             instance[current->len] = no + 1 ; // i.e. the next index on cache_peeer table.
         } else {
             debugs(49, 6, "snmp peer_Inst: We have " << i << " peers. Can't find #" << no);
@@ -864,7 +863,7 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
         debugs(49, 6, HERE << "len" << *len << ", current-len" << current->len << ", addr=" << laddr << ", size=" << size);
 
         instance = (oid *)xmalloc(sizeof(name) * (*len + size ));
-        xmemcpy(instance, name, (sizeof(name) * (*len)));
+        memcpy(instance, name, (sizeof(name) * (*len)));
 
         if ( !laddr.IsAnyAddr() ) {
             addr2oid(laddr, &instance[ *len]);  // the addr
@@ -888,7 +887,7 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
             debugs(49, 6, HERE << "len" << *len << ", current-len" << current->len << ", addr=" << laddr << ", newshift=" << newshift);
 
             instance = (oid *)xmalloc(sizeof(name) * (current->len +  newshift));
-            xmemcpy(instance, name, (sizeof(name) * (current->len)));
+            memcpy(instance, name, (sizeof(name) * (current->len)));
             addr2oid(laddr, &instance[current->len]);  // the addr.
             *len = current->len + newshift ;
         }

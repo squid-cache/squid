@@ -54,7 +54,6 @@ extern "C" {
 //MOVED:structs.h    extern SquidConfig2 Config2;
     extern char *ConfigFile;	/* NULL */
     extern char *IcpOpcodeStr[];
-    extern const char *log_tags[];
     extern char tmp_error_buf[ERROR_BUF_SZ];
     extern char ThisCache[RFC2181_MAXHOSTNAMELEN << 1];
     extern char ThisCache2[RFC2181_MAXHOSTNAMELEN << 1];
@@ -149,8 +148,7 @@ extern "C" {
 
     extern unsigned int WIN32_Socks_initialized;	/* 0 */
 #endif
-#if _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     extern unsigned int WIN32_OS_version;	/* 0 */
     extern char *WIN32_OS_string;           /* NULL */
     extern char *WIN32_Service_name;        /* NULL */
@@ -166,6 +164,7 @@ extern "C" {
     extern int ssl_ex_index_server;	/* -1 */
     extern int ssl_ctx_ex_index_dont_verify_domain; /* -1 */
     extern int ssl_ex_index_cert_error_check;	/* -1 */
+    extern int ssl_ex_index_ssl_error_detail;      /* -1 */
 
     extern const char *external_acl_message;      /* NULL */
     extern int opt_send_signal;	/* -1 */

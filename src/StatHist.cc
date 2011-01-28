@@ -53,15 +53,13 @@ static void statHistInit(StatHist * H, int capacity, hbase_f * val_in, hbase_f *
 static int statHistBin(const StatHist * H, double v);
 static double statHistVal(const StatHist * H, int bin);
 static StatHistBinDumper statHistBinDumper;
-#if !defined(_SQUID_HPUX_) || !defined(__GNUC__)
-/*
- * HP-UX and GCC (2.8?) give strange errors when these simple
- * functions are static.
- */
-static hbase_f Log;
-static hbase_f Exp;
-static hbase_f Null;
-#endif
+
+namespace Math
+{
+hbase_f Log;
+hbase_f Exp;
+hbase_f Null;
+};
 
 /* low level init, higher level functions has less params */
 static void
@@ -125,7 +123,7 @@ statHistCopy(StatHist * Dest, const StatHist * Orig)
            (long int) (Dest->capacity * sizeof(*Dest->bins)) << " bytes to " <<
            Dest->bins << " from " << Orig->bins);
 
-    xmemcpy(Dest->bins, Orig->bins, Dest->capacity * sizeof(*Dest->bins));
+    memcpy(Dest->bins, Orig->bins, Dest->capacity * sizeof(*Dest->bins));
 }
 
 /*
@@ -274,21 +272,15 @@ statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd)
 }
 
 /* log based histogram */
-#if !defined(_SQUID_HPUX_) || !defined(__GNUC__)
-static
-#endif
 double
-Log(double x)
+Math::Log(double x)
 {
     assert((x + 1.0) >= 0.0);
     return log(x + 1.0);
 }
 
-#if !defined(_SQUID_HPUX_) || !defined(__GNUC__)
-static
-#endif
 double
-Exp(double x)
+Math::Exp(double x)
 {
     return exp(x) - 1.0;
 }
@@ -296,16 +288,13 @@ Exp(double x)
 void
 statHistLogInit(StatHist * H, int capacity, double min, double max)
 {
-    statHistInit(H, capacity, Log, Exp, min, max);
+    statHistInit(H, capacity, Math::Log, Math::Exp, min, max);
 }
 
 /* linear histogram for enums */
 /* we want to be have [-1,last_enum+1] range to track out of range enums */
-#if !defined(_SQUID_HPUX_) || !defined(__GNUC__)
-static
-#endif
 double
-Null(double x)
+Math::Null(double x)
 {
     return x;
 }
@@ -313,7 +302,7 @@ Null(double x)
 void
 statHistEnumInit(StatHist * H, int last_enum)
 {
-    statHistInit(H, last_enum + 3, Null, Null, (double) -1, (double) (last_enum + 1 + 1));
+    statHistInit(H, last_enum + 3, Math::Null, Math::Null, (double) -1, (double) (last_enum + 1 + 1));
 }
 
 void
@@ -327,7 +316,7 @@ statHistEnumDumper(StoreEntry * sentry, int idx, double val, double size, int co
 void
 statHistIntInit(StatHist * H, int n)
 {
-    statHistInit(H, n, Null, Null, (double) 0, (double) n - 1);
+    statHistInit(H, n, Math::Null, Math::Null, (double) 0, (double) n - 1);
 }
 
 void

@@ -9,11 +9,11 @@
 MAKETEST="distcheck"
 #
 #
-# The options for this level can be easily generated semi-automatically from configure.in by:
-#	grep -E "^AC_ARG_ENABLE" ./configure.in | grep -o -E "[0-9a-z\-]+[,]" | grep -o -E "[^,]+" >disable.opts
+# The options for this level can be easily generated semi-automatically from configure.ac by:
+#	grep -E "^AC_ARG_ENABLE" ./configure.ac | grep -o -E "[0-9a-z\-]+[,]" | grep -o -E "[^,]+" >disable.opts
 # followed by insertion of '	--disable-' and '\' strings
 #
-# 	grep -E "^AC_ARG_WITH" ./configure.in | grep -o -E "[0-9a-z\-]+[,]" | grep -o -E "[^,]+" >without.opts
+# 	grep -E "^AC_ARG_WITH" ./configure.ac | grep -o -E "[0-9a-z\-]+[,]" | grep -o -E "[^,]+" >without.opts
 # followed by insertion of '	--without-' and ' \' strings
 #
 # sometimes it's just too automatic.. Following options should be just stripped

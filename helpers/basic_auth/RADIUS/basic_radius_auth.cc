@@ -63,7 +63,7 @@
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 #include <io.h>
 #endif
 #if HAVE_CTYPE_H

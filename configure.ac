@@ -39,7 +39,11 @@ AC_CANONICAL_HOST
 AC_MSG_CHECKING([simplified host os])
 simple_host_os=`echo $host_os|sed 's/[0-9].*//g;s/-.*//g'`
 squid_host_os_version=`echo $host_os|tr -d "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"`
-squid_host_os=`echo $simple_host_os| sed s/$squid_host_os_version//g`
+if test -n "$squid_host_os_version"; then
+	squid_host_os="`echo $simple_host_os| sed s/$squid_host_os_version//g`"
+else
+	squid_host_os="$simple_host_os"
+fi
 AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 # on windows squid_host_os is either mingw or cygwin, version is 32
 
@@ -510,7 +514,7 @@ for module in $squid_disk_module_candidates none; do
             AC_MSG_NOTICE([Windows threads support automatically enabled])
             ;;
           freebsd)
-            if test $squid_host_os_version -lt 7 ; then
+            if test `echo "$squid_host_os_version" | cut -b1` -lt 7 ; then
                 AC_MSG_NOTICE(pthread library requires FreeBSD 7 or later)
                 squid_opt_use_diskthreads="no"
             else
@@ -954,28 +958,6 @@ dnl   fi
 dnl ])
 
 
-AC_ARG_ENABLE(useragent-log,
-  AS_HELP_STRING([--enable-useragent-log],
-                 [Enable logging of User-Agent header]), [ 
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-useragent-log: $enableval])
-  enable_useragent_log=$enableval
-])
-SQUID_DEFINE_BOOL(USE_USERAGENT_LOG,${enable_useragent_log:=no},
-    [If you want to log User-Agent request header values, define this.])
-AC_MSG_NOTICE([User-Agent logging enabled: $enable_useragent_log])
-
-AC_ARG_ENABLE(referer-log,
-  AS_HELP_STRING([--enable-referer-log],[Enable logging of Referer header]), [ 
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-referer-log: $enableval])
-])
-SQUID_DEFINE_BOOL(USE_REFERER_LOG,${enable_referer_log:=no},
-       [If you want to log Referer request header values, define this.
-        By default, they are written to referer.log in the Squid logdir.
-        This feature is deprecated in favour of custom log formats])
-AC_MSG_NOTICE([Referer logging enabled: $enable_referer_log])
-
 AC_ARG_ENABLE(wccp,
   AS_HELP_STRING([--disable-wccp],[Disable Web Cache Coordination Protocol]), [
 SQUID_YESNO([$enableval],[unrecognized argument to --disable-wccp: $enableval])
@@ -1401,6 +1383,10 @@ if test "x$with_netfilter_conntrack" != "xno"; then
             AC_MSG_ERROR([--with-netfilter-conntrack specified but libnetfilter-conntrack headers not found])
         fi
         with_netfilter_conntrack=no])
+  # If nothing is broken; enable the libraries usage.
+  if test "x$with_netfilter_conntrack" != "xno"; then
+    with_netfilter_conntrack=yes
+  fi
 fi
 AC_MSG_NOTICE([Linux Netfilter Conntrack support enabled: ${with_netfilter_conntrack} ${squid_opt_netfilterconntrackpath}])
 
@@ -2127,14 +2113,12 @@ AC_ARG_ENABLE(cpu-profiling,
 SQUID_YESNO([$enableval],
             [unrecognized argument to --enable-cpu-profiling: $enableval])
 ])
-if test "x$enable_cpu_profiling" != "xno"; then
+# Default OFF. This is a debug feature. Only check and enable if forced ON.
+if test "x$enable_cpu_profiling" = "xyes"; then
   SQUID_CHECK_FUNCTIONAL_CPU_PROFILER
-  if test "x$enable_cpu_profiling" = "xyes" -a "x$squid_cv_cpu_profiler_works" = "xno"; then
+  if test "x$squid_cv_cpu_profiler_works" = "xno"; then
     AC_MSG_ERROR([CPU profiling will not be functional in this build.])
-  elif test "x$squid_cv_cpu_profiler_works" = "xno"; then
-    AC_MSG_NOTICE([CPU profiling will not be functional in this build.])
   fi
-  enable_cpu_profiling="$squid_cv_cpu_profiler_works"
 fi
 SQUID_DEFINE_BOOL(USE_XPROF_STATS,${enable_cpu_profiling:=no},
                       [Define to enable CPU profiling within Squid])
@@ -3437,6 +3421,7 @@ AC_CONFIG_FILES([\
 	helpers/external_acl/unix_group/Makefile \
 	helpers/external_acl/wbinfo_group/Makefile \
 	helpers/log_daemon/Makefile \
+	helpers/log_daemon/DB/Makefile \
 	helpers/log_daemon/file/Makefile \
 	helpers/url_rewrite/Makefile \
 	helpers/url_rewrite/fake/Makefile \

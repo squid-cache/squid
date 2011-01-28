@@ -56,7 +56,7 @@ malloc_statistics(void (*func) (int, int, int, void *), void *data)
     for (; i <= XMS_DBG_MAXSIZE; i += XMS_DBG_GRAIN)
         func(i, malloc_sizes[XMS_DBG_INDEX(i)], malloc_histo[XMS_DBG_INDEX(i)], data);
 
-    xmemcpy(&malloc_histo, &malloc_sizes, sizeof(malloc_sizes));
+    memcpy(&malloc_histo, &malloc_sizes, sizeof(malloc_sizes));
 }
 #endif /* XMALLOC_STATISTICS */
 
@@ -79,7 +79,7 @@ xcalloc(size_t n, size_t sz)
         if (failure_notify) {
             static char msg[128];
             snprintf(msg, 128, "xcalloc: Unable to allocate %"PRIuSIZE" blocks of %"PRIuSIZE" bytes!\n", n, sz);
-            (*failure_notify) (msg);
+            failure_notify(msg);
         } else {
             perror("xcalloc");
         }
@@ -120,7 +120,7 @@ xmalloc(size_t sz)
         if (failure_notify) {
             static char msg[128];
             snprintf(msg, 128, "xmalloc: Unable to allocate %"PRIuSIZE" bytes!\n", sz);
-            (*failure_notify) (msg);
+            failure_notify(msg);
         } else {
             perror("malloc");
         }
@@ -168,7 +168,7 @@ xrealloc(void *s, size_t sz)
         if (failure_notify) {
             static char msg[128];
             snprintf(msg, 128, "xrealloc: Unable to reallocate %"PRIuSIZE" bytes!\n", sz);
-            (*failure_notify) (msg);
+            failure_notify(msg);
         } else {
             perror("realloc");
         }

@@ -56,6 +56,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
+#include "log/Tokens.h"
 #include "MemObject.h"
 #include "SquidTime.h"
 #include "StoreClient.h"
@@ -2055,7 +2056,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     if (buf != result.data) {
         /* we've got to copy some data */
         assert(result.length <= next()->readBuffer.length);
-        xmemcpy(buf, result.data, result.length);
+        memcpy(buf, result.data, result.length);
         body_buf = buf;
     }
 

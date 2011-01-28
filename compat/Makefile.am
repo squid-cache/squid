@@ -32,6 +32,7 @@ libcompat_squid_a_SOURCES = \
 	osdetect.h \
 	psignal.h \
 	stdvarargs.h \
+	strnstr.cc \
 	strsep.h \
 	strtoll.h \
 	tempnam.h \
@@ -40,6 +41,7 @@ libcompat_squid_a_SOURCES = \
 	valgrind.h \
 	xalloc.cc \
 	xalloc.h \
+	xis.h \
 	xstrerror.cc \
 	xstrerror.h \
 	xstring.cc \

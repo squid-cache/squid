@@ -1765,14 +1765,18 @@ DOC_START
 	an additional ACL needs to be used which ensures the IPv6-bound traffic
 	is never forced or permitted out the IPv4 interface.
 
+	# IPv6 destination test along with a dummy access control to perofrm the required DNS
+	# This MUST be place before any ALLOW rules.
 	acl to_ipv6 dst ipv6
-	tcp_outgoing_address 2002::c001 good_service_net to_ipv6
+	http_access deny ipv6 !all
+
+	tcp_outgoing_address 2001:db8::c001 good_service_net to_ipv6
 	tcp_outgoing_address 10.1.0.2 good_service_net !to_ipv6
 
-	tcp_outgoing_address 2002::beef normal_service_net to_ipv6
+	tcp_outgoing_address 2001:db8::beef normal_service_net to_ipv6
 	tcp_outgoing_address 10.1.0.1 normal_service_net !to_ipv6
 
-	tcp_outgoing_address 2002::1 to_ipv6
+	tcp_outgoing_address 2001:db8::1 to_ipv6
 	tcp_outgoing_address 10.1.0.3 !to_ipv6
 
 	WARNING:
@@ -2817,7 +2821,7 @@ COMMENT_END
 
 NAME: logformat
 TYPE: logformat
-LOC: Config.Log.logformats
+LOC: Log::TheConfig
 DEFAULT: none
 DOC_START
 	Usage:
@@ -2859,6 +2863,7 @@ DOC_START
 		>a	Client source IP address
 		>A	Client FQDN
 		>p	Client source port
+		>eui	Client EUI (MAC address, EUI-48 or EUI-64 identifier)
 		<A	Server IP address or peer name
 		la	Local IP address (http_port)
 		lp	Local port number (http_port)
@@ -2962,10 +2967,18 @@ DOC_START
 
 	The default formats available (which do not need re-defining) are:
 
-logformat squid %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %un %Sh/%<A %mt
-logformat squidmime %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %un %Sh/%<A %mt [%>h] [%<h]
-logformat common %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
-logformat combined %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
+logformat squid      %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %un %Sh/%<A %mt
+logformat common     %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
+logformat combined   %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
+logformat referrer   %ts.%03tu %>a %{Referer}>h %ru
+logformat useragent  %>a [%tl] "%{User-Agent}>h"
+
+	When the log_mime_hdrs directive is set to ON. The squid, common and combined
+	formats have a safely encoded copy of the mime headers appended to each line
+	within a pair of brackets.
+
+	The common and combined formats are not quite true to the Apache definition.
+	The logs from Squid contain an extra status and hierarchy code appended.
 DOC_END
 
 NAME: access_log cache_access_log
@@ -3121,7 +3134,7 @@ DOC_START
 	  L<data>\n - logfile data
 	  R\n - rotate file
 	  T\n - truncate file
-	  O\n - repoen file
+	  O\n - reopen file
 	  F\n - flush file
 	  r<n>\n - set rotate count to <n>
 	  b<n>\n - 1 = buffer output, 0 = don't buffer output
@@ -3226,16 +3239,9 @@ DOC_START
 DOC_END
 
 NAME: emulate_httpd_log
-COMMENT: on|off
-TYPE: onoff
-DEFAULT: off
-LOC: Config.onoff.common_log
+TYPE: obsolete
 DOC_START
-	The Cache can emulate the log file format which many 'httpd'
-	programs use.  To disable/enable this emulation, set
-	emulate_httpd_log to 'off' or 'on'.  The default
-	is to use the native log format since it includes useful
-	information Squid-specific log analyzers use.
+	Replace this with an access_log directive using the format 'common' or 'combined'.
 DOC_END
 
 NAME: log_ip_on_direct
@@ -3273,27 +3279,15 @@ DOC_START
 DOC_END
 
 NAME: useragent_log
-TYPE: string
-LOC: Config.Log.useragent
-DEFAULT: none
-IFDEF: USE_USERAGENT_LOG
+TYPE: obsolete
 DOC_START
-	Squid will write the User-Agent field from HTTP requests
-	to the filename specified here.  By default useragent_log
-	is disabled.
+	Replace this with an access_log directive using the format 'useragent'.
 DOC_END
 
 NAME: referer_log referrer_log
-TYPE: string
-LOC: Config.Log.referer
-DEFAULT: none
-IFDEF: USE_REFERER_LOG
+TYPE: obsolete
 DOC_START
-	Squid will write the Referer field from HTTP requests to the
-	filename specified here.  By default referer_log is disabled.
-	Note that "referer" is actually a misspelling of "referrer"
-	however the misspelt version has been accepted into the HTTP RFCs
-	and we accept both.
+	Replace this with an access_log directive using the format 'referrer'.
 DOC_END
 
 NAME: pid_filename
@@ -3322,14 +3316,9 @@ DOC_START
 DOC_END
 
 NAME: forward_log
-IFDEF: WIP_FWD_LOG
-TYPE: string
-DEFAULT: none
-LOC: Config.Log.forward
+TYPE: obsolete
 DOC_START
-	Logs the server-side requests.
-
-	This is currently work in progress.
+	Use a regular access.log with ACL limiting it to MISS events.
 DOC_END
 
 NAME: strip_query_terms
@@ -3487,6 +3476,29 @@ DOC_START
 	the related problems with external NAT devices/layers.
 
 	Requires ftp_passive to be ON (default) for any effect.
+DOC_END
+
+NAME: ftp_eprt
+TYPE: onoff
+DEFAULT: on
+LOC: Config.Ftp.eprt
+DOC_START
+	FTP Protocol extensions permit the use of a special "EPRT" command.
+
+	This extension provides a protocol neutral alternative to the
+	IPv4-only PORT command. When supported it enables active FTP data
+	channels over IPv6 and efficient NAT handling.
+
+	Turning this OFF will prevent EPRT being attempted and will skip
+	straight to using PORT for IPv4 servers.
+
+	Some devices are known to not handle this extension correctly and
+	may result in crashes. Devices which suport EPRT enough to fail
+	cleanly will result in Squid attempting PORT anyway. This directive
+	should only be disabled when EPRT results in device failures.
+
+	WARNING: Doing so will convert Squid back to the old behavior with all
+	the related problems with external NAT devices/layers and IPv4-only FTP.
 DOC_END
 
 NAME: ftp_sanitycheck
@@ -3702,6 +3714,17 @@ DOC_START
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
+NAME: max_stale
+COMMENT: time-units
+TYPE: time_t
+LOC: Config.maxStale
+DEFAULT: 1 week
+DOC_START
+	This option puts an upper limit on how stale content Squid
+	will serve from the cache if cache validation fails.
+	Can be overriden by the refresh_pattern max-stale option.
+DOC_END
+
 NAME: refresh_pattern
 TYPE: refreshpattern
 LOC: Config.Refresh
@@ -3734,6 +3757,7 @@ DOC_START
 		 ignore-must-revalidate
 		 ignore-private
 		 ignore-auth
+		 max-stale=NN
 		 refresh-ims
 		 store-stale
 
@@ -3798,6 +3822,10 @@ DOC_START
 		present, or if they're already stale. By default, Squid will 
 		not cache such responses because they usually can't be
 		reused. Note that such responses will be stale by default.
+
+		max-stale=NN provide a maximum staleness factor. Squid won't
+		serve objects more stale than this even if it failed to
+		validate the object. Default: use the max_stale global limit.
 
 	Basically a cached object is:
 
@@ -4047,6 +4075,17 @@ DOC_START
 	than this limit receives an "Invalid Request" error message.
 	If you set this parameter to a zero (the default), there will
 	be no limit imposed.
+DOC_END
+
+NAME: client_request_buffer_max_size
+COMMENT: (bytes)
+TYPE: b_size_t
+DEFAULT: 512 KB
+LOC: Config.maxRequestBufferSize
+DOC_START
+	This specifies the maximum buffer size of a client request.
+	It prevents squid eating too much memory when somebody uploads
+	a large file.
 DOC_END
 
 NAME: chunked_request_body_max_size
@@ -5922,12 +5961,18 @@ DOC_START
 	    you may also specify them by your custom file name:
 	    Example: deny_info ERR_CUSTOM_ACCESS_DENIED bad_guys
 
+	By defaut Squid will send "403 Forbidden". A different 4xx or 5xx
+	may be specified by prefixing the file name with the code and a colon.
+	e.g. 404:ERR_CUSTOM_ACCESS_DENIED
+
 	Alternatively you can tell Squid to reset the TCP connection
 	by specifying TCP_RESET.
 
 	Or you can specify an error URL or URL pattern. The browsers will
-	get redirected (302) to the specified URL after formatting tags have
-	been replaced.
+	get redirected to the specified URL after formatting tags have
+	been replaced. Redirect will be done with 302 or 307 according to
+	HTTP/1.1 specs. A different 3xx code may be specified by prefixing
+	the URL. e.g. 303:http://example.com/
 
 	URL FORMAT TAGS:
 		%a	- username (if available. Password NOT included)
@@ -7072,7 +7117,7 @@ DOC_START
 	X-Forwarded-For header.
 
 	If set to "truncate", Squid will remove all existing
-	X-Forwarded-For entries, and place itself as the sole entry.
+	X-Forwarded-For entries, and place the client IP as the sole entry.
 DOC_END
 
 NAME: cachemgr_passwd

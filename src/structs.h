@@ -167,6 +167,7 @@ struct SquidConfig {
 #if USE_HTTP_VIOLATIONS
     time_t negativeTtl;
 #endif
+    time_t maxStale;
     time_t negativeDnsTtl;
     time_t positiveDnsTtl;
     time_t shutdownLifetime;
@@ -199,6 +200,7 @@ struct SquidConfig {
     size_t maxRequestHeaderSize;
     int64_t maxRequestBodySize;
     int64_t maxChunkedRequestBodySize;
+    size_t maxRequestBufferSize;
     size_t maxReplyHeaderSize;
     acl_size_t *ReplyBodySize;
 
@@ -260,27 +262,10 @@ struct SquidConfig {
     struct {
         char *store;
         char *swap;
-#if USE_USERAGENT_LOG
-
-        char *useragent;
-#endif
-#if USE_REFERER_LOG
-
-        char *referer;
-#endif
-#if WIP_FWD_LOG
-
-        char *forward;
-#endif
-
-        logformat *logformats;
-
         customlog *accesslogs;
-
 #if ICAP_CLIENT
         customlog *icaplogs;
 #endif
-
         int rotateNumber;
     } Log;
     char *adminEmail;
@@ -502,6 +487,7 @@ struct SquidConfig {
         int passive;
         int epsv_all;
         int epsv;
+        int eprt;
         int sanitycheck;
         int telnet;
     } Ftp;
@@ -730,6 +716,7 @@ public:
     int max_age;
     int s_maxage;
     int max_stale;
+    int stale_if_error;
     int min_fresh;
     String other;
 };
@@ -1122,6 +1109,7 @@ struct _refresh_t {
         unsigned int ignore_auth:1;
 #endif
     } flags;
+    int max_stale;
 };
 
 /*
@@ -1314,23 +1302,17 @@ struct _store_rebuild_data {
     int zero_object_sz;
 };
 
-class logformat_token;
-
-struct _logformat {
-    char *name;
-    logformat_token *format;
-    logformat *next;
-};
-
 class Logfile;
+class logformat;
 
+#include "log/Formats.h"
 struct _customlog {
     char *filename;
     ACLList *aclList;
     logformat *logFormat;
     Logfile *logfile;
     customlog *next;
-    customlog_type type;
+    Log::Format::log_type type;
 };
 
 #endif /* SQUID_STRUCTS_H */
