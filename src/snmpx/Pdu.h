@@ -42,7 +42,7 @@ public:
 private:
     void init(); ///< initialize members
     void assign(const Pdu& pdu); ///< perform full assignment
-    int aggrCount;  ///< The number of other Pdus merged into
+    unsigned int aggrCount;  ///< The number of other Pdus merged into
 };
 
 } // namespace Snmp

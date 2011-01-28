@@ -16,10 +16,11 @@
 #include "mgr/Response.h"
 #include "mgr/Forwarder.h"
 #include "CacheManager.h"
+#if SQUID_SNMP
 #include "snmpx/Forwarder.h"
 #include "snmpx/Request.h"
 #include "snmpx/Response.h"
-
+#endif
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Strand);
 
@@ -67,6 +68,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         handleCacheMgrResponse(Mgr::Response(message));
         break;
 
+#if SQUID_SNMP
     case mtSnmpRequest:
         handleSnmpRequest(Snmp::Request(message));
         break;
@@ -74,6 +76,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
     case mtSnmpResponse:
         handleSnmpResponse(Snmp::Response(message));
         break;
+#endif
 
     default:
         debugs(54, 1, HERE << "Unhandled message type: " << message.type());
@@ -106,6 +109,7 @@ void Ipc::Strand::handleCacheMgrResponse(const Mgr::Response& response)
     Mgr::Forwarder::HandleRemoteAck(response.requestId);
 }
 
+#if SQUID_SNMP
 void Ipc::Strand::handleSnmpRequest(const Snmp::Request& request)
 {
     debugs(54, 6, HERE);
@@ -117,6 +121,7 @@ void Ipc::Strand::handleSnmpResponse(const Snmp::Response& response)
     debugs(54, 6, HERE);
     Snmp::Forwarder::HandleRemoteAck(response.requestId);
 }
+#endif
 
 void Ipc::Strand::timedout()
 {
