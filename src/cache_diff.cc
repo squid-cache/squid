@@ -146,9 +146,8 @@ cacheIndexAddLog(CacheIndex * idx, const char *fname)
         return 0;
     }
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
     setmode(fileno(file), O_BINARY);
-
 #endif
 
     scanned_count = cacheIndexScan(idx, fname, file);

@@ -33,7 +33,7 @@
 #ifndef _INC_SQUID_WINDOWS_H
 #define _INC_SQUID_WINDOWS_H
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 
 #ifndef ACL
 #define ACL WindowsACL
@@ -45,6 +45,5 @@
 #undef _MSWIN_ACL_WAS_NOT_DEFINED
 #endif
 
-#endif /* _SQUID_WIN32_ */
-
+#endif /* _SQUID_WINDOWS_ */
 #endif /* _INC_SQUID_WINDOWS_H */

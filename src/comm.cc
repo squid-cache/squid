@@ -62,7 +62,7 @@
 #endif
 
 #include "cbdata.h"
-#if defined(_SQUID_CYGWIN_)
+#if _SQUID_CYGWIN_
 #include <sys/ioctl.h>
 #endif
 #ifdef HAVE_NETINET_TCP_H
@@ -1661,12 +1661,10 @@ commSetNonBlocking(int fd)
     int flags;
     int dummy = 0;
 #endif
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     int nonblocking = TRUE;
 
-#ifdef _SQUID_CYGWIN_
-
+#if _SQUID_CYGWIN_
     if (fd_table[fd].type != FD_PIPE) {
 #endif
 
@@ -1675,8 +1673,7 @@ commSetNonBlocking(int fd)
             return COMM_ERROR;
         }
 
-#ifdef _SQUID_CYGWIN_
-
+#if _SQUID_CYGWIN_
     } else {
 #endif
 #endif
@@ -1693,10 +1690,8 @@ commSetNonBlocking(int fd)
         }
 
 #endif
-#ifdef _SQUID_CYGWIN_
-
+#if _SQUID_CYGWIN_
     }
-
 #endif
     fd_table[fd].flags.nonblocking = 1;
 
