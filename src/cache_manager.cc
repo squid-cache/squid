@@ -187,8 +187,7 @@ CacheManager::ParseUrl(const char *url)
     Must(len > 0);
     t = sscanf(url, "cache_object://%[^/]/%[^@?]%n@%[^?]?%s", host, request, &pos, password, params);
 
-    Must(pos > 0);
-    if (url[pos] == '?') {
+    if (pos >0 && url[pos] == '?') {
         ++pos;
         if (pos < len)
             xstrncpy(params, url + pos, sizeof(params));
