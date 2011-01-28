@@ -1847,6 +1847,10 @@ storeSwapMetaSize(const StoreEntry * e)
     size += pfx + STORE_HDR_METASIZE;
     size += pfx + strlen(e->url()) + 1;
 
+    // STORE_META_OBJSIZE
+    if (e->objectLen() >= 0)
+        size += pfx + sizeof(int64_t);
+
     if (const char *vary = e->mem_obj->vary_headers)
         size += pfx + strlen(vary) + 1;
 
