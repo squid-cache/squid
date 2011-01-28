@@ -59,7 +59,7 @@
    using external DNS process.
  */
 #if !USE_DNSSERVERS
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 #include "squid_windows.h"
 #define REG_TCPIP_PARA_INTERFACES "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces"
 #define REG_TCPIP_PARA "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"
@@ -226,7 +226,7 @@ static void idnsParseNameservers(void);
 #ifndef _SQUID_MSWIN_
 static void idnsParseResolvConf(void);
 #endif
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 static void idnsParseWIN32Registry(void);
 static void idnsParseWIN32SearchList(const char *);
 #endif
@@ -364,9 +364,8 @@ idnsParseResolvConf(void)
         return;
     }
 
-#if defined(_SQUID_CYGWIN_)
+#if _SQUID_CYGWIN_
     setmode(fileno(fp), O_TEXT);
-
 #endif
 
     while (fgets(buf, RESOLV_BUFSZ, fp)) {
@@ -434,7 +433,7 @@ idnsParseResolvConf(void)
 
 #endif
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 static void
 idnsParseWIN32SearchList(const char * Separator)
 {
@@ -1512,20 +1511,16 @@ idnsInit(void)
         idnsParseResolvConf();
 
 #endif
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     if (0 == nns)
         idnsParseWIN32Registry();
-
 #endif
 
     if (0 == nns) {
         debugs(78, 1, "Warning: Could not find any nameservers. Trying to use localhost");
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
         debugs(78, 1, "Please check your TCP-IP settings or /etc/resolv.conf file");
 #else
-
         debugs(78, 1, "Please check your /etc/resolv.conf file");
 #endif
 
