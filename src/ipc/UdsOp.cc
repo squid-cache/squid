@@ -146,7 +146,7 @@ int Ipc::ImportFdIntoComm(int fd, int socktype, int protocol, Ipc::FdNoteId note
         comm_import_opened(fd, ipAddr, COMM_NONBLOCKING, Ipc::FdNote(noteId), addr_info);
         ipAddr.FreeAddrInfo(addr_info);
     } else {
-        debugs(16, DBG_CRITICAL, HERE << "ERROR: FD " << fd << ' ' << xstrerror());
+        debugs(54, DBG_CRITICAL, HERE << "ERROR: FD " << fd << ' ' << xstrerror());
         ::close(fd);
         fd = -1;
     }

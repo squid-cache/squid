@@ -64,7 +64,7 @@ Ipc::Inquirer::inquire()
     }
 
     Must(request->requestId == 0);
-    AsyncCall::Pointer callback = asyncCall(16, 5, "Mgr::Inquirer::handleRemoteAck",
+    AsyncCall::Pointer callback = asyncCall(54, 5, "Mgr::Inquirer::handleRemoteAck",
                                             HandleAckDialer(this, &Inquirer::handleRemoteAck, NULL));
     if (++LastRequestId == 0) // don't use zero value as request->requestId
         ++LastRequestId;
@@ -178,7 +178,7 @@ Ipc::Inquirer::RequestTimedOut(void* param)
     Must(param != NULL);
     Inquirer* cmi = static_cast<Inquirer*>(param);
     // use async call to enable job call protection that time events lack
-    CallJobHere(16, 5, cmi, Inquirer, requestTimedOut);
+    CallJobHere(54, 5, cmi, Inquirer, requestTimedOut);
 }
 
 /// called when the strand failed to respond (or finish responding) in time
