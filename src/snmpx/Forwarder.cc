@@ -25,7 +25,7 @@ Snmp::Forwarder::Forwarder(const Pdu& aPdu, const Session& aSession, int aFd,
 {
     debugs(49, 5, HERE << "FD " << aFd);
     Must(fd >= 0);
-    closer = asyncCall(16, 5, "Snmp::Forwarder::noteCommClosed",
+    closer = asyncCall(49, 5, "Snmp::Forwarder::noteCommClosed",
                        CommCbMemFunT<Forwarder, CommCloseCbParams>(this, &Forwarder::noteCommClosed));
     comm_add_close_handler(fd, closer);
 }
