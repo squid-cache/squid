@@ -48,7 +48,6 @@ public:
     unsigned int asTimeTicks() const; ///< returns variable value as time ticks
     Range<const oid*> asObject() const; ///< returns variable value as object oid
     Range<const u_char*> asString() const; ///< returns variable value as chars string
-    ipaddr asIpAddress() const; ///< returns variable value as ip address
 
     void setInt(int value); ///< assign int value to variable
     void setCounter(int value); ///< assign Counter32 value to variable
@@ -56,7 +55,6 @@ public:
     void setString(const Range<const u_char*>& string); ///< assign string to variable
     void setObject(const Range<const oid*>& object); ///< assign object oid to variable
     void setTimeTicks(unsigned int ticks); ///<assign unsigned int (time) value to variable
-    void setIpAddress(ipaddr addr); ///< assign sockaddr_in to variable
     void setCounter64(long long int counter); ///< assign Counter64 value to variable
 
     void copyValue(const Var& var); ///< copy variable from another one

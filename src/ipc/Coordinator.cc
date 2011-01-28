@@ -15,10 +15,11 @@
 #include "mgr/Inquirer.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
+#if SQUID_SNMP
 #include "snmpx/Inquirer.h"
 #include "snmpx/Request.h"
 #include "snmpx/Response.h"
-
+#endif
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
 Ipc::Coordinator* Ipc::Coordinator::TheInstance = NULL;
@@ -75,6 +76,7 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
         handleCacheMgrResponse(Mgr::Response(message));
         break;
 
+#if SQUID_SNMP
     case mtSnmpRequest:
         debugs(54, 6, HERE << "SNMP request");
         handleSnmpRequest(Snmp::Request(message));
@@ -84,6 +86,7 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
         debugs(54, 6, HERE << "SNMP response");
         handleSnmpResponse(Snmp::Response(message));
         break;
+#endif
 
     default:
         debugs(54, 1, HERE << "Unhandled message type: " << message.type());
@@ -143,6 +146,7 @@ Ipc::Coordinator::handleCacheMgrResponse(const Mgr::Response& response)
     Mgr::Inquirer::HandleRemoteAck(response);
 }
 
+#if SQUID_SNMP
 void
 Ipc::Coordinator::handleSnmpRequest(const Snmp::Request& request)
 {
@@ -162,6 +166,7 @@ Ipc::Coordinator::handleSnmpResponse(const Snmp::Response& response)
     debugs(54, 4, HERE);
     Snmp::Inquirer::HandleRemoteAck(response);
 }
+#endif
 
 int
 Ipc::Coordinator::openListenSocket(const SharedListenRequest& request,
