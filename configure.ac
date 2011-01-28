@@ -152,10 +152,10 @@ fi
 AC_SUBST(CGIEXT)
 
 AM_CONDITIONAL(ENABLE_WIN32SPECIFIC,
-               [test "x$squid_host_os" = "xmingw$squid_host_os_version" -o "x$squid_host_os" = "xcygwin$squid_host_os_version"])
-AM_CONDITIONAL(USE_IPC_WIN32,[test "x$squid_host_os" = "xmingw$squid_host_os_version"])
+               [test "x$squid_host_os" = "xmingw" -o "x$squid_host_os" = "xcygwin"])
+AM_CONDITIONAL(USE_IPC_WIN32,[test "x$squid_host_os" = "xmingw"])
 
-if test "x$squid_host_os" = "xmingw$squid_host_os_version"; then
+if test "x$squid_host_os" = "xmingw"; then
   AC_PATH_PROG(WIN32_PSAPI, psapi.dll, none)
   CFLAGS="$CFLAGS -mthreads"
   CXXFLAGS="$CXXFLAGS -mthreads"
@@ -509,7 +509,7 @@ for module in $squid_disk_module_candidates none; do
       dnl REF: http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
       dnl REF: http://autoconf-archive.cryp.to/acx_pthread.html
         case "$squid_host_os" in
-          mingw|mingw32)
+          mingw)
             USE_AIOPS_WIN32=1
             AC_MSG_NOTICE([Windows threads support automatically enabled])
             ;;
@@ -709,7 +709,7 @@ for fs in $squid_storeio_module_candidates none; do
       if ! test "x$squid_disk_module_candidates_AIO" = "xyes"; then
         AC_MSG_ERROR([COSS requires POSIX AIO which is not available.])
       fi
-      # Automake om MinGW needs explicit exe extension
+      # Automake on MinGW needs explicit exe extension
       # for STORE_TESTS substition
       STORE_TESTS="$STORE_TESTS tests/testCoss$EXEEXT"
       ;;
@@ -1032,7 +1032,7 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
     linux|solaris|freebsd|openbsd|netbsd)
       ${TRUE}
       ;;
-    cygwin|cygwin32|mingw|mingw32)
+    cygwin|mingw)
       EUILIB="-liphlpapi"
       ;;
     *)
@@ -1190,7 +1190,7 @@ AC_ARG_ENABLE(select,
 [
 SQUID_YESNO($enableval,[--disable-select takes no extra argument])
 if test "x$enableval" = "xyes"; then
-  if test "x$squid_host_os" = "xmingw$squid_host_os_version"; then
+  if test "x$squid_host_os" = "xmingw"; then
     squid_opt_io_loop_engine="select_win32"
   else
     squid_opt_io_loop_engine="select"
@@ -2517,7 +2517,7 @@ AC_SEARCH_LIBS([opcom_stack_trace],[opcom_stack])
 AC_SEARCH_LIBS([strlcpy], [bsd])
 AC_SEARCH_LIBS([yp_match], [nsl nss_nis nss_nisplus])
 dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
-if test "x$squid_host_os" = "xmingw32" ; then
+if test "x$squid_host_os" = "xmingw" ; then
   SQUID_CHECK_WINSOCK_LIB
 fi
 
@@ -3112,7 +3112,7 @@ elif test "x$enable_poll" != "xno" -a "x$ac_cv_func_poll" = "xyes" ; then
   squid_opt_io_loop_engine="poll"
 elif test "x$enable_select" != "xno" -a "x$ac_cv_func_select" = "xyes"; then
   squid_opt_io_loop_engine="select"
-elif test "x$enable_select" != "xno" -a "x$squid_host_os" = "xmingw$squid_host_os_version"; then
+elif test "x$enable_select" != "xno" -a "x$squid_host_os" = "xmingw"; then
   squid_opt_io_loop_engine="select_win32"
 else
   AC_MSG_WARN([Eep!  Cannot find epoll, kqueue, /dev/poll, poll or select!])
