@@ -62,14 +62,10 @@ void GetProcessName(pid_t, char *);
 void
 GetProcessName(pid_t pid, char *ProcessName)
 {
-    HANDLE hProcess;
-
     strcpy(ProcessName, "unknown");
 #if HAVE_WIN32_PSAPI
     /* Get a handle to the process. */
-    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
-                           PROCESS_VM_READ,
-                           FALSE, pid);
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
     /* Get the process name. */
     if (NULL != hProcess) {
         HMODULE hMod;
@@ -366,21 +362,16 @@ inline const char *
 wsastrerror(int err)
 {
     static char xwsaerror_buf[BUFSIZ];
-    int i, errind = -1;
 
     if (err == 0)
         return "(0) No error.";
-    for (i = 0; i < sizeof(_wsaerrtext) / sizeof(struct _wsaerrtext); i++) {
+    for (size_t i = 0; i < sizeof(_wsaerrtext) / sizeof(struct _wsaerrtext); i++) {
         if (_wsaerrtext[i].err != err)
             continue;
-        errind = i;
-        break;
+        snprintf(xwsaerror_buf, BUFSIZ, "%s, %s", _wsaerrtext[i].errconst, _wsaerrtext[i].errdesc);
+        return xwsaerror_buf;
     }
-    if (errind == -1)
-        snprintf(xwsaerror_buf, BUFSIZ, "Unknown");
-    else
-        snprintf(xwsaerror_buf, BUFSIZ, "%s, %s", _wsaerrtext[errind].errconst, _wsaerrtext[errind].errdesc);
-    return xwsaerror_buf;
+    return "Unknown";
 }
 
 #if _SQUID_MINGW_	/* MinGW environment */
@@ -473,10 +464,8 @@ static struct errorentry errortable[] = {
 void
 WIN32_maperror(unsigned long WIN32_oserrno)
 {
-    int i;
-
     _doserrno = WIN32_oserrno;
-    for (i = 0; i < (sizeof(errortable) / sizeof(struct errorentry)); ++i) {
+    for (size_t i = 0; i < (sizeof(errortable) / sizeof(struct errorentry)); ++i) {
         if (WIN32_oserrno == errortable[i].WIN32_code) {
             errno = errortable[i].POSIX_errno;
             return;
