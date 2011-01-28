@@ -46,13 +46,9 @@
 #include <netinet/ip_icmp.h>
 #endif
 
-#ifndef _SQUID_LINUX_
-#ifndef _SQUID_CYGWIN_
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_LINUX_ && !_SQUID_WINDOWS_
 #define icmphdr icmp
 #define iphdr ip
-#endif
-#endif
 #endif
 
 /* Linux uses its own field names. */
@@ -87,8 +83,7 @@
    to use the native Windows port definitions.
  */
 
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
 #include "fde.h"
 
 #ifdef _SQUID_MSWIN_

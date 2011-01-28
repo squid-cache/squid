@@ -36,7 +36,7 @@
 
 #if USE_DISKIO_AIO
 
-#ifdef _SQUID_CYGWIN_
+#if _SQUID_CYGWIN_
 #include "squid_windows.h"
 #endif
 

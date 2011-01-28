@@ -966,14 +966,12 @@ mainInitialize(void)
 
     debugs(1, 0, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
 
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
         debugs(1, 0, "Running as " << WIN32_Service_name << " Windows System Service on " << WIN32_OS_string);
         debugs(1, 0, "Service command line is: " << WIN32_Service_Command_Line);
     } else
         debugs(1, 0, "Running on " << WIN32_OS_string);
-
 #endif
 
     debugs(1, 1, "Process ID " << getpid());
@@ -1240,8 +1238,7 @@ SquidMain(int argc, char **argv)
 {
     ConfigureCurrentKid(argv[0]);
 
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     int WIN32_init_err;
 #endif
 
@@ -1260,11 +1257,9 @@ SquidMain(int argc, char **argv)
 
 #endif
 
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     if ((WIN32_init_err = WIN32_Subsystem_Init(&argc, &argv)))
         return WIN32_init_err;
-
 #endif
 
     /* call mallopt() before anything else */

@@ -44,7 +44,7 @@ using namespace Squid;
 /** \endcond */
 #endif
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 #include <io.h>
 #endif
 #if HAVE_STDIO_H
@@ -400,9 +400,8 @@ main(int argc, char *argv[])
                     xstrerror());
             exit(-1);
         }
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
         setmode(put_fd, O_BINARY);
-
 #endif
 
         fstat(put_fd, &sb);
