@@ -13,8 +13,8 @@ extern "C" {
 
 #if !USE_XPROF_STATS
 
-#define PROF_start(ARGS) ((void)0)
-#define PROF_stop(ARGS) ((void)0)
+#define PROF_start(probename) ((void)0)
+#define PROF_stop(probename) ((void)0)
 
 #else /* USE_XPROF_STATS */
 
@@ -51,8 +51,8 @@ extern "C" {
     extern void xprof_stop(xprof_type type, const char *timer);
     extern void xprof_event(void *data);
 
-#define PROF_start(type) xprof_start(XPROF_##type, #type)
-#define PROF_stop(type) xprof_stop(XPROF_##type, #type)
+#define PROF_start(probename) xprof_start(XPROF_##probename, #probename)
+#define PROF_stop(probename) xprof_stop(XPROF_##probename, #probename)
 
 #endif /* USE_XPROF_STATS */
 
