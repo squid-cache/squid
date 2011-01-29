@@ -7,19 +7,17 @@
 #include "squid.h"
 #include "fs/rock/RockDirMap.h"
 
-Rock::DirMap::DirMap(int roughLimit): hintPast(-1), hintNext(0),
-    bitLimit(roundLimit(roughLimit)), bitCount(0), words(NULL), wordCount(0)
+Rock::DirMap::DirMap(const int aLimit): hintPast(-1), hintNext(0),
+    limit(aLimit), count(0), slots(NULL)
 {
-    syncWordCount();
     allocate();
 }
 
 Rock::DirMap::DirMap(const DirMap &m):
     hintPast(m.hintPast), hintNext(m.hintNext),
-    bitLimit(m.bitLimit), bitCount(m.bitCount),
-    words(NULL), wordCount(m.wordCount)
+    limit(m.limit), count(m.count),
+    slots(NULL)
 {
-    syncWordCount();
     copyFrom(m);
 }
 
@@ -34,24 +32,21 @@ Rock::DirMap &Rock::DirMap::operator =(const DirMap &m)
 
     hintPast = m.hintPast;
     hintNext = m.hintNext;
-    bitLimit = m.bitLimit;
-    bitCount = m.bitCount;
+    limit = m.limit;
+    count = m.count;
 
-    wordCount = m.wordCount;
     copyFrom(m);
     return *this;
 }
 
 void
-Rock::DirMap::resize(const int roughLimit)
+Rock::DirMap::resize(const int newLimit)
 {
-    const int newLimit = roundLimit(roughLimit);
     // TODO: optimize?
-    if (newLimit != bitLimit) {
+    if (newLimit != limit) {
         DirMap old(*this);
         deallocate();
-        bitLimit = newLimit;
-        syncWordCount();
+        limit = newLimit;
         copyFrom(old);
 	}
 }
@@ -59,25 +54,25 @@ Rock::DirMap::resize(const int roughLimit)
 int
 Rock::DirMap::entryLimit() const
 {
-    return bitLimit;
+    return limit;
 }
 
 int
 Rock::DirMap::entryCount() const
 {
-    return bitCount;
+    return count;
 }
 
 bool
 Rock::DirMap::full() const
 {
-    return bitCount >= bitLimit;
+    return count >= limit;
 }
 
 bool
 Rock::DirMap::valid(const int pos) const
 {
-    return 0 <= pos && pos < bitLimit;
+    return 0 <= pos && pos < limit;
 }
 
 int
@@ -90,21 +85,21 @@ Rock::DirMap::useNext()
     return next;
 }
 
-/// low-level allocation, assumes wordCount is set
+/// allocation, assumes limit is set
 void
 Rock::DirMap::allocate()
 {
-    assert(!words);
-    words = new unsigned long[wordCount];
-    memset(words, 0, ramSize());
+    assert(!slots);
+    slots = new uint8_t[limit];
+    memset(slots, 0, ramSize());
 }
 
-/// low-level deallocation; may place the object in an inconsistent state
+/// deallocation; may place the object in an inconsistent state
 void
 Rock::DirMap::deallocate()
 {
-    delete[] words;
-    words = NULL;
+    delete [] slots;
+    slots = NULL;
 }
 
 /// low-level copy; assumes all counts have been setup
@@ -112,63 +107,22 @@ void
 Rock::DirMap::copyFrom(const DirMap &m)
 {
     allocate();
-    if (m.wordCount)
-        memcpy(words, m.words, min(ramSize(), m.ramSize()));
+    if (m.limit)
+        memcpy(slots, m.slots, min(ramSize(), m.ramSize()));
 }
 
 /// low-level ram size calculation for mem*() calls
 int
 Rock::DirMap::ramSize() const
 {
-    return sizeof(*words) * wordCount;
+    return sizeof(*slots) * limit;
 }
-
-/* XXX: Number of bits in a long and other constants from filemap.cc */
-#if SIZEOF_LONG == 8
-#define LONG_BIT_SHIFT 6
-#define BITS_IN_A_LONG 0x40
-#define LONG_BIT_MASK  0x3F
-#define ALL_ONES (unsigned long) 0xFFFFFFFFFFFFFFFF
-#elif SIZEOF_LONG == 4
-#define LONG_BIT_SHIFT 5
-#define BITS_IN_A_LONG 0x20
-#define LONG_BIT_MASK  0x1F
-#define ALL_ONES (unsigned long) 0xFFFFFFFF
-#else
-#define LONG_BIT_SHIFT 5
-#define BITS_IN_A_LONG 0x20
-#define LONG_BIT_MASK  0x1F
-#define ALL_ONES (unsigned long) 0xFFFFFFFF
-#endif
-
-#define FM_INITIAL_NUMBER (1<<14)
 
 int
 Rock::DirMap::AbsoluteEntryLimit()
 {
     const int sfilenoMax = 0xFFFFFF; // Core sfileno maximum
-    return ((sfilenoMax+1) >> LONG_BIT_SHIFT) << LONG_BIT_SHIFT;
-}
-
-/// Adjust limit so that there are no "extra" bits in the last word
-//  that are above the limit but still found by findNext.
-int
-Rock::DirMap::roundLimit(const int roughLimit) const
-{
-    const int allowedLimit = min(roughLimit, AbsoluteEntryLimit());
-    const int newLimit = (allowedLimit >> LONG_BIT_SHIFT) << LONG_BIT_SHIFT;
-    debugs(8, 3, HERE << "adjusted map limit from " << roughLimit << " to " <<
-        newLimit);
-    return newLimit;
-}
-
-/// calculate wordCount for the number of entries (bitLimit)
-void
-Rock::DirMap::syncWordCount()
-{
-    wordCount = bitLimit >> LONG_BIT_SHIFT;
-    debugs(8, 3, HERE << wordCount << ' ' << BITS_IN_A_LONG <<
-        "-bit long words for " << bitLimit << " bits");
+    return sfilenoMax;
 }
 
 void
@@ -176,11 +130,8 @@ Rock::DirMap::use(const int pos)
 {
     if (!has(pos)) {
         assert(valid(pos));
-
-        const unsigned long bitmask = (1L << (pos & LONG_BIT_MASK));
-        words[pos >> LONG_BIT_SHIFT] |= bitmask;
-
-        ++bitCount;
+        slots[pos] = 1;
+        ++count;
         debugs(8, 6, HERE << pos);
 	} else {
         debugs(8, 3, HERE << pos << " in vain");
@@ -191,9 +142,8 @@ void
 Rock::DirMap::clear(const int pos)
 {
     if (has(pos)) {
-        const unsigned long bitmask = (1L << (pos & LONG_BIT_MASK));
-        words[pos >> LONG_BIT_SHIFT] &= ~bitmask;
-        --bitCount;
+        slots[pos] = 0;
+        --count;
         debugs(8, 6, HERE << pos);
 	} else {
         debugs(8, 3, HERE << pos << " in vain");
@@ -209,8 +159,7 @@ Rock::DirMap::has(const int pos) const
     if (!valid(pos)) // the only place where we are forgiving
         return false;
 
-    const unsigned long bitmask = (1L << (pos & LONG_BIT_MASK));
-    return words[pos >> LONG_BIT_SHIFT] & bitmask;
+    return slots[pos];
 }
 
 /// low-level empty-slot search routine, uses and updates hints
@@ -228,24 +177,12 @@ Rock::DirMap::findNext() const
     // adjust and try the scan-based hint
     if (!valid(hintNext))
         hintNext = 0;
-    if (valid(hintNext) && !has(hintNext))
-        return hintNext++;
 
-    // start scan with the scan-based hint
-    int wordPos = hintNext >> LONG_BIT_SHIFT;
-
-    for (int i = 0; i < wordCount; ++i) {
-        if (words[wordPos] != ALL_ONES)
-            break;
-
-        wordPos = (wordPos + 1) % wordCount;
-    }
-
-    for (int bitPos = 0; bitPos < BITS_IN_A_LONG; ++bitPos) {
-        hintNext = ((unsigned long) wordPos << LONG_BIT_SHIFT) | bitPos;
-
-        if (hintNext < bitLimit && !has(hintNext))
+    for (int i = 0; i < limit; ++i) {
+        if (!has(hintNext))
             return hintNext++;
+
+        hintNext = (hintNext + 1) % limit;
     }
 
     // the map is full
