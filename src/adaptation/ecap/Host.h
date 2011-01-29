@@ -28,6 +28,11 @@ public:
     virtual std::ostream *openDebug(libecap::LogVerbosity lv);
     virtual void closeDebug(std::ostream *debug);
 
+    // Message creation
+    typedef libecap::shared_ptr<libecap::Message> MessagePtr;
+    virtual MessagePtr newRequest() const;
+    virtual MessagePtr newResponse() const;
+
     static void Register(); ///< register adaptation host
 
 private:
