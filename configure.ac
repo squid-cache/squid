@@ -709,7 +709,7 @@ for fs in $squid_storeio_module_candidates none; do
       if ! test "x$squid_disk_module_candidates_AIO" = "xyes"; then
         AC_MSG_ERROR([COSS requires POSIX AIO which is not available.])
       fi
-      # Automake om MinGW needs explicit exe extension
+      # Automake on MinGW needs explicit exe extension
       # for STORE_TESTS substition
       STORE_TESTS="$STORE_TESTS tests/testCoss$EXEEXT"
       ;;
@@ -1189,7 +1189,13 @@ AC_ARG_ENABLE(select,
   AS_HELP_STRING([--disable-select],[Disable select(2) support.]),
 [
 SQUID_YESNO($enableval,[--disable-select takes no extra argument])
-test "x$enableval" = "xyes" && squid_opt_io_loop_engine="select"
+if test "x$enableval" = "xyes"; then
+  if test "x$squid_host_os" = "xmingw"; then
+    squid_opt_io_loop_engine="select_win32"
+  else
+    squid_opt_io_loop_engine="select"
+  fi
+fi
 ])
 AC_MSG_NOTICE([enabling select syscall for net I/O: ${enable_select:=auto}])
 
@@ -2056,7 +2062,7 @@ if test "x$squid_require_sasl" = "xyes"; then
       AC_MSG_ERROR(Neither SASL nor SASL2 found)
     ])
   ])
-  case "$host_os" in
+  case "$squid_host_os" in
     Darwin)
       if test "$ac_cv_lib_sasl2_sasl_errstring" = "yes" ; then
         AC_DEFINE(HAVE_SASL_DARWIN,1,[Define to 1 if Mac Darwin without sasl.h])
@@ -3102,11 +3108,10 @@ elif test "x$enable_devpoll" != "xno" ; then
   squid_opt_io_loop_engine="devpoll"
 elif test "x$enable_poll" != "xno" -a "x$ac_cv_func_poll" = "xyes" ; then
   squid_opt_io_loop_engine="poll"
-elif test "x$enable_select" != "xno" -a "x$ac_cv_func_select" = "xyes" ; then
+elif test "x$enable_select" != "xno" -a "x$ac_cv_func_select" = "xyes"; then
   squid_opt_io_loop_engine="select"
-  if test "x$squid_host_os" = "xmingw" ; then
-    squid_opt_io_loop_engine="select_win32"
-  fi
+elif test "x$enable_select" != "xno" -a "x$squid_host_os" = "xmingw"; then
+  squid_opt_io_loop_engine="select_win32"
 else
   AC_MSG_WARN([Eep!  Cannot find epoll, kqueue, /dev/poll, poll or select!])
   AC_MSG_WARN([Will try select and hope for the best.])
@@ -3118,7 +3123,6 @@ AC_MSG_NOTICE([Using ${squid_opt_io_loop_engine} for the IO loop.])
 AM_CONDITIONAL([USE_POLL], [test $squid_opt_io_loop_engine = poll])
 AM_CONDITIONAL([USE_EPOLL], [test $squid_opt_io_loop_engine = epoll])
 AM_CONDITIONAL([USE_SELECT], [test $squid_opt_io_loop_engine = select])
-AM_CONDITIONAL([USE_SELECT_SIMPLE], [test $squid_opt_io_loop_engine = select_simple])
 AM_CONDITIONAL([USE_SELECT_WIN32], [test $squid_opt_io_loop_engine = select_win32])
 AM_CONDITIONAL([USE_KQUEUE], [test $squid_opt_io_loop_engine = kqueue])
 AM_CONDITIONAL([USE_DEVPOLL], [test $squid_opt_io_loop_engine = devpoll])
