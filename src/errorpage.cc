@@ -1057,6 +1057,7 @@ ErrorState::BuildContent()
     String hdr;
     char dir[256];
     int l = 0;
+    const char *freePage = NULL;
 
     /** error_directory option in squid.conf overrides translations.
      * Custom errors are always found either in error_directory or the templates directory.
@@ -1130,6 +1131,7 @@ ErrorState::BuildContent()
                 if (m) {
                     /* store the language we found for the Content-Language reply header */
                     err_language = xstrdup(reset);
+                    freePage = m;
                     break;
                 } else if (Config.errorLogMissingLanguages) {
                     debugs(4, DBG_IMPORTANT, "WARNING: Error Pages Missing Language: " << reset);
@@ -1165,6 +1167,10 @@ ErrorState::BuildContent()
 #endif
         debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
     }
+
+#if USE_ERR_LOCALES
+    safe_free(freePage);
+#endif
 
     return ConvertText(m, true);
 }
