@@ -48,11 +48,13 @@ int SMB_Types[] = {SMB_P_Core,
                    -1
                   };
 
+#if UNDEFINED
 char *SMB_DOSTimToStr(int DOS_time);
 char *SMB_AtrToStr(int attribs, BOOL verbose);
 int SMB_Get_Tree_MBS(SMB_Tree_Handle tree);
 int SMB_Get_Max_Buf_Siz(SMB_Handle_Type Con_Handle);
 int SMB_Get_Protocol_IDX(SMB_Handle_Type Con_Handle);
+#endif /* UNDEFINED */
 int SMB_Get_Protocol(SMB_Handle_Type Con_Handle);
 int SMB_Figure_Protocol(const char *dialects[], int prot_index);
 int SMB_TreeDisconnect(SMB_Tree_Handle Tree_Handle, BOOL discard);
@@ -80,6 +82,7 @@ void SMB_Print_Pkt(FILE fd, RFCNB_Pkt *pkt, BOOL command, int Offset, int Len)
 
 /* Convert a DOS Date_Time to a local host type date time for printing */
 
+#if UNDEFINED
 char *SMB_DOSTimToStr(int DOS_time)
 
 {
@@ -172,6 +175,7 @@ int SMB_Get_Protocol_IDX(SMB_Handle_Type Con_Handle)
     }
 
 }
+#endif /* UNDEFINED */
 
 /* Pick up the protocol from the connection structure                       */
 
