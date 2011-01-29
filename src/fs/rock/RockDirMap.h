@@ -4,23 +4,22 @@
 namespace Rock {
 
 /// \ingroup Rock
-/// bitmap of used db slots indexed by sfileno
+/// map of used db slots indexed by sfileno
 class DirMap
 {
 public:
-    // the map may adjust the limit down a little; see roundLimit()
-    DirMap(const int roughLimit = 0);
+    DirMap(const int aLimit = 0);
     DirMap(const DirMap &map);
     ~DirMap();
 
     DirMap &operator =(const DirMap &map);
-    void resize(const int newLimit); ///< forgets higher bits or appends zeros
+    void resize(const int newLimit); ///< forgets higher slots or appends zeros
 
     bool full() const; ///< there are no empty slots left
     bool has(int n) const; ///< whether slot n is occupied
     bool valid(int n) const; ///< whether n is a valid slot coordinate
-    int entryCount() const; ///< number of bits turned on
-    int entryLimit() const; ///< maximum number of bits that can be turned on
+    int entryCount() const; ///< number of used slots
+    int entryLimit() const; ///< maximum number of slots that can be used
 
     void use(int n); ///< mark slot n as used
     void clear(int n); ///< mark slot n as unused
@@ -34,14 +33,12 @@ private:
     ///< unreliable next empty slot suggestion #2 (scan based)
     mutable int hintNext;
 
-    int bitLimit; ///< maximum number of map entries
-    int bitCount; ///< current number of map entries
+    int limit; ///< maximum number of map slots
+    int count; ///< current number of map slots
 
-    unsigned long *words; ///< low level storage
-    int wordCount; ///< number of words allocated
+    typedef uint8_t Slot;
+    Slot *slots; ///< slots storage
 
-    int roundLimit(const int roughLimit) const;
-    void syncWordCount();
     int ramSize() const;
     void allocate();
     void deallocate();
@@ -53,8 +50,5 @@ private:
 
 // We do not reuse struct _fileMap because we cannot control its size,
 // resulting in sfilenos that are pointing beyond the database.
-
-// TODO: Consider using std::bitset. Is it really slower for findNext()?
-
 
 #endif /* SQUID_FS_ROCK_DIR_MAP_H */
