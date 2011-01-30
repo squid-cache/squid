@@ -25,6 +25,85 @@ Rock::DirMap::DirMap(const int id):
     shared = reinterpret_cast<Shared *>(shm.mem());
 }
 
+bool
+Rock::DirMap::initialize(const cache_key *const key, const StoreEntryBasics &seBasics)
+{
+    Slot &s = slot(key);
+    if (s.state.swap_if(Slot::WaitingToBeInitialized, Slot::Initializing)) {
+        assert(!s.readLevel);
+        s.setKey(key);
+        s.seBasics = seBasics;
+        ++shared->count;
+        assert(s.state.swap_if(Slot::Initializing, Slot::Usable));
+        return true;
+    }
+    return false;
+}
+
+bool
+Rock::DirMap::initialize(const int idx)
+{
+    return valid(idx) &&
+        shared->slots[idx].state.swap_if(Slot::WaitingToBeInitialized, Slot::Empty);
+}
+
+StoreEntryBasics *
+Rock::DirMap::add(const cache_key *const key)
+{
+    Slot &s = slot(key);
+    if (s.state.swap_if(Slot::Empty, Slot::Writing)) {
+        assert(!s.readLevel);
+        s.setKey(key);
+        return &s.seBasics;
+    }
+    return 0;
+}
+
+void
+Rock::DirMap::added(const cache_key *const key)
+{
+    Slot &s = slot(key);
+    assert(s.checkKey(key));
+    assert(s.state == Slot::Writing);
+    assert(!s.readLevel);
+    ++shared->count;
+    assert(s.state.swap_if(Slot::Writing, Slot::Usable));
+}
+
+bool
+Rock::DirMap::free(const cache_key *const key)
+{
+    if (open(key)) {
+        slot(key).state.swap_if(Slot::Usable, Slot::WaitingToBeFreed);
+        close(key);
+    }
+    return false;
+}
+
+const StoreEntryBasics *
+Rock::DirMap::open(const cache_key *const key)
+{
+    Slot &s = slot(key);
+    if (s.checkKey(key) && s.state == Slot::Usable) {
+        ++s.readLevel;
+        if (s.checkKey(key) && s.state == Slot::Usable)
+            return &s.seBasics;
+        --s.readLevel;
+        freeIfNeeded(s);
+    }
+    return 0;
+}
+
+void
+Rock::DirMap::close(const cache_key *const key)
+{
+    Slot &s = slot(key);
+    assert(s.checkKey(key));
+    assert(s.readLevel > 0);
+    --s.readLevel;
+    freeIfNeeded(s);
+}
+
 int
 Rock::DirMap::entryLimit() const
 {
@@ -50,84 +129,36 @@ Rock::DirMap::valid(const int pos) const
 }
 
 int
-Rock::DirMap::useNext()
-{
-    assert(!full());
-    const int next = findNext();
-    assert(valid(next)); // because we were not full
-    use(next);
-    return next;
-}
-
-int
 Rock::DirMap::AbsoluteEntryLimit()
 {
     const int sfilenoMax = 0xFFFFFF; // Core sfileno maximum
     return sfilenoMax;
 }
 
-void
-Rock::DirMap::use(const int pos)
-{
-    if (!has(pos)) {
-        assert(valid(pos));
-        shared->slots[pos] = 1;
-        ++shared->count;
-        debugs(8, 6, HERE << pos);
-    } else {
-        debugs(8, 3, HERE << pos << " in vain");
-    }
-}
-
-void
-Rock::DirMap::clear(const int pos)
-{
-    if (has(pos)) {
-        shared->slots[pos] = 0;
-        --shared->count;
-        debugs(8, 6, HERE << pos);
-    } else {
-        debugs(8, 3, HERE << pos << " in vain");
-        assert(valid(pos));
-    }
-    if (shared->hintPast < 0)
-        shared->hintPast = pos; // remember cleared slot
-}
-
-bool
-Rock::DirMap::has(const int pos) const
-{
-    if (!valid(pos)) // the only place where we are forgiving
-        return false;
-
-    return shared->slots[pos];
-}
-
-/// low-level empty-slot search routine, uses and updates hints
 int
-Rock::DirMap::findNext() const
+Rock::DirMap::slotIdx(const cache_key *const key) const
 {
-    // try the clear-based hint, if any
-    if (shared->hintPast >= 0) {
-        const int result = shared->hintPast;
-        shared->hintPast = -1; // assume used; or we could update it in set()
-        if (valid(result) && !has(result))
-            return result;
+    const uint64_t *const k = reinterpret_cast<const uint64_t *>(&key);
+    // TODO: use a better hash function
+    return (k[0] + k[1]) % shared->limit;
+}
+
+Rock::DirMap::Slot &
+Rock::DirMap::slot(const cache_key *const key)
+{
+    return shared->slots[slotIdx(key)];
+}
+
+void
+Rock::DirMap::freeIfNeeded(Slot &s)
+{
+    if (!s.readLevel &&
+        s.state.swap_if(Slot::WaitingToBeFreed, Slot::Freeing)) {
+        memset(s.key, 0, sizeof(s.key));
+        memset(&s.seBasics, 0, sizeof(s.seBasics));
+        --shared->count;
+        s.state.swap_if(Slot::Freeing, Slot::Empty);
     }
-
-    // adjust and try the scan-based hint
-    if (!valid(shared->hintNext))
-        shared->hintNext = 0;
-
-    for (int i = 0; i < shared->limit; ++i) {
-        if (!has(shared->hintNext))
-            return shared->hintNext++;
-
-        shared->hintNext = (shared->hintNext + 1) % shared->limit;
-    }
-
-    // the map is full
-    return -1;
 }
 
 int
@@ -136,7 +167,19 @@ Rock::DirMap::SharedSize(const int limit)
     return sizeof(Shared) + limit * sizeof(Slot);
 }
 
-Rock::DirMap::Shared::Shared(const int aLimit):
-    hintPast(-1), hintNext(0), limit(aLimit), count(0)
+void
+Rock::DirMap::Slot::setKey(const cache_key *const aKey)
+{
+    memcpy(key, &aKey, sizeof(key));
+}
+
+bool
+Rock::DirMap::Slot::checkKey(const cache_key *const aKey) const
+{
+    const uint64_t *const k = reinterpret_cast<const uint64_t *>(&key);
+    return k[0] == key[0] && k[1] == key[1];
+}
+
+Rock::DirMap::Shared::Shared(const int aLimit): limit(aLimit), count(0)
 {
 }
