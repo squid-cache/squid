@@ -12,6 +12,8 @@
 #include <sys/wait.h>
 #endif
 
+int TheProcessKind = pkOther;
+
 Kid::Kid():
         badFailures(0),
         pid(-1),
