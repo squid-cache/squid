@@ -1,6 +1,9 @@
 #ifndef SQUID_FS_ROCK_DIR_MAP_H
 #define SQUID_FS_ROCK_DIR_MAP_H
 
+#include "ipc/AtomicWord.h"
+#include "ipc/SharedMemory.h"
+
 namespace Rock {
 
 /// \ingroup Rock
@@ -8,12 +11,8 @@ namespace Rock {
 class DirMap
 {
 public:
-    DirMap(const int aLimit = 0);
-    DirMap(const DirMap &map);
-    ~DirMap();
-
-    DirMap &operator =(const DirMap &map);
-    void resize(const int newLimit); ///< forgets higher slots or appends zeros
+    DirMap(const int id, const int limit); ///< create a new shared DirMap
+    DirMap(const int id); ///< open an existing shared DirMap
 
     bool full() const; ///< there are no empty slots left
     bool has(int n) const; ///< whether slot n is occupied
@@ -28,22 +27,27 @@ public:
     static int AbsoluteEntryLimit(); ///< maximum entryLimit() possible
 
 private:
-    /// unreliable next empty slot suggestion #1 (clear based)
-    mutable int hintPast;
-    ///< unreliable next empty slot suggestion #2 (scan based)
-    mutable int hintNext;
-
-    int limit; ///< maximum number of map slots
-    int count; ///< current number of map slots
-
-    typedef uint8_t Slot;
-    Slot *slots; ///< slots storage
-
-    int ramSize() const;
-    void allocate();
-    void deallocate();
-    void copyFrom(const DirMap &map);
     int findNext() const;
+
+    static int SharedSize(const int limit);
+
+    SharedMemory shm; ///< shared memory segment
+
+    typedef AtomicWordT<uint8_t> Slot;
+    struct Shared {
+        Shared(const int aLimit);
+
+        /// unreliable next empty slot suggestion #1 (clear based)
+        mutable AtomicWord hintPast;
+        ///< unreliable next empty slot suggestion #2 (scan based)
+        mutable AtomicWord hintNext;
+
+        AtomicWord limit; ///< maximum number of map slots
+        AtomicWord count; ///< current number of map slots
+
+        Slot slots[]; ///< slots storage
+    };
+    Shared *shared; ///< pointer to shared memory
 };
 
 } // namespace Rock
