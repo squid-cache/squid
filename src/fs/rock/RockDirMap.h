@@ -27,13 +27,10 @@ public:
     DirMap(const int id, const int limit); ///< create a new shared DirMap
     DirMap(const int id); ///< open an existing shared DirMap
 
-    /// initialize usable slot
-    bool initialize(const cache_key *const key, const StoreEntryBasics &seBasics);
-    /// initialize empty slot
-    bool initialize(const int idx);
-
     /// start adding a new entry
     StoreEntryBasics *add(const cache_key *const key);
+    /// start adding a new entry, with fileno check
+    StoreEntryBasics *add(const cache_key *const key, const sfileno fileno);
     /// finish adding a new entry
     void added(const cache_key *const key);
 
@@ -55,8 +52,6 @@ public:
 private:
     struct Slot {
         enum {
-            WaitingToBeInitialized,
-            Initializing,
             Empty,
             Writing,
             Usable,
@@ -84,6 +79,8 @@ private:
 
     int slotIdx(const cache_key *const key) const;
     Slot &slot(const cache_key *const key);
+    bool free(const sfileno fileno);
+    const StoreEntryBasics *open(const sfileno fileno);
     void freeIfNeeded(Slot &s);
 
     static int SharedSize(const int limit);
