@@ -52,9 +52,8 @@ protected:
     void validateOptions(); ///< warns of configuration problems; may quit
 
     void rebuild(); ///< starts loading and validating stored entry metadata
-    void unlink(int fileno); ///< used for entries failed to load in rebuild
     ///< used to add entries successfully loaded during rebuild
-    StoreEntry *addEntry(int fileno, const StoreEntry &from);
+    void addEntry(const int fileno, const StoreEntry &from);
 
     bool full() const; ///< no more entries can be stored without purging
     void trackReferences(StoreEntry &e); ///< add to replacement policy scope

@@ -25,31 +25,20 @@ Rock::DirMap::DirMap(const int id):
     shared = reinterpret_cast<Shared *>(shm.mem());
 }
 
-bool
-Rock::DirMap::initialize(const cache_key *const key, const StoreEntryBasics &seBasics)
-{
-    Slot &s = slot(key);
-    if (s.state.swap_if(Slot::WaitingToBeInitialized, Slot::Initializing)) {
-        s.setKey(key);
-        s.seBasics = seBasics;
-        ++shared->count;
-        assert(s.state.swap_if(Slot::Initializing, Slot::Usable));
-        return true;
-    }
-    return false;
-}
-
-bool
-Rock::DirMap::initialize(const int idx)
-{
-    return valid(idx) &&
-        shared->slots[idx].state.swap_if(Slot::WaitingToBeInitialized, Slot::Empty);
-}
-
 StoreEntryBasics *
 Rock::DirMap::add(const cache_key *const key)
 {
-    Slot &s = slot(key);
+    return add(key, slotIdx(key));
+}
+
+StoreEntryBasics *
+Rock::DirMap::add(const cache_key *const key, const sfileno fileno)
+{
+    if (fileno != slotIdx(key))
+        return 0;
+
+    free(fileno);
+    Slot &s = shared->slots[fileno];
     if (s.state.swap_if(Slot::Empty, Slot::Writing)) {
         s.setKey(key);
         return &s.seBasics;
@@ -70,28 +59,43 @@ Rock::DirMap::added(const cache_key *const key)
 bool
 Rock::DirMap::free(const cache_key *const key)
 {
-    int idx;
-    if (open(key, idx)) {
-        Slot &s = shared->slots[idx];
+    return free(slotIdx(key));
+}
+
+bool
+Rock::DirMap::free(const int fileno)
+{
+    if (open(fileno)) {
+        Slot &s = shared->slots[fileno];
         s.state.swap_if(Slot::Usable, Slot::WaitingToBeFreed);
         --s.readLevel;
         freeIfNeeded(s);
+        return true;
     }
     return false;
+}
+
+const StoreEntryBasics *
+Rock::DirMap::open(const sfileno fileno)
+{
+    Slot &s = shared->slots[fileno];
+    ++s.readLevel;
+    if (s.state == Slot::Usable)
+        return &s.seBasics;
+    --s.readLevel;
+    freeIfNeeded(s);
+    return 0;
 }
 
 const StoreEntryBasics *
 Rock::DirMap::open(const cache_key *const key, sfileno &fileno)
 {
     const int idx = slotIdx(key);
-    Slot &s = shared->slots[idx];
-    ++s.readLevel;
-    if (s.state == Slot::Usable && s.checkKey(key)) {
+    const StoreEntryBasics *const seBasics = open(idx);
+    if (seBasics && shared->slots[fileno].checkKey(key)) {
         fileno = idx;
-        return &s.seBasics;
+        return seBasics;
     }
-    --s.readLevel;
-    freeIfNeeded(s);
     return 0;
 }
 
@@ -160,7 +164,7 @@ Rock::DirMap::freeIfNeeded(Slot &s)
             memset(s.key, 0, sizeof(s.key));
             memset(&s.seBasics, 0, sizeof(s.seBasics));
             --shared->count;
-            s.state.swap_if(Slot::Freeing, Slot::Empty);
+            assert(s.state.swap_if(Slot::Freeing, Slot::Empty));
         }
     }
 }
