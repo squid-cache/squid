@@ -819,7 +819,13 @@ IamWorkerProcess()
     if (opt_no_daemon || Config.workers == 0)
         return true;
 
-    return 0 < KidIdentifier && KidIdentifier <= Config.workers;
+    return TheProcessKind == pkWorker;
+}
+
+bool
+IamDiskProcess()
+{
+    return TheProcessKind == pkDisker;
 }
 
 bool
@@ -831,13 +837,13 @@ InDaemonMode()
 bool
 UsingSmp()
 {
-    return !opt_no_daemon && Config.workers > 1;
+    return InDaemonMode() && NumberOfKids() > 1;
 }
 
 bool
 IamCoordinatorProcess()
 {
-    return UsingSmp() && KidIdentifier == Config.workers + 1;
+    return TheProcessKind == pkCoordinator;
 }
 
 bool
@@ -863,11 +869,28 @@ NumberOfKids()
     if (!InDaemonMode())
         return 0;
 
-    // workers + the coordinator process
-    if (UsingSmp())
-        return Config.workers + 1;
+    // XXX: detect and abort when called before workers/cache_dirs are parsed
 
-    return Config.workers;
+    // XXX: this is not always the case as there are other cache_dir types
+    const int rockDirs = Config.cacheSwap.n_configured;
+
+    const bool needCoord = Config.workers > 1 || rockDirs > 0;
+    return (needCoord ? 1 : 0) + Config.workers + rockDirs;
+}
+
+String
+ProcessRoles()
+{
+    String roles = "";
+    if (IamMasterProcess())
+        roles.append(" master");
+    if (IamCoordinatorProcess())
+        roles.append(" coordinator");
+    if (IamWorkerProcess())
+        roles.append(" worker");
+    if (IamDiskProcess())
+        roles.append(" disker");
+    return roles;
 }
 
 void
