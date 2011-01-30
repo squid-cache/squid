@@ -929,10 +929,20 @@ if test "$use_esi" = "yes" ; then
   fi
 
 else
-  AC_MSG_NOTICE([Disabling ESI processor and Surrogate header support.])
-fi
-AM_CONDITIONAL(USE_ESI, test "$use_esi" = "yes")
-AM_CONDITIONAL(HAVE_LIBEXPAT, test $HAVE_LIBEXPAT = 1)
+  ac_cv_libxml2_include='no'
+      AC_MSG_NOTICE([Testing in /usr/include/libxml2])
+      AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include="/usr/include/libxml2"], [])
+      if test "x$ac_cv_libxml2_include" = "xno"; then
+          AC_MSG_NOTICE([Testing in /usr/local/include/libxml2])
+          SAVED_CPPFLAGS="$CPPFLAGS"
+          CPPFLAGS="-I/usr/local/include/libxml2 $CPPFLAGS"
+          unset ac_cv_header_libxml_parser_h
+          AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include="/usr/local/include/libxml2"], [])
+          CPPFLAGS="$SAVED_CPPFLAGS"
+      fi
+  if test "x$ac_cv_libxml2_include" != "xno"; then
+      SQUID_CXXFLAGS="-I$ac_cv_libxml2_include $SQUID_CXXFLAGS"
+      CPPFLAGS="-I$ac_cv_libxml2_include $CPPFLAGS"
 AC_SUBST(EXPATLIB)
 AM_CONDITIONAL(HAVE_LIBXML2, test $HAVE_LIBXML2 = 1)
 AC_SUBST(XMLLIB)
