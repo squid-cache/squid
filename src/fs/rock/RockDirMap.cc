@@ -7,72 +7,46 @@
 #include "squid.h"
 #include "fs/rock/RockDirMap.h"
 
-Rock::DirMap::DirMap(const int aLimit): hintPast(-1), hintNext(0),
-    limit(aLimit), count(0), slots(NULL)
+static const char SharedMemoryName[] = "RockDirMap";
+
+Rock::DirMap::DirMap(const int id, const int limit):
+    shm(SharedMemoryName, id)
 {
-    allocate();
+    shm.create(limit);
+    assert(shm.mem());
+    shared = new (shm.mem()) Shared(limit);
 }
 
-Rock::DirMap::DirMap(const DirMap &m):
-    hintPast(m.hintPast), hintNext(m.hintNext),
-    limit(m.limit), count(m.count),
-    slots(NULL)
+Rock::DirMap::DirMap(const int id):
+    shm(SharedMemoryName, id)
 {
-    copyFrom(m);
-}
-
-Rock::DirMap::~DirMap()
-{
-    deallocate();
-}
-
-Rock::DirMap &Rock::DirMap::operator =(const DirMap &m)
-{
-    deallocate();
-
-    hintPast = m.hintPast;
-    hintNext = m.hintNext;
-    limit = m.limit;
-    count = m.count;
-
-    copyFrom(m);
-    return *this;
-}
-
-void
-Rock::DirMap::resize(const int newLimit)
-{
-    // TODO: optimize?
-    if (newLimit != limit) {
-        DirMap old(*this);
-        deallocate();
-        limit = newLimit;
-        copyFrom(old);
-	}
+    shm.open();
+    assert(shm.mem());
+    shared = reinterpret_cast<Shared *>(shm.mem());
 }
 
 int
 Rock::DirMap::entryLimit() const
 {
-    return limit;
+    return shared->limit;
 }
 
 int
 Rock::DirMap::entryCount() const
 {
-    return count;
+    return shared->count;
 }
 
 bool
 Rock::DirMap::full() const
 {
-    return count >= limit;
+    return entryCount() >= entryLimit();
 }
 
 bool
 Rock::DirMap::valid(const int pos) const
 {
-    return 0 <= pos && pos < limit;
+    return 0 <= pos && pos < entryLimit();
 }
 
 int
@@ -83,39 +57,6 @@ Rock::DirMap::useNext()
     assert(valid(next)); // because we were not full
     use(next);
     return next;
-}
-
-/// allocation, assumes limit is set
-void
-Rock::DirMap::allocate()
-{
-    assert(!slots);
-    slots = new uint8_t[limit];
-    memset(slots, 0, ramSize());
-}
-
-/// deallocation; may place the object in an inconsistent state
-void
-Rock::DirMap::deallocate()
-{
-    delete [] slots;
-    slots = NULL;
-}
-
-/// low-level copy; assumes all counts have been setup
-void
-Rock::DirMap::copyFrom(const DirMap &m)
-{
-    allocate();
-    if (m.limit)
-        memcpy(slots, m.slots, min(ramSize(), m.ramSize()));
-}
-
-/// low-level ram size calculation for mem*() calls
-int
-Rock::DirMap::ramSize() const
-{
-    return sizeof(*slots) * limit;
 }
 
 int
@@ -130,27 +71,27 @@ Rock::DirMap::use(const int pos)
 {
     if (!has(pos)) {
         assert(valid(pos));
-        slots[pos] = 1;
-        ++count;
+        shared->slots[pos] = 1;
+        ++shared->count;
         debugs(8, 6, HERE << pos);
-	} else {
+    } else {
         debugs(8, 3, HERE << pos << " in vain");
-	}
+    }
 }
 
 void
 Rock::DirMap::clear(const int pos)
 {
     if (has(pos)) {
-        slots[pos] = 0;
-        --count;
+        shared->slots[pos] = 0;
+        --shared->count;
         debugs(8, 6, HERE << pos);
-	} else {
+    } else {
         debugs(8, 3, HERE << pos << " in vain");
         assert(valid(pos));
-	}
-    if (hintPast < 0)
-        hintPast = pos; // remember cleared slot
+    }
+    if (shared->hintPast < 0)
+        shared->hintPast = pos; // remember cleared slot
 }
 
 bool
@@ -159,7 +100,7 @@ Rock::DirMap::has(const int pos) const
     if (!valid(pos)) // the only place where we are forgiving
         return false;
 
-    return slots[pos];
+    return shared->slots[pos];
 }
 
 /// low-level empty-slot search routine, uses and updates hints
@@ -167,24 +108,35 @@ int
 Rock::DirMap::findNext() const
 {
     // try the clear-based hint, if any
-    if (hintPast >= 0) {
-        const int result = hintPast;
-        hintPast = -1; // assume used; or we could update it in set()
+    if (shared->hintPast >= 0) {
+        const int result = shared->hintPast;
+        shared->hintPast = -1; // assume used; or we could update it in set()
         if (valid(result) && !has(result))
             return result;
-	}
+    }
 
     // adjust and try the scan-based hint
-    if (!valid(hintNext))
-        hintNext = 0;
+    if (!valid(shared->hintNext))
+        shared->hintNext = 0;
 
-    for (int i = 0; i < limit; ++i) {
-        if (!has(hintNext))
-            return hintNext++;
+    for (int i = 0; i < shared->limit; ++i) {
+        if (!has(shared->hintNext))
+            return shared->hintNext++;
 
-        hintNext = (hintNext + 1) % limit;
+        shared->hintNext = (shared->hintNext + 1) % shared->limit;
     }
 
     // the map is full
     return -1;
+}
+
+int
+Rock::DirMap::SharedSize(const int limit)
+{
+    return sizeof(Shared) + limit * sizeof(Slot);
+}
+
+Rock::DirMap::Shared::Shared(const int aLimit):
+    hintPast(-1), hintNext(0), limit(aLimit), count(0)
+{
 }
