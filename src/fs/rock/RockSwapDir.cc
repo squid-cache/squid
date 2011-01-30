@@ -255,37 +255,29 @@ Rock::SwapDir::rebuild() {
 
 /* Add a new object to the cache with empty memory copy and pointer to disk
  * use to rebuild store from disk. XXX: dupes UFSSwapDir::addDiskRestore */
-StoreEntry *
-Rock::SwapDir::addEntry(int fileno, const StoreEntry &from)
+void
+Rock::SwapDir::addEntry(const int fileno, const StoreEntry &from)
 {
-    /* if you call this you'd better be sure file_number is not
-     * already in use! */
-    StoreEntry *e = new StoreEntry(); // TODO: optimize by reusing "from"?
-    debugs(47, 5, HERE << e << ' ' << storeKeyText((const cache_key*)from.key)
+    const cache_key *const key = reinterpret_cast<const cache_key *>(from.key);
+    debugs(47, 5, HERE << &from << ' ' << storeKeyText(key)
        << ", fileno="<< std::setfill('0') << std::hex << std::uppercase <<
        std::setw(8) << fileno);
-    e->store_status = STORE_OK;
-    e->setMemStatus(NOT_IN_MEMORY);
-    e->swap_status = SWAPOUT_DONE;
-    e->swap_filen = fileno;
-    e->swap_dirn = index;
-    e->swap_file_sz = from.swap_file_sz;
-    e->lock_count = 0;
-    e->lastref = from.lastref;
-    e->timestamp = from.timestamp;
-    e->expires = from.expires;
-    e->lastmod = from.lastmod;
-    e->refcount = from.refcount;
-    e->flags = from.flags;
-    EBIT_SET(e->flags, ENTRY_CACHABLE);
-    EBIT_CLR(e->flags, RELEASE_REQUEST);
-    EBIT_CLR(e->flags, KEY_PRIVATE);
-    e->ping_status = PING_NONE;
-    EBIT_CLR(e->flags, ENTRY_VALIDATED);
-    map.use(e->swap_filen);
-    e->hashInsert((const cache_key*)from.key); /* do it after we clear KEY_PRIVATE */
-    trackReferences(*e);
-    return e;
+
+    StoreEntryBasics *const basics = map.add(key, fileno);
+    if (!basics) {
+        debugs(47, 5, HERE << "Rock::SwapDir::addEntry: map.add failed");
+    }
+
+    memset(basics, 0, sizeof(*basics));
+    basics->timestamp = from.timestamp;
+    basics->lastref = from.lastref;
+    basics->expires = from.expires;
+    basics->lastmod = from.lastmod;
+    basics->swap_file_sz = from.swap_file_sz;
+    basics->refcount = from.refcount;
+    basics->flags = from.flags;
+
+    map.added(key);
 }
 
 
@@ -538,22 +530,11 @@ Rock::SwapDir::dereference(StoreEntry &e)
 }
 
 void
-Rock::SwapDir::unlink(int fileno)
-{
-    debugs(47,5, HERE << index << ' ' << fileno);
-    if (map.has(fileno)) {
-        map.clear(fileno);
-        cur_size = (HeaderSize + max_objsize * map.entryCount()) >> 10;
-        // XXX: update store
-	}
-}
-
-void
 Rock::SwapDir::unlink(StoreEntry &e)
 {
     debugs(47, 5, HERE << &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
     ignoreReferences(e);
-    unlink(e.swap_filen);
+    map.free(e.key);
 }
 
 void
