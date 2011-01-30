@@ -208,6 +208,8 @@ private:
     bool hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) const;
 };
 
+std::ostream &operator <<(std::ostream &os, const StoreEntry &e);
+
 /// \ingroup StoreAPI
 class NullStoreEntry:public StoreEntry
 {
