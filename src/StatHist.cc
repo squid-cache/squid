@@ -53,15 +53,10 @@ static void statHistInit(StatHist * H, int capacity, hbase_f * val_in, hbase_f *
 static int statHistBin(const StatHist * H, double v);
 static double statHistVal(const StatHist * H, int bin);
 static StatHistBinDumper statHistBinDumper;
-#if !defined(_SQUID_HPUX_) || !defined(__GNUC__)
-/*
- * HP-UX and GCC (2.8?) give strange errors when these simple
- * functions are static.
- */
-static hbase_f Log;
-static hbase_f Exp;
-static hbase_f Null;
-#endif
+
+hbase_f Log;
+hbase_f Exp;
+hbase_f Null;
 
 /* low level init, higher level functions has less params */
 static void
@@ -274,9 +269,6 @@ statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd)
 }
 
 /* log based histogram */
-#if !defined(_SQUID_HPUX_) || !defined(__GNUC__)
-static
-#endif
 double
 Log(double x)
 {
@@ -284,9 +276,6 @@ Log(double x)
     return log(x + 1.0);
 }
 
-#if !defined(_SQUID_HPUX_) || !defined(__GNUC__)
-static
-#endif
 double
 Exp(double x)
 {
@@ -301,9 +290,6 @@ statHistLogInit(StatHist * H, int capacity, double min, double max)
 
 /* linear histogram for enums */
 /* we want to be have [-1,last_enum+1] range to track out of range enums */
-#if !defined(_SQUID_HPUX_) || !defined(__GNUC__)
-static
-#endif
 double
 Null(double x)
 {
