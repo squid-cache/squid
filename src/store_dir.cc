@@ -691,8 +691,33 @@ StoreController::dereference(StoreEntry & e)
 StoreEntry *
 StoreController::get(const cache_key *key)
 {
+    if (StoreEntry *e = swapDir->get(key)) {
+        debugs(20, 1, HERE << "got in-transit entry: " << *e);
+        return e;
+    }
 
-    return swapDir->get(key);
+    if (const int cacheDirs = Config.cacheSwap.n_configured) {
+        // ask each cache_dir until the entry is found; use static starting
+        // point to avoid asking the same subset of disks more often
+        // TODO: coordinate with put() to be able to guess the right disk often
+        static int idx = 0;
+
+        for (int n = 0; n < cacheDirs; ++n) {
+            if (idx >= cacheDirs)
+                idx = 0;
+
+            SwapDir *sd = dynamic_cast<SwapDir*>(INDEXSD(idx));
+            if (StoreEntry *e = sd->get(key)) {
+                debugs(20, 1, HERE << "cache_dir " << idx <<
+                    " got cached entry: " << *e);
+                return e;
+            }
+        }
+    }
+
+    debugs(20, 1, HERE << "none of " << Config.cacheSwap.n_configured <<
+        " cache_dirs have " << storeKeyText(key));
+    return NULL;
 }
 
 void
