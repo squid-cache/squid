@@ -175,7 +175,8 @@ String::set(char const *loc, char const ch)
 void
 String::cut(String::size_type newLength)
 {
-    if (newLength < 0 || newLength > len_) return;
+    // size_type is size_t, unsigned. No need to check for newLength <0
+    if (newLength > len_) return;
 
     len_ = newLength;
 
