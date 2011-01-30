@@ -4,6 +4,7 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libipc.la
 
 libipc_la_SOURCES = \
+	AtomicWord.h \
 	FdNotes.cc \
 	FdNotes.h \
 	Kid.cc \
@@ -18,6 +19,8 @@ libipc_la_SOURCES = \
 	StrandCoords.h \
 	SharedListen.cc \
 	SharedListen.h \
+	SharedMemory.cc \
+	SharedMemory.h \
 	TypedMsgHdr.cc \
 	TypedMsgHdr.h \
 	Coordinator.cc \
