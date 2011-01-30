@@ -212,6 +212,10 @@ Rock::SwapDir::validateOptions()
 
 void
 Rock::SwapDir::rebuild() {
+    // in SMP mode, only the disker is responsible for populating the map
+    if (UsingSmp() && !IamDiskProcess())
+        return;
+
     ++StoreController::store_dirs_rebuilding;
     Rebuild *r = new Rebuild(this);
     r->start(); // will delete self when done
