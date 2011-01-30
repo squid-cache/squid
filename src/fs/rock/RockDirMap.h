@@ -41,7 +41,7 @@ public:
     bool free(const cache_key *const key);
 
     /// open slot for reading, increments read level
-    const StoreEntryBasics *open(const cache_key *const key);
+    const StoreEntryBasics *open(const cache_key *const key, sfileno &fileno);
     /// close slot after reading, decrements read level
     void close(const cache_key *const key);
 
