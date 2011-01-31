@@ -6,6 +6,8 @@
 
 class StoreEntryBasics {
 public:
+    void set(const StoreEntry &from);
+
     /* START OF ON-DISK STORE_META_STD TLV field */
     time_t timestamp;
     time_t lastref;
@@ -24,23 +26,23 @@ namespace Rock {
 class DirMap
 {
 public:
-    DirMap(const int id, const int limit); ///< create a new shared DirMap
-    DirMap(const int id); ///< open an existing shared DirMap
+    DirMap(const char *const path, const int limit); ///< create a new shared DirMap
+    DirMap(const char *const path); ///< open an existing shared DirMap
 
-    /// start adding a new entry
-    StoreEntryBasics *add(const cache_key *const key);
-    /// start adding a new entry, with fileno check
-    StoreEntryBasics *add(const cache_key *const key, const sfileno fileno);
-    /// finish adding a new entry
-    void added(const cache_key *const key);
+    /// start writing a new entry
+    StoreEntryBasics *openForWriting(const cache_key *const key, sfileno &fileno);
+    /// finish writing a new entry
+    void closeForWriting(const sfileno fileno);
 
     /// mark slot as waiting to be freed, will be freed when no one uses it
-    bool free(const cache_key *const key);
+    bool free(const sfileno fileno);
 
     /// open slot for reading, increments read level
-    const StoreEntryBasics *open(const cache_key *const key, sfileno &fileno);
+    const StoreEntryBasics *openForReading(const cache_key *const key, sfileno &fileno);
+    /// open slot for reading, increments read level
+    const StoreEntryBasics *openForReadingAt(const sfileno fileno);
     /// close slot after reading, decrements read level
-    void close(const cache_key *const key);
+    void closeForReading(const sfileno fileno);
 
     bool full() const; ///< there are no empty slots left
     bool valid(int n) const; ///< whether n is a valid slot coordinate
@@ -79,11 +81,11 @@ private:
 
     int slotIdx(const cache_key *const key) const;
     Slot &slot(const cache_key *const key);
-    bool free(const sfileno fileno);
-    const StoreEntryBasics *open(const sfileno fileno);
+    const StoreEntryBasics *openForReading(Slot &s);
     void freeIfNeeded(Slot &s);
 
     static int SharedSize(const int limit);
+    static String SharedMemoryName(const char *path);
 
     SharedMemory shm; ///< shared memory segment
     Shared *shared; ///< pointer to shared memory

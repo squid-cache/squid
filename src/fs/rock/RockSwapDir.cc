@@ -20,13 +20,14 @@
 // must be divisible by 1024 due to cur_size and max_size KB madness
 const int64_t Rock::SwapDir::HeaderSize = 16*1024;
 
-Rock::SwapDir::SwapDir(): ::SwapDir("rock"), filePath(NULL), io(NULL)
+Rock::SwapDir::SwapDir(): ::SwapDir("rock"), filePath(NULL), io(NULL), map(NULL)
 {
 }
 
 Rock::SwapDir::~SwapDir()
 {
     delete io;
+    delete map;
     safe_free(filePath);
 }
 
@@ -41,7 +42,7 @@ StoreEntry *
 Rock::SwapDir::get(const cache_key *key)
 {
     sfileno fileno;
-    const StoreEntryBasics *const basics = map.open(key, fileno);
+    const StoreEntryBasics *const basics = map->openForReading(key, fileno);
     if (!basics)
         return NULL;
 
@@ -173,6 +174,10 @@ Rock::SwapDir::parse(int anIndex, char *aPath)
 
     repl = createRemovalPolicy(Config.replPolicy);
 
+    // map size is set when shared memory segment is created
+    if (!map)
+        map = new DirMap(path);
+
     validateOptions();
 }
 
@@ -210,12 +215,14 @@ Rock::SwapDir::validateOptions()
     if (ps > 0 && (max_objsize % ps != 0))
         fatal("Rock store max-size should be a multiple of page size");
 
+    /*
     const int64_t eLimitHi = 0xFFFFFF; // Core sfileno maximum
     const int64_t eLimitLo = map.entryLimit(); // dynamic shrinking unsupported
     const int64_t eWanted = (maximumSize() - HeaderSize)/max_objsize;
     const int64_t eAllowed = min(max(eLimitLo, eWanted), eLimitHi);
 
     map.resize(eAllowed); // the map may decide to use an even lower limit
+    */
 
     // Note: We could try to shrink max_size now. It is stored in KB so we
     // may not be able to make it match the end of the last entry exactly.
@@ -226,10 +233,10 @@ Rock::SwapDir::validateOptions()
     assert(diskOffsetLimit() <= maximumSize());
 
     // warn if maximum db size is not reachable due to sfileno limit
-    if (map.entryLimit() == map.AbsoluteEntryLimit() &&
+    if (map->entryLimit() == map->AbsoluteEntryLimit() &&
         totalWaste > roundingWasteMx) {
         debugs(47, 0, "Rock store cache_dir[" << index << "]:");
-        debugs(47, 0, "\tmaximum number of entries: " << map.entryLimit());
+        debugs(47, 0, "\tmaximum number of entries: " << map->entryLimit());
         debugs(47, 0, "\tmaximum entry size: " << max_objsize << " bytes");
         debugs(47, 0, "\tmaximum db size: " << maximumSize() << " bytes");
         debugs(47, 0, "\tusable db size:  " << diskOffsetLimit() << " bytes");
@@ -243,7 +250,7 @@ Rock::SwapDir::validateOptions()
         // not fatal because it can be added later
 	}
 
-    cur_size = (HeaderSize + max_objsize * map.entryCount()) >> 10;
+    cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
 }
 
 void
@@ -259,7 +266,7 @@ Rock::SwapDir::rebuild() {
 
 /* Add a new object to the cache with empty memory copy and pointer to disk
  * use to rebuild store from disk. XXX: dupes UFSSwapDir::addDiskRestore */
-void
+bool
 Rock::SwapDir::addEntry(const int fileno, const StoreEntry &from)
 {
     const cache_key *const key = reinterpret_cast<const cache_key *>(from.key);
@@ -267,21 +274,19 @@ Rock::SwapDir::addEntry(const int fileno, const StoreEntry &from)
        << ", fileno="<< std::setfill('0') << std::hex << std::uppercase <<
        std::setw(8) << fileno);
 
-    StoreEntryBasics *const basics = map.add(key, fileno);
-    if (!basics) {
-        debugs(47, 5, HERE << "Rock::SwapDir::addEntry: map.add failed");
+    int idx;
+    StoreEntryBasics *const basics = map->openForWriting(key, idx);
+    if (!basics || fileno != idx) {
+        debugs(47, 5, HERE << "Rock::SwapDir::addEntry: map->add failed");
+        if (basics) {
+            map->closeForWriting(idx);
+            map->free(idx);
+        }
+        return false;
     }
-
-    memset(basics, 0, sizeof(*basics));
-    basics->timestamp = from.timestamp;
-    basics->lastref = from.lastref;
-    basics->expires = from.expires;
-    basics->lastmod = from.lastmod;
-    basics->swap_file_sz = from.swap_file_sz;
-    basics->refcount = from.refcount;
-    basics->flags = from.flags;
-
-    map.added(key);
+    basics->set(from);
+    map->closeForWriting(fileno);
+    return true;
 }
 
 
@@ -307,16 +312,19 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
         return NULL;
     }
 
-    if (full()) {
-        maintain();
-        if (full()) // maintain() above warns when it fails
-            return NULL;
+    sfileno fileno;
+    StoreEntryBasics *const basics =
+        map->openForWriting(reinterpret_cast<const cache_key *>(e.key), fileno);
+    if (!basics) {
+        debugs(47, 5, HERE << "Rock::SwapDir::createStoreIO: map->add failed");
+        return NULL;
     }
+    basics->set(e);
 
     IoState *sio = new IoState(this, &e, cbFile, cbIo, data);
 
     sio->swap_dirn = index;
-    sio->swap_filen = map.useNext();
+    sio->swap_filen = fileno;
     sio->offset_ = diskOffset(sio->swap_filen);
     sio->entrySize = e.objectLen() + e.mem_obj->swap_hdr_sz;
 
@@ -343,7 +351,7 @@ Rock::SwapDir::diskOffset(int filen) const
 int64_t
 Rock::SwapDir::diskOffsetLimit() const
 {
-    return diskOffset(map.entryLimit());
+    return diskOffset(map->entryLimit());
 }
 
 StoreIOState::Pointer
@@ -351,6 +359,13 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
 {
     if (!theFile || theFile->error()) {
         debugs(47,4, HERE << theFile);
+        return NULL;
+    }
+
+    if (!map->openForReadingAt(e.swap_filen)) {
+        debugs(47,1, HERE << "bug: dir " << index << " lost fileno: " <<
+            std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
+            e.swap_filen);
         return NULL;
     }
 
@@ -362,17 +377,10 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
         std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
         sio->swap_filen);
 
-    assert(map.valid(sio->swap_filen));
+    assert(map->valid(sio->swap_filen));
     sio->offset_ = diskOffset(sio->swap_filen);
     sio->entrySize = e.swap_file_sz;
     assert(sio->entrySize <= max_objsize);
-
-    if (!map.has(sio->swap_filen)) {
-        debugs(47,1, HERE << "bug: dir " << index << " lost fileno: " <<
-            std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
-            sio->swap_filen);
-        return NULL;
-    }
 
     assert(sio->offset_ + sio->entrySize <= diskOffsetLimit());
 
@@ -394,12 +402,12 @@ Rock::SwapDir::ioCompletedNotification()
         fatalf("Rock cache_dir failed to open db file: %s", filePath);
 	}
 
-    cur_size = (HeaderSize + max_objsize * map.entryCount()) >> 10;
+    cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
 
     // TODO: lower debugging level
     debugs(47,1, "Rock cache_dir[" << index << "] limits: " << 
         std::setw(12) << maximumSize() << " disk bytes and " <<
-        std::setw(7) << map.entryLimit() << " entries");
+        std::setw(7) << map->entryLimit() << " entries");
 }
 
 void
@@ -414,6 +422,7 @@ Rock::SwapDir::readCompleted(const char *buf, int rlen, int errflag, RefCount< :
     ReadRequest *request = dynamic_cast<Rock::ReadRequest*>(r.getRaw());
     assert(request);
     IoState::Pointer sio = request->sio;
+    map->closeForReading(sio->swap_filen);
 
     // do not increment sio->offset_: callers always supply relative offset
 
@@ -432,12 +441,13 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
     assert(request);
     assert(request->sio !=  NULL);
     IoState &sio = *request->sio;
+    map->closeForWriting(sio.swap_filen);
     if (errflag != DISK_OK)
-        map.clear(sio.swap_filen); // TODO: test by forcing failure
+        map->free(sio.swap_filen); // TODO: test by forcing failure
     // else sio.offset_ += rlen;
 
     // TODO: always compute cur_size based on map, do not store it
-    cur_size = (HeaderSize + max_objsize * map.entryCount()) >> 10;
+    cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
     assert(sio.offset_ <= diskOffsetLimit()); // post-factum check
 
     sio.finishedWriting(errflag);
@@ -446,7 +456,7 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
 bool
 Rock::SwapDir::full() const
 {
-    return map.full();
+    return map->full();
 }
 
 void
@@ -454,7 +464,7 @@ Rock::SwapDir::updateSize(int64_t size, int sign)
 {
     // it is not clear what store_swap_size really is; TODO: move low-level
 	// size maintenance to individual store dir types
-    cur_size = (HeaderSize + max_objsize * map.entryCount()) >> 10;
+    cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
     store_swap_size = cur_size;
 
     if (sign > 0)
@@ -489,7 +499,7 @@ Rock::SwapDir::maintain()
         return; // no need (to find a victim)
 
     debugs(47,3, HERE << "cache_dir[" << index << "] state: " << 
-        map.full() << ' ' << currentSize() << " < " << diskOffsetLimit());
+        map->full() << ' ' << currentSize() << " < " << diskOffsetLimit());
 
     // Hopefully, we find a removable entry much sooner (TODO: use time?)
     const int maxProbed = 10000;
@@ -538,7 +548,7 @@ Rock::SwapDir::unlink(StoreEntry &e)
 {
     debugs(47, 5, HERE << &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
     ignoreReferences(e);
-    map.free(e.key);
+    map->free(e.swap_filen);
 }
 
 void
@@ -564,9 +574,9 @@ Rock::SwapDir::statfs(StoreEntry &e) const
     storeAppendPrintf(&e, "Current Size: %"PRIu64" KB %.2f%%\n", cur_size,
                       100.0 * cur_size / max_size);
 
-    storeAppendPrintf(&e, "Maximum entries: %9d\n", map.entryLimit());
+    storeAppendPrintf(&e, "Maximum entries: %9d\n", map->entryLimit());
     storeAppendPrintf(&e, "Current entries: %9d %.2f%%\n",
-        map.entryCount(), (100.0 * map.entryCount() / map.entryLimit()));
+        map->entryCount(), (100.0 * map->entryCount() / map->entryLimit()));
 
     storeAppendPrintf(&e, "Pending operations: %d out of %d\n",
         store_open_disk_fd, Config.max_open_disk_fds);
