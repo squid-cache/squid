@@ -5,20 +5,22 @@
  */
 
 #include "squid.h"
+
+#include "Store.h"
 #include "fs/rock/RockDirMap.h"
 
 static const char SharedMemoryName[] = "RockDirMap";
 
-Rock::DirMap::DirMap(const int id, const int limit):
-    shm(SharedMemoryName, id)
+Rock::DirMap::DirMap(const char *const path, const int limit):
+    shm(SharedMemoryName(path))
 {
     shm.create(limit);
     assert(shm.mem());
     shared = new (shm.mem()) Shared(limit);
 }
 
-Rock::DirMap::DirMap(const int id):
-    shm(SharedMemoryName, id)
+Rock::DirMap::DirMap(const char *const path):
+    shm(SharedMemoryName(path))
 {
     shm.open();
     assert(shm.mem());
@@ -26,19 +28,11 @@ Rock::DirMap::DirMap(const int id):
 }
 
 StoreEntryBasics *
-Rock::DirMap::add(const cache_key *const key)
+Rock::DirMap::openForWriting(const cache_key *const key, sfileno &fileno)
 {
-    return add(key, slotIdx(key));
-}
-
-StoreEntryBasics *
-Rock::DirMap::add(const cache_key *const key, const sfileno fileno)
-{
-    if (fileno != slotIdx(key))
-        return 0;
-
-    free(fileno);
-    Slot &s = shared->slots[fileno];
+    const int idx = slotIdx(key);
+    free(idx);
+    Slot &s = shared->slots[idx];
     if (s.state.swap_if(Slot::Empty, Slot::Writing)) {
         s.setKey(key);
         return &s.seBasics;
@@ -47,25 +41,19 @@ Rock::DirMap::add(const cache_key *const key, const sfileno fileno)
 }
 
 void
-Rock::DirMap::added(const cache_key *const key)
+Rock::DirMap::closeForWriting(const sfileno fileno)
 {
-    Slot &s = slot(key);
-    assert(s.checkKey(key));
+    assert(valid(fileno));
+    Slot &s = shared->slots[fileno];
     assert(s.state == Slot::Writing);
     ++shared->count;
     assert(s.state.swap_if(Slot::Writing, Slot::Usable));
 }
 
 bool
-Rock::DirMap::free(const cache_key *const key)
+Rock::DirMap::free(const sfileno fileno)
 {
-    return free(slotIdx(key));
-}
-
-bool
-Rock::DirMap::free(const int fileno)
-{
-    if (open(fileno)) {
+    if (openForReadingAt(fileno)) {
         Slot &s = shared->slots[fileno];
         s.state.swap_if(Slot::Usable, Slot::WaitingToBeFreed);
         --s.readLevel;
@@ -76,8 +64,21 @@ Rock::DirMap::free(const int fileno)
 }
 
 const StoreEntryBasics *
-Rock::DirMap::open(const sfileno fileno)
+Rock::DirMap::openForReading(const cache_key *const key, sfileno &fileno)
 {
+    const int idx = slotIdx(key);
+    const StoreEntryBasics *const seBasics = openForReadingAt(idx);
+    if (seBasics && shared->slots[idx].checkKey(key)) {
+        fileno = idx;
+        return seBasics;
+    }
+    return 0;
+}
+
+const StoreEntryBasics *
+Rock::DirMap::openForReadingAt(const sfileno fileno)
+{
+    assert(valid(fileno));
     Slot &s = shared->slots[fileno];
     ++s.readLevel;
     if (s.state == Slot::Usable)
@@ -87,23 +88,11 @@ Rock::DirMap::open(const sfileno fileno)
     return 0;
 }
 
-const StoreEntryBasics *
-Rock::DirMap::open(const cache_key *const key, sfileno &fileno)
-{
-    const int idx = slotIdx(key);
-    const StoreEntryBasics *const seBasics = open(idx);
-    if (seBasics && shared->slots[fileno].checkKey(key)) {
-        fileno = idx;
-        return seBasics;
-    }
-    return 0;
-}
-
 void
-Rock::DirMap::close(const cache_key *const key)
+Rock::DirMap::closeForReading(const sfileno fileno)
 {
-    Slot &s = slot(key);
-    assert(s.checkKey(key));
+    assert(valid(fileno));
+    Slot &s = shared->slots[fileno];
     assert(s.readLevel > 0);
     --s.readLevel;
     freeIfNeeded(s);
@@ -175,6 +164,21 @@ Rock::DirMap::SharedSize(const int limit)
     return sizeof(Shared) + limit * sizeof(Slot);
 }
 
+String
+Rock::DirMap::SharedMemoryName(const char *path)
+{
+    String result;
+    for (const char *p = strchr(path, '/'); p; p = strchr(path, '/')) {
+        if (path != p) {
+            result.append('.');
+            result.append(path, p - path);
+        }
+        path = p + 1;
+    }
+    result.append(path);
+    return result;
+}
+
 void
 Rock::DirMap::Slot::setKey(const cache_key *const aKey)
 {
@@ -190,4 +194,17 @@ Rock::DirMap::Slot::checkKey(const cache_key *const aKey) const
 
 Rock::DirMap::Shared::Shared(const int aLimit): limit(aLimit), count(0)
 {
+}
+
+void
+StoreEntryBasics::set(const StoreEntry &from)
+{
+    memset(this, 0, sizeof(*this));
+    timestamp = from.timestamp;
+    lastref = from.lastref;
+    expires = from.expires;
+    lastmod = from.lastmod;
+    swap_file_sz = from.swap_file_sz;
+    refcount = from.refcount;
+    flags = from.flags;
 }

@@ -53,7 +53,7 @@ protected:
 
     void rebuild(); ///< starts loading and validating stored entry metadata
     ///< used to add entries successfully loaded during rebuild
-    void addEntry(const int fileno, const StoreEntry &from);
+    bool addEntry(const int fileno, const StoreEntry &from);
 
     bool full() const; ///< no more entries can be stored without purging
     void trackReferences(StoreEntry &e); ///< add to replacement policy scope
@@ -64,7 +64,7 @@ protected:
     int64_t maximumSize() const { return static_cast<int64_t>(max_size) << 10;}
     int64_t diskOffset(int filen) const;
     int64_t diskOffsetLimit() const;
-    int entryLimit() const { return map.entryLimit(); }
+    int entryLimit() const { return map->entryLimit(); }
 
     friend class Rebuild;
     const char *filePath; ///< location of cache storage file inside path/
@@ -72,7 +72,7 @@ protected:
 private:
     DiskIOStrategy *io;
     RefCount<DiskFile> theFile; ///< cache storage for this cache_dir
-    DirMap map;
+    DirMap *map;
 
     static const int64_t HeaderSize; ///< on-disk db header size
 };

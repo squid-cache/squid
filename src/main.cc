@@ -73,6 +73,7 @@
 #include "MemPool.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
+#include "fs/rock/RockDirMap.h"
 
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
@@ -763,6 +764,7 @@ mainReconfigureFinish(void *)
 
     // parse the config returns a count of errors encountered.
     const int oldWorkers = Config.workers;
+
     if ( parseConfigFile(ConfigFile) != 0) {
         // for now any errors are a fatal condition...
         self_destruct();
@@ -1368,6 +1370,15 @@ SquidMain(int argc, char **argv)
 
         Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
 
+        debugs(0,0, HERE << '1');
+        if (IamMasterProcess()) {
+            debugs(0,0, HERE << '2');
+            new Rock::DirMap("/home/dikk/projects/factory/squid/rock_smp/rock1", 1000);
+            new Rock::DirMap("/home/dikk/projects/factory/squid/rock_smp/rock2", 1000);
+            new Rock::DirMap("/home/dikk/projects/factory/squid/rock_smp/rock3", 1000);
+        }
+        debugs(0,0, HERE << '3');
+
         parse_err = parseConfigFile(ConfigFile);
 
         Mem::Report();
@@ -1695,7 +1706,7 @@ watch_child(char *argv[])
     }
     TheKids.init();
 
-syslog(LOG_NOTICE, "XXX: will start %d kids", TheKids.count());
+syslog(LOG_NOTICE, "XXX: will start %d kids", (int)TheKids.count());
 
     // keep [re]starting kids until it is time to quit
     for (;;) {

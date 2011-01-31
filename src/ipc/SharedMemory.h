@@ -11,9 +11,8 @@
 /// POSIX shared memory segment
 class SharedMemory {
 public:
-    /// Create a shared memory segment. Id is a human-readable name,
-    /// optional magic is unique key (e.g. kid id).
-    SharedMemory(const String &id, const int magic = 0);
+    /// Create a shared memory segment.
+    SharedMemory(const String &id);
     ~SharedMemory();
 
     /// Create a new shared memory segment. Fails if a segment with
@@ -29,7 +28,7 @@ private:
     void attach();
     void detach();
 
-    static String GenerateName(const String &id, const int magic);
+    static String GenerateName(const String &id);
 
     const String theName; ///< shared memory segment file name
     int theFD; ///< shared memory segment file descriptor
