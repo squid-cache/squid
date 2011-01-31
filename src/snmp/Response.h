@@ -10,7 +10,7 @@
 
 #include "ipc/forward.h"
 #include "ipc/Response.h"
-#include "snmpx/Pdu.h"
+#include "snmp/Pdu.h"
 #include <ostream>
 
 namespace Snmp

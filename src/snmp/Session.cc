@@ -9,7 +9,7 @@
 #include "base/TextException.h"
 #include "ipc/TypedMsgHdr.h"
 #include "protos.h"
-#include "snmpx/Session.h"
+#include "snmp/Session.h"
 
 
 Snmp::Session::Session()

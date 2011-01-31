@@ -24,16 +24,6 @@ SBUF_SOURCE= \
 	MemBlob.h \
 	MemBlob.cc
 
-SNMP_ALL_SOURCE = \
-	snmp_core.h \
-	snmp_core.cc \
-	snmp_agent.cc
-if ENABLE_SNMP
-SNMP_SOURCE = $(SNMP_ALL_SOURCE)
-else
-SNMP_SOURCE = 
-endif
-
 LOADABLE_MODULES_SOURCES = \
 	LoadableModule.h \
 	LoadableModule.cc \
@@ -51,9 +41,16 @@ else
 SSL_LOCAL_LIBS =
 endif
 
+SNMP_ALL_SOURCE = \
+	snmp_core.h \
+	snmp_core.cc \
+	snmp_agent.cc
 if ENABLE_SNMP
-SUBDIRS += snmpx
-SNMPX_LIBS = snmpx/libsnmpx.la
+SNMP_SOURCE = $(SNMP_ALL_SOURCE)
+SUBDIRS += snmp
+SNMP_LIBS = snmp/libsnmp.la
+else
+SNMP_SOURCE = 
 endif
 
 if USE_ADAPTATION
@@ -553,7 +550,7 @@ squid_LDADD = \
 	$(CRYPTLIB) \
 	$(REGEXLIB) \
 	$(SNMPLIB) \
-	$(SNMPX_LIBS) \
+	$(SNMP_LIBS) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \

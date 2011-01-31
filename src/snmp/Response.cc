@@ -9,7 +9,7 @@
 #include "base/TextException.h"
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
-#include "snmpx/Response.h"
+#include "snmp/Response.h"
 
 
 std::ostream& Snmp::operator << (std::ostream& os, const Response& response)

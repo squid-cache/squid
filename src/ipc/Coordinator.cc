@@ -16,9 +16,9 @@
 #include "mgr/Request.h"
 #include "mgr/Response.h"
 #if SQUID_SNMP
-#include "snmpx/Inquirer.h"
-#include "snmpx/Request.h"
-#include "snmpx/Response.h"
+#include "snmp/Inquirer.h"
+#include "snmp/Request.h"
+#include "snmp/Response.h"
 #endif
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);

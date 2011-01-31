@@ -11,8 +11,8 @@
 #include "ip/Address.h"
 #include "ipc/forward.h"
 #include "ipc/Request.h"
-#include "snmpx/Pdu.h"
-#include "snmpx/Session.h"
+#include "snmp/Pdu.h"
+#include "snmp/Session.h"
 
 
 namespace Snmp
