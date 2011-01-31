@@ -1,5 +1,6 @@
-#ifndef _SQUID_COMPAT_STRNSTR_C_
-#define _SQUID_COMPAT_STRNSTR_C_
+#ifndef _SQUID_COMPAT_STRNSTR_CC_
+#define _SQUID_COMPAT_STRNSTR_CC_
+
 /*
  *  Shamelessly duplicated from the FreeBSD public sources
  *  for use by the Squid Project under GNU Public License.
@@ -17,7 +18,6 @@
  */
 
 #include "config.h"
-#include "strnstr.h"
 
 #if !HAVE_STRNSTR
 
@@ -65,7 +65,7 @@
 #include <string.h>
 #endif
 
-/*
+/**
  * Find the first occurrence of find in s, where the search is limited to the
  * first slen characters of s.
  */
@@ -93,4 +93,4 @@ squid_strnstr(const char *s, const char *find, size_t slen)
 }
 
 #endif /* !HAVE_STRNSTR */
-#endif /* _SQUID_COMPAT_STRNSTR_C_ */
+#endif /* _SQUID_COMPAT_STRNSTR_CC_ */

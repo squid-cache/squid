@@ -158,7 +158,7 @@ StoreMeta::Factory (char type, size_t len, void const *value)
 
     result->length = len;
     result->value = xmalloc(len);
-    xmemcpy(result->value, value, len);
+    memcpy(result->value, value, len);
     return result;
 }
 

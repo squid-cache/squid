@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "comm/Loops.h"
 
 #include <sys/ipc.h>
 #include <sys/msg.h>
@@ -203,10 +204,8 @@ DiskdIOStrategy::init()
     fd_note(wfd, "squid -> diskd");
 
     commSetTimeout(wfd, -1, NULL, NULL);
-
     commSetNonBlocking(wfd);
-
-    comm_quick_poll_required();
+    Comm::QuickPollRequired();
 }
 
 /*

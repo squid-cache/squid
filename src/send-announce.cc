@@ -92,7 +92,7 @@ send_announce(const ipcache_addrs *ia, const DnsLookupDetails &, void *junk)
 
     snprintf(tbuf, 256, "generated %d [%s]\n",
              (int) squid_curtime,
-             mkhttpdlogtime(&squid_curtime));
+             Time::FormatHttpd(squid_curtime));
     strcat(sndbuf, tbuf);
     l = strlen(sndbuf);
 

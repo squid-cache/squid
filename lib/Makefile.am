@@ -70,7 +70,6 @@ libmiscutil_la_SOURCES = \
 	rfc3596.c \
 	$(SNPRINTFSOURCE) \
 	Splay.cc \
-	strnstr.cc \
 	stub_memaccount.c \
 	util.c \
 	xusleep.c \

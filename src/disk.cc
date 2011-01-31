@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "comm/Loops.h"
 #include "fde.h"
 #include "MemBuf.h"
 
@@ -196,12 +197,12 @@ diskCombineWrites(struct _fde_disk *fdd)
             dwrite_q *q = fdd->write_q;
 
             len = q->len - q->buf_offset;
-            xmemcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
+            memcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
             wq->len += len;
             fdd->write_q = q->next;
 
             if (q->free_func)
-                (q->free_func) (q->buf);
+                q->free_func(q->buf);
 
             memFree(q, MEM_DWRITE_Q);
         };
@@ -285,7 +286,7 @@ diskHandleWrite(int fd, void *notused)
                 fdd->write_q = q->next;
 
                 if (q->free_func)
-                    (q->free_func) (q->buf);
+                    q->free_func(q->buf);
 
                 if (q) {
                     memFree(q, MEM_DWRITE_Q);
@@ -314,7 +315,7 @@ diskHandleWrite(int fd, void *notused)
             fdd->write_q = q->next;
 
             if (q->free_func)
-                (q->free_func) (q->buf);
+                q->free_func(q->buf);
 
             if (q) {
                 memFree(q, MEM_DWRITE_Q);
@@ -329,7 +330,7 @@ diskHandleWrite(int fd, void *notused)
     } else {
         /* another block is queued */
         diskCombineWrites(fdd);
-        commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
+        Comm::SetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
         F->flags.write_daemon = 1;
     }
 
@@ -458,7 +459,7 @@ diskHandleRead(int fd, void *data)
 
     if (len < 0) {
         if (ignoreErrno(errno)) {
-            commSetSelect(fd, COMM_SELECT_READ, diskHandleRead, ctrl_dat, 0);
+            Comm::SetSelect(fd, COMM_SELECT_READ, diskHandleRead, ctrl_dat, 0);
             PROF_stop(diskHandleRead);
             return;
         }
@@ -522,10 +523,7 @@ xrename(const char *from, const char *to)
 {
     debugs(21, 2, "xrename: renaming " << from << " to " << to);
 #if defined (_SQUID_OS2_) || defined (_SQUID_WIN32_)
-
-    remove
-    (to);
-
+    remove(to);
 #endif
 
     if (0 == rename(from, to))

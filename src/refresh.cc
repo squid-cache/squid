@@ -86,6 +86,7 @@ enum {
     STALE_EXPIRES,
     STALE_MAX_RULE,
     STALE_LMFACTOR_RULE,
+    STALE_MAX_STALE,
     STALE_DEFAULT = 299
 };
 
@@ -283,6 +284,15 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     debugs(22, 3, "Staleness = " << staleness);
 
+    // stale-if-error requires any failure be passed thru when its period is over.
+    if (request && entry->mem_obj && entry->mem_obj->getReply() && entry->mem_obj->getReply()->cache_control &&
+            EBIT_TEST(entry->mem_obj->getReply()->cache_control->mask, CC_STALE_IF_ERROR) &&
+            entry->mem_obj->getReply()->cache_control->stale_if_error < staleness) {
+
+        debugs(22, 3, "refreshCheck: stale-if-error period expired.");
+        request->flags.fail_on_validation_err = 1;
+    }
+
     if (EBIT_TEST(entry->flags, ENTRY_REVALIDATE) && staleness > -1
 #if USE_HTTP_VIOLATIONS
             && !R->flags.ignore_must_revalidate
@@ -379,7 +389,16 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     /*
      * At this point the response is stale, unless one of
      * the override options kicks in.
+     * NOTE: max-stale config blocks the overrides.
      */
+    int max_stale = (R->max_stale >= 0 ? R->max_stale : Config.maxStale);
+    if ( max_stale >= 0 && staleness < max_stale) {
+        debugs(22, 3, "refreshCheck: YES: max-stale limit");
+        if (request)
+            request->flags.fail_on_validation_err = 1;
+        return STALE_MAX_STALE;
+    }
+
     if (sf.expires) {
 #if USE_HTTP_VIOLATIONS
 

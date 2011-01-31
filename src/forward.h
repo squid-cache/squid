@@ -72,13 +72,6 @@ private:
     ErrorState *makeConnectingError(const err_type type) const;
     static void RegisterWithCacheManager(void);
 
-#if WIP_FWD_LOG
-
-    void uninit                /**DOCS_NOSEMI*/
-    static void logRotate      /**DOCS_NOSEMI*/
-    void status()              /**DOCS_NOSEMI*/
-#endif
-
 public:
     StoreEntry *entry;
     HttpRequest *request;
@@ -91,10 +84,7 @@ private:
     time_t start_t;
     int n_tries;
     int origin_tries;
-#if WIP_FWD_LOG
 
-    http_status last_status;
-#endif
     // AsyncCalls which we set and may need cancelling.
     struct {
         AsyncCall::Pointer connector;  ///< a call linking us to the ConnOpener producing serverConn.

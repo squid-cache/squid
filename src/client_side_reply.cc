@@ -56,6 +56,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
+#include "log/Tokens.h"
 #include "MemObject.h"
 #include "SquidTime.h"
 #include "StoreClient.h"
@@ -2051,12 +2052,11 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     if (buf != result.data) {
         /* we've got to copy some data */
         assert(result.length <= next()->readBuffer.length);
-        xmemcpy(buf, result.data, result.length);
+        memcpy(buf, result.data, result.length);
         body_buf = buf;
     }
 
-    if (reqofs==0 && !logTypeIsATcpHit(http->logType)) {
-        assert(conn != NULL && Comm::IsConnOpen(conn->clientConn)); // the beginning of this method implies FD may be closed.
+    if (reqofs==0 && !logTypeIsATcpHit(http->logType) && Comm::IsConnOpen(conn->clientConn)) {
         if (Ip::Qos::TheConfig.isHitTosActive()) {
             Ip::Qos::doTosLocalMiss(conn->clientConn, http->request->hier.code);
         }

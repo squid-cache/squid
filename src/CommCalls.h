@@ -276,10 +276,11 @@ public:
     inline CommCbFunPtrCallT(int debugSection, int debugLevel,
                              const char *callName, const Dialer &aDialer);
 
-    inline CommCbFunPtrCallT(const Pointer &p) :
-            AsyncCall(p->debugSection, p->debugLevel, p->name),
-            dialer(p->dialer)
-        {}
+    inline CommCbFunPtrCallT(const CommCbFunPtrCallT &o) :
+            AsyncCall(o.debugSection, o.debugLevel, o.name),
+            dialer(o.dialer) {}
+
+    ~CommCbFunPtrCallT() {}
 
     virtual CallDialer* getDialer() { return &dialer; }
 
@@ -289,6 +290,9 @@ public:
 protected:
     inline virtual bool canFire();
     inline virtual void fire();
+
+private:
+    CommCbFunPtrCallT & operator=(const CommCbFunPtrCallT &); // not defined. not permitted.
 };
 
 // Conveninece wrapper: It is often easier to call a templated function than

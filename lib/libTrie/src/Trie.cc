@@ -29,55 +29,50 @@
 #include "Trie.cci"
 #endif
 
-Trie::Trie (TrieCharTransform *aTransform) : head (0) , transform (aTransform)
+Trie::Trie(TrieCharTransform *aTransform) : head(0) , transform(aTransform)
 {}
 
-extern "C" void *TrieCreate ()
+extern "C" void *TrieCreate()
 {
     return new Trie;
 }
 
-Trie::~Trie ()
+Trie::~Trie()
 {
     delete head;
     delete transform;
 }
 
-extern "C" void TrieDestroy (void *aTrie)
+extern "C" void TrieDestroy(void *aTrie)
 {
     delete (Trie *)aTrie;
 }
 
-extern "C" void *TrieFind (void *aTrie, char const *aString, size_t theLength)
+extern "C" void *TrieFind(void *aTrie, char const *aString, size_t theLength)
 {
-    return ((Trie *)aTrie)->find (aString, theLength);
+    return ((Trie *)aTrie)->find(aString, theLength);
 }
 
 bool
-
-Trie::add
-(char const *aString, size_t theLength, void *privatedata)
+Trie::add(char const *aString, size_t theLength, void *privatedata)
 {
     if (!privatedata)
         return false;
 
     if (head) {
-        if (find (aString, theLength))
+        if (find(aString, theLength))
             return false;
 
-        return head->add
-               (aString, theLength, privatedata, transform);
+        return head->add(aString, theLength, privatedata, transform);
     }
 
     head = new TrieNode;
 
-    return head->add
-           (aString, theLength, privatedata, transform);
+    return head->add(aString, theLength, privatedata, transform);
 }
 
-extern "C" int TrieAdd (void *aTrie, char const *aString, size_t theLength, void *privatedata)
+extern "C" int TrieAdd(void *aTrie, char const *aString, size_t theLength, void *privatedata)
 {
 
-    return ((Trie *)aTrie)->add
-           (aString, theLength, privatedata);
+    return ((Trie *)aTrie)->add(aString, theLength, privatedata);
 }

@@ -882,7 +882,7 @@ UFSSwapDir::writeCleanStart()
     state->outbuf = (char *)xcalloc(CLEAN_BUF_SZ, 1);
     state->outbuf_offset = 0;
     /*copy the header */
-    xmemcpy(state->outbuf, &header, sizeof(StoreSwapLogHeader));
+    memcpy(state->outbuf, &header, sizeof(StoreSwapLogHeader));
     state->outbuf_offset += header.record_size;
 
     state->walker = repl->WalkInit(repl);
@@ -931,8 +931,8 @@ UFSCleanLog::write(StoreEntry const &e)
     s.swap_file_sz = e.swap_file_sz;
     s.refcount = e.refcount;
     s.flags = e.flags;
-    xmemcpy(&s.key, e.key, SQUID_MD5_DIGEST_LENGTH);
-    xmemcpy(outbuf + outbuf_offset, &s, ss);
+    memcpy(&s.key, e.key, SQUID_MD5_DIGEST_LENGTH);
+    memcpy(outbuf + outbuf_offset, &s, ss);
     outbuf_offset += ss;
     /* buffered write */
 
@@ -1040,7 +1040,7 @@ UFSSwapDir::logEntry(const StoreEntry & e, int op) const
     s->swap_file_sz = e.swap_file_sz;
     s->refcount = e.refcount;
     s->flags = e.flags;
-    xmemcpy(s->key, e.key, SQUID_MD5_DIGEST_LENGTH);
+    memcpy(s->key, e.key, SQUID_MD5_DIGEST_LENGTH);
     file_write(swaplog_fd,
                -1,
                s,

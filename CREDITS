@@ -524,3 +524,13 @@ helpers/external_acl/kerberos_ldap_group/support_ldap.cc
  * <http://www.OpenLDAP.org/license.html>.
  */
 
+==============================================================================
+
+helpers/log_daemon/DB/doc/:
+helpers/log_daemon/DB/log_db_daemon.pl.in:
+
+  Copyright (C) 2008 by Marcello Romani
+
+  This library is free software; you can redistribute it and/or modify
+  it under the same terms as Perl itself, either Perl version 5.8.8 or,
+  at your option, any later version of Perl 5 you may have available.

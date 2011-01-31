@@ -13,17 +13,13 @@ TestStore::callback()
 }
 
 StoreEntry*
-
-TestStore::get
-(const cache_key*)
+TestStore::get(const cache_key*)
 {
     return NULL;
 }
 
 void
-
-TestStore::get
-(String, void (*)(StoreEntry*, void*), void*)
+TestStore::get(String, void (*)(StoreEntry*, void*), void*)
 {}
 
 void
@@ -58,7 +54,7 @@ TestStore::search(String const url, HttpRequest *)
 void
 testStore::testSetRoot()
 {
-    StorePointer aStore (new TestStore);
+    StorePointer aStore(new TestStore);
     Store::Root(aStore);
 
     CPPUNIT_ASSERT(&Store::Root() == aStore.getRaw());
@@ -68,8 +64,8 @@ testStore::testSetRoot()
 void
 testStore::testUnsetRoot()
 {
-    StorePointer aStore (new TestStore);
-    StorePointer aStore2 (new TestStore);
+    StorePointer aStore(new TestStore);
+    StorePointer aStore2(new TestStore);
     Store::Root(aStore);
     Store::Root(aStore2);
     CPPUNIT_ASSERT(&Store::Root() == aStore2.getRaw());
@@ -79,7 +75,7 @@ testStore::testUnsetRoot()
 void
 testStore::testStats()
 {
-    TestStorePointer aStore (new TestStore);
+    TestStorePointer aStore(new TestStore);
     Store::Root(aStore.getRaw());
     CPPUNIT_ASSERT(aStore->statsCalled == false);
     Store::Stats(NullStoreEntry::getInstance());
@@ -90,7 +86,7 @@ testStore::testStats()
 void
 testStore::testMaxSize()
 {
-    StorePointer aStore (new TestStore);
+    StorePointer aStore(new TestStore);
     Store::Root(aStore.getRaw());
     CPPUNIT_ASSERT(aStore->maxSize() == 3);
     Store::Root(NULL);

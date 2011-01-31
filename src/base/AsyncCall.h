@@ -45,8 +45,6 @@ public:
     friend class AsyncCallQueue;
 
     AsyncCall(int aDebugSection, int aDebugLevel, const char *aName);
-    AsyncCall();
-    AsyncCall(const AsyncCall &);
     virtual ~AsyncCall();
 
     void make(); // fire if we can; handles general call debugging
@@ -86,6 +84,10 @@ protected:
 
 private:
     const char *isCanceled; // set to the cancelation reason by cancel()
+
+    // not implemented to prevent nil calls from being passed around and unknowingly scheduled, for now.
+    AsyncCall();
+    AsyncCall(const AsyncCall &);
 };
 
 inline
@@ -124,9 +126,11 @@ public:
                const Dialer &aDialer): AsyncCall(aDebugSection, aDebugLevel, aName),
             dialer(aDialer) {}
 
-    AsyncCallT(const RefCount<AsyncCallT<Dialer> > &o):
-            AsyncCall(o->debugSection, o->debugLevel, o->name),
-            dialer(o->dialer) {}
+    AsyncCallT(const AsyncCallT<Dialer> &o):
+            AsyncCall(o.debugSection, o.debugLevel, o.name),
+            dialer(o.dialer) {}
+
+    ~AsyncCallT() {}
 
     CallDialer *getDialer() { return &dialer; }
 
@@ -138,6 +142,9 @@ protected:
     virtual void fire() { dialer.dial(*this); }
 
     Dialer dialer;
+
+private:
+    AsyncCallT & operator=(const AsyncCallT &); // not defined. call assignments not permitted.
 };
 
 template <class Dialer>

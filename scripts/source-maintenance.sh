@@ -114,6 +114,20 @@ for FILENAME in `ls -1`; do
 done
 }
 
+# Build XPROF types file from current sources
+echo "#ifndef _PROFILER_XPROF_TYPE_H_" >${ROOT}/lib/profiler/list
+echo "#define _PROFILER_XPROF_TYPE_H_" >>${ROOT}/lib/profiler/list
+echo "/* AUTO-GENERATED FILE */" >>${ROOT}/lib/profiler/list
+echo "#if USE_XPROF_STATS" >>${ROOT}/lib/profiler/list
+echo "typedef enum {" >>${ROOT}/lib/profiler/list
+echo "XPROF_PROF_UNACCOUNTED," >>${ROOT}/lib/profiler/list
+grep -R -h "PROF_start.*" ./* | grep -v probename | sed -e 's/ //g; s/PROF_start(/XPROF_/; s/);/,/' | sort -u >>${ROOT}/lib/profiler/list
+echo "  XPROF_LAST } xprof_type;" >>${ROOT}/lib/profiler/list
+echo "#endif" >>${ROOT}/lib/profiler/list
+echo "#endif" >>${ROOT}/lib/profiler/list
+mv ${ROOT}/lib/profiler/list ${ROOT}/lib/profiler/xprof_type.h
+
+# Run formating
 echo "" >${ROOT}/doc/debug-sections.tmp
 srcformat || exit 1
 sort -u <${ROOT}/doc/debug-sections.tmp | sort -n >${ROOT}/doc/debug-sections.txt
