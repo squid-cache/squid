@@ -16,8 +16,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-SharedMemory::SharedMemory(const String &id, const int magic):
-    theName(GenerateName(id, magic)), theFD(-1), theSize(-1), theMem(NULL)
+SharedMemory::SharedMemory(const String &id):
+    theName(GenerateName(id)), theFD(-1), theSize(-1), theMem(NULL)
 {
 }
 
@@ -35,7 +35,7 @@ SharedMemory::create(const int aSize)
     assert(aSize > 0);
     assert(theFD < 0);
 
-    theFD = shm_open(theName.termedBuf(), O_CREAT | O_EXCL | O_RDWR,
+    theFD = shm_open(theName.termedBuf(), O_CREAT | O_RDWR,
                      S_IRUSR | S_IWUSR);
     if (theFD < 0) {
         debugs(54, 5, "SharedMemory::create: shm_open: " << xstrerror());
@@ -60,7 +60,9 @@ SharedMemory::open()
     theFD = shm_open(theName.termedBuf(), O_RDWR, 0);
     if (theFD < 0) {
         debugs(54, 5, "SharedMemory::open: shm_open: " << xstrerror());
-        fatal("SharedMemory::open failed");
+        String s = "SharedMemory::open failed 1 ";
+        s.append(theName);
+        fatal(s.termedBuf());
     }
 
     {
@@ -68,7 +70,9 @@ SharedMemory::open()
         memset(&s, 0, sizeof(s));
         if (fstat(theFD, &s)) {
             debugs(54, 5, "SharedMemory::open: fstat: " << xstrerror());
-            fatal("SharedMemory::open failed");
+        String s = "SharedMemory::open failed 2 ";
+        s.append(theName);
+        fatal(s.termedBuf());
         }
 
         theSize = s.st_size;
@@ -108,21 +112,11 @@ SharedMemory::detach()
     theMem = 0;
 }
 
-/// Generate name for shared memory segment. Uses the master process
-/// PID to avoid conflicts with other Squid instances.
+/// Generate name for shared memory segment.
 String
-SharedMemory::GenerateName(const String &id, const int magic)
+SharedMemory::GenerateName(const String &id)
 {
     String name("/squid-");
     name.append(id);
-    name.append('-');
-    {
-        const int pid = IamMasterProcess() ? getpid() : getppid();
-        name.append(pid);
-    }
-    if (magic) {
-        name.append('-');
-        name.append(magic);
-    }
     return name;
 }
