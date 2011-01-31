@@ -210,7 +210,7 @@ parse_rfc1123(const char *str)
     if (t != -1) {
         time_t dst = 0;
 #if !(defined(_TIMEZONE) || defined(_timezone) || _SQUID_AIX_ || _SQUID_WINDOWS_ || _SQUID_SGI_)
-    extern long timezone;
+        extern long timezone;
 #endif
         /*
          * The following assumes a fixed DST offset of 1 hour,
