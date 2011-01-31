@@ -17,9 +17,9 @@
 #include "mgr/Forwarder.h"
 #include "CacheManager.h"
 #if SQUID_SNMP
-#include "snmpx/Forwarder.h"
-#include "snmpx/Request.h"
-#include "snmpx/Response.h"
+#include "snmp/Forwarder.h"
+#include "snmp/Request.h"
+#include "snmp/Response.h"
 #endif
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Strand);

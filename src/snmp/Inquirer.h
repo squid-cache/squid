@@ -9,8 +9,8 @@
 #define SQUID_SNMPX_INQUIRER_H
 
 #include "ipc/Inquirer.h"
-#include "snmpx/forward.h"
-#include "snmpx/Pdu.h"
+#include "snmp/forward.h"
+#include "snmp/Pdu.h"
 
 
 class CommCloseCbParams;

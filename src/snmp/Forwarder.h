@@ -9,8 +9,8 @@
 #define SQUID_SNMPX_FORWARDER_H
 
 #include "ipc/Forwarder.h"
-#include "snmpx/Pdu.h"
-#include "snmpx/Session.h"
+#include "snmp/Pdu.h"
+#include "snmp/Session.h"
 
 
 class CommCloseCbParams;

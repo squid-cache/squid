@@ -9,7 +9,7 @@
 #include "base/TextException.h"
 #include "ipc/TypedMsgHdr.h"
 #include "protos.h"
-#include "snmpx/Var.h"
+#include "snmp/Var.h"
 
 
 Snmp::Var::Var()

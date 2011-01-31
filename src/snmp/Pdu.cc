@@ -10,8 +10,8 @@
 #include "ipc/TypedMsgHdr.h"
 #include "protos.h"
 #include "snmp_core.h"
-#include "snmpx/Pdu.h"
-#include "snmpx/Var.h"
+#include "snmp/Pdu.h"
+#include "snmp/Var.h"
 
 
 Snmp::Pdu::Pdu()

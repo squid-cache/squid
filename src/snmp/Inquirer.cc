@@ -10,9 +10,9 @@
 #include "CommCalls.h"
 #include "ipc/UdsOp.h"
 #include "snmp_core.h"
-#include "snmpx/Inquirer.h"
-#include "snmpx/Response.h"
-#include "snmpx/Request.h"
+#include "snmp/Inquirer.h"
+#include "snmp/Response.h"
+#include "snmp/Request.h"
 
 
 CBDATA_NAMESPACED_CLASS_INIT(Snmp, Inquirer);
