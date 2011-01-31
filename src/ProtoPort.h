@@ -38,7 +38,12 @@ struct http_port_list {
         unsigned int timeout;
     } tcp_keepalive;
 
-    Comm::ConnectionPointer listenConn;   ///< Socket used by a ConnAcceptor for incoming clients.
+    /**
+     * The listening socket details.
+     * If Comm::ConnIsOpen() we are actively listening for client requests.
+     * use listenConn->close() to stop.
+     */
+    Comm::ConnectionPointer listenConn;
 
 #if USE_SSL
     // XXX: temporary hack to ease move of SSL options to http_port

@@ -38,58 +38,44 @@
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
 #include "comm/Connection.h"
-#include "comm/ConnAcceptor.h"
+#include "comm/Loops.h"
+#include "comm/TcpAcceptor.h"
 #include "fde.h"
 #include "protos.h"
 #include "SquidTime.h"
 
-namespace Comm {
-    CBDATA_CLASS_INIT(ConnAcceptor);
+namespace Comm
+{
+CBDATA_CLASS_INIT(TcpAcceptor);
 };
 
-Comm::ConnAcceptor::ConnAcceptor(const Comm::ConnectionPointer &newConn, const char *note, const Subscription::Pointer &aSub) :
-        AsyncJob("Comm::ConnAcceptor"),
+Comm::TcpAcceptor::TcpAcceptor(const Comm::ConnectionPointer &newConn, const char *note, const Subscription::Pointer &aSub) :
+        AsyncJob("Comm::TcpAcceptor"),
         errcode(0),
         isLimited(0),
         theCallSub(aSub),
         conn(newConn)
-{
-    assert(newConn != NULL);
-
-    /* open the conn if its not already open */
-    if (!IsConnOpen(conn)) {
-        conn->fd = comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn->local, conn->flags, note);
-        errcode = errno;
-
-        if (!conn->isOpen()) {
-            debugs(5, DBG_CRITICAL, HERE << "comm_open failed: " << conn << " error: " << errcode);
-            conn = NULL;
-            return;
-        }
-        debugs(9, 3, HERE << "Unconnected data socket created on " << conn);
-    }
-    assert(IsConnOpen(newConn));
-}
+{}
 
 void
-Comm::ConnAcceptor::subscribe(const Subscription::Pointer &aSub)
+Comm::TcpAcceptor::subscribe(const Subscription::Pointer &aSub)
 {
-    debugs(5, 5, HERE << conn << " AsyncCall Subscription: " << aSub);
+    debugs(5, 5, HERE << status() << " AsyncCall Subscription: " << aSub);
     unsubscribe("subscription change");
     theCallSub = aSub;
 }
 
 void
-Comm::ConnAcceptor::unsubscribe(const char *reason)
+Comm::TcpAcceptor::unsubscribe(const char *reason)
 {
-    debugs(5, 5, HERE << conn << " AsyncCall Subscription " << theCallSub << " removed: " << reason);
+    debugs(5, 5, HERE << status() << " AsyncCall Subscription " << theCallSub << " removed: " << reason);
     theCallSub = NULL;
 }
 
 void
-Comm::ConnAcceptor::start()
+Comm::TcpAcceptor::start()
 {
-    debugs(5, 5, HERE << conn << " AsyncCall Subscription: " << theCallSub);
+    debugs(5, 5, HERE << status() << " AsyncCall Subscription: " << theCallSub);
 
     Must(IsConnOpen(conn));
 
@@ -97,11 +83,11 @@ Comm::ConnAcceptor::start()
 
     // if no error so far start accepting connections.
     if (errcode == 0)
-        commSetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
+        SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
 }
 
 bool
-Comm::ConnAcceptor::doneAll() const
+Comm::TcpAcceptor::doneAll() const
 {
     // stop when FD is closed
     if (!IsConnOpen(conn)) {
@@ -118,13 +104,33 @@ Comm::ConnAcceptor::doneAll() const
 }
 
 void
-Comm::ConnAcceptor::swanSong()
+Comm::TcpAcceptor::swanSong()
 {
     debugs(5,5, HERE);
     unsubscribe("swanSong");
     conn = NULL;
     AcceptLimiter::Instance().removeDead(this);
     AsyncJob::swanSong();
+}
+
+const char *
+Comm::TcpAcceptor::status() const
+{
+    if (conn == NULL)
+        return "[nil connection]";
+
+    static char ipbuf[MAX_IPSTRLEN] = {'\0'};
+    if (ipbuf[0] == '\0')
+        conn->local.ToHostname(ipbuf, MAX_IPSTRLEN);
+
+    static MemBuf buf;
+    buf.reset();
+    buf.Printf(" FD %d, %s",conn->fd, ipbuf);
+
+    const char *jobStatus = AsyncJob::status();
+    buf.append(jobStatus, strlen(jobStatus));
+
+    return buf.content();
 }
 
 /**
@@ -135,11 +141,11 @@ Comm::ConnAcceptor::swanSong()
  * accept()ed some time later.
  */
 void
-Comm::ConnAcceptor::setListen()
+Comm::TcpAcceptor::setListen()
 {
     errcode = 0; // reset local errno copy.
     if (listen(conn->fd, Squid_MaxFD >> 2) < 0) {
-        debugs(50, DBG_CRITICAL, "ERROR: listen(" << conn << ", " << (Squid_MaxFD >> 2) << "): " << xstrerror());
+        debugs(50, DBG_CRITICAL, "ERROR: listen(" << status() << ", " << (Squid_MaxFD >> 2) << "): " << xstrerror());
         errcode = errno;
         return;
     }
@@ -174,30 +180,30 @@ Comm::ConnAcceptor::setListen()
  * done later when enough sockets become available.
  */
 void
-Comm::ConnAcceptor::doAccept(int fd, void *data)
+Comm::TcpAcceptor::doAccept(int fd, void *data)
 {
     try {
         debugs(5, 2, HERE << "New connection on FD " << fd);
 
         Must(isOpen(fd));
-        ConnAcceptor *afd = static_cast<ConnAcceptor*>(data);
+        TcpAcceptor *afd = static_cast<TcpAcceptor*>(data);
 
         if (!okToAccept()) {
             AcceptLimiter::Instance().defer(afd);
         } else {
             afd->acceptNext();
         }
-        commSetSelect(fd, COMM_SELECT_READ, Comm::ConnAcceptor::doAccept, afd, 0);
+        SetSelect(fd, COMM_SELECT_READ, Comm::TcpAcceptor::doAccept, afd, 0);
 
-    } catch(const TextException &e) {
-        fatalf("FATAL: error while accepting new client connection: %s\n", e.message);
-    } catch(...) {
+    } catch (const std::exception &e) {
+        fatalf("FATAL: error while accepting new client connection: %s\n", e.what());
+    } catch (...) {
         fatal("FATAL: error while accepting new client connection: [unkown]\n");
     }
 }
 
 bool
-Comm::ConnAcceptor::okToAccept()
+Comm::TcpAcceptor::okToAccept()
 {
     static time_t last_warn = 0;
 
@@ -213,7 +219,7 @@ Comm::ConnAcceptor::okToAccept()
 }
 
 void
-Comm::ConnAcceptor::acceptOne()
+Comm::TcpAcceptor::acceptOne()
 {
     /*
      * We don't worry about running low on FDs here.  Instead,
@@ -223,21 +229,21 @@ Comm::ConnAcceptor::acceptOne()
 
     /* Accept a new connection */
     ConnectionPointer newConnDetails = new Connection();
-    comm_err_t status = oldAccept(newConnDetails);
+    const comm_err_t flag = oldAccept(newConnDetails);
 
     /* Check for errors */
     if (!newConnDetails->isOpen()) {
 
-        if (status == COMM_NOMESSAGE) {
+        if (flag == COMM_NOMESSAGE) {
             /* register interest again */
             debugs(5, 5, HERE << "try later: " << conn << " handler Subscription: " << theCallSub);
-            commSetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
+            SetSelect(conn->fd, COMM_SELECT_READ, doAccept, this, 0);
             return;
         }
 
         // A non-recoverable error; notify the caller */
-        debugs(5, 5, HERE << "non-recoverable error: " << conn << " handler Subscription: " << theCallSub);
-        notify(status, newConnDetails);
+        debugs(5, 5, HERE << "non-recoverable error:" << status() << " handler Subscription: " << theCallSub);
+        notify(flag, newConnDetails);
         mustStop("Listener socket closed");
         return;
     }
@@ -245,21 +251,19 @@ Comm::ConnAcceptor::acceptOne()
     debugs(5, 5, HERE << "Listener: " << conn <<
            " accepted new connection " << newConnDetails <<
            " handler Subscription: " << theCallSub);
-    notify(status, newConnDetails);
+    notify(flag, newConnDetails);
 }
 
 void
-Comm::ConnAcceptor::acceptNext()
+Comm::TcpAcceptor::acceptNext()
 {
     Must(IsConnOpen(conn));
     debugs(5, 2, HERE << "connection on " << conn);
     acceptOne();
 }
 
-// XXX: obsolete comment?
-// NP: can't be a const function because syncWithComm() side effects hit theCallSub->callback().
 void
-Comm::ConnAcceptor::notify(comm_err_t flag, const Comm::ConnectionPointer &newConnDetails)
+Comm::TcpAcceptor::notify(const comm_err_t flag, const Comm::ConnectionPointer &newConnDetails) const
 {
     // listener socket handlers just abandon the port with COMM_ERR_CLOSING
     // it should only happen when this object is deleted...
@@ -288,7 +292,7 @@ Comm::ConnAcceptor::notify(comm_err_t flag, const Comm::ConnectionPointer &newCo
  *                         Or if this client has too many connections already.
  */
 comm_err_t
-Comm::ConnAcceptor::oldAccept(Comm::ConnectionPointer &details)
+Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
 {
     PROF_start(comm_accept);
     statCounter.syscalls.sock.accepts++;
@@ -305,13 +309,13 @@ Comm::ConnAcceptor::oldAccept(Comm::ConnectionPointer &details)
         PROF_stop(comm_accept);
 
         if (ignoreErrno(errno)) {
-            debugs(50, 5, HERE << conn << ": " << xstrerror());
+            debugs(50, 5, HERE << status() << ": " << xstrerror());
             return COMM_NOMESSAGE;
         } else if (ENFILE == errno || EMFILE == errno) {
-            debugs(50, 3, HERE << conn << ": " << xstrerror());
+            debugs(50, 3, HERE << status() << ": " << xstrerror());
             return COMM_ERROR;
         } else {
-            debugs(50, 1, HERE << conn << ": " << xstrerror());
+            debugs(50, 1, HERE << status() << ": " << xstrerror());
             return COMM_ERROR;
         }
     }

@@ -1,13 +1,14 @@
 #include "squid.h"
+#include "comm.h"
 #include "ProtoPort.h"
 #if HAVE_LIMITS
 #include <limits>
 #endif
 
-http_port_list::http_port_list(const char *aProtocol)
+http_port_list::http_port_list(const char *aProtocol) :
 #if USE_SSL
-        :
-        http(*this), dynamicCertMemCacheSize(std::numeric_limits<size_t>::max())
+        http(*this),
+        dynamicCertMemCacheSize(std::numeric_limits<size_t>::max())
 #endif
 {
     protocol = xstrdup(aProtocol);
@@ -15,8 +16,10 @@ http_port_list::http_port_list(const char *aProtocol)
 
 http_port_list::~http_port_list()
 {
-    if (Comm::IsConnOpen(listenConn))
+    if (Comm::IsConnOpen(listenConn)) {
         listenConn->close();
+        listenConn = NULL;
+    }
 
     safe_free(name);
     safe_free(defaultsite);

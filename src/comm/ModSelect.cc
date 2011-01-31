@@ -30,17 +30,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#include "config.h"
+
+#if USE_SELECT
 
 #include "squid.h"
-#include "comm_select.h"
+#include "comm/Loops.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
-
-#if USE_SELECT_WIN32
 #include "Store.h"
 #include "fde.h"
 
-static int MAX_POLL_TIME = 1000;	/* see also comm_quick_poll_required() */
+static int MAX_POLL_TIME = 1000;	/* see also Comm::QuickPollRequired() */
 
 #ifndef        howmany
 #define howmany(x, y)   (((x)+((y)-1))/(y))
@@ -131,13 +132,12 @@ static int incoming_http_interval = 16 << INCOMING_FACTOR;
 #define commCheckHTTPIncoming (++http_io_events > (incoming_http_interval>> INCOMING_FACTOR))
 
 void
-commSetSelect(int fd, unsigned int type, PF * handler, void *client_data,
-              time_t timeout)
+Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
 {
     fde *F = &fd_table[fd];
     assert(fd >= 0);
     assert(F->flags.open);
-    debugs(5, 5, "commSetSelect: FD " << fd << " type " << type);
+    debugs(5, 5, HERE << "FD " << fd << " type " << type);
 
     if (type & COMM_SELECT_READ) {
         F->read_handler = handler;
@@ -156,7 +156,7 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data,
 }
 
 void
-commResetSelect(int fd)
+Comm::ResetSelect(int fd)
 {
 }
 
@@ -206,8 +206,6 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
     PF *hdl = NULL;
     fd_set read_mask;
     fd_set write_mask;
-    fd_set errfds;
-    FD_ZERO(&errfds);
     FD_ZERO(&read_mask);
     FD_ZERO(&write_mask);
     incoming_sockets_accepted = 0;
@@ -237,14 +235,13 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
 
     statCounter.syscalls.selects++;
 
-    if (select(maxfd, &read_mask, &write_mask, &errfds, &zero_tv) < 1)
-
+    if (select(maxfd, &read_mask, &write_mask, NULL, &zero_tv) < 1)
         return incoming_sockets_accepted;
 
     for (i = 0; i < nfds; i++) {
         fd = fds[i];
 
-        if (__WSAFDIsSet(fd_table[fd].win32.handle, &read_mask)) {
+        if (FD_ISSET(fd, &read_mask)) {
             if ((hdl = fd_table[fd].read_handler) != NULL) {
                 fd_table[fd].read_handler = NULL;
                 commUpdateReadBits(fd, NULL);
@@ -254,7 +251,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
             }
         }
 
-        if (__WSAFDIsSet(fd_table[fd].win32.handle, &write_mask)) {
+        if (FD_ISSET(fd, &write_mask)) {
             if ((hdl = fd_table[fd].write_handler) != NULL) {
                 fd_table[fd].write_handler = NULL;
                 commUpdateWriteBits(fd, NULL);
@@ -336,7 +333,7 @@ comm_select_http_incoming(void)
 #define DEBUG_FDBITS 0
 /* Select on all sockets; call handlers for those that are ready. */
 comm_err_t
-comm_select(int msec)
+Comm::DoSelect(int msec)
 {
     fd_set readfds;
     fd_set pendingfds;
@@ -349,18 +346,21 @@ comm_select(int msec)
     int pending;
     int callicp = 0, callhttp = 0;
     int calldns = 0;
+    int maxindex;
+    unsigned int k;
     int j;
 #if DEBUG_FDBITS
 
     int i;
 #endif
+
+    fd_mask *fdsp;
+    fd_mask *pfdsp;
+    fd_mask tmask;
+
     struct timeval poll_time;
     double timeout = current_dtime + (msec / 1000.0);
     fde *F;
-
-    int no_bits;
-    fd_set errfds;
-    FD_ZERO(&errfds);
 
     do {
         double start;
@@ -380,36 +380,36 @@ comm_select(int msec)
 
         maxfd = Biggest_FD + 1;
 
-        xmemcpy(&readfds, &global_readfds, sizeof(global_readfds));
+        memcpy(&readfds, &global_readfds,
+               howmany(maxfd, FD_MASK_BITS) * FD_MASK_BYTES);
 
-        xmemcpy(&writefds, &global_writefds, sizeof(global_writefds));
-
-        xmemcpy(&errfds, &global_writefds, sizeof(global_writefds));
+        memcpy(&writefds, &global_writefds,
+               howmany(maxfd, FD_MASK_BITS) * FD_MASK_BYTES);
 
         /* remove stalled FDs, and deal with pending descriptors */
         pending = 0;
 
         FD_ZERO(&pendingfds);
 
-        for (j = 0; j < (int) readfds.fd_count; j++) {
-            register int readfds_handle = readfds.fd_array[j];
-            no_bits = 1;
+        maxindex = howmany(maxfd, FD_MASK_BITS);
 
-            for ( fd = Biggest_FD; fd; fd-- ) {
-                if ( fd_table[fd].win32.handle == readfds_handle ) {
-                    if (fd_table[fd].flags.open) {
-                        no_bits = 0;
-                        break;
-                    }
+        fdsp = (fd_mask *) & readfds;
+
+        for (j = 0; j < maxindex; j++) {
+            if ((tmask = fdsp[j]) == 0)
+                continue;	/* no bits here */
+
+            for (k = 0; k < FD_MASK_BITS; k++) {
+                if (!EBIT_TEST(tmask, k))
+                    continue;
+
+                /* Found a set bit */
+                fd = (j * FD_MASK_BITS) + k;
+
+                if (FD_ISSET(fd, &readfds) && fd_table[fd].flags.read_pending) {
+                    FD_SET(fd, &pendingfds);
+                    pending++;
                 }
-            }
-
-            if (no_bits)
-                continue;
-
-            if (__WSAFDIsSet(fd_table[fd].win32.handle, &readfds) && fd_table[fd].flags.read_pending) {
-                FD_SET(fd, &pendingfds);
-                pending++;
             }
         }
 
@@ -418,11 +418,11 @@ comm_select(int msec)
             /* Check each open socket for a handler. */
 
             if (fd_table[i].read_handler) {
-                assert(__WSAFDIsSet(fd_table[i].win32.handle, readfds));
+                assert(FD_ISSET(i, &readfds));
             }
 
             if (fd_table[i].write_handler) {
-                assert(__WSAFDIsSet(fd_table[i].win32.handle, writefds));
+                assert(FD_ISSET(i, &writefds));
             }
         }
 
@@ -441,8 +441,8 @@ comm_select(int msec)
         for (;;) {
             poll_time.tv_sec = msec / 1000;
             poll_time.tv_usec = (msec % 1000) * 1000;
-            ++statCounter.syscalls.selects;
-            num = select(maxfd, &readfds, &writefds, &errfds, &poll_time);
+            statCounter.syscalls.selects++;
+            num = select(maxfd, &readfds, &writefds, NULL, &poll_time);
             ++statCounter.select_loops;
 
             if (num >= 0 || pending > 0)
@@ -473,156 +473,134 @@ comm_select(int msec)
             continue;
 
         /* Scan return fd masks for ready descriptors */
-        assert(readfds.fd_count <= (unsigned int) Biggest_FD);
-        assert(pendingfds.fd_count <= (unsigned int) Biggest_FD);
+        fdsp = (fd_mask *) & readfds;
 
-        for (j = 0; j < (int) readfds.fd_count; j++) {
-            register int readfds_handle = readfds.fd_array[j];
-            register int pendingfds_handle = pendingfds.fd_array[j];
-            register int osfhandle;
-            no_bits = 1;
+        pfdsp = (fd_mask *) & pendingfds;
 
-            for ( fd = Biggest_FD; fd; fd-- ) {
-                osfhandle = fd_table[fd].win32.handle;
+        maxindex = howmany(maxfd, FD_MASK_BITS);
 
-                if (( osfhandle == readfds_handle ) ||
-                        ( osfhandle == pendingfds_handle )) {
-                    if (fd_table[fd].flags.open) {
-                        no_bits = 0;
-                        break;
-                    }
-                }
-            }
+        for (j = 0; j < maxindex; j++) {
+            if ((tmask = (fdsp[j] | pfdsp[j])) == 0)
+                continue;	/* no bits here */
 
-            if (no_bits)
-                continue;
+            for (k = 0; k < FD_MASK_BITS; k++) {
+                if (tmask == 0)
+                    break;	/* no more bits left */
+
+                if (!EBIT_TEST(tmask, k))
+                    continue;
+
+                /* Found a set bit */
+                fd = (j * FD_MASK_BITS) + k;
+
+                EBIT_CLR(tmask, k);	/* this will be done */
 
 #if DEBUG_FDBITS
 
-            debugs(5, 9, "FD " << fd << " bit set for reading");
+                debugs(5, 9, "FD " << fd << " bit set for reading");
 
-            assert(__WSAFDIsSet(fd_table[fd].win32.handle, readfds));
+                assert(FD_ISSET(fd, &readfds));
 
 #endif
 
-            if (fdIsIcp(fd)) {
-                callicp = 1;
-                continue;
-            }
+                if (fdIsIcp(fd)) {
+                    callicp = 1;
+                    continue;
+                }
 
-            if (fdIsDns(fd)) {
-                calldns = 1;
-                continue;
-            }
+                if (fdIsDns(fd)) {
+                    calldns = 1;
+                    continue;
+                }
 
-            if (fdIsHttp(fd)) {
-                callhttp = 1;
-                continue;
-            }
+                if (fdIsHttp(fd)) {
+                    callhttp = 1;
+                    continue;
+                }
 
-            F = &fd_table[fd];
-            debugs(5, 6, "comm_select: FD " << fd << " ready for reading");
+                F = &fd_table[fd];
+                debugs(5, 6, "comm_select: FD " << fd << " ready for reading");
 
-            if (NULL == (hdl = F->read_handler))
-                (void) 0;
-            else {
-                F->read_handler = NULL;
-                F->flags.read_pending = 0;
-                commUpdateReadBits(fd, NULL);
-                hdl(fd, F->read_data);
-                statCounter.select_fds++;
+                if (NULL == (hdl = F->read_handler))
+                    (void) 0;
+                else {
+                    F->read_handler = NULL;
+                    F->flags.read_pending = 0;
+                    commUpdateReadBits(fd, NULL);
+                    hdl(fd, F->read_data);
+                    statCounter.select_fds++;
 
-                if (commCheckICPIncoming)
-                    comm_select_icp_incoming();
+                    if (commCheckICPIncoming)
+                        comm_select_icp_incoming();
 
-                if (commCheckDNSIncoming)
-                    comm_select_dns_incoming();
+                    if (commCheckDNSIncoming)
+                        comm_select_dns_incoming();
 
-                if (commCheckHTTPIncoming)
-                    comm_select_http_incoming();
+                    if (commCheckHTTPIncoming)
+                        comm_select_http_incoming();
+                }
             }
         }
 
-        assert(errfds.fd_count <= (unsigned int) Biggest_FD);
+        fdsp = (fd_mask *) & writefds;
 
-        for (j = 0; j < (int) errfds.fd_count; j++) {
-            register int errfds_handle = errfds.fd_array[j];
+        for (j = 0; j < maxindex; j++) {
+            if ((tmask = fdsp[j]) == 0)
+                continue;	/* no bits here */
 
-            for ( fd = Biggest_FD; fd; fd-- ) {
-                if ( fd_table[fd].win32.handle == errfds_handle )
-                    break;
-            }
+            for (k = 0; k < FD_MASK_BITS; k++) {
+                if (tmask == 0)
+                    break;	/* no more bits left */
 
-            if (fd_table[fd].flags.open) {
+                if (!EBIT_TEST(tmask, k))
+                    continue;
+
+                /* Found a set bit */
+                fd = (j * FD_MASK_BITS) + k;
+
+                EBIT_CLR(tmask, k);	/* this will be done */
+
+#if DEBUG_FDBITS
+
+                debugs(5, 9, "FD " << fd << " bit set for writing");
+
+                assert(FD_ISSET(fd, &writefds));
+
+#endif
+
+                if (fdIsIcp(fd)) {
+                    callicp = 1;
+                    continue;
+                }
+
+                if (fdIsDns(fd)) {
+                    calldns = 1;
+                    continue;
+                }
+
+                if (fdIsHttp(fd)) {
+                    callhttp = 1;
+                    continue;
+                }
+
                 F = &fd_table[fd];
+                debugs(5, 5, "comm_select: FD " << fd << " ready for writing");
 
                 if ((hdl = F->write_handler)) {
                     F->write_handler = NULL;
                     commUpdateWriteBits(fd, NULL);
                     hdl(fd, F->write_data);
                     statCounter.select_fds++;
+
+                    if (commCheckICPIncoming)
+                        comm_select_icp_incoming();
+
+                    if (commCheckDNSIncoming)
+                        comm_select_dns_incoming();
+
+                    if (commCheckHTTPIncoming)
+                        comm_select_http_incoming();
                 }
-            }
-        }
-
-        assert(writefds.fd_count <= (unsigned int) Biggest_FD);
-
-        for (j = 0; j < (int) writefds.fd_count; j++) {
-            register int writefds_handle = writefds.fd_array[j];
-            no_bits = 1;
-
-            for ( fd = Biggest_FD; fd; fd-- ) {
-                if ( fd_table[fd].win32.handle == writefds_handle ) {
-                    if (fd_table[fd].flags.open) {
-                        no_bits = 0;
-                        break;
-                    }
-                }
-            }
-
-            if (no_bits)
-                continue;
-
-#if DEBUG_FDBITS
-
-            debugs(5, 9, "FD " << fd << " bit set for writing");
-
-            assert(__WSAFDIsSet(fd_table[fd].win32.handle, writefds));
-
-#endif
-
-            if (fdIsIcp(fd)) {
-                callicp = 1;
-                continue;
-            }
-
-            if (fdIsDns(fd)) {
-                calldns = 1;
-                continue;
-            }
-
-            if (fdIsHttp(fd)) {
-                callhttp = 1;
-                continue;
-            }
-
-            F = &fd_table[fd];
-            debugs(5, 5, "comm_select: FD " << fd << " ready for writing");
-
-            if ((hdl = F->write_handler)) {
-                F->write_handler = NULL;
-                commUpdateWriteBits(fd, NULL);
-                hdl(fd, F->write_data);
-                statCounter.select_fds++;
-
-                if (commCheckICPIncoming)
-                    comm_select_icp_incoming();
-
-                if (commCheckDNSIncoming)
-                    comm_select_dns_incoming();
-
-                if (commCheckHTTPIncoming)
-                    comm_select_http_incoming();
             }
         }
 
@@ -682,16 +660,8 @@ comm_select_dns_incoming(void)
     statHistCount(&statCounter.comm_dns_incoming, nevents);
 }
 
-static void
-commSelectRegisterWithCacheManager(void)
-{
-    Mgr::RegisterAction("comm_select_incoming",
-                        "comm_incoming() stats",
-                        commIncomingStats, 0, 1);
-}
-
 void
-comm_select_init(void)
+Comm::SelectLoopInit(void)
 {
     zero_tv.tv_sec = 0;
     zero_tv.tv_usec = 0;
@@ -699,7 +669,9 @@ comm_select_init(void)
     FD_ZERO(&global_writefds);
     nreadfds = nwritefds = 0;
 
-    commSelectRegisterWithCacheManager();
+    Mgr::RegisterAction("comm_select_incoming",
+                        "comm_incoming() stats",
+                        commIncomingStats, 0, 1);
 }
 
 /*
@@ -731,9 +703,9 @@ examine_select(fd_set * readfds, fd_set * writefds)
         FD_ZERO(&write_x);
         tv.tv_sec = tv.tv_usec = 0;
 
-        if (__WSAFDIsSet(fd_table[fd].win32.handle, readfds))
+        if (FD_ISSET(fd, readfds))
             FD_SET(fd, &read_x);
-        else if (__WSAFDIsSet(fd_table[fd].win32.handle, writefds))
+        else if (FD_ISSET(fd, writefds))
             FD_SET(fd, &write_x);
         else
             continue;
@@ -797,10 +769,10 @@ commIncomingStats(StoreEntry * sentry)
 void
 commUpdateReadBits(int fd, PF * handler)
 {
-    if (handler && !__WSAFDIsSet(fd_table[fd].win32.handle, &global_readfds)) {
+    if (handler && !FD_ISSET(fd, &global_readfds)) {
         FD_SET(fd, &global_readfds);
         nreadfds++;
-    } else if (!handler && __WSAFDIsSet(fd_table[fd].win32.handle, &global_readfds)) {
+    } else if (!handler && FD_ISSET(fd, &global_readfds)) {
         FD_CLR(fd, &global_readfds);
         nreadfds--;
     }
@@ -809,10 +781,10 @@ commUpdateReadBits(int fd, PF * handler)
 void
 commUpdateWriteBits(int fd, PF * handler)
 {
-    if (handler && !__WSAFDIsSet(fd_table[fd].win32.handle, &global_writefds)) {
+    if (handler && !FD_ISSET(fd, &global_writefds)) {
         FD_SET(fd, &global_writefds);
         nwritefds++;
-    } else if (!handler && __WSAFDIsSet(fd_table[fd].win32.handle, &global_writefds)) {
+    } else if (!handler && FD_ISSET(fd, &global_writefds)) {
         FD_CLR(fd, &global_writefds);
         nwritefds--;
     }
@@ -820,9 +792,9 @@ commUpdateWriteBits(int fd, PF * handler)
 
 /* Called by async-io or diskd to speed up the polling */
 void
-comm_quick_poll_required(void)
+Comm::QuickPollRequired(void)
 {
     MAX_POLL_TIME = 10;
 }
 
-#endif /* USE_SELECT_WIN32 */
+#endif /* USE_SELECT */

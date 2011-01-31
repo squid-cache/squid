@@ -170,7 +170,7 @@ void Ssl::CrtdMessage::composeBody(CrtdMessage::BodyParams const & map, std::str
         body += i->first + "=" + i->second;
     }
     if (!other_part.empty())
-        body += other_part;
+        body += '\n' + other_part;
 }
 
 const std::string Ssl::CrtdMessage::code_new_certificate("new_certificate");

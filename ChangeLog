@@ -1,3 +1,21 @@
+Changes to squid-3.2.0.4 (22 Dec 2010):
+
+	- Port 2.x: cache_dir min-size setting
+	- Bug 3059: Crash on digest auth headers with unknown nonce
+	- Fix cachemgr reported HTTP/ICP requests/messages per minute when multiple workers used
+	- Fix cachemgr mem-pools reporting
+	- Add Dynamic SSL certificate generation
+	- Add useragent, referer, combined built-in log formats
+	- Obsolete log_fqdn directive
+	- Obsolete useragent/referer/forward_log directives
+	- HTTP/1.1: Send 1.1 on CONNECT responses
+	- Updated Kerberos support for newer GSSAPI releases
+	- Improve handling of adapted body delivery failures in REQMOD request satisfaction mode
+	- Improve handling of early eCAP transaction failures
+	- Various ext_edirectory_acl fixes
+	- ... all bug and feature fixes included in 3.1.10 release
+	- ... and a lot of code and documentation polishing
+
 Changes to squid-3.2.0.3 (07 Nov 2010):
 
 	- Regression fix: SMP broke ICP outgoing IP lookup if no udp_outgoing_addr set
@@ -88,6 +106,30 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many code cleanups
 	- ... and a great many testing improvements
 	- ... and many documentation updates
+
+Changes to squid-3.1.10 (22 Dec 2010):
+
+	- Bug 3121: memory leak in DigestAuth: AuthUser object is locked twice
+	- Bug 3113: Consuming too much memory when uploading files
+	- Bug 3110: 'reply_body_max_size none' does not work with x-forwarded-for
+	- Bug 3096: Consuming too much memory when delaying traffic
+	- Bug 3091: Bypassed ICAP errors are not counted as service failures
+	- Bug 3090: Polish FTP login error handing
+	- Bug 3068: cache_dir capacity and usage overflows
+	- Bug 3028: Permit wbinfo_group.pl to authenticate Kerberos users with NT domain
+	- Bug  427: HTTP Compliance: Support If-Match and If-None-Match requests
+	- Fix memory leak in adaptation_access
+	- Fix /dev/poll and poll() selection priority
+	- Fix PREFIX/var/run creation during install
+	- Fix cachemgr http_port config report display
+	- Add upgrade help process for obsolete options
+	- Accept RFC 2965 Set-Cookie2 / Cookie2 headers as 'known'
+	- HTTP/1.1: entry is stale if request has max-age=0
+	- HTTP/1.1: do not forward TRACE with Max-Forwards: 0 after REQMOD
+	- Toolchain update to support newer auto-tools
+	- ... and updated error page translations
+	- ... and updated documentation
+	- ... and some code optimization/simplification polish
 
 Changes to squid-3.1.9 (25 Oct 2010):
 

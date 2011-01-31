@@ -36,8 +36,9 @@
 #include "base/InstanceId.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
-#include "comm/Write.h"
 #include "comm.h"
+#include "comm/Loops.h"
+#include "comm/Write.h"
 #include "event.h"
 #include "fde.h"
 #include "ip/tools.h"
@@ -282,7 +283,7 @@ idnsAddNameserver(const char *buf)
         nameservers = (ns *)xcalloc(nns_alloc, sizeof(*nameservers));
 
         if (oldptr && oldalloc)
-            xmemcpy(nameservers, oldptr, oldalloc * sizeof(*nameservers));
+            memcpy(nameservers, oldptr, oldalloc * sizeof(*nameservers));
 
         if (oldptr)
             safe_free(oldptr);
@@ -314,7 +315,7 @@ idnsAddPathComponent(const char *buf)
         searchpath = (sp *)xcalloc(npc_alloc, sizeof(*searchpath));
 
         if (oldptr && oldalloc)
-            xmemcpy(searchpath, oldptr, oldalloc * sizeof(*searchpath));
+            memcpy(searchpath, oldptr, oldalloc * sizeof(*searchpath));
 
         if (oldptr)
             safe_free(oldptr);
@@ -1233,7 +1234,7 @@ idnsRead(int fd, void *data)
 
     // Always keep reading. This stops (or at least makes harder) several
     // attacks on the DNS client.
-    commSetSelect(fd, COMM_SELECT_READ, idnsRead, NULL, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, idnsRead, NULL, 0);
 
     /* BUG (UNRESOLVED)
      *  two code lines after returning from comm_udprecvfrom()
@@ -1499,12 +1500,12 @@ idnsInit(void)
         if (DnsSocketB >= 0) {
             port = comm_local_port(DnsSocketB);
             debugs(78, 1, "DNS Socket created at " << addrB << ", FD " << DnsSocketB);
-            commSetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
+            Comm::SetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
         }
         if (DnsSocketA >= 0) {
             port = comm_local_port(DnsSocketA);
             debugs(78, 1, "DNS Socket created at " << addrA << ", FD " << DnsSocketA);
-            commSetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
+            Comm::SetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
         }
     }
 

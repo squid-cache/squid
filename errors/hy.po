@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-11-06 03:26+1300\n"
-"PO-Revision-Date: 2010-08-21 17:08+0200\n"
+"PO-Revision-Date: 2011-01-20 21:35+0200\n"
 "Last-Translator: Arthur <arthurtumanyan@yahoo.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: hy\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Pootle 2.0.1\n"
+"X-Generator: Pootle 2.0.5\n"
 
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -100,7 +100,7 @@ msgstr ""
 msgid ""
 "At least one precondition specified by the HTTP client in the request header "
 "has failed."
-msgstr ""
+msgstr "HTTP հարցումի նախապայմաններից առնվազն մեկը անհնար է մշակել"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
@@ -112,9 +112,8 @@ msgid "Cache Manager Access Denied."
 msgstr "Քեշի կառավառման մուտքն արգելված է."
 
 #: templates/ERR_URN_RESOLVE:5
-#, fuzzy
 msgid "Cannot Resolve URN"
-msgstr "Cannot Resolve URN"
+msgstr "Չհաջողվեց մշակել URN հարցումը"
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
@@ -122,7 +121,7 @@ msgstr "Կապի հաստատման ժամանակը սպառվեց"
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
-msgstr ""
+msgstr "Չհաջողվեց կապ հաստատել %I -ի հետ"
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
@@ -134,7 +133,7 @@ msgstr "Դիրեկտորիայի պարունակությունը:"
 
 #: templates/ERR_DIR_LISTING:4
 msgid "Directory Listing"
-msgstr ""
+msgstr "Դիրեկտորիայի պարունակությունը"
 
 #: templates/ERR_DIR_LISTING:1
 msgid "Directory: %U"
@@ -199,7 +198,7 @@ msgstr "ՍԽԱԼ: Պահանջվող URL-ն հնարավոր չէ ստանալ"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
-msgstr ""
+msgstr "Չհաջողվեց մշակել ESI հարցումը"
 
 #: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
 msgid "FTP PUT Successful."
@@ -281,25 +280,19 @@ msgstr "Ինչպես փնտրել այս կարգաբերումները քո բ�
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
-msgstr ""
+msgstr "ICAP արձանարության սխալ"
 
 #: templates/ERR_TOO_BIG:7
-#, fuzzy
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
-msgstr ""
-"Եթե Դուք GET հարցում եք ձևակերպում, ապա տարրը ,որը Դուք փորձում եք "
-"բեռնավորել, շատ մեծ ծավալ ունի."
+msgstr "GET հարցման օբյեկտը շատ մեծ ծավալ ունի."
 
 #: templates/ERR_TOO_BIG:6
-#, fuzzy
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
-msgstr ""
-"Եթե Դուք POST կամ PUT  հարցում եք ձևակերպում, ապա տարրը ,որը Դուք փորձում եք "
-"բեռնավորել, շատ մեծ ծավալ ունի"
+msgstr "POST հարցման օբյեկտը շատ մեծ ծավալ ունի."
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
@@ -376,7 +369,7 @@ msgstr ""
 
 #: templates/ERR_PRECONDITION_FAILED:5
 msgid "Precondition Failed."
-msgstr ""
+msgstr "Չհաջողվեց մշակել նախապայմանը"
 
 #: templates/ERR_READ_ERROR:5
 msgid "Read Error"
@@ -466,9 +459,8 @@ msgid "The DNS server returned:"
 msgstr "DNS սերվերի պատասխանը:"
 
 #: templates/ERR_ESI:6
-#, fuzzy
 msgid "The ESI processor returned:"
-msgstr "ESI պրոցեսորը պատասխանեց:"
+msgstr "ESI հարցման պատասխանն է։"
 
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"

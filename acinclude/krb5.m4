@@ -27,7 +27,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
 dnl these checks must be performed in the same order as here defined,
-dnl and have mostly been lifted out of an inlined configure.in.
+dnl and have mostly been lifted out of an inlined configure.ac.
 
 dnl checks for a broken solaris header file, and sets squid_cv_broken_krb5_h
 dnl to yes if that's the case

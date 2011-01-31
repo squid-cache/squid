@@ -135,15 +135,15 @@ storeSwapMetaPack(tlv * tlv_list, int *length)
 
     buf[j++] = (char) STORE_META_OK;
 
-    xmemcpy(&buf[j], &buflen, sizeof(int));
+    memcpy(&buf[j], &buflen, sizeof(int));
 
     j += sizeof(int);
 
     for (t = tlv_list; t; t = t->next) {
         buf[j++] = t->getType();
-        xmemcpy(&buf[j], &t->length, sizeof(int));
+        memcpy(&buf[j], &t->length, sizeof(int));
         j += sizeof(int);
-        xmemcpy(&buf[j], t->value, t->length);
+        memcpy(&buf[j], t->value, t->length);
         j += t->length;
     }
 

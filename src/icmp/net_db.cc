@@ -620,7 +620,7 @@ netdbReloadState(void)
 
         n = (netdbEntry *)memAllocate(MEM_NETDBENTRY);
 
-        xmemcpy(n, &N, sizeof(netdbEntry));
+        memcpy(n, &N, sizeof(netdbEntry));
 
         netdbHashInsert(n, addr);
 
@@ -778,21 +778,21 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
             case NETDB_EX_NETWORK:
                 o++;
                 /* FIXME INET6 : NetDB can still ony send IPv4 */
-                xmemcpy(&line_addr, p + o, sizeof(struct in_addr));
+                memcpy(&line_addr, p + o, sizeof(struct in_addr));
                 addr = line_addr;
                 o += sizeof(struct in_addr);
                 break;
 
             case NETDB_EX_RTT:
                 o++;
-                xmemcpy(&j, p + o, sizeof(int));
+                memcpy(&j, p + o, sizeof(int));
                 o += sizeof(int);
                 rtt = (double) ntohl(j) / 1000.0;
                 break;
 
             case NETDB_EX_HOPS:
                 o++;
-                xmemcpy(&j, p + o, sizeof(int));
+                memcpy(&j, p + o, sizeof(int));
                 o += sizeof(int);
                 hops = (double) ntohl(j) / 1000.0;
                 break;
@@ -1247,7 +1247,7 @@ netdbBinaryExchange(StoreEntry * s)
         buf[i++] = (char) NETDB_EX_NETWORK;
 
         addr.GetInAddr(line_addr);
-        xmemcpy(&buf[i], &line_addr, sizeof(struct in_addr));
+        memcpy(&buf[i], &line_addr, sizeof(struct in_addr));
 
         i += sizeof(struct in_addr);
 
@@ -1255,7 +1255,7 @@ netdbBinaryExchange(StoreEntry * s)
 
         j = htonl((int) (n->rtt * 1000));
 
-        xmemcpy(&buf[i], &j, sizeof(int));
+        memcpy(&buf[i], &j, sizeof(int));
 
         i += sizeof(int);
 
@@ -1263,7 +1263,7 @@ netdbBinaryExchange(StoreEntry * s)
 
         j = htonl((int) (n->hops * 1000));
 
-        xmemcpy(&buf[i], &j, sizeof(int));
+        memcpy(&buf[i], &j, sizeof(int));
 
         i += sizeof(int);
 

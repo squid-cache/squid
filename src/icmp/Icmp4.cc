@@ -130,7 +130,7 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
         if (len > MAX_PAYLOAD)
             len = MAX_PAYLOAD;
 
-        xmemcpy(echo->payload, payload, len);
+        memcpy(echo->payload, payload, len);
 
         icmp_pktsize += len;
     }

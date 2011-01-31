@@ -39,6 +39,7 @@
 #include "comm/Connection.h"
 #include "Store.h"
 #include "HttpRequest.h"
+#include "log/Tokens.h"
 #include "MemObject.h"
 #include "fde.h"
 #include "mem_node.h"
@@ -649,7 +650,7 @@ GetInfo(Mgr::InfoActionData& stats)
         stats.mem_pool_allocated = mp_stats.TheMeter->alloc.level;
 #endif
 
-        stats.gb_freed_count = mp_stats.TheMeter->gb_saved.count;
+        stats.gb_saved_count = mp_stats.TheMeter->gb_saved.count;
         stats.gb_freed_count = mp_stats.TheMeter->gb_freed.count;
     }
 
@@ -722,10 +723,10 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
                       stats.request_failure_ratio / fct);
 
     storeAppendPrintf(sentry, "\tAverage HTTP requests per minute since start:\t%.1f\n",
-                      stats.avg_client_http_requests / fct);
+                      stats.avg_client_http_requests);
 
     storeAppendPrintf(sentry, "\tAverage ICP messages per minute since start:\t%.1f\n",
-                      stats.avg_icp_messages / fct);
+                      stats.avg_icp_messages);
 
     storeAppendPrintf(sentry, "\tSelect loop called: %.0f times, %0.3f ms avg\n",
                       stats.select_loops, stats.avg_loop_time / fct);
@@ -749,7 +750,7 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
                       stats.request_hit_disk_ratio60 / fct);
 
     storeAppendPrintf(sentry, "\tStorage Swap size:\t%.0f KB\n",
-                      stats.store_swap_size / 1024);
+                      stats.store_swap_size);
 
     storeAppendPrintf(sentry, "\tStorage Swap capacity:\t%4.1f%% used, %4.1f%% free\n",
                       Math::doublePercent(stats.store_swap_size, stats.store_swap_max_size),
@@ -1425,7 +1426,7 @@ statAvgTick(void *notused)
     c->timestamp = current_time;
     /* even if NCountHist is small, we already Init()ed the tail */
     statCountersClean(CountHist + N_COUNT_HIST - 1);
-    xmemmove(p, t, (N_COUNT_HIST - 1) * sizeof(StatCounters));
+    memmove(p, t, (N_COUNT_HIST - 1) * sizeof(StatCounters));
     statCountersCopy(t, c);
     NCountHist++;
 
@@ -1435,7 +1436,7 @@ statAvgTick(void *notused)
         StatCounters *p2 = &CountHourHist[1];
         StatCounters *c2 = &CountHist[N_COUNT_HIST - 1];
         statCountersClean(CountHourHist + N_COUNT_HOUR_HIST - 1);
-        xmemmove(p2, t2, (N_COUNT_HOUR_HIST - 1) * sizeof(StatCounters));
+        memmove(p2, t2, (N_COUNT_HOUR_HIST - 1) * sizeof(StatCounters));
         statCountersCopy(t2, c2);
         NCountHourHist++;
     }
@@ -1545,7 +1546,7 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
 {
     assert(dest && orig);
     /* this should take care of all the fields, but "special" ones */
-    xmemcpy(dest, orig, sizeof(*dest));
+    memcpy(dest, orig, sizeof(*dest));
     /* prepare space where to copy special entries */
     statCountersInitSpecial(dest);
     /* now handle special cases */

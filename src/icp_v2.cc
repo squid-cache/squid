@@ -39,6 +39,8 @@
 #include "AccessLogEntry.h"
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
+#include "comm.h"
+#include "comm/Loops.h"
 #include "comm/Connection.h"
 #include "HttpRequest.h"
 #include "icmp/net_db.h"
@@ -124,7 +126,7 @@ _icp_common_t::_icp_common_t(char *buf, unsigned int len)
         return;
     }
 
-    xmemcpy(this, buf, sizeof(icp_common_t));
+    memcpy(this, buf, sizeof(icp_common_t));
     /*
      * Convert network order sensitive fields
      */
@@ -303,7 +305,7 @@ _icp_common_t::createMessage(
     if (opcode == ICP_QUERY)
         urloffset += sizeof(uint32_t);
 
-    xmemcpy(urloffset, url, strlen(url));
+    memcpy(urloffset, url, strlen(url));
 
     return (icp_common_t *)buf;
 }
@@ -349,7 +351,7 @@ icpUdpSend(int fd,
             IcpQueueTail = queue;
         }
 
-        commSetSelect(fd, COMM_SELECT_WRITE, icpUdpSendQueue, NULL, 0);
+        Comm::SetSelect(fd, COMM_SELECT_WRITE, icpUdpSendQueue, NULL, 0);
         statCounter.icp.replies_queued++;
     } else {
         /* don't queue it */
@@ -628,7 +630,7 @@ icpHandleUdp(int sock, void *data)
     int len;
     int icp_version;
     int max = INCOMING_ICP_MAX;
-    commSetSelect(sock, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
+    Comm::SetSelect(sock, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
 
     while (max--) {
         len = comm_udp_recvfrom(sock,
@@ -713,7 +715,7 @@ icpConnectionsOpen(void)
     Ipc::StartListening(SOCK_DGRAM,
                         IPPROTO_UDP,
                         icpIncomingConn,
-                        Ipc::fdnInIcpSocket, call, Subscription::Pointer());
+                        Ipc::fdnInIcpSocket, call);
 
     if ( !Config.Addrs.udp_outgoing.IsNoAddr() ) {
         icpOutgoingConn = new Comm::Connection;
@@ -738,7 +740,7 @@ icpConnectionsOpen(void)
 
         debugs(12, DBG_CRITICAL, "Sending ICP messages from " << icpOutgoingConn->local);
 
-        commSetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
+        Comm::SetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
         fd_note(icpOutgoingConn->fd, "Outgoing ICP socket");
         icpGetOutgoingIpAddress();
     }
@@ -766,7 +768,7 @@ icpIncomingConnectionOpened(int errNo)
     if (!Comm::IsConnOpen(icpIncomingConn))
         fatal("Cannot open ICP Port");
 
-    commSetSelect(icpIncomingConn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
+    Comm::SetSelect(icpIncomingConn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
 
     for (const wordlist *s = Config.mcast_group_list; s; s = s->next)
         ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL); // XXX: pass the icpIncomingConn for mcastJoinGroups usage.
@@ -819,7 +821,7 @@ icpConnectionShutdown(void)
      */
     assert(Comm::IsConnOpen(icpOutgoingConn));
 
-    commSetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
 void

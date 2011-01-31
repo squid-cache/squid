@@ -640,7 +640,7 @@ ESIContext::send ()
     assert (len != 0 || rep != NULL);
 
     if (len) {
-        xmemcpy (next->readBuffer.data, &outbound->buf[outbound_offset], len);
+        memcpy(next->readBuffer.data, &outbound->buf[outbound_offset], len);
 
         if (len + outbound_offset == outbound->len) {
             ESISegment::Pointer temp = outbound->next;
@@ -798,7 +798,7 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
                    &context->incoming->buf[context->incoming->len] <<
                    " because our buffer was not used");
 
-            xmemcpy (&context->incoming->buf[context->incoming->len], receivedData.data, len);
+            memcpy(&context->incoming->buf[context->incoming->len], receivedData.data, len);
             context->incoming->len += len;
 
             if (context->incoming->len == HTTP_REQBUF_SZ) {
@@ -809,7 +809,7 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
 
             if (len != receivedData.length) {
                 /* capture the remnants */
-                xmemcpy (context->incoming->buf, &receivedData.data[len], receivedData.length - len);
+                memcpy(context->incoming->buf, &receivedData.data[len], receivedData.length - len);
                 context->incoming->len = receivedData.length - len;
             }
 
@@ -2296,7 +2296,7 @@ ElementList::pop_front (size_t const count)
     if (!count)
         return;
 
-    xmemmove (elements, &elements[count], (elementcount - count)  * sizeof (ESIElement::Pointer));
+    memmove(elements, &elements[count], (elementcount - count)  * sizeof (ESIElement::Pointer));
 
     elementcount -= count;
 }

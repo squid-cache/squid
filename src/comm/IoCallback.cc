@@ -2,6 +2,7 @@
 #include "ClientInfo.h"
 #include "comm/Connection.h"
 #include "comm/IoCallback.h"
+#include "comm/Loops.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
 #include "fde.h"
@@ -71,7 +72,7 @@ Comm::IoCallback::selectOrQueueWrite()
     }
 #endif
 
-    commSetSelect(conn->fd, COMM_SELECT_WRITE, Comm::HandleWrite, this, 0);
+    SetSelect(conn->fd, COMM_SELECT_WRITE, Comm::HandleWrite, this, 0);
 }
 
 void

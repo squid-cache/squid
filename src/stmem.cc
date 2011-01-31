@@ -142,7 +142,7 @@ mem_hdr::writeAvailable(mem_node *aNode, int64_t location, size_t amount, char c
     assert (location - aNode->nodeBuffer.offset == (int64_t)aNode->nodeBuffer.length);
     size_t copyLen = min(amount, aNode->space());
 
-    xmemcpy(aNode->nodeBuffer.data + aNode->nodeBuffer.length, source, copyLen);
+    memcpy(aNode->nodeBuffer.data + aNode->nodeBuffer.length, source, copyLen);
 
     if (inmem_hi <= location)
         inmem_hi = location + copyLen;
@@ -218,7 +218,7 @@ mem_hdr::copyAvailable(mem_node *aNode, int64_t location, size_t amount, char *t
 
     size_t copyLen = min(amount, aNode->nodeBuffer.length - copyOffset);
 
-    xmemcpy(target, aNode->nodeBuffer.data + copyOffset, copyLen);
+    memcpy(target, aNode->nodeBuffer.data + copyOffset, copyLen);
 
     return copyLen;
 }
