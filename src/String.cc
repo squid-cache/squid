@@ -130,7 +130,7 @@ String::allocAndFill(const char *str, int len)
     assert(this && str);
     allocBuffer(len + 1);
     len_ = len;
-    xmemcpy(buf_, str, len);
+    memcpy(buf_, str, len);
     buf_[len] = '\0';
     PROF_stop(StringAllocAndFill);
 }
@@ -200,10 +200,10 @@ String::append(const char *str, int len)
         snew.allocBuffer(snew.len_ + 1);
 
         if (len_)
-            xmemcpy(snew.buf_, rawBuf(), len_);
+            memcpy(snew.buf_, rawBuf(), len_);
 
         if (len)
-            xmemcpy(snew.buf_ + len_, str, len);
+            memcpy(snew.buf_ + len_, str, len);
 
         snew.buf_[snew.len_] = '\0';
 
@@ -287,17 +287,13 @@ StringRegistry::StringRegistry()
 }
 
 void
-
-StringRegistry::add
-(String const *entry)
+StringRegistry::add(String const *entry)
 {
     entries.insert(entry, ptrcmp);
 }
 
 void
-
-StringRegistry::remove
-(String const *entry)
+StringRegistry::remove(String const *entry)
 {
     entries.remove(entry, ptrcmp);
 }

@@ -52,6 +52,7 @@
 #if USE_DELAY_POOLS
 #include "ClientDelayConfig.h"
 #endif
+#include "comm.h"
 #include "ConfigParser.h"
 #include "CpuAffinity.h"
 #if USE_DELAY_POOLS
@@ -61,48 +62,21 @@
 #include "event.h"
 #include "EventLoop.h"
 #include "ExternalACL.h"
-#include "Store.h"
+#include "htcp.h"
+#include "HttpReply.h"
 #include "ICP.h"
 #include "ident/Ident.h"
 #include "ip/tools.h"
 #include "ipc/Coordinator.h"
 #include "ipc/Kids.h"
 #include "ipc/Strand.h"
-#include "HttpReply.h"
-#include "pconn.h"
-#include "Mem.h"
-#include "acl/Asn.h"
-#include "acl/Acl.h"
-#include "htcp.h"
-#include "StoreFileSystem.h"
+
 #include "DiskIO/DiskIOModule.h"
-#include "comm.h"
-#if USE_EPOLL
-#include "comm_epoll.h"
-#endif
-#if USE_KQUEUE
-#include "comm_kqueue.h"
-#endif
-#if USE_POLL
-#include "comm_poll.h"
-#endif
-#if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
-#include "comm_select.h"
-#endif
-#include "ConfigParser.h"
-#include "CpuAffinity.h"
-#include "DiskIO/DiskIOModule.h"
-#include "errorpage.h"
 #if USE_SQUID_ESI
 #include "esi/Module.h"
 #endif
-#include "event.h"
-#include "EventLoop.h"
-#include "ExternalACL.h"
 #include "forward.h"
 #include "fs/Module.h"
-#include "htcp.h"
-#include "HttpReply.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
 #if USE_LOADABLE_MODULES
@@ -134,9 +108,6 @@
 #endif
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
-#endif
-#if USE_SQUID_ESI
-#include "esi/Module.h"
 #endif
 #include "fs/Module.h"
 
@@ -783,8 +754,6 @@ mainReconfigureStart(void)
 #if ICAP_CLIENT
     icapLogClose();
 #endif
-    useragentLogClose();
-    refererCloseLog();
 
     eventAdd("mainReconfigureFinish", &mainReconfigureFinish, NULL, 0, 1,
              false);
@@ -850,8 +819,6 @@ mainReconfigureFinish(void *)
     icapLogOpen();
 #endif
     storeLogOpen();
-    useragentOpenLog();
-    refererOpenLog();
 #if USE_DNSSERVERS
 
     dnsInit();
@@ -920,15 +887,9 @@ mainRotate(void)
     storeDirWriteCleanLogs(1);
     storeLogRotate();		/* store.log */
     accessLogRotate();		/* access.log */
-    useragentRotateLog();	/* useragent.log */
-    refererRotateLog();		/* referer.log */
 #if ICAP_CLIENT
     icapLogRotate();               /*icap.log*/
 #endif
-#if WIP_FWD_LOG
-    fwdLogRotate();
-#endif
-
     icmpEngine.Open();
 #if USE_DNSSERVERS
     dnsInit();
@@ -1066,10 +1027,6 @@ mainInitialize(void)
     authenticateInit(&Auth::TheConfig);
 
     externalAclInit();
-
-    useragentOpenLog();
-
-    refererOpenLog();
 
     httpHeaderInitModule();	/* must go before any header processing (e.g. the one in errorInitialize) */
 
@@ -1424,8 +1381,6 @@ SquidMain(int argc, char **argv)
 
     comm_init();
 
-    comm_select_init();
-
     mainInitialize();
 
     test_access();
@@ -1476,8 +1431,6 @@ SquidMain(int argc, char **argv)
 
     /* init comm module */
     comm_init();
-
-    comm_select_init();
 
     if (opt_no_daemon) {
         /* we have to init fdstat here. */
@@ -1902,13 +1855,6 @@ SquidShutdown()
     Store::Root().sync();		/* Flush log writes */
     storeLogClose();
     accessLogClose();
-    useragentLogClose();
-    refererCloseLog();
-#if WIP_FWD_LOG
-
-    fwdUninit();
-#endif
-
     Store::Root().sync();		/* Flush log close */
     StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();

@@ -35,7 +35,8 @@
 #include "squid.h"
 #include "comm.h"
 #include "comm/ConnOpener.h"
-#include "comm/ConnAcceptor.h"
+#include "CommCalls.h"
+#include "comm/TcpAcceptor.h"
 #include "comm/Write.h"
 #include "compat/strtoll.h"
 #include "errorpage.h"
@@ -454,6 +455,7 @@ FTPSM *FTP_SM_FUNCS[] = {
 void
 FtpStateData::ctrlClosed(const CommCloseCbParams &io)
 {
+    debugs(9, 4, HERE);
     ctrl.clear();
     deleteThis("FtpStateData::ctrlClosed");
 }
@@ -462,10 +464,11 @@ FtpStateData::ctrlClosed(const CommCloseCbParams &io)
 void
 FtpStateData::dataClosed(const CommCloseCbParams &io)
 {
+    debugs(9, 4, HERE);
     if (data.listenConn != NULL) {
         data.listenConn->close();
         data.listenConn = NULL;
-        data.conn = NULL;
+        // NP clear() does the: data.fd = -1;
     }
     data.clear();
     failed(ERR_FTP_FAILURE, 0);
@@ -636,13 +639,29 @@ FtpStateData::switchTimeoutToDataChannel()
 void
 FtpStateData::listenForDataChannel(const Comm::ConnectionPointer &conn, const char *note)
 {
-    data.listenConn = conn;
+    assert(!Comm::IsConnOpen(data.conn));
 
     typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> AcceptDialer;
     typedef AsyncCallT<AcceptDialer> AcceptCall;
-    RefCount<AcceptCall> call = (AcceptCall*)JobCallback(11, 5, AcceptDialer, this, FtpStateData::ftpAcceptDataConnection);
+    RefCount<AcceptCall> call = static_cast<AcceptCall*>(JobCallback(11, 5, AcceptDialer, this, FtpStateData::ftpAcceptDataConnection));
     Subscription::Pointer sub = new CallSubscription<AcceptCall>(call);
-    AsyncJob::Start(new Comm::ConnAcceptor(data.listenConn, note, sub));
+
+    /* open the conn if its not already open */
+    if (!Comm::IsConnOpen(conn)) {
+        conn->fd = comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn->local, conn->flags, note);
+        if (!Comm::IsConnOpen(conn)) {
+            debugs(5, DBG_CRITICAL, HERE << "comm_open_listener failed:" << conn->local << " error: " << errno);
+            return;
+        }
+        debugs(9, 3, HERE << "Unconnected data socket created on " << conn);
+    }
+
+    assert(Comm::IsConnOpen(conn));
+    AsyncJob::Start(new Comm::TcpAcceptor(conn, note, sub));
+
+    // Ensure we have a copy of the FD opened for listening and a close handler on it.
+    data.opened(conn, dataCloser());
+    switchTimeoutToDataChannel();
 }
 
 void
@@ -1105,10 +1124,16 @@ FtpStateData::parseListing()
 
     usable = end - sbuf;
 
-    debugs(9, 3, HERE << "usable = " << usable);
+    debugs(9, 3, HERE << "usable = " << usable << " of " << len << " bytes.");
 
     if (usable == 0) {
-        debugs(9, 3, HERE << "didn't find end for " << entry->url()  );
+        if (buf[0] == '\0' && len == 1) {
+            debugs(9, 3, HERE << "NIL ends data from " << entry->url() << " transfer problem?");
+            data.readBuf->consume(len);
+        } else {
+            debugs(9, 3, HERE << "didn't find end for " << entry->url());
+            debugs(9, 3, HERE << "buffer remains (" << len << " bytes) '" << rfc1738_do_escape(buf,0) << "'");
+        }
         xfree(sbuf);
         return;
     }
@@ -1176,6 +1201,13 @@ FtpStateData::dataComplete()
      * It caused some problems if the FTP server returns an unexpected
      * status code after the data command.  FtpStateData was being
      * deleted in the middle of dataRead().
+     */
+    /* AYJ: 2011-01-13: Bug 2581.
+     * 226 status is possibly waiting in the ctrl buffer.
+     * The connection will hang if we DONT send buffered_ok.
+     * This happens on all transfers which can be completly sent by the
+     * server before the 150 started status message is read in by Squid.
+     * ie all transfers of about one packet hang.
      */
     scheduleReadControlReply(1);
 }
@@ -1354,17 +1386,18 @@ FtpStateData::processReplyBody()
 int
 FtpStateData::checkAuth(const HttpHeader * req_hdr)
 {
-    const char *auth;
-
     /* default username */
     xstrncpy(user, "anonymous", MAX_URL);
 
+#if HAVE_AUTH_MODULE_BASIC
     /* Check HTTP Authorization: headers (better than defaults, but less than URL) */
+    const char *auth;
     if ( (auth = req_hdr->getAuth(HDR_AUTHORIZATION, "Basic")) ) {
         flags.authenticated = 1;
         loginParser(auth, FTP_LOGIN_NOT_ESCAPED);
     }
     /* we fail with authorization-required error later IFF the FTP server requests it */
+#endif
 
     /* Test URL login syntax. Overrides any headers received. */
     loginParser(request->login, FTP_LOGIN_ESCAPED);
@@ -1792,8 +1825,7 @@ FtpStateData::handleControlReply()
         /* Got some data past the complete reply */
         assert(bytes_used < ctrl.offset);
         ctrl.offset -= bytes_used;
-        xmemmove(ctrl.buf, ctrl.buf + bytes_used,
-                 ctrl.offset);
+        memmove(ctrl.buf, ctrl.buf + bytes_used, ctrl.offset);
     }
 
     /* Move the last line of the reply message to ctrl.last_reply */
@@ -1907,8 +1939,11 @@ FtpStateData::loginFailed()
 
     HttpReply *newrep = err->BuildHttpReply();
     errorStateFree(err);
+
+#if HAVE_AUTH_MODULE_BASIC
     /* add Authenticate header */
     newrep->header.putAuth("Basic", ftpRealm());
+#endif
 
     // add it to the store entry for response....
     entry->replaceHttpReply(newrep);
@@ -2726,15 +2761,19 @@ static void
 ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
 {
     /// Close old data channels, if any. We may open a new one below.
-    ftpState->data.close();
+    if ((ftpState->data.conn->flags & COMM_REUSEADDR))
+        // NP: in fact it points to the control channel. just clear it.
+        ftpState->data.clear();
+    else
+        ftpState->data.close();
     ftpState->data.host = NULL;
 
     /*
      * Set up a listen socket on the same local address as the
      * control connection.
      */
-    ftpState->data.listenConn = new Comm::Connection;
-    ftpState->data.listenConn->local = ftpState->ctrl.conn->local;
+    Comm::ConnectionPointer temp = new Comm::Connection;
+    temp->local = ftpState->ctrl.conn->local;
 
     /*
      * REUSEADDR is needed in fallback mode, since the same port is
@@ -2744,13 +2783,13 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
         int on = 1;
         setsockopt(ftpState->ctrl.conn->fd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
         ftpState->ctrl.conn->flags |= COMM_REUSEADDR;
-        ftpState->data.listenConn->flags |= COMM_REUSEADDR;
+        temp->flags |= COMM_REUSEADDR;
     } else {
         /* if not running in fallback mode a new port needs to be retrieved */
-        ftpState->data.listenConn->local.SetPort(0);
+        temp->local.SetPort(0);
     }
 
-    ftpState->listenForDataChannel(ftpState->data.listenConn, ftpState->entry->url());
+    ftpState->listenForDataChannel(temp, ftpState->entry->url());
 }
 
 /// \ingroup ServerProtocolFTPInternal
@@ -2820,10 +2859,15 @@ ftpReadPORT(FtpStateData * ftpState)
 static void
 ftpSendEPRT(FtpStateData * ftpState)
 {
-    char buf[MAX_IPSTRLEN];
-
     if (Config.Ftp.epsv_all && ftpState->flags.epsv_all_sent) {
         debugs(9, DBG_IMPORTANT, "FTP does not allow EPRT method after 'EPSV ALL' has been sent.");
+        return;
+    }
+
+    if (!Config.Ftp.eprt) {
+        /* Disabled. Switch immediately to attempting old PORT command. */
+        debugs(9, 3, "EPRT disabled by local administrator");
+        ftpSendPORT(ftpState);
         return;
     }
 
@@ -2831,11 +2875,14 @@ ftpSendEPRT(FtpStateData * ftpState)
     ftpState->flags.pasv_supported = 0;
 
     ftpOpenListenSocket(ftpState, 0);
-    if (!Comm::IsConnOpen(ftpState->data.listenConn)) {
+    debugs(9, 3, "Listening for FTP data connection with FD " << ftpState->data.conn);
+    if (!Comm::IsConnOpen(ftpState->data.conn)) {
         /* XXX Need to set error message */
         ftpFail(ftpState);
         return;
     }
+
+    char buf[MAX_IPSTRLEN];
 
     /* RFC 2428 defines EPRT as IPv6 equivalent to IPv4 PORT command. */
     /* Which can be used by EITHER protocol. */
@@ -2874,8 +2921,7 @@ ftpReadEPRT(FtpStateData * ftpState)
 void
 FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
 {
-    char ntoapeer[MAX_IPSTRLEN];
-    debugs(9, 3, "ftpAcceptDataConnection");
+    debugs(9, 3, HERE);
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         abortTransaction("entry aborted when accepting data conn");
@@ -2899,6 +2945,20 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
         return;
     }
 
+    if (io.flag != COMM_OK) {
+        data.close();
+        debugs(9, DBG_IMPORTANT, "FTP AcceptDataConnection: FD " << io.fd << ": " << xstrerr(io.xerrno));
+        /** \todo Need to send error message on control channel*/
+        ftpFail(this);
+        return;
+    }
+
+    /* data listening conn is no longer even open. abort. */
+    if (!Comm::IsConnOpen(data.conn)) {
+        data.clear(); // ensure that it's cleared and not just closed.
+        return;
+    }
+
     /** \par
      * When squid.conf ftp_sanitycheck is enabled, check the new connection is actually being
      * made by the remote client which is connected to the FTP control socket.
@@ -2906,14 +2966,15 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
      * This prevents third-party hacks, but also third-party load balancing handshakes.
      */
     if (Config.Ftp.sanitycheck) {
-        io.conn->remote.NtoA(ntoapeer,MAX_IPSTRLEN);
-
         // accept if either our data or ctrl connection is talking to this remote peer.
-        if (data.listenConn->remote != io.conn->remote && ctrl.conn->remote != io.conn->remote) {
+        if (data.conn->remote != io.conn->remote && ctrl.conn->remote != io.conn->remote) {
             debugs(9, DBG_IMPORTANT,
                    "FTP data connection from unexpected server (" <<
                    io.conn->remote << "), expecting " <<
-                   data.listenConn->remote << " or " << ctrl.conn->remote);
+                   data.conn->remote << " or " << ctrl.conn->remote);
+
+            /* close the bad sources connection down ASAP. */
+            io.conn->close();
 
             /* drop the bad connection (io) by ignoring the attempt. */
             return;
@@ -2924,8 +2985,6 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
     data.close();
     data.opened(io.conn, dataCloser());
     io.conn->remote.NtoA(data.host,SQUIDHOSTNAMELEN);
-    data.listenConn->close();
-    data.listenConn = NULL;
 
     debugs(9, 3, HERE << "Connected data socket on " <<
            io.conn << ". FD table says: " <<
@@ -3136,17 +3195,15 @@ ftpReadList(FtpStateData * ftpState)
     debugs(9, 3, HERE);
 
     if (code == 125 || (code == 150 && Comm::IsConnOpen(ftpState->data.conn))) {
-        debugs(9, 3, HERE << "begin data transfer from " << ftpState->data.conn->remote);
         /* Begin data transfer */
+        debugs(9, 3, HERE << "begin data transfer from " << ftpState->data.conn->remote << " (" << ftpState->data.conn->local << ")");
         ftpState->switchTimeoutToDataChannel();
         ftpState->maybeReadVirginBody();
         ftpState->state = READING_DATA;
         return;
     } else if (code == 150) {
-        debugs(9, 3, HERE << "accept data channel from " << ftpState->ctrl.conn->remote);
-        ftpState->switchTimeoutToDataChannel();
-
         /* Accept data channel */
+        debugs(9, 3, HERE << "accept data channel from " << ftpState->data.conn->remote << " (" << ftpState->data.conn->local << ")");
         ftpState->listenForDataChannel(ftpState->data.conn, ftpState->data.host);
         return;
     } else if (!ftpState->flags.tried_nlst && code > 300) {
@@ -3188,7 +3245,6 @@ ftpReadRetr(FtpStateData * ftpState)
         ftpState->state = READING_DATA;
     } else if (code == 150) {
         /* Accept data channel */
-        ftpState->switchTimeoutToDataChannel();
         ftpState->listenForDataChannel(ftpState->data.conn, ftpState->data.host);
     } else if (code >= 300) {
         if (!ftpState->flags.try_slash_hack) {
@@ -3656,8 +3712,10 @@ FtpStateData::ftpAuthRequired(HttpRequest * request, const char *realm)
     ErrorState *err = errorCon(ERR_CACHE_ACCESS_DENIED, HTTP_UNAUTHORIZED, request);
     HttpReply *newrep = err->BuildHttpReply();
     errorStateFree(err);
+#if HAVE_AUTH_MODULE_BASIC
     /* add Authenticate header */
     newrep->header.putAuth("Basic", realm);
+#endif
     return newrep;
 }
 
@@ -3815,7 +3873,7 @@ void
 FtpStateData::abortTransaction(const char *reason)
 {
     debugs(9, 3, HERE << "aborting transaction for " << reason <<
-           "; FD " << ctrl.conn->fd << ", Data FD " << data.conn->fd << ", this " << this);
+           "; FD " << (ctrl.conn!=NULL?ctrl.conn->fd:-1) << ", Data FD " << (data.conn!=NULL?data.conn->fd:-1) << ", this " << this);
     if (Comm::IsConnOpen(ctrl.conn)) {
         ctrl.conn->close();
         return;
@@ -3853,12 +3911,7 @@ void
 FtpChannel::close()
 {
     // channels with active listeners will be closed when the listener handler dies.
-    if (listenConn != NULL) {
-        listenConn->close();
-        listenConn = NULL;
-        comm_remove_close_handler(conn->fd, closer);
-        closer = NULL;
-    } else if (Comm::IsConnOpen(conn)) {
+    if (Comm::IsConnOpen(conn)) {
         comm_remove_close_handler(conn->fd, closer);
         closer = NULL;
         conn->close(); // we do not expect to be called back

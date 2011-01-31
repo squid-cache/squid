@@ -409,7 +409,7 @@ asn_parse_string(u_char * data, int *datalength,
         snmp_set_api_error(SNMPERR_ASN_DECODE);
         return (NULL);
     }
-    xmemcpy((char *) string, (char *) bufp, (int) asn_length);
+    memcpy((char *) string, (char *) bufp, (int) asn_length);
     *strlength = (int) asn_length;
     *datalength -= (int) asn_length + (bufp - data);
     return (bufp + asn_length);
@@ -448,7 +448,7 @@ asn_build_string(u_char * data, int *datalength,
         snmp_set_api_error(SNMPERR_ASN_DECODE);
         return (NULL);
     }
-    xmemcpy((char *) data, (char *) string, strlength);
+    memcpy((char *) data, (char *) string, strlength);
     *datalength -= strlength;
     return (data + strlength);
 }
@@ -587,7 +587,7 @@ asn_parse_length(u_char * data, u_int * length)
             return (NULL);
         }
         *length = (u_int) 0;
-        xmemcpy((char *) (length), (char *) data + 1, (int) lengthbyte);
+        memcpy((char *) (length), (char *) data + 1, (int) lengthbyte);
         *length = ntohl(*length);
         *length >>= (8 * ((sizeof *length) - lengthbyte));
         return (data + lengthbyte + 1);
@@ -818,7 +818,7 @@ asn_build_objid(u_char * data, int *datalength,
         snmp_set_api_error(SNMPERR_ASN_DECODE);
         return (NULL);
     }
-    xmemcpy((char *) data, (char *) buf, asnlength);
+    memcpy((char *) data, (char *) buf, asnlength);
     *datalength -= asnlength;
     return (data + asnlength);
 }
@@ -932,7 +932,7 @@ asn_parse_bitstring(u_char * data, int *datalength,
         snmp_set_api_error(SNMPERR_ASN_DECODE);
         return (NULL);
     }
-    xmemcpy((char *) string, (char *) bufp, (int) asn_length);
+    memcpy((char *) string, (char *) bufp, (int) asn_length);
     *strlength = (int) asn_length;
     *datalength -= (int) asn_length + (bufp - data);
     return (bufp + asn_length);
@@ -973,7 +973,7 @@ asn_build_bitstring(u_char * data, int *datalength,
         snmp_set_api_error(SNMPERR_ASN_ENCODE);
         return (NULL);
     }
-    xmemcpy((char *) data, (char *) string, strlength);
+    memcpy((char *) data, (char *) string, strlength);
     *datalength -= strlength;
     return (data + strlength);
 }

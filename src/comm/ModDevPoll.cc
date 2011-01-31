@@ -44,21 +44,22 @@
  * Last modified 2010-10-08
  */
 
-
-#include "squid.h"
-
 /*
  * There are several poll types in Squid, ALL of which are compiled and linked
  * in. Thus conditional compile-time flags are used to prevent the different
  * modules from creating several versions of the same function simultaneously.
  */
 
+#include "config.h"
+
 #if USE_DEVPOLL
 
-#include "Store.h"
+#include "squid.h"
+#include "comm/Loops.h"
 #include "fde.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
+#include "Store.h"
 
 #if HAVE_SYS_DEVPOLL_H
 /* Solaris /dev/poll support, see "man -s 7D poll" */
@@ -198,7 +199,7 @@ commDevPollRegisterWithCacheManager(void)
  * Allocates memory, opens /dev/poll device handle.
  */
 void
-comm_select_init(void)
+Comm::SelectLoopInit(void)
 {
     /* allocate memory first before attempting to open poll device */
     /* This tracks the FD devpoll offset+state */
@@ -243,8 +244,7 @@ comm_select_init(void)
  * @param timeout if non-zero then timeout relative to now
  */
 void
-commSetSelect(int fd, unsigned int type, PF * handler,
-              void *client_data, time_t timeout)
+Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
 {
     assert(fd >= 0);
     debugs(
@@ -325,10 +325,10 @@ commSetSelect(int fd, unsigned int type, PF * handler,
  * @param fd file descriptor to clear polling on
  */
 void
-commResetSelect(int fd)
+Comm::ResetSelect(int fd)
 {
-    commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
-    commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+    SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+    SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
 
@@ -346,7 +346,7 @@ commResetSelect(int fd)
  * @param msec milliseconds to poll for (limited by max_poll_time)
  */
 comm_err_t
-comm_select(int msec)
+Comm::DoSelect(int msec)
 {
     int num, i;
     fde *F;
@@ -432,7 +432,7 @@ comm_select(int msec)
                     HERE << "no read handler for FD " << fd
                 );
                 // remove interest since no handler exist for this event.
-                commSetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
+                SetSelect(fd, COMM_SELECT_READ, NULL, NULL, 0);
             }
         }
 
@@ -456,7 +456,7 @@ comm_select(int msec)
                     HERE << "no write handler for FD " << fd
                 );
                 // remove interest since no handler exist for this event.
-                commSetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+                SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
             }
         }
     }
@@ -465,9 +465,8 @@ comm_select(int msec)
     return COMM_OK;
 }
 
-
 void
-comm_quick_poll_required(void)
+Comm::QuickPollRequired(void)
 {
     max_poll_time = 10;
 }

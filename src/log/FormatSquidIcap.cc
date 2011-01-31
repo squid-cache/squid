@@ -1,9 +1,8 @@
 /*
  * $Id$
  *
- * DEBUG: section 40    Referer Logging
- * AUTHOR: Joe Ramey <ramey@csc.ti.com> (useragent)
- *         Jens-S. Vöckler <voeckler@rvs.uni-hannover.de> (mod 4 referer)
+ * DEBUG: section 46    Access Log - Squid ICAP Logging
+ * AUTHOR: Alex Rousskov
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,71 +32,60 @@
  *
  */
 
-#include "squid.h"
+#include "config.h"
+
+#if ICAP_CLIENT
+
+#include "AccessLogEntry.h"
+#include "HttpRequest.h"
 #include "log/File.h"
+#include "log/Formats.h"
+#include "log/Gadgets.h"
 #include "SquidTime.h"
 
-#if USE_REFERER_LOG
-static Logfile *refererlog = NULL;
-#endif
-
 void
-refererOpenLog(void)
+Log::Format::SquidIcap(AccessLogEntry * al, Logfile * logfile)
 {
-#if USE_REFERER_LOG
-    assert(NULL == refererlog);
+    const char *client = NULL;
+    const char *user = NULL;
+    char tmp[MAX_IPSTRLEN], clientbuf[MAX_IPSTRLEN];
 
-    if (!Config.Log.referer || (0 == strcmp(Config.Log.referer, "none"))) {
-        debugs(40, 1, "Referer logging is disabled.");
-        return;
+    if (al->cache.caddr.IsAnyAddr()) { // ICAP OPTIONS xactions lack client
+        client = "-";
+    } else {
+        if (Config.onoff.log_fqdn)
+            client = fqdncache_gethostbyaddr(al->cache.caddr, FQDN_LOOKUP_IF_MISS);
+        if (!client)
+            client = al->cache.caddr.NtoA(clientbuf, MAX_IPSTRLEN);
     }
 
-    refererlog = logfileOpen(Config.Log.referer, 0, 1);
+    user = Log::FormatName(al->cache.authuser);
+
+    if (!user)
+        user = Log::FormatName(al->cache.extuser);
+
+#if USE_SSL
+    if (!user)
+        user = Log::FormatName(al->cache.ssluser);
 #endif
-}
 
-void
-refererRotateLog(void)
-{
-#if USE_REFERER_LOG
+    if (!user)
+        user = Log::FormatName(al->cache.rfc931);
 
-    if (NULL == refererlog)
-        return;
+    if (user && !*user)
+        safe_free(user);
 
-    logfileRotate(refererlog);
-
-#endif
-}
-
-void
-logReferer(const char *client, const char *referer, const char *uri)
-{
-#if USE_REFERER_LOG
-
-    if (NULL == refererlog)
-        return;
-
-    logfilePrintf(refererlog, "%9d.%03d %s %s %s\n",
-                  (int) current_time.tv_sec,
+    logfilePrintf(logfile, "%9ld.%03d %6d %s -/%03d %"PRId64" %s %s %s -/%s -\n",
+                  (long int) current_time.tv_sec,
                   (int) current_time.tv_usec / 1000,
+                  al->icap.trTime,
                   client,
-                  referer,
-                  uri ? uri : "-");
-
-#endif
+                  al->icap.resStatus,
+                  al->icap.bytesRead,
+                  Adaptation::Icap::ICAP::methodStr(al->icap.reqMethod),
+                  al->icap.reqUri.termedBuf(),
+                  user ? user : "-",
+                  al->icap.hostAddr.NtoA(tmp, MAX_IPSTRLEN));
+    safe_free(user);
 }
-
-void
-refererCloseLog(void)
-{
-#if USE_REFERER_LOG
-
-    if (NULL == refererlog)
-        return;
-
-    logfileClose(refererlog);
-
-    refererlog = NULL;
-
 #endif
-}

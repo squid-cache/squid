@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "comm.h"
+#include "comm/Loops.h"
 #include "CommRead.h"
 #include "fde.h"
 
@@ -90,14 +91,13 @@ commSetCloseOnExec(int fd)
 }
 
 void
-commSetSelect(int fd, unsigned int type, PF * handler, void *client_data,
-              time_t timeout)
+Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
 {
     /* all test code runs synchronously at the moment */
 }
 
 void
-comm_quick_poll_required()
+Comm::QuickPollRequired()
 {
     /* for tests ... ignore */
 }

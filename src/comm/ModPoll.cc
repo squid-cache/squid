@@ -30,15 +30,16 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#include "config.h"
+
+#if USE_POLL
 
 #include "squid.h"
-#include "comm_poll.h"
+#include "comm/Loops.h"
+#include "fde.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "fde.h"
-
-#if USE_POLL
 
 #if HAVE_POLL_H
 #include <poll.h>
@@ -54,7 +55,7 @@
 #endif
 #endif
 
-static int MAX_POLL_TIME = 1000;	/* see also comm_quick_poll_required() */
+static int MAX_POLL_TIME = 1000;	/* see also Comm::QuickPollRequired() */
 
 #ifndef        howmany
 #define howmany(x, y)   (((x)+((y)-1))/(y))
@@ -136,8 +137,7 @@ static int incoming_http_interval = 16 << INCOMING_FACTOR;
 
 
 void
-commSetSelect(int fd, unsigned int type, PF * handler, void *client_data,
-              time_t timeout)
+Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
 {
     fde *F = &fd_table[fd];
     assert(fd >= 0);
@@ -159,7 +159,7 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data,
 }
 
 void
-commResetSelect(int fd)
+Comm::ResetSelect(int fd)
 {
 }
 
@@ -341,9 +341,8 @@ comm_poll_http_incoming(void)
 
 /* poll all sockets; call handlers for those that are ready. */
 comm_err_t
-comm_select(int msec)
+Comm::DoSelect(int msec)
 {
-
     struct pollfd pfds[SQUID_MAXFD];
 
     PF *hdl = NULL;
@@ -631,7 +630,7 @@ commPollRegisterWithCacheManager(void)
 }
 
 void
-comm_select_init(void)
+Comm::SelectLoopInit(void)
 {
     commPollRegisterWithCacheManager();
 }
@@ -658,7 +657,7 @@ commIncomingStats(StoreEntry * sentry)
 
 /* Called by async-io or diskd to speed up the polling */
 void
-comm_quick_poll_required(void)
+Comm::QuickPollRequired(void)
 {
     MAX_POLL_TIME = 10;
 }

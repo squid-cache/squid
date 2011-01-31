@@ -91,12 +91,17 @@
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "client_side_request.h"
+#if USE_DELAY_POOLS
+#include "ClientInfo.h"
+#endif
 #include "ClientRequestContext.h"
 #include "clientStream.h"
 #include "comm.h"
 #include "comm/Connection.h"
-#include "comm/ConnAcceptor.h"
+#include "CommCalls.h"
+#include "comm/Loops.h"
 #include "comm/Write.h"
+#include "comm/TcpAcceptor.h"
 #include "eui/Config.h"
 #include "fde.h"
 #include "HttpHdrContRange.h"
@@ -105,18 +110,13 @@
 #include "ident/Config.h"
 #include "ident/Ident.h"
 #include "ip/Intercept.h"
+#include "ipc/FdNotes.h"
 #include "ipc/StartListening.h"
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "ProtoPort.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
-#include "Store.h"
-
-#if USE_DELAY_POOLS
-#include "ClientInfo.h"
-#endif
-
 #if USE_SSL
 #include "ssl/context_storage.h"
 #include "ssl/helper.h"
@@ -127,6 +127,7 @@
 #include "ssl/crtd_message.h"
 #include "ssl/certificate_db.h"
 #endif
+#include "Store.h"
 
 #if HAVE_LIMITS
 #include <limits>
@@ -140,28 +141,28 @@
 class ListeningStartedDialer: public CallDialer, public Ipc::StartListeningCb
 {
 public:
-    typedef void (*Handler)(int errNo, http_port_list *portCfg, bool uses_ssl);
-    ListeningStartedDialer(Handler aHandler, http_port_list *aPortCfg, bool aSslFlag):
-            handler(aHandler), portCfg(aPortCfg), uses_ssl(aSslFlag) {}
+    typedef void (*Handler)(http_port_list *portCfg, const Ipc::FdNoteId note, const Subscription::Pointer &sub);
+    ListeningStartedDialer(Handler aHandler, http_port_list *aPortCfg, const Ipc::FdNoteId note, const Subscription::Pointer &aSub):
+            handler(aHandler), portCfg(aPortCfg), portTypeNote(note), sub(aSub) {}
 
     virtual void print(std::ostream &os) const {
         startPrint(os) <<
-        ", " << (uses_ssl? "SSL " :"") << "port=" << (void*)portCfg << ')';
+        ", " << FdNote(portTypeNote) << " port=" << (void*)portCfg << ')';
     }
 
     virtual bool canDial(AsyncCall &) const { return true; }
-    virtual void dial(AsyncCall &) { (handler)(errNo, portCfg, uses_ssl); }
+    virtual void dial(AsyncCall &) { (handler)(portCfg, portTypeNote, sub); }
 
 public:
     Handler handler;
 
 private:
-    http_port_list *portCfg; ///< from Config.Sockaddr.http
-    bool uses_ssl;
+    http_port_list *portCfg;   ///< from Config.Sockaddr.http
+    Ipc::FdNoteId portTypeNote;    ///< Type of IPC socket being opened
+    Subscription::Pointer sub; ///< The handler to be subscribed for this connetion listener
 };
 
-
-static void clientListenerConnectionOpened(int errNo, http_port_list *s, bool uses_ssl);
+static void clientListenerConnectionOpened(http_port_list *s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub);
 
 /* our socket-related context */
 
@@ -256,7 +257,8 @@ ConnStateData::readSomeData()
 
     debugs(33, 4, "clientReadSomeData: FD " << clientConn->fd << ": reading request...");
 
-    makeSpaceAvailable();
+    if (!maybeMakeSpaceAvailable())
+        return;
 
     typedef CommCbMemFunT<ConnStateData, CommIoCbParams> Dialer;
     reader = JobCallback(33, 5, Dialer, this, ConnStateData::clientReadRequest);
@@ -827,12 +829,6 @@ static int
 clientIsContentLengthValid(HttpRequest * r)
 {
     switch (r->method.id()) {
-
-    case METHOD_PUT:
-
-    case METHOD_POST:
-        /* PUT/POST requires a request entity */
-        return (r->content_length >= 0);
 
     case METHOD_GET:
 
@@ -2247,13 +2243,22 @@ ConnStateData::getAvailableBufferLength() const
     return result;
 }
 
-void
-ConnStateData::makeSpaceAvailable()
+bool
+ConnStateData::maybeMakeSpaceAvailable()
 {
     if (getAvailableBufferLength() < 2) {
-        in.buf = (char *)memReallocBuf(in.buf, in.allocatedSize * 2, &in.allocatedSize);
+        size_t newSize;
+        if (in.allocatedSize >= Config.maxRequestBufferSize) {
+            debugs(33, 4, "request buffer full: client_request_buffer_max_size=" << Config.maxRequestBufferSize);
+            return false;
+        }
+        if ((newSize=in.allocatedSize * 2) > Config.maxRequestBufferSize) {
+            newSize=Config.maxRequestBufferSize;
+        }
+        in.buf = (char *)memReallocBuf(in.buf, newSize, &in.allocatedSize);
         debugs(33, 2, "growing request buffer: notYetUsed=" << in.notYetUsed << " size=" << in.allocatedSize);
     }
+    return true;
 }
 
 void
@@ -2330,8 +2335,7 @@ connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount)
      */
 
     if (conn->in.notYetUsed > 0)
-        xmemmove(conn->in.buf, conn->in.buf + byteCount,
-                 conn->in.notYetUsed);
+        memmove(conn->in.buf, conn->in.buf + byteCount, conn->in.notYetUsed);
 }
 
 /// respond with ERR_TOO_BIG if request header exceeds request_header_max_size
@@ -2625,7 +2629,7 @@ static void
 connStripBufferWhitespace (ConnStateData * conn)
 {
     while (conn->in.notYetUsed > 0 && xisspace(conn->in.buf[0])) {
-        xmemmove(conn->in.buf, conn->in.buf + 1, conn->in.notYetUsed - 1);
+        memmove(conn->in.buf, conn->in.buf + 1, conn->in.notYetUsed - 1);
         --conn->in.notYetUsed;
     }
 }
@@ -2828,7 +2832,7 @@ ConnStateData::handleReadData(char *buf, size_t size)
     char *current_buf = in.addressToReadInto();
 
     if (buf != current_buf)
-        xmemmove(current_buf, buf, size);
+        memmove(current_buf, buf, size);
 
     in.notYetUsed += size;
 
@@ -2970,7 +2974,10 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
 void
 ConnStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer )
 {
-    handleRequestBodyData();
+    if (!handleRequestBodyData())
+        return;
+
+    readSomeData();
 }
 
 void
@@ -3034,7 +3041,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
         /*
          * Aha, but we don't want a read handler!
          */
-        commSetSelect(io.fd, COMM_SELECT_READ, NULL, NULL, 0);
+        Comm::SetSelect(io.fd, COMM_SELECT_READ, NULL, NULL, 0);
     }
 
 #else
@@ -3109,12 +3116,16 @@ connStateCreate(const Comm::ConnectionPointer &client, http_port_list *port)
 
 /** Handle a new connection on HTTP socket. */
 void
-httpAccept(int sock, const Comm::ConnectionPointer &details, comm_err_t flag, int xerrno, void *data)
+httpAccept(int, const Comm::ConnectionPointer &details, comm_err_t flag, int xerrno, void *data)
 {
     http_port_list *s = (http_port_list *)data;
     ConnStateData *connState = NULL;
 
-    assert(flag == COMM_OK); // acceptor does not call us for anything bad.
+    if (flag != COMM_OK) {
+        // Its possible the call was still queued when the client disconnected
+        debugs(33, 2, "httpAccept: " << s->listenConn << ": accept failure: " << xstrerr(xerrno));
+        return;
+    }
 
     debugs(33, 4, HERE << details << ": accepted");
     fd_note(details->fd, "client http connect");
@@ -3244,11 +3255,11 @@ clientNegotiateSSL(int fd, void *data)
         switch (ssl_error) {
 
         case SSL_ERROR_WANT_READ:
-            commSetSelect(fd, COMM_SELECT_READ, clientNegotiateSSL, conn, 0);
+            Comm::SetSelect(fd, COMM_SELECT_READ, clientNegotiateSSL, conn, 0);
             return;
 
         case SSL_ERROR_WANT_WRITE:
-            commSetSelect(fd, COMM_SELECT_WRITE, clientNegotiateSSL, conn, 0);
+            Comm::SetSelect(fd, COMM_SELECT_WRITE, clientNegotiateSSL, conn, 0);
             return;
 
         case SSL_ERROR_SYSCALL:
@@ -3350,12 +3361,16 @@ clientNegotiateSSL(int fd, void *data)
 
 /** handle a new HTTPS connection */
 static void
-httpsAccept(int sock, const Comm::ConnectionPointer& details, comm_err_t flag, int xerrno, void *data)
+httpsAccept(int, const Comm::ConnectionPointer& details, comm_err_t flag, int xerrno, void *data)
 {
     https_port_list *s = (https_port_list *)data;
     SSL_CTX *sslContext = s->staticSslContext.get();
 
-    assert(flag != COMM_OK); // Acceptor does not call un unless successful.
+    if (flag != COMM_OK) {
+        // Its possible the call was still queued when the client disconnected
+        debugs(33, 2, "httpsAccept: " << s->listenConn << ": accept failure: " << xstrerr(xerrno));
+        return;
+    }
 
     SSL *ssl = NULL;
     if (!(ssl = httpsCreate(details, sslContext)))
@@ -3390,7 +3405,7 @@ httpsAccept(int sock, const Comm::ConnectionPointer& details, comm_err_t flag, i
         commSetTcpKeepalive(details->fd, s->http.tcp_keepalive.idle, s->http.tcp_keepalive.interval, s->http.tcp_keepalive.timeout);
     }
 
-    commSetSelect(details->fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
+    Comm::SetSelect(details->fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
 
     clientdbEstablished(details->remote, 1);
 
@@ -3502,10 +3517,8 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
     // commSetConnTimeout() was called for this request before we switched.
 
     // Disable the client read handler until peer selection is complete
-    commSetSelect(clientConn->fd, COMM_SELECT_READ, NULL, NULL, 0);
-
-    commSetSelect(clientConn->fd, COMM_SELECT_READ, clientNegotiateSSL, this, 0);
-
+    Comm::SetSelect(clientConn->fd, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(clientConn->fd, COMM_SELECT_READ, clientNegotiateSSL, this, 0);
     switchedToHttps_ = true;
     return true;
 }
@@ -3531,7 +3544,7 @@ ConnStateData::switchToHttps(const char *host)
 
 /// check FD after clientHttp[s]ConnectionOpened, adjust HttpSockets as needed
 static bool
-OpenedHttpSocket(const Comm::ConnectionPointer &clientConn, const char *msgIfFail)
+OpenedHttpSocket(const Comm::ConnectionPointer &clientConn, const Ipc::FdNoteId portType)
 {
     if (!Comm::IsConnOpen(clientConn)) {
         Must(NHttpSockets > 0); // we tried to open some
@@ -3539,7 +3552,7 @@ OpenedHttpSocket(const Comm::ConnectionPointer &clientConn, const char *msgIfFai
         Must(HttpSockets[NHttpSockets] < 0); // no extra fds received
 
         if (!NHttpSockets) // we could not open any listen sockets at all
-            fatal(msgIfFail);
+            fatalf("Unable to open %s",FdNote(portType));
 
         return false;
     }
@@ -3590,12 +3603,8 @@ clientHttpConnectionsOpen(void)
         Ssl::Helper::GetInstance();
 #endif //USE_SSL_CRTD
 
-// NOTE: would the design here be better if we opened both the ConnAcceptor and IPC informative messages now?
-//	that way we have at least one worker listening on the socket immediately with others joining in as
-//	they receive the IPC message.
-
         // Fill out a Comm::Connection which IPC will open as a listener for us
-        //  then pass back so we can start a ConnAcceptor subscription.
+        //  then pass back when active so we can start a TcpAcceptor subscription.
         s->listenConn = new Comm::Connection;
         s->listenConn->local = s->s;
         s->listenConn->flags = COMM_NONBLOCKING | (s->spoof_client_ip ? COMM_TRANSPARENT : 0);
@@ -3606,10 +3615,10 @@ clientHttpConnectionsOpen(void)
         Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
 
         AsyncCall::Pointer listenCall = asyncCall(33,2, "clientListenerConnectionOpened",
-                                                  ListeningStartedDialer(&clientListenerConnectionOpened, s, false));
-        Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpSocket, listenCall, sub);
+                                        ListeningStartedDialer(&clientListenerConnectionOpened, s, Ipc::fdnHttpSocket, sub));
+        Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpSocket, listenCall);
 
-        HttpSockets[NHttpSockets++] = -1; // set in clientListenerHttpConnectionOpened
+        HttpSockets[NHttpSockets++] = -1; // set in clientListenerConnectionOpened
     }
 
 #if USE_SSL
@@ -3652,10 +3661,9 @@ clientHttpsConnectionsOpen(void)
         Subscription::Pointer sub = new CallSubscription<AcceptCall>(subCall);
 
         AsyncCall::Pointer listenCall = asyncCall(33, 2, "clientListenerConnectionOpened",
-                                                  ListeningStartedDialer(&clientListenerConnectionOpened, &s->http, true));
-
-        Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpsSocket, listenCall, sub);
-
+                                        ListeningStartedDialer(&clientListenerConnectionOpened,
+                                                               &s->http, Ipc::fdnHttpsSocket, sub));
+        Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpsSocket, listenCall);
         HttpSockets[NHttpSockets++] = -1;
     }
 }
@@ -3663,20 +3671,24 @@ clientHttpsConnectionsOpen(void)
 
 /// process clientHttpConnectionsOpen result
 static void
-clientListenerConnectionOpened(int, http_port_list *s, bool uses_ssl)
+clientListenerConnectionOpened(http_port_list *s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub)
 {
-    if (!OpenedHttpSocket(s->listenConn, (uses_ssl?"Cannot open HTTP Port":"Cannot open HTTPS Port")))
+    if (!OpenedHttpSocket(s->listenConn, portTypeNote))
         return;
 
     Must(s);
     Must(Comm::IsConnOpen(s->listenConn));
+
+    // TCP: setup a job to handle accept() with subscribed handler
+    AsyncJob::Start(new Comm::TcpAcceptor(s->listenConn, FdNote(portTypeNote), sub));
 
     debugs(1, 1, "Accepting" <<
            (s->intercepted ? " intercepted" : "") <<
            (s->spoof_client_ip ? " spoofing" : "") <<
            (s->sslBump ? " bumpy" : "") <<
            (s->accel ? " accelerated" : "")
-           << " HTTP" << (uses_ssl?"S":"") << " connections at " << s->listenConn << ".");
+           << FdNote(portTypeNote) << " connections at "
+           << s->listenConn);
 
     Must(AddOpenedHttpSocket(s->listenConn)); // otherwise, we have received a fd we did not ask for
 }

@@ -63,18 +63,18 @@ void Ip::Qos::getNfmarkFromServer(const Comm::ConnectionPointer &server, const f
         if (Ip::EnableIpv6 && server->local.IsIPv6()) {
             nfct_set_attr_u8(ct, ATTR_L3PROTO, AF_INET6);
             struct in6_addr serv_fde_remote_ip6;
-            server->remote.GetAddr(&serv_fde_remote_ip6);
+            server->remote.GetInAddr(serv_fde_remote_ip6);
             nfct_set_attr(ct, ATTR_IPV6_DST, serv_fde_remote_ip6.s6_addr);
             struct in6_addr serv_fde_local_ip6;
-            server->local.GetAddr(serv_fde_local_ip6);
+            server->local.GetInAddr(serv_fde_local_ip6);
             nfct_set_attr(ct, ATTR_IPV6_SRC, serv_fde_local_ip6.s6_addr);
         } else {
             nfct_set_attr_u8(ct, ATTR_L3PROTO, AF_INET);
-            struct in6_addr serv_fde_remote_ip;
-            server->remote.GetAddr(&serv_fde_remote_ip);
+            struct in_addr serv_fde_remote_ip;
+            server->remote.GetInAddr(serv_fde_remote_ip);
             nfct_set_attr_u32(ct, ATTR_IPV4_DST, serv_fde_remote_ip.s_addr);
             struct in_addr serv_fde_local_ip;
-            server->local.GetAddr(serv_fde_local_ip);
+            server->local.GetInAddr(serv_fde_local_ip);
             nfct_set_attr_u32(ct, ATTR_IPV4_SRC, serv_fde_local_ip.s_addr);
         }
 
@@ -96,7 +96,6 @@ void Ip::Qos::getNfmarkFromServer(const Comm::ConnectionPointer &server, const f
         } else {
             debugs(17, 2, "QOS: Failed to open conntrack handle for upstream netfilter mark retrieval.");
         }
-        serv_fde_local_conn.FreeAddrInfo(addr);
         nfct_destroy(ct);
 
     } else {

@@ -95,8 +95,7 @@ class external_acl
 public:
     external_acl *next;
 
-    void add
-    (ExternalACLEntry *);
+    void add(ExternalACLEntry *);
 
     void trimCache();
 
@@ -629,9 +628,7 @@ find_externalAclHelper(const char *name)
 }
 
 void
-
-external_acl::add
-(ExternalACLEntry *anEntry)
+external_acl::add(ExternalACLEntry *anEntry)
 {
     trimCache();
     assert (anEntry->def == NULL);
@@ -1108,7 +1105,7 @@ external_acl_grace_expired(external_acl * def, external_acl_entry * entry)
     ttl = entry->result == 1 ? def->ttl : def->negative_ttl;
     ttl = (ttl * (100 - def->grace)) / 100;
 
-    if (entry->date + ttl < squid_curtime)
+    if (entry->date + ttl <= squid_curtime)
         return 1;
     else
         return 0;
@@ -1132,8 +1129,7 @@ external_acl_cache_add(external_acl * def, const char *key, ExternalACLEntryData
     entry->key = xstrdup(key);
     entry->update (data);
 
-    def->add
-    (entry);
+    def->add(entry);
 
     return entry;
 }

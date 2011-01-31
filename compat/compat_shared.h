@@ -205,6 +205,45 @@ extern "C" {
 #include "compat/xstrerror.h"
 #include "compat/xstring.h"
 #include "compat/xstrto.h"
+#include "compat/xis.h"
 
+#if !HAVE_MEMCPY
+#if HAVE_BCOPY
+#define memcpy(d,s,n) bcopy((s),(d),(n))
+#elif HAVE_MEMMOVE
+#define memcpy(d,s,n) memmove((d),(s),(n))
+#endif
+#endif
+
+#if !HAVE_MEMMOVE && HAVE_BCOPY
+#define memmove(d,s,n) bcopy((s),(d),(n))
+#endif
+
+/*
+ * strnstr() is needed. The OS may not provide a working copy.
+ */
+#if HAVE_STRNSTR
+/* If strnstr exists and is usable we do so. */
+#define squid_strnstr(a,b,c)    strnstr(a,b,c)
+#else
+/* If not we have our own copy imported from FreeBSD */
+const char * squid_strnstr(const char *s, const char *find, size_t slen);
+#endif
+
+#if __GNUC__
+#if !defined(PRINTF_FORMAT_ARG1)
+#define PRINTF_FORMAT_ARG1 __attribute__ ((format (printf, 1, 2)))
+#endif
+#if !defined(PRINTF_FORMAT_ARG2)
+#define PRINTF_FORMAT_ARG2 __attribute__ ((format (printf, 2, 3)))
+#endif
+#if !defined(PRINTF_FORMAT_ARG3)
+#define PRINTF_FORMAT_ARG3 __attribute__ ((format (printf, 3, 4)))
+#endif
+#else /* !__GNU__ */
+#define PRINTF_FORMAT_ARG1
+#define PRINTF_FORMAT_ARG2
+#define PRINTF_FORMAT_ARG3
+#endif
 
 #endif /* _SQUID_COMPAT_SHARED_H */

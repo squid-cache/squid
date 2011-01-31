@@ -1,11 +1,13 @@
-#ifndef SQUID_COMM_CONNACCEPTOR_H
-#define SQUID_COMM_CONNACCEPTOR_H
+#ifndef SQUID_COMM_TCPACCEPTOR_H
+#define SQUID_COMM_TCPACCEPTOR_H
 
 #include "base/AsyncCall.h"
 #include "base/Subscription.h"
 #include "CommCalls.h"
 #include "comm_err_t.h"
 #include "comm/forward.h"
+#include "comm/TcpAcceptor.h"
+#include "ip/Address.h"
 
 #if HAVE_MAP
 #include <map>
@@ -28,24 +30,26 @@ class AcceptLimiter;
  * be looked up. Currently these are the local/remote IP:port details
  * and the listening socket transparent-mode flag.
  */
-class ConnAcceptor : public AsyncJob
+class TcpAcceptor : public AsyncJob
 {
 private:
     virtual void start();
     virtual bool doneAll() const;
     virtual void swanSong();
+    virtual const char *status() const;
+
+    TcpAcceptor(const TcpAcceptor &); // not implemented.
 
 public:
-    ConnAcceptor(const Comm::ConnectionPointer &conn, const char *note, const Subscription::Pointer &aSub);
-    ConnAcceptor(const ConnAcceptor &r); // not implemented.
+    TcpAcceptor(const Comm::ConnectionPointer &conn, const char *note, const Subscription::Pointer &aSub);
 
     /** Subscribe a handler to receive calls back about new connections.
-     * Replaces any existing subscribed handler.
+     * Unsubscribes any existing subscribed handler.
      */
     void subscribe(const Subscription::Pointer &aSub);
 
     /** Remove the currently waiting callback subscription.
-     * Pending calls will remain scheduled.
+     * Already scheduled callbacks remain scheduled.
      */
     void unsubscribe(const char *reason);
 
@@ -56,21 +60,22 @@ public:
     void acceptNext();
 
     /// Call the subscribed callback handler with details about a new connection.
-    void notify(comm_err_t flag, const Comm::ConnectionPointer &details);
+    void notify(const comm_err_t flag, const Comm::ConnectionPointer &details) const;
 
     /// errno code of the last accept() or listen() action if one occurred.
     int errcode;
 
-private:
+protected:
     friend class AcceptLimiter;
     int32_t isLimited;                   ///< whether this socket is delayed and on the AcceptLimiter queue.
+
+private:
     Subscription::Pointer theCallSub;    ///< used to generate AsyncCalls handling our events.
 
     /// conn being listened on for new connections
     /// Reserved for read-only use.
     ConnectionPointer conn;
 
-private:
     /// Method to test if there are enough file descriptors to open a new client connection
     /// if not the accept() will be postponed
     static bool okToAccept();
@@ -82,9 +87,9 @@ private:
     comm_err_t oldAccept(Comm::ConnectionPointer &details);
     void setListen();
 
-    CBDATA_CLASS2(ConnAcceptor);
+    CBDATA_CLASS2(TcpAcceptor);
 };
 
 } // namespace Comm
 
-#endif /* SQUID_COMM_CONNACCEPTOR_H */
+#endif /* SQUID_COMM_TCPACCEPTOR_H */

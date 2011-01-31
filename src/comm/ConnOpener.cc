@@ -6,6 +6,7 @@
 //#include "base/TextException.h"
 #include "comm/ConnOpener.h"
 #include "comm/Connection.h"
+#include "comm/Loops.h"
 #include "comm.h"
 #include "fde.h"
 #include "icmp/net_db.h"
@@ -64,7 +65,7 @@ Comm::ConnOpener::swanSong()
     // rollback what we can from the job state
     if (conn_ != NULL && conn_->isOpen()) {
         // drop any handlers now to save a lot of cycles later
-        commSetSelect(conn_->fd, COMM_SELECT_WRITE, NULL, NULL, 0);
+        Comm::SetSelect(conn_->fd, COMM_SELECT_WRITE, NULL, NULL, 0);
         commUnsetConnTimeout(conn_);
         // it never reached fully open, so abort the FD
         conn_->close();
@@ -217,7 +218,7 @@ Comm::ConnOpener::connect()
             return;
         } else {
             debugs(5, 5, HERE << conn_ << ": COMM_INPROGRESS");
-            commSetSelect(conn_->fd, COMM_SELECT_WRITE, Comm::ConnOpener::InProgressConnectRetry, this, 0);
+            Comm::SetSelect(conn_->fd, COMM_SELECT_WRITE, Comm::ConnOpener::InProgressConnectRetry, this, 0);
         }
         break;
 
@@ -294,7 +295,7 @@ Comm::ConnOpener::timeout(const CommTimeoutCbParams &)
 }
 
 /* Legacy Wrapper for the retry event after COMM_INPROGRESS
- * XXX: As soon as comm commSetSelect() accepts Async calls we can use a ConnOpener::connect call
+ * XXX: As soon as Comm::SetSelect() accepts Async calls we can use a ConnOpener::connect call
  */
 void
 Comm::ConnOpener::InProgressConnectRetry(int fd, void *data)

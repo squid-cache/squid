@@ -88,15 +88,16 @@ do_open(diomsg * r, int len, const char *buf)
 
     fs = (file_state *)xcalloc(1, sizeof(*fs));
     fs->id = r->id;
-    fs->key = &fs->id;		/* gack */
+    fs->key = &fs->id;          /* gack */
     fs->fd = fd;
     hash_join(hash, (hash_link *) fs);
-    DEBUG(2)
-    fprintf(stderr, "%d OPEN  id %d, FD %d, fs %p\n",
-            (int) mypid,
-            fs->id,
-            fs->fd,
-            fs);
+    DEBUG(2) {
+        fprintf(stderr, "%d OPEN  id %d, FD %d, fs %p\n",
+                (int) mypid,
+                fs->id,
+                fs->fd,
+                fs);
+    }
     return fd;
 }
 
@@ -119,12 +120,13 @@ do_close(diomsg * r, int len)
 
     fd = fs->fd;
     hash_remove_link(hash, (hash_link *) fs);
-    DEBUG(2)
-    fprintf(stderr, "%d CLOSE id %d, FD %d, fs %p\n",
-            (int) mypid,
-            r->id,
-            fs->fd,
-            fs);
+    DEBUG(2) {
+        fprintf(stderr, "%d CLOSE id %d, FD %d, fs %p\n",
+                (int) mypid,
+                r->id,
+                fs->fd,
+                fs);
+    }
     xfree(fs);
     return close(fd);
 }
@@ -148,8 +150,9 @@ do_read(diomsg * r, int len, char *buf)
     }
 
     if (r->offset > -1 && r->offset != fs->offset) {
-        DEBUG(2)
-        fprintf(stderr, "seeking to %"PRId64"\n", (int64_t)r->offset);
+        DEBUG(2) {
+            fprintf(stderr, "seeking to %"PRId64"\n", (int64_t)r->offset);
+        }
 
         if (lseek(fs->fd, r->offset, SEEK_SET) < 0) {
             DEBUG(1) {
@@ -160,9 +163,10 @@ do_read(diomsg * r, int len, char *buf)
     }
 
     x = read(fs->fd, buf, readlen);
-    DEBUG(2)
-    fprintf(stderr, "%d READ %d,%d,%"PRId64" ret %d\n", (int) mypid,
-            fs->fd, readlen, (int64_t)r->offset, x);
+    DEBUG(2) {
+        fprintf(stderr, "%d READ %d,%d,%"PRId64" ret %d\n", (int) mypid,
+                fs->fd, readlen, (int64_t)r->offset, x);
+    }
 
     if (x < 0) {
         DEBUG(1) {
@@ -204,9 +208,10 @@ do_write(diomsg * r, int len, const char *buf)
         }
     }
 
-    DEBUG(2)
-    fprintf(stderr, "%d WRITE %d,%d,%"PRId64"\n", (int) mypid,
-            fs->fd, wrtlen, (int64_t)r->offset);
+    DEBUG(2) {
+        fprintf(stderr, "%d WRITE %d,%d,%"PRId64"\n", (int) mypid,
+                fs->fd, wrtlen, (int64_t)r->offset);
+    }
     x = write(fs->fd, buf, wrtlen);
 
     if (x < 0) {
@@ -234,8 +239,9 @@ do_unlink(diomsg * r, int len, const char *buf)
         return -errno;
     }
 
-    DEBUG(2)
-    fprintf(stderr, "%d UNLNK %s\n", (int) mypid, buf);
+    DEBUG(2) {
+        fprintf(stderr, "%d UNLNK %s\n", (int) mypid, buf);
+    }
     return 0;
 }
 
@@ -245,11 +251,11 @@ msg_handle(diomsg * r, int rl, diomsg * s)
     char *buf = NULL;
     s->mtype = r->mtype;
     s->id = r->id;
-    s->seq_no = r->seq_no;	/* optional, debugging */
+    s->seq_no = r->seq_no;      /* optional, debugging */
     s->callback_data = r->callback_data;
     s->requestor = r->requestor;
-    s->size = 0;		/* optional, debugging */
-    s->offset = 0;		/* optional, debugging */
+    s->size = 0;                /* optional, debugging */
+    s->offset = 0;              /* optional, debugging */
     s->shm_offset = r->shm_offset;
     s->newstyle = r->newstyle;
 
@@ -368,10 +374,11 @@ main(int argc, char *argv[])
     for (;;) {
         alarm(1);
         memset(&rmsg, '\0', sizeof(rmsg));
-        DEBUG(2)
-        std::cerr << "msgrcv: " << rmsgid << ", "
-                  << &rmsg << ", " << diomsg::msg_snd_rcv_sz
-                  << ", " << 0 << ", " << 0 << std::endl;
+        DEBUG(2) {
+            std::cerr << "msgrcv: " << rmsgid << ", "
+                      << &rmsg << ", " << diomsg::msg_snd_rcv_sz
+                      << ", " << 0 << ", " << 0 << std::endl;
+        }
         rlen = msgrcv(rmsgid, &rmsg, diomsg::msg_snd_rcv_sz, 0, 0);
 
         if (rlen < 0) {
@@ -403,8 +410,9 @@ main(int argc, char *argv[])
         }
     }
 
-    DEBUG(2)
-    fprintf(stderr, "%d diskd exiting\n", (int) mypid);
+    DEBUG(2) {
+        fprintf(stderr, "%d diskd exiting\n", (int) mypid);
+    }
 
     if (msgctl(rmsgid, IPC_RMID, 0) < 0)
         perror("msgctl IPC_RMID");

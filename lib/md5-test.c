@@ -45,10 +45,8 @@ main(int argc, char **argv)
     MDString("abc");
     MDString("message digest");
     MDString("abcdefghijklmnopqrstuvwxyz");
-    MDString
-    ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
-    MDString
-    ("1234567890123456789012345678901234567890\
-1234567890123456789012345678901234567890");
+    MDString("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+    MDString("1234567890123456789012345678901234567890"
+             "1234567890123456789012345678901234567890");
     return 0;
 }

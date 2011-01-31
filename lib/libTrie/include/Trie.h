@@ -25,10 +25,6 @@
  * bindings. libtrie itself is written in C++.
  */
 
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
