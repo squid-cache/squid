@@ -790,14 +790,7 @@ struct rusage {
 
 #undef ACL
 
-inline int
-chroot(const char *dirname)
-{
-    if (SetCurrentDirectory(dirname))
-        return 0;
-    else
-        return GetLastError();
-}
+SQUIDCEXTERN int chroot(const char *dirname);
 
 #if 0
 inline int
@@ -820,18 +813,8 @@ WIN32_truncate(const char *pathname, off_t length)
 
 SQUIDCEXTERN int kill(pid_t, int);
 SQUIDCEXTERN int statfs(const char *, struct statfs *);
-
-inline struct passwd *
-getpwnam(char *unused) {
-    static struct passwd pwd = {NULL, NULL, 100, 100, NULL, NULL, NULL};
-    return &pwd;
-}
-
-inline struct group *
-getgrnam(char *unused) {
-    static struct group grp = {NULL, NULL, 100, NULL};
-    return &grp;
-}
+SQUIDCEXTERN struct passwd * getpwnam(char *unused);
+SQUIDCEXTERN struct group * getgrnam(char *unused);
 
 #define geteuid(X)  static_cast<uid_t>(100)
 #define seteuid(X)  (void)0
@@ -844,18 +827,8 @@ getgrnam(char *unused) {
 
 #if !defined(getpagesize)
 /* Windows may lack getpagesize() prototype */
-inline size_t
-getpagesize()
-{
-    static DWORD system_pagesize = 0;
-    if (!system_pagesize) {
-        SYSTEM_INFO system_info;
-        GetSystemInfo(&system_info);
-        system_pagesize = system_info.dwPageSize;
-    }
-    return system_pagesize;
-}
-#define HAVE_GETPAGESIZE 1
+SQUIDCEXTERN size_t getpagesize();
+#define HAVE_GETPAGESIZE 2
 #endif
 
 #endif /* _SQUID_WINDOWS_ */

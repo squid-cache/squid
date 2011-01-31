@@ -58,6 +58,29 @@ LPCRITICAL_SECTION dbg_mutex = NULL;
 
 void GetProcessName(pid_t, char *);
 
+#if HAVE_GETPAGESIZE > 1
+size_t
+getpagesize()
+{
+    static DWORD system_pagesize = 0;
+    if (!system_pagesize) {
+        SYSTEM_INFO system_info;
+        GetSystemInfo(&system_info);
+        system_pagesize = system_info.dwPageSize;
+    }
+    return system_pagesize;
+}
+#endif
+
+int
+chroot(const char *dirname)
+{
+    if (SetCurrentDirectory(dirname))
+        return 0;
+    else
+        return GetLastError();
+}
+
 void
 GetProcessName(pid_t pid, char *ProcessName)
 {
@@ -371,6 +394,18 @@ wsastrerror(int err)
         return xwsaerror_buf;
     }
     return "Unknown";
+}
+
+struct passwd *
+getpwnam(char *unused) {
+    static struct passwd pwd = {NULL, NULL, 100, 100, NULL, NULL, NULL};
+    return &pwd;
+}
+
+struct group *
+getgrnam(char *unused) {
+    static struct group grp = {NULL, NULL, 100, NULL};
+    return &grp;
 }
 
 #if _SQUID_MINGW_	/* MinGW environment */
