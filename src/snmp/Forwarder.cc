@@ -10,9 +10,9 @@
 #include "CommCalls.h"
 #include "ipc/Port.h"
 #include "snmp_core.h"
-#include "snmpx/Forwarder.h"
-#include "snmpx/Request.h"
-#include "snmpx/Response.h"
+#include "snmp/Forwarder.h"
+#include "snmp/Request.h"
+#include "snmp/Response.h"
 
 
 CBDATA_NAMESPACED_CLASS_INIT(Snmp, Forwarder);

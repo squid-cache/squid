@@ -16,7 +16,7 @@
 #include "ipc/StrandCoords.h"
 #include "mgr/forward.h"
 #if SQUID_SNMP
-#include "snmpx/forward.h"
+#include "snmp/forward.h"
 #endif
 #include <map>
 

@@ -8,7 +8,7 @@
 #include "config.h"
 #include "ipc/Messages.h"
 #include "ipc/TypedMsgHdr.h"
-#include "snmpx/Request.h"
+#include "snmp/Request.h"
 
 
 Snmp::Request::Request(int aRequestorId, unsigned int aRequestId,
