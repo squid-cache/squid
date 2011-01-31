@@ -228,7 +228,7 @@ public:
     /** Apply a mask to the stored address.
      \param mask Netmask format to be bit-mask-AND'd over the stored address.
      */
-    const int ApplyMask(const Address &mask);
+    int ApplyMask(const Address &mask);
 
     /** Apply a mask to the stored address.
      *  CIDR will be converted appropriate to map the stored content.

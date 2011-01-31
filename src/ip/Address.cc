@@ -116,7 +116,7 @@ Ip::Address::GetCIDR() const
     return len;
 }
 
-const int
+int
 Ip::Address::ApplyMask(Ip::Address const &mask_addr)
 {
     uint32_t *p1 = (uint32_t*)(&m_SocketAddr.sin6_addr);
