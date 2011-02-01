@@ -163,6 +163,9 @@ static long ipcache_high = 200;
 extern int _dns_ttl_;
 #endif
 
+/// \ingroup IPCacheInternal
+inline int ipcacheCount() { return ip_table ? ip_table->count : 0; }
+
 int
 ipcache_entry::age() const
 {
@@ -237,7 +240,7 @@ ipcache_purgelru(void *voidnotused)
     eventAdd("ipcache_purgelru", ipcache_purgelru, NULL, 10.0, 1);
 
     for (m = lru_list.tail; m; m = prev) {
-        if (memInUse(MEM_IPCACHE_ENTRY) < ipcache_low)
+        if (ipcacheCount() < ipcache_low)
             break;
 
         prev = m->prev;
@@ -918,8 +921,10 @@ stat_ipcache_get(StoreEntry * sentry)
     dlink_node *m;
     assert(ip_table != NULL);
     storeAppendPrintf(sentry, "IP Cache Statistics:\n");
-    storeAppendPrintf(sentry, "IPcache Entries:  %d\n",
+    storeAppendPrintf(sentry, "IPcache Entries In Use:  %d\n",
                       memInUse(MEM_IPCACHE_ENTRY));
+    storeAppendPrintf(sentry, "IPcache Entries Cached:  %d\n",
+                      ipcacheCount());
     storeAppendPrintf(sentry, "IPcache Requests: %d\n",
                       IpcacheStats.requests);
     storeAppendPrintf(sentry, "IPcache Hits:            %d\n",
@@ -1501,7 +1506,7 @@ snmp_netIpFn(variable_list * Var, snint * ErrP)
 
     case IP_ENT:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      memInUse(MEM_IPCACHE_ENTRY),
+                                      ipcacheCount(),
                                       SMI_GAUGE32);
         break;
 

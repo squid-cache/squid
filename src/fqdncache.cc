@@ -153,6 +153,9 @@ static long fqdncache_low = 180;
 /// \ingroup FQDNCacheInternal
 static long fqdncache_high = 200;
 
+/// \ingroup FQDNCacheInternal
+inline int fqdncacheCount() { return fqdn_table ? fqdn_table->count : 0; }
+
 int
 fqdncache_entry::age() const
 {
@@ -230,7 +233,7 @@ fqdncache_purgelru(void *notused)
     eventAdd("fqdncache_purgelru", fqdncache_purgelru, NULL, 10.0, 1);
 
     for (m = lru_list.tail; m; m = prev) {
-        if (memInUse(MEM_FQDNCACHE_ENTRY) < fqdncache_low)
+        if (fqdncacheCount() < fqdncache_low)
             break;
 
         prev = m->prev;
@@ -700,8 +703,11 @@ fqdnStats(StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "FQDN Cache Statistics:\n");
 
-    storeAppendPrintf(sentry, "FQDNcache Entries: %d\n",
+    storeAppendPrintf(sentry, "FQDNcache Entries In Use: %d\n",
                       memInUse(MEM_FQDNCACHE_ENTRY));
+
+    storeAppendPrintf(sentry, "FQDNcache Entries Cached: %d\n",
+                      fqdncacheCount());
 
     storeAppendPrintf(sentry, "FQDNcache Requests: %d\n",
                       FqdncacheStats.requests);
@@ -891,7 +897,7 @@ snmp_netFqdnFn(variable_list * Var, snint * ErrP)
 
     case FQDN_ENT:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      memInUse(MEM_FQDNCACHE_ENTRY),
+                                      fqdncacheCount(),
                                       SMI_GAUGE32);
         break;
 
