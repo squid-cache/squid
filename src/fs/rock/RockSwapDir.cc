@@ -185,8 +185,6 @@ Rock::SwapDir::init()
 
     theFile = io->newFile(filePath);
     theFile->open(O_RDWR, 0644, this);
-
-    rebuild();
 }
 
 void
@@ -453,6 +451,8 @@ Rock::SwapDir::ioCompletedNotification()
     debugs(47,1, "Rock cache_dir[" << index << "] limits: " << 
         std::setw(12) << maximumSize() << " disk bytes and " <<
         std::setw(7) << map->entryLimit() << " entries");
+
+    rebuild();
 }
 
 void
