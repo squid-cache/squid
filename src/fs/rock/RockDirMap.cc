@@ -41,6 +41,7 @@ Rock::DirMap::openForWriting(const cache_key *const key, sfileno &fileno)
     const int idx = slotIdx(key);
     free(idx);
     Slot &s = shared->slots[idx];
+    freeIfNeeded(s);
     if (s.state.swap_if(Slot::Empty, Slot::Writing)) {
         fileno = idx;
         s.setKey(key);
@@ -75,9 +76,9 @@ Rock::DirMap::free(const sfileno fileno)
         Slot &s = shared->slots[fileno];
         s.state.swap_if(Slot::Usable, Slot::WaitingToBeFreed);
         --s.readLevel;
-        freeIfNeeded(s);
         debugs(79, 5, HERE << " marked entry at " << fileno << " to be freed in"
                " map [" << path << ']');
+        freeIfNeeded(s);
         return true;
     }
     debugs(79, 5, HERE << " failed to mark entry at " << fileno << " to be "
@@ -189,14 +190,21 @@ Rock::DirMap::slot(const cache_key *const key)
 void
 Rock::DirMap::freeIfNeeded(Slot &s)
 {
+    const int idx = &s - shared->slots;
     if (s.state.swap_if(Slot::WaitingToBeFreed, Slot::Freeing)) {
+        debugs(79, 5, HERE << " trying to free entry at " << idx << " in map ["
+               << path << ']');
         if (s.readLevel > 0) {
             assert(s.state.swap_if(Slot::Freeing, Slot::WaitingToBeFreed));
+            debugs(79, 5, HERE << " failed to free entry at " << idx << " in "
+                   "map [" << path << ']');
         } else {
             memset(s.key_, 0, sizeof(s.key_));
             memset(&s.seBasics, 0, sizeof(s.seBasics));
             --shared->count;
             assert(s.state.swap_if(Slot::Freeing, Slot::Empty));
+            debugs(79, 5, HERE << " freed entry at " << idx << " in map [" <<
+                   path << ']');
         }
     }
 }
