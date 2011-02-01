@@ -45,6 +45,7 @@ Rock::DirMap::openForWriting(const cache_key *const key, sfileno &fileno)
     if (s.state.swap_if(Slot::Empty, Slot::Writing)) {
         fileno = idx;
         s.setKey(key);
+        ++shared->count;
         debugs(79, 5, HERE << " opened entry at " << fileno << " for key " <<
                storeKeyText(key) << " for writing in map [" << path << ']');
         return &s.seBasics;
@@ -63,19 +64,15 @@ Rock::DirMap::closeForWriting(const sfileno fileno)
     Slot &s = shared->slots[fileno];
     assert(s.state == Slot::Writing);
     ++s.readLevel;
-    ++shared->count;
     assert(s.state.swap_if(Slot::Writing, Slot::Usable));
 }
 
 bool
 Rock::DirMap::free(const sfileno fileno)
 {
-    debugs(79, 5, HERE << " trying to mark entry at " << fileno << " to be "
-           "freed in map [" << path << ']');
-    if (openForReadingAt(fileno)) {
-        Slot &s = shared->slots[fileno];
-        s.state.swap_if(Slot::Usable, Slot::WaitingToBeFreed);
-        --s.readLevel;
+    assert(valid(fileno));
+    Slot &s = shared->slots[fileno];
+    if (s.state.swap_if(Slot::Usable, Slot::WaitingToBeFreed)) {
         debugs(79, 5, HERE << " marked entry at " << fileno << " to be freed in"
                " map [" << path << ']');
         freeIfNeeded(s);
