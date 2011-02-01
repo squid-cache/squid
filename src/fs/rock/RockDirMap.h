@@ -26,8 +26,8 @@ namespace Rock {
 class DirMap
 {
 public:
-    DirMap(const char *const path, const int limit); ///< create a new shared DirMap
-    DirMap(const char *const path); ///< open an existing shared DirMap
+    DirMap(const char *const aPath, const int limit); ///< create a new shared DirMap
+    DirMap(const char *const aPath); ///< open an existing shared DirMap
 
     /// start writing a new entry
     StoreEntryBasics *openForWriting(const cache_key *const key, sfileno &fileno);
@@ -83,10 +83,11 @@ private:
     Slot &slot(const cache_key *const key);
     const StoreEntryBasics *openForReading(Slot &s);
     void freeIfNeeded(Slot &s);
+    String sharedMemoryName();
 
     static int SharedSize(const int limit);
-    static String SharedMemoryName(const char *path);
 
+    const String path; ///< cache_dir path, used for logging
     SharedMemory shm; ///< shared memory segment
     Shared *shared; ///< pointer to shared memory
 };

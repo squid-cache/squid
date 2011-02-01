@@ -700,18 +700,15 @@ StoreController::get(const cache_key *key)
         // ask each cache_dir until the entry is found; use static starting
         // point to avoid asking the same subset of disks more often
         // TODO: coordinate with put() to be able to guess the right disk often
-        static int idx = 0;
-
         for (int n = 0; n < cacheDirs; ++n) {
-            if (idx >= cacheDirs)
-                idx = 0;
-
+            static int idx = 0;
             SwapDir *sd = dynamic_cast<SwapDir*>(INDEXSD(idx));
             if (StoreEntry *e = sd->get(key)) {
                 debugs(20, 1, HERE << "cache_dir " << idx <<
                     " got cached entry: " << *e);
                 return e;
             }
+            idx = (idx + 1) % cacheDirs;
         }
     }
 
