@@ -100,17 +100,16 @@ Rock::IoState::startWriting()
     assert(theFile->canWrite());
     assert(!theBuf.isNull());
 
-    static const int ps = getpagesize();
-    const size_t tail = (ps - (theBuf.contentSize() % ps)) % ps;
-    const int64_t writeSize = theBuf.contentSize() + tail;
+    // TODO: if DiskIO module is mmap-based, we should be writing whole pages
+    // to avoid triggering read-page;new_head+old_tail;write-page overheads
+
     debugs(79, 5, HERE << swap_filen << " at " << offset_ << '+' <<
-        theBuf.contentSize() << '+' << tail);
+        theBuf.contentSize());
 
     assert(theBuf.contentSize() <= slotSize);
-    assert(writeSize <= slotSize);
     // theFile->write may call writeCompleted immediatelly
     theFile->write(new WriteRequest(::WriteRequest(theBuf.content(), offset_,
-        writeSize, theBuf.freeFunc()), this));
+        theBuf.contentSize(), theBuf.freeFunc()), this));
 }
 
 // 
