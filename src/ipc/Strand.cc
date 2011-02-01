@@ -41,17 +41,6 @@ void Ipc::Strand::registerSelf()
     Must(!isRegistered);
 
     HereIamMessage ann(StrandCoord(KidIdentifier, getpid()));
-
-    // announce that we are responsible for our cache_dir if needed
-    // XXX: misplaced
-    if (IamDiskProcess()) {
-        const int myDisk = KidIdentifier % Config.cacheSwap.n_processes;
-        if (const SwapDir *sd = dynamic_cast<const SwapDir*>(INDEXSD(myDisk))) {
-            ann.strand.tag = sd->path;
-            ann.strand.tag.append("/rock"); // XXX: scope boundary violation
-		}
-	}
-
     TypedMsgHdr message;
     ann.pack(message);
     SendMessage(coordinatorAddr, message);
