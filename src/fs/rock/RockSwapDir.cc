@@ -67,6 +67,7 @@ Rock::SwapDir::get(const cache_key *key)
     EBIT_CLR(e->flags, KEY_PRIVATE);
     EBIT_SET(e->flags, ENTRY_VALIDATED);
 
+    e->hashInsert(key);
     trackReferences(*e);
 
     return e;
@@ -276,12 +277,15 @@ Rock::SwapDir::addEntry(const int fileno, const StoreEntry &from)
 
     int idx;
     StoreEntryBasics *const basics = map->openForWriting(key, idx);
-    if (!basics || fileno != idx) {
-        debugs(47, 5, HERE << "Rock::SwapDir::addEntry: map->add failed");
-        if (basics) {
-            map->closeForWriting(idx);
-            map->free(idx);
-        }
+    if (!basics) {
+        debugs(47, 5, HERE << "Rock::SwapDir::addEntry: the entry loaded from "
+               "disk clashed with locked newer entries");
+        return false;
+    } else if (fileno != idx) {
+        debugs(47, 5, HERE << "Rock::SwapDir::addEntry: the entry loaded from "
+               "disk was hashed to a new slot");
+        map->closeForWriting(idx);
+        map->free(idx);
         return false;
     }
     basics->set(from);
@@ -363,7 +367,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
     }
 
     if (!map->openForReadingAt(e.swap_filen)) {
-        debugs(47,1, HERE << "bug: dir " << index << " lost fileno: " <<
+        debugs(47,1, HERE << "bug: dir " << index << " lost locked fileno: " <<
             std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
             e.swap_filen);
         return NULL;
