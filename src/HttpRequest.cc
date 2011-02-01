@@ -480,7 +480,7 @@ void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const
 }
 
 /*
- * Indicate whether or not we would usually expect an entity-body
+ * Indicate whether or not we would expect an entity-body
  * along with this request
  */
 bool
@@ -489,28 +489,18 @@ HttpRequest::expectingBody(const HttpRequestMethod& unused, int64_t& theSize) co
     bool expectBody = false;
 
     /*
-     * GET and HEAD don't usually have bodies, but we should be prepared
-     * to accept one if the request_entities directive is set
+     * Note: Checks for message validity is in clientIsContentLengthValid().
+     * this just checks if a entity-body is expected based on HTTP message syntax
      */
-
-    if (method == METHOD_GET || method == METHOD_HEAD)
-        expectBody = Config.onoff.request_entities ? true : false;
-    else if (method == METHOD_PUT || method == METHOD_POST)
+    if (header.chunked()) {
         expectBody = true;
-    else if (header.chunked())
+        theSize = -1;
+    } else if (content_length >= 0) {
         expectBody = true;
-    else if (content_length >= 0)
-        expectBody = true;
-    else
+        theSize = content_length;
+    } else {
         expectBody = false;
-
-    if (expectBody) {
-        if (header.chunked())
-            theSize = -1;
-        else if (content_length >= 0)
-            theSize = content_length;
-        else
-            theSize = -1;
+        // theSize undefined
     }
 
     return expectBody;

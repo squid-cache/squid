@@ -714,12 +714,6 @@ clientIsContentLengthValid(HttpRequest * r)
 {
     switch (r->method.id()) {
 
-    case METHOD_PUT:
-
-    case METHOD_POST:
-        /* PUT/POST requires a request entity */
-        return (r->content_length >= 0);
-
     case METHOD_GET:
 
     case METHOD_HEAD:
