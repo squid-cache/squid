@@ -93,6 +93,11 @@ Rock::SwapDir::create()
     assert(path);
     assert(filePath);
 
+    if (UsingSmp() && !IamDiskProcess()) {
+        debugs (47,3, HERE << "disker will create in " << path);
+        return;
+    }
+
     debugs (47,3, HERE << "creating in " << path);
 
     struct stat swap_sb;
