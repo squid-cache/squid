@@ -109,7 +109,7 @@ Rock::SwapDir::init()
     // are refcounted. We up our count once to avoid implicit delete's.
     RefCountReference();
 
-    DiskIOModule *m = DiskIOModule::Find("Mmapped"); // TODO: configurable?
+    DiskIOModule *m = DiskIOModule::Find("IpcIo"); // TODO: configurable?
     assert(m);
     io = m->createStrategy();
     io->init();

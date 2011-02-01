@@ -1885,8 +1885,11 @@ static void
 parse_cachedir(SquidConfig::_cacheSwap * swap)
 {
     // coordinator does not need to handle cache_dir.
-    if (IamCoordinatorProcess())
+    if (IamCoordinatorProcess()) {
+        // make sure the NumberOfKids() is correct for coordinator
+        ++swap->n_processes; // XXX: does not work in reconfigure
         return;
+    }
 
     char *type_str;
     char *path_str;
@@ -1953,6 +1956,7 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
     sd->parse(swap->n_configured, path_str);
 
     ++swap->n_configured;
+    ++swap->n_processes;
 
     /* Update the max object size */
     update_maxobjsize();
