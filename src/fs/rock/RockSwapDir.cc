@@ -66,12 +66,21 @@ Rock::SwapDir::get(const cache_key *key)
     EBIT_CLR(e->flags, RELEASE_REQUEST);
     EBIT_CLR(e->flags, KEY_PRIVATE);
     EBIT_SET(e->flags, ENTRY_VALIDATED);
-
     e->hashInsert(key);
     trackReferences(*e);
 
     return e;
     // the disk entry remains open for reading, protected from modifications
+}
+
+void
+Rock::SwapDir::closeForReading(StoreEntry &e)
+{
+    assert(index == e.swap_dirn);
+    assert(e.swap_filen >= 0);
+    map->closeForReading(e.swap_filen);
+    e.swap_dirn = -1;
+    e.swap_filen = -1;
 }
 
 // TODO: encapsulate as a tool; identical to CossSwapDir::create()

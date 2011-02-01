@@ -61,6 +61,7 @@ Rock::DirMap::closeForWriting(const sfileno fileno)
     assert(valid(fileno));
     Slot &s = shared->slots[fileno];
     assert(s.state == Slot::Writing);
+    ++s.readLevel;
     ++shared->count;
     assert(s.state.swap_if(Slot::Writing, Slot::Usable));
 }
