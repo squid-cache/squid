@@ -3000,15 +3000,22 @@ ftpReadPORT(FtpStateData * ftpState)
 static void
 ftpSendEPRT(FtpStateData * ftpState)
 {
-    int fd;
-    IpAddress addr;
-    struct addrinfo *AI = NULL;
-    char buf[MAX_IPSTRLEN];
-
     if (Config.Ftp.epsv_all && ftpState->flags.epsv_all_sent) {
         debugs(9, DBG_IMPORTANT, "FTP does not allow EPRT method after 'EPSV ALL' has been sent.");
         return;
     }
+
+    if (!Config.Ftp.eprt) {
+        /* Disabled. Switch immediately to attempting old PORT command. */
+        debugs(9, 3, "EPRT disabled by local administrator");
+        ftpSendPORT(ftpState);
+        return;
+    }
+
+    int fd;
+    IpAddress addr;
+    struct addrinfo *AI = NULL;
+    char buf[MAX_IPSTRLEN];
 
     debugs(9, 3, HERE);
     ftpState->flags.pasv_supported = 0;

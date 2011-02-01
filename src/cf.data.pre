@@ -3067,6 +3067,29 @@ DOC_START
 	Requires ftp_passive to be ON (default) for any effect.
 DOC_END
 
+NAME: ftp_eprt
+TYPE: onoff
+DEFAULT: on
+LOC: Config.Ftp.eprt
+DOC_START
+	FTP Protocol extensions permit the use of a special "EPRT" command.
+
+	This extension provides a protocol neutral alternative to the
+	IPv4-only PORT command. When supported it enables active FTP data
+	channels over IPv6 and efficient NAT handling.
+
+	Turning this OFF will prevent EPRT being attempted and will skip
+	straight to using PORT for IPv4 servers.
+
+	Some devices are known to not handle this extension correctly and
+	may result in crashes. Devices which suport EPRT enough to fail
+	cleanly will result in Squid attempting PORT anyway. This directive
+	should only be disabled when EPRT results in device failures.
+
+	WARNING: Doing so will convert Squid back to the old behavior with all
+	the related problems with external NAT devices/layers and IPv4-only FTP.
+DOC_END
+
 NAME: ftp_sanitycheck
 TYPE: onoff
 DEFAULT: on

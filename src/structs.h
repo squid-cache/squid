@@ -503,6 +503,7 @@ struct SquidConfig {
         int passive;
         int epsv_all;
         int epsv;
+        int eprt;
         int sanitycheck;
         int telnet;
     } Ftp;
