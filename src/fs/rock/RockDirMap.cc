@@ -193,7 +193,7 @@ Rock::DirMap::freeIfNeeded(Slot &s)
         if (s.readLevel > 0) {
             assert(s.state.swap_if(Slot::Freeing, Slot::WaitingToBeFreed));
         } else {
-            memset(s.key, 0, sizeof(s.key));
+            memset(s.key_, 0, sizeof(s.key_));
             memset(&s.seBasics, 0, sizeof(s.seBasics));
             --shared->count;
             assert(s.state.swap_if(Slot::Freeing, Slot::Empty));
@@ -226,14 +226,15 @@ Rock::DirMap::SharedSize(const int limit)
 void
 Rock::DirMap::Slot::setKey(const cache_key *const aKey)
 {
-    memcpy(key, aKey, sizeof(key));
+    memcpy(key_, aKey, sizeof(key_));
 }
 
 bool
 Rock::DirMap::Slot::checkKey(const cache_key *const aKey) const
 {
-    const uint64_t *const k = reinterpret_cast<const uint64_t *>(&key);
-    return k[0] == key[0] && k[1] == key[1];
+    const uint32_t *const k = reinterpret_cast<const uint32_t *>(aKey);
+    return k[0] == key_[0] && k[1] == key_[1] &&
+           k[2] == key_[2] && k[3] == key_[3];
 }
 
 Rock::DirMap::Shared::Shared(const int aLimit): limit(aLimit), count(0)
