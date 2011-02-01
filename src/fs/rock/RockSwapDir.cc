@@ -305,11 +305,13 @@ Rock::SwapDir::addEntry(const int fileno, const StoreEntry &from)
         debugs(47, 5, HERE << "Rock::SwapDir::addEntry: the entry loaded from "
                "disk was hashed to a new slot");
         map->closeForWriting(idx);
+        map->closeForReading(idx);
         map->free(idx);
         return false;
     }
     basics->set(from);
     map->closeForWriting(fileno);
+    map->closeForReading(fileno);
     return true;
 }
 
