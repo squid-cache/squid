@@ -160,12 +160,13 @@ IpcIoFile::readCompleted(ReadRequest *readRequest,
     if (ipcResponse.xerrno) {
         debugs(79,1, HERE << "error: " << xstrerr(ipcResponse.xerrno));
         error_ = true;
-	}
+	} else {
+        memcpy(readRequest->buf, ipcResponse.buf, ipcResponse.len);
+    }
 
     const ssize_t rlen = error_ ? -1 : (ssize_t)readRequest->len;
     const int errflag = error_ ? DISK_ERROR : DISK_OK;
-    // XXX: check buffering expectations of the recepient
-    ioRequestor->readCompleted(ipcResponse.buf, rlen, errflag, readRequest);
+    ioRequestor->readCompleted(readRequest->buf, rlen, errflag, readRequest);
 }
 
 void
