@@ -194,13 +194,7 @@ main(int argc, char *argv[])
 
     shcmd = debug ? HELPERSCRIPT : HELPERSCRIPT " > /dev/null 2>&1";
 
-    /* pass to helper script */
-    if (putenv("SAMBAPREFIX=" SAMBAPREFIX) != 0)
-        return 1;
-
-    while (1) {
-        if (fgets(buf, BUFSIZE, stdin) == NULL)
-            break;
+    while (fgets(buf, BUFSIZE, stdin) != NULL) {
 
         if ((s = strchr(buf, '\n')) == NULL)
             continue;

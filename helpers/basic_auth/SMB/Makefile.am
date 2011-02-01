@@ -8,20 +8,9 @@
 
 include $(top_srcdir)/src/Common.am
 
-# SAMBAPREFIX must point to the directory where Samba has been installed.
-# By default, Samba is installed in /usr/local/samba. If you changed this
-# by using the --prefix option when configuring Samba, you need to change
-# SAMBAPREFIX accordingly.
-
-## FIXME: autoconf should test for the samba path.
-
-SMB_AUTH_HELPER	= smb_auth.sh
-SAMBAPREFIX=/usr/local/samba
-SMB_AUTH_HELPER_PATH = $(libexecdir)/$(SMB_AUTH_HELPER)
-
-libexec_SCRIPTS	= $(SMB_AUTH_HELPER)
+libexec_SCRIPTS	= smb_auth.sh
 libexec_PROGRAMS = smb_auth
-smb_auth_CFLAGS = -DSAMBAPREFIX=\"$(SAMBAPREFIX)\" -DHELPERSCRIPT=\"$(SMB_AUTH_HELPER_PATH)\"
+smb_auth_CFLAGS = -DHELPERSCRIPT=\"$(libexecdir)/smb_auth.sh\"
 EXTRA_DIST = smb_auth.sh COPYING-2.0 config.test
 
 ## we need our local files too (but avoid -I. at all costs)

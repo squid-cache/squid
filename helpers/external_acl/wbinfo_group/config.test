@@ -1,12 +1,18 @@
 #!/bin/sh
-
-for sambaprefix in ${SAMBAPREFIX} /usr/local /opt /opt/samba /usr/local/samba /usr
+samba_found="no"
+for sambaprefix in /usr/local /opt /opt/samba /usr/local/samba /usr
 do
-    for perlprefix in /usr /usr/local /opt /opt/perl
-    do
-        if [ -x $sambaprefix/bin/wbinfo -a -x $perlprefix/bin/perl ]; then
-            exit 0
-        fi
-    done
+    if [ -x $sambaprefix/bin/wbinfo ]; then
+      samba_found="yes"
+    fi
+done
+if test "$samba_found" = "no"; then
+    echo "WARNING: Samba wbinfo not found in default location. wbinfo_group.pl may not work on this machine"
+fi
+for perlprefix in /usr /usr/local /opt /opt/perl
+do
+    if [ -x $perlprefix/bin/perl ]; then
+        exit 0
+    fi
 done
 exit 1

@@ -1,8 +1,10 @@
 #!/bin/sh
-for prefix in ${SAMBAPREFIX} /usr/local /opt /opt/samba /usr/local/samba /usr
+for prefix in /usr/local /opt /opt/samba /usr/local/samba /usr
 do
     if [ -x ${prefix}/bin/smbclient ]; then
         exit 0
     fi
 done
-exit 1
+echo "WARNING: Samba smbclient not found in default location. smb_auth may not work on this machine"
+# allow script install anyway.
+exit 0
