@@ -328,21 +328,6 @@ httpMsgIsPersistent(HttpVersion const &http_ver, const HttpHeader * hdr)
          */
         return !httpHeaderHasConnDir(hdr, "close");
     } else {
-        /*
-         * Persistent connections in Netscape 3.x are allegedly broken,
-         * return false if it is a browser connection.  If there is a
-         * VIA header, then we assume this is NOT a browser connection.
-         */
-        const char *agent = hdr->getStr(HDR_USER_AGENT);
-
-        if (agent && !hdr->has(HDR_VIA)) {
-            if (!strncasecmp(agent, "Mozilla/3.", 10))
-                return 0;
-
-            if (!strncasecmp(agent, "Netscape/3.", 11))
-                return 0;
-        }
-
         /* for old versions of HTTP: persistent if has "keep-alive" */
         return httpHeaderHasConnDir(hdr, "keep-alive");
     }
