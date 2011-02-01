@@ -85,7 +85,7 @@ public:
     virtual const char *getMD5Text() const;
     StoreEntry();
     StoreEntry(const char *url, const char *log_url);
-    virtual ~StoreEntry() {}
+    virtual ~StoreEntry();
 
     virtual HttpReply const *getReply() const;
     virtual void write (StoreIOBuffer);

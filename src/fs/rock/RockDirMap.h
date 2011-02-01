@@ -31,7 +31,7 @@ public:
 
     /// start writing a new entry
     StoreEntryBasics *openForWriting(const cache_key *const key, sfileno &fileno);
-    /// finish writing a new entry
+    /// finish writing a new entry, leaves the entry opened for reading
     void closeForWriting(const sfileno fileno);
 
     /// mark slot as waiting to be freed, will be freed when no one uses it
