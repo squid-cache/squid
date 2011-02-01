@@ -50,9 +50,6 @@ class clientStreamNode;
 class ChunkedCodingParser;
 class HttpParser;
 
-template <class T>
-class Range;
-
 class ClientSocketContext : public RefCountable
 {
 
