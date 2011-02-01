@@ -1370,15 +1370,6 @@ SquidMain(int argc, char **argv)
 
         Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
 
-        debugs(0,0, HERE << '1');
-        if (IamMasterProcess()) {
-            debugs(0,0, HERE << '2');
-            new Rock::DirMap("/home/dikk/projects/factory/squid/rock_smp/rock1", 1000);
-            new Rock::DirMap("/home/dikk/projects/factory/squid/rock_smp/rock2", 1000);
-            new Rock::DirMap("/home/dikk/projects/factory/squid/rock_smp/rock3", 1000);
-        }
-        debugs(0,0, HERE << '3');
-
         parse_err = parseConfigFile(ConfigFile);
 
         Mem::Report();
