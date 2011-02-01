@@ -12,6 +12,7 @@
 #include "DiskIO/WriteRequest.h"
 #include "ipc/Messages.h"
 #include "ipc/Port.h"
+#include "ipc/StrandCoord.h"
 #include "ipc/UdsOp.h"
 
 CBDATA_CLASS_INIT(IpcIoFile);
@@ -43,7 +44,17 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 
     if (IamDiskProcess()) {
         error_ = !DiskerOpen(dbName, flags, mode);
+        if (error_)
+            return;
+
         ioRequestor->ioCompletedNotification();
+
+        Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
+        ann.strand.tag = dbName;
+        Ipc::TypedMsgHdr message;
+        ann.pack(message);
+        SendMessage(Ipc::coordinatorAddr, message);
+
         return;
 	}        
 

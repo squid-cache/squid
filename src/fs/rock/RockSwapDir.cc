@@ -156,6 +156,15 @@ Rock::SwapDir::init()
     // are refcounted. We up our count once to avoid implicit delete's.
     RefCountReference();
 
+    if (!map && (!UsingSmp() || IamDiskProcess())) {
+        // XXX: polish, validateOptions() has same code
+        const int64_t eLimitHi = 0xFFFFFF; // Core sfileno maximum
+        const int64_t eLimitLo = 0; // dynamic shrinking unsupported
+        const int64_t eWanted = (maximumSize() - HeaderSize)/max_objsize;
+        const int64_t eAllowed = min(max(eLimitLo, eWanted), eLimitHi);
+        map = new DirMap(path, eAllowed);
+    }
+
     DiskIOModule *m = DiskIOModule::Find("IpcIo"); // TODO: configurable?
     assert(m);
     io = m->createStrategy();
@@ -183,10 +192,6 @@ Rock::SwapDir::parse(int anIndex, char *aPath)
     parseOptions(0);
 
     repl = createRemovalPolicy(Config.replPolicy);
-
-    // map size is set when shared memory segment is created
-    if (!map)
-        map = new DirMap(path);
 
     validateOptions();
 }
@@ -225,15 +230,16 @@ Rock::SwapDir::validateOptions()
     if (ps > 0 && (max_objsize % ps != 0))
         fatal("Rock store max-size should be a multiple of page size");
 
-    /*
+    /* XXX: should we support resize?
     const int64_t eLimitHi = 0xFFFFFF; // Core sfileno maximum
-    const int64_t eLimitLo = map.entryLimit(); // dynamic shrinking unsupported
+    const int64_t eLimitLo = map->entryLimit(); // dynamic shrinking unsupported
     const int64_t eWanted = (maximumSize() - HeaderSize)/max_objsize;
     const int64_t eAllowed = min(max(eLimitLo, eWanted), eLimitHi);
 
-    map.resize(eAllowed); // the map may decide to use an even lower limit
+    map->resize(eAllowed); // the map may decide to use an even lower limit
     */
 
+    /* XXX: misplaced, map is not yet created
     // Note: We could try to shrink max_size now. It is stored in KB so we
     // may not be able to make it match the end of the last entry exactly.
     const int64_t mapRoundWasteMx = max_objsize*sizeof(long)*8;
@@ -253,6 +259,7 @@ Rock::SwapDir::validateOptions()
         debugs(47, 0, "\tdisk space waste: " << totalWaste << " bytes");
         debugs(47, 0, "WARNING: Rock store config wastes space.");
 	}
+    */
 
     if (!repl) {
         debugs(47,0, "ERROR: Rock cache_dir[" << index << "] " <<
@@ -260,7 +267,8 @@ Rock::SwapDir::validateOptions()
         // not fatal because it can be added later
 	}
 
-    cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
+    // XXX: misplaced, map is not yet created
+    //cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
 }
 
 void
@@ -414,6 +422,9 @@ Rock::SwapDir::ioCompletedNotification()
         debugs(47, 1, HERE << filePath << ": " << xstrerror());
         fatalf("Rock cache_dir failed to open db file: %s", filePath);
 	}
+
+    if (!map)
+        map = new DirMap(path);
 
     cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
 
