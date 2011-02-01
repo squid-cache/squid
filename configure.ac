@@ -633,6 +633,13 @@ for module in $squid_disk_module_candidates none; do
       DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/Mmapped/MmappedDiskIOModule.o"
       ;;
 
+    IpcIo)
+      AC_MSG_NOTICE([Enabling IpcIo DiskIO module])
+      DISK_LIBS="$DISK_LIBS libIpcIo.a"
+      DISK_MODULES="$DISK_MODULES IpcIo"
+      DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/IpcIo/IpcIoDiskIOModule.o"
+      ;;
+
     Blocking)
       AC_MSG_NOTICE([Enabling Blocking DiskIO module])
       DISK_LIBS="$DISK_LIBS libBlocking.a"
@@ -721,8 +728,8 @@ for fs in $squid_storeio_module_candidates none; do
       STORE_TESTS="$STORE_TESTS tests/testCoss$EXEEXT"
       ;;
     rock)
-	if ! test "x$squid_disk_module_candidates_Mmapped" = "xyes"; then
-	  AC_MSG_ERROR([Storage modeule Rock requires Mmapped DiskIO module])
+	if ! test "x$squid_disk_module_candidates_IpcIo" = "xyes"; then
+	  AC_MSG_ERROR([Storage modeule Rock requires IpcIo DiskIO module])
 	fi
 	STORE_TESTS="$STORE_TESTS tests/testRock$EXEEXT"
 	;;
