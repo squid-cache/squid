@@ -3,7 +3,7 @@
 
 #include "SwapDir.h"
 #include "DiskIO/IORequestor.h"
-#include "rock/RockDirMap.h"
+#include "fs/rock/RockDirMap.h"
 
 class DiskIOStrategy;
 class DiskFile;
@@ -25,6 +25,8 @@ public:
     virtual void reconfigure(int, char *);
     virtual StoreSearch *search(String const url, HttpRequest *);
     virtual StoreEntry *get(const cache_key *key);
+
+    void closeForReading(StoreEntry &e);
 
 protected:
     /* protected ::SwapDir API */

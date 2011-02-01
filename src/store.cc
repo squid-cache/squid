@@ -53,6 +53,7 @@
 #include "SquidTime.h"
 #include "swap_log_op.h"
 #include "mgr/StoreIoAction.h"
+#include "fs/rock/RockSwapDir.h"
 
 static STMCB storeWriteComplete;
 
@@ -385,6 +386,16 @@ StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl):
 
     swap_filen = -1;
     swap_dirn = -1;
+}
+
+StoreEntry::~StoreEntry()
+{
+    if (swap_filen >= 0) {
+        // XXX: support cache types other than Rock
+        Rock::SwapDir &rockSwapDir =
+            dynamic_cast<Rock::SwapDir &>(*store());
+        rockSwapDir.closeForReading(*this);
+    }
 }
 
 void
