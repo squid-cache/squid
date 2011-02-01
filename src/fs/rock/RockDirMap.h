@@ -66,7 +66,10 @@ private:
 
         AtomicWordT<uint8_t> state; ///< slot state
         AtomicWord readLevel; ///< read level
-        AtomicWordT<uint64_t> key[2]; ///< MD5 entry key
+
+        // we want two uint64_t, but older GCCs lack __sync_fetch_and_add_8
+        AtomicWordT<uint32_t> key_[4]; ///< MD5 entry key
+
         StoreEntryBasics seBasics; ///< basic store entry data
     };
 
