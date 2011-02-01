@@ -7341,6 +7341,8 @@ DOC_START
 
 	Defaults to off for bandwidth management and access logging
 	reasons.
+
+	WARNING: pipelining breaks NTLM and Negotiate/Kerberos authentication.
 DOC_END
 
 NAME: high_response_time_warning
