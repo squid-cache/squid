@@ -156,7 +156,7 @@ AIOPS_SOURCE = DiskIO/DiskThreads/aiops.cc
 endif
 
 EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a \
-	libMmapped.a
+	libMmapped.a libIpcIo.a
 noinst_LIBRARIES = $(DISK_LIBS)
 noinst_LTLIBRARIES = libsquid.la
 
@@ -715,6 +715,14 @@ libMmapped_a_SOURCES = \
 		DiskIO/Mmapped/MmappedIOStrategy.h \
 		DiskIO/Mmapped/MmappedDiskIOModule.cc \
 		DiskIO/Mmapped/MmappedDiskIOModule.h 
+
+libIpcIo_a_SOURCES = \
+		DiskIO/IpcIo/IpcIoFile.cc \
+		DiskIO/IpcIo/IpcIoFile.h \
+		DiskIO/IpcIo/IpcIoIOStrategy.cc \
+		DiskIO/IpcIo/IpcIoIOStrategy.h \
+		DiskIO/IpcIo/IpcIoDiskIOModule.cc \
+		DiskIO/IpcIo/IpcIoDiskIOModule.h 
 
 libDiskDaemon_a_SOURCES = \
 		DiskIO/DiskDaemon/DiskdFile.cc \

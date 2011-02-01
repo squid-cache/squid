@@ -15,6 +15,8 @@
 #include "mgr/Request.h"
 #include "mgr/Response.h"
 #include "mgr/Forwarder.h"
+#include "DiskIO/IpcIo/IpcIoFile.h" /* XXX: scope boundary violation */
+#include "SwapDir.h" /* XXX: scope boundary violation */
 #include "CacheManager.h"
 
 
@@ -37,8 +39,21 @@ void Ipc::Strand::registerSelf()
 {
     debugs(54, 6, HERE);
     Must(!isRegistered);
+
+    HereIamMessage ann(StrandCoord(KidIdentifier, getpid()));
+
+    // announce that we are responsible for our cache_dir if needed
+    // XXX: misplaced
+    if (IamDiskProcess()) {
+        const int myDisk = KidIdentifier % Config.cacheSwap.n_processes;
+        if (const SwapDir *sd = dynamic_cast<const SwapDir*>(INDEXSD(myDisk))) {
+            ann.strand.tag = sd->path;
+            ann.strand.tag.append("/rock"); // XXX: scope boundary violation
+		}
+	}
+
     TypedMsgHdr message;
-    StrandCoord(KidIdentifier, getpid()).pack(message);
+    ann.pack(message);
     SendMessage(coordinatorAddr, message);
     setTimeout(6, "Ipc::Strand::timeoutHandler"); // TODO: make 6 configurable?
 }
@@ -49,11 +64,19 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
     switch (message.type()) {
 
     case mtRegistration:
-        handleRegistrationResponse(StrandCoord(message));
+        handleRegistrationResponse(HereIamMessage(message));
         break;
 
     case mtSharedListenResponse:
         SharedListenJoined(SharedListenResponse(message));
+        break;
+
+    case mtIpcIoRequest:
+        IpcIoFile::HandleRequest(IpcIoRequest(message));
+        break;
+
+    case mtIpcIoResponse:
+        IpcIoFile::HandleResponse(message);
         break;
 
     case mtCacheMgrRequest:
@@ -70,10 +93,10 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
     }
 }
 
-void Ipc::Strand::handleRegistrationResponse(const StrandCoord &strand)
+void Ipc::Strand::handleRegistrationResponse(const HereIamMessage &msg)
 {
     // handle registration response from the coordinator; it could be stale
-    if (strand.kidId == KidIdentifier && strand.pid == getpid()) {
+    if (msg.strand.kidId == KidIdentifier && msg.strand.pid == getpid()) {
         debugs(54, 6, "kid" << KidIdentifier << " registered");
         clearTimeout(); // we are done
     } else {

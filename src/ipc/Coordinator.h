@@ -14,8 +14,10 @@
 #include "ipc/Port.h"
 #include "ipc/SharedListen.h"
 #include "ipc/StrandCoords.h"
+#include "ipc/StrandSearch.h"
 #include "mgr/forward.h"
 
+#include <list>
 #include <map>
 
 namespace Ipc
@@ -40,7 +42,12 @@ protected:
 
     StrandCoord* findStrand(int kidId); ///< registered strand or NULL
     void registerStrand(const StrandCoord &); ///< adds or updates existing
-    void handleRegistrationRequest(const StrandCoord &); ///< register,ACK
+    void handleRegistrationRequest(const HereIamMessage &); ///< register,ACK
+
+    /// answer the waiting search request
+    void notifySearcher(const StrandSearchRequest &request, const StrandCoord&);
+    /// answers or queues the request if the answer is not yet known
+    void handleSearchRequest(const StrandSearchRequest &request);
 
     /// returns cached socket or calls openListenSocket()
     void handleSharedListenRequest(const SharedListenRequest& request);
@@ -52,6 +59,9 @@ protected:
 
 private:
     StrandCoords strands_; ///< registered processes and threads
+
+    typedef std::list<StrandSearchRequest> Searchers; ///< search requests
+    Searchers searchers; ///< yet unanswered search requests in arrival order
 
     typedef std::map<OpenListenerParams, int> Listeners; ///< params:fd map
     Listeners listeners; ///< cached comm_open_listener() results

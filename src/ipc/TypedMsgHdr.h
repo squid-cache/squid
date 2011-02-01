@@ -27,7 +27,7 @@ namespace Ipc
 class TypedMsgHdr: public msghdr
 {
 public:
-    enum {maxSize = 4096};
+    enum {maxSize = 36*1024}; // XXX: so that disker I/O can fit
 
 public:
     TypedMsgHdr();
