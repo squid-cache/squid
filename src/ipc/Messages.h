@@ -18,7 +18,9 @@ namespace Ipc
 
 /// message class identifier
 typedef enum { mtNone = 0, mtRegistration,
+               mtStrandSearchRequest, mtStrandSearchResponse,
                mtSharedListenRequest, mtSharedListenResponse,
+               mtIpcIoRequest, mtIpcIoResponse,
                mtCacheMgrRequest, mtCacheMgrResponse
              } MessageType;
 
