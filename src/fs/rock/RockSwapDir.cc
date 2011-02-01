@@ -41,6 +41,9 @@ Rock::SwapDir::search(String const url, HttpRequest *)
 StoreEntry *
 Rock::SwapDir::get(const cache_key *key)
 {
+    if (!map)
+        return NULL;
+
     sfileno fileno;
     const StoreEntryBasics *const basics = map->openForReading(key, fileno);
     if (!basics)
@@ -319,6 +322,12 @@ Rock::SwapDir::canStore(const StoreEntry &e) const
     if (EBIT_TEST(e.flags, ENTRY_SPECIAL))
         return -1;
 
+    if (!theFile || !theFile->canRead() || !theFile->canWrite())
+        return -1;
+
+    if (!map)
+        return -1;
+
     if (io->shedLoad())
         return -1;
 
@@ -509,6 +518,9 @@ Rock::SwapDir::diskFull() {
 void
 Rock::SwapDir::maintain()
 {
+    if (!map)
+        return;
+
     debugs(47,3, HERE << "cache_dir[" << index << "] guards: " << 
         StoreController::store_dirs_rebuilding << !repl << !full());
 
