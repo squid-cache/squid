@@ -1168,11 +1168,12 @@ ErrorState::BuildContent()
         debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
     }
 
+    MemBuf *result = ConvertText(m, true);
 #if USE_ERR_LOCALES
     safe_free(freePage);
 #endif
 
-    return ConvertText(m, true);
+    return result;
 }
 
 MemBuf *ErrorState::ConvertText(const char *text, bool allowRecursion)
