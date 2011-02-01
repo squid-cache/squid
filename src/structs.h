@@ -497,6 +497,8 @@ struct SquidConfig {
         RefCount<class Store> *swapDirs;
         int n_allocated;
         int n_configured;
+        ///< number of disk processes (set even when n_configured is not)
+        int n_processes;
     } cacheSwap;
     /*
      * I'm sick of having to keep doing this ..

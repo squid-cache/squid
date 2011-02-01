@@ -16,6 +16,8 @@ libipc_la_SOURCES = \
 	StrandCoord.cc \
 	StrandCoord.h \
 	StrandCoords.h \
+	StrandSearch.cc \
+	StrandSearch.h \
 	SharedListen.cc \
 	SharedListen.h \
 	TypedMsgHdr.cc \

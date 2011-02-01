@@ -13,6 +13,7 @@ namespace Ipc
 
 class TypedMsgHdr;
 class StrandCoord;
+class HereIamMessage;
 
 } // namespace Ipc
 

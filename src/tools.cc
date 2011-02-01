@@ -855,7 +855,7 @@ IamPrimaryProcess()
 
     // when there is a master and worker process, the master delegates
     // primary functions to its only kid
-    if (Config.workers == 1)
+    if (NumberOfKids() == 1)
         return IamWorkerProcess();
 
     // in SMP mode, multiple kids delegate primary functions to the coordinator
@@ -872,7 +872,7 @@ NumberOfKids()
     // XXX: detect and abort when called before workers/cache_dirs are parsed
 
     // XXX: this is not always the case as there are other cache_dir types
-    const int rockDirs = Config.cacheSwap.n_configured;
+    const int rockDirs = Config.cacheSwap.n_processes;
 
     const bool needCoord = Config.workers > 1 || rockDirs > 0;
     return (needCoord ? 1 : 0) + Config.workers + rockDirs;
