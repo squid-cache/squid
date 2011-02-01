@@ -704,7 +704,7 @@ StoreController::get(const cache_key *key)
             static int idx = 0;
             SwapDir *sd = dynamic_cast<SwapDir*>(INDEXSD(idx));
             if (StoreEntry *e = sd->get(key)) {
-                debugs(20, 1, HERE << "cache_dir " << idx <<
+                debugs(20, 3, HERE << "cache_dir " << idx <<
                     " got cached entry: " << *e);
                 return e;
             }
@@ -712,7 +712,7 @@ StoreController::get(const cache_key *key)
         }
     }
 
-    debugs(20, 1, HERE << "none of " << Config.cacheSwap.n_configured <<
+    debugs(20, 4, HERE << "none of " << Config.cacheSwap.n_configured <<
         " cache_dirs have " << storeKeyText(key));
     return NULL;
 }
