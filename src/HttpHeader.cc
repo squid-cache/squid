@@ -1178,7 +1178,7 @@ HttpHeader::putSc(HttpHdrSc *sc)
     Packer p;
     assert(sc);
     /* remove old directives if any */
-    delById(HDR_RANGE);
+    delById(HDR_SURROGATE_CONTROL);
     /* pack into mb */
     mb.init();
     packerToMemInit(&p, &mb);
