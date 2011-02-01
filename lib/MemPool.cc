@@ -430,12 +430,15 @@ MemImplementingAllocator::~MemImplementingAllocator()
 {
     MemImplementingAllocator *find_pool, *prev_pool;
 
-    assert(MemPools::GetInstance().pools != NULL && "Called MemImplementingAllocator::~MemImplementingAllocator, but no pool exists!");
+    /* Abort if the associated pool doesn't exist */
+    assert(MemPools::GetInstance().pools != NULL );
 
     /* Pool clean, remove it from List and free */
     for (find_pool = MemPools::GetInstance().pools, prev_pool = NULL; (find_pool && this != find_pool); find_pool = find_pool->next)
         prev_pool = find_pool;
-    assert(find_pool != NULL && "pool to destroy not found");
+
+    /* make sure that we found the pool to destroy */
+    assert(find_pool != NULL);
 
     if (prev_pool)
         prev_pool->next = next;
