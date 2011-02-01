@@ -35,7 +35,7 @@ SharedMemory::create(const int aSize)
     assert(aSize > 0);
     assert(theFD < 0);
 
-    theFD = shm_open(theName.termedBuf(), O_CREAT | O_RDWR,
+    theFD = shm_open(theName.termedBuf(), O_CREAT | O_RDWR | O_TRUNC,
                      S_IRUSR | S_IWUSR);
     if (theFD < 0) {
         debugs(54, 5, "SharedMemory::create: shm_open: " << xstrerror());

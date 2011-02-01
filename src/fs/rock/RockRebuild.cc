@@ -98,8 +98,10 @@ Rock::Rebuild::doOneEntry() {
     StoreEntry loadedE;
     if (!storeRebuildLoadEntry(fd, loadedE, key, counts, 0)) {
         // skip empty slots
-        if (loadedE.swap_filen > 0 || loadedE.swap_file_sz > 0)
+        if (loadedE.swap_filen > 0 || loadedE.swap_file_sz > 0) {
             counts.invalid++;
+            //sd->unlink(fileno); leave garbage on disk, it should not hurt
+        }
         return;
 	}
 
