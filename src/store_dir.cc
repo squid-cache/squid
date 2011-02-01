@@ -832,6 +832,12 @@ StoreHashIndex::init()
         *         above
         * Step 3: have the hash index walk the searches itself.
          */
+        if (IamDiskProcess() &&
+            i != KidIdentifier % Config.cacheSwap.n_configured) {
+            debugs(20, 3, HERE << " skipping init for cache_dir " <<
+                   dynamic_cast<const SwapDir &>(*store(i)).path);
+            continue;
+        }
         store(i)->init();
     }
 }
