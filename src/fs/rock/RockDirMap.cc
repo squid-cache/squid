@@ -36,7 +36,7 @@ Rock::DirMap::DirMap(const char *const aPath):
 StoreEntryBasics *
 Rock::DirMap::openForWriting(const cache_key *const key, sfileno &fileno)
 {
-    debugs(79, 5, HERE << " trying to open entry for key " << storeKeyText(key)
+    debugs(79, 5, HERE << " trying to open slot for key " << storeKeyText(key)
            << " for writing in map [" << path << ']');
     const int idx = slotIdx(key);
     free(idx);
@@ -46,11 +46,11 @@ Rock::DirMap::openForWriting(const cache_key *const key, sfileno &fileno)
         fileno = idx;
         s.setKey(key);
         ++shared->count;
-        debugs(79, 5, HERE << " opened entry at " << fileno << " for key " <<
+        debugs(79, 5, HERE << " opened slot at " << fileno << " for key " <<
                storeKeyText(key) << " for writing in map [" << path << ']');
         return &s.seBasics;
     }
-    debugs(79, 5, HERE << " failed to open entry for key " << storeKeyText(key)
+    debugs(79, 5, HERE << " failed to open slot for key " << storeKeyText(key)
            << " for writing in map [" << path << ']');
     return 0;
 }
@@ -58,8 +58,8 @@ Rock::DirMap::openForWriting(const cache_key *const key, sfileno &fileno)
 void
 Rock::DirMap::closeForWriting(const sfileno fileno)
 {
-    debugs(79, 5, HERE << " closing entry at " << fileno << " for writing in "
-           "map [" << path << ']');
+    debugs(79, 5, HERE << " closing slot at " << fileno << " for writing and "
+           "openning for reading in map [" << path << ']');
     assert(valid(fileno));
     Slot &s = shared->slots[fileno];
     assert(s.state == Slot::Writing);
@@ -73,12 +73,12 @@ Rock::DirMap::free(const sfileno fileno)
     assert(valid(fileno));
     Slot &s = shared->slots[fileno];
     if (s.state.swap_if(Slot::Usable, Slot::WaitingToBeFreed)) {
-        debugs(79, 5, HERE << " marked entry at " << fileno << " to be freed in"
+        debugs(79, 5, HERE << " marked slot at " << fileno << " to be freed in"
                " map [" << path << ']');
         freeIfNeeded(s);
         return true;
     }
-    debugs(79, 5, HERE << " failed to mark entry at " << fileno << " to be "
+    debugs(79, 5, HERE << " failed to mark slot at " << fileno << " to be "
            "freed in map [" << path << ']');
     return false;
 }
@@ -86,7 +86,7 @@ Rock::DirMap::free(const sfileno fileno)
 const StoreEntryBasics *
 Rock::DirMap::openForReading(const cache_key *const key, sfileno &fileno)
 {
-    debugs(79, 5, HERE << " trying to open entry for key " << storeKeyText(key)
+    debugs(79, 5, HERE << " trying to open slot for key " << storeKeyText(key)
            << " for reading in map [" << path << ']');
     const int idx = slotIdx(key);
     const StoreEntryBasics *const seBasics = openForReadingAt(idx);
@@ -94,7 +94,7 @@ Rock::DirMap::openForReading(const cache_key *const key, sfileno &fileno)
         Slot &s = shared->slots[idx];
         if (s.checkKey(key)) {
             fileno = idx;
-            debugs(79, 5, HERE << " opened entry at " << fileno << " for key "
+            debugs(79, 5, HERE << " opened slot at " << fileno << " for key "
                    << storeKeyText(key) << " for reading in map [" << path <<
                    ']');
             return seBasics;
@@ -102,7 +102,7 @@ Rock::DirMap::openForReading(const cache_key *const key, sfileno &fileno)
         --s.readLevel;
         freeIfNeeded(s);
     }
-    debugs(79, 5, HERE << " failed to open entry for key " << storeKeyText(key)
+    debugs(79, 5, HERE << " failed to open slot for key " << storeKeyText(key)
            << " for reading in map [" << path << ']');
     return 0;
 }
@@ -110,19 +110,19 @@ Rock::DirMap::openForReading(const cache_key *const key, sfileno &fileno)
 const StoreEntryBasics *
 Rock::DirMap::openForReadingAt(const sfileno fileno)
 {
-    debugs(79, 5, HERE << " trying to open entry at " << fileno << " for "
+    debugs(79, 5, HERE << " trying to open slot at " << fileno << " for "
            "reading in map [" << path << ']');
     assert(valid(fileno));
     Slot &s = shared->slots[fileno];
     ++s.readLevel;
     if (s.state == Slot::Usable) {
-        debugs(79, 5, HERE << " opened entry at " << fileno << " for reading in"
+        debugs(79, 5, HERE << " opened slot at " << fileno << " for reading in"
                " map [" << path << ']');
         return &s.seBasics;
     }
     --s.readLevel;
     freeIfNeeded(s);
-    debugs(79, 5, HERE << " failed to open entry at " << fileno << " for "
+    debugs(79, 5, HERE << " failed to open slot at " << fileno << " for "
            "reading in map [" << path << ']');
     return 0;
 }
@@ -130,7 +130,7 @@ Rock::DirMap::openForReadingAt(const sfileno fileno)
 void
 Rock::DirMap::closeForReading(const sfileno fileno)
 {
-    debugs(79, 5, HERE << " closing entry at " << fileno << " for reading in "
+    debugs(79, 5, HERE << " closing slot at " << fileno << " for reading in "
            "map [" << path << ']');
     assert(valid(fileno));
     Slot &s = shared->slots[fileno];
@@ -189,18 +189,18 @@ Rock::DirMap::freeIfNeeded(Slot &s)
 {
     const int idx = &s - shared->slots;
     if (s.state.swap_if(Slot::WaitingToBeFreed, Slot::Freeing)) {
-        debugs(79, 5, HERE << " trying to free entry at " << idx << " in map ["
+        debugs(79, 5, HERE << " trying to free slot at " << idx << " in map ["
                << path << ']');
         if (s.readLevel > 0) {
             assert(s.state.swap_if(Slot::Freeing, Slot::WaitingToBeFreed));
-            debugs(79, 5, HERE << " failed to free entry at " << idx << " in "
+            debugs(79, 5, HERE << " failed to free slot at " << idx << " in "
                    "map [" << path << ']');
         } else {
             memset(s.key_, 0, sizeof(s.key_));
             memset(&s.seBasics, 0, sizeof(s.seBasics));
             --shared->count;
             assert(s.state.swap_if(Slot::Freeing, Slot::Empty));
-            debugs(79, 5, HERE << " freed entry at " << idx << " in map [" <<
+            debugs(79, 5, HERE << " freed slot at " << idx << " in map [" <<
                    path << ']');
         }
     }
