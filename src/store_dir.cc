@@ -692,7 +692,7 @@ StoreEntry *
 StoreController::get(const cache_key *key)
 {
     if (StoreEntry *e = swapDir->get(key)) {
-        debugs(20, 1, HERE << "got in-transit entry: " << *e);
+        debugs(20, 3, HERE << "got in-transit entry: " << *e);
         return e;
     }
 
