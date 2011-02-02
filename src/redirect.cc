@@ -194,14 +194,14 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
       clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
       clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
       assert (repContext);
-      IpAddress tmpnoaddr;
+      Ip::Address tmpnoaddr;
       tmpnoaddr.SetNoAddr();
       repContext->setReplyToError(ERR_GATEWAY_FAILURE, status,
 				  http->request->method, NULL,
 				  http->getConn() != NULL ? http->getConn()->peer : tmpnoaddr,
 				  http->request,
 				  NULL,
-				  http->getConn() != NULL && http->getConn()->auth_user_request ?
+				  http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
 				  http->getConn()->auth_user_request : http->request->auth_user_request);
 
       node = (clientStreamNode *)http->client_stream.tail->data;
