@@ -118,6 +118,9 @@ public:
     virtual void reconfigure(int, char *) = 0;
     char const *type() const;
 
+    virtual bool needsDiskStrand() const; ///< needs a dedicated kid process
+    virtual bool active() const; ///< may be used in this strand
+
     /* official Store interface functions */
     virtual void diskFull();
 
