@@ -187,6 +187,12 @@ Rock::SwapDir::init()
     theFile->open(O_RDWR, 0644, this);
 }
 
+bool
+Rock::SwapDir::needsDiskStrand() const
+{
+    return true;
+}
+
 void
 Rock::SwapDir::parse(int anIndex, char *aPath)
 {
