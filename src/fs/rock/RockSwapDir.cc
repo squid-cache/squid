@@ -300,6 +300,9 @@ Rock::SwapDir::addEntry(const int fileno, const StoreEntry &from)
        << ", fileno="<< std::setfill('0') << std::hex << std::uppercase <<
        std::setw(8) << fileno);
 
+    // after writing, we close for reading because we do not add this entry to
+    // store_table and, hence, there is nobody to hold the read lock
+
     int idx;
     StoreEntryBasics *const basics = map->openForWriting(key, idx);
     if (!basics) {
@@ -399,12 +402,13 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
         return NULL;
     }
 
-    if (!map->openForReadingAt(e.swap_filen)) {
-        debugs(47,1, HERE << "bug: dir " << index << " lost locked fileno: " <<
-            std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
-            e.swap_filen);
+    if (e.swap_filen < 0) { 
+        debugs(47,4, HERE << e);
         return NULL;
     }
+
+    // The only way the entry has swap_filen is if get() locked it for reading
+    // so we do not need to map->openForReadingAt(swap_filen) again here.
 
     IoState *sio = new IoState(this, &e, cbFile, cbIo, data);
 
@@ -464,7 +468,6 @@ Rock::SwapDir::readCompleted(const char *buf, int rlen, int errflag, RefCount< :
     ReadRequest *request = dynamic_cast<Rock::ReadRequest*>(r.getRaw());
     assert(request);
     IoState::Pointer sio = request->sio;
-    map->closeForReading(sio->swap_filen);
 
     // do not increment sio->offset_: callers always supply relative offset
 
@@ -483,10 +486,12 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
     assert(request);
     assert(request->sio !=  NULL);
     IoState &sio = *request->sio;
-    map->closeForWriting(sio.swap_filen);
+
     if (errflag != DISK_OK)
         map->free(sio.swap_filen); // TODO: test by forcing failure
     // else sio.offset_ += rlen;
+
+    map->closeForWriting(sio.swap_filen); // assume we only write once
 
     // TODO: always compute cur_size based on map, do not store it
     cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
