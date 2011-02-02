@@ -40,9 +40,9 @@
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
 #include "comm/IoCallback.h"
-#include "comm/Write.h"
-#include "comm/ListenStateData.h"
 #include "comm/Loops.h"
+#include "comm/Write.h"
+#include "comm/TcpAcceptor.h"
 #include "CommIO.h"
 #include "CommRead.h"
 #include "ConnectionDetail.h"
@@ -62,7 +62,7 @@
 #endif
 
 #include "cbdata.h"
-#if defined(_SQUID_CYGWIN_)
+#if _SQUID_CYGWIN_
 #include <sys/ioctl.h>
 #endif
 #ifdef HAVE_NETINET_TCP_H
@@ -144,7 +144,7 @@ fd_debug_t *fdd_table = NULL;
 bool
 isOpen(const int fd)
 {
-    return fd_table[fd].flags.open != 0;
+    return fd >= 0 && fd_table[fd].flags.open != 0;
 }
 
 /**
@@ -1661,12 +1661,10 @@ commSetNonBlocking(int fd)
     int flags;
     int dummy = 0;
 #endif
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     int nonblocking = TRUE;
 
-#ifdef _SQUID_CYGWIN_
-
+#if _SQUID_CYGWIN_
     if (fd_table[fd].type != FD_PIPE) {
 #endif
 
@@ -1675,8 +1673,7 @@ commSetNonBlocking(int fd)
             return COMM_ERROR;
         }
 
-#ifdef _SQUID_CYGWIN_
-
+#if _SQUID_CYGWIN_
     } else {
 #endif
 #endif
@@ -1693,10 +1690,8 @@ commSetNonBlocking(int fd)
         }
 
 #endif
-#ifdef _SQUID_CYGWIN_
-
+#if _SQUID_CYGWIN_
     }
-
 #endif
     fd_table[fd].flags.nonblocking = 1;
 

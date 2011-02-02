@@ -72,7 +72,7 @@
 #include "include/util.h"
 
 
-#ifdef _SQUID_CYGWIN_
+#if _SQUID_CYGWIN_
 #include <wchar.h>
 int _wcsicmp(const wchar_t *, const wchar_t *);
 #endif

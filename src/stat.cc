@@ -673,15 +673,13 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "Squid Object Cache: Version %s\n",
                       version_string);
 
-#if _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
         storeAppendPrintf(sentry,"\nRunning as %s Windows System Service on %s\n",
                           WIN32_Service_name, WIN32_OS_string);
         storeAppendPrintf(sentry,"Service command line is: %s\n", WIN32_Service_Command_Line);
     } else
         storeAppendPrintf(sentry,"Running on %s\n",WIN32_OS_string);
-
 #endif
 
     storeAppendPrintf(sentry, "Start Time:\t%s\n",
@@ -749,7 +747,7 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
                       stats.request_hit_disk_ratio60 / fct);
 
     storeAppendPrintf(sentry, "\tStorage Swap size:\t%.0f KB\n",
-                      stats.store_swap_size / 1024);
+                      stats.store_swap_size);
 
     storeAppendPrintf(sentry, "\tStorage Swap capacity:\t%4.1f%% used, %4.1f%% free\n",
                       Math::doublePercent(stats.store_swap_size, stats.store_swap_max_size),
