@@ -732,7 +732,7 @@ SQUIDCEXTERN int varyEvaluateMatch(StoreEntry * entry, HttpRequest * req);
 
 /* CygWin & Windows NT Port */
 /* win32.c */
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 SQUIDCEXTERN int WIN32_Subsystem_Init(int *, char ***);
 SQUIDCEXTERN void WIN32_sendSignal(int);
 SQUIDCEXTERN void WIN32_Abort(int);
@@ -741,7 +741,7 @@ SQUIDCEXTERN void WIN32_SetServiceCommandLine(void);
 SQUIDCEXTERN void WIN32_InstallService(void);
 SQUIDCEXTERN void WIN32_RemoveService(void);
 SQUIDCEXTERN int SquidMain(int, char **);
-#endif /* _SQUID_WIN32_ */
+#endif /* _SQUID_WINDOWS_ */
 #ifdef _SQUID_MSWIN_
 
 SQUIDCEXTERN int WIN32_pipe(int[2]);

@@ -986,10 +986,9 @@ UFSSwapDir::writeCleanDone()
     /* rename */
 
     if (state->fd >= 0) {
-#if defined(_SQUID_OS2_) || defined (_SQUID_WIN32_)
+#if _SQUID_OS2_ || _SQUID_WINDOWS_
         file_close(state->fd);
         state->fd = -1;
-
 #endif
 
         xrename(state->newLog, state->cur);

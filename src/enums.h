@@ -326,7 +326,7 @@ enum {
 
 
 /* CygWin & Windows NT Port */
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 /*
  * Supported Windows OS types codes
  */

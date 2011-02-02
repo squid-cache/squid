@@ -33,15 +33,104 @@
  */
 
 #include "squid.h"
+#include "base/TextException.h"
 #include "CommCalls.h"
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
-#include "comm/ListenStateData.h"
 #include "comm/Loops.h"
+#include "comm/TcpAcceptor.h"
 #include "ConnectionDetail.h"
 #include "fde.h"
 #include "protos.h"
 #include "SquidTime.h"
+
+namespace Comm
+{
+CBDATA_CLASS_INIT(TcpAcceptor);
+};
+
+Comm::TcpAcceptor::TcpAcceptor(const int listenFd, const Ip::Address &laddr, int flags,
+                               const char *note, const Subscription::Pointer &aSub) :
+        AsyncJob("Comm::TcpAcceptor"),
+        errcode(0),
+        fd(listenFd),
+        isLimited(0),
+        theCallSub(aSub),
+        local_addr(laddr)
+{}
+
+void
+Comm::TcpAcceptor::subscribe(const Subscription::Pointer &aSub)
+{
+    debugs(5, 5, HERE << status() << " AsyncCall Subscription: " << aSub);
+    unsubscribe("subscription change");
+    theCallSub = aSub;
+}
+
+void
+Comm::TcpAcceptor::unsubscribe(const char *reason)
+{
+    debugs(5, 5, HERE << status() << " AsyncCall Subscription " << theCallSub << " removed: " << reason);
+    theCallSub = NULL;
+}
+
+void
+Comm::TcpAcceptor::start()
+{
+    debugs(5, 5, HERE << status() << " AsyncCall Subscription: " << theCallSub);
+
+    Must(isOpen(fd));
+
+    setListen();
+
+    // if no error so far start accepting connections.
+    if (errcode == 0)
+        SetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
+}
+
+bool
+Comm::TcpAcceptor::doneAll() const
+{
+    // stop when FD is closed
+    if (!isOpen(fd)) {
+        return AsyncJob::doneAll();
+    }
+
+    // stop when handlers are gone
+    if (theCallSub == NULL) {
+        return AsyncJob::doneAll();
+    }
+
+    // open FD with handlers...keep accepting.
+    return false;
+}
+
+void
+Comm::TcpAcceptor::swanSong()
+{
+    debugs(5,5, HERE);
+    unsubscribe("swanSong");
+    fd = -1;
+    AcceptLimiter::Instance().removeDead(this);
+    AsyncJob::swanSong();
+}
+
+const char *
+Comm::TcpAcceptor::status() const
+{
+    static char ipbuf[MAX_IPSTRLEN] = {'\0'};
+    if (ipbuf[0] == '\0')
+        local_addr.ToHostname(ipbuf, MAX_IPSTRLEN);
+
+    static MemBuf buf;
+    buf.reset();
+    buf.Printf(" FD %d, %s",fd, ipbuf);
+
+    const char *jobStatus = AsyncJob::status();
+    buf.append(jobStatus, strlen(jobStatus));
+
+    return buf.content();
+}
 
 /**
  * New-style listen and accept routines
@@ -51,11 +140,11 @@
  * accept()ed some time later.
  */
 void
-Comm::ListenStateData::setListen()
+Comm::TcpAcceptor::setListen()
 {
     errcode = 0; // reset local errno copy.
     if (listen(fd, Squid_MaxFD >> 2) < 0) {
-        debugs(50, 0, HERE << "listen(FD " << fd << ", " << (Squid_MaxFD >> 2) << "): " << xstrerror());
+        debugs(50, DBG_CRITICAL, "ERROR: listen(" << status() << ", " << (Squid_MaxFD >> 2) << "): " << xstrerror());
         errcode = errno;
         return;
     }
@@ -67,35 +156,17 @@ Comm::ListenStateData::setListen()
         debugs(5, DBG_IMPORTANT, "Installing accept filter '" << Config.accept_filter << "' on FD " << fd);
         xstrncpy(afa.af_name, Config.accept_filter, sizeof(afa.af_name));
         if (setsockopt(fd, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof(afa)) < 0)
-            debugs(5, DBG_CRITICAL, "SO_ACCEPTFILTER '" << Config.accept_filter << "': '" << xstrerror());
+            debugs(5, DBG_CRITICAL, "WARNING: SO_ACCEPTFILTER '" << Config.accept_filter << "': '" << xstrerror());
 #elif defined(TCP_DEFER_ACCEPT)
         int seconds = 30;
         if (strncmp(Config.accept_filter, "data=", 5) == 0)
             seconds = atoi(Config.accept_filter + 5);
         if (setsockopt(fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &seconds, sizeof(seconds)) < 0)
-            debugs(5, DBG_CRITICAL, "TCP_DEFER_ACCEPT '" << Config.accept_filter << "': '" << xstrerror());
+            debugs(5, DBG_CRITICAL, "WARNING: TCP_DEFER_ACCEPT '" << Config.accept_filter << "': '" << xstrerror());
 #else
-        debugs(5, DBG_CRITICAL, "accept_filter not supported on your OS");
+        debugs(5, DBG_CRITICAL, "WARNING: accept_filter not supported on your OS");
 #endif
     }
-}
-
-Comm::ListenStateData::ListenStateData(int aFd, AsyncCall::Pointer &call, bool accept_many) :
-        fd(aFd),
-        theCallback(call),
-        mayAcceptMore(accept_many)
-{
-    assert(aFd >= 0);
-    debugs(5, 5, HERE << "FD " << fd << " AsyncCall: " << call);
-    assert(isOpen(aFd));
-    setListen();
-    SetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
-}
-
-Comm::ListenStateData::~ListenStateData()
-{
-    comm_close(fd);
-    fd = -1;
 }
 
 /**
@@ -108,23 +179,30 @@ Comm::ListenStateData::~ListenStateData()
  * done later when enough sockets become available.
  */
 void
-Comm::ListenStateData::doAccept(int fd, void *data)
+Comm::TcpAcceptor::doAccept(int fd, void *data)
 {
-    debugs(5, 2, HERE << "New connection on FD " << fd);
+    try {
+        debugs(5, 2, HERE << "New connection on FD " << fd);
 
-    assert(isOpen(fd));
-    ListenStateData *afd = static_cast<ListenStateData*>(data);
+        Must(isOpen(fd));
+        TcpAcceptor *afd = static_cast<TcpAcceptor*>(data);
 
-    if (!okToAccept()) {
-        AcceptLimiter::Instance().defer(afd);
-    } else {
-        afd->acceptNext();
+        if (!okToAccept()) {
+            AcceptLimiter::Instance().defer(afd);
+        } else {
+            afd->acceptNext();
+        }
+        SetSelect(fd, COMM_SELECT_READ, Comm::TcpAcceptor::doAccept, afd, 0);
+
+    } catch (const std::exception &e) {
+        fatalf("FATAL: error while accepting new client connection: %s\n", e.what());
+    } catch (...) {
+        fatal("FATAL: error while accepting new client connection: [unkown]\n");
     }
-    SetSelect(fd, COMM_SELECT_READ, Comm::ListenStateData::doAccept, afd, 0);
 }
 
 bool
-Comm::ListenStateData::okToAccept()
+Comm::TcpAcceptor::okToAccept()
 {
     static time_t last_warn = 0;
 
@@ -140,7 +218,7 @@ Comm::ListenStateData::okToAccept()
 }
 
 void
-Comm::ListenStateData::acceptOne()
+Comm::TcpAcceptor::acceptOne()
 {
     /*
      * We don't worry about running low on FDs here.  Instead,
@@ -149,42 +227,45 @@ Comm::ListenStateData::acceptOne()
      */
 
     /* Accept a new connection */
-    ConnectionDetail connDetails;
-    int newfd = oldAccept(connDetails);
+    ConnectionDetail newConnDetails;
+    int newFd = -1;
+    const comm_err_t flag = oldAccept(newConnDetails, &newFd);
 
     /* Check for errors */
-    if (newfd < 0) {
+    if (!isOpen(newFd)) {
 
-        if (newfd == COMM_NOMESSAGE) {
+        if (flag == COMM_NOMESSAGE) {
             /* register interest again */
-            debugs(5, 5, HERE << "try later: FD " << fd << " handler: " << theCallback);
+            debugs(5, 5, HERE << "try later: FD " << fd << " handler Subscription: " << theCallSub);
             SetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
             return;
         }
 
         // A non-recoverable error; notify the caller */
-        debugs(5, 5, HERE << "non-recoverable error: FD " << fd << " handler: " << theCallback);
-        notify(-1, COMM_ERROR, connDetails);
-        mayAcceptMore = false;
+        debugs(5, 5, HERE << "non-recoverable error:" << status() << " handler Subscription: " << theCallSub);
+        notify(flag, newConnDetails, newFd);
+        mustStop("Listener socket closed");
         return;
     }
 
-    debugs(5, 5, HERE << "accepted: FD " << fd <<
-           " newfd: " << newfd << " from: " << connDetails.peer <<
-           " handler: " << theCallback);
-    notify(newfd, COMM_OK, connDetails);
+    debugs(5, 5, HERE << "Listener: FD " << fd <<
+           " accepted new connection from " << newConnDetails.peer <<
+           " handler Subscription: " << theCallSub);
+    notify(flag, newConnDetails, newFd);
 }
 
 void
-Comm::ListenStateData::acceptNext()
+Comm::TcpAcceptor::acceptNext()
 {
-    assert(isOpen(fd));
+    Must(isOpen(fd));
     debugs(5, 2, HERE << "connection on FD " << fd);
     acceptOne();
 }
 
+// XXX: obsolete comment?
+// NP: can't be a const function because syncWithComm() side effects hit theCallSub->callback().
 void
-Comm::ListenStateData::notify(int newfd, comm_err_t flag, const ConnectionDetail &connDetails)
+Comm::TcpAcceptor::notify(const comm_err_t flag, const ConnectionDetail &connDetails, int newFd) const
 {
     // listener socket handlers just abandon the port with COMM_ERR_CLOSING
     // it should only happen when this object is deleted...
@@ -192,26 +273,29 @@ Comm::ListenStateData::notify(int newfd, comm_err_t flag, const ConnectionDetail
         return;
     }
 
-    if (theCallback != NULL) {
-        typedef CommAcceptCbParams Params;
-        Params &params = GetCommParams<Params>(theCallback);
+    if (theCallSub != NULL) {
+        AsyncCall::Pointer call = theCallSub->callback();
+        CommAcceptCbParams &params = GetCommParams<CommAcceptCbParams>(call);
         params.fd = fd;
-        params.nfd = newfd;
+        params.nfd = newFd;
         params.details = connDetails;
         params.flag = flag;
         params.xerrno = errcode;
-        ScheduleCallHere(theCallback);
-        if (!mayAcceptMore)
-            theCallback = NULL;
+        ScheduleCallHere(call);
     }
 }
 
 /**
  * accept() and process
- * Wait for an incoming connection on FD.
+ * Wait for an incoming connection on our listener socket.
+ *
+ * \retval COMM_OK         success. details parameter filled.
+ * \retval COMM_NOMESSAGE  attempted accept() but nothing useful came in.
+ * \retval COMM_ERROR      an outright failure occured.
+ *                         Or if this client has too many connections already.
  */
-int
-Comm::ListenStateData::oldAccept(ConnectionDetail &details)
+comm_err_t
+Comm::TcpAcceptor::oldAccept(ConnectionDetail &details, int *newFd)
 {
     PROF_start(comm_accept);
     statCounter.syscalls.sock.accepts++;
@@ -228,17 +312,19 @@ Comm::ListenStateData::oldAccept(ConnectionDetail &details)
         PROF_stop(comm_accept);
 
         if (ignoreErrno(errno)) {
-            debugs(50, 5, HERE << "FD " << fd << ": " << xstrerror());
+            debugs(50, 5, HERE << status() << ": " << xstrerror());
             return COMM_NOMESSAGE;
         } else if (ENFILE == errno || EMFILE == errno) {
-            debugs(50, 3, HERE << "FD " << fd << ": " << xstrerror());
+            debugs(50, 3, HERE << status() << ": " << xstrerror());
             return COMM_ERROR;
         } else {
-            debugs(50, 1, HERE << "FD " << fd << ": " << xstrerror());
+            debugs(50, 1, HERE << status() << ": " << xstrerror());
             return COMM_ERROR;
         }
     }
 
+    Must(sock >= 0);
+    *newFd = sock;
     details.peer = *gai;
 
     if ( Config.client_ip_max_connections >= 0) {
@@ -249,15 +335,16 @@ Comm::ListenStateData::oldAccept(ConnectionDetail &details)
         }
     }
 
+    // lookup the local-end details of this new connection
     details.me.InitAddrInfo(gai);
-
     details.me.SetEmpty();
     getsockname(sock, gai->ai_addr, &gai->ai_addrlen);
     details.me = *gai;
-
-    commSetCloseOnExec(sock);
+    details.me.FreeAddrInfo(gai);
 
     /* fdstat update */
+    // XXX : these are not all HTTP requests. use a note about type and ip:port details->
+    // so we end up with a uniform "(HTTP|FTP-data|HTTPS|...) remote-ip:remote-port"
     fd_open(sock, FD_SOCKET, "HTTP Request");
 
     fdd_table[sock].close_file = NULL;
@@ -266,15 +353,16 @@ Comm::ListenStateData::oldAccept(ConnectionDetail &details)
     fde *F = &fd_table[sock];
     details.peer.NtoA(F->ipaddr,MAX_IPSTRLEN);
     F->remote_port = details.peer.GetPort();
-    F->local_addr.SetPort(details.me.GetPort());
+    F->local_addr = details.me;
     F->sock_family = details.me.IsIPv6()?AF_INET6:AF_INET;
-    details.me.FreeAddrInfo(gai);
 
+    // set socket flags
+    commSetCloseOnExec(sock);
     commSetNonBlocking(sock);
 
     /* IFF the socket is (tproxy) transparent, pass the flag down to allow spoofing */
     F->flags.transparent = fd_table[fd].flags.transparent;
 
     PROF_stop(comm_accept);
-    return sock;
+    return COMM_OK;
 }
