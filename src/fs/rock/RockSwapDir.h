@@ -30,6 +30,7 @@ public:
 
 protected:
     /* protected ::SwapDir API */
+    virtual bool needsDiskStrand() const;
     virtual void create();
     virtual void init();
     virtual int canStore(StoreEntry const &) const;
