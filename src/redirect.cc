@@ -174,39 +174,39 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
         fqdn = dash_str;
 
     sz = snprintf(buf, MAX_REDIRECTOR_REQUEST_STRLEN, "%s %s/%s %s %s myip=%s myport=%d\n",
-		  r->orig_url,
-		  r->client_addr.NtoA(claddr,MAX_IPSTRLEN),
-		  fqdn,
-		  r->client_ident[0] ? rfc1738_escape(r->client_ident) : dash_str,
-		  r->method_s,
-		  http->request->my_addr.NtoA(myaddr,MAX_IPSTRLEN),
-		  http->request->my_addr.GetPort());
+                  r->orig_url,
+                  r->client_addr.NtoA(claddr,MAX_IPSTRLEN),
+                  fqdn,
+                  r->client_ident[0] ? rfc1738_escape(r->client_ident) : dash_str,
+                  r->method_s,
+                  http->request->my_addr.NtoA(myaddr,MAX_IPSTRLEN),
+                  http->request->my_addr.GetPort());
 
     if ((sz<=0) || (sz>=MAX_REDIRECTOR_REQUEST_STRLEN)) {
-      if (sz<=0) {
-	status = HTTP_INTERNAL_SERVER_ERROR;
-	debugs(61, DBG_CRITICAL, "ERROR: Gateway Failure. Can not build request to be passed to redirector. Request ABORTED.");
-      } else {
-	status = HTTP_REQUEST_URI_TOO_LARGE;
-	debugs(61, DBG_CRITICAL, "ERROR: Gateway Failure. Request passed to redirector exceeds MAX_REDIRECTOR_REQUEST_STRLEN (" << MAX_REDIRECTOR_REQUEST_STRLEN << "). Request ABORTED.");
-      }
+        if (sz<=0) {
+            status = HTTP_INTERNAL_SERVER_ERROR;
+            debugs(61, DBG_CRITICAL, "ERROR: Gateway Failure. Can not build request to be passed to redirector. Request ABORTED.");
+        } else {
+            status = HTTP_REQUEST_URI_TOO_LARGE;
+            debugs(61, DBG_CRITICAL, "ERROR: Gateway Failure. Request passed to redirector exceeds MAX_REDIRECTOR_REQUEST_STRLEN (" << MAX_REDIRECTOR_REQUEST_STRLEN << "). Request ABORTED.");
+        }
 
-      clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
-      clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-      assert (repContext);
-      Ip::Address tmpnoaddr;
-      tmpnoaddr.SetNoAddr();
-      repContext->setReplyToError(ERR_GATEWAY_FAILURE, status,
-				  http->request->method, NULL,
-				  http->getConn() != NULL ? http->getConn()->peer : tmpnoaddr,
-				  http->request,
-				  NULL,
-				  http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
-				  http->getConn()->auth_user_request : http->request->auth_user_request);
+        clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert (repContext);
+        Ip::Address tmpnoaddr;
+        tmpnoaddr.SetNoAddr();
+        repContext->setReplyToError(ERR_GATEWAY_FAILURE, status,
+                                    http->request->method, NULL,
+                                    http->getConn() != NULL ? http->getConn()->peer : tmpnoaddr,
+                                    http->request,
+                                    NULL,
+                                    http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
+                                    http->getConn()->auth_user_request : http->request->auth_user_request);
 
-      node = (clientStreamNode *)http->client_stream.tail->data;
-      clientStreamRead(node, http, node->readBuffer);
-      return;
+        node = (clientStreamNode *)http->client_stream.tail->data;
+        clientStreamRead(node, http, node->readBuffer);
+        return;
     }
 
     helperSubmit(redirectors, buf, redirectHandleReply, r);
