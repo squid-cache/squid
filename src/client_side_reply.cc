@@ -262,13 +262,13 @@ clientReplyContext::processExpired()
     http->storeEntry(entry);
     assert(http->out.offset == 0);
 
-    http->request->clientConnection = http->getConn();
+    http->request->clientConnection = http->getConn(); // AYJ: irrelevant?
 
     /*
      * A refcounted pointer so that FwdState stays around as long as
      * this clientReplyContext does
      */
-    Comm::ConnectionPointer conn = http->getConn() != NULL ? http->getConn()->clientConn : NULL;
+    Comm::ConnectionPointer conn = http->getConn() != NULL ? http->getConn()->clientConnection : NULL;
     FwdState::fwdStart(conn, http->storeEntry(), http->request);
 
     /* Register with storage manager to receive updates when data comes in. */
@@ -624,7 +624,7 @@ clientReplyContext::processMiss()
     if (r->flags.loopdetect &&
             (http->flags.accel || http->flags.intercepted)) {
         http->al.http.code = HTTP_FORBIDDEN;
-        err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->clientConn->remote, http->request);
+        err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->clientConnection->remote, http->request);
         createStoreEntry(r->method, request_flags());
         errorAppendEntry(http->storeEntry(), err);
         triggerInitialStoreRead();
@@ -655,7 +655,7 @@ clientReplyContext::processMiss()
         r->clientConnection = http->getConn();
 
         /** Start forwarding to get the new object from network */
-        Comm::ConnectionPointer conn = http->getConn() != NULL ? http->getConn()->clientConn : NULL;
+        Comm::ConnectionPointer conn = http->getConn() != NULL ? http->getConn()->clientConnection : NULL;
         FwdState::fwdStart(conn, http->storeEntry(), r);
     }
 }
@@ -673,7 +673,7 @@ clientReplyContext::processOnlyIfCachedMiss()
            RequestMethodStr(http->request->method) << " " << http->uri << "'");
     http->al.http.code = HTTP_GATEWAY_TIMEOUT;
     ErrorState *err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, HTTP_GATEWAY_TIMEOUT, NULL,
-                                       http->getConn()->clientConn->remote, http->request);
+                                       http->getConn()->clientConnection->remote, http->request);
     removeClientStoreReference(&sc, http);
     startError(err);
 }
@@ -840,7 +840,7 @@ clientReplyContext::purgeFoundObject(StoreEntry *entry)
     if (EBIT_TEST(entry->flags, ENTRY_SPECIAL)) {
         http->logType = LOG_TCP_DENIED;
         ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL,
-                                           http->getConn()->clientConn->remote, http->request);
+                                           http->getConn()->clientConnection->remote, http->request);
         startError(err);
         return;
     }
@@ -878,7 +878,7 @@ clientReplyContext::purgeRequest()
 
     if (!Config2.onoff.enable_purge) {
         http->logType = LOG_TCP_DENIED;
-        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->clientConn->remote, http->request);
+        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->clientConnection->remote, http->request);
         startError(err);
         return;
     }
@@ -1724,11 +1724,11 @@ clientReplyContext::doGetMoreData()
         assert(http->out.offset == 0);
 
         if (Ip::Qos::TheConfig.isHitTosActive()) {
-            Ip::Qos::doTosLocalHit(http->getConn()->clientConn);
+            Ip::Qos::doTosLocalHit(http->getConn()->clientConnection);
         }
 
         if (Ip::Qos::TheConfig.isHitNfmarkActive()) {
-            Ip::Qos::doNfmarkLocalHit(http->getConn()->clientConn);
+            Ip::Qos::doNfmarkLocalHit(http->getConn()->clientConnection);
         }
 
         localTempBuffer.offset = reqofs;
@@ -1829,7 +1829,7 @@ clientReplyContext::sendBodyTooLargeError()
     tmp_noaddr.SetNoAddr(); // TODO: make a global const
     http->logType = LOG_TCP_DENIED_REPLY;
     ErrorState *err = clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
-                                       http->getConn() != NULL ? http->getConn()->clientConn->remote : tmp_noaddr,
+                                       http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmp_noaddr,
                                        http->request);
     removeClientStoreReference(&(sc), http);
     HTTPMSGUNLOCK(reply);
@@ -1844,7 +1844,7 @@ clientReplyContext::sendPreconditionFailedError()
     http->logType = LOG_TCP_HIT;
     ErrorState *const err =
         clientBuildError(ERR_PRECONDITION_FAILED, HTTP_PRECONDITION_FAILED,
-                         NULL, http->getConn()->clientConn->remote, http->request);
+                         NULL, http->getConn()->clientConnection->remote, http->request);
     removeClientStoreReference(&sc, http);
     HTTPMSGUNLOCK(reply);
     startError(err);
@@ -1951,7 +1951,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
         Ip::Address tmp_noaddr;
         tmp_noaddr.SetNoAddr();
         err = clientBuildError(page_id, HTTP_FORBIDDEN, NULL,
-                               http->getConn() != NULL ? http->getConn()->clientConn->remote : tmp_noaddr,
+                               http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmp_noaddr,
                                http->request);
 
         removeClientStoreReference(&sc, http);
@@ -2038,10 +2038,10 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     ConnStateData * conn = http->getConn();
 
     // AYJ: this seems a bit weird to ignore CLOSED but drop on closing.
-    if (conn != NULL && Comm::IsConnOpen(conn->clientConn) && fd_table[conn->clientConn->fd].closing()) {
+    if (conn != NULL && Comm::IsConnOpen(conn->clientConnection) && fd_table[conn->clientConnection->fd].closing()) {
         // too late, our conn is closing
         // TODO: should we also quit?
-        debugs(33,3, HERE << "not sending more data to a closing " << conn->clientConn);
+        debugs(33,3, HERE << "not sending more data to a closing " << conn->clientConnection);
         return;
     }
 
@@ -2056,12 +2056,12 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         body_buf = buf;
     }
 
-    if (reqofs==0 && !logTypeIsATcpHit(http->logType) && Comm::IsConnOpen(conn->clientConn)) {
+    if (reqofs==0 && !logTypeIsATcpHit(http->logType) && Comm::IsConnOpen(conn->clientConnection)) {
         if (Ip::Qos::TheConfig.isHitTosActive()) {
-            Ip::Qos::doTosLocalMiss(conn->clientConn, http->request->hier.code);
+            Ip::Qos::doTosLocalMiss(conn->clientConnection, http->request->hier.code);
         }
         if (Ip::Qos::TheConfig.isHitNfmarkActive()) {
-            Ip::Qos::doNfmarkLocalMiss(conn->clientConn, http->request->hier.code);
+            Ip::Qos::doNfmarkLocalMiss(conn->clientConnection, http->request->hier.code);
         }
     }
 
@@ -2084,7 +2084,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
            reqofs << " bytes (" << result.length <<
            " new bytes)");
     debugs(88, 5, "clientReplyContext::sendMoreData:"
-           << conn->clientConn <<
+           << conn->clientConnection <<
            " '" << entry->url() << "'" <<
            " out.offset=" << http->out.offset);
 

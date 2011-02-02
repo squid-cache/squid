@@ -130,7 +130,6 @@ public:
     size_t lengthToSend(Range<int64_t> const &available);
     void noteSentBodyBytes(size_t);
     void buildRangeHeader(HttpReply * rep);
-    const Comm::ConnectionPointer & clientConn() const;
     clientStreamNode * getTail() const;
     clientStreamNode * getClientReplyContext() const;
     void connIsFinished();
@@ -202,7 +201,7 @@ public:
     virtual void sendControlMsg(HttpControlMsg msg);
 
     // Client TCP connection details from comm layer.
-    Comm::ConnectionPointer clientConn;
+    Comm::ConnectionPointer clientConnection;
 
     struct In {
         In();
@@ -236,7 +235,6 @@ public:
     ClientSocketContext::Pointer currentobject;
 
     Ip::Address log_addr;
-    char rfc931[USER_IDENT_SZ];
     int nrequests;
 
 #if USE_SQUID_EUI
@@ -249,7 +247,7 @@ public:
         bool swanSang; // XXX: temporary flag to check proper cleanup
     } flags;
     struct {
-        Comm::ConnectionPointer serverConn; /* pinned server side connection */
+        Comm::ConnectionPointer serverConnection; /* pinned server side connection */
         char *host;             /* host name of pinned connection */
         int port;               /* port of pinned connection */
         bool pinned;             /* this connection was pinned */

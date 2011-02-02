@@ -108,13 +108,13 @@ ACLFilledChecklist::conn(ConnStateData *aConn)
 int
 ACLFilledChecklist::fd() const
 {
-    return (conn_ != NULL && conn_->clientConn != NULL) ? conn_->clientConn->fd : fd_;
+    return (conn_ != NULL && conn_->clientConnection != NULL) ? conn_->clientConnection->fd : fd_;
 }
 
 void
 ACLFilledChecklist::fd(int aDescriptor)
 {
-    assert(!conn() || conn()->clientConn == NULL || conn()->clientConn->fd == aDescriptor);
+    assert(!conn() || conn()->clientConnection == NULL || conn()->clientConnection->fd == aDescriptor);
     fd_ = aDescriptor;
 }
 

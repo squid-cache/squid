@@ -616,7 +616,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
         if (answer == 0) {
             err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN, request);
             *status_ptr = HTTP_FORBIDDEN;
-            errorSend(http->getConn()->clientConn, err);
+            errorSend(http->getConn()->clientConnection, err);
             return;
         }
     }
@@ -633,7 +633,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     tunnelState->request = HTTPMSGLOCK(request);
     tunnelState->server.size_ptr = size_ptr;
     tunnelState->status_ptr = status_ptr;
-    tunnelState->client.conn = http->getConn()->clientConn;
+    tunnelState->client.conn = http->getConn()->clientConnection;
 
     comm_add_close_handler(tunnelState->client.conn->fd,
                            tunnelClientClosed,

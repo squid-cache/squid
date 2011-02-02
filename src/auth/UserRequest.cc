@@ -343,7 +343,7 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
 
     if (*auth_user_request == NULL) {
         if (conn != NULL) {
-            debugs(29, 9, HERE << "This is a new checklist test on:" << conn->clientConn);
+            debugs(29, 9, HERE << "This is a new checklist test on:" << conn->clientConnection);
         }
 
         if (proxy_auth && request->auth_user_request == NULL && conn != NULL && conn->auth_user_request != NULL) {
