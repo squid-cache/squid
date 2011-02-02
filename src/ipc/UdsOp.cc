@@ -113,7 +113,7 @@ void Ipc::UdsSender::write()
 
 void Ipc::UdsSender::wrote(const CommIoCbParams& params)
 {
-    debugs(54, 5, HERE << "FD " << params.fd << " flag " << params.flag << " [" << this << ']');
+    debugs(54, 5, HERE << "FD " << params.fd << " flag " << params.flag << " retries " << retries << " [" << this << ']');
     writing = false;
     if (params.flag != COMM_OK && retries-- > 0) {
         sleep(1); // do not spend all tries at once; XXX: use an async timed event instead of blocking here; store the time when we started writing so that we do not sleep if not needed?

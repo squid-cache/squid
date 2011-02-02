@@ -770,7 +770,9 @@ DOC_START
 
 	acl aclname maxconn number
 	  # This will be matched when the client's IP address has
-	  # more than <number> HTTP connections established. [fast]
+	  # more than <number> TCP connections established. [fast]
+	  # NOTE: This only measures direct TCP links so X-Forwarded-For
+	  # indirect clients are not counted.
 
 	acl aclname max_user_ip [-s] number
 	  # This will be matched when the user attempts to log in from more
@@ -943,6 +945,9 @@ DOC_START
 	Controls whether the indirect client address
 	(see follow_x_forwarded_for) is used instead of the
 	direct client address in acl matching.
+
+	NOTE: maxconn ACL considers direct TCP links and indirect
+	      clients will always have zero. So no match.
 DOC_END
 
 NAME: delay_pool_uses_indirect_client
@@ -1765,14 +1770,18 @@ DOC_START
 	an additional ACL needs to be used which ensures the IPv6-bound traffic
 	is never forced or permitted out the IPv4 interface.
 
+	# IPv6 destination test along with a dummy access control to perofrm the required DNS
+	# This MUST be place before any ALLOW rules.
 	acl to_ipv6 dst ipv6
-	tcp_outgoing_address 2002::c001 good_service_net to_ipv6
+	http_access deny ipv6 !all
+
+	tcp_outgoing_address 2001:db8::c001 good_service_net to_ipv6
 	tcp_outgoing_address 10.1.0.2 good_service_net !to_ipv6
 
-	tcp_outgoing_address 2002::beef normal_service_net to_ipv6
+	tcp_outgoing_address 2001:db8::beef normal_service_net to_ipv6
 	tcp_outgoing_address 10.1.0.1 normal_service_net !to_ipv6
 
-	tcp_outgoing_address 2002::1 to_ipv6
+	tcp_outgoing_address 2001:db8::1 to_ipv6
 	tcp_outgoing_address 10.1.0.3 !to_ipv6
 
 	WARNING:

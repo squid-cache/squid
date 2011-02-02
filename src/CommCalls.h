@@ -176,6 +176,7 @@ class CommAcceptCbPtrFun: public CallDialer,
 {
 public:
     typedef CommAcceptCbParams Params;
+    typedef RefCount<CommAcceptCbPtrFun> Pointer;
 
     CommAcceptCbPtrFun(IOACB *aHandler, const CommAcceptCbParams &aParams);
     void dial();
@@ -259,10 +260,17 @@ template <class Dialer>
 class CommCbFunPtrCallT: public AsyncCall
 {
 public:
+    typedef RefCount<CommCbFunPtrCallT<Dialer> > Pointer;
     typedef typename Dialer::Params Params;
 
     inline CommCbFunPtrCallT(int debugSection, int debugLevel,
                              const char *callName, const Dialer &aDialer);
+
+    inline CommCbFunPtrCallT(const CommCbFunPtrCallT &o) :
+            AsyncCall(o.debugSection, o.debugLevel, o.name),
+            dialer(o.dialer) {}
+
+    ~CommCbFunPtrCallT() {}
 
     virtual CallDialer* getDialer() { return &dialer; }
 
@@ -272,6 +280,9 @@ public:
 protected:
     inline virtual bool canFire();
     inline virtual void fire();
+
+private:
+    CommCbFunPtrCallT & operator=(const CommCbFunPtrCallT &); // not defined. not permitted.
 };
 
 // Conveninece wrapper: It is often easier to call a templated function than

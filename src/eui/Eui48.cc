@@ -52,8 +52,7 @@
          and can be wrapped
  */
 
-#if _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
 struct arpreq {
 
     Ip::Address arp_pa;   /* protocol address */
@@ -160,9 +159,9 @@ bool
 Eui::Eui48::lookup(Ip::Address &c)
 {
     struct arpreq arpReq;
-#if !_SQUID_WIN32_
+#if !_SQUID_WINDOWS_
     struct sockaddr_in *sa = NULL;
-#endif /* !_SQUID_WIN32_ */
+#endif /* !_SQUID_WINDOWS_ */
 
     Ip::Address ipAddr = c;
     ipAddr.SetPort(0);
@@ -451,7 +450,7 @@ Eui::Eui48::lookup(Ip::Address &c)
     set(arpReq.arp_ha.sa_data, 6);
     return true;
 
-#elif _SQUID_WIN32_
+#elif _SQUID_WINDOWS_
 
     DWORD           dwNetTable = 0;
 

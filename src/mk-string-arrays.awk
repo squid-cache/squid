@@ -14,9 +14,17 @@ BEGIN {
 	print "/*"
 	print " * Auto-Generated File. Changes will be destroyed."
 	print " */"
-	print "#include \"squid.h\""
+	print "#include \"config.h\""
         codeSkip = 1
         e = 0
+        nspath = ""
+}
+
+# when namespace is encountered store it
+/^namespace [a-zA-Z]+/	{
+	nspath = tolower($2) "/"		# nested folder
+	namespace = $2				# code namespace reconstruct
+	next
 }
 
 # Skip all lines outside of typedef {}
@@ -34,11 +42,17 @@ codeSkip == 1		{ next }
 	type = t[1]
         codeSkip = 1
 
-	print "#include \"" type ".h\""
+	print "#include \"" nspath type ".h\""
+
+	# if namesapce is not empty ??
+	if (namespace) print "namespace " namespace
+	if (namespace) print "{"
+
 	print "\nconst char *" type "_str[] = {"
 	for ( i = 1; i < e; ++i)
 		print "\t\"" Element[i] "\","
 	print "\t\"" Element[i] "\""
 	print "};"
+	if (namespace) print "}; // namespace " namespace
 	next
 }
