@@ -146,13 +146,13 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
         r->client_ident = http->request->extacl_user.termedBuf();
     }
 
-    if (!r->client_ident && (conn != NULL && conn->rfc931[0]))
-        r->client_ident = conn->rfc931;
+    if (!r->client_ident && conn != NULL && conn->clientConnection != NULL && conn->clientConnection->rfc931[0])
+        r->client_ident = conn->clientConnection->rfc931;
 
 #if USE_SSL
 
-    if (!r->client_ident && conn != NULL && Comm::IsConnOpen(conn->clientConn))
-        r->client_ident = sslGetUserEmail(fd_table[conn->clientConn->fd].ssl);
+    if (!r->client_ident && conn != NULL && Comm::IsConnOpen(conn->clientConnection))
+        r->client_ident = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl);
 
 #endif
 

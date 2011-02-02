@@ -141,6 +141,8 @@ public:
     /** COMM flags set on this connection */
     int flags;
 
+    char rfc931[USER_IDENT_SZ];
+
 private:
     // XXX: we need to call this member peer_ but the struct peer_ global type
     //      behind peer* clashes despite our private Comm:: namespace
@@ -162,6 +164,9 @@ operator << (std::ostream &os, const Comm::Connection &conn)
 {
     os << "FD " << conn.fd << " local=" << conn.local <<
         " remote=" << conn.remote << " flags=" << conn.flags;
+#if USE_IDENT
+    os << " IDENT::" << conn.rfc931;
+#endif
     return os;
 }
 

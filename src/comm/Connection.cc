@@ -19,7 +19,9 @@ Comm::Connection::Connection() :
         tos(0),
         flags(COMM_NONBLOCKING),
         _peer(NULL)
-{}
+{
+    *rfc931 = 0; // quick init the head. the rest does not matter.
+}
 
 static int64_t lost_conn = 0;
 Comm::Connection::~Connection()
