@@ -132,3 +132,23 @@ void Ipc::SendMessage(const String& toAddress, const TypedMsgHdr &message)
 {
     AsyncJob::Start(new UdsSender(toAddress, message));
 }
+
+int Ipc::ImportFdIntoComm(int fd, int socktype, int protocol, Ipc::FdNoteId noteId)
+{
+    struct sockaddr_in addr;
+    socklen_t len = sizeof(addr);
+    if (getsockname(fd, reinterpret_cast<sockaddr*>(&addr), &len) == 0) {
+        Ip::Address ipAddr(addr);
+        struct addrinfo* addr_info = NULL;
+        ipAddr.GetAddrInfo(addr_info);
+        addr_info->ai_socktype = socktype;
+        addr_info->ai_protocol = protocol;
+        comm_import_opened(fd, ipAddr, COMM_NONBLOCKING, Ipc::FdNote(noteId), addr_info);
+        ipAddr.FreeAddrInfo(addr_info);
+    } else {
+        debugs(54, DBG_CRITICAL, HERE << "ERROR: FD " << fd << ' ' << xstrerror());
+        ::close(fd);
+        fd = -1;
+    }
+    return fd;
+}
