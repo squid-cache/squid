@@ -162,11 +162,11 @@ snmpInit(void)
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.3.1", PERF_SYS_NUMOBJCNT, snmp_prfSysFn, static_Inst, atSum);
     /*
       Amos comments:
-      The meaning of LRU is "oldest timestamped object in cache,  if LRU algorithm is 
+      The meaning of LRU is "oldest timestamped object in cache,  if LRU algorithm is
       used"...
-      What this SMP support needs to do is aggregate via a special filter equivalent to 
-      min() to retain the semantic oldest-object meaning. A special one is needed that 
-      works as unsigned and ignores '0' values. 
+      What this SMP support needs to do is aggregate via a special filter equivalent to
+      min() to retain the semantic oldest-object meaning. A special one is needed that
+      works as unsigned and ignores '0' values.
      */
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.3.1", PERF_SYS_CURLRUEXP, snmp_prfSysFn, static_Inst);
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.3.1", PERF_SYS_CURUNLREQ, snmp_prfSysFn, static_Inst, atSum);
@@ -532,7 +532,7 @@ snmpConstructReponse(snmp_request_t * rq)
 
     if (UsingSmp() && IamWorkerProcess()) {
         AsyncJob::Start(new Snmp::Forwarder(static_cast<Snmp::Pdu&>(*rq->PDU),
-            static_cast<Snmp::Session&>(rq->session), rq->sock, rq->from));
+                                            static_cast<Snmp::Session&>(rq->session), rq->sock, rq->from));
         snmp_free_pdu(rq->PDU);
         return;
     }

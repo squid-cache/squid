@@ -37,7 +37,7 @@ public:
     void clearVars(); ///< clear variables list
     Range<const oid*> getSystemOid() const;
     void setSystemOid(const Range<const oid*>& systemOid);
-    void clearSystemOid(); 
+    void clearSystemOid();
 
 private:
     void init(); ///< initialize members
