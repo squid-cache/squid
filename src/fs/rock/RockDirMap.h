@@ -21,6 +21,36 @@ public:
 
 namespace Rock {
 
+/// DirMap entry
+class Slot {
+public:
+    /// possible persistent states
+    typedef enum {
+        Empty, ///< ready for writing, with nothing of value
+        Writeable, ///< transitions from Empty to Readable
+        Readable, ///< ready for reading
+    } State;
+
+    void setKey(const cache_key *const aKey);
+    bool checkKey(const cache_key *const aKey) const;
+
+    bool sharedLock() const; ///< lock for reading or return false
+    bool exclusiveLock(); ///< lock for modification or return false
+    void releaseSharedLock() const; ///< undo successful sharedLock()
+    void releaseExclusiveLock(); ///< undo successful exclusiveLock()
+
+public:
+    // we want two uint64_t, but older GCCs lack __sync_fetch_and_add_8
+    AtomicWordT<uint32_t> key_[4]; ///< MD5 entry key
+    StoreEntryBasics seBasics; ///< basic store entry data
+    AtomicWordT<uint8_t> state; ///< current state
+    AtomicWordT<uint8_t> waitingToBeFreed; ///< a state-independent mark
+
+private:
+    mutable AtomicWord readers; ///< number of users trying to read
+    AtomicWord writers; ///< number of writers trying to modify the slot
+};
+
 /// \ingroup Rock
 /// map of used db slots indexed by sfileno
 class DirMap
@@ -29,13 +59,16 @@ public:
     DirMap(const char *const aPath, const int limit); ///< create a new shared DirMap
     DirMap(const char *const aPath); ///< open an existing shared DirMap
 
-    /// start writing a new entry
+    /// finds space for writing a new entry or returns nil
     StoreEntryBasics *openForWriting(const cache_key *const key, sfileno &fileno);
     /// finish writing a new entry, leaves the entry opened for reading
     void closeForWriting(const sfileno fileno);
 
-    /// mark slot as waiting to be freed, will be freed when no one uses it
-    bool free(const sfileno fileno);
+    /// stores entry info at the requested slot or returns false
+    bool putAt(const StoreEntry &e, const sfileno fileno);
+
+    /// mark the slot as waiting to be freed and, if possible, free it
+    void free(const sfileno fileno);
 
     /// open slot for reading, increments read level
     const StoreEntryBasics *openForReading(const cache_key *const key, sfileno &fileno);
@@ -52,27 +85,6 @@ public:
     static int AbsoluteEntryLimit(); ///< maximum entryLimit() possible
 
 private:
-    struct Slot {
-        enum {
-            Empty,
-            Writing,
-            Usable,
-            WaitingToBeFreed,
-            Freeing
-        };
-
-        void setKey(const cache_key *const aKey);
-        bool checkKey(const cache_key *const aKey) const;
-
-        AtomicWordT<uint8_t> state; ///< slot state
-        AtomicWord readLevel; ///< read level
-
-        // we want two uint64_t, but older GCCs lack __sync_fetch_and_add_8
-        AtomicWordT<uint32_t> key_[4]; ///< MD5 entry key
-
-        StoreEntryBasics seBasics; ///< basic store entry data
-    };
-
     struct Shared {
         Shared(const int aLimit);
 

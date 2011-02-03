@@ -291,36 +291,21 @@ Rock::SwapDir::rebuild() {
 }
 
 /* Add a new object to the cache with empty memory copy and pointer to disk
- * use to rebuild store from disk. XXX: dupes UFSSwapDir::addDiskRestore */
+ * use to rebuild store from disk. Based on UFSSwapDir::addDiskRestore */
 bool
 Rock::SwapDir::addEntry(const int fileno, const StoreEntry &from)
 {
-    const cache_key *const key = reinterpret_cast<const cache_key *>(from.key);
-    debugs(47, 5, HERE << &from << ' ' << storeKeyText(key)
-       << ", fileno="<< std::setfill('0') << std::hex << std::uppercase <<
+    debugs(47, 8, HERE << &from << ' ' << from.getMD5Text() <<
+       ", fileno="<< std::setfill('0') << std::hex << std::uppercase <<
        std::setw(8) << fileno);
 
-    // after writing, we close for reading because we do not add this entry to
-    // store_table and, hence, there is nobody to hold the read lock
-
-    int idx;
-    StoreEntryBasics *const basics = map->openForWriting(key, idx);
-    if (!basics) {
-        debugs(47, 5, HERE << "Rock::SwapDir::addEntry: the entry loaded from "
-               "disk clashed with locked newer entries");
-        return false;
-    } else if (fileno != idx) {
-        debugs(47, 5, HERE << "Rock::SwapDir::addEntry: the entry loaded from "
-               "disk was hashed to a new slot");
-        map->closeForWriting(idx);
-        map->closeForReading(idx);
-        map->free(idx);
-        return false;
+    if (map->putAt(from, fileno)) {
+        // we do not add this entry to store_table so core will not updateSize
+        updateSize(from.swap_file_sz, +1);
+        return true;
     }
-    basics->set(from);
-    map->closeForWriting(fileno);
-    map->closeForReading(fileno);
-    return true;
+
+    return false;
 }
 
 
