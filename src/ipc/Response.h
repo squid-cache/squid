@@ -23,7 +23,7 @@ public:
 
 public:
     explicit Response(unsigned int aRequestId):
-        requestId(aRequestId) {}
+            requestId(aRequestId) {}
 
     virtual void pack(TypedMsgHdr& msg) const = 0; ///< prepare for sendmsg()
     virtual Pointer clone() const = 0; ///< returns a copy of this

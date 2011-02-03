@@ -23,7 +23,7 @@ class Request: public Ipc::Request
 {
 public:
     Request(int aRequestorId, unsigned int aRequestId, const Pdu& aPdu,
-        const Session& aSession, int aFd, const Ip::Address& anAddress);
+            const Session& aSession, int aFd, const Ip::Address& anAddress);
 
     explicit Request(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
     /* Ipc::Request API */
@@ -35,7 +35,7 @@ private:
 
 public:
     Pdu pdu; ///< SNMP protocol data unit
-    Session session; ///< SNMP session 
+    Session session; ///< SNMP session
     int fd; ///< client connection descriptor
     Ip::Address address; ///< client address
 };

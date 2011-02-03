@@ -31,7 +31,7 @@ public:
     Var& operator /= (int num);
     bool operator < (const Var& var) const;
     bool operator > (const Var& var) const;
-    
+
     void pack(Ipc::TypedMsgHdr& msg) const; ///< prepare for sendmsg()
     void unpack(const Ipc::TypedMsgHdr& msg); ///< restore struct from the message
 
