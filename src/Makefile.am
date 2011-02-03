@@ -176,7 +176,8 @@ COMMON_LIBS = \
 	ip/libip.la \
 	fs/libfs.la \
 	ipc/libipc.la \
-	mgr/libmgr.la
+	mgr/libmgr.la \
+	$(SNMP_LIBS)
 
 EXTRA_PROGRAMS = \
 	DiskIO/DiskDaemon/diskd \
@@ -550,7 +551,6 @@ squid_LDADD = \
 	$(CRYPTLIB) \
 	$(REGEXLIB) \
 	$(SNMPLIB) \
-	$(SNMP_LIBS) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
@@ -767,7 +767,7 @@ DEFAULT_ERROR_DIR	= $(datadir)/errors
 # Make location configure settings available to the code
 DEFS += -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" -DDEFAULT_SQUID_DATA_DIR=\"$(datadir)\" -DDEFAULT_SQUID_CONFIG_DIR=\"$(sysconfdir)\"
 
-snmp_core.o snmp_agent.o: ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
+snmp_core.o snmp_agent.o: ../snmplib/libsnmplib.a $(top_srcdir)/include/cache_snmp.h
 
 globals.cc: globals.h mk-globals-c.awk
 	$(AWK) -f $(srcdir)/mk-globals-c.awk < $(srcdir)/globals.h > $@ || ($(RM) -f $@ && exit 1)
@@ -1144,6 +1144,7 @@ tests_testCacheManager_SOURCES = \
 	tests/testCacheManager.h \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_ipc_Forwarder.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1346,6 +1347,7 @@ tests_testEvent_SOURCES = \
 	tests/testEvent.h \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_ipc_Forwarder.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1506,6 +1508,7 @@ tests_testEventLoop_SOURCES = \
 	tests/testEventLoop.h \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_ipc_Forwarder.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1676,6 +1679,7 @@ tests_test_http_range_SOURCES = \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
 	tests/stub_main_cc.cc \
+	tests/stub_ipc_Forwarder.cc \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
@@ -1819,6 +1823,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/testHttpRequestMethod.cc \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_ipc_Forwarder.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -2235,6 +2240,7 @@ tests_testURL_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_debug.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_ipc_Forwarder.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
