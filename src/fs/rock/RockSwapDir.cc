@@ -361,6 +361,9 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
     }
     basics->set(e);
 
+    // XXX: We rely on our caller, storeSwapOutStart(), to set e->fileno.
+    // If that does not happen, the entry will not decrement the read level!
+
     IoState *sio = new IoState(this, &e, cbFile, cbIo, data);
 
     sio->swap_dirn = index;
