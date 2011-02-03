@@ -45,8 +45,7 @@ Snmp::Var::init()
 Snmp::Var&
 Snmp::Var::operator += (const Var& var)
 {
-    switch(type)
-    {
+    switch (type) {
     case SMI_INTEGER:
         setInt(asInt() + var.asInt());
         break;
@@ -74,8 +73,7 @@ Snmp::Var&
 Snmp::Var::operator /= (int num)
 {
     Must(num != 0);
-    switch(type)
-    {
+    switch (type) {
     case SMI_INTEGER:
         setInt(asInt() / num);
         break;
@@ -102,8 +100,7 @@ Snmp::Var::operator /= (int num)
 bool
 Snmp::Var::operator < (const Var& var) const
 {
-    switch(type)
-    {
+    switch (type) {
     case SMI_INTEGER:
         return asInt() < var.asInt();
     case SMI_GAUGE32:
@@ -125,8 +122,7 @@ Snmp::Var::operator < (const Var& var) const
 bool
 Snmp::Var::operator > (const Var& var) const
 {
-    switch(type)
-    {
+    switch (type) {
     case SMI_INTEGER:
         return asInt() > var.asInt();
     case SMI_GAUGE32:

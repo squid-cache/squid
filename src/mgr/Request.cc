@@ -22,13 +22,13 @@ Mgr::Request::Request(int aRequestorId, unsigned int aRequestId, int aFd,
 }
 
 Mgr::Request::Request(const Request& request):
-    Ipc::Request(request.requestorId, request.requestId),
-    fd(request.fd), params(request.params)
+        Ipc::Request(request.requestorId, request.requestId),
+        fd(request.fd), params(request.params)
 {
 }
 
 Mgr::Request::Request(const Ipc::TypedMsgHdr& msg):
-    Ipc::Request(0, 0)
+        Ipc::Request(0, 0)
 {
     msg.checkType(Ipc::mtCacheMgrRequest);
     msg.getPod(requestorId);

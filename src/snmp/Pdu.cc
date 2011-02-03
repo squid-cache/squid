@@ -52,8 +52,7 @@ Snmp::Pdu::aggregate(const Pdu& pdu)
     Must(varCount() == pdu.varCount());
     aggrCount++;
     for (variable_list* p_aggr = variables, *p_var = pdu.variables; p_var != NULL;
-         p_aggr = p_aggr->next_variable, p_var = p_var->next_variable)
-    {
+            p_aggr = p_aggr->next_variable, p_var = p_var->next_variable) {
         Must(p_aggr != NULL);
         Var& aggr = static_cast<Var&>(*p_aggr);
         Var& var = static_cast<Var&>(*p_var);
@@ -61,8 +60,7 @@ Snmp::Pdu::aggregate(const Pdu& pdu)
             aggr.setName(var.getName());
             aggr.copyValue(var);
         } else {
-            switch(snmpAggrType(aggr.name, aggr.name_length))
-            {
+            switch (snmpAggrType(aggr.name, aggr.name_length)) {
             case atSum:
             case atAverage:
                 // The mean-average division is done later
@@ -128,8 +126,7 @@ Snmp::Pdu::setVars(variable_list* vars)
 {
     clearVars();
     for (variable_list** p_var = &variables; vars != NULL;
-         vars = vars->next_variable, p_var = &(*p_var)->next_variable)
-    {
+            vars = vars->next_variable, p_var = &(*p_var)->next_variable) {
         *p_var = new Var(static_cast<Var&>(*vars));
     }
 }
@@ -207,8 +204,7 @@ Snmp::Pdu::unpack(const Ipc::TypedMsgHdr& msg)
     msg.getPod(time);
     int count = msg.getInt();
     for (variable_list** p_var = &variables; count > 0;
-         p_var = &(*p_var)->next_variable, --count)
-    {
+            p_var = &(*p_var)->next_variable, --count) {
         Var* var = new Var();
         var->unpack(msg);
         *p_var = var;
@@ -224,14 +220,14 @@ Snmp::Pdu::varCount() const
     return count;
 }
 
-void 
+void
 Snmp::Pdu::fixAggregate()
 {
     if (aggrCount < 2)
         return;
     for (variable_list* p_aggr = variables; p_aggr != NULL; p_aggr = p_aggr->next_variable) {
         Var& aggr = static_cast<Var&>(*p_aggr);
-        if(snmpAggrType(aggr.name, aggr.name_length) == atAverage) {
+        if (snmpAggrType(aggr.name, aggr.name_length) == atAverage) {
             aggr /= aggrCount;
         }
     }

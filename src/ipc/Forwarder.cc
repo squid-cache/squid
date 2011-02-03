@@ -19,8 +19,8 @@ Ipc::Forwarder::RequestsMap Ipc::Forwarder::TheRequestsMap;
 unsigned int Ipc::Forwarder::LastRequestId = 0;
 
 Ipc::Forwarder::Forwarder(Request::Pointer aRequest, double aTimeout):
-    AsyncJob("Ipc::Forwarder"),
-    request(aRequest), timeout(aTimeout)
+        AsyncJob("Ipc::Forwarder"),
+        request(aRequest), timeout(aTimeout)
 {
     debugs(54, 5, HERE);
 }

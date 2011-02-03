@@ -16,7 +16,7 @@
 namespace Snmp
 {
 
-/// 
+///
 class Response: public Ipc::Response
 {
 public:

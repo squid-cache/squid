@@ -22,12 +22,12 @@ Mgr::Response::Response(unsigned int aRequestId, Action::Pointer anAction):
 }
 
 Mgr::Response::Response(const Response& response):
-    Ipc::Response(response.requestId), action(response.action)
+        Ipc::Response(response.requestId), action(response.action)
 {
 }
 
 Mgr::Response::Response(const Ipc::TypedMsgHdr& msg):
-    Ipc::Response(0)
+        Ipc::Response(0)
 {
     msg.checkType(Ipc::mtCacheMgrResponse);
     msg.getPod(requestId);
