@@ -66,26 +66,34 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
         handleSharedListenRequest(SharedListenRequest(message));
         break;
 
-    case mtCacheMgrRequest:
+    case mtCacheMgrRequest: {
         debugs(54, 6, HERE << "Cache manager request");
-        handleCacheMgrRequest(Mgr::Request(message));
-        break;
+        const Mgr::Request req(message);
+        handleCacheMgrRequest(req);
+    }
+    break;
 
-    case mtCacheMgrResponse:
+    case mtCacheMgrResponse: {
         debugs(54, 6, HERE << "Cache manager response");
-        handleCacheMgrResponse(Mgr::Response(message));
-        break;
+        const Mgr::Response resp(message);
+        handleCacheMgrResponse(resp);
+    }
+    break;
 
 #if SQUID_SNMP
-    case mtSnmpRequest:
+    case mtSnmpRequest: {
         debugs(54, 6, HERE << "SNMP request");
-        handleSnmpRequest(Snmp::Request(message));
-        break;
+        const Snmp::Request req(message);
+        handleSnmpRequest(req);
+    }
+    break;
 
-    case mtSnmpResponse:
+    case mtSnmpResponse: {
         debugs(54, 6, HERE << "SNMP response");
-        handleSnmpResponse(Snmp::Response(message));
-        break;
+        const Snmp::Response resp(message);
+        handleSnmpResponse(resp);
+    }
+    break;
 #endif
 
     default:

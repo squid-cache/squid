@@ -60,22 +60,30 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         SharedListenJoined(SharedListenResponse(message));
         break;
 
-    case mtCacheMgrRequest:
-        handleCacheMgrRequest(Mgr::Request(message));
-        break;
+    case mtCacheMgrRequest: {
+        const Mgr::Request req(message);
+        handleCacheMgrRequest(req);
+    }
+    break;
 
-    case mtCacheMgrResponse:
-        handleCacheMgrResponse(Mgr::Response(message));
-        break;
+    case mtCacheMgrResponse: {
+        const Mgr::Response resp(message);
+        handleCacheMgrResponse(resp);
+    }
+    break;
 
 #if SQUID_SNMP
-    case mtSnmpRequest:
-        handleSnmpRequest(Snmp::Request(message));
-        break;
+    case mtSnmpRequest: {
+        const Snmp::Request req(message);
+        handleSnmpRequest(req);
+    }
+    break;
 
-    case mtSnmpResponse:
-        handleSnmpResponse(Snmp::Response(message));
-        break;
+    case mtSnmpResponse: {
+        const Snmp::Response resp(message);
+        handleSnmpResponse(resp);
+    }
+    break;
 #endif
 
     default:
