@@ -993,9 +993,9 @@ AC_ARG_ENABLE(snmp,
 ])
 SQUID_DEFINE_BOOL(SQUID_SNMP,${enable_snmp:=yes},
    [Define to enable SNMP monitoring of Squid])
-AM_CONDITIONAL(USE_SNMP, [test "x$enable_snmp" = "xyes"])
+AM_CONDITIONAL(ENABLE_SNMP, [test "x$enable_snmp" = "xyes"])
 if test "x$enable_snmp" = "xyes"; then
-    SNMPLIB='../snmplib/libsnmp.a'
+    SNMPLIB='../snmplib/libsnmplib.a'
     makesnmplib=snmplib
 fi
 AC_MSG_NOTICE([SNMP support enabled: $enable_snmp])
@@ -3374,6 +3374,7 @@ AC_CONFIG_FILES([\
 	src/ipc/Makefile \
 	src/ssl/Makefile \
 	src/mgr/Makefile \
+	src/snmp/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \
 	icons/Makefile \
