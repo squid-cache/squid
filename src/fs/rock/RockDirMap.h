@@ -38,6 +38,7 @@ public:
     bool exclusiveLock(); ///< lock for modification or return false
     void releaseSharedLock() const; ///< undo successful sharedLock()
     void releaseExclusiveLock(); ///< undo successful exclusiveLock()
+    void switchExclusiveToSharedLock(); ///< trade exclusive for shared access
 
 public:
     // we want two uint64_t, but older GCCs lack __sync_fetch_and_add_8
