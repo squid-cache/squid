@@ -68,6 +68,17 @@ Rock::DirMap::closeForWriting(const sfileno fileno)
     s.switchExclusiveToSharedLock();
 }
 
+void
+Rock::DirMap::abortWriting(const sfileno fileno)
+{
+    debugs(79, 5, HERE << " abort writing slot at " << fileno <<
+           " in map [" << path << ']');
+    assert(valid(fileno));
+    Slot &s = shared->slots[fileno];
+    assert(s.state == Slot::Writeable);
+    freeLocked(s);
+}
+
 bool
 Rock::DirMap::putAt(const StoreEntry &e, const sfileno fileno)
 {
@@ -214,23 +225,30 @@ Rock::DirMap::slot(const cache_key *const key)
     return shared->slots[slotIdx(key)];
 }
 
+/// frees the slot if (b) it is waiting to be freed and (a) we can lock it
 void
 Rock::DirMap::freeIfNeeded(Slot &s)
 {
-    const int idx = &s - shared->slots;
     if (s.exclusiveLock()) {
-        if (s.waitingToBeFreed.swap_if(true, false)) {
-            memset(s.key_, 0, sizeof(s.key_));
-            memset(&s.seBasics, 0, sizeof(s.seBasics));
-            s.state = Slot::Empty;
+        if (s.waitingToBeFreed == true)
+            freeLocked(s);
+        else
             s.releaseExclusiveLock();
-            --shared->count;
-            debugs(79, 5, HERE << " freed slot at " << idx << " in map [" <<
-                   path << ']');
-        } else {
-            s.releaseExclusiveLock();
-		}
     }
+}
+
+/// unconditionally frees the already exclusively locked slot and releases lock
+void
+Rock::DirMap::freeLocked(Slot &s)
+{
+    memset(s.key_, 0, sizeof(s.key_));
+    memset(&s.seBasics, 0, sizeof(s.seBasics));
+    s.waitingToBeFreed = false;
+    s.state = Slot::Empty;
+    s.releaseExclusiveLock();
+    --shared->count;
+    debugs(79, 5, HERE << " freed slot at " << (&s - shared->slots) <<
+           " in map [" << path << ']');
 }
 
 String
@@ -307,7 +325,7 @@ Rock::Slot::releaseExclusiveLock()
 }
 
 void
-Rock::Slot::switchExclusiveToSharedLock() const
+Rock::Slot::switchExclusiveToSharedLock()
 {
     ++readers; // must be done before we release exclusive control
     releaseExclusiveLock();
