@@ -64,8 +64,6 @@ public:
     StoreEntryBasics *openForWriting(const cache_key *const key, sfileno &fileno);
     /// successfully finish writing the entry, leaving it opened for reading
     void closeForWriting(const sfileno fileno);
-    /// terminate writing the entry, freeing its slot for others to use
-    void abortWriting(const sfileno fileno);
 
     /// stores entry info at the requested slot or returns false
     bool putAt(const StoreEntry &e, const sfileno fileno);
@@ -79,6 +77,9 @@ public:
     const StoreEntryBasics *openForReadingAt(const sfileno fileno);
     /// close slot after reading, decrements read level
     void closeForReading(const sfileno fileno);
+
+    /// called by lock holder to terminate either slot writing or reading
+    void abortIo(const sfileno fileno);
 
     bool full() const; ///< there are no empty slots left
     bool valid(int n) const; ///< whether n is a valid slot coordinate
@@ -100,6 +101,7 @@ private:
     int slotIdx(const cache_key *const key) const;
     Slot &slot(const cache_key *const key);
     const StoreEntryBasics *openForReading(Slot &s);
+    void abortWriting(const sfileno fileno);
     void freeIfNeeded(Slot &s);
     void freeLocked(Slot &s);
     String sharedMemoryName();

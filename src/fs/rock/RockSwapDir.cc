@@ -76,14 +76,21 @@ Rock::SwapDir::get(const cache_key *key)
     // the disk entry remains open for reading, protected from modifications
 }
 
-void
-Rock::SwapDir::closeForReading(StoreEntry &e)
+void Rock::SwapDir::disconnect(StoreEntry &e)
 {
-    assert(index == e.swap_dirn);
+    assert(e.swap_dirn == index);
     assert(e.swap_filen >= 0);
-    map->closeForReading(e.swap_filen);
+    // cannot have SWAPOUT_NONE entry with swap_filen >= 0
+    assert(e.swap_status != SWAPOUT_NONE);
+
+    // do not rely on e.swap_status here because there is an async delay
+    // before it switches from SWAPOUT_WRITING to SWAPOUT_DONE.
+
+    // since e has swap_filen, its slot is locked for either reading or writing
+    map->abortIo(e.swap_filen);
     e.swap_dirn = -1;
     e.swap_filen = -1;
+    e.swap_status = SWAPOUT_NONE;
 }
 
 // TODO: encapsulate as a tool; identical to CossSwapDir::create()
@@ -475,11 +482,15 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
     assert(request->sio !=  NULL);
     IoState &sio = *request->sio;
 
-    if (errflag != DISK_OK)
-        map->free(sio.swap_filen); // TODO: test by forcing failure
-    // else sio.offset_ += rlen;
-
-    map->closeForWriting(sio.swap_filen); // assume we only write once
+    if (errflag == DISK_OK) {
+        // close, assuming we only write once; the entry gets the read lock
+        map->closeForWriting(sio.swap_filen);
+        // and sio.offset_ += rlen;
+    } else {
+        // Do not abortWriting here. The entry should keep the write lock
+        // instead of losing association with the store and confusing core.
+        map->free(sio.swap_filen); // will mark as unusable, just in case
+    }
 
     // TODO: always compute cur_size based on map, do not store it
     cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
@@ -584,15 +595,16 @@ Rock::SwapDir::dereference(StoreEntry &e)
 void
 Rock::SwapDir::unlink(StoreEntry &e)
 {
-    debugs(47, 5, HERE << &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
+    debugs(47, 5, HERE << e);
     ignoreReferences(e);
     map->free(e.swap_filen);
+    disconnect(e);
 }
 
 void
 Rock::SwapDir::trackReferences(StoreEntry &e)
 {
-    debugs(47, 5, HERE << *e);
+    debugs(47, 5, HERE << e);
     repl->Add(repl, &e, &e.repl);
 }
 
@@ -600,7 +612,7 @@ Rock::SwapDir::trackReferences(StoreEntry &e)
 void
 Rock::SwapDir::ignoreReferences(StoreEntry &e)
 {
-    debugs(47, 5, HERE << *e);
+    debugs(47, 5, HERE << e);
     repl->Remove(repl, &e, &e.repl);
 }
 
