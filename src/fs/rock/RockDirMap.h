@@ -60,10 +60,12 @@ public:
     DirMap(const char *const aPath, const int limit); ///< create a new shared DirMap
     DirMap(const char *const aPath); ///< open an existing shared DirMap
 
-    /// finds space for writing a new entry or returns nil
+    /// finds/reservers space for writing a new entry or returns nil
     StoreEntryBasics *openForWriting(const cache_key *const key, sfileno &fileno);
-    /// finish writing a new entry, leaves the entry opened for reading
+    /// successfully finish writing the entry, leaving it opened for reading
     void closeForWriting(const sfileno fileno);
+    /// terminate writing the entry, freeing its slot for others to use
+    void abortWriting(const sfileno fileno);
 
     /// stores entry info at the requested slot or returns false
     bool putAt(const StoreEntry &e, const sfileno fileno);
@@ -99,6 +101,7 @@ private:
     Slot &slot(const cache_key *const key);
     const StoreEntryBasics *openForReading(Slot &s);
     void freeIfNeeded(Slot &s);
+    void freeLocked(Slot &s);
     String sharedMemoryName();
 
     static int SharedSize(const int limit);
