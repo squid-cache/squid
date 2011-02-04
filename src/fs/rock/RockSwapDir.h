@@ -25,8 +25,7 @@ public:
     virtual void reconfigure(int, char *);
     virtual StoreSearch *search(String const url, HttpRequest *);
     virtual StoreEntry *get(const cache_key *key);
-
-    void closeForReading(StoreEntry &e);
+    virtual void disconnect(StoreEntry &e);
 
 protected:
     /* protected ::SwapDir API */

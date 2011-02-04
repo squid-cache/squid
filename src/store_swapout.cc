@@ -115,6 +115,7 @@ storeSwapOutFileNotify(void *data, int errflag, StoreIOState::Pointer self)
     assert(mem);
     assert(mem->swapout.sio == self);
     assert(errflag == 0);
+    assert(e->swap_filen < 0); // if this fails, call SwapDir::disconnect(e)
     e->swap_filen = mem->swapout.sio->swap_filen;
     e->swap_dirn = mem->swapout.sio->swap_dirn;
 }
@@ -340,11 +341,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
         if (e->swap_filen > 0)
             e->unlink();
 
-        e->swap_filen = -1;
-
-        e->swap_dirn = -1;
-
-        e->swap_status = SWAPOUT_NONE;
+        assert(e->swap_status == SWAPOUT_NONE);
 
         e->releaseRequest();
     } else {
