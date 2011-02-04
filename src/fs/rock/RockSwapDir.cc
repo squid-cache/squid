@@ -592,7 +592,7 @@ Rock::SwapDir::unlink(StoreEntry &e)
 void
 Rock::SwapDir::trackReferences(StoreEntry &e)
 {
-    debugs(47, 5, HERE << &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
+    debugs(47, 5, HERE << *e);
     repl->Add(repl, &e, &e.repl);
 }
 
@@ -600,7 +600,7 @@ Rock::SwapDir::trackReferences(StoreEntry &e)
 void
 Rock::SwapDir::ignoreReferences(StoreEntry &e)
 {
-    debugs(47, 5, HERE << &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
+    debugs(47, 5, HERE << *e);
     repl->Remove(repl, &e, &e.repl);
 }
 
