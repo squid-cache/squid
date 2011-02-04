@@ -325,10 +325,9 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
     cbdataFree(c);
 
     if (errflag) {
-        debugs(20, 1, "storeSwapOutFileClosed: dirno " << e->swap_dirn << ", swapfile " <<
+        debugs(20, 2, "storeSwapOutFileClosed: dirno " << e->swap_dirn << ", swapfile " <<
                std::hex << std::setw(8) << std::setfill('0') << std::uppercase <<
                e->swap_filen << ", errflag=" << errflag);
-        debugs(20, 1, "\t" << xstrerror());
 
         if (errflag == DISK_NO_SPACE_LEFT) {
             /* FIXME: this should be handle by the link from store IO to
