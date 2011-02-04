@@ -68,6 +68,7 @@ Rock::DirMap::closeForWriting(const sfileno fileno)
     s.switchExclusiveToSharedLock();
 }
 
+/// terminate writing the entry, freeing its slot for others to use
 void
 Rock::DirMap::abortWriting(const sfileno fileno)
 {
@@ -77,6 +78,22 @@ Rock::DirMap::abortWriting(const sfileno fileno)
     Slot &s = shared->slots[fileno];
     assert(s.state == Slot::Writeable);
     freeLocked(s);
+}
+
+void
+Rock::DirMap::abortIo(const sfileno fileno)
+{
+    debugs(79, 5, HERE << " abort I/O for slot at " << fileno <<
+           " in map [" << path << ']');
+    assert(valid(fileno));
+    Slot &s = shared->slots[fileno];
+
+    // The caller is a lock holder. Thus, if we are Writeable, then the
+    // caller must be the writer; otherwise the caller must be the reader.
+    if (s.state == Slot::Writeable)
+        abortWriting(fileno);
+    else
+        closeForReading(fileno);
 }
 
 bool
@@ -176,6 +193,7 @@ Rock::DirMap::closeForReading(const sfileno fileno)
            "map [" << path << ']');
     assert(valid(fileno));
     Slot &s = shared->slots[fileno];
+    assert(s.state == Slot::Readable);
     s.releaseSharedLock();
     freeIfNeeded(s);
 }

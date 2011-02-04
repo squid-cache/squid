@@ -139,6 +139,9 @@ public:
     /* migrated from store_dir.cc */
     bool objectSizeIsAcceptable(int64_t objsize) const;
 
+    /// called when the entry is about to forget its association with cache_dir
+    virtual void disconnect(StoreEntry &) {}
+
 protected:
     void parseOptions(int reconfiguring);
     void dumpOptions(StoreEntry * e) const;
