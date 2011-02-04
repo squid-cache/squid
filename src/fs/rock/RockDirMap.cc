@@ -65,7 +65,7 @@ Rock::DirMap::closeForWriting(const sfileno fileno)
     assert(valid(fileno));
     Slot &s = shared->slots[fileno];
     assert(s.state.swap_if(Slot::Writeable, Slot::Readable));
-    s.releaseExclusiveLock();
+    s.switchExclusiveToSharedLock();
 }
 
 bool
@@ -306,6 +306,12 @@ Rock::Slot::releaseExclusiveLock()
     assert(writers-- > 0);
 }
 
+void
+Rock::Slot::switchExclusiveToSharedLock() const
+{
+    ++readers; // must be done before we release exclusive control
+    releaseExclusiveLock();
+}
 
 Rock::DirMap::Shared::Shared(const int aLimit): limit(aLimit), count(0)
 {
