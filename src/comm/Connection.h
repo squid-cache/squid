@@ -43,6 +43,10 @@
 #include "ip/Address.h"
 #include "RefCount.h"
 #include "typedefs.h"
+#if USE_SQUID_EUI
+#include "eui/Eui48.h"
+#include "eui/Eui64.h"
+#endif
 
 #if HAVE_IOSFWD
 #include <iosfwd>
@@ -142,6 +146,11 @@ public:
     int flags;
 
     char rfc931[USER_IDENT_SZ];
+
+#if USE_SQUID_EUI
+    Eui::Eui48 remoteEui48;
+    Eui::Eui64 remoteEui64;
+#endif
 
 private:
     // XXX: we need to call this member peer_ but the struct peer_ global type

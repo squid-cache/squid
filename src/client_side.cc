@@ -2491,8 +2491,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     setLogUri (http, urlCanonicalClean(request));
     request->client_addr = conn->clientConnection->remote; // XXX: remove reuest->client_addr member.
 #if USE_SQUID_EUI
-    request->client_eui48 = conn->peer_eui48;
-    request->client_eui64 = conn->peer_eui64;
+    request->client_eui48 = conn->clientConnection->remoteEui48;
+    request->client_eui64 = conn->clientConnection->remoteEui64;
 #endif
 #if FOLLOW_X_FORWARDED_FOR
     request->indirect_client_addr = conn->clientConnection->remote;
@@ -3088,19 +3088,44 @@ connStateCreate(const Comm::ConnectionPointer &client, http_port_list *port)
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
         int i = IP_PMTUDISC_DONT;
         setsockopt(client->fd, SOL_IP, IP_MTU_DISCOVER, &i, sizeof i);
-
 #else
-
         static int reported = 0;
 
         if (!reported) {
             debugs(33, 1, "Notice: httpd_accel_no_pmtu_disc not supported on your platform");
             reported = 1;
         }
+#endif
+    }
 
+    typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
+    AsyncCall::Pointer call = JobCallback(33, 5, Dialer, result, ConnStateData::connStateClosed);
+    comm_add_close_handler(client->fd, call);
+
+    if (Config.onoff.log_fqdn)
+        fqdncache_gethostbyaddr(client->remote, FQDN_LOOKUP_IF_MISS);
+
+#if USE_IDENT
+    if (Ident::TheConfig.identLookup) {
+        ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, NULL, NULL);
+        identChecklist.src_addr = client->remote;
+        identChecklist.my_addr = client->local;
+        if (identChecklist.fastCheck())
+            Ident::Start(client, clientIdentDone, result);
+    }
 #endif
 
+#if USE_SQUID_EUI
+    if (Eui::TheConfig.euiLookup) {
+        if (client->remote.IsIPv4()) {
+            result->clientConnection->remoteEui48.lookup(client->remote);
+        } else if (client->remote.IsIPv6()) {
+            result->clientConnection->remoteEui64.lookup(client->remote);
+        }
     }
+#endif
+
+    clientdbEstablished(client->remote, 1);
 
     result->flags.readMoreRequests = true;
     return result;
@@ -3111,7 +3136,6 @@ void
 httpAccept(int, const Comm::ConnectionPointer &details, comm_err_t flag, int xerrno, void *data)
 {
     http_port_list *s = (http_port_list *)data;
-    ConnStateData *connState = NULL;
 
     if (flag != COMM_OK) {
         // Its possible the call was still queued when the client disconnected
@@ -3121,47 +3145,22 @@ httpAccept(int, const Comm::ConnectionPointer &details, comm_err_t flag, int xer
 
     debugs(33, 4, HERE << details << ": accepted");
     fd_note(details->fd, "client http connect");
-    connState = connStateCreate(details, s);
 
-    typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
-    AsyncCall::Pointer call = JobCallback(33, 5, Dialer, connState, ConnStateData::connStateClosed);
-    comm_add_close_handler(details->fd, call);
+    if (s->tcp_keepalive.enabled) {
+        commSetTcpKeepalive(details->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
+    }
 
-    if (Config.onoff.log_fqdn)
-        fqdncache_gethostbyaddr(details->remote, FQDN_LOOKUP_IF_MISS);
+    incoming_sockets_accepted++;
+
+    // Socket is ready, setup the connection manager to start using it
+    ConnStateData *connState = connStateCreate(details, s);
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
                                       TimeoutDialer, connState, ConnStateData::requestTimeout);
     commSetConnTimeout(details, Config.Timeout.read, timeoutCall);
 
-#if USE_IDENT
-    if (Ident::TheConfig.identLookup) {
-        ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, NULL, NULL);
-        identChecklist.src_addr = details->remote;
-        identChecklist.my_addr = details->local;
-        if (identChecklist.fastCheck())
-            Ident::Start(details, clientIdentDone, connState);
-    }
-#endif
-
-#if USE_SQUID_EUI
-    if (Eui::TheConfig.euiLookup) {
-        if (details->remote.IsIPv4()) {
-            connState->peer_eui48.lookup(details->remote);
-        } else if (details->remote.IsIPv6()) {
-            connState->peer_eui64.lookup(details->remote);
-        }
-    }
-#endif
-
-    if (s->tcp_keepalive.enabled) {
-        commSetTcpKeepalive(details->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
-    }
-
     connState->readSomeData();
-
-    clientdbEstablished(details->remote, 1);
 
 #if USE_DELAY_POOLS
     fd_table[newfd].clientInfo = NULL;
@@ -3203,7 +3202,6 @@ httpAccept(int, const Comm::ConnectionPointer &details, comm_err_t flag, int xer
         }
     }
 #endif
-    incoming_sockets_accepted++;
 }
 
 #if USE_SSL
@@ -3356,7 +3354,6 @@ static void
 httpsAccept(int, const Comm::ConnectionPointer& details, comm_err_t flag, int xerrno, void *data)
 {
     https_port_list *s = (https_port_list *)data;
-    SSL_CTX *sslContext = s->staticSslContext.get();
 
     if (flag != COMM_OK) {
         // Its possible the call was still queued when the client disconnected
@@ -3364,44 +3361,29 @@ httpsAccept(int, const Comm::ConnectionPointer& details, comm_err_t flag, int xe
         return;
     }
 
+    SSL_CTX *sslContext = s->staticSslContext.get();
     SSL *ssl = NULL;
     if (!(ssl = httpsCreate(details, sslContext)))
         return;
 
     debugs(33, 5, HERE << details << " accepted, starting SSL negotiation.");
     fd_note(details->fd, "client https connect");
-    ConnStateData *connState = connStateCreate(details, &s->http);
-    typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
-    AsyncCall::Pointer call = JobCallback(33, 5, Dialer, connState, ConnStateData::connStateClosed);
-    comm_add_close_handler(details->fd, call);
 
-    if (Config.onoff.log_fqdn)
-        fqdncache_gethostbyaddr(details->remote, FQDN_LOOKUP_IF_MISS);
+    if (s->http.tcp_keepalive.enabled) {
+        commSetTcpKeepalive(details->fd, s->http.tcp_keepalive.idle, s->http.tcp_keepalive.interval, s->http.tcp_keepalive.timeout);
+    }
+
+    incoming_sockets_accepted++;
+
+    // Socket is ready, setup the connection manager to start using it
+    ConnStateData *connState = connStateCreate(details, &s->http);
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
                                       TimeoutDialer, connState, ConnStateData::requestTimeout);
     commSetConnTimeout(details, Config.Timeout.request, timeoutCall);
 
-#if USE_IDENT
-    if (Ident::TheConfig.identLookup) {
-        ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, NULL, NULL);
-        identChecklist.src_addr = details->remote;
-        identChecklist.my_addr = details->local;
-        if (identChecklist.fastCheck())
-            Ident::Start(details, clientIdentDone, connState);
-    }
-#endif
-
-    if (s->http.tcp_keepalive.enabled) {
-        commSetTcpKeepalive(details->fd, s->http.tcp_keepalive.idle, s->http.tcp_keepalive.interval, s->http.tcp_keepalive.timeout);
-    }
-
     Comm::SetSelect(details->fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
-
-    clientdbEstablished(details->remote, 1);
-
-    incoming_sockets_accepted++;
 }
 
 void
