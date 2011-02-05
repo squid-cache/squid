@@ -38,8 +38,6 @@
 #include "BodyPipe.h"
 #include "comm.h"
 #include "CommCalls.h"
-#include "eui/Eui48.h"
-#include "eui/Eui64.h"
 #include "HttpControlMsg.h"
 #include "RefCount.h"
 #include "StoreIOBuffer.h"
@@ -237,11 +235,6 @@ public:
     Ip::Address log_addr;
     int nrequests;
 
-#if USE_SQUID_EUI
-    Eui::Eui48 peer_eui48;
-    Eui::Eui64 peer_eui64;
-#endif
-
     struct {
         bool readMoreRequests;
         bool swanSang; // XXX: temporary flag to check proper cleanup
@@ -341,13 +334,15 @@ private:
 
 private:
     CBDATA_CLASS2(ConnStateData);
+    // XXX: CBDATA macro plays with public/private exposing all of the supposedly below private fields...
+
     bool transparent_; // AYJ: is this a duplicate of the transparent/intercept flags?
     bool closing_;
 
     bool switchedToHttps_;
     String sslHostName; ///< Host name for SSL certificate generation
     AsyncCall::Pointer reader; ///< set when we are reading
-    BodyPipe::Pointer bodyPipe; // set when we are reading request body
+    BodyPipe::Pointer bodyPipe; ///< set when we are reading request body
 };
 
 /* convenience class while splitting up body handling */
