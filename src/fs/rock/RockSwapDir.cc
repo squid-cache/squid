@@ -531,6 +531,10 @@ Rock::SwapDir::diskFull() {
 void
 Rock::SwapDir::maintain()
 {
+    // Current openForWriting() code does not search for an empty
+    // slot so removing old slots will not make any difference.
+    return;
+
     if (!map)
         return;
 
