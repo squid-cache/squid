@@ -2219,6 +2219,7 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 
 AC_CHECK_HEADERS( \
+  algorithm \
   arpa/inet.h \
   arpa/nameser.h \
   assert.h \
