@@ -1,3 +1,4 @@
+#include "config.h"
 #include "ipc/Forwarder.h"
 
 //Avoid linker errors about Ipc::Forwarder
