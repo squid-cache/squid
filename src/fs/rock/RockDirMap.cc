@@ -43,10 +43,11 @@ Rock::DirMap::openForWriting(const cache_key *const key, sfileno &fileno)
 
     if (s.exclusiveLock()) {
         assert(s.state != Slot::Writeable); // until we start breaking locks
+        if (s.state == Slot::Empty) // we may also overwrite a Readable slot
+            ++shared->count;
         s.state = Slot::Writeable;
         s.setKey(key);
         fileno = idx;
-        ++shared->count;
         debugs(79, 5, HERE << " opened slot at " << fileno << " for key " <<
                storeKeyText(key) << " for writing in map [" << path << ']');
         return &s.seBasics; // and keep the entry locked
@@ -118,11 +119,12 @@ Rock::DirMap::putAt(const StoreEntry &e, const sfileno fileno)
 
     if (s.exclusiveLock()) {
         assert(s.state != Slot::Writeable); // until we start breaking locks
+        if (s.state == Slot::Empty) // we may also overwrite a Readable slot
+            ++shared->count;
         s.setKey(static_cast<const cache_key*>(e.key));
         s.seBasics.set(e);
         s.state = Slot::Readable;
         s.releaseExclusiveLock();
-        ++shared->count;
         debugs(79, 5, HERE << " put slot at " << fileno << " for key " <<
                storeKeyText(key) << " in map [" << path << ']');
         return true;
