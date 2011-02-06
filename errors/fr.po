@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-11-06 03:26+1300\n"
-"PO-Revision-Date: 2010-11-17 19:36+0200\n"
+"PO-Revision-Date: 2011-01-24 19:52+0200\n"
 "Last-Translator: Bernard <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
@@ -106,7 +106,7 @@ msgid ""
 "has failed."
 msgstr ""
 "Au moins une précondition indiquée dans l'en-tête de la requête du client "
-"HTTP  a échoué."
+"HTTP a échoué."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
@@ -222,7 +222,7 @@ msgstr "FTP est désactivé"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
-msgstr "Il n'a pas été possible d'établir d'une connexion sécurisée vers %I"
+msgstr "Il n'a pas été possible d'établir une connexion sécurisée vers %I"
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
@@ -322,8 +322,8 @@ msgstr "Les double espaces ne sont pas valides dans une adresse URL"
 #: templates/ERR_AGENT_CONFIGURE:14
 msgid "In the HTTP proxy box type the proxy name %h and port 3128."
 msgstr ""
-"Dans l'onglet proxy HTTP, vous devez indiquer le chemin du proxy %h et le "
-"port 3128"
+"Dans l'onglet proxy HTTP, vous devez indiquer le nom du proxy %h et le port "
+"3128"
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
@@ -405,7 +405,7 @@ msgstr "La requête est trop volumineuse"
 
 #: templates/ERR_AGENT_WPAD:10
 msgid "Select Automatically detect settings"
-msgstr "Sélectionnez détection automatique les paramètres"
+msgstr "Sélectionnez la détection automatique les paramètres"
 
 #: templates/ERR_AGENT_WPAD:13
 msgid "Select Use Automatic proxy configuration"
@@ -449,7 +449,7 @@ msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
-"Squid ne prend pas en charge tout les types de requêtes par rapport à tous "
+"Squid ne prend pas en charge tous les types de requêtes par rapport à tous "
 "les protocoles d'accès. Vous ne pouvez pas par exemple utiliser le protocole "
 "POST dans une requête Gopher."
 
@@ -465,7 +465,7 @@ msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
-"Squid n'est pas en mesure d'ouvrir une socket TCP, probablement due à une "
+"Squid n'est pas en mesure d'ouvrir le socket TCP, probablement due à une "
 "surcharge. Veuillez renouveler votre requête."
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
@@ -485,16 +485,16 @@ msgstr "Le processeur ESI a répondu :"
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"Le serveur FTP était surchargé et ne permettent pas l'accès à l'URL : <a "
-"href=\"%U\">%U</a>"
+"Le serveur FTP est surchargé et ne permet pas l'accès à l'URL : <a href=\"%"
+"U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
-"Le message reçu par le serveur HTTP contacté, n'a pas pu être compris ou a "
-"été mal formulé. Veuillez contacter le responsable du site."
+"La réponse HTTP reçu, qui a été envoyée par le serveur n'a pas pu être "
+"compris ou a été mal formulé. Veuillez contacter le responsable du site."
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
@@ -625,7 +625,7 @@ msgid ""
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
 "Cela signifie que le serveur FTP n'a pas les autorisations ou pas assez "
-"d'espace pour stocker ce fichier. Veuillez vérifier l'emplacement, les "
+"d'espace pour stocker ce fichier. Veuillez vérifier le chemin, les "
 "autorisations et l'espace disque puis essayez de nouveau."
 
 #: templates/ERR_DNS_FAIL:7
@@ -654,9 +654,9 @@ msgid ""
 "comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
-"Cela pourrait être causé par une URL FTP qui contient les chemins absolus "
-"(ce qui n'est pas compatible avec la RFC 1738). Si tel est le cas, le "
-"fichier peut être disponible à l'adresse <a% href=\\\"%B\\\"> B </ a>."
+"Cela pourrait être causé par une URL FTP qui contient un chemin absolut (ce "
+"qui n'est pas compatible avec la RFC 1738). Si tel est le cas, le fichier "
+"peut être disponible à l'adresse <a% href=\\\"%B\\\"> B </ a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -666,7 +666,7 @@ msgid ""
 "the host security credentials."
 msgstr ""
 "Ce proxy et l'hôte distant n'ont pas pu négocier mutuellement une connexion "
-"de sécurité pour le traitement de votre requête. Il est possible que l'hôte "
+"sécurisée pour le traitement de votre requête. Il est possible que l'hôte "
 "distant ne supporte pas les connexions sécurisées, ou que le proxy n'est pas "
 "satisfait du certificat de sécurité de l'hôte distant."
 
@@ -721,8 +721,8 @@ msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
 msgstr ""
-"Aucun document valide n'a été trouvé dans le cache et la directive <q>only-"
-"if-cached</q> a été spécifiée."
+"Aucun document valide n'a été trouvé dans le cache, de plus la directive <q"
+">only-if-cached</q> a été spécifiée."
 
 #: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
 #: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
