@@ -10,6 +10,9 @@
 #include "ipc/TypedMsgHdr.h"
 #include "protos.h"
 #include "snmp/Var.h"
+#if HAVE_ALGORITHM
+#include <algorithm>
+#endif
 
 
 Snmp::Var::Var()

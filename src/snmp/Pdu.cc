@@ -12,6 +12,9 @@
 #include "snmp_core.h"
 #include "snmp/Pdu.h"
 #include "snmp/Var.h"
+#if HAVE_ALGORITHM
+#include <algorithm>
+#endif
 
 
 Snmp::Pdu::Pdu()
