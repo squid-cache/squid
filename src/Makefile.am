@@ -758,7 +758,7 @@ DEFAULT_PINGER		= $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/
 DEFAULT_UNLINKD		= $(libexecdir)/`echo unlinkd | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_LOGFILED	= $(libexecdir)/`echo log_file_daemon | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_DISKD		= $(libexecdir)/`echo diskd | sed '$(transform);s/$$/$(EXEEXT)/'`
-DEFAULT_ICON_DIR	= $(datadir)/icons
+DEFAULT_ICON_DIR	= $(localstatedir)/www/squid/icons
 DEFAULT_ERROR_DIR	= $(datadir)/errors
 
 # Make location configure settings available to the code
