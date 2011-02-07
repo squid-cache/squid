@@ -192,6 +192,11 @@ Rock::SwapDir::init()
 
     theFile = io->newFile(filePath);
     theFile->open(O_RDWR, 0644, this);
+
+    // Increment early. Otherwise, if one SwapDir finishes rebuild before
+    // others start, storeRebuildComplete() will think the rebuild is over!
+    // TODO: move store_dirs_rebuilding hack to store modules that need it.
+    ++StoreController::store_dirs_rebuilding;
 }
 
 bool
@@ -288,13 +293,8 @@ Rock::SwapDir::validateOptions()
 
 void
 Rock::SwapDir::rebuild() {
-    // in SMP mode, only the disker is responsible for populating the map
-    if (UsingSmp() && !IamDiskProcess())
-        return;
-
-    ++StoreController::store_dirs_rebuilding;
-    Rebuild *r = new Rebuild(this);
-    r->start(); // will delete self when done
+    //++StoreController::store_dirs_rebuilding; // see Rock::SwapDir::init()
+    AsyncJob::Start(new Rebuild(this));
 }
 
 /* Add a new object to the cache with empty memory copy and pointer to disk
