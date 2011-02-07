@@ -745,6 +745,22 @@ configDoConfigure(void)
                " Change client_request_buffer_max or request_header_max_size limits.",
                (uint32_t)Config.maxRequestBufferSize, (uint32_t)Config.maxRequestHeaderSize);
     }
+
+    /*
+     * disable client side request pipelining. There is a race with
+     * Negotiate and NTLM when the client sends a second request on an
+     * connection before the authenticate challenge is sent. With
+     * pipelining OFF, the client may fail to authenticate, but squid's
+     * state will be preserved.
+     */
+    if (Config.onoff.pipeline_prefetch) {
+        AuthConfig *nego = AuthConfig::Find("Negotiate");
+        AuthConfig *ntlm = AuthConfig::Find("NTLM");
+        if ((nego && nego->active()) || (ntlm && ntlm->active())) {
+            debugs(3, DBG_IMPORTANT, "WARNING: pipeline_prefetch breaks NTLM and Negotiate authentication. Forced OFF.");
+            Config.onoff.pipeline_prefetch = 0;
+        }
+    }
 }
 
 /** Parse a line containing an obsolete directive.

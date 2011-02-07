@@ -164,17 +164,6 @@ AuthNegotiateConfig::parse(AuthConfig * scheme, int n_configured, char *param_st
     } else {
         debugs(29, 0, "AuthNegotiateConfig::parse: unrecognised negotiate auth scheme parameter '" << param_str << "'");
     }
-
-    /*
-     * disable client side request pipelining. There is a race with
-     * Negotiate when the client sends a second request on an Negotiate
-     * connection before the authenticate challenge is sent. With
-     * this patch, the client may fail to authenticate, but squid's
-     * state will be preserved.  Caveats: this should be a post-parse
-     * test, but that can wait for the modular parser to be integrated.
-     */
-    if (authenticate)
-        Config.onoff.pipeline_prefetch = 0;
 }
 
 const char *
