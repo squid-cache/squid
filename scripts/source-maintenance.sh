@@ -128,13 +128,15 @@ echo "#endif" >>${ROOT}/lib/profiler/list
 mv ${ROOT}/lib/profiler/list ${ROOT}/lib/profiler/xprof_type.h
 
 # Build icons install include form current icons available
-echo "ICONS= \\" >${ROOT}/icons/list
+(
+echo -n "ICONS="
 for f in `ls -1 ${ROOT}/icons/silk/*`
 do
-	echo " \\" >>${ROOT}/icons/list
-	echo -n "    ${f}" | sed s%${ROOT}/icons/%% >>${ROOT}/icons/list
+	echo " \\"
+	echo -n "    ${f}"
 done
-echo " " >>${ROOT}/icons/list
+echo " "
+)| sed s%${ROOT}/icons/%%g >${ROOT}/icons/list
 
 # Run formating
 echo "" >${ROOT}/doc/debug-sections.tmp
