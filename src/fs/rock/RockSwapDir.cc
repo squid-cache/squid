@@ -220,7 +220,7 @@ Rock::SwapDir::parse(int anIndex, char *aPath)
     parseSize();
     parseOptions(0);
 
-    repl = createRemovalPolicy(Config.replPolicy);
+    assert(!repl); // repl = createRemovalPolicy(Config.replPolicy);
 
     validateOptions();
 }
@@ -280,12 +280,6 @@ Rock::SwapDir::validateOptions()
         debugs(47, 0, "WARNING: Rock store config wastes space.");
 	}
     */
-
-    if (!repl) {
-        debugs(47,0, "ERROR: Rock cache_dir[" << index << "] " <<
-            "lacks replacement policy and will overflow.");
-        // not fatal because it can be added later
-	}
 
     // XXX: misplaced, map is not yet created
     //cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
@@ -584,7 +578,7 @@ void
 Rock::SwapDir::reference(StoreEntry &e)
 {
     debugs(47, 5, HERE << &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
-    if (repl->Referenced)
+    if (repl && repl->Referenced)
         repl->Referenced(repl, &e, &e.repl);
 }
 
@@ -592,7 +586,7 @@ void
 Rock::SwapDir::dereference(StoreEntry &e)
 {
     debugs(47, 5, HERE << &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
-    if (repl->Dereferenced)
+    if (repl && repl->Dereferenced)
         repl->Dereferenced(repl, &e, &e.repl);
 }
 
@@ -609,7 +603,8 @@ void
 Rock::SwapDir::trackReferences(StoreEntry &e)
 {
     debugs(47, 5, HERE << e);
-    repl->Add(repl, &e, &e.repl);
+    if (repl)
+        repl->Add(repl, &e, &e.repl);
 }
 
 
@@ -617,7 +612,8 @@ void
 Rock::SwapDir::ignoreReferences(StoreEntry &e)
 {
     debugs(47, 5, HERE << e);
-    repl->Remove(repl, &e, &e.repl);
+    if (repl)
+        repl->Remove(repl, &e, &e.repl);
 }
 
 void
