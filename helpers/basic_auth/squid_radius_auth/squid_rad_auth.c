@@ -387,6 +387,7 @@ authenticate(int socket_fd, const char *username, const char *passwd)
         *ptr++ = len + 2;
         memcpy(ptr, identifier, len);
         ptr += len;
+        total_length += len + 2;
     } else {
         *ptr++ = PW_NAS_IP_ADDRESS;
         *ptr++ = 6;
