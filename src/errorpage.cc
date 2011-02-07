@@ -34,7 +34,9 @@
 #include "config.h"
 #include "comm/Write.h"
 #include "errorpage.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "SquidTime.h"
 #include "Store.h"
 #include "html_quote.h"
@@ -548,7 +550,9 @@ errorStateFree(ErrorState * err)
     wordlistDestroy(&err->ftp.server_msg);
     safe_free(err->ftp.request);
     safe_free(err->ftp.reply);
+#if USE_AUTH
     err->auth_user_request = NULL;
+#endif
     safe_free(err->err_msg);
 #if USE_ERR_LOCALES
     if (err->err_language != Config.errorDefaultLanguage)
@@ -582,10 +586,10 @@ ErrorState::Dump(MemBuf * mb)
     } else {
         str.Printf("Err: [none]\r\n");
     }
-
+#if USE_AUTH
     if (auth_user_request->denyMessage())
         str.Printf("Auth ErrMsg: %s\r\n", auth_user_request->denyMessage());
-
+#endif
     if (dnsError.size() > 0)
         str.Printf("DNS ErrMsg: %s\r\n", dnsError.termedBuf());
 
@@ -659,12 +663,13 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
     switch (token) {
 
     case 'a':
+#if USE_AUTH
         if (request && request->auth_user_request != NULL)
             p = request->auth_user_request->username();
         if (!p)
+#endif
             p = "-";
         break;
-
     case 'B':
         if (building_deny_info_url) break;
         p = request ? ftpUrlWith2f(request) : "[no URL]";
@@ -773,7 +778,11 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'm':
         if (building_deny_info_url) break;
+#if USE_AUTH
         p = auth_user_request->denyMessage("[not available]");
+#else
+        p = "-";
+#endif
         break;
 
     case 'M':

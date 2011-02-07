@@ -35,6 +35,8 @@
 #ifndef SQUID_AUTHUSERREQUEST_H
 #define SQUID_AUTHUSERREQUEST_H
 
+#if USE_AUTH
+
 #include "auth/AuthAclState.h"
 #include "auth/Scheme.h"
 #include "auth/User.h"
@@ -200,5 +202,5 @@ extern int authenticateDirection(AuthUserRequest::Pointer);
 /// See AuthUserRequest::authenticated()
 extern int authenticateUserAuthenticated(AuthUserRequest::Pointer);
 
-
+#endif /* USE_AUTH */
 #endif /* SQUID_AUTHUSERREQUEST_H */

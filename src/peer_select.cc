@@ -516,8 +516,10 @@ peerGetSomeParent(ps_state * ps)
 
     if ((p = getDefaultParent(request))) {
         code = DEFAULT_PARENT;
+#if USE_AUTH
     } else if ((p = peerUserHashSelectParent(request))) {
         code = USERHASH_PARENT;
+#endif
     } else if ((p = peerSourceHashSelectParent(request))) {
         code = SOURCEHASH_PARENT;
     } else if ((p = carpSelectParent(request))) {

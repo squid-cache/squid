@@ -37,7 +37,9 @@
 #if ICAP_CLIENT
 #include "adaptation/icap/icap_log.h"
 #endif
+#if USE_AUTH
 #include "auth/Gadgets.h"
+#endif
 #include "base/TextException.h"
 #if USE_DELAY_POOLS
 #include "ClientDelayConfig.h"
@@ -231,10 +233,10 @@ SignalEngine::doShutdown(time_t wait)
 
     /* run the closure code which can be shared with reconfigure */
     serverConnectionsClose();
-
+#if USE_AUTH
     /* detach the auth components (only do this on full shutdown) */
     AuthScheme::FreeAll();
-
+#endif
     eventAdd("SquidShutdown", &StopEventLoop, this, (double) (wait + 1), 1, false);
 }
 
@@ -667,7 +669,9 @@ serverConnectionsOpen(void)
         peerSelectInit();
 
         carpInit();
+#if USE_AUTH
         peerUserHashInit();
+#endif
         peerSourceHashInit();
     }
 }
@@ -736,7 +740,9 @@ mainReconfigureStart(void)
     Ssl::TheGlobalContextStorage.reconfigureStart();
 #endif
     redirectShutdown();
+#if USE_AUTH
     authenticateReset();
+#endif
     externalAclShutdown();
     storeDirCloseSwapLogs();
     storeLogClose();
@@ -821,7 +827,9 @@ mainReconfigureFinish(void *)
 #endif
 
     redirectInit();
+#if USE_AUTH
     authenticateInit(&Auth::TheConfig);
+#endif
     externalAclInit();
 
     if (IamPrimaryProcess()) {
@@ -870,7 +878,9 @@ mainRotate(void)
     dnsShutdown();
 #endif
     redirectShutdown();
+#if USE_AUTH
     authenticateRotate();
+#endif
     externalAclShutdown();
 
     _db_rotate_log();		/* cache.log */
@@ -885,7 +895,9 @@ mainRotate(void)
     dnsInit();
 #endif
     redirectInit();
+#if USE_AUTH
     authenticateInit(&Auth::TheConfig);
+#endif
     externalAclInit();
 }
 
@@ -1011,9 +1023,9 @@ mainInitialize(void)
 #endif
 
     redirectInit();
-
+#if USE_AUTH
     authenticateInit(&Auth::TheConfig);
-
+#endif
     externalAclInit();
 
     httpHeaderInitModule();	/* must go before any header processing (e.g. the one in errorInitialize) */
@@ -1345,9 +1357,9 @@ SquidMain(int argc, char **argv)
 
         /* we may want the parsing process to set this up in the future */
         Store::Root(new StoreController);
-
+#if USE_AUTH
         InitAuthSchemes();      /* required for config parsing */
-
+#endif
         Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
 
         parse_err = parseConfigFile(ConfigFile);
@@ -1821,8 +1833,9 @@ SquidShutdown()
 #if USE_DELAY_POOLS
     DelayPools::FreePools();
 #endif
-
+#if USE_AUTH
     authenticateReset();
+#endif
 #if USE_WIN32_SERVICE
 
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);

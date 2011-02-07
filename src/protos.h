@@ -795,12 +795,15 @@ class external_acl;
 
 #endif
 
-#if HAVE_KRB5 && HAVE_GSSAPI
+#if USE_AUTH
+
+#if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
             /* upstream proxy authentication */
             SQUIDCEXTERN char *peer_proxy_negotiate_auth(char *principal_name, char *proxy);
 #endif
 
             /* call to ensure the auth component schemes exist. */
             SQUIDCEXTERN void InitAuthSchemes(void);
+#endif /* USE_AUTH */
 
 #endif /* SQUID_PROTOS_H */
