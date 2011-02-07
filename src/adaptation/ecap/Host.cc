@@ -25,6 +25,7 @@ Adaptation::Ecap::Host::Host()
     // this code can run only once
 
     libecap::headerReferer.assignHostId(HDR_REFERER);
+    libecap::headerContentLength.assignHostId(HDR_CONTENT_LENGTH);
 
     libecap::protocolHttp.assignHostId(PROTO_HTTP);
     libecap::protocolHttps.assignHostId(PROTO_HTTPS);
