@@ -7,3 +7,6 @@ DISTCLEANFILES =
 
 install-data-local: SN.png install-iconDATA
 	$(INSTALL_DATA) $(srcdir)/SN.png "$(DESTDIR)$(localstatedir)/www/squid/icons/"
+
+uninstall-local:
+	$(RM) $(DESTDIR)$(localstatedir)/www/squid/icons/SN.png
