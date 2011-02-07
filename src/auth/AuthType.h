@@ -1,6 +1,8 @@
 #ifndef _SQUID__SRC_AUTH_AUTHTYPE_H
 #define _SQUID__SRC_AUTH_AUTHTYPE_H
 
+#if USE_AUTH
+
 typedef enum {
     AUTH_UNKNOWN,               /* default */
     AUTH_BASIC,
@@ -12,4 +14,5 @@ typedef enum {
 
 extern const char *AuthType_str[];
 
+#endif /* USE_AUTH */
 #endif

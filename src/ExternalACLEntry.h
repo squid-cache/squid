@@ -61,8 +61,11 @@ public:
     ExternalACLEntryData() : result (-1) {}
 
     int result;
+#if USE_AUTH
+    // TODO use an AuthUser to hold this info
     String user;
     String password;
+#endif
     String message;
     String tag;
     String log;
@@ -88,8 +91,10 @@ public:
     dlink_node lru;
     int result;
     time_t date;
+#if USE_AUTH
     String user;
     String password;
+#endif
     String message;
     String tag;
     String log;

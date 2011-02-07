@@ -36,7 +36,9 @@
 
 #include "squid.h"
 #include "HttpRequest.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "HttpHeaderRange.h"
 #include "MemBuf.h"
 #include "Store.h"
@@ -82,7 +84,9 @@ HttpRequest::init()
     login[0] = '\0';
     host[0] = '\0';
     host_is_numeric = -1;
+#if USE_AUTH
     auth_user_request = NULL;
+#endif
     pinned_connection = NULL;
     port = 0;
     canonical = NULL;
@@ -107,8 +111,10 @@ HttpRequest::init()
     vary_headers = NULL;
     myportname = null_string;
     tag = null_string;
+#if USE_AUTH
     extacl_user = null_string;
     extacl_passwd = null_string;
+#endif
     extacl_log = null_string;
     extacl_message = null_string;
     pstate = psReadyToParseStartLine;
@@ -130,9 +136,9 @@ HttpRequest::clean()
     // we used to assert that the pipe is NULL, but now the request only
     // points to a pipe that is owned and initiated by another object.
     body_pipe = NULL;
-
+#if USE_AUTH
     auth_user_request = NULL;
-
+#endif
     safe_free(canonical);
 
     safe_free(vary_headers);
@@ -157,11 +163,10 @@ HttpRequest::clean()
     myportname.clean();
 
     tag.clean();
-
+#if USE_AUTH
     extacl_user.clean();
-
     extacl_passwd.clean();
-
+#endif
     extacl_log.clean();
 
     extacl_message.clean();
@@ -216,8 +221,10 @@ HttpRequest::clone() const
 
     copy->myportname = myportname;
     copy->tag = tag;
+#if USE_AUTH
     copy->extacl_user = extacl_user;
     copy->extacl_passwd = extacl_passwd;
+#endif
     copy->extacl_log = extacl_log;
     copy->extacl_message = extacl_message;
 
@@ -621,9 +628,9 @@ bool HttpRequest::inheritProperties(const HttpMsg *aMsg)
 
     errType = aReq->errType;
     errDetail = aReq->errDetail;
-
+#if USE_AUTH
     auth_user_request = aReq->auth_user_request;
-
+#endif
     if (aReq->pinned_connection) {
         pinned_connection = cbdataReference(aReq->pinned_connection);
     }
