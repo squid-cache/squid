@@ -220,6 +220,8 @@ Rock::SwapDir::parse(int anIndex, char *aPath)
     parseSize();
     parseOptions(0);
 
+    // Current openForWriting() code overwrites the old slot if needed
+    // and possible, so proactively removing old slots is probably useless.
     assert(!repl); // repl = createRemovalPolicy(Config.replPolicy);
 
     validateOptions();
@@ -525,25 +527,21 @@ Rock::SwapDir::diskFull() {
 void
 Rock::SwapDir::maintain()
 {
-    // Current openForWriting() code does not search for an empty
-    // slot so removing old slots will not make any difference.
-    return;
-
-    if (!map)
-        return;
-
     debugs(47,3, HERE << "cache_dir[" << index << "] guards: " << 
-        StoreController::store_dirs_rebuilding << !repl << !full());
-
-    // XXX: UFSSwapDir::maintain says we must quit during rebuild
-    if (StoreController::store_dirs_rebuilding)
-        return;
+        !repl << !map << !full() << StoreController::store_dirs_rebuilding);
 
     if (!repl)
         return; // no means (cannot find a victim)
 
+    if (!map)
+        return; // no victims (yet)
+
     if (!full())
         return; // no need (to find a victim)
+
+    // XXX: UFSSwapDir::maintain says we must quit during rebuild
+    if (StoreController::store_dirs_rebuilding)
+        return;
 
     debugs(47,3, HERE << "cache_dir[" << index << "] state: " << 
         map->full() << ' ' << currentSize() << " < " << diskOffsetLimit());
