@@ -103,6 +103,7 @@ typedef enum {
     ERR_INVALID_RESP,
     ERR_ICAP_FAILURE,
     ERR_UNSUP_HTTPVERSION,     /* HTTP version is not supported */
+    ERR_GATEWAY_FAILURE,
     ERR_MAX
 } err_type;
 

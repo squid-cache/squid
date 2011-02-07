@@ -29,6 +29,7 @@ ERROR_TEMPLATES =  \
 	templates/ERR_FTP_PUT_ERROR \
 	templates/ERR_FTP_PUT_MODIFIED \
 	templates/ERR_FTP_UNAVAILABLE \
+	templates/ERR_GATEWAY_FAILURE \
 	templates/ERR_ICAP_FAILURE \
 	templates/ERR_INVALID_REQ \
 	templates/ERR_INVALID_RESP \
