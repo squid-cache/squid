@@ -2,6 +2,8 @@
 #ifndef SQUID_SRC_TEST_ACLMAXUSERIP_H
 #define SQUID_SRC_TEST_ACLMAXUSERIP_H
 
+#if USE_AUTH
+
 #include <cppunit/extensions/HelperMacros.h>
 
 /*
@@ -24,5 +26,5 @@ protected:
     void testParseLine();
 };
 
+#endif /* USE_AUTH */
 #endif /* SQUID_SRC_TEST_ACLMAXUSERIP_H */
-

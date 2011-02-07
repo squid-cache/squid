@@ -30,7 +30,19 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= base comm eui acl fs repl auth ip icmp ident log ipc mgr
+SUBDIRS	= base comm eui acl fs repl
+DIST_SUBDIRS = base comm eui acl fs repl
+
+if ENABLE_AUTH
+SUBDIRS += auth
+AUTH_LIBS= auth/libauth.la
+AUTH_ACL_LIBS= auth/libacls.la
+check_PROGRAMS+= tests/testAuth tests/testACLMaxUserIP
+endif
+DIST_SUBDIRS += auth
+
+SUBDIRS	+= ip icmp ident log ipc mgr
+DIST_SUBDIRS += ip icmp ident log ipc mgr
 
 if ENABLE_SSL
 SUBDIRS += ssl
@@ -40,6 +52,20 @@ SSL_LIBS = \
 else
 SSL_LOCAL_LIBS =
 endif
+DIST_SUBDIRS += ssl
+
+SNMP_ALL_SOURCE = \
+	snmp_core.h \
+	snmp_core.cc \
+	snmp_agent.cc
+if ENABLE_SNMP
+SNMP_SOURCE = $(SNMP_ALL_SOURCE)
+SUBDIRS += snmp
+SNMP_LIBS = snmp/libsnmp.la
+else
+SNMP_SOURCE = 
+endif
+DIST_SUBDIRS += snmp
 
 SNMP_ALL_SOURCE = \
 	snmp_core.h \
@@ -56,6 +82,7 @@ endif
 if USE_ADAPTATION
 SUBDIRS += adaptation
 endif
+DIST_SUBDIRS += adaptation
 
 if USE_ESI
 SUBDIRS += esi
@@ -68,6 +95,7 @@ ESI_LIBS = $(ESI_LOCAL_LIBS) \
 else
 ESI_LIBS = 
 endif
+DIST_SUBDIRS += esi
 
 DELAY_POOL_ALL_SOURCE = \
 	CommonPool.h \
@@ -164,12 +192,12 @@ noinst_LTLIBRARIES = libsquid.la
 
 # libraries used by many targets
 COMMON_LIBS = \
-	auth/libacls.la \
+	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	eui/libeui.la \
 	acl/libstate.la \
-	auth/libauth.la \
+	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
@@ -895,9 +923,7 @@ TESTSOURCES= \
 TEST_CALL_SOURCES = \
 	event.cc
 
-
-check_PROGRAMS+= tests/testAuth \
-	tests/testACLMaxUserIP \
+check_PROGRAMS+=\
 	tests/testBoilerplate \
 	tests/testCacheManager \
 	tests/testDiskIO \
@@ -987,7 +1013,7 @@ tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 tests_testHttpReply_LDADD=\
 	acl/libapi.la \
 	acl/libstate.la \
-	auth/libauth.la \
+	$(AUTH_LIBS) \
 	ip/libip.la \
 	base/libbase.la \
 	$(top_builddir)/lib/libmisccontainers.la \
@@ -1098,12 +1124,12 @@ tests_testACLMaxUserIP_SOURCES= \
 nodist_tests_testACLMaxUserIP_SOURCES= \
 	$(TESTSOURCES)
 tests_testACLMaxUserIP_LDADD= \
-	auth/libacls.la \
+	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	eui/libeui.la \
 	acl/libstate.la \
-	auth/libauth.la \
+	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
@@ -1275,12 +1301,12 @@ nodist_tests_testCacheManager_SOURCES = \
 	$(BUILT_SOURCES)
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
-	auth/libacls.la \
+	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	eui/libeui.la \
 	acl/libstate.la \
-	auth/libauth.la \
+	$(AUTH_LIBS) \
 	acl/libapi.la \
 	base/libbase.la \
 	libsquid.la \
@@ -1330,12 +1356,12 @@ tests_testDiskIO_LDADD = \
 	SquidConfig.o \
 	CommCalls.o \
 	DnsLookupDetails.o \
-	auth/libacls.la \
+	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	acl/libacls.la \
 	eui/libeui.la \
 	acl/libstate.la \
-	auth/libauth.la \
+	$(AUTH_LIBS) \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \

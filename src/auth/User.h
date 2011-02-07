@@ -34,6 +34,8 @@
 #ifndef SQUID_AUTHUSER_H
 #define SQUID_AUTHUSER_H
 
+#if USE_AUTH
+
 #include "auth/AuthType.h"
 #include "dlink.h"
 #include "ip/Address.h"
@@ -134,4 +136,5 @@ extern const char *CredentialsState_str[];
 #include "auth/User.cci"
 #endif
 
+#endif /* USE_AUTH */
 #endif /* SQUID_AUTHUSER_H */

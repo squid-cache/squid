@@ -84,7 +84,9 @@
 #include "squid.h"
 
 #include "acl/FilledChecklist.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "base/TextException.h"
 #include "ChunkedCodingParser.h"
 #include "client_side.h"
@@ -599,13 +601,12 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
         aLogEntry->cache.requestSize += request->content_length;
     aLogEntry->cache.extuser = request->extacl_user.termedBuf();
 
+#if USE_AUTH
     if (request->auth_user_request != NULL) {
-
         if (request->auth_user_request->username())
             aLogEntry->cache.authuser = xstrdup(request->auth_user_request->username());
-
-// WTF??        request->auth_user_request = NULL;
     }
+#endif
 
     if (aLogEntry->request) {
         aLogEntry->request->errType = request->errType;
@@ -763,12 +764,12 @@ ConnStateData::swanSong()
     clientdbEstablished(peer, -1);	/* decrement */
     assert(areAllContextsForThisConnection());
     freeAllContexts();
-
+#if USE_AUTH
     if (auth_user_request != NULL) {
         debugs(33, 4, "ConnStateData::swanSong: freeing auth_user_request '" << auth_user_request << "' (this is '" << this << "')");
         auth_user_request->onConnectionClose(this);
     }
-
+#endif
     if (pinning.fd >= 0)
         comm_close(pinning.fd);
 
@@ -2551,7 +2552,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             clientStreamNode *node = context->getClientReplyContext();
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
-            repContext->setReplyToError(ERR_INVALID_REQ, HTTP_EXPECTATION_FAILED, request->method, http->uri, conn->peer, request, NULL, NULL);
+            repContext->setReplyToError(ERR_INVALID_REQ, HTTP_EXPECTATION_FAILED, request->method,
+                                        http->uri, conn->peer, request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
             goto finish;
