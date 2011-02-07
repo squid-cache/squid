@@ -337,7 +337,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
             storeConfigure();
         }
 
-        if (e->swap_filen > 0)
+        if (e->swap_filen >= 0)
             e->unlink();
 
         assert(e->swap_status == SWAPOUT_NONE);
