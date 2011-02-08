@@ -53,7 +53,7 @@ Rock::DirMap::openForWriting(const cache_key *const key, sfileno &fileno)
         return &s.seBasics; // and keep the entry locked
     }
 
-    debugs(79, 5, HERE << " failed to open slot for key " << storeKeyText(key)
+    debugs(79, 5, HERE << " failed to open slot at " << idx << " for key " << storeKeyText(key)
            << " for writing in map [" << path << ']');
     return NULL;
 }
