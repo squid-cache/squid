@@ -89,17 +89,19 @@ public:
     /// disker entry point for remote I/O requests
     static void HandleRequest(const IpcIoRequest &request);
 
+protected:
+    friend class IpcIoPendingRequest;
+    void openCompleted(const IpcIoResponse *response);
+    void readCompleted(ReadRequest *readRequest, const IpcIoResponse *);
+    void writeCompleted(WriteRequest *writeRequest, const IpcIoResponse *);
+
 private:
     void send(IpcIoRequest &request, IpcIoPendingRequest *pending);
 
-    void openCompleted(const IpcIoResponse &);
-    void readCompleted(ReadRequest *readRequest, const IpcIoResponse &);
-    void writeCompleted(WriteRequest *writeRequest, const IpcIoResponse &);
-
-    static void RequestTimedOut(void* param);
-    void requestTimedOut();
-    void removeTimeoutEvent();
     static IpcIoPendingRequest *DequeueRequest(unsigned int requestId);
+
+    static void CheckTimeouts(void* param);
+    static void ScheduleTimeoutCheck();
 
 private:
     const String dbName; ///< the name of the file we are managing
@@ -111,8 +113,12 @@ private:
     bool error_; ///< whether we have seen at least one I/O error (XXX)
 
     /// maps requestId to the handleResponse callback
-    typedef std::map<unsigned int, IpcIoPendingRequest*> RequestsMap;
-    static RequestsMap TheRequestsMap; ///< pending requests map
+    typedef std::map<unsigned int, IpcIoPendingRequest*> RequestMap;
+    static RequestMap TheRequestMap1; ///< older (or newer) pending requests
+    static RequestMap TheRequestMap2; ///< newer (or older) pending requests
+    static RequestMap *TheOlderRequests; ///< older requests (map1 or map2)
+    static RequestMap *TheNewerRequests; ///< newer requests (map2 or map1)
+    static bool TimeoutCheckScheduled; ///< we expect a CheckTimeouts() call
 
     static unsigned int LastRequestId; ///< last requestId used
 
@@ -125,6 +131,9 @@ class IpcIoPendingRequest
 {
 public:
     IpcIoPendingRequest(const IpcIoFile::Pointer &aFile);
+
+    /// called when response is received and, with a nil response, on timeouts
+    void completeIo(IpcIoResponse *response);
 
 public:
     IpcIoFile::Pointer file; ///< the file object waiting for the response

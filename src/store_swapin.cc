@@ -97,6 +97,7 @@ storeSwapInFileNotify(void *data, int errflag, StoreIOState::Pointer self)
            e->swap_dirn << " to " << sc->swapin_sio->swap_filen << "/" <<
            sc->swapin_sio->swap_dirn);
 
+    assert(e->swap_filen < 0); // if this fails, call SwapDir::disconnect(e)
     e->swap_filen = sc->swapin_sio->swap_filen;
     e->swap_dirn = sc->swapin_sio->swap_dirn;
 }

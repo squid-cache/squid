@@ -871,8 +871,7 @@ NumberOfKids()
 
     // XXX: detect and abort when called before workers/cache_dirs are parsed
 
-    // XXX: this is not always the case as there are other cache_dir types
-    const int rockDirs = Config.cacheSwap.n_processes;
+    const int rockDirs = Config.cacheSwap.n_strands;
 
     const bool needCoord = Config.workers > 1 || rockDirs > 0;
     return (needCoord ? 1 : 0) + Config.workers + rockDirs;

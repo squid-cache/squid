@@ -728,8 +728,9 @@ for fs in $squid_storeio_module_candidates none; do
       STORE_TESTS="$STORE_TESTS tests/testCoss$EXEEXT"
       ;;
     rock)
-	if ! test "x$squid_disk_module_candidates_IpcIo" = "xyes"; then
-	  AC_MSG_ERROR([Storage modeule Rock requires IpcIo DiskIO module])
+	if ! test "x$squid_disk_module_candidates_IpcIo" = "xyes" -a \
+	  "x$squid_disk_module_candidates_Blocking" = "xyes"; then
+	  AC_MSG_ERROR([Storage module Rock requires IpcIo and Blocking DiskIO modules])
 	fi
 	STORE_TESTS="$STORE_TESTS tests/testRock$EXEEXT"
 	;;

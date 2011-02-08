@@ -27,14 +27,12 @@ Ipc::StrandCoord::unpack(const TypedMsgHdr &hdrMsg)
     hdrMsg.getPod(kidId);
     hdrMsg.getPod(pid);
     hdrMsg.getString(tag);
-debugs(0,0, HERE << "getting tag: " << tag);
 }
 
 void Ipc::StrandCoord::pack(TypedMsgHdr &hdrMsg) const
 {
     hdrMsg.putPod(kidId);
     hdrMsg.putPod(pid);
-debugs(0,0, HERE << "putting tag: " << tag);
     hdrMsg.putString(tag);
 }
 

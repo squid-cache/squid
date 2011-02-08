@@ -76,14 +76,21 @@ Rock::SwapDir::get(const cache_key *key)
     // the disk entry remains open for reading, protected from modifications
 }
 
-void
-Rock::SwapDir::closeForReading(StoreEntry &e)
+void Rock::SwapDir::disconnect(StoreEntry &e)
 {
-    assert(index == e.swap_dirn);
+    assert(e.swap_dirn == index);
     assert(e.swap_filen >= 0);
-    map->closeForReading(e.swap_filen);
+    // cannot have SWAPOUT_NONE entry with swap_filen >= 0
+    assert(e.swap_status != SWAPOUT_NONE);
+
+    // do not rely on e.swap_status here because there is an async delay
+    // before it switches from SWAPOUT_WRITING to SWAPOUT_DONE.
+
+    // since e has swap_filen, its slot is locked for either reading or writing
+    map->abortIo(e.swap_filen);
     e.swap_dirn = -1;
     e.swap_filen = -1;
+    e.swap_status = SWAPOUT_NONE;
 }
 
 // TODO: encapsulate as a tool; identical to CossSwapDir::create()
@@ -173,15 +180,29 @@ Rock::SwapDir::init()
         map = new DirMap(path, eAllowed);
     }
 
-    DiskIOModule *m = DiskIOModule::Find("IpcIo"); // TODO: configurable?
-    assert(m);
-    io = m->createStrategy();
-    io->init();
+    const char *ioModule = UsingSmp() ? "IpcIo" : "Blocking";
+    if (DiskIOModule *m = DiskIOModule::Find(ioModule)) {
+        debugs(47,2, HERE << "Using DiskIO module: " << ioModule);
+        io = m->createStrategy();
+        io->init();
+    } else {
+        debugs(47,1, "Rock store is missing DiskIO module: " << ioModule);
+        fatal("Rock Store missing a required DiskIO module");
+    }
 
     theFile = io->newFile(filePath);
     theFile->open(O_RDWR, 0644, this);
 
-    rebuild();
+    // Increment early. Otherwise, if one SwapDir finishes rebuild before
+    // others start, storeRebuildComplete() will think the rebuild is over!
+    // TODO: move store_dirs_rebuilding hack to store modules that need it.
+    ++StoreController::store_dirs_rebuilding;
+}
+
+bool
+Rock::SwapDir::needsDiskStrand() const
+{
+    return true;
 }
 
 void
@@ -199,7 +220,9 @@ Rock::SwapDir::parse(int anIndex, char *aPath)
     parseSize();
     parseOptions(0);
 
-    repl = createRemovalPolicy(Config.replPolicy);
+    // Current openForWriting() code overwrites the old slot if needed
+    // and possible, so proactively removing old slots is probably useless.
+    assert(!repl); // repl = createRemovalPolicy(Config.replPolicy);
 
     validateOptions();
 }
@@ -228,15 +251,6 @@ Rock::SwapDir::validateOptions()
 {
     if (max_objsize <= 0)
         fatal("Rock store requires a positive max-size");
-
-    // Rock::IoState::startWriting() inflates write size to the end of the page
-    // so that mmap does not have to read the tail and then write it back.
-    // This is a weak check that the padded area will be allocated by [growing]
-    // MemBuf and a sufficient check that inflated size will not exceed the
-    // slot size.
-    static const int ps = getpagesize();
-    if (ps > 0 && (max_objsize % ps != 0))
-        fatal("Rock store max-size should be a multiple of page size");
 
     /* XXX: should we support resize?
     const int64_t eLimitHi = 0xFFFFFF; // Core sfileno maximum
@@ -269,55 +283,32 @@ Rock::SwapDir::validateOptions()
 	}
     */
 
-    if (!repl) {
-        debugs(47,0, "ERROR: Rock cache_dir[" << index << "] " <<
-            "lacks replacement policy and will overflow.");
-        // not fatal because it can be added later
-	}
-
     // XXX: misplaced, map is not yet created
     //cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
 }
 
 void
 Rock::SwapDir::rebuild() {
-    // in SMP mode, only the disker is responsible for populating the map
-    if (UsingSmp() && !IamDiskProcess())
-        return;
-
-    ++StoreController::store_dirs_rebuilding;
-    Rebuild *r = new Rebuild(this);
-    r->start(); // will delete self when done
+    //++StoreController::store_dirs_rebuilding; // see Rock::SwapDir::init()
+    AsyncJob::Start(new Rebuild(this));
 }
 
 /* Add a new object to the cache with empty memory copy and pointer to disk
- * use to rebuild store from disk. XXX: dupes UFSSwapDir::addDiskRestore */
+ * use to rebuild store from disk. Based on UFSSwapDir::addDiskRestore */
 bool
 Rock::SwapDir::addEntry(const int fileno, const StoreEntry &from)
 {
-    const cache_key *const key = reinterpret_cast<const cache_key *>(from.key);
-    debugs(47, 5, HERE << &from << ' ' << storeKeyText(key)
-       << ", fileno="<< std::setfill('0') << std::hex << std::uppercase <<
+    debugs(47, 8, HERE << &from << ' ' << from.getMD5Text() <<
+       ", fileno="<< std::setfill('0') << std::hex << std::uppercase <<
        std::setw(8) << fileno);
 
-    int idx;
-    StoreEntryBasics *const basics = map->openForWriting(key, idx);
-    if (!basics) {
-        debugs(47, 5, HERE << "Rock::SwapDir::addEntry: the entry loaded from "
-               "disk clashed with locked newer entries");
-        return false;
-    } else if (fileno != idx) {
-        debugs(47, 5, HERE << "Rock::SwapDir::addEntry: the entry loaded from "
-               "disk was hashed to a new slot");
-        map->closeForWriting(idx);
-        map->closeForReading(idx);
-        map->free(idx);
-        return false;
+    if (map->putAt(from, fileno)) {
+        // we do not add this entry to store_table so core will not updateSize
+        updateSize(from.swap_file_sz, +1);
+        return true;
     }
-    basics->set(from);
-    map->closeForWriting(fileno);
-    map->closeForReading(fileno);
-    return true;
+
+    return false;
 }
 
 
@@ -357,6 +348,9 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
         return NULL;
     }
     basics->set(e);
+
+    // XXX: We rely on our caller, storeSwapOutStart(), to set e->fileno.
+    // If that does not happen, the entry will not decrement the read level!
 
     IoState *sio = new IoState(this, &e, cbFile, cbIo, data);
 
@@ -399,12 +393,13 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
         return NULL;
     }
 
-    if (!map->openForReadingAt(e.swap_filen)) {
-        debugs(47,1, HERE << "bug: dir " << index << " lost locked fileno: " <<
-            std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
-            e.swap_filen);
+    if (e.swap_filen < 0) { 
+        debugs(47,4, HERE << e);
         return NULL;
     }
+
+    // The only way the entry has swap_filen is if get() locked it for reading
+    // so we do not need to map->openForReadingAt(swap_filen) again here.
 
     IoState *sio = new IoState(this, &e, cbFile, cbIo, data);
 
@@ -448,6 +443,8 @@ Rock::SwapDir::ioCompletedNotification()
     debugs(47,1, "Rock cache_dir[" << index << "] limits: " << 
         std::setw(12) << maximumSize() << " disk bytes and " <<
         std::setw(7) << map->entryLimit() << " entries");
+
+    rebuild();
 }
 
 void
@@ -462,7 +459,6 @@ Rock::SwapDir::readCompleted(const char *buf, int rlen, int errflag, RefCount< :
     ReadRequest *request = dynamic_cast<Rock::ReadRequest*>(r.getRaw());
     assert(request);
     IoState::Pointer sio = request->sio;
-    map->closeForReading(sio->swap_filen);
 
     // do not increment sio->offset_: callers always supply relative offset
 
@@ -481,10 +477,16 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
     assert(request);
     assert(request->sio !=  NULL);
     IoState &sio = *request->sio;
-    map->closeForWriting(sio.swap_filen);
-    if (errflag != DISK_OK)
-        map->free(sio.swap_filen); // TODO: test by forcing failure
-    // else sio.offset_ += rlen;
+
+    if (errflag == DISK_OK) {
+        // close, assuming we only write once; the entry gets the read lock
+        map->closeForWriting(sio.swap_filen);
+        // and sio.offset_ += rlen;
+    } else {
+        // Do not abortWriting here. The entry should keep the write lock
+        // instead of losing association with the store and confusing core.
+        map->free(sio.swap_filen); // will mark as unusable, just in case
+    }
 
     // TODO: always compute cur_size based on map, do not store it
     cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
@@ -525,21 +527,21 @@ Rock::SwapDir::diskFull() {
 void
 Rock::SwapDir::maintain()
 {
-    if (!map)
-        return;
-
     debugs(47,3, HERE << "cache_dir[" << index << "] guards: " << 
-        StoreController::store_dirs_rebuilding << !repl << !full());
-
-    // XXX: UFSSwapDir::maintain says we must quit during rebuild
-    if (StoreController::store_dirs_rebuilding)
-        return;
+        !repl << !map << !full() << StoreController::store_dirs_rebuilding);
 
     if (!repl)
         return; // no means (cannot find a victim)
 
+    if (!map)
+        return; // no victims (yet)
+
     if (!full())
         return; // no need (to find a victim)
+
+    // XXX: UFSSwapDir::maintain says we must quit during rebuild
+    if (StoreController::store_dirs_rebuilding)
+        return;
 
     debugs(47,3, HERE << "cache_dir[" << index << "] state: " << 
         map->full() << ' ' << currentSize() << " < " << diskOffsetLimit());
@@ -574,7 +576,7 @@ void
 Rock::SwapDir::reference(StoreEntry &e)
 {
     debugs(47, 5, HERE << &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
-    if (repl->Referenced)
+    if (repl && repl->Referenced)
         repl->Referenced(repl, &e, &e.repl);
 }
 
@@ -582,31 +584,34 @@ void
 Rock::SwapDir::dereference(StoreEntry &e)
 {
     debugs(47, 5, HERE << &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
-    if (repl->Dereferenced)
+    if (repl && repl->Dereferenced)
         repl->Dereferenced(repl, &e, &e.repl);
 }
 
 void
 Rock::SwapDir::unlink(StoreEntry &e)
 {
-    debugs(47, 5, HERE << &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
+    debugs(47, 5, HERE << e);
     ignoreReferences(e);
     map->free(e.swap_filen);
+    disconnect(e);
 }
 
 void
 Rock::SwapDir::trackReferences(StoreEntry &e)
 {
-    debugs(47, 5, HERE << &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
-    repl->Add(repl, &e, &e.repl);
+    debugs(47, 5, HERE << e);
+    if (repl)
+        repl->Add(repl, &e, &e.repl);
 }
 
 
 void
 Rock::SwapDir::ignoreReferences(StoreEntry &e)
 {
-    debugs(47, 5, HERE << &e << ' ' << e.swap_dirn << ' ' << e.swap_filen);
-    repl->Remove(repl, &e, &e.repl);
+    debugs(47, 5, HERE << e);
+    if (repl)
+        repl->Remove(repl, &e, &e.repl);
 }
 
 void
@@ -617,9 +622,13 @@ Rock::SwapDir::statfs(StoreEntry &e) const
     storeAppendPrintf(&e, "Current Size: %"PRIu64" KB %.2f%%\n", cur_size,
                       100.0 * cur_size / max_size);
 
-    storeAppendPrintf(&e, "Maximum entries: %9d\n", map->entryLimit());
-    storeAppendPrintf(&e, "Current entries: %9d %.2f%%\n",
-        map->entryCount(), (100.0 * map->entryCount() / map->entryLimit()));
+    if (map) {
+        const int limit = map->entryLimit();
+        storeAppendPrintf(&e, "Maximum entries: %9d\n", limit);
+        if (limit > 0)
+            storeAppendPrintf(&e, "Current entries: %9d %.2f%%\n",
+                map->entryCount(), (100.0 * map->entryCount() / limit));
+    }    
 
     storeAppendPrintf(&e, "Pending operations: %d out of %d\n",
         store_open_disk_fd, Config.max_open_disk_fds);
