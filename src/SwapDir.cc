@@ -161,6 +161,25 @@ SwapDir::type() const
     return theType;
 }
 
+bool
+SwapDir::active() const
+{
+    if (IamWorkerProcess())
+        return true;
+
+    // we are inside a disker dedicated to this disk
+    if (IamDiskProcess() && index == (KidIdentifier-1 - Config.workers))
+        return true;
+
+    return false; // Coordinator, wrong disker, etc.
+}
+
+bool
+SwapDir::needsDiskStrand() const
+{
+    return false;
+}
+
 /* NOT performance critical. Really. Don't bother optimising for speed
  * - RBC 20030718
  */

@@ -53,7 +53,6 @@
 #include "SquidTime.h"
 #include "swap_log_op.h"
 #include "mgr/StoreIoAction.h"
-#include "fs/rock/RockSwapDir.h"
 
 static STMCB storeWriteComplete;
 
@@ -372,6 +371,7 @@ StoreEntry::StoreEntry():
 
     expires = lastmod = lastref = timestamp = -1;
 
+    swap_status = SWAPOUT_NONE;
     swap_filen = -1;
     swap_dirn = -1;
 }
@@ -384,6 +384,7 @@ StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl):
 
     expires = lastmod = lastref = timestamp = -1;
 
+    swap_status = SWAPOUT_NONE;
     swap_filen = -1;
     swap_dirn = -1;
 }
@@ -391,10 +392,8 @@ StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl):
 StoreEntry::~StoreEntry()
 {
     if (swap_filen >= 0) {
-        // XXX: support cache types other than Rock
-        Rock::SwapDir &rockSwapDir =
-            dynamic_cast<Rock::SwapDir &>(*store());
-        rockSwapDir.closeForReading(*this);
+        SwapDir &sd = dynamic_cast<SwapDir&>(*store());
+        sd.disconnect(*this);
     }
 }
 
@@ -798,9 +797,6 @@ storeCreateEntry(const char *url, const char *log_url, request_flags flags, cons
 
     e->store_status = STORE_PENDING;
     e->setMemStatus(NOT_IN_MEMORY);
-    e->swap_status = SWAPOUT_NONE;
-    e->swap_filen = -1;
-    e->swap_dirn = -1;
     e->refcount = 0;
     e->lastref = squid_curtime;
     e->timestamp = -1;          /* set in StoreEntry::timestampsSet() */
@@ -1269,31 +1265,30 @@ StoreEntry::release()
             lock_count++;
             setReleaseFlag();
             LateReleaseStack.push_back(this);
-            PROF_stop(storeRelease);
-            return;
         } else {
             destroyStoreEntry(static_cast<hash_link *>(this));
+            // "this" is no longer valid
         }
+
+        PROF_stop(storeRelease);
+        return;
     }
 
     storeLog(STORE_LOG_RELEASE, this);
 
     if (swap_filen > -1) {
-        unlink();
 
+        // update size before unlink() below clears swap_status
+        // TODO: the store/SwapDir::unlink should update the size!
         if (swap_status == SWAPOUT_DONE)
             if (EBIT_TEST(flags, ENTRY_VALIDATED))
                 store()->updateSize(swap_file_sz, -1);
 
+        // log before unlink() below clears swap_filen
         if (!EBIT_TEST(flags, KEY_PRIVATE))
             storeDirSwapLog(this, SWAP_LOG_DEL);
 
-#if 0
-        /* From 2.4. I think we do this in storeUnlink? */
-        storeSwapFileNumberSet(this, -1);
-
-#endif
-
+        unlink();
     }
 
     setMemStatus(NOT_IN_MEMORY);
@@ -1314,7 +1309,7 @@ storeLateRelease(void *unused)
     }
 
     for (i = 0; i < 10; i++) {
-        e = LateReleaseStack.pop();
+        e = LateReleaseStack.count ? LateReleaseStack.pop() : NULL;
 
         if (e == NULL) {
             /* done! */
@@ -1442,6 +1437,10 @@ StoreEntry::keepInMemory() const
         return 0;
 
     if (!Config.onoff.memory_cache_first && swap_status == SWAPOUT_DONE && refcount == 1)
+        return 0;
+
+    // already kept more than allowed
+    if (mem_node::InUseCount() > store_pages_max)
         return 0;
 
     return 1;
@@ -2013,7 +2012,10 @@ StoreEntry::store() const
 void
 StoreEntry::unlink()
 {
-    store()->unlink(*this);
+    store()->unlink(*this); // implies disconnect()
+    swap_filen = -1;
+    swap_dirn = -1;
+    swap_status = SWAPOUT_NONE;
 }
 
 /*

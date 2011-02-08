@@ -1820,12 +1820,12 @@ ClientSocketContext::initiateClose(const char *reason)
 void
 ClientSocketContext::writeComplete(int aFileDescriptor, char *bufnotused, size_t size, comm_err_t errflag)
 {
-    StoreEntry *entry = http->storeEntry();
+    const StoreEntry *entry = http->storeEntry();
     http->out.size += size;
     assert(aFileDescriptor > -1);
     debugs(33, 5, "clientWriteComplete: FD " << aFileDescriptor << ", sz " << size <<
            ", err " << errflag << ", off " << http->out.size << ", len " <<
-           entry ? entry->objectLen() : 0);
+           (entry ? entry->objectLen() : 0));
     clientUpdateSocketStats(http->logType, size);
     assert (this->fd() == aFileDescriptor);
 

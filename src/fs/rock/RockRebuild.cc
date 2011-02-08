@@ -9,7 +9,7 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Rock, Rebuild);
 
-Rock::Rebuild::Rebuild(SwapDir *dir):
+Rock::Rebuild::Rebuild(SwapDir *dir): AsyncJob("Rock::Rebuild"),
     sd(dir),
     dbSize(0),
     dbEntrySize(0),
@@ -34,6 +34,14 @@ Rock::Rebuild::~Rebuild()
 /// prepares and initiates entry loading sequence
 void
 Rock::Rebuild::start() {
+    // in SMP mode, only the disker is responsible for populating the map
+    if (UsingSmp() && !IamDiskProcess()) {
+        debugs(47, 2, "Non-disker skips rebuilding of cache_dir #" <<
+           sd->index << " from " << sd->filePath);
+        mustStop("non-disker");
+        return;
+    }
+
     debugs(47, DBG_IMPORTANT, "Loading cache_dir #" << sd->index <<
            " from " << sd->filePath);
 
@@ -51,20 +59,25 @@ Rock::Rebuild::start() {
     checkpoint();
 }
 
-/// quits if done; otherwise continues after a pause
+/// continues after a pause if not done
 void
 Rock::Rebuild::checkpoint()
 {
-    if (dbOffset < dbSize)
+    if (!done())
         eventAdd("Rock::Rebuild", Rock::Rebuild::Steps, this, 0.01, 1, true);
-    else
-        complete();
+}
+
+bool
+Rock::Rebuild::doneAll() const
+{
+    return dbOffset >= dbSize && AsyncJob::doneAll();
 }
 
 void
 Rock::Rebuild::Steps(void *data)
 {
-    static_cast<Rebuild*>(data)->steps();
+    // use async call to enable job call protection that time events lack
+    CallJobHere(47, 5, static_cast<Rebuild*>(data), Rock::Rebuild, steps);
 }
 
 void
@@ -116,12 +129,11 @@ Rock::Rebuild::doOneEntry() {
 }
 
 void
-Rock::Rebuild::complete() {
-    debugs(47,3, HERE << sd->index);
-    close(fd);
-    StoreController::store_dirs_rebuilding--;
+Rock::Rebuild::swanSong() {
+    debugs(47,3, HERE << "cache_dir #" << sd->index << " rebuild level: " <<
+        StoreController::store_dirs_rebuilding);
+    --StoreController::store_dirs_rebuilding;
     storeRebuildComplete(&counts);
-    delete this; // same as cbdataFree
 }
 
 void

@@ -115,6 +115,7 @@ storeSwapOutFileNotify(void *data, int errflag, StoreIOState::Pointer self)
     assert(mem);
     assert(mem->swapout.sio == self);
     assert(errflag == 0);
+    assert(e->swap_filen < 0); // if this fails, call SwapDir::disconnect(e)
     e->swap_filen = mem->swapout.sio->swap_filen;
     e->swap_dirn = mem->swapout.sio->swap_dirn;
 }
@@ -324,10 +325,9 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
     cbdataFree(c);
 
     if (errflag) {
-        debugs(20, 1, "storeSwapOutFileClosed: dirno " << e->swap_dirn << ", swapfile " <<
+        debugs(20, 2, "storeSwapOutFileClosed: dirno " << e->swap_dirn << ", swapfile " <<
                std::hex << std::setw(8) << std::setfill('0') << std::uppercase <<
                e->swap_filen << ", errflag=" << errflag);
-        debugs(20, 1, "\t" << xstrerror());
 
         if (errflag == DISK_NO_SPACE_LEFT) {
             /* FIXME: this should be handle by the link from store IO to
@@ -337,14 +337,10 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
             storeConfigure();
         }
 
-        if (e->swap_filen > 0)
+        if (e->swap_filen >= 0)
             e->unlink();
 
-        e->swap_filen = -1;
-
-        e->swap_dirn = -1;
-
-        e->swap_status = SWAPOUT_NONE;
+        assert(e->swap_status == SWAPOUT_NONE);
 
         e->releaseRequest();
     } else {
