@@ -1265,11 +1265,13 @@ StoreEntry::release()
             lock_count++;
             setReleaseFlag();
             LateReleaseStack.push_back(this);
-            PROF_stop(storeRelease);
-            return;
         } else {
             destroyStoreEntry(static_cast<hash_link *>(this));
+            // "this" is no longer valid
         }
+
+        PROF_stop(storeRelease);
+        return;
     }
 
     storeLog(STORE_LOG_RELEASE, this);
