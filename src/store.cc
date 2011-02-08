@@ -1439,6 +1439,10 @@ StoreEntry::keepInMemory() const
     if (!Config.onoff.memory_cache_first && swap_status == SWAPOUT_DONE && refcount == 1)
         return 0;
 
+    // already kept more than allowed
+    if (mem_node::InUseCount() > store_pages_max)
+        return 0;
+
     return 1;
 }
 
