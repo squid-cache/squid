@@ -526,7 +526,20 @@ StoreEntry::unlock()
     assert(storePendingNClients(this) == 0);
 
     if (EBIT_TEST(flags, RELEASE_REQUEST))
+    {
         this->release();
+        return 0;
+    }
+
+    // XXX: Rock store specific: since each SwapDir controls the index,
+    // unlocked entries should not stay in the global store_table
+    if (fileno >= 0) {
+        Store::Root().dereference(*this);
+        debugs(20, 5, HERE << "destroying unlocked entry: " << this << ' ' << *this);
+        setMemStatus(NOT_IN_MEMORY);
+        destroyStoreEntry(static_cast<hash_link *>(this));
+        return 0;
+    }
     else if (keepInMemory()) {
         Store::Root().dereference(*this);
         setMemStatus(IN_MEMORY);
