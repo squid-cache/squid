@@ -104,7 +104,7 @@ clientReplyContext::setReplyToError(
 #else
     int
 #endif
-    )
+)
 {
     ErrorState *errstate = clientBuildError(err, status, uri, addr, failedrequest);
 
