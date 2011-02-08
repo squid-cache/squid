@@ -1,3 +1,24 @@
+Changes to squid-3.1.11 (08 Feb 2011):
+
+	- Bug 3149: not caching eCAP adapted body
+	- Bug 3144: redirector program blocks while reading STDIN
+	- Bug 3140: memory leak in error page generation
+	- Bug 3137: RADIUS auth helper does not send identifier to RADIUS server
+	- Bug 3115: logging segfaults if access_log is set to a directory
+	- Bug 2968: Show the Vary: headers information in cachemgr objects report
+	- Bug 2959: remove SAMBAPREFIX dependency
+	- Bug 2868: icc doesn't like string literal in assert checks
+	- HTTP/1.1: Send 307 status on deny_info redirection
+	- HTTP/1.1: Support POST/PUT with no body
+	- HTTP/1.1: Allow persistent connections for Mozilla/3.0 User-Agents
+	- Support RFC 5861 Cache-Control: stale-if-error option
+	- Add ftp_eprt directive to disable EPRT extensions in FTP
+	- Fix external_acl_type grace=0 to obey TTL
+	- Fix IP/FQDN cache accounting to avoid idle caches on busy servers
+	- Prevent pipeline_prefetch misconfigurations breaking NTLM/Negotiate auth
+	- ... and some documentation updates and corrections
+	- ... and some portability and stability fixes
+
 Changes to squid-3.1.10 (22 Dec 2010):
 
 	- Bug 3121: memory leak in DigestAuth: AuthUser object is locked twice
