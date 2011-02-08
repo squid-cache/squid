@@ -82,6 +82,7 @@ public:
 private:
     /* migration logic */
     StorePointer store(int const x) const;
+    SwapDir &dir(int const idx) const;
 };
 
 class StoreHashIndexEntry : public StoreEntry

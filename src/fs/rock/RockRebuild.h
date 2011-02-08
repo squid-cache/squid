@@ -2,6 +2,7 @@
 #define SQUID_FS_ROCK_REBUILD_H
 
 #include "config.h"
+#include "base/AsyncJob.h"
 #include "structs.h"
 
 namespace Rock {
@@ -10,19 +11,21 @@ class SwapDir;
 
 /// \ingroup Rock
 /// manages store rebuild process: loading meta information from db on disk
-class Rebuild {
+class Rebuild: public AsyncJob {
 public:
     Rebuild(SwapDir *dir);
     ~Rebuild();
-    void start();
+
+protected:
+    /* AsyncJob API */
+    virtual void start();
+    virtual bool doneAll() const;
+    virtual void swanSong();
 
 private:
-    CBDATA_CLASS2(Rebuild);
-
     void checkpoint();
     void steps();
     void doOneEntry();
-    void complete();
     void failure(const char *msg, int errNo = 0);
 
     SwapDir *sd;
@@ -38,6 +41,8 @@ private:
     struct _store_rebuild_data counts;
 
     static void Steps(void *data);
+
+    CBDATA_CLASS2(Rebuild);
 };
 
 } // namespace Rock

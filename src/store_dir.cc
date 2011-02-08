@@ -515,6 +515,14 @@ StoreHashIndex::store(int const x) const
     return INDEXSD(x);
 }
 
+SwapDir &
+StoreHashIndex::dir(const int i) const
+{
+    SwapDir *sd = dynamic_cast<SwapDir*>(INDEXSD(i));
+    assert(sd);
+    return *sd;
+}
+
 void
 StoreController::sync(void)
 {
@@ -692,7 +700,7 @@ StoreEntry *
 StoreController::get(const cache_key *key)
 {
     if (StoreEntry *e = swapDir->get(key)) {
-        debugs(20, 1, HERE << "got in-transit entry: " << *e);
+        debugs(20, 3, HERE << "got in-transit entry: " << *e);
         return e;
     }
 
@@ -700,19 +708,22 @@ StoreController::get(const cache_key *key)
         // ask each cache_dir until the entry is found; use static starting
         // point to avoid asking the same subset of disks more often
         // TODO: coordinate with put() to be able to guess the right disk often
+        static int idx = 0;
         for (int n = 0; n < cacheDirs; ++n) {
-            static int idx = 0;
+            idx = (idx + 1) % cacheDirs;
             SwapDir *sd = dynamic_cast<SwapDir*>(INDEXSD(idx));
+            if (!sd->active())
+                continue;
+
             if (StoreEntry *e = sd->get(key)) {
-                debugs(20, 1, HERE << "cache_dir " << idx <<
+                debugs(20, 3, HERE << "cache_dir " << idx <<
                     " got cached entry: " << *e);
                 return e;
             }
-            idx = (idx + 1) % cacheDirs;
         }
     }
 
-    debugs(20, 1, HERE << "none of " << Config.cacheSwap.n_configured <<
+    debugs(20, 4, HERE << "none of " << Config.cacheSwap.n_configured <<
         " cache_dirs have " << storeKeyText(key));
     return NULL;
 }
@@ -774,8 +785,10 @@ StoreHashIndex::callback()
 void
 StoreHashIndex::create()
 {
-    for (int i = 0; i < Config.cacheSwap.n_configured; i++)
-        store(i)->create();
+    for (int i = 0; i < Config.cacheSwap.n_configured; i++) {
+        if (dir(i).active())
+            store(i)->create();
+    }
 }
 
 /* Lookup an object in the cache.
@@ -832,13 +845,8 @@ StoreHashIndex::init()
         *         above
         * Step 3: have the hash index walk the searches itself.
          */
-        if (IamDiskProcess() &&
-            i != KidIdentifier % Config.cacheSwap.n_configured) {
-            debugs(20, 3, HERE << " skipping init for cache_dir " <<
-                   dynamic_cast<const SwapDir &>(*store(i)).path);
-            continue;
-        }
-        store(i)->init();
+        if (dir(i).active())
+            store(i)->init();
     }
 }
 

@@ -118,6 +118,9 @@ public:
     virtual void reconfigure(int, char *) = 0;
     char const *type() const;
 
+    virtual bool needsDiskStrand() const; ///< needs a dedicated kid process
+    virtual bool active() const; ///< may be used in this strand
+
     /* official Store interface functions */
     virtual void diskFull();
 
@@ -135,6 +138,9 @@ public:
 
     /* migrated from store_dir.cc */
     bool objectSizeIsAcceptable(int64_t objsize) const;
+
+    /// called when the entry is about to forget its association with cache_dir
+    virtual void disconnect(StoreEntry &) {}
 
 protected:
     void parseOptions(int reconfiguring);
