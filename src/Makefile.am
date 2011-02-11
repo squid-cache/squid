@@ -24,15 +24,6 @@ SBUF_SOURCE= \
 	MemBlob.h \
 	MemBlob.cc
 
-SNMP_ALL_SOURCE = \
-	snmp_core.cc \
-	snmp_agent.cc
-if USE_SNMP
-SNMP_SOURCE = $(SNMP_ALL_SOURCE)
-else
-SNMP_SOURCE = 
-endif
-
 LOADABLE_MODULES_SOURCES = \
 	LoadableModule.h \
 	LoadableModule.cc \
@@ -48,6 +39,18 @@ SSL_LIBS = \
 	ssl/libsslsquid.la
 else
 SSL_LOCAL_LIBS =
+endif
+
+SNMP_ALL_SOURCE = \
+	snmp_core.h \
+	snmp_core.cc \
+	snmp_agent.cc
+if ENABLE_SNMP
+SNMP_SOURCE = $(SNMP_ALL_SOURCE)
+SUBDIRS += snmp
+SNMP_LIBS = snmp/libsnmp.la $(SNMPLIB)
+else
+SNMP_SOURCE = 
 endif
 
 if USE_ADAPTATION
@@ -546,10 +549,10 @@ squid_LDADD = \
 	$(DISK_OS_LIBS) \
 	$(CRYPTLIB) \
 	$(REGEXLIB) \
-	$(SNMPLIB) \
-	${ADAPTATION_LIBS} \
+	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
+	$(SNMP_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -563,8 +566,7 @@ squid_DEPENDENCIES = \
 	$(DISK_LIBS) \
 	$(DISK_LINKOBJS) \
 	$(REPL_OBJS) \
-	$(SNMPLIB) \
-	${ADAPTATION_LIBS} \
+	$(ADAPTATION_LIBS) \
 	$(ESI_LOCAL_LIBS) \
 	$(SSL_LIBS) \
 	$(COMMON_LIBS)
@@ -646,7 +648,6 @@ ufsdump_LDADD = \
 	$(REPL_OBJS) \
 	$(CRYPTLIB) \
 	$(REGEXLIB) \
-	$(SNMPLIB) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(EPOLL_LIBS) \
@@ -763,7 +764,7 @@ DEFAULT_ERROR_DIR	= $(datadir)/errors
 # Make location configure settings available to the code
 DEFS += -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" -DDEFAULT_SQUID_DATA_DIR=\"$(datadir)\" -DDEFAULT_SQUID_CONFIG_DIR=\"$(sysconfdir)\"
 
-snmp_core.o snmp_agent.o: ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
+snmp_core.o snmp_agent.o: ../snmplib/libsnmplib.a $(top_srcdir)/include/cache_snmp.h
 
 globals.cc: globals.h mk-globals-c.awk
 	$(AWK) -f $(srcdir)/mk-globals-c.awk < $(srcdir)/globals.h > $@ || ($(RM) -f $@ && exit 1)
@@ -816,7 +817,7 @@ cf.data: cf.data.pre Makefile
 	sed \
 	-e "s%[@]DEFAULT_HTTP_PORT[@]%$(DEFAULT_HTTP_PORT)%g" \
 	-e "s%[@]DEFAULT_ICP_PORT[@]%$(DEFAULT_ICP_PORT)%g" \
-	-e "s%[@]DEFAULT_CACHE_EFFECTIVE_USER[@]%${CACHE_EFFECTIVE_USER}%g" \
+	-e "s%[@]DEFAULT_CACHE_EFFECTIVE_USER[@]%$(CACHE_EFFECTIVE_USER)%g" \
 	-e "s%[@]DEFAULT_MIME_TABLE[@]%$(DEFAULT_MIME_TABLE)%g" \
 	-e "s%[@]DEFAULT_DNSSERVER[@]%$(DEFAULT_DNSSERVER)%g" \
 	-e "s%[@]DEFAULT_SSL_CRTD[@]%$(DEFAULT_SSL_CRTD)%g" \
@@ -1097,7 +1098,17 @@ tests_testACLMaxUserIP_SOURCES= \
 nodist_tests_testACLMaxUserIP_SOURCES= \
 	$(TESTSOURCES)
 tests_testACLMaxUserIP_LDADD= \
-	$(COMMON_LIBS) \
+	auth/libacls.la \
+	ident/libident.la \
+	acl/libacls.la \
+	eui/libeui.la \
+	acl/libstate.la \
+	auth/libauth.la \
+	acl/libapi.la \
+	base/libbase.la \
+	libsquid.la \
+	ip/libip.la \
+	fs/libfs.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1140,6 +1151,7 @@ tests_testCacheManager_SOURCES = \
 	tests/testCacheManager.h \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_ipc_Forwarder.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1263,19 +1275,31 @@ nodist_tests_testCacheManager_SOURCES = \
 	$(BUILT_SOURCES)
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
-	$(COMMON_LIBS) \
+	auth/libacls.la \
+	ident/libident.la \
+	acl/libacls.la \
+	eui/libeui.la \
+	acl/libstate.la \
+	auth/libauth.la \
+	acl/libapi.la \
+	base/libbase.la \
+	libsquid.la \
+	ip/libip.la \
+	fs/libfs.la \
+	ipc/libipc.la \
+	mgr/libmgr.la \
+	$(SNMP_LIBS) \
 	comm/libcomm.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
-	${ADAPTATION_LIBS} \
+	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
-	$(SNMPLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -1306,11 +1330,21 @@ tests_testDiskIO_LDADD = \
 	SquidConfig.o \
 	CommCalls.o \
 	DnsLookupDetails.o \
-	$(COMMON_LIBS) \
+	auth/libacls.la \
+	ident/libident.la \
+	acl/libacls.la \
+	eui/libeui.la \
+	acl/libstate.la \
+	auth/libauth.la \
+	base/libbase.la \
+	libsquid.la \
+	ip/libip.la \
+	fs/libfs.la \
 	$(REPL_OBJS) \
 	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
 	acl/libapi.la \
+	mgr/libmgr.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1342,6 +1376,7 @@ tests_testEvent_SOURCES = \
 	tests/testEvent.h \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_ipc_Forwarder.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1464,18 +1499,18 @@ nodist_tests_testEvent_SOURCES = \
 	$(BUILT_SOURCES)
 tests_testEvent_LDADD = \
 	$(COMMON_LIBS) \
+	$(SNMP_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
-	${ADAPTATION_LIBS} \
+	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
-	$(SNMPLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -1502,6 +1537,7 @@ tests_testEventLoop_SOURCES = \
 	tests/testEventLoop.h \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_ipc_Forwarder.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1624,18 +1660,18 @@ nodist_tests_testEventLoop_SOURCES = \
 	$(BUILT_SOURCES)
 tests_testEventLoop_LDADD = \
 	$(COMMON_LIBS) \
+	$(SNMP_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
-	${ADAPTATION_LIBS} \
+	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
-	$(SNMPLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -1672,6 +1708,7 @@ tests_test_http_range_SOURCES = \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
 	tests/stub_main_cc.cc \
+	tests/stub_ipc_Forwarder.cc \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
@@ -1779,18 +1816,18 @@ nodist_tests_test_http_range_SOURCES = \
 	$(BUILT_SOURCES)
 tests_test_http_range_LDADD = \
 	$(COMMON_LIBS) \
+	$(SNMP_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
-	${ADAPTATION_LIBS} \
+	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
-	$(SNMPLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -1815,6 +1852,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/testHttpRequestMethod.cc \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_ipc_Forwarder.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1939,18 +1977,18 @@ nodist_tests_testHttpRequest_SOURCES = \
 	$(BUILT_SOURCES)
 tests_testHttpRequest_LDADD = \
 	$(COMMON_LIBS) \
+	$(SNMP_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
-	${ADAPTATION_LIBS} \
+	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
-	$(SNMPLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
@@ -2068,7 +2106,9 @@ tests_testString_SOURCES = \
 nodist_tests_testString_SOURCES = \
 	$(TESTSOURCES)
 tests_testString_LDADD = \
-	$(COMMON_LIBS) \
+	base/libbase.la \
+	libsquid.la \
+	ip/libip.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
@@ -2231,6 +2271,7 @@ tests_testURL_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_debug.cc \
 	tests/stub_main_cc.cc \
+	tests/stub_ipc_Forwarder.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -2351,15 +2392,15 @@ nodist_tests_testURL_SOURCES = \
 	$(BUILT_SOURCES)
 tests_testURL_LDADD = \
 	$(COMMON_LIBS) \
+	$(SNMP_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
 	log/liblog.la \
 	$(REGEXLIB) \
 	$(REPL_OBJS) \
-	${ADAPTATION_LIBS} \
+	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
-	$(SNMPLIB) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \

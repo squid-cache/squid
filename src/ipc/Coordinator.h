@@ -15,7 +15,9 @@
 #include "ipc/SharedListen.h"
 #include "ipc/StrandCoords.h"
 #include "mgr/forward.h"
-
+#if SQUID_SNMP
+#include "snmp/forward.h"
+#endif
 #include <map>
 
 namespace Ipc
@@ -46,7 +48,10 @@ protected:
     void handleSharedListenRequest(const SharedListenRequest& request);
     void handleCacheMgrRequest(const Mgr::Request& request);
     void handleCacheMgrResponse(const Mgr::Response& response);
-
+#if SQUID_SNMP
+    void handleSnmpRequest(const Snmp::Request& request);
+    void handleSnmpResponse(const Snmp::Response& response);
+#endif
     /// calls comm_open_listener()
     int openListenSocket(const SharedListenRequest& request, int &errNo);
 
