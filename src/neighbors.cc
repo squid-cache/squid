@@ -168,6 +168,10 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
             return 0;
     }
 
+    // CONNECT requests are proxy requests. Not to be forwarded to origin servers.
+    if (p->options.originserver && request->method == METHOD_CONNECT)
+        return 0;
+
     if (p->peer_domain == NULL && p->access == NULL)
         return do_ping;
 
