@@ -75,7 +75,7 @@ public:
 #if USE_AUTH
                          AuthUserRequest::Pointer);
 #else
-                         int unused);
+                         void * unused);
 #endif
     void createStoreEntry(const HttpRequestMethod& m, request_flags flags);
     void removeStoreReference(store_client ** scp, StoreEntry ** ep);

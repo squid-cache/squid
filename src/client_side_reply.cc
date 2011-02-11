@@ -102,7 +102,7 @@ clientReplyContext::setReplyToError(
 #if USE_AUTH
     AuthUserRequest::Pointer auth_user_request
 #else
-    int
+    void*
 #endif
 )
 {
