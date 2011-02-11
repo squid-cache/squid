@@ -34,7 +34,9 @@
  */
 
 #include "squid.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "fde.h"
@@ -144,12 +146,14 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
     else
         r->client_addr.SetNoAddr();
     r->client_ident = NULL;
-
+#if USE_AUTH
     if (http->request->auth_user_request != NULL)
         r->client_ident = http->request->auth_user_request->username();
-    else if (http->request->extacl_user.defined()) {
-        r->client_ident = http->request->extacl_user.termedBuf();
-    }
+    else
+#endif
+        if (http->request->extacl_user.defined()) {
+            r->client_ident = http->request->extacl_user.termedBuf();
+        }
 
     if (!r->client_ident && (conn != NULL && conn->rfc931[0]))
         r->client_ident = conn->rfc931;
@@ -201,8 +205,12 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
                                     http->getConn() != NULL ? http->getConn()->peer : tmpnoaddr,
                                     http->request,
                                     NULL,
+#if USE_AUTH
                                     http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
                                     http->getConn()->auth_user_request : http->request->auth_user_request);
+#else
+                                    NULL);
+#endif
 
         node = (clientStreamNode *)http->client_stream.tail->data;
         clientStreamRead(node, http, node->readBuffer);

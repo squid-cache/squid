@@ -1569,8 +1569,8 @@ SQUID_YESNO([$enableval],
             [unrecognized argument to --enable-auth: $enableval])
 ])
 AC_MSG_NOTICE([Authentication support enabled: ${enable_auth:=yes}])
-SQUID_DEFINE_BOOL(USE_AUTH,$enable_auth,
-   [Enable support for authentication])
+SQUID_DEFINE_BOOL(USE_AUTH,$enable_auth,[Enable support for authentication])
+AM_CONDITIONAL(ENABLE_AUTH, test "x$enable_auth" != "xno")
 AUTH_MODULES=""
 
 AC_ARG_ENABLE(auth-basic,

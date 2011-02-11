@@ -33,7 +33,9 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "base/AsyncJob.h"
 #include "BodyPipe.h"
 #include "comm.h"
@@ -181,11 +183,13 @@ public:
      */
     int64_t mayNeedToReadMoreBody() const;
 
+#if USE_AUTH
     /**
      * note this is ONLY connection based because NTLM and Negotiate is against HTTP spec.
      * the user details for connection based authentication
      */
     AuthUserRequest::Pointer auth_user_request;
+#endif
 
     /**
      * used by the owner of the connection, opaque otherwise

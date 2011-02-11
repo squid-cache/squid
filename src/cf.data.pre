@@ -172,6 +172,7 @@ COMMENT_END
 
 NAME: auth_param
 TYPE: authparam
+IFDEF: USE_AUTH
 LOC: Auth::TheConfig
 DEFAULT: none
 DOC_START
