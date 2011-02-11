@@ -1,3 +1,22 @@
+Changes to squid-3.2.0.5 (12 Feb 2011):
+
+	- Regression Fix: profiler should not be built by default
+	- Regression Bug 3081: assertion failed: AsyncCallQueue
+	- Regression Bug 2948: Requests for FTP active downloads cause failed assertion
+	- Bug 3089: FTP command output overrides directory listing
+	- Bug 2870: --disable-auth does not work
+	- Bug 2586: multiple memory leaks during reconfigure
+	- Bug 2581: FTP directory listing sometimes fails
+	- Port from 2.7: maximum staleness limits
+	- HTTP/1.1: Support RFC 5861 Cache-Control: stale-if-error option
+	- HTTP/1.1: Support configurable status codes for deny_info
+	- Support upcoming "fresh message creation" eCAP API
+	- Aggregate SNMP responses when using SMP with multiple workers
+	- Several more Solaris, Windows and ICC support fixes
+	- ... all bug fixes and updates from 3.1.11
+	- ... and more code cleanup shufflings
+	- ... and several documentation updates
+
 Changes to squid-3.2.0.4 (22 Dec 2010):
 
 	- Port 2.x: cache_dir min-size setting
