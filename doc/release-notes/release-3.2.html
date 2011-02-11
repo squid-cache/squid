@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
- <TITLE>Squid 3.2.0.4 release notes</TITLE>
+ <TITLE>Squid 3.2.0.5 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.2.0.4 release notes</H1>
+<H1>Squid 3.2.0.5 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -70,7 +70,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.2.0.4 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.2.0.5 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.2/">http://www.squid-cache.org/Versions/v3/3.2/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -140,8 +140,9 @@ This is perfect for non-caching Squids but inappropriate for Squids that
 must coordinate caching activities (in-between environments are in a gray
 area requiring case-by-case analysis).</P>
 
-<P>Cache manager and SNMP statistics are reported from a worker point of
-view, for now.</P>
+<P>Cache manager statistics are reported from a worker point of view, for now.
+Though some reports are combined. SNMP statistics are combined across all
+workers.</P>
 
 <P>Startup, reconfiguration, shutdown, and log rotation are handled as for a
 monolithic Squid. Abnormally terminated workers are restarted while
@@ -514,6 +515,9 @@ If-statements can be used to make configuration directives depend on conditions.
 <P>The else part is optional. The keywords <EM>if</EM>, <EM>else</EM> and <EM>endif</EM> 
 must be typed on their own lines, as if they were regular configuration directives.</P>
 
+<DT><B>max_stale</B><DD>
+<P>Places an upper limit on how stale content Squid will serve from the cache if cache validation fails</P>
+
 <DT><B>memory_cache_mode</B><DD>
 <P>Controls which objects to keep in the memory cache (cache_mem)
 <PRE>
@@ -615,7 +619,7 @@ The old form is deprecated but still accepted.</P>
 <P><EM>icap::%&gt;bs</EM> Number of message body bytes received from the ICAP server.</P>
 <P><EM>%&gt;lp</EM> Local TCP port used by transactions with http servers.</P>
 <P><EM>%sn</EM> Unique sequence number per log line. Ported from 2.7</P>
-<P><EM>%&lt;eui</EM> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
+<P><EM>%&gt;eui</EM> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
 Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.</P>
 <P><EM>%err_code</EM> The ID of an error response served by Squid or
 a similar internal error identifier</P>
@@ -636,6 +640,10 @@ a similar internal error identifier</P>
 It does, however, require libnetfilter_conntrack.
 This will be included by default if available (see the --without-netfilter-conntrack configure option for more details).</P>
 <P><EM>miss</EM> sets a value for a cache miss. It is available for both the tos and mark options and takes precedence over the preserve-miss feature.</P>
+
+<DT><B>refresh_pattern</B><DD>
+<P>New option <EM>max-stale=</EM> to provide a maximum staleness factor. Squid won't
+serve objects more stale than this even if it failed to validate the object.</P>
 
 <DT><B>tcp_outgoing_mark</B><DD>
 <P>New configuration parameter <EM>tcp_outgoing_mark</EM></P>
@@ -1016,13 +1024,9 @@ certificate request and instead enables the ssl_crtd processes.</P>
 <DT><B>logformat</B><DD>
 <P><EM>%oa</EM> tag not yet ported from 2.7</P>
 
-<DT><B>max_stale</B><DD>
-<P>Not yet ported from 2.7</P>
-
 <DT><B>refresh_pattern</B><DD>
 <P><EM>stale-while-revalidate=</EM> not yet ported from 2.7</P>
 <P><EM>ignore-stale-while-revalidate=</EM> not yet ported from 2.7</P>
-<P><EM>max-stale=</EM> not yet ported from 2.7</P>
 <P><EM>negative-ttl=</EM> not yet ported from 2.7</P>
 
 <DT><B>refresh_stale_hit</B><DD>
