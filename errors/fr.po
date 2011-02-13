@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-02-06 22:39+1300\n"
-"PO-Revision-Date: 2011-02-13 16:50+0200\n"
+"PO-Revision-Date: 2011-02-13 21:22+0200\n"
 "Last-Translator: Bernard <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
@@ -48,7 +48,6 @@ msgid "A URL for the requested URN could not be retrieved"
 msgstr "En utilisant URN, la requête URL n'a pas pu être chargée."
 
 #: templates/ERR_GATEWAY_FAILURE:6
-#, fuzzy
 msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
 "request from being completed."
@@ -141,8 +140,8 @@ msgstr "La connexion %I a échouée."
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
 msgstr ""
-"Le champ \"Content-Length\" est absent, pour l'utilisation des requêtes POST "
-"ou PUT"
+"Le champ \"Content-Length\" est absent, pour l'utilisation des requêtes avec "
+"POST ou PUT"
 
 #: templates/ERR_DIR_LISTING:3
 msgid "Directory Content:"
@@ -253,7 +252,6 @@ msgstr "Pour configurer Firefox, allez à : <ul>"
 msgid "For Internet Explorer browsers go to: <ul>"
 msgstr "Pour configurer Internet Explorer, allez à : <ul>"
 
-# Suggestion2 ok
 #: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
 msgid "For Opera browsers go to: <ul>"
 msgstr "Pour configurer Opéra, allez à : <ul>"
@@ -263,7 +261,6 @@ msgid "Forwarding Denied."
 msgstr "Retransmission interdite."
 
 #: templates/ERR_GATEWAY_FAILURE:5
-#, fuzzy
 msgid "Gateway Proxy Failure"
 msgstr "Défaillance de la passerelle Proxy "
 
@@ -322,7 +319,7 @@ msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
 msgstr ""
-"Si vous effectuez une requête POST ou PUT, l'élément que vous essayez "
+"Si vous effectuez une requête avec POST ou PUT, l'élément que vous essayez "
 "d'envoyer est alors trop volumineux."
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
@@ -634,7 +631,6 @@ msgstr ""
 "configuré."
 
 #: templates/ERR_GATEWAY_FAILURE:7
-#, fuzzy
 msgid ""
 "This may be due to limits established by the Internet Service Provider who "
 "operates this cache. Please contact them directly for more information."
@@ -812,7 +808,7 @@ msgstr "Votre webmaster est <a href=\"mailto:%w\">%w</a>."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr "Réponse de longueur nulle"
+msgstr "Réponse de taille zéro"
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "ERREUR : L'URN demandée n'a pu être chargée"
