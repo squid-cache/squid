@@ -93,7 +93,7 @@ check_mit() {
                        else
                          ac_gssapi_libs=`krb5-config --libs gssapi 2>/dev/null`
                          if test "x$ac_gssapi_libs" != "x" ; then
-                           LDFLAGS="$LDFLAGS $ac_gssapi_libs"
+                           LIBS="$LIBS $ac_gssapi_libs"
                          else
                            for lib in $ac_gss_libs; do
                              AC_CHECK_LIB($lib,main)
@@ -117,7 +117,7 @@ check_mit() {
                      fi
                      ac_gssapi_libs=`krb5-config --libs gssapi 2>/dev/null`
                      if test "x$ac_gssapi_libs" != "x" ; then
-                         LDFLAGS="$LDFLAGS $ac_gssapi_libs"
+                         LIBS="$LIBS $ac_gssapi_libs"
                      else
                          for lib in $ac_gss_libs; do
                             AC_CHECK_LIB($lib,main)
@@ -171,7 +171,7 @@ check_heimdal(){
                              ac_libdir=`echo $ac_gssapi_libs | sed -e 's/.*-L//' | sed -e 's/ .*//'`  
                              LDFLAGS="$LDFLAGS $w_flag$ac_libdir$w_flag_2"
                            fi
-                           LDFLAGS="$LDFLAGS $ac_gssapi_libs"
+                           LIBS="$LIBS $ac_gssapi_libs"
                          else
                            for lib in $ac_gss_libs; do
                              AC_CHECK_LIB($lib,main)
@@ -200,7 +200,7 @@ check_heimdal(){
                            ac_libdir=`echo $ac_gssapi_libs | sed -e 's/.*-L//' | sed -e 's/ .*//'`  
                            LDFLAGS="$LDFLAGS $w_flag$ac_libdir$w_flag_2"
                          fi
-                         LDFLAGS="$LDFLAGS $ac_gssapi_libs"
+                         LIBS="$LIBS $ac_gssapi_libs"
                      else
                          for lib in $ac_gss_libs; do
                             AC_CHECK_LIB($lib,main)
