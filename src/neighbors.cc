@@ -1510,9 +1510,8 @@ peerCountMcastPeersDone(void *data)
 
     cbdataReferenceDone(psstate->callback_data);
 
-    EBIT_SET(fake->flags, ENTRY_ABORTED);
+    fake->abort(); // sets ENTRY_ABORTED and initiates releated cleanup
     HTTPMSGUNLOCK(fake->mem_obj->request);
-    fake->releaseRequest();
     fake->unlock();
     HTTPMSGUNLOCK(psstate->request);
     cbdataFree(psstate);
