@@ -139,8 +139,8 @@ Mgr::Forwarder::handleRemoteAck()
     Must(entry != NULL);
 
     requestId = 0;
-    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
-    entry->complete();
+    // Do not clear ENTRY_FWD_HDR_WAIT or do entry->complete() because
+    // it will trigger our client side processing. Let job cleanup close.
 }
 
 /// Mgr::Forwarder::requestTimedOut wrapper
