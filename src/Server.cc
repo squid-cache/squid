@@ -524,7 +524,7 @@ ServerStateData::maybePurgeOthers()
     purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_CONTENT_LOCATION);
 }
 
-// called (usually by kids) when we have final (possibly adapted) reply headers
+/// called when we have final (possibly adapted) reply headers; kids extend
 void
 ServerStateData::haveParsedReplyHeaders()
 {
