@@ -1,12 +1,17 @@
 #ifndef SQUID_FS_ROCK_DIR_MAP_H
 #define SQUID_FS_ROCK_DIR_MAP_H
 
+#include "fs/rock/RockFile.h"
 #include "ipc/AtomicWord.h"
 #include "ipc/SharedMemory.h"
 
+namespace Rock {
+
 class StoreEntryBasics {
 public:
-    void set(const StoreEntry &from);
+    void set(const DbCellHeader &aHeader, const StoreEntry &anEntry);
+
+    DbCellHeader header; ///< rock-specific entry metadata
 
     /* START OF ON-DISK STORE_META_STD TLV field */
     time_t timestamp;
@@ -19,7 +24,21 @@ public:
     /* END OF ON-DISK STORE_META_STD */
 };
 
-namespace Rock {
+/// aggregates basic map performance measurements; all numbers are approximate
+class MapStats {
+public:
+    MapStats();
+
+    void dump(StoreEntry &e) const;
+
+    int capacity; ///< the total number of slots in the map
+    int readable; ///< number of slots in Readable state
+    int writeable; ///< number of slots in Writeable state
+    int empty; ///< number of slots in Empty state
+    int readers; ///< sum of slot.readers
+    int writers; ///< sum of slot.writers
+    int marked; ///< number of slots marked for freeing
+};
 
 /// DirMap entry
 class Slot {
@@ -39,6 +58,9 @@ public:
     void releaseSharedLock() const; ///< undo successful sharedLock()
     void releaseExclusiveLock(); ///< undo successful exclusiveLock()
     void switchExclusiveToSharedLock(); ///< trade exclusive for shared access
+
+    /// adds approximate current stats to the supplied ones
+    void updateStats(MapStats &stats) const;
 
 public:
     // we want two uint64_t, but older GCCs lack __sync_fetch_and_add_8
@@ -66,7 +88,10 @@ public:
     void closeForWriting(const sfileno fileno);
 
     /// stores entry info at the requested slot or returns false
-    bool putAt(const StoreEntry &e, const sfileno fileno);
+    bool putAt(const DbCellHeader &header, const StoreEntry &e, const sfileno fileno);
+
+    /// only works on locked entries; returns nil unless the slot is readable
+    const StoreEntryBasics *peekAtReader(const sfileno fileno) const;
 
     /// mark the slot as waiting to be freed and, if possible, free it
     void free(const sfileno fileno);
@@ -85,6 +110,9 @@ public:
     bool valid(int n) const; ///< whether n is a valid slot coordinate
     int entryCount() const; ///< number of used slots
     int entryLimit() const; ///< maximum number of slots that can be used
+
+    /// adds approximate current stats to the supplied ones
+    void updateStats(MapStats &stats) const;
 
     static int AbsoluteEntryLimit(); ///< maximum entryLimit() possible
 
