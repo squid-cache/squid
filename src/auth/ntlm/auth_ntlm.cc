@@ -294,12 +294,6 @@ AuthNTLMConfig::decode(char const *proxy_auth)
     return auth_user_request;
 }
 
-void
-NTLMUser::deleteSelf() const
-{
-    delete this;
-}
-
 NTLMUser::NTLMUser (AuthConfig *aConfig) : AuthUser (aConfig)
 {
     proxy_auth_list.head = proxy_auth_list.tail = NULL;

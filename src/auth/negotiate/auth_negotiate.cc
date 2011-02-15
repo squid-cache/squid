@@ -320,12 +320,6 @@ AuthNegotiateConfig::decode(char const *proxy_auth)
     return auth_user_request;
 }
 
-void
-NegotiateUser::deleteSelf() const
-{
-    delete this;
-}
-
 NegotiateUser::NegotiateUser(AuthConfig *aConfig) : AuthUser (aConfig)
 {
     proxy_auth_list.head = proxy_auth_list.tail = NULL;
