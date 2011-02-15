@@ -112,7 +112,7 @@ public:
     void purgeMem();
     void swapOut();
     bool swapOutAble() const;
-    void swapOutFileClose();
+    void swapOutFileClose(int how);
     const char *url() const;
     int checkCachable();
     int checkNegativeHit() const;

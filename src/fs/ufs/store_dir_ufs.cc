@@ -57,13 +57,17 @@ int *UFSSwapDir::UFSDirToGlobalDirMapping = NULL;
  * object is able to be stored on this filesystem. UFS filesystems will
  * happily store anything as long as the LRU time isn't too small.
  */
-int
-UFSSwapDir::canStore(StoreEntry const &e)const
+bool
+UFSSwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
 {
-    if (IO->shedLoad())
-        return -1;
+    if (!SwapDir::canStore(e, diskSpaceNeeded, load))
+        return false;
 
-    return IO->load();
+    if (IO->shedLoad())
+        return false;
+
+    load = IO->load();
+    return true;
 }
 
 
