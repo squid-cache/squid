@@ -483,6 +483,9 @@ void diskerRead(const IpcIoRequest &request)
     response.command = request.command;
 
     const ssize_t read = pread(TheFile, response.buf, request.len, request.offset);
+    statCounter.syscalls.disk.reads++;
+    fd_bytes(TheFile, read, FD_READ);
+
     if (read >= 0) {
         response.xerrno = 0;
         response.len = static_cast<size_t>(read); // safe because read > 0
@@ -515,6 +518,9 @@ void diskerWrite(const IpcIoRequest &request)
     response.command = request.command;
 
     const ssize_t wrote = pwrite(TheFile, request.buf, request.len, request.offset);
+    statCounter.syscalls.disk.writes++;
+    fd_bytes(TheFile, wrote, FD_WRITE);
+
     if (wrote >= 0) {
         response.xerrno = 0;
         response.len = static_cast<size_t>(wrote); // safe because wrote > 0
