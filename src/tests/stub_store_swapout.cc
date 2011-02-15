@@ -38,7 +38,7 @@
 StoreIoStats store_io_stats;
 
 void
-StoreEntry::swapOutFileClose()
+StoreEntry::swapOutFileClose(int)
 {
     fatal ("Not implemented");
 }

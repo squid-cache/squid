@@ -398,8 +398,13 @@ RebuildState::rebuildFromDirectory()
             continue;
         }
 
+        MemBuf buf;
+        buf.init(SM_PAGE_SIZE, SM_PAGE_SIZE);
+        if (!storeRebuildLoadEntry(fd, sd->index, buf, counts))
+            return;
+
         StoreEntry tmpe;
-        const bool loaded = storeRebuildLoadEntry(fd, tmpe, key, counts,
+        const bool loaded = storeRebuildParseEntry(buf, tmpe, key, counts,
             (int64_t)sb.st_size);
 
         file_close(fd);

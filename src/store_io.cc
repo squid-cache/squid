@@ -15,31 +15,23 @@ StoreIOState::Pointer
 storeCreate(StoreEntry * e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * close_callback, void *callback_data)
 {
     assert (e);
-    ssize_t objsize;
-    sdirno dirn;
-    RefCount<SwapDir> SD;
 
     store_io_stats.create.calls++;
-    /* This is just done for logging purposes */
-    objsize = e->objectLen();
-
-    if (objsize != -1)
-        objsize += e->mem_obj->swap_hdr_sz;
 
     /*
      * Pick the swapdir
      * We assume that the header has been packed by now ..
      */
-    dirn = storeDirSelectSwapDir(e);
+    const sdirno dirn = storeDirSelectSwapDir(e);
 
     if (dirn == -1) {
-        debugs(20, 2, "storeCreate: no valid swapdirs for this object");
+        debugs(20, 2, "storeCreate: no swapdirs for " << *e);
         store_io_stats.create.select_fail++;
         return NULL;
     }
 
-    debugs(20, 2, "storeCreate: Selected dir '" << dirn << "' for obj size '" << objsize << "'");
-    SD = dynamic_cast<SwapDir *>(INDEXSD(dirn));
+    debugs(20, 2, "storeCreate: Selected dir " << dirn << " for " << *e);
+    SwapDir *SD = dynamic_cast<SwapDir *>(INDEXSD(dirn));
 
     /* Now that we have a fs to use, call its storeCreate function */
     StoreIOState::Pointer sio = SD->createStoreIO(*e, file_callback, close_callback, callback_data);
@@ -63,7 +55,7 @@ storeOpen(StoreEntry * e, StoreIOState::STFNCB * file_callback, StoreIOState::ST
 }
 
 void
-storeClose(StoreIOState::Pointer sio)
+storeClose(StoreIOState::Pointer sio, int how)
 {
     if (sio->flags.closing) {
         debugs(20,3,HERE << "storeClose: flags.closing already set, bailing");
@@ -72,8 +64,8 @@ storeClose(StoreIOState::Pointer sio)
 
     sio->flags.closing = 1;
 
-    debugs(20,3,HERE << "storeClose: calling sio->close()");
-    sio->close();
+    debugs(20,3,HERE << "storeClose: calling sio->close(" << how << ")");
+    sio->close(how);
 }
 
 void

@@ -23,9 +23,10 @@ void
 TestSwapDir::init()
 {}
 
-int
-TestSwapDir::canStore(const StoreEntry&) const
+bool
+TestSwapDir::canStore(const StoreEntry &, int64_t, int &load) const
 {
+    load = 0;
     return true;
 }
 

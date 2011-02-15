@@ -176,8 +176,8 @@ public:
     virtual bool doubleCheck(StoreEntry &);	/* Double check the obj integrity */
     virtual void statfs(StoreEntry &) const;	/* Dump fs statistics */
     virtual void maintain();	/* Replacement maintainence */
-    /* <0 == error. > 1000 == error */
-    virtual int canStore(StoreEntry const &)const = 0; /* Check if the fs will store an object */
+    /// check whether we can store the entry; if we can, report current load
+    virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const = 0;
     /* These two are notifications */
     virtual void reference(StoreEntry &);	/* Reference this object */
     virtual void dereference(StoreEntry &);	/* Unreference this object */

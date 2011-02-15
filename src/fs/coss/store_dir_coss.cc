@@ -960,26 +960,14 @@ CossSwapDir::~CossSwapDir()
     safe_free(stripe_path);
 }
 
-/*
- * storeCossDirCheckObj
- *
- * This routine is called by storeDirSelectSwapDir to see if the given
- * object is able to be stored on this filesystem. COSS filesystems will
- * not store everything. We don't check for maxobjsize here since its
- * done by the upper layers.
- */
-int
-CossSwapDir::canStore(StoreEntry const &e)const
+bool
+CossSwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
 {
+    if (!SwapDir::canStore(e, diskSpaceNeeded, load))
+        return false;
 
-    /* Check if the object is a special object, we can't cache these */
-
-    if (EBIT_TEST(e.flags, ENTRY_SPECIAL))
-        return -1;
-
-    /* Otherwise, we're ok */
-    /* Return load, cs->aq.aq_numpending out of MAX_ASYNCOP */
-    return io->load();
+    load = io->load();
+    return true;
 }
 
 /*
