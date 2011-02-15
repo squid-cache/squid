@@ -296,13 +296,13 @@ Rock::SwapDir::rebuild() {
 /* Add a new object to the cache with empty memory copy and pointer to disk
  * use to rebuild store from disk. Based on UFSSwapDir::addDiskRestore */
 bool
-Rock::SwapDir::addEntry(const int fileno, const StoreEntry &from)
+Rock::SwapDir::addEntry(const int fileno, const DbCellHeader &header, const StoreEntry &from)
 {
     debugs(47, 8, HERE << &from << ' ' << from.getMD5Text() <<
        ", fileno="<< std::setfill('0') << std::hex << std::uppercase <<
        std::setw(8) << fileno);
 
-    if (map->putAt(from, fileno)) {
+    if (map->putAt(header, from, fileno)) {
         // we do not add this entry to store_table so core will not updateSize
         updateSize(from.swap_file_sz, +1);
         return true;
@@ -312,24 +312,23 @@ Rock::SwapDir::addEntry(const int fileno, const StoreEntry &from)
 }
 
 
-int
-Rock::SwapDir::canStore(const StoreEntry &e) const
+bool
+Rock::SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
 {
-    debugs(47,8, HERE << e.swap_file_sz << " ? " << max_objsize);
+    if (!::SwapDir::canStore(e, sizeof(DbCellHeader)+diskSpaceNeeded, load))
+        return false;
 
-    if (EBIT_TEST(e.flags, ENTRY_SPECIAL))
-        return -1;
-
-    if (!theFile || !theFile->canRead() || !theFile->canWrite())
-        return -1;
+    if (!theFile || !theFile->canWrite())
+        return false;
 
     if (!map)
-        return -1;
+        return false;
 
     if (io->shedLoad())
-        return -1;
+        return false;
 
-    return io->load();
+    load = io->load();
+    return true;
 }
 
 StoreIOState::Pointer
@@ -340,6 +339,16 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
         return NULL;
     }
 
+    // compute payload size for our cell header, using StoreEntry info
+    // careful: e.objectLen() may still be negative here
+    const int64_t expectedReplySize = e.mem_obj->expectedReplySize();
+    assert(expectedReplySize >= 0); // must know to prevent cell overflows
+    assert(e.mem_obj->swap_hdr_sz > 0);
+    DbCellHeader header;
+    header.payloadSize = e.mem_obj->swap_hdr_sz + expectedReplySize;
+    const int64_t payloadEnd = sizeof(DbCellHeader) + header.payloadSize;
+    assert(payloadEnd <= max_objsize);
+
     sfileno fileno;
     StoreEntryBasics *const basics =
         map->openForWriting(reinterpret_cast<const cache_key *>(e.key), fileno);
@@ -347,25 +356,24 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
         debugs(47, 5, HERE << "Rock::SwapDir::createStoreIO: map->add failed");
         return NULL;
     }
-    basics->set(e);
+    e.swap_file_sz = header.payloadSize; // and will be copied to the map
+    basics->set(header, e);
 
-    // XXX: We rely on our caller, storeSwapOutStart(), to set e->fileno.
+    // XXX: We rely on our caller, storeSwapOutStart(), to set e.fileno.
     // If that does not happen, the entry will not decrement the read level!
 
     IoState *sio = new IoState(this, &e, cbFile, cbIo, data);
 
     sio->swap_dirn = index;
     sio->swap_filen = fileno;
-    sio->offset_ = diskOffset(sio->swap_filen);
-    sio->entrySize = e.objectLen() + e.mem_obj->swap_hdr_sz;
+    sio->payloadEnd = payloadEnd;
+    sio->diskOffset = diskOffset(sio->swap_filen);
 
     debugs(47,5, HERE << "dir " << index << " created new fileno " <<
         std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
-        sio->swap_filen << std::dec << " at " << sio->offset_ << " size: " <<
-        sio->entrySize << " (" << e.objectLen() << '+' <<
-        e.mem_obj->swap_hdr_sz << ")");
+        sio->swap_filen << std::dec << " at " << sio->diskOffset);
 
-    assert(sio->offset_ + sio->entrySize <= diskOffsetLimit());
+    assert(sio->diskOffset + payloadEnd <= diskOffsetLimit());
 
     sio->file(theFile);
 
@@ -376,15 +384,18 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
 int64_t
 Rock::SwapDir::diskOffset(int filen) const
 {
+    assert(filen >= 0);
     return HeaderSize + max_objsize*filen;
 }
 
 int64_t
 Rock::SwapDir::diskOffsetLimit() const
 {
+    assert(map);
     return diskOffset(map->entryLimit());
 }
 
+// tries to open an old or being-written-to entry with swap_filen for reading
 StoreIOState::Pointer
 Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOState::STIOCB *cbIo, void *data)
 {
@@ -398,23 +409,29 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
         return NULL;
     }
 
-    // The only way the entry has swap_filen is if get() locked it for reading
-    // so we do not need to map->openForReadingAt(swap_filen) again here.
+    // The are two ways an entry can get swap_filen: our get() locked it for
+    // reading or our storeSwapOutStart() locked it for writing. Peeking at our
+    // locked entry is safe, but no support for reading a filling entry.
+    const StoreEntryBasics *basics = map->peekAtReader(e.swap_filen);
+    if (!basics)
+        return NULL; // we were writing afterall
 
     IoState *sio = new IoState(this, &e, cbFile, cbIo, data);
 
     sio->swap_dirn = index;
     sio->swap_filen = e.swap_filen;
+    sio->payloadEnd = sizeof(DbCellHeader) + basics->header.payloadSize;
+    assert(sio->payloadEnd <= max_objsize); // the payload fits the slot
+
     debugs(47,5, HERE << "dir " << index << " has old fileno: " <<
         std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
         sio->swap_filen);
 
-    assert(map->valid(sio->swap_filen));
-    sio->offset_ = diskOffset(sio->swap_filen);
-    sio->entrySize = e.swap_file_sz;
-    assert(sio->entrySize <= max_objsize);
+    assert(basics->swap_file_sz > 0);
+    assert(basics->swap_file_sz == e.swap_file_sz);
 
-    assert(sio->offset_ + sio->entrySize <= diskOffsetLimit());
+    sio->diskOffset = diskOffset(sio->swap_filen);
+    assert(sio->diskOffset + sio->payloadEnd <= diskOffsetLimit());
 
     sio->file(theFile);
     return sio;
@@ -460,7 +477,9 @@ Rock::SwapDir::readCompleted(const char *buf, int rlen, int errflag, RefCount< :
     assert(request);
     IoState::Pointer sio = request->sio;
 
-    // do not increment sio->offset_: callers always supply relative offset
+    if (errflag == DISK_OK && rlen > 0)
+        sio->offset_ += rlen;
+    assert(sio->diskOffset + sio->offset_ <= diskOffsetLimit()); // post-factum
 
     StoreIOState::STRCB *callback = sio->read.callback;
     assert(callback);
@@ -481,7 +500,7 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
     if (errflag == DISK_OK) {
         // close, assuming we only write once; the entry gets the read lock
         map->closeForWriting(sio.swap_filen);
-        // and sio.offset_ += rlen;
+        // do not increment sio.offset_ because we do it in sio->write()
     } else {
         // Do not abortWriting here. The entry should keep the write lock
         // instead of losing association with the store and confusing core.
@@ -490,7 +509,7 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
 
     // TODO: always compute cur_size based on map, do not store it
     cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
-    assert(sio.offset_ <= diskOffsetLimit()); // post-factum check
+    assert(sio.diskOffset + sio.offset_ <= diskOffsetLimit()); // post-factum
 
     sio.finishedWriting(errflag);
 }
@@ -498,7 +517,7 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
 bool
 Rock::SwapDir::full() const
 {
-    return map->full();
+    return map && map->full();
 }
 
 void
@@ -625,9 +644,17 @@ Rock::SwapDir::statfs(StoreEntry &e) const
     if (map) {
         const int limit = map->entryLimit();
         storeAppendPrintf(&e, "Maximum entries: %9d\n", limit);
-        if (limit > 0)
+        if (limit > 0) {
+            const int entryCount = map->entryCount();
             storeAppendPrintf(&e, "Current entries: %9d %.2f%%\n",
-                map->entryCount(), (100.0 * map->entryCount() / limit));
+                entryCount, (100.0 * entryCount / limit));
+
+            if (limit < 100) { // XXX: otherwise too expensive to count
+                MapStats stats;
+                map->updateStats(stats);
+                stats.dump(e);
+            }
+        }
     }    
 
     storeAppendPrintf(&e, "Pending operations: %d out of %d\n",
