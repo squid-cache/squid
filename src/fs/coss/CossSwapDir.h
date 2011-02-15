@@ -37,7 +37,7 @@ public:
     virtual StoreSearch *search(String const url, HttpRequest *);
     virtual void unlink (StoreEntry &);
     virtual void statfs (StoreEntry &)const;
-    virtual int canStore(StoreEntry const &)const;
+    virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const;
     virtual int callback();
     virtual void sync();
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
