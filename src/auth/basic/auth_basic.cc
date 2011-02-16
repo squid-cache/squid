@@ -337,7 +337,7 @@ AuthBasicConfig::decodeCleartext(const char *httpAuthHeader)
         if (strcspn(cleartext, "\r\n") != strlen(cleartext)) {
             debugs(29, DBG_IMPORTANT, "WARNING: Bad characters in authorization header '" << httpAuthHeader << "'");
             safe_free(cleartext);
-       }
+        }
     }
     return cleartext;
 }
