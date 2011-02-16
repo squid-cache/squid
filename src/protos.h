@@ -535,10 +535,12 @@ SQUIDCEXTERN void storeRebuildStart(void);
 SQUIDCEXTERN void storeRebuildComplete(struct _store_rebuild_data *);
 SQUIDCEXTERN void storeRebuildProgress(int sd_index, int total, int sofar);
 
-/// tries to load and validate entry metadata; returns tmp entry on success
-SQUIDCEXTERN bool storeRebuildLoadEntry(int fd, StoreEntry &e, cache_key *key, struct _store_rebuild_data &counts, uint64_t expectedSize);
+/// loads entry from disk; fills supplied memory buffer on success
+bool storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, struct _store_rebuild_data &counts);
+/// parses entry buffer and validates entry metadata; fills e on success
+bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, struct _store_rebuild_data &counts, uint64_t expectedSize);
 /// checks whether the loaded entry should be kept; updates counters
-SQUIDCEXTERN bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, struct _store_rebuild_data &counts);
+bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, struct _store_rebuild_data &counts);
 
 
 /*

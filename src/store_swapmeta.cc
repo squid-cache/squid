@@ -61,8 +61,8 @@ storeSwapMetaBuild(StoreEntry * e)
     tlv **T = &TLV;
     const char *url;
     const char *vary;
-    const int64_t objsize = e->objectLen();
     assert(e->mem_obj != NULL);
+    const int64_t objsize = e->mem_obj->expectedReplySize();
     assert(e->swap_status == SWAPOUT_WRITING);
     url = e->url();
     debugs(20, 3, "storeSwapMetaBuild: " << url  );

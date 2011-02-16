@@ -64,6 +64,9 @@ public:
     void replaceHttpReply(HttpReply *newrep);
     void stat (MemBuf * mb) const;
     int64_t endOffset () const;
+    /// negative if unknown; otherwise, expected object_sz, expected endOffset
+    /// maximum, and stored reply headers+body size (all three are the same)
+    int64_t expectedReplySize() const;
     int64_t size() const;
     void reset();
     int64_t lowestMemReaderOffset() const;
@@ -106,8 +109,7 @@ public:
     {
 
     public:
-        int64_t queue_offset;     /* relative to in-mem data */
-        mem_node *memnode;      /* which node we're currently paging out */
+        int64_t queue_offset; ///< number of bytes sent to SwapDir for writing
         StoreIOState::Pointer sio;
     };
 

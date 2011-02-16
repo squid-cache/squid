@@ -479,6 +479,9 @@ diskerRead(IpcIoMsg &ipcIo)
 {
     debugs(0,0,HERE);
     const ssize_t read = pread(TheFile, ipcIo.buf, ipcIo.len, ipcIo.offset);
+    statCounter.syscalls.disk.reads++;
+    fd_bytes(TheFile, read, FD_READ);
+
     if (read >= 0) {
         ipcIo.xerrno = 0;
         const size_t len = static_cast<size_t>(read); // safe because read > 0
@@ -498,6 +501,9 @@ diskerWrite(IpcIoMsg &ipcIo)
 {
     debugs(0,0,HERE);
     const ssize_t wrote = pwrite(TheFile, ipcIo.buf, ipcIo.len, ipcIo.offset);
+    statCounter.syscalls.disk.writes++;
+    fd_bytes(TheFile, wrote, FD_WRITE);
+
     if (wrote >= 0) {
         ipcIo.xerrno = 0;
         const size_t len = static_cast<size_t>(wrote); // safe because wrote > 0
