@@ -286,24 +286,34 @@ struct InitStoreEntry : public unary_function<StoreMeta, void> {
 };
 
 bool
-storeRebuildLoadEntry(int fd, StoreEntry &tmpe, cache_key *key,
-                      struct _store_rebuild_data &counts, uint64_t expectedSize)
+storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf,
+                      struct _store_rebuild_data &counts)
 {
     if (fd < 0)
         return false;
 
-    char hdr_buf[SM_PAGE_SIZE];
+    assert(buf.hasSpace()); // caller must allocate
 
-    ++counts.scancount;
+    const int len = FD_READ_METHOD(fd, buf.space(), buf.spaceSize());
     statCounter.syscalls.disk.reads++;
-    int len;
-    if ((len = FD_READ_METHOD(fd, hdr_buf, SM_PAGE_SIZE)) < 0) {
-        debugs(47, 1, HERE << "failed to read swap entry meta data: " << xstrerror());
+    if (len < 0) {
+        const int xerrno = errno;
+        debugs(47, 1, "cache_dir[" << diskIndex << "]: " <<
+            "failed to read swap entry meta data: " << xstrerr(xerrno));
         return false;
     }
 
+    buf.appended(len);
+    return true;
+}
+
+bool
+storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
+                       struct _store_rebuild_data &counts,
+                       uint64_t expectedSize)
+{
     int swap_hdr_len = 0;
-    StoreMetaUnpacker aBuilder(hdr_buf, len, &swap_hdr_len);
+    StoreMetaUnpacker aBuilder(buf.content(), buf.contentSize(), &swap_hdr_len);
     if (aBuilder.isBufferZero()) {
         debugs(47,5, HERE << "skipping empty record.");
         return false;
@@ -319,6 +329,8 @@ storeRebuildLoadEntry(int fd, StoreEntry &tmpe, cache_key *key,
         debugs(47, 1, HERE << "failed to get swap entry meta data list");
         return false;
     }
+
+    // TODO: consume parsed metadata?
 
     debugs(47,7, HERE << "successful swap meta unpacking");
     memset(key, '\0', SQUID_MD5_DIGEST_LENGTH);
@@ -346,6 +358,10 @@ storeRebuildLoadEntry(int fd, StoreEntry &tmpe, cache_key *key,
                    tmpe.swap_file_sz << "!=" << expectedSize);
             return false;
         }
+    } else
+    if (tmpe.swap_file_sz <= 0) {
+        debugs(47, 1, HERE << "missing swap entry size: " << tmpe);
+        return false;
     }
 
     if (EBIT_TEST(tmpe.flags, KEY_PRIVATE)) {

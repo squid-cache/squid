@@ -186,7 +186,8 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
     int load;
     RefCount<SwapDir> sd;
 
-    ssize_t objsize = e->objectLen();
+    // e->objectLen() is negative at this point when we are still STORE_PENDING
+    ssize_t objsize = e->mem_obj->expectedReplySize();
     if (objsize != -1)
         objsize += e->mem_obj->swap_hdr_sz;
 
@@ -196,17 +197,8 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
 
         sd = dynamic_cast<SwapDir *>(INDEXSD(dirn));
 
-        if (sd->flags.read_only)
+        if (!sd->canStore(*e, objsize, load))
             continue;
-
-        if (sd->cur_size > sd->max_size)
-            continue;
-
-        if (!sd->objectSizeIsAcceptable(objsize))
-            continue;
-
-        /* check for error or overload condition */
-        load = sd->canStore(*e);
 
         if (load < 0 || load > 1000) {
             continue;
@@ -234,7 +226,6 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
 static int
 storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
 {
-    ssize_t objsize;
     ssize_t most_free = 0, cur_free;
     ssize_t least_objsize = -1;
     int least_load = INT_MAX;
@@ -243,8 +234,8 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
     int i;
     RefCount<SwapDir> SD;
 
-    /* Calculate the object size */
-    objsize = e->objectLen();
+    // e->objectLen() is negative at this point when we are still STORE_PENDING
+    ssize_t objsize = e->mem_obj->expectedReplySize();
 
     if (objsize != -1)
         objsize += e->mem_obj->swap_hdr_sz;
@@ -252,19 +243,11 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
     for (i = 0; i < Config.cacheSwap.n_configured; i++) {
         SD = dynamic_cast<SwapDir *>(INDEXSD(i));
         SD->flags.selected = 0;
-        load = SD->canStore(*e);
 
-        if (load < 0 || load > 1000) {
-            continue;
-        }
-
-        if (!SD->objectSizeIsAcceptable(objsize))
+        if (!SD->canStore(*e, objsize, load))
             continue;
 
-        if (SD->flags.read_only)
-            continue;
-
-        if (SD->cur_size > SD->max_size)
+        if (load < 0 || load > 1000)
             continue;
 
         if (load > least_load)

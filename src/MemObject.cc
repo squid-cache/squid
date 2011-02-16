@@ -240,6 +240,22 @@ MemObject::size() const
     return object_sz;
 }
 
+int64_t
+MemObject::expectedReplySize() const {
+    debugs(20, 7, HERE << "object_sz: " << object_sz);
+    if (object_sz >= 0) // complete() has been called; we know the exact answer
+        return object_sz;
+
+    if (_reply) {
+        const int64_t clen = _reply->bodySize(method);
+        debugs(20, 7, HERE << "clen: " << clen);
+        if (clen >= 0 && _reply->hdr_sz > 0) // yuck: HttpMsg sets hdr_sz to 0
+            return clen + _reply->hdr_sz;
+    }
+
+    return -1; // not enough information to predict
+}
+
 void
 MemObject::reset()
 {
@@ -339,7 +355,7 @@ MemObject::trimSwappable()
      * there will be a chunk of the data which is not in memory
      * and is not yet on disk.
      * The -1 makes sure the page isn't freed until storeSwapOut has
-     * walked to the next page. (mem->swapout.memnode)
+     * walked to the next page.
      */
     int64_t on_disk;
 

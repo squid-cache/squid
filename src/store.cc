@@ -46,6 +46,7 @@
 #include "mem_node.h"
 #include "StoreMeta.h"
 #include "SwapDir.h"
+#include "StoreIOState.h"
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
@@ -526,7 +527,20 @@ StoreEntry::unlock()
     assert(storePendingNClients(this) == 0);
 
     if (EBIT_TEST(flags, RELEASE_REQUEST))
+    {
         this->release();
+        return 0;
+    }
+
+    // XXX: Rock store specific: since each SwapDir controls the index,
+    // unlocked entries should not stay in the global store_table
+    if (fileno >= 0) {
+        Store::Root().dereference(*this);
+        debugs(20, 5, HERE << "destroying unlocked entry: " << this << ' ' << *this);
+        setMemStatus(NOT_IN_MEMORY);
+        destroyStoreEntry(static_cast<hash_link *>(this));
+        return 0;
+    }
     else if (keepInMemory()) {
         Store::Root().dereference(*this);
         setMemStatus(IN_MEMORY);
@@ -1100,16 +1114,6 @@ StoreEntry::abort()
 
     store_status = STORE_OK;
 
-    /*
-     * We assign an object length here.  The only other place we assign
-     * the object length is in storeComplete()
-     */
-    /* RBC: What do we need an object length for? we've just aborted the
-     * request, the request is private and negatively cached. Surely
-     * the object length is inappropriate to set.
-     */
-    mem_obj->object_sz = mem_obj->endOffset();
-
     /* Notify the server side */
 
     /*
@@ -1133,8 +1137,8 @@ StoreEntry::abort()
     /* Notify the client side */
     invokeHandlers();
 
-    /* Close any swapout file */
-    swapOutFileClose();
+    // abort swap out, invalidating what was created so far (release follows)
+    swapOutFileClose(StoreIOState::writerGone);
 
     unlock();       /* unlock */
 }
@@ -1825,47 +1829,13 @@ StoreEntry::replaceHttpReply(HttpReply *rep)
 char const *
 StoreEntry::getSerialisedMetaData()
 {
-    const size_t swap_hdr_sz0 = storeSwapMetaSize(this);
-    assert (swap_hdr_sz0 >= 0);
-    mem_obj->swap_hdr_sz = (size_t) swap_hdr_sz0;
-    // now we can use swap_hdr_sz to calculate swap_file_sz
-    // so that storeSwapMetaBuild/Pack can pack corrent swap_file_sz
-    swap_file_sz = objectLen() + mem_obj->swap_hdr_sz;
-
     StoreMeta *tlv_list = storeSwapMetaBuild(this);
     int swap_hdr_sz;
     char *result = storeSwapMetaPack(tlv_list, &swap_hdr_sz);
-    assert(static_cast<int>(swap_hdr_sz0) == swap_hdr_sz);
     storeSwapTLVFree(tlv_list);
+    assert (swap_hdr_sz >= 0);
+    mem_obj->swap_hdr_sz = (size_t) swap_hdr_sz;
     return result;
-}
-
-/*
- * Calculate TLV list size for a StoreEntry
- * XXX: Must match the actual storeSwapMetaBuild result size
- */
-size_t
-storeSwapMetaSize(const StoreEntry * e)
-{
-    size_t size = 0;
-    ++size; // STORE_META_OK
-    size += sizeof(int); // size of header to follow
-
-    const size_t pfx = sizeof(char) + sizeof(int); // in the start of list entries
-
-    size += pfx + SQUID_MD5_DIGEST_LENGTH;
-    size += pfx + STORE_HDR_METASIZE;
-    size += pfx + strlen(e->url()) + 1;
-
-    // STORE_META_OBJSIZE
-    if (e->objectLen() >= 0)
-        size += pfx + sizeof(int64_t);
-
-    if (const char *vary = e->mem_obj->vary_headers)
-        size += pfx + strlen(vary) + 1;
-
-    debugs(20, 3, "storeSwapMetaSize(" << e->url() << "): " << size);
-    return size;
 }
 
 bool
@@ -1877,13 +1847,49 @@ StoreEntry::swapoutPossible()
 
     if (EBIT_TEST(flags, ENTRY_ABORTED)) {
         assert(EBIT_TEST(flags, RELEASE_REQUEST));
-        swapOutFileClose();
+        // StoreEntry::abort() already closed the swap out file, if any
         return false;
+    }
+
+    // if we decided that swapout is possible, do not repeat same checks
+    // TODO: do not repeat any checks if we decided that swapout is impossible
+    if (swap_status != SWAPOUT_NONE) {
+        debugs(20, 3, "storeSwapOut: already started");
+        return true;
     }
 
     if (EBIT_TEST(flags, ENTRY_SPECIAL)) {
         debugs(20, 3, "storeSwapOut: " << url() << " SPECIAL");
         return false;
+    }
+
+    // check cache_dir max-size limit if all cache_dirs have it
+    if (store_maxobjsize >= 0) {
+        assert(mem_obj);
+
+        // TODO: add estimated store metadata size to be conservative
+
+        // use guaranteed maximum if it is known
+        const int64_t expectedEnd = mem_obj->expectedReplySize();
+        debugs(20, 7, "storeSwapOut: expectedEnd = " << expectedEnd);
+        if (expectedEnd > store_maxobjsize) {
+            debugs(20, 3, "storeSwapOut: will not fit: " << expectedEnd <<
+                " > " << store_maxobjsize);
+            return false; // known to outgrow the limit eventually
+        }
+        if (expectedEnd < 0) {
+            debugs(20, 3, "storeSwapOut: wait for more info: " <<
+                store_maxobjsize);
+            return false; // may fit later, but will be rejected now
+        }
+
+        // use current minimum (always known)
+        const int64_t currentEnd = mem_obj->endOffset();
+        if (currentEnd > store_maxobjsize) {
+            debugs(20, 3, "storeSwapOut: does not fit: " << currentEnd <<
+                " > " << store_maxobjsize);
+            return false; // already does not fit and may only get bigger
+        }
     }
 
     return true;
