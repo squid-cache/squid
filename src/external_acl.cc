@@ -1439,8 +1439,8 @@ ACLExternal::ExternalAclLookup(ACLChecklist *checklist, ACLExternal * me, EAH * 
         debugs(82, 4, "externalAclLookup: using cached entry " << entry);
 
         if (entry != NULL) {
-            debugs(82, 4, "externalAclLookup: entry = { date=" << 
-               (long unsigned int) entry->date <<
+            debugs(82, 4, "externalAclLookup: entry = { date=" <<
+                   (long unsigned int) entry->date <<
                    ", result=" << entry->result <<
                    " tag=" << entry->tag <<
                    " log=" << entry->log << " }");
