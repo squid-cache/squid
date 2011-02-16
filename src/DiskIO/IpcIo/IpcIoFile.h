@@ -6,6 +6,7 @@
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/IORequestor.h"
 #include "ipc/forward.h"
+#include "ipc/Queue.h"
 #include <map>
 
 // TODO: expand to all classes
@@ -19,43 +20,19 @@ enum { BufCapacity = 32*1024 }; // XXX: must not exceed TypedMsgHdr.maxSize
 } // namespace IpcIo
 
 
-/// converts DiskIO requests to IPC messages
-// TODO: make this IpcIoMsg to make IpcIoRequest and IpcIoResponse similar
-class IpcIoRequest {
+/// converts DiskIO requests to IPC queue messages
+class IpcIoMsg {
 public:
-    IpcIoRequest();
-
-    explicit IpcIoRequest(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
-    void pack(Ipc::TypedMsgHdr& msg) const; ///< prepare for sendmsg()
+    IpcIoMsg();
 
 public:
-    int requestorId; ///< kidId of the requestor; used for response destination
-    unsigned int requestId; ///< unique for sender; matches request w/ response
+    unsigned int requestId; ///< unique for requestor; matches request w/ response
 
-    /* ReadRequest and WriteRequest parameters to pass to disker */
     char buf[IpcIo::BufCapacity]; // XXX: inefficient
     off_t offset;
     size_t len;
 
-    IpcIo::Command command; ///< what disker is supposed to do
-};
-
-/// disker response to IpcIoRequest
-class IpcIoResponse {
-public:
-    IpcIoResponse();
-
-    explicit IpcIoResponse(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
-    void pack(Ipc::TypedMsgHdr& msg) const; ///< prepare for sendmsg()
-
-public:
-    int diskId; ///< kidId of the responding disker
-    unsigned int requestId; ///< unique for sender; matches request w/ response
-
-    char buf[IpcIo::BufCapacity]; // XXX: inefficient
-    size_t len;
-
-    IpcIo::Command command; ///< what disker did
+    IpcIo::Command command; ///< what disker is supposed to do or did
 
     int xerrno; ///< I/O error code or zero
 };
@@ -83,44 +60,59 @@ public:
     virtual bool canWrite() const;
     virtual bool ioInProgress() const;
 
-    /// finds and calls the right IpcIoFile upon disker's response
-    static void HandleResponse(const Ipc::TypedMsgHdr &response);
+    /// handle open response from coordinator
+    static void HandleOpenResponse(const Ipc::StrandSearchResponse &response);
 
-    /// disker entry point for remote I/O requests
-    static void HandleRequest(const IpcIoRequest &request);
+    /// handle queue push notifications from worker or disker
+    static void HandleNotification(const Ipc::TypedMsgHdr &msg);
 
 protected:
     friend class IpcIoPendingRequest;
-    void openCompleted(const IpcIoResponse *response);
-    void readCompleted(ReadRequest *readRequest, const IpcIoResponse *);
-    void writeCompleted(WriteRequest *writeRequest, const IpcIoResponse *);
+    void openCompleted(const Ipc::StrandSearchResponse *const response);
+    void readCompleted(ReadRequest *readRequest, const IpcIoMsg *const response);
+    void writeCompleted(WriteRequest *writeRequest, const IpcIoMsg *const response);
 
 private:
-    void send(IpcIoRequest &request, IpcIoPendingRequest *pending);
+    void trackPendingRequest(IpcIoPendingRequest &pending);
+    void push(IpcIoPendingRequest &pending);
+    IpcIoPendingRequest *dequeueRequest(const unsigned int requestId);
 
-    static IpcIoPendingRequest *DequeueRequest(unsigned int requestId);
+    static void Notify(const int peerId);
 
-    static void CheckTimeouts(void* param);
-    static void ScheduleTimeoutCheck();
+    static void CheckTimeouts(void *const param);
+    void checkTimeouts();
+    void scheduleTimeoutCheck();
+
+    void handleResponses();
+    void handleResponse(const IpcIoMsg &ipcIo);
+
+    static void DiskerHandleRequests();
+    static void DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo);
 
 private:
+    typedef FewToOneBiQueue<IpcIoMsg> DiskerQueue;
+    typedef OneToOneBiQueue<IpcIoMsg> WorkerQueue;
+
     const String dbName; ///< the name of the file we are managing
     int diskId; ///< the process ID of the disker we talk to
+    static DiskerQueue *diskerQueue; ///< IPC queue for disker
+    WorkerQueue *workerQueue; ///< IPC queue for worker
     RefCount<IORequestor> ioRequestor;
-
-    int ioLevel; ///< number of pending I/O requests using this file
 
     bool error_; ///< whether we have seen at least one I/O error (XXX)
 
+    unsigned int lastRequestId; ///< last requestId used
+
     /// maps requestId to the handleResponse callback
     typedef std::map<unsigned int, IpcIoPendingRequest*> RequestMap;
-    static RequestMap TheRequestMap1; ///< older (or newer) pending requests
-    static RequestMap TheRequestMap2; ///< newer (or older) pending requests
-    static RequestMap *TheOlderRequests; ///< older requests (map1 or map2)
-    static RequestMap *TheNewerRequests; ///< newer requests (map2 or map1)
-    static bool TimeoutCheckScheduled; ///< we expect a CheckTimeouts() call
+    RequestMap requestMap1; ///< older (or newer) pending requests
+    RequestMap requestMap2; ///< newer (or older) pending requests
+    RequestMap *olderRequests; ///< older requests (map1 or map2)
+    RequestMap *newerRequests; ///< newer requests (map2 or map1)
+    bool timeoutCheckScheduled; ///< we expect a CheckTimeouts() call
 
-    static unsigned int LastRequestId; ///< last requestId used
+    typedef std::map<int, IpcIoFile*> IpcIoFiles; ///< maps diskerId to IpcIoFile
+    static IpcIoFiles ipcIoFiles;
 
     CBDATA_CLASS2(IpcIoFile);
 };
@@ -133,10 +125,11 @@ public:
     IpcIoPendingRequest(const IpcIoFile::Pointer &aFile);
 
     /// called when response is received and, with a nil response, on timeouts
-    void completeIo(IpcIoResponse *response);
+    void completeIo(const IpcIoMsg *const response);
 
 public:
     IpcIoFile::Pointer file; ///< the file object waiting for the response
+    unsigned int id; ///< request id
     ReadRequest *readRequest; ///< set if this is a read requests
     WriteRequest *writeRequest; ///< set if this is a write request
 

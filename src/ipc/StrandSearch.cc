@@ -12,16 +12,16 @@
 #include "ipc/TypedMsgHdr.h"
 
 
-Ipc::StrandSearchRequest::StrandSearchRequest(): requestorId(-1), requestId(0)
+Ipc::StrandSearchRequest::StrandSearchRequest(): requestorId(-1), data(0)
 {
 }
 
 Ipc::StrandSearchRequest::StrandSearchRequest(const TypedMsgHdr &hdrMsg):
-    requestorId(-1), requestId(0)
+    requestorId(-1), data(NULL)
 {
     hdrMsg.checkType(mtStrandSearchRequest);
     hdrMsg.getPod(requestorId);
-    hdrMsg.getPod(requestId);
+    hdrMsg.getPod(data);
     hdrMsg.getString(tag);
 }
 
@@ -29,30 +29,30 @@ void Ipc::StrandSearchRequest::pack(TypedMsgHdr &hdrMsg) const
 {
     hdrMsg.setType(mtStrandSearchRequest);
     hdrMsg.putPod(requestorId);
-    hdrMsg.putPod(requestId);
+    hdrMsg.putPod(data);
     hdrMsg.putString(tag);
 }
 
 
 /* StrandSearchResponse */
 
-Ipc::StrandSearchResponse::StrandSearchResponse(int aRequestId,
+Ipc::StrandSearchResponse::StrandSearchResponse(void *const aData,
     const Ipc::StrandCoord &aStrand):
-    requestId(aRequestId), strand(aStrand)
+    data(aData), strand(aStrand)
 {
 }
 
 Ipc::StrandSearchResponse::StrandSearchResponse(const TypedMsgHdr &hdrMsg):
-    requestId(0)
+    data(NULL)
 {
     hdrMsg.checkType(mtStrandSearchResponse);
-    hdrMsg.getPod(requestId);
+    hdrMsg.getPod(data);
     strand.unpack(hdrMsg);
 }
 
 void Ipc::StrandSearchResponse::pack(TypedMsgHdr &hdrMsg) const
 {
     hdrMsg.setType(mtStrandSearchResponse);
-    hdrMsg.putPod(requestId);
+    hdrMsg.putPod(data);
     strand.pack(hdrMsg);
 }
