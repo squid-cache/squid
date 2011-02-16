@@ -24,13 +24,17 @@ public:
     // ::StoreIOState API
     virtual void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data);
     virtual void write(char const *buf, size_t size, off_t offset, FREE * free_func);
-    virtual void close();
+    virtual void close(int how);
 
     /// called by SwapDir when writing is done
     void finishedWriting(int errFlag);
 
     int64_t slotSize; ///< db cell size
-    int64_t entrySize; ///< planned or actual stored size for the entry
+    int64_t diskOffset; ///< the start of this cell inside the db file
+
+    /// when reading: number of bytes previously written to the db cell;
+    /// when writing: maximum payload offset in a db cell
+    int64_t payloadEnd;
 
     MEMPROXY_CLASS(IoState);
 

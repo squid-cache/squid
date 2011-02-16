@@ -32,7 +32,7 @@ protected:
     virtual bool needsDiskStrand() const;
     virtual void create();
     virtual void init();
-    virtual int canStore(StoreEntry const &) const;
+    virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const;
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual void maintain();
@@ -55,7 +55,7 @@ protected:
 
     void rebuild(); ///< starts loading and validating stored entry metadata
     ///< used to add entries successfully loaded during rebuild
-    bool addEntry(const int fileno, const StoreEntry &from);
+    bool addEntry(const int fileno, const DbCellHeader &header, const StoreEntry &from);
 
     bool full() const; ///< no more entries can be stored without purging
     void trackReferences(StoreEntry &e); ///< add to replacement policy scope

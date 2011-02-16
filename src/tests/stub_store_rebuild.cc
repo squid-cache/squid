@@ -46,7 +46,7 @@ storeRebuildComplete(struct _store_rebuild_data *dc)
 {}
 
 bool
-storeRebuildLoadEntry(int fd, StoreEntry &tmpe, cache_key *key,
+storeRebuildLoadEntry(MemBuf &buf, StoreEntry &e, cache_key *key,
     struct _store_rebuild_data &counts, uint64_t expectedSize)
 {
     return false;

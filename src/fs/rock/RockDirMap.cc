@@ -31,7 +31,7 @@ Rock::DirMap::DirMap(const char *const aPath):
            entryLimit());
 }
 
-StoreEntryBasics *
+Rock::StoreEntryBasics *
 Rock::DirMap::openForWriting(const cache_key *const key, sfileno &fileno)
 {
     debugs(79, 5, HERE << " trying to open slot for key " << storeKeyText(key)
@@ -95,8 +95,26 @@ Rock::DirMap::abortIo(const sfileno fileno)
         closeForReading(fileno);
 }
 
+const Rock::StoreEntryBasics *
+Rock::DirMap::peekAtReader(const sfileno fileno) const
+{
+    assert(valid(fileno));
+    const Slot &s = shared->slots[fileno];
+    switch (s.state) {
+    case Slot::Readable:
+        return &s.seBasics; // immediate access by lock holder so no locking
+    case Slot::Writeable:
+        return NULL; // cannot read the slot when it is being written
+    case Slot::Empty:
+        assert(false); // must be locked for reading or writing
+    }
+    assert(false); // not reachable
+    return NULL;
+}
+
 bool
-Rock::DirMap::putAt(const StoreEntry &e, const sfileno fileno)
+Rock::DirMap::putAt(const DbCellHeader &header, const StoreEntry &e,
+                    const sfileno fileno)
 {
     const cache_key *key = static_cast<const cache_key*>(e.key);
     debugs(79, 5, HERE << " trying to open slot for key " << storeKeyText(key)
@@ -120,7 +138,7 @@ Rock::DirMap::putAt(const StoreEntry &e, const sfileno fileno)
         if (s.state == Slot::Empty) // we may also overwrite a Readable slot
             ++shared->count;
         s.setKey(static_cast<const cache_key*>(e.key));
-        s.seBasics.set(e);
+        s.seBasics.set(header, e);
         s.state = Slot::Readable;
         s.releaseExclusiveLock();
         debugs(79, 5, HERE << " put slot at " << fileno << " for key " <<
@@ -145,7 +163,7 @@ Rock::DirMap::free(const sfileno fileno)
     freeIfNeeded(s);
 }
 
-const StoreEntryBasics *
+const Rock::StoreEntryBasics *
 Rock::DirMap::openForReading(const cache_key *const key, sfileno &fileno)
 {
     debugs(79, 5, HERE << " trying to open slot for key " << storeKeyText(key)
@@ -168,7 +186,7 @@ Rock::DirMap::openForReading(const cache_key *const key, sfileno &fileno)
     return 0;
 }
 
-const StoreEntryBasics *
+const Rock::StoreEntryBasics *
 Rock::DirMap::openForReadingAt(const sfileno fileno)
 {
     debugs(79, 5, HERE << " trying to open slot at " << fileno << " for "
@@ -214,6 +232,14 @@ bool
 Rock::DirMap::full() const
 {
     return entryCount() >= entryLimit();
+}
+
+void
+Rock::DirMap::updateStats(MapStats &stats) const
+{
+    stats.capacity += shared->limit;
+    for (int i = 0; i < shared->limit; ++i)
+        shared->slots[i].updateStats(stats);
 }
 
 bool
@@ -333,14 +359,38 @@ Rock::Slot::switchExclusiveToSharedLock()
     releaseExclusiveLock();
 }
 
+void
+Rock::Slot::updateStats(MapStats &stats) const
+{
+    switch (state) {
+    case Readable:
+        ++stats.readable;
+        stats.readers += readers;
+        break;
+    case Writeable:
+        ++stats.writeable;
+        stats.writers += writers;
+        break;
+    case Empty:
+        ++stats.empty;
+        break;
+    }
+
+    if (waitingToBeFreed)
+        ++stats.marked;
+}
+
+
 Rock::DirMap::Shared::Shared(const int aLimit): limit(aLimit), count(0)
 {
 }
 
 void
-StoreEntryBasics::set(const StoreEntry &from)
+Rock::StoreEntryBasics::set(const DbCellHeader &aHeader, const StoreEntry &from)
 {
+    assert(from.swap_file_sz > 0);
     memset(this, 0, sizeof(*this));
+    header = aHeader;
     timestamp = from.timestamp;
     lastref = from.lastref;
     expires = from.expires;
@@ -348,4 +398,41 @@ StoreEntryBasics::set(const StoreEntry &from)
     swap_file_sz = from.swap_file_sz;
     refcount = from.refcount;
     flags = from.flags;
+}
+
+
+/* MapStats */
+
+Rock::MapStats::MapStats()
+{
+    memset(this, 0, sizeof(*this));
+}
+ 
+void
+Rock::MapStats::dump(StoreEntry &e) const
+{
+    storeAppendPrintf(&e, "Available slots: %9d\n", capacity);
+
+    if (!capacity)
+        return;
+
+    storeAppendPrintf(&e, "Readable slots:  %9d %6.2f%%\n",
+        readable, (100.0 * readable / capacity));
+    storeAppendPrintf(&e, "Filling slots:   %9d %6.2f%%\n",
+        writeable, (100.0 * writeable / capacity));
+    storeAppendPrintf(&e, "Empty slots:     %9d %6.2f%%\n",
+        empty, (100.0 * empty / capacity));
+
+    if (readers || writers) {
+        const int locks = readers + writers;
+        storeAppendPrintf(&e, "Readers:         %9d %6.2f%%\n",
+            readers, (100.0 * readers / locks));
+        storeAppendPrintf(&e, "Writers:         %9d %6.2f%%\n",
+            writers, (100.0 * writers / locks));
+    }
+
+    if (readable + writeable) {
+        storeAppendPrintf(&e, "Marked slots:    %9d %6.2f%%\n",
+            marked, (100.0 * marked / (readable + writeable)));
+    }
 }

@@ -4,8 +4,10 @@
  * DEBUG: section 79    Disk IO Routines
  */
 
+#include "config.h"
 #include "fs/rock/RockRebuild.h"
 #include "fs/rock/RockSwapDir.h"
+#include "fs/rock/RockFile.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Rock, Rebuild);
 
@@ -104,12 +106,38 @@ Rock::Rebuild::doOneEntry() {
     debugs(47,5, HERE << sd->index << " fileno " << fileno << " at " <<
         dbOffset << " <= " << dbSize);
 
+    ++counts.scancount;
+
     if (lseek(fd, dbOffset, SEEK_SET) < 0)
         failure("cannot seek to db entry", errno);
 
+    MemBuf buf;
+    buf.init(SM_PAGE_SIZE, SM_PAGE_SIZE);
+
+    if (!storeRebuildLoadEntry(fd, sd->index, buf, counts))
+        return;
+
+    // get our header
+    DbCellHeader header;
+    if (buf.contentSize() < static_cast<mb_size_t>(sizeof(header))) {
+        debugs(47, 1, "cache_dir[" << sd->index << "]: " <<
+            "truncated swap entry meta data at " << dbOffset);
+        counts.invalid++;
+        return;
+    }
+    memcpy(&header, buf.content(), sizeof(header));
+
+    if (!header.sane()) {
+        debugs(47, 1, "cache_dir[" << sd->index << "]: " <<
+            "malformed rock db cell header at " << dbOffset);
+        counts.invalid++;
+        return;
+    }
+    buf.consume(sizeof(header)); // optimize to avoid memmove()
+
     cache_key key[SQUID_MD5_DIGEST_LENGTH];
     StoreEntry loadedE;
-    if (!storeRebuildLoadEntry(fd, loadedE, key, counts, 0)) {
+    if (!storeRebuildParseEntry(buf, loadedE, key, counts, header.payloadSize)) {
         // skip empty slots
         if (loadedE.swap_filen > 0 || loadedE.swap_file_sz > 0) {
             counts.invalid++;
@@ -125,7 +153,7 @@ Rock::Rebuild::doOneEntry() {
     counts.objcount++;
     // loadedE->dump(5);
 
-    sd->addEntry(fileno, loadedE);
+    sd->addEntry(fileno, header, loadedE);
 }
 
 void

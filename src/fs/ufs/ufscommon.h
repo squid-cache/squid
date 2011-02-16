@@ -62,7 +62,7 @@ public:
     virtual void unlink(StoreEntry &);
     virtual void statfs(StoreEntry &)const;
     virtual void maintain();
-    virtual int canStore(StoreEntry const &)const;
+    virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const;
     virtual void reference(StoreEntry &);
     virtual void dereference(StoreEntry &);
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
@@ -206,7 +206,7 @@ public:
     void operator delete (void *);
     UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * callback_, void *callback_data_);
     ~UFSStoreState();
-    virtual void close();
+    virtual void close(int how);
     virtual void closeCompleted();
     // protected:
     virtual void ioCompletedNotification();

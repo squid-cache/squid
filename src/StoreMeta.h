@@ -155,8 +155,6 @@ public:
 /// \ingroup SwapStoreAPI
 SQUIDCEXTERN char *storeSwapMetaPack(tlv * tlv_list, int *length);
 /// \ingroup SwapStoreAPI
-SQUIDCEXTERN size_t storeSwapMetaSize(const StoreEntry * e);
-/// \ingroup SwapStoreAPI
 SQUIDCEXTERN tlv *storeSwapMetaBuild(StoreEntry * e);
 /// \ingroup SwapStoreAPI
 SQUIDCEXTERN void storeSwapTLVFree(tlv * n);
