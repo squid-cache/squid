@@ -16,7 +16,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-SharedMemory::SharedMemory(const String &id):
+SharedMemory::SharedMemory(const char *const id):
     theName(GenerateName(id)), theFD(-1), theSize(-1), theMem(NULL)
 {
 }
@@ -112,11 +112,18 @@ SharedMemory::detach()
     theMem = 0;
 }
 
-/// Generate name for shared memory segment.
+/// Generate name for shared memory segment. Replaces all slashes with dots.
 String
-SharedMemory::GenerateName(const String &id)
+SharedMemory::GenerateName(const char *id)
 {
     String name("/squid-");
+    for (const char *slash = strchr(id, '/'); slash; slash = strchr(id, '/')) {
+        if (id != slash) {
+            name.append(id, slash - id);
+            name.append('.');
+        }
+        id = slash + 1;
+    }
     name.append(id);
     return name;
 }
