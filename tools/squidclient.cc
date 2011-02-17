@@ -450,7 +450,7 @@ main(int argc, char *argv[])
         }
 
         if (reload) {
-            snprintf(buf, BUFSIZ, "Pragma: no-cache\r\n");
+            snprintf(buf, BUFSIZ, "Cache-Control: no-cache\r\n");
             strcat(msg, buf);
         }
         if (put_fd > 0) {
