@@ -18,6 +18,7 @@ const libecap::Name Adaptation::Ecap::protocolIcp("ICP", libecap::Name::NextId()
 #if USE_HTCP
 const libecap::Name Adaptation::Ecap::protocolHtcp("Htcp", libecap::Name::NextId());
 #endif
+const libecap::Name Adaptation::Ecap::metaBypassable("bypassable", libecap::Name::NextId());
 
 /// the host application (i.e., Squid) wrapper registered with libecap
 static libecap::shared_ptr<Adaptation::Ecap::Host> TheHost;
@@ -47,6 +48,9 @@ Adaptation::Ecap::Host::Host()
 #if USE_HTCP
     protocolHtcp.assignHostId(PROTO_HTCP);
 #endif
+
+    // allows adapter to safely ignore this in adapter::Service::configure()
+    metaBypassable.assignHostId(1);
 }
 
 std::string

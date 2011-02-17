@@ -47,6 +47,9 @@
 bool Adaptation::Config::Enabled = false;
 char *Adaptation::Config::masterx_shared_name = NULL;
 int Adaptation::Config::service_iteration_limit = 16;
+int Adaptation::Config::send_client_ip = false;
+int Adaptation::Config::send_username = false;
+int Adaptation::Config::use_indirect_client = true;
 
 
 Adaptation::ServiceConfig*

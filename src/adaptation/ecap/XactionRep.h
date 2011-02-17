@@ -35,6 +35,8 @@ public:
     void master(const AdapterXaction &aMaster); // establish a link
 
     // libecap::host::Xaction API
+    virtual const libecap::Area option(const libecap::Name &name) const;
+    virtual void visitEachOption(libecap::NamedValueVisitor &visitor) const;
     virtual libecap::Message &virgin();
     virtual const libecap::Message &cause();
     virtual libecap::Message &adapted();
@@ -86,6 +88,9 @@ protected:
 
     void terminateMaster();
     void scheduleStop(const char *reason);
+
+    const libecap::Area clientIpValue() const;
+    const libecap::Area usernameValue() const;
 
 private:
     AdapterXaction theMaster; // the actual adaptation xaction we represent
