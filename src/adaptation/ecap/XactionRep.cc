@@ -4,11 +4,14 @@
 #include "squid.h"
 #include <libecap/common/area.h>
 #include <libecap/common/delay.h>
+#include <libecap/common/named_values.h>
+#include <libecap/common/names.h>
 #include <libecap/adapter/xaction.h>
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "SquidTime.h"
 #include "adaptation/ecap/XactionRep.h"
+#include "adaptation/ecap/Config.h"
 #include "adaptation/Initiator.h"
 #include "base/TextException.h"
 
@@ -51,6 +54,67 @@ Adaptation::Ecap::XactionRep::service()
 {
     Must(theService != NULL);
     return *theService;
+}
+
+const libecap::Area
+Adaptation::Ecap::XactionRep::option(const libecap::Name &name) const
+{
+    if (name == libecap::metaClientIp)
+        return clientIpValue();
+    if (name == libecap::metaUserName)
+        return usernameValue();
+    // TODO: metaServerIp, metaAuthenticatedUser, metaAuthenticatedGroups, and 
+    // Adaptation::Config::masterx_shared_name
+    return libecap::Area();
+}
+
+void
+Adaptation::Ecap::XactionRep::visitEachOption(libecap::NamedValueVisitor &visitor) const
+{
+    if (const libecap::Area value = clientIpValue())
+       visitor.visit(libecap::metaClientIp, value);
+    if (const libecap::Area value = usernameValue())
+       visitor.visit(libecap::metaUserName, value);
+    // TODO: metaServerIp, metaAuthenticatedUser, metaAuthenticatedGroups, and 
+    // Adaptation::Config::masterx_shared_name
+}
+
+const libecap::Area
+Adaptation::Ecap::XactionRep::clientIpValue() const
+{
+    const HttpRequest *request = dynamic_cast<const HttpRequest*>(theCauseRep ?
+                                 theCauseRep->raw().header : theVirginRep.raw().header);
+    Must(request);
+    // TODO: move this logic into HttpRequest::clientIp(bool) and
+    // HttpRequest::clientIpString(bool) and reuse everywhere
+    if (TheConfig.send_client_ip && request) {
+        Ip::Address client_addr;
+#if FOLLOW_X_FORWARDED_FOR
+        if (TheConfig.use_indirect_client) {
+            client_addr = request->indirect_client_addr;
+		} else
+#endif
+            client_addr = request->client_addr;
+        if (!client_addr.IsAnyAddr() && !client_addr.IsNoAddr()) {
+            char ntoabuf[MAX_IPSTRLEN] = "";
+            client_addr.NtoA(ntoabuf,MAX_IPSTRLEN);
+            return libecap::Area::FromTempBuffer(ntoabuf, strlen(ntoabuf));
+        }
+	}
+    return libecap::Area();
+}
+
+const libecap::Area
+Adaptation::Ecap::XactionRep::usernameValue() const
+{
+    const HttpRequest *request = dynamic_cast<const HttpRequest*>(theCauseRep ?
+                                 theCauseRep->raw().header : theVirginRep.raw().header);
+    Must(request);
+    if (request->auth_user_request != NULL) {
+        if (char const *name = request->auth_user_request->username())
+            return libecap::Area::FromTempBuffer(name, strlen(name));
+	}
+    return libecap::Area();
 }
 
 void
