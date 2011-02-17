@@ -395,7 +395,15 @@ main(int argc, char *argv[])
     /* Build the HTTP request */
     if (strncmp(url, "mgr:", 4) == 0) {
         char *t = xstrdup(url + 4);
-        snprintf(url, BUFSIZ, "cache_object://%s/%s", hostname, t);
+        const char *at = NULL;
+        if (!strrchr(t, '@')) { // ignore any -w password if @ is explicit already.
+            at = proxy_password;
+        }
+        // embed the -w proxy password into old-style cachemgr URLs
+        if (at)
+            snprintf(url, BUFSIZ, "cache_object://%s/%s@%s", hostname, t, at);
+        else
+            snprintf(url, BUFSIZ, "cache_object://%s/%s", hostname, t);
         xfree(t);
     }
     if (put_file) {
