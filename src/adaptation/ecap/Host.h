@@ -47,6 +47,7 @@ extern const libecap::Name protocolIcp;
 #if USE_HTCP
 extern const libecap::Name protocolHtcp;
 #endif
+extern const libecap::Name metaBypassable; ///< an ecap_service parameter
 
 } // namespace Ecap
 } // namespace Adaptation
