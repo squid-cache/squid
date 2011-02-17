@@ -67,6 +67,7 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
 
     case mtIpcIoNotification:
         IpcIoFile::HandleNotification(message);
+        break;
 
     case mtCacheMgrRequest:
         handleCacheMgrRequest(Mgr::Request(message));
