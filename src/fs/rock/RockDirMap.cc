@@ -9,10 +9,8 @@
 #include "Store.h"
 #include "fs/rock/RockDirMap.h"
 
-static const char SharedMemoryName[] = "RockDirMap";
-
 Rock::DirMap::DirMap(const char *const aPath, const int limit):
-    path(aPath), shm(sharedMemoryName())
+    path(aPath), shm(aPath)
 {
     shm.create(SharedSize(limit));
     assert(shm.mem());
@@ -23,7 +21,7 @@ Rock::DirMap::DirMap(const char *const aPath, const int limit):
 }
 
 Rock::DirMap::DirMap(const char *const aPath):
-    path(aPath), shm(sharedMemoryName())
+    path(aPath), shm(aPath)
 {
     shm.open();
     assert(shm.mem());
@@ -295,22 +293,6 @@ Rock::DirMap::freeLocked(Slot &s)
     --shared->count;
     debugs(79, 5, HERE << " freed slot at " << (&s - shared->slots) <<
            " in map [" << path << ']');
-}
-
-String
-Rock::DirMap::sharedMemoryName()
-{
-    String result;
-    const char *begin = path.termedBuf();
-    for (const char *end = strchr(begin, '/'); end; end = strchr(begin, '/')) {
-        if (begin != end) {
-            result.append(begin, end - begin);
-            result.append('.');
-        }
-        begin = end + 1;
-    }
-    result.append(begin);
-    return result;
 }
 
 int

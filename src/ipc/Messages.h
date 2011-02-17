@@ -20,7 +20,7 @@ namespace Ipc
 typedef enum { mtNone = 0, mtRegistration,
                mtStrandSearchRequest, mtStrandSearchResponse,
                mtSharedListenRequest, mtSharedListenResponse,
-               mtIpcIoRequest, mtIpcIoResponse,
+               mtIpcIoNotification,
                mtCacheMgrRequest, mtCacheMgrResponse
              } MessageType;
 

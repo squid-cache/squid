@@ -17,7 +17,6 @@
 #include "mgr/Request.h"
 #include "mgr/Response.h"
 #include "mgr/StoreToCommWriter.h"
-#include "DiskIO/IpcIo/IpcIoFile.h" /* XXX: layering violation */
 
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
@@ -77,16 +76,13 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
         handleRegistrationRequest(HereIamMessage(message));
         break;
 
-    case mtIpcIoRequest: { // XXX: this should have been mtStrandSearchRequest
-        IpcIoRequest io(message);
-        StrandSearchRequest sr;
-        sr.requestorId = io.requestorId;
-        sr.requestId = io.requestId;
-        sr.tag.limitInit(io.buf, io.len);
-        debugs(54, 6, HERE << "Strand search request: " << io.requestorId << ' ' << io.requestId << ' ' << io.len << " cmd=" << io.command << " tag: " << sr.tag);
+    case mtStrandSearchRequest: {
+        const StrandSearchRequest sr(message);
+        debugs(54, 6, HERE << "Strand search request: " << sr.requestorId <<
+               " tag: " << sr.tag);
         handleSearchRequest(sr);
         break;
-	}
+    }
 
     case mtSharedListenRequest:
         debugs(54, 6, HERE << "Shared listen request");
@@ -189,14 +185,9 @@ Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
 {
     debugs(54, 3, HERE << "tell kid" << request.requestorId << " that " <<
         request.tag << " is kid" << strand.kidId);
-    const StrandSearchResponse response0(request.requestId, strand);
-    // XXX: we should use StrandSearchResponse instead of converting it
-    IpcIoResponse io;
-    io.diskId = strand.kidId;
-    io.requestId = request.requestId;
-    io.command = IpcIo::cmdOpen;
+    const StrandSearchResponse response(request.data, strand);
     TypedMsgHdr message;
-    io.pack(message);
+    response.pack(message);
     SendMessage(MakeAddr(strandAddrPfx, request.requestorId), message);
 }
 

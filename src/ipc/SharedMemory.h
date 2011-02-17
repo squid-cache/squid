@@ -12,7 +12,7 @@
 class SharedMemory {
 public:
     /// Create a shared memory segment.
-    SharedMemory(const String &id);
+    SharedMemory(const char *const id);
     ~SharedMemory();
 
     /// Create a new shared memory segment. Fails if a segment with
@@ -28,7 +28,7 @@ private:
     void attach();
     void detach();
 
-    static String GenerateName(const String &id);
+    static String GenerateName(const char *id);
 
     const String theName; ///< shared memory segment file name
     int theFD; ///< shared memory segment file descriptor
