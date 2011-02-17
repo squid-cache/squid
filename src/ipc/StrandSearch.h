@@ -24,7 +24,7 @@ public:
 
 public:
     int requestorId; ///< sender-provided return address
-    unsigned int requestId; ///< sender-provided for response:request matching
+    void *data; ///< sender-provided opaque pointer
     String tag; ///< set when looking for a matching StrandCoord::tag
 };
 
@@ -32,12 +32,12 @@ public:
 class StrandSearchResponse
 {
 public:
-    StrandSearchResponse(int requestId, const StrandCoord &strand);
+    StrandSearchResponse(void *const aData, const StrandCoord &strand);
     explicit StrandSearchResponse(const TypedMsgHdr &hdrMsg); ///< from recvmsg()
     void pack(TypedMsgHdr &hdrMsg) const; ///< prepare for sendmsg()
 
 public:
-    unsigned int requestId; ///< a copy of the StrandSearchRequest::requestId
+    void *data; ///< a copy of the StrandSearchRequest::data
     StrandCoord strand; ///< answer matching StrandSearchRequest criteria
 };
 

@@ -11,6 +11,7 @@
 #include "ipc/StrandCoord.h"
 #include "ipc/Messages.h"
 #include "ipc/SharedListen.h"
+#include "ipc/StrandSearch.h"
 #include "ipc/Kids.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
@@ -60,12 +61,12 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         SharedListenJoined(SharedListenResponse(message));
         break;
 
-    case mtIpcIoRequest:
-        IpcIoFile::HandleRequest(IpcIoRequest(message));
+    case mtStrandSearchResponse:
+        IpcIoFile::HandleOpenResponse(StrandSearchResponse(message));
         break;
 
-    case mtIpcIoResponse:
-        IpcIoFile::HandleResponse(message);
+    case mtIpcIoNotification:
+        IpcIoFile::HandleNotification(message);
         break;
 
     case mtCacheMgrRequest:

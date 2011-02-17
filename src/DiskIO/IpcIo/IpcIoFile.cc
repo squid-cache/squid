@@ -12,17 +12,13 @@
 #include "DiskIO/WriteRequest.h"
 #include "ipc/Messages.h"
 #include "ipc/Port.h"
-#include "ipc/StrandCoord.h"
+#include "ipc/StrandSearch.h"
 #include "ipc/UdsOp.h"
 
 CBDATA_CLASS_INIT(IpcIoFile);
 
-IpcIoFile::RequestMap IpcIoFile::TheRequestMap1;
-IpcIoFile::RequestMap IpcIoFile::TheRequestMap2;
-IpcIoFile::RequestMap *IpcIoFile::TheOlderRequests = &IpcIoFile::TheRequestMap1;
-IpcIoFile::RequestMap *IpcIoFile::TheNewerRequests = &IpcIoFile::TheRequestMap2;
-bool IpcIoFile::TimeoutCheckScheduled = false;
-unsigned int IpcIoFile::LastRequestId = 0;
+IpcIoFile::DiskerQueue *IpcIoFile::diskerQueue = NULL;
+IpcIoFile::IpcIoFiles IpcIoFile::ipcIoFiles;
 
 static bool DiskerOpen(const String &path, int flags, mode_t mode);
 static void DiskerClose(const String &path);
@@ -31,8 +27,12 @@ static void DiskerClose(const String &path);
 IpcIoFile::IpcIoFile(char const *aDb):
     dbName(aDb),
     diskId(-1),
-    ioLevel(0),
-    error_(false)
+    workerQueue(NULL),
+    error_(false),
+    lastRequestId(0),
+    olderRequests(&requestMap1),
+    newerRequests(&requestMap2),
+    timeoutCheckScheduled(false)
 {
 }
 
@@ -45,11 +45,16 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 {
     ioRequestor = callback;
     Must(diskId < 0); // we do not know our disker yet
+    Must(!diskerQueue && !workerQueue);
 
     if (IamDiskProcess()) {
         error_ = !DiskerOpen(dbName, flags, mode);
         if (error_)
             return;
+
+        // XXX: make capacity configurable
+        diskerQueue = new DiskerQueue(dbName.termedBuf(), Config.workers, 1024);
+        ipcIoFiles.insert(std::make_pair(KidIdentifier, this));
 
         Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
         ann.strand.tag = dbName;
@@ -59,36 +64,43 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 
         ioRequestor->ioCompletedNotification();
         return;
-	}        
+    }
 
-    // XXX: use StrandSearchRequest instead
-    IpcIoRequest ipcIo;
-    ipcIo.requestorId = KidIdentifier;
-    ipcIo.command = IpcIo::cmdOpen;
-    ipcIo.len = dbName.size();
-    assert(ipcIo.len <= sizeof(ipcIo.buf));
-    memcpy(ipcIo.buf, dbName.rawBuf(), ipcIo.len);    
+    Ipc::StrandSearchRequest request;
+    request.requestorId = KidIdentifier;
+    request.data = this;
+    request.tag = dbName;
 
-    IpcIoPendingRequest *pending = new IpcIoPendingRequest(this);
-    send(ipcIo, pending);
+    Ipc::TypedMsgHdr msg;
+    request.pack(msg);
+    Ipc::SendMessage(Ipc::coordinatorAddr, msg);
+
+    IpcIoPendingRequest *const pending = new IpcIoPendingRequest(this);
+    trackPendingRequest(*pending);
 }
 
 void
-IpcIoFile::openCompleted(const IpcIoResponse *ipcResponse) {
-    if (!ipcResponse) {
+IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response) {
+    Must(diskId < 0); // we do not know our disker yet
+    Must(!workerQueue);
+
+    // contain single pending open request at this time
+    newerRequests->clear();
+    olderRequests->clear();
+
+    if (!response) {
         debugs(79,1, HERE << "error: timeout");
         error_ = true;
-	} else
-    if (ipcResponse->xerrno) {
-        debugs(79,1, HERE << "error: " << xstrerr(ipcResponse->xerrno));
-        error_ = true;
-	} else {
-        diskId = ipcResponse->diskId;
-        if (diskId < 0) {
+    } else {
+        diskId = response->strand.kidId;
+        if (diskId >= 0) {
+            workerQueue = DiskerQueue::Attach(dbName.termedBuf(), KidIdentifier - 1);
+            ipcIoFiles.insert(std::make_pair(diskId, this));
+        } else {
             error_ = true;
             debugs(79,1, HERE << "error: no disker claimed " << dbName);
-		}
-	}
+        }
+    }
 
     ioRequestor->ioCompletedNotification();
 }
@@ -110,9 +122,12 @@ IpcIoFile::close()
 {
     assert(ioRequestor != NULL);
 
+    delete diskerQueue;
+    delete workerQueue;
+
     if (IamDiskProcess())
         DiskerClose(dbName);
-    // XXX: else nothing to do?  
+    // XXX: else nothing to do?
 
     ioRequestor->closeCompleted();
 }
@@ -149,31 +164,25 @@ IpcIoFile::read(ReadRequest *readRequest)
     //assert(minOffset < 0 || minOffset <= readRequest->offset);
     //assert(maxOffset < 0 || readRequest->offset + readRequest->len <= (uint64_t)maxOffset);
 
-    IpcIoRequest ipcIo;
-    ipcIo.requestorId = KidIdentifier;
-    ipcIo.command = IpcIo::cmdRead;
-    ipcIo.offset = readRequest->offset;
-    ipcIo.len = readRequest->len;
-
-    IpcIoPendingRequest *pending = new IpcIoPendingRequest(this);
+    IpcIoPendingRequest *const pending = new IpcIoPendingRequest(this);
     pending->readRequest = readRequest;
-    send(ipcIo, pending);
+    push(*pending);
 }
 
 void
 IpcIoFile::readCompleted(ReadRequest *readRequest,
-                         const IpcIoResponse *ipcResponse)
+                         const IpcIoMsg *const response)
 {
     bool ioError = false;
-    if (!ipcResponse) {
+    if (!response) {
         debugs(79,1, HERE << "error: timeout");
         ioError = true; // I/O timeout does not warrant setting error_?
-	} else
-    if (ipcResponse->xerrno) {
-        debugs(79,1, HERE << "error: " << xstrerr(ipcResponse->xerrno));
+    } else
+    if (response->xerrno) {
+        debugs(79,1, HERE << "error: " << xstrerr(response->xerrno));
         ioError = error_ = true;
-	} else {
-        memcpy(readRequest->buf, ipcResponse->buf, ipcResponse->len);
+    } else {
+        memcpy(readRequest->buf, response->buf, response->len);
     }
 
     const ssize_t rlen = ioError ? -1 : (ssize_t)readRequest->len;
@@ -196,34 +205,26 @@ IpcIoFile::write(WriteRequest *writeRequest)
     //assert(minOffset < 0 || minOffset <= writeRequest->offset);
     //assert(maxOffset < 0 || writeRequest->offset + writeRequest->len <= (uint64_t)maxOffset);
 
-    IpcIoRequest ipcIo;
-    ipcIo.requestorId = KidIdentifier;
-    ipcIo.command = IpcIo::cmdWrite;
-    ipcIo.offset = writeRequest->offset;
-    ipcIo.len = writeRequest->len;
-    assert(ipcIo.len <= sizeof(ipcIo.buf));
-    memcpy(ipcIo.buf, writeRequest->buf, ipcIo.len); // optimize away
-
-    IpcIoPendingRequest *pending = new IpcIoPendingRequest(this);
+    IpcIoPendingRequest *const pending = new IpcIoPendingRequest(this);
     pending->writeRequest = writeRequest;
-    send(ipcIo, pending);
+    push(*pending);
 }
 
 void
 IpcIoFile::writeCompleted(WriteRequest *writeRequest,
-                          const IpcIoResponse *ipcResponse)
+                          const IpcIoMsg *const response)
 {
     bool ioError = false;
-    if (!ipcResponse) {
+    if (!response) {
         debugs(79,1, HERE << "error: timeout");
         ioError = true; // I/O timeout does not warrant setting error_?
-	} else
-    if (ipcResponse->xerrno) {
-        debugs(79,1, HERE << "error: " << xstrerr(ipcResponse->xerrno));
-        error_ = true;
     } else
-    if (ipcResponse->len != writeRequest->len) {
-        debugs(79,1, HERE << "problem: " << ipcResponse->len << " < " << writeRequest->len);
+    if (response->xerrno) {
+        debugs(79,1, HERE << "error: " << xstrerr(response->xerrno));
+        ioError = error_ = true;
+    } else
+    if (response->len != writeRequest->len) {
+        debugs(79,1, HERE << "problem: " << response->len << " < " << writeRequest->len);
         error_ = true;
     }
 
@@ -243,111 +244,172 @@ IpcIoFile::writeCompleted(WriteRequest *writeRequest,
 bool
 IpcIoFile::ioInProgress() const
 {
-    return ioLevel > 0; // XXX: todo
+    return !olderRequests->empty() || !newerRequests->empty();
 }
 
-/// sends an I/O request to disker
+/// track a new pending request
 void
-IpcIoFile::send(IpcIoRequest &ipcIo, IpcIoPendingRequest *pending)
+IpcIoFile::trackPendingRequest(IpcIoPendingRequest &pending)
 {
-    if (++LastRequestId == 0) // don't use zero value as requestId
-        ++LastRequestId;
-    ipcIo.requestId = LastRequestId;
-    TheNewerRequests->insert(std::make_pair(ipcIo.requestId, pending));
-
-    Ipc::TypedMsgHdr message;
-    ipcIo.pack(message);
-
-    Must(diskId >= 0 || ipcIo.command == IpcIo::cmdOpen);
-    const String addr = diskId >= 0 ?
-        Ipc::Port::MakeAddr(Ipc::strandAddrPfx, diskId) :
-        Ipc::coordinatorAddr;
-
-    debugs(47, 7, HERE << "asking disker" << diskId << " to " <<
-        ipcIo.command << "; ipcIo" << KidIdentifier << '.' << ipcIo.requestId);
-
-    Ipc::SendMessage(addr, message);
-    ++ioLevel;
-
-    if (!TimeoutCheckScheduled)
-        ScheduleTimeoutCheck();
+    newerRequests->insert(std::make_pair(pending.id, &pending));
+    if (!timeoutCheckScheduled)
+        scheduleTimeoutCheck();
 }
 
-/// called when disker responds to our I/O request
+/// push an I/O request to disker
 void
-IpcIoFile::HandleResponse(const Ipc::TypedMsgHdr &raw)
+IpcIoFile::push(IpcIoPendingRequest &pending)
 {
-    IpcIoResponse response(raw);
+    debugs(47, 7, HERE);
+    Must(diskId >= 0);
+    Must(workerQueue);
+    Must(pending.readRequest || pending.writeRequest);
 
-    const int requestId = response.requestId;
-    debugs(47, 7, HERE << "disker response to " << response.command <<
-        "; ipcIo" << KidIdentifier << '.' << requestId);
+    IpcIoMsg ipcIo;
+    ipcIo.requestId = pending.id;
+    if (pending.readRequest) {
+        ipcIo.command = IpcIo::cmdRead;
+        ipcIo.offset = pending.readRequest->offset;
+        ipcIo.len = pending.readRequest->len;
+        assert(ipcIo.len <= sizeof(ipcIo.buf));
+        memcpy(ipcIo.buf, pending.readRequest->buf, ipcIo.len); // optimize away
+    } else { // pending.writeRequest
+        ipcIo.command = IpcIo::cmdWrite;
+        ipcIo.offset = pending.writeRequest->offset;
+        ipcIo.len = pending.writeRequest->len;
+        assert(ipcIo.len <= sizeof(ipcIo.buf));
+        memcpy(ipcIo.buf, pending.writeRequest->buf, ipcIo.len); // optimize away
+    }
 
-    Must(requestId != 0);
+    if (!workerQueue->push(ipcIo)) {
+        pending.completeIo(NULL);
+        return;
+    }
 
-    if (IpcIoPendingRequest *pending = DequeueRequest(requestId)) {
-        pending->completeIo(&response);
+    if (workerQueue->pushedSize() == 1)
+        Notify(diskId); // notify disker
+
+    trackPendingRequest(pending);
+}
+
+/// called when coordinator responds to worker open request
+void
+IpcIoFile::HandleOpenResponse(const Ipc::StrandSearchResponse &response)
+{
+    debugs(47, 7, HERE << "coordinator response to open request");
+    Must(response.data);
+    reinterpret_cast<IpcIoFile*>(response.data)->openCompleted(&response);
+}
+
+void
+IpcIoFile::handleResponses()
+{
+    Must(workerQueue);
+    IpcIoMsg ipcIo;
+    while (workerQueue->pop(ipcIo))
+        handleResponse(ipcIo);
+}
+
+void
+IpcIoFile::handleResponse(const IpcIoMsg &ipcIo)
+{
+    const int requestId = ipcIo.requestId;
+    debugs(47, 7, HERE << "disker response to " << ipcIo.command <<
+           "; ipcIo" << KidIdentifier << '.' << requestId);
+    Must(requestId);
+    if (IpcIoPendingRequest *const pending = dequeueRequest(requestId)) {
+        pending->completeIo(&ipcIo);
         delete pending; // XXX: leaking if throwing
     } else {
-        debugs(47, 4, HERE << "LATE disker response to " << response.command <<
-            "; ipcIo" << KidIdentifier << '.' << requestId);
+        debugs(47, 4, HERE << "LATE disker response to " << ipcIo.command <<
+               "; ipcIo" << KidIdentifier << '.' << requestId);
         // nothing we can do about it; completeIo() has been called already
     }
 }
 
-/// Mgr::IpcIoFile::checkTimeous wrapper
 void
-IpcIoFile::CheckTimeouts(void*)
+IpcIoFile::Notify(const int peerId)
 {
-    TimeoutCheckScheduled = false;
+    debugs(47, 7, HERE << "kid" << peerId);
+    Ipc::TypedMsgHdr msg;
+    msg.setType(Ipc::mtIpcIoNotification); // TODO: add proper message type?
+    msg.putInt(KidIdentifier);
+    const String addr = Ipc::Port::MakeAddr(Ipc::strandAddrPfx, peerId);
+    Ipc::SendMessage(addr, msg);
+}
+
+void
+IpcIoFile::HandleNotification(const Ipc::TypedMsgHdr &msg)
+{
+    debugs(47, 7, HERE);
+    if (IamDiskProcess())
+        DiskerHandleRequests();
+    else {
+        const int diskId = msg.getInt();
+        const IpcIoFiles::const_iterator i = ipcIoFiles.find(diskId);
+        Must(i != ipcIoFiles.end()); // XXX: warn and continue?
+        i->second->handleResponses();
+    }
+}
+
+/// IpcIoFile::checkTimeouts wrapper
+void
+IpcIoFile::CheckTimeouts(void *const param)
+{
+    Must(param);
+    reinterpret_cast<IpcIoFile*>(param)->checkTimeouts();
+}
+
+void
+IpcIoFile::checkTimeouts()
+{
+    timeoutCheckScheduled = false;
 
     // any old request would have timed out by now
     typedef RequestMap::const_iterator RMCI;
-    RequestMap &elders = *TheOlderRequests;
-    for (RMCI i = elders.begin(); i != elders.end(); ++i) {
-        IpcIoPendingRequest *pending = i->second;
+    for (RMCI i = olderRequests->begin(); i != olderRequests->end(); ++i) {
+        IpcIoPendingRequest *const pending = i->second;
 
         const int requestId = i->first;
         debugs(47, 7, HERE << "disker timeout; ipcIo" <<
-            KidIdentifier << '.' << requestId);
+               KidIdentifier << '.' << diskId << '.' << requestId);
 
         pending->completeIo(NULL); // no response
         delete pending; // XXX: leaking if throwing
-	}
-    elders.clear();
+    }
+    olderRequests->clear();
 
-    swap(TheOlderRequests, TheNewerRequests); // switches pointers around
-    if (!TheOlderRequests->empty())
-        ScheduleTimeoutCheck();
+    swap(olderRequests, newerRequests); // switches pointers around
+    if (!olderRequests->empty())
+        scheduleTimeoutCheck();
 }
 
 /// prepare to check for timeouts in a little while
 void
-IpcIoFile::ScheduleTimeoutCheck()
+IpcIoFile::scheduleTimeoutCheck()
 {
     // we check all older requests at once so some may be wait for 2*timeout
     const double timeout = 7; // in seconds
     eventAdd("IpcIoFile::CheckTimeouts", &IpcIoFile::CheckTimeouts,
-             NULL, timeout, 0, false);
-    TimeoutCheckScheduled = true;
+             this, timeout, 0, false);
+    timeoutCheckScheduled = true;
 }
 
 /// returns and forgets the right IpcIoFile pending request
 IpcIoPendingRequest *
-IpcIoFile::DequeueRequest(unsigned int requestId)
+IpcIoFile::dequeueRequest(const unsigned int requestId)
 {
-    debugs(47, 3, HERE);
     Must(requestId != 0);
 
-	RequestMap *map = NULL;
-    RequestMap::iterator i = TheRequestMap1.find(requestId);
+    RequestMap *map = NULL;
+    RequestMap::iterator i = requestMap1.find(requestId);
 
-    if (i != TheRequestMap1.end())
-        map = &TheRequestMap1;
+    if (i != requestMap1.end())
+        map = &requestMap1;
     else {
-        i = TheRequestMap2.find(requestId);
-        if (i != TheRequestMap2.end())
-            map = &TheRequestMap2;
+        i = requestMap2.find(requestId);
+        if (i != requestMap2.end())
+            map = &requestMap2;
     }
 
     if (!map) // not found in both maps
@@ -359,99 +421,32 @@ IpcIoFile::DequeueRequest(unsigned int requestId)
 }
 
 int
-IpcIoFile::getFD() const 
+IpcIoFile::getFD() const
 {
     assert(false); // not supported; TODO: remove this method from API
     return -1;
 }
 
 
-/* IpcIoRequest */
+/* IpcIoMsg */
 
-IpcIoRequest::IpcIoRequest():
-    requestorId(0), requestId(0),
-    offset(0), len(0),
-    command(IpcIo::cmdNone)
+IpcIoMsg::IpcIoMsg():
+    requestId(0), offset(0), len(0), command(IpcIo::cmdNone), xerrno(0)
 {
 }
-
-IpcIoRequest::IpcIoRequest(const Ipc::TypedMsgHdr& msg)
-{
-    msg.checkType(Ipc::mtIpcIoRequest);
-    msg.getPod(requestorId);
-    msg.getPod(requestId);
-   
-    msg.getPod(offset);
-    msg.getPod(len);
-    msg.getPod(command);
-
-    if (command == IpcIo::cmdOpen || command == IpcIo::cmdWrite)
-        msg.getFixed(buf, len);
-}
-
-void
-IpcIoRequest::pack(Ipc::TypedMsgHdr& msg) const
-{
-    msg.setType(Ipc::mtIpcIoRequest);
-    msg.putPod(requestorId);
-    msg.putPod(requestId);
-
-    msg.putPod(offset);
-    msg.putPod(len);
-    msg.putPod(command);
-
-    if (command == IpcIo::cmdOpen || command == IpcIo::cmdWrite)
-        msg.putFixed(buf, len);
-}
-
-
-/* IpcIoResponse */
-
-IpcIoResponse::IpcIoResponse():
-    diskId(-1),
-    requestId(0),
-    len(0),
-    xerrno(0)
-{
-}
-
-IpcIoResponse::IpcIoResponse(const Ipc::TypedMsgHdr& msg)
-{
-    msg.checkType(Ipc::mtIpcIoResponse);
-    msg.getPod(diskId);
-    msg.getPod(requestId);
-    msg.getPod(len);
-    msg.getPod(command);
-    msg.getPod(xerrno);
-
-    if (command == IpcIo::cmdRead && !xerrno)
-        msg.getFixed(buf, len);
-}
-
-void
-IpcIoResponse::pack(Ipc::TypedMsgHdr& msg) const
-{
-    msg.setType(Ipc::mtIpcIoResponse);
-    msg.putPod(diskId);
-    msg.putPod(requestId);
-    msg.putPod(len);
-    msg.putPod(command);
-    msg.putPod(xerrno);
-
-    if (command == IpcIo::cmdRead && !xerrno)
-        msg.putFixed(buf, len);
-}
-
 
 /* IpcIoPendingRequest */
 
 IpcIoPendingRequest::IpcIoPendingRequest(const IpcIoFile::Pointer &aFile):
     file(aFile), readRequest(NULL), writeRequest(NULL)
 {
+    if (++file->lastRequestId == 0) // don't use zero value as requestId
+        ++file->lastRequestId;
+    id = file->lastRequestId;
 }
 
 void
-IpcIoPendingRequest::completeIo(IpcIoResponse *response)
+IpcIoPendingRequest::completeIo(const IpcIoMsg *const response)
 {
     Must(file != NULL);
 
@@ -460,8 +455,10 @@ IpcIoPendingRequest::completeIo(IpcIoResponse *response)
     else
     if (writeRequest)
         file->writeCompleted(writeRequest, response);
-    else
-        file->openCompleted(response);
+    else {
+        Must(!response); // only timeouts are handled here
+        file->openCompleted(NULL);
+    }
 }
 
 
@@ -470,95 +467,85 @@ IpcIoPendingRequest::completeIo(IpcIoResponse *response)
 
 static int TheFile = -1; ///< db file descriptor
 
-static
-void diskerRead(const IpcIoRequest &request)
+static void
+diskerRead(IpcIoMsg &ipcIo)
 {
-    debugs(47,5, HERE << "disker" << KidIdentifier << " reads " <<
-        request.len << " at " << request.offset <<
-        " ipcIo" << request.requestorId << '.' << request.requestId);
-
-    IpcIoResponse response;
-    response.diskId = KidIdentifier;
-    response.requestId = request.requestId;
-    response.command = request.command;
-
-    const ssize_t read = pread(TheFile, response.buf, request.len, request.offset);
+    const ssize_t read = pread(TheFile, ipcIo.buf, ipcIo.len, ipcIo.offset);
     statCounter.syscalls.disk.reads++;
     fd_bytes(TheFile, read, FD_READ);
 
     if (read >= 0) {
-        response.xerrno = 0;
-        response.len = static_cast<size_t>(read); // safe because read > 0
+        ipcIo.xerrno = 0;
+        const size_t len = static_cast<size_t>(read); // safe because read > 0
         debugs(47,8, HERE << "disker" << KidIdentifier << " read " <<
-            (response.len == request.len ? "all " : "just ") << read);
-	} else {
-        response.xerrno = errno;
-        response.len = 0;
+            (len == ipcIo.len ? "all " : "just ") << read);
+        ipcIo.len = len;
+    } else {
+        ipcIo.xerrno = errno;
+        ipcIo.len = 0;
         debugs(47,5, HERE << "disker" << KidIdentifier << " read error: " <<
-            response.xerrno);
-	}
-    
-    Ipc::TypedMsgHdr message;
-    response.pack(message);
-    const String addr =
-        Ipc::Port::MakeAddr(Ipc::strandAddrPfx, request.requestorId);
-    Ipc::SendMessage(addr, message);
+            ipcIo.xerrno);
+    }
 }
 
-static
-void diskerWrite(const IpcIoRequest &request)
+static void
+diskerWrite(IpcIoMsg &ipcIo)
 {
-    debugs(47,5, HERE << "disker" << KidIdentifier << " writes " <<
-        request.len << " at " << request.offset <<
-        " ipcIo" << request.requestorId << '.' << request.requestId);
-
-    IpcIoResponse response;
-    response.diskId = KidIdentifier;
-    response.requestId = request.requestId;
-    response.command = request.command;
-
-    const ssize_t wrote = pwrite(TheFile, request.buf, request.len, request.offset);
+    const ssize_t wrote = pwrite(TheFile, ipcIo.buf, ipcIo.len, ipcIo.offset);
     statCounter.syscalls.disk.writes++;
     fd_bytes(TheFile, wrote, FD_WRITE);
 
     if (wrote >= 0) {
-        response.xerrno = 0;
-        response.len = static_cast<size_t>(wrote); // safe because wrote > 0
+        ipcIo.xerrno = 0;
+        const size_t len = static_cast<size_t>(wrote); // safe because wrote > 0
         debugs(47,8, HERE << "disker" << KidIdentifier << " wrote " <<
-            (response.len == request.len ? "all " : "just ") << wrote);
-	} else {
-        response.xerrno = errno;
-        response.len = 0;
+            (len == ipcIo.len ? "all " : "just ") << wrote);
+        ipcIo.len = len;
+    } else {
+        ipcIo.xerrno = errno;
+        ipcIo.len = 0;
         debugs(47,5, HERE << "disker" << KidIdentifier << " write error: " <<
-            response.xerrno);
-	}
-    
-    Ipc::TypedMsgHdr message;
-    response.pack(message);
-    const String addr =
-        Ipc::Port::MakeAddr(Ipc::strandAddrPfx, request.requestorId);
-    Ipc::SendMessage(addr, message);
+               ipcIo.xerrno);
+    }
+}
+
+void
+IpcIoFile::DiskerHandleRequests()
+{
+    Must(diskerQueue);
+    int workerId;
+    IpcIoMsg ipcIo;
+    while (diskerQueue->pop(workerId, ipcIo))
+        DiskerHandleRequest(workerId, ipcIo);
 }
 
 /// called when disker receives an I/O request
 void
-IpcIoFile::HandleRequest(const IpcIoRequest &request)
+IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
 {
-    switch (request.command) {
-    case IpcIo::cmdRead:
-        diskerRead(request);
-        break;
+    Must(diskerQueue);
 
-    case IpcIo::cmdWrite:
-        diskerWrite(request);
-        break;
-
-    default:
+    if (ipcIo.command != IpcIo::cmdRead && ipcIo.command != IpcIo::cmdWrite) {
         debugs(0,0, HERE << "disker" << KidIdentifier <<
-               " should not receive " << request.command <<
-               " ipcIo" << request.requestorId << '.' << request.requestId);
-        break;
-	}
+               " should not receive " << ipcIo.command <<
+               " ipcIo" << workerId << '.' << ipcIo.requestId);
+        return;
+    }
+
+    debugs(47,5, HERE << "disker" << KidIdentifier <<
+           (ipcIo.command == IpcIo::cmdRead ? " reads " : " writes ") <<
+           ipcIo.len << " at " << ipcIo.offset <<
+           " ipcIo" << workerId << '.' << ipcIo.requestId);
+
+    if (ipcIo.command == IpcIo::cmdRead)
+        diskerRead(ipcIo);
+    else // ipcIo.command == IpcIo::cmdWrite
+        diskerWrite(ipcIo);
+
+    diskerQueue->push(workerId, ipcIo); // XXX: report warning
+
+    if (diskerQueue->pushedSize(workerId) == 1)
+        Notify(workerId + 1); // notify worker
 }
 
 static bool
@@ -573,11 +560,11 @@ DiskerOpen(const String &path, int flags, mode_t mode)
         debugs(47,0, HERE << "rock db error opening " << path << ": " <<
                xstrerr(xerrno));
         return false;
-	}
+    }
 
     store_open_disk_fd++;
     debugs(79,3, HERE << "rock db opened " << path << ": FD " << TheFile);
-	return true;
+    return true;
 }
 
 static void
@@ -588,5 +575,5 @@ DiskerClose(const String &path)
         debugs(79,3, HERE << "rock db closed " << path << ": FD " << TheFile);
         TheFile = -1;
         store_open_disk_fd--;
-	}
+    }
 }
