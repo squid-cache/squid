@@ -467,7 +467,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                     len = TEMP_BUF_SIZE - gopherState->len;
                 }
 
-                xmemcpy(gopherState->buf + gopherState->len, inbuf, len);
+                memcpy(gopherState->buf + gopherState->len, inbuf, len);
                 gopherState->len += len;
                 return;
             }
@@ -498,7 +498,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
                 }
 
                 if (len > (pos - inbuf)) {
-                    xmemcpy(gopherState->buf, pos, len - (pos - inbuf));
+                    memcpy(gopherState->buf, pos, len - (pos - inbuf));
                     gopherState->len = len - (pos - inbuf);
                 }
 

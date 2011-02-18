@@ -4,7 +4,7 @@ msgstr ""
 "#-#-#-#-#  ERR_ACCESS_DENIED.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:39+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -15,7 +15,7 @@ msgstr ""
 "#-#-#-#-#  ERR_AGENT_CONFIGURE.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:39+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -26,7 +26,7 @@ msgstr ""
 "#-#-#-#-#  ERR_AGENT_WPAD.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:39+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -37,7 +37,7 @@ msgstr ""
 "#-#-#-#-#  ERR_CACHE_ACCESS_DENIED.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:39+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -48,7 +48,7 @@ msgstr ""
 "#-#-#-#-#  ERR_CACHE_MGR_ACCESS_DENIED.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:39+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -59,7 +59,7 @@ msgstr ""
 "#-#-#-#-#  ERR_CANNOT_FORWARD.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:39+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -70,7 +70,7 @@ msgstr ""
 "#-#-#-#-#  ERR_CONNECT_FAIL.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:39+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -81,7 +81,7 @@ msgstr ""
 "#-#-#-#-#  ERR_DIR_LISTING.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:39+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -92,7 +92,7 @@ msgstr ""
 "#-#-#-#-#  ERR_DNS_FAIL.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -103,7 +103,7 @@ msgstr ""
 "#-#-#-#-#  ERR_ESI.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -114,7 +114,7 @@ msgstr ""
 "#-#-#-#-#  ERR_FORWARDING_DENIED.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -125,7 +125,7 @@ msgstr ""
 "#-#-#-#-#  ERR_FTP_DISABLED.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -136,7 +136,7 @@ msgstr ""
 "#-#-#-#-#  ERR_FTP_FAILURE.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -147,7 +147,7 @@ msgstr ""
 "#-#-#-#-#  ERR_FTP_FORBIDDEN.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -158,7 +158,7 @@ msgstr ""
 "#-#-#-#-#  ERR_FTP_NOT_FOUND.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -169,7 +169,7 @@ msgstr ""
 "#-#-#-#-#  ERR_FTP_PUT_CREATED.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -180,7 +180,7 @@ msgstr ""
 "#-#-#-#-#  ERR_FTP_PUT_ERROR.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -191,7 +191,7 @@ msgstr ""
 "#-#-#-#-#  ERR_FTP_PUT_MODIFIED.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -202,7 +202,18 @@ msgstr ""
 "#-#-#-#-#  ERR_FTP_UNAVAILABLE.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Translate Toolkit 1.7.0\n"
+"#-#-#-#-#  ERR_GATEWAY_FAILURE.pot (Squid-3)  #-#-#-#-#\n"
+"Project-Id-Version: Squid-3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -213,7 +224,7 @@ msgstr ""
 "#-#-#-#-#  ERR_ICAP_FAILURE.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -224,7 +235,7 @@ msgstr ""
 "#-#-#-#-#  ERR_INVALID_REQ.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -235,7 +246,7 @@ msgstr ""
 "#-#-#-#-#  ERR_INVALID_RESP.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -246,7 +257,7 @@ msgstr ""
 "#-#-#-#-#  ERR_INVALID_URL.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -257,7 +268,7 @@ msgstr ""
 "#-#-#-#-#  ERR_LIFETIME_EXP.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -268,7 +279,7 @@ msgstr ""
 "#-#-#-#-#  ERR_NO_RELAY.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:27+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -279,7 +290,7 @@ msgstr ""
 "#-#-#-#-#  ERR_ONLY_IF_CACHED_MISS.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:27+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -290,7 +301,7 @@ msgstr ""
 "#-#-#-#-#  ERR_PRECONDITION_FAILED.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:27+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -301,7 +312,7 @@ msgstr ""
 "#-#-#-#-#  ERR_READ_ERROR.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:27+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -312,7 +323,7 @@ msgstr ""
 "#-#-#-#-#  ERR_READ_TIMEOUT.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:27+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -323,7 +334,7 @@ msgstr ""
 "#-#-#-#-#  ERR_SECURE_CONNECT_FAIL.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:27+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -334,7 +345,7 @@ msgstr ""
 "#-#-#-#-#  ERR_SHUTTING_DOWN.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:27+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -345,7 +356,7 @@ msgstr ""
 "#-#-#-#-#  ERR_SOCKET_FAILURE.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:27+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -356,7 +367,7 @@ msgstr ""
 "#-#-#-#-#  ERR_TOO_BIG.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:27+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -367,7 +378,7 @@ msgstr ""
 "#-#-#-#-#  ERR_UNSUP_HTTPVERSION.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:27+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -378,7 +389,7 @@ msgstr ""
 "#-#-#-#-#  ERR_UNSUP_REQ.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:27+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -389,7 +400,7 @@ msgstr ""
 "#-#-#-#-#  ERR_URN_RESOLVE.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:27+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -400,7 +411,7 @@ msgstr ""
 "#-#-#-#-#  ERR_WRITE_ERROR.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:27+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -411,7 +422,7 @@ msgstr ""
 "#-#-#-#-#  ERR_ZERO_SIZE_OBJECT.pot (Squid-3)  #-#-#-#-#\n"
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:27+1300\n"
+"POT-Creation-Date: 2011-02-06 22:40+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -444,6 +455,12 @@ msgstr ""
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
+msgstr ""
+
+#: templates/ERR_GATEWAY_FAILURE:6
+msgid ""
+"A non-recoverable internal failure or configuration problem prevents this "
+"request from being completed."
 msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:5
@@ -539,16 +556,17 @@ msgstr ""
 #: templates/ERR_FORWARDING_DENIED:2 templates/ERR_FTP_DISABLED:2
 #: templates/ERR_FTP_FAILURE:2 templates/ERR_FTP_FORBIDDEN:2
 #: templates/ERR_FTP_NOT_FOUND:2 templates/ERR_FTP_PUT_ERROR:2
-#: templates/ERR_FTP_UNAVAILABLE:2 templates/ERR_ICAP_FAILURE:2
-#: templates/ERR_INVALID_REQ:2 templates/ERR_INVALID_RESP:2
-#: templates/ERR_INVALID_URL:2 templates/ERR_LIFETIME_EXP:2
-#: templates/ERR_NO_RELAY:2 templates/ERR_ONLY_IF_CACHED_MISS:2
-#: templates/ERR_PRECONDITION_FAILED:2 templates/ERR_READ_ERROR:2
-#: templates/ERR_READ_TIMEOUT:2 templates/ERR_SECURE_CONNECT_FAIL:2
-#: templates/ERR_SHUTTING_DOWN:2 templates/ERR_SOCKET_FAILURE:2
-#: templates/ERR_TOO_BIG:2 templates/ERR_UNSUP_HTTPVERSION:2
-#: templates/ERR_UNSUP_REQ:2 templates/ERR_URN_RESOLVE:2
-#: templates/ERR_WRITE_ERROR:2 templates/ERR_ZERO_SIZE_OBJECT:2
+#: templates/ERR_FTP_UNAVAILABLE:2 templates/ERR_GATEWAY_FAILURE:2
+#: templates/ERR_ICAP_FAILURE:2 templates/ERR_INVALID_REQ:2
+#: templates/ERR_INVALID_RESP:2 templates/ERR_INVALID_URL:2
+#: templates/ERR_LIFETIME_EXP:2 templates/ERR_NO_RELAY:2
+#: templates/ERR_ONLY_IF_CACHED_MISS:2 templates/ERR_PRECONDITION_FAILED:2
+#: templates/ERR_READ_ERROR:2 templates/ERR_READ_TIMEOUT:2
+#: templates/ERR_SECURE_CONNECT_FAIL:2 templates/ERR_SHUTTING_DOWN:2
+#: templates/ERR_SOCKET_FAILURE:2 templates/ERR_TOO_BIG:2
+#: templates/ERR_UNSUP_HTTPVERSION:2 templates/ERR_UNSUP_REQ:2
+#: templates/ERR_URN_RESOLVE:2 templates/ERR_WRITE_ERROR:2
+#: templates/ERR_ZERO_SIZE_OBJECT:2
 msgid "ERROR"
 msgstr ""
 
@@ -569,15 +587,16 @@ msgstr ""
 #: templates/ERR_FORWARDING_DENIED:1 templates/ERR_FTP_DISABLED:1
 #: templates/ERR_FTP_FAILURE:1 templates/ERR_FTP_FORBIDDEN:1
 #: templates/ERR_FTP_NOT_FOUND:1 templates/ERR_FTP_UNAVAILABLE:1
-#: templates/ERR_ICAP_FAILURE:1 templates/ERR_INVALID_REQ:1
-#: templates/ERR_INVALID_RESP:1 templates/ERR_INVALID_URL:1
-#: templates/ERR_LIFETIME_EXP:1 templates/ERR_NO_RELAY:1
-#: templates/ERR_ONLY_IF_CACHED_MISS:1 templates/ERR_PRECONDITION_FAILED:1
-#: templates/ERR_READ_ERROR:1 templates/ERR_READ_TIMEOUT:1
-#: templates/ERR_SECURE_CONNECT_FAIL:1 templates/ERR_SHUTTING_DOWN:1
-#: templates/ERR_SOCKET_FAILURE:1 templates/ERR_TOO_BIG:1
-#: templates/ERR_UNSUP_HTTPVERSION:1 templates/ERR_UNSUP_REQ:1
-#: templates/ERR_WRITE_ERROR:1 templates/ERR_ZERO_SIZE_OBJECT:1
+#: templates/ERR_GATEWAY_FAILURE:1 templates/ERR_ICAP_FAILURE:1
+#: templates/ERR_INVALID_REQ:1 templates/ERR_INVALID_RESP:1
+#: templates/ERR_INVALID_URL:1 templates/ERR_LIFETIME_EXP:1
+#: templates/ERR_NO_RELAY:1 templates/ERR_ONLY_IF_CACHED_MISS:1
+#: templates/ERR_PRECONDITION_FAILED:1 templates/ERR_READ_ERROR:1
+#: templates/ERR_READ_TIMEOUT:1 templates/ERR_SECURE_CONNECT_FAIL:1
+#: templates/ERR_SHUTTING_DOWN:1 templates/ERR_SOCKET_FAILURE:1
+#: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_HTTPVERSION:1
+#: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
+#: templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
 msgstr ""
 
@@ -629,6 +648,10 @@ msgstr ""
 msgid "Forwarding Denied."
 msgstr ""
 
+#: templates/ERR_GATEWAY_FAILURE:5
+msgid "Gateway Proxy Failure"
+msgstr ""
+
 #: templates/ERR_ACCESS_DENIED:8 templates/ERR_AGENT_CONFIGURE:16
 #: templates/ERR_AGENT_WPAD:15 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
@@ -638,16 +661,17 @@ msgstr ""
 #: templates/ERR_FTP_FAILURE:8 templates/ERR_FTP_FORBIDDEN:8
 #: templates/ERR_FTP_NOT_FOUND:9 templates/ERR_FTP_PUT_CREATED:4
 #: templates/ERR_FTP_PUT_ERROR:9 templates/ERR_FTP_PUT_MODIFIED:4
-#: templates/ERR_FTP_UNAVAILABLE:8 templates/ERR_ICAP_FAILURE:11
-#: templates/ERR_INVALID_REQ:14 templates/ERR_INVALID_RESP:8
-#: templates/ERR_INVALID_URL:13 templates/ERR_LIFETIME_EXP:8
-#: templates/ERR_NO_RELAY:8 templates/ERR_ONLY_IF_CACHED_MISS:8
-#: templates/ERR_PRECONDITION_FAILED:8 templates/ERR_READ_ERROR:9
-#: templates/ERR_READ_TIMEOUT:9 templates/ERR_SECURE_CONNECT_FAIL:9
-#: templates/ERR_SHUTTING_DOWN:7 templates/ERR_SOCKET_FAILURE:9
-#: templates/ERR_TOO_BIG:10 templates/ERR_UNSUP_HTTPVERSION:8
-#: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
-#: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
+#: templates/ERR_FTP_UNAVAILABLE:8 templates/ERR_GATEWAY_FAILURE:9
+#: templates/ERR_ICAP_FAILURE:11 templates/ERR_INVALID_REQ:14
+#: templates/ERR_INVALID_RESP:8 templates/ERR_INVALID_URL:13
+#: templates/ERR_LIFETIME_EXP:8 templates/ERR_NO_RELAY:8
+#: templates/ERR_ONLY_IF_CACHED_MISS:8 templates/ERR_PRECONDITION_FAILED:8
+#: templates/ERR_READ_ERROR:9 templates/ERR_READ_TIMEOUT:9
+#: templates/ERR_SECURE_CONNECT_FAIL:9 templates/ERR_SHUTTING_DOWN:7
+#: templates/ERR_SOCKET_FAILURE:9 templates/ERR_TOO_BIG:10
+#: templates/ERR_UNSUP_HTTPVERSION:8 templates/ERR_UNSUP_REQ:8
+#: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
+#: templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
 msgstr ""
 
@@ -852,14 +876,15 @@ msgstr ""
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
 #: templates/ERR_CONNECT_FAIL:4 templates/ERR_DNS_FAIL:4 templates/ERR_ESI:4
 #: templates/ERR_FORWARDING_DENIED:4 templates/ERR_FTP_DISABLED:4
-#: templates/ERR_ICAP_FAILURE:4 templates/ERR_INVALID_URL:4
-#: templates/ERR_LIFETIME_EXP:4 templates/ERR_NO_RELAY:4
-#: templates/ERR_ONLY_IF_CACHED_MISS:4 templates/ERR_PRECONDITION_FAILED:4
-#: templates/ERR_READ_ERROR:4 templates/ERR_READ_TIMEOUT:4
-#: templates/ERR_SECURE_CONNECT_FAIL:4 templates/ERR_SHUTTING_DOWN:4
-#: templates/ERR_SOCKET_FAILURE:4 templates/ERR_TOO_BIG:4
-#: templates/ERR_UNSUP_HTTPVERSION:4 templates/ERR_UNSUP_REQ:4
-#: templates/ERR_WRITE_ERROR:4 templates/ERR_ZERO_SIZE_OBJECT:4
+#: templates/ERR_GATEWAY_FAILURE:4 templates/ERR_ICAP_FAILURE:4
+#: templates/ERR_INVALID_URL:4 templates/ERR_LIFETIME_EXP:4
+#: templates/ERR_NO_RELAY:4 templates/ERR_ONLY_IF_CACHED_MISS:4
+#: templates/ERR_PRECONDITION_FAILED:4 templates/ERR_READ_ERROR:4
+#: templates/ERR_READ_TIMEOUT:4 templates/ERR_SECURE_CONNECT_FAIL:4
+#: templates/ERR_SHUTTING_DOWN:4 templates/ERR_SOCKET_FAILURE:4
+#: templates/ERR_TOO_BIG:4 templates/ERR_UNSUP_HTTPVERSION:4
+#: templates/ERR_UNSUP_REQ:4 templates/ERR_WRITE_ERROR:4
+#: templates/ERR_ZERO_SIZE_OBJECT:4
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
@@ -884,15 +909,15 @@ msgstr ""
 #: templates/ERR_FORWARDING_DENIED:3 templates/ERR_FTP_DISABLED:3
 #: templates/ERR_FTP_FAILURE:3 templates/ERR_FTP_FORBIDDEN:3
 #: templates/ERR_FTP_NOT_FOUND:3 templates/ERR_FTP_UNAVAILABLE:3
-#: templates/ERR_ICAP_FAILURE:3 templates/ERR_INVALID_REQ:3
-#: templates/ERR_INVALID_RESP:3 templates/ERR_INVALID_URL:3
-#: templates/ERR_LIFETIME_EXP:3 templates/ERR_NO_RELAY:3
-#: templates/ERR_ONLY_IF_CACHED_MISS:3 templates/ERR_PRECONDITION_FAILED:3
-#: templates/ERR_READ_ERROR:3 templates/ERR_READ_TIMEOUT:3
-#: templates/ERR_SECURE_CONNECT_FAIL:3 templates/ERR_SHUTTING_DOWN:3
-#: templates/ERR_SOCKET_FAILURE:3 templates/ERR_TOO_BIG:3
-#: templates/ERR_UNSUP_REQ:3 templates/ERR_WRITE_ERROR:3
-#: templates/ERR_ZERO_SIZE_OBJECT:3
+#: templates/ERR_GATEWAY_FAILURE:3 templates/ERR_ICAP_FAILURE:3
+#: templates/ERR_INVALID_REQ:3 templates/ERR_INVALID_RESP:3
+#: templates/ERR_INVALID_URL:3 templates/ERR_LIFETIME_EXP:3
+#: templates/ERR_NO_RELAY:3 templates/ERR_ONLY_IF_CACHED_MISS:3
+#: templates/ERR_PRECONDITION_FAILED:3 templates/ERR_READ_ERROR:3
+#: templates/ERR_READ_TIMEOUT:3 templates/ERR_SECURE_CONNECT_FAIL:3
+#: templates/ERR_SHUTTING_DOWN:3 templates/ERR_SOCKET_FAILURE:3
+#: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
+#: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
 msgid "The requested URL could not be retrieved"
 msgstr ""
 
@@ -941,6 +966,12 @@ msgid ""
 "This cache will not forward your request because it is trying to enforce a "
 "sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
+msgstr ""
+
+#: templates/ERR_GATEWAY_FAILURE:7
+msgid ""
+"This may be due to limits established by the Internet Service Provider who "
+"operates this cache. Please contact them directly for more information."
 msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:7
@@ -1056,15 +1087,16 @@ msgstr ""
 #: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
 #: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
 #: templates/ERR_FTP_NOT_FOUND:8 templates/ERR_FTP_PUT_ERROR:8
-#: templates/ERR_FTP_UNAVAILABLE:7 templates/ERR_INVALID_REQ:13
-#: templates/ERR_INVALID_RESP:7 templates/ERR_INVALID_URL:12
-#: templates/ERR_LIFETIME_EXP:7 templates/ERR_NO_RELAY:7
-#: templates/ERR_ONLY_IF_CACHED_MISS:7 templates/ERR_READ_ERROR:8
-#: templates/ERR_READ_TIMEOUT:8 templates/ERR_SECURE_CONNECT_FAIL:8
-#: templates/ERR_SHUTTING_DOWN:6 templates/ERR_SOCKET_FAILURE:8
-#: templates/ERR_TOO_BIG:9 templates/ERR_UNSUP_HTTPVERSION:7
-#: templates/ERR_UNSUP_REQ:7 templates/ERR_URN_RESOLVE:7
-#: templates/ERR_WRITE_ERROR:8 templates/ERR_ZERO_SIZE_OBJECT:7
+#: templates/ERR_FTP_UNAVAILABLE:7 templates/ERR_GATEWAY_FAILURE:8
+#: templates/ERR_INVALID_REQ:13 templates/ERR_INVALID_RESP:7
+#: templates/ERR_INVALID_URL:12 templates/ERR_LIFETIME_EXP:7
+#: templates/ERR_NO_RELAY:7 templates/ERR_ONLY_IF_CACHED_MISS:7
+#: templates/ERR_READ_ERROR:8 templates/ERR_READ_TIMEOUT:8
+#: templates/ERR_SECURE_CONNECT_FAIL:8 templates/ERR_SHUTTING_DOWN:6
+#: templates/ERR_SOCKET_FAILURE:8 templates/ERR_TOO_BIG:9
+#: templates/ERR_UNSUP_HTTPVERSION:7 templates/ERR_UNSUP_REQ:7
+#: templates/ERR_URN_RESOLVE:7 templates/ERR_WRITE_ERROR:8
+#: templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
 msgstr ""
 

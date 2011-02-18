@@ -91,38 +91,6 @@
 #define SQUID_UDP_SO_RCVBUF SQUID_DETECT_UDP_SO_RCVBUF
 #endif
 
-#if HAVE_MEMCPY
-#define xmemcpy(d,s,n) memcpy((d),(s),(n))
-#elif HAVE_BCOPY
-#define xmemcpy(d,s,n) bcopy((s),(d),(n))
-#elif HAVE_MEMMOVE
-#define xmemcpy(d,s,n) memmove((d),(s),(n))
-#endif
-
-#if HAVE_MEMMOVE
-#define xmemmove(d,s,n) memmove((d),(s),(n))
-#elif HAVE_BCOPY
-#define xmemmove(d,s,n) bcopy((s),(d),(n))
-#endif
-
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
-#define xisspace(x) isspace((unsigned char)x)
-#define xtoupper(x) toupper((unsigned char)x)
-#define xtolower(x) tolower((unsigned char)x)
-#define xisdigit(x) isdigit((unsigned char)x)
-#define xisascii(x) isascii((unsigned char)x)
-#define xislower(x) islower((unsigned char)x)
-#define xisalpha(x) isalpha((unsigned char)x)
-#define xisprint(x) isprint((unsigned char)x)
-#define xisalnum(x) isalnum((unsigned char)x)
-#define xiscntrl(x) iscntrl((unsigned char)x)
-#define xispunct(x) ispunct((unsigned char)x)
-#define xisupper(x) isupper((unsigned char)x)
-#define xisxdigit(x) isxdigit((unsigned char)x)
-#define xisgraph(x) isgraph((unsigned char)x)
-
 #if HAVE_RANDOM
 #define squid_random random
 #define squid_srandom srandom
@@ -132,20 +100,6 @@
 #else
 #define squid_random rand
 #define squid_srandom srand
-#endif
-
-/* gcc doesn't recognize the Windows native 64 bit formatting tags causing
- * the compile fail, so we must disable the check on native Windows.
- */
-
-#if __GNUC__ && !defined(_SQUID_MSWIN_)
-#define PRINTF_FORMAT_ARG1 __attribute__ ((format (printf, 1, 2)))
-#define PRINTF_FORMAT_ARG2 __attribute__ ((format (printf, 2, 3)))
-#define PRINTF_FORMAT_ARG3 __attribute__ ((format (printf, 3, 4)))
-#else
-#define PRINTF_FORMAT_ARG1
-#define PRINTF_FORMAT_ARG2
-#define PRINTF_FORMAT_ARG3
 #endif
 
 /*
@@ -161,10 +115,5 @@
 
 /* temp hack: needs to be pre-defined for now. */
 #define SQUID_MAXPATHLEN 256
-
-/*
- * strnstr() is needed. The OS may not provide a working copy.
- */
-#include "strnstr.h"
 
 #endif /* SQUID_CONFIG_H */

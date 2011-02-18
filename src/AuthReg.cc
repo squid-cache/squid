@@ -1,4 +1,7 @@
 #include "config.h"
+
+#if USE_AUTH
+
 #include "Debug.h"
 #include "protos.h"
 
@@ -41,3 +44,5 @@ InitAuthSchemes()
 #endif
     debugs(29,1,"Initializing Authentication Schemes Complete.");
 }
+
+#endif /* USE_AUTH */

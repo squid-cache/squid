@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.9 release notes</title>
+<title>Squid 3.1.11 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.9
+The Squid Team are pleased to announce the release of Squid-3.1.11
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -563,6 +563,10 @@ This section gives a thorough account of those changes in three categories:
 	direct client address in delay pools.
 	</verb>
 
+	<tag>client_request_buffer_max_size</tag>
+	<p>New directive added with squid-3.1.10 to set limits on the amount of buffer space allocated
+	for receiving upload and request data from clients.
+
         <tag>dns_v4_fallback</tag>
         <p>New option to prevent Squid from always looking up IPv4 regardless of whether IPv6 addresses are found.
            Squid will follow a policy of prefering IPv6 links, keeping the IPv4 only as a safety net behind IPv6.
@@ -681,39 +685,17 @@ This section gives a thorough account of those changes in three categories:
 		follow_x_forwarded_for allow my_other_proxy
 	</verb>
 
+	<tag>ftp_eprt</tag>
+	<p>New directive added with squid-3.1.11 to control whether Squid uses EPRT extension
+	   for efficient NAT handling and IPv6 protocol support in FTP.
+
 	<tag>ftp_epsv</tag>
-	<verb>
-	FTP Protocol extensions permit the use of a special "EPSV" command.
-
-	NATs may be able to put the connection on a "fast path" through the
-	translator using EPSV, as the EPRT command will never be used and therefore,
-	translation of the data portion of the segments will never be needed.
-
-	Turning this OFF will prevent EPSV being attempted.
-
-	WARNING: Doing so will convert Squid back to the old behavior with all
-	the related problems with external NAT devices/layers.
-
-	Requires ftp_passive to be ON (default) for any effect.
-	</verb>
+	<p>New directive to control whether Squid uses EPSV extension for
+	   efficient NAT handling and IPv6 protocol support in FTP.
 
 	<tag>ftp_epsv_all</tag>
-	<verb>
-	FTP Protocol extensions permit the use of a special "EPSV ALL" command.
-
-	NATs may be able to put the connection on a "fast path" through the
-	translator, as the EPRT command will never be used and therefore,
-	translation of the data portion of the segments will never be needed.
-
-	When a client only expects to do two-way FTP transfers this may be useful.
-	If Squid finds that it must do a three-way FTP transfer after issuing
-	an EPSV ALL command, the FTP session will fail.
-
-	If you have any doubts about this option do not use it.
-	Squid will nicely attempt all other connection methods.
-
-	Requires ftp_passive to be ON (default)
-	</verb>
+	<p>New directive to control whether Squid uses "EPSV ALL" extension for
+	   efficient NAT handling and IPv6 protocol support in FTP.
 
 	<tag>forward_max_tries</tag>
 	<p>Controls how many different forward paths Squid will try
@@ -1106,7 +1088,7 @@ NOCOMMENT_START
 	X-Forwarded-For header.
 
 	If set to "truncate", Squid will remove all existing
-	X-Forwarded-For entries, and place itself as the sole entry.
+	X-Forwarded-For entries, and place the client IP as the sole entry.
 	</verb>
 
 	<tag>http_port transparent intercept ssl-bump connection-auth[=on|off] ignore-cc</tag>

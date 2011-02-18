@@ -38,7 +38,6 @@
 
 #include "smblib/smblib-priv.h"
 #define uchar unsigned char
-extern int DEBUGLEVEL;
 
 #include "rfcnb/byteorder.h"
 

@@ -35,10 +35,13 @@
 #include "squid.h"
 #include "event.h"
 #include "StoreClient.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "HttpRequest.h"
+#include "log/Tokens.h"
 #include "MemObject.h"
 #include "fde.h"
 #include "mem_node.h"
@@ -672,15 +675,13 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "Squid Object Cache: Version %s\n",
                       version_string);
 
-#if _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
         storeAppendPrintf(sentry,"\nRunning as %s Windows System Service on %s\n",
                           WIN32_Service_name, WIN32_OS_string);
         storeAppendPrintf(sentry,"Service command line is: %s\n", WIN32_Service_Command_Line);
     } else
         storeAppendPrintf(sentry,"Running on %s\n",WIN32_OS_string);
-
 #endif
 
     storeAppendPrintf(sentry, "Start Time:\t%s\n",
@@ -748,7 +749,7 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
                       stats.request_hit_disk_ratio60 / fct);
 
     storeAppendPrintf(sentry, "\tStorage Swap size:\t%.0f KB\n",
-                      stats.store_swap_size / 1024);
+                      stats.store_swap_size);
 
     storeAppendPrintf(sentry, "\tStorage Swap capacity:\t%4.1f%% used, %4.1f%% free\n",
                       Math::doublePercent(stats.store_swap_size, stats.store_swap_max_size),
@@ -1372,9 +1373,11 @@ statRegisterWithCacheManager(void)
     Mgr::RegisterAction("active_requests",
                         "Client-side Active Requests",
                         statClientRequests, 0, 1);
+#if USE_AUTH
     Mgr::RegisterAction("username_cache",
                         "Active Cached Usernames",
                         AuthUser::UsernameCacheStats, 0, 1);
+#endif
 #if DEBUG_OPENFD
     Mgr::RegisterAction("openfd_objects", "Objects with Swapout files open",
                         statOpenfdObj, 0, 0);
@@ -1424,7 +1427,7 @@ statAvgTick(void *notused)
     c->timestamp = current_time;
     /* even if NCountHist is small, we already Init()ed the tail */
     statCountersClean(CountHist + N_COUNT_HIST - 1);
-    xmemmove(p, t, (N_COUNT_HIST - 1) * sizeof(StatCounters));
+    memmove(p, t, (N_COUNT_HIST - 1) * sizeof(StatCounters));
     statCountersCopy(t, c);
     NCountHist++;
 
@@ -1434,7 +1437,7 @@ statAvgTick(void *notused)
         StatCounters *p2 = &CountHourHist[1];
         StatCounters *c2 = &CountHist[N_COUNT_HIST - 1];
         statCountersClean(CountHourHist + N_COUNT_HOUR_HIST - 1);
-        xmemmove(p2, t2, (N_COUNT_HOUR_HIST - 1) * sizeof(StatCounters));
+        memmove(p2, t2, (N_COUNT_HOUR_HIST - 1) * sizeof(StatCounters));
         statCountersCopy(t2, c2);
         NCountHourHist++;
     }
@@ -1544,7 +1547,7 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
 {
     assert(dest && orig);
     /* this should take care of all the fields, but "special" ones */
-    xmemcpy(dest, orig, sizeof(*dest));
+    memcpy(dest, orig, sizeof(*dest));
     /* prepare space where to copy special entries */
     statCountersInitSpecial(dest);
     /* now handle special cases */
@@ -2052,12 +2055,14 @@ statClientRequests(StoreEntry * s)
                           (long int) http->start_time.tv_sec,
                           (int) http->start_time.tv_usec,
                           tvSubDsec(http->start_time, current_time));
-
+#if USE_AUTH
         if (http->request->auth_user_request != NULL)
             p = http->request->auth_user_request->username();
-        else if (http->request->extacl_user.defined()) {
-            p = http->request->extacl_user.termedBuf();
-        }
+        else
+#endif
+            if (http->request->extacl_user.defined()) {
+                p = http->request->extacl_user.termedBuf();
+            }
 
         if (!p && (conn != NULL && conn->rfc931[0]))
             p = conn->rfc931;

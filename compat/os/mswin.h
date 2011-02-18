@@ -34,7 +34,7 @@
 #ifndef SQUID_OS_MSWIN_H
 #define SQUID_OS_MSWIN_H
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 
 #define ACL WindowsACL
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
@@ -749,5 +749,14 @@ struct rusage {
 SQUIDCEXTERN size_t getpagesize(void);
 #endif
 
-#endif /* _SQUID_WIN32_ */
+/* gcc doesn't recognize the Windows native 64 bit formatting tags causing
+ * the compile fail, so we must disable the check on native Windows.
+ */
+#if __GNUC__
+#define PRINTF_FORMAT_ARG1
+#define PRINTF_FORMAT_ARG2
+#define PRINTF_FORMAT_ARG3
+#endif
+
+#endif /* _SQUID_WINDOWS_ */
 #endif /* SQUID_OS_MSWIN_H */

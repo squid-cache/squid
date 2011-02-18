@@ -115,7 +115,7 @@ IdleConnList::push(int fd)
         nfds_alloc <<= 1;
         int *old = fds;
         fds = (int *)xmalloc(nfds_alloc * sizeof(int));
-        xmemcpy(fds, old, nfds * sizeof(int));
+        memcpy(fds, old, nfds * sizeof(int));
 
         if (nfds == PCONN_FDS_SZ)
             pconn_fds_pool->freeOne(old);
@@ -367,9 +367,7 @@ PconnModule::registerWithCacheManager(void)
 }
 
 void
-
-PconnModule::add
-(PconnPool *aPool)
+PconnModule::add(PconnPool *aPool)
 {
     assert(poolCount < MAX_NUM_PCONN_POOLS);
     *(pools+poolCount) = aPool;

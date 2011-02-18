@@ -140,7 +140,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
 
             if (receivedData.data != esiStream->localbuffer->buf) {
                 /* But not the start of it */
-                xmemmove (esiStream->localbuffer->buf, receivedData.data, receivedData.length);
+                memmove(esiStream->localbuffer->buf, receivedData.data, receivedData.length);
             }
 
             esiStream->localbuffer->len = receivedData.length;

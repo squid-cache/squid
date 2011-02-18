@@ -58,4 +58,25 @@ public:
     virtual void tick();
 };
 
+namespace Time
+{
+
+/** Display time as a formatted human-readable string.
+ * Time syntax is
+ * "YYYY/MM/DD hh:mm:ss"
+ *
+ * Output is only valid until next call to this function.
+ */
+const char *FormatStrf(time_t t);
+
+/** Display time as a formatted human-readable string.
+ * Time string syntax used is that of Apache httpd.
+ * "DD/MMM/YYYY:hh:mm:ss zzzz"
+ *
+ * Output is only valid until next call to this function.
+ */
+const char *FormatHttpd(time_t t);
+
+} // namespace Time
+
 #endif /* SQUID_TIME_H */

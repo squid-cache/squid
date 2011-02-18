@@ -168,6 +168,10 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
             return 0;
     }
 
+    // CONNECT requests are proxy requests. Not to be forwarded to origin servers.
+    if (p->options.originserver && request->method == METHOD_CONNECT)
+        return 0;
+
     if (p->peer_domain == NULL && p->access == NULL)
         return do_ping;
 
@@ -1574,13 +1578,13 @@ dump_peer_options(StoreEntry * sentry, peer * p)
 
     if (p->options.carp)
         storeAppendPrintf(sentry, " carp");
-
+#if USE_AUTH
     if (p->options.userhash)
         storeAppendPrintf(sentry, " userhash");
 
     if (p->options.userhash)
         storeAppendPrintf(sentry, " sourcehash");
-
+#endif
     if (p->options.weighted_roundrobin)
         storeAppendPrintf(sentry, " weighted-round-robin");
 
@@ -1755,7 +1759,7 @@ dump_peers(StoreEntry * sentry, peer * peers)
 
         if (e->stats.last_connect_failure) {
             storeAppendPrintf(sentry, "Last failed connect() at: %s\n",
-                              mkhttpdlogtime(&(e->stats.last_connect_failure)));
+                              Time::FormatHttpd(e->stats.last_connect_failure));
         }
 
         if (e->peer_domain != NULL) {

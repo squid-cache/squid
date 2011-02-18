@@ -120,7 +120,7 @@ MemPoolMalloc::MemPoolMalloc(char const *aLabel, size_t aSize) : MemImplementing
 
 MemPoolMalloc::~MemPoolMalloc()
 {
-    assert(meter.inuse.level == 0 && "While trying to destroy pool");
+    assert(meter.inuse.level == 0);
     clean(0);
 }
 

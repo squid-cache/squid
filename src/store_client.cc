@@ -622,7 +622,7 @@ store_client::readHeader(char const *buf, ssize_t len)
          */
         size_t copy_sz = min(copyInto.length, body_sz);
         debugs(90, 3, "storeClientReadHeader: copying " << copy_sz << " bytes of body");
-        xmemmove(copyInto.data, copyInto.data + mem->swap_hdr_sz, copy_sz);
+        memmove(copyInto.data, copyInto.data + mem->swap_hdr_sz, copy_sz);
 
         readBody(copyInto.data, copy_sz);
 

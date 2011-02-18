@@ -1,6 +1,9 @@
 #define SQUID_UNIT_TEST 1
 
 #include "squid.h"
+
+#if USE_AUTH
+
 #include "testAuth.h"
 #include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
@@ -275,3 +278,4 @@ testAuthNegotiateUserRequest::username()
 }
 
 #endif /* HAVE_AUTH_MODULE_NEGOTIATE */
+#endif /* USE_AUTH */

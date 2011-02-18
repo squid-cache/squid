@@ -78,7 +78,7 @@ file_map_grow(fileMap * fm)
     debugs(8, 3, "file_map_grow: creating space for " << fm->max_n_files << " files");
     fm->file_map = (unsigned long *)xcalloc(fm->nwords, sizeof(*fm->file_map));
     debugs(8, 3, "copying " << old_sz << " old bytes");
-    xmemcpy(fm->file_map, old_map, old_sz);
+    memcpy(fm->file_map, old_map, old_sz);
     xfree(old_map);
     /* XXX account fm->file_map */
 }

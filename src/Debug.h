@@ -100,7 +100,7 @@ private:
 
 extern FILE *debug_log;
 
-const size_t BuildPrefixInit();
+size_t BuildPrefixInit();
 const char * SkipBuildPrefix(const char* path);
 
 /* Debug stream */

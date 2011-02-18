@@ -312,7 +312,7 @@ handle_read(char *inbuf, int len)
         return -1;
     }
     total_bytes_read += len;
-    xmemcpy(buf, inbuf, len);
+    memcpy(buf, inbuf, len);
     if (len == 0) {
         fprintf(stderr, "WARNING: %s, server closed socket after %d+%d bytes\n", r->url, r->hdr_offset, r->bytes_read);
         /* XXX, If no data was received and it isn't the first request on this
@@ -331,12 +331,12 @@ handle_read(char *inbuf, int len)
         /* Build headers */
         if (r->hdr_length == 0) {
             hlen = min(len, REPLY_HDR_SZ - r->hdr_offset - 1);
-            xmemcpy(r->reply_hdrs + r->hdr_offset, buf, hlen);
+            memcpy(r->reply_hdrs + r->hdr_offset, buf, hlen);
             r->hdr_offset += hlen;
             r->reply_hdrs[r->hdr_offset] = '\0';
             len -= hlen;
             /* Save any remaining read data */
-            xmemmove(buf, buf + hlen, len);
+            memmove(buf, buf + hlen, len);
         }
         /* Process headers */
         if (r->hdr_length == 0 && (end = mime_headers_end(r->reply_hdrs)) != NULL) {
@@ -352,8 +352,8 @@ handle_read(char *inbuf, int len)
             blen = r->hdr_offset - r->hdr_length;
             assert(blen >= 0);
             if (blen > 0) {
-                xmemmove(buf + blen, buf, len);
-                xmemcpy(buf, r->reply_hdrs + r->hdr_length, blen);
+                memmove(buf + blen, buf, len);
+                memcpy(buf, r->reply_hdrs + r->hdr_length, blen);
                 len += blen;
             }
             r->reply_hdrs[r->hdr_length] = '\0';	/* Null terminate headers */
@@ -398,7 +398,7 @@ handle_read(char *inbuf, int len)
             } else if (r->content_length > -1) {
                 assert(r->bytes_read < r->content_length);
             }
-            xmemmove(buf, buf + bytes_used, len);
+            memmove(buf, buf + bytes_used, len);
         }
     }
     return 0;

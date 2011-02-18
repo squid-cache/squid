@@ -100,6 +100,7 @@ typedef enum {
     CC_MAX_STALE,
     CC_MIN_FRESH,
     CC_ONLY_IF_CACHED,
+    CC_STALE_IF_ERROR,
     CC_OTHER,
     CC_ENUM_END
 } http_hdr_cc_type;
@@ -325,7 +326,7 @@ enum {
 
 
 /* CygWin & Windows NT Port */
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 /*
  * Supported Windows OS types codes
  */
@@ -342,20 +343,7 @@ enum {
     _WIN_OS_WINLON,
     _WIN_OS_WIN7
 };
-
 #endif
-
-typedef enum {
-    CLF_UNKNOWN,
-    CLF_AUTO,
-    CLF_CUSTOM,
-    CLF_SQUID,
-    CLF_COMMON,
-#if ICAP_CLIENT
-    CLF_ICAP_SQUID,
-#endif
-    CLF_NONE
-} customlog_type;
 
 enum {
     DISABLE_PMTU_OFF,
