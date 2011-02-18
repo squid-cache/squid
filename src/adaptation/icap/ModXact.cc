@@ -770,7 +770,7 @@ void Adaptation::Icap::ModXact::parseIcapHead()
     // update the cross-transactional database if needed (all status codes!)
     if (const char *xxName = Adaptation::Config::masterx_shared_name) {
         Adaptation::History::Pointer ah = request->adaptHistory(true);
-        if (ah != NULL) {
+        if (ah != NULL) { // TODO: reorder checks to avoid creating history
             const String val = icapReply->header.getByName(xxName);
             if (val.size() > 0) // XXX: HttpHeader lacks empty value detection
                 ah->updateXxRecord(xxName, val);
@@ -791,11 +791,9 @@ void Adaptation::Icap::ModXact::parseIcapHead()
     // If we already have stored headers from previous ICAP transaction related to this
     // request, old headers will be replaced with the new one.
 
-    Adaptation::Icap::History::Pointer h = request->icapHistory();
-    if (h != NULL) {
-        h->mergeIcapHeaders(&icapReply->header);
-        h->setIcapLastHeader(&icapReply->header);
-    }
+    Adaptation::History::Pointer ah = request->adaptLogHistory();
+    if (ah != NULL)
+        ah->recordMeta(&icapReply->header);
 
     // handle100Continue() manages state.writing on its own.
     // Non-100 status means the server needs no postPreview data from us.
@@ -1302,6 +1300,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
 
     // share the cross-transactional database records if needed
     if (Adaptation::Config::masterx_shared_name) {
+        // XXX: do not create history here: there can be no values in empty ah
         Adaptation::History::Pointer ah = request->adaptHistory(true);
         if (ah != NULL) {
             String name, value;

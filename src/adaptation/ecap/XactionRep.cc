@@ -18,6 +18,24 @@
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Ecap::XactionRep, XactionRep);
 
 
+/// a libecap Visitor for converting adapter transaction options to HttpHeader
+class OptionsExtractor: public libecap::NamedValueVisitor
+{
+public:
+    typedef libecap::Name Name;
+    typedef libecap::Area Area;
+
+    OptionsExtractor(HttpHeader &aMeta): meta(aMeta) {}
+
+    // libecap::NamedValueVisitor API
+    virtual void visit(const Name &name, const Area &value)
+    {
+        meta.putExt(name.image().c_str(), value.toString().c_str());
+    }
+
+    HttpHeader &meta; ///< where to put extracted options
+};
+
 Adaptation::Ecap::XactionRep::XactionRep(
     HttpMsg *virginHeader, HttpRequest *virginCause,
     const Adaptation::ServicePointer &aService):
@@ -63,8 +81,10 @@ Adaptation::Ecap::XactionRep::option(const libecap::Name &name) const
         return clientIpValue();
     if (name == libecap::metaUserName)
         return usernameValue();
-    // TODO: metaServerIp, metaAuthenticatedUser, metaAuthenticatedGroups, and 
-    // Adaptation::Config::masterx_shared_name
+    if (name == Adaptation::Config::masterx_shared_name)
+        return masterxSharedValue(name);
+
+    // TODO: metaServerIp, metaAuthenticatedUser, and metaAuthenticatedGroups
     return libecap::Area();
 }
 
@@ -75,8 +95,14 @@ Adaptation::Ecap::XactionRep::visitEachOption(libecap::NamedValueVisitor &visito
        visitor.visit(libecap::metaClientIp, value);
     if (const libecap::Area value = usernameValue())
        visitor.visit(libecap::metaUserName, value);
-    // TODO: metaServerIp, metaAuthenticatedUser, metaAuthenticatedGroups, and 
-    // Adaptation::Config::masterx_shared_name
+
+    if (Adaptation::Config::masterx_shared_name) {
+       const libecap::Name name(Adaptation::Config::masterx_shared_name);
+       if (const libecap::Area value = masterxSharedValue(name))
+           visitor.visit(name, value);
+    }
+
+    // TODO: metaServerIp, metaAuthenticatedUser, and metaAuthenticatedGroups
 }
 
 const libecap::Area
@@ -114,6 +140,23 @@ Adaptation::Ecap::XactionRep::usernameValue() const
         if (char const *name = request->auth_user_request->username())
             return libecap::Area::FromTempBuffer(name, strlen(name));
 	}
+    return libecap::Area();
+}
+
+const libecap::Area
+Adaptation::Ecap::XactionRep::masterxSharedValue(const libecap::Name &name) const
+{
+    const HttpRequest *request = dynamic_cast<const HttpRequest*>(theCauseRep ?
+                                 theCauseRep->raw().header : theVirginRep.raw().header);
+    Must(request);
+    if (name.known()) { // must check to avoid empty names matching unset cfg
+        Adaptation::History::Pointer ah = request->adaptHistory(false);
+        if (ah != NULL) {
+            String name, value;
+            if (ah->getXxRecord(name, value))
+                return libecap::Area::FromTempBuffer(value.rawBuf(), value.size());
+        }
+    }
     return libecap::Area();
 }
 
@@ -271,6 +314,7 @@ Adaptation::Ecap::XactionRep::useVirgin()
     // check that clone() copies the pipe so that we do not have to
     Must(!theVirginRep.raw().header->body_pipe == !clone->body_pipe);
 
+    updateHistory();
     sendAnswer(Answer::Forward(clone));
     Must(done());
 }
@@ -286,6 +330,7 @@ Adaptation::Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Mess
     HttpMsg *msg = answer().header;
     if (!theAnswerRep->body()) { // final, bodyless answer
         proxyingAb = opNever;
+        updateHistory();
         sendAnswer(Answer::Forward(msg));
     } else { // got answer headers but need to handle body
         proxyingAb = opOn;
@@ -295,6 +340,7 @@ Adaptation::Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Mess
         rep->tieBody(this); // sets us as a producer
         Must(msg->body_pipe != NULL); // check tieBody
 
+        updateHistory();
         sendAnswer(Answer::Forward(msg));
 
         debugs(93,4, HERE << "adapter will produce body" << status());
@@ -311,9 +357,58 @@ Adaptation::Ecap::XactionRep::blockVirgin()
 
     sinkVb("blockVirgin");
 
+    updateHistory();
     sendAnswer(Answer::Block(service().cfg().key));
     Must(done());
 }
+
+/// Called just before sendAnswer() to record adapter meta-information
+/// which may affect answer processing and may be needed for logging.
+void
+Adaptation::Ecap::XactionRep::updateHistory()
+{
+    if (!theMaster) // all updates rely on being able to query the adapter
+        return;
+
+    const HttpRequest *request = dynamic_cast<const HttpRequest*>(theCauseRep ?
+                                 theCauseRep->raw().header : theVirginRep.raw().header);
+    Must(request);
+
+    // TODO: move common ICAP/eCAP logic to Adaptation::Xaction or similar
+    // TODO: optimize Area-to-String conversion
+
+    // update the cross-transactional database if needed
+    if (const char *xxNameStr = Adaptation::Config::masterx_shared_name) {
+        Adaptation::History::Pointer ah = request->adaptHistory(true);
+        if (ah != NULL) {
+            libecap::Name xxName(xxNameStr); // TODO: optimize?
+            if (const libecap::Area val = theMaster->option(xxName))
+                ah->updateXxRecord(xxNameStr, val.toString().c_str());
+        }
+    }
+
+    // update the adaptation plan if needed
+    if (service().cfg().routing) {
+        String services;
+        if (const libecap::Area services = theMaster->option(libecap::metaNextServices)) {
+            Adaptation::History::Pointer ah = request->adaptHistory(true);
+            if (ah != NULL)
+                ah->updateNextServices(services.toString().c_str());
+        }
+    } // TODO: else warn (occasionally!) if we got libecap::metaNextServices
+
+    // Store received meta headers for adapt::<last_h logformat code use.
+    // If we already have stored headers from a previous adaptation transaction
+    // related to the same master transction, they will be replaced.
+    Adaptation::History::Pointer ah = request->adaptLogHistory();
+    if (ah != NULL) {
+        HttpHeader meta(hoReply);
+        OptionsExtractor extractor(meta);
+        theMaster->visitEachOption(extractor);
+        ah->recordMeta(&meta);
+    }
+}
+
 
 void
 Adaptation::Ecap::XactionRep::vbDiscard()
