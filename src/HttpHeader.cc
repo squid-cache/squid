@@ -383,11 +383,17 @@ HttpHeader::HttpHeader() : owner (hoNone), len (0)
     httpHeaderMaskInit(&mask, 0);
 }
 
-HttpHeader::HttpHeader(http_hdr_owner_type const &anOwner) : owner (anOwner), len (0)
+HttpHeader::HttpHeader(const http_hdr_owner_type anOwner): owner(anOwner), len(0)
 {
     assert(anOwner > hoNone && anOwner <= hoReply);
     debugs(55, 7, "init-ing hdr: " << this << " owner: " << owner);
     httpHeaderMaskInit(&mask, 0);
+}
+
+HttpHeader::HttpHeader(const HttpHeader &other): owner(other.owner), len(other.len)
+{
+    httpHeaderMaskInit(&mask, 0);
+    update(&other, NULL); // will update the mask as well
 }
 
 HttpHeader::~HttpHeader()
@@ -395,7 +401,7 @@ HttpHeader::~HttpHeader()
     clean();
 }
 
-const HttpHeader &
+HttpHeader &
 HttpHeader::operator =(const HttpHeader &other)
 {
     if (this != &other) {
