@@ -421,14 +421,14 @@ typedef enum {
 #if USE_ADAPTATION
     LTF_ADAPTATION_SUM_XACT_TIMES,
     LTF_ADAPTATION_ALL_XACT_TIMES,
+    LFT_ADAPTATION_LAST_HEADER,
+    LFT_ADAPTATION_LAST_HEADER_ELEM,
+    LFT_ADAPTATION_LAST_ALL_HEADERS,
 #endif
 
 #if ICAP_CLIENT
 
     LFT_ICAP_TOTAL_TIME,
-    LFT_ICAP_LAST_MATCHED_HEADER,
-    LFT_ICAP_LAST_MATCHED_HEADER_ELEM,
-    LFT_ICAP_LAST_MATCHED_ALL_HEADERS,
 
     LFT_ICAP_ADDR,
     LFT_ICAP_SERV_NAME,
@@ -583,11 +583,12 @@ struct logformat_token_table_entry logformat_token_table[] = {
 #if USE_ADAPTATION
     {"adapt::all_trs", LTF_ADAPTATION_ALL_XACT_TIMES},
     {"adapt::sum_trs", LTF_ADAPTATION_SUM_XACT_TIMES},
+    {"adapt::<last_h", LFT_ADAPTATION_LAST_HEADER},
 #endif
 
 #if ICAP_CLIENT
     {"icap::tt", LFT_ICAP_TOTAL_TIME},
-    {"icap::<last_h", LFT_ICAP_LAST_MATCHED_HEADER},
+    {"icap::<last_h", LFT_ADAPTATION_LAST_HEADER}, // deprecated
 
     {"icap::<A",  LFT_ICAP_ADDR},
     {"icap::<service_name",  LFT_ICAP_SERV_NAME},
@@ -830,42 +831,43 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
                 out = sb.termedBuf();
             }
             break;
+
+        case LFT_ADAPTATION_LAST_HEADER:
+            if (al->request) {
+                const Adaptation::History::Pointer ah = al->request->adaptHistory();
+                if (ah != NULL) // XXX: add adapt::<all_h but use lastMeta here
+                    sb = ah->allMeta.getByName(fmt->data.header.header);
+            }
+
+            // XXX: here and elsewhere: move such code inside the if guard
+            out = sb.termedBuf();
+
+            quote = 1;
+
+            break;
+
+        case LFT_ADAPTATION_LAST_HEADER_ELEM:
+            if (al->request) {
+                const Adaptation::History::Pointer ah = al->request->adaptHistory();
+                if (ah != NULL) // XXX: add adapt::<all_h but use lastMeta here
+                    sb = ah->allMeta.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
+            }
+
+            out = sb.termedBuf();
+
+            quote = 1;
+
+            break;
+
+        case LFT_ADAPTATION_LAST_ALL_HEADERS:
+            out = al->headers.adapt_last;
+
+            quote = 1;
+
+            break;
 #endif
 
 #if ICAP_CLIENT
-        case LFT_ICAP_LAST_MATCHED_HEADER:
-            if (al->request) {
-                Adaptation::Icap::History::Pointer ih = al->request->icapHistory();
-                if (ih != NULL)
-                    sb = ih->mergeOfIcapHeaders.getByName(fmt->data.header.header);
-            }
-
-            out = sb.termedBuf();
-
-            quote = 1;
-
-            break;
-
-        case LFT_ICAP_LAST_MATCHED_HEADER_ELEM:
-            if (al->request) {
-                Adaptation::Icap::History::Pointer ih = al->request->icapHistory();
-                if (ih != NULL)
-                    sb = ih->mergeOfIcapHeaders.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
-            }
-
-            out = sb.termedBuf();
-
-            quote = 1;
-
-            break;
-
-        case LFT_ICAP_LAST_MATCHED_ALL_HEADERS:
-            out = al->headers.icap;
-
-            quote = 1;
-
-            break;
-
         case LFT_ICAP_ADDR:
             if (!out)
                 out = al->icap.hostAddr.NtoA(tmp,1024);
@@ -1478,9 +1480,11 @@ done:
 
     switch (lt->type) {
 
-#if ICAP_CLIENT
-    case LFT_ICAP_LAST_MATCHED_HEADER:
+#if USE_ADAPTATION
+    case LFT_ADAPTATION_LAST_HEADER:
+#endif
 
+#if ICAP_CLIENT
     case LFT_ICAP_REQ_HEADER:
 
     case LFT_ICAP_REP_HEADER:
@@ -1518,10 +1522,12 @@ done:
                 case LFT_REPLY_HEADER:
                     lt->type = LFT_REPLY_HEADER_ELEM;
                     break;
-#if ICAP_CLIENT
-                case LFT_ICAP_LAST_MATCHED_HEADER:
-                    lt->type = LFT_ICAP_LAST_MATCHED_HEADER_ELEM;
+#if USE_ADAPTATION
+                case LFT_ADAPTATION_LAST_HEADER:
+                    lt->type = LFT_ADAPTATION_LAST_HEADER_ELEM;
                     break;
+#endif
+#if ICAP_CLIENT
                 case LFT_ICAP_REQ_HEADER:
                     lt->type = LFT_ICAP_REQ_HEADER_ELEM;
                     break;
@@ -1548,10 +1554,12 @@ done:
             case LFT_REPLY_HEADER:
                 lt->type = LFT_REPLY_ALL_HEADERS;
                 break;
-#if ICAP_CLIENT
-            case LFT_ICAP_LAST_MATCHED_HEADER:
-                lt->type = LFT_ICAP_LAST_MATCHED_ALL_HEADERS;
+#if USE_ADAPTATION
+            case LFT_ADAPTATION_LAST_HEADER:
+                lt->type = LFT_ADAPTATION_LAST_ALL_HEADERS;
                 break;
+#endif
+#if ICAP_CLIENT
             case LFT_ICAP_REQ_HEADER:
                 lt->type = LFT_ICAP_REQ_ALL_HEADERS;
                 break;
@@ -1652,8 +1660,10 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
 
                 case LFT_STRING:
                     break;
+#if USE_ADAPTATION
+                case LFT_ADAPTATION_LAST_HEADER_ELEM:
+#endif
 #if ICAP_CLIENT
-                case LFT_ICAP_LAST_MATCHED_HEADER_ELEM:
                 case LFT_ICAP_REQ_HEADER_ELEM:
                 case LFT_ICAP_REP_HEADER_ELEM:
 #endif
@@ -1670,18 +1680,20 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
 
                     switch (type) {
                     case LFT_REQUEST_HEADER_ELEM:
-                        type = LFT_REQUEST_HEADER_ELEM;
+                        type = LFT_REQUEST_HEADER;
                         break;
                     case LFT_ADAPTED_REQUEST_HEADER_ELEM:
-                        type = LFT_ADAPTED_REQUEST_HEADER_ELEM;
+                        type = LFT_ADAPTED_REQUEST_HEADER;
                         break;
                     case LFT_REPLY_HEADER_ELEM:
-                        type = LFT_REPLY_HEADER_ELEM;
+                        type = LFT_REPLY_HEADER;
                         break;
+#if USE_ADAPTATION
+                    case LFT_ADAPTATION_LAST_HEADER_ELEM:
+                        type = LFT_ADAPTATION_LAST_HEADER;
+                        break;
+#endif
 #if ICAP_CLIENT
-                    case LFT_ICAP_LAST_MATCHED_HEADER_ELEM:
-                        type = LFT_ICAP_LAST_MATCHED_HEADER;
-                        break;
                     case LFT_ICAP_REQ_HEADER_ELEM:
                         type = LFT_ICAP_REQ_HEADER;
                         break;
@@ -1699,8 +1711,10 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
                 case LFT_ADAPTED_REQUEST_ALL_HEADERS:
                 case LFT_REPLY_ALL_HEADERS:
 
+#if USE_ADAPTATION
+                case LFT_ADAPTATION_LAST_ALL_HEADERS:
+#endif
 #if ICAP_CLIENT
-                case LFT_ICAP_LAST_MATCHED_ALL_HEADERS:
                 case LFT_ICAP_REQ_ALL_HEADERS:
                 case LFT_ICAP_REP_ALL_HEADERS:
 #endif
@@ -1715,10 +1729,12 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
                     case LFT_REPLY_ALL_HEADERS:
                         type = LFT_REPLY_HEADER;
                         break;
-#if ICAP_CLIENT
-                    case LFT_ICAP_LAST_MATCHED_ALL_HEADERS:
-                        type = LFT_ICAP_LAST_MATCHED_HEADER;
+#if USE_ADAPTATION
+                    case LFT_ADAPTATION_LAST_ALL_HEADERS:
+                        type = LFT_ADAPTATION_LAST_HEADER;
                         break;
+#endif
+#if ICAP_CLIENT
                     case LFT_ICAP_REQ_ALL_HEADERS:
                         type = LFT_ICAP_REQ_HEADER;
                         break;
@@ -2202,18 +2218,17 @@ accessLogInit(void)
 
         LogfileStatus = LOG_ENABLE;
 
-#if USE_ADAPTATION || ICAP_CLIENT
-        for (logformat_token * curr_token = (log->logFormat?log->logFormat->format:NULL); curr_token; curr_token = curr_token->next) {
 #if USE_ADAPTATION
+        for (logformat_token * curr_token = (log->logFormat?log->logFormat->format:NULL); curr_token; curr_token = curr_token->next) {
             if (curr_token->type == LTF_ADAPTATION_SUM_XACT_TIMES ||
-                    curr_token->type == LTF_ADAPTATION_ALL_XACT_TIMES) {
+                    curr_token->type == LTF_ADAPTATION_ALL_XACT_TIMES ||
+                    curr_token->type == LFT_ADAPTATION_LAST_HEADER ||
+                    curr_token->type == LFT_ADAPTATION_LAST_HEADER_ELEM ||
+                    curr_token->type == LFT_ADAPTATION_LAST_ALL_HEADERS) {
                 alLogformatHasAdaptToken = true;
             }
-#endif
 #if ICAP_CLIENT
-            if (curr_token->type == LFT_ICAP_LAST_MATCHED_HEADER ||
-                    curr_token->type == LFT_ICAP_LAST_MATCHED_HEADER_ELEM ||
-                    curr_token->type == LFT_ICAP_LAST_MATCHED_ALL_HEADERS) {
+            if (curr_token->type == LFT_ICAP_TOTAL_TIME) {
                 alLogformatHasIcapToken = true;
             }
 #endif
@@ -2482,7 +2497,7 @@ accessLogFreeMemory(AccessLogEntry * aLogEntry)
     safe_free(aLogEntry->headers.request);
 
 #if ICAP_CLIENT
-    safe_free(aLogEntry->headers.icap);
+    safe_free(aLogEntry->headers.adapt_last);
 #endif
 
     safe_free(aLogEntry->headers.reply);

@@ -86,11 +86,13 @@ protected:
 
     void moveAbContent();
 
+    void updateHistory();
     void terminateMaster();
     void scheduleStop(const char *reason);
 
     const libecap::Area clientIpValue() const;
     const libecap::Area usernameValue() const;
+    const libecap::Area masterxSharedValue(const libecap::Name &name) const;
 
 private:
     AdapterXaction theMaster; // the actual adaptation xaction we represent
