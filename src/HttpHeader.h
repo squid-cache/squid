@@ -205,10 +205,11 @@ class HttpHeader
 
 public:
     HttpHeader();
-    HttpHeader(http_hdr_owner_type const &owner);
+    explicit HttpHeader(const http_hdr_owner_type owner);
+    HttpHeader(const HttpHeader &other);
     ~HttpHeader();
 
-    const HttpHeader &operator =(const HttpHeader &other);
+    HttpHeader &operator =(const HttpHeader &other);
 
     /* Interface functions */
     void clean();
@@ -274,8 +275,6 @@ protected:
 
 private:
     HttpHeaderEntry *findLastEntry(http_hdr_type id) const;
-    /// Made it non-copyable. Our destructor is a bit nasty...
-    HttpHeader(const HttpHeader &);
 };
 
 
