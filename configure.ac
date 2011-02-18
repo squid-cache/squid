@@ -1821,6 +1821,9 @@ if test x"$krb5confpath" != "xno"; then
     fi
 fi
 if test "x$ac_krb5_config" = "xyes" ; then
+  # Kerberos helpers use res_search() from libresolv or libc
+  AC_SEARCH_LIBS([__res_search],[resolv])
+
   ac_heimdal="`$krb5confpath --version 2>/dev/null | grep -i heimdal`"
   ac_solaris="`$krb5confpath --version 2>/dev/null | grep -i solaris`"
   if test "x$ac_heimdal" != "x" ; then
