@@ -6,7 +6,7 @@
 namespace Comm
 {
 
-class ListenStateData;
+class TcpAcceptor;
 
 /**
  * FIFO Queue holding listener socket handlers which have been activated
@@ -25,7 +25,10 @@ public:
     static AcceptLimiter &Instance();
 
     /** delay accepting a new client connection. */
-    void defer(Comm::ListenStateData *afd);
+    void defer(Comm::TcpAcceptor *afd);
+
+    /** remove all records of an acceptor. Only to be called by the ConnAcceptor::swanSong() */
+    void removeDead(const Comm::TcpAcceptor *afd);
 
     /** try to accept and begin processing any delayed client connections. */
     void kick();
@@ -34,7 +37,7 @@ private:
     static AcceptLimiter Instance_;
 
     /** FIFO queue */
-    Vector<Comm::ListenStateData*> deferred;
+    Vector<Comm::TcpAcceptor*> deferred;
 };
 
 }; // namepace Comm

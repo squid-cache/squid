@@ -31,17 +31,13 @@ class BasicUser : public AuthUser
 public:
     MEMPROXY_CLASS(BasicUser);
 
-    virtual void deleteSelf() const;
     BasicUser(AuthConfig *);
     ~BasicUser();
     bool authenticated() const;
     void queueRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data);
     void submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data);
-    void decode(char const *credentials, AuthUserRequest::Pointer);
-    char *getCleartext() {return cleartext;}
 
     bool valid() const;
-    void makeLoggingInstance(AuthUserRequest::Pointer auth_user_request);
 
     /** Update the cached password for a username. */
     void updateCached(BasicUser *from);
@@ -52,12 +48,7 @@ public:
     BasicAuthQueueNode *auth_queue;
 
 private:
-    bool decodeCleartext();
-    void extractUsername();
-    void extractPassword();
-    char *cleartext;
     AuthUserRequest::Pointer currentRequest;
-    char const *httpAuthHeader;
 };
 
 MEMPROXY_CLASS_INLINE(BasicUser);
@@ -79,12 +70,16 @@ public:
     virtual void fixHeader(AuthUserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *);
     virtual void init(AuthConfig *);
     virtual void parse(AuthConfig *, int, char *);
+    void decode(char const *httpAuthHeader, AuthUserRequest::Pointer);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
     char *basicAuthRealm;
     time_t credentialsTTL;
     int casesensitive;
     int utf8;
+
+private:
+    char * decodeCleartext(const char *httpAuthHeader);
 };
 
 #endif /* __AUTH_BASIC_H__ */

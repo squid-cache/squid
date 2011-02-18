@@ -36,6 +36,7 @@
 #include "event.h"
 #include "ClientInfo.h"
 #include "ip/Address.h"
+#include "log/Tokens.h"
 #include "mgr/Registration.h"
 #include "SquidMath.h"
 #include "SquidTime.h"

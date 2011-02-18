@@ -2,6 +2,7 @@
 #include "icap_log.h"
 #include "AccessLogEntry.h"
 #include "log/File.h"
+#include "log/Formats.h"
 
 int IcapLogfileStatus = LOG_DISABLE;
 
@@ -11,11 +12,8 @@ icapLogOpen()
     customlog *log;
 
     for (log = Config.Log.icaplogs; log; log = log->next) {
-        if (log->type == CLF_NONE)
+        if (log->type == Log::Format::CLF_NONE)
             continue;
-
-        if (log->type == CLF_AUTO)
-            log->type = CLF_ICAP_SQUID;
 
         log->logfile = logfileOpen(log->filename, MAX_URL << 1, 1);
 

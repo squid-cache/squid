@@ -321,7 +321,7 @@ MemPoolChunked::~MemPoolChunked()
 
     flushMetersFull();
     clean(0);
-    assert(meter.inuse.level == 0 && "While trying to destroy pool");
+    assert(meter.inuse.level == 0);
 
     chunk = Chunks;
     while ( (fchunk = chunk) != NULL) {

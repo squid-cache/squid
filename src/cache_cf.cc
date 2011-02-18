@@ -50,8 +50,10 @@
 #include "ssl/support.h"
 #include "ssl/Config.h"
 #endif
+#if USE_AUTH
 #include "auth/Config.h"
 #include "auth/Scheme.h"
+#endif
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
 #include "eui/Config.h"
@@ -133,13 +135,9 @@ static const char *const B_GBYTES_STR = "GB";
 
 static const char *const list_sep = ", \t\n\r";
 
-static void parse_logformat(logformat ** logformat_definitions);
 static void parse_access_log(customlog ** customlog_definitions);
 static int check_null_access_log(customlog *customlog_definitions);
-
-static void dump_logformat(StoreEntry * entry, const char *name, logformat * definitions);
 static void dump_access_log(StoreEntry * entry, const char *name, customlog * definitions);
-static void free_logformat(logformat ** definitions);
 static void free_access_log(customlog ** definitions);
 
 static void update_maxobjsize(void);
@@ -423,10 +421,8 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
     if (fp == NULL)
         fatalf("Unable to open configuration file: %s: %s", file_name, xstrerror());
 
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     setmode(fileno(fp), O_TEXT);
-
 #endif
 
     SetConfigFilename(file_name, bool(is_pipe));
@@ -911,6 +907,32 @@ configDoConfigure(void)
         }
     }
 
+#endif
+
+    // prevent infinite fetch loops in the request parser
+    // due to buffer full but not enough data recived to finish parse
+    if (Config.maxRequestBufferSize <= Config.maxRequestHeaderSize) {
+        fatalf("Client request buffer of %u bytes cannot hold a request with %u bytes of headers." \
+               " Change client_request_buffer_max or request_header_max_size limits.",
+               (uint32_t)Config.maxRequestBufferSize, (uint32_t)Config.maxRequestHeaderSize);
+    }
+
+#if USE_AUTH
+    /*
+     * disable client side request pipelining. There is a race with
+     * Negotiate and NTLM when the client sends a second request on an
+     * connection before the authenticate challenge is sent. With
+     * pipelining OFF, the client may fail to authenticate, but squid's
+     * state will be preserved.
+     */
+    if (Config.onoff.pipeline_prefetch) {
+        AuthConfig *nego = AuthConfig::Find("Negotiate");
+        AuthConfig *ntlm = AuthConfig::Find("NTLM");
+        if ((nego && nego->active()) || (ntlm && ntlm->active())) {
+            debugs(3, DBG_IMPORTANT, "WARNING: pipeline_prefetch breaks NTLM and Negotiate authentication. Forced OFF.");
+            Config.onoff.pipeline_prefetch = 0;
+        }
+    }
 #endif
 }
 
@@ -1807,6 +1829,7 @@ check_null_string(char *s)
     return s == NULL;
 }
 
+#if USE_AUTH
 static void
 parse_authparam(Auth::authConfig * config)
 {
@@ -1865,6 +1888,7 @@ dump_authparam(StoreEntry * entry, const char *name, authConfig cfg)
     for (authConfig::iterator  i = cfg.begin(); i != cfg.end(); ++i)
         (*i)->dump(entry, name, (*i));
 }
+#endif /* USE_AUTH */
 
 /* TODO: just return the object, the # is irrelevant */
 static int
@@ -2204,13 +2228,15 @@ parse_peer(peer ** head)
                 fatalf("parse_peer: non-parent carp peer %s/%d\n", p->host, p->http_port);
 
             p->options.carp = 1;
-
         } else if (!strcasecmp(token, "userhash")) {
+#if USE_AUTH
             if (p->type != PEER_PARENT)
                 fatalf("parse_peer: non-parent userhash peer %s/%d\n", p->host, p->http_port);
 
             p->options.userhash = 1;
-
+#else
+            fatalf("parse_peer: userhash requires authentication. peer %s/%d\n", p->host, p->http_port);
+#endif
         } else if (!strcasecmp(token, "sourcehash")) {
             if (p->type != PEER_PARENT)
                 fatalf("parse_peer: non-parent sourcehash peer %s/%d\n", p->host, p->http_port);
@@ -2647,6 +2673,9 @@ dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
                           (int) (100.0 * head->pct + 0.5),
                           (int) head->max / 60);
 
+        if (head->max_stale >= 0)
+            storeAppendPrintf(entry, " max-stale=%d", head->max_stale);
+
         if (head->flags.refresh_ims)
             storeAppendPrintf(entry, " refresh-ims");
 
@@ -2700,6 +2729,7 @@ parse_refreshpattern(refresh_t ** head)
     time_t max = 0;
     int refresh_ims = 0;
     int store_stale = 0;
+    int max_stale = -1;
 
 #if USE_HTTP_VIOLATIONS
 
@@ -2778,6 +2808,8 @@ parse_refreshpattern(refresh_t ** head)
             refresh_ims = 1;
         } else if (!strcmp(token, "store-stale")) {
             store_stale = 1;
+        } else if (!strncmp(token, "max-stale=", 10)) {
+            max_stale = atoi(token + 10);
 #if USE_HTTP_VIOLATIONS
 
         } else if (!strcmp(token, "override-expire"))
@@ -2805,7 +2837,7 @@ parse_refreshpattern(refresh_t ** head)
 #endif
 
         } else
-            debugs(22, 0, "redreshAddToList: Unknown option '" << pattern << "': " << token);
+            debugs(22, 0, "refreshAddToList: Unknown option '" << pattern << "': " << token);
     }
 
     if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
@@ -2833,6 +2865,8 @@ parse_refreshpattern(refresh_t ** head)
 
     if (store_stale)
         t->flags.store_stale = 1;
+
+    t->max_stale = max_stale;
 
 #if USE_HTTP_VIOLATIONS
 
@@ -3790,7 +3824,7 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
     if (s->name)
         storeAppendPrintf(e, " name=%s", s->name);
 
-#if !USE_HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
     if (!s->accel && s->ignore_cc)
         storeAppendPrintf(e, " ignore-cc");
 #endif
@@ -3945,6 +3979,9 @@ void
 configFreeMemory(void)
 {
     free_all();
+#if USE_SSL
+    SSL_CTX_free(Config.ssl_client.sslContext);
+#endif
 }
 
 void
@@ -3975,36 +4012,6 @@ strtokFile(void)
 }
 
 #include "AccessLogEntry.h"
-/* TODO: split out parsing somehow ...*/
-static void
-parse_logformat(logformat ** logformat_definitions)
-{
-    logformat *nlf;
-    char *name, *def;
-
-    if ((name = strtok(NULL, w_space)) == NULL)
-        self_destruct();
-
-    if ((def = strtok(NULL, "\r\n")) == NULL) {
-        self_destruct();
-        return;
-    }
-
-    debugs(3, 2, "Logformat for '" << name << "' is '" << def << "'");
-
-    nlf = (logformat *)xcalloc(1, sizeof(logformat));
-
-    nlf->name = xstrdup(name);
-
-    if (!accessLogParseLogFormat(&nlf->format, def)) {
-        self_destruct();
-        return;
-    }
-
-    nlf->next = *logformat_definitions;
-
-    *logformat_definitions = nlf;
-}
 
 static void
 parse_access_log(customlog ** logs)
@@ -4021,19 +4028,19 @@ parse_access_log(customlog ** logs)
     }
 
     if (strcmp(filename, "none") == 0) {
-        cl->type = CLF_NONE;
+        cl->type = Log::Format::CLF_NONE;
         goto done;
     }
 
     if ((logdef_name = strtok(NULL, w_space)) == NULL)
-        logdef_name = "auto";
+        logdef_name = "squid";
 
     debugs(3, 9, "Log definition name '" << logdef_name << "' file '" << filename << "'");
 
     cl->filename = xstrdup(filename);
 
     /* look for the definition pointer corresponding to this name */
-    lf = Config.Log.logformats;
+    lf = Log::TheConfig.logformats;
 
     while (lf != NULL) {
         debugs(3, 9, "Comparing against '" << lf->name << "'");
@@ -4045,18 +4052,25 @@ parse_access_log(customlog ** logs)
     }
 
     if (lf != NULL) {
-        cl->type = CLF_CUSTOM;
+        cl->type = Log::Format::CLF_CUSTOM;
         cl->logFormat = lf;
     } else if (strcmp(logdef_name, "auto") == 0) {
-        cl->type = CLF_AUTO;
+        debugs(0,0, "WARNING: Log format 'auto' no longer exists. Using 'squid' instead.");
+        cl->type = Log::Format::CLF_SQUID;
     } else if (strcmp(logdef_name, "squid") == 0) {
-        cl->type = CLF_SQUID;
+        cl->type = Log::Format::CLF_SQUID;
     } else if (strcmp(logdef_name, "common") == 0) {
-        cl->type = CLF_COMMON;
+        cl->type = Log::Format::CLF_COMMON;
+    } else if (strcmp(logdef_name, "combined") == 0) {
+        cl->type = Log::Format::CLF_COMBINED;
 #if ICAP_CLIENT
     } else if (strcmp(logdef_name, "icap_squid") == 0) {
-        cl->type = CLF_ICAP_SQUID;
+        cl->type = Log::Format::CLF_ICAP_SQUID;
 #endif
+    } else if (strcmp(logdef_name, "useragent") == 0) {
+        cl->type = Log::Format::CLF_USERAGENT;
+    } else if (strcmp(logdef_name, "referrer") == 0) {
+        cl->type = Log::Format::CLF_REFERER;
     } else {
         debugs(3, 0, "Log format '" << logdef_name << "' is not defined");
         self_destruct();
@@ -4079,12 +4093,6 @@ check_null_access_log(customlog *customlog_definitions)
 }
 
 static void
-dump_logformat(StoreEntry * entry, const char *name, logformat * definitions)
-{
-    accessLogDumpLogFormat(entry, name, definitions);
-}
-
-static void
 dump_access_log(StoreEntry * entry, const char *name, customlog * logs)
 {
     customlog *log;
@@ -4094,36 +4102,40 @@ dump_access_log(StoreEntry * entry, const char *name, customlog * logs)
 
         switch (log->type) {
 
-        case CLF_CUSTOM:
+        case Log::Format::CLF_CUSTOM:
             storeAppendPrintf(entry, "%s %s", log->filename, log->logFormat->name);
             break;
 
-        case CLF_NONE:
+        case Log::Format::CLF_NONE:
             storeAppendPrintf(entry, "none");
             break;
 
-        case CLF_SQUID:
+        case Log::Format::CLF_SQUID:
             storeAppendPrintf(entry, "%s squid", log->filename);
             break;
 
-        case CLF_COMMON:
-            storeAppendPrintf(entry, "%s squid", log->filename);
+        case Log::Format::CLF_COMBINED:
+            storeAppendPrintf(entry, "%s combined", log->filename);
             break;
+
+        case Log::Format::CLF_COMMON:
+            storeAppendPrintf(entry, "%s common", log->filename);
+            break;
+
 #if ICAP_CLIENT
-        case CLF_ICAP_SQUID:
+        case Log::Format::CLF_ICAP_SQUID:
             storeAppendPrintf(entry, "%s icap_squid", log->filename);
             break;
 #endif
-        case CLF_AUTO:
-
-            if (log->aclList)
-                storeAppendPrintf(entry, "%s auto", log->filename);
-            else
-                storeAppendPrintf(entry, "%s", log->filename);
-
+        case Log::Format::CLF_USERAGENT:
+            storeAppendPrintf(entry, "%s useragent", log->filename);
             break;
 
-        case CLF_UNKNOWN:
+        case Log::Format::CLF_REFERER:
+            storeAppendPrintf(entry, "%s referrer", log->filename);
+            break;
+
+        case Log::Format::CLF_UNKNOWN:
             break;
         }
 
@@ -4135,18 +4147,6 @@ dump_access_log(StoreEntry * entry, const char *name, customlog * logs)
 }
 
 static void
-free_logformat(logformat ** definitions)
-{
-    while (*definitions) {
-        logformat *format = *definitions;
-        *definitions = format->next;
-        safe_free(format->name);
-        accessLogFreeLogFormat(&format->format);
-        xfree(format);
-    }
-}
-
-static void
 free_access_log(customlog ** definitions)
 {
     while (*definitions) {
@@ -4154,7 +4154,7 @@ free_access_log(customlog ** definitions)
         *definitions = log->next;
 
         log->logFormat = NULL;
-        log->type = CLF_UNKNOWN;
+        log->type = Log::Format::CLF_UNKNOWN;
 
         if (log->aclList)
             aclDestroyAclList(&log->aclList);

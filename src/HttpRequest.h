@@ -158,9 +158,9 @@ private:
 
 public:
     Ip::Address host_addr;
-
+#if USE_AUTH
     AuthUserRequest::Pointer auth_user_request;
-
+#endif
     u_short port;
 
     String urlpath;

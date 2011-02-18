@@ -86,6 +86,15 @@ AC_DEFUN([SQUID_CC_GUESS_VARIANT], [
 #endif
     ]])],[squid_cv_compiler="sunstudio"],[])
   fi
+  dnl Intel CC
+  if test -z "$squid_cv_compiler" ; then
+   AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([[
+#if !defined(__ICC)
+#error "not Intel(R) C++ Compiler"
+#endif
+    ]])],[squid_cv_compiler="icc"],[])
+  fi
   dnl end of block to be repeated
   if test -z "$squid_cv_compiler" ; then
    squid_cv_compiler="none"
@@ -120,6 +129,13 @@ AC_DEFUN([SQUID_CC_GUESS_OPTIONS], [
    squid_cv_cxx_option_werror="-errwarn=%all,no%badargtype2w,no%wbadinit,no%wbadasg -errtags" 
    squid_cv_cc_option_wall="+w"
    squid_cv_cc_option_optimize="-fast"
+   squid_cv_cc_arg_pipe=""
+   ;;
+  icc) 
+   squid_cv_cxx_option_werror="-Werror"
+   squid_cv_cc_option_werror="$squid_cv_cxx_option_werror" 
+   squid_cv_cc_option_wall="-Wall"
+   squid_cv_cc_option_optimize="-O2"
    squid_cv_cc_arg_pipe=""
    ;;
   *) 

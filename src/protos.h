@@ -57,7 +57,6 @@ SQUIDCEXTERN void fvdbCountForw(const char *key);
 #if HEADERS_LOG
 SQUIDCEXTERN void headersLog(int cs, int pq, const HttpRequestMethod& m, void *data);
 #endif
-SQUIDCEXTERN char *log_quote(const char *header);
 SQUIDCEXTERN int logTypeIsATcpHit(log_type);
 
 /*
@@ -631,14 +630,6 @@ SQUIDCEXTERN int urlDefaultPort(protocol_t p);
 SQUIDCEXTERN char *urlHostname(const char *url);
 SQUIDCEXTERN void urlExtMethodConfigure(void);
 
-SQUIDCEXTERN void useragentOpenLog(void);
-SQUIDCEXTERN void useragentRotateLog(void);
-SQUIDCEXTERN void logUserAgent(const char *, const char *);
-SQUIDCEXTERN void useragentLogClose(void);
-SQUIDCEXTERN void refererOpenLog(void);
-SQUIDCEXTERN void refererRotateLog(void);
-SQUIDCEXTERN void logReferer(const char *, const char *, const char *);
-SQUIDCEXTERN void refererCloseLog(void);
 SQUIDCEXTERN peer_t parseNeighborType(const char *s);
 
 /* tools.c */
@@ -741,7 +732,7 @@ SQUIDCEXTERN int varyEvaluateMatch(StoreEntry * entry, HttpRequest * req);
 
 /* CygWin & Windows NT Port */
 /* win32.c */
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 SQUIDCEXTERN int WIN32_Subsystem_Init(int *, char ***);
 SQUIDCEXTERN void WIN32_sendSignal(int);
 SQUIDCEXTERN void WIN32_Abort(int);
@@ -750,7 +741,7 @@ SQUIDCEXTERN void WIN32_SetServiceCommandLine(void);
 SQUIDCEXTERN void WIN32_InstallService(void);
 SQUIDCEXTERN void WIN32_RemoveService(void);
 SQUIDCEXTERN int SquidMain(int, char **);
-#endif /* _SQUID_WIN32_ */
+#endif /* _SQUID_WINDOWS_ */
 #ifdef _SQUID_MSWIN_
 
 SQUIDCEXTERN int WIN32_pipe(int[2]);
@@ -804,12 +795,15 @@ class external_acl;
 
 #endif
 
-#if HAVE_KRB5 && HAVE_GSSAPI
+#if USE_AUTH
+
+#if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
             /* upstream proxy authentication */
             SQUIDCEXTERN char *peer_proxy_negotiate_auth(char *principal_name, char *proxy);
 #endif
 
             /* call to ensure the auth component schemes exist. */
             SQUIDCEXTERN void InitAuthSchemes(void);
+#endif /* USE_AUTH */
 
 #endif /* SQUID_PROTOS_H */

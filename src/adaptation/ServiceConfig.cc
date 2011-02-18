@@ -57,12 +57,12 @@ Adaptation::ServiceConfig::parseVectPoint(const char *service_configConfig) cons
 bool
 Adaptation::ServiceConfig::parse()
 {
-    char *method_point = NULL;
+    String method_point;
 
     ConfigParser::ParseString(&key);
     ConfigParser::ParseString(&method_point);
-    method = parseMethod(method_point);
-    point = parseVectPoint(method_point);
+    method = parseMethod(method_point.termedBuf());
+    point = parseVectPoint(method_point.termedBuf());
 
     // reset optional parameters in case we are reconfiguring
     bypass = routing = false;

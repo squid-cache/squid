@@ -11,7 +11,6 @@
 #include "Stack.h"
 
 template <class V>
-
 class SplayNode
 {
 
@@ -32,8 +31,7 @@ public:
     SplayNode<V> const * start() const;
     SplayNode<V> const * finish() const;
 
-    SplayNode<V> * remove
-    (const Value data, SPLAYCMP * compare);
+    SplayNode<V> * remove(const Value data, SPLAYCMP * compare);
 
     SplayNode<V> * insert(Value data, SPLAYCMP * compare);
 
@@ -43,15 +41,12 @@ public:
 typedef SplayNode<void *> splayNode;
 
 template <class V>
-
 class SplayConstIterator;
 
 template <class V>
-
 class SplayIterator;
 
 template <class V>
-
 class Splay
 {
 
@@ -67,8 +62,7 @@ public:
     template <class FindValue> Value const *find (FindValue const &, int( * compare)(FindValue const &a, Value const &b)) const;
     void insert(Value const &, SPLAYCMP *compare);
 
-    void remove
-    (Value const &, SPLAYCMP *compare);
+    void remove(Value const &, SPLAYCMP *compare);
 
     void destroy(SPLAYFREE *);
 
@@ -158,8 +152,7 @@ SplayNode<V>::destroy(SPLAYFREE * free_func)
 
 template<class V>
 SplayNode<V> *
-SplayNode<V>::remove
-(Value const dataToRemove, SPLAYCMP * compare)
+SplayNode<V>::remove(Value const dataToRemove, SPLAYCMP * compare)
 {
     if (this == NULL)
         return NULL;
@@ -311,13 +304,11 @@ Splay<V>::insert(Value const &value, SPLAYCMP *compare)
 
 template <class V>
 void
-Splay<V>::remove
-(Value const &value, SPLAYCMP *compare)
+Splay<V>::remove(Value const &value, SPLAYCMP *compare)
 {
     assert (find (value, compare));
 
-    head = head->remove
-           (value, compare);
+    head = head->remove(value, compare);
 
     --elements;
 }
@@ -376,7 +367,6 @@ Splay<V>::end() const
 }
 
 template <class V>
-
 class SplayConstIterator
 {
 

@@ -40,7 +40,9 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "clientStream.h"
@@ -56,6 +58,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
+#include "log/Tokens.h"
 #include "MemObject.h"
 #include "SquidTime.h"
 #include "StoreClient.h"
@@ -96,7 +99,12 @@ void
 clientReplyContext::setReplyToError(
     err_type err, http_status status, const HttpRequestMethod& method, char const *uri,
     Ip::Address &addr, HttpRequest * failedrequest, const char *unparsedrequest,
-    AuthUserRequest::Pointer auth_user_request)
+#if USE_AUTH
+    AuthUserRequest::Pointer auth_user_request
+#else
+    void*
+#endif
+)
 {
     ErrorState *errstate = clientBuildError(err, status, uri, addr, failedrequest);
 
@@ -110,9 +118,9 @@ clientReplyContext::setReplyToError(
     http->al.http.code = errstate->httpStatus;
 
     createStoreEntry(method, request_flags());
-
+#if USE_AUTH
     errstate->auth_user_request = auth_user_request;
-
+#endif
     assert(errstate->callback_data == NULL);
     errorAppendEntry(http->storeEntry(), errstate);
     /* Now the caller reads to get this */
@@ -1329,8 +1337,9 @@ clientReplyContext::buildReplyHeader()
         else if (http->storeEntry()->timestamp > 0)
             hdr->insertTime(HDR_DATE, http->storeEntry()->timestamp);
         else {
-            debugs(88,1,"WARNING: An error inside Squid has caused an HTTP reply without Date:. Please report this");
-            /* TODO: dump something useful about the problem */
+            debugs(88,DBG_IMPORTANT,"WARNING: An error inside Squid has caused an HTTP reply without Date:. Please report this:");
+            /* dump something useful about the problem */
+            http->storeEntry()->dump(DBG_IMPORTANT);
         }
     }
 
@@ -1342,7 +1351,6 @@ clientReplyContext::buildReplyHeader()
     }
 
     /* Filter unproxyable authentication types */
-
     if (http->logType != LOG_TCP_DENIED &&
             hdr->has(HDR_WWW_AUTHENTICATE)) {
         HttpHeaderPos pos = HttpHeaderInitPos;
@@ -1385,6 +1393,7 @@ clientReplyContext::buildReplyHeader()
             hdr->refreshMask();
     }
 
+#if USE_AUTH
     /* Handle authentication headers */
     if (http->logType == LOG_TCP_DENIED &&
             ( reply->sline.status == HTTP_PROXY_AUTHENTICATION_REQUIRED ||
@@ -1399,6 +1408,7 @@ clientReplyContext::buildReplyHeader()
         authenticateFixHeader(reply, request->auth_user_request, request, 0, 1);
     } else if (request->auth_user_request != NULL)
         authenticateFixHeader(reply, request->auth_user_request, request, http->flags.accel, 0);
+#endif
 
     /* Append X-Cache */
     httpHeaderPutStrf(hdr, HDR_X_CACHE, "%s from %s",
@@ -2055,7 +2065,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     if (buf != result.data) {
         /* we've got to copy some data */
         assert(result.length <= next()->readBuffer.length);
-        xmemcpy(buf, result.data, result.length);
+        memcpy(buf, result.data, result.length);
         body_buf = buf;
     }
 

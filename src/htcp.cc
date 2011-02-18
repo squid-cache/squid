@@ -34,20 +34,21 @@
  */
 
 #include "squid.h"
-#include "htcp.h"
+#include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Acl.h"
+#include "comm.h"
+#include "comm/Loops.h"
+#include "htcp.h"
+#include "http.h"
+#include "HttpRequest.h"
+#include "icmp/net_db.h"
+#include "ipc/StartListening.h"
 #include "ip/tools.h"
+#include "MemBuf.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
-#include "HttpRequest.h"
-#include "comm.h"
-#include "MemBuf.h"
-#include "http.h"
-#include "icmp/net_db.h"
-#include "AccessLogEntry.h"
-#include "ipc/StartListening.h"
 
 /// dials htcpIncomingConnectionOpened call
 class HtcpListeningStartedDialer: public CallDialer,
@@ -332,7 +333,7 @@ htcpBuildAuth(char *buf, size_t buflen)
     copy_sz += 2;
     if (buflen < copy_sz)
         return -1;
-    xmemcpy(buf, &auth, copy_sz);
+    memcpy(buf, &auth, copy_sz);
     return copy_sz;
 }
 
@@ -357,7 +358,7 @@ htcpBuildCountstr(char *buf, size_t buflen, const char *s)
 
     length = htons((uint16_t) len);
 
-    xmemcpy(buf + off, &length, 2);
+    memcpy(buf + off, &length, 2);
 
     off += 2;
 
@@ -365,7 +366,7 @@ htcpBuildCountstr(char *buf, size_t buflen, const char *s)
         return -1;
 
     if (len)
-        xmemcpy(buf + off, s, len);
+        memcpy(buf + off, s, len);
 
     off += len;
 
@@ -473,7 +474,7 @@ htcpBuildClrOpData(char *buf, size_t buflen, htcpStuff * stuff)
     case RR_REQUEST:
         debugs(31, 3, "htcpBuildClrOpData: RR_REQUEST");
         reason = htons((u_short)stuff->reason);
-        xmemcpy(buf, &reason, 2);
+        memcpy(buf, &reason, 2);
         return htcpBuildSpecifier(buf + 2, buflen - 2, stuff) + 2;
     case RR_RESPONSE:
         break;
@@ -548,7 +549,7 @@ htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
     hdr.msg_id = htonl(hdr.msg_id);
 
     if (!old_squid_format) {
-        xmemcpy(buf, &hdr, hdr_sz);
+        memcpy(buf, &hdr, hdr_sz);
     } else {
         htcpDataHeaderSquid hdrSquid;
         memset(&hdrSquid, 0, sizeof(hdrSquid));
@@ -557,7 +558,7 @@ htcpBuildData(char *buf, size_t buflen, htcpStuff * stuff)
         hdrSquid.response = hdr.response;
         hdrSquid.F1 = hdr.F1;
         hdrSquid.RR = hdr.RR;
-        xmemcpy(buf, &hdrSquid, hdr_sz);
+        memcpy(buf, &hdrSquid, hdr_sz);
     }
 
     debugs(31, 3, "htcpBuildData: size " << off);
@@ -605,7 +606,7 @@ htcpBuildPacket(char *buf, size_t buflen, htcpStuff * stuff)
     else
         hdr.minor = 1;
 
-    xmemcpy(buf, &hdr, hdr_sz);
+    memcpy(buf, &hdr, hdr_sz);
 
     debugs(31, 3, "htcpBuildPacket: size " << off);
 
@@ -1357,15 +1358,15 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
     htcpDataHeader hdr;
     char *hbuf;
     int hsz;
-    assert (sz >= 0);
 
-    if ((size_t)sz < sizeof(htcpHeader)) {
-        debugs(31, 3, "htcpHandle: msg size less than htcpHeader size");
+    if (sz < 0 || (size_t)sz < sizeof(htcpHeader)) {
+        // These are highly likely to be attack packets. Should probably get a bigger warning.
+        debugs(31, 2, "htcpHandle: msg size less than htcpHeader size from " << from);
         return;
     }
 
     htcpHexdump("htcpHandle", buf, sz);
-    xmemcpy(&htcpHdr, buf, sizeof(htcpHeader));
+    memcpy(&htcpHdr, buf, sizeof(htcpHeader));
     htcpHdr.length = ntohs(htcpHdr.length);
 
     if (htcpHdr.minor == 0)
@@ -1399,10 +1400,10 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
     }
 
     if (!old_squid_format) {
-        xmemcpy(&hdr, hbuf, sizeof(hdr));
+        memcpy(&hdr, hbuf, sizeof(hdr));
     } else {
         htcpDataHeaderSquid hdrSquid;
-        xmemcpy(&hdrSquid, hbuf, sizeof(hdrSquid));
+        memcpy(&hdrSquid, hbuf, sizeof(hdrSquid));
         hdr.length = hdrSquid.length;
         hdr.opcode = hdrSquid.opcode;
         hdr.response = hdrSquid.response;
@@ -1484,7 +1485,7 @@ htcpRecv(int fd, void *data)
 
     htcpHandleMsg(buf, len, from);
 
-    commSetSelect(fd, COMM_SELECT_READ, htcpRecv, NULL, 0);
+    Comm::SetSelect(fd, COMM_SELECT_READ, htcpRecv, NULL, 0);
 }
 
 /*
@@ -1547,7 +1548,7 @@ htcpInit(void)
         if (htcpOutSocket < 0)
             fatal("Cannot open Outgoing HTCP Socket");
 
-        commSetSelect(htcpOutSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
+        Comm::SetSelect(htcpOutSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
 
         debugs(31, 1, "Outgoing HTCP messages on port " << Config.Port.htcp << ", FD " << htcpOutSocket << ".");
 
@@ -1567,7 +1568,7 @@ htcpIncomingConnectionOpened(int fd, int errNo)
     if (htcpInSocket < 0)
         fatal("Cannot open HTCP Socket");
 
-    commSetSelect(htcpInSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
+    Comm::SetSelect(htcpInSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
 
     debugs(31, 1, "Accepting HTCP messages on port " << Config.Port.htcp << ", FD " << htcpInSocket << ".");
 
@@ -1733,7 +1734,7 @@ htcpSocketShutdown(void)
      */
     assert(htcpOutSocket > -1);
 
-    commSetSelect(htcpOutSocket, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(htcpOutSocket, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
 void

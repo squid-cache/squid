@@ -81,7 +81,7 @@ cacheEntryCreate(const StoreSwapLogData * s)
     CacheEntry *e = xcalloc(1, sizeof(CacheEntry));
     assert(s);
     /* e->s = *s; */
-    xmemcpy(e->key_arr, s->key, SQUID_MD5_DIGEST_LENGTH);
+    memcpy(e->key_arr, s->key, SQUID_MD5_DIGEST_LENGTH);
     e->key = &e->key_arr[0];
     return e;
 }
@@ -146,9 +146,8 @@ cacheIndexAddLog(CacheIndex * idx, const char *fname)
         return 0;
     }
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
     setmode(fileno(file), O_BINARY);
-
 #endif
 
     scanned_count = cacheIndexScan(idx, fname, file);

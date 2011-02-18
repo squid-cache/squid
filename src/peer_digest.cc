@@ -491,7 +491,7 @@ peerDigestHandleReply(void *data, StoreIOBuffer receivedData)
          */
         newsize = fetch->bufofs - retsize;
 
-        xmemmove(fetch->buf, fetch->buf + retsize, fetch->bufofs - newsize);
+        memmove(fetch->buf, fetch->buf + retsize, fetch->bufofs - newsize);
 
         fetch->bufofs = newsize;
 
@@ -713,7 +713,7 @@ peerDigestSwapInMask(void *data, char *buf, ssize_t size)
      * NOTENOTENOTENOTENOTE: buf doesn't point to pd->cd->mask anymore!
      * we need to do the copy ourselves!
      */
-    xmemcpy(pd->cd->mask + fetch->mask_offset, buf, size);
+    memcpy(pd->cd->mask + fetch->mask_offset, buf, size);
 
     /* NOTE! buf points to the middle of pd->cd->mask! */
 
@@ -988,7 +988,7 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
     int freed_size = 0;
     const char *host = pd->host.termedBuf();
 
-    xmemcpy(&cblock, buf, sizeof(cblock));
+    memcpy(&cblock, buf, sizeof(cblock));
     /* network -> host conversions */
     cblock.ver.current = ntohs(cblock.ver.current);
     cblock.ver.required = ntohs(cblock.ver.required);

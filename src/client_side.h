@@ -33,7 +33,9 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "base/AsyncJob.h"
 #include "BodyPipe.h"
 #include "comm.h"
@@ -49,9 +51,6 @@ class ClientHttpRequest;
 class clientStreamNode;
 class ChunkedCodingParser;
 class HttpParser;
-
-template <class T>
-class Range;
 
 class ClientSocketContext : public RefCountable
 {
@@ -153,7 +152,7 @@ public:
     void freeAllContexts();
     void notifyAllContexts(const int xerrno); ///< tell everybody about the err
     void readNextRequest();
-    void makeSpaceAvailable();
+    bool maybeMakeSpaceAvailable();
     ClientSocketContext::Pointer getCurrentContext() const;
     void addContextToQueue(ClientSocketContext * context);
     int getConcurrentRequestCount() const;
@@ -184,11 +183,13 @@ public:
      */
     int64_t mayNeedToReadMoreBody() const;
 
+#if USE_AUTH
     /**
      * note this is ONLY connection based because NTLM and Negotiate is against HTTP spec.
      * the user details for connection based authentication
      */
     AuthUserRequest::Pointer auth_user_request;
+#endif
 
     /**
      * used by the owner of the connection, opaque otherwise
