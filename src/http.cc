@@ -41,7 +41,9 @@
 #include "squid.h"
 
 #include "acl/FilledChecklist.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
 #include "base64.h"
@@ -906,10 +908,6 @@ HttpStateData::haveParsedReplyHeaders()
         entry->mem_obj->vary_headers = xstrdup(vary);
     }
 
-#if WIP_FWD_LOG
-    fwdStatus(fwd, s);
-
-#endif
     /*
      * If its not a reply that we will re-forward, then
      * allow the client to get it.
@@ -1153,7 +1151,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
         /* Skip whitespace between replies */
 
         while (len > 0 && xisspace(*buf))
-            xmemmove(buf, buf + 1, len--);
+            memmove(buf, buf + 1, len--);
 
         if (len == 0) {
             /* Continue to read... */
@@ -1599,8 +1597,10 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
 
         if (orig_request->extacl_user.size())
             username = orig_request->extacl_user.termedBuf();
+#if USE_AUTH
         else if (orig_request->auth_user_request != NULL)
             username = orig_request->auth_user_request->username();
+#endif
 
         snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
 
@@ -1623,7 +1623,7 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
     }
 
     /* Kerberos login to peer */
-#if HAVE_KRB5 && HAVE_GSSAPI
+#if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
     if (strncmp(orig_request->peer_login, "NEGOTIATE",strlen("NEGOTIATE")) == 0) {
         char *Token=NULL;
         char *PrincipalName=NULL,*p;

@@ -1,6 +1,7 @@
-
 #ifndef SQUID_SRC_TEST_AUTH_H
 #define SQUID_SRC_TEST_AUTH_H
+
+#if USE_AUTH
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -113,5 +114,5 @@ protected:
 };
 #endif
 
-#endif
-
+#endif /* USE_AUTH */
+#endif /* SQUID_SRC_TEST_AUTH_H */

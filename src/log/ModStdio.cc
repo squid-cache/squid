@@ -82,7 +82,7 @@ logfile_mod_stdio_writeline(Logfile * lf, const char *buf, size_t len)
         return;
     }
     /* buffer it */
-    xmemcpy(ll->buf + ll->offset, buf, len);
+    memcpy(ll->buf + ll->offset, buf, len);
 
     ll->offset += len;
 
@@ -206,6 +206,8 @@ logfile_mod_stdio_open(Logfile * lf, const char *path, size_t bufsz, int fatal_f
                    "\tThe parent directory must be writeable by the\n"
                    "\tuser '%s', which is the cache_effective_user\n"
                    "\tset in squid.conf.", path, Config.effectiveUser);
+        } else if (EISDIR == errno && fatal_flag) {
+            fatalf("Cannot open '%s' because it is a directory, not a file.\n", path);
         } else {
             debugs(50, DBG_IMPORTANT, "logfileOpen (stdio): " <<  path << ": " << xstrerror());
             return 0;

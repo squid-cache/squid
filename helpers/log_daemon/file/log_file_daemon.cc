@@ -56,14 +56,14 @@ rotate(const char *path, int rotate_count)
         i--;
         snprintf(from, MAXPATHLEN, "%s.%d", path, i - 1);
         snprintf(to, MAXPATHLEN, "%s.%d", path, i);
-#if defined(_SQUID_OS2_) || defined(_SQUID_WIN32_)
+#if _SQUID_OS2_ || _SQUID_WINDOWS_
         remove(to);
 #endif
         rename(from, to);
     }
     if (rotate_count > 0) {
         snprintf(to, MAXPATHLEN, "%s.%d", path, 0);
-#if defined(_SQUID_OS2_) || defined(_SQUID_WIN32_)
+#if _SQUID_OS2_ || _SQUID_WINDOWS_
         remove(to);
 #endif
         rename(path, to);

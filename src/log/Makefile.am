@@ -9,6 +9,16 @@ liblog_la_SOURCES = \
 	Config.h \
 	File.cc \
 	File.h \
+	FormatHttpdCombined.cc \
+	FormatHttpdCommon.cc \
+	Formats.h \
+	FormatSquidCustom.cc \
+	FormatSquidIcap.cc \
+	FormatSquidNative.cc \
+	FormatSquidReferer.cc \
+	FormatSquidUseragent.cc \
+	Gadgets.cc \
+	Gadgets.h \
 	ModDaemon.cc \
 	ModDaemon.h \
 	ModStdio.cc \
@@ -18,4 +28,7 @@ liblog_la_SOURCES = \
 	ModTcp.cc \
 	ModTcp.h \
 	ModUdp.cc \
-	ModUdp.h
+	ModUdp.h \
+	Tokens.cc \
+	Tokens.h
+

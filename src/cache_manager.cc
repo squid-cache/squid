@@ -221,18 +221,21 @@ CacheManager::ParseUrl(const char *url)
 void
 CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &params)
 {
-    const char *basic_cookie;	/* base 64 _decoded_ user:passwd pair */
-    const char *passwd_del;
     assert(request);
 
     params.httpMethod = request->method.id();
     params.httpFlags = request->flags;
 
-    basic_cookie = request->header.getAuth(HDR_AUTHORIZATION, "Basic");
+#if HAVE_AUTH_MODULE_BASIC
+    // TODO: use the authentication system decode to retrieve these details properly.
+
+    /* base 64 _decoded_ user:passwd pair */
+    const char *basic_cookie = request->header.getAuth(HDR_AUTHORIZATION, "Basic");
 
     if (!basic_cookie)
         return;
 
+    const char *passwd_del;
     if (!(passwd_del = strchr(basic_cookie, ':'))) {
         debugs(16, DBG_IMPORTANT, "CacheManager::ParseHeaders: unknown basic_cookie format '" << basic_cookie << "'");
         return;
@@ -242,9 +245,10 @@ CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &param
     params.userName.limitInit(basic_cookie, passwd_del - basic_cookie);
     params.password = passwd_del + 1;
 
-    /* warning: this prints decoded password which maybe not what you want to do @?@ @?@ */
+    /* warning: this prints decoded password which maybe not be what you want to do @?@ @?@ */
     debugs(16, 9, "CacheManager::ParseHeaders: got user: '" <<
            params.userName << "' passwd: '" << params.password << "'");
+#endif
 }
 
 /**
@@ -336,11 +340,13 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
 
         errorStateFree(errState);
 
+#if HAVE_AUTH_MODULE_BASIC
         /*
          * add Authenticate header using action name as a realm because
          * password depends on the action
          */
         rep->header.putAuth("Basic", actionName);
+#endif
 
         /* store the reply */
         entry->replaceHttpReply(rep);

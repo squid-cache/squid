@@ -18,7 +18,9 @@
 #include "acl/DestinationDomain.h"
 #include "acl/DestinationIp.h"
 #include "acl/DomainData.h"
+#if USE_AUTH
 #include "acl/ExtUser.h"
+#endif
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "acl/HierCodeData.h"
@@ -64,8 +66,10 @@
 #include "acl/UrlPath.h"
 #include "acl/UrlPort.h"
 #include "acl/UserData.h"
+#if USE_AUTH
 #include "auth/AclProxyAuth.h"
 #include "auth/AclMaxUserIp.h"
+#endif
 #if USE_IDENT
 #include "ident/AclIdent.h"
 #endif
@@ -79,10 +83,12 @@ ACL::Prototype ACLDestinationDomain::RegexRegistryProtoype(&ACLDestinationDomain
 ACLStrategised<char const *> ACLDestinationDomain::RegexRegistryEntry_(new ACLRegexData,ACLDestinationDomainStrategy::Instance() ,"dstdom_regex");
 ACL::Prototype ACLDestinationIP::RegistryProtoype(&ACLDestinationIP::RegistryEntry_, "dst");
 ACLDestinationIP ACLDestinationIP::RegistryEntry_;
+#if USE_AUTH
 ACL::Prototype ACLExtUser::UserRegistryProtoype(&ACLExtUser::UserRegistryEntry_, "ext_user");
 ACLExtUser ACLExtUser::UserRegistryEntry_(new ACLUserData, "ext_user");
 ACL::Prototype ACLExtUser::RegexRegistryProtoype(&ACLExtUser::RegexRegistryEntry_, "ext_user_regex" );
 ACLExtUser ACLExtUser::RegexRegistryEntry_(new ACLRegexData, "ext_user_regex");
+#endif
 ACL::Prototype ACLHierCode::RegistryProtoype(&ACLHierCode::RegistryEntry_, "hier_code");
 ACLStrategised<hier_code> ACLHierCode::RegistryEntry_(new ACLHierCodeData, ACLHierCodeStrategy::Instance(), "hier_code");
 ACL::Prototype ACLHTTPRepHeader::RegistryProtoype(&ACLHTTPRepHeader::RegistryEntry_, "rep_header");
@@ -152,7 +158,7 @@ ACL::Prototype ACLIdent::RegexRegistryProtoype(&ACLIdent::RegexRegistryEntry_, "
 ACLIdent ACLIdent::RegexRegistryEntry_(new ACLRegexData, "ident_regex");
 #endif
 
-
+#if USE_AUTH
 ACL::Prototype ACLProxyAuth::UserRegistryProtoype(&ACLProxyAuth::UserRegistryEntry_, "proxy_auth");
 ACLProxyAuth ACLProxyAuth::UserRegistryEntry_(new ACLUserData, "proxy_auth");
 ACL::Prototype ACLProxyAuth::RegexRegistryProtoype(&ACLProxyAuth::RegexRegistryEntry_, "proxy_auth_regex" );
@@ -160,6 +166,7 @@ ACLProxyAuth ACLProxyAuth::RegexRegistryEntry_(new ACLRegexData, "proxy_auth_reg
 
 ACL::Prototype ACLMaxUserIP::RegistryProtoype(&ACLMaxUserIP::RegistryEntry_, "max_user_ip");
 ACLMaxUserIP ACLMaxUserIP::RegistryEntry_("max_user_ip");
+#endif
 
 ACL::Prototype ACLTag::RegistryProtoype(&ACLTag::RegistryEntry_, "tag");
 ACLStrategised<const char *> ACLTag::RegistryEntry_(new ACLStringData, ACLTagStrategy::Instance(), "tag");

@@ -36,6 +36,7 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "CacheManager.h"
+#include "comm/Loops.h"
 #include "event.h"
 #include "errorpage.h"
 #include "fde.h"
@@ -53,6 +54,7 @@
 #include "mgr/Registration.h"
 #if USE_SSL
 #include "ssl/support.h"
+#include "ssl/ErrorDetail.h"
 #endif
 
 static PSC fwdStartCompleteWrapper;
@@ -69,11 +71,6 @@ static void fwdServerFree(FwdServer * fs);
 
 #define MAX_FWD_STATS_IDX 9
 static int FwdReplyCodes[MAX_FWD_STATS_IDX + 1][HTTP_INVALID_HEADER + 1];
-
-#if WIP_FWD_LOG
-static void fwdLog(FwdState * fwdState);
-static Logfile *logfile = NULL;
-#endif
 
 static PconnPool *fwdPconnPool = new PconnPool("server-side");
 CBDATA_CLASS_INIT(FwdState);
@@ -138,10 +135,6 @@ FwdState::completed()
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
-#endif
-#if WIP_FWD_LOG
-
-    log();
 #endif
 
     if (entry->store_status == STORE_PENDING) {
@@ -593,11 +586,11 @@ FwdState::negotiateSSL(int fd)
         switch (ssl_error) {
 
         case SSL_ERROR_WANT_READ:
-            commSetSelect(fd, COMM_SELECT_READ, fwdNegotiateSSLWrapper, this, 0);
+            Comm::SetSelect(fd, COMM_SELECT_READ, fwdNegotiateSSLWrapper, this, 0);
             return;
 
         case SSL_ERROR_WANT_WRITE:
-            commSetSelect(fd, COMM_SELECT_WRITE, fwdNegotiateSSLWrapper, this, 0);
+            Comm::SetSelect(fd, COMM_SELECT_WRITE, fwdNegotiateSSLWrapper, this, 0);
             return;
 
         default:
@@ -612,6 +605,14 @@ FwdState::negotiateSSL(int fd)
 
             anErr->xerrno = EACCES;
 #endif
+
+            Ssl::ErrorDetail *errFromFailure = (Ssl::ErrorDetail *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail);
+            if (errFromFailure != NULL) {
+                // The errFromFailure is attached to the ssl object
+                // and will be released when ssl object destroyed.
+                // Copy errFromFailure to a new Ssl::ErrorDetail object
+                anErr->detail = new Ssl::ErrorDetail(*errFromFailure);
+            }
 
             fail(anErr);
 
@@ -1266,18 +1267,6 @@ void
 FwdState::initModule()
 {
     memDataInit(MEM_FWD_SERVER, "FwdServer", sizeof(FwdServer), 0);
-
-#if WIP_FWD_LOG
-
-    if (logfile)
-        (void) 0;
-    else if (NULL == Config.Log.forward)
-        (void) 0;
-    else
-        logfile = logfileOpen(Config.Log.forward, 0, 1);
-
-#endif
-
     RegisterWithCacheManager();
 }
 
@@ -1472,47 +1461,3 @@ GetNfmarkToServer(HttpRequest * request)
 
     return aclMapNfmark(Ip::Qos::TheConfig.nfmarkToServer, &ch);
 }
-
-
-/**** WIP_FWD_LOG *************************************************************/
-
-#if WIP_FWD_LOG
-void
-fwdUninit(void)
-{
-    if (NULL == logfile)
-        return;
-
-    logfileClose(logfile);
-
-    logfile = NULL;
-}
-
-void
-fwdLogRotate(void)
-{
-    if (logfile)
-        logfileRotate(logfile);
-}
-
-static void
-FwdState::log()
-{
-    if (NULL == logfile)
-        return;
-
-    logfilePrintf(logfile, "%9d.%03d %03d %s %s\n",
-                  (int) current_time.tv_sec,
-                  (int) current_time.tv_usec / 1000,
-                  last_status,
-                  RequestMethodStr(request->method),
-                  request->canonical);
-}
-
-void
-FwdState::status(http_status s)
-{
-    last_status = s;
-}
-
-#endif

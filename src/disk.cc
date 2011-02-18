@@ -33,13 +33,14 @@
  */
 
 #include "squid.h"
+#include "comm/Loops.h"
 #include "fde.h"
 #include "MemBuf.h"
 
 static PF diskHandleRead;
 static PF diskHandleWrite;
 
-#if defined(_SQUID_WIN32_) || defined(_SQUID_OS2_)
+#if _SQUID_WINDOWS_ || _SQUID_OS2_
 static int
 diskWriteIsComplete(int fd)
 {
@@ -109,25 +110,18 @@ file_close(int fd)
     }
 
     if (F->flags.write_daemon) {
-#if defined(_SQUID_WIN32_) || defined(_SQUID_OS2_)
+#if _SQUID_WINDOWS_ || _SQUID_OS2_
         /*
          * on some operating systems, you can not delete or rename
          * open files, so we won't allow delayed close.
          */
-
         while (!diskWriteIsComplete(fd))
             diskHandleWrite(fd, NULL);
-
 #else
-
         F->flags.close_request = 1;
-
         debugs(6, 2, "file_close: FD " << fd << ", delaying close");
-
         PROF_stop(file_close);
-
         return;
-
 #endif
 
     }
@@ -196,12 +190,12 @@ diskCombineWrites(struct _fde_disk *fdd)
             dwrite_q *q = fdd->write_q;
 
             len = q->len - q->buf_offset;
-            xmemcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
+            memcpy(wq->buf + wq->len, q->buf + q->buf_offset, len);
             wq->len += len;
             fdd->write_q = q->next;
 
             if (q->free_func)
-                (q->free_func) (q->buf);
+                q->free_func(q->buf);
 
             memFree(q, MEM_DWRITE_Q);
         };
@@ -285,7 +279,7 @@ diskHandleWrite(int fd, void *notused)
                 fdd->write_q = q->next;
 
                 if (q->free_func)
-                    (q->free_func) (q->buf);
+                    q->free_func(q->buf);
 
                 if (q) {
                     memFree(q, MEM_DWRITE_Q);
@@ -314,7 +308,7 @@ diskHandleWrite(int fd, void *notused)
             fdd->write_q = q->next;
 
             if (q->free_func)
-                (q->free_func) (q->buf);
+                q->free_func(q->buf);
 
             if (q) {
                 memFree(q, MEM_DWRITE_Q);
@@ -329,7 +323,7 @@ diskHandleWrite(int fd, void *notused)
     } else {
         /* another block is queued */
         diskCombineWrites(fdd);
-        commSetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
+        Comm::SetSelect(fd, COMM_SELECT_WRITE, diskHandleWrite, NULL, 0);
         F->flags.write_daemon = 1;
     }
 
@@ -458,7 +452,7 @@ diskHandleRead(int fd, void *data)
 
     if (len < 0) {
         if (ignoreErrno(errno)) {
-            commSetSelect(fd, COMM_SELECT_READ, diskHandleRead, ctrl_dat, 0);
+            Comm::SetSelect(fd, COMM_SELECT_READ, diskHandleRead, ctrl_dat, 0);
             PROF_stop(diskHandleRead);
             return;
         }
@@ -521,11 +515,8 @@ int
 xrename(const char *from, const char *to)
 {
     debugs(21, 2, "xrename: renaming " << from << " to " << to);
-#if defined (_SQUID_OS2_) || defined (_SQUID_WIN32_)
-
-    remove
-    (to);
-
+#if _SQUID_OS2_ || _SQUID_WINDOWS_
+    remove(to);
 #endif
 
     if (0 == rename(from, to))

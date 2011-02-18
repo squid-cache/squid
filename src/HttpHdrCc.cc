@@ -51,6 +51,7 @@ static const HttpHeaderFieldAttrs CcAttrs[CC_ENUM_END] = {
     {"max-age", (http_hdr_type)CC_MAX_AGE},
     {"s-maxage", (http_hdr_type)CC_S_MAXAGE},
     {"max-stale", (http_hdr_type)CC_MAX_STALE},
+    {"stale-if-error", (http_hdr_type)CC_STALE_IF_ERROR},
     {"min-fresh", (http_hdr_type)CC_MIN_FRESH},
     {"Other,", (http_hdr_type)CC_OTHER}	/* ',' will protect from matches */
 };
@@ -190,6 +191,14 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
                 EBIT_CLR(cc->mask, type);
             }
 
+            break;
+
+        case CC_STALE_IF_ERROR:
+            if (!p || !httpHeaderParseInt(p, &cc->stale_if_error)) {
+                debugs(65, 2, "cc: invalid stale-if-error specs near '" << item << "'");
+                cc->stale_if_error = -1;
+                EBIT_CLR(cc->mask, type);
+            }
             break;
 
         case CC_OTHER:

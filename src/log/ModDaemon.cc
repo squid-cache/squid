@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "cbdata.h"
+#include "comm/Loops.h"
 #include "fde.h"
 #include "log/Config.h"
 #include "log/File.h"
@@ -151,7 +152,7 @@ logfileHandleWrite(int fd, void *data)
     /* there is, so schedule more */
 
 reschedule:
-    commSetSelect(ll->wfd, COMM_SELECT_WRITE, logfileHandleWrite, lf, 0);
+    Comm::SetSelect(ll->wfd, COMM_SELECT_WRITE, logfileHandleWrite, lf, 0);
     ll->flush_pending = 1;
 finish:
     return;
@@ -171,7 +172,7 @@ logfileQueueWrite(Logfile * lf)
             logfile_mod_daemon_append(lf, "F\n", 2);
     }
     /* Ok, schedule a write-event */
-    commSetSelect(ll->wfd, COMM_SELECT_WRITE, logfileHandleWrite, lf, 0);
+    Comm::SetSelect(ll->wfd, COMM_SELECT_WRITE, logfileHandleWrite, lf, 0);
 }
 
 static void
@@ -191,7 +192,7 @@ logfile_mod_daemon_append(Logfile * lf, const char *buf, int len)
         b = static_cast<logfile_buffer_t*>(ll->bufs.tail->data);
         debugs(50, 3, "logfile_mod_daemon_append: current buffer has " << b->len << " of " << b->size << " bytes before append");
         s = min(len, (b->size - b->len));
-        xmemcpy(b->buf + b->len, buf, s);
+        memcpy(b->buf + b->len, buf, s);
         len = len - s;
         buf = buf + s;
         b->len = b->len + s;

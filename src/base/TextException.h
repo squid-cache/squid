@@ -5,6 +5,9 @@
 
 #include <exception>
 
+#if __GNUC__
+__attribute__((unused))
+#endif
 static unsigned int FileNameHashCached(const char *fname);
 
 // simple exception to report custom errors
@@ -59,12 +62,6 @@ FileNameHashCached(const char *fname)
     }
     return lastHash;
 }
-
-///  Avoids "defined but not used" warnings for FileNameHashCached
-class FileNameHashCacheUser
-{
-    bool use(void *ptr=NULL) { return ptr != &FileNameHashCached;}
-};
 
 #if !defined(TexcHere)
 #    define TexcHere(msg) TextException((msg), __FILE__, __LINE__, \

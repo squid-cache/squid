@@ -23,7 +23,7 @@ HelperChildConfig::operator =(const HelperChildConfig &rhs)
     return *this;
 }
 
-const int
+int
 HelperChildConfig::needNew() const
 {
     /* during the startup and reconfigure use our special amount... */
