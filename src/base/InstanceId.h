@@ -41,12 +41,12 @@ private:
 
 /// convenience macro to instantiate Class-specific stuff in .cc files
 #define InstanceIdDefinitions(Class, prefix) \
+    template<> const char *InstanceId<Class>::Prefix = prefix; \
+    template<> InstanceId<Class>::Value InstanceId<Class>::Last = 0; \
     template<> std::ostream & \
     InstanceId<Class>::print(std::ostream &os) const { \
         return os << Prefix << value; \
-    } \
-    template<> const char *InstanceId<Class>::Prefix = prefix; \
-    template<> InstanceId<Class>::Value InstanceId<Class>::Last = 0
+    }
 
 
 /// print the id
