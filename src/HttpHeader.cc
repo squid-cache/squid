@@ -395,6 +395,19 @@ HttpHeader::~HttpHeader()
     clean();
 }
 
+const HttpHeader &
+HttpHeader::operator =(const HttpHeader &other)
+{
+    if (this != &other) {
+        // we do not really care, but the caller probably does
+        assert(owner == other.owner);
+        clean();
+        update(&other, NULL); // will update the mask as well
+        len = other.len;
+    }
+    return *this;
+}
+
 void
 HttpHeader::clean()
 {
@@ -437,6 +450,7 @@ HttpHeader::clean()
     }
     entries.clean();
     httpHeaderMaskInit(&mask, 0);
+    len = 0; // TODO: this line was missing for a while; do we need len at all?
     PROF_stop(HttpHeaderClean);
 }
 
@@ -500,10 +514,7 @@ HttpHeader::update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask)
 int
 HttpHeader::reset()
 {
-    http_hdr_owner_type ho;
-    ho = owner;
     clean();
-    *this = HttpHeader(ho);
     return 0;
 }
 

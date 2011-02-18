@@ -207,6 +207,9 @@ public:
     HttpHeader();
     HttpHeader(http_hdr_owner_type const &owner);
     ~HttpHeader();
+
+    const HttpHeader &operator =(const HttpHeader &other);
+
     /* Interface functions */
     void clean();
     void append(const HttpHeader * src);
@@ -273,8 +276,6 @@ private:
     HttpHeaderEntry *findLastEntry(http_hdr_type id) const;
     /// Made it non-copyable. Our destructor is a bit nasty...
     HttpHeader(const HttpHeader &);
-    //assignment is used by the reset method, can't block it..
-    //const HttpHeader operator=(const HttpHeader &);
 };
 
 
