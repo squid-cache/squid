@@ -1043,8 +1043,10 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
     Iphlpapi.h \
     net/if_dl.h \
     sys/sockio.h \
-    sys/param.h
-  )
+    sys/param.h,
+  [], [], [[
+#include <windows.h>
+]])
   AC_CHECK_HEADERS( \
     net/if_arp.h \
     net/route.h, 
