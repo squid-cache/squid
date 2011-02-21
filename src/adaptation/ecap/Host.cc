@@ -28,9 +28,9 @@ Adaptation::Ecap::Host::Host()
     // assign our host-specific IDs to well-known names
     // this code can run only once
 
-    libecap::headerContentLength.assignHostId(HDR_CONTENT_LENGTH);
     libecap::headerTransferEncoding.assignHostId(HDR_TRANSFER_ENCODING);
     libecap::headerReferer.assignHostId(HDR_REFERER);
+    libecap::headerContentLength.assignHostId(HDR_CONTENT_LENGTH);
     libecap::headerVia.assignHostId(HDR_VIA);
     // TODO: libecap::headerXClientIp.assignHostId(HDR_X_CLIENT_IP);
     // TODO: libecap::headerXServerIp.assignHostId(HDR_X_SERVER_IP);
