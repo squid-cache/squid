@@ -16,6 +16,7 @@ namespace Adaptation
 namespace Ecap
 {
 
+/// eCAP service configuration
 class ServiceConfig: public Adaptation::ServiceConfig {
 public:
     // Adaptation::ServiceConfig API
@@ -28,6 +29,7 @@ public:
 };
 
 
+/// General eCAP configuration
 class Config: public Adaptation::Config
 {
 
