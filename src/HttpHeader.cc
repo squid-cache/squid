@@ -456,7 +456,7 @@ HttpHeader::clean()
     }
     entries.clean();
     httpHeaderMaskInit(&mask, 0);
-    len = 0; // TODO: this line was missing for a while; do we need len at all?
+    len = 0;
     PROF_stop(HttpHeaderClean);
 }
 
