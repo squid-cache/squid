@@ -442,7 +442,11 @@ diskHandleRead(int fd, void *data)
 
     PROF_start(diskHandleRead);
 
+#if WRITES_MAINTAIN_DISK_OFFSET
     if (F->disk.offset != ctrl_dat->offset) {
+#else
+    {
+#endif
         debugs(6, 3, "diskHandleRead: FD " << fd << " seeking to offset " << ctrl_dat->offset);
         lseek(fd, ctrl_dat->offset, SEEK_SET);	/* XXX ignore return? */
         statCounter.syscalls.disk.seeks++;
