@@ -58,7 +58,7 @@ ClientHttpRequest::getConn()
     return conn_;
 }
 
-ConnStateData * const
+ConnStateData const *
 ClientHttpRequest::getConn() const
 {
     if (!cbdataReferenceValid(conn_))

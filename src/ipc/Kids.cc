@@ -56,7 +56,7 @@ Kid* Kids::find(pid_t pid)
 /// returns the kid by index, useful for kids iteration
 Kid& Kids::get(size_t i)
 {
-    assert(i >= 0 && i < count());
+    assert(i < count());
     return storage[i];
 }
 
