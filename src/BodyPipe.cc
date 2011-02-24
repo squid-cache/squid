@@ -148,7 +148,6 @@ BodyPipe::~BodyPipe()
 void BodyPipe::setBodySize(uint64_t aBodySize)
 {
     assert(!bodySizeKnown());
-    assert(aBodySize >= 0);
     assert(thePutSize <= aBodySize);
 
     // If this assert fails, we need to add code to check for eof and inform

@@ -1659,11 +1659,9 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
            ", id = 0x" << std::hex << q->msg_id);
 
     q->callback = callback;
-
     q->callback_data = cbdataReference(data);
 
     idnsCacheQuery(q);
-
     idnsSendQuery(q);
 }
 
@@ -1711,11 +1709,9 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
            ", id = 0x" << std::hex << q->msg_id);
 
     q->callback = callback;
-
     q->callback_data = cbdataReference(data);
 
     idnsCacheQuery(q);
-
     idnsSendQuery(q);
 }
 

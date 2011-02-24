@@ -1090,11 +1090,6 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
 
         }
 
-        /*
-         * paranoid check
-         */
-        assert((available.size() >= 0 && i->debt() >= 0) || i->debt() == -1);
-
         if (!canPackMoreRanges()) {
             debugs(33, 3, "clientPackRange: Returning because !canPackMoreRanges.");
 
