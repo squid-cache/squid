@@ -41,6 +41,7 @@
 #include "comm/Loops.h"
 #include "comm/TcpAcceptor.h"
 #include "fde.h"
+#include "ip/Intercept.h"
 #include "protos.h"
 #include "SquidTime.h"
 
@@ -358,7 +359,13 @@ Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
     commSetNonBlocking(sock);
 
     /* IFF the socket is (tproxy) transparent, pass the flag down to allow spoofing */
-    F->flags.transparent = fd_table[conn->fd].flags.transparent;
+    F->flags.transparent = fd_table[conn->fd].flags.transparent; // XXX: can we remove this line yet?
+
+    // Perform NAT or TPROXY operations to retrieve the real client/dest IP addresses
+    if (conn->flags&(COMM_TRANSPARENT|COMM_INTERCEPTION) && !Ip::Interceptor.Lookup(details, conn)) {
+        // Failed.
+        return COMM_ERROR;
+    }
 
     PROF_stop(comm_accept);
     return COMM_OK;

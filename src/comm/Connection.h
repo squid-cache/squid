@@ -64,11 +64,12 @@ namespace Comm {
  * currently there is code still using comm_open() and comm_openex() synchronously!!
  */
 #define COMM_UNSET              0x00
-#define COMM_NONBLOCKING        0x01
+#define COMM_NONBLOCKING        0x01  // default flag.
 #define COMM_NOCLOEXEC          0x02
-#define COMM_REUSEADDR          0x04
-#define COMM_TRANSPARENT        0x08
-#define COMM_DOBIND             0x10
+#define COMM_REUSEADDR          0x04  // shared FD may be both accept()ing and read()ing
+#define COMM_DOBIND             0x08  // requires a bind()
+#define COMM_TRANSPARENT        0x10  // arrived via TPROXY
+#define COMM_INTERCEPTION       0x20  // arrived via NAT
 
 /**
  * Store data about the physical and logical attributes of a connection.

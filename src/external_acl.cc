@@ -901,12 +901,14 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
 #if USE_SQUID_EUI
         case _external_acl_format::EXT_ACL_SRCEUI48:
-            if (request->client_eui48.encode(buf, sizeof(buf)))
+            if (request->clientConnectionManager.valid() && request->clientConnectionManager->clientConnection != NULL &&
+                    request->clientConnectionManager->clientConnection->remoteEui48.encode(buf, sizeof(buf)))
                 str = buf;
             break;
 
         case _external_acl_format::EXT_ACL_SRCEUI64:
-            if (request->client_eui64.encode(buf, sizeof(buf)))
+            if (request->clientConnectionManager.valid() && request->clientConnectionManager->clientConnection != NULL &&
+                    request->clientConnectionManager->clientConnection->remoteEui64.encode(buf, sizeof(buf)))
                 str = buf;
             break;
 #endif

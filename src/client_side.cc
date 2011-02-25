@@ -109,7 +109,6 @@
 #include "HttpRequest.h"
 #include "ident/Config.h"
 #include "ident/Ident.h"
-#include "ip/Intercept.h"
 #include "ipc/FdNotes.h"
 #include "ipc/StartListening.h"
 #include "MemBuf.h"
@@ -191,7 +190,9 @@ static ClientSocketContext *ClientSocketContextNew(const Comm::ConnectionPointer
 static IOCB clientWriteComplete;
 static IOCB clientWriteBodyComplete;
 static IOACB httpAccept;
+#if USE_SSL
 static IOACB httpsAccept;
+#endif
 static bool clientParseRequest(ConnStateData * conn, bool &do_next_read);
 static CTCB clientLifetimeTimeout;
 static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
@@ -2193,12 +2194,6 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
      */
     if (csd->transparent()) {
         /* intercept or transparent mode, properly working with no failures */
-        http->flags.intercepted = csd->port->intercepted;
-        http->flags.spoof_client_ip = csd->port->spoof_client_ip;
-        prepareTransparentURL(csd, http, url, req_hdr);
-
-    } else if (csd->port->intercepted || csd->port->spoof_client_ip) {
-        /* transparent or intercept mode with failures */
         prepareTransparentURL(csd, http, url, req_hdr);
 
     } else if (csd->port->accel || csd->switchedToHttps()) {
@@ -2456,6 +2451,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         goto finish;
     }
 
+    request->clientConnectionManager = conn;
+
     request->flags.accelerated = http->flags.accel;
     request->flags.ignore_cc = conn->port->ignore_cc;
     request->flags.no_direct = request->flags.accelerated ? !conn->port->allow_direct : 0;
@@ -2464,11 +2461,9 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
      * If transparent or interception mode is working clone the transparent and interception flags
      * from the port settings to the request.
      */
-    if (Ip::Interceptor.InterceptActive()) {
-        request->flags.intercepted = http->flags.intercepted;
-    }
-    if (Ip::Interceptor.TransparentActive()) {
-        request->flags.spoof_client_ip = conn->port->spoof_client_ip;
+    if (http->clientConnection != NULL) {
+        request->flags.intercepted = (http->clientConnection->flags & COMM_INTERCEPTION);
+        request->flags.spoof_client_ip = (http->clientConnection->flags & COMM_TRANSPARENT);
     }
 
     if (internalCheck(request->urlpath.termedBuf())) {
@@ -2490,11 +2485,9 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request));
     request->client_addr = conn->clientConnection->remote; // XXX: remove reuest->client_addr member.
-#if USE_SQUID_EUI
-    request->client_eui48 = conn->clientConnection->remoteEui48;
-    request->client_eui64 = conn->clientConnection->remoteEui64;
-#endif
 #if FOLLOW_X_FORWARDED_FOR
+    // indirect client gets stored here because it is an HTTP header result (from X-Forwarded-For:)
+    // not a details about teh TCP connection itself
     request->indirect_client_addr = conn->clientConnection->remote;
 #endif /* FOLLOW_X_FORWARDED_FOR */
     request->my_addr = conn->clientConnection->local;
@@ -3072,17 +3065,6 @@ connStateCreate(const Comm::ConnectionPointer &client, http_port_list *port)
     result->in.buf = (char *)memAllocBuf(CLIENT_REQ_BUF_SZ, &result->in.allocatedSize);
     result->port = cbdataReference(port);
 
-    // XXX: move the NAT and TPROXY stuff into ConnAcceptor
-    if (port->intercepted || port->spoof_client_ip) {
-        Ip::Address cl, dst;
-
-        if (Ip::Interceptor.NatLookup(client->fd, client->local, client->remote, cl, dst) == 0) {
-            result->clientConnection->local = cl;
-            result->clientConnection->remote = dst;
-            result->transparent(true);
-        }
-    }
-
     if (port->disable_pmtu_discovery != DISABLE_PMTU_OFF &&
             (result->transparent() || port->disable_pmtu_discovery == DISABLE_PMTU_ALWAYS)) {
 #if defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DONT)
@@ -3581,7 +3563,7 @@ clientHttpConnectionsOpen(void)
         //  then pass back when active so we can start a TcpAcceptor subscription.
         s->listenConn = new Comm::Connection;
         s->listenConn->local = s->s;
-        s->listenConn->flags = COMM_NONBLOCKING | (s->spoof_client_ip ? COMM_TRANSPARENT : 0);
+        s->listenConn->flags = COMM_NONBLOCKING | (s->spoof_client_ip ? COMM_TRANSPARENT : 0) | (s->intercepted ? COMM_INTERCEPTION : 0);
 
         // setup the subscriptions such that new connections accepted by listenConn are handled by HTTP
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
@@ -3627,7 +3609,8 @@ clientHttpsConnectionsOpen(void)
         // Fill out a Comm::Connection which IPC will open as a listener for us
         s->http.listenConn = new Comm::Connection;
         s->http.listenConn->local = s->http.s;
-        s->http.listenConn->flags = COMM_NONBLOCKING | (s->http.spoof_client_ip ? COMM_TRANSPARENT : 0);
+        s->http.listenConn->flags = COMM_NONBLOCKING | (s->http.spoof_client_ip ? COMM_TRANSPARENT : 0) |
+                                    (s->http.intercepted ? COMM_INTERCEPTION : 0);
 
         // setup the subscriptions such that new connections accepted by listenConn are handled by HTTPS
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
@@ -3800,7 +3783,6 @@ CBDATA_CLASS_INIT(ConnStateData);
 
 ConnStateData::ConnStateData() :
         AsyncJob("ConnStateData"),
-        transparent_(false),
         closing_(false),
         switchedToHttps_(false)
 {
@@ -3811,13 +3793,7 @@ ConnStateData::ConnStateData() :
 bool
 ConnStateData::transparent() const
 {
-    return transparent_;
-}
-
-void
-ConnStateData::transparent(bool const anInt)
-{
-    transparent_ = anInt;
+    return clientConnection != NULL && (clientConnection->flags & (COMM_TRANSPARENT|COMM_INTERCEPTION));
 }
 
 bool

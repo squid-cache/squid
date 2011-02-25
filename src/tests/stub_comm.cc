@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "comm.h"
+#include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "CommRead.h"
 #include "fde.h"
@@ -74,7 +75,7 @@ comm_read(const Comm::ConnectionPointer &conn, char*, int, AsyncCall::Pointer &c
 
 /* should be in stub_CommRead */
 #include "CommRead.h"
-CommRead::CommRead (int fd, char *buf, int len, AsyncCall::Pointer &callback)
+CommRead::CommRead(const Comm::ConnectionPointer &, char *buf, int len, AsyncCall::Pointer &callback)
 {
     fatal ("Not implemented");
 }
