@@ -25,6 +25,7 @@ SBUF_SOURCE= \
 	MemBlob.cc
 
 SNMP_ALL_SOURCE = \
+	snmp_core.h \
 	snmp_core.cc \
 	snmp_agent.cc
 if USE_SNMP
@@ -286,7 +287,6 @@ squid_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	ConfigParser.h \
-	ConnectionDetail.h \
 	CpuAffinity.cc \
 	CpuAffinity.h \
 	CpuAffinityMap.cc \
@@ -585,6 +585,12 @@ INCLUDES += $(KRB5INCS)
 
 
 unlinkd_SOURCES = unlinkd_daemon.cc
+unlinkd_LDADD = \
+	ipc/libipc.la \
+	ip/libip.la \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+
 dnsserver_SOURCES = dnsserver.cc SquidNew.cc tests/stub_debug.cc test_tools.cc time.cc
 recv_announce_SOURCES = recv-announce.cc
 
@@ -2081,18 +2087,40 @@ tests_testString_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 
 SWAP_TEST_SOURCES = \
-	tests/stub_internal.cc \
-	tests/stub_CommIO.cc \
-	tests/stub_store_rebuild.cc \
-	fd.cc \
+	CacheDigest.cc \
+	cbdata.cc \
+	ClientInfo.h \
+	ConfigOption.cc \
+	ConfigParser.cc \
 	disk.cc \
+	ETag.cc \
+	EventLoop.cc \
+	fd.cc \
 	filemap.cc \
 	HttpBody.cc \
+	HttpHdrContRange.cc \
+	HttpHdrCc.cc \
+	HttpHdrSc.cc \
+	HttpHdrScTarget.cc \
+	HttpHdrRange.cc \
+	HttpHeaderTools.cc \
+	HttpHeader.cc \
+	HttpMsg.cc \
 	HttpReply.cc \
+	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
 	int.cc \
 	list.cc \
+	MemBuf.cc \
 	MemObject.cc \
+	mem_node.cc \
+	mem.cc \
+	Packer.cc \
+	Parsing.cc \
+	refresh.cc \
+	RemovalPolicy.cc \
+	StatHist.cc \
+	stmem.cc \
 	StoreSwapLogData.cc \
 	StoreIOState.cc \
 	StoreMeta.cc \
@@ -2104,12 +2132,38 @@ SWAP_TEST_SOURCES = \
 	StoreMetaVary.cc \
 	StoreFileSystem.cc \
 	store_io.cc \
+	store_key_md5.cc \
 	store_swapout.cc \
 	store_swapmeta.cc \
+	store_dir.cc \
+	store.cc \
+	String.cc \
+	SwapDir.cc \
+	tests/stub_access_log.cc \
+	tests/stub_acl.cc \
+	tests/stub_cache_cf.cc \
+	tests/stub_client_side_request.cc \
+	tests/stub_debug.cc \
+	tests/stub_errorpage.cc \
+	tests/stub_helper.cc \
+	tests/stub_http.cc \
+	tests/stub_HttpRequest.cc \
+	tests/stub_internal.cc \
+	tests/stub_mime.cc \
+	tests/stub_store_client.cc \
+	tests/stub_store_rebuild.cc \
+	tests/stub_tools.cc \
+	tests/testStoreSupport.cc \
+	tests/testStoreSupport.h \
+	time.cc \
+	url.cc \
+	URLScheme.cc \
+	wordlist.cc \
+	$(DELAY_POOL_SOURCE) \
+	$(DISKIO_SOURCE) \
+	$(TEST_CALL_SOURCES) \
 	$(UNLINKDSOURCE) \
-	$(WIN32_SOURCE) \
-	$(STORE_TEST_SOURCES) \
-	$(DISKIO_SOURCE)
+	$(WIN32_SOURCE)
 
 SWAP_TEST_GEN_SOURCES = \
 	$(TESTSOURCES) \

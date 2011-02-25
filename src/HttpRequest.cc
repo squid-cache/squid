@@ -93,10 +93,6 @@ HttpRequest::init()
     imslen = 0;
     lastmod = -1;
     client_addr.SetEmpty();
-#if USE_SQUID_EUI
-    client_eui48.clear();
-    client_eui64.clear();
-#endif
     my_addr.SetEmpty();
     body_pipe = NULL;
     // hier
@@ -597,13 +593,12 @@ bool HttpRequest::inheritProperties(const HttpMsg *aMsg)
     if (!aReq)
         return false;
 
+    // main property is which connection the request was received on (if any)
+    clientConnectionManager = aReq->clientConnectionManager;
+
     client_addr = aReq->client_addr;
 #if FOLLOW_X_FORWARDED_FOR
     indirect_client_addr = aReq->indirect_client_addr;
-#endif
-#if USE_SQUID_EUI
-    client_eui48 = aReq->client_eui48;
-    client_eui64 = aReq->client_eui64;
 #endif
     my_addr = aReq->my_addr;
 

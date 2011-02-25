@@ -233,6 +233,8 @@ public:
     ClientSocketContext::Pointer currentobject;
 
     Ip::Address log_addr;
+
+    /// count of requests made so far on this connection
     int nrequests;
 
     struct {
@@ -252,7 +254,6 @@ public:
     http_port_list *port;
 
     bool transparent() const;
-    void transparent(bool const);
     bool reading() const;
     void stopReading(); ///< cancels comm_read if it is scheduled
 
@@ -336,7 +337,6 @@ private:
     CBDATA_CLASS2(ConnStateData);
     // XXX: CBDATA macro plays with public/private exposing all of the supposedly below private fields...
 
-    bool transparent_; // AYJ: is this a duplicate of the transparent/intercept flags?
     bool closing_;
 
     bool switchedToHttps_;
