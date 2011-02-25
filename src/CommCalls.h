@@ -8,7 +8,7 @@
 
 #include "base/AsyncCall.h"
 #include "base/AsyncJobCalls.h"
-#include "comm/comm_err_t.h"
+#include "comm_err_t.h"
 #include "comm/forward.h"
 
 /* CommCalls implement AsyncCall interface for comm_* callbacks.

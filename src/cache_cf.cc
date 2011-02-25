@@ -3491,7 +3491,7 @@ parse_http_port_option(http_port_list * s, char *token)
         if (Ip::EnableIpv6)
             debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
         if ( !s->s.SetIPv4() ) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot NAT intercept (protocol does not provide NAT)" << s->s );
             self_destruct();
         }
     } else if (strcmp(token, "tproxy") == 0) {
