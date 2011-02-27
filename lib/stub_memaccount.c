@@ -5,8 +5,8 @@
 /* Stub function for programs not implementing statMemoryAccounted */
 #include "config.h"
 #include "util.h"
-int
+double
 statMemoryAccounted(void)
 {
-    return -1;
+    return -1.0;
 }

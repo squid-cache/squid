@@ -445,14 +445,6 @@ info_get(StoreEntry * sentry)
     struct rusage rusage;
     double cputime;
     double runtime;
-#if HAVE_MSTATS && HAVE_GNUMALLOC_H
-
-    struct mstats ms;
-#elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
-
-    struct mallinfo mp;
-    long t;
-#endif
 
     runtime = tvSubDsec(squid_start, current_time);
 
@@ -624,72 +616,73 @@ info_get(StoreEntry * sentry)
 
 #if HAVE_MSTATS && HAVE_GNUMALLOC_H
 
-    ms = mstats();
+
+    struct mstats ms = mstats();
 
     storeAppendPrintf(sentry, "Memory usage for %s via mstats():\n",APP_SHORTNAME);
 
-    storeAppendPrintf(sentry, "\tTotal space in arena:  %6ld KB\n",
-                      (long)(ms.bytes_total >> 10));
+    storeAppendPrintf(sentry, "\tTotal space in arena:  %6.0f KB\n",
+                      static_cast<double>(ms.bytes_total / 1024));
 
-    storeAppendPrintf(sentry, "\tTotal free:            %6ld KB %d%%\n",
-                      (long)(ms.bytes_free >> 10), Math::intPercent(ms.bytes_free, ms.bytes_total));
+    storeAppendPrintf(sentry, "\tTotal free:            %6.0f KB %.0f%%\n",
+                      static_cast<double>(ms.bytes_free / 1024),
+                      Math::doublePercent(static_cast<double>(ms.bytes_free), static_cast<double>(ms.bytes_total)));
 
 #elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
 
-    mp = mallinfo();
+    struct mallinfo mp = mallinfo();
 
     storeAppendPrintf(sentry, "Memory usage for %s via mallinfo():\n",APP_SHORTNAME);
 
-    storeAppendPrintf(sentry, "\tTotal space in arena:  %6ld KB\n",
-                      (long)(mp.arena >> 10));
+    storeAppendPrintf(sentry, "\tTotal space in arena:  %6.0f KB\n",
+                      static_cast<double>(mp.arena / 1024));
 
-    storeAppendPrintf(sentry, "\tOrdinary blocks:       %6ld KB %6ld blks\n",
-                      (long)(mp.uordblks >> 10), (long)mp.ordblks);
+    storeAppendPrintf(sentry, "\tOrdinary blocks:       %6.0f KB %6.0f blks\n",
+                      static_cast<double>(mp.uordblks / 1024), static_cast<double>(mp.ordblks));
 
-    storeAppendPrintf(sentry, "\tSmall blocks:          %6ld KB %6ld blks\n",
-                      (long)(mp.usmblks >> 10), (long)mp.smblks);
+    storeAppendPrintf(sentry, "\tSmall blocks:          %6.0f KB %6.0f blks\n",
+                      static_cast<double>(mp.usmblks / 1024), static_cast<double>(mp.smblks));
 
-    storeAppendPrintf(sentry, "\tHolding blocks:        %6ld KB %6ld blks\n",
-                      (long)(mp.hblkhd >> 10), (long)mp.hblks);
+    storeAppendPrintf(sentry, "\tHolding blocks:        %6.0f KB %6.0f blks\n",
+                      static_cast<double>(mp.hblkhd / 1024), static_cast<double>(mp.hblks));
 
-    storeAppendPrintf(sentry, "\tFree Small blocks:     %6ld KB\n",
-                      (long)(mp.fsmblks >> 10));
+    storeAppendPrintf(sentry, "\tFree Small blocks:     %6.0f KB\n",
+                      static_cast<double>(mp.fsmblks / 1024));
 
-    storeAppendPrintf(sentry, "\tFree Ordinary blocks:  %6ld KB\n",
-                      (long)(mp.fordblks >> 10));
+    storeAppendPrintf(sentry, "\tFree Ordinary blocks:  %6.0f KB\n",
+                      static_cast<double>(mp.fordblks / 1024));
 
-    t = mp.uordblks + mp.usmblks + mp.hblkhd;
+    double t = mp.uordblks + mp.usmblks + mp.hblkhd;
 
-    storeAppendPrintf(sentry, "\tTotal in use:          %6ld KB %d%%\n",
-                      (long)(t >> 10), Math::intPercent(t, mp.arena + mp.hblkhd));
+    storeAppendPrintf(sentry, "\tTotal in use:          %6.0f KB %.0f%%\n",
+                      (t / 1024), Math::doublePercent(t, static_cast<double>(mp.arena + mp.hblkhd)));
 
     t = mp.fsmblks + mp.fordblks;
 
-    storeAppendPrintf(sentry, "\tTotal free:            %6ld KB %d%%\n",
-                      (long)(t >> 10), Math::intPercent(t, mp.arena + mp.hblkhd));
+    storeAppendPrintf(sentry, "\tTotal free:            %6.0f KB %.0f%%\n",
+                      (t / 1024), Math::doublePercent(t, static_cast<double>(mp.arena + mp.hblkhd)));
 
     t = mp.arena + mp.hblkhd;
 
-    storeAppendPrintf(sentry, "\tTotal size:            %6ld KB\n",
-                      (long)(t >> 10));
+    storeAppendPrintf(sentry, "\tTotal size:            %6.0f KB\n", (t / 1024));
 
 #if HAVE_STRUCT_MALLINFO_MXFAST
 
-    storeAppendPrintf(sentry, "\tmax size of small blocks:\t%d\n", mp.mxfast);
+    storeAppendPrintf(sentry, "\tmax size of small blocks:\t%.0f\n", static_cast<double>(mp.mxfast));
 
-    storeAppendPrintf(sentry, "\tnumber of small blocks in a holding block:\t%ld\n",
-                      (long)mp.nlblks);
+    storeAppendPrintf(sentry, "\tnumber of small blocks in a holding block:\t%6.0f\n",
+                      static_cast<double>(mp.nlblks));
 
-    storeAppendPrintf(sentry, "\tsmall block rounding factor:\t%ld\n", (long)mp.grain);
+    storeAppendPrintf(sentry, "\tsmall block rounding factor:\t%.0f\n", static_cast<double>(mp.grain));
 
-    storeAppendPrintf(sentry, "\tspace (including overhead) allocated in ord. blks:\t%ld\n",
-                      (long)mp.uordbytes);
+    storeAppendPrintf(sentry, "\tspace (including overhead) allocated in ord. blks:\t%.0f\n",
+                      static_cast<double>(mp.uordbytes));
 
-    storeAppendPrintf(sentry, "\tnumber of ordinary blocks allocated:\t%ld\n",
-                      (long)mp.allocated);
+    storeAppendPrintf(sentry, "\tnumber of ordinary blocks allocated:\t%.0f\n",
+                      static_cast<double>(mp.allocated));
 
-    storeAppendPrintf(sentry, "\tbytes used in maintaining the free tree:\t%ld\n",
-                      (long)mp.treeoverhead);
+    storeAppendPrintf(sentry, "\tbytes used in maintaining the free tree:\t%.0f\n",
+                      static_cast<double>(mp.treeoverhead));
 
 #endif /* HAVE_STRUCT_MALLINFO_MXFAST */
 #endif /* HAVE_MALLINFO */
@@ -698,13 +691,13 @@ info_get(StoreEntry * sentry)
 
 #if !(HAVE_MSTATS && HAVE_GNUMALLOC_H) && HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
 
-    storeAppendPrintf(sentry, "\tTotal accounted:       %6ld KB %3d%%\n",
-                      (long)(statMemoryAccounted() >> 10), Math::intPercent(statMemoryAccounted(), t));
+    storeAppendPrintf(sentry, "\tTotal accounted:       %6.0f KB %.0f%%\n",
+                      (statMemoryAccounted() / 1024), Math::doublePercent(statMemoryAccounted(), t));
 
 #else
 
-    storeAppendPrintf(sentry, "\tTotal accounted:       %6ld KB\n",
-                      (long)(statMemoryAccounted() >> 10));
+    storeAppendPrintf(sentry, "\tTotal accounted:       %6.0f KB\n",
+                      (statMemoryAccounted() / 1024));
 
 #endif
     {
@@ -712,15 +705,15 @@ info_get(StoreEntry * sentry)
         memPoolGetGlobalStats(&mp_stats);
 #if !(HAVE_MSTATS && HAVE_GNUMALLOC_H) && HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
 
-        storeAppendPrintf(sentry, "\tmemPool accounted:     %6ld KB %3d%%\n",
-                          (long)(mp_stats.TheMeter->alloc.level >> 10),
-                          Math::intPercent(mp_stats.TheMeter->alloc.level, t));
+        storeAppendPrintf(sentry, "\tmemPool accounted:     %6.0f KB %.0f%%\n",
+                          static_cast<double>(mp_stats.TheMeter->alloc.level / 1024),
+                          Math::doublePercent(static_cast<double>(mp_stats.TheMeter->alloc.level), t));
 
-        int iFree = 0;
+        double iFree = 0;
         if (t >= mp_stats.TheMeter->alloc.level)
-            iFree = Math::intPercent((t - mp_stats.TheMeter->alloc.level), t);
-        storeAppendPrintf(sentry, "\tmemPool unaccounted:   %6ld KB %3d%%\n",
-                          (long)((t - mp_stats.TheMeter->alloc.level) >> 10), iFree);
+            iFree = Math::doublePercent((t - static_cast<double>(mp_stats.TheMeter->alloc.level)), t);
+        storeAppendPrintf(sentry, "\tmemPool unaccounted:   %6.0f KB %.0f%%\n",
+                          static_cast<double>((t - mp_stats.TheMeter->alloc.level) / 1024), iFree);
 #endif
 
         storeAppendPrintf(sentry, "\tmemPoolAlloc calls: %9.0f\n",
@@ -1774,8 +1767,8 @@ statGraphDump(StoreEntry * e)
 
 #endif /* STAT_GRAPHS */
 
-int
+double
 statMemoryAccounted(void)
 {
-    return memPoolsTotalAllocated();
+    return static_cast<double>(memPoolsTotalAllocated());
 }

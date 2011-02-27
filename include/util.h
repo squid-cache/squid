@@ -150,7 +150,7 @@ extern void gb_flush(gb_t *);  /* internal, do not use this */
 /*
  * Returns the amount of known allocated memory
  */
-int statMemoryAccounted(void);
+double statMemoryAccounted(void);
 
 /* Windows Port */
 /* win32lib.c */

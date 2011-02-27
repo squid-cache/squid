@@ -365,9 +365,9 @@ malloc_number(void *p)
 static void
 xmalloc_show_trace(void *p, int sign)
 {
-    int statMemoryAccounted();
-    static size_t last_total = 0, last_accounted = 0, last_mallinfo = 0;
-    size_t accounted = statMemoryAccounted();
+    static double last_accounted = 0;
+    static size_t last_total = 0, last_mallinfo = 0;
+    double accounted = statMemoryAccounted();
     size_t mi = 0;
     size_t sz;
 #if HAVE_MALLINFO
@@ -381,10 +381,10 @@ xmalloc_show_trace(void *p, int sign)
     xmalloc_count += sign > 0;
 
     if (xmalloc_trace) {
-        fprintf(stderr, "%c%8p size=%5d/%d acc=%5d/%d mallinfo=%5d/%d %s:%d %s",
+        fprintf(stderr, "%c%8p size=%5d/%d acc=%5.0f/%.0f mallinfo=%5d/%d %s:%d %s",
                 sign > 0 ? '+' : '-', p,
                 (int) xmalloc_total - last_total, (int) xmalloc_total,
-                (int) accounted - last_accounted, (int) accounted,
+                accounted - last_accounted, accounted,
                 (int) mi - last_mallinfo, (int) mi,
                 xmalloc_file, xmalloc_line, xmalloc_func);
 
