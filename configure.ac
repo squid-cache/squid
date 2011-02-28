@@ -1024,7 +1024,7 @@ AC_ARG_ENABLE(cachemgr-hostname,
 
 AC_ARG_ENABLE(eui,
   AS_HELP_STRING([--disable-eui],
-                 [Enable use of ARP / MAC/ EUI (ether address)]), [
+                 [Disable use of ARP / MAC/ EUI (ether address)]), [
 SQUID_YESNO([$enableval],[--disable-eui expects no arguments])
 ])
 if test "x${enable_eui:=yes}" = "xyes" ; then
