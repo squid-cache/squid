@@ -2511,6 +2511,7 @@ AC_MSG_NOTICE([libcap2 headers are ok: $squid_cv_sys_capability_works])
 dnl Check for needed libraries
 AC_SEARCH_LIBS([gethostbyname],[nsl resolv bind])
 AC_SEARCH_LIBS([res_init],[resolv])
+AC_SEARCH_LIBS([__res_search],[resolv])
 AC_SEARCH_LIBS([bind],[socket])
 AC_SEARCH_LIBS([opcom_stack_trace],[opcom_stack])
 AC_SEARCH_LIBS([strlcpy], [bsd])
