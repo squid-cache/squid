@@ -9,7 +9,8 @@
  * Defines are provided short-term for legacy code. These will disappear soon.
  */
 
-namespace Comm {
+namespace Comm
+{
 
 /// Initialize the module on Squid startup
 extern void SelectLoopInit(void);
