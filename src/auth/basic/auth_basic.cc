@@ -160,7 +160,6 @@ AuthBasicConfig::done()
 BasicUser::~BasicUser()
 {
     safe_free(passwd);
-    safe_free(cleartext);
 }
 
 static void
@@ -301,109 +300,46 @@ authBasicAuthUserFindUsername(const char *username)
     return NULL;
 }
 
-void
-BasicUser::deleteSelf() const
-{
-    delete this;
-}
-
 BasicUser::BasicUser(AuthConfig *aConfig) :
         AuthUser(aConfig),
         passwd(NULL),
         auth_queue(NULL),
-        cleartext(NULL),
-        currentRequest(NULL),
-        httpAuthHeader(NULL)
+        currentRequest(NULL)
 {}
 
-bool
-BasicUser::decodeCleartext()
+char *
+AuthBasicConfig::decodeCleartext(const char *httpAuthHeader)
 {
-    char *sent_auth = NULL;
+    const char *proxy_auth = httpAuthHeader;
 
-    /* username and password */
-    sent_auth = xstrdup(httpAuthHeader);
+    /* trim BASIC from string */
+    while (xisgraph(*proxy_auth))
+        proxy_auth++;
+
+    /* Trim leading whitespace before decoding */
+    while (xisspace(*proxy_auth))
+        proxy_auth++;
 
     /* Trim trailing \n before decoding */
-    strtok(sent_auth, "\n");
+    // XXX: really? is the \n actually still there? does the header parse not drop it?
+    char *eek = xstrdup(proxy_auth);
+    strtok(eek, "\n");
+    char *cleartext = uudecode(eek);
+    safe_free(eek);
 
-    cleartext = uudecode(sent_auth);
+    if (cleartext) {
+        /*
+         * Don't allow NL or CR in the credentials.
+         * Oezguer Kesim <oec@codeblau.de>
+         */
+        debugs(29, 9, HERE << "'" << cleartext << "'");
 
-    safe_free(sent_auth);
-
-    if (!cleartext)
-        return false;
-
-    /*
-     * Don't allow NL or CR in the credentials.
-     * Oezguer Kesim <oec@codeblau.de>
-     */
-    debugs(29, 9, HERE << "'" << cleartext << "'");
-
-    if (strcspn(cleartext, "\r\n") != strlen(cleartext)) {
-        debugs(29, 1, HERE << "bad characters in authorization header '" << httpAuthHeader << "'");
-        safe_free(cleartext);
-        return false;
-    }
-    return true;
-}
-
-void
-BasicUser::extractUsername()
-{
-    char * seperator = strchr(cleartext, ':');
-
-    if (seperator == NULL) {
-        username(cleartext);
-    } else {
-        /* terminate the username */
-        *seperator = '\0';
-
-        username(cleartext);
-
-        /* replace the colon so we can find the password */
-        *seperator = ':';
-    }
-
-    if (!static_cast<AuthBasicConfig*>(config)->casesensitive)
-        Tolower((char *)username());
-}
-
-void
-BasicUser::extractPassword()
-{
-    passwd = strchr(cleartext, ':');
-
-    if (passwd == NULL) {
-        debugs(29, 4, HERE << "no password in proxy authorization header '" << httpAuthHeader << "'");
-        passwd = NULL;
-        currentRequest->setDenyMessage("no password was present in the HTTP [proxy-]authorization header. This is most likely a browser bug");
-    } else {
-        ++passwd;
-        if (*passwd == '\0') {
-            debugs(29, 4, HERE << "Disallowing empty password,user is '" << username() << "'");
-            passwd = NULL;
-            currentRequest->setDenyMessage("Request denied because you provided an empty password. Users MUST have a password.");
-        } else {
-            passwd = xstrndup(passwd, USER_IDENT_SZ);
+        if (strcspn(cleartext, "\r\n") != strlen(cleartext)) {
+            debugs(29, DBG_IMPORTANT, "WARNING: Bad characters in authorization header '" << httpAuthHeader << "'");
+            safe_free(cleartext);
         }
     }
-}
-
-void
-BasicUser::decode(char const *proxy_auth, AuthUserRequest::Pointer auth_user_request)
-{
-    currentRequest = auth_user_request;
-    httpAuthHeader = proxy_auth;
-    if (decodeCleartext()) {
-        extractUsername();
-        extractPassword();
-    }
-    currentRequest = NULL; // AYJ: why ?? we have only just filled it with data!
-    // so that we dont have circular UserRequest->User->UseRequest loops persisting outside the auth decode sequence????
-
-    // okay we dont need the original buffer string any more.
-    httpAuthHeader = NULL;
+    return cleartext;
 }
 
 bool
@@ -414,26 +350,6 @@ BasicUser::valid() const
     if (passwd == NULL)
         return false;
     return true;
-}
-
-/**
- * Generate a duplicate of the bad credentials before clearing the working copy.
- */
-void
-BasicUser::makeLoggingInstance(AuthUserRequest::Pointer auth_user_request)
-{
-    if (username()) {
-        /* log the username */
-        debugs(29, 9, HERE << "Creating new user for logging '" << username() << "'");
-        /* new scheme data */
-        AuthUser::Pointer basic_auth = dynamic_cast<AuthUser*>(new BasicUser(config));
-        auth_user_request->user(basic_auth);
-        /* save the credentials */
-        basic_auth->username(username());
-        username(NULL);
-        /* set the auth_user type */
-        basic_auth->auth_type = AUTH_BROKEN;
-    }
 }
 
 void
@@ -469,43 +385,70 @@ AuthBasicConfig::decode(char const *proxy_auth)
 {
     AuthUserRequest::Pointer auth_user_request = dynamic_cast<AuthUserRequest*>(new AuthBasicUserRequest);
     /* decode the username */
-    /* trim BASIC from string */
 
-    while (xisgraph(*proxy_auth))
-        proxy_auth++;
+    // retrieve the cleartext (in a dynamically allocated char*)
+    char *cleartext = decodeCleartext(proxy_auth);
 
-    /* decoder copy. maybe temporary. maybe added to hash if none already existing. */
-    BasicUser *local_basic = new BasicUser(this);
+    // empty header? no auth details produced...
+    if (!cleartext)
+        return auth_user_request;
 
-    /* Trim leading whitespace before decoding */
-    while (xisspace(*proxy_auth))
-        proxy_auth++;
+    AuthUser::Pointer lb;
+    /* permitted because local_basic is purely local function scope. */
+    BasicUser *local_basic = NULL;
 
-    local_basic->decode(proxy_auth, auth_user_request);
+    char *seperator = strchr(cleartext, ':');
+
+    lb = local_basic = new BasicUser(this);
+    if (seperator == NULL) {
+        local_basic->username(cleartext);
+    } else {
+        /* terminate the username */
+        *seperator = '\0';
+        local_basic->username(cleartext);
+        local_basic->passwd = xstrdup(seperator+1);
+    }
+
+    if (!casesensitive)
+        Tolower((char *)local_basic->username());
+
+    if (local_basic->passwd == NULL) {
+        debugs(29, 4, HERE << "no password in proxy authorization header '" << proxy_auth << "'");
+        auth_user_request->setDenyMessage("no password was present in the HTTP [proxy-]authorization header. This is most likely a browser bug");
+    } else {
+        if (local_basic->passwd[0] == '\0') {
+            debugs(29, 4, HERE << "Disallowing empty password. User is '" << local_basic->username() << "'");
+            safe_free(local_basic->passwd);
+            auth_user_request->setDenyMessage("Request denied because you provided an empty password. Users MUST have a password.");
+        }
+    }
+
+    xfree(cleartext);
 
     if (!local_basic->valid()) {
-        local_basic->makeLoggingInstance(auth_user_request);
+        lb->auth_type = AUTH_BROKEN;
+        auth_user_request->user(lb);
         return auth_user_request;
     }
 
     /* now lookup and see if we have a matching auth_user structure in memory. */
     AuthUser::Pointer auth_user;
 
-    if ((auth_user = authBasicAuthUserFindUsername(local_basic->username())) == NULL) {
+    if ((auth_user = authBasicAuthUserFindUsername(lb->username())) == NULL) {
         /* the user doesn't exist in the username cache yet */
         /* save the credentials */
-        debugs(29, 9, HERE << "Creating new user '" << local_basic->username() << "'");
+        debugs(29, 9, HERE << "Creating new user '" << lb->username() << "'");
         /* set the auth_user type */
-        local_basic->auth_type = AUTH_BASIC;
+        lb->auth_type = AUTH_BASIC;
         /* current time for timeouts */
-        local_basic->expiretime = current_time.tv_sec;
+        lb->expiretime = current_time.tv_sec;
 
         /* this basic_user struct is the 'lucky one' to get added to the username cache */
         /* the requests after this link to the basic_user */
         /* store user in hash */
-        local_basic->addToNameCache();
+        lb->addToNameCache();
 
-        auth_user = dynamic_cast<AuthUser*>(local_basic);
+        auth_user = lb;
         assert(auth_user != NULL);
     } else {
         /* replace the current cached password with the new one */
