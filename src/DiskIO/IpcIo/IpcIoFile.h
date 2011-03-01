@@ -7,6 +7,7 @@
 #include "DiskIO/IORequestor.h"
 #include "ipc/forward.h"
 #include "ipc/Queue.h"
+#include <list>
 #include <map>
 
 // TODO: expand to all classes
@@ -79,6 +80,7 @@ private:
 
     static void Notify(const int peerId);
 
+    static void OpenTimeout(void *const param);
     static void CheckTimeouts(void *const param);
     void checkTimeouts();
     void scheduleTimeoutCheck();
@@ -90,8 +92,8 @@ private:
     static void DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo);
 
 private:
-    typedef FewToOneBiQueue<IpcIoMsg> DiskerQueue;
-    typedef OneToOneBiQueue<IpcIoMsg> WorkerQueue;
+    typedef FewToOneBiQueue DiskerQueue;
+    typedef OneToOneBiQueue WorkerQueue;
 
     const String dbName; ///< the name of the file we are managing
     int diskId; ///< the process ID of the disker we talk to
@@ -111,8 +113,14 @@ private:
     RequestMap *newerRequests; ///< newer requests (map2 or map1)
     bool timeoutCheckScheduled; ///< we expect a CheckTimeouts() call
 
-    typedef std::map<int, IpcIoFile*> IpcIoFiles; ///< maps diskerId to IpcIoFile
-    static IpcIoFiles ipcIoFiles;
+    static const double Timeout; ///< timeout value in seconds
+
+    typedef std::list<Pointer> IpcIoFileList;
+    static IpcIoFileList WaitingForOpen; ///< pending open requests
+
+    ///< maps diskerId to IpcIoFile, cleared in destructor
+    typedef std::map<int, IpcIoFile*> IpcIoFilesMap;
+    static IpcIoFilesMap IpcIoFiles;
 
     CBDATA_CLASS2(IpcIoFile);
 };
@@ -128,8 +136,7 @@ public:
     void completeIo(const IpcIoMsg *const response);
 
 public:
-    IpcIoFile::Pointer file; ///< the file object waiting for the response
-    unsigned int id; ///< request id
+    const IpcIoFile::Pointer file; ///< the file object waiting for the response
     ReadRequest *readRequest; ///< set if this is a read requests
     WriteRequest *writeRequest; ///< set if this is a write request
 

@@ -12,6 +12,7 @@ libipc_la_SOURCES = \
 	Kids.cc \
 	Kids.h \
 	Messages.h \
+	Queue.cc \
 	Queue.h \
 	StartListening.cc \
 	StartListening.h \
