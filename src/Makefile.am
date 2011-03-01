@@ -536,6 +536,7 @@ nodist_squid_SOURCES = \
 	$(BUILT_SOURCES)
 
 squid_LDADD = \
+	$(DISK_LIBS) \
 	$(COMMON_LIBS) \
 	comm/libcomm.la \
 	eui/libeui.la \
@@ -544,7 +545,6 @@ squid_LDADD = \
 	$(XTRA_OBJS) \
 	$(DISK_LINKOBJS) \
 	$(REPL_OBJS) \
-	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
 	$(CRYPTLIB) \
 	$(REGEXLIB) \

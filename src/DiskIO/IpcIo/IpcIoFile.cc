@@ -18,26 +18,30 @@
 CBDATA_CLASS_INIT(IpcIoFile);
 
 IpcIoFile::DiskerQueue *IpcIoFile::diskerQueue = NULL;
-IpcIoFile::IpcIoFiles IpcIoFile::ipcIoFiles;
+const double IpcIoFile::Timeout = 7;
+IpcIoFile::IpcIoFileList IpcIoFile::WaitingForOpen;
+IpcIoFile::IpcIoFilesMap IpcIoFile::IpcIoFiles;
 
 static bool DiskerOpen(const String &path, int flags, mode_t mode);
 static void DiskerClose(const String &path);
 
 
 IpcIoFile::IpcIoFile(char const *aDb):
-    dbName(aDb),
-    diskId(-1),
-    workerQueue(NULL),
-    error_(false),
-    lastRequestId(0),
-    olderRequests(&requestMap1),
-    newerRequests(&requestMap2),
+    dbName(aDb), diskId(-1), workerQueue(NULL), error_(false), lastRequestId(0),
+    olderRequests(&requestMap1), newerRequests(&requestMap2),
     timeoutCheckScheduled(false)
 {
 }
 
 IpcIoFile::~IpcIoFile()
 {
+    if (diskId >= 0) {
+        const IpcIoFilesMap::iterator i = IpcIoFiles.find(diskId);
+        // XXX: warn and continue?
+        Must(i != IpcIoFiles.end());
+        Must(i->second == this);
+        IpcIoFiles.erase(i);
+    }
 }
 
 void
@@ -53,8 +57,12 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
             return;
 
         // XXX: make capacity configurable
-        diskerQueue = new DiskerQueue(dbName.termedBuf(), Config.workers, 1024);
-        ipcIoFiles.insert(std::make_pair(KidIdentifier, this));
+        diskerQueue =
+            new DiskerQueue(dbName, Config.workers, sizeof(IpcIoMsg), 1024);
+        diskId = KidIdentifier;
+        const bool inserted =
+            IpcIoFiles.insert(std::make_pair(diskId, this)).second;
+        Must(inserted);
 
         Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
         ann.strand.tag = dbName;
@@ -68,15 +76,16 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 
     Ipc::StrandSearchRequest request;
     request.requestorId = KidIdentifier;
-    request.data = this;
     request.tag = dbName;
 
     Ipc::TypedMsgHdr msg;
     request.pack(msg);
     Ipc::SendMessage(Ipc::coordinatorAddr, msg);
 
-    IpcIoPendingRequest *const pending = new IpcIoPendingRequest(this);
-    trackPendingRequest(*pending);
+    WaitingForOpen.push_back(this);
+
+    eventAdd("IpcIoFile::OpenTimeout", &IpcIoFile::OpenTimeout,
+             this, Timeout, 0, false); // "this" pointer is used as id
 }
 
 void
@@ -84,18 +93,16 @@ IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response) {
     Must(diskId < 0); // we do not know our disker yet
     Must(!workerQueue);
 
-    // contain single pending open request at this time
-    newerRequests->clear();
-    olderRequests->clear();
-
     if (!response) {
         debugs(79,1, HERE << "error: timeout");
         error_ = true;
     } else {
         diskId = response->strand.kidId;
         if (diskId >= 0) {
-            workerQueue = DiskerQueue::Attach(dbName.termedBuf(), KidIdentifier - 1);
-            ipcIoFiles.insert(std::make_pair(diskId, this));
+            workerQueue = DiskerQueue::Attach(dbName, KidIdentifier - 1);
+            const bool inserted =
+                IpcIoFiles.insert(std::make_pair(diskId, this)).second;
+            Must(inserted);
         } else {
             error_ = true;
             debugs(79,1, HERE << "error: no disker claimed " << dbName);
@@ -251,7 +258,7 @@ IpcIoFile::ioInProgress() const
 void
 IpcIoFile::trackPendingRequest(IpcIoPendingRequest &pending)
 {
-    newerRequests->insert(std::make_pair(pending.id, &pending));
+    newerRequests->insert(std::make_pair(lastRequestId, &pending));
     if (!timeoutCheckScheduled)
         scheduleTimeoutCheck();
 }
@@ -266,7 +273,7 @@ IpcIoFile::push(IpcIoPendingRequest &pending)
     Must(pending.readRequest || pending.writeRequest);
 
     IpcIoMsg ipcIo;
-    ipcIo.requestId = pending.id;
+    ipcIo.requestId = lastRequestId;
     if (pending.readRequest) {
         ipcIo.command = IpcIo::cmdRead;
         ipcIo.offset = pending.readRequest->offset;
@@ -297,8 +304,18 @@ void
 IpcIoFile::HandleOpenResponse(const Ipc::StrandSearchResponse &response)
 {
     debugs(47, 7, HERE << "coordinator response to open request");
-    Must(response.data);
-    reinterpret_cast<IpcIoFile*>(response.data)->openCompleted(&response);
+    for (IpcIoFileList::iterator i = WaitingForOpen.begin();
+         i != WaitingForOpen.end(); ++i) {
+        if (response.strand.tag == (*i)->dbName) {
+            (*i)->openCompleted(&response);
+            WaitingForOpen.erase(i);
+            return;
+        }
+    }
+
+    debugs(47, 4, HERE << "LATE disker response to open for " <<
+           response.strand.tag);
+    // nothing we can do about it; completeIo() has been called already
 }
 
 void
@@ -346,9 +363,27 @@ IpcIoFile::HandleNotification(const Ipc::TypedMsgHdr &msg)
         DiskerHandleRequests();
     else {
         const int diskId = msg.getInt();
-        const IpcIoFiles::const_iterator i = ipcIoFiles.find(diskId);
-        Must(i != ipcIoFiles.end()); // XXX: warn and continue?
+        const IpcIoFilesMap::const_iterator i = IpcIoFiles.find(diskId);
+        Must(i != IpcIoFiles.end()); // XXX: warn and continue?
         i->second->handleResponses();
+    }
+}
+
+/// handles open request timeout
+void
+IpcIoFile::OpenTimeout(void *const param)
+{
+    Must(param);
+    // the pointer is used for comparison only and not dereferenced
+    const IpcIoFile *const ipcIoFile =
+        reinterpret_cast<const IpcIoFile *>(param);
+    for (IpcIoFileList::iterator i = WaitingForOpen.begin();
+         i != WaitingForOpen.end(); ++i) {
+        if (*i == ipcIoFile) {
+            (*i)->openCompleted(NULL);
+            WaitingForOpen.erase(i);
+            break;
+        }
     }
 }
 
@@ -357,7 +392,11 @@ void
 IpcIoFile::CheckTimeouts(void *const param)
 {
     Must(param);
-    reinterpret_cast<IpcIoFile*>(param)->checkTimeouts();
+    const int diskId = reinterpret_cast<uintptr_t>(param);
+    debugs(47, 7, HERE << "diskId=" << diskId);
+    const IpcIoFilesMap::const_iterator i = IpcIoFiles.find(diskId);
+    if (i != IpcIoFiles.end())
+        i->second->checkTimeouts();
 }
 
 void
@@ -370,9 +409,9 @@ IpcIoFile::checkTimeouts()
     for (RMCI i = olderRequests->begin(); i != olderRequests->end(); ++i) {
         IpcIoPendingRequest *const pending = i->second;
 
-        const int requestId = i->first;
+        const unsigned int requestId = i->first;
         debugs(47, 7, HERE << "disker timeout; ipcIo" <<
-               KidIdentifier << '.' << diskId << '.' << requestId);
+               KidIdentifier << '.' << requestId);
 
         pending->completeIo(NULL); // no response
         delete pending; // XXX: leaking if throwing
@@ -388,10 +427,9 @@ IpcIoFile::checkTimeouts()
 void
 IpcIoFile::scheduleTimeoutCheck()
 {
-    // we check all older requests at once so some may be wait for 2*timeout
-    const double timeout = 7; // in seconds
+    // we check all older requests at once so some may be wait for 2*Timeout
     eventAdd("IpcIoFile::CheckTimeouts", &IpcIoFile::CheckTimeouts,
-             this, timeout, 0, false);
+             reinterpret_cast<void *>(diskId), Timeout, 0, false);
     timeoutCheckScheduled = true;
 }
 
@@ -440,16 +478,14 @@ IpcIoMsg::IpcIoMsg():
 IpcIoPendingRequest::IpcIoPendingRequest(const IpcIoFile::Pointer &aFile):
     file(aFile), readRequest(NULL), writeRequest(NULL)
 {
+    Must(file != NULL);
     if (++file->lastRequestId == 0) // don't use zero value as requestId
         ++file->lastRequestId;
-    id = file->lastRequestId;
 }
 
 void
 IpcIoPendingRequest::completeIo(const IpcIoMsg *const response)
 {
-    Must(file != NULL);
-
     if (readRequest)
         file->readCompleted(readRequest, response);
     else
