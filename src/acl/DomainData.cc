@@ -74,8 +74,8 @@ splaystrcmp (T&l, T&r)
 static int
 aclHostDomainCompare( char *const &a, char * const &b)
 {
-    const char *h = (const char *)a;
-    const char *d = (const char *)b;
+    const char *h = static_cast<const char *>(a);
+    const char *d = static_cast<const char *>(b);
     return matchDomainName(h, d);
 }
 
@@ -86,8 +86,8 @@ template<class T>
 int
 aclDomainCompare(T const &a, T const &b)
 {
-    char * const d1 = (char *const)b;
-    char * const d2 = (char *const )a;
+    char * const d1 = static_cast<char *>(b);
+    char * const d2 = static_cast<char *>(a);
     int ret;
     ret = aclHostDomainCompare(d1, d2);
 
