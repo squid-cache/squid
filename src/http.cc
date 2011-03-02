@@ -717,14 +717,14 @@ HttpStateData::processReplyHeader()
 
     newrep->removeStaleWarnings();
 
-    if (newrep->sline.protocol == PROTO_HTTP && newrep->sline.status >= 100 && newrep->sline.status < 200) {
+    if (newrep->sline.protocol == AnyP::PROTO_HTTP && newrep->sline.status >= 100 && newrep->sline.status < 200) {
         handle1xx(newrep);
         ctx_exit(ctx);
         return;
     }
 
     flags.chunked = 0;
-    if (newrep->sline.protocol == PROTO_HTTP && newrep->header.chunked()) {
+    if (newrep->sline.protocol == AnyP::PROTO_HTTP && newrep->header.chunked()) {
         flags.chunked = 1;
         httpChunkDecoder = new ChunkedCodingParser;
     }
@@ -1816,7 +1816,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* append Front-End-Https */
     if (flags.front_end_https) {
-        if (flags.front_end_https == 1 || request->protocol == PROTO_HTTPS)
+        if (flags.front_end_https == 1 || request->protocol == AnyP::PROTO_HTTPS)
             hdr_out->putStr(HDR_FRONT_END_HTTPS, "On");
     }
 

@@ -154,7 +154,9 @@ class DnsLookupDetails;
 typedef void FQDNH(const char *, const DnsLookupDetails &details, void *);
 typedef void IDCB(const char *ident, void *data);
 typedef void IPH(const ipcache_addrs *, const DnsLookupDetails &details, void *);
-typedef void IRCB(struct peer *, peer_t, protocol_t, void *, void *data);
+
+#include "anyp/ProtocolType.h"
+typedef void IRCB(struct peer *, peer_t, AnyP::ProtocolType, void *, void *data);
 
 class FwdServer;
 typedef void PSC(FwdServer *, void *);

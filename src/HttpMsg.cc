@@ -38,7 +38,7 @@
 #include "MemBuf.h"
 
 HttpMsg::HttpMsg(http_hdr_owner_type owner): header(owner),
-        cache_control(NULL), hdr_sz(0), content_length(0), protocol(PROTO_NONE),
+        cache_control(NULL), hdr_sz(0), content_length(0), protocol(AnyP::PROTO_NONE),
         pstate(psReadyToParseStartLine), lock_count(0)
 {}
 
