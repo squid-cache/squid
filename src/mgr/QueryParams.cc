@@ -11,7 +11,6 @@
 #include "mgr/IntParam.h"
 #include "mgr/StringParam.h"
 #include "mgr/QueryParams.h"
-#include <regex.h>
 
 
 Mgr::QueryParam::Pointer
