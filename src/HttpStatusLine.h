@@ -36,10 +36,9 @@
 class Packer;
 class String;
 
-/* for http_status and protocol_t */
-#include "enums.h"
-
+#include "HttpStatusCode.h"
 #include "HttpVersion.h"
+#include "anyp/ProtocolType.h"
 #include "SquidString.h"
 
 /**
@@ -54,10 +53,10 @@ public:
 
     /**
      * By rights protocol name should be a constant "HTTP", with no need for this field to exist.
-     * However there are protocols which violate HTTP by sending their wn custom formats
-     * back with other protocol names (ICY streaming format being the current major problem)
+     * However there are protocols which violate HTTP by sending their own custom formats
+     * back with other protocol names (ICY streaming format being the current major problem).
      */
-    protocol_t protocol;
+    AnyP::ProtocolType protocol;
 
     HttpVersion version;     ///< breakdown of protocol version labels: 0.9 1.0 1.1
     http_status status;      ///< status code. ie 200 404

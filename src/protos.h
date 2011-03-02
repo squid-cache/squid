@@ -84,7 +84,8 @@ SQUIDCEXTERN void parse_time_t(time_t * var);
 
 SQUIDCEXTERN void clientdbInit(void);
 
-SQUIDCEXTERN void clientdbUpdate(const Ip::Address &, log_type, protocol_t, size_t);
+#include "anyp/ProtocolType.h"
+SQUIDCEXTERN void clientdbUpdate(const Ip::Address &, log_type, AnyP::ProtocolType, size_t);
 
 SQUIDCEXTERN int clientdbCutoffDenied(const Ip::Address &);
 void clientdbDump(StoreEntry *);
@@ -614,7 +615,7 @@ SQUIDCEXTERN void unlinkdClose(void);
 SQUIDCEXTERN void unlinkdUnlink(const char *);
 #endif
 
-SQUIDCEXTERN protocol_t urlParseProtocol(const char *, const char *e = NULL);
+SQUIDCEXTERN AnyP::ProtocolType urlParseProtocol(const char *, const char *e = NULL);
 SQUIDCEXTERN void urlInitialize(void);
 SQUIDCEXTERN HttpRequest *urlParse(const HttpRequestMethod&, char *, HttpRequest *request = NULL);
 SQUIDCEXTERN const char *urlCanonical(HttpRequest *);
@@ -626,7 +627,7 @@ SQUIDCEXTERN char *urlRInternal(const char *host, u_short port, const char *dir,
 SQUIDCEXTERN char *urlInternal(const char *dir, const char *name);
 SQUIDCEXTERN int matchDomainName(const char *host, const char *domain);
 SQUIDCEXTERN int urlCheckRequest(const HttpRequest *);
-SQUIDCEXTERN int urlDefaultPort(protocol_t p);
+SQUIDCEXTERN int urlDefaultPort(AnyP::ProtocolType p);
 SQUIDCEXTERN char *urlHostname(const char *url);
 SQUIDCEXTERN void urlExtMethodConfigure(void);
 

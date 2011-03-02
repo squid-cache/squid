@@ -954,7 +954,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
 
         case _external_acl_format::EXT_ACL_PROTO:
-            str = ProtocolStr[request->protocol];
+            str = AnyP::ProtocolType_str[request->protocol];
             break;
 
         case _external_acl_format::EXT_ACL_PORT:
