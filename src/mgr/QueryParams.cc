@@ -15,10 +15,10 @@
 
 
 Mgr::QueryParam::Pointer
-Mgr::QueryParams::get(const String& name)
+Mgr::QueryParams::get(const String& name) const
 {
     Must(name.size() != 0);
-    Params::iterator pos = find(name);
+    Params::const_iterator pos = find(name);
     return (pos == params.end() ? NULL : pos->second);
 }
 
@@ -52,11 +52,11 @@ Mgr::QueryParams::unpack(const Ipc::TypedMsgHdr& msg)
     }
 }
 
-Mgr::QueryParams::Params::iterator
-Mgr::QueryParams::find(const String& name)
+Mgr::QueryParams::Params::const_iterator
+Mgr::QueryParams::find(const String& name) const
 {
     Must(name.size() != 0);
-    Params::iterator iter = params.begin();
+    Params::const_iterator iter = params.begin();
     for ( ; iter != params.end(); ++iter) {
         if (name.caseCmp(iter->first) == 0)
             break;

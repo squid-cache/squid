@@ -142,9 +142,8 @@ Mgr::Inquirer::applyQueryParams(const Ipc::StrandCoords& aStrands, const QueryPa
 {
     Ipc::StrandCoords strands;
 
-    Mgr::Request *cause = static_cast<Mgr::Request *>(request.getRaw());
-    QueryParam::Pointer processesParam = cause->params.queryParams.get("processes");
-    QueryParam::Pointer workersParam = cause->params.queryParams.get("workers");
+    QueryParam::Pointer processesParam = aParams.get("processes");
+    QueryParam::Pointer workersParam = aParams.get("workers");
 
     if (processesParam == NULL || workersParam == NULL) {
         if (processesParam != NULL) {
