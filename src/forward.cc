@@ -203,7 +203,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
      */
 
     if ( Config.accessList.miss && !request->client_addr.IsNoAddr() &&
-            request->protocol != AnyP::PROTO_INTERNAL && request->protocol != AnyP::PROTO_CACHEOBJ) {
+            request->protocol != AnyP::PROTO_INTERNAL && request->protocol != AnyP::PROTO_CACHE_OBJECT) {
         /**
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          */
@@ -251,7 +251,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
         internalStart(request, entry);
         return;
 
-    case AnyP::PROTO_CACHEOBJ:
+    case AnyP::PROTO_CACHE_OBJECT:
         CacheManager::GetInstance()->Start(client_fd, request, entry);
         return;
 
@@ -1086,7 +1086,7 @@ FwdState::dispatch()
             ftpStart(this);
             break;
 
-        case AnyP::PROTO_CACHEOBJ:
+        case AnyP::PROTO_CACHE_OBJECT:
 
         case AnyP::PROTO_INTERNAL:
 

@@ -583,7 +583,7 @@ HttpRequest::cacheable() const
     if (protocol == AnyP::PROTO_GOPHER)
         return gopherCachable(this);
 
-    if (protocol == AnyP::PROTO_CACHEOBJ)
+    if (protocol == AnyP::PROTO_CACHE_OBJECT)
         return false;
 
     return true;

@@ -19,7 +19,7 @@ typedef enum {
     PROTO_HTTPS,
     PROTO_GOPHER,
     PROTO_WAIS,
-    PROTO_CACHEOBJ,
+    PROTO_CACHE_OBJECT,
     PROTO_ICP,
 #if USE_HTCP
     PROTO_HTCP,
