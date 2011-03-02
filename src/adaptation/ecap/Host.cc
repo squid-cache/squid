@@ -30,18 +30,18 @@ Adaptation::Ecap::Host::Host()
     libecap::headerReferer.assignHostId(HDR_REFERER);
     libecap::headerContentLength.assignHostId(HDR_CONTENT_LENGTH);
 
-    libecap::protocolHttp.assignHostId(PROTO_HTTP);
-    libecap::protocolHttps.assignHostId(PROTO_HTTPS);
-    libecap::protocolFtp.assignHostId(PROTO_FTP);
-    libecap::protocolGopher.assignHostId(PROTO_GOPHER);
-    libecap::protocolWais.assignHostId(PROTO_WAIS);
-    libecap::protocolUrn.assignHostId(PROTO_URN);
-    libecap::protocolWhois.assignHostId(PROTO_WHOIS);
-    protocolInternal.assignHostId(PROTO_INTERNAL);
-    protocolCacheObj.assignHostId(PROTO_CACHEOBJ);
-    protocolIcp.assignHostId(PROTO_ICP);
+    libecap::protocolHttp.assignHostId(AnyP::PROTO_HTTP);
+    libecap::protocolHttps.assignHostId(AnyP::PROTO_HTTPS);
+    libecap::protocolFtp.assignHostId(AnyP::PROTO_FTP);
+    libecap::protocolGopher.assignHostId(AnyP::PROTO_GOPHER);
+    libecap::protocolWais.assignHostId(AnyP::PROTO_WAIS);
+    libecap::protocolUrn.assignHostId(AnyP::PROTO_URN);
+    libecap::protocolWhois.assignHostId(AnyP::PROTO_WHOIS);
+    protocolInternal.assignHostId(AnyP::PROTO_INTERNAL);
+    protocolCacheObj.assignHostId(AnyP::PROTO_CACHE_OBJECT);
+    protocolIcp.assignHostId(AnyP::PROTO_ICP);
 #if USE_HTCP
-    protocolHtcp.assignHostId(PROTO_HTCP);
+    protocolHtcp.assignHostId(AnyP::PROTO_HTCP);
 #endif
 }
 

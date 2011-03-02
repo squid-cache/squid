@@ -98,7 +98,7 @@ testURLScheme::testConstructprotocol_t()
     URLScheme lhs_none(AnyP::PROTO_NONE), rhs_none(AnyP::PROTO_NONE);
     CPPUNIT_ASSERT_EQUAL(lhs_none, rhs_none);
 
-    URLScheme lhs_cacheobj(AnyP::PROTO_CACHEOBJ), rhs_cacheobj(AnyP::PROTO_CACHEOBJ);
+    URLScheme lhs_cacheobj(AnyP::PROTO_CACHE_OBJECT), rhs_cacheobj(AnyP::PROTO_CACHE_OBJECT);
     CPPUNIT_ASSERT_EQUAL(lhs_cacheobj, rhs_cacheobj);
     CPPUNIT_ASSERT(lhs_none != rhs_cacheobj);
 }
@@ -125,7 +125,7 @@ testURLScheme::testEqualprotocol_t()
     CPPUNIT_ASSERT(URLScheme() == AnyP::PROTO_NONE);
     CPPUNIT_ASSERT(not (URLScheme(AnyP::PROTO_WAIS) == AnyP::PROTO_HTTP));
     CPPUNIT_ASSERT(AnyP::PROTO_HTTP == URLScheme(AnyP::PROTO_HTTP));
-    CPPUNIT_ASSERT(not (AnyP::PROTO_CACHEOBJ == URLScheme(AnyP::PROTO_HTTP)));
+    CPPUNIT_ASSERT(not (AnyP::PROTO_CACHE_OBJECT == URLScheme(AnyP::PROTO_HTTP)));
 }
 
 /*
