@@ -16,6 +16,8 @@ class String;
 /// Lockless fixed-capacity queue for a single writer and a single reader.
 class OneToOneUniQueue {
 public:
+    class Empty {};
+    class Full {};
     class ItemTooLarge {};
 
     OneToOneUniQueue(const String &id, const unsigned int maxItemSize, const int capacity);
@@ -32,9 +34,9 @@ public:
     static int Items2Bytes(const unsigned int maxItemSize, const int size);
 
     template <class Value>
-    bool pop(Value &value); ///< returns false iff the queue is empty
+    bool pop(Value &value); ///< returns true iff the queue was full
     template <class Value>
-    bool push(const Value &value); ///< returns false iff the queue is full
+    bool push(const Value &value); ///< returns true iff the queue was empty
 
 private:
     struct Shared {
@@ -57,11 +59,13 @@ private:
 /// Lockless fixed-capacity bidirectional queue for two processes.
 class OneToOneBiQueue {
 public:
+    typedef OneToOneUniQueue::Empty Empty;
+    typedef OneToOneUniQueue::Full Full;
+    typedef OneToOneUniQueue::ItemTooLarge ItemTooLarge;
+
     /// Create a new shared queue.
     OneToOneBiQueue(const String &id, const unsigned int maxItemSize, const int capacity);
     OneToOneBiQueue(const String &id); ///< Attach to existing shared queue.
-
-    int pushedSize() const { return pushQueue->size(); }
 
     template <class Value>
     bool pop(Value &value) { return popQueue->pop(value); }
@@ -83,18 +87,21 @@ private:
  */
 class FewToOneBiQueue {
 public:
+    typedef OneToOneBiQueue::Empty Empty;
+    typedef OneToOneBiQueue::Full Full;
+    typedef OneToOneBiQueue::ItemTooLarge ItemTooLarge;
+
     FewToOneBiQueue(const String &id, const int aWorkerCount, const unsigned int maxItemSize, const int capacity);
     static OneToOneBiQueue *Attach(const String &id, const int workerId);
     ~FewToOneBiQueue();
 
     bool validWorkerId(const int workerId) const;
     int workerCount() const { return theWorkerCount; }
-    int pushedSize(const int workerId) const;
 
     template <class Value>
-    bool pop(int &workerId, Value &value); ///< returns false iff the queue is empty
+    bool pop(int &workerId, Value &value); ///< returns false iff the queue was full
     template <class Value>
-    bool push(const int workerId, const Value &value); ///< returns false iff the queue is full
+    bool push(const int workerId, const Value &value); ///< returns false iff the queue was empty
 
 private:
     int theLastPopWorkerId; ///< the last worker ID we pop()ed from
@@ -113,13 +120,14 @@ OneToOneUniQueue::pop(Value &value)
         throw ItemTooLarge();
 
     if (empty())
-        return false;
+        throw Empty();
 
+    const bool wasFull = full();
     const unsigned int pos =
         shared->theOut++ % shared->theCapacity * shared->theMaxItemSize;
     memcpy(&value, shared->theBuffer + pos, sizeof(value));
     --shared->theSize;
-    return true;
+    return wasFull;
 }
 
 template <class Value>
@@ -130,13 +138,14 @@ OneToOneUniQueue::push(const Value &value)
         throw ItemTooLarge();
 
     if (full())
-        return false;
+        throw Full();
 
+    const bool wasEmpty = empty();
     const unsigned int pos =
         shared->theIn++ % shared->theCapacity * shared->theMaxItemSize;
     memcpy(shared->theBuffer + pos, &value, sizeof(value));
     ++shared->theSize;
-    return true;
+    return wasEmpty;
 }
 
 
@@ -149,12 +158,13 @@ FewToOneBiQueue::pop(int &workerId, Value &value)
     ++theLastPopWorkerId;
     for (int i = 0; i < theWorkerCount; ++i) {
         theLastPopWorkerId = (theLastPopWorkerId + 1) % theWorkerCount;
-        if (biQueues[theLastPopWorkerId]->pop(value)) {
+        try {
+            const bool wasFull = biQueues[theLastPopWorkerId]->pop(value);
             workerId = theLastPopWorkerId;
-            return true;
-        }
+            return wasFull;
+        } catch (const Empty &) {}
     }
-    return false;
+    throw Empty();
 }
 
 template <class Value>
