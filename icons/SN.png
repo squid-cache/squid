@@ -1,0 +1,11 @@
+--2011-02-07 01:21:41--  http://www.squid-cache.org/Artwork/SN.png
+Resolving www.squid-cache.org... 198.186.193.234, 209.169.10.131
+Connecting to www.squid-cache.org|198.186.193.234|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 12716 (12K) [image/png]
+Saving to: `SN.png'
+
+     0K .......... ..                                         100% 27.0K=0.5s
+
+2011-02-07 01:21:42 (27.0 KB/s) - `SN.png' saved [12716/12716]
+

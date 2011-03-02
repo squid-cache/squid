@@ -63,7 +63,7 @@
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 #include <io.h>
 #endif
 #if HAVE_CTYPE_H
@@ -375,6 +375,7 @@ authenticate(int socket_fd, const char *username, const char *passwd)
         *ptr++ = len + 2;
         memcpy(ptr, identifier, len);
         ptr += len;
+        total_length += len + 2;
     } else {
         *ptr++ = PW_NAS_IP_ADDRESS;
         *ptr++ = 6;

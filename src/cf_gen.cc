@@ -239,7 +239,7 @@ main(int argc, char *argv[])
         exit(1);
     }
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
     setmode(fileno(fp), O_TEXT);
 
 #endif
@@ -465,9 +465,8 @@ main(int argc, char *argv[])
         exit(1);
     }
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
     setmode(fileno(fp), O_TEXT);
-
 #endif
 
     fprintf(fp,
@@ -501,9 +500,8 @@ main(int argc, char *argv[])
         exit(1);
     }
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
     setmode(fileno(fp), O_TEXT);
-
 #endif
 
     gen_conf(entries, fp, 1);
@@ -514,7 +512,7 @@ main(int argc, char *argv[])
         perror(conf_filename_short);
         exit(1);
     }
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
     setmode(fileno(fp), O_TEXT);
 #endif
     gen_conf(entries, fp, 0);

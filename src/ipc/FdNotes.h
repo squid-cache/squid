@@ -15,7 +15,9 @@ namespace Ipc
 
 /// fd_note() label ID
 typedef enum { fdnNone, fdnHttpSocket, fdnHttpsSocket,
+#if SQUID_SNMP
                fdnInSnmpSocket, fdnOutSnmpSocket,
+#endif
                fdnInIcpSocket, fdnInHtcpSocket, fdnEnd
              } FdNoteId;
 

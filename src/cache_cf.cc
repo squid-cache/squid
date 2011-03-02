@@ -50,8 +50,10 @@
 #include "ssl/support.h"
 #include "ssl/Config.h"
 #endif
+#if USE_AUTH
 #include "auth/Config.h"
 #include "auth/Scheme.h"
+#endif
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
 #include "eui/Config.h"
@@ -419,10 +421,8 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
     if (fp == NULL)
         fatalf("Unable to open configuration file: %s: %s", file_name, xstrerror());
 
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     setmode(fileno(fp), O_TEXT);
-
 #endif
 
     SetConfigFilename(file_name, bool(is_pipe));
@@ -916,6 +916,24 @@ configDoConfigure(void)
                " Change client_request_buffer_max or request_header_max_size limits.",
                (uint32_t)Config.maxRequestBufferSize, (uint32_t)Config.maxRequestHeaderSize);
     }
+
+#if USE_AUTH
+    /*
+     * disable client side request pipelining. There is a race with
+     * Negotiate and NTLM when the client sends a second request on an
+     * connection before the authenticate challenge is sent. With
+     * pipelining OFF, the client may fail to authenticate, but squid's
+     * state will be preserved.
+     */
+    if (Config.onoff.pipeline_prefetch) {
+        AuthConfig *nego = AuthConfig::Find("Negotiate");
+        AuthConfig *ntlm = AuthConfig::Find("NTLM");
+        if ((nego && nego->active()) || (ntlm && ntlm->active())) {
+            debugs(3, DBG_IMPORTANT, "WARNING: pipeline_prefetch breaks NTLM and Negotiate authentication. Forced OFF.");
+            Config.onoff.pipeline_prefetch = 0;
+        }
+    }
+#endif
 }
 
 /** Parse a line containing an obsolete directive.
@@ -1811,6 +1829,7 @@ check_null_string(char *s)
     return s == NULL;
 }
 
+#if USE_AUTH
 static void
 parse_authparam(Auth::authConfig * config)
 {
@@ -1869,6 +1888,7 @@ dump_authparam(StoreEntry * entry, const char *name, authConfig cfg)
     for (authConfig::iterator  i = cfg.begin(); i != cfg.end(); ++i)
         (*i)->dump(entry, name, (*i));
 }
+#endif /* USE_AUTH */
 
 /* TODO: just return the object, the # is irrelevant */
 static int
@@ -2208,13 +2228,15 @@ parse_peer(peer ** head)
                 fatalf("parse_peer: non-parent carp peer %s/%d\n", p->host, p->http_port);
 
             p->options.carp = 1;
-
         } else if (!strcasecmp(token, "userhash")) {
+#if USE_AUTH
             if (p->type != PEER_PARENT)
                 fatalf("parse_peer: non-parent userhash peer %s/%d\n", p->host, p->http_port);
 
             p->options.userhash = 1;
-
+#else
+            fatalf("parse_peer: userhash requires authentication. peer %s/%d\n", p->host, p->http_port);
+#endif
         } else if (!strcasecmp(token, "sourcehash")) {
             if (p->type != PEER_PARENT)
                 fatalf("parse_peer: non-parent sourcehash peer %s/%d\n", p->host, p->http_port);

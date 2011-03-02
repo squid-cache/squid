@@ -8,7 +8,8 @@
 #ifndef SQUID_MGR_REQUEST_H
 #define SQUID_MGR_REQUEST_H
 
-#include "ipc/TypedMsgHdr.h"
+#include "ipc/forward.h"
+#include "ipc/Request.h"
 #include "mgr/ActionParams.h"
 
 
@@ -16,18 +17,21 @@ namespace Mgr
 {
 
 /// cache manager request
-class Request
+class Request: public Ipc::Request
 {
 public:
     Request(int aRequestorId, unsigned int aRequestId, int aFd,
             const ActionParams &aParams);
 
     explicit Request(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
-    void pack(Ipc::TypedMsgHdr& msg) const; ///< prepare for sendmsg()
+    /* Ipc::Request API */
+    virtual void pack(Ipc::TypedMsgHdr& msg) const;
+    virtual Pointer clone() const;
+
+private:
+    Request(const Request& request);
 
 public:
-    int requestorId; ///< kidId of the requestor; used for response destination
-    unsigned int requestId; ///< unique for sender; matches request w/ response
     int fd; ///< HTTP client connection descriptor
 
     ActionParams params; ///< action name and parameters

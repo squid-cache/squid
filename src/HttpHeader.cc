@@ -383,16 +383,35 @@ HttpHeader::HttpHeader() : owner (hoNone), len (0)
     httpHeaderMaskInit(&mask, 0);
 }
 
-HttpHeader::HttpHeader(http_hdr_owner_type const &anOwner) : owner (anOwner), len (0)
+HttpHeader::HttpHeader(const http_hdr_owner_type anOwner): owner(anOwner), len(0)
 {
     assert(anOwner > hoNone && anOwner <= hoReply);
     debugs(55, 7, "init-ing hdr: " << this << " owner: " << owner);
     httpHeaderMaskInit(&mask, 0);
 }
 
+HttpHeader::HttpHeader(const HttpHeader &other): owner(other.owner), len(other.len)
+{
+    httpHeaderMaskInit(&mask, 0);
+    update(&other, NULL); // will update the mask as well
+}
+
 HttpHeader::~HttpHeader()
 {
     clean();
+}
+
+HttpHeader &
+HttpHeader::operator =(const HttpHeader &other)
+{
+    if (this != &other) {
+        // we do not really care, but the caller probably does
+        assert(owner == other.owner);
+        clean();
+        update(&other, NULL); // will update the mask as well
+        len = other.len;
+    }
+    return *this;
 }
 
 void
@@ -437,6 +456,7 @@ HttpHeader::clean()
     }
     entries.clean();
     httpHeaderMaskInit(&mask, 0);
+    len = 0;
     PROF_stop(HttpHeaderClean);
 }
 
@@ -500,10 +520,7 @@ HttpHeader::update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask)
 int
 HttpHeader::reset()
 {
-    http_hdr_owner_type ho;
-    ho = owner;
     clean();
-    *this = HttpHeader(ho);
     return 0;
 }
 

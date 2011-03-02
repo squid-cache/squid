@@ -30,6 +30,6 @@ typedef enum {
 
 extern const char *hier_code_str[];
 
-inline const hier_code operator++(hier_code &i) { return (hier_code)(i+1); }
+inline hier_code operator++(hier_code &i) { return (hier_code)(i+1); }
 
 #endif /* SQUID__HIER_CODE_H */

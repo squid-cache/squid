@@ -168,6 +168,10 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
             return 0;
     }
 
+    // CONNECT requests are proxy requests. Not to be forwarded to origin servers.
+    if (p->options.originserver && request->method == METHOD_CONNECT)
+        return 0;
+
     if (p->peer_domain == NULL && p->access == NULL)
         return do_ping;
 
@@ -1089,14 +1093,14 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
         if (p == NULL) {
             neighborIgnoreNonPeer(from, opcode);
         } else {
-            mem->ping_reply_callback(p, ntype, PROTO_ICP, header, mem->ircb_data);
+            mem->ping_reply_callback(p, ntype, AnyP::PROTO_ICP, header, mem->ircb_data);
         }
     } else if (opcode == ICP_HIT) {
         if (p == NULL) {
             neighborIgnoreNonPeer(from, opcode);
         } else {
             header->opcode = ICP_HIT;
-            mem->ping_reply_callback(p, ntype, PROTO_ICP, header, mem->ircb_data);
+            mem->ping_reply_callback(p, ntype, AnyP::PROTO_ICP, header, mem->ircb_data);
         }
     } else if (opcode == ICP_DECHO) {
         if (p == NULL) {
@@ -1105,7 +1109,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
             debug_trap("neighborsUdpAck: Found non-ICP cache as SIBLING\n");
             debug_trap("neighborsUdpAck: non-ICP neighbors must be a PARENT\n");
         } else {
-            mem->ping_reply_callback(p, ntype, PROTO_ICP, header, mem->ircb_data);
+            mem->ping_reply_callback(p, ntype, AnyP::PROTO_ICP, header, mem->ircb_data);
         }
     } else if (opcode == ICP_SECHO) {
         if (p) {
@@ -1128,7 +1132,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
             }
         }
     } else if (opcode == ICP_MISS_NOFETCH) {
-        mem->ping_reply_callback(p, ntype, PROTO_ICP, header, mem->ircb_data);
+        mem->ping_reply_callback(p, ntype, AnyP::PROTO_ICP, header, mem->ircb_data);
     } else {
         debugs(15, 0, "neighborsUdpAck: Unexpected ICP reply: " << opcode_d);
     }
@@ -1519,7 +1523,7 @@ peerCountMcastPeersDone(void *data)
 }
 
 static void
-peerCountHandleIcpReply(peer * p, peer_t type, protocol_t proto, void *hdrnotused, void *data)
+peerCountHandleIcpReply(peer * p, peer_t type, AnyP::ProtocolType proto, void *hdrnotused, void *data)
 {
     int rtt_av_factor;
 
@@ -1527,7 +1531,7 @@ peerCountHandleIcpReply(peer * p, peer_t type, protocol_t proto, void *hdrnotuse
     StoreEntry *fake = psstate->entry;
     MemObject *mem = fake->mem_obj;
     int rtt = tvSubMsec(mem->start_ping, current_time);
-    assert(proto == PROTO_ICP);
+    assert(proto == AnyP::PROTO_ICP);
     assert(fake);
     assert(mem);
     psstate->ping.n_recv++;
@@ -1574,13 +1578,13 @@ dump_peer_options(StoreEntry * sentry, peer * p)
 
     if (p->options.carp)
         storeAppendPrintf(sentry, " carp");
-
+#if USE_AUTH
     if (p->options.userhash)
         storeAppendPrintf(sentry, " userhash");
 
     if (p->options.userhash)
         storeAppendPrintf(sentry, " sourcehash");
-
+#endif
     if (p->options.weighted_roundrobin)
         storeAppendPrintf(sentry, " weighted-round-robin");
 
@@ -1834,7 +1838,7 @@ neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const Ip::Addres
     }
 
     debugs(15, 3, "neighborsHtcpReply: e = " << e);
-    mem->ping_reply_callback(p, ntype, PROTO_HTCP, htcp, mem->ircb_data);
+    mem->ping_reply_callback(p, ntype, AnyP::PROTO_HTCP, htcp, mem->ircb_data);
 }
 
 /*

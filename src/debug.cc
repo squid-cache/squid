@@ -255,9 +255,8 @@ debugOpenLog(const char *logfile)
         debug_log = stderr;
     }
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
     setmode(fileno(debug_log), O_TEXT);
-
 #endif
 }
 
@@ -783,7 +782,7 @@ Debug::xassert(const char *msg, const char *file, int line)
 
 std::ostringstream (*Debug::CurrentDebug)(NULL);
 
-const size_t
+size_t
 BuildPrefixInit()
 {
     // XXX: This must be kept in sync with the actual debug.cc location
