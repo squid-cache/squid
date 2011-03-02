@@ -26,7 +26,7 @@ public:
 
 public:
     /// returns query parameter by name
-    QueryParam::Pointer get(const String& name);
+    QueryParam::Pointer get(const String& name) const;
     void pack(Ipc::TypedMsgHdr& msg) const; ///< store params into msg
     void unpack(const Ipc::TypedMsgHdr& msg); ///< load params from msg
     /// parses the query string parameters
@@ -34,7 +34,7 @@ public:
 
 private:
     /// find query parameter by name
-    Params::iterator find(const String& name);
+    Params::const_iterator find(const String& name) const;
     /// creates a parameter of the specified type
     static QueryParam::Pointer CreateParam(QueryParam::Type aType);
     /// parses string like "param=value"; returns true if success
