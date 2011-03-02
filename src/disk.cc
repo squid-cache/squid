@@ -40,7 +40,7 @@
 static PF diskHandleRead;
 static PF diskHandleWrite;
 
-#if defined(_SQUID_WIN32_) || defined(_SQUID_OS2_)
+#if _SQUID_WINDOWS_ || _SQUID_OS2_
 static int
 diskWriteIsComplete(int fd)
 {
@@ -110,25 +110,18 @@ file_close(int fd)
     }
 
     if (F->flags.write_daemon) {
-#if defined(_SQUID_WIN32_) || defined(_SQUID_OS2_)
+#if _SQUID_WINDOWS_ || _SQUID_OS2_
         /*
          * on some operating systems, you can not delete or rename
          * open files, so we won't allow delayed close.
          */
-
         while (!diskWriteIsComplete(fd))
             diskHandleWrite(fd, NULL);
-
 #else
-
         F->flags.close_request = 1;
-
         debugs(6, 2, "file_close: FD " << fd << ", delaying close");
-
         PROF_stop(file_close);
-
         return;
-
 #endif
 
     }
@@ -522,7 +515,7 @@ int
 xrename(const char *from, const char *to)
 {
     debugs(21, 2, "xrename: renaming " << from << " to " << to);
-#if defined (_SQUID_OS2_) || defined (_SQUID_WIN32_)
+#if _SQUID_OS2_ || _SQUID_WINDOWS_
     remove(to);
 #endif
 

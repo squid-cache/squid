@@ -36,7 +36,9 @@
 
 #include "squid.h"
 #include "HttpRequest.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "HttpHeaderRange.h"
 #include "MemBuf.h"
 #include "Store.h"
@@ -51,7 +53,7 @@ HttpRequest::HttpRequest() : HttpMsg(hoRequest)
     init();
 }
 
-HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath) : HttpMsg(hoRequest)
+HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath) : HttpMsg(hoRequest)
 {
     static unsigned int id = 1;
     debugs(93,7, HERE << "constructed, this=" << this << " id=" << ++id);
@@ -66,7 +68,7 @@ HttpRequest::~HttpRequest()
 }
 
 void
-HttpRequest::initHTTP(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath)
+HttpRequest::initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath)
 {
     method = aMethod;
     protocol = aProtocol;
@@ -77,12 +79,14 @@ void
 HttpRequest::init()
 {
     method = METHOD_NONE;
-    protocol = PROTO_NONE;
+    protocol = AnyP::PROTO_NONE;
     urlpath = NULL;
     login[0] = '\0';
     host[0] = '\0';
     host_is_numeric = -1;
+#if USE_AUTH
     auth_user_request = NULL;
+#endif
     pinned_connection = NULL;
     port = 0;
     canonical = NULL;
@@ -107,8 +111,10 @@ HttpRequest::init()
     vary_headers = NULL;
     myportname = null_string;
     tag = null_string;
+#if USE_AUTH
     extacl_user = null_string;
     extacl_passwd = null_string;
+#endif
     extacl_log = null_string;
     extacl_message = null_string;
     pstate = psReadyToParseStartLine;
@@ -130,9 +136,9 @@ HttpRequest::clean()
     // we used to assert that the pipe is NULL, but now the request only
     // points to a pipe that is owned and initiated by another object.
     body_pipe = NULL;
-
+#if USE_AUTH
     auth_user_request = NULL;
-
+#endif
     safe_free(canonical);
 
     safe_free(vary_headers);
@@ -157,11 +163,10 @@ HttpRequest::clean()
     myportname.clean();
 
     tag.clean();
-
+#if USE_AUTH
     extacl_user.clean();
-
     extacl_passwd.clean();
-
+#endif
     extacl_log.clean();
 
     extacl_message.clean();
@@ -216,8 +221,10 @@ HttpRequest::clone() const
 
     copy->myportname = myportname;
     copy->tag = tag;
+#if USE_AUTH
     copy->extacl_user = extacl_user;
     copy->extacl_passwd = extacl_passwd;
+#endif
     copy->extacl_log = extacl_log;
     copy->extacl_message = extacl_message;
 
@@ -502,7 +509,7 @@ void HttpRequest::packFirstLineInto(Packer * p, bool full_uri) const
 }
 
 /*
- * Indicate whether or not we would usually expect an entity-body
+ * Indicate whether or not we would expect an entity-body
  * along with this request
  */
 bool
@@ -511,28 +518,18 @@ HttpRequest::expectingBody(const HttpRequestMethod& unused, int64_t& theSize) co
     bool expectBody = false;
 
     /*
-     * GET and HEAD don't usually have bodies, but we should be prepared
-     * to accept one if the request_entities directive is set
+     * Note: Checks for message validity is in clientIsContentLengthValid().
+     * this just checks if a entity-body is expected based on HTTP message syntax
      */
-
-    if (method == METHOD_GET || method == METHOD_HEAD)
-        expectBody = Config.onoff.request_entities ? true : false;
-    else if (method == METHOD_PUT || method == METHOD_POST)
+    if (header.chunked()) {
         expectBody = true;
-    else if (header.chunked())
+        theSize = -1;
+    } else if (content_length >= 0) {
         expectBody = true;
-    else if (content_length >= 0)
-        expectBody = true;
-    else
+        theSize = content_length;
+    } else {
         expectBody = false;
-
-    if (expectBody) {
-        if (header.chunked())
-            theSize = -1;
-        else if (content_length >= 0)
-            theSize = content_length;
-        else
-            theSize = -1;
+        // theSize undefined
     }
 
     return expectBody;
@@ -568,7 +565,7 @@ HttpRequest::CreateFromUrl(char * url)
 bool
 HttpRequest::cacheable() const
 {
-    if (protocol == PROTO_HTTP)
+    if (protocol == AnyP::PROTO_HTTP)
         return httpCachable(method);
 
     /*
@@ -583,10 +580,10 @@ HttpRequest::cacheable() const
      * XXX POST may be cached sometimes.. ignored
      * for now
      */
-    if (protocol == PROTO_GOPHER)
+    if (protocol == AnyP::PROTO_GOPHER)
         return gopherCachable(this);
 
-    if (protocol == PROTO_CACHEOBJ)
+    if (protocol == AnyP::PROTO_CACHEOBJ)
         return false;
 
     return true;
@@ -631,9 +628,9 @@ bool HttpRequest::inheritProperties(const HttpMsg *aMsg)
 
     errType = aReq->errType;
     errDetail = aReq->errDetail;
-
+#if USE_AUTH
     auth_user_request = aReq->auth_user_request;
-
+#endif
     if (aReq->pinned_connection) {
         pinned_connection = cbdataReference(aReq->pinned_connection);
     }
