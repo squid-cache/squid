@@ -769,7 +769,7 @@ clientHierarchical(ClientHttpRequest * http)
     if (request->protocol == AnyP::PROTO_GOPHER)
         return gopherCachable(request);
 
-    if (request->protocol == AnyP::PROTO_CACHEOBJ)
+    if (request->protocol == AnyP::PROTO_CACHE_OBJECT)
         return 0;
 
     return 1;

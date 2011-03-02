@@ -132,7 +132,7 @@ urlParseProtocol(const char *b, const char *e)
         return AnyP::PROTO_WAIS;
 
     if (strncasecmp(b, "cache_object", len) == 0)
-        return AnyP::PROTO_CACHEOBJ;
+        return AnyP::PROTO_CACHE_OBJECT;
 
     if (strncasecmp(b, "urn", len) == 0)
         return AnyP::PROTO_URN;
@@ -166,7 +166,7 @@ urlDefaultPort(AnyP::ProtocolType p)
     case AnyP::PROTO_WAIS:
         return 210;
 
-    case AnyP::PROTO_CACHEOBJ:
+    case AnyP::PROTO_CACHE_OBJECT:
 
     case AnyP::PROTO_INTERNAL:
         return CACHE_HTTP_PORT;
@@ -815,7 +815,7 @@ urlCheckRequest(const HttpRequest * r)
 
     case AnyP::PROTO_HTTP:
 
-    case AnyP::PROTO_CACHEOBJ:
+    case AnyP::PROTO_CACHE_OBJECT:
         rc = 1;
         break;
 
