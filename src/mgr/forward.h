@@ -20,6 +20,8 @@ class ActionWriter;
 class Command;
 class Request;
 class Response;
+class QueryParam;
+class QueryParams;
 
 typedef RefCount<Action> ActionPointer;
 typedef RefCount<ActionProfile> ActionProfilePointer;

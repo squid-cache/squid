@@ -48,6 +48,7 @@
 #include "mgr/Command.h"
 #include "mgr/Forwarder.h"
 #include "mgr/FunAction.h"
+#include "mgr/QueryParams.h"
 #include "protos.h" /* rotate_logs() */
 #include "SquidTime.h"
 #include "Store.h"
@@ -176,7 +177,21 @@ CacheManager::ParseUrl(const char *url)
     LOCAL_ARRAY(char, host, MAX_URL);
     LOCAL_ARRAY(char, request, MAX_URL);
     LOCAL_ARRAY(char, password, MAX_URL);
-    t = sscanf(url, "cache_object://%[^/]/%[^@]@%s", host, request, password);
+    LOCAL_ARRAY(char, params, MAX_URL);
+    host[0] = 0;
+    request[0] = 0;
+    password[0] = 0;
+    params[0] = 0;
+    int pos = -1;
+    int len = strlen(url);
+    Must(len > 0);
+    t = sscanf(url, "cache_object://%[^/]/%[^@?]%n@%[^?]?%s", host, request, &pos, password, params);
+
+    if (pos >0 && url[pos] == '?') {
+        ++pos;
+        if (pos < len)
+            xstrncpy(params, url + pos, sizeof(params));
+    }
 
     if (t < 2)
         xstrncpy(request, "menu", MAX_URL);
@@ -204,10 +219,12 @@ CacheManager::ParseUrl(const char *url)
     }
 
     Mgr::Command::Pointer cmd = new Mgr::Command;
+    if (!Mgr::QueryParams::Parse(params, cmd->params.queryParams))
+        return NULL;
     cmd->profile = profile;
     cmd->params.httpUri = url;
     cmd->params.userName = String();
-    cmd->params.password = t == 3 ? String(password) : String();
+    cmd->params.password = password;
     cmd->params.actionName = request;
     return cmd;
 }
