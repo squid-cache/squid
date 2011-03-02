@@ -240,7 +240,7 @@ Comm::ResetSelect(int fd)
  */
 
 comm_err_t
-Comm::Select(int msec)
+Comm::DoSelect(int msec)
 {
     int num, i;
 

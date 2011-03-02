@@ -143,7 +143,7 @@ ClientInfo * clientdbGetInfo(const Ip::Address &addr)
 }
 #endif
 void
-clientdbUpdate(const Ip::Address &addr, log_type ltype, protocol_t p, size_t size)
+clientdbUpdate(const Ip::Address &addr, log_type ltype, AnyP::ProtocolType p, size_t size)
 {
     char key[MAX_IPSTRLEN];
     ClientInfo *c;
@@ -161,14 +161,14 @@ clientdbUpdate(const Ip::Address &addr, log_type ltype, protocol_t p, size_t siz
     if (c == NULL)
         debug_trap("clientdbUpdate: Failed to add entry");
 
-    if (p == PROTO_HTTP) {
+    if (p == AnyP::PROTO_HTTP) {
         c->Http.n_requests++;
         c->Http.result_hist[ltype]++;
         kb_incr(&c->Http.kbytes_out, size);
 
         if (logTypeIsATcpHit(ltype))
             kb_incr(&c->Http.hit_kbytes_out, size);
-    } else if (p == PROTO_ICP) {
+    } else if (p == AnyP::PROTO_ICP) {
         c->Icp.n_requests++;
         c->Icp.result_hist[ltype]++;
         kb_incr(&c->Icp.kbytes_out, size);

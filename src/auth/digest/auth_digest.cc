@@ -443,7 +443,7 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
  * \retval  0    the digest is not stale yet
  * \retval -1    the digest will be stale on the next request
  */
-const int
+int
 authDigestNonceLastRequest(digest_nonce_h * nonce)
 {
     if (!nonce)

@@ -9,6 +9,7 @@
 #include "base/TextException.h"
 #include "HttpReply.h"
 #include "ipc/Messages.h"
+#include "ipc/UdsOp.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/Filler.h"
 #include "mgr/InfoAction.h"
@@ -155,7 +156,7 @@ void
 Mgr::InfoAction::respond(const Request& request)
 {
     debugs(16, 5, HERE);
-    int fd = ImportHttpFdIntoComm(request.fd);
+    int fd = Ipc::ImportFdIntoComm(request.fd, SOCK_STREAM, IPPROTO_TCP, Ipc::fdnHttpSocket);
     Must(fd >= 0);
     Must(request.requestId != 0);
     AsyncJob::Start(new Mgr::Filler(this, fd, request.requestId));

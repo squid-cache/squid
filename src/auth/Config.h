@@ -32,6 +32,8 @@
 #ifndef SQUID_AUTHCONFIG_H
 #define SQUID_AUTHCONFIG_H
 
+#if USE_AUTH
+
 #include "auth/UserRequest.h"
 #include "HelperChildConfig.h"
 
@@ -142,4 +144,5 @@ extern authConfig TheConfig;
 
 } // namespace Auth
 
+#endif /* USE_AUTH */
 #endif /* SQUID_AUTHCONFIG_H */

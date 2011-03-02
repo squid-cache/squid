@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.0.4 release notes</title>
+<title>Squid 3.2.0.5 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.0.4 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.0.5 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -76,8 +76,9 @@ Most user-facing changes are reflected in squid.conf (see below).
    must coordinate caching activities (in-between environments are in a gray
    area requiring case-by-case analysis).
 
-<p>Cache manager and SNMP statistics are reported from a worker point of
-   view, for now.
+<p>Cache manager statistics are reported from a worker point of view, for now.
+   Though some reports are combined. SNMP statistics are combined across all
+   workers.
 
 <p>Startup, reconfiguration, shutdown, and log rotation are handled as for a
    monolithic Squid. Abnormally terminated workers are restarted while

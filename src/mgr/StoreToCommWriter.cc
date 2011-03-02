@@ -164,25 +164,3 @@ Mgr::StoreToCommWriter::Abort(void* param)
     if (mgrWriter->fd >= 0)
         comm_close(mgrWriter->fd);
 }
-
-
-int
-Mgr::ImportHttpFdIntoComm(int fd)
-{
-    struct sockaddr_in addr;
-    socklen_t len = sizeof(addr);
-    if (getsockname(fd, reinterpret_cast<sockaddr*>(&addr), &len) == 0) {
-        Ip::Address ipAddr(addr);
-        struct addrinfo* addr_info = NULL;
-        ipAddr.GetAddrInfo(addr_info);
-        addr_info->ai_socktype = SOCK_STREAM;
-        addr_info->ai_protocol = IPPROTO_TCP;
-        comm_import_opened(fd, ipAddr, COMM_NONBLOCKING, Ipc::FdNote(Ipc::fdnHttpSocket), addr_info);
-        ipAddr.FreeAddrInfo(addr_info);
-    } else {
-        debugs(16, DBG_CRITICAL, HERE << "ERROR: FD " << fd << ' ' << xstrerror());
-        ::close(fd);
-        fd = -1;
-    }
-    return fd;
-}

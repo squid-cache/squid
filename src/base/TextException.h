@@ -63,7 +63,7 @@ FileNameHashCached(const char *fname)
 ///  Avoids "defined but not used" warnings for FileNameHashCached
 class FileNameHashCacheUser
 {
-    bool use(void *ptr=NULL) { return ptr != &FileNameHashCached;}
+    bool use(void *ptr=NULL) { return ptr != (void*)&FileNameHashCached; }
 };
 
 #if !defined(TexcHere)

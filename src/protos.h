@@ -84,7 +84,8 @@ SQUIDCEXTERN void parse_time_t(time_t * var);
 
 SQUIDCEXTERN void clientdbInit(void);
 
-SQUIDCEXTERN void clientdbUpdate(const Ip::Address &, log_type, protocol_t, size_t);
+#include "anyp/ProtocolType.h"
+SQUIDCEXTERN void clientdbUpdate(const Ip::Address &, log_type, AnyP::ProtocolType, size_t);
 
 SQUIDCEXTERN int clientdbCutoffDenied(const Ip::Address &);
 void clientdbDump(StoreEntry *);
@@ -614,7 +615,7 @@ SQUIDCEXTERN void unlinkdClose(void);
 SQUIDCEXTERN void unlinkdUnlink(const char *);
 #endif
 
-SQUIDCEXTERN protocol_t urlParseProtocol(const char *, const char *e = NULL);
+SQUIDCEXTERN AnyP::ProtocolType urlParseProtocol(const char *, const char *e = NULL);
 SQUIDCEXTERN void urlInitialize(void);
 SQUIDCEXTERN HttpRequest *urlParse(const HttpRequestMethod&, char *, HttpRequest *request = NULL);
 SQUIDCEXTERN const char *urlCanonical(HttpRequest *);
@@ -626,7 +627,7 @@ SQUIDCEXTERN char *urlRInternal(const char *host, u_short port, const char *dir,
 SQUIDCEXTERN char *urlInternal(const char *dir, const char *name);
 SQUIDCEXTERN int matchDomainName(const char *host, const char *domain);
 SQUIDCEXTERN int urlCheckRequest(const HttpRequest *);
-SQUIDCEXTERN int urlDefaultPort(protocol_t p);
+SQUIDCEXTERN int urlDefaultPort(AnyP::ProtocolType p);
 SQUIDCEXTERN char *urlHostname(const char *url);
 SQUIDCEXTERN void urlExtMethodConfigure(void);
 
@@ -732,7 +733,7 @@ SQUIDCEXTERN int varyEvaluateMatch(StoreEntry * entry, HttpRequest * req);
 
 /* CygWin & Windows NT Port */
 /* win32.c */
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 SQUIDCEXTERN int WIN32_Subsystem_Init(int *, char ***);
 SQUIDCEXTERN void WIN32_sendSignal(int);
 SQUIDCEXTERN void WIN32_Abort(int);
@@ -741,7 +742,7 @@ SQUIDCEXTERN void WIN32_SetServiceCommandLine(void);
 SQUIDCEXTERN void WIN32_InstallService(void);
 SQUIDCEXTERN void WIN32_RemoveService(void);
 SQUIDCEXTERN int SquidMain(int, char **);
-#endif /* _SQUID_WIN32_ */
+#endif /* _SQUID_WINDOWS_ */
 #ifdef _SQUID_MSWIN_
 
 SQUIDCEXTERN int WIN32_pipe(int[2]);
@@ -795,12 +796,15 @@ class external_acl;
 
 #endif
 
-#if HAVE_KRB5 && HAVE_GSSAPI
+#if USE_AUTH
+
+#if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
             /* upstream proxy authentication */
             SQUIDCEXTERN char *peer_proxy_negotiate_auth(char *principal_name, char *proxy);
 #endif
 
             /* call to ensure the auth component schemes exist. */
             SQUIDCEXTERN void InitAuthSchemes(void);
+#endif /* USE_AUTH */
 
 #endif /* SQUID_PROTOS_H */

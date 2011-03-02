@@ -12,6 +12,7 @@
 #include "SquidString.h"
 #include "base/AsyncJob.h"
 #include "ipc/TypedMsgHdr.h"
+#include "ipc/FdNotes.h"
 
 class CommTimeoutCbParams;
 class CommIoCbParams;
@@ -90,6 +91,8 @@ private:
 
 
 void SendMessage(const String& toAddress, const TypedMsgHdr& message);
+/// import socket fd from another strand into our Comm state
+int ImportFdIntoComm(int fd, int socktype, int protocol, FdNoteId noteId);
 
 
 }
