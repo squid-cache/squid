@@ -173,7 +173,7 @@ IpcIoFile::read(ReadRequest *readRequest)
 
     IpcIoPendingRequest *const pending = new IpcIoPendingRequest(this);
     pending->readRequest = readRequest;
-    push(*pending);
+    push(pending);
 }
 
 void
@@ -214,7 +214,7 @@ IpcIoFile::write(WriteRequest *writeRequest)
 
     IpcIoPendingRequest *const pending = new IpcIoPendingRequest(this);
     pending->writeRequest = writeRequest;
-    push(*pending);
+    push(pending);
 }
 
 void
@@ -256,47 +256,48 @@ IpcIoFile::ioInProgress() const
 
 /// track a new pending request
 void
-IpcIoFile::trackPendingRequest(IpcIoPendingRequest &pending)
+IpcIoFile::trackPendingRequest(IpcIoPendingRequest *const pending)
 {
-    newerRequests->insert(std::make_pair(lastRequestId, &pending));
+    newerRequests->insert(std::make_pair(lastRequestId, pending));
     if (!timeoutCheckScheduled)
         scheduleTimeoutCheck();
 }
 
 /// push an I/O request to disker
 void
-IpcIoFile::push(IpcIoPendingRequest &pending)
+IpcIoFile::push(IpcIoPendingRequest *const pending)
 {
     debugs(47, 7, HERE);
     Must(diskId >= 0);
     Must(workerQueue);
-    Must(pending.readRequest || pending.writeRequest);
+    Must(pending);
+    Must(pending->readRequest || pending->writeRequest);
 
     IpcIoMsg ipcIo;
     ipcIo.requestId = lastRequestId;
-    if (pending.readRequest) {
+    if (pending->readRequest) {
         ipcIo.command = IpcIo::cmdRead;
-        ipcIo.offset = pending.readRequest->offset;
-        ipcIo.len = pending.readRequest->len;
+        ipcIo.offset = pending->readRequest->offset;
+        ipcIo.len = pending->readRequest->len;
         assert(ipcIo.len <= sizeof(ipcIo.buf));
-        memcpy(ipcIo.buf, pending.readRequest->buf, ipcIo.len); // optimize away
-    } else { // pending.writeRequest
+        memcpy(ipcIo.buf, pending->readRequest->buf, ipcIo.len); // optimize away
+    } else { // pending->writeRequest
         ipcIo.command = IpcIo::cmdWrite;
-        ipcIo.offset = pending.writeRequest->offset;
-        ipcIo.len = pending.writeRequest->len;
+        ipcIo.offset = pending->writeRequest->offset;
+        ipcIo.len = pending->writeRequest->len;
         assert(ipcIo.len <= sizeof(ipcIo.buf));
-        memcpy(ipcIo.buf, pending.writeRequest->buf, ipcIo.len); // optimize away
+        memcpy(ipcIo.buf, pending->writeRequest->buf, ipcIo.len); // optimize away
     }
 
-    if (!workerQueue->push(ipcIo)) {
-        pending.completeIo(NULL);
-        return;
+    try {
+        if (workerQueue->push(ipcIo))
+            Notify(diskId); // notify disker
+        trackPendingRequest(pending);
+    } catch (const WorkerQueue::Full &) {
+        // XXX: grow queue size?
+        pending->completeIo(NULL);
+        delete pending;
     }
-
-    if (workerQueue->pushedSize() == 1)
-        Notify(diskId); // notify disker
-
-    trackPendingRequest(pending);
 }
 
 /// called when coordinator responds to worker open request
@@ -322,9 +323,13 @@ void
 IpcIoFile::handleResponses()
 {
     Must(workerQueue);
-    IpcIoMsg ipcIo;
-    while (workerQueue->pop(ipcIo))
-        handleResponse(ipcIo);
+    try {
+        while (true) {
+            IpcIoMsg ipcIo;
+            workerQueue->pop(ipcIo); // XXX: notify disker?
+            handleResponse(ipcIo);
+        }
+    } catch (const WorkerQueue::Empty &) {}
 }
 
 void
@@ -549,10 +554,14 @@ void
 IpcIoFile::DiskerHandleRequests()
 {
     Must(diskerQueue);
-    int workerId;
-    IpcIoMsg ipcIo;
-    while (diskerQueue->pop(workerId, ipcIo))
-        DiskerHandleRequest(workerId, ipcIo);
+    try {
+        while (true) {
+            int workerId;
+            IpcIoMsg ipcIo;
+            diskerQueue->pop(workerId, ipcIo); // XXX: notify worker?
+            DiskerHandleRequest(workerId, ipcIo);
+        }
+    } catch (const DiskerQueue::Empty &) {}
 }
 
 /// called when disker receives an I/O request
@@ -578,10 +587,12 @@ IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
     else // ipcIo.command == IpcIo::cmdWrite
         diskerWrite(ipcIo);
 
-    diskerQueue->push(workerId, ipcIo); // XXX: report warning
-
-    if (diskerQueue->pushedSize(workerId) == 1)
-        Notify(workerId + 1); // notify worker
+    try {
+        if (diskerQueue->push(workerId, ipcIo))
+            Notify(workerId + 1); // notify worker
+    } catch (const DiskerQueue::Full &) {
+        // XXX: grow queue size?
+    }
 }
 
 static bool

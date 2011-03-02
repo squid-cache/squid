@@ -74,8 +74,8 @@ protected:
     void writeCompleted(WriteRequest *writeRequest, const IpcIoMsg *const response);
 
 private:
-    void trackPendingRequest(IpcIoPendingRequest &pending);
-    void push(IpcIoPendingRequest &pending);
+    void trackPendingRequest(IpcIoPendingRequest *const pending);
+    void push(IpcIoPendingRequest *const pending);
     IpcIoPendingRequest *dequeueRequest(const unsigned int requestId);
 
     static void Notify(const int peerId);
