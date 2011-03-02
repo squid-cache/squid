@@ -89,7 +89,7 @@ public:
 
     int64_t content_length;
 
-    protocol_t protocol;
+    AnyP::ProtocolType protocol;
 
     HttpMsgParseState pstate;   /* the current parsing state */
 

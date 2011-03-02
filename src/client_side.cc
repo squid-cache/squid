@@ -679,7 +679,7 @@ ClientHttpRequest::logRequest()
             updateCounters();
 
             if (getConn() != NULL)
-                clientdbUpdate(getConn()->peer, logType, PROTO_HTTP, out.size);
+                clientdbUpdate(getConn()->peer, logType, AnyP::PROTO_HTTP, out.size);
         }
 
         delete checklist;
@@ -2485,7 +2485,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     }
 
     if (http->flags.internal) {
-        request->protocol = PROTO_HTTP;
+        request->protocol = AnyP::PROTO_HTTP;
         request->login[0] = '\0';
     }
 
