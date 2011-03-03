@@ -398,7 +398,7 @@ Ip::Address::LookupHostIP(const char *s, bool nodns)
 #endif
 
     if ( (err = getaddrinfo(s, NULL, &want, &res)) != 0) {
-        debugs(14,3, HERE << "Given Bad IP '" << s << "': " << gai_strerror(err) );
+        debugs(14,3, HERE << "Given Non-IP '" << s << "': " << gai_strerror(err) );
         /* free the memory getaddrinfo() dynamically allocated. */
         if (res) {
             freeaddrinfo(res);
