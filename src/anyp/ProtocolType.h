@@ -5,7 +5,8 @@
 #include <ostream>
 #endif
 
-namespace AnyP {
+namespace AnyP
+{
 
 /**
  * List of all protocols known and supported.

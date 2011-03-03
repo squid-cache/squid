@@ -77,8 +77,7 @@ Mgr::Inquirer::start()
         std::auto_ptr<HttpReply> reply(err->BuildHttpReply());
         replyBuf.reset(reply->pack());
         errorStateFree(err);
-    }
-    else {
+    } else {
         std::auto_ptr<HttpReply> reply(new HttpReply);
         reply->setHeaders(HTTP_OK, NULL, "text/plain", -1, squid_curtime, squid_curtime);
         reply->header.putStr(HDR_CONNECTION, "close"); // until we chunk response
@@ -151,8 +150,7 @@ Mgr::Inquirer::applyQueryParams(const Ipc::StrandCoords& aStrands, const QueryPa
             if (param != NULL && param->type == QueryParam::ptInt) {
                 const std::vector<int>& processes = param->value();
                 for (Ipc::StrandCoords::const_iterator iter = aStrands.begin();
-                     iter != aStrands.end(); ++iter)
-                {
+                        iter != aStrands.end(); ++iter) {
                     if (std::find(processes.begin(), processes.end(), iter->kidId) != processes.end())
                         strands.push_back(*iter);
                 }
@@ -161,8 +159,7 @@ Mgr::Inquirer::applyQueryParams(const Ipc::StrandCoords& aStrands, const QueryPa
             IntParam* param = dynamic_cast<IntParam*>(workersParam.getRaw());
             if (param != NULL && param->type == QueryParam::ptInt) {
                 const std::vector<int>& workers = param->value();
-                for (int i = 0; i < (int)aStrands.size(); ++i)
-                {
+                for (int i = 0; i < (int)aStrands.size(); ++i) {
                     if (std::find(workers.begin(), workers.end(), i + 1) != workers.end())
                         strands.push_back(aStrands[i]);
                 }
