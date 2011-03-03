@@ -139,7 +139,7 @@ Mgr::Inquirer::doneAll() const
 Ipc::StrandCoords
 Mgr::Inquirer::applyQueryParams(const Ipc::StrandCoords& aStrands, const QueryParams& aParams)
 {
-    Ipc::StrandCoords strands;
+    Ipc::StrandCoords sc;
 
     QueryParam::Pointer processesParam = aParams.get("processes");
     QueryParam::Pointer workersParam = aParams.get("workers");
@@ -152,7 +152,7 @@ Mgr::Inquirer::applyQueryParams(const Ipc::StrandCoords& aStrands, const QueryPa
                 for (Ipc::StrandCoords::const_iterator iter = aStrands.begin();
                         iter != aStrands.end(); ++iter) {
                     if (std::find(processes.begin(), processes.end(), iter->kidId) != processes.end())
-                        strands.push_back(*iter);
+                        sc.push_back(*iter);
                 }
             }
         } else if (workersParam != NULL) {
@@ -161,18 +161,18 @@ Mgr::Inquirer::applyQueryParams(const Ipc::StrandCoords& aStrands, const QueryPa
                 const std::vector<int>& workers = param->value();
                 for (int i = 0; i < (int)aStrands.size(); ++i) {
                     if (std::find(workers.begin(), workers.end(), i + 1) != workers.end())
-                        strands.push_back(aStrands[i]);
+                        sc.push_back(aStrands[i]);
                 }
             }
         } else {
-            strands = aStrands;
+            sc = aStrands;
         }
     }
 
     debugs(0, 0, HERE << "strands kid IDs = ");
-    for (Ipc::StrandCoords::const_iterator iter = strands.begin(); iter != strands.end(); ++iter) {
+    for (Ipc::StrandCoords::const_iterator iter = sc.begin(); iter != sc.end(); ++iter) {
         debugs(0, 0, HERE << iter->kidId);
     }
 
-    return strands;
+    return sc;
 }
