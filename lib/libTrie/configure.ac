@@ -4,7 +4,7 @@ AC_CONFIG_SRCDIR([src/Trie.cc])
 AM_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(cfgaux)
 
-enable_inline=${enable_inine:=yes}
+enable_inline=${enable_inline:=yes}
 AC_ARG_ENABLE(optimizations,
   AC_HELP_STRING([--disable-optimizations],
                  [Do not compile Squid with compiler optimizations enabled.
@@ -13,7 +13,7 @@ AC_ARG_ENABLE(optimizations,
                   --disable-optimizations to reduce compilation times
                   and allow easier debugging. This option implicitly
                   also enabled --disable-inline]), [
-if test "x$enableval" = "xno" ; then
+  if test "x$enableval" = "xno" ; then
         AC_MSG_NOTICE([Disabling compiler optimizations (-O flag)])
         CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9]]*//'`"
         CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-O[[0-9]]*//'`"
@@ -32,9 +32,11 @@ AC_ARG_ENABLE(inline,
                   production builds, or load tests, use
                   --enable-inline to have squid make all trivial
                   methods inlinable by the compiler.]), [
+  if test "x${enableval}" = "xno" ; then
+    enable_inline=no
+  fi
 ])
-
-if test "$enable_inline" = "yes" ; then
+if test "x$enable_inline" = "xyes" ; then
     AC_DEFINE(_SQUID_INLINE_, inline, 
       [Keyword used by squid for inlining methods])
     AC_DEFINE(_USE_INLINE_, 1, [Include inline methods into header file])
@@ -43,7 +45,6 @@ else
     AC_DEFINE(_SQUID_INLINE_, [] , [Keyword used by squid for inlining methods])
     AC_DEFINE(_USE_INLINE_, 0, [Include inline methods into header file])
 fi
-
 
 # Checks for programs.
 AC_PROG_CXX
