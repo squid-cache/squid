@@ -1295,16 +1295,20 @@ tests_testCacheManager_DEPENDENCIES = \
 
 tests_testDiskIO_SOURCES = \
 	$(SWAP_TEST_SOURCES) \
+	ipc.cc \
 	tests/testDiskIO.cc \
 	tests/testDiskIO.h \
 	tests/testMain.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_client_db.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
 	tests/stub_TypedMsgHdr.cc \
 	tests/stub_UdsOp.cc
 nodist_tests_testDiskIO_SOURCES= \
-	$(SWAP_TEST_GEN_SOURCES) \
+	$(TESTSOURCES) \
+	$(DISKIO_GEN_SOURCE) \
 	SquidMath.cc \
 	SquidMath.h \
 	swap_log_op.cc
@@ -1312,12 +1316,24 @@ tests_testDiskIO_LDADD = \
 	SquidConfig.o \
 	CommCalls.o \
 	DnsLookupDetails.o \
-	$(COMMON_LIBS) \
+	auth/libacls.la \
+	ident/libident.la \
+	acl/libacls.la \
+	eui/libeui.la \
+	acl/libstate.la \
+	auth/libauth.la \
+	libsquid.la \
+	fs/libfs.la \
+	ipc/libipc.la \
+	mgr/libmgr.la \
 	$(REPL_OBJS) \
 	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
 	acl/libapi.la \
 	comm/libcomm.la \
+	ip/libip.la \
+	ipc/libipc.la \
+	base/libbase.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2165,10 +2181,6 @@ SWAP_TEST_SOURCES = \
 	$(UNLINKDSOURCE) \
 	$(WIN32_SOURCE)
 
-SWAP_TEST_GEN_SOURCES = \
-	$(TESTSOURCES) \
-	$(DISKIO_GEN_SOURCE)
-
 SWAP_TEST_DS =\
 	repl_modules.o \
 	$(DISK_LIBS) \
@@ -2181,24 +2193,38 @@ tests_testUfs_SOURCES = \
 	tests/testMain.cc \
 	tests/testUfs.h \
 	tests/stub_cache_manager.cc \
+	tests/stub_comm.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
 	tests/stub_TypedMsgHdr.cc \
 	tests/stub_UdsOp.cc \
 	$(SWAP_TEST_SOURCES)
 nodist_tests_testUfs_SOURCES = \
-	$(SWAP_TEST_GEN_SOURCES) \
+	$(TESTSOURCES) \
+	$(DISKIO_GEN_SOURCE) \
 	SquidMath.cc \
 	SquidMath.h \
 	swap_log_op.cc
 tests_testUfs_LDADD = \
 	CommCalls.o \
 	DnsLookupDetails.o \
-	$(COMMON_LIBS) \
 	$(REPL_OBJS) \
 	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
+	auth/libacls.la \
+	ident/libident.la \
+	acl/libacls.la \
+	eui/libeui.la \
+	acl/libstate.la \
+	auth/libauth.la \
 	acl/libapi.la \
+	libsquid.la \
+	base/libbase.la \
+	ip/libip.la \
+	fs/libfs.la \
+	ipc/libipc.la \
+	mgr/libmgr.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2223,7 +2249,8 @@ nodist_tests_testCoss_SOURCES = \
 	swap_log_op.cc \
 	SquidMath.cc \
 	SquidMath.h \
-	$(SWAP_TEST_GEN_SOURCES)
+	$(TESTSOURCES) \
+	$(DISKIO_GEN_SOURCE)
 tests_testCoss_LDADD = \
 	libsquid.la \
 	$(REGEXLIB) \
@@ -2249,7 +2276,8 @@ tests_testNull_SOURCES = \
 	tests/testNull.h \
 	$(SWAP_TEST_SOURCES)
 nodist_tests_testNull_SOURCES = \
-	$(SWAP_TEST_GEN_SOURCES)
+	$(TESTSOURCES) \
+	$(DISKIO_GEN_SOURCE)
 tests_testNull_LDADD = \
 	$(REGEXLIB) \
 	$(COMMON_LIBS) \

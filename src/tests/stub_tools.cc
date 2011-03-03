@@ -44,8 +44,7 @@ percent(int a, int b)
 void
 death(int sig)
 {
-    fprintf(stderr, "Not implemented");
-    exit(1);
+    fatal("tools.cc required");
 }
 
 void*
@@ -53,4 +52,16 @@ xmemset(void* dst, int val, size_t sz)
 {
     assert(dst);
     return memset(dst, val, sz);
+}
+
+void
+logsFlush(void)
+{
+    fatal("tools.cc required");
+}
+
+void
+no_suid(void)
+{
+    fatal("tools.cc required");
 }
