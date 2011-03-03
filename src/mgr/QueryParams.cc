@@ -123,7 +123,7 @@ Mgr::QueryParams::Parse(const String& aParamsStr, QueryParams& aParams)
 Mgr::QueryParam::Pointer
 Mgr::QueryParams::CreateParam(QueryParam::Type aType)
 {
-    switch(aType) {
+    switch (aType) {
     case QueryParam::ptInt:
         return new IntParam();
 
