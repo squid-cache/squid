@@ -1013,9 +1013,9 @@ read_request(void)
             req->pub_auth = xstrdup(q), decode_pub_auth(req);
         else if (0 == strcasecmp(t, "operation"))
             req->action = xstrdup(q);
-        else if(0 == strcasecmp(t, "workers") && strlen(q))
+        else if (0 == strcasecmp(t, "workers") && strlen(q))
             req->workers = xstrdup(q);
-         else if(0 == strcasecmp(t, "processes") && strlen(q))
+        else if (0 == strcasecmp(t, "processes") && strlen(q))
             req->processes = xstrdup(q);
     }
 
