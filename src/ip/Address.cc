@@ -213,8 +213,8 @@ Ip::Address::SetEmpty()
 }
 
 #if _SQUID_AIX_
-    // Bug 2885 comment 78 explains.
-    // In short AIX has a different netinet/in.h union definition
+// Bug 2885 comment 78 explains.
+// In short AIX has a different netinet/in.h union definition
 const struct in6_addr Ip::Address::v4_localhost = {{{ 0x00000000, 0x00000000, 0x0000ffff, 0x7f000001 }}};
 const struct in6_addr Ip::Address::v4_anyaddr = {{{ 0x00000000, 0x00000000, 0x0000ffff, 0x00000000 }}};
 const struct in6_addr Ip::Address::v4_noaddr = {{{ 0x00000000, 0x00000000, 0x0000ffff, 0xffffffff }}};
