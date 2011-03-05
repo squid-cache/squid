@@ -107,7 +107,7 @@ rfc1738_do_escape(const char *url, int flags)
 
         /* RFC 1738 defines these chars as unsafe */
         if ((flags & RFC1738_ESCAPE_UNSAFE)) {
-            for (i = 0;i < sizeof(rfc1738_unsafe_chars); i++) {
+            for (i = 0; i < sizeof(rfc1738_unsafe_chars); i++) {
                 if (*p == rfc1738_unsafe_chars[i]) {
                     do_escape = 1;
                     break;
