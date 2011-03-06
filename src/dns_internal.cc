@@ -1148,7 +1148,7 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
 
             if (q->sz < 0) {
                 /* problem with query data -- query not sent */
-                idnsCallback(q->callback_data, NULL, 0, "Internal error");
+                idnsCallback(static_cast<idns_query *>(q->callback_data), NULL, 0, "Internal error");
                 cbdataFree(q);
                 return;
             }
@@ -1192,7 +1192,7 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
 
         if (q->sz < 0) {
             /* problem with query data -- query not sent */
-            idnsCallback(q->callback_data, NULL, 0, "Internal error");
+            idnsCallback(static_cast<idns_query *>(q->callback_data), NULL, 0, "Internal error");
             cbdataFree(q);
             return;
         }
