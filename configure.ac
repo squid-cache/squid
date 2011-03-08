@@ -913,10 +913,10 @@ then
         AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-loadable-modules with --enable-ecap.]);
     fi
 
-    dnl eCAP support requires libecap
-    dnl This Squid supports libecap v0.2.x
-    dnl Use EXT prefix or libtool will get confused with two libecaps:
-    dnl one "external" (that we check for here) and one our own convenience lib
+    dnl eCAP support requires libecap.
+    dnl This Squid supports libecap v0.2.x.
+    dnl Use EXT prefix so that make and libtool messages distinguish between
+    dnl external libecap (that we check for here) and our own convenience lib.
     PKG_CHECK_MODULES(EXTLIBECAP, [libecap > 0.2 libecap < 0.3])
 fi
 

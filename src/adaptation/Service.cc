@@ -7,7 +7,7 @@
 #include "adaptation/ServiceFilter.h"
 #include "adaptation/Service.h"
 
-Adaptation::Service::Service(ServiceConfigPointer aConfig): theConfig(aConfig)
+Adaptation::Service::Service(const ServiceConfigPointer &aConfig): theConfig(aConfig)
 {
     Must(theConfig != NULL);
     debugs(93,3, HERE << "creating adaptation service " << cfg().key);

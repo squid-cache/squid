@@ -6758,10 +6758,12 @@ DOC_START
 
 	An ICAP REQMOD or RESPMOD transaction may set an entry in the 
 	shared table by returning an ICAP header field with a name 
-	specified in adaptation_masterx_shared_names. An eCAP REQMOD or
-	RESPMOD transaction may set an entry in the shared table by
-	implementing the libecap::visitEachOption() API to provide an
-	option with a name specified in adaptation_masterx_shared_names.
+	specified in adaptation_masterx_shared_names.
+
+	An eCAP REQMOD or RESPMOD transaction may set an entry in the
+	shared table by implementing the libecap::visitEachOption() API
+	to provide an option with a name specified in
+	adaptation_masterx_shared_names.
 
 	Squid will store and forward the set entry to subsequent adaptation
 	transactions within the same master transaction scope.

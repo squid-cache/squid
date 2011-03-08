@@ -87,7 +87,7 @@ public:
     typedef RefCount<ServiceRep> Pointer;
 
 public:
-    ServiceRep(ServiceConfigPointer aConfig);
+    explicit ServiceRep(const ServiceConfigPointer &aConfig);
     virtual ~ServiceRep();
 
     virtual void finalize();

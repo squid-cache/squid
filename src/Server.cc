@@ -793,7 +793,7 @@ ServerStateData::handleAdaptationAborted(bool bypassable)
 void
 ServerStateData::handleAdaptationBlocked(const Adaptation::Answer &answer)
 {
-    debugs(11,5, HERE << "handleAdaptationBlocked: " << answer.ruleId);
+    debugs(11,5, HERE << answer.ruleId);
 
     if (abortOnBadEntry("entry went bad while ICAP aborted"))
         return;

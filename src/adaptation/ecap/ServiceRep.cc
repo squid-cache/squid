@@ -78,7 +78,7 @@ Adaptation::Ecap::ConfigRep::visitEachOption(libecap::NamedValueVisitor &visitor
 
 
 
-Adaptation::Ecap::ServiceRep::ServiceRep(ServiceConfigPointer cfg):
+Adaptation::Ecap::ServiceRep::ServiceRep(const ServiceConfigPointer &cfg):
         /*AsyncJob("Adaptation::Ecap::ServiceRep"),*/ Adaptation::Service(cfg),
         isDetached(false)
 {

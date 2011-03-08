@@ -18,9 +18,9 @@ libxecap_la_SOURCES = \
 	Registry.h
 
 # add libecap using its pkg-config-produced configuration variables
-libxecap_la_CPPFLAGS = $(EXTLIBECAP_CFLAGS)
+libxecap_la_CXXFLAGS = $(EXTLIBECAP_CFLAGS)
 
-## It is tempting to put libxecap_la_LDFLAGS here, but it leads to weird
+## It is tempting to put libxecap_la_LDFLAGS/LIBADD here, but it leads to weird
 ## linking errors. For example, "make clean all" works, but rebuilding after
 ## modifying a single source file leads to libtool's "file not found" errors.
-## libxecap_la_LDFLAGS = $(EXTLIBECAP_LIBS)
+## libxecap_la_LIBADD = $(EXTLIBECAP_LIBS)
