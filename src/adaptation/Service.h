@@ -24,7 +24,7 @@ public:
     typedef String Id;
 
 public:
-    explicit Service(ServiceConfigPointer aConfig);
+    explicit Service(const ServiceConfigPointer &aConfig);
     virtual ~Service();
 
     virtual bool probed() const = 0; // see comments above

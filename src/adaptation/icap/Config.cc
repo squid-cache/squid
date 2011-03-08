@@ -58,7 +58,7 @@ Adaptation::Icap::Config::~Config()
 }
 
 Adaptation::ServicePointer
-Adaptation::Icap::Config::createService(ServiceConfigPointer cfg)
+Adaptation::Icap::Config::createService(const ServiceConfigPointer &cfg)
 {
     return new Adaptation::Icap::ServiceRep(cfg);
 }
