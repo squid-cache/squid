@@ -33,7 +33,7 @@ Adaptation::Ecap::Config::newServiceConfig() const
 }
 
 Adaptation::ServicePointer
-Adaptation::Ecap::Config::createService(ServiceConfigPointer cfg)
+Adaptation::Ecap::Config::createService(const ServiceConfigPointer &cfg)
 {
     return new Adaptation::Ecap::ServiceRep(cfg);
 }

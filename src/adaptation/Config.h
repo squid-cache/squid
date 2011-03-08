@@ -64,7 +64,7 @@ private:
     Config(const Config &); // unsupported
     Config &operator =(const Config &); // unsupported
 
-    virtual ServicePointer createService(ServiceConfigPointer cfg) = 0;
+    virtual ServicePointer createService(const ServiceConfigPointer &cfg) = 0;
 
     static void ParseServiceGroup(ServiceGroupPointer group);
     static void FreeServiceGroups(void);
