@@ -41,7 +41,7 @@ HttpRequest::HttpRequest() : HttpMsg(hoRequest)
     fatal("Not implemented");
 }
 
-HttpRequest::HttpRequest(const HttpRequestMethod& method, protocol_t protocol, const char *aUrlpath) : HttpMsg(hoRequest)
+HttpRequest::HttpRequest(const HttpRequestMethod& method, AnyP::ProtocolType protocol, const char *aUrlpath) : HttpMsg(hoRequest)
 {
     fatal("Not implemented");
 }
@@ -82,7 +82,7 @@ HttpRequest::expectingBody(const HttpRequestMethod& unused, int64_t&) const
 }
 
 void
-HttpRequest::initHTTP(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath)
+HttpRequest::initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath)
 {
     fatal("Not implemented");
 }

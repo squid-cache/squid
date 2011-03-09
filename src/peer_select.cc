@@ -497,7 +497,7 @@ peerGetSomeDirect(ps_state * ps)
         return;
 
     /* WAIS is not implemented natively */
-    if (ps->request->protocol == PROTO_WAIS)
+    if (ps->request->protocol == AnyP::PROTO_WAIS)
         return;
 
     peerAddFwdServer(&ps->servers, NULL, HIER_DIRECT);
@@ -745,20 +745,20 @@ peerHtcpParentMiss(peer * p, htcpReplyData * htcp, ps_state * ps)
 #endif
 
 static void
-peerHandlePingReply(peer * p, peer_t type, protocol_t proto, void *pingdata, void *data)
+peerHandlePingReply(peer * p, peer_t type, AnyP::ProtocolType proto, void *pingdata, void *data)
 {
-    if (proto == PROTO_ICP)
+    if (proto == AnyP::PROTO_ICP)
         peerHandleIcpReply(p, type, (icp_common_t *)pingdata, data);
 
 #if USE_HTCP
 
-    else if (proto == PROTO_HTCP)
+    else if (proto == AnyP::PROTO_HTCP)
         peerHandleHtcpReply(p, type, (htcpReplyData *)pingdata, data);
 
 #endif
 
     else
-        debugs(44, 1, "peerHandlePingReply: unknown protocol_t " << proto);
+        debugs(44, 1, "peerHandlePingReply: unknown protocol " << proto);
 }
 
 static void

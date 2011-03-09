@@ -1471,7 +1471,7 @@ FtpStateData::buildTitleUrl()
 
     title_url.append(request->GetHost());
 
-    if (request->port != urlDefaultPort(PROTO_FTP)) {
+    if (request->port != urlDefaultPort(AnyP::PROTO_FTP)) {
         title_url.append(":");
         title_url.append(xitoa(request->port));
     }
@@ -1493,7 +1493,7 @@ FtpStateData::buildTitleUrl()
 
     base_href.append(request->GetHost());
 
-    if (request->port != urlDefaultPort(PROTO_FTP)) {
+    if (request->port != urlDefaultPort(AnyP::PROTO_FTP)) {
         base_href.append(":");
         base_href.append(xitoa(request->port));
     }
@@ -3773,7 +3773,7 @@ ftpUrlWith2f(HttpRequest * request)
 {
     String newbuf = "%2f";
 
-    if (request->protocol != PROTO_FTP)
+    if (request->protocol != AnyP::PROTO_FTP)
         return NULL;
 
     if ( request->urlpath[0]=='/' ) {

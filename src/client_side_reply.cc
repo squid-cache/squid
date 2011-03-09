@@ -551,7 +551,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
              */
             http->logType = LOG_TCP_CLIENT_REFRESH_MISS;
             processMiss();
-        } else if (r->protocol == PROTO_HTTP) {
+        } else if (r->protocol == AnyP::PROTO_HTTP) {
             /*
              * Object needs to be revalidated
              * XXX This could apply to FTP as well, if Last-Modified is known.
@@ -658,7 +658,7 @@ clientReplyContext::processMiss()
 
         /** Check for internal requests. Update Protocol info if so. */
         if (http->flags.internal)
-            r->protocol = PROTO_INTERNAL;
+            r->protocol = AnyP::PROTO_INTERNAL;
 
         r->clientConnection = http->getConn();
 
@@ -1504,7 +1504,7 @@ clientReplyContext::cloneReply()
 
     reply = HTTPMSGLOCK(rep);
 
-    if (reply->sline.protocol == PROTO_HTTP) {
+    if (reply->sline.protocol == AnyP::PROTO_HTTP) {
         /* RFC 2616 requires us to advertise our 1.1 version (but only on real HTTP traffic) */
         reply->sline.version = HttpVersion(1,1);
     }
@@ -2148,7 +2148,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, request_flags r
      */
 
     if (http->request == NULL)
-        http->request = HTTPMSGLOCK(new HttpRequest(m, PROTO_NONE, null_string));
+        http->request = HTTPMSGLOCK(new HttpRequest(m, AnyP::PROTO_NONE, null_string));
 
     StoreEntry *e = storeCreateEntry(http->uri, http->log_uri, reqFlags, m);
 

@@ -678,7 +678,7 @@ ClientHttpRequest::logRequest()
             updateCounters();
 
             if (getConn() != NULL)
-                clientdbUpdate(getConn()->peer, logType, PROTO_HTTP, out.size);
+                clientdbUpdate(getConn()->peer, logType, AnyP::PROTO_HTTP, out.size);
         }
 
         delete checklist;
@@ -1088,11 +1088,6 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
             buf += copy_sz;
 
         }
-
-        /*
-         * paranoid check
-         */
-        assert((available.size() >= 0 && i->debt() >= 0) || i->debt() == -1);
 
         if (!canPackMoreRanges()) {
             debugs(33, 3, "clientPackRange: Returning because !canPackMoreRanges.");
@@ -2020,21 +2015,21 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         return; /* already in good shape */
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
+    // BUG 2976: Squid only accepts intercepted HTTP.
 
     if ((host = mime_get_header(req_hdr, "Host")) != NULL) {
         int url_sz = strlen(url) + 32 + Config.appendDomainLen +
                      strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
-        snprintf(http->uri, url_sz, "%s://%s%s",
-                 conn->port->protocol, host, url);
+        snprintf(http->uri, url_sz, "http://%s%s", /*conn->port->protocol,*/ host, url);
         debugs(33, 5, "TRANSPARENT HOST REWRITE: '" << http->uri <<"'");
     } else {
         /* Put the local socket IP address as the hostname.  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
         http->getConn()->me.ToHostname(ipbuf,MAX_IPSTRLEN),
-        snprintf(http->uri, url_sz, "%s://%s:%d%s",
-                 http->getConn()->port->protocol,
+        snprintf(http->uri, url_sz, "http://%s:%d%s",
+                 // http->getConn()->port->protocol,
                  ipbuf, http->getConn()->me.GetPort(), url);
         debugs(33, 5, "TRANSPARENT REWRITE: '" << http->uri << "'");
     }
@@ -2489,7 +2484,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     }
 
     if (http->flags.internal) {
-        request->protocol = PROTO_HTTP;
+        request->protocol = AnyP::PROTO_HTTP;
         request->login[0] = '\0';
     }
 
