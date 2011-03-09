@@ -915,16 +915,16 @@ then
 
     dnl eCAP support requires libecap.
     dnl This Squid supports libecap v0.2.x.
-    dnl Use EXT prefix so that make and libtool messages distinguish between
-    dnl external libecap (that we check for here) and our own convenience lib.
-    PKG_CHECK_MODULES(EXTLIBECAP, [libecap > 0.2 libecap < 0.3])
+    dnl Use EXT_ prefix to distinguish external libecap (that we check for
+    dnl here) from our own convenience ecap library in Makefiles.
+    PKG_CHECK_MODULES(EXT_LIBECAP, [libecap > 0.2 libecap < 0.3])
 fi
 
 AM_CONDITIONAL(USE_ECAP, test "x$squid_opt_use_ecap" = "xyes")
 if test "x$squid_opt_use_ecap" = "xyes";
 then
     AC_DEFINE(USE_ECAP,1,[Enable eCAP support])
-    ECAP_LIBS="ecap/libxecap.la"
+    ECAP_LIBS="ecap/libsquid-ecap.la"
     squid_opt_use_adaptation=yes
 else
     AC_DEFINE(USE_ECAP,0,[Disable eCAP support])
