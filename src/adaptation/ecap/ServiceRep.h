@@ -23,7 +23,7 @@ namespace Ecap
 class ServiceRep : public Adaptation::Service
 {
 public:
-    ServiceRep(const Adaptation::ServiceConfig &config);
+    explicit ServiceRep(const ServiceConfigPointer &aConfig);
     virtual ~ServiceRep();
 
     typedef libecap::shared_ptr<libecap::adapter::Service> AdapterService;

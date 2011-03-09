@@ -312,42 +312,43 @@ Log::Format::SquidCustom(AccessLogEntry * al, customlog * log)
                 out = sb.termedBuf();
             }
             break;
+
+        case LFT_ADAPTATION_LAST_HEADER:
+            if (al->request) {
+                const Adaptation::History::Pointer ah = al->request->adaptHistory();
+                if (ah != NULL) // XXX: add adapt::<all_h but use lastMeta here
+                    sb = ah->allMeta.getByName(fmt->data.header.header);
+            }
+
+            // XXX: here and elsewhere: move such code inside the if guard
+            out = sb.termedBuf();
+
+            quote = 1;
+
+            break;
+
+        case LFT_ADAPTATION_LAST_HEADER_ELEM:
+            if (al->request) {
+                const Adaptation::History::Pointer ah = al->request->adaptHistory();
+                if (ah != NULL) // XXX: add adapt::<all_h but use lastMeta here
+                    sb = ah->allMeta.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
+            }
+
+            out = sb.termedBuf();
+
+            quote = 1;
+
+            break;
+
+        case LFT_ADAPTATION_LAST_ALL_HEADERS:
+            out = al->headers.adapt_last;
+
+            quote = 1;
+
+            break;
 #endif
 
 #if ICAP_CLIENT
-        case LFT_ICAP_LAST_MATCHED_HEADER:
-            if (al->request) {
-                Adaptation::Icap::History::Pointer ih = al->request->icapHistory();
-                if (ih != NULL)
-                    sb = ih->mergeOfIcapHeaders.getByName(fmt->data.header.header);
-            }
-
-            out = sb.termedBuf();
-
-            quote = 1;
-
-            break;
-
-        case LFT_ICAP_LAST_MATCHED_HEADER_ELEM:
-            if (al->request) {
-                Adaptation::Icap::History::Pointer ih = al->request->icapHistory();
-                if (ih != NULL)
-                    sb = ih->mergeOfIcapHeaders.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
-            }
-
-            out = sb.termedBuf();
-
-            quote = 1;
-
-            break;
-
-        case LFT_ICAP_LAST_MATCHED_ALL_HEADERS:
-            out = al->headers.icap;
-
-            quote = 1;
-
-            break;
-
         case LFT_ICAP_ADDR:
             if (!out)
                 out = al->icap.hostAddr.NtoA(tmp,1024);

@@ -15,7 +15,7 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ServiceRep);
 
-Adaptation::Icap::ServiceRep::ServiceRep(const Adaptation::ServiceConfig &svcCfg):
+Adaptation::Icap::ServiceRep::ServiceRep(const ServiceConfigPointer &svcCfg):
         AsyncJob("Adaptation::Icap::ServiceRep"), Adaptation::Service(svcCfg),
         theOptions(NULL), theOptionsFetcher(0), theLastUpdate(0),
         isSuspended(0), notifying(false),
@@ -304,11 +304,19 @@ void Adaptation::Icap::ServiceRep::announceStatusChange(const char *downPhrase, 
 }
 
 // we are receiving ICAP OPTIONS response headers here or NULL on failures
-void Adaptation::Icap::ServiceRep::noteAdaptationAnswer(HttpMsg *msg)
+void Adaptation::Icap::ServiceRep::noteAdaptationAnswer(const Answer &answer)
 {
     Must(initiated(theOptionsFetcher));
     clearAdaptation(theOptionsFetcher);
 
+    if (answer.kind == Answer::akError) {
+        debugs(93,3, HERE << "failed to fetch options " << status());
+        handleNewOptions(0);
+        return;
+    }
+
+    Must(answer.kind == Answer::akForward); // no akBlock for OPTIONS requests
+    HttpMsg *msg = answer.message;
     Must(msg);
 
     debugs(93,5, HERE << "is interpreting new options " << status());
@@ -322,15 +330,6 @@ void Adaptation::Icap::ServiceRep::noteAdaptationAnswer(HttpMsg *msg)
     }
 
     handleNewOptions(newOptions);
-}
-
-void Adaptation::Icap::ServiceRep::noteAdaptationQueryAbort(bool)
-{
-    Must(initiated(theOptionsFetcher));
-    clearAdaptation(theOptionsFetcher);
-
-    debugs(93,3, HERE << "failed to fetch options " << status());
-    handleNewOptions(0);
 }
 
 // we (a) must keep trying to get OPTIONS and (b) are RefCounted so we

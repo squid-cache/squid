@@ -554,9 +554,6 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
     assert(request);
     assert(aLogEntry);
 
-#if ICAP_CLIENT
-    Adaptation::Icap::History::Pointer ih = request->icapHistory();
-#endif
     if (Config.onoff.log_mime_hdrs) {
         Packer p;
         MemBuf mb;
@@ -575,14 +572,15 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
             aLogEntry->headers.request = xstrdup(mb.buf);
         }
 
-#if ICAP_CLIENT
-        packerClean(&p);
-        mb.reset();
-        packerToMemInit(&p, &mb);
-
-        if (ih != NULL)
-            ih->lastIcapHeader.packInto(&p);
-        aLogEntry->headers.icap = xstrdup(mb.buf);
+#if USE_ADAPTATION
+        const Adaptation::History::Pointer ah = request->adaptLogHistory();
+        if (ah != NULL) {
+            packerClean(&p);
+            mb.reset();
+            packerToMemInit(&p, &mb);
+            ah->lastMeta.packInto(&p);
+            aLogEntry->headers.adapt_last = xstrdup(mb.buf);
+        }
 #endif
 
         packerClean(&p);
@@ -590,6 +588,7 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
     }
 
 #if ICAP_CLIENT
+    const Adaptation::Icap::History::Pointer ih = request->icapHistory();
     if (ih != NULL)
         aLogEntry->icap.processingTime = ih->processingTime();
 #endif
