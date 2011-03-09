@@ -199,8 +199,10 @@ Adaptation::Ecap::RequestLineRep::uri(const Area &aUri)
 Adaptation::Ecap::RequestLineRep::Area
 Adaptation::Ecap::RequestLineRep::uri() const
 {
-    return Area::FromTempBuffer(theMessage.urlpath.rawBuf(),
-                                theMessage.urlpath.size());
+    const char *fullUrl = urlCanonical(&theMessage);
+    Must(fullUrl);
+    // optimize: avoid copying by having an Area::Detail that locks theMessage
+    return Area::FromTempBuffer(fullUrl, strlen(fullUrl));
 }
 
 void
