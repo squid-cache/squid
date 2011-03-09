@@ -35,11 +35,14 @@ public:
     void master(const AdapterXaction &aMaster); // establish a link
 
     // libecap::host::Xaction API
+    virtual const libecap::Area option(const libecap::Name &name) const;
+    virtual void visitEachOption(libecap::NamedValueVisitor &visitor) const;
     virtual libecap::Message &virgin();
     virtual const libecap::Message &cause();
     virtual libecap::Message &adapted();
     virtual void useVirgin();
     virtual void useAdapted(const libecap::shared_ptr<libecap::Message> &msg);
+    virtual void blockVirgin();
     virtual void adaptationDelayed(const libecap::Delay &);
     virtual void adaptationAborted();
     virtual void vbDiscard();
@@ -77,11 +80,19 @@ protected:
 
     Adaptation::Message &answer();
 
-    void dropVirgin(const char *reason);
+    void sinkVb(const char *reason);
+    void preserveVb(const char *reason);
+    void forgetVb(const char *reason);
+
     void moveAbContent();
 
+    void updateHistory();
     void terminateMaster();
     void scheduleStop(const char *reason);
+
+    const libecap::Area clientIpValue() const;
+    const libecap::Area usernameValue() const;
+    const libecap::Area masterxSharedValue(const libecap::Name &name) const;
 
 private:
     AdapterXaction theMaster; // the actual adaptation xaction we represent
@@ -94,10 +105,10 @@ private:
     MessagePtr theAnswerRep;
 
     typedef enum { opUndecided, opOn, opComplete, opNever } OperationState;
-    OperationState proxyingVb; // delivering virgin body from core to adapter
+    OperationState makingVb; //< delivering virgin body from pipe to adapter
     OperationState proxyingAb; // delivering adapted body from adapter to core
     int adaptHistoryId;        ///< adaptation history slot reservation
-    bool canAccessVb;          // virgin BodyPipe content is accessible
+    bool vbProductionFinished; // whether there can be no more vb bytes
     bool abProductionFinished; // whether adapter has finished producing ab
     bool abProductionAtEnd;    // whether adapter produced a complete ab
 

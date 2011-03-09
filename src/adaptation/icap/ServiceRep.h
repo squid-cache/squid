@@ -87,7 +87,7 @@ public:
     typedef RefCount<ServiceRep> Pointer;
 
 public:
-    ServiceRep(const Adaptation::ServiceConfig &config);
+    explicit ServiceRep(const ServiceConfigPointer &aConfig);
     virtual ~ServiceRep();
 
     virtual void finalize();
@@ -119,8 +119,7 @@ public: // treat these as private, they are for callbacks only
     void noteTimeToNotify();
 
     // receive either an ICAP OPTIONS response header or an abort message
-    virtual void noteAdaptationAnswer(HttpMsg *msg);
-    virtual void noteAdaptationQueryAbort(bool);
+    virtual void noteAdaptationAnswer(const Answer &answer);
 
 private:
     // stores Prepare() callback info

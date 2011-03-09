@@ -311,18 +311,17 @@ accessLogInit(void)
 
         LogfileStatus = LOG_ENABLE;
 
-#if USE_ADAPTATION || ICAP_CLIENT
-        for (logformat_token * curr_token = (log->logFormat?log->logFormat->format:NULL); curr_token; curr_token = curr_token->next) {
 #if USE_ADAPTATION
+        for (logformat_token * curr_token = (log->logFormat?log->logFormat->format:NULL); curr_token; curr_token = curr_token->next) {
             if (curr_token->type == LTF_ADAPTATION_SUM_XACT_TIMES ||
-                    curr_token->type == LTF_ADAPTATION_ALL_XACT_TIMES) {
+                    curr_token->type == LTF_ADAPTATION_ALL_XACT_TIMES ||
+                    curr_token->type == LFT_ADAPTATION_LAST_HEADER ||
+                    curr_token->type == LFT_ADAPTATION_LAST_HEADER_ELEM ||
+                    curr_token->type == LFT_ADAPTATION_LAST_ALL_HEADERS) {
                 alLogformatHasAdaptToken = true;
             }
-#endif
 #if ICAP_CLIENT
-            if (curr_token->type == LFT_ICAP_LAST_MATCHED_HEADER ||
-                    curr_token->type == LFT_ICAP_LAST_MATCHED_HEADER_ELEM ||
-                    curr_token->type == LFT_ICAP_LAST_MATCHED_ALL_HEADERS) {
+            if (curr_token->type == LFT_ICAP_TOTAL_TIME) {
                 alLogformatHasIcapToken = true;
             }
 #endif
@@ -573,7 +572,7 @@ accessLogFreeMemory(AccessLogEntry * aLogEntry)
     safe_free(aLogEntry->headers.request);
 
 #if ICAP_CLIENT
-    safe_free(aLogEntry->headers.icap);
+    safe_free(aLogEntry->headers.adapt_last);
 #endif
 
     safe_free(aLogEntry->headers.reply);
