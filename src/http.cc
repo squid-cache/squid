@@ -769,7 +769,7 @@ HttpStateData::handle1xx(HttpReply *reply)
 #if USE_HTTP_VIOLATIONS
     // check whether the 1xx response forwarding is allowed by squid.conf
     if (Config.accessList.reply) {
-        ACLFilledChecklist ch(Config.accessList.reply, request, NULL);
+        ACLFilledChecklist ch(Config.accessList.reply, originalRequest(), NULL);
         ch.reply = HTTPMSGLOCK(reply);
         if (!ch.fastCheck()) { // TODO: support slow lookups?
             debugs(11, 3, HERE << "ignoring denied 1xx");
@@ -2208,7 +2208,7 @@ HttpStateData::finishingBrokenPost()
         return false;
     }
 
-    ACLFilledChecklist ch(Config.accessList.brokenPosts, request, NULL);
+    ACLFilledChecklist ch(Config.accessList.brokenPosts, originalRequest(), NULL);
     if (!ch.fastCheck()) {
         debugs(11, 5, HERE << "didn't match brokenPosts");
         return false;
