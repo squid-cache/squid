@@ -26,10 +26,25 @@ Adaptation::Ecap::Config::finalize()
     CheckUnusedAdapterServices(AllServices());
 }
 
-Adaptation::ServicePointer
-Adaptation::Ecap::Config::createService(const Adaptation::ServiceConfig &cfg)
+Adaptation::ServiceConfig *
+Adaptation::Ecap::Config::newServiceConfig() const
 {
-    Adaptation::ServicePointer s = new Adaptation::Ecap::ServiceRep(cfg);
-    return s.getRaw();
+    return new ServiceConfig();
+}
+
+Adaptation::ServicePointer
+Adaptation::Ecap::Config::createService(const ServiceConfigPointer &cfg)
+{
+    return new Adaptation::Ecap::ServiceRep(cfg);
+}
+
+
+/* ServiceConfig */
+
+bool
+Adaptation::Ecap::ServiceConfig::grokExtension(const char *name, const char *value)
+{
+    extensions.push_back(std::make_pair(name, value));
+    return true;
 }
 

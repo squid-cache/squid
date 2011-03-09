@@ -44,9 +44,12 @@ private:
 extern const libecap::Name protocolInternal;
 extern const libecap::Name protocolCacheObj;
 extern const libecap::Name protocolIcp;
+extern const libecap::Name protocolIcy;
+extern const libecap::Name protocolUnknown;
 #if USE_HTCP
 extern const libecap::Name protocolHtcp;
 #endif
+extern const libecap::Name metaBypassable; ///< an ecap_service parameter
 
 } // namespace Ecap
 } // namespace Adaptation

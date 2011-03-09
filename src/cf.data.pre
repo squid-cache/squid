@@ -2932,7 +2932,7 @@ DOC_START
 				sent to the first selected peer. The timer stops
 				with the last I/O with the last peer.
 
-	If ICAP is enabled, the following two codes become available (as
+	If ICAP is enabled, the following code becomes available (as
 	well as ICAP log codes documented with the icap_log option):
 
 		icap::tt        Total ICAP processing time for the HTTP
@@ -2940,14 +2940,13 @@ DOC_START
 				ACLs are checked and when ICAP
 				transaction is in progress.
 
-		icap::<last_h	The header of the last ICAP response
-				related to the HTTP transaction. Like
-				<h, accepts an optional header name
-				argument.  Will not change semantics
-				when multiple ICAP transactions per HTTP
-				transaction are supported.
+	If adaptation is enabled the following three codes become available:
 
-	If adaptation is enabled the following two codes become available:
+		adapt::<last_h	The header of the last ICAP response or
+				meta-information from the last eCAP
+				transaction related to the HTTP transaction.
+				Like <h, accepts an optional header name
+				argument.
 
 		adapt::sum_trs Summed adaptation transaction response
 				times recorded as a comma-separated list in
@@ -3125,7 +3124,7 @@ DOC_START
 
 logformat icap_squid %ts.%03tu %6icap::tr %>a %icap::to/%03icap::Hs %icap::<size %icap::rm %icap::ru% %un -/%icap::<A -
 
-	See also: logformat, log_icap, and %icap::<last_h 
+	See also: logformat, log_icap, and %adapt::<last_h 
 DOC_END
 
 NAME: logfile_daemon
@@ -4148,12 +4147,12 @@ Example:
  broken_posts allow buggy_server
 DOC_END
 
-NAME: icap_uses_indirect_client
+NAME: adaptation_uses_indirect_client icap_uses_indirect_client
 COMMENT: on|off
 TYPE: onoff
-IFDEF: FOLLOW_X_FORWARDED_FOR&&ICAP_CLIENT
+IFDEF: FOLLOW_X_FORWARDED_FOR&&USE_ADAPTATION
 DEFAULT: on
-LOC: Adaptation::Icap::TheConfig.icap_uses_indirect_client
+LOC: Adaptation::Config::use_indirect_client
 DOC_START
    Controls whether the indirect client address
    (see follow_x_forwarded_for) instead of the
@@ -5962,6 +5961,8 @@ DOC_START
 	  the first authentication related acl encountered
 	- When none of the http_access lines matches. It's then the last
 	  acl processed on the last http_access line.
+	- When the decision to deny access was made by an adaptation service,
+	  the acl name is the corresponding eCAP or ICAP service_name.
 
 	NP: If providing your own custom error pages with error_directory
 	    you may also specify them by your custom file name:
@@ -6400,25 +6401,27 @@ DOC_START
 	an ICAP server.
 DOC_END
 
-NAME: icap_send_client_ip
+NAME: adaptation_send_client_ip icap_send_client_ip
 TYPE: onoff
-IFDEF: ICAP_CLIENT
+IFDEF: USE_ADAPTATION
 COMMENT: on|off
-LOC: Adaptation::Icap::TheConfig.send_client_ip
+LOC: Adaptation::Config::send_client_ip
 DEFAULT: off
 DOC_START
 	This adds the header "X-Client-IP" to ICAP requests.
 DOC_END
 
-NAME: icap_send_client_username
+NAME: adaptation_send_username icap_send_client_username
 TYPE: onoff
-IFDEF: ICAP_CLIENT
+IFDEF: USE_ADAPTATION
 COMMENT: on|off
-LOC: Adaptation::Icap::TheConfig.send_client_username
+LOC: Adaptation::Config::send_username
 DEFAULT: off
 DOC_START
 	This sends authenticated HTTP client username (if available) to
-	the ICAP service. The username value is encoded based on the
+	the adaptation service.
+
+	For ICAP, the username value is encoded based on the
 	icap_client_username_encode option and is sent using the header
 	specified by the icap_client_username_header option.
 DOC_END
@@ -6429,7 +6432,7 @@ IFDEF: ICAP_CLIENT
 LOC: Adaptation::Icap::TheConfig.client_username_header
 DEFAULT: X-Client-Username
 DOC_START
-	ICAP request header name to use for send_client_username.
+	ICAP request header name to use for send_username.
 DOC_END
 
 NAME: icap_client_username_encode
@@ -6755,8 +6758,14 @@ DOC_START
 
 	An ICAP REQMOD or RESPMOD transaction may set an entry in the 
 	shared table by returning an ICAP header field with a name 
-	specified in adaptation_masterx_shared_names. Squid will store 
-	and forward that ICAP header field to subsequent ICAP 
+	specified in adaptation_masterx_shared_names.
+
+	An eCAP REQMOD or RESPMOD transaction may set an entry in the
+	shared table by implementing the libecap::visitEachOption() API
+	to provide an option with a name specified in
+	adaptation_masterx_shared_names.
+
+	Squid will store and forward the set entry to subsequent adaptation
 	transactions within the same master transaction scope.
 
 	Only one shared entry name is supported at this time.

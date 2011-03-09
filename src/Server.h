@@ -90,8 +90,7 @@ public:
     static void adaptationAclCheckDoneWrapper(Adaptation::ServiceGroupPointer group, void *data);
 
     // ICAPInitiator: start an ICAP transaction and receive adapted headers.
-    virtual void noteAdaptationAnswer(HttpMsg *message);
-    virtual void noteAdaptationQueryAbort(bool final);
+    virtual void noteAdaptationAnswer(const Adaptation::Answer &answer);
 
     // BodyProducer: provide virgin response body to ICAP.
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer );
@@ -154,7 +153,9 @@ protected:
     void handleAdaptedBodyProductionEnded();
     void handleAdaptedBodyProducerAborted();
 
+    void handleAdaptedHeader(HttpMsg *msg);
     void handleAdaptationCompleted();
+    void handleAdaptationBlocked(const Adaptation::Answer &answer);
     void handleAdaptationAborted(bool bypassable = false);
 #endif
 

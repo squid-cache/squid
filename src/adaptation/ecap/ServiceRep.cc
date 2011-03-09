@@ -4,6 +4,11 @@
 #include "squid.h"
 #include <list>
 #include <libecap/adapter/service.h>
+#include <libecap/common/options.h>
+#include <libecap/common/name.h>
+#include <libecap/common/named_values.h>
+#include "adaptation/ecap/Config.h"
+#include "adaptation/ecap/Host.h"
 #include "adaptation/ecap/ServiceRep.h"
 #include "adaptation/ecap/XactionRep.h"
 #include "base/TextException.h"
@@ -11,7 +16,69 @@
 // configured eCAP service wrappers
 static std::list<Adaptation::Ecap::ServiceRep::AdapterService> TheServices;
 
-Adaptation::Ecap::ServiceRep::ServiceRep(const Adaptation::ServiceConfig &cfg):
+namespace Adaptation
+{
+namespace Ecap
+{
+
+/// wraps Adaptation::Ecap::ServiceConfig to allow eCAP visitors
+class ConfigRep: public libecap::Options
+{
+public:
+    typedef Adaptation::Ecap::ServiceConfig Master;
+    typedef libecap::Name Name;
+    typedef libecap::Area Area;
+
+    ConfigRep(const Master &aMaster);
+
+    // libecap::Options API
+    virtual const libecap::Area option(const libecap::Name &name) const;
+    virtual void visitEachOption(libecap::NamedValueVisitor &visitor) const;
+
+    const Master &master; ///< the configuration being wrapped
+};
+
+} // namespace Ecap
+} // namespace Adaptation
+
+
+Adaptation::Ecap::ConfigRep::ConfigRep(const Master &aMaster): master(aMaster)
+{
+}
+
+const libecap::Area
+Adaptation::Ecap::ConfigRep::option(const libecap::Name &name) const
+{
+    // we may supply the params we know about, but only when names have host ID
+    if (name == metaBypassable)
+        return Area(master.bypass ? "1" : "0", 1);
+
+    // TODO: We could build a by-name index, but is it worth it? Good adapters
+    // should use visitEachOption() instead, to check for name typos/errors.
+    typedef Master::Extensions::const_iterator MECI;
+    for (MECI i = master.extensions.begin(); i != master.extensions.end(); ++i) {
+        if (name == i->first)
+            return Area(i->second.data(), i->second.size());
+    }
+
+    return Area();
+}
+
+void
+Adaptation::Ecap::ConfigRep::visitEachOption(libecap::NamedValueVisitor &visitor) const
+{
+    // we may supply the params we know about too, but only if we set host ID
+    visitor.visit(metaBypassable, Area(master.bypass ? "1" : "0", 1));
+
+    // visit adapter-specific options (i.e., those not recognized by Squid)
+    typedef Master::Extensions::const_iterator MECI;
+    for (MECI i = master.extensions.begin(); i != master.extensions.end(); ++i)
+        visitor.visit(Name(i->first), Area::FromTempString(i->second));
+}
+
+
+
+Adaptation::Ecap::ServiceRep::ServiceRep(const ServiceConfigPointer &cfg):
         /*AsyncJob("Adaptation::Ecap::ServiceRep"),*/ Adaptation::Service(cfg),
         isDetached(false)
 {
@@ -32,6 +99,10 @@ Adaptation::Ecap::ServiceRep::finalize()
     Adaptation::Service::finalize();
     theService = FindAdapterService(cfg().uri);
     if (theService) {
+        debugs(93,3, HERE << "configuring eCAP service: " << theService->uri());
+        const ConfigRep cfgRep(dynamic_cast<const ServiceConfig&>(cfg()));
+        theService->configure(cfgRep);
+
         debugs(93,3, HERE << "starting eCAP service: " << theService->uri());
         theService->start();
     } else {
