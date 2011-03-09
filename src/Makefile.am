@@ -30,8 +30,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= base comm eui acl fs repl
-DIST_SUBDIRS = base comm eui acl fs repl
+SUBDIRS	= base anyp comm eui acl fs repl
+DIST_SUBDIRS = base anyp comm eui acl fs repl
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -554,6 +554,7 @@ nodist_squid_SOURCES = \
 
 squid_LDADD = \
 	$(COMMON_LIBS) \
+	anyp/libanyp.la \
 	comm/libcomm.la \
 	eui/libeui.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
@@ -1044,6 +1045,7 @@ nodist_tests_testAuth_SOURCES = \
 
 tests_testAuth_LDADD= \
 	$(COMMON_LIBS) \
+	anyp/libanyp.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1310,6 +1312,7 @@ tests_testCacheManager_LDADD = \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
+	anyp/libanyp.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1341,6 +1344,7 @@ nodist_tests_testDiskIO_SOURCES= \
 	SquidMath.h \
 	swap_log_op.cc
 tests_testDiskIO_LDADD = \
+	anyp/libanyp.la \
 	SquidConfig.o \
 	CommCalls.o \
 	DnsLookupDetails.o \
@@ -1513,6 +1517,7 @@ nodist_tests_testEvent_SOURCES = \
 	$(BUILT_SOURCES)
 tests_testEvent_LDADD = \
 	$(COMMON_LIBS) \
+	anyp/libanyp.la \
 	$(SNMP_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
@@ -1674,6 +1679,7 @@ nodist_tests_testEventLoop_SOURCES = \
 	$(BUILT_SOURCES)
 tests_testEventLoop_LDADD = \
 	$(COMMON_LIBS) \
+	anyp/libanyp.la \
 	$(SNMP_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
@@ -1830,6 +1836,7 @@ nodist_tests_test_http_range_SOURCES = \
 	$(BUILT_SOURCES)
 tests_test_http_range_LDADD = \
 	$(COMMON_LIBS) \
+	anyp/libanyp.la \
 	$(SNMP_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
@@ -1991,6 +1998,7 @@ nodist_tests_testHttpRequest_SOURCES = \
 	$(BUILT_SOURCES)
 tests_testHttpRequest_LDADD = \
 	$(COMMON_LIBS) \
+	anyp/libanyp.la \
 	$(SNMP_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
@@ -2089,6 +2097,7 @@ nodist_tests_testStore_SOURCES= \
 
 tests_testStore_LDADD= \
 	$(COMMON_LIBS) \
+	anyp/libanyp.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2191,6 +2200,7 @@ nodist_tests_testUfs_SOURCES = \
 	SquidMath.h \
 	swap_log_op.cc
 tests_testUfs_LDADD = \
+	anyp/libanyp.la \
 	CommCalls.o \
 	DnsLookupDetails.o \
 	$(COMMON_LIBS) \
@@ -2405,6 +2415,7 @@ tests_testURL_SOURCES = \
 nodist_tests_testURL_SOURCES = \
 	$(BUILT_SOURCES)
 tests_testURL_LDADD = \
+	anyp/libanyp.la \
 	$(COMMON_LIBS) \
 	$(SNMP_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \

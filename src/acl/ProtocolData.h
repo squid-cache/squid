@@ -35,11 +35,13 @@
 
 #ifndef SQUID_ACLPROTOCOLDATA_H
 #define SQUID_ACLPROTOCOLDATA_H
+
 #include "acl/Acl.h"
 #include "acl/Data.h"
+#include "anyp/ProtocolType.h"
 #include "CbDataList.h"
 
-class ACLProtocolData : public ACLData<protocol_t>
+class ACLProtocolData : public ACLData<AnyP::ProtocolType>
 {
 
 public:
@@ -49,13 +51,13 @@ public:
     ACLProtocolData(ACLProtocolData const &);
     ACLProtocolData &operator= (ACLProtocolData const &);
     virtual ~ACLProtocolData();
-    bool match(protocol_t);
+    bool match(AnyP::ProtocolType);
     wordlist *dump();
     void parse();
     bool empty() const;
-    virtual ACLData<protocol_t> *clone() const;
+    virtual ACLData<AnyP::ProtocolType> *clone() const;
 
-    CbDataList<protocol_t> *values;
+    CbDataList<AnyP::ProtocolType> *values;
 };
 
 MEMPROXY_CLASS_INLINE(ACLProtocolData);

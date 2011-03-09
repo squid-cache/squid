@@ -39,7 +39,8 @@ private:
     void noteWroteHeader(const CommIoCbParams& params);
     void noteCommClosed(const CommCloseCbParams& params);
     void removeCloseHandler();
-
+    Ipc::StrandCoords applyQueryParams(const Ipc::StrandCoords& aStrands,
+                                       const QueryParams& aParams);
 private:
     Action::Pointer aggrAction; //< action to aggregate
 

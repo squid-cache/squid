@@ -40,7 +40,7 @@
 #include "rfc1738.h"
 
 static HttpRequest *urlParseFinish(const HttpRequestMethod& method,
-                                   const protocol_t protocol,
+                                   const AnyP::ProtocolType protocol,
                                    const char *const urlpath,
                                    const char *const host,
                                    const char *const login,
@@ -65,9 +65,9 @@ urlInitialize(void)
 {
     debugs(23, 5, "urlInitialize: Initializing...");
     /* this ensures that the number of protocol strings is the same as
-     * the enum slots allocated because the last enum is always 'TOTAL'.
+     * the enum slots allocated because the last enum is always 'MAX'.
      */
-    assert(strcmp(ProtocolStr[PROTO_MAX], "TOTAL") == 0);
+    assert(strcmp(AnyP::ProtocolType_str[AnyP::PROTO_MAX], "MAX") == 0);
     /*
      * These test that our matchDomainName() function works the
      * way we expect it to.
@@ -97,7 +97,7 @@ urlInitialize(void)
  * backwards compatibility, e defaults to NULL, in which case we
  * assume b is NULL-terminated.
  */
-protocol_t
+AnyP::ProtocolType
 urlParseProtocol(const char *b, const char *e)
 {
     /*
@@ -114,64 +114,64 @@ urlParseProtocol(const char *b, const char *e)
     /* test common stuff first */
 
     if (strncasecmp(b, "http", len) == 0)
-        return PROTO_HTTP;
+        return AnyP::PROTO_HTTP;
 
     if (strncasecmp(b, "ftp", len) == 0)
-        return PROTO_FTP;
+        return AnyP::PROTO_FTP;
 
     if (strncasecmp(b, "https", len) == 0)
-        return PROTO_HTTPS;
+        return AnyP::PROTO_HTTPS;
 
     if (strncasecmp(b, "file", len) == 0)
-        return PROTO_FTP;
+        return AnyP::PROTO_FTP;
 
     if (strncasecmp(b, "gopher", len) == 0)
-        return PROTO_GOPHER;
+        return AnyP::PROTO_GOPHER;
 
     if (strncasecmp(b, "wais", len) == 0)
-        return PROTO_WAIS;
+        return AnyP::PROTO_WAIS;
 
     if (strncasecmp(b, "cache_object", len) == 0)
-        return PROTO_CACHEOBJ;
+        return AnyP::PROTO_CACHE_OBJECT;
 
     if (strncasecmp(b, "urn", len) == 0)
-        return PROTO_URN;
+        return AnyP::PROTO_URN;
 
     if (strncasecmp(b, "whois", len) == 0)
-        return PROTO_WHOIS;
+        return AnyP::PROTO_WHOIS;
 
     if (strncasecmp(b, "internal", len) == 0)
-        return PROTO_INTERNAL;
+        return AnyP::PROTO_INTERNAL;
 
-    return PROTO_NONE;
+    return AnyP::PROTO_NONE;
 }
 
 int
-urlDefaultPort(protocol_t p)
+urlDefaultPort(AnyP::ProtocolType p)
 {
     switch (p) {
 
-    case PROTO_HTTP:
+    case AnyP::PROTO_HTTP:
         return 80;
 
-    case PROTO_HTTPS:
+    case AnyP::PROTO_HTTPS:
         return 443;
 
-    case PROTO_FTP:
+    case AnyP::PROTO_FTP:
         return 21;
 
-    case PROTO_GOPHER:
+    case AnyP::PROTO_GOPHER:
         return 70;
 
-    case PROTO_WAIS:
+    case AnyP::PROTO_WAIS:
         return 210;
 
-    case PROTO_CACHEOBJ:
+    case AnyP::PROTO_CACHE_OBJECT:
 
-    case PROTO_INTERNAL:
+    case AnyP::PROTO_INTERNAL:
         return CACHE_HTTP_PORT;
 
-    case PROTO_WHOIS:
+    case AnyP::PROTO_WHOIS:
         return 43;
 
     default:
@@ -210,7 +210,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
     char *t = NULL;
     char *q = NULL;
     int port;
-    protocol_t protocol = PROTO_NONE;
+    AnyP::ProtocolType protocol = AnyP::PROTO_NONE;
     int l;
     int i;
     const char *src;
@@ -232,7 +232,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
 
     } else if ((method == METHOD_OPTIONS || method == METHOD_TRACE) &&
                strcmp(url, "*") == 0) {
-        protocol = PROTO_HTTP;
+        protocol = AnyP::PROTO_HTTP;
         port = urlDefaultPort(protocol);
         return urlParseFinish(method, protocol, url, host, login, port, request);
     } else if (!strncmp(url, "urn:", 4)) {
@@ -425,7 +425,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
  */
 static HttpRequest *
 urlParseFinish(const HttpRequestMethod& method,
-               const protocol_t protocol,
+               const AnyP::ProtocolType protocol,
                const char *const urlpath,
                const char *const host,
                const char *const login,
@@ -448,7 +448,7 @@ static HttpRequest *
 urnParse(const HttpRequestMethod& method, char *urn)
 {
     debugs(50, 5, "urnParse: " << urn);
-    return new HttpRequest(method, PROTO_URN, urn + 4);
+    return new HttpRequest(method, AnyP::PROTO_URN, urn + 4);
 }
 
 const char *
@@ -461,7 +461,7 @@ urlCanonical(HttpRequest * request)
     if (request->canonical)
         return request->canonical;
 
-    if (request->protocol == PROTO_URN) {
+    if (request->protocol == AnyP::PROTO_URN) {
         snprintf(urlbuf, MAX_URL, "urn:" SQUIDSTRINGPH,
                  SQUIDSTRINGPRINT(request->urlpath));
     } else {
@@ -478,8 +478,9 @@ urlCanonical(HttpRequest * request)
             if (request->port != urlDefaultPort(request->protocol))
                 snprintf(portbuf, 32, ":%d", request->port);
 
+            const URLScheme sch = request->protocol; // temporary, until bug 1961 URL handling is fixed.
             snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s" SQUIDSTRINGPH,
-                     ProtocolStr[request->protocol],
+                     sch.const_str(),
                      request->login,
                      *request->login ? "@" : null_string,
                      request->GetHost(),
@@ -505,7 +506,7 @@ urlCanonicalClean(const HttpRequest * request)
     LOCAL_ARRAY(char, loginbuf, MAX_LOGIN_SZ + 1);
     char *t;
 
-    if (request->protocol == PROTO_URN) {
+    if (request->protocol == AnyP::PROTO_URN) {
         snprintf(buf, MAX_URL, "urn:" SQUIDSTRINGPH,
                  SQUIDSTRINGPRINT(request->urlpath));
     } else {
@@ -535,8 +536,9 @@ urlCanonicalClean(const HttpRequest * request)
                 strcat(loginbuf, "@");
             }
 
+            const URLScheme sch = request->protocol; // temporary, until bug 1961 URL handling is fixed.
             snprintf(buf, MAX_URL, "%s://%s%s%s" SQUIDSTRINGPH,
-                     ProtocolStr[request->protocol],
+                     sch.const_str(),
                      loginbuf,
                      request->GetHost(),
                      portbuf,
@@ -630,7 +632,7 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
 
     char *urlbuf = (char *)xmalloc(MAX_URL * sizeof(char));
 
-    if (req->protocol == PROTO_URN) {
+    if (req->protocol == AnyP::PROTO_URN) {
         snprintf(urlbuf, MAX_URL, "urn:" SQUIDSTRINGPH,
                  SQUIDSTRINGPRINT(req->urlpath));
         return (urlbuf);
@@ -638,9 +640,10 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
 
     size_t urllen;
 
+    const URLScheme sch = req->protocol; // temporary, until bug 1961 URL handling is fixed.
     if (req->port != urlDefaultPort(req->protocol)) {
         urllen = snprintf(urlbuf, MAX_URL, "%s://%s%s%s:%d",
-                          ProtocolStr[req->protocol],
+                          sch.const_str(),
                           req->login,
                           *req->login ? "@" : null_string,
                           req->GetHost(),
@@ -648,7 +651,7 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
                          );
     } else {
         urllen = snprintf(urlbuf, MAX_URL, "%s://%s%s%s",
-                          ProtocolStr[req->protocol],
+                          sch.const_str(),
                           req->login,
                           *req->login ? "@" : null_string,
                           req->GetHost()
@@ -808,24 +811,24 @@ urlCheckRequest(const HttpRequest * r)
     /* does method match the protocol? */
     switch (r->protocol) {
 
-    case PROTO_URN:
+    case AnyP::PROTO_URN:
 
-    case PROTO_HTTP:
+    case AnyP::PROTO_HTTP:
 
-    case PROTO_CACHEOBJ:
+    case AnyP::PROTO_CACHE_OBJECT:
         rc = 1;
         break;
 
-    case PROTO_FTP:
+    case AnyP::PROTO_FTP:
 
         if (r->method == METHOD_PUT)
             rc = 1;
 
-    case PROTO_GOPHER:
+    case AnyP::PROTO_GOPHER:
 
-    case PROTO_WAIS:
+    case AnyP::PROTO_WAIS:
 
-    case PROTO_WHOIS:
+    case AnyP::PROTO_WHOIS:
         if (r->method == METHOD_GET)
             rc = 1;
         else if (r->method == METHOD_HEAD)
@@ -833,7 +836,7 @@ urlCheckRequest(const HttpRequest * r)
 
         break;
 
-    case PROTO_HTTPS:
+    case AnyP::PROTO_HTTPS:
 #if USE_SSL
 
         rc = 1;

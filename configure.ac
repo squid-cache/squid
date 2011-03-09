@@ -1821,9 +1821,6 @@ if test x"$krb5confpath" != "xno"; then
     fi
 fi
 if test "x$ac_krb5_config" = "xyes" ; then
-  # Kerberos helpers use res_search() from libresolv or libc
-  AC_SEARCH_LIBS([__res_search],[resolv])
-
   ac_heimdal="`$krb5confpath --version 2>/dev/null | grep -i heimdal`"
   ac_solaris="`$krb5confpath --version 2>/dev/null | grep -i solaris`"
   if test "x$ac_heimdal" != "x" ; then
@@ -2514,6 +2511,7 @@ AC_MSG_NOTICE([libcap2 headers are ok: $squid_cv_sys_capability_works])
 dnl Check for needed libraries
 AC_SEARCH_LIBS([gethostbyname],[nsl resolv bind])
 AC_SEARCH_LIBS([res_init],[resolv])
+AC_SEARCH_LIBS([__res_search],[resolv])
 AC_SEARCH_LIBS([bind],[socket])
 AC_SEARCH_LIBS([opcom_stack_trace],[opcom_stack])
 AC_SEARCH_LIBS([strlcpy], [bsd])
@@ -3368,6 +3366,7 @@ AC_CONFIG_FILES([\
 	lib/smblib/Makefile \
 	scripts/Makefile \
 	src/Makefile \
+	src/anyp/Makefile \
 	src/base/Makefile \
 	src/acl/Makefile \
 	src/fs/Makefile \

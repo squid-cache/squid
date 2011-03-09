@@ -18,6 +18,9 @@ const libecap::Name Adaptation::Ecap::protocolIcp("ICP", libecap::Name::NextId()
 #if USE_HTCP
 const libecap::Name Adaptation::Ecap::protocolHtcp("Htcp", libecap::Name::NextId());
 #endif
+const libecap::Name Adaptation::Ecap::protocolIcy("ICY", libecap::Name::NextId());
+const libecap::Name Adaptation::Ecap::protocolUnknown("_unknown_", libecap::Name::NextId());
+
 const libecap::Name Adaptation::Ecap::metaBypassable("bypassable", libecap::Name::NextId());
 
 /// the host application (i.e., Squid) wrapper registered with libecap
@@ -35,19 +38,21 @@ Adaptation::Ecap::Host::Host()
     // TODO: libecap::headerXClientIp.assignHostId(HDR_X_CLIENT_IP);
     // TODO: libecap::headerXServerIp.assignHostId(HDR_X_SERVER_IP);
 
-    libecap::protocolHttp.assignHostId(PROTO_HTTP);
-    libecap::protocolHttps.assignHostId(PROTO_HTTPS);
-    libecap::protocolFtp.assignHostId(PROTO_FTP);
-    libecap::protocolGopher.assignHostId(PROTO_GOPHER);
-    libecap::protocolWais.assignHostId(PROTO_WAIS);
-    libecap::protocolUrn.assignHostId(PROTO_URN);
-    libecap::protocolWhois.assignHostId(PROTO_WHOIS);
-    protocolInternal.assignHostId(PROTO_INTERNAL);
-    protocolCacheObj.assignHostId(PROTO_CACHEOBJ);
-    protocolIcp.assignHostId(PROTO_ICP);
+    libecap::protocolHttp.assignHostId(AnyP::PROTO_HTTP);
+    libecap::protocolHttps.assignHostId(AnyP::PROTO_HTTPS);
+    libecap::protocolFtp.assignHostId(AnyP::PROTO_FTP);
+    libecap::protocolGopher.assignHostId(AnyP::PROTO_GOPHER);
+    libecap::protocolWais.assignHostId(AnyP::PROTO_WAIS);
+    libecap::protocolUrn.assignHostId(AnyP::PROTO_URN);
+    libecap::protocolWhois.assignHostId(AnyP::PROTO_WHOIS);
+    protocolInternal.assignHostId(AnyP::PROTO_INTERNAL);
+    protocolCacheObj.assignHostId(AnyP::PROTO_CACHE_OBJECT);
+    protocolIcp.assignHostId(AnyP::PROTO_ICP);
 #if USE_HTCP
-    protocolHtcp.assignHostId(PROTO_HTCP);
+    protocolHtcp.assignHostId(AnyP::PROTO_HTCP);
 #endif
+    protocolIcy.assignHostId(AnyP::PROTO_ICY);
+    protocolUnknown.assignHostId(AnyP::PROTO_UNKNOWN);
 
     // allows adapter to safely ignore this in adapter::Service::configure()
     metaBypassable.assignHostId(1);

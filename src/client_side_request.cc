@@ -763,18 +763,17 @@ clientHierarchical(ClientHttpRequest * http)
     if (request->flags.loopdetect)
         return 0;
 
-    if (request->protocol == PROTO_HTTP)
+    if (request->protocol == AnyP::PROTO_HTTP)
         return httpCachable(method);
 
-    if (request->protocol == PROTO_GOPHER)
+    if (request->protocol == AnyP::PROTO_GOPHER)
         return gopherCachable(request);
 
-    if (request->protocol == PROTO_CACHEOBJ)
+    if (request->protocol == AnyP::PROTO_CACHE_OBJECT)
         return 0;
 
     return 1;
 }
-
 
 static void
 clientCheckPinning(ClientHttpRequest * http)
