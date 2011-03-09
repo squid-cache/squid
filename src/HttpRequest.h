@@ -73,7 +73,7 @@ public:
 
     MEMPROXY_CLASS(HttpRequest);
     HttpRequest();
-    HttpRequest(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath);
+    HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath);
     ~HttpRequest();
     virtual void reset();
 
@@ -82,7 +82,7 @@ public:
         return static_cast<HttpRequest*>(HttpMsg::_lock());
     };
 
-    void initHTTP(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath);
+    void initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath);
 
     virtual HttpRequest *clone() const;
 
@@ -111,7 +111,7 @@ public:
         }
     };
     inline const char* GetHost(void) const { return host; };
-    inline const int GetHostIsNumeric(void) const { return host_is_numeric; };
+    inline int GetHostIsNumeric(void) const { return host_is_numeric; };
 
 #if USE_ADAPTATION
     /// Returns possibly nil history, creating it if adapt. logging is enabled

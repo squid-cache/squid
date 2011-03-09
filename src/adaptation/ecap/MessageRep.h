@@ -10,6 +10,7 @@
 #include "BodyPipe.h"
 #include "adaptation/forward.h"
 #include "adaptation/Message.h"
+#include "anyp/ProtocolType.h"
 #include <libecap/common/message.h>
 #include <libecap/common/header.h>
 #include <libecap/common/body.h>
@@ -70,7 +71,7 @@ public:
     void protocol(const Name &aProtocol);
 
 protected:
-    static protocol_t TranslateProtocolId(const Name &name);
+    static AnyP::ProtocolType TranslateProtocolId(const Name &name);
 
 private:
     HttpMsg &theMessage; // the message which first line is being translated

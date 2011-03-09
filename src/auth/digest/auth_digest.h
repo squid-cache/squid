@@ -73,7 +73,7 @@ struct _digest_nonce_h : public hash_link {
 extern void authDigestNonceUnlink(digest_nonce_h * nonce);
 extern int authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9]);
 extern const char *authenticateDigestNonceNonceb64(const digest_nonce_h * nonce);
-extern const int authDigestNonceLastRequest(digest_nonce_h * nonce);
+extern int authDigestNonceLastRequest(digest_nonce_h * nonce);
 
 /* configuration runtime data */
 

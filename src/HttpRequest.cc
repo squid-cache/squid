@@ -53,7 +53,7 @@ HttpRequest::HttpRequest() : HttpMsg(hoRequest)
     init();
 }
 
-HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath) : HttpMsg(hoRequest)
+HttpRequest::HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath) : HttpMsg(hoRequest)
 {
     static unsigned int id = 1;
     debugs(93,7, HERE << "constructed, this=" << this << " id=" << ++id);
@@ -68,7 +68,7 @@ HttpRequest::~HttpRequest()
 }
 
 void
-HttpRequest::initHTTP(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath)
+HttpRequest::initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath)
 {
     method = aMethod;
     protocol = aProtocol;
@@ -79,7 +79,7 @@ void
 HttpRequest::init()
 {
     method = METHOD_NONE;
-    protocol = PROTO_NONE;
+    protocol = AnyP::PROTO_NONE;
     urlpath = NULL;
     login[0] = '\0';
     host[0] = '\0';
@@ -565,7 +565,7 @@ HttpRequest::CreateFromUrl(char * url)
 bool
 HttpRequest::cacheable() const
 {
-    if (protocol == PROTO_HTTP)
+    if (protocol == AnyP::PROTO_HTTP)
         return httpCachable(method);
 
     /*
@@ -580,10 +580,10 @@ HttpRequest::cacheable() const
      * XXX POST may be cached sometimes.. ignored
      * for now
      */
-    if (protocol == PROTO_GOPHER)
+    if (protocol == AnyP::PROTO_GOPHER)
         return gopherCachable(this);
 
-    if (protocol == PROTO_CACHEOBJ)
+    if (protocol == AnyP::PROTO_CACHE_OBJECT)
         return false;
 
     return true;
