@@ -1427,7 +1427,7 @@ ClientHttpRequest::noteAdaptationAnswer(const Adaptation::Answer &answer)
 }
 
 void
-ClientHttpRequest::handleAdaptedHeader(HttpMsg *msg)    
+ClientHttpRequest::handleAdaptedHeader(HttpMsg *msg)
 {
     assert(msg);
 
