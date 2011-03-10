@@ -21,7 +21,8 @@ namespace Adaptation
 {
 
 /// summarizes adaptation service answer for the noteAdaptationAnswer() API
-class Answer {
+class Answer
+{
 public:
     /// helps interpret other members without a class hierarchy
     typedef enum {
