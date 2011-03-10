@@ -17,7 +17,8 @@ namespace Ecap
 {
 
 /// eCAP service configuration
-class ServiceConfig: public Adaptation::ServiceConfig {
+class ServiceConfig: public Adaptation::ServiceConfig
+{
 public:
     // Adaptation::ServiceConfig API
     virtual bool grokExtension(const char *name, const char *value);

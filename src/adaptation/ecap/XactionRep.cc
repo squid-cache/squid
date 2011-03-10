@@ -28,8 +28,7 @@ public:
     OptionsExtractor(HttpHeader &aMeta): meta(aMeta) {}
 
     // libecap::NamedValueVisitor API
-    virtual void visit(const Name &name, const Area &value)
-    {
+    virtual void visit(const Name &name, const Area &value) {
         meta.putExt(name.image().c_str(), value.toString().c_str());
     }
 
@@ -92,14 +91,14 @@ void
 Adaptation::Ecap::XactionRep::visitEachOption(libecap::NamedValueVisitor &visitor) const
 {
     if (const libecap::Area value = clientIpValue())
-       visitor.visit(libecap::metaClientIp, value);
+        visitor.visit(libecap::metaClientIp, value);
     if (const libecap::Area value = usernameValue())
-       visitor.visit(libecap::metaUserName, value);
+        visitor.visit(libecap::metaUserName, value);
 
     if (Adaptation::Config::masterx_shared_name) {
-       const libecap::Name name(Adaptation::Config::masterx_shared_name);
-       if (const libecap::Area value = masterxSharedValue(name))
-           visitor.visit(name, value);
+        const libecap::Name name(Adaptation::Config::masterx_shared_name);
+        if (const libecap::Area value = masterxSharedValue(name))
+            visitor.visit(name, value);
     }
 
     // TODO: metaServerIp, metaAuthenticatedUser, and metaAuthenticatedGroups
@@ -118,7 +117,7 @@ Adaptation::Ecap::XactionRep::clientIpValue() const
 #if FOLLOW_X_FORWARDED_FOR
         if (TheConfig.use_indirect_client) {
             client_addr = request->indirect_client_addr;
-		} else
+        } else
 #endif
             client_addr = request->client_addr;
         if (!client_addr.IsAnyAddr() && !client_addr.IsNoAddr()) {
@@ -126,7 +125,7 @@ Adaptation::Ecap::XactionRep::clientIpValue() const
             client_addr.NtoA(ntoabuf,MAX_IPSTRLEN);
             return libecap::Area::FromTempBuffer(ntoabuf, strlen(ntoabuf));
         }
-	}
+    }
     return libecap::Area();
 }
 
@@ -139,7 +138,7 @@ Adaptation::Ecap::XactionRep::usernameValue() const
     if (request->auth_user_request != NULL) {
         if (char const *name = request->auth_user_request->username())
             return libecap::Area::FromTempBuffer(name, strlen(name));
-	}
+    }
     return libecap::Area();
 }
 
@@ -615,8 +614,7 @@ Adaptation::Ecap::XactionRep::status() const
     const BodyPipePointer &vp = theVirginRep.raw().body_pipe;
     if (!vp)
         buf.append(" !V", 3);
-    else
-    if (vp->stillConsuming(const_cast<XactionRep*>(this)))
+    else if (vp->stillConsuming(const_cast<XactionRep*>(this)))
         buf.append(" Vc", 3);
     else
         buf.append(" V?", 3);
