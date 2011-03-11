@@ -579,7 +579,7 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
             mb.reset();
             packerToMemInit(&p, &mb);
             ah->lastMeta.packInto(&p);
-            aLogEntry->headers.adapt_last = xstrdup(mb.buf);
+            aLogEntry->adapt.last_meta = xstrdup(mb.buf);
         }
 #endif
 
