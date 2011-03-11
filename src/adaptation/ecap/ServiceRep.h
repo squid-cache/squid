@@ -28,21 +28,14 @@ public:
 
     typedef libecap::shared_ptr<libecap::adapter::Service> AdapterService;
 
+    /* Adaptation::Service API */
     virtual void finalize();
-
     virtual bool probed() const;
     virtual bool up() const;
-
-    Adaptation::Initiate *makeXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause);
-
-    // the methods below can only be called on an up() service
+    virtual Adaptation::Initiate *makeXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause);
     virtual bool wantsUrl(const String &urlPath) const;
-
-    // called by transactions to report service failure
     virtual void noteFailure();
-
     virtual const char *status() const;
-
     virtual void detach();
     virtual bool detached() const;
 
