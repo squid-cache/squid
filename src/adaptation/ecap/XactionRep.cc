@@ -313,7 +313,7 @@ Adaptation::Ecap::XactionRep::useVirgin()
     // check that clone() copies the pipe so that we do not have to
     Must(!theVirginRep.raw().header->body_pipe == !clone->body_pipe);
 
-    updateHistory();
+    updateHistory(clone);
     sendAnswer(Answer::Forward(clone));
     Must(done());
 }
@@ -329,7 +329,7 @@ Adaptation::Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Mess
     HttpMsg *msg = answer().header;
     if (!theAnswerRep->body()) { // final, bodyless answer
         proxyingAb = opNever;
-        updateHistory();
+        updateHistory(msg);
         sendAnswer(Answer::Forward(msg));
     } else { // got answer headers but need to handle body
         proxyingAb = opOn;
@@ -339,7 +339,7 @@ Adaptation::Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Mess
         rep->tieBody(this); // sets us as a producer
         Must(msg->body_pipe != NULL); // check tieBody
 
-        updateHistory();
+        updateHistory(msg);
         sendAnswer(Answer::Forward(msg));
 
         debugs(93,4, HERE << "adapter will produce body" << status());
@@ -356,7 +356,7 @@ Adaptation::Ecap::XactionRep::blockVirgin()
 
     sinkVb("blockVirgin");
 
-    updateHistory();
+    updateHistory(NULL);
     sendAnswer(Answer::Block(service().cfg().key));
     Must(done());
 }
@@ -364,7 +364,7 @@ Adaptation::Ecap::XactionRep::blockVirgin()
 /// Called just before sendAnswer() to record adapter meta-information
 /// which may affect answer processing and may be needed for logging.
 void
-Adaptation::Ecap::XactionRep::updateHistory()
+Adaptation::Ecap::XactionRep::updateHistory(HttpMsg *adapted)
 {
     if (!theMaster) // all updates rely on being able to query the adapter
         return;
@@ -406,6 +406,10 @@ Adaptation::Ecap::XactionRep::updateHistory()
         theMaster->visitEachOption(extractor);
         ah->recordMeta(&meta);
     }
+
+    // Add just-created history to the adapted/cloned request that lacks it.
+    if (HttpRequest *adaptedReq = dynamic_cast<HttpRequest*>(adapted))
+        adaptedReq->adaptHistoryImport(*request);
 }
 
 

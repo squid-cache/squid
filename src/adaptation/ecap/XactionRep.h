@@ -86,7 +86,7 @@ protected:
 
     void moveAbContent();
 
-    void updateHistory();
+    void updateHistory(HttpMsg *adapted);
     void terminateMaster();
     void scheduleStop(const char *reason);
 
