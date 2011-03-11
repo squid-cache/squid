@@ -6432,7 +6432,7 @@ IFDEF: ICAP_CLIENT
 LOC: Adaptation::Icap::TheConfig.client_username_header
 DEFAULT: X-Client-Username
 DOC_START
-	ICAP request header name to use for send_username.
+	ICAP request header name to use for adaptation_send_username.
 DOC_END
 
 NAME: icap_client_username_encode
