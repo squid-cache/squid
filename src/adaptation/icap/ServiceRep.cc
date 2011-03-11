@@ -3,6 +3,7 @@
  */
 
 #include "squid.h"
+#include "adaptation/Answer.h"
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/ModXact.h"
 #include "adaptation/icap/Options.h"

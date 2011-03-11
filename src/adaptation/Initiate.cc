@@ -4,6 +4,7 @@
 
 #include "squid.h"
 #include "HttpMsg.h"
+#include "adaptation/Answer.h"
 #include "adaptation/Initiator.h"
 #include "adaptation/Initiate.h"
 #include "base/AsyncJobCalls.h"
