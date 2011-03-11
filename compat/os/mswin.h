@@ -504,7 +504,7 @@ int connect(int s, const struct sockaddr * n, int l)
 }
 
 inline
-struct hostent * gethostbyname (const char *n) {
+struct hostent * gethostbyname(const char *n) {
     HOSTENT FAR * result;
     if ((result = ::gethostbyname(n)) == NULL)
         errno = WSAGetLastError();
@@ -513,14 +513,14 @@ struct hostent * gethostbyname (const char *n) {
 #define gethostbyname(n) Squid::gethostbyname(n)
 
 inline
-SERVENT FAR* getservbyname (const char * n, const char * p)
+SERVENT FAR* getservbyname(const char * n, const char * p)
 {
     SERVENT FAR * result;
     if ((result = ::getservbyname(n, p)) == NULL)
         errno = WSAGetLastError();
     return result;
 }
-#define getservbyname(n,p) Squid::getservbyname(n,p)
+//#define getservbyname(n,p) Squid::getservbyname(n,p)
 
 inline
 HOSTENT FAR * gethostbyaddr(const char * a, int l, int t)
