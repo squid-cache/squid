@@ -99,11 +99,11 @@ Adaptation::Ecap::ServiceRep::finalize()
     Adaptation::Service::finalize();
     theService = FindAdapterService(cfg().uri);
     if (theService) {
-        debugs(93,3, HERE << "configuring eCAP service: " << theService->uri());
+        debugs(93,2, HERE << "configuring eCAP service: " << theService->uri());
         const ConfigRep cfgRep(dynamic_cast<const ServiceConfig&>(cfg()));
         theService->configure(cfgRep);
 
-        debugs(93,3, HERE << "starting eCAP service: " << theService->uri());
+        debugs(93,DBG_IMPORTANT, HERE << "starting eCAP service: " << theService->uri());
         theService->start();
     } else {
         debugs(93,1, "Warning: configured ecap_service was not loaded: " <<
