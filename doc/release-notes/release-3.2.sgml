@@ -43,6 +43,7 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 	<item>Logging Infrastructure Updated
 	<item>Client Bandwidth Limits
         <item> Dynamic SSL Certificate Generation
+        <item>Better eCAP support
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -356,6 +357,18 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
+	<tag>adaptation_send_client_ip</tag>
+	<p>Same as depricated icap_send_client_ip
+	   but applies to both ICAP and eCAP.</p>
+
+	<tag>adaptation_send_username</tag>
+	<p>Same as depricated icap_send_client_username
+	   but applies to both ICAP and eCAP.</p>
+
+	<tag>adaptation_uses_indirect_client</tag>
+	<p>Same as depricated icap_uses_indirect_client
+	   but applies to both ICAP and eCAP.</p>
+
 	<tag>client_delay_pools</tag>
 	<p>New setting for client bandwith limits to specifies the number 
 	  of client delay pools used.
@@ -490,6 +503,18 @@ This section gives a thorough account of those changes in three categories:
 	<p><em>children-startup=N</em> determins minimum number of helper processes used.
 	<p><em>children-idle=N</em> determines how many helper to retain as buffer against sudden traffic loads.
 	<p>Deprecated <em>children=N</em> in favor of <em>children-max=N</em>.
+
+	<tag>icap_send_client_ip</tag>
+	<p>Deprecated in favor of adaptation_send_client_ip
+	which applies to both ICAP and eCAP.</p>
+
+	<tag>icap_send_client_username</tag>
+	<p>Deprecated in favor of adaptation_send_username
+	which applies to both ICAP and eCAP.</p>
+
+	<tag>icap_uses_indirect_client</tag>
+	<p>Deprecated in favor of adaptation_uses_indirect_client 
+	which applies to both ICAP and eCAP.</p>
 
 	<tag>logformat</tag>
         <p><em>%&gt;bs</em> Number of HTTP-equivalent message body bytes received from the next hop.
