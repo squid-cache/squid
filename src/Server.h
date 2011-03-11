@@ -45,6 +45,8 @@
 #include "adaptation/Initiator.h"
 #endif
 
+class HttpMsg;
+
 /**
  * ServerStateData is a common base for server-side classes such as
  * HttpStateData and FtpStateData. All such classes must be able to

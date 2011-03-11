@@ -6,6 +6,7 @@
 #include "comm.h"
 #include "HttpReply.h"
 
+#include "adaptation/Answer.h"
 #include "adaptation/icap/OptXact.h"
 #include "adaptation/icap/Options.h"
 #include "adaptation/icap/Config.h"

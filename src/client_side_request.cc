@@ -47,6 +47,7 @@
 #include "acl/Gadgets.h"
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
+#include "adaptation/Answer.h"
 #include "adaptation/Iterator.h"
 #include "adaptation/Service.h"
 #if ICAP_CLIENT
