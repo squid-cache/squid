@@ -439,6 +439,17 @@ HttpRequest::adaptLogHistory() const
     return HttpRequest::adaptHistory(loggingNeedsHistory);
 }
 
+void
+HttpRequest::adaptHistoryImport(const HttpRequest &them)
+{
+    if (!adaptHistory_) {
+        adaptHistory_ = them.adaptHistory_; // may be nil
+    } else {
+        // check that histories did not diverge
+        Must(!them.adaptHistory_ || them.adaptHistory_ == adaptHistory_);
+    }
+}
+
 #endif
 
 bool

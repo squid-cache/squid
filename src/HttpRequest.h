@@ -118,6 +118,8 @@ public:
     Adaptation::History::Pointer adaptLogHistory() const;
     /// Returns possibly nil history, creating it if requested
     Adaptation::History::Pointer adaptHistory(bool createIfNone = false) const;
+    /// Makes their history ours, throwing on conflicts
+    void adaptHistoryImport(const HttpRequest &them);
 #endif
 #if ICAP_CLIENT
     /// Returns possibly nil history, creating it if icap logging is enabled

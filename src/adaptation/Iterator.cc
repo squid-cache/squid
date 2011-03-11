@@ -191,8 +191,10 @@ bool Adaptation::Iterator::updatePlan(bool adopt)
     Must(r);
 
     Adaptation::History::Pointer ah = r->adaptHistory();
-    if (!ah)
+    if (!ah) {
+        debugs(85,9, HERE << "no history to store a service-proposed plan");
         return false; // the feature is not enabled or is not triggered
+    }
 
     String services;
     if (!ah->extractNextServices(services)) { // clears history
