@@ -42,8 +42,8 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 	<item>Surrogate/1.0 protocol extensions to HTTP
 	<item>Logging Infrastructure Updated
 	<item>Client Bandwidth Limits
-        <item> Dynamic SSL Certificate Generation
-        <item>Better eCAP support
+	<item>Dynamic SSL Certificate Generation
+	<item>Better eCAP support
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
