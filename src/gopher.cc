@@ -776,7 +776,6 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
     int clen;
     int bin;
     size_t read_sz = BUFSIZ;
-    int do_next_read = 0;
 #if USE_DELAY_POOLS
     DelayId delayId = entry->mem_obj->mostBytesAllowed();
 #endif
@@ -826,26 +825,23 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
             req->hier.bodyBytesRead = 0;
 
         req->hier.bodyBytesRead += len;
-
     }
 
-    if (flag != COMM_OK || len < 0) {
+    if (flag != COMM_OK) {
         debugs(50, 1, "gopherReadReply: error reading: " << xstrerror());
 
         if (ignoreErrno(errno)) {
-            do_next_read = 1;
+            comm_read(fd, buf, read_sz, gopherReadReply, gopherState);
         } else {
             ErrorState *err;
             err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, gopherState->fwd->request);
             err->xerrno = errno;
             gopherState->fwd->fail(err);
             comm_close(fd);
-            do_next_read = 0;
         }
     } else if (len == 0 && entry->isEmpty()) {
         gopherState->fwd->fail(errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE, gopherState->fwd->request));
         comm_close(fd);
-        do_next_read = 0;
     } else if (len == 0) {
         /* Connection closed; retrieval done. */
         /* flush the rest of data in temp buf if there is one. */
@@ -854,28 +850,17 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
             gopherEndHTML(gopherState);
 
         entry->timestampsSet();
-
         entry->flush();
-
         gopherState->fwd->complete();
-
         comm_close(fd);
-
-        do_next_read = 0;
     } else {
         if (gopherState->conversion != gopher_ds::NORMAL) {
             gopherToHTML(gopherState, buf, len);
         } else {
             entry->append(buf, len);
         }
-
-        do_next_read = 1;
-    }
-
-    if (do_next_read)
         comm_read(fd, buf, read_sz, gopherReadReply, gopherState);
-
-    return;
+    }
 }
 
 /**
