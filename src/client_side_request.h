@@ -93,8 +93,7 @@ public:
     _SQUID_INLINE_ StoreEntry *loggingEntry() const;
     void loggingEntry(StoreEntry *);
 
-    _SQUID_INLINE_ ConnStateData * getConn();
-    _SQUID_INLINE_ ConnStateData * const getConn() const;
+    _SQUID_INLINE_ ConnStateData * getConn() const;
     _SQUID_INLINE_ void setConn(ConnStateData *);
     HttpRequest *request;		/* Parsed URL ... */
     char *uri;
