@@ -8,10 +8,7 @@
 #ifndef SQUID_IPC_MESSAGES_H
 #define SQUID_IPC_MESSAGES_H
 
-#include "ipc/forward.h"
-#include <sys/types.h>
-
-/** Declarations used by varios IPC messages */
+/** Declarations used by various IPC messages */
 
 namespace Ipc
 {
@@ -20,6 +17,10 @@ namespace Ipc
 typedef enum { mtNone = 0, mtRegistration,
                mtSharedListenRequest, mtSharedListenResponse,
                mtCacheMgrRequest, mtCacheMgrResponse
+#if SQUID_SNMP
+               ,
+               mtSnmpRequest, mtSnmpResponse
+#endif
              } MessageType;
 
 } // namespace Ipc;

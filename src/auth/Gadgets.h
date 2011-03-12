@@ -33,6 +33,8 @@
 #ifndef SQUID_AUTH_GADGETS_H
 #define SQUID_AUTH_GADGETS_H
 
+#if USE_AUTH
+
 #include "hash.h"
 #include "MemPool.h"
 #include "auth/Config.h"
@@ -107,4 +109,5 @@ extern int authenticateSchemeCount(void);
 /// \ingroup AuthAPI
 extern void authenticateOnCloseConnection(ConnStateData * conn);
 
+#endif /* USE_AUTH */
 #endif /* SQUID_AUTH_GADGETS_H */

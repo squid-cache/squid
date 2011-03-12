@@ -1,9 +1,9 @@
 include $(top_srcdir)/src/Common.am
 include $(top_srcdir)/src/TestHeaders.am
 
-noinst_LTLIBRARIES = libecap.la
+noinst_LTLIBRARIES = libsquid-ecap.la
 
-libecap_la_SOURCES = \
+libsquid_ecap_la_SOURCES = \
 	Config.h \
 	Config.cc \
 	Host.h \
@@ -16,3 +16,7 @@ libecap_la_SOURCES = \
 	XactionRep.cc \
 	\
 	Registry.h
+
+# add libecap using its pkg-config-produced configuration variables
+libsquid_ecap_la_CXXFLAGS = $(EXT_LIBECAP_CFLAGS)
+libsquid_ecap_la_LIBADD = $(EXT_LIBECAP_LIBS) 

@@ -1,9 +1,9 @@
 #ifndef SQUID_ADAPTATION__INITIATOR_H
 #define SQUID_ADAPTATION__INITIATOR_H
 
+#include "adaptation/forward.h"
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
-#include "adaptation/forward.h"
 
 /*
  * The ICAP Initiator is an ICAP vectoring point that initates ICAP
@@ -14,8 +14,6 @@
  * or aborting an ICAP transaction.
  */
 
-class HttpMsg;
-
 namespace Adaptation
 {
 
@@ -25,12 +23,9 @@ public:
     Initiator(): AsyncJob("Initiator") {}
     virtual ~Initiator() {}
 
-    // called when ICAP response headers are successfully interpreted
-    virtual void noteAdaptationAnswer(HttpMsg *message) = 0;
-
-    // called when valid ICAP response headers are no longer expected
-    // the final parameter is set to disable bypass or retries
-    virtual void noteAdaptationQueryAbort(bool final) = 0;
+    /// called with the initial adaptation decision (adapt, block, error);
+    /// virgin and/or adapted body transmission may continue after this
+    virtual void noteAdaptationAnswer(const Answer &answer) = 0;
 
 protected:
     ///< starts freshly created initiate and returns a safe pointer to it

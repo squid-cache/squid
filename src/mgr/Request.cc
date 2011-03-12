@@ -8,20 +8,27 @@
 #include "config.h"
 #include "base/TextException.h"
 #include "ipc/Messages.h"
+#include "ipc/TypedMsgHdr.h"
 #include "mgr/ActionParams.h"
 #include "mgr/Request.h"
 
 
 Mgr::Request::Request(int aRequestorId, unsigned int aRequestId, int aFd,
                       const ActionParams &aParams):
-        requestorId(aRequestorId), requestId(aRequestId),
+        Ipc::Request(aRequestorId, aRequestId),
         fd(aFd), params(aParams)
 {
     Must(requestorId > 0);
-    Must(requestId != 0);
 }
 
-Mgr::Request::Request(const Ipc::TypedMsgHdr& msg)
+Mgr::Request::Request(const Request& request):
+        Ipc::Request(request.requestorId, request.requestId),
+        fd(request.fd), params(request.params)
+{
+}
+
+Mgr::Request::Request(const Ipc::TypedMsgHdr& msg):
+        Ipc::Request(0, 0)
 {
     msg.checkType(Ipc::mtCacheMgrRequest);
     msg.getPod(requestorId);
@@ -40,4 +47,10 @@ Mgr::Request::pack(Ipc::TypedMsgHdr& msg) const
     params.pack(msg);
 
     msg.putFd(fd);
+}
+
+Ipc::Request::Pointer
+Mgr::Request::clone() const
+{
+    return new Request(*this);
 }

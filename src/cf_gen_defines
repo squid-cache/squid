@@ -8,7 +8,7 @@ BEGIN {
 	define["USE_DELAY_POOLS"]="--enable-delay-pools"
 	define["FOLLOW_X_FORWARDED_FOR"]="--enable-follow-x-forwarded-for"
 	define["FOLLOW_X_FORWARDED_FOR&&USE_DELAY_POOLS"]="--enable-follow-x-forwarded-for and --enable-delay-pools"
-	define["FOLLOW_X_FORWARDED_FOR&&ICAP_CLIENT"]="--enable-follow-x-forwarded-for and --enable-icap-client"
+	define["FOLLOW_X_FORWARDED_FOR&&USE_ADAPTATION"]="--enable-follow-x-forwarded-for and (--enable-icap-client and/or --enable-ecap)"
 	define["FOLLOW_X_FORWARDED_FOR&&LINUX_NETFILTER"]="--enable-follow-x-forwarded-for and --enable-linux-netfilter"
 	define["USE_HTTP_VIOLATIONS"]="--enable-http-violations"
 	define["ICAP_CLIENT"]="--enable-icap-client"

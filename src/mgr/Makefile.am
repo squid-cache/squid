@@ -44,4 +44,11 @@ libmgr_la_SOURCES = \
 	StoreIoAction.cc \
 	StoreIoAction.h \
 	StoreToCommWriter.cc \
-	StoreToCommWriter.h
+	StoreToCommWriter.h \
+	QueryParam.h \
+	QueryParams.cc \
+	QueryParams.h \
+	IntParam.cc \
+	IntParam.h \
+	StringParam.cc \
+	StringParam.h

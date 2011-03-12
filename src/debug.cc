@@ -782,7 +782,7 @@ Debug::xassert(const char *msg, const char *file, int line)
 
 std::ostringstream (*Debug::CurrentDebug)(NULL);
 
-const size_t
+size_t
 BuildPrefixInit()
 {
     // XXX: This must be kept in sync with the actual debug.cc location

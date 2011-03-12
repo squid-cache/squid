@@ -901,8 +901,10 @@ AC_MSG_RESULT([$squid_opt_use_ecap, explicitly])
     ]
 )
 
+dnl Necessary if the first PKG_CHECK_MODULES call is conditional
+PKG_PROG_PKG_CONFIG
+
 dnl Perform configuration consistency checks for eCAP
-ECAPLIB=""
 if test "x$squid_opt_use_ecap" = "xyes";
 then
     dnl eCAP support requires loadable modules, which are enabled by default
@@ -911,18 +913,18 @@ then
         AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-loadable-modules with --enable-ecap.]);
     fi
 
-    dnl eCAP support requires libecap
-    AC_CHECK_LIB([ecap], [main],
-        [ECAPLIB="-lecap"],
-        [AC_MSG_FAILURE([eCAP support requires libecap library, but no usable library was found])]
-    )
+    dnl eCAP support requires libecap.
+    dnl This Squid supports libecap v0.2.x.
+    dnl Use EXT_ prefix to distinguish external libecap (that we check for
+    dnl here) from our own convenience ecap library in Makefiles.
+    PKG_CHECK_MODULES(EXT_LIBECAP, [libecap > 0.2 libecap < 0.3])
 fi
 
 AM_CONDITIONAL(USE_ECAP, test "x$squid_opt_use_ecap" = "xyes")
 if test "x$squid_opt_use_ecap" = "xyes";
 then
     AC_DEFINE(USE_ECAP,1,[Enable eCAP support])
-    ECAP_LIBS="ecap/libecap.la $ECAP_LIBS"
+    ECAP_LIBS="ecap/libsquid-ecap.la"
     squid_opt_use_adaptation=yes
 else
     AC_DEFINE(USE_ECAP,0,[Disable eCAP support])
@@ -930,8 +932,6 @@ else
 fi
 dnl convenience library
 AC_SUBST(ECAP_LIBS)
-dnl -lecap if needed
-AC_SUBST(ECAPLIB)
 
 
 dnl enable adaptation if requested by specific adaptation mechanisms
@@ -993,9 +993,9 @@ AC_ARG_ENABLE(snmp,
 ])
 SQUID_DEFINE_BOOL(SQUID_SNMP,${enable_snmp:=yes},
    [Define to enable SNMP monitoring of Squid])
-AM_CONDITIONAL(USE_SNMP, [test "x$enable_snmp" = "xyes"])
+AM_CONDITIONAL(ENABLE_SNMP, [test "x$enable_snmp" = "xyes"])
 if test "x$enable_snmp" = "xyes"; then
-    SNMPLIB='../snmplib/libsnmp.a'
+    SNMPLIB='../snmplib/libsnmplib.a'
     makesnmplib=snmplib
 fi
 AC_MSG_NOTICE([SNMP support enabled: $enable_snmp])
@@ -1024,7 +1024,7 @@ AC_ARG_ENABLE(cachemgr-hostname,
 
 AC_ARG_ENABLE(eui,
   AS_HELP_STRING([--disable-eui],
-                 [Enable use of ARP / MAC/ EUI (ether address)]), [
+                 [Disable use of ARP / MAC/ EUI (ether address)]), [
 SQUID_YESNO([$enableval],[--disable-eui expects no arguments])
 ])
 if test "x${enable_eui:=yes}" = "xyes" ; then
@@ -1571,8 +1571,8 @@ SQUID_YESNO([$enableval],
             [unrecognized argument to --enable-auth: $enableval])
 ])
 AC_MSG_NOTICE([Authentication support enabled: ${enable_auth:=yes}])
-SQUID_DEFINE_BOOL(USE_AUTH,$enable_auth,
-   [Enable support for authentication])
+SQUID_DEFINE_BOOL(USE_AUTH,$enable_auth,[Enable support for authentication])
+AM_CONDITIONAL(ENABLE_AUTH, test "x$enable_auth" != "xno")
 AUTH_MODULES=""
 
 AC_ARG_ENABLE(auth-basic,
@@ -2221,6 +2221,7 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 
 AC_CHECK_HEADERS( \
+  algorithm \
   arpa/inet.h \
   arpa/nameser.h \
   assert.h \
@@ -2514,6 +2515,7 @@ AC_MSG_NOTICE([libcap2 headers are ok: $squid_cv_sys_capability_works])
 dnl Check for needed libraries
 AC_SEARCH_LIBS([gethostbyname],[nsl resolv bind])
 AC_SEARCH_LIBS([res_init],[resolv])
+AC_SEARCH_LIBS([__res_search],[resolv])
 AC_SEARCH_LIBS([bind],[socket])
 AC_SEARCH_LIBS([opcom_stack_trace],[opcom_stack])
 AC_SEARCH_LIBS([strlcpy], [bsd])
@@ -3368,6 +3370,7 @@ AC_CONFIG_FILES([\
 	lib/smblib/Makefile \
 	scripts/Makefile \
 	src/Makefile \
+	src/anyp/Makefile \
 	src/base/Makefile \
 	src/acl/Makefile \
 	src/fs/Makefile \
@@ -3386,6 +3389,7 @@ AC_CONFIG_FILES([\
 	src/ipc/Makefile \
 	src/ssl/Makefile \
 	src/mgr/Makefile \
+	src/snmp/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \
 	icons/Makefile \

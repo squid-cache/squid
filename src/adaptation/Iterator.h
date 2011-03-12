@@ -5,6 +5,9 @@
 #include "adaptation/Initiate.h"
 #include "adaptation/ServiceGroups.h"
 
+class HttpMsg;
+class HttpRequest;
+
 namespace Adaptation
 {
 
@@ -29,8 +32,7 @@ public:
     void noteInitiatorAborted();
 
     // Adaptation::Initiator: asynchronous communication with the current launcher
-    virtual void noteAdaptationAnswer(HttpMsg *message);
-    virtual void noteAdaptationQueryAbort(bool final);
+    virtual void noteAdaptationAnswer(const Answer &answer);
 
 protected:
     // Adaptation::Initiate API implementation
@@ -46,6 +48,10 @@ protected:
 
     /// creates service filter for the current step
     ServiceFilter filter() const;
+
+    void handleAdaptedHeader(HttpMsg *msg);
+    void handleAdaptationBlock(const Answer &answer);
+    void handleAdaptationError(bool final);
 
     ServiceGroupPointer theGroup; ///< the service group we are iterating
     ServicePlan thePlan; ///< which services to use and in what order

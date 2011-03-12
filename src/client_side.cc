@@ -84,7 +84,9 @@
 #include "squid.h"
 
 #include "acl/FilledChecklist.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "base/TextException.h"
 #include "ChunkedCodingParser.h"
 #include "client_side.h"
@@ -552,9 +554,6 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
     assert(request);
     assert(aLogEntry);
 
-#if ICAP_CLIENT
-    Adaptation::Icap::History::Pointer ih = request->icapHistory();
-#endif
     if (Config.onoff.log_mime_hdrs) {
         Packer p;
         MemBuf mb;
@@ -573,14 +572,15 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
             aLogEntry->headers.request = xstrdup(mb.buf);
         }
 
-#if ICAP_CLIENT
-        packerClean(&p);
-        mb.reset();
-        packerToMemInit(&p, &mb);
-
-        if (ih != NULL)
-            ih->lastIcapHeader.packInto(&p);
-        aLogEntry->headers.icap = xstrdup(mb.buf);
+#if USE_ADAPTATION
+        const Adaptation::History::Pointer ah = request->adaptLogHistory();
+        if (ah != NULL) {
+            packerClean(&p);
+            mb.reset();
+            packerToMemInit(&p, &mb);
+            ah->lastMeta.packInto(&p);
+            aLogEntry->adapt.last_meta = xstrdup(mb.buf);
+        }
 #endif
 
         packerClean(&p);
@@ -588,6 +588,7 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
     }
 
 #if ICAP_CLIENT
+    const Adaptation::Icap::History::Pointer ih = request->icapHistory();
     if (ih != NULL)
         aLogEntry->icap.processingTime = ih->processingTime();
 #endif
@@ -599,13 +600,12 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
         aLogEntry->cache.requestSize += request->content_length;
     aLogEntry->cache.extuser = request->extacl_user.termedBuf();
 
+#if USE_AUTH
     if (request->auth_user_request != NULL) {
-
         if (request->auth_user_request->username())
             aLogEntry->cache.authuser = xstrdup(request->auth_user_request->username());
-
-// WTF??        request->auth_user_request = NULL;
     }
+#endif
 
     if (aLogEntry->request) {
         aLogEntry->request->errType = request->errType;
@@ -678,7 +678,7 @@ ClientHttpRequest::logRequest()
             updateCounters();
 
             if (getConn() != NULL)
-                clientdbUpdate(getConn()->peer, logType, PROTO_HTTP, out.size);
+                clientdbUpdate(getConn()->peer, logType, AnyP::PROTO_HTTP, out.size);
         }
 
         delete checklist;
@@ -763,12 +763,12 @@ ConnStateData::swanSong()
     clientdbEstablished(peer, -1);	/* decrement */
     assert(areAllContextsForThisConnection());
     freeAllContexts();
-
+#if USE_AUTH
     if (auth_user_request != NULL) {
         debugs(33, 4, "ConnStateData::swanSong: freeing auth_user_request '" << auth_user_request << "' (this is '" << this << "')");
         auth_user_request->onConnectionClose(this);
     }
-
+#endif
     if (pinning.fd >= 0)
         comm_close(pinning.fd);
 
@@ -1055,7 +1055,7 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
              * intersection of "have" and "need" ranges must not be empty
              */
             assert(http->out.offset < i->currentSpec()->offset + i->currentSpec()->length);
-            assert(http->out.offset + available.size() > i->currentSpec()->offset);
+            assert(http->out.offset + (int64_t)available.size() > i->currentSpec()->offset);
 
             /*
              * put boundary and headers at the beginning of a range in a
@@ -1089,11 +1089,6 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
 
         }
 
-        /*
-         * paranoid check
-         */
-        assert((available.size() >= 0 && i->debt() >= 0) || i->debt() == -1);
-
         if (!canPackMoreRanges()) {
             debugs(33, 3, "clientPackRange: Returning because !canPackMoreRanges.");
 
@@ -1113,7 +1108,7 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
         /* adjust for not to be transmitted bytes */
         http->out.offset = nextOffset;
 
-        if (available.size() <= skip)
+        if (available.size() <= (uint64_t)skip)
             return;
 
         available.start += skip;
@@ -1919,14 +1914,52 @@ findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end)
 }
 
 void
-setLogUri(ClientHttpRequest * http, char const *uri)
+setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl)
 {
     safe_free(http->log_uri);
 
-    if (!stringHasCntl(uri))
+    if (!cleanUrl)
+        // The uri is already clean just dump it.
         http->log_uri = xstrndup(uri, MAX_URL);
-    else
-        http->log_uri = xstrndup(rfc1738_escape_unescaped(uri), MAX_URL);
+    else {
+        int flags = 0;
+        switch (Config.uri_whitespace) {
+        case URI_WHITESPACE_ALLOW:
+            flags |= RFC1738_ESCAPE_NOSPACE;
+
+        case URI_WHITESPACE_ENCODE:
+            flags |= RFC1738_ESCAPE_UNESCAPED;
+            http->log_uri = xstrndup(rfc1738_do_escape(uri, flags), MAX_URL);
+            break;
+
+        case URI_WHITESPACE_CHOP: {
+            flags |= RFC1738_ESCAPE_NOSPACE;
+            flags |= RFC1738_ESCAPE_UNESCAPED;
+            http->log_uri = xstrndup(rfc1738_do_escape(uri, flags), MAX_URL);
+            int pos = strcspn(http->log_uri, w_space);
+            http->log_uri[pos] = '\0';
+        }
+        break;
+
+        case URI_WHITESPACE_DENY:
+        case URI_WHITESPACE_STRIP:
+        default: {
+            const char *t;
+            char *tmp_uri = static_cast<char*>(xmalloc(strlen(uri) + 1));
+            char *q = tmp_uri;
+            t = uri;
+            while (*t) {
+                if (!xisspace(*t))
+                    *q++ = *t;
+                t++;
+            }
+            *q = '\0';
+            http->log_uri = xstrndup(rfc1738_escape_unescaped(tmp_uri), MAX_URL);
+            xfree(tmp_uri);
+        }
+        break;
+        }
+    }
 }
 
 static void
@@ -2020,21 +2053,21 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         return; /* already in good shape */
 
     /* BUG: Squid cannot deal with '*' URLs (RFC2616 5.1.2) */
+    // BUG 2976: Squid only accepts intercepted HTTP.
 
     if ((host = mime_get_header(req_hdr, "Host")) != NULL) {
         int url_sz = strlen(url) + 32 + Config.appendDomainLen +
                      strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
-        snprintf(http->uri, url_sz, "%s://%s%s",
-                 conn->port->protocol, host, url);
+        snprintf(http->uri, url_sz, "http://%s%s", /*conn->port->protocol,*/ host, url);
         debugs(33, 5, "TRANSPARENT HOST REWRITE: '" << http->uri <<"'");
     } else {
         /* Put the local socket IP address as the hostname.  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
         http->getConn()->me.ToHostname(ipbuf,MAX_IPSTRLEN),
-        snprintf(http->uri, url_sz, "%s://%s:%d%s",
-                 http->getConn()->port->protocol,
+        snprintf(http->uri, url_sz, "http://%s:%d%s",
+                 // http->getConn()->port->protocol,
                  ipbuf, http->getConn()->me.GetPort(), url);
         debugs(33, 5, "TRANSPARENT REWRITE: '" << http->uri << "'");
     }
@@ -2229,7 +2262,6 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
         strcpy(http->uri, url);
     }
 
-    setLogUri(http, http->uri);
     debugs(33, 5, "parseHttpRequest: Complete request received");
     result->flags.parsed_ok = 1;
     xfree(url);
@@ -2400,6 +2432,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if (context->flags.parsed_ok == 0) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 1, "clientProcessRequest: Invalid Request");
+        // setLogUri should called before repContext->setReplyToError
+        setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         switch (hp->request_parse_status) {
@@ -2421,6 +2455,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Invalid URL: " << http->uri);
+        // setLogUri should called before repContext->setReplyToError
+        setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri, conn->peer, NULL, NULL, NULL);
@@ -2438,6 +2474,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Unsupported HTTP version discovered. :\n" << HttpParserHdrBuf(hp));
+        // setLogUri should called before repContext->setReplyToError
+        setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, HTTP_HTTP_VERSION_NOT_SUPPORTED, method, http->uri, conn->peer, NULL, HttpParserHdrBuf(hp), NULL);
@@ -2453,6 +2491,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if (http_ver.major >= 1 && !request->parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp))) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Failed to parse request headers:\n" << HttpParserHdrBuf(hp));
+        // setLogUri should called before repContext->setReplyToError
+        setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, http->uri, conn->peer, NULL, NULL, NULL);
@@ -2489,7 +2529,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     }
 
     if (http->flags.internal) {
-        request->protocol = PROTO_HTTP;
+        request->protocol = AnyP::PROTO_HTTP;
         request->login[0] = '\0';
     }
 
@@ -2551,7 +2591,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             clientStreamNode *node = context->getClientReplyContext();
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
-            repContext->setReplyToError(ERR_INVALID_REQ, HTTP_EXPECTATION_FAILED, request->method, http->uri, conn->peer, request, NULL, NULL);
+            repContext->setReplyToError(ERR_INVALID_REQ, HTTP_EXPECTATION_FAILED, request->method,
+                                        http->uri, conn->peer, request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
             goto finish;

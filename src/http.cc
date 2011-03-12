@@ -41,7 +41,9 @@
 #include "squid.h"
 
 #include "acl/FilledChecklist.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
 #include "base64.h"
@@ -715,14 +717,14 @@ HttpStateData::processReplyHeader()
 
     newrep->removeStaleWarnings();
 
-    if (newrep->sline.protocol == PROTO_HTTP && newrep->sline.status >= 100 && newrep->sline.status < 200) {
+    if (newrep->sline.protocol == AnyP::PROTO_HTTP && newrep->sline.status >= 100 && newrep->sline.status < 200) {
         handle1xx(newrep);
         ctx_exit(ctx);
         return;
     }
 
     flags.chunked = 0;
-    if (newrep->sline.protocol == PROTO_HTTP && newrep->header.chunked()) {
+    if (newrep->sline.protocol == AnyP::PROTO_HTTP && newrep->header.chunked()) {
         flags.chunked = 1;
         httpChunkDecoder = new ChunkedCodingParser;
     }
@@ -767,7 +769,7 @@ HttpStateData::handle1xx(HttpReply *reply)
 #if USE_HTTP_VIOLATIONS
     // check whether the 1xx response forwarding is allowed by squid.conf
     if (Config.accessList.reply) {
-        ACLFilledChecklist ch(Config.accessList.reply, request, NULL);
+        ACLFilledChecklist ch(Config.accessList.reply, originalRequest(), NULL);
         ch.reply = HTTPMSGLOCK(reply);
         if (!ch.fastCheck()) { // TODO: support slow lookups?
             debugs(11, 3, HERE << "ignoring denied 1xx");
@@ -1595,8 +1597,10 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
 
         if (orig_request->extacl_user.size())
             username = orig_request->extacl_user.termedBuf();
+#if USE_AUTH
         else if (orig_request->auth_user_request != NULL)
             username = orig_request->auth_user_request->username();
+#endif
 
         snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
 
@@ -1619,7 +1623,7 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
     }
 
     /* Kerberos login to peer */
-#if HAVE_KRB5 && HAVE_GSSAPI
+#if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
     if (strncmp(orig_request->peer_login, "NEGOTIATE",strlen("NEGOTIATE")) == 0) {
         char *Token=NULL;
         char *PrincipalName=NULL,*p;
@@ -1812,7 +1816,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* append Front-End-Https */
     if (flags.front_end_https) {
-        if (flags.front_end_https == 1 || request->protocol == PROTO_HTTPS)
+        if (flags.front_end_https == 1 || request->protocol == AnyP::PROTO_HTTPS)
             hdr_out->putStr(HDR_FRONT_END_HTTPS, "On");
     }
 
@@ -2204,7 +2208,7 @@ HttpStateData::finishingBrokenPost()
         return false;
     }
 
-    ACLFilledChecklist ch(Config.accessList.brokenPosts, request, NULL);
+    ACLFilledChecklist ch(Config.accessList.brokenPosts, originalRequest(), NULL);
     if (!ch.fastCheck()) {
         debugs(11, 5, HERE << "didn't match brokenPosts");
         return false;

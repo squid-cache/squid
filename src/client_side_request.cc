@@ -47,13 +47,16 @@
 #include "acl/Gadgets.h"
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
+#include "adaptation/Answer.h"
 #include "adaptation/Iterator.h"
 #include "adaptation/Service.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/History.h"
 #endif
 #endif
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "clientStream.h"
 #include "client_side.h"
 #include "client_side_reply.h"
@@ -576,21 +579,24 @@ ClientRequestContext::clientAccessCheckDone(int answer)
            (answer == ACCESS_ALLOWED ? "ALLOWED" : "DENIED") <<
            ", because it matched '" <<
            (AclMatchedName ? AclMatchedName : "NO ACL's") << "'" );
-    char const *proxy_auth_msg = "<null>";
 
+#if USE_AUTH
+    char const *proxy_auth_msg = "<null>";
     if (http->getConn() != NULL && http->getConn()->auth_user_request != NULL)
         proxy_auth_msg = http->getConn()->auth_user_request->denyMessage("<null>");
     else if (http->request->auth_user_request != NULL)
         proxy_auth_msg = http->request->auth_user_request->denyMessage("<null>");
+#endif
 
     if (answer != ACCESS_ALLOWED) {
         /* Send an error */
         int require_auth = (answer == ACCESS_REQ_PROXY_AUTH || aclIsProxyAuth(AclMatchedName));
         debugs(85, 5, "Access Denied: " << http->uri);
         debugs(85, 5, "AclMatchedName = " << (AclMatchedName ? AclMatchedName : "<null>"));
-
+#if USE_AUTH
         if (require_auth)
             debugs(33, 5, "Proxy Auth Message = " << (proxy_auth_msg ? proxy_auth_msg : "<null>"));
+#endif
 
         /*
          * NOTE: get page_id here, based on AclMatchedName because if
@@ -603,6 +609,7 @@ ClientRequestContext::clientAccessCheckDone(int answer)
         http->logType = LOG_TCP_DENIED;
 
         if (require_auth) {
+#if USE_AUTH
             if (!http->flags.accel) {
                 /* Proxy authorisation needed */
                 status = HTTP_PROXY_AUTHENTICATION_REQUIRED;
@@ -610,7 +617,10 @@ ClientRequestContext::clientAccessCheckDone(int answer)
                 /* WWW authorisation needed */
                 status = HTTP_UNAUTHORIZED;
             }
-
+#else
+            // need auth, but not possible to do.
+            status = HTTP_FORBIDDEN;
+#endif
             if (page_id == ERR_NONE)
                 page_id = ERR_CACHE_ACCESS_DENIED;
         } else {
@@ -630,9 +640,12 @@ ClientRequestContext::clientAccessCheckDone(int answer)
                                     http->getConn() != NULL ? http->getConn()->peer : tmpnoaddr,
                                     http->request,
                                     NULL,
+#if USE_AUTH
                                     http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
                                     http->getConn()->auth_user_request : http->request->auth_user_request);
-
+#else
+                                    NULL);
+#endif
         node = (clientStreamNode *)http->client_stream.tail->data;
         clientStreamRead(node, http, node->readBuffer);
         return;
@@ -751,18 +764,17 @@ clientHierarchical(ClientHttpRequest * http)
     if (request->flags.loopdetect)
         return 0;
 
-    if (request->protocol == PROTO_HTTP)
+    if (request->protocol == AnyP::PROTO_HTTP)
         return httpCachable(method);
 
-    if (request->protocol == PROTO_GOPHER)
+    if (request->protocol == AnyP::PROTO_GOPHER)
         return gopherCachable(request);
 
-    if (request->protocol == PROTO_CACHEOBJ)
+    if (request->protocol == AnyP::PROTO_CACHE_OBJECT)
         return 0;
 
     return 1;
 }
-
 
 static void
 clientCheckPinning(ClientHttpRequest * http)
@@ -1037,8 +1049,9 @@ ClientRequestContext::clientRedirectDone(char *result)
         new_request->my_addr = old_request->my_addr;
         new_request->flags = old_request->flags;
         new_request->flags.redirected = 1;
+#if USE_AUTH
         new_request->auth_user_request = old_request->auth_user_request;
-
+#endif
         if (old_request->body_pipe != NULL) {
             new_request->body_pipe = old_request->body_pipe;
             old_request->body_pipe = NULL;
@@ -1393,9 +1406,30 @@ ClientHttpRequest::startAdaptation(const Adaptation::ServiceGroupPointer &g)
 }
 
 void
-ClientHttpRequest::noteAdaptationAnswer(HttpMsg *msg)
+ClientHttpRequest::noteAdaptationAnswer(const Adaptation::Answer &answer)
 {
     assert(cbdataReferenceValid(this));		// indicates bug
+    clearAdaptation(virginHeadSource);
+    assert(!adaptedBodySource);
+
+    switch (answer.kind) {
+    case Adaptation::Answer::akForward:
+        handleAdaptedHeader(answer.message);
+        break;
+
+    case Adaptation::Answer::akBlock:
+        handleAdaptationBlock(answer);
+        break;
+
+    case Adaptation::Answer::akError:
+        handleAdaptationFailure(ERR_DETAIL_CLT_REQMOD_ABORT, !answer.final);
+        break;
+    }
+}
+
+void
+ClientHttpRequest::handleAdaptedHeader(HttpMsg *msg)
+{
     assert(msg);
 
     if (HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg)) {
@@ -1444,11 +1478,13 @@ ClientHttpRequest::noteAdaptationAnswer(HttpMsg *msg)
 }
 
 void
-ClientHttpRequest::noteAdaptationQueryAbort(bool final)
+ClientHttpRequest::handleAdaptationBlock(const Adaptation::Answer &answer)
 {
-    clearAdaptation(virginHeadSource);
-    assert(!adaptedBodySource);
-    handleAdaptationFailure(ERR_DETAIL_CLT_REQMOD_ABORT, !final);
+    request->detailError(ERR_ACCESS_DENIED, ERR_DETAIL_REQMOD_BLOCK);
+    AclMatchedName = answer.ruleId.termedBuf();
+    assert(calloutContext);
+    calloutContext->clientAccessCheckDone(ACCESS_DENIED);
+    AclMatchedName = NULL;
 }
 
 void

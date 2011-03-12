@@ -35,7 +35,9 @@
 #include "squid.h"
 #include "event.h"
 #include "StoreClient.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "HttpRequest.h"
@@ -1371,9 +1373,11 @@ statRegisterWithCacheManager(void)
     Mgr::RegisterAction("active_requests",
                         "Client-side Active Requests",
                         statClientRequests, 0, 1);
+#if USE_AUTH
     Mgr::RegisterAction("username_cache",
                         "Active Cached Usernames",
                         AuthUser::UsernameCacheStats, 0, 1);
+#endif
 #if DEBUG_OPENFD
     Mgr::RegisterAction("openfd_objects", "Objects with Swapout files open",
                         statOpenfdObj, 0, 0);
@@ -2051,12 +2055,14 @@ statClientRequests(StoreEntry * s)
                           (long int) http->start_time.tv_sec,
                           (int) http->start_time.tv_usec,
                           tvSubDsec(http->start_time, current_time));
-
+#if USE_AUTH
         if (http->request->auth_user_request != NULL)
             p = http->request->auth_user_request->username();
-        else if (http->request->extacl_user.defined()) {
-            p = http->request->extacl_user.termedBuf();
-        }
+        else
+#endif
+            if (http->request->extacl_user.defined()) {
+                p = http->request->extacl_user.termedBuf();
+            }
 
         if (!p && (conn != NULL && conn->rfc931[0]))
             p = conn->rfc931;

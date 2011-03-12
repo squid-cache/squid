@@ -33,6 +33,8 @@
 #ifndef SQUID_AUTHSCHEME_H
 #define SQUID_AUTHSCHEME_H
 
+#if USE_AUTH
+
 #include "Array.h"
 #include "RefCount.h"
 
@@ -100,4 +102,5 @@ private:
     static Vector<AuthScheme::Pointer> *_Schemes;
 };
 
+#endif /* USE_AUTH */
 #endif /* SQUID_AUTHSCHEME_H */
