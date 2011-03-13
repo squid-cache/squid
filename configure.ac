@@ -904,20 +904,26 @@ AC_MSG_RESULT([$squid_opt_use_ecap, explicitly])
 dnl Necessary if the first PKG_CHECK_MODULES call is conditional
 PKG_PROG_PKG_CONFIG
 
+AC_MSG_NOTICE([pkg-config= $PKG_CONFIG])
+
 dnl Perform configuration consistency checks for eCAP
 if test "x$squid_opt_use_ecap" = "xyes";
 then
     dnl eCAP support requires loadable modules, which are enabled by default
     if test "x$enable_loadable_modules" != "xyes"
     then
-        AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-loadable-modules with --enable-ecap.]);
+        AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-loadable-modules with --enable-ecap.])
     fi
 
-    dnl eCAP support requires libecap.
-    dnl This Squid supports libecap v0.2.x.
-    dnl Use EXT_ prefix to distinguish external libecap (that we check for
-    dnl here) from our own convenience ecap library in Makefiles.
-    PKG_CHECK_MODULES(EXT_LIBECAP, [libecap > 0.2 libecap < 0.3])
+    if ! test "x$PKG_CONFIG" = "x"; then
+      dnl eCAP support requires libecap.
+      dnl This Squid supports libecap v0.2.x.
+      dnl Use EXT_ prefix to distinguish external libecap (that we check for
+      dnl here) from our own convenience ecap library in Makefiles.
+      PKG_CHECK_MODULES([EXT_LIBECAP],[libecap >= 0.2.0 libecap < 0.3])
+    else
+      AC_MSG_NOTICE([eCAP support requires pkg-config to verify the correct library version. Trouble may follow.])
+    fi
 fi
 
 AM_CONDITIONAL(USE_ECAP, test "x$squid_opt_use_ecap" = "xyes")
