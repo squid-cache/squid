@@ -1695,7 +1695,7 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
     // idns_query is POD so no constructors are called after allocation
     q->xact_id.change();
 
-    if (Ip::EnableIpv6 && addr.IsIPv6()) {
+    if (addr.IsIPv6()) {
         struct in6_addr addr6;
         addr.GetInAddr(addr6);
         q->sz = rfc3596BuildPTRQuery6(addr6, q->buf, sizeof(q->buf), 0, &q->query, Config.dns.packet_max);
