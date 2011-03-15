@@ -20,7 +20,7 @@ static SslErrorDetailEntry TheSslDetailMap[] = {
       "%err_name: SSL Certficate is not valid before: %ssl_notbefore" },
     { X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD,
       "X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD",
-      "%err_name: SSL Certificate has invalid start date (the 'not before' field): %subject" },
+      "%err_name: SSL Certificate has invalid start date (the 'not before' field): %ssl_subject" },
     { X509_V_ERR_CERT_HAS_EXPIRED,
       "X509_V_ERR_CERT_HAS_EXPIRED",
       "%err_name: SSL Certificate expired on %ssl_notafter" },
