@@ -192,8 +192,8 @@ struct SquidConfig {
 
 #if !USE_DNSSERVERS
 
-        time_t idns_retransmit;
-        time_t idns_query;
+        time_msec_t idns_retransmit;
+        time_msec_t idns_query;
 #endif
 
     } Timeout;
