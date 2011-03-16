@@ -767,9 +767,9 @@ idnsDoSendQueryVC(nsvc *vc)
     vc->busy = 1;
 
     // Comm needs seconds but idnsCheckQueue() will check the exact timeout
-    const int timeout = (Config.Timeout.idns_query % 1000 ? 
-        Config.Timeout.idns_query + 1000 : Config.Timeout.idns_query) / 1000;
-        
+    const int timeout = (Config.Timeout.idns_query % 1000 ?
+                         Config.Timeout.idns_query + 1000 : Config.Timeout.idns_query) / 1000;
+
     commSetTimeout(vc->fd, timeout, NULL, NULL);
 
     AsyncCall::Pointer call = commCbCall(78, 5, "idnsSentQueryVC",
