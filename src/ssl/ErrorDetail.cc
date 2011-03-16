@@ -7,6 +7,7 @@ struct SslErrorDetailEntry {
     const char *detail;
 };
 
+static const char *SslErrorDetailDefaultStr = "SSL certificate validation error (%err_name): %ssl_subject";
 // TODO: optimize by replacing with std::map or similar
 static SslErrorDetailEntry TheSslDetailMap[] = {
     {  SQUID_X509_V_ERR_DOMAIN_MISMATCH,
@@ -77,7 +78,9 @@ static const char *getErrorDetail(Ssl::ssl_error_t value)
             return TheSslDetailMap[i].detail;
     }
 
-    return NULL;
+    // we must always return something because ErrorDetail::buildDetail
+    // will hit an assertion
+    return SslErrorDetailDefaultStr;
 }
 
 Ssl::ErrorDetail::err_frm_code Ssl::ErrorDetail::ErrorFormatingCodes[] = {
@@ -176,9 +179,12 @@ const char *Ssl::ErrorDetail::notafter() const
  */
 const char *Ssl::ErrorDetail::err_code() const
 {
+    static char tmpBuffer[64];
     const char *err = getErrorName(error_no);
-    if (!err)
-        return "[Not available]";
+    if (!err) {
+        snprintf(tmpBuffer, 64, "%d", (int)error_no); 
+        err = tmpBuffer;
+    }
     return err;
 }
 
@@ -220,9 +226,7 @@ void Ssl::ErrorDetail::buildDetail() const
     char const *t;
     int code_len = 0;
 
-    if (!s)  //May be add a default detail string?
-        return;
-
+    assert(s);
     while ((p = strchr(s, '%'))) {
         errDetailStr.append(s, p - s);
         code_len = convert(++p, &t);
