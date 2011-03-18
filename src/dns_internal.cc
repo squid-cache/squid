@@ -124,7 +124,7 @@ struct _idns_query {
     char buf[RESOLV_BUFSZ];
     char name[NS_MAXDNAME + 1];
     char orig[NS_MAXDNAME + 1];
-    size_t sz;
+    ssize_t sz;
     unsigned short msg_id; /// random query ID sent to server; changes with every query sent
     InstanceId<idns_query> xact_id; /// identifies our "transaction", stays constant when query is retried
 
@@ -1145,6 +1145,14 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
                 // see EDNS notes at top of file why this sends 0
                 q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), 0, &q->query, 0);
             }
+
+            if (q->sz < 0) {
+                /* problem with query data -- query not sent */
+                idnsCallback(static_cast<idns_query *>(q->callback_data), NULL, 0, "Internal error");
+                cbdataFree(q);
+                return;
+            }
+
             idnsCacheQuery(q);
             idnsSendQuery(q);
             return;
@@ -1181,6 +1189,14 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
         // see EDNS notes at top of file why this sends 0
         q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), 0, &q->query, 0);
         q->need_A = false;
+
+        if (q->sz < 0) {
+            /* problem with query data -- query not sent */
+            idnsCallback(static_cast<idns_query *>(q->callback_data), NULL, 0, "Internal error");
+            cbdataFree(q);
+            return;
+        }
+
         idnsCacheQuery(q);
         idnsSendQuery(q);
         return;
