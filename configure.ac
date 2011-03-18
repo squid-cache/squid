@@ -901,8 +901,10 @@ AC_MSG_RESULT([$squid_opt_use_ecap, explicitly])
     ]
 )
 
+dnl Necessary if the first PKG_CHECK_MODULES call is conditional
+PKG_PROG_PKG_CONFIG
+
 dnl Perform configuration consistency checks for eCAP
-ECAPLIB=""
 if test "x$squid_opt_use_ecap" = "xyes";
 then
     dnl eCAP support requires loadable modules, which are enabled by default
@@ -911,18 +913,18 @@ then
         AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-loadable-modules with --enable-ecap.]);
     fi
 
-    dnl eCAP support requires libecap
-    AC_CHECK_LIB([ecap], [main],
-        [ECAPLIB="-lecap"],
-        [AC_MSG_FAILURE([eCAP support requires libecap library, but no usable library was found])]
-    )
+    dnl eCAP support requires libecap.
+    dnl This Squid supports libecap v0.2.x.
+    dnl Use EXT_ prefix to distinguish external libecap (that we check for
+    dnl here) from our own convenience ecap library in Makefiles.
+    PKG_CHECK_MODULES(EXT_LIBECAP, [libecap > 0.2 libecap < 0.3])
 fi
 
 AM_CONDITIONAL(USE_ECAP, test "x$squid_opt_use_ecap" = "xyes")
 if test "x$squid_opt_use_ecap" = "xyes";
 then
     AC_DEFINE(USE_ECAP,1,[Enable eCAP support])
-    ECAP_LIBS="ecap/libecap.la $ECAP_LIBS"
+    ECAP_LIBS="ecap/libsquid-ecap.la"
     squid_opt_use_adaptation=yes
 else
     AC_DEFINE(USE_ECAP,0,[Disable eCAP support])
@@ -930,8 +932,6 @@ else
 fi
 dnl convenience library
 AC_SUBST(ECAP_LIBS)
-dnl -lecap if needed
-AC_SUBST(ECAPLIB)
 
 
 dnl enable adaptation if requested by specific adaptation mechanisms

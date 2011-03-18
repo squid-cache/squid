@@ -8,6 +8,7 @@
 #include <libecap/common/names.h>
 #include <libecap/common/area.h>
 #include <libecap/common/version.h>
+#include <libecap/common/named_values.h>
 #include "adaptation/ecap/MessageRep.h"
 #include "adaptation/ecap/XactionRep.h"
 #include "adaptation/ecap/Host.h" /* for protocol constants */
@@ -64,6 +65,17 @@ Adaptation::Ecap::HeaderRep::removeAny(const Name &name)
 
     if (squidId == HDR_CONTENT_LENGTH)
         theMessage.content_length = theHeader.getInt64(HDR_CONTENT_LENGTH);
+}
+
+void
+Adaptation::Ecap::HeaderRep::visitEach(libecap::NamedValueVisitor &visitor) const
+{
+    HttpHeaderPos pos = HttpHeaderInitPos;
+    while (HttpHeaderEntry *e = theHeader.getEntry(&pos)) {
+        const Name name(e->name.termedBuf()); // optimize: find std Names
+        name.assignHostId(e->id);
+        visitor.visit(name, Value(e->value.rawBuf(), e->value.size()));
+    }
 }
 
 libecap::Area
@@ -149,7 +161,9 @@ Adaptation::Ecap::FirstLineRep::protocol() const
     case AnyP::PROTO_INTERNAL:
         return protocolInternal;
     case AnyP::PROTO_ICY:
-        return Name();
+        return protocolIcy;
+    case AnyP::PROTO_UNKNOWN:
+        return protocolUnknown; // until we remember the protocol image
     case AnyP::PROTO_NONE:
         return Name();
 
@@ -168,12 +182,12 @@ Adaptation::Ecap::FirstLineRep::protocol(const Name &p)
     theMessage.protocol = TranslateProtocolId(p);
 }
 
-protocol_t
+AnyP::ProtocolType
 Adaptation::Ecap::FirstLineRep::TranslateProtocolId(const Name &name)
 {
     if (name.assignedHostId())
-        return static_cast<protocol_t>(name.hostId());
-    return AnyP::PROTO_NONE; // no AnyP::PROTO_OTHER
+        return static_cast<AnyP::ProtocolType>(name.hostId());
+    return AnyP::PROTO_UNKNOWN;
 }
 
 

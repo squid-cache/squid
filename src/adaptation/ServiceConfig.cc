@@ -69,6 +69,7 @@ Adaptation::ServiceConfig::parse()
 
     // handle optional service name=value parameters
     const char *lastOption = NULL;
+    bool grokkedUri = false;
     while (char *option = strtok(NULL, w_space)) {
         if (strcmp(option, "0") == 0) { // backward compatibility
             bypass = false;
@@ -94,20 +95,21 @@ Adaptation::ServiceConfig::parse()
             grokked = grokBool(bypass, name, value);
         else if (strcmp(name, "routing") == 0)
             grokked = grokBool(routing, name, value);
+        else if (strcmp(name, "uri") == 0)
+            grokked = grokkedUri = grokUri(value);
         else if (strcmp(name, "ipv6") == 0) {
             grokked = grokBool(ipv6, name, value);
             if (grokked && ipv6 && !Ip::EnableIpv6)
                 debugs(3, DBG_IMPORTANT, "WARNING: IPv6 is disabled. ICAP service option ignored.");
-        } else {
-            debugs(3, 0, cfg_filename << ':' << config_lineno << ": " <<
-                   "unknown adaptation service option: " << name << '=' << value);
-        }
+        } else
+            grokked = grokExtension(name, value);
+
         if (!grokked)
             return false;
     }
 
     // what is left must be the service URI
-    if (!grokUri(lastOption))
+    if (!grokkedUri && !grokUri(lastOption))
         return false;
 
     // there should be nothing else left
@@ -242,4 +244,14 @@ Adaptation::ServiceConfig::grokBool(bool &var, const char *name, const char *val
     }
 
     return true;
+}
+
+bool
+Adaptation::ServiceConfig::grokExtension(const char *name, const char *value)
+{
+    // we do not accept extensions by default
+    debugs(3, DBG_CRITICAL, cfg_filename << ':' << config_lineno << ": " <<
+           "ERROR: unknown adaptation service option: " <<
+           name << '=' << value);
+    return false;
 }

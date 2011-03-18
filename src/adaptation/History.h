@@ -1,8 +1,9 @@
 #ifndef SQUID_ADAPT_HISTORY_H
 #define SQUID_ADAPT_HISTORY_H
 
-#include "RefCount.h"
 #include "Array.h"
+#include "HttpHeader.h"
+#include "RefCount.h"
 #include "SquidString.h"
 
 namespace Adaptation
@@ -40,6 +41,15 @@ public:
 
     /// returns true, fills the value, and resets iff next services were set
     bool extractNextServices(String &value);
+
+    /// store the last meta header fields received from the adaptation service
+    void recordMeta(const HttpHeader *lm);
+
+public:
+    /// Last received meta header (REQMOD or RESPMOD, whichever comes last).
+    HttpHeader lastMeta;
+    /// All REQMOD and RESPMOD meta headers merged. Last field wins conflicts.
+    HttpHeader allMeta;
 
 private:
     /// single Xaction stats (i.e., a historical record entry)

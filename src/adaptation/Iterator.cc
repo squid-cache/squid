@@ -51,7 +51,7 @@ void Adaptation::Iterator::step()
     Must(!theLauncher);
 
     if (thePlan.exhausted()) { // nothing more to do
-        sendAnswer(theMsg);
+        sendAnswer(Answer::Forward(theMsg));
         Must(done());
         return;
     }
@@ -74,7 +74,26 @@ void Adaptation::Iterator::step()
     Must(!done());
 }
 
-void Adaptation::Iterator::noteAdaptationAnswer(HttpMsg *aMsg)
+void
+Adaptation::Iterator::noteAdaptationAnswer(const Answer &answer)
+{
+    switch (answer.kind) {
+    case Answer::akForward:
+        handleAdaptedHeader(answer.message);
+        break;
+
+    case Answer::akBlock:
+        handleAdaptationBlock(answer);
+        break;
+
+    case Answer::akError:
+        handleAdaptationError(answer.final);
+        break;
+    }
+}
+
+void
+Adaptation::Iterator::handleAdaptedHeader(HttpMsg *aMsg)
 {
     // set theCause if we switched to request satisfaction mode
     if (!theCause) { // probably sent a request message
@@ -106,7 +125,16 @@ void Adaptation::Iterator::noteInitiatorAborted()
     mustStop("initiator gone");
 }
 
-void Adaptation::Iterator::noteAdaptationQueryAbort(bool final)
+void Adaptation::Iterator::handleAdaptationBlock(const Answer &answer)
+{
+    debugs(93,5, HERE << "blocked by " << answer);
+    clearAdaptation(theLauncher);
+    updatePlan(false);
+    sendAnswer(answer);
+    mustStop("blocked");
+}
+
+void Adaptation::Iterator::handleAdaptationError(bool final)
 {
     debugs(93,5, HERE << "final: " << final << " plan: " << thePlan);
     clearAdaptation(theLauncher);
@@ -130,7 +158,7 @@ void Adaptation::Iterator::noteAdaptationQueryAbort(bool final)
 
     if (canIgnore && srcIntact && adapted) {
         debugs(85,3, HERE << "responding with older adapted msg");
-        sendAnswer(theMsg);
+        sendAnswer(Answer::Forward(theMsg));
         mustStop("sent older adapted msg");
         return;
     }

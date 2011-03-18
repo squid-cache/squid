@@ -155,8 +155,8 @@ public:
         Headers() : request(NULL),
                 adapted_request(NULL),
 
-#if ICAP_CLIENT
-                icap(NULL),
+#if USE_ADAPTATION
+                adapt_last(NULL),
 #endif
                 reply(NULL) {}
 
@@ -165,8 +165,9 @@ public:
         char *adapted_request; //< HTTP request headers after adaptation and redirection
 
 
-#if ICAP_CLIENT
-        char * icap;    ///< last matching ICAP response header.
+#if USE_ADAPTATION
+
+        char *adapt_last; ///< last ICAP response header or eCAP meta received
 #endif
         char *reply;
     } headers;

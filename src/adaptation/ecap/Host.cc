@@ -18,6 +18,10 @@ const libecap::Name Adaptation::Ecap::protocolIcp("ICP", libecap::Name::NextId()
 #if USE_HTCP
 const libecap::Name Adaptation::Ecap::protocolHtcp("Htcp", libecap::Name::NextId());
 #endif
+const libecap::Name Adaptation::Ecap::protocolIcy("ICY", libecap::Name::NextId());
+const libecap::Name Adaptation::Ecap::protocolUnknown("_unknown_", libecap::Name::NextId());
+
+const libecap::Name Adaptation::Ecap::metaBypassable("bypassable", libecap::Name::NextId());
 
 /// the host application (i.e., Squid) wrapper registered with libecap
 static libecap::shared_ptr<Adaptation::Ecap::Host> TheHost;
@@ -27,8 +31,12 @@ Adaptation::Ecap::Host::Host()
     // assign our host-specific IDs to well-known names
     // this code can run only once
 
+    libecap::headerTransferEncoding.assignHostId(HDR_TRANSFER_ENCODING);
     libecap::headerReferer.assignHostId(HDR_REFERER);
     libecap::headerContentLength.assignHostId(HDR_CONTENT_LENGTH);
+    libecap::headerVia.assignHostId(HDR_VIA);
+    // TODO: libecap::headerXClientIp.assignHostId(HDR_X_CLIENT_IP);
+    // TODO: libecap::headerXServerIp.assignHostId(HDR_X_SERVER_IP);
 
     libecap::protocolHttp.assignHostId(AnyP::PROTO_HTTP);
     libecap::protocolHttps.assignHostId(AnyP::PROTO_HTTPS);
@@ -43,6 +51,11 @@ Adaptation::Ecap::Host::Host()
 #if USE_HTCP
     protocolHtcp.assignHostId(AnyP::PROTO_HTCP);
 #endif
+    protocolIcy.assignHostId(AnyP::PROTO_ICY);
+    protocolUnknown.assignHostId(AnyP::PROTO_UNKNOWN);
+
+    // allows adapter to safely ignore this in adapter::Service::configure()
+    metaBypassable.assignHostId(1);
 }
 
 std::string
@@ -74,7 +87,7 @@ SquidLogLevel(libecap::LogVerbosity lv)
         return DBG_DATA; // is it a good idea to ignore other flags?
 
     if (lv.application())
-        return DBG_DATA; // is it a good idea to ignore other flags?
+        return DBG_IMPORTANT; // is it a good idea to ignore other flags?
 
     return 2 + 2*lv.debugging() + 3*lv.operation() + 2*lv.xaction();
 }

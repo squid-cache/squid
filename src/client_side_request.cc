@@ -1405,9 +1405,30 @@ ClientHttpRequest::startAdaptation(const Adaptation::ServiceGroupPointer &g)
 }
 
 void
-ClientHttpRequest::noteAdaptationAnswer(HttpMsg *msg)
+ClientHttpRequest::noteAdaptationAnswer(const Adaptation::Answer &answer)
 {
     assert(cbdataReferenceValid(this));		// indicates bug
+    clearAdaptation(virginHeadSource);
+    assert(!adaptedBodySource);
+
+    switch (answer.kind) {
+    case Adaptation::Answer::akForward:
+        handleAdaptedHeader(answer.message);
+        break;
+
+    case Adaptation::Answer::akBlock:
+        handleAdaptationBlock(answer);
+        break;
+
+    case Adaptation::Answer::akError:
+        handleAdaptationFailure(ERR_DETAIL_CLT_REQMOD_ABORT, !answer.final);
+        break;
+    }
+}
+
+void
+ClientHttpRequest::handleAdaptedHeader(HttpMsg *msg)
+{
     assert(msg);
 
     if (HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg)) {
@@ -1456,11 +1477,13 @@ ClientHttpRequest::noteAdaptationAnswer(HttpMsg *msg)
 }
 
 void
-ClientHttpRequest::noteAdaptationQueryAbort(bool final)
+ClientHttpRequest::handleAdaptationBlock(const Adaptation::Answer &answer)
 {
-    clearAdaptation(virginHeadSource);
-    assert(!adaptedBodySource);
-    handleAdaptationFailure(ERR_DETAIL_CLT_REQMOD_ABORT, !final);
+    request->detailError(ERR_ACCESS_DENIED, ERR_DETAIL_REQMOD_BLOCK);
+    AclMatchedName = answer.ruleId.termedBuf();
+    assert(calloutContext);
+    calloutContext->clientAccessCheckDone(ACCESS_DENIED);
+    AclMatchedName = NULL;
 }
 
 void

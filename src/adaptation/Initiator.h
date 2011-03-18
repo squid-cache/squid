@@ -4,6 +4,9 @@
 #include "base/AsyncJob.h"
 #include "base/CbcPointer.h"
 #include "adaptation/forward.h"
+#include "HttpMsg.h"
+
+#include <iosfwd>
 
 /*
  * The ICAP Initiator is an ICAP vectoring point that initates ICAP
@@ -14,10 +17,41 @@
  * or aborting an ICAP transaction.
  */
 
-class HttpMsg;
-
 namespace Adaptation
 {
+
+/// summarizes adaptation service answer for the noteAdaptationAnswer() API
+class Answer
+{
+public:
+    /// helps interpret other members without a class hierarchy
+    typedef enum {
+        akForward, ///< forward the supplied adapted HTTP message
+        akBlock, ///< block or deny the master xaction; see authority
+        akError, ///< no adapted message will come; see bypassable
+    } Kind;
+
+    static Answer Error(bool final); ///< create an akError answer
+    static Answer Forward(HttpMsg *aMsg); ///< create an akForward answer
+    static Answer Block(const String &aRule); ///< create an akBlock answer
+
+    std::ostream &print(std::ostream &os) const;
+
+public:
+    HttpMsgPointerT<HttpMsg> message; ///< HTTP request or response to forward
+    String ruleId; ///< ACL (or similar rule) name that blocked forwarding
+    bool final; ///< whether the error, if any, cannot be bypassed
+    Kind kind; ///< the type of the answer
+
+private:
+    explicit Answer(Kind aKind); ///< use static creators instead
+};
+
+inline
+std::ostream &operator <<(std::ostream &os, const Answer &answer)
+{
+    return answer.print(os);
+}
 
 class Initiator: virtual public AsyncJob
 {
@@ -25,12 +59,9 @@ public:
     Initiator(): AsyncJob("Initiator") {}
     virtual ~Initiator() {}
 
-    // called when ICAP response headers are successfully interpreted
-    virtual void noteAdaptationAnswer(HttpMsg *message) = 0;
-
-    // called when valid ICAP response headers are no longer expected
-    // the final parameter is set to disable bypass or retries
-    virtual void noteAdaptationQueryAbort(bool final) = 0;
+    /// called with the initial adaptation decision (adapt, block, error);
+    /// virgin and/or adapted body transmission may continue after this
+    virtual void noteAdaptationAnswer(const Answer &answer) = 0;
 
 protected:
     ///< starts freshly created initiate and returns a safe pointer to it

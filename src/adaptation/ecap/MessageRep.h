@@ -10,6 +10,7 @@
 #include "BodyPipe.h"
 #include "adaptation/forward.h"
 #include "adaptation/Message.h"
+#include "anyp/ProtocolType.h"
 #include <libecap/common/message.h>
 #include <libecap/common/header.h>
 #include <libecap/common/body.h>
@@ -41,6 +42,8 @@ public:
     virtual void add(const Name &name, const Value &value);
     virtual void removeAny(const Name &name);
 
+    virtual void visitEach(libecap::NamedValueVisitor &visitor) const;
+
     virtual Area image() const;
     virtual void parse(const Area &buf); // throws on failures
 
@@ -68,7 +71,7 @@ public:
     void protocol(const Name &aProtocol);
 
 protected:
-    static protocol_t TranslateProtocolId(const Name &name);
+    static AnyP::ProtocolType TranslateProtocolId(const Name &name);
 
 private:
     HttpMsg &theMessage; // the message which first line is being translated

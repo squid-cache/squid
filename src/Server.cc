@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "acl/Gadgets.h"
 #include "base/TextException.h"
 #include "comm/Write.h"
 #include "Server.h"
@@ -660,10 +661,28 @@ ServerStateData::noteBodyConsumerAborted(BodyPipe::Pointer)
 
 // received adapted response headers (body may follow)
 void
-ServerStateData::noteAdaptationAnswer(HttpMsg *msg)
+ServerStateData::noteAdaptationAnswer(const Adaptation::Answer &answer)
 {
     clearAdaptation(adaptedHeadSource); // we do not expect more messages
 
+    switch (answer.kind) {
+    case Adaptation::Answer::akForward:
+        handleAdaptedHeader(answer.message);
+        break;
+
+    case Adaptation::Answer::akBlock:
+        handleAdaptationBlocked(answer);
+        break;
+
+    case Adaptation::Answer::akError:
+        handleAdaptationAborted(!answer.final);
+        break;
+    }
+}
+
+void
+ServerStateData::handleAdaptedHeader(HttpMsg *msg)
+{
     if (abortOnBadEntry("entry went bad while waiting for adapted headers"))
         return;
 
@@ -683,14 +702,6 @@ ServerStateData::noteAdaptationAnswer(HttpMsg *msg)
         if (doneWithAdaptation()) // we may still be sending virgin response
             handleAdaptationCompleted();
     }
-}
-
-// will not receive adapted response headers (and, hence, body)
-void
-ServerStateData::noteAdaptationQueryAbort(bool final)
-{
-    clearAdaptation(adaptedHeadSource);
-    handleAdaptationAborted(!final);
 }
 
 // more adapted response body is available
@@ -776,6 +787,37 @@ ServerStateData::handleAdaptationAborted(bool bypassable)
     }
 
     abortTransaction("ICAP failure");
+}
+
+// adaptation service wants us to deny HTTP client access to this response
+void
+ServerStateData::handleAdaptationBlocked(const Adaptation::Answer &answer)
+{
+    debugs(11,5, HERE << answer.ruleId);
+
+    if (abortOnBadEntry("entry went bad while ICAP aborted"))
+        return;
+
+    if (!entry->isEmpty()) { // too late to block (should not really happen)
+        if (request)
+            request->detailError(ERR_ICAP_FAILURE, ERR_DETAIL_RESPMOD_BLOCK_LATE);
+        abortTransaction("late adaptation block");
+        return;
+    }
+
+    debugs(11,7, HERE << "creating adaptation block response");
+
+    err_type page_id =
+        aclGetDenyInfoPage(&Config.denyInfoList, answer.ruleId.termedBuf(), 1);
+    if (page_id == ERR_NONE)
+        page_id = ERR_ACCESS_DENIED;
+
+    ErrorState *err = errorCon(page_id, HTTP_FORBIDDEN, request);
+    err->xerrno = ERR_DETAIL_RESPMOD_BLOCK_EARLY;
+    fwd->fail(err);
+    fwd->dontRetry(true);
+
+    abortTransaction("timely adaptation block");
 }
 
 void
