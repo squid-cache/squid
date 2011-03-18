@@ -132,6 +132,8 @@ typedef struct {
     char *user_name;
     char *passwd;
     char *pub_auth;
+    char *workers;
+    char *processes;
 } cachemgr_request;
 
 /*
@@ -839,12 +841,14 @@ process_request(cachemgr_request * req)
     S.FreeAddrInfo(AI);
 
     l = snprintf(buf, sizeof(buf),
-                 "GET cache_object://%s/%s HTTP/1.0\r\n"
+                 "GET cache_object://%s/%s%s%s HTTP/1.0\r\n"
                  "Accept: */*\r\n"
                  "%s"			/* Authentication info or nothing */
                  "\r\n",
                  req->hostname,
                  req->action,
+                 req->workers? "?workers=" : (req->processes ? "?processes=" : ""),
+                 req->workers? req->workers : (req->processes ? req->processes: ""),
                  make_auth_header(req));
     if (write(s, buf, l) < 0) {
         fprintf(stderr,"ERROR: (%d) writing request: '%s'\n", errno, buf);
@@ -1009,6 +1013,10 @@ read_request(void)
             req->pub_auth = xstrdup(q), decode_pub_auth(req);
         else if (0 == strcasecmp(t, "operation"))
             req->action = xstrdup(q);
+        else if (0 == strcasecmp(t, "workers") && strlen(q))
+            req->workers = xstrdup(q);
+        else if (0 == strcasecmp(t, "processes") && strlen(q))
+            req->processes = xstrdup(q);
     }
 
     if (req->server && !req->hostname) {
@@ -1020,8 +1028,8 @@ read_request(void)
     }
 
     make_pub_auth(req);
-    debug("cmgr: got req: host: '%s' port: %d uname: '%s' passwd: '%s' auth: '%s' oper: '%s'\n",
-          safe_str(req->hostname), req->port, safe_str(req->user_name), safe_str(req->passwd), safe_str(req->pub_auth), safe_str(req->action));
+    debug("cmgr: got req: host: '%s' port: %d uname: '%s' passwd: '%s' auth: '%s' oper: '%s' workers: '%s' processes: '%s'\n",
+          safe_str(req->hostname), req->port, safe_str(req->user_name), safe_str(req->passwd), safe_str(req->pub_auth), safe_str(req->action), safe_str(req->workers), safe_str(req->processes));
     return req;
 }
 
