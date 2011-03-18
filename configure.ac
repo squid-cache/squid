@@ -3366,6 +3366,7 @@ AC_CONFIG_FILES([\
 	lib/smblib/Makefile \
 	scripts/Makefile \
 	src/Makefile \
+	src/anyp/Makefile \
 	src/base/Makefile \
 	src/acl/Makefile \
 	src/fs/Makefile \

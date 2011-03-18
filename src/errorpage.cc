@@ -808,7 +808,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'P':
         if (request) {
-            p = ProtocolStr[request->protocol];
+            p = AnyP::ProtocolType_str[request->protocol];
         } else if (!building_deny_info_url) {
             p = "[unknown protocol]";
         }

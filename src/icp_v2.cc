@@ -214,7 +214,7 @@ icpLogIcp(const Ip::Address &caddr, log_type logcode, int len, const char *url, 
     if (LOG_ICP_QUERY == logcode)
         return;
 
-    clientdbUpdate(caddr, logcode, PROTO_ICP, len);
+    clientdbUpdate(caddr, logcode, AnyP::PROTO_ICP, len);
 
     if (!Config.onoff.log_udp)
         return;
@@ -425,7 +425,7 @@ icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
          * count this DENIED query in the clientdb, even though
          * we're not sending an ICP reply...
          */
-        clientdbUpdate(from, LOG_UDP_DENIED, PROTO_ICP, 0);
+        clientdbUpdate(from, LOG_UDP_DENIED, AnyP::PROTO_ICP, 0);
     } else {
         icpCreateAndSend(ICP_DENIED, 0, url, reqnum, 0, fd, from);
     }

@@ -55,7 +55,7 @@ ACLProtocolData::~ACLProtocolData()
 }
 
 bool
-ACLProtocolData::match(protocol_t toFind)
+ACLProtocolData::match(AnyP::ProtocolType toFind)
 {
     return values->findAndTune (toFind);
 }
@@ -63,17 +63,17 @@ ACLProtocolData::match(protocol_t toFind)
 /* explicit instantiation required for some systems */
 
 /// \cond AUTODOCS-IGNORE
-template cbdata_type CbDataList<protocol_t>::CBDATA_CbDataList;
+template cbdata_type CbDataList<AnyP::ProtocolType>::CBDATA_CbDataList;
 /// \endcond
 
 wordlist *
 ACLProtocolData::dump()
 {
     wordlist *W = NULL;
-    CbDataList<protocol_t> *data = values;
+    CbDataList<AnyP::ProtocolType> *data = values;
 
     while (data != NULL) {
-        wordlistAdd(&W, ProtocolStr[data->element]);
+        wordlistAdd(&W, AnyP::ProtocolType_str[data->element]);
         data = data->next;
     }
 
@@ -83,14 +83,24 @@ ACLProtocolData::dump()
 void
 ACLProtocolData::parse()
 {
-    CbDataList<protocol_t> **Tail;
+    CbDataList<AnyP::ProtocolType> **Tail;
     char *t = NULL;
 
     for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-        CbDataList<protocol_t> *q = new CbDataList<protocol_t> (urlParseProtocol(t));
-        *(Tail) = q;
-        Tail = &q->next;
+        int p = AnyP::PROTO_NONE;
+        for (; p < AnyP::PROTO_UNKNOWN; ++p) {
+            if (strcasecmp(t, AnyP::ProtocolType_str[p]) == 0) {
+                CbDataList<AnyP::ProtocolType> *q = new CbDataList<AnyP::ProtocolType>(static_cast<AnyP::ProtocolType>(p));
+                *(Tail) = q;
+                Tail = &q->next;
+                break;
+            }
+        }
+        if (p == AnyP::PROTO_UNKNOWN) {
+            debugs(28, DBG_IMPORTANT, "WARNING: Ignoring unknown protocol '" << t << "' in the ACL named '" << AclMatchedName << "'");
+            // XXX: store the text pattern of this protocol name for live comparisons
+        }
     }
 }
 
@@ -100,7 +110,7 @@ ACLProtocolData::empty() const
     return values == NULL;
 }
 
-ACLData<protocol_t> *
+ACLData<AnyP::ProtocolType> *
 ACLProtocolData::clone() const
 {
     /* Splay trees don't clone yet. */

@@ -55,11 +55,11 @@ testURLScheme::testAssignFromprotocol_t()
 {
     URLScheme empty_scheme;
     URLScheme scheme;
-    scheme = PROTO_NONE;
+    scheme = AnyP::PROTO_NONE;
     CPPUNIT_ASSERT_EQUAL(empty_scheme, scheme);
 
-    URLScheme https_scheme(PROTO_HTTPS);
-    scheme = PROTO_HTTPS;
+    URLScheme https_scheme(AnyP::PROTO_HTTPS);
+    scheme = AnyP::PROTO_HTTPS;
     CPPUNIT_ASSERT_EQUAL(https_scheme, scheme);
 }
 
@@ -71,21 +71,21 @@ void
 testURLScheme::testCastToprotocol_t()
 {
     /* explicit cast */
-    protocol_t protocol = (protocol_t) URLScheme();
-    CPPUNIT_ASSERT_EQUAL(PROTO_NONE, protocol);
+    AnyP::ProtocolType protocol = static_cast<AnyP::ProtocolType>(URLScheme());
+    CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_NONE, protocol);
     /* and implicit */
-    protocol = URLScheme(PROTO_HTTP);
-    CPPUNIT_ASSERT_EQUAL(PROTO_HTTP, protocol);
+    protocol = URLScheme(AnyP::PROTO_HTTP);
+    CPPUNIT_ASSERT_EQUAL(AnyP::PROTO_HTTP, protocol);
 }
 
 /*
- * a default constructed URLScheme is == PROTO_NONE
+ * a default constructed URLScheme is == AnyP::PROTO_NONE
  */
 void
 testURLScheme::testDefaultConstructor()
 {
     URLScheme lhs;
-    URLScheme rhs(PROTO_NONE);
+    URLScheme rhs(AnyP::PROTO_NONE);
     CPPUNIT_ASSERT_EQUAL(lhs, rhs);
 }
 
@@ -95,10 +95,10 @@ testURLScheme::testDefaultConstructor()
 void
 testURLScheme::testConstructprotocol_t()
 {
-    URLScheme lhs_none(PROTO_NONE), rhs_none(PROTO_NONE);
+    URLScheme lhs_none(AnyP::PROTO_NONE), rhs_none(AnyP::PROTO_NONE);
     CPPUNIT_ASSERT_EQUAL(lhs_none, rhs_none);
 
-    URLScheme lhs_cacheobj(PROTO_CACHEOBJ), rhs_cacheobj(PROTO_CACHEOBJ);
+    URLScheme lhs_cacheobj(AnyP::PROTO_CACHE_OBJECT), rhs_cacheobj(AnyP::PROTO_CACHE_OBJECT);
     CPPUNIT_ASSERT_EQUAL(lhs_cacheobj, rhs_cacheobj);
     CPPUNIT_ASSERT(lhs_none != rhs_cacheobj);
 }
@@ -110,7 +110,7 @@ void
 testURLScheme::testConst_str()
 {
     String lhs("wais");
-    URLScheme wais(PROTO_WAIS);
+    URLScheme wais(AnyP::PROTO_WAIS);
     String rhs(wais.const_str());
     CPPUNIT_ASSERT_EQUAL(lhs, rhs);
 }
@@ -122,10 +122,10 @@ testURLScheme::testConst_str()
 void
 testURLScheme::testEqualprotocol_t()
 {
-    CPPUNIT_ASSERT(URLScheme() == PROTO_NONE);
-    CPPUNIT_ASSERT(not (URLScheme(PROTO_WAIS) == PROTO_HTTP));
-    CPPUNIT_ASSERT(PROTO_HTTP == URLScheme(PROTO_HTTP));
-    CPPUNIT_ASSERT(not (PROTO_CACHEOBJ == URLScheme(PROTO_HTTP)));
+    CPPUNIT_ASSERT(URLScheme() == AnyP::PROTO_NONE);
+    CPPUNIT_ASSERT(not (URLScheme(AnyP::PROTO_WAIS) == AnyP::PROTO_HTTP));
+    CPPUNIT_ASSERT(AnyP::PROTO_HTTP == URLScheme(AnyP::PROTO_HTTP));
+    CPPUNIT_ASSERT(not (AnyP::PROTO_CACHE_OBJECT == URLScheme(AnyP::PROTO_HTTP)));
 }
 
 /*
@@ -134,10 +134,10 @@ testURLScheme::testEqualprotocol_t()
 void
 testURLScheme::testNotEqualprotocol_t()
 {
-    CPPUNIT_ASSERT(URLScheme(PROTO_NONE) != PROTO_HTTP);
-    CPPUNIT_ASSERT(not (URLScheme(PROTO_HTTP) != PROTO_HTTP));
-    CPPUNIT_ASSERT(PROTO_NONE != URLScheme(PROTO_HTTP));
-    CPPUNIT_ASSERT(not (PROTO_WAIS != URLScheme(PROTO_WAIS)));
+    CPPUNIT_ASSERT(URLScheme(AnyP::PROTO_NONE) != AnyP::PROTO_HTTP);
+    CPPUNIT_ASSERT(not (URLScheme(AnyP::PROTO_HTTP) != AnyP::PROTO_HTTP));
+    CPPUNIT_ASSERT(AnyP::PROTO_NONE != URLScheme(AnyP::PROTO_HTTP));
+    CPPUNIT_ASSERT(not (AnyP::PROTO_WAIS != URLScheme(AnyP::PROTO_WAIS)));
 }
 
 /*
@@ -147,7 +147,7 @@ void
 testURLScheme::testStream()
 {
     std::ostringstream buffer;
-    buffer << URLScheme(PROTO_HTTP);
+    buffer << URLScheme(AnyP::PROTO_HTTP);
     String http_str("http");
     String from_buf(buffer.str().c_str());
     CPPUNIT_ASSERT_EQUAL(http_str, from_buf);

@@ -125,7 +125,7 @@ internalRemoteUri(const char *host, u_short port, const char *dir, const char *n
     mb.Printf("http://%s", lc_host);
 
     /* append port if not default */
-    if (port && port != urlDefaultPort(PROTO_HTTP))
+    if (port && port != urlDefaultPort(AnyP::PROTO_HTTP))
         mb.Printf(":%d", port);
 
     if (dir)
