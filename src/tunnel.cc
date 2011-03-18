@@ -526,6 +526,9 @@ tunnelConnectedWriteDone(int fd, char *buf, size_t size, comm_err_t flag, int xe
 static void
 tunnelProxyConnectedWriteDone(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
 {
+    TunnelStateData *tunnelState = static_cast<TunnelStateData *>(data);
+    debugs(26, 3, HERE << "FD " << fd << " tunnelState=" << tunnelState);
+    *tunnelState->status_ptr = HTTP_OK;
     tunnelConnectedWriteDone(fd, buf, size, flag, xerrno, data);
 }
 
