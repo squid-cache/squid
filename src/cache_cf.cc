@@ -144,8 +144,8 @@ static void free_access_log(customlog ** definitions);
 static void update_maxobjsize(void);
 static void configDoConfigure(void);
 static void parse_refreshpattern(refresh_t **);
-static uint64_t parseTimeUnits(const char *unit);
-static void parseTimeLine(time_msec_t * tptr, const char *units);
+static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
+static void parseTimeLine(time_msec_t * tptr, const char *units, bool allowMsec);
 static void parse_ushort(u_short * var);
 static void parse_string(char **);
 static void default_all(void);
@@ -958,14 +958,14 @@ parse_obsolete(const char *name)
 /* Parse a time specification from the config file.  Store the
  * result in 'tptr', after converting it to 'units' */
 static void
-parseTimeLine(time_msec_t * tptr, const char *units)
+parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec)
 {
     char *token;
     double d;
     time_msec_t m;
     time_msec_t u;
 
-    if ((u = parseTimeUnits(units)) == 0)
+    if ((u = parseTimeUnits(units, allowMsec)) == 0)
         self_destruct();
 
     if ((token = strtok(NULL, w_space)) == NULL)
@@ -981,16 +981,16 @@ parseTimeLine(time_msec_t * tptr, const char *units)
         debugs(3, 0, "WARNING: No units on '" <<
                config_input_line << "', assuming " <<
                d << " " << units  );
-    else if ((m = parseTimeUnits(token)) == 0)
+    else if ((m = parseTimeUnits(token, allowMsec)) == 0)
         self_destruct();
 
     *tptr = static_cast<time_msec_t>(m * d);
 }
 
 static uint64_t
-parseTimeUnits(const char *unit)
+parseTimeUnits(const char *unit, bool allowMsec)
 {
-    if (!strncasecmp(unit, T_MILLISECOND_STR, strlen(T_MILLISECOND_STR)))
+    if (allowMsec && !strncasecmp(unit, T_MILLISECOND_STR, strlen(T_MILLISECOND_STR)))
         return 1;
 
     if (!strncasecmp(unit, T_SECOND_STR, strlen(T_SECOND_STR)))
@@ -3008,7 +3008,7 @@ void
 parse_time_t(time_t * var)
 {
     time_msec_t tval;
-    parseTimeLine(&tval, T_SECOND_STR);
+    parseTimeLine(&tval, T_SECOND_STR, false);
     *var = static_cast<time_t>(tval/1000);
 }
 
@@ -3031,7 +3031,7 @@ dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
 void
 parse_time_msec(time_msec_t * var)
 {
-    parseTimeLine(var, T_SECOND_STR);
+    parseTimeLine(var, T_SECOND_STR, true);
 }
 
 static void
@@ -4384,7 +4384,7 @@ static void parse_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
     else if ((token = strtok(NULL, w_space)) == NULL) {
         debugs(3, 0, "No time-units on '" << config_input_line << "'");
         self_destruct();
-    } else if ((m = parseTimeUnits(token)) == 0)
+    } else if ((m = parseTimeUnits(token, false)) == 0)
         self_destruct();
 
     cfg->oldest_service_failure = (m * d);
