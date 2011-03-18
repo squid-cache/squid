@@ -1914,14 +1914,52 @@ findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end)
 }
 
 void
-setLogUri(ClientHttpRequest * http, char const *uri)
+setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl)
 {
     safe_free(http->log_uri);
 
-    if (!stringHasCntl(uri))
+    if (!cleanUrl)
+        // The uri is already clean just dump it.
         http->log_uri = xstrndup(uri, MAX_URL);
-    else
-        http->log_uri = xstrndup(rfc1738_escape_unescaped(uri), MAX_URL);
+    else {
+        int flags = 0;
+        switch (Config.uri_whitespace) {
+        case URI_WHITESPACE_ALLOW:
+            flags |= RFC1738_ESCAPE_NOSPACE;
+
+        case URI_WHITESPACE_ENCODE:
+            flags |= RFC1738_ESCAPE_UNESCAPED;
+            http->log_uri = xstrndup(rfc1738_do_escape(uri, flags), MAX_URL);
+            break;
+
+        case URI_WHITESPACE_CHOP: {
+            flags |= RFC1738_ESCAPE_NOSPACE;
+            flags |= RFC1738_ESCAPE_UNESCAPED;
+            http->log_uri = xstrndup(rfc1738_do_escape(uri, flags), MAX_URL);
+            int pos = strcspn(http->log_uri, w_space);
+            http->log_uri[pos] = '\0';
+        }
+        break;
+
+        case URI_WHITESPACE_DENY:
+        case URI_WHITESPACE_STRIP:
+        default: {
+            const char *t;
+            char *tmp_uri = static_cast<char*>(xmalloc(strlen(uri) + 1));
+            char *q = tmp_uri;
+            t = uri;
+            while (*t) {
+                if (!xisspace(*t))
+                    *q++ = *t;
+                t++;
+            }
+            *q = '\0';
+            http->log_uri = xstrndup(rfc1738_escape_unescaped(tmp_uri), MAX_URL);
+            xfree(tmp_uri);
+        }
+        break;
+        }
+    }
 }
 
 static void
@@ -2224,7 +2262,6 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
         strcpy(http->uri, url);
     }
 
-    setLogUri(http, http->uri);
     debugs(33, 5, "parseHttpRequest: Complete request received");
     result->flags.parsed_ok = 1;
     xfree(url);
@@ -2395,6 +2432,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if (context->flags.parsed_ok == 0) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 1, "clientProcessRequest: Invalid Request");
+        // setLogUri should called before repContext->setReplyToError
+        setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         switch (hp->request_parse_status) {
@@ -2416,6 +2455,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Invalid URL: " << http->uri);
+        // setLogUri should called before repContext->setReplyToError
+        setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri, conn->peer, NULL, NULL, NULL);
@@ -2433,6 +2474,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Unsupported HTTP version discovered. :\n" << HttpParserHdrBuf(hp));
+        // setLogUri should called before repContext->setReplyToError
+        setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, HTTP_HTTP_VERSION_NOT_SUPPORTED, method, http->uri, conn->peer, NULL, HttpParserHdrBuf(hp), NULL);
@@ -2448,6 +2491,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if (http_ver.major >= 1 && !request->parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp))) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Failed to parse request headers:\n" << HttpParserHdrBuf(hp));
+        // setLogUri should called before repContext->setReplyToError
+        setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, http->uri, conn->peer, NULL, NULL, NULL);
