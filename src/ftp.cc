@@ -3083,6 +3083,14 @@ void FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
         return;
     }
 
+    if (io.flag != COMM_OK) {
+        data.close();
+        debugs(9, DBG_IMPORTANT, "FTP AcceptDataConnection: FD " << io.fd << ": " << xstrerr(io.xerrno));
+        /** \todo Need to send error message on control channel*/
+        ftpFail(this);
+        return;
+    }
+
     /** \par
      * When squid.conf ftp_sanitycheck is enabled, check the new connection is actually being
      * made by the remote client which is connected to the FTP control socket.
@@ -3104,13 +3112,6 @@ void FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
             comm_accept(data.fd, acceptCall);
             return;
         }
-    }
-
-    if (io.flag != COMM_OK) {
-        debugs(9, DBG_IMPORTANT, "ftpHandleDataAccept: comm_accept(" << io.nfd << "): " << xstrerr(io.xerrno));
-        /** \todo XXX Need to set error message */
-        ftpFail(this);
-        return;
     }
 
     /**\par
