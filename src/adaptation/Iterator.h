@@ -5,6 +5,9 @@
 #include "adaptation/Initiate.h"
 #include "adaptation/ServiceGroups.h"
 
+class HttpMsg;
+class HttpRequest;
+
 namespace Adaptation
 {
 

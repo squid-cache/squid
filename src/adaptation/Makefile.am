@@ -20,6 +20,8 @@ libadaptation_la_SOURCES = \
 	AccessCheck.h \
 	AccessRule.cc \
 	AccessRule.h \
+	Answer.cc \
+	Answer.h \
 	Config.cc \
 	Config.h \
 	Elements.cc \

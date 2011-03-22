@@ -3,6 +3,7 @@
  */
 
 #include "squid.h"
+#include "adaptation/Answer.h"
 #include "adaptation/Config.h"
 #include "adaptation/Iterator.h"
 #include "adaptation/Service.h"
