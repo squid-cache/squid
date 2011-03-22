@@ -1581,7 +1581,7 @@ idnsPTRLookup(const IpAddress &addr, IDNSCB * callback, void *data)
 
     q->id = idnsQueryID();
 
-    if (Ip::EnableIpv6 && addr.IsIPv6()) {
+    if (addr.IsIPv6()) {
         struct in6_addr addr6;
         addr.GetInAddr(addr6);
         q->sz = rfc3596BuildPTRQuery6(addr6, q->buf, sizeof(q->buf), q->id, &q->query);
