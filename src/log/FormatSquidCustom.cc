@@ -341,7 +341,7 @@ Log::Format::SquidCustom(AccessLogEntry * al, customlog * log)
             break;
 
         case LFT_ADAPTATION_LAST_ALL_HEADERS:
-            out = al->headers.adapt_last;
+            out = al->adapt.last_meta;
 
             quote = 1;
 

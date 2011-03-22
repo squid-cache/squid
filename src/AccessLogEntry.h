@@ -154,23 +154,29 @@ public:
     public:
         Headers() : request(NULL),
                 adapted_request(NULL),
-
-#if USE_ADAPTATION
-                adapt_last(NULL),
-#endif
                 reply(NULL) {}
 
         char *request; //< virgin HTTP request headers
 
         char *adapted_request; //< HTTP request headers after adaptation and redirection
 
-
-#if USE_ADAPTATION
-
-        char *adapt_last; ///< last ICAP response header or eCAP meta received
-#endif
         char *reply;
     } headers;
+
+#if USE_ADAPTATION
+    /** \brief This subclass holds general adaptation log info.
+     * \todo Inner class declarations should be moved outside.
+     */
+    class AdaptationDetails
+    {
+
+    public:
+        AdaptationDetails(): last_meta(NULL) {}
+
+        /// image of the last ICAP response header or eCAP meta received
+        char *last_meta;
+    } adapt;
+#endif
 
     // Why is this a sub-class and not a set of real "private:" fields?
     // It looks like its duplicating HTTPRequestMethod anyway!

@@ -572,7 +572,7 @@ accessLogFreeMemory(AccessLogEntry * aLogEntry)
     safe_free(aLogEntry->headers.request);
 
 #if ICAP_CLIENT
-    safe_free(aLogEntry->headers.adapt_last);
+    safe_free(aLogEntry->adapt.last_meta);
 #endif
 
     safe_free(aLogEntry->headers.reply);
