@@ -812,7 +812,6 @@ void
 StoreEntry::write (StoreIOBuffer writeBuffer)
 {
     assert(mem_obj != NULL);
-    assert(writeBuffer.length >= 0);
     /* This assert will change when we teach the store to update */
     PROF_start(StoreEntry_write);
     assert(store_status == STORE_PENDING);
