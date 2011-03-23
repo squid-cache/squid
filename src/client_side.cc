@@ -2431,7 +2431,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     if (context->flags.parsed_ok == 0) {
         clientStreamNode *node = context->getClientReplyContext();
-        debugs(33, 1, "clientProcessRequest: Invalid Request");
+        debugs(33, 2, "clientProcessRequest: Invalid Request");
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
