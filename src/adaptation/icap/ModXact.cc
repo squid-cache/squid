@@ -1845,10 +1845,14 @@ bool Adaptation::Icap::ModXact::fillVirginHttpHeader(MemBuf &mb) const
 
 void Adaptation::Icap::ModXact::detailError(int errDetail)
 {
-    if (HttpRequest *request = virgin.cause ?
-                               virgin.cause : dynamic_cast<HttpRequest*>(virgin.header)) {
+    HttpRequest *request = dynamic_cast<HttpRequest*>(adapted.header);
+    // if no adapted request, update virgin (and inherit its properties later)
+    // TODO: make this and HttpRequest::detailError constant, like adaptHistory
+    if (!request)
+        request = const_cast<HttpRequest*>(&virginRequest());
+
+    if (request)
         request->detailError(ERR_ICAP_FAILURE, errDetail);
-    }
 }
 
 /* Adaptation::Icap::ModXactLauncher */
