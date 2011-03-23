@@ -42,7 +42,7 @@ class StreamTest
 {
 public:
     std::ostream &serialise(std::ostream &);
-    int const getAnInt() const;
+    int getAnInt() const;
     char const *getACString() const;
 };
 
@@ -58,7 +58,7 @@ StreamTest::serialise(std::ostream &aStream)
     return aStream;
 }
 
-int const
+int
 StreamTest::getAnInt() const
 {
     return 5;
