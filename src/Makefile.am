@@ -913,7 +913,19 @@ man_MANS = squid.8
 EXTRA_DIST += squid.8.in
 CLEANFILES += squid.8
 
-install-data-local: install-sysconfDATA install-dataDATA
+## check for existing Squid icons (used to be $datadir/icons).
+## move them into the new icons location so we dont break anyones existing mime.conf
+mimeconf-Upgrade-Shuffle:
+	@if test -d $(DESTDIR)$(datadir)/icons; then \
+	  mv $(DESTDIR)$(datadir)/icons/* $(DESTDIR)$(DEFAULT_ICON_DIR)/; \
+	  $(RM) -r $(DESTDIR)$(datadir)/icons; \
+	  echo "NOTICE: "; \
+	  echo "NOTICE: The Squid icons have been upgraded. Please update your $(DESTDIR)$(DEFAULT_MIME_TABLE)." ; \
+	  echo "NOTICE: $(DESTDIR)$(DEFAULT_MIME_TABLE).default contains the new icon configuration." ; \
+	  echo "NOTICE: "; \
+	fi
+
+install-data-local: install-sysconfDATA install-dataDATA mimeconf-Upgrade-Shuffle
 	@if test -f $(DESTDIR)$(DEFAULT_MIME_TABLE) ; then \
 	  echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_MIME_TABLE)" ; \
 	else \
