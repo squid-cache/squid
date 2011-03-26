@@ -136,6 +136,9 @@ protected:
 class HttpParser
 {
 public:
+    HttpParser() {};
+    HttpParser(const char *buf, int len);
+
     /**
      * Attempt to parse the first line of a new request message.
      *

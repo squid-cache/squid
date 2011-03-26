@@ -434,6 +434,11 @@ HttpParserRequestLen(HttpParser *hp)
 }
 #endif
 
+HttpParser::HttpParser(const char *buf, int len)
+{
+    HttpParserInit(this, buf, len);
+}
+
 int
 HttpParser::parseRequestFirstLine()
 {
