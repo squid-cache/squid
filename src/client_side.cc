@@ -192,7 +192,6 @@ static ClientSocketContext *ClientSocketContextNew(ClientHttpRequest *);
 /* other */
 static IOCB clientWriteComplete;
 static IOCB clientWriteBodyComplete;
-static bool clientParseRequest(ConnStateData * conn, bool &do_next_read);
 static PF clientLifetimeTimeout;
 static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
 static ClientSocketContext *parseHttpRequest(ConnStateData *, HttpParser *, HttpRequestMethod *, HttpVersion *);
@@ -1532,7 +1531,7 @@ ClientSocketContext::keepaliveNextRequest()
      * from our read buffer we may never re-register for another client read.
      */
 
-    if (clientParseRequest(conn, do_next_read)) {
+    if (conn->clientParseRequest(do_next_read)) {
         debugs(33, 3, "clientSocketContext::keepaliveNextRequest: FD " << conn->fd << ": parsed next request from buffer");
     }
 
@@ -2695,76 +2694,67 @@ connOkToAddRequest(ConnStateData * conn)
  * do_next_read is updated to indicate whether a read should be
  * scheduled.
  */
-static bool
-clientParseRequest(ConnStateData * conn, bool &do_next_read)
+bool
+ConnStateData::clientParseRequest(bool &do_next_read)
 {
     HttpRequestMethod method;
-    ClientSocketContext *context;
     bool parsed_req = false;
     HttpVersion http_ver;
-    HttpParser hp;
 
-    debugs(33, 5, "clientParseRequest: FD " << conn->fd << ": attempting to parse");
+    debugs(33, 5, HERE << "FD " << fd << ": attempting to parse");
 
     // Loop while we have read bytes that are not needed for producing the body
     // On errors, bodyPipe may become nil, but readMoreRequests will be cleared
-    while (conn->in.notYetUsed > 0 && !conn->bodyPipe &&
-            conn->flags.readMoreRequests) {
-        connStripBufferWhitespace (conn);
+    while (in.notYetUsed > 0 && !bodyPipe && flags.readMoreRequests) {
+        connStripBufferWhitespace(this);
 
         /* Don't try to parse if the buffer is empty */
-
-        if (conn->in.notYetUsed == 0)
+        if (in.notYetUsed == 0)
             break;
 
         /* Limit the number of concurrent requests to 2 */
-
-        if (!connOkToAddRequest(conn)) {
+        if (!connOkToAddRequest(this)) {
             break;
         }
 
         /* Should not be needed anymore */
         /* Terminate the string */
-        conn->in.buf[conn->in.notYetUsed] = '\0';
+        in.buf[in.notYetUsed] = '\0';
 
         /* Begin the parsing */
-        HttpParserInit(&hp, conn->in.buf, conn->in.notYetUsed);
+        PROF_start(parseHttpRequest);
+        HttpParserInit(&parser_, in.buf, in.notYetUsed);
 
         /* Process request */
-        PROF_start(parseHttpRequest);
-
-        context = parseHttpRequest(conn, &hp, &method, &http_ver);
-
+        ClientSocketContext *context = parseHttpRequest(this, &parser_, &method, &http_ver);
         PROF_stop(parseHttpRequest);
 
         /* partial or incomplete request */
         if (!context) {
             // TODO: why parseHttpRequest can just return parseHttpRequestAbort
             // (which becomes context) but checkHeaderLimits cannot?
-            conn->checkHeaderLimits();
+            checkHeaderLimits();
             break;
         }
 
         /* status -1 or 1 */
         if (context) {
-            debugs(33, 5, "clientParseRequest: FD " << conn->fd << ": parsed a request");
-            commSetTimeout(conn->fd, Config.Timeout.lifetime, clientLifetimeTimeout,
+            debugs(33, 5, HERE << "FD " << fd << ": parsed a request");
+            commSetTimeout(fd, Config.Timeout.lifetime, clientLifetimeTimeout,
                            context->http);
 
-            clientProcessRequest(conn, &hp, context, method, http_ver);
+            clientProcessRequest(this, &parser_, context, method, http_ver);
 
-            parsed_req = true;
+            parsed_req = true; // XXX: do we really need to parse everything right NOW ?
 
             if (context->mayUseConnection()) {
-                debugs(33, 3, "clientParseRequest: Not reading, as this request may need the connection");
-                do_next_read = 0;
-                break;
+                debugs(33, 3, HERE << "Not reading, as this request may need the connection");
+                return false;
             }
         }
     }
 
     /* XXX where to 'finish' the parsing pass? */
-
     return parsed_req;
 }
 
@@ -2835,7 +2825,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
     if (getConcurrentRequestCount() == 0)
         fd_note(fd, "Reading next request");
 
-    if (! clientParseRequest(this, do_next_read)) {
+    if (!clientParseRequest(do_next_read)) {
         if (!isOpen())
             return;
         /*

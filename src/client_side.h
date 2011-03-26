@@ -151,6 +151,8 @@ public:
     bool areAllContextsForThisConnection() const;
     void freeAllContexts();
     void notifyAllContexts(const int xerrno); ///< tell everybody about the err
+    /// Traffic parsing
+    bool clientParseRequest(bool &do_next_read);
     void readNextRequest();
     bool maybeMakeSpaceAvailable();
     ClientSocketContext::Pointer getCurrentContext() const;
@@ -308,6 +310,9 @@ private:
     void clientAfterReadingRequests(int do_next_read);
 
 private:
+    HttpParser parser_;
+
+    // XXX: CBDATA plays with public/private and leaves the following 'private' fields all public... :(
     CBDATA_CLASS2(ConnStateData);
     bool transparent_;
     bool closing_;
