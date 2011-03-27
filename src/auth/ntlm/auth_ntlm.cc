@@ -92,8 +92,8 @@ AuthNTLMConfig::done()
     delete ntlmauthenticators;
     ntlmauthenticators = NULL;
 
-    if (authenticate)
-        wordlistDestroy(&authenticate);
+    if (authenticateProgram)
+        wordlistDestroy(&authenticateProgram);
 
     debugs(29, 2, "ntlmScheme::done: NTLM authentication Shutdown.");
 }
@@ -101,7 +101,7 @@ AuthNTLMConfig::done()
 void
 AuthNTLMConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
 {
-    wordlist *list = authenticate;
+    wordlist *list = authenticateProgram;
     storeAppendPrintf(entry, "%s %s", name, "ntlm");
 
     while (list != NULL) {
@@ -122,12 +122,12 @@ void
 AuthNTLMConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
 {
     if (strcasecmp(param_str, "program") == 0) {
-        if (authenticate)
-            wordlistDestroy(&authenticate);
+        if (authenticateProgram)
+            wordlistDestroy(&authenticateProgram);
 
-        parse_wordlist(&authenticate);
+        parse_wordlist(&authenticateProgram);
 
-        requirePathnameExists("auth_param ntlm program", authenticate->key);
+        requirePathnameExists("auth_param ntlm program", authenticateProgram->key);
     } else if (strcasecmp(param_str, "children") == 0) {
         authenticateChildren.parseConfig();
     } else if (strcasecmp(param_str, "keep_alive") == 0) {
@@ -148,7 +148,7 @@ AuthNTLMConfig::type() const
 void
 AuthNTLMConfig::init(AuthConfig * scheme)
 {
-    if (authenticate) {
+    if (authenticateProgram) {
 
         authntlm_initialised = 1;
 
@@ -160,7 +160,7 @@ AuthNTLMConfig::init(AuthConfig * scheme)
 
         assert(proxy_auth_cache);
 
-        ntlmauthenticators->cmdline = authenticate;
+        ntlmauthenticators->cmdline = authenticateProgram;
 
         ntlmauthenticators->childs = authenticateChildren;
 
@@ -189,7 +189,7 @@ AuthNTLMConfig::active() const
 bool
 AuthNTLMConfig::configured() const
 {
-    if ((authenticate != NULL) && (authenticateChildren.n_max != 0)) {
+    if ((authenticateProgram != NULL) && (authenticateChildren.n_max != 0)) {
         debugs(29, 9, "AuthNTLMConfig::configured: returning configured");
         return true;
     }
@@ -203,7 +203,7 @@ AuthNTLMConfig::configured() const
 void
 AuthNTLMConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
-    if (!authenticate)
+    if (!authenticateProgram)
         return;
 
     /* Need keep-alive */

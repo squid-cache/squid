@@ -78,7 +78,7 @@ AuthBasicConfig::active() const
 bool
 AuthBasicConfig::configured() const
 {
-    if ((authenticate != NULL) && (authenticateChildren.n_max != 0) &&
+    if ((authenticateProgram != NULL) && (authenticateChildren.n_max != 0) &&
             (basicAuthRealm != NULL)) {
         debugs(29, 9, HERE << "returning configured");
         return true;
@@ -120,7 +120,7 @@ BasicUser::authenticated() const
 void
 AuthBasicConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
-    if (authenticate) {
+    if (authenticateProgram) {
         debugs(29, 9, HERE << "Sending type:" << hdrType << " header: 'Basic realm=\"" << basicAuthRealm << "\"'");
         httpHeaderPutStrf(&rep->header, hdrType, "Basic realm=\"%s\"", basicAuthRealm);
     }
@@ -150,8 +150,8 @@ AuthBasicConfig::done()
     delete basicauthenticators;
     basicauthenticators = NULL;
 
-    if (authenticate)
-        wordlistDestroy(&authenticate);
+    if (authenticateProgram)
+        wordlistDestroy(&authenticateProgram);
 
     if (basicAuthRealm)
         safe_free(basicAuthRealm);
@@ -221,7 +221,7 @@ authenticateBasicHandleReply(void *data, char *reply)
 void
 AuthBasicConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
 {
-    wordlist *list = authenticate;
+    wordlist *list = authenticateProgram;
     storeAppendPrintf(entry, "%s %s", name, "basic");
 
     while (list != NULL) {
@@ -254,12 +254,12 @@ void
 AuthBasicConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
 {
     if (strcasecmp(param_str, "program") == 0) {
-        if (authenticate)
-            wordlistDestroy(&authenticate);
+        if (authenticateProgram)
+            wordlistDestroy(&authenticateProgram);
 
-        parse_wordlist(&authenticate);
+        parse_wordlist(&authenticateProgram);
 
-        requirePathnameExists("auth_param basic program", authenticate->key);
+        requirePathnameExists("auth_param basic program", authenticateProgram->key);
     } else if (strcasecmp(param_str, "children") == 0) {
         authenticateChildren.parseConfig();
     } else if (strcasecmp(param_str, "realm") == 0) {
@@ -468,13 +468,13 @@ AuthBasicConfig::decode(char const *proxy_auth)
 void
 AuthBasicConfig::init(AuthConfig * schemeCfg)
 {
-    if (authenticate) {
+    if (authenticateProgram) {
         authbasic_initialised = 1;
 
         if (basicauthenticators == NULL)
             basicauthenticators = new helper("basicauthenticator");
 
-        basicauthenticators->cmdline = authenticate;
+        basicauthenticators->cmdline = authenticateProgram;
 
         basicauthenticators->childs = authenticateChildren;
 

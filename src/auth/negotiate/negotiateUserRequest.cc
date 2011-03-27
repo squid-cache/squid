@@ -121,7 +121,7 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
 
     debugs(29, 8, HERE << "auth state is '" << user()->credentials() << "'");
 
-    if (static_cast<AuthNegotiateConfig*>(AuthConfig::Find("negotiate"))->authenticate == NULL) {
+    if (static_cast<AuthNegotiateConfig*>(AuthConfig::Find("negotiate"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: No Negotiate authentication program configured.");
         handler(data, NULL);
         return;
