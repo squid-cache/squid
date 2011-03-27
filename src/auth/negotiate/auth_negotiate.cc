@@ -104,8 +104,8 @@ AuthNegotiateConfig::done()
     delete negotiateauthenticators;
     negotiateauthenticators = NULL;
 
-    if (authenticate)
-        wordlistDestroy(&authenticate);
+    if (authenticateProgram)
+        wordlistDestroy(&authenticateProgram);
 
     debugs(29, 2, "negotiateScheme::done: Negotiate authentication Shutdown.");
 }
@@ -113,7 +113,7 @@ AuthNegotiateConfig::done()
 void
 AuthNegotiateConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
 {
-    wordlist *list = authenticate;
+    wordlist *list = authenticateProgram;
     storeAppendPrintf(entry, "%s %s", name, "negotiate");
 
     while (list != NULL) {
@@ -134,12 +134,12 @@ void
 AuthNegotiateConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
 {
     if (strcasecmp(param_str, "program") == 0) {
-        if (authenticate)
-            wordlistDestroy(&authenticate);
+        if (authenticateProgram)
+            wordlistDestroy(&authenticateProgram);
 
-        parse_wordlist(&authenticate);
+        parse_wordlist(&authenticateProgram);
 
-        requirePathnameExists("auth_param negotiate program", authenticate->key);
+        requirePathnameExists("auth_param negotiate program", authenticateProgram->key);
     } else if (strcasecmp(param_str, "children") == 0) {
         authenticateChildren.parseConfig();
     } else if (strcasecmp(param_str, "keep_alive") == 0) {
@@ -162,7 +162,7 @@ AuthNegotiateConfig::type() const
 void
 AuthNegotiateConfig::init(AuthConfig * scheme)
 {
-    if (authenticate) {
+    if (authenticateProgram) {
 
         authnegotiate_initialised = 1;
 
@@ -174,7 +174,7 @@ AuthNegotiateConfig::init(AuthConfig * scheme)
 
         assert(proxy_auth_cache);
 
-        negotiateauthenticators->cmdline = authenticate;
+        negotiateauthenticators->cmdline = authenticateProgram;
 
         negotiateauthenticators->childs = authenticateChildren;
 
@@ -203,7 +203,7 @@ AuthNegotiateConfig::active() const
 bool
 AuthNegotiateConfig::configured() const
 {
-    if ((authenticate != NULL) && (authenticateChildren.n_max != 0)) {
+    if (authenticateProgram && (authenticateChildren.n_max != 0)) {
         debugs(29, 9, "AuthNegotiateConfig::configured: returning configured");
         return true;
     }
@@ -219,7 +219,7 @@ AuthNegotiateConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpR
 {
     AuthNegotiateUserRequest *negotiate_request;
 
-    if (!authenticate)
+    if (!authenticateProgram)
         return;
 
     /* Need keep-alive */

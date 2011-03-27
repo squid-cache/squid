@@ -215,8 +215,6 @@ AuthUserRequest::direction()
         return 0;
 
     return module_direction();
-
-    return -2;
 }
 
 void
