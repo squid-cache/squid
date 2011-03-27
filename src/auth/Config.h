@@ -64,7 +64,7 @@ public:
     static AuthUserRequest::Pointer CreateAuthUser(const char *proxy_auth);
 
     static AuthConfig *Find(const char *proxy_auth);
-    AuthConfig() : authenticateChildren(20), authenticate(NULL) {}
+    AuthConfig() : authenticateChildren(20), authenticateProgram(NULL) {}
 
     virtual ~AuthConfig() {}
 
@@ -132,7 +132,7 @@ public:
 
 public:
     HelperChildConfig authenticateChildren;
-    wordlist *authenticate;
+    wordlist *authenticateProgram; ///< Helper program to run, includes all parameters
 };
 
 namespace Auth
