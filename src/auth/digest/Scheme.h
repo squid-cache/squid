@@ -36,22 +36,24 @@
 #include "auth/Scheme.h"
 #include "auth/digest/auth_digest.h"
 
-namespace Auth {
-namespace Digest {
+namespace Auth
+{
+namespace Digest
+{
 
 /// \ingroup AuthSchemeAPI
 /// \ingroup AuthAPI
-class Scheme : public AuthScheme
+class Scheme : public Auth::Scheme
 {
 
 public:
-    static AuthScheme::Pointer GetInstance();
+    static Auth::Scheme::Pointer GetInstance();
     Scheme() {};
     virtual ~Scheme() {}
 
     /* per scheme */
     virtual char const *type () const;
-    virtual void done();
+    virtual void shutdownCleanup();
     virtual AuthConfig *createConfig();
 
     /* Not implemented */
@@ -59,7 +61,7 @@ public:
     Scheme &operator=(Scheme const &);
 
 private:
-    static AuthScheme::Pointer _instance;
+    static Auth::Scheme::Pointer _instance;
 
     /**
      * Remove all cached user credentials from circulation.

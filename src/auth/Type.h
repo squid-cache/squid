@@ -3,7 +3,8 @@
 
 #if USE_AUTH
 
-namespace Auth {
+namespace Auth
+{
 
 typedef enum {
     AUTH_UNKNOWN,               /* default */

@@ -235,7 +235,7 @@ SignalEngine::doShutdown(time_t wait)
     serverConnectionsClose();
 #if USE_AUTH
     /* detach the auth components (only do this on full shutdown) */
-    AuthScheme::FreeAll();
+    Auth::Scheme::FreeAll();
 #endif
     eventAdd("SquidShutdown", &StopEventLoop, this, (double) (wait + 1), 1, false);
 }

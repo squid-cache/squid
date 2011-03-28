@@ -564,9 +564,8 @@ authenticateAddTrailer(HttpReply * rep, AuthUserRequest::Pointer auth_user_reque
         auth_user_request->addTrailer(rep, accelerated);
 }
 
-AuthScheme::Pointer
+Auth::Scheme::Pointer
 AuthUserRequest::scheme() const
 {
-    /* TODO: this should be overriden by the child and be essentially a no-op */
-    return AuthScheme::Find(user()->config->type());
+    return Auth::Scheme::Find(user()->config->type());
 }
