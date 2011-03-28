@@ -40,8 +40,8 @@
 #include "squid.h"
 #include "auth/Gadgets.h"
 #include "auth/ntlm/auth_ntlm.h"
-#include "auth/ntlm/ntlmScheme.h"
-#include "auth/ntlm/ntlmUserRequest.h"
+#include "auth/ntlm/Scheme.h"
+#include "auth/ntlm/UserRequest.h"
 #include "auth/State.h"
 #include "mgr/Registration.h"
 #include "Store.h"
@@ -287,7 +287,7 @@ AuthNTLMConfig::decode(char const *proxy_auth)
     assert(auth_user_request->user() == NULL);
 
     auth_user_request->user(newUser);
-    auth_user_request->user()->auth_type = AUTH_NTLM;
+    auth_user_request->user()->auth_type = Auth::AUTH_NTLM;
 
     /* all we have to do is identify that it's NTLM - the helper does the rest */
     debugs(29, 9, "AuthNTLMConfig::decode: NTLM authentication");

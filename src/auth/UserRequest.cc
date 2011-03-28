@@ -84,12 +84,12 @@ AuthUserRequest::valid() const
         return false;
     }
 
-    if (user()->auth_type == AUTH_UNKNOWN) {
+    if (user()->auth_type == Auth::AUTH_UNKNOWN) {
         debugs(29, 4, HERE << "AuthUser '" << user() << "' uses unknown scheme.");
         return false;
     }
 
-    if (user()->auth_type == AUTH_BROKEN) {
+    if (user()->auth_type == Auth::AUTH_BROKEN) {
         debugs(29, 4, HERE << "AuthUser '" << user() << "' is broken for it's scheme.");
         return false;
     }

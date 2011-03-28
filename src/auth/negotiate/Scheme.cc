@@ -31,40 +31,43 @@
  */
 
 #include "config.h"
-#include "auth/ntlm/auth_ntlm.h"
-#include "auth/ntlm/ntlmScheme.h"
+#include "auth/negotiate/Scheme.h"
 #include "helper.h"
 
 AuthScheme::Pointer
-ntlmScheme::GetInstance()
+negotiateScheme::GetInstance()
 {
     if (_instance == NULL) {
-        _instance = new ntlmScheme();
+        _instance = new negotiateScheme();
         AddScheme(_instance);
     }
     return _instance;
 }
 
 char const *
-ntlmScheme::type () const
+negotiateScheme::type () const
 {
-    return "ntlm";
+    return "negotiate";
 }
 
-AuthScheme::Pointer ntlmScheme::_instance = NULL;
+AuthScheme::Pointer negotiateScheme::_instance = NULL;
 
+/**
+ \ingroup AuthNegotiateInternal
+ \todo move to negotiateScheme.cc
+ */
 void
-ntlmScheme::done()
+negotiateScheme::done()
 {
     /* clear the global handle to this scheme. */
     _instance = NULL;
 
-    debugs(29, 2, "ntlmScheme::done: NTLM authentication Shutdown.");
+    debugs(29, 2, "negotiateScheme::done: Negotiate authentication Shutdown.");
 }
 
 AuthConfig *
-ntlmScheme::createConfig()
+negotiateScheme::createConfig()
 {
-    auth_ntlm_config *ntlmCfg = new auth_ntlm_config;
-    return dynamic_cast<AuthConfig*>(ntlmCfg);
+    AuthNegotiateConfig *negotiateCfg = new AuthNegotiateConfig;
+    return dynamic_cast<AuthConfig*>(negotiateCfg);
 }

@@ -31,47 +31,40 @@
  */
 
 #include "config.h"
-#include "auth/digest/digestScheme.h"
+#include "auth/ntlm/auth_ntlm.h"
+#include "auth/ntlm/Scheme.h"
 #include "helper.h"
 
 AuthScheme::Pointer
-digestScheme::GetInstance()
+ntlmScheme::GetInstance()
 {
     if (_instance == NULL) {
-        _instance = new digestScheme();
+        _instance = new ntlmScheme();
         AddScheme(_instance);
     }
     return _instance;
 }
 
 char const *
-digestScheme::type () const
+ntlmScheme::type () const
 {
-    return "digest";
+    return "ntlm";
 }
 
-AuthScheme::Pointer digestScheme::_instance = NULL;
-
-AuthConfig *
-digestScheme::createConfig()
-{
-    AuthDigestConfig *digestCfg = new AuthDigestConfig;
-    return dynamic_cast<AuthConfig*>(digestCfg);
-}
+AuthScheme::Pointer ntlmScheme::_instance = NULL;
 
 void
-digestScheme::PurgeCredentialsCache(void)
+ntlmScheme::done()
 {
-    AuthUserHashPointer *usernamehash;
-    AuthUser::Pointer auth_user;
-    hash_first(proxy_auth_username_cache);
+    /* clear the global handle to this scheme. */
+    _instance = NULL;
 
-    while ((usernamehash = static_cast<AuthUserHashPointer *>(hash_next(proxy_auth_username_cache)) )) {
-        auth_user = usernamehash->user();
+    debugs(29, 2, "ntlmScheme::done: NTLM authentication Shutdown.");
+}
 
-        if (strcmp(auth_user->config->type(), "digest") == 0) {
-            hash_remove_link(proxy_auth_username_cache, static_cast<hash_link*>(usernamehash));
-            delete usernamehash;
-        }
-    }
+AuthConfig *
+ntlmScheme::createConfig()
+{
+    auth_ntlm_config *ntlmCfg = new auth_ntlm_config;
+    return dynamic_cast<AuthConfig*>(ntlmCfg);
 }

@@ -1,6 +1,6 @@
 #include "config.h"
 #include "auth/digest/auth_digest.h"
-#include "auth/digest/digestUserRequest.h"
+#include "auth/digest/UserRequest.h"
 #include "auth/State.h"
 #include "charset.h"
 #include "HttpReply.h"
@@ -168,7 +168,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
 int
 AuthDigestUserRequest::module_direction()
 {
-    if (user()->auth_type != AUTH_DIGEST)
+    if (user()->auth_type != Auth::AUTH_DIGEST)
         return -2;
 
     switch (user()->credentials()) {
@@ -251,7 +251,7 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     authenticateStateData *r = NULL;
     char buf[8192];
 
-    assert(user() != NULL && user()->auth_type == AUTH_DIGEST);
+    assert(user() != NULL && user()->auth_type == Auth::AUTH_DIGEST);
     debugs(29, 9, "authenticateStart: '\"" << user()->username() << "\":\"" << realm << "\"'");
 
     if (static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->authenticateProgram == NULL) {
