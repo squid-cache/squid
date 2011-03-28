@@ -72,13 +72,8 @@ public:
     virtual int module_direction();
     virtual void onConnectionClose(ConnStateData *);
     virtual void module_start(RH *, void *);
-    virtual AuthUser *user() {return _theUser;}
-
-    virtual const AuthUser *user() const {return _theUser;}
 
     virtual void addHeader(HttpReply * rep, int accel);
-
-    virtual void user (AuthUser *aUser) {_theUser=dynamic_cast<NegotiateUser *>(aUser);}
 
     virtual const char * connLastHeader();
 
@@ -102,10 +97,6 @@ public:
 
     /* need access to the request flags to mess around on pconn failure */
     HttpRequest *request;
-
-private:
-    /* the user */
-    NegotiateUser * _theUser;
 };
 
 MEMPROXY_CLASS_INLINE(AuthNegotiateUserRequest);

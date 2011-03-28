@@ -1446,7 +1446,7 @@ AuthDigestUserRequest::credentials(CredentialsState newCreds)
 AuthDigestUserRequest::AuthDigestUserRequest() : nonceb64(NULL) ,cnonce(NULL) ,realm(NULL),
         pszPass(NULL) ,algorithm(NULL) ,pszMethod(NULL),
         qop(NULL) ,uri(NULL) ,response(NULL),
-        nonce(NULL), _theUser (NULL) ,
+        nonce(NULL),
         credentials_ok (Unchecked)
 {}
 

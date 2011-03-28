@@ -758,8 +758,7 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * c
 }
 
 AuthNegotiateUserRequest::AuthNegotiateUserRequest() :
-        /*conn(NULL),*/ auth_state(AUTHENTICATE_STATE_NONE),
-        _theUser(NULL)
+        /*conn(NULL),*/ auth_state(AUTHENTICATE_STATE_NONE)
 {
     waiting=0;
     client_blob=0;

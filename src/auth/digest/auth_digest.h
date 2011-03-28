@@ -70,11 +70,6 @@ public:
 #endif
 
     virtual void module_start(RH *, void *);
-    virtual AuthUser *user() {return _theUser;}
-
-    virtual const AuthUser *user() const {return _theUser;}
-
-    virtual void user(AuthUser *aUser) {_theUser=dynamic_cast<DigestUser *>(aUser);}
 
     CredentialsState credentials() const;
     void credentials(CredentialsState);
@@ -100,7 +95,6 @@ public:
     digest_nonce_h *nonce;
 
 private:
-    DigestUser *_theUser;
     CredentialsState credentials_ok;
 };
 

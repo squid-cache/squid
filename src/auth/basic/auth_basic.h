@@ -95,14 +95,6 @@ public:
     virtual void authenticate(HttpRequest * request, ConnStateData *conn, http_hdr_type type);
     virtual int module_direction();
     virtual void module_start(RH *, void *);
-    virtual AuthUser *user() {return _theUser;}
-
-    virtual const AuthUser *user() const {return _theUser;}
-
-    virtual void user (AuthUser *aUser) {_theUser=dynamic_cast<BasicUser *>(aUser);}
-
-private:
-    BasicUser *_theUser;
 };
 
 MEMPROXY_CLASS_INLINE(AuthBasicUserRequest);

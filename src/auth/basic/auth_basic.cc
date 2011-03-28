@@ -122,7 +122,7 @@ AuthBasicConfig::type() const
     return basicScheme::GetInstance().type();
 }
 
-AuthBasicUserRequest::AuthBasicUserRequest() : _theUser(NULL)
+AuthBasicUserRequest::AuthBasicUserRequest()
 {}
 
 AuthBasicUserRequest::~AuthBasicUserRequest()
