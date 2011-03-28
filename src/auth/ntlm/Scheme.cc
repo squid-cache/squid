@@ -35,9 +35,9 @@
 #include "auth/ntlm/Scheme.h"
 #include "helper.h"
 
-AuthScheme::Pointer Auth::Ntlm::Scheme::_instance = NULL;
+Auth::Scheme::Pointer Auth::Ntlm::Scheme::_instance = NULL;
 
-AuthScheme::Pointer
+Auth::Scheme::Pointer
 Auth::Ntlm::Scheme::GetInstance()
 {
     if (_instance == NULL) {
@@ -54,7 +54,7 @@ Auth::Ntlm::Scheme::type() const
 }
 
 void
-Auth::Ntlm::Scheme::done()
+Auth::Ntlm::Scheme::shutdownCleanup()
 {
     if (_instance == NULL)
         return;

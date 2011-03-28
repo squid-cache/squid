@@ -30,8 +30,8 @@
  *
  */
 
-#ifndef SQUID_AUTHSCHEME_H
-#define SQUID_AUTHSCHEME_H
+#ifndef SQUID_AUTH_SCHEME_H
+#define SQUID_AUTH_SCHEME_H
 
 #if USE_AUTH
 
@@ -45,6 +45,9 @@ class AuthConfig;
  \ingroup AuthAPI
  */
 
+namespace Auth
+{
+
 /**
  * \ingroup AuthAPI
  * \ingroup AuthSchemeAPI
@@ -54,20 +57,20 @@ class AuthConfig;
  * \par
  * Should we need multiple configs of a single scheme,
  * a new class AuthConfiguration should be made, and the
- * config specific calls on AuthScheme moved to it.
+ * config specific calls on Auth::Scheme moved to it.
  */
-class AuthScheme : public RefCountable
+class Scheme : public RefCountable
 {
 public:
-    typedef RefCount<AuthScheme> Pointer;
-    typedef Vector<AuthScheme::Pointer>::iterator iterator;
-    typedef Vector<AuthScheme::Pointer>::const_iterator const_iterator;
+    typedef RefCount<Scheme> Pointer;
+    typedef Vector<Scheme::Pointer>::iterator iterator;
+    typedef Vector<Scheme::Pointer>::const_iterator const_iterator;
 
 public:
-    AuthScheme() : initialised (false) {};
-    virtual ~AuthScheme() {};
+    Scheme() : initialised (false) {};
+    virtual ~Scheme() {};
 
-    static void AddScheme(AuthScheme::Pointer);
+    static void AddScheme(Scheme::Pointer);
 
     /**
      * Final termination of all authentication components.
@@ -82,25 +85,27 @@ public:
     /**
      * Locate an authentication scheme component by Name.
      */
-    static AuthScheme::Pointer Find(const char *);
+    static Scheme::Pointer Find(const char *);
 
     /* per scheme methods */
     virtual char const *type() const = 0;
-    virtual void done() = 0;
+    virtual void shutdownCleanup() = 0;
     virtual AuthConfig *createConfig() = 0;
 
     // Not implemented
-    AuthScheme(AuthScheme const &);
-    AuthScheme &operator=(AuthScheme const&);
+    Scheme(Scheme const &);
+    Scheme &operator=(Scheme const&);
 
-    static Vector<AuthScheme::Pointer> &GetSchemes();
+    static Vector<Scheme::Pointer> &GetSchemes();
 
 protected:
     bool initialised;
 
 private:
-    static Vector<AuthScheme::Pointer> *_Schemes;
+    static Vector<Scheme::Pointer> *_Schemes;
 };
 
+} // namespace Auth
+
 #endif /* USE_AUTH */
-#endif /* SQUID_AUTHSCHEME_H */
+#endif /* SQUID_AUTH_SCHEME_H */

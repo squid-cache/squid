@@ -1851,7 +1851,7 @@ parse_authparam(Auth::authConfig * config)
 
     if (schemeCfg == NULL) {
         /* Create a configuration based on the scheme info */
-        AuthScheme::Pointer theScheme = AuthScheme::Find(type_str);
+        Auth::Scheme::Pointer theScheme = Auth::Scheme::Find(type_str);
 
         if (theScheme == NULL) {
             debugs(3, DBG_CRITICAL, "Parsing Config File: Unknown authentication scheme '" << type_str << "'.");

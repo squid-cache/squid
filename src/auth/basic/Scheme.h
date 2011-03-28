@@ -36,29 +36,31 @@
 #include "auth/Scheme.h"
 #include "auth/basic/auth_basic.h"
 
-namespace Auth {
-namespace Basic {
+namespace Auth
+{
+namespace Basic
+{
 
 /// \ingroup AuthAPI
 /// \ingroup AuthSchemeAPI
-class Scheme : public AuthScheme
+class Scheme : public Auth::Scheme
 {
 
 public:
-    static AuthScheme::Pointer GetInstance();
+    static Auth::Scheme::Pointer GetInstance();
     Scheme() {};
     virtual ~Scheme() {}
 
     /* per scheme */
     virtual char const *type() const;
-    virtual void done();
+    virtual void shutdownCleanup();
     virtual AuthConfig *createConfig();
     /* Not implemented */
     Scheme(Scheme const &);
     Scheme &operator=(Scheme const &);
 
 private:
-    static AuthScheme::Pointer _instance;
+    static Auth::Scheme::Pointer _instance;
 };
 
 } // namespace Basic

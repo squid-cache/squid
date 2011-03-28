@@ -162,7 +162,7 @@ public:
      */
     char const *username() const;
 
-    AuthScheme::Pointer scheme() const;
+    Auth::Scheme::Pointer scheme() const;
 
     virtual const char * connLastHeader();
 

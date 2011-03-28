@@ -34,9 +34,9 @@
 #include "auth/negotiate/Scheme.h"
 #include "helper.h"
 
-AuthScheme::Pointer Auth::Negotiate::Scheme::_instance = NULL;
+Auth::Scheme::Pointer Auth::Negotiate::Scheme::_instance = NULL;
 
-AuthScheme::Pointer
+Auth::Scheme::Pointer
 Auth::Negotiate::Scheme::GetInstance()
 {
     if (_instance == NULL) {
@@ -53,7 +53,7 @@ Auth::Negotiate::Scheme::type() const
 }
 
 void
-Auth::Negotiate::Scheme::done()
+Auth::Negotiate::Scheme::shutdownCleanup()
 {
     if (_instance == NULL)
         return;

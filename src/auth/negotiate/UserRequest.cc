@@ -348,7 +348,7 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, auth_user_request->user()->username()));
         AuthUser::Pointer local_auth_user = negotiate_request->user();
         while (usernamehash && (usernamehash->user()->auth_type != Auth::AUTH_NEGOTIATE ||
-               strcmp(usernamehash->user()->username(), auth_user_request->user()->username()) != 0))
+                                strcmp(usernamehash->user()->username(), auth_user_request->user()->username()) != 0))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
         if (usernamehash) {
             /* we can't seamlessly recheck the username due to the

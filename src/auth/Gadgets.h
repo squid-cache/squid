@@ -72,8 +72,11 @@ private:
 
 MEMPROXY_CLASS_INLINE(AuthUserHashPointer);
 
+namespace Auth
+{
+class Scheme;
+}
 class ConnStateData;
-class AuthScheme;
 class StoreEntry;
 
 /**

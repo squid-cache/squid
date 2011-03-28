@@ -653,7 +653,7 @@ AuthDigestConfig::done()
         httpHeaderDestroyFieldsInfo(DigestFieldsInfo, DIGEST_ENUM_END);
         DigestFieldsInfo = NULL;
     }
-        
+
     if (!shutting_down)
         return;
 

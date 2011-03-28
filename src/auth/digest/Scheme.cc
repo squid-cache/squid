@@ -34,9 +34,9 @@
 #include "auth/digest/Scheme.h"
 #include "helper.h"
 
-AuthScheme::Pointer Auth::Digest::Scheme::_instance = NULL;
+Auth::Scheme::Pointer Auth::Digest::Scheme::_instance = NULL;
 
-AuthScheme::Pointer
+Auth::Scheme::Pointer
 Auth::Digest::Scheme::GetInstance()
 {
     if (_instance == NULL) {
@@ -53,7 +53,7 @@ Auth::Digest::Scheme::type() const
 }
 
 void
-Auth::Digest::Scheme::done()
+Auth::Digest::Scheme::shutdownCleanup()
 {
     if (_instance == NULL)
         return;

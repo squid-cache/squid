@@ -37,9 +37,9 @@
 /* for AuthConfig */
 #include "auth/basic/auth_basic.h"
 
-AuthScheme::Pointer Auth::Basic::Scheme::_instance = NULL;
+Auth::Scheme::Pointer Auth::Basic::Scheme::_instance = NULL;
 
-AuthScheme::Pointer
+Auth::Scheme::Pointer
 Auth::Basic::Scheme::GetInstance()
 {
     if (_instance == NULL) {
@@ -50,13 +50,13 @@ Auth::Basic::Scheme::GetInstance()
 }
 
 char const *
-basicScheme::type() const
+Auth::Basic::Scheme::type() const
 {
     return "basic";
 }
 
 void
-Auth::Basic::Scheme::done()
+Auth::Basic::Scheme::shutdownCleanup()
 {
     if (_instance == NULL)
         return;
