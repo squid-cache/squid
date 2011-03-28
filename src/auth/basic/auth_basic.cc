@@ -39,8 +39,8 @@
 
 #include "squid.h"
 #include "auth/basic/auth_basic.h"
-#include "auth/basic/basicScheme.h"
-#include "auth/basic/basicUserRequest.h"
+#include "auth/basic/Scheme.h"
+#include "auth/basic/UserRequest.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
 #include "charset.h"
@@ -180,7 +180,7 @@ authenticateBasicHandleReply(void *data, char *reply)
     }
 
     assert(r->auth_user_request != NULL);
-    assert(r->auth_user_request->user()->auth_type == AUTH_BASIC);
+    assert(r->auth_user_request->user()->auth_type == Auth::AUTH_BASIC);
 
     /* this is okay since we only play with the BasicUser child fields below
      * and dont pass the pointer itself anywhere */
@@ -289,7 +289,7 @@ authBasicAuthUserFindUsername(const char *username)
 
     if (username && (usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, username)))) {
         while (usernamehash) {
-            if ((usernamehash->user()->auth_type == AUTH_BASIC) &&
+            if ((usernamehash->user()->auth_type == Auth::AUTH_BASIC) &&
                     !strcmp(username, (char const *)usernamehash->key))
                 return usernamehash->user();
 
@@ -426,7 +426,7 @@ AuthBasicConfig::decode(char const *proxy_auth)
     xfree(cleartext);
 
     if (!local_basic->valid()) {
-        lb->auth_type = AUTH_BROKEN;
+        lb->auth_type = Auth::AUTH_BROKEN;
         auth_user_request->user(lb);
         return auth_user_request;
     }
@@ -439,7 +439,7 @@ AuthBasicConfig::decode(char const *proxy_auth)
         /* save the credentials */
         debugs(29, 9, HERE << "Creating new user '" << lb->username() << "'");
         /* set the auth_user type */
-        lb->auth_type = AUTH_BASIC;
+        lb->auth_type = Auth::AUTH_BASIC;
         /* current time for timeouts */
         lb->expiretime = current_time.tv_sec;
 

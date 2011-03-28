@@ -31,7 +31,7 @@
  */
 
 #include "config.h"
-#include "auth/basic/basicScheme.h"
+#include "auth/basic/Scheme.h"
 #include "helper.h"
 
 /* for AuthConfig */

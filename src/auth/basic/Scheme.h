@@ -56,7 +56,6 @@ public:
 
 private:
     static AuthScheme::Pointer _instance;
-//    AuthBasicConfig basicConfig;
 };
 
 #endif /* SQUID_BASICSCHEME_H */

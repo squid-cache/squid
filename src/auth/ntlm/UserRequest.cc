@@ -1,6 +1,6 @@
 #include "config.h"
-#include "auth/ntlm/ntlmUserRequest.h"
 #include "auth/ntlm/auth_ntlm.h"
+#include "auth/ntlm/UserRequest.h"
 #include "auth/State.h"
 #include "cbdata.h"
 #include "HttpRequest.h"
@@ -46,7 +46,7 @@ AuthNTLMUserRequest::module_direction()
     if (waiting || client_blob)
         return -1; /* need helper response to continue */
 
-    if (user()->auth_type != AUTH_NTLM)
+    if (user()->auth_type != Auth::AUTH_NTLM)
         return -2;
 
     switch (user()->credentials()) {
@@ -266,7 +266,7 @@ AuthNTLMUserRequest::HandleReply(void *data, void *lastserver, char *reply)
     assert(ntlm_request != NULL);
     assert(ntlm_request->waiting);
     assert(ntlm_request->user() != NULL);
-    assert(ntlm_request->user()->auth_type == AUTH_NTLM);
+    assert(ntlm_request->user()->auth_type == Auth::AUTH_NTLM);
 
     ntlm_request->waiting = 0;
     safe_free(ntlm_request->client_blob);
@@ -307,7 +307,8 @@ AuthNTLMUserRequest::HandleReply(void *data, void *lastserver, char *reply)
          * string */
         auth_user_hash_pointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, auth_user_request->user()->username()));
         AuthUser::Pointer local_auth_user = ntlm_request->user();
-        while (usernamehash && (usernamehash->user()->auth_type != AUTH_NTLM || strcmp(usernamehash->user()->username(), auth_user_request->user()->username()) != 0))
+        while (usernamehash && (usernamehash->user()->auth_type != Auth::AUTH_NTLM ||
+               strcmp(usernamehash->user()->username(), auth_user_request->user()->username()) != 0))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
         if (usernamehash) {
             /* we can't seamlessly recheck the username due to the
