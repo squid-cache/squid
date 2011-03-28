@@ -6,16 +6,16 @@
 #include "protos.h"
 
 #if HAVE_AUTH_MODULE_BASIC
-#include "auth/basic/basicScheme.h"
+#include "auth/basic/Scheme.h"
 #endif
 #if HAVE_AUTH_MODULE_DIGEST
-#include "auth/digest/digestScheme.h"
+#include "auth/digest/Scheme.h"
 #endif
 #if HAVE_AUTH_MODULE_NEGOTIATE
-#include "auth/negotiate/negotiateScheme.h"
+#include "auth/negotiate/Scheme.h"
 #endif
 #if HAVE_AUTH_MODULE_NTLM
-#include "auth/ntlm/ntlmScheme.h"
+#include "auth/ntlm/Scheme.h"
 #endif
 
 /**

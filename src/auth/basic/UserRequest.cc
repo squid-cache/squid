@@ -1,8 +1,7 @@
 #include "config.h"
-#include "auth/basic/basicUserRequest.h"
-#include "SquidTime.h"
-
 #include "auth/basic/auth_basic.h"
+#include "auth/basic/UserRequest.h"
+#include "SquidTime.h"
 
 int
 AuthBasicUserRequest::authenticated() const
@@ -46,7 +45,7 @@ int
 AuthBasicUserRequest::module_direction()
 {
     /* null auth_user is checked for by authenticateDirection */
-    if (user()->auth_type != AUTH_BASIC)
+    if (user()->auth_type != Auth::AUTH_BASIC)
         return -2;
 
     switch (user()->credentials()) {
@@ -72,7 +71,7 @@ AuthBasicUserRequest::module_direction()
 void
 AuthBasicUserRequest::module_start(RH * handler, void *data)
 {
-    assert(user()->auth_type == AUTH_BASIC);
+    assert(user()->auth_type == Auth::AUTH_BASIC);
     BasicUser *basic_auth = dynamic_cast<BasicUser *>(user().getRaw());
     assert(basic_auth != NULL);
     debugs(29, 9, HERE << "'" << basic_auth->username() << ":" << basic_auth->passwd << "'");

@@ -1,6 +1,6 @@
 #include "config.h"
 #include "auth/negotiate/auth_negotiate.h"
-#include "auth/negotiate/negotiateUserRequest.h"
+#include "auth/negotiate/UserRequest.h"
 #include "auth/User.h"
 #include "helper.h"
 #include "HttpReply.h"
@@ -66,7 +66,7 @@ AuthNegotiateUserRequest::module_direction()
     if (waiting || client_blob)
         return -1; /* need helper response to continue */
 
-    if (user()->auth_type != AUTH_NEGOTIATE)
+    if (user()->auth_type != Auth::AUTH_NEGOTIATE)
         return -2;
 
     switch (user()->credentials()) {
@@ -117,7 +117,7 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
     assert(handler);
 
     assert(user() != NULL);
-    assert(user()->auth_type == AUTH_NEGOTIATE);
+    assert(user()->auth_type == Auth::AUTH_NEGOTIATE);
 
     debugs(29, 8, HERE << "auth state is '" << user()->credentials() << "'");
 
@@ -295,7 +295,7 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
     safe_free(negotiate_request->client_blob);
 
     assert(auth_user_request->user() != NULL);
-    assert(auth_user_request->user()->auth_type == AUTH_NEGOTIATE);
+    assert(auth_user_request->user()->auth_type == Auth::AUTH_NEGOTIATE);
 
     if (negotiate_request->authserver == NULL)
         negotiate_request->authserver = static_cast<helper_stateful_server*>(lastserver);
@@ -347,7 +347,8 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
          * string */
         AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, auth_user_request->user()->username()));
         AuthUser::Pointer local_auth_user = negotiate_request->user();
-        while (usernamehash && (usernamehash->user()->auth_type != AUTH_NEGOTIATE || strcmp(usernamehash->user()->username(), auth_user_request->user()->username()) != 0))
+        while (usernamehash && (usernamehash->user()->auth_type != Auth::AUTH_NEGOTIATE ||
+               strcmp(usernamehash->user()->username(), auth_user_request->user()->username()) != 0))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
         if (usernamehash) {
             /* we can't seamlessly recheck the username due to the

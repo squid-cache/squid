@@ -31,43 +31,47 @@
  */
 
 #include "config.h"
-#include "auth/negotiate/negotiateScheme.h"
+#include "auth/digest/Scheme.h"
 #include "helper.h"
 
 AuthScheme::Pointer
-negotiateScheme::GetInstance()
+digestScheme::GetInstance()
 {
     if (_instance == NULL) {
-        _instance = new negotiateScheme();
+        _instance = new digestScheme();
         AddScheme(_instance);
     }
     return _instance;
 }
 
 char const *
-negotiateScheme::type () const
+digestScheme::type () const
 {
-    return "negotiate";
+    return "digest";
 }
 
-AuthScheme::Pointer negotiateScheme::_instance = NULL;
-
-/**
- \ingroup AuthNegotiateInternal
- \todo move to negotiateScheme.cc
- */
-void
-negotiateScheme::done()
-{
-    /* clear the global handle to this scheme. */
-    _instance = NULL;
-
-    debugs(29, 2, "negotiateScheme::done: Negotiate authentication Shutdown.");
-}
+AuthScheme::Pointer digestScheme::_instance = NULL;
 
 AuthConfig *
-negotiateScheme::createConfig()
+digestScheme::createConfig()
 {
-    AuthNegotiateConfig *negotiateCfg = new AuthNegotiateConfig;
-    return dynamic_cast<AuthConfig*>(negotiateCfg);
+    AuthDigestConfig *digestCfg = new AuthDigestConfig;
+    return dynamic_cast<AuthConfig*>(digestCfg);
+}
+
+void
+digestScheme::PurgeCredentialsCache(void)
+{
+    AuthUserHashPointer *usernamehash;
+    AuthUser::Pointer auth_user;
+    hash_first(proxy_auth_username_cache);
+
+    while ((usernamehash = static_cast<AuthUserHashPointer *>(hash_next(proxy_auth_username_cache)) )) {
+        auth_user = usernamehash->user();
+
+        if (strcmp(auth_user->config->type(), "digest") == 0) {
+            hash_remove_link(proxy_auth_username_cache, static_cast<hash_link*>(usernamehash));
+            delete usernamehash;
+        }
+    }
 }
