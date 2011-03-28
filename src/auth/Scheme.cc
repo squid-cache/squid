@@ -38,10 +38,10 @@
 #include "auth/Gadgets.h"
 #include "auth/Config.h"
 
-Vector<AuthScheme::Pointer> *AuthScheme::_Schemes = NULL;
+Vector<Auth::Scheme::Pointer> *Auth::Scheme::_Schemes = NULL;
 
 void
-AuthScheme::AddScheme(AuthScheme::Pointer instance)
+Auth::Scheme::AddScheme(Auth::Scheme::Pointer instance)
 {
     iterator i = GetSchemes().begin();
 
@@ -53,22 +53,22 @@ AuthScheme::AddScheme(AuthScheme::Pointer instance)
     GetSchemes().push_back(instance);
 }
 
-AuthScheme::Pointer
-AuthScheme::Find(const char *typestr)
+Auth::Scheme::Pointer
+Auth::Scheme::Find(const char *typestr)
 {
     for (iterator i = GetSchemes().begin(); i != GetSchemes().end(); ++i) {
         if (strcmp((*i)->type(), typestr) == 0)
             return *i;
     }
 
-    return AuthScheme::Pointer(NULL);
+    return Auth::Scheme::Pointer(NULL);
 }
 
-Vector<AuthScheme::Pointer> &
-AuthScheme::GetSchemes()
+Vector<Auth::Scheme::Pointer> &
+Auth::Scheme::GetSchemes()
 {
     if (!_Schemes)
-        _Schemes = new Vector<AuthScheme::Pointer>;
+        _Schemes = new Vector<Auth::Scheme::Pointer>;
 
     return *_Schemes;
 }
@@ -81,13 +81,13 @@ AuthScheme::GetSchemes()
  * connections will retain pointers to them.
  */
 void
-AuthScheme::FreeAll()
+Auth::Scheme::FreeAll()
 {
     assert(shutting_down);
 
     while (GetSchemes().size()) {
-        AuthScheme::Pointer scheme = GetSchemes().back();
+        Auth::Scheme::Pointer scheme = GetSchemes().back();
         GetSchemes().pop_back();
-        scheme->done();
+        scheme->shutdownCleanup();
     }
 }
