@@ -85,7 +85,7 @@ public:
     static AuthScheme::Pointer Find(const char *);
 
     /* per scheme methods */
-    virtual char const *type () const = 0;
+    virtual char const *type() const = 0;
     virtual void done() = 0;
     virtual AuthConfig *createConfig() = 0;
 

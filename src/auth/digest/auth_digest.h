@@ -74,6 +74,7 @@ extern void authDigestNonceUnlink(digest_nonce_h * nonce);
 extern int authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9]);
 extern const char *authenticateDigestNonceNonceb64(const digest_nonce_h * nonce);
 extern int authDigestNonceLastRequest(digest_nonce_h * nonce);
+extern void authenticateDigestNonceShutdown(void);
 
 /* configuration runtime data */
 

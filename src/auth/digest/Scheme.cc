@@ -34,40 +34,54 @@
 #include "auth/digest/Scheme.h"
 #include "helper.h"
 
+AuthScheme::Pointer Auth::Digest::Scheme::_instance = NULL;
+
 AuthScheme::Pointer
-digestScheme::GetInstance()
+Auth::Digest::Scheme::GetInstance()
 {
     if (_instance == NULL) {
-        _instance = new digestScheme();
+        _instance = new Auth::Digest::Scheme();
         AddScheme(_instance);
     }
     return _instance;
 }
 
 char const *
-digestScheme::type () const
+Auth::Digest::Scheme::type() const
 {
     return "digest";
 }
 
-AuthScheme::Pointer digestScheme::_instance = NULL;
+void
+Auth::Digest::Scheme::done()
+{
+    if (_instance == NULL)
+        return;
+
+    PurgeCredentialsCache();
+    authenticateDigestNonceShutdown();
+
+    _instance = NULL;
+    debugs(29, DBG_CRITICAL, "Shutdown: Digest authentication.");
+}
 
 AuthConfig *
-digestScheme::createConfig()
+Auth::Digest::Scheme::createConfig()
 {
     AuthDigestConfig *digestCfg = new AuthDigestConfig;
     return dynamic_cast<AuthConfig*>(digestCfg);
 }
 
 void
-digestScheme::PurgeCredentialsCache(void)
+Auth::Digest::Scheme::PurgeCredentialsCache(void)
 {
     AuthUserHashPointer *usernamehash;
-    AuthUser::Pointer auth_user;
+
+    debugs(29, 2, HERE << "Erasing Digest authentication credentials from username cache.");
     hash_first(proxy_auth_username_cache);
 
     while ((usernamehash = static_cast<AuthUserHashPointer *>(hash_next(proxy_auth_username_cache)) )) {
-        auth_user = usernamehash->user();
+        AuthUser::Pointer auth_user = usernamehash->user();
 
         if (strcmp(auth_user->config->type(), "digest") == 0) {
             hash_remove_link(proxy_auth_username_cache, static_cast<hash_link*>(usernamehash));

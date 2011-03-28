@@ -91,7 +91,7 @@ AuthBasicConfig::configured() const
 const char *
 AuthBasicConfig::type() const
 {
-    return basicScheme::GetInstance()->type();
+    return Auth::Basic::Scheme::GetInstance()->type();
 }
 
 int32_t

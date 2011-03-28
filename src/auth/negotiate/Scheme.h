@@ -30,33 +30,39 @@
  *
  */
 
-#ifndef SQUID_NEGOTIATESCHEME_H
-#define SQUID_NEGOTIATESCHEME_H
+#ifndef SQUID_AUTH_NEGOTIATE_SCHEME_H
+#define SQUID_AUTH_NEGOTIATE_SCHEME_H
 
 #include "auth/Scheme.h"
 #include "auth/negotiate/auth_negotiate.h"
 
+namespace Auth {
+namespace Negotiate {
+
 /// \ingroup AuthSchemeAPI
 /// \ingroup AuthAPI
-class negotiateScheme : public AuthScheme
+class Scheme : public AuthScheme
 {
 
 public:
     static AuthScheme::Pointer GetInstance();
-    negotiateScheme() {};
-    virtual ~negotiateScheme() {};
+    Scheme() {};
+    virtual ~Scheme() {};
 
     /* per scheme */
-    virtual char const *type () const;
+    virtual char const *type() const;
     virtual void done();
     virtual AuthConfig *createConfig();
 
     /* Not implemented */
-    negotiateScheme (negotiateScheme const &);
-    negotiateScheme &operator=(negotiateScheme const &);
+    Scheme (Scheme const &);
+    Scheme &operator=(Scheme const &);
 
 private:
     static AuthScheme::Pointer _instance;
 };
 
-#endif /* SQUID_negotiateSCHEME_H */
+} // namespace Negotiate
+} // namespace Auth
+
+#endif /* SQUID_AUTH_NEGOTIATE_SCHEME_H */
