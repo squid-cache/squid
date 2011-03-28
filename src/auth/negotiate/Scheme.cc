@@ -34,39 +34,36 @@
 #include "auth/negotiate/Scheme.h"
 #include "helper.h"
 
+AuthScheme::Pointer Auth::Negotiate::Scheme::_instance = NULL;
+
 AuthScheme::Pointer
-negotiateScheme::GetInstance()
+Auth::Negotiate::Scheme::GetInstance()
 {
     if (_instance == NULL) {
-        _instance = new negotiateScheme();
+        _instance = new Auth::Negotiate::Scheme();
         AddScheme(_instance);
     }
     return _instance;
 }
 
 char const *
-negotiateScheme::type () const
+Auth::Negotiate::Scheme::type() const
 {
     return "negotiate";
 }
 
-AuthScheme::Pointer negotiateScheme::_instance = NULL;
-
-/**
- \ingroup AuthNegotiateInternal
- \todo move to negotiateScheme.cc
- */
 void
-negotiateScheme::done()
+Auth::Negotiate::Scheme::done()
 {
-    /* clear the global handle to this scheme. */
-    _instance = NULL;
+    if (_instance == NULL)
+        return;
 
-    debugs(29, 2, "negotiateScheme::done: Negotiate authentication Shutdown.");
+    _instance = NULL;
+    debugs(29, DBG_CRITICAL, "Shutdown: Negotiate authentication.");
 }
 
 AuthConfig *
-negotiateScheme::createConfig()
+Auth::Negotiate::Scheme::createConfig()
 {
     AuthNegotiateConfig *negotiateCfg = new AuthNegotiateConfig;
     return dynamic_cast<AuthConfig*>(negotiateCfg);

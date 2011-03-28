@@ -30,21 +30,24 @@
  *
  */
 
-#ifndef SQUID_DIGESTSCHEME_H
-#define SQUID_DIGESTSCHEME_H
+#ifndef SQUID_AUTH_DIGEST_SCHEME_H
+#define SQUID_AUTH_DIGEST_SCHEME_H
 
 #include "auth/Scheme.h"
 #include "auth/digest/auth_digest.h"
 
+namespace Auth {
+namespace Digest {
+
 /// \ingroup AuthSchemeAPI
 /// \ingroup AuthAPI
-class digestScheme : public AuthScheme
+class Scheme : public AuthScheme
 {
 
 public:
     static AuthScheme::Pointer GetInstance();
-    digestScheme() {};
-    virtual ~digestScheme() {}
+    Scheme() {};
+    virtual ~Scheme() {}
 
     /* per scheme */
     virtual char const *type () const;
@@ -52,8 +55,8 @@ public:
     virtual AuthConfig *createConfig();
 
     /* Not implemented */
-    digestScheme (digestScheme const &);
-    digestScheme &operator=(digestScheme const &);
+    Scheme(Scheme const &);
+    Scheme &operator=(Scheme const &);
 
 private:
     static AuthScheme::Pointer _instance;
@@ -66,4 +69,7 @@ private:
     static void PurgeCredentialsCache(void);
 };
 
-#endif /* SQUID_DIGESTSCHEME_H */
+} // namespace Digest
+} // namespace Auth
+
+#endif /* SQUID_AUTH_DIGEST_SCHEME_H */
