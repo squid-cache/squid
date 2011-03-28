@@ -103,8 +103,6 @@ static digest_nonce_h *authenticateDigestNonceFindNonce(const char *nonceb64);
 static digest_nonce_h *authenticateDigestNonceNew(void);
 static void authenticateDigestNonceDelete(digest_nonce_h * nonce);
 static void authenticateDigestNonceSetup(void);
-static void authenticateDigestNonceShutdown(void);
-static void authenticateDigestNonceReconfigure(void);
 static int authDigestNonceIsStale(digest_nonce_h * nonce);
 static void authDigestNonceEncode(digest_nonce_h * nonce);
 static void authDigestNonceLink(digest_nonce_h * nonce);
@@ -231,7 +229,7 @@ authenticateDigestNonceSetup(void)
     }
 }
 
-static void
+void
 authenticateDigestNonceShutdown(void)
 {
     /*
@@ -258,10 +256,6 @@ authenticateDigestNonceShutdown(void)
 #endif
     debugs(29, 2, "authenticateDigestNonceShutdown: Nonce cache shutdown");
 }
-
-static void
-authenticateDigestNonceReconfigure(void)
-{}
 
 static void
 authenticateDigestNonceCacheCleanup(void *data)
@@ -509,38 +503,6 @@ AuthDigestConfig::rotateHelpers()
     /* NP: dynamic helper restart will ensure they start up again as needed. */
 }
 
-/** delete the digest request structure. Does NOT delete related structures */
-void
-digestScheme::done()
-{
-    /** \todo this should be a Config call. */
-
-    if (digestauthenticators)
-        helperShutdown(digestauthenticators);
-
-    if (DigestFieldsInfo) {
-        httpHeaderDestroyFieldsInfo(DigestFieldsInfo, DIGEST_ENUM_END);
-        DigestFieldsInfo = NULL;
-    }
-
-    authdigest_initialised = 0;
-
-    if (!shutting_down) {
-        authenticateDigestNonceReconfigure();
-        return;
-    }
-
-    delete digestauthenticators;
-    digestauthenticators = NULL;
-
-    PurgeCredentialsCache();
-    authenticateDigestNonceShutdown();
-    debugs(29, 2, "authenticateDigestDone: Digest authentication shut down.");
-
-    /* clear the global handle to this scheme. */
-    _instance = NULL;
-}
-
 void
 AuthDigestConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
 {
@@ -682,6 +644,22 @@ AuthDigestConfig::registerWithCacheManager(void)
 void
 AuthDigestConfig::done()
 {
+    authdigest_initialised = 0;
+
+    if (digestauthenticators)
+        helperShutdown(digestauthenticators);
+
+    if (DigestFieldsInfo) {
+        httpHeaderDestroyFieldsInfo(DigestFieldsInfo, DIGEST_ENUM_END);
+        DigestFieldsInfo = NULL;
+    }
+        
+    if (!shutting_down)
+        return;
+
+    delete digestauthenticators;
+    digestauthenticators = NULL;
+
     if (authenticateProgram)
         wordlistDestroy(&authenticateProgram);
 
@@ -739,7 +717,7 @@ AuthDigestConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
 const char *
 AuthDigestConfig::type() const
 {
-    return digestScheme::GetInstance()->type();
+    return Auth::Digest::Scheme::GetInstance()->type();
 }
 
 

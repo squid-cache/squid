@@ -30,32 +30,38 @@
  *
  */
 
-#ifndef SQUID_BASICSCHEME_H
-#define SQUID_BASICSCHEME_H
+#ifndef SQUID_AUTH_BASIC_SCHEME_H
+#define SQUID_AUTH_BASIC_SCHEME_H
 
 #include "auth/Scheme.h"
 #include "auth/basic/auth_basic.h"
 
+namespace Auth {
+namespace Basic {
+
 /// \ingroup AuthAPI
 /// \ingroup AuthSchemeAPI
-class basicScheme : public AuthScheme
+class Scheme : public AuthScheme
 {
 
 public:
     static AuthScheme::Pointer GetInstance();
-    basicScheme() {};
-    virtual ~basicScheme() {}
+    Scheme() {};
+    virtual ~Scheme() {}
 
     /* per scheme */
-    virtual char const *type () const;
+    virtual char const *type() const;
     virtual void done();
     virtual AuthConfig *createConfig();
     /* Not implemented */
-    basicScheme (basicScheme const &);
-    basicScheme &operator=(basicScheme const &);
+    Scheme(Scheme const &);
+    Scheme &operator=(Scheme const &);
 
 private:
     static AuthScheme::Pointer _instance;
 };
 
-#endif /* SQUID_BASICSCHEME_H */
+} // namespace Basic
+} // namespace Auth
+
+#endif /* SQUID_AUTH_BASIC_SCHEME_H */

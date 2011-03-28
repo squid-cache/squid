@@ -140,7 +140,7 @@ AuthNTLMConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
 const char *
 AuthNTLMConfig::type() const
 {
-    return ntlmScheme::GetInstance()->type();
+    return Auth::Ntlm::Scheme::GetInstance()->type();
 }
 
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the

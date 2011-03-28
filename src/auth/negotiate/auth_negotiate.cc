@@ -151,7 +151,7 @@ AuthNegotiateConfig::parse(AuthConfig * scheme, int n_configured, char *param_st
 const char *
 AuthNegotiateConfig::type() const
 {
-    return negotiateScheme::GetInstance()->type();
+    return Auth::Negotiate::Scheme::GetInstance()->type();
 }
 
 /**
