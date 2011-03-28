@@ -34,6 +34,12 @@ const char *getErrorName(ssl_error_t value);
 
 /**
    \ingroup ServerProtocolSSLAPI
+ * A short description of the SSL error "value"
+ */
+const char *GetErrorDescr(ssl_error_t value);
+
+/**
+   \ingroup ServerProtocolSSLAPI
  * Used to pass SSL error details to the error pages returned to the
  * end user.
  */
@@ -63,6 +69,7 @@ private:
     const char *notbefore() const;
     const char *notafter() const;
     const char *err_code() const;
+    const char *err_descr() const;
 
     int convert(const char *code, const char **value) const;
     void buildDetail() const;

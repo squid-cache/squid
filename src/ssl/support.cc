@@ -233,39 +233,10 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         }
     } else {
         error_no = ctx->error;
-        switch (ctx->error) {
-
-        case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY:
-        case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT:
-            debugs(83, 5, "SSL Certficate error: CA not known: " << buffer);
-            break;
-
-        case X509_V_ERR_CERT_NOT_YET_VALID:
-            debugs(83, 5, "SSL Certficate not yet valid: " << buffer);
-            break;
-
-        case X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD:
-            debugs(83, 5, "SSL Certificate has illegal \'not before\' field: " <<
-                   buffer);
-
-            break;
-
-        case X509_V_ERR_CERT_HAS_EXPIRED:
-            debugs(83, 5, "SSL Certificate expired: " << buffer);
-            break;
-
-        case X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD:
-            debugs(83, 5, "SSL Certificate has invalid \'not after\' field: " << buffer);
-            break;
-
-        case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
-            debugs(83, 5, "SSL Certificate is self signed: " << buffer);
-            break;
-
-        default:
+        if (const char *err_descr = Ssl::GetErrorDescr(ctx->error))
+            debugs(83, 5, err_descr << ": " << buffer);
+        else
             debugs(83, 1, "SSL unknown certificate error " << ctx->error << " in " << buffer);
-            break;
-        }
 
         if (check)
             Filled(check)->ssl_error = ctx->error;

@@ -1,51 +1,174 @@
 #include "squid.h"
 #include "ssl/ErrorDetail.h"
+#if HAVE_MAP
+#include <map>
+#endif
 
 struct SslErrorDetailEntry {
     Ssl::ssl_error_t value;
     const char *name;
-    const char *detail;
+    const char *detail; ///< for error page %D macro expansion; may contain macros
+    const char *descr; ///< short error description (for use in debug messages or error pages) 
 };
 
 static const char *SslErrorDetailDefaultStr = "SSL certificate validation error (%err_name): %ssl_subject";
-// TODO: optimize by replacing with std::map or similar
-static SslErrorDetailEntry TheSslDetailMap[] = {
-    {  SQUID_X509_V_ERR_DOMAIN_MISMATCH,
-        "SQUID_X509_V_ERR_DOMAIN_MISMATCH",
-        "%err_name: The hostname you are connecting to (%H),  does not match any of the Certificate valid names: %ssl_cn"},
-    { X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
-      "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT",
-      "%err_name: SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name" },
-    { X509_V_ERR_CERT_NOT_YET_VALID,
-      "X509_V_ERR_CERT_NOT_YET_VALID",
-      "%err_name: SSL Certficate is not valid before: %ssl_notbefore" },
-    { X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD,
-      "X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD",
-      "%err_name: SSL Certificate has invalid start date (the 'not before' field): %ssl_subject" },
-    { X509_V_ERR_CERT_HAS_EXPIRED,
-      "X509_V_ERR_CERT_HAS_EXPIRED",
-      "%err_name: SSL Certificate expired on %ssl_notafter" },
-    { X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD,
-      "X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD",
-      "%err_name: SSL Certificate has invalid expiration date (the 'not after' field): %ssl_subject" },
+//Use std::map to optimize search
+typedef std::map<Ssl::ssl_error_t, const SslErrorDetailEntry *> SslErrorDetails;
+SslErrorDetails TheSslDetail;
+
+static SslErrorDetailEntry TheSslDetailArray[] = {
+    {X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT, 
+     "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT",
+     "%err_name: SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name",
+     "Unable to get issuer certificate"},
+    {X509_V_ERR_UNABLE_TO_GET_CRL, 
+     "X509_V_ERR_UNABLE_TO_GET_CRL",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "Unable to get certificate CRL"},
+    {X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE, 
+     "X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "Unable to decrypt certificate's signature"},
+    {X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE, 
+     "X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "Unable to decrypt CRL's signature"},
+    {X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY, 
+     "X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY",
+     "%err_name: Unable to decode issuer (CA) public key: %ssl_ca_name",
+     "Unable to decode issuer public key"},
+    {X509_V_ERR_CERT_SIGNATURE_FAILURE, 
+     "X509_V_ERR_CERT_SIGNATURE_FAILURE",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "Certificate signature failure"},
+    {X509_V_ERR_CRL_SIGNATURE_FAILURE,
+     "X509_V_ERR_CRL_SIGNATURE_FAILURE",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "CRL signature failure"},
+    {X509_V_ERR_CERT_NOT_YET_VALID,
+     "X509_V_ERR_CERT_NOT_YET_VALID",
+     "%err_name: SSL Certficate is not valid before: %ssl_notbefore",
+     "Certificate is not yet valid"},
+    {X509_V_ERR_CERT_HAS_EXPIRED,
+     "X509_V_ERR_CERT_HAS_EXPIRED",
+     "%err_name: SSL Certificate expired on: %ssl_notafter",
+     "Certificate has expired"},
+    {X509_V_ERR_CRL_NOT_YET_VALID,
+     "X509_V_ERR_CRL_NOT_YET_VALID",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "CRL is not yet valid"},
+    {X509_V_ERR_CRL_HAS_EXPIRED,
+     "X509_V_ERR_CRL_HAS_EXPIRED",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "CRL has expired"},
+    {X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD,
+     "X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD",
+     "%err_name: SSL Certificate has invalid start date (the 'not before' field): %ssl_subject",
+     "Format error in certificate's notBefore field"},
+    {X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD,
+     "X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD",
+     "%err_name: SSL Certificate has invalid expiration date (the 'not after' field): %ssl_subject",
+     "Format error in certificate's notAfter field"},
+    {X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD,
+     "X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "Format error in CRL's lastUpdate field"},
+    {X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD,
+     "X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "Format error in CRL's nextUpdate field"},
+    {X509_V_ERR_OUT_OF_MEM,
+     "X509_V_ERR_OUT_OF_MEM",
+     "%err_name: %ssl_error_descr",
+     "Out of memory"},
     {X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT,
      "X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT",
-     "%err_name: Self-signed SSL Certificate: %ssl_subject"},
-    { X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY,
-      "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
-      "%err_name: SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name" },
-    { SSL_ERROR_NONE, "SSL_ERROR_NONE", "%err_name: No error" },
-    {SSL_ERROR_NONE, NULL, NULL }
+     "%err_name: Self-signed SSL Certificate: %ssl_subject",
+     "Self signed certificate"},
+    {X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN,
+     "X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN",
+     "%err_name: Self-signed SSL Certificate in chain: %ssl_subject",
+     "Self signed certificate in certificate chain"},
+    {X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY,
+     "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
+     "%err_name: SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name",
+     "Unable to get local issuer certificate"},
+    {X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE,
+     "X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "Unable to verify the first certificate"},
+    {X509_V_ERR_CERT_CHAIN_TOO_LONG,
+     "X509_V_ERR_CERT_CHAIN_TOO_LONG",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "Certificate chain too long"},
+    {X509_V_ERR_CERT_REVOKED,
+     "X509_V_ERR_CERT_REVOKED",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "Certificate revoked"},
+    {X509_V_ERR_INVALID_CA,
+     "X509_V_ERR_INVALID_CA",
+     "%err_name: %ssl_error_descr: %ssl_ca_name",
+     "Invalid CA certificate"},
+    {X509_V_ERR_PATH_LENGTH_EXCEEDED,
+     "X509_V_ERR_PATH_LENGTH_EXCEEDED",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "Path length constraint exceeded"},
+    {X509_V_ERR_INVALID_PURPOSE,
+     "X509_V_ERR_INVALID_PURPOSE",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "Unsupported certificate purpose"},
+    {X509_V_ERR_CERT_UNTRUSTED,
+     "X509_V_ERR_CERT_UNTRUSTED",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "Certificate not trusted"},
+    {X509_V_ERR_CERT_REJECTED,
+     "X509_V_ERR_CERT_REJECTED",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "Certificate rejected"},
+    {X509_V_ERR_SUBJECT_ISSUER_MISMATCH,
+     "X509_V_ERR_SUBJECT_ISSUER_MISMATCH",
+     "%err_name: %ssl_error_descr: %ssl_ca_name",
+     "Subject issuer mismatch"},
+    {X509_V_ERR_AKID_SKID_MISMATCH,
+     "X509_V_ERR_AKID_SKID_MISMATCH",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "Authority and subject key identifier mismatch"},
+    {X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH,
+     "X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH",
+     "%err_name: %ssl_error_descr: %ssl_ca_name",
+     "Authority and issuer serial number mismatch"},
+    {X509_V_ERR_KEYUSAGE_NO_CERTSIGN,
+     "X509_V_ERR_KEYUSAGE_NO_CERTSIGN",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "Key usage does not include certificate signing"},
+    {X509_V_ERR_APPLICATION_VERIFICATION,
+     "X509_V_ERR_APPLICATION_VERIFICATION",
+     "%err_name: %ssl_error_descr: %ssl_subject",
+     "Application verification failure"},
+    { SSL_ERROR_NONE, "SSL_ERROR_NONE", "%err_name: No error", "No error" },
+    {SSL_ERROR_NONE, NULL, NULL, NULL }
 };
+
+static void loadSslDetailMap()
+{
+    assert(TheSslDetail.empty());
+    for (int i = 0; TheSslDetailArray[i].name; ++i) {
+        TheSslDetail[TheSslDetailArray[i].value] = &TheSslDetailArray[i];
+    }
+}
 
 Ssl::ssl_error_t
 Ssl::parseErrorString(const char *name)
 {
     assert(name);
 
-    for (int i = 0; TheSslDetailMap[i].name; ++i) {
-        if (strcmp(name, TheSslDetailMap[i].name) == 0)
-            return TheSslDetailMap[i].value;
+    if (TheSslDetail.empty())
+        loadSslDetailMap();
+
+    typedef SslErrorDetails::const_iterator SEDCI;
+    for (SEDCI i = TheSslDetail.begin(); i != TheSslDetail.end(); ++i) {
+        if (strcmp(name, i->second->name) == 0)
+            return i->second->value;
     }
 
     if (xisdigit(*name)) {
@@ -59,28 +182,44 @@ Ssl::parseErrorString(const char *name)
     return SSL_ERROR_SSL; // not reached
 }
 
+static const SslErrorDetailEntry *getErrorRecord(Ssl::ssl_error_t value)
+{
+    if (TheSslDetail.empty())
+        loadSslDetailMap();
+
+    const SslErrorDetails::const_iterator it = TheSslDetail.find(value);
+    if (it != TheSslDetail.end())
+        return it->second;
+
+    return NULL;
+}
+
 const char *
 Ssl::getErrorName(Ssl::ssl_error_t value)
 {
-
-    for (int i = 0; TheSslDetailMap[i].name; ++i) {
-        if (TheSslDetailMap[i].value == value)
-            return TheSslDetailMap[i].name;
-    }
+    if (const SslErrorDetailEntry *errorRecord = getErrorRecord(value))
+        return errorRecord->name;
 
     return NULL;
 }
 
 static const char *getErrorDetail(Ssl::ssl_error_t value)
 {
-    for (int i = 0; TheSslDetailMap[i].name; ++i) {
-        if (TheSslDetailMap[i].value == value)
-            return TheSslDetailMap[i].detail;
-    }
+    if (const SslErrorDetailEntry *errorRecord = getErrorRecord(value))
+        return errorRecord->detail;
 
     // we must always return something because ErrorDetail::buildDetail
     // will hit an assertion
     return SslErrorDetailDefaultStr;
+}
+
+const char *
+Ssl::GetErrorDescr(Ssl::ssl_error_t value)
+{
+    if (const SslErrorDetailEntry *errorRecord = getErrorRecord(value))
+        return errorRecord->descr;
+
+    return NULL;
 }
 
 Ssl::ErrorDetail::err_frm_code Ssl::ErrorDetail::ErrorFormatingCodes[] = {
@@ -90,6 +229,7 @@ Ssl::ErrorDetail::err_frm_code Ssl::ErrorDetail::ErrorFormatingCodes[] = {
     {"ssl_notbefore", &Ssl::ErrorDetail::notbefore},
     {"ssl_notafter", &Ssl::ErrorDetail::notafter},
     {"err_name", &Ssl::ErrorDetail::err_code},
+    {"ssl_error_descr", &Ssl::ErrorDetail::err_descr},
     {NULL,NULL}
 };
 
@@ -189,9 +329,20 @@ const char *Ssl::ErrorDetail::err_code() const
 }
 
 /**
+ * A short description of the error_no
+ */
+const char *Ssl::ErrorDetail::err_descr() const
+{
+    if (const char *err = GetErrorDescr(error_no))
+        return err;
+    return "[Not available]";
+}
+
+/**
  * It converts the code to a string value. Currently the following
  * formating codes are supported:
  * %err_name: The name of the SSL error
+ * %ssl_error_descr: A short description of the SSL error
  * %ssl_cn: The comma-separated list of common and alternate names
  * %ssl_subject: The certificate subject
  * %ssl_ca_name: The certificate issuer name
