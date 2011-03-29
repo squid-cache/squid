@@ -1338,7 +1338,7 @@ SearchIPLDAP(edui_ldap_t *l)
 // broken?                        xstrncpy(l->userid, ber[j]->bv_val, min(sizeof(l->userid),static_cast<size_t>(ber[j]->bv_len)));
                                 xstrncpy(l->userid, ber[j]->bv_val, sizeof(l->userid));
                                 /* Using bv_len of min() breaks the result by 2 chars */
-			    }
+                            }
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1373,7 +1373,7 @@ SearchIPLDAP(edui_ldap_t *l)
 // broken?                        xstrncpy(l->userid, ber[j]->bv_val, min(sizeof(l->userid),static_cast<size_t>(ber[j]->bv_len)));
                                 xstrncpy(l->userid, ber[j]->bv_val, sizeof(l->userid));
                                 /* Using bv_len of min() breaks the result by 2 chars */
-			    }
+                            }
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1965,7 +1965,7 @@ MainSafe(int argc, char **argv)
 int
 main(int argc, char **argv)
 {
-	int x;
-	x = MainSafe(argc, argv);
-	return x;
+    int x;
+    x = MainSafe(argc, argv);
+    return x;
 }
