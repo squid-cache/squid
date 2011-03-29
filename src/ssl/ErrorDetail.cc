@@ -8,7 +8,7 @@ struct SslErrorDetailEntry {
     Ssl::ssl_error_t value;
     const char *name;
     const char *detail; ///< for error page %D macro expansion; may contain macros
-    const char *descr; ///< short error description (for use in debug messages or error pages) 
+    const char *descr; ///< short error description (for use in debug messages or error pages)
 };
 
 static const char *SslErrorDetailDefaultStr = "SSL certificate validation error (%err_name): %ssl_subject";
@@ -17,27 +17,27 @@ typedef std::map<Ssl::ssl_error_t, const SslErrorDetailEntry *> SslErrorDetails;
 SslErrorDetails TheSslDetail;
 
 static SslErrorDetailEntry TheSslDetailArray[] = {
-    {X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT, 
-     "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT",
-     "%err_name: SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name",
-     "Unable to get issuer certificate"},
-    {X509_V_ERR_UNABLE_TO_GET_CRL, 
+    {X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
+        "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT",
+        "%err_name: SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name",
+        "Unable to get issuer certificate"},
+    {X509_V_ERR_UNABLE_TO_GET_CRL,
      "X509_V_ERR_UNABLE_TO_GET_CRL",
      "%err_name: %ssl_error_descr: %ssl_subject",
      "Unable to get certificate CRL"},
-    {X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE, 
+    {X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE,
      "X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE",
      "%err_name: %ssl_error_descr: %ssl_subject",
      "Unable to decrypt certificate's signature"},
-    {X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE, 
+    {X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE,
      "X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE",
      "%err_name: %ssl_error_descr: %ssl_subject",
      "Unable to decrypt CRL's signature"},
-    {X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY, 
+    {X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY,
      "X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY",
      "%err_name: Unable to decode issuer (CA) public key: %ssl_ca_name",
      "Unable to decode issuer public key"},
-    {X509_V_ERR_CERT_SIGNATURE_FAILURE, 
+    {X509_V_ERR_CERT_SIGNATURE_FAILURE,
      "X509_V_ERR_CERT_SIGNATURE_FAILURE",
      "%err_name: %ssl_error_descr: %ssl_subject",
      "Certificate signature failure"},
