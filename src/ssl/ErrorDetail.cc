@@ -158,7 +158,7 @@ static void loadSslDetailMap()
 }
 
 Ssl::ssl_error_t
-Ssl::parseErrorString(const char *name)
+Ssl::ParseErrorString(const char *name)
 {
     assert(name);
 
@@ -195,7 +195,7 @@ static const SslErrorDetailEntry *getErrorRecord(Ssl::ssl_error_t value)
 }
 
 const char *
-Ssl::getErrorName(Ssl::ssl_error_t value)
+Ssl::GetErrorName(Ssl::ssl_error_t value)
 {
     if (const SslErrorDetailEntry *errorRecord = getErrorRecord(value))
         return errorRecord->name;
@@ -320,7 +320,7 @@ const char *Ssl::ErrorDetail::notafter() const
 const char *Ssl::ErrorDetail::err_code() const
 {
     static char tmpBuffer[64];
-    const char *err = getErrorName(error_no);
+    const char *err = GetErrorName(error_no);
     if (!err) {
         snprintf(tmpBuffer, 64, "%d", (int)error_no);
         err = tmpBuffer;

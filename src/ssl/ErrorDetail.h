@@ -24,13 +24,13 @@ typedef int ssl_error_t;
    \ingroup ServerProtocolSSLAPI
  * The ssl_error_t representation of the error described by "name".
  */
-ssl_error_t parseErrorString(const char *name);
+ssl_error_t ParseErrorString(const char *name);
 
 /**
    \ingroup ServerProtocolSSLAPI
  * The string representation of the SSL error "value"
  */
-const char *getErrorName(ssl_error_t value);
+const char *GetErrorName(ssl_error_t value);
 
 /**
    \ingroup ServerProtocolSSLAPI
