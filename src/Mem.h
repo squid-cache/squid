@@ -34,8 +34,8 @@
 #ifndef SQUID_MEM
 #define SQUID_MEM
 
-#if HAVE_OSTREAM
-#include <ostream>
+#if HAVE_IOSFWD
+#include <iosfwd>
 #endif
 
 class StoreEntry;
