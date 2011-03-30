@@ -88,7 +88,7 @@ struct _devpoll_state {
  * pfds structure elements have been set) until it is full before it
  * is written out the API.
  */
-struct {
+static struct {
     struct pollfd *pfds; /**< ptr to array of struct pollfd config elements */
     int cur; /**< index of last written element of array, or -1 if none */
     int size; /**< maximum number of elements in array */
