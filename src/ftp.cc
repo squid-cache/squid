@@ -1270,7 +1270,7 @@ FtpStateData::dataRead(const CommIoCbParams &io)
         IOStats.Ftp.read_hist[bin]++;
     }
 
-    if (io.flag != COMM_OK || io.size < 0) {
+    if (io.flag != COMM_OK) {
         debugs(50, ignoreErrno(io.xerrno) ? 3 : DBG_IMPORTANT,
                "ftpDataRead: read error: " << xstrerr(io.xerrno));
 
@@ -1769,7 +1769,7 @@ void FtpStateData::ftpReadControlReply(const CommIoCbParams &io)
         fd_bytes(io.fd, io.size, FD_READ);
     }
 
-    if (io.flag != COMM_OK || io.size < 0) {
+    if (io.flag != COMM_OK) {
         debugs(50, ignoreErrno(io.xerrno) ? 3 : DBG_IMPORTANT,
                "ftpReadControlReply: read error: " << xstrerr(io.xerrno));
 
@@ -1778,9 +1778,7 @@ void FtpStateData::ftpReadControlReply(const CommIoCbParams &io)
         } else {
             failed(ERR_READ_ERROR, io.xerrno);
             /* failed closes ctrl.fd and frees ftpState */
-            return;
         }
-
         return;
     }
 
