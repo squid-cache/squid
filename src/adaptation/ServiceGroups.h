@@ -100,7 +100,11 @@ protected:
 class DynamicServiceChain: public ServiceChain
 {
 public:
-    DynamicServiceChain(const String &srvcs, const ServiceGroupPointer prev);
+    DynamicServiceChain(const DynamicGroupCfg &cfg, const ServiceFilter &f);
+
+    /// separates dynamic services matching current location from future ones
+    static void Split(const ServiceFilter &filter, const String &ids,
+                      DynamicGroupCfg &current, DynamicGroupCfg &future);
 };
 
 

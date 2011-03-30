@@ -55,6 +55,7 @@ protected:
     virtual void start();
     virtual bool doneAll() const { return false; } /// not done until mustStop
 
+    bool usedDynamicRules();
     void check();
 
 private:
