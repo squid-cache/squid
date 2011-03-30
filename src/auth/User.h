@@ -36,7 +36,7 @@
 
 #if USE_AUTH
 
-#include "auth/AuthType.h"
+#include "auth/Type.h"
 #include "dlink.h"
 #include "ip/Address.h"
 #include "RefCount.h"
@@ -63,7 +63,7 @@ public:
      * Aim to remove shortly
      */
     /** \deprecated this determines what scheme owns the user data. */
-    AuthType auth_type;
+    Auth::Type auth_type;
     /** the config for this user */
     AuthConfig *config;
     /** we may have many proxy-authenticate strings that decode to the same user */

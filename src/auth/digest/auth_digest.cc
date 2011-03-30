@@ -40,6 +40,8 @@
 #include "squid.h"
 #include "rfc2617.h"
 #include "auth/digest/auth_digest.h"
+#include "auth/digest/Scheme.h"
+#include "auth/digest/UserRequest.h"
 #include "auth/Gadgets.h"
 #include "base64.h"
 #include "event.h"
@@ -49,9 +51,6 @@
 #include "HttpReply.h"
 #include "wordlist.h"
 #include "SquidTime.h"
-/* TODO don't include this */
-#include "auth/digest/digestScheme.h"
-#include "auth/digest/digestUserRequest.h"
 
 /* Digest Scheme */
 
@@ -488,10 +487,10 @@ authDigestUserFindUsername(const char *username)
     debugs(29, 9, HERE << "Looking for user '" << username << "'");
 
     if (username && (usernamehash = static_cast < auth_user_hash_pointer * >(hash_lookup(proxy_auth_username_cache, username)))) {
-        while ((usernamehash->user()->auth_type != AUTH_DIGEST) && (usernamehash->next))
+        while ((usernamehash->user()->auth_type != Auth::AUTH_DIGEST) && (usernamehash->next))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
 
-        if (usernamehash->user()->auth_type == AUTH_DIGEST) {
+        if (usernamehash->user()->auth_type == Auth::AUTH_DIGEST) {
             return usernamehash->user();
         }
     }
@@ -837,7 +836,7 @@ authDigestLogUsername(char *username, AuthUserRequest::Pointer auth_user_request
     /* save the credentials */
     digest_user->username(username);
     /* set the auth_user type */
-    digest_user->auth_type = AUTH_BROKEN;
+    digest_user->auth_type = Auth::AUTH_BROKEN;
     /* link the request to the user */
     auth_user_request->user(digest_user);
     return auth_user_request;
@@ -1100,7 +1099,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
         /* save the username */
         digest_user->username(username);
         /* set the user type */
-        digest_user->auth_type = AUTH_DIGEST;
+        digest_user->auth_type = Auth::AUTH_DIGEST;
         /* this auth_user struct is the one to get added to the
          * username cache */
         /* store user in hash's */

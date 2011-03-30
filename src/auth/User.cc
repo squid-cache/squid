@@ -57,7 +57,7 @@ const char *CredentialsState_str[] = { "Unchecked", "Ok", "Pending", "Handshake"
 
 
 AuthUser::AuthUser(AuthConfig *aConfig) :
-        auth_type(AUTH_UNKNOWN),
+        auth_type(Auth::AUTH_UNKNOWN),
         config(aConfig),
         ipcount(0),
         expiretime(0),
@@ -174,7 +174,7 @@ AuthUser::~AuthUser()
         xfree((char*)username_);
 
     /* prevent accidental reuse */
-    auth_type = AUTH_UNKNOWN;
+    auth_type = Auth::AUTH_UNKNOWN;
 }
 
 void
@@ -385,7 +385,7 @@ AuthUser::UsernameCacheStats(StoreEntry *output)
         AuthUser::Pointer auth_user = usernamehash->user();
 
         storeAppendPrintf(output, "%-15s %-9s %-9d %-9d %s\n",
-                          AuthType_str[auth_user->auth_type],
+                          Auth::Type_str[auth_user->auth_type],
                           CredentialsState_str[auth_user->credentials()],
                           auth_user->ttl(),
                           static_cast<int32_t>(auth_user->expiretime - squid_curtime + Config.authenticateTTL),

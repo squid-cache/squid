@@ -47,9 +47,8 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "SquidTime.h"
-/** \todo remove this include */
-#include "auth/negotiate/negotiateScheme.h"
-#include "auth/negotiate/negotiateUserRequest.h"
+#include "auth/negotiate/Scheme.h"
+#include "auth/negotiate/UserRequest.h"
 #include "wordlist.h"
 
 /**
@@ -313,7 +312,7 @@ AuthNegotiateConfig::decode(char const *proxy_auth)
     assert(auth_user_request->user() == NULL);
 
     auth_user_request->user(newUser);
-    auth_user_request->user()->auth_type = AUTH_NEGOTIATE;
+    auth_user_request->user()->auth_type = Auth::AUTH_NEGOTIATE;
 
     /* all we have to do is identify that it's Negotiate - the helper does the rest */
     debugs(29, 9, "AuthNegotiateConfig::decode: Negotiate authentication");
