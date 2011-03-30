@@ -24,6 +24,8 @@ libadaptation_la_SOURCES = \
 	Answer.h \
 	Config.cc \
 	Config.h \
+	DynamicGroupCfg.cc \
+	DynamicGroupCfg.h \
 	Elements.cc \
 	Elements.h \
 	forward.h \
