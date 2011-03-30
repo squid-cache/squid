@@ -39,6 +39,10 @@ public:
     virtual void detach();
     virtual bool detached() const;
 
+protected:
+    void tryConfigureAndStart();
+    bool handleFinalizeFailure(const char *error);
+
 private:
     AdapterService theService; // the actual adaptation service we represent
     bool           isDetached;
