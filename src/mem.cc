@@ -105,7 +105,7 @@ memStringStats(std::ostream &stream)
     stream << "String Pool\t Impact\t\t\n \t (%strings)\t (%volume)\n";
     /* table body */
 
-    for (i = 0; i < mem_str_pool_count; i++) {
+    for (i = 0; i < mem_str_pool_count; ++i) {
         const MemAllocator *pool = StrPools[i].pool;
         const int plevel = pool->getMeter().inuse.level;
         stream << std::setw(20) << std::left << pool->objectType();
@@ -198,7 +198,7 @@ memAllocString(size_t net_size, size_t * gross_size)
     MemAllocator *pool = NULL;
     assert(gross_size);
 
-    for (i = 0; i < mem_str_pool_count; i++) {
+    for (i = 0; i < mem_str_pool_count; ++i) {
         if (net_size <= StrPoolsAttrs[i].obj_size) {
             pool = StrPools[i].pool;
             break;
@@ -232,7 +232,7 @@ memFreeString(size_t size, void *buf)
     MemAllocator *pool = NULL;
     assert(size && buf);
 
-    for (i = 0; i < mem_str_pool_count; i++) {
+    for (i = 0; i < mem_str_pool_count; ++i) {
         if (size <= StrPoolsAttrs[i].obj_size) {
             assert(size == StrPoolsAttrs[i].obj_size);
             pool = StrPools[i].pool;
@@ -430,7 +430,7 @@ Mem::Init(void)
     MemPools[MEM_MD5_DIGEST]->setChunkSize(512 * 1024);
 
     /** Lastly init the string pools. */
-    for (i = 0; i < mem_str_pool_count; i++) {
+    for (i = 0; i < mem_str_pool_count; ++i) {
         StrPools[i].pool = memPoolCreate(StrPoolsAttrs[i].name, StrPoolsAttrs[i].obj_size);
         StrPools[i].pool->zeroOnPush(false);
 
@@ -603,7 +603,7 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::
         needed = mp_st->items_inuse / mp_st->chunk_capacity;
 
         if (mp_st->items_inuse % mp_st->chunk_capacity)
-            needed++;
+            ++needed;
 
         excess = mp_st->chunks_inuse - needed;
 
@@ -735,14 +735,14 @@ Mem::Report(std::ostream &stream)
         if (mp_stats.pool->getMeter().gb_allocated.count > 0)	/* this pool has been used */
             sortme[npools++] = mp_stats;
         else
-            not_used++;
+            ++not_used;
     }
 
     memPoolIterateDone(&iter);
 
     qsort(sortme, npools, sizeof(*sortme), MemPoolReportSorter);
 
-    for (int i = 0; i< npools; i++) {
+    for (int i = 0; i< npools; ++i) {
         PoolReport(&sortme[i], mp_total.TheMeter, stream);
     }
 
