@@ -35,6 +35,7 @@
 #define SQUID_HTTPHIERARCHYLOGENTRY_H
 
 #include "hier_code.h"
+#include "ip/Address.h"
 #include "lookup_t.h"
 #include "rfc2181.h"
 #include "PingData.h"
@@ -64,7 +65,7 @@ public:
     int64_t peer_response_time; ///< last peer response delay
     timeval first_conn_start; ///< first connection use among all peers
     int64_t total_response_time; ///< cumulative for all peers
-    u_short peer_local_port; //< local port of the last server-side connection
+    Ip::Address peer_local_addr; ///< local IP:port of the last server-side connection
     int64_t bodyBytesRead;  ///< number of body bytes received from the next hop or -1
 };
 
