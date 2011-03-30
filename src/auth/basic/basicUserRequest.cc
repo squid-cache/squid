@@ -77,7 +77,7 @@ AuthBasicUserRequest::module_start(RH * handler, void *data)
     assert(basic_auth != NULL);
     debugs(29, 9, HERE << "'" << basic_auth->username() << ":" << basic_auth->passwd << "'");
 
-    if (static_cast<AuthBasicConfig*>(AuthConfig::Find("basic"))->authenticate == NULL) {
+    if (static_cast<AuthBasicConfig*>(AuthConfig::Find("basic"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: No Basic authentication program configured.");
         handler(data, NULL);
         return;

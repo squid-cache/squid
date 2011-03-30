@@ -545,7 +545,7 @@ digestScheme::done()
 void
 AuthDigestConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
 {
-    wordlist *list = authenticate;
+    wordlist *list = authenticateProgram;
     debugs(29, 9, "authDigestCfgDump: Dumping configuration");
     storeAppendPrintf(entry, "%s %s", name, "digest");
 
@@ -571,7 +571,7 @@ AuthDigestConfig::active() const
 bool
 AuthDigestConfig::configured() const
 {
-    if ((authenticate != NULL) &&
+    if ((authenticateProgram != NULL) &&
             (authenticateChildren.n_max != 0) &&
             (digestAuthRealm != NULL) && (noncemaxduration > -1))
         return true;
@@ -583,7 +583,7 @@ AuthDigestConfig::configured() const
 void
 AuthDigestConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
-    if (!authenticate)
+    if (!authenticateProgram)
         return;
 
     int stale = 0;
@@ -651,7 +651,7 @@ DigestUser::ttl() const
 void
 AuthDigestConfig::init(AuthConfig * scheme)
 {
-    if (authenticate) {
+    if (authenticateProgram) {
         DigestFieldsInfo = httpHeaderBuildFieldsInfo(DigestAttrs, DIGEST_ENUM_END);
         authenticateDigestNonceSetup();
         authdigest_initialised = 1;
@@ -659,7 +659,7 @@ AuthDigestConfig::init(AuthConfig * scheme)
         if (digestauthenticators == NULL)
             digestauthenticators = new helper("digestauthenticator");
 
-        digestauthenticators->cmdline = authenticate;
+        digestauthenticators->cmdline = authenticateProgram;
 
         digestauthenticators->childs = authenticateChildren;
 
@@ -683,8 +683,8 @@ AuthDigestConfig::registerWithCacheManager(void)
 void
 AuthDigestConfig::done()
 {
-    if (authenticate)
-        wordlistDestroy(&authenticate);
+    if (authenticateProgram)
+        wordlistDestroy(&authenticateProgram);
 
     safe_free(digestAuthRealm);
 }
@@ -708,12 +708,12 @@ void
 AuthDigestConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
 {
     if (strcasecmp(param_str, "program") == 0) {
-        if (authenticate)
-            wordlistDestroy(&authenticate);
+        if (authenticateProgram)
+            wordlistDestroy(&authenticateProgram);
 
-        parse_wordlist(&authenticate);
+        parse_wordlist(&authenticateProgram);
 
-        requirePathnameExists("auth_param digest program", authenticate->key);
+        requirePathnameExists("auth_param digest program", authenticateProgram->key);
     } else if (strcasecmp(param_str, "children") == 0) {
         authenticateChildren.parseConfig();
     } else if (strcasecmp(param_str, "realm") == 0) {
