@@ -1329,8 +1329,9 @@ clientReplyContext::buildReplyHeader()
         else if (http->storeEntry()->timestamp > 0)
             hdr->insertTime(HDR_DATE, http->storeEntry()->timestamp);
         else {
-            debugs(88,1,"WARNING: An error inside Squid has caused an HTTP reply without Date:. Please report this");
-            /* TODO: dump something useful about the problem */
+            debugs(88,DBG_IMPORTANT,"WARNING: An error inside Squid has caused an HTTP reply without Date:. Please report this:");
+            /* dump something useful about the problem */
+            http->storeEntry()->dump(DBG_IMPORTANT);
         }
     }
 
