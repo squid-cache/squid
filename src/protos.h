@@ -561,6 +561,7 @@ SQUIDCEXTERN void safeunlink(const char *path, int quiet);
 void death(int sig);
 void sigusr2_handle(int sig);
 void sig_child(int sig);
+void sig_shutdown(int sig); ///< handles shutdown notifications from kids
 SQUIDCEXTERN void leave_suid(void);
 SQUIDCEXTERN void enter_suid(void);
 SQUIDCEXTERN void no_suid(void);

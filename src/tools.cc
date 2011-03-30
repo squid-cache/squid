@@ -397,9 +397,6 @@ death(int sig)
         puts(dead_msg());
     }
 
-    if (shutting_down)
-        exit(1);
-
     abort();
 }
 
@@ -593,6 +590,12 @@ sig_child(int sig)
 
 #endif
 #endif
+}
+
+void
+sig_shutdown(int sig)
+{
+    shutting_down = 1;
 }
 
 const char *
