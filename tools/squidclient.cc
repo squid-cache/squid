@@ -132,12 +132,13 @@ usage(const char *progname)
 {
     fprintf(stderr,
             "Version: %s\n"
-            "Usage: %s [-arsv] [-g count] [-h remote host] [-H 'string'] [-i IMS] [-I ping-interval] [-j 'Host-header']"
+            "Usage: %s [-arsv] [-A 'string'] [-g count] [-h remote host] [-H 'string'] [-i IMS] [-I ping-interval] [-j 'Host-header']"
             "[-k] [-l local-host] [-m method] [-p port] [-P file] [-t count] [-T timeout] [-u proxy-user] [-U www-user] "
             "[-V version] [-w proxy-password] [-W www-password] url\n"
             "\n"
             "Options:\n"
             "    -a           Do NOT include Accept: header.\n"
+            "    -A           User-Agent: header. Use \"\" to omit.\n"
             "    -g count     Ping mode, perform \"count\" iterations (0 to loop until interrupted).\n"
             "    -h host      Retrieve URL from cache on hostname.  Default is localhost.\n"
             "    -H 'string'  Extra headers to send. Use '\\n' for new lines.\n"
@@ -192,6 +193,7 @@ main(int argc, char *argv[])
     const char *www_password = NULL;
     const char *host = NULL;
     const char *version = "1.0";
+    const char *useragent = NULL;
 
     /* set the defaults */
     hostname = "localhost";
@@ -213,11 +215,16 @@ main(int argc, char *argv[])
         if (url[0] == '-')
             usage(argv[0]);
 
-        while ((c = getopt(argc, argv, "ah:j:V:l:P:i:km:p:rsvt:g:p:I:H:T:u:U:w:W:?")) != -1)
+        while ((c = getopt(argc, argv, "aA:h:j:V:l:P:i:km:p:rsvt:g:p:I:H:T:u:U:w:W:?")) != -1)
             switch (c) {
 
             case 'a':
                 opt_noaccept = 1;
+                break;
+
+            case 'A':
+                if (optarg != NULL)
+                    useragent = optarg;
                 break;
 
             case 'h':		/* remote host */
@@ -380,6 +387,14 @@ main(int argc, char *argv[])
 
         if (host) {
             snprintf(buf, BUFSIZ, "Host: %s\r\n", host);
+            strcat(msg,buf);
+        }
+
+        if (useragent == NULL) {
+            snprintf(buf, BUFSIZ, "User-Agent: squidclient/%s\r\n", VERSION);
+            strcat(msg,buf);
+        } else if (useragent[0] != '\0') {
+            snprintf(buf, BUFSIZ, "User-Agent: %s\r\n", useragent);
             strcat(msg,buf);
         }
 

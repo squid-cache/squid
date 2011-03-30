@@ -3,8 +3,9 @@
 squidclient -- a simple HTTP web client
 .SH SYNOPSIS
 .B squidclient
-.RB [ \-arsv ]
-.RB [ \-g
+.RB [ \-arsv ] [ \-A
+.IR string
+.RB ] [ \-g
 .IR count ]
 .RB [ \-h
 .IR remote\-host ]
@@ -50,6 +51,10 @@ proxy object cache and management information are provided.
 .SH OPTIONS
 .IP "\-a"
 Do NOT include Accept: header.
+.IP "\-A 'string'"
+Send 
+.B string
+as User-Agent: header. To omit the header completely set string to empty ('').
 .IP "\-g \fIcount\fP"
 Ping mode, perform
 .I count
