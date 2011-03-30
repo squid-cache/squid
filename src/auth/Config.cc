@@ -41,7 +41,7 @@ Auth::authConfig Auth::TheConfig;
 /**
  * Get Auth User: Return a filled out auth_user structure for the given
  * Proxy Auth (or Auth) header. It may be a cached Auth User or a new
- * Unauthenticated structure. The structure is given an inital lock here.
+ * Unauthenticated structure. The structure is given an initial lock here.
  * It may also be NULL reflecting that no user could be created.
  */
 AuthUserRequest::Pointer
@@ -53,7 +53,8 @@ AuthConfig::CreateAuthUser(const char *proxy_auth)
     AuthConfig *config = Find(proxy_auth);
 
     if (config == NULL || !config->active()) {
-        debugs(29, 1, "AuthConfig::CreateAuthUser: Unsupported or unconfigured/inactive proxy-auth scheme, '" << proxy_auth << "'");
+        debugs(29, (shutting_down?3:DBG_IMPORTANT), (shutting_down?"":"WARNING: ") << 
+               "Unsupported or unconfigured/inactive proxy-auth scheme, '" << proxy_auth << "'");
         return NULL;
     }
 
