@@ -68,7 +68,7 @@ getConfig(char const *type_str)
 
     if (scheme == NULL) {
         /* Create a configuration */
-        AuthScheme::Pointer theScheme = AuthScheme::Find(type_str);
+        Auth::Scheme::Pointer theScheme = Auth::Scheme::Find(type_str);
 
         if (theScheme == NULL) {
             return NULL;
@@ -158,7 +158,7 @@ testAuthConfig::create()
     Debug::Levels[29]=9;
     fake_auth_setup();
 
-    for (AuthScheme::iterator i = AuthScheme::GetSchemes().begin(); i != AuthScheme::GetSchemes().end(); ++i) {
+    for (Auth::Scheme::iterator i = Auth::Scheme::GetSchemes().begin(); i != Auth::Scheme::GetSchemes().end(); ++i) {
         AuthUserRequest::Pointer authRequest = AuthConfig::CreateAuthUser(find_proxy_auth((*i)->type()));
         CPPUNIT_ASSERT(authRequest != NULL);
     }
@@ -177,7 +177,7 @@ testAuthUserRequest::scheme()
     Debug::Levels[29]=9;
     fake_auth_setup();
 
-    for (AuthScheme::iterator i = AuthScheme::GetSchemes().begin(); i != AuthScheme::GetSchemes().end(); ++i) {
+    for (Auth::Scheme::iterator i = Auth::Scheme::GetSchemes().begin(); i != Auth::Scheme::GetSchemes().end(); ++i) {
         // create a user request
         // check its scheme matches *i
         AuthUserRequest::Pointer authRequest = AuthConfig::CreateAuthUser(find_proxy_auth((*i)->type()));

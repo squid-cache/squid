@@ -36,22 +36,24 @@
 #include "auth/Scheme.h"
 #include "auth/ntlm/auth_ntlm.h"
 
-namespace Auth {
-namespace Ntlm {
+namespace Auth
+{
+namespace Ntlm
+{
 
 /// \ingroup AuthSchemeAPI
 /// \ingroup AuthAPI
-class Scheme : public AuthScheme
+class Scheme : public Auth::Scheme
 {
 
 public:
-    static AuthScheme::Pointer GetInstance();
+    static Auth::Scheme::Pointer GetInstance();
     Scheme() {};
     virtual ~Scheme() {};
 
     /* per scheme */
     virtual char const *type() const;
-    virtual void done();
+    virtual void shutdownCleanup();
     virtual AuthConfig *createConfig();
 
     /* Not implemented */
@@ -63,7 +65,7 @@ private:
      * Main instance of this authentication Scheme.
      * NULL when the scheme is not being used.
      */
-    static AuthScheme::Pointer _instance;
+    static Auth::Scheme::Pointer _instance;
 };
 
 } // namespace Ntlm
