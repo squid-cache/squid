@@ -6879,7 +6879,7 @@ DOC_START
 DOC_END
 
 NAME: dns_retransmit_interval
-TYPE: time_t
+TYPE: time_msec
 DEFAULT: 5 seconds
 LOC: Config.Timeout.idns_retransmit
 IFDEF: !USE_DNSSERVERS
@@ -6889,7 +6889,7 @@ DOC_START
 DOC_END
 
 NAME: dns_timeout
-TYPE: time_t
+TYPE: time_msec
 DEFAULT: 2 minutes
 LOC: Config.Timeout.idns_query
 IFDEF: !USE_DNSSERVERS

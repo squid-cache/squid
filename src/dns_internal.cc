@@ -724,7 +724,9 @@ idnsTickleQueue(void)
     if (NULL == lru_list.tail)
         return;
 
-    eventAdd("idnsCheckQueue", idnsCheckQueue, NULL, 1.0, 1);
+    const double when = min(Config.Timeout.idns_query, Config.Timeout.idns_retransmit)/1000.0;
+
+    eventAdd("idnsCheckQueue", idnsCheckQueue, NULL, when, 1);
 
     event_queued = 1;
 }
@@ -764,7 +766,11 @@ idnsDoSendQueryVC(nsvc *vc)
 
     vc->busy = 1;
 
-    commSetTimeout(vc->fd, Config.Timeout.idns_query, NULL, NULL);
+    // Comm needs seconds but idnsCheckQueue() will check the exact timeout
+    const int timeout = (Config.Timeout.idns_query % 1000 ?
+                         Config.Timeout.idns_query + 1000 : Config.Timeout.idns_query) / 1000;
+
+    commSetTimeout(vc->fd, timeout, NULL, NULL);
 
     AsyncCall::Pointer call = commCbCall(78, 5, "idnsSentQueryVC",
                                          CommIoCbPtrFun(&idnsSentQueryVC, vc));
@@ -1341,11 +1347,11 @@ idnsCheckQueue(void *unused)
         q = static_cast<idns_query*>(n->data);
 
         /* Anything to process in the queue? */
-        if (tvSubDsec(q->queue_t, current_time) < Config.Timeout.idns_retransmit )
+        if ((time_msec_t)tvSubMsec(q->queue_t, current_time) < Config.Timeout.idns_retransmit )
             break;
 
         /* Query timer expired? */
-        if (tvSubDsec(q->sent_t, current_time) < Config.Timeout.idns_retransmit * 1 << ((q->nsends - 1) / nns)) {
+        if ((time_msec_t)tvSubMsec(q->sent_t, current_time) < (Config.Timeout.idns_retransmit * 1 << ((q->nsends - 1) / nns))) {
             dlinkDelete(&q->lru, &lru_list);
             q->queue_t = current_time;
             dlinkAdd(q, &q->lru, &lru_list);
@@ -1358,7 +1364,7 @@ idnsCheckQueue(void *unused)
 
         dlinkDelete(&q->lru, &lru_list);
 
-        if (tvSubDsec(q->start_t, current_time) < Config.Timeout.idns_query) {
+        if ((time_msec_t)tvSubMsec(q->start_t, current_time) < Config.Timeout.idns_query) {
             idnsSendQuery(q);
         } else {
             debugs(78, 2, "idnsCheckQueue: ID " << q->xact_id <<

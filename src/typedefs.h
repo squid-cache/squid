@@ -191,4 +191,7 @@ typedef unsigned char cache_key;
 typedef ssize_t mb_size_t;
 
 typedef int STDIRSELECT(const StoreEntry *);
+
+/*Use uint64_t to store miliseconds*/
+typedef uint64_t time_msec_t;
 #endif /* SQUID_TYPEDEFS_H */

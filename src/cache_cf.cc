@@ -118,6 +118,7 @@ static void free_ecap_service_type(Adaptation::Ecap::Config *);
 
 CBDATA_TYPE(peer);
 
+static const char *const T_MILLISECOND_STR = "millisecond";
 static const char *const T_SECOND_STR = "second";
 static const char *const T_MINUTE_STR = "minute";
 static const char *const T_HOUR_STR = "hour";
@@ -143,8 +144,8 @@ static void free_access_log(customlog ** definitions);
 static void update_maxobjsize(void);
 static void configDoConfigure(void);
 static void parse_refreshpattern(refresh_t **);
-static int parseTimeUnits(const char *unit);
-static void parseTimeLine(time_t * tptr, const char *units);
+static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
+static void parseTimeLine(time_msec_t * tptr, const char *units, bool allowMsec);
 static void parse_ushort(u_short * var);
 static void parse_string(char **);
 static void default_all(void);
@@ -957,14 +958,14 @@ parse_obsolete(const char *name)
 /* Parse a time specification from the config file.  Store the
  * result in 'tptr', after converting it to 'units' */
 static void
-parseTimeLine(time_t * tptr, const char *units)
+parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec)
 {
     char *token;
     double d;
-    time_t m;
-    time_t u;
+    time_msec_t m;
+    time_msec_t u;
 
-    if ((u = parseTimeUnits(units)) == 0)
+    if ((u = parseTimeUnits(units, allowMsec)) == 0)
         self_destruct();
 
     if ((token = strtok(NULL, w_space)) == NULL)
@@ -980,41 +981,44 @@ parseTimeLine(time_t * tptr, const char *units)
         debugs(3, 0, "WARNING: No units on '" <<
                config_input_line << "', assuming " <<
                d << " " << units  );
-    else if ((m = parseTimeUnits(token)) == 0)
+    else if ((m = parseTimeUnits(token, allowMsec)) == 0)
         self_destruct();
 
-    *tptr = static_cast<time_t> (m * d / u);
+    *tptr = static_cast<time_msec_t>(m * d);
 }
 
-static int
-parseTimeUnits(const char *unit)
+static uint64_t
+parseTimeUnits(const char *unit, bool allowMsec)
 {
-    if (!strncasecmp(unit, T_SECOND_STR, strlen(T_SECOND_STR)))
+    if (allowMsec && !strncasecmp(unit, T_MILLISECOND_STR, strlen(T_MILLISECOND_STR)))
         return 1;
 
+    if (!strncasecmp(unit, T_SECOND_STR, strlen(T_SECOND_STR)))
+        return 1000;
+
     if (!strncasecmp(unit, T_MINUTE_STR, strlen(T_MINUTE_STR)))
-        return 60;
+        return 60 * 1000;
 
     if (!strncasecmp(unit, T_HOUR_STR, strlen(T_HOUR_STR)))
-        return 3600;
+        return 3600 * 1000;
 
     if (!strncasecmp(unit, T_DAY_STR, strlen(T_DAY_STR)))
-        return 86400;
+        return 86400 * 1000;
 
     if (!strncasecmp(unit, T_WEEK_STR, strlen(T_WEEK_STR)))
-        return 86400 * 7;
+        return 86400 * 7 * 1000;
 
     if (!strncasecmp(unit, T_FORTNIGHT_STR, strlen(T_FORTNIGHT_STR)))
-        return 86400 * 14;
+        return 86400 * 14 * 1000;
 
     if (!strncasecmp(unit, T_MONTH_STR, strlen(T_MONTH_STR)))
-        return 86400 * 30;
+        return static_cast<uint64_t>(86400) * 30 * 1000;
 
     if (!strncasecmp(unit, T_YEAR_STR, strlen(T_YEAR_STR)))
-        return static_cast<int>(86400 * 365.2522);
+        return static_cast<uint64_t>(86400 * 1000 * 365.2522);
 
     if (!strncasecmp(unit, T_DECADE_STR, strlen(T_DECADE_STR)))
-        return static_cast<int>(86400 * 365.2522 * 10);
+        return static_cast<uint64_t>(86400 * 1000 * 365.2522 * 10);
 
     debugs(3, 1, "parseTimeUnits: unknown time unit '" << unit << "'");
 
@@ -3003,7 +3007,9 @@ dump_time_t(StoreEntry * entry, const char *name, time_t var)
 void
 parse_time_t(time_t * var)
 {
-    parseTimeLine(var, T_SECOND_STR);
+    time_msec_t tval;
+    parseTimeLine(&tval, T_SECOND_STR, false);
+    *var = static_cast<time_t>(tval/1000);
 }
 
 static void
@@ -3011,6 +3017,29 @@ free_time_t(time_t * var)
 {
     *var = 0;
 }
+
+#if !USE_DNSSERVERS
+static void
+dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
+{
+    if (var % 1000)
+        storeAppendPrintf(entry, "%s %"PRId64" milliseconds\n", name, var);
+    else
+        storeAppendPrintf(entry, "%s %d seconds\n", name, (int)(var/1000) );
+}
+
+void
+parse_time_msec(time_msec_t * var)
+{
+    parseTimeLine(var, T_SECOND_STR, true);
+}
+
+static void
+free_time_msec(time_msec_t * var)
+{
+    *var = 0;
+}
+#endif
 
 #if UNUSED_CODE
 static void
@@ -4355,7 +4384,7 @@ static void parse_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
     else if ((token = strtok(NULL, w_space)) == NULL) {
         debugs(3, 0, "No time-units on '" << config_input_line << "'");
         self_destruct();
-    } else if ((m = parseTimeUnits(token)) == 0)
+    } else if ((m = parseTimeUnits(token, false)) == 0)
         self_destruct();
 
     cfg->oldest_service_failure = (m * d);
