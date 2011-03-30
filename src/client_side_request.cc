@@ -1178,7 +1178,8 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
         return;
 
     if (errflag) {
-        getConn()->startClosing("CONNECT response failure in SslBump");
+        debugs(85, 3, HERE << "CONNECT response failure in SslBump: " << errflag);
+        comm_close(getConn()->fd);
         return;
     }
 
