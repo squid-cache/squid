@@ -1301,8 +1301,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
 
     // share the cross-transactional database records if needed
     if (Adaptation::Config::masterx_shared_name) {
-        // XXX: do not create history here: there can be no values in empty ah
-        Adaptation::History::Pointer ah = request->adaptHistory(true);
+        Adaptation::History::Pointer ah = request->adaptHistory(false);
         if (ah != NULL) {
             String name, value;
             if (ah->getXxRecord(name, value)) {
