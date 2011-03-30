@@ -37,35 +37,36 @@
 /* for AuthConfig */
 #include "auth/basic/auth_basic.h"
 
-AuthScheme::Pointer basicScheme::_instance = NULL;
+AuthScheme::Pointer Auth::Basic::Scheme::_instance = NULL;
 
 AuthScheme::Pointer
-basicScheme::GetInstance()
+Auth::Basic::Scheme::GetInstance()
 {
     if (_instance == NULL) {
-        _instance = new basicScheme();
+        _instance = new Auth::Basic::Scheme();
         AddScheme(_instance);
     }
     return _instance;
 }
 
 char const *
-basicScheme::type () const
+basicScheme::type() const
 {
     return "basic";
 }
 
 void
-basicScheme::done()
+Auth::Basic::Scheme::done()
 {
-    /* clear the global handle to this scheme. */
-    _instance = NULL;
+    if (_instance == NULL)
+        return;
 
-    debugs(29, DBG_CRITICAL, HERE << "Basic authentication Schema Detached.");
+    _instance = NULL;
+    debugs(29, DBG_CRITICAL, "Shutdown: Basic authentication.");
 }
 
 AuthConfig *
-basicScheme::createConfig()
+Auth::Basic::Scheme::createConfig()
 {
     AuthBasicConfig *newCfg = new AuthBasicConfig;
     return dynamic_cast<AuthConfig*>(newCfg);

@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -31,30 +30,33 @@
  *
  */
 
-#ifndef SQUID_NTLMSCHEME_H
-#define SQUID_NTLMSCHEME_H
+#ifndef SQUID_AUTH_NTLM_SCHEME_H
+#define SQUID_AUTH_NTLM_SCHEME_H
 
 #include "auth/Scheme.h"
 #include "auth/ntlm/auth_ntlm.h"
 
+namespace Auth {
+namespace Ntlm {
+
 /// \ingroup AuthSchemeAPI
 /// \ingroup AuthAPI
-class ntlmScheme : public AuthScheme
+class Scheme : public AuthScheme
 {
 
 public:
     static AuthScheme::Pointer GetInstance();
-    ntlmScheme() {};
-    virtual ~ntlmScheme() {};
+    Scheme() {};
+    virtual ~Scheme() {};
 
     /* per scheme */
-    virtual char const *type () const;
+    virtual char const *type() const;
     virtual void done();
     virtual AuthConfig *createConfig();
 
     /* Not implemented */
-    ntlmScheme (ntlmScheme const &);
-    ntlmScheme &operator=(ntlmScheme const &);
+    Scheme (Scheme const &);
+    Scheme &operator=(Scheme const &);
 
 private:
     /**
@@ -64,4 +66,7 @@ private:
     static AuthScheme::Pointer _instance;
 };
 
-#endif /* SQUID_ntlmSCHEME_H */
+} // namespace Ntlm
+} // namespace Auth
+
+#endif /* SQUID_AUTH_NTLM_SCHEME_H */
