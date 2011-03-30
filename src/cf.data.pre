@@ -6890,7 +6890,7 @@ DOC_END
 
 NAME: dns_timeout
 TYPE: time_msec
-DEFAULT: 2 minutes
+DEFAULT: 30 seconds
 LOC: Config.Timeout.idns_query
 IFDEF: !USE_DNSSERVERS
 DOC_START
