@@ -118,6 +118,7 @@ logfile_mod_tcp_linestart(Logfile * lf)
 static void
 logfile_mod_tcp_lineend(Logfile * lf)
 {
+    logfile_mod_tcp_flush(lf);
 }
 
 static void
