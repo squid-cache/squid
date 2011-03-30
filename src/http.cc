@@ -2076,7 +2076,7 @@ HttpStateData::doneSendingRequestBody()
 
 #if HTTP_VIOLATIONS
     if (Config.accessList.brokenPosts) {
-        ACLFilledChecklist ch(Config.accessList.brokenPosts, request, NULL);
+        ACLFilledChecklist ch(Config.accessList.brokenPosts, originalRequest(), NULL);
         if (!ch.fastCheck()) {
             debugs(11, 5, "doneSendingRequestBody: didn't match brokenPosts");
             CommIoCbParams io(NULL);

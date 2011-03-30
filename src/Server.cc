@@ -815,7 +815,7 @@ ServerStateData::adaptOrFinalizeReply()
     // The callback can be called with a NULL service if adaptation is off.
     adaptationAccessCheckPending = Adaptation::AccessCheck::Start(
                                        Adaptation::methodRespmod, Adaptation::pointPreCache,
-                                       request, virginReply(), adaptationAclCheckDoneWrapper, this);
+                                       originalRequest(), virginReply(), adaptationAclCheckDoneWrapper, this);
     debugs(11,5, HERE << "adaptationAccessCheckPending=" << adaptationAccessCheckPending);
     if (adaptationAccessCheckPending)
         return;
