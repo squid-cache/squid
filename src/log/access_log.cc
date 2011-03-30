@@ -252,7 +252,7 @@ HierarchyLogEntry::HierarchyLogEntry() :
         peer_reply_status(HTTP_STATUS_NONE),
         peer_response_time(-1),
         total_response_time(-1),
-        peer_local_port(0),
+        peer_local_addr(),
         bodyBytesRead(-1)
 {
     memset(host, '\0', SQUIDHOSTNAMELEN);

@@ -85,13 +85,14 @@ struct logformat_token_table_entry logformat_token_table[] = {
     /*{ "<p", LFT_SERVER_PORT }, */
     {"<A", LFT_SERVER_IP_OR_PEER_NAME},
 
-    /* {"oa", LFT_OUTGOING_IP}, */
-    /* {"ot", LFT_OUTGOING_TOS}, */
-
     {"la", LFT_LOCAL_IP},
     {"lp", LFT_LOCAL_PORT},
     /*{ "lA", LFT_LOCAL_NAME }, */
+
+    {"<la", LFT_PEER_LOCAL_IP},
+    {"oa", LFT_PEER_LOCAL_IP_OLD_27},
     {"<lp", LFT_PEER_LOCAL_PORT},
+    /* {"ot", LFT_PEER_OUTGOING_TOS}, */
 
     {"ts", LFT_TIME_SECONDS_SINCE_EPOCH},
     {"tu", LFT_TIME_SUBSECOND},
@@ -453,9 +454,15 @@ done:
         break;
 
     case LFT_HTTP_SENT_STATUS_CODE_OLD_30:
-        debugs(46, 0, "WARNING: the \"Hs\" formating code is deprecated use the \">Hs\" instead");
+        debugs(46, 0, "WARNING: The \"Hs\" formatting code is deprecated. Use the \">Hs\" instead.");
         lt->type = LFT_HTTP_SENT_STATUS_CODE;
         break;
+
+    case LFT_PEER_LOCAL_IP_OLD_27:
+        debugs(46, 0, "WARNING: The \"oa\" formatting code is deprecated. Use the \"<la\" instead.");
+        lt->type = LFT_PEER_LOCAL_IP;
+        break;
+
     default:
         break;
     }

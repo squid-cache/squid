@@ -685,7 +685,9 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
         return;
     }
 
-    request->hier.peer_local_port = comm_local_port(sock); // for %<lp logging
+    // record local IP:port for %<la and %<lp logging
+    if (comm_local_port(sock))
+        request->hier.peer_local_addr = fd_table[sock].local_addr;
 
     tunnelState = new TunnelStateData;
 #if USE_DELAY_POOLS

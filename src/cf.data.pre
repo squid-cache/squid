@@ -2873,6 +2873,7 @@ DOC_START
 		<A	Server IP address or peer name
 		la	Local IP address (http_port)
 		lp	Local port number (http_port)
+		<la	Local IP address of the last server or peer connection
 		<lp     Local port number of the last server or peer connection
 
 	Time related format codes:
