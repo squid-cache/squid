@@ -617,7 +617,7 @@ shut_down(int sig)
 
     const pid_t ppid = getppid();
 
-    if (ppid > 1) {
+    if (!IamMasterProcess() && ppid > 1) {
         // notify master that we are shutting down
         if (kill(ppid, SIGUSR1) < 0)
             debugs(1, DBG_IMPORTANT, "Failed to send SIGUSR1 to master process,"
@@ -627,7 +627,7 @@ shut_down(int sig)
 #ifndef _SQUID_MSWIN_
 #if KILL_PARENT_OPT
 
-    if (ppid > 1) {
+    if (!IamMasterProcess() && ppid > 1) {
         debugs(1, DBG_IMPORTANT, "Killing master process, pid " << ppid);
 
         if (kill(ppid, sig) < 0)
