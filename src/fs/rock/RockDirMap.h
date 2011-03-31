@@ -3,7 +3,7 @@
 
 #include "fs/rock/RockFile.h"
 #include "ipc/AtomicWord.h"
-#include "ipc/SharedMemory.h"
+#include "ipc/mem/Segment.h"
 
 namespace Rock {
 
@@ -137,7 +137,7 @@ private:
     static int SharedSize(const int limit);
 
     const String path; ///< cache_dir path, used for logging
-    SharedMemory shm; ///< shared memory segment
+    Ipc::Mem::Segment shm; ///< shared memory segment
     Shared *shared; ///< pointer to shared memory
 };
 

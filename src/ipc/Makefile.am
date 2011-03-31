@@ -23,8 +23,6 @@ libipc_la_SOURCES = \
 	StrandSearch.h \
 	SharedListen.cc \
 	SharedListen.h \
-	SharedMemory.cc \
-	SharedMemory.h \
 	TypedMsgHdr.cc \
 	TypedMsgHdr.h \
 	Coordinator.cc \
@@ -39,6 +37,8 @@ libipc_la_SOURCES = \
 	forward.h \
 	\
 	mem/PageStack.cc \
-	mem/PageStack.h
+	mem/PageStack.h \
+	mem/Segment.cc \
+	mem/Segment.h
 
 DEFS += -DDEFAULT_PREFIX=\"$(prefix)\"

@@ -8,7 +8,7 @@
 
 #include "Array.h"
 #include "ipc/AtomicWord.h"
-#include "ipc/SharedMemory.h"
+#include "ipc/mem/Segment.h"
 #include "util.h"
 
 class String;
@@ -52,7 +52,7 @@ private:
         char theBuffer[];
     };
 
-    SharedMemory shm; ///< shared memory segment
+    Ipc::Mem::Segment shm; ///< shared memory segment
     Shared *shared; ///< pointer to shared memory
 };
 

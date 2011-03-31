@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-#include "ipc/SharedMemory.h"
+#include "ipc/mem/Segment.h"
 #include "protos.h"
 
 #include <fcntl.h>
@@ -16,21 +16,21 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-SharedMemory::SharedMemory(const char *const id):
+Ipc::Mem::Segment::Segment(const char *const id):
     theName(GenerateName(id)), theFD(-1), theSize(-1), theMem(NULL)
 {
 }
 
-SharedMemory::~SharedMemory() {
+Ipc::Mem::Segment::~Segment() {
     if (theFD >= 0) {
         detach();
-        if (close(theFD))
-            debugs(54, 5, "SharedMemory::~SharedMemory: close: " << xstrerror());
+        if (close(theFD) != 0)
+            debugs(54, 5, HERE << "close: " << xstrerror());
     }
 }
 
 void
-SharedMemory::create(const int aSize)
+Ipc::Mem::Segment::create(const int aSize)
 {
     assert(aSize > 0);
     assert(theFD < 0);
@@ -38,13 +38,13 @@ SharedMemory::create(const int aSize)
     theFD = shm_open(theName.termedBuf(), O_CREAT | O_RDWR | O_TRUNC,
                      S_IRUSR | S_IWUSR);
     if (theFD < 0) {
-        debugs(54, 5, "SharedMemory::create: shm_open: " << xstrerror());
-        fatal("SharedMemory::create failed");
+        debugs(54, 5, HERE << "shm_open: " << xstrerror());
+        fatal("Ipc::Mem::Segment::create failed to shm_open");
     }
 
     if (ftruncate(theFD, aSize)) {
-        debugs(54, 5, "SharedMemory::create: ftruncate: " << xstrerror());
-        fatal("SharedMemory::create failed");
+        debugs(54, 5, HERE << "ftruncate: " << xstrerror());
+        fatal("Ipc::Mem::Segment::create failed to ftruncate");
     }
 
     theSize = aSize;
@@ -53,14 +53,14 @@ SharedMemory::create(const int aSize)
 }
 
 void
-SharedMemory::open()
+Ipc::Mem::Segment::open()
 {
     assert(theFD < 0);
 
     theFD = shm_open(theName.termedBuf(), O_RDWR, 0);
     if (theFD < 0) {
-        debugs(54, 5, "SharedMemory::open: shm_open: " << xstrerror());
-        String s = "SharedMemory::open failed 1 ";
+        debugs(54, 5, HERE << "shm_open: " << xstrerror());
+        String s = "Ipc::Mem::Segment::open failed to shm_open";
         s.append(theName);
         fatal(s.termedBuf());
     }
@@ -69,8 +69,8 @@ SharedMemory::open()
         struct stat s;
         memset(&s, 0, sizeof(s));
         if (fstat(theFD, &s)) {
-            debugs(54, 5, "SharedMemory::open: fstat: " << xstrerror());
-        String s = "SharedMemory::open failed 2 ";
+            debugs(54, 5, HERE << "fstat: " << xstrerror());
+        String s = "Ipc::Mem::Segment::open failed to fstat";
         s.append(theName);
         fatal(s.termedBuf());
         }
@@ -83,7 +83,7 @@ SharedMemory::open()
 
 /// Map the shared memory segment to the process memory space.
 void
-SharedMemory::attach()
+Ipc::Mem::Segment::attach()
 {
     assert(theFD >= 0);
     assert(theSize >= 0);
@@ -92,29 +92,29 @@ SharedMemory::attach()
     void *const p =
         mmap(NULL, theSize, PROT_READ | PROT_WRITE, MAP_SHARED, theFD, 0);
     if (p == MAP_FAILED) {
-        debugs(54, 5, "SharedMemory::mmap: mmap: " << xstrerror());
-        fatal("SharedMemory::mmap failed");
+        debugs(54, 5, HERE << "mmap: " << xstrerror());
+        fatal("Ipc::Mem::Segment::attach failed to mmap");
     }
     theMem = p;
 }
 
 /// Unmap the shared memory segment from the process memory space.
 void
-SharedMemory::detach()
+Ipc::Mem::Segment::detach()
 {
     if (!theMem)
         return;
 
     if (munmap(theMem, theSize)) {
-        debugs(54, 5, "SharedMemory::munmap: munmap: " << xstrerror());
-        fatal("SharedMemory::munmap failed");
+        debugs(54, 5, HERE << "munmap: " << xstrerror());
+        fatal("Ipc::Mem::Segment::detach failed to munmap");
     }
     theMem = 0;
 }
 
 /// Generate name for shared memory segment. Replaces all slashes with dots.
 String
-SharedMemory::GenerateName(const char *id)
+Ipc::Mem::Segment::GenerateName(const char *id)
 {
     String name("/squid-");
     for (const char *slash = strchr(id, '/'); slash; slash = strchr(id, '/')) {

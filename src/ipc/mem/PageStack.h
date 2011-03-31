@@ -7,7 +7,7 @@
 #define SQUID_IPC_MEM_PAGE_STACK_H
 
 #include "ipc/AtomicWord.h"
-#include "ipc/SharedMemory.h"
+#include "ipc/mem/Segment.h"
 
 namespace Ipc {
 
@@ -53,7 +53,7 @@ private:
         Item theItems[]; ///< page number storage
     };
 
-    SharedMemory shm; ///< shared memory segment to store metadata (and pages)
+    Segment shm; ///< shared memory segment to store metadata (and pages)
     Shared *shared; ///< our metadata, shared among all stack users
 };
 
