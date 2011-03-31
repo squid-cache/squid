@@ -3,17 +3,21 @@
  *
  */
 
-#ifndef SQUID_IPC_SHARED_MEMORY_H
-#define SQUID_IPC_SHARED_MEMORY_H
+#ifndef SQUID_IPC_MEM_SEGMENT_H
+#define SQUID_IPC_MEM_SEGMENT_H
 
 #include "SquidString.h"
 
+namespace Ipc {
+
+namespace Mem {
+
 /// POSIX shared memory segment
-class SharedMemory {
+class Segment {
 public:
     /// Create a shared memory segment.
-    SharedMemory(const char *const id);
-    ~SharedMemory();
+    Segment(const char *const id);
+    ~Segment();
 
     /// Create a new shared memory segment. Fails if a segment with
     /// the same name already exists.
@@ -36,4 +40,8 @@ private:
     void *theMem; ///< pointer to mmapped shared memory segment
 };
 
-#endif /* SQUID_IPC_SHARED_MEMORY_H */
+} // namespace Mem
+
+} // namespace Ipc
+
+#endif /* SQUID_IPC_MEM_SEGMENT_H */
