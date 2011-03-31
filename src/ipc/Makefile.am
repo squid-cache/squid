@@ -36,6 +36,9 @@ libipc_la_SOURCES = \
 	Strand.cc \
 	Strand.h \
 	\
-	forward.h
+	forward.h \
+	\
+	mem/PageStack.cc \
+	mem/PageStack.h
 
 DEFS += -DDEFAULT_PREFIX=\"$(prefix)\"
