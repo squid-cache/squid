@@ -36,6 +36,12 @@ libipc_la_SOURCES = \
 	\
 	forward.h \
 	\
+	mem/Page.cc \
+	mem/Page.h \
+	mem/PagePool.cc \
+	mem/PagePool.h \
+	mem/Pages.cc \
+	mem/Pages.h \
 	mem/PageStack.cc \
 	mem/PageStack.h \
 	mem/Segment.cc \
