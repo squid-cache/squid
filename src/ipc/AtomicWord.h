@@ -20,6 +20,9 @@ public:
 
     bool swap_if(const int comparand, const int replacement) { return __sync_bool_compare_and_swap(&value, comparand, replacement); }
 
+    /// v1 = value; value &= v2; return v1;
+    Value fetchAndAnd(const Value v2) { return __sync_fetch_and_and(&value, v2); }
+
     // TODO: no need for __sync_bool_compare_and_swap here?
     bool operator ==(int v2) { return __sync_bool_compare_and_swap(&value, v2, value); }
 
