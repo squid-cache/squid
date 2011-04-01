@@ -544,6 +544,9 @@ This section gives a thorough account of those changes in three categories:
 	   This will be included by default if available (see the --without-netfilter-conntrack configure option for more details).
 	<p><em>miss</em> sets a value for a cache miss. It is available for both the tos and mark options and takes precedence over the preserve-miss feature.
 
+	<tag>range_offset_limit</tag>
+	<p>Added ACL support for control over when the limit applies and when it is avoided.
+
 	<tag>refresh_pattern</tag>
 	<p>New option <em>max-stale=</em> to provide a maximum staleness factor. Squid won't
 	   serve objects more stale than this even if it failed to validate the object.
