@@ -49,8 +49,12 @@ Ipc::Mem::PageStack::pop(Value &value)
         value = shared->theItems[idx].fetchAndAnd(0); // works if Writable is 0
         const bool popped = value != Writable;
         // theItems[idx] is probably not Readable [any more]
-        // help others (if we popped) or go left ourselves (if we did not)
+
+        // Whether we popped a Readable value or not, we should try going left
+        // to maintain the index (and make progress).
+        // We may fail if others already updated the index, but that is OK.
         shared->theLastReadable.swap_if(idx, shared->prev(idx)); // may fail or lie
+
         if (popped) {
             // the slot we emptied may already be filled, but that is OK
             shared->theFirstWritable = idx; // may lie
@@ -72,8 +76,12 @@ Ipc::Mem::PageStack::push(const Value value)
         const Offset idx = shared->theFirstWritable;
         const bool pushed = shared->theItems[idx].swap_if(Writable, value);
         // theItems[idx] is probably not Writable [any more];
-        // help others (if we pushed) or go right ourselves (if we did not)
+
+        // Whether we pushed the value or not, we should try going right
+        // to maintain the index (and make progress).
+        // We may fail if others already updated the index, but that is OK.
         shared->theFirstWritable.swap_if(idx, shared->next(idx)); // may fail or lie
+
         if (pushed) {
             // the enqueued value may already by gone, but that is OK
             shared->theLastReadable = idx; // may lie
