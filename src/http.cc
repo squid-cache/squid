@@ -94,7 +94,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
     surrogateNoStore = false;
     fd = fwd->server_fd;
     readBuf = new MemBuf;
-    readBuf->init();
+    readBuf->init(16*1024, 256*1024);
     orig_request = HTTPMSGLOCK(fwd->request);
 
     // reset peer response time stats for %<pt
