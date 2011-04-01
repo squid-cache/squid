@@ -3915,23 +3915,41 @@ DOC_START
 	performed).
 DOC_END
 
-NAME: header_replace
+NAME: request_header_replace header_replace
 IFDEF: HTTP_VIOLATIONS
 TYPE: http_header_replace[]
 LOC: Config.request_header_access
 DEFAULT: none
 DOC_START
-	Usage:   header_replace header_name message
-	Example: header_replace User-Agent Nutscrape/1.0 (CP/M; 8-bit)
+	Usage:   request_header_replace header_name message
+	Example: request_header_replace User-Agent Nutscrape/1.0 (CP/M; 8-bit)
 
 	This option allows you to change the contents of headers
-	denied with header_access above, by replacing them with
-	some fixed string. This replaces the old fake_user_agent
+	denied with request_header_access above, by replacing them
+	with some fixed string. This replaces the old fake_user_agent
 	option.
 
 	This only applies to request headers, not reply headers.
 
 	By default, headers are removed if denied.
+DOC_END
+
+NAME: reply_header_replace
+IFDEF: HTTP_VIOLATIONS
+TYPE: http_header_replace[]
+LOC: Config.reply_header_access
+DEFAULT: none
+DOC_START
+        Usage:   reply_header_replace header_name message
+        Example: reply_header_replace Server Foo/1.0
+
+        This option allows you to change the contents of headers
+        denied with reply_header_access above, by replacing them
+        with some fixed string.
+
+        This only applies to reply headers, not request headers.
+
+        By default, headers are removed if denied.
 DOC_END
 
 NAME: relaxed_header_parser

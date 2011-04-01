@@ -701,6 +701,22 @@ This section gives a thorough account of those changes in three categories:
 	<p>Controls how many different forward paths Squid will try
 	before giving up. Default: 10
 
+	<tag>reply_header_replace</tag>
+	<p>This option allows you to change the contents of reply headers.
+	<verb>
+	In Squid 2 header_replace (now deprecated) worked for both requests
+	and replies, while in Squid 3 it only did respect request headers.
+	This option brings back the functionality to replace the contents of
+	reply headers. Consult the documentation for usage details.
+
+	<tag>request_header_replace</tag>
+	<p>This option allows you to change the contents of request headers.
+	<verb>
+	To be consistent with the naming changes of header_access in Squid 3
+	(header_access has been split into two options request_header_access
+	and reply_header_access), header_replace (now deprecated) is being
+	replaced by request_header_replace.
+
 	<tag>icap_log</tag>
 	<p>New option to write ICAP log files record ICAP transaction summaries, one line per
         transaction. Similar to access.log.
@@ -1090,6 +1106,9 @@ NOCOMMENT_START
 	If set to "truncate", Squid will remove all existing
 	X-Forwarded-For entries, and place itself as the sole entry.
 	</verb>
+
+	<tag>header_replace</tag>
+	<p>Deprecated. Use request_header_replace or reply_header_replace instead.
 
 	<tag>http_port transparent intercept ssl-bump connection-auth[=on|off] ignore-cc</tag>
 	<p>Option 'transparent' is being deprecated in favour of 'intercept' which more clearly identifies what the option does.
