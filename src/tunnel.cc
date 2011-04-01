@@ -524,7 +524,10 @@ tunnelProxyConnectedWriteDone(int fd, char *buf, size_t size, comm_err_t flag, i
 {
     TunnelStateData *tunnelState = static_cast<TunnelStateData *>(data);
     debugs(26, 3, HERE << "FD " << fd << " tunnelState=" << tunnelState);
-    *tunnelState->status_ptr = HTTP_OK;
+    if (flag == COMM_OK)
+        *tunnelState->status_ptr = HTTP_OK;
+    else
+        *tunnelState->status_ptr = HTTP_INTERNAL_SERVER_ERROR;
     tunnelConnectedWriteDone(fd, buf, size, flag, xerrno, data);
 }
 
