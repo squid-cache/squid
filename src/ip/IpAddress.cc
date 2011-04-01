@@ -375,7 +375,7 @@ bool IpAddress::LookupHostIP(const char *s, bool nodns)
 #endif
 
     if ( (err = xgetaddrinfo(s, NULL, &want, &res)) != 0) {
-        debugs(14,3, HERE << "Given Bad IP '" << s << "': " << xgai_strerror(err) );
+        debugs(14,3, HERE << "Given Non-IP '" << s << "': " << xgai_strerror(err) );
         /* free the memory xgetaddrinfo() dynamically allocated. */
         if (res) {
             xfreeaddrinfo(res);
