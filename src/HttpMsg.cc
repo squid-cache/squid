@@ -379,17 +379,11 @@ HttpMsg::_unlock()
 void
 HttpParserInit(HttpParser *hdr, const char *buf, int bufsiz)
 {
+    hdr->clear();
     hdr->state = 1;
-    hdr->request_parse_status = HTTP_STATUS_NONE;
     hdr->buf = buf;
     hdr->bufsiz = bufsiz;
-    hdr->req_start = hdr->req_end = -1;
-    hdr->hdr_start = hdr->hdr_end = -1;
     debugs(74, 5, "httpParseInit: Request buffer is " << buf);
-    hdr->m_start = hdr->m_end = -1;
-    hdr->u_start = hdr->u_end = -1;
-    hdr->v_start = hdr->v_end = -1;
-    hdr->v_maj = hdr->v_min = 0;
 }
 
 #if MSGDODEBUG
@@ -433,6 +427,26 @@ HttpParserRequestLen(HttpParser *hp)
     return hp->hdr_end - hp->req_start + 1;
 }
 #endif
+
+HttpParser::HttpParser(const char *buf, int len)
+{
+    HttpParserInit(this, buf, len);
+}
+
+void
+HttpParser::clear()
+{
+    state = 0;
+    request_parse_status = HTTP_STATUS_NONE;
+    buf = NULL; // NP: we do not own the buffer, merely reference to it.
+    bufsiz = 0;
+    req_start = req_end = -1;
+    hdr_start = hdr_end = -1;
+    m_start = m_end = -1;
+    u_start = u_end = -1;
+    v_start = v_end = -1;
+    v_maj = v_min = 0;
+}
 
 int
 HttpParser::parseRequestFirstLine()
