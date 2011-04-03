@@ -289,7 +289,7 @@ private:
 /* convenience class while splitting up body handling */
 /* temporary existence only - on stack use expected */
 
-void setLogUri(ClientHttpRequest * http, char const *uri);
+void setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl = false);
 
 const char *findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end = NULL);
 
