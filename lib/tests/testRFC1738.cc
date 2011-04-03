@@ -86,10 +86,6 @@ void testRFC1738::testUrlEncode()
 {
     char *result;
 
-#define RFC1738_ESCAPE_UNSAFE     0
-#define RFC1738_ESCAPE_RESERVED   1
-#define RFC1738_ESCAPE_UNESCAPED -1
-
     /* TEST: Escaping only unsafe characters */
 
     /* regular URL (no encoding needed) */

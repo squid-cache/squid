@@ -53,6 +53,7 @@ static char rfc1738_unsafe_chars[] = {
     (char) 0x22,		/* " */
     (char) 0x23,		/* # */
 #if 0				/* done in code */
+    (char) 0x20,		/* space */
     (char) 0x25,		/* % */
 #endif
     (char) 0x7B,		/* { */
@@ -64,8 +65,7 @@ static char rfc1738_unsafe_chars[] = {
     (char) 0x5B,		/* [ */
     (char) 0x5D,		/* ] */
     (char) 0x60,		/* ` */
-    (char) 0x27,		/* ' */
-    (char) 0x20			/* space */
+    (char) 0x27 		/* ' */
 };
 
 static char rfc1738_reserved_chars[] = {
@@ -97,36 +97,49 @@ rfc1738_do_escape(const char *url, int flags)
         buf = (char*)xcalloc(bufsize, 1);
     }
     for (p = url, q = buf; *p != '\0' && q < (buf + bufsize - 1); p++, q++) {
+
+        /* a-z, A-Z and 0-9 are SAFE. */
+        if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') || (*p >= '0' && *p <= '9')) {
+            *q = *p;
+            continue;
+        }
+
         do_escape = 0;
 
         /* RFC 1738 defines these chars as unsafe */
-        for (i = 0; i < sizeof(rfc1738_unsafe_chars); i++) {
-            if (*p == rfc1738_unsafe_chars[i]) {
-                do_escape = 1;
-                break;
+        if ((flags & RFC1738_ESCAPE_UNSAFE)) {
+            for (i = 0; i < sizeof(rfc1738_unsafe_chars); i++) {
+                if (*p == rfc1738_unsafe_chars[i]) {
+                    do_escape = 1;
+                    break;
+                }
             }
+            /* Handle % separately */
+            if (!(flags & RFC1738_ESCAPE_NOPERCENT) && *p == '%')
+                do_escape = 1;
+            /* Handle space separately */
+            else if (!(flags & RFC1738_ESCAPE_NOSPACE) && *p <= ' ')
+                do_escape = 1;
         }
-        /* Handle % separately */
-        if (flags != RFC1738_ESCAPE_UNESCAPED && *p == '%')
-            do_escape = 1;
         /* RFC 1738 defines these chars as reserved */
-        for (i = 0; i < sizeof(rfc1738_reserved_chars) && flags == RFC1738_ESCAPE_RESERVED; i++) {
-            if (*p == rfc1738_reserved_chars[i]) {
-                do_escape = 1;
-                break;
+        if ((flags & RFC1738_ESCAPE_RESERVED) && do_escape == 0) {
+            for (i = 0; i < sizeof(rfc1738_reserved_chars); i++) {
+                if (*p == rfc1738_reserved_chars[i]) {
+                    do_escape = 1;
+                    break;
+                }
             }
         }
-        /* RFC 1738 says any control chars (0x00-0x1F) are encoded */
-        if ((unsigned char) *p <= (unsigned char) 0x1F) {
-            do_escape = 1;
-        }
-        /* RFC 1738 says 0x7f is encoded */
-        if (*p == (char) 0x7F) {
-            do_escape = 1;
-        }
-        /* RFC 1738 says any non-US-ASCII are encoded */
-        if (((unsigned char) *p >= (unsigned char) 0x80)) {
-            do_escape = 1;
+        if ((flags & RFC1738_ESCAPE_CTRLS) && do_escape == 0) {
+            /* RFC 1738 says any control chars (0x00-0x1F) are encoded */
+            if ((unsigned char) *p <= (unsigned char) 0x1F)
+                do_escape = 1;
+            /* RFC 1738 says 0x7f is encoded */
+            else if (*p == (char) 0x7F)
+                do_escape = 1;
+            /* RFC 1738 says any non-US-ASCII are encoded */
+            else if (((unsigned char) *p >= (unsigned char) 0x80))
+                do_escape = 1;
         }
         /* Do the triplet encoding, or just copy the char */
         /* note: we do not need snprintf here as q is appropriately
