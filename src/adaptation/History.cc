@@ -148,3 +148,22 @@ void Adaptation::History::recordMeta(const HttpHeader *lm)
     allMeta.update(lm, NULL);
     allMeta.compact();
 }
+
+void
+Adaptation::History::setFutureServices(const DynamicGroupCfg &services)
+{
+    if (!theFutureServices.empty())
+        debugs(93,3, HERE << "old future services: " << theFutureServices);
+    debugs(93,3, HERE << "new future services: " << services);
+    theFutureServices = services; // may be empty
+}
+
+bool Adaptation::History::extractFutureServices(DynamicGroupCfg &value)
+{
+    if (theFutureServices.empty())
+        return false;
+
+    value = theFutureServices;
+    theFutureServices.clear();
+    return true;
+}
