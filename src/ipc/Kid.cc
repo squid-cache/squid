@@ -6,6 +6,7 @@
  */
 
 #include "config.h"
+#include "globals.h"
 #include "ipc/Kid.h"
 
 #if HAVE_SYS_WAIT_H
@@ -62,6 +63,18 @@ void Kid::stop(status_type exitStatus)
 bool Kid::running() const
 {
     return isRunning;
+}
+
+/// returns true if master process should restart this kid
+bool Kid::shouldRestart() const
+{
+    return !(running() ||
+             exitedHappy() ||
+             hopeless() ||
+             shutting_down ||
+             signaled(SIGKILL) || // squid -k kill
+             signaled(SIGINT) || // unexpected forced shutdown
+             signaled(SIGTERM)); // unexpected forced shutdown
 }
 
 /// returns current pid for a running kid and last pid for a stopped kid

@@ -614,14 +614,24 @@ shut_down(int sig)
         shutdown_status = 1;
 
 #endif
+
+    const pid_t ppid = getppid();
+
+    if (!IamMasterProcess() && ppid > 1) {
+        // notify master that we are shutting down
+        if (kill(ppid, SIGUSR1) < 0)
+            debugs(1, DBG_IMPORTANT, "Failed to send SIGUSR1 to master process,"
+                   " pid " << ppid << ": " << xstrerror());
+    }
+
 #ifndef _SQUID_MSWIN_
 #if KILL_PARENT_OPT
 
-    if (getppid() > 1) {
-        debugs(1, 1, "Killing master process, pid " << getppid());
+    if (!IamMasterProcess() && ppid > 1) {
+        debugs(1, DBG_IMPORTANT, "Killing master process, pid " << ppid);
 
-        if (kill(getppid(), sig) < 0)
-            debugs(1, 1, "kill " << getppid() << ": " << xstrerror());
+        if (kill(ppid, sig) < 0)
+            debugs(1, DBG_IMPORTANT, "kill " << ppid << ": " << xstrerror());
     }
 
 #endif /* KILL_PARENT_OPT */
@@ -1682,6 +1692,9 @@ watch_child(char *argv[])
         dup2(nullfd, 2);
     }
 
+    // handle shutdown notifications from kids
+    squid_signal(SIGUSR1, sig_shutdown, SA_RESTART);
+
     if (Config.workers > 128) {
         syslog(LOG_ALERT, "Suspiciously high workers value: %d",
                Config.workers);
@@ -1696,7 +1709,7 @@ watch_child(char *argv[])
         // start each kid that needs to be [re]started; once
         for (int i = TheKids.count() - 1; i >= 0; --i) {
             Kid& kid = TheKids.get(i);
-            if (kid.hopeless() || kid.exitedHappy() || kid.running())
+            if (!kid.shouldRestart())
                 continue;
 
             if ((pid = fork()) == 0) {
@@ -1742,6 +1755,11 @@ watch_child(char *argv[])
                 } else {
                     syslog(LOG_NOTICE, "Squid Parent: child process %d exited", kid->getPid());
                 }
+                if (kid->hopeless()) {
+                    syslog(LOG_NOTICE, "Squid Parent: child process %d will not"
+                           " be restarted due to repeated, frequent failures",
+                           kid->getPid());
+                }
             } else {
                 syslog(LOG_NOTICE, "Squid Parent: unknown child process %d exited", pid);
             }
@@ -1752,22 +1770,18 @@ watch_child(char *argv[])
         while ((pid = waitpid(-1, &status, WNOHANG)) > 0);
 #endif
 
-        if (TheKids.allExitedHappy()) {
+        if (!TheKids.someRunning() && !TheKids.shouldRestartSome()) {
+            if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
+                syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
+                exit(1);
+            }
+
+            if (TheKids.allHopeless()) {
+                syslog(LOG_ALERT, "Exiting due to repeated, frequent failures");
+                exit(1);
+            }
+
             exit(0);
-        }
-
-        if (TheKids.allHopeless()) {
-            syslog(LOG_ALERT, "Exiting due to repeated, frequent failures");
-            exit(1);
-        }
-
-        if (TheKids.allSignaled(SIGKILL)) {
-            exit(0);
-        }
-
-        if (TheKids.allSignaled(SIGINT) || TheKids.allSignaled(SIGTERM)) {
-            syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
-            exit(1);
         }
 
         squid_signal(SIGINT, SIG_DFL, SA_RESTART);
