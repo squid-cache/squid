@@ -103,7 +103,7 @@ struct _idns_query {
     char buf[RESOLV_BUFSZ];
     char name[NS_MAXDNAME + 1];
     char orig[NS_MAXDNAME + 1];
-    size_t sz;
+    ssize_t sz;
     unsigned short id;
     int nsends;
     int need_vc;
@@ -1050,6 +1050,14 @@ idnsGrokReply(const char *buf, size_t sz)
                 debugs(78, 3, "idnsGrokReply: Trying A Query for " << q->name);
                 q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
             }
+
+            if (q->sz < 0) {
+                /* problem with query data -- query not sent */
+                idnsCallback(static_cast<idns_query *>(q->callback_data), NULL, 0, "Internal error");
+                cbdataFree(q);
+                return;
+            }
+
             idnsCacheQuery(q);
             idnsSendQuery(q);
             return;
@@ -1088,6 +1096,14 @@ idnsGrokReply(const char *buf, size_t sz)
         rfc1035SetQueryID(q->buf, q->id);
         q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->id, &q->query);
         q->need_A = false;
+
+        if (q->sz < 0) {
+            /* problem with query data -- query not sent */
+            idnsCallback(static_cast<idns_query *>(q->callback_data), NULL, 0, "Internal error");
+            cbdataFree(q);
+            return;
+        }
+
         idnsCacheQuery(q);
         idnsSendQuery(q);
         return;
