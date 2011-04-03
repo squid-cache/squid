@@ -1,3 +1,24 @@
+Changes to squid-3.1.12 (04 Apr 2011):
+
+	- Regression fix: Use bigger buffer for server reads.
+	- Regression fix: Add reply_header_replace directive for ability lost since 2.7
+	- Bug 3181: /dev/poll fails to build on Solaris with GCC 4.5.0
+	- Bug 3177: assertion failed: comm.cc:1583: "fd >= 0"
+	- Bug 3175: IPv6 PTR lookup crashes on raw-IP URLs when IPv6 disabled
+	- Bug 3173: Assertion bodyPipe!=NULL on SslBump CONNECT response writing failure
+	- Bug 3164: Total memory info display 32-bit overflows
+	- Bug 3155: Werror is hard-coded in libTrie build
+	- Bug 3151: squid_kerb_auth: use autoconf LIBS instead of FLAGS for library linkage
+	- Bug 2976: invalid URL on intercepted requests during reconfigure
+	- Bug 2720: comment in same line as cache/mem_replacement_policy causes error
+	- Bug 2621: Provide request headers to RESPMOD when using cache_peer.
+	- Bug 2330: AuthUser objects are never unlocked
+	- Prevent CONNECT request relaying to origin servers
+	- squidclient HTTP/1.1 compliance updates (Pragma and User-Agent headers)
+	- squidclient: send Cache Manager password using -w
+	- eCAP: give full Request-URI to adapters
+	- ... and several debug and error display cleanups
+
 Changes to squid-3.1.11 (08 Feb 2011):
 
 	- Bug 3149: not caching eCAP adapted body

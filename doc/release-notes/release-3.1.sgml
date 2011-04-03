@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.11 release notes</title>
+<title>Squid 3.1.12 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.11
+The Squid Team are pleased to announce the release of Squid-3.1.12
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -708,6 +708,7 @@ This section gives a thorough account of those changes in three categories:
 	and replies, while in Squid 3 it only did respect request headers.
 	This option brings back the functionality to replace the contents of
 	reply headers. Consult the documentation for usage details.
+	</verb>
 
 	<tag>request_header_replace</tag>
 	<p>This option allows you to change the contents of request headers.
@@ -716,6 +717,7 @@ This section gives a thorough account of those changes in three categories:
 	(header_access has been split into two options request_header_access
 	and reply_header_access), header_replace (now deprecated) is being
 	replaced by request_header_replace.
+	</verb>
 
 	<tag>icap_log</tag>
 	<p>New option to write ICAP log files record ICAP transaction summaries, one line per
@@ -1067,7 +1069,6 @@ NOCOMMENT_START
 
 	<tag>debug_options rotate=</tag>
 	<p>New parameter rotate=N to control number of cache.log rotations independent of other logs.
-
 
         <tag>external_acl_type</tag>
         <p>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between Squid and its helpers.
