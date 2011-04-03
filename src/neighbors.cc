@@ -168,7 +168,8 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
     }
 
     // CONNECT requests are proxy requests. Not to be forwarded to origin servers.
-    if (p->options.originserver && request->method == METHOD_CONNECT)
+    // Unless the destination port matches, in which case we MAY perform a 'DIRECT' to this peer.
+    if (p->options.originserver && request->method == METHOD_CONNECT && request->port != p->in_addr.GetPort())
         return 0;
 
     if (p->peer_domain == NULL && p->access == NULL)

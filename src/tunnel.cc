@@ -589,7 +589,7 @@ tunnelConnectDone(int fdnotused, const DnsLookupDetails &dns, comm_err_t status,
         err->callback_data = tunnelState;
         errorSend(tunnelState->client.fd(), err);
     } else {
-        if (tunnelState->servers->_peer)
+        if (tunnelState->servers->_peer && !tunnelState->servers->_peer->options.originserver)
             tunnelProxyConnected(tunnelState->server.fd(), tunnelState);
         else {
             tunnelConnected(tunnelState->server.fd(), tunnelState);
@@ -772,7 +772,7 @@ tunnelPeerSelectComplete(FwdServer * fs, void *data)
 
     if (fs->_peer) {
         tunnelState->request->peer_login = fs->_peer->login;
-        tunnelState->request->flags.proxying = 1;
+        tunnelState->request->flags.proxying = (fs->_peer->options.originserver?0:1);
     } else {
         tunnelState->request->peer_login = NULL;
         tunnelState->request->flags.proxying = 0;
