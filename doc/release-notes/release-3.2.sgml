@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.0.5 release notes</title>
+<title>Squid 3.2.0.6 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.0.5 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.0.6 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -42,8 +42,8 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 	<item>Surrogate/1.0 protocol extensions to HTTP
 	<item>Logging Infrastructure Updated
 	<item>Client Bandwidth Limits
-        <item> Dynamic SSL Certificate Generation
-        <item>Better eCAP support
+	<item>Dynamic SSL Certificate Generation
+	<item>Better eCAP support
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -227,7 +227,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <sect1>Multi-Lingual manuals
 <p>The man(8) and man(1) pages bundled with Squid are now provided online for all
-   versions and beginning with 3.2 they are available in languages other than english.
+   versions and beginning with 3.2 they are available in languages other than English (where translated).
 
 <p>Details in <url url="http://wiki.squid-cache.org/Features/QualityOfService" name="The Squid wiki">
 
@@ -543,6 +543,9 @@ This section gives a thorough account of those changes in three categories:
 	   It does, however, require libnetfilter_conntrack.
 	   This will be included by default if available (see the --without-netfilter-conntrack configure option for more details).
 	<p><em>miss</em> sets a value for a cache miss. It is available for both the tos and mark options and takes precedence over the preserve-miss feature.
+
+	<tag>range_offset_limit</tag>
+	<p>Added ACL support for control over when the limit applies and when it is avoided.
 
 	<tag>refresh_pattern</tag>
 	<p>New option <em>max-stale=</em> to provide a maximum staleness factor. Squid won't

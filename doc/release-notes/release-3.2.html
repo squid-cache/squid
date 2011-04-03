@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
- <TITLE>Squid 3.2.0.5 release notes</TITLE>
+ <TITLE>Squid 3.2.0.6 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.2.0.5 release notes</H1>
+<H1>Squid 3.2.0.6 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -70,7 +70,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.2.0.5 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.2.0.6 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.2/">http://www.squid-cache.org/Versions/v3/3.2/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -104,7 +104,8 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <LI>Surrogate/1.0 protocol extensions to HTTP</LI>
 <LI>Logging Infrastructure Updated</LI>
 <LI>Client Bandwidth Limits</LI>
-<LI> Dynamic SSL Certificate Generation</LI>
+<LI>Dynamic SSL Certificate Generation</LI>
+<LI>Better eCAP support</LI>
 </UL>
 </P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
@@ -325,7 +326,7 @@ For several helpers the directory name used in --enable-X-helpers configure opti
 </H2>
 
 <P>The man(8) and man(1) pages bundled with Squid are now provided online for all
-versions and beginning with 3.2 they are available in languages other than english.</P>
+versions and beginning with 3.2 they are available in languages other than English (where translated).</P>
 
 <P>Details in 
 <A HREF="http://wiki.squid-cache.org/Features/QualityOfService">The Squid wiki</A></P>
@@ -472,6 +473,18 @@ reduce the number of warnings by blocking some embedded content. </P>
 
 <P>
 <DL>
+<DT><B>adaptation_send_client_ip</B><DD>
+<P>Same as depricated icap_send_client_ip
+but applies to both ICAP and eCAP.</P>
+
+<DT><B>adaptation_send_username</B><DD>
+<P>Same as depricated icap_send_client_username
+but applies to both ICAP and eCAP.</P>
+
+<DT><B>adaptation_uses_indirect_client</B><DD>
+<P>Same as depricated icap_uses_indirect_client
+but applies to both ICAP and eCAP.</P>
+
 <DT><B>client_delay_pools</B><DD>
 <P>New setting for client bandwith limits to specifies the number 
 of client delay pools used.</P>
@@ -614,10 +627,23 @@ The old form is deprecated but still accepted.</P>
 <P><EM>children-idle=N</EM> determines how many helper to retain as buffer against sudden traffic loads.</P>
 <P>Deprecated <EM>children=N</EM> in favor of <EM>children-max=N</EM>.</P>
 
+<DT><B>icap_send_client_ip</B><DD>
+<P>Deprecated in favor of adaptation_send_client_ip
+which applies to both ICAP and eCAP.</P>
+
+<DT><B>icap_send_client_username</B><DD>
+<P>Deprecated in favor of adaptation_send_username
+which applies to both ICAP and eCAP.</P>
+
+<DT><B>icap_uses_indirect_client</B><DD>
+<P>Deprecated in favor of adaptation_uses_indirect_client 
+which applies to both ICAP and eCAP.</P>
+
 <DT><B>logformat</B><DD>
 <P><EM>%&gt;bs</EM> Number of HTTP-equivalent message body bytes received from the next hop.</P>
 <P><EM>icap::%&gt;bs</EM> Number of message body bytes received from the ICAP server.</P>
-<P><EM>%&gt;lp</EM> Local TCP port used by transactions with http servers.</P>
+<P><EM>%&lt;la</EM> Local IP address of the last server or peer connection. Ported from 2.7 where it is called <EM>%oa</EM>.</P>
+<P><EM>%&lt;lp</EM> Local port number of the last server or peer connection.</P>
 <P><EM>%sn</EM> Unique sequence number per log line. Ported from 2.7</P>
 <P><EM>%&gt;eui</EM> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
 Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.</P>
@@ -640,6 +666,9 @@ a similar internal error identifier</P>
 It does, however, require libnetfilter_conntrack.
 This will be included by default if available (see the --without-netfilter-conntrack configure option for more details).</P>
 <P><EM>miss</EM> sets a value for a cache miss. It is available for both the tos and mark options and takes precedence over the preserve-miss feature.</P>
+
+<DT><B>range_offset_limit</B><DD>
+<P>Added ACL support for control over when the limit applies and when it is avoided.</P>
 
 <DT><B>refresh_pattern</B><DD>
 <P>New option <EM>max-stale=</EM> to provide a maximum staleness factor. Squid won't
@@ -1020,9 +1049,6 @@ certificate request and instead enables the ssl_crtd processes.</P>
 
 <DT><B>location_rewrite_program</B><DD>
 <P>Not yet ported from 2.6</P>
-
-<DT><B>logformat</B><DD>
-<P><EM>%oa</EM> tag not yet ported from 2.7</P>
 
 <DT><B>refresh_pattern</B><DD>
 <P><EM>stale-while-revalidate=</EM> not yet ported from 2.7</P>
