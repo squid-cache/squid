@@ -51,6 +51,7 @@
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
+#include "err_detail_type.h"
 #include "errorpage.h"
 #include "http.h"
 #include "HttpControlMsg.h"
@@ -2304,8 +2305,12 @@ HttpStateData::handleRequestBodyProducerAborted()
     if (entry->isEmpty()) {
         debugs(11, 3, "request body aborted: FD " << fd);
         ErrorState *err;
-        err = errorCon(ERR_READ_ERROR, HTTP_BAD_GATEWAY, fwd->request);
-        err->xerrno = errno;
+        // We usually get here when ICAP REQMOD aborts during body processing.
+        // We might also get here if client-side aborts, but then our response
+        // should not matter because either client-side will provide its own or
+        // there will be no response at all (e.g., if the the client has left).
+        err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, fwd->request);
+        err->xerrno = ERR_DETAIL_SRV_REQMOD_REQ_BODY;
         fwd->fail(err);
     }
 
