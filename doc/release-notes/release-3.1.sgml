@@ -708,6 +708,7 @@ This section gives a thorough account of those changes in three categories:
 	and replies, while in Squid 3 it only did respect request headers.
 	This option brings back the functionality to replace the contents of
 	reply headers. Consult the documentation for usage details.
+	</verb>
 
 	<tag>request_header_replace</tag>
 	<p>This option allows you to change the contents of request headers.
@@ -716,6 +717,7 @@ This section gives a thorough account of those changes in three categories:
 	(header_access has been split into two options request_header_access
 	and reply_header_access), header_replace (now deprecated) is being
 	replaced by request_header_replace.
+	</verb>
 
 	<tag>icap_log</tag>
 	<p>New option to write ICAP log files record ICAP transaction summaries, one line per
