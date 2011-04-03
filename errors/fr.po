@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-02-06 22:39+1300\n"
-"PO-Revision-Date: 2011-01-24 19:52+0200\n"
+"PO-Revision-Date: 2011-02-24 19:27+0200\n"
 "Last-Translator: Bernard <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
@@ -52,6 +52,8 @@ msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
 "request from being completed."
 msgstr ""
+"Une défaillance interne non-récupérable ou un problème de configuration "
+"empêchent cette requête de s'achever."
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
@@ -138,8 +140,8 @@ msgstr "La connexion %I a échouée."
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
 msgstr ""
-"Le champ \"Content-Length\" est absent, pour l'utilisation des requêtes POST "
-"ou PUT"
+"Le champ \"Content-Length\" est absent, pour l'utilisation des requêtes avec "
+"POST ou PUT"
 
 #: templates/ERR_DIR_LISTING:3
 msgid "Directory Content:"
@@ -147,7 +149,7 @@ msgstr "Contenu du Répertoire :"
 
 #: templates/ERR_DIR_LISTING:4
 msgid "Directory Listing"
-msgstr "Listing du Répertoire"
+msgstr "Liste du répertoire"
 
 #: templates/ERR_DIR_LISTING:1
 msgid "Directory: %U"
@@ -218,11 +220,11 @@ msgstr "Le traitement ESI a échoué."
 
 #: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
 msgid "FTP PUT Successful."
-msgstr "FTP PUT envoi du fichier réussi."
+msgstr "FTP avec PUT, envoi du fichier réussi."
 
 #: templates/ERR_FTP_PUT_ERROR:3
 msgid "FTP PUT upload failed"
-msgstr "FTP PUT échec à l'envoi du fichier"
+msgstr "FTP avec PUT, échec lors de l'envoi du fichier"
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
@@ -250,18 +252,17 @@ msgstr "Pour configurer Firefox, allez à : <ul>"
 msgid "For Internet Explorer browsers go to: <ul>"
 msgstr "Pour configurer Internet Explorer, allez à : <ul>"
 
-# Suggestion2 ok
 #: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
 msgid "For Opera browsers go to: <ul>"
 msgstr "Pour configurer Opéra, allez à : <ul>"
 
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
-msgstr "Retransmission interdite."
+msgstr "Transmission interdite."
 
 #: templates/ERR_GATEWAY_FAILURE:5
 msgid "Gateway Proxy Failure"
-msgstr ""
+msgstr "Défaillance de la passerelle Proxy"
 
 #: templates/ERR_ACCESS_DENIED:8 templates/ERR_AGENT_CONFIGURE:16
 #: templates/ERR_AGENT_WPAD:15 templates/ERR_CACHE_ACCESS_DENIED:8
@@ -289,7 +290,7 @@ msgstr "Générer le %T en %h (%s)"
 #: templates/ERR_INVALID_REQ:12
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
-msgstr "HTTP/1.1 <q>Expect:</ q> cette fonction a besoin du logiciel HTTP/1.0."
+msgstr "HTTP/1.1 <q>Expect:</q> cette fonction a besoin du logiciel HTTP/1.0."
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -310,15 +311,15 @@ msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
 msgstr ""
-"Si vous effectuez une requête GET, l'élément que vous essayez de télécharger "
-"est alors trop volumineux."
+"Si vous effectuez une requête avec GET, l'élément que vous essayez de "
+"télécharger est alors trop volumineux."
 
 #: templates/ERR_TOO_BIG:6
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
 msgstr ""
-"Si vous effectuez une requête POST ou PUT, l'élément que vous essayez "
+"Si vous effectuez une requête avec POST ou PUT, l'élément que vous essayez "
 "d'envoyer est alors trop volumineux."
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
@@ -335,8 +336,8 @@ msgstr "Les double espaces ne sont pas valides dans une adresse URL"
 #: templates/ERR_AGENT_CONFIGURE:14
 msgid "In the HTTP proxy box type the proxy name %h and port 3128."
 msgstr ""
-"Dans l'onglet proxy HTTP, vous devez indiquer le nom du proxy %h et le port "
-"3128"
+"Vous devez indiquer le nom du proxy %h et le port 3128 dans l'onglet proxy "
+"du HTTP"
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
@@ -383,9 +384,10 @@ msgid ""
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
-"S'il vous plait, contacter <a href=\"mailto:%w%W\">administrateur du proxy</"
-"a> si vous avez des difficultés pour vous authentifier ou pour <a href="
-"\"http://%h/cgi-bin/chpasswd.cgi\">changez</a> votre mot de passe par défaut."
+"S'il vous plait, contacter <a href=\"mailto:%w%W\">l'administrateur du "
+"proxy</a> si vous avez des difficultés pour vous authentifier ou pour <a "
+"href=\"http://%h/cgi-bin/chpasswd.cgi\">changez</a> votre mot de passe par "
+"défaut."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -394,9 +396,9 @@ msgid ""
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 msgstr ""
-"S'il vous plait, contacter <a href=\"mailto:%w%W\">administrateur du proxy</"
-"a> si vous avez des difficultés pour vous authentifier ou si vous <em>êtes</"
-"em> l'administrateur, lisez la documentation Squid sur l'interface du "
+"S'il vous plait, contacter <a href=\"mailto:%w%W\">l'administrateur du "
+"proxy</a> si vous avez des difficultés pour vous authentifier ou si vous "
+"<em>êtes</em> administrateur, lisez la documentation Squid de l'interface du "
 "gestionnaire de cache, vérifiez aussi les fichiers logs du gestionnaire "
 "cache pour analyser en détails les messages d'erreurs."
 
@@ -418,7 +420,7 @@ msgstr "La requête est trop volumineuse"
 
 #: templates/ERR_AGENT_WPAD:10
 msgid "Select Automatically detect settings"
-msgstr "Sélectionnez la détection automatique les paramètres"
+msgstr "Sélectionnez la détection automatique des paramètres"
 
 #: templates/ERR_AGENT_WPAD:13
 msgid "Select Use Automatic proxy configuration"
@@ -455,7 +457,7 @@ msgstr ""
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
-msgstr "Squid n'a reçu toutes les données pour cette requête."
+msgstr "Squid n'a pas reçu toutes les données pour cette requête."
 
 #: templates/ERR_UNSUP_REQ:6
 msgid ""
@@ -463,8 +465,8 @@ msgid ""
 "example, you can not POST a Gopher request."
 msgstr ""
 "Squid ne prend pas en charge tous les types de requêtes par rapport à tous "
-"les protocoles d'accès. Vous ne pouvez pas par exemple utiliser le protocole "
-"POST dans une requête Gopher."
+"les protocoles d'accès. Vous ne pouvez pas par exemple utiliser une requête "
+"POST avec le protocole Gopher."
 
 #: templates/ERR_LIFETIME_EXP:6
 msgid ""
@@ -498,8 +500,8 @@ msgstr "Le processeur ESI a répondu :"
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"Le serveur FTP est surchargé et ne permet pas l'accès à l'URL : <a href=\"%U"
-"\">%U</a>"
+"Le serveur FTP est surchargé et ne permet pas d'accéder à l'URL : <a href=\"%"
+"U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
@@ -534,16 +536,16 @@ msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"En essayant d'accéder à l'URL <a href=\"%U\">%U</a> l'erreur suivante a été "
-"rencontrée :"
+"L'erreur suivante s'est produite en essayant d'accéder à l'URL : <a href=\"%"
+"U\">%U</a>"
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"En essayant d'accéder à l'URN <a href=\"%U\">%U</a> l'erreur suivante a été "
-"rencontrée :"
+"l'erreur suivante s'est produite en essayant d'accéder à l'URN : <a href=\"%"
+"U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down. Please try the request again."
@@ -630,7 +632,6 @@ msgstr ""
 "configuré."
 
 #: templates/ERR_GATEWAY_FAILURE:7
-#, fuzzy
 msgid ""
 "This may be due to limits established by the Internet Service Provider who "
 "operates this cache. Please contact them directly for more information."
@@ -680,7 +681,7 @@ msgid ""
 msgstr ""
 "Cela pourrait être causé par une URL FTP qui contient un chemin absolut (ce "
 "qui n'est pas compatible avec la RFC 1738). Si tel est le cas, le fichier "
-"peut être disponible à l'adresse <a% href=\\\"%B\\\"> B </ a>."
+"peut être disponible à l'adresse <a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -792,7 +793,7 @@ msgstr ""
 #: templates/ERR_URN_RESOLVE:7 templates/ERR_WRITE_ERROR:8
 #: templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
-msgstr "Votre administrateur proxy est <a href=\"mailto:%w\">%w</a>."
+msgstr "Votre administrateur proxy est <a href=\"mailto:%w%W\">%w</a>."
 
 #: templates/ERR_INVALID_RESP:6
 msgid ""
@@ -808,7 +809,7 @@ msgstr "Votre webmaster est <a href=\"mailto:%w\">%w</a>."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr "Réponse de longueur nulle"
+msgstr "Réponse de taille zéro"
 
 #~ msgid "ERROR: The requested URN not be retrieved"
 #~ msgstr "ERREUR : L'URN demandée n'a pu être chargée"
