@@ -1,3 +1,29 @@
+Changes to squid-3.2.0.6 (04 Apr 2011):
+
+	- Regression fix: upgrade existing icons
+	- Regression fix: dont crash when accessing an SSL certificate with errors
+	- Regression fix: prevent stdio log module segfaults on rotate
+	- Regression fix: shutdown properly even if a worker process crashes on exit
+	- Regression Bug 3159: (partial fix) ICAP and --disable-auth compile problems
+	- Bug 3170: "Unsupported or unconfigured/inactive proxy-auth scheme" on shutdown
+	- Bug 3105: malformed Proxy-Authorization leaks memory
+	- Bug 3007: CONNECT to cache_peer returns 000 status code
+	- Bug 2885: Compile errors on AIX
+	- Support parameterized Cache Manager queries
+	- Support libecap v0.2.0; fixed eCAP body handling and logging
+	- Support dynamic adaptation plans that cover multiple vectoring points
+	- Support %D details for documented OpenSSL errors
+	- Support logging of all transactions including those with uncertain status or no sent response
+	- Updrate negotiate_kerberos_auth to version 3.0.4sq
+	- Update ext_kerberos_ldap_group_acl to version 1.3.0sq
+	- Update ext_edirectory_userip_acl to version 2.1
+	- Convert dns_timeout and dns_retransmit_interval directives to use millisecond resolution
+	- Change the default dns_timeout value from 2 minutes to 30 seconds
+	- Fix TCP log stream flushing on every line
+	- ... all bug fixes and updates from 3.1.12
+	- ... a great many compiler portability fixes
+	- ... many code polishings and display cleanups
+
 Changes to squid-3.2.0.5 (12 Feb 2011):
 
 	- Regression Fix: profiler should not be built by default
@@ -125,6 +151,27 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many code cleanups
 	- ... and a great many testing improvements
 	- ... and many documentation updates
+
+Changes to squid-3.1.12 (04 Apr 2011):
+
+	- Regression fix: Use bigger buffer for server reads.
+	- Regression fix: Add reply_header_replace directive for ability lost since 2.7
+	- Bug 3181: /dev/poll fails to build on Solaris with GCC 4.5.0
+	- Bug 3177: assertion failed: comm.cc:1583: "fd >= 0"
+	- Bug 3175: IPv6 PTR lookup crashes on raw-IP URLs when IPv6 disabled
+	- Bug 3173: Assertion bodyPipe!=NULL on SslBump CONNECT response writing failure
+	- Bug 3164: Total memory info display 32-bit overflows
+	- Bug 3155: Werror is hard-coded in libTrie build
+	- Bug 3151: squid_kerb_auth: use autoconf LIBS instead of FLAGS for library linkage
+	- Bug 2976: invalid URL on intercepted requests during reconfigure
+	- Bug 2720: comment in same line as cache/mem_replacement_policy causes error
+	- Bug 2621: Provide request headers to RESPMOD when using cache_peer.
+	- Bug 2330: AuthUser objects are never unlocked
+	- Prevent CONNECT request relaying to origin servers
+	- squidclient HTTP/1.1 compliance updates (Pragma and User-Agent headers)
+	- squidclient: send Cache Manager password using -w
+	- eCAP: give full Request-URI to adapters
+	- ... and several debug and error display cleanups
 
 Changes to squid-3.1.11 (08 Feb 2011):
 
