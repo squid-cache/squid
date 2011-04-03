@@ -941,7 +941,7 @@ HttpStateData::statusIfComplete() const
      * connection.
      */
     if (!flags.request_sent) {
-        debugs(11, 1, "statusIfComplete: Request not yet fully sent \"" << RequestMethodStr(orig_request->method) << " " << entry->url() << "\"" );
+        debugs(11, 2, "statusIfComplete: Request not yet fully sent \"" << RequestMethodStr(orig_request->method) << " " << entry->url() << "\"" );
         return COMPLETE_NONPERSISTENT_MSG;
     }
 
