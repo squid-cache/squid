@@ -4935,7 +4935,7 @@ delay_parameters pool aggregate network individual user
 
 	For a class 5 delay pool:
 
-delay_parameters pool tag
+delay_parameters pool tagrate
 
 	The variables here are:
 
@@ -4943,19 +4943,19 @@ delay_parameters pool tag
 				number specified in delay_pools as used in
 				delay_class lines.
 
-		aggregate	the "delay parameters" for the aggregate bucket
+		aggregate	the speed limit parameters for the aggregate bucket
 				(class 1, 2, 3).
 
-		individual	the "delay parameters" for the individual
+		individual	the speed limit parameters for the individual
 				buckets (class 2, 3).
 
-		network		the "delay parameters" for the network buckets
+		network		the speed limit parameters for the network buckets
 				(class 3).
 
-		user		the delay parameters for the user buckets
+		user		the speed limit parameters for the user buckets
 				(class 4).
 
-		tag		the delay parameters for the tag buckets
+		tagrate		the speed limit parameters for the tag buckets
 				(class 5).
 
 	A pair of delay parameters is written restore/maximum, where restore is
