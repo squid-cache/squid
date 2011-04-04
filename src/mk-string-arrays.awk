@@ -37,6 +37,13 @@ codeSkip == 1		{ next }
 	next
 }
 
+/^#/ {
+	if (codeSkip) next
+
+	Wrapper[++e] = $0
+	next
+}
+
 /^} / {
 	split($2, t, ";")			# remove ;
 	type = t[1]
@@ -50,7 +57,9 @@ codeSkip == 1		{ next }
 
 	print "\nconst char *" type "_str[] = {"
 	for ( i = 1; i < e; ++i)
-		print "\t\"" Element[i] "\","
+		if (Wrapper[i]) print Wrapper[i]
+		else print "\t\"" Element[i] "\","
+
 	print "\t\"" Element[i] "\""
 	print "};"
 	if (namespace) print "}; // namespace " namespace
