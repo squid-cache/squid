@@ -4155,10 +4155,10 @@ IFDEF: FOLLOW_X_FORWARDED_FOR&&USE_ADAPTATION
 DEFAULT: on
 LOC: Adaptation::Config::use_indirect_client
 DOC_START
-   Controls whether the indirect client address
-   (see follow_x_forwarded_for) instead of the
-   direct client address is passed to an ICAP
-   server as "X-Client-IP".
+	Controls whether the indirect client IP address (instead of the direct
+	client IP address) is passed to adaptation services.
+
+	See also: follow_x_forwarded_for adaptation_send_client_ip
 DOC_END
 
 NAME: via
@@ -6427,7 +6427,11 @@ COMMENT: on|off
 LOC: Adaptation::Config::send_client_ip
 DEFAULT: off
 DOC_START
-	This adds the header "X-Client-IP" to ICAP requests.
+	If enabled, Squid shares HTTP client IP information with adaptation
+	services. For ICAP, Squid adds the X-Client-IP header to ICAP requests.
+	For eCAP, Squid sets the libecap::metaClientIp transaction option.
+
+	See also: adaptation_uses_indirect_client
 DOC_END
 
 NAME: adaptation_send_username icap_send_client_username
