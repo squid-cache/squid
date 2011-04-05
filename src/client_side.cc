@@ -606,7 +606,11 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
     }
 #endif
 
+    // Adapted request, if any, inherits and then collects all the stats, but
+    // the virgin request gets logged instead; copy the stats to log them.
+    // TODO: avoid losses by keeping these stats in a shared history object?
     if (aLogEntry->request) {
+        aLogEntry->request->dnsWait = request->dnsWait;
         aLogEntry->request->errType = request->errType;
         aLogEntry->request->errDetail = request->errDetail;
     }
