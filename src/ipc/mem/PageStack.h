@@ -34,7 +34,7 @@ private:
     typedef unsigned int Offset; ///< stack index type
 
     struct Shared {
-        Shared(const unsigned int theCapacity);
+        Shared(const unsigned int aCapacity);
 
         // these help iterate the stack in search of a free spot or a page
         Offset next(const Offset idx) const { return (idx + 1) % theCapacity; }

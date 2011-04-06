@@ -17,10 +17,10 @@ namespace Mem {
 /// Shared memory page identifier, address, or handler
 class PageId {
 public:
-    PageId(): segment(0), number(0) {}
+    PageId(): pool(0), number(0) {}
 
-    // uint32_t pool; ///< page pool ID within Squid; unused for now
-    uint32_t segment; ///< memory segment ID within the pool
+    uint32_t pool; ///< page pool ID within Squid
+    // uint32_t segment; ///< memory segment ID within the pool; unused for now
     uint32_t number; ///< page number within the segment
 };
 

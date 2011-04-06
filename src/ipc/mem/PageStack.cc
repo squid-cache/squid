@@ -71,6 +71,7 @@ void
 Ipc::Mem::PageStack::push(const Value value)
 {
     Must(value != Writable);
+    Must(value <= shared->theCapacity);
     // find a Writable slot, starting with theFirstWritable and going right
     while (shared->theSize < shared->theCapacity) {
         const Offset idx = shared->theFirstWritable;

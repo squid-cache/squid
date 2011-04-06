@@ -25,7 +25,7 @@ void Attach();
 bool GetPage(PageId &page);
 
 /// makes identified page available as a free page to future GetPage() callers
-void PutPage(const PageId &page);
+void PutPage(PageId &page);
 
 /// converts page handler into a temporary writeable shared memory pointer
 void *PagePointer(const PageId &page);
