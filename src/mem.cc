@@ -65,11 +65,11 @@ static double xm_deltat = 0;
 static bool MemIsInitialized = false;
 
 /* string pools */
-#define mem_str_pool_count 3
+#define mem_str_pool_count 6
 
 // 4 bytes bigger than the biggest string pool size
 // which is in turn calculated from SmallestStringBeforeMemIsInitialized
-static const size_t SmallestStringBeforeMemIsInitialized = 516;
+static const size_t SmallestStringBeforeMemIsInitialized = 1024*16+4;
 
 static const struct {
     const char *name;
@@ -85,9 +85,18 @@ StrPoolsAttrs[mem_str_pool_count] = {
         "Medium Strings", MemAllocator::RoundedSize(128),
     },				/* to fit most urls */
     {
-        "Long Strings", 
+        "Long Strings", MemAllocator::RoundedSize(512),
+    },
+    {
+        "1KB Strings", MemAllocator::RoundedSize(1024),
+    },
+    {
+        "4KB Strings", MemAllocator::RoundedSize(4*1024),
+    },
+    {
+        "16KB Strings",
         MemAllocator::RoundedSize(SmallestStringBeforeMemIsInitialized-4)
-    }				/* other */
+    }
 };
 
 static struct {
