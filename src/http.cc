@@ -1966,6 +1966,13 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case HDR_PROXY_CONNECTION: // SHOULD ignore. But doing so breaks things.
         break;
 
+    case HDR_CONTENT_LENGTH:
+        // pass through unless we chunk; also, keeping this away from default
+        // prevents request smuggling via Connection: Content-Length tricks
+        if (!flags.chunked_request)
+            hdr_out->addEntry(e->clone());
+        break;
+
     case HDR_X_FORWARDED_FOR:
 
     case HDR_CACHE_CONTROL:
@@ -2088,8 +2095,8 @@ HttpStateData::sendRequest()
                                     Dialer, this, HttpStateData::sentRequestBody);
 
         Must(!flags.chunked_request);
-        // Preserve original chunked encoding unless we learned the length.
-        if (orig_request->header.chunked() && orig_request->content_length < 0)
+        // use chunked encoding if we do not know the length
+        if (orig_request->content_length < 0)
             flags.chunked_request = 1;
     } else {
         assert(!requestBodySource);
