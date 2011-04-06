@@ -452,12 +452,6 @@ unsigned char **source;
 
 #ifdef DEBUG
 
-/* We use standard I/O for debugging.  */
-#include <stdio.h>
-
-/* It is useful to test things that ``must'' be true when debugging.  */
-#include <assert.h>
-
 static int debug = 0;
 
 #define DEBUG_STATEMENT(e) e
