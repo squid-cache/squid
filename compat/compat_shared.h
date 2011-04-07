@@ -34,8 +34,7 @@ extern void (*failure_notify) (const char *);
 
 /*
  * DIRENT functionality can apparently come from many places.
- * I believe these should really be done by OS-specific compat
- * files, but for now its left here.
+ * With various complaints by different compilers
  */
 #if HAVE_DIRENT_H
 #include <dirent.h>
@@ -53,6 +52,15 @@ extern void (*failure_notify) (const char *);
 #include <ndir.h>
 #endif /* HAVE_NDIR_H */
 #endif /* HAVE_DIRENT_H */
+
+/* The structure dirent also varies between 64-bit and 32-bit environments.
+ * Define our own dirent_t type for consistent simple internal use.
+ */
+#if defined(__USE_FILE_OFFSET64)
+typedef struct dirent64 dirent_t;
+#else
+typedef struct dirent dirent_t;
+#endif
 
 
 /*
