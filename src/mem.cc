@@ -218,7 +218,7 @@ memAllocString(size_t net_size, size_t * gross_size)
     // the requested size is not poolable so that the right deallocator
     // will be used
     if (!MemIsInitialized && net_size < SmallestStringBeforeMemIsInitialized)
-    	net_size = SmallestStringBeforeMemIsInitialized;
+        net_size = SmallestStringBeforeMemIsInitialized;
 
     unsigned int i;
     for (i = 0; i < mem_str_pool_count; ++i) {
