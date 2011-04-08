@@ -42,6 +42,9 @@ uint64_t Level();
 /// approximate total number of shared memory bytes we can allocate now
 inline uint64_t Available() { return Limit() - Level(); }
 
+/// returns page size in bytes; all pages are assumed to be the same size
+size_t PageSize();
+
 } // namespace Mem
 
 } // namespace Ipc
