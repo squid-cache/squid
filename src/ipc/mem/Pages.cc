@@ -19,17 +19,10 @@
 static const String PagePoolId = "squid-page-pool";
 static Ipc::Mem::PagePool *ThePagePool = 0;
 
-// XXX: temporary function until we have a better page size handling
-static unsigned int
-calculatePageSize()
-{
-    unsigned int max_objsize = 0;
-    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-        const SwapDir *const sd = dynamic_cast<SwapDir *>(INDEXSD(i));
-        if (sd->max_objsize > max_objsize)
-            max_objsize = sd->max_objsize;
-    }
-    return max_objsize;
+// XXX: make configurable
+size_t
+Ipc::Mem::PageSize() {
+	return 16*1024;
 }
 
 void
@@ -37,7 +30,7 @@ Ipc::Mem::Init()
 {
     Must(!ThePagePool);
     // XXX: pool capacity and page size should be configurable/meaningful
-    ThePagePool = new PagePool(PagePoolId, 1024, calculatePageSize());
+    ThePagePool = new PagePool(PagePoolId, 1024, PageSize());
 }
 
 void
