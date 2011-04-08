@@ -45,7 +45,7 @@ private:
         const unsigned int theCapacity; ///< number of pages in the pool
         const unsigned int thePageSize; ///< page size
 
-        char *theBuf[]; ///< pages storage
+        char theBuf[]; ///< pages storage
     };
 
     PageStack pageIndex; ///< free pages index
