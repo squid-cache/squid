@@ -967,9 +967,9 @@ setMaxFD(void)
 {
 #if HAVE_SETRLIMIT && defined(RLIMIT_NOFILE)
 
-/* On Linux with 64-bit file support the sys/resource.h header
- * uses #define to change the function definition to require rlimit64
- */
+    /* On Linux with 64-bit file support the sys/resource.h header
+     * uses #define to change the function definition to require rlimit64
+     */
 #if defined(getrlimit)
     struct rlimit64 rl; // Assume its a 64-bit redefine anyways.
 #else
