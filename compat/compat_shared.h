@@ -57,9 +57,9 @@ extern void (*failure_notify) (const char *);
  * Define our own dirent_t type for consistent simple internal use.
  */
 #if defined(__USE_FILE_OFFSET64)
-typedef struct dirent64 dirent_t;
+#define dirent_t struct dirent64
 #else
-typedef struct dirent dirent_t;
+#define dirent_t struct dirent
 #endif
 
 
