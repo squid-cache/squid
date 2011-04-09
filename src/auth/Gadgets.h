@@ -86,7 +86,7 @@ class StoreEntry;
 typedef void AUTHSSTATS(StoreEntry *);
 
 /// \ingroup AuthAPI
-extern void authenticateInit(Auth::authConfig *);
+extern void authenticateInit(Auth::ConfigVector *);
 
 /** \ingroup AuthAPI
  * Remove all idle authentication state. Intended for use by reconfigure.

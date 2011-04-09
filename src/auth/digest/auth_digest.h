@@ -26,7 +26,7 @@ class DigestUser : public AuthUser
 public:
     MEMPROXY_CLASS(DigestUser);
 
-    DigestUser(AuthConfig *);
+    DigestUser(Auth::Config *);
     ~DigestUser();
     int authenticated() const;
 
@@ -78,7 +78,7 @@ extern void authenticateDigestNonceShutdown(void);
 
 /* configuration runtime data */
 
-class AuthDigestConfig : public AuthConfig
+class AuthDigestConfig : public Auth::Config
 {
 
 public:
@@ -88,12 +88,14 @@ public:
     virtual AuthUserRequest::Pointer decode(char const *proxy_auth);
     virtual void done();
     virtual void rotateHelpers();
-    virtual void dump(StoreEntry *, const char *, AuthConfig *);
+    virtual void dump(StoreEntry *, const char *, Auth::Config *);
     virtual void fixHeader(AuthUserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *);
-    virtual void init(AuthConfig *);
-    virtual void parse(AuthConfig *, int, char *);
+    virtual void init(Auth::Config *);
+    virtual void parse(Auth::Config *, int, char *);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
+
+public:
     char *digestAuthRealm;
     time_t nonceGCInterval;
     time_t noncemaxduration;

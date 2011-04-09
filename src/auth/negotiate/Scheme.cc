@@ -62,9 +62,9 @@ Auth::Negotiate::Scheme::shutdownCleanup()
     debugs(29, DBG_CRITICAL, "Shutdown: Negotiate authentication.");
 }
 
-AuthConfig *
+Auth::Config *
 Auth::Negotiate::Scheme::createConfig()
 {
     AuthNegotiateConfig *negotiateCfg = new AuthNegotiateConfig;
-    return dynamic_cast<AuthConfig*>(negotiateCfg);
+    return dynamic_cast<Auth::Config*>(negotiateCfg);
 }

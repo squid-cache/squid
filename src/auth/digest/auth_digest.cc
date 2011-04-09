@@ -225,7 +225,7 @@ authenticateDigestNonceSetup(void)
     if (!digest_nonce_cache) {
         digest_nonce_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
         assert(digest_nonce_cache);
-        eventAdd("Digest none cache maintenance", authenticateDigestNonceCacheCleanup, NULL, static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->nonceGCInterval, 1);
+        eventAdd("Digest none cache maintenance", authenticateDigestNonceCacheCleanup, NULL, static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->nonceGCInterval, 1);
     }
 }
 
@@ -288,8 +288,8 @@ authenticateDigestNonceCacheCleanup(void *data)
 
     debugs(29, 3, "authenticateDigestNonceCacheCleanup: Finished cleaning the nonce cache.");
 
-    if (static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->active())
-        eventAdd("Digest none cache maintenance", authenticateDigestNonceCacheCleanup, NULL, static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->nonceGCInterval, 1);
+    if (static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->active())
+        eventAdd("Digest none cache maintenance", authenticateDigestNonceCacheCleanup, NULL, static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->nonceGCInterval, 1);
 }
 
 static void
@@ -376,12 +376,12 @@ authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
     }
 
     /* is the nonce-count ok ? */
-    if (!static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->CheckNonceCount) {
+    if (!static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->CheckNonceCount) {
         nonce->nc++;
         return -1;              /* forced OK by configuration */
     }
 
-    if ((static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->NonceStrictness && intnc != nonce->nc + 1) ||
+    if ((static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->NonceStrictness && intnc != nonce->nc + 1) ||
             intnc < nonce->nc + 1) {
         debugs(29, 4, "authDigestNonceIsValid: Nonce count doesn't match");
         nonce->flags.valid = 0;
@@ -406,10 +406,10 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
         return -1;
 
     /* has it's max duration expired? */
-    if (nonce->noncedata.creationtime + static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->noncemaxduration < current_time.tv_sec) {
+    if (nonce->noncedata.creationtime + static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->noncemaxduration < current_time.tv_sec) {
         debugs(29, 4, "authDigestNonceIsStale: Nonce is too old. " <<
                nonce->noncedata.creationtime << " " <<
-               static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->noncemaxduration << " " <<
+               static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->noncemaxduration << " " <<
                current_time.tv_sec);
 
         nonce->flags.valid = 0;
@@ -422,7 +422,7 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
         return -1;
     }
 
-    if (nonce->nc > static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->noncemaxuses) {
+    if (nonce->nc > static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->noncemaxuses) {
         debugs(29, 4, "authDigestNoncelastRequest: Nonce count over user limit");
         nonce->flags.valid = 0;
         return -1;
@@ -447,7 +447,7 @@ authDigestNonceLastRequest(digest_nonce_h * nonce)
         return -1;
     }
 
-    if (nonce->nc >= static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->noncemaxuses - 1) {
+    if (nonce->nc >= static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->noncemaxuses - 1) {
         debugs(29, 4, "authDigestNoncelastRequest: Nonce count about to hit user limit");
         return -1;
     }
@@ -504,7 +504,7 @@ AuthDigestConfig::rotateHelpers()
 }
 
 void
-AuthDigestConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
+AuthDigestConfig::dump(StoreEntry * entry, const char *name, Auth::Config * scheme)
 {
     wordlist *list = authenticateProgram;
     debugs(29, 9, "authDigestCfgDump: Dumping configuration");
@@ -602,7 +602,7 @@ DigestUser::ttl() const
     if (latest_nonce == -1)
         return min(-1, global_ttl);
 
-    int32_t nonce_ttl = latest_nonce - current_time.tv_sec + static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->noncemaxduration;
+    int32_t nonce_ttl = latest_nonce - current_time.tv_sec + static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->noncemaxduration;
 
     return min(nonce_ttl, global_ttl);
 }
@@ -610,7 +610,7 @@ DigestUser::ttl() const
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
 void
-AuthDigestConfig::init(AuthConfig * scheme)
+AuthDigestConfig::init(Auth::Config * scheme)
 {
     if (authenticateProgram) {
         DigestFieldsInfo = httpHeaderBuildFieldsInfo(DigestAttrs, DIGEST_ENUM_END);
@@ -682,7 +682,7 @@ AuthDigestConfig::AuthDigestConfig()
 }
 
 void
-AuthDigestConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
+AuthDigestConfig::parse(Auth::Config * scheme, int n_configured, char *param_str)
 {
     if (strcasecmp(param_str, "program") == 0) {
         if (authenticateProgram)
@@ -810,7 +810,7 @@ authDigestLogUsername(char *username, AuthUserRequest::Pointer auth_user_request
 
     /* log the username */
     debugs(29, 9, "authDigestLogUsername: Creating new user for logging '" << username << "'");
-    AuthUser::Pointer digest_user = new DigestUser(static_cast<AuthDigestConfig*>(AuthConfig::Find("digest")));
+    AuthUser::Pointer digest_user = new DigestUser(static_cast<AuthDigestConfig*>(Auth::Config::Find("digest")));
     /* save the credentials */
     digest_user->username(username);
     /* set the auth_user type */
@@ -1110,5 +1110,5 @@ AuthDigestConfig::decode(char const *proxy_auth)
     return digest_request;
 }
 
-DigestUser::DigestUser(AuthConfig *aConfig) : AuthUser(aConfig), HA1created (0)
+DigestUser::DigestUser(Auth::Config *aConfig) : AuthUser(aConfig), HA1created (0)
 {}

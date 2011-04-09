@@ -36,21 +36,22 @@
 #include "auth/Config.h"
 #include "auth/UserRequest.h"
 
-Auth::authConfig Auth::TheConfig;
+Auth::ConfigVector Auth::TheConfig;
 
 /**
- * Get Auth User: Return a filled out auth_user structure for the given
- * Proxy Auth (or Auth) header. It may be a cached Auth User or a new
- * Unauthenticated structure. The structure is given an initial lock here.
+ * Get an User credentials object filled out for the given Proxy- or WWW-Authenticate header.
+ * Any decoding which needs to be done will be done.
+ *
+ * It may be a cached AuthUser or a new Unauthenticated object.
  * It may also be NULL reflecting that no user could be created.
  */
 AuthUserRequest::Pointer
-AuthConfig::CreateAuthUser(const char *proxy_auth)
+Auth::Config::CreateAuthUser(const char *proxy_auth)
 {
     assert(proxy_auth != NULL);
-    debugs(29, 9, "AuthConfig::CreateAuthUser: header = '" << proxy_auth << "'");
+    debugs(29, 9, HERE << "header = '" << proxy_auth << "'");
 
-    AuthConfig *config = Find(proxy_auth);
+    Auth::Config *config = Find(proxy_auth);
 
     if (config == NULL || !config->active()) {
         debugs(29, (shutting_down?3:DBG_IMPORTANT), (shutting_down?"":"WARNING: ") <<
@@ -61,17 +62,17 @@ AuthConfig::CreateAuthUser(const char *proxy_auth)
     return config->decode(proxy_auth);
 }
 
-AuthConfig *
-AuthConfig::Find(const char *proxy_auth)
+Auth::Config *
+Auth::Config::Find(const char *proxy_auth)
 {
-    for (Auth::authConfig::iterator  i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
+    for (Auth::ConfigVector::iterator  i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
         if (strncasecmp(proxy_auth, (*i)->type(), strlen((*i)->type())) == 0)
             return *i;
 
     return NULL;
 }
 
-/* Default behaviour is to expose nothing */
+/** Default behaviour is to expose nothing */
 void
-AuthConfig::registerWithCacheManager(void)
+Auth::Config::registerWithCacheManager(void)
 {}

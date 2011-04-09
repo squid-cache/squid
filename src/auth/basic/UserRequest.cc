@@ -26,7 +26,7 @@ AuthBasicUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, 
         return;
 
     /* are we about to recheck the credentials externally? */
-    if ((user()->expiretime + static_cast<AuthBasicConfig*>(AuthConfig::Find("basic"))->credentialsTTL) <= squid_curtime) {
+    if ((user()->expiretime + static_cast<AuthBasicConfig*>(Auth::Config::Find("basic"))->credentialsTTL) <= squid_curtime) {
         debugs(29, 4, HERE << "credentials expired - rechecking");
         return;
     }
@@ -55,7 +55,7 @@ AuthBasicUserRequest::module_direction()
         return -1;
 
     case AuthUser::Ok:
-        if (user()->expiretime + static_cast<AuthBasicConfig*>(AuthConfig::Find("basic"))->credentialsTTL <= squid_curtime)
+        if (user()->expiretime + static_cast<AuthBasicConfig*>(Auth::Config::Find("basic"))->credentialsTTL <= squid_curtime)
             return -1;
         return 0;
 
@@ -76,7 +76,7 @@ AuthBasicUserRequest::module_start(RH * handler, void *data)
     assert(basic_auth != NULL);
     debugs(29, 9, HERE << "'" << basic_auth->username() << ":" << basic_auth->passwd << "'");
 
-    if (static_cast<AuthBasicConfig*>(AuthConfig::Find("basic"))->authenticateProgram == NULL) {
+    if (static_cast<AuthBasicConfig*>(Auth::Config::Find("basic"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: No Basic authentication program configured.");
         handler(data, NULL);
         return;

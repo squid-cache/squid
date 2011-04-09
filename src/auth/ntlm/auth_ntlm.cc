@@ -99,7 +99,7 @@ AuthNTLMConfig::done()
 }
 
 void
-AuthNTLMConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
+AuthNTLMConfig::dump(StoreEntry * entry, const char *name, Auth::Config * scheme)
 {
     wordlist *list = authenticateProgram;
     storeAppendPrintf(entry, "%s %s", name, "ntlm");
@@ -119,7 +119,7 @@ AuthNTLMConfig::AuthNTLMConfig() : keep_alive(1)
 { }
 
 void
-AuthNTLMConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
+AuthNTLMConfig::parse(Auth::Config * scheme, int n_configured, char *param_str)
 {
     if (strcasecmp(param_str, "program") == 0) {
         if (authenticateProgram)
@@ -146,7 +146,7 @@ AuthNTLMConfig::type() const
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
 void
-AuthNTLMConfig::init(AuthConfig * scheme)
+AuthNTLMConfig::init(Auth::Config * scheme)
 {
     if (authenticateProgram) {
 
@@ -282,7 +282,7 @@ authenticateNTLMStats(StoreEntry * sentry)
 AuthUserRequest::Pointer
 AuthNTLMConfig::decode(char const *proxy_auth)
 {
-    NTLMUser *newUser = new NTLMUser(AuthConfig::Find("ntlm"));
+    NTLMUser *newUser = new NTLMUser(Auth::Config::Find("ntlm"));
     AuthUserRequest::Pointer auth_user_request = new AuthNTLMUserRequest();
     assert(auth_user_request->user() == NULL);
 
@@ -294,7 +294,7 @@ AuthNTLMConfig::decode(char const *proxy_auth)
     return auth_user_request;
 }
 
-NTLMUser::NTLMUser (AuthConfig *aConfig) : AuthUser (aConfig)
+NTLMUser::NTLMUser(Auth::Config *aConfig) : AuthUser(aConfig)
 {
     proxy_auth_list.head = proxy_auth_list.tail = NULL;
 }

@@ -110,7 +110,7 @@ AuthNegotiateConfig::done()
 }
 
 void
-AuthNegotiateConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
+AuthNegotiateConfig::dump(StoreEntry * entry, const char *name, Auth::Config * scheme)
 {
     wordlist *list = authenticateProgram;
     storeAppendPrintf(entry, "%s %s", name, "negotiate");
@@ -130,7 +130,7 @@ AuthNegotiateConfig::AuthNegotiateConfig() : keep_alive(1)
 { }
 
 void
-AuthNegotiateConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
+AuthNegotiateConfig::parse(Auth::Config * scheme, int n_configured, char *param_str)
 {
     if (strcasecmp(param_str, "program") == 0) {
         if (authenticateProgram)
@@ -159,7 +159,7 @@ AuthNegotiateConfig::type() const
  * Called AFTER parsing the config file
  */
 void
-AuthNegotiateConfig::init(AuthConfig * scheme)
+AuthNegotiateConfig::init(Auth::Config * scheme)
 {
     if (authenticateProgram) {
 
@@ -319,7 +319,7 @@ AuthNegotiateConfig::decode(char const *proxy_auth)
     return auth_user_request;
 }
 
-NegotiateUser::NegotiateUser(AuthConfig *aConfig) : AuthUser (aConfig)
+NegotiateUser::NegotiateUser(Auth::Config *aConfig) : AuthUser(aConfig)
 {
     proxy_auth_list.head = proxy_auth_list.tail = NULL;
 }

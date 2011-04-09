@@ -51,12 +51,6 @@ typedef struct {
 /// \deprecated Use AuthUserHashPointer instead.
 typedef struct AuthUserHashPointer auth_user_hash_pointer;
 
-/* temporary: once Config is fully hidden, this shouldn't be needed */
-#include "Array.h"
-
-class AuthConfig;
-typedef Vector<AuthConfig *> authConfig;
-
 struct http_port_list;
 struct https_port_list;
 
