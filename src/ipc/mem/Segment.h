@@ -27,6 +27,8 @@ public:
     const String &name() { return theName; } ///< shared memory segment name
     int size() { return theSize; } ///< shared memory segment size
     void *mem() { return theMem; } ///< pointer to mmapped shared memory segment
+    void *reserve(size_t chunkSize); ///< reserve and return the next chunk
+    // TODO: convert most mem() calls to reserve()
 
 private:
     void attach();
@@ -36,8 +38,9 @@ private:
 
     const String theName; ///< shared memory segment file name
     int theFD; ///< shared memory segment file descriptor
-    int theSize; ///< shared memory segment size
     void *theMem; ///< pointer to mmapped shared memory segment
+    size_t theSize; ///< shared memory segment size
+    size_t theReserved; ///< the total number of reserve()d bytes
 };
 
 } // namespace Mem
