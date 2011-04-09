@@ -45,22 +45,24 @@ Rock::SwapDir::get(const cache_key *key)
         return NULL;
 
     sfileno fileno;
-    const StoreEntryBasics *const basics = map->openForReading(key, fileno);
-    if (!basics)
+    const Ipc::StoreMapSlot *const slot = map->openForReading(key, fileno);
+    if (!slot)
         return NULL;
+
+    const Ipc::StoreMapSlot::Basics &basics = slot->basics;
 
     // create a brand new store entry and initialize it with stored basics
     StoreEntry *e = new StoreEntry();
     e->lock_count = 0;
     e->swap_dirn = index;
     e->swap_filen = fileno;
-    e->swap_file_sz = basics->swap_file_sz;
-    e->lastref = basics->lastref;
-    e->timestamp = basics->timestamp;
-    e->expires = basics->expires;
-    e->lastmod = basics->lastmod;
-    e->refcount = basics->refcount;
-    e->flags = basics->flags;
+    e->swap_file_sz = basics.swap_file_sz;
+    e->lastref = basics.lastref;
+    e->timestamp = basics.timestamp;
+    e->expires = basics.expires;
+    e->lastmod = basics.lastmod;
+    e->refcount = basics.refcount;
+    e->flags = basics.flags;
     e->store_status = STORE_OK;
     e->setMemStatus(NOT_IN_MEMORY);
     e->swap_status = SWAPOUT_DONE;
@@ -302,10 +304,16 @@ Rock::SwapDir::addEntry(const int fileno, const DbCellHeader &header, const Stor
        ", fileno="<< std::setfill('0') << std::hex << std::uppercase <<
        std::setw(8) << fileno);
 
-    if (map->putAt(header, from, fileno)) {
-        // we do not add this entry to store_table so core will not updateSize
-        updateSize(from.swap_file_sz, +1);
-        return true;
+    sfileno newLocation = 0;
+    if (Ipc::StoreMapSlot *slot = map->openForWriting(reinterpret_cast<const cache_key *>(from.key), newLocation)) {
+        if (fileno == newLocation) {
+            slot->set(from);
+            map->header(fileno) = header;
+            // core will not updateSize: we do not add the entry to store_table
+            updateSize(from.swap_file_sz, +1);
+        } // else some other, newer entry got into our cell
+        map->closeForWriting(newLocation, false);
+        return fileno == newLocation;
     }
 
     return false;
@@ -350,14 +358,15 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
     assert(payloadEnd <= max_objsize);
 
     sfileno fileno;
-    StoreEntryBasics *const basics =
+    Ipc::StoreMapSlot *const slot =
         map->openForWriting(reinterpret_cast<const cache_key *>(e.key), fileno);
-    if (!basics) {
+    if (!slot) {
         debugs(47, 5, HERE << "Rock::SwapDir::createStoreIO: map->add failed");
         return NULL;
     }
     e.swap_file_sz = header.payloadSize; // and will be copied to the map
-    basics->set(header, e);
+    slot->set(e);
+    map->header(fileno) = header;
 
     // XXX: We rely on our caller, storeSwapOutStart(), to set e.fileno.
     // If that does not happen, the entry will not decrement the read level!
@@ -412,23 +421,23 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
     // The are two ways an entry can get swap_filen: our get() locked it for
     // reading or our storeSwapOutStart() locked it for writing. Peeking at our
     // locked entry is safe, but no support for reading a filling entry.
-    const StoreEntryBasics *basics = map->peekAtReader(e.swap_filen);
-    if (!basics)
+    const Ipc::StoreMapSlot *slot = map->peekAtReader(e.swap_filen);
+    if (!slot)
         return NULL; // we were writing afterall
 
     IoState *sio = new IoState(this, &e, cbFile, cbIo, data);
 
     sio->swap_dirn = index;
     sio->swap_filen = e.swap_filen;
-    sio->payloadEnd = sizeof(DbCellHeader) + basics->header.payloadSize;
+    sio->payloadEnd = sizeof(DbCellHeader) + map->header(e.swap_filen).payloadSize;
     assert(sio->payloadEnd <= max_objsize); // the payload fits the slot
 
     debugs(47,5, HERE << "dir " << index << " has old fileno: " <<
         std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
         sio->swap_filen);
 
-    assert(basics->swap_file_sz > 0);
-    assert(basics->swap_file_sz == e.swap_file_sz);
+    assert(slot->basics.swap_file_sz > 0);
+    assert(slot->basics.swap_file_sz == e.swap_file_sz);
 
     sio->diskOffset = diskOffset(sio->swap_filen);
     assert(sio->diskOffset + sio->payloadEnd <= diskOffsetLimit());
@@ -499,7 +508,7 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
 
     if (errflag == DISK_OK) {
         // close, assuming we only write once; the entry gets the read lock
-        map->closeForWriting(sio.swap_filen);
+        map->closeForWriting(sio.swap_filen, true);
         // do not increment sio.offset_ because we do it in sio->write()
     } else {
         // Do not abortWriting here. The entry should keep the write lock
@@ -650,7 +659,7 @@ Rock::SwapDir::statfs(StoreEntry &e) const
                 entryCount, (100.0 * entryCount / limit));
 
             if (limit < 100) { // XXX: otherwise too expensive to count
-                MapStats stats;
+                Ipc::ReadWriteLockStats stats;
                 map->updateStats(stats);
                 stats.dump(e);
             }
