@@ -56,7 +56,7 @@ time_t AuthUser::last_discard = 0;
 const char *CredentialsState_str[] = { "Unchecked", "Ok", "Pending", "Handshake", "Failed" };
 
 
-AuthUser::AuthUser(AuthConfig *aConfig) :
+AuthUser::AuthUser(Auth::Config *aConfig) :
         auth_type(Auth::AUTH_UNKNOWN),
         config(aConfig),
         ipcount(0),

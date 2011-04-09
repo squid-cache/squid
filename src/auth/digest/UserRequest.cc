@@ -102,7 +102,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
             return;
         }
 
-        if (static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->PostWorkaround && request->method != METHOD_GET) {
+        if (static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->PostWorkaround && request->method != METHOD_GET) {
             /* Ugly workaround for certain very broken browsers using the
              * wrong method to calculate the request-digest on POST request.
              * This should be deleted once Digest authentication becomes more
@@ -209,7 +209,7 @@ AuthDigestUserRequest::addHeader(HttpReply * rep, int accel)
         return;
 #endif
 
-    if ((static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->authenticateProgram) && authDigestNonceLastRequest(nonce)) {
+    if ((static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->authenticateProgram) && authDigestNonceLastRequest(nonce)) {
         flags.authinfo_sent = 1;
         debugs(29, 9, "authDigestAddHead: Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceb64(nonce) << "\"");
         httpHeaderPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceb64(nonce));
@@ -254,7 +254,7 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     assert(user() != NULL && user()->auth_type == Auth::AUTH_DIGEST);
     debugs(29, 9, "authenticateStart: '\"" << user()->username() << "\":\"" << realm << "\"'");
 
-    if (static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->authenticateProgram == NULL) {
+    if (static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: No Digest authentication program configured.");
         handler(data, NULL);
         return;
@@ -264,7 +264,7 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     r->handler = handler;
     r->data = cbdataReference(data);
     r->auth_user_request = static_cast<AuthUserRequest*>(this);
-    if (static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->utf8) {
+    if (static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->utf8) {
         char userstr[1024];
         latin1_to_utf8(userstr, sizeof(userstr), user()->username());
         snprintf(buf, 8192, "\"%s\":\"%s\"\n", userstr, realm);

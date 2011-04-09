@@ -41,9 +41,13 @@
 #include "ip/Address.h"
 #include "RefCount.h"
 
-class AuthConfig;
 class AuthUserHashPointer;
 class StoreEntry;
+
+namespace Auth
+{
+class Config;
+}
 
 /**
  *  \ingroup AuthAPI
@@ -65,7 +69,7 @@ public:
     /** \deprecated this determines what scheme owns the user data. */
     Auth::Type auth_type;
     /** the config for this user */
-    AuthConfig *config;
+    Auth::Config *config;
     /** we may have many proxy-authenticate strings that decode to the same user */
     dlink_list proxy_auth_list;
     dlink_list proxy_match_cache;
@@ -110,7 +114,7 @@ private:
     CredentialsState credentials_state;
 
 protected:
-    AuthUser(AuthConfig *);
+    AuthUser(Auth::Config *);
 
 private:
     /**

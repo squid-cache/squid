@@ -219,7 +219,7 @@ authenticateBasicHandleReply(void *data, char *reply)
 }
 
 void
-AuthBasicConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
+AuthBasicConfig::dump(StoreEntry * entry, const char *name, Auth::Config * scheme)
 {
     wordlist *list = authenticateProgram;
     storeAppendPrintf(entry, "%s %s", name, "basic");
@@ -251,7 +251,7 @@ AuthBasicConfig::~AuthBasicConfig()
 }
 
 void
-AuthBasicConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
+AuthBasicConfig::parse(Auth::Config * scheme, int n_configured, char *param_str)
 {
     if (strcasecmp(param_str, "program") == 0) {
         if (authenticateProgram)
@@ -300,7 +300,7 @@ authBasicAuthUserFindUsername(const char *username)
     return NULL;
 }
 
-BasicUser::BasicUser(AuthConfig *aConfig) :
+BasicUser::BasicUser(Auth::Config *aConfig) :
         AuthUser(aConfig),
         passwd(NULL),
         auth_queue(NULL),
@@ -466,7 +466,7 @@ AuthBasicConfig::decode(char const *proxy_auth)
 /** Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
 void
-AuthBasicConfig::init(AuthConfig * schemeCfg)
+AuthBasicConfig::init(Auth::Config * schemeCfg)
 {
     if (authenticateProgram) {
         authbasic_initialised = 1;

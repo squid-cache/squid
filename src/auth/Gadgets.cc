@@ -56,7 +56,7 @@ authenticateActiveSchemeCount(void)
 {
     int rv = 0;
 
-    for (Auth::authConfig::iterator i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
+    for (Auth::ConfigVector::iterator i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
         if ((*i)->configured())
             ++rv;
 
@@ -76,16 +76,16 @@ authenticateSchemeCount(void)
 }
 
 static void
-authenticateRegisterWithCacheManager(Auth::authConfig * config)
+authenticateRegisterWithCacheManager(Auth::ConfigVector * config)
 {
-    for (Auth::authConfig::iterator i = config->begin(); i != config->end(); ++i) {
-        AuthConfig *scheme = *i;
+    for (Auth::ConfigVector::iterator i = config->begin(); i != config->end(); ++i) {
+        Auth::Config *scheme = *i;
         scheme->registerWithCacheManager();
     }
 }
 
 void
-authenticateInit(Auth::authConfig * config)
+authenticateInit(Auth::ConfigVector * config)
 {
     /* Do this first to clear memory and remove dead state on a reconfigure */
     if (proxy_auth_username_cache)
@@ -95,8 +95,8 @@ authenticateInit(Auth::authConfig * config)
     if (!config)
         return;
 
-    for (Auth::authConfig::iterator i = config->begin(); i != config->end(); ++i) {
-        AuthConfig *schemeCfg = *i;
+    for (Auth::ConfigVector::iterator i = config->begin(); i != config->end(); ++i) {
+        Auth::Config *schemeCfg = *i;
 
         if (schemeCfg->configured())
             schemeCfg->init(schemeCfg);
@@ -111,7 +111,7 @@ authenticateInit(Auth::authConfig * config)
 void
 authenticateRotate(void)
 {
-    for (Auth::authConfig::iterator i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
+    for (Auth::ConfigVector::iterator i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
         if ((*i)->configured())
             (*i)->rotateHelpers();
 }
