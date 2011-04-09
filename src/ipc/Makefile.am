@@ -14,8 +14,12 @@ libipc_la_SOURCES = \
 	Messages.h \
 	Queue.cc \
 	Queue.h \
+	ReadWriteLock.cc \
+	ReadWriteLock.h \
 	StartListening.cc \
 	StartListening.h \
+	StoreMap.cc \
+	StoreMap.h \
 	StrandCoord.cc \
 	StrandCoord.h \
 	StrandCoords.h \
