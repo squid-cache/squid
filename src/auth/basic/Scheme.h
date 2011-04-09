@@ -54,7 +54,7 @@ public:
     /* per scheme */
     virtual char const *type() const;
     virtual void shutdownCleanup();
-    virtual AuthConfig *createConfig();
+    virtual Auth::Config *createConfig();
     /* Not implemented */
     Scheme(Scheme const &);
     Scheme &operator=(Scheme const &);

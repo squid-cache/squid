@@ -27,7 +27,7 @@ class NegotiateUser : public AuthUser
 
 public:
     MEMPROXY_CLASS(NegotiateUser);
-    NegotiateUser(AuthConfig *);
+    NegotiateUser(Auth::Config *);
     ~NegotiateUser();
     virtual int32_t ttl() const;
 
@@ -41,7 +41,7 @@ extern statefulhelper *negotiateauthenticators;
 /* configuration runtime data */
 
 /// \ingroup AuthNegotiateAPI
-class AuthNegotiateConfig : public AuthConfig
+class AuthNegotiateConfig : public Auth::Config
 {
 
 public:
@@ -51,10 +51,10 @@ public:
     virtual AuthUserRequest::Pointer decode(char const *proxy_auth);
     virtual void done();
     virtual void rotateHelpers();
-    virtual void dump(StoreEntry *, const char *, AuthConfig *);
+    virtual void dump(StoreEntry *, const char *, Auth::Config *);
     virtual void fixHeader(AuthUserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *);
-    virtual void init(AuthConfig *);
-    virtual void parse(AuthConfig *, int, char *);
+    virtual void init(Auth::Config *);
+    virtual void parse(Auth::Config *, int, char *);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
     int keep_alive;

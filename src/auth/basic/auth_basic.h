@@ -31,7 +31,7 @@ class BasicUser : public AuthUser
 public:
     MEMPROXY_CLASS(BasicUser);
 
-    BasicUser(AuthConfig *);
+    BasicUser(Auth::Config *);
     ~BasicUser();
     bool authenticated() const;
     void queueRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data);
@@ -55,7 +55,7 @@ MEMPROXY_CLASS_INLINE(BasicUser);
 
 /* configuration runtime data */
 
-class AuthBasicConfig : public AuthConfig
+class AuthBasicConfig : public Auth::Config
 {
 
 public:
@@ -66,10 +66,10 @@ public:
     virtual AuthUserRequest::Pointer decode(char const *proxy_auth);
     virtual void done();
     virtual void rotateHelpers();
-    virtual void dump(StoreEntry *, const char *, AuthConfig *);
+    virtual void dump(StoreEntry *, const char *, Auth::Config *);
     virtual void fixHeader(AuthUserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *);
-    virtual void init(AuthConfig *);
-    virtual void parse(AuthConfig *, int, char *);
+    virtual void init(Auth::Config *);
+    virtual void parse(Auth::Config *, int, char *);
     void decode(char const *httpAuthHeader, AuthUserRequest::Pointer);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
