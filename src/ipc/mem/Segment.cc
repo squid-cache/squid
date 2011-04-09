@@ -17,7 +17,8 @@
 #include <unistd.h>
 
 Ipc::Mem::Segment::Segment(const char *const id):
-    theName(GenerateName(id)), theFD(-1), theSize(-1), theMem(NULL)
+    theName(GenerateName(id)), theFD(-1), theMem(NULL),
+    theSize(0), theReserved(0)
 {
 }
 
@@ -48,6 +49,7 @@ Ipc::Mem::Segment::create(const int aSize)
     }
 
     theSize = aSize;
+    theReserved = 0;
 
     attach();
 }
@@ -86,7 +88,6 @@ void
 Ipc::Mem::Segment::attach()
 {
     assert(theFD >= 0);
-    assert(theSize >= 0);
     assert(!theMem);
 
     void *const p =
@@ -110,6 +111,15 @@ Ipc::Mem::Segment::detach()
         fatal("Ipc::Mem::Segment::detach failed to munmap");
     }
     theMem = 0;
+}
+
+void *
+Ipc::Mem::Segment::reserve(size_t chunkSize)
+{
+    assert(chunkSize <= theSize);
+    assert(theReserved <= theSize - chunkSize);
+    theReserved += chunkSize;
+    return reinterpret_cast<char*>(mem()) + theReserved;
 }
 
 /// Generate name for shared memory segment. Replaces all slashes with dots.
