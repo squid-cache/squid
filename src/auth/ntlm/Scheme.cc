@@ -66,6 +66,6 @@ Auth::Ntlm::Scheme::shutdownCleanup()
 Auth::Config *
 Auth::Ntlm::Scheme::createConfig()
 {
-    auth_ntlm_config *ntlmCfg = new auth_ntlm_config;
+    Auth::Ntlm::Config *ntlmCfg = new Auth::Ntlm::Config;
     return dynamic_cast<Auth::Config*>(ntlmCfg);
 }

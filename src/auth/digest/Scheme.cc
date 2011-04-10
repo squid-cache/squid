@@ -68,7 +68,7 @@ Auth::Digest::Scheme::shutdownCleanup()
 Auth::Config *
 Auth::Digest::Scheme::createConfig()
 {
-    AuthDigestConfig *digestCfg = new AuthDigestConfig;
+    Auth::Digest::Config *digestCfg = new Auth::Digest::Config;
     return dynamic_cast<Auth::Config*>(digestCfg);
 }
 
