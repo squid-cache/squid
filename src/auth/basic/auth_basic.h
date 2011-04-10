@@ -53,14 +53,15 @@ private:
 
 MEMPROXY_CLASS_INLINE(BasicUser);
 
-/* configuration runtime data */
+namespace Auth {
+namespace Basic {
 
-class AuthBasicConfig : public Auth::Config
+/** Basic authentication configuration data */
+class Config : public Auth::Config
 {
-
 public:
-    AuthBasicConfig();
-    ~AuthBasicConfig();
+    Config();
+    ~Config();
     virtual bool active() const;
     virtual bool configured() const;
     virtual AuthUserRequest::Pointer decode(char const *proxy_auth);
@@ -73,6 +74,8 @@ public:
     void decode(char const *httpAuthHeader, AuthUserRequest::Pointer);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
+
+public:
     char *basicAuthRealm;
     time_t credentialsTTL;
     int casesensitive;
@@ -81,5 +84,8 @@ public:
 private:
     char * decodeCleartext(const char *httpAuthHeader);
 };
+
+} // namespace Basic
+} // namespace Auth
 
 #endif /* __AUTH_BASIC_H__ */

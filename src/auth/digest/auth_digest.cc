@@ -225,7 +225,7 @@ authenticateDigestNonceSetup(void)
     if (!digest_nonce_cache) {
         digest_nonce_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
         assert(digest_nonce_cache);
-        eventAdd("Digest none cache maintenance", authenticateDigestNonceCacheCleanup, NULL, static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->nonceGCInterval, 1);
+        eventAdd("Digest none cache maintenance", authenticateDigestNonceCacheCleanup, NULL, static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->nonceGCInterval, 1);
     }
 }
 
@@ -288,8 +288,8 @@ authenticateDigestNonceCacheCleanup(void *data)
 
     debugs(29, 3, "authenticateDigestNonceCacheCleanup: Finished cleaning the nonce cache.");
 
-    if (static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->active())
-        eventAdd("Digest none cache maintenance", authenticateDigestNonceCacheCleanup, NULL, static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->nonceGCInterval, 1);
+    if (static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->active())
+        eventAdd("Digest none cache maintenance", authenticateDigestNonceCacheCleanup, NULL, static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->nonceGCInterval, 1);
 }
 
 static void
@@ -376,12 +376,12 @@ authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
     }
 
     /* is the nonce-count ok ? */
-    if (!static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->CheckNonceCount) {
+    if (!static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->CheckNonceCount) {
         nonce->nc++;
         return -1;              /* forced OK by configuration */
     }
 
-    if ((static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->NonceStrictness && intnc != nonce->nc + 1) ||
+    if ((static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->NonceStrictness && intnc != nonce->nc + 1) ||
             intnc < nonce->nc + 1) {
         debugs(29, 4, "authDigestNonceIsValid: Nonce count doesn't match");
         nonce->flags.valid = 0;
@@ -406,10 +406,10 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
         return -1;
 
     /* has it's max duration expired? */
-    if (nonce->noncedata.creationtime + static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->noncemaxduration < current_time.tv_sec) {
+    if (nonce->noncedata.creationtime + static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->noncemaxduration < current_time.tv_sec) {
         debugs(29, 4, "authDigestNonceIsStale: Nonce is too old. " <<
                nonce->noncedata.creationtime << " " <<
-               static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->noncemaxduration << " " <<
+               static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->noncemaxduration << " " <<
                current_time.tv_sec);
 
         nonce->flags.valid = 0;
@@ -422,7 +422,7 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
         return -1;
     }
 
-    if (nonce->nc > static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->noncemaxuses) {
+    if (nonce->nc > static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->noncemaxuses) {
         debugs(29, 4, "authDigestNoncelastRequest: Nonce count over user limit");
         nonce->flags.valid = 0;
         return -1;
@@ -447,7 +447,7 @@ authDigestNonceLastRequest(digest_nonce_h * nonce)
         return -1;
     }
 
-    if (nonce->nc >= static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->noncemaxuses - 1) {
+    if (nonce->nc >= static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->noncemaxuses - 1) {
         debugs(29, 4, "authDigestNoncelastRequest: Nonce count about to hit user limit");
         return -1;
     }
@@ -493,7 +493,7 @@ authDigestUserFindUsername(const char *username)
 }
 
 void
-AuthDigestConfig::rotateHelpers()
+Auth::Digest::Config::rotateHelpers()
 {
     /* schedule closure of existing helpers */
     if (digestauthenticators) {
@@ -504,7 +504,7 @@ AuthDigestConfig::rotateHelpers()
 }
 
 void
-AuthDigestConfig::dump(StoreEntry * entry, const char *name, Auth::Config * scheme)
+Auth::Digest::Config::dump(StoreEntry * entry, const char *name, Auth::Config * scheme)
 {
     wordlist *list = authenticateProgram;
     debugs(29, 9, "authDigestCfgDump: Dumping configuration");
@@ -524,13 +524,13 @@ AuthDigestConfig::dump(StoreEntry * entry, const char *name, Auth::Config * sche
 }
 
 bool
-AuthDigestConfig::active() const
+Auth::Digest::Config::active() const
 {
     return authdigest_initialised == 1;
 }
 
 bool
-AuthDigestConfig::configured() const
+Auth::Digest::Config::configured() const
 {
     if ((authenticateProgram != NULL) &&
             (authenticateChildren.n_max != 0) &&
@@ -542,7 +542,7 @@ AuthDigestConfig::configured() const
 
 /* add the [www-|Proxy-]authenticate header on a 407 or 401 reply */
 void
-AuthDigestConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
+Auth::Digest::Config::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
     if (!authenticateProgram)
         return;
@@ -602,7 +602,7 @@ DigestUser::ttl() const
     if (latest_nonce == -1)
         return min(-1, global_ttl);
 
-    int32_t nonce_ttl = latest_nonce - current_time.tv_sec + static_cast<AuthDigestConfig*>(Auth::Config::Find("digest"))->noncemaxduration;
+    int32_t nonce_ttl = latest_nonce - current_time.tv_sec + static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->noncemaxduration;
 
     return min(nonce_ttl, global_ttl);
 }
@@ -610,7 +610,7 @@ DigestUser::ttl() const
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
 void
-AuthDigestConfig::init(Auth::Config * scheme)
+Auth::Digest::Config::init(Auth::Config * scheme)
 {
     if (authenticateProgram) {
         DigestFieldsInfo = httpHeaderBuildFieldsInfo(DigestAttrs, DIGEST_ENUM_END);
@@ -633,7 +633,7 @@ AuthDigestConfig::init(Auth::Config * scheme)
 }
 
 void
-AuthDigestConfig::registerWithCacheManager(void)
+Auth::Digest::Config::registerWithCacheManager(void)
 {
     Mgr::RegisterAction("digestauthenticator",
                         "Digest User Authenticator Stats",
@@ -642,7 +642,7 @@ AuthDigestConfig::registerWithCacheManager(void)
 
 /* free any allocated configuration details */
 void
-AuthDigestConfig::done()
+Auth::Digest::Config::done()
 {
     authdigest_initialised = 0;
 
@@ -666,7 +666,7 @@ AuthDigestConfig::done()
     safe_free(digestAuthRealm);
 }
 
-AuthDigestConfig::AuthDigestConfig()
+Auth::Digest::Config::Config()
 {
     /* TODO: move into initialisation list */
     /* 5 minutes */
@@ -682,7 +682,7 @@ AuthDigestConfig::AuthDigestConfig()
 }
 
 void
-AuthDigestConfig::parse(Auth::Config * scheme, int n_configured, char *param_str)
+Auth::Digest::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
 {
     if (strcasecmp(param_str, "program") == 0) {
         if (authenticateProgram)
@@ -715,7 +715,7 @@ AuthDigestConfig::parse(Auth::Config * scheme, int n_configured, char *param_str
 }
 
 const char *
-AuthDigestConfig::type() const
+Auth::Digest::Config::type() const
 {
     return Auth::Digest::Scheme::GetInstance()->type();
 }
@@ -810,7 +810,7 @@ authDigestLogUsername(char *username, AuthUserRequest::Pointer auth_user_request
 
     /* log the username */
     debugs(29, 9, "authDigestLogUsername: Creating new user for logging '" << username << "'");
-    AuthUser::Pointer digest_user = new DigestUser(static_cast<AuthDigestConfig*>(Auth::Config::Find("digest")));
+    AuthUser::Pointer digest_user = new DigestUser(static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest")));
     /* save the credentials */
     digest_user->username(username);
     /* set the auth_user type */
@@ -825,7 +825,7 @@ authDigestLogUsername(char *username, AuthUserRequest::Pointer auth_user_request
  * Auth_user structure.
  */
 AuthUserRequest::Pointer
-AuthDigestConfig::decode(char const *proxy_auth)
+Auth::Digest::Config::decode(char const *proxy_auth)
 {
     const char *item;
     const char *p;

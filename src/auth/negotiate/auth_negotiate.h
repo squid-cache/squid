@@ -38,14 +38,14 @@ MEMPROXY_CLASS_INLINE(NegotiateUser);
 
 extern statefulhelper *negotiateauthenticators;
 
-/* configuration runtime data */
+namespace Auth {
+namespace Negotiate {
 
-/// \ingroup AuthNegotiateAPI
-class AuthNegotiateConfig : public Auth::Config
+/** Negotiate Authentication configuration data */
+class Config : public Auth::Config
 {
-
 public:
-    AuthNegotiateConfig();
+    Config();
     virtual bool active() const;
     virtual bool configured() const;
     virtual AuthUserRequest::Pointer decode(char const *proxy_auth);
@@ -57,9 +57,12 @@ public:
     virtual void parse(Auth::Config *, int, char *);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
+
+public:
     int keep_alive;
 };
 
-extern AuthNegotiateConfig negotiateConfig;
+} // namespace Negotiate
+} // namespace Auth
 
 #endif

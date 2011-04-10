@@ -76,13 +76,14 @@ extern const char *authenticateDigestNonceNonceb64(const digest_nonce_h * nonce)
 extern int authDigestNonceLastRequest(digest_nonce_h * nonce);
 extern void authenticateDigestNonceShutdown(void);
 
-/* configuration runtime data */
+namespace Auth {
+namespace Digest {
 
-class AuthDigestConfig : public Auth::Config
+/** Digest Authentication configuration data */
+class Config : public Auth::Config
 {
-
 public:
-    AuthDigestConfig();
+    Config();
     virtual bool active() const;
     virtual bool configured() const;
     virtual AuthUserRequest::Pointer decode(char const *proxy_auth);
@@ -106,7 +107,8 @@ public:
     int utf8;
 };
 
-typedef class AuthDigestConfig auth_digest_config;
+} // namespace Digest
+} // namespace Auth
 
 /* strings */
 #define QOP_AUTH "auth"
