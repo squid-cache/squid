@@ -66,7 +66,7 @@ static hash_table *proxy_auth_cache = NULL;
  */
 
 void
-AuthNTLMConfig::rotateHelpers()
+Auth::Ntlm::Config::rotateHelpers()
 {
     /* schedule closure of existing helpers */
     if (ntlmauthenticators) {
@@ -78,7 +78,7 @@ AuthNTLMConfig::rotateHelpers()
 
 /* free any allocated configuration details */
 void
-AuthNTLMConfig::done()
+Auth::Ntlm::Config::done()
 {
     authntlm_initialised = 0;
 
@@ -95,11 +95,11 @@ AuthNTLMConfig::done()
     if (authenticateProgram)
         wordlistDestroy(&authenticateProgram);
 
-    debugs(29, 2, "ntlmScheme::done: NTLM authentication Shutdown.");
+    debugs(29, DBG_IMPORTANT, "Reconfigure: NTLM authentication configuration cleared.");
 }
 
 void
-AuthNTLMConfig::dump(StoreEntry * entry, const char *name, Auth::Config * scheme)
+Auth::Ntlm::Config::dump(StoreEntry * entry, const char *name, Auth::Config * scheme)
 {
     wordlist *list = authenticateProgram;
     storeAppendPrintf(entry, "%s %s", name, "ntlm");
@@ -115,11 +115,11 @@ AuthNTLMConfig::dump(StoreEntry * entry, const char *name, Auth::Config * scheme
 
 }
 
-AuthNTLMConfig::AuthNTLMConfig() : keep_alive(1)
+Auth::Ntlm::Config::Config() : keep_alive(1)
 { }
 
 void
-AuthNTLMConfig::parse(Auth::Config * scheme, int n_configured, char *param_str)
+Auth::Ntlm::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
 {
     if (strcasecmp(param_str, "program") == 0) {
         if (authenticateProgram)
@@ -133,12 +133,12 @@ AuthNTLMConfig::parse(Auth::Config * scheme, int n_configured, char *param_str)
     } else if (strcasecmp(param_str, "keep_alive") == 0) {
         parse_onoff(&keep_alive);
     } else {
-        debugs(29, 0, "AuthNTLMConfig::parse: unrecognised ntlm auth scheme parameter '" << param_str << "'");
+        debugs(29, DBG_CRITICAL, "ERROR unrecognised NTLM auth scheme parameter '" << param_str << "'");
     }
 }
 
 const char *
-AuthNTLMConfig::type() const
+Auth::Ntlm::Config::type() const
 {
     return Auth::Ntlm::Scheme::GetInstance()->type();
 }
@@ -146,7 +146,7 @@ AuthNTLMConfig::type() const
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
 void
-AuthNTLMConfig::init(Auth::Config * scheme)
+Auth::Ntlm::Config::init(Auth::Config * scheme)
 {
     if (authenticateProgram) {
 
@@ -173,7 +173,7 @@ AuthNTLMConfig::init(Auth::Config * scheme)
 }
 
 void
-AuthNTLMConfig::registerWithCacheManager(void)
+Auth::Ntlm::Config::registerWithCacheManager(void)
 {
     Mgr::RegisterAction("ntlmauthenticator",
                         "NTLM User Authenticator Stats",
@@ -181,27 +181,27 @@ AuthNTLMConfig::registerWithCacheManager(void)
 }
 
 bool
-AuthNTLMConfig::active() const
+Auth::Ntlm::Config::active() const
 {
     return authntlm_initialised == 1;
 }
 
 bool
-AuthNTLMConfig::configured() const
+Auth::Ntlm::Config::configured() const
 {
     if ((authenticateProgram != NULL) && (authenticateChildren.n_max != 0)) {
-        debugs(29, 9, "AuthNTLMConfig::configured: returning configured");
+        debugs(29, 9, HERE << "returning configured");
         return true;
     }
 
-    debugs(29, 9, "AuthNTLMConfig::configured: returning unconfigured");
+    debugs(29, 9, HERE << "returning unconfigured");
     return false;
 }
 
 /* NTLM Scheme */
 
 void
-AuthNTLMConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
+Auth::Ntlm::Config::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
     if (!authenticateProgram)
         return;
@@ -212,7 +212,7 @@ AuthNTLMConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply 
 
     /* New request, no user details */
     if (auth_user_request == NULL) {
-        debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << hdrType << " header: 'NTLM'");
+        debugs(29, 9, HERE << "Sending type:" << hdrType << " header: 'NTLM'");
         httpHeaderPutStrf(&rep->header, hdrType, "NTLM");
 
         if (!keep_alive) {
@@ -240,19 +240,19 @@ AuthNTLMConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply 
         case AuthUser::Unchecked:
             /* semantic change: do not drop the connection.
              * 2.5 implementation used to keep it open - Kinkie */
-            debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << hdrType << " header: 'NTLM'");
+            debugs(29, 9, HERE << "Sending type:" << hdrType << " header: 'NTLM'");
             httpHeaderPutStrf(&rep->header, hdrType, "NTLM");
             break;
 
         case AuthUser::Handshake:
             /* we're waiting for a response from the client. Pass it the blob */
-            debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << hdrType << " header: 'NTLM " << ntlm_request->server_blob << "'");
+            debugs(29, 9, HERE << "Sending type:" << hdrType << " header: 'NTLM " << ntlm_request->server_blob << "'");
             httpHeaderPutStrf(&rep->header, hdrType, "NTLM %s", ntlm_request->server_blob);
             safe_free(ntlm_request->server_blob);
             break;
 
         default:
-            debugs(29, DBG_CRITICAL, "AuthNTLMConfig::fixHeader: state " << ntlm_request->user()->credentials() << ".");
+            debugs(29, DBG_CRITICAL, "NTLM Auth fixHeader: state " << ntlm_request->user()->credentials() << ".");
             fatal("unexpected state in AuthenticateNTLMFixErrorHeader.\n");
         }
     }
@@ -280,7 +280,7 @@ authenticateNTLMStats(StoreEntry * sentry)
  * Auth_user structure.
  */
 AuthUserRequest::Pointer
-AuthNTLMConfig::decode(char const *proxy_auth)
+Auth::Ntlm::Config::decode(char const *proxy_auth)
 {
     NTLMUser *newUser = new NTLMUser(Auth::Config::Find("ntlm"));
     AuthUserRequest::Pointer auth_user_request = new AuthNTLMUserRequest();
@@ -290,7 +290,7 @@ AuthNTLMConfig::decode(char const *proxy_auth)
     auth_user_request->user()->auth_type = Auth::AUTH_NTLM;
 
     /* all we have to do is identify that it's NTLM - the helper does the rest */
-    debugs(29, 9, "AuthNTLMConfig::decode: NTLM authentication");
+    debugs(29, 9, HERE << "decode: NTLM authentication");
     return auth_user_request;
 }
 

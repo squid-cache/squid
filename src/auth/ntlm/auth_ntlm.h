@@ -30,13 +30,14 @@ MEMPROXY_CLASS_INLINE(NTLMUser);
 
 typedef class NTLMUser ntlm_user_t;
 
-/* configuration runtime data */
+namespace Auth {
+namespace Ntlm {
 
-class AuthNTLMConfig : public Auth::Config
+/** NTLM Authentication configuration data */
+class Config : public Auth::Config
 {
-
 public:
-    AuthNTLMConfig();
+    Config();
     virtual bool active() const;
     virtual bool configured() const;
     virtual AuthUserRequest::Pointer decode(char const *proxy_auth);
@@ -48,10 +49,13 @@ public:
     virtual void parse(Auth::Config *, int, char *);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
+
+public:
     int keep_alive;
 };
 
-typedef class AuthNTLMConfig auth_ntlm_config;
+} // namespace Ntlm
+} // namespace Auth
 
 extern statefulhelper *ntlmauthenticators;
 

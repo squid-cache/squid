@@ -65,6 +65,6 @@ Auth::Negotiate::Scheme::shutdownCleanup()
 Auth::Config *
 Auth::Negotiate::Scheme::createConfig()
 {
-    AuthNegotiateConfig *negotiateCfg = new AuthNegotiateConfig;
+    Auth::Negotiate::Config *negotiateCfg = new Auth::Negotiate::Config;
     return dynamic_cast<Auth::Config*>(negotiateCfg);
 }
