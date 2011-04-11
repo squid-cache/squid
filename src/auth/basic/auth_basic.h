@@ -53,8 +53,10 @@ private:
 
 MEMPROXY_CLASS_INLINE(BasicUser);
 
-namespace Auth {
-namespace Basic {
+namespace Auth
+{
+namespace Basic
+{
 
 /** Basic authentication configuration data */
 class Config : public Auth::Config
