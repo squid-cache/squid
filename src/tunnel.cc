@@ -312,7 +312,7 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
     if (!fd_closed(server.fd()))
         commSetTimeout(server.fd(), Config.Timeout.read, tunnelTimeout, this);
 
-    if (len < 0 || errcode)
+    if (errcode)
         from.error (xerrno);
     else if (len == 0 || fd_closed(to.fd())) {
         comm_close(from.fd());
@@ -343,12 +343,10 @@ TunnelStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xer
 {
     debugs(26, 3, "tunnelWriteServer: FD " << server.fd() << ", " << len << " bytes written");
 
-    if (flag == COMM_ERR_CLOSING)
-        return;
-
     /* Error? */
-    if (len < 0 || flag != COMM_OK) {
-        server.error(xerrno); // may call comm_close
+    if (flag != COMM_OK) {
+        if (flag != COMM_ERR_CLOSING)
+            server.error(xerrno); // may call comm_close
         return;
     }
 
@@ -404,12 +402,10 @@ TunnelStateData::writeClientDone(char *buf, size_t len, comm_err_t flag, int xer
 {
     debugs(26, 3, "tunnelWriteClient: FD " << client.fd() << ", " << len << " bytes written");
 
-    if (flag == COMM_ERR_CLOSING)
-        return;
-
     /* Error? */
-    if (len < 0 || flag != COMM_OK) {
-        client.error(xerrno); // may call comm_close
+    if (flag != COMM_OK) {
+        if (flag != COMM_ERR_CLOSING)
+            client.error(xerrno); // may call comm_close
         return;
     }
 

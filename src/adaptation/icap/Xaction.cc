@@ -355,7 +355,6 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
     reader = NULL;
 
     Must(io.flag == COMM_OK);
-    Must(io.size >= 0);
 
     if (!io.size) {
         commEof = true;

@@ -104,7 +104,7 @@ public:
         }
     };
     inline const char* GetHost(void) const { return host; };
-    inline const int GetHostIsNumeric(void) const { return host_is_numeric; };
+    inline int GetHostIsNumeric(void) const { return host_is_numeric; };
 
 #if USE_ADAPTATION
     /// Returns possibly nil history, creating it if adapt. logging is enabled
