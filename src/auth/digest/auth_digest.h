@@ -20,7 +20,7 @@ typedef struct _digest_nonce_data digest_nonce_data;
 
 typedef struct _digest_nonce_h digest_nonce_h;
 
-class DigestUser : public AuthUser
+class DigestUser : public Auth::User
 {
 
 public:
