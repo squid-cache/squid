@@ -505,6 +505,8 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
 
         list[i].url = url;
         list[i].host = xstrdup(host);
+        // TODO: Use storeHas() or lock/unlock entry to avoid creating unlocked
+        // ones.
         list[i].flags.cached = storeGetPublic(url, m) ? 1 : 0;
         i++;
     }
