@@ -474,7 +474,7 @@ authDigestNoncePurge(digest_nonce_h * nonce)
 }
 
 /* USER related functions */
-static AuthUser::Pointer
+static Auth::User::Pointer
 authDigestUserFindUsername(const char *username)
 {
     AuthUserHashPointer *usernamehash;
@@ -810,7 +810,7 @@ authDigestLogUsername(char *username, AuthUserRequest::Pointer auth_user_request
 
     /* log the username */
     debugs(29, 9, "authDigestLogUsername: Creating new user for logging '" << username << "'");
-    AuthUser::Pointer digest_user = new DigestUser(static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest")));
+    Auth::User::Pointer digest_user = new DigestUser(static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest")));
     /* save the credentials */
     digest_user->username(username);
     /* set the auth_user type */
@@ -1045,7 +1045,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
         /* we couldn't find a matching nonce! */
         debugs(29, 2, "authenticateDigestDecode: Unexpected or invalid nonce received");
         if (digest_request->user() != NULL)
-            digest_request->user()->credentials(AuthUser::Failed);
+            digest_request->user()->credentials(Auth::Failed);
         return authDigestLogUsername(username, digest_request);
     }
 
@@ -1066,7 +1066,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
     /* find the user */
     DigestUser *digest_user;
 
-    AuthUser::Pointer auth_user;
+    Auth::User::Pointer auth_user;
 
     if ((auth_user = authDigestUserFindUsername(username)) == NULL) {
         /* the user doesn't exist in the username cache yet */
@@ -1110,5 +1110,5 @@ Auth::Digest::Config::decode(char const *proxy_auth)
     return digest_request;
 }
 
-DigestUser::DigestUser(Auth::Config *aConfig) : AuthUser(aConfig), HA1created (0)
+DigestUser::DigestUser(Auth::Config *aConfig) : Auth::User(aConfig), HA1created (0)
 {}

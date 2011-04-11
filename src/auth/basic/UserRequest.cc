@@ -22,7 +22,7 @@ AuthBasicUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, 
     assert(user() != NULL);
 
     /* if the password is not ok, do an identity */
-    if (!user() || user()->credentials() != AuthUser::Ok)
+    if (!user() || user()->credentials() != Auth::Ok)
         return;
 
     /* are we about to recheck the credentials externally? */
@@ -50,16 +50,16 @@ AuthBasicUserRequest::module_direction()
 
     switch (user()->credentials()) {
 
-    case AuthUser::Unchecked:
-    case AuthUser::Pending:
+    case Auth::Unchecked:
+    case Auth::Pending:
         return -1;
 
-    case AuthUser::Ok:
+    case Auth::Ok:
         if (user()->expiretime + static_cast<Auth::Basic::Config*>(Auth::Config::Find("basic"))->credentialsTTL <= squid_curtime)
             return -1;
         return 0;
 
-    case AuthUser::Failed:
+    case Auth::Failed:
         return 0;
 
     default:
@@ -83,7 +83,7 @@ AuthBasicUserRequest::module_start(RH * handler, void *data)
     }
 
     /* check to see if the auth_user already has a request outstanding */
-    if (user()->credentials() == AuthUser::Pending) {
+    if (user()->credentials() == Auth::Pending) {
         /* there is a request with the same credentials already being verified */
         basic_auth->queueRequest(this, handler, data);
         return;

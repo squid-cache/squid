@@ -80,17 +80,17 @@ AuthUserRequest::valid() const
     debugs(29, 9, HERE << "Validating AuthUserRequest '" << this << "'.");
 
     if (user() == NULL) {
-        debugs(29, 4, HERE << "No associated AuthUser data");
+        debugs(29, 4, HERE << "No associated Auth::User data");
         return false;
     }
 
     if (user()->auth_type == Auth::AUTH_UNKNOWN) {
-        debugs(29, 4, HERE << "AuthUser '" << user() << "' uses unknown scheme.");
+        debugs(29, 4, HERE << "Auth::User '" << user() << "' uses unknown scheme.");
         return false;
     }
 
     if (user()->auth_type == Auth::AUTH_BROKEN) {
-        debugs(29, 4, HERE << "AuthUser '" << user() << "' is broken for it's scheme.");
+        debugs(29, 4, HERE << "Auth::User '" << user() << "' is broken for it's scheme.");
         return false;
     }
 
@@ -161,7 +161,7 @@ AuthUserRequest::denyMessage(char const * const default_message)
 static void
 authenticateAuthUserRequestSetIp(AuthUserRequest::Pointer auth_user_request, Ip::Address &ipaddr)
 {
-    AuthUser::Pointer auth_user = auth_user_request->user();
+    Auth::User::Pointer auth_user = auth_user_request->user();
 
     if (!auth_user)
         return;
@@ -172,7 +172,7 @@ authenticateAuthUserRequestSetIp(AuthUserRequest::Pointer auth_user_request, Ip:
 void
 authenticateAuthUserRequestRemoveIp(AuthUserRequest::Pointer auth_user_request, Ip::Address const &ipaddr)
 {
-    AuthUser::Pointer auth_user = auth_user_request->user();
+    Auth::User::Pointer auth_user = auth_user_request->user();
 
     if (!auth_user)
         return;

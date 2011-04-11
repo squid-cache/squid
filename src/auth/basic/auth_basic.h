@@ -25,7 +25,7 @@ public:
     void *data;
 };
 
-class BasicUser : public AuthUser
+class BasicUser : public Auth::User
 {
 
 public:
