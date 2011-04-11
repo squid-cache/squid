@@ -76,8 +76,10 @@ extern const char *authenticateDigestNonceNonceb64(const digest_nonce_h * nonce)
 extern int authDigestNonceLastRequest(digest_nonce_h * nonce);
 extern void authenticateDigestNonceShutdown(void);
 
-namespace Auth {
-namespace Digest {
+namespace Auth
+{
+namespace Digest
+{
 
 /** Digest Authentication configuration data */
 class Config : public Auth::Config
