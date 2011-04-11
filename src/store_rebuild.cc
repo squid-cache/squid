@@ -400,6 +400,12 @@ storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key,
             /* key already exists, old entry is newer */
             /* keep old, ignore new */
             counts.dupcount++;
+
+            // For some stores, get() creates/unpacks a store entry. Signal
+            // such stores that we will no longer use the get() result:
+            e->lock();
+            e->unlock();
+
             return false;
         } else {
             /* URL already exists, this swapfile not being used */
