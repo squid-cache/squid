@@ -32,16 +32,14 @@
 #include "config.h"
 #include "base/TextException.h"
 #include "Debug.h"
+#include "Mem.h"
 #include "MemBlob.h"
+#include "protos.h"
+
 #if HAVE_IOSTREAM
 #include <iostream>
 #endif
 
-#define MEMBLOB_USES_MEM_POOLS 0
-
-#if MEMBLOB_USES_MEM_POOLS
-#include "protos.h"
-#endif
 
 MemBlobStats MemBlob::Stats;
 InstanceIdDefinitions(MemBlob, "blob");
@@ -90,13 +88,8 @@ MemBlob::MemBlob(const char *buffer, const MemBlob::size_type bufSize) :
 
 MemBlob::~MemBlob()
 {
-#if MEMBLOB_USES_MEM_POOLS
-    //no mempools for now
-    // \todo reinstate mempools use
-    memFreeString(capacity,mem);
-#else
-    xfree(mem);
-#endif
+    if (mem || capacity)
+        memFreeString(capacity,mem);
     Stats.liveBytes -= capacity;
     --Stats.live;
 
@@ -106,45 +99,16 @@ MemBlob::~MemBlob()
            << " size=" << size);
 }
 
-/**
- * Given the requested minimum size, return a rounded allocation size
- * for the backing store.
- * This is a stopgap call, this job is eventually expected to be handled
- * by MemPools via memAllocString.
- */
-MemBlob::size_type
-MemBlob::calcAllocSize(const size_type sz) const
-{
-    if (sz <= 36) return 36;
-    if (sz <= 128) return 128;
-    if (sz <= 512) return 512;
-    if (sz <= 4096) return RoundTo(sz, 512);
-    // XXX: recover squidSystemPageSize functionality. It's easy for
-    //      the main squid, harder for tests
-#if 0
-    return RoundTo(sz, squidSystemPageSize);
-#else
-    return RoundTo(sz, 4096);
-#endif
-}
-
 /** Allocate an available space area of at least minSize bytes in size.
  *  Must be called by constructors and only by constructors.
  */
 void
 MemBlob::memAlloc(const size_type minSize)
 {
-    size_t actualAlloc = calcAllocSize(minSize);
+    size_t actualAlloc = minSize;
 
     Must(!mem);
-#if MEMBLOB_USES_MEM_POOLS
-    // XXX: for now, do without mempools. In order to do it, MemPools
-    //  need to be singletons so that initialization order can be enforced
-    mem = static_cast<char*>(memAllocString(minSize, &actualAlloc));
-#else
-    // \todo reinstate mempools use
-    mem = static_cast<char*>(xmalloc(actualAlloc));
-#endif
+    mem = static_cast<char*>(memAllocString(actualAlloc, &actualAlloc));
     Must(mem);
 
     capacity = actualAlloc;
