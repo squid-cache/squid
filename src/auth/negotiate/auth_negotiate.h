@@ -38,8 +38,10 @@ MEMPROXY_CLASS_INLINE(NegotiateUser);
 
 extern statefulhelper *negotiateauthenticators;
 
-namespace Auth {
-namespace Negotiate {
+namespace Auth
+{
+namespace Negotiate
+{
 
 /** Negotiate Authentication configuration data */
 class Config : public Auth::Config

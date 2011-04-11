@@ -30,8 +30,10 @@ MEMPROXY_CLASS_INLINE(NTLMUser);
 
 typedef class NTLMUser ntlm_user_t;
 
-namespace Auth {
-namespace Ntlm {
+namespace Auth
+{
+namespace Ntlm
+{
 
 /** NTLM Authentication configuration data */
 class Config : public Auth::Config
