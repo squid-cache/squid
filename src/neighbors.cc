@@ -1072,6 +1072,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
     }
 
     if (entry->lock_count == 0) {
+        // TODO: many entries are unlocked; why is this reported at level 1?
         debugs(12, 1, "neighborsUdpAck: '" << storeKeyText(key) << "' has no locks");
         neighborCountIgnored(p);
         return;
@@ -1817,6 +1818,7 @@ neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const Ip::Addres
     }
 
     if (e->lock_count == 0) {
+        // TODO: many entries are unlocked; why is this reported at level 1?
         debugs(12, 1, "neighborsUdpAck: '" << storeKeyText(key) << "' has no locks");
         neighborCountIgnored(p);
         return;
