@@ -1882,7 +1882,7 @@ free_authparam(Auth::ConfigVector * cfg)
 
     /* on reconfigure initialize new auth schemes for the new config. */
     if (reconfiguring) {
-        InitAuthSchemes();
+        Auth::Init();
     }
 }
 
