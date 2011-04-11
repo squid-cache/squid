@@ -820,7 +820,7 @@ DEFAULT_PINGER		= $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/
 DEFAULT_UNLINKD		= $(libexecdir)/`echo unlinkd | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_LOGFILED	= $(libexecdir)/`echo log_file_daemon | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_DISKD		= $(libexecdir)/`echo diskd | sed '$(transform);s/$$/$(EXEEXT)/'`
-DEFAULT_ICON_DIR	= $(localstatedir)/www/squid/icons
+DEFAULT_ICON_DIR	= $(datadir)/icons
 DEFAULT_ERROR_DIR	= $(datadir)/errors
 
 # Make location configure settings available to the code
@@ -913,19 +913,7 @@ man_MANS = squid.8
 EXTRA_DIST += squid.8.in
 CLEANFILES += squid.8
 
-## check for existing Squid icons (used to be $datadir/icons).
-## move them into the new icons location so we dont break anyones existing mime.conf
-mimeconf-Upgrade-Shuffle:
-	@if test -d $(DESTDIR)$(datadir)/icons; then \
-	  mv $(DESTDIR)$(datadir)/icons/* $(DESTDIR)$(DEFAULT_ICON_DIR)/; \
-	  $(RM) -r $(DESTDIR)$(datadir)/icons; \
-	  echo "NOTICE: "; \
-	  echo "NOTICE: The Squid icons have been upgraded. Please update your $(DESTDIR)$(DEFAULT_MIME_TABLE)." ; \
-	  echo "NOTICE: $(DESTDIR)$(DEFAULT_MIME_TABLE).default contains the new icon configuration." ; \
-	  echo "NOTICE: "; \
-	fi
-
-install-data-local: install-sysconfDATA install-dataDATA mimeconf-Upgrade-Shuffle
+install-data-local: install-sysconfDATA install-dataDATA
 	@if test -f $(DESTDIR)$(DEFAULT_MIME_TABLE) ; then \
 	  echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_MIME_TABLE)" ; \
 	else \
