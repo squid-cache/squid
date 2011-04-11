@@ -763,7 +763,7 @@ ConnStateData::swanSong()
 {
     debugs(33, 2, "ConnStateData::swanSong: FD " << fd);
     fd = -1;
-    flags.readMoreRequests = false;
+    flags.readMore = false;
     clientdbEstablished(peer, -1);	/* decrement */
     assert(areAllContextsForThisConnection());
     freeAllContexts();
@@ -1515,7 +1515,6 @@ void
 ClientSocketContext::keepaliveNextRequest()
 {
     ConnStateData * conn = http->getConn();
-    bool do_next_read = false;
 
     debugs(33, 3, "ClientSocketContext::keepaliveNextRequest: FD " << conn->fd);
     connIsFinished();
@@ -1536,7 +1535,7 @@ ClientSocketContext::keepaliveNextRequest()
      * from our read buffer we may never re-register for another client read.
      */
 
-    if (conn->clientParseRequest(do_next_read)) {
+    if (conn->clientParseRequests()) {
         debugs(33, 3, "clientSocketContext::keepaliveNextRequest: FD " << conn->fd << ": parsed next request from buffer");
     }
 
@@ -1566,9 +1565,12 @@ ClientSocketContext::keepaliveNextRequest()
     if ((deferredRequest = conn->getCurrentContext()).getRaw()) {
         debugs(33, 3, "ClientSocketContext:: FD " << conn->fd << ": calling PushDeferredIfNeeded");
         ClientSocketContextPushDeferredIfNeeded(deferredRequest, conn);
-    } else {
+    } else if (conn->flags.readMore) {
         debugs(33, 3, "ClientSocketContext:: FD " << conn->fd << ": calling conn->readNextRequest()");
         conn->readNextRequest();
+    } else {
+        // XXX: Can this happen? CONNECT tunnels have deferredRequest set.
+        debugs(33, DBG_IMPORTANT, HERE << "abandoning FD " << conn->fd);
     }
 }
 
@@ -2397,16 +2399,7 @@ ConnStateData::checkHeaderLimits()
 }
 
 void
-ConnStateData::clientMaybeReadData(int do_next_read)
-{
-    if (do_next_read) {
-        flags.readMoreRequests = true;
-        readSomeData();
-    }
-}
-
-void
-ConnStateData::clientAfterReadingRequests(int do_next_read)
+ConnStateData::clientAfterReadingRequests()
 {
     // Were we expecting to read more request body from half-closed connection?
     if (mayNeedToReadMoreBody() && commIsHalfClosed(fd)) {
@@ -2415,7 +2408,8 @@ ConnStateData::clientAfterReadingRequests(int do_next_read)
         return;
     }
 
-    clientMaybeReadData (do_next_read);
+    if (flags.readMore)
+        readSomeData();
 }
 
 static void
@@ -2452,7 +2446,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         }
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMoreRequests = false;
+        conn->flags.readMore = false;
         goto finish;
     }
 
@@ -2466,7 +2460,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         repContext->setReplyToError(ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri, conn->peer, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMoreRequests = false;
+        conn->flags.readMore = false;
         goto finish;
     }
 
@@ -2485,7 +2479,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, HTTP_HTTP_VERSION_NOT_SUPPORTED, method, http->uri, conn->peer, NULL, HttpParserHdrBuf(hp), NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMoreRequests = false;
+        conn->flags.readMore = false;
         goto finish;
     }
 
@@ -2502,7 +2496,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, http->uri, conn->peer, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMoreRequests = false;
+        conn->flags.readMore = false;
         goto finish;
     }
 
@@ -2570,7 +2564,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
                                     conn->peer, request, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMoreRequests = false;
+        conn->flags.readMore = false;
         goto finish;
     }
 
@@ -2584,7 +2578,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
                                     conn->peer, request, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMoreRequests = false;
+        conn->flags.readMore = false;
         goto finish;
     }
 
@@ -2599,6 +2593,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
                                         http->uri, conn->peer, request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
+            conn->flags.readMore = false;
             goto finish;
         }
     }
@@ -2606,9 +2601,11 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     http->request = HTTPMSGLOCK(request);
     clientSetKeepaliveFlag(http);
 
-    /* If this is a CONNECT, don't schedule a read - ssl.c will handle it */
-    if (http->request->method == METHOD_CONNECT)
+    // Let tunneling code be fully responsible for CONNECT requests
+    if (http->request->method == METHOD_CONNECT) {
         context->mayUseConnection(true);
+        conn->flags.readMore = false;
+    }
 
     /* Do we expect a request-body? */
     expectBody = chunked || request->content_length > 0;
@@ -2631,6 +2628,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
                                         conn->peer, http->request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
+            conn->flags.readMore = false;
             goto finish;
         }
 
@@ -2639,10 +2637,11 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         if (!conn->handleRequestBodyData())
             goto finish;
 
-        if (!request->body_pipe->productionEnded())
-            conn->readSomeData();
-
-        context->mayUseConnection(!request->body_pipe->productionEnded());
+        if (!request->body_pipe->productionEnded()) {
+            debugs(33, 5, HERE << "need more request body");
+            context->mayUseConnection(true);
+            assert(conn->flags.readMore);
+        }
     }
 
     http->calloutContext = new ClientRequestContext(http);
@@ -2662,7 +2661,7 @@ finish:
      */
     if (http->request->flags.resetTCP() && conn->fd > -1) {
         debugs(33, 3, HERE << "Sending TCP RST on FD " << conn->fd);
-        conn->flags.readMoreRequests = false;
+        conn->flags.readMore = false;
         comm_reset_close(conn->fd);
         return;
     }
@@ -2696,11 +2695,9 @@ connOkToAddRequest(ConnStateData * conn)
  * Attempt to parse one or more requests from the input buffer.
  * If a request is successfully parsed, even if the next request
  * is only partially parsed, it will return TRUE.
- * do_next_read is updated to indicate whether a read should be
- * scheduled.
  */
 bool
-ConnStateData::clientParseRequest(bool &do_next_read)
+ConnStateData::clientParseRequests()
 {
     HttpRequestMethod method;
     bool parsed_req = false;
@@ -2709,8 +2706,8 @@ ConnStateData::clientParseRequest(bool &do_next_read)
     debugs(33, 5, HERE << "FD " << fd << ": attempting to parse");
 
     // Loop while we have read bytes that are not needed for producing the body
-    // On errors, bodyPipe may become nil, but readMoreRequests will be cleared
-    while (in.notYetUsed > 0 && !bodyPipe && flags.readMoreRequests) {
+    // On errors, bodyPipe may become nil, but readMore will be cleared
+    while (in.notYetUsed > 0 && !bodyPipe && flags.readMore) {
         connStripBufferWhitespace(this);
 
         /* Don't try to parse if the buffer is empty */
@@ -2753,8 +2750,8 @@ ConnStateData::clientParseRequest(bool &do_next_read)
             parsed_req = true; // XXX: do we really need to parse everything right NOW ?
 
             if (context->mayUseConnection()) {
-                debugs(33, 3, HERE << "Not reading, as this request may need the connection");
-                return false;
+                debugs(33, 3, HERE << "Not parsing new requests, as this request may need the connection");
+                break;
             }
         }
     }
@@ -2769,7 +2766,6 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
     debugs(33,5,HERE << "clientReadRequest FD " << io.fd << " size " << io.size);
     Must(reading());
     reader = NULL;
-    bool do_next_read = 1; /* the default _is_ to read data! - adrian */
 
     assert (io.fd == fd);
 
@@ -2814,8 +2810,6 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
 
             commMarkHalfClosed(fd);
 
-            do_next_read = 0;
-
             fd_note(fd, "half-closed");
 
             /* There is one more close check at the end, to detect aborted
@@ -2830,7 +2824,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
     if (getConcurrentRequestCount() == 0)
         fd_note(fd, "Reading next request");
 
-    if (!clientParseRequest(do_next_read)) {
+    if (!clientParseRequests()) {
         if (!isOpen())
             return;
         /*
@@ -2851,7 +2845,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
     if (!isOpen())
         return;
 
-    clientAfterReadingRequests(do_next_read);
+    clientAfterReadingRequests();
 }
 
 /**
@@ -3002,7 +2996,7 @@ ConnStateData::abortChunkedRequestBody(const err_type error)
     debugs(33, 3, HERE << "aborting chunked request without error " << error);
     comm_reset_close(fd);
 #endif
-    flags.readMoreRequests = false;
+    flags.readMore = false;
 }
 
 void
@@ -3146,7 +3140,7 @@ connStateCreate(const Ip::Address &peer, const Ip::Address &me, int fd, http_por
 
     }
 
-    result->flags.readMoreRequests = true;
+    result->flags.readMore = true;
     return result;
 }
 
