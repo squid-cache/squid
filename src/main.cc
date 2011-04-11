@@ -1368,7 +1368,7 @@ SquidMain(int argc, char **argv)
         /* we may want the parsing process to set this up in the future */
         Store::Root(new StoreController);
 #if USE_AUTH
-        InitAuthSchemes();      /* required for config parsing */
+        Auth::Init();      /* required for config parsing */
 #endif
         Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
 
