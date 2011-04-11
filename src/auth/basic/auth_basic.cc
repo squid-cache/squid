@@ -97,7 +97,7 @@ Auth::Basic::Config::type() const
 int32_t
 BasicUser::ttl() const
 {
-    if (credentials() != Ok && credentials() != Pending)
+    if (credentials() != Auth::Ok && credentials() != Auth::Pending)
         return -1; // TTL is obsolete NOW.
 
     int32_t basic_ttl = expiretime - squid_curtime + static_cast<Auth::Basic::Config*>(config)->credentialsTTL;
@@ -109,7 +109,7 @@ BasicUser::ttl() const
 bool
 BasicUser::authenticated() const
 {
-    if ((credentials() == Ok) && (expiretime + static_cast<Auth::Basic::Config*>(config)->credentialsTTL > squid_curtime))
+    if ((credentials() == Auth::Ok) && (expiretime + static_cast<Auth::Basic::Config*>(config)->credentialsTTL > squid_curtime))
         return true;
 
     debugs(29, 4, "User not authenticated or credentials need rechecking.");
@@ -189,9 +189,9 @@ authenticateBasicHandleReply(void *data, char *reply)
     assert(basic_auth != NULL);
 
     if (reply && (strncasecmp(reply, "OK", 2) == 0))
-        basic_auth->credentials(AuthUser::Ok);
+        basic_auth->credentials(Auth::Ok);
     else {
-        basic_auth->credentials(AuthUser::Failed);
+        basic_auth->credentials(Auth::Failed);
 
         if (t && *t)
             r->auth_user_request->setDenyMessage(t);
@@ -281,7 +281,7 @@ authenticateBasicStats(StoreEntry * sentry)
     helperStats(sentry, basicauthenticators, "Basic Authenticator Statistics");
 }
 
-static AuthUser::Pointer
+static Auth::User::Pointer
 authBasicAuthUserFindUsername(const char *username)
 {
     AuthUserHashPointer *usernamehash;
@@ -301,7 +301,7 @@ authBasicAuthUserFindUsername(const char *username)
 }
 
 BasicUser::BasicUser(Auth::Config *aConfig) :
-        AuthUser(aConfig),
+        Auth::User(aConfig),
         passwd(NULL),
         auth_queue(NULL),
         currentRequest(NULL)
@@ -361,15 +361,15 @@ BasicUser::updateCached(BasicUser *from)
 
     if (strcmp(from->passwd, passwd)) {
         debugs(29, 4, HERE << "new password found. Updating in user master record and resetting auth state to unchecked");
-        credentials(Unchecked);
+        credentials(Auth::Unchecked);
         xfree(passwd);
         passwd = from->passwd;
         from->passwd = NULL;
     }
 
-    if (credentials() == Failed) {
+    if (credentials() == Auth::Failed) {
         debugs(29, 4, HERE << "last attempt to authenticate this user failed, resetting auth state to unchecked");
-        credentials(Unchecked);
+        credentials(Auth::Unchecked);
     }
 }
 
@@ -393,7 +393,7 @@ Auth::Basic::Config::decode(char const *proxy_auth)
     if (!cleartext)
         return auth_user_request;
 
-    AuthUser::Pointer lb;
+    Auth::User::Pointer lb;
     /* permitted because local_basic is purely local function scope. */
     BasicUser *local_basic = NULL;
 
@@ -432,7 +432,7 @@ Auth::Basic::Config::decode(char const *proxy_auth)
     }
 
     /* now lookup and see if we have a matching auth_user structure in memory. */
-    AuthUser::Pointer auth_user;
+    Auth::User::Pointer auth_user;
 
     if ((auth_user = authBasicAuthUserFindUsername(lb->username())) == NULL) {
         /* the user doesn't exist in the username cache yet */
@@ -512,7 +512,7 @@ void
 BasicUser::submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data)
 {
     /* mark the user as having verification in progress */
-    credentials(Pending);
+    credentials(Auth::Pending);
     authenticateStateData *r = NULL;
     char buf[8192];
     char user[1024], pass[1024];

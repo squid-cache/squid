@@ -22,7 +22,7 @@
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 
 /// \ingroup AuthNegotiateAPI
-class NegotiateUser : public AuthUser
+class NegotiateUser : public Auth::User
 {
 
 public:

@@ -13,7 +13,7 @@
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 
-class NTLMUser : public AuthUser
+class NTLMUser : public Auth::User
 {
 
 public:

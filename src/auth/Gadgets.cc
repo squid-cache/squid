@@ -89,7 +89,7 @@ authenticateInit(Auth::ConfigVector * config)
 {
     /* Do this first to clear memory and remove dead state on a reconfigure */
     if (proxy_auth_username_cache)
-        AuthUser::CachedACLsReset();
+        Auth::User::CachedACLsReset();
 
     /* If we do not have any auth config state to create stop now. */
     if (!config)
@@ -103,7 +103,7 @@ authenticateInit(Auth::ConfigVector * config)
     }
 
     if (!proxy_auth_username_cache)
-        AuthUser::cacheInit();
+        Auth::User::cacheInit();
 
     authenticateRegisterWithCacheManager(config);
 }
@@ -137,7 +137,7 @@ authenticateReset(void)
     Auth::TheConfig.clean();
 }
 
-AuthUserHashPointer::AuthUserHashPointer(AuthUser::Pointer anAuth_user):
+AuthUserHashPointer::AuthUserHashPointer(Auth::User::Pointer anAuth_user):
         auth_user(anAuth_user)
 {
     key = (void *)anAuth_user->username();
@@ -145,7 +145,7 @@ AuthUserHashPointer::AuthUserHashPointer(AuthUser::Pointer anAuth_user):
     hash_join(proxy_auth_username_cache, (hash_link *) this);
 }
 
-AuthUser::Pointer
+Auth::User::Pointer
 AuthUserHashPointer::user() const
 {
     return auth_user;

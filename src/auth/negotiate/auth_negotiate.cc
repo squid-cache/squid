@@ -241,14 +241,14 @@ Auth::Negotiate::Config::fixHeader(AuthUserRequest::Pointer auth_user_request, H
 
         switch (negotiate_request->user()->credentials()) {
 
-        case AuthUser::Failed:
+        case Auth::Failed:
             /* here it makes sense to drop the connection, as auth is
              * tied to it, even if MAYBE the client could handle it - Kinkie */
             rep->header.delByName("keep-alive");
             request->flags.proxy_keepalive = 0;
             /* fall through */
 
-        case AuthUser::Ok:
+        case Auth::Ok:
             /* Special case: authentication finished OK but disallowed by ACL.
              * Need to start over to give the client another chance.
              */
@@ -262,14 +262,14 @@ Auth::Negotiate::Config::fixHeader(AuthUserRequest::Pointer auth_user_request, H
             }
             break;
 
-        case AuthUser::Unchecked:
+        case Auth::Unchecked:
             /* semantic change: do not drop the connection.
              * 2.5 implementation used to keep it open - Kinkie */
             debugs(29, 9, HERE << "Sending type:" << reqType << " header: 'Negotiate'");
             httpHeaderPutStrf(&rep->header, reqType, "Negotiate");
             break;
 
-        case AuthUser::Handshake:
+        case Auth::Handshake:
             /* we're waiting for a response from the client. Pass it the blob */
             debugs(29, 9, HERE << "Sending type:" << reqType << " header: 'Negotiate " << negotiate_request->server_blob << "'");
             httpHeaderPutStrf(&rep->header, reqType, "Negotiate %s", negotiate_request->server_blob);
@@ -319,7 +319,7 @@ Auth::Negotiate::Config::decode(char const *proxy_auth)
     return auth_user_request;
 }
 
-NegotiateUser::NegotiateUser(Auth::Config *aConfig) : AuthUser(aConfig)
+NegotiateUser::NegotiateUser(Auth::Config *aConfig) : Auth::User(aConfig)
 {
     proxy_auth_list.head = proxy_auth_list.tail = NULL;
 }
