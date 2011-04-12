@@ -36,6 +36,8 @@
 #include "squid.h"
 #include "Store.h"
 #include "MemObject.h"
+#include "MemStore.h"
+#include "mem_node.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "SwapDir.h"
@@ -73,10 +75,13 @@ static STDIRSELECT storeDirSelectSwapDirLeastLoad;
 int StoreController::store_dirs_rebuilding = 1;
 
 StoreController::StoreController() : swapDir (new StoreHashIndex())
+    , memStore(NULL)
 {}
 
 StoreController::~StoreController()
-{}
+{
+    delete memStore;
+}
 
 /*
  * This function pointer is set according to 'store_dir_select_algorithm'
@@ -87,6 +92,10 @@ STDIRSELECT *storeDirSelectSwapDir = storeDirSelectSwapDirLeastLoad;
 void
 StoreController::init()
 {
+    // XXX: add: if (UsingSmp())
+    memStore = new MemStore;
+    memStore->init();
+
     swapDir->init();
 
     if (0 == strcasecmp(Config.store_dir_select_algorithm, "round-robin")) {
@@ -336,6 +345,9 @@ SwapDir::updateSize(int64_t size, int sign)
 void
 StoreController::stat(StoreEntry &output) const
 {
+    if (memStore)
+        memStore->stat(output);
+
     storeAppendPrintf(&output, "Store Directory Statistics:\n");
     storeAppendPrintf(&output, "Store Entries          : %lu\n",
                       (unsigned long int)StoreEntry::inUseCount());
@@ -509,7 +521,8 @@ StoreHashIndex::dir(const int i) const
 void
 StoreController::sync(void)
 {
-    /* sync mem cache? */
+    if (memStore)
+        memStore->sync();
     swapDir->sync();
 }
 
@@ -657,7 +670,11 @@ StoreController::reference(StoreEntry &e)
     if (e.swap_dirn > -1)
         e.store()->reference(e);
 
-    /* Notify the memory cache that we're referencing this object again */
+    // Notify the memory cache that we're referencing this object again
+    if (memStore && e.mem_status == IN_MEMORY)
+        memStore->reference(e);
+
+    // TODO: move this code to a non-shared memory cache class when we have it
     if (e.mem_obj) {
         if (mem_policy->Referenced)
             mem_policy->Referenced(mem_policy, &e, &e.mem_obj->repl);
@@ -672,7 +689,11 @@ StoreController::dereference(StoreEntry & e)
     if (e.swap_filen > -1)
         e.store()->dereference(e);
 
-    /* Notify the memory cache that we're not referencing this object any more */
+    // Notify the memory cache that we're not referencing this object any more
+    if (memStore && e.mem_status == IN_MEMORY)
+        memStore->dereference(e);
+
+    // TODO: move this code to a non-shared memory cache class when we have it
     if (e.mem_obj) {
         if (mem_policy->Dereferenced)
             mem_policy->Dereferenced(mem_policy, &e, &e.mem_obj->repl);
@@ -683,10 +704,20 @@ StoreEntry *
 StoreController::get(const cache_key *key)
 {
     if (StoreEntry *e = swapDir->get(key)) {
+        // TODO: ignore and maybe handleIdleEntry() unlocked intransit entries
+        // because their backing store slot may be gone already.
         debugs(20, 3, HERE << "got in-transit entry: " << *e);
         return e;
     }
 
+    if (memStore) {
+        if (StoreEntry *e = memStore->get(key)) {
+            debugs(20, 3, HERE << "got mem-cached entry: " << *e);
+            return e;
+        }
+    }
+
+    // TODO: this disk iteration is misplaced; move to StoreHashIndex
     if (const int cacheDirs = Config.cacheSwap.n_configured) {
         // ask each cache_dir until the entry is found; use static starting
         // point to avoid asking the same subset of disks more often
@@ -715,6 +746,38 @@ void
 StoreController::get(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
 {
     fatal("not implemented");
+}
+
+void
+StoreController::handleIdleEntry(StoreEntry &e)
+{
+    bool keepInLocalMemory = false;
+    if (memStore) {
+        memStore->considerKeeping(e);
+        // leave keepInLocalMemory false; memStore maintains its own cache
+    } else {
+        keepInLocalMemory = e.memoryCachable() && // entry is in good shape and
+            // the local memory cache is not overflowing
+            (mem_node::InUseCount() <= store_pages_max);
+    }
+
+    dereference(e);
+
+    // XXX: Rock store specific: Since each SwapDir controls its index,
+    // unlocked entries should not stay in the global store_table.
+    if (fileno >= 0) {
+        debugs(20, 5, HERE << "destroying unlocked entry: " << &e << ' ' << e);
+        destroyStoreEntry(static_cast<hash_link*>(&e));
+        return;
+    }
+
+    // TODO: move this into [non-shared] memory cache class when we have one
+    if (keepInLocalMemory) {
+        e.setMemStatus(IN_MEMORY);
+        e.mem_obj->unlinkRequest();
+    } else {
+        e.purgeMem(); // may free e
+    }
 }
 
 StoreHashIndex::StoreHashIndex()

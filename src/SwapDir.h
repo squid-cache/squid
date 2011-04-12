@@ -37,14 +37,14 @@
 
 /* forward decls */
 class RemovalPolicy;
+class MemStore;
 
 /* Store dir configuration routines */
 /* SwapDir *sd, char *path ( + char *opt later when the strtok mess is gone) */
 
 class ConfigOption;
 
-/* New class that replaces the static SwapDir methods as part of the Store overhaul */
-
+/// hides memory/disk cache distinction from callers
 class StoreController : public Store
 {
 
@@ -57,6 +57,9 @@ public:
     virtual StoreEntry * get(const cache_key *);
 
     virtual void get(String const, STOREGETCLIENT, void * cbdata);
+
+    /* Store parent API */
+    virtual void handleIdleEntry(StoreEntry &e);
 
     virtual void init();
 
@@ -84,7 +87,8 @@ public:
 private:
     void createOneStore(Store &aStore);
 
-    StorePointer swapDir;
+    StorePointer swapDir; ///< summary view of all disk caches
+    MemStore *memStore; ///< memory cache
 };
 
 /* migrating from the Config based list of swapdirs */
@@ -108,7 +112,7 @@ SQUIDCEXTERN void storeDirLRUAdd(StoreEntry *);
 SQUIDCEXTERN int storeDirGetBlkSize(const char *path, int *blksize);
 SQUIDCEXTERN int storeDirGetUFSStats(const char *, int *, int *, int *, int *);
 
-
+/// manages a single cache_dir
 class SwapDir : public Store
 {
 
