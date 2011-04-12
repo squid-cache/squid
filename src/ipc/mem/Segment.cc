@@ -51,6 +51,8 @@ Ipc::Mem::Segment::create(const int aSize)
     theSize = aSize;
     theReserved = 0;
 
+    debugs(54, 3, HERE << "created " << theName << " segment: " << theSize);
+
     attach();
 }
 
@@ -79,6 +81,8 @@ Ipc::Mem::Segment::open()
 
         theSize = s.st_size;
     }
+
+    debugs(54, 3, HERE << "opened " << theName << " segment: " << theSize);
 
     attach();
 }
@@ -118,8 +122,9 @@ Ipc::Mem::Segment::reserve(size_t chunkSize)
 {
     assert(chunkSize <= theSize);
     assert(theReserved <= theSize - chunkSize);
+    void *result = reinterpret_cast<char*>(mem()) + theReserved;
     theReserved += chunkSize;
-    return reinterpret_cast<char*>(mem()) + theReserved;
+    return result;
 }
 
 /// Generate name for shared memory segment. Replaces all slashes with dots.
