@@ -31,7 +31,8 @@ public:
     void push(const Value value);
 
 private:
-    typedef unsigned int Offset; ///< stack index type
+    /// stack index and size type (may temporary go negative)
+    typedef int Offset;
 
     struct Shared {
         Shared(const unsigned int aCapacity);
