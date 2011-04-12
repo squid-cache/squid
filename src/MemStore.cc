@@ -182,7 +182,9 @@ MemStore::copyFromShm(StoreEntry &e, const MemStoreMap::Extras &extras)
 
     assert(e.mem_obj->data_hdr.write(sourceBuf)); // from MemObject::write()
     const int64_t written = e.mem_obj->endOffset();
-    assert(written == sourceBuf.length); // StoreEntry::write never fails?
+    // we should write all because StoreEntry::write() never fails
+    assert(written >= 0 &&
+           static_cast<size_t>(written) == sourceBuf.length);
     // would be nice to call validLength() here, but it needs e.key
 
     debugs(20, 7, HERE << "mem-loaded all " << written << " bytes of " << e <<
@@ -214,7 +216,7 @@ bool
 MemStore::willFit(int64_t need)
 {
     // TODO: obey configured maximum entry size (with page-based rounding)
-    return need <= Ipc::Mem::PageSize();
+    return need <= static_cast<int64_t>(Ipc::Mem::PageSize());
 }
 
 /// allocates map slot and calls copyToShm to store the entry in shared memory
