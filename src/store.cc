@@ -314,6 +314,13 @@ StoreEntry::storeClientType() const
      * offset 0 in the memory object is the HTTP headers.
      */
 
+    if (/* XXX: restore: UsingSmp() && */ mem_status == IN_MEMORY) {
+        // clients of an object cached in shared memory are memory clients
+        return STORE_MEM_CLIENT;
+    }
+
+    assert(mem_obj);
+
     if (mem_obj->inmem_lo)
         return STORE_DISK_CLIENT;
 
@@ -365,6 +372,7 @@ StoreEntry::storeClientType() const
 }
 
 StoreEntry::StoreEntry():
+        hidden_mem_obj(NULL),
         swap_file_sz(0)
 {
     debugs(20, 3, HERE << "new StoreEntry " << this);
@@ -378,6 +386,7 @@ StoreEntry::StoreEntry():
 }
 
 StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl):
+        hidden_mem_obj(NULL),
         swap_file_sz(0)
 {
     debugs(20, 3, HERE << "new StoreEntry " << this);
@@ -396,6 +405,7 @@ StoreEntry::~StoreEntry()
         SwapDir &sd = dynamic_cast<SwapDir&>(*store());
         sd.disconnect(*this);
     }
+    delete hidden_mem_obj;
 }
 
 void
@@ -406,6 +416,18 @@ StoreEntry::destroyMemObject()
     MemObject *mem = mem_obj;
     mem_obj = NULL;
     delete mem;
+    delete hidden_mem_obj;
+    hidden_mem_obj = NULL;
+}
+
+void
+StoreEntry::hideMemObject()
+{
+    debugs(20, 3, HERE << "hiding " << mem_obj);
+    assert(mem_obj);
+    assert(!hidden_mem_obj);
+    hidden_mem_obj = mem_obj;
+    mem_obj = NULL;
 }
 
 void
@@ -532,29 +554,10 @@ StoreEntry::unlock()
         return 0;
     }
 
-    // XXX: Rock store specific: since each SwapDir controls the index,
-    // unlocked entries should not stay in the global store_table
-    if (fileno >= 0) {
-        Store::Root().dereference(*this);
-        debugs(20, 5, HERE << "destroying unlocked entry: " << this << ' ' << *this);
-        setMemStatus(NOT_IN_MEMORY);
-        destroyStoreEntry(static_cast<hash_link *>(this));
-        return 0;
-    }
-    else if (keepInMemory()) {
-        Store::Root().dereference(*this);
-        setMemStatus(IN_MEMORY);
-        mem_obj->unlinkRequest();
-    } else {
-        Store::Root().dereference(*this);
+    if (EBIT_TEST(flags, KEY_PRIVATE))
+        debugs(20, 1, "WARNING: " << __FILE__ << ":" << __LINE__ << ": found KEY_PRIVATE");
 
-        if (EBIT_TEST(flags, KEY_PRIVATE))
-            debugs(20, 1, "WARNING: " << __FILE__ << ":" << __LINE__ << ": found KEY_PRIVATE");
-
-        /* StoreEntry::purgeMem may free e */
-        purgeMem();
-    }
-
+    Store::Root().handleIdleEntry(*this); // may delete us
     return 0;
 }
 
@@ -722,6 +725,8 @@ StoreEntry::setPublicKey()
             }
         }
 
+        // TODO: storeGetPublic() calls below may create unlocked entries.
+        // We should add/use storeHas() API or lock/unlock those entries.
         if (mem_obj->vary_headers && !storeGetPublic(mem_obj->url, mem_obj->method)) {
             /* Create "vary" base object */
             String vary;
@@ -1428,8 +1433,8 @@ storeConfigure(void)
     store_pages_max = Config.memMaxSize / sizeof(mem_node);
 }
 
-int
-StoreEntry::keepInMemory() const
+bool
+StoreEntry::memoryCachable() const
 {
     if (mem_obj == NULL)
         return 0;
@@ -1443,8 +1448,9 @@ StoreEntry::keepInMemory() const
     if (!Config.onoff.memory_cache_first && swap_status == SWAPOUT_DONE && refcount == 1)
         return 0;
 
-    // already kept more than allowed
-    if (mem_node::InUseCount() > store_pages_max)
+    const int64_t expectedSize = mem_obj->expectedReplySize();
+    // objects of unknown size are not allowed into the memory cache, for now
+    if (expectedSize < 0 || expectedSize > Config.Store.maxInMemObjSize)
         return 0;
 
     return 1;
@@ -1612,6 +1618,16 @@ StoreEntry::setMemStatus(mem_status_t new_status)
     if (new_status == mem_status)
         return;
 
+    // XXX: restore: if (UsingSmp())
+    {
+        assert(new_status != IN_MEMORY); // we do not call this otherwise
+        // This method was designed to update replacement policy, not to
+        // actually purge something from the memory cache (TODO: rename?).
+        // Shared memory cache does not have a policy that needs updates.
+        mem_status = new_status;
+        return;
+    }
+
     assert(mem_obj != NULL);
 
     if (new_status == IN_MEMORY) {
@@ -1624,7 +1640,7 @@ StoreEntry::setMemStatus(mem_status_t new_status)
             debugs(20, 4, "StoreEntry::setMemStatus: inserted mem node " << mem_obj->url << " key: " << getMD5Text());
         }
 
-        hot_obj_count++;
+        hot_obj_count++; // TODO: maintain for the shared hot cache as well
     } else {
         if (EBIT_TEST(flags, ENTRY_SPECIAL)) {
             debugs(20, 4, "StoreEntry::setMemStatus: special entry " << mem_obj->url);
@@ -1655,6 +1671,14 @@ StoreEntry::createMemObject(const char *aUrl, const char *aLogUrl)
 {
     if (mem_obj)
         return;
+
+    if (hidden_mem_obj) {
+        debugs(20, 3, HERE << "restoring " << hidden_mem_obj);
+        mem_obj = hidden_mem_obj;
+        hidden_mem_obj = NULL;
+        mem_obj->resetUrls(aUrl, aLogUrl);
+        return;
+    }
 
     mem_obj = new MemObject(aUrl, aLogUrl);
 }

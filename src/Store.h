@@ -110,6 +110,7 @@ public:
     void cacheNegatively();		/** \todo argh, why both? */
     void invokeHandlers();
     void purgeMem();
+    void cacheInMemory(); ///< start or continue storing in memory cache
     void swapOut();
     bool swapOutAble() const;
     void swapOutFileClose(int how);
@@ -118,8 +119,9 @@ public:
     int checkNegativeHit() const;
     int locked() const;
     int validToSend() const;
-    int keepInMemory() const;
+    bool memoryCachable() const; ///< may be cached in memory
     void createMemObject(const char *, const char *);
+    void hideMemObject(); ///< no mem_obj for callers until createMemObject
     void dump(int debug_lvl) const;
     void hashDelete();
     void hashInsert(const cache_key *);
@@ -144,6 +146,7 @@ public:
     virtual RefCount<Store> store() const;
 
     MemObject *mem_obj;
+    MemObject *hidden_mem_obj; ///< mem_obj created before URLs were known
     RemovalPolicyNode repl;
     /* START OF ON-DISK STORE_META_STD TLV field */
     time_t timestamp;
@@ -318,6 +321,11 @@ public:
     virtual void dereference(StoreEntry &) = 0;	/* Unreference this object */
 
     virtual void maintain() = 0; /* perform regular maintenance should be private and self registered ... */
+
+    // XXX: This method belongs to Store::Root/StoreController, but it is here
+    // because test cases use non-StoreController derivatives as Root
+    /// called when the entry is no longer needed by any transaction
+    virtual void handleIdleEntry(StoreEntry &e) {}
 
     /* These should really be private */
     virtual void updateSize(int64_t size, int sign) = 0;

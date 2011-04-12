@@ -64,6 +64,7 @@
 #include "StoreFileSystem.h"
 #include "DiskIO/DiskIOModule.h"
 #include "ipc/Kids.h"
+#include "ipc/mem/Pages.h"
 #include "ipc/Coordinator.h"
 #include "ipc/Strand.h"
 #include "ip/tools.h"
@@ -1410,6 +1411,13 @@ SquidMain(int argc, char **argv)
         sendSignal();
         /* NOTREACHED */
     }
+
+    // XXX: this logic should probably be moved into Ipc::Mem::Init()
+    if (IamMasterProcess())
+        Ipc::Mem::Init();
+    else
+    if (UsingSmp() && IamWorkerProcess())
+        Ipc::Mem::Attach();
 
     if (!opt_no_daemon && Config.workers > 0)
         watch_child(argv);
