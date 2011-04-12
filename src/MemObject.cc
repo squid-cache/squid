@@ -71,6 +71,15 @@ MemObject::inUseCount()
     return Pool().inUseCount();
 }
 
+void
+MemObject::resetUrls(char const *aUrl, char const *aLog_url)
+{
+    safe_free(url);
+    safe_free(log_url);    /* XXX account log_url */
+    log_url = xstrdup(aLog_url);
+    url = xstrdup(aUrl);
+}
+
 MemObject::MemObject(char const *aUrl, char const *aLog_url)
 {
     debugs(20, 3, HERE << "new MemObject " << this);

@@ -463,8 +463,8 @@ squid_SOURCES = \
 	Server.h \
 	structs.h \
 	swap_log_op.h \
-	SwapDir.cc \
-	SwapDir.h \
+	SwapDir.cc MemStore.cc MemStoreMap.cc \
+	SwapDir.h MemStore.h MemStoreMap.h \
 	time.cc \
 	tools.cc \
 	tunnel.cc \
@@ -1268,7 +1268,7 @@ tests_testCacheManager_SOURCES = \
 	$(TEST_CALL_SOURCES) \
 	tools.cc \
 	tunnel.cc \
-	SwapDir.cc \
+	SwapDir.cc MemStore.cc MemStoreMap.cc \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
@@ -1469,7 +1469,7 @@ tests_testEvent_SOURCES = \
 	$(TEST_CALL_SOURCES) \
 	tools.cc \
 	tunnel.cc \
-	SwapDir.cc \
+	SwapDir.cc MemStore.cc MemStoreMap.cc \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
@@ -1629,7 +1629,7 @@ tests_testEventLoop_SOURCES = \
 	$(TEST_CALL_SOURCES) \
 	tools.cc \
 	tunnel.cc \
-	SwapDir.cc \
+	SwapDir.cc MemStore.cc MemStoreMap.cc \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
@@ -1778,7 +1778,7 @@ tests_test_http_range_SOURCES = \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
-	SwapDir.cc \
+	SwapDir.cc MemStore.cc MemStoreMap.cc \
 	$(TEST_CALL_SOURCES) \
 	time.cc \
 	tools.cc \
@@ -1944,7 +1944,7 @@ tests_testHttpRequest_SOURCES = \
 	$(TEST_CALL_SOURCES) \
 	tools.cc \
 	tunnel.cc \
-	SwapDir.cc \
+	SwapDir.cc MemStore.cc MemStoreMap.cc \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
@@ -1997,7 +1997,7 @@ STORE_TEST_SOURCES=\
 	store_key_md5.cc \
 	Parsing.cc \
 	ConfigOption.cc \
-	SwapDir.cc \
+	SwapDir.cc MemStore.cc MemStoreMap.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
 	tests/stub_helper.cc cbdata.cc String.cc \
 	tests/stub_comm.cc \
@@ -2391,7 +2391,7 @@ tests_testURL_SOURCES = \
 	$(TEST_CALL_SOURCES) \
 	tools.cc \
 	tunnel.cc \
-	SwapDir.cc \
+	SwapDir.cc MemStore.cc MemStoreMap.cc \
 	urn.cc \
 	wccp2.cc \
 	whois.cc \
