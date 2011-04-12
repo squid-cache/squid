@@ -1450,7 +1450,8 @@ StoreEntry::memoryCachable() const
 
     const int64_t expectedSize = mem_obj->expectedReplySize();
     // objects of unknown size are not allowed into the memory cache, for now
-    if (expectedSize < 0 || expectedSize > Config.Store.maxInMemObjSize)
+    if (expectedSize < 0 ||
+        expectedSize > static_cast<int64_t>(Config.Store.maxInMemObjSize))
         return 0;
 
     return 1;
