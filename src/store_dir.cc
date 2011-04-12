@@ -200,7 +200,7 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
     if (objsize != -1)
         objsize += e->mem_obj->swap_hdr_sz;
 
-    for (i = 0; i <= Config.cacheSwap.n_configured; i++) {
+    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
         if (++dirn >= Config.cacheSwap.n_configured)
             dirn = 0;
 
@@ -345,9 +345,6 @@ SwapDir::updateSize(int64_t size, int sign)
 void
 StoreController::stat(StoreEntry &output) const
 {
-    if (memStore)
-        memStore->stat(output);
-
     storeAppendPrintf(&output, "Store Directory Statistics:\n");
     storeAppendPrintf(&output, "Store Entries          : %lu\n",
                       (unsigned long int)StoreEntry::inUseCount());
@@ -358,7 +355,9 @@ StoreController::stat(StoreEntry &output) const
     storeAppendPrintf(&output, "Current Capacity       : %"PRId64"%% used, %"PRId64"%% free\n",
                       Math::int64Percent(store_swap_size, maxSize()),
                       Math::int64Percent((maxSize() - store_swap_size), maxSize()));
-    /* FIXME Here we should output memory statistics */
+
+    if (memStore)
+        memStore->stat(output);
 
     /* now the swapDir */
     swapDir->stat(output);
