@@ -13,6 +13,7 @@ Ipc::StoreMap::StoreMap(const char *const aPath, const int limit,
     size_t sharedSizeExtra):
     cleaner(NULL), path(aPath), shm(aPath), shared(NULL)
 {
+    assert(limit > 0); // we should not be created otherwise
     const size_t mySharedSize = Shared::MemSize(limit);
     shm.create(mySharedSize + sharedSizeExtra);
     shared = new (shm.reserve(mySharedSize)) Shared(limit);
@@ -25,7 +26,8 @@ Ipc::StoreMap::StoreMap(const char *const aPath):
     shm.open();
     assert(shm.mem());
     shared = reinterpret_cast<Shared *>(shm.mem());
-    // check that nobody used our segment chunk and that shared->limit is sane
+    assert(shared->limit > 0); // we should not be created otherwise
+    // now that the limit is checked, check that nobody used our segment chunk
     assert(shared == reinterpret_cast<Shared *>(shm.reserve(Shared::MemSize(shared->limit))));
     debugs(54, 5, HERE << "attached map [" << path << "] created: " << shared->limit);
 }
