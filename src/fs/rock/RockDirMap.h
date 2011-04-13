@@ -38,7 +38,7 @@ private:
 // resulting in sfilenos that are pointing beyond the database.
 
 /* 
- * Rock::DirMap does not implement Icp::StoreMapCleaner API because we want
+ * Rock::DirMap does not implement Ipc::StoreMapCleaner API because we want
  * to avoid extra I/O necessary to mark the disk slot empty. We may create some
  * stale responses if Squid quits, but should save a lot of I/O in the common
  * cases. TODO: Consider cleaning on-disk slots on exit; always scheduling 
