@@ -963,6 +963,8 @@ StoreEntry::checkTooSmall()
     return 0;
 }
 
+// TODO: remove checks already performed by swapoutPossible()
+// TODO: move "too many open..." checks outside -- we are called too early/late
 int
 StoreEntry::checkCachable()
 {
@@ -1866,32 +1868,57 @@ StoreEntry::getSerialisedMetaData()
 bool
 StoreEntry::swapoutPossible()
 {
+    if (!Config.cacheSwap.n_configured)
+        return false;
+
     /* should we swap something out to disk? */
     debugs(20, 7, "storeSwapOut: " << url());
     debugs(20, 7, "storeSwapOut: store_status = " << storeStatusStr[store_status]);
 
+    assert(mem_obj);
+    MemObject::SwapOut::Decision &decision = mem_obj->swapout.decision;
+
+    // if we decided that swapout is not possible, do not repeat same checks
+    if (decision == MemObject::SwapOut::swImpossible) {
+        debugs(20, 3, "storeSwapOut: already rejected");
+        return false;
+    }
+
+    // this flag may change so we must check it even if we already said "yes"
     if (EBIT_TEST(flags, ENTRY_ABORTED)) {
         assert(EBIT_TEST(flags, RELEASE_REQUEST));
         // StoreEntry::abort() already closed the swap out file, if any
+        decision = MemObject::SwapOut::swImpossible;
         return false;
     }
 
     // if we decided that swapout is possible, do not repeat same checks
-    // TODO: do not repeat any checks if we decided that swapout is impossible
+    if (decision == MemObject::SwapOut::swPossible) {
+        debugs(20, 3, "storeSwapOut: already allowed");
+        return true;
+    }
+
+    // if we are swapping out already, do not repeat same checks
     if (swap_status != SWAPOUT_NONE) {
         debugs(20, 3, "storeSwapOut: already started");
+        decision = MemObject::SwapOut::swPossible;
         return true;
+    }
+
+    if (!checkCachable()) {
+        debugs(20, 3, "storeSwapOut: not cachable");
+        decision = MemObject::SwapOut::swImpossible;
+        return false;
     }
 
     if (EBIT_TEST(flags, ENTRY_SPECIAL)) {
         debugs(20, 3, "storeSwapOut: " << url() << " SPECIAL");
+        decision = MemObject::SwapOut::swImpossible;
         return false;
     }
 
     // check cache_dir max-size limit if all cache_dirs have it
     if (store_maxobjsize >= 0) {
-        assert(mem_obj);
-
         // TODO: add estimated store metadata size to be conservative
 
         // use guaranteed maximum if it is known
@@ -1900,6 +1927,7 @@ StoreEntry::swapoutPossible()
         if (expectedEnd > store_maxobjsize) {
             debugs(20, 3, "storeSwapOut: will not fit: " << expectedEnd <<
                 " > " << store_maxobjsize);
+            decision = MemObject::SwapOut::swImpossible;
             return false; // known to outgrow the limit eventually
         }
         if (expectedEnd < 0) {
@@ -1913,10 +1941,12 @@ StoreEntry::swapoutPossible()
         if (currentEnd > store_maxobjsize) {
             debugs(20, 3, "storeSwapOut: does not fit: " << currentEnd <<
                 " > " << store_maxobjsize);
+            decision = MemObject::SwapOut::swImpossible;
             return false; // already does not fit and may only get bigger
         }
     }
 
+    decision = MemObject::SwapOut::swPossible;
     return true;
 }
 

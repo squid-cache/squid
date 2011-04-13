@@ -99,6 +99,8 @@ MemObject::MemObject(char const *aUrl, char const *aLog_url)
     object_sz = -1;
 
     /* XXX account log_url */
+
+    swapout.decision = SwapOut::swNeedsCheck;
 }
 
 MemObject::~MemObject()
