@@ -37,4 +37,13 @@ private:
 // We do not reuse struct _fileMap because we cannot control its size,
 // resulting in sfilenos that are pointing beyond the database.
 
+/* 
+ * Rock::DirMap does not implement Icp::StoreMapCleaner API because we want
+ * to avoid extra I/O necessary to mark the disk slot empty. We may create some
+ * stale responses if Squid quits, but should save a lot of I/O in the common
+ * cases. TODO: Consider cleaning on-disk slots on exit; always scheduling 
+ * but cancelling/merging cleanup I/O; scheduling cleanup I/O after a
+ * configurable delay; etc.
+ */
+
 #endif /* SQUID_FS_ROCK_DIR_MAP_H */
