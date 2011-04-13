@@ -11,7 +11,7 @@
 
 Ipc::StoreMap::StoreMap(const char *const aPath, const int limit,
     size_t sharedSizeExtra):
-    path(aPath), shm(aPath), shared(NULL)
+    cleaner(NULL), path(aPath), shm(aPath), shared(NULL)
 {
     const size_t mySharedSize = Shared::MemSize(limit);
     shm.create(mySharedSize + sharedSizeExtra);
@@ -20,7 +20,7 @@ Ipc::StoreMap::StoreMap(const char *const aPath, const int limit,
 }
 
 Ipc::StoreMap::StoreMap(const char *const aPath):
-    path(aPath), shm(aPath), shared(NULL)
+    cleaner(NULL), path(aPath), shm(aPath), shared(NULL)
 {
     shm.open();
     assert(shm.mem());
@@ -43,12 +43,12 @@ Ipc::StoreMap::openForWriting(const cache_key *const key, sfileno &fileno)
     if (lock.lockExclusive()) {
         assert(s.state != Slot::Writeable); // until we start breaking locks
 
-        // free if the entry was dirty, keeping the entry locked
-        if (s.waitingToBeFreed == true)
+        // free if the entry was used, keeping the entry locked
+        if (s.waitingToBeFreed == true || s.state == Slot::Readable)
             freeLocked(s, true);
 
-        if (s.state == Slot::Empty) // we may also overwrite a Readable slot
-            ++shared->count;
+        assert(s.state == Slot::Empty);
+        ++shared->count;
         s.state = Slot::Writeable;
         fileno = idx;
         //s.setKey(key); // XXX: the caller should do that
@@ -253,6 +253,9 @@ Ipc::StoreMap::slotByKey(const cache_key *const key)
 void
 Ipc::StoreMap::freeLocked(Slot &s, bool keepLocked)
 {
+    if (s.state == Slot::Readable && cleaner)
+        cleaner->cleanReadable(&s - shared->slots);
+
     s.waitingToBeFreed = false;
     s.state = Slot::Empty;
     if (!keepLocked)
