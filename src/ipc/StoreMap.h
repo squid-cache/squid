@@ -3,6 +3,7 @@
 
 #include "ipc/ReadWriteLock.h"
 #include "ipc/mem/Segment.h"
+#include "typedefs.h"
 
 namespace Ipc {
 
@@ -43,6 +44,8 @@ public:
     State state; ///< current state
 };
 
+class StoreMapCleaner;
+
 /// map of StoreMapSlots indexed by their keys, with read/write slot locking 
 /// kids extend to store custom data
 class StoreMap
@@ -82,6 +85,8 @@ public:
     /// adds approximate current stats to the supplied ones
     void updateStats(ReadWriteLockStats &stats) const;
 
+    StoreMapCleaner *cleaner; ///< notified before a readable entry is freed
+
 protected:
     class Shared {
     public:
@@ -111,6 +116,17 @@ private:
 
     Shared *shared; ///< pointer to shared memory
 };
+
+/// API for adjusting external state when dirty map slot is being freed
+class StoreMapCleaner
+{
+public:
+    virtual ~StoreMapCleaner() {}
+
+    /// adjust slot-linked state before a locked Readable slot is erased
+    virtual void cleanReadable(const sfileno fileno) = 0;
+};
+
 
 } // namespace Ipc
 

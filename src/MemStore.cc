@@ -33,8 +33,10 @@ MemStore::init()
         const int64_t entrySize = Ipc::Mem::PageSize(); // for now
         const int64_t entryCount = Config.memMaxSize / entrySize;
         // TODO: warn if we cannot cache at least one item (misconfiguration)
-        if (entryCount > 0)
+        if (entryCount > 0) {
             map = new MemStoreMap("cache_mem", entryCount);
+            map->cleaner = this;
+        }
     }
 }
 
@@ -295,3 +297,10 @@ MemStore::copyToShm(StoreEntry &e, MemStoreMap::Extras &extras)
     extras.storedSize = copied;
     return true;
 }
+
+void
+MemStore::cleanReadable(const sfileno fileno)
+{
+    Ipc::Mem::PutPage(map->extras(fileno).page);
+}
+
