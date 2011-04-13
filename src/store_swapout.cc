@@ -85,9 +85,7 @@ storeSwapOutStart(StoreEntry * e)
 
     if (sio == NULL) {
         e->swap_status = SWAPOUT_NONE;
-        // our caller thinks SWAPOUT_NONE means swapping out has not started
-        // yet so we better release here to avoid being called again and again
-        e->releaseRequest();
+        mem->swapout.decision = MemObject::SwapOut::swImpossible;
         delete c;
         xfree((char*)buf);
         storeLog(STORE_LOG_SWAPOUTFAIL, e);
@@ -279,13 +277,7 @@ StoreEntry::swapOut()
     if (swap_status == SWAPOUT_NONE) {
         assert(mem_obj->swapout.sio == NULL);
         assert(mem_obj->inmem_lo == 0);
-
-        if (checkCachable())
-            storeSwapOutStart(this);
-        else
-            return;
-
-        /* ENTRY_CACHABLE will be cleared and we'll never get here again */
+        storeSwapOutStart(this); // sets SwapOut::swImpossible on failures
     }
 
     if (mem_obj->swapout.sio == NULL)
@@ -364,6 +356,10 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
         e->swap_status = SWAPOUT_DONE;
         e->store()->updateSize(e->swap_file_sz, 1);
 
+        // XXX: For some Stores, it is pointless to re-check cachability here
+        // and it leads to double counts in store_check_cachable_hist. We need
+        // another way to signal a completed but failed swapout. Or, better,
+        // each Store should handle its own logging and LOG state setting.
         if (e->checkCachable()) {
             storeLog(STORE_LOG_SWAPOUT, e);
             storeDirSwapLog(e, SWAP_LOG_ADD);

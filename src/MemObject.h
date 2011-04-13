@@ -114,6 +114,10 @@ public:
     public:
         int64_t queue_offset; ///< number of bytes sent to SwapDir for writing
         StoreIOState::Pointer sio;
+
+        /// Decision states for StoreEntry::swapoutPossible() and related code.
+        typedef enum { swNeedsCheck = 0, swImpossible = -1, swPossible = +1 } Decision;
+        Decision decision; ///< current decision state
     };
 
     SwapOut swapout;
