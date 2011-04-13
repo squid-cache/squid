@@ -19,18 +19,18 @@
 static const String PagePoolId = "squid-page-pool";
 static Ipc::Mem::PagePool *ThePagePool = 0;
 
-// XXX: make configurable
+// TODO: make configurable to avoid waste when mem-cached objects are small/big
 size_t
 Ipc::Mem::PageSize() {
-	return 16*1024;
+    return 32*1024;
 }
 
 void
 Ipc::Mem::Init()
 {
     Must(!ThePagePool);
-    // XXX: pool capacity and page size should be configurable/meaningful
-    ThePagePool = new PagePool(PagePoolId, 1024, PageSize());
+    const size_t capacity = Limit() / PageSize();
+    ThePagePool = new PagePool(PagePoolId, capacity, PageSize());
 }
 
 void
@@ -44,8 +44,7 @@ Ipc::Mem::Attach()
 bool
 Ipc::Mem::GetPage(PageId &page)
 {
-    Must(ThePagePool);
-    return ThePagePool->get(page);
+    return ThePagePool ? ThePagePool->get(page) : false;
 }
 
 void
@@ -61,3 +60,15 @@ Ipc::Mem::PagePointer(const PageId &page)
     Must(ThePagePool);
     return ThePagePool->pagePointer(page);
 }
+
+size_t
+Ipc::Mem::Limit()
+{
+    // TODO: adjust cache_mem description to say that in SMP mode,
+    // in-transit objects are not allocated using cache_mem. Eventually,
+    // they should not use cache_mem even if shared memory is not used:
+    // in-transit objects have nothing to do with caching.
+    return Config.memMaxSize;
+}
+
+// TODO: Implement size_t Ipc::Mem::Level()
