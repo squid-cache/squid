@@ -1,7 +1,8 @@
 #ifndef _SQUID_AUTH_CREDENTIALSTATE_H
 #define _SQUID_AUTH_CREDENTIALSTATE_H
 
-namespace Auth {
+namespace Auth
+{
 
 typedef enum {
     Unchecked,
