@@ -10,7 +10,7 @@
 
 /// Stores HTTP entities in RAM. Current implementation uses shared memory.
 /// Unlike a disk store (SwapDir), operations are synchronous (and fast).
-class MemStore: public Store {
+class MemStore: public Store, public Ipc::StoreMapCleaner {
 public:
     MemStore();
     virtual ~MemStore();
@@ -38,6 +38,9 @@ protected:
 
     bool copyToShm(StoreEntry &e, MemStoreMap::Extras &extras);
     bool copyFromShm(StoreEntry &e, const MemStoreMap::Extras &extras);
+
+    // Ipc::StoreMapCleaner API
+    virtual void cleanReadable(const sfileno fileno);
 
 private:
     MemStoreMap *map; ///< index of mem-cached entries
