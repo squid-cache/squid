@@ -34,13 +34,13 @@ void *PagePointer(const PageId &page);
 /* Limits and statistics */
 
 /// the total number of shared memory bytes that can be in use at any time
-uint64_t Limit();
+size_t Limit();
 
 /// approximate total number of shared memory bytes used now
-uint64_t Level();
+size_t Level();
 
 /// approximate total number of shared memory bytes we can allocate now
-inline uint64_t Available() { return Limit() - Level(); }
+inline size_t Available() { return Limit() - Level(); }
 
 /// returns page size in bytes; all pages are assumed to be the same size
 size_t PageSize();
