@@ -6,15 +6,28 @@
  */
 
 #include "config.h"
+#include "base/RunnersRegistry.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/Pages.h"
 #include "MemObject.h"
 #include "MemStore.h"
 #include "HttpReply.h"
 
+/// shared memory segment path to use for MemStore maps
+static const char *ShmLabel = "cache_mem";
 
 // XXX: support storage using more than one page per entry
 
+void
+MemStore::Init()
+{
+    const int64_t entryLimit = EntryLimit();
+    if (entryLimit <= 0)
+        return; // no memory cache configured or a misconfiguration
+
+    MemStoreMap *map = new MemStoreMap(ShmLabel, entryLimit);
+    delete map; // we just wanted to initialize shared memory segments
+}
 
 MemStore::MemStore(): map(NULL)
 {
@@ -26,18 +39,13 @@ MemStore::~MemStore()
 }
 
 void
-MemStore::init()
-{
-    if (!map && Config.memMaxSize && (!UsingSmp() || IamWorkerProcess())) {
-        // TODO: warn if we cannot support the configured maximum entry size
-        const int64_t entrySize = Ipc::Mem::PageSize(); // for now
-        const int64_t entryCount = Config.memMaxSize / entrySize;
-        // TODO: warn if we cannot cache at least one item (misconfiguration)
-        if (entryCount > 0) {
-            map = new MemStoreMap("cache_mem", entryCount);
-            map->cleaner = this;
-        }
-    }
+MemStore::init() {
+    const int64_t entryLimit = EntryLimit();
+    if (entryLimit <= 0)
+        return; // no memory cache configured or a misconfiguration
+
+    map = new MemStoreMap(ShmLabel);
+    map->cleaner = this;
 }
 
 void
@@ -304,3 +312,37 @@ MemStore::cleanReadable(const sfileno fileno)
     Ipc::Mem::PutPage(map->extras(fileno).page);
 }
 
+/// calculates maximum number of entries we need to store and map
+int64_t
+MemStore::EntryLimit()
+{
+    if (!Config.memMaxSize)
+        return 0; // no memory cache configured
+
+    // TODO: warn if we cannot support the configured maximum entry size
+    const int64_t entrySize = Ipc::Mem::PageSize(); // for now
+    const int64_t entryLimit = Config.memMaxSize / entrySize;
+    // TODO: warn if we cannot cache at least one item (misconfiguration)
+    return entryLimit;
+}
+
+
+/// initializes shared memory segments used by MemStore
+class MemStoreRr: public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    virtual void run(const RunnerRegistry &);
+    // TODO: cleanup in destructor
+};
+
+RunnerRegistrationEntry(rrAfterConfig, MemStoreRr);
+
+
+void MemStoreRr::run(const RunnerRegistry &)
+{
+    // XXX: restore if (!UsingSmp()) return;
+
+    if (IamMasterProcess())
+        MemStore::Init();
+}
