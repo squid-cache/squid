@@ -32,6 +32,9 @@ public:
     virtual void maintain();
     virtual void updateSize(int64_t size, int sign);
 
+    /// initializes shared memory segments before they are used by workers
+    static void Init();
+
 protected:
     bool willFit(int64_t needed);
     void keep(StoreEntry &e);
@@ -41,6 +44,8 @@ protected:
 
     // Ipc::StoreMapCleaner API
     virtual void cleanReadable(const sfileno fileno);
+
+    static int64_t EntryLimit();
 
 private:
     MemStoreMap *map; ///< index of mem-cached entries
