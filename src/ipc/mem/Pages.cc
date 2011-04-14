@@ -91,6 +91,11 @@ void SharedMemPagesRr::run(const RunnerRegistry &)
 {
     // XXX: restore if (!UsingSmp()) return;
 
+    // When cache_dirs start using shared memory pages, they would
+    // need to communicate their needs to us somehow.
+    if (!Ipc::Mem::Limit())
+        return;
+
     if (IamMasterProcess())
         Ipc::Mem::Init();
     else
