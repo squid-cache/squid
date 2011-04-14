@@ -21,12 +21,12 @@ class PageId;
 class PagePool {
 public:
     /// creates a new shared page pool that can hold up to capacity pages of pageSize size
-    PagePool(const String &id, const unsigned int capacity, const unsigned int pageSize);
+    PagePool(const String &id, const unsigned int capacity, const size_t pageSize);
     /// attaches to the identified shared page pool
     PagePool(const String &id);
 
     unsigned int capacity() const { return shared->theCapacity; }
-    unsigned int pageSize() const { return shared->thePageSize; }
+    size_t pageSize() const { return shared->thePageSize; }
 
     /// sets page ID and returns true unless no free pages are found
     bool get(PageId &page);
@@ -39,11 +39,11 @@ private:
     inline bool pageIdIsValid(const PageId &page) const;
 
     struct Shared {
-        Shared(const unsigned int aCapacity, const unsigned int aPageSize);
+        Shared(const unsigned int aCapacity, const size_t aPageSize);
 
         const unsigned int theId; ///< pool id
         const unsigned int theCapacity; ///< number of pages in the pool
-        const unsigned int thePageSize; ///< page size
+        const size_t thePageSize; ///< page size
 
         char theBuf[]; ///< pages storage
     };
