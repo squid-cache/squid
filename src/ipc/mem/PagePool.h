@@ -45,6 +45,7 @@ private:
         const unsigned int theCapacity; ///< number of pages in the pool
         const size_t thePageSize; ///< page size
 
+        // TODO: add padding to make pages system page-aligned?
         char theBuf[]; ///< pages storage
     };
 
