@@ -41,6 +41,9 @@ private:
     struct Shared {
         Shared(const unsigned int aCapacity, const size_t aPageSize);
 
+        /// total shared memory size required to share
+        static off_t MemSize(const unsigned int capacity, const size_t pageSize);
+
         const unsigned int theId; ///< pool id
         const unsigned int theCapacity; ///< number of pages in the pool
         const size_t thePageSize; ///< page size
@@ -51,7 +54,7 @@ private:
 
     PageStack pageIndex; ///< free pages index
     Segment shm; ///< shared memory segment to store metadata (and pages)
-    Shared *shared; ///< our metadata and page storage, shared among all stack users
+    Shared *shared; ///< our metadata and page storage, shared among all pool users
 };
 
 } // namespace Mem
