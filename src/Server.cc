@@ -162,8 +162,8 @@ ServerStateData::setFinalReply(HttpReply *rep)
     assert(rep);
     theFinalReply = HTTPMSGLOCK(rep);
 
-    entry->replaceHttpReply(theFinalReply);
     haveParsedReplyHeaders();
+    entry->replaceHttpReply(theFinalReply);
 
     return theFinalReply;
 }
