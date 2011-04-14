@@ -6,7 +6,7 @@
  */
 
 #include "config.h"
-
+#include "base/TextException.h"
 #include "ipc/mem/Segment.h"
 #include "protos.h"
 
@@ -31,7 +31,7 @@ Ipc::Mem::Segment::~Segment() {
 }
 
 void
-Ipc::Mem::Segment::create(const int aSize)
+Ipc::Mem::Segment::create(const off_t aSize)
 {
     assert(aSize > 0);
     assert(theFD < 0);
@@ -47,6 +47,8 @@ Ipc::Mem::Segment::create(const int aSize)
         debugs(54, 5, HERE << "ftruncate: " << xstrerror());
         fatal("Ipc::Mem::Segment::create failed to ftruncate");
     }
+
+    assert(statSize("Ipc::Mem::Segment::create") == aSize); // paranoid
 
     theSize = aSize;
     theReserved = 0;
@@ -69,18 +71,7 @@ Ipc::Mem::Segment::open()
         fatal(s.termedBuf());
     }
 
-    {
-        struct stat s;
-        memset(&s, 0, sizeof(s));
-        if (fstat(theFD, &s)) {
-            debugs(54, 5, HERE << "fstat: " << xstrerror());
-        String s = "Ipc::Mem::Segment::open failed to fstat";
-        s.append(theName);
-        fatal(s.termedBuf());
-        }
-
-        theSize = s.st_size;
-    }
+    theSize = statSize("Ipc::Mem::Segment::open");
 
     debugs(54, 3, HERE << "opened " << theName << " segment: " << theSize);
 
@@ -120,11 +111,33 @@ Ipc::Mem::Segment::detach()
 void *
 Ipc::Mem::Segment::reserve(size_t chunkSize)
 {
-    assert(chunkSize <= theSize);
-    assert(theReserved <= theSize - chunkSize);
+    // check for overflows
+    assert(static_cast<off_t>(chunkSize) >= 0);
+    assert(static_cast<off_t>(chunkSize) <= theSize);
+    assert(theReserved <= theSize - static_cast<off_t>(chunkSize));
     void *result = reinterpret_cast<char*>(mem()) + theReserved;
     theReserved += chunkSize;
     return result;
+}
+
+/// determines the size of the underlying "file"
+off_t
+Ipc::Mem::Segment::statSize(const char *context) const
+{
+    Must(theFD >= 0);
+
+    struct stat s;
+    memset(&s, 0, sizeof(s));
+
+    if (fstat(theFD, &s) != 0) {
+        debugs(54, 5, HERE << "fstat: " << xstrerror());
+        String s = context;
+        s.append("failed to fstat(2)");
+        s.append(theName);
+        fatal(s.termedBuf());
+    }
+
+    return s.st_size;
 }
 
 /// Generate name for shared memory segment. Replaces all slashes with dots.
