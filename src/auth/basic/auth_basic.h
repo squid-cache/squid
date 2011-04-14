@@ -7,7 +7,6 @@
 #define __AUTH_BASIC_H__
 
 #include "auth/Gadgets.h"
-#include "auth/User.h"
 #include "auth/UserRequest.h"
 #include "auth/Config.h"
 #include "helper.h"
@@ -24,34 +23,6 @@ public:
     RH *handler;
     void *data;
 };
-
-class BasicUser : public Auth::User
-{
-
-public:
-    MEMPROXY_CLASS(BasicUser);
-
-    BasicUser(Auth::Config *);
-    ~BasicUser();
-    bool authenticated() const;
-    void queueRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data);
-    void submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data);
-
-    bool valid() const;
-
-    /** Update the cached password for a username. */
-    void updateCached(BasicUser *from);
-    virtual int32_t ttl() const;
-
-    char *passwd;
-
-    BasicAuthQueueNode *auth_queue;
-
-private:
-    AuthUserRequest::Pointer currentRequest;
-};
-
-MEMPROXY_CLASS_INLINE(BasicUser);
 
 namespace Auth
 {

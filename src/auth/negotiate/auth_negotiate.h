@@ -8,8 +8,6 @@
 
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
-#include "auth/State.h"
-#include "auth/User.h"
 #include "auth/UserRequest.h"
 #include "helper.h"
 
@@ -20,23 +18,6 @@
 
 /// \ingroup AuthNegotiateAPI
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
-
-/// \ingroup AuthNegotiateAPI
-class NegotiateUser : public Auth::User
-{
-
-public:
-    MEMPROXY_CLASS(NegotiateUser);
-    NegotiateUser(Auth::Config *);
-    ~NegotiateUser();
-    virtual int32_t ttl() const;
-
-    dlink_list proxy_auth_list;
-};
-
-MEMPROXY_CLASS_INLINE(NegotiateUser);
-
-extern statefulhelper *negotiateauthenticators;
 
 namespace Auth
 {
@@ -66,5 +47,7 @@ public:
 
 } // namespace Negotiate
 } // namespace Auth
+
+extern statefulhelper *negotiateauthenticators;
 
 #endif

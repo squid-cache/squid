@@ -1,5 +1,6 @@
 #include "config.h"
 #include "auth/digest/auth_digest.h"
+#include "auth/digest/User.h"
 #include "auth/digest/UserRequest.h"
 #include "auth/State.h"
 #include "charset.h"
@@ -67,7 +68,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
 
     Auth::User::Pointer auth_user = user();
 
-    DigestUser *digest_user = dynamic_cast<DigestUser*>(auth_user.getRaw());
+    Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User*>(auth_user.getRaw());
     assert(digest_user != NULL);
 
     AuthDigestUserRequest *digest_request = this;
@@ -306,7 +307,7 @@ AuthDigestUserRequest::HandleReply(void *data, char *reply)
             digest_request->setDenyMessage(t);
     } else if (reply) {
         /* allow this because the digest_request pointer is purely local */
-        DigestUser *digest_user = dynamic_cast<DigestUser *>(auth_user_request->user().getRaw());
+        Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User *>(auth_user_request->user().getRaw());
         assert(digest_user != NULL);
 
         CvtBin(reply, digest_user->HA1);

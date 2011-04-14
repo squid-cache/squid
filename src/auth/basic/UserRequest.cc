@@ -1,12 +1,13 @@
 #include "config.h"
 #include "auth/basic/auth_basic.h"
+#include "auth/basic/User.h"
 #include "auth/basic/UserRequest.h"
 #include "SquidTime.h"
 
 int
 AuthBasicUserRequest::authenticated() const
 {
-    BasicUser const *basic_auth = dynamic_cast<BasicUser const *>(user().getRaw());
+    Auth::Basic::User const *basic_auth = dynamic_cast<Auth::Basic::User const *>(user().getRaw());
 
     if (basic_auth && basic_auth->authenticated())
         return 1;
@@ -72,7 +73,7 @@ void
 AuthBasicUserRequest::module_start(RH * handler, void *data)
 {
     assert(user()->auth_type == Auth::AUTH_BASIC);
-    BasicUser *basic_auth = dynamic_cast<BasicUser *>(user().getRaw());
+    Auth::Basic::User *basic_auth = dynamic_cast<Auth::Basic::User *>(user().getRaw());
     assert(basic_auth != NULL);
     debugs(29, 9, HERE << "'" << basic_auth->username() << ":" << basic_auth->passwd << "'");
 

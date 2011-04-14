@@ -1,6 +1,7 @@
 #include "config.h"
 #include "auth/negotiate/auth_negotiate.h"
 #include "auth/negotiate/UserRequest.h"
+#include "auth/State.h"
 #include "auth/User.h"
 #include "helper.h"
 #include "HttpReply.h"
