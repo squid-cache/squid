@@ -21,7 +21,7 @@ PageIndexId(String id)
 
 // Ipc::Mem::PagePool
 
-Ipc::Mem::PagePool::PagePool(const String &id, const unsigned int capacity, const unsigned int pageSize):
+Ipc::Mem::PagePool::PagePool(const String &id, const unsigned int capacity, const size_t pageSize):
     pageIndex(PageIndexId(id), capacity),
     shm(id.termedBuf())
 {
@@ -75,7 +75,7 @@ Ipc::Mem::PagePool::pageIdIsValid(const PageId &page) const
 
 static unsigned int LastPagePoolId = 0;
 
-Ipc::Mem::PagePool::Shared::Shared(const unsigned int aCapacity, const unsigned int aPageSize):
+Ipc::Mem::PagePool::Shared::Shared(const unsigned int aCapacity, size_t aPageSize):
     theId(++LastPagePoolId), theCapacity(aCapacity), thePageSize(aPageSize)
 {
     if (LastPagePoolId + 1 == 0)
