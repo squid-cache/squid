@@ -32,17 +32,19 @@ public:
     // these are global squid.conf options, documented elsewhere
     static char *masterx_shared_name; // global TODO: do we need TheConfig?
     static int service_iteration_limit;
+    static int send_client_ip;
+    static int send_username;
+    static int use_indirect_client;
+
     // Options below are accessed via Icap::TheConfig or Ecap::TheConfig
     // TODO: move ICAP-specific options to Icap::Config and add TheConfig
     int onoff;
-    int send_client_ip;
-    int send_client_username;
     int service_failure_limit;
     time_t oldest_service_failure;
     int service_revival_delay;
-    int icap_uses_indirect_client;
 
-    Vector<ServiceConfig*> serviceConfigs;
+    typedef Vector<ServiceConfigPointer> ServiceConfigs;
+    ServiceConfigs serviceConfigs;
 
     Config();
     virtual ~Config();
@@ -54,11 +56,15 @@ public:
 
     virtual void finalize();
 
+protected:
+    /// creates service configuration object that will parse and keep cfg info
+    virtual ServiceConfig *newServiceConfig() const;
+
 private:
     Config(const Config &); // unsupported
     Config &operator =(const Config &); // unsupported
 
-    virtual ServicePointer createService(const ServiceConfig &cfg) = 0;
+    virtual ServicePointer createService(const ServiceConfigPointer &cfg) = 0;
 
     static void ParseServiceGroup(ServiceGroupPointer group);
     static void FreeServiceGroups(void);

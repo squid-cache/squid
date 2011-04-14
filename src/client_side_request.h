@@ -93,8 +93,7 @@ public:
     _SQUID_INLINE_ StoreEntry *loggingEntry() const;
     void loggingEntry(StoreEntry *);
 
-    _SQUID_INLINE_ ConnStateData * getConn();
-    _SQUID_INLINE_ ConnStateData * const getConn() const;
+    _SQUID_INLINE_ ConnStateData * getConn() const;
     _SQUID_INLINE_ void setConn(ConnStateData *);
     HttpRequest *request;		/* Parsed URL ... */
     char *uri;
@@ -166,8 +165,9 @@ public:
 
 private:
     // Adaptation::Initiator API
-    virtual void noteAdaptationAnswer(HttpMsg *message);
-    virtual void noteAdaptationQueryAbort(bool final);
+    virtual void noteAdaptationAnswer(const Adaptation::Answer &answer);
+    void handleAdaptedHeader(HttpMsg *msg);
+    void handleAdaptationBlock(const Adaptation::Answer &answer);
 
     // BodyConsumer API, called by BodyPipe
     virtual void noteMoreBodyDataAvailable(BodyPipe::Pointer);

@@ -36,6 +36,8 @@
 #include "squid.h"
 #include "comm.h"
 #include "fde.h"
+#include "ip/Address.h"
+#include "rfc1738.h"
 #include "SquidTime.h"
 
 #ifndef _MSWSOCK_

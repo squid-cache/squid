@@ -15,19 +15,19 @@
 #include "mgr/Response.h"
 
 
-std::ostream& Mgr::operator << (std::ostream &os, const Response& response)
-{
-    os << "response: {requestId: " << response.requestId << '}';
-    return os;
-}
-
 Mgr::Response::Response(unsigned int aRequestId, Action::Pointer anAction):
-        requestId(aRequestId), action(anAction)
+        Ipc::Response(aRequestId), action(anAction)
 {
     Must(!action || action->name()); // if there is an action, it must be named
 }
 
-Mgr::Response::Response(const Ipc::TypedMsgHdr& msg)
+Mgr::Response::Response(const Response& response):
+        Ipc::Response(response.requestId), action(response.action)
+{
+}
+
+Mgr::Response::Response(const Ipc::TypedMsgHdr& msg):
+        Ipc::Response(0)
 {
     msg.checkType(Ipc::mtCacheMgrResponse);
     msg.getPod(requestId);
@@ -52,6 +52,12 @@ Mgr::Response::pack(Ipc::TypedMsgHdr& msg) const
         msg.putString(action->name());
         action->pack(msg);
     }
+}
+
+Ipc::Response::Pointer
+Mgr::Response::clone() const
+{
+    return new Response(*this);
 }
 
 bool

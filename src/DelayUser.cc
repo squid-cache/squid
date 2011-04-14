@@ -186,7 +186,7 @@ DelayUserBucket::operator delete(void *address)
     ::operator delete(address);
 }
 
-DelayUserBucket::DelayUserBucket(AuthUser::Pointer aUser) : authUser(aUser)
+DelayUserBucket::DelayUserBucket(Auth::User::Pointer aUser) : authUser(aUser)
 {
     debugs(77, 3, "DelayUserBucket::DelayUserBucket");
 }
@@ -204,7 +204,7 @@ DelayUserBucket::stats (StoreEntry *entry) const
     theBucket.stats(entry);
 }
 
-DelayUser::Id::Id(DelayUser::Pointer aDelayUser, AuthUser::Pointer aUser) : theUser(aDelayUser)
+DelayUser::Id::Id(DelayUser::Pointer aDelayUser, Auth::User::Pointer aUser) : theUser(aDelayUser)
 {
     theBucket = new DelayUserBucket(aUser);
     DelayUserBucket::Pointer const *existing = theUser->buckets.find(theBucket, DelayUserCmp);

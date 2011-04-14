@@ -327,9 +327,9 @@ urnHandleReply(void *data, StoreIOBuffer result)
     char *buf = urnState->reqbuf;
     StoreIOBuffer tempBuffer;
 
-    debugs(52, 3, "urnHandleReply: Called with size=" << (unsigned int)result.length << ".");
+    debugs(52, 3, "urnHandleReply: Called with size=" << result.length << ".");
 
-    if (EBIT_TEST(urlres_e->flags, ENTRY_ABORTED) || result.length == 0 || result.flags.error < 0) {
+    if (EBIT_TEST(urlres_e->flags, ENTRY_ABORTED) || result.length == 0 || result.flags.error) {
         urnHandleReplyError(urnState, urlres_e);
         return;
     }

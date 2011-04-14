@@ -203,7 +203,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
      */
 
     if ( Config.accessList.miss && !request->client_addr.IsNoAddr() &&
-            request->protocol != PROTO_INTERNAL && request->protocol != PROTO_CACHEOBJ) {
+            request->protocol != AnyP::PROTO_INTERNAL && request->protocol != AnyP::PROTO_CACHE_OBJECT) {
         /**
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          */
@@ -247,15 +247,15 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 
     switch (request->protocol) {
 
-    case PROTO_INTERNAL:
+    case AnyP::PROTO_INTERNAL:
         internalStart(request, entry);
         return;
 
-    case PROTO_CACHEOBJ:
+    case AnyP::PROTO_CACHE_OBJECT:
         CacheManager::GetInstance()->Start(client_fd, request, entry);
         return;
 
-    case PROTO_URN:
+    case AnyP::PROTO_URN:
         urnStart(request, entry);
         return;
 
@@ -752,7 +752,7 @@ FwdState::connectDone(int aServerFD, const DnsLookupDetails &dns, comm_err_t sta
 #if USE_SSL
 
         if ((fs->_peer && fs->_peer->use_ssl) ||
-                (!fs->_peer && request->protocol == PROTO_HTTPS)) {
+                (!fs->_peer && request->protocol == AnyP::PROTO_HTTPS)) {
             initiateSSL();
             return;
         }
@@ -880,8 +880,8 @@ FwdState::connectStart()
 
         comm_add_close_handler(fd, fwdServerClosedWrapper, this);
 
-        // TODO: Avoid this if %<lp is not used? F->local_port is often cached.
-        request->hier.peer_local_port = comm_local_port(fd);
+        if (comm_local_port(fd))
+            request->hier.peer_local_addr = fd_table[fd].local_addr;
 
         dispatch();
 
@@ -949,7 +949,8 @@ FwdState::connectStart()
     if (!fs->_peer)
         origin_tries++;
 
-    request->hier.peer_local_port = comm_local_port(fd);
+    if (comm_local_port(fd))
+        request->hier.peer_local_addr = fd_table[fd].local_addr;
 
     /*
      * stats.conn_open is used to account for the number of
@@ -1069,36 +1070,36 @@ FwdState::dispatch()
         switch (request->protocol) {
 #if USE_SSL
 
-        case PROTO_HTTPS:
+        case AnyP::PROTO_HTTPS:
             httpStart(this);
             break;
 #endif
 
-        case PROTO_HTTP:
+        case AnyP::PROTO_HTTP:
             httpStart(this);
             break;
 
-        case PROTO_GOPHER:
+        case AnyP::PROTO_GOPHER:
             gopherStart(this);
             break;
 
-        case PROTO_FTP:
+        case AnyP::PROTO_FTP:
             ftpStart(this);
             break;
 
-        case PROTO_CACHEOBJ:
+        case AnyP::PROTO_CACHE_OBJECT:
 
-        case PROTO_INTERNAL:
+        case AnyP::PROTO_INTERNAL:
 
-        case PROTO_URN:
+        case AnyP::PROTO_URN:
             fatal_dump("Should never get here");
             break;
 
-        case PROTO_WHOIS:
+        case AnyP::PROTO_WHOIS:
             whoisStart(this);
             break;
 
-        case PROTO_WAIS:	/* Not implemented */
+        case AnyP::PROTO_WAIS:	/* Not implemented */
 
         default:
             debugs(17, 1, "fwdDispatch: Cannot retrieve '" << entry->url() << "'" );

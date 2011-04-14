@@ -192,8 +192,8 @@ struct SquidConfig {
 
 #if !USE_DNSSERVERS
 
-        time_t idns_retransmit;
-        time_t idns_query;
+        time_msec_t idns_retransmit;
+        time_msec_t idns_query;
 #endif
 
     } Timeout;
@@ -883,7 +883,9 @@ struct peer {
 #endif
         unsigned int allow_miss:1;
         unsigned int carp:1;
+#if USE_AUTH
         unsigned int userhash:1;
+#endif
         unsigned int sourcehash:1;
         unsigned int originserver:1;
         unsigned int no_tproxy:1;
@@ -926,13 +928,13 @@ struct peer {
         double load_multiplier;
         double load_factor;	/* normalized weight value */
     } carp;
-
+#if USE_AUTH
     struct {
         unsigned int hash;
         double load_multiplier;
         double load_factor;	/* normalized weight value */
     } userhash;
-
+#endif
     struct {
         unsigned int hash;
         double load_multiplier;

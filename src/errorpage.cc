@@ -34,7 +34,9 @@
 #include "config.h"
 #include "comm/Write.h"
 #include "errorpage.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "SquidTime.h"
 #include "Store.h"
 #include "html_quote.h"
@@ -548,7 +550,9 @@ errorStateFree(ErrorState * err)
     wordlistDestroy(&err->ftp.server_msg);
     safe_free(err->ftp.request);
     safe_free(err->ftp.reply);
+#if USE_AUTH
     err->auth_user_request = NULL;
+#endif
     safe_free(err->err_msg);
 #if USE_ERR_LOCALES
     if (err->err_language != Config.errorDefaultLanguage)
@@ -582,10 +586,10 @@ ErrorState::Dump(MemBuf * mb)
     } else {
         str.Printf("Err: [none]\r\n");
     }
-
+#if USE_AUTH
     if (auth_user_request->denyMessage())
         str.Printf("Auth ErrMsg: %s\r\n", auth_user_request->denyMessage());
-
+#endif
     if (dnsError.size() > 0)
         str.Printf("DNS ErrMsg: %s\r\n", dnsError.termedBuf());
 
@@ -659,12 +663,13 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
     switch (token) {
 
     case 'a':
+#if USE_AUTH
         if (request && request->auth_user_request != NULL)
             p = request->auth_user_request->username();
         if (!p)
+#endif
             p = "-";
         break;
-
     case 'B':
         if (building_deny_info_url) break;
         p = request ? ftpUrlWith2f(request) : "[no URL]";
@@ -682,12 +687,15 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         // currently only SSL error details implemented
         else if (detail) {
             const String &errDetail = detail->toString();
-            MemBuf *detail_mb  = ConvertText(errDetail.termedBuf(), false);
-            mb.append(detail_mb->content(), detail_mb->contentSize());
-            delete detail_mb;
-            do_quote = 0;
-        } else
+            if (errDetail.defined()) {
+                MemBuf *detail_mb  = ConvertText(errDetail.termedBuf(), false);
+                mb.append(detail_mb->content(), detail_mb->contentSize());
+                delete detail_mb;
+                do_quote = 0;
+            }
+        }
 #endif
+        if (!mb.contentSize())
             mb.Printf("[No Error Detail]");
         break;
 
@@ -773,7 +781,11 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'm':
         if (building_deny_info_url) break;
+#if USE_AUTH
         p = auth_user_request->denyMessage("[not available]");
+#else
+        p = "-";
+#endif
         break;
 
     case 'M':
@@ -799,7 +811,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'P':
         if (request) {
-            p = ProtocolStr[request->protocol];
+            p = AnyP::ProtocolType_str[request->protocol];
         } else if (!building_deny_info_url) {
             p = "[unknown protocol]";
         }
@@ -1057,6 +1069,7 @@ ErrorState::BuildContent()
     String hdr;
     char dir[256];
     int l = 0;
+    const char *freePage = NULL;
 
     /** error_directory option in squid.conf overrides translations.
      * Custom errors are always found either in error_directory or the templates directory.
@@ -1130,6 +1143,7 @@ ErrorState::BuildContent()
                 if (m) {
                     /* store the language we found for the Content-Language reply header */
                     err_language = xstrdup(reset);
+                    freePage = m;
                     break;
                 } else if (Config.errorLogMissingLanguages) {
                     debugs(4, DBG_IMPORTANT, "WARNING: Error Pages Missing Language: " << reset);
@@ -1166,7 +1180,12 @@ ErrorState::BuildContent()
         debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
     }
 
-    return ConvertText(m, true);
+    MemBuf *result = ConvertText(m, true);
+#if USE_ERR_LOCALES
+    safe_free(freePage);
+#endif
+
+    return result;
 }
 
 MemBuf *ErrorState::ConvertText(const char *text, bool allowRecursion)

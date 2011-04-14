@@ -35,6 +35,8 @@
 #ifndef SQUID_ACLMAXUSERIP_H
 #define SQUID_ACLMAXUSERIP_H
 
+#if USE_AUTH
+
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "auth/UserRequest.h"
@@ -81,4 +83,5 @@ private:
 
 MEMPROXY_CLASS_INLINE(ACLMaxUserIP);
 
+#endif /* USE_AUTH */
 #endif /* SQUID_ACLMAXUSERIP_H */

@@ -5,8 +5,6 @@
 #include "base/CbcPointer.h"
 #include "adaptation/forward.h"
 
-class HttpMsg;
-
 namespace Adaptation
 {
 
@@ -34,7 +32,7 @@ public:
     virtual void noteInitiatorAborted() = 0;
 
 protected:
-    void sendAnswer(HttpMsg *msg); // send to the initiator
+    void sendAnswer(const Answer &answer); // send to the initiator
     void tellQueryAborted(bool final); // tell initiator
     void clearInitiator(); // used by noteInitiatorAborted; TODO: make private
 

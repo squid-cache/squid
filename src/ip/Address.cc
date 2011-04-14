@@ -116,7 +116,7 @@ Ip::Address::GetCIDR() const
     return len;
 }
 
-const int
+int
 Ip::Address::ApplyMask(Ip::Address const &mask_addr)
 {
     uint32_t *p1 = (uint32_t*)(&m_SocketAddr.sin6_addr);
@@ -212,6 +212,14 @@ Ip::Address::SetEmpty()
     memset(&m_SocketAddr, 0, sizeof(m_SocketAddr) );
 }
 
+#if _SQUID_AIX_
+// Bug 2885 comment 78 explains.
+// In short AIX has a different netinet/in.h union definition
+const struct in6_addr Ip::Address::v4_localhost = {{{ 0x00000000, 0x00000000, 0x0000ffff, 0x7f000001 }}};
+const struct in6_addr Ip::Address::v4_anyaddr = {{{ 0x00000000, 0x00000000, 0x0000ffff, 0x00000000 }}};
+const struct in6_addr Ip::Address::v4_noaddr = {{{ 0x00000000, 0x00000000, 0x0000ffff, 0xffffffff }}};
+const struct in6_addr Ip::Address::v6_noaddr = {{{ 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff }}};
+#else
 const struct in6_addr Ip::Address::v4_localhost = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01 }}
 };
@@ -224,7 +232,7 @@ const struct in6_addr Ip::Address::v4_noaddr = {{{ 0x00, 0x00, 0x00, 0x00, 0x00,
 const struct in6_addr Ip::Address::v6_noaddr = {{{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }}
 };
-
+#endif
 
 bool
 Ip::Address::SetIPv4()
@@ -398,7 +406,7 @@ Ip::Address::LookupHostIP(const char *s, bool nodns)
 #endif
 
     if ( (err = getaddrinfo(s, NULL, &want, &res)) != 0) {
-        debugs(14,3, HERE << "Given Bad IP '" << s << "': " << gai_strerror(err) );
+        debugs(14,3, HERE << "Given Non-IP '" << s << "': " << gai_strerror(err) );
         /* free the memory getaddrinfo() dynamically allocated. */
         if (res) {
             freeaddrinfo(res);
@@ -822,7 +830,7 @@ Ip::Address::NtoA(char* buf, const unsigned int blen, int force) const
     /* some external code may have blindly memset a parent. */
     /* thats okay, our default is known */
     if ( IsAnyAddr() ) {
-        memcpy(buf,"::\0", min((const unsigned int)3,blen));
+        memcpy(buf,"::\0", min(static_cast<unsigned int>(3),blen));
         return buf;
     }
 
@@ -832,7 +840,7 @@ Ip::Address::NtoA(char* buf, const unsigned int blen, int force) const
     /* However IPv4 CAN. */
     if ( force == AF_INET && !IsIPv4() ) {
         if ( IsIPv6() ) {
-            memcpy(buf, "{!IPv4}\0", min((const unsigned int)8,blen));
+            memcpy(buf, "{!IPv4}\0", min(static_cast<unsigned int>(8),blen));
         }
         return buf;
     }
@@ -851,7 +859,7 @@ Ip::Address::NtoA(char* buf, const unsigned int blen, int force) const
                force << "). accepted={" << AF_UNSPEC << "," << AF_INET << "," << AF_INET6 << "}");
         fprintf(stderr,"WARNING: Corrupt IP Address details OR required to display in unknown format (%d). accepted={%d,%d,%d} ",
                 force, AF_UNSPEC, AF_INET, AF_INET6);
-        memcpy(buf,"dead:beef::\0", min((const unsigned int)13,blen));
+        memcpy(buf,"dead:beef::\0", min(static_cast<unsigned int>(13),blen));
         assert(false);
     }
 
