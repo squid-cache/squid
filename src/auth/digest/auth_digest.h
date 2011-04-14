@@ -8,43 +8,23 @@
 
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
-#include "auth/State.h"
-#include "auth/User.h"
 #include "auth/UserRequest.h"
 #include "helper.h"
 #include "rfc2617.h"
 
+namespace Auth
+{
+namespace Digest
+{
+class User;
+}
+}
+
 /* Generic */
-
 typedef struct _digest_nonce_data digest_nonce_data;
-
 typedef struct _digest_nonce_h digest_nonce_h;
 
-class DigestUser : public Auth::User
-{
-
-public:
-    MEMPROXY_CLASS(DigestUser);
-
-    DigestUser(Auth::Config *);
-    ~DigestUser();
-    int authenticated() const;
-
-    virtual int32_t ttl() const;
-
-    HASH HA1;
-    int HA1created;
-
-    /* what nonces have been allocated to this user */
-    dlink_list nonces;
-
-};
-
-MEMPROXY_CLASS_INLINE(DigestUser);
-
-
 /* data to be encoded into the nonce's b64 representation */
-
 struct _digest_nonce_data {
     time_t creationtime;
     /* in memory address of the nonce struct (similar purpose to an ETag) */
@@ -61,7 +41,7 @@ struct _digest_nonce_h : public hash_link {
     /* reference count */
     short references;
     /* the auth_user this nonce has been tied to */
-    DigestUser *user;
+    Auth::Digest::User *user;
     /* has this nonce been invalidated ? */
 
     struct {
@@ -75,6 +55,7 @@ extern int authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9]);
 extern const char *authenticateDigestNonceNonceb64(const digest_nonce_h * nonce);
 extern int authDigestNonceLastRequest(digest_nonce_h * nonce);
 extern void authenticateDigestNonceShutdown(void);
+extern void authDigestNoncePurge(digest_nonce_h * nonce);
 
 namespace Auth
 {

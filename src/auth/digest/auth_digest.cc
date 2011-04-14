@@ -41,8 +41,10 @@
 #include "rfc2617.h"
 #include "auth/digest/auth_digest.h"
 #include "auth/digest/Scheme.h"
+#include "auth/digest/User.h"
 #include "auth/digest/UserRequest.h"
 #include "auth/Gadgets.h"
+#include "auth/State.h"
 #include "base64.h"
 #include "event.h"
 #include "mgr/Registration.h"
@@ -110,7 +112,6 @@ static void authDigestNonceLink(digest_nonce_h * nonce);
 static int authDigestNonceLinks(digest_nonce_h * nonce);
 #endif
 static void authDigestNonceUserUnlink(digest_nonce_h * nonce);
-static void authDigestNoncePurge(digest_nonce_h * nonce);
 
 static void
 authDigestNonceEncode(digest_nonce_h * nonce)
@@ -456,7 +457,7 @@ authDigestNonceLastRequest(digest_nonce_h * nonce)
     return 0;
 }
 
-static void
+void
 authDigestNoncePurge(digest_nonce_h * nonce)
 {
     if (!nonce)
@@ -567,44 +568,6 @@ Auth::Digest::Config::fixHeader(AuthUserRequest::Pointer auth_user_request, Http
 
     /* in the future, for WWW auth we may want to support the domain entry */
     httpHeaderPutStrf(&rep->header, hdrType, "Digest realm=\"%s\", nonce=\"%s\", qop=\"%s\", stale=%s", digestAuthRealm, authenticateDigestNonceNonceb64(nonce), QOP_AUTH, stale ? "true" : "false");
-}
-
-DigestUser::~DigestUser()
-{
-    dlink_node *link, *tmplink;
-    link = nonces.head;
-
-    while (link) {
-        tmplink = link;
-        link = link->next;
-        dlinkDelete(tmplink, &nonces);
-        authDigestNoncePurge(static_cast < digest_nonce_h * >(tmplink->data));
-        authDigestNonceUnlink(static_cast < digest_nonce_h * >(tmplink->data));
-        dlinkNodeDelete(tmplink);
-    }
-}
-
-int32_t
-DigestUser::ttl() const
-{
-    int32_t global_ttl = static_cast<int32_t>(expiretime - squid_curtime + Config.authenticateTTL);
-
-    /* find the longest lasting nonce. */
-    int32_t latest_nonce = -1;
-    dlink_node *link = nonces.head;
-    while (link) {
-        digest_nonce_h *nonce = static_cast<digest_nonce_h *>(link->data);
-        if (nonce->flags.valid && nonce->noncedata.creationtime > latest_nonce)
-            latest_nonce = nonce->noncedata.creationtime;
-
-        link = link->next;
-    }
-    if (latest_nonce == -1)
-        return min(-1, global_ttl);
-
-    int32_t nonce_ttl = latest_nonce - current_time.tv_sec + static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->noncemaxduration;
-
-    return min(nonce_ttl, global_ttl);
 }
 
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
@@ -732,7 +695,7 @@ authenticateDigestStats(StoreEntry * sentry)
 static void
 authDigestNonceUserUnlink(digest_nonce_h * nonce)
 {
-    DigestUser *digest_user;
+    Auth::Digest::User *digest_user;
     dlink_node *link, *tmplink;
 
     if (!nonce)
@@ -767,17 +730,15 @@ authDigestNonceUserUnlink(digest_nonce_h * nonce)
 }
 
 /* authDigestUserLinkNonce: add a nonce to a given user's struct */
-
 static void
-authDigestUserLinkNonce(DigestUser * user, digest_nonce_h * nonce)
+authDigestUserLinkNonce(Auth::Digest::User * user, digest_nonce_h * nonce)
 {
     dlink_node *node;
-    DigestUser *digest_user;
 
     if (!user || !nonce)
         return;
 
-    digest_user = user;
+    Auth::Digest::User *digest_user = user;
 
     node = digest_user->nonces.head;
 
@@ -810,7 +771,7 @@ authDigestLogUsername(char *username, AuthUserRequest::Pointer auth_user_request
 
     /* log the username */
     debugs(29, 9, "authDigestLogUsername: Creating new user for logging '" << username << "'");
-    Auth::User::Pointer digest_user = new DigestUser(static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest")));
+    Auth::User::Pointer digest_user = new Auth::Digest::User(static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest")));
     /* save the credentials */
     digest_user->username(username);
     /* set the auth_user type */
@@ -1064,14 +1025,14 @@ Auth::Digest::Config::decode(char const *proxy_auth)
     /* we don't send or parse opaques. Ok so we're flexable ... */
 
     /* find the user */
-    DigestUser *digest_user;
+    Auth::Digest::User *digest_user;
 
     Auth::User::Pointer auth_user;
 
     if ((auth_user = authDigestUserFindUsername(username)) == NULL) {
         /* the user doesn't exist in the username cache yet */
         debugs(29, 9, "authDigestDecodeAuth: Creating new digest user '" << username << "'");
-        digest_user = new DigestUser(this);
+        digest_user = new Auth::Digest::User(this);
         /* auth_user is a parent */
         auth_user = digest_user;
         /* save the username */
@@ -1091,7 +1052,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
         authDigestUserLinkNonce(digest_user, nonce);
     } else {
         debugs(29, 9, "authDigestDecodeAuth: Found user '" << username << "' in the user cache as '" << auth_user << "'");
-        digest_user = static_cast<DigestUser *>(auth_user.getRaw());
+        digest_user = static_cast<Auth::Digest::User *>(auth_user.getRaw());
         xfree(username);
     }
 
@@ -1109,6 +1070,3 @@ Auth::Digest::Config::decode(char const *proxy_auth)
 
     return digest_request;
 }
-
-DigestUser::DigestUser(Auth::Config *aConfig) : Auth::User(aConfig), HA1created (0)
-{}

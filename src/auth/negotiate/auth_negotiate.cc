@@ -48,6 +48,7 @@
 #include "HttpRequest.h"
 #include "SquidTime.h"
 #include "auth/negotiate/Scheme.h"
+#include "auth/negotiate/User.h"
 #include "auth/negotiate/UserRequest.h"
 #include "wordlist.h"
 
@@ -283,17 +284,6 @@ Auth::Negotiate::Config::fixHeader(AuthUserRequest::Pointer auth_user_request, H
     }
 }
 
-NegotiateUser::~NegotiateUser()
-{
-    debugs(29, 5, HERE << "doing nothing to clearNegotiate scheme data for '" << this << "'");
-}
-
-int32_t
-NegotiateUser::ttl() const
-{
-    return -1; // Negotiate cannot be cached.
-}
-
 static void
 authenticateNegotiateStats(StoreEntry * sentry)
 {
@@ -307,7 +297,7 @@ authenticateNegotiateStats(StoreEntry * sentry)
 AuthUserRequest::Pointer
 Auth::Negotiate::Config::decode(char const *proxy_auth)
 {
-    NegotiateUser *newUser = new NegotiateUser(&negotiateConfig);
+    Auth::Negotiate::User *newUser = new Auth::Negotiate::User(&negotiateConfig);
     AuthUserRequest *auth_user_request = new AuthNegotiateUserRequest();
     assert(auth_user_request->user() == NULL);
 
@@ -317,9 +307,4 @@ Auth::Negotiate::Config::decode(char const *proxy_auth)
     /* all we have to do is identify that it's Negotiate - the helper does the rest */
     debugs(29, 9, HERE << "decode Negotiate authentication");
     return auth_user_request;
-}
-
-NegotiateUser::NegotiateUser(Auth::Config *aConfig) : Auth::User(aConfig)
-{
-    proxy_auth_list.head = proxy_auth_list.tail = NULL;
 }

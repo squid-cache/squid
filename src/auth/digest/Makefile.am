@@ -8,5 +8,7 @@ libdigest_la_SOURCES = \
 	Scheme.h \
 	auth_digest.cc \
 	auth_digest.h \
+	User.cc \
+	User.h \
 	UserRequest.cc \
 	UserRequest.h

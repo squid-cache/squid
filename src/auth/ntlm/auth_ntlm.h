@@ -6,29 +6,14 @@
 #ifndef __AUTH_NTLM_H__
 #define __AUTH_NTLM_H__
 #include "auth/Gadgets.h"
-#include "auth/User.h"
 #include "auth/UserRequest.h"
 #include "auth/Config.h"
 #include "helper.h"
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 
-class NTLMUser : public Auth::User
-{
-
-public:
-    MEMPROXY_CLASS(NTLMUser);
-    NTLMUser(Auth::Config *);
-    ~NTLMUser();
-
-    virtual int32_t ttl() const;
-
-    dlink_list proxy_auth_list;
-};
-
-MEMPROXY_CLASS_INLINE(NTLMUser);
-
-typedef class NTLMUser ntlm_user_t;
+class HttpRequest;
+class StoreEntry;
 
 namespace Auth
 {

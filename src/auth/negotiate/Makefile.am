@@ -8,5 +8,7 @@ libnegotiate_la_SOURCES = \
 	Scheme.h \
 	auth_negotiate.cc \
 	auth_negotiate.h \
+	User.cc \
+	User.h \
 	UserRequest.cc \
 	UserRequest.h
