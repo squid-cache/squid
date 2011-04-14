@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "base/TextException.h"
+#include "base/RunnersRegistry.h"
 #include "ipc/mem/PagePool.h"
 #include "ipc/mem/Pages.h"
 #include "structs.h"
@@ -16,7 +17,7 @@
 // Eventually, we may have pools dedicated to memory caching, disk I/O, etc.
 
 // TODO: make pool id more unique so it does not conflict with other Squids?
-static const String PagePoolId = "squid-page-pool";
+static const char *PagePoolId = "squid-page-pool";
 static Ipc::Mem::PagePool *ThePagePool = 0;
 
 // TODO: make configurable to avoid waste when mem-cached objects are small/big
@@ -72,3 +73,26 @@ Ipc::Mem::Limit()
 }
 
 // TODO: Implement size_t Ipc::Mem::Level()
+
+
+/// initializes shared memory pages
+class SharedMemPagesRr: public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    virtual void run(const RunnerRegistry &);
+    // TODO: cleanup in destructor
+};
+
+RunnerRegistrationEntry(rrAfterConfig, SharedMemPagesRr);
+
+
+void SharedMemPagesRr::run(const RunnerRegistry &)
+{
+    // XXX: restore if (!UsingSmp()) return;
+
+    if (IamMasterProcess())
+        Ipc::Mem::Init();
+    else
+        Ipc::Mem::Attach();
+}
