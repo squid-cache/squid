@@ -101,10 +101,9 @@ Adaptation::ServiceConfig::parse()
             grokked = grokBool(ipv6, name, value);
             if (grokked && ipv6 && !Ip::EnableIpv6)
                 debugs(3, DBG_IMPORTANT, "WARNING: IPv6 is disabled. ICAP service option ignored.");
-        } else {
-            debugs(3, 0, cfg_filename << ':' << config_lineno << ": " <<
-                   "unknown adaptation service option: " << name << '=' << value);
-        }
+        } else
+            grokked = grokExtension(name, value);
+
         if (!grokked)
             return false;
     }
@@ -245,4 +244,14 @@ Adaptation::ServiceConfig::grokBool(bool &var, const char *name, const char *val
     }
 
     return true;
+}
+
+bool
+Adaptation::ServiceConfig::grokExtension(const char *name, const char *value)
+{
+    // we do not accept extensions by default
+    debugs(3, DBG_CRITICAL, cfg_filename << ':' << config_lineno << ": " <<
+           "ERROR: unknown adaptation service option: " <<
+           name << '=' << value);
+    return false;
 }

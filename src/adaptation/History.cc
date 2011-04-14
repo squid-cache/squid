@@ -33,7 +33,10 @@ int Adaptation::History::Entry::rptm()
 }
 
 
-Adaptation::History::History(): theNextServices(TheNullServices)
+Adaptation::History::History():
+        lastMeta(hoReply),
+        allMeta(hoReply),
+        theNextServices(TheNullServices)
 {
 }
 
@@ -135,6 +138,15 @@ bool Adaptation::History::extractNextServices(String &value)
     value = theNextServices;
     theNextServices = TheNullServices; // prevents resetting the plan twice
     return true;
+}
+
+void Adaptation::History::recordMeta(const HttpHeader *lm)
+{
+    lastMeta.clean();
+    lastMeta.update(lm, NULL);
+
+    allMeta.update(lm, NULL);
+    allMeta.compact();
 }
 
 void

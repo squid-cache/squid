@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.10 release notes</title>
+<title>Squid 3.1.12 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.10
+The Squid Team are pleased to announce the release of Squid-3.1.12
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -686,8 +686,8 @@ This section gives a thorough account of those changes in three categories:
 	</verb>
 
 	<tag>ftp_eprt</tag>
-	<p>New directive to control whether Squid uses EPRT extension for
-	   efficient NAT handling and IPv6 protocol support in FTP.
+	<p>New directive added with squid-3.1.11 to control whether Squid uses EPRT extension
+	   for efficient NAT handling and IPv6 protocol support in FTP.
 
 	<tag>ftp_epsv</tag>
 	<p>New directive to control whether Squid uses EPSV extension for
@@ -700,6 +700,24 @@ This section gives a thorough account of those changes in three categories:
 	<tag>forward_max_tries</tag>
 	<p>Controls how many different forward paths Squid will try
 	before giving up. Default: 10
+
+	<tag>reply_header_replace</tag>
+	<p>This option allows you to change the contents of reply headers.
+	<verb>
+	In Squid 2 header_replace (now deprecated) worked for both requests
+	and replies, while in Squid 3 it only did respect request headers.
+	This option brings back the functionality to replace the contents of
+	reply headers. Consult the documentation for usage details.
+	</verb>
+
+	<tag>request_header_replace</tag>
+	<p>This option allows you to change the contents of request headers.
+	<verb>
+	To be consistent with the naming changes of header_access in Squid 3
+	(header_access has been split into two options request_header_access
+	and reply_header_access), header_replace (now deprecated) is being
+	replaced by request_header_replace.
+	</verb>
 
 	<tag>icap_log</tag>
 	<p>New option to write ICAP log files record ICAP transaction summaries, one line per
@@ -1052,7 +1070,6 @@ NOCOMMENT_START
 	<tag>debug_options rotate=</tag>
 	<p>New parameter rotate=N to control number of cache.log rotations independent of other logs.
 
-
         <tag>external_acl_type</tag>
         <p>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between Squid and its helpers.
            Please be aware of some limits to these options. These options only affet the transport protocol used
@@ -1090,6 +1107,9 @@ NOCOMMENT_START
 	If set to "truncate", Squid will remove all existing
 	X-Forwarded-For entries, and place the client IP as the sole entry.
 	</verb>
+
+	<tag>header_replace</tag>
+	<p>Deprecated. Use request_header_replace or reply_header_replace instead.
 
 	<tag>http_port transparent intercept ssl-bump connection-auth[=on|off] ignore-cc</tag>
 	<p>Option 'transparent' is being deprecated in favour of 'intercept' which more clearly identifies what the option does.

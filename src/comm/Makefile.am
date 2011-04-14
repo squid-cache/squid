@@ -7,8 +7,6 @@ noinst_LTLIBRARIES = libcomm.la
 libcomm_la_SOURCES= \
 	AcceptLimiter.cc \
 	AcceptLimiter.h \
-	ListenStateData.cc \
-	ListenStateData.h \
 	Loops.h \
 	ModDevPoll.cc \
 	ModEpoll.cc \
@@ -16,6 +14,8 @@ libcomm_la_SOURCES= \
 	ModPoll.cc \
 	ModSelect.cc \
 	ModSelectWin32.cc \
+	TcpAcceptor.cc \
+	TcpAcceptor.h \
 	\
 	IoCallback.cc \
 	IoCallback.h \

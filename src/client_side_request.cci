@@ -50,15 +50,6 @@ ClientHttpRequest::memObject() const
 }
 
 ConnStateData *
-ClientHttpRequest::getConn()
-{
-    if (!cbdataReferenceValid(conn_))
-        return NULL;
-
-    return conn_;
-}
-
-ConnStateData * const
 ClientHttpRequest::getConn() const
 {
     if (!cbdataReferenceValid(conn_))

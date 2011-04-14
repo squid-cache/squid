@@ -148,8 +148,7 @@ extern "C" {
 
     extern unsigned int WIN32_Socks_initialized;	/* 0 */
 #endif
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     extern unsigned int WIN32_OS_version;	/* 0 */
     extern char *WIN32_OS_string;           /* NULL */
     extern char *WIN32_Service_name;        /* NULL */

@@ -11,7 +11,9 @@
 #include "ipc/forward.h"
 #include "ipc/Port.h"
 #include "mgr/forward.h"
-
+#if SQUID_SNMP
+#include "snmp/forward.h"
+#endif
 
 namespace Ipc
 {
@@ -35,6 +37,10 @@ private:
     void handleRegistrationResponse(const HereIamMessage &msg);
     void handleCacheMgrRequest(const Mgr::Request& request);
     void handleCacheMgrResponse(const Mgr::Response& response);
+#if SQUID_SNMP
+    void handleSnmpRequest(const Snmp::Request& request);
+    void handleSnmpResponse(const Snmp::Response& response);
+#endif
 
 private:
     bool isRegistered; ///< whether Coordinator ACKed registration (unused)

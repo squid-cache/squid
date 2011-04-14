@@ -1,6 +1,9 @@
 #define SQUID_UNIT_TEST 1
 
 #include "squid.h"
+
+#if USE_AUTH
+
 #include "testACLMaxUserIP.h"
 #include "auth/AclMaxUserIp.h"
 
@@ -40,3 +43,5 @@ testACLMaxUserIP::testParseLine()
     CPPUNIT_ASSERT(anACL.valid());
     xfree(line);
 }
+
+#endif /* USE_AUTH */

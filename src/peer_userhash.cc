@@ -35,6 +35,9 @@
  */
 
 #include "squid.h"
+
+#if USE_AUTH
+
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "HttpRequest.h"
@@ -236,3 +239,5 @@ peerUserHashCachemgr(StoreEntry * sentry)
                           sumfetches ? (double) p->stats.fetches / sumfetches : -1.0);
     }
 }
+
+#endif /* USE_AUTH */
