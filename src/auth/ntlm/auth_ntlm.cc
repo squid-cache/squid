@@ -41,6 +41,7 @@
 #include "auth/Gadgets.h"
 #include "auth/ntlm/auth_ntlm.h"
 #include "auth/ntlm/Scheme.h"
+#include "auth/ntlm/User.h"
 #include "auth/ntlm/UserRequest.h"
 #include "auth/State.h"
 #include "mgr/Registration.h"
@@ -258,17 +259,6 @@ Auth::Ntlm::Config::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpRe
     }
 }
 
-NTLMUser::~NTLMUser()
-{
-    debugs(29, 5, "NTLMUser::~NTLMUser: doing nothing to clearNTLM scheme data for '" << this << "'");
-}
-
-int32_t
-NTLMUser::ttl() const
-{
-    return -1; // NTLM credentials cannot be cached.
-}
-
 static void
 authenticateNTLMStats(StoreEntry * sentry)
 {
@@ -282,7 +272,7 @@ authenticateNTLMStats(StoreEntry * sentry)
 AuthUserRequest::Pointer
 Auth::Ntlm::Config::decode(char const *proxy_auth)
 {
-    NTLMUser *newUser = new NTLMUser(Auth::Config::Find("ntlm"));
+    Auth::Ntlm::User *newUser = new Auth::Ntlm::User(Auth::Config::Find("ntlm"));
     AuthUserRequest::Pointer auth_user_request = new AuthNTLMUserRequest();
     assert(auth_user_request->user() == NULL);
 
@@ -292,9 +282,4 @@ Auth::Ntlm::Config::decode(char const *proxy_auth)
     /* all we have to do is identify that it's NTLM - the helper does the rest */
     debugs(29, 9, HERE << "decode: NTLM authentication");
     return auth_user_request;
-}
-
-NTLMUser::NTLMUser(Auth::Config *aConfig) : Auth::User(aConfig)
-{
-    proxy_auth_list.head = proxy_auth_list.tail = NULL;
 }

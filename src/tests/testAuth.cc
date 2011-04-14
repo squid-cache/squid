@@ -186,8 +186,8 @@ testAuthUserRequest::scheme()
 }
 
 #if HAVE_AUTH_MODULE_BASIC
+#include "auth/basic/User.h"
 #include "auth/basic/UserRequest.h"
-#include "auth/basic/auth_basic.h"
 /* AuthBasicUserRequest::AuthBasicUserRequest works
  */
 void
@@ -202,7 +202,7 @@ void
 testAuthBasicUserRequest::username()
 {
     AuthUserRequest::Pointer temp = new AuthBasicUserRequest();
-    BasicUser *basic_auth=new BasicUser(Auth::Config::Find("basic"));
+    Auth::Basic::User *basic_auth=new Auth::Basic::User(Auth::Config::Find("basic"));
     basic_auth->username("John");
     temp->user(basic_auth);
     CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));
@@ -210,7 +210,8 @@ testAuthBasicUserRequest::username()
 #endif /* HAVE_AUTH_MODULE_BASIC */
 
 #if HAVE_AUTH_MODULE_DIGEST
-#include "auth/digest/auth_digest.h"
+#include "auth/digest/User.h"
+#include "auth/digest/UserRequest.h"
 /* AuthDigestUserRequest::AuthDigestUserRequest works
  */
 void
@@ -225,7 +226,7 @@ void
 testAuthDigestUserRequest::username()
 {
     AuthUserRequest::Pointer temp = new AuthDigestUserRequest();
-    DigestUser *duser=new DigestUser(Auth::Config::Find("digest"));
+    Auth::Digest::User *duser=new Auth::Digest::User(Auth::Config::Find("digest"));
     duser->username("John");
     temp->user(duser);
     CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));
@@ -233,7 +234,8 @@ testAuthDigestUserRequest::username()
 #endif /* HAVE_AUTH_MODULE_DIGEST */
 
 #if HAVE_AUTH_MODULE_NTLM
-#include "auth/ntlm/auth_ntlm.h"
+#include "auth/ntlm/User.h"
+#include "auth/ntlm/UserRequest.h"
 /* AuthNTLMUserRequest::AuthNTLMUserRequest works
  */
 void
@@ -248,7 +250,7 @@ void
 testAuthNTLMUserRequest::username()
 {
     AuthUserRequest::Pointer temp = new AuthNTLMUserRequest();
-    NTLMUser *nuser=new NTLMUser(Auth::Config::Find("ntlm"));
+    Auth::Ntlm::User *nuser=new Auth::Ntlm::User(Auth::Config::Find("ntlm"));
     nuser->username("John");
     temp->user(nuser);
     CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));
@@ -256,7 +258,8 @@ testAuthNTLMUserRequest::username()
 #endif /* HAVE_AUTH_MODULE_NTLM */
 
 #if HAVE_AUTH_MODULE_NEGOTIATE
-#include "auth/negotiate/auth_negotiate.h"
+#include "auth/negotiate/User.h"
+#include "auth/negotiate/UserRequest.h"
 /* AuthNegotiateUserRequest::AuthNegotiateUserRequest works
  */
 void
@@ -271,7 +274,7 @@ void
 testAuthNegotiateUserRequest::username()
 {
     AuthUserRequest::Pointer temp = new AuthNegotiateUserRequest();
-    NegotiateUser *nuser=new NegotiateUser(Auth::Config::Find("negotiate"));
+    Auth::Negotiate::User *nuser=new Auth::Negotiate::User(Auth::Config::Find("negotiate"));
     nuser->username("John");
     temp->user(nuser);
     CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));

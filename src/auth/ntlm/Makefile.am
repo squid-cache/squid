@@ -8,5 +8,7 @@ libntlm_la_SOURCES = \
 	Scheme.h \
 	auth_ntlm.cc \
 	auth_ntlm.h \
+	User.cc \
+	User.h \
 	UserRequest.cc \
 	UserRequest.h

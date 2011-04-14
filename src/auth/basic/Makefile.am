@@ -8,5 +8,7 @@ libbasic_la_SOURCES = \
 	Scheme.h \
 	auth_basic.cc \
 	auth_basic.h \
+	User.cc \
+	User.h \
 	UserRequest.cc \
 	UserRequest.h
