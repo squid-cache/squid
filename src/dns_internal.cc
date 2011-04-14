@@ -59,7 +59,7 @@
    using external DNS process.
  */
 #if !USE_DNSSERVERS
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 #include "squid_windows.h"
 #define REG_TCPIP_PARA_INTERFACES "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces"
 #define REG_TCPIP_PARA "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"
@@ -124,7 +124,7 @@ struct _idns_query {
     char buf[RESOLV_BUFSZ];
     char name[NS_MAXDNAME + 1];
     char orig[NS_MAXDNAME + 1];
-    size_t sz;
+    ssize_t sz;
     unsigned short msg_id; /// random query ID sent to server; changes with every query sent
     InstanceId<idns_query> xact_id; /// identifies our "transaction", stays constant when query is retried
 
@@ -226,7 +226,7 @@ static void idnsParseNameservers(void);
 #ifndef _SQUID_MSWIN_
 static void idnsParseResolvConf(void);
 #endif
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 static void idnsParseWIN32Registry(void);
 static void idnsParseWIN32SearchList(const char *);
 #endif
@@ -364,9 +364,8 @@ idnsParseResolvConf(void)
         return;
     }
 
-#if defined(_SQUID_CYGWIN_)
+#if _SQUID_CYGWIN_
     setmode(fileno(fp), O_TEXT);
-
 #endif
 
     while (fgets(buf, RESOLV_BUFSZ, fp)) {
@@ -434,7 +433,7 @@ idnsParseResolvConf(void)
 
 #endif
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 static void
 idnsParseWIN32SearchList(const char * Separator)
 {
@@ -725,7 +724,9 @@ idnsTickleQueue(void)
     if (NULL == lru_list.tail)
         return;
 
-    eventAdd("idnsCheckQueue", idnsCheckQueue, NULL, 1.0, 1);
+    const double when = min(Config.Timeout.idns_query, Config.Timeout.idns_retransmit)/1000.0;
+
+    eventAdd("idnsCheckQueue", idnsCheckQueue, NULL, when, 1);
 
     event_queued = 1;
 }
@@ -765,7 +766,11 @@ idnsDoSendQueryVC(nsvc *vc)
 
     vc->busy = 1;
 
-    commSetTimeout(vc->fd, Config.Timeout.idns_query, NULL, NULL);
+    // Comm needs seconds but idnsCheckQueue() will check the exact timeout
+    const int timeout = (Config.Timeout.idns_query % 1000 ?
+                         Config.Timeout.idns_query + 1000 : Config.Timeout.idns_query) / 1000;
+
+    commSetTimeout(vc->fd, timeout, NULL, NULL);
 
     AsyncCall::Pointer call = commCbCall(78, 5, "idnsSentQueryVC",
                                          CommIoCbPtrFun(&idnsSentQueryVC, vc));
@@ -1146,6 +1151,14 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
                 // see EDNS notes at top of file why this sends 0
                 q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), 0, &q->query, 0);
             }
+
+            if (q->sz < 0) {
+                /* problem with query data -- query not sent */
+                idnsCallback(static_cast<idns_query *>(q->callback_data), NULL, 0, "Internal error");
+                cbdataFree(q);
+                return;
+            }
+
             idnsCacheQuery(q);
             idnsSendQuery(q);
             return;
@@ -1182,6 +1195,14 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
         // see EDNS notes at top of file why this sends 0
         q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), 0, &q->query, 0);
         q->need_A = false;
+
+        if (q->sz < 0) {
+            /* problem with query data -- query not sent */
+            idnsCallback(static_cast<idns_query *>(q->callback_data), NULL, 0, "Internal error");
+            cbdataFree(q);
+            return;
+        }
+
         idnsCacheQuery(q);
         idnsSendQuery(q);
         return;
@@ -1326,11 +1347,11 @@ idnsCheckQueue(void *unused)
         q = static_cast<idns_query*>(n->data);
 
         /* Anything to process in the queue? */
-        if (tvSubDsec(q->queue_t, current_time) < Config.Timeout.idns_retransmit )
+        if ((time_msec_t)tvSubMsec(q->queue_t, current_time) < Config.Timeout.idns_retransmit )
             break;
 
         /* Query timer expired? */
-        if (tvSubDsec(q->sent_t, current_time) < Config.Timeout.idns_retransmit * 1 << ((q->nsends - 1) / nns)) {
+        if ((time_msec_t)tvSubMsec(q->sent_t, current_time) < (Config.Timeout.idns_retransmit * 1 << ((q->nsends - 1) / nns))) {
             dlinkDelete(&q->lru, &lru_list);
             q->queue_t = current_time;
             dlinkAdd(q, &q->lru, &lru_list);
@@ -1343,7 +1364,7 @@ idnsCheckQueue(void *unused)
 
         dlinkDelete(&q->lru, &lru_list);
 
-        if (tvSubDsec(q->start_t, current_time) < Config.Timeout.idns_query) {
+        if ((time_msec_t)tvSubMsec(q->start_t, current_time) < Config.Timeout.idns_query) {
             idnsSendQuery(q);
         } else {
             debugs(78, 2, "idnsCheckQueue: ID " << q->xact_id <<
@@ -1512,20 +1533,16 @@ idnsInit(void)
         idnsParseResolvConf();
 
 #endif
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     if (0 == nns)
         idnsParseWIN32Registry();
-
 #endif
 
     if (0 == nns) {
         debugs(78, 1, "Warning: Could not find any nameservers. Trying to use localhost");
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
         debugs(78, 1, "Please check your TCP-IP settings or /etc/resolv.conf file");
 #else
-
         debugs(78, 1, "Please check your /etc/resolv.conf file");
 #endif
 
@@ -1664,11 +1681,9 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
            ", id = 0x" << std::hex << q->msg_id);
 
     q->callback = callback;
-
     q->callback_data = cbdataReference(data);
 
     idnsCacheQuery(q);
-
     idnsSendQuery(q);
 }
 
@@ -1686,7 +1701,7 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
     // idns_query is POD so no constructors are called after allocation
     q->xact_id.change();
 
-    if (Ip::EnableIpv6 && addr.IsIPv6()) {
+    if (addr.IsIPv6()) {
         struct in6_addr addr6;
         addr.GetInAddr(addr6);
         q->sz = rfc3596BuildPTRQuery6(addr6, q->buf, sizeof(q->buf), 0, &q->query, Config.dns.packet_max);
@@ -1716,11 +1731,9 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
            ", id = 0x" << std::hex << q->msg_id);
 
     q->callback = callback;
-
     q->callback_data = cbdataReference(data);
 
     idnsCacheQuery(q);
-
     idnsSendQuery(q);
 }
 

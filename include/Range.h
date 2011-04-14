@@ -42,7 +42,7 @@
 
 /* represents [start, end) */
 
-template <class C>
+template <class C, class S = size_t>
 class Range
 {
 
@@ -52,35 +52,35 @@ public:
     C start;
     C end;
     Range intersection (Range const &) const;
-    C size() const;
+    S size() const;
 };
 
-template <class C>
-std::ostream& operator << (std::ostream &os, Range<C> const &aRange)
+template <class C, class S>
+std::ostream& operator << (std::ostream &os, Range<C, S> const &aRange)
 {
     os << "[" << aRange.start << "," << aRange.end << ")";
     return os;
 }
 
-template<class C>
-Range<C>::Range () : start(), end() {}
+template<class C, class S>
+Range<C, S>::Range () : start(), end() {}
 
-template<class C>
-Range<C>::Range (C start_, C end_) : start(start_), end(end_) {}
+template<class C, class S>
+Range<C, S>::Range (C start_, C end_) : start(start_), end(end_) {}
 
-template<class C>
-Range<C>
-Range<C>::intersection (Range const &rhs) const
+template<class C, class S>
+Range<C, S>
+Range<C, S>::intersection (Range const &rhs) const
 {
-    Range<C> result (max(start, rhs.start), min(end, rhs.end));
+    Range<C, S> result (max(start, rhs.start), min(end, rhs.end));
     return result;
 }
 
-template<class C>
-C
-Range<C>::size() const
+template<class C, class S>
+S
+Range<C, S>::size() const
 {
-    return end > start ? end - start : 0;
+    return (S) (end > start ? end - start : 0);
 }
 
 #endif /* SQUID_RANGE_H */

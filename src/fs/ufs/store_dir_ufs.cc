@@ -990,10 +990,9 @@ UFSSwapDir::writeCleanDone()
     /* rename */
 
     if (state->fd >= 0) {
-#if defined(_SQUID_OS2_) || defined (_SQUID_WIN32_)
+#if _SQUID_OS2_ || _SQUID_WINDOWS_
         file_close(state->fd);
         state->fd = -1;
-
 #endif
 
         xrename(state->newLog, state->cur);
@@ -1068,7 +1067,6 @@ UFSSwapDir::DirClean(int swap_index)
 {
     DIR *dir_pointer = NULL;
 
-    struct dirent *de = NULL;
     LOCAL_ARRAY(char, p1, MAXPATHLEN + 1);
     LOCAL_ARRAY(char, p2, MAXPATHLEN + 1);
 
@@ -1112,6 +1110,7 @@ UFSSwapDir::DirClean(int swap_index)
         return 0;
     }
 
+    dirent_t *de;
     while ((de = readdir(dir_pointer)) != NULL && k < 20) {
         if (sscanf(de->d_name, "%X", &swapfileno) != 1)
             continue;

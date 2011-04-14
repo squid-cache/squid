@@ -15,6 +15,10 @@ class TypedMsgHdr;
 class StrandCoord;
 class HereIamMessage;
 class StrandSearchResponse;
+class Forwarder;
+class Inquirer;
+class Request;
+class Response;
 
 } // namespace Ipc
 

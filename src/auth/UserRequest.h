@@ -35,6 +35,8 @@
 #ifndef SQUID_AUTHUSERREQUEST_H
 #define SQUID_AUTHUSERREQUEST_H
 
+#if USE_AUTH
+
 #include "auth/AuthAclState.h"
 #include "auth/Scheme.h"
 #include "auth/User.h"
@@ -76,7 +78,7 @@ public:
      * it has request specific data, and links to user specific data
      * the user
      */
-    AuthUser::Pointer _auth_user;
+    Auth::User::Pointer _auth_user;
 
     /**
      *  Used by squid to determine what the next step in performing authentication for a given scheme is.
@@ -126,11 +128,11 @@ public:
      */
     virtual void module_start(RH *handler, void *data) = 0;
 
-    virtual AuthUser::Pointer user() {return _auth_user;}
+    virtual Auth::User::Pointer user() {return _auth_user;}
 
-    virtual const AuthUser::Pointer user() const {return _auth_user;}
+    virtual const Auth::User::Pointer user() const {return _auth_user;}
 
-    virtual void user(AuthUser::Pointer aUser) {_auth_user=aUser;}
+    virtual void user(Auth::User::Pointer aUser) {_auth_user=aUser;}
 
     static AuthAclState tryToAuthenticateAndSetAuthUser(AuthUserRequest::Pointer *, http_hdr_type, HttpRequest *, ConnStateData *, Ip::Address &);
     static void addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal);
@@ -160,7 +162,7 @@ public:
      */
     char const *username() const;
 
-    AuthScheme::Pointer scheme() const;
+    Auth::Scheme::Pointer scheme() const;
 
     virtual const char * connLastHeader();
 
@@ -200,5 +202,5 @@ extern int authenticateDirection(AuthUserRequest::Pointer);
 /// See AuthUserRequest::authenticated()
 extern int authenticateUserAuthenticated(AuthUserRequest::Pointer);
 
-
+#endif /* USE_AUTH */
 #endif /* SQUID_AUTHUSERREQUEST_H */

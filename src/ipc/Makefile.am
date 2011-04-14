@@ -37,8 +37,13 @@ libipc_la_SOURCES = \
 	Port.h \
 	Strand.cc \
 	Strand.h \
-	\
 	forward.h \
+	Forwarder.cc \
+	Forwarder.h \
+	Inquirer.cc \
+	Inquirer.h \
+	Request.h \
+	Response.h \
 	\
 	mem/Page.cc \
 	mem/Page.h \

@@ -53,7 +53,7 @@ fi
 # do not build any of the install's ...
 #
 # eval is need to correctly handle quoted arguments
-	eval "$base/../configure ${SQUID_CONFIGURE_FLAGS} ${configcache}" \
+	eval "$base/../configure ${DISTCHECK_CONFIGURE_FLAGS} ${configcache}" \
 		2>&1 && \
 	make ${pjobs} ${MAKETEST} 2>&1
 

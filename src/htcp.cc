@@ -1358,10 +1358,10 @@ htcpHandleMsg(char *buf, int sz, Ip::Address &from)
     htcpDataHeader hdr;
     char *hbuf;
     int hsz;
-    assert (sz >= 0);
 
-    if ((size_t)sz < sizeof(htcpHeader)) {
-        debugs(31, 3, "htcpHandle: msg size less than htcpHeader size");
+    if (sz < 0 || (size_t)sz < sizeof(htcpHeader)) {
+        // These are highly likely to be attack packets. Should probably get a bigger warning.
+        debugs(31, 2, "htcpHandle: msg size less than htcpHeader size from " << from);
         return;
     }
 

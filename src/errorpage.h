@@ -35,7 +35,9 @@
 #define   SQUID_ERRORPAGE_H
 
 #include "squid.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "cbdata.h"
 #include "ip/Address.h"
 #if USE_SSL
@@ -140,7 +142,9 @@ public:
     int page_id;
     char *err_language;
     http_status httpStatus;
+#if USE_AUTH
     AuthUserRequest::Pointer auth_user_request;
+#endif
     HttpRequest *request;
     char *url;
     int xerrno;

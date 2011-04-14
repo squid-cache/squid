@@ -313,7 +313,7 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
     if (!fd_closed(server.fd()))
         commSetTimeout(server.fd(), Config.Timeout.read, tunnelTimeout, this);
 
-    if (len < 0 || errcode)
+    if (errcode)
         from.error (xerrno);
     else if (len == 0 || fd_closed(to.fd())) {
         comm_close(from.fd());
@@ -347,12 +347,10 @@ TunnelStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xer
 {
     debugs(26, 3, "tunnelWriteServer: FD " << server.fd() << ", " << len << " bytes written");
 
-    if (flag == COMM_ERR_CLOSING)
-        return;
-
     /* Error? */
-    if (len < 0 || flag != COMM_OK) {
-        server.error(xerrno); // may call comm_close
+    if (flag != COMM_OK) {
+        if (flag != COMM_ERR_CLOSING)
+            server.error(xerrno); // may call comm_close
         return;
     }
 
@@ -408,12 +406,10 @@ TunnelStateData::writeClientDone(char *buf, size_t len, comm_err_t flag, int xer
 {
     debugs(26, 3, "tunnelWriteClient: FD " << client.fd() << ", " << len << " bytes written");
 
-    if (flag == COMM_ERR_CLOSING)
-        return;
-
     /* Error? */
-    if (len < 0 || flag != COMM_OK) {
-        client.error(xerrno); // may call comm_close
+    if (flag != COMM_OK) {
+        if (flag != COMM_ERR_CLOSING)
+            client.error(xerrno); // may call comm_close
         return;
     }
 
@@ -526,6 +522,12 @@ tunnelConnectedWriteDone(int fd, char *buf, size_t size, comm_err_t flag, int xe
 static void
 tunnelProxyConnectedWriteDone(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
 {
+    TunnelStateData *tunnelState = static_cast<TunnelStateData *>(data);
+    debugs(26, 3, HERE << "FD " << fd << " tunnelState=" << tunnelState);
+    if (flag == COMM_OK)
+        *tunnelState->status_ptr = HTTP_OK;
+    else
+        *tunnelState->status_ptr = HTTP_INTERNAL_SERVER_ERROR;
     tunnelConnectedWriteDone(fd, buf, size, flag, xerrno, data);
 }
 
@@ -594,7 +596,7 @@ tunnelConnectDone(int fdnotused, const DnsLookupDetails &dns, comm_err_t status,
         err->callback_data = tunnelState;
         errorSend(tunnelState->client.fd(), err);
     } else {
-        if (tunnelState->servers->_peer)
+        if (tunnelState->servers->_peer && !tunnelState->servers->_peer->options.originserver)
             tunnelProxyConnected(tunnelState->server.fd(), tunnelState);
         else {
             tunnelConnected(tunnelState->server.fd(), tunnelState);
@@ -689,7 +691,9 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
         return;
     }
 
-    request->hier.peer_local_port = comm_local_port(sock); // for %<lp logging
+    // record local IP:port for %<la and %<lp logging
+    if (comm_local_port(sock))
+        request->hier.peer_local_addr = fd_table[sock].local_addr;
 
     tunnelState = new TunnelStateData;
 #if USE_DELAY_POOLS
@@ -787,7 +791,7 @@ tunnelPeerSelectComplete(FwdServer * fs, void *data)
 
     if (fs->_peer) {
         tunnelState->request->peer_login = fs->_peer->login;
-        tunnelState->request->flags.proxying = 1;
+        tunnelState->request->flags.proxying = (fs->_peer->options.originserver?0:1);
     } else {
         tunnelState->request->peer_login = NULL;
         tunnelState->request->flags.proxying = 0;

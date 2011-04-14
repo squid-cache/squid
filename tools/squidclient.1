@@ -7,7 +7,9 @@ A simple HTTP web client tool
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B squidclient
-.if !'po4a'hide' .B "[ \-arsv ] [ \-g"
+.if !'po4a'hide' .B "[ \-arsv ] [ \-A"
+string
+.if !'po4a'hide' .B "] [ \-g"
 count
 .if !'po4a'hide' .B "] [ \-h"
 remote host
@@ -59,6 +61,12 @@ proxy object cache and management information are provided.
 .if !'po4a'hide' .TP 12
 .if !'po4a'hide' .B "\-a"
 Do NOT include Accept: header.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-A 'string'"
+Send 
+.B string
+as User-Agent: header. To omit the header completely set string to empty ('').
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-g count"
