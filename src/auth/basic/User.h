@@ -27,7 +27,7 @@ public:
     void submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data);
 
     bool valid() const;
-  
+
     /** Update the cached password for a username. */
     void updateCached(User *from);
     virtual int32_t ttl() const;
