@@ -107,9 +107,9 @@ main(int argc, char *const argv[])
     char buf[MAX_AUTHTOKEN_LEN];
     char tbuff[MAX_AUTHTOKEN_LEN];
     char buff[MAX_AUTHTOKEN_LEN+2];
-    char *c, *p;
+    char *c;
     static int err = 0;
-    int opt, debug = 0;
+    int debug = 0;
     int length;
     int nstart = 0, kstart = 0;
     int nend = 0, kend = 0;
@@ -257,8 +257,7 @@ main(int argc, char *const argv[])
     FDNOUT=fdopen(pnout[0],"r");
 
     if (!FDKIN || !FDKOUT || !FDNIN || !FDNOUT) {
-        fprintf(stderr, "%s| %s: Could not assign streams for FDKIN/FDKOUT/FDNIN/FDNOUT %d/%d/%d/%d\n",
-                LogTime(), PROGRAM, FDKIN, FDKOUT, FDNIN, FDNOUT);
+        fprintf(stderr, "%s| %s: Could not assign streams for FDKIN/FDKOUT/FDNIN/FDNOUT\n", LogTime(), PROGRAM);
         return 1;
     }
 
@@ -346,7 +345,7 @@ main(int argc, char *const argv[])
 
         nw_base64_decode(token, buf + 3, length);
 
-        if ((length >= sizeof ntlmProtocol + 1) &&
+        if ((static_cast<size_t>(length) >= sizeof(ntlmProtocol) + 1) &&
                 (!memcmp(token, ntlmProtocol, sizeof ntlmProtocol))) {
             free(token);
             if (debug)
@@ -372,10 +371,9 @@ main(int argc, char *const argv[])
                Set blob to '='
                 */
             if (strlen(tbuff) >= 3 && (!strncmp(tbuff,"AF ",3) || !strncmp(tbuff,"NA ",3))) {
-                int i;
                 strncpy(buff,tbuff,3);
                 buff[3]='=';
-                for (i=2; i<=strlen(tbuff); i++)
+                for (unsigned int i=2; i<=strlen(tbuff); i++)
                     buff[i+2] = tbuff[i];
             } else {
                 strcpy(buff,tbuff);
