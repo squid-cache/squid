@@ -275,8 +275,9 @@ CossSwapDir::openStoreIO(StoreEntry & e, StoreIOState::STFNCB * file_callback,
     return sio;
 }
 
+/// COSS does not distinguish different closure types
 void
-CossState::close()
+CossState::close(int)
 {
     debugs(79, 3, "storeCossClose: offset " << swap_filen);
 
