@@ -1,10 +1,10 @@
-
-
-
 #ifndef SQUID_LEAKFINDER_H
 #define SQUID_LEAKFINDER_H
 
 #if USE_LEAKFINDER
+
+#include "hash.h"
+
 #define leakAdd(p,l) if (l) l->add(p,__FILE__,__LINE__)
 #define leakTouch(p,l) if (l) l->touch(p,__FILE__,__LINE__)
 #define leakFree(p,l) if (l) l->free(p,__FILE__,__LINE__)

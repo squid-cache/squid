@@ -1620,7 +1620,6 @@ void Adaptation::Icap::VirginBodyAct::disable()
 void Adaptation::Icap::VirginBodyAct::progress(size_t size)
 {
     Must(active());
-    Must(static_cast<int64_t>(size) >= 0);
     theStart += static_cast<int64_t>(size);
 }
 

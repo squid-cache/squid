@@ -33,6 +33,7 @@
 #if USE_HTCP
 
 #include "HttpHeader.h"
+#include "typedefs.h"
 
 class IpAddress;
 
