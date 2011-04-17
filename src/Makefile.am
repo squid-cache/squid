@@ -112,8 +112,13 @@ SSL_ALL_SOURCE = \
 
 if ENABLE_SSL
 SSL_SOURCE = $(SSL_ALL_SOURCE)
+SUBDIRS += ssl
+SSL_LIBS = \
+	ssl/libsslutil.la \
+	ssl/libsslsquid.la
 else
 SSL_SOURCE = 
+SSL_LIBS = 
 endif
 
 WIN32_ALL_SOURCE = \
@@ -531,6 +536,7 @@ squid_LDADD = \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
 	$(SSLLIB) \
+	$(SSL_LIBS) \
 	-lmiscutil \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
@@ -715,6 +721,7 @@ DEFAULT_CONFIG_DIR	= $(sysconfdir)
 DEFAULT_CONFIG_FILE     = $(DEFAULT_CONFIG_DIR)/squid.conf
 DEFAULT_MIME_TABLE	= $(DEFAULT_CONFIG_DIR)/mime.conf
 DEFAULT_DNSSERVER       = $(libexecdir)/`echo dnsserver | sed '$(transform);s/$$/$(EXEEXT)/'`
+DEFAULT_SSL_CRTD	= $(libexecdir)/`echo ssl_crtd  | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_LOG_PREFIX	= $(DEFAULT_LOG_DIR)
 DEFAULT_CACHE_LOG       = $(DEFAULT_LOG_PREFIX)/cache.log
 DEFAULT_ACCESS_LOG      = $(DEFAULT_LOG_PREFIX)/access.log
@@ -722,6 +729,7 @@ DEFAULT_STORE_LOG       = $(DEFAULT_LOG_PREFIX)/store.log
 DEFAULT_PID_FILE        = $(DEFAULT_PIDFILE)
 DEFAULT_NETDB_FILE      = $(DEFAULT_LOG_PREFIX)/netdb.state
 DEFAULT_SWAP_DIR        = $(localstatedir)/cache
+DEFAULT_SSL_DB_DIR	= $(localstatedir)/lib/ssl_db
 DEFAULT_PINGER		= $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_UNLINKD		= $(libexecdir)/`echo unlinkd | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_DISKD		= $(libexecdir)/`echo diskd | sed '$(transform);s/$$/$(EXEEXT)/'`
@@ -769,6 +777,7 @@ cf.data: cf.data.pre Makefile
 	-e "s%[@]DEFAULT_CACHE_EFFECTIVE_USER[@]%${CACHE_EFFECTIVE_USER}%g" \
 	-e "s%[@]DEFAULT_MIME_TABLE[@]%$(DEFAULT_MIME_TABLE)%g" \
 	-e "s%[@]DEFAULT_DNSSERVER[@]%$(DEFAULT_DNSSERVER)%g" \
+	-e "s%[@]DEFAULT_SSL_CRTD[@]%$(DEFAULT_SSL_CRTD)%g" \
 	-e "s%[@]DEFAULT_UNLINKD[@]%$(DEFAULT_UNLINKD)%g" \
 	-e "s%[@]DEFAULT_PINGER[@]%$(DEFAULT_PINGER)%g" \
 	-e "s%[@]DEFAULT_DISKD[@]%$(DEFAULT_DISKD)%g" \
@@ -778,6 +787,7 @@ cf.data: cf.data.pre Makefile
 	-e "s%[@]DEFAULT_PID_FILE[@]%$(DEFAULT_PID_FILE)%g" \
 	-e "s%[@]DEFAULT_NETDB_FILE[@]%$(DEFAULT_NETDB_FILE)%g" \
 	-e "s%[@]DEFAULT_SWAP_DIR[@]%$(DEFAULT_SWAP_DIR)%g" \
+	-e "s%[@]DEFAULT_SSL_DB_DIR[@]%$(DEFAULT_SSL_DB_DIR)%g" \
 	-e "s%[@]DEFAULT_ICON_DIR[@]%$(DEFAULT_ICON_DIR)%g" \
 	-e "s%[@]DEFAULT_CONFIG_DIR[@]%$(DEFAULT_CONFIG_DIR)%g" \
 	-e "s%[@]DEFAULT_PREFIX[@]%$(DEFAULT_PREFIX)%g" \
@@ -1195,6 +1205,7 @@ tests_testCacheManager_LDADD = \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
+	$(SSL_LIBS) \
 	$(XTRA_LIBS)
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -1370,6 +1381,7 @@ tests_testEvent_LDADD = \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
+	$(SSL_LIBS) \
 	$(XTRA_LIBS)
 tests_testEvent_LDFLAGS = $(LIBADD_DL)
 tests_testEvent_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -1520,6 +1532,7 @@ tests_testEventLoop_LDADD = \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
+	$(SSL_LIBS) \
 	$(XTRA_LIBS)
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -1665,6 +1678,7 @@ tests_test_http_range_LDADD = \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
+	$(SSL_LIBS) \
 	$(XTRA_LIBS)
 tests_test_http_range_LDFLAGS = $(LIBADD_DL)
 tests_test_http_range_DEPENDENCIES = \
@@ -1815,6 +1829,7 @@ tests_testHttpRequest_LDADD = \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
+	$(SSL_LIBS) \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -2177,6 +2192,7 @@ tests_testURL_LDADD = \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
 	$(SSLLIB) \
+	$(SSL_LIBS) \
 	$(XTRA_LIBS)
 tests_testURL_LDFLAGS = $(LIBADD_DL)
 tests_testURL_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \

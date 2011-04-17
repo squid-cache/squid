@@ -259,7 +259,20 @@ public:
     virtual void swanSong();
 
 #if USE_SSL
-    bool switchToHttps();
+    /// Start to create dynamic SSL_CTX for host or uses static port SSL context.
+    bool getSslContextStart();
+    /**
+     * Done create dynamic ssl certificate.
+     *
+     * \param[in] isNew if generated certificate is new, so we need to add this certificate to storage.
+     */
+    bool getSslContextDone(SSL_CTX * sslContext, bool isNew = false);
+    /// Callback function. It is called when squid receive message from ssl_crtd.
+    static void sslCrtdHandleReplyWrapper(void *data, char *reply);
+    /// Proccess response from ssl_crtd.
+    void sslCrtdHandleReply(const char * reply);
+
+    bool switchToHttps(const char *host);
     bool switchedToHttps() const { return switchedToHttps_; }
 #else
     bool switchedToHttps() const { return false; }
@@ -282,6 +295,7 @@ private:
     bool closing_;
 
     bool switchedToHttps_;
+    String sslHostName; ///< Host name for SSL certificate generation
     AsyncCall::Pointer reader; ///< set when we are reading
     BodyPipe::Pointer bodyPipe; // set when we are reading request body
 };

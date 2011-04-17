@@ -9,8 +9,9 @@
 #include "acl/Data.h"
 #include "CbDataList.h"
 #include "ssl_support.h"
+#include "ssl/ErrorDetail.h"
 
-class ACLSslErrorData : public ACLData<ssl_error_t>
+class ACLSslErrorData : public ACLData<Ssl::ssl_error_t>
 {
 
 public:
@@ -20,13 +21,13 @@ public:
     ACLSslErrorData(ACLSslErrorData const &);
     ACLSslErrorData &operator= (ACLSslErrorData const &);
     virtual ~ACLSslErrorData();
-    bool match(ssl_error_t);
+    bool match(Ssl::ssl_error_t);
     wordlist *dump();
     void parse();
     bool empty() const;
-    virtual ACLData<ssl_error_t> *clone() const;
+    virtual ACLData<Ssl::ssl_error_t> *clone() const;
 
-    CbDataList<ssl_error_t> *values;
+    CbDataList<Ssl::ssl_error_t> *values;
 };
 
 MEMPROXY_CLASS_INLINE(ACLSslErrorData);

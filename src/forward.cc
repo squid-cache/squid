@@ -48,6 +48,10 @@
 #include "icmp/net_db.h"
 #include "ip/IpIntercept.h"
 #include "ip/tools.h"
+#if USE_SSL
+#include "ssl_support.h"
+#include "ssl/ErrorDetail.h"
+ #endif
 
 static PSC fwdStartCompleteWrapper;
 static PF fwdServerClosedWrapper;
@@ -604,6 +608,14 @@ FwdState::negotiateSSL(int fd)
 
             anErr->xerrno = EACCES;
 #endif
+
+            Ssl::ErrorDetail *errFromFailure = (Ssl::ErrorDetail *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail);
+            if (errFromFailure != NULL){
+                // The errFromFailure is attached to the ssl object
+                // and will be released when ssl object destroyed.
+                // Copy errFromFailure to a new Ssl::ErrorDetail object
+                anErr->detail = new Ssl::ErrorDetail(*errFromFailure);
+            }
 
             fail(anErr);
 

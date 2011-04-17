@@ -36,6 +36,7 @@
 #define SQUID_SSL_SUPPORT_H
 
 #include "config.h"
+#include "ssl/gadgets.h"
 #if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
 #endif
@@ -88,15 +89,50 @@ const char *sslGetUserCertificatePEM(SSL *ssl);
 /// \ingroup ServerProtocolSSLAPI
 const char *sslGetUserCertificateChainPEM(SSL *ssl);
 
-typedef int ssl_error_t;
-ssl_error_t sslParseErrorString(const char *name);
-const char *sslFindErrorString(ssl_error_t value);
+namespace Ssl
+{
+/**
+  \ingroup ServerProtocolSSLAPI
+  * Decide on the kind of certificate and generate a CA- or self-signed one
+*/
+SSL_CTX *generateSslContext(char const *host, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey);
 
-// Custom SSL errors; assumes all official errors are positive
-#define SQUID_X509_V_ERR_DOMAIN_MISMATCH -1
-// All SSL errors range: from smallest (negative) custom to largest SSL error
-#define SQUID_SSL_ERROR_MIN SQUID_X509_V_ERR_DOMAIN_MISMATCH
-#define SQUID_SSL_ERROR_MAX INT_MAX
+/**
+  \ingroup ServerProtocolSSLAPI
+  * Check date of certificate signature. If there is out of date error fucntion
+  * returns false, true otherwise.
+ */
+bool verifySslCertificateDate(SSL_CTX * sslContext);
+
+/**
+  \ingroup ServerProtocolSSLAPI
+  * Read private key and certificate from memory and generate SSL context
+  * using their.
+ */
+SSL_CTX * generateSslContextUsingPkeyAndCertFromMemory(const char * data);
+
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Iterates over the X509 common and alternate names and to see if  matches with given data
+   * using the check_func.
+   \param peer_cert  The X509 cert to check
+   \param check_data The data with which the X509 CNs compared
+   \param check_func The function used to match X509 CNs. The CN data passed as ASN1_STRING data
+   \return   1 if any of the certificate CN matches, 0 if none matches.
+ */
+int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data));
+
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Convert a given ASN1_TIME to a string form.
+   \param tm the time in ASN1_TIME form
+   \param buf the buffer to write the output
+   \param len write at most len bytes
+   \return The number of bytes written
+ */
+int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
+
+} //namespace Ssl
 
 #ifdef _SQUID_MSWIN_
 

@@ -80,6 +80,15 @@
 #include "LoadableModules.h"
 #endif
 
+#if USE_SSL_CRTD
+#include "ssl/helper.h"
+#include "ssl/certificate_db.h"
+#endif
+
+#if USE_SSL
+#include "ssl/context_storage.h"
+#endif
+
 #if ICAP_CLIENT
 #include "adaptation/icap/Config.h"
 #endif
@@ -691,7 +700,12 @@ mainReconfigureStart(void)
 
     idnsShutdown();
 #endif
-
+#if USE_SSL_CRTD
+    Ssl::Helper::GetInstance()->Shutdown();
+#endif
+#if USE_SSL
+    Ssl::TheGlobalContextStorage.reconfigureStart();
+#endif
     redirectShutdown();
     authenticateShutdown();
     externalAclShutdown();
@@ -766,6 +780,9 @@ mainReconfigureFinish(void *)
 #else
 
     idnsInit();
+#endif
+#if USE_SSL_CRTD
+    Ssl::Helper::GetInstance()->Init();
 #endif
 
     redirectInit();
@@ -1701,7 +1718,9 @@ SquidShutdown()
 
     idnsShutdown();
 #endif
-
+#if USE_SSL_CRTD
+    Ssl::Helper::GetInstance()->Shutdown();
+#endif
     redirectShutdown();
     externalAclShutdown();
     icpConnectionClose();

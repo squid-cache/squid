@@ -106,6 +106,20 @@
 #include "ChunkedCodingParser.h"
 #include "rfc1738.h"
 
+#if USE_SSL
+#include "ssl/context_storage.h"
+#include "ssl/helper.h"
+#include "ssl/gadgets.h"
+#endif
+#if USE_SSL_CRTD
+#include "ssl/crtd_message.h"
+#include "ssl/certificate_db.h"
+#endif
+
+#if HAVE_LIMITS
+#include <limits>
+#endif
+
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
 #endif
@@ -3289,7 +3303,7 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
             comm_err_t flag, int xerrno, void *data)
 {
     https_port_list *s = (https_port_list *)data;
-    SSL_CTX *sslContext = s->sslContext;
+    SSL_CTX *sslContext = s->staticSslContext.get();
 
     if (flag == COMM_ERR_CLOSING) {
         return;
@@ -3350,24 +3364,109 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
     incoming_sockets_accepted++;
 }
 
-bool
-ConnStateData::switchToHttps()
+void
+ConnStateData::sslCrtdHandleReplyWrapper(void *data, char *reply)
 {
-    assert(!switchedToHttps_);
+    ConnStateData * state_data = (ConnStateData *)(data);
+    state_data->sslCrtdHandleReply(reply);
+}
 
-    //HTTPMSGLOCK(currentobject->http->request);
-    assert(areAllContextsForThisConnection());
-    freeAllContexts();
-    //currentobject->connIsFinished();
+void
+ConnStateData::sslCrtdHandleReply(const char * reply)
+{
+    if (!reply) {
+        debugs(1, 1, HERE << "\"ssl_crtd\" helper return <NULL> reply");
+    } else {
+        Ssl::CrtdMessage reply_message;
+        if (reply_message.parse(reply, strlen(reply)) != Ssl::CrtdMessage::OK) {
+            debugs(33, 5, HERE << "Reply from ssl_crtd for " << sslHostName << " is incorrect");
+        } else {
+            if (reply_message.getCode() != "ok") {
+                debugs(33, 5, HERE << "Certificate for " << sslHostName << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
+            } else {
+                debugs(33, 5, HERE << "Certificate for " << sslHostName << " was successfully recieved from ssl_crtd");
+                getSslContextDone(Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str()), true);
+                return;
+            }
+        }
+    }
+    getSslContextDone(NULL);
+}
 
-    debugs(33, 5, HERE << "converting FD " << fd << " to SSL");
+bool
+ConnStateData::getSslContextStart()
+{
+    char const * host = sslHostName.termedBuf();
+    if (port->generateHostCertificates && host && strcmp(host, "") != 0) {
+        debugs(33, 5, HERE << "Finding SSL certificate for " << host << " in cache");
+        Ssl::LocalContextStorage & ssl_ctx_cache(Ssl::TheGlobalContextStorage.getLocalStorage(port->s));
+        SSL_CTX * dynCtx = ssl_ctx_cache.find(host);
+        if (dynCtx) {
+            debugs(33, 5, HERE << "SSL certificate for " << host << " have found in cache");
+            if (Ssl::verifySslCertificateDate(dynCtx)) {
+                debugs(33, 5, HERE << "Cached SSL certificate for " << host << " is valid");
+                return getSslContextDone(dynCtx);
+            } else {
+                debugs(33, 5, HERE << "Cached SSL certificate for " << host << " is out of date. Delete this certificate from cache");
+                ssl_ctx_cache.remove(host);
+            }
+        } else {
+            debugs(33, 5, HERE << "SSL certificate for " << host << " haven't found in cache");
+        }
+
+#ifdef USE_SSL_CRTD
+        debugs(33, 5, HERE << "Generating SSL certificate for " << host << " using ssl_crtd.");
+        Ssl::CrtdMessage request_message;
+        request_message.setCode(Ssl::CrtdMessage::code_new_certificate);
+        Ssl::CrtdMessage::BodyParams map;
+        map.insert(std::make_pair(Ssl::CrtdMessage::param_host, host));
+        std::string bufferToWrite;
+        Ssl::writeCertAndPrivateKeyToMemory(port->signingCert, port->signPkey, bufferToWrite);
+        request_message.composeBody(map, bufferToWrite);
+        Ssl::Helper::GetInstance()->sslSubmit(request_message, sslCrtdHandleReplyWrapper, this);
+        return true;
+#else
+        debugs(33, 5, HERE << "Generating SSL certificate for " << host);
+        dynCtx = Ssl::generateSslContext(host, port->signingCert, port->signPkey);
+        return getSslContextDone(dynCtx, true);
+#endif //USE_SSL_CRTD
+    }
+    return getSslContextDone(NULL);
+}
+
+bool
+ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
+{
+    // Try to add generated ssl context to storage.
+    if (port->generateHostCertificates && isNew) {
+        Ssl::LocalContextStorage & ssl_ctx_cache(Ssl::TheGlobalContextStorage.getLocalStorage(port->s));
+        if (sslContext && sslHostName != "") {
+            if (!ssl_ctx_cache.add(sslHostName.termedBuf(), sslContext)) {
+                // If it is not in storage delete after using. Else storage deleted it.
+                fd_table[fd].dynamicSslContext = sslContext;
+            }
+        } else {
+            debugs(33, 2, HERE << "Failed to generate SSL cert for " << sslHostName);
+        }
+    }
+
+    // If generated ssl context = NULL, try to use static ssl context.
+    if (!sslContext) {
+        if (!port->staticSslContext) {
+            debugs(83, 1, "Closing SSL FD " << fd << " as lacking SSL context");
+            comm_close(fd);
+            return false;
+        } else {
+            debugs(33, 5, HERE << "Using static ssl context.");
+            sslContext = port->staticSslContext.get();
+        }
+    }
 
     // fake a ConnectionDetail object; XXX: make ConnState a ConnectionDetail?
     ConnectionDetail detail;
     detail.me = me;
     detail.peer = peer;
 
-    SSL_CTX *sslContext = port->sslContext;
     SSL *ssl = NULL;
     if (!(ssl = httpsCreate(fd, &detail, sslContext)))
         return false;
@@ -3381,6 +3480,23 @@ ConnStateData::switchToHttps()
 
     switchedToHttps_ = true;
     return true;
+}
+
+bool
+ConnStateData::switchToHttps(const char *host)
+{
+    assert(!switchedToHttps_);
+
+    sslHostName = host;
+
+    //HTTPMSGLOCK(currentobject->http->request);
+    assert(areAllContextsForThisConnection());
+    freeAllContexts();
+    //currentobject->connIsFinished();
+
+    debugs(33, 5, HERE << "converting FD " << fd << " to SSL");
+
+    return getSslContextStart();
 }
 
 #endif /* USE_SSL */
@@ -3403,14 +3519,21 @@ clientHttpConnectionsOpen(void)
         }
 
 #if USE_SSL
-        if (s->sslBump && s->sslContext == NULL) {
+        if (s->sslBump &&
+                !s->staticSslContext && !s->generateHostCertificates) {
             debugs(1, 1, "Will not bump SSL at http_port " <<
                    s->http.s << " due to SSL initialization failure.");
             s->sslBump = 0;
         }
-        if (s->sslBump)
+        if (s->sslBump) {
             ++bumpCount;
+            // Create ssl_ctx cache for this port.
+            Ssl::TheGlobalContextStorage.addLocalStorage(s->s, s->dynamicCertMemCacheSize == std::numeric_limits<size_t>::max() ? 4194304 : s->dynamicCertMemCacheSize);
+        }
 #endif
+#if USE_SSL_CRTD
+        Ssl::Helper::GetInstance();
+#endif //USE_SSL_CRTD
 
         enter_suid();
 
@@ -3462,7 +3585,7 @@ clientHttpsConnectionsOpen(void)
             continue;
         }
 
-        if (s->sslContext == NULL) {
+        if (!s->staticSslContext) {
             debugs(1, 1, "Ignoring https_port " << s->http.s <<
                    " due to SSL initialization failure.");
             continue;
@@ -3610,7 +3733,7 @@ clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 
 CBDATA_CLASS_INIT(ConnStateData);
 
-ConnStateData::ConnStateData() :AsyncJob("ConnStateData"), transparent_ (false), closing_ (false)
+ConnStateData::ConnStateData() :AsyncJob("ConnStateData"), transparent_ (false), closing_ (false), switchedToHttps_(false)
 {
     pinning.fd = -1;
     pinning.pinned = false;

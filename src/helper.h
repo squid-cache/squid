@@ -73,6 +73,8 @@ struct _helper {
         int queue_size;
         int avg_svc_time;
     } stats;
+    /// True if callback expects the whole helper output, as a c-string.
+    bool return_full_reply;
 };
 
 struct _helper_stateful {

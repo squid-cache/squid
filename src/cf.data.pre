@@ -1339,6 +1339,25 @@ DOC_START
 
 	   sslcontext=	SSL session ID context identifier.
 
+	   generate-host-certificates[=<on|off>]
+			Dynamically create SSL server certificates for the
+			destination hosts of bumped CONNECT requests.When 
+			enabled, the cert and key options are used to sign
+			generated certificates. Otherwise generated
+			certificate will be selfsigned.
+			If there is CA certificate life time of generated 
+			certificate equals lifetime of CA certificate. If
+			generated certificate is selfsigned lifetime is three 
+			years.
+			This option is enabled by default when SslBump is used.
+			See the sslBump option above for more information.
+			
+	   dynamic_cert_mem_cache_size=SIZE
+			Approximate total RAM size spent on cached generated
+			certificates. If set to zero, caching is disabled. The
+			default value is 4MB. An average XXX-bit certificate
+			consumes about XXX bytes of RAM.
+
 	   vport	Accelerator with IP based virtual host support.
 
 	   vport=NN	As above, but uses specified port number rather
@@ -1707,6 +1726,35 @@ DOC_START
 	The key file name is given as argument to the program allowing
 	selection of the right password if you have multiple encrypted
 	keys.
+DOC_END
+
+COMMENT_START
+OPTIONS RELATING TO EXTERNAL SSL_CRTD 
+-----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: sslcrtd_program
+TYPE: eol 
+IFDEF: USE_SSL_CRTD
+DEFAULT: @DEFAULT_SSL_CRTD@ -s @DEFAULT_SSL_DB_DIR@ -M 4MB
+LOC: Ssl::TheConfig.ssl_crtd
+DOC_START
+	Specify the location and options of the executable for ssl_crtd process.
+	@DEFAULT_SSL_CRTD@ program requires -s and -M parameters
+	For more information use:
+		@DEFAULT_SSL_CRTD@ -h
+DOC_END
+
+NAME: sslcrtd_children
+TYPE: int
+IFDEF: USE_SSL_CRTD
+DEFAULT: 5
+LOC: Ssl::TheConfig.ssl_crtd_n_running
+DOC_START
+	The maximum number of processes spawn to service ssl server.
+	The maximum this may be safely set to is 32.
+	
+	You must have at least one ssl_crtd process.
 DOC_END
 
 COMMENT_START

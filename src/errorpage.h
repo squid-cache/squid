@@ -37,6 +37,9 @@
 #include "squid.h"
 #include "cbdata.h"
 #include "ip/IpAddress.h"
+#if USE_SSL
+#include "ssl/ErrorDetail.h"
+#endif
 
 /**
  \defgroup ErrorPageAPI Error Pages API
@@ -48,6 +51,7 @@
    B - URL with FTP %2f hack                    x
    c - Squid error code                         x
    d - seconds elapsed since request received   x
+   D - Error details                            x
    e - errno                                    x
    E - strerror()                               x
    f - FTP request line                         x
@@ -99,9 +103,18 @@ private:
     MemBuf *BuildContent(void);
 
     /**
-     * Convert an error template into an error page.
+     * Convert the given template string into textual output
+     *
+     * \param text            The string to be converted
+     * \param allowRecursion  Whether to convert codes which output may contain codes
      */
-    const char *Convert(char token);
+    MemBuf *ConvertText(const char *text, bool allowRecursion);
+
+    /**
+     * Convert an error template into an error page.
+     * \ allowRecursion   True if the codes which do recursions should converted
+     */
+    const char *Convert(char token, bool allowRecursion);
 
     /**
      * CacheManager / Debug dump of the ErrorState object.
@@ -141,6 +154,9 @@ public:
     char *request_hdrs;
     char *err_msg; /* Preformatted error message from the cache */
 
+#if USE_SSL
+    Ssl::ErrorDetail *detail;
+#endif
 private:
     CBDATA_CLASS2(ErrorState);
 };

@@ -172,6 +172,7 @@ extern "C" {
     extern int ssl_ex_index_server;	/* -1 */
     extern int ssl_ctx_ex_index_dont_verify_domain; /* -1 */
     extern int ssl_ex_index_cert_error_check;	/* -1 */
+    extern int ssl_ex_index_ssl_error_detail;      /* -1 */
 
     extern const char *external_acl_message;      /* NULL */
     extern int opt_send_signal;	/* -1 */

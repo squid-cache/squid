@@ -102,6 +102,7 @@ public:
     WRITE_HANDLER *write_method;
 #if USE_SSL
     SSL *ssl;
+    SSL_CTX *dynamicSslContext; ///< cached and then freed when fd is closed
 #endif
 #ifdef _SQUID_MSWIN_
     struct {
