@@ -358,7 +358,7 @@ storeCossRemove(CossSwapDir * sd, StoreEntry * e)
     CossIndexNode *coss_node = (CossIndexNode *)e->repl.data;
     e->repl.data = NULL;
     dlinkDelete(&coss_node->node, &sd->cossindex);
-    coss_index_pool->free(coss_node);
+    coss_index_pool->freeOne(coss_node);
     sd->count -= 1;
 }
 
@@ -930,7 +930,7 @@ CossSwapDir::create()
 
     memset(&block, '\0', 1024);
 
-    for (off_t offset = 0; offset < max_size; ++offset) {
+    for (uint64_t offset = 0; offset < max_size; ++offset) {
         if (write (swap, block, 1024) < 1024) {
             debugs (47, 0, "Failed to create COSS swap space in " << path);
         }
