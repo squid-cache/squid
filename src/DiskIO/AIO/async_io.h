@@ -34,7 +34,6 @@ typedef enum {
     AQ_ENTRY_WRITE
 } async_queue_entry_type_t;
 
-
 typedef struct _async_queue_entry async_queue_entry_t;
 
 typedef struct _async_queue async_queue_t;
@@ -47,7 +46,12 @@ struct _async_queue_entry {
     async_queue_entry_state_t aq_e_state;
     async_queue_entry_type_t aq_e_type;
 
+    /* 64-bit environments with non-GCC complain about the type mismatch on Linux */
+#if defined(__USE_FILE_OFFSET64) && !defined(__GNUC__)
+    struct aiocb64 aq_e_aiocb;
+#else
     struct aiocb aq_e_aiocb;
+#endif
     AIODiskFile *theFile;
     void *aq_e_callback_data;
     FREE *aq_e_free;
