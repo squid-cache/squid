@@ -73,6 +73,8 @@ public:
 
     virtual uint64_t currentCount() const;
 
+    virtual int64_t maxObjectSize() const;
+
     virtual void stat(StoreEntry &) const;
 
     virtual void sync();	/* Sync the store prior to shutdown */
@@ -145,6 +147,8 @@ public:
     virtual uint64_t currentSize() const { return cur_size; }
 
     virtual uint64_t currentCount() const { return n_disk_objects; }
+
+    virtual int64_t maxObjectSize() const { return max_objsize; }
 
     virtual void stat (StoreEntry &anEntry) const;
     virtual StoreSearch *search(String const url, HttpRequest *) = 0;
