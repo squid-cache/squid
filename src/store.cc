@@ -1233,9 +1233,10 @@ StoreController::maintain()
 
     /* this should be emitted by the oversize dir, not globally */
 
-    if (store_swap_size > Store::Root().maxSize()) {
+    if (Store::Root().currentSize() > Store::Root().maxSize()) {
         if (squid_curtime - last_warn_time > 10) {
-            debugs(20, 0, "WARNING: Disk space over limit: " << store_swap_size << " KB > "
+            debugs(20, 0, "WARNING: Disk space over limit: "
+                   << Store::Root().currentSize() << " KB > "
                    << Store::Root().maxSize() << " KB");
             last_warn_time = squid_curtime;
         }

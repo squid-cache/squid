@@ -108,7 +108,6 @@ extern "C" {
     extern char *snmp_agentinfo;
 #endif
 
-    extern int n_disk_objects;	/* 0 */
     extern iostats IOStats;
 
     extern struct acl_deny_info_list *DenyInfoList;	/* NULL */
@@ -117,7 +116,6 @@ extern "C" {
     extern int starting_up;	/* 1 */
     extern int shutting_down;	/* 0 */
     extern int reconfiguring;	/* 0 */
-    extern unsigned long store_swap_size;	/* 0 */
     extern time_t hit_only_mode_until;	/* 0 */
     extern StatCounters statCounter;
     extern double request_failure_ratio;	/* 0.0 */

@@ -67,7 +67,7 @@ snmp_sysFn(variable_list * Var, snint * ErrP)
 
     case SYSSTOR:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      store_swap_size,
+                                      Store::Root().currentSize(),
                                       ASN_INTEGER);
         break;
 
@@ -531,7 +531,7 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
 
         case PERF_PROTOSTAT_AGGR_CURSWAP:
             Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) store_swap_size,
+                                          (snint) Store::Root().currentSize(),
                                           SMI_GAUGE32);
             break;
 

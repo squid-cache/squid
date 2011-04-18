@@ -67,6 +67,10 @@ public:
 
     virtual uint64_t minSize() const;
 
+    virtual uint64_t currentSize() const;
+
+    virtual uint64_t currentCount() const;
+
     virtual void stat(StoreEntry&) const;
 
     virtual void reference(StoreEntry&);

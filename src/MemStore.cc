@@ -29,7 +29,7 @@ MemStore::Init()
     delete map; // we just wanted to initialize shared memory segments
 }
 
-MemStore::MemStore(): map(NULL)
+MemStore::MemStore(): map(NULL), cur_size(0)
 {
 }
 
@@ -59,9 +59,8 @@ MemStore::stat(StoreEntry &e) const
         const int limit = map->entryLimit();
         storeAppendPrintf(&e, "Maximum entries: %9d\n", limit);
         if (limit > 0) {
-            const int entryCount = map->entryCount();
-            storeAppendPrintf(&e, "Current entries: %9d %.2f%%\n",
-                entryCount, (100.0 * entryCount / limit));
+            storeAppendPrintf(&e, "Current entries: %"PRId64" %.2f%%\n",
+                currentCount(), (100.0 * currentCount() / limit));
 
             if (limit < 100) { // XXX: otherwise too expensive to count
                 Ipc::ReadWriteLockStats stats;
@@ -87,6 +86,18 @@ uint64_t
 MemStore::maxSize() const
 {
     return 0; // XXX: make configurable
+}
+
+uint64_t
+MemStore::currentSize() const
+{
+    return cur_size >> 10;
+}
+
+uint64_t
+MemStore::currentCount() const
+{
+    return map ? map->entryCount() : 0;
 }
 
 void
@@ -300,6 +311,7 @@ MemStore::copyToShm(StoreEntry &e, MemStoreMap::Extras &extras)
     debugs(20, 7, HERE << "mem-cached all " << eSize << " bytes of " << e <<
            " in " << page);
 
+    cur_size += eSize;
     // remember storage location and size
     extras.page = page;
     extras.storedSize = copied;
@@ -310,6 +322,7 @@ void
 MemStore::cleanReadable(const sfileno fileno)
 {
     Ipc::Mem::PutPage(map->extras(fileno).page);
+    cur_size -= map->extras(fileno).storedSize;
 }
 
 /// calculates maximum number of entries we need to store and map

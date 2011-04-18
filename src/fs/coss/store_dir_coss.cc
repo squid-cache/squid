@@ -427,9 +427,8 @@ storeCossRebuildFromSwapLog(void *data)
                 /*
                  * Make sure we don't unlink the file, it might be
                  * in use by a subsequent entry.  Also note that
-                 * we don't have to subtract from store_swap_size
-                 * because adding to store_swap_size happens in
-                 * the cleanup procedure.
+                 * we don't have to subtract from cur_size because
+                 * adding to cur_size happens in the cleanup procedure.
                  */
                 e->expireNow();
                 e->releaseRequest();
@@ -481,7 +480,6 @@ storeCossRebuildFromSwapLog(void *data)
             continue;
         }
 
-        /* update store_swap_size */
         rb->counts.objcount++;
 
         e = storeCossAddDiskRestore(rb->sd, s.key,
