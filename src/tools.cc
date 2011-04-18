@@ -880,7 +880,16 @@ void
 setMaxFD(void)
 {
 #if HAVE_SETRLIMIT && defined(RLIMIT_NOFILE)
+
+    /* On Linux with 64-bit file support the sys/resource.h header
+     * uses #define to change the function definition to require rlimit64
+     */
+#if defined(getrlimit)
+    struct rlimit64 rl; // Assume its a 64-bit redefine anyways.
+#else
     struct rlimit rl;
+#endif
+
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
         debugs(50, DBG_CRITICAL, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
     } else if (Config.max_filedescriptors > 0) {
@@ -916,7 +925,16 @@ setSystemLimits(void)
 {
 #if HAVE_SETRLIMIT && defined(RLIMIT_NOFILE) && !defined(_SQUID_CYGWIN_)
     /* limit system filedescriptors to our own limit */
+
+    /* On Linux with 64-bit file support the sys/resource.h header
+     * uses #define to change the function definition to require rlimit64
+     */
+#if defined(getrlimit)
+    struct rlimit64 rl; // Assume its a 64-bit redefine anyways.
+#else
     struct rlimit rl;
+#endif
+
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
         debugs(50, DBG_CRITICAL, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
     } else {
