@@ -95,6 +95,26 @@ void Rock::SwapDir::disconnect(StoreEntry &e)
     e.swap_status = SWAPOUT_NONE;
 }
 
+uint64_t
+Rock::SwapDir::currentSize() const
+{
+    return (HeaderSize + max_objsize * currentCount()) >> 10;
+}
+
+uint64_t
+Rock::SwapDir::currentCount() const
+{
+    return map ? map->entryCount() : 0;
+}
+
+/// In SMP mode only the disker process reports stats to avoid
+/// counting the same stats by multiple processes.
+bool
+Rock::SwapDir::doReportStat() const
+{
+    return ::SwapDir::doReportStat() && (!UsingSmp() || IamDiskProcess());
+}
+
 // TODO: encapsulate as a tool; identical to CossSwapDir::create()
 void
 Rock::SwapDir::create()
@@ -284,9 +304,6 @@ Rock::SwapDir::validateOptions()
         debugs(47, 0, "WARNING: Rock store config wastes space.");
 	}
     */
-
-    // XXX: misplaced, map is not yet created
-    //cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
 }
 
 void
@@ -463,8 +480,6 @@ Rock::SwapDir::ioCompletedNotification()
     if (!map)
         map = new DirMap(path);
 
-    cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
-
     // TODO: lower debugging level
     debugs(47,1, "Rock cache_dir[" << index << "] limits: " << 
         std::setw(12) << maximumSize() << " disk bytes and " <<
@@ -516,8 +531,6 @@ Rock::SwapDir::writeCompleted(int errflag, size_t rlen, RefCount< ::WriteRequest
         map->free(sio.swap_filen); // will mark as unusable, just in case
     }
 
-    // TODO: always compute cur_size based on map, do not store it
-    cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
     assert(sio.diskOffset + sio.offset_ <= diskOffsetLimit()); // post-factum
 
     sio.finishedWriting(errflag);
@@ -532,15 +545,7 @@ Rock::SwapDir::full() const
 void
 Rock::SwapDir::updateSize(int64_t size, int sign)
 {
-    // it is not clear what store_swap_size really is; TODO: move low-level
-	// size maintenance to individual store dir types
-    cur_size = (HeaderSize + max_objsize * map->entryCount()) >> 10;
-    store_swap_size = cur_size;
-
-    if (sign > 0)
-        ++n_disk_objects;
-    else if (sign < 0)
-        --n_disk_objects;
+    // stats are not stored but computed when needed
 }
 
 // storeSwapOutFileClosed calls this nethod on DISK_NO_SPACE_LEFT,
@@ -571,8 +576,8 @@ Rock::SwapDir::maintain()
     if (StoreController::store_dirs_rebuilding)
         return;
 
-    debugs(47,3, HERE << "cache_dir[" << index << "] state: " << 
-        map->full() << ' ' << currentSize() << " < " << diskOffsetLimit());
+    debugs(47,3, HERE << "cache_dir[" << index << "] state: " << map->full() <<
+           ' ' << (currentSize() << 10) << " < " << diskOffsetLimit());
 
     // Hopefully, we find a removable entry much sooner (TODO: use time?)
     const int maxProbed = 10000;
@@ -647,8 +652,8 @@ Rock::SwapDir::statfs(StoreEntry &e) const
 {
     storeAppendPrintf(&e, "\n");
     storeAppendPrintf(&e, "Maximum Size: %"PRIu64" KB\n", max_size);
-    storeAppendPrintf(&e, "Current Size: %"PRIu64" KB %.2f%%\n", cur_size,
-                      100.0 * cur_size / max_size);
+    storeAppendPrintf(&e, "Current Size: %"PRIu64" KB %.2f%%\n",
+                      currentSize(), 100.0 * currentSize() / max_size);
 
     if (map) {
         const int limit = map->entryLimit();

@@ -69,6 +69,10 @@ public:
 
     virtual uint64_t minSize() const;
 
+    virtual uint64_t currentSize() const;
+
+    virtual uint64_t currentCount() const;
+
     virtual void stat(StoreEntry &) const;
 
     virtual void sync();	/* Sync the store prior to shutdown */
@@ -124,6 +128,8 @@ public:
 
     virtual bool needsDiskStrand() const; ///< needs a dedicated kid process
     virtual bool active() const; ///< may be used in this strand
+    /// whether stat should be reported by this SwapDir
+    virtual bool doReportStat() const { return active(); }
 
     /* official Store interface functions */
     virtual void diskFull();
@@ -135,6 +141,11 @@ public:
     virtual uint64_t maxSize() const { return max_size;}
 
     virtual uint64_t minSize() const;
+
+    virtual uint64_t currentSize() const { return cur_size; }
+
+    virtual uint64_t currentCount() const { return n_disk_objects; }
+
     virtual void stat (StoreEntry &anEntry) const;
     virtual StoreSearch *search(String const url, HttpRequest *) = 0;
 
@@ -159,8 +170,10 @@ private:
     char const *theType;
 
 public:
-    uint64_t cur_size;        ///< currently used space in the storage area
-    uint64_t max_size;        ///< maximum allocatable size of the storage area
+    // TODO: store cur_size and max_size in bytes
+    uint64_t cur_size;        ///< currently used space in the storage area in kiloBytes
+    uint64_t max_size;        ///< maximum allocatable size of the storage area in kiloBytes
+    uint64_t n_disk_objects;  ///< total number of objects stored
     char *path;
     int index;			/* This entry's index into the swapDirs array */
     int64_t min_objsize;

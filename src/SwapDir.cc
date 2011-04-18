@@ -39,7 +39,7 @@
 #include "ConfigOption.h"
 
 SwapDir::SwapDir(char const *aType): theType(aType),
-        cur_size (0), max_size(0),
+        cur_size (0), max_size(0), n_disk_objects(0),
         path(NULL), index(-1), min_objsize(0), max_objsize (-1),
         repl(NULL), removals(0), scanned(0),
         cleanLog(NULL)
@@ -71,6 +71,9 @@ SwapDir::unlink(StoreEntry &) {}
 void
 SwapDir::stat(StoreEntry &output) const
 {
+    if (!doReportStat())
+        return;
+
     storeAppendPrintf(&output, "Store Directory #%d (%s): %s\n", index, type(),
                       path);
     storeAppendPrintf(&output, "FS Block Size %d Bytes\n",
