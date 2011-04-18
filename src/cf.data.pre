@@ -4155,10 +4155,10 @@ IFDEF: FOLLOW_X_FORWARDED_FOR&&USE_ADAPTATION
 DEFAULT: on
 LOC: Adaptation::Config::use_indirect_client
 DOC_START
-   Controls whether the indirect client address
-   (see follow_x_forwarded_for) instead of the
-   direct client address is passed to an ICAP
-   server as "X-Client-IP".
+	Controls whether the indirect client IP address (instead of the direct
+	client IP address) is passed to adaptation services.
+
+	See also: follow_x_forwarded_for adaptation_send_client_ip
 DOC_END
 
 NAME: via
@@ -4935,7 +4935,7 @@ delay_parameters pool aggregate network individual user
 
 	For a class 5 delay pool:
 
-delay_parameters pool tag
+delay_parameters pool tagrate
 
 	The variables here are:
 
@@ -4943,19 +4943,19 @@ delay_parameters pool tag
 				number specified in delay_pools as used in
 				delay_class lines.
 
-		aggregate	the "delay parameters" for the aggregate bucket
+		aggregate	the speed limit parameters for the aggregate bucket
 				(class 1, 2, 3).
 
-		individual	the "delay parameters" for the individual
+		individual	the speed limit parameters for the individual
 				buckets (class 2, 3).
 
-		network		the "delay parameters" for the network buckets
+		network		the speed limit parameters for the network buckets
 				(class 3).
 
-		user		the delay parameters for the user buckets
+		user		the speed limit parameters for the user buckets
 				(class 4).
 
-		tag		the delay parameters for the tag buckets
+		tagrate		the speed limit parameters for the tag buckets
 				(class 5).
 
 	A pair of delay parameters is written restore/maximum, where restore is
@@ -6427,7 +6427,11 @@ COMMENT: on|off
 LOC: Adaptation::Config::send_client_ip
 DEFAULT: off
 DOC_START
-	This adds the header "X-Client-IP" to ICAP requests.
+	If enabled, Squid shares HTTP client IP information with adaptation
+	services. For ICAP, Squid adds the X-Client-IP header to ICAP requests.
+	For eCAP, Squid sets the libecap::metaClientIp transaction option.
+
+	See also: adaptation_uses_indirect_client
 DOC_END
 
 NAME: adaptation_send_username icap_send_client_username
