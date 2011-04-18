@@ -353,7 +353,6 @@ MemStore::EntryLimit()
 
     const int64_t entrySize = Ipc::Mem::PageSize(); // for now
     const int64_t entryLimit = Config.memMaxSize / entrySize;
-    // TODO: warn if we cannot cache at least one item (misconfiguration)
     return entryLimit;
 }
 

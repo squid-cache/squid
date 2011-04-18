@@ -100,6 +100,15 @@ void SharedMemPagesRr::run(const RunnerRegistry &)
     if (!Ipc::Mem::Limit())
         return;
 
+    if (Ipc::Mem::Limit() < Ipc::Mem::PageSize()) {
+        if (IamMasterProcess()) {
+            debugs(54, DBG_IMPORTANT, "WARNING: mem-cache size is too small ("
+                   << (Ipc::Mem::Limit() / 1024.0) << " KB), should be >= " <<
+                   (Ipc::Mem::PageSize() / 1024.0) << " KB");
+        }
+        return;
+    }
+
     if (IamMasterProcess())
         Ipc::Mem::Init();
     else
