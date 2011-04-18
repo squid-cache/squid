@@ -30,8 +30,7 @@
 
 /*
  * DIRENT functionality can apparently come from many places.
- * I believe these should really be done by OS-specific compat
- * files, but for now its left here.
+ * With various complaints by different compilers
  */
 #if HAVE_DIRENT_H
 #include <dirent.h>
@@ -51,6 +50,15 @@
 #endif /* HAVE_NDIR_H */
 #endif /* HAVE_DIRENT_H */
 
+/* The structure dirent also varies between 64-bit and 32-bit environments.
+ * Define our own dirent_t type for consistent simple internal use.
+ * NP: GCC seems not to care about the type naming differences.
+ */
+#if defined(__USE_FILE_OFFSET64) && !defined(__GNUC__)
+#define dirent_t struct dirent64
+#else
+#define dirent_t struct dirent
+#endif
 
 /*
  * Filedescriptor limits in the different select loops

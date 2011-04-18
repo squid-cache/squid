@@ -399,7 +399,7 @@ public:
     int done;
     int fn;
 
-    struct dirent *entry;
+    dirent_t *entry;
     DIR *td;
     char fullpath[SQUID_MAXPATHLEN];
     char fullfilename[SQUID_MAXPATHLEN];
