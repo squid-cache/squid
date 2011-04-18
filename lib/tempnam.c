@@ -17,12 +17,6 @@
 #if HAVE_LIBC_H
 #include <libc.h>
 #endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_TYPES_H
-#include <sys/types.h>
-#endif
 #if HAVE_LIMITS_H
 #include <limits.h>
 #endif

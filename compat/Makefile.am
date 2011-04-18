@@ -17,6 +17,7 @@ libcompat_la_SOURCES = \
 	compat_shared.h \
 	fdsetsize.h \
 	osdetect.h \
+	stdio.h \
 	stdvarargs.h \
 	valgrind.h \
 	\
