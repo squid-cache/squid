@@ -300,6 +300,12 @@ public:
     /** The minimum size the store will shrink to via normal housekeeping */
     virtual uint64_t minSize() const = 0;
 
+    /** current store size in kiloBytes */
+    virtual uint64_t currentSize() const = 0; // TODO: return size in bytes
+
+    /** the total number of objects stored */
+    virtual uint64_t currentCount() const = 0;
+
     /**
      * Output stats to the provided store entry.
      \todo make these calls asynchronous

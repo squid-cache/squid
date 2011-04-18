@@ -26,6 +26,9 @@ public:
     virtual StoreSearch *search(String const url, HttpRequest *);
     virtual StoreEntry *get(const cache_key *key);
     virtual void disconnect(StoreEntry &e);
+    virtual uint64_t currentSize() const;
+    virtual uint64_t currentCount() const;
+    virtual bool doReportStat() const;
 
 protected:
     /* protected ::SwapDir API */
@@ -62,7 +65,6 @@ protected:
     void ignoreReferences(StoreEntry &e); ///< delete from repl policy scope
 
     // TODO: change cur_size and max_size type to stop this madness
-    int64_t currentSize() const { return static_cast<int64_t>(cur_size) << 10;}
     int64_t maximumSize() const { return static_cast<int64_t>(max_size) << 10;}
     int64_t diskOffset(int filen) const;
     int64_t diskOffsetLimit() const;

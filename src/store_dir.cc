@@ -334,7 +334,6 @@ SwapDir::updateSize(int64_t size, int sign)
     int64_t blks = (size + fs.blksize - 1) / fs.blksize;
     int64_t k = ((blks * fs.blksize) >> 10) * sign;
     cur_size += k;
-    store_swap_size += k;
 
     if (sign > 0)
         n_disk_objects++;
@@ -351,10 +350,10 @@ StoreController::stat(StoreEntry &output) const
     storeAppendPrintf(&output, "Maximum Swap Size      : %"PRIu64" KB\n",
                       maxSize());
     storeAppendPrintf(&output, "Current Store Swap Size: %8lu KB\n",
-                      store_swap_size);
+                      currentSize());
     storeAppendPrintf(&output, "Current Capacity       : %"PRId64"%% used, %"PRId64"%% free\n",
-                      Math::int64Percent(store_swap_size, maxSize()),
-                      Math::int64Percent((maxSize() - store_swap_size), maxSize()));
+                      Math::int64Percent(currentSize(), maxSize()),
+                      Math::int64Percent((maxSize() - currentSize()), maxSize()));
 
     if (memStore)
         memStore->stat(output);
@@ -376,6 +375,18 @@ StoreController::minSize() const
 {
     /* TODO: include memory cache ? */
     return swapDir->minSize();
+}
+
+uint64_t
+StoreController::currentSize() const
+{
+    return swapDir->currentSize();
+}
+
+uint64_t
+StoreController::currentCount() const
+{
+    return swapDir->currentCount();
 }
 
 void
@@ -900,8 +911,10 @@ StoreHashIndex::maxSize() const
 {
     uint64_t result = 0;
 
-    for (int i = 0; i < Config.cacheSwap.n_configured; i++)
-        result += store(i)->maxSize();
+    for (int i = 0; i < Config.cacheSwap.n_configured; i++) {
+        if (dir(i).doReportStat())
+            result += store(i)->maxSize();
+    }
 
     return result;
 }
@@ -911,8 +924,36 @@ StoreHashIndex::minSize() const
 {
     uint64_t result = 0;
 
-    for (int i = 0; i < Config.cacheSwap.n_configured; i++)
-        result += store(i)->minSize();
+    for (int i = 0; i < Config.cacheSwap.n_configured; i++) {
+        if (dir(i).doReportStat())
+            result += store(i)->minSize();
+    }
+
+    return result;
+}
+
+uint64_t
+StoreHashIndex::currentSize() const
+{
+    uint64_t result = 0;
+
+    for (int i = 0; i < Config.cacheSwap.n_configured; i++) {
+        if (dir(i).doReportStat())
+            result += store(i)->currentSize();
+    }
+
+    return result;
+}
+
+uint64_t
+StoreHashIndex::currentCount() const
+{
+    uint64_t result = 0;
+
+    for (int i = 0; i < Config.cacheSwap.n_configured; i++) {
+        if (dir(i).doReportStat())
+            result += store(i)->currentCount();
+    }
 
     return result;
 }

@@ -25,6 +25,8 @@ public:
     virtual void init();
     virtual uint64_t maxSize() const;
     virtual uint64_t minSize() const;
+    virtual uint64_t currentSize() const;
+    virtual uint64_t currentCount() const;
     virtual void stat(StoreEntry &) const;
     virtual StoreSearch *search(String const url, HttpRequest *);
     virtual void reference(StoreEntry &);
@@ -49,6 +51,7 @@ protected:
 
 private:
     MemStoreMap *map; ///< index of mem-cached entries
+    uint64_t cur_size; ///< currently used space in the storage area
 };
 
 // Why use Store as a base? MemStore and SwapDir are both "caches".
