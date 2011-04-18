@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
- <TITLE>Squid 3.1.12 release notes</TITLE>
+ <TITLE>Squid 3.1.12.1 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.12 release notes</H1>
+<H1>Squid 3.1.12.1 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -31,9 +31,10 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <LI><A NAME="toc2.5">2.5</A> <A HREF="#ss2.5">Connection Pinning (for NTLM Auth Passthrough)</A>
 <LI><A NAME="toc2.6">2.6</A> <A HREF="#ss2.6">Quality of Service (QoS) Flow support</A>
 <LI><A NAME="toc2.7">2.7</A> <A HREF="#ss2.7">SSL Bump (for HTTPS Filtering and Adaptation)</A>
-<LI><A NAME="toc2.8">2.8</A> <A HREF="#ss2.8">eCAP Adaptation Module support</A>
-<LI><A NAME="toc2.9">2.9</A> <A HREF="#ss2.9">ICAP Bypass and Retry enhancements</A>
-<LI><A NAME="toc2.10">2.10</A> <A HREF="#ss2.10">ICY streaming protocol support</A>
+<LI><A NAME="toc2.8">2.8</A> <A HREF="#ss2.8">Dynamic SSL Certificate Generation</A>
+<LI><A NAME="toc2.9">2.9</A> <A HREF="#ss2.9">eCAP Adaptation Module support</A>
+<LI><A NAME="toc2.10">2.10</A> <A HREF="#ss2.10">ICAP Bypass and Retry enhancements</A>
+<LI><A NAME="toc2.11">2.11</A> <A HREF="#ss2.11">ICY streaming protocol support</A>
 </UL>
 <P>
 <H2><A NAME="toc3">3.</A> <A HREF="#s3">Changes to squid.conf since Squid-3.0</A></H2>
@@ -70,7 +71,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.12</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.12.1</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -124,6 +125,7 @@ While this release is not fully bug-free we believe it is ready for use in produ
 <LI>eCAP Adaptation Module support</LI>
 <LI>ICAP Bypass and Retry enhancements</LI>
 <LI>ICY streaming protocol support</LI>
+<LI>Dynamic SSL Certificate Generation (3.1.12.1 and later)</LI>
 </UL>
 </P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
@@ -371,8 +373,30 @@ configured to explicitly use the proxy in their browser settings or via WPAD/PAC
 configuration. Use of interception for port 443 is not officially supported, despite
 being known to work under certain limited networking circumstances.</P>
 
+<H2><A NAME="ss2.8">2.8</A> <A HREF="#toc2.8">Dynamic SSL Certificate Generation</A>
+</H2>
 
-<H2><A NAME="ss2.8">2.8</A> <A HREF="#toc2.8">eCAP Adaptation Module support</A>
+<P> SslBump users know how many certificate warnings a single complex site
+(using dedicated image, style, and/or advertisement servers for embedded content)
+can generate. The warnings are legitimate and are caused by Squid-provided site
+certificate. Two things may be wrong with that certificate:
+<UL>
+<LI> Squid certificate is not signed by a trusted authority.</LI>
+<LI> Squid certificate name does not match the site domain name.</LI>
+</UL>
+
+Squid can do nothing about (A), but in most targeted environments, users will
+trust the "man in the middle" authority and install the corresponding root
+certificate.</P>
+
+<P>To avoid mismatch (B), the DynamicSslCert feature concentrates on generating  
+site certificates that match the requested site domain name. Please note that
+the browser site name check does not really add much security in an SslBump
+environment where the user already trusts the "man in the middle". The check
+only adds warnings and creates page rendering problems in browsers that try to
+reduce the number of warnings by blocking some embedded content.</P>
+
+<H2><A NAME="ss2.9">2.9</A> <A HREF="#toc2.9">eCAP Adaptation Module support</A>
 </H2>
 
 <P>Details in 
@@ -384,7 +408,7 @@ a c-icap server wrapper. This enables faster processing.</P>
 <P>Currently known and available eCAP modules are listed in the wiki feature page on eCAP.</P>
 
 
-<H2><A NAME="ss2.9">2.9</A> <A HREF="#toc2.9">ICAP Bypass and Retry enhancements</A>
+<H2><A NAME="ss2.10">2.10</A> <A HREF="#toc2.10">ICAP Bypass and Retry enhancements</A>
 </H2>
 
 <P>Details in 
@@ -446,7 +470,7 @@ should be large enough to not require an explicit configuration in most
 environments yet may be small enough to limit side-effects of loops.</P>
 
 
-<H2><A NAME="ss2.10">2.10</A> <A HREF="#toc2.10">ICY streaming protocol support</A>
+<H2><A NAME="ss2.11">2.11</A> <A HREF="#toc2.11">ICY streaming protocol support</A>
 </H2>
 
 <P>Squid-3.1 adds native support for streaming protocol ICY.
@@ -1047,6 +1071,12 @@ NOCOMMENT_START
 </PRE>
 </P>
 
+<DT><B>sslcrtd_program</B><DD>
+<P>Specify the location and options of the executable for ssl_crtd process.</P>
+
+<DT><B>sslcrtd_children</B><DD>
+<P> Configures the number of sslcrtd processes to spawn</P>
+
 <DT><B>sslproxy_cert_error</B><DD>
 <P>New Access Control to selectively bypass server certificate validation errors.
 DEFAULT: None bypassed.
@@ -1574,6 +1604,10 @@ Cannot be used with --disable-loadable-modules.</P>
 <P>Support following the X-Forwarded-For HTTP header for determining the
 original or indirect client when a request has been forwarded through other
 proxies.</P>
+
+<DT><B>--enable-ssl-crtd</B><DD>
+<P>Prevent Squid from direct generation of SSL private key and
+certificate request and instead enables the <EM>ssl_crtd</EM> processes.</P>
 
 <DT><B>--enable-zph-qos</B><DD>
 <P>Build with support for ZPH Quality of Service controls</P>
