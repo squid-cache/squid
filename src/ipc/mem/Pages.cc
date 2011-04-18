@@ -72,8 +72,12 @@ Ipc::Mem::Limit()
     return Config.memMaxSize;
 }
 
-// TODO: Implement size_t Ipc::Mem::Level()
-
+size_t
+Ipc::Mem::Level()
+{
+    return ThePagePool ?
+        (ThePagePool->capacity() - ThePagePool->size()) * PageSize() : 0;
+}
 
 /// initializes shared memory pages
 class SharedMemPagesRr: public RegisteredRunner

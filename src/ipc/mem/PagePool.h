@@ -26,6 +26,8 @@ public:
     PagePool(const String &id);
 
     unsigned int capacity() const { return shared->theCapacity; }
+    /// lower bound for the number of free pages
+    unsigned int size() const { return pageIndex.size(); }
     size_t pageSize() const { return shared->thePageSize; }
 
     /// sets page ID and returns true unless no free pages are found
