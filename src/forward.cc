@@ -51,7 +51,7 @@
 #if USE_SSL
 #include "ssl_support.h"
 #include "ssl/ErrorDetail.h"
- #endif
+#endif
 
 static PSC fwdStartCompleteWrapper;
 static PF fwdServerClosedWrapper;
@@ -610,7 +610,7 @@ FwdState::negotiateSSL(int fd)
 #endif
 
             Ssl::ErrorDetail *errFromFailure = (Ssl::ErrorDetail *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail);
-            if (errFromFailure != NULL){
+            if (errFromFailure != NULL) {
                 // The errFromFailure is attached to the ssl object
                 // and will be released when ssl object destroyed.
                 // Copy errFromFailure to a new Ssl::ErrorDetail object

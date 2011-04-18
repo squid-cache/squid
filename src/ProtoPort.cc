@@ -13,7 +13,7 @@
 http_port_list::http_port_list(const char *aProtocol)
 #if USE_SSL
         :
-    http(*this), dynamicCertMemCacheSize(std::numeric_limits<size_t>::max())
+        http(*this), dynamicCertMemCacheSize(std::numeric_limits<size_t>::max())
 #endif
 {
     protocol = xstrdup(aProtocol);

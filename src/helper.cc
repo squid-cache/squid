@@ -863,8 +863,8 @@ static void helperReturnBuffer(int request_number, helper_server * srv, helper *
 
         hlp->stats.avg_svc_time =
             Math::intAverage(hlp->stats.avg_svc_time,
-                       tvSubMsec(r->dispatch_time, current_time),
-                       hlp->stats.replies, REDIRECT_AV_FACTOR);
+                             tvSubMsec(r->dispatch_time, current_time),
+                             hlp->stats.replies, REDIRECT_AV_FACTOR);
 
         helperRequestFree(r);
     } else {
