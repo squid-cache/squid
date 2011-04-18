@@ -62,7 +62,7 @@ The most important of these new features are:
 	<item>eCAP Adaptation Module support
 	<item>ICAP Bypass and Retry enhancements
 	<item>ICY streaming protocol support
-	<item>Dynamioc SSL Certificate Generatio (3.1.12.1 and later)
+	<item>Dynamic SSL Certificate Generation (3.1.12.1 and later)
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -1407,7 +1407,7 @@ This section gives an account of those changes in three categories:
 
 	<tag>--enable-ssl-crtd</tag>
 	<p>Prevent Squid from direct generation of SSL private key and
-	certificate request and instead enables the <em>ssl_crtd,/em> processes.
+	certificate request and instead enables the <em>ssl_crtd</em> processes.
 
 	<tag>--enable-zph-qos</tag>
 	<p>Build with support for ZPH Quality of Service controls
