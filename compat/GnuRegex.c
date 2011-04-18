@@ -235,9 +235,6 @@ char *alloca();
 
 #define STREQ(s1, s2) ((strcmp (s1, s2) == 0))
 
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-
 #if !defined(__MINGW32__)	/* MinGW defines boolean */
 typedef char boolean;
 #endif
@@ -3141,7 +3138,7 @@ restore_best_regs:
                 if (bufp->regs_allocated == REGS_UNALLOCATED) {		/* No.  So allocate them with malloc.  We need one
 									 * extra element beyond `num_regs' for the `-1' marker
 									 * GNU code uses.  */
-                    regs->num_regs = MAX(RE_NREGS, num_regs + 1);
+                    regs->num_regs = max(RE_NREGS, num_regs + 1);
                     regs->start = TALLOC(regs->num_regs, regoff_t);
                     regs->end = TALLOC(regs->num_regs, regoff_t);
                     if (regs->start == NULL || regs->end == NULL)
@@ -3170,7 +3167,7 @@ restore_best_regs:
                 }
                 /* Go through the first `min (num_regs, regs->num_regs)'
                  * registers, since that is all we initialized.  */
-                for (mcnt = 1; mcnt < MIN(num_regs, regs->num_regs); mcnt++) {
+                for (mcnt = 1; mcnt < min(num_regs, regs->num_regs); mcnt++) {
                     if (REG_UNSET(regstart[mcnt]) || REG_UNSET(regend[mcnt]))
                         regs->start[mcnt] = regs->end[mcnt] = -1;
                     else {
