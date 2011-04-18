@@ -1376,7 +1376,7 @@ statRegisterWithCacheManager(void)
 #if USE_AUTH
     Mgr::RegisterAction("username_cache",
                         "Active Cached Usernames",
-                        AuthUser::UsernameCacheStats, 0, 1);
+                        Auth::User::UsernameCacheStats, 0, 1);
 #endif
 #if DEBUG_OPENFD
     Mgr::RegisterAction("openfd_objects", "Objects with Swapout files open",

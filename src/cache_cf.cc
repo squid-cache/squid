@@ -927,8 +927,8 @@ configDoConfigure(void)
      * state will be preserved.
      */
     if (Config.onoff.pipeline_prefetch) {
-        AuthConfig *nego = AuthConfig::Find("Negotiate");
-        AuthConfig *ntlm = AuthConfig::Find("NTLM");
+        Auth::Config *nego = Auth::Config::Find("Negotiate");
+        Auth::Config *ntlm = Auth::Config::Find("NTLM");
         if ((nego && nego->active()) || (ntlm && ntlm->active())) {
             debugs(3, DBG_IMPORTANT, "WARNING: pipeline_prefetch breaks NTLM and Negotiate authentication. Forced OFF.");
             Config.onoff.pipeline_prefetch = 0;
@@ -1835,7 +1835,7 @@ check_null_string(char *s)
 
 #if USE_AUTH
 static void
-parse_authparam(Auth::authConfig * config)
+parse_authparam(Auth::ConfigVector * config)
 {
     char *type_str;
     char *param_str;
@@ -1847,7 +1847,7 @@ parse_authparam(Auth::authConfig * config)
         self_destruct();
 
     /* find a configuration for the scheme in the currently parsed configs... */
-    AuthConfig *schemeCfg = AuthConfig::Find(type_str);
+    Auth::Config *schemeCfg = Auth::Config::Find(type_str);
 
     if (schemeCfg == NULL) {
         /* Create a configuration based on the scheme info */
@@ -1859,7 +1859,7 @@ parse_authparam(Auth::authConfig * config)
         }
 
         config->push_back(theScheme->createConfig());
-        schemeCfg = AuthConfig::Find(type_str);
+        schemeCfg = Auth::Config::Find(type_str);
         if (schemeCfg == NULL) {
             debugs(3, DBG_CRITICAL, "Parsing Config File: Corruption configuring authentication scheme '" << type_str << "'.");
             self_destruct();
@@ -1870,7 +1870,7 @@ parse_authparam(Auth::authConfig * config)
 }
 
 static void
-free_authparam(Auth::authConfig * cfg)
+free_authparam(Auth::ConfigVector * cfg)
 {
     /* Wipe the Auth globals and Detach/Destruct component config + state. */
     cfg->clean();
@@ -1882,14 +1882,14 @@ free_authparam(Auth::authConfig * cfg)
 
     /* on reconfigure initialize new auth schemes for the new config. */
     if (reconfiguring) {
-        InitAuthSchemes();
+        Auth::Init();
     }
 }
 
 static void
-dump_authparam(StoreEntry * entry, const char *name, authConfig cfg)
+dump_authparam(StoreEntry * entry, const char *name, Auth::ConfigVector cfg)
 {
-    for (authConfig::iterator  i = cfg.begin(); i != cfg.end(); ++i)
+    for (Auth::ConfigVector::iterator  i = cfg.begin(); i != cfg.end(); ++i)
         (*i)->dump(entry, name, (*i));
 }
 #endif /* USE_AUTH */

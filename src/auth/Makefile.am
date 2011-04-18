@@ -14,6 +14,8 @@ libauth_la_SOURCES = \
 	Type.cc \
 	Config.cc \
 	Config.h \
+	CredentialState.cc \
+	CredentialState.h \
 	Gadgets.cc \
 	Gadgets.h \
 	Scheme.cc \
@@ -40,7 +42,10 @@ libacls_la_SOURCES = \
 	AclProxyAuth.h \
 	AuthAclState.h
 
+CredentialState.cc: CredentialState.h $(top_srcdir)/src/mk-string-arrays.awk
+	$(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk < $(srcdir)/CredentialState.h > $@ || (rm -f $@ ; exit 1)
+
 Type.cc: Type.h $(top_srcdir)/src/mk-string-arrays.awk
 	$(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk < $(srcdir)/Type.h > $@ || (rm -f $@ ; exit 1)
 
-CLEANFILES += Type.cc
+CLEANFILES += CredentialState.cc Type.cc

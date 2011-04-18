@@ -804,8 +804,11 @@ class external_acl;
             SQUIDCEXTERN char *peer_proxy_negotiate_auth(char *principal_name, char *proxy);
 #endif
 
-            /* call to ensure the auth component schemes exist. */
-            SQUIDCEXTERN void InitAuthSchemes(void);
+                namespace Auth {
+        /* call to ensure the auth component schemes exist. */
+        extern void Init(void);
+        } // namespace Auth
+
 #endif /* USE_AUTH */
 
 #endif /* SQUID_PROTOS_H */

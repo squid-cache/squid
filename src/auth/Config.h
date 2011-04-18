@@ -29,8 +29,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#ifndef SQUID_AUTHCONFIG_H
-#define SQUID_AUTHCONFIG_H
+#ifndef SQUID_AUTH_CONFIG_H
+#define SQUID_AUTH_CONFIG_H
 
 #if USE_AUTH
 
@@ -45,28 +45,30 @@ class wordlist;
 /* for http_hdr_type parameters-by-value */
 #include "HttpHeader.h"
 
+namespace Auth
+{
 
 /**
- \ingroup AuthAPI
- \par
+ * \ingroup AuthAPI
+ * \par
  * I am the configuration for an auth scheme.
  * Currently each scheme has only one instance of me,
  * but this may change.
- \par
+ * \par
  * This class is treated like a ref counted class.
  * If the children ever stop being singletons, implement the
  * ref counting...
  */
-class AuthConfig
+class Config
 {
 
 public:
     static AuthUserRequest::Pointer CreateAuthUser(const char *proxy_auth);
 
-    static AuthConfig *Find(const char *proxy_auth);
-    AuthConfig() : authenticateChildren(20), authenticateProgram(NULL) {}
+    static Config *Find(const char *proxy_auth);
+    Config() : authenticateChildren(20), authenticateProgram(NULL) {}
 
-    virtual ~AuthConfig() {}
+    virtual ~Config() {}
 
     /**
      * Used by squid to determine whether the auth module has successfully initialised itself with the current configuration.
@@ -117,16 +119,20 @@ public:
      * Responsible for writing to the StoreEntry the configuration parameters that a user
      * would put in a config file to recreate the running configuration.
      */
-    virtual void dump(StoreEntry *, const char *, AuthConfig *) = 0;
+    virtual void dump(StoreEntry *, const char *, Config *) = 0;
 
     /** add headers as needed when challenging for auth */
     virtual void fixHeader(AuthUserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *) = 0;
+
     /** prepare to handle requests */
-    virtual void init(AuthConfig *) = 0;
+    virtual void init(Config *) = 0;
+
     /** expose any/all statistics to a CacheManager */
     virtual void registerWithCacheManager(void);
+
     /** parse config options */
-    virtual void parse(AuthConfig *, int, char *) = 0;
+    virtual void parse(Config *, int, char *) = 0;
+
     /** the http string id */
     virtual const char * type() const = 0;
 
@@ -135,12 +141,9 @@ public:
     wordlist *authenticateProgram; ///< Helper program to run, includes all parameters
 };
 
-namespace Auth
-{
+typedef Vector<Config *> ConfigVector;
 
-typedef Vector<AuthConfig *> authConfig;
-
-extern authConfig TheConfig;
+extern ConfigVector TheConfig;
 
 } // namespace Auth
 

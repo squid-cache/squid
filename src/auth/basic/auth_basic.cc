@@ -40,6 +40,7 @@
 #include "squid.h"
 #include "auth/basic/auth_basic.h"
 #include "auth/basic/Scheme.h"
+#include "auth/basic/User.h"
 #include "auth/basic/UserRequest.h"
 #include "auth/Gadgets.h"
 #include "auth/State.h"
@@ -70,13 +71,13 @@ static int authbasic_initialised = 0;
 /* internal functions */
 
 bool
-AuthBasicConfig::active() const
+Auth::Basic::Config::active() const
 {
     return authbasic_initialised == 1;
 }
 
 bool
-AuthBasicConfig::configured() const
+Auth::Basic::Config::configured() const
 {
     if ((authenticateProgram != NULL) && (authenticateChildren.n_max != 0) &&
             (basicAuthRealm != NULL)) {
@@ -89,36 +90,13 @@ AuthBasicConfig::configured() const
 }
 
 const char *
-AuthBasicConfig::type() const
+Auth::Basic::Config::type() const
 {
     return Auth::Basic::Scheme::GetInstance()->type();
 }
 
-int32_t
-BasicUser::ttl() const
-{
-    if (credentials() != Ok && credentials() != Pending)
-        return -1; // TTL is obsolete NOW.
-
-    int32_t basic_ttl = expiretime - squid_curtime + static_cast<AuthBasicConfig*>(config)->credentialsTTL;
-    int32_t global_ttl = static_cast<int32_t>(expiretime - squid_curtime + Config.authenticateTTL);
-
-    return min(basic_ttl, global_ttl);
-}
-
-bool
-BasicUser::authenticated() const
-{
-    if ((credentials() == Ok) && (expiretime + static_cast<AuthBasicConfig*>(config)->credentialsTTL > squid_curtime))
-        return true;
-
-    debugs(29, 4, "User not authenticated or credentials need rechecking.");
-
-    return false;
-}
-
 void
-AuthBasicConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
+Auth::Basic::Config::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
     if (authenticateProgram) {
         debugs(29, 9, HERE << "Sending type:" << hdrType << " header: 'Basic realm=\"" << basicAuthRealm << "\"'");
@@ -127,7 +105,7 @@ AuthBasicConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply
 }
 
 void
-AuthBasicConfig::rotateHelpers()
+Auth::Basic::Config::rotateHelpers()
 {
     /* schedule closure of existing helpers */
     if (basicauthenticators) {
@@ -139,7 +117,7 @@ AuthBasicConfig::rotateHelpers()
 
 /** shutdown the auth helpers and free any allocated configuration details */
 void
-AuthBasicConfig::done()
+Auth::Basic::Config::done()
 {
     authbasic_initialised = 0;
 
@@ -155,11 +133,6 @@ AuthBasicConfig::done()
 
     if (basicAuthRealm)
         safe_free(basicAuthRealm);
-}
-
-BasicUser::~BasicUser()
-{
-    safe_free(passwd);
 }
 
 static void
@@ -182,16 +155,16 @@ authenticateBasicHandleReply(void *data, char *reply)
     assert(r->auth_user_request != NULL);
     assert(r->auth_user_request->user()->auth_type == Auth::AUTH_BASIC);
 
-    /* this is okay since we only play with the BasicUser child fields below
+    /* this is okay since we only play with the Auth::Basic::User child fields below
      * and dont pass the pointer itself anywhere */
-    BasicUser *basic_auth = dynamic_cast<BasicUser *>(r->auth_user_request->user().getRaw());
+    Auth::Basic::User *basic_auth = dynamic_cast<Auth::Basic::User *>(r->auth_user_request->user().getRaw());
 
     assert(basic_auth != NULL);
 
     if (reply && (strncasecmp(reply, "OK", 2) == 0))
-        basic_auth->credentials(AuthUser::Ok);
+        basic_auth->credentials(Auth::Ok);
     else {
-        basic_auth->credentials(AuthUser::Failed);
+        basic_auth->credentials(Auth::Failed);
 
         if (t && *t)
             r->auth_user_request->setDenyMessage(t);
@@ -219,7 +192,7 @@ authenticateBasicHandleReply(void *data, char *reply)
 }
 
 void
-AuthBasicConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
+Auth::Basic::Config::dump(StoreEntry * entry, const char *name, Auth::Config * scheme)
 {
     wordlist *list = authenticateProgram;
     storeAppendPrintf(entry, "%s %s", name, "basic");
@@ -237,7 +210,7 @@ AuthBasicConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
     storeAppendPrintf(entry, "%s basic casesensitive %s\n", name, casesensitive ? "on" : "off");
 }
 
-AuthBasicConfig::AuthBasicConfig() :
+Auth::Basic::Config::Config() :
         credentialsTTL( 2*60*60 ),
         casesensitive(0),
         utf8(0)
@@ -245,13 +218,13 @@ AuthBasicConfig::AuthBasicConfig() :
     basicAuthRealm = xstrdup("Squid proxy-caching web server");
 }
 
-AuthBasicConfig::~AuthBasicConfig()
+Auth::Basic::Config::~Config()
 {
     safe_free(basicAuthRealm);
 }
 
 void
-AuthBasicConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
+Auth::Basic::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
 {
     if (strcasecmp(param_str, "program") == 0) {
         if (authenticateProgram)
@@ -281,7 +254,7 @@ authenticateBasicStats(StoreEntry * sentry)
     helperStats(sentry, basicauthenticators, "Basic Authenticator Statistics");
 }
 
-static AuthUser::Pointer
+static Auth::User::Pointer
 authBasicAuthUserFindUsername(const char *username)
 {
     AuthUserHashPointer *usernamehash;
@@ -300,15 +273,8 @@ authBasicAuthUserFindUsername(const char *username)
     return NULL;
 }
 
-BasicUser::BasicUser(AuthConfig *aConfig) :
-        AuthUser(aConfig),
-        passwd(NULL),
-        auth_queue(NULL),
-        currentRequest(NULL)
-{}
-
 char *
-AuthBasicConfig::decodeCleartext(const char *httpAuthHeader)
+Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader)
 {
     const char *proxy_auth = httpAuthHeader;
 
@@ -342,37 +308,6 @@ AuthBasicConfig::decodeCleartext(const char *httpAuthHeader)
     return cleartext;
 }
 
-bool
-BasicUser::valid() const
-{
-    if (username() == NULL)
-        return false;
-    if (passwd == NULL)
-        return false;
-    return true;
-}
-
-void
-BasicUser::updateCached(BasicUser *from)
-{
-    debugs(29, 9, HERE << "Found user '" << from->username() << "' already in the user cache as '" << this << "'");
-
-    assert(strcmp(from->username(), username()) == 0);
-
-    if (strcmp(from->passwd, passwd)) {
-        debugs(29, 4, HERE << "new password found. Updating in user master record and resetting auth state to unchecked");
-        credentials(Unchecked);
-        xfree(passwd);
-        passwd = from->passwd;
-        from->passwd = NULL;
-    }
-
-    if (credentials() == Failed) {
-        debugs(29, 4, HERE << "last attempt to authenticate this user failed, resetting auth state to unchecked");
-        credentials(Unchecked);
-    }
-}
-
 /**
  * Decode a Basic [Proxy-]Auth string, linking the passed
  * auth_user_request structure to any existing user structure or creating one
@@ -381,7 +316,7 @@ BasicUser::updateCached(BasicUser *from)
  * descriptive message to the user.
  */
 AuthUserRequest::Pointer
-AuthBasicConfig::decode(char const *proxy_auth)
+Auth::Basic::Config::decode(char const *proxy_auth)
 {
     AuthUserRequest::Pointer auth_user_request = dynamic_cast<AuthUserRequest*>(new AuthBasicUserRequest);
     /* decode the username */
@@ -393,13 +328,13 @@ AuthBasicConfig::decode(char const *proxy_auth)
     if (!cleartext)
         return auth_user_request;
 
-    AuthUser::Pointer lb;
+    Auth::User::Pointer lb;
     /* permitted because local_basic is purely local function scope. */
-    BasicUser *local_basic = NULL;
+    Auth::Basic::User *local_basic = NULL;
 
     char *seperator = strchr(cleartext, ':');
 
-    lb = local_basic = new BasicUser(this);
+    lb = local_basic = new Auth::Basic::User(this);
     if (seperator == NULL) {
         local_basic->username(cleartext);
     } else {
@@ -432,7 +367,7 @@ AuthBasicConfig::decode(char const *proxy_auth)
     }
 
     /* now lookup and see if we have a matching auth_user structure in memory. */
-    AuthUser::Pointer auth_user;
+    Auth::User::Pointer auth_user;
 
     if ((auth_user = authBasicAuthUserFindUsername(lb->username())) == NULL) {
         /* the user doesn't exist in the username cache yet */
@@ -452,7 +387,7 @@ AuthBasicConfig::decode(char const *proxy_auth)
         assert(auth_user != NULL);
     } else {
         /* replace the current cached password with the new one */
-        BasicUser *basic_auth = dynamic_cast<BasicUser *>(auth_user.getRaw());
+        Auth::Basic::User *basic_auth = dynamic_cast<Auth::Basic::User *>(auth_user.getRaw());
         assert(basic_auth);
         basic_auth->updateCached(local_basic);
         auth_user = basic_auth;
@@ -466,7 +401,7 @@ AuthBasicConfig::decode(char const *proxy_auth)
 /** Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
 void
-AuthBasicConfig::init(AuthConfig * schemeCfg)
+Auth::Basic::Config::init(Auth::Config * schemeCfg)
 {
     if (authenticateProgram) {
         authbasic_initialised = 1;
@@ -487,15 +422,16 @@ AuthBasicConfig::init(AuthConfig * schemeCfg)
 }
 
 void
-AuthBasicConfig::registerWithCacheManager(void)
+Auth::Basic::Config::registerWithCacheManager(void)
 {
     Mgr::RegisterAction("basicauthenticator",
                         "Basic User Authenticator Stats",
                         authenticateBasicStats, 0, 1);
 }
 
+// XXX: this is a auth management function. Surely not in scope for the credentials storage object
 void
-BasicUser::queueRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data)
+Auth::Basic::User::queueRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data)
 {
     BasicAuthQueueNode *node;
     node = static_cast<BasicAuthQueueNode *>(xcalloc(1, sizeof(BasicAuthQueueNode)));
@@ -508,11 +444,12 @@ BasicUser::queueRequest(AuthUserRequest::Pointer auth_user_request, RH * handler
     node->data = cbdataReference(data);
 }
 
+// XXX: this is a auth management function. Surely not in scope for the credentials storage object
 void
-BasicUser::submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data)
+Auth::Basic::User::submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data)
 {
     /* mark the user as having verification in progress */
-    credentials(Pending);
+    credentials(Auth::Pending);
     authenticateStateData *r = NULL;
     char buf[8192];
     char user[1024], pass[1024];
@@ -520,7 +457,7 @@ BasicUser::submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handle
     r->handler = handler;
     r->data = cbdataReference(data);
     r->auth_user_request = auth_user_request;
-    if (static_cast<AuthBasicConfig*>(config)->utf8) {
+    if (static_cast<Auth::Basic::Config*>(config)->utf8) {
         latin1_to_utf8(user, sizeof(user), username());
         latin1_to_utf8(pass, sizeof(pass), passwd);
         xstrncpy(user, rfc1738_escape(user), sizeof(user));

@@ -48,6 +48,7 @@
 #include "HttpRequest.h"
 #include "SquidTime.h"
 #include "auth/negotiate/Scheme.h"
+#include "auth/negotiate/User.h"
 #include "auth/negotiate/UserRequest.h"
 #include "wordlist.h"
 
@@ -66,7 +67,7 @@ statefulhelper *negotiateauthenticators = NULL;
 static int authnegotiate_initialised = 0;
 
 /// \ingroup AuthNegotiateInternal
-AuthNegotiateConfig negotiateConfig;
+Auth::Negotiate::Config negotiateConfig;
 
 /// \ingroup AuthNegotiateInternal
 static hash_table *proxy_auth_cache = NULL;
@@ -78,7 +79,7 @@ static hash_table *proxy_auth_cache = NULL;
  */
 
 void
-AuthNegotiateConfig::rotateHelpers()
+Auth::Negotiate::Config::rotateHelpers()
 {
     /* schedule closure of existing helpers */
     if (negotiateauthenticators) {
@@ -89,7 +90,7 @@ AuthNegotiateConfig::rotateHelpers()
 }
 
 void
-AuthNegotiateConfig::done()
+Auth::Negotiate::Config::done()
 {
     authnegotiate_initialised = 0;
 
@@ -106,11 +107,11 @@ AuthNegotiateConfig::done()
     if (authenticateProgram)
         wordlistDestroy(&authenticateProgram);
 
-    debugs(29, 2, "negotiateScheme::done: Negotiate authentication Shutdown.");
+    debugs(29, DBG_IMPORTANT, "Reconfigure: Negotiate authentication configuration cleared.");
 }
 
 void
-AuthNegotiateConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
+Auth::Negotiate::Config::dump(StoreEntry * entry, const char *name, Auth::Config * scheme)
 {
     wordlist *list = authenticateProgram;
     storeAppendPrintf(entry, "%s %s", name, "negotiate");
@@ -126,11 +127,11 @@ AuthNegotiateConfig::dump(StoreEntry * entry, const char *name, AuthConfig * sch
 
 }
 
-AuthNegotiateConfig::AuthNegotiateConfig() : keep_alive(1)
+Auth::Negotiate::Config::Config() : keep_alive(1)
 { }
 
 void
-AuthNegotiateConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
+Auth::Negotiate::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)
 {
     if (strcasecmp(param_str, "program") == 0) {
         if (authenticateProgram)
@@ -144,12 +145,12 @@ AuthNegotiateConfig::parse(AuthConfig * scheme, int n_configured, char *param_st
     } else if (strcasecmp(param_str, "keep_alive") == 0) {
         parse_onoff(&keep_alive);
     } else {
-        debugs(29, 0, "AuthNegotiateConfig::parse: unrecognised negotiate auth scheme parameter '" << param_str << "'");
+        debugs(29, DBG_CRITICAL, "ERROR: unrecognised Negotiate auth scheme parameter '" << param_str << "'");
     }
 }
 
 const char *
-AuthNegotiateConfig::type() const
+Auth::Negotiate::Config::type() const
 {
     return Auth::Negotiate::Scheme::GetInstance()->type();
 }
@@ -159,7 +160,7 @@ AuthNegotiateConfig::type() const
  * Called AFTER parsing the config file
  */
 void
-AuthNegotiateConfig::init(AuthConfig * scheme)
+Auth::Negotiate::Config::init(Auth::Config * scheme)
 {
     if (authenticateProgram) {
 
@@ -186,7 +187,7 @@ AuthNegotiateConfig::init(AuthConfig * scheme)
 }
 
 void
-AuthNegotiateConfig::registerWithCacheManager(void)
+Auth::Negotiate::Config::registerWithCacheManager(void)
 {
     Mgr::RegisterAction("negotiateauthenticator",
                         "Negotiate User Authenticator Stats",
@@ -194,27 +195,27 @@ AuthNegotiateConfig::registerWithCacheManager(void)
 }
 
 bool
-AuthNegotiateConfig::active() const
+Auth::Negotiate::Config::active() const
 {
     return authnegotiate_initialised == 1;
 }
 
 bool
-AuthNegotiateConfig::configured() const
+Auth::Negotiate::Config::configured() const
 {
     if (authenticateProgram && (authenticateChildren.n_max != 0)) {
-        debugs(29, 9, "AuthNegotiateConfig::configured: returning configured");
+        debugs(29, 9, HERE << "returning configured");
         return true;
     }
 
-    debugs(29, 9, "AuthNegotiateConfig::configured: returning unconfigured");
+    debugs(29, 9, HERE << "returning unconfigured");
     return false;
 }
 
 /* Negotiate Scheme */
 
 void
-AuthNegotiateConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type reqType, HttpRequest * request)
+Auth::Negotiate::Config::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type reqType, HttpRequest * request)
 {
     AuthNegotiateUserRequest *negotiate_request;
 
@@ -227,7 +228,7 @@ AuthNegotiateConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpR
 
     /* New request, no user details */
     if (auth_user_request == NULL) {
-        debugs(29, 9, "AuthNegotiateConfig::fixHeader: Sending type:" << reqType << " header: 'Negotiate'");
+        debugs(29, 9, HERE << "Sending type:" << reqType << " header: 'Negotiate'");
         httpHeaderPutStrf(&rep->header, reqType, "Negotiate");
 
         if (!keep_alive) {
@@ -241,57 +242,46 @@ AuthNegotiateConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpR
 
         switch (negotiate_request->user()->credentials()) {
 
-        case AuthUser::Failed:
+        case Auth::Failed:
             /* here it makes sense to drop the connection, as auth is
              * tied to it, even if MAYBE the client could handle it - Kinkie */
             rep->header.delByName("keep-alive");
             request->flags.proxy_keepalive = 0;
             /* fall through */
 
-        case AuthUser::Ok:
+        case Auth::Ok:
             /* Special case: authentication finished OK but disallowed by ACL.
              * Need to start over to give the client another chance.
              */
             if (negotiate_request->server_blob) {
-                debugs(29, 9, "authenticateNegotiateFixErrorHeader: Sending type:" << reqType << " header: 'Negotiate " << negotiate_request->server_blob << "'");
+                debugs(29, 9, HERE << "Sending type:" << reqType << " header: 'Negotiate " << negotiate_request->server_blob << "'");
                 httpHeaderPutStrf(&rep->header, reqType, "Negotiate %s", negotiate_request->server_blob);
                 safe_free(negotiate_request->server_blob);
             } else {
-                debugs(29, 9, "authenticateNegotiateFixErrorHeader: Connection authenticated");
+                debugs(29, 9, HERE << "Connection authenticated");
                 httpHeaderPutStrf(&rep->header, reqType, "Negotiate");
             }
             break;
 
-        case AuthUser::Unchecked:
+        case Auth::Unchecked:
             /* semantic change: do not drop the connection.
              * 2.5 implementation used to keep it open - Kinkie */
-            debugs(29, 9, "AuthNegotiateConfig::fixHeader: Sending type:" << reqType << " header: 'Negotiate'");
+            debugs(29, 9, HERE << "Sending type:" << reqType << " header: 'Negotiate'");
             httpHeaderPutStrf(&rep->header, reqType, "Negotiate");
             break;
 
-        case AuthUser::Handshake:
+        case Auth::Handshake:
             /* we're waiting for a response from the client. Pass it the blob */
-            debugs(29, 9, "AuthNegotiateConfig::fixHeader: Sending type:" << reqType << " header: 'Negotiate " << negotiate_request->server_blob << "'");
+            debugs(29, 9, HERE << "Sending type:" << reqType << " header: 'Negotiate " << negotiate_request->server_blob << "'");
             httpHeaderPutStrf(&rep->header, reqType, "Negotiate %s", negotiate_request->server_blob);
             safe_free(negotiate_request->server_blob);
             break;
 
         default:
-            debugs(29, DBG_CRITICAL, "AuthNegotiateConfig::fixHeader: state " << negotiate_request->user()->credentials() << ".");
+            debugs(29, DBG_CRITICAL, "ERROR: Negotiate auth fixHeader: state " << negotiate_request->user()->credentials() << ".");
             fatal("unexpected state in AuthenticateNegotiateFixErrorHeader.\n");
         }
     }
-}
-
-NegotiateUser::~NegotiateUser()
-{
-    debugs(29, 5, "NegotiateUser::~NegotiateUser: doing nothing to clearNegotiate scheme data for '" << this << "'");
-}
-
-int32_t
-NegotiateUser::ttl() const
-{
-    return -1; // Negotiate cannot be cached.
 }
 
 static void
@@ -305,9 +295,9 @@ authenticateNegotiateStats(StoreEntry * sentry)
  * Auth_user structure.
  */
 AuthUserRequest::Pointer
-AuthNegotiateConfig::decode(char const *proxy_auth)
+Auth::Negotiate::Config::decode(char const *proxy_auth)
 {
-    NegotiateUser *newUser = new NegotiateUser(&negotiateConfig);
+    Auth::Negotiate::User *newUser = new Auth::Negotiate::User(&negotiateConfig);
     AuthUserRequest *auth_user_request = new AuthNegotiateUserRequest();
     assert(auth_user_request->user() == NULL);
 
@@ -315,11 +305,6 @@ AuthNegotiateConfig::decode(char const *proxy_auth)
     auth_user_request->user()->auth_type = Auth::AUTH_NEGOTIATE;
 
     /* all we have to do is identify that it's Negotiate - the helper does the rest */
-    debugs(29, 9, "AuthNegotiateConfig::decode: Negotiate authentication");
+    debugs(29, 9, HERE << "decode Negotiate authentication");
     return auth_user_request;
-}
-
-NegotiateUser::NegotiateUser(AuthConfig *aConfig) : AuthUser (aConfig)
-{
-    proxy_auth_list.head = proxy_auth_list.tail = NULL;
 }

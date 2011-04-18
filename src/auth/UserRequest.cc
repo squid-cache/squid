@@ -80,17 +80,17 @@ AuthUserRequest::valid() const
     debugs(29, 9, HERE << "Validating AuthUserRequest '" << this << "'.");
 
     if (user() == NULL) {
-        debugs(29, 4, HERE << "No associated AuthUser data");
+        debugs(29, 4, HERE << "No associated Auth::User data");
         return false;
     }
 
     if (user()->auth_type == Auth::AUTH_UNKNOWN) {
-        debugs(29, 4, HERE << "AuthUser '" << user() << "' uses unknown scheme.");
+        debugs(29, 4, HERE << "Auth::User '" << user() << "' uses unknown scheme.");
         return false;
     }
 
     if (user()->auth_type == Auth::AUTH_BROKEN) {
-        debugs(29, 4, HERE << "AuthUser '" << user() << "' is broken for it's scheme.");
+        debugs(29, 4, HERE << "Auth::User '" << user() << "' is broken for it's scheme.");
         return false;
     }
 
@@ -161,7 +161,7 @@ AuthUserRequest::denyMessage(char const * const default_message)
 static void
 authenticateAuthUserRequestSetIp(AuthUserRequest::Pointer auth_user_request, Ip::Address &ipaddr)
 {
-    AuthUser::Pointer auth_user = auth_user_request->user();
+    Auth::User::Pointer auth_user = auth_user_request->user();
 
     if (!auth_user)
         return;
@@ -172,7 +172,7 @@ authenticateAuthUserRequestSetIp(AuthUserRequest::Pointer auth_user_request, Ip:
 void
 authenticateAuthUserRequestRemoveIp(AuthUserRequest::Pointer auth_user_request, Ip::Address const &ipaddr)
 {
-    AuthUser::Pointer auth_user = auth_user_request->user();
+    Auth::User::Pointer auth_user = auth_user_request->user();
 
     if (!auth_user)
         return;
@@ -346,7 +346,7 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
         debugs(29, 9, HERE << "This is a new checklist test on FD:" << (conn != NULL ? conn->fd : -1)  );
 
         if (proxy_auth && request->auth_user_request == NULL && conn != NULL && conn->auth_user_request != NULL) {
-            AuthConfig * scheme = AuthConfig::Find(proxy_auth);
+            Auth::Config * scheme = Auth::Config::Find(proxy_auth);
 
             if (conn->auth_user_request->user() == NULL || conn->auth_user_request->user()->config != scheme) {
                 debugs(29, 1, "WARNING: Unexpected change of authentication scheme from '" <<
@@ -362,7 +362,7 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
             /* beginning of a new request check */
             debugs(29, 4, HERE << "No connection authentication type");
 
-            *auth_user_request = AuthConfig::CreateAuthUser(proxy_auth);
+            *auth_user_request = Auth::Config::CreateAuthUser(proxy_auth);
             if (*auth_user_request == NULL)
                 return AUTH_ACL_CHALLENGE;
             else if (!(*auth_user_request)->valid()) {
@@ -526,8 +526,8 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer au
         else {
             /* call each configured & running authscheme */
 
-            for (Auth::authConfig::iterator  i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i) {
-                AuthConfig *scheme = *i;
+            for (Auth::ConfigVector::iterator  i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i) {
+                Auth::Config *scheme = *i;
 
                 if (scheme->active())
                     scheme->fixHeader(NULL, rep, type, request);

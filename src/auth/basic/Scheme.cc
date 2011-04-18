@@ -34,7 +34,7 @@
 #include "auth/basic/Scheme.h"
 #include "helper.h"
 
-/* for AuthConfig */
+/* for Auth::Config */
 #include "auth/basic/auth_basic.h"
 
 Auth::Scheme::Pointer Auth::Basic::Scheme::_instance = NULL;
@@ -65,9 +65,9 @@ Auth::Basic::Scheme::shutdownCleanup()
     debugs(29, DBG_CRITICAL, "Shutdown: Basic authentication.");
 }
 
-AuthConfig *
+Auth::Config *
 Auth::Basic::Scheme::createConfig()
 {
-    AuthBasicConfig *newCfg = new AuthBasicConfig;
-    return dynamic_cast<AuthConfig*>(newCfg);
+    Auth::Basic::Config *newCfg = new Auth::Basic::Config;
+    return dynamic_cast<Auth::Config*>(newCfg);
 }

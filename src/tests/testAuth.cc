@@ -59,12 +59,12 @@ find_proxy_auth(char const *type)
 }
 
 static
-AuthConfig *
+Auth::Config *
 getConfig(char const *type_str)
 {
-    Auth::authConfig &config = Auth::TheConfig;
+    Auth::ConfigVector &config = Auth::TheConfig;
     /* find a configuration for the scheme */
-    AuthConfig *scheme = AuthConfig::Find(type_str);
+    Auth::Config *scheme = Auth::Config::Find(type_str);
 
     if (scheme == NULL) {
         /* Create a configuration */
@@ -85,9 +85,9 @@ getConfig(char const *type_str)
 
 static
 void
-setup_scheme(AuthConfig *scheme, char const **params, unsigned param_count)
+setup_scheme(Auth::Config *scheme, char const **params, unsigned param_count)
 {
-    Auth::authConfig &config = Auth::TheConfig;
+    Auth::ConfigVector &config = Auth::TheConfig;
 
     for (unsigned position=0; position < param_count; position++) {
         char *param_str=xstrdup(params[position]);
@@ -107,7 +107,7 @@ fake_auth_setup()
 
     Mem::Init();
 
-    Auth::authConfig &config = Auth::TheConfig;
+    Auth::ConfigVector &config = Auth::TheConfig;
 
     char const *digest_parms[]= {"program /home/robertc/install/squid/libexec/digest_pw_auth /home/robertc/install/squid/etc/digest.pwd",
                                  "realm foo"
@@ -134,7 +134,7 @@ fake_auth_setup()
     };
 
     for (unsigned scheme=0; scheme < 4; scheme++) {
-        AuthConfig *schemeConfig;
+        Auth::Config *schemeConfig;
         schemeConfig = getConfig(params[scheme].name);
         if (schemeConfig != NULL)
             setup_scheme(schemeConfig, params[scheme].params,
@@ -149,7 +149,7 @@ fake_auth_setup()
     setup=true;
 }
 
-/* AuthConfig::CreateAuthUser works for all
+/* Auth::Config::CreateAuthUser works for all
  * authentication types
  */
 void
@@ -159,7 +159,7 @@ testAuthConfig::create()
     fake_auth_setup();
 
     for (Auth::Scheme::iterator i = Auth::Scheme::GetSchemes().begin(); i != Auth::Scheme::GetSchemes().end(); ++i) {
-        AuthUserRequest::Pointer authRequest = AuthConfig::CreateAuthUser(find_proxy_auth((*i)->type()));
+        AuthUserRequest::Pointer authRequest = Auth::Config::CreateAuthUser(find_proxy_auth((*i)->type()));
         CPPUNIT_ASSERT(authRequest != NULL);
     }
 }
@@ -180,14 +180,14 @@ testAuthUserRequest::scheme()
     for (Auth::Scheme::iterator i = Auth::Scheme::GetSchemes().begin(); i != Auth::Scheme::GetSchemes().end(); ++i) {
         // create a user request
         // check its scheme matches *i
-        AuthUserRequest::Pointer authRequest = AuthConfig::CreateAuthUser(find_proxy_auth((*i)->type()));
+        AuthUserRequest::Pointer authRequest = Auth::Config::CreateAuthUser(find_proxy_auth((*i)->type()));
         CPPUNIT_ASSERT_EQUAL(authRequest->scheme(), *i);
     }
 }
 
 #if HAVE_AUTH_MODULE_BASIC
+#include "auth/basic/User.h"
 #include "auth/basic/UserRequest.h"
-#include "auth/basic/auth_basic.h"
 /* AuthBasicUserRequest::AuthBasicUserRequest works
  */
 void
@@ -202,7 +202,7 @@ void
 testAuthBasicUserRequest::username()
 {
     AuthUserRequest::Pointer temp = new AuthBasicUserRequest();
-    BasicUser *basic_auth=new BasicUser(AuthConfig::Find("basic"));
+    Auth::Basic::User *basic_auth=new Auth::Basic::User(Auth::Config::Find("basic"));
     basic_auth->username("John");
     temp->user(basic_auth);
     CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));
@@ -210,7 +210,8 @@ testAuthBasicUserRequest::username()
 #endif /* HAVE_AUTH_MODULE_BASIC */
 
 #if HAVE_AUTH_MODULE_DIGEST
-#include "auth/digest/auth_digest.h"
+#include "auth/digest/User.h"
+#include "auth/digest/UserRequest.h"
 /* AuthDigestUserRequest::AuthDigestUserRequest works
  */
 void
@@ -225,7 +226,7 @@ void
 testAuthDigestUserRequest::username()
 {
     AuthUserRequest::Pointer temp = new AuthDigestUserRequest();
-    DigestUser *duser=new DigestUser(AuthConfig::Find("digest"));
+    Auth::Digest::User *duser=new Auth::Digest::User(Auth::Config::Find("digest"));
     duser->username("John");
     temp->user(duser);
     CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));
@@ -233,7 +234,8 @@ testAuthDigestUserRequest::username()
 #endif /* HAVE_AUTH_MODULE_DIGEST */
 
 #if HAVE_AUTH_MODULE_NTLM
-#include "auth/ntlm/auth_ntlm.h"
+#include "auth/ntlm/User.h"
+#include "auth/ntlm/UserRequest.h"
 /* AuthNTLMUserRequest::AuthNTLMUserRequest works
  */
 void
@@ -248,7 +250,7 @@ void
 testAuthNTLMUserRequest::username()
 {
     AuthUserRequest::Pointer temp = new AuthNTLMUserRequest();
-    NTLMUser *nuser=new NTLMUser(AuthConfig::Find("ntlm"));
+    Auth::Ntlm::User *nuser=new Auth::Ntlm::User(Auth::Config::Find("ntlm"));
     nuser->username("John");
     temp->user(nuser);
     CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));
@@ -256,7 +258,8 @@ testAuthNTLMUserRequest::username()
 #endif /* HAVE_AUTH_MODULE_NTLM */
 
 #if HAVE_AUTH_MODULE_NEGOTIATE
-#include "auth/negotiate/auth_negotiate.h"
+#include "auth/negotiate/User.h"
+#include "auth/negotiate/UserRequest.h"
 /* AuthNegotiateUserRequest::AuthNegotiateUserRequest works
  */
 void
@@ -271,7 +274,7 @@ void
 testAuthNegotiateUserRequest::username()
 {
     AuthUserRequest::Pointer temp = new AuthNegotiateUserRequest();
-    NegotiateUser *nuser=new NegotiateUser(AuthConfig::Find("negotiate"));
+    Auth::Negotiate::User *nuser=new Auth::Negotiate::User(Auth::Config::Find("negotiate"));
     nuser->username("John");
     temp->user(nuser);
     CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));

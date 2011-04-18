@@ -38,8 +38,6 @@
 #include "Array.h"
 #include "RefCount.h"
 
-class AuthConfig;
-
 /**
  \defgroup AuthSchemeAPI	Authentication Scheme API
  \ingroup AuthAPI
@@ -47,6 +45,8 @@ class AuthConfig;
 
 namespace Auth
 {
+
+class Config;
 
 /**
  * \ingroup AuthAPI
@@ -56,8 +56,7 @@ namespace Auth
  * store the scheme metadata.
  * \par
  * Should we need multiple configs of a single scheme,
- * a new class AuthConfiguration should be made, and the
- * config specific calls on Auth::Scheme moved to it.
+ * a new class should be made, and the config specific calls on Auth::Scheme moved to it.
  */
 class Scheme : public RefCountable
 {
@@ -90,7 +89,7 @@ public:
     /* per scheme methods */
     virtual char const *type() const = 0;
     virtual void shutdownCleanup() = 0;
-    virtual AuthConfig *createConfig() = 0;
+    virtual Auth::Config *createConfig() = 0;
 
     // Not implemented
     Scheme(Scheme const &);

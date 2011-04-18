@@ -56,7 +56,7 @@ authenticateActiveSchemeCount(void)
 {
     int rv = 0;
 
-    for (Auth::authConfig::iterator i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
+    for (Auth::ConfigVector::iterator i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
         if ((*i)->configured())
             ++rv;
 
@@ -76,34 +76,34 @@ authenticateSchemeCount(void)
 }
 
 static void
-authenticateRegisterWithCacheManager(Auth::authConfig * config)
+authenticateRegisterWithCacheManager(Auth::ConfigVector * config)
 {
-    for (Auth::authConfig::iterator i = config->begin(); i != config->end(); ++i) {
-        AuthConfig *scheme = *i;
+    for (Auth::ConfigVector::iterator i = config->begin(); i != config->end(); ++i) {
+        Auth::Config *scheme = *i;
         scheme->registerWithCacheManager();
     }
 }
 
 void
-authenticateInit(Auth::authConfig * config)
+authenticateInit(Auth::ConfigVector * config)
 {
     /* Do this first to clear memory and remove dead state on a reconfigure */
     if (proxy_auth_username_cache)
-        AuthUser::CachedACLsReset();
+        Auth::User::CachedACLsReset();
 
     /* If we do not have any auth config state to create stop now. */
     if (!config)
         return;
 
-    for (Auth::authConfig::iterator i = config->begin(); i != config->end(); ++i) {
-        AuthConfig *schemeCfg = *i;
+    for (Auth::ConfigVector::iterator i = config->begin(); i != config->end(); ++i) {
+        Auth::Config *schemeCfg = *i;
 
         if (schemeCfg->configured())
             schemeCfg->init(schemeCfg);
     }
 
     if (!proxy_auth_username_cache)
-        AuthUser::cacheInit();
+        Auth::User::cacheInit();
 
     authenticateRegisterWithCacheManager(config);
 }
@@ -111,7 +111,7 @@ authenticateInit(Auth::authConfig * config)
 void
 authenticateRotate(void)
 {
-    for (Auth::authConfig::iterator i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
+    for (Auth::ConfigVector::iterator i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
         if ((*i)->configured())
             (*i)->rotateHelpers();
 }
@@ -137,7 +137,7 @@ authenticateReset(void)
     Auth::TheConfig.clean();
 }
 
-AuthUserHashPointer::AuthUserHashPointer(AuthUser::Pointer anAuth_user):
+AuthUserHashPointer::AuthUserHashPointer(Auth::User::Pointer anAuth_user):
         auth_user(anAuth_user)
 {
     key = (void *)anAuth_user->username();
@@ -145,7 +145,7 @@ AuthUserHashPointer::AuthUserHashPointer(AuthUser::Pointer anAuth_user):
     hash_join(proxy_auth_username_cache, (hash_link *) this);
 }
 
-AuthUser::Pointer
+Auth::User::Pointer
 AuthUserHashPointer::user() const
 {
     return auth_user;

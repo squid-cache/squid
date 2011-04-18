@@ -51,14 +51,14 @@ AuthNTLMUserRequest::module_direction()
 
     switch (user()->credentials()) {
 
-    case AuthUser::Handshake:
+    case Auth::Handshake:
         assert(server_blob);
         return 1; /* send to client */
 
-    case AuthUser::Ok:
+    case Auth::Ok:
         return 0; /* do nothing */
 
-    case AuthUser::Failed:
+    case Auth::Failed:
         return -2;
 
     default:
@@ -79,7 +79,7 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
 
     debugs(29, 8, HERE << "credentials state is '" << user()->credentials() << "'");
 
-    if (static_cast<AuthNTLMConfig*>(AuthConfig::Find("ntlm"))->authenticateProgram == NULL) {
+    if (static_cast<Auth::Ntlm::Config*>(Auth::Config::Find("ntlm"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: NTLM Start: no NTLM program configured.");
         handler(data, NULL);
         return;
@@ -90,7 +90,7 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
     r->data = cbdataReference(data);
     r->auth_user_request = this;
 
-    if (user()->credentials() == AuthUser::Pending) {
+    if (user()->credentials() == Auth::Pending) {
         snprintf(buf, 8192, "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
     } else {
         snprintf(buf, 8192, "KK %s\n", client_blob);
@@ -141,7 +141,7 @@ AuthNTLMUserRequest::onConnectionClose(ConnStateData *conn)
 int
 AuthNTLMUserRequest::authenticated() const
 {
-    if (user()->credentials() == AuthUser::Ok) {
+    if (user()->credentials() == Auth::Ok) {
         debugs(29, 9, "AuthNTLMUserRequest::authenticated: user authenticated.");
         return 1;
     }
@@ -162,7 +162,7 @@ AuthNTLMUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, 
      * auth challenges */
 
     if (conn == NULL || !cbdataReferenceValid(conn)) {
-        user()->credentials(AuthUser::Failed);
+        user()->credentials(Auth::Failed);
         debugs(29, 1, "AuthNTLMUserRequest::authenticate: attempt to perform authentication without a connection!");
         return;
     }
@@ -197,10 +197,10 @@ AuthNTLMUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, 
 
     switch (user()->credentials()) {
 
-    case AuthUser::Unchecked:
+    case Auth::Unchecked:
         /* we've received a ntlm request. pass to a helper */
         debugs(29, 9, "AuthNTLMUserRequest::authenticate: auth state ntlm none. Received blob: '" << proxy_auth << "'");
-        user()->credentials(AuthUser::Pending);
+        user()->credentials(Auth::Pending);
         safe_free(client_blob);
         client_blob=xstrdup(blob);
         assert(conn->auth_user_request == NULL);
@@ -209,11 +209,11 @@ AuthNTLMUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, 
         HTTPMSGLOCK(request);
         break;
 
-    case AuthUser::Pending:
+    case Auth::Pending:
         debugs(29, 1, "AuthNTLMUserRequest::authenticate: need to ask helper");
         break;
 
-    case AuthUser::Handshake:
+    case Auth::Handshake:
         /* we should have received a blob from the client. Hand it off to
          * some helper */
         safe_free(client_blob);
@@ -225,11 +225,11 @@ AuthNTLMUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, 
         HTTPMSGLOCK(request);
         break;
 
-    case AuthUser::Ok:
+    case Auth::Ok:
         fatal("AuthNTLMUserRequest::authenticate: unexpect auth state DONE! Report a bug to the squid developers.\n");
         break;
 
-    case AuthUser::Failed:
+    case Auth::Failed:
         /* we've failed somewhere in authentication */
         debugs(29, 9, "AuthNTLMUserRequest::authenticate: auth state ntlm failed. " << proxy_auth);
         break;
@@ -287,11 +287,11 @@ AuthNTLMUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         ntlm_request->request->flags.must_keepalive = 1;
         if (ntlm_request->request->flags.proxy_keepalive) {
             ntlm_request->server_blob = xstrdup(blob);
-            ntlm_request->user()->credentials(AuthUser::Handshake);
+            ntlm_request->user()->credentials(Auth::Handshake);
             auth_user_request->denyMessage("Authentication in progress");
             debugs(29, 4, "authenticateNTLMHandleReply: Need to challenge the client with a server blob '" << blob << "'");
         } else {
-            ntlm_request->user()->credentials(AuthUser::Failed);
+            ntlm_request->user()->credentials(Auth::Failed);
             auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
         }
     } else if (strncasecmp(reply, "AF ", 3) == 0) {
@@ -306,7 +306,7 @@ AuthNTLMUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         /* see if this is an existing user with a different proxy_auth
          * string */
         auth_user_hash_pointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, auth_user_request->user()->username()));
-        AuthUser::Pointer local_auth_user = ntlm_request->user();
+        Auth::User::Pointer local_auth_user = ntlm_request->user();
         while (usernamehash && (usernamehash->user()->auth_type != Auth::AUTH_NTLM ||
                                 strcmp(usernamehash->user()->username(), auth_user_request->user()->username()) != 0))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
@@ -325,11 +325,11 @@ AuthNTLMUserRequest::HandleReply(void *data, void *lastserver, char *reply)
          * existing user or a new user */
         local_auth_user->expiretime = current_time.tv_sec;
         ntlm_request->releaseAuthServer();
-        local_auth_user->credentials(AuthUser::Ok);
+        local_auth_user->credentials(Auth::Ok);
     } else if (strncasecmp(reply, "NA ", 3) == 0) {
         /* authentication failure (wrong password, etc.) */
         auth_user_request->denyMessage(blob);
-        ntlm_request->user()->credentials(AuthUser::Failed);
+        ntlm_request->user()->credentials(Auth::Failed);
         safe_free(ntlm_request->server_blob);
         ntlm_request->releaseAuthServer();
         debugs(29, 4, "authenticateNTLMHandleReply: Failed validating user via NTLM. Error returned '" << blob << "'");
@@ -340,7 +340,7 @@ AuthNTLMUserRequest::HandleReply(void *data, void *lastserver, char *reply)
          * If after a KK deny the user's request w/ 407 and mark the helper as
          * Needing YR. */
         auth_user_request->denyMessage(blob);
-        auth_user_request->user()->credentials(AuthUser::Failed);
+        auth_user_request->user()->credentials(Auth::Failed);
         safe_free(ntlm_request->server_blob);
         ntlm_request->releaseAuthServer();
         debugs(29, 1, "authenticateNTLMHandleReply: Error validating user via NTLM. Error returned '" << reply << "'");

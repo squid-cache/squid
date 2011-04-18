@@ -63,9 +63,9 @@ Auth::Ntlm::Scheme::shutdownCleanup()
     debugs(29, DBG_CRITICAL, "Shutdown: NTLM authentication.");
 }
 
-AuthConfig *
+Auth::Config *
 Auth::Ntlm::Scheme::createConfig()
 {
-    auth_ntlm_config *ntlmCfg = new auth_ntlm_config;
-    return dynamic_cast<AuthConfig*>(ntlmCfg);
+    Auth::Ntlm::Config *ntlmCfg = new Auth::Ntlm::Config;
+    return dynamic_cast<Auth::Config*>(ntlmCfg);
 }

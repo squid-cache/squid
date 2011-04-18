@@ -1,5 +1,6 @@
 #include "config.h"
 #include "auth/digest/auth_digest.h"
+#include "auth/digest/User.h"
 #include "auth/digest/UserRequest.h"
 #include "auth/State.h"
 #include "charset.h"
@@ -45,7 +46,7 @@ AuthDigestUserRequest::~AuthDigestUserRequest()
 int
 AuthDigestUserRequest::authenticated() const
 {
-    if (user() != NULL && user()->credentials() == AuthUser::Ok)
+    if (user() != NULL && user()->credentials() == Auth::Ok)
         return 1;
 
     return 0;
@@ -61,26 +62,26 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
     HASHHEX Response;
 
     /* if the check has corrupted the user, just return */
-    if (user() == NULL || user()->credentials() == AuthUser::Failed) {
+    if (user() == NULL || user()->credentials() == Auth::Failed) {
         return;
     }
 
-    AuthUser::Pointer auth_user = user();
+    Auth::User::Pointer auth_user = user();
 
-    DigestUser *digest_user = dynamic_cast<DigestUser*>(auth_user.getRaw());
+    Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User*>(auth_user.getRaw());
     assert(digest_user != NULL);
 
     AuthDigestUserRequest *digest_request = this;
 
     /* do we have the HA1 */
     if (!digest_user->HA1created) {
-        auth_user->credentials(AuthUser::Pending);
+        auth_user->credentials(Auth::Pending);
         return;
     }
 
     if (digest_request->nonce == NULL) {
         /* this isn't a nonce we issued */
-        auth_user->credentials(AuthUser::Failed);
+        auth_user->credentials(Auth::Failed);
         return;
     }
 
@@ -98,11 +99,11 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
         if (!digest_request->flags.helper_queried) {
             /* Query the helper in case the password has changed */
             digest_request->flags.helper_queried = 1;
-            auth_user->credentials(AuthUser::Pending);
+            auth_user->credentials(Auth::Pending);
             return;
         }
 
-        if (static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->PostWorkaround && request->method != METHOD_GET) {
+        if (static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->PostWorkaround && request->method != METHOD_GET) {
             /* Ugly workaround for certain very broken browsers using the
              * wrong method to calculate the request-digest on POST request.
              * This should be deleted once Digest authentication becomes more
@@ -114,7 +115,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
                                RequestMethodStr(METHOD_GET), digest_request->uri, HA2, Response);
 
             if (strcasecmp(digest_request->response, Response)) {
-                auth_user->credentials(AuthUser::Failed);
+                auth_user->credentials(Auth::Failed);
                 digest_request->flags.invalid_password = 1;
                 digest_request->setDenyMessage("Incorrect password");
                 return;
@@ -139,7 +140,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
                 }
             }
         } else {
-            auth_user->credentials(AuthUser::Failed);
+            auth_user->credentials(Auth::Failed);
             digest_request->flags.invalid_password = 1;
             digest_request->setDenyMessage("Incorrect password");
             return;
@@ -148,13 +149,13 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
         /* check for stale nonce */
         if (!authDigestNonceIsValid(digest_request->nonce, digest_request->nc)) {
             debugs(29, 3, "authenticateDigestAuthenticateuser: user '" << auth_user->username() << "' validated OK but nonce stale");
-            auth_user->credentials(AuthUser::Failed);
+            auth_user->credentials(Auth::Failed);
             digest_request->setDenyMessage("Stale nonce");
             return;
         }
     }
 
-    auth_user->credentials(AuthUser::Ok);
+    auth_user->credentials(Auth::Ok);
 
     /* password was checked and did match */
     debugs(29, 4, "authenticateDigestAuthenticateuser: user '" << auth_user->username() << "' validated OK");
@@ -173,15 +174,15 @@ AuthDigestUserRequest::module_direction()
 
     switch (user()->credentials()) {
 
-    case AuthUser::Ok:
+    case Auth::Ok:
         return 0;
 
-    case AuthUser::Failed:
+    case Auth::Failed:
         /* send new challenge */
         return 1;
 
-    case AuthUser::Unchecked:
-    case AuthUser::Pending:
+    case Auth::Unchecked:
+    case Auth::Pending:
         return -1;
 
     default:
@@ -209,7 +210,7 @@ AuthDigestUserRequest::addHeader(HttpReply * rep, int accel)
         return;
 #endif
 
-    if ((static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->authenticateProgram) && authDigestNonceLastRequest(nonce)) {
+    if ((static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->authenticateProgram) && authDigestNonceLastRequest(nonce)) {
         flags.authinfo_sent = 1;
         debugs(29, 9, "authDigestAddHead: Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceb64(nonce) << "\"");
         httpHeaderPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceb64(nonce));
@@ -237,7 +238,7 @@ AuthDigestUserRequest::addTrailer(HttpReply * rep, int accel)
 
     type = accel ? HDR_AUTHENTICATION_INFO : HDR_PROXY_AUTHENTICATION_INFO;
 
-    if ((static_cast<AuthDigestConfig*>(digestScheme::GetInstance()->getConfig())->authenticate) && authDigestNonceLastRequest(nonce)) {
+    if ((static_cast<Auth::Digest::Config*>(digestScheme::GetInstance()->getConfig())->authenticate) && authDigestNonceLastRequest(nonce)) {
         debugs(29, 9, "authDigestAddTrailer: Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceb64(nonce) << "\"");
         httpTrailerPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceb64(nonce));
     }
@@ -254,7 +255,7 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     assert(user() != NULL && user()->auth_type == Auth::AUTH_DIGEST);
     debugs(29, 9, "authenticateStart: '\"" << user()->username() << "\":\"" << realm << "\"'");
 
-    if (static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->authenticateProgram == NULL) {
+    if (static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: No Digest authentication program configured.");
         handler(data, NULL);
         return;
@@ -264,7 +265,7 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     r->handler = handler;
     r->data = cbdataReference(data);
     r->auth_user_request = static_cast<AuthUserRequest*>(this);
-    if (static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->utf8) {
+    if (static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->utf8) {
         char userstr[1024];
         latin1_to_utf8(userstr, sizeof(userstr), user()->username());
         snprintf(buf, 8192, "\"%s\":\"%s\"\n", userstr, realm);
@@ -299,14 +300,14 @@ AuthDigestUserRequest::HandleReply(void *data, char *reply)
         AuthDigestUserRequest *digest_request = dynamic_cast<AuthDigestUserRequest *>(auth_user_request.getRaw());
         assert(digest_request);
 
-        digest_request->user()->credentials(AuthUser::Failed);
+        digest_request->user()->credentials(Auth::Failed);
         digest_request->flags.invalid_password = 1;
 
         if (t && *t)
             digest_request->setDenyMessage(t);
     } else if (reply) {
         /* allow this because the digest_request pointer is purely local */
-        DigestUser *digest_user = dynamic_cast<DigestUser *>(auth_user_request->user().getRaw());
+        Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User *>(auth_user_request->user().getRaw());
         assert(digest_user != NULL);
 
         CvtBin(reply, digest_user->HA1);

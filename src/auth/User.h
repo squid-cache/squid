@@ -31,19 +31,24 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_AUTHUSER_H
-#define SQUID_AUTHUSER_H
+#ifndef SQUID_AUTH_USER_H
+#define SQUID_AUTH_USER_H
 
 #if USE_AUTH
 
+#include "auth/CredentialState.h"
 #include "auth/Type.h"
 #include "dlink.h"
 #include "ip/Address.h"
 #include "RefCount.h"
 
-class AuthConfig;
 class AuthUserHashPointer;
 class StoreEntry;
+
+namespace Auth
+{
+
+class Config;
 
 /**
  *  \ingroup AuthAPI
@@ -53,10 +58,10 @@ class StoreEntry;
  * structure is the cached ACL match results. This structure, is private to
  * the authentication framework.
  */
-class AuthUser : public RefCountable
+class User : public RefCountable
 {
 public:
-    typedef RefCount<AuthUser> Pointer;
+    typedef RefCount<User> Pointer;
 
     /* extra fields for proxy_auth */
     /* auth_type and auth_module are deprecated. Do Not add new users of these fields.
@@ -65,18 +70,19 @@ public:
     /** \deprecated this determines what scheme owns the user data. */
     Auth::Type auth_type;
     /** the config for this user */
-    AuthConfig *config;
+    Auth::Config *config;
     /** we may have many proxy-authenticate strings that decode to the same user */
     dlink_list proxy_auth_list;
     dlink_list proxy_match_cache;
     size_t ipcount;
     long expiretime;
 
+public:
     static void cacheInit();
     static void CachedACLsReset();
 
-    void absorb(AuthUser::Pointer from);
-    virtual ~AuthUser();
+    void absorb(Auth::User::Pointer from);
+    virtual ~User();
     _SQUID_INLINE_ char const *username() const;
     _SQUID_INLINE_ void username(char const *);
 
@@ -94,9 +100,8 @@ public:
     void addToNameCache();
     static void UsernameCacheStats(StoreEntry * output);
 
-    enum CredentialsState { Unchecked, Ok, Pending, Handshake, Failed };
-    CredentialsState credentials() const;
-    void credentials(CredentialsState);
+    CredentialState credentials() const;
+    void credentials(CredentialState);
 
 private:
     /**
@@ -107,10 +112,10 @@ private:
      *   Handshake happening in stateful auth.
      *   Failed auth
      */
-    CredentialsState credentials_state;
+    CredentialState credentials_state;
 
 protected:
-    AuthUser(AuthConfig *);
+    User(Auth::Config *);
 
 private:
     /**
@@ -130,11 +135,11 @@ private:
     dlink_list ip_list;
 };
 
-extern const char *CredentialsState_str[];
+} // namespace Auth
 
 #if _USE_INLINE_
 #include "auth/User.cci"
 #endif
 
 #endif /* USE_AUTH */
-#endif /* SQUID_AUTHUSER_H */
+#endif /* SQUID_AUTH_USER_H */

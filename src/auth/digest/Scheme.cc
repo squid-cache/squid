@@ -65,11 +65,11 @@ Auth::Digest::Scheme::shutdownCleanup()
     debugs(29, DBG_CRITICAL, "Shutdown: Digest authentication.");
 }
 
-AuthConfig *
+Auth::Config *
 Auth::Digest::Scheme::createConfig()
 {
-    AuthDigestConfig *digestCfg = new AuthDigestConfig;
-    return dynamic_cast<AuthConfig*>(digestCfg);
+    Auth::Digest::Config *digestCfg = new Auth::Digest::Config;
+    return dynamic_cast<Auth::Config*>(digestCfg);
 }
 
 void
@@ -81,7 +81,7 @@ Auth::Digest::Scheme::PurgeCredentialsCache(void)
     hash_first(proxy_auth_username_cache);
 
     while ((usernamehash = static_cast<AuthUserHashPointer *>(hash_next(proxy_auth_username_cache)) )) {
-        AuthUser::Pointer auth_user = usernamehash->user();
+        Auth::User::Pointer auth_user = usernamehash->user();
 
         if (strcmp(auth_user->config->type(), "digest") == 0) {
             hash_remove_link(proxy_auth_username_cache, static_cast<hash_link*>(usernamehash));

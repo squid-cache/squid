@@ -1,6 +1,7 @@
 #include "config.h"
 #include "auth/negotiate/auth_negotiate.h"
 #include "auth/negotiate/UserRequest.h"
+#include "auth/State.h"
 #include "auth/User.h"
 #include "helper.h"
 #include "HttpReply.h"
@@ -48,7 +49,7 @@ AuthNegotiateUserRequest::connLastHeader()
 int
 AuthNegotiateUserRequest::authenticated() const
 {
-    if (user() != NULL && user()->credentials() == AuthUser::Ok) {
+    if (user() != NULL && user()->credentials() == Auth::Ok) {
         debugs(29, 9, HERE << "user authenticated.");
         return 1;
     }
@@ -71,14 +72,14 @@ AuthNegotiateUserRequest::module_direction()
 
     switch (user()->credentials()) {
 
-    case AuthUser::Handshake:
+    case Auth::Handshake:
         assert(server_blob);
         return 1; /* send to client */
 
-    case AuthUser::Ok:
+    case Auth::Ok:
         return 0; /* do nothing */
 
-    case AuthUser::Failed:
+    case Auth::Failed:
         return -2;
 
     default:
@@ -121,7 +122,7 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
 
     debugs(29, 8, HERE << "auth state is '" << user()->credentials() << "'");
 
-    if (static_cast<AuthNegotiateConfig*>(AuthConfig::Find("negotiate"))->authenticateProgram == NULL) {
+    if (static_cast<Auth::Negotiate::Config*>(Auth::Config::Find("negotiate"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: No Negotiate authentication program configured.");
         handler(data, NULL);
         return;
@@ -132,7 +133,7 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
     r->data = cbdataReference(data);
     r->auth_user_request = this;
 
-    if (user()->credentials() == AuthUser::Pending) {
+    if (user()->credentials() == Auth::Pending) {
         snprintf(buf, MAX_AUTHTOKEN_LEN, "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
     } else {
         snprintf(buf, MAX_AUTHTOKEN_LEN, "KK %s\n", client_blob);
@@ -187,7 +188,7 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * c
 
     /** Check that we are in the client side, where we can generate auth challenges */
     if (conn == NULL) {
-        user()->credentials(AuthUser::Failed);
+        user()->credentials(Auth::Failed);
         debugs(29, DBG_IMPORTANT, "WARNING: Negotiate Authentication attempt to perform authentication without a connection!");
         return;
     }
@@ -221,10 +222,10 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * c
 
     switch (user()->credentials()) {
 
-    case AuthUser::Unchecked:
+    case Auth::Unchecked:
         /* we've received a negotiate request. pass to a helper */
         debugs(29, 9, HERE << "auth state negotiate none. Received blob: '" << proxy_auth << "'");
-        user()->credentials(AuthUser::Pending);
+        user()->credentials(Auth::Pending);
         safe_free(client_blob);
         client_blob=xstrdup(blob);
         assert(conn->auth_user_request == NULL);
@@ -233,11 +234,11 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * c
         HTTPMSGLOCK(request);
         break;
 
-    case AuthUser::Pending:
+    case Auth::Pending:
         debugs(29, 1, HERE << "need to ask helper");
         break;
 
-    case AuthUser::Handshake:
+    case Auth::Handshake:
         /* we should have received a blob from the client. Hand it off to
          * some helper */
         safe_free(client_blob);
@@ -248,11 +249,11 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * c
         HTTPMSGLOCK(request);
         break;
 
-    case AuthUser::Ok:
+    case Auth::Ok:
         fatal("AuthNegotiateUserRequest::authenticate: unexpected auth state DONE! Report a bug to the squid developers.\n");
         break;
 
-    case AuthUser::Failed:
+    case Auth::Failed:
         /* we've failed somewhere in authentication */
         debugs(29, 9, HERE << "auth state negotiate failed. " << proxy_auth);
         break;
@@ -320,11 +321,11 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         negotiate_request->request->flags.must_keepalive = 1;
         if (negotiate_request->request->flags.proxy_keepalive) {
             negotiate_request->server_blob = xstrdup(blob);
-            auth_user_request->user()->credentials(AuthUser::Handshake);
+            auth_user_request->user()->credentials(Auth::Handshake);
             auth_user_request->denyMessage("Authentication in progress");
             debugs(29, 4, HERE << "Need to challenge the client with a server blob '" << blob << "'");
         } else {
-            auth_user_request->user()->credentials(AuthUser::Failed);
+            auth_user_request->user()->credentials(Auth::Failed);
             auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
         }
     } else if (strncasecmp(reply, "AF ", 3) == 0 && arg != NULL) {
@@ -338,7 +339,7 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         safe_free(negotiate_request->server_blob);
         negotiate_request->server_blob = xstrdup(blob);
         negotiate_request->releaseAuthServer();
-        auth_user_request->user()->credentials(AuthUser::Ok);
+        auth_user_request->user()->credentials(Auth::Ok);
         debugs(29, 4, HERE << "Successfully validated user via Negotiate. Username '" << blob << "'");
 
         /* connection is authenticated */
@@ -346,7 +347,7 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         /* see if this is an existing user with a different proxy_auth
          * string */
         AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, auth_user_request->user()->username()));
-        AuthUser::Pointer local_auth_user = negotiate_request->user();
+        Auth::User::Pointer local_auth_user = negotiate_request->user();
         while (usernamehash && (usernamehash->user()->auth_type != Auth::AUTH_NEGOTIATE ||
                                 strcmp(usernamehash->user()->username(), auth_user_request->user()->username()) != 0))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
@@ -367,7 +368,7 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
          * existing user or a new user */
         local_auth_user->expiretime = current_time.tv_sec;
         negotiate_request->releaseAuthServer();
-        negotiate_request->user()->credentials(AuthUser::Ok);
+        negotiate_request->user()->credentials(Auth::Ok);
 
     } else if (strncasecmp(reply, "NA ", 3) == 0 && arg != NULL) {
         /* authentication failure (wrong password, etc.) */
@@ -376,7 +377,7 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
             *arg++ = '\0';
 
         auth_user_request->denyMessage(arg);
-        negotiate_request->user()->credentials(AuthUser::Failed);
+        negotiate_request->user()->credentials(Auth::Failed);
         safe_free(negotiate_request->server_blob);
         negotiate_request->server_blob = xstrdup(blob);
         negotiate_request->releaseAuthServer();
@@ -388,7 +389,7 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
          * If after a KK deny the user's request w/ 407 and mark the helper as
          * Needing YR. */
         auth_user_request->denyMessage(blob);
-        auth_user_request->user()->credentials(AuthUser::Failed);
+        auth_user_request->user()->credentials(Auth::Failed);
         safe_free(negotiate_request->server_blob);
         negotiate_request->releaseAuthServer();
         debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication validating user. Error returned '" << reply << "'");
