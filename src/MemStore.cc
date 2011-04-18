@@ -49,11 +49,12 @@ MemStore::init() {
         if (max_size == -1) {
             debugs(20, DBG_IMPORTANT, "WARNING: disk-cache maximum object size "
                    "is unlimited but mem-cache maximum object size is " <<
-                   Ipc::Mem::PageSize());
+                   Ipc::Mem::PageSize() / 1024.0 << " KB");
         } else if (max_size > maxObjectSize()) {
             debugs(20, DBG_IMPORTANT, "WARNING: disk-cache maximum object size "
                    "is too large for mem-cache: " <<
-                   Store::Root().maxObjectSize() << " > " << maxObjectSize());
+                   Store::Root().maxObjectSize() / 1024.0 << " KB > " <<
+                   maxObjectSize() / 1024.0 << " KB");
         }
     }
 
