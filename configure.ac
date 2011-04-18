@@ -3424,6 +3424,7 @@ AC_CONFIG_FILES([\
 	helpers/negotiate_auth/Makefile \
 	helpers/negotiate_auth/kerberos/Makefile \
 	helpers/negotiate_auth/SSPI/Makefile \
+	helpers/negotiate_auth/wrapper/Makefile \
 	helpers/external_acl/Makefile \
 	helpers/external_acl/AD_group/Makefile \
 	helpers/external_acl/eDirectory_userip/Makefile \
