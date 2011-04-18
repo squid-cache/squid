@@ -29,7 +29,7 @@ MemStore::Init()
     delete map; // we just wanted to initialize shared memory segments
 }
 
-MemStore::MemStore(): map(NULL), cur_size(0)
+MemStore::MemStore(): map(NULL), theCurrentSize(0)
 {
 }
 
@@ -105,7 +105,7 @@ MemStore::maxSize() const
 uint64_t
 MemStore::currentSize() const
 {
-    return cur_size >> 10;
+    return theCurrentSize >> 10;
 }
 
 uint64_t
@@ -331,7 +331,7 @@ MemStore::copyToShm(StoreEntry &e, MemStoreMap::Extras &extras)
     debugs(20, 7, HERE << "mem-cached all " << eSize << " bytes of " << e <<
            " in " << page);
 
-    cur_size += eSize;
+    theCurrentSize += Ipc::Mem::PageSize();
     // remember storage location and size
     extras.page = page;
     extras.storedSize = copied;
@@ -342,7 +342,7 @@ void
 MemStore::cleanReadable(const sfileno fileno)
 {
     Ipc::Mem::PutPage(map->extras(fileno).page);
-    cur_size -= map->extras(fileno).storedSize;
+    theCurrentSize -= Ipc::Mem::PageSize();
 }
 
 /// calculates maximum number of entries we need to store and map

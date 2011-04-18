@@ -52,7 +52,7 @@ protected:
 
 private:
     MemStoreMap *map; ///< index of mem-cached entries
-    uint64_t cur_size; ///< currently used space in the storage area
+    uint64_t theCurrentSize; ///< currently used space in the storage area
 };
 
 // Why use Store as a base? MemStore and SwapDir are both "caches".
