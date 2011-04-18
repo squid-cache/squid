@@ -402,7 +402,7 @@ comm_select(int msec)
          * Note that this will only ever trigger when there are no log files
          * and stdout/err/in are all closed too.
          */
-        if (nfds == 0 && !npending) {
+        if (nfds == 0 && npending == 0) {
             if (shutting_down)
                 return COMM_SHUTDOWN;
             else
@@ -416,7 +416,7 @@ comm_select(int msec)
             ++statCounter.select_loops;
             PROF_stop(comm_poll_normal);
 
-            if (num >= 0 || npending >= 0)
+            if (num >= 0 || npending > 0)
                 break;
 
             if (ignoreErrno(errno))
