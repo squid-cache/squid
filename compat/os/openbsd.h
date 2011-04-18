@@ -35,5 +35,13 @@
 #define IPV6_V6ONLY             27 // from OpenBSD 4.3 headers. (NP: does not match non-BSD OS values)
 #endif
 
+/* OpenBSD 4.8 and 4.9 require netinet/in.h before arpa/inet.h */
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+
 #endif /* _SQUID_OPENBSD_ */
 #endif /* SQUID_OS_OPENBSD_H */
