@@ -44,6 +44,29 @@ typedef uint32_t __u32;
 #include <sys/capability.h>
 #endif /* HAVE_SYS_CAPABILITY_H */
 
+/*
+ * glob.h is provided by GNU on Linux and contains some unavoidable preprocessor
+ * logic errors in its 64-bit definitions which are hit by non-GCC compilers.
+ *
+ * #if __USE_FILE_OFFSET64 && __GNUC__ < 2
+ *  # define glob glob64
+ * #endif
+ * #if !defined __USE_FILE_OFFSET64 || __GNUC__ < 2
+ * extern "C" glob(...);
+ * #endif
+ * extern "C" glob64(...);
+ *
+ * ... and multiple "C" definitions of glob64 refuse to compile.
+ * Because __GNUC__ being undefined equates to 0 and (0 < 2)
+ */
+#if __USE_FILE_OFFSET64 && __GNUC__ < 2
+#if HAVE_GLOB_H
+#undef HAVE_GLOB_H
+#endif
+#if HAVE_GLOB
+#undef HAVE_GLOB
+#endif
+#endif
 
 #endif /* _SQUID_LINUX_ */
 #endif /* SQUID_OS_LINUX_H */
