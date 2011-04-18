@@ -44,6 +44,19 @@ MemStore::init() {
     if (entryLimit <= 0)
         return; // no memory cache configured or a misconfiguration
 
+    if (IamWorkerProcess()) { // XXX: coordinator should not create MemStore
+        const int64_t max_size = Store::Root().maxObjectSize();
+        if (max_size == -1) {
+            debugs(20, DBG_IMPORTANT, "WARNING: disk-cache maximum object size "
+                   "is unlimited but mem-cache maximum object size is " <<
+                   Ipc::Mem::PageSize());
+        } else if (max_size > maxObjectSize()) {
+            debugs(20, DBG_IMPORTANT, "WARNING: disk-cache maximum object size "
+                   "is too large for mem-cache: " <<
+                   Store::Root().maxObjectSize() << " > " << maxObjectSize());
+        }
+    }
+
     map = new MemStoreMap(ShmLabel);
     map->cleaner = this;
 }
@@ -98,6 +111,12 @@ uint64_t
 MemStore::currentCount() const
 {
     return map ? map->entryCount() : 0;
+}
+
+int64_t
+MemStore::maxObjectSize() const
+{
+    return Ipc::Mem::PageSize();
 }
 
 void
@@ -332,7 +351,6 @@ MemStore::EntryLimit()
     if (!Config.memMaxSize)
         return 0; // no memory cache configured
 
-    // TODO: warn if we cannot support the configured maximum entry size
     const int64_t entrySize = Ipc::Mem::PageSize(); // for now
     const int64_t entryLimit = Config.memMaxSize / entrySize;
     // TODO: warn if we cannot cache at least one item (misconfiguration)

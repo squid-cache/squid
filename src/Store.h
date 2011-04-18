@@ -306,6 +306,9 @@ public:
     /** the total number of objects stored */
     virtual uint64_t currentCount() const = 0;
 
+    /** the maximum object size that can be stored, -1 if unlimited */
+    virtual int64_t maxObjectSize() const = 0;
+
     /**
      * Output stats to the provided store entry.
      \todo make these calls asynchronous

@@ -71,6 +71,8 @@ public:
 
     virtual uint64_t currentCount() const;
 
+    virtual int64_t maxObjectSize() const;
+
     virtual void stat(StoreEntry&) const;
 
     virtual void reference(StoreEntry&);
