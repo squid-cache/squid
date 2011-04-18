@@ -27,7 +27,8 @@ public:
     bool operator ==(int v2) { return __sync_bool_compare_and_swap(&value, v2, value); }
 
     // TODO: no need for __sync_fetch_and_add here?
-    operator Value () const { return __sync_fetch_and_add(const_cast<Value*>(&value), 0); }
+    Value get() const { return __sync_fetch_and_add(const_cast<Value*>(&value), 0); }
+    operator Value () const { return get(); }
 
 private:
     Value value;

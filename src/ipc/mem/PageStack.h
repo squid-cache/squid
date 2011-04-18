@@ -25,6 +25,9 @@ public:
     /// attaches to the identified shared stack
     PageStack(const String &id);
 
+    /// lower bound for the number of free pages
+    unsigned int size() const { return max(0, shared->theSize.get()); }
+
     /// sets value and returns true unless no free page numbers are found
     bool pop(Value &value);
     /// makes value available as a free page number to future pop() callers
