@@ -313,10 +313,11 @@ AuthNTLMUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         if (usernamehash) {
             /* we can't seamlessly recheck the username due to the
              * challenge-response nature of the protocol.
-             * Just free the temporary auth_user */
+             * Just free the temporary auth_user after merging as
+             * much of it new state into the existing one as possible */
             usernamehash->user()->absorb(local_auth_user);
             local_auth_user = usernamehash->user();
-            ntlm_request->_auth_user = local_auth_user;
+            auth_user_request->user(local_auth_user);
         } else {
             /* store user in hash's */
             local_auth_user->addToNameCache();
