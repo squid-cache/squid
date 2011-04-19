@@ -124,6 +124,14 @@ Ipc::Mem::Segment::reserve(size_t chunkSize)
     return result;
 }
 
+void
+Ipc::Mem::Segment::Unlink(const char *const id)
+{
+    const String path = GenerateName(id);
+    if (shm_unlink(path.termedBuf()) != 0)
+        debugs(54, 5, HERE << "shm_unlink(" << path << "): " << xstrerror());
+}
+
 /// determines the size of the underlying "file"
 off_t
 Ipc::Mem::Segment::statSize(const char *context) const

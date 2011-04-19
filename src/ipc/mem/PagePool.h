@@ -24,6 +24,8 @@ public:
     PagePool(const String &id, const unsigned int capacity, const size_t pageSize);
     /// attaches to the identified shared page pool
     PagePool(const String &id);
+    /// unlinks shared memory segments
+    static void Unlink(const String &id);
 
     unsigned int capacity() const { return shared->theCapacity; }
     /// lower bound for the number of free pages

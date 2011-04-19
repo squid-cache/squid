@@ -24,6 +24,8 @@ public:
     PageStack(const String &id, const unsigned int capacity);
     /// attaches to the identified shared stack
     PageStack(const String &id);
+    /// unlinks shared memory segment
+    static void Unlink(const String &id);
 
     /// lower bound for the number of free pages
     unsigned int size() const { return max(0, shared->theSize.get()); }
