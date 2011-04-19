@@ -1431,7 +1431,6 @@ SquidMain(int argc, char **argv)
 
     debugs(1,2, HERE << "Doing post-config initialization\n");
     ActivateRegistered(rrAfterConfig);
-    // TODO: find a place to call DeactivateRegistered(rrAfterConfig);
 
     if (!opt_no_daemon && Config.workers > 0)
         watch_child(argv);
@@ -1797,6 +1796,8 @@ syslog(LOG_NOTICE, "XXX: will start %d kids", (int)TheKids.count());
 #endif
 
         if (!TheKids.someRunning() && !TheKids.shouldRestartSome()) {
+            DeactivateRegistered(rrAfterConfig);
+
             if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
                 syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
                 exit(1);
@@ -1896,6 +1897,7 @@ SquidShutdown()
     Store::Root().sync();		/* Flush log close */
     StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();
+    DeactivateRegistered(rrAfterConfig);
 #if LEAK_CHECK_MODE && 0 /* doesn't work at the moment */
 
     configFreeMemory();

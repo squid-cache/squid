@@ -30,6 +30,8 @@ public:
     void *reserve(size_t chunkSize); ///< reserve and return the next chunk
     // TODO: convert most mem() calls to reserve()
 
+    static void Unlink(const char *const id); ///< unlink the segment
+
 private:
     void attach();
     void detach();

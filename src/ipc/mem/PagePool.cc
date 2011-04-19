@@ -38,6 +38,13 @@ Ipc::Mem::PagePool::PagePool(const String &id):
     assert(shared);
 }
 
+void
+Ipc::Mem::PagePool::Unlink(const String &id)
+{
+    PageStack::Unlink(PageIndexId(id));
+    Segment::Unlink(id.termedBuf());
+}
+
 bool
 Ipc::Mem::PagePool::get(PageId &page)
 {

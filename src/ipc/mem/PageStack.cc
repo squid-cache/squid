@@ -29,6 +29,12 @@ Ipc::Mem::PageStack::PageStack(const String &id): shm(id.termedBuf())
     assert(shared);
 }
 
+void
+Ipc::Mem::PageStack::Unlink(const String &id)
+{
+    Segment::Unlink(id.termedBuf());
+}
+
 /*
  * TODO: We currently rely on the theLastReadable hint during each
  * loop iteration. We could also use hint just for the start position:

@@ -364,7 +364,7 @@ class MemStoreRr: public RegisteredRunner
 public:
     /* RegisteredRunner API */
     virtual void run(const RunnerRegistry &);
-    // TODO: cleanup in destructor
+    virtual ~MemStoreRr();
 };
 
 RunnerRegistrationEntry(rrAfterConfig, MemStoreRr);
@@ -376,4 +376,12 @@ void MemStoreRr::run(const RunnerRegistry &)
 
     if (IamMasterProcess())
         MemStore::Init();
+}
+
+MemStoreRr::~MemStoreRr()
+{
+    // XXX: restore if (!UsingSmp()) return;
+
+    if (IamMasterProcess())
+        MemStoreMap::Unlink(ShmLabel);
 }
