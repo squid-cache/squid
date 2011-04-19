@@ -142,7 +142,7 @@ FewToOneBiQueue::FewToOneBiQueue(const String &id, const int aWorkerCount, const
     biQueues.reserve(theWorkerCount);
     for (int i = 0; i < theWorkerCount; ++i) {
         OneToOneBiQueue *const biQueue =
-            new OneToOneBiQueue(QueueId(id, i), maxItemSize, capacity);
+            new OneToOneBiQueue(QueueId(id, i + WorkerIdOffset), maxItemSize, capacity);
         QueueReader *remoteReader =
             new (shm.reserve(sizeof(QueueReader))) QueueReader;
         biQueue->readers(reader, remoteReader);
@@ -158,11 +158,11 @@ FewToOneBiQueue::Attach(const String &id, const int workerId)
 
     Ipc::Mem::Segment &shm = *shmPtr;
     shm.open();
-    assert(shm.size() >= static_cast<off_t>((1 + workerId+1)*sizeof(QueueReader)));
+    assert(shm.size() >= static_cast<off_t>((1 + workerId+1 - WorkerIdOffset)*sizeof(QueueReader)));
     QueueReader *readers = reinterpret_cast<QueueReader*>(shm.mem());
     QueueReader *remoteReader = &readers[0];
     debugs(54, 7, HERE << "disker " << id << " reader: " << remoteReader->id);
-    QueueReader *localReader = &readers[workerId+1];
+    QueueReader *localReader = &readers[workerId+1 - WorkerIdOffset];
     debugs(54, 7, HERE << "local " << id << " reader: " << localReader->id);
 
     OneToOneBiQueue *const biQueue =
@@ -179,7 +179,8 @@ FewToOneBiQueue::~FewToOneBiQueue()
 
 bool FewToOneBiQueue::validWorkerId(const int workerId) const
 {
-    return 0 <= workerId && workerId < theWorkerCount;
+    return WorkerIdOffset <= workerId &&
+        workerId < WorkerIdOffset + theWorkerCount;
 }
 
 void

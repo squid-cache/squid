@@ -131,7 +131,7 @@ public:
  * communicate with the one central process. The central process uses
  * FewToOneBiQueue object, while workers use OneToOneBiQueue objects
  * created with the Attach() method. Each worker has a unique integer
- * ID in [0, workerCount) range.
+ * ID in [1, workerCount] range.
  */
 class FewToOneBiQueue {
 public:
@@ -161,6 +161,8 @@ public:
 
     Ipc::Mem::Segment shm; ///< shared memory segment to store the reader
     QueueReader *reader; ///< the state of the code popping from all biQueues
+
+    enum { WorkerIdOffset = 1 }; ///< worker ID offset, always 1 for now
 };
 
 
@@ -222,7 +224,7 @@ FewToOneBiQueue::pop(int &workerId, Value &value)
     for (int i = 0; i < theWorkerCount; ++i) {
         theLastPopWorker = (theLastPopWorker + 1) % theWorkerCount;
         if (biQueues[theLastPopWorker]->pop(value)) {
-            workerId = theLastPopWorker;
+            workerId = theLastPopWorker + WorkerIdOffset;
             return true;
         }
     }
@@ -234,7 +236,7 @@ bool
 FewToOneBiQueue::push(const int workerId, const Value &value)
 {
     assert(validWorkerId(workerId));
-    return biQueues[workerId]->push(value);
+    return biQueues[workerId - WorkerIdOffset]->push(value);
 }
 
 #endif // SQUID_IPC_QUEUE_H
