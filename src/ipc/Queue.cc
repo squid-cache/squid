@@ -6,9 +6,12 @@
  */
 
 #include "config.h"
+#include "base/TextException.h"
+#include "Debug.h"
+#include "globals.h"
 #include "ipc/Queue.h"
 
-
+/// constructs shared segment ID from parent queue ID and child queue index
 static String
 QueueId(String id, const int idx)
 {
@@ -17,22 +20,48 @@ QueueId(String id, const int idx)
     return id;
 }
 
+/// constructs QueueReader ID from parent queue ID
+static String
+ReaderId(String id)
+{
+    id.append("__readers");
+    return id;
+}
+
+
+/* QueueReader */
+
+InstanceIdDefinitions(QueueReader, "ipcQR");
+
+QueueReader::QueueReader(): popBlocked(1), popSignal(0)
+{
+    debugs(54, 7, HERE << "constructed " << id);
+}
+
 
 // OneToOneUniQueue
 
 OneToOneUniQueue::OneToOneUniQueue(const String &id, const unsigned int maxItemSize, const int capacity):
-    shm(id.termedBuf())
+    shm(id.termedBuf()), reader_(NULL)
 {
-    shm.create(Items2Bytes(maxItemSize, capacity));
-    assert(shm.mem());
-    shared = new (shm.mem()) Shared(maxItemSize, capacity);
+    const int sharedSize = Items2Bytes(maxItemSize, capacity);
+    shm.create(sharedSize);
+    shared = new (shm.reserve(sharedSize)) Shared(maxItemSize, capacity);
 }
 
-OneToOneUniQueue::OneToOneUniQueue(const String &id): shm(id.termedBuf())
+OneToOneUniQueue::OneToOneUniQueue(const String &id): shm(id.termedBuf()),
+    reader_(NULL)
 {
     shm.open();
     shared = reinterpret_cast<Shared *>(shm.mem());
     assert(shared);
+}
+
+void
+OneToOneUniQueue::reader(QueueReader *aReader)
+{
+    Must(!reader_ && aReader);
+    reader_ = aReader;
 }
 
 int
@@ -56,6 +85,13 @@ OneToOneUniQueue::Shared::Shared(const unsigned int aMaxItemSize, const int aCap
 {
 }
 
+QueueReader &
+OneToOneUniQueue::reader()
+{
+    Must(reader_);
+    return *reader_;
+}
+
 
 // OneToOneBiQueue
 
@@ -71,17 +107,42 @@ OneToOneBiQueue::OneToOneBiQueue(const String &id):
 {
 }
 
+void
+OneToOneBiQueue::readers(QueueReader *r1, QueueReader *r2)
+{
+    popQueue->reader(r1);
+    pushQueue->reader(r2);
+}
+
+void
+OneToOneBiQueue::clearReaderSignal()
+{
+    debugs(54, 7, HERE << "reader: " << &popQueue->reader());
+    popQueue->reader().clearSignal();
+}
+
 
 // FewToOneBiQueue
 
 FewToOneBiQueue::FewToOneBiQueue(const String &id, const int aWorkerCount, const unsigned int maxItemSize, const int capacity):
-    theLastPopWorkerId(-1), theWorkerCount(aWorkerCount)
+    theLastPopWorker(0), theWorkerCount(aWorkerCount),
+    shm(ReaderId(id).termedBuf()),
+    reader(NULL)
 {
+    // create a new segment for the local and remote queue readers
+    // TODO: all our queues and readers should use a single segment
+    shm.create((theWorkerCount+1)*sizeof(QueueReader));
+    reader = new (shm.reserve(sizeof(QueueReader))) QueueReader;
+    debugs(54, 7, HERE << "disker " << id << " reader: " << reader->id);
+
     assert(theWorkerCount >= 0);
     biQueues.reserve(theWorkerCount);
     for (int i = 0; i < theWorkerCount; ++i) {
         OneToOneBiQueue *const biQueue =
             new OneToOneBiQueue(QueueId(id, i), maxItemSize, capacity);
+        QueueReader *remoteReader =
+            new (shm.reserve(sizeof(QueueReader))) QueueReader;
+        biQueue->readers(reader, remoteReader);
         biQueues.push_back(biQueue);
     }
 }
@@ -89,7 +150,22 @@ FewToOneBiQueue::FewToOneBiQueue(const String &id, const int aWorkerCount, const
 OneToOneBiQueue *
 FewToOneBiQueue::Attach(const String &id, const int workerId)
 {
-    return new OneToOneBiQueue(QueueId(id, workerId));
+    // XXX: remove this leak. By refcounting Ipc::Mem::Segments? By creating a global FewToOneBiQueue for each worker?
+    Ipc::Mem::Segment *shmPtr = new Ipc::Mem::Segment(ReaderId(id).termedBuf());
+
+    Ipc::Mem::Segment &shm = *shmPtr;
+    shm.open();
+    assert(shm.size() >= static_cast<off_t>((1 + workerId+1)*sizeof(QueueReader)));
+    QueueReader *readers = reinterpret_cast<QueueReader*>(shm.mem());
+    QueueReader *remoteReader = &readers[0];
+    debugs(54, 7, HERE << "disker " << id << " reader: " << remoteReader->id);
+    QueueReader *localReader = &readers[workerId+1];
+    debugs(54, 7, HERE << "local " << id << " reader: " << localReader->id);
+
+    OneToOneBiQueue *const biQueue =
+        new OneToOneBiQueue(QueueId(id, workerId));
+    biQueue->readers(localReader, remoteReader);
+    return biQueue;
 }
 
 FewToOneBiQueue::~FewToOneBiQueue()
@@ -101,4 +177,18 @@ FewToOneBiQueue::~FewToOneBiQueue()
 bool FewToOneBiQueue::validWorkerId(const int workerId) const
 {
     return 0 <= workerId && workerId < theWorkerCount;
+}
+
+void
+FewToOneBiQueue::clearReaderSignal(int workerId)
+{
+    debugs(54, 7, HERE << "reader: " << reader->id);
+
+    assert(validWorkerId(workerId));
+    reader->clearSignal();
+
+    // we got a hint; we could reposition iteration to try popping from the
+    // workerId queue first; but it does not seem to help much and might
+    // introduce some bias so we do not do that for now:
+    // theLastPopWorker = (workerId + theWorkerCount - 1) % theWorkerCount;
 }

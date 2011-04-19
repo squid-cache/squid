@@ -85,10 +85,11 @@ private:
     void checkTimeouts();
     void scheduleTimeoutCheck();
 
-    void handleResponses();
+    void handleNotification();
+    void handleResponses(const char *when);
     void handleResponse(const IpcIoMsg &ipcIo);
 
-    static void DiskerHandleRequests();
+    static void DiskerHandleRequests(const int workerId);
     static void DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo);
 
 private:
