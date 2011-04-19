@@ -12,12 +12,6 @@ namespace Mem {
 
 class PageId;
 
-/// initializes and configures shared memory [pools] for all kids
-void Init();
-
-/// attaches this kid to the already configured shared memory [pools]
-void Attach();
-
 /* Single page manipulation */
 
 /// sets page ID and returns true unless no free pages are found
