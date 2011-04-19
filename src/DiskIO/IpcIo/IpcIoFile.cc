@@ -18,12 +18,29 @@
 CBDATA_CLASS_INIT(IpcIoFile);
 
 IpcIoFile::DiskerQueue *IpcIoFile::diskerQueue = NULL;
-const double IpcIoFile::Timeout = 7;
+const double IpcIoFile::Timeout = 7; // seconds;  XXX: ALL,9 may require more
 IpcIoFile::IpcIoFileList IpcIoFile::WaitingForOpen;
 IpcIoFile::IpcIoFilesMap IpcIoFile::IpcIoFiles;
 
 static bool DiskerOpen(const String &path, int flags, mode_t mode);
 static void DiskerClose(const String &path);
+
+/// IpcIo wrapper for debugs() streams; XXX: find a better class name
+struct SipcIo {
+    SipcIo(int aWorker, const IpcIoMsg &aMsg, int aDisker):
+        worker(aWorker), msg(aMsg), disker(aDisker) {}
+
+    int worker;
+    const IpcIoMsg &msg;
+    int disker;
+};
+
+std::ostream &
+operator <<(std::ostream &os, const SipcIo &sio)
+{
+    return os << "ipcIo" << sio.worker << '.' << sio.msg.requestId <<
+        (sio.msg.command == IpcIo::cmdRead ? 'r' : 'w') << sio.disker;
+}
 
 
 IpcIoFile::IpcIoFile(char const *aDb):
@@ -99,6 +116,7 @@ IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response) {
     } else {
         diskId = response->strand.kidId;
         if (diskId >= 0) {
+            // XXX: Remove this +-1 math! FewToOneBiQueue API must use kid IDs.
             workerQueue = DiskerQueue::Attach(dbName, KidIdentifier - 1);
             const bool inserted =
                 IpcIoFiles.insert(std::make_pair(diskId, this)).second;
@@ -267,6 +285,9 @@ IpcIoFile::trackPendingRequest(IpcIoPendingRequest *const pending)
 void
 IpcIoFile::push(IpcIoPendingRequest *const pending)
 {
+    // prevent queue overflows: check for responses to earlier requests
+    handleResponses("before push");
+
     debugs(47, 7, HERE);
     Must(diskId >= 0);
     Must(workerQueue);
@@ -289,13 +310,18 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
         memcpy(ipcIo.buf, pending->writeRequest->buf, ipcIo.len); // optimize away
     }
 
+    debugs(47, 7, HERE << "pushing " << SipcIo(KidIdentifier, ipcIo, diskId) << " at " << workerQueue->pushQueue->size());
+
     try {
         if (workerQueue->push(ipcIo))
-            Notify(diskId); // notify disker
+            Notify(diskId); // must notify disker
         trackPendingRequest(pending);
     } catch (const WorkerQueue::Full &) {
-        // XXX: grow queue size?
-        pending->completeIo(NULL);
+        debugs(47, DBG_IMPORTANT, "Worker I/O push queue overflow: " <<
+               SipcIo(KidIdentifier, ipcIo, diskId)); // TODO: report queue len
+        // TODO: grow queue size
+
+        pending->completeIo(NULL); // XXX: should distinguish this from timeout
         delete pending;
     }
 }
@@ -320,24 +346,31 @@ IpcIoFile::HandleOpenResponse(const Ipc::StrandSearchResponse &response)
 }
 
 void
-IpcIoFile::handleResponses()
+IpcIoFile::handleNotification()
 {
+    debugs(47, 4, HERE << "notified");
+    workerQueue->clearReaderSignal();
+    handleResponses("after notification");
+}
+
+void
+IpcIoFile::handleResponses(const char *when)
+{
+    debugs(47, 4, HERE << "popping all " << when);
     Must(workerQueue);
-    try {
-        while (true) {
-            IpcIoMsg ipcIo;
-            workerQueue->pop(ipcIo); // XXX: notify disker?
-            handleResponse(ipcIo);
-        }
-    } catch (const WorkerQueue::Empty &) {}
+    IpcIoMsg ipcIo;
+    // get all responses we can: since we are not pushing, this will stop
+    while (workerQueue->pop(ipcIo))
+        handleResponse(ipcIo);
 }
 
 void
 IpcIoFile::handleResponse(const IpcIoMsg &ipcIo)
 {
     const int requestId = ipcIo.requestId;
-    debugs(47, 7, HERE << "disker response to " << ipcIo.command <<
-           "; ipcIo" << KidIdentifier << '.' << requestId);
+    debugs(47, 7, HERE << "popped disker response: " <<
+        SipcIo(KidIdentifier, ipcIo, diskId)  << " at " << workerQueue->popQueue->size());
+
     Must(requestId);
     if (IpcIoPendingRequest *const pending = dequeueRequest(requestId)) {
         pending->completeIo(&ipcIo);
@@ -352,6 +385,7 @@ IpcIoFile::handleResponse(const IpcIoMsg &ipcIo)
 void
 IpcIoFile::Notify(const int peerId)
 {
+    // TODO: Count and report the total number of notifications, pops, pushes.
     debugs(47, 7, HERE << "kid" << peerId);
     Ipc::TypedMsgHdr msg;
     msg.setType(Ipc::mtIpcIoNotification); // TODO: add proper message type?
@@ -363,14 +397,16 @@ IpcIoFile::Notify(const int peerId)
 void
 IpcIoFile::HandleNotification(const Ipc::TypedMsgHdr &msg)
 {
-    debugs(47, 7, HERE);
-    if (IamDiskProcess())
-        DiskerHandleRequests();
-    else {
-        const int diskId = msg.getInt();
+    const int from = msg.getInt();
+    debugs(47, 7, HERE << "from " << from);
+    if (IamDiskProcess()) {
+        const int workerId = from;
+        DiskerHandleRequests(workerId - 1);
+    } else {
+        const int diskId = from;
         const IpcIoFilesMap::const_iterator i = IpcIoFiles.find(diskId);
-        Must(i != IpcIoFiles.end()); // XXX: warn and continue?
-        i->second->handleResponses();
+        Must(i != IpcIoFiles.end()); // TODO: warn but continue
+        i->second->handleNotification();
     }
 }
 
@@ -551,17 +587,22 @@ diskerWrite(IpcIoMsg &ipcIo)
 }
 
 void
-IpcIoFile::DiskerHandleRequests()
+IpcIoFile::DiskerHandleRequests(const int workerWhoNotified)
 {
     Must(diskerQueue);
-    try {
-        while (true) {
-            int workerId;
-            IpcIoMsg ipcIo;
-            diskerQueue->pop(workerId, ipcIo); // XXX: notify worker?
-            DiskerHandleRequest(workerId, ipcIo);
-        }
-    } catch (const DiskerQueue::Empty &) {}
+    diskerQueue->clearReaderSignal(workerWhoNotified);
+
+    int workerId = 0;
+    IpcIoMsg ipcIo;
+    while (diskerQueue->pop(workerId, ipcIo))
+        DiskerHandleRequest(workerId, ipcIo);
+
+    // TODO: If the loop keeps on looping, we probably should take a break
+    // once in a while to update clock, read Coordinator messages, etc. 
+    // This can be combined with "elevator" optimization where we get up to N
+    // requests first, then reorder the popped requests to optimize seek time,
+    // then do I/O, then take a break, and come back for the next set of I/O
+    // requests.
 }
 
 /// called when disker receives an I/O request
@@ -587,11 +628,20 @@ IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
     else // ipcIo.command == IpcIo::cmdWrite
         diskerWrite(ipcIo);
 
+    debugs(47, 7, HERE << "pushing " << SipcIo(workerId+1, ipcIo, KidIdentifier) << " at " << diskerQueue->biQueues[workerId]->pushQueue->size());
+
     try {
         if (diskerQueue->push(workerId, ipcIo))
-            Notify(workerId + 1); // notify worker
+            Notify(workerId + 1); // must notify worker
     } catch (const DiskerQueue::Full &) {
-        // XXX: grow queue size?
+        // The worker queue should not overflow because the worker should pop()
+        // before push()ing and because if disker pops N requests at a time,
+        // we should make sure the worker pop() queue length is the worker
+        // push queue length plus N+1. XXX: implement the N+1 difference.
+        debugs(47, DBG_IMPORTANT, "BUG: Worker I/O pop queue overflow: " <<
+               SipcIo(workerId+1, ipcIo, KidIdentifier)); // TODO: report queue len
+
+        // the I/O request we could not push will timeout
     }
 }
 
