@@ -105,6 +105,7 @@ void SharedMemPagesRr::run(const RunnerRegistry &)
 SharedMemPagesRr::~SharedMemPagesRr()
 {
     delete ThePagePool;
+    ThePagePool = NULL;
     if (IamMasterProcess())
         Ipc::Mem::PagePool::Unlink(PagePoolId);
 }
