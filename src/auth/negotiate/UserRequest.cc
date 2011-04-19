@@ -339,8 +339,6 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         safe_free(negotiate_request->server_blob);
         negotiate_request->server_blob = xstrdup(blob);
         negotiate_request->releaseAuthServer();
-        auth_user_request->user()->credentials(Auth::Ok);
-        debugs(29, 4, HERE << "Successfully validated user via Negotiate. Username '" << blob << "'");
 
         /* connection is authenticated */
         debugs(29, 4, HERE << "authenticated user " << auth_user_request->user()->username());
@@ -357,9 +355,9 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
              * Just free the temporary auth_user after merging as
              * much of it new state into the existing one as possible */
             usernamehash->user()->absorb(local_auth_user);
-            local_auth_user = usernamehash->user();
             /* from here on we are working with the original cached credentials. */
-            negotiate_request->_auth_user = local_auth_user;
+            local_auth_user = usernamehash->user();
+            auth_user_request->user(local_auth_user);
         } else {
             /* store user in hash's */
             local_auth_user->addToNameCache();
@@ -367,8 +365,8 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         /* set these to now because this is either a new login from an
          * existing user or a new user */
         local_auth_user->expiretime = current_time.tv_sec;
-        negotiate_request->releaseAuthServer();
-        negotiate_request->user()->credentials(Auth::Ok);
+        auth_user_request->user()->credentials(Auth::Ok);
+        debugs(29, 4, HERE << "Successfully validated user via Negotiate. Username '" << blob << "'");
 
     } else if (strncasecmp(reply, "NA ", 3) == 0 && arg != NULL) {
         /* authentication failure (wrong password, etc.) */

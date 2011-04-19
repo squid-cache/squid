@@ -4,7 +4,7 @@
 #include "auth/User.h"
 
 namespace Auth
-{  
+{
 namespace Digest
 {
 
@@ -26,7 +26,7 @@ public:
     /* what nonces have been allocated to this user */
     dlink_list nonces;
 };
- 
+
 MEMPROXY_CLASS_INLINE(Auth::Digest::User);
 
 } // namespace Digest
