@@ -26,9 +26,8 @@ public:
 
     const String &name() { return theName; } ///< shared memory segment name
     off_t size() { return theSize; } ///< shared memory segment size
-    void *mem() { return theMem; } ///< pointer to mmapped shared memory segment
+    void *mem() { return reserve(0); } ///< pointer to the next chunk
     void *reserve(size_t chunkSize); ///< reserve and return the next chunk
-    // TODO: convert most mem() calls to reserve()
 
     static void Unlink(const char *const id); ///< unlink the segment
 
