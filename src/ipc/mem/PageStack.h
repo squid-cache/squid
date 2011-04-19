@@ -42,6 +42,9 @@ private:
     struct Shared {
         Shared(const unsigned int aCapacity);
 
+        /// total shared memory size required to share
+        static size_t MemSize(const unsigned int capacity);
+
         // these help iterate the stack in search of a free spot or a page
         Offset next(const Offset idx) const { return (idx + 1) % theCapacity; }
         Offset prev(const Offset idx) const { return (theCapacity + idx - 1) % theCapacity; }
