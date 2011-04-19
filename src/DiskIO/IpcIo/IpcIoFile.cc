@@ -116,8 +116,7 @@ IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response) {
     } else {
         diskId = response->strand.kidId;
         if (diskId >= 0) {
-            // XXX: Remove this +-1 math! FewToOneBiQueue API must use kid IDs.
-            workerQueue = DiskerQueue::Attach(dbName, KidIdentifier - 1);
+            workerQueue = DiskerQueue::Attach(dbName, KidIdentifier);
             const bool inserted =
                 IpcIoFiles.insert(std::make_pair(diskId, this)).second;
             Must(inserted);
@@ -401,7 +400,7 @@ IpcIoFile::HandleNotification(const Ipc::TypedMsgHdr &msg)
     debugs(47, 7, HERE << "from " << from);
     if (IamDiskProcess()) {
         const int workerId = from;
-        DiskerHandleRequests(workerId - 1);
+        DiskerHandleRequests(workerId);
     } else {
         const int diskId = from;
         const IpcIoFilesMap::const_iterator i = IpcIoFiles.find(diskId);
@@ -628,18 +627,18 @@ IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
     else // ipcIo.command == IpcIo::cmdWrite
         diskerWrite(ipcIo);
 
-    debugs(47, 7, HERE << "pushing " << SipcIo(workerId+1, ipcIo, KidIdentifier) << " at " << diskerQueue->biQueues[workerId]->pushQueue->size());
+    debugs(47, 7, HERE << "pushing " << SipcIo(workerId, ipcIo, KidIdentifier) << " at " << diskerQueue->biQueues[workerId]->pushQueue->size());
 
     try {
         if (diskerQueue->push(workerId, ipcIo))
-            Notify(workerId + 1); // must notify worker
+            Notify(workerId); // must notify worker
     } catch (const DiskerQueue::Full &) {
         // The worker queue should not overflow because the worker should pop()
         // before push()ing and because if disker pops N requests at a time,
         // we should make sure the worker pop() queue length is the worker
         // push queue length plus N+1. XXX: implement the N+1 difference.
         debugs(47, DBG_IMPORTANT, "BUG: Worker I/O pop queue overflow: " <<
-               SipcIo(workerId+1, ipcIo, KidIdentifier)); // TODO: report queue len
+               SipcIo(workerId, ipcIo, KidIdentifier)); // TODO: report queue len
 
         // the I/O request we could not push will timeout
     }
