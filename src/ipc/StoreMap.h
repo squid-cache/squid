@@ -55,6 +55,7 @@ public:
 
     StoreMap(const char *const aPath, const int limit, size_t sharedSizeExtra); ///< create a new shared StoreMap
     explicit StoreMap(const char *const aPath); ///< open an existing shared StoreMap
+    static void Unlink(const char *const path); ///< unlink shared memory segment
 
     /// finds, reservers space for writing a new entry or returns nil
     Slot *openForWriting(const cache_key *const key, sfileno &fileno);

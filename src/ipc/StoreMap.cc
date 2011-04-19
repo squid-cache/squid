@@ -32,6 +32,12 @@ Ipc::StoreMap::StoreMap(const char *const aPath):
     debugs(54, 5, HERE << "attached map [" << path << "] created: " << shared->limit);
 }
 
+void
+Ipc::StoreMap::Unlink(const char *const path)
+{
+    Mem::Segment::Unlink(path);
+}
+
 Ipc::StoreMap::Slot *
 Ipc::StoreMap::openForWriting(const cache_key *const key, sfileno &fileno)
 {

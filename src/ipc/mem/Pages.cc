@@ -85,7 +85,7 @@ class SharedMemPagesRr: public RegisteredRunner
 public:
     /* RegisteredRunner API */
     virtual void run(const RunnerRegistry &);
-    // TODO: cleanup in destructor
+    virtual ~SharedMemPagesRr();
 };
 
 RunnerRegistrationEntry(rrAfterConfig, SharedMemPagesRr);
@@ -113,4 +113,11 @@ void SharedMemPagesRr::run(const RunnerRegistry &)
         Ipc::Mem::Init();
     else
         Ipc::Mem::Attach();
+}
+
+SharedMemPagesRr::~SharedMemPagesRr()
+{
+    delete ThePagePool;
+    if (IamMasterProcess())
+        Ipc::Mem::PagePool::Unlink(PagePoolId);
 }
