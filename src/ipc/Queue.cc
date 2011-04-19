@@ -55,9 +55,9 @@ OneToOneUniQueue::OneToOneUniQueue(const String &id): shm(id.termedBuf()),
     shm.open();
     shared = reinterpret_cast<Shared *>(shm.mem());
     assert(shared);
-    const int mySharedSize =
+    const int sharedSize =
         Items2Bytes(shared->theMaxItemSize, shared->theCapacity);
-    assert(shared == reinterpret_cast<Shared *>(shm.reserve(mySharedSize)));
+    assert(shared == reinterpret_cast<Shared *>(shm.reserve(sharedSize)));
 }
 
 void
