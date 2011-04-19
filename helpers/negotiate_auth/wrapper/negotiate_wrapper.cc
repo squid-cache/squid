@@ -77,14 +77,14 @@ static const unsigned char ntlmProtocol[] = {'N', 'T', 'L', 'M', 'S', 'S', 'P', 
 static const char *
 LogTime()
 {
-    struct tm *tm;
     struct timeval now;
     static time_t last_t = 0;
     static char buf[128];
 
     gettimeofday(&now, NULL);
     if (now.tv_sec != last_t) {
-        tm = localtime((time_t *) & now.tv_sec);
+        time_t *tmp = (time_t *) & now.tv_sec;
+        struct tm *tm = localtime(tmp);
         strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
         last_t = now.tv_sec;
     }
@@ -189,8 +189,15 @@ main(int argc, char *const argv[])
        to the right helper. squid must keep session state
     */
 
-    pipe(pkin);
-    pipe(pkout);
+    if (pipe(pkin) < 0) {
+        fprintf(stderr, "%s| %s: Could not assign streams for pkin\n", LogTime(), PROGRAM);
+        return 1;
+    }
+    if (pipe(pkout) < 0) {
+        fprintf(stderr, "%s| %s: Could not assign streams for pkout\n", LogTime(), PROGRAM);
+        return 1;
+    }
+
 
     if  (( fpid = vfork()) < 0 ) {
         fprintf(stderr, "%s| %s: Failed first fork\n", LogTime(), PROGRAM);
@@ -220,8 +227,14 @@ main(int argc, char *const argv[])
     close(pkin[0]);
     close(pkout[1]);
 
-    pipe(pnin);
-    pipe(pnout);
+    if (pipe(pnin) < 0) {
+        fprintf(stderr, "%s| %s: Could not assign streams for pnin\n", LogTime(), PROGRAM);
+        return 1;
+    }
+    if (pipe(pnout) < 0) {
+        fprintf(stderr, "%s| %s: Could not assign streams for pnout\n", LogTime(), PROGRAM);
+        return 1;
+    }
 
     if  (( fpid = vfork()) < 0 ) {
         fprintf(stderr, "%s| %s: Failed second fork\n", LogTime(), PROGRAM);
