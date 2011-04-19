@@ -86,19 +86,12 @@ Auth::User::credentials(CredentialState newCreds)
  * two users _can_ be merged without invalidating all the request
  * scheme data. The scheme is also responsible for merging any user
  * related scheme data itself.
+ * The caller is responsible for altering all refcount pointers to
+ * the 'from' object. They are invalid once this method is complete.
  */
 void
 Auth::User::absorb(Auth::User::Pointer from)
 {
-
-    /* RefCount children CANNOT be merged like this. The external Auth::User::Pointer's cannot be changed. */
-
-    /* check that we only have the two references:
-     * 1) our function scope
-     * 2) the parsing function scope)
-     */
-    assert(from->RefCountCount() == 2);
-
     /*
      * XXX Incomplete: it should merge in hash references too and ask the module to merge in scheme data
      *  dlink_list proxy_auth_list;

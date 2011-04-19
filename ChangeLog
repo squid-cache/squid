@@ -1,3 +1,15 @@
+Changes to squid-3.2.0.7 (19 Apr 2011):
+
+	- Regression fix: NTLM and Negotiate auth assertion "RefCountCount() == 2"
+	- Regression fix: icons/ FHS compliance
+	- Regression fix: Startup aborts with URL error when --disable-htcp
+	- Bug 3192: comm.cc:216: "fd_table[fd].halfClosedReader != NULL"
+	- Add negotiate_wrapper_auth version 1.0.1
+	- Fixed %dt logging in the presence of REQMOD
+	- Fixed chunked request forwarding in ICAP REQMOD presence
+	- ... all bug fixes and updates from 3.1.12.1
+	- ... many code polishings and display cleanups
+
 Changes to squid-3.2.0.6 (04 Apr 2011):
 
 	- Regression fix: upgrade existing icons
@@ -151,6 +163,16 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many code cleanups
 	- ... and a great many testing improvements
 	- ... and many documentation updates
+
+Changes to squid-3.1.12.1 (19 Apr 2011):
+
+	- Port from 3.2: Dynamic SSL Certificate generation
+	- Bug 3194: selinux may prevent ntlm_smb_lm_auth from using /tmp
+	- Bug 3185: 3.1.11 fails to compile on OpenBSD 4.8 and 4.9
+	- Bug 3183: Invalid URL accepted with url host part of only '@'
+	- Display ERROR in cache.log for invalid configured paths
+	- Cache Manager: send User-Agent header from cachemgr.cgi
+	- ... and many portability compile fixes for non-GCC systems.
 
 Changes to squid-3.1.12 (04 Apr 2011):
 
