@@ -115,11 +115,12 @@ Ipc::Mem::Segment::detach()
 void *
 Ipc::Mem::Segment::reserve(size_t chunkSize)
 {
+    Must(theMem);
     // check for overflows
     assert(static_cast<off_t>(chunkSize) >= 0);
     assert(static_cast<off_t>(chunkSize) <= theSize);
     assert(theReserved <= theSize - static_cast<off_t>(chunkSize));
-    void *result = reinterpret_cast<char*>(mem()) + theReserved;
+    void *result = reinterpret_cast<char*>(theMem) + theReserved;
     theReserved += chunkSize;
     return result;
 }

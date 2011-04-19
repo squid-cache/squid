@@ -17,9 +17,10 @@ const Ipc::Mem::PageStack::Value Writable = 0;
 Ipc::Mem::PageStack::PageStack(const String &id, const unsigned int capacity):
     shm(id.termedBuf())
 {
-    shm.create(sizeof(Shared::Item) * capacity + sizeof(Shared));
+    const size_t mySharedSize = Shared::MemSize(capacity);
+    shm.create(mySharedSize);
     assert(shm.mem());
-    shared = new (shm.mem()) Shared(capacity);
+    shared = new (shm.reserve(mySharedSize)) Shared(capacity);
 }
 
 Ipc::Mem::PageStack::PageStack(const String &id): shm(id.termedBuf())
@@ -27,6 +28,8 @@ Ipc::Mem::PageStack::PageStack(const String &id): shm(id.termedBuf())
     shm.open();
     shared = reinterpret_cast<Shared *>(shm.mem());
     assert(shared);
+    const off_t mySharedSize = Shared::MemSize(shared->theCapacity);
+    assert(shared == reinterpret_cast<Shared *>(shm.reserve(mySharedSize)));
 }
 
 void
@@ -107,4 +110,10 @@ Ipc::Mem::PageStack::Shared::Shared(const unsigned int aCapacity):
     // initially, all pages are free
     for (Offset i = 0; i < theSize; ++i)
         theItems[i] = i + 1; // skip page number zero to keep numbers positive
+}
+
+size_t
+Ipc::Mem::PageStack::Shared::MemSize(const unsigned int capacity)
+{
+    return sizeof(Item) * capacity + sizeof(Shared);
 }

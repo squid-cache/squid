@@ -25,9 +25,10 @@ Ipc::Mem::PagePool::PagePool(const String &id, const unsigned int capacity, cons
     pageIndex(PageIndexId(id), capacity),
     shm(id.termedBuf())
 {
-    shm.create(Shared::MemSize(capacity, pageSize));
+    const off_t mySharedSize = Shared::MemSize(capacity, pageSize);
+    shm.create(mySharedSize);
     assert(shm.mem());
-    shared = new (shm.mem()) Shared(capacity, pageSize);
+    shared = new (shm.reserve(mySharedSize)) Shared(capacity, pageSize);
 }
 
 Ipc::Mem::PagePool::PagePool(const String &id):
@@ -36,6 +37,9 @@ Ipc::Mem::PagePool::PagePool(const String &id):
     shm.open();
     shared = reinterpret_cast<Shared *>(shm.mem());
     assert(shared);
+    const off_t mySharedSize =
+        Shared::MemSize(shared->theCapacity, shared->thePageSize);
+    assert(shared == reinterpret_cast<Shared *>(shm.reserve(mySharedSize)));
 }
 
 void
