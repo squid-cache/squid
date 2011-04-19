@@ -26,22 +26,6 @@ Ipc::Mem::PageSize() {
     return 32*1024;
 }
 
-void
-Ipc::Mem::Init()
-{
-    Must(!ThePagePool);
-    const size_t capacity = Limit() / PageSize();
-    ThePagePool = new PagePool(PagePoolId, capacity, PageSize());
-}
-
-void
-Ipc::Mem::Attach()
-{
-    Must(!ThePagePool);
-    // TODO: make pool id more unique so it does not conflict with other Squid instances?
-    ThePagePool = new PagePool(PagePoolId);
-}
-
 bool
 Ipc::Mem::GetPage(PageId &page)
 {
@@ -109,10 +93,13 @@ void SharedMemPagesRr::run(const RunnerRegistry &)
         return;
     }
 
-    if (IamMasterProcess())
-        Ipc::Mem::Init();
-    else
-        Ipc::Mem::Attach();
+    Must(!ThePagePool);
+    if (IamMasterProcess()) {
+        const size_t capacity = Ipc::Mem::Limit() / Ipc::Mem::PageSize();
+        ThePagePool =
+            new Ipc::Mem::PagePool(PagePoolId, capacity, Ipc::Mem::PageSize());
+    } else
+        ThePagePool = new Ipc::Mem::PagePool(PagePoolId);
 }
 
 SharedMemPagesRr::~SharedMemPagesRr()
