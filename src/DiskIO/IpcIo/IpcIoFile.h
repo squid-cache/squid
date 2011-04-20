@@ -16,7 +16,7 @@ namespace IpcIo {
 /// what kind of I/O the disker needs to do or have done
 typedef enum { cmdNone, cmdOpen, cmdRead, cmdWrite } Command;
 
-enum { BufCapacity = 32*1024 }; // XXX: must not exceed TypedMsgHdr.maxSize
+enum { BufCapacity = 32*1024 };
 
 } // namespace IpcIo
 
