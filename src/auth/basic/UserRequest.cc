@@ -42,29 +42,29 @@ AuthBasicUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, 
     return;
 }
 
-int
+Auth::Direction
 AuthBasicUserRequest::module_direction()
 {
-    /* null auth_user is checked for by authenticateDirection */
+    /* null auth_user is checked for by AuthUserRequest::direction() */
     if (user()->auth_type != Auth::AUTH_BASIC)
-        return -2;
+        return Auth::CRED_ERROR;
 
     switch (user()->credentials()) {
 
     case Auth::Unchecked:
     case Auth::Pending:
-        return -1;
+        return Auth::CRED_LOOKUP;
 
     case Auth::Ok:
         if (user()->expiretime + static_cast<Auth::Basic::Config*>(Auth::Config::Find("basic"))->credentialsTTL <= squid_curtime)
-            return -1;
-        return 0;
+            return Auth::CRED_LOOKUP;
+        return Auth::CRED_VALID;
 
     case Auth::Failed:
-        return 0;
+        return Auth::CRED_VALID;
 
     default:
-        return -2;
+        return Auth::CRED_ERROR;
     }
 }
 
