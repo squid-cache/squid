@@ -894,7 +894,7 @@ AC_ARG_ENABLE(ecap,
        yes|no) squid_opt_use_ecap=$enableval ;;
        *) AC_MSG_ERROR(bad value ${enableval} for --enable-ecap) ;;
     esac
-AC_MSG_RESULT([$squid_opt_use_ecap, explicitly])
+    AC_MSG_RESULT([$squid_opt_use_ecap, explicitly])
     ], [
         squid_opt_use_ecap=no;
         AC_MSG_RESULT([$squid_opt_use_ecap, implicitly])
@@ -905,6 +905,7 @@ dnl Necessary if the first PKG_CHECK_MODULES call is conditional
 PKG_PROG_PKG_CONFIG
 
 AC_MSG_NOTICE([pkg-config= $PKG_CONFIG])
+AC_MSG_NOTICE([squid_opt_use_ecap= $squid_opt_use_ecap])
 
 dnl Perform configuration consistency checks for eCAP
 if test "x$squid_opt_use_ecap" = "xyes";
@@ -915,7 +916,7 @@ then
         AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-loadable-modules with --enable-ecap.])
     fi
 
-    if ! test "x$PKG_CONFIG" = "x"; then
+    if test -n "$PKG_CONFIG"; then
       dnl eCAP support requires libecap.
       dnl This Squid supports libecap v0.2.x.
       dnl Use EXT_ prefix to distinguish external libecap (that we check for
