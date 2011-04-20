@@ -208,11 +208,14 @@ authenticateUserAuthenticated(AuthUserRequest::Pointer auth_user_request)
     return auth_user_request->authenticated();
 }
 
-int
+Auth::Direction
 AuthUserRequest::direction()
 {
+    if (user() == NULL)
+        return Auth::CRED_ERROR; // No credentials. Should this be a CHALLENGE instead?
+
     if (authenticateUserAuthenticated(this))
-        return 0;
+        return Auth::CRED_VALID;
 
     return module_direction();
 }
@@ -397,42 +400,44 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
     }
 
     if (!authenticateUserAuthenticated(*auth_user_request)) {
-        /* User not logged in. Log them in */
+        /* User not logged in. Try to log them in */
         authenticateAuthenticateUser(*auth_user_request, request, conn, headertype);
 
-        switch (authenticateDirection(*auth_user_request)) {
+        switch ((*auth_user_request)->direction()) {
 
-        case 1:
+        case Auth::CRED_CHALLENGE:
 
             if (request->auth_user_request == NULL) {
                 request->auth_user_request = *auth_user_request;
             }
 
-            /* fallthrough to -2 */
+            /* fallthrough to ERROR case and do the challenge */
 
-        case -2:
+        case Auth::CRED_ERROR:
             /* this ACL check is finished. */
             *auth_user_request = NULL;
             return AUTH_ACL_CHALLENGE;
 
-        case -1:
+        case Auth::CRED_LOOKUP:
             /* we are partway through authentication within squid,
              * the *auth_user_request variables stores the auth_user_request
              * for the callback to here - Do not Unlock */
             return AUTH_ACL_HELPER;
-        }
 
-        /* on 0 the authentication is finished - fallthrough */
-        /* See if user authentication failed for some reason */
-        if (!authenticateUserAuthenticated(*auth_user_request)) {
-            if ((*auth_user_request)->username()) {
-                if (!request->auth_user_request) {
-                    request->auth_user_request = *auth_user_request;
+        case Auth::CRED_VALID:
+            /* authentication is finished */
+            /* See if user authentication failed for some reason */
+            if (!authenticateUserAuthenticated(*auth_user_request)) {
+                if ((*auth_user_request)->username()) {
+                    if (!request->auth_user_request) {
+                        request->auth_user_request = *auth_user_request;
+                    }
                 }
-            }
 
-            *auth_user_request = NULL;
-            return AUTH_ACL_CHALLENGE;
+                *auth_user_request = NULL;
+                return AUTH_ACL_CHALLENGE;
+            }
+            // otherwise fallthrough to acceptance.
         }
     }
 
@@ -473,21 +478,6 @@ AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest::Pointer * auth
     return result;
 }
 
-/* returns
- * 0: no output needed
- * 1: send to client
- * -1: send to helper
- * -2: authenticate broken in some fashion
- */
-int
-authenticateDirection(AuthUserRequest::Pointer auth_user_request)
-{
-    if (auth_user_request == NULL || auth_user_request->user() == NULL)
-        return -2;
-
-    return auth_user_request->direction();
-}
-
 void
 AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal)
 /* send the auth types we are configured to support (and have compiled in!) */
@@ -520,8 +510,8 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer au
         /* this is a authenticate-needed response */
     {
 
-        if ((auth_user_request != NULL) && authenticateDirection(auth_user_request) == 1)
-            /* scheme specific */
+        if (auth_user_request != NULL && auth_user_request->direction() == Auth::CRED_CHALLENGE)
+            /* add the scheme specific challenge header to the response */
             auth_user_request->user()->config->fixHeader(auth_user_request, rep, type, request);
         else {
             /* call each configured & running authscheme */

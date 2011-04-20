@@ -20,7 +20,7 @@ public:
     virtual ~AuthNTLMUserRequest();
     virtual int authenticated() const;
     virtual void authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type);
-    virtual int module_direction();
+    virtual Auth::Direction module_direction();
     virtual void onConnectionClose(ConnStateData *);
     virtual void module_start(RH *, void *);
 

@@ -166,27 +166,27 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
     return;
 }
 
-int
+Auth::Direction
 AuthDigestUserRequest::module_direction()
 {
     if (user()->auth_type != Auth::AUTH_DIGEST)
-        return -2;
+        return Auth::CRED_ERROR;
 
     switch (user()->credentials()) {
 
     case Auth::Ok:
-        return 0;
+        return Auth::CRED_VALID;
 
     case Auth::Failed:
         /* send new challenge */
-        return 1;
+        return Auth::CRED_CHALLENGE;
 
     case Auth::Unchecked:
     case Auth::Pending:
-        return -1;
+        return Auth::CRED_LOOKUP;
 
     default:
-        return -2;
+        return Auth::CRED_ERROR;
     }
 }
 
