@@ -1430,7 +1430,9 @@ SquidMain(int argc, char **argv)
     }
 
     debugs(1,2, HERE << "Doing post-config initialization\n");
+    leave_suid();
     ActivateRegistered(rrAfterConfig);
+    enter_suid();
 
     if (!opt_no_daemon && Config.workers > 0)
         watch_child(argv);
@@ -1796,7 +1798,9 @@ syslog(LOG_NOTICE, "XXX: will start %d kids", (int)TheKids.count());
 #endif
 
         if (!TheKids.someRunning() && !TheKids.shouldRestartSome()) {
+            leave_suid();
             DeactivateRegistered(rrAfterConfig);
+            enter_suid();
 
             if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
                 syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
