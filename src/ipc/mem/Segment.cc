@@ -26,7 +26,7 @@ Ipc::Mem::Segment::~Segment() {
     if (theFD >= 0) {
         detach();
         if (close(theFD) != 0)
-            debugs(54, 5, HERE << "close: " << xstrerror());
+            debugs(54, 5, HERE << "close " << theName << ": " << xstrerror());
     }
 }
 
@@ -39,12 +39,12 @@ Ipc::Mem::Segment::create(const off_t aSize)
     theFD = shm_open(theName.termedBuf(), O_CREAT | O_RDWR | O_TRUNC,
                      S_IRUSR | S_IWUSR);
     if (theFD < 0) {
-        debugs(54, 5, HERE << "shm_open: " << xstrerror());
+        debugs(54, 5, HERE << "shm_open " << theName << ": " << xstrerror());
         fatal("Ipc::Mem::Segment::create failed to shm_open");
     }
 
     if (ftruncate(theFD, aSize)) {
-        debugs(54, 5, HERE << "ftruncate: " << xstrerror());
+        debugs(54, 5, HERE << "ftruncate " << theName << ": " << xstrerror());
         fatal("Ipc::Mem::Segment::create failed to ftruncate");
     }
 
@@ -65,8 +65,8 @@ Ipc::Mem::Segment::open()
 
     theFD = shm_open(theName.termedBuf(), O_RDWR, 0);
     if (theFD < 0) {
-        debugs(54, 5, HERE << "shm_open: " << xstrerror());
-        String s = "Ipc::Mem::Segment::open failed to shm_open";
+        debugs(54, 5, HERE << "shm_open " << theName << ": " << xstrerror());
+        String s = "Ipc::Mem::Segment::open failed to shm_open ";
         s.append(theName);
         fatal(s.termedBuf());
     }
@@ -92,7 +92,7 @@ Ipc::Mem::Segment::attach()
     void *const p =
         mmap(NULL, theSize, PROT_READ | PROT_WRITE, MAP_SHARED, theFD, 0);
     if (p == MAP_FAILED) {
-        debugs(54, 5, HERE << "mmap: " << xstrerror());
+        debugs(54, 5, HERE << "mmap " << theName << ": " << xstrerror());
         fatal("Ipc::Mem::Segment::attach failed to mmap");
     }
     theMem = p;
@@ -106,7 +106,7 @@ Ipc::Mem::Segment::detach()
         return;
 
     if (munmap(theMem, theSize)) {
-        debugs(54, 5, HERE << "munmap: " << xstrerror());
+        debugs(54, 5, HERE << "munmap " << theName << ": " << xstrerror());
         fatal("Ipc::Mem::Segment::detach failed to munmap");
     }
     theMem = 0;
@@ -143,9 +143,9 @@ Ipc::Mem::Segment::statSize(const char *context) const
     memset(&s, 0, sizeof(s));
 
     if (fstat(theFD, &s) != 0) {
-        debugs(54, 5, HERE << "fstat: " << xstrerror());
+        debugs(54, 5, HERE << "fstat " << theName << ": " << xstrerror());
         String s = context;
-        s.append("failed to fstat(2)");
+        s.append("failed to fstat(2) ");
         s.append(theName);
         fatal(s.termedBuf());
     }
