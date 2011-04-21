@@ -908,7 +908,7 @@ AC_MSG_NOTICE([pkg-config= $PKG_CONFIG])
 AC_MSG_NOTICE([squid_opt_use_ecap= $squid_opt_use_ecap])
 
 dnl Perform configuration consistency checks for eCAP
-if test "x$squid_opt_use_ecap" = "xyes";
+if test "x$squid_opt_use_ecap" != "xno"
 then
     dnl eCAP support requires loadable modules, which are enabled by default
     if test "x$enable_loadable_modules" != "xyes"
