@@ -77,7 +77,8 @@ RunnerRegistrationEntry(rrAfterConfig, SharedMemPagesRr);
 
 void SharedMemPagesRr::run(const RunnerRegistry &)
 {
-    // XXX: restore if (!UsingSmp()) return;
+    if (!UsingSmp())
+        return;
 
     // When cache_dirs start using shared memory pages, they would
     // need to communicate their needs to us somehow.
@@ -104,6 +105,9 @@ void SharedMemPagesRr::run(const RunnerRegistry &)
 
 SharedMemPagesRr::~SharedMemPagesRr()
 {
+    if (!UsingSmp())
+        return;
+
     delete ThePagePool;
     ThePagePool = NULL;
     if (IamMasterProcess())

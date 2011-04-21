@@ -314,7 +314,7 @@ StoreEntry::storeClientType() const
      * offset 0 in the memory object is the HTTP headers.
      */
 
-    if (/* XXX: restore: UsingSmp() && */ mem_status == IN_MEMORY) {
+    if (mem_status == IN_MEMORY && UsingSmp()) {
         // clients of an object cached in shared memory are memory clients
         return STORE_MEM_CLIENT;
     }
@@ -1621,8 +1621,7 @@ StoreEntry::setMemStatus(mem_status_t new_status)
     if (new_status == mem_status)
         return;
 
-    // XXX: restore: if (UsingSmp())
-    {
+    if (UsingSmp()) {
         assert(new_status != IN_MEMORY); // we do not call this otherwise
         // This method was designed to update replacement policy, not to
         // actually purge something from the memory cache (TODO: rename?).
