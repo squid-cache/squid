@@ -372,7 +372,8 @@ RunnerRegistrationEntry(rrAfterConfig, MemStoreRr);
 
 void MemStoreRr::run(const RunnerRegistry &)
 {
-    // XXX: restore if (!UsingSmp()) return;
+    if (!UsingSmp())
+        return;
 
     if (IamMasterProcess())
         MemStore::Init();
@@ -380,7 +381,8 @@ void MemStoreRr::run(const RunnerRegistry &)
 
 MemStoreRr::~MemStoreRr()
 {
-    // XXX: restore if (!UsingSmp()) return;
+    if (!UsingSmp())
+        return;
 
     if (IamMasterProcess())
         MemStoreMap::Unlink(ShmLabel);

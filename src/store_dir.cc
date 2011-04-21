@@ -92,9 +92,10 @@ STDIRSELECT *storeDirSelectSwapDir = storeDirSelectSwapDirLeastLoad;
 void
 StoreController::init()
 {
-    // XXX: add: if (UsingSmp())
-    memStore = new MemStore;
-    memStore->init();
+    if (UsingSmp() && IamWorkerProcess()) {
+        memStore = new MemStore;
+        memStore->init();
+    }
 
     swapDir->init();
 
