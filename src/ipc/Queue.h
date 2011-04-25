@@ -16,6 +16,8 @@
 
 class String;
 
+namespace Ipc {
+
 /// State of the reading end of a queue (i.e., of the code calling pop()).
 /// Multiple queues attached to one reader share this state.
 class QueueReader {
@@ -90,7 +92,7 @@ public:
     class Full {};
     class ItemTooLarge {};
 
-    typedef Ipc::Mem::Owner<Shared> Owner;
+    typedef Mem::Owner<Shared> Owner;
 
     /// initialize shared memory
     static Owner *Init(const String &id, const unsigned int maxItemSize, const int capacity);
@@ -118,7 +120,7 @@ public:
 
 private:
 
-    Ipc::Mem::Pointer<Shared> shared; ///< pointer to shared memory
+    Mem::Pointer<Shared> shared; ///< pointer to shared memory
     QueueReader *reader_; ///< the state of the code popping from this queue
 };
 
@@ -171,7 +173,7 @@ public:
 
     private:
         Vector<OneToOneBiQueue::Owner *> biQueueOwners;
-        Ipc::Mem::Owner<QueueReaders> *const readersOwner;
+        Mem::Owner<QueueReaders> *const readersOwner;
     };
 
     static Owner *Init(const String &id, const int workerCount, const unsigned int maxItemSize, const int capacity);
@@ -196,7 +198,7 @@ public:
     int theLastPopWorker; ///< the ID of the last worker we tried to pop() from
     Vector<OneToOneBiQueue *> biQueues; ///< worker queues indexed by worker ID
 
-    const Ipc::Mem::Pointer<QueueReaders> readers; ///< readers array
+    const Mem::Pointer<QueueReaders> readers; ///< readers array
     QueueReader *const reader; ///< the state of the code popping from all biQueues
 
     enum { WorkerIdOffset = 1 }; ///< worker ID offset, always 1 for now
@@ -275,5 +277,7 @@ FewToOneBiQueue::push(const int workerId, const Value &value)
     assert(validWorkerId(workerId));
     return biQueues[workerId - WorkerIdOffset]->push(value);
 }
+
+} // namespace Ipc
 
 #endif // SQUID_IPC_QUEUE_H
