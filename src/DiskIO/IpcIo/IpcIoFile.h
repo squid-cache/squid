@@ -7,6 +7,7 @@
 #include "DiskIO/IORequestor.h"
 #include "ipc/forward.h"
 #include "ipc/Queue.h"
+#include "ipc/mem/Page.h"
 #include <list>
 #include <map>
 
@@ -15,8 +16,6 @@ namespace IpcIo {
 
 /// what kind of I/O the disker needs to do or have done
 typedef enum { cmdNone, cmdOpen, cmdRead, cmdWrite } Command;
-
-enum { BufCapacity = 32*1024 };
 
 } // namespace IpcIo
 
@@ -29,9 +28,9 @@ public:
 public:
     unsigned int requestId; ///< unique for requestor; matches request w/ response
 
-    char buf[IpcIo::BufCapacity]; // XXX: inefficient
     off_t offset;
     size_t len;
+    Ipc::Mem::PageId page;
 
     IpcIo::Command command; ///< what disker is supposed to do or did
 
@@ -70,7 +69,7 @@ public:
 protected:
     friend class IpcIoPendingRequest;
     void openCompleted(const Ipc::StrandSearchResponse *const response);
-    void readCompleted(ReadRequest *readRequest, const IpcIoMsg *const response);
+    void readCompleted(ReadRequest *readRequest, IpcIoMsg *const response);
     void writeCompleted(WriteRequest *writeRequest, const IpcIoMsg *const response);
 
 private:
@@ -87,7 +86,7 @@ private:
 
     void handleNotification();
     void handleResponses(const char *when);
-    void handleResponse(const IpcIoMsg &ipcIo);
+    void handleResponse(IpcIoMsg &ipcIo);
 
     static void DiskerHandleRequests(const int workerId);
     static void DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo);
@@ -135,7 +134,7 @@ public:
     IpcIoPendingRequest(const IpcIoFile::Pointer &aFile);
 
     /// called when response is received and, with a nil response, on timeouts
-    void completeIo(const IpcIoMsg *const response);
+    void completeIo(IpcIoMsg *const response);
 
 public:
     const IpcIoFile::Pointer file; ///< the file object waiting for the response

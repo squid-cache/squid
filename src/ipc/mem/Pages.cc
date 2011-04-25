@@ -39,7 +39,7 @@ Ipc::Mem::PutPage(PageId &page)
     ThePagePool->put(page);
 }
 
-void *
+char *
 Ipc::Mem::PagePointer(const PageId &page)
 {
     Must(ThePagePool);
