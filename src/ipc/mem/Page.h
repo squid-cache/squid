@@ -19,6 +19,8 @@ class PageId {
 public:
     PageId(): pool(0), number(0) {}
 
+    operator bool() const { return pool && number; }
+
     uint32_t pool; ///< page pool ID within Squid
     // uint32_t segment; ///< memory segment ID within the pool; unused for now
     uint32_t number; ///< page number within the segment

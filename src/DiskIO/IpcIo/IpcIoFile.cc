@@ -14,6 +14,7 @@
 #include "ipc/Port.h"
 #include "ipc/StrandSearch.h"
 #include "ipc/UdsOp.h"
+#include "ipc/mem/Pages.h"
 
 CBDATA_CLASS_INIT(IpcIoFile);
 
@@ -201,7 +202,7 @@ IpcIoFile::read(ReadRequest *readRequest)
 
 void
 IpcIoFile::readCompleted(ReadRequest *readRequest,
-                         const IpcIoMsg *const response)
+                         IpcIoMsg *const response)
 {
     bool ioError = false;
     if (!response) {
@@ -211,9 +212,17 @@ IpcIoFile::readCompleted(ReadRequest *readRequest,
     if (response->xerrno) {
         debugs(79,1, HERE << "error: " << xstrerr(response->xerrno));
         ioError = error_ = true;
-    } else {
-        memcpy(readRequest->buf, response->buf, response->len);
     }
+    else
+    if (!response->page) {
+        debugs(79,1, HERE << "error: run out of shared memory pages");
+        ioError = true;
+    } else {
+        const char *const buf = Ipc::Mem::PagePointer(response->page);
+        memcpy(readRequest->buf, buf, response->len);
+    }
+
+    Ipc::Mem::PutPage(response->page);
 
     const ssize_t rlen = ioError ? -1 : (ssize_t)readRequest->len;
     const int errflag = ioError ? DISK_ERROR : DISK_OK;
@@ -300,24 +309,27 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
     Must(pending->readRequest || pending->writeRequest);
 
     IpcIoMsg ipcIo;
-    ipcIo.requestId = lastRequestId;
-    if (pending->readRequest) {
-        ipcIo.command = IpcIo::cmdRead;
-        ipcIo.offset = pending->readRequest->offset;
-        ipcIo.len = pending->readRequest->len;
-        assert(ipcIo.len <= sizeof(ipcIo.buf));
-        memcpy(ipcIo.buf, pending->readRequest->buf, ipcIo.len); // optimize away
-    } else { // pending->writeRequest
-        ipcIo.command = IpcIo::cmdWrite;
-        ipcIo.offset = pending->writeRequest->offset;
-        ipcIo.len = pending->writeRequest->len;
-        assert(ipcIo.len <= sizeof(ipcIo.buf));
-        memcpy(ipcIo.buf, pending->writeRequest->buf, ipcIo.len); // optimize away
-    }
-
-    debugs(47, 7, HERE << "pushing " << SipcIo(KidIdentifier, ipcIo, diskId) << " at " << workerQueue->pushQueue->size());
-
     try {
+        ipcIo.requestId = lastRequestId;
+        if (pending->readRequest) {
+            ipcIo.command = IpcIo::cmdRead;
+            ipcIo.offset = pending->readRequest->offset;
+            ipcIo.len = pending->readRequest->len;
+        } else { // pending->writeRequest
+            Must(pending->writeRequest->len <= Ipc::Mem::PageSize());
+            if (!Ipc::Mem::GetPage(ipcIo.page)) {
+                ipcIo.len = 0;
+                throw TexcHere("run out of shared memory pages");
+            }
+            ipcIo.command = IpcIo::cmdWrite;
+            ipcIo.offset = pending->writeRequest->offset;
+            ipcIo.len = pending->writeRequest->len;
+            char *const buf = Ipc::Mem::PagePointer(ipcIo.page);
+            memcpy(buf, pending->writeRequest->buf, ipcIo.len); // optimize away
+        }
+
+        debugs(47, 7, HERE << "pushing " << SipcIo(KidIdentifier, ipcIo, diskId) << " at " << workerQueue->pushQueue->size());
+
         if (workerQueue->push(ipcIo))
             Notify(diskId); // must notify disker
         trackPendingRequest(pending);
@@ -325,7 +337,11 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
         debugs(47, DBG_IMPORTANT, "Worker I/O push queue overflow: " <<
                SipcIo(KidIdentifier, ipcIo, diskId)); // TODO: report queue len
         // TODO: grow queue size
-
+ 
+        pending->completeIo(NULL); // XXX: should distinguish this from timeout
+        delete pending;
+    } catch (const TextException &e) {
+        debugs(47, DBG_IMPORTANT, HERE << e.what());
         pending->completeIo(NULL); // XXX: should distinguish this from timeout
         delete pending;
     }
@@ -370,7 +386,7 @@ IpcIoFile::handleResponses(const char *when)
 }
 
 void
-IpcIoFile::handleResponse(const IpcIoMsg &ipcIo)
+IpcIoFile::handleResponse(IpcIoMsg &ipcIo)
 {
     const int requestId = ipcIo.requestId;
     debugs(47, 7, HERE << "popped disker response: " <<
@@ -530,7 +546,7 @@ IpcIoPendingRequest::IpcIoPendingRequest(const IpcIoFile::Pointer &aFile):
 }
 
 void
-IpcIoPendingRequest::completeIo(const IpcIoMsg *const response)
+IpcIoPendingRequest::completeIo(IpcIoMsg *const response)
 {
     if (readRequest)
         file->readCompleted(readRequest, response);
@@ -552,7 +568,14 @@ static int TheFile = -1; ///< db file descriptor
 static void
 diskerRead(IpcIoMsg &ipcIo)
 {
-    const ssize_t read = pread(TheFile, ipcIo.buf, ipcIo.len, ipcIo.offset);
+    if (!Ipc::Mem::GetPage(ipcIo.page)) {
+        ipcIo.len = 0;
+        debugs(47,5, HERE << "run out of shared memory pages");
+        return;
+    }
+
+    char *const buf = Ipc::Mem::PagePointer(ipcIo.page);
+    const ssize_t read = pread(TheFile, buf, min(ipcIo.len, Ipc::Mem::PageSize()), ipcIo.offset);
     statCounter.syscalls.disk.reads++;
     fd_bytes(TheFile, read, FD_READ);
 
@@ -573,7 +596,8 @@ diskerRead(IpcIoMsg &ipcIo)
 static void
 diskerWrite(IpcIoMsg &ipcIo)
 {
-    const ssize_t wrote = pwrite(TheFile, ipcIo.buf, ipcIo.len, ipcIo.offset);
+    const char *const buf = Ipc::Mem::PagePointer(ipcIo.page);
+    const ssize_t wrote = pwrite(TheFile, buf, min(ipcIo.len, Ipc::Mem::PageSize()), ipcIo.offset);
     statCounter.syscalls.disk.writes++;
     fd_bytes(TheFile, wrote, FD_WRITE);
 
@@ -589,6 +613,8 @@ diskerWrite(IpcIoMsg &ipcIo)
         debugs(47,5, HERE << "disker" << KidIdentifier << " write error: " <<
                ipcIo.xerrno);
     }
+
+    Ipc::Mem::PutPage(ipcIo.page);
 }
 
 void

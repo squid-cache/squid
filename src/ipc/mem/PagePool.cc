@@ -30,7 +30,7 @@ Ipc::Mem::PagePool::PagePool(const char *const id):
     theBuf = reinterpret_cast<char *>(pageIndex.getRaw()) + pagesDataOffset;
 }
 
-void *
+char *
 Ipc::Mem::PagePool::pagePointer(const PageId &page)
 {
     Must(pageIndex->pageIdIsValid(page));

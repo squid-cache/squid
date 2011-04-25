@@ -35,6 +35,8 @@ Ipc::Mem::PageStack::PageStack(const uint32_t aPoolId, const unsigned int aCapac
 bool
 Ipc::Mem::PageStack::pop(PageId &page)
 {
+    Must(!page);
+
     // we may fail to dequeue, but be conservative to prevent long searches
     --theSize;
 
@@ -68,6 +70,9 @@ Ipc::Mem::PageStack::pop(PageId &page)
 void
 Ipc::Mem::PageStack::push(PageId &page)
 {
+    if (!page)
+        return;
+
     Must(pageIdIsValid(page));
     // find a Writable slot, starting with theFirstWritable and going right
     while (theSize < theCapacity) {
