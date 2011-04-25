@@ -92,8 +92,8 @@ private:
     static void DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo);
 
 private:
-    typedef FewToOneBiQueue DiskerQueue;
-    typedef OneToOneBiQueue WorkerQueue;
+    typedef Ipc::FewToOneBiQueue DiskerQueue;
+    typedef Ipc::OneToOneBiQueue WorkerQueue;
 
     const String dbName; ///< the name of the file we are managing
     int diskId; ///< the process ID of the disker we talk to
