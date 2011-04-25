@@ -9,8 +9,10 @@
 #include "Array.h"
 #include "base/InstanceId.h"
 #include "ipc/AtomicWord.h"
-#include "ipc/mem/Segment.h"
+#include "ipc/mem/Pointer.h"
 #include "util.h"
+
+#include <memory>
 
 class String;
 
@@ -45,6 +47,16 @@ public:
     const InstanceId<QueueReader> id;
 };
 
+/// shared array of QueueReaders
+class QueueReaders {
+public:
+    QueueReaders(const int aCapacity);
+    size_t sharedMemorySize() const;
+    static size_t SharedMemorySize(const int capacity);
+
+    const int theCapacity; /// number of readers
+    QueueReader theReaders[]; /// readers
+};
 
 /**
  * Lockless fixed-capacity queue for a single writer and a single reader.
@@ -57,12 +69,32 @@ public:
  * different value). We can add support for blocked writers if needed.
  */
 class OneToOneUniQueue {
+private:
+    struct Shared {
+        Shared(const unsigned int aMaxItemSize, const int aCapacity);
+        size_t sharedMemorySize() const;
+        static size_t SharedMemorySize(const unsigned int maxItemSize, const int capacity);
+
+        unsigned int theIn; ///< input index, used only in push()
+        unsigned int theOut; ///< output index, used only in pop()
+
+        AtomicWord theSize; ///< number of items in the queue
+        const unsigned int theMaxItemSize; ///< maximum item size
+        const int theCapacity; ///< maximum number of items, i.e. theBuffer size
+
+        char theBuffer[];
+    };
+
 public:
     // pop() and push() exceptions; TODO: use TextException instead
     class Full {};
     class ItemTooLarge {};
 
-    OneToOneUniQueue(const String &id, const unsigned int maxItemSize, const int capacity);
+    typedef Ipc::Mem::Owner<Shared> Owner;
+
+    /// initialize shared memory
+    static Owner *Init(const String &id, const unsigned int maxItemSize, const int capacity);
+
     OneToOneUniQueue(const String &id);
 
     unsigned int maxItemSize() const { return shared->theMaxItemSize; }
@@ -85,33 +117,27 @@ public:
     void reader(QueueReader *aReader);
 
 private:
-    struct Shared {
-        Shared(const unsigned int aMaxItemSize, const int aCapacity);
 
-        unsigned int theIn; ///< input index, used only in push()
-        unsigned int theOut; ///< output index, used only in pop()
-
-        AtomicWord theSize; ///< number of items in the queue
-        const unsigned int theMaxItemSize; ///< maximum item size
-        const int theCapacity; ///< maximum number of items, i.e. theBuffer size
-
-        char theBuffer[];
-    };
-
-    Ipc::Mem::Segment shm; ///< shared memory segment
-    Shared *shared; ///< pointer to shared memory
+    Ipc::Mem::Pointer<Shared> shared; ///< pointer to shared memory
     QueueReader *reader_; ///< the state of the code popping from this queue
 };
 
 /// Lockless fixed-capacity bidirectional queue for two processes.
 class OneToOneBiQueue {
+private:
+    typedef std::auto_ptr<OneToOneUniQueue::Owner> UniQueueOwner;
+
 public:
     typedef OneToOneUniQueue::Full Full;
     typedef OneToOneUniQueue::ItemTooLarge ItemTooLarge;
 
-    /// Create a new shared queue.
-    OneToOneBiQueue(const String &id, const unsigned int maxItemSize, const int capacity);
-    OneToOneBiQueue(const String &id); ///< Attach to existing shared queue.
+    typedef std::pair<UniQueueOwner, UniQueueOwner> Owner;
+
+    /// initialize shared memory
+    static Owner *Init(const String &id, const unsigned int maxItemSize, const int capacity);
+
+    enum Side { Side1 = 1, Side2 = 2 };
+    OneToOneBiQueue(const String &id, const Side side);
 
     void readers(QueueReader *r1, QueueReader *r2);
     void clearReaderSignal();
@@ -121,8 +147,8 @@ public:
     template<class Value> bool push(const Value &value) { return pushQueue->push(value); }
 
 //private:
-    OneToOneUniQueue *const popQueue; ///< queue to pop from for this process
-    OneToOneUniQueue *const pushQueue; ///< queue to push to for this process
+    std::auto_ptr<OneToOneUniQueue> popQueue; ///< queue to pop from for this process
+    std::auto_ptr<OneToOneUniQueue> pushQueue; ///< queue to push to for this process
 };
 
 /**
@@ -138,12 +164,24 @@ public:
     typedef OneToOneBiQueue::Full Full;
     typedef OneToOneBiQueue::ItemTooLarge ItemTooLarge;
 
-    FewToOneBiQueue(const String &id, const int aWorkerCount, const unsigned int maxItemSize, const int capacity);
+    class Owner {
+    public:
+        Owner(const String &id, const int workerCount, const unsigned int maxItemSize, const int capacity);
+        ~Owner();
+
+    private:
+        Vector<OneToOneBiQueue::Owner *> biQueueOwners;
+        Ipc::Mem::Owner<QueueReaders> *const readersOwner;
+    };
+
+    static Owner *Init(const String &id, const int workerCount, const unsigned int maxItemSize, const int capacity);
+
+    FewToOneBiQueue(const String &id);
     static OneToOneBiQueue *Attach(const String &id, const int workerId);
     ~FewToOneBiQueue();
 
     bool validWorkerId(const int workerId) const;
-    int workerCount() const { return theWorkerCount; }
+    int workerCount() const { return readers->theCapacity - 1; }
 
     /// clears the reader notification received by the disker from worker
     void clearReaderSignal(int workerId);
@@ -157,10 +195,9 @@ public:
 //private: XXX: make private by moving pop/push debugging into pop/push
     int theLastPopWorker; ///< the ID of the last worker we tried to pop() from
     Vector<OneToOneBiQueue *> biQueues; ///< worker queues indexed by worker ID
-    const int theWorkerCount; ///< the total number of workers
 
-    Ipc::Mem::Segment shm; ///< shared memory segment to store the reader
-    QueueReader *reader; ///< the state of the code popping from all biQueues
+    const Ipc::Mem::Pointer<QueueReaders> readers; ///< readers array
+    QueueReader *const reader; ///< the state of the code popping from all biQueues
 
     enum { WorkerIdOffset = 1 }; ///< worker ID offset, always 1 for now
 };
@@ -221,8 +258,8 @@ bool
 FewToOneBiQueue::pop(int &workerId, Value &value)
 {
     // iterate all workers, starting after the one we visited last
-    for (int i = 0; i < theWorkerCount; ++i) {
-        theLastPopWorker = (theLastPopWorker + 1) % theWorkerCount;
+    for (int i = 0; i < workerCount(); ++i) {
+        theLastPopWorker = (theLastPopWorker + 1) % workerCount();
         if (biQueues[theLastPopWorker]->pop(value)) {
             workerId = theLastPopWorker + WorkerIdOffset;
             return true;

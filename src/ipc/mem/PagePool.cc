@@ -11,91 +11,28 @@
 #include "ipc/mem/PagePool.h"
 
 
-static String
-PageIndexId(String id)
-{
-    id.append("-index");
-    return id;
-}
-
-
 // Ipc::Mem::PagePool
 
-Ipc::Mem::PagePool::PagePool(const String &id, const unsigned int capacity, const size_t pageSize):
-    pageIndex(PageIndexId(id), capacity),
-    shm(id.termedBuf())
+Ipc::Mem::PagePool::Owner *
+Ipc::Mem::PagePool::Init(const char *const id, const unsigned int capacity, const size_t pageSize)
 {
-    const off_t sharedSize = Shared::MemSize(capacity, pageSize);
-    shm.create(sharedSize);
-    assert(shm.mem());
-    shared = new (shm.reserve(sharedSize)) Shared(capacity, pageSize);
+    static uint32_t LastPagePoolId = 0;
+    if (++LastPagePoolId == 0)
+        ++LastPagePoolId; // skip zero pool id
+    return shm_new(PageStack)(id, LastPagePoolId, capacity, pageSize);
 }
 
-Ipc::Mem::PagePool::PagePool(const String &id):
-    pageIndex(PageIndexId(id)), shm(id.termedBuf())
+Ipc::Mem::PagePool::PagePool(const char *const id):
+    pageIndex(shm_old(PageStack)(id))
 {
-    shm.open();
-    shared = reinterpret_cast<Shared *>(shm.mem());
-    assert(shared);
-    const off_t sharedSize =
-        Shared::MemSize(shared->theCapacity, shared->thePageSize);
-    assert(shared == reinterpret_cast<Shared *>(shm.reserve(sharedSize)));
-}
-
-void
-Ipc::Mem::PagePool::Unlink(const String &id)
-{
-    PageStack::Unlink(PageIndexId(id));
-    Segment::Unlink(id.termedBuf());
-}
-
-bool
-Ipc::Mem::PagePool::get(PageId &page)
-{
-    if (pageIndex.pop(page.number)) {
-        page.pool = shared->theId;
-        return true;
-    }
-    return false;
-}
-
-void
-Ipc::Mem::PagePool::put(PageId &page)
-{
-    Must(pageIdIsValid(page));
-    pageIndex.push(page.number);
-    page = PageId();
+    const size_t pagesDataOffset =
+        pageIndex->sharedMemorySize() - capacity() * pageSize();
+    theBuf = reinterpret_cast<char *>(pageIndex.getRaw()) + pagesDataOffset;
 }
 
 void *
 Ipc::Mem::PagePool::pagePointer(const PageId &page)
 {
-    Must(pageIdIsValid(page));
-    return shared->theBuf + shared->thePageSize * (page.number - 1);
-}
-
-bool
-Ipc::Mem::PagePool::pageIdIsValid(const PageId &page) const
-{
-    return page.pool == shared->theId &&
-        0 < page.number && page.number <= shared->theCapacity;
-}
-
-
-// Ipc::Mem::PagePool::Shared
-
-static unsigned int LastPagePoolId = 0;
-
-Ipc::Mem::PagePool::Shared::Shared(const unsigned int aCapacity, size_t aPageSize):
-    theId(++LastPagePoolId), theCapacity(aCapacity), thePageSize(aPageSize)
-{
-    if (LastPagePoolId + 1 == 0)
-        ++LastPagePoolId; // skip zero pool id
-}
-
-off_t
-Ipc::Mem::PagePool::Shared::MemSize(const unsigned int capacity, const size_t pageSize)
-{
-    return static_cast<off_t>(sizeof(Shared)) +
-        static_cast<off_t>(pageSize) * capacity;
+    Must(pageIndex->pageIdIsValid(page));
+    return theBuf + pageSize() * (page.number - 1);
 }

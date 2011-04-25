@@ -9,34 +9,28 @@
 #include "Store.h"
 #include "ipc/StoreMap.h"
 
-Ipc::StoreMap::StoreMap(const char *const aPath, const int limit,
-    size_t sharedSizeExtra):
-    cleaner(NULL), path(aPath), shm(aPath), shared(NULL)
+Ipc::StoreMap::Owner *
+Ipc::StoreMap::Init(const char *const path, const int limit, const size_t extrasSize)
 {
     assert(limit > 0); // we should not be created otherwise
-    const size_t sharedSize = Shared::MemSize(limit);
-    shm.create(sharedSize + sharedSizeExtra);
-    shared = new (shm.reserve(sharedSize)) Shared(limit);
+    assert(extrasSize >= 0);
+    Owner *const owner = shm_new(Shared)(path, limit, extrasSize);
     debugs(54, 5, HERE << "new map [" << path << "] created: " << limit);
+    return owner;
 }
 
-Ipc::StoreMap::StoreMap(const char *const aPath):
-    cleaner(NULL), path(aPath), shm(aPath), shared(NULL)
+Ipc::StoreMap::Owner *
+Ipc::StoreMap::Init(const char *const path, const int limit)
 {
-    shm.open();
-    assert(shm.mem());
-    shared = reinterpret_cast<Shared *>(shm.mem());
+    return Init(path, limit, 0);
+}
+
+Ipc::StoreMap::StoreMap(const char *const aPath): cleaner(NULL), path(aPath),
+    shared(shm_old(Shared)(aPath))
+{
     assert(shared->limit > 0); // we should not be created otherwise
-    // now that the limit is checked, check that nobody used our segment chunk
-    const size_t sharedSize = Shared::MemSize(shared->limit);
-    assert(shared == reinterpret_cast<Shared *>(shm.reserve(sharedSize)));
-    debugs(54, 5, HERE << "attached map [" << path << "] created: " << shared->limit);
-}
-
-void
-Ipc::StoreMap::Unlink(const char *const path)
-{
-    Mem::Segment::Unlink(path);
+    debugs(54, 5, HERE << "attached map [" << path << "] created: " <<
+           shared->limit);
 }
 
 Ipc::StoreMap::Slot *
@@ -312,13 +306,20 @@ Ipc::StoreMapSlot::set(const StoreEntry &from)
 
 /* Ipc::StoreMap::Shared */
 
-Ipc::StoreMap::Shared::Shared(const int aLimit): limit(aLimit), count(0)
+Ipc::StoreMap::Shared::Shared(const int aLimit, const size_t anExtrasSize):
+    limit(aLimit), extrasSize(anExtrasSize), count(0)
 {
 }
 
 size_t
-Ipc::StoreMap::Shared::MemSize(int limit)
+Ipc::StoreMap::Shared::sharedMemorySize() const
 {
-    return sizeof(Shared) + limit * sizeof(Slot);
+    return SharedMemorySize(limit, extrasSize);
+}
+
+size_t
+Ipc::StoreMap::Shared::SharedMemorySize(const int limit, const size_t extrasSize)
+{
+    return sizeof(Shared) + limit * (sizeof(Slot) + extrasSize);
 }
 

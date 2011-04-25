@@ -3,7 +3,8 @@
 
 #include "SwapDir.h"
 #include "DiskIO/IORequestor.h"
-#include "fs/rock/RockDirMap.h"
+#include "fs/rock/RockFile.h"
+#include "ipc/StoreMap.h"
 
 class DiskIOStrategy;
 class DiskFile;
@@ -74,8 +75,11 @@ protected:
     const char *filePath; ///< location of cache storage file inside path/
 
 private:
+    typedef Ipc::StoreMapWithExtras<DbCellHeader> DirMap;
+
     DiskIOStrategy *io;
     RefCount<DiskFile> theFile; ///< cache storage for this cache_dir
+    DirMap::Owner *mapOwner;
     DirMap *map;
 
     static const int64_t HeaderSize; ///< on-disk db header size

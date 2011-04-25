@@ -18,17 +18,6 @@ static const char *ShmLabel = "cache_mem";
 
 // XXX: support storage using more than one page per entry
 
-void
-MemStore::Init()
-{
-    const int64_t entryLimit = EntryLimit();
-    if (entryLimit <= 0)
-        return; // no memory cache configured or a misconfiguration
-
-    MemStoreMap *map = new MemStoreMap(ShmLabel, entryLimit);
-    delete map; // we just wanted to initialize shared memory segments
-}
-
 MemStore::MemStore(): map(NULL), theCurrentSize(0)
 {
 }
@@ -363,8 +352,12 @@ class MemStoreRr: public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
+    MemStoreRr(): owner(NULL) {}
     virtual void run(const RunnerRegistry &);
     virtual ~MemStoreRr();
+
+private:
+    MemStoreMap::Owner *owner;
 };
 
 RunnerRegistrationEntry(rrAfterConfig, MemStoreRr);
@@ -375,15 +368,16 @@ void MemStoreRr::run(const RunnerRegistry &)
     if (!UsingSmp())
         return;
 
-    if (IamMasterProcess())
-        MemStore::Init();
+    if (IamMasterProcess()) {
+        Must(!owner);
+        const int64_t entryLimit = MemStore::EntryLimit();
+        if (entryLimit <= 0)
+            return; // no memory cache configured or a misconfiguration
+        owner = MemStoreMap::Init(ShmLabel, entryLimit);
+    }
 }
 
 MemStoreRr::~MemStoreRr()
 {
-    if (!UsingSmp())
-        return;
-
-    if (IamMasterProcess())
-        MemStoreMap::Unlink(ShmLabel);
+    delete owner;
 }

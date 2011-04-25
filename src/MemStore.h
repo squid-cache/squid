@@ -5,8 +5,16 @@
 #ifndef SQUID_MEMSTORE_H
 #define SQUID_MEMSTORE_H
 
+#include "ipc/mem/Page.h"
+#include "ipc/StoreMap.h"
 #include "Store.h"
-#include "MemStoreMap.h"
+
+// StoreEntry restoration info not already stored by Ipc::StoreMap
+struct MemStoreMapExtras {
+    Ipc::Mem::PageId page; ///< shared memory page with the entry content
+    int64_t storedSize; ///< total size of the stored entry content
+};
+typedef Ipc::StoreMapWithExtras<MemStoreMapExtras> MemStoreMap;
 
 /// Stores HTTP entities in RAM. Current implementation uses shared memory.
 /// Unlike a disk store (SwapDir), operations are synchronous (and fast).
@@ -35,8 +43,7 @@ public:
     virtual void maintain();
     virtual void updateSize(int64_t size, int sign);
 
-    /// initializes shared memory segments before they are used by workers
-    static void Init();
+    static int64_t EntryLimit();
 
 protected:
     bool willFit(int64_t needed);
@@ -47,8 +54,6 @@ protected:
 
     // Ipc::StoreMapCleaner API
     virtual void cleanReadable(const sfileno fileno);
-
-    static int64_t EntryLimit();
 
 private:
     MemStoreMap *map; ///< index of mem-cached entries
