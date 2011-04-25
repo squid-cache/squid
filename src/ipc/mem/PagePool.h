@@ -34,7 +34,7 @@ public:
     /// makes identified page available as a free page to future get() callers
     void put(PageId &page) { return pageIndex->push(page); }
     /// converts page handler into a temporary writeable shared memory pointer
-    void *pagePointer(const PageId &page);
+    char *pagePointer(const PageId &page);
 
 private:
     Ipc::Mem::Pointer<PageStack> pageIndex; ///< free pages index

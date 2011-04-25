@@ -21,7 +21,7 @@ bool GetPage(PageId &page);
 void PutPage(PageId &page);
 
 /// converts page handler into a temporary writeable shared memory pointer
-void *PagePointer(const PageId &page);
+char *PagePointer(const PageId &page);
 
 
 /* Limits and statistics */
