@@ -2,7 +2,7 @@
 #define SQUID_IPC_STORE_MAP_H
 
 #include "ipc/ReadWriteLock.h"
-#include "ipc/mem/Segment.h"
+#include "ipc/mem/Pointer.h"
 #include "typedefs.h"
 
 namespace Ipc {
@@ -53,9 +53,26 @@ class StoreMap
 public:
     typedef StoreMapSlot Slot;
 
-    StoreMap(const char *const aPath, const int limit, size_t sharedSizeExtra); ///< create a new shared StoreMap
-    explicit StoreMap(const char *const aPath); ///< open an existing shared StoreMap
-    static void Unlink(const char *const path); ///< unlink shared memory segment
+private:
+    struct Shared
+    {
+        Shared(const int aLimit, const size_t anExtrasSize);
+        size_t sharedMemorySize() const;
+        static size_t SharedMemorySize(const int limit, const size_t anExtrasSize);
+
+        const int limit; ///< maximum number of map slots
+        const size_t extrasSize; ///< size of slot extra data
+        AtomicWord count; ///< current number of map slots
+        Slot slots[]; ///< slots storage
+    };
+
+public:
+    typedef Mem::Owner<Shared> Owner;
+
+    /// initialize shared memory
+    static Owner *Init(const char *const path, const int limit);
+
+    StoreMap(const char *const aPath);
 
     /// finds, reservers space for writing a new entry or returns nil
     Slot *openForWriting(const cache_key *const key, sfileno &fileno);
@@ -79,7 +96,7 @@ public:
     void abortIo(const sfileno fileno);
 
     bool full() const; ///< there are no empty slots left
-    bool valid(int n) const; ///< whether n is a valid slot coordinate
+    bool valid(const int n) const; ///< whether n is a valid slot coordinate
     int entryCount() const; ///< number of used slots
     int entryLimit() const; ///< maximum number of slots that can be used
 
@@ -89,21 +106,10 @@ public:
     StoreMapCleaner *cleaner; ///< notified before a readable entry is freed
 
 protected:
-    class Shared {
-    public:
-        static size_t MemSize(int limit);
+    static Owner *Init(const char *const path, const int limit, const size_t extrasSize);
 
-        Shared(const int aLimit);
-
-        const AtomicWord limit; ///< maximum number of map slots
-        AtomicWord count; ///< current number of map slots
-
-        Slot slots[]; ///< slots storage
-    };
-
-protected:
     const String path; ///< cache_dir path, used for logging
-    Ipc::Mem::Segment shm; ///< shared memory segment
+    Mem::Pointer<Shared> shared;
 
 private:
     int slotIndexByKey(const cache_key *const key) const;
@@ -113,9 +119,30 @@ private:
     void abortWriting(const sfileno fileno);
     void freeIfNeeded(Slot &s);
     void freeLocked(Slot &s, bool keepLocked);
-    String sharedMemoryName();
+};
 
-    Shared *shared; ///< pointer to shared memory
+/// StoreMap with extra slot data
+/// Note: ExtrasT must be POD, it is initialized with zeroes, no
+/// constructors or destructors are called
+template <class ExtrasT>
+class StoreMapWithExtras: public StoreMap
+{
+public:
+    typedef ExtrasT Extras;
+
+    /// initialize shared memory
+    static Owner *Init(const char *const path, const int limit);
+
+    StoreMapWithExtras(const char *const path);
+
+    /// write access to the extras; call openForWriting() first!
+    ExtrasT &extras(const sfileno fileno);
+    /// read-only access to the extras; call openForReading() first!
+    const ExtrasT &extras(const sfileno fileno) const;
+
+protected:
+
+    ExtrasT *sharedExtras; ///< pointer to extras in shared memory
 };
 
 /// API for adjusting external state when dirty map slot is being freed
@@ -127,6 +154,40 @@ public:
     /// adjust slot-linked state before a locked Readable slot is erased
     virtual void cleanReadable(const sfileno fileno) = 0;
 };
+
+// StoreMapWithExtras implementation
+
+template <class ExtrasT>
+StoreMap::Owner *
+StoreMapWithExtras<ExtrasT>::Init(const char *const path, const int limit)
+{
+    return StoreMap::Init(path, limit, sizeof(Extras));
+}
+
+template <class ExtrasT>
+StoreMapWithExtras<ExtrasT>::StoreMapWithExtras(const char *const path):
+    StoreMap(path)
+{
+    const size_t sharedSizeWithoutExtras =
+        Shared::SharedMemorySize(entryLimit(), 0);
+    sharedExtras = reinterpret_cast<Extras *>(reinterpret_cast<char *>(shared.getRaw()) + sharedSizeWithoutExtras);
+}
+
+template <class ExtrasT>
+ExtrasT &
+StoreMapWithExtras<ExtrasT>::extras(const sfileno fileno)
+{
+    return const_cast<ExtrasT &>(const_cast<const StoreMapWithExtras *>(this)->extras(fileno));
+}
+
+template <class ExtrasT>
+const ExtrasT &
+StoreMapWithExtras<ExtrasT>::extras(const sfileno fileno) const
+{
+    assert(sharedExtras);
+    assert(valid(fileno));
+    return sharedExtras[fileno];
+}
 
 
 } // namespace Ipc

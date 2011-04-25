@@ -20,13 +20,15 @@
 // must be divisible by 1024 due to cur_size and max_size KB madness
 const int64_t Rock::SwapDir::HeaderSize = 16*1024;
 
-Rock::SwapDir::SwapDir(): ::SwapDir("rock"), filePath(NULL), io(NULL), map(NULL)
+Rock::SwapDir::SwapDir(): ::SwapDir("rock"), filePath(NULL), io(NULL),
+    mapOwner(NULL), map(NULL)
 {
 }
 
 Rock::SwapDir::~SwapDir()
 {
     delete io;
+    delete mapOwner;
     delete map;
     safe_free(filePath);
 }
@@ -199,7 +201,9 @@ Rock::SwapDir::init()
         const int64_t eLimitLo = 0; // dynamic shrinking unsupported
         const int64_t eWanted = (maximumSize() - HeaderSize)/max_objsize;
         const int64_t eAllowed = min(max(eLimitLo, eWanted), eLimitHi);
-        map = new DirMap(path, eAllowed);
+        Must(!mapOwner);
+        mapOwner = DirMap::Init(path, eAllowed);
+        map = new DirMap(path);
     }
 
     const char *ioModule = UsingSmp() ? "IpcIo" : "Blocking";
@@ -293,8 +297,7 @@ Rock::SwapDir::validateOptions()
     assert(diskOffsetLimit() <= maximumSize());
 
     // warn if maximum db size is not reachable due to sfileno limit
-    if (map->entryLimit() == map->AbsoluteEntryLimit() &&
-        totalWaste > roundingWasteMx) {
+    if (map->entryLimit() == eLimitHi && totalWaste > roundingWasteMx) {
         debugs(47, 0, "Rock store cache_dir[" << index << "]:");
         debugs(47, 0, "\tmaximum number of entries: " << map->entryLimit());
         debugs(47, 0, "\tmaximum entry size: " << max_objsize << " bytes");
@@ -325,7 +328,7 @@ Rock::SwapDir::addEntry(const int fileno, const DbCellHeader &header, const Stor
     if (Ipc::StoreMapSlot *slot = map->openForWriting(reinterpret_cast<const cache_key *>(from.key), newLocation)) {
         if (fileno == newLocation) {
             slot->set(from);
-            map->header(fileno) = header;
+            map->extras(fileno) = header;
             // core will not updateSize: we do not add the entry to store_table
             updateSize(from.swap_file_sz, +1);
         } // else some other, newer entry got into our cell
@@ -383,7 +386,7 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
     }
     e.swap_file_sz = header.payloadSize; // and will be copied to the map
     slot->set(e);
-    map->header(fileno) = header;
+    map->extras(fileno) = header;
 
     // XXX: We rely on our caller, storeSwapOutStart(), to set e.fileno.
     // If that does not happen, the entry will not decrement the read level!
@@ -446,7 +449,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
 
     sio->swap_dirn = index;
     sio->swap_filen = e.swap_filen;
-    sio->payloadEnd = sizeof(DbCellHeader) + map->header(e.swap_filen).payloadSize;
+    sio->payloadEnd = sizeof(DbCellHeader) + map->extras(e.swap_filen).payloadSize;
     assert(sio->payloadEnd <= max_objsize); // the payload fits the slot
 
     debugs(47,5, HERE << "dir " << index << " has old fileno: " <<

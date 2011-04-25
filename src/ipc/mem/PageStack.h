@@ -7,11 +7,12 @@
 #define SQUID_IPC_MEM_PAGE_STACK_H
 
 #include "ipc/AtomicWord.h"
-#include "ipc/mem/Segment.h"
 
 namespace Ipc {
 
 namespace Mem {
+
+class PageId;
 
 /// Atomic container of "free" page numbers inside a single SharedMemory space.
 /// Assumptions: all page numbers are unique, positive, have an known maximum,
@@ -20,50 +21,45 @@ class PageStack {
 public:
     typedef uint32_t Value; ///< stack item type (a free page number)
 
-    /// creates a new shared stack that can hold up to capacity items
-    PageStack(const String &id, const unsigned int capacity);
-    /// attaches to the identified shared stack
-    PageStack(const String &id);
-    /// unlinks shared memory segment
-    static void Unlink(const String &id);
+    PageStack(const uint32_t aPoolId, const unsigned int aCapacity, const size_t aPageSize);
 
+    unsigned int capacity() const { return theCapacity; }
+    size_t pageSize() const { return thePageSize; }
     /// lower bound for the number of free pages
-    unsigned int size() const { return max(0, shared->theSize.get()); }
+    unsigned int size() const { return max(0, theSize.get()); }
 
     /// sets value and returns true unless no free page numbers are found
-    bool pop(Value &value);
+    bool pop(PageId &page);
     /// makes value available as a free page number to future pop() callers
-    void push(const Value value);
+    void push(PageId &page);
+
+    bool pageIdIsValid(const PageId &page) const;
+
+    /// total shared memory size required to share
+    static size_t SharedMemorySize(const uint32_t aPoolId, const unsigned int capacity, const size_t pageSize);
+    size_t sharedMemorySize() const;
 
 private:
     /// stack index and size type (may temporary go negative)
     typedef int Offset;
 
-    struct Shared {
-        Shared(const unsigned int aCapacity);
+    // these help iterate the stack in search of a free spot or a page
+    Offset next(const Offset idx) const { return (idx + 1) % theCapacity; }
+    Offset prev(const Offset idx) const { return (theCapacity + idx - 1) % theCapacity; }
 
-        /// total shared memory size required to share
-        static size_t MemSize(const unsigned int capacity);
+    const uint32_t thePoolId; ///< pool ID
+    const Offset theCapacity; ///< stack capacity, i.e. theItems size
+    const size_t thePageSize; ///< page size, used to calculate shared memory size
+    /// lower bound for the number of free pages (may get negative!)
+    AtomicWordT<Offset> theSize;
 
-        // these help iterate the stack in search of a free spot or a page
-        Offset next(const Offset idx) const { return (idx + 1) % theCapacity; }
-        Offset prev(const Offset idx) const { return (theCapacity + idx - 1) % theCapacity; }
+    /// last readable item index; just a hint, not a guarantee
+    AtomicWordT<Offset> theLastReadable;
+    /// first writable item index; just a hint, not a guarantee
+    AtomicWordT<Offset> theFirstWritable;
 
-        const Offset theCapacity; ///< stack capacity, i.e. theItems size
-        /// lower bound for the number of free pages (may get negative!)
-        AtomicWordT<Offset> theSize;
-
-        /// last readable item index; just a hint, not a guarantee
-        AtomicWordT<Offset> theLastReadable;
-        /// first writable item index; just a hint, not a guarantee
-        AtomicWordT<Offset> theFirstWritable;
-
-        typedef AtomicWordT<Value> Item;
-        Item theItems[]; ///< page number storage
-    };
-
-    Segment shm; ///< shared memory segment to store metadata (and pages)
-    Shared *shared; ///< our metadata, shared among all stack users
+    typedef AtomicWordT<Value> Item;
+    Item theItems[]; ///< page number storage
 };
 
 } // namespace Mem

@@ -17,6 +17,7 @@
 
 CBDATA_CLASS_INIT(IpcIoFile);
 
+IpcIoFile::DiskerQueue::Owner *IpcIoFile::diskerQueueOwner = NULL;
 IpcIoFile::DiskerQueue *IpcIoFile::diskerQueue = NULL;
 const double IpcIoFile::Timeout = 7; // seconds;  XXX: ALL,9 may require more
 IpcIoFile::IpcIoFileList IpcIoFile::WaitingForOpen;
@@ -66,7 +67,7 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 {
     ioRequestor = callback;
     Must(diskId < 0); // we do not know our disker yet
-    Must(!diskerQueue && !workerQueue);
+    Must(!diskerQueueOwner && !diskerQueue && !workerQueue);
 
     if (IamDiskProcess()) {
         error_ = !DiskerOpen(dbName, flags, mode);
@@ -74,8 +75,9 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
             return;
 
         // XXX: make capacity configurable
-        diskerQueue =
-            new DiskerQueue(dbName, Config.workers, sizeof(IpcIoMsg), 1024);
+        diskerQueueOwner =
+            DiskerQueue::Init(dbName, Config.workers, sizeof(IpcIoMsg), 1024);
+        diskerQueue = new DiskerQueue(dbName);
         diskId = KidIdentifier;
         const bool inserted =
             IpcIoFiles.insert(std::make_pair(diskId, this)).second;
@@ -146,8 +148,12 @@ IpcIoFile::close()
 {
     assert(ioRequestor != NULL);
 
+    delete diskerQueueOwner;
+    diskerQueueOwner = NULL;
     delete diskerQueue;
+    diskerQueue = NULL;
     delete workerQueue;
+    workerQueue = NULL;
 
     if (IamDiskProcess())
         DiskerClose(dbName);

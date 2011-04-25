@@ -20,7 +20,7 @@ public:
     ~Segment();
 
     /// Create a new shared memory segment. Fails if a segment with
-    /// the same name already exists.
+    /// the same name already exists. Unlinks the segment on destruction.
     void create(const off_t aSize);
     void open(); ///< Open an existing shared memory segment.
 
@@ -29,20 +29,25 @@ public:
     void *mem() { return reserve(0); } ///< pointer to the next chunk
     void *reserve(size_t chunkSize); ///< reserve and return the next chunk
 
-    static void Unlink(const char *const id); ///< unlink the segment
 
 private:
     void attach();
     void detach();
+    void unlink(); ///< unlink the segment
     off_t statSize(const char *context) const;
 
     static String GenerateName(const char *id);
+
+    // not implemented
+    Segment(const Segment &);
+    Segment &operator =(const Segment &);
 
     const String theName; ///< shared memory segment file name
     int theFD; ///< shared memory segment file descriptor
     void *theMem; ///< pointer to mmapped shared memory segment
     off_t theSize; ///< shared memory segment size
     off_t theReserved; ///< the total number of reserve()d bytes
+    bool doUnlink; ///< whether the segment should be unlinked on destruction
 };
 
 } // namespace Mem

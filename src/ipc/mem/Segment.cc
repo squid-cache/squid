@@ -18,7 +18,7 @@
 
 Ipc::Mem::Segment::Segment(const char *const id):
     theName(GenerateName(id)), theFD(-1), theMem(NULL),
-    theSize(0), theReserved(0)
+    theSize(0), theReserved(0), doUnlink(false)
 {
 }
 
@@ -28,6 +28,8 @@ Ipc::Mem::Segment::~Segment() {
         if (close(theFD) != 0)
             debugs(54, 5, HERE << "close " << theName << ": " << xstrerror());
     }
+    if (doUnlink)
+        unlink();
 }
 
 void
@@ -52,6 +54,7 @@ Ipc::Mem::Segment::create(const off_t aSize)
 
     theSize = aSize;
     theReserved = 0;
+    doUnlink = true;
 
     debugs(54, 3, HERE << "created " << theName << " segment: " << theSize);
 
@@ -112,6 +115,15 @@ Ipc::Mem::Segment::detach()
     theMem = 0;
 }
 
+void
+Ipc::Mem::Segment::unlink()
+{
+    if (shm_unlink(theName.termedBuf()) != 0)
+        debugs(54, 5, HERE << "shm_unlink(" << theName << "): " << xstrerror());
+    else
+        debugs(54, 3, HERE << "unlinked " << theName << " segment");
+}
+
 void *
 Ipc::Mem::Segment::reserve(size_t chunkSize)
 {
@@ -123,14 +135,6 @@ Ipc::Mem::Segment::reserve(size_t chunkSize)
     void *result = reinterpret_cast<char*>(theMem) + theReserved;
     theReserved += chunkSize;
     return result;
-}
-
-void
-Ipc::Mem::Segment::Unlink(const char *const id)
-{
-    const String path = GenerateName(id);
-    if (shm_unlink(path.termedBuf()) != 0)
-        debugs(54, 5, HERE << "shm_unlink(" << path << "): " << xstrerror());
 }
 
 /// determines the size of the underlying "file"

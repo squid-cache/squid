@@ -8,34 +8,21 @@
 #include "config.h"
 
 #include "base/TextException.h"
+#include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
 
 /// used to mark a stack slot available for storing free page offsets
 const Ipc::Mem::PageStack::Value Writable = 0;
 
 
-Ipc::Mem::PageStack::PageStack(const String &id, const unsigned int capacity):
-    shm(id.termedBuf())
+Ipc::Mem::PageStack::PageStack(const uint32_t aPoolId, const unsigned int aCapacity, const size_t aPageSize):
+    thePoolId(aPoolId), theCapacity(aCapacity), thePageSize(aPageSize),
+    theSize(theCapacity),
+    theLastReadable(prev(theSize)), theFirstWritable(next(theLastReadable))
 {
-    const size_t sharedSize = Shared::MemSize(capacity);
-    shm.create(sharedSize);
-    assert(shm.mem());
-    shared = new (shm.reserve(sharedSize)) Shared(capacity);
-}
-
-Ipc::Mem::PageStack::PageStack(const String &id): shm(id.termedBuf())
-{
-    shm.open();
-    shared = reinterpret_cast<Shared *>(shm.mem());
-    assert(shared);
-    const off_t sharedSize = Shared::MemSize(shared->theCapacity);
-    assert(shared == reinterpret_cast<Shared *>(shm.reserve(sharedSize)));
-}
-
-void
-Ipc::Mem::PageStack::Unlink(const String &id)
-{
-    Segment::Unlink(id.termedBuf());
+    // initially, all pages are free
+    for (Offset i = 0; i < theSize; ++i)
+        theItems[i] = i + 1; // skip page number zero to keep numbers positive
 }
 
 /*
@@ -46,56 +33,58 @@ Ipc::Mem::PageStack::Unlink(const String &id)
  * approach is better? Same for push().
  */
 bool
-Ipc::Mem::PageStack::pop(Value &value)
+Ipc::Mem::PageStack::pop(PageId &page)
 {
     // we may fail to dequeue, but be conservative to prevent long searches
-    --shared->theSize;
+    --theSize;
 
     // find a Readable slot, starting with theLastReadable and going left
-    while (shared->theSize >= 0) {
-        const Offset idx = shared->theLastReadable;
+    while (theSize >= 0) {
+        const Offset idx = theLastReadable;
         // mark the slot at ids Writable while extracting its current value
-        value = shared->theItems[idx].fetchAndAnd(0); // works if Writable is 0
+        const Value value = theItems[idx].fetchAndAnd(0); // works if Writable is 0
         const bool popped = value != Writable;
         // theItems[idx] is probably not Readable [any more]
 
         // Whether we popped a Readable value or not, we should try going left
         // to maintain the index (and make progress).
         // We may fail if others already updated the index, but that is OK.
-        shared->theLastReadable.swap_if(idx, shared->prev(idx)); // may fail or lie
+        theLastReadable.swap_if(idx, prev(idx)); // may fail or lie
 
         if (popped) {
             // the slot we emptied may already be filled, but that is OK
-            shared->theFirstWritable = idx; // may lie
+            theFirstWritable = idx; // may lie
+            page.pool = thePoolId;
+            page.number = value;
             return true;
         }
         // TODO: report suspiciously long loops
     }
 
-    ++shared->theSize;
+    ++theSize;
     return false;
 }
 
 void
-Ipc::Mem::PageStack::push(const Value value)
+Ipc::Mem::PageStack::push(PageId &page)
 {
-    Must(value != Writable);
-    Must(static_cast<Offset>(value) <= shared->theCapacity);
+    Must(pageIdIsValid(page));
     // find a Writable slot, starting with theFirstWritable and going right
-    while (shared->theSize < shared->theCapacity) {
-        const Offset idx = shared->theFirstWritable;
-        const bool pushed = shared->theItems[idx].swap_if(Writable, value);
+    while (theSize < theCapacity) {
+        const Offset idx = theFirstWritable;
+        const bool pushed = theItems[idx].swap_if(Writable, page.number);
         // theItems[idx] is probably not Writable [any more];
 
-        // Whether we pushed the value or not, we should try going right
+        // Whether we pushed the page number or not, we should try going right
         // to maintain the index (and make progress).
         // We may fail if others already updated the index, but that is OK.
-        shared->theFirstWritable.swap_if(idx, shared->next(idx)); // may fail or lie
+        theFirstWritable.swap_if(idx, next(idx)); // may fail or lie
 
         if (pushed) {
             // the enqueued value may already by gone, but that is OK
-            shared->theLastReadable = idx; // may lie
-            ++shared->theSize;
+            theLastReadable = idx; // may lie
+            ++theSize;
+            page = PageId();
             return;
         }
         // TODO: report suspiciously long loops
@@ -103,17 +92,21 @@ Ipc::Mem::PageStack::push(const Value value)
     Must(false); // the number of pages cannot exceed theCapacity
 }
 
-Ipc::Mem::PageStack::Shared::Shared(const unsigned int aCapacity):
-    theCapacity(aCapacity), theSize(theCapacity),
-    theLastReadable(prev(theSize)), theFirstWritable(next(theLastReadable))
+bool
+Ipc::Mem::PageStack::pageIdIsValid(const PageId &page) const
 {
-    // initially, all pages are free
-    for (Offset i = 0; i < theSize; ++i)
-        theItems[i] = i + 1; // skip page number zero to keep numbers positive
+    return page.pool == thePoolId && page.number != Writable &&
+        page.number <= capacity();
 }
 
 size_t
-Ipc::Mem::PageStack::Shared::MemSize(const unsigned int capacity)
+Ipc::Mem::PageStack::sharedMemorySize() const
 {
-    return sizeof(Item) * capacity + sizeof(Shared);
+    return SharedMemorySize(thePoolId, theCapacity, thePageSize);
+}
+
+size_t
+Ipc::Mem::PageStack::SharedMemorySize(const uint32_t, const unsigned int capacity, const size_t pageSize)
+{
+    return sizeof(PageStack) + capacity * (sizeof(Item) + pageSize);
 }
