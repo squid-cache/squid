@@ -68,8 +68,12 @@ class SharedMemPagesRr: public RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
+    SharedMemPagesRr(): owner(NULL) {}
     virtual void run(const RunnerRegistry &);
     virtual ~SharedMemPagesRr();
+
+private:
+    Ipc::Mem::PagePool::Owner *owner;
 };
 
 RunnerRegistrationEntry(rrAfterConfig, SharedMemPagesRr);
@@ -94,13 +98,14 @@ void SharedMemPagesRr::run(const RunnerRegistry &)
         return;
     }
 
-    Must(!ThePagePool);
     if (IamMasterProcess()) {
+        Must(!owner);
         const size_t capacity = Ipc::Mem::Limit() / Ipc::Mem::PageSize();
-        ThePagePool =
-            new Ipc::Mem::PagePool(PagePoolId, capacity, Ipc::Mem::PageSize());
-    } else
-        ThePagePool = new Ipc::Mem::PagePool(PagePoolId);
+        owner = Ipc::Mem::PagePool::Init(PagePoolId, capacity, Ipc::Mem::PageSize());
+    }
+
+    Must(!ThePagePool);
+    ThePagePool = new Ipc::Mem::PagePool(PagePoolId);
 }
 
 SharedMemPagesRr::~SharedMemPagesRr()
@@ -110,6 +115,5 @@ SharedMemPagesRr::~SharedMemPagesRr()
 
     delete ThePagePool;
     ThePagePool = NULL;
-    if (IamMasterProcess())
-        Ipc::Mem::PagePool::Unlink(PagePoolId);
+    delete owner;
 }

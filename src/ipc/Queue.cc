@@ -38,26 +38,40 @@ QueueReader::QueueReader(): popBlocked(1), popSignal(0)
     debugs(54, 7, HERE << "constructed " << id);
 }
 
+/* QueueReaders */
+
+QueueReaders::QueueReaders(const int aCapacity): theCapacity(aCapacity)
+{
+    Must(theCapacity > 0);
+    new (theReaders) QueueReader[theCapacity];
+}
+
+size_t
+QueueReaders::sharedMemorySize() const
+{
+    return SharedMemorySize(theCapacity);
+}
+
+size_t
+QueueReaders::SharedMemorySize(const int capacity)
+{
+    return sizeof(QueueReaders) + sizeof(QueueReader) * capacity;
+}
+
 
 // OneToOneUniQueue
 
-OneToOneUniQueue::OneToOneUniQueue(const String &id, const unsigned int maxItemSize, const int capacity):
-    shm(id.termedBuf()), reader_(NULL)
+OneToOneUniQueue::Owner *
+OneToOneUniQueue::Init(const String &id, const unsigned int maxItemSize, const int capacity)
 {
-    const int sharedSize = Items2Bytes(maxItemSize, capacity);
-    shm.create(sharedSize);
-    shared = new (shm.reserve(sharedSize)) Shared(maxItemSize, capacity);
+    Must(maxItemSize > 0);
+    Must(capacity > 0);
+    return shm_new(Shared)(id.termedBuf(), maxItemSize, capacity);
 }
 
-OneToOneUniQueue::OneToOneUniQueue(const String &id): shm(id.termedBuf()),
-    reader_(NULL)
+OneToOneUniQueue::OneToOneUniQueue(const String &id):
+    shared(shm_old(Shared)(id.termedBuf())), reader_(NULL)
 {
-    shm.open();
-    shared = reinterpret_cast<Shared *>(shm.mem());
-    assert(shared);
-    const int sharedSize =
-        Items2Bytes(shared->theMaxItemSize, shared->theCapacity);
-    assert(shared == reinterpret_cast<Shared *>(shm.reserve(sharedSize)));
 }
 
 void
@@ -82,12 +96,6 @@ OneToOneUniQueue::Items2Bytes(const unsigned int maxItemSize, const int size)
     return sizeof(Shared) + maxItemSize * size;
 }
 
-OneToOneUniQueue::Shared::Shared(const unsigned int aMaxItemSize, const int aCapacity):
-    theIn(0), theOut(0), theSize(0), theMaxItemSize(aMaxItemSize),
-    theCapacity(aCapacity)
-{
-}
-
 QueueReader &
 OneToOneUniQueue::reader()
 {
@@ -95,19 +103,54 @@ OneToOneUniQueue::reader()
     return *reader_;
 }
 
-
-// OneToOneBiQueue
-
-OneToOneBiQueue::OneToOneBiQueue(const String &id, const unsigned int maxItemSize, const int capacity):
-    popQueue(new OneToOneUniQueue(QueueId(id, 1), maxItemSize, capacity)),
-    pushQueue(new OneToOneUniQueue(QueueId(id, 2), maxItemSize, capacity))
+OneToOneUniQueue::Shared::Shared(const unsigned int aMaxItemSize, const int aCapacity):
+    theIn(0), theOut(0), theSize(0), theMaxItemSize(aMaxItemSize),
+    theCapacity(aCapacity)
 {
 }
 
-OneToOneBiQueue::OneToOneBiQueue(const String &id):
-    popQueue(new OneToOneUniQueue(QueueId(id, 2))),
-    pushQueue(new OneToOneUniQueue(QueueId(id, 1)))
+size_t
+OneToOneUniQueue::Shared::sharedMemorySize() const
 {
+    return SharedMemorySize(theMaxItemSize, theCapacity);
+}
+
+size_t
+OneToOneUniQueue::Shared::SharedMemorySize(const unsigned int maxItemSize, const int capacity)
+{
+    return Items2Bytes(maxItemSize, capacity);
+}
+
+
+// OneToOneBiQueue
+
+OneToOneBiQueue::Owner *
+OneToOneBiQueue::Init(const String &id, const unsigned int maxItemSize, const int capacity)
+{
+    UniQueueOwner owner1(OneToOneUniQueue::Init(QueueId(id, Side1), maxItemSize, capacity));
+    UniQueueOwner owner2(OneToOneUniQueue::Init(QueueId(id, Side2), maxItemSize, capacity));
+    Owner *const owner = new Owner;
+    owner->first = owner1;
+    owner->second = owner2;
+    return owner;
+}
+
+OneToOneBiQueue::OneToOneBiQueue(const String &id, const Side side)
+{
+    OneToOneUniQueue *const queue1 = new OneToOneUniQueue(QueueId(id, Side1));
+    OneToOneUniQueue *const queue2 = new OneToOneUniQueue(QueueId(id, Side2));
+    switch (side) {
+    case Side1:
+        popQueue.reset(queue1);
+        pushQueue.reset(queue2);
+        break;
+    case Side2:
+        popQueue.reset(queue2);
+        pushQueue.reset(queue1);
+        break;
+    default:
+        Must(false);
+    }
 }
 
 void
@@ -127,24 +170,25 @@ OneToOneBiQueue::clearReaderSignal()
 
 // FewToOneBiQueue
 
-FewToOneBiQueue::FewToOneBiQueue(const String &id, const int aWorkerCount, const unsigned int maxItemSize, const int capacity):
-    theLastPopWorker(0), theWorkerCount(aWorkerCount),
-    shm(ReaderId(id).termedBuf()),
-    reader(NULL)
+FewToOneBiQueue::Owner *
+FewToOneBiQueue::Init(const String &id, const int workerCount, const unsigned int maxItemSize, const int capacity)
 {
-    // create a new segment for the local and remote queue readers
-    // TODO: all our queues and readers should use a single segment
-    shm.create((theWorkerCount+1)*sizeof(QueueReader));
-    reader = new (shm.reserve(sizeof(QueueReader))) QueueReader;
+    return new Owner(id, workerCount, maxItemSize, capacity);
+}
+
+FewToOneBiQueue::FewToOneBiQueue(const String &id):
+    theLastPopWorker(0),
+    readers(shm_old(QueueReaders)(ReaderId(id).termedBuf())),
+    reader(readers->theReaders)
+{
+    Must(readers->theCapacity > 1);
+
     debugs(54, 7, HERE << "disker " << id << " reader: " << reader->id);
 
-    assert(theWorkerCount >= 0);
-    biQueues.reserve(theWorkerCount);
-    for (int i = 0; i < theWorkerCount; ++i) {
-        OneToOneBiQueue *const biQueue =
-            new OneToOneBiQueue(QueueId(id, i + WorkerIdOffset), maxItemSize, capacity);
-        QueueReader *remoteReader =
-            new (shm.reserve(sizeof(QueueReader))) QueueReader;
+    biQueues.reserve(workerCount());
+    for (int i = 0; i < workerCount(); ++i) {
+        OneToOneBiQueue *const biQueue = new OneToOneBiQueue(QueueId(id, i + WorkerIdOffset), OneToOneBiQueue::Side1);
+        QueueReader *const remoteReader = readers->theReaders + i + 1;
         biQueue->readers(reader, remoteReader);
         biQueues.push_back(biQueue);
     }
@@ -153,34 +197,36 @@ FewToOneBiQueue::FewToOneBiQueue(const String &id, const int aWorkerCount, const
 OneToOneBiQueue *
 FewToOneBiQueue::Attach(const String &id, const int workerId)
 {
-    // XXX: remove this leak. By refcounting Ipc::Mem::Segments? By creating a global FewToOneBiQueue for each worker?
-    Ipc::Mem::Segment *shmPtr = new Ipc::Mem::Segment(ReaderId(id).termedBuf());
-
-    Ipc::Mem::Segment &shm = *shmPtr;
-    shm.open();
-    assert(shm.size() >= static_cast<off_t>((1 + workerId+1 - WorkerIdOffset)*sizeof(QueueReader)));
-    QueueReader *readers = reinterpret_cast<QueueReader*>(shm.mem());
-    QueueReader *remoteReader = &readers[0];
+    Ipc::Mem::Pointer<QueueReaders> readers = shm_old(QueueReaders)(ReaderId(id).termedBuf());
+    Must(workerId >= WorkerIdOffset);
+    Must(workerId < readers->theCapacity - 1 + WorkerIdOffset);
+    QueueReader *const remoteReader = readers->theReaders;
     debugs(54, 7, HERE << "disker " << id << " reader: " << remoteReader->id);
-    QueueReader *localReader = &readers[workerId+1 - WorkerIdOffset];
+    QueueReader *const localReader =
+        readers->theReaders + workerId - WorkerIdOffset + 1;
     debugs(54, 7, HERE << "local " << id << " reader: " << localReader->id);
 
     OneToOneBiQueue *const biQueue =
-        new OneToOneBiQueue(QueueId(id, workerId));
+        new OneToOneBiQueue(QueueId(id, workerId), OneToOneBiQueue::Side2);
     biQueue->readers(localReader, remoteReader);
+
+    // XXX: remove this leak. By refcounting Ipc::Mem::Segments? By creating a global FewToOneBiQueue for each worker?
+    const Ipc::Mem::Pointer<QueueReaders> *const leakingReaders = new Ipc::Mem::Pointer<QueueReaders>(readers);
+    Must(leakingReaders); // silence unused variable warning
+
     return biQueue;
 }
 
 FewToOneBiQueue::~FewToOneBiQueue()
 {
-    for (int i = 0; i < theWorkerCount; ++i)
+    for (int i = 0; i < workerCount(); ++i)
         delete biQueues[i];
 }
 
 bool FewToOneBiQueue::validWorkerId(const int workerId) const
 {
     return WorkerIdOffset <= workerId &&
-        workerId < WorkerIdOffset + theWorkerCount;
+        workerId < WorkerIdOffset + workerCount();
 }
 
 void
@@ -194,5 +240,22 @@ FewToOneBiQueue::clearReaderSignal(int workerId)
     // we got a hint; we could reposition iteration to try popping from the
     // workerId queue first; but it does not seem to help much and might
     // introduce some bias so we do not do that for now:
-    // theLastPopWorker = (workerId + theWorkerCount - 1) % theWorkerCount;
+    // theLastPopWorker = (workerId + workerCount() - 1) % workerCount();
+}
+
+FewToOneBiQueue::Owner::Owner(const String &id, const int workerCount, const unsigned int maxItemSize, const int capacity):
+    readersOwner(shm_new(QueueReaders)(ReaderId(id).termedBuf(), workerCount + 1))
+{
+    biQueueOwners.reserve(workerCount);
+    for (int i = 0; i < workerCount; ++i) {
+        OneToOneBiQueue::Owner *const queueOwner = OneToOneBiQueue::Init(QueueId(id, i + WorkerIdOffset), maxItemSize, capacity);
+        biQueueOwners.push_back(queueOwner);
+    }
+}
+
+FewToOneBiQueue::Owner::~Owner()
+{
+    for (size_t i = 0; i < biQueueOwners.size(); ++i)
+        delete biQueueOwners[i];
+    delete readersOwner;
 }

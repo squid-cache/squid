@@ -31,8 +31,6 @@ libufs_la_SOURCES = \
 librock_la_SOURCES = \
 	rock/RockCommon.cc \
 	rock/RockCommon.h \
-	rock/RockDirMap.cc \
-	rock/RockDirMap.h \
 	rock/RockFile.cc \
 	rock/RockFile.h \
 	rock/RockIoState.cc \

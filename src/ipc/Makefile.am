@@ -53,6 +53,7 @@ libipc_la_SOURCES = \
 	mem/Pages.h \
 	mem/PageStack.cc \
 	mem/PageStack.h \
+	mem/Pointer.h \
 	mem/Segment.cc \
 	mem/Segment.h
 

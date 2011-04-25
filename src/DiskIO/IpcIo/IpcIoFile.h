@@ -98,6 +98,7 @@ private:
 
     const String dbName; ///< the name of the file we are managing
     int diskId; ///< the process ID of the disker we talk to
+    static DiskerQueue::Owner *diskerQueueOwner; ///< IPC queue owner for disker
     static DiskerQueue *diskerQueue; ///< IPC queue for disker
     WorkerQueue *workerQueue; ///< IPC queue for worker
     RefCount<IORequestor> ioRequestor;
