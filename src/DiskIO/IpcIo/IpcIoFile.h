@@ -6,10 +6,14 @@
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/IORequestor.h"
 #include "ipc/forward.h"
-#include "ipc/Queue.h"
 #include "ipc/mem/Page.h"
 #include <list>
 #include <map>
+#include <memory>
+
+namespace Ipc {
+class FewToFewBiQueue;
+} // Ipc
 
 // TODO: expand to all classes
 namespace IpcIo {
@@ -84,22 +88,15 @@ private:
     void checkTimeouts();
     void scheduleTimeoutCheck();
 
-    void handleNotification();
-    void handleResponses(const char *when);
+    static void HandleResponses(const char *const when);
     void handleResponse(IpcIoMsg &ipcIo);
 
-    static void DiskerHandleRequests(const int workerId);
+    static void DiskerHandleRequests();
     static void DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo);
 
 private:
-    typedef Ipc::FewToOneBiQueue DiskerQueue;
-    typedef Ipc::OneToOneBiQueue WorkerQueue;
-
     const String dbName; ///< the name of the file we are managing
     int diskId; ///< the process ID of the disker we talk to
-    static DiskerQueue::Owner *diskerQueueOwner; ///< IPC queue owner for disker
-    static DiskerQueue *diskerQueue; ///< IPC queue for disker
-    WorkerQueue *workerQueue; ///< IPC queue for worker
     RefCount<IORequestor> ioRequestor;
 
     bool error_; ///< whether we have seen at least one I/O error (XXX)
@@ -122,6 +119,9 @@ private:
     ///< maps diskerId to IpcIoFile, cleared in destructor
     typedef std::map<int, IpcIoFile*> IpcIoFilesMap;
     static IpcIoFilesMap IpcIoFiles;
+
+    typedef Ipc::FewToFewBiQueue Queue;
+    static std::auto_ptr<Queue> queue; ///< IPC queue
 
     CBDATA_CLASS2(IpcIoFile);
 };
