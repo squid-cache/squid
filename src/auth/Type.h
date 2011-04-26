@@ -3,6 +3,9 @@
 
 #if USE_AUTH
 
+namespace Auth
+{
+
 typedef enum {
     AUTH_UNKNOWN,               /* default */
     AUTH_BASIC,
@@ -10,9 +13,11 @@ typedef enum {
     AUTH_DIGEST,
     AUTH_NEGOTIATE,
     AUTH_BROKEN                 /* known type, but broken data */
-} AuthType;
+} Type;
 
-extern const char *AuthType_str[];
+extern const char *Type_str[];
+
+}; // namespace Auth
 
 #endif /* USE_AUTH */
 #endif

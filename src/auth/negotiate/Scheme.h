@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -31,37 +30,41 @@
  *
  */
 
-#ifndef SQUID_NTLMSCHEME_H
-#define SQUID_NTLMSCHEME_H
+#ifndef SQUID_AUTH_NEGOTIATE_SCHEME_H
+#define SQUID_AUTH_NEGOTIATE_SCHEME_H
 
 #include "auth/Scheme.h"
-#include "auth/ntlm/auth_ntlm.h"
+#include "auth/negotiate/auth_negotiate.h"
+
+namespace Auth
+{
+namespace Negotiate
+{
 
 /// \ingroup AuthSchemeAPI
 /// \ingroup AuthAPI
-class ntlmScheme : public AuthScheme
+class Scheme : public Auth::Scheme
 {
 
 public:
-    static AuthScheme::Pointer GetInstance();
-    ntlmScheme() {};
-    virtual ~ntlmScheme() {};
+    static Auth::Scheme::Pointer GetInstance();
+    Scheme() {};
+    virtual ~Scheme() {};
 
     /* per scheme */
-    virtual char const *type () const;
-    virtual void done();
-    virtual AuthConfig *createConfig();
+    virtual char const *type() const;
+    virtual void shutdownCleanup();
+    virtual Auth::Config *createConfig();
 
     /* Not implemented */
-    ntlmScheme (ntlmScheme const &);
-    ntlmScheme &operator=(ntlmScheme const &);
+    Scheme (Scheme const &);
+    Scheme &operator=(Scheme const &);
 
 private:
-    /**
-     * Main instance of this authentication Scheme.
-     * NULL when the scheme is not being used.
-     */
-    static AuthScheme::Pointer _instance;
+    static Auth::Scheme::Pointer _instance;
 };
 
-#endif /* SQUID_ntlmSCHEME_H */
+} // namespace Negotiate
+} // namespace Auth
+
+#endif /* SQUID_AUTH_NEGOTIATE_SCHEME_H */

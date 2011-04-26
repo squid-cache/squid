@@ -1,4 +1,4 @@
-/* ext_edirectory_userip_acl - Copyright (C) 2009, 2010 Chad E. Naugle
+/* ext_edirectory_userip_acl - Copyright (C) 2009-2011 Chad E. Naugle
  *
  ********************************************************************************
  *
@@ -19,7 +19,9 @@
  *
  ********************************************************************************
  *
- * ext_edirectory_userip_acl.cc -- Rev 2010-12-15
+ * ext_edirectory_userip_acl.cc -- Rev 2011-03-28
+ *
+ * - Misc code cleanups using "static", and 64-bit SLES fix for SearchFilterLDAP()
  *
  */
 
@@ -30,7 +32,7 @@
 #include "util.h"
 
 #define EDUI_PROGRAM_NAME		"ext_edirectory_userip_acl"
-#define EDUI_PROGRAM_VERSION		"2.0"
+#define EDUI_PROGRAM_VERSION		"2.1"
 
 /* System includes */
 #ifdef HAVE_STDIO_H
@@ -77,7 +79,7 @@
 #ifdef HELPER_INPUT_BUFFER
 #define EDUI_MAXLEN		HELPER_INPUT_BUFFER
 #else
-#define EDUI_MAXLEN		8196
+#define EDUI_MAXLEN		4096		/* Modified to improve performance, unless HELPER_INPUT_BUFFER exists */
 #endif
 
 /* ldap compile options */
@@ -86,7 +88,9 @@
 # define NETSCAPE_SSL
 #endif
 
-/* define LDAP_AUTH_TLS */
+/* define LDAP_AUTH_TLS
+ * - ldap.h Hack for cleaner code, if it does not provide it.
+ */
 #ifdef NETSCAPE_SSL
 # ifndef LDAP_AUTH_TLS
 #  define LDAP_AUTH_TLS         ((ber_tag_t) 0xb3U)
@@ -176,30 +180,30 @@ typedef struct {
 } edui_ldap_t;
 
 /* Global function prototypes */
-void local_printfx(const char *,...);
-int StringSplit(char *, char, char *, size_t);
-int BinarySplit(void *, size_t, char, void *, size_t);
+static void local_printfx(const char *,...);
+static int StringSplit(char *, char, char *, size_t);
+static int BinarySplit(void *, size_t, char, void *, size_t);
 static void DisplayVersion();
 static void DisplayUsage();
 static void InitConf();
 static void DisplayConf();
 static void InitLDAP(edui_ldap_t *);
-int OpenLDAP(edui_ldap_t *, char *, unsigned int);
-int CloseLDAP(edui_ldap_t *);
-int SetVerLDAP(edui_ldap_t *, int);
-int BindLDAP(edui_ldap_t *, char *, char *, unsigned int);
-int ConvertIP(edui_ldap_t *, char *);
-int ResetLDAP(edui_ldap_t *);
-int SearchFilterLDAP(edui_ldap_t *, char *);
-int SearchLDAP(edui_ldap_t *, int, char *, char **);
-int SearchIPLDAP(edui_ldap_t *);
+static int OpenLDAP(edui_ldap_t *, char *, unsigned int);
+static int CloseLDAP(edui_ldap_t *);
+static int SetVerLDAP(edui_ldap_t *, int);
+static int BindLDAP(edui_ldap_t *, char *, char *, unsigned int);
+static int ConvertIP(edui_ldap_t *, char *);
+static int ResetLDAP(edui_ldap_t *);
+static int SearchFilterLDAP(edui_ldap_t *, char *);
+static int SearchLDAP(edui_ldap_t *, int, char *, char **);
+static int SearchIPLDAP(edui_ldap_t *);
 const char *ErrLDAP(int);
 extern "C" void SigTrap(int);
 
 /* Global variables */
 const char *search_attrib[] = { "cn", "uid", "networkAddress", "groupMembership", NULL };
-edui_conf_t edui_conf;
-edui_ldap_t edui_ldap;
+static edui_conf_t edui_conf;
+static edui_ldap_t edui_ldap;
 time_t edui_now;
 time_t edui_elap;
 
@@ -207,8 +211,11 @@ time_t edui_elap;
  *
  * Print formatted message to stderr AND stdout, without preformatting.
  *
+ * - Exists as a hack, because SEND_OK() does not appear to work here.
+ *
  */
-void local_printfx(const char *msg,...)
+static void
+local_printfx(const char *msg,...)
 {
     char prog[EDUI_MAXLEN], dbuf[EDUI_MAXLEN];
     size_t sz, x;
@@ -219,9 +226,9 @@ void local_printfx(const char *msg,...)
     else
         xstrncpy(prog, edui_conf.program, sizeof(prog));
 
-    if ((msg == NULL) || (strlen(prog) > 256)) {
+    if (msg == NULL) {
         /* FAIL */
-        debug("local_printfx() EPIC FAIL.\n");
+        debug("local_printfx() FAILURE, no data.\n");
         return;
     }
     sz = sizeof(dbuf);
@@ -249,7 +256,7 @@ void local_printfx(const char *msg,...)
  * Will not exceed size tolerances.
  *
  */
-int
+static int
 StringSplit(char *In_Str, char chr, char *Out_Str, size_t Out_Sz)
 {
     if ((In_Str == NULL) || (Out_Str == NULL))
@@ -300,7 +307,7 @@ StringSplit(char *In_Str, char chr, char *Out_Str, size_t Out_Sz)
  * Will not exceed size tolerances.
  *
  */
-int
+static int
 BinarySplit(void *In_Obj, size_t In_Sz, char chr, void *Out_Obj, size_t Out_Sz)
 {
     // check tolerances
@@ -347,13 +354,15 @@ BinarySplit(void *In_Obj, size_t In_Sz, char chr, void *Out_Obj, size_t Out_Sz)
 }
 
 /* Displays version information */
-static void DisplayVersion()
+static void
+DisplayVersion()
 {
-    local_printfx("Squid eDirectory IP Lookup Helper %s.  Copyright (C) 2009, 2010 Chad E. Naugle\n", EDUI_PROGRAM_VERSION);
+    local_printfx("Squid eDirectory IP Lookup Helper %s.  Copyright (C) 2009-2011 Chad E. Naugle\n", EDUI_PROGRAM_VERSION);
 }
 
 /* Displays program usage information */
-static void DisplayUsage()
+static void
+DisplayUsage()
 {
     DisplayVersion();
     local_printfx("\n");
@@ -382,7 +391,8 @@ static void DisplayUsage()
 }
 
 /* Initalizes program's configuration paremeters */
-static void InitConf()
+static void
+InitConf()
 {
     *(edui_conf.program) = '\0';
     *(edui_conf.basedn) = '\0';
@@ -398,7 +408,7 @@ static void InitConf()
     edui_conf.mode = 0;
     edui_conf.mode |= EDUI_MODE_INIT;
 
-    /* Set defaults from compile-time-options */
+    /* Set defaults from compile-time-options, if provided, but depriciated. */
 #ifdef EDUI_BASE_DN
     xstrncpy(edui_conf.basedn, EDUI_BASE_DN, sizeof(edui_conf.basedn));
 #endif
@@ -457,7 +467,8 @@ static void InitConf()
 }
 
 /* Displays running configuration */
-static void DisplayConf()
+static void
+DisplayConf()
 {
     if (!(edui_conf.mode & EDUI_MODE_DEBUG))
         return;
@@ -542,7 +553,8 @@ static void DisplayConf()
  * Initalize LDAP structure for use, zeroing out all variables.
  *
  */
-static void InitLDAP(edui_ldap_t *l)
+static void
+InitLDAP(edui_ldap_t *l)
 {
     if (l == NULL) return;
 
@@ -593,7 +605,8 @@ static void InitLDAP(edui_ldap_t *l)
  * Build LDAP struct with hostname and port, and ready it for binding.
  *
  */
-int OpenLDAP(edui_ldap_t *l, char *h, unsigned int p)
+static int
+OpenLDAP(edui_ldap_t *l, char *h, unsigned int p)
 {
     if ((l == NULL) || (h == NULL)) return LDAP_ERR_NULL;
     if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;		/* Not initalized, or might be in use */
@@ -633,7 +646,8 @@ int OpenLDAP(edui_ldap_t *l, char *h, unsigned int p)
  * Close LDAP connection, and clean up data structure.
  *
  */
-int CloseLDAP(edui_ldap_t *l)
+static int
+CloseLDAP(edui_ldap_t *l)
 {
     int s;
     if (l == NULL) return LDAP_ERR_NULL;
@@ -668,7 +682,8 @@ int CloseLDAP(edui_ldap_t *l)
  * Set LDAP version number for connection to <version> of 1, 2, or 3
  *
  */
-int SetVerLDAP(edui_ldap_t *l, int v)
+static int
+SetVerLDAP(edui_ldap_t *l, int v)
 {
     int x;
     if (l == NULL) return LDAP_ERR_NULL;
@@ -695,7 +710,8 @@ int SetVerLDAP(edui_ldap_t *l, int v)
  * Bind LDAP connection (Open) using optional dn and password, of <type>
  *
  */
-int BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
+static int
+BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
 {
     int s;
     if (l == NULL) return LDAP_ERR_NULL;
@@ -776,10 +792,11 @@ int BindLDAP(edui_ldap_t *l, char *dn, char *pw, unsigned int t)
  * Take an IPv4 address in dot-decimal or IPv6 notation, and convert to 2-digit HEX stored in l->search_ip
  * This is the networkAddress that we search LDAP for.
  *
- * PENDING -- CHANGE OVER TO inet*_pton
+ * PENDING -- CHANGE OVER TO inet*_pton, but inet6_pton does not provide the correct syntax
  *
  */
-int ConvertIP(edui_ldap_t *l, char *ip)
+static int
+ConvertIP(edui_ldap_t *l, char *ip)
 {
     char bufa[EDUI_MAXLEN], bufb[EDUI_MAXLEN], obj[EDUI_MAXLEN];
     char hexc[4], *p;
@@ -1007,7 +1024,8 @@ int ConvertIP(edui_ldap_t *l, char *ip)
  * Resets LDAP connection for next search query.
  *
  */
-int ResetLDAP(edui_ldap_t *l)
+static int
+ResetLDAP(edui_ldap_t *l)
 {
     if (l == NULL) return LDAP_ERR_NULL;
     if (!(l->status & LDAP_INIT_S)) return LDAP_ERR_INIT;                 /* Not initalized */
@@ -1050,7 +1068,8 @@ int ResetLDAP(edui_ldap_t *l)
  * Build LDAP Search Filter string and copy to l->search_filter
  *
  */
-int SearchFilterLDAP(edui_ldap_t *l, char *group)
+static int
+SearchFilterLDAP(edui_ldap_t *l, char *group)
 {
     size_t i, j, s;
     int swi;
@@ -1062,7 +1081,8 @@ int SearchFilterLDAP(edui_ldap_t *l, char *group)
     if (l->search_ip[0] == '\0') return LDAP_ERR_DATA;				/* Search IP is required */
 
     /* Zero out if not already */
-    *(bufa) = '\0';
+    memset(bufa, '\0', sizeof(bufa));
+    // using memset() for 'bufa' fixes the 64-bit issue
     *(bufb) = '\0';
     *(bufc) = '\0';
     *(bufd) = '\0';
@@ -1142,7 +1162,8 @@ int SearchFilterLDAP(edui_ldap_t *l, char *group)
  * <attrib> will generally be networkAddress ...
  *
  */
-int SearchLDAP(edui_ldap_t *l, int scope, char *filter, char **attrs)
+static int
+SearchLDAP(edui_ldap_t *l, int scope, char *filter, char **attrs)
 {
     int s;
     char ft[EDUI_MAXLEN];
@@ -1198,7 +1219,8 @@ int SearchLDAP(edui_ldap_t *l, int scope, char *filter, char **attrs)
  * Actual IP matching routine for eDirectory
  *
  */
-int SearchIPLDAP(edui_ldap_t *l)
+static int
+SearchIPLDAP(edui_ldap_t *l)
 {
     ber_len_t i, x;
     ber_len_t j, k;
@@ -1312,9 +1334,11 @@ int SearchIPLDAP(edui_ldap_t *l)
                         if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
-                            for (j = 0; j < z; j++)
+                            for (j = 0; j < z; j++) {
 // broken?                        xstrncpy(l->userid, ber[j]->bv_val, min(sizeof(l->userid),static_cast<size_t>(ber[j]->bv_len)));
                                 xstrncpy(l->userid, ber[j]->bv_val, sizeof(l->userid));
+                                /* Using bv_len of min() breaks the result by 2 chars */
+                            }
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1345,9 +1369,11 @@ int SearchIPLDAP(edui_ldap_t *l)
                         if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
-                            for (j = 0; j < z; j++)
+                            for (j = 0; j < z; j++) {
 // broken?                        xstrncpy(l->userid, ber[j]->bv_val, min(sizeof(l->userid),static_cast<size_t>(ber[j]->bv_len)));
                                 xstrncpy(l->userid, ber[j]->bv_val, sizeof(l->userid));
+                                /* Using bv_len of min() breaks the result by 2 chars */
+                            }
                             ldap_value_free_len(l->val);
                             l->val = NULL;
                             ldap_value_free_len(ber);
@@ -1401,7 +1427,14 @@ int SearchIPLDAP(edui_ldap_t *l)
     return LDAP_ERR_NOTFOUND;						/* Not found ... Sorry :) */
 }
 
-const char *ErrLDAP(int e)
+/*
+ * ErrLDAP() - <errno>
+ *
+ * Returns error description of error code
+ *
+ */
+const char
+*ErrLDAP(int e)
 {
     switch (e) {
     case LDAP_ERR_NULL:
@@ -1443,8 +1476,14 @@ const char *ErrLDAP(int e)
     }
 }
 
-/* Signal Trap routine */
-void SigTrap(int s)
+/*
+ * SigTrap() - <signal>
+ *
+ * Traps signal codes by number, and gracefully shuts down.
+ *
+ */
+extern "C" void
+SigTrap(int s)
 {
     if (!(edui_conf.mode & EDUI_MODE_KILL))
         edui_conf.mode |= EDUI_MODE_KILL;
@@ -1457,8 +1496,14 @@ void SigTrap(int s)
     exit(0);
 }
 
-/* main() - function */
-int main(int argc, char **argv)
+/*
+ * MainSafe() - <argc> <argv>
+ *
+ * "Safe" version of main()
+ *
+ */
+static int
+MainSafe(int argc, char **argv)
 {
     char bufa[EDUI_MAXLEN], bufb[EDUI_MAXLEN], *p = NULL;
     char bufc[EDUI_MAXLEN];
@@ -1913,5 +1958,14 @@ int main(int argc, char **argv)
     }
 
     debug("Terminating.\n");
-    exit(1);
+    return 1;
+}
+
+/* "main()" - function */
+int
+main(int argc, char **argv)
+{
+    int x;
+    x = MainSafe(argc, argv);
+    return x;
 }

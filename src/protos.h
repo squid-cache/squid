@@ -561,6 +561,7 @@ SQUIDCEXTERN void safeunlink(const char *path, int quiet);
 void death(int sig);
 void sigusr2_handle(int sig);
 void sig_child(int sig);
+void sig_shutdown(int sig); ///< handles shutdown notifications from kids
 SQUIDCEXTERN void leave_suid(void);
 SQUIDCEXTERN void enter_suid(void);
 SQUIDCEXTERN void no_suid(void);
@@ -803,8 +804,11 @@ class external_acl;
             SQUIDCEXTERN char *peer_proxy_negotiate_auth(char *principal_name, char *proxy);
 #endif
 
-            /* call to ensure the auth component schemes exist. */
-            SQUIDCEXTERN void InitAuthSchemes(void);
+                namespace Auth {
+        /* call to ensure the auth component schemes exist. */
+        extern void Init(void);
+        } // namespace Auth
+
 #endif /* USE_AUTH */
 
 #endif /* SQUID_PROTOS_H */

@@ -31,42 +31,41 @@
  */
 
 #include "config.h"
-#include "auth/basic/basicScheme.h"
+#include "auth/ntlm/auth_ntlm.h"
+#include "auth/ntlm/Scheme.h"
 #include "helper.h"
 
-/* for AuthConfig */
-#include "auth/basic/auth_basic.h"
+Auth::Scheme::Pointer Auth::Ntlm::Scheme::_instance = NULL;
 
-AuthScheme::Pointer basicScheme::_instance = NULL;
-
-AuthScheme::Pointer
-basicScheme::GetInstance()
+Auth::Scheme::Pointer
+Auth::Ntlm::Scheme::GetInstance()
 {
     if (_instance == NULL) {
-        _instance = new basicScheme();
+        _instance = new Auth::Ntlm::Scheme();
         AddScheme(_instance);
     }
     return _instance;
 }
 
 char const *
-basicScheme::type () const
+Auth::Ntlm::Scheme::type() const
 {
-    return "basic";
+    return "ntlm";
 }
 
 void
-basicScheme::done()
+Auth::Ntlm::Scheme::shutdownCleanup()
 {
-    /* clear the global handle to this scheme. */
-    _instance = NULL;
+    if (_instance == NULL)
+        return;
 
-    debugs(29, DBG_CRITICAL, HERE << "Basic authentication Schema Detached.");
+    _instance = NULL;
+    debugs(29, DBG_CRITICAL, "Shutdown: NTLM authentication.");
 }
 
-AuthConfig *
-basicScheme::createConfig()
+Auth::Config *
+Auth::Ntlm::Scheme::createConfig()
 {
-    AuthBasicConfig *newCfg = new AuthBasicConfig;
-    return dynamic_cast<AuthConfig*>(newCfg);
+    Auth::Ntlm::Config *ntlmCfg = new Auth::Ntlm::Config;
+    return dynamic_cast<Auth::Config*>(ntlmCfg);
 }

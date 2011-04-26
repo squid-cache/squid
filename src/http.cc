@@ -51,6 +51,7 @@
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
+#include "err_detail_type.h"
 #include "errorpage.h"
 #include "http.h"
 #include "HttpControlMsg.h"
@@ -93,7 +94,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
     surrogateNoStore = false;
     fd = fwd->server_fd;
     readBuf = new MemBuf;
-    readBuf->init();
+    readBuf->init(16*1024, 256*1024);
     orig_request = HTTPMSGLOCK(fwd->request);
 
     // reset peer response time stats for %<pt
@@ -981,7 +982,7 @@ HttpStateData::statusIfComplete() const
      * connection.
      */
     if (!flags.request_sent) {
-        debugs(11, 1, "statusIfComplete: Request not yet fully sent \"" << RequestMethodStr(orig_request->method) << " " << entry->url() << "\"" );
+        debugs(11, 2, "statusIfComplete: Request not yet fully sent \"" << RequestMethodStr(orig_request->method) << " " << entry->url() << "\"" );
         return COMPLETE_NONPERSISTENT_MSG;
     }
 
@@ -1965,6 +1966,13 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case HDR_PROXY_CONNECTION: // SHOULD ignore. But doing so breaks things.
         break;
 
+    case HDR_CONTENT_LENGTH:
+        // pass through unless we chunk; also, keeping this away from default
+        // prevents request smuggling via Connection: Content-Length tricks
+        if (!flags.chunked_request)
+            hdr_out->addEntry(e->clone());
+        break;
+
     case HDR_X_FORWARDED_FOR:
 
     case HDR_CACHE_CONTROL:
@@ -2087,8 +2095,8 @@ HttpStateData::sendRequest()
                                     Dialer, this, HttpStateData::sentRequestBody);
 
         Must(!flags.chunked_request);
-        // Preserve original chunked encoding unless we learned the length.
-        if (orig_request->header.chunked() && orig_request->content_length < 0)
+        // use chunked encoding if we do not know the length
+        if (orig_request->content_length < 0)
             flags.chunked_request = 1;
     } else {
         assert(!requestBodySource);
@@ -2304,8 +2312,12 @@ HttpStateData::handleRequestBodyProducerAborted()
     if (entry->isEmpty()) {
         debugs(11, 3, "request body aborted: FD " << fd);
         ErrorState *err;
-        err = errorCon(ERR_READ_ERROR, HTTP_BAD_GATEWAY, fwd->request);
-        err->xerrno = errno;
+        // We usually get here when ICAP REQMOD aborts during body processing.
+        // We might also get here if client-side aborts, but then our response
+        // should not matter because either client-side will provide its own or
+        // there will be no response at all (e.g., if the the client has left).
+        err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, fwd->request);
+        err->xerrno = ERR_DETAIL_SRV_REQMOD_REQ_BODY;
         fwd->fail(err);
     }
 

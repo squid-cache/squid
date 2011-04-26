@@ -60,7 +60,7 @@ logfileWriteWrapper(Logfile * lf, const void *buf, size_t len)
     if (!lf->flags.fatal)
         return;
 
-    fatalf("logfileWrite (stdio): %s: %s\n", lf->path, xstrerror());
+    fatalf("logfileWrite: %s: %s\n", lf->path, xstrerror());
 }
 
 static void
@@ -125,22 +125,24 @@ logfile_mod_stdio_rotate(Logfile * lf)
     char to[MAXPATHLEN];
     l_stdio_t *ll = (l_stdio_t *) lf->data;
     assert(lf->path);
+    const char *realpath = lf->path+6; // skip 'stdio:' prefix.
+    assert(realpath);
 
 #ifdef S_ISREG
 
-    if (stat(lf->path, &sb) == 0)
+    if (stat(realpath, &sb) == 0)
         if (S_ISREG(sb.st_mode) == 0)
             return;
 
 #endif
 
-    debugs(0, DBG_IMPORTANT, "logfileRotate (stdio): " << lf->path);
+    debugs(0, DBG_IMPORTANT, "Rotate log file " << lf->path);
 
     /* Rotate numbers 0 through N up one */
     for (i = Config.Log.rotateNumber; i > 1;) {
         i--;
-        snprintf(from, MAXPATHLEN, "%s.%d", lf->path, i - 1);
-        snprintf(to, MAXPATHLEN, "%s.%d", lf->path, i);
+        snprintf(from, MAXPATHLEN, "%s.%d", realpath, i - 1);
+        snprintf(to, MAXPATHLEN, "%s.%d", realpath, i);
         xrename(from, to);
     }
 
@@ -150,14 +152,14 @@ logfile_mod_stdio_rotate(Logfile * lf)
     file_close(ll->fd);		/* always close */
 
     if (Config.Log.rotateNumber > 0) {
-        snprintf(to, MAXPATHLEN, "%s.%d", lf->path, 0);
-        xrename(lf->path, to);
+        snprintf(to, MAXPATHLEN, "%s.%d", realpath, 0);
+        xrename(realpath, to);
     }
     /* Reopen the log.  It may have been renamed "manually" */
-    ll->fd = file_open(lf->path, O_WRONLY | O_CREAT | O_TEXT);
+    ll->fd = file_open(realpath, O_WRONLY | O_CREAT | O_TEXT);
 
     if (DISK_ERROR == ll->fd && lf->flags.fatal) {
-        debugs(50, DBG_CRITICAL, "logfileRotate (stdio): " << lf->path << ": " << xstrerror());
+        debugs(50, DBG_CRITICAL, "ERROR: logfileRotate: " << lf->path << ": " << xstrerror());
         fatalf("Cannot open %s: %s", lf->path, xstrerror());
     }
 }
@@ -209,7 +211,7 @@ logfile_mod_stdio_open(Logfile * lf, const char *path, size_t bufsz, int fatal_f
         } else if (EISDIR == errno && fatal_flag) {
             fatalf("Cannot open '%s' because it is a directory, not a file.\n", path);
         } else {
-            debugs(50, DBG_IMPORTANT, "logfileOpen (stdio): " <<  path << ": " << xstrerror());
+            debugs(50, DBG_IMPORTANT, "ERROR: logfileOpen " << lf->path << ": " << xstrerror());
             return 0;
         }
     }

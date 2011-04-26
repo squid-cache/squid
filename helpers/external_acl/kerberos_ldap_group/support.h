@@ -22,7 +22,7 @@
  * -----------------------------------------------------------------------------
  */
 
-#define KERBEROS_LDAP_GROUP_VERSION "1.2.2sq"
+#define KERBEROS_LDAP_GROUP_VERSION "1.3.0sq"
 
 #if HAVE_STRING_H
 #include <string.h>
@@ -99,12 +99,18 @@ struct ndstruct {
     char *domain;
     struct ndstruct *next;
 };
+struct lsstruct {
+    char *lserver;
+    char *domain;
+    struct lsstruct *next;
+};
 
 struct main_args {
     char *glist;
     char *ulist;
     char *tlist;
     char *nlist;
+    char *llist;
     char *luser;
     char *lpass;
     char *lbind;
@@ -116,6 +122,7 @@ struct main_args {
     char *ddomain;
     struct gdstruct *groups;
     struct ndstruct *ndoms;
+    struct lsstruct *lservs;
 };
 
 SQUIDCEXTERN int log_enabled;
@@ -171,6 +178,7 @@ char *get_netbios_name(struct main_args *margs, char *netbios);
 
 int create_gd(struct main_args *margs);
 int create_nd(struct main_args *margs);
+int create_ls(struct main_args *margs);
 
 int krb5_create_cache(struct main_args *margs, char *domain);
 void krb5_cleanup(void);

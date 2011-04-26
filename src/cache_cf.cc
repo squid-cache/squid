@@ -118,6 +118,7 @@ static void free_ecap_service_type(Adaptation::Ecap::Config *);
 
 CBDATA_TYPE(peer);
 
+static const char *const T_MILLISECOND_STR = "millisecond";
 static const char *const T_SECOND_STR = "second";
 static const char *const T_MINUTE_STR = "minute";
 static const char *const T_HOUR_STR = "hour";
@@ -143,8 +144,8 @@ static void free_access_log(customlog ** definitions);
 static void update_maxobjsize(void);
 static void configDoConfigure(void);
 static void parse_refreshpattern(refresh_t **);
-static int parseTimeUnits(const char *unit);
-static void parseTimeLine(time_t * tptr, const char *units);
+static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
+static void parseTimeLine(time_msec_t * tptr, const char *units, bool allowMsec);
 static void parse_ushort(u_short * var);
 static void parse_string(char **);
 static void default_all(void);
@@ -926,8 +927,8 @@ configDoConfigure(void)
      * state will be preserved.
      */
     if (Config.onoff.pipeline_prefetch) {
-        AuthConfig *nego = AuthConfig::Find("Negotiate");
-        AuthConfig *ntlm = AuthConfig::Find("NTLM");
+        Auth::Config *nego = Auth::Config::Find("Negotiate");
+        Auth::Config *ntlm = Auth::Config::Find("NTLM");
         if ((nego && nego->active()) || (ntlm && ntlm->active())) {
             debugs(3, DBG_IMPORTANT, "WARNING: pipeline_prefetch breaks NTLM and Negotiate authentication. Forced OFF.");
             Config.onoff.pipeline_prefetch = 0;
@@ -957,14 +958,14 @@ parse_obsolete(const char *name)
 /* Parse a time specification from the config file.  Store the
  * result in 'tptr', after converting it to 'units' */
 static void
-parseTimeLine(time_t * tptr, const char *units)
+parseTimeLine(time_msec_t * tptr, const char *units,  bool allowMsec)
 {
     char *token;
     double d;
-    time_t m;
-    time_t u;
+    time_msec_t m;
+    time_msec_t u;
 
-    if ((u = parseTimeUnits(units)) == 0)
+    if ((u = parseTimeUnits(units, allowMsec)) == 0)
         self_destruct();
 
     if ((token = strtok(NULL, w_space)) == NULL)
@@ -980,41 +981,44 @@ parseTimeLine(time_t * tptr, const char *units)
         debugs(3, 0, "WARNING: No units on '" <<
                config_input_line << "', assuming " <<
                d << " " << units  );
-    else if ((m = parseTimeUnits(token)) == 0)
+    else if ((m = parseTimeUnits(token, allowMsec)) == 0)
         self_destruct();
 
-    *tptr = static_cast<time_t> (m * d / u);
+    *tptr = static_cast<time_msec_t>(m * d);
 }
 
-static int
-parseTimeUnits(const char *unit)
+static uint64_t
+parseTimeUnits(const char *unit, bool allowMsec)
 {
-    if (!strncasecmp(unit, T_SECOND_STR, strlen(T_SECOND_STR)))
+    if (allowMsec && !strncasecmp(unit, T_MILLISECOND_STR, strlen(T_MILLISECOND_STR)))
         return 1;
 
+    if (!strncasecmp(unit, T_SECOND_STR, strlen(T_SECOND_STR)))
+        return 1000;
+
     if (!strncasecmp(unit, T_MINUTE_STR, strlen(T_MINUTE_STR)))
-        return 60;
+        return 60 * 1000;
 
     if (!strncasecmp(unit, T_HOUR_STR, strlen(T_HOUR_STR)))
-        return 3600;
+        return 3600 * 1000;
 
     if (!strncasecmp(unit, T_DAY_STR, strlen(T_DAY_STR)))
-        return 86400;
+        return 86400 * 1000;
 
     if (!strncasecmp(unit, T_WEEK_STR, strlen(T_WEEK_STR)))
-        return 86400 * 7;
+        return 86400 * 7 * 1000;
 
     if (!strncasecmp(unit, T_FORTNIGHT_STR, strlen(T_FORTNIGHT_STR)))
-        return 86400 * 14;
+        return 86400 * 14 * 1000;
 
     if (!strncasecmp(unit, T_MONTH_STR, strlen(T_MONTH_STR)))
-        return 86400 * 30;
+        return static_cast<uint64_t>(86400) * 30 * 1000;
 
     if (!strncasecmp(unit, T_YEAR_STR, strlen(T_YEAR_STR)))
-        return static_cast<int>(86400 * 365.2522);
+        return static_cast<uint64_t>(86400 * 1000 * 365.2522);
 
     if (!strncasecmp(unit, T_DECADE_STR, strlen(T_DECADE_STR)))
-        return static_cast<int>(86400 * 365.2522 * 10);
+        return static_cast<uint64_t>(86400 * 1000 * 365.2522 * 10);
 
     debugs(3, 1, "parseTimeUnits: unknown time unit '" << unit << "'");
 
@@ -1831,7 +1835,7 @@ check_null_string(char *s)
 
 #if USE_AUTH
 static void
-parse_authparam(Auth::authConfig * config)
+parse_authparam(Auth::ConfigVector * config)
 {
     char *type_str;
     char *param_str;
@@ -1843,11 +1847,11 @@ parse_authparam(Auth::authConfig * config)
         self_destruct();
 
     /* find a configuration for the scheme in the currently parsed configs... */
-    AuthConfig *schemeCfg = AuthConfig::Find(type_str);
+    Auth::Config *schemeCfg = Auth::Config::Find(type_str);
 
     if (schemeCfg == NULL) {
         /* Create a configuration based on the scheme info */
-        AuthScheme::Pointer theScheme = AuthScheme::Find(type_str);
+        Auth::Scheme::Pointer theScheme = Auth::Scheme::Find(type_str);
 
         if (theScheme == NULL) {
             debugs(3, DBG_CRITICAL, "Parsing Config File: Unknown authentication scheme '" << type_str << "'.");
@@ -1855,7 +1859,7 @@ parse_authparam(Auth::authConfig * config)
         }
 
         config->push_back(theScheme->createConfig());
-        schemeCfg = AuthConfig::Find(type_str);
+        schemeCfg = Auth::Config::Find(type_str);
         if (schemeCfg == NULL) {
             debugs(3, DBG_CRITICAL, "Parsing Config File: Corruption configuring authentication scheme '" << type_str << "'.");
             self_destruct();
@@ -1866,7 +1870,7 @@ parse_authparam(Auth::authConfig * config)
 }
 
 static void
-free_authparam(Auth::authConfig * cfg)
+free_authparam(Auth::ConfigVector * cfg)
 {
     /* Wipe the Auth globals and Detach/Destruct component config + state. */
     cfg->clean();
@@ -1878,14 +1882,14 @@ free_authparam(Auth::authConfig * cfg)
 
     /* on reconfigure initialize new auth schemes for the new config. */
     if (reconfiguring) {
-        InitAuthSchemes();
+        Auth::Init();
     }
 }
 
 static void
-dump_authparam(StoreEntry * entry, const char *name, authConfig cfg)
+dump_authparam(StoreEntry * entry, const char *name, Auth::ConfigVector cfg)
 {
-    for (authConfig::iterator  i = cfg.begin(); i != cfg.end(); ++i)
+    for (Auth::ConfigVector::iterator  i = cfg.begin(); i != cfg.end(); ++i)
         (*i)->dump(entry, name, (*i));
 }
 #endif /* USE_AUTH */
@@ -3003,7 +3007,9 @@ dump_time_t(StoreEntry * entry, const char *name, time_t var)
 void
 parse_time_t(time_t * var)
 {
-    parseTimeLine(var, T_SECOND_STR);
+    time_msec_t tval;
+    parseTimeLine(&tval, T_SECOND_STR, false);
+    *var = static_cast<time_t>(tval/1000);
 }
 
 static void
@@ -3011,6 +3017,29 @@ free_time_t(time_t * var)
 {
     *var = 0;
 }
+
+#if !USE_DNSSERVERS
+static void
+dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
+{
+    if (var % 1000)
+        storeAppendPrintf(entry, "%s %"PRId64" milliseconds\n", name, var);
+    else
+        storeAppendPrintf(entry, "%s %d seconds\n", name, (int)(var/1000) );
+}
+
+void
+parse_time_msec(time_msec_t * var)
+{
+    parseTimeLine(var, T_SECOND_STR, true);
+}
+
+static void
+free_time_msec(time_msec_t * var)
+{
+    *var = 0;
+}
+#endif
 
 #if UNUSED_CODE
 static void
@@ -3998,10 +4027,13 @@ requirePathnameExists(const char *name, const char *path)
     }
 
     if (stat(path, &sb) < 0) {
+        debugs(0, DBG_CRITICAL, (opt_parse_cfg_only?"FATAL ":"") << "ERROR: " << name << " " << path << ": " << xstrerror());
+        // keep going to find more issues if we are only checking the config file with "-k parse"
+        if (opt_parse_cfg_only)
+            return;
+        // this is fatal if it is found during startup or reconfigure
         if (opt_send_signal == -1 || opt_send_signal == SIGHUP)
             fatalf("%s %s: %s", name, path, xstrerror());
-        else
-            fprintf(stderr, "WARNING: %s %s: %s\n", name, path, xstrerror());
     }
 }
 
@@ -4355,7 +4387,7 @@ static void parse_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
     else if ((token = strtok(NULL, w_space)) == NULL) {
         debugs(3, 0, "No time-units on '" << config_input_line << "'");
         self_destruct();
-    } else if ((m = parseTimeUnits(token)) == 0)
+    } else if ((m = parseTimeUnits(token, false)) == 0)
         self_destruct();
 
     cfg->oldest_service_failure = (m * d);

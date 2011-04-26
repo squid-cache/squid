@@ -8,8 +8,6 @@
 
 #include "auth/Config.h"
 #include "auth/Gadgets.h"
-#include "auth/State.h"
-#include "auth/User.h"
 #include "auth/UserRequest.h"
 #include "helper.h"
 
@@ -21,45 +19,35 @@
 /// \ingroup AuthNegotiateAPI
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 
-/// \ingroup AuthNegotiateAPI
-class NegotiateUser : public AuthUser
+namespace Auth
+{
+namespace Negotiate
 {
 
-public:
-    MEMPROXY_CLASS(NegotiateUser);
-    NegotiateUser(AuthConfig *);
-    ~NegotiateUser();
-    virtual int32_t ttl() const;
-
-    dlink_list proxy_auth_list;
-};
-
-MEMPROXY_CLASS_INLINE(NegotiateUser);
-
-extern statefulhelper *negotiateauthenticators;
-
-/* configuration runtime data */
-
-/// \ingroup AuthNegotiateAPI
-class AuthNegotiateConfig : public AuthConfig
+/** Negotiate Authentication configuration data */
+class Config : public Auth::Config
 {
-
 public:
-    AuthNegotiateConfig();
+    Config();
     virtual bool active() const;
     virtual bool configured() const;
     virtual AuthUserRequest::Pointer decode(char const *proxy_auth);
     virtual void done();
     virtual void rotateHelpers();
-    virtual void dump(StoreEntry *, const char *, AuthConfig *);
+    virtual void dump(StoreEntry *, const char *, Auth::Config *);
     virtual void fixHeader(AuthUserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *);
-    virtual void init(AuthConfig *);
-    virtual void parse(AuthConfig *, int, char *);
+    virtual void init(Auth::Config *);
+    virtual void parse(Auth::Config *, int, char *);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
+
+public:
     int keep_alive;
 };
 
-extern AuthNegotiateConfig negotiateConfig;
+} // namespace Negotiate
+} // namespace Auth
+
+extern statefulhelper *negotiateauthenticators;
 
 #endif

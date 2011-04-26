@@ -30,48 +30,48 @@
  *
  */
 
-#include "config.h"
-#include "auth/digest/digestScheme.h"
-#include "helper.h"
+#ifndef SQUID_AUTH_DIGEST_SCHEME_H
+#define SQUID_AUTH_DIGEST_SCHEME_H
 
-AuthScheme::Pointer
-digestScheme::GetInstance()
+#include "auth/Scheme.h"
+#include "auth/digest/auth_digest.h"
+
+namespace Auth
 {
-    if (_instance == NULL) {
-        _instance = new digestScheme();
-        AddScheme(_instance);
-    }
-    return _instance;
-}
-
-char const *
-digestScheme::type () const
+namespace Digest
 {
-    return "digest";
-}
 
-AuthScheme::Pointer digestScheme::_instance = NULL;
-
-AuthConfig *
-digestScheme::createConfig()
+/// \ingroup AuthSchemeAPI
+/// \ingroup AuthAPI
+class Scheme : public Auth::Scheme
 {
-    AuthDigestConfig *digestCfg = new AuthDigestConfig;
-    return dynamic_cast<AuthConfig*>(digestCfg);
-}
 
-void
-digestScheme::PurgeCredentialsCache(void)
-{
-    AuthUserHashPointer *usernamehash;
-    AuthUser::Pointer auth_user;
-    hash_first(proxy_auth_username_cache);
+public:
+    static Auth::Scheme::Pointer GetInstance();
+    Scheme() {};
+    virtual ~Scheme() {}
 
-    while ((usernamehash = static_cast<AuthUserHashPointer *>(hash_next(proxy_auth_username_cache)) )) {
-        auth_user = usernamehash->user();
+    /* per scheme */
+    virtual char const *type () const;
+    virtual void shutdownCleanup();
+    virtual Auth::Config *createConfig();
 
-        if (strcmp(auth_user->config->type(), "digest") == 0) {
-            hash_remove_link(proxy_auth_username_cache, static_cast<hash_link*>(usernamehash));
-            delete usernamehash;
-        }
-    }
-}
+    /* Not implemented */
+    Scheme(Scheme const &);
+    Scheme &operator=(Scheme const &);
+
+private:
+    static Auth::Scheme::Pointer _instance;
+
+    /**
+     * Remove all cached user credentials from circulation.
+     * Intended for use during shutdown procedure.
+     * After calling this all newly received credentials must be re-authenticated.
+     */
+    static void PurgeCredentialsCache(void);
+};
+
+} // namespace Digest
+} // namespace Auth
+
+#endif /* SQUID_AUTH_DIGEST_SCHEME_H */

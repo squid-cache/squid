@@ -30,40 +30,44 @@
  *
  */
 
-#ifndef SQUID_DIGESTSCHEME_H
-#define SQUID_DIGESTSCHEME_H
+#include "config.h"
+#include "auth/basic/Scheme.h"
+#include "helper.h"
 
-#include "auth/Scheme.h"
-#include "auth/digest/auth_digest.h"
+/* for Auth::Config */
+#include "auth/basic/auth_basic.h"
 
-/// \ingroup AuthSchemeAPI
-/// \ingroup AuthAPI
-class digestScheme : public AuthScheme
+Auth::Scheme::Pointer Auth::Basic::Scheme::_instance = NULL;
+
+Auth::Scheme::Pointer
+Auth::Basic::Scheme::GetInstance()
 {
+    if (_instance == NULL) {
+        _instance = new Auth::Basic::Scheme();
+        AddScheme(_instance);
+    }
+    return _instance;
+}
 
-public:
-    static AuthScheme::Pointer GetInstance();
-    digestScheme() {};
-    virtual ~digestScheme() {}
+char const *
+Auth::Basic::Scheme::type() const
+{
+    return "basic";
+}
 
-    /* per scheme */
-    virtual char const *type () const;
-    virtual void done();
-    virtual AuthConfig *createConfig();
+void
+Auth::Basic::Scheme::shutdownCleanup()
+{
+    if (_instance == NULL)
+        return;
 
-    /* Not implemented */
-    digestScheme (digestScheme const &);
-    digestScheme &operator=(digestScheme const &);
+    _instance = NULL;
+    debugs(29, DBG_CRITICAL, "Shutdown: Basic authentication.");
+}
 
-private:
-    static AuthScheme::Pointer _instance;
-
-    /**
-     * Remove all cached user credentials from circulation.
-     * Intended for use during shutdown procedure.
-     * After calling this all newly received credentials must be re-authenticated.
-     */
-    static void PurgeCredentialsCache(void);
-};
-
-#endif /* SQUID_DIGESTSCHEME_H */
+Auth::Config *
+Auth::Basic::Scheme::createConfig()
+{
+    Auth::Basic::Config *newCfg = new Auth::Basic::Config;
+    return dynamic_cast<Auth::Config*>(newCfg);
+}

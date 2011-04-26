@@ -862,12 +862,8 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
 
     debugs(84, 5, "helperHandleRead: " << len << " bytes from " << hlp->id_name << " #" << srv->index + 1);
 
-    if (flag != COMM_OK || len <= 0) {
-        if (len < 0)
-            debugs(84, 1, "helperHandleRead: FD " << fd << " read: " << xstrerror());
-
+    if (flag != COMM_OK || len == 0) {
         comm_close(fd);
-
         return;
     }
 
@@ -936,12 +932,8 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
            hlp->id_name << " #" << srv->index + 1);
 
 
-    if (flag != COMM_OK || len <= 0) {
-        if (len < 0)
-            debugs(84, 1, "helperStatefulHandleRead: FD " << fd << " read: " << xstrerror());
-
+    if (flag != COMM_OK || len == 0) {
         comm_close(fd);
-
         return;
     }
 

@@ -31,43 +31,61 @@
  */
 
 #include "config.h"
-#include "auth/negotiate/negotiateScheme.h"
+#include "auth/digest/Scheme.h"
 #include "helper.h"
 
-AuthScheme::Pointer
-negotiateScheme::GetInstance()
+Auth::Scheme::Pointer Auth::Digest::Scheme::_instance = NULL;
+
+Auth::Scheme::Pointer
+Auth::Digest::Scheme::GetInstance()
 {
     if (_instance == NULL) {
-        _instance = new negotiateScheme();
+        _instance = new Auth::Digest::Scheme();
         AddScheme(_instance);
     }
     return _instance;
 }
 
 char const *
-negotiateScheme::type () const
+Auth::Digest::Scheme::type() const
 {
-    return "negotiate";
+    return "digest";
 }
 
-AuthScheme::Pointer negotiateScheme::_instance = NULL;
-
-/**
- \ingroup AuthNegotiateInternal
- \todo move to negotiateScheme.cc
- */
 void
-negotiateScheme::done()
+Auth::Digest::Scheme::shutdownCleanup()
 {
-    /* clear the global handle to this scheme. */
-    _instance = NULL;
+    if (_instance == NULL)
+        return;
 
-    debugs(29, 2, "negotiateScheme::done: Negotiate authentication Shutdown.");
+    PurgeCredentialsCache();
+    authenticateDigestNonceShutdown();
+
+    _instance = NULL;
+    debugs(29, DBG_CRITICAL, "Shutdown: Digest authentication.");
 }
 
-AuthConfig *
-negotiateScheme::createConfig()
+Auth::Config *
+Auth::Digest::Scheme::createConfig()
 {
-    AuthNegotiateConfig *negotiateCfg = new AuthNegotiateConfig;
-    return dynamic_cast<AuthConfig*>(negotiateCfg);
+    Auth::Digest::Config *digestCfg = new Auth::Digest::Config;
+    return dynamic_cast<Auth::Config*>(digestCfg);
+}
+
+void
+Auth::Digest::Scheme::PurgeCredentialsCache(void)
+{
+    AuthUserHashPointer *usernamehash;
+
+    debugs(29, 2, HERE << "Erasing Digest authentication credentials from username cache.");
+    hash_first(proxy_auth_username_cache);
+
+    while ((usernamehash = static_cast<AuthUserHashPointer *>(hash_next(proxy_auth_username_cache)) )) {
+        Auth::User::Pointer auth_user = usernamehash->user();
+
+        if (strcmp(auth_user->config->type(), "digest") == 0) {
+            hash_remove_link(proxy_auth_username_cache, static_cast<hash_link*>(usernamehash));
+            delete usernamehash;
+        }
+    }
 }

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-02-06 22:39+1300\n"
-"PO-Revision-Date: 2011-01-20 21:35+0200\n"
+"PO-Revision-Date: 2011-03-16 11:24+0200\n"
 "Last-Translator: Arthur <arthurtumanyan@yahoo.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: hy\n"
@@ -51,7 +51,7 @@ msgstr "Պահանջվող URN-ի համար URL-ն հնարավոր չէ ստա
 msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
 "request from being completed."
-msgstr ""
+msgstr "Ներքին խափանման պատճառով այս հարցումը հնարավոր չէ ավարտել"
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
@@ -84,7 +84,7 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
-msgstr ""
+msgstr "Սխալ պատասխան է ստացվել ICAP սերվերից"
 
 #: templates/ERR_READ_ERROR:7
 msgid ""
@@ -250,7 +250,7 @@ msgstr "Վերահասցեագրումն արգելված է."
 
 #: templates/ERR_GATEWAY_FAILURE:5
 msgid "Gateway Proxy Failure"
-msgstr ""
+msgstr "Երթուղային պրոքսի սերվերի խափանում"
 
 #: templates/ERR_ACCESS_DENIED:8 templates/ERR_AGENT_CONFIGURE:16
 #: templates/ERR_AGENT_WPAD:15 templates/ERR_CACHE_ACCESS_DENIED:8
@@ -276,11 +276,10 @@ msgid "Generated %T by %h (%s)"
 msgstr "Ստեղծված է %T by %h (%s)"
 
 #: templates/ERR_INVALID_REQ:12
-#, fuzzy
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
-"HTTP/1.1 <q>Expect:</q> հատկության համար հարցում է կատարվում HTTP/1.0 "
+"HTTP/1.1 <q>Expect:</q>հնարավորության համար հարցում է կատարվում HTTP/1.0 "
 "ծրագրային միջոցից"
 
 #: templates/ERR_URN_RESOLVE:6
@@ -370,15 +369,14 @@ msgstr ""
 "ընթացիկ գաղտնաբառը."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
-#, fuzzy
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
 "have difficulties authenticating yourself or, if you <em>are</em> the "
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 msgstr ""
-"Աութենտիֆիկացիայի հետ խնդիրներ առաջանալու դեպքում խնդրվում է դիմել<a href="
-"\"mailto:%w%W\">քեշի կառավարիչին</a>."
+"Աութենտիֆիկացիայի հետ խնդիրներ առաջանալու դեպքում խնդրվում է դիմել<a "
+"href=\"mailto:%w%W\">քեշի կառավարիչին</a>."
 
 #: templates/ERR_PRECONDITION_FAILED:5
 msgid "Precondition Failed."
@@ -551,7 +549,7 @@ msgstr "Պահանջվող URL-ն հնարավոր չէ ստանալ"
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
 #: templates/ERR_FTP_UNAVAILABLE:6
 msgid "The server responded with:"
-msgstr ""
+msgstr "Սերվերը պատասխանեց:"
 
 #: templates/ERR_CONNECT_FAIL:6 templates/ERR_ICAP_FAILURE:6
 #: templates/ERR_READ_ERROR:6 templates/ERR_READ_TIMEOUT:6
@@ -604,7 +602,6 @@ msgstr ""
 "սարքաբերված քեշ է."
 
 #: templates/ERR_GATEWAY_FAILURE:7
-#, fuzzy
 msgid ""
 "This may be due to limits established by the Internet Service Provider who "
 "operates this cache. Please contact them directly for more information."
@@ -643,7 +640,7 @@ msgstr ""
 
 #: templates/ERR_PRECONDITION_FAILED:6
 msgid "This means:"
-msgstr ""
+msgstr "Սա նշանակում է:"
 
 #: templates/ERR_FTP_NOT_FOUND:7
 msgid ""
@@ -661,7 +658,7 @@ msgid ""
 "security settings for handling your request. It is possible that the remote "
 "host does not support secure connections, or the proxy is not satisfied with "
 "the host security credentials."
-msgstr ""
+msgstr "Հնարավոր է,որ հեռակա հանգույցը չի աջակցում անվտանգ կապի հաստատում"
 
 #: templates/ERR_CANNOT_FORWARD:6
 msgid ""

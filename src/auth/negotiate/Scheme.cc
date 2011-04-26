@@ -30,33 +30,41 @@
  *
  */
 
-#ifndef SQUID_NEGOTIATESCHEME_H
-#define SQUID_NEGOTIATESCHEME_H
+#include "config.h"
+#include "auth/negotiate/Scheme.h"
+#include "helper.h"
 
-#include "auth/Scheme.h"
-#include "auth/negotiate/auth_negotiate.h"
+Auth::Scheme::Pointer Auth::Negotiate::Scheme::_instance = NULL;
 
-/// \ingroup AuthSchemeAPI
-/// \ingroup AuthAPI
-class negotiateScheme : public AuthScheme
+Auth::Scheme::Pointer
+Auth::Negotiate::Scheme::GetInstance()
 {
+    if (_instance == NULL) {
+        _instance = new Auth::Negotiate::Scheme();
+        AddScheme(_instance);
+    }
+    return _instance;
+}
 
-public:
-    static AuthScheme::Pointer GetInstance();
-    negotiateScheme() {};
-    virtual ~negotiateScheme() {};
+char const *
+Auth::Negotiate::Scheme::type() const
+{
+    return "negotiate";
+}
 
-    /* per scheme */
-    virtual char const *type () const;
-    virtual void done();
-    virtual AuthConfig *createConfig();
+void
+Auth::Negotiate::Scheme::shutdownCleanup()
+{
+    if (_instance == NULL)
+        return;
 
-    /* Not implemented */
-    negotiateScheme (negotiateScheme const &);
-    negotiateScheme &operator=(negotiateScheme const &);
+    _instance = NULL;
+    debugs(29, DBG_CRITICAL, "Shutdown: Negotiate authentication.");
+}
 
-private:
-    static AuthScheme::Pointer _instance;
-};
-
-#endif /* SQUID_negotiateSCHEME_H */
+Auth::Config *
+Auth::Negotiate::Scheme::createConfig()
+{
+    Auth::Negotiate::Config *negotiateCfg = new Auth::Negotiate::Config;
+    return dynamic_cast<Auth::Config*>(negotiateCfg);
+}

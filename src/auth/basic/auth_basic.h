@@ -7,7 +7,6 @@
 #define __AUTH_BASIC_H__
 
 #include "auth/Gadgets.h"
-#include "auth/User.h"
 #include "auth/UserRequest.h"
 #include "auth/Config.h"
 #include "helper.h"
@@ -25,54 +24,31 @@ public:
     void *data;
 };
 
-class BasicUser : public AuthUser
+namespace Auth
+{
+namespace Basic
 {
 
-public:
-    MEMPROXY_CLASS(BasicUser);
-
-    BasicUser(AuthConfig *);
-    ~BasicUser();
-    bool authenticated() const;
-    void queueRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data);
-    void submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data);
-
-    bool valid() const;
-
-    /** Update the cached password for a username. */
-    void updateCached(BasicUser *from);
-    virtual int32_t ttl() const;
-
-    char *passwd;
-
-    BasicAuthQueueNode *auth_queue;
-
-private:
-    AuthUserRequest::Pointer currentRequest;
-};
-
-MEMPROXY_CLASS_INLINE(BasicUser);
-
-/* configuration runtime data */
-
-class AuthBasicConfig : public AuthConfig
+/** Basic authentication configuration data */
+class Config : public Auth::Config
 {
-
 public:
-    AuthBasicConfig();
-    ~AuthBasicConfig();
+    Config();
+    ~Config();
     virtual bool active() const;
     virtual bool configured() const;
     virtual AuthUserRequest::Pointer decode(char const *proxy_auth);
     virtual void done();
     virtual void rotateHelpers();
-    virtual void dump(StoreEntry *, const char *, AuthConfig *);
+    virtual void dump(StoreEntry *, const char *, Auth::Config *);
     virtual void fixHeader(AuthUserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *);
-    virtual void init(AuthConfig *);
-    virtual void parse(AuthConfig *, int, char *);
+    virtual void init(Auth::Config *);
+    virtual void parse(Auth::Config *, int, char *);
     void decode(char const *httpAuthHeader, AuthUserRequest::Pointer);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
+
+public:
     char *basicAuthRealm;
     time_t credentialsTTL;
     int casesensitive;
@@ -81,5 +57,8 @@ public:
 private:
     char * decodeCleartext(const char *httpAuthHeader);
 };
+
+} // namespace Basic
+} // namespace Auth
 
 #endif /* __AUTH_BASIC_H__ */

@@ -1,13 +1,13 @@
 #include "config.h"
-#include "auth/basic/basicUserRequest.h"
-#include "SquidTime.h"
-
 #include "auth/basic/auth_basic.h"
+#include "auth/basic/User.h"
+#include "auth/basic/UserRequest.h"
+#include "SquidTime.h"
 
 int
 AuthBasicUserRequest::authenticated() const
 {
-    BasicUser const *basic_auth = dynamic_cast<BasicUser const *>(user().getRaw());
+    Auth::Basic::User const *basic_auth = dynamic_cast<Auth::Basic::User const *>(user().getRaw());
 
     if (basic_auth && basic_auth->authenticated())
         return 1;
@@ -23,11 +23,11 @@ AuthBasicUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, 
     assert(user() != NULL);
 
     /* if the password is not ok, do an identity */
-    if (!user() || user()->credentials() != AuthUser::Ok)
+    if (!user() || user()->credentials() != Auth::Ok)
         return;
 
     /* are we about to recheck the credentials externally? */
-    if ((user()->expiretime + static_cast<AuthBasicConfig*>(AuthConfig::Find("basic"))->credentialsTTL) <= squid_curtime) {
+    if ((user()->expiretime + static_cast<Auth::Basic::Config*>(Auth::Config::Find("basic"))->credentialsTTL) <= squid_curtime) {
         debugs(29, 4, HERE << "credentials expired - rechecking");
         return;
     }
@@ -42,29 +42,29 @@ AuthBasicUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, 
     return;
 }
 
-int
+Auth::Direction
 AuthBasicUserRequest::module_direction()
 {
-    /* null auth_user is checked for by authenticateDirection */
-    if (user()->auth_type != AUTH_BASIC)
-        return -2;
+    /* null auth_user is checked for by AuthUserRequest::direction() */
+    if (user()->auth_type != Auth::AUTH_BASIC)
+        return Auth::CRED_ERROR;
 
     switch (user()->credentials()) {
 
-    case AuthUser::Unchecked:
-    case AuthUser::Pending:
-        return -1;
+    case Auth::Unchecked:
+    case Auth::Pending:
+        return Auth::CRED_LOOKUP;
 
-    case AuthUser::Ok:
-        if (user()->expiretime + static_cast<AuthBasicConfig*>(AuthConfig::Find("basic"))->credentialsTTL <= squid_curtime)
-            return -1;
-        return 0;
+    case Auth::Ok:
+        if (user()->expiretime + static_cast<Auth::Basic::Config*>(Auth::Config::Find("basic"))->credentialsTTL <= squid_curtime)
+            return Auth::CRED_LOOKUP;
+        return Auth::CRED_VALID;
 
-    case AuthUser::Failed:
-        return 0;
+    case Auth::Failed:
+        return Auth::CRED_VALID;
 
     default:
-        return -2;
+        return Auth::CRED_ERROR;
     }
 }
 
@@ -72,19 +72,19 @@ AuthBasicUserRequest::module_direction()
 void
 AuthBasicUserRequest::module_start(RH * handler, void *data)
 {
-    assert(user()->auth_type == AUTH_BASIC);
-    BasicUser *basic_auth = dynamic_cast<BasicUser *>(user().getRaw());
+    assert(user()->auth_type == Auth::AUTH_BASIC);
+    Auth::Basic::User *basic_auth = dynamic_cast<Auth::Basic::User *>(user().getRaw());
     assert(basic_auth != NULL);
     debugs(29, 9, HERE << "'" << basic_auth->username() << ":" << basic_auth->passwd << "'");
 
-    if (static_cast<AuthBasicConfig*>(AuthConfig::Find("basic"))->authenticate == NULL) {
+    if (static_cast<Auth::Basic::Config*>(Auth::Config::Find("basic"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: No Basic authentication program configured.");
         handler(data, NULL);
         return;
     }
 
     /* check to see if the auth_user already has a request outstanding */
-    if (user()->credentials() == AuthUser::Pending) {
+    if (user()->credentials() == Auth::Pending) {
         /* there is a request with the same credentials already being verified */
         basic_auth->queueRequest(this, handler, data);
         return;

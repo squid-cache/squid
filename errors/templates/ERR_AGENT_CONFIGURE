@@ -27,7 +27,7 @@ body
 For Firefox browsers go to:
 <ul>
 <li>Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings</li>
-<li>In the HTTP proxy box type the proxy name %h and port 3128.</li>
+<li>In the HTTP proxy box type the proxy name %h and port %b.</li>
 </ul>
 </div>
 
@@ -35,7 +35,7 @@ For Firefox browsers go to:
 For Internet Explorer browsers go to:
 <ul>
 <li>Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy</li>
-<li>In the HTTP proxy box type the proxy name %h and port 3128.</li>
+<li>In the HTTP proxy box type the proxy name %h and port %b.</li>
 </ul>
 </div>
 
@@ -43,7 +43,7 @@ For Internet Explorer browsers go to:
 For Opera browsers go to:
 <ul>
 <li>Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers</li>
-<li>In the HTTP proxy box type the proxy name %h and port 3128.</li>
+<li>In the HTTP proxy box type the proxy name %h and port %b.</li>
 </ul>
 </div>
 

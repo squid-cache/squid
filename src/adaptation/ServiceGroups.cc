@@ -1,14 +1,13 @@
 #include "squid.h"
 
 #include "ConfigParser.h"
-#include "Array.h"      // really Vector
 #include "adaptation/Config.h"
 #include "adaptation/AccessRule.h"
+#include "adaptation/DynamicGroupCfg.h"
 #include "adaptation/Service.h"
 #include "adaptation/ServiceFilter.h"
 #include "adaptation/ServiceGroups.h"
 
-#define ServiceGroup ServiceGroup
 
 Adaptation::ServiceGroup::ServiceGroup(const String &aKind, bool allSame):
         kind(aKind), method(methodNone), point(pointNone),
@@ -209,28 +208,51 @@ Adaptation::ServiceChain::ServiceChain(): ServiceGroup("adaptation chain", false
 }
 
 
-/* ServiceChain */
+/* DynamicServiceChain */
 
-Adaptation::DynamicServiceChain::DynamicServiceChain(const String &ids,
-        const ServiceGroupPointer prev)
+Adaptation::DynamicServiceChain::DynamicServiceChain(
+    const DynamicGroupCfg &cfg, const ServiceFilter &filter)
 {
     kind = "dynamic adaptation chain"; // TODO: optimize by using String const
-    id = ids; // use services ids as the dynamic group ID
+    id = cfg.id; // use services ids as the dynamic group ID
+    services = cfg.services;
 
     // initialize cache to improve consistency checks in finalize()
-    if (prev != NULL) {
-        method = prev->method;
-        point = prev->point;
-    }
+    method = filter.method;
+    point = filter.point;
 
-    // populate services storage with supplied service ids
+    finalize(); // will report [dynamic] config errors
+}
+
+void
+Adaptation::DynamicServiceChain::Split(const ServiceFilter &filter,
+                                       const String &ids, DynamicGroupCfg &current,
+                                       DynamicGroupCfg &future)
+{
+    // walk the list of services and split it into two parts:
+    // services that are applicable now and future services
+    bool doingCurrent = true;
     const char *item = NULL;
     int ilen = 0;
     const char *pos = NULL;
-    while (strListGetItem(&ids, ',', &item, &ilen, &pos))
-        services.push_back(item);
+    while (strListGetItem(&ids, ',', &item, &ilen, &pos)) {
+        String id;
+        id.limitInit(item, ilen);
+        ServicePointer service = FindService(id);
+        if (doingCurrent) {
+            if (!service || // cannot tell or matches current location
+                    (service->cfg().method == filter.method &&
+                     service->cfg().point == filter.point)) {
+                current.add(id);
+                continue;
+            } else {
+                doingCurrent = false;
+            }
+        }
 
-    finalize(); // will report [dynamic] config errors
+        if (!doingCurrent)
+            future.add(id);
+    }
 }
 
 /* ServicePlan */

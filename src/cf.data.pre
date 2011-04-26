@@ -2873,6 +2873,7 @@ DOC_START
 		<A	Server IP address or peer name
 		la	Local IP address (http_port)
 		lp	Local port number (http_port)
+		<la	Local IP address of the last server or peer connection
 		<lp     Local port number of the last server or peer connection
 
 	Time related format codes:
@@ -4154,10 +4155,10 @@ IFDEF: FOLLOW_X_FORWARDED_FOR&&USE_ADAPTATION
 DEFAULT: on
 LOC: Adaptation::Config::use_indirect_client
 DOC_START
-   Controls whether the indirect client address
-   (see follow_x_forwarded_for) instead of the
-   direct client address is passed to an ICAP
-   server as "X-Client-IP".
+	Controls whether the indirect client IP address (instead of the direct
+	client IP address) is passed to adaptation services.
+
+	See also: follow_x_forwarded_for adaptation_send_client_ip
 DOC_END
 
 NAME: via
@@ -4374,23 +4375,41 @@ DOC_START
 	performed).
 DOC_END
 
-NAME: header_replace
+NAME: request_header_replace header_replace
 IFDEF: USE_HTTP_VIOLATIONS
 TYPE: http_header_replace[]
 LOC: Config.request_header_access
 DEFAULT: none
 DOC_START
-	Usage:   header_replace header_name message
-	Example: header_replace User-Agent Nutscrape/1.0 (CP/M; 8-bit)
+	Usage:   request_header_replace header_name message
+	Example: request_header_replace User-Agent Nutscrape/1.0 (CP/M; 8-bit)
 
 	This option allows you to change the contents of headers
-	denied with header_access above, by replacing them with
-	some fixed string. This replaces the old fake_user_agent
+	denied with request_header_access above, by replacing them
+	with some fixed string. This replaces the old fake_user_agent
 	option.
 
 	This only applies to request headers, not reply headers.
 
 	By default, headers are removed if denied.
+DOC_END
+
+NAME: reply_header_replace
+IFDEF: USE_HTTP_VIOLATIONS
+TYPE: http_header_replace[]
+LOC: Config.reply_header_access
+DEFAULT: none
+DOC_START
+        Usage:   reply_header_replace header_name message
+        Example: reply_header_replace Server Foo/1.0
+
+        This option allows you to change the contents of headers
+        denied with reply_header_access above, by replacing them
+        with some fixed string.
+
+        This only applies to reply headers, not request headers.
+
+        By default, headers are removed if denied.
 DOC_END
 
 NAME: relaxed_header_parser
@@ -4857,6 +4876,11 @@ DOC_START
 		class 5		Requests are grouped according their tag (see
 				external_acl's tag= reply).
 
+
+	Each pool also requires a delay_parameters directive to configure the pool size
+	and speed limits used whenever the pool is applied to a request. Along with
+	a set of delay_access directives to determine when it is used.
+
 	NOTE: If an IP address is a.b.c.d
 		-> bits 25 through 32 are "d"
 		-> bits 17 through 24 are "c"
@@ -4898,45 +4922,47 @@ LOC: Config.Delay
 DOC_START
 	This defines the parameters for a delay pool.  Each delay pool has
 	a number of "buckets" associated with it, as explained in the
-	description of delay_class.  For a class 1 delay pool, the syntax is:
+	description of delay_class.
 
-delay_parameters pool aggregate
+	For a class 1 delay pool, the syntax is:
+		delay_pools pool 1
+		delay_parameters pool aggregate
 
 	For a class 2 delay pool:
-
-delay_parameters pool aggregate individual
+		delay_pools pool 2
+		delay_parameters pool aggregate individual
 
 	For a class 3 delay pool:
-
-delay_parameters pool aggregate network individual
+		delay_pools pool 3
+		delay_parameters pool aggregate network individual
 
 	For a class 4 delay pool:
-
-delay_parameters pool aggregate network individual user
+		delay_pools pool 4
+		delay_parameters pool aggregate network individual user
 
 	For a class 5 delay pool:
+		delay_pools pool 5
+		delay_parameters pool tagrate
 
-delay_parameters pool tag
-
-	The variables here are:
+	The option variables are:
 
 		pool		a pool number - ie, a number between 1 and the
 				number specified in delay_pools as used in
 				delay_class lines.
 
-		aggregate	the "delay parameters" for the aggregate bucket
+		aggregate	the speed limit parameters for the aggregate bucket
 				(class 1, 2, 3).
 
-		individual	the "delay parameters" for the individual
+		individual	the speed limit parameters for the individual
 				buckets (class 2, 3).
 
-		network		the "delay parameters" for the network buckets
+		network		the speed limit parameters for the network buckets
 				(class 3).
 
-		user		the delay parameters for the user buckets
+		user		the speed limit parameters for the user buckets
 				(class 4).
 
-		tag		the delay parameters for the tag buckets
+		tagrate		the speed limit parameters for the tag buckets
 				(class 5).
 
 	A pair of delay parameters is written restore/maximum, where restore is
@@ -4944,30 +4970,39 @@ delay_parameters pool tag
 	quoted in bits) per second placed into the bucket, and maximum is the
 	maximum number of bytes which can be in the bucket at any time.
 
+	There must be one delay_parameters line for each delay pool.
+
+
 	For example, if delay pool number 1 is a class 2 delay pool as in the
-	above example, and is being used to strictly limit each host to 64kbps
+	above example, and is being used to strictly limit each host to 64Kbit/sec
 	(plus overheads), with no overall limit, the line is:
 
-delay_parameters 1 -1/-1 8000/8000
+		delay_parameters 1 -1/-1 8000/8000
+
+	Note that 8 x 8000 KByte/sec -> 64Kbit/sec.
 
 	Note that the figure -1 is used to represent "unlimited".
 
+
 	And, if delay pool number 2 is a class 3 delay pool as in the above
-	example, and you want to limit it to a total of 256kbps (strict limit)
-	with each 8-bit network permitted 64kbps (strict limit) and each
-	individual host permitted 4800bps with a bucket maximum size of 64kb
+	example, and you want to limit it to a total of 256Kbit/sec (strict limit)
+	with each 8-bit network permitted 64Kbit/sec (strict limit) and each
+	individual host permitted 4800bit/sec with a bucket maximum size of 64Kbits
 	to permit a decent web page to be downloaded at a decent speed
 	(if the network is not being limited due to overuse) but slow down
 	large downloads more significantly:
 
-delay_parameters 2 32000/32000 8000/8000 600/8000
+		delay_parameters 2 32000/32000 8000/8000 600/8000
 
-	There must be one delay_parameters line for each delay pool.
+	Note that 8 x 32000 KByte/sec -> 256Kbit/sec.
+		  8 x  8000 KByte/sec ->  64Kbit/sec.
+		  8 x   600 Byte/sec  -> 4800bit/sec.
+
 
 	Finally, for a class 4 delay pool as in the example - each user will
-	be limited to 128Kb no matter how many workstations they are logged into.:
+	be limited to 128Kbits/sec no matter how many workstations they are logged into.:
 
-delay_parameters 4 32000/32000 8000/8000 600/64000 16000/16000
+		delay_parameters 4 32000/32000 8000/8000 600/64000 16000/16000
 DOC_END
 
 NAME: delay_initial_bucket_level
@@ -6408,7 +6443,11 @@ COMMENT: on|off
 LOC: Adaptation::Config::send_client_ip
 DEFAULT: off
 DOC_START
-	This adds the header "X-Client-IP" to ICAP requests.
+	If enabled, Squid shares HTTP client IP information with adaptation
+	services. For ICAP, Squid adds the X-Client-IP header to ICAP requests.
+	For eCAP, Squid sets the libecap::metaClientIp transaction option.
+
+	See also: adaptation_uses_indirect_client
 DOC_END
 
 NAME: adaptation_send_username icap_send_client_username
@@ -6879,7 +6918,7 @@ DOC_START
 DOC_END
 
 NAME: dns_retransmit_interval
-TYPE: time_t
+TYPE: time_msec
 DEFAULT: 5 seconds
 LOC: Config.Timeout.idns_retransmit
 IFDEF: !USE_DNSSERVERS
@@ -6889,8 +6928,8 @@ DOC_START
 DOC_END
 
 NAME: dns_timeout
-TYPE: time_t
-DEFAULT: 2 minutes
+TYPE: time_msec
+DEFAULT: 30 seconds
 LOC: Config.Timeout.idns_query
 IFDEF: !USE_DNSSERVERS
 DOC_START

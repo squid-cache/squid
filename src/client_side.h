@@ -151,6 +151,8 @@ public:
     bool areAllContextsForThisConnection() const;
     void freeAllContexts();
     void notifyAllContexts(const int xerrno); ///< tell everybody about the err
+    /// Traffic parsing
+    bool clientParseRequests();
     void readNextRequest();
     bool maybeMakeSpaceAvailable();
     ClientSocketContext::Pointer getCurrentContext() const;
@@ -211,7 +213,7 @@ public:
 #endif
 
     struct {
-        bool readMoreRequests;
+        bool readMore; ///< needs comm_read (for this request or new requests)
         bool swanSang; // XXX: temporary flag to check proper cleanup
     } flags;
     struct {
@@ -304,10 +306,12 @@ protected:
 private:
     int connReadWasError(comm_err_t flag, int size, int xerrno);
     int connFinishedWithConn(int size);
-    void clientMaybeReadData(int do_next_read);
-    void clientAfterReadingRequests(int do_next_read);
+    void clientAfterReadingRequests();
 
 private:
+    HttpParser parser_;
+
+    // XXX: CBDATA plays with public/private and leaves the following 'private' fields all public... :(
     CBDATA_CLASS2(ConnStateData);
     bool transparent_;
     bool closing_;

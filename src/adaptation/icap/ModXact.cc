@@ -1301,8 +1301,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
 
     // share the cross-transactional database records if needed
     if (Adaptation::Config::masterx_shared_name) {
-        // XXX: do not create history here: there can be no values in empty ah
-        Adaptation::History::Pointer ah = request->adaptHistory(true);
+        Adaptation::History::Pointer ah = request->adaptHistory(false);
         if (ah != NULL) {
             String name, value;
             if (ah->getXxRecord(name, value)) {
@@ -1496,8 +1495,6 @@ void Adaptation::Icap::ModXact::decideOnPreview()
     }
 
     // we decided to do preview, now compute its size
-
-    Must(wantedSize >= 0);
 
     // cannot preview more than we can backup
     size_t ad = min(wantedSize, TheBackupLimit);
@@ -1767,7 +1764,7 @@ void Adaptation::Icap::VirginBodyAct::disable()
 void Adaptation::Icap::VirginBodyAct::progress(size_t size)
 {
     Must(active());
-    Must(size >= 0);
+    Must(static_cast<int64_t>(size) >= 0);
     theStart += static_cast<int64_t>(size);
 }
 
@@ -1784,7 +1781,6 @@ Adaptation::Icap::Preview::Preview(): theWritten(0), theAd(0), theState(stDisabl
 void Adaptation::Icap::Preview::enable(size_t anAd)
 {
     // TODO: check for anAd not exceeding preview size limit
-    Must(anAd >= 0);
     Must(!enabled());
     theAd = anAd;
     theState = stWriting;
@@ -1845,10 +1841,14 @@ bool Adaptation::Icap::ModXact::fillVirginHttpHeader(MemBuf &mb) const
 
 void Adaptation::Icap::ModXact::detailError(int errDetail)
 {
-    if (HttpRequest *request = virgin.cause ?
-                               virgin.cause : dynamic_cast<HttpRequest*>(virgin.header)) {
+    HttpRequest *request = dynamic_cast<HttpRequest*>(adapted.header);
+    // if no adapted request, update virgin (and inherit its properties later)
+    // TODO: make this and HttpRequest::detailError constant, like adaptHistory
+    if (!request)
+        request = const_cast<HttpRequest*>(&virginRequest());
+
+    if (request)
         request->detailError(ERR_ICAP_FAILURE, errDetail);
-    }
 }
 
 /* Adaptation::Icap::ModXactLauncher */

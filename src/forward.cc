@@ -880,8 +880,8 @@ FwdState::connectStart()
 
         comm_add_close_handler(fd, fwdServerClosedWrapper, this);
 
-        // TODO: Avoid this if %<lp is not used? F->local_port is often cached.
-        request->hier.peer_local_port = comm_local_port(fd);
+        if (comm_local_port(fd))
+            request->hier.peer_local_addr = fd_table[fd].local_addr;
 
         dispatch();
 
@@ -949,7 +949,8 @@ FwdState::connectStart()
     if (!fs->_peer)
         origin_tries++;
 
-    request->hier.peer_local_port = comm_local_port(fd);
+    if (comm_local_port(fd))
+        request->hier.peer_local_addr = fd_table[fd].local_addr;
 
     /*
      * stats.conn_open is used to account for the number of

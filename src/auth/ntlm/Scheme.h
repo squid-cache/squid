@@ -30,41 +30,45 @@
  *
  */
 
-#include "config.h"
+#ifndef SQUID_AUTH_NTLM_SCHEME_H
+#define SQUID_AUTH_NTLM_SCHEME_H
+
+#include "auth/Scheme.h"
 #include "auth/ntlm/auth_ntlm.h"
-#include "auth/ntlm/ntlmScheme.h"
-#include "helper.h"
 
-AuthScheme::Pointer
-ntlmScheme::GetInstance()
+namespace Auth
 {
-    if (_instance == NULL) {
-        _instance = new ntlmScheme();
-        AddScheme(_instance);
-    }
-    return _instance;
-}
-
-char const *
-ntlmScheme::type () const
+namespace Ntlm
 {
-    return "ntlm";
-}
 
-AuthScheme::Pointer ntlmScheme::_instance = NULL;
-
-void
-ntlmScheme::done()
+/// \ingroup AuthSchemeAPI
+/// \ingroup AuthAPI
+class Scheme : public Auth::Scheme
 {
-    /* clear the global handle to this scheme. */
-    _instance = NULL;
 
-    debugs(29, 2, "ntlmScheme::done: NTLM authentication Shutdown.");
-}
+public:
+    static Auth::Scheme::Pointer GetInstance();
+    Scheme() {};
+    virtual ~Scheme() {};
 
-AuthConfig *
-ntlmScheme::createConfig()
-{
-    auth_ntlm_config *ntlmCfg = new auth_ntlm_config;
-    return dynamic_cast<AuthConfig*>(ntlmCfg);
-}
+    /* per scheme */
+    virtual char const *type() const;
+    virtual void shutdownCleanup();
+    virtual Auth::Config *createConfig();
+
+    /* Not implemented */
+    Scheme (Scheme const &);
+    Scheme &operator=(Scheme const &);
+
+private:
+    /**
+     * Main instance of this authentication Scheme.
+     * NULL when the scheme is not being used.
+     */
+    static Auth::Scheme::Pointer _instance;
+};
+
+} // namespace Ntlm
+} // namespace Auth
+
+#endif /* SQUID_AUTH_NTLM_SCHEME_H */

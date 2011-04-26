@@ -77,10 +77,6 @@
 #include "config.h"
 #include "compat/eui64_aton.h"
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-
 /*
  * Convert an ASCII representation of an EUI-64 to binary form.
  */

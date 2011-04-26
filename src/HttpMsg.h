@@ -136,6 +136,13 @@ protected:
 class HttpParser
 {
 public:
+    HttpParser() { clear(); }
+    HttpParser(const char *buf, int len);
+
+    /// Set this parser back to a default state.
+    /// Will DROP any reference to a buffer (does not free).
+    void clear();
+
     /**
      * Attempt to parse the first line of a new request message.
      *
