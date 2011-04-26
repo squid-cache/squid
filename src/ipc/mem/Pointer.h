@@ -27,6 +27,8 @@ public:
     static Owner *New(const char *const id, const P1 &p1, const P2 &p2);
     template <class P1, class P2, class P3>
     static Owner *New(const char *const id, const P1 &p1, const P2 &p2, const P3 &p3);
+    template <class P1, class P2, class P3, class P4>
+    static Owner *New(const char *const id, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4);
 
     ~Owner();
 
@@ -72,7 +74,7 @@ private:
     typedef RefCount< Object<Class> > Base;
 
 public:
-    explicit Pointer(Object<Class> *const anObject): Base(anObject) {}
+    explicit Pointer(Object<Class> *const anObject = NULL): Base(anObject) {}
 
     Class *operator ->() const { return Base::operator ->()->theObject; }
     Class &operator *() const { return *Base::operator *().theObject; }
@@ -134,6 +136,16 @@ Owner<Class>::New(const char *const id, const P1 &p1, const P2 &p2, const P3 &p3
     const off_t sharedSize = Class::SharedMemorySize(p1, p2, p3);
     Owner *const owner = new Owner(id, sharedSize);
     owner->theObject = new (owner->theSegment.reserve(sharedSize)) Class(p1, p2, p3);
+    return owner;
+}
+
+template <class Class> template <class P1, class P2, class P3, class P4>
+Owner<Class> *
+Owner<Class>::New(const char *const id, const P1 &p1, const P2 &p2, const P3 &p3, const P4 &p4)
+{
+    const off_t sharedSize = Class::SharedMemorySize(p1, p2, p3, p4);
+    Owner *const owner = new Owner(id, sharedSize);
+    owner->theObject = new (owner->theSegment.reserve(sharedSize)) Class(p1, p2, p3, p4);
     return owner;
 }
 
