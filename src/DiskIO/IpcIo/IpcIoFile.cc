@@ -5,6 +5,7 @@
  */
 
 #include "config.h"
+#include "base/RunnersRegistry.h"
 #include "base/TextException.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/IpcIo/IpcIoFile.h"
@@ -12,17 +13,20 @@
 #include "DiskIO/WriteRequest.h"
 #include "ipc/Messages.h"
 #include "ipc/Port.h"
+#include "ipc/Queue.h"
 #include "ipc/StrandSearch.h"
 #include "ipc/UdsOp.h"
 #include "ipc/mem/Pages.h"
 
 CBDATA_CLASS_INIT(IpcIoFile);
 
-IpcIoFile::DiskerQueue::Owner *IpcIoFile::diskerQueueOwner = NULL;
-IpcIoFile::DiskerQueue *IpcIoFile::diskerQueue = NULL;
+/// shared memory segment path to use for IpcIoFile maps
+static const char *const ShmLabel = "io_file";
+
 const double IpcIoFile::Timeout = 7; // seconds;  XXX: ALL,9 may require more
 IpcIoFile::IpcIoFileList IpcIoFile::WaitingForOpen;
 IpcIoFile::IpcIoFilesMap IpcIoFile::IpcIoFiles;
+std::auto_ptr<IpcIoFile::Queue> IpcIoFile::queue;
 
 static bool DiskerOpen(const String &path, int flags, mode_t mode);
 static void DiskerClose(const String &path);
@@ -46,7 +50,7 @@ operator <<(std::ostream &os, const SipcIo &sio)
 
 
 IpcIoFile::IpcIoFile(char const *aDb):
-    dbName(aDb), diskId(-1), workerQueue(NULL), error_(false), lastRequestId(0),
+    dbName(aDb), diskId(-1), error_(false), lastRequestId(0),
     olderRequests(&requestMap1), newerRequests(&requestMap2),
     timeoutCheckScheduled(false)
 {
@@ -68,17 +72,15 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 {
     ioRequestor = callback;
     Must(diskId < 0); // we do not know our disker yet
-    Must(!diskerQueueOwner && !diskerQueue && !workerQueue);
+
+    if (!queue.get())
+        queue.reset(new Queue(ShmLabel, IamWorkerProcess() ? Queue::groupA : Queue::groupB, KidIdentifier));
 
     if (IamDiskProcess()) {
         error_ = !DiskerOpen(dbName, flags, mode);
         if (error_)
             return;
 
-        // XXX: make capacity configurable
-        diskerQueueOwner =
-            DiskerQueue::Init(dbName, Config.workers, sizeof(IpcIoMsg), 1024);
-        diskerQueue = new DiskerQueue(dbName);
         diskId = KidIdentifier;
         const bool inserted =
             IpcIoFiles.insert(std::make_pair(diskId, this)).second;
@@ -111,7 +113,6 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 void
 IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response) {
     Must(diskId < 0); // we do not know our disker yet
-    Must(!workerQueue);
 
     if (!response) {
         debugs(79,1, HERE << "error: timeout");
@@ -119,7 +120,6 @@ IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response) {
     } else {
         diskId = response->strand.kidId;
         if (diskId >= 0) {
-            workerQueue = DiskerQueue::Attach(dbName, KidIdentifier);
             const bool inserted =
                 IpcIoFiles.insert(std::make_pair(diskId, this)).second;
             Must(inserted);
@@ -148,13 +148,6 @@ void
 IpcIoFile::close()
 {
     assert(ioRequestor != NULL);
-
-    delete diskerQueueOwner;
-    diskerQueueOwner = NULL;
-    delete diskerQueue;
-    diskerQueue = NULL;
-    delete workerQueue;
-    workerQueue = NULL;
 
     if (IamDiskProcess())
         DiskerClose(dbName);
@@ -300,11 +293,10 @@ void
 IpcIoFile::push(IpcIoPendingRequest *const pending)
 {
     // prevent queue overflows: check for responses to earlier requests
-    handleResponses("before push");
+    HandleResponses("before push");
 
     debugs(47, 7, HERE);
     Must(diskId >= 0);
-    Must(workerQueue);
     Must(pending);
     Must(pending->readRequest || pending->writeRequest);
 
@@ -328,12 +320,12 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
             memcpy(buf, pending->writeRequest->buf, ipcIo.len); // optimize away
         }
 
-        debugs(47, 7, HERE << "pushing " << SipcIo(KidIdentifier, ipcIo, diskId) << " at " << workerQueue->pushQueue->size());
+        debugs(47, 7, HERE << "pushing " << SipcIo(KidIdentifier, ipcIo, diskId));
 
-        if (workerQueue->push(ipcIo))
+        if (queue->push(diskId, ipcIo))
             Notify(diskId); // must notify disker
         trackPendingRequest(pending);
-    } catch (const WorkerQueue::Full &) {
+    } catch (const Queue::Full &) {
         debugs(47, DBG_IMPORTANT, "Worker I/O push queue overflow: " <<
                SipcIo(KidIdentifier, ipcIo, diskId)); // TODO: report queue len
         // TODO: grow queue size
@@ -367,22 +359,17 @@ IpcIoFile::HandleOpenResponse(const Ipc::StrandSearchResponse &response)
 }
 
 void
-IpcIoFile::handleNotification()
-{
-    debugs(47, 4, HERE << "notified");
-    workerQueue->clearReaderSignal();
-    handleResponses("after notification");
-}
-
-void
-IpcIoFile::handleResponses(const char *when)
+IpcIoFile::HandleResponses(const char *const when)
 {
     debugs(47, 4, HERE << "popping all " << when);
-    Must(workerQueue);
     IpcIoMsg ipcIo;
     // get all responses we can: since we are not pushing, this will stop
-    while (workerQueue->pop(ipcIo))
-        handleResponse(ipcIo);
+    int diskId;
+    while (queue->pop(diskId, ipcIo)) {
+        const IpcIoFilesMap::const_iterator i = IpcIoFiles.find(diskId);
+        Must(i != IpcIoFiles.end()); // TODO: warn but continue
+        i->second->handleResponse(ipcIo);
+    }
 }
 
 void
@@ -390,7 +377,7 @@ IpcIoFile::handleResponse(IpcIoMsg &ipcIo)
 {
     const int requestId = ipcIo.requestId;
     debugs(47, 7, HERE << "popped disker response: " <<
-        SipcIo(KidIdentifier, ipcIo, diskId)  << " at " << workerQueue->popQueue->size());
+        SipcIo(KidIdentifier, ipcIo, diskId));
 
     Must(requestId);
     if (IpcIoPendingRequest *const pending = dequeueRequest(requestId)) {
@@ -420,15 +407,11 @@ IpcIoFile::HandleNotification(const Ipc::TypedMsgHdr &msg)
 {
     const int from = msg.getInt();
     debugs(47, 7, HERE << "from " << from);
-    if (IamDiskProcess()) {
-        const int workerId = from;
-        DiskerHandleRequests(workerId);
-    } else {
-        const int diskId = from;
-        const IpcIoFilesMap::const_iterator i = IpcIoFiles.find(diskId);
-        Must(i != IpcIoFiles.end()); // TODO: warn but continue
-        i->second->handleNotification();
-    }
+    queue->clearReaderSignal(from);
+    if (IamDiskProcess())
+        DiskerHandleRequests();
+    else
+        HandleResponses("after notification");
 }
 
 /// handles open request timeout
@@ -618,14 +601,11 @@ diskerWrite(IpcIoMsg &ipcIo)
 }
 
 void
-IpcIoFile::DiskerHandleRequests(const int workerWhoNotified)
+IpcIoFile::DiskerHandleRequests()
 {
-    Must(diskerQueue);
-    diskerQueue->clearReaderSignal(workerWhoNotified);
-
     int workerId = 0;
     IpcIoMsg ipcIo;
-    while (diskerQueue->pop(workerId, ipcIo))
+    while (queue->pop(workerId, ipcIo))
         DiskerHandleRequest(workerId, ipcIo);
 
     // TODO: If the loop keeps on looping, we probably should take a break
@@ -640,8 +620,6 @@ IpcIoFile::DiskerHandleRequests(const int workerWhoNotified)
 void
 IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
 {
-    Must(diskerQueue);
-
     if (ipcIo.command != IpcIo::cmdRead && ipcIo.command != IpcIo::cmdWrite) {
         debugs(0,0, HERE << "disker" << KidIdentifier <<
                " should not receive " << ipcIo.command <<
@@ -659,12 +637,12 @@ IpcIoFile::DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo)
     else // ipcIo.command == IpcIo::cmdWrite
         diskerWrite(ipcIo);
 
-    debugs(47, 7, HERE << "pushing " << SipcIo(workerId, ipcIo, KidIdentifier) << " at " << diskerQueue->biQueues[workerId-1]->pushQueue->size());
+    debugs(47, 7, HERE << "pushing " << SipcIo(workerId, ipcIo, KidIdentifier));
 
     try {
-        if (diskerQueue->push(workerId, ipcIo))
+        if (queue->push(workerId, ipcIo))
             Notify(workerId); // must notify worker
-    } catch (const DiskerQueue::Full &) {
+    } catch (const Queue::Full &) {
         // The worker queue should not overflow because the worker should pop()
         // before push()ing and because if disker pops N requests at a time,
         // we should make sure the worker pop() queue length is the worker
@@ -704,4 +682,38 @@ DiskerClose(const String &path)
         TheFile = -1;
         store_open_disk_fd--;
     }
+}
+
+
+/// initializes shared memory segments used by IpcIoFile
+class IpcIoRr: public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    IpcIoRr(): owner(NULL) {}
+    virtual void run(const RunnerRegistry &);
+    virtual ~IpcIoRr();
+
+private:
+    Ipc::FewToFewBiQueue::Owner *owner;
+};
+
+RunnerRegistrationEntry(rrAfterConfig, IpcIoRr);
+
+
+void IpcIoRr::run(const RunnerRegistry &)
+{
+    if (!UsingSmp())
+        return;
+
+    if (IamMasterProcess()) {
+        Must(!owner);
+        // XXX: make capacity configurable
+        owner = Ipc::FewToFewBiQueue::Init(ShmLabel, Config.workers, 1, Config.cacheSwap.n_configured, 1 + Config.workers, sizeof(IpcIoMsg), 1024);
+    }
+}
+
+IpcIoRr::~IpcIoRr()
+{
+    delete owner;
 }

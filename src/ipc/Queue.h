@@ -12,8 +12,6 @@
 #include "ipc/mem/Pointer.h"
 #include "util.h"
 
-#include <memory>
-
 class String;
 
 namespace Ipc {
@@ -71,137 +69,130 @@ public:
  * different value). We can add support for blocked writers if needed.
  */
 class OneToOneUniQueue {
-private:
-    struct Shared {
-        Shared(const unsigned int aMaxItemSize, const int aCapacity);
-        size_t sharedMemorySize() const;
-        static size_t SharedMemorySize(const unsigned int maxItemSize, const int capacity);
-
-        unsigned int theIn; ///< input index, used only in push()
-        unsigned int theOut; ///< output index, used only in pop()
-
-        AtomicWord theSize; ///< number of items in the queue
-        const unsigned int theMaxItemSize; ///< maximum item size
-        const int theCapacity; ///< maximum number of items, i.e. theBuffer size
-
-        char theBuffer[];
-    };
-
 public:
     // pop() and push() exceptions; TODO: use TextException instead
     class Full {};
     class ItemTooLarge {};
 
-    typedef Mem::Owner<Shared> Owner;
+    OneToOneUniQueue(const unsigned int aMaxItemSize, const int aCapacity);
 
-    /// initialize shared memory
-    static Owner *Init(const String &id, const unsigned int maxItemSize, const int capacity);
+    unsigned int maxItemSize() const { return theMaxItemSize; }
+    int size() const { return theSize; }
+    int capacity() const { return theCapacity; }
+    int sharedMemorySize() const { return Items2Bytes(theMaxItemSize, theCapacity); }
 
-    OneToOneUniQueue(const String &id);
-
-    unsigned int maxItemSize() const { return shared->theMaxItemSize; }
-    int size() const { return shared->theSize; }
-    int capacity() const { return shared->theCapacity; }
-
-    bool empty() const { return !shared->theSize; }
-    bool full() const { return shared->theSize == shared->theCapacity; }
+    bool empty() const { return !theSize; }
+    bool full() const { return theSize == theCapacity; }
 
     static int Bytes2Items(const unsigned int maxItemSize, int size);
     static int Items2Bytes(const unsigned int maxItemSize, const int size);
 
     /// returns true iff the value was set; [un]blocks the reader as needed
-    template<class Value> bool pop(Value &value);
+    template<class Value> bool pop(Value &value, QueueReader *const reader = NULL);
 
     /// returns true iff the caller must notify the reader of the pushed item
-    template<class Value> bool push(const Value &value);
-
-    QueueReader &reader();
-    void reader(QueueReader *aReader);
+    template<class Value> bool push(const Value &value, QueueReader *const reader = NULL);
 
 private:
 
-    Mem::Pointer<Shared> shared; ///< pointer to shared memory
-    QueueReader *reader_; ///< the state of the code popping from this queue
+    unsigned int theIn; ///< input index, used only in push()
+    unsigned int theOut; ///< output index, used only in pop()
+
+    AtomicWord theSize; ///< number of items in the queue
+    const unsigned int theMaxItemSize; ///< maximum item size
+    const int theCapacity; ///< maximum number of items, i.e. theBuffer size
+
+    char theBuffer[];
 };
 
-/// Lockless fixed-capacity bidirectional queue for two processes.
-class OneToOneBiQueue {
+/// shared array of OneToOneUniQueues
+class OneToOneUniQueues {
+public:
+    OneToOneUniQueues(const int aCapacity, const unsigned int maxItemSize, const int queueCapacity);
+
+    size_t sharedMemorySize() const;
+    static size_t SharedMemorySize(const int capacity, const unsigned int maxItemSize, const int queueCapacity);
+
+    const OneToOneUniQueue &operator [](const int index) const;
+    inline OneToOneUniQueue &operator [](const int index);
+
 private:
-    typedef std::auto_ptr<OneToOneUniQueue::Owner> UniQueueOwner;
+    inline const OneToOneUniQueue &front() const;
 
 public:
-    typedef OneToOneUniQueue::Full Full;
-    typedef OneToOneUniQueue::ItemTooLarge ItemTooLarge;
-
-    typedef std::pair<UniQueueOwner, UniQueueOwner> Owner;
-
-    /// initialize shared memory
-    static Owner *Init(const String &id, const unsigned int maxItemSize, const int capacity);
-
-    enum Side { Side1 = 1, Side2 = 2 };
-    OneToOneBiQueue(const String &id, const Side side);
-
-    void readers(QueueReader *r1, QueueReader *r2);
-    void clearReaderSignal();
-
-    /* wrappers to call the right OneToOneUniQueue method for this process */
-    template<class Value> bool pop(Value &value) { return popQueue->pop(value); }
-    template<class Value> bool push(const Value &value) { return pushQueue->push(value); }
-
-//private:
-    std::auto_ptr<OneToOneUniQueue> popQueue; ///< queue to pop from for this process
-    std::auto_ptr<OneToOneUniQueue> pushQueue; ///< queue to push to for this process
+    const int theCapacity; /// number of OneToOneUniQueues
 };
 
 /**
  * Lockless fixed-capacity bidirectional queue for a limited number
- * pricesses. Implements a star topology: Many worker processes
- * communicate with the one central process. The central process uses
- * FewToOneBiQueue object, while workers use OneToOneBiQueue objects
- * created with the Attach() method. Each worker has a unique integer
- * ID in [1, workerCount] range.
+ * processes. Allows communication between two groups of processes:
+ * any process in one group may send data to and receive from any
+ * process in another group, but processes in the same group can not
+ * communicate. Process in each group has a unique integer ID in
+ * [groupIdOffset, groupIdOffset + groupSize) range.
  */
-class FewToOneBiQueue {
+class FewToFewBiQueue {
 public:
-    typedef OneToOneBiQueue::Full Full;
-    typedef OneToOneBiQueue::ItemTooLarge ItemTooLarge;
+    typedef OneToOneUniQueue::Full Full;
+    typedef OneToOneUniQueue::ItemTooLarge ItemTooLarge;
 
+private:
+    /// Shared metadata for FewToFewBiQueue
+    struct Metadata {
+        Metadata(const int aGroupASize, const int aGroupAIdOffset, const int aGroupBSize, const int aGroupBIdOffset);
+        size_t sharedMemorySize() const { return sizeof(*this); }
+        static size_t SharedMemorySize(const int, const int, const int, const int) { return sizeof(Metadata); }
+
+        const int theGroupASize;
+        const int theGroupAIdOffset;
+        const int theGroupBSize;
+        const int theGroupBIdOffset;
+    };
+
+public:
     class Owner {
     public:
-        Owner(const String &id, const int workerCount, const unsigned int maxItemSize, const int capacity);
+        Owner(const String &id, const int groupASize, const int groupAIdOffset, const int groupBSize, const int groupBIdOffset, const unsigned int maxItemSize, const int capacity);
         ~Owner();
 
     private:
-        Vector<OneToOneBiQueue::Owner *> biQueueOwners;
+        Mem::Owner<Metadata> *const metadataOwner;
+        Mem::Owner<OneToOneUniQueues> *const queuesOwner;
         Mem::Owner<QueueReaders> *const readersOwner;
     };
 
-    static Owner *Init(const String &id, const int workerCount, const unsigned int maxItemSize, const int capacity);
+    static Owner *Init(const String &id, const int groupASize, const int groupAIdOffset, const int groupBSize, const int groupBIdOffset, const unsigned int maxItemSize, const int capacity);
 
-    FewToOneBiQueue(const String &id);
-    static OneToOneBiQueue *Attach(const String &id, const int workerId);
-    ~FewToOneBiQueue();
+    enum Group { groupA = 0, groupB = 1 };
+    FewToFewBiQueue(const String &id, const Group aLocalGroup, const int aLocalProcessId);
 
-    bool validWorkerId(const int workerId) const;
-    int workerCount() const { return readers->theCapacity - 1; }
+    Group localGroup() const { return theLocalGroup; }
+    Group remoteGroup() const { return theLocalGroup == groupA ? groupB : groupA; }
 
-    /// clears the reader notification received by the disker from worker
-    void clearReaderSignal(int workerId);
+    /// clears the reader notification received by the local process from the remote process
+    void clearReaderSignal(const int remoteProcessId);
 
-    /// picks a worker and calls OneToOneUniQueue::pop() using its queue
-    template <class Value> bool pop(int &workerId, Value &value);
+    /// picks a process and calls OneToOneUniQueue::pop() using its queue
+    template <class Value> bool pop(int &remoteProcessId, Value &value);
 
-    /// calls OneToOneUniQueue::push() using the given worker queue
-    template <class Value> bool push(const int workerId, const Value &value);
+    /// calls OneToOneUniQueue::push() using the given process queue
+    template <class Value> bool push(const int remoteProcessId, const Value &value);
 
-//private: XXX: make private by moving pop/push debugging into pop/push
-    int theLastPopWorker; ///< the ID of the last worker we tried to pop() from
-    Vector<OneToOneBiQueue *> biQueues; ///< worker queues indexed by worker ID
+private:
+    bool validProcessId(const Group group, const int processId) const;
+    OneToOneUniQueue &oneToOneQueue(const Group fromGroup, const int fromProcessId, const Group toGroup, const int toProcessId);
+    QueueReader &reader(const Group group, const int processId);
+    int remoteGroupSize() const { return theLocalGroup == groupA ? metadata->theGroupBSize : metadata->theGroupASize; }
+    int remoteGroupIdOffset() const { return theLocalGroup == groupA ? metadata->theGroupBIdOffset : metadata->theGroupAIdOffset; }
 
+private:
+    const Mem::Pointer<Metadata> metadata; ///< shared metadata
+    const Mem::Pointer<OneToOneUniQueues> queues; ///< unidirection one-to-one queues
     const Mem::Pointer<QueueReaders> readers; ///< readers array
-    QueueReader *const reader; ///< the state of the code popping from all biQueues
 
-    enum { WorkerIdOffset = 1 }; ///< worker ID offset, always 1 for now
+    const Group theLocalGroup; ///< group of this queue
+    const int theLocalProcessId; ///< process ID of this queue
+    int theLastPopProcessId; ///< the ID of the last process we tried to pop() from
 };
 
 
@@ -209,73 +200,99 @@ public:
 
 template <class Value>
 bool
-OneToOneUniQueue::pop(Value &value)
+OneToOneUniQueue::pop(Value &value, QueueReader *const reader)
 {
-    if (sizeof(value) > shared->theMaxItemSize)
+    if (sizeof(value) > theMaxItemSize)
         throw ItemTooLarge();
 
     // A writer might push between the empty test and block() below, so we do
     // not return false right after calling block(), but test again.
     if (empty()) {
-        reader().block();
+        if (!reader)
+            return false;
+
+        reader->block();
         // A writer might push between the empty test and block() below,
         // so we must test again as such a writer will not signal us.
         if (empty())
             return false;
     }
 
-    reader().unblock();
-    const unsigned int pos =
-        (shared->theOut++ % shared->theCapacity) * shared->theMaxItemSize;
-    memcpy(&value, shared->theBuffer + pos, sizeof(value));
-    --shared->theSize;
+    if (reader)
+        reader->unblock();
+
+    const unsigned int pos = (theOut++ % theCapacity) * theMaxItemSize;
+    memcpy(&value, theBuffer + pos, sizeof(value));
+    --theSize;
 
     return true;
 }
 
 template <class Value>
 bool
-OneToOneUniQueue::push(const Value &value)
+OneToOneUniQueue::push(const Value &value, QueueReader *const reader)
 {
-    if (sizeof(value) > shared->theMaxItemSize)
+    if (sizeof(value) > theMaxItemSize)
         throw ItemTooLarge();
 
     if (full())
         throw Full();
 
     const bool wasEmpty = empty();
-    const unsigned int pos =
-        shared->theIn++ % shared->theCapacity * shared->theMaxItemSize;
-    memcpy(shared->theBuffer + pos, &value, sizeof(value));
-    ++shared->theSize;
+    const unsigned int pos = theIn++ % theCapacity * theMaxItemSize;
+    memcpy(theBuffer + pos, &value, sizeof(value));
+    ++theSize;
 
-    return wasEmpty && reader().raiseSignal();
+    return wasEmpty && (!reader || reader->raiseSignal());
 }
 
 
-// FewToOneBiQueue
+// OneToOneUniQueues
+
+inline OneToOneUniQueue &
+OneToOneUniQueues::operator [](const int index)
+{
+    return const_cast<OneToOneUniQueue &>((*const_cast<const OneToOneUniQueues *>(this))[index]);
+}
+
+inline const OneToOneUniQueue &
+OneToOneUniQueues::front() const
+{
+    const char *const queue =
+        reinterpret_cast<const char *>(this) + sizeof(*this);
+    return *reinterpret_cast<const OneToOneUniQueue *>(queue);
+}
+
+
+// FewToFewBiQueue
 
 template <class Value>
 bool
-FewToOneBiQueue::pop(int &workerId, Value &value)
+FewToFewBiQueue::pop(int &remoteProcessId, Value &value)
 {
-    // iterate all workers, starting after the one we visited last
-    for (int i = 0; i < workerCount(); ++i) {
-        theLastPopWorker = (theLastPopWorker + 1) % workerCount();
-        if (biQueues[theLastPopWorker]->pop(value)) {
-            workerId = theLastPopWorker + WorkerIdOffset;
+    // iterate all remote group processes, starting after the one we visited last
+    QueueReader &localReader = reader(theLocalGroup, theLocalProcessId);
+    for (int i = 0; i < remoteGroupSize(); ++i) {
+        if (++theLastPopProcessId >= remoteGroupIdOffset() + remoteGroupSize())
+            theLastPopProcessId = remoteGroupIdOffset();
+        OneToOneUniQueue &queue = oneToOneQueue(remoteGroup(), theLastPopProcessId, theLocalGroup, theLocalProcessId);
+        if (queue.pop(value, &localReader)) {
+            remoteProcessId = theLastPopProcessId;
+            debugs(54, 7, HERE << "popped from " << remoteProcessId << " to " << theLocalProcessId << " at " << queue.size());
             return true;
         }
     }
-    return false; // no worker had anything to pop
+    return false; // no process had anything to pop
 }
 
 template <class Value>
 bool
-FewToOneBiQueue::push(const int workerId, const Value &value)
+FewToFewBiQueue::push(const int remoteProcessId, const Value &value)
 {
-    assert(validWorkerId(workerId));
-    return biQueues[workerId - WorkerIdOffset]->push(value);
+    OneToOneUniQueue &remoteQueue = oneToOneQueue(theLocalGroup, theLocalProcessId, remoteGroup(), remoteProcessId);
+    QueueReader &remoteReader = reader(remoteGroup(), remoteProcessId);
+    debugs(54, 7, HERE << "pushing from " << theLocalProcessId << " to " << remoteProcessId << " at " << remoteQueue.size());
+    return remoteQueue.push(value, &remoteReader);
 }
 
 } // namespace Ipc
