@@ -4030,8 +4030,8 @@ DOC_START
 DOC_END
 
 NAME: store_avg_object_size
-COMMENT: (kbytes)
-TYPE: kb_int64_t
+COMMENT: (bytes)
+TYPE: b_int64_t
 DEFAULT: 13 KB
 LOC: Config.Store.avgObjectSize
 DOC_START
