@@ -2062,7 +2062,7 @@ StoreEntry::hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) con
     return matched;
 }
 
-StorePointer
+SwapDir::Pointer
 StoreEntry::store() const
 {
     assert(0 <= swap_dirn && swap_dirn < Config.cacheSwap.n_configured);

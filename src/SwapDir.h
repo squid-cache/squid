@@ -123,6 +123,8 @@ class SwapDir : public Store
 {
 
 public:
+    typedef RefCount<SwapDir> Pointer;
+
     SwapDir(char const *aType);
     virtual ~SwapDir();
     virtual void reconfigure(int, char *) = 0;
