@@ -41,7 +41,6 @@ public:
     virtual void reference(StoreEntry &);
     virtual void dereference(StoreEntry &);
     virtual void maintain();
-    virtual void updateSize(int64_t size, int sign);
 
     static int64_t EntryLimit();
 

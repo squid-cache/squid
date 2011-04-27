@@ -30,6 +30,7 @@ public:
     virtual uint64_t currentSize() const;
     virtual uint64_t currentCount() const;
     virtual bool doReportStat() const;
+    virtual void swappedOut(const StoreEntry &e);
 
     int64_t entryLimitHigh() const { return 0xFFFFFF; } /// Core sfileno maximum
     int64_t entryLimitAllowed() const;
@@ -48,7 +49,6 @@ protected:
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual void maintain();
-    virtual void updateSize(int64_t size, int sign);
     virtual void diskFull();
     virtual void reference(StoreEntry &e);
     virtual void dereference(StoreEntry &e);

@@ -134,6 +134,8 @@ void
 CossSwapDir::unlink(StoreEntry & e)
 {
     debugs(79, 3, "storeCossUnlink: offset " << e.swap_filen);
+    if (e.swap_status == SWAPOUT_DONE && EBIT_TEST(e.flags, ENTRY_VALIDATED))
+        updateSize(e.swap_file_sz, -1);
     StoreFScoss::GetInstance().stats.unlink.ops++;
     StoreFScoss::GetInstance().stats.unlink.success++;
     storeCossRemove(this, &e);
