@@ -1288,13 +1288,6 @@ StoreEntry::release()
     storeLog(STORE_LOG_RELEASE, this);
 
     if (swap_filen > -1) {
-
-        // update size before unlink() below clears swap_status
-        // TODO: the store/SwapDir::unlink should update the size!
-        if (swap_status == SWAPOUT_DONE)
-            if (EBIT_TEST(flags, ENTRY_VALIDATED))
-                store()->updateSize(swap_file_sz, -1);
-
         // log before unlink() below clears swap_filen
         if (!EBIT_TEST(flags, KEY_PRIVATE))
             storeDirSwapLog(this, SWAP_LOG_DEL);

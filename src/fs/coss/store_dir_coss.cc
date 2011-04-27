@@ -539,6 +539,7 @@ storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * key,
     EBIT_CLR(e->flags, KEY_PRIVATE);
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
+    SD->updateSize(e->swap_file_sz, 1);
     e->hashInsert(key);	/* do it after we clear KEY_PRIVATE */
     storeCossAdd(SD, e);
     assert(e->swap_filen >= 0);
@@ -1077,6 +1078,12 @@ CossSwapDir::reconfigure(int index, char *path)
     /* Enforce maxobjsize being set to something */
     if (max_objsize == -1)
         fatal("COSS requires max-size to be set to something other than -1!\n");
+}
+
+void
+CossSwapDir::swappedOut(const StoreEntry &e)
+{
+    updateSize(e.swap_file_sz, 1);
 }
 
 void

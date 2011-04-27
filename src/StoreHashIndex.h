@@ -81,8 +81,6 @@ public:
 
     virtual void maintain();
 
-    virtual void updateSize(int64_t, int);
-
     virtual StoreSearch *search(String const url, HttpRequest *);
 
 private:

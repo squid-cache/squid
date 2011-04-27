@@ -76,6 +76,7 @@ public:
     virtual void reconfigure(int, char *);
     virtual int callback();
     virtual void sync();
+    virtual void swappedOut(const StoreEntry &e);
 
     void unlinkFile(sfileno f);
     // move down when unlink is a virtual method
