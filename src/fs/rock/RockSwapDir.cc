@@ -8,6 +8,7 @@
 #include "Parsing.h"
 #include <iomanip>
 #include "MemObject.h"
+#include "SquidMath.h"
 #include "base/RunnersRegistry.h"
 #include "DiskIO/DiskIOModule.h"
 #include "DiskIO/DiskIOStrategy.h"
@@ -99,7 +100,7 @@ void Rock::SwapDir::disconnect(StoreEntry &e)
 uint64_t
 Rock::SwapDir::currentSize() const
 {
-    return (HeaderSize + max_objsize * currentCount()) >> 10;
+    return HeaderSize + max_objsize * currentCount();
 }
 
 uint64_t
@@ -571,7 +572,7 @@ Rock::SwapDir::maintain()
         return;
 
     debugs(47,3, HERE << "cache_dir[" << index << "] state: " << map->full() <<
-           ' ' << (currentSize() << 10) << " < " << diskOffsetLimit());
+           ' ' << currentSize() << " < " << diskOffsetLimit());
 
     // Hopefully, we find a removable entry much sooner (TODO: use time?)
     const int maxProbed = 10000;
@@ -644,10 +645,12 @@ Rock::SwapDir::ignoreReferences(StoreEntry &e)
 void
 Rock::SwapDir::statfs(StoreEntry &e) const
 {
+    const double currentSizeInKB = currentSize() / 1024.0;
     storeAppendPrintf(&e, "\n");
     storeAppendPrintf(&e, "Maximum Size: %"PRIu64" KB\n", max_size);
-    storeAppendPrintf(&e, "Current Size: %"PRIu64" KB %.2f%%\n",
-                      currentSize(), 100.0 * currentSize() / max_size);
+    storeAppendPrintf(&e, "Current Size: %.2f KB %.2f%%\n",
+                      currentSizeInKB,
+                      Math::doublePercent(currentSizeInKB, max_size));
 
     if (map) {
         const int limit = map->entryLimit();
