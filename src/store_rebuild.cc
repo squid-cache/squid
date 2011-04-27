@@ -111,7 +111,7 @@ storeCleanup(void *datanotused)
     if (currentSearch->isDone()) {
         debugs(20, 1, "  Completed Validation Procedure");
         debugs(20, 1, "  Validated " << validated << " Entries");
-        debugs(20, 1, "  store_swap_size = " << Store::Root().currentSize());
+        debugs(20, 1, "  store_swap_size = " << Store::Root().currentSize() / 1024.0 << " KB");
         StoreController::store_dirs_rebuilding--;
         assert(0 == StoreController::store_dirs_rebuilding);
 

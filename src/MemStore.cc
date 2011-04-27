@@ -94,7 +94,7 @@ MemStore::maxSize() const
 uint64_t
 MemStore::currentSize() const
 {
-    return theCurrentSize >> 10;
+    return theCurrentSize;
 }
 
 uint64_t
