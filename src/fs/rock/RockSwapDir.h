@@ -31,10 +31,11 @@ public:
     virtual uint64_t currentCount() const;
     virtual bool doReportStat() const;
 
+    int64_t entryLimitHigh() const { return 0xFFFFFF; } /// Core sfileno maximum
+    int64_t entryLimitAllowed() const;
+
     // TODO: change cur_size and max_size type to stop this madness
     int64_t maximumSize() const { return static_cast<int64_t>(max_size) << 10; }
-
-    static const int64_t HeaderSize;
 
     typedef Ipc::StoreMapWithExtras<DbCellHeader> DirMap;
 
@@ -83,6 +84,8 @@ private:
     DiskIOStrategy *io;
     RefCount<DiskFile> theFile; ///< cache storage for this cache_dir
     DirMap *map;
+
+    static const int64_t HeaderSize; ///< on-disk db header size
 };
 
 } // namespace Rock
