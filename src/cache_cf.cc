@@ -608,7 +608,7 @@ configDoConfigure(void)
     if (0 == Store::Root().maxSize())
         /* people might want a zero-sized cache on purpose */
         (void) 0;
-    else if (Store::Root().maxSize() < (Config.memMaxSize >> 10))
+    else if (Store::Root().maxSize() < Config.memMaxSize)
         /* This is bogus. folk with NULL caches will want this */
         debugs(3, 0, "WARNING cache_mem is larger than total disk cache space!");
 

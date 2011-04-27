@@ -83,8 +83,7 @@ CossSwapDir::allocate(const StoreEntry * e, int which)
         allocsize = e->objectLen() + e->mem_obj->swap_hdr_sz;
 
     /* Check if we have overflowed the disk .. */
-    /* max_size is int, so cast to (off_t) *before* bit-shifting */
-    if ((current_offset + allocsize) > ((off_t)max_size << 10)) {
+    if (current_offset + allocsize > static_cast<int64_t>(maxSize())) {
         /*
          * tried to allocate past the end of the disk, so wrap
          * back to the beginning

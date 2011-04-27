@@ -179,9 +179,10 @@ private:
 private:
     uint64_t cur_size;        ///< currently used space in the storage area
 
+protected:
+    uint64_t max_size;        ///< maximum allocatable size of the storage area
+
 public:
-    // TODO: store max_size in bytes
-    uint64_t max_size;        ///< maximum allocatable size of the storage area in kiloBytes
     uint64_t n_disk_objects;  ///< total number of objects stored
     char *path;
     int index;			/* This entry's index into the swapDirs array */
