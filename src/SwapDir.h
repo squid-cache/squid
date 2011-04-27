@@ -144,7 +144,7 @@ public:
 
     virtual uint64_t minSize() const;
 
-    virtual uint64_t currentSize() const { return cur_size << 10; }
+    virtual uint64_t currentSize() const { return cur_size; }
 
     virtual uint64_t currentCount() const { return n_disk_objects; }
 
@@ -173,9 +173,11 @@ private:
     void optionObjectSizeDump(StoreEntry * e) const;
     char const *theType;
 
+private:
+    uint64_t cur_size;        ///< currently used space in the storage area
+
 public:
-    // TODO: store cur_size and max_size in bytes
-    uint64_t cur_size;        ///< currently used space in the storage area in kiloBytes
+    // TODO: store max_size in bytes
     uint64_t max_size;        ///< maximum allocatable size of the storage area in kiloBytes
     uint64_t n_disk_objects;  ///< total number of objects stored
     char *path;

@@ -236,7 +236,7 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
 static int
 storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
 {
-    ssize_t most_free = 0, cur_free;
+    uint64_t most_free = 0;
     ssize_t least_objsize = -1;
     int least_load = INT_MAX;
     int load;
@@ -263,7 +263,7 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
         if (load > least_load)
             continue;
 
-        cur_free = SD->max_size - SD->cur_size;
+        const uint64_t cur_free = (SD->max_size << 10) - SD->currentSize();
 
         /* If the load is equal, then look in more details */
         if (load == least_load) {
@@ -332,8 +332,8 @@ StoreController::updateSize(int64_t size, int sign)
 void
 SwapDir::updateSize(int64_t size, int sign)
 {
-    int64_t blks = (size + fs.blksize - 1) / fs.blksize;
-    int64_t k = ((blks * fs.blksize) >> 10) * sign;
+    const int64_t blks = (size + fs.blksize - 1) / fs.blksize;
+    const int64_t k = blks * fs.blksize * sign;
     cur_size += k;
 
     if (sign > 0)
@@ -400,12 +400,12 @@ StoreController::maxObjectSize() const
 void
 SwapDir::diskFull()
 {
-    if (cur_size >= max_size)
+    if (currentSize() >= max_size << 10)
         return;
 
-    max_size = cur_size;
+    max_size = currentSize() >> 10;
 
-    debugs(20, 1, "WARNING: Shrinking cache_dir #" << index << " to " << cur_size << " KB");
+    debugs(20, 1, "WARNING: Shrinking cache_dir #" << index << " to " << currentSize() / 1024.0 << " KB");
 }
 
 void

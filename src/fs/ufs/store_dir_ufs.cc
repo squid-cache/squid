@@ -314,12 +314,13 @@ UFSSwapDir::statfs(StoreEntry & sentry) const
     int totl_in = 0;
     int free_in = 0;
     int x;
+    const double currentSizeInKB = currentSize() / 1024.0;
     storeAppendPrintf(&sentry, "First level subdirectories: %d\n", l1);
     storeAppendPrintf(&sentry, "Second level subdirectories: %d\n", l2);
     storeAppendPrintf(&sentry, "Maximum Size: %"PRIu64" KB\n", max_size);
-    storeAppendPrintf(&sentry, "Current Size: %"PRIu64" KB\n", cur_size);
+    storeAppendPrintf(&sentry, "Current Size: %.2f KB\n", currentSizeInKB);
     storeAppendPrintf(&sentry, "Percent Used: %0.2f%%\n",
-                      (double)(100.0 * cur_size) / (double)max_size);
+                      Math::doublePercent(currentSizeInKB, max_size));
     storeAppendPrintf(&sentry, "Filemap bits in use: %d of %d (%d%%)\n",
                       map->n_files_in_map, map->max_n_files,
                       Math::intPercent(map->n_files_in_map, map->max_n_files));
@@ -365,7 +366,7 @@ UFSSwapDir::maintain()
 
     RemovalPurgeWalker *walker;
 
-    double f = (double) (cur_size - minSize()) / (max_size - minSize());
+    double f = (double) (currentSize() / 1024.0 - minSize()) / (max_size - minSize());
 
     f = f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f;
 
@@ -382,7 +383,7 @@ UFSSwapDir::maintain()
     walker = repl->PurgeInit(repl, max_scan);
 
     while (1) {
-        if (cur_size < minSize())
+        if (currentSize() < minSize() << 10)
             break;
 
         if (removed >= max_remove)
