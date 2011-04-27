@@ -143,7 +143,7 @@ struct relist {
 class CpuAffinityMap;
 class RemovalPolicySettings;
 class external_acl;
-class Store;
+class SwapDir;
 
 struct SquidConfig {
 
@@ -494,7 +494,7 @@ struct SquidConfig {
     refresh_t *Refresh;
 
     struct _cacheSwap {
-        RefCount<class Store> *swapDirs;
+        RefCount<SwapDir> *swapDirs;
         int n_allocated;
         int n_configured;
         ///< number of disk processes required to support all cache_dirs
