@@ -324,8 +324,6 @@ Rock::SwapDir::addEntry(const int fileno, const DbCellHeader &header, const Stor
         if (fileno == newLocation) {
             slot->set(from);
             map->extras(fileno) = header;
-            // core will not updateSize: we do not add the entry to store_table
-            updateSize(from.swap_file_sz, +1);
         } // else some other, newer entry got into our cell
         map->closeForWriting(newLocation, false);
         return fileno == newLocation;
