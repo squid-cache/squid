@@ -117,6 +117,12 @@ Rock::SwapDir::doReportStat() const
     return ::SwapDir::doReportStat() && (!UsingSmp() || IamDiskProcess());
 }
 
+void
+Rock::SwapDir::swappedOut(const StoreEntry &)
+{
+    // stats are not stored but computed when needed
+}
+
 int64_t
 Rock::SwapDir::entryLimitAllowed() const
 {
@@ -533,12 +539,6 @@ bool
 Rock::SwapDir::full() const
 {
     return map && map->full();
-}
-
-void
-Rock::SwapDir::updateSize(int64_t size, int sign)
-{
-    // stats are not stored but computed when needed
 }
 
 // storeSwapOutFileClosed calls this nethod on DISK_NO_SPACE_LEFT,

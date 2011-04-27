@@ -49,6 +49,7 @@ public:
     virtual void logEntry(const StoreEntry & e, int op) const;
     virtual void parse (int index, char *path);
     virtual void reconfigure (int, char *);
+    virtual void swappedOut(const StoreEntry &e);
     /* internals */
     virtual off_t storeCossFilenoToDiskOffset(sfileno);
     virtual sfileno storeCossDiskOffsetToFileno(off_t);

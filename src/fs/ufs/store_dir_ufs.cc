@@ -718,6 +718,7 @@ UFSSwapDir::addDiskRestore(const cache_key * key,
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
     mapBitSet(e->swap_filen);
+    updateSize(e->swap_file_sz, 1);
     e->hashInsert(key);	/* do it after we clear KEY_PRIVATE */
     replacementAdd (e);
     return e;
@@ -1289,6 +1290,8 @@ UFSSwapDir::unlink(StoreEntry & e)
 {
     debugs(79, 3, "storeUfsUnlink: dirno " << index  << ", fileno "<<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << e.swap_filen);
+    if (e.swap_status == SWAPOUT_DONE && EBIT_TEST(e.flags, ENTRY_VALIDATED))
+        updateSize(e.swap_file_sz, -1);
     replacementRemove(&e);
     mapBitReset(e.swap_filen);
     UFSSwapDir::unlinkFile(e.swap_filen);
@@ -1362,6 +1365,12 @@ void
 UFSSwapDir::sync()
 {
     IO->sync();
+}
+
+void
+UFSSwapDir::swappedOut(const StoreEntry &e)
+{
+    updateSize(e.swap_file_sz, 1);
 }
 
 StoreSearch *

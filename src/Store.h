@@ -336,9 +336,6 @@ public:
     /// called when the entry is no longer needed by any transaction
     virtual void handleIdleEntry(StoreEntry &e) {}
 
-    /* These should really be private */
-    virtual void updateSize(int64_t size, int sign) = 0;
-
 private:
     static RefCount<Store> CurrentRoot;
 };

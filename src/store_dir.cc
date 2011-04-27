@@ -324,12 +324,6 @@ storeDirSwapLog(const StoreEntry * e, int op)
 }
 
 void
-StoreController::updateSize(int64_t size, int sign)
-{
-    fatal("StoreController has no independent size\n");
-}
-
-void
 SwapDir::updateSize(int64_t size, int sign)
 {
     const int64_t blks = (size + fs.blksize - 1) / fs.blksize;
@@ -1013,10 +1007,6 @@ StoreHashIndex::maintain()
         store(i)->maintain();
     }
 }
-
-void
-StoreHashIndex::updateSize(int64_t, int)
-{}
 
 void
 StoreHashIndex::sync()

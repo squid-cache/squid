@@ -99,10 +99,6 @@ storeCleanup(void *datanotused)
          * otherwise, set it in the validation procedure
          */
 
-
-        if (e->swap_status == SWAPOUT_DONE)
-            e->store()->updateSize(e->swap_file_sz, 1);
-
         if ((++validated & 0x3FFFF) == 0)
             /* TODO format the int with with a stream operator */
             debugs(20, 1, "  " << validated << " Entries Validated so far.");

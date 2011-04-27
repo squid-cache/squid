@@ -85,8 +85,6 @@ public:
 
     virtual void dereference(StoreEntry &);	/* Unreference this object */
 
-    virtual void updateSize(int64_t size, int sign);
-
     /* the number of store dirs being rebuilt. */
     static int store_dirs_rebuilding;
 
@@ -162,6 +160,9 @@ public:
 
     /// called when the entry is about to forget its association with cache_dir
     virtual void disconnect(StoreEntry &) {}
+
+    /// called when entry swap out is complete
+    virtual void swappedOut(const StoreEntry &e) = 0;
 
 protected:
     void parseOptions(int reconfiguring);

@@ -354,7 +354,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
         assert(e->objectLen() >= 0); // we checked that above
         e->swap_file_sz = e->objectLen() + mem->swap_hdr_sz;
         e->swap_status = SWAPOUT_DONE;
-        e->store()->updateSize(e->swap_file_sz, 1);
+        e->store()->swappedOut(*e);
 
         // XXX: For some Stores, it is pointless to re-check cachability here
         // and it leads to double counts in store_check_cachable_hist. We need
