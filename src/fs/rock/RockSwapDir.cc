@@ -19,7 +19,6 @@
 #include "fs/rock/RockIoRequests.h"
 #include "fs/rock/RockRebuild.h"
 
-// must be divisible by 1024 due to cur_size and max_size KB madness
 const int64_t Rock::SwapDir::HeaderSize = 16*1024;
 
 Rock::SwapDir::SwapDir(): ::SwapDir("rock"), filePath(NULL), io(NULL), map(NULL)
@@ -127,7 +126,7 @@ int64_t
 Rock::SwapDir::entryLimitAllowed() const
 {
     const int64_t eLimitLo = map ? map->entryLimit() : 0; // dynamic shrinking unsupported
-    const int64_t eWanted = (maximumSize() - HeaderSize)/maxObjectSize();
+    const int64_t eWanted = (maxSize() - HeaderSize)/maxObjectSize();
     return min(max(eLimitLo, eWanted), entryLimitHigh());
 }
 
@@ -162,11 +161,12 @@ Rock::SwapDir::create()
 
 #if SLOWLY_FILL_WITH_ZEROS
     /* TODO just set the file size */
-    char block[1024]; // max_size is in KB so this is one unit of max_size
+    char block[1024];
+    Must(maxSize() % sizeof(block) == 0);
     memset(block, '\0', sizeof(block));
 
     const int swap = open(filePath, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, 0600);
-    for (off_t offset = 0; offset < max_size; ++offset) {
+    for (off_t offset = 0; offset < maxSize(); offset += sizeof(block)) {
         if (write(swap, block, sizeof(block)) != sizeof(block)) {
             debugs(47,0, "Failed to create Rock Store db in " << filePath <<
                 ": " << xstrerror());
@@ -182,7 +182,7 @@ Rock::SwapDir::create()
         fatal("Rock Store db creation error");
     }
 
-    if (ftruncate(swap, maximumSize()) != 0) {
+    if (ftruncate(swap, maxSize()) != 0) {
         debugs(47,0, "Failed to initialize Rock Store db in " << filePath <<
             "; truncate error: " << xstrerror());
         fatal("Rock Store db creation error");
@@ -272,9 +272,10 @@ Rock::SwapDir::reconfigure(int, char *)
 void
 Rock::SwapDir::parseSize()
 {
-    max_size = GetInteger() << 10; // MBytes to KBytes
-    if (max_size < 0)
+    const int i = GetInteger();
+    if (i < 0)
         fatal("negative Rock cache_dir size value");
+    max_size = i << 20; // MBytes to Bytes
 }
 
 /// check the results of the configuration; only level-0 debugging works here
@@ -289,20 +290,21 @@ Rock::SwapDir::validateOptions()
     */
 
     /* XXX: misplaced, map is not yet created
+    // XXX: max_size is in Bytes now
     // Note: We could try to shrink max_size now. It is stored in KB so we
     // may not be able to make it match the end of the last entry exactly.
     const int64_t mapRoundWasteMx = max_objsize*sizeof(long)*8;
     const int64_t sizeRoundWasteMx = 1024; // max_size stored in KB
     const int64_t roundingWasteMx = max(mapRoundWasteMx, sizeRoundWasteMx);
-    const int64_t totalWaste = maximumSize() - diskOffsetLimit();
-    assert(diskOffsetLimit() <= maximumSize());
+    const int64_t totalWaste = maxSize() - diskOffsetLimit();
+    assert(diskOffsetLimit() <= maxSize());
 
     // warn if maximum db size is not reachable due to sfileno limit
     if (map->entryLimit() == entryLimitHigh() && totalWaste > roundingWasteMx) {
         debugs(47, 0, "Rock store cache_dir[" << index << "]:");
         debugs(47, 0, "\tmaximum number of entries: " << map->entryLimit());
         debugs(47, 0, "\tmaximum entry size: " << max_objsize << " bytes");
-        debugs(47, 0, "\tmaximum db size: " << maximumSize() << " bytes");
+        debugs(47, 0, "\tmaximum db size: " << maxSize() << " bytes");
         debugs(47, 0, "\tusable db size:  " << diskOffsetLimit() << " bytes");
         debugs(47, 0, "\tdisk space waste: " << totalWaste << " bytes");
         debugs(47, 0, "WARNING: Rock store config wastes space.");
@@ -481,7 +483,7 @@ Rock::SwapDir::ioCompletedNotification()
 
     // TODO: lower debugging level
     debugs(47,1, "Rock cache_dir[" << index << "] limits: " << 
-        std::setw(12) << maximumSize() << " disk bytes and " <<
+        std::setw(12) << maxSize() << " disk bytes and " <<
         std::setw(7) << map->entryLimit() << " entries");
 
     rebuild();
@@ -643,12 +645,11 @@ Rock::SwapDir::ignoreReferences(StoreEntry &e)
 void
 Rock::SwapDir::statfs(StoreEntry &e) const
 {
-    const double currentSizeInKB = currentSize() / 1024.0;
     storeAppendPrintf(&e, "\n");
-    storeAppendPrintf(&e, "Maximum Size: %"PRIu64" KB\n", max_size);
+    storeAppendPrintf(&e, "Maximum Size: %"PRIu64" KB\n", maxSize() >> 10);
     storeAppendPrintf(&e, "Current Size: %.2f KB %.2f%%\n",
-                      currentSizeInKB,
-                      Math::doublePercent(currentSizeInKB, max_size));
+                      currentSize() / 1024.0,
+                      Math::doublePercent(currentSize(), maxSize()));
 
     if (map) {
         const int limit = map->entryLimit();

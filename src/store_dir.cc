@@ -236,7 +236,7 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
 static int
 storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
 {
-    uint64_t most_free = 0;
+    int64_t most_free = 0;
     ssize_t least_objsize = -1;
     int least_load = INT_MAX;
     int load;
@@ -263,7 +263,7 @@ storeDirSelectSwapDirLeastLoad(const StoreEntry * e)
         if (load > least_load)
             continue;
 
-        const uint64_t cur_free = (SD->max_size << 10) - SD->currentSize();
+        const int64_t cur_free = SD->maxSize() - SD->currentSize();
 
         /* If the load is equal, then look in more details */
         if (load == least_load) {
@@ -339,17 +339,16 @@ SwapDir::updateSize(int64_t size, int sign)
 void
 StoreController::stat(StoreEntry &output) const
 {
-    const double currentSizeInKB = currentSize() / 1024.0;
     storeAppendPrintf(&output, "Store Directory Statistics:\n");
     storeAppendPrintf(&output, "Store Entries          : %lu\n",
                       (unsigned long int)StoreEntry::inUseCount());
     storeAppendPrintf(&output, "Maximum Swap Size      : %"PRIu64" KB\n",
-                      maxSize());
+                      maxSize() >> 10);
     storeAppendPrintf(&output, "Current Store Swap Size: %.2f KB\n",
-                      currentSizeInKB);
+                      currentSize() / 1024.0);
     storeAppendPrintf(&output, "Current Capacity       : %.2f%% used, %.2f%% free\n",
-                      Math::doublePercent(currentSizeInKB, maxSize()),
-                      Math::doublePercent((maxSize() - currentSizeInKB), maxSize()));
+                      Math::doublePercent(currentSize(), maxSize()),
+                      Math::doublePercent((maxSize() - currentSize()), maxSize()));
 
     if (memStore)
         memStore->stat(output);
@@ -394,10 +393,10 @@ StoreController::maxObjectSize() const
 void
 SwapDir::diskFull()
 {
-    if (currentSize() >= max_size << 10)
+    if (currentSize() >= maxSize())
         return;
 
-    max_size = currentSize() >> 10;
+    max_size = currentSize();
 
     debugs(20, 1, "WARNING: Shrinking cache_dir #" << index << " to " << currentSize() / 1024.0 << " KB");
 }
@@ -872,8 +871,8 @@ StoreHashIndex::init()
     /* Calculate size of hash table (maximum currently 64k buckets).  */
     /* this is very bogus, its specific to the any Store maintaining an
      * in-core index, not global */
-    size_t buckets = (Store::Root().maxSize() + ( Config.memMaxSize >> 10)) / Config.Store.avgObjectSize;
-    debugs(20, 1, "Swap maxSize " << Store::Root().maxSize() <<
+    size_t buckets = ((Store::Root().maxSize() + Config.memMaxSize) >> 10) / Config.Store.avgObjectSize;
+    debugs(20, 1, "Swap maxSize " << (Store::Root().maxSize() >> 10) <<
            " + " << ( Config.memMaxSize >> 10) << " KB, estimated " << buckets << " objects");
     buckets /= Config.Store.objectsPerBucket;
     debugs(20, 1, "Target number of buckets: " << buckets);
@@ -882,7 +881,7 @@ StoreHashIndex::init()
     store_hash_buckets = storeKeyHashBuckets(buckets);
     debugs(20, 1, "Using " << store_hash_buckets << " Store buckets");
     debugs(20, 1, "Max Mem  size: " << ( Config.memMaxSize >> 10) << " KB");
-    debugs(20, 1, "Max Swap size: " << Store::Root().maxSize() << " KB");
+    debugs(20, 1, "Max Swap size: " << (Store::Root().maxSize() >> 10) << " KB");
 
     store_table = hash_create(storeKeyHashCmp,
                               store_hash_buckets, storeKeyHashHash);

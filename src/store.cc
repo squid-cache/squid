@@ -1236,8 +1236,8 @@ StoreController::maintain()
     if (Store::Root().currentSize() > Store::Root().maxSize()) {
         if (squid_curtime - last_warn_time > 10) {
             debugs(20, 0, "WARNING: Disk space over limit: "
-                   << Store::Root().currentSize() << " KB > "
-                   << Store::Root().maxSize() << " KB");
+                   << Store::Root().currentSize() / 1024.0 << " KB > "
+                   << (Store::Root().maxSize() >> 10) << " KB");
             last_warn_time = squid_curtime;
         }
     }

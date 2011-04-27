@@ -35,9 +35,6 @@ public:
     int64_t entryLimitHigh() const { return 0xFFFFFF; } /// Core sfileno maximum
     int64_t entryLimitAllowed() const;
 
-    // TODO: change cur_size and max_size type to stop this madness
-    int64_t maximumSize() const { return static_cast<int64_t>(max_size) << 10; }
-
     typedef Ipc::StoreMapWithExtras<DbCellHeader> DirMap;
 
 protected:
