@@ -144,7 +144,7 @@ public:
 
     virtual uint64_t minSize() const;
 
-    virtual uint64_t currentSize() const { return cur_size; }
+    virtual uint64_t currentSize() const { return cur_size << 10; }
 
     virtual uint64_t currentCount() const { return n_disk_objects; }
 

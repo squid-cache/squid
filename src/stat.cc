@@ -546,7 +546,7 @@ GetInfo(Mgr::InfoActionData& stats)
     stats.request_hit_disk_ratio5 = statRequestHitDiskRatio(5);
     stats.request_hit_disk_ratio60 = statRequestHitDiskRatio(60);
 
-    stats.store_swap_size = Store::Root().currentSize();
+    stats.store_swap_size = Store::Root().currentSize() / 1024.0;
     stats.store_swap_max_size = Store::Root().maxSize();
 
     stats.store_mem_size = mem_node::StoreMemSize();
@@ -555,7 +555,7 @@ GetInfo(Mgr::InfoActionData& stats)
 
     stats.n_disk_objects = Store::Root().currentCount();
     stats.objects_size = stats.n_disk_objects > 0 ?
-        (double)Store::Root().currentSize() / stats.n_disk_objects : 0.0;
+        stats.store_swap_size / stats.n_disk_objects : 0.0;
 
     stats.unlink_requests = statCounter.unlink.requests;
 
