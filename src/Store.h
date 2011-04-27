@@ -57,8 +57,8 @@
 class AsyncCall;
 class StoreClient;
 class MemObject;
-class Store;
 class StoreSearch;
+class SwapDir;
 
 typedef struct {
 
@@ -143,7 +143,7 @@ public:
     bool hasIfNoneMatchEtag(const HttpRequest &request) const;
 
     /** What store does this entry belong too ? */
-    virtual RefCount<Store> store() const;
+    virtual RefCount<SwapDir> store() const;
 
     MemObject *mem_obj;
     MemObject *hidden_mem_obj; ///< mem_obj created before URLs were known
