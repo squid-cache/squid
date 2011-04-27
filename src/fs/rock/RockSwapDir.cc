@@ -116,6 +116,14 @@ Rock::SwapDir::doReportStat() const
     return ::SwapDir::doReportStat() && (!UsingSmp() || IamDiskProcess());
 }
 
+int64_t
+Rock::SwapDir::entryLimitAllowed() const
+{
+    const int64_t eLimitLo = map ? map->entryLimit() : 0; // dynamic shrinking unsupported
+    const int64_t eWanted = (maximumSize() - HeaderSize)/maxObjectSize();
+    return min(max(eLimitLo, eWanted), entryLimitHigh());
+}
+
 // TODO: encapsulate as a tool; identical to CossSwapDir::create()
 void
 Rock::SwapDir::create()
@@ -270,12 +278,7 @@ Rock::SwapDir::validateOptions()
         fatal("Rock store requires a positive max-size");
 
     /* XXX: should we support resize?
-    const int64_t eLimitHi = 0xFFFFFF; // Core sfileno maximum
-    const int64_t eLimitLo = map->entryLimit(); // dynamic shrinking unsupported
-    const int64_t eWanted = (maximumSize() - HeaderSize)/max_objsize;
-    const int64_t eAllowed = min(max(eLimitLo, eWanted), eLimitHi);
-
-    map->resize(eAllowed); // the map may decide to use an even lower limit
+    map->resize(entryLimitAllowed()); // the map may decide to use an even lower limit
     */
 
     /* XXX: misplaced, map is not yet created
@@ -288,7 +291,7 @@ Rock::SwapDir::validateOptions()
     assert(diskOffsetLimit() <= maximumSize());
 
     // warn if maximum db size is not reachable due to sfileno limit
-    if (map->entryLimit() == eLimitHi && totalWaste > roundingWasteMx) {
+    if (map->entryLimit() == entryLimitHigh() && totalWaste > roundingWasteMx) {
         debugs(47, 0, "Rock store cache_dir[" << index << "]:");
         debugs(47, 0, "\tmaximum number of entries: " << map->entryLimit());
         debugs(47, 0, "\tmaximum entry size: " << max_objsize << " bytes");
@@ -698,17 +701,10 @@ void RockSwapDirRr::run(const RunnerRegistry &)
     if (IamMasterProcess()) {
         Must(owners.empty());
         for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-            const Rock::SwapDir *const sd =
-                dynamic_cast<Rock::SwapDir *>(INDEXSD(i));
-            if (!sd)
-                continue;
-
-            // XXX: polish, validateOptions() has same code
-            const int64_t eLimitHi = 0xFFFFFF; // Core sfileno maximum
-            const int64_t eLimitLo = 0; // dynamic shrinking unsupported
-            const int64_t eWanted = (sd->maximumSize() - Rock::SwapDir::HeaderSize)/sd->maxObjectSize();
-            const int64_t eAllowed = min(max(eLimitLo, eWanted), eLimitHi);
-            owners.push_back(Rock::SwapDir::DirMap::Init(sd->path, eAllowed));
+            if (const Rock::SwapDir *const sd = dynamic_cast<Rock::SwapDir *>(INDEXSD(i))) {
+                Rock::SwapDir::DirMap::Owner *const owner = Rock::SwapDir::DirMap::Init(sd->path, sd->entryLimitAllowed());
+                owners.push_back(owner);
+            }
         }
     }
 }
