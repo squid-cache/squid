@@ -31,6 +31,13 @@ public:
     virtual uint64_t currentCount() const;
     virtual bool doReportStat() const;
 
+    // TODO: change cur_size and max_size type to stop this madness
+    int64_t maximumSize() const { return static_cast<int64_t>(max_size) << 10; }
+
+    static const int64_t HeaderSize;
+
+    typedef Ipc::StoreMapWithExtras<DbCellHeader> DirMap;
+
 protected:
     /* protected ::SwapDir API */
     virtual bool needsDiskStrand() const;
@@ -65,8 +72,6 @@ protected:
     void trackReferences(StoreEntry &e); ///< add to replacement policy scope
     void ignoreReferences(StoreEntry &e); ///< delete from repl policy scope
 
-    // TODO: change cur_size and max_size type to stop this madness
-    int64_t maximumSize() const { return static_cast<int64_t>(max_size) << 10;}
     int64_t diskOffset(int filen) const;
     int64_t diskOffsetLimit() const;
     int entryLimit() const { return map->entryLimit(); }
@@ -75,14 +80,9 @@ protected:
     const char *filePath; ///< location of cache storage file inside path/
 
 private:
-    typedef Ipc::StoreMapWithExtras<DbCellHeader> DirMap;
-
     DiskIOStrategy *io;
     RefCount<DiskFile> theFile; ///< cache storage for this cache_dir
-    DirMap::Owner *mapOwner;
     DirMap *map;
-
-    static const int64_t HeaderSize; ///< on-disk db header size
 };
 
 } // namespace Rock

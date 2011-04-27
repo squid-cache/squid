@@ -8,6 +8,7 @@
 #include "Parsing.h"
 #include <iomanip>
 #include "MemObject.h"
+#include "base/RunnersRegistry.h"
 #include "DiskIO/DiskIOModule.h"
 #include "DiskIO/DiskIOStrategy.h"
 #include "DiskIO/ReadRequest.h"
@@ -20,15 +21,13 @@
 // must be divisible by 1024 due to cur_size and max_size KB madness
 const int64_t Rock::SwapDir::HeaderSize = 16*1024;
 
-Rock::SwapDir::SwapDir(): ::SwapDir("rock"), filePath(NULL), io(NULL),
-    mapOwner(NULL), map(NULL)
+Rock::SwapDir::SwapDir(): ::SwapDir("rock"), filePath(NULL), io(NULL), map(NULL)
 {
 }
 
 Rock::SwapDir::~SwapDir()
 {
     delete io;
-    delete mapOwner;
     delete map;
     safe_free(filePath);
 }
@@ -195,16 +194,8 @@ Rock::SwapDir::init()
     // are refcounted. We up our count once to avoid implicit delete's.
     RefCountReference();
 
-    if (!map && (!UsingSmp() || IamDiskProcess())) {
-        // XXX: polish, validateOptions() has same code
-        const int64_t eLimitHi = 0xFFFFFF; // Core sfileno maximum
-        const int64_t eLimitLo = 0; // dynamic shrinking unsupported
-        const int64_t eWanted = (maximumSize() - HeaderSize)/max_objsize;
-        const int64_t eAllowed = min(max(eLimitLo, eWanted), eLimitHi);
-        Must(!mapOwner);
-        mapOwner = DirMap::Init(path, eAllowed);
-        map = new DirMap(path);
-    }
+    Must(!map);
+    map = new DirMap(path);
 
     const char *ioModule = UsingSmp() ? "IpcIo" : "Blocking";
     if (DiskIOModule *m = DiskIOModule::Find(ioModule)) {
@@ -480,9 +471,6 @@ Rock::SwapDir::ioCompletedNotification()
         fatalf("Rock cache_dir failed to open db file: %s", filePath);
 	}
 
-    if (!map)
-        map = new DirMap(path);
-
     // TODO: lower debugging level
     debugs(47,1, "Rock cache_dir[" << index << "] limits: " << 
         std::setw(12) << maximumSize() << " disk bytes and " <<
@@ -687,4 +675,46 @@ Rock::SwapDir::statfs(StoreEntry &e) const
 
     storeAppendPrintf(&e, "\n");
 
+}
+
+
+/// initializes shared memory segments used by Rock::SwapDir
+class RockSwapDirRr: public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    virtual void run(const RunnerRegistry &);
+    virtual ~RockSwapDirRr();
+
+private:
+    Vector<Rock::SwapDir::DirMap::Owner *> owners;
+};
+
+RunnerRegistrationEntry(rrAfterConfig, RockSwapDirRr);
+
+
+void RockSwapDirRr::run(const RunnerRegistry &)
+{
+    if (IamMasterProcess()) {
+        Must(owners.empty());
+        for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+            const Rock::SwapDir *const sd =
+                dynamic_cast<Rock::SwapDir *>(INDEXSD(i));
+            if (!sd)
+                continue;
+
+            // XXX: polish, validateOptions() has same code
+            const int64_t eLimitHi = 0xFFFFFF; // Core sfileno maximum
+            const int64_t eLimitLo = 0; // dynamic shrinking unsupported
+            const int64_t eWanted = (sd->maximumSize() - Rock::SwapDir::HeaderSize)/sd->maxObjectSize();
+            const int64_t eAllowed = min(max(eLimitLo, eWanted), eLimitHi);
+            owners.push_back(Rock::SwapDir::DirMap::Init(sd->path, eAllowed));
+        }
+    }
+}
+
+RockSwapDirRr::~RockSwapDirRr()
+{
+    for (size_t i = 0; i < owners.size(); ++i)
+        delete owners[i];
 }
