@@ -871,7 +871,7 @@ StoreHashIndex::init()
     /* Calculate size of hash table (maximum currently 64k buckets).  */
     /* this is very bogus, its specific to the any Store maintaining an
      * in-core index, not global */
-    size_t buckets = ((Store::Root().maxSize() + Config.memMaxSize) >> 10) / Config.Store.avgObjectSize;
+    size_t buckets = (Store::Root().maxSize() + Config.memMaxSize) / Config.Store.avgObjectSize;
     debugs(20, 1, "Swap maxSize " << (Store::Root().maxSize() >> 10) <<
            " + " << ( Config.memMaxSize >> 10) << " KB, estimated " << buckets << " objects");
     buckets /= Config.Store.objectsPerBucket;
