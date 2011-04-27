@@ -131,7 +131,7 @@ snmp_confFn(variable_list * Var, snint * ErrP)
 
         case CONF_ST_SWMAXSZ:
             Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint) (Store::Root().maxSize() >> 10),
+                                          (snint) (Store::Root().maxSize() >> 20),
                                           ASN_INTEGER);
             break;
 

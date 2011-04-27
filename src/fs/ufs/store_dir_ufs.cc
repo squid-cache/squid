@@ -80,14 +80,14 @@ UFSSwapDir::parseSizeL1L2()
     if (i <= 0)
         fatal("UFSSwapDir::parseSizeL1L2: invalid size value");
 
-    size_t size = i << 10;		/* Mbytes to kbytes */
+    const uint64_t size = i << 20; // MBytes to Bytes
 
     /* just reconfigure it */
     if (reconfiguring) {
-        if (size == max_size)
-            debugs(3, 2, "Cache dir '" << path << "' size remains unchanged at " << size << " KB");
+        if (size == maxSize())
+            debugs(3, 2, "Cache dir '" << path << "' size remains unchanged at " << i << " MB");
         else
-            debugs(3, 1, "Cache dir '" << path << "' size changed to " << size << " KB");
+            debugs(3, 1, "Cache dir '" << path << "' size changed to " << i << " MB");
     }
 
     max_size = size;
@@ -314,13 +314,12 @@ UFSSwapDir::statfs(StoreEntry & sentry) const
     int totl_in = 0;
     int free_in = 0;
     int x;
-    const double currentSizeInKB = currentSize() / 1024.0;
     storeAppendPrintf(&sentry, "First level subdirectories: %d\n", l1);
     storeAppendPrintf(&sentry, "Second level subdirectories: %d\n", l2);
-    storeAppendPrintf(&sentry, "Maximum Size: %"PRIu64" KB\n", max_size);
-    storeAppendPrintf(&sentry, "Current Size: %.2f KB\n", currentSizeInKB);
+    storeAppendPrintf(&sentry, "Maximum Size: %"PRIu64" KB\n", maxSize() >> 10);
+    storeAppendPrintf(&sentry, "Current Size: %.2f KB\n", currentSize() / 1024.0);
     storeAppendPrintf(&sentry, "Percent Used: %0.2f%%\n",
-                      Math::doublePercent(currentSizeInKB, max_size));
+                      Math::doublePercent(currentSize(), maxSize()));
     storeAppendPrintf(&sentry, "Filemap bits in use: %d of %d (%d%%)\n",
                       map->n_files_in_map, map->max_n_files,
                       Math::intPercent(map->n_files_in_map, map->max_n_files));
@@ -366,7 +365,7 @@ UFSSwapDir::maintain()
 
     RemovalPurgeWalker *walker;
 
-    double f = (double) (currentSize() / 1024.0 - minSize()) / (max_size - minSize());
+    double f = (double) (currentSize() - minSize()) / (maxSize() - minSize());
 
     f = f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f;
 
@@ -383,7 +382,7 @@ UFSSwapDir::maintain()
     walker = repl->PurgeInit(repl, max_scan);
 
     while (1) {
-        if (currentSize() < minSize() << 10)
+        if (currentSize() < minSize())
             break;
 
         if (removed >= max_remove)
@@ -1330,7 +1329,7 @@ UFSSwapDir::replacementRemove(StoreEntry * e)
 void
 UFSSwapDir::dump(StoreEntry & entry) const
 {
-    storeAppendPrintf(&entry, " %"PRIu64" %d %d", (max_size >> 10), l1, l2);
+    storeAppendPrintf(&entry, " %"PRIu64" %d %d", maxSize() >> 20, l1, l2);
     dumpOptions(&entry);
 }
 

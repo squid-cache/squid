@@ -127,7 +127,7 @@ SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
     if (flags.read_only)
         return false; // cannot write at all
 
-    if (currentSize() > max_size << 10)
+    if (currentSize() > maxSize())
         return false; // already overflowing
 
     /* Return 999 (99.9%) constant load; TODO: add a named constant for this */

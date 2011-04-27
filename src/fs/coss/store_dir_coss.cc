@@ -924,13 +924,12 @@ CossSwapDir::create()
     swap = open(stripePath(), O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0600);
 
     /* TODO just set the file size */
-    /* swap size is in K */
-    char *block[1024];
+    char block[1024];
+    Must(maxSize() % sizeof(block) == 0);
+    memset(block, '\0', sizeof(block));
 
-    memset(&block, '\0', 1024);
-
-    for (uint64_t offset = 0; offset < max_size; ++offset) {
-        if (write (swap, block, 1024) < 1024) {
+    for (uint64_t offset = 0; offset < maxSize(); offset += sizeof(block)) {
+        if (write (swap, block, sizeof(block)) != sizeof(block)) {
             debugs (47, 0, "Failed to create COSS swap space in " << path);
         }
     }
@@ -982,12 +981,11 @@ CossSwapDir::callback()
 void
 CossSwapDir::statfs(StoreEntry & sentry) const
 {
-    const double currentSizeInKB = currentSize() / 1024.0;
     storeAppendPrintf(&sentry, "\n");
-    storeAppendPrintf(&sentry, "Maximum Size: %lu KB\n", max_size);
-    storeAppendPrintf(&sentry, "Current Size: %.2f KB\n", currentSizeInKB);
+    storeAppendPrintf(&sentry, "Maximum Size: %"PRIu64" KB\n", maxSize() >> 10);
+    storeAppendPrintf(&sentry, "Current Size: %.2f KB\n", currentSize() / 1024.0);
     storeAppendPrintf(&sentry, "Percent Used: %0.2f%%\n",
-                      Math::doublePercent(currentSizeInKB, max_size) );
+                      Math::doublePercent(currentSize(), maxSize()) );
     storeAppendPrintf(&sentry, "Number of object collisions: %d\n", (int) numcollisions);
 #if 0
     /* is this applicable? I Hope not .. */
@@ -1011,21 +1009,15 @@ CossSwapDir::statfs(StoreEntry & sentry) const
 void
 CossSwapDir::parse(int anIndex, char *aPath)
 {
-    unsigned int i;
-    unsigned int size;
-    off_t max_offset;
-
-    i = GetInteger();
-    size = i << 10;		/* Mbytes to Kbytes */
-
-    if (size <= 0)
+    const int i = GetInteger();
+    if (i <= 0)
         fatal("storeCossDirParse: invalid size value");
 
     index = anIndex;
 
     path = xstrdup(aPath);
 
-    max_size = size;
+    max_size = i << 20; // MBytes to Bytes
 
     parseOptions(0);
 
@@ -1045,12 +1037,12 @@ CossSwapDir::parse(int anIndex, char *aPath)
      * largest possible sfileno, assuming sfileno is a 25-bit
      * signed integer, as defined in structs.h.
      */
-    max_offset = (off_t) 0xFFFFFF << blksz_bits;
+    const uint64_t max_offset = (uint64_t) 0xFFFFFF << blksz_bits;
 
-    if ((off_t)max_size > (max_offset>>10)) {
+    if (maxSize() > max_offset) {
         debugs(47, 0, "COSS block-size = " << (1<<blksz_bits) << " bytes");
         debugs(47,0, "COSS largest file offset = " << (max_offset >> 10) << " KB");
-        debugs(47, 0, "COSS cache_dir size = " << max_size << " KB");
+        debugs(47, 0, "COSS cache_dir size = " << (maxSize() >> 10) << " KB");
         fatal("COSS cache_dir size exceeds largest offset\n");
     }
 }
@@ -1059,19 +1051,16 @@ CossSwapDir::parse(int anIndex, char *aPath)
 void
 CossSwapDir::reconfigure(int index, char *path)
 {
-    unsigned int i;
-    unsigned int size;
-
-    i = GetInteger();
-    size = i << 10;		/* Mbytes to Kbytes */
-
-    if (size <= 0)
+    const int i = GetInteger();
+    if (i <= 0)
         fatal("storeCossDirParse: invalid size value");
 
-    if (size == (size_t)max_size)
-        debugs(3, 1, "Cache COSS dir '" << path << "' size remains unchanged at " << size << " KB");
+    const uint64_t size = i << 20; // MBytes to Bytes
+
+    if (size == maxSize())
+        debugs(3, 1, "Cache COSS dir '" << path << "' size remains unchanged at " << i << " MB");
     else {
-        debugs(3, 1, "Cache COSS dir '" << path << "' size changed to " << size << " KB");
+        debugs(3, 1, "Cache COSS dir '" << path << "' size changed to " << i << " MB");
         max_size = size;
     }
 
@@ -1089,7 +1078,7 @@ CossSwapDir::swappedOut(const StoreEntry &e)
 void
 CossSwapDir::dump(StoreEntry &entry)const
 {
-    storeAppendPrintf(&entry, " %lu", (max_size >> 10));
+    storeAppendPrintf(&entry, " %"PRIu64, maxSize() >> 20);
     dumpOptions(&entry);
 }
 
