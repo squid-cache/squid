@@ -74,16 +74,6 @@ struct _RebuildState {
 
 static char *storeCossDirSwapLogFile(SwapDir *, const char *);
 static EVH storeCossRebuildFromSwapLog;
-static StoreEntry *storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * key,
-        int file_number,
-        uint64_t swap_file_sz,
-        time_t expires,
-        time_t timestamp,
-        time_t lastref,
-        time_t lastmod,
-        uint32_t refcount,
-        uint16_t flags,
-        int clean);
 static void storeCossDirRebuild(CossSwapDir * sd);
 static void storeCossDirCloseTmpSwapLog(CossSwapDir * sd);
 static FILE *storeCossDirOpenTmpSwapLog(CossSwapDir *, int *, int *);
@@ -482,7 +472,7 @@ storeCossRebuildFromSwapLog(void *data)
 
         rb->counts.objcount++;
 
-        e = storeCossAddDiskRestore(rb->sd, s.key,
+        e = rb->sd->addDiskRestore(s.key,
                                     s.swap_filen,
                                     s.swap_file_sz,
                                     s.expires,
@@ -501,8 +491,8 @@ storeCossRebuildFromSwapLog(void *data)
 
 /* Add a new object to the cache with empty memory copy and pointer to disk
  * use to rebuild store from disk. */
-static StoreEntry *
-storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * key,
+StoreEntry *
+CossSwapDir::addDiskRestore(const cache_key *const key,
                         int file_number,
                         uint64_t swap_file_sz,
                         time_t expires,
@@ -522,7 +512,7 @@ storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * key,
      * already in use! */
     e = new StoreEntry();
     e->store_status = STORE_OK;
-    e->swap_dirn = SD->index;
+    e->swap_dirn = index;
     e->setMemStatus(NOT_IN_MEMORY);
     e->swap_status = SWAPOUT_DONE;
     e->swap_filen = file_number;
@@ -539,9 +529,10 @@ storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * key,
     EBIT_CLR(e->flags, KEY_PRIVATE);
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
-    SD->updateSize(e->swap_file_sz, 1);
+    cur_size += fs.blksize * sizeInBlocks(e->swap_file_sz);
+    ++n_disk_objects;
     e->hashInsert(key);	/* do it after we clear KEY_PRIVATE */
-    storeCossAdd(SD, e);
+    storeCossAdd(this, e);
     assert(e->swap_filen >= 0);
     return e;
 }
@@ -1072,7 +1063,8 @@ CossSwapDir::reconfigure(int index, char *path)
 void
 CossSwapDir::swappedOut(const StoreEntry &e)
 {
-    updateSize(e.swap_file_sz, 1);
+    cur_size += fs.blksize * sizeInBlocks(e.swap_file_sz);
+    ++n_disk_objects;
 }
 
 void
@@ -1082,7 +1074,7 @@ CossSwapDir::dump(StoreEntry &entry)const
     dumpOptions(&entry);
 }
 
-CossSwapDir::CossSwapDir() : SwapDir ("coss"), swaplog_fd(-1), count(0), current_membuf (NULL), current_offset(0), numcollisions(0),  blksz_bits(0), io (NULL), ioModule(NULL), currentIOOptions(new ConfigOptionVector()), stripe_path(NULL)
+CossSwapDir::CossSwapDir() : SwapDir ("coss"), swaplog_fd(-1), count(0), current_membuf (NULL), current_offset(0), numcollisions(0),  blksz_bits(0), io (NULL), ioModule(NULL), currentIOOptions(new ConfigOptionVector()), stripe_path(NULL), cur_size(0), n_disk_objects(0)
 {
     membufs.head = NULL;
     membufs.tail = NULL;

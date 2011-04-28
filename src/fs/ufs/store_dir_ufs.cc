@@ -246,7 +246,7 @@ UFSSwapDir::create()
     createSwapSubDirs();
 }
 
-UFSSwapDir::UFSSwapDir(char const *aType, const char *anIOType) : SwapDir(aType), IO(NULL), map(file_map_create()), suggest(0), swaplog_fd (-1), currentIOOptions(new ConfigOptionVector()), ioType(xstrdup(anIOType))
+UFSSwapDir::UFSSwapDir(char const *aType, const char *anIOType) : SwapDir(aType), IO(NULL), map(file_map_create()), suggest(0), swaplog_fd (-1), currentIOOptions(new ConfigOptionVector()), ioType(xstrdup(anIOType)), cur_size(0), n_disk_objects(0)
 {
     /* modulename is only set to disk modules that are built, by configure,
      * so the Find call should never return NULL here.
@@ -717,7 +717,8 @@ UFSSwapDir::addDiskRestore(const cache_key * key,
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
     mapBitSet(e->swap_filen);
-    updateSize(e->swap_file_sz, 1);
+    cur_size += fs.blksize * sizeInBlocks(e->swap_file_sz);
+    ++n_disk_objects;
     e->hashInsert(key);	/* do it after we clear KEY_PRIVATE */
     replacementAdd (e);
     return e;
@@ -1289,8 +1290,10 @@ UFSSwapDir::unlink(StoreEntry & e)
 {
     debugs(79, 3, "storeUfsUnlink: dirno " << index  << ", fileno "<<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << e.swap_filen);
-    if (e.swap_status == SWAPOUT_DONE && EBIT_TEST(e.flags, ENTRY_VALIDATED))
-        updateSize(e.swap_file_sz, -1);
+    if (e.swap_status == SWAPOUT_DONE && EBIT_TEST(e.flags, ENTRY_VALIDATED)) {
+        cur_size -= fs.blksize * sizeInBlocks(e.swap_file_sz);
+        --n_disk_objects;
+    }
     replacementRemove(&e);
     mapBitReset(e.swap_filen);
     UFSSwapDir::unlinkFile(e.swap_filen);
@@ -1369,7 +1372,8 @@ UFSSwapDir::sync()
 void
 UFSSwapDir::swappedOut(const StoreEntry &e)
 {
-    updateSize(e.swap_file_sz, 1);
+    cur_size += fs.blksize * sizeInBlocks(e.swap_file_sz);
+    ++n_disk_objects;
 }
 
 StoreSearch *
