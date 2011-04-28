@@ -468,6 +468,9 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>deny_info</tag>
 	<p>Support URL format tags. For dynamically generated URL in denial redirect.
+	<p>Support the full range of 200-599 HTTP status codes.
+	   3xx status only available when redirecting to a URI.
+	   Other status only available when supplying an error template body.
 
 	<tag>external_acl_type</tag>
 	<p>New format tags and option parameters:
