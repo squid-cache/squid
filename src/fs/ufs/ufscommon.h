@@ -77,6 +77,8 @@ public:
     virtual int callback();
     virtual void sync();
     virtual void swappedOut(const StoreEntry &e);
+    virtual uint64_t currentSize() const { return cur_size; }
+    virtual uint64_t currentCount() const { return n_disk_objects; }
 
     void unlinkFile(sfileno f);
     // move down when unlink is a virtual method
@@ -136,7 +138,8 @@ private:
     void optionIODump(StoreEntry * e) const;
     mutable ConfigOptionVector *currentIOOptions;
     char const *ioType;
-
+    uint64_t cur_size; ///< currently used space in the storage area
+    uint64_t n_disk_objects; ///< total number of objects stored
 };
 
 #include "RefCount.h"

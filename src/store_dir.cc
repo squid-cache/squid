@@ -324,19 +324,6 @@ storeDirSwapLog(const StoreEntry * e, int op)
 }
 
 void
-SwapDir::updateSize(int64_t size, int sign)
-{
-    const int64_t blks = (size + fs.blksize - 1) / fs.blksize;
-    const int64_t k = blks * fs.blksize * sign;
-    cur_size += k;
-
-    if (sign > 0)
-        n_disk_objects++;
-    else if (sign < 0)
-        n_disk_objects--;
-}
-
-void
 StoreController::stat(StoreEntry &output) const
 {
     storeAppendPrintf(&output, "Store Directory Statistics:\n");
