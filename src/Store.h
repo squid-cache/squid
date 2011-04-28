@@ -95,7 +95,8 @@ public:
     virtual void complete();
     virtual store_client_t storeClientType() const;
     virtual char const *getSerialisedMetaData();
-    virtual void replaceHttpReply(HttpReply *);
+    void replaceHttpReply(HttpReply *, bool andStartWriting = true);
+    void startWriting(); ///< pack and write reply headers and, maybe, body
     virtual bool swapoutPossible();
     virtual void trimMemory();
     void abort();

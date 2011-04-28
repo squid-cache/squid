@@ -1816,10 +1816,9 @@ storeSwapFileNumberSet(StoreEntry * e, sfileno filn)
  * a new reply. This eats the reply.
  */
 void
-StoreEntry::replaceHttpReply(HttpReply *rep)
+StoreEntry::replaceHttpReply(HttpReply *rep, bool andStartWriting)
 {
     debugs(20, 3, "StoreEntry::replaceHttpReply: " << url());
-    Packer p;
 
     if (!mem_obj) {
         debugs(20, 0, "Attempt to replace object with no in-memory representation");
@@ -1828,18 +1827,31 @@ StoreEntry::replaceHttpReply(HttpReply *rep)
 
     mem_obj->replaceHttpReply(rep);
 
+    if (andStartWriting)
+        startWriting();
+}
+
+
+void
+StoreEntry::startWriting()
+{
+    Packer p;
+
     /* TODO: when we store headers serparately remove the header portion */
     /* TODO: mark the length of the headers ? */
     /* We ONLY want the headers */
     packerToStoreInit(&p, this);
 
     assert (isEmpty());
+    assert(mem_obj);
+    
+    const HttpReply *rep = getReply();
+    assert(rep);
 
-    getReply()->packHeadersInto(&p);
+    rep->packHeadersInto(&p);
+    mem_obj->markEndOfReplyHeaders();
 
-    rep->hdr_sz = mem_obj->endOffset();
-
-    httpBodyPackInto(&getReply()->body, &p);
+    httpBodyPackInto(&rep->body, &p);
 
     packerClean(&p);
 }
