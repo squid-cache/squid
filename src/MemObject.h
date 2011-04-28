@@ -67,6 +67,7 @@ public:
     void replaceHttpReply(HttpReply *newrep);
     void stat (MemBuf * mb) const;
     int64_t endOffset () const;
+    void markEndOfReplyHeaders(); ///< sets _reply->hdr_sz to endOffset()
     /// negative if unknown; otherwise, expected object_sz, expected endOffset
     /// maximum, and stored reply headers+body size (all three are the same)
     int64_t expectedReplySize() const;

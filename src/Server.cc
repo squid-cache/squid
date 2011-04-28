@@ -162,8 +162,10 @@ ServerStateData::setFinalReply(HttpReply *rep)
     assert(rep);
     theFinalReply = HTTPMSGLOCK(rep);
 
-    haveParsedReplyHeaders();
-    entry->replaceHttpReply(theFinalReply);
+    // give entry the reply because haveParsedReplyHeaders() expects it there
+    entry->replaceHttpReply(theFinalReply, false); // but do not write yet
+    haveParsedReplyHeaders(); // update the entry/reply (e.g., set timestamps)
+    entry->startWriting(); // write the updated entry to store
 
     return theFinalReply;
 }
