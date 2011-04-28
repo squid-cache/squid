@@ -144,16 +144,10 @@ public:
 
     virtual uint64_t minSize() const;
 
-    virtual uint64_t currentSize() const { return cur_size; }
-
-    virtual uint64_t currentCount() const { return n_disk_objects; }
-
     virtual int64_t maxObjectSize() const { return max_objsize; }
 
     virtual void stat (StoreEntry &anEntry) const;
     virtual StoreSearch *search(String const url, HttpRequest *) = 0;
-
-    virtual void updateSize(int64_t size, int sign);
 
     /* migrated from store_dir.cc */
     bool objectSizeIsAcceptable(int64_t objsize) const;
@@ -169,6 +163,8 @@ protected:
     void dumpOptions(StoreEntry * e) const;
     virtual ConfigOption *getOptionTree() const;
 
+    int64_t sizeInBlocks(const int64_t size) const { return (size + fs.blksize - 1) / fs.blksize; }
+
 private:
     bool optionReadOnlyParse(char const *option, const char *value, int reconfiguring);
     void optionReadOnlyDump(StoreEntry * e) const;
@@ -176,14 +172,10 @@ private:
     void optionObjectSizeDump(StoreEntry * e) const;
     char const *theType;
 
-private:
-    uint64_t cur_size;        ///< currently used space in the storage area
-
 protected:
     uint64_t max_size;        ///< maximum allocatable size of the storage area
 
 public:
-    uint64_t n_disk_objects;  ///< total number of objects stored
     char *path;
     int index;			/* This entry's index into the swapDirs array */
     int64_t min_objsize;
