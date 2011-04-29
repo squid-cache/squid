@@ -231,6 +231,12 @@ urlParse(method_t method, char *url, HttpRequest *request)
             if (*t != '\0')
                 port = atoi(t);
         }
+
+        // Bug 3183 sanity check: If scheme is present, host must be too.
+        if (protocol != PROTO_NONE && (host == NULL || *host == '\0')) {
+            debugs(23, DBG_IMPORTANT, "SECURITY WARNING: Missing hostname in URL '" << url << "'. see access.log for details.");
+            return NULL;
+        }
     }
 
     for (t = host; *t; t++)
