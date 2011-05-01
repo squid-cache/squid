@@ -589,6 +589,10 @@ HttpReply::calcMaxBodySize(HttpRequest& request)
         return;
     bodySizeMax = -1;
 
+    // short-circuit ACL testing if there are none configured
+    if (!Config.ReplyBodySize)
+        return;
+
     ACLFilledChecklist ch(NULL, &request, NULL);
 #if FOLLOW_X_FORWARDED_FOR
     if (Config.onoff.acl_uses_indirect_client)
