@@ -536,9 +536,9 @@ HOSTENT FAR * gethostbyaddr(const char * a, int l, int t)
 #define gethostbyaddr(a,l,t) Squid::gethostbyaddr(a,l,t)
 
 inline
-int getsockname(int s, struct sockaddr * n, size_t * l)
+int getsockname(int s, struct sockaddr * n, socklen_t * l)
 {
-    if ((::getsockname(_get_osfhandle(s), n, (int *)l)) == SOCKET_ERROR) {
+    if ((::getsockname(_get_osfhandle(s), n, l)) == SOCKET_ERROR) {
         errno = WSAGetLastError();
         return -1;
     } else
