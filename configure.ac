@@ -19,6 +19,7 @@ m4_include([acinclude/compiler-flags.m4])
 m4_include([acinclude/os-deps.m4])
 m4_include([acinclude/krb5.m4])
 m4_include([acinclude/pam.m4])
+m4_include([acinclude/pkg.m4])
 m4_include([acinclude/lib-checks.m4])
 
 PRESET_CFLAGS="$CFLAGS"
