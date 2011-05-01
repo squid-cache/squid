@@ -523,7 +523,7 @@ SERVENT FAR* getservbyname(const char * n, const char * p)
         errno = WSAGetLastError();
     return result;
 }
-//#define getservbyname(n,p) Squid::getservbyname(n,p)
+#define getservbyname(n,p) Squid::getservbyname(n,p)
 
 inline
 HOSTENT FAR * gethostbyaddr(const char * a, int l, int t)
@@ -544,6 +544,7 @@ int getsockname(int s, struct sockaddr * n, size_t * l)
     } else
         return 0;
 }
+#define getsockname(s,a,l) Squid::getsockname(s,a,l)
 
 inline
 int gethostname(char * n, size_t l)
