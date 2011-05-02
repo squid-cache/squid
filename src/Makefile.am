@@ -37,7 +37,7 @@ if ENABLE_AUTH
 SUBDIRS += auth
 AUTH_LIBS= auth/libauth.la
 AUTH_ACL_LIBS= auth/libacls.la
-check_PROGRAMS+= tests/testAuth tests/testACLMaxUserIP
+check_PROGRAMS+= tests/testACLMaxUserIP
 endif
 DIST_SUBDIRS += auth
 
@@ -1054,81 +1054,6 @@ tests_testHttpReply_LDADD=\
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
-
-tests_testAuth_SOURCES = \
-	cbdata.cc \
-	ClientInfo.h \
-	ConfigParser.cc \
-	ETag.cc \
-	event.cc \
-	HelperChildConfig.cc \
-	HelperChildConfig.h \
-	HttpHdrCc.cc \
-	HttpHdrContRange.cc \
-	HttpHdrRange.cc \
-	HttpHdrSc.cc \
-	HttpHdrScTarget.cc \
-	HttpHeaderTools.cc \
-	HttpHeader.cc \
-	HttpMsg.cc \
-	HttpRequestMethod.cc \
-	mem_node.cc \
-	mem.cc \
-	MemBuf.cc \
-	Packer.cc \
-	StatHist.cc \
-	stmem.cc \
-	String.cc \
-	tests/stub_access_log.cc \
-	tests/stub_acl.cc \
-	tests/stub_cache_cf.cc \
-	tests/stub_cache_manager.cc \
-	tests/stub_comm.cc \
-	tests/stub_debug.cc \
-	tests/stub_DelayId.cc \
-	tests/stub_errorpage.cc \
-	tests/stub_helper.cc \
-	tests/stub_HttpRequest.cc \
-	tests/stub_http.cc \
-	tests/stub_MemObject.cc \
-	tests/stub_mime.cc \
-	tests/stub_store.cc \
-	tests/testAuth.cc \
-	tests/testAuth.h \
-	tests/testMain.cc \
-	time.cc \
-	URLScheme.cc \
-	url.cc \
-	wordlist.cc
-nodist_tests_testAuth_SOURCES = \
-	$(TESTSOURCES)
-
-tests_testAuth_LDADD= \
-	$(AUTH_ACL_LIBS) \
-	ident/libident.la \
-	acl/libacls.la \
-	eui/libeui.la \
-	acl/libstate.la \
-	$(AUTH_LIBS) \
-	acl/libapi.la \
-	base/libbase.la \
-	libsquid.la \
-	ip/libip.la \
-	fs/libfs.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
-	anyp/libanyp.la \
-	$(top_builddir)/lib/libmisccontainers.la \
-	$(top_builddir)/lib/libmiscencoding.la \
-	$(top_builddir)/lib/libmiscutil.la \
-	$(REGEXLIB) \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SSLLIB) \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-tests_testAuth_LDFLAGS = $(LIBADD_DL)
-tests_testAuth_DEPENDENCIES = \
-	$(SQUID_CPPUNIT_LA)
 
 ## Tests for the ACLMaxUserIP class
 ## acl needs wordlist. wordlist needs MemBug
