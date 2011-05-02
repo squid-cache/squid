@@ -374,13 +374,12 @@ main(int argc, char *const argv[])
             fprintf(stdout, "BH Invalid negotiate request\n");
             continue;
         }
-        input_token.length = ska_base64_decode_len(buf + 3);
+        input_token.length = base64_decode_len(buf+3);
         debug((char *) "%s| %s: DEBUG: Decode '%s' (decoded length: %d).\n",
               LogTime(), PROGRAM, buf + 3, (int) input_token.length);
         input_token.value = xmalloc(input_token.length);
 
-        ska_base64_decode((char *) input_token.value, buf + 3, input_token.length);
-
+        input_token.length = base64_decode((char *) input_token.value, input_token.length, buf+3);
 
         if ((input_token.length >= sizeof ntlmProtocol + 1) &&
                 (!memcmp(input_token.value, ntlmProtocol, sizeof ntlmProtocol))) {
@@ -427,14 +426,14 @@ main(int argc, char *const argv[])
         if (output_token.length) {
             spnegoToken = (const unsigned char *) output_token.value;
             spnegoTokenLength = output_token.length;
-            token = (char *) xmalloc(ska_base64_encode_len(spnegoTokenLength));
+            token = (char *) xmalloc(base64_encode_len(spnegoTokenLength));
             if (token == NULL) {
                 debug((char *) "%s| %s: ERROR: Not enough memory\n", LogTime(), PROGRAM);
                 fprintf(stdout, "BH Not enough memory\n");
                 goto cleanup;
             }
-            ska_base64_encode(token, (const char *) spnegoToken,
-                              ska_base64_encode_len(spnegoTokenLength), spnegoTokenLength);
+            base64_encode_str(token, base64_encode_len(spnegoTokenLength),
+                              (const char *) spnegoToken, spnegoTokenLength);
 
             if (check_gss_err(major_status, minor_status, "gss_accept_sec_context()", log))
                 goto cleanup;

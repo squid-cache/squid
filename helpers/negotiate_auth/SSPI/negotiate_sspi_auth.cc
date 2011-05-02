@@ -121,9 +121,11 @@ int
 manage_request()
 {
     char buf[HELPER_INPUT_BUFFER];
+    char decoded[HELPER_INPUT_BUFFER];
+    int decodedLen;
     char helper_command[3];
-    char *c, *decoded;
-    int plen, status;
+    char *c;
+    int status;
     int oversized = 0;
     char *ErrorMessage;
     static char cred[SSP_MAX_CRED_LEN + 1];
@@ -148,26 +150,22 @@ try_again:
     }
 
     if ((strlen(buf) > 3) && Negotiate_packet_debug_enabled) {
-        decoded = base64_decode(buf + 3);
+        decodedLen = base64_decode(decoded, sizeof(decoded), buf+3);
         strncpy(helper_command, buf, 2);
         debug("Got '%s' from Squid with data:\n", helper_command);
-        hex_dump(decoded, ((strlen(buf) - 3) * 3) / 4);
+        hex_dump(decoded, decodedLen);
     } else
         debug("Got '%s' from Squid\n", buf);
 
     if (memcmp(buf, "YR ", 3) == 0) {	/* refresh-request */
         /* figure out what we got */
         decoded = base64_decode(buf + 3);
-        /*  Note: we don't need to manage memory at this point, since
-         *  base64_decode returns a pointer to static storage.
-         */
-        if (!decoded) {		/* decoding failure, return error */
+        if ((size_t)decodedLen < sizeof(ntlmhdr)) {		/* decoding failure, return error */
             SEND("NA * Packet format error, couldn't base64-decode");
             return 1;
         }
         /* Obtain server blob against SSPI */
-        plen = (strlen(buf) - 3) * 3 / 4;	/* we only need it here. Optimization */
-        c = (char *) SSP_MakeNegotiateBlob(decoded, plen, &Done, &status, cred);
+        c = (char *) SSP_MakeNegotiateBlob(decoded, decodedLen, &Done, &status, cred);
 
         if (status == SSP_OK) {
             if (Done) {
@@ -175,10 +173,10 @@ try_again:
                 have_serverblob = 0;
                 Done = FALSE;
                 if (Negotiate_packet_debug_enabled) {
-                    decoded = base64_decode(c);
+                    decodedLen = base64_decode(decoded, sizeof(decoded), c);
                     debug("sending 'AF' %s to squid with data:\n", cred);
                     if (c != NULL)
-                        hex_dump(decoded, (strlen(c) * 3) / 4);
+                        hex_dump(decoded, decodedLen);
                     else
                         fprintf(stderr, "No data available.\n");
                     printf("AF %s %s\n", c, cred);
@@ -186,9 +184,9 @@ try_again:
                     SEND3("AF %s %s", c, cred);
             } else {
                 if (Negotiate_packet_debug_enabled) {
-                    decoded = base64_decode(c);
+                    decodedLen = base64_decode(decoded, sizeof(decoded), c);
                     debug("sending 'TT' to squid with data:\n");
-                    hex_dump(decoded, (strlen(c) * 3) / 4);
+                    hex_dump(decoded, decodedLen);
                     printf("TT %s\n", c);
                 } else {
                     SEND2("TT %s", c);
@@ -205,17 +203,13 @@ try_again:
             return 1;
         }
         /* figure out what we got */
-        decoded = base64_decode(buf + 3);
-        /*  Note: we don't need to manage memory at this point, since
-         *  base64_decode returns a pointer to static storage.
-         */
-        if (!decoded) {		/* decoding failure, return error */
+        decodedLen = base64_decode(decoded, sizeof(decoded), buf+3);
+        if ((size_t)decodedLen < sizeof(ntlmhdr)) {		/* decoding failure, return error */
             SEND("NA * Packet format error, couldn't base64-decode");
             return 1;
         }
         /* check against SSPI */
-        plen = (strlen(buf) - 3) * 3 / 4;	/* we only need it here. Optimization */
-        c = (char *) SSP_ValidateNegotiateCredentials(decoded, plen, &Done, &status, cred);
+        c = (char *) SSP_ValidateNegotiateCredentials(decoded, decodedLen, &Done, &status, cred);
 
         if (status == SSP_ERROR) {
             FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
@@ -239,10 +233,10 @@ try_again:
             have_serverblob = 0;
             Done = FALSE;
             if (Negotiate_packet_debug_enabled) {
-                decoded = base64_decode(c);
+                decodedLen = base64_decode(decoded, sizeof(decoded), c);
                 debug("sending 'AF' %s to squid with data:\n", cred);
                 if (c != NULL)
-                    hex_dump(decoded, (strlen(c) * 3) / 4);
+                    hex_dump(decoded, decodedLen);
                 else
                     fprintf(stderr, "No data available.\n");
                 printf("AF %s %s\n", c, cred);
@@ -252,9 +246,9 @@ try_again:
             return 1;
         } else {
             if (Negotiate_packet_debug_enabled) {
-                decoded = base64_decode(c);
+                decodedLen = base64_decode(decoded, sizeof(decoded), c);
                 debug("sending 'TT' to squid with data:\n");
-                hex_dump(decoded, (strlen(c) * 3) / 4);
+                hex_dump(decoded, decodedLen);
                 printf("TT %s\n", c);
             } else
                 SEND2("TT %s", c);
