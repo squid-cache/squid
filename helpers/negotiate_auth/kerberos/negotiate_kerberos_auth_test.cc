@@ -196,9 +196,9 @@ squid_kerb_proxy_auth(char *proxy)
         goto cleanup;
 
     if (output_token.length) {
-        token = (char *) xmalloc(ska_base64_encode_len(output_token.length));
-        ska_base64_encode(token, (const char *) output_token.value,
-                          ska_base64_encode_len(output_token.length), output_token.length);
+        token = (char *) xmalloc(base64_encode_len(output_token.length));
+        base64_encode_str(token, base64_encode_len(output_token.length),
+                          (const char *) output_token.value, output_token.length);
     }
 cleanup:
     gss_delete_sec_context(&minor_status, &gss_context, NULL);

@@ -1,5 +1,9 @@
 /*
  * $Id$
+ *
+ * AUTHOR: Markus Moeller
+ *
+ * Encoders adopted from http://ftp.sunet.se/pub2/gnu/vm/base64-encode.c with adjustments.
  */
 
 #include "config.h"
@@ -37,19 +41,37 @@ base64_init(void)
     base64_initialized = 1;
 }
 
-char *
-base64_decode(const char *p)
+int
+base64_decode_len(const char *data)
 {
-    static char result[BASE64_RESULT_SZ];
-    int j;
+    if (!data || !*data)
+        return 0;
+
+    int terminatorLen = 0;
+    int dataLen = strlen(data);
+    int i;
+
+    for (i = dataLen - 1; i >= 0; i--) {
+        if (data[i] == '=')
+            terminatorLen++;
+        if (data[i] != '=')
+            break;
+    }
+    return dataLen / 4 * 3 - terminatorLen;
+}
+
+int
+base64_decode(char *result, unsigned int result_size, const char *p)
+{
+    int j = 0;
     int c;
     long val;
-    if (!p)
-        return NULL;
+    if (!p || !result || result_size == 0)
+        return j;
     if (!base64_initialized)
         base64_init();
     val = c = 0;
-    for (j = 0; *p && j + 4 < BASE64_RESULT_SZ; p++) {
+    for (; *p; p++) {
         unsigned int k = ((unsigned char) *p) % BASE64_VALUE_SZ;
         if (base64_value[k] < 0)
             continue;
@@ -58,85 +80,107 @@ base64_decode(const char *p)
         if (++c < 4)
             continue;
         /* One quantum of four encoding characters/24 bit */
-        result[j++] = (val >> 16) & 0xff;	/* High 8 bits */
-        result[j++] = (val >> 8) & 0xff;	/* Mid 8 bits */
-        result[j++] = val & 0xff;	/* Low 8 bits */
+        if (j+4 <= result_size) {
+            // Speed optimization: plenty of space, avoid some per-byte checks.
+            result[j++] = (val >> 16) & 0xff;	/* High 8 bits */
+            result[j++] = (val >> 8) & 0xff;	/* Mid 8 bits */
+            result[j++] = val & 0xff;		/* Low 8 bits */
+        } else {
+            // part-quantum goes a bit slower with per-byte checks
+            result[j++] = (val >> 16) & 0xff;	/* High 8 bits */
+            if (j == result_size)
+                return j;
+            result[j++] = (val >> 8) & 0xff;	/* Mid 8 bits */
+            if (j == result_size)
+                return j;
+            result[j++] = val & 0xff;		/* Low 8 bits */
+        }
+        if (j == result_size)
+            return j;
         val = c = 0;
     }
-    result[j] = 0;
+    return j;
+}
+
+int
+base64_encode_len(int len)
+{
+    // NP: some magic numbers + potential nil-terminator
+    return ((len + 2) / 3 * 4) + 1;
+}
+
+const char *
+old_base64_encode(const char *decoded_str)
+{
+    static char result[BASE64_RESULT_SZ];
+    base64_encode_str(result, sizeof(result), decoded_str, strlen(decoded_str));
     return result;
 }
 
-/* adopted from http://ftp.sunet.se/pub2/gnu/vm/base64-encode.c with adjustments */
 const char *
-base64_encode(const char *decoded_str)
+base64_encode_bin(const char *decoded_str, int len)
 {
     static char result[BASE64_RESULT_SZ];
-    int bits = 0;
-    int char_count = 0;
-    int out_cnt = 0;
-    int c;
-
-    if (!decoded_str)
-        return decoded_str;
-
-    if (!base64_initialized)
-        base64_init();
-
-    while ((c = (unsigned char) *decoded_str++) && out_cnt < sizeof(result) - 5) {
-        bits += c;
-        char_count++;
-        if (char_count == 3) {
-            result[out_cnt++] = base64_code[bits >> 18];
-            result[out_cnt++] = base64_code[(bits >> 12) & 0x3f];
-            result[out_cnt++] = base64_code[(bits >> 6) & 0x3f];
-            result[out_cnt++] = base64_code[bits & 0x3f];
-            bits = 0;
-            char_count = 0;
-        } else {
-            bits <<= 8;
-        }
-    }
-    if (char_count != 0) {
-        bits <<= 16 - (8 * char_count);
-        result[out_cnt++] = base64_code[bits >> 18];
-        result[out_cnt++] = base64_code[(bits >> 12) & 0x3f];
-        if (char_count == 1) {
-            result[out_cnt++] = '=';
-            result[out_cnt++] = '=';
-        } else {
-            result[out_cnt++] = base64_code[(bits >> 6) & 0x3f];
-            result[out_cnt++] = '=';
-        }
-    }
-    result[out_cnt] = '\0';	/* terminate */
+    base64_encode_str(result, sizeof(result), decoded_str, len);
     return result;
 }
 
-/* adopted from http://ftp.sunet.se/pub2/gnu/vm/base64-encode.c with adjustments */
-const char *
-base64_encode_bin(const char *data, int len)
+int
+base64_encode_str(char *result, int result_max_size, const char *data, int data_size)
 {
-    static char result[BASE64_RESULT_SZ];
+    if (result_max_size < 1)
+        return 0;
+
+    int used = base64_encode(result, result_max_size, data, data_size);
+    /* terminate */
+    if (used >= result_max_size) {
+        result[result_max_size - 1] = '\0';
+        return result_max_size;
+    } else {
+        result[used++] = '\0';
+    }
+    return used;
+}
+
+/* adopted from http://ftp.sunet.se/pub2/gnu/vm/base64-encode.c with adjustments */
+int
+base64_encode(char *result, int result_size, const char *data, int data_size)
+{
     int bits = 0;
     int char_count = 0;
     int out_cnt = 0;
 
-    if (!data)
-        return data;
+    if (!data || !*data || !result || result_size < 1 || data_size < 1)
+        return 0;
 
     if (!base64_initialized)
         base64_init();
 
-    while (len-- && out_cnt < sizeof(result) - 5) {
+    while (data_size--) {
         int c = (unsigned char) *data++;
         bits += c;
         char_count++;
         if (char_count == 3) {
-            result[out_cnt++] = base64_code[bits >> 18];
-            result[out_cnt++] = base64_code[(bits >> 12) & 0x3f];
-            result[out_cnt++] = base64_code[(bits >> 6) & 0x3f];
-            result[out_cnt++] = base64_code[bits & 0x3f];
+            if (out_cnt >= result_size)
+                break;
+            if (out_cnt+4 <= result_size) {
+                result[out_cnt++] = base64_code[bits >> 18];
+                result[out_cnt++] = base64_code[(bits >> 12) & 0x3f];
+                result[out_cnt++] = base64_code[(bits >> 6) & 0x3f];
+                result[out_cnt++] = base64_code[bits & 0x3f];
+            } else {
+                // part-quantum goes a bit slower with per-byte checks
+                result[out_cnt++] = base64_code[bits >> 18];
+                if (out_cnt >= result_size)
+                    break;
+                result[out_cnt++] = base64_code[(bits >> 12) & 0x3f];
+                if (out_cnt >= result_size)
+                    break;
+                result[out_cnt++] = base64_code[(bits >> 6) & 0x3f];
+                if (out_cnt >= result_size)
+                    break;
+                result[out_cnt++] = base64_code[bits & 0x3f];
+            }
             bits = 0;
             char_count = 0;
         } else {
@@ -145,16 +189,27 @@ base64_encode_bin(const char *data, int len)
     }
     if (char_count != 0) {
         bits <<= 16 - (8 * char_count);
+        if (out_cnt >= result_size)
+            return result_size;
         result[out_cnt++] = base64_code[bits >> 18];
+        if (out_cnt >= result_size)
+            return result_size;
         result[out_cnt++] = base64_code[(bits >> 12) & 0x3f];
         if (char_count == 1) {
+            if (out_cnt >= result_size)
+                return result_size;
             result[out_cnt++] = '=';
+            if (out_cnt >= result_size)
+                return result_size;
             result[out_cnt++] = '=';
         } else {
+            if (out_cnt >= result_size)
+                return result_size;
             result[out_cnt++] = base64_code[(bits >> 6) & 0x3f];
+            if (out_cnt >= result_size)
+                return result_size;
             result[out_cnt++] = '=';
         }
     }
-    result[out_cnt] = '\0';	/* terminate */
-    return result;
+    return (out_cnt >= result_size?result_size:out_cnt);
 }
