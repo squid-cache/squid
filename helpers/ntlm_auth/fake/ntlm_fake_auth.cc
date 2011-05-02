@@ -180,7 +180,7 @@ main(int argc, char *argv[])
             packet = (ntlmhdr*)decodedBuf;
         } else {
             packet = NULL;
-            decodeLen = 0;
+            decodedLen = 0;
         }
         if (buflen > 3 && NTLM_packet_debug_enabled) {
             strncpy(helper_command, buf, 2);
