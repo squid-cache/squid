@@ -1414,7 +1414,10 @@ HttpHeader::getAuth(http_hdr_type id, const char *auth_scheme) const
     if (!*field)		/* no authorization cookie */
         return NULL;
 
-    return base64_decode(field);
+    static char decodedAuthToken[8192];
+    const int decodedLen = base64_decode(decodedAuthToken, sizeof(decodedAuthToken)-1, field);
+    decodedAuthToken[decodedLen] = '\0';
+    return decodedAuthToken;
 }
 
 ETag

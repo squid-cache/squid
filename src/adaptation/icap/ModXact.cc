@@ -1425,7 +1425,7 @@ void Adaptation::Icap::ModXact::makeUsernameHeader(const HttpRequest *request, M
     if (request->auth_user_request != NULL) {
         char const *name = request->auth_user_request->username();
         if (name) {
-            const char *value = TheConfig.client_username_encode ? base64_encode(name) : name;
+            const char *value = TheConfig.client_username_encode ? old_base64_encode(name) : name;
             buf.Printf("%s: %s\r\n", TheConfig.client_username_header, value);
         }
     }
