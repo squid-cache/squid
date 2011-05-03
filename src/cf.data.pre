@@ -3593,10 +3593,10 @@ TYPE: wordlist
 LOC: Config.Program.redirect
 DEFAULT: none
 DOC_START
-	Specify the location of the executable for the URL rewriter.
+	Specify the location of the executable URL rewriter to use.
 	Since they can perform almost any function there isn't one included.
 
-	For each requested URL rewriter will receive on line with the format
+	For each requested URL, the rewriter will receive on line with the format
 
 	URL <SP> client_ip "/" fqdn <SP> user <SP> method [<SP> kvpairs]<NL>
 
@@ -3610,7 +3610,7 @@ DOC_START
 
 	The rewriter can also indicate that a client-side redirect should
 	be performed to the new URL. This is done by prefixing the returned
-	URL with "301:" (moved permanently) or 302: (moved temporarily).
+	URL with "301:" (moved permanently) or 302: (moved temporarily), etc.
 
 	By default, a URL rewriter is not used.
 DOC_END
