@@ -748,6 +748,7 @@ EXTRA_DIST = \
 	mk-string-arrays.pl \
 	mk-string-arrays.awk \
 	repl_modules.sh \
+	tests/STUB.h \
 	mib.txt \
 	mime.conf.default
 
@@ -950,6 +951,7 @@ test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
 TESTSOURCES= \
+	tests/STUB.h \
 	test_tools.cc \
 	globals.cc
 
@@ -2177,6 +2179,9 @@ tests_testStore_SOURCES= \
 	HttpMsg.cc \
 	RemovalPolicy.cc \
 	store_dir.cc \
+	store_io.cc \
+	store_swapout.cc \
+	StoreIOState.cc \
 	store.cc \
 	HttpRequestMethod.cc \
 	store_key_md5.cc \
