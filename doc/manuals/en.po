@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-05-04 13:58+1200\n"
-"PO-Revision-Date: 2011-05-04 03:59+0200\n"
+"PO-Revision-Date: 2011-05-04 04:34+0200\n"
 "Last-Translator: Amos <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: en\n"
@@ -895,6 +895,8 @@ msgid ""
 "Specity the LDAP server to connect to by LDAP URI (requires OpenLDAP "
 "libraries).  Servers can also be specified last on the command line."
 msgstr ""
+"Specity the LDAP server to connect to by LDAP URI (requires OpenLDAP "
+"libraries).  Servers can also be specified last on the command line."
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:206
@@ -912,6 +914,9 @@ msgid ""
 "than the default LDAP port 389. Can also be specified within the server "
 "specification by using servername:port syntax."
 msgstr ""
+"Specify an alternate TCP port where the LDAP server is listening if other "
+"than the default LDAP port 389. Can also be specified within the server "
+"specification by using servername:port syntax."
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:218
@@ -973,6 +978,9 @@ msgid ""
 "locate your user DNs as these can no longer be constructed directly from the "
 "base DN and login name alone:"
 msgstr ""
+"If you have sub-domains then you need to use a search filter approach to "
+"locate your user DNs as these can no longer be constructed directly from the "
+"base DN and login name alone:"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:263
@@ -980,6 +988,8 @@ msgid ""
 "And similarly if you only want to allow access to users having a specific "
 "attribute"
 msgstr ""
+"And similarly if you only want to allow access to users having a specific "
+"attribute"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:274
@@ -2006,6 +2016,8 @@ msgid ""
 "It is possible to enable case insensitive group name comparison ( B<-c> ), "
 "but on some non-English locales, the results can be unexpected."
 msgstr ""
+"It is possible to enable case insensitive group name comparison ( B<-c> ), "
+"but on some non-English locales, the results can be unexpected."
 
 #. type: Plain text
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:167
@@ -2273,6 +2285,9 @@ msgid ""
 "fixed by using version 4.91 SP3+, with the 'Auto-Reconnect' feature not re-"
 "populating the networkAddress field in eDirectory."
 msgstr ""
+"There is a known issue regarding Novell's Client for Windows, that is mostly "
+"fixed by using version 4.91 SP3+, with the 'Auto-Reconnect' feature not re-"
+"populating the networkAddress field in eDirectory."
 
 #. type: Plain text
 #: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:179
@@ -2282,6 +2297,10 @@ msgid ""
 "low on connection licenses, that it I sometimes does not populate the "
 "networkAddress fields correctly."
 msgstr ""
+"I have also experienced an issue related to using NetWare 6.5 (SP6 and "
+"lower?) and connection licensing.  It appears that whenever a server runs "
+"low on connection licenses, that it I sometimes does not populate the "
+"networkAddress fields correctly."
 
 #. type: Plain text
 #: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:186
@@ -2291,6 +2310,10 @@ msgid ""
 "B<basic_ldap_auth> as a fallback.  Check ConsoleOne, etc to verify their "
 "networkAddress fields to troubleshoot."
 msgstr ""
+"Majority of Proxy Authentication issues can be resolved by having the users' "
+"B<reboot> if their networkAddress is not correct, or using "
+"B<basic_ldap_auth> as a fallback.  Check ConsoleOne, etc to verify their "
+"networkAddress fields to troubleshoot."
 
 #. type: Plain text
 #: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:211
@@ -2317,6 +2340,8 @@ msgid ""
 "B<ext_file_userip_acl> is an installed binary. An external helper for the "
 "Squid external acl scheme."
 msgstr ""
+"B<ext_file_userip_acl> is an installed binary. An external helper for the "
+"Squid external acl scheme."
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:22
@@ -2337,7 +2362,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:43
 msgid "The B<squid.conf> configuration for the external ACL should be:"
-msgstr ""
+msgstr "The B<squid.conf> configuration for the external ACL should be:"
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:51
@@ -2345,6 +2370,8 @@ msgid ""
 "If the helper program finds a matching username/ip in the configuration "
 "file, it returns B<OK> , otherwise it returns B<ERR .>"
 msgstr ""
+"If the helper program finds a matching username/ip in the configuration "
+"file, it returns B<OK> , otherwise it returns B<ERR .>"
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:53
@@ -2357,6 +2384,8 @@ msgid ""
 "Where B<ip_addr> is a dotted quad format IP address, the B<netmask> must be "
 "in dotted quad format too."
 msgstr ""
+"Where B<ip_addr> is a dotted quad format IP address, the B<netmask> must be "
+"in dotted quad format too."
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:68
@@ -2364,12 +2393,14 @@ msgid ""
 "When the second parameter is prefixed with an B<@> , the program will lookup "
 "the B</etc/group> file entry for the specified username."
 msgstr ""
+"When the second parameter is prefixed with an B<@> , the program will lookup "
+"the B</etc/group> file entry for the specified username."
 
 #. any user on this IP address may authenticate\" or \"no user on this ip address may authenticate\".
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:74
 msgid "There are other two directives, B<ALL> and B<NONE> , which mean"
-msgstr ""
+msgstr "There are other two directives, B<ALL> and B<NONE> , which mean"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:7
@@ -2390,6 +2421,11 @@ msgid ""
 "user@REALM, NDOMAIN\\euser) to be checked against the LDAP directory are "
 "specified on subsequent lines of input to the helper, one username per line."
 msgstr ""
+"B<ext_kerberos_ldap_group_acl> is an installed binary and allows Squid to "
+"connect to a LDAP directory to authorize users via LDAP groups. Options are "
+"specified as parameters on the command line, while the username (e.g. user, "
+"user@REALM, NDOMAIN\\euser) to be checked against the LDAP directory are "
+"specified on subsequent lines of input to the helper, one username per line."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:28
@@ -2476,17 +2512,17 @@ msgstr ""
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:80
 msgid "Maximal depth of recursive group search."
-msgstr ""
+msgstr "Maximal depth of recursive group search."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:83
 msgid "Username for LDAP server."
-msgstr ""
+msgstr "Username for LDAP server."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:86
 msgid "Password for LDAP server."
-msgstr ""
+msgstr "Password for LDAP server."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:91
@@ -2497,6 +2533,11 @@ msgid ""
 "hold of a copy of your Squid configuration file or extracts the password "
 "used from a process listing."
 msgstr ""
+"As the password needs to be printed in plain text in your Squid "
+"configuration it is strongly recommended to use a account with minimal "
+"associated privileges.  This to limit the damage in case someone could get "
+"hold of a copy of your Squid configuration file or extracts the password "
+"used from a process listing."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:95
@@ -2542,12 +2583,14 @@ msgid ""
 "This helper is intended to be used as an B<external_acl_type> helper in "
 "B<squid.conf.>"
 msgstr ""
+"This helper is intended to be used as an B<external_acl_type> helper in "
+"B<squid.conf.>"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:138
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:55
 msgid "B<NOTE:> The following squid startup file modification may be required:"
-msgstr ""
+msgstr "B<NOTE:> The following squid startup file modification may be required:"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:142
@@ -2672,13 +2715,14 @@ msgstr ""
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:238
 msgid "B<RFC1035> - Domain names - implementation and specification,"
-msgstr ""
+msgstr "B<RFC1035> - Domain names - implementation and specification,"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:240
 msgid ""
 "B<RFC2782> - A DNS RR for specifying the location of services (DNS SRV),"
 msgstr ""
+"B<RFC2782> - A DNS RR for specifying the location of services (DNS SRV),"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:245
@@ -2766,6 +2810,8 @@ msgid ""
 "The DN and password to bind as while performing searches. Required if the "
 "LDAP directory does not allow anonymous searches."
 msgstr ""
+"The DN and password to bind as while performing searches. Required if the "
+"LDAP directory does not allow anonymous searches."
 
 #. type: Plain text
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:93
