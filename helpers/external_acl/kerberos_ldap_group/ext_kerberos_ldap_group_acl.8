@@ -115,8 +115,7 @@ Group|Group@|Group@Realm[:Group@|Group@Realm] where group and domain
 is in UTF-8 hex format
 .
 .SH CONFIGURATION
-.PP See FAQ wiki page for examples of how to write configuration snippets. (TBD)
-.PP 
+.PP
 This helper is intended to be used as an
 .B external_acl_type
 helper in
@@ -136,7 +135,7 @@ helper in
 .PP
 .B NOTE:
 The following squid startup file modification may be required:
-
+.
 Add the following lines to the squid startup script to point squid to a keytab file which
 contains the HTTP/fqdn service principal for the default Kerberos domain. The fqdn must be
 the proxy name set in IE or firefox. You can not use an IP address.
@@ -147,7 +146,7 @@ the proxy name set in IE or firefox. You can not use an IP address.
 .if !'po4a'hide' export KRB5_KTNAME
 .if !'po4a'hide' .fi
 .if !'po4a'hide' .ft
-
+.
 If you use a different Kerberos domain than the machine itself is in you can point squid to
 the seperate Kerberos config file by setting the following environmnet variable in the startup
 script.
@@ -158,7 +157,7 @@ script.
 .if !'po4a'hide' export KRB5_CONFIG
 .if !'po4a'hide' .fi
 .if !'po4a'hide' .ft
-
+.
 .B ext_kerberos_ldap_group_acl
 will determine automagically the right ldap server. The following method is used:
 

@@ -206,9 +206,9 @@ on the command line.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-p ldap_port"
-Specify an alternate TCP port where the ldap server is listening if
+Specify an alternate TCP port where the LDAP server is listening if
 other than the default LDAP port 389. Can also be specified within the
-server specificiation by using servername:port syntax.
+server specification by using servername:port syntax.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-v 2|3"
@@ -251,14 +251,14 @@ are located and the server name:
 .if !'po4a'hide' .RE
 .PP
 If you have sub\-domains then you need to use a search filter approach
-to locate your user DNs as these can no longer be constructed direcly
+to locate your user DNs as these can no longer be constructed directly
 from the base DN and login name alone:
 .IP
 .if !'po4a'hide' .RS
 .if !'po4a'hide' .B basic_ldap_auth -b "dc=your,dc=domain" -f "uid=%s" ldapserver
 .if !'po4a'hide' .RE
 .PP
-And similarily if you only want to allow access to users having a
+And similarly if you only want to allow access to users having a
 specific attribute
 .IP
 .if !'po4a'hide' .RS
