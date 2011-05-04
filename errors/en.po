@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-02-06 22:39+1300\n"
-"PO-Revision-Date: 2011-05-03 06:38+0200\n"
+"PO-Revision-Date: 2011-05-04 01:55+0200\n"
 "Last-Translator: Amos <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: en\n"
@@ -612,14 +612,12 @@ msgstr ""
 "misconfigured."
 
 #: templates/ERR_GATEWAY_FAILURE:7
-#, fuzzy
 msgid ""
 "This may be due to limits established by the Internet Service Provider who "
 "operates this cache. Please contact them directly for more information."
 msgstr ""
-"These limits have been established by the Internet Service Provider who "
-"operates this cache. Please contact them directly if you feel this is an "
-"error."
+"This may be due to limits established by the Internet Service Provider who "
+"operates this cache. Please contact them directly for more information."
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
