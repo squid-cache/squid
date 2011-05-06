@@ -126,7 +126,7 @@ std::string Ssl::CrtdMessage::compose() const
     if (code.empty()) return std::string();
     char buffer[10];
     snprintf(buffer, sizeof(buffer), "%zd", body.length());
-    return code + ' ' + buffer + ' ' + body + '\n';
+    return code + ' ' + buffer + ' ' + body;
 }
 
 void Ssl::CrtdMessage::clear()
