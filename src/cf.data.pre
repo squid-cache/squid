@@ -644,8 +644,9 @@ DOC_START
 
 	When using "file", the file should contain one item per line.
 
-	By default, regular expressions are CASE-SENSITIVE.  To make
-	them case-insensitive, use the -i option.
+	By default, regular expressions are CASE-SENSITIVE.
+	To make them case-insensitive, use the -i option. To return case-sensitive
+	use the +i option between patterns, or make a new ACL line without -i.
 
 	Some acl types require suspending the current request in order
 	to access some external data source.
