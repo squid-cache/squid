@@ -828,6 +828,13 @@ FwdState::connectStart()
     if (ftimeout < ctimeout)
         ctimeout = ftimeout;
 
+    if (fs->_peer && request->flags.sslBumped == true) {
+        debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parrent proxy are not allowed");
+        ErrorState *anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, request);
+        fail(anErr);
+        self = NULL; // refcounted
+        return;
+    } 
 
     request->flags.pinned = 0;
     if (fs->code == PINNED) {
