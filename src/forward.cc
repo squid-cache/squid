@@ -834,7 +834,7 @@ FwdState::connectStart()
         fail(anErr);
         self = NULL; // refcounted
         return;
-    } 
+    }
 
     request->flags.pinned = 0;
     if (fs->code == PINNED) {
