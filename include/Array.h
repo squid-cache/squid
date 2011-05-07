@@ -226,6 +226,9 @@ Vector<E>::shift()
 
     count--;
 
+    /*reset the last (unused) element...*/
+    items[count] = value_type();
+
     return result;
 }
 
