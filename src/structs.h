@@ -122,6 +122,7 @@ struct ushortlist {
 };
 
 struct relist {
+    int flags;
     char *pattern;
     regex_t regex;
     relist *next;
