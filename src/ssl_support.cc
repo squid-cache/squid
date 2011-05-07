@@ -681,8 +681,13 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
     switch (version) {
 
     case 2:
+#ifndef OPENSSL_NO_SSL2
         debugs(83, 5, "Using SSLv2.");
         method = SSLv2_server_method();
+#else
+        debugs(83, 1, "SSLv2 is not available in this Proxy.");
+        return NULL;
+#endif
         break;
 
     case 3:
@@ -879,8 +884,13 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
     switch (version) {
 
     case 2:
+#ifndef OPENSSL_NO_SSL2
         debugs(83, 5, "Using SSLv2.");
         method = SSLv2_client_method();
+#else
+        debugs(83, 1, "SSLv2 is not available in this Proxy.");
+        return NULL;
+#endif
         break;
 
     case 3:
