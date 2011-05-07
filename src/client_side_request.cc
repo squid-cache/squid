@@ -1110,14 +1110,13 @@ ClientHttpRequest::processRequest()
 {
     debugs(85, 4, "clientProcessRequest: " << RequestMethodStr(request->method) << " '" << uri << "'");
 
-#if USE_SSL
-    if (request->method == METHOD_CONNECT && sslBumpNeeded()) {
-        sslBumpStart();
-        return;
-    }
-#endif
-
     if (request->method == METHOD_CONNECT && !redirect.status) {
+#if USE_SSL
+        if (sslBumpNeeded()) {
+            sslBumpStart();
+            return;
+        }
+#endif
         logType = LOG_TCP_MISS;
         getConn()->stopReading(); // tunnels read for themselves
         tunnelStart(this, &out.size, &al.http.code);
