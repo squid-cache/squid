@@ -1053,16 +1053,17 @@ make_pub_auth(cachemgr_request * req)
         return;
 
     /* host | time | user | passwd */
-    snprintf(buf, sizeof(buf), "%s|%d|%s|%s",
-             req->hostname,
-             (int) now,
-             req->user_name ? req->user_name : "",
-             req->passwd);
-
+    const int bufLen = snprintf(buf, sizeof(buf), "%s|%d|%s|%s",
+                                req->hostname,
+                                (int) now,
+                                req->user_name ? req->user_name : "",
+                                req->passwd);
     debug("cmgr: pre-encoded for pub: %s\n", buf);
-    debug("cmgr: encoded: '%s'\n", base64_encode(buf));
 
-    req->pub_auth = xstrdup(base64_encode(buf));
+    const int encodedLen = base64_encode_len(bufLen);
+    req->pub_auth = (char *) xmalloc(encodedLen);
+    base64_encode_str(req->pub_auth, encodedLen, buf, bufLen);
+    debug("cmgr: encoded: '%s'\n", req->pub_auth);
 }
 
 static void
@@ -1080,7 +1081,9 @@ decode_pub_auth(cachemgr_request * req)
     if (!req->pub_auth || strlen(req->pub_auth) < 4 + strlen(safe_str(req->hostname)))
         return;
 
-    buf = xstrdup(base64_decode(req->pub_auth));
+    const int decodedLen = base64_decode_len(req->pub_auth);
+    buf = (char*)xmalloc(decodedLen);
+    base64_decode(buf, decodedLen, req->pub_auth);
 
     debug("cmgr: length ok\n");
 
@@ -1136,16 +1139,20 @@ make_auth_header(const cachemgr_request * req)
 {
     static char buf[1024];
     size_t stringLength = 0;
-    const char *str64;
 
     if (!req->passwd)
         return "";
 
-    snprintf(buf, sizeof(buf), "%s:%s",
-             req->user_name ? req->user_name : "",
-             req->passwd);
+    int bufLen = snprintf(buf, sizeof(buf), "%s:%s",
+                          req->user_name ? req->user_name : "",
+                          req->passwd);
 
-    str64 = base64_encode(buf);
+    int encodedLen = base64_encode_len(bufLen);
+    if (encodedLen <= 0)
+        return "";
+
+    char *str64 = static_cast<char*>(xmalloc(encodedLen));
+    base64_encode_str(str64, encodedLen, buf, bufLen);
 
     stringLength += snprintf(buf, sizeof(buf), "Authorization: Basic %s\r\n", str64);
 
