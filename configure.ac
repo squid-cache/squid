@@ -48,6 +48,12 @@ fi
 AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 # on windows squid_host_os is either mingw or cygwin, version is 32
 
+# this needs to be before any test is run, to have more standard
+# functions available on some Unix sysems (e.g. Solaris)
+if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
+	AC_USE_SYSTEM_EXTENSIONS
+fi
+
 # test for programs
 AC_PROG_RANLIB
 AC_PROG_CPP
@@ -79,12 +85,6 @@ AC_PATH_PROG(AR, ar, $FALSE)
 AR_R="$AR r"
 AC_SUBST(AR_R)
 
-# this needs to be before any test is run, to have more standard
-# functions available on some Unix sysems (e.g. Solaris)
-if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
-	AC_USE_SYSTEM_EXTENSIONS
-fi
-
 AC_ARG_ENABLE(strict-error-checking,
   AS_HELP_STRING([--disable-strict-error-checking],[By default squid is compiled
                  with all possible static compiler error-checks enabled.
@@ -111,6 +111,8 @@ else
   AC_DISABLE_SHARED
 fi
 
+# LT_INIT requires libtool v2, might as well state it loud
+LT_PREREQ ([2.2])
 LT_INIT([dlopen],[disable-shared])
 if ! test "${ac_top_build_prefix}" = "";
 then
