@@ -473,6 +473,8 @@ This section gives a thorough account of those changes in three categories:
 	<p>New format tags and option parameters:
 	<p><em>%SRCEUI48</em> EUI-48 / MAC address of client from ARP lookup.
 	<p><em>%SRCEUI64</em> EUI-64 of clients with SLAAC address.
+	<p><em>%EXT_LOG</em> log= message returned by previous external ACL calls. An updated version may be returned.
+	<p><em>%EXT_TAG</em> tag= value returned by previous external ACL calls. Tag may not be altered once set.
 	<p><em>children-max=N</em> determins maximum number of helper processes used.
 	<p><em>children-startup=N</em> determins minimum number of helper processes used.
 	<p><em>children-idle=N</em> determines how many helper to retain as buffer against sudden traffic loads.

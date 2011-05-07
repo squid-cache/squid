@@ -556,7 +556,9 @@ DOC_START
 	FORMAT specifications
 
 	  %LOGIN	Authenticated user login name
-	  %EXT_USER	Username from external acl
+	  %EXT_USER	Username from previous external acl
+	  %EXT_LOG	Log details from previous external acl
+	  %EXT_TAG	Tag from previous external acl
 	  %IDENT	Ident user name
 	  %SRC		Client IP
 	  %SRCPORT	Client source port
