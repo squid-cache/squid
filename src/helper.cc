@@ -886,19 +886,19 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         char *msg = srv->rbuf;
         int i = 0;
         debugs(84, 3, "helperHandleRead: end of reply found");
-        
+
         if (t > srv->rbuf && t[-1] == '\r' && hlp->eom == '\n')
             t[-1] = '\0';
-        
+
         *t++ = '\0';
-        
+
         if (hlp->childs.concurrency) {
             i = strtol(msg, &msg, 10);
-            
+
             while (*msg && xisspace(*msg))
                 msg++;
         }
-        
+
         helperReturnBuffer(i, srv, hlp, msg, t);
     }
 
