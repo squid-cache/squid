@@ -108,7 +108,7 @@ ACLRegexData::dump()
 
     while (temp != NULL) {
         if (temp->flags != flags) {
-            if (temp->flags&REG_ICASE != 0) {
+            if ((temp->flags&REG_ICASE) != 0) {
                 wordlistAdd(&W, "-i");
             } else {
                 wordlistAdd(&W, "+i");
