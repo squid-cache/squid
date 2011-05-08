@@ -269,7 +269,7 @@ clientReplyContext::processExpired()
     http->storeEntry(entry);
     assert(http->out.offset == 0);
 
-    http->request->clientConnection = http->getConn();
+    http->request->clientConnectionManager = http->getConn();
 
     /*
      * A refcounted pointer so that FwdState stays around as long as
@@ -660,7 +660,7 @@ clientReplyContext::processMiss()
         if (http->flags.internal)
             r->protocol = AnyP::PROTO_INTERNAL;
 
-        r->clientConnection = http->getConn();
+        r->clientConnectionManager = http->getConn();
 
         /** Start forwarding to get the new object from network */
         FwdState::fwdStart(http->getConn() != NULL ? http->getConn()->fd : -1,

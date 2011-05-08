@@ -842,7 +842,6 @@ FwdState::connectStart()
         assert(pinned_connection);
         fd = pinned_connection->validatePinnedConnection(request, fs->_peer);
         if (fd >= 0) {
-            pinned_connection->unpinConnection();
 #if 0
             if (!fs->_peer)
                 fs->code = HIER_DIRECT;
@@ -858,8 +857,7 @@ FwdState::connectStart()
             return;
         }
         /* Failure. Fall back on next path */
-        debugs(17,2,HERE << " Pinned connection " << pinned_connection << " not valid. Releasing.");
-        request->releasePinnedConnection();
+        debugs(17,2,HERE << " Pinned connection " << pinned_connection << " not valid.");
         servers = fs->next;
         fwdServerFree(fs);
         connectStart();

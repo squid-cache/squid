@@ -145,12 +145,6 @@ private:
     char host[SQUIDHOSTNAMELEN];
     int host_is_numeric;
 
-    /***
-     * The client side connection data of pinned connections for the client side
-     * request related objects
-     */
-    ConnStateData *pinned_connection;
-
 #if USE_ADAPTATION
     mutable Adaptation::History::Pointer adaptHistory_; ///< per-HTTP transaction info
 #endif
@@ -248,20 +242,18 @@ public:
 
     static HttpRequest * CreateFromUrl(char * url);
 
-    void setPinnedConnection(ConnStateData *conn) {
-        pinned_connection = cbdataReference(conn);
-    }
-
     ConnStateData *pinnedConnection() {
-        return pinned_connection;
+        if (clientConnectionManager.valid() && clientConnectionManager->pinning.pinned)
+            return clientConnectionManager.get();
+        return NULL;
     }
 
-    void releasePinnedConnection() {
-        cbdataReferenceDone(pinned_connection);
-    }
-
-    /// client-side conn manager, if known; used for 1xx response forwarding
-    CbcPointer<ConnStateData> clientConnection;
+    /**
+     * The client connection manager, if known;
+     * Used for any response actions needed directly to the client.
+     * ie 1xx forwarding or connection pinning state changes
+     */
+    CbcPointer<ConnStateData> clientConnectionManager;
 
     int64_t getRangeOffsetLimit(); /* the result of this function gets cached in rangeOffsetLimit */
 
