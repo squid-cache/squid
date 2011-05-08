@@ -919,7 +919,7 @@ FwdState::connectStart()
 
     tos_t tos = GetTosToServer(request);
 
-#if SO_MARK
+#if SO_MARK && USE_LIBCAP
     nfmark_t mark = GetNfmarkToServer(request);
     debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << int(tos)
            << ", netfilter mark " << mark);
@@ -1031,7 +1031,7 @@ FwdState::dispatch()
             tos_t tos = GetTosToServer(request);
             Ip::Qos::setSockTos(server_fd, tos);
         }
-#if SO_MARK
+#if SO_MARK && USE_LIBCAP
         if (Ip::Qos::TheConfig.isAclNfmarkActive()) {
             nfmark_t mark = GetNfmarkToServer(request);
             Ip::Qos::setSockNfmark(server_fd, mark);
