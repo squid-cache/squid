@@ -24,10 +24,9 @@ public:
     virtual int authenticated() const;
     virtual void authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type);
     virtual Auth::Direction module_direction();
-    virtual void addHeader(HttpReply * rep, int accel);
+    virtual void addAuthenticationInfoHeader(HttpReply * rep, int accel);
 #if WAITING_FOR_TE
-
-    virtual void addTrailer(HttpReply * rep, int accel);
+    virtual void addAuthenticationInfoTrailer(HttpReply * rep, int accel);
 #endif
 
     virtual void module_start(RH *, void *);
