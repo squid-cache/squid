@@ -25,7 +25,7 @@ public:
     virtual void onConnectionClose(ConnStateData *);
     virtual void module_start(RH *, void *);
 
-    virtual void addHeader(HttpReply * rep, int accel);
+    virtual void addAuthenticationInfoHeader(HttpReply * rep, int accel);
 
     virtual const char * connLastHeader();
 

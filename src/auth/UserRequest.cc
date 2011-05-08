@@ -221,11 +221,11 @@ AuthUserRequest::direction()
 }
 
 void
-AuthUserRequest::addHeader(HttpReply * rep, int accelerated)
+AuthUserRequest::addAuthenticationInfoHeader(HttpReply * rep, int accelerated)
 {}
 
 void
-AuthUserRequest::addTrailer(HttpReply * rep, int accelerated)
+AuthUserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int accelerated)
 {}
 
 void
@@ -527,13 +527,13 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer au
         }
 
     }
+
     /*
      * allow protocol specific headers to be _added_ to the existing
-     * response - ie digest auth
+     * response - currently Digest or Negotiate auth
      */
-
     if (auth_user_request != NULL) {
-        auth_user_request->addHeader(rep, accelerated);
+        auth_user_request->addAuthenticationInfoHeader(rep, accelerated);
         if (auth_user_request->lastReply != AUTH_AUTHENTICATED)
             auth_user_request->lastReply = AUTH_ACL_CANNOT_AUTHENTICATE;
     }
@@ -545,13 +545,12 @@ authenticateFixHeader(HttpReply * rep, AuthUserRequest::Pointer auth_user_reques
     AuthUserRequest::addReplyAuthHeader(rep, auth_user_request, request, accelerated, internal);
 }
 
-
 /* call the active auth module and allow it to add a trailer to the request */
 void
 authenticateAddTrailer(HttpReply * rep, AuthUserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated)
 {
     if (auth_user_request != NULL)
-        auth_user_request->addTrailer(rep, accelerated);
+        auth_user_request->addAuthenticationInfoTrailer(rep, accelerated);
 }
 
 Auth::Scheme::Pointer

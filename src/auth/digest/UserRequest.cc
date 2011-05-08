@@ -190,9 +190,8 @@ AuthDigestUserRequest::module_direction()
     }
 }
 
-/* add the [proxy]authorisation header */
 void
-AuthDigestUserRequest::addHeader(HttpReply * rep, int accel)
+AuthDigestUserRequest::addAuthenticationInfoHeader(HttpReply * rep, int accel)
 {
     http_hdr_type type;
 
@@ -218,9 +217,8 @@ AuthDigestUserRequest::addHeader(HttpReply * rep, int accel)
 }
 
 #if WAITING_FOR_TE
-/** add the [proxy]authorisation header */
 void
-AuthDigestUserRequest::addTrailer(HttpReply * rep, int accel)
+AuthDigestUserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int accel)
 {
     int type;
 
