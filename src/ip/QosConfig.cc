@@ -221,7 +221,7 @@ Ip::Qos::Config::parseConfigLine()
         // Work out TOS or mark. Default to TOS for backwards compatibility
         if (!(mark || tos)) {
             if (strncmp(token, "mark",4) == 0) {
-#if SO_MARK
+#if SO_MARK && USE_LIBCAP
                 mark = true;
                 // Assume preserve is true. We don't set at initialisation as this affects isHitNfmarkActive()
 #if USE_LIBNETFILTERCONNTRACK
@@ -231,11 +231,15 @@ Ip::Qos::Config::parseConfigLine()
                 debugs(3, DBG_IMPORTANT, "WARNING: Squid not compiled with Netfilter conntrack library. "
                        << "Netfilter mark preservation not available.");
 #endif // USE_LIBNETFILTERCONNTRACK
-#else // SO_MARK
+#elif SO_MARK // SO_MARK && USE_LIBCAP
                 debugs(3, DBG_CRITICAL, "ERROR: Invalid parameter 'mark' in qos_flows option. "
-                       << "Linux Netfilter marking not available.");
+                       << "Linux Netfilter marking not available without LIBCAP support.");
                 self_destruct();
-#endif // SO_MARK
+#else // SO_MARK && USE_LIBCAP
+                debugs(3, DBG_CRITICAL, "ERROR: Invalid parameter 'mark' in qos_flows option. "
+                       << "Linux Netfilter marking not available on this platform.");
+                self_destruct();
+#endif // SO_MARK && USE_LIBCAP
             } else if (strncmp(token, "tos",3) == 0) {
                 preserveMissTos = true;
                 tos = true;
