@@ -2546,6 +2546,10 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->myportname = conn->port->name;
     request->http_ver = http_ver;
 
+    // Link this HttpRequest to ConnStateData relatively early so the following complex handling can use it
+    // TODO: this effectively obsoletes a lot of conn->FOO copying. That needs cleaning up later.
+    request->clientConnectionManager = conn;
+
     if (request->header.chunked()) {
         chunked = true;
     } else if (request->header.has(HDR_TRANSFER_ENCODING)) {
