@@ -3451,6 +3451,7 @@ AC_CONFIG_FILES([\
 	helpers/external_acl/session/Makefile \
 	helpers/external_acl/unix_group/Makefile \
 	helpers/external_acl/wbinfo_group/Makefile \
+	helpers/external_acl/time_quota/Makefile \
 	helpers/log_daemon/Makefile \
 	helpers/log_daemon/DB/Makefile \
 	helpers/log_daemon/file/Makefile \

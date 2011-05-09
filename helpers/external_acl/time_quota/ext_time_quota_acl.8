@@ -1,0 +1,251 @@
+.if !'po4a'hide' .TH ext_time_quota_acl 8 "22 March 2011"
+.
+.SH NAME
+.if !'po4a'hide' .B ext_time_quota_acl
+.if !'po4a'hide' \-
+Squid time quota external acl helper.
+.PP
+Version 1.0
+.
+.SH SYNOPSIS
+.if !'po4a'hide' .B ext_time_quota_acl
+.if !'po4a'hide' .B "[\-b database] [\-l logfile] [\-d] [\-p pauselen] [\-h] configfile
+.
+.SH DESCRIPTION
+.B ext_time_quota_acl
+allows an administrator to define time budgets for the users of squid
+to limit the time using squid.
+.PP
+This is useful for corporate lunch time allocations, wifi portal
+pay-per-minute installations or for parental control of children. The
+administrator can define a time budget (e.g. 1 hour per day) which is enforced
+through this helper.
+.
+.SH OPTIONS
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-b database"
+.B Filename
+of persistent database. This defaults to ext_time_quota.db in Squids state
+directory.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-p pauselen"
+.B Pauselen
+is given in seconds and defines the period between two requests to be treated as part of the same session.
+Pauses shorter than this value will be counted against the quota, longer ones ignored.
+Default is 300 seconds (5 minutes).
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-l logfile"
+.B Filename
+where all logging and debugging information will be written. If none is given,
+then stderr will be used and the logging will go to Squids main cache.log.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-d"
+Enables debug logging in the logfile.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-h"
+show a short command line help.
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B configfile
+This file contains the definition of the time budgets for the users.
+.PP
+.
+.SH CONFIGURATION
+.PP
+The time quotas of the users are defined in a text file typically
+residing in /etc/squid/time_quota. Any line starting with "#" contains
+a comment and is ignored. Every line must start with a user
+followed by a time budget and a corresponding time period separated by
+"/". Here is an example file:
+.PP
+.if !'po4a'hide' .RS
+# user budget / period
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B john 8h / 1d
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B littlejoe 1h / 1d
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B babymary 30m / 1w
+.if !'po4a'hide' .br
+.if !'po4a'hide' .RE
+.PP
+John has a time budget of 8 hours every day, littlejoe is only allowed
+1 hour and the poor babymary only 30 minutes a week.
+.PP
+You can use "s" for seconds, "m" for minutes, "h" for hours, "d" for
+days and "w" for weeks. Numerical values can be given as integer
+values or with a fraction. E.g. "0.5h" means 30 minutes.
+.PP
+This helper is configured in 
+.B squid.conf 
+using the
+.B external_acl_type 
+directive then access controls which use it to allow or deny.
+.
+.PP
+Here is an example.
+.PP
+.if !'po4a'hide' .RS
+# Ensure that users have a valid login. We need their username.
+.if !'po4a'hide' .br
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl users proxy_auth REQUIRED
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access deny !users
+.if !'po4a'hide' .br
+# Define program and quota file
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B external_acl_type time_quota ttl=60 children-max=1 %LOGIN /usr/libexec/ext_time_quota_acl /etc/squid/time_quota
+.if !'po4a'hide' .br
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl noquota src all
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B acl time_quota external time_quota
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B deny_info ERR_ACL_TIME_QUOTA_EXCEEDED noquota
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B http_access deny !time_quota noquota
+.if !'po4a'hide' .RE
+.
+.PP
+In this example, after restarting Squid it should allow access only for users as long as they have time budget left.
+If the budget is exceeded the user will be presented with an error page informing them.
+.PP
+In this example we use separate 
+.B users 
+access control and 
+.B noquota 
+ACL in order to keep the username and password prompt and the quota-exceeded messages separated.
+.
+.PP
+User is just a unique key value. The above example uses %LOGIN and the username but any of the 
+.B external_acl_type 
+format tags can be substituted in its place. 
+.B %EXT_TAG
+,
+.B %LOGIN
+, 
+.B %IDENT
+, 
+.B %EXT_USER
+, 
+.B %SRC 
+,
+.B %SRCEUI48
+, and 
+.B %SRCEUI64
+are all likely candidates for client identification.
+The Squid wiki has more examples at http://wiki.squid-cache.org/ConfigExamples.
+.
+.SH LIMITATIONS
+.PP
+This helper only controls access to the Internet through HTTP. It does
+not control other protocols, like VOIP, ICQ, IRC, FTP, IMAP, SMTP or
+SSH.
+.
+.PP
+Desktop browsers are typically able to deal with authentication to HTTP proxies like
+.B squid . 
+But more and more different programs and devices (smartphones,
+games on mobile devices, ...) are using the Internet over HTTP. These
+devices are often not able to work through an authenticating proxy.
+Means other than %LOGIN authentication are required to authorize these devices and software.
+.
+.PP
+A more general control to Internet access could be a captive portal approach
+(such as pfSense or ChilliSpot) using %SRC, %SRCEUI48 and %SRCEUI64 as keys 
+or maybe a 802.11X solution. But the latter is often not supported by mobile devices.
+.
+.SH IMPLEMENTATION
+.PP
+When the helper is called it will be asked if the current user is allowed to
+access squid. The helper will reduce the remaining time budget of this user
+and return 
+.B OK 
+if there is budget left. Otherwise it will return 
+.B ERR .
+.
+.PP
+The 
+.B ttl=N 
+parameter in 
+.B squid.conf 
+determines how often the helper will be called, the example config uses a 1 minute TTL.
+The interaction is that Squid will only call the helper on new requests
+.B if
+there has been more than TTL seconds passed since last check.
+This handling creates an amount of slippage outside the quota by whatever amount is configured.
+TTL can be set as short as desired, down to and including zero.
+Though values of 1 or more are recommended due to a quota resolution of one second.
+.
+.PP
+If the configured time period (e.g. "1w" for babymary) is over, the
+time budget will be restored to the configured value thus allowing the
+user to access squid with a fresh budget.
+.
+.PP
+If the time between the current request and the previous request is greater than
+.B pauselen
+(default 5 minutes and adjustable with command line parameter 
+.B "-p"
+), the current request will be considered as a new request and the time budget will
+not be decreased. If the time is less than 
+.B pauselen 
+, then both requests will be considered as part of the same active time period and the time budget will
+be decreased by the time difference. This allows the user to take arbitrary
+breaks during Internet access without losing their time budget.
+.
+.SH FURTHER IDEAS
+The following ideas could further improve this helper. Maybe someone
+wants to help? Any support or feedback is welcome!
+.if !'po4a'hide' .TP
+There should be a way for a user to see their configured and remaining
+time budget. This could be realized by implementing a web page
+accessing the database of the helper showing the corresponding
+data. One of the problems to be solved is user authentication.
+.if !'po4a'hide' .TP
+We could always return "OK" and use the module simply as an Internet
+usage tracker showing who has stayed how long in the WWW.
+.PP
+.
+.SH AUTHOR
+This program and documentation was written by
+.if !'po4a'hide' .I Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+.
+.SH COPYRIGHT
+This program and documentation is copyright to the authors named above.
+.PP
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
+.
+.SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
+.
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR GPL "(7), "
+.br
+The Squid FAQ wiki
+.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.br
+The Squid Configuration Manual
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/

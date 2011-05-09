@@ -13,6 +13,7 @@ DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 ## List of automated translations possible:
 ERROR_TEMPLATES =  \
 	templates/ERR_ACCESS_DENIED \
+	templates/ERR_ACL_TIME_QUOTA_EXCEEDED \
 	templates/ERR_CACHE_ACCESS_DENIED \
 	templates/ERR_CACHE_MGR_ACCESS_DENIED \
 	templates/ERR_CANNOT_FORWARD \
