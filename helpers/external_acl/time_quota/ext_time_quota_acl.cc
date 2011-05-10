@@ -71,7 +71,7 @@ DB *db = NULL;
 #define TQ_BUFFERSIZE                     1024
 
 /** If there is more than this given number of seconds between two
- * sucessive requests, than the second request will be treated as a 
+ * sucessive requests, than the second request will be treated as a
  * new request and the time between first and seconds request will
  * be treated as a activity pause.
  *
@@ -83,11 +83,12 @@ static int pauseLength = 300;
 static FILE *logfile = stderr;
 static int tq_debug_enabled = false;
 
-static void open_log(const char *logfilename) {
+static void open_log(const char *logfilename)
+{
     logfile = fopen(logfilename, "a");
     if ( logfile == NULL ) {
-	perror(logfilename);
-	logfile = stderr;
+        perror(logfilename);
+        logfile = stderr;
     }
 }
 
@@ -105,9 +106,9 @@ static void log_debug(const char *format, ...)
     va_list args;
 
     if ( tq_debug_enabled ) {
-	va_start (args, format);
-	vlog("DEBUG", format, args);
-	va_end (args);
+        va_start (args, format);
+        vlog("DEBUG", format, args);
+        va_end (args);
     }
 }
 
@@ -159,16 +160,16 @@ static void writeTime(const char *user_key, const char *sub_key, time_t t)
     DBT key, data;
 
     if ( strlen(user_key) + strlen(sub_key) + 1 + 1 > sizeof(keybuffer) ) {
-	log_error("key too long (%s,%s)\n", user_key, sub_key);
+        log_error("key too long (%s,%s)\n", user_key, sub_key);
     } else {
-	snprintf(keybuffer, sizeof(keybuffer), "%s-%s", user_key, sub_key);
+        snprintf(keybuffer, sizeof(keybuffer), "%s-%s", user_key, sub_key);
 
-	key.data = (void *)keybuffer;
-	key.size = strlen(keybuffer);
-	data.data = &t;
-	data.size = sizeof(t);
-	db->put(db, &key, &data, 0);
-	log_debug("writeTime(\"%s\", %d)\n", keybuffer, t);
+        key.data = (void *)keybuffer;
+        key.size = strlen(keybuffer);
+        data.data = &t;
+        data.size = sizeof(t);
+        db->put(db, &key, &data, 0);
+        log_debug("writeTime(\"%s\", %d)\n", keybuffer, t);
     }
 }
 
@@ -179,20 +180,20 @@ static time_t readTime(const char *user_key, const char *sub_key)
     time_t t = 0;
 
     if ( strlen(user_key) + 1 + strlen(sub_key) + 1 > sizeof(keybuffer) ) {
-	log_error("key too long (%s,%s)\n", user_key, sub_key);
+        log_error("key too long (%s,%s)\n", user_key, sub_key);
     } else {
-	snprintf(keybuffer, sizeof(keybuffer), "%s-%s", user_key, sub_key);
+        snprintf(keybuffer, sizeof(keybuffer), "%s-%s", user_key, sub_key);
 
-	key.data = (void *)keybuffer;
-	key.size = strlen(keybuffer);
-	if (db->get(db, &key, &data, 0) == 0) {
-	    if (data.size != sizeof(t)) {
-		log_error("CORRUPTED DATABASE (%s)\n", keybuffer);
-	    } else {
-		memcpy(&t, data.data, sizeof(t));
-	    }
-	}
-	log_debug("readTime(\"%s\")=%d\n", keybuffer, t);
+        key.data = (void *)keybuffer;
+        key.size = strlen(keybuffer);
+        if (db->get(db, &key, &data, 0) == 0) {
+            if (data.size != sizeof(t)) {
+                log_error("CORRUPTED DATABASE (%s)\n", keybuffer);
+            } else {
+                memcpy(&t, data.data, sizeof(t));
+            }
+        }
+        log_debug("readTime(\"%s\")=%d\n", keybuffer, t);
     }
 
     return t;
@@ -212,29 +213,29 @@ static void parseTime(const char *s, time_t *secs, time_t *start)
     sscanf(s, " %lf %c", &value, &unit);
     switch (unit) {
     case 's':
-	periodLength = 1;
-	break;
+        periodLength = 1;
+        break;
     case 'm':
-	periodLength = 60;
-	*start -= ltime->tm_sec;
-	break;
+        periodLength = 60;
+        *start -= ltime->tm_sec;
+        break;
     case 'h':
-	periodLength = 3600;
-	*start -= ltime->tm_min * 60 + ltime->tm_sec;
-	break;
+        periodLength = 3600;
+        *start -= ltime->tm_min * 60 + ltime->tm_sec;
+        break;
     case 'd':
-	periodLength = 24 * 3600;
-	*start -= ltime->tm_hour * 3600 + ltime->tm_min * 60 + ltime->tm_sec;
-	break;
+        periodLength = 24 * 3600;
+        *start -= ltime->tm_hour * 3600 + ltime->tm_min * 60 + ltime->tm_sec;
+        break;
     case 'w':
-	periodLength = 7 * 24 * 3600;
-	*start -= ltime->tm_hour * 3600 + ltime->tm_min * 60 + ltime->tm_sec;
-	*start -= ltime->tm_wday * 24 * 3600;
-	*start += 24 * 3600;         // in europe, the week starts monday
-	break;
+        periodLength = 7 * 24 * 3600;
+        *start -= ltime->tm_hour * 3600 + ltime->tm_min * 60 + ltime->tm_sec;
+        *start -= ltime->tm_wday * 24 * 3600;
+        *start += 24 * 3600;         // in europe, the week starts monday
+        break;
     default:
-	log_error("Wrong time unit \"%c\". Only \"m\", \"h\", \"d\", or \"w\" allowed.\n", unit);
-	break;
+        log_error("Wrong time unit \"%c\". Only \"m\", \"h\", \"d\", or \"w\" allowed.\n", unit);
+        break;
     }
 
     *secs = (long)(periodLength * value);
@@ -244,7 +245,7 @@ static void parseTime(const char *s, time_t *secs, time_t *start)
 /** This function parses the time quota file and stores it
  * in memory.
  */
-static void readConfig(const char *filename) 
+static void readConfig(const char *filename)
 {
     char line[TQ_BUFFERSIZE];        /* the buffer for the lines read
 				   from the dict file */
@@ -262,122 +263,122 @@ static void readConfig(const char *filename)
 
     FH = fopen(filename, "r");
     if ( FH ) {
-	/* the pointer to the first entry in the linked list */
-	while ((cp = fgets (line, sizeof(line), FH)) != NULL) {
-	    if (line[0] == '#') {
-		continue;
-	    }
-	    if ((cp = strchr (line, '\n')) != NULL) {
-		/* chop \n characters */
-		*cp = '\0';
-	    }
-	    log_debug("read config line \"%s\".\n", line);
-	    if ((cp = strtok (line, "\t ")) != NULL) {
-		username = cp;
-		
-		/* get the time budget */
-		budget = strtok (NULL, "/");
-		period = strtok (NULL, "/");
+        /* the pointer to the first entry in the linked list */
+        while ((cp = fgets (line, sizeof(line), FH)) != NULL) {
+            if (line[0] == '#') {
+                continue;
+            }
+            if ((cp = strchr (line, '\n')) != NULL) {
+                /* chop \n characters */
+                *cp = '\0';
+            }
+            log_debug("read config line \"%s\".\n", line);
+            if ((cp = strtok (line, "\t ")) != NULL) {
+                username = cp;
 
-		parseTime(budget, &budgetSecs, &start);
-		parseTime(period, &periodSecs, &start);
+                /* get the time budget */
+                budget = strtok (NULL, "/");
+                period = strtok (NULL, "/");
 
-		log_debug("read time quota for user \"%s\": %lds / %lds starting %lds\n", 
-		    username, budgetSecs, periodSecs, start);
+                parseTime(budget, &budgetSecs, &start);
+                parseTime(period, &periodSecs, &start);
 
-		writeTime(username, KEY_PERIOD_START, start);
-		writeTime(username, KEY_PERIOD_LENGTH_CONFIGURED, periodSecs);
-		writeTime(username, KEY_TIME_BUDGET_CONFIGURED, budgetSecs);
-		t = readTime(username, KEY_TIME_BUDGET_CONFIGURED);
-		writeTime(username, KEY_TIME_BUDGET_LEFT, t);
-	    }
-	}
-	fclose(FH);
+                log_debug("read time quota for user \"%s\": %lds / %lds starting %lds\n",
+                          username, budgetSecs, periodSecs, start);
+
+                writeTime(username, KEY_PERIOD_START, start);
+                writeTime(username, KEY_PERIOD_LENGTH_CONFIGURED, periodSecs);
+                writeTime(username, KEY_TIME_BUDGET_CONFIGURED, budgetSecs);
+                t = readTime(username, KEY_TIME_BUDGET_CONFIGURED);
+                writeTime(username, KEY_TIME_BUDGET_LEFT, t);
+            }
+        }
+        fclose(FH);
     } else {
-	perror(filename);
+        perror(filename);
     }
 }
 
 static void processActivity(const char *user_key)
 {
-     time_t now = time(NULL);
-     time_t lastActivity;
-     time_t activityLength;
-     time_t periodStart;
-     time_t periodLength;
-     time_t userPeriodLength;
-     time_t timeBudgetCurrent;
-     time_t timeBudgetConfigured;
-     char message[TQ_BUFFERSIZE];
+    time_t now = time(NULL);
+    time_t lastActivity;
+    time_t activityLength;
+    time_t periodStart;
+    time_t periodLength;
+    time_t userPeriodLength;
+    time_t timeBudgetCurrent;
+    time_t timeBudgetConfigured;
+    char message[TQ_BUFFERSIZE];
 
-     log_debug("processActivity(\"%s\")\n", user_key);
+    log_debug("processActivity(\"%s\")\n", user_key);
 
-     // [1] Reset period if over
-     periodStart = readTime(user_key, KEY_PERIOD_START);
-     if ( periodStart == 0 ) {
-	 // This is the first period ever.
-	 periodStart = now;
-	 writeTime(user_key, KEY_PERIOD_START, periodStart);
-     }
+    // [1] Reset period if over
+    periodStart = readTime(user_key, KEY_PERIOD_START);
+    if ( periodStart == 0 ) {
+        // This is the first period ever.
+        periodStart = now;
+        writeTime(user_key, KEY_PERIOD_START, periodStart);
+    }
 
-     periodLength = now - periodStart;
-     userPeriodLength = readTime(user_key, KEY_PERIOD_LENGTH_CONFIGURED);
-     if ( userPeriodLength == 0 ) {
-	 // This user is not configured. Allow anything.
-	 log_debug("No period length found for user \"%s\". Quota for this user disabled.\n", user_key);
-	 writeTime(user_key, KEY_TIME_BUDGET_LEFT, pauseLength);
-     } else {
-	 if ( periodLength >= userPeriodLength ) {
-	     // a new period has started.
-	     log_debug("New time period started for user \"%s\".\n", user_key);
-	     while ( periodStart < now ) {
-		 periodStart += periodLength;
-	     }
-	     writeTime(user_key, KEY_PERIOD_START, periodStart);
-	     timeBudgetConfigured = readTime(user_key, KEY_TIME_BUDGET_CONFIGURED);
-	     if ( timeBudgetConfigured == 0 ) {
-		 log_debug("No time budget configured for user \"%s\". Quota for this user disabled.\n", user_key);
-		 writeTime(user_key, KEY_TIME_BUDGET_LEFT, pauseLength);
-	     } else {
-		 writeTime(user_key, KEY_TIME_BUDGET_LEFT, timeBudgetConfigured);
-	     }
-	 }
-     }
+    periodLength = now - periodStart;
+    userPeriodLength = readTime(user_key, KEY_PERIOD_LENGTH_CONFIGURED);
+    if ( userPeriodLength == 0 ) {
+        // This user is not configured. Allow anything.
+        log_debug("No period length found for user \"%s\". Quota for this user disabled.\n", user_key);
+        writeTime(user_key, KEY_TIME_BUDGET_LEFT, pauseLength);
+    } else {
+        if ( periodLength >= userPeriodLength ) {
+            // a new period has started.
+            log_debug("New time period started for user \"%s\".\n", user_key);
+            while ( periodStart < now ) {
+                periodStart += periodLength;
+            }
+            writeTime(user_key, KEY_PERIOD_START, periodStart);
+            timeBudgetConfigured = readTime(user_key, KEY_TIME_BUDGET_CONFIGURED);
+            if ( timeBudgetConfigured == 0 ) {
+                log_debug("No time budget configured for user \"%s\". Quota for this user disabled.\n", user_key);
+                writeTime(user_key, KEY_TIME_BUDGET_LEFT, pauseLength);
+            } else {
+                writeTime(user_key, KEY_TIME_BUDGET_LEFT, timeBudgetConfigured);
+            }
+        }
+    }
 
-     // [2] Decrease time budget iff activity
-     lastActivity = readTime(user_key, KEY_LAST_ACTIVITY);
-     if ( lastActivity == 0 ) {
-	 // This is the first request ever
-	 writeTime(user_key, KEY_LAST_ACTIVITY, now);
-     } else {
-	 activityLength = now - lastActivity;
-	 if ( activityLength >= pauseLength ) {
-	     // This is an activity pause.
-	     log_debug("Activity pause detected for user \"%s\".\n", user_key);
-	     writeTime(user_key, KEY_LAST_ACTIVITY, now);
-	 } else {
-	     // This is real usage.
-	     writeTime(user_key, KEY_LAST_ACTIVITY, now);
+    // [2] Decrease time budget iff activity
+    lastActivity = readTime(user_key, KEY_LAST_ACTIVITY);
+    if ( lastActivity == 0 ) {
+        // This is the first request ever
+        writeTime(user_key, KEY_LAST_ACTIVITY, now);
+    } else {
+        activityLength = now - lastActivity;
+        if ( activityLength >= pauseLength ) {
+            // This is an activity pause.
+            log_debug("Activity pause detected for user \"%s\".\n", user_key);
+            writeTime(user_key, KEY_LAST_ACTIVITY, now);
+        } else {
+            // This is real usage.
+            writeTime(user_key, KEY_LAST_ACTIVITY, now);
 
-	     log_debug("Time budget reduced by %ld for user \"%s\".\n", 
-		 activityLength, user_key);
-	     timeBudgetCurrent = readTime(user_key, KEY_TIME_BUDGET_LEFT);
-	     timeBudgetCurrent -= activityLength;
-	     writeTime(user_key, KEY_TIME_BUDGET_LEFT, timeBudgetCurrent);
-	 }
-     }
+            log_debug("Time budget reduced by %ld for user \"%s\".\n",
+                      activityLength, user_key);
+            timeBudgetCurrent = readTime(user_key, KEY_TIME_BUDGET_LEFT);
+            timeBudgetCurrent -= activityLength;
+            writeTime(user_key, KEY_TIME_BUDGET_LEFT, timeBudgetCurrent);
+        }
+    }
 
-     timeBudgetCurrent = readTime(user_key, KEY_TIME_BUDGET_LEFT);
-     snprintf(message, TQ_BUFFERSIZE, "message=\"Remaining quota for '%s' is %d seconds.\"", user_key, (int)timeBudgetCurrent);
-     if ( timeBudgetCurrent > 0 ) {
-	 log_debug("OK %s.\n", message);
-	 SEND_OK(message);
-     } else {
-	 log_debug("ERR %s\n", message);
-	 SEND_ERR("Time budget exceeded.");
-     }
+    timeBudgetCurrent = readTime(user_key, KEY_TIME_BUDGET_LEFT);
+    snprintf(message, TQ_BUFFERSIZE, "message=\"Remaining quota for '%s' is %d seconds.\"", user_key, (int)timeBudgetCurrent);
+    if ( timeBudgetCurrent > 0 ) {
+        log_debug("OK %s.\n", message);
+        SEND_OK(message);
+    } else {
+        log_debug("ERR %s\n", message);
+        SEND_ERR("Time budget exceeded.");
+    }
 
-     db->sync(db, 0);
+    db->sync(db, 0);
 }
 
 static void usage(void)
@@ -404,10 +405,10 @@ int main(int argc, char **argv)
     while ((opt = getopt(argc, argv, "dp:l:b:h")) != -1) {
         switch (opt) {
         case 'd':
-	    tq_debug_enabled = true;
+            tq_debug_enabled = true;
             break;
         case 'l':
-	    open_log(optarg);
+            open_log(optarg);
             break;
         case 'b':
             db_path = optarg;
@@ -428,19 +429,19 @@ int main(int argc, char **argv)
     init_db();
 
     if ( optind + 1 != argc ) {
-	usage();
-	exit(1);
+        usage();
+        exit(1);
     } else {
-	readConfig(argv[optind]);
+        readConfig(argv[optind]);
     }
 
     log_info("Waiting for requests...\n");
     while (fgets(request, HELPER_INPUT_BUFFER, stdin)) {
-	// we expect the following line syntax: "%LOGIN 
+        // we expect the following line syntax: "%LOGIN
         const char *user_key = NULL;
         user_key = strtok(request, " \n");
 
-	processActivity(user_key);
+        processActivity(user_key);
     }
     log_info("Ending %s\n", __FILE__);
     shutdown_db();
