@@ -1443,11 +1443,13 @@ StoreEntry::memoryCachable() const
     if (!Config.onoff.memory_cache_first && swap_status == SWAPOUT_DONE && refcount == 1)
         return 0;
 
-    const int64_t expectedSize = mem_obj->expectedReplySize();
-    // objects of unknown size are not allowed into the memory cache, for now
-    if (expectedSize < 0 ||
-        expectedSize > static_cast<int64_t>(Config.Store.maxInMemObjSize))
-        return 0;
+    if (UsingSmp()) {
+        const int64_t expectedSize = mem_obj->expectedReplySize();
+        // objects of unknown size are not allowed into memory cache, for now
+        if (expectedSize < 0 ||
+            expectedSize > static_cast<int64_t>(Config.Store.maxInMemObjSize))
+            return 0;
+    }
 
     return 1;
 }
