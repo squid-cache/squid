@@ -2702,11 +2702,11 @@ DOC_START
 	higher hit ratio at the expense of an increase in response
 	time.
 
-        The rock store type:
+	The rock store type:
 
 	    cache_dir rock Directory-Name Mbytes <max-size=bytes>
 
-        The Rock Store type is a database-style storage. All cached
+	The Rock Store type is a database-style storage. All cached
 	entries are stored in a "database" file, using fixed-size slots,
 	one entry per slot. The database size is specified in MB. The
 	slot size is specified in bytes using the max-size option. See
