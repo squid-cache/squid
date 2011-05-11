@@ -1416,12 +1416,14 @@ ClientHttpRequest::doCallouts()
         }
     }
 
+#if USE_SSL
     if (!calloutContext->sslBumpCheckDone) {
         calloutContext->sslBumpCheckDone = true;
         if (calloutContext->sslBumpAccessCheck())
             return;
         /* else no ssl bump required*/
     }
+#endif
 
     cbdataReferenceDone(calloutContext->http);
     delete calloutContext;
