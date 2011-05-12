@@ -424,13 +424,15 @@ UFSSwapDir::reference(StoreEntry &e)
  * This routine is called whenever the last reference to an object is
  * removed, to maintain replacement information within the storage fs.
  */
-void
+bool
 UFSSwapDir::dereference(StoreEntry & e)
 {
     debugs(47, 3, "UFSSwapDir::dereference: referencing " << &e << " " << e.swap_dirn << "/" << e.swap_filen);
 
     if (repl->Dereferenced)
         repl->Dereferenced(repl, &e, &e.repl);
+
+    return true; // keep e in the global store_table
 }
 
 StoreIOState::Pointer

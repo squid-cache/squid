@@ -328,7 +328,8 @@ public:
     /* pulled up from SwapDir for migration.... probably do not belong here */
     virtual void reference(StoreEntry &) = 0;	/* Reference this object */
 
-    virtual void dereference(StoreEntry &) = 0;	/* Unreference this object */
+    /// Undo reference(), returning false iff idle e should be destroyed
+    virtual bool dereference(StoreEntry &e) = 0;
 
     virtual void maintain() = 0; /* perform regular maintenance should be private and self registered ... */
 

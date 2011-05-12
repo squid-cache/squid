@@ -48,7 +48,7 @@ protected:
     virtual void maintain();
     virtual void diskFull();
     virtual void reference(StoreEntry &e);
-    virtual void dereference(StoreEntry &e);
+    virtual bool dereference(StoreEntry &e);
     virtual void unlink(StoreEntry &e);
     virtual void statfs(StoreEntry &e) const;
 
