@@ -665,7 +665,7 @@ StoreController::reference(StoreEntry &e)
     /* Notify the fs that we're referencing this object again */
 
     if (e.swap_dirn > -1)
-        e.store()->reference(e);
+        swapDir->reference(e);
 
     // Notify the memory cache that we're referencing this object again
     if (memStore && e.mem_status == IN_MEMORY)
@@ -678,23 +678,27 @@ StoreController::reference(StoreEntry &e)
     }
 }
 
-void
+bool
 StoreController::dereference(StoreEntry & e)
 {
+    bool keepInStoreTable = false;
+
     /* Notify the fs that we're not referencing this object any more */
 
     if (e.swap_filen > -1)
-        e.store()->dereference(e);
+        keepInStoreTable = swapDir->dereference(e) || keepInStoreTable;
 
     // Notify the memory cache that we're not referencing this object any more
     if (memStore && e.mem_status == IN_MEMORY)
-        memStore->dereference(e);
+        keepInStoreTable = memStore->dereference(e) || keepInStoreTable;
 
     // TODO: move this code to a non-shared memory cache class when we have it
     if (e.mem_obj) {
         if (mem_policy->Dereferenced)
             mem_policy->Dereferenced(mem_policy, &e, &e.mem_obj->repl);
     }
+
+    return keepInStoreTable;
 }
 
 StoreEntry *
@@ -758,11 +762,9 @@ StoreController::handleIdleEntry(StoreEntry &e)
             (mem_node::InUseCount() <= store_pages_max);
     }
 
-    dereference(e);
-
-    // XXX: Rock store specific: Since each SwapDir controls its index,
-    // unlocked entries should not stay in the global store_table.
-    if (fileno >= 0) {
+    // An idle, unlocked entry that belongs to a SwapDir which controls
+    // its own index, should not stay in the global store_table.
+    if (!dereference(e)) {
         debugs(20, 5, HERE << "destroying unlocked entry: " << &e << ' ' << e);
         destroyStoreEntry(static_cast<hash_link*>(&e));
         return;
@@ -972,12 +974,16 @@ StoreHashIndex::stat(StoreEntry & output) const
 }
 
 void
-StoreHashIndex::reference(StoreEntry&)
-{}
+StoreHashIndex::reference(StoreEntry &e)
+{
+    e.store()->reference(e);
+}
 
-void
-StoreHashIndex::dereference(StoreEntry&)
-{}
+bool
+StoreHashIndex::dereference(StoreEntry &e)
+{
+    return e.store()->dereference(e);
+}
 
 void
 StoreHashIndex::maintain()

@@ -103,8 +103,11 @@ SwapDir::minSize() const
 void
 SwapDir::reference(StoreEntry &) {}
 
-void
-SwapDir::dereference(StoreEntry &) {}
+bool
+SwapDir::dereference(StoreEntry &)
+{
+    return true; // keep in global store_table
+}
 
 int
 SwapDir::callback()

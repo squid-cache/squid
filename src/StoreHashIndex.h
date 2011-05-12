@@ -77,7 +77,7 @@ public:
 
     virtual void reference(StoreEntry&);
 
-    virtual void dereference(StoreEntry&);
+    virtual bool dereference(StoreEntry&);
 
     virtual void maintain();
 
