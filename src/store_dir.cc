@@ -718,7 +718,8 @@ StoreController::get(const cache_key *key)
         }
     }
 
-    // TODO: this disk iteration is misplaced; move to StoreHashIndex
+    // TODO: this disk iteration is misplaced; move to StoreHashIndex when
+    // the global store_table is no longer used for in-transit objects.
     if (const int cacheDirs = Config.cacheSwap.n_configured) {
         // ask each cache_dir until the entry is found; use static starting
         // point to avoid asking the same subset of disks more often
