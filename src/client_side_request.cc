@@ -1243,7 +1243,7 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
 
     if (errflag) {
         debugs(85, 3, HERE << "CONNECT response failure in SslBump: " << errflag);
-        comm_close(getConn()->fd);
+        getConn()->clientConnection->close();
         return;
     }
 
