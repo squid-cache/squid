@@ -80,6 +80,7 @@
    u - URL with password                        x
    w - cachemgr email address                   x
    W - error data (to be included in the mailto links)
+   x - error name                               x
    z - dns server error message                 x
    Z - Preformatted error message               x
  \endverbatim
