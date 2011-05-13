@@ -3,7 +3,6 @@
  */
 
 #include "config.h"
-//#include "base/TextException.h"
 #include "comm/ConnOpener.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"

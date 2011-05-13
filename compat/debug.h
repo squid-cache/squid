@@ -6,10 +6,6 @@
  * It shunts the debug messages down stderr for logging by Squid
  * or display to the user instead of corrupting the stdout data stream.
  */
-
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif

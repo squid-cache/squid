@@ -89,7 +89,7 @@ public:
 
     int64_t content_length;
 
-    protocol_t protocol;
+    AnyP::ProtocolType protocol;
 
     HttpMsgParseState pstate;   /* the current parsing state */
 
@@ -136,6 +136,13 @@ protected:
 class HttpParser
 {
 public:
+    HttpParser() { clear(); }
+    HttpParser(const char *buf, int len);
+
+    /// Set this parser back to a default state.
+    /// Will DROP any reference to a buffer (does not free).
+    void clear();
+
     /**
      * Attempt to parse the first line of a new request message.
      *
@@ -220,8 +227,7 @@ public:
     const Msg &operator *() const { return *msg; }
     Msg *operator ->() { return msg; }
     const Msg *operator ->() const { return msg; }
-    operator Msg *() { return msg; }
-    operator const Msg *() const { return msg; }
+    operator Msg *() const { return msg; }
     // add more as needed
 
     /// public access for HttpMsgPointerT copying and assignment; avoid

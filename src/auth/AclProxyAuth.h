@@ -34,6 +34,9 @@
 
 #ifndef SQUID_ACLPROXYAUTH_H
 #define SQUID_ACLPROXYAUTH_H
+
+#if USE_AUTH
+
 #include "acl/Acl.h"
 #include "acl/Data.h"
 #include "acl/Checklist.h"
@@ -97,4 +100,5 @@ private:
 
 MEMPROXY_CLASS_INLINE(ACLProxyAuth);
 
+#endif /* USE_AUTH */
 #endif /* SQUID_ACLPROXYAUTH_H */

@@ -33,12 +33,12 @@
  */
 
 #include "squid.h"
-#include "comm.h"
 #include "comm/Connection.h"
-#include "fde.h"
 #include "mgr/Registration.h"
-#include "pconn.h"
 #include "Store.h"
+#include "pconn.h"
+#include "comm.h"
+#include "fde.h"
 
 #define PCONN_FDS_SZ	8	/* pconn set size, increase for better memcache hit rate */
 
@@ -285,9 +285,10 @@ PconnPool::dumpHash(StoreEntry *e) const
 
 PconnPool::PconnPool(const char *aDescr) : table(NULL), descr(aDescr)
 {
+    int i;
     table = hash_create((HASHCMP *) strcmp, 229, hash_string);
 
-    for (int i = 0; i < PCONN_HIST_SZ; i++)
+    for (i = 0; i < PCONN_HIST_SZ; i++)
         hist[i] = 0;
 
     PconnModule::GetInstance()->add(this);
@@ -410,7 +411,9 @@ PconnModule::add(PconnPool *aPool)
 void
 PconnModule::dump(StoreEntry *e)
 {
-    for (int i = 0; i < poolCount; i++) {
+    int i;
+
+    for (i = 0; i < poolCount; i++) {
         storeAppendPrintf(e, "\n Pool %d Stats\n", i);
         (*(pools+i))->dumpHist(e);
         storeAppendPrintf(e, "\n Pool %d Hash Table\n",i);

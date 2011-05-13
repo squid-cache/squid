@@ -10,6 +10,7 @@
 #include "BodyPipe.h"
 #include "adaptation/forward.h"
 #include "adaptation/Message.h"
+#include "anyp/ProtocolType.h"
 #include <libecap/common/message.h>
 #include <libecap/common/header.h>
 #include <libecap/common/body.h>
@@ -35,12 +36,12 @@ public:
 public:
     HeaderRep(HttpMsg &aMessage);
 
+    /* libecap::Header API */
     virtual bool hasAny(const Name &name) const;
     virtual Value value(const Name &name) const;
-
     virtual void add(const Name &name, const Value &value);
     virtual void removeAny(const Name &name);
-
+    virtual void visitEach(libecap::NamedValueVisitor &visitor) const;
     virtual Area image() const;
     virtual void parse(const Area &buf); // throws on failures
 
@@ -68,7 +69,7 @@ public:
     void protocol(const Name &aProtocol);
 
 protected:
-    static protocol_t TranslateProtocolId(const Name &name);
+    static AnyP::ProtocolType TranslateProtocolId(const Name &name);
 
 private:
     HttpMsg &theMessage; // the message which first line is being translated
@@ -84,12 +85,11 @@ public:
 public:
     RequestLineRep(HttpRequest &aMessage);
 
+    /* libecap::RequestLine API */
     virtual void uri(const Area &aUri);
     virtual Area uri() const;
-
     virtual void method(const Name &aMethod);
     virtual Name method() const;
-
     virtual libecap::Version version() const;
     virtual void version(const libecap::Version &aVersion);
     virtual Name protocol() const;
@@ -109,12 +109,11 @@ public:
 public:
     StatusLineRep(HttpReply &aMessage);
 
+    /* libecap::StatusLine API */
     virtual void statusCode(int code);
     virtual int statusCode() const;
-
     virtual void reasonPhrase(const Area &phrase);
     virtual Area reasonPhrase() const;
-
     virtual libecap::Version version() const;
     virtual void version(const libecap::Version &aVersion);
     virtual Name protocol() const;
@@ -150,17 +149,16 @@ public:
     explicit MessageRep(HttpMsg *rawHeader);
     virtual ~MessageRep();
 
+    /* libecap::Message API */
     virtual libecap::shared_ptr<libecap::Message> clone() const;
-
     virtual libecap::FirstLine &firstLine();
     virtual const libecap::FirstLine &firstLine() const;
-
     virtual libecap::Header &header();
     virtual const libecap::Header &header() const;
-
     virtual void addBody();
     virtual libecap::Body *body();
     virtual const libecap::Body *body() const;
+
     void tieBody(Ecap::XactionRep *x); // to a specific transaction
 
     Adaptation::Message &raw() { return theMessage; } // for host access

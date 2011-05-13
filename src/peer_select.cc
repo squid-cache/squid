@@ -33,18 +33,18 @@
  */
 
 #include "squid.h"
-#include "acl/FilledChecklist.h"
 #include "DnsLookupDetails.h"
 #include "event.h"
-#include "forward.h"
-#include "hier_code.h"
-#include "htcp.h"
-#include "HttpRequest.h"
-#include "icmp/net_db.h"
-#include "ICP.h"
 #include "PeerSelectState.h"
-#include "SquidTime.h"
 #include "Store.h"
+#include "hier_code.h"
+#include "ICP.h"
+#include "HttpRequest.h"
+#include "acl/FilledChecklist.h"
+#include "htcp.h"
+#include "forward.h"
+#include "SquidTime.h"
+#include "icmp/net_db.h"
 
 static struct {
     int timeouts;
@@ -75,7 +75,6 @@ static void peerGetAllParents(ps_state *);
 static void peerAddFwdServer(FwdServer **, peer *, hier_code);
 static void peerSelectPinned(ps_state * ps);
 static void peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, void *data);
-
 
 CBDATA_CLASS_INIT(ps_state);
 
@@ -150,7 +149,6 @@ peerSelect(Comm::ConnectionList * paths,
     psstate->request = HTTPMSGLOCK(request);
 
     psstate->entry = entry;
-
     psstate->paths = paths;
 
     psstate->callback = callback;
@@ -335,7 +333,7 @@ peerSelectFoo(ps_state * ps)
     HttpRequest *request = ps->request;
     debugs(44, 3, "peerSelectFoo: '" << RequestMethodStr(request->method) << " " << request->GetHost() << "'");
 
-    /** If we don't know whether DIRECT is permitted ... */
+    /** If we don't known whether DIRECT is permitted ... */
     if (ps->direct == DIRECT_UNKNOWN) {
         if (ps->always_direct == 0 && Config.accessList.AlwaysDirect) {
             /** check always_direct; */
@@ -420,10 +418,10 @@ peerSelectFoo(ps_state * ps)
 
 int peerAllowedToUse(const peer * p, HttpRequest * request);
 
-/**
+/*
  * peerSelectPinned
  *
- * Selects a pinned connection.
+ * Selects a pinned connection
  */
 static void
 peerSelectPinned(ps_state * ps)
@@ -445,7 +443,7 @@ peerSelectPinned(ps_state * ps)
     }
 }
 
-/**
+/*
  * peerGetSomeNeighbor
  *
  * Selects a neighbor (parent or sibling) based on one of the
@@ -568,7 +566,7 @@ peerGetSomeDirect(ps_state * ps)
         return;
 
     /* WAIS is not implemented natively */
-    if (ps->request->protocol == PROTO_WAIS)
+    if (ps->request->protocol == AnyP::PROTO_WAIS)
         return;
 
     peerAddFwdServer(&ps->servers, NULL, HIER_DIRECT);
@@ -587,8 +585,10 @@ peerGetSomeParent(ps_state * ps)
 
     if ((p = getDefaultParent(request))) {
         code = DEFAULT_PARENT;
+#if USE_AUTH
     } else if ((p = peerUserHashSelectParent(request))) {
         code = USERHASH_PARENT;
+#endif
     } else if ((p = peerSourceHashSelectParent(request))) {
         code = SOURCEHASH_PARENT;
     } else if ((p = carpSelectParent(request))) {
@@ -815,20 +815,20 @@ peerHtcpParentMiss(peer * p, htcpReplyData * htcp, ps_state * ps)
 #endif
 
 static void
-peerHandlePingReply(peer * p, peer_t type, protocol_t proto, void *pingdata, void *data)
+peerHandlePingReply(peer * p, peer_t type, AnyP::ProtocolType proto, void *pingdata, void *data)
 {
-    if (proto == PROTO_ICP)
+    if (proto == AnyP::PROTO_ICP)
         peerHandleIcpReply(p, type, (icp_common_t *)pingdata, data);
 
 #if USE_HTCP
 
-    else if (proto == PROTO_HTCP)
+    else if (proto == AnyP::PROTO_HTCP)
         peerHandleHtcpReply(p, type, (htcpReplyData *)pingdata, data);
 
 #endif
 
     else
-        debugs(44, 1, "peerHandlePingReply: unknown protocol_t " << proto);
+        debugs(44, 1, "peerHandlePingReply: unknown protocol " << proto);
 }
 
 static void

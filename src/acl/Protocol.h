@@ -35,10 +35,12 @@
 
 #ifndef SQUID_ACLPROTOCOL_H
 #define SQUID_ACLPROTOCOL_H
+
 #include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "anyp/ProtocolType.h"
 
-class ACLProtocolStrategy : public ACLStrategy<protocol_t>
+class ACLProtocolStrategy : public ACLStrategy<AnyP::ProtocolType>
 {
 
 public:
@@ -63,7 +65,7 @@ class ACLProtocol
 
 private:
     static ACL::Prototype RegistryProtoype;
-    static ACLStrategised<protocol_t> RegistryEntry_;
+    static ACLStrategised<AnyP::ProtocolType> RegistryEntry_;
 };
 
 #endif /* SQUID_ACLPROTOCOL_H */

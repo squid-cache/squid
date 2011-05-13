@@ -32,6 +32,7 @@
 
 
 #include "squid.h"
+#include "forward.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "CacheManager.h"
@@ -42,7 +43,6 @@
 #include "event.h"
 #include "errorpage.h"
 #include "fde.h"
-#include "forward.h"
 #include "hier_code.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -202,7 +202,7 @@ FwdState::fwdStart(const Comm::ConnectionPointer &clientConn, StoreEntry *entry,
      */
 
     if ( Config.accessList.miss && !request->client_addr.IsNoAddr() &&
-            request->protocol != PROTO_INTERNAL && request->protocol != PROTO_CACHEOBJ) {
+            request->protocol != AnyP::PROTO_INTERNAL && request->protocol != AnyP::PROTO_CACHE_OBJECT) {
         /**
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          */
@@ -246,15 +246,15 @@ FwdState::fwdStart(const Comm::ConnectionPointer &clientConn, StoreEntry *entry,
 
     switch (request->protocol) {
 
-    case PROTO_INTERNAL:
+    case AnyP::PROTO_INTERNAL:
         internalStart(request, entry);
         return;
 
-    case PROTO_CACHEOBJ:
+    case AnyP::PROTO_CACHE_OBJECT:
         CacheManager::GetInstance()->Start(clientConn, request, entry);
         return;
 
-    case PROTO_URN:
+    case AnyP::PROTO_URN:
         urnStart(request, entry);
         return;
 
@@ -384,15 +384,6 @@ fwdServerClosedWrapper(int fd, void *data)
     fwd->serverClosed(fd);
 }
 
-#if 0
-static void
-fwdConnectStartWrapper(void *data)
-{
-    FwdState *fwd = (FwdState *) data;
-    fwd->connectStart();
-}
-#endif
-
 #if USE_SSL
 static void
 fwdNegotiateSSLWrapper(int fd, void *data)
@@ -400,6 +391,7 @@ fwdNegotiateSSLWrapper(int fd, void *data)
     FwdState *fwd = (FwdState *) data;
     fwd->negotiateSSL(fd);
 }
+
 #endif
 
 void
@@ -528,10 +520,11 @@ FwdState::retryOrBail()
         }
         // else bail. no more serverDestinations possible to try.
 
-        // AYJ: cannot-forward error ??
-// is this hack needed since we now have doneWithRetries() below?
-//        ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
-//        errorAppendEntry(entry, anErr);
+        // produce cannot-forward error, but only if no more specific one exists
+        if (!err) {
+            ErrorState *anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_INTERNAL_SERVER_ERROR, request);
+            errorAppendEntry(entry, anErr);
+        }
     }
 
     // TODO: should we call completed() here and move doneWithRetries there?
@@ -673,6 +666,10 @@ FwdState::initiateSSL()
 
     } else {
         SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)request->GetHost());
+
+        // We need to set SNI TLS extension only in the case we are
+        // connecting direct to origin server
+        Ssl::setClientSNI(ssl, request->GetHost());
     }
 
     // Create the ACL check list now, while we have access to more info.
@@ -728,7 +725,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
 
 #if USE_SSL
     if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
-            (!serverConnection()->getPeer() && request->protocol == PROTO_HTTPS)) {
+            (!serverConnection()->getPeer() && request->protocol == AnyP::PROTO_HTTPS)) {
         initiateSSL();
         return;
     }
@@ -794,13 +791,20 @@ FwdState::connectStart()
     if (ftimeout < ctimeout)
         ctimeout = ftimeout;
 
+    if (serverDestinations[0]->getPeer() && request->flags.sslBumped == true) {
+        debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parrent proxy are not allowed");
+        ErrorState *anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, request);
+        fail(anErr);
+        self = NULL; // refcounted
+        return;
+    }
+
     request->flags.pinned = 0;
     if (serverDestinations[0]->peerType == PINNED) {
         ConnStateData *pinned_connection = request->pinnedConnection();
         assert(pinned_connection);
         serverConn = pinned_connection->validatePinnedConnection(request, serverDestinations[0]->getPeer());
         if (Comm::IsConnOpen(serverConn)) {
-            pinned_connection->unpinConnection(); // XXX: this should be just remove the pinning close handler ??
 #if 0
             if (!serverConn->getPeer())
                 serverConn->peerType = HIER_DIRECT;
@@ -814,8 +818,7 @@ FwdState::connectStart()
             return;
         }
         /* Failure. Fall back on next path */
-        debugs(17, 2, HERE << " Pinned connection " << pinned_connection << " not valid. Releasing.");
-        request->releasePinnedConnection();
+        debugs(17,2,HERE << " Pinned connection " << pinned_connection << " not valid.");
         serverDestinations.shift();
         startConnectionOrFail();
         return;
@@ -870,7 +873,7 @@ FwdState::connectStart()
     if (Ip::Qos::TheConfig.isAclTosActive()) {
         serverDestinations[0]->tos = GetTosToServer(request);
     }
-#if SO_MARK
+#if SO_MARK && USE_LIBCAP
     serverDestinations[0]->nfmark = GetNfmarkToServer(request);
     debugs(17, 3, "fwdConnectStart: got outgoing addr " << serverDestinations[0]->local << ", tos " << int(serverDestinations[0]->tos)
            << ", netfilter mark " << serverDestinations[0]->nfmark);
@@ -944,36 +947,36 @@ FwdState::dispatch()
         switch (request->protocol) {
 #if USE_SSL
 
-        case PROTO_HTTPS:
+        case AnyP::PROTO_HTTPS:
             httpStart(this);
             break;
 #endif
 
-        case PROTO_HTTP:
+        case AnyP::PROTO_HTTP:
             httpStart(this);
             break;
 
-        case PROTO_GOPHER:
+        case AnyP::PROTO_GOPHER:
             gopherStart(this);
             break;
 
-        case PROTO_FTP:
+        case AnyP::PROTO_FTP:
             ftpStart(this);
             break;
 
-        case PROTO_CACHEOBJ:
+        case AnyP::PROTO_CACHE_OBJECT:
 
-        case PROTO_INTERNAL:
+        case AnyP::PROTO_INTERNAL:
 
-        case PROTO_URN:
+        case AnyP::PROTO_URN:
             fatal_dump("Should never get here");
             break;
 
-        case PROTO_WHOIS:
+        case AnyP::PROTO_WHOIS:
             whoisStart(this);
             break;
 
-        case PROTO_WAIS:	/* Not implemented */
+        case AnyP::PROTO_WAIS:	/* Not implemented */
 
         default:
             debugs(17, 1, "fwdDispatch: Cannot retrieve '" << entry->url() << "'" );
@@ -1190,8 +1193,6 @@ FwdState::updateHierarchyInfo()
             serverConnection()->remote.NtoA(nextHop, 256);
     }
 
-    request->hier.peer_local_port = serverConnection()->local.GetPort();
-
     assert(nextHop[0]);
     hierarchyNote(&request->hier, serverConnection()->peerType, nextHop);
 }
@@ -1289,7 +1290,6 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
     }
 }
 
-// XXX: convert this to accepting a serverConn and migrate to QosConfig.cc
 tos_t
 GetTosToServer(HttpRequest * request)
 {
@@ -1303,7 +1303,6 @@ GetTosToServer(HttpRequest * request)
     return aclMapTOS(Ip::Qos::TheConfig.tosToServer, &ch);
 }
 
-// XXX: convert this to accepting a serverConn and migrate to QosConfig.cc
 nfmark_t
 GetNfmarkToServer(HttpRequest * request)
 {

@@ -16,6 +16,7 @@ namespace Adaptation
 
 class Service;
 class ServiceConfig;
+class DynamicGroupCfg;
 class Class;
 class Initiate;
 class Initiator;
@@ -25,8 +26,10 @@ class ServiceGroup;
 class ServicePlan;
 class ServiceFilter;
 class Message;
+class Answer;
 
 typedef RefCount<Service> ServicePointer;
+typedef RefCount<ServiceConfig> ServiceConfigPointer;
 typedef RefCount<ServiceGroup> ServiceGroupPointer;
 
 } // namespace Adaptation

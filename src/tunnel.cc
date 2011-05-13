@@ -1,3 +1,4 @@
+
 /*
  * $Id$
  *
@@ -33,22 +34,22 @@
  */
 
 #include "squid.h"
-#include "acl/FilledChecklist.h"
+#include "errorpage.h"
+#include "HttpRequest.h"
+#include "fde.h"
 #include "Array.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "comm/Write.h"
-#include "client_side.h"
 #include "client_side_request.h"
+#include "acl/FilledChecklist.h"
 #if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif
-#include "errorpage.h"
-#include "fde.h"
-#include "HttpRequest.h"
-#include "http.h"
+#include "client_side.h"
 #include "MemBuf.h"
+#include "http.h"
 #include "PeerSelectState.h"
 
 class TunnelStateData
@@ -91,7 +92,7 @@ public:
         void error(int const xerrno);
         int debugLevelForError(int const xerrno) const;
         void closeIfOpen();
-        void dataSent(size_t amount);
+        void dataSent (size_t amount);
         int len;
         char *buf;
         int64_t *size_ptr;		/* pointer to size in an ConnStateData for logging */
@@ -100,6 +101,7 @@ public:
 
     private:
 #if USE_DELAY_POOLS
+
         DelayId delayId;
 #endif
 
@@ -180,7 +182,7 @@ tunnelStateFree(TunnelStateData * tunnelState)
 
 TunnelStateData::Connection::~Connection()
 {
-    safe_free(buf);
+    safe_free (buf);
 }
 
 int
@@ -249,7 +251,7 @@ TunnelStateData::readServer(char *buf, size_t len, comm_err_t errcode, int xerrn
         kb_incr(&statCounter.server.other.kbytes_in, len);
     }
 
-    copy(len, errcode, xerrno, server, client, WriteClientDone);
+    copy (len, errcode, xerrno, server, client, WriteClientDone);
 }
 
 void
@@ -269,7 +271,7 @@ void
 TunnelStateData::ReadClient(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t errcode, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
-    assert(cbdataReferenceValid(tunnelState));
+    assert (cbdataReferenceValid (tunnelState));
 
     tunnelState->readClient(buf, len, errcode, xerrno);
 }
@@ -283,6 +285,7 @@ TunnelStateData::readClient(char *buf, size_t len, comm_err_t errcode, int xerrn
      * Bail out early on COMM_ERR_CLOSING
      * - close handlers will tidy up for us
      */
+
     if (errcode == COMM_ERR_CLOSING)
         return;
 
@@ -291,11 +294,11 @@ TunnelStateData::readClient(char *buf, size_t len, comm_err_t errcode, int xerrn
         kb_incr(&statCounter.client_http.kbytes_in, len);
     }
 
-    copy(len, errcode, xerrno, client, server, WriteServerDone);
+    copy (len, errcode, xerrno, client, server, WriteServerDone);
 }
 
 void
-TunnelStateData::copy(size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, IOCB *completion)
+TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, IOCB *completion)
 {
     /* I think this is to prevent free-while-in-a-callback behaviour
      * - RBC 20030229
@@ -310,7 +313,7 @@ TunnelStateData::copy(size_t len, comm_err_t errcode, int xerrno, Connection &fr
         commSetConnTimeout(from.conn, Config.Timeout.read, timeoutCall);
     }
 
-    if (len < 0 || errcode)
+    if (errcode)
         from.error (xerrno);
     else if (len == 0 || !Comm::IsConnOpen(to.conn)) {
         from.conn->close();
@@ -333,7 +336,7 @@ void
 TunnelStateData::WriteServerDone(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
-    assert(cbdataReferenceValid(tunnelState));
+    assert (cbdataReferenceValid (tunnelState));
 
     tunnelState->writeServerDone(buf, len, flag, xerrno);
 }
@@ -343,12 +346,10 @@ TunnelStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xer
 {
     debugs(26, 3, HERE  << server.conn << ", " << len << " bytes written");
 
-    if (flag == COMM_ERR_CLOSING)
-        return;
-
     /* Error? */
-    if (len < 0 || flag != COMM_OK) {
-        server.error(xerrno); // may call comm_close
+    if (flag != COMM_OK) {
+        if (flag != COMM_ERR_CLOSING)
+            server.error(xerrno); // may call comm_close
         return;
     }
 
@@ -382,7 +383,7 @@ void
 TunnelStateData::WriteClientDone(const Comm::ConnectionPointer &, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
-    assert(cbdataReferenceValid(tunnelState));
+    assert (cbdataReferenceValid (tunnelState));
 
     tunnelState->writeClientDone(buf, len, flag, xerrno);
 }
@@ -403,12 +404,10 @@ TunnelStateData::writeClientDone(char *buf, size_t len, comm_err_t flag, int xer
 {
     debugs(26, 3, HERE << client.conn << ", " << len << " bytes written");
 
-    if (flag == COMM_ERR_CLOSING)
-        return;
-
     /* Error? */
-    if (len < 0 || flag != COMM_OK) {
-        client.error(xerrno); // may call comm_close
+    if (flag != COMM_OK) {
+        if (flag != COMM_ERR_CLOSING)
+            client.error(xerrno); // may call comm_close
         return;
     }
 
@@ -467,7 +466,9 @@ TunnelStateData::copyRead(Connection &from, IOCB *completion)
 
 /**
  * All the pieces we need to write to client and/or server connection
- * Have been written. Start the blind pump.
+ * have been written.
+ * - Set the HTTP status for this request.
+ * - Start the blind pump.
  */
 static void
 tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
@@ -475,22 +476,26 @@ tunnelConnectedWriteDone(const Comm::ConnectionPointer &conn, char *buf, size_t 
     TunnelStateData *tunnelState = (TunnelStateData *)data;
 
     if (flag != COMM_OK) {
+        *tunnelState->status_ptr = HTTP_INTERNAL_SERVER_ERROR;
         tunnelErrorComplete(conn->fd, data, 0);
         return;
     }
 
+    *tunnelState->status_ptr = HTTP_OK;
     if (cbdataReferenceValid(tunnelState)) {
         tunnelState->copyRead(tunnelState->server, TunnelStateData::ReadServer);
         tunnelState->copyRead(tunnelState->client, TunnelStateData::ReadClient);
     }
 }
 
+/*
+ * handle the write completion from a proxy request to an upstream origin
+ */
 static void
 tunnelConnected(const Comm::ConnectionPointer &server, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     debugs(26, 3, HERE << server << ", tunnelState=" << tunnelState);
-    *tunnelState->status_ptr = HTTP_OK;
     AsyncCall::Pointer call = commCbCall(5,5, "tunnelConnectedWriteDone",
                                          CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
     Comm::Write(tunnelState->client.conn, conn_established, strlen(conn_established), call, NULL);
@@ -534,9 +539,6 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
     else
         hierarchyNote(&tunnelState->request->hier, conn->peerType, tunnelState->getHost());
 
-    // TODO: merge this into hierarchyNote with a conn parameter instead of peerType
-    request->hier.peer_local_port = conn->local.GetPort(); // for %<lp logging
-
     if (status != COMM_OK) {
         /* At this point only the TCP handshake has failed. no data has been passed.
          * we are allowed to re-try the TCP-level connection to alternate IPs for CONNECT.
@@ -567,13 +569,13 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
 
     if (conn->getPeer()) {
         tunnelState->request->peer_login = conn->getPeer()->login;
-        tunnelState->request->flags.proxying = 1;
+        tunnelState->request->flags.proxying = (conn->getPeer()->options.originserver?0:1);
     } else {
         tunnelState->request->peer_login = NULL;
         tunnelState->request->flags.proxying = 0;
     }
 
-    if (conn->getPeer())
+    if (tunnelState->request->flags.proxying)
         tunnelRelayConnectRequest(conn, tunnelState);
     else {
         tunnelConnected(conn, tunnelState);

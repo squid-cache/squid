@@ -33,12 +33,12 @@
 #ifndef SQUID_AUTH_GADGETS_H
 #define SQUID_AUTH_GADGETS_H
 
+#if USE_AUTH
+
 #include "hash.h"
 #include "MemPool.h"
 #include "auth/Config.h"
 #include "auth/User.h"
-
-class AuthUser;
 
 /**
  \ingroup AuthAPI
@@ -59,19 +59,22 @@ class AuthUserHashPointer : public hash_link
 public:
     MEMPROXY_CLASS(AuthUserHashPointer);
 
-    AuthUserHashPointer(AuthUser::Pointer);
+    AuthUserHashPointer(Auth::User::Pointer);
     ~AuthUserHashPointer() { auth_user = NULL; };
 
-    AuthUser::Pointer user() const;
+    Auth::User::Pointer user() const;
 
 private:
-    AuthUser::Pointer auth_user;
+    Auth::User::Pointer auth_user;
 };
 
 MEMPROXY_CLASS_INLINE(AuthUserHashPointer);
 
+namespace Auth
+{
+class Scheme;
+}
 class ConnStateData;
-class AuthScheme;
 class StoreEntry;
 
 /**
@@ -81,7 +84,7 @@ class StoreEntry;
 typedef void AUTHSSTATS(StoreEntry *);
 
 /// \ingroup AuthAPI
-extern void authenticateInit(Auth::authConfig *);
+extern void authenticateInit(Auth::ConfigVector *);
 
 /** \ingroup AuthAPI
  * Remove all idle authentication state. Intended for use by reconfigure.
@@ -107,4 +110,5 @@ extern int authenticateSchemeCount(void);
 /// \ingroup AuthAPI
 extern void authenticateOnCloseConnection(ConnStateData * conn);
 
+#endif /* USE_AUTH */
 #endif /* SQUID_AUTH_GADGETS_H */

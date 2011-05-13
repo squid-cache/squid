@@ -13,6 +13,7 @@
 #include "base/AsyncJob.h"
 #include "comm/forward.h"
 #include "ipc/TypedMsgHdr.h"
+#include "ipc/FdNotes.h"
 
 class CommTimeoutCbParams;
 class CommIoCbParams;
@@ -91,6 +92,8 @@ private:
 
 
 void SendMessage(const String& toAddress, const TypedMsgHdr& message);
+/// import socket fd from another strand into our Comm state
+const Comm::ConnectionPointer & ImportFdIntoComm(const Comm::ConnectionPointer &conn, int socktype, int protocol, FdNoteId noteId);
 
 
 }

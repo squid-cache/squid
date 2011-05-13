@@ -383,16 +383,35 @@ HttpHeader::HttpHeader() : owner (hoNone), len (0)
     httpHeaderMaskInit(&mask, 0);
 }
 
-HttpHeader::HttpHeader(http_hdr_owner_type const &anOwner) : owner (anOwner), len (0)
+HttpHeader::HttpHeader(const http_hdr_owner_type anOwner): owner(anOwner), len(0)
 {
     assert(anOwner > hoNone && anOwner <= hoReply);
     debugs(55, 7, "init-ing hdr: " << this << " owner: " << owner);
     httpHeaderMaskInit(&mask, 0);
 }
 
+HttpHeader::HttpHeader(const HttpHeader &other): owner(other.owner), len(other.len)
+{
+    httpHeaderMaskInit(&mask, 0);
+    update(&other, NULL); // will update the mask as well
+}
+
 HttpHeader::~HttpHeader()
 {
     clean();
+}
+
+HttpHeader &
+HttpHeader::operator =(const HttpHeader &other)
+{
+    if (this != &other) {
+        // we do not really care, but the caller probably does
+        assert(owner == other.owner);
+        clean();
+        update(&other, NULL); // will update the mask as well
+        len = other.len;
+    }
+    return *this;
 }
 
 void
@@ -437,6 +456,7 @@ HttpHeader::clean()
     }
     entries.clean();
     httpHeaderMaskInit(&mask, 0);
+    len = 0;
     PROF_stop(HttpHeaderClean);
 }
 
@@ -500,10 +520,7 @@ HttpHeader::update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask)
 int
 HttpHeader::reset()
 {
-    http_hdr_owner_type ho;
-    ho = owner;
     clean();
-    *this = HttpHeader(ho);
     return 0;
 }
 
@@ -1397,7 +1414,10 @@ HttpHeader::getAuth(http_hdr_type id, const char *auth_scheme) const
     if (!*field)		/* no authorization cookie */
         return NULL;
 
-    return base64_decode(field);
+    static char decodedAuthToken[8192];
+    const int decodedLen = base64_decode(decodedAuthToken, sizeof(decodedAuthToken)-1, field);
+    decodedAuthToken[decodedLen] = '\0';
+    return decodedAuthToken;
 }
 
 ETag
@@ -1723,15 +1743,14 @@ httpHeaderStoreReport(StoreEntry * e)
 http_hdr_type
 httpHeaderIdByName(const char *name, size_t name_len, const HttpHeaderFieldInfo * info, int end)
 {
-    int i;
+    if (name_len > 0) {
+        for (int i = 0; i < end; ++i) {
+            if (name_len != info[i].name.size())
+                continue;
 
-    for (i = 0; i < end; ++i) {
-        if (name_len >= 0 && name_len != info[i].name.size())
-            continue;
-
-        if (!strncasecmp(name, info[i].name.termedBuf(),
-                         name_len < 0 ? info[i].name.size() + 1 : name_len))
-            return info[i].id;
+            if (!strncasecmp(name, info[i].name.rawBuf(), name_len))
+                return info[i].id;
+        }
     }
 
     return HDR_BAD_HDR;

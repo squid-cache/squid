@@ -93,10 +93,8 @@ public:
     _SQUID_INLINE_ StoreEntry *loggingEntry() const;
     void loggingEntry(StoreEntry *);
 
-    _SQUID_INLINE_ ConnStateData * getConn();
-    _SQUID_INLINE_ ConnStateData * const getConn() const;
+    _SQUID_INLINE_ ConnStateData * getConn() const;
     _SQUID_INLINE_ void setConn(ConnStateData *);
-
 
     /** Details of the client socket which produced us.
      * Treat as read-only for the lifetime of this HTTP request.
@@ -157,8 +155,14 @@ private:
     ConnStateData * conn_;
 
 #if USE_SSL
+    /// whether the request needs to be bumped
+    enum { needUnknown,  needConfirmed,  needNot } sslBumpNeed;
+
 public:
+    /// return true if the request needs to be bumped
     bool sslBumpNeeded() const;
+    /// set the sslBumpNeeded state
+    void sslBumpNeeded(bool isNeeded);
     void sslBumpStart();
     void sslBumpEstablish(comm_err_t errflag);
 #endif
@@ -173,8 +177,9 @@ public:
 
 private:
     // Adaptation::Initiator API
-    virtual void noteAdaptationAnswer(HttpMsg *message);
-    virtual void noteAdaptationQueryAbort(bool final);
+    virtual void noteAdaptationAnswer(const Adaptation::Answer &answer);
+    void handleAdaptedHeader(HttpMsg *msg);
+    void handleAdaptationBlock(const Adaptation::Answer &answer);
 
     // BodyConsumer API, called by BodyPipe
     virtual void noteMoreBodyDataAvailable(BodyPipe::Pointer);

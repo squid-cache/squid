@@ -74,16 +74,6 @@ CommIoCbParams::CommIoCbParams(void *aData): CommCommonCbParams(aData),
 bool
 CommIoCbParams::syncWithComm()
 {
-#if 0 // transition past??
-    // transition only: read/write legacy code does not know about conn, it just sets FD
-    if (fd >= 0) {
-        if (conn == NULL) {
-            conn = new Comm::Connection;
-            conn->fd = fd;
-        }
-    }
-#endif
-
     // change parameters if the call was scheduled before comm_close but
     // is being fired after comm_close
     if (conn->fd >= 0 && fd_table[conn->fd].closing() && flag != COMM_ERR_CLOSING) {

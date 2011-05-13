@@ -34,7 +34,7 @@
 #ifndef SQUID_OS_MSWIN_H
 #define SQUID_OS_MSWIN_H
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 
 #define ACL WindowsACL
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
@@ -272,6 +272,9 @@ typedef char * caddr_t;
 #endif
 #ifndef EAFNOSUPPORT
 #define EAFNOSUPPORT WSAEAFNOSUPPORT
+#endif
+#ifndef ENETUNREACH
+#define ENETUNREACH WSAENETUNREACH
 #endif
 
 #undef h_errno
@@ -758,5 +761,5 @@ SQUIDCEXTERN size_t getpagesize(void);
 #define PRINTF_FORMAT_ARG3
 #endif
 
-#endif /* _SQUID_WIN32_ */
+#endif /* _SQUID_WINDOWS_ */
 #endif /* SQUID_OS_MSWIN_H */

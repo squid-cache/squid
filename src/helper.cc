@@ -862,10 +862,7 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
 
     debugs(84, 5, "helperHandleRead: " << len << " bytes from " << hlp->id_name << " #" << srv->index + 1);
 
-    if (flag != COMM_OK || len <= 0) {
-        if (len < 0)
-            debugs(84, 1, "helperHandleRead: FD " << conn->fd << " read: " << xstrerror());
-
+    if (flag != COMM_OK || len == 0) {
         srv->closePipesSafely();
         return;
     }
@@ -884,30 +881,25 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
         srv->rbuf[0] = '\0';
     }
 
-    if (hlp->return_full_reply) {
-        debugs(84, 3, HERE << "Return entire buffer");
-        helperReturnBuffer(0, srv, hlp, srv->rbuf, srv->rbuf + srv->roffset);
-    } else {
-        while ((t = strchr(srv->rbuf, '\n'))) {
-            /* end of reply found */
-            char *msg = srv->rbuf;
-            int i = 0;
-            debugs(84, 3, "helperHandleRead: end of reply found");
+    while ((t = strchr(srv->rbuf, hlp->eom))) {
+        /* end of reply found */
+        char *msg = srv->rbuf;
+        int i = 0;
+        debugs(84, 3, "helperHandleRead: end of reply found");
 
-            if (t > srv->rbuf && t[-1] == '\r')
-                t[-1] = '\0';
+        if (t > srv->rbuf && t[-1] == '\r' && hlp->eom == '\n')
+            t[-1] = '\0';
 
-            *t++ = '\0';
+        *t++ = '\0';
 
-            if (hlp->childs.concurrency) {
-                i = strtol(msg, &msg, 10);
+        if (hlp->childs.concurrency) {
+            i = strtol(msg, &msg, 10);
 
-                while (*msg && xisspace(*msg))
-                    msg++;
-            }
-
-            helperReturnBuffer(i, srv, hlp, msg, t);
+            while (*msg && xisspace(*msg))
+                msg++;
         }
+
+        helperReturnBuffer(i, srv, hlp, msg, t);
     }
 
     if (Comm::IsConnOpen(srv->readPipe)) {
@@ -938,10 +930,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
            hlp->id_name << " #" << srv->index + 1);
 
 
-    if (flag != COMM_OK || len <= 0) {
-        if (len < 0)
-            debugs(84, 1, "helperStatefulHandleRead: FD " << conn->fd << " read: " << xstrerror());
-
+    if (flag != COMM_OK || len == 0) {
         srv->closePipesSafely();
         return;
     }
@@ -959,12 +948,12 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
         srv->roffset = 0;
     }
 
-    if ((t = strchr(srv->rbuf, '\n'))) {
+    if ((t = strchr(srv->rbuf, hlp->eom))) {
         /* end of reply found */
         int called = 1;
         debugs(84, 3, "helperStatefulHandleRead: end of reply found");
 
-        if (t > srv->rbuf && t[-1] == '\r')
+        if (t > srv->rbuf && t[-1] == '\r' && hlp->eom == '\n')
             t[-1] = '\0';
 
         *t = '\0';

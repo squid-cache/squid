@@ -2,8 +2,10 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "client_side.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
 #include "auth/AclProxyAuth.h"
+#endif
 #include "acl/FilledChecklist.h"
 #include "comm/Connection.h"
 #include "comm/forward.h"
@@ -15,6 +17,7 @@ ACLFilledChecklist::checkCallback(allow_t answer)
 {
     debugs(28, 5, HERE << this << " answer=" << answer);
 
+#if USE_AUTH
     /* During reconfigure, we can end up not finishing call
      * sequences into the auth code */
 
@@ -26,6 +29,7 @@ ACLFilledChecklist::checkCallback(allow_t answer)
             conn()->auth_user_request = NULL;
         }
     }
+#endif
 
     ACLChecklist::checkCallback(answer); // may delete us
 }
@@ -53,7 +57,9 @@ ACLFilledChecklist::ACLFilledChecklist() :
         dst_rdns(NULL),
         request (NULL),
         reply (NULL),
+#if USE_AUTH
         auth_user_request (NULL),
+#endif
 #if SQUID_SNMP
         snmp_community(NULL),
 #endif
@@ -163,7 +169,9 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
         dst_rdns(NULL),
         request(NULL),
         reply(NULL),
+#if USE_AUTh
         auth_user_request(NULL),
+#endif
 #if SQUID_SNMP
         snmp_community(NULL),
 #endif

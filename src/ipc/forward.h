@@ -13,6 +13,10 @@ namespace Ipc
 
 class TypedMsgHdr;
 class StrandCoord;
+class Forwarder;
+class Inquirer;
+class Request;
+class Response;
 
 } // namespace Ipc
 

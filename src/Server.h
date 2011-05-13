@@ -34,16 +34,17 @@
 #ifndef SQUID_SERVER_H
 #define SQUID_SERVER_H
 
-#include "config.h"
+#include "StoreIOBuffer.h"
+#include "forward.h"
+#include "BodyPipe.h"
+#include "base/AsyncJob.h"
+#include "CommCalls.h"
 #if USE_ADAPTATION
 #include "adaptation/forward.h"
 #include "adaptation/Initiator.h"
 #endif
-#include "base/AsyncJob.h"
-#include "BodyPipe.h"
-#include "CommCalls.h"
-#include "forward.h"
-#include "StoreIOBuffer.h"
+
+class HttpMsg;
 
 /**
  * ServerStateData is a common base for server-side classes such as
@@ -52,7 +53,7 @@
  * virgin responses using ICAP, and provide the client-side consumer with
  * responses.
  *
- * \todo TODO: Rename to something clearer.
+ \todo TODO: Rename to ServerStateDataInfoRecordHandler.
  */
 class ServerStateData:
 #if USE_ADAPTATION
@@ -90,8 +91,7 @@ public:
     static void adaptationAclCheckDoneWrapper(Adaptation::ServiceGroupPointer group, void *data);
 
     // ICAPInitiator: start an ICAP transaction and receive adapted headers.
-    virtual void noteAdaptationAnswer(HttpMsg *message);
-    virtual void noteAdaptationQueryAbort(bool final);
+    virtual void noteAdaptationAnswer(const Adaptation::Answer &answer);
 
     // BodyProducer: provide virgin response body to ICAP.
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer );
@@ -152,7 +152,9 @@ protected:
     void handleAdaptedBodyProductionEnded();
     void handleAdaptedBodyProducerAborted();
 
+    void handleAdaptedHeader(HttpMsg *msg);
     void handleAdaptationCompleted();
+    void handleAdaptationBlocked(const Adaptation::Answer &answer);
     void handleAdaptationAborted(bool bypassable = false);
 #endif
 

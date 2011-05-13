@@ -37,7 +37,6 @@
 #if USE_WCCP
 
 #include "squid.h"
-
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"

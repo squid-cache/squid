@@ -9,7 +9,7 @@ namespace Adaptation
 {
 
 // manages adaptation service configuration in squid.conf
-class ServiceConfig
+class ServiceConfig: public RefCountable
 {
 public:
     ServiceConfig();
@@ -42,6 +42,8 @@ protected:
     /// interpret parsed values
     bool grokBool(bool &var, const char *name, const char *value);
     bool grokUri(const char *value);
+    /// handle name=value configuration option with name unknown to Squid
+    virtual bool grokExtension(const char *name, const char *value);
 };
 
 } // namespace Adaptation

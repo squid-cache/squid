@@ -36,7 +36,10 @@
 #endif
 
 /* Check if we try to compile on a Windows Platform */
-#if defined(_SQUID_CYGWIN_) || defined(_SQUID_MSWIN_)
+#if !_SQUID_WINDOWS_
+/* NON Windows Platform !!! */
+#error NON WINDOWS PLATFORM
+#endif
 
 #include "valid.h"
 
@@ -174,9 +177,3 @@ main(int argc, char **argv)
     }
     return 0;
 }
-
-#else  /* NON Windows Platform !!! */
-
-#error NON WINDOWS PLATFORM
-
-#endif

@@ -51,12 +51,6 @@ typedef struct {
 /// \deprecated Use AuthUserHashPointer instead.
 typedef struct AuthUserHashPointer auth_user_hash_pointer;
 
-/* temporary: once Config is fully hidden, this shouldn't be needed */
-#include "Array.h"
-
-class AuthConfig;
-typedef Vector<AuthConfig *> authConfig;
-
 struct http_port_list;
 struct https_port_list;
 
@@ -154,7 +148,9 @@ class DnsLookupDetails;
 typedef void FQDNH(const char *, const DnsLookupDetails &details, void *);
 typedef void IDCB(const char *ident, void *data);
 typedef void IPH(const ipcache_addrs *, const DnsLookupDetails &details, void *);
-typedef void IRCB(struct peer *, peer_t, protocol_t, void *, void *data);
+
+#include "anyp/ProtocolType.h"
+typedef void IRCB(struct peer *, peer_t, AnyP::ProtocolType, void *, void *data);
 
 typedef void RH(void *data, char *);
 /* in wordlist.h */
@@ -187,4 +183,7 @@ typedef unsigned char cache_key;
 typedef ssize_t mb_size_t;
 
 typedef int STDIRSELECT(const StoreEntry *);
+
+/*Use uint64_t to store miliseconds*/
+typedef uint64_t time_msec_t;
 #endif /* SQUID_TYPEDEFS_H */

@@ -34,40 +34,36 @@
 #ifndef SQUID_URLSCHEME_H
 #define SQUID_URLSCHEME_H
 
-/* For the definition of NULL and protocol_t */
-#include "squid.h"
-
+#include "anyp/ProtocolType.h"
+#if HAVE_IOSFWD
 #include <iosfwd>
+#endif
 
-extern const char *ProtocolStr[];
-
-/* This class represents a URL Scheme such as HTTPS, HTTP, WAIS etc.
+/** This class represents a URL Scheme such as HTTPS, HTTP, WAIS etc.
  * It does not represent the PROTOCOL that such schemes refer to.
  */
-
 class URLScheme
 {
 
 public:
-    URLScheme() : theScheme(PROTO_NONE) {}
+    URLScheme() : theScheme_(AnyP::PROTO_NONE) {}
+    URLScheme(AnyP::ProtocolType const aScheme) : theScheme_(aScheme) {}
+    ~URLScheme() {}
 
-    URLScheme(protocol_t const aScheme) : theScheme(aScheme) {}
+    operator AnyP::ProtocolType() const { return theScheme_; }
 
-    operator protocol_t() const { return theScheme; }
+    bool operator != (AnyP::ProtocolType const & aProtocol) const { return theScheme_ != aProtocol; }
 
-    bool operator != (protocol_t const & aProtocol) const { return theScheme != aProtocol;}
-
-    /* Get a char string representation of the scheme. */
-    char const *const_str() const { return ProtocolStr[theScheme]; }
+    /** Get a char string representation of the scheme.
+     * An upper bound length of BUFSIZ bytes converted. Remainder will be truncated.
+     * The result of this call will remain usable only until any subsequest call
+     * and must be copied if persistence is needed.
+     */
+    char const *const_str() const;
 
 private:
-    /* This is a typecode for now - TODO make the varying methods virtual
-     * Doing that without doubling the storage size will require having
-     * something like a flyweight. perhaps the strategy pattern is appropiate:
-     * one strategy per scheme, and an object that is nothing but a pointer
-     * into the registry of schemes.
-     */
-    protocol_t theScheme;
+    /// This is a typecode pointer into the enum/registry of protocols handled.
+    AnyP::ProtocolType theScheme_;
 };
 
 inline std::ostream &

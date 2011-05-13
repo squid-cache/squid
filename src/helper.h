@@ -36,8 +36,8 @@
 #include "squid.h"
 #include "cbdata.h"
 #include "comm/forward.h"
-#include "HelperChildConfig.h"
 #include "ip/Address.h"
+#include "HelperChildConfig.h"
 
 class helper_request;
 
@@ -46,7 +46,7 @@ typedef void HLPSCB(void *, void *lastserver, char *buf);
 class helper
 {
 public:
-    inline helper(const char *name) : cmdline(NULL), id_name(name) {};
+    inline helper(const char *name) : cmdline(NULL), id_name(name), eom('\n') {}
     ~helper();
 
 public:
@@ -59,6 +59,7 @@ public:
     Ip::Address addr;
     time_t last_queue_warn;
     time_t last_restart;
+    char eom;   ///< The char which marks the end of (response) message, normally '\n'
 
     struct _stats {
         int requests;
@@ -66,8 +67,6 @@ public:
         int queue_size;
         int avg_svc_time;
     } stats;
-    /// True if callback expects the whole helper output, as a c-string.
-    bool return_full_reply;
 
 private:
     CBDATA_CLASS2(helper);

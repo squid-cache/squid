@@ -4,6 +4,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#include "adaptation/Answer.h"
 #include "adaptation/History.h"
 #include "adaptation/icap/Client.h"
 #include "adaptation/icap/Config.h"
@@ -715,7 +716,7 @@ void Adaptation::Icap::ModXact::startSending()
 {
     disableRepeats("sent headers");
     disableBypass("sent headers", true);
-    sendAnswer(adapted.header);
+    sendAnswer(Answer::Forward(adapted.header));
 
     if (state.sending == State::sendingVirgin)
         echoMore();
@@ -771,7 +772,7 @@ void Adaptation::Icap::ModXact::parseIcapHead()
     // update the cross-transactional database if needed (all status codes!)
     if (const char *xxName = Adaptation::Config::masterx_shared_name) {
         Adaptation::History::Pointer ah = request->adaptHistory(true);
-        if (ah != NULL) {
+        if (ah != NULL) { // TODO: reorder checks to avoid creating history
             const String val = icapReply->header.getByName(xxName);
             if (val.size() > 0) // XXX: HttpHeader lacks empty value detection
                 ah->updateXxRecord(xxName, val);
@@ -792,11 +793,9 @@ void Adaptation::Icap::ModXact::parseIcapHead()
     // If we already have stored headers from previous ICAP transaction related to this
     // request, old headers will be replaced with the new one.
 
-    Adaptation::Icap::History::Pointer h = request->icapHistory();
-    if (h != NULL) {
-        h->mergeIcapHeaders(&icapReply->header);
-        h->setIcapLastHeader(&icapReply->header);
-    }
+    Adaptation::History::Pointer ah = request->adaptLogHistory();
+    if (ah != NULL)
+        ah->recordMeta(&icapReply->header);
 
     // handle100Continue() manages state.writing on its own.
     // Non-100 status means the server needs no postPreview data from us.
@@ -1303,7 +1302,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
 
     // share the cross-transactional database records if needed
     if (Adaptation::Config::masterx_shared_name) {
-        Adaptation::History::Pointer ah = request->adaptHistory(true);
+        Adaptation::History::Pointer ah = request->adaptHistory(false);
         if (ah != NULL) {
             String name, value;
             if (ah->getXxRecord(name, value)) {
@@ -1358,7 +1357,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
     if (TheConfig.send_client_ip && request) {
         Ip::Address client_addr;
 #if FOLLOW_X_FORWARDED_FOR
-        if (TheConfig.icap_uses_indirect_client) {
+        if (TheConfig.use_indirect_client) {
             client_addr = request->indirect_client_addr;
         } else
 #endif
@@ -1367,7 +1366,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
             buf.Printf("X-Client-IP: %s\r\n", client_addr.NtoA(ntoabuf,MAX_IPSTRLEN));
     }
 
-    if (TheConfig.send_client_username && request)
+    if (TheConfig.send_username && request)
         makeUsernameHeader(request, buf);
 
     // fprintf(stderr, "%s\n", buf.content());
@@ -1423,13 +1422,15 @@ void Adaptation::Icap::ModXact::makeAllowHeader(MemBuf &buf)
 
 void Adaptation::Icap::ModXact::makeUsernameHeader(const HttpRequest *request, MemBuf &buf)
 {
+#if USE_AUTH
     if (request->auth_user_request != NULL) {
         char const *name = request->auth_user_request->username();
         if (name) {
-            const char *value = TheConfig.client_username_encode ? base64_encode(name) : name;
+            const char *value = TheConfig.client_username_encode ? old_base64_encode(name) : name;
             buf.Printf("%s: %s\r\n", TheConfig.client_username_header, value);
         }
     }
+#endif
 }
 
 void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *section, MemBuf &httpBuf, const HttpMsg *head)
@@ -1495,8 +1496,6 @@ void Adaptation::Icap::ModXact::decideOnPreview()
     }
 
     // we decided to do preview, now compute its size
-
-    Must(wantedSize >= 0);
 
     // cannot preview more than we can backup
     size_t ad = min(wantedSize, TheBackupLimit);
@@ -1766,7 +1765,7 @@ void Adaptation::Icap::VirginBodyAct::disable()
 void Adaptation::Icap::VirginBodyAct::progress(size_t size)
 {
     Must(active());
-    Must(size >= 0);
+    Must(static_cast<int64_t>(size) >= 0);
     theStart += static_cast<int64_t>(size);
 }
 
@@ -1783,7 +1782,6 @@ Adaptation::Icap::Preview::Preview(): theWritten(0), theAd(0), theState(stDisabl
 void Adaptation::Icap::Preview::enable(size_t anAd)
 {
     // TODO: check for anAd not exceeding preview size limit
-    Must(anAd >= 0);
     Must(!enabled());
     theAd = anAd;
     theState = stWriting;
@@ -1844,10 +1842,14 @@ bool Adaptation::Icap::ModXact::fillVirginHttpHeader(MemBuf &mb) const
 
 void Adaptation::Icap::ModXact::detailError(int errDetail)
 {
-    if (HttpRequest *request = virgin.cause ?
-                               virgin.cause : dynamic_cast<HttpRequest*>(virgin.header)) {
+    HttpRequest *request = dynamic_cast<HttpRequest*>(adapted.header);
+    // if no adapted request, update virgin (and inherit its properties later)
+    // TODO: make this and HttpRequest::detailError constant, like adaptHistory
+    if (!request)
+        request = const_cast<HttpRequest*>(&virginRequest());
+
+    if (request)
         request->detailError(ERR_ICAP_FAILURE, errDetail);
-    }
 }
 
 /* Adaptation::Icap::ModXactLauncher */

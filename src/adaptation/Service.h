@@ -24,7 +24,7 @@ public:
     typedef String Id;
 
 public:
-    Service(const ServiceConfig &aConfig);
+    explicit Service(const ServiceConfigPointer &aConfig);
     virtual ~Service();
 
     virtual bool probed() const = 0; // see comments above
@@ -41,7 +41,7 @@ public:
     // called by transactions to report service failure
     virtual void noteFailure() = 0;
 
-    const ServiceConfig &cfg() const { return theConfig; }
+    const ServiceConfig &cfg() const { return *theConfig; }
 
     virtual void finalize(); // called after creation
 
@@ -52,10 +52,10 @@ public:
     virtual bool detached() const = 0;
 
 protected:
-    ServiceConfig &writeableCfg() { return theConfig; }
+    ServiceConfig &writeableCfg() { return *theConfig; }
 
 private:
-    ServiceConfig theConfig;
+    ServiceConfigPointer theConfig;
 };
 
 typedef Service::Pointer ServicePointer;

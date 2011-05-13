@@ -35,6 +35,9 @@
  */
 
 #include "squid.h"
+
+#if USE_AUTH
+
 #include "acl/ExtUser.h"
 #include "acl/FilledChecklist.h"
 #include "acl/RegexData.h"
@@ -103,3 +106,4 @@ ACLExtUser::clone() const
     return new ACLExtUser(*this);
 }
 
+#endif /* USE_AUTH */

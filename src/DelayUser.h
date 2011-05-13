@@ -58,10 +58,10 @@ public:
     void operator delete (void *);
 
     void stats(StoreEntry *)const;
-    DelayUserBucket(AuthUser::Pointer);
+    DelayUserBucket(Auth::User::Pointer);
     ~DelayUserBucket();
     DelayBucket theBucket;
-    AuthUser::Pointer authUser;
+    Auth::User::Pointer authUser;
 };
 
 /// \ingroup DelayPoolsAPI
@@ -90,7 +90,7 @@ private:
     public:
         void *operator new(size_t);
         void operator delete (void *);
-        Id(RefCount<DelayUser>, AuthUser::Pointer);
+        Id(RefCount<DelayUser>, Auth::User::Pointer);
         ~Id();
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);

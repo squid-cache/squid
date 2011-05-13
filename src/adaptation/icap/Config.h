@@ -76,7 +76,7 @@ private:
     Config(const Config &); // not implemented
     Config &operator =(const Config &); // not implemented
 
-    virtual Adaptation::ServicePointer createService(const Adaptation::ServiceConfig &cfg);
+    virtual Adaptation::ServicePointer createService(const ServiceConfigPointer &cfg);
 };
 
 extern Config TheConfig;
