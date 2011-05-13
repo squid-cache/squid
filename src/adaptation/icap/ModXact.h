@@ -157,6 +157,7 @@ public:
 
     // service waiting
     void noteServiceReady();
+    void noteServiceAvailable();
 
 public:
     InOut virgin;
@@ -303,6 +304,7 @@ private:
         bool allowedPostview206; // must handle 206 Partial Content outside preview
         bool allowedPreview206; // must handle 206 Partial Content inside preview
         bool readyForUob; ///< got a 206 response and expect a use-origin-body
+        bool waitedForService; ///< true if was queued at least once
 
         // will not write anything [else] to the ICAP server connection
         bool doneWriting() const { return writing == writingReallyDone; }
