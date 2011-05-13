@@ -80,9 +80,6 @@
 #include "compat/inet_ntop.h"
 #include "compat/getaddrinfo.h"
 
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif

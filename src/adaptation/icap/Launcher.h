@@ -80,13 +80,12 @@ public:
     void noteInitiatorAborted();
 
     // Adaptation::Initiator: asynchronous communication with the current transaction
-    virtual void noteAdaptationAnswer(HttpMsg *message);
+    virtual void noteAdaptationAnswer(const Answer &answer);
     virtual void noteXactAbort(XactAbortInfo info);
 
 private:
     bool canRetry(XactAbortInfo &info) const; //< true if can retry in the case of persistent connection failures
     bool canRepeat(XactAbortInfo &info) const; //< true if can repeat in the case of no or unsatisfactory response
-    virtual void noteAdaptationQueryAbort(bool final);
 
 protected:
     // Adaptation::Initiate API implementation

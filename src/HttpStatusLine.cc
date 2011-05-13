@@ -60,7 +60,7 @@ void
 httpStatusLineSet(HttpStatusLine * sline, HttpVersion version, http_status status, const char *reason)
 {
     assert(sline);
-    sline->protocol = PROTO_HTTP;
+    sline->protocol = AnyP::PROTO_HTTP;
     sline->version = version;
     sline->status = status;
     /* Note: no xstrdup for 'reason', assumes constant 'reasons' */
@@ -77,7 +77,7 @@ httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p)
     assert(sline && p);
 
     /* handle ICY protocol status line specially. Pass on the bad format. */
-    if (sline->protocol == PROTO_ICY) {
+    if (sline->protocol == AnyP::PROTO_ICY) {
         debugs(57, 9, "packing sline " << sline << " using " << p << ":");
         debugs(57, 9, "FORMAT=" << IcyStatusLineFormat );
         debugs(57, 9, "ICY " << sline->status << " " << (sline->reason ? sline->reason : httpStatusString(sline->status)) );
@@ -108,7 +108,7 @@ httpStatusLineParse(HttpStatusLine * sline, const String &protoPrefix, const cha
 
     if (protoPrefix.cmp("ICY", 3) == 0) {
         debugs(57, 3, "httpStatusLineParse: Invalid HTTP identifier. Detected ICY protocol istead.");
-        sline->protocol = PROTO_ICY;
+        sline->protocol = AnyP::PROTO_ICY;
         start += protoPrefix.size();
     } else if (protoPrefix.caseCmp(start, protoPrefix.size()) == 0) {
 

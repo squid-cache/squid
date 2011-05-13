@@ -66,9 +66,6 @@ protected:
     CBDATA_CLASS2(StoreToCommWriter);
 };
 
-/// import HTTP socket fd from another strand into our Comm state
-extern Comm::ConnectionPointer ImportHttpFdIntoComm(int fd);
-
 } // namespace Mgr
 
 #endif /* SQUID_MGR_STORE_TO_COMM_WRITER_H */

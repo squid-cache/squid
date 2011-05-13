@@ -44,7 +44,11 @@
 #include "mgr/Registration.h"
 #include "ExternalACL.h"
 #include "ExternalACLEntry.h"
+#if USE_AUTH
+#include "auth/Acl.h"
+#include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
+#endif
 #include "SquidTime.h"
 #include "Store.h"
 #include "fde.h"
@@ -58,8 +62,6 @@
 #include "comm/Connection.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
-#include "auth/Acl.h"
-#include "auth/Gadgets.h"
 #include "helper.h"
 #include "MemBuf.h"
 #include "rfc1738.h"
@@ -125,6 +127,7 @@ public:
 
     dlink_list queue;
 
+#if USE_AUTH
     /**
      * Configuration flag. May only be altered by the configuration parser.
      *
@@ -132,6 +135,7 @@ public:
      * details to be processed. If none are available its a fail match.
      */
     bool require_auth;
+#endif
 
     enum {
         QUOTE_METHOD_SHELL = 1,
@@ -144,7 +148,9 @@ public:
 struct _external_acl_format {
     enum format_type {
         EXT_ACL_UNKNOWN,
+#if USE_AUTH
         EXT_ACL_LOGIN,
+#endif
 #if USE_IDENT
         EXT_ACL_IDENT,
 #endif
@@ -179,7 +185,11 @@ struct _external_acl_format {
         EXT_ACL_USER_CERT_RAW,
         EXT_ACL_USER_CERTCHAIN_RAW,
 #endif
+#if USE_AUTH
         EXT_ACL_EXT_USER,
+#endif
+        EXT_ACL_EXT_LOG,
+        EXT_ACL_TAG,
         EXT_ACL_END
     } type;
     external_acl_format *next;
@@ -400,9 +410,11 @@ parse_externalAclHelper(external_acl ** list)
             parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REQUEST);
         } else if (strncmp(token, "%<{", 3) == 0) {
             parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REPLY);
+#if USE_AUTH
         } else if (strcmp(token, "%LOGIN") == 0) {
             format->type = _external_acl_format::EXT_ACL_LOGIN;
             a->require_auth = true;
+#endif
         }
 
 #if USE_IDENT
@@ -451,8 +463,14 @@ parse_externalAclHelper(external_acl ** list)
             format->header = xstrdup(token + 11);
         }
 #endif
+#if USE_AUTH
         else if (strcmp(token, "%EXT_USER") == 0)
             format->type = _external_acl_format::EXT_ACL_EXT_USER;
+#endif
+        else if (strcmp(token, "%EXT_LOG") == 0)
+            format->type = _external_acl_format::EXT_ACL_EXT_LOG;
+        else if (strcmp(token, "%TAG") == 0)
+            format->type = _external_acl_format::EXT_ACL_TAG;
         else {
             debugs(0,0, "ERROR: Unknown Format token " << token);
             self_destruct();
@@ -547,8 +565,9 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
             case _external_acl_format::EXT_ACL_##a: \
                 storeAppendPrintf(sentry, " %%%s", #a); \
                 break
-
+#if USE_AUTH
                 DUMP_EXT_ACL_TYPE(LOGIN);
+#endif
 #if USE_IDENT
 
                 DUMP_EXT_ACL_TYPE(IDENT);
@@ -587,9 +606,11 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
                 storeAppendPrintf(sentry, " %%USER_CERT_%s", format->header);
                 break;
 #endif
-
+#if USE_AUTH
                 DUMP_EXT_ACL_TYPE(EXT_USER);
-
+#endif
+                DUMP_EXT_ACL_TYPE(EXT_LOG);
+                DUMP_EXT_ACL_TYPE(TAG);
             default:
                 fatal("unknown external_acl format error");
                 break;
@@ -694,6 +715,7 @@ ACLExternal::parse()
 bool
 ACLExternal::valid () const
 {
+#if USE_AUTH
     if (data->def->require_auth) {
         if (authenticateSchemeCount() == 0) {
             debugs(28, 0, "Can't use proxy auth because no authentication schemes were compiled.");
@@ -705,6 +727,7 @@ ACLExternal::valid () const
             return false;
         }
     }
+#endif
 
     return true;
 }
@@ -727,15 +750,20 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
     int result;
     external_acl_entry *entry;
     const char *key = "";
-    debugs(82, 9, "aclMatchExternal: acl=\"" << acl->def->name << "\"");
+    debugs(82, 9, HERE << "acl=\"" << acl->def->name << "\"");
     entry = ch->extacl_entry;
 
     if (entry) {
-        if (cbdataReferenceValid(entry) && entry->def == acl->def &&
-                strcmp((char *)entry->key, key) == 0) {
+        if (cbdataReferenceValid(entry) && entry->def == acl->def) {
             /* Ours, use it.. */
         } else {
             /* Not valid, or not ours.. get rid of it */
+            debugs(82, 9, HERE << "entry " << entry << " not valid or not ours. Discarded.");
+            if (entry) {
+                debugs(82, 9, HERE << "entry def=" << entry->def << ", our def=" << acl->def);
+                key = makeExternalAclKey(ch, acl);
+                debugs(82, 9, HERE << "entry key='" << (char *)entry->key << "', our key='" << key << "'");
+            }
             cbdataReferenceDone(ch->extacl_entry);
             entry = NULL;
         }
@@ -744,18 +772,19 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
     external_acl_message = "MISSING REQUIRED INFORMATION";
 
     if (!entry) {
+        debugs(82, 9, HERE << "No helper entry available");
+#if USE_AUTH
         if (acl->def->require_auth) {
             int ti;
             /* Make sure the user is authenticated */
             debugs(82, 3, "aclMatchExternal: " << acl->def->name << " check user authenticated.");
-
             if ((ti = AuthenticateAcl(ch)) != 1) {
                 debugs(82, 2, "aclMatchExternal: " << acl->def->name << " user not authenticated (" << ti << ")");
                 return ti;
             }
             debugs(82, 3, "aclMatchExternal: " << acl->def->name << " user is authenticated.");
         }
-
+#endif
         key = makeExternalAclKey(ch, acl);
 
         if (!key) {
@@ -800,12 +829,13 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
     debugs(82, 2, "aclMatchExternal: " << acl->def->name << " = " << result);
 
     if (ch->request) {
+#if USE_AUTH
         if (entry->user.size())
             ch->request->extacl_user = entry->user;
 
         if (entry->password.size())
             ch->request->extacl_passwd = entry->password;
-
+#endif
         if (!ch->request->tag.size())
             ch->request->tag = entry->tag;
 
@@ -851,6 +881,10 @@ ACLExternal::dump() const
 static void
 external_acl_cache_touch(external_acl * def, external_acl_entry * entry)
 {
+    // this must not be done when nothing is being cached.
+    if (def->cache_size <= 0 || (def->ttl <= 0 && entry->result == 1) || (def->negative_ttl <= 0 && entry->result != 1))
+        return;
+
     dlinkDelete(&entry->lru, &def->lru_list);
     dlinkAdd(entry, &entry->lru, &def->lru_list);
 }
@@ -872,13 +906,13 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
         String sb;
 
         switch (format->type) {
-
+#if USE_AUTH
         case _external_acl_format::EXT_ACL_LOGIN:
             assert (ch->auth_user_request != NULL);
             str = ch->auth_user_request->username();
             break;
+#endif
 #if USE_IDENT
-
         case _external_acl_format::EXT_ACL_IDENT:
             str = ch->rfc931;
 
@@ -931,7 +965,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
 
         case _external_acl_format::EXT_ACL_PROTO:
-            str = ProtocolStr[request->protocol];
+            str = AnyP::ProtocolType_str[request->protocol];
             break;
 
         case _external_acl_format::EXT_ACL_PORT:
@@ -1040,11 +1074,17 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
             break;
 #endif
-
+#if USE_AUTH
         case _external_acl_format::EXT_ACL_EXT_USER:
             str = request->extacl_user.termedBuf();
             break;
-
+#endif
+        case _external_acl_format::EXT_ACL_EXT_LOG:
+            str = request->extacl_log.termedBuf();
+            break;
+        case _external_acl_format::EXT_ACL_TAG:
+            str = request->tag.termedBuf();
+            break;
         case _external_acl_format::EXT_ACL_UNKNOWN:
 
         case _external_acl_format::EXT_ACL_END:
@@ -1094,6 +1134,9 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 static int
 external_acl_entry_expired(external_acl * def, external_acl_entry * entry)
 {
+    if (def->cache_size <= 0)
+        return 1;
+
     if (entry->date + (entry->result == 1 ? def->ttl : def->negative_ttl) < squid_curtime)
         return 1;
     else
@@ -1103,6 +1146,9 @@ external_acl_entry_expired(external_acl * def, external_acl_entry * entry)
 static int
 external_acl_grace_expired(external_acl * def, external_acl_entry * entry)
 {
+    if (def->cache_size <= 0)
+        return 1;
+
     int ttl;
     ttl = entry->result == 1 ? def->ttl : def->negative_ttl;
     ttl = (ttl * (100 - def->grace)) / 100;
@@ -1116,12 +1162,24 @@ external_acl_grace_expired(external_acl * def, external_acl_entry * entry)
 static external_acl_entry *
 external_acl_cache_add(external_acl * def, const char *key, ExternalACLEntryData const & data)
 {
-    ExternalACLEntry *entry = static_cast<ExternalACLEntry *>(hash_lookup(def->cache, key));
+    ExternalACLEntry *entry;
+
+    // do not bother caching this result if TTL is going to expire it immediately
+    if (def->cache_size <= 0 || (def->ttl <= 0 && data.result == 1) || (def->negative_ttl <= 0 && data.result != 1)) {
+        debugs(82,6, HERE);
+        entry = new ExternalACLEntry;
+        entry->key = xstrdup(key);
+        entry->update(data);
+        entry->def = def;
+        return entry;
+    }
+
+    entry = static_cast<ExternalACLEntry *>(hash_lookup(def->cache, key));
     debugs(82, 2, "external_acl_cache_add: Adding '" << key << "' = " << data.result);
 
     if (entry) {
         debugs(82, 3, "ExternalACLEntry::update: updating existing entry");
-        entry->update (data);
+        entry->update(data);
         external_acl_cache_touch(def, entry);
 
         return entry;
@@ -1129,7 +1187,7 @@ external_acl_cache_add(external_acl * def, const char *key, ExternalACLEntryData
 
     entry = new ExternalACLEntry;
     entry->key = xstrdup(key);
-    entry->update (data);
+    entry->update(data);
 
     def->add(entry);
 
@@ -1139,7 +1197,7 @@ external_acl_cache_add(external_acl * def, const char *key, ExternalACLEntryData
 static void
 external_acl_cache_delete(external_acl * def, external_acl_entry * entry)
 {
-    assert (entry->def == def);
+    assert(def->cache_size > 0 && entry->def == def);
     hash_remove_link(def->cache, entry);
     dlinkDelete(&entry->lru, &def->lru_list);
     def->cache_entries -= 1;
@@ -1203,7 +1261,7 @@ externalAclHandleReply(void *data, char *reply)
     char *status;
     char *token;
     char *value;
-    char *t;
+    char *t = NULL;
     ExternalACLEntryData entryData;
     entryData.result = 0;
     external_acl_entry *entry = NULL;
@@ -1225,9 +1283,7 @@ externalAclHandleReply(void *data, char *reply)
                 if (state->def->quote == external_acl::QUOTE_METHOD_URL)
                     rfc1738_unescape(value);
 
-                if (strcmp(token, "user") == 0)
-                    entryData.user = value;
-                else if (strcmp(token, "message") == 0)
+                if (strcmp(token, "message") == 0)
                     entryData.message = value;
                 else if (strcmp(token, "error") == 0)
                     entryData.message = value;
@@ -1235,12 +1291,16 @@ externalAclHandleReply(void *data, char *reply)
                     entryData.tag = value;
                 else if (strcmp(token, "log") == 0)
                     entryData.log = value;
+#if USE_AUTH
+                else if (strcmp(token, "user") == 0)
+                    entryData.user = value;
                 else if (strcmp(token, "password") == 0)
                     entryData.password = value;
                 else if (strcmp(token, "passwd") == 0)
                     entryData.password = value;
                 else if (strcmp(token, "login") == 0)
                     entryData.user = value;
+#endif
             }
         }
     }
@@ -1285,6 +1345,7 @@ ACLExternal::ExternalAclLookup(ACLChecklist *checklist, ACLExternal * me, EAH * 
     bool graceful = 0;
 
     ACLFilledChecklist *ch = Filled(checklist);
+#if USE_AUTH
     if (acl->def->require_auth) {
         int ti;
         /* Make sure the user is authenticated */
@@ -1298,6 +1359,7 @@ ACLExternal::ExternalAclLookup(ACLChecklist *checklist, ACLExternal * me, EAH * 
         }
         debugs(82, 3, "aclMatchExternal: " << acl->def->name << " user is authenticated.");
     }
+#endif
 
     const char *key = makeExternalAclKey(ch, acl);
 
@@ -1316,12 +1378,15 @@ ACLExternal::ExternalAclLookup(ACLChecklist *checklist, ACLExternal * me, EAH * 
         entry = NULL;
 
     /* Check for a pending lookup to hook into */
-    for (node = def->queue.head; node; node = node->next) {
-        externalAclState *oldstatetmp = static_cast<externalAclState *>(node->data);
+    // only possible if we are caching results.
+    if (def->cache_size > 0) {
+        for (node = def->queue.head; node; node = node->next) {
+            externalAclState *oldstatetmp = static_cast<externalAclState *>(node->data);
 
-        if (strcmp(key, oldstatetmp->key) == 0) {
-            oldstate = oldstatetmp;
-            break;
+            if (strcmp(key, oldstatetmp->key) == 0) {
+                oldstate = oldstatetmp;
+                break;
+            }
         }
     }
 
@@ -1392,9 +1457,13 @@ ACLExternal::ExternalAclLookup(ACLChecklist *checklist, ACLExternal * me, EAH * 
 
         if (entry != NULL) {
             debugs(82, 4, "externalAclLookup: entry = { date=" <<
-                   (long unsigned int) entry->date << ", result=" <<
-                   entry->result << ", user=" << entry->user << " tag=" <<
-                   entry->tag << " log=" << entry->log << " }");
+                   (long unsigned int) entry->date <<
+                   ", result=" << entry->result <<
+                   " tag=" << entry->tag <<
+                   " log=" << entry->log << " }");
+#if USE_AUTH
+            debugs(82, 4, "externalAclLookup: user=" << entry->user);
+#endif
 
         }
 
@@ -1534,5 +1603,9 @@ ACLExternal::typeString() const
 bool
 ACLExternal::isProxyAuth() const
 {
+#if USE_AUTH
     return data->def->require_auth;
+#else
+    return false;
+#endif
 }

@@ -153,7 +153,6 @@ Ipc::TypedMsgHdr::putFixed(const void *raw, size_t size)
 void
 Ipc::TypedMsgHdr::getRaw(void *raw, size_t size) const
 {
-    Must(size >= 0);
     if (size > 0) {
         Must(size <= data.size - offset);
         memcpy(raw, data.raw + offset, size);
@@ -165,7 +164,6 @@ Ipc::TypedMsgHdr::getRaw(void *raw, size_t size) const
 void
 Ipc::TypedMsgHdr::putRaw(const void *raw, size_t size)
 {
-    Must(size >= 0);
     if (size > 0) {
         Must(size <= sizeof(data.raw) - data.size);
         memcpy(data.raw + data.size, raw, size);

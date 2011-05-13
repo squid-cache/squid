@@ -6,8 +6,9 @@
  */
 
 #include "config.h"
-#include "base/TextException.h"
+#include <map>
 #include "comm.h"
+#include "base/TextException.h"
 #include "comm/Connection.h"
 #include "ipc/Port.h"
 #include "ipc/Messages.h"
@@ -15,8 +16,6 @@
 #include "ipc/TypedMsgHdr.h"
 #include "ipc/StartListening.h"
 #include "ipc/SharedListen.h"
-
-#include <map>
 
 /// holds information necessary to handle JoinListen response
 class PendingOpenRequest

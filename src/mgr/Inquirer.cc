@@ -7,66 +7,49 @@
 
 #include "config.h"
 #include "base/TextException.h"
-#include "comm.h"
+#include "comm/Connection.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
-#include "comm/Connection.h"
 #include "HttpReply.h"
-#include "ipc/Coordinator.h"
+#include "HttpRequest.h"
+#include "ipc/UdsOp.h"
 #include "mgr/ActionWriter.h"
-#include "mgr/Command.h"
+#include "mgr/IntParam.h"
 #include "mgr/Inquirer.h"
+#include "mgr/Command.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
 #include "SquidTime.h"
+#include "errorpage.h"
 #include <memory>
 #include <algorithm>
 
 
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, Inquirer);
 
-Mgr::Inquirer::RequestsMap Mgr::Inquirer::TheRequestsMap;
-unsigned int Mgr::Inquirer::LastRequestId = 0;
 
-/// compare Ipc::StrandCoord using kidId, for std::sort() below
-static bool
-LesserStrandByKidId(const Ipc::StrandCoord &c1, const Ipc::StrandCoord &c2)
-{
-    return c1.kidId < c2.kidId;
-}
-
-Mgr::Inquirer::Inquirer(Action::Pointer anAction, const Comm::ConnectionPointer &conn,
+Mgr::Inquirer::Inquirer(Action::Pointer anAction,
                         const Request &aCause, const Ipc::StrandCoords &coords):
-        AsyncJob("Mgr::Inquirer"),
-        aggrAction(anAction),
-        cause(aCause),
-        clientConnection(conn),
-        strands(coords), pos(strands.begin()),
-        requestId(0), closer(NULL), timeout(aggrAction->atomic() ? 10 : 100)
+        Ipc::Inquirer(aCause.clone(), applyQueryParams(coords, aCause.params.queryParams), anAction->atomic() ? 10 : 100),
+        aggrAction(anAction)
 {
-    debugs(16, 5, HERE << conn << " action: " << aggrAction);
+    conn = aCause.conn;
+    Ipc::ImportFdIntoComm(conn, SOCK_STREAM, IPPROTO_TCP, Ipc::fdnHttpSocket);
 
-    // order by ascending kid IDs; useful for non-aggregatable stats
-    std::sort(strands.begin(), strands.end(), LesserStrandByKidId);
+    debugs(16, 5, HERE << conn << " action: " << aggrAction);
 
     closer = asyncCall(16, 5, "Mgr::Inquirer::noteCommClosed",
                        CommCbMemFunT<Inquirer, CommCloseCbParams>(this, &Inquirer::noteCommClosed));
-    comm_add_close_handler(clientConnection->fd, closer);
-}
-
-Mgr::Inquirer::~Inquirer()
-{
-    debugs(16, 5, HERE);
-    close();
+    comm_add_close_handler(conn->fd, closer);
 }
 
 /// closes our copy of the client HTTP connection socket
 void
-Mgr::Inquirer::close()
+Mgr::Inquirer::cleanup()
 {
-    if (Comm::IsConnOpen(clientConnection)) {
+    if (Comm::IsConnOpen(conn)) {
         removeCloseHandler();
-        clientConnection->close();
+        conn->close();
     }
 }
 
@@ -74,7 +57,7 @@ void
 Mgr::Inquirer::removeCloseHandler()
 {
     if (closer != NULL) {
-        comm_remove_close_handler(clientConnection->fd, closer);
+        comm_remove_close_handler(conn->fd, closer);
         closer = NULL;
     }
 }
@@ -83,16 +66,28 @@ void
 Mgr::Inquirer::start()
 {
     debugs(16, 5, HERE);
-    Must(Comm::IsConnOpen(clientConnection));
+    Ipc::Inquirer::start();
+    Must(Comm::IsConnOpen(conn));
     Must(aggrAction != NULL);
 
-    std::auto_ptr<HttpReply> reply(new HttpReply);
-    reply->setHeaders(HTTP_OK, NULL, "text/plain", -1, squid_curtime, squid_curtime);
-    reply->header.putStr(HDR_CONNECTION, "close"); // until we chunk response
-    std::auto_ptr<MemBuf> replyBuf(reply->pack());
+    std::auto_ptr<MemBuf> replyBuf;
+    if (strands.empty()) {
+        LOCAL_ARRAY(char, url, MAX_URL);
+        snprintf(url, MAX_URL, "%s", aggrAction->command().params.httpUri.termedBuf());
+        HttpRequest *req = HttpRequest::CreateFromUrl(url);
+        ErrorState *err = errorCon(ERR_INVALID_URL, HTTP_NOT_FOUND, req);
+        std::auto_ptr<HttpReply> reply(err->BuildHttpReply());
+        replyBuf.reset(reply->pack());
+        errorStateFree(err);
+    } else {
+        std::auto_ptr<HttpReply> reply(new HttpReply);
+        reply->setHeaders(HTTP_OK, NULL, "text/plain", -1, squid_curtime, squid_curtime);
+        reply->header.putStr(HDR_CONNECTION, "close"); // until we chunk response
+        replyBuf.reset(reply->pack());
+    }
     writer = asyncCall(16, 5, "Mgr::Inquirer::noteWroteHeader",
                        CommCbMemFunT<Inquirer, CommIoCbParams>(this, &Inquirer::noteWroteHeader));
-    Comm::Write(clientConnection, replyBuf.get(), writer);
+    Comm::Write(conn, replyBuf.get(), writer);
 }
 
 /// called when we wrote the response header
@@ -102,49 +97,9 @@ Mgr::Inquirer::noteWroteHeader(const CommIoCbParams& params)
     debugs(16, 5, HERE);
     writer = NULL;
     Must(params.flag == COMM_OK);
-    Must(clientConnection != NULL && params.fd == clientConnection->fd);
+    Must(params.conn.getRaw() == conn.getRaw());
     Must(params.size != 0);
     // start inquiries at the initial pos
-    inquire();
-}
-
-void
-Mgr::Inquirer::inquire()
-{
-    if (pos == strands.end()) {
-        Must(done());
-        return;
-    }
-
-    Must(requestId == 0);
-    AsyncCall::Pointer callback = asyncCall(16, 5, "Mgr::Inquirer::handleRemoteAck",
-                                            HandleAckDialer(this, &Inquirer::handleRemoteAck, Response()));
-    if (++LastRequestId == 0) // don't use zero value as requestId
-        ++LastRequestId;
-    requestId = LastRequestId;
-    const int kidId = pos->kidId;
-    debugs(16, 4, HERE << "inquire kid: " << kidId << status());
-    TheRequestsMap[requestId] = callback;
-    Request mgrRequest(KidIdentifier, requestId, clientConnection,
-                       aggrAction->command().params);
-    Ipc::TypedMsgHdr message;
-    mgrRequest.pack(message);
-    Ipc::SendMessage(Ipc::Port::MakeAddr(Ipc::strandAddrPfx, kidId), message);
-    eventAdd("Mgr::Inquirer::requestTimedOut", &Inquirer::RequestTimedOut,
-             this, timeout, 0, false);
-}
-
-/// called when a strand is done writing its output
-void
-Mgr::Inquirer::handleRemoteAck(const Response& response)
-{
-    debugs(16, 4, HERE << status());
-    requestId = 0;
-    removeTimeoutEvent();
-    if (response.hasAction())
-        aggrAction->add(response.getAction());
-    Must(!done()); // or we should not be called
-    ++pos; // advance after a successful inquiry
     inquire();
 }
 
@@ -153,102 +108,73 @@ void
 Mgr::Inquirer::noteCommClosed(const CommCloseCbParams& params)
 {
     debugs(16, 5, HERE);
-    Must(!Comm::IsConnOpen(clientConnection) || clientConnection->fd == params.fd);
-    clientConnection = NULL; // AYJ: Do we actually have to NULL it?
+    Must(!Comm::IsConnOpen(conn) && params.conn.getRaw() == conn.getRaw());
+    conn = NULL;
     mustStop("commClosed");
 }
 
-void
-Mgr::Inquirer::swanSong()
+bool
+Mgr::Inquirer::aggregate(Ipc::Response::Pointer aResponse)
 {
-    debugs(16, 5, HERE);
-    removeTimeoutEvent();
-    if (requestId > 0) {
-        DequeueRequest(requestId);
-        requestId = 0;
-    }
-    if (aggrAction->aggregatable()) {
+    Mgr::Response& response = static_cast<Response&>(*aResponse);
+    if (response.hasAction())
+        aggrAction->add(response.getAction());
+    return true;
+}
+
+void
+Mgr::Inquirer::sendResponse()
+{
+    if (!strands.empty() && aggrAction->aggregatable()) {
         removeCloseHandler();
-        AsyncJob::Start(new ActionWriter(aggrAction, clientConnection));
-        clientConnection = NULL; // should not close fd because we passed it to ActionWriter
+        AsyncJob::Start(new ActionWriter(aggrAction, conn));
+        conn = NULL; // should not close because we passed it to ActionWriter
     }
-    close();
 }
 
 bool
 Mgr::Inquirer::doneAll() const
 {
-    return !writer && pos == strands.end();
+    return !writer && Ipc::Inquirer::doneAll();
 }
 
-/// returns and forgets the right Inquirer callback for strand request
-AsyncCall::Pointer
-Mgr::Inquirer::DequeueRequest(unsigned int requestId)
+Ipc::StrandCoords
+Mgr::Inquirer::applyQueryParams(const Ipc::StrandCoords& aStrands, const QueryParams& aParams)
 {
-    debugs(16, 3, HERE << " requestId " << requestId);
-    Must(requestId != 0);
-    AsyncCall::Pointer call;
-    RequestsMap::iterator request = TheRequestsMap.find(requestId);
-    if (request != TheRequestsMap.end()) {
-        call = request->second;
-        Must(call != NULL);
-        TheRequestsMap.erase(request);
+    Ipc::StrandCoords sc;
+
+    QueryParam::Pointer processesParam = aParams.get("processes");
+    QueryParam::Pointer workersParam = aParams.get("workers");
+
+    if (processesParam == NULL || workersParam == NULL) {
+        if (processesParam != NULL) {
+            IntParam* param = dynamic_cast<IntParam*>(processesParam.getRaw());
+            if (param != NULL && param->type == QueryParam::ptInt) {
+                const std::vector<int>& processes = param->value();
+                for (Ipc::StrandCoords::const_iterator iter = aStrands.begin();
+                        iter != aStrands.end(); ++iter) {
+                    if (std::find(processes.begin(), processes.end(), iter->kidId) != processes.end())
+                        sc.push_back(*iter);
+                }
+            }
+        } else if (workersParam != NULL) {
+            IntParam* param = dynamic_cast<IntParam*>(workersParam.getRaw());
+            if (param != NULL && param->type == QueryParam::ptInt) {
+                const std::vector<int>& workers = param->value();
+                for (int i = 0; i < (int)aStrands.size(); ++i) {
+                    if (std::find(workers.begin(), workers.end(), i + 1) != workers.end())
+                        sc.push_back(aStrands[i]);
+                }
+            }
+        } else {
+            sc = aStrands;
+        }
     }
-    return call;
-}
 
-void
-Mgr::Inquirer::HandleRemoteAck(const Mgr::Response& response)
-{
-    Must(response.requestId != 0);
-    AsyncCall::Pointer call = DequeueRequest(response.requestId);
-    if (call != NULL) {
-        HandleAckDialer* dialer = dynamic_cast<HandleAckDialer*>(call->getDialer());
-        Must(dialer);
-        dialer->arg1 = response;
-        ScheduleCallHere(call);
+    debugs(0, 0, HERE << "strands kid IDs = ");
+    for (Ipc::StrandCoords::const_iterator iter = sc.begin(); iter != sc.end(); ++iter) {
+        debugs(0, 0, HERE << iter->kidId);
     }
-}
 
-/// called when we are no longer waiting for the strand to respond
-void
-Mgr::Inquirer::removeTimeoutEvent()
-{
-    if (eventFind(&Inquirer::RequestTimedOut, this))
-        eventDelete(&Inquirer::RequestTimedOut, this);
-}
-
-/// Mgr::Inquirer::requestTimedOut wrapper
-void
-Mgr::Inquirer::RequestTimedOut(void* param)
-{
-    debugs(16, 3, HERE);
-    Must(param != NULL);
-    Inquirer* cmi = static_cast<Inquirer*>(param);
-    // use async call to enable job call protection that time events lack
-    CallJobHere(16, 5, cmi, Mgr::Inquirer, requestTimedOut);
-}
-
-/// called when the strand failed to respond (or finish responding) in time
-void
-Mgr::Inquirer::requestTimedOut()
-{
-    debugs(16, 3, HERE);
-    if (requestId != 0) {
-        DequeueRequest(requestId);
-        requestId = 0;
-        Must(!done()); // or we should not be called
-        ++pos; // advance after a failed inquiry
-        inquire();
-    }
-}
-
-const char*
-Mgr::Inquirer::status() const
-{
-    static MemBuf buf;
-    buf.reset();
-    buf.Printf(" [FD %d, requestId %u]", clientConnection->fd, requestId);
-    buf.terminate();
-    return buf.content();
+    return sc;
 }

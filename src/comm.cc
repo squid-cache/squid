@@ -63,7 +63,7 @@
 #endif
 
 #include "cbdata.h"
-#if defined(_SQUID_CYGWIN_)
+#if _SQUID_CYGWIN_
 #include <sys/ioctl.h>
 #endif
 #ifdef HAVE_NETINET_TCP_H
@@ -99,13 +99,6 @@ static void commSetNoLinger(int);
 static void commSetTcpNoDelay(int);
 #endif
 static void commSetTcpRcvbuf(int, int);
-
-/*
-typedef enum {
-    COMM_CB_READ = 1,
-    COMM_CB_DERIVED
-} comm_callback_t;
-*/
 
 static MemAllocator *conn_close_pool = NULL;
 fd_debug_t *fdd_table = NULL;
@@ -155,16 +148,6 @@ commHandleRead(int fd, void *data)
     /* Nope, register for some more IO */
     Comm::SetSelect(fd, COMM_SELECT_READ, commHandleRead, data, 0);
 }
-
-#if 0 // obsolete wrapper.
-void
-comm_read(const Comm::ConnectionPointer &conn, char *buf, int size, IOCB *handler, void *handler_data)
-{
-    AsyncCall::Pointer call = commCbCall(5,4, "SomeCommReadHandler",
-                                         CommIoCbPtrFun(handler, handler_data));
-    comm_read(conn, buf, size, call);
-}
-#endif
 
 /**
  * Queue a read. handler/handler_data are called when the read
@@ -544,6 +527,7 @@ comm_openex(int sock_type,
     AI->ai_protocol = proto;
 
     debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
+
     new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
 
     /* under IPv6 there is the possibility IPv6 is present but disabled. */
@@ -578,7 +562,7 @@ comm_openex(int sock_type,
         return -1;
     }
 
-    // temporary for the transition. comm_openex will eventually have a conn to play with.
+    // XXX: temporary for the transition. comm_openex will eventually have a conn to play with.
     Comm::ConnectionPointer conn = new Comm::Connection;
     conn->local = addr;
     conn->fd = new_socket;
@@ -608,7 +592,7 @@ comm_openex(int sock_type,
 
     PROF_stop(comm_open);
 
-    // XXX transition only. prevent conn from closing the new FD on functio exit.
+    // XXX transition only. prevent conn from closing the new FD on function exit.
     conn->fd = -1;
     return new_socket;
 }
@@ -636,7 +620,9 @@ comm_init_opened(const Comm::ConnectionPointer &conn,
     fde *F = &fd_table[conn->fd];
     F->local_addr = conn->local;
     F->tosToServer = tos;
+
     F->nfmarkToServer = nfmark;
+
     F->sock_family = AI->ai_family;
 }
 
@@ -740,34 +726,6 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
      * if ((flags & COMM_DOBIND) ...) ...
      */
 }
-
-#if 0
-int
-commSetTimeout_old(int fd, int timeout, CTCB * handler, void *data)
-{
-    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
-    assert(fd >= 0);
-    assert(fd < Squid_MaxFD);
-    fde *F = &fd_table[fd];
-    assert(F->flags.open);
-
-    if (timeout < 0) {
-        cbdataReferenceDone(F->timeout_data);
-        F->timeout_handler = NULL;
-        F->timeout = 0;
-    } else {
-        if (handler) {
-            cbdataReferenceDone(F->timeout_data);
-            F->timeout_handler = handler;
-            F->timeout_data = cbdataReference(data);
-        }
-
-        F->timeout = squid_curtime + (time_t) timeout;
-    }
-
-    return F->timeout;
-}
-#endif
 
 // Legacy pre-AsyncCalls API for FD timeouts.
 int
@@ -1058,7 +1016,7 @@ comm_lingering_close(int fd)
 
 #endif
 
-/**
+/*
  * enable linger with time of 0 so that when the socket is
  * closed, TCP generates a RESET
  */
@@ -1070,7 +1028,7 @@ comm_reset_close(Comm::ConnectionPointer &conn)
     L.l_linger = 0;
 
     if (setsockopt(conn->fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0)
-        debugs(50, DBG_CRITICAL, "ERROR: Closing FD " << conn->fd << " with TCP RST: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "ERROR: Closing " << conn << " with TCP RST: " << xstrerror());
 
     conn->close();
 }
@@ -1370,12 +1328,10 @@ commSetNonBlocking(int fd)
     int flags;
     int dummy = 0;
 #endif
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     int nonblocking = TRUE;
 
-#ifdef _SQUID_CYGWIN_
-
+#if _SQUID_CYGWIN_
     if (fd_table[fd].type != FD_PIPE) {
 #endif
 
@@ -1384,8 +1340,7 @@ commSetNonBlocking(int fd)
             return COMM_ERROR;
         }
 
-#ifdef _SQUID_CYGWIN_
-
+#if _SQUID_CYGWIN_
     } else {
 #endif
 #endif
@@ -1402,10 +1357,8 @@ commSetNonBlocking(int fd)
         }
 
 #endif
-#ifdef _SQUID_CYGWIN_
-
+#if _SQUID_CYGWIN_
     }
-
 #endif
     fd_table[fd].flags.nonblocking = 1;
 

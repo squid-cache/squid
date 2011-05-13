@@ -35,8 +35,11 @@
 #include "squid.h"
 #include "event.h"
 #include "StoreClient.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "comm/Connection.h"
+#include "mgr/Registration.h"
 #include "Store.h"
 #include "HttpRequest.h"
 #include "log/Tokens.h"
@@ -56,7 +59,6 @@
 #include "mgr/InfoAction.h"
 #include "mgr/IntervalAction.h"
 #include "mgr/IoAction.h"
-#include "mgr/Registration.h"
 #include "mgr/ServiceTimesAction.h"
 #if USE_SSL
 #include "ssl/support.h"
@@ -674,15 +676,13 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "Squid Object Cache: Version %s\n",
                       version_string);
 
-#if _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
         storeAppendPrintf(sentry,"\nRunning as %s Windows System Service on %s\n",
                           WIN32_Service_name, WIN32_OS_string);
         storeAppendPrintf(sentry,"Service command line is: %s\n", WIN32_Service_Command_Line);
     } else
         storeAppendPrintf(sentry,"Running on %s\n",WIN32_OS_string);
-
 #endif
 
     storeAppendPrintf(sentry, "Start Time:\t%s\n",
@@ -1374,9 +1374,11 @@ statRegisterWithCacheManager(void)
     Mgr::RegisterAction("active_requests",
                         "Client-side Active Requests",
                         statClientRequests, 0, 1);
+#if USE_AUTH
     Mgr::RegisterAction("username_cache",
                         "Active Cached Usernames",
-                        AuthUser::UsernameCacheStats, 0, 1);
+                        Auth::User::UsernameCacheStats, 0, 1);
+#endif
 #if DEBUG_OPENFD
     Mgr::RegisterAction("openfd_objects", "Objects with Swapout files open",
                         statOpenfdObj, 0, 0);
@@ -2051,12 +2053,14 @@ statClientRequests(StoreEntry * s)
                           (long int) http->start_time.tv_sec,
                           (int) http->start_time.tv_usec,
                           tvSubDsec(http->start_time, current_time));
-
+#if USE_AUTH
         if (http->request->auth_user_request != NULL)
             p = http->request->auth_user_request->username();
-        else if (http->request->extacl_user.defined()) {
-            p = http->request->extacl_user.termedBuf();
-        }
+        else
+#endif
+            if (http->request->extacl_user.defined()) {
+                p = http->request->extacl_user.termedBuf();
+            }
 
         if (!p && conn != NULL && conn->clientConnection->rfc931[0])
             p = conn->clientConnection->rfc931;

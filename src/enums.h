@@ -143,25 +143,6 @@ typedef enum {
     STORE_DISK_CLIENT
 } store_client_t;
 
-typedef enum {
-    PROTO_NONE,
-    PROTO_HTTP,
-    PROTO_FTP,
-    PROTO_GOPHER,
-    PROTO_WAIS,
-    PROTO_CACHEOBJ,
-    PROTO_ICP,
-#if USE_HTCP
-    PROTO_HTCP,
-#endif
-    PROTO_URN,
-    PROTO_WHOIS,
-    PROTO_INTERNAL,
-    PROTO_HTTPS,
-    PROTO_ICY,
-    PROTO_MAX
-} protocol_t;
-
 /*
  * These are for StoreEntry->flag, which is defined as a SHORT
  *
@@ -326,7 +307,7 @@ enum {
 
 
 /* CygWin & Windows NT Port */
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 /*
  * Supported Windows OS types codes
  */

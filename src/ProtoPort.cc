@@ -1,3 +1,7 @@
+/*
+ * $Id$
+ */
+
 #include "squid.h"
 #include "comm.h"
 #include "ProtoPort.h"

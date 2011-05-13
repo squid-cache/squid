@@ -122,6 +122,7 @@ struct ushortlist {
 };
 
 struct relist {
+    int flags;
     char *pattern;
     regex_t regex;
     relist *next;
@@ -192,8 +193,8 @@ struct SquidConfig {
 
 #if !USE_DNSSERVERS
 
-        time_t idns_retransmit;
-        time_t idns_query;
+        time_msec_t idns_retransmit;
+        time_msec_t idns_query;
 #endif
 
     } Timeout;
@@ -881,7 +882,9 @@ struct peer {
 #endif
         unsigned int allow_miss:1;
         unsigned int carp:1;
+#if USE_AUTH
         unsigned int userhash:1;
+#endif
         unsigned int sourcehash:1;
         unsigned int originserver:1;
         unsigned int no_tproxy:1;
@@ -924,13 +927,13 @@ struct peer {
         double load_multiplier;
         double load_factor;	/* normalized weight value */
     } carp;
-
+#if USE_AUTH
     struct {
         unsigned int hash;
         double load_multiplier;
         double load_factor;	/* normalized weight value */
     } userhash;
-
+#endif
     struct {
         unsigned int hash;
         double load_multiplier;
@@ -1009,7 +1012,7 @@ struct _iostats {
 
 
 struct request_flags {
-    request_flags(): range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),fail_on_validation_err(0),stale_if_hit(0),accelerated(0),ignore_cc(0),intercepted(0),spoof_client_ip(0),internal(0),internalclient(0),must_keepalive(0),chunked_reply(0),stream_error(0),destinationIPLookedUp_(0) {
+    request_flags(): range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),fail_on_validation_err(0),stale_if_hit(0),accelerated(0),ignore_cc(0),intercepted(0),spoof_client_ip(0),internal(0),internalclient(0),must_keepalive(0),chunked_reply(0),stream_error(0),sslBumped(0),destinationIPLookedUp_(0) {
 #if USE_HTTP_VIOLATIONS
         nocache_hack = 0;
 #endif
@@ -1051,6 +1054,7 @@ unsigned int proxying:
     unsigned int no_direct:1;	/* Deny direct forwarding unless overriden by always_direct. Used in accelerator mode */
     unsigned int chunked_reply:1; /**< Reply with chunked transfer encoding */
     unsigned int stream_error:1; /**< Whether stream error has occured */
+    unsigned int sslBumped:1; /**< ssl-bumped request*/
 
     // When adding new flags, please update cloneAdaptationImmune() as needed.
 

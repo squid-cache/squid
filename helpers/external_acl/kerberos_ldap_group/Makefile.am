@@ -19,6 +19,7 @@ ext_kerberos_ldap_group_acl_SOURCES = \
 	support_ldap.cc \
 	support_sasl.cc \
 	support_resolv.cc \
+	support_lserver.cc \
 	support_log.cc
 
 ext_kerberos_ldap_group_acl_LDFLAGS =

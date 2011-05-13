@@ -34,13 +34,13 @@
 #ifndef _LIBSSPWIN32_H_
 #define _LIBSSPWIN32_H_
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 
 #define SECURITY_WIN32
 #define NTLM_PACKAGE_NAME "NTLM"
 #define NEGOTIATE_PACKAGE_NAME "Negotiate"
 
-#ifdef _SQUID_CYGWIN_
+#if _SQUID_CYGWIN_
 #include <wchar.h>
 #define _T(x) TEXT(x)
 #else
@@ -77,6 +77,5 @@ const char * WINAPI SSP_MakeNegotiateBlob(PVOID, int, PBOOL, int *, char *);
 extern BOOL Use_Unicode;
 extern BOOL NTLM_LocalCall;
 
-#endif /* _SQUID_WIN32_ */
-
+#endif /* _SQUID_WINDOWS_ */
 #endif /* LIBSSPWIN32_H_ */

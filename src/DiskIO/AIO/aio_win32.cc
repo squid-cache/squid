@@ -37,7 +37,7 @@
 #include "comm.h"
 #include "aio_win32.h"
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 VOID CALLBACK IoCompletionRoutine(DWORD dwErrorCode,
                                   DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped)
 {
@@ -351,4 +351,4 @@ ssize_t aio_return64(struct aiocb64 * aiocbp)
 {
     return aiocbp->aio_sigevent.sigev_signo;
 }
-#endif /* _SQUID_WIN32_ */
+#endif /* _SQUID_WINDOWS_ */

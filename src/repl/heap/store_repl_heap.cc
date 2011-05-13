@@ -336,7 +336,10 @@ createRemovalPolicy_heap(wordlist * args)
     }
 
     /* No additional arguments expected */
-    assert(!args);
+    while (args) {
+        debugs(81, DBG_IMPORTANT, "WARNING: discarding unknown removal policy '" << args->key << "'");
+        args = args->next;
+    }
 
     heap_data->theHeap = new_heap(1000, heap_data->keyfunc);
 

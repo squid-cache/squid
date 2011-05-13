@@ -40,6 +40,9 @@ public:
     /// returns true if tracking of kid is stopped
     bool running() const;
 
+    /// returns true if master should restart this kid
+    bool shouldRestart() const;
+
     /// returns current pid for a running kid and last pid for a stopped kid
     pid_t getPid() const;
 

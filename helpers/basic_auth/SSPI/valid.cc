@@ -30,9 +30,12 @@
 #include "util.h"
 
 /* Check if we try to compile on a Windows Platform */
-#if defined(_SQUID_CYGWIN_) || defined(_SQUID_MSWIN_)
+#if !_SQUID_WINDOWS_
+/* NON Windows Platform !!! */
+#error NON WINDOWS PLATFORM
+#endif
 
-#if defined(_SQUID_CYGWIN_)
+#if _SQUID_CYGWIN_
 #include <wchar.h>
 #endif
 #include "valid.h"
@@ -175,8 +178,3 @@ Valid_User(char *UserName, char *Password, char *Group)
     }
     return result;
 }
-#else  /* NON Windows Platform !!! */
-
-#error NON WINDOWS PLATFORM
-
-#endif

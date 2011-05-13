@@ -48,7 +48,7 @@ class HttpHdrRangeSpec
 
 public:
     MEMPROXY_CLASS(HttpHdrRangeSpec);
-    typedef Range<int64_t> HttpRange;
+    typedef Range<int64_t, uint64_t> HttpRange;
     static int64_t const UnknownPosition;
 
     HttpHdrRangeSpec();

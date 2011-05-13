@@ -122,7 +122,6 @@ private:
     static MemBlobStats Stats; ///< class-wide statistics
 
     void memAlloc(const size_type memSize);
-    size_type calcAllocSize(const size_type minSize) const;
 
     /// whether the offset points to the end of the used area
     bool isAppendOffset(const size_type off) const { return off == size; }

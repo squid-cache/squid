@@ -33,7 +33,9 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "base/AsyncJob.h"
 #include "BodyPipe.h"
 #include "comm.h"
@@ -48,34 +50,6 @@ class clientStreamNode;
 class ChunkedCodingParser;
 class HttpParser;
 
-template <class T>
-class Range;
-
-/**
- * Badly named.
- * This is in fact the processing context for a single HTTP request.
- *
- * Managing what has been done, and what happens next to the data buffer
- * holding what we hope is an HTTP request.
- *
- * Parsing is still a mess of global functions done in conjunction with the
- * real socket controller which generated ClientHttpRequest.
- * It also generates one of us and passes us control from there based on
- * the results of the parse.
- *
- * After that all the request interpretation and adaptation is in our scope.
- * Then finally the reply fetcher is created by this and we get the result
- * back. Which we then have to manage writing of it to the ConnStateData.
- *
- * The socket level management is done by a ConnStateData which owns us.
- * The scope of this objects control over a socket consists of the data
- * buffer received from ConnStateData with an initially unknown length.
- * When that length is known it sets the end bounary of our acces to the
- * buffer.
- *
- * The individual processing actions are done by other Jobs which we
- * kick off as needed.
- */
 class ClientSocketContext : public RefCountable
 {
 
@@ -141,7 +115,7 @@ public:
     void writeControlMsg(HttpControlMsg &msg);
 
 protected:
-    static IOCB WroteControlMsg;  //(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data);
+    static IOCB WroteControlMsg;
     void wroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno);
 
 private:
@@ -160,20 +134,7 @@ private:
 };
 
 
-/**
- * Manages a connection to a client.
- *
- * Multiple requests (up to 2) can be pipelined. This object is responsible for managing
- * which one is currently being fulfilled and what happens to the queue if the current one
- * causes the client connection to be closed early.
- *
- * Act as a manager for the connection and passes data in buffer to the current parser.
- * the parser has ambiguous scope at present due to being made from global functions
- * I believe this object uses the parser to identify boundaries and kick off the
- * actual HTTP request handling objects (ClientSocketContext, ClientHttpRequest, HttpRequest)
- *
- * If the above can be confirmed accurate we can call this object PipelineManager or similar
- */
+/** A connection to a socket */
 class ConnStateData : public BodyProducer, public HttpControlMsgSink
 {
 
@@ -187,6 +148,8 @@ public:
     bool areAllContextsForThisConnection() const;
     void freeAllContexts();
     void notifyAllContexts(const int xerrno); ///< tell everybody about the err
+    /// Traffic parsing
+    bool clientParseRequests();
     void readNextRequest();
     bool maybeMakeSpaceAvailable();
     ClientSocketContext::Pointer getCurrentContext() const;
@@ -220,11 +183,13 @@ public:
      */
     int64_t mayNeedToReadMoreBody() const;
 
+#if USE_AUTH
     /**
      * note this is ONLY connection based because NTLM and Negotiate is against HTTP spec.
      * the user details for connection based authentication
      */
     AuthUserRequest::Pointer auth_user_request;
+#endif
 
     /**
      * used by the owner of the connection, opaque otherwise
@@ -233,12 +198,10 @@ public:
     ClientSocketContext::Pointer currentobject;
 
     Ip::Address log_addr;
-
-    /// count of requests made so far on this connection
     int nrequests;
 
     struct {
-        bool readMoreRequests;
+        bool readMore; ///< needs comm_read (for this request or new requests)
         bool swanSang; // XXX: temporary flag to check proper cleanup
     } flags;
     struct {
@@ -330,25 +293,25 @@ protected:
 private:
     int connReadWasError(comm_err_t flag, int size, int xerrno);
     int connFinishedWithConn(int size);
-    void clientMaybeReadData(int do_next_read);
-    void clientAfterReadingRequests(int do_next_read);
+    void clientAfterReadingRequests();
 
 private:
-    CBDATA_CLASS2(ConnStateData);
-    // XXX: CBDATA macro plays with public/private exposing all of the supposedly below private fields...
+    HttpParser parser_;
 
+    // XXX: CBDATA plays with public/private and leaves the following 'private' fields all public... :(
+    CBDATA_CLASS2(ConnStateData);
     bool closing_;
 
     bool switchedToHttps_;
     String sslHostName; ///< Host name for SSL certificate generation
     AsyncCall::Pointer reader; ///< set when we are reading
-    BodyPipe::Pointer bodyPipe; ///< set when we are reading request body
+    BodyPipe::Pointer bodyPipe; // set when we are reading request body
 };
 
 /* convenience class while splitting up body handling */
 /* temporary existence only - on stack use expected */
 
-void setLogUri(ClientHttpRequest * http, char const *uri);
+void setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl = false);
 
 const char *findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end = NULL);
 

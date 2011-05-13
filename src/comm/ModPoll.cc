@@ -35,8 +35,10 @@
 #if USE_POLL
 
 #include "squid.h"
+#include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "fde.h"
+#include "ICP.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -166,10 +168,10 @@ Comm::ResetSelect(int fd)
 static int
 fdIsIcp(int fd)
 {
-    if (fd == theInIcpConnection)
+    if (icpIncomingConn != NULL && icpIncomingConn->fd == fd)
         return 1;
 
-    if (fd == theOutIcpConnection)
+    if (icpOutgoingConn != NULL && icpOutgoingConn->fd == fd)
         return 1;
 
     return 0;
@@ -279,12 +281,11 @@ comm_poll_icp_incoming(void)
     int nevents;
     icp_io_events = 0;
 
-    if (theInIcpConnection >= 0)
-        fds[nfds++] = theInIcpConnection;
+    if (Comm::IsConnOpen(icpIncomingConn))
+        fds[nfds++] = icpIncomingConn->fd;
 
-    if (theInIcpConnection != theOutIcpConnection)
-        if (theOutIcpConnection >= 0)
-            fds[nfds++] = theOutIcpConnection;
+    if (icpIncomingConn != icpOutgoingConn && Comm::IsConnOpen(icpOutgoingConn))
+            fds[nfds++] = icpOutgoingConn->fd;
 
     if (nfds == 0)
         return;
@@ -414,7 +415,7 @@ Comm::DoSelect(int msec)
          * Note that this will only ever trigger when there are no log files
          * and stdout/err/in are all closed too.
          */
-        if (nfds == 0 && !npending) {
+        if (nfds == 0 && npending == 0) {
             if (shutting_down)
                 return COMM_SHUTDOWN;
             else
@@ -428,7 +429,7 @@ Comm::DoSelect(int msec)
             ++statCounter.select_loops;
             PROF_stop(comm_poll_normal);
 
-            if (num >= 0 || npending >= 0)
+            if (num >= 0 || npending > 0)
                 break;
 
             if (ignoreErrno(errno))

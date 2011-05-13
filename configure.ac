@@ -19,6 +19,7 @@ m4_include([acinclude/compiler-flags.m4])
 m4_include([acinclude/os-deps.m4])
 m4_include([acinclude/krb5.m4])
 m4_include([acinclude/pam.m4])
+m4_include([acinclude/pkg.m4])
 m4_include([acinclude/lib-checks.m4])
 
 PRESET_CFLAGS="$CFLAGS"
@@ -46,6 +47,12 @@ else
 fi
 AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 # on windows squid_host_os is either mingw or cygwin, version is 32
+
+# this needs to be before any test is run, to have more standard
+# functions available on some Unix sysems (e.g. Solaris)
+if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
+	AC_USE_SYSTEM_EXTENSIONS
+fi
 
 # test for programs
 AC_PROG_RANLIB
@@ -78,12 +85,6 @@ AC_PATH_PROG(AR, ar, $FALSE)
 AR_R="$AR r"
 AC_SUBST(AR_R)
 
-# this needs to be before any test is run, to have more standard
-# functions available on some Unix sysems (e.g. Solaris)
-if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
-	AC_USE_SYSTEM_EXTENSIONS
-fi
-
 AC_ARG_ENABLE(strict-error-checking,
   AS_HELP_STRING([--disable-strict-error-checking],[By default squid is compiled
                  with all possible static compiler error-checks enabled.
@@ -110,6 +111,8 @@ else
   AC_DISABLE_SHARED
 fi
 
+# LT_INIT requires libtool v2, might as well state it loud
+LT_PREREQ ([2.2])
 LT_INIT([dlopen],[disable-shared])
 if ! test "${ac_top_build_prefix}" = "";
 then
@@ -709,7 +712,7 @@ for fs in $squid_storeio_module_candidates none; do
       if ! test "x$squid_disk_module_candidates_AIO" = "xyes"; then
         AC_MSG_ERROR([COSS requires POSIX AIO which is not available.])
       fi
-      # Automake om MinGW needs explicit exe extension
+      # Automake on MinGW needs explicit exe extension
       # for STORE_TESTS substition
       STORE_TESTS="$STORE_TESTS tests/testCoss$EXEEXT"
       ;;
@@ -901,8 +904,10 @@ AC_MSG_RESULT([$squid_opt_use_ecap, explicitly])
     ]
 )
 
+dnl Necessary if the first PKG_CHECK_MODULES call is conditional
+PKG_PROG_PKG_CONFIG
+
 dnl Perform configuration consistency checks for eCAP
-ECAPLIB=""
 if test "x$squid_opt_use_ecap" = "xyes";
 then
     dnl eCAP support requires loadable modules, which are enabled by default
@@ -911,18 +916,18 @@ then
         AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-loadable-modules with --enable-ecap.]);
     fi
 
-    dnl eCAP support requires libecap
-    AC_CHECK_LIB([ecap], [main],
-        [ECAPLIB="-lecap"],
-        [AC_MSG_FAILURE([eCAP support requires libecap library, but no usable library was found])]
-    )
+    dnl eCAP support requires libecap.
+    dnl This Squid supports libecap v0.2.x.
+    dnl Use EXT_ prefix to distinguish external libecap (that we check for
+    dnl here) from our own convenience ecap library in Makefiles.
+    PKG_CHECK_MODULES(EXT_LIBECAP, [libecap > 0.2 libecap < 0.3])
 fi
 
 AM_CONDITIONAL(USE_ECAP, test "x$squid_opt_use_ecap" = "xyes")
 if test "x$squid_opt_use_ecap" = "xyes";
 then
     AC_DEFINE(USE_ECAP,1,[Enable eCAP support])
-    ECAP_LIBS="ecap/libecap.la $ECAP_LIBS"
+    ECAP_LIBS="ecap/libsquid-ecap.la"
     squid_opt_use_adaptation=yes
 else
     AC_DEFINE(USE_ECAP,0,[Disable eCAP support])
@@ -930,8 +935,6 @@ else
 fi
 dnl convenience library
 AC_SUBST(ECAP_LIBS)
-dnl -lecap if needed
-AC_SUBST(ECAPLIB)
 
 
 dnl enable adaptation if requested by specific adaptation mechanisms
@@ -993,9 +996,9 @@ AC_ARG_ENABLE(snmp,
 ])
 SQUID_DEFINE_BOOL(SQUID_SNMP,${enable_snmp:=yes},
    [Define to enable SNMP monitoring of Squid])
-AM_CONDITIONAL(USE_SNMP, [test "x$enable_snmp" = "xyes"])
+AM_CONDITIONAL(ENABLE_SNMP, [test "x$enable_snmp" = "xyes"])
 if test "x$enable_snmp" = "xyes"; then
-    SNMPLIB='../snmplib/libsnmp.a'
+    SNMPLIB='../snmplib/libsnmplib.a'
     makesnmplib=snmplib
 fi
 AC_MSG_NOTICE([SNMP support enabled: $enable_snmp])
@@ -1024,7 +1027,7 @@ AC_ARG_ENABLE(cachemgr-hostname,
 
 AC_ARG_ENABLE(eui,
   AS_HELP_STRING([--disable-eui],
-                 [Enable use of ARP / MAC/ EUI (ether address)]), [
+                 [Disable use of ARP / MAC/ EUI (ether address)]), [
 SQUID_YESNO([$enableval],[--disable-eui expects no arguments])
 ])
 if test "x${enable_eui:=yes}" = "xyes" ; then
@@ -1189,7 +1192,13 @@ AC_ARG_ENABLE(select,
   AS_HELP_STRING([--disable-select],[Disable select(2) support.]),
 [
 SQUID_YESNO($enableval,[--disable-select takes no extra argument])
-test "x$enableval" = "xyes" && squid_opt_io_loop_engine="select"
+if test "x$enableval" = "xyes"; then
+  if test "x$squid_host_os" = "xmingw"; then
+    squid_opt_io_loop_engine="select_win32"
+  else
+    squid_opt_io_loop_engine="select"
+  fi
+fi
 ])
 AC_MSG_NOTICE([enabling select syscall for net I/O: ${enable_select:=auto}])
 
@@ -1345,6 +1354,7 @@ AC_MSG_NOTICE([Linux Netfilter support requested: ${enable_linux_netfilter:=auto
 
 
 dnl Look for libnetfilter_conntrack options (needed for QOS netfilter marking)
+dnl squid_opt_netfilterconntrack is set only when option is explicity specified
 AC_ARG_WITH(netfilter-conntrack,
   AS_HELP_STRING([--without-netfilter-conntrack],
                  [Do not use Netfilter conntrack libraries for packet marking.
@@ -1352,7 +1362,7 @@ AC_ARG_WITH(netfilter-conntrack,
                   using --with-netfilter-conntrack=PATH. Default: auto-detect.]), [
 case "$with_netfilter_conntrack" in
   yes|no)
-    : # Nothing special to do here
+    squid_opt_netfilterconntrack=$with_netfilter_conntrack
     ;;
   *)
     if test ! -d "$withval" ; then
@@ -1362,6 +1372,7 @@ case "$with_netfilter_conntrack" in
     LDFLAGS="-L$squid_opt_netfilterconntrackpath/lib $LDFLAGS"
     CPPFLAGS="-I$squid_opt_netfilterconntrackpath/include $CPPFLAGS"
     with_netfilter_conntrack=yes
+    squid_opt_netfilterconntrack=yes
   esac
 ])
 AC_MSG_NOTICE([Linux Netfilter Conntrack support requested: ${with_netfilter_conntrack:=auto}])
@@ -1382,7 +1393,6 @@ if test "x$with_netfilter_conntrack" != "xno"; then
     with_netfilter_conntrack=yes
   fi
 fi
-AC_MSG_NOTICE([Linux Netfilter Conntrack support enabled: ${with_netfilter_conntrack} ${squid_opt_netfilterconntrackpath}])
 
 
 dnl Enable Large file support
@@ -1563,8 +1573,8 @@ SQUID_YESNO([$enableval],
             [unrecognized argument to --enable-auth: $enableval])
 ])
 AC_MSG_NOTICE([Authentication support enabled: ${enable_auth:=yes}])
-SQUID_DEFINE_BOOL(USE_AUTH,$enable_auth,
-   [Enable support for authentication])
+SQUID_DEFINE_BOOL(USE_AUTH,$enable_auth,[Enable support for authentication])
+AM_CONDITIONAL(ENABLE_AUTH, test "x$enable_auth" != "xno")
 AUTH_MODULES=""
 
 AC_ARG_ENABLE(auth-basic,
@@ -1752,7 +1762,7 @@ dnl This list will not be needed when each auth library has its own Makefile
 dnl this is to be placed AFTER each auth module's handler
 AUTH_LIBS_TO_BUILD=
 for module in $AUTH_MODULES; do
-    AUTH_LIBS_TO_BUILD="$AUTH_LIBS_TO_BUILD lib${module}.la"
+    AUTH_LIBS_TO_BUILD="$AUTH_LIBS_TO_BUILD ${module}/lib${module}.la"
 done
 AC_SUBST(AUTH_MODULES)
 AC_SUBST(AUTH_LIBS_TO_BUILD)
@@ -2056,7 +2066,7 @@ if test "x$squid_require_sasl" = "xyes"; then
       AC_MSG_ERROR(Neither SASL nor SASL2 found)
     ])
   ])
-  case "$host_os" in
+  case "$squid_host_os" in
     Darwin)
       if test "$ac_cv_lib_sasl2_sasl_errstring" = "yes" ; then
         AC_DEFINE(HAVE_SASL_DARWIN,1,[Define to 1 if Mac Darwin without sasl.h])
@@ -2136,21 +2146,6 @@ SQUID_DEFINE_BOOL(X_ACCELERATOR_VARY,${enable_x_accelerator_vary:=no},
 AC_MSG_NOTICE([X-Accelerator-Vary support enabled: $enable_x_accelerator_vary])
 
 
-AC_ARG_ENABLE(zph-qos,
-  AS_HELP_STRING([--enable-zph-qos],[Enable ZPH QOS support]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-zph-qos: $enableval])
-])
-SQUID_DEFINE_BOOL(USE_QOS_TOS,${enable_zph_qos:=yes},
-          [Enable Zero Penalty Hit QOS. When set, Squid will alter the
-           TOS field of HIT responses to help policing network traffic])
-AC_MSG_NOTICE([ZPH QOS enabled: $enable_zph_qos])
-if test x"$enable_zph_qos" = "xyes" ; then
-        AC_MSG_NOTICE([QOS netfilter mark preservation enabled: $with_netfilter_conntrack])
-        SQUID_DEFINE_BOOL(USE_LIBNETFILTERCONNTRACK,${with_netfilter_conntrack:=no},
-                      [Enable support for QOS netfilter mark preservation])
-fi
-
 if $CPPUNITCONFIG --help >/dev/null; then
   squid_cv_cppunit_version="`$CPPUNITCONFIG --version`"
   AC_MSG_NOTICE([using system installed cppunit version $squid_cv_cppunit_version])
@@ -2213,6 +2208,7 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 
 AC_CHECK_HEADERS( \
+  algorithm \
   arpa/inet.h \
   arpa/nameser.h \
   assert.h \
@@ -2504,6 +2500,7 @@ AC_MSG_NOTICE([libcap2 headers are ok: $squid_cv_sys_capability_works])
 dnl Check for needed libraries
 AC_SEARCH_LIBS([gethostbyname],[nsl resolv bind])
 AC_SEARCH_LIBS([res_init],[resolv])
+AC_SEARCH_LIBS([__res_search],[resolv])
 AC_SEARCH_LIBS([bind],[socket])
 AC_SEARCH_LIBS([opcom_stack_trace],[opcom_stack])
 AC_SEARCH_LIBS([strlcpy], [bsd])
@@ -3102,11 +3099,10 @@ elif test "x$enable_devpoll" != "xno" ; then
   squid_opt_io_loop_engine="devpoll"
 elif test "x$enable_poll" != "xno" -a "x$ac_cv_func_poll" = "xyes" ; then
   squid_opt_io_loop_engine="poll"
-elif test "x$enable_select" != "xno" -a "x$ac_cv_func_select" = "xyes" ; then
+elif test "x$enable_select" != "xno" -a "x$ac_cv_func_select" = "xyes"; then
   squid_opt_io_loop_engine="select"
-  if test "x$squid_host_os" = "xmingw" ; then
-    squid_opt_io_loop_engine="select_win32"
-  fi
+elif test "x$enable_select" != "xno" -a "x$squid_host_os" = "xmingw"; then
+  squid_opt_io_loop_engine="select_win32"
 else
   AC_MSG_WARN([Eep!  Cannot find epoll, kqueue, /dev/poll, poll or select!])
   AC_MSG_WARN([Will try select and hope for the best.])
@@ -3118,7 +3114,6 @@ AC_MSG_NOTICE([Using ${squid_opt_io_loop_engine} for the IO loop.])
 AM_CONDITIONAL([USE_POLL], [test $squid_opt_io_loop_engine = poll])
 AM_CONDITIONAL([USE_EPOLL], [test $squid_opt_io_loop_engine = epoll])
 AM_CONDITIONAL([USE_SELECT], [test $squid_opt_io_loop_engine = select])
-AM_CONDITIONAL([USE_SELECT_SIMPLE], [test $squid_opt_io_loop_engine = select_simple])
 AM_CONDITIONAL([USE_SELECT_WIN32], [test $squid_opt_io_loop_engine = select_win32])
 AM_CONDITIONAL([USE_KQUEUE], [test $squid_opt_io_loop_engine = kqueue])
 AM_CONDITIONAL([USE_DEVPOLL], [test $squid_opt_io_loop_engine = devpoll])
@@ -3223,6 +3218,33 @@ if test "x$enable_linux_netfilter" = "xyes" -a "x$with_libcap" != "xyes" ; then
     AC_MSG_WARN([Reduced support to Interception Proxy])
     # AC_DEFINEd later
 fi
+
+if test "x$squid_opt_netfilterconntrack" = "xyes" -a "x$with_libcap" != "xyes" ; then
+    AC_MSG_ERROR([Linux netfilter conntrack requires libcap support (libcap or libcap2)])
+fi
+if test "x$with_netfilter_conntrack" = "xyes" -a "x$with_libcap" != "xyes" ; then
+    AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for netfilter mark support])
+    AC_MSG_WARN([Linux netfilter marking support WILL NOT be enabled])
+    with_netfilter_conntrack=no
+fi
+AC_MSG_NOTICE([Linux Netfilter Conntrack support enabled: ${with_netfilter_conntrack} ${squid_opt_netfilterconntrackpath}])
+
+
+AC_ARG_ENABLE(zph-qos,
+  AS_HELP_STRING([--enable-zph-qos],[Enable ZPH QOS support]), [
+SQUID_YESNO([$enableval],
+            [unrecognized argument to --enable-zph-qos: $enableval])
+])
+SQUID_DEFINE_BOOL(USE_QOS_TOS,${enable_zph_qos:=yes},
+          [Enable Zero Penalty Hit QOS. When set, Squid will alter the
+           TOS field of HIT responses to help policing network traffic])
+AC_MSG_NOTICE([ZPH QOS enabled: $enable_zph_qos])
+if test x"$enable_zph_qos" = "xyes" ; then
+        AC_MSG_NOTICE([QOS netfilter mark preservation enabled: $with_netfilter_conntrack])
+        SQUID_DEFINE_BOOL(USE_LIBNETFILTERCONNTRACK,${with_netfilter_conntrack:=no},
+                      [Enable support for QOS netfilter mark preservation])
+fi
+
 
 AC_CHECK_LIB(regex, regexec, [REGEXLIB="-lregex"],[REGEXLIB=''])
 AC_ARG_ENABLE(gnuregex,
@@ -3338,6 +3360,14 @@ AC_SUBST(XTRA_LIBS)
 AC_SUBST(SQUID_CFLAGS)
 AC_SUBST(SQUID_CXXFLAGS)
 
+AC_MSG_NOTICE([BUILD LIBRARIES: $LIBS])
+AC_MSG_NOTICE([BUILD EXTRA LIBRARIES: $XTRA_LIBS])
+AC_MSG_NOTICE([BUILD OBJECTS: $OBJS])
+AC_MSG_NOTICE([BUILD EXTRA OBJECTS: $XTRA_OBJS])
+AC_MSG_NOTICE([BUILD C FLAGS: $CFLAGS])
+AC_MSG_NOTICE([BUILD EXTRA C FLAGS: $SQUID_CFLAGS])
+AC_MSG_NOTICE([BUILD C++ FLAGS: $CXXFLAGS])
+AC_MSG_NOTICE([BUILD EXTRA C++ FLAGS: $SQUID_CXXFLAGS])
 
 dnl Clean up after OSF/1 core dump bug
 rm -f core 
@@ -3352,11 +3382,16 @@ AC_CONFIG_FILES([\
 	lib/smblib/Makefile \
 	scripts/Makefile \
 	src/Makefile \
+	src/anyp/Makefile \
 	src/base/Makefile \
 	src/acl/Makefile \
 	src/fs/Makefile \
 	src/repl/Makefile \
 	src/auth/Makefile \
+	src/auth/basic/Makefile \
+	src/auth/digest/Makefile \
+	src/auth/negotiate/Makefile \
+	src/auth/ntlm/Makefile \
 	src/adaptation/Makefile \
 	src/adaptation/icap/Makefile \
 	src/adaptation/ecap/Makefile \
@@ -3370,6 +3405,7 @@ AC_CONFIG_FILES([\
 	src/ipc/Makefile \
 	src/ssl/Makefile \
 	src/mgr/Makefile \
+	src/snmp/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \
 	icons/Makefile \
@@ -3404,6 +3440,7 @@ AC_CONFIG_FILES([\
 	helpers/negotiate_auth/Makefile \
 	helpers/negotiate_auth/kerberos/Makefile \
 	helpers/negotiate_auth/SSPI/Makefile \
+	helpers/negotiate_auth/wrapper/Makefile \
 	helpers/external_acl/Makefile \
 	helpers/external_acl/AD_group/Makefile \
 	helpers/external_acl/eDirectory_userip/Makefile \
@@ -3414,6 +3451,7 @@ AC_CONFIG_FILES([\
 	helpers/external_acl/session/Makefile \
 	helpers/external_acl/unix_group/Makefile \
 	helpers/external_acl/wbinfo_group/Makefile \
+	helpers/external_acl/time_quota/Makefile \
 	helpers/log_daemon/Makefile \
 	helpers/log_daemon/DB/Makefile \
 	helpers/log_daemon/file/Makefile \

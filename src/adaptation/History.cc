@@ -33,7 +33,10 @@ int Adaptation::History::Entry::rptm()
 }
 
 
-Adaptation::History::History(): theNextServices(TheNullServices)
+Adaptation::History::History():
+        lastMeta(hoReply),
+        allMeta(hoReply),
+        theNextServices(TheNullServices)
 {
 }
 
@@ -134,5 +137,33 @@ bool Adaptation::History::extractNextServices(String &value)
 
     value = theNextServices;
     theNextServices = TheNullServices; // prevents resetting the plan twice
+    return true;
+}
+
+void Adaptation::History::recordMeta(const HttpHeader *lm)
+{
+    lastMeta.clean();
+    lastMeta.update(lm, NULL);
+
+    allMeta.update(lm, NULL);
+    allMeta.compact();
+}
+
+void
+Adaptation::History::setFutureServices(const DynamicGroupCfg &services)
+{
+    if (!theFutureServices.empty())
+        debugs(93,3, HERE << "old future services: " << theFutureServices);
+    debugs(93,3, HERE << "new future services: " << services);
+    theFutureServices = services; // may be empty
+}
+
+bool Adaptation::History::extractFutureServices(DynamicGroupCfg &value)
+{
+    if (theFutureServices.empty())
+        return false;
+
+    value = theFutureServices;
+    theFutureServices.clear();
     return true;
 }

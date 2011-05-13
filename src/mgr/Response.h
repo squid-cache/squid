@@ -8,6 +8,8 @@
 #ifndef SQUID_MGR_RESPONSE_H
 #define SQUID_MGR_RESPONSE_H
 
+#include "ipc/forward.h"
+#include "ipc/Response.h"
 #include "mgr/Action.h"
 
 
@@ -16,22 +18,26 @@ namespace Mgr
 
 /// A response to Mgr::Request.
 /// May carry strand action data to be aggregated with data from other strands.
-class Response
+class Response: public Ipc::Response
 {
 public:
-    Response(unsigned int aRequestId = 0, Action::Pointer anAction = NULL);
+    Response(unsigned int aRequestId, Action::Pointer anAction = NULL);
 
     explicit Response(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
-    void pack(Ipc::TypedMsgHdr& msg) const; ///< prepare for sendmsg()
+
+    /* Ipc::Response API */
+    virtual void pack(Ipc::TypedMsgHdr& msg) const;
+    virtual Ipc::Response::Pointer clone() const;
+
     bool hasAction() const; ///< whether response contain action object
     const Action& getAction() const; ///< returns action object
 
+private:
+    Response(const Response& response);
+
 public:
-    unsigned int requestId; ///< ID of request we are responding to
     Action::Pointer action; ///< action relating to response
 };
-
-extern std::ostream& operator <<(std::ostream &os, const Response &response);
 
 } // namespace Mgr
 

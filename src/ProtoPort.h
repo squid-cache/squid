@@ -1,3 +1,7 @@
+/*
+ * $Id$
+ */
+
 #ifndef SQUID_PROTO_PORT_H
 #define SQUID_PROTO_PORT_H
 

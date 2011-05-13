@@ -1,5 +1,5 @@
-#ifndef _SQUID_SRC_COMM_ACCEPTLIMITER_H
-#define _SQUID_SRC_COMM_ACCEPTLIMITER_H
+#ifndef _SQUID_SRC_COMM_ACCEPT_LIMITER_H
+#define _SQUID_SRC_COMM_ACCEPT_LIMITER_H
 
 #include "Array.h"
 
@@ -43,4 +43,4 @@ private:
 
 }; // namepace Comm
 
-#endif /* _SQUID_SRC_COMM_ACCEPTLIMITER_H */
+#endif /* _SQUID_SRC_COMM_ACCEPT_LIMITER_H */

@@ -4,7 +4,7 @@ AC_CONFIG_SRCDIR([src/Trie.cc])
 AM_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(cfgaux)
 
-enable_inline=${enable_inine:=yes}
+enable_inline=${enable_inline:=yes}
 AC_ARG_ENABLE(optimizations,
   AC_HELP_STRING([--disable-optimizations],
                  [Do not compile Squid with compiler optimizations enabled.
@@ -13,7 +13,7 @@ AC_ARG_ENABLE(optimizations,
                   --disable-optimizations to reduce compilation times
                   and allow easier debugging. This option implicitly
                   also enabled --disable-inline]), [
-if test "x$enableval" = "xno" ; then
+  if test "x$enableval" = "xno" ; then
         AC_MSG_NOTICE([Disabling compiler optimizations (-O flag)])
         CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9]]*//'`"
         CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-O[[0-9]]*//'`"
@@ -32,9 +32,11 @@ AC_ARG_ENABLE(inline,
                   production builds, or load tests, use
                   --enable-inline to have squid make all trivial
                   methods inlinable by the compiler.]), [
+  if test "x${enableval}" = "xno" ; then
+    enable_inline=no
+  fi
 ])
-
-if test "$enable_inline" = "yes" ; then
+if test "x$enable_inline" = "xyes" ; then
     AC_DEFINE(_SQUID_INLINE_, inline, 
       [Keyword used by squid for inlining methods])
     AC_DEFINE(_USE_INLINE_, 1, [Include inline methods into header file])
@@ -43,7 +45,6 @@ else
     AC_DEFINE(_SQUID_INLINE_, [] , [Keyword used by squid for inlining methods])
     AC_DEFINE(_USE_INLINE_, 0, [Include inline methods into header file])
 fi
-
 
 # Checks for programs.
 AC_PROG_CXX
@@ -62,19 +63,34 @@ AC_LTDL_DLLIB
 AC_SUBST(INCLTDL)
 AC_SUBST(LIBLTDL)
 
-
 dnl set useful flags
+TRIE_CFLAGS=
+TRIE_CXXFLAGS=
 if test "$GCC" = "yes"; then
-   TRIE_CFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
-   TRIE_CXXFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wcomments"
-else
-   TRIE_CFLAGS=
-   TRIE_CXXFLAGS=
-fi
+  TRIE_CFLAGS="-Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
+  TRIE_CXXFLAGS="-Wall -Wpointer-arith -Wwrite-strings -Wcomments"
 
-if test "$GCC" = "yes" ; then
-	AC_TEST_CHECKFORHUGEOBJECTS
-	TRIE_CXXFLAGS="$TRIE_CXXFLAGS $HUGE_OBJECT_FLAG"
+  AC_ARG_ENABLE(strict-error-checking,
+    AS_HELP_STRING([--disable-strict-error-checking],[By default compile
+                   with all possible static compiler error-checks enabled.
+                   This flag disables the behavior]), [
+    case $enableval in
+      yes|1|true)
+	enable_strict_error_checking=yes
+	;;
+      *)
+	enable_strict_error_checking=no
+	;;
+    esac
+  ])
+  AC_MSG_NOTICE([strict error checking enabled: ${enable_strict_error_checking:=yes}])
+  if test "x${enable_strict_error_checking:=yes}" = "xyes"; then
+     TRIE_CFLAGS="-Werror $TRIE_CFLAGS"
+     TRIE_CXXFLAGS="-Werror $TRIE_CXXFLAGS"
+  fi
+
+  AC_TEST_CHECKFORHUGEOBJECTS
+  TRIE_CXXFLAGS="$TRIE_CXXFLAGS $HUGE_OBJECT_FLAG"
 fi
 
 AC_SUBST(TRIE_CFLAGS)

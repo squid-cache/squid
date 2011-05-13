@@ -9,7 +9,7 @@ clientdbInit(void)
 }
 
 void
-clientdbUpdate(const Ip::Address &, log_type, protocol_t, size_t)
+clientdbUpdate(const Ip::Address &, log_type, AnyP::ProtocolType, size_t)
 {
     fatal("client_db.cc required");
 }

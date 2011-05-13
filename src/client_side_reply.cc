@@ -40,7 +40,9 @@
 #include "squid.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "clientStream.h"
@@ -97,7 +99,12 @@ void
 clientReplyContext::setReplyToError(
     err_type err, http_status status, const HttpRequestMethod& method, char const *uri,
     Ip::Address &addr, HttpRequest * failedrequest, const char *unparsedrequest,
-    AuthUserRequest::Pointer auth_user_request)
+#if USE_AUTH
+    AuthUserRequest::Pointer auth_user_request
+#else
+    void*
+#endif
+)
 {
     ErrorState *errstate = clientBuildError(err, status, uri, addr, failedrequest);
 
@@ -111,9 +118,9 @@ clientReplyContext::setReplyToError(
     http->al.http.code = errstate->httpStatus;
 
     createStoreEntry(method, request_flags());
-
+#if USE_AUTH
     errstate->auth_user_request = auth_user_request;
-
+#endif
     assert(errstate->callback_data == NULL);
     errorAppendEntry(http->storeEntry(), errstate);
     /* Now the caller reads to get this */
@@ -261,8 +268,7 @@ clientReplyContext::processExpired()
     debugs(88, 5, "clientReplyContext::processExpired : lastmod " << entry->lastmod );
     http->storeEntry(entry);
     assert(http->out.offset == 0);
-
-    http->request->clientConnectionManager = http->getConn(); // AYJ: irrelevant?
+    assert(http->request->clientConnectionManager == http->getConn());
 
     /*
      * A refcounted pointer so that FwdState stays around as long as
@@ -272,6 +278,7 @@ clientReplyContext::processExpired()
     FwdState::fwdStart(conn, http->storeEntry(), http->request);
 
     /* Register with storage manager to receive updates when data comes in. */
+
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
         debugs(88, 0, "clientReplyContext::processExpired: Found ENTRY_ABORTED object");
 
@@ -543,7 +550,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
              */
             http->logType = LOG_TCP_CLIENT_REFRESH_MISS;
             processMiss();
-        } else if (r->protocol == PROTO_HTTP) {
+        } else if (r->protocol == AnyP::PROTO_HTTP) {
             /*
              * Object needs to be revalidated
              * XXX This could apply to FTP as well, if Last-Modified is known.
@@ -650,9 +657,9 @@ clientReplyContext::processMiss()
 
         /** Check for internal requests. Update Protocol info if so. */
         if (http->flags.internal)
-            r->protocol = PROTO_INTERNAL;
+            r->protocol = AnyP::PROTO_INTERNAL;
 
-        r->clientConnectionManager = http->getConn();
+        assert(r->clientConnectionManager == http->getConn());
 
         /** Start forwarding to get the new object from network */
         Comm::ConnectionPointer conn = http->getConn() != NULL ? http->getConn()->clientConnection : NULL;
@@ -1329,8 +1336,9 @@ clientReplyContext::buildReplyHeader()
         else if (http->storeEntry()->timestamp > 0)
             hdr->insertTime(HDR_DATE, http->storeEntry()->timestamp);
         else {
-            debugs(88,1,"WARNING: An error inside Squid has caused an HTTP reply without Date:. Please report this");
-            /* TODO: dump something useful about the problem */
+            debugs(88,DBG_IMPORTANT,"WARNING: An error inside Squid has caused an HTTP reply without Date:. Please report this:");
+            /* dump something useful about the problem */
+            http->storeEntry()->dump(DBG_IMPORTANT);
         }
     }
 
@@ -1342,7 +1350,6 @@ clientReplyContext::buildReplyHeader()
     }
 
     /* Filter unproxyable authentication types */
-
     if (http->logType != LOG_TCP_DENIED &&
             hdr->has(HDR_WWW_AUTHENTICATE)) {
         HttpHeaderPos pos = HttpHeaderInitPos;
@@ -1385,6 +1392,7 @@ clientReplyContext::buildReplyHeader()
             hdr->refreshMask();
     }
 
+#if USE_AUTH
     /* Handle authentication headers */
     if (http->logType == LOG_TCP_DENIED &&
             ( reply->sline.status == HTTP_PROXY_AUTHENTICATION_REQUIRED ||
@@ -1399,6 +1407,7 @@ clientReplyContext::buildReplyHeader()
         authenticateFixHeader(reply, request->auth_user_request, request, 0, 1);
     } else if (request->auth_user_request != NULL)
         authenticateFixHeader(reply, request->auth_user_request, request, http->flags.accel, 0);
+#endif
 
     /* Append X-Cache */
     httpHeaderPutStrf(hdr, HDR_X_CACHE, "%s from %s",
@@ -1494,7 +1503,7 @@ clientReplyContext::cloneReply()
 
     reply = HTTPMSGLOCK(rep);
 
-    if (reply->sline.protocol == PROTO_HTTP) {
+    if (reply->sline.protocol == AnyP::PROTO_HTTP) {
         /* RFC 2616 requires us to advertise our 1.1 version (but only on real HTTP traffic) */
         reply->sline.version = HttpVersion(1,1);
     }
@@ -1955,8 +1964,12 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
                                http->request);
 
         removeClientStoreReference(&sc, http);
+
         HTTPMSGUNLOCK(reply);
+
         startError(err);
+
+
         return;
     }
 
@@ -2120,6 +2133,8 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     return;
 }
 
+
+
 /* Using this breaks the client layering just a little!
  */
 void
@@ -2132,7 +2147,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, request_flags r
      */
 
     if (http->request == NULL)
-        http->request = HTTPMSGLOCK(new HttpRequest(m, PROTO_NONE, null_string));
+        http->request = HTTPMSGLOCK(new HttpRequest(m, AnyP::PROTO_NONE, null_string));
 
     StoreEntry *e = storeCreateEntry(http->uri, http->log_uri, reqFlags, m);
 

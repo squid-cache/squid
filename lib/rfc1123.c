@@ -209,14 +209,8 @@ parse_rfc1123(const char *str)
     t = mktime(tm);
     if (t != -1) {
         time_t dst = 0;
-#if defined (_TIMEZONE)
-#elif defined (_timezone)
-#elif defined(_SQUID_AIX_)
-#elif defined(_SQUID_CYGWIN_)
-#elif defined(_SQUID_MSWIN_)
-#elif defined(_SQUID_SGI_)
-#else
-    extern long timezone;
+#if !(defined(_TIMEZONE) || defined(_timezone) || _SQUID_AIX_ || _SQUID_WINDOWS_ || _SQUID_SGI_)
+        extern long timezone;
 #endif
         /*
          * The following assumes a fixed DST offset of 1 hour,
@@ -224,7 +218,7 @@ parse_rfc1123(const char *str)
          */
         if (tm->tm_isdst > 0)
             dst = -3600;
-#if defined ( _timezone) || defined(_SQUID_WIN32_)
+#if defined(_timezone) || _SQUID_WINDOWS_
         t -= (_timezone + dst);
 #else
     t -= (timezone + dst);

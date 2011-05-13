@@ -30,7 +30,7 @@ find_variant()
   shift
   versions="$*"
   for version in $versions; do
-    for variant in "" "-${version}" "`echo $version | sed -e 's/\.//g'`"; do
+    for variant in "" "${version}" "-${version}" "`echo $version | sed -e 's/\.//g'`"; do
       if check_version $tool ${tool}${variant} $version; then
 	found="${variant}"
 	break
@@ -74,14 +74,7 @@ bootstrap() {
 bootstrap_libtoolize() {
     ltver=$1
 
-    # TODO: when we have libtool2, tell libtoolize where to put its files
-    # instead of manualy moving files from ltdl to lib/libLtdl
-    if egrep -q '^[[:space:]]*AC_LIBLTDL_' configure.ac
-    then
-	ltdl="--ltdl"
-    else
-        ltdl=""
-    fi
+    ltdl="--ltdl"
 
     bootstrap libtoolize$ltver $ltdl --force --copy --automake
 

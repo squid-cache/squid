@@ -28,7 +28,7 @@
 #ifndef _VALID_H_
 #define _VALID_H_
 
-#ifdef _SQUID_CYGWIN_
+#if _SQUID_CYGWIN_
 #include <windows.h>
 #endif
 #include <lm.h>

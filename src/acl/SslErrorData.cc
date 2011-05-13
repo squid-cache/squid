@@ -40,7 +40,7 @@ ACLSslErrorData::dump()
     CbDataList<Ssl::ssl_error_t> *data = values;
 
     while (data != NULL) {
-        wordlistAdd(&W, Ssl::getErrorName(data->element));
+        wordlistAdd(&W, Ssl::GetErrorName(data->element));
         data = data->next;
     }
 
@@ -55,7 +55,7 @@ ACLSslErrorData::parse()
 
     for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-        CbDataList<Ssl::ssl_error_t> *q = new CbDataList<Ssl::ssl_error_t>(Ssl::parseErrorString(t));
+        CbDataList<Ssl::ssl_error_t> *q = new CbDataList<Ssl::ssl_error_t>(Ssl::ParseErrorString(t));
         *(Tail) = q;
         Tail = &q->next;
     }

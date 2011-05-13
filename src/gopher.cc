@@ -776,7 +776,6 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
     int clen;
     int bin;
     size_t read_sz = BUFSIZ;
-    int do_next_read = 0;
 #if USE_DELAY_POOLS
     DelayId delayId = entry->mem_obj->mostBytesAllowed();
 #endif
@@ -801,8 +800,6 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
 
     /* leave one space for \0 in gopherToHTML */
 
-    debugs(10, 5, HERE << conn << " read len=" << len);
-
     if (flag == COMM_OK && len > 0) {
 #if USE_DELAY_POOLS
         delayId.bytesIn(len);
@@ -810,7 +807,11 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
 
         kb_incr(&statCounter.server.all.kbytes_in, len);
         kb_incr(&statCounter.server.other.kbytes_in, len);
+    }
 
+    debugs(10, 5, HERE << conn << " read len=" << len);
+
+    if (flag == COMM_OK && len > 0) {
         AsyncCall::Pointer nil;
         commSetConnTimeout(conn, Config.Timeout.read, nil);
         IOStats.Gopher.reads++;
@@ -825,25 +826,25 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
             req->hier.bodyBytesRead = 0;
 
         req->hier.bodyBytesRead += len;
-
     }
 
-    if (flag != COMM_OK || len < 0) {
+    if (flag != COMM_OK) {
         debugs(50, 1, "gopherReadReply: error reading: " << xstrerror());
 
         if (ignoreErrno(errno)) {
-            do_next_read = 1;
+            AsyncCall::Pointer call = commCbCall(5,4, "gopherReadReply",
+                                                 CommIoCbPtrFun(gopherReadReply, gopherState));
+            comm_read(conn, buf, read_sz, call);
         } else {
-            ErrorState *err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, gopherState->fwd->request);
+            ErrorState *err;
+            err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, gopherState->fwd->request);
             err->xerrno = errno;
             gopherState->fwd->fail(err);
             gopherState->serverConn->close();
-            do_next_read = 0;
         }
     } else if (len == 0 && entry->isEmpty()) {
         gopherState->fwd->fail(errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE, gopherState->fwd->request));
         gopherState->serverConn->close();
-        do_next_read = 0;
     } else if (len == 0) {
         /* Connection closed; retrieval done. */
         /* flush the rest of data in temp buf if there is one. */
@@ -855,23 +856,16 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
         entry->flush();
         gopherState->fwd->complete();
         gopherState->serverConn->close();
-        do_next_read = 0;
     } else {
         if (gopherState->conversion != gopher_ds::NORMAL) {
             gopherToHTML(gopherState, buf, len);
         } else {
             entry->append(buf, len);
         }
-
-        do_next_read = 1;
-    }
-
-    if (do_next_read) {
         AsyncCall::Pointer call = commCbCall(5,4, "gopherReadReply",
                                              CommIoCbPtrFun(gopherReadReply, gopherState));
         comm_read(conn, buf, read_sz, call);
     }
-    return;
 }
 
 /**

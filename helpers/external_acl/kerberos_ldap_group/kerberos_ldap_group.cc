@@ -45,6 +45,7 @@ init_args(struct main_args *margs)
 {
     margs->nlist = NULL;
     margs->glist = NULL;
+    margs->llist = NULL;
     margs->ulist = NULL;
     margs->tlist = NULL;
     margs->luser = NULL;
@@ -58,41 +59,42 @@ init_args(struct main_args *margs)
     margs->ddomain = NULL;
     margs->groups = NULL;
     margs->ndoms = NULL;
+    margs->lservs = NULL;
 }
 
 void clean_gd(struct gdstruct *gdsp);
 void clean_nd(struct ndstruct *ndsp);
+void clean_ls(struct ndstruct *lssp);
 
 void
 clean_gd(struct gdstruct *gdsp)
 {
     struct gdstruct *p = NULL, *pp = NULL;
 
-start:
     p = gdsp;
-    if (!p)
-        return;
-    while (p->next) {
-        pp = p;
-        p = p->next;
+    while (p) {
+        while (p->next) {
+            pp = p;
+            p = p->next;
+        }
+        if (p->group) {
+            xfree(p->group);
+            p->group = NULL;
+        }
+        if (p->domain) {
+            xfree(p->domain);
+            p->domain = NULL;
+        }
+        if (pp && pp->next) {
+            xfree(pp->next);
+            pp->next = NULL;
+        }
+        if (p == gdsp) {
+            xfree(gdsp);
+            gdsp = NULL;
+        }
+        p = gdsp;
     }
-    if (p->group) {
-        xfree(p->group);
-        p->group = NULL;
-    }
-    if (p->domain) {
-        xfree(p->domain);
-        p->domain = NULL;
-    }
-    if (pp && pp->next) {
-        xfree(pp->next);
-        pp->next = NULL;
-    }
-    if (p == gdsp) {
-        xfree(gdsp);
-        gdsp = NULL;
-    }
-    goto start;
 }
 
 void
@@ -100,31 +102,61 @@ clean_nd(struct ndstruct *ndsp)
 {
     struct ndstruct *p = NULL, *pp = NULL;
 
-start:
     p = ndsp;
-    if (!p)
-        return;
-    while (p->next) {
-        pp = p;
-        p = p->next;
+    while (p) {
+        while (p->next) {
+            pp = p;
+            p = p->next;
+        }
+        if (p->netbios) {
+            xfree(p->netbios);
+            p->netbios = NULL;
+        }
+        if (p->domain) {
+            xfree(p->domain);
+            p->domain = NULL;
+        }
+        if (pp && pp->next) {
+            xfree(pp->next);
+            pp->next = NULL;
+        }
+        if (p == ndsp) {
+            xfree(ndsp);
+            ndsp = NULL;
+        }
+        p = ndsp;
     }
-    if (p->netbios) {
-        xfree(p->netbios);
-        p->netbios = NULL;
+}
+
+void
+clean_ls(struct lsstruct *lssp)
+{
+    struct lsstruct *p = NULL, *pp = NULL;
+
+    p = lssp;
+    while (p) {
+        while (p->next) {
+            pp = p;
+            p = p->next;
+        }
+        if (p->lserver) {
+            xfree(p->lserver);
+            p->lserver = NULL;
+        }
+        if (p->domain) {
+            xfree(p->domain);
+            p->domain = NULL;
+        }
+        if (pp && pp->next) {
+            xfree(pp->next);
+            pp->next = NULL;
+        }
+        if (p == lssp) {
+            xfree(lssp);
+            lssp = NULL;
+        }
+        p = lssp;
     }
-    if (p->domain) {
-        xfree(p->domain);
-        p->domain = NULL;
-    }
-    if (pp && pp->next) {
-        xfree(pp->next);
-        pp->next = NULL;
-    }
-    if (p == ndsp) {
-        xfree(ndsp);
-        ndsp = NULL;
-    }
-    goto start;
 }
 
 void
@@ -145,6 +177,10 @@ clean_args(struct main_args *margs)
     if (margs->nlist) {
         xfree(margs->nlist);
         margs->nlist = NULL;
+    }
+    if (margs->llist) {
+        xfree(margs->llist);
+        margs->llist = NULL;
     }
     if (margs->luser) {
         xfree(margs->luser);
@@ -178,6 +214,10 @@ clean_args(struct main_args *margs)
         clean_nd(margs->ndoms);
         margs->ndoms = NULL;
     }
+    if (margs->lservs) {
+        clean_ls(margs->lservs);
+        margs->lservs = NULL;
+    }
 }
 
 void strup(char *s);
@@ -190,7 +230,6 @@ main(int argc, char *const argv[])
     char *nuser, *nuser8 = NULL, *netbios;
     char *c;
     int opt;
-    int length;
     struct main_args margs;
 
     setbuf(stdout, NULL);
@@ -247,6 +286,9 @@ main(int argc, char *const argv[])
         case 'm':
             margs.mdepth = atoi(optarg);
             break;
+        case 'S':
+            margs.llist = xstrdup(optarg);
+            break;
         case 'h':
             fprintf(stderr, "Usage: \n");
             fprintf(stderr, "squid_kerb_ldap [-d] [-i] -g group list [-D domain] [-N netbios domain map] [-s] [-u ldap user] [-p ldap user password] [-l ldap url] [-b ldap bind path] [-a] [-m max depth] [-h]\n");
@@ -257,6 +299,7 @@ main(int argc, char *const argv[])
             fprintf(stderr, "-T group list (all in hex UTF-8 format - except seperator @)\n");
             fprintf(stderr, "-D default domain\n");
             fprintf(stderr, "-N netbios to dns domain map\n");
+            fprintf(stderr, "-S ldap server to dns domain map\n");
             fprintf(stderr, "-u ldap user\n");
             fprintf(stderr, "-p ldap user password\n");
             fprintf(stderr, "-l ldap url\n");
@@ -278,6 +321,11 @@ main(int argc, char *const argv[])
             fprintf(stderr, "is followed to the top (e.g. if the group is a member of a group)\n");
             fprintf(stderr, "Group membership is determined with non AD servers through the users memberuid (assuming\n");
             fprintf(stderr, "PosixGroup) or primary group membership (assuming PosixAccount)\n");
+            fprintf(stderr, "The ldap server list can be:\n");
+            fprintf(stderr, "server - In this case server can be used for all Kerberos domains\n");
+            fprintf(stderr, "server@  - In this case server can be used for all Kerberos domains\n");
+            fprintf(stderr, "server@domain  - In this case server can be used for Kerberos domain domain\n");
+            fprintf(stderr, "server1a@domain1:server1b@domain1:server2@domain2:server3@:server4 - A list is build with a colon as seperator\n");
             clean_args(&margs);
             exit(0);
         default:
@@ -294,6 +342,12 @@ main(int argc, char *const argv[])
     }
     if (create_nd(&margs)) {
         debug((char *) "%s| %s: FATAL: Error in netbios list: %s\n", LogTime(), PROGRAM, margs.nlist ? margs.nlist : "NULL");
+        SEND_ERR("");
+        clean_args(&margs);
+        exit(1);
+    }
+    if (create_ls(&margs)) {
+        debug((char *) "%s| %s: Error in ldap server list: %s\n", LogTime(), PROGRAM, margs.llist ? margs.llist : "NULL");
         SEND_ERR("");
         clean_args(&margs);
         exit(1);
@@ -315,7 +369,6 @@ main(int argc, char *const argv[])
         c = (char *) memchr(buf, '\n', sizeof(buf) - 1);
         if (c) {
             *c = '\0';
-            length = c - buf;
         } else {
             SEND_ERR("");
             debug((char *) "%s| %s: ERR\n", LogTime(), PROGRAM);

@@ -35,7 +35,9 @@
 #define   SQUID_ERRORPAGE_H
 
 #include "squid.h"
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "ip/Address.h"
@@ -141,7 +143,9 @@ public:
     int page_id;
     char *err_language;
     http_status httpStatus;
+#if USE_AUTH
     AuthUserRequest::Pointer auth_user_request;
+#endif
     HttpRequest *request;
     char *url;
     int xerrno;
@@ -191,7 +195,7 @@ SQUIDCEXTERN void errorInitialize(void);
 SQUIDCEXTERN void errorClean(void);
 
 /**
- * \ingroup ErrorPageAPI
+ \ingroup ErrorPageAPI
  *
  * This function generates a error page from the info contained
  * by err and then sends it to the client.
@@ -201,14 +205,14 @@ SQUIDCEXTERN void errorClean(void);
  * err to the cbdata because comm_write() requires it
  * for all callback data pointers.
  *
- * \note normally errorSend() should only be called from
- *       routines in ssl.c and pass.c, where we don't have any
- *       StoreEntry's.  In client_side.c we must allocate a StoreEntry
- *       for errors and use errorAppendEntry() to account for
- *       persistent/pipeline connections.
+ \note normally errorSend() should only be called from
+ *     routines in ssl.c and pass.c, where we don't have any
+ *     StoreEntry's.  In client_side.c we must allocate a StoreEntry
+ *     for errors and use errorAppendEntry() to account for
+ *     persistent/pipeline connections.
  *
- * \param clientConn  socket where page object is to be written
- * \param err         This object is destroyed after use in this function.
+ \param clientConn  socket where page object is to be written
+ \param err         This object is destroyed after use in this function.
  */
 SQUIDCEXTERN void errorSend(const Comm::ConnectionPointer &conn, ErrorState *err);
 
