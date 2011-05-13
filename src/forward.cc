@@ -684,6 +684,10 @@ FwdState::initiateSSL()
 
     } else {
         SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)request->GetHost());
+
+        // We need to set SNI TLS extension only in the case we are
+        // connecting direct to origin server
+        Ssl::setClientSNI(ssl, request->GetHost());
     }
 
     // Create the ACL check list now, while we have access to more info.
