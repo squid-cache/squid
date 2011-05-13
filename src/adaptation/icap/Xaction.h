@@ -138,6 +138,7 @@ protected:
     void setOutcome(const XactOutcome &xo);
     virtual void finalizeLogInfo();
 
+public:
     ServiceRep &service();
 
 private:

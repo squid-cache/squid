@@ -94,6 +94,9 @@ IdleConnList::removeFD(int fd)
     for (; index < nfds - 1; index++)
         fds[index] = fds[index + 1];
 
+    if (parent)
+        parent->noteConnectionRemoved();
+
     if (--nfds == 0) {
         debugs(48, 3, "IdleConnList::removeFD: deleting " << hashKeyStr(&hash));
         delete this;
@@ -122,6 +125,9 @@ IdleConnList::push(int fd)
         else
             xfree(old);
     }
+
+    if (parent)
+        parent->noteConnectionAdded();
 
     fds[nfds++] = fd;
     comm_read(fd, fakeReadBuf, sizeof(fakeReadBuf), IdleConnList::read, this);
@@ -230,7 +236,8 @@ PconnPool::dumpHash(StoreEntry *e)
 
 /* ========== PconnPool PUBLIC FUNCTIONS ============================================ */
 
-PconnPool::PconnPool(const char *aDescr) : table(NULL), descr(aDescr)
+PconnPool::PconnPool(const char *aDescr) : table(NULL), descr(aDescr),
+        theCount(0)
 {
     int i;
     table = hash_create((HASHCMP *) strcmp, 229, hash_string);
@@ -291,6 +298,7 @@ PconnPool::push(int fd, const char *host, u_short port, const char *domain, Ip::
  * We close available persistent connection if the caller transaction is not
  * retriable to avoid having a growing number of open connections when many
  * transactions create persistent connections but are not retriable.
+ * PconnPool::closeN() relies on that behavior as well.
  */
 int
 PconnPool::pop(const char *host, u_short port, const char *domain, Ip::Address &client_address, bool isRetriable)
@@ -321,13 +329,23 @@ PconnPool::pop(const char *host, u_short port, const char *domain, Ip::Address &
 }
 
 void
-PconnPool::unlinkList(IdleConnList *list) const
+PconnPool::closeN(int n, const char *host, u_short port, const char *domain, Ip::Address &client_address)
 {
+    // TODO: optimize: we can probably do hash_lookup just once
+    for (int i = 0; i < n; ++i)
+        pop(host, port, domain, client_address, false); // may fail!
+}
+
+void
+PconnPool::unlinkList(IdleConnList *list)
+{
+    theCount -= list->count();
+    assert(theCount >= 0);
     hash_remove_link(table, &list->hash);
 }
 
 void
-PconnPool::count(int uses)
+PconnPool::noteUses(int uses)
 {
     if (uses >= PCONN_HIST_SZ)
         uses = PCONN_HIST_SZ - 1;
