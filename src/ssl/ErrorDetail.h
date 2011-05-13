@@ -49,6 +49,8 @@ public:
     ErrorDetail(ssl_error_t err_no, X509 *cert);
     ErrorDetail(ErrorDetail const &);
     const String &toString() const;  ///< An error detail string to embed in squid error pages
+    /// The error name to embed in squid error pages
+    const char *errorName() const {return err_code();}
 
 private:
     typedef const char * (ErrorDetail::*fmt_action_t)() const;
