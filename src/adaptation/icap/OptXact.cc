@@ -6,6 +6,7 @@
 #include "comm.h"
 #include "HttpReply.h"
 
+#include "adaptation/Answer.h"
 #include "adaptation/icap/OptXact.h"
 #include "adaptation/icap/Options.h"
 #include "adaptation/icap/Config.h"
@@ -79,7 +80,7 @@ void Adaptation::Icap::OptXact::handleCommRead(size_t)
         debugs(93, 7, HERE << "readAll=" << readAll);
         icap_tio_finish = current_time;
         setOutcome(xoOpt);
-        sendAnswer(icapReply);
+        sendAnswer(Answer::Forward(icapReply));
         Must(done()); // there should be nothing else to do
         return;
     }

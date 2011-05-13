@@ -137,10 +137,10 @@ public:
      \retval METHOD_OTHER  the method is not recognized and has no unique ID
      \retval *             the method is on of the recognized HTTP methods.
      */
-    _method_t const id() const { return theMethod; }
+    _method_t id() const { return theMethod; }
 
     /** Get a char string representation of the method. */
-    char const* image() const;
+    char const * image() const;
 
     bool isCacheble() const;
     bool purgesOthers() const;

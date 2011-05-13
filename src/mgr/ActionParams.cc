@@ -27,6 +27,7 @@ Mgr::ActionParams::ActionParams(const Ipc::TypedMsgHdr &msg)
     msg.getString(actionName);
     msg.getString(userName);
     msg.getString(password);
+    queryParams.unpack(msg);
 }
 
 void
@@ -39,4 +40,5 @@ Mgr::ActionParams::pack(Ipc::TypedMsgHdr &msg) const
     msg.putString(actionName);
     msg.putString(userName);
     msg.putString(password);
+    queryParams.pack(msg);
 }

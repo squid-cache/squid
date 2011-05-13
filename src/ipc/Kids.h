@@ -36,8 +36,14 @@ public:
     /// whether all kids called exited happy
     bool allExitedHappy() const;
 
-    /// whether all kids died from a given signal
-    bool allSignaled(int sgnl) const;
+    /// whether some kids died from a given signal
+    bool someSignaled(const int sgnl) const;
+
+    /// whether some kids are running
+    bool someRunning() const;
+
+    /// whether some kids should be restarted by master
+    bool shouldRestartSome() const;
 
     /// returns the number of kids
     size_t count() const;

@@ -57,6 +57,7 @@ size_t
 IpAddress_list
 string
 string
+time_msec
 time_t
 tristate
 uri_whitespace

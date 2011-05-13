@@ -85,13 +85,14 @@ struct logformat_token_table_entry logformat_token_table[] = {
     /*{ "<p", LFT_SERVER_PORT }, */
     {"<A", LFT_SERVER_IP_OR_PEER_NAME},
 
-    /* {"oa", LFT_OUTGOING_IP}, */
-    /* {"ot", LFT_OUTGOING_TOS}, */
-
     {"la", LFT_LOCAL_IP},
     {"lp", LFT_LOCAL_PORT},
     /*{ "lA", LFT_LOCAL_NAME }, */
+
+    {"<la", LFT_PEER_LOCAL_IP},
+    {"oa", LFT_PEER_LOCAL_IP_OLD_27},
     {"<lp", LFT_PEER_LOCAL_PORT},
+    /* {"ot", LFT_PEER_OUTGOING_TOS}, */
 
     {"ts", LFT_TIME_SECONDS_SINCE_EPOCH},
     {"tu", LFT_TIME_SUBSECOND},
@@ -161,11 +162,12 @@ struct logformat_token_table_entry logformat_token_table[] = {
 #if USE_ADAPTATION
     {"adapt::all_trs", LTF_ADAPTATION_ALL_XACT_TIMES},
     {"adapt::sum_trs", LTF_ADAPTATION_SUM_XACT_TIMES},
+    {"adapt::<last_h", LFT_ADAPTATION_LAST_HEADER},
 #endif
 
 #if ICAP_CLIENT
     {"icap::tt", LFT_ICAP_TOTAL_TIME},
-    {"icap::<last_h", LFT_ICAP_LAST_MATCHED_HEADER},
+    {"icap::<last_h", LFT_ADAPTATION_LAST_HEADER}, // deprecated
 
     {"icap::<A",  LFT_ICAP_ADDR},
     {"icap::<service_name",  LFT_ICAP_SERV_NAME},
@@ -336,9 +338,11 @@ done:
 
     switch (lt->type) {
 
-#if ICAP_CLIENT
-    case LFT_ICAP_LAST_MATCHED_HEADER:
+#if USE_ADAPTATION
+    case LFT_ADAPTATION_LAST_HEADER:
+#endif
 
+#if ICAP_CLIENT
     case LFT_ICAP_REQ_HEADER:
 
     case LFT_ICAP_REP_HEADER:
@@ -376,10 +380,12 @@ done:
                 case LFT_REPLY_HEADER:
                     lt->type = LFT_REPLY_HEADER_ELEM;
                     break;
-#if ICAP_CLIENT
-                case LFT_ICAP_LAST_MATCHED_HEADER:
-                    lt->type = LFT_ICAP_LAST_MATCHED_HEADER_ELEM;
+#if USE_ADAPTATION
+                case LFT_ADAPTATION_LAST_HEADER:
+                    lt->type = LFT_ADAPTATION_LAST_HEADER_ELEM;
                     break;
+#endif
+#if ICAP_CLIENT
                 case LFT_ICAP_REQ_HEADER:
                     lt->type = LFT_ICAP_REQ_HEADER_ELEM;
                     break;
@@ -406,10 +412,12 @@ done:
             case LFT_REPLY_HEADER:
                 lt->type = LFT_REPLY_ALL_HEADERS;
                 break;
-#if ICAP_CLIENT
-            case LFT_ICAP_LAST_MATCHED_HEADER:
-                lt->type = LFT_ICAP_LAST_MATCHED_ALL_HEADERS;
+#if USE_ADAPTATION
+            case LFT_ADAPTATION_LAST_HEADER:
+                lt->type = LFT_ADAPTATION_LAST_ALL_HEADERS;
                 break;
+#endif
+#if ICAP_CLIENT
             case LFT_ICAP_REQ_HEADER:
                 lt->type = LFT_ICAP_REQ_ALL_HEADERS;
                 break;
@@ -446,9 +454,15 @@ done:
         break;
 
     case LFT_HTTP_SENT_STATUS_CODE_OLD_30:
-        debugs(46, 0, "WARNING: the \"Hs\" formating code is deprecated use the \">Hs\" instead");
+        debugs(46, 0, "WARNING: The \"Hs\" formatting code is deprecated. Use the \">Hs\" instead.");
         lt->type = LFT_HTTP_SENT_STATUS_CODE;
         break;
+
+    case LFT_PEER_LOCAL_IP_OLD_27:
+        debugs(46, 0, "WARNING: The \"oa\" formatting code is deprecated. Use the \"<la\" instead.");
+        lt->type = LFT_PEER_LOCAL_IP;
+        break;
+
     default:
         break;
     }
@@ -510,8 +524,10 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
 
                 case LFT_STRING:
                     break;
+#if USE_ADAPTATION
+                case LFT_ADAPTATION_LAST_HEADER_ELEM:
+#endif
 #if ICAP_CLIENT
-                case LFT_ICAP_LAST_MATCHED_HEADER_ELEM:
                 case LFT_ICAP_REQ_HEADER_ELEM:
                 case LFT_ICAP_REP_HEADER_ELEM:
 #endif
@@ -528,18 +544,20 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
 
                     switch (type) {
                     case LFT_REQUEST_HEADER_ELEM:
-                        type = LFT_REQUEST_HEADER_ELEM;
+                        type = LFT_REQUEST_HEADER_ELEM; // XXX: remove _ELEM?
                         break;
                     case LFT_ADAPTED_REQUEST_HEADER_ELEM:
-                        type = LFT_ADAPTED_REQUEST_HEADER_ELEM;
+                        type = LFT_ADAPTED_REQUEST_HEADER_ELEM; // XXX: remove _ELEM?
                         break;
                     case LFT_REPLY_HEADER_ELEM:
-                        type = LFT_REPLY_HEADER_ELEM;
+                        type = LFT_REPLY_HEADER_ELEM; // XXX: remove _ELEM?
                         break;
+#if USE_ADAPTATION
+                    case LFT_ADAPTATION_LAST_HEADER_ELEM:
+                        type = LFT_ADAPTATION_LAST_HEADER;
+                        break;
+#endif
 #if ICAP_CLIENT
-                    case LFT_ICAP_LAST_MATCHED_HEADER_ELEM:
-                        type = LFT_ICAP_LAST_MATCHED_HEADER;
-                        break;
                     case LFT_ICAP_REQ_HEADER_ELEM:
                         type = LFT_ICAP_REQ_HEADER;
                         break;
@@ -557,8 +575,10 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
                 case LFT_ADAPTED_REQUEST_ALL_HEADERS:
                 case LFT_REPLY_ALL_HEADERS:
 
+#if USE_ADAPTATION
+                case LFT_ADAPTATION_LAST_ALL_HEADERS:
+#endif
 #if ICAP_CLIENT
-                case LFT_ICAP_LAST_MATCHED_ALL_HEADERS:
                 case LFT_ICAP_REQ_ALL_HEADERS:
                 case LFT_ICAP_REP_ALL_HEADERS:
 #endif
@@ -573,10 +593,12 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
                     case LFT_REPLY_ALL_HEADERS:
                         type = LFT_REPLY_HEADER;
                         break;
-#if ICAP_CLIENT
-                    case LFT_ICAP_LAST_MATCHED_ALL_HEADERS:
-                        type = LFT_ICAP_LAST_MATCHED_HEADER;
+#if USE_ADAPTATION
+                    case LFT_ADAPTATION_LAST_ALL_HEADERS:
+                        type = LFT_ADAPTATION_LAST_HEADER;
                         break;
+#endif
+#if ICAP_CLIENT
                     case LFT_ICAP_REQ_ALL_HEADERS:
                         type = LFT_ICAP_REQ_HEADER;
                         break;

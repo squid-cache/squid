@@ -29,11 +29,11 @@ void
 testURL::testConstructScheme()
 {
     URLScheme empty_scheme;
-    URL protoless_url(PROTO_NONE);
+    URL protoless_url(AnyP::PROTO_NONE);
     CPPUNIT_ASSERT_EQUAL(empty_scheme, protoless_url.getScheme());
 
-    URLScheme ftp_scheme(PROTO_FTP);
-    URL ftp_url(PROTO_FTP);
+    URLScheme ftp_scheme(AnyP::PROTO_FTP);
+    URL ftp_url(AnyP::PROTO_FTP);
     CPPUNIT_ASSERT_EQUAL(ftp_scheme, ftp_url.getScheme());
 }
 

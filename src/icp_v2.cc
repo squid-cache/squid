@@ -36,23 +36,23 @@
  */
 
 #include "squid.h"
-#include "AccessLogEntry.h"
-#include "acl/Acl.h"
-#include "acl/FilledChecklist.h"
+#include "Store.h"
 #include "comm.h"
 #include "comm/Loops.h"
+#include "ICP.h"
 #include "comm/Connection.h"
 #include "HttpRequest.h"
+#include "acl/FilledChecklist.h"
+#include "acl/Acl.h"
+#include "AccessLogEntry.h"
+#include "wordlist.h"
+#include "SquidTime.h"
+#include "SwapDir.h"
 #include "icmp/net_db.h"
-#include "ICP.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "ipc/StartListening.h"
 #include "rfc1738.h"
-#include "Store.h"
-#include "SquidTime.h"
-#include "SwapDir.h"
-#include "wordlist.h"
 
 /// dials icpIncomingConnectionOpened call
 class IcpListeningStartedDialer: public CallDialer,
@@ -227,7 +227,7 @@ icpLogIcp(const Ip::Address &caddr, log_type logcode, int len, const char *url, 
     if (LOG_ICP_QUERY == logcode)
         return;
 
-    clientdbUpdate(caddr, logcode, PROTO_ICP, len);
+    clientdbUpdate(caddr, logcode, AnyP::PROTO_ICP, len);
 
     if (!Config.onoff.log_udp)
         return;
@@ -438,7 +438,7 @@ icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
          * count this DENIED query in the clientdb, even though
          * we're not sending an ICP reply...
          */
-        clientdbUpdate(from, LOG_UDP_DENIED, PROTO_ICP, 0);
+        clientdbUpdate(from, LOG_UDP_DENIED, AnyP::PROTO_ICP, 0);
     } else {
         icpCreateAndSend(ICP_DENIED, 0, url, reqnum, 0, fd, from);
     }
@@ -677,7 +677,10 @@ icpHandleUdp(int sock, void *data)
 
         icp_version = (int) buf[1];	/* cheat! */
 
-        if (icp_version == ICP_VERSION_2)
+        if (icpOutgoingConn->local == from)
+            // ignore ICP packets which loop back (multicast usually)
+            debugs(12, 4, "icpHandleUdp: Ignoring UDP packet sent by myself");
+        else if (icp_version == ICP_VERSION_2)
             icpHandleIcpV2(sock, from, buf, len);
         else if (icp_version == ICP_VERSION_3)
             icpHandleIcpV3(sock, from, buf, len);

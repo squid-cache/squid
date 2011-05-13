@@ -82,7 +82,7 @@
 #define MAX_AUTHTOKEN_LEN   65535
 #endif
 #ifndef SQUID_KERB_AUTH_VERSION
-#define SQUID_KERB_AUTH_VERSION "3.0.3sq"
+#define SQUID_KERB_AUTH_VERSION "3.0.4sq"
 #endif
 
 int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
@@ -165,39 +165,37 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
 
         len = 0;
         msg_ctx = 0;
-        while (!msg_ctx) {
+        do {
             /* convert major status code (GSS-API error) to text */
             maj_stat = gss_display_status(&min_stat, major_status,
                                           GSS_C_GSS_CODE, GSS_C_NULL_OID, &msg_ctx, &status_string);
-            if (maj_stat == GSS_S_COMPLETE) {
+            if (maj_stat == GSS_S_COMPLETE && status_string.length > 0) {
                 if (sizeof(buf) > len + status_string.length + 1) {
                     snprintf(buf + len, (sizeof(buf) - len), "%s", (char *) status_string.value);
                     len += status_string.length;
                 }
-                gss_release_buffer(&min_stat, &status_string);
-                break;
-            }
+            } else
+                msg_ctx = 0;
             gss_release_buffer(&min_stat, &status_string);
-        }
+        } while (msg_ctx);
         if (sizeof(buf) > len + 2) {
             snprintf(buf + len, (sizeof(buf) - len), "%s", ". ");
             len += 2;
         }
         msg_ctx = 0;
-        while (!msg_ctx) {
+        do {
             /* convert minor status code (underlying routine error) to text */
             maj_stat = gss_display_status(&min_stat, minor_status,
                                           GSS_C_MECH_CODE, GSS_C_NULL_OID, &msg_ctx, &status_string);
-            if (maj_stat == GSS_S_COMPLETE) {
+            if (maj_stat == GSS_S_COMPLETE && status_string.length > 0) {
                 if (sizeof(buf) > len + status_string.length) {
                     snprintf(buf + len, (sizeof(buf) - len), "%s", (char *) status_string.value);
                     len += status_string.length;
                 }
-                gss_release_buffer(&min_stat, &status_string);
-                break;
-            }
+            } else
+                msg_ctx = 0;
             gss_release_buffer(&min_stat, &status_string);
-        }
+        } while (msg_ctx);
         debug((char *) "%s| %s: ERROR: %s failed: %s\n", LogTime(), PROGRAM, function, buf);
         fprintf(stdout, "BH %s failed: %s\n", function, buf);
         if (log)
@@ -376,13 +374,12 @@ main(int argc, char *const argv[])
             fprintf(stdout, "BH Invalid negotiate request\n");
             continue;
         }
-        input_token.length = ska_base64_decode_len(buf + 3);
+        input_token.length = base64_decode_len(buf+3);
         debug((char *) "%s| %s: DEBUG: Decode '%s' (decoded length: %d).\n",
               LogTime(), PROGRAM, buf + 3, (int) input_token.length);
         input_token.value = xmalloc(input_token.length);
 
-        ska_base64_decode((char *) input_token.value, buf + 3, input_token.length);
-
+        input_token.length = base64_decode((char *) input_token.value, input_token.length, buf+3);
 
         if ((input_token.length >= sizeof ntlmProtocol + 1) &&
                 (!memcmp(input_token.value, ntlmProtocol, sizeof ntlmProtocol))) {
@@ -429,14 +426,14 @@ main(int argc, char *const argv[])
         if (output_token.length) {
             spnegoToken = (const unsigned char *) output_token.value;
             spnegoTokenLength = output_token.length;
-            token = (char *) xmalloc(ska_base64_encode_len(spnegoTokenLength));
+            token = (char *) xmalloc(base64_encode_len(spnegoTokenLength));
             if (token == NULL) {
                 debug((char *) "%s| %s: ERROR: Not enough memory\n", LogTime(), PROGRAM);
                 fprintf(stdout, "BH Not enough memory\n");
                 goto cleanup;
             }
-            ska_base64_encode(token, (const char *) spnegoToken,
-                              ska_base64_encode_len(spnegoTokenLength), spnegoTokenLength);
+            base64_encode_str(token, base64_encode_len(spnegoTokenLength),
+                              (const char *) spnegoToken, spnegoTokenLength);
 
             if (check_gss_err(major_status, minor_status, "gss_accept_sec_context()", log))
                 goto cleanup;

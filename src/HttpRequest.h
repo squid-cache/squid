@@ -73,7 +73,7 @@ public:
 
     MEMPROXY_CLASS(HttpRequest);
     HttpRequest();
-    HttpRequest(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath);
+    HttpRequest(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath);
     ~HttpRequest();
     virtual void reset();
 
@@ -82,7 +82,7 @@ public:
         return static_cast<HttpRequest*>(HttpMsg::_lock());
     };
 
-    void initHTTP(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath);
+    void initHTTP(const HttpRequestMethod& aMethod, AnyP::ProtocolType aProtocol, const char *aUrlpath);
 
     virtual HttpRequest *clone() const;
 
@@ -111,13 +111,15 @@ public:
         }
     };
     inline const char* GetHost(void) const { return host; };
-    inline const int GetHostIsNumeric(void) const { return host_is_numeric; };
+    inline int GetHostIsNumeric(void) const { return host_is_numeric; };
 
 #if USE_ADAPTATION
     /// Returns possibly nil history, creating it if adapt. logging is enabled
     Adaptation::History::Pointer adaptLogHistory() const;
     /// Returns possibly nil history, creating it if requested
     Adaptation::History::Pointer adaptHistory(bool createIfNone = false) const;
+    /// Makes their history ours, throwing on conflicts
+    void adaptHistoryImport(const HttpRequest &them);
 #endif
 #if ICAP_CLIENT
     /// Returns possibly nil history, creating it if icap logging is enabled
@@ -143,12 +145,6 @@ private:
     char host[SQUIDHOSTNAMELEN];
     int host_is_numeric;
 
-    /***
-     * The client side connection data of pinned connections for the client side
-     * request related objects
-     */
-    ConnStateData *pinned_connection;
-
 #if USE_ADAPTATION
     mutable Adaptation::History::Pointer adaptHistory_; ///< per-HTTP transaction info
 #endif
@@ -158,9 +154,9 @@ private:
 
 public:
     Ip::Address host_addr;
-
+#if USE_AUTH
     AuthUserRequest::Pointer auth_user_request;
-
+#endif
     u_short port;
 
     String urlpath;
@@ -239,19 +235,17 @@ public:
 
     static HttpRequest * CreateFromUrl(char * url);
 
-    void setPinnedConnection(ConnStateData *conn) {
-        pinned_connection = cbdataReference(conn);
-    }
-
     ConnStateData *pinnedConnection() {
-        return pinned_connection;
+        if (clientConnectionManager.valid() && clientConnectionManager->pinning.pinned)
+            return clientConnectionManager.get();
+        return NULL;
     }
 
-    void releasePinnedConnection() {
-        cbdataReferenceDone(pinned_connection);
-    }
-
-    /// client-side conn manager, if known; used for 1xx response forwarding
+    /**
+     * The client connection manager, if known;
+     * Used for any response actions needed directly to the client.
+     * ie 1xx forwarding or connection pinning state changes
+     */
     CbcPointer<ConnStateData> clientConnectionManager;
 
     int64_t getRangeOffsetLimit(); /* the result of this function gets cached in rangeOffsetLimit */

@@ -44,7 +44,7 @@ using namespace Squid;
 /** \endcond */
 #endif
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
 #include <io.h>
 #endif
 #if HAVE_STDIO_H
@@ -161,7 +161,7 @@ usage(const char *progname)
 {
     fprintf(stderr,
             "Version: %s\n"
-            "Usage: %s [-arsv] [-g count] [-h remote host] [-H 'string'] [-i IMS] [-I ping-interval] [-j 'Host-header']"
+            "Usage: %s [-arsv] [-A 'string'] [-g count] [-h remote host] [-H 'string'] [-i IMS] [-I ping-interval] [-j 'Host-header']"
             "[-k] [-l local-host] [-m method] "
 #if HAVE_GSSAPI
             "[-n] [-N] "
@@ -171,6 +171,7 @@ usage(const char *progname)
             "\n"
             "Options:\n"
             "    -a           Do NOT include Accept: header.\n"
+            "    -A           User-Agent: header. Use \"\" to omit.\n"
             "    -g count     Ping mode, perform \"count\" iterations (0 to loop until interrupted).\n"
             "    -h host      Retrieve URL from cache on hostname.  Default is localhost.\n"
             "    -H 'string'  Extra headers to send. Use '\\n' for new lines.\n"
@@ -230,6 +231,7 @@ main(int argc, char *argv[])
     const char *www_password = NULL;
     const char *host = NULL;
     const char *version = "1.0";
+    const char *useragent = NULL;
 
     /* set the defaults */
     hostname = "localhost";
@@ -253,14 +255,19 @@ main(int argc, char *argv[])
         if (url[0] == '-')
             usage(argv[0]);
 #if HAVE_GSSAPI
-        while ((c = getopt(argc, argv, "ah:j:V:l:P:i:km:p:rsvt:g:p:I:H:T:u:U:w:W:nN?")) != -1)
+        while ((c = getopt(argc, argv, "aA:h:j:V:l:P:i:km:p:rsvt:g:p:I:H:T:u:U:w:W:nN?")) != -1)
 #else
-        while ((c = getopt(argc, argv, "ah:j:V:l:P:i:km:p:rsvt:g:p:I:H:T:u:U:w:W:?")) != -1)
+        while ((c = getopt(argc, argv, "aA:h:j:V:l:P:i:km:p:rsvt:g:p:I:H:T:u:U:w:W:?")) != -1)
 #endif
             switch (c) {
 
             case 'a':
                 opt_noaccept = 1;
+                break;
+
+            case 'A':
+                if (optarg != NULL)
+                    useragent = optarg;
                 break;
 
             case 'h':		/* remote host */
@@ -388,7 +395,15 @@ main(int argc, char *argv[])
     /* Build the HTTP request */
     if (strncmp(url, "mgr:", 4) == 0) {
         char *t = xstrdup(url + 4);
-        snprintf(url, BUFSIZ, "cache_object://%s/%s", hostname, t);
+        const char *at = NULL;
+        if (!strrchr(t, '@')) { // ignore any -w password if @ is explicit already.
+            at = proxy_password;
+        }
+        // embed the -w proxy password into old-style cachemgr URLs
+        if (at)
+            snprintf(url, BUFSIZ, "cache_object://%s/%s@%s", hostname, t, at);
+        else
+            snprintf(url, BUFSIZ, "cache_object://%s/%s", hostname, t);
         xfree(t);
     }
     if (put_file) {
@@ -400,9 +415,8 @@ main(int argc, char *argv[])
                     xstrerror());
             exit(-1);
         }
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
         setmode(put_fd, O_BINARY);
-
 #endif
 
         fstat(put_fd, &sb);
@@ -435,8 +449,16 @@ main(int argc, char *argv[])
             strcat(msg,buf);
         }
 
+        if (useragent == NULL) {
+            snprintf(buf, BUFSIZ, "User-Agent: squidclient/%s\r\n", VERSION);
+            strcat(msg,buf);
+        } else if (useragent[0] != '\0') {
+            snprintf(buf, BUFSIZ, "User-Agent: %s\r\n", useragent);
+            strcat(msg,buf);
+        }
+
         if (reload) {
-            snprintf(buf, BUFSIZ, "Pragma: no-cache\r\n");
+            snprintf(buf, BUFSIZ, "Cache-Control: no-cache\r\n");
             strcat(msg, buf);
         }
         if (put_fd > 0) {
@@ -467,7 +489,7 @@ main(int argc, char *argv[])
                 exit(1);
             }
             snprintf(buf, BUFSIZ, "%s:%s", user, password);
-            snprintf(buf, BUFSIZ, "Proxy-Authorization: Basic %s\r\n", base64_encode(buf));
+            snprintf(buf, BUFSIZ, "Proxy-Authorization: Basic %s\r\n", old_base64_encode(buf));
             strcat(msg, buf);
         }
         if (www_user) {
@@ -482,7 +504,7 @@ main(int argc, char *argv[])
                 exit(1);
             }
             snprintf(buf, BUFSIZ, "%s:%s", user, password);
-            snprintf(buf, BUFSIZ, "Authorization: Basic %s\r\n", base64_encode(buf));
+            snprintf(buf, BUFSIZ, "Authorization: Basic %s\r\n", old_base64_encode(buf));
             strcat(msg, buf);
         }
 #if HAVE_GSSAPI

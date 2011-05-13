@@ -30,6 +30,9 @@ void Ssl::Helper::Init()
         ssl_crtd = new helper("ssl_crtd");
     ssl_crtd->childs = Ssl::TheConfig.ssl_crtdChildren;
     ssl_crtd->ipc_type = IPC_STREAM;
+    // The crtd messages may contain the eol ('\n') character. We are
+    // going to use the '\1' char as the end-of-message mark.
+    ssl_crtd->eom = '\1';
     assert(ssl_crtd->cmdline == NULL);
     {
         char *tmp = xstrdup(Ssl::TheConfig.ssl_crtd);
@@ -57,7 +60,6 @@ void Ssl::Helper::Init()
         }
         safe_free(tmp_begin);
     }
-    ssl_crtd->return_full_reply = true;
     helperOpenServers(ssl_crtd);
 }
 
@@ -88,5 +90,7 @@ void Ssl::Helper::sslSubmit(CrtdMessage const & message, HLPCB * callback, void 
     }
 
     first_warn = 0;
-    helperSubmit(ssl_crtd, message.compose().c_str(), callback, data);
+    std::string msg = message.compose();
+    msg += '\n';
+    helperSubmit(ssl_crtd, msg.c_str(), callback, data);
 }

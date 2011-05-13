@@ -13,12 +13,15 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "ipc/Coordinator.h"
-#include "ipc/FdNotes.h"
 #include "ipc/SharedListen.h"
 #include "mgr/Inquirer.h"
 #include "mgr/Request.h"
 #include "mgr/Response.h"
-#include "mgr/StoreToCommWriter.h"
+#if SQUID_SNMP
+#include "snmp/Inquirer.h"
+#include "snmp/Request.h"
+#include "snmp/Response.h"
+#endif
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
 Ipc::Coordinator* Ipc::Coordinator::TheInstance = NULL;
@@ -65,15 +68,35 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
         handleSharedListenRequest(SharedListenRequest(message));
         break;
 
-    case mtCacheMgrRequest:
+    case mtCacheMgrRequest: {
         debugs(54, 6, HERE << "Cache manager request");
-        handleCacheMgrRequest(Mgr::Request(message));
-        break;
+        const Mgr::Request req(message);
+        handleCacheMgrRequest(req);
+    }
+    break;
 
-    case mtCacheMgrResponse:
+    case mtCacheMgrResponse: {
         debugs(54, 6, HERE << "Cache manager response");
-        handleCacheMgrResponse(Mgr::Response(message));
-        break;
+        const Mgr::Response resp(message);
+        handleCacheMgrResponse(resp);
+    }
+    break;
+
+#if SQUID_SNMP
+    case mtSnmpRequest: {
+        debugs(54, 6, HERE << "SNMP request");
+        const Snmp::Request req(message);
+        handleSnmpRequest(req);
+    }
+    break;
+
+    case mtSnmpResponse: {
+        debugs(54, 6, HERE << "SNMP response");
+        const Snmp::Response resp(message);
+        handleSnmpResponse(resp);
+    }
+    break;
+#endif
 
     default:
         debugs(54, 1, HERE << "Unhandled message type: " << message.type());
@@ -124,8 +147,7 @@ Ipc::Coordinator::handleCacheMgrRequest(const Mgr::Request& request)
 
     Mgr::Action::Pointer action =
         CacheManager::GetInstance()->createRequestedAction(request.params);
-    Comm::ConnectionPointer ir = Mgr::ImportHttpFdIntoComm(request.fd);
-    AsyncJob::Start(new Mgr::Inquirer(action, ir, request, strands_));
+    AsyncJob::Start(new Mgr::Inquirer(action, request, strands_));
 }
 
 void
@@ -133,6 +155,28 @@ Ipc::Coordinator::handleCacheMgrResponse(const Mgr::Response& response)
 {
     Mgr::Inquirer::HandleRemoteAck(response);
 }
+
+#if SQUID_SNMP
+void
+Ipc::Coordinator::handleSnmpRequest(const Snmp::Request& request)
+{
+    debugs(54, 4, HERE);
+
+    Snmp::Response response(request.requestId);
+    TypedMsgHdr message;
+    response.pack(message);
+    SendMessage(MakeAddr(strandAddrPfx, request.requestorId), message);
+
+    AsyncJob::Start(new Snmp::Inquirer(request, strands_));
+}
+
+void
+Ipc::Coordinator::handleSnmpResponse(const Snmp::Response& response)
+{
+    debugs(54, 4, HERE);
+    Snmp::Inquirer::HandleRemoteAck(response);
+}
+#endif
 
 Comm::ConnectionPointer
 Ipc::Coordinator::openListenSocket(const SharedListenRequest& request,

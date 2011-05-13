@@ -132,6 +132,13 @@ int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(vo
  */
 int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
 
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Sets the hostname for the Server Name Indication (SNI) TLS extension
+   * if supported by the used openssl toolkit.
+   \return true if SNI set false otherwise
+*/
+bool setClientSNI(SSL *ssl, const char *fqdn);
 } //namespace Ssl
 
 #ifdef _SQUID_MSWIN_

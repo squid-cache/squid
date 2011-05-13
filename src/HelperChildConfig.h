@@ -21,7 +21,7 @@ public:
      * \retval N < 0   Error. No more helpers may be started.
      * \retval N       N more helpers may be started immediately.
      */
-    const int needNew() const;
+    int needNew() const;
     void parseConfig();
 
     /* values from squid.conf */

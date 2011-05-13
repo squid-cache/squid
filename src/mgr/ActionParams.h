@@ -10,6 +10,7 @@
 
 #include "HttpRequestMethod.h"
 #include "ipc/forward.h"
+#include "mgr/QueryParams.h"
 
 namespace Mgr
 {
@@ -33,7 +34,7 @@ public:
     String actionName; ///< action name (and credentials realm)
     String userName; ///< user login name; currently only used for logging
     String password; ///< user password; used for acceptance check and cleared
-
+    QueryParams queryParams;
 };
 
 } // namespace Mgr

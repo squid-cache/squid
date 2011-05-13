@@ -4,12 +4,14 @@
  * DEBUG: section 54    Interprocess Communication
  *
  */
+
+
 #include "config.h"
-#include "base/TextException.h"
 #include "comm.h"
 #include "CommCalls.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
+#include "base/TextException.h"
 #include "ipc/UdsOp.h"
 
 
@@ -133,4 +135,24 @@ void Ipc::UdsSender::timedout()
 void Ipc::SendMessage(const String& toAddress, const TypedMsgHdr &message)
 {
     AsyncJob::Start(new UdsSender(toAddress, message));
+}
+
+const Comm::ConnectionPointer &
+Ipc::ImportFdIntoComm(const Comm::ConnectionPointer &conn, int socktype, int protocol, Ipc::FdNoteId noteId)
+{
+    struct sockaddr_in addr;
+    socklen_t len = sizeof(addr);
+    if (getsockname(conn->fd, reinterpret_cast<sockaddr*>(&addr), &len) == 0) {
+        conn->remote = addr;
+        struct addrinfo* addr_info = NULL;
+        conn->remote.GetAddrInfo(addr_info);
+        addr_info->ai_socktype = socktype;
+        addr_info->ai_protocol = protocol;
+        comm_import_opened(conn, Ipc::FdNote(noteId), addr_info);
+        conn->remote.FreeAddrInfo(addr_info);
+    } else {
+        debugs(54, DBG_CRITICAL, "ERROR: Ipc::ImportFdIntoComm: " << conn << ' ' << xstrerror());
+        conn->close();
+    }
+    return conn;
 }

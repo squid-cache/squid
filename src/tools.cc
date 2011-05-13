@@ -33,18 +33,17 @@
  */
 
 #include "squid.h"
-
 #include "base/Subscription.h"
 #include "fde.h"
 #include "ICP.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
-#include "ipc/Coordinator.h"
-#include "ipc/Kids.h"
 #include "MemBuf.h"
 #include "ProtoPort.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
+#include "ipc/Kids.h"
+#include "ipc/Coordinator.h"
 #include "SwapDir.h"
 #include "wordlist.h"
 
@@ -88,10 +87,11 @@ SQUIDCEXTERN int setresuid(uid_t, uid_t, uid_t);
 void
 releaseServerSockets(void)
 {
+    int i;
     /* Release the main ports as early as possible */
 
     // clear both http_port and https_port lists.
-    for (int i = 0; i < NHttpSockets; i++) {
+    for (i = 0; i < NHttpSockets; i++) {
         if (HttpSockets[i] >= 0)
             close(HttpSockets[i]);
     }
@@ -395,9 +395,6 @@ death(int sig)
         puts(dead_msg());
     }
 
-    if (shutting_down)
-        exit(1);
-
     abort();
 }
 
@@ -591,6 +588,12 @@ sig_child(int sig)
 
 #endif
 #endif
+}
+
+void
+sig_shutdown(int sig)
+{
+    shutting_down = 1;
 }
 
 const char *
@@ -961,7 +964,16 @@ void
 setMaxFD(void)
 {
 #if HAVE_SETRLIMIT && defined(RLIMIT_NOFILE)
+
+    /* On Linux with 64-bit file support the sys/resource.h header
+     * uses #define to change the function definition to require rlimit64
+     */
+#if defined(getrlimit)
+    struct rlimit64 rl; // Assume its a 64-bit redefine anyways.
+#else
     struct rlimit rl;
+#endif
+
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
         debugs(50, DBG_CRITICAL, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
     } else if (Config.max_filedescriptors > 0) {
@@ -995,9 +1007,18 @@ setMaxFD(void)
 void
 setSystemLimits(void)
 {
-#if HAVE_SETRLIMIT && defined(RLIMIT_NOFILE) && !defined(_SQUID_CYGWIN_)
+#if HAVE_SETRLIMIT && defined(RLIMIT_NOFILE) && !_SQUID_CYGWIN_
     /* limit system filedescriptors to our own limit */
+
+    /* On Linux with 64-bit file support the sys/resource.h header
+     * uses #define to change the function definition to require rlimit64
+     */
+#if defined(getrlimit)
+    struct rlimit64 rl; // Assume its a 64-bit redefine anyways.
+#else
     struct rlimit rl;
+#endif
+
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
         debugs(50, DBG_CRITICAL, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
     } else {
@@ -1147,9 +1168,8 @@ parseEtcHosts(void)
         return;
     }
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WINDOWS_
     setmode(fileno(fp), O_TEXT);
-
 #endif
 
     while (fgets(buf, 1024, fp)) {	/* for each line */

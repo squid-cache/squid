@@ -4,8 +4,8 @@
 ## 
 AM_CFLAGS = $(SQUID_CFLAGS)
 AM_CXXFLAGS = $(SQUID_CXXFLAGS)
-noinst_LIBRARIES = libsnmp.a
-libsnmp_a_SOURCES  = asn1.c parse.c snmp_vars.c \
+noinst_LIBRARIES = libsnmplib.a
+libsnmplib_a_SOURCES  = asn1.c parse.c snmp_vars.c \
 	coexistance.c snmp_api.c snmp_error.c  \
 	mib.c snmp_api_error.c   \
 	snmp_msg.c \

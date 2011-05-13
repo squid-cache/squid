@@ -83,6 +83,7 @@ swap(struct hstruct *a, struct hstruct *b)
     c.host = a->host;
     c.priority = a->priority;
     c.weight = a->weight;
+    a->host = b->host;
     a->priority = b->priority;
     a->weight = b->weight;
     b->host = c.host;
@@ -228,16 +229,35 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nh, 
      */
     char name[1024];
     char host[NS_MAXDNAME];
-    char *service;
+    char *service = NULL;
     struct hstruct *hp = NULL;
+    struct lsstruct *ls = NULL;
     int nhosts = 0;
     int size;
     int type, rdlength;
     int priority, weight, port;
     int len, olen;
     int i, j, k;
-    u_char *buffer;
+    u_char *buffer = NULL;
     u_char *p;
+
+    ls = margs->lservs;
+    while (ls) {
+        debug((char *) "%s| %s: DEBUG: Ldap server loop: lserver@domain %s@%s\n", LogTime(), PROGRAM, ls->lserver, ls->domain);
+        if (ls->domain && !strcasecmp(ls->domain, domain)) {
+            debug((char *) "%s| %s: DEBUG: Found lserver@domain %s@%s\n", LogTime(), PROGRAM, ls->lserver, ls->domain);
+            hp = (struct hstruct *) xrealloc(hp, sizeof(struct hstruct) * (nhosts + 1));
+            hp[nhosts].host = strdup(ls->lserver);
+            hp[nhosts].port = -1;
+            hp[nhosts].priority = -2;
+            hp[nhosts].weight = -2;
+            nhosts++;
+        }
+        ls = ls->next;
+    }
+    /* found ldap servers in predefined list -> exit */
+    if (nhosts > 0)
+        goto cleanup;
 
     if (margs->ssl) {
         service = (char *) xmalloc(strlen("_ldaps._tcp.") + strlen(domain) + 1);
@@ -371,6 +391,15 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nh, 
         goto cleanup;
     }
     nhosts = get_hostname_list(margs, &hp, nh, domain);
+
+    debug("%s| %s: DEBUG: Adding %s to list\n", LogTime(), PROGRAM, domain);
+
+    hp = (struct hstruct *) xrealloc(hp, sizeof(struct hstruct) * (nhosts + 1));
+    hp[nhosts].host = strdup(domain);
+    hp[nhosts].port = -1;
+    hp[nhosts].priority = -2;
+    hp[nhosts].weight = -2;
+    nhosts++;
 
     /* Remove duplicates */
     for (i = 0; i < nhosts; i++) {

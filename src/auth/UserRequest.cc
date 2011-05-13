@@ -42,6 +42,10 @@
 #include "squid.h"
 #include "auth/UserRequest.h"
 #include "auth/User.h"
+/*#include "auth/Gadgets.h"
+#include "acl/Acl.h"
+#include "client_side.h"
+*/
 #include "auth/Config.h"
 #include "auth/Scheme.h"
 #include "comm/Connection.h"
@@ -77,17 +81,17 @@ AuthUserRequest::valid() const
     debugs(29, 9, HERE << "Validating AuthUserRequest '" << this << "'.");
 
     if (user() == NULL) {
-        debugs(29, 4, HERE << "No associated AuthUser data");
+        debugs(29, 4, HERE << "No associated Auth::User data");
         return false;
     }
 
-    if (user()->auth_type == AUTH_UNKNOWN) {
-        debugs(29, 4, HERE << "AuthUser '" << user() << "' uses unknown scheme.");
+    if (user()->auth_type == Auth::AUTH_UNKNOWN) {
+        debugs(29, 4, HERE << "Auth::User '" << user() << "' uses unknown scheme.");
         return false;
     }
 
-    if (user()->auth_type == AUTH_BROKEN) {
-        debugs(29, 4, HERE << "AuthUser '" << user() << "' is broken for it's scheme.");
+    if (user()->auth_type == Auth::AUTH_BROKEN) {
+        debugs(29, 4, HERE << "Auth::User '" << user() << "' is broken for it's scheme.");
         return false;
     }
 
@@ -158,7 +162,7 @@ AuthUserRequest::denyMessage(char const * const default_message)
 static void
 authenticateAuthUserRequestSetIp(AuthUserRequest::Pointer auth_user_request, Ip::Address &ipaddr)
 {
-    AuthUser::Pointer auth_user = auth_user_request->user();
+    Auth::User::Pointer auth_user = auth_user_request->user();
 
     if (!auth_user)
         return;
@@ -169,7 +173,7 @@ authenticateAuthUserRequestSetIp(AuthUserRequest::Pointer auth_user_request, Ip:
 void
 authenticateAuthUserRequestRemoveIp(AuthUserRequest::Pointer auth_user_request, Ip::Address const &ipaddr)
 {
-    AuthUser::Pointer auth_user = auth_user_request->user();
+    Auth::User::Pointer auth_user = auth_user_request->user();
 
     if (!auth_user)
         return;
@@ -205,23 +209,24 @@ authenticateUserAuthenticated(AuthUserRequest::Pointer auth_user_request)
     return auth_user_request->authenticated();
 }
 
-int
+Auth::Direction
 AuthUserRequest::direction()
 {
+    if (user() == NULL)
+        return Auth::CRED_ERROR; // No credentials. Should this be a CHALLENGE instead?
+
     if (authenticateUserAuthenticated(this))
-        return 0;
+        return Auth::CRED_VALID;
 
     return module_direction();
-
-    return -2;
 }
 
 void
-AuthUserRequest::addHeader(HttpReply * rep, int accelerated)
+AuthUserRequest::addAuthenticationInfoHeader(HttpReply * rep, int accelerated)
 {}
 
 void
-AuthUserRequest::addTrailer(HttpReply * rep, int accelerated)
+AuthUserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int accelerated)
 {}
 
 void
@@ -347,7 +352,7 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
         }
 
         if (proxy_auth && request->auth_user_request == NULL && conn != NULL && conn->auth_user_request != NULL) {
-            AuthConfig * scheme = AuthConfig::Find(proxy_auth);
+            Auth::Config * scheme = Auth::Config::Find(proxy_auth);
 
             if (conn->auth_user_request->user() == NULL || conn->auth_user_request->user()->config != scheme) {
                 debugs(29, 1, "WARNING: Unexpected change of authentication scheme from '" <<
@@ -363,7 +368,7 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
             /* beginning of a new request check */
             debugs(29, 4, HERE << "No connection authentication type");
 
-            *auth_user_request = AuthConfig::CreateAuthUser(proxy_auth);
+            *auth_user_request = Auth::Config::CreateAuthUser(proxy_auth);
             if (*auth_user_request == NULL)
                 return AUTH_ACL_CHALLENGE;
             else if (!(*auth_user_request)->valid()) {
@@ -398,42 +403,44 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
     }
 
     if (!authenticateUserAuthenticated(*auth_user_request)) {
-        /* User not logged in. Log them in */
+        /* User not logged in. Try to log them in */
         authenticateAuthenticateUser(*auth_user_request, request, conn, headertype);
 
-        switch (authenticateDirection(*auth_user_request)) {
+        switch ((*auth_user_request)->direction()) {
 
-        case 1:
+        case Auth::CRED_CHALLENGE:
 
             if (request->auth_user_request == NULL) {
                 request->auth_user_request = *auth_user_request;
             }
 
-            /* fallthrough to -2 */
+            /* fallthrough to ERROR case and do the challenge */
 
-        case -2:
+        case Auth::CRED_ERROR:
             /* this ACL check is finished. */
             *auth_user_request = NULL;
             return AUTH_ACL_CHALLENGE;
 
-        case -1:
+        case Auth::CRED_LOOKUP:
             /* we are partway through authentication within squid,
              * the *auth_user_request variables stores the auth_user_request
              * for the callback to here - Do not Unlock */
             return AUTH_ACL_HELPER;
-        }
 
-        /* on 0 the authentication is finished - fallthrough */
-        /* See if user authentication failed for some reason */
-        if (!authenticateUserAuthenticated(*auth_user_request)) {
-            if ((*auth_user_request)->username()) {
-                if (!request->auth_user_request) {
-                    request->auth_user_request = *auth_user_request;
+        case Auth::CRED_VALID:
+            /* authentication is finished */
+            /* See if user authentication failed for some reason */
+            if (!authenticateUserAuthenticated(*auth_user_request)) {
+                if ((*auth_user_request)->username()) {
+                    if (!request->auth_user_request) {
+                        request->auth_user_request = *auth_user_request;
+                    }
                 }
-            }
 
-            *auth_user_request = NULL;
-            return AUTH_ACL_CHALLENGE;
+                *auth_user_request = NULL;
+                return AUTH_ACL_CHALLENGE;
+            }
+            // otherwise fallthrough to acceptance.
         }
     }
 
@@ -474,21 +481,6 @@ AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest::Pointer * auth
     return result;
 }
 
-/* returns
- * 0: no output needed
- * 1: send to client
- * -1: send to helper
- * -2: authenticate broken in some fashion
- */
-int
-authenticateDirection(AuthUserRequest::Pointer auth_user_request)
-{
-    if (auth_user_request == NULL || auth_user_request->user() == NULL)
-        return -2;
-
-    return auth_user_request->direction();
-}
-
 void
 AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal)
 /* send the auth types we are configured to support (and have compiled in!) */
@@ -521,14 +513,14 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer au
         /* this is a authenticate-needed response */
     {
 
-        if ((auth_user_request != NULL) && authenticateDirection(auth_user_request) == 1)
-            /* scheme specific */
+        if (auth_user_request != NULL && auth_user_request->direction() == Auth::CRED_CHALLENGE)
+            /* add the scheme specific challenge header to the response */
             auth_user_request->user()->config->fixHeader(auth_user_request, rep, type, request);
         else {
             /* call each configured & running authscheme */
 
-            for (Auth::authConfig::iterator  i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i) {
-                AuthConfig *scheme = *i;
+            for (Auth::ConfigVector::iterator  i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i) {
+                Auth::Config *scheme = *i;
 
                 if (scheme->active())
                     scheme->fixHeader(NULL, rep, type, request);
@@ -538,13 +530,13 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer au
         }
 
     }
+
     /*
      * allow protocol specific headers to be _added_ to the existing
-     * response - ie digest auth
+     * response - currently Digest or Negotiate auth
      */
-
     if (auth_user_request != NULL) {
-        auth_user_request->addHeader(rep, accelerated);
+        auth_user_request->addAuthenticationInfoHeader(rep, accelerated);
         if (auth_user_request->lastReply != AUTH_AUTHENTICATED)
             auth_user_request->lastReply = AUTH_ACL_CANNOT_AUTHENTICATE;
     }
@@ -556,18 +548,16 @@ authenticateFixHeader(HttpReply * rep, AuthUserRequest::Pointer auth_user_reques
     AuthUserRequest::addReplyAuthHeader(rep, auth_user_request, request, accelerated, internal);
 }
 
-
 /* call the active auth module and allow it to add a trailer to the request */
 void
 authenticateAddTrailer(HttpReply * rep, AuthUserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated)
 {
     if (auth_user_request != NULL)
-        auth_user_request->addTrailer(rep, accelerated);
+        auth_user_request->addAuthenticationInfoTrailer(rep, accelerated);
 }
 
-AuthScheme::Pointer
+Auth::Scheme::Pointer
 AuthUserRequest::scheme() const
 {
-    /* TODO: this should be overriden by the child and be essentially a no-op */
-    return AuthScheme::Find(user()->config->type());
+    return Auth::Scheme::Find(user()->config->type());
 }

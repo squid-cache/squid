@@ -37,24 +37,24 @@
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "event.h"
+#include "fde.h"
+#include "Store.h"
+#include "mgr/Registration.h"
+#include "StoreClient.h"
+#include "stmem.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "MemObject.h"
+#include "mem_node.h"
+#include "StoreMeta.h"
+#include "SwapDir.h"
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
-#include "fde.h"
-#include "HttpReply.h"
-#include "HttpRequest.h"
-#include "mem_node.h"
-#include "MemObject.h"
-#include "mgr/Registration.h"
-#include "SquidTime.h"
 #include "Stack.h"
-#include "stmem.h"
-#include "Store.h"
-#include "StoreClient.h"
-#include "mgr/StoreIoAction.h"
-#include "StoreMeta.h"
+#include "SquidTime.h"
 #include "swap_log_op.h"
-#include "SwapDir.h"
+#include "mgr/StoreIoAction.h"
 
 static STMCB storeWriteComplete;
 
@@ -250,14 +250,16 @@ StoreEntry::delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int l
         /* delay id limit */
         mem_obj->mostBytesAllowed().delayRead(DeferredRead(DeferReader, this, CommRead(conn, buf, len, callback)));
         return;
+
 #endif
+
     }
 
     comm_read(conn, buf, amountToRead, callback);
 }
 
 size_t
-StoreEntry::bytesWanted(Range<size_t> const aRange) const
+StoreEntry::bytesWanted (Range<size_t> const aRange) const
 {
     assert (aRange.size());
 
@@ -811,7 +813,6 @@ void
 StoreEntry::write (StoreIOBuffer writeBuffer)
 {
     assert(mem_obj != NULL);
-    assert(writeBuffer.length >= 0);
     /* This assert will change when we teach the store to update */
     PROF_start(StoreEntry_write);
     assert(store_status == STORE_PENDING);

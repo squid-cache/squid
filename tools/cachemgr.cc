@@ -132,6 +132,8 @@ typedef struct {
     char *user_name;
     char *passwd;
     char *pub_auth;
+    char *workers;
+    char *processes;
 } cachemgr_request;
 
 /*
@@ -839,12 +841,16 @@ process_request(cachemgr_request * req)
     S.FreeAddrInfo(AI);
 
     l = snprintf(buf, sizeof(buf),
-                 "GET cache_object://%s/%s HTTP/1.0\r\n"
+                 "GET cache_object://%s/%s%s%s HTTP/1.0\r\n"
+                 "User-Agent: cachemgr.cgi/%s\r\n"
                  "Accept: */*\r\n"
                  "%s"			/* Authentication info or nothing */
                  "\r\n",
                  req->hostname,
                  req->action,
+                 req->workers? "?workers=" : (req->processes ? "?processes=" : ""),
+                 req->workers? req->workers : (req->processes ? req->processes: ""),
+                 VERSION,
                  make_auth_header(req));
     if (write(s, buf, l) < 0) {
         fprintf(stderr,"ERROR: (%d) writing request: '%s'\n", errno, buf);
@@ -1009,6 +1015,10 @@ read_request(void)
             req->pub_auth = xstrdup(q), decode_pub_auth(req);
         else if (0 == strcasecmp(t, "operation"))
             req->action = xstrdup(q);
+        else if (0 == strcasecmp(t, "workers") && strlen(q))
+            req->workers = xstrdup(q);
+        else if (0 == strcasecmp(t, "processes") && strlen(q))
+            req->processes = xstrdup(q);
     }
 
     if (req->server && !req->hostname) {
@@ -1020,8 +1030,8 @@ read_request(void)
     }
 
     make_pub_auth(req);
-    debug("cmgr: got req: host: '%s' port: %d uname: '%s' passwd: '%s' auth: '%s' oper: '%s'\n",
-          safe_str(req->hostname), req->port, safe_str(req->user_name), safe_str(req->passwd), safe_str(req->pub_auth), safe_str(req->action));
+    debug("cmgr: got req: host: '%s' port: %d uname: '%s' passwd: '%s' auth: '%s' oper: '%s' workers: '%s' processes: '%s'\n",
+          safe_str(req->hostname), req->port, safe_str(req->user_name), safe_str(req->passwd), safe_str(req->pub_auth), safe_str(req->action), safe_str(req->workers), safe_str(req->processes));
     return req;
 }
 
@@ -1043,16 +1053,17 @@ make_pub_auth(cachemgr_request * req)
         return;
 
     /* host | time | user | passwd */
-    snprintf(buf, sizeof(buf), "%s|%d|%s|%s",
-             req->hostname,
-             (int) now,
-             req->user_name ? req->user_name : "",
-             req->passwd);
-
+    const int bufLen = snprintf(buf, sizeof(buf), "%s|%d|%s|%s",
+                                req->hostname,
+                                (int) now,
+                                req->user_name ? req->user_name : "",
+                                req->passwd);
     debug("cmgr: pre-encoded for pub: %s\n", buf);
-    debug("cmgr: encoded: '%s'\n", base64_encode(buf));
 
-    req->pub_auth = xstrdup(base64_encode(buf));
+    const int encodedLen = base64_encode_len(bufLen);
+    req->pub_auth = (char *) xmalloc(encodedLen);
+    base64_encode_str(req->pub_auth, encodedLen, buf, bufLen);
+    debug("cmgr: encoded: '%s'\n", req->pub_auth);
 }
 
 static void
@@ -1070,7 +1081,9 @@ decode_pub_auth(cachemgr_request * req)
     if (!req->pub_auth || strlen(req->pub_auth) < 4 + strlen(safe_str(req->hostname)))
         return;
 
-    buf = xstrdup(base64_decode(req->pub_auth));
+    const int decodedLen = base64_decode_len(req->pub_auth);
+    buf = (char*)xmalloc(decodedLen);
+    base64_decode(buf, decodedLen, req->pub_auth);
 
     debug("cmgr: length ok\n");
 
@@ -1126,16 +1139,20 @@ make_auth_header(const cachemgr_request * req)
 {
     static char buf[1024];
     size_t stringLength = 0;
-    const char *str64;
 
     if (!req->passwd)
         return "";
 
-    snprintf(buf, sizeof(buf), "%s:%s",
-             req->user_name ? req->user_name : "",
-             req->passwd);
+    int bufLen = snprintf(buf, sizeof(buf), "%s:%s",
+                          req->user_name ? req->user_name : "",
+                          req->passwd);
 
-    str64 = base64_encode(buf);
+    int encodedLen = base64_encode_len(bufLen);
+    if (encodedLen <= 0)
+        return "";
+
+    char *str64 = static_cast<char*>(xmalloc(encodedLen));
+    base64_encode_str(str64, encodedLen, buf, bufLen);
 
     stringLength += snprintf(buf, sizeof(buf), "Authorization: Basic %s\r\n", str64);
 

@@ -34,8 +34,6 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "acl/Acl.h"
-#include "acl/Asn.h"
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
 #endif
@@ -46,7 +44,9 @@
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/icap_log.h"
 #endif
+#if USE_AUTH
 #include "auth/Gadgets.h"
+#endif
 #include "base/Subscription.h"
 #include "base/TextException.h"
 #if USE_DELAY_POOLS
@@ -62,34 +62,33 @@
 #include "event.h"
 #include "EventLoop.h"
 #include "ExternalACL.h"
-#include "htcp.h"
-#include "HttpReply.h"
+#include "fs/Module.h"
+#include "PeerSelectState.h"
+#include "Store.h"
 #include "ICP.h"
 #include "ident/Ident.h"
-#include "ip/tools.h"
-#include "ipc/Coordinator.h"
-#include "ipc/Kids.h"
-#include "ipc/Strand.h"
-
+#include "HttpReply.h"
+#include "pconn.h"
+#include "Mem.h"
+#include "acl/Asn.h"
+#include "acl/Acl.h"
+#include "htcp.h"
+#include "StoreFileSystem.h"
 #include "DiskIO/DiskIOModule.h"
-#if USE_SQUID_ESI
-#include "esi/Module.h"
-#endif
+#include "ipc/Kids.h"
+#include "ipc/Coordinator.h"
+#include "ipc/Strand.h"
+#include "ip/tools.h"
+#include "SquidTime.h"
+#include "SwapDir.h"
 #include "forward.h"
-#include "fs/Module.h"
+#include "MemPool.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
+
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
 #endif
-#include "Mem.h"
-#include "MemPool.h"
-#include "pconn.h"
-#include "PeerSelectState.h"
-#include "SquidTime.h"
-#include "Store.h"
-#include "StoreFileSystem.h"
-#include "SwapDir.h"
 
 #if USE_SSL_CRTD
 #include "ssl/helper.h"
@@ -108,6 +107,9 @@
 #endif
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
+#endif
+#if USE_SQUID_ESI
+#include "esi/Module.h"
 #endif
 #include "fs/Module.h"
 
@@ -241,10 +243,10 @@ SignalEngine::doShutdown(time_t wait)
 
     /* run the closure code which can be shared with reconfigure */
     serverConnectionsClose();
-
+#if USE_AUTH
     /* detach the auth components (only do this on full shutdown) */
-    AuthScheme::FreeAll();
-
+    Auth::Scheme::FreeAll();
+#endif
     eventAdd("SquidShutdown", &StopEventLoop, this, (double) (wait + 1), 1, false);
 }
 
@@ -622,14 +624,24 @@ shut_down(int sig)
         shutdown_status = 1;
 
 #endif
+
+    const pid_t ppid = getppid();
+
+    if (!IamMasterProcess() && ppid > 1) {
+        // notify master that we are shutting down
+        if (kill(ppid, SIGUSR1) < 0)
+            debugs(1, DBG_IMPORTANT, "Failed to send SIGUSR1 to master process,"
+                   " pid " << ppid << ": " << xstrerror());
+    }
+
 #ifndef _SQUID_MSWIN_
 #if KILL_PARENT_OPT
 
-    if (getppid() > 1) {
-        debugs(1, 1, "Killing master process, pid " << getppid());
+    if (!IamMasterProcess() && ppid > 1) {
+        debugs(1, DBG_IMPORTANT, "Killing master process, pid " << ppid);
 
-        if (kill(getppid(), sig) < 0)
-            debugs(1, 1, "kill " << getppid() << ": " << xstrerror());
+        if (kill(ppid, sig) < 0)
+            debugs(1, DBG_IMPORTANT, "kill " << ppid << ": " << xstrerror());
     }
 
 #endif /* KILL_PARENT_OPT */
@@ -677,7 +689,9 @@ serverConnectionsOpen(void)
         peerSelectInit();
 
         carpInit();
+#if USE_AUTH
         peerUserHashInit();
+#endif
         peerSourceHashInit();
     }
 }
@@ -746,7 +760,9 @@ mainReconfigureStart(void)
     Ssl::TheGlobalContextStorage.reconfigureStart();
 #endif
     redirectShutdown();
+#if USE_AUTH
     authenticateReset();
+#endif
     externalAclShutdown();
     storeDirCloseSwapLogs();
     storeLogClose();
@@ -831,7 +847,9 @@ mainReconfigureFinish(void *)
 #endif
 
     redirectInit();
+#if USE_AUTH
     authenticateInit(&Auth::TheConfig);
+#endif
     externalAclInit();
 
     if (IamPrimaryProcess()) {
@@ -880,7 +898,9 @@ mainRotate(void)
     dnsShutdown();
 #endif
     redirectShutdown();
+#if USE_AUTH
     authenticateRotate();
+#endif
     externalAclShutdown();
 
     _db_rotate_log();		/* cache.log */
@@ -895,7 +915,9 @@ mainRotate(void)
     dnsInit();
 #endif
     redirectInit();
+#if USE_AUTH
     authenticateInit(&Auth::TheConfig);
+#endif
     externalAclInit();
 }
 
@@ -976,14 +998,12 @@ mainInitialize(void)
 
     debugs(1, 0, "Starting Squid Cache version " << version_string << " for " << CONFIG_HOST_TYPE << "...");
 
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
         debugs(1, 0, "Running as " << WIN32_Service_name << " Windows System Service on " << WIN32_OS_string);
         debugs(1, 0, "Service command line is: " << WIN32_Service_Command_Line);
     } else
         debugs(1, 0, "Running on " << WIN32_OS_string);
-
 #endif
 
     debugs(1, 1, "Process ID " << getpid());
@@ -1023,9 +1043,9 @@ mainInitialize(void)
 #endif
 
     redirectInit();
-
+#if USE_AUTH
     authenticateInit(&Auth::TheConfig);
-
+#endif
     externalAclInit();
 
     httpHeaderInitModule();	/* must go before any header processing (e.g. the one in errorInitialize) */
@@ -1250,8 +1270,7 @@ SquidMain(int argc, char **argv)
 {
     ConfigureCurrentKid(argv[0]);
 
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     int WIN32_init_err;
 #endif
 
@@ -1270,11 +1289,9 @@ SquidMain(int argc, char **argv)
 
 #endif
 
-#ifdef _SQUID_WIN32_
-
+#if _SQUID_WINDOWS_
     if ((WIN32_init_err = WIN32_Subsystem_Init(&argc, &argv)))
         return WIN32_init_err;
-
 #endif
 
     /* call mallopt() before anything else */
@@ -1360,9 +1377,9 @@ SquidMain(int argc, char **argv)
 
         /* we may want the parsing process to set this up in the future */
         Store::Root(new StoreController);
-
-        InitAuthSchemes();      /* required for config parsing */
-
+#if USE_AUTH
+        Auth::Init();      /* required for config parsing */
+#endif
         Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
 
         parse_err = parseConfigFile(ConfigFile);
@@ -1685,6 +1702,9 @@ watch_child(char *argv[])
         dup2(nullfd, 2);
     }
 
+    // handle shutdown notifications from kids
+    squid_signal(SIGUSR1, sig_shutdown, SA_RESTART);
+
     if (Config.workers > 128) {
         syslog(LOG_ALERT, "Suspiciously high workers value: %d",
                Config.workers);
@@ -1699,7 +1719,7 @@ watch_child(char *argv[])
         // start each kid that needs to be [re]started; once
         for (int i = TheKids.count() - 1; i >= 0; --i) {
             Kid& kid = TheKids.get(i);
-            if (kid.hopeless() || kid.exitedHappy() || kid.running())
+            if (!kid.shouldRestart())
                 continue;
 
             if ((pid = fork()) == 0) {
@@ -1745,6 +1765,11 @@ watch_child(char *argv[])
                 } else {
                     syslog(LOG_NOTICE, "Squid Parent: child process %d exited", kid->getPid());
                 }
+                if (kid->hopeless()) {
+                    syslog(LOG_NOTICE, "Squid Parent: child process %d will not"
+                           " be restarted due to repeated, frequent failures",
+                           kid->getPid());
+                }
             } else {
                 syslog(LOG_NOTICE, "Squid Parent: unknown child process %d exited", pid);
             }
@@ -1755,22 +1780,18 @@ watch_child(char *argv[])
         while ((pid = waitpid(-1, &status, WNOHANG)) > 0);
 #endif
 
-        if (TheKids.allExitedHappy()) {
+        if (!TheKids.someRunning() && !TheKids.shouldRestartSome()) {
+            if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
+                syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
+                exit(1);
+            }
+
+            if (TheKids.allHopeless()) {
+                syslog(LOG_ALERT, "Exiting due to repeated, frequent failures");
+                exit(1);
+            }
+
             exit(0);
-        }
-
-        if (TheKids.allHopeless()) {
-            syslog(LOG_ALERT, "Exiting due to repeated, frequent failures");
-            exit(1);
-        }
-
-        if (TheKids.allSignaled(SIGKILL)) {
-            exit(0);
-        }
-
-        if (TheKids.allSignaled(SIGINT) || TheKids.allSignaled(SIGTERM)) {
-            syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
-            exit(1);
         }
 
         squid_signal(SIGINT, SIG_DFL, SA_RESTART);
@@ -1836,8 +1857,9 @@ SquidShutdown()
 #if USE_DELAY_POOLS
     DelayPools::FreePools();
 #endif
-
+#if USE_AUTH
     authenticateReset();
+#endif
 #if USE_WIN32_SERVICE
 
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);

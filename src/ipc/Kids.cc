@@ -56,7 +56,7 @@ Kid* Kids::find(pid_t pid)
 /// returns the kid by index, useful for kids iteration
 Kid& Kids::get(size_t i)
 {
-    assert(i >= 0 && i < count());
+    assert(i < count());
     return storage[i];
 }
 
@@ -80,14 +80,34 @@ bool Kids::allExitedHappy() const
     return true;
 }
 
-/// whether all kids died from a given signal
-bool Kids::allSignaled(int sgnl) const
+/// whether some kids died from a given signal
+bool Kids::someSignaled(const int sgnl) const
 {
     for (size_t i = 0; i < storage.size(); ++i) {
-        if (!storage[i].signaled(sgnl))
-            return false;
+        if (storage[i].signaled(sgnl))
+            return true;
     }
-    return true;
+    return false;
+}
+
+/// whether some kids are running
+bool Kids::someRunning() const
+{
+    for (size_t i = 0; i < storage.size(); ++i) {
+        if (storage[i].running())
+            return true;
+    }
+    return false;
+}
+
+/// whether some kids should be restarted by master
+bool Kids::shouldRestartSome() const
+{
+    for (size_t i = 0; i < storage.size(); ++i) {
+        if (storage[i].shouldRestart())
+            return true;
+    }
+    return false;
 }
 
 /// returns the number of kids

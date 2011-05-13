@@ -167,7 +167,6 @@ void Adaptation::Icap::Xaction::closeConnection()
         if (reuseConnection) {
             //status() adds leading spaces.
             debugs(93,3, HERE << "pushing pconn" << status());
-            AsyncCall::Pointer nil;
             commUnsetConnTimeout(connection);
             icapPconnPool->push(connection, NULL);
             disableRetries();
@@ -222,7 +221,9 @@ void Adaptation::Icap::Xaction::scheduleWrite(MemBuf &buf)
 
     // comm module will free the buffer
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommIoCbParams> Dialer;
-    writer = JobCallback(93, 3, Dialer, this, Adaptation::Icap::Xaction::noteCommWrote);
+    writer = JobCallback(93, 3,
+                         Dialer, this, Adaptation::Icap::Xaction::noteCommWrote);
+
     Comm::Write(connection, &buf, writer);
     updateTimeout();
 }
@@ -327,7 +328,9 @@ void Adaptation::Icap::Xaction::scheduleRead()
      * here instead of reading directly into readBuf.buf.
      */
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommIoCbParams> Dialer;
-    reader = JobCallback(93, 3, Dialer, this, Adaptation::Icap::Xaction::noteCommRead);
+    reader = JobCallback(93, 3,
+                         Dialer, this, Adaptation::Icap::Xaction::noteCommRead);
+
     comm_read(connection, commBuf, readBuf.spaceSize(), reader);
     updateTimeout();
 }
@@ -339,7 +342,6 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
     reader = NULL;
 
     Must(io.flag == COMM_OK);
-    Must(io.size >= 0);
 
     if (!io.size) {
         commEof = true;

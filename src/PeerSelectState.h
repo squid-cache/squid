@@ -37,8 +37,8 @@
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "hier_code.h"
-#include "ip/Address.h"
 #include "PingData.h"
+#include "ip/Address.h"
 
 class HttpRequest;
 class StoreEntry;
@@ -104,5 +104,6 @@ public:
 private:
     CBDATA_CLASS(ps_state);
 };
+
 
 #endif /* SQUID_PEERSELECTSTATE_H */

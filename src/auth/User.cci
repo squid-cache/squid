@@ -34,13 +34,13 @@
  */
 
 char const *
-AuthUser::username () const
+Auth::User::username () const
 {
     return username_;
 }
 
 void
-AuthUser::username(char const *aString)
+Auth::User::username(char const *aString)
 {
     if (aString) {
         assert(!username_);

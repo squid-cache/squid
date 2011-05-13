@@ -68,9 +68,6 @@ static const char rcsid[] = "inet_ntop.c,v 1.1.2.1.8.2 2005/11/03 23:08:40 marka
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
 #if HAVE_STRING_H
 #include <string.h>
 #endif

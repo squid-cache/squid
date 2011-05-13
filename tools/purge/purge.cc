@@ -480,7 +480,7 @@ filelevel( const char* directory, const REList* list )
 //          list (IN): list of rexps to match URLs against
 // returns: true, if every subdir && action was successful.
 {
-    struct dirent* entry;
+    dirent_t * entry;
     if ( debugFlag & 0x01 )
         fprintf( stderr, "# [2] %s\n", directory );
 
@@ -522,7 +522,7 @@ dirlevel( const char* dirname, const REList* list, bool level=false )
 // returns: true, if every subdir && action was successful.
 // warning: this function is once-recursive, no deeper.
 {
-    struct dirent* entry;
+    dirent_t* entry;
     if ( debugFlag & 0x01 )
         fprintf( stderr, "# [%d] %s\n", (level ? 1 : 0), dirname );
 

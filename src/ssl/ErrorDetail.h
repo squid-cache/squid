@@ -24,13 +24,19 @@ typedef int ssl_error_t;
    \ingroup ServerProtocolSSLAPI
  * The ssl_error_t representation of the error described by "name".
  */
-ssl_error_t parseErrorString(const char *name);
+ssl_error_t ParseErrorString(const char *name);
 
 /**
    \ingroup ServerProtocolSSLAPI
  * The string representation of the SSL error "value"
  */
-const char *getErrorName(ssl_error_t value);
+const char *GetErrorName(ssl_error_t value);
+
+/**
+   \ingroup ServerProtocolSSLAPI
+ * A short description of the SSL error "value"
+ */
+const char *GetErrorDescr(ssl_error_t value);
 
 /**
    \ingroup ServerProtocolSSLAPI
@@ -63,6 +69,7 @@ private:
     const char *notbefore() const;
     const char *notafter() const;
     const char *err_code() const;
+    const char *err_descr() const;
 
     int convert(const char *code, const char **value) const;
     void buildDetail() const;

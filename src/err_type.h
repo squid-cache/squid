@@ -52,6 +52,9 @@ typedef enum {
     /* ICAP Errors */
     ERR_ICAP_FAILURE,
 
+    /* Squid problem */
+    ERR_GATEWAY_FAILURE,
+
     /* Special Cases */
     ERR_DIR_LISTING,            /* Display of remote directory (FTP, Gopher) */
     ERR_SQUID_SIGNATURE,        /* not really an error */

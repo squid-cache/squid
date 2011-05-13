@@ -8,6 +8,7 @@
 #include "config.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
+#include "ipc/UdsOp.h"
 #include "mgr/Command.h"
 #include "mgr/Filler.h"
 #include "mgr/FunAction.h"
@@ -32,10 +33,10 @@ void
 Mgr::FunAction::respond(const Request& request)
 {
     debugs(16, 5, HERE);
-    const Comm::ConnectionPointer client = ImportHttpFdIntoComm(request.fd);
-    Must(Comm::IsConnOpen(client));
+    Ipc::ImportFdIntoComm(request.conn, SOCK_STREAM, IPPROTO_TCP, Ipc::fdnHttpSocket);
+    Must(Comm::IsConnOpen(request.conn));
     Must(request.requestId != 0);
-    AsyncJob::Start(new Mgr::Filler(this, client, request.requestId));
+    AsyncJob::Start(new Mgr::Filler(this, request.conn, request.requestId));
 }
 
 void

@@ -27,7 +27,7 @@ body
 For Firefox browsers go to:
 <ul>
 <li>Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings</li>
-</li>Select Auto-detect proxy settings for this network</li>
+<li>Select Auto-detect proxy settings for this network</li>
 </ul>
 </div>
 

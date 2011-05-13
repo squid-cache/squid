@@ -32,22 +32,24 @@
  *
  */
 #include "config.h"
-#include "auth/UserRequest.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
-#include "err_detail_type.h"
 #include "errorpage.h"
-#include "fde.h"
+#if USE_AUTH
+#include "auth/UserRequest.h"
+#endif
+#include "SquidTime.h"
+#include "Store.h"
 #include "html_quote.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "MemBuf.h"
 #include "MemObject.h"
+#include "fde.h"
+#include "MemBuf.h"
 #include "rfc1738.h"
-#include "SquidTime.h"
-#include "Store.h"
 #include "URLScheme.h"
 #include "wordlist.h"
+#include "err_detail_type.h"
 
 /**
  \defgroup ErrorPageInternal Error Page Internals
@@ -501,11 +503,13 @@ errorSend(const Comm::ConnectionPointer &conn, ErrorState * err)
     err->flags.flag_cbdata = 1;
 
     rep = err->BuildHttpReply();
+
     MemBuf *mb = rep->pack();
     AsyncCall::Pointer call = commCbCall(78, 5, "errorSendComplete",
                                          CommIoCbPtrFun(&errorSendComplete, err));
     Comm::Write(conn, mb, call);
     delete mb;
+
     delete rep;
 }
 
@@ -547,7 +551,9 @@ errorStateFree(ErrorState * err)
     wordlistDestroy(&err->ftp.server_msg);
     safe_free(err->ftp.request);
     safe_free(err->ftp.reply);
+#if USE_AUTH
     err->auth_user_request = NULL;
+#endif
     safe_free(err->err_msg);
 #if USE_ERR_LOCALES
     if (err->err_language != Config.errorDefaultLanguage)
@@ -581,10 +587,10 @@ ErrorState::Dump(MemBuf * mb)
     } else {
         str.Printf("Err: [none]\r\n");
     }
-
+#if USE_AUTH
     if (auth_user_request->denyMessage())
         str.Printf("Auth ErrMsg: %s\r\n", auth_user_request->denyMessage());
-
+#endif
     if (dnsError.size() > 0)
         str.Printf("DNS ErrMsg: %s\r\n", dnsError.termedBuf());
 
@@ -658,10 +664,16 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
     switch (token) {
 
     case 'a':
+#if USE_AUTH
         if (request && request->auth_user_request != NULL)
             p = request->auth_user_request->username();
         if (!p)
+#endif
             p = "-";
+        break;
+
+    case 'b':
+        mb.Printf("%d", getMyPort());
         break;
 
     case 'B':
@@ -681,12 +693,15 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         // currently only SSL error details implemented
         else if (detail) {
             const String &errDetail = detail->toString();
-            MemBuf *detail_mb  = ConvertText(errDetail.termedBuf(), false);
-            mb.append(detail_mb->content(), detail_mb->contentSize());
-            delete detail_mb;
-            do_quote = 0;
-        } else
+            if (errDetail.defined()) {
+                MemBuf *detail_mb  = ConvertText(errDetail.termedBuf(), false);
+                mb.append(detail_mb->content(), detail_mb->contentSize());
+                delete detail_mb;
+                do_quote = 0;
+            }
+        }
 #endif
+        if (!mb.contentSize())
             mb.Printf("[No Error Detail]");
         break;
 
@@ -772,7 +787,11 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'm':
         if (building_deny_info_url) break;
+#if USE_AUTH
         p = auth_user_request->denyMessage("[not available]");
+#else
+        p = "-";
+#endif
         break;
 
     case 'M':
@@ -798,7 +817,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 
     case 'P':
         if (request) {
-            p = ProtocolStr[request->protocol];
+            p = AnyP::ProtocolType_str[request->protocol];
         } else if (!building_deny_info_url) {
             p = "[unknown protocol]";
         }
@@ -1167,11 +1186,12 @@ ErrorState::BuildContent()
         debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
     }
 
+    MemBuf *result = ConvertText(m, true);
 #if USE_ERR_LOCALES
     safe_free(freePage);
 #endif
 
-    return ConvertText(m, true);
+    return result;
 }
 
 MemBuf *ErrorState::ConvertText(const char *text, bool allowRecursion)

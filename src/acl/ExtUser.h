@@ -35,6 +35,8 @@
 #ifndef SQUID_EXTUSER_H
 #define SQUID_EXTUSER_H
 
+#if USE_AUTH
+
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "acl/Data.h"
@@ -70,4 +72,5 @@ private:
 
 MEMPROXY_CLASS_INLINE(ACLExtUser);
 
+#endif /* USE_AUTH */
 #endif /* SQUID_EXTUSER_H */

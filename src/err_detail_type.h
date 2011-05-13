@@ -7,8 +7,12 @@ typedef enum {
     ERR_DETAIL_CLT_REQMOD_ABORT = ERR_DETAIL_START, // client-side detected transaction abort
     ERR_DETAIL_CLT_REQMOD_REQ_BODY, // client-side detected REQMOD request body adaptation failure
     ERR_DETAIL_CLT_REQMOD_RESP_BODY, // client-side detected REQMOD satisfaction reply body failure
+    ERR_DETAIL_SRV_REQMOD_REQ_BODY, // server-side detected REQMOD request body abort
     ERR_DETAIL_ICAP_RESPMOD_EARLY, // RESPMOD failed w/o store entry
     ERR_DETAIL_ICAP_RESPMOD_LATE,  // RESPMOD failed with a store entry
+    ERR_DETAIL_REQMOD_BLOCK, // REQMOD denied client access
+    ERR_DETAIL_RESPMOD_BLOCK_EARLY, // RESPMOD denied client access to HTTP response, before any part of the response was sent
+    ERR_DETAIL_RESPMOD_BLOCK_LATE, // RESPMOD denied client access to HTTP response, after [a part of] the response was sent
     ERR_DETAIL_ICAP_XACT_START, // transaction start failure
     ERR_DETAIL_ICAP_XACT_BODY_CONSUMER_ABORT, // transaction body consumer gone
     ERR_DETAIL_ICAP_INIT_GONE, // initiator gone

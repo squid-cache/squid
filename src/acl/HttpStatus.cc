@@ -35,7 +35,7 @@
  */
 
 #include "config.h"
-#ifdef _SQUID_CYGWIN_
+#if _SQUID_CYGWIN_
 #include <squid_windows.h>
 #endif
 #include "squid.h"

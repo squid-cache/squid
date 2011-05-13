@@ -41,7 +41,7 @@
 
 /* explicit template instantiation required for some systems */
 
-template class ACLStrategised<protocol_t>;
+template class ACLStrategised<AnyP::ProtocolType>;
 
 
 

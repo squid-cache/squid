@@ -47,13 +47,16 @@
 #include "acl/Gadgets.h"
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
+#include "adaptation/Answer.h"
 #include "adaptation/Iterator.h"
 #include "adaptation/Service.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/History.h"
 #endif
 #endif
+#if USE_AUTH
 #include "auth/UserRequest.h"
+#endif
 #include "clientStream.h"
 #include "client_side.h"
 #include "client_side_reply.h"
@@ -110,6 +113,9 @@ ClientRequestContext::operator delete (void *address)
 /* Local functions */
 /* other */
 static void clientAccessCheckDoneWrapper(int, void *);
+#if USE_SSL
+static void sslBumpAccessCheckDoneWrapper(int, void *);
+#endif
 static int clientHierarchical(ClientHttpRequest * http);
 static void clientInterpretRequestHeaders(ClientHttpRequest * http);
 static RH clientRedirectDoneWrapper;
@@ -138,6 +144,9 @@ ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbd
     redirect_done = false;
     no_cache_done = false;
     interpreted_req_hdrs = false;
+#if USE_SSL
+    sslBumpCheckDone = false;
+#endif
     debugs(85,3, HERE << this << " ClientRequestContext constructed");
 }
 
@@ -171,6 +180,9 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     dlinkAdd(this, &active, &ClientActiveRequests);
 #if USE_ADAPTATION
     request_satisfaction_mode = false;
+#endif
+#if USE_SSL
+    sslBumpNeed = needUnknown;
 #endif
 }
 
@@ -580,21 +592,24 @@ ClientRequestContext::clientAccessCheckDone(int answer)
            (answer == ACCESS_ALLOWED ? "ALLOWED" : "DENIED") <<
            ", because it matched '" <<
            (AclMatchedName ? AclMatchedName : "NO ACL's") << "'" );
-    char const *proxy_auth_msg = "<null>";
 
+#if USE_AUTH
+    char const *proxy_auth_msg = "<null>";
     if (http->getConn() != NULL && http->getConn()->auth_user_request != NULL)
         proxy_auth_msg = http->getConn()->auth_user_request->denyMessage("<null>");
     else if (http->request->auth_user_request != NULL)
         proxy_auth_msg = http->request->auth_user_request->denyMessage("<null>");
+#endif
 
     if (answer != ACCESS_ALLOWED) {
         /* Send an error */
         int require_auth = (answer == ACCESS_REQ_PROXY_AUTH || aclIsProxyAuth(AclMatchedName));
         debugs(85, 5, "Access Denied: " << http->uri);
         debugs(85, 5, "AclMatchedName = " << (AclMatchedName ? AclMatchedName : "<null>"));
-
+#if USE_AUTH
         if (require_auth)
             debugs(33, 5, "Proxy Auth Message = " << (proxy_auth_msg ? proxy_auth_msg : "<null>"));
+#endif
 
         /*
          * NOTE: get page_id here, based on AclMatchedName because if
@@ -607,6 +622,7 @@ ClientRequestContext::clientAccessCheckDone(int answer)
         http->logType = LOG_TCP_DENIED;
 
         if (require_auth) {
+#if USE_AUTH
             if (!http->flags.accel) {
                 /* Proxy authorisation needed */
                 status = HTTP_PROXY_AUTHENTICATION_REQUIRED;
@@ -614,7 +630,10 @@ ClientRequestContext::clientAccessCheckDone(int answer)
                 /* WWW authorisation needed */
                 status = HTTP_UNAUTHORIZED;
             }
-
+#else
+            // need auth, but not possible to do.
+            status = HTTP_FORBIDDEN;
+#endif
             if (page_id == ERR_NONE)
                 page_id = ERR_CACHE_ACCESS_DENIED;
         } else {
@@ -634,9 +653,12 @@ ClientRequestContext::clientAccessCheckDone(int answer)
                                     http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmpnoaddr,
                                     http->request,
                                     NULL,
+#if USE_AUTH
                                     http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
                                     http->getConn()->auth_user_request : http->request->auth_user_request);
-
+#else
+                                    NULL);
+#endif
         node = (clientStreamNode *)http->client_stream.tail->data;
         clientStreamRead(node, http, node->readBuffer);
         return;
@@ -756,18 +778,17 @@ clientHierarchical(ClientHttpRequest * http)
     if (request->flags.loopdetect)
         return 0;
 
-    if (request->protocol == PROTO_HTTP)
+    if (request->protocol == AnyP::PROTO_HTTP)
         return httpCachable(method);
 
-    if (request->protocol == PROTO_GOPHER)
+    if (request->protocol == AnyP::PROTO_GOPHER)
         return gopherCachable(request);
 
-    if (request->protocol == PROTO_CACHEOBJ)
+    if (request->protocol == AnyP::PROTO_CACHE_OBJECT)
         return 0;
 
     return 1;
 }
-
 
 static void
 clientCheckPinning(ClientHttpRequest * http)
@@ -791,7 +812,8 @@ clientCheckPinning(ClientHttpRequest * http)
             } else {
                 request->flags.connection_proxy_auth = 1;
             }
-            request->setPinnedConnection(http_conn);
+            // These should already be linked correctly.
+            assert(request->clientConnectionManager == http_conn);
         }
     }
 
@@ -824,7 +846,8 @@ clientCheckPinning(ClientHttpRequest * http)
                 }
             }
             if (may_pin && !request->pinnedConnection()) {
-                request->setPinnedConnection(http->getConn());
+                // These should already be linked correctly. Just need the ServerConnection to pinn.
+                assert(request->clientConnectionManager == http_conn);
             }
         }
     }
@@ -1042,8 +1065,9 @@ ClientRequestContext::clientRedirectDone(char *result)
         new_request->my_addr = old_request->my_addr;
         new_request->flags = old_request->flags;
         new_request->flags.redirected = 1;
+#if USE_AUTH
         new_request->auth_user_request = old_request->auth_user_request;
-
+#endif
         if (old_request->body_pipe != NULL) {
             new_request->body_pipe = old_request->body_pipe;
             old_request->body_pipe = NULL;
@@ -1103,6 +1127,45 @@ ClientRequestContext::checkNoCacheDone(int answer)
     http->doCallouts();
 }
 
+#if USE_SSL
+bool
+ClientRequestContext::sslBumpAccessCheck()
+{
+    if (http->request->method == METHOD_CONNECT &&
+            Config.accessList.ssl_bump && http->getConn()->port->sslBump) {
+        debugs(85, 5, HERE << "SslBump possible, checking ACL");
+
+        ACLFilledChecklist *acl_checklist = clientAclChecklistCreate(Config.accessList.ssl_bump, http);
+        acl_checklist->nonBlockingCheck(sslBumpAccessCheckDoneWrapper, this);
+        return true;
+    } else {
+        http->sslBumpNeeded(false);
+        return false;
+    }
+}
+
+/**
+ * A wrapper function to use the ClientRequestContext::sslBumpAccessCheckDone method
+ * as ACLFilledChecklist callback
+ */
+static void
+sslBumpAccessCheckDoneWrapper(int answer, void *data)
+{
+    ClientRequestContext *calloutContext = static_cast<ClientRequestContext *>(data);
+
+    if (!calloutContext->httpStateIsValid())
+        return;
+    calloutContext->sslBumpAccessCheckDone(answer == ACCESS_ALLOWED);
+}
+
+void
+ClientRequestContext::sslBumpAccessCheckDone(bool doSslBump)
+{
+    http->sslBumpNeeded(doSslBump);
+    http->doCallouts();
+}
+#endif
+
 /*
  * Identify requests that do not go through the store and client side stream
  * and forward them to the appropriate location. All other requests, request
@@ -1113,14 +1176,13 @@ ClientHttpRequest::processRequest()
 {
     debugs(85, 4, "clientProcessRequest: " << RequestMethodStr(request->method) << " '" << uri << "'");
 
-#if USE_SSL
-    if (request->method == METHOD_CONNECT && sslBumpNeeded()) {
-        sslBumpStart();
-        return;
-    }
-#endif
-
     if (request->method == METHOD_CONNECT && !redirect.status) {
+#if USE_SSL
+        if (sslBumpNeeded()) {
+            sslBumpStart();
+            return;
+        }
+#endif
         logType = LOG_TCP_MISS;
         getConn()->stopReading(); // tunnels read for themselves
         tunnelStart(this, &out.size, &al.http.code);
@@ -1147,19 +1209,18 @@ ClientHttpRequest::httpStart()
 
 #if USE_SSL
 
-// determines whether we should bump the CONNECT request
 bool
 ClientHttpRequest::sslBumpNeeded() const
 {
-    if (!getConn()->port->sslBump || !Config.accessList.ssl_bump)
-        return false;
+    assert(sslBumpNeed != needUnknown);
+    return (sslBumpNeed == needConfirmed);
+}
 
-    debugs(85, 5, HERE << "SslBump possible, checking ACL");
-
-    ACLFilledChecklist check(Config.accessList.ssl_bump, request, NULL);
-    check.src_addr = request->client_addr;
-    check.my_addr = request->my_addr;
-    return check.fastCheck() == 1;
+void
+ClientHttpRequest::sslBumpNeeded(bool isNeeded)
+{
+    debugs(83, 3, HERE << "sslBump required: "<< (isNeeded ? "Yes" : "No"));
+    sslBumpNeed = (isNeeded ? needConfirmed : needNot);
 }
 
 // called when comm_write has completed
@@ -1181,7 +1242,8 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
         return;
 
     if (errflag) {
-        getConn()->startClosing("CONNECT response failure in SslBump");
+        debugs(85, 3, HERE << "CONNECT response failure in SslBump: " << errflag);
+        comm_close(getConn()->fd);
         return;
     }
 
@@ -1356,6 +1418,15 @@ ClientHttpRequest::doCallouts()
         }
     }
 
+#if USE_SSL
+    if (!calloutContext->sslBumpCheckDone) {
+        calloutContext->sslBumpCheckDone = true;
+        if (calloutContext->sslBumpAccessCheck())
+            return;
+        /* else no ssl bump required*/
+    }
+#endif
+
     cbdataReferenceDone(calloutContext->http);
     delete calloutContext;
     calloutContext = NULL;
@@ -1395,9 +1466,30 @@ ClientHttpRequest::startAdaptation(const Adaptation::ServiceGroupPointer &g)
 }
 
 void
-ClientHttpRequest::noteAdaptationAnswer(HttpMsg *msg)
+ClientHttpRequest::noteAdaptationAnswer(const Adaptation::Answer &answer)
 {
     assert(cbdataReferenceValid(this));		// indicates bug
+    clearAdaptation(virginHeadSource);
+    assert(!adaptedBodySource);
+
+    switch (answer.kind) {
+    case Adaptation::Answer::akForward:
+        handleAdaptedHeader(answer.message);
+        break;
+
+    case Adaptation::Answer::akBlock:
+        handleAdaptationBlock(answer);
+        break;
+
+    case Adaptation::Answer::akError:
+        handleAdaptationFailure(ERR_DETAIL_CLT_REQMOD_ABORT, !answer.final);
+        break;
+    }
+}
+
+void
+ClientHttpRequest::handleAdaptedHeader(HttpMsg *msg)
+{
     assert(msg);
 
     if (HttpRequest *new_req = dynamic_cast<HttpRequest*>(msg)) {
@@ -1446,11 +1538,13 @@ ClientHttpRequest::noteAdaptationAnswer(HttpMsg *msg)
 }
 
 void
-ClientHttpRequest::noteAdaptationQueryAbort(bool final)
+ClientHttpRequest::handleAdaptationBlock(const Adaptation::Answer &answer)
 {
-    clearAdaptation(virginHeadSource);
-    assert(!adaptedBodySource);
-    handleAdaptationFailure(ERR_DETAIL_CLT_REQMOD_ABORT, !final);
+    request->detailError(ERR_ACCESS_DENIED, ERR_DETAIL_REQMOD_BLOCK);
+    AclMatchedName = answer.ruleId.termedBuf();
+    assert(calloutContext);
+    calloutContext->clientAccessCheckDone(ACCESS_DENIED);
+    AclMatchedName = NULL;
 }
 
 void
