@@ -923,10 +923,13 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         break;
 
     case 'x':
+#if USE_SSL
         if (detail)
             mb.Printf("%s", detail->errorName());
-        else if (!building_deny_info_url)
-            p = "[Unknown Error Code]";
+        else
+#endif
+            if (!building_deny_info_url)
+                p = "[Unknown Error Code]";
         break;
 
     case 'z':
