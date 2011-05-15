@@ -351,7 +351,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
                std::uppercase << e->swap_filen);
         debugs(20, 5, HERE << "swap_file_sz = " <<
                e->objectLen() << " + " << mem->swap_hdr_sz);
-        assert(e->objectLen() >= 0); // we checked that above
+
         e->swap_file_sz = e->objectLen() + mem->swap_hdr_sz;
         e->swap_status = SWAPOUT_DONE;
         e->store()->swappedOut(*e);
