@@ -37,6 +37,7 @@
 #include "event.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
+#include "ipcache.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
 #include "Store.h"

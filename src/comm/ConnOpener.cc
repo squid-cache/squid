@@ -9,6 +9,7 @@
 #include "comm.h"
 #include "fde.h"
 #include "icmp/net_db.h"
+#include "ipcache.h"
 #include "SquidTime.h"
 
 namespace Comm {

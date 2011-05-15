@@ -375,6 +375,7 @@ squid_SOURCES = \
 	internal.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
+	ipcache.h \
 	$(LEAKFINDERSOURCE) \
 	list.cc \
 	lookup_t.h \

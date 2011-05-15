@@ -58,6 +58,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
+#include "ipcache.h"
 #include "log/Tokens.h"
 #include "MemObject.h"
 #include "SquidTime.h"
