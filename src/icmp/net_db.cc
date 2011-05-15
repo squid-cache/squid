@@ -57,6 +57,7 @@
 
 #if USE_ICMP
 #include "icmp/IcmpSquid.h"
+#include "ipcache.h"
 #include "StoreClient.h"
 
 #define	NETDB_REQBUF_SZ	4096

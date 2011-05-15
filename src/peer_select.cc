@@ -45,6 +45,7 @@
 #include "forward.h"
 #include "SquidTime.h"
 #include "icmp/net_db.h"
+#include "ipcache.h"
 
 static struct {
     int timeouts;

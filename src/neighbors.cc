@@ -40,6 +40,7 @@
 #include "HttpRequest.h"
 #include "ICP.h"
 #include "ip/tools.h"
+#include "ipcache.h"
 #include "MemObject.h"
 #include "PeerDigest.h"
 #include "PeerSelectState.h"

@@ -38,6 +38,7 @@
 #include "event.h"
 #include "fde.h"
 #include "ICP.h"
+#include "ipcache.h"
 #include "SquidTime.h"
 
 static IPH send_announce;

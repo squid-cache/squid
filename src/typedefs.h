@@ -74,8 +74,6 @@ typedef struct _HttpBody HttpBody;
 
 typedef struct _ConnCloseHelperData ConnCloseHelperData;
 
-typedef struct _ipcache_addrs ipcache_addrs;
-
 typedef struct _domain_ping domain_ping;
 
 typedef struct _domain_type domain_type;
@@ -147,7 +145,6 @@ typedef void DTCB(int errflag, void *data);	/* disk trunc CB */
 class DnsLookupDetails;
 typedef void FQDNH(const char *, const DnsLookupDetails &details, void *);
 typedef void IDCB(const char *ident, void *data);
-typedef void IPH(const ipcache_addrs *, const DnsLookupDetails &details, void *);
 
 #include "anyp/ProtocolType.h"
 typedef void IRCB(struct peer *, peer_t, AnyP::ProtocolType, void *, void *data);

@@ -777,14 +777,6 @@ struct _http_state_flags {
     unsigned int sentLastChunk:1; ///< do not try to write last-chunk again
 };
 
-struct _ipcache_addrs {
-    Ip::Address *in_addrs;
-    unsigned char *bad_mask;
-    unsigned char count;
-    unsigned char cur;
-    unsigned char badcount;
-};
-
 struct _domain_ping {
     char *domain;
     int do_ping;		/* boolean */

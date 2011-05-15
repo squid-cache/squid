@@ -46,6 +46,7 @@
 #include "acl/DestinationAsn.h"
 #include "acl/DestinationIp.h"
 #include "HttpReply.h"
+#include "ipcache.h"
 #include "forward.h"
 #include "wordlist.h"
 
