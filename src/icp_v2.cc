@@ -52,6 +52,7 @@
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "ipc/StartListening.h"
+#include "ipcache.h"
 #include "rfc1738.h"
 
 /// dials icpIncomingConnectionOpened call

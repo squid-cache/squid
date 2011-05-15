@@ -37,6 +37,7 @@
 #define SQUID_ACLDESTINATIONIP_H
 #include "acl/Checklist.h"
 #include "acl/Ip.h"
+#include "ipcache.h"
 
 class DestinationIPLookup : public ACLChecklist::AsyncState
 {

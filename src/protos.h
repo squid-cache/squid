@@ -323,23 +323,6 @@ extern void wccp2ConnectionOpen(void);
 extern void wccp2ConnectionClose(void);
 #endif /* USE_WCCPv2 */
 
-void ipcache_purgelru(void *);
-SQUIDCEXTERN void ipcache_nbgethostbyname(const char *name,
-        IPH * handler,
-        void *handlerData);
-SQUIDCEXTERN const ipcache_addrs *ipcache_gethostbyname(const char *, int flags);
-SQUIDCEXTERN void ipcacheInvalidate(const char *);
-SQUIDCEXTERN void ipcacheInvalidateNegative(const char *);
-SQUIDCEXTERN void ipcache_init(void);
-SQUIDCEXTERN void ipcacheCycleAddr(const char *name, ipcache_addrs *);
-SQUIDCEXTERN void ipcacheMarkBadAddr(const char *name, const Ip::Address &);
-SQUIDCEXTERN void ipcacheMarkGoodAddr(const char *name, const Ip::Address &);
-SQUIDCEXTERN void ipcacheMarkAllGood(const char *name);
-SQUIDCEXTERN void ipcacheFreeMemory(void);
-SQUIDCEXTERN ipcache_addrs *ipcacheCheckNumeric(const char *name);
-SQUIDCEXTERN void ipcache_restart(void);
-SQUIDCEXTERN int ipcacheAddEntryFromHosts(const char *name, const char *ipaddr);
-
 SQUIDCEXTERN char *mime_get_header(const char *mime, const char *header);
 SQUIDCEXTERN char *mime_get_header_field(const char *mime, const char *name, const char *prefix);
 SQUIDCEXTERN size_t headersEnd(const char *, size_t);
@@ -354,6 +337,7 @@ SQUIDCEXTERN char mimeGetTransferMode(const char *fn);
 SQUIDCEXTERN int mimeGetDownloadOption(const char *fn);
 SQUIDCEXTERN int mimeGetViewOption(const char *fn);
 
+#include "ipcache.h"
 SQUIDCEXTERN int mcastSetTtl(int, int);
 SQUIDCEXTERN IPH mcastJoinGroups;
 
