@@ -36,6 +36,16 @@ public:
     void adaptationAccessCheck();
     void adaptationAclCheckDone(Adaptation::ServiceGroupPointer g);
 #endif
+#if USE_SSL
+    /**
+     * Initiates and start the acl checklist to check if the a CONNECT
+     * request must be bumped.
+     \retval true if the acl check scheduled, false if no ssl-bump required
+     */
+    bool sslBumpAccessCheck();
+    /// The callback function for ssl-bump access check list
+    void sslBumpAccessCheckDone(bool doSslBump);
+#endif
 
     ClientHttpRequest *http;
     ACLChecklist *acl_checklist;        /* need ptr back so we can unreg if needed */
@@ -51,6 +61,9 @@ public:
     bool interpreted_req_hdrs;
     bool tosToClientDone;
     bool nfmarkToClientDone;
+#if USE_SSL
+    bool sslBumpCheckDone;
+#endif
 
 private:
     CBDATA_CLASS(ClientRequestContext);

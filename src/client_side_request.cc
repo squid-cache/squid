@@ -112,6 +112,9 @@ ClientRequestContext::operator delete (void *address)
 /* Local functions */
 /* other */
 static void clientAccessCheckDoneWrapper(int, void *);
+#if USE_SSL
+static void sslBumpAccessCheckDoneWrapper(int, void *);
+#endif
 static int clientHierarchical(ClientHttpRequest * http);
 static void clientInterpretRequestHeaders(ClientHttpRequest * http);
 static RH clientRedirectDoneWrapper;
@@ -140,6 +143,9 @@ ClientRequestContext::ClientRequestContext(ClientHttpRequest *anHttp) : http(cbd
     redirect_done = false;
     no_cache_done = false;
     interpreted_req_hdrs = false;
+#if USE_SSL
+    sslBumpCheckDone = false;
+#endif
     debugs(85,3, HERE << this << " ClientRequestContext constructed");
 }
 
@@ -172,6 +178,9 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     dlinkAdd(this, &active, &ClientActiveRequests);
 #if USE_ADAPTATION
     request_satisfaction_mode = false;
+#endif
+#if USE_SSL
+    sslBumpNeed = needUnknown;
 #endif
 }
 
@@ -1113,6 +1122,46 @@ ClientRequestContext::checkNoCacheDone(int answer)
     http->doCallouts();
 }
 
+#if USE_SSL
+bool
+ClientRequestContext::sslBumpAccessCheck()
+{
+    if (http->request->method == METHOD_CONNECT &&
+        Config.accessList.ssl_bump && http->getConn()->port->sslBump) {
+        debugs(85, 5, HERE << "SslBump possible, checking ACL");
+
+        ACLFilledChecklist *acl_checklist = clientAclChecklistCreate(Config.accessList.ssl_bump, http);
+        acl_checklist->nonBlockingCheck(sslBumpAccessCheckDoneWrapper, this);
+        return true;
+    }
+    else {
+        http->sslBumpNeeded(false);
+        return false;
+    }
+}
+
+/** 
+ * A wrapper function to use the ClientRequestContext::sslBumpAccessCheckDone method
+ * as ACLFilledChecklist callback
+ */
+static void
+sslBumpAccessCheckDoneWrapper(int answer, void *data)
+{
+    ClientRequestContext *calloutContext = static_cast<ClientRequestContext *>(data);
+
+    if (!calloutContext->httpStateIsValid())
+        return;
+    calloutContext->sslBumpAccessCheckDone(answer == ACCESS_ALLOWED);
+}
+
+void
+ClientRequestContext::sslBumpAccessCheckDone(bool doSslBump)
+{
+    http->sslBumpNeeded(doSslBump);
+    http->doCallouts();
+}
+#endif
+
 /*
  * Identify requests that do not go through the store and client side stream
  * and forward them to the appropriate location. All other requests, request
@@ -1156,19 +1205,18 @@ ClientHttpRequest::httpStart()
 
 #if USE_SSL
 
-// determines whether we should bump the CONNECT request
 bool
 ClientHttpRequest::sslBumpNeeded() const
 {
-    if (!getConn()->port->sslBump || !Config.accessList.ssl_bump)
-        return false;
+    assert(sslBumpNeed != needUnknown);
+    return (sslBumpNeed == needConfirmed);
+}
 
-    debugs(85, 5, HERE << "SslBump possible, checking ACL");
-
-    ACLFilledChecklist check(Config.accessList.ssl_bump, request, NULL);
-    check.src_addr = request->client_addr;
-    check.my_addr = request->my_addr;
-    return check.fastCheck() == 1;
+void
+ClientHttpRequest::sslBumpNeeded(bool isNeeded)
+{
+    debugs(83, 3, HERE << "sslBump required: "<< (isNeeded ? "Yes" : "No"));
+    sslBumpNeed = (isNeeded ? needConfirmed : needNot);
 }
 
 // called when comm_write has completed
@@ -1368,6 +1416,15 @@ ClientHttpRequest::doCallouts()
                 Ip::Qos::setSockNfmark(getConn()->fd, mark);
         }
     }
+
+#if USE_SSL
+    if (!calloutContext->sslBumpCheckDone) {
+        calloutContext->sslBumpCheckDone = true;
+        if (calloutContext->sslBumpAccessCheck())
+            return;
+        /* else no ssl bump required*/
+    }
+#endif
 
     cbdataReferenceDone(calloutContext->http);
     delete calloutContext;
