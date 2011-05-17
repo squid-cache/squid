@@ -6530,6 +6530,26 @@ DOC_START
 		is to use IPv4-only connections. When set to 'on' this option will
 		make Squid use IPv6-only connections to contact this ICAP service.
 
+	on-overload=block|bypass|wait|force
+		If the service Max-Connections limit has been reached, do
+		one of the following for each new ICAP transaction:
+		  * block:  send an HTTP error response to the client
+		  * bypass: ignore the "over-connected" ICAP service
+		  * wait:   wait (in a FIFO queue) for an ICAP connection slot
+		  * force:  proceed, ignoring the Max-Connections limit 
+
+		In SMP mode with N workers, each worker assumes the service
+		connection limit is Max-Connections/N, even though not all
+		workers may use a given service.
+
+		The default value is "bypass" if service is bypassable,
+		otherwise it is set to "wait".
+		
+
+	max-conn=number
+		Use the given number as the Max-Connections limit, regardless
+		of the Max-Connections value given by the service, if any.
+
 	Older icap_service format without optional named parameters is
 	deprecated but supported for backward compatibility.
 

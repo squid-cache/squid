@@ -21,8 +21,6 @@
 #include "SquidTime.h"
 #include "err_detail_type.h"
 
-static PconnPool *icapPconnPool = new PconnPool("ICAP Servers");
-
 
 //CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, Xaction);
 
@@ -90,19 +88,24 @@ void Adaptation::Icap::Xaction::start()
 // TODO: obey service-specific, OPTIONS-reported connection limit
 void Adaptation::Icap::Xaction::openConnection()
 {
-    Ip::Address client_addr;
-
     Must(connection < 0);
 
-    const Adaptation::Service &s = service();
+    Adaptation::Icap::ServiceRep &s = service();
 
     if (!TheConfig.reuse_connections)
         disableRetries(); // this will also safely drain pconn pool
 
-    // TODO: check whether NULL domain is appropriate here
-    connection = icapPconnPool->pop(s.cfg().host.termedBuf(), s.cfg().port, NULL, client_addr, isRetriable);
-    if (connection >= 0) {
-        debugs(93,3, HERE << "reused pconn FD " << connection);
+    bool wasReused = false;
+    connection = s.getConnection(isRetriable, wasReused);
+    if (connection < 0)
+        dieOnConnectionFailure(); // throws
+
+    if (wasReused) {
+        // Set comm Close handler
+        typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommCloseCbParams> CloseDialer;
+        closer =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommClosed",
+                            CloseDialer(this,&Adaptation::Icap::Xaction::noteCommClosed));
+        comm_add_close_handler(connection, closer);
 
         // fake the connect callback
         // TODO: can we sync call Adaptation::Icap::Xaction::noteCommConnected here instead?
@@ -119,39 +122,25 @@ void Adaptation::Icap::Xaction::openConnection()
 
     disableRetries(); // we only retry pconn failures
 
-    Ip::Address outgoing;
-    if (!Ip::EnableIpv6 && !outgoing.SetIPv4()) {
-        debugs(31, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << outgoing << " is not an IPv4 address.");
-        dieOnConnectionFailure(); // throws
-    }
-    /* split-stack for now requires default IPv4-only socket */
-    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && outgoing.IsAnyAddr() && !s.cfg().ipv6) {
-        outgoing.SetIPv4();
-    }
 
-    connection = comm_open(SOCK_STREAM, 0, outgoing,
-                           COMM_NONBLOCKING, s.cfg().uri.termedBuf());
-
-    if (connection < 0)
-        dieOnConnectionFailure(); // throws
-
-    debugs(93,3, typeName << " opens connection to " << s.cfg().host << ":" << s.cfg().port);
+    debugs(93,3, typeName << " opens connection to " << s.cfg().host.termedBuf() << ":" << s.cfg().port);
 
     // TODO: service bypass status may differ from that of a transaction
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall = JobCallback(93, 5,
-                                     TimeoutDialer, this, Adaptation::Icap::Xaction::noteCommTimedout);
+    AsyncCall::Pointer timeoutCall =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommTimedout",
+                                      TimeoutDialer(this,&Adaptation::Icap::Xaction::noteCommTimedout));
+
     commSetTimeout(connection, TheConfig.connect_timeout(
                        service().cfg().bypass), timeoutCall);
 
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommCloseCbParams> CloseDialer;
-    closer = JobCallback(93, 5,
-                         CloseDialer, this, Adaptation::Icap::Xaction::noteCommClosed);
+    closer =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommClosed",
+                        CloseDialer(this,&Adaptation::Icap::Xaction::noteCommClosed));
     comm_add_close_handler(connection, closer);
 
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> ConnectDialer;
-    connector = JobCallback(93,3,
-                            ConnectDialer, this, Adaptation::Icap::Xaction::noteCommConnected);
+    connector = asyncCall(93,3, "Adaptation::Icap::Xaction::noteCommConnected",
+                          ConnectDialer(this, &Adaptation::Icap::Xaction::noteCommConnected));
     commConnectStart(connection, s.cfg().host.termedBuf(), s.cfg().port, connector);
 }
 
@@ -186,21 +175,11 @@ void Adaptation::Icap::Xaction::closeConnection()
             reuseConnection = false;
         }
 
-        if (reuseConnection) {
-            Ip::Address client_addr;
-            //status() adds leading spaces.
-            debugs(93,3, HERE << "pushing pconn" << status());
-            AsyncCall::Pointer call = NULL;
-            commSetTimeout(connection, -1, call);
-            icapPconnPool->push(connection, theService->cfg().host.termedBuf(),
-                                theService->cfg().port, NULL, client_addr);
+        if (reuseConnection)
             disableRetries();
-        } else {
-            //status() adds leading spaces.
-            debugs(93,3, HERE << "closing pconn" << status());
-            // comm_close will clear timeout
-            comm_close(connection);
-        }
+
+        Adaptation::Icap::ServiceRep &s = service();
+        s.putConnection(connection, reuseConnection, status());
 
         writer = NULL;
         reader = NULL;
@@ -218,7 +197,7 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
     if (io.flag != COMM_OK)
         dieOnConnectionFailure(); // throws
 
-    fd_table[connection].noteUse(icapPconnPool);
+    service().noteConnectionUse(connection);
 
     handleCommConnected();
 }
