@@ -786,7 +786,7 @@ HttpStateData::handle1xx(HttpReply *reply)
     typedef NullaryMemFunT<HttpStateData> CbDialer;
     const AsyncCall::Pointer cb = JobCallback(11, 3, CbDialer, this,
                                   HttpStateData::proceedAfter1xx);
-    CallJobHere1(11, 4, orig_request->clientConnection, ConnStateData,
+    CallJobHere1(11, 4, orig_request->clientConnectionManager, ConnStateData,
                  ConnStateData::sendControlMsg, HttpControlMsg(msg, cb));
     // If the call is not fired, then the Sink is gone, and HttpStateData
     // will terminate due to an aborted store entry or another similar error.

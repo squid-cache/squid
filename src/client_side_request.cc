@@ -798,7 +798,8 @@ clientCheckPinning(ClientHttpRequest * http)
             } else {
                 request->flags.connection_proxy_auth = 1;
             }
-            request->setPinnedConnection(http_conn);
+            // These should already be linked correctly.
+            assert(request->clientConnectionManager == http_conn);
         }
     }
 
@@ -831,7 +832,8 @@ clientCheckPinning(ClientHttpRequest * http)
                 }
             }
             if (may_pin && !request->pinnedConnection()) {
-                request->setPinnedConnection(http->getConn());
+                // These should already be linked correctly. Just need the ServerConnection to pinn.
+                assert(request->clientConnectionManager == http_conn);
             }
         }
     }

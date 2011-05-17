@@ -87,7 +87,6 @@ HttpRequest::init()
 #if USE_AUTH
     auth_user_request = NULL;
 #endif
-    pinned_connection = NULL;
     port = 0;
     canonical = NULL;
     memset(&flags, '\0', sizeof(flags));
@@ -156,9 +155,6 @@ HttpRequest::clean()
         delete range;
         range = NULL;
     }
-
-    if (pinned_connection)
-        cbdataReferenceDone(pinned_connection);
 
     myportname.clean();
 
@@ -642,9 +638,7 @@ bool HttpRequest::inheritProperties(const HttpMsg *aMsg)
 #if USE_AUTH
     auth_user_request = aReq->auth_user_request;
 #endif
-    if (aReq->pinned_connection) {
-        pinned_connection = cbdataReference(aReq->pinned_connection);
-    }
+    clientConnectionManager = aReq->clientConnectionManager;
     return true;
 }
 
