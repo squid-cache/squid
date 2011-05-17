@@ -6018,6 +6018,7 @@ DOC_START
 			  (HTTPS URLs terminate with *)
 		%u	- Full canonical URL from client
 		%w	- Admin email from squid.conf
+		%x	- Error name
 		%%	- Literal percent (%) code
 
 DOC_END
