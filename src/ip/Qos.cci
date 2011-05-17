@@ -17,13 +17,16 @@ Ip::Qos::setSockTos(int fd, tos_t tos)
 int
 Ip::Qos::setSockNfmark(int fd, nfmark_t mark)
 {
-#if SO_MARK
+#if SO_MARK && USE_LIBCAP
     int x = setsockopt(fd, SOL_SOCKET, SO_MARK, &mark, sizeof(nfmark_t));
     if (x < 0)
         debugs(50, 2, "setSockNfmark: setsockopt(SO_MARK) on FD " << fd << ": " << xstrerror());
     return x;
-#else
+#elif USE_LIBCAP
     debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(SO_MARK) not supported on this platform");
+    return -1;
+#else
+    debugs(50, DBG_IMPORTANT, "WARNING: Netfilter marking disabled (netfilter marking requires build with LIBCAP)");
     return -1;
 #endif
 }

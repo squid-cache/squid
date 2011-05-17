@@ -1453,7 +1453,7 @@ free_acl_tos(acl_tos ** head)
     }
 }
 
-#if defined(SO_MARK)
+#if SO_MARK && USE_LIBCAP
 
 CBDATA_TYPE(acl_nfmark);
 

@@ -1623,7 +1623,7 @@ DOC_END
 
 NAME: tcp_outgoing_mark
 TYPE: acl_nfmark
-IFDEF: SO_MARK
+IFDEF: SO_MARK&&USE_LIBCAP
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.nfmarkToServer
 DOC_START
@@ -1643,7 +1643,7 @@ DOC_END
 
 NAME: clientside_mark
 TYPE: acl_nfmark
-IFDEF: SO_MARK
+IFDEF: SO_MARK&&USE_LIBCAP
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.nfmarkToClient
 DOC_START
