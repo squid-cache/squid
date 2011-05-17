@@ -3495,7 +3495,7 @@ ConnStateData::switchToHttps(const char *host)
     freeAllContexts();
     //currentobject->connIsFinished();
     // We are going to read new request
-    flags.readMore = true;
+    flags.readMoreRequests = true;
     debugs(33, 5, HERE << "converting FD " << fd << " to SSL");
 
     return getSslContextStart();
