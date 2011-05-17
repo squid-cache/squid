@@ -49,6 +49,12 @@ class ConnStateData;
 class HttpReply;
 class HttpRequest;
 
+/**
+ * Maximum length (buffer size) for token strings.
+ */
+// AYJ: must match re-definition in helpers/negotiate_auth/kerberos/negotiate_kerb_auth.cc
+#define MAX_AUTHTOKEN_LEN   32768
+
 /// \ingroup AuthAPI
 class AuthUserIP
 {
@@ -128,18 +134,24 @@ public:
     bool valid() const;
 
     virtual void authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type) = 0;
-    /* template method */
+
+    /* template method - what needs to be done next? advertise schemes, challenge, handle error, nothing? */
     virtual Auth::Direction module_direction() = 0;
-    virtual void addHeader(HttpReply * rep, int accel);
-    virtual void addTrailer(HttpReply * rep, int accel);
+
+    /* add the [Proxy-]Authentication-Info header */
+    virtual void addAuthenticationInfoHeader(HttpReply * rep, int accel);
+
+    /* add the [Proxy-]Authentication-Info trailer */
+    virtual void addAuthenticationInfoTrailer(HttpReply * rep, int accel);
+
     virtual void onConnectionClose(ConnStateData *);
 
     /**
      * Called when squid is ready to put the request on hold and wait for a callback from the auth module
      * when the auth module has performed it's external activities.
      *
-     \param handler	Handler to process the callback when its run
-     \param data	CBDATA for handler
+     * \param handler	Handler to process the callback when its run
+     * \param data	CBDATA for handler
      */
     virtual void module_start(RH *handler, void *data) = 0;
 
