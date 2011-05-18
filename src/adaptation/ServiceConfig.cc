@@ -9,7 +9,8 @@
 
 Adaptation::ServiceConfig::ServiceConfig():
         port(-1), method(methodNone), point(pointNone),
-        bypass(false), routing(false), ipv6(false)
+        bypass(false), maxConn(-1), onOverload(srvWait),
+        routing(false), ipv6(false)
 {}
 
 const char *
@@ -70,6 +71,7 @@ Adaptation::ServiceConfig::parse()
     // handle optional service name=value parameters
     const char *lastOption = NULL;
     bool grokkedUri = false;
+    bool onOverloadSet = false;
     while (char *option = strtok(NULL, w_space)) {
         if (strcmp(option, "0") == 0) { // backward compatibility
             bypass = false;
@@ -91,9 +93,9 @@ Adaptation::ServiceConfig::parse()
 
         // TODO: warn if option is set twice?
         bool grokked = false;
-        if (strcmp(name, "bypass") == 0)
+        if (strcmp(name, "bypass") == 0) {
             grokked = grokBool(bypass, name, value);
-        else if (strcmp(name, "routing") == 0)
+        } else if (strcmp(name, "routing") == 0)
             grokked = grokBool(routing, name, value);
         else if (strcmp(name, "uri") == 0)
             grokked = grokkedUri = grokUri(value);
@@ -101,12 +103,21 @@ Adaptation::ServiceConfig::parse()
             grokked = grokBool(ipv6, name, value);
             if (grokked && ipv6 && !Ip::EnableIpv6)
                 debugs(3, DBG_IMPORTANT, "WARNING: IPv6 is disabled. ICAP service option ignored.");
+        } else if (strcmp(name, "max-conn") == 0)
+            grokked = grokLong(maxConn, name, value);
+        else if (strcmp(name, "on-overload") == 0) {
+            grokked = grokOnOverload(onOverload, value);
+            onOverloadSet = true;
         } else
             grokked = grokExtension(name, value);
 
         if (!grokked)
             return false;
     }
+
+    // set default on-overload value if needed
+    if (!onOverloadSet)
+        onOverload = bypass ? srvBypass : srvWait;
 
     // what is left must be the service URI
     if (!grokkedUri && !grokUri(lastOption))
@@ -243,6 +254,41 @@ Adaptation::ServiceConfig::grokBool(bool &var, const char *name, const char *val
         return false;
     }
 
+    return true;
+}
+
+bool
+Adaptation::ServiceConfig::grokLong(long &var, const char *name, const char *value)
+{
+    char *bad = NULL;
+    const long p = strtol(value, &bad, 0);
+    if (p < 0 || bad == value) {
+        debugs(3, DBG_CRITICAL, "ERROR: " << cfg_filename << ':' <<
+               config_lineno << ": " << "wrong value for " << name << "; " <<
+               "a non-negative integer expected but got: " << value);
+        return false;
+    }
+    var = p;
+    return true;
+}
+
+bool
+Adaptation::ServiceConfig::grokOnOverload(SrvBehaviour &var, const char *value)
+{
+    if (strcmp(value, "block") == 0)
+        var = srvBlock;
+    else if (strcmp(value, "bypass") == 0)
+        var = srvBypass;
+    else if (strcmp(value, "wait") == 0)
+        var = srvWait;
+    else if (strcmp(value, "force") == 0)
+        var = srvForce;
+    else {
+        debugs(3, DBG_CRITICAL, "ERROR: " << cfg_filename << ':' <<
+               config_lineno << ": " << "wrong value for on-overload; " <<
+               "'block', 'bypass', 'wait' or 'force' expected but got: " << value);
+        return false;
+    }
     return true;
 }
 

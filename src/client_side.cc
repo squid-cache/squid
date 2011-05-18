@@ -2501,6 +2501,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     }
 
     request->flags.accelerated = http->flags.accel;
+    request->flags.sslBumped = conn->switchedToHttps();
     request->flags.ignore_cc = conn->port->ignore_cc;
     request->flags.no_direct = request->flags.accelerated ? !conn->port->allow_direct : 0;
 
@@ -2544,6 +2545,10 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->my_addr = conn->me;
     request->myportname = conn->port->name;
     request->http_ver = http_ver;
+
+    // Link this HttpRequest to ConnStateData relatively early so the following complex handling can use it
+    // TODO: this effectively obsoletes a lot of conn->FOO copying. That needs cleaning up later.
+    request->clientConnectionManager = conn;
 
     if (request->header.chunked()) {
         chunked = true;
@@ -4034,7 +4039,8 @@ ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
      * connection has gone away */
 }
 
-void ConnStateData::pinConnection(int pinning_fd, HttpRequest *request, struct peer *aPeer, bool auth)
+void
+ConnStateData::pinConnection(int pinning_fd, HttpRequest *request, struct peer *aPeer, bool auth)
 {
     fde *f;
     char desc[FD_DESC_SZ];
@@ -4068,7 +4074,8 @@ void ConnStateData::pinConnection(int pinning_fd, HttpRequest *request, struct p
 
 }
 
-int ConnStateData::validatePinnedConnection(HttpRequest *request, const struct peer *aPeer)
+int
+ConnStateData::validatePinnedConnection(HttpRequest *request, const struct peer *aPeer)
 {
     bool valid = true;
     if (pinning.fd < 0)
@@ -4088,21 +4095,15 @@ int ConnStateData::validatePinnedConnection(HttpRequest *request, const struct p
     }
 
     if (!valid) {
-        int pinning_fd=pinning.fd;
-        /* The pinning info is not safe, remove any pinning info*/
+        /* The pinning info is not safe, remove any pinning info */
         unpinConnection();
-
-        /* also close the server side socket, we should not use it for invalid/unauthenticated
-           requests...
-         */
-        comm_close(pinning_fd);
-        return -1;
     }
 
     return pinning.fd;
 }
 
-void ConnStateData::unpinConnection()
+void
+ConnStateData::unpinConnection()
 {
     if (pinning.peer)
         cbdataReferenceDone(pinning.peer);
@@ -4111,6 +4112,8 @@ void ConnStateData::unpinConnection()
         comm_remove_close_handler(pinning.fd, pinning.closeHandler);
         pinning.closeHandler = NULL;
     }
+    /// also close the server side socket, we should not use it for any future requests...
+    comm_close(pinning.fd);
     pinning.fd = -1;
     safe_free(pinning.host);
 }

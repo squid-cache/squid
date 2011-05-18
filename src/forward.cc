@@ -684,6 +684,10 @@ FwdState::initiateSSL()
 
     } else {
         SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)request->GetHost());
+
+        // We need to set SNI TLS extension only in the case we are
+        // connecting direct to origin server
+        Ssl::setClientSNI(ssl, request->GetHost());
     }
 
     // Create the ACL check list now, while we have access to more info.
@@ -828,6 +832,13 @@ FwdState::connectStart()
     if (ftimeout < ctimeout)
         ctimeout = ftimeout;
 
+    if (fs->_peer && request->flags.sslBumped == true) {
+        debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parrent proxy are not allowed");
+        ErrorState *anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, request);
+        fail(anErr);
+        self = NULL; // refcounted
+        return;
+    }
 
     request->flags.pinned = 0;
     if (fs->code == PINNED) {
@@ -835,7 +846,6 @@ FwdState::connectStart()
         assert(pinned_connection);
         fd = pinned_connection->validatePinnedConnection(request, fs->_peer);
         if (fd >= 0) {
-            pinned_connection->unpinConnection();
 #if 0
             if (!fs->_peer)
                 fs->code = HIER_DIRECT;
@@ -851,8 +861,7 @@ FwdState::connectStart()
             return;
         }
         /* Failure. Fall back on next path */
-        debugs(17,2,HERE << " Pinned connection " << pinned_connection << " not valid. Releasing.");
-        request->releasePinnedConnection();
+        debugs(17,2,HERE << " Pinned connection " << pinned_connection << " not valid.");
         servers = fs->next;
         fwdServerFree(fs);
         connectStart();
@@ -914,7 +923,7 @@ FwdState::connectStart()
 
     tos_t tos = GetTosToServer(request);
 
-#if SO_MARK
+#if SO_MARK && USE_LIBCAP
     nfmark_t mark = GetNfmarkToServer(request);
     debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << int(tos)
            << ", netfilter mark " << mark);
@@ -1026,7 +1035,7 @@ FwdState::dispatch()
             tos_t tos = GetTosToServer(request);
             Ip::Qos::setSockTos(server_fd, tos);
         }
-#if SO_MARK
+#if SO_MARK && USE_LIBCAP
         if (Ip::Qos::TheConfig.isAclNfmarkActive()) {
             nfmark_t mark = GetNfmarkToServer(request);
             Ip::Qos::setSockNfmark(server_fd, mark);

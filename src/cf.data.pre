@@ -556,7 +556,9 @@ DOC_START
 	FORMAT specifications
 
 	  %LOGIN	Authenticated user login name
-	  %EXT_USER	Username from external acl
+	  %EXT_USER	Username from previous external acl
+	  %EXT_LOG	Log details from previous external acl
+	  %EXT_TAG	Tag from previous external acl
 	  %IDENT	Ident user name
 	  %SRC		Client IP
 	  %SRCPORT	Client source port
@@ -642,8 +644,9 @@ DOC_START
 
 	When using "file", the file should contain one item per line.
 
-	By default, regular expressions are CASE-SENSITIVE.  To make
-	them case-insensitive, use the -i option.
+	By default, regular expressions are CASE-SENSITIVE.
+	To make them case-insensitive, use the -i option. To return case-sensitive
+	use the +i option between patterns, or make a new ACL line without -i.
 
 	Some acl types require suspending the current request in order
 	to access some external data source.
@@ -1620,7 +1623,7 @@ DOC_END
 
 NAME: tcp_outgoing_mark
 TYPE: acl_nfmark
-IFDEF: SO_MARK
+IFDEF: SO_MARK&&USE_LIBCAP
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.nfmarkToServer
 DOC_START
@@ -1640,7 +1643,7 @@ DOC_END
 
 NAME: clientside_mark
 TYPE: acl_nfmark
-IFDEF: SO_MARK
+IFDEF: SO_MARK&&USE_LIBCAP
 DEFAULT: none
 LOC: Ip::Qos::TheConfig.nfmarkToClient
 DOC_START
@@ -1916,9 +1919,9 @@ DOC_START
 
 	By default, no requests are bumped.
 
-	See also: http_port sslBump
+	See also: http_port ssl-bump
    
-	This clause only supports fast acl types.
+	This clause supports both fast and slow acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 
@@ -1945,7 +1948,6 @@ DOC_START
 	    NO_DEFAULT_CA	Don't use the default CA list built in
 				to OpenSSL.
 DOC_END
-
 
 NAME: sslproxy_cert_error
 IFDEF: USE_SSL
@@ -1976,8 +1978,6 @@ DOC_START
 
 	Default setting:  sslproxy_cert_error deny all
 DOC_END
-
-
 
 NAME: sslpassword_program
 IFDEF: USE_SSL
@@ -3591,10 +3591,10 @@ TYPE: wordlist
 LOC: Config.Program.redirect
 DEFAULT: none
 DOC_START
-	Specify the location of the executable for the URL rewriter.
+	Specify the location of the executable URL rewriter to use.
 	Since they can perform almost any function there isn't one included.
 
-	For each requested URL rewriter will receive on line with the format
+	For each requested URL, the rewriter will receive on line with the format
 
 	URL <SP> client_ip "/" fqdn <SP> user <SP> method [<SP> kvpairs]<NL>
 
@@ -3608,7 +3608,7 @@ DOC_START
 
 	The rewriter can also indicate that a client-side redirect should
 	be performed to the new URL. This is done by prefixing the returned
-	URL with "301:" (moved permanently) or 302: (moved temporarily).
+	URL with "301:" (moved permanently) or 302: (moved temporarily), etc.
 
 	By default, a URL rewriter is not used.
 DOC_END
@@ -6034,6 +6034,7 @@ DOC_START
 			  (HTTPS URLs terminate with *)
 		%u	- Full canonical URL from client
 		%w	- Admin email from squid.conf
+		%x	- Error name
 		%%	- Literal percent (%) code
 
 DOC_END
@@ -6545,6 +6546,26 @@ DOC_START
 		Only has effect on split-stack systems. The default on those systems
 		is to use IPv4-only connections. When set to 'on' this option will
 		make Squid use IPv6-only connections to contact this ICAP service.
+
+	on-overload=block|bypass|wait|force
+		If the service Max-Connections limit has been reached, do
+		one of the following for each new ICAP transaction:
+		  * block:  send an HTTP error response to the client
+		  * bypass: ignore the "over-connected" ICAP service
+		  * wait:   wait (in a FIFO queue) for an ICAP connection slot
+		  * force:  proceed, ignoring the Max-Connections limit 
+
+		In SMP mode with N workers, each worker assumes the service
+		connection limit is Max-Connections/N, even though not all
+		workers may use a given service.
+
+		The default value is "bypass" if service is bypassable,
+		otherwise it is set to "wait".
+		
+
+	max-conn=number
+		Use the given number as the Max-Connections limit, regardless
+		of the Max-Connections value given by the service, if any.
 
 	Older icap_service format without optional named parameters is
 	deprecated but supported for backward compatibility.

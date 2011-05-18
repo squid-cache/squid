@@ -187,6 +187,8 @@ struct _external_acl_format {
 #if USE_AUTH
         EXT_ACL_EXT_USER,
 #endif
+        EXT_ACL_EXT_LOG,
+        EXT_ACL_TAG,
         EXT_ACL_END
     } type;
     external_acl_format *next;
@@ -464,6 +466,10 @@ parse_externalAclHelper(external_acl ** list)
         else if (strcmp(token, "%EXT_USER") == 0)
             format->type = _external_acl_format::EXT_ACL_EXT_USER;
 #endif
+        else if (strcmp(token, "%EXT_LOG") == 0)
+            format->type = _external_acl_format::EXT_ACL_EXT_LOG;
+        else if (strcmp(token, "%TAG") == 0)
+            format->type = _external_acl_format::EXT_ACL_TAG;
         else {
             debugs(0,0, "ERROR: Unknown Format token " << token);
             self_destruct();
@@ -602,6 +608,8 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
 #if USE_AUTH
                 DUMP_EXT_ACL_TYPE(EXT_USER);
 #endif
+                DUMP_EXT_ACL_TYPE(EXT_LOG);
+                DUMP_EXT_ACL_TYPE(TAG);
             default:
                 fatal("unknown external_acl format error");
                 break;
@@ -1068,6 +1076,12 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             str = request->extacl_user.termedBuf();
             break;
 #endif
+        case _external_acl_format::EXT_ACL_EXT_LOG:
+            str = request->extacl_log.termedBuf();
+            break;
+        case _external_acl_format::EXT_ACL_TAG:
+            str = request->tag.termedBuf();
+            break;
         case _external_acl_format::EXT_ACL_UNKNOWN:
 
         case _external_acl_format::EXT_ACL_END:

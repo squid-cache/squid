@@ -664,7 +664,10 @@ icpHandleUdp(int sock, void *data)
 
         icp_version = (int) buf[1];	/* cheat! */
 
-        if (icp_version == ICP_VERSION_2)
+        if (theOutICPAddr == from)
+            // ignore ICP packets which loop back (multicast usually)
+            debugs(12, 4, "icpHandleUdp: Ignoring UDP packet sent by myself");
+        else if (icp_version == ICP_VERSION_2)
             icpHandleIcpV2(sock, from, buf, len);
         else if (icp_version == ICP_VERSION_3)
             icpHandleIcpV3(sock, from, buf, len);

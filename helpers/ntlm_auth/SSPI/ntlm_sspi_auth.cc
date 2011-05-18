@@ -415,9 +415,10 @@ manage_request()
 {
     ntlmhdr *fast_header;
     char buf[BUFFER_SIZE];
+    char decoded[BUFFER_SIZE];
+    int decodedLen;
     char helper_command[3];
-    char *c, *decoded, *cred;
-    int plen;
+    char *c, *cred;
     int oversized = 0;
     char * ErrorMessage;
     static ntlm_negotiate local_nego;
@@ -454,24 +455,22 @@ try_again:
         goto try_again;
     }
     if ((strlen(buf) > 3) && NTLM_packet_debug_enabled) {
-        decoded = base64_decode(buf + 3);
+        decodedLen = base64_decode(decoded, sizeof(decoded), buf+3);
         strncpy(helper_command, buf, 2);
         debug("Got '%s' from Squid with data:\n", helper_command);
-        hex_dump(decoded, ((strlen(buf) - 3) * 3) / 4);
+        hex_dump(decoded, decodedLen);
     } else
         debug("Got '%s' from Squid\n", buf);
     if (memcmp(buf, "YR", 2) == 0) {	/* refresh-request */
         /* figure out what we got */
         if (strlen(buf) > 3)
-            decoded = base64_decode(buf + 3);
+            decodedLen = base64_decode(decoded, sizeof(decoded), buf+3);
         else {
             debug("Negotiate packet not supplied - self generated\n");
-            decoded = (char *) &local_nego;
+            memcpy(decoded, local_lego, sizeof(local_nego));
+            decodedLen = sizeof(localnego);
         }
-        /* Note: we don't need to manage memory at this point, since
-         *  base64_decode returns a pointer to static storage.
-         */
-        if (!decoded) {		/* decoding failure, return error */
+        if ((size_t)decodedLen < sizeof(ntlmhdr)) {		/* decoding failure, return error */
             SEND("NA Packet format error, couldn't base64-decode");
             return 1;
         }
@@ -486,39 +485,36 @@ try_again:
         switch (fast_header->type) {
         case NTLM_NEGOTIATE:
             /* Obtain challenge against SSPI */
-            if (strlen(buf) > 3)
-                plen = (strlen(buf) - 3) * 3 / 4;		/* we only need it here. Optimization */
-            else
-                plen = sizeof(ntlmhdr) + sizeof uint32_t); /* local_nego only has header and flags set. */
-                debug("attempting SSPI challenge retrieval\n");
-                if ((c = (char *) SSP_MakeChallenge((ntlm_negotiate *) decoded, plen)) != NULL ) {
-                    if (NTLM_packet_debug_enabled) {
-                        printf("TT %s\n",c);
-                        decoded = base64_decode(c);
-                        debug("sending 'TT' to squid with data:\n");
-                        hex_dump(decoded, (strlen(c) * 3) / 4);
-                        if (NTLM_LocalCall)
-                            debug("NTLM Local Call detected\n");
-                    } else {
-                        SEND2("TT %s", c);
-                    }
-                    have_challenge = 1;
-                } else
-                    helperfail("can't obtain challenge");
-                    return 1;
-                    /* notreached */
-                case NTLM_CHALLENGE:
-                        SEND("NA Got a challenge. We refuse to have our authority disputed");
-                        return 1;
-                        /* notreached */
-                    case NTLM_AUTHENTICATE:
-                            SEND("NA Got authentication request instead of negotiate request");
-                            return 1;
-                            /* notreached */
-                        default:
-                                helperfail("unknown refresh-request packet type");
-                                return 1;
-                            }
+            debug("attempting SSPI challenge retrieval\n");
+            if ((c = (char *) SSP_MakeChallenge((ntlm_negotiate *) decoded, decodedLen)) != NULL ) {
+                if (NTLM_packet_debug_enabled) {
+                    printf("TT %s\n",c);
+                    decodedLen = base64_decode(decoded, sizeof(decoded), c);
+                    debug("sending 'TT' to squid with data:\n");
+                    hex_dump(decoded, decodedLen);
+                    if (NTLM_LocalCall)
+                        debug("NTLM Local Call detected\n");
+                } else {
+                    SEND2("TT %s", c);
+                }
+                have_challenge = 1;
+            } else
+                helperfail("can't obtain challenge");
+
+            return 1;
+            /* notreached */
+        case NTLM_CHALLENGE:
+            SEND("NA Got a challenge. We refuse to have our authority disputed");
+            return 1;
+            /* notreached */
+        case NTLM_AUTHENTICATE:
+            SEND("NA Got authentication request instead of negotiate request");
+            return 1;
+            /* notreached */
+        default:
+            helperfail("unknown refresh-request packet type");
+            return 1;
+        }
         return 1;
     }
     if (memcmp(buf, "KK ", 3) == 0) {	/* authenticate-request */
@@ -527,12 +523,9 @@ try_again:
             return 1;
         }
         /* figure out what we got */
-        decoded = base64_decode(buf + 3);
-        /* Note: we don't need to manage memory at this point, since
-         *  base64_decode returns a pointer to static storage.
-         */
+        decodedLen = base64_decode(decoded, sizeof(decoded), buf+3);
 
-        if (!decoded) {		/* decoding failure, return error */
+        if ((size_t)decodedLen < sizeof(ntlmhdr)) {		/* decoding failure, return error */
             SEND("NA Packet format error, couldn't base64-decode");
             return 1;
         }
@@ -556,8 +549,7 @@ try_again:
             /* notreached */
         case NTLM_AUTHENTICATE:
             /* check against SSPI */
-            plen = (strlen(buf) - 3) * 3 / 4;		/* we only need it here. Optimization */
-            err = ntlm_check_auth((ntlm_authenticate *) decoded, user, domain, plen);
+            err = ntlm_check_auth((ntlm_authenticate *) decoded, user, domain, decodedLen);
             have_challenge = 0;
             if (err != NTLM_ERR_NONE) {
 #if FAIL_DEBUG

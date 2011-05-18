@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-06 22:39+1300\n"
+"POT-Creation-Date: 2011-05-04 13:57+1300\n"
 "PO-Revision-Date: 2010-05-05 13:38+0200\n"
 "Last-Translator: Francesco Chemolli <kinkie@squid-cache.org>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -14,13 +14,50 @@ msgstr ""
 "X-Generator: Pootle 2.0.1\n"
 "X-Launchpad-Export-Date: 2009-07-22 10:00+0000\n"
 
-#: templates/ERR_DIR_LISTING:6
+#: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:29
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:29
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:29
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:29
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:30
+msgid "%F"
+msgstr ""
+
+#: templates/ERR_INVALID_REQ+html.body.div.blockquote.pre:23
+#: templates/ERR_INVALID_RESP+html.body.div.blockquote.pre:23
+msgid "%R"
+msgstr ""
+
+#: templates/ERR_ESI+html.body.div.blockquote.pre:28
+msgid "%Z"
+msgstr ""
+
+#: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:24
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:24
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:24
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:24
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:25
+msgid "%f"
+msgstr ""
+
+#: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:30
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:30
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:30
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:31
+msgid "%g"
+msgstr ""
+
+#: templates/ERR_DIR_LISTING+html.body.div.blockquote.pre:22
+#: templates/ERR_DNS_FAIL+html.body.div.blockquote.pre:28
+msgid "%z"
+msgstr ""
+
+#: templates/ERR_DIR_LISTING+html.body.div.table.tr.th:28
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
 "<a href=\"../\">Directory superiore</a> (<a href=\"/\">Directory principale</"
 "a>)"
 
-#: templates/ERR_INVALID_REQ:4
+#: templates/ERR_INVALID_REQ+html.body.div.p:20
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
@@ -28,7 +65,7 @@ msgstr ""
 "<b>Richiesta non valida</b>. Si è verificato un errore durante "
 "l'elaborazione della richiesta:"
 
-#: templates/ERR_INVALID_RESP:4
+#: templates/ERR_INVALID_RESP+html.body.div.p:20
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
@@ -36,7 +73,7 @@ msgstr ""
 "<b>Risposta non valida</b>. Si è verificato un errore durante l'elaborazione "
 "della richiesta:"
 
-#: templates/ERR_READ_TIMEOUT:7
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:28
 msgid ""
 "A Timeout occurred while waiting to read data from the network. The network "
 "or server may be down or congested. Please retry your request."
@@ -45,22 +82,22 @@ msgstr ""
 "La rete o il server potrebbero essere inaccessibili o sovraccarichi. "
 "Riprovare più tardi."
 
-#: templates/ERR_URN_RESOLVE:3
+#: templates/ERR_URN_RESOLVE+html.body.div.h2:15
 msgid "A URL for the requested URN could not be retrieved"
 msgstr ""
 "Non è stato possibile ottenere una URL corrispondente alla URN richiesta."
 
-#: templates/ERR_GATEWAY_FAILURE:6
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:26
 msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
 "request from being completed."
 msgstr ""
 
-#: templates/ERR_ACCESS_DENIED:5
+#: templates/ERR_ACCESS_DENIED+html.body.div.blockquote.p:23
 msgid "Access Denied."
 msgstr "Accesso negato."
 
-#: templates/ERR_ACCESS_DENIED:6
+#: templates/ERR_ACCESS_DENIED+html.body.div.p:26
 msgid ""
 "Access control configuration prevents your request from being allowed at "
 "this time. Please contact your service provider if you feel this is "
@@ -69,7 +106,7 @@ msgstr ""
 "La richiesta non è permessa dalle impostazioni di sicurezza. Se ritieni sia "
 "un errore, contatta il fornitore del servizio."
 
-#: templates/ERR_FTP_FORBIDDEN:4
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:20
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
@@ -77,7 +114,8 @@ msgstr ""
 "Le credenziali fornite per l'accesso al server FTP relativo alla URL <a href="
 "\"%U\">%U</a> sono invalide."
 
-#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
+#: templates/ERR_FTP_FAILURE+html.body.div.p:20
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:20
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
@@ -85,11 +123,11 @@ msgstr ""
 "Si è verificato un errore di protocollo FTP durante l'accesso alla URL <a "
 "href=\"%U\">%U</a>."
 
-#: templates/ERR_ICAP_FAILURE:10
+#: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:33
 msgid "An Illegal response was received from the ICAP server."
 msgstr "Il server ICAP ha dato una risposta non valida (illegal response)."
 
-#: templates/ERR_READ_ERROR:7
+#: templates/ERR_READ_ERROR+html.body.div.p:28
 msgid ""
 "An error condition occurred while reading data from the network. Please "
 "retry your request."
@@ -97,7 +135,7 @@ msgstr ""
 "Si è verificato un errore durante la lettura delle informazioni dalla rete. "
 "Riprova più tardi."
 
-#: templates/ERR_WRITE_ERROR:7
+#: templates/ERR_WRITE_ERROR+html.body.div.p:28
 msgid ""
 "An error condition occurred while writing to the network. Please retry your "
 "request."
@@ -105,201 +143,259 @@ msgstr ""
 "Si è verificato un errore durante la scrittura di informazioni sulla rete. "
 "Riprova più tardi."
 
-#: templates/ERR_PRECONDITION_FAILED:7
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:28
 msgid ""
 "At least one precondition specified by the HTTP client in the request header "
 "has failed."
 msgstr ""
 
-#: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h2:16
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.blockquote.p:24
 msgid "Cache Access Denied."
 msgstr "Accesso alla cache negato."
 
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:3
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:5
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h2:15
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.blockquote.p:23
 msgid "Cache Manager Access Denied."
 msgstr "L'accesso al cache manager è negato."
 
-#: templates/ERR_URN_RESOLVE:5
+#: templates/ERR_URN_RESOLVE+html.body.div.blockquote.p:23
 msgid "Cannot Resolve URN"
 msgstr "Impossibile risolvere la URN."
 
-#: templates/ERR_LIFETIME_EXP:5
+#: templates/ERR_LIFETIME_EXP+html.body.div.blockquote.p:23
 msgid "Connection Lifetime Expired"
 msgstr "Il tempo di mantenimento di connessioni inattive è scaduto."
 
-#: templates/ERR_CONNECT_FAIL:5
+#: templates/ERR_CONNECT_FAIL+html.body.div.blockquote.p:23
 msgid "Connection to %I failed."
 msgstr "La connessione a %I non è riuscita."
 
-#: templates/ERR_INVALID_REQ:10
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:32
 msgid "Content-Length missing for POST or PUT requests."
 msgstr "La richiesta di tipo POST o PUT non contiene il campo Content-Length."
 
-#: templates/ERR_DIR_LISTING:3
+#: templates/ERR_DIR_LISTING+html.body.div.h4:19
 msgid "Directory Content:"
 msgstr "Contenuto della directory:"
 
-#: templates/ERR_DIR_LISTING:4
+#: templates/ERR_DIR_LISTING+html.body.div.table:-1
 msgid "Directory Listing"
 msgstr "Elenco della directory"
 
-#: templates/ERR_DIR_LISTING:1
+#: templates/ERR_DIR_LISTING+html.head.title:4
 msgid "Directory: %U"
 msgstr "Directory: %U"
 
-#: templates/ERR_DIR_LISTING:2
+#: templates/ERR_DIR_LISTING+html.body.div.h2:14
 msgid "Directory: <a href=\"%U\">%U</a>/"
 msgstr "Directory: <a href=\"%U\">%U</a>/"
 
-#: templates/ERR_ACCESS_DENIED:2 templates/ERR_AGENT_CONFIGURE:2
-#: templates/ERR_AGENT_WPAD:2 templates/ERR_CACHE_ACCESS_DENIED:2
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
-#: templates/ERR_CONNECT_FAIL:2 templates/ERR_DNS_FAIL:2 templates/ERR_ESI:2
-#: templates/ERR_FORWARDING_DENIED:2 templates/ERR_FTP_DISABLED:2
-#: templates/ERR_FTP_FAILURE:2 templates/ERR_FTP_FORBIDDEN:2
-#: templates/ERR_FTP_NOT_FOUND:2 templates/ERR_FTP_PUT_ERROR:2
-#: templates/ERR_FTP_UNAVAILABLE:2 templates/ERR_GATEWAY_FAILURE:2
-#: templates/ERR_ICAP_FAILURE:2 templates/ERR_INVALID_REQ:2
-#: templates/ERR_INVALID_RESP:2 templates/ERR_INVALID_URL:2
-#: templates/ERR_LIFETIME_EXP:2 templates/ERR_NO_RELAY:2
-#: templates/ERR_ONLY_IF_CACHED_MISS:2 templates/ERR_PRECONDITION_FAILED:2
-#: templates/ERR_READ_ERROR:2 templates/ERR_READ_TIMEOUT:2
-#: templates/ERR_SECURE_CONNECT_FAIL:2 templates/ERR_SHUTTING_DOWN:2
-#: templates/ERR_SOCKET_FAILURE:2 templates/ERR_TOO_BIG:2
-#: templates/ERR_UNSUP_HTTPVERSION:2 templates/ERR_UNSUP_REQ:2
-#: templates/ERR_URN_RESOLVE:2 templates/ERR_WRITE_ERROR:2
-#: templates/ERR_ZERO_SIZE_OBJECT:2
+#: templates/ERR_ACCESS_DENIED+html.body.div.h1:14
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.h1:14
+#: templates/ERR_AGENT_WPAD+html.body.div.h1:14
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h1:15
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h1:14
+#: templates/ERR_CANNOT_FORWARD+html.body.div.h1:15
+#: templates/ERR_CONNECT_FAIL+html.body.div.h1:14
+#: templates/ERR_DNS_FAIL+html.body.div.h1:14
+#: templates/ERR_ESI+html.body.div.h1:14
+#: templates/ERR_FORWARDING_DENIED+html.body.div.h1:14
+#: templates/ERR_FTP_DISABLED+html.body.div.h1:14
+#: templates/ERR_FTP_FAILURE+html.body.div.h1:14
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.h1:14
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.h1:14
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.h1:14
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.h1:14
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.h1:14
+#: templates/ERR_ICAP_FAILURE+html.body.div.h1:14
+#: templates/ERR_INVALID_REQ+html.body.div.h1:14
+#: templates/ERR_INVALID_RESP+html.body.div.h1:14
+#: templates/ERR_INVALID_URL+html.body.div.h1:14
+#: templates/ERR_LIFETIME_EXP+html.body.div.h1:14
+#: templates/ERR_NO_RELAY+html.body.div.h1:14
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.h1:14
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.h1:14
+#: templates/ERR_READ_ERROR+html.body.div.h1:14
+#: templates/ERR_READ_TIMEOUT+html.body.div.h1:14
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.h1:14
+#: templates/ERR_SHUTTING_DOWN+html.body.div.h1:14
+#: templates/ERR_SOCKET_FAILURE+html.body.div.h1:14
+#: templates/ERR_TOO_BIG+html.body.div.h1:14
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h1:14
+#: templates/ERR_UNSUP_REQ+html.body.div.h1:14
+#: templates/ERR_URN_RESOLVE+html.body.div.h1:14
+#: templates/ERR_WRITE_ERROR+html.body.div.h1:14
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h1:14
 msgid "ERROR"
 msgstr "ERRORE"
 
-#: templates/ERR_CACHE_ACCESS_DENIED:1
+#: templates/ERR_CACHE_ACCESS_DENIED+html.head.title:4
 msgid "ERROR: Cache Access Denied"
 msgstr "ERRORE: accesso alla cache negato."
 
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:1
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.head.title:4
 msgid "ERROR: Cache Manager Access Denied"
 msgstr "ERRORE: accesso al Cache Manager negato."
 
-#: templates/ERR_FTP_PUT_ERROR:1
+#: templates/ERR_FTP_PUT_ERROR+html.head.title:4
 msgid "ERROR: FTP upload failed"
 msgstr "ERRORE: l'invio del file via FTP non è riuscito."
 
-#: templates/ERR_ACCESS_DENIED:1 templates/ERR_CANNOT_FORWARD:1
-#: templates/ERR_CONNECT_FAIL:1 templates/ERR_DNS_FAIL:1 templates/ERR_ESI:1
-#: templates/ERR_FORWARDING_DENIED:1 templates/ERR_FTP_DISABLED:1
-#: templates/ERR_FTP_FAILURE:1 templates/ERR_FTP_FORBIDDEN:1
-#: templates/ERR_FTP_NOT_FOUND:1 templates/ERR_FTP_UNAVAILABLE:1
-#: templates/ERR_GATEWAY_FAILURE:1 templates/ERR_ICAP_FAILURE:1
-#: templates/ERR_INVALID_REQ:1 templates/ERR_INVALID_RESP:1
-#: templates/ERR_INVALID_URL:1 templates/ERR_LIFETIME_EXP:1
-#: templates/ERR_NO_RELAY:1 templates/ERR_ONLY_IF_CACHED_MISS:1
-#: templates/ERR_PRECONDITION_FAILED:1 templates/ERR_READ_ERROR:1
-#: templates/ERR_READ_TIMEOUT:1 templates/ERR_SECURE_CONNECT_FAIL:1
-#: templates/ERR_SHUTTING_DOWN:1 templates/ERR_SOCKET_FAILURE:1
-#: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_HTTPVERSION:1
-#: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
-#: templates/ERR_ZERO_SIZE_OBJECT:1
+#: templates/ERR_ACCESS_DENIED+html.head.title:4
+#: templates/ERR_CANNOT_FORWARD+html.head.title:4
+#: templates/ERR_CONNECT_FAIL+html.head.title:4
+#: templates/ERR_DNS_FAIL+html.head.title:4
+#: templates/ERR_ESI+html.head.title:4
+#: templates/ERR_FORWARDING_DENIED+html.head.title:4
+#: templates/ERR_FTP_DISABLED+html.head.title:4
+#: templates/ERR_FTP_FAILURE+html.head.title:4
+#: templates/ERR_FTP_FORBIDDEN+html.head.title:4
+#: templates/ERR_FTP_NOT_FOUND+html.head.title:4
+#: templates/ERR_FTP_UNAVAILABLE+html.head.title:4
+#: templates/ERR_GATEWAY_FAILURE+html.head.title:4
+#: templates/ERR_ICAP_FAILURE+html.head.title:4
+#: templates/ERR_INVALID_REQ+html.head.title:4
+#: templates/ERR_INVALID_RESP+html.head.title:4
+#: templates/ERR_INVALID_URL+html.head.title:4
+#: templates/ERR_LIFETIME_EXP+html.head.title:4
+#: templates/ERR_NO_RELAY+html.head.title:4
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.head.title:4
+#: templates/ERR_PRECONDITION_FAILED+html.head.title:4
+#: templates/ERR_READ_ERROR+html.head.title:4
+#: templates/ERR_READ_TIMEOUT+html.head.title:4
+#: templates/ERR_SECURE_CONNECT_FAIL+html.head.title:4
+#: templates/ERR_SHUTTING_DOWN+html.head.title:4
+#: templates/ERR_SOCKET_FAILURE+html.head.title:4
+#: templates/ERR_TOO_BIG+html.head.title:4
+#: templates/ERR_UNSUP_HTTPVERSION+html.head.title:4
+#: templates/ERR_UNSUP_REQ+html.head.title:4
+#: templates/ERR_WRITE_ERROR+html.head.title:4
+#: templates/ERR_ZERO_SIZE_OBJECT+html.head.title:4
 msgid "ERROR: The requested URL could not be retrieved"
 msgstr "ERRORE: non è possibile accedere alla URL richiesta"
 
-#: templates/ERR_URN_RESOLVE:1
+#: templates/ERR_URN_RESOLVE+html.head.title:4
 msgid "ERROR: The requested URN could not be retrieved"
 msgstr "ERRORE: non è possibile accedere alla URN richiesta"
 
-#: templates/ERR_ESI:5
+#: templates/ERR_ESI+html.body.div.blockquote.p:23
 msgid "ESI Processing failed."
 msgstr "L'elaborazione ESI è fallita."
 
-#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
+#: templates/ERR_FTP_PUT_CREATED+html.head.title:4
+#: templates/ERR_FTP_PUT_MODIFIED+html.head.title:4
 #, fuzzy
 msgid "FTP PUT Successful."
 msgstr "Comando FTP PUT eseguito correttamente: il file è stato creato."
 
-#: templates/ERR_FTP_PUT_ERROR:3
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.h2:15
 #, fuzzy
 msgid "FTP PUT upload failed"
 msgstr "Comando FTP PUT non riuscito."
 
-#: templates/ERR_FTP_DISABLED:5
+#: templates/ERR_FTP_DISABLED+html.body.div.blockquote.p:23
 msgid "FTP is Disabled"
 msgstr "Il protocollo FTP è disabilitato."
 
-#: templates/ERR_SECURE_CONNECT_FAIL:5
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.blockquote.p:23
 msgid "Failed to establish a secure connection to %I"
 msgstr "Non è stato possibile stabilire una connessione sicura verso %I"
 
-#: templates/ERR_FTP_PUT_CREATED:3
+#: templates/ERR_FTP_PUT_CREATED+html.body.div.h2:15
 msgid "File created"
 msgstr "Il file è stato creato."
 
-#: templates/ERR_FTP_PUT_MODIFIED:3
+#: templates/ERR_FTP_PUT_MODIFIED+html.body.div.h2:15
 msgid "File updated"
 msgstr "Il file è stato aggiornato."
 
-#: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:26
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:26
 msgid "For Firefox browsers go to: <ul>"
 msgstr "Per configurare Mozilla Firefox accedere a: <ul>"
 
-#: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:34
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:34
 msgid "For Internet Explorer browsers go to: <ul>"
 msgstr "Per configurare Microsoft Internet Explorer: <ul>"
 
-#: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:42
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:42
 msgid "For Opera browsers go to: <ul>"
 msgstr "Per configurare i browser Opera: <ul>"
 
-#: templates/ERR_FORWARDING_DENIED:5
+#: templates/ERR_FORWARDING_DENIED+html.body.div.blockquote.p:23
 msgid "Forwarding Denied."
 msgstr "Inoltro negato."
 
-#: templates/ERR_GATEWAY_FAILURE:5
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.blockquote.p:23
 msgid "Gateway Proxy Failure"
 msgstr ""
 
-#: templates/ERR_ACCESS_DENIED:8 templates/ERR_AGENT_CONFIGURE:16
-#: templates/ERR_AGENT_WPAD:15 templates/ERR_CACHE_ACCESS_DENIED:8
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
-#: templates/ERR_CONNECT_FAIL:9 templates/ERR_DIR_LISTING:7
-#: templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
-#: templates/ERR_FORWARDING_DENIED:8 templates/ERR_FTP_DISABLED:8
-#: templates/ERR_FTP_FAILURE:8 templates/ERR_FTP_FORBIDDEN:8
-#: templates/ERR_FTP_NOT_FOUND:9 templates/ERR_FTP_PUT_CREATED:4
-#: templates/ERR_FTP_PUT_ERROR:9 templates/ERR_FTP_PUT_MODIFIED:4
-#: templates/ERR_FTP_UNAVAILABLE:8 templates/ERR_GATEWAY_FAILURE:9
-#: templates/ERR_ICAP_FAILURE:11 templates/ERR_INVALID_REQ:14
-#: templates/ERR_INVALID_RESP:8 templates/ERR_INVALID_URL:13
-#: templates/ERR_LIFETIME_EXP:8 templates/ERR_NO_RELAY:8
-#: templates/ERR_ONLY_IF_CACHED_MISS:8 templates/ERR_PRECONDITION_FAILED:8
-#: templates/ERR_READ_ERROR:9 templates/ERR_READ_TIMEOUT:9
-#: templates/ERR_SECURE_CONNECT_FAIL:9 templates/ERR_SHUTTING_DOWN:7
-#: templates/ERR_SOCKET_FAILURE:9 templates/ERR_TOO_BIG:10
-#: templates/ERR_UNSUP_HTTPVERSION:8 templates/ERR_UNSUP_REQ:8
-#: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
-#: templates/ERR_ZERO_SIZE_OBJECT:8
+#: templates/ERR_ACCESS_DENIED+html.body.div.p:34
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.p:56
+#: templates/ERR_AGENT_WPAD+html.body.div.p:56
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:36
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:35
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:36
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:37
+#: templates/ERR_DIR_LISTING+html.body.div.p:38
+#: templates/ERR_DNS_FAIL+html.body.div.p:39
+#: templates/ERR_ESI+html.body.div.p:39
+#: templates/ERR_FORWARDING_DENIED+html.body.div.p:35
+#: templates/ERR_FTP_DISABLED+html.body.div.p:35
+#: templates/ERR_FTP_FAILURE+html.body.div.p:39
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:39
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:41
+#: templates/ERR_FTP_PUT_CREATED+html.body.div.p:23
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:40
+#: templates/ERR_FTP_PUT_MODIFIED+html.body.div.p:23
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:40
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:36
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:41
+#: templates/ERR_INVALID_REQ+html.body.div.p:43
+#: templates/ERR_INVALID_RESP+html.body.div.p:36
+#: templates/ERR_INVALID_URL+html.body.div.p:42
+#: templates/ERR_LIFETIME_EXP+html.body.div.p:34
+#: templates/ERR_NO_RELAY+html.body.div.p:34
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:34
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.p:36
+#: templates/ERR_READ_ERROR+html.body.div.p:36
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:36
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:36
+#: templates/ERR_SHUTTING_DOWN+html.body.div.p:30
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:36
+#: templates/ERR_TOO_BIG+html.body.div.p:36
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:34
+#: templates/ERR_UNSUP_REQ+html.body.div.p:34
+#: templates/ERR_URN_RESOLVE+html.body.div.p:34
+#: templates/ERR_WRITE_ERROR+html.body.div.p:36
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:34
 msgid "Generated %T by %h (%s)"
 msgstr "Generato da %h (%s) il %T."
 
-#: templates/ERR_INVALID_REQ:12
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:34
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
 "Un software HTTP/1.0 sta cercando di utilizzare le funzionalità <q>Expect</"
 "q> di HTTP/1.1."
 
-#: templates/ERR_URN_RESOLVE:6
+#: templates/ERR_URN_RESOLVE+html.body.div.p:26
 msgid "Hey, don't expect too much from URNs on %T :)"
 msgstr "Ehi, non ci si deve aspettare granché dalle URN su %T :)"
 
-#: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.p:24
+#: templates/ERR_AGENT_WPAD+html.body.div.p:24
 msgid "How to find these settings in your browser:"
 msgstr "Indicazioni su come configurare il tuo browser sono disponibili a:"
 
-#: templates/ERR_ICAP_FAILURE:5
+#: templates/ERR_ICAP_FAILURE+html.body.div.blockquote.p:23
 msgid "ICAP protocol error."
 msgstr "Si è verificato un errore di protocollo ICAP."
 
-#: templates/ERR_TOO_BIG:7
+#: templates/ERR_TOO_BIG+html.body.div.p:27
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
@@ -307,7 +403,7 @@ msgstr ""
 "Se la richiesta è di tipo GET, ciò che si sta cercando di scaricare è di "
 "dimensioni troppo grandi."
 
-#: templates/ERR_TOO_BIG:6
+#: templates/ERR_TOO_BIG+html.body.div.p:26
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
@@ -315,61 +411,61 @@ msgstr ""
 "Se la richiesta è di tipo PUT, ciò che si sta cercando di inviare è di "
 "dimensioni troppo grandi."
 
-#: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:33
+#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:33
 msgid "Illegal character in hostname; underscores are not allowed."
 msgstr ""
 "Nome host non valido: i caratteri underscore (\"_\") non sono consentiti."
 
-#: templates/ERR_INVALID_URL:10
+#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:32
 msgid "Illegal double-escape in the URL-Path"
 msgstr "Doppia codifica (\"double-escape\") non valida nella path della URL."
 
-#: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
-#: templates/ERR_AGENT_CONFIGURE:14
-msgid "In the HTTP proxy box type the proxy name %h and port 3128."
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:30
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:38
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:46
+#, fuzzy
+msgid "In the HTTP proxy box type the proxy name %h and port %b."
 msgstr ""
 "Nel box \"Proxy HTTP\" inserisci l'indirizzo del proxy (%h) e la porta 3128."
 
-#: templates/ERR_INVALID_URL:5
+#: templates/ERR_INVALID_URL+html.body.div.blockquote.p:23
 msgid "Invalid URL"
 msgstr "URL non valida"
 
-#: templates/ERR_INVALID_REQ:8
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:30
 msgid "Missing HTTP Identifier (HTTP/1.0)."
 msgstr "L'identificativo del protocollo HTTP è mancante (HTTP/1.0)."
 
-#: templates/ERR_INVALID_REQ:7
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:29
 msgid "Missing URL."
 msgstr "URL non specificata."
 
-#: templates/ERR_INVALID_URL:9
+#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:31
 msgid "Missing hostname"
 msgstr "Nome host non specificato."
 
-#: templates/ERR_INVALID_URL:8
+#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:30
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
 msgstr ""
 "Protocollo di accesso mancante o non corretto (dovrebbe essere <q>http://</"
 "q> o simile)."
 
-#: templates/ERR_INVALID_REQ:6
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:28
 msgid "Missing or unknown request method."
 msgstr "Metodo della richiesta non specificato o sconoscito."
 
-#: templates/ERR_NO_RELAY:5
+#: templates/ERR_NO_RELAY+html.body.div.blockquote.p:23
 msgid "No Wais Relay"
 msgstr "Le funzioni di inoltro Wais non sono implementate."
 
-#: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
+#: templates/ERR_FTP_PUT_CREATED+html.body.div.h1:14
+#: templates/ERR_FTP_PUT_MODIFIED+html.body.div.h1:14
 msgid "Operation successful"
 msgstr "Operazione eseguita correttamente"
 
-#: templates/ERR_DIR_LISTING:5
-msgid "Parent Directory"
-msgstr "Directory superiore"
-
-#: templates/ERR_CACHE_ACCESS_DENIED:7
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:29
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
@@ -380,7 +476,7 @@ msgstr ""
 "href=\"http://%h/cgi-bin/chpasswd.cgi\">cambiare</a> la vostra password "
 "iniziale."
 
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:28
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
 "have difficulties authenticating yourself or, if you <em>are</em> the "
@@ -393,61 +489,67 @@ msgstr ""
 "riguardante l'interfaccia del <em>cache manager</em> e di verificare il log "
 "del servizio alla ricerca informazioni più dettagliate sull'errore."
 
-#: templates/ERR_PRECONDITION_FAILED:5
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:23
 msgid "Precondition Failed."
 msgstr ""
 
-#: templates/ERR_READ_ERROR:5
+#: templates/ERR_READ_ERROR+html.body.div.blockquote.p:23
 msgid "Read Error"
 msgstr "Errore di lettura"
 
-#: templates/ERR_READ_TIMEOUT:5
+#: templates/ERR_READ_TIMEOUT+html.body.div.blockquote.p:23
 msgid "Read Timeout"
 msgstr "Timeout nella lettura"
 
-#: templates/ERR_INVALID_REQ:9
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:31
 msgid "Request is too large."
 msgstr "La richiesta è di dimensioni troppo grandi."
 
-#: templates/ERR_AGENT_WPAD:10
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:30
+#, fuzzy
+msgid "Select Auto-detect proxy settings for this network"
+msgstr "Seleziona \"Rileva automaticamente impostazioni\""
+
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:38
 msgid "Select Automatically detect settings"
 msgstr "Seleziona \"Rileva automaticamente impostazioni\""
 
-#: templates/ERR_AGENT_WPAD:13
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:46
 msgid "Select Use Automatic proxy configuration"
 msgstr "Seleziona \"Usa script di configurazione automatica\""
 
-#: templates/ERR_SOCKET_FAILURE:5
+#: templates/ERR_SOCKET_FAILURE+html.body.div.blockquote.p:23
 msgid "Socket Failure"
 msgstr "L'operazione di rete (socket) è fallita."
 
-#: templates/ERR_INVALID_URL:6
+#: templates/ERR_INVALID_URL+html.body.div.p:26
 msgid "Some aspect of the requested URL is incorrect."
 msgstr "Qualcosa nella URL richiesta non è corretto."
 
-#: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
-#: templates/ERR_INVALID_URL:7
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:30
+#: templates/ERR_INVALID_REQ+html.body.div.p:26
+#: templates/ERR_INVALID_URL+html.body.div.p:28
 msgid "Some possible problems are:"
 msgstr "Alcuni dei possibili problemi sono:"
 
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:26
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 msgstr ""
 "Per richiedere %U da questo cache manager è necessario prima identificarsi."
 
-#: templates/ERR_CACHE_ACCESS_DENIED:6
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:27
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
 msgstr "Per richiedere %U da questa cache è necessario prima identificarsi."
 
-#: templates/ERR_ZERO_SIZE_OBJECT:6
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:26
 msgid "Squid did not receive any data for this request."
 msgstr "Squid non ha ricevuto dati per questa richiesta."
 
-#: templates/ERR_UNSUP_REQ:6
+#: templates/ERR_UNSUP_REQ+html.body.div.p:26
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
@@ -455,7 +557,7 @@ msgstr ""
 "Squid non consente di utilizzare qualsiasi tipo di richiesta per qualsiasi "
 "protocollo (a esempio non consente una richiesta POST su protocollo Gopher)."
 
-#: templates/ERR_LIFETIME_EXP:6
+#: templates/ERR_LIFETIME_EXP+html.body.div.p:26
 msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
@@ -463,7 +565,7 @@ msgstr ""
 "La richiesta è stata interrotta perché è stato superato il limite di durata "
 "massima della connessione."
 
-#: templates/ERR_SOCKET_FAILURE:7
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:28
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
@@ -471,27 +573,29 @@ msgstr ""
 "Squid non è in grado di aprire un socket TCP, probabilmente per un "
 "sovraccarico. Riprovare più tardi."
 
-#: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
-#: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
-#: templates/ERR_FTP_UNAVAILABLE:5
+#: templates/ERR_FTP_FAILURE+html.body.div.p:22
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:22
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:22
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:22
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:22
 msgid "Squid sent the following FTP command:"
 msgstr "Il comando FTP inviato da Squid era:"
 
-#: templates/ERR_DNS_FAIL:6
+#: templates/ERR_DNS_FAIL+html.body.div.p:26
 msgid "The DNS server returned:"
 msgstr "Il server DNS ha risposto:"
 
-#: templates/ERR_ESI:6
+#: templates/ERR_ESI+html.body.div.p:26
 msgid "The ESI processor returned:"
 msgstr "Il sistema di gestione delle funzioni ESI ha risposto:"
 
-#: templates/ERR_FTP_UNAVAILABLE:4
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:20
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
 "Il server FTP era sovraccarico e non ha consentito di accedere alla URL: <a "
 "href=\"%U\">%U</a>."
 
-#: templates/ERR_INVALID_RESP:5
+#: templates/ERR_INVALID_RESP+html.body.div.p:26
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
@@ -500,27 +604,40 @@ msgstr ""
 "era irregolare. Si prega di contattare il gestore del sito per segnalargli "
 "l'errore."
 
-#: templates/ERR_ICAP_FAILURE:9
+#: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:32
 msgid "The ICAP server is not reachable."
 msgstr "Il server ICAP non è raggiungibile."
 
-#: templates/ERR_FTP_NOT_FOUND:4
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:20
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
 msgstr "Non è stato possibile accedere alla URL: <a href=\"%U\">%U</a>."
 
-#: templates/ERR_ACCESS_DENIED:4 templates/ERR_CACHE_ACCESS_DENIED:4
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
-#: templates/ERR_CONNECT_FAIL:4 templates/ERR_DNS_FAIL:4 templates/ERR_ESI:4
-#: templates/ERR_FORWARDING_DENIED:4 templates/ERR_FTP_DISABLED:4
-#: templates/ERR_GATEWAY_FAILURE:4 templates/ERR_ICAP_FAILURE:4
-#: templates/ERR_INVALID_URL:4 templates/ERR_LIFETIME_EXP:4
-#: templates/ERR_NO_RELAY:4 templates/ERR_ONLY_IF_CACHED_MISS:4
-#: templates/ERR_PRECONDITION_FAILED:4 templates/ERR_READ_ERROR:4
-#: templates/ERR_READ_TIMEOUT:4 templates/ERR_SECURE_CONNECT_FAIL:4
-#: templates/ERR_SHUTTING_DOWN:4 templates/ERR_SOCKET_FAILURE:4
-#: templates/ERR_TOO_BIG:4 templates/ERR_UNSUP_HTTPVERSION:4
-#: templates/ERR_UNSUP_REQ:4 templates/ERR_WRITE_ERROR:4
-#: templates/ERR_ZERO_SIZE_OBJECT:4
+#: templates/ERR_ACCESS_DENIED+html.body.div.p:20
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:21
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:20
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:21
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:20
+#: templates/ERR_DNS_FAIL+html.body.div.p:20
+#: templates/ERR_ESI+html.body.div.p:20
+#: templates/ERR_FORWARDING_DENIED+html.body.div.p:20
+#: templates/ERR_FTP_DISABLED+html.body.div.p:20
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:20
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:20
+#: templates/ERR_INVALID_URL+html.body.div.p:20
+#: templates/ERR_LIFETIME_EXP+html.body.div.p:20
+#: templates/ERR_NO_RELAY+html.body.div.p:20
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:20
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.p:20
+#: templates/ERR_READ_ERROR+html.body.div.p:20
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:20
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:20
+#: templates/ERR_SHUTTING_DOWN+html.body.div.p:20
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:20
+#: templates/ERR_TOO_BIG+html.body.div.p:20
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:20
+#: templates/ERR_UNSUP_REQ+html.body.div.p:20
+#: templates/ERR_WRITE_ERROR+html.body.div.p:20
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:20
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
@@ -528,7 +645,7 @@ msgstr ""
 "Mentre si cercava di accedere alla URL <a href=\"%U\">%U</a> si è presentato "
 "il seguente errore:"
 
-#: templates/ERR_URN_RESOLVE:4
+#: templates/ERR_URN_RESOLVE+html.body.div.p:20
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
@@ -536,47 +653,67 @@ msgstr ""
 "Mentre si cercava di accedere alla URN <a href=\"%U\">%U</a> si è presentato "
 "il seguente errore:"
 
-#: templates/ERR_CONNECT_FAIL:7
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:28
 msgid "The remote host or network may be down. Please try the request again."
 msgstr ""
 "Il server remoto e` irraggiungibile, forse per un guasto di rete. Riprova "
 "tra qualche minuto."
 
-#: templates/ERR_TOO_BIG:5
+#: templates/ERR_TOO_BIG+html.body.div.blockquote.p:23
 msgid "The request or reply is too large."
 msgstr "La richesta o la risposta è di dimensioni troppo grandi."
 
-#: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
-#: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
-#: templates/ERR_FORWARDING_DENIED:3 templates/ERR_FTP_DISABLED:3
-#: templates/ERR_FTP_FAILURE:3 templates/ERR_FTP_FORBIDDEN:3
-#: templates/ERR_FTP_NOT_FOUND:3 templates/ERR_FTP_UNAVAILABLE:3
-#: templates/ERR_GATEWAY_FAILURE:3 templates/ERR_ICAP_FAILURE:3
-#: templates/ERR_INVALID_REQ:3 templates/ERR_INVALID_RESP:3
-#: templates/ERR_INVALID_URL:3 templates/ERR_LIFETIME_EXP:3
-#: templates/ERR_NO_RELAY:3 templates/ERR_ONLY_IF_CACHED_MISS:3
-#: templates/ERR_PRECONDITION_FAILED:3 templates/ERR_READ_ERROR:3
-#: templates/ERR_READ_TIMEOUT:3 templates/ERR_SECURE_CONNECT_FAIL:3
-#: templates/ERR_SHUTTING_DOWN:3 templates/ERR_SOCKET_FAILURE:3
-#: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
-#: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
+#: templates/ERR_ACCESS_DENIED+html.body.div.h2:15
+#: templates/ERR_CANNOT_FORWARD+html.body.div.h2:16
+#: templates/ERR_CONNECT_FAIL+html.body.div.h2:15
+#: templates/ERR_DNS_FAIL+html.body.div.h2:15
+#: templates/ERR_ESI+html.body.div.h2:15
+#: templates/ERR_FORWARDING_DENIED+html.body.div.h2:15
+#: templates/ERR_FTP_DISABLED+html.body.div.h2:15
+#: templates/ERR_FTP_FAILURE+html.body.div.h2:15
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.h2:15
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.h2:15
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.h2:15
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.h2:15
+#: templates/ERR_ICAP_FAILURE+html.body.div.h2:15
+#: templates/ERR_INVALID_REQ+html.body.div.h2:15
+#: templates/ERR_INVALID_RESP+html.body.div.h2:15
+#: templates/ERR_INVALID_URL+html.body.div.h2:15
+#: templates/ERR_LIFETIME_EXP+html.body.div.h2:15
+#: templates/ERR_NO_RELAY+html.body.div.h2:15
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.h2:15
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.h2:15
+#: templates/ERR_READ_ERROR+html.body.div.h2:15
+#: templates/ERR_READ_TIMEOUT+html.body.div.h2:15
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.h2:15
+#: templates/ERR_SHUTTING_DOWN+html.body.div.h2:15
+#: templates/ERR_SOCKET_FAILURE+html.body.div.h2:15
+#: templates/ERR_TOO_BIG+html.body.div.h2:15
+#: templates/ERR_UNSUP_REQ+html.body.div.h2:15
+#: templates/ERR_WRITE_ERROR+html.body.div.h2:15
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h2:15
 msgid "The requested URL could not be retrieved"
 msgstr "Non è stato possibile accedere alla URL richiesta."
 
-#: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
-#: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
-#: templates/ERR_FTP_UNAVAILABLE:6
+#: templates/ERR_FTP_FAILURE+html.body.div.p:27
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:27
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:27
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:27
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:28
 msgid "The server responded with:"
 msgstr "Il server ha risposto:"
 
-#: templates/ERR_CONNECT_FAIL:6 templates/ERR_ICAP_FAILURE:6
-#: templates/ERR_READ_ERROR:6 templates/ERR_READ_TIMEOUT:6
-#: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
-#: templates/ERR_WRITE_ERROR:6
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:26
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:26
+#: templates/ERR_READ_ERROR+html.body.div.p:26
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:26
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:26
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:26
+#: templates/ERR_WRITE_ERROR+html.body.div.p:26
 msgid "The system returned: <i>%E</i>"
 msgstr "Il sistema ha risposto: <i>%E</i>"
 
-#: templates/ERR_NO_RELAY:6
+#: templates/ERR_NO_RELAY+html.body.div.p:26
 msgid ""
 "There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
@@ -584,7 +721,7 @@ msgstr ""
 "Non è stato definito nessun host per il relay del servizio WAIS! Prenditela "
 "con l'amministratore."
 
-#: templates/ERR_TOO_BIG:8
+#: templates/ERR_TOO_BIG+html.body.div.p:28
 msgid ""
 "These limits have been established by the Internet Service Provider who "
 "operates this cache. Please contact them directly if you feel this is an "
@@ -593,17 +730,17 @@ msgstr ""
 "Questi limiti sono stati stabiliti dall'ISP che gestisce questo proxy. Se "
 "ritieni sia un errore, contatta il fornitore del servizio."
 
-#: templates/ERR_UNSUP_HTTPVERSION:6
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:26
 msgid "This Squid does not accept the HTTP version you are attempting to use."
 msgstr ""
 "Questa installazione di Squid non supporta la versione HTTP che si sta "
 "cercando di utilizzare."
 
-#: templates/ERR_FTP_DISABLED:6
+#: templates/ERR_FTP_DISABLED+html.body.div.p:26
 msgid "This cache does not support FTP."
 msgstr "Questo proxy non supporta il protocollo FTP."
 
-#: templates/ERR_SHUTTING_DOWN:5
+#: templates/ERR_SHUTTING_DOWN+html.body.div.p:22
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time. Please retry your request again soon."
@@ -611,7 +748,7 @@ msgstr ""
 "Non è possibile eseguire la richiesta perché è in corso lo spegnimento del "
 "proxy. Riprova tra poco."
 
-#: templates/ERR_FORWARDING_DENIED:6
+#: templates/ERR_FORWARDING_DENIED+html.body.div.p:26
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
 "sibling relationship. Perhaps the client at %i is a cache which has been "
@@ -621,7 +758,7 @@ msgstr ""
 "relazione di parentela. Forse il client all'indirizzo %i è un proxy "
 "configurato in modo errato."
 
-#: templates/ERR_GATEWAY_FAILURE:7
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:28
 #, fuzzy
 msgid ""
 "This may be due to limits established by the Internet Service Provider who "
@@ -630,13 +767,13 @@ msgstr ""
 "Questi limiti sono stati stabiliti dall'ISP che gestisce questo proxy. Se "
 "ritieni sia un errore, contatta il fornitore del servizio."
 
-#: templates/ERR_ICAP_FAILURE:7
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:28
 msgid "This means that some aspect of the ICAP communication failed."
 msgstr ""
 "Questo significa che qualche aspetto della comunicazione ICAP non è stato "
 "completato regolarmente."
 
-#: templates/ERR_FTP_PUT_ERROR:7
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:32
 msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
@@ -645,7 +782,7 @@ msgstr ""
 "per ricevere il file. Si prega di controllare il percorso, i permessi e lo "
 "spazio su disco e riprovare."
 
-#: templates/ERR_DNS_FAIL:7
+#: templates/ERR_DNS_FAIL+html.body.div.p:31
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
@@ -654,7 +791,7 @@ msgstr ""
 "URL nel relativo indirizzo. Verificate la correttezza dell'indirizzo e "
 "riprovate."
 
-#: templates/ERR_ESI:7
+#: templates/ERR_ESI+html.body.div.p:31
 msgid ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
@@ -662,11 +799,11 @@ msgstr ""
 "Questo significa che il surrogate non è stato in grado di processare il "
 "template ESI. Si prega di segnalare l'errore al webmaster."
 
-#: templates/ERR_PRECONDITION_FAILED:6
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.p:26
 msgid "This means:"
 msgstr ""
 
-#: templates/ERR_FTP_NOT_FOUND:7
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:33
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
 "comply with RFC 1738). If this is the cause, then the file can be found at "
@@ -676,7 +813,7 @@ msgstr ""
 "(il che non è compatibile con la RFC 1738). Se è questa la causa, il file "
 "può essere disponibile all'indirizzo <a href=\"%B\">%B</a>."
 
-#: templates/ERR_SECURE_CONNECT_FAIL:7
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:28
 msgid ""
 "This proxy and the remote host failed to negotiate a mutually acceptable "
 "security settings for handling your request. It is possible that the remote "
@@ -687,7 +824,7 @@ msgstr ""
 "sicura. Probabilmente il server remoto non supporta connessioni sicure, o il "
 "proxy non è soddisfatto delle credenziali di sicurezza proposte dall'host."
 
-#: templates/ERR_CANNOT_FORWARD:6
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:27
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches. The most likely cause for this error is that the cache administrator "
@@ -699,45 +836,49 @@ msgstr ""
 "l'amministratore del proxy abbia bloccato le connessioni dirette al server "
 "originario, e che tutti i proxy di livello superiore siano inaccessibili."
 
-#: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:37
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:37
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
 msgstr ""
 "Strumenti -&gt; Opzioni Internet -&gt; Connessioni -&gt; Impostazioni LAN -"
 "&gt;Proxy"
 
-#: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:29
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:29
 msgid ""
 "Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
 msgstr ""
 "Strumenti -&gt; Opzioni -&gt; Avanzate -&gt; Rete -&gt; Impostazioni di "
 "connessione"
 
-#: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:45
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:45
 msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
 msgstr ""
 "Strumenti -&gt; Preferenze -&gt; Avanzate -&gt; Rete -&gt; Server proxy"
 
-#: templates/ERR_DNS_FAIL:5
+#: templates/ERR_DNS_FAIL+html.body.div.blockquote.p:23
 msgid "Unable to determine IP address from host name <q>%H</q>"
 msgstr ""
 "Non è stato possibile risalire all'indirizzo IP corrispondente al nome host "
 "<q>%H</q>"
 
-#: templates/ERR_CANNOT_FORWARD:5
+#: templates/ERR_CANNOT_FORWARD+html.body.div.blockquote.p:24
 msgid "Unable to forward this request at this time."
 msgstr "Non è possibile inoltrare la richiesta in questo momento."
 
-#: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h2:15
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.blockquote.p:23
 msgid "Unsupported HTTP version"
 msgstr "Versione HTTP non supportata"
 
-#: templates/ERR_UNSUP_REQ:5
+#: templates/ERR_UNSUP_REQ+html.body.div.blockquote.p:23
 msgid "Unsupported Request Method and Protocol"
 msgstr "Metodo e protocollo della richiesta non sono supportati."
 
-#: templates/ERR_ONLY_IF_CACHED_MISS:5
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.blockquote.p:23
 msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
@@ -745,16 +886,18 @@ msgstr ""
 "Non è stato possibile reperire un documento valido nella cache, e la "
 "richiesta contiene la direttiva <q>only-if-cached</q>."
 
-#: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
-#: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
+#: templates/ERR_AGENT_CONFIGURE+html.head.title:4
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.h2:15
+#: templates/ERR_AGENT_WPAD+html.head.title:4
+#: templates/ERR_AGENT_WPAD+html.body.div.h2:15
 msgid "Web Browser Configuration"
 msgstr "Configurazione del browser"
 
-#: templates/ERR_WRITE_ERROR:5
+#: templates/ERR_WRITE_ERROR+html.body.div.blockquote.p:23
 msgid "Write Error"
 msgstr "Errore durante l'operazione di scrittura"
 
-#: templates/ERR_ONLY_IF_CACHED_MISS:6
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:26
 msgid ""
 "You have issued a request with a <q>only-if-cached</q> cache control "
 "directive. The document was not found in the cache, <em>or</em> it required "
@@ -765,33 +908,49 @@ msgstr ""
 "<em>oppure</em> richiedeva una operazione di verifica, non consentita dalla "
 "direttiva."
 
-#: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.blockquote.p:21
+#: templates/ERR_AGENT_WPAD+html.body.div.blockquote.p:21
 msgid ""
 "Your Web Browser configuration needs to be corrected to use this network."
 msgstr ""
 "La configurazione del tuo browser dev'essere modificata prima di poter "
 "utilizzare questa rete."
 
-#: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
-#: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
-#: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
-#: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
-#: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
-#: templates/ERR_FTP_NOT_FOUND:8 templates/ERR_FTP_PUT_ERROR:8
-#: templates/ERR_FTP_UNAVAILABLE:7 templates/ERR_GATEWAY_FAILURE:8
-#: templates/ERR_INVALID_REQ:13 templates/ERR_INVALID_RESP:7
-#: templates/ERR_INVALID_URL:12 templates/ERR_LIFETIME_EXP:7
-#: templates/ERR_NO_RELAY:7 templates/ERR_ONLY_IF_CACHED_MISS:7
-#: templates/ERR_READ_ERROR:8 templates/ERR_READ_TIMEOUT:8
-#: templates/ERR_SECURE_CONNECT_FAIL:8 templates/ERR_SHUTTING_DOWN:6
-#: templates/ERR_SOCKET_FAILURE:8 templates/ERR_TOO_BIG:9
-#: templates/ERR_UNSUP_HTTPVERSION:7 templates/ERR_UNSUP_REQ:7
-#: templates/ERR_URN_RESOLVE:7 templates/ERR_WRITE_ERROR:8
-#: templates/ERR_ZERO_SIZE_OBJECT:7
+#: templates/ERR_ACCESS_DENIED+html.body.div.p:28
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.p:50
+#: templates/ERR_AGENT_WPAD+html.body.div.p:50
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:29
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:30
+#: templates/ERR_DNS_FAIL+html.body.div.p:33
+#: templates/ERR_FORWARDING_DENIED+html.body.div.p:28
+#: templates/ERR_FTP_DISABLED+html.body.div.p:28
+#: templates/ERR_FTP_FAILURE+html.body.div.p:33
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:33
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:35
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:34
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:34
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:30
+#: templates/ERR_INVALID_REQ+html.body.div.p:37
+#: templates/ERR_INVALID_RESP+html.body.div.p:30
+#: templates/ERR_INVALID_URL+html.body.div.p:36
+#: templates/ERR_LIFETIME_EXP+html.body.div.p:28
+#: templates/ERR_NO_RELAY+html.body.div.p:28
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:28
+#: templates/ERR_READ_ERROR+html.body.div.p:30
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:30
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:30
+#: templates/ERR_SHUTTING_DOWN+html.body.div.p:24
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:30
+#: templates/ERR_TOO_BIG+html.body.div.p:30
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:28
+#: templates/ERR_UNSUP_REQ+html.body.div.p:28
+#: templates/ERR_URN_RESOLVE+html.body.div.p:28
+#: templates/ERR_WRITE_ERROR+html.body.div.p:30
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:28
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
 msgstr "L'amministratore del proxy è <a href=\"mailto:%w%W\">%w</a>."
 
-#: templates/ERR_INVALID_RESP:6
+#: templates/ERR_INVALID_RESP+html.body.div.p:28
 msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
@@ -799,11 +958,11 @@ msgstr ""
 "L'amministratore del proxy potrebbe essere in grado di fornire ulteriori "
 "dettagli sul tipo di problema."
 
-#: templates/ERR_ESI:8
+#: templates/ERR_ESI+html.body.div.p:33
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
 msgstr "Il webmaster è <a href=\"mailto:%w\">%w</a>."
 
-#: templates/ERR_ZERO_SIZE_OBJECT:5
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.blockquote.p:23
 msgid "Zero Sized Reply"
 msgstr "Risposta di dimensione nulla"
 
@@ -812,6 +971,9 @@ msgstr "Risposta di dimensione nulla"
 
 #~ msgid "FTP PUT Successful: File Updated"
 #~ msgstr "Comando FTP PUT eseguito correttamente: il file è stato aggiornato."
+
+#~ msgid "Parent Directory"
+#~ msgstr "Directory superiore"
 
 #~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
 #~ msgstr ""

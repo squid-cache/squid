@@ -32,13 +32,14 @@ class IdleConnList
 public:
     IdleConnList(const char *key, PconnPool *parent);
     ~IdleConnList();
-    int numIdle() { return nfds; }
 
     int findFDIndex(int fd); ///< search from the end of array
     void removeFD(int fd);
     void push(int fd);
     int findUseableFD();     ///< find first from the end not pending read fd.
     void clearHandlers(int fd);
+
+    int count() const { return nfds; }
 
 private:
     static IOCB read;
@@ -82,10 +83,14 @@ public:
     void moduleInit();
     void push(int fd, const char *host, u_short port, const char *domain, Ip::Address &client_address);
     int pop(const char *host, u_short port, const char *domain, Ip::Address &client_address, bool retriable);
-    void count(int uses);
+    void noteUses(int uses);
     void dumpHist(StoreEntry *e);
     void dumpHash(StoreEntry *e);
-    void unlinkList(IdleConnList *list) const;
+    void unlinkList(IdleConnList *list);
+    void closeN(int n, const char *host, u_short port, const char *domain, Ip::Address &client_address);
+    int count() const { return theCount; }
+    void noteConnectionAdded() { ++theCount; }
+    void noteConnectionRemoved() { assert(theCount > 0); --theCount; }
 
 private:
 
@@ -94,7 +99,7 @@ private:
     int hist[PCONN_HIST_SZ];
     hash_table *table;
     const char *descr;
-
+    int theCount; ///< the number of pooled connections
 };
 
 
