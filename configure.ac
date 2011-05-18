@@ -1042,8 +1042,8 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
       AC_MSG_WARN([EUI support probably will not work on host $host.])
       ;;
   esac
+  #Iphlpapi.h check delayed after winsock2.h
   AC_CHECK_HEADERS( \
-    Iphlpapi.h \
     net/if_dl.h \
     sys/sockio.h \
     sys/param.h
@@ -2508,6 +2508,10 @@ AC_SEARCH_LIBS([yp_match], [nsl nss_nis nss_nisplus])
 dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
 if test "x$squid_host_os" = "xmingw" ; then
   SQUID_CHECK_WINSOCK_LIB
+  AC_CHECK_HEADERS(Iphlpapi.h,,,[
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif])
 fi
 
 # check that we have unix sockets
