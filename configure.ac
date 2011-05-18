@@ -160,7 +160,7 @@ AM_CONDITIONAL(USE_IPC_WIN32,[test "x$squid_host_os" = "xmingw"])
 
 if test "x$squid_host_os" = "xmingw"; then
   AC_PATH_PROG(WIN32_PSAPI, psapi.dll, none)
-  CFLAGS="$CFLAGS -mthreads -std99"
+  CFLAGS="$CFLAGS -mthreads"
   CXXFLAGS="$CXXFLAGS -mthreads"
   if test "x$ac_cv_path_WIN32_PSAPI" = "xnone"; then
     AC_MSG_NOTICE([PSAPI.DLL is recommended to run Squid on Windows NT Platform])
