@@ -796,19 +796,19 @@ dnl may set ac_cv_func_select as a side effect
 AC_DEFUN([SQUID_CHECK_WINSOCK_LIB],[
   AC_CHECK_HEADERS(winsock2.h winsock.h)
   SQUID_STATE_SAVE(winsock)
-  SQUID_SEARCH_LIBS([closesocket],[ws2_32 wsock32],,,,[
+  SQUID_SEARCH_LIBS([squid_getprotobynumber],[ws2_32 wsock32],,,,[
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
 #elif HAVE_WINSOCK_H
 #include <winsock.h>
 #endif
 /* ugly hack. */
-void foo() {
+void squid_getprotobynumber(void) {
     getprotobynumber(1);
 }
   ])
   AC_MSG_CHECKING([for winsock library])
-  case "$ac_cv_search_closesocket" in
+  case "$ac_cv_search_squid_getprotobynumber" in
     "no")
       AC_MSG_RESULT([winsock library not found])
       ;;
