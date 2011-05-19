@@ -799,9 +799,13 @@ AC_DEFUN([SQUID_CHECK_WINSOCK_LIB],[
   SQUID_SEARCH_LIBS([closesocket],[ws2_32 wsock32],,,,[
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
-#elsif HAVE_WINSOCK_H
+#elif HAVE_WINSOCK_H
 #include <winsock.h>
 #endif
+/* ugly hack. */
+void foo() {
+    getprotobynumber(1);
+}
   ])
   AC_MSG_CHECKING([for winsock library])
   case "$ac_cv_search_closesocket" in

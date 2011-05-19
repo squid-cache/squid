@@ -228,7 +228,7 @@ AC_DEFUN([SQUID_SEARCH_LIBS],
 [AS_VAR_PUSHDEF([ac_Search], [ac_cv_search_$1])dnl
 AC_CACHE_CHECK([for library containing $1], [ac_Search],
 [ac_func_search_save_LIBS=$LIBS
-AC_LANG_CONFTEST([AC_LANG_CALL([$6], [$1])])
+AC_LANG_CONFTEST([AC_LANG_PROGRAM([$6], [$1()])])
 for ac_lib in '' $2; do
   if test -z "$ac_lib"; then
     ac_res="none required"
