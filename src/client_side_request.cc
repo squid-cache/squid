@@ -1058,6 +1058,7 @@ ClientRequestContext::clientRedirectDone(char *result)
         new_request->indirect_client_addr = old_request->indirect_client_addr;
 #endif /* FOLLOW_X_FORWARDED_FOR */
         new_request->my_addr = old_request->my_addr;
+        new_request->clientConnectionManager = old_request->clientConnectionManager;
         new_request->flags = old_request->flags;
         new_request->flags.redirected = 1;
 #if USE_AUTH
