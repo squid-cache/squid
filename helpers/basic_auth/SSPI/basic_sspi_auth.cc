@@ -26,6 +26,7 @@
 
 #include "config.h"
 #include "helpers/defines.h"
+#include "rfc1738.h"
 #include "util.h"
 
 #if HAVE_STDIO_H
@@ -56,18 +57,16 @@ int debug_enabled = 0;
  * -D can specify a Windows Local Group name not allowed to authenticate.
  * -O can specify the default Domain against to authenticate.
  */
-char *my_program_name = NULL;
-
 void
-usage()
+usage(char *my_program_name)
 {
-    fprintf(stderr, "Usage:\n%s [-A|D UserGroup][-O DefaultDomain][-d]\n"
+    std::cerr << "Usage:\n" <<
+    		my_program_name << " [-A|D UserGroup][-O DefaultDomain][-d]\n"
             "-A can specify a Windows Local Group name allowed to authenticate\n"
             "-D can specify a Windows Local Group name not allowed to authenticate\n"
             "-O can specify the default Domain against to authenticate\n"
             "-d enable debugging.\n"
-            "-h this message\n\n",
-            my_program_name);
+            "-h this message\n\n";
 }
 
 void
@@ -100,7 +99,7 @@ process_options(int argc, char *argv[])
             /* fall thru to default */
         default:
             fprintf(stderr, "FATAL: Unknown option: -%c\n", opt);
-            usage();
+            usage(argv[0]);
             exit(1);
         }
     }
@@ -118,10 +117,9 @@ main(int argc, char **argv)
     char *p;
     int err = 0;
 
-    my_program_name = argv[0];
     process_options(argc, argv);
 
-    if (LoadSecurityDll(SSP_BASIC, NTLM_PACKAGE_NAME) == NULL) {
+    if (LoadSecurityDll(SSP_BASIC, const_cast<char*>(NTLM_PACKAGE_NAME)) == NULL) {
         fprintf(stderr, "FATAL: can't initialize SSPI, exiting.\n");
         exit(1);
     }
@@ -155,7 +153,7 @@ main(int argc, char **argv)
         password[0] = '\0';
         sscanf(wstr, "%s %s", username, password);	/* Extract parameters */
 
-        debug("Got %s from Squid\n", wstr);
+        debug("Got " << wstr << " from Squid\n");
 
         /* Check for invalid or blank entries */
         if ((username[0] == '\0') || (password[0] == '\0')) {
@@ -166,7 +164,7 @@ main(int argc, char **argv)
         rfc1738_unescape(username);
         rfc1738_unescape(password);
 
-        debug("Trying to validate; %s %s\n", username, password);
+        debug("Trying to validate; " << username << " " << password << std::endl);
 
         if (Valid_User(username, password, NTGroup) == NTV_NO_ERROR)
             SEND_OK("");

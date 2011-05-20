@@ -151,7 +151,7 @@ Valid_User(char *UserName, char *Password, char *Group)
     if (!SSP_LogonUser(User, Password, NTDomain)) {
         result = NTV_LOGON_ERROR;
         errormsg = NTV_LOGON_ERROR_MSG;
-        debug("%s\n", errormsg);
+        debug(errormsg << std::endl);
     } else {
         result = NTV_NO_ERROR;
         if (strcmp(NTDomain, NTV_DEFAULT_DOMAIN) == 0)
@@ -165,14 +165,14 @@ Valid_User(char *UserName, char *Password, char *Group)
             if (!Valid_Group(DomainUser, NTAllowedGroup)) {
                 result = NTV_GROUP_ERROR;
                 errormsg = NTV_GROUP_ERROR_MSG;
-                debug("%s\n", errormsg);
+                debug(errormsg << std::endl);
             }
         }
         if (UseDisallowedGroup) {
             if (Valid_Group(DomainUser, NTDisAllowedGroup)) {
                 result = NTV_GROUP_ERROR;
                 errormsg = NTV_GROUP_ERROR_MSG;
-                debug("%s\n", errormsg);
+                debug(errormsg << std::endl);
             }
         }
     }

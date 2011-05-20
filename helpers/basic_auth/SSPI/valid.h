@@ -43,7 +43,9 @@
 #define DEBUG
 #endif
 
+#ifndef safe_free
 #define safe_free(x)	if (x) { free(x); x = NULL; }
+#endif
 
 /* SMB User verification function */
 
@@ -70,37 +72,18 @@ extern const char * errormsg;
 
 /* Debugging stuff */
 
-#ifdef __GNUC__			/* this is really a gcc-ism */
 #ifdef DEBUG
-#include <stdio.h>
 #include <unistd.h>
-static char *__foo;
-#define debug(X...) if (debug_enabled) { \
-                    fprintf(stderr,"nt_auth[%d](%s:%d): ", getpid(), \
-                    ((__foo=strrchr(__FILE__,'/'))==NULL?__FILE__:__foo+1),\
-                    __LINE__);\
-                    fprintf(stderr,X); }
+#include <iostream>
+#define debug(X) if (debug_enabled) { \
+					const char *__foo=strrchr(__FILE__,'/'); \
+					std::cerr << "nt_auth[" << getpid() << "] :(" << \
+					(__foo==NULL?__FILE__:__foo+1) << ":" << __LINE__ \
+					<< "): " << X; \
+					}
 #else /* DEBUG */
-#define debug(X...)		/* */
+#define debug(X)		/* */
 #endif /* DEBUG */
-#else /* __GNUC__ */
-static void
-debug(char *format,...)
-{
-#ifdef DEBUG
-#if _SQUID_MSWIN_
-    if (debug_enabled) {
-        va_list args;
-
-        va_start(args,format);
-        fprintf(stderr, "nt_auth[%d]: ",getpid());
-        vfprintf(stderr, format, args);
-        va_end(args);
-    }
-#endif /* _SQUID_MSWIN_ */
-#endif /* DEBUG */
-}
-#endif /* __GNUC__ */
 
 int Valid_User(char *,char *, char *);
 
