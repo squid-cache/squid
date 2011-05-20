@@ -119,6 +119,7 @@ main(int argc, char **argv)
 
     process_options(argc, argv);
 
+#if _SQUID_CYGWIN_
     if (LoadSecurityDll(SSP_BASIC, const_cast<char*>(NTLM_PACKAGE_NAME)) == NULL) {
         fprintf(stderr, "FATAL: can't initialize SSPI, exiting.\n");
         exit(1);
@@ -126,6 +127,7 @@ main(int argc, char **argv)
     debug("SSPI initialized OK\n");
 
     atexit(UnloadSecurityDll);
+#endif
 
     /* initialize FDescs */
     setbuf(stdout, NULL);
