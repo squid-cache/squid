@@ -6,11 +6,12 @@ INCLUDES += -I$(srcdir)
 libexec_PROGRAMS = basic_sspi_auth
 
 basic_sspi_auth_SOURCES = basic_sspi_auth.cc valid.cc valid.h \
-	../../include/rfc1738.h
+	../../../include/rfc1738.h ../../../include/sspwin32.h
 basic_sspi_auth_CXXFLAGS = -Wl,--enable-auto-import
 basic_sspi_auth_LDADD = \
 	$(COMPAT_LIB) -lmiscencoding \
-	-L$(top_builddir)/lib -lsspwin32 \
+	-L$(top_builddir)/lib \
+	-lsspwin32 \
 	-lnetapi32 -ladvapi32
 	$(XTRA_LIBS)
 

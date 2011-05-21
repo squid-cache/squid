@@ -34,6 +34,10 @@
 #ifndef _LIBSSPWIN32_H_
 #define _LIBSSPWIN32_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if _SQUID_WINDOWS_
 
 #define SECURITY_WIN32
@@ -77,5 +81,8 @@ const char * WINAPI SSP_MakeNegotiateBlob(PVOID, int, PBOOL, int *, char *);
 extern BOOL Use_Unicode;
 extern BOOL NTLM_LocalCall;
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* _SQUID_WINDOWS_ */
 #endif /* LIBSSPWIN32_H_ */

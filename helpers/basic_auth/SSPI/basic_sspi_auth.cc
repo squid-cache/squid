@@ -27,6 +27,7 @@
 #include "config.h"
 #include "helpers/defines.h"
 #include "rfc1738.h"
+#include "sspwin32.h"
 #include "util.h"
 
 #if HAVE_STDIO_H
