@@ -12,11 +12,12 @@ basic_sspi_auth_SOURCES = \
 	sspwin32.h
 basic_sspi_auth_CXXFLAGS = -Wl,--enable-auto-import
 basic_sspi_auth_LDADD = \
-	-L$(top_builddir)/lib -lsspwin32 \
-	$(top_builddir)/lib/libmiscencoding.la \
+	-L$(top_builddir)/lib \
 	$(COMPAT_LIB) \
+	-lsspwin32 \
+	-lmiscencoding \
 	-lnetapi32 -ladvapi32 \
 	$(XTRA_LIBS)
 
-man_MANS = basic_db_auth.8
+man_MANS = basic_sspi_auth.8
 EXTRA_DIST = basic_sspi_auth.8 config.test
