@@ -173,6 +173,11 @@ extern int WIN32_ftruncate(int fd, off_t size);
 #define SIGUSR2 31	/* user defined signal 2 */
 
 typedef unsigned short int ushort;
+#if _SQUID_MINGW_
+typedef unsigned char boolean;
+typedef unsigned char u_char;
+typedef unsigned int u_int;
+#endif
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 typedef int uid_t;
 typedef int gid_t;
@@ -213,23 +218,6 @@ struct timezone {
     int	tz_minuteswest;	/* minutes west of Greenwich */
     int	tz_dsttime;	/* type of dst correction */
 };
-
-inline int
-gettimeofday(struct timeval *pcur_time, void *tzp)
-{
-    struct _timeb current;
-    struct timezone *tz = (struct timezone *) tzp;
-
-    _ftime(&current);
-
-    pcur_time->tv_sec = current.time;
-    pcur_time->tv_usec = current.millitm * 1000L;
-    if (tz) {
-        tz->tz_minuteswest = current.timezone;  /* minutes west of Greenwich  */
-        tz->tz_dsttime = current.dstflag;       /* type of dst correction  */
-    }
-    return 0;
-}
 #endif
 
 #define CHANGE_FD_SETSIZE 1
@@ -376,26 +364,8 @@ SQUIDCEXTERN int _free_osfhnd(int);
 
 SQUIDCEXTERN THREADLOCAL int ws32_result;
 
-SQUIDCEXTERN const char *wsastrerror(int);
-
-#if !HAVE_STRERROR
-#if HAVE_STDIO_H
-#include <stdio.h>
-#undef HAVE_STDIO_H
-#endif
-inline const char *
-strerror(int err)
-{
-    static char xbstrerror_buf[BUFSIZ];
-
-    if (err < 0 || err >= sys_nerr)
-        strncpy(xbstrerror_buf, wsastrerror(err), BUFSIZ);
-    else
-        strncpy(xbstrerror_buf, strerror(err), BUFSIZ);
-    return xbstrerror_buf;
-}
+#define strerror(e) WIN32_strerror(e)
 #define HAVE_STRERROR 1
-#endif
 
 #ifdef __cplusplus
 
@@ -796,24 +766,7 @@ struct rusage {
 
 SQUIDCEXTERN int chroot(const char *dirname);
 
-#if 0
-inline int
-WIN32_truncate(const char *pathname, off_t length)
-{
-    int res = -1;
-    int fd = open(pathname, O_RDWR);
-
-    if (fd == -1)
-        errno = EBADF;
-    else {
-        res = WIN32_ftruncate(fd, length);
-        _close(fd);
-    }
-
-    return res;
-}
 #define truncate(x,y) WIN32_truncate((x),(y))
-#endif
 
 SQUIDCEXTERN int kill(pid_t, int);
 SQUIDCEXTERN int statfs(const char *, struct statfs *);
