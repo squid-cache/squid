@@ -647,11 +647,11 @@ configDoConfigure(void)
 
 #if !HAVE_SETRLIMIT || !defined(RLIMIT_NOFILE)
     if (Config.max_filedescriptors > 0) {
-        debugs(0, DBG_WARNING, "WARNING: max_filedescriptors disabled. Operating System setrlimit(RLIMIT_NOFILE) is missing.");
+        debugs(0, DBG_IMPORTANT, "WARNING: max_filedescriptors disabled. Operating System setrlimit(RLIMIT_NOFILE) is missing.");
     }
 #elif USE_SELECT || USE_SELECT_WIN32
     if (Config.max_filedescriptors > FD_SETSIZE) {
-        debugs(0, DBG_WARNING, "WARNING: max_filedescriptors limited to " << FD_SETSIZE << " by select() algorithm.");
+        debugs(0, DBG_IMPORTANT, "WARNING: max_filedescriptors limited to " << FD_SETSIZE << " by select() algorithm.");
     }
 #endif
 
