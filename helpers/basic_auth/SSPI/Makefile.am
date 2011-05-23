@@ -7,9 +7,7 @@ libexec_PROGRAMS = basic_sspi_auth
 
 basic_sspi_auth_SOURCES = \
 	basic_sspi_auth.cc \
-	valid.cc valid.h \
-	rfc1738.h \
-	sspwin32.h
+	valid.cc valid.h
 basic_sspi_auth_CXXFLAGS = -Wl,--enable-auto-import
 basic_sspi_auth_LDADD = \
 	-L$(top_builddir)/lib \
