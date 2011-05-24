@@ -26,7 +26,7 @@
  */
 
 #include "config.h"
-#include "nw_base64.h"
+#include "base64.h"
 
 #if HAVE_STRING_H
 #include <string.h>
@@ -346,7 +346,7 @@ main(int argc, char *const argv[])
             fprintf(stdout, "BH Invalid negotiate request\n");
             continue;
         }
-        length = nw_base64_decode_len(buf + 3);
+        length = base64_decode_len(buf+3);
         if (debug)
             fprintf(stderr, "%s| %s: Decode '%s' (decoded length: %d).\n",
                     LogTime(), PROGRAM, buf + 3, (int) length);
@@ -356,7 +356,7 @@ main(int argc, char *const argv[])
             return 1;
         }
 
-        nw_base64_decode(token, buf + 3, length);
+        length = base64_decode(token, length, buf+3);
 
         if ((static_cast<size_t>(length) >= sizeof(ntlmProtocol) + 1) &&
                 (!memcmp(token, ntlmProtocol, sizeof ntlmProtocol))) {

@@ -245,7 +245,8 @@ static bool proccessNewRequest(Ssl::CrtdMessage const & request_message, std::st
     response_message.setCode("ok");
     response_message.setBody(bufferToWrite);
 
-    std::cout << response_message.compose();
+    // Use the '\1' char as end-of-message character
+    std::cout << response_message.compose() << '\1' << std::flush;
 
     return true;
 }

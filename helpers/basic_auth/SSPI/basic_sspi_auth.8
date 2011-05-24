@@ -24,9 +24,11 @@ to authenticate users on an NT domain in native WIN32 mode.
 .
 .PP
 Usage is simple. It accepts a username and password on standard input
-and will return OK if the username/password is valid for the domain/machine,
-or ERR if there was some problem.
-It's possible to authenticate against NT trusted domains specifyng the username 
+and will return 
+.B OK 
+if the username/password is valid for the domain/machine, or 
+.B ERR 
+if there was some problem. It is possible to authenticate against NT trusted domains specifying the username 
 in the domain\\username Microsoft notation.
 .
 .SH OPTIONS
@@ -46,11 +48,12 @@ A Windows Local Group name not allowed to authenticate.
 .if !'po4a'hide' .B \-O
 The default Domain against to authenticate.
 .
-.SH CONFGURATION
-.PP Allowing Users.
+.SH CONFIGURATION
+.PP
 Users that are allowed to access the web proxy must have the Windows NT
-User Rights "logon from the network" and must be included in the NT LOCAL User Groups 
-specified in the Authenticator's command line.
+User Rights 
+.I "\"logon from the network\"" 
+and must be included in the NT LOCAL User Groups specified in the Authenticator's command line.
 .PP
 This can be accomplished creating a local user group on the NT machine, grant the privilege,
 and adding users to it.
@@ -110,7 +113,7 @@ Note that if NT guest user access is allowed on the PDC, an
 message may be returned instead of 
 .B ERR
 .PP
-Test that entering an valid username and password results in an 
+Test that entering a valid username and password results in an 
 .B OK 
 message.
 .PP

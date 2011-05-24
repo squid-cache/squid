@@ -670,6 +670,11 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 #endif
             p = "-";
         break;
+
+    case 'b':
+        mb.Printf("%d", getMyPort());
+        break;
+
     case 'B':
         if (building_deny_info_url) break;
         p = request ? ftpUrlWith2f(request) : "[no URL]";
@@ -915,6 +920,16 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         if (Config.adminEmail && Config.onoff.emailErrData)
             Dump(&mb);
         no_urlescape = 1;
+        break;
+
+    case 'x':
+#if USE_SSL
+        if (detail)
+            mb.Printf("%s", detail->errorName());
+        else
+#endif
+            if (!building_deny_info_url)
+                p = "[Unknown Error Code]";
         break;
 
     case 'z':

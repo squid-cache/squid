@@ -786,7 +786,7 @@ HttpStateData::handle1xx(HttpReply *reply)
     typedef NullaryMemFunT<HttpStateData> CbDialer;
     const AsyncCall::Pointer cb = JobCallback(11, 3, CbDialer, this,
                                   HttpStateData::proceedAfter1xx);
-    CallJobHere1(11, 4, orig_request->clientConnection, ConnStateData,
+    CallJobHere1(11, 4, orig_request->clientConnectionManager, ConnStateData,
                  ConnStateData::sendControlMsg, HttpControlMsg(msg, cb));
     // If the call is not fired, then the Sink is gone, and HttpStateData
     // will terminate due to an aborted store entry or another similar error.
@@ -1606,7 +1606,7 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
         snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
 
         httpHeaderPutStrf(hdr_out, header, "Basic %s",
-                          base64_encode(loginbuf));
+                          old_base64_encode(loginbuf));
         return;
     }
 
@@ -1619,7 +1619,7 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
                  SQUIDSTRINGPRINT(orig_request->extacl_user),
                  SQUIDSTRINGPRINT(orig_request->extacl_passwd));
         httpHeaderPutStrf(hdr_out, header, "Basic %s",
-                          base64_encode(loginbuf));
+                          old_base64_encode(loginbuf));
         return;
     }
 
@@ -1640,7 +1640,7 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
 #endif /* HAVE_KRB5 && HAVE_GSSAPI */
 
     httpHeaderPutStrf(hdr_out, header, "Basic %s",
-                      base64_encode(orig_request->peer_login));
+                      old_base64_encode(orig_request->peer_login));
     return;
 }
 
@@ -1771,7 +1771,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     if (!hdr_out->has(HDR_AUTHORIZATION)) {
         if (!request->flags.proxying && *request->login) {
             httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
-                              base64_encode(request->login));
+                              old_base64_encode(request->login));
         }
     }
 

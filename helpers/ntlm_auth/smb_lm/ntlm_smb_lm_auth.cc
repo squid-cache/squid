@@ -506,9 +506,9 @@ manage_request()
 {
     ntlmhdr *fast_header;
     char buf[NTLM_BLOB_BUFFER_SIZE];
+    char decoded[NTLM_BLOB_BUFFER_SIZE];
     const char *ch;
-    char *ch2, *decoded, *cred = NULL;
-    int plen;
+    char *ch2, *cred = NULL;
 
     if (fgets(buf, NTLM_BLOB_BUFFER_SIZE, stdin) == NULL) {
         fprintf(stderr, "fgets() failed! dying..... errno=%d (%s)\n", errno,
@@ -525,12 +525,9 @@ manage_request()
 
     if (memcmp(buf, "KK ", 3) == 0) {	/* authenticate-request */
         /* figure out what we got */
-        decoded = base64_decode(buf + 3);
-        /* Note: we don't need to manage memory at this point, since
-         *  base64_decode returns a pointer to static storage.
-         */
+        int decodedLen = base64_decode(decoded, sizeof(decoded), buf+3);
 
-        if (!decoded) {		/* decoding failure, return error */
+        if ((size_t)decodedLen < sizeof(ntlmhdr)) {	/* decoding failure, return error */
             SEND("NA Packet format error, couldn't base64-decode");
             return;
         }
@@ -553,10 +550,9 @@ manage_request()
             /* notreached */
         case NTLM_AUTHENTICATE:
             /* check against the DC */
-            plen = strlen(buf) * 3 / 4;		/* we only need it here. Optimization */
             signal(SIGALRM, timeout_during_auth);
             alarm(30);
-            cred = ntlm_check_auth((ntlm_authenticate *) decoded, plen);
+            cred = ntlm_check_auth((ntlm_authenticate *) decoded, decodedLen);
             alarm(0);
             signal(SIGALRM, SIG_DFL);
             if (got_timeout != 0) {
@@ -585,7 +581,7 @@ manage_request()
                  * without it.. */
                 if (nb_error != 0) {	/* netbios-level error */
                     send_bh_or_ld("NetBios error!",
-                                  (ntlm_authenticate *) decoded, plen);
+                                  (ntlm_authenticate *) decoded, decodedLen);
                     fprintf(stderr, "NetBios error code %d (%s)\n", nb_error,
                             RFCNB_Error_Strings[abs(nb_error)]);
                     return;
@@ -596,7 +592,7 @@ manage_request()
                     SEND("NA Authentication failed");
                     /*
                      * send_bh_or_ld("SMB success, but no creds. Internal error?",
-                     * (ntlm_authenticate *) decoded, plen);
+                     * (ntlm_authenticate *) decoded, decodedLen);
                      */
                     return;
                 case SMBC_ERRDOS:
@@ -619,7 +615,7 @@ manage_request()
                         return;
                     default:
                         send_bh_or_ld("DOS Error",
-                                      (ntlm_authenticate *) decoded, plen);
+                                      (ntlm_authenticate *) decoded, decodedLen);
                         return;
                     }
                 case SMBC_ERRSRV:	/* server errors */
@@ -634,16 +630,16 @@ manage_request()
                         return;
                     default:
                         send_bh_or_ld("Server Error",
-                                      (ntlm_authenticate *) decoded, plen);
+                                      (ntlm_authenticate *) decoded, decodedLen);
                         return;
                     }
                 case SMBC_ERRHRD:	/* hardware errors don't really matter */
                     send_bh_or_ld("Domain Controller Hardware error",
-                                  (ntlm_authenticate *) decoded, plen);
+                                  (ntlm_authenticate *) decoded, decodedLen);
                     return;
                 case SMBC_ERRCMD:
                     send_bh_or_ld("Domain Controller Command Error",
-                                  (ntlm_authenticate *) decoded, plen);
+                                  (ntlm_authenticate *) decoded, decodedLen);
                     return;
                 }
                 SEND("BH unknown internal error.");

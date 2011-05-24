@@ -652,8 +652,13 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
     switch (version) {
 
     case 2:
+#ifndef OPENSSL_NO_SSL2
         debugs(83, 5, "Using SSLv2.");
         method = SSLv2_server_method();
+#else
+        debugs(83, 1, "SSLv2 is not available in this Proxy.");
+        return NULL;
+#endif
         break;
 
     case 3:
@@ -850,8 +855,13 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
     switch (version) {
 
     case 2:
+#ifndef OPENSSL_NO_SSL2
         debugs(83, 5, "Using SSLv2.");
         method = SSLv2_client_method();
+#else
+        debugs(83, 1, "SSLv2 is not available in this Proxy.");
+        return NULL;
+#endif
         break;
 
     case 3:
@@ -1225,6 +1235,25 @@ bool Ssl::verifySslCertificateDate(SSL_CTX * sslContext)
     ASN1_TIME * time_notAfter = X509_get_notAfter(cert);
     bool ret = (X509_cmp_current_time(time_notBefore) < 0 && X509_cmp_current_time(time_notAfter) > 0);
     return ret;
+}
+
+bool
+Ssl::setClientSNI(SSL *ssl, const char *fqdn)
+{
+    //The SSL_CTRL_SET_TLSEXT_HOSTNAME is a openssl macro which indicates
+    // if the TLS servername extension (SNI) is enabled in openssl library.
+#if defined(SSL_CTRL_SET_TLSEXT_HOSTNAME)
+    if (!SSL_set_tlsext_host_name(ssl, fqdn)) {
+        const int ssl_error = ERR_get_error();
+        debugs(83, 3,  "WARNING: unable to set TLS servername extension (SNI): " <<
+               ERR_error_string(ssl_error, NULL) << "\n");
+        return false;
+    }
+    return true;
+#else
+    debugs(83, 7,  "no support for TLS servername extension (SNI)\n");
+    return false;
+#endif
 }
 
 #endif /* USE_SSL */

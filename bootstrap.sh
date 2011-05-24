@@ -74,14 +74,7 @@ bootstrap() {
 bootstrap_libtoolize() {
     ltver=$1
 
-    # TODO: when we have libtool2, tell libtoolize where to put its files
-    # instead of manualy moving files from ltdl to lib/libLtdl
-    if egrep -q '^[[:space:]]*AC_LIBLTDL_' configure.ac
-    then
-	ltdl="--ltdl"
-    else
-        ltdl=""
-    fi
+    ltdl="--ltdl"
 
     bootstrap libtoolize$ltver $ltdl --force --copy --automake
 
