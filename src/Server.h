@@ -68,7 +68,7 @@ public:
     virtual ~ServerStateData();
 
     /// \return primary or "request data connection"
-    virtual const Comm::ConnectionPointer & dataDescriptor() const = 0;
+    virtual const Comm::ConnectionPointer & dataConnection() const = 0;
 
     // BodyConsumer: consume request body or adapted response body.
     // The implementation just calls the corresponding HTTP or ICAP handle*()

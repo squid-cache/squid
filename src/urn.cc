@@ -256,8 +256,7 @@ UrnState::created(StoreEntry *newEntry)
     if (urlres_e->isNull()) {
         urlres_e = storeCreateEntry(urlres, urlres, request_flags(), METHOD_GET);
         sc = storeClientListAdd(urlres_e, this);
-        Comm::ConnectionPointer nul;
-        FwdState::fwdStart(nul, urlres_e, urlres_r);
+        FwdState::fwdStart(Comm::ConnectionPointer(), urlres_e, urlres_r);
     } else {
 
         urlres_e->lock();

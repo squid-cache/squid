@@ -78,10 +78,9 @@ namespace Comm {
  * object for state data. But a semantic equivalent for FD with easily
  * accessible cached properties not requiring repeated complex lookups.
  *
- * While the properties may be changed, this is for teh purpose of creating
- * potential connection descriptors which may be opened. Properties should
- * be considered read-only outside of the Comm layer code once the connection
- * is open.
+ * Connection properties may be changed until tehe connection is opened.
+ * Properties should be considered read-only outside of the Comm layer
+ * code once the connection is open.
  *
  * These objects must not be passed around directly,
  * but a Comm::ConnectionPointer must be passed instead.
@@ -89,7 +88,6 @@ namespace Comm {
 class Connection : public RefCountable
 {
 public:
-    /** standard empty connection creation */
     Connection();
 
     /** Clear the connection properties and close any open socket. */
@@ -134,7 +132,7 @@ public:
     /** Hierarchy code for this connection link */
     hier_code peerType;
 
-    /** Socket used by this connection. -1 if no socket has been opened. */
+    /** Socket used by this connection. Negative if not open. */
     int fd;
 
     /** Quality of Service TOS values currently sent on this connection */
