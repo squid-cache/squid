@@ -8,6 +8,7 @@ namespace Adaptation
 
 typedef enum { methodNone, methodReqmod, methodRespmod, methodOptions } Method;
 typedef enum { pointNone, pointPreCache, pointPostCache } VectPoint;
+typedef enum { srvBlock, srvBypass, srvWait, srvForce} SrvBehaviour;
 
 extern const char *crlf;
 extern const char *methodStr(Method); // TODO: make into a stream operator?

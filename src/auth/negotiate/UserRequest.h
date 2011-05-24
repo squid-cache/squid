@@ -21,11 +21,11 @@ public:
     virtual ~AuthNegotiateUserRequest();
     virtual int authenticated() const;
     virtual void authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type);
-    virtual int module_direction();
+    virtual Auth::Direction module_direction();
     virtual void onConnectionClose(ConnStateData *);
     virtual void module_start(RH *, void *);
 
-    virtual void addHeader(HttpReply * rep, int accel);
+    virtual void addAuthenticationInfoHeader(HttpReply * rep, int accel);
 
     virtual const char * connLastHeader();
 

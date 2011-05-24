@@ -52,3 +52,5 @@ libmgr_la_SOURCES = \
 	IntParam.h \
 	StringParam.cc \
 	StringParam.h
+
+EXTRA_DIST = stub_libmgr.cc

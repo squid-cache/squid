@@ -32,6 +32,10 @@ public:
     Method method;   // what is being adapted (REQMOD vs RESPMOD)
     VectPoint point; // where the adaptation happens (pre- or post-cache)
     bool bypass;
+
+    // options
+    long maxConn; ///< maximum number of concurrent service transactions
+    SrvBehaviour onOverload; ///< how to handle Max-Connections feature
     bool routing; ///< whether this service may determine the next service(s)
     bool ipv6;    ///< whether this service uses IPv6 transport (default IPv4)
 
@@ -42,6 +46,9 @@ protected:
     /// interpret parsed values
     bool grokBool(bool &var, const char *name, const char *value);
     bool grokUri(const char *value);
+    bool grokLong(long &var, const char *name, const char *value);
+    /// handle on-overload configuration option
+    bool grokOnOverload(SrvBehaviour &var, const char *value);
     /// handle name=value configuration option with name unknown to Squid
     virtual bool grokExtension(const char *name, const char *value);
 };

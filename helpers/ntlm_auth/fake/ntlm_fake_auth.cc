@@ -150,6 +150,8 @@ main(int argc, char *argv[])
 {
     char buf[HELPER_INPUT_BUFFER];
     int buflen = 0;
+    char decodedBuf[HELPER_INPUT_BUFFER];
+    int decodedLen;
     char user[NTLM_MAX_FIELD_LENGTH], domain[NTLM_MAX_FIELD_LENGTH];
     char *p;
     ntlmhdr *packet = NULL;
@@ -173,13 +175,18 @@ main(int argc, char *argv[])
         if ((p = strchr(buf, '\n')) != NULL)
             *p = '\0';		/* strip \n */
         buflen = strlen(buf);   /* keep this so we only scan the buffer for \0 once per loop */
-        if (buflen > 3)
-            packet = (ntlmhdr*)base64_decode(buf + 3);
+        if (buflen > 3) {
+            decodedLen = base64_decode(decodedBuf, sizeof(decodedBuf), buf+3);
+            packet = (ntlmhdr*)decodedBuf;
+        } else {
+            packet = NULL;
+            decodedLen = 0;
+        }
         if (buflen > 3 && NTLM_packet_debug_enabled) {
             strncpy(helper_command, buf, 2);
             helper_command[2] = '\0';
             debug("Got '%s' from Squid with data:\n", helper_command);
-            hex_dump((unsigned char*)packet, ((buflen - 3) * 3) / 4);
+            hex_dump((unsigned char *)decodedBuf, decodedLen);
         } else
             debug("Got '%s' from Squid\n", buf);
 
@@ -208,7 +215,7 @@ main(int argc, char *argv[])
             if (!packet) {
                 SEND("BH received KK with no data! user=");
             } else if (ntlm_validate_packet(packet, NTLM_AUTHENTICATE) == NTLM_ERR_NONE) {
-                if (ntlm_unpack_auth((ntlm_authenticate *)packet, user, domain, (buflen-3)) == NTLM_ERR_NONE) {
+                if (ntlm_unpack_auth((ntlm_authenticate *)packet, user, domain, decodedLen) == NTLM_ERR_NONE) {
                     lc(user);
                     lc(domain);
                     if (strip_domain_enabled) {
