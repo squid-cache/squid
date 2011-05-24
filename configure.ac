@@ -19,6 +19,7 @@ m4_include([acinclude/compiler-flags.m4])
 m4_include([acinclude/os-deps.m4])
 m4_include([acinclude/krb5.m4])
 m4_include([acinclude/pam.m4])
+m4_include([acinclude/pkg.m4])
 m4_include([acinclude/lib-checks.m4])
 
 PRESET_CFLAGS="$CFLAGS"
@@ -46,6 +47,12 @@ else
 fi
 AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 # on windows squid_host_os is either mingw or cygwin, version is 32
+
+# this needs to be before any test is run, to have more standard
+# functions available on some Unix sysems (e.g. Solaris)
+if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
+	AC_USE_SYSTEM_EXTENSIONS
+fi
 
 # test for programs
 AC_PROG_RANLIB
@@ -78,12 +85,6 @@ AC_PATH_PROG(AR, ar, $FALSE)
 AR_R="$AR r"
 AC_SUBST(AR_R)
 
-# this needs to be before any test is run, to have more standard
-# functions available on some Unix sysems (e.g. Solaris)
-if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
-	AC_USE_SYSTEM_EXTENSIONS
-fi
-
 AC_ARG_ENABLE(strict-error-checking,
   AS_HELP_STRING([--disable-strict-error-checking],[By default squid is compiled
                  with all possible static compiler error-checks enabled.
@@ -110,6 +111,8 @@ else
   AC_DISABLE_SHARED
 fi
 
+# LT_INIT requires libtool v2, might as well state it loud
+LT_PREREQ([2.2])
 LT_INIT([dlopen],[disable-shared])
 if ! test "${ac_top_build_prefix}" = "";
 then
@@ -1061,8 +1064,8 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
       AC_MSG_WARN([EUI support probably will not work on host $host.])
       ;;
   esac
+  #Iphlpapi.h check delayed after winsock2.h
   AC_CHECK_HEADERS( \
-    Iphlpapi.h \
     net/if_dl.h \
     sys/sockio.h \
     sys/param.h
@@ -1373,6 +1376,7 @@ AC_MSG_NOTICE([Linux Netfilter support requested: ${enable_linux_netfilter:=auto
 
 
 dnl Look for libnetfilter_conntrack options (needed for QOS netfilter marking)
+dnl squid_opt_netfilterconntrack is set only when option is explicity specified
 AC_ARG_WITH(netfilter-conntrack,
   AS_HELP_STRING([--without-netfilter-conntrack],
                  [Do not use Netfilter conntrack libraries for packet marking.
@@ -1380,7 +1384,7 @@ AC_ARG_WITH(netfilter-conntrack,
                   using --with-netfilter-conntrack=PATH. Default: auto-detect.]), [
 case "$with_netfilter_conntrack" in
   yes|no)
-    : # Nothing special to do here
+    squid_opt_netfilterconntrack=$with_netfilter_conntrack
     ;;
   *)
     if test ! -d "$withval" ; then
@@ -1390,6 +1394,7 @@ case "$with_netfilter_conntrack" in
     LDFLAGS="-L$squid_opt_netfilterconntrackpath/lib $LDFLAGS"
     CPPFLAGS="-I$squid_opt_netfilterconntrackpath/include $CPPFLAGS"
     with_netfilter_conntrack=yes
+    squid_opt_netfilterconntrack=yes
   esac
 ])
 AC_MSG_NOTICE([Linux Netfilter Conntrack support requested: ${with_netfilter_conntrack:=auto}])
@@ -1410,7 +1415,6 @@ if test "x$with_netfilter_conntrack" != "xno"; then
     with_netfilter_conntrack=yes
   fi
 fi
-AC_MSG_NOTICE([Linux Netfilter Conntrack support enabled: ${with_netfilter_conntrack} ${squid_opt_netfilterconntrackpath}])
 
 
 dnl Enable Large file support
@@ -2164,21 +2168,6 @@ SQUID_DEFINE_BOOL(X_ACCELERATOR_VARY,${enable_x_accelerator_vary:=no},
 AC_MSG_NOTICE([X-Accelerator-Vary support enabled: $enable_x_accelerator_vary])
 
 
-AC_ARG_ENABLE(zph-qos,
-  AS_HELP_STRING([--enable-zph-qos],[Enable ZPH QOS support]), [
-SQUID_YESNO([$enableval],
-            [unrecognized argument to --enable-zph-qos: $enableval])
-])
-SQUID_DEFINE_BOOL(USE_QOS_TOS,${enable_zph_qos:=yes},
-          [Enable Zero Penalty Hit QOS. When set, Squid will alter the
-           TOS field of HIT responses to help policing network traffic])
-AC_MSG_NOTICE([ZPH QOS enabled: $enable_zph_qos])
-if test x"$enable_zph_qos" = "xyes" ; then
-        AC_MSG_NOTICE([QOS netfilter mark preservation enabled: $with_netfilter_conntrack])
-        SQUID_DEFINE_BOOL(USE_LIBNETFILTERCONNTRACK,${with_netfilter_conntrack:=no},
-                      [Enable support for QOS netfilter mark preservation])
-fi
-
 if $CPPUNITCONFIG --help >/dev/null; then
   squid_cv_cppunit_version="`$CPPUNITCONFIG --version`"
   AC_MSG_NOTICE([using system installed cppunit version $squid_cv_cppunit_version])
@@ -2541,6 +2530,10 @@ AC_SEARCH_LIBS([yp_match], [nsl nss_nis nss_nisplus])
 dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
 if test "x$squid_host_os" = "xmingw" ; then
   SQUID_CHECK_WINSOCK_LIB
+  AC_CHECK_HEADERS(Iphlpapi.h,,,[
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif])
 fi
 
 # check that we have unix sockets
@@ -3252,6 +3245,33 @@ if test "x$enable_linux_netfilter" = "xyes" -a "x$with_libcap" != "xyes" ; then
     # AC_DEFINEd later
 fi
 
+if test "x$squid_opt_netfilterconntrack" = "xyes" -a "x$with_libcap" != "xyes" ; then
+    AC_MSG_ERROR([Linux netfilter conntrack requires libcap support (libcap or libcap2)])
+fi
+if test "x$with_netfilter_conntrack" = "xyes" -a "x$with_libcap" != "xyes" ; then
+    AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for netfilter mark support])
+    AC_MSG_WARN([Linux netfilter marking support WILL NOT be enabled])
+    with_netfilter_conntrack=no
+fi
+AC_MSG_NOTICE([Linux Netfilter Conntrack support enabled: ${with_netfilter_conntrack} ${squid_opt_netfilterconntrackpath}])
+
+
+AC_ARG_ENABLE(zph-qos,
+  AS_HELP_STRING([--enable-zph-qos],[Enable ZPH QOS support]), [
+SQUID_YESNO([$enableval],
+            [unrecognized argument to --enable-zph-qos: $enableval])
+])
+SQUID_DEFINE_BOOL(USE_QOS_TOS,${enable_zph_qos:=yes},
+          [Enable Zero Penalty Hit QOS. When set, Squid will alter the
+           TOS field of HIT responses to help policing network traffic])
+AC_MSG_NOTICE([ZPH QOS enabled: $enable_zph_qos])
+if test x"$enable_zph_qos" = "xyes" ; then
+        AC_MSG_NOTICE([QOS netfilter mark preservation enabled: $with_netfilter_conntrack])
+        SQUID_DEFINE_BOOL(USE_LIBNETFILTERCONNTRACK,${with_netfilter_conntrack:=no},
+                      [Enable support for QOS netfilter mark preservation])
+fi
+
+
 AC_CHECK_LIB(regex, regexec, [REGEXLIB="-lregex"],[REGEXLIB=''])
 AC_ARG_ENABLE(gnuregex,
   AS_HELP_STRING([--enable-gnuregex],
@@ -3457,6 +3477,7 @@ AC_CONFIG_FILES([\
 	helpers/external_acl/session/Makefile \
 	helpers/external_acl/unix_group/Makefile \
 	helpers/external_acl/wbinfo_group/Makefile \
+	helpers/external_acl/time_quota/Makefile \
 	helpers/log_daemon/Makefile \
 	helpers/log_daemon/DB/Makefile \
 	helpers/log_daemon/file/Makefile \

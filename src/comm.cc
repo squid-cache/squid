@@ -1490,7 +1490,7 @@ _comm_close(int fd, char const *file, int line)
     commCallCloseHandlers(fd);
 
     if (F->pconn.uses)
-        F->pconn.pool->count(F->pconn.uses);
+        F->pconn.pool->noteUses(F->pconn.uses);
 
     comm_empty_os_read_buffers(fd);
 
