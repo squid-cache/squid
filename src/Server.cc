@@ -410,7 +410,7 @@ ServerStateData::sendMoreRequestBody()
     assert(requestBodySource != NULL);
     assert(!requestSender);
 
-    const Comm::ConnectionPointer conn = dataDescriptor();
+    const Comm::ConnectionPointer conn = dataConnection();
 
     if (!Comm::IsConnOpen(conn)) {
         debugs(9,3, HERE << "cannot send request body to closing " << conn);

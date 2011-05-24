@@ -1337,8 +1337,7 @@ netdbExchangeStart(void *data)
 
     urlCanonical(ex->r);
 
-    Comm::ConnectionPointer nul;
-    FwdState::fwdStart(nul, ex->e, ex->r);
+    FwdState::fwdStart(Comm::ConnectionPointer(), ex->e, ex->r);
 
 #endif
 }

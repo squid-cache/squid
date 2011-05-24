@@ -261,7 +261,7 @@ public:
     void buildTitleUrl();
     void writeReplyBody(const char *, size_t len);
     void printfReplyBody(const char *fmt, ...);
-    virtual const Comm::ConnectionPointer & dataDescriptor() const;
+    virtual const Comm::ConnectionPointer & dataConnection() const;
     virtual void maybeReadVirginBody();
     virtual void closeServer();
     virtual void completeForwarding();
@@ -1178,7 +1178,7 @@ FtpStateData::parseListing()
 }
 
 const Comm::ConnectionPointer &
-FtpStateData::dataDescriptor() const
+FtpStateData::dataConnection() const
 {
     return data.conn;
 }

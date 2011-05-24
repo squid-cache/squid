@@ -172,7 +172,7 @@ HttpStateData::~HttpStateData()
 }
 
 const Comm::ConnectionPointer &
-HttpStateData::dataDescriptor() const
+HttpStateData::dataConnection() const
 {
     return serverConnection;
 }
