@@ -1051,11 +1051,14 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
   esac
   #Iphlpapi.h check delayed after winsock2.h
   AC_CHECK_HEADERS( \
+    windows.h \
     net/if_dl.h \
     sys/sockio.h \
     sys/param.h,
   [], [], [[
+#if HAVE_WINDOWS_H
 #include <windows.h>
+#endif
 ]])
   AC_CHECK_HEADERS( \
     net/if_arp.h \
