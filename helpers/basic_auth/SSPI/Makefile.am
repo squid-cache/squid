@@ -3,7 +3,9 @@ include $(top_srcdir)/src/Common.am
 ## we need our local files too (but avoid -I. at all costs)
 INCLUDES += -I$(srcdir)
 
+if ENABLE_WIN32SPECIFIC
 libexec_PROGRAMS = basic_sspi_auth
+endif
 
 basic_sspi_auth_SOURCES = \
 	basic_sspi_auth.cc \
