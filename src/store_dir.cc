@@ -92,7 +92,7 @@ STDIRSELECT *storeDirSelectSwapDir = storeDirSelectSwapDirLeastLoad;
 void
 StoreController::init()
 {
-    if (UsingSmp() && IamWorkerProcess()) {
+    if (Config.memShared && IamWorkerProcess()) {
         memStore = new MemStore;
         memStore->init();
     }
@@ -870,7 +870,8 @@ StoreHashIndex::init()
      * moment it remains at approximately 24 hours.  */
     store_hash_buckets = storeKeyHashBuckets(buckets);
     debugs(20, 1, "Using " << store_hash_buckets << " Store buckets");
-    debugs(20, 1, "Max Mem  size: " << ( Config.memMaxSize >> 10) << " KB");
+    debugs(20, 1, "Max Mem  size: " << ( Config.memMaxSize >> 10) << " KB" <<
+        (memStore ? " [shared]" : ""));
     debugs(20, 1, "Max Swap size: " << (Store::Root().maxSize() >> 10) << " KB");
 
     store_table = hash_create(storeKeyHashCmp,
