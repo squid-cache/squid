@@ -744,17 +744,6 @@ SQUIDCEXTERN void WIN32_InstallService(void);
 SQUIDCEXTERN void WIN32_RemoveService(void);
 SQUIDCEXTERN int SquidMain(int, char **);
 #endif /* _SQUID_WINDOWS_ */
-#if _SQUID_MSWIN_
-
-SQUIDCEXTERN int WIN32_pipe(int[2]);
-
-SQUIDCEXTERN int WIN32_getrusage(int, struct rusage *);
-SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
-
-SQUIDCEXTERN int Win32__WSAFDIsSet(int fd, fd_set* set);
-SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
-
-#endif
 
 /* external_acl.c */
 class external_acl;

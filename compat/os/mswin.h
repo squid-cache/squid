@@ -33,15 +33,14 @@
  */
 #ifndef SQUID_OS_MSWIN_H
 #define SQUID_OS_MSWIN_H
-
 #if _SQUID_WINDOWS_
 
 #if HAVE_FCNTL_H
 #include <fcntl.h>
-#endif
+#endif /* HAVE_FCNTL_H */
 #if HAVE_STRING_H
 #include <string.h>
-#endif
+#endif /* HAVE_FCNTL_H */
 
 #define ACL WindowsACL
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
@@ -49,8 +48,8 @@
 #define _CRT_SECURE_NO_DEPRECATE
 #pragma warning( disable : 4290 )
 #pragma warning( disable : 4996 )
-#endif
-#endif
+#endif /* _MSC_VER == 1400 */
+#endif /* _MSC_VER */
 
 /* Some MinGW version defines min() and max() as macros
    causing the fail of the build process. The following
@@ -70,7 +69,7 @@
 typedef uint64_t ino_t;
 #else
 typedef unsigned long ino_t;
-#endif
+#endif /* __USE_FILE_OFFSET64 */
 
 #define INT64_MAX _I64_MAX
 #define INT64_MIN _I64_MIN
@@ -84,11 +83,11 @@ typedef unsigned long ino_t;
 
 #define THREADLOCAL __attribute__((section(".tls")))
 
-#endif
+#endif /* _MSC_VER */
 
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 #define alloca _alloca
-#endif
+#endif /* _MSC_VER */
 #define chdir _chdir
 #define dup _dup
 #define dup2 _dup2
@@ -96,7 +95,7 @@ typedef unsigned long ino_t;
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 #define fileno _fileno
 #define fstat _fstati64
-#endif
+#endif /* _MSC_VER */
 #if 0
 #define ftruncate WIN32_ftruncate
 #if !_SQUID_MINGW_
@@ -111,7 +110,7 @@ extern int WIN32_ftruncate(int fd, off_t size);
 #define memccpy _memccpy
 #define mkdir(p) _mkdir(p)
 #define mktemp _mktemp
-#endif
+#endif /* _MSC_VER */
 #define pclose _pclose
 #define pipe WIN32_pipe
 #define popen _popen
@@ -126,7 +125,7 @@ extern int WIN32_ftruncate(int fd, off_t size);
 #define strlwr _strlwr
 #define strncasecmp _strnicmp
 #define tempnam _tempnam
-#endif
+#endif /* _MSC_VER */
 #define umask _umask
 #define unlink _unlink
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
@@ -162,7 +161,7 @@ extern int WIN32_ftruncate(int fd, off_t size);
 #define S_IRWXO 007
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 #define	S_ISDIR(m) (((m) & _S_IFDIR) == _S_IFDIR)
-#endif
+#endif /* _MSC_VER */
 
 #define	SIGHUP	1	/* hangup */
 #define	SIGKILL	9	/* kill (cannot be caught or ignored) */
@@ -177,7 +176,7 @@ typedef unsigned short int ushort;
 typedef unsigned char boolean;
 typedef unsigned char u_char;
 typedef unsigned int u_int;
-#endif
+#endif /* _SQUID_MINGW_ */
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 typedef int uid_t;
 typedef int gid_t;
@@ -218,7 +217,7 @@ struct timezone {
     int	tz_minuteswest;	/* minutes west of Greenwich */
     int	tz_dsttime;	/* type of dst correction */
 };
-#endif
+#endif /* !HAVE_GETTIMEOFDAY */
 
 #define CHANGE_FD_SETSIZE 1
 #if CHANGE_FD_SETSIZE && SQUID_MAXFD > DEFAULT_FD_SETSIZE
@@ -229,7 +228,7 @@ struct timezone {
 #include <errno.h>
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 #include <winsock2.h>
-#endif
+#endif /* _MSC_VER */
 #include <ws2tcpip.h>
 #if (EAI_NODATA == EAI_NONAME)
 #undef EAI_NODATA
@@ -360,7 +359,7 @@ SQUIDCEXTERN int __cdecl _free_osfhnd(int);
 __MINGW_IMPORT ioinfo * __pioinfo[];
 SQUIDCEXTERN int _free_osfhnd(int);
 
-#endif
+#endif /* _MSC_VER */
 
 SQUIDCEXTERN THREADLOCAL int ws32_result;
 
@@ -405,7 +404,7 @@ int open(const char *filename, int oflag, int pmode = 0)
 {
     return _open(filename, oflag, pmode & (_S_IREAD | _S_IWRITE));
 }
-#endif
+#endif /* _MSC_VER */
 
 inline
 int read(int fd, void * buf, size_t siz)
@@ -789,7 +788,11 @@ SQUIDCEXTERN size_t getpagesize();
 #define HAVE_GETPAGESIZE 2
 #endif
 
-#endif /* _SQUID_WINDOWS_ */
+SQUIDCEXTERN int WIN32_pipe(int[2]);
+SQUIDCEXTERN int WIN32_getrusage(int, struct rusage *);
+SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
+SQUIDCEXTERN int Win32__WSAFDIsSet(int fd, fd_set* set);
+SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
 
 /* gcc doesn't recognize the Windows native 64 bit formatting tags causing
  * the compile fail, so we must disable the check on native Windows.
@@ -800,4 +803,6 @@ SQUIDCEXTERN size_t getpagesize();
 #define PRINTF_FORMAT_ARG3
 #endif
 
+
+#endif /* _SQUID_WINDOWS_ */
 #endif /* SQUID_OS_MSWIN_H */
