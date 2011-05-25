@@ -361,6 +361,28 @@ SQUID_DEFINE_BOOL(_USE_INLINE_,$enable_inline,
 # to be used by sub-commands
 export enable_inline
 
+dnl
+dnl Check for atomic operations support in the compiler
+dnl
+AC_MSG_CHECKING([for atomic operations support])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    int n = 0;
+]],[[
+    __sync_add_and_fetch(&n, 1); // n becomes 1
+    __sync_fetch_and_add(&n, 1); // n becomes 2
+    __sync_bool_compare_and_swap(&n, 2, 201); // n becomes 201
+    __sync_fetch_and_and(&n, 200); // n becomes 200
+    return (n == 200) ? 0 : -1;
+]])],
+[
+    AC_DEFINE(HAVE_ATOMIC_OPS,1,
+        [Define to 1 if you have __sync_add_and_fetch() and such])
+    AC_MSG_RESULT(yes)
+],[
+    AC_MSG_RESULT(no)
+])
+
+
 AC_ARG_ENABLE(debug-cbdata,
   AS_HELP_STRING([--enable-debug-cbdata],
       [Provide some debug information in cbdata]), [ 
