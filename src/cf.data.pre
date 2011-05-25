@@ -2550,6 +2550,18 @@ DOC_START
 	enough to keep larger objects from hoarding cache_mem.
 DOC_END
 
+NAME: memory_cache_shared
+COMMENT: on|off
+TYPE: YesNoNone
+LOC: Config.memShared
+DEFAULT: none
+DOC_START
+	Controls whether the memory cache is shared among SMP workers.
+
+	By default, the memory cache is shared only if there are multiple
+	worker processes with positive cache_mem setting.
+DOC_END
+
 NAME: memory_cache_mode
 TYPE: memcachemode
 LOC: Config
