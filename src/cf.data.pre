@@ -2558,8 +2558,10 @@ DEFAULT: none
 DOC_START
 	Controls whether the memory cache is shared among SMP workers.
 
-	By default, the memory cache is shared only if there are multiple
-	worker processes with positive cache_mem setting.
+	By default, the memory cache is shared if and only if all of the
+	following conditions are satisfied: SMP mode is enabled using multiple
+	worker processes, cache_mem is positive, and Squid was built with a
+	compiler that supports GCC-style atomic operations.
 DOC_END
 
 NAME: memory_cache_mode
