@@ -871,7 +871,7 @@ StoreHashIndex::init()
     store_hash_buckets = storeKeyHashBuckets(buckets);
     debugs(20, 1, "Using " << store_hash_buckets << " Store buckets");
     debugs(20, 1, "Max Mem  size: " << ( Config.memMaxSize >> 10) << " KB" <<
-        (memStore ? " [shared]" : ""));
+        (Config.memShared ? " [shared]" : ""));
     debugs(20, 1, "Max Swap size: " << (Store::Root().maxSize() >> 10) << " KB");
 
     store_table = hash_create(storeKeyHashCmp,
