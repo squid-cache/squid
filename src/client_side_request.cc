@@ -1016,7 +1016,6 @@ clientRedirectDoneWrapper(void *data, char *result)
 void
 ClientRequestContext::clientRedirectDone(char *result)
 {
-    HttpRequest *new_request = NULL;
     HttpRequest *old_request = http->request;
     debugs(85, 5, "clientRedirectDone: '" << http->uri << "' result=" << (result ? result : "NULL"));
     assert(redirect_state == REDIRECT_PENDING);
@@ -1042,41 +1041,33 @@ ClientRequestContext::clientRedirectDone(char *result)
                     debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid 303 redirect Location: " << result);
             }
         } else if (strcmp(result, http->uri)) {
-            if (!(new_request = HttpRequest::CreateFromUrlAndMethod(result, old_request->method)))
+            // XXX: validate the URL properly *without* generating a whole new request object right here.
+            // XXX: the clone() should be done only AFTER we know the new URL is valid.
+            HttpRequest *new_request = old_request->clone();
+            if (urlParse(old_request->method, result, new_request)) {
+                debugs(61,2, HERE << "URL-rewriter diverts URL from " << urlCanonical(old_request) << " to " << urlCanonical(new_request));
+
+                // update the new request to flag the re-writing was done on it
+                new_request->flags.redirected = 1;
+
+                // unlink bodypipe from the old request. Not needed there any longer.
+                if (old_request->body_pipe != NULL) {
+                    old_request->body_pipe = NULL;
+                    debugs(61,2, HERE << "URL-rewriter diverts body_pipe " << new_request->body_pipe <<
+                           " from request " << old_request << " to " << new_request);
+                }
+
+                // update the current working ClientHttpRequest fields
+                safe_free(http->uri);
+                http->uri = xstrdup(urlCanonical(new_request));
+                HTTPMSGUNLOCK(old_request);
+                http->request = HTTPMSGLOCK(new_request);
+            } else {
                 debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
                        old_request->method << " " << result << " HTTP/1.1");
+                delete new_request;
+            }
         }
-    }
-
-    if (new_request) {
-        safe_free(http->uri);
-        http->uri = xstrdup(urlCanonical(new_request));
-        new_request->http_ver = old_request->http_ver;
-        new_request->header.append(&old_request->header);
-        new_request->client_addr = old_request->client_addr;
-#if FOLLOW_X_FORWARDED_FOR
-        new_request->indirect_client_addr = old_request->indirect_client_addr;
-#endif /* FOLLOW_X_FORWARDED_FOR */
-        new_request->my_addr = old_request->my_addr;
-        new_request->clientConnectionManager = old_request->clientConnectionManager;
-        new_request->flags = old_request->flags;
-        new_request->flags.redirected = 1;
-#if USE_AUTH
-        new_request->auth_user_request = old_request->auth_user_request;
-#endif
-        if (old_request->body_pipe != NULL) {
-            new_request->body_pipe = old_request->body_pipe;
-            old_request->body_pipe = NULL;
-            debugs(61,2, HERE << "URL-rewriter diverts body_pipe " << new_request->body_pipe <<
-                   " from request " << old_request << " to " << new_request);
-        }
-
-        new_request->content_length = old_request->content_length;
-        new_request->extacl_user = old_request->extacl_user;
-        new_request->extacl_passwd = old_request->extacl_passwd;
-        new_request->flags.proxy_keepalive = old_request->flags.proxy_keepalive;
-        HTTPMSGUNLOCK(old_request);
-        http->request = HTTPMSGLOCK(new_request);
     }
 
     /* FIXME PIPELINE: This is innacurate during pipelining */
