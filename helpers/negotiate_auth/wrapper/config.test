@@ -1,5 +1,7 @@
 #!/bin/sh
 
+exit 1
+
 # Don't build on Windows
 if [ -f /usr/include/w32api/windows.h ]; then
         exit 1
