@@ -10,6 +10,8 @@
 #include "cbdata.h"
 #include "MemBuf.h"
 
+#include <ostream>
+
 InstanceIdDefinitions(AsyncJob, "job");
 
 AsyncJob::Pointer AsyncJob::Start(AsyncJob *j)
