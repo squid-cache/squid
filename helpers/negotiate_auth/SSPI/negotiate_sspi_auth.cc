@@ -38,7 +38,7 @@
  */
 #include "config.h"
 #include "helpers/defines.h"
-#include "libntlmauth/support_bits.cci"
+#include "ntlmauth/support_bits.cci"
 #include "sspwin32.h"
 #include "util.h"
 

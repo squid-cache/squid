@@ -65,8 +65,8 @@ typedef unsigned char uchar;
 
 #include "config.h"
 #include "helpers/defines.h"
-#include "libntlmauth/ntlmauth.h"
-#include "libntlmauth/support_bits.h"
+#include "ntlmauth/ntlmauth.h"
+#include "ntlmauth/support_bits.h"
 #include "sspwin32.h"
 #include "util.h"
 
@@ -278,7 +278,7 @@ char * GetDomainName(void)
  * the user's credentials (domain\\username)
  * upon success. WARNING. It's pointing to static storage.
  * In case of problem sets as side-effect ntlm_errno to one of the
- * codes defined in libntlmauth/ntlmauth.h
+ * codes defined in ntlmauth/ntlmauth.h
  */
 int
 ntlm_check_auth(ntlm_authenticate * auth, char *user, char *domain, int auth_length)
