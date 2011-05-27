@@ -112,7 +112,6 @@ extern int WIN32_ftruncate(int fd, off_t size);
 #define mktemp _mktemp
 #endif /* _MSC_VER */
 #define pclose _pclose
-#define pipe WIN32_pipe
 #define popen _popen
 #define putenv _putenv
 #define setmode _setmode
@@ -788,7 +787,6 @@ SQUIDCEXTERN size_t getpagesize();
 #define HAVE_GETPAGESIZE 2
 #endif
 
-SQUIDCEXTERN int WIN32_pipe(int[2]);
 SQUIDCEXTERN int WIN32_getrusage(int, struct rusage *);
 SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
 SQUIDCEXTERN int Win32__WSAFDIsSet(int fd, fd_set* set);
