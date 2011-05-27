@@ -112,7 +112,7 @@ else
 fi
 
 # LT_INIT requires libtool v2, might as well state it loud
-LT_PREREQ ([2.2])
+LT_PREREQ([2.2])
 LT_INIT([dlopen],[disable-shared])
 if ! test "${ac_top_build_prefix}" = "";
 then
