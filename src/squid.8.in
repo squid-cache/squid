@@ -107,7 +107,7 @@ Parse configuration file, then send signal to running copy
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-l facility"
-Use specified syslog facility. implies
+Use specified syslog facility. Implies
 .B \-s
 .
 .if !'po4a'hide' .TP
@@ -174,7 +174,8 @@ Squid configuration files located in @SYSCONFDIR@/:
 .if !'po4a'hide' .IP "squid.conf"
 The main configuration file. You must initially make changes to this file for 
 .B squid
-to work. For example, the default configuration does not allow access from any browser.
+to work. For example, the default configuration only allows access from RFC private LAN networks.
+Some packaging distributions block even that.
 .
 .if !'po4a'hide' .IP "squid.conf.default"
 Reference copy of the configuration file. Always kept up to date with

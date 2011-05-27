@@ -15,22 +15,39 @@ Version 1.3.0sq
 .B ext_kerberos_ldap_group_acl
 is an installed binary and allows Squid to connect to a LDAP directory to 
 authorize users via LDAP groups. Options are specified as parameters on the 
-command line, while the username (e.g. user, user@REALM, NDOMAIN\\user) to 
-be checked against the LDAP directory are specified on subsequent lines of 
+command line, while the username (e.g. 
+.B user
+, 
+.B user@REALM
+, 
+.B NDOMAIN\\user
+) to be checked against the LDAP directory are specified on subsequent lines of 
 input to the helper, one username per line.
 .PP
 .B ext_kerberos_ldap_group_acl 
-will determine the ldap server name from DNS SRV and/or 
-A records or a local hosts file (e.g. for the Kerberos Realm SUSE.HOME it 
-will look for an SRV record _ldap._tcp.SUSE.HOME and an A record SUSE.HOME 
-or a SUSE.HOME hosts entry). If no domain information is available from the 
-username the ldap server will be determined through the command line options.
+will determine the ldap server name from DNS SRV and/or A records or a 
+local hosts file (e.g. for the Kerberos Realm 
+.B SUSE.HOME 
+it will look for an SRV record 
+.B _ldap._tcp.SUSE.HOME 
+and an A record 
+.B SUSE.HOME 
+or a 
+.B SUSE.HOME 
+hosts entry). If no domain information is available from the 
+username the LDAP server will be determined through the command line options.
 .PP
 .B ext_kerberos_ldap_group_acl 
-requires as a minimum the \-g, \-t or \-T option which 
-provides the ldap group name the user has to belong too. For Active Directory 
-a recursive group lookup is implemented until a max depth specified by \-m depth. 
-For other Ldap servers a RFC2307bis schema of groups is assumed.
+requires as a minimum the 
+.B \-g
+, 
+.B \-t 
+or 
+.B \-T 
+option which provides the LDAP group name the user has to belong too. For Active Directory 
+a recursive group lookup is implemented until a max depth specified by 
+.B \-m 
+depth. For other LDAP servers a RFC2307bis schema of groups is assumed.
 .PP
 Different group names can be specified for different domains using a 
 group@domain syntax. 
@@ -57,7 +74,7 @@ Write debug messages to stderr.
 Write informational messages to stderr.
 .if !'po4a'hide' .TP 12
 .if !'po4a'hide' .B \-s
-Use SSL for the ldap connection.
+Use SSL for the LDAP connection.
 .IP
 The CA certificate file can be set via the environment variable TLS_CACERTFILE (default /etc/ssl/certs/cert.pem) (OpenLDAP).
 .IP
@@ -85,7 +102,7 @@ Username for LDAP server.
 Password for LDAP server.
 .IP
 As the password needs to be printed in plain text in your Squid configuration
-it is strongly recommended to use a account with minimal associated privileges.  
+it is strongly recommended to use an account with minimal associated privileges.  
 This to limit the damage in case someone could get hold of a copy of your Squid 
 configuration file or extracts the password used from a process listing.
 .
@@ -115,8 +132,7 @@ Group|Group@|Group@Realm[:Group@|Group@Realm] where group and domain
 is in UTF-8 hex format
 .
 .SH CONFIGURATION
-.PP See FAQ wiki page for examples of how to write configuration snippets. (TBD)
-.PP 
+.PP
 This helper is intended to be used as an
 .B external_acl_type
 helper in
@@ -136,7 +152,7 @@ helper in
 .PP
 .B NOTE:
 The following squid startup file modification may be required:
-
+.
 Add the following lines to the squid startup script to point squid to a keytab file which
 contains the HTTP/fqdn service principal for the default Kerberos domain. The fqdn must be
 the proxy name set in IE or firefox. You can not use an IP address.
@@ -147,7 +163,7 @@ the proxy name set in IE or firefox. You can not use an IP address.
 .if !'po4a'hide' export KRB5_KTNAME
 .if !'po4a'hide' .fi
 .if !'po4a'hide' .ft
-
+.
 If you use a different Kerberos domain than the machine itself is in you can point squid to
 the seperate Kerberos config file by setting the following environmnet variable in the startup
 script.
@@ -158,7 +174,7 @@ script.
 .if !'po4a'hide' export KRB5_CONFIG
 .if !'po4a'hide' .fi
 .if !'po4a'hide' .ft
-
+.
 .B ext_kerberos_ldap_group_acl
 will determine automagically the right ldap server. The following method is used:
 
