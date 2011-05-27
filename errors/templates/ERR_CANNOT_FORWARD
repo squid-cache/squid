@@ -9,8 +9,7 @@ body
 :lang(fa) { direction: rtl; font-size: 100%; font-family: Tahoma, Roya, sans-serif; float: right; }
 :lang(he) { direction: rtl; float: right; }
  --></style>
-</head>
-<body>
+</head><body id=%c>
 <div id="titles">
 <h1>ERROR</h1>
 <h2>The requested URL could not be retrieved</h2>
