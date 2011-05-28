@@ -70,7 +70,7 @@ typedef char * SSP_blobP;
 #define SSP_OK 1
 #define SSP_ERROR 2
 
-HMODULE LoadSecurityDll(int, char *);
+HMODULE LoadSecurityDll(int, const char *);
 void UnloadSecurityDll(void);
 BOOL WINAPI SSP_LogonUser(PTSTR, PTSTR, PTSTR);
 BOOL WINAPI SSP_ValidateNTLMCredentials(PVOID, int, char *);

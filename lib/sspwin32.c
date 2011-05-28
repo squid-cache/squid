@@ -109,7 +109,7 @@ void UnloadSecurityDll(void)
 }
 
 
-HMODULE LoadSecurityDll(int mode, char * SSP_Package)
+HMODULE LoadSecurityDll(int mode, const char * SSP_Package)
 {
     TCHAR lpszDLL[MAX_PATH];
     OSVERSIONINFO VerInfo;

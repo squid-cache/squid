@@ -64,9 +64,10 @@
 typedef unsigned char uchar;
 
 #include "config.h"
+#include "base64.h"
 #include "helpers/defines.h"
 #include "ntlmauth/ntlmauth.h"
-#include "ntlmauth/support_bits.h"
+#include "ntlmauth/support_bits.cci"
 #include "sspwin32.h"
 #include "util.h"
 
@@ -93,6 +94,17 @@ int UseAllowedGroup = 0;
 
 #if FAIL_DEBUG
 int fail_debug_enabled = 0;
+#endif
+
+/* A couple of harmless helper macros */
+#define SEND(X) debug("sending '%s' to squid\n",X); printf(X "\n");
+#ifdef __GNUC__
+#define SEND2(X,Y...) debug("sending '" X "' to squid\n",Y); printf(X "\n",Y);
+#define SEND3(X,Y...) debug("sending '" X "' to squid\n",Y); printf(X "\n",Y);
+#else
+/* no gcc, no debugging. varargs macros are a gcc extension */
+#define SEND2(X,Y) debug("sending '" X "' to squid\n",Y); printf(X "\n",Y);
+#define SEND3(X,Y,Z) debug("sending '" X "' to squid\n",Y); printf(X "\n",Y,Z);
 #endif
 
 /* returns 1 on success, 0 on failure */
@@ -274,11 +286,12 @@ char * GetDomainName(void)
     return DomainName;
 }
 
-/* returns NULL on failure, or a pointer to
- * the user's credentials (domain\\username)
- * upon success. WARNING. It's pointing to static storage.
- * In case of problem sets as side-effect ntlm_errno to one of the
- * codes defined in ntlmauth/ntlmauth.h
+/*
+ * Sets user and domain parameters to the user's
+ * credentials (domain\\username) upon success.
+ *
+ * In case of problem returns an NTLM auth error
+ * code defined in ntlmauth/ntlmauth.h
  */
 int
 ntlm_check_auth(ntlm_authenticate * auth, char *user, char *domain, int auth_length)
@@ -286,7 +299,6 @@ ntlm_check_auth(ntlm_authenticate * auth, char *user, char *domain, int auth_len
     int x;
     int rv;
     char credentials[DNLEN+UNLEN+2];	/* we can afford to waste */
-    lstring tmp;
 
     if (!NTLM_LocalCall) {
 
@@ -418,7 +430,7 @@ manage_request()
     char decoded[BUFFER_SIZE];
     int decodedLen;
     char helper_command[3];
-    char *c, *cred;
+    char *c;
     int oversized = 0;
     char * ErrorMessage;
     static ntlm_negotiate local_nego;
@@ -427,10 +439,10 @@ manage_request()
 
     /* NP: for some reason this helper sometimes needs to accept
      * from clients that send no negotiate packet. */
-    if (memcpy(local_nego.signature, "NTLMSSP", 8) != 0) {
+    if (memcpy(local_nego.hdr.signature, "NTLMSSP", 8) != 0) {
         memset(&local_nego, 0, sizeof(ntlm_negotiate));	/* reset */
-        memcpy(local_nego.signature, "NTLMSSP", 8);     /* set the signature */
-        local_nego.type = le32toh(NTLM_NEGOTIATE);      /* this is a challenge */
+        memcpy(local_nego.hdr.signature, "NTLMSSP", 8);     /* set the signature */
+        local_nego.hdr.type = le32toh(NTLM_NEGOTIATE);      /* this is a challenge */
         local_nego.flags = le32toh(NTLM_NEGOTIATE_ALWAYS_SIGN |
                                    NTLM_NEGOTIATE_USE_NTLM |
                                    NTLM_NEGOTIATE_USE_LM |
@@ -441,7 +453,7 @@ try_again:
     if (fgets(buf, BUFFER_SIZE, stdin) == NULL)
         return 0;
 
-    c = memchr(buf, '\n', BUFFER_SIZE);	/* safer against overrun than strchr */
+    c = static_cast<char*>(memchr(buf, '\n', BUFFER_SIZE));	/* safer against overrun than strchr */
     if (c) {
         if (oversized) {
             helperfail("illegal request received");
@@ -458,7 +470,7 @@ try_again:
         decodedLen = base64_decode(decoded, sizeof(decoded), buf+3);
         strncpy(helper_command, buf, 2);
         debug("Got '%s' from Squid with data:\n", helper_command);
-        hex_dump(decoded, decodedLen);
+        hex_dump((unsigned char*)decoded, decodedLen);
     } else
         debug("Got '%s' from Squid\n", buf);
     if (memcmp(buf, "YR", 2) == 0) {	/* refresh-request */
@@ -467,8 +479,8 @@ try_again:
             decodedLen = base64_decode(decoded, sizeof(decoded), buf+3);
         else {
             debug("Negotiate packet not supplied - self generated\n");
-            memcpy(decoded, local_lego, sizeof(local_nego));
-            decodedLen = sizeof(localnego);
+            memcpy(decoded, &local_nego, sizeof(local_nego));
+            decodedLen = sizeof(local_nego);
         }
         if ((size_t)decodedLen < sizeof(ntlmhdr)) {		/* decoding failure, return error */
             SEND("NA Packet format error, couldn't base64-decode");
@@ -491,9 +503,10 @@ try_again:
                     printf("TT %s\n",c);
                     decodedLen = base64_decode(decoded, sizeof(decoded), c);
                     debug("sending 'TT' to squid with data:\n");
-                    hex_dump(decoded, decodedLen);
-                    if (NTLM_LocalCall)
+                    hex_dump((unsigned char *)decoded, decodedLen);
+                    if (NTLM_LocalCall) {
                         debug("NTLM Local Call detected\n");
+                    }
                 } else {
                     SEND2("TT %s", c);
                 }
@@ -548,14 +561,15 @@ try_again:
             return 1;
             /* notreached */
         case NTLM_AUTHENTICATE:
+        {
             /* check against SSPI */
-            err = ntlm_check_auth((ntlm_authenticate *) decoded, user, domain, decodedLen);
+            int err = ntlm_check_auth((ntlm_authenticate *) decoded, user, domain, decodedLen);
             have_challenge = 0;
             if (err != NTLM_ERR_NONE) {
 #if FAIL_DEBUG
                 fail_debug_enabled =1;
 #endif
-                switch (ntlm_errno) {
+                switch (err) {
                 case NTLM_ERR_NONE:
                     break;
                 case NTLM_BAD_NTGROUP:
@@ -588,8 +602,11 @@ try_again:
                 }
             }
             /* let's lowercase them for our convenience */
-            SEND3("AF %s\\%s", lc(domain), lc(user));
+            lc(domain);
+            lc(user);
+            SEND3("AF %s\\%s", domain, user);
             return 1;
+        }
         default:
             helperfail("unknown authentication packet type");
             return 1;
