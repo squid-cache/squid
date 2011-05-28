@@ -17,7 +17,7 @@ testHttpParser::globalSetup()
     static bool setup_done = false;
     if (setup_done)
         return;
-    
+
     Mem::Init();
     setup_done = true;
 }
