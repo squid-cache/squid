@@ -2593,6 +2593,7 @@ AC_CHECK_TYPE(uint64_t,[
   ],,SQUID_DEFAULT_INCLUDES)
 #need the define for overflow checks
 AC_CHECK_SIZEOF(off_t)
+AC_CHECK_SIZEOF(size_t)
 
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.
