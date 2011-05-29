@@ -1650,9 +1650,9 @@ DOC_START
 
 	By default, no requests are bumped.
 
-	See also: http_port sslBump
+	See also: http_port ssl-bump
    
-	This clause only supports fast acl types.
+	This clause supports both fast and slow acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 
@@ -1679,7 +1679,6 @@ DOC_START
 	    NO_DEFAULT_CA	Don't use the default CA list built in
 				to OpenSSL.
 DOC_END
-
 
 NAME: sslproxy_cert_error
 IFDEF: USE_SSL
@@ -1710,8 +1709,6 @@ DOC_START
 
 	Default setting:  sslproxy_cert_error deny all
 DOC_END
-
-
 
 NAME: sslpassword_program
 IFDEF: USE_SSL
