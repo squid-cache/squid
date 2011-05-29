@@ -730,12 +730,9 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
 
             if (acl->def->theHelper->stats.queue_size <= acl->def->theHelper->n_running) {
                 debugs(82, 2, "aclMatchExternal: \"" << key << "\": queueing a call.");
-                ch->changeState (ExternalACLLookup::Instance());
-
-                if (entry == NULL) {
-                    debugs(82, 2, "aclMatchExternal: \"" << key << "\": return -1.");
-                    return -1;
-                }
+                ch->changeState(ExternalACLLookup::Instance());
+                debugs(82, 2, "aclMatchExternal: \"" << key << "\": return -1.");
+                return -1; // to get here we have to have an expired cache entry. MUST not use.
             } else {
                 if (!entry) {
                     debugs(82, 1, "aclMatchExternal: '" << acl->def->name <<
