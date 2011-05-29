@@ -123,7 +123,6 @@ AIODiskIOStrategy::callback()
     void *cbdata;
     int callback_valid;
     void *buf;
-    int filedescriptor;
     async_queue_entry_t *aqe;
     async_queue_entry_type_t type;
 
@@ -148,7 +147,6 @@ AIODiskIOStrategy::callback()
                 /* Get the callback parameters */
                 freefunc = aqe->aq_e_free;
                 buf = aqe->aq_e_buf;
-                filedescriptor = aqe->aq_e_fd;
                 type = aqe->aq_e_type;
                 callback_valid = cbdataReferenceValidDone(aqe->aq_e_callback_data, &cbdata);
                 AIODiskFile * theFile = NULL;
