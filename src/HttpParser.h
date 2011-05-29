@@ -56,12 +56,20 @@ public:
     uint8_t state;
     const char *buf;
     int bufsiz;
-    int req_start, req_end;
+
+    /// Offsets for pieces of the (HTTP request) Request-Line as per RFC 2616
+    struct request_offsets {
+        int start, end;
+        int m_start, m_end; // method
+        int u_start, u_end; // url
+        int v_start, v_end; // version (full text)
+        int v_maj, v_min;   // version numerics
+    } req;
+
+    // Offsets for pieces of the MiME Header segment
     int hdr_start, hdr_end;
-    int m_start, m_end;
-    int u_start, u_end;
-    int v_start, v_end;
-    int v_maj, v_min;
+
+    // TODO: Offsets for pieces of the (HTTP reply) Status-Line as per RFC 2616
 
     /** HTTP status code to be used on the invalid-request error page
      * HTTP_STATUS_NONE indicates incomplete parse, HTTP_OK indicates no error.
@@ -80,10 +88,10 @@ extern int HttpParserHdrSz(HttpParser *);
 extern const char * HttpParserHdrBuf(HttpParser *);
 extern int HttpParserRequestLen(HttpParser *hp);
 #else
-#define HttpParserReqSz(hp)     ( (hp)->req_end - (hp)->req_start + 1 )
+#define HttpParserReqSz(hp)     ( (hp)->req.end - (hp)->req.start + 1 )
 #define HttpParserHdrSz(hp)     ( (hp)->hdr_end - (hp)->hdr_start + 1 )
 #define HttpParserHdrBuf(hp)    ( (hp)->buf + (hp)->hdr_start )
-#define HttpParserRequestLen(hp)        ( (hp)->hdr_end - (hp)->req_start + 1 )
+#define HttpParserRequestLen(hp)        ( (hp)->hdr_end - (hp)->req.start + 1 )
 #endif
 
 

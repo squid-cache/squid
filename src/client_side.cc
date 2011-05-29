@@ -2126,10 +2126,10 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
     }
 
     /* Request line is valid here .. */
-    *http_ver = HttpVersion(hp->v_maj, hp->v_min);
+    *http_ver = HttpVersion(hp->req.v_maj, hp->req.v_min);
 
     /* This call scans the entire request, not just the headers */
-    if (hp->v_maj > 0) {
+    if (hp->req.v_maj > 0) {
         if ((req_sz = headersEnd(hp->buf, hp->bufsiz)) == 0) {
             debugs(33, 5, "Incomplete request, waiting for end of headers");
             return NULL;
@@ -2149,7 +2149,7 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
 
     hp->hdr_end = req_sz - 1;
 
-    hp->hdr_start = hp->req_end + 1;
+    hp->hdr_start = hp->req.end + 1;
 
     /* Enforce max_request_size */
     if (req_sz >= Config.maxRequestHeaderSize) {
@@ -2159,7 +2159,7 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
     }
 
     /* Set method_p */
-    *method_p = HttpRequestMethod(&hp->buf[hp->m_start], &hp->buf[hp->m_end]+1);
+    *method_p = HttpRequestMethod(&hp->buf[hp->req.m_start], &hp->buf[hp->req.m_end]+1);
 
     /* deny CONNECT via accelerated ports */
     if (*method_p == METHOD_CONNECT && conn && conn->port && conn->port->accel) {
@@ -2182,7 +2182,7 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
      * TODO: Use httpRequestParse here.
      */
     /* XXX this code should be modified to take a const char * later! */
-    req_hdr = (char *) hp->buf + hp->req_end + 1;
+    req_hdr = (char *) hp->buf + hp->req.end + 1;
 
     debugs(33, 3, "parseHttpRequest: req_hdr = {" << req_hdr << "}");
 
@@ -2215,11 +2215,11 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
      * XXX this should eventually not use a malloc'ed buffer; the transformation code
      * below needs to be modified to not expect a mutable nul-terminated string.
      */
-    char *url = (char *)xmalloc(hp->u_end - hp->u_start + 16);
+    char *url = (char *)xmalloc(hp->req.u_end - hp->req.u_start + 16);
 
-    memcpy(url, hp->buf + hp->u_start, hp->u_end - hp->u_start + 1);
+    memcpy(url, hp->buf + hp->req.u_start, hp->req.u_end - hp->req.u_start + 1);
 
-    url[hp->u_end - hp->u_start + 1] = '\0';
+    url[hp->req.u_end - hp->req.u_start + 1] = '\0';
 
 #if THIS_VIOLATES_HTTP_SPECS_ON_URL_TRANSFORMATION
 
