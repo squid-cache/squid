@@ -1590,8 +1590,9 @@ dump_peer_options(StoreEntry * sentry, peer * p)
 
     if (p->options.userhash)
         storeAppendPrintf(sentry, " userhash");
+#endif
 
-    if (p->options.userhash)
+    if (p->options.sourcehash)
         storeAppendPrintf(sentry, " sourcehash");
 
     if (p->options.weighted_roundrobin)
