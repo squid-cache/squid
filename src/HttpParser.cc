@@ -10,12 +10,12 @@ HttpParser::clear()
     request_parse_status = HTTP_STATUS_NONE;
     buf = NULL;
     bufsiz = 0;
-    req_start = req_end = -1;
+    req.start = req.end = -1;
     hdr_start = hdr_end = -1;
-    m_start = m_end = -1;
-    u_start = u_end = -1;
-    v_start = v_end = -1;
-    v_maj = v_min = 0;
+    req.m_start = req.m_end = -1;
+    req.u_start = req.u_end = -1;
+    req.v_start = req.v_end = -1;
+    req.v_maj = req.v_min = 0;
 }
 
 void
@@ -39,21 +39,21 @@ HttpParser::parseRequestFirstLine()
 
     // Single-pass parse: (provided we have the whole line anyways)
 
-    req_start = 0;
+    req.start = 0;
     if (Config.onoff.relaxed_header_parser) {
-        if (Config.onoff.relaxed_header_parser < 0 && buf[req_start] == ' ')
+        if (Config.onoff.relaxed_header_parser < 0 && buf[req.start] == ' ')
             debugs(74, DBG_IMPORTANT, "WARNING: Invalid HTTP Request: " <<
                    "Whitespace bytes received ahead of method. " <<
                    "Ignored due to relaxed_header_parser.");
         // Be tolerant of prefix spaces (other bytes are valid method values)
-        for (; req_start < bufsiz && buf[req_start] == ' '; req_start++);
+        for (; req.start < bufsiz && buf[req.start] == ' '; req.start++);
     }
-    req_end = -1;
+    req.end = -1;
     for (int i = 0; i < bufsiz; i++) {
         // track first and last whitespace (SP only)
         if (buf[i] == ' ') {
             last_whitespace = i;
-            if (first_whitespace < req_start)
+            if (first_whitespace < req.start)
                 first_whitespace = i;
         }
 
@@ -64,7 +64,7 @@ HttpParser::parseRequestFirstLine()
 
         // locate line terminator
         if (buf[i] == '\n') {
-            req_end = i;
+            req.end = i;
             line_end = i - 1;
             break;
         }
@@ -82,12 +82,12 @@ HttpParser::parseRequestFirstLine()
                     i++;
 
                 if (buf[i + 1] == '\n') {
-                    req_end = i + 1;
+                    req.end = i + 1;
                     break;
                 }
             } else {
                 if (buf[i + 1] == '\n') {
-                    req_end = i + 1;
+                    req.end = i + 1;
                     line_end = i - 1;
                     break;
                 }
@@ -99,9 +99,9 @@ HttpParser::parseRequestFirstLine()
             return -1;
         }
     }
-    if (req_end == -1) {
-        debugs(74, 5, "Parser: retval 0: from " << req_start <<
-               "->" << req_end << ": needs more data to complete first line.");
+    if (req.end == -1) {
+        debugs(74, 5, "Parser: retval 0: from " << req.start <<
+               "->" << req.end << ": needs more data to complete first line.");
         return 0;
     }
 
@@ -115,45 +115,45 @@ HttpParser::parseRequestFirstLine()
     // generating HTTP status for any aborts as we go.
 
     // First non-whitespace = beginning of method
-    if (req_start > line_end) {
+    if (req.start > line_end) {
         request_parse_status = HTTP_BAD_REQUEST;
         return -1;
     }
-    m_start = req_start;
+    req.m_start = req.start;
 
     // First whitespace = end of method
-    if (first_whitespace > line_end || first_whitespace < req_start) {
+    if (first_whitespace > line_end || first_whitespace < req.start) {
         request_parse_status = HTTP_BAD_REQUEST; // no method
         return -1;
     }
-    m_end = first_whitespace - 1;
-    if (m_end < m_start) {
+    req.m_end = first_whitespace - 1;
+    if (req.m_end < req.m_start) {
         request_parse_status = HTTP_BAD_REQUEST; // missing URI?
         return -1;
     }
 
     // First non-whitespace after first SP = beginning of URL+Version
-    if (second_word > line_end || second_word < req_start) {
+    if (second_word > line_end || second_word < req.start) {
         request_parse_status = HTTP_BAD_REQUEST; // missing URI
         return -1;
     }
-    u_start = second_word;
+    req.u_start = second_word;
 
     // RFC 1945: SP and version following URI are optional, marking version 0.9
     // we identify this by the last whitespace being earlier than URI start
-    if (last_whitespace < second_word && last_whitespace >= req_start) {
-        v_maj = 0;
-        v_min = 9;
-        u_end = line_end;
+    if (last_whitespace < second_word && last_whitespace >= req.start) {
+        req.v_maj = 0;
+        req.v_min = 9;
+        req.u_end = line_end;
         request_parse_status = HTTP_OK; // HTTP/0.9
         return 1;
     } else {
         // otherwise last whitespace is somewhere after end of URI.
-        u_end = last_whitespace;
+        req.u_end = last_whitespace;
         // crop any trailing whitespace in the area we think of as URI
-        for (; u_end >= u_start && xisspace(buf[u_end]); u_end--);
+        for (; req.u_end >= req.u_start && xisspace(buf[req.u_end]); req.u_end--);
     }
-    if (u_end < u_start) {
+    if (req.u_end < req.u_start) {
         request_parse_status = HTTP_BAD_REQUEST; // missing URI
         return -1;
     }
@@ -163,18 +163,18 @@ HttpParser::parseRequestFirstLine()
         request_parse_status = HTTP_BAD_REQUEST; // missing version
         return -1;
     }
-    v_start = last_whitespace + 1;
-    v_end = line_end;
+    req.v_start = last_whitespace + 1;
+    req.v_end = line_end;
 
     // We only accept HTTP protocol requests right now.
     // TODO: accept other protocols; RFC 2326 (RTSP protocol) etc
-    if ((v_end - v_start +1) < 5 || strncasecmp(&buf[v_start], "HTTP/", 5) != 0) {
+    if ((req.v_end - req.v_start +1) < 5 || strncasecmp(&buf[req.v_start], "HTTP/", 5) != 0) {
 #if USE_HTTP_VIOLATIONS
         // being lax; old parser accepted strange versions
         // there is a LOT of cases which are ambiguous, therefore we cannot use relaxed_header_parser here.
-        v_maj = 0;
-        v_min = 9;
-        u_end = line_end;
+        req.v_maj = 0;
+        req.v_min = 9;
+        req.u_end = line_end;
         request_parse_status = HTTP_OK; // treat as HTTP/0.9
         return 1;
 #else
@@ -183,7 +183,7 @@ HttpParser::parseRequestFirstLine()
 #endif
     }
 
-    int i = v_start + sizeof("HTTP/") -1;
+    int i = req.v_start + sizeof("HTTP/") -1;
 
     /* next should be 1 or more digits */
     if (!isdigit(buf[i])) {
@@ -200,7 +200,7 @@ HttpParser::parseRequestFirstLine()
         request_parse_status = HTTP_HTTP_VERSION_NOT_SUPPORTED;
         return -1;
     }
-    v_maj = maj;
+    req.v_maj = maj;
 
     /* next should be .; we -have- to have this as we have a whole line.. */
     if (buf[i] != '.') {
@@ -227,7 +227,7 @@ HttpParser::parseRequestFirstLine()
         request_parse_status = HTTP_HTTP_VERSION_NOT_SUPPORTED;
         return -1;
     }
-    v_min = min;
+    req.v_min = min;
 
     /*
      * Rightio - we have all the schtuff. Return true; we've got enough.
@@ -241,11 +241,11 @@ HttpParserParseReqLine(HttpParser *hmsg)
 {
     PROF_start(HttpParserParseReqLine);
     int retcode = hmsg->parseRequestFirstLine();
-    debugs(74, 5, "Parser: retval " << retcode << ": from " << hmsg->req_start <<
-           "->" << hmsg->req_end << ": method " << hmsg->m_start << "->" <<
-           hmsg->m_end << "; url " << hmsg->u_start << "->" << hmsg->u_end <<
-           "; version " << hmsg->v_start << "->" << hmsg->v_end << " (" << hmsg->v_maj <<
-           "/" << hmsg->v_min << ")");
+    debugs(74, 5, "Parser: retval " << retcode << ": from " << hmsg->req.start <<
+           "->" << hmsg->req.end << ": method " << hmsg->req.m_start << "->" <<
+           hmsg->req.m_end << "; url " << hmsg->req.u_start << "->" << hmsg->req.u_end <<
+           "; version " << hmsg->req.v_start << "->" << hmsg->req.v_end << " (" << hmsg->req.v_maj <<
+           "/" << hmsg->req.v_min << ")");
     PROF_stop(HttpParserParseReqLine);
     return retcode;
 }
@@ -256,9 +256,9 @@ int
 HttpParserReqSz(HttpParser *hp)
 {
     assert(hp->state == HTTP_PARSE_NEW);
-    assert(hp->req_start != -1);
-    assert(hp->req_end != -1);
-    return hp->req_end - hp->req_start + 1;
+    assert(hp->req.start != -1);
+    assert(hp->req.end != -1);
+    return hp->req.end - hp->req.start + 1;
 }
 
 /*
@@ -287,7 +287,7 @@ HttpParserHdrBuf(HttpParser *hp)
 int
 HttpParserRequestLen(HttpParser *hp)
 {
-    return hp->hdr_end - hp->req_start + 1;
+    return hp->hdr_end - hp->req.start + 1;
 }
 #endif
 
