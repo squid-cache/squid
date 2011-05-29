@@ -1,3 +1,23 @@
+Changes to squid-3.1.12.2 (30 May 2011):
+
+	- Bug 3226: Tags from external ACLs do not correctly expire
+	- Bug 3215: Malformed IPv6 DNS reverse lookup
+	- Bug 3209: ssl-bumped requests forwarded unencrypted to the parent proxies/caches
+	- Bug 3205: SSL-bump starts then hangs
+	- Bug 3178: gcc-4.6 complains unused variables
+	- Bug 3122: Unknown record type in WCCPv2 Packet (6)
+	- Bug 2965 (partial): Compile errors on MinGW
+	- Fix to only ssl-bump CONNECT requests if they are about to be tunneled
+	- Fix cache manager display of -i/+i in regex ACL config display
+	- Fix cache manager display of cache_peer options userhash and sourcehash 
+	- Fix URL re-writer loosing many transaction details
+	- Fix always-true comparison in ICAP for some 32-bit platforms
+	- Support for 'slow' group ACLs in ssl_bump access control
+	- Support OpenSSL 1.0.0 built without SSLv2
+	- Support GCC 4.6 and binutils-gold
+	- Add CSS id attribute to BODY tag of generated error pages.
+	- Display WARNING and ERROR when max_filedescriptors has failed
+
 Changes to squid-3.1.12.1 (19 Apr 2011):
 
 	- Port from 3.2: Dynamic SSL Certificate generation
