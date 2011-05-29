@@ -460,15 +460,12 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
 {
     authenticateStateData *r = NULL;
     static char buf[8192];
-    ntlm_user_t *ntlm_user;
     AuthUser *auth_user = user();
 
     assert(data);
     assert(handler);
     assert(auth_user);
     assert(auth_user->auth_type == AUTH_NTLM);
-
-    ntlm_user = dynamic_cast<ntlm_user_t *>(user());
 
     debugs(29, 8, "AuthNTLMUserRequest::module_start: auth state is '" << auth_state << "'");
 
@@ -572,12 +569,10 @@ AuthNTLMUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, 
 
     /* TODO: rename this!! */
     AuthUser *local_auth_user;
-    ntlm_user_t *ntlm_user;
 
     local_auth_user = user();
     assert(local_auth_user);
     assert(local_auth_user->auth_type == AUTH_NTLM);
-    ntlm_user = dynamic_cast<ntlm_user_t *>(local_auth_user);
     assert (this);
 
     /* Check that we are in the client side, where we can generate

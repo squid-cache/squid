@@ -759,6 +759,7 @@ comm_openex(int sock_type,
     /* set TOS if needed */
     if (TOS && comm_set_tos(new_socket, TOS) ) {
         tos = TOS;
+        (void)tos;
     }
 
     if ( Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && addr.IsIPv6() )

@@ -518,7 +518,6 @@ int
 ErrorState::Dump(MemBuf * mb)
 {
     MemBuf str;
-    const char *p = NULL;	/* takes priority over mb if set */
     char ntoabuf[MAX_IPSTRLEN];
 
     str.reset();
@@ -573,10 +572,6 @@ ErrorState::Dump(MemBuf * mb)
         packerToMemInit(&pck, &str);
         request->header.packInto(&pck);
         packerClean(&pck);
-    } else if (request_hdrs) {
-        p = request_hdrs;
-    } else {
-        p = "[none]";
     }
 
     str.Printf("\r\n");

@@ -158,13 +158,11 @@ AuthUser::CachedACLsReset()
      */
     AuthUserHashPointer *usernamehash;
     AuthUser *auth_user;
-    char const *username = NULL;
     debugs(29, 3, "AuthUser::CachedACLsReset: Flushing the ACL caches for all users.");
     hash_first(proxy_auth_username_cache);
 
     while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
         auth_user = usernamehash->user();
-        username = auth_user->username();
         /* free cached acl results */
         aclCacheMatchFlush(&auth_user->proxy_match_cache);
 

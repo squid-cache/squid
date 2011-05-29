@@ -544,15 +544,12 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
 {
     authenticateStateData *r = NULL;
     static char buf[MAX_AUTHTOKEN_LEN];
-    negotiate_user_t *negotiate_user;
     AuthUser *auth_user = user();
 
     assert(data);
     assert(handler);
     assert(auth_user);
     assert(auth_user->auth_type == AUTH_NEGOTIATE);
-
-    negotiate_user = dynamic_cast<negotiate_user_t *>(user());
 
     debugs(29, 8, "AuthNegotiateUserRequest::module_start: auth state is '" << auth_state << "'");
 
@@ -655,12 +652,10 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * c
 
     /** \todo rename this!! */
     AuthUser *local_auth_user;
-    negotiate_user_t *negotiate_user;
 
     local_auth_user = user();
     assert(local_auth_user);
     assert(local_auth_user->auth_type == AUTH_NEGOTIATE);
-    negotiate_user = dynamic_cast<negotiate_user_t *>(local_auth_user);
     assert (this);
 
     /** Check that we are in the client side, where we can generate

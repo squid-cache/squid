@@ -141,7 +141,6 @@ ntlmMakeChallenge(struct ntlm_challenge *chal, int32_t flags)
 {
     static unsigned hash;
     int r;
-    char *d;
     int i;
 
     debug("ntlmMakeChallenge: flg %08x\n", flags);
@@ -158,7 +157,6 @@ ntlmMakeChallenge(struct ntlm_challenge *chal, int32_t flags)
     chal->flags = flags;
     chal->unknown[6] = htole16(0x003a);
 
-    d = (char *) chal + 48;
     i = 0;
 
     if (authenticate_ntlm_domain != NULL)
