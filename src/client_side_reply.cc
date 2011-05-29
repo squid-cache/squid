@@ -1069,14 +1069,6 @@ clientReplyContext::storeNotOKTransferDone() const
         /* haven't found end of headers yet */
         return 0;
 
-    int sending = SENDING_BODY;
-
-    if (curReply->sline.status == HTTP_NO_CONTENT ||
-            curReply->sline.status == HTTP_NOT_MODIFIED ||
-            curReply->sline.status < HTTP_OK ||
-            http->request->method == METHOD_HEAD)
-        sending = SENDING_HDRSONLY;
-
     /*
      * Figure out how much data we are supposed to send.
      * If we are sending a body and we don't have a content-length,
@@ -2059,13 +2051,10 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     char *buf = next()->readBuffer.data;
 
-    char *body_buf = buf;
-
     if (buf != result.data) {
         /* we've got to copy some data */
         assert(result.length <= next()->readBuffer.length);
         memcpy(buf, result.data, result.length);
-        body_buf = buf;
     }
 
     if (reqofs==0 && !logTypeIsATcpHit(http->logType)) {

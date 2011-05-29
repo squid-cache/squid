@@ -1477,8 +1477,6 @@ idnsInit(void)
     CBDATA_INIT_TYPE(idns_query);
 
     if (DnsSocketA < 0 && DnsSocketB < 0) {
-        int port;
-
         Ip::Address addrA; // since we don't want to alter Config.Addrs.udp_* and dont have one of our own.
 
         if (!Config.Addrs.udp_outgoing.IsNoAddr())
@@ -1514,12 +1512,12 @@ idnsInit(void)
          * statement. Doing so messes up the internal Debug::level
          */
         if (DnsSocketB >= 0) {
-            port = comm_local_port(DnsSocketB);
+            comm_local_port(DnsSocketB);
             debugs(78, 1, "DNS Socket created at " << addrB << ", FD " << DnsSocketB);
             Comm::SetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
         }
         if (DnsSocketA >= 0) {
-            port = comm_local_port(DnsSocketA);
+            comm_local_port(DnsSocketA);
             debugs(78, 1, "DNS Socket created at " << addrA << ", FD " << DnsSocketA);
             Comm::SetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
         }
