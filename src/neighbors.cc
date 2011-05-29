@@ -832,7 +832,6 @@ neighborsDigestSelect(HttpRequest * request)
     peer *best_p = NULL;
 #if USE_CACHE_DIGESTS
 
-    const cache_key *key;
     int best_rtt = 0;
     int choice_count = 0;
     int ichoice_count = 0;
@@ -843,7 +842,7 @@ neighborsDigestSelect(HttpRequest * request)
     if (!request->flags.hierarchical)
         return NULL;
 
-    key = storeKeyPublicByRequest(request);
+    storeKeyPublicByRequest(request);
 
     for (i = 0, p = first_ping; i++ < Config.npeers; p = p->next) {
         lookup_t lookup;
