@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.12.1 release notes</title>
+<title>Squid 3.1.12.2 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.12.1
+The Squid Team are pleased to announce the release of Squid-3.1.12.2
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -1096,6 +1096,9 @@ NOCOMMENT_START
 	<tag>debug_options rotate=</tag>
 	<p>New parameter rotate=N to control number of cache.log rotations independent of other logs.
 
+	<tag>deny_info</tag>
+	<p>Support 307 status for redirecting CONNECT tunnels with HTTPS traffic.
+
         <tag>external_acl_type</tag>
         <p>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between Squid and its helpers.
            Please be aware of some limits to these options. These options only affet the transport protocol used
@@ -1407,7 +1410,7 @@ This section gives an account of those changes in three categories:
 
 	<tag>--enable-ssl-crtd</tag>
 	<p>Prevent Squid from direct generation of SSL private key and
-	certificate request and instead enables the <em>ssl_crtd,/em> processes.
+	certificate request and instead enables the <em>ssl_crtd</em> processes.
 
 	<tag>--enable-zph-qos</tag>
 	<p>Build with support for ZPH Quality of Service controls

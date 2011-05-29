@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.0.7 release notes</title>
+<title>Squid 3.2.0.8 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.0.7 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.0.8 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -468,6 +468,9 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>deny_info</tag>
 	<p>Support URL format tags. For dynamically generated URL in denial redirect.
+	<p>Support the full range of 200-599 HTTP status codes.
+	   3xx status only available when redirecting to a URI.
+	   Other status only available when supplying an error template body.
 
 	<tag>external_acl_type</tag>
 	<p>New format tags and option parameters:

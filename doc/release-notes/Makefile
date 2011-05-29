@@ -14,9 +14,9 @@ $(DOC).ps: $(DOC).sgml
 %.txt: %.sgml
 	linuxdoc -B txt --filter $<
 
-$(DOC).html: $(DOC).sgml
+%.html: %.sgml
 	linuxdoc -B html -T 2 --split=0 $<
-	perl -i -p -e "s%$(DOC).html%%" $(DOC).html
+	perl -i -p -e "s%$@%%" $@
 
 %.man: %.sgml
 	linuxdoc -B txt -T 2 -m $(DOC)
