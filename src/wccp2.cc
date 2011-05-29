@@ -1271,6 +1271,7 @@ wccp2HandleUdp(int sock, void *not_used)
             /* Nothing to do for the types below */
 
         case WCCP2_ASSIGN_MAP:
+        case WCCP2_REDIRECT_ASSIGNMENT:
             break;
 
         default:
