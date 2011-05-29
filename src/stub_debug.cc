@@ -88,6 +88,13 @@ Debug::finishDebug()
 }
 
 void
+xassert(const char *msg, const char *file, int line)
+{
+    debugs(0, 0, "assertion failed: " << file << ":" << line << ": \"" << msg << "\"");
+    abort();
+}
+
+void
 Debug::xassert(const char *msg, const char *file, int line)
 {
 

@@ -10,6 +10,14 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testACLMaxUserIP );
 
+// Stubs so this will build.
+#include "event.h"
+void
+eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)
+{
+// CALLED as setUp no-op
+//    fatal("eventAdd. Not implemented.");
+}
 
 void
 testACLMaxUserIP::testDefaults()

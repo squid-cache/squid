@@ -21,6 +21,21 @@ void
 reconfigure(int)
 {}
 
+#include "comm.h"
+void
+commSetSelect(int, unsigned int, PF *, void *, time_t)
+{}
+
+void
+commResetSelect(int)
+{}
+
+comm_err_t
+comm_select(int)
+{
+    return COMM_ERR__END__; // invalid result.
+}
+
 /* end stubs */
 
 /* init memory pools */

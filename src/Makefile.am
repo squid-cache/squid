@@ -565,7 +565,7 @@ endif
 
 unlinkd_SOURCES = unlinkd_daemon.cc SquidNew.cc
 
-dnsserver_SOURCES = dnsserver.cc SquidNew.cc stub_debug.cc
+dnsserver_SOURCES = dnsserver.cc SquidNew.cc
 recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 
 ## What requires what..
@@ -669,6 +669,7 @@ EXTRA_DIST = \
 	mk-string-arrays.awk \
 	repl_modules.sh \
 	stub_debug.cc \
+	tests/STUB.h \
 	mib.txt \
 	mime.conf.default
 
@@ -835,6 +836,7 @@ test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
 TESTSOURCES= \
+	tests/STUB.h \
 	test_tools.cc \
 	globals.cc
 
@@ -843,7 +845,7 @@ TEST_CALL_SOURCES = \
 	event.cc
 
 
-check_PROGRAMS+= tests/testAuth \
+check_PROGRAMS+= \
 	tests/testACLMaxUserIP \
 	tests/testBoilerplate \
 	tests/testCacheManager \
@@ -941,47 +943,6 @@ tests_testHttpReply_LDADD=\
 tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA) \
 	$(top_builddir)/lib/libmiscutil.a
 
-tests_testAuth_SOURCES = \
-	tests/testAuth.cc tests/testMain.cc  tests/testAuth.h \
-	ConfigParser.cc \
-	tests/stub_acl.cc tests/stub_cache_cf.cc \
-	tests/stub_helper.cc cbdata.cc String.cc \
-	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc mem.cc ClientInfo.h \
-	MemBuf.cc HttpHdrContRange.cc Packer.cc HttpHdrCc.cc HttpHdrSc.cc \
-	HttpHdrScTarget.cc url.cc \
-	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
-	tests/stub_HttpRequest.cc tests/stub_DelayId.cc \
-	tests/stub_MemObject.cc mem_node.cc \
-	tests/stub_cache_manager.cc \
-	stmem.cc \
-	tests/stub_comm.cc \
-	tests/stub_http.cc \
-	HttpMsg.cc \
-	HttpRequestMethod.cc \
-	tests/stub_mime.cc \
-	tests/stub_access_log.cc \
-	time.cc \
-	URLScheme.cc \
-	$(TEST_CALL_SOURCES) \
-	wordlist.cc
-##	acl.cc cache_cf.cc tools.cc \
-##	helper.cc String.cc cbdata.cc HttpHeaderTools.cc store.cc cache_manager.cc \
-##	HttpHeader.cc url.cc mem.cc HttpRequest.cc Packer.cc access_log.cc \
-##	MemBuf.cc StatHist.cc logfile.cc
-nodist_tests_testAuth_SOURCES = \
-	$(TESTSOURCES)
-
-tests_testAuth_LDADD= \
-	$(COMMON_LIBS) \
-	-L../lib -lmiscutil \
-	$(REGEXLIB) \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SSLLIB) \
-	$(XTRA_LIBS)
-tests_testAuth_LDFLAGS = $(LIBADD_DL)
-tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
-	$(SQUID_CPPUNIT_LA)
-
 ## Tests for the ACLMaxUserIP class
 ## acl needs wordlist. wordlist needs MemBug
 ## MemBuf needs mem, MemBuf needs event,
@@ -1003,8 +964,13 @@ tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 tests_testACLMaxUserIP_SOURCES= \
 	cbdata.cc \
 	ClientInfo.h \
+	ConfigOption.cc \
 	ConfigParser.cc \
+	disk.cc \
+	DiskIO/ReadRequest.cc \
+	DiskIO/WriteRequest.cc \
 	ETag.cc \
+	filemap.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
 	HttpHdrContRange.cc \
@@ -1012,23 +978,52 @@ tests_testACLMaxUserIP_SOURCES= \
 	HttpHdrCc.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
+	HttpMsg.cc \
+	HttpRequestMethod.cc \
+	int.cc \
+	list.cc \
 	mem_node.cc \
 	Packer.cc \
 	Parsing.cc \
+	SquidMath.cc \
 	StatHist.cc \
 	stmem.cc \
 	String.cc \
-	$(TEST_CALL_SOURCES) \
+	store_dir.cc \
+	StoreIOState.cc \
+	StoreMeta.cc \
+	StoreMetaMD5.cc \
+	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc \
+	StoreMetaUnpacker.cc \
+	StoreMetaURL.cc \
+	StoreMetaVary.cc \
+	StoreSwapLogData.cc \
+	store_key_md5.cc \
+	string_arrays.c \
+	SwapDir.cc \
+	SwapDir.h \
+	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_comm.cc \
 	tests/stub_DelayId.cc \
+	tests/stub_DiskIOModule.cc \
+	tests/stub_fd.cc \
+	tests/stub_HttpRequest.cc \
 	tests/stub_MemObject.cc \
+	tests/stub_mime.cc \
 	tests/stub_store.cc \
+	tests/stub_store_rebuild.cc \
+	tests/stub_store_swapout.cc \
 	tests/stub_cache_manager.cc \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h \
 	tests/testMain.cc \
 	time.cc \
+	url.cc \
+	URL.h \
+	URLScheme.cc \
+	URLScheme.h \
 	mem.cc \
 	MemBuf.cc \
 	wordlist.cc
@@ -1883,24 +1878,93 @@ STORE_TEST_GEN_SOURCES = \
 ## why so many sources? well httpHeaderTools requites ACLChecklist & friends.
 ## first line - what we are testing.
 tests_testStore_SOURCES= \
-	tests/stub_store_swapout.cc \
-	tests/testMain.cc \
+	CacheDigest.cc \
+	cbdata.cc \
+	ClientInfo.h \
+	ConfigOption.cc \
+	ConfigParser.cc \
+	$(DELAY_POOL_SOURCE) \
+	disk.cc \
+	DiskIO/ReadRequest.cc \
+	DiskIO/WriteRequest.cc \
+	ETag.cc \
+	event.cc \
+	EventLoop.cc \
+	filemap.cc \
+	HttpHdrCc.cc \
+	HttpHdrContRange.cc \
+	HttpHdrRange.cc \
+	HttpHdrSc.cc \
+	HttpHdrScTarget.cc \
+	HttpHeaderTools.cc \
+	HttpHeader.cc \
+	HttpMsg.cc \
+	HttpRequestMethod.cc \
+	int.cc \
+	list.cc \
+	mem.cc \
+	mem_node.cc \
+	MemBuf.cc \
+	Packer.cc \
+	Parsing.cc \
+	RemovalPolicy.cc \
+	refresh.cc \
+	StatHist.cc \
+	stmem.cc \
+	store.cc \
+	store_dir.cc \
+	store_io.cc \
+	store_swapout.cc \
+	StoreIOState.cc \
+	StoreMeta.cc \
+	StoreMetaMD5.cc \
+	StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc \
+	StoreMetaUnpacker.cc \
+	StoreMetaURL.cc \
+	StoreMetaVary.cc \
+	StoreSwapLogData.cc \
+	store_key_md5.cc \
+	String.cc \
+	SwapDir.cc \
+	tests/CapturingStoreEntry.h \
+	tests/stub_access_log.cc \
+	tests/stub_acl.cc \
+	tests/stub_cache_cf.cc \
+	tests/stub_cache_manager.cc \
+	tests/stub_client_side_request.cc \
+	tests/stub_comm.cc \
+	tests/stub_DiskIOModule.cc \
+	tests/stub_errorpage.cc \
+	tests/stub_fd.cc \
+	tests/stub_helper.cc \
+	tests/stub_http.cc \
+	tests/stub_HttpReply.cc \
+	tests/stub_HttpRequest.cc \
 	tests/stub_MemObject.cc \
+	tests/stub_mime.cc \
+	tests/stub_store_client.cc \
+	tests/stub_store_rebuild.cc \
+	tests/stub_store_swapout.cc \
+	tests/stub_tools.cc \
+	tests/testMain.cc \
 	tests/testStore.cc \
 	tests/testStore.h \
-	tests/CapturingStoreEntry.h \
 	tests/testStoreEntryStream.cc \
 	tests/testStoreEntryStream.h \
 	tests/testStoreController.cc \
 	tests/testStoreController.h \
 	tests/testStoreHashIndex.cc \
 	tests/testStoreHashIndex.h \
+	tests/testStoreSupport.cc \
+	tests/testStoreSupport.h \
 	tests/TestSwapDir.cc \
 	tests/TestSwapDir.h \
-	tests/stub_fd.cc \
-	tests/stub_HttpReply.cc \
-	tests/stub_cache_manager.cc \
-	$(STORE_TEST_SOURCES)
+	time.cc \
+	url.cc \
+	URLScheme.cc \
+	URLScheme.h \
+	wordlist.cc
 
 nodist_tests_testStore_SOURCES= \
 	$(STORE_TEST_GEN_SOURCES) \
@@ -2050,26 +2114,10 @@ tests_testNull_DEPENDENCIES = \
 ## Tests of the URL module.
 ## TODO: Trim this down once the insanity is over.
 tests_testURL_SOURCES = \
-	debug.cc \
-	url.cc \
-	URLScheme.cc \
-	HttpRequest.cc \
-	HttpRequestMethod.cc \
-	mem.cc \
-	RemovalPolicy.cc \
-	String.cc \
-	tests/testURL.cc \
-	tests/testURL.h \
-	tests/testURLScheme.cc \
-	tests/testURLScheme.h \
-	tests/testMain.cc \
-	time.cc \
 	access_log.cc \
 	BodyPipe.cc \
-	cache_manager.cc \
 	cache_cf.cc \
-	ProtoPort.cc \
-	ProtoPort.h \
+	cache_manager.cc \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
@@ -2080,20 +2128,24 @@ tests_testURL_SOURCES = \
 	client_side_request.cc \
 	ClientInfo.h \
 	clientStream.cc \
-	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
 	ConfigParser.cc \
+	debug.cc \
 	$(DELAY_POOL_SOURCE) \
 	disk.cc \
+	DiskIO/ReadRequest.cc \
+	DiskIO/WriteRequest.cc \
 	dlink.h \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
 	ETag.cc \
+	event.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
 	fd.cc \
 	fde.cc \
+	filemap.cc \
 	forward.cc \
 	fqdncache.cc \
 	ftp.cc \
@@ -2102,15 +2154,17 @@ tests_testURL_SOURCES = \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
-	HttpHeader.cc \
-	HttpHeaderTools.cc \
 	HttpHdrCc.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
+	HttpHeader.cc \
+	HttpHeaderTools.cc \
 	HttpMsg.cc \
 	HttpReply.cc \
+	HttpRequest.cc \
+	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
@@ -2121,6 +2175,7 @@ tests_testURL_SOURCES = \
 	list.cc \
 	logfile.cc \
 	multicast.cc \
+	mem.cc \
 	mem_node.cc \
 	MemBuf.cc \
 	MemObject.cc \
@@ -2134,14 +2189,17 @@ tests_testURL_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
+	ProtoPort.cc \
+	ProtoPort.h \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
+	RemovalPolicy.cc \
 	Server.cc \
 	$(SNMP_SOURCE) \
-	$(SSL_SOURCE) \
 	SquidMath.h \
 	SquidMath.cc \
+	ssl_support.cc \
 	stat.cc \
 	StatHist.cc \
 	stmem.cc \
@@ -2166,10 +2224,19 @@ tests_testURL_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
-	$(TEST_CALL_SOURCES) \
+	String.cc \
+	SwapDir.cc \
+	tests/stub_DiskIOModule.cc \
+	tests/testURL.cc \
+	tests/testURL.h \
+	tests/testURLScheme.cc \
+	tests/testURLScheme.h \
+	tests/testMain.cc \
+	time.cc \
 	tools.cc \
 	tunnel.cc \
-	SwapDir.cc \
+	url.cc \
+	URLScheme.cc \
 	urn.cc \
 	useragent.cc \
 	wccp2.cc \
