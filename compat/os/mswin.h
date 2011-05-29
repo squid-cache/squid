@@ -286,6 +286,9 @@ typedef char * caddr_t;
 #ifndef EAFNOSUPPORT
 #define EAFNOSUPPORT WSAEAFNOSUPPORT
 #endif
+#ifndef ENETUNREACH
+#define ENETUNREACH WSAENETUNREACH
+#endif
 
 #undef h_errno
 #define h_errno errno /* we'll set it ourselves */
