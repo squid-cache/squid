@@ -8,7 +8,6 @@
 #ifndef SQUID_SNMP_CORE_H
 #define SQUID_SNMP_CORE_H
 
-#include "config.h"
 #include "cache_snmp.h"
 
 #define SNMP_REQUEST_SIZE 4096
