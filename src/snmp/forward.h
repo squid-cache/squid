@@ -8,8 +8,6 @@
 #ifndef SQUID_SNMPX_FORWARD_H
 #define SQUID_SNMPX_FORWARD_H
 
-#include "config.h"
-
 namespace Snmp
 {
 

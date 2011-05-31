@@ -7,6 +7,8 @@
 #include "base/AsyncCallQueue.h"
 #include "cbdata.h"
 
+#include <ostream>
+
 InstanceIdDefinitions(AsyncCall, "call");
 
 

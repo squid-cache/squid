@@ -230,7 +230,6 @@ main(int argc, char **argv)
     int use_extension_dn = 0;
     int strip_nt_domain = 0;
     int strip_kerberos_realm = 0;
-    int err = 0;
 
     setbuf(stdout, NULL);
 
@@ -613,7 +612,6 @@ recover:
                 tryagain = 1;
             }
         }
-        err = 0;
     }
     if (ld)
         ldap_unbind(ld);

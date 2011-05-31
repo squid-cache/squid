@@ -40,6 +40,8 @@ The 3.3 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 Most user-facing changes are reflected in squid.conf (see below).
 
 <sect1>
+<p>
+
 
 <sect>Changes to squid.conf since Squid-3.2
 <p>
@@ -57,6 +59,7 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
+
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
@@ -251,7 +254,6 @@ This section gives an account of those changes in three categories:
 	<p>Not yet ported from 2.6
 
 	<tag>cache_dir</tag>
-	<p><em>min-size</em> option not yet ported from Squid-2
 	<p><em>COSS</em> storage type is lacking stability fixes from 2.6
 	<p>COSS <em>overwrite-percent=</em> option not yet ported from 2.6
 	<p>COSS <em>max-stripe-waste=</em> option not yet ported from 2.6
@@ -303,13 +305,9 @@ This section gives an account of those changes in three categories:
 	<tag>logformat</tag>
 	<p><em>%oa</em> tag not yet ported from 2.7
 
-	<tag>max_stale</tag>
-	<p>Not yet ported from 2.7
-
 	<tag>refresh_pattern</tag>
 	<p><em>stale-while-revalidate=</em> not yet ported from 2.7
 	<p><em>ignore-stale-while-revalidate=</em> not yet ported from 2.7
-	<p><em>max-stale=</em> not yet ported from 2.7
 	<p><em>negative-ttl=</em> not yet ported from 2.7
 
 	<tag>refresh_stale_hit</tag>

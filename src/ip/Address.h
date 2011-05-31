@@ -75,7 +75,7 @@ class Address
 public:
     /** @name Constructors and Destructor */
     /*@{*/
-    Address();
+    Address() { SetEmpty(); }
     Address(const Address &);
 
     /**
@@ -94,8 +94,7 @@ public:
     Address(const struct hostent &);
     Address(const struct addrinfo &);
     Address(const char*);
-    /// Default destructor.
-    ~Address();
+    ~Address() {}
     /*@}*/
 
     /** @name Assignment Operators */
