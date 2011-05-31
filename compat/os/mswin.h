@@ -759,9 +759,6 @@ struct rusage {
 #undef ACL
 
 SQUIDCEXTERN int chroot(const char *dirname);
-
-#define truncate(x,y) WIN32_truncate((x),(y))
-
 SQUIDCEXTERN int kill(pid_t, int);
 SQUIDCEXTERN int statfs(const char *, struct statfs *);
 SQUIDCEXTERN struct passwd * getpwnam(char *unused);
