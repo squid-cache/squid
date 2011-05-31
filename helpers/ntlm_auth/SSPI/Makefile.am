@@ -9,6 +9,7 @@ ntlm_sspi_auth_SOURCES = ntlm_sspi_auth.cc
 LDADD = \
 	$(top_builddir)/lib/ntlmauth/libntlmauth.la \
 	-L$(top_builddir)/lib -lsspwin32 \
+	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	-lnetapi32 \
 	-ladvapi32 \
