@@ -28,10 +28,10 @@ noinst_LTLIBRARIES += libsspwin32.la
 libsspwin32_la_SOURCES = sspwin32.c
 else
 SUBDIRS += rfcnb smblib
+EXTRA_DIST += sspwin32.c
+endif
 if ENABLE_AUTH_NTLM
 SUBDIRS += ntlmauth
-endif
-EXTRA_DIST += sspwin32.c
 endif
 
 #
