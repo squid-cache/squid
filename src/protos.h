@@ -716,7 +716,6 @@ SQUIDCEXTERN void *leakFreeFL(void *, const char *, int);
 
 #ifdef _SQUID_SOLARIS_
 
-SQUIDCEXTERN int getrusage(int, struct rusage *);
 SQUIDCEXTERN int getpagesize(void);
 #if !defined(_XPG4_2) && !(defined(__EXTENSIONS__) || \
 (!defined(_POSIX_C_SOURCE) && !defined(_XOPEN_SOURCE)))

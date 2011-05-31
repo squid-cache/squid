@@ -104,7 +104,6 @@ extern int WIN32_ftruncate(int fd, off_t size);
 #endif /* 0 */
 #define getcwd _getcwd
 #define getpid _getpid
-#define getrusage WIN32_getrusage
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 #define lseek _lseeki64
 #define memccpy _memccpy
@@ -783,7 +782,6 @@ SQUIDCEXTERN size_t getpagesize();
 #define HAVE_GETPAGESIZE 2
 #endif
 
-SQUIDCEXTERN int WIN32_getrusage(int, struct rusage *);
 SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
 SQUIDCEXTERN int Win32__WSAFDIsSet(int fd, fd_set* set);
 SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
