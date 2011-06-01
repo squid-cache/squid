@@ -1,15 +1,6 @@
 #ifndef _getaddrinfo_h
 #define _getaddrinfo_h
 
-#if _SQUID_MSWIN_ || _SQUID_MINGW_
-#ifdef HAVE_WINSOCK2_H
-#include <winsock2.h>
-#endif
-#undef IN_ADDR
-#include <ws2tcpip.h>
-#endif /* _SQUID_MSWIN_ */
-
-
 /*
  *  Shamelessly duplicated from the fetchmail public sources
  *  for use by the Squid Project under GNU Public License.

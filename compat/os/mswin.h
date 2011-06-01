@@ -224,10 +224,14 @@ struct timezone {
 
 #include <process.h>
 #include <errno.h>
-#if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
+#if _SQUID_MSWIN_ || _SQUID_MINGW_
+#ifdef HAVE_WINSOCK2_H
 #include <winsock2.h>
-#endif /* _MSC_VER */
+#endif
+#undef IN_ADDR
 #include <ws2tcpip.h>
+#endif /* _SQUID_MSWIN_ */
+
 #if (EAI_NODATA == EAI_NONAME)
 #undef EAI_NODATA
 #define EAI_NODATA WSANO_DATA
