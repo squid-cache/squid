@@ -437,11 +437,11 @@ namespace Squid
 {
 /** \endcond */
 
-inline
-int accept(int s, struct sockaddr * a, size_t * l)
+inline int
+accept(int s, struct sockaddr * a, socklen_t * l)
 {
     SOCKET result;
-    if ((result = ::accept(_get_osfhandle(s), a, (int *)l)) == INVALID_SOCKET) {
+    if ((result = ::accept(_get_osfhandle(s), a, l)) == INVALID_SOCKET) {
         if (WSAEMFILE == (errno = WSAGetLastError()))
             errno = EMFILE;
         return -1;
@@ -449,8 +449,8 @@ int accept(int s, struct sockaddr * a, size_t * l)
         return _open_osfhandle(result, 0);
 }
 
-inline
-int bind(int s, struct sockaddr * n, int l)
+inline int
+bind(int s, const struct sockaddr * n, socklen_t l)
 {
     if (::bind(_get_osfhandle(s),n,l) == SOCKET_ERROR) {
         errno = WSAGetLastError();
@@ -459,8 +459,8 @@ int bind(int s, struct sockaddr * n, int l)
         return 0;
 }
 
-inline
-int connect(int s, const struct sockaddr * n, int l)
+inline int
+connect(int s, const struct sockaddr * n, socklen_t l)
 {
     if (::connect(_get_osfhandle(s),n,l) == SOCKET_ERROR) {
         if (WSAEMFILE == (errno = WSAGetLastError()))
@@ -470,8 +470,9 @@ int connect(int s, const struct sockaddr * n, int l)
         return 0;
 }
 
-inline
-struct hostent * gethostbyname(const char *n) {
+inline struct hostent *
+gethostbyname(const char *n)
+{
     HOSTENT FAR * result;
     if ((result = ::gethostbyname(n)) == NULL)
         errno = WSAGetLastError();
@@ -479,8 +480,8 @@ struct hostent * gethostbyname(const char *n) {
 }
 #define gethostbyname(n) Squid::gethostbyname(n)
 
-inline
-SERVENT FAR* getservbyname(const char * n, const char * p)
+inline SERVENT FAR *
+getservbyname(const char * n, const char * p)
 {
     SERVENT FAR * result;
     if ((result = ::getservbyname(n, p)) == NULL)
@@ -489,18 +490,18 @@ SERVENT FAR* getservbyname(const char * n, const char * p)
 }
 #define getservbyname(n,p) Squid::getservbyname(n,p)
 
-inline
-HOSTENT FAR * gethostbyaddr(const char * a, int l, int t)
+inline HOSTENT FAR *
+gethostbyaddr(const void * a, size_t l, int t)
 {
     HOSTENT FAR * result;
-    if ((result = ::gethostbyaddr(a, l, t)) == NULL)
+    if ((result = ::gethostbyaddr((const char*)a, l, t)) == NULL)
         errno = WSAGetLastError();
     return result;
 }
 #define gethostbyaddr(a,l,t) Squid::gethostbyaddr(a,l,t)
 
-inline
-int getsockname(int s, struct sockaddr * n, socklen_t * l)
+inline int
+getsockname(int s, struct sockaddr * n, socklen_t * l)
 {
     if ((::getsockname(_get_osfhandle(s), n, l)) == SOCKET_ERROR) {
         errno = WSAGetLastError();
@@ -510,8 +511,8 @@ int getsockname(int s, struct sockaddr * n, socklen_t * l)
 }
 #define getsockname(s,a,l) Squid::getsockname(s,a,l)
 
-inline
-int gethostname(char * n, size_t l)
+inline int
+gethostname(char * n, size_t l)
 {
     if ((::gethostname(n, l)) == SOCKET_ERROR) {
         errno = WSAGetLastError();
@@ -521,8 +522,8 @@ int gethostname(char * n, size_t l)
 }
 #define gethostname(n,l) Squid::gethostname(n,l)
 
-inline
-int getsockopt(int s, int l, int o, void * v, int * n)
+inline int
+getsockopt(int s, int l, int o, void * v, socklen_t * n)
 {
     Sleep(1);
     if ((::getsockopt(_get_osfhandle(s), l, o,(char *) v, n)) == SOCKET_ERROR) {
@@ -533,8 +534,8 @@ int getsockopt(int s, int l, int o, void * v, int * n)
 }
 
 /* Simple ioctl() emulation */
-inline
-int ioctl(int s, int c, void * a)
+inline int
+ioctl(int s, int c, void * a)
 {
     if ((::ioctlsocket(_get_osfhandle(s), c, (u_long FAR *)a)) == SOCKET_ERROR) {
         errno = WSAGetLastError();
@@ -543,8 +544,8 @@ int ioctl(int s, int c, void * a)
         return 0;
 }
 
-inline
-int ioctlsocket(int s, long c, u_long FAR * a)
+inline int
+ioctlsocket(int s, long c, u_long FAR * a)
 {
     if ((::ioctlsocket(_get_osfhandle(s), c, a)) == SOCKET_ERROR) {
         errno = WSAGetLastError();
@@ -553,8 +554,8 @@ int ioctlsocket(int s, long c, u_long FAR * a)
         return 0;
 }
 
-inline
-int listen(int s, int b)
+inline int
+listen(int s, int b)
 {
     if (::listen(_get_osfhandle(s), b) == SOCKET_ERROR) {
         if (WSAEMFILE == (errno = WSAGetLastError()))
@@ -565,10 +566,10 @@ int listen(int s, int b)
 }
 #define listen(s,b) Squid::listen(s,b)
 
-inline
-int recv(int s, void * b, size_t l, int f)
+inline ssize_t
+recv(int s, void * b, size_t l, int f)
 {
-    int result;
+    ssize_t result;
     if ((result = ::recv(_get_osfhandle(s), (char *)b, l, f)) == SOCKET_ERROR) {
         errno = WSAGetLastError();
         return -1;
@@ -576,19 +577,19 @@ int recv(int s, void * b, size_t l, int f)
         return result;
 }
 
-inline
-int recvfrom(int s, void * b, size_t l, int f, struct sockaddr * fr, size_t * fl)
+inline ssize_t
+recvfrom(int s, void * b, size_t l, int f, struct sockaddr * fr, socklen_t * fl)
 {
-    int result;
-    if ((result = ::recvfrom(_get_osfhandle(s), (char *)b, l, f, fr, (int *)fl)) == SOCKET_ERROR) {
+    ssize_t result;
+    if ((result = ::recvfrom(_get_osfhandle(s), (char *)b, l, f, fr, fl)) == SOCKET_ERROR) {
         errno = WSAGetLastError();
         return -1;
     } else
         return result;
 }
 
-inline
-int select(int n, fd_set * r, fd_set * w, fd_set * e, struct timeval * t)
+inline int
+select(int n, fd_set * r, fd_set * w, fd_set * e, struct timeval * t)
 {
     int result;
     if ((result = ::select(n,r,w,e,t)) == SOCKET_ERROR) {
@@ -599,10 +600,10 @@ int select(int n, fd_set * r, fd_set * w, fd_set * e, struct timeval * t)
 }
 #define select(n,r,w,e,t) Squid::select(n,r,w,e,t)
 
-inline
-int send(int s, const void * b, size_t l, int f)
+inline ssize_t
+send(int s, const void * b, size_t l, int f)
 {
-    int result;
+    ssize_t result;
     if ((result = ::send(_get_osfhandle(s), (char *)b, l, f)) == SOCKET_ERROR) {
         errno = WSAGetLastError();
         return -1;
@@ -610,10 +611,10 @@ int send(int s, const void * b, size_t l, int f)
         return result;
 }
 
-inline
-int sendto(int s, const void * b, size_t l, int f, const struct sockaddr * t, int tl)
+inline ssize_t
+sendto(int s, const void * b, size_t l, int f, const struct sockaddr * t, socklen_t tl)
 {
-    int result;
+    ssize_t result;
     if ((result = ::sendto(_get_osfhandle(s), (char *)b, l, f, t, tl)) == SOCKET_ERROR) {
         errno = WSAGetLastError();
         return -1;
@@ -621,14 +622,14 @@ int sendto(int s, const void * b, size_t l, int f, const struct sockaddr * t, in
         return result;
 }
 
-inline
-int setsockopt(SOCKET s, int l, int o, const char * v, int n)
+inline int
+setsockopt(SOCKET s, int l, int o, const void * v, socklen_t n)
 {
     SOCKET socket;
 
     socket = ((s == INVALID_SOCKET) ? s : (SOCKET)_get_osfhandle((int)s));
 
-    if (::setsockopt(socket, l, o, v, n) == SOCKET_ERROR) {
+    if (::setsockopt(socket, l, o, (const char *)v, n) == SOCKET_ERROR) {
         errno = WSAGetLastError();
         return -1;
     } else
@@ -636,8 +637,8 @@ int setsockopt(SOCKET s, int l, int o, const char * v, int n)
 }
 #define setsockopt(s,l,o,v,n) Squid::setsockopt(s,l,o,v,n)
 
-inline
-int shutdown(int s, int h)
+inline int
+shutdown(int s, int h)
 {
     if (::shutdown(_get_osfhandle(s),h) == SOCKET_ERROR) {
         errno = WSAGetLastError();
@@ -646,8 +647,8 @@ int shutdown(int s, int h)
         return 0;
 }
 
-inline
-int socket(int f, int t, int p)
+inline int
+socket(int f, int t, int p)
 {
     SOCKET result;
     if ((result = ::socket(f, t, p)) == INVALID_SOCKET) {
