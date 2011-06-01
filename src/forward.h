@@ -91,6 +91,7 @@ private:
     } calls;
 
     struct {
+        unsigned int connected_okay:1; ///< TCP link ever opened properly. This affects retry of POST,PUT,CONNECT,etc
         unsigned int dont_retry:1;
         unsigned int forward_completed:1;
     } flags;

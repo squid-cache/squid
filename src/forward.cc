@@ -440,6 +440,10 @@ FwdState::checkRetry()
     if (flags.dont_retry)
         return false;
 
+    // NP: not yet actually connected anywhere. retry is safe.
+    if (!flags.connected_okay)
+        return true;
+
     if (!checkRetriable())
         return false;
 
@@ -731,6 +735,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
     }
 #endif
 
+    flags.connected_okay = true;
     dispatch();
 }
 
