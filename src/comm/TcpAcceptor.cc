@@ -304,7 +304,8 @@ Comm::TcpAcceptor::oldAccept(ConnectionDetail &details, int *newFd)
     details.me.InitAddrInfo(gai);
 
     errcode = 0; // reset local errno copy.
-    if ((sock = accept(fd, gai->ai_addr, &gai->ai_addrlen)) < 0) {
+    // NP: this cast is needed for OS which still define ai_addrlen as size_t!
+    if ((sock = accept(fd, gai->ai_addr, (socklen_t*)&gai->ai_addrlen)) < 0) {
         errcode = errno; // store last accept errno locally.
 
         details.me.FreeAddrInfo(gai);
@@ -338,7 +339,8 @@ Comm::TcpAcceptor::oldAccept(ConnectionDetail &details, int *newFd)
     // lookup the local-end details of this new connection
     details.me.InitAddrInfo(gai);
     details.me.SetEmpty();
-    getsockname(sock, gai->ai_addr, &gai->ai_addrlen);
+    // NP: this cast is needed for OS which still define ai_addrlen as size_t!
+    getsockname(sock, gai->ai_addr, (socklen_t*)&gai->ai_addrlen);
     details.me = *gai;
     details.me.FreeAddrInfo(gai);
 
