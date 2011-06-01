@@ -34,9 +34,9 @@
  */
 
 #include "squid.h"
-//#include "compat/getaddrinfo.h"
 #include "acl/Ip.h"
 #include "acl/Checklist.h"
+#include "compat/getaddrinfo.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "wordlist.h"
