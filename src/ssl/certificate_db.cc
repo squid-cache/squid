@@ -258,18 +258,10 @@ void Ssl::CertificateDb::create(std::string const & db_path, int serial)
     std::string cert_full(db_path + "/" + cert_dir);
     std::string size_full(db_path + "/" + size_file);
 
-#ifdef _SQUID_MSWIN_
-    if (mkdir(db_path.c_str()))
-#else
     if (mkdir(db_path.c_str(), 0777))
-#endif
         throw std::runtime_error("Cannot create " + db_path);
 
-#ifdef _SQUID_MSWIN_
-    if (mkdir(cert_full.c_str()))
-#else
     if (mkdir(cert_full.c_str(), 0777))
-#endif
         throw std::runtime_error("Cannot create " + cert_full);
 
     Ssl::ASN1_INT_Pointer i(ASN1_INTEGER_new());
