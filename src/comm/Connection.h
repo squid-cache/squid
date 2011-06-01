@@ -41,6 +41,7 @@
 #include "comm/forward.h"
 #include "hier_code.h"
 #include "ip/Address.h"
+#include "MemPool.h"
 #include "RefCount.h"
 #include "typedefs.h"
 #if USE_SQUID_EUI
@@ -88,6 +89,8 @@ namespace Comm {
 class Connection : public RefCountable
 {
 public:
+    MEMPROXY_CLASS(Comm::Connection);
+
     Connection();
 
     /** Clear the connection properties and close any open socket. */
@@ -159,6 +162,8 @@ private:
     /** cache_peer data object (if any) */
     peer *_peer;
 };
+
+MEMPROXY_CLASS_INLINE(Connection);
 
 }; // namespace Comm
 
