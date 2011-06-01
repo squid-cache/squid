@@ -33,7 +33,6 @@
 #ifndef SQUID_SRC_URL_H
 #define SQUID_SRC_URL_H
 
-#include "squid.h"
 #include "MemPool.h"
 #include "URLScheme.h"
 
