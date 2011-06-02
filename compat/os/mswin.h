@@ -227,7 +227,7 @@ struct timezone {
 #include <process.h>
 #include <errno.h>
 #if _SQUID_MSWIN_ || _SQUID_MINGW_
-#ifdef HAVE_WINSOCK2_H
+#if HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif
 #undef IN_ADDR
