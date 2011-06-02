@@ -1,7 +1,7 @@
 #
 #
 # Complete Check - everything MUST work at this level
-MAKETEST="distcheck"
+MAKETEST="-k distcheck"
 #
 # Default configuration options.
 #  - Nothing special configured. Just whatever is found by "./configure"
