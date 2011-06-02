@@ -49,7 +49,9 @@
 
 #include "convert.hh"
 #include <string.h>
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <stdlib.h>

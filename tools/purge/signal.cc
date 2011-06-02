@@ -58,7 +58,9 @@
 #include <memory.h>
 #include <stdio.h>
 #include <unistd.h>
+#if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
+#endif
 //#include <signal.h>
 
 SigFunc*
@@ -79,7 +81,9 @@ Signal( int signo, SigFunc* newhandler, bool doInterrupt )
     sigemptyset( &action.sa_mask );
 
     if ( signo == SIGCHLD ) {
+#ifdef SA_NOCLDSTOP
         action.sa_flags |= SA_NOCLDSTOP;
+#endif
 
 #ifdef SA_NODEFER
         action.sa_flags |= SA_NODEFER;   // SYSV: don't block current signal

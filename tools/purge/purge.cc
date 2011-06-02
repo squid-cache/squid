@@ -109,7 +109,9 @@
 #include <string.h>
 //#include <sys/types.h>
 #include <sys/stat.h>
+#if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
+#endif
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>

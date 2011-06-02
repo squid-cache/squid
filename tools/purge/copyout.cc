@@ -53,7 +53,9 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
+#if HAVE_SYS_MMAN_H
 #include <sys/mman.h>
+#endif
 
 #ifndef MAP_FILE
 #define MAP_FILE 0
@@ -76,13 +78,17 @@ assert_copydir( const char* copydir )
         // stat() returned true, but did not point to a directory
         fprintf( stderr, "copy dir \"%s\" is a file!\n", copydir );
         return -1;
-    } else if ( S_ISDIR(st.st_mode) &&
-                !( (st.st_uid == geteuid() && ( (st.st_mode & S_IWUSR) > 0 )) ||
-                   (st.st_gid == getegid() && ( (st.st_mode & S_IWGRP) > 0 )) ||
-                   ((st.st_mode & S_IWOTH) > 0) ) ) {
+    }
+    // on some OSes (Windows), mode-checking is not possible.
+#if defined(S_IWUSR) && defined(S_IWGRP) && defined(S_IWOTH)
+    if ( S_ISDIR(st.st_mode) &&
+    		!( (st.st_uid == geteuid() && ( (st.st_mode & S_IWUSR) > 0 )) ||
+    		(st.st_gid == getegid() && ( (st.st_mode & S_IWGRP) > 0 )) ||
+    		((st.st_mode & S_IWOTH) > 0) ) ) {
         fprintf( stderr, "copy dir \"%s\" is not accessible to me\n", copydir );
         return -1;
     }
+#endif
     if ( status == -1 ) {
         // stat() returned with an error. 'File not found' is a legal error.
         if ( errno != ENOENT ) {

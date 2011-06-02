@@ -61,7 +61,9 @@ typedef int bool;
 #endif /* __cplusplus */
 
 #include <sys/types.h>
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>	// SOMAXCONN
+#endif
 #include <netinet/in.h>
 
 #if SOMAXCONN <= 5

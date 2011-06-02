@@ -55,7 +55,15 @@ typedef char bool;
 #endif /* __cplusplus */
 
 #include <sys/types.h>
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
+#if HAVE_WINSOCK_H
+#include <winsock.h>
+#endif
 
 typedef char HostAddress[16]; // strlen("xxx.xxx.xxx.xxx\0") <= 16
 typedef char SockAddress[24]; // strlen("xxx.xxx.xxx.xxx:xxxxx\0" ) < 24

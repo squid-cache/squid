@@ -36,6 +36,8 @@
 #ifndef _SQUID_IP_IPADDRESS_H
 #define _SQUID_IP_IPADDRESS_H
 
+#include "compat/compat.h"
+
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif

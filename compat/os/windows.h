@@ -45,5 +45,9 @@
 #undef _MSWIN_ACL_WAS_NOT_DEFINED
 #endif
 
+#ifndef USE_REGULAR_COPY
+#define USE_REGULAR_COPY 1
+#endif
+
 #endif /* _SQUID_WINDOWS_ */
 #endif /* SQUID_OS_WINDOWS_H */
