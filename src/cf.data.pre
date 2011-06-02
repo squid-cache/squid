@@ -4765,7 +4765,7 @@ LOC: Config.Announce.file
 DOC_NONE
 
 NAME: announce_port
-TYPE: ushort
+TYPE: u_short
 DEFAULT: 3131
 LOC: Config.Announce.port
 DOC_START
@@ -5007,7 +5007,7 @@ DOC_END
 
 NAME: delay_initial_bucket_level
 COMMENT: (percent, 0-100)
-TYPE: ushort
+TYPE: u_short
 DEFAULT: 50
 IFDEF: USE_DELAY_POOLS
 LOC: Config.Delay.initial
@@ -5039,7 +5039,7 @@ DOC_END
 
 NAME: client_delay_initial_bucket_level
 COMMENT: (percent, 0-no_limit)
-TYPE: ushort
+TYPE: u_short
 DEFAULT: 50
 IFDEF: USE_DELAY_POOLS
 LOC: Config.ClientDelay.initial
@@ -5449,7 +5449,7 @@ COMMENT_START
 COMMENT_END
 
 NAME: snmp_port
-TYPE: ushort
+TYPE: u_short
 LOC: Config.Port.snmp
 DEFAULT: 0
 IFDEF: SQUID_SNMP
@@ -5521,7 +5521,7 @@ COMMENT_START
 COMMENT_END
 
 NAME: icp_port udp_port
-TYPE: ushort
+TYPE: u_short
 DEFAULT: 0
 LOC: Config.Port.icp
 DOC_START
@@ -5535,7 +5535,7 @@ DOC_END
 
 NAME: htcp_port
 IFDEF: USE_HTCP
-TYPE: ushort
+TYPE: u_short
 DEFAULT: 0
 LOC: Config.Port.htcp
 DOC_START
@@ -5796,7 +5796,7 @@ DOC_END
 
 NAME: mcast_miss_ttl
 IFDEF: MULTICAST_MISS_STREAM
-TYPE: ushort
+TYPE: u_short
 LOC: Config.mcast_miss.ttl
 DEFAULT: 16
 DOC_START
@@ -5807,7 +5807,7 @@ DOC_END
 
 NAME: mcast_miss_port
 IFDEF: MULTICAST_MISS_STREAM
-TYPE: ushort
+TYPE: u_short
 LOC: Config.mcast_miss.port
 DEFAULT: 3135
 DOC_START
