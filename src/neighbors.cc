@@ -589,9 +589,9 @@ neighbors_init(void)
                 if (thisPeer->http_port != s->s.GetPort())
                     continue;
 
-                debugs(15, 1, "WARNING: Peer looks like this host");
+                debugs(15, DBG_IMPORTANT, "WARNING: Peer looks like this host");
 
-                debugs(15, 1, "         Ignoring " <<
+                debugs(15, DBG_IMPORTANT, "         Ignoring " <<
                        neighborTypeStr(thisPeer) << " " << thisPeer->host <<
                        "/" << thisPeer->http_port << "/" <<
                        thisPeer->icp.port);
@@ -603,7 +603,7 @@ neighbors_init(void)
 
     peerRefreshDNS((void *) 1);
 
-    if (ICP_INVALID == echo_hdr.opcode) {
+    if (echo_hdr.opcode == ICP_INVALID) {
         echo_hdr.opcode = ICP_SECHO;
         echo_hdr.version = ICP_VERSION_CURRENT;
         echo_hdr.length = 0;
