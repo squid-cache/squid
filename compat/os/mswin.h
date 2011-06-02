@@ -229,10 +229,12 @@ struct timezone {
 #if _SQUID_MSWIN_ || _SQUID_MINGW_
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
+#elif HAVE_WINSOCK_H
+#include <winsock.h>
 #endif
 #undef IN_ADDR
 #include <ws2tcpip.h>
-#endif /* _SQUID_MSWIN_ */
+#endif /* _SQUID_MSWIN_ || _SQUID_MINGW_ */
 
 #if (EAI_NODATA == EAI_NONAME)
 #undef EAI_NODATA
