@@ -1362,7 +1362,7 @@ comm_lingering_close(int fd)
 
 #endif
 
-/*
+/**
  * enable linger with time of 0 so that when the socket is
  * closed, TCP generates a RESET
  */

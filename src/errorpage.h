@@ -195,7 +195,7 @@ SQUIDCEXTERN void errorInitialize(void);
 SQUIDCEXTERN void errorClean(void);
 
 /**
- \ingroup ErrorPageAPI
+ * \ingroup ErrorPageAPI
  *
  * This function generates a error page from the info contained
  * by err and then sends it to the client.

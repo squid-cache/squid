@@ -1,0 +1,13 @@
+TRANSLATE_LANGUAGES= \
+    ar.lang \
+    cs.lang \
+    de.lang \
+    en.lang \
+    en_AU.lang \
+    es.lang \
+    fr.lang \
+    it.lang \
+    oc.lang \
+    pt.lang \
+    ro.lang \
+    ru.lang 

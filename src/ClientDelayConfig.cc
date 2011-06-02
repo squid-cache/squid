@@ -58,7 +58,7 @@ void ClientDelayConfig::parsePoolCount()
 
 void ClientDelayConfig::parsePoolRates()
 {
-    ushort pool;
+    u_short pool;
     ConfigParser::ParseUShort(&pool);
 
     if (pool < 1 || pool > pools.size()) {
@@ -74,7 +74,7 @@ void ClientDelayConfig::parsePoolRates()
 
 void ClientDelayConfig::parsePoolAccess(ConfigParser &parser)
 {
-    ushort pool;
+    u_short pool;
 
     ConfigParser::ParseUShort(&pool);
 
