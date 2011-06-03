@@ -141,7 +141,7 @@ echo " "
 # Build templates install include from current templates available
 (
 echo -n "ERROR_TEMPLATES="
-for f in `ls -1 ${ROOT}/errors/templates/*`
+for f in `ls -1 ${ROOT}/errors/templates/ERR_*`
 do
 	echo " \\"
 	echo -n "    ${f}"
