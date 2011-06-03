@@ -51,7 +51,9 @@
 #endif
 
 #include "socket.hh"
+#if HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
+#endif
 #include <arpa/inet.h>
 #include <netdb.h>
 

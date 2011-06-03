@@ -123,8 +123,12 @@
 #include <siginfo.h>
 #endif
 
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#if HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>  // TCP_NODELAY
+#endif
 #include <arpa/inet.h>
 #include <netdb.h>        // gethostbyname()
 //#include <regex.h>    //comes via compat.h

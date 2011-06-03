@@ -47,6 +47,7 @@
 
 //#include <assert.h>
 //#include <sys/types.h>
+#include <iostream>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <string.h>
@@ -76,7 +77,7 @@ assert_copydir( const char* copydir )
     // or if copydir can be created.
     if ( status == 0 && ! S_ISDIR(st.st_mode) ) {
         // stat() returned true, but did not point to a directory
-        fprintf( stderr, "copy dir \"%s\" is a file!\n", copydir );
+        std::cerr << "copy dir \"" << copydir << "\" is a file!\n";
         return -1;
     }
     // on some OSes (Windows), mode-checking is not possible.
@@ -85,7 +86,7 @@ assert_copydir( const char* copydir )
     		!( (st.st_uid == geteuid() && ( (st.st_mode & S_IWUSR) > 0 )) ||
     		(st.st_gid == getegid() && ( (st.st_mode & S_IWGRP) > 0 )) ||
     		((st.st_mode & S_IWOTH) > 0) ) ) {
-        fprintf( stderr, "copy dir \"%s\" is not accessible to me\n", copydir );
+        std::cerr << "copy dir \"" << copydir "\" is not accessible to me\n";
         return -1;
     }
 #endif
@@ -93,13 +94,14 @@ assert_copydir( const char* copydir )
         // stat() returned with an error. 'File not found' is a legal error.
         if ( errno != ENOENT ) {
             // not a 'file not found' error, so this is hard error.
-            fprintf( stderr, "accessing copy-out dir \"%s\": %s\n",
-                     copydir, strerror(errno) );
+            std::cerr << "accessing copy-out dir \" " << copydir << " \": " <<
+                     strerror(errno) << std::endl;
             return -1;
         } else {
             // directory does not exist. Try to create it.
             if ( mkdir( copydir, 0750 ) == -1 ) {
-                fprintf( stderr, "mkdir(%s): %s\n", copydir, strerror(errno) );
+                std::cerr << "mkdir(" << copydir << "): " << strerror(errno)
+                		<< std::endl;
                 return -1;
             }
         }
@@ -157,11 +159,12 @@ copy_out( size_t filesize, size_t metasize, unsigned debug,
     for ( char* t = strchr(here,'/'); t; t = strchr(t,'/') ) {
         *t = 0;
         if ( mkdir( filename, 0775 ) == -1 && errno != EEXIST ) {
-            fprintf( stderr, "mkdir(%s): %s\n", filename, strerror(errno) );
+        	std::cerr << "mkdir(" << filename << "): " << strerror(errno) <<
+        			std::endl;
             delete[] filename;
             return false;
         } else if ( debug & 0x02 ) {
-            fprintf( stderr, "# creating %s\n", filename );
+        	std::cerr << "# creating" << filename;
         }
         *t++ = '/';
     }
@@ -224,7 +227,8 @@ copy_out( size_t filesize, size_t metasize, unsigned debug,
 #ifdef USE_REGULAR_COPY
     // position input at start of server answer (contains HTTP headers)
     if ( lseek( input, metasize, SEEK_SET ) == -1 ) {
-        fprintf( stderr, "lseek(%s,%lu): %s\n", fn, metasize, strerror(errno) );
+        std::cerr << "lseek( " << fn << "," << metasize << "): " <<
+        		strerror(errno) << std::endl;
         BAUTZ(false);
     }
 
@@ -240,14 +244,13 @@ copy_out( size_t filesize, size_t metasize, unsigned debug,
     // seek end of output file ...
     off_t position = lseek( out, filesize-metasize-1, SEEK_SET );
     if ( position == -1 ) {
-        fprintf( stderr, "lseek(%s,%lu): %s\n", filename,
-                 (unsigned long)filesize-metasize,
-                 strerror(errno) );
+        std::cerr << "lseek(" << filename << "," << filesize-metasize <<
+        		"): " << strerror(errno) << std::endl ;
         BAUTZ(false);
     } else if ( debug & 0x02 ) {
-        fprintf( stderr, "# filesize=%lu, metasize=%lu, filepos=%ld\n",
-                 (unsigned long)filesize, (unsigned long)metasize,
-                 (long)position );
+        std::cerr <<  "# filesize= " << filesize <<
+        		", metasize=" << metasize <<
+        		", filepos=" << position << std::endl;
     }
 
     // ...and write 1 byte there (create a file that length)

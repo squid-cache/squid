@@ -52,8 +52,12 @@
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
+#if HAVE_ARPA_INET_H
 #include <arpa/inet.h>
+#endif
+#if HAVE_NETDB_H
 #include <netdb.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 

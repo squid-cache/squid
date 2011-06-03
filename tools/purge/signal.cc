@@ -88,21 +88,24 @@ Signal( int signo, SigFunc* newhandler, bool doInterrupt )
 #ifdef SA_NODEFER
         action.sa_flags |= SA_NODEFER;   // SYSV: don't block current signal
 #endif
+        ;
     }
 
     if ( signo == SIGALRM || doInterrupt ) {
 #ifdef SA_INTERRUPT
         action.sa_flags |= SA_INTERRUPT; // SunOS, obsoleted by POSIX
 #endif
+        ;
     } else {
 #ifdef SA_RESTART
         action.sa_flags |= SA_RESTART;   // BSD, SVR4
 #endif
+        ;
     }
 
-    return ( sigaction( signo, &action, &old ) < 0 ) ?
-           (SigFunc*) SIG_ERR :
-           (SigFunc*) old.sa_handler;
+    if (sigaction( signo, &action, &old ) < 0)
+    	return (SigFunc*) SIG_ERR;
+    return (SigFunc*) old.sa_handler;
 }
 
 SIGRETTYPE
