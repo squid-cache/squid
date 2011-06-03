@@ -131,7 +131,9 @@ DelayId::DelayClient(ClientHttpRequest * http)
             DelayId result (pool + 1);
             CompositePoolNode::CompositeSelectionDetails details;
             details.src_addr = ch.src_addr;
+#if USE_AUTH
             details.user = r->auth_user_request;
+#endif
             details.tag = r->tag;
             result.compositePosition(DelayPools::delay_data[pool].theComposite()->id(details));
             return result;
