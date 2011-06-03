@@ -340,7 +340,9 @@ CommonPool::Factory(unsigned char _class, CompositePoolNode::Pointer& compositeC
             temp->push_back (new Aggregate);
             temp->push_back (new ClassCNetPool);
             temp->push_back (new ClassCHostPool);
+#if USE_AUTH
             temp->push_back (new DelayUser);
+#endif
         }
         break;
 

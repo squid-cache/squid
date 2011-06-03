@@ -1630,8 +1630,12 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
     repContext->setReplyToError(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR,
                                 request->method, NULL,
                                 (c != NULL ? c->peer : noAddr), request, NULL,
+#if USE_AUTH
                                 (c != NULL && c->auth_user_request != NULL ?
                                  c->auth_user_request : request->auth_user_request));
+#else
+                                NULL);
+#endif
 
     request->detailError(ERR_ICAP_FAILURE, errDetail);
 
