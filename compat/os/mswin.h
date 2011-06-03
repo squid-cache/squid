@@ -745,6 +745,7 @@ int WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
 #define	RUSAGE_SELF	0		/* calling process */
 #define	RUSAGE_CHILDREN	-1		/* terminated child processes */
 
+#define HAVE_RUSAGE 1
 struct rusage {
     struct timeval ru_utime;	/* user time used */
     struct timeval ru_stime;	/* system time used */
