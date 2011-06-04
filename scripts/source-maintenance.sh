@@ -127,7 +127,7 @@ echo "#endif" >>${ROOT}/lib/profiler/list
 echo "#endif" >>${ROOT}/lib/profiler/list
 mv ${ROOT}/lib/profiler/list ${ROOT}/lib/profiler/xprof_type.h
 
-# Build icons install include form current icons available
+# Build icons install include from current icons available
 (
 echo -n "ICONS="
 for f in `ls -1 ${ROOT}/icons/silk/*`
@@ -137,6 +137,39 @@ do
 done
 echo " "
 )| sed s%${ROOT}/icons/%%g >${ROOT}/icons/list
+
+# Build templates install include from current templates available
+(
+echo -n "ERROR_TEMPLATES="
+for f in `ls -1 ${ROOT}/errors/templates/ERR_*`
+do
+	echo " \\"
+	echo -n "    ${f}"
+done
+echo " "
+)| sed s%${ROOT}/errors/%%g >${ROOT}/errors/template.list
+
+# Build errors translation install include from current .PO available
+(
+echo -n "TRANSLATE_LANGUAGES="
+for f in `ls -1 ${ROOT}/errors/*.po`
+do
+	echo " \\"
+	echo -n "    ${f}"
+done
+echo " "
+)| sed s%${ROOT}/errors/%%g | sed s%\.po%\.lang%g >${ROOT}/errors/language.list
+
+# Build manuals translation install include from current .PO available
+(
+echo -n "TRANSLATE_LANGUAGES="
+for f in `ls -1 ${ROOT}/doc/manuals/*.po`
+do
+	echo " \\"
+	echo -n "    ${f}"
+done
+echo " "
+)| sed s%${ROOT}/doc/manuals/%%g | sed s%\.po%\.lang%g >${ROOT}/doc/manuals/language.list
 
 # Run formating
 echo "" >${ROOT}/doc/debug-sections.tmp

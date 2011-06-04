@@ -48,6 +48,8 @@ public:
 
     void clearHandlers(const Comm::ConnectionPointer &conn);
 
+    int count() const { return size_; }
+
 private:
     bool removeAt(int index);
     int findIndexOf(const Comm::ConnectionPointer &conn) const;
@@ -120,7 +122,12 @@ public:
     void count(int uses);
     void dumpHist(StoreEntry *e) const;
     void dumpHash(StoreEntry *e) const;
-    void unlinkList(IdleConnList *list) const;
+    void unlinkList(IdleConnList *list);
+    void noteUses(int uses);
+    void closeN(int n, const Comm::ConnectionPointer &destLink, const char *domain);
+    int count() const { return theCount; }
+    void noteConnectionAdded() { ++theCount; }
+    void noteConnectionRemoved() { assert(theCount > 0); --theCount; }
 
 private:
 
@@ -129,6 +136,7 @@ private:
     int hist[PCONN_HIST_SZ];
     hash_table *table;
     const char *descr;
+    int theCount; ///< the number of pooled connections
 };
 
 

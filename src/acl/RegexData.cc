@@ -134,8 +134,13 @@ aclParseRegexList(relist **curlist)
     int errcode;
     int flags = REG_EXTENDED | REG_NOSUB;
 
+    debugs(28,5, HERE << "Regex new line.");
+
     for (Tail = (relist **)curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = ConfigParser::strtokFile())) {
+
+        debugs(28,5, HERE << "Regex token: " << t);
+
         if (strcmp(t, "-i") == 0) {
             flags |= REG_ICASE;
             continue;

@@ -81,6 +81,7 @@
    u - URL with password                        x
    w - cachemgr email address                   x
    W - error data (to be included in the mailto links)
+   x - error name                               x
    z - dns server error message                 x
    Z - Preformatted error message               x
  \endverbatim
@@ -195,7 +196,7 @@ SQUIDCEXTERN void errorInitialize(void);
 SQUIDCEXTERN void errorClean(void);
 
 /**
- \ingroup ErrorPageAPI
+ * \ingroup ErrorPageAPI
  *
  * This function generates a error page from the info contained
  * by err and then sends it to the client.
