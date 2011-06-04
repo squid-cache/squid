@@ -71,6 +71,12 @@ PconnPool::count(int uses)
 }
 
 void
+PconnPool::noteUses(int)
+{
+    fatal("pconn.cc required");
+}
+
+void
 PconnPool::dumpHist(StoreEntry *e) const
 {
     fatal("pconn.cc required");
@@ -83,7 +89,7 @@ PconnPool::dumpHash(StoreEntry *e) const
 }
 
 void
-PconnPool::unlinkList(IdleConnList *list) const
+PconnPool::unlinkList(IdleConnList *list)
 {
     fatal("pconn.cc required");
 }

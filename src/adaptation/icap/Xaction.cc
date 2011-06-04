@@ -22,8 +22,6 @@
 #include "SquidTime.h"
 #include "err_detail_type.h"
 
-static PconnPool *icapPconnPool = new PconnPool("ICAP Servers");
-
 
 //CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, Xaction);
 
@@ -93,23 +91,20 @@ Adaptation::Icap::Xaction::openConnection()
 {
     Must(!haveConnection());
 
-    const Adaptation::Service &s = service();
+    Adaptation::Icap::ServiceRep &s = service();
 
     if (!TheConfig.reuse_connections)
         disableRetries(); // this will also safely drain pconn pool
 
-    connection = new Comm::Connection;
+    bool wasReused = false;
+    connection = s.getConnection(isRetriable, wasReused);
 
-    /* NP: set these here because it applies whether a pconn or a new conn is used */
-
-    // TODO: Avoid blocking lookup if s.cfg().host is a hostname
-    connection->remote = s.cfg().host.termedBuf();
-    connection->remote.SetPort(s.cfg().port);
-
-    // TODO: check whether NULL domain is appropriate here
-    icapPconnPool->pop(connection, NULL, isRetriable);
-    if (connection->isOpen()) {
-        debugs(93,3, HERE << "reused pconn " << connection);
+    if (wasReused && Comm::IsConnOpen(connection)) {
+        // Set comm Close handler
+        typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommCloseCbParams> CloseDialer;
+        closer =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommClosed",
+                            CloseDialer(this,&Adaptation::Icap::Xaction::noteCommClosed));
+        comm_add_close_handler(connection->fd, closer);
 
         // fake the connect callback
         // TODO: can we sync call Adaptation::Icap::Xaction::noteCommConnected here instead?
@@ -125,6 +120,22 @@ Adaptation::Icap::Xaction::openConnection()
     }
 
     disableRetries(); // we only retry pconn failures
+
+    // Attempt to open a new connection...
+    debugs(93,3, typeName << " opens connection to " << s.cfg().host.termedBuf() << ":" << s.cfg().port);
+
+    // TODO: service bypass status may differ from that of a transaction
+    typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommTimeoutCbParams> TimeoutDialer;
+    AsyncCall::Pointer timeoutCall =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommTimedout",
+                                      TimeoutDialer(this,&Adaptation::Icap::Xaction::noteCommTimedout));
+
+    commSetTimeout(connection->fd, TheConfig.connect_timeout(
+                       service().cfg().bypass), timeoutCall);
+
+    typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommCloseCbParams> CloseDialer;
+    closer =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommClosed",
+                        CloseDialer(this,&Adaptation::Icap::Xaction::noteCommClosed));
+    comm_add_close_handler(connection->fd, closer);
 
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> ConnectDialer;
     connector = JobCallback(93,3, ConnectDialer, this, Adaptation::Icap::Xaction::noteCommConnected);
@@ -164,17 +175,11 @@ void Adaptation::Icap::Xaction::closeConnection()
             reuseConnection = false;
         }
 
-        if (reuseConnection) {
-            //status() adds leading spaces.
-            debugs(93,3, HERE << "pushing pconn" << status());
-            commUnsetConnTimeout(connection);
-            icapPconnPool->push(connection, NULL);
+        if (reuseConnection)
             disableRetries();
-        } else {
-            //status() adds leading spaces.
-            debugs(93,3, HERE << "closing pconn" << status());
-            connection->close();
-        }
+
+        Adaptation::Icap::ServiceRep &s = service();
+        s.putConnection(connection, reuseConnection, status());
 
         writer = NULL;
         reader = NULL;
@@ -202,7 +207,8 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
                         CloseDialer(this,&Adaptation::Icap::Xaction::noteCommClosed));
     comm_add_close_handler(io.conn->fd, closer);
 
-    fd_table[io.conn->fd].noteUse(icapPconnPool);
+// ??    fd_table[io.conn->fd].noteUse(icapPconnPool);
+    service().noteConnectionUse(connection);
 
     handleCommConnected();
 }

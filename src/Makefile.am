@@ -360,6 +360,8 @@ squid_SOURCES = \
 	HttpControlMsg.h \
 	HttpMsg.cc \
 	HttpMsg.h \
+	HttpParser.cc \
+	HttpParser.h \
 	HttpReply.cc \
 	HttpReply.h \
 	HttpRequest.cc \
@@ -968,6 +970,7 @@ check_PROGRAMS+=\
 	tests/testEvent \
 	tests/testEventLoop \
 	tests/test_http_range \
+	tests/testHttpParser \
 	tests/testHttpReply \
 	tests/testHttpRequest \
 	tests/testStore \
@@ -1202,6 +1205,8 @@ tests_testBoilerplate_DEPENDENCIES = \
 tests_testCacheManager_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
+	HttpParser.cc \
+	HttpParser.h \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	mem.cc \
@@ -1566,6 +1571,8 @@ tests_testEvent_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
+	HttpParser.cc \
+	HttpParser.h \
 	HttpReply.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
@@ -1741,6 +1748,8 @@ tests_testEventLoop_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
+	HttpParser.cc \
+	HttpParser.h \
 	HttpReply.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
@@ -1914,6 +1923,8 @@ tests_test_http_range_SOURCES = \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
 	HttpMsg.cc \
+	HttpParser.cc \
+	HttpParser.h \
 	HttpReply.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
@@ -2027,9 +2038,41 @@ tests_test_http_range_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 
 
+tests_testHttpParser_SOURCES = \
+	Debug.h \
+	HttpParser.cc \
+	HttpParser.h \
+	MemBuf.cc \
+	MemBuf.h \
+	mem.cc \
+	structs.h \
+	tests/stub_cache_manager.cc \
+	tests/stub_debug.cc \
+	tests/stub_event.cc \
+	tests/stub_HelperChildConfig.cc \
+	tests/testHttpParser.cc \
+	tests/testHttpParser.h \
+	tests/testMain.cc \
+	time.cc
+nodist_tests_testHttpParser_SOURCES = \
+	$(TESTSOURCES)
+tests_testHttpParser_LDADD= \
+	SquidConfig.o \
+	base/libbase.la \
+	ip/libip.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(SQUID_CPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testHttpParser_LDFLAGS = $(LIBADD_DL)
+tests_testHttpParser_DEPENDENCIES = \
+	$(SQUID_CPPUNIT_LA)
+
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
+	HttpParser.cc \
+	HttpParser.h \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	mem.cc \
@@ -2825,6 +2868,8 @@ tests_testURL_SOURCES = \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
 	HttpMsg.cc \
+	HttpParser.cc \
+	HttpParser.h \
 	HttpReply.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \

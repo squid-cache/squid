@@ -8,7 +8,6 @@
 #ifndef SQUID_SNMPX_SESSION_H
 #define SQUID_SNMPX_SESSION_H
 
-#include "config.h"
 #include "ipc/forward.h"
 #include "snmp.h"
 #include "snmp_session.h"
