@@ -46,7 +46,7 @@ static HttpRequest *urlParseFinish(const HttpRequestMethod& method,
                                    const char *const login,
                                    const int port,
                                    HttpRequest *request);
-static HttpRequest *urnParse(const HttpRequestMethod& method, char *urn);
+static HttpRequest *urnParse(const HttpRequestMethod& method, char *urn, HttpRequest *request);
 static const char valid_hostname_chars_u[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
@@ -236,7 +236,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         port = urlDefaultPort(protocol);
         return urlParseFinish(method, protocol, url, host, login, port, request);
     } else if (!strncmp(url, "urn:", 4)) {
-        return urnParse(method, url);
+        return urnParse(method, url, request);
     } else {
         /* Parse the URL: */
         src = url;
@@ -442,6 +442,7 @@ urlParseFinish(const HttpRequestMethod& method,
         request = new HttpRequest(method, protocol, urlpath);
     else {
         request->initHTTP(method, protocol, urlpath);
+        safe_free(request->canonical);
     }
 
     request->SetHost(host);
@@ -451,9 +452,15 @@ urlParseFinish(const HttpRequestMethod& method,
 }
 
 static HttpRequest *
-urnParse(const HttpRequestMethod& method, char *urn)
+urnParse(const HttpRequestMethod& method, char *urn, HttpRequest *request)
 {
     debugs(50, 5, "urnParse: " << urn);
+    if (request) {
+        request->initHTTP(method, AnyP::PROTO_URN, urn + 4);
+        safe_free(request->canonical);
+        return request;
+    }
+
     return new HttpRequest(method, AnyP::PROTO_URN, urn + 4);
 }
 

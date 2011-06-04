@@ -146,7 +146,7 @@ static void configDoConfigure(void);
 static void parse_refreshpattern(refresh_t **);
 static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
 static void parseTimeLine(time_msec_t * tptr, const char *units, bool allowMsec);
-static void parse_ushort(u_short * var);
+static void parse_u_short(u_short * var);
 static void parse_string(char **);
 static void default_all(void);
 static void defaults_if_none(void);
@@ -644,6 +644,16 @@ configDoConfigure(void)
 
     if (Config.errHtmlText == NULL)
         Config.errHtmlText = xstrdup(null_string);
+
+#if !HAVE_SETRLIMIT || !defined(RLIMIT_NOFILE)
+    if (Config.max_filedescriptors > 0) {
+        debugs(0, DBG_IMPORTANT, "WARNING: max_filedescriptors disabled. Operating System setrlimit(RLIMIT_NOFILE) is missing.");
+    }
+#elif USE_SELECT || USE_SELECT_WIN32
+    if (Config.max_filedescriptors > FD_SETSIZE) {
+        debugs(0, DBG_IMPORTANT, "WARNING: max_filedescriptors limited to " << FD_SETSIZE << " by select() algorithm.");
+    }
+#endif
 
     storeConfigure();
 
@@ -1584,7 +1594,7 @@ free_acl_b_size_t(acl_size_t ** head)
 #include "DelayPools.h"
 #include "DelayConfig.h"
 /* do nothing - free_delay_pool_count is the magic free function.
- * this is why delay_pool_count isn't just marked TYPE: ushort
+ * this is why delay_pool_count isn't just marked TYPE: u_short
  */
 #define free_delay_pool_class(X)
 #define free_delay_pool_access(X)
@@ -1634,7 +1644,7 @@ parse_delay_pool_access(DelayConfig * cfg)
 #if USE_DELAY_POOLS
 #include "ClientDelayConfig.h"
 /* do nothing - free_client_delay_pool_count is the magic free function.
- * this is why client_delay_pool_count isn't just marked TYPE: ushort
+ * this is why client_delay_pool_count isn't just marked TYPE: u_short
  */
 
 #define free_client_delay_pool_access(X)
@@ -3152,19 +3162,19 @@ free_b_int64_t(int64_t * var)
 #define free_kb_int64_t free_b_int64_t
 
 static void
-dump_ushort(StoreEntry * entry, const char *name, u_short var)
+dump_u_short(StoreEntry * entry, const char *name, u_short var)
 {
     storeAppendPrintf(entry, "%s %d\n", name, var);
 }
 
 static void
-free_ushort(u_short * u)
+free_u_short(u_short * u)
 {
     *u = 0;
 }
 
 static void
-parse_ushort(u_short * var)
+parse_u_short(u_short * var)
 {
     ConfigParser::ParseUShort(var);
 }

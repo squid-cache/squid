@@ -106,6 +106,9 @@ IdleConnList::removeAt(int index)
         theList_[index] = theList_[index + 1];
     theList_[size_-1] = NULL;
 
+    if (parent_)
+        parent_->noteConnectionRemoved();
+
     if (--size_ == 0) {
         debugs(48, 3, HERE << "deleting " << hashKeyStr(&hash));
         delete this;
@@ -139,6 +142,9 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
 */
         delete[] oldList;
     }
+
+    if (parent_)
+        parent_->noteConnectionAdded();
 
     theList_[size_++] = conn;
     AsyncCall::Pointer readCall = commCbCall(5,4, "IdleConnList::Read",
@@ -283,7 +289,8 @@ PconnPool::dumpHash(StoreEntry *e) const
 
 /* ========== PconnPool PUBLIC FUNCTIONS ============================================ */
 
-PconnPool::PconnPool(const char *aDescr) : table(NULL), descr(aDescr)
+PconnPool::PconnPool(const char *aDescr) : table(NULL), descr(aDescr),
+        theCount(0)
 {
     int i;
     table = hash_create((HASHCMP *) strcmp, 229, hash_string);
@@ -355,13 +362,23 @@ PconnPool::pop(const Comm::ConnectionPointer &destLink, const char *domain, bool
 }
 
 void
-PconnPool::unlinkList(IdleConnList *list) const
+PconnPool::closeN(int n, const Comm::ConnectionPointer &destLink, const char *domain)
 {
+    // TODO: optimize: we can probably do hash_lookup just once
+    for (int i = 0; i < n; ++i)
+        pop(destLink, domain, false); // may fail!
+}
+
+void
+PconnPool::unlinkList(IdleConnList *list)
+{
+    theCount -= list->count();
+    assert(theCount >= 0);
     hash_remove_link(table, &list->hash);
 }
 
 void
-PconnPool::count(int uses)
+PconnPool::noteUses(int uses)
 {
     if (uses >= PCONN_HIST_SZ)
         uses = PCONN_HIST_SZ - 1;

@@ -98,6 +98,8 @@ void Adaptation::Icap::Options::configure(const HttpReply *reply)
     }
 
     cfgIntHeader(h, "Max-Connections", max_connections);
+    if (max_connections == 0)
+        debugs(93, DBG_IMPORTANT, "WARNING: Max-Connections is set to zero! ");
 
     cfgIntHeader(h, "Options-TTL", theTTL);
 

@@ -583,9 +583,9 @@ neighbors_init(void)
                 if (thisPeer->http_port != s->s.GetPort())
                     continue;
 
-                debugs(15, 1, "WARNING: Peer looks like this host");
+                debugs(15, DBG_IMPORTANT, "WARNING: Peer looks like this host");
 
-                debugs(15, 1, "         Ignoring " <<
+                debugs(15, DBG_IMPORTANT, "         Ignoring " <<
                        neighborTypeStr(thisPeer) << " " << thisPeer->host <<
                        "/" << thisPeer->http_port << "/" <<
                        thisPeer->icp.port);
@@ -597,7 +597,7 @@ neighbors_init(void)
 
     peerRefreshDNS((void *) 1);
 
-    if (ICP_INVALID == echo_hdr.opcode) {
+    if (echo_hdr.opcode == ICP_INVALID) {
         echo_hdr.opcode = ICP_SECHO;
         echo_hdr.version = ICP_VERSION_CURRENT;
         echo_hdr.length = 0;
@@ -824,7 +824,6 @@ neighborsDigestSelect(HttpRequest * request)
     peer *best_p = NULL;
 #if USE_CACHE_DIGESTS
 
-    const cache_key *key;
     int best_rtt = 0;
     int choice_count = 0;
     int ichoice_count = 0;
@@ -835,7 +834,7 @@ neighborsDigestSelect(HttpRequest * request)
     if (!request->flags.hierarchical)
         return NULL;
 
-    key = storeKeyPublicByRequest(request);
+    storeKeyPublicByRequest(request);
 
     for (i = 0, p = first_ping; i++ < Config.npeers; p = p->next) {
         lookup_t lookup;

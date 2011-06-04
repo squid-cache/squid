@@ -112,7 +112,7 @@ else
 fi
 
 # LT_INIT requires libtool v2, might as well state it loud
-LT_PREREQ ([2.2])
+LT_PREREQ([2.2])
 LT_INIT([dlopen],[disable-shared])
 if ! test "${ac_top_build_prefix}" = "";
 then
@@ -1042,8 +1042,8 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
       AC_MSG_WARN([EUI support probably will not work on host $host.])
       ;;
   esac
+  #Iphlpapi.h check delayed after winsock2.h
   AC_CHECK_HEADERS( \
-    Iphlpapi.h \
     net/if_dl.h \
     sys/sockio.h \
     sys/param.h
@@ -2428,6 +2428,7 @@ AC_CHECK_SIZEOF(int64_t)
 AC_CHECK_SIZEOF(long)
 #need the define for overflow checks
 AC_CHECK_SIZEOF(off_t)
+AC_CHECK_SIZEOF(size_t)
 
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.
@@ -2508,6 +2509,10 @@ AC_SEARCH_LIBS([yp_match], [nsl nss_nis nss_nisplus])
 dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
 if test "x$squid_host_os" = "xmingw" ; then
   SQUID_CHECK_WINSOCK_LIB
+  AC_CHECK_HEADERS(Iphlpapi.h,,,[
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif])
 fi
 
 # check that we have unix sockets

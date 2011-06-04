@@ -1016,7 +1016,7 @@ comm_lingering_close(int fd)
 
 #endif
 
-/*
+/**
  * enable linger with time of 0 so that when the socket is
  * closed, TCP generates a RESET
  */
@@ -1157,7 +1157,7 @@ _comm_close(int fd, char const *file, int line)
     commCallCloseHandlers(fd);
 
     if (F->pconn.uses)
-        F->pconn.pool->count(F->pconn.uses);
+        F->pconn.pool->noteUses(F->pconn.uses);
 
     comm_empty_os_read_buffers(fd);
 

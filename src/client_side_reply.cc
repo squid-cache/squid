@@ -1070,14 +1070,6 @@ clientReplyContext::storeNotOKTransferDone() const
         /* haven't found end of headers yet */
         return 0;
 
-    int sending = SENDING_BODY;
-
-    if (curReply->sline.status == HTTP_NO_CONTENT ||
-            curReply->sline.status == HTTP_NOT_MODIFIED ||
-            curReply->sline.status < HTTP_OK ||
-            http->request->method == METHOD_HEAD)
-        sending = SENDING_HDRSONLY;
-
     /*
      * Figure out how much data we are supposed to send.
      * If we are sending a body and we don't have a content-length,
@@ -1265,9 +1257,9 @@ clientReplyContext::buildReplyHeader()
         hdr->delById(HDR_SET_COOKIE);
     // TODO: RFC 2965 : Must honour Cache-Control: no-cache="set-cookie2" and remove header.
 
-    // if there is not configured a peer proxy with login=PASS option enabled
+    // if there is not configured a peer proxy with login=PASS or login=PASSTHRU option enabled
     // remove the Proxy-Authenticate header
-    if ( !(request->peer_login && strcmp(request->peer_login,"PASS") ==0))
+    if ( !request->peer_login || (strcmp(request->peer_login,"PASS") != 0 && strcmp(request->peer_login,"PASSTHRU") != 0))
         reply->header.delById(HDR_PROXY_AUTHENTICATE);
 
     reply->header.removeHopByHopEntries();
@@ -2061,13 +2053,10 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     char *buf = next()->readBuffer.data;
 
-    char *body_buf = buf;
-
     if (buf != result.data) {
         /* we've got to copy some data */
         assert(result.length <= next()->readBuffer.length);
         memcpy(buf, result.data, result.length);
-        body_buf = buf;
     }
 
     if (reqofs==0 && !logTypeIsATcpHit(http->logType) && Comm::IsConnOpen(conn->clientConnection)) {

@@ -569,7 +569,6 @@ int
 ErrorState::Dump(MemBuf * mb)
 {
     MemBuf str;
-    const char *p = NULL;	/* takes priority over mb if set */
     char ntoabuf[MAX_IPSTRLEN];
 
     str.reset();
@@ -624,10 +623,6 @@ ErrorState::Dump(MemBuf * mb)
         packerToMemInit(&pck, &str);
         request->header.packInto(&pck);
         packerClean(&pck);
-    } else if (request_hdrs) {
-        p = request_hdrs;
-    } else {
-        p = "[none]";
     }
 
     str.Printf("\r\n");
@@ -921,6 +916,16 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         if (Config.adminEmail && Config.onoff.emailErrData)
             Dump(&mb);
         no_urlescape = 1;
+        break;
+
+    case 'x':
+#if USE_SSL
+        if (detail)
+            mb.Printf("%s", detail->errorName());
+        else
+#endif
+            if (!building_deny_info_url)
+                p = "[Unknown Error Code]";
         break;
 
     case 'z':

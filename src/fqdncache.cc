@@ -497,10 +497,9 @@ fqdncacheHandleReply(void *data, char *reply)
 fqdncacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error_message)
 #endif
 {
-    int n;
     fqdncache_entry *f;
     static_cast<generic_cbdata *>(data)->unwrap(&f);
-    n = ++FqdncacheStats.replies;
+    ++FqdncacheStats.replies;
     const int age = f->age();
     statHistCount(&statCounter.dns.svc_time, age);
 #if USE_DNSSERVERS
