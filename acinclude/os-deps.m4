@@ -822,7 +822,7 @@ void squid_getprotobynumber(void) {
       ;;
     "-lwsock32")
       AC_MSG_RESULT([winsock])
-      XTRA_LIBS="-lws2_32 $XTRA_LIBS"
+      XTRA_LIBS="-lwsock32 $XTRA_LIBS"
       ac_cv_func_select='yes'
       ;;
   esac
