@@ -2442,7 +2442,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             repContext->setReplyToError(ERR_UNSUP_REQ, HTTP_METHOD_NOT_ALLOWED, method, http->uri, conn->peer, NULL, conn->in.buf, NULL);
             break;
         default:
-            repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, http->uri, conn->peer, NULL, conn->in.buf, NULL);
+            repContext->setReplyToError(ERR_INVALID_REQ, hp->request_parse_status, method, http->uri, conn->peer, NULL, conn->in.buf, NULL);
         }
         assert(context->http->out.offset == 0);
         context->pullData();
