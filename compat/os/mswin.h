@@ -584,6 +584,7 @@ recv(int s, void * b, size_t l, int f)
     } else
         return result;
 }
+#define recv(s,b,l,f) Squid::recv(s,b,l,f)
 
 inline ssize_t
 recvfrom(int s, void * b, size_t l, int f, struct sockaddr * fr, socklen_t * fl)
