@@ -52,6 +52,31 @@ class clientStreamNode;
 class ChunkedCodingParser;
 class HttpParser;
 
+/**
+ * Badly named.
+ * This is in fact the processing context for a single HTTP request.
+ *
+ * Managing what has been done, and what happens next to the data buffer
+ * holding what we hope is an HTTP request.
+ *
+ * Parsing is still a mess of global functions done in conjunction with the
+ * real socket controller which generated ClientHttpRequest.
+ * It also generates one of us and passes us control from there based on
+ * the results of the parse.
+ *
+ * After that all the request interpretation and adaptation is in our scope.
+ * Then finally the reply fetcher is created by this and we get the result
+ * back. Which we then have to manage writing of it to the ConnStateData.
+ *
+ * The socket level management is done by a ConnStateData which owns us.
+ * The scope of this objects control over a socket consists of the data
+ * buffer received from ConnStateData with an initially unknown length.
+ * When that length is known it sets the end bounary of our acces to the
+ * buffer.
+ *
+ * The individual processing actions are done by other Jobs which we
+ * kick off as needed.
+ */
 class ClientSocketContext : public RefCountable
 {
 
@@ -137,7 +162,20 @@ private:
 
 class ConnectionDetail;
 
-/** A connection to a socket */
+/**
+ * Manages a connection to a client.
+ *
+ * Multiple requests (up to 2) can be pipelined. This object is responsible for managing
+ * which one is currently being fulfilled and what happens to the queue if the current one
+ * causes the client connection to be closed early.
+ *
+ * Act as a manager for the connection and passes data in buffer to the current parser.
+ * the parser has ambiguous scope at present due to being made from global functions
+ * I believe this object uses the parser to identify boundaries and kick off the
+ * actual HTTP request handling objects (ClientSocketContext, ClientHttpRequest, HttpRequest)
+ *
+ * If the above can be confirmed accurate we can call this object PipelineManager or similar
+ */
 class ConnStateData : public BodyProducer, public HttpControlMsgSink
 {
 

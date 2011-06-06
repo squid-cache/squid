@@ -347,10 +347,10 @@ peerSelectFoo(ps_state * ps)
     peerSelectCallback(ps);
 }
 
-/*
+/**
  * peerSelectPinned
  *
- * Selects a pinned connection
+ * Selects a pinned connection.
  */
 int peerAllowedToUse(const peer * p, HttpRequest * request);
 static void
@@ -374,7 +374,7 @@ peerSelectPinned(ps_state * ps)
     }
 }
 
-/*
+/**
  * peerGetSomeNeighbor
  *
  * Selects a neighbor (parent or sibling) based on one of the
