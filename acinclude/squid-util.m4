@@ -32,6 +32,8 @@ dnl e.g. SQUID_SAVEFLAGS([foo]) will save CFLAGS to foo_CFLAGS etc.
 dnl Saved variables are:
 dnl CFLAGS, CXXFLAGS, LDFLAGS, LIBS plus any variables specified as
 dnl second argument
+
+m4_include([m4sugar/m4sh.m4])
 AC_DEFUN([SQUID_STATE_SAVE],[
 # save state, key is $1
 $1_CFLAGS="${CFLAGS}"
