@@ -8,7 +8,6 @@
 #ifndef SQUID_SNMPX_VAR_H
 #define SQUID_SNMPX_VAR_H
 
-#include "config.h"
 #include "ipc/forward.h"
 #include "Range.h"
 #include "snmp_vars.h"
