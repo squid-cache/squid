@@ -896,7 +896,7 @@ int main (int argc, char ** argv) {
 ]])],[squid_cv_recv_second_arg_type=void],
      [squid_cv_recv_second_arg_type=char])
   AC_MSG_RESULT($squid_cv_recv_second_arg_type*)
+  ])
   AC_DEFINE_UNQUOTED(RECV_ARG_TYPE,$squid_cv_recv_second_arg_type,
     [Base type of the second argument to recv(2)])
-  ])
 ])
