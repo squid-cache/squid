@@ -1,6 +1,6 @@
 include $(top_srcdir)/src/Common.am
 
-if !ENABLE_WIN32_SPECIFIC
+if !ENABLE_WIN32SPECIFIC
 libexec_SCRIPTS	= basic_smb_auth.sh
 libexec_PROGRAMS = basic_smb_auth
 endif 
