@@ -891,6 +891,9 @@ FwdState::connectStart()
 
         comm_add_close_handler(fd, fwdServerClosedWrapper, this);
 
+        if (comm_local_port(fd))
+            request->hier.peer_local_addr = fd_table[fd].local_addr;
+
         dispatch();
 
         return;
@@ -949,6 +952,9 @@ FwdState::connectStart()
 
     if (!fs->_peer)
         origin_tries++;
+
+    if (comm_local_port(fd))
+        request->hier.peer_local_addr = fd_table[fd].local_addr;
 
     /*
      * stats.conn_open is used to account for the number of

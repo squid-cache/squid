@@ -337,6 +337,9 @@ typedef enum {
     LFT_LOCAL_IP,
     LFT_LOCAL_PORT,
     /*LFT_LOCAL_NAME, */
+    LFT_PEER_LOCAL_IP,
+    LFT_PEER_LOCAL_IP_OLD_27,
+    LFT_PEER_LOCAL_PORT,
 
     LFT_TIME_SECONDS_SINCE_EPOCH,
     LFT_TIME_SUBSECOND,
@@ -493,7 +496,11 @@ struct logformat_token_table_entry logformat_token_table[] = {
 
     {"la", LFT_LOCAL_IP},
     {"lp", LFT_LOCAL_PORT},
-    /*{ "lA", LFT_LOCAL_NAME }, */
+    /*{ "lA", LFT_LOCAL_NAME }, */+
+    {"<la", LFT_PEER_LOCAL_IP},
+    {"oa", LFT_PEER_LOCAL_IP_OLD_27},
+    {"<lp", LFT_PEER_LOCAL_PORT},
+    /* {"ot", LFT_PEER_OUTGOING_TOS}, */
 
     {"ts", LFT_TIME_SECONDS_SINCE_EPOCH},
     {"tu", LFT_TIME_SUBSECOND},
@@ -663,6 +670,22 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
         case LFT_LOCAL_PORT:
             if (al->request) {
                 outint = al->request->my_addr.GetPort();
+                doint = 1;
+            }
+
+            break;
+
+            // the fmt->type can not be LFT_PEER_LOCAL_IP_OLD_27
+            // but compiler complains if ommited
+        case LFT_PEER_LOCAL_IP_OLD_27:
+        case LFT_PEER_LOCAL_IP:
+            if (!al->hier.peer_local_addr.IsAnyAddr()) {
+                out = al->hier.peer_local_addr.NtoA(tmp,sizeof(tmp));
+            }
+            break;
+
+        case LFT_PEER_LOCAL_PORT:
+            if ((outint = al->hier.peer_local_addr.GetPort())) {
                 doint = 1;
             }
 
@@ -1498,6 +1521,12 @@ done:
         debugs(46, 0, "WARNING: the \"Hs\" formating code is deprecated use the \">Hs\" instead");
         lt->type = LFT_HTTP_SENT_STATUS_CODE;
         break;
+
+    case LFT_PEER_LOCAL_IP_OLD_27:
+        debugs(46, 0, "WARNING: The \"oa\" formatting code is deprecated. Use the \"<la\" instead.");
+        lt->type = LFT_PEER_LOCAL_IP;
+        break;
+
     default:
         break;
     }
@@ -2049,7 +2078,8 @@ HierarchyLogEntry::HierarchyLogEntry() :
         n_ichoices(0),
         peer_reply_status(HTTP_STATUS_NONE),
         peer_response_time(-1),
-        total_response_time(-1)
+        total_response_time(-1),
+        peer_local_addr()
 {
     memset(host, '\0', SQUIDHOSTNAMELEN);
     memset(cd_host, '\0', SQUIDHOSTNAMELEN);

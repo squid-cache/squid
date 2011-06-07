@@ -34,6 +34,7 @@
 #ifndef SQUID_HTTPHIERARCHYLOGENTRY_H
 #define SQUID_HTTPHIERARCHYLOGENTRY_H
 
+#include "ip/IpAddress.h"
 #include "rfc2181.h"
 #include "PingData.h"
 
@@ -62,6 +63,7 @@ public:
     int64_t peer_response_time; ///< last peer response delay
     timeval first_conn_start; ///< first connection use among all peers
     int64_t total_response_time; ///< cumulative for all peers
+    IpAddress peer_local_addr; ///< local IP:port of the last server-side connection
 };
 
 extern void hierarchyNote(HierarchyLogEntry *, hier_code, const char *);
