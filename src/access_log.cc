@@ -496,7 +496,7 @@ struct logformat_token_table_entry logformat_token_table[] = {
 
     {"la", LFT_LOCAL_IP},
     {"lp", LFT_LOCAL_PORT},
-    /*{ "lA", LFT_LOCAL_NAME }, */+
+    /*{ "lA", LFT_LOCAL_NAME }, */
     {"<la", LFT_PEER_LOCAL_IP},
     {"oa", LFT_PEER_LOCAL_IP_OLD_27},
     {"<lp", LFT_PEER_LOCAL_PORT},
