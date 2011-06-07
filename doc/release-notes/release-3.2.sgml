@@ -498,8 +498,6 @@ This section gives a thorough account of those changes in three categories:
 	<tag>logformat</tag>
         <p><em>%&gt;bs</em> Number of HTTP-equivalent message body bytes received from the next hop.
         <p><em>icap::%&gt;bs</em> Number of message body bytes received from the ICAP server.
-	<p><em>%&lt;la</em> Local IP address of the last server or peer connection. Ported from 2.7 where it is called <em>%oa</em>.
-	<p><em>%&lt;lp</em> Local port number of the last server or peer connection.
 	<p><em>%sn</em> Unique sequence number per log line. Ported from 2.7
 	<p><em>%&gt;eui</em> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
 	   Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.
