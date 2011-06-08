@@ -2911,9 +2911,17 @@ DOC_START
 		[http::]Sh	Squid hierarchy status (DEFAULT_PARENT etc)
 		[http::]mt	MIME content type
 		[http::]rm	Request method (GET/POST etc)
-		[http::]ru	Request URL
+		[http::]>rm	Request method from client
+		[http::]<rm	Request method sent to server or peer
+		[http::]ru	Request URL from client (historic, filtered for logging)
+		[http::]>ru	Request URL from client
+		[http::]<ru	Request URL sent to server or peer
 		[http::]rp	Request URL-Path excluding hostname
+		[http::]>rp	Request URL-Path excluding hostname from client
+		[http::]<rp	Request URL-Path excluding hostname sento to server or peer
 		[http::]rv	Request protocol version
+		[http::]>rv	Request protocol version from client
+		[http::]<rv	Request protocol version sent to server or peer
 		[http::]et	Tag returned by external acl
 		[http::]ea	Log string returned by external acl
 		[http::]<st	Sent reply size including HTTP headers

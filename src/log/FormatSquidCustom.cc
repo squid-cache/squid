@@ -655,26 +655,79 @@ Log::Format::SquidCustom(AccessLogEntry * al, customlog * log)
 
             break;
 
-        case LFT_REQUEST_METHOD:
-            out = al->_private.method_str;
-
+        case LFT_CLIENT_REQ_METHOD:
+            if (al->request) {
+                out = al->request->method.image();
+                quote = 1;
+            }
             break;
 
-        case LFT_REQUEST_URI:
-            out = al->url;
-
+        case LFT_CLIENT_REQ_URI:
+            // original client URI
+            if (al->request) {
+                out = urlCanonical(al->request);
+                quote = 1;
+            }
             break;
 
-        case LFT_REQUEST_URLPATH:
+        case LFT_REQUEST_URLPATH_OLD_31:
+        case LFT_CLIENT_REQ_URLPATH:
             if (al->request) {
                 out = al->request->urlpath.termedBuf();
                 quote = 1;
             }
             break;
 
+        case LFT_CLIENT_REQ_VERSION:
+            if (al->request) {
+                snprintf(tmp, sizeof(tmp), "%d.%d", (int) al->request->http_ver.major, (int) al->request->http_ver.minor);
+                out = tmp;
+            }
+            break;
+
+        case LFT_REQUEST_METHOD:
+            out = al->_private.method_str;
+            break;
+
+        case LFT_REQUEST_URI:
+            out = al->url;
+            break;
+
+        case LFT_REQUEST_VERSION_OLD_2X:
         case LFT_REQUEST_VERSION:
             snprintf(tmp, sizeof(tmp), "%d.%d", (int) al->http.version.major, (int) al->http.version.minor);
             out = tmp;
+            break;
+
+        case LFT_SERVER_REQ_METHOD:
+            if (al->adapted_request) {
+                out = al->adapted_request->method.image();
+                quote = 1;
+            }
+            break;
+
+        case LFT_SERVER_REQ_URI:
+            // adapted request URI sent to server/peer
+            if (al->adapted_request) {
+                out = urlCanonical(al->adapted_request);
+                quote = 1;
+            }
+            break;
+
+        case LFT_SERVER_REQ_URLPATH:
+            if (al->adapted_request) {
+                out = al->adapted_request->urlpath.termedBuf();
+                quote = 1;
+            }
+            break;
+
+        case LFT_SERVER_REQ_VERSION:
+            if (al->adapted_request) {
+                snprintf(tmp, sizeof(tmp), "%d.%d",
+                         (int) al->adapted_request->http_ver.major,
+                         (int) al->adapted_request->http_ver.minor);
+                out = tmp;
+            }
             break;
 
         case LFT_REQUEST_SIZE_TOTAL:
