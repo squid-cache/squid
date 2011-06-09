@@ -2541,7 +2541,7 @@ tests_testUfs_LDADD = \
 	anyp/libanyp.la \
 	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
-	auth/libacls.la \
+	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
 	eui/libeui.la \
 	acl/libstate.la \
