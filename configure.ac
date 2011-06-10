@@ -1054,7 +1054,8 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
     windows.h \
     net/if_dl.h \
     sys/sockio.h \
-    sys/param.h,
+    sys/param.h \
+    ws2tcpip.h,
   [], [], [[
 #if HAVE_WINDOWS_H
 #include <windows.h>
