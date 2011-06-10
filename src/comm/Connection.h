@@ -79,7 +79,7 @@ namespace Comm {
  * object for state data. But a semantic equivalent for FD with easily
  * accessible cached properties not requiring repeated complex lookups.
  *
- * Connection properties may be changed until tehe connection is opened.
+ * Connection properties may be changed until the connection is opened.
  * Properties should be considered read-only outside of the Comm layer
  * code once the connection is open.
  *
@@ -176,9 +176,12 @@ inline std::ostream &
 operator << (std::ostream &os, const Comm::Connection &conn)
 {
     os << "FD " << conn.fd << " local=" << conn.local <<
-        " remote=" << conn.remote << " flags=" << conn.flags;
+        " remote=" << conn.remote;
+    if (flags != COMM_UNSET)
+        os << " flags=" << conn.flags;
 #if USE_IDENT
-    os << " IDENT::" << conn.rfc931;
+    if (*conn.rfc931)
+        os << " IDENT::" << conn.rfc931;
 #endif
     return os;
 }
