@@ -61,7 +61,7 @@ public:
 
 private:
     /** List of connections we are holding.
-     * Sorted oldest to newest for most efficient speeds on pop() and findUsable()
+     * Sorted as FIFO list for most efficient speeds on pop() and findUsable()
      * The worst-case pop() and scans occur on timeout and link closure events
      * where timing is less critical. Occasional slow additions are okay.
      */

@@ -135,11 +135,6 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
         for (int index = 0; index < size_; index++)
             theList_[index] = oldList[index];
 
-/* TODO: re-attach to MemPools.
-        if (size_ == PCONN_FDS_SZ)
-            pconn_fds_pool->freeOne(oldList);
-        else
-*/
         delete[] oldList;
     }
 
