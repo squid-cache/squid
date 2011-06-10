@@ -2,7 +2,6 @@
 
 #if USE_AUTH
 #include "auth/State.h"
-#include "cbdata.h"
 
 CBDATA_GLOBAL_TYPE(authenticateStateData);
 

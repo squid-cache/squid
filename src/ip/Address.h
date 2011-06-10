@@ -36,6 +36,7 @@
 #ifndef _SQUID_IP_IPADDRESS_H
 #define _SQUID_IP_IPADDRESS_H
 
+#include "config.h"
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -45,8 +46,11 @@
 #if HAVE_NETINET_IP_H
 #include <netinet/ip.h>
 #endif
-#if _SQUID_MSWIN_
-#include <ws2tcpip.h>
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
+#if HAVE_WINSOCK_H
+#include <winsock.h>
 #endif
 #if HAVE_NETDB_H
 #include <netdb.h>
