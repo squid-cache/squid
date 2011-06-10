@@ -91,6 +91,12 @@ CacheManager::registerProfile(const Mgr::ActionProfile::Pointer &profile)
     }
 }
 
+/**
+ \ingroup CacheManagerAPI
+ * Registers a C-style action, which is implemented as a pointer to a function
+ * taking as argument a pointer to a StoreEntry and returning void.
+ * Implemented via CacheManagerActionLegacy.
+ */
 void
 CacheManager::registerProfile(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic)
 {
