@@ -32,6 +32,7 @@
 #ifndef SQUID_PACKER_H
 #define SQUID_PACKER_H
 
+#include "config.h"
 /* see Packer.cc for description */
 class Packer;
 

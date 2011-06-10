@@ -34,6 +34,9 @@
 #ifndef _SQUID_LOG_TOKENS_H
 #define _SQUID_LOG_TOKENS_H
 
+#include "config.h"
+#include "autoconf.h" /* for some reason it is not picked up on windows */
+
 class StoreEntry;
 
 #define LOG_BUF_SZ (MAX_URL<<2)
