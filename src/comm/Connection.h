@@ -175,8 +175,9 @@ MEMPROXY_CLASS_INLINE(Connection);
 inline std::ostream &
 operator << (std::ostream &os, const Comm::Connection &conn)
 {
-    os << "FD " << conn.fd << " local=" << conn.local <<
-        " remote=" << conn.remote;
+    os << "local=" << conn.local << " remote=" << conn.remote;
+    if (fd >= 0)
+        os << " FD " << conn.fd;
     if (flags != COMM_UNSET)
         os << " flags=" << conn.flags;
 #if USE_IDENT
