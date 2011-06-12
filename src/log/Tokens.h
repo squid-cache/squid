@@ -105,11 +105,27 @@ typedef enum {
 
     LFT_MIME_TYPE,
 
+    /* original Request-Line details receved from client */
+    LFT_CLIENT_REQ_METHOD,
+    LFT_CLIENT_REQ_URI,
+    LFT_CLIENT_REQ_URLPATH,
+    /* LFT_CLIENT_REQ_QUERY, */
+    LFT_CLIENT_REQ_VERSION,
+
+    /* Request-Line details receved from client (legacy, filtered) */
     LFT_REQUEST_METHOD,
     LFT_REQUEST_URI,
-    LFT_REQUEST_URLPATH,
-    /*LFT_REQUEST_QUERY, * // * this is not needed. see strip_query_terms */
+    LFT_REQUEST_URLPATH_OLD_31,
+    /*LFT_REQUEST_QUERY, */
+    LFT_REQUEST_VERSION_OLD_2X,
     LFT_REQUEST_VERSION,
+
+    /* Request-Line details sent to the server/peer */
+    LFT_SERVER_REQ_METHOD,
+    LFT_SERVER_REQ_URI,
+    LFT_SERVER_REQ_URLPATH,
+    /*LFT_SERVER_REQ_QUERY, */
+    LFT_SERVER_REQ_VERSION,
 
     LFT_REQUEST_SIZE_TOTAL,
     /*LFT_REQUEST_SIZE_LINE, */
