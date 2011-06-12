@@ -22,6 +22,10 @@
 extern void (*failure_notify) (const char *);
 #endif
 
+#if !defined(NULL)
+#define NULL 0
+#endif
+
 /*
  * sys/resource.h and sys/time.h are apparently order-dependant.
  */
