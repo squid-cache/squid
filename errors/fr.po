@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-05-04 13:57+1300\n"
-"PO-Revision-Date: 2011-05-26 14:36+0200\n"
+"PO-Revision-Date: 2011-05-30 17:27+0200\n"
 "Last-Translator: Bernard <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
@@ -321,7 +321,6 @@ msgstr "Le fichier a été mis à jour"
 msgid "For Firefox browsers go to: <ul>"
 msgstr "Pour configurer Firefox, allez à : <ul>"
 
-# Suggestion2 ok
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:34
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:34
 msgid "For Internet Explorer browsers go to: <ul>"
@@ -422,7 +421,7 @@ msgstr ""
 #: templates/ERR_INVALID_URL+html.body.div.ul.li.p:33
 msgid "Illegal character in hostname; underscores are not allowed."
 msgstr ""
-"Caractère non valide dans le nom d'hôte; les Caractères soulignés "
+"Caractère non valide dans le nom d'hôte; Les caractères soulignés "
 "(underscores) ne sont pas autorisés."
 
 #: templates/ERR_INVALID_URL+html.body.div.ul.li.p:32
@@ -432,11 +431,10 @@ msgstr "Les double espaces ne sont pas valides dans une adresse URL"
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:30
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:38
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:46
-#, fuzzy
 msgid "In the HTTP proxy box type the proxy name %h and port %b."
 msgstr ""
-"Vous devez indiquer le nom du proxy %h et le port 3128 dans l'onglet proxy "
-"du HTTP"
+"Vous devez indiquer dans la fenêtre du proxy HTTP, le nom du proxy %h et le "
+"port 3128"
 
 #: templates/ERR_INVALID_URL+html.body.div.blockquote.p:23
 msgid "Invalid URL"
@@ -515,9 +513,9 @@ msgid "Request is too large."
 msgstr "La requête est trop volumineuse"
 
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:30
-#, fuzzy
 msgid "Select Auto-detect proxy settings for this network"
-msgstr "Sélectionnez la détection automatique des paramètres"
+msgstr ""
+"Sélectionnez détection automatique des paramètres de proxy pour ce réseau"
 
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:38
 msgid "Select Automatically detect settings"
