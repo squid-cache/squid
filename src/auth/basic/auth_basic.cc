@@ -138,7 +138,7 @@ Auth::Basic::Config::done()
 static void
 authenticateBasicHandleReply(void *data, char *reply)
 {
-    authenticateStateData *r = static_cast<authenticateStateData *>(data);
+    Auth::StateData *r = static_cast<Auth::StateData *>(data);
     BasicAuthQueueNode *tmpnode;
     char *t = NULL;
     void *cbdata;
@@ -188,7 +188,7 @@ authenticateBasicHandleReply(void *data, char *reply)
         basic_auth->auth_queue = tmpnode;
     }
 
-    authenticateStateFree(r);
+    delete r;
 }
 
 void
@@ -416,8 +416,6 @@ Auth::Basic::Config::init(Auth::Config * schemeCfg)
         basicauthenticators->ipc_type = IPC_STREAM;
 
         helperOpenServers(basicauthenticators);
-
-        CBDATA_INIT_TYPE(authenticateStateData);
     }
 }
 
@@ -450,13 +448,8 @@ Auth::Basic::User::submitRequest(AuthUserRequest::Pointer auth_user_request, RH 
 {
     /* mark the user as having verification in progress */
     credentials(Auth::Pending);
-    authenticateStateData *r = NULL;
     char buf[8192];
     char user[1024], pass[1024];
-    r = cbdataAlloc(authenticateStateData);
-    r->handler = handler;
-    r->data = cbdataReference(data);
-    r->auth_user_request = auth_user_request;
     if (static_cast<Auth::Basic::Config*>(config)->utf8) {
         latin1_to_utf8(user, sizeof(user), username());
         latin1_to_utf8(pass, sizeof(pass), passwd);
@@ -467,5 +460,6 @@ Auth::Basic::User::submitRequest(AuthUserRequest::Pointer auth_user_request, RH 
         xstrncpy(pass, rfc1738_escape(passwd), sizeof(pass));
     }
     snprintf(buf, sizeof(buf), "%s %s\n", user, pass);
-    helperSubmit(basicauthenticators, buf, authenticateBasicHandleReply, r);
+    helperSubmit(basicauthenticators, buf, authenticateBasicHandleReply,
+                 new Auth::StateData(auth_user_request, handler, data));
 }
