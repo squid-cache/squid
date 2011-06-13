@@ -9,6 +9,28 @@
 #include "adaptation/Initiate.h"
 #include "base/AsyncJobCalls.h"
 
+namespace Adaptation
+{
+typedef UnaryMemFunT<Initiator, Answer, const Answer &> AnswerDialer;
+/// Calls expectNoConsumption() if noteAdaptationAnswer async call is
+/// scheduled but never fired (e.g., because the HTTP transaction aborts).
+class AnswerCall: public AsyncCallT<AnswerDialer>{
+public:
+    AnswerCall(const char *aName, const AnswerDialer &aDialer) :
+        AsyncCallT<AnswerDialer>(93, 5, aName, aDialer), fired(false) {}
+    virtual void fire() {
+        fired = true; 
+        AsyncCallT<AnswerDialer>::fire();
+    }
+    virtual ~AnswerCall() {
+        if (!fired && dialer.arg1.message != NULL && dialer.arg1.message->body_pipe != NULL)
+            dialer.arg1.message->body_pipe->expectNoConsumption();
+    }
+
+private:
+    bool fired; ///< whether we fired the call
+};
+}
 
 Adaptation::Initiate::Initiate(const char *aTypeName): AsyncJob(aTypeName)
 {
@@ -50,9 +72,9 @@ void Adaptation::Initiate::clearInitiator()
 
 void Adaptation::Initiate::sendAnswer(const Answer &answer)
 {
-    typedef UnaryMemFunT<Initiator, Answer, const Answer &> MyDialer;
-    CallJob(93, 5, __FILE__, __LINE__, "Initiator::noteAdaptationAnswer",
-            MyDialer(theInitiator, &Initiator::noteAdaptationAnswer, answer));
+    AsyncCall::Pointer call = new AnswerCall("Initiator::noteAdaptationAnswer",
+                                             AnswerDialer(theInitiator, &Initiator::noteAdaptationAnswer, answer));
+    ScheduleCallHere(call);
     clearInitiator();
 }
 
