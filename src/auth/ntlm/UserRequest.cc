@@ -92,11 +92,6 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
 
     debugs(29, 8, HERE << "credentials state is '" << user()->credentials() << "'");
 
-    authenticateStateData *r = cbdataAlloc(authenticateStateData);
-    r->handler = handler;
-    r->data = cbdataReference(data);
-    r->auth_user_request = this;
-
     if (user()->credentials() == Auth::Pending) {
         snprintf(buf, sizeof(buf), "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
     } else {
@@ -106,7 +101,8 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
     waiting = 1;
 
     safe_free(client_blob);
-    helperStatefulSubmit(ntlmauthenticators, buf, AuthNTLMUserRequest::HandleReply, r, authserver);
+    helperStatefulSubmit(ntlmauthenticators, buf, AuthNTLMUserRequest::HandleReply,
+                         new Auth::StateData(this, handler, data), authserver);
 }
 
 /**
@@ -229,18 +225,14 @@ AuthNTLMUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, 
 void
 AuthNTLMUserRequest::HandleReply(void *data, void *lastserver, char *reply)
 {
-    authenticateStateData *r = static_cast<authenticateStateData *>(data);
-
-    int valid;
+    Auth::StateData *r = static_cast<Auth::StateData *>(data);
     char *blob;
 
     debugs(29, 8, HERE << "helper: '" << lastserver << "' sent us '" << (reply ? reply : "<NULL>") << "'");
-    valid = cbdataReferenceValid(r->data);
 
-    if (!valid) {
+    if (!cbdataReferenceValid(r->data)) {
         debugs(29, DBG_IMPORTANT, "ERROR: NTLM Authentication invalid callback data. helper '" << lastserver << "'.");
-        cbdataReferenceDone(r->data);
-        authenticateStateFree(r);
+        delete r;
         return;
     }
 
@@ -349,6 +341,5 @@ AuthNTLMUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         lm_request->request = NULL;
     }
     r->handler(r->data, NULL);
-    cbdataReferenceDone(r->data);
-    authenticateStateFree(r);
+    delete r;
 }
