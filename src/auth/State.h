@@ -4,19 +4,36 @@
 #if USE_AUTH
 
 #include "auth/UserRequest.h"
+#include "cbdata.h"
+
+namespace Auth
+{
 
 /**
  * CBDATA state for NTLM, Negotiate, and Digest stateful authentication.
  */
-typedef struct {
+class StateData {
+public:
+    StateData(const AuthUserRequest::Pointer &r, RH *h, void *d) :
+        data(cbdataReference(d)),
+        auth_user_request(r),
+        handler(h)
+    {}
+
+    ~StateData() {
+        auth_user_request = NULL;
+        cbdataReferenceDone(data);
+    }
+
     void *data;
     AuthUserRequest::Pointer auth_user_request;
     RH *handler;
-} authenticateStateData;
 
-extern CBDATA_GLOBAL_TYPE(authenticateStateData);
+private:
+    CBDATA_CLASS2(StateData);
+};
 
-extern void authenticateStateFree(authenticateStateData * r);
+} // namespace Auth
 
 #endif /* USE_AUTH */
 #endif /* __AUTH_AUTHENTICATE_STATE_T__ */
