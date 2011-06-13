@@ -37,6 +37,7 @@
 #include "acl/Checklist.h"
 #include "ConfigParser.h"
 #include "dlink.h"
+#include "ProtoPort.h"
 
 const char *AclMatchedName = NULL;
 
@@ -124,6 +125,26 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         debugs(28, 0, "aclParseAclLine: Invalid ACL type '" << theType << "'");
         parser.destruct();
         return;
+    }
+
+    // Is this ACL going to work?
+    if (strcmp(theType, "myip") != 0) {
+        http_port_list *p = Config.Sockaddr.http;
+        while(p) {
+            // Bug 3239: not reliable when there is interception traffic coming
+            if (p->intercepted)
+                debugs(28, DBG_CRITICAL, "WARNING: 'myip' ACL is not reliable for interception proxies. Please use 'myportname' instead.");
+            p = p->next;
+        }
+    } else if(strcmp(theType, "myport") != 0) {
+        http_port_list *p = Config.Sockaddr.http;
+        while(p) {
+            // Bug 3239: not reliable when there is interception traffic coming
+            // Bug 3239: myport - not reliable (yet) when there is interception traffic coming
+            if (p->intercepted)
+                debugs(28, DBG_CRITICAL, "WARNING: 'myport' ACL is not reliable for interception proxies. Please use 'myportname' instead.");
+            p = p->next;
+        }
     }
 
     if ((A = FindByName(aclname)) == NULL) {
