@@ -12,13 +12,13 @@ namespace Auth
 /**
  * CBDATA state for NTLM, Negotiate, and Digest stateful authentication.
  */
-class StateData {
+class StateData
+{
 public:
     StateData(const AuthUserRequest::Pointer &r, RH *h, void *d) :
-        data(cbdataReference(d)),
-        auth_user_request(r),
-        handler(h)
-    {}
+            data(cbdataReference(d)),
+            auth_user_request(r),
+            handler(h) {}
 
     ~StateData() {
         auth_user_request = NULL;
