@@ -33,6 +33,9 @@
  */
 #ifndef SQUID_OS_MSWIN_H
 #define SQUID_OS_MSWIN_H
+
+#include "config.h"
+
 #if _SQUID_WINDOWS_
 
 #if HAVE_FCNTL_H
@@ -803,6 +806,16 @@ SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
 #define PRINTF_FORMAT_ARG1
 #define PRINTF_FORMAT_ARG2
 #define PRINTF_FORMAT_ARG3
+#endif
+
+#if !HAVE_SYSLOG
+/* let's disable for now */
+#define syslog(X,Y,...) ;
+#define LOG_ALERT 1
+#define LOG_NOTICE 2
+#define LOG_CONS 3
+#define LOG_LOCAL4 4
+#define LOG_PID -1
 #endif
 
 

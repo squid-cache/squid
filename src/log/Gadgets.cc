@@ -1,4 +1,5 @@
 #include "config.h"
+#include "compat/compat.h"
 #include "log/Gadgets.h"
 
 static const char c2x[] =
