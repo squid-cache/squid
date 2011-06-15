@@ -102,7 +102,7 @@ public:
      * This means any proxy_auth, external_acl, DNS lookups, Ident lookups etc
      * which have not already been performed and cached will not be checked.
      *
-     * If there is no access list to check the default is to return DENIED.
+     * If there is no access list to check the default is to return ALLOWED.
      * However callers should perform their own check and default based on local
      * knowledge of the ACL usage rather than depend on this default.
      * That will also save on work setting up ACLChecklist fields for a no-op.
