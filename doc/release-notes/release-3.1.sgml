@@ -231,7 +231,7 @@ Updates can be downloaded from <url url="http://www.squid-cache.org/Versions/lan
 
 <sect1>Connection Pinning (for NTLM Auth Passthrough)
 
-<p>Details in <url url="http://wiki.squid-cache.org/Features/ConnPinn" name="The Squid wiki">
+<p>Details in <url url="http://wiki.squid-cache.org/Features/ConnPin" name="The Squid wiki">
 
 <p>Squid 3.1 includes the much asked for Connection Pinning feature from Squid 2.6.
 
