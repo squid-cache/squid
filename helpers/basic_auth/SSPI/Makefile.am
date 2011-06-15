@@ -13,7 +13,7 @@ basic_sspi_auth_SOURCES = \
 basic_sspi_auth_CXXFLAGS = -Wl,--enable-auto-import
 basic_sspi_auth_LDADD = \
 	$(COMPAT_LIB) \
-	-L../../../lib \
+	-L$(top_builddir)/lib \
 	-lsspwin32 \
 	-lmiscencoding \
 	-lnetapi32 -ladvapi32 \
