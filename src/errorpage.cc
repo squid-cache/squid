@@ -420,6 +420,7 @@ TemplateFile::loadFor(HttpRequest *request)
 {
     String hdr;
 
+#if USE_ERR_LOCALES
     if (loaded()) // already loaded?
         return true;
 
@@ -449,6 +450,7 @@ TemplateFile::loadFor(HttpRequest *request)
             debugs(4, DBG_IMPORTANT, "WARNING: Error Pages Missing Language: " << lang);
         }
     }
+#endif
 
     return loaded();
 }
