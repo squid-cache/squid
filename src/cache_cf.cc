@@ -2625,6 +2625,11 @@ free_string(char **var)
 void
 parse_eol(char *volatile *var)
 {
+    if (!var) {
+        self_destruct();
+        return;
+    }
+
     unsigned char *token = (unsigned char *) strtok(NULL, null_string);
     safe_free(*var);
 
