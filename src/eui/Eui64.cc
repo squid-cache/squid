@@ -36,7 +36,7 @@ Eui::Eui64::encode(char *buf, const int len)
 
 // return binary representation of the EUI
 bool
-Eui::Eui64::lookup(Ip::Address &c)
+Eui::Eui64::lookup(const Ip::Address &c)
 {
     /* try to short-circuit slow OS lookups by using SLAAC data */
     if (lookupSlaac(c)) return true;
@@ -46,7 +46,7 @@ Eui::Eui64::lookup(Ip::Address &c)
 }
 
 bool
-Eui::Eui64::lookupSlaac(Ip::Address &c)
+Eui::Eui64::lookupSlaac(const Ip::Address &c)
 {
     /* RFC 4291 Link-Local unicast addresses which contain SLAAC - usually trustable. */
     if (c.IsSiteLocal6() && c.IsSlaac() ) {
@@ -63,7 +63,7 @@ Eui::Eui64::lookupSlaac(Ip::Address &c)
 
 // return binary representation of the EUI
 bool
-Eui::Eui64::lookupNdp(Ip::Address &c)
+Eui::Eui64::lookupNdp(const Ip::Address &c)
 {
 #if 0 /* no actual lookup coded yet */
 

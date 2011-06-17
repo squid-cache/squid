@@ -8,6 +8,7 @@
 #include "config.h"
 #include "base/TextException.h"
 #include "CommCalls.h"
+#include "comm.h"
 #include "ipc/Port.h"
 #include "snmp_core.h"
 #include "snmp/Forwarder.h"

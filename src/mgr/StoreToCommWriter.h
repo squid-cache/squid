@@ -9,6 +9,7 @@
 #define SQUID_MGR_STORE_TO_COMM_WRITER_H
 
 #include "base/AsyncJob.h"
+#include "comm/forward.h"
 #include "mgr/Action.h"
 #include "StoreIOBuffer.h"
 
@@ -25,7 +26,7 @@ namespace Mgr
 class StoreToCommWriter: public AsyncJob
 {
 public:
-    StoreToCommWriter(int aFd, StoreEntry *anEntry);
+    StoreToCommWriter(const Comm::ConnectionPointer &conn, StoreEntry *anEntry);
     virtual ~StoreToCommWriter();
 
 protected:
@@ -53,7 +54,7 @@ protected:
     void close();
 
 protected:
-    int fd; ///< HTTP client descriptor
+    Comm::ConnectionPointer clientConnection; ///< HTTP client descriptor
 
     StoreEntry* entry; ///< store entry with the cache manager response
     store_client* sc; ///< our registration with the store

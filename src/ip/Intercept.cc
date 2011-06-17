@@ -31,6 +31,7 @@
  *
  */
 #include "config.h"
+#include "comm/Connection.h"
 #include "ip/Intercept.h"
 #include "fde.h"
 
@@ -96,104 +97,90 @@ Ip::Intercept Ip::Interceptor;
 void
 Ip::Intercept::StopTransparency(const char *str)
 {
-    if (transparent_active) {
+    if (transparentActive_) {
         debugs(89, DBG_IMPORTANT, "Stopping full transparency: " << str);
-        transparent_active = 0;
+        transparentActive_ = 0;
     }
 }
 
 void
 Ip::Intercept::StopInterception(const char *str)
 {
-    if (intercept_active) {
+    if (interceptActive_) {
         debugs(89, DBG_IMPORTANT, "Stopping IP interception: " << str);
-        intercept_active = 0;
+        interceptActive_ = 0;
     }
 }
 
-int
-Ip::Intercept::NetfilterInterception(int fd, const Ip::Address &me, Ip::Address &dst, int silent)
+bool
+Ip::Intercept::NetfilterInterception(const Comm::ConnectionPointer &newConn, int silent)
 {
 #if LINUX_NETFILTER
-    struct addrinfo *lookup = NULL;
-
-    dst.GetAddrInfo(lookup,AF_INET);
+    struct sockaddr_in lookup;
+    socklen_t len = sizeof(struct sockaddr_in);
+    newConn->local.GetSockAddr(lookup);
 
     /** \par
      * Try NAT lookup for REDIRECT or DNAT targets. */
-    if ( getsockopt(fd, IPPROTO_IP, SO_ORIGINAL_DST, lookup->ai_addr, &lookup->ai_addrlen) != 0) {
+    if ( getsockopt(newConn->fd, IPPROTO_IP, SO_ORIGINAL_DST, &lookup, &len) != 0) {
         if (!silent) {
-            debugs(89, DBG_IMPORTANT, HERE << " NF getsockopt(SO_ORIGINAL_DST) failed on FD " << fd << ": " << xstrerror());
-            last_reported = squid_curtime;
+            debugs(89, DBG_IMPORTANT, HERE << " NF getsockopt(SO_ORIGINAL_DST) failed on " << newConn << ": " << xstrerror());
+            lastReported_ = squid_curtime;
         }
+        debugs(89, 9, HERE << "address: " << newConn);
+        return false;
     } else {
-        dst = *lookup;
+        newConn->local = lookup;
+        debugs(89, 5, HERE << "address NAT: " << newConn);
+        return true;
     }
-
-    Address::FreeAddrInfo(lookup);
-
-    if (me != dst) {
-        debugs(89, 5, HERE << "address NAT: me= " << me << ", dst= " << dst);
-        return 0;
-    }
-
-    debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
 #endif
-    return -1;
+    return false;
 }
 
-int
-Ip::Intercept::NetfilterTransparent(int fd, const Ip::Address &me, Ip::Address &client, int silent)
+bool
+Ip::Intercept::NetfilterTransparent(const Comm::ConnectionPointer &newConn, int silent)
 {
 #if LINUX_NETFILTER
-
     /* Trust the user configured properly. If not no harm done.
      * We will simply attempt a bind outgoing on our own IP.
      */
-    if (fd_table[fd].flags.transparent) {
-        client.SetPort(0); // allow random outgoing port to prevent address clashes
-        debugs(89, 5, HERE << "address TPROXY: me= " << me << ", client= " << client);
-        return 0;
-    }
-
-    debugs(89, 9, HERE << "address: me= " << me << ", client= " << client);
+    newConn->remote.SetPort(0); // allow random outgoing port to prevent address clashes
+    debugs(89, 5, HERE << "address TPROXY: " << newConn);
+    return true;
+#else
+    return false;
 #endif
-    return -1;
 }
 
-int
-Ip::Intercept::IpfwInterception(int fd, const Ip::Address &me, Ip::Address &dst, int silent)
+bool
+Ip::Intercept::IpfwInterception(const Comm::ConnectionPointer &newConn, int silent)
 {
 #if IPFW_TRANSPARENT
-    struct addrinfo *lookup = NULL;
-
-    dst.GetAddrInfo(lookup,AF_INET);
+    struct sockaddr_storage lookup;
+    socklen_t len = sizeof(struct sockaddr_storage);
+    newConn->local.GetSockAddr(lookup, AF_INET);
 
     /** \par
      * Try lookup for IPFW interception. */
-    if ( getsockname(fd, lookup->ai_addr, &lookup->ai_addrlen) != 0 ) {
+    if ( getsockname(newConn->fd, (struct sockaddr*)&lookup, &len) != 0 ) {
         if ( !silent ) {
             debugs(89, DBG_IMPORTANT, HERE << " IPFW getsockname(...) failed: " << xstrerror());
-            last_reported = squid_curtime;
+            lastReported_ = squid_curtime;
         }
+        debugs(89, 9, HERE << "address: " << newConn);
+        return false;
     } else {
-        dst = *lookup;
+        newConn->local = lookup;
+        debugs(89, 5, HERE << "address NAT: " << newConn);
+        return true;
     }
-
-    Address::FreeAddrInfo(lookup);
-
-    if (me != dst) {
-        debugs(89, 5, HERE << "address NAT: me= " << me << ", dst= " << dst);
-        return 0;
-    }
-
-    debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
 #endif
-    return -1;
+    return false;
 }
 
-int
-Ip::Intercept::IpfInterception(int fd, const Ip::Address &me, Ip::Address &client, Ip::Address &dst, int silent)
+bool
+Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silent)
 {
 #if IPF_TRANSPARENT  /* --enable-ipf-transparent */
 
@@ -215,10 +202,10 @@ Ip::Intercept::IpfInterception(int fd, const Ip::Address &me, Ip::Address &clien
     obj.ipfo_offset = 0;
 #endif
 
-    natLookup.nl_inport = htons(me.GetPort());
-    natLookup.nl_outport = htons(dst.GetPort());
-    me.GetInAddr(natLookup.nl_inip);
-    dst.GetInAddr(natLookup.nl_outip);
+    natLookup.nl_inport = htons(newConn->local.GetPort());
+    newConn->local.GetInAddr(natLookup.nl_inip);
+    natLookup.nl_outport = htons(neConn->remote.GetPort());
+    newConn->remote.GetInAddr(natLookup.nl_outip);
     natLookup.nl_flags = IPN_TCP;
 
     if (natfd < 0) {
@@ -237,8 +224,8 @@ Ip::Intercept::IpfInterception(int fd, const Ip::Address &me, Ip::Address &clien
     if (natfd < 0) {
         if (!silent) {
             debugs(89, DBG_IMPORTANT, HERE << "NAT open failed: " << xstrerror());
-            last_reported = squid_curtime;
-            return -1;
+            lastReported_ = squid_curtime;
+            return false;
         }
     }
 
@@ -264,33 +251,28 @@ Ip::Intercept::IpfInterception(int fd, const Ip::Address &me, Ip::Address &clien
         if (errno != ESRCH) {
             if (!silent) {
                 debugs(89, DBG_IMPORTANT, HERE << "NAT lookup failed: ioctl(SIOCGNATL)");
-                last_reported = squid_curtime;
+                lastReported_ = squid_curtime;
             }
 
             close(natfd);
             natfd = -1;
         }
 
-        return -1;
+        debugs(89, 9, HERE << "address: " << newConn);
+        return false;
     } else {
-        if (client != natLookup.nl_realip) {
-            client = natLookup.nl_realip;
-            client.SetPort(ntohs(natLookup.nl_realport));
-        }
-        // else. we already copied it.
-
-        debugs(89, 5, HERE << "address NAT: me= " << me << ", client= " << client << ", dst= " << dst);
-        return 0;
+        newConn->local = natLookup.nl_realip;
+        newConn->local.SetPort(ntohs(natLookup.nl_realport));
+        debugs(89, 5, HERE << "address NAT: " << newConn);
+        return true;
     }
 
-    debugs(89, 9, HERE << "address: me= " << me << ", client= " << client << ", dst= " << dst);
-
 #endif /* --enable-ipf-transparent */
-    return -1;
+    return false;
 }
 
-int
-Ip::Intercept::PfInterception(int fd, const Ip::Address &me, Ip::Address &client, Ip::Address &dst, int silent)
+bool
+Ip::Intercept::PfInterception(const Comm::ConnectionPointer &newConn, int silent)
 {
 #if PF_TRANSPARENT  /* --enable-pf-transparent */
 
@@ -303,17 +285,17 @@ Ip::Intercept::PfInterception(int fd, const Ip::Address &me, Ip::Address &client
     if (pffd < 0) {
         if (!silent) {
             debugs(89, DBG_IMPORTANT, HERE << "PF open failed: " << xstrerror());
-            last_reported = squid_curtime;
+            lastReported_ = squid_curtime;
         }
-        return -1;
+        return false;
     }
 
     memset(&nl, 0, sizeof(struct pfioc_natlook));
-    dst.GetInAddr(nl.saddr.v4);
-    nl.sport = htons(dst.GetPort());
+    newConn->remote.GetInAddr(nl.saddr.v4);
+    nl.sport = htons(newConn->remote.GetPort());
 
-    me.GetInAddr(nl.daddr.v4);
-    nl.dport = htons(me.GetPort());
+    newConn->local.GetInAddr(nl.daddr.v4);
+    nl.dport = htons(newConn->local.GetPort());
 
     nl.af = AF_INET;
     nl.proto = IPPROTO_TCP;
@@ -323,31 +305,26 @@ Ip::Intercept::PfInterception(int fd, const Ip::Address &me, Ip::Address &client
         if (errno != ENOENT) {
             if (!silent) {
                 debugs(89, DBG_IMPORTANT, HERE << "PF lookup failed: ioctl(DIOCNATLOOK)");
-                last_reported = squid_curtime;
+                lastReported_ = squid_curtime;
             }
             close(pffd);
             pffd = -1;
         }
+        debugs(89, 9, HERE << "address: " << newConn);
+        return false;
     } else {
-        int natted = (client != nl.rdaddr.v4);
-        client = nl.rdaddr.v4;
-        client.SetPort(ntohs(nl.rdport));
-
-        if (natted) {
-            debugs(89, 5, HERE << "address NAT: me= " << me << ", client= " << client << ", dst= " << dst);
-            return 0;
-        }
+        newConn->local = nl.rdaddr.v4;
+        newConn->local.SetPort(ntohs(nl.rdport));
+        debugs(89, 5, HERE << "address NAT: " << newConn);
+        return true;
     }
 
-    debugs(89, 9, HERE << "address: me= " << me << ", client= " << client << ", dst= " << dst);
-
 #endif /* --enable-pf-transparent */
-    return -1;
+    return false;
 }
 
-
-int
-Ip::Intercept::NatLookup(int fd, const Ip::Address &me, const Ip::Address &peer, Ip::Address &client, Ip::Address &dst)
+bool
+Ip::Intercept::Lookup(const Comm::ConnectionPointer &newConn, const Comm::ConnectionPointer &listenConn)
 {
     /* --enable-linux-netfilter    */
     /* --enable-ipfw-transparent   */
@@ -355,44 +332,42 @@ Ip::Intercept::NatLookup(int fd, const Ip::Address &me, const Ip::Address &peer,
     /* --enable-pf-transparent     */
 #if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT || PF_TRANSPARENT
 
-    client = me;
-    dst = peer;
-
 #if 0
     // Crop interception errors down to one per minute.
-    int silent = (squid_curtime - last_reported > 60 ? 0 : 1);
+    int silent = (squid_curtime - lastReported_ > 60 ? 0 : 1);
 #else
     // Show all interception errors.
     int silent = 0;
 #endif
 
-    debugs(89, 5, HERE << "address BEGIN: me= " << me << ", client= " << client <<
-           ", dst= " << dst << ", peer= " << peer);
+    debugs(89, 5, HERE << "address BEGIN: me/client= " << newConn->local << ", destination/me= " << newConn->remote);
+
+    newConn->flags |= (listenConn->flags & (COMM_TRANSPARENT|COMM_INTERCEPTION));
 
     /* NP: try TPROXY first, its much quieter than NAT when non-matching */
-    if (transparent_active) {
-        if ( NetfilterTransparent(fd, me, dst, silent) == 0) return 0;
+    if (transparentActive_ && listenConn->flags&COMM_TRANSPARENT) {
+        if (NetfilterTransparent(newConn, silent)) return true;
     }
 
     /* NAT is only available in IPv4 */
-    if ( !me.IsIPv4()   ) return -1;
-    if ( !peer.IsIPv4() ) return -1;
+    if ( !newConn->local.IsIPv4()  ) return false;
+    if ( !newConn->remote.IsIPv4() ) return false;
 
-    if (intercept_active) {
+    if (interceptActive_ && listenConn->flags&COMM_INTERCEPTION) {
         /* NAT methods that use sock-opts to return client address */
-        if ( NetfilterInterception(fd, me, client, silent) == 0) return 0;
-        if ( IpfwInterception(fd, me, client, silent) == 0) return 0;
+        if (NetfilterInterception(newConn, silent)) return true;
+        if (IpfwInterception(newConn, silent)) return true;
 
         /* NAT methods that use ioctl to return client address AND destination address */
-        if ( PfInterception(fd, me, client, dst, silent) == 0) return 0;
-        if ( IpfInterception(fd, me, client, dst, silent) == 0) return 0;
+        if (PfInterception(newConn, silent)) return true;
+        if (IpfInterception(newConn, silent)) return true;
     }
 
 #else /* none of the transparent options configured */
     debugs(89, DBG_IMPORTANT, "WARNING: transparent proxying not supported");
 #endif
 
-    return -1;
+    return false;
 }
 
 bool

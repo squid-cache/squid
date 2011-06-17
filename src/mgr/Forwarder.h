@@ -8,6 +8,7 @@
 #ifndef SQUID_MGR_FORWARDER_H
 #define SQUID_MGR_FORWARDER_H
 
+#include "comm/forward.h"
 #include "ipc/Forwarder.h"
 #include "mgr/ActionParams.h"
 
@@ -27,7 +28,7 @@ namespace Mgr
 class Forwarder: public Ipc::Forwarder
 {
 public:
-    Forwarder(int aFd, const ActionParams &aParams, HttpRequest* aRequest,
+    Forwarder(const Comm::ConnectionPointer &aConn, const ActionParams &aParams, HttpRequest* aRequest,
               StoreEntry* anEntry);
     virtual ~Forwarder();
 
@@ -46,7 +47,7 @@ private:
 private:
     HttpRequest* httpRequest; ///< HTTP client request for detailing errors
     StoreEntry* entry; ///< Store entry expecting the response
-    int fd; ///< HTTP client connection descriptor
+    Comm::ConnectionPointer conn; ///< HTTP client connection descriptor
     AsyncCall::Pointer closer; ///< comm_close handler for the HTTP connection
 
     CBDATA_CLASS2(Forwarder);

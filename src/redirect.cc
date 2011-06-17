@@ -37,6 +37,7 @@
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
+#include "comm/Connection.h"
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "fde.h"
@@ -155,13 +156,13 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
             r->client_ident = http->request->extacl_user.termedBuf();
         }
 
-    if (!r->client_ident && (conn != NULL && conn->rfc931[0]))
-        r->client_ident = conn->rfc931;
+    if (!r->client_ident && conn != NULL && conn->clientConnection != NULL && conn->clientConnection->rfc931[0])
+        r->client_ident = conn->clientConnection->rfc931;
 
 #if USE_SSL
 
-    if (!r->client_ident && conn != NULL)
-        r->client_ident = sslGetUserEmail(fd_table[conn->fd].ssl);
+    if (!r->client_ident && conn != NULL && Comm::IsConnOpen(conn->clientConnection))
+        r->client_ident = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl);
 
 #endif
 
@@ -202,7 +203,8 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
         tmpnoaddr.SetNoAddr();
         repContext->setReplyToError(ERR_GATEWAY_FAILURE, status,
                                     http->request->method, NULL,
-                                    http->getConn() != NULL ? http->getConn()->peer : tmpnoaddr,
+                                    http->getConn() != NULL && http->getConn()->clientConnection != NULL ?
+                                    http->getConn()->clientConnection->remote : tmpnoaddr,
                                     http->request,
                                     NULL,
 #if USE_AUTH

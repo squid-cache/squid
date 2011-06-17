@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "comm.h"
+#include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "CommRead.h"
 #include "fde.h"
@@ -61,20 +62,20 @@ DeferredReadManager::kickReads(int const count)
 }
 
 void
-comm_read(int fd, char *buf, int size, IOCB *handler, void *handler_data)
+comm_read(const Comm::ConnectionPointer &conn, char *buf, int size, IOCB *handler, void *handler_data)
 {
     fatal ("Not implemented");
 }
 
 void
-comm_read(int, char*, int, AsyncCall::Pointer &callback)
+comm_read(const Comm::ConnectionPointer &conn, char*, int, AsyncCall::Pointer &callback)
 {
     fatal ("Not implemented");
 }
 
 /* should be in stub_CommRead */
 #include "CommRead.h"
-CommRead::CommRead (int fd, char *buf, int len, AsyncCall::Pointer &callback)
+CommRead::CommRead(const Comm::ConnectionPointer &, char *buf, int len, AsyncCall::Pointer &callback)
 {
     fatal ("Not implemented");
 }
@@ -90,6 +91,7 @@ commSetCloseOnExec(int fd)
     /* for tests... ignore */
 }
 
+#if 0
 void
 Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
 {
@@ -101,6 +103,7 @@ Comm::QuickPollRequired()
 {
     /* for tests ... ignore */
 }
+#endif
 
 int
 ignoreErrno(int ierrno)
@@ -125,15 +128,6 @@ commSetNonBlocking(int fd)
 
 int
 commUnsetNonBlocking(int fd)
-{
-    fatal ("Not implemented");
-    return -1;
-}
-
-/* bah, cheating on stub count */
-
-pid_t
-ipcCreate(int type, const char *prog, const char *const args[], const char *name, Ip::Address &local_addr, int *rfd, int *wfd, void **hIpc)
 {
     fatal ("Not implemented");
     return -1;
@@ -173,11 +167,6 @@ comm_open_uds(int sock_type, int proto, struct sockaddr_un* addr, int flags)
 
 void
 comm_write(int fd, const char *buf, int size, AsyncCall::Pointer &callback, FREE * free_func)
-{
-    fatal ("Not implemented");
-}
-
-ConnectionDetail::ConnectionDetail() : me(), peer()
 {
     fatal ("Not implemented");
 }

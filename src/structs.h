@@ -439,6 +439,7 @@ struct SquidConfig {
     } onoff;
 
     int forward_max_tries;
+    int connect_retries;
 
     class ACL *aclList;
 
@@ -516,7 +517,6 @@ struct SquidConfig {
     char *errorStylesheet;
 
     struct {
-        int maxtries;
         int onerror;
     } retry;
 
@@ -777,14 +777,6 @@ struct _http_state_flags {
     unsigned int sentLastChunk:1; ///< do not try to write last-chunk again
 };
 
-struct _ipcache_addrs {
-    Ip::Address *in_addrs;
-    unsigned char *bad_mask;
-    unsigned char count;
-    unsigned char cur;
-    unsigned char badcount;
-};
-
 struct _domain_ping {
     char *domain;
     int do_ping;		/* boolean */
@@ -920,7 +912,7 @@ struct peer {
     int n_addresses;
     int rr_count;
     peer *next;
-    int test_fd;
+    int testing_now;
 
     struct {
         unsigned int hash;

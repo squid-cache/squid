@@ -393,7 +393,7 @@ peerDigestRequest(PeerDigest * pd)
     /* push towards peer cache */
     debugs(72, 3, "peerDigestRequest: forwarding to fwdStart...");
 
-    FwdState::fwdStart(-1, e, req);
+    FwdState::fwdStart(Comm::ConnectionPointer(), e, req);
 
     tempBuffer.offset = 0;
 

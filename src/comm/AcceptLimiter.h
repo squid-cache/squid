@@ -14,7 +14,8 @@ class TcpAcceptor;
  * But when doing so there were not enough FD available to handle the
  * new connection. These handlers are awaiting some FD to become free.
  *
- * defer - used only by Comm layer ListenStateData adding themselves when FD are limited.
+ * defer - used only by Comm layer ConnAcceptor adding themselves when FD are limited.
+ * removeDead - used only by Comm layer ConnAcceptor to remove themselves when dying.
  * kick - used by Comm layer when FD are closed.
  */
 class AcceptLimiter

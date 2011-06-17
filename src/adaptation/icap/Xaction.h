@@ -34,7 +34,7 @@
 #ifndef SQUID_ICAPXACTION_H
 #define SQUID_ICAPXACTION_H
 
-#include "comm.h"
+#include "comm/forward.h"
 #include "CommCalls.h"
 #include "MemBuf.h"
 #include "adaptation/icap/ServiceRep.h"
@@ -102,6 +102,7 @@ protected:
     void openConnection();
     void closeConnection();
     void dieOnConnectionFailure();
+    bool haveConnection() const;
 
     void scheduleRead();
     void scheduleWrite(MemBuf &buf);
@@ -146,7 +147,7 @@ private:
     void maybeLog();
 
 protected:
-    int connection;     // FD of the ICAP server connection
+    Comm::ConnectionPointer connection;     ///< ICAP server connection
     Adaptation::Icap::ServiceRep::Pointer theService;
 
     /*

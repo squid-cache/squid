@@ -9,6 +9,7 @@
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
 #include "CommCalls.h"
+#include "comm/Connection.h"
 #include "errorpage.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -22,13 +23,13 @@
 CBDATA_NAMESPACED_CLASS_INIT(Mgr, Forwarder);
 
 
-Mgr::Forwarder::Forwarder(int aFd, const ActionParams &aParams,
+Mgr::Forwarder::Forwarder(const Comm::ConnectionPointer &aConn, const ActionParams &aParams,
                           HttpRequest* aRequest, StoreEntry* anEntry):
-        Ipc::Forwarder(new Request(KidIdentifier, 0, aFd, aParams), 10),
-        httpRequest(aRequest), entry(anEntry), fd(aFd)
+        Ipc::Forwarder(new Request(KidIdentifier, 0, aConn, aParams), 10),
+        httpRequest(aRequest), entry(anEntry), conn(aConn)
 {
-    debugs(16, 5, HERE << "FD " << fd);
-    Must(fd >= 0);
+    debugs(16, 5, HERE << conn);
+    Must(Comm::IsConnOpen(conn));
     Must(httpRequest != NULL);
     Must(entry != NULL);
 
@@ -38,7 +39,7 @@ Mgr::Forwarder::Forwarder(int aFd, const ActionParams &aParams,
 
     closer = asyncCall(16, 5, "Mgr::Forwarder::noteCommClosed",
                        CommCbMemFunT<Forwarder, CommCloseCbParams>(this, &Forwarder::noteCommClosed));
-    comm_add_close_handler(fd, closer);
+    comm_add_close_handler(conn->fd, closer);
 }
 
 Mgr::Forwarder::~Forwarder()
@@ -57,14 +58,14 @@ Mgr::Forwarder::~Forwarder()
 void
 Mgr::Forwarder::cleanup()
 {
-    if (fd >= 0) {
+    if (Comm::IsConnOpen(conn)) {
         if (closer != NULL) {
-            comm_remove_close_handler(fd, closer);
+            comm_remove_close_handler(conn->fd, closer);
             closer = NULL;
         }
-        comm_close(fd);
-        fd = -1;
+        conn->close();
     }
+    conn = NULL;
 }
 
 void
@@ -85,7 +86,7 @@ Mgr::Forwarder::handleTimeout()
 void
 Mgr::Forwarder::handleException(const std::exception& e)
 {
-    if (entry != NULL && httpRequest != NULL && fd >= 0)
+    if (entry != NULL && httpRequest != NULL && Comm::IsConnOpen(conn))
         sendError(errorCon(ERR_INVALID_RESP, HTTP_INTERNAL_SERVER_ERROR, httpRequest));
     Ipc::Forwarder::handleException(e);
 }
@@ -95,8 +96,7 @@ void
 Mgr::Forwarder::noteCommClosed(const CommCloseCbParams& params)
 {
     debugs(16, 5, HERE);
-    Must(fd == params.fd);
-    fd = -1;
+    conn = NULL; // needed?
     mustStop("commClosed");
 }
 

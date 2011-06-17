@@ -62,6 +62,7 @@
 #include "client_side_reply.h"
 #include "client_side_request.h"
 #include "ClientRequestContext.h"
+#include "comm/Connection.h"
 #include "comm/Write.h"
 #include "compat/inet_pton.h"
 #include "fde.h"
@@ -175,6 +176,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 {
     start_time = current_time;
     setConn(aConn);
+    clientConnection = aConn->clientConnection;
     dlinkAdd(this, &active, &ClientActiveRequests);
 #if USE_ADAPTATION
     request_satisfaction_mode = false;
@@ -291,6 +293,8 @@ ClientHttpRequest::~ClientHttpRequest()
 
     if (calloutContext)
         delete calloutContext;
+
+    clientConnection = NULL;
 
     if (conn_)
         cbdataReferenceDone(conn_);
@@ -560,7 +564,7 @@ ClientRequestContext::clientAccessCheck2()
         acl_checklist = clientAclChecklistCreate(Config.accessList.adapted_http, http);
         acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
     } else {
-        debugs(85, 2, HERE << "No adapted_http_access configuration.");
+        debugs(85, 2, HERE << "No adapted_http_access configuration. default: ALLOW");
         clientAccessCheckDone(ACCESS_ALLOWED);
     }
 }
@@ -646,7 +650,7 @@ ClientRequestContext::clientAccessCheckDone(int answer)
         tmpnoaddr.SetNoAddr();
         repContext->setReplyToError(page_id, status,
                                     http->request->method, NULL,
-                                    http->getConn() != NULL ? http->getConn()->peer : tmpnoaddr,
+                                    http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmpnoaddr,
                                     http->request,
                                     NULL,
 #if USE_AUTH
@@ -690,9 +694,10 @@ ClientRequestContext::adaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
     Adaptation::Icap::History::Pointer ih = http->request->icapHistory();
     if (ih != NULL) {
         if (http->getConn() != NULL) {
-            ih->rfc931 = http->getConn()->rfc931;
+            ih->rfc931 = http->getConn()->clientConnection->rfc931;
 #if USE_SSL
-            ih->ssluser = sslGetUserEmail(fd_table[http->getConn()->fd].ssl);
+            assert(http->getConn()->clientConnection != NULL);
+            ih->ssluser = sslGetUserEmail(fd_table[http->getConn()->clientConnection->fd].ssl);
 #endif
         }
         ih->log_uri = http->log_uri;
@@ -800,7 +805,7 @@ clientCheckPinning(ClientHttpRequest * http)
 
     request->flags.connection_auth_disabled = http_conn->port->connection_auth_disabled;
     if (!request->flags.connection_auth_disabled) {
-        if (http_conn->pinning.fd != -1) {
+        if (Comm::IsConnOpen(http_conn->pinning.serverConnection)) {
             if (http_conn->pinning.auth) {
                 request->flags.connection_auth = 1;
                 request->flags.auth = 1;
@@ -1072,8 +1077,8 @@ ClientRequestContext::clientRedirectDone(char *result)
 
     /* FIXME PIPELINE: This is innacurate during pipelining */
 
-    if (http->getConn() != NULL)
-        fd_note(http->getConn()->fd, http->uri);
+    if (http->getConn() != NULL && Comm::IsConnOpen(http->getConn()->clientConnection))
+        fd_note(http->getConn()->clientConnection->fd, http->uri);
 
     assert(http->uri);
 
@@ -1212,7 +1217,7 @@ ClientHttpRequest::sslBumpNeeded(bool isNeeded)
 
 // called when comm_write has completed
 static void
-SslBumpEstablish(int, char *, size_t, comm_err_t errflag, int, void *data)
+SslBumpEstablish(const Comm::ConnectionPointer &, char *, size_t, comm_err_t errflag, int, void *data)
 {
     ClientHttpRequest *r = static_cast<ClientHttpRequest*>(data);
     debugs(85, 5, HERE << "responded to CONNECT: " << r << " ? " << errflag);
@@ -1230,7 +1235,7 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
 
     if (errflag) {
         debugs(85, 3, HERE << "CONNECT response failure in SslBump: " << errflag);
-        comm_close(getConn()->fd);
+        getConn()->clientConnection->close();
         return;
     }
 
@@ -1240,18 +1245,15 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
 void
 ClientHttpRequest::sslBumpStart()
 {
-    debugs(85, 5, HERE << "ClientHttpRequest::sslBumpStart");
-
+    debugs(85, 5, HERE << "Confirming CONNECT tunnel on FD " << getConn()->clientConnection);
     // send an HTTP 200 response to kick client SSL negotiation
-    const int fd = getConn()->fd;
-    debugs(33, 7, HERE << "Confirming CONNECT tunnel on FD " << fd);
+    debugs(33, 7, HERE << "Confirming CONNECT tunnel on FD " << getConn()->clientConnection);
 
     // TODO: Unify with tunnel.cc and add a Server(?) header
-    static const char *const conn_established =
-        "HTTP/1.1 200 Connection established\r\n\r\n";
+    static const char *const conn_established = "HTTP/1.1 200 Connection established\r\n\r\n";
     AsyncCall::Pointer call = commCbCall(85, 5, "ClientSocketContext::sslBumpEstablish",
                                          CommIoCbPtrFun(&SslBumpEstablish, this));
-    Comm::Write(fd, conn_established, strlen(conn_established), call, NULL);
+    Comm::Write(getConn()->clientConnection, conn_established, strlen(conn_established), call, NULL);
 }
 
 #endif
@@ -1386,25 +1388,25 @@ ClientHttpRequest::doCallouts()
 
     if (!calloutContext->tosToClientDone) {
         calloutContext->tosToClientDone = true;
-        if (getConn() != NULL) {
+        if (getConn() != NULL && Comm::IsConnOpen(getConn()->clientConnection)) {
             ACLFilledChecklist ch(NULL, request, NULL);
             ch.src_addr = request->client_addr;
             ch.my_addr = request->my_addr;
             tos_t tos = aclMapTOS(Ip::Qos::TheConfig.tosToClient, &ch);
             if (tos)
-                Ip::Qos::setSockTos(getConn()->fd, tos);
+                Ip::Qos::setSockTos(getConn()->clientConnection, tos);
         }
     }
 
     if (!calloutContext->nfmarkToClientDone) {
         calloutContext->nfmarkToClientDone = true;
-        if (getConn() != NULL) {
+        if (getConn() != NULL && Comm::IsConnOpen(getConn()->clientConnection)) {
             ACLFilledChecklist ch(NULL, request, NULL);
             ch.src_addr = request->client_addr;
             ch.my_addr = request->my_addr;
             nfmark_t mark = aclMapNfmark(Ip::Qos::TheConfig.nfmarkToClient, &ch);
             if (mark)
-                Ip::Qos::setSockNfmark(getConn()->fd, mark);
+                Ip::Qos::setSockNfmark(getConn()->clientConnection, mark);
         }
     }
 
@@ -1591,9 +1593,9 @@ ClientHttpRequest::noteBodyProducerAborted(BodyPipe::Pointer)
     debugs(85,3, HERE << "REQMOD body production failed");
     if (request_satisfaction_mode) { // too late to recover or serve an error
         request->detailError(ERR_ICAP_FAILURE, ERR_DETAIL_CLT_REQMOD_RESP_BODY);
-        const int fd = getConn()->fd;
-        Must(fd >= 0);
-        comm_close(fd); // drastic, but we may be writing a response already
+        const Comm::ConnectionPointer c = getConn()->clientConnection;
+        Must(Comm::IsConnOpen(c));
+        c->close(); // drastic, but we may be writing a response already
     } else {
         handleAdaptationFailure(ERR_DETAIL_CLT_REQMOD_REQ_BODY);
     }
@@ -1629,7 +1631,7 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
     ConnStateData * c = getConn();
     repContext->setReplyToError(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR,
                                 request->method, NULL,
-                                (c != NULL ? c->peer : noAddr), request, NULL,
+                                (c != NULL ? c->clientConnection->remote : noAddr), request, NULL,
 #if USE_AUTH
                                 (c != NULL && c->auth_user_request != NULL ?
                                  c->auth_user_request : request->auth_user_request));

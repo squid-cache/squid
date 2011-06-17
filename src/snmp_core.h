@@ -9,6 +9,7 @@
 #define SQUID_SNMP_CORE_H
 
 #include "cache_snmp.h"
+#include "comm/forward.h"
 
 #define SNMP_REQUEST_SIZE 4096
 #define MAX_PROTOSTAT 5
@@ -33,5 +34,7 @@ struct _mib_tree_entry {
 
 extern struct snmp_pdu* snmpAgentResponse(struct snmp_pdu* PDU);
 extern AggrType snmpAggrType(oid* Current, snint CurrentLen);
+
+extern Comm::ConnectionPointer snmpOutgoingConn;
 
 #endif /* SQUID_SNMP_CORE_H */

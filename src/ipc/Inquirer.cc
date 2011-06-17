@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "base/TextException.h"
+#include "comm.h"
 #include "comm/Write.h"
 #include "ipc/Inquirer.h"
 #include "ipc/Port.h"
