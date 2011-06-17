@@ -367,7 +367,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
             continue;
         }
 
-        debugs(3, 5, "Processing: '" << tmp_line << "'");
+        debugs(3, (opt_parse_cfg_only?1:5), "Processing: " << tmp_line);
 
         /* Handle includes here */
         if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && xisspace(tmp_line[7])) {
