@@ -630,7 +630,7 @@ recv_announce_SOURCES = recv-announce.cc
 ## ACLChecklist.cc wants ACLProxyAuth.cc directly
 ## ACLProxyAuth.cc wants ACLUserData
 ## ACLProxyAuth.cc wants ACLRegexData
-## cache_cf.cc wants libauth.la
+## cache_cf.cc wants $(AUTH_LIBS)
 ## cache_cf.cc wants Swapdir
 ## cache_cf.cc wants ProtoPort
 ## client_side wants client_db
@@ -1070,7 +1070,7 @@ tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 ## acl needs wordlist. wordlist needs MemBug
 ## MemBuf needs mem, MemBuf needs event,
 ## event needs cbdata.
-## ACLMaxUserUP needs libauth.la
+## ACLMaxUserUP needs $(AUTH_LIBS)
 ## ACLMaxUserIP needs ACLChecklist
 ## AuthUser request needs HttpHeader, which brings in 
 ##	ETag.cc \
@@ -2541,16 +2541,6 @@ tests_testUfs_LDADD = \
 	anyp/libanyp.la \
 	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
-	$(AUTH_ACL_LIBS) \
-	ident/libident.la \
-	eui/libeui.la \
-	acl/libstate.la \
-	auth/libauth.la \
-	acl/libapi.la \
-	fs/libfs.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
-	libsquid.la \
 	$(SSL_LIBS) \
 	comm/libcomm.la \
 	base/libbase.la \
