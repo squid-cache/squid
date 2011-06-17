@@ -23,6 +23,8 @@ libsslsquid_la_SOURCES = \
 	Config.h \
 	ErrorDetail.cc \
 	ErrorDetail.h \
+	ErrorDetailManager.cc \
+	ErrorDetailManager.h \
 	support.cc \
 	support.h
 

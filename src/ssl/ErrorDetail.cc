@@ -1,160 +1,104 @@
 #include "squid.h"
+#include "errorpage.h"
 #include "ssl/ErrorDetail.h"
 #if HAVE_MAP
 #include <map>
 #endif
 
-struct SslErrorDetailEntry {
+struct SslErrorEntry{
     Ssl::ssl_error_t value;
     const char *name;
-    const char *detail; ///< for error page %D macro expansion; may contain macros
-    const char *descr; ///< short error description (for use in debug messages or error pages)
 };
 
 static const char *SslErrorDetailDefaultStr = "SSL certificate validation error (%err_name): %ssl_subject";
 //Use std::map to optimize search
-typedef std::map<Ssl::ssl_error_t, const SslErrorDetailEntry *> SslErrorDetails;
-SslErrorDetails TheSslDetail;
+typedef std::map<Ssl::ssl_error_t, const SslErrorEntry *> SslErrors;
+SslErrors TheSslErrors;
 
-static SslErrorDetailEntry TheSslDetailArray[] = {
+static SslErrorEntry TheSslErrorArray[] = {
     {X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
-        "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT",
-        "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name",
-        "Unable to get issuer certificate"},
+        "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT"},
     {X509_V_ERR_UNABLE_TO_GET_CRL,
-     "X509_V_ERR_UNABLE_TO_GET_CRL",
-     "%ssl_error_descr: %ssl_subject",
-     "Unable to get certificate CRL"},
+     "X509_V_ERR_UNABLE_TO_GET_CRL"},
     {X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE,
-     "X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE",
-     "%ssl_error_descr: %ssl_subject",
-     "Unable to decrypt certificate's signature"},
+     "X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE"},
     {X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE,
-     "X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE",
-     "%ssl_error_descr: %ssl_subject",
-     "Unable to decrypt CRL's signature"},
+     "X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE"},
     {X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY,
-     "X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY",
-     "Unable to decode issuer (CA) public key: %ssl_ca_name",
-     "Unable to decode issuer public key"},
+     "X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY"},
     {X509_V_ERR_CERT_SIGNATURE_FAILURE,
-     "X509_V_ERR_CERT_SIGNATURE_FAILURE",
-     "%ssl_error_descr: %ssl_subject",
-     "Certificate signature failure"},
+     "X509_V_ERR_CERT_SIGNATURE_FAILURE"},
     {X509_V_ERR_CRL_SIGNATURE_FAILURE,
-     "X509_V_ERR_CRL_SIGNATURE_FAILURE",
-     "%ssl_error_descr: %ssl_subject",
-     "CRL signature failure"},
+     "X509_V_ERR_CRL_SIGNATURE_FAILURE"},
     {X509_V_ERR_CERT_NOT_YET_VALID,
-     "X509_V_ERR_CERT_NOT_YET_VALID",
-     "SSL Certficate is not valid before: %ssl_notbefore",
-     "Certificate is not yet valid"},
+     "X509_V_ERR_CERT_NOT_YET_VALID"},
     {X509_V_ERR_CERT_HAS_EXPIRED,
-     "X509_V_ERR_CERT_HAS_EXPIRED",
-     "SSL Certificate expired on: %ssl_notafter",
-     "Certificate has expired"},
+     "X509_V_ERR_CERT_HAS_EXPIRED"},
     {X509_V_ERR_CRL_NOT_YET_VALID,
-     "X509_V_ERR_CRL_NOT_YET_VALID",
-     "%ssl_error_descr: %ssl_subject",
-     "CRL is not yet valid"},
+     "X509_V_ERR_CRL_NOT_YET_VALID"},
     {X509_V_ERR_CRL_HAS_EXPIRED,
-     "X509_V_ERR_CRL_HAS_EXPIRED",
-     "%ssl_error_descr: %ssl_subject",
-     "CRL has expired"},
+     "X509_V_ERR_CRL_HAS_EXPIRED"},
     {X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD,
-     "X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD",
-     "SSL Certificate has invalid start date (the 'not before' field): %ssl_subject",
-     "Format error in certificate's notBefore field"},
+     "X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD"},
     {X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD,
-     "X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD",
-     "SSL Certificate has invalid expiration date (the 'not after' field): %ssl_subject",
-     "Format error in certificate's notAfter field"},
+     "X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD"},
     {X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD,
-     "X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD",
-     "%ssl_error_descr: %ssl_subject",
-     "Format error in CRL's lastUpdate field"},
+     "X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD"},
     {X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD,
-     "X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD",
-     "%ssl_error_descr: %ssl_subject",
-     "Format error in CRL's nextUpdate field"},
+     "X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD"},
     {X509_V_ERR_OUT_OF_MEM,
-     "X509_V_ERR_OUT_OF_MEM",
-     "%ssl_error_descr",
-     "Out of memory"},
+     "X509_V_ERR_OUT_OF_MEM"},
     {X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT,
-     "X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT",
-     "Self-signed SSL Certificate: %ssl_subject",
-     "Self signed certificate"},
+     "X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT"},
     {X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN,
-     "X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN",
-     "Self-signed SSL Certificate in chain: %ssl_subject",
-     "Self signed certificate in certificate chain"},
+     "X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN"},
     {X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY,
-     "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
-     "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name",
-     "Unable to get local issuer certificate"},
+     "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY"},
     {X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE,
-     "X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE",
-     "%ssl_error_descr: %ssl_subject",
-     "Unable to verify the first certificate"},
+     "X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE"},
     {X509_V_ERR_CERT_CHAIN_TOO_LONG,
-     "X509_V_ERR_CERT_CHAIN_TOO_LONG",
-     "%ssl_error_descr: %ssl_subject",
-     "Certificate chain too long"},
+     "X509_V_ERR_CERT_CHAIN_TOO_LONG"},
     {X509_V_ERR_CERT_REVOKED,
-     "X509_V_ERR_CERT_REVOKED",
-     "%ssl_error_descr: %ssl_subject",
-     "Certificate revoked"},
+     "X509_V_ERR_CERT_REVOKED"},
     {X509_V_ERR_INVALID_CA,
-     "X509_V_ERR_INVALID_CA",
-     "%ssl_error_descr: %ssl_ca_name",
-     "Invalid CA certificate"},
+     "X509_V_ERR_INVALID_CA"},
     {X509_V_ERR_PATH_LENGTH_EXCEEDED,
-     "X509_V_ERR_PATH_LENGTH_EXCEEDED",
-     "%ssl_error_descr: %ssl_subject",
-     "Path length constraint exceeded"},
+     "X509_V_ERR_PATH_LENGTH_EXCEEDED"},
     {X509_V_ERR_INVALID_PURPOSE,
-     "X509_V_ERR_INVALID_PURPOSE",
-     "%ssl_error_descr: %ssl_subject",
-     "Unsupported certificate purpose"},
+     "X509_V_ERR_INVALID_PURPOSE"},
     {X509_V_ERR_CERT_UNTRUSTED,
-     "X509_V_ERR_CERT_UNTRUSTED",
-     "%ssl_error_descr: %ssl_subject",
-     "Certificate not trusted"},
+     "X509_V_ERR_CERT_UNTRUSTED"},
     {X509_V_ERR_CERT_REJECTED,
-     "X509_V_ERR_CERT_REJECTED",
-     "%ssl_error_descr: %ssl_subject",
-     "Certificate rejected"},
+     "X509_V_ERR_CERT_REJECTED"},
     {X509_V_ERR_SUBJECT_ISSUER_MISMATCH,
-     "X509_V_ERR_SUBJECT_ISSUER_MISMATCH",
-     "%ssl_error_descr: %ssl_ca_name",
-     "Subject issuer mismatch"},
+     "X509_V_ERR_SUBJECT_ISSUER_MISMATCH"},
     {X509_V_ERR_AKID_SKID_MISMATCH,
-     "X509_V_ERR_AKID_SKID_MISMATCH",
-     "%ssl_error_descr: %ssl_subject",
-     "Authority and subject key identifier mismatch"},
+     "X509_V_ERR_AKID_SKID_MISMATCH"},
     {X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH,
-     "X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH",
-     "%ssl_error_descr: %ssl_ca_name",
-     "Authority and issuer serial number mismatch"},
+     "X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH"},
     {X509_V_ERR_KEYUSAGE_NO_CERTSIGN,
-     "X509_V_ERR_KEYUSAGE_NO_CERTSIGN",
-     "%ssl_error_descr: %ssl_subject",
-     "Key usage does not include certificate signing"},
+     "X509_V_ERR_KEYUSAGE_NO_CERTSIGN"},
     {X509_V_ERR_APPLICATION_VERIFICATION,
-     "X509_V_ERR_APPLICATION_VERIFICATION",
-     "%ssl_error_descr: %ssl_subject",
-     "Application verification failure"},
-    { SSL_ERROR_NONE, "SSL_ERROR_NONE", "No error", "No error" },
-    {SSL_ERROR_NONE, NULL, NULL, NULL }
+     "X509_V_ERR_APPLICATION_VERIFICATION"},
+    { SSL_ERROR_NONE, "SSL_ERROR_NONE"},
+    {SSL_ERROR_NONE, NULL}
 };
 
-static void loadSslDetailMap()
+static void loadSslErrorMap()
 {
-    assert(TheSslDetail.empty());
-    for (int i = 0; TheSslDetailArray[i].name; ++i) {
-        TheSslDetail[TheSslDetailArray[i].value] = &TheSslDetailArray[i];
+    assert(TheSslErrors.empty());
+    for (int i = 0; TheSslErrorArray[i].name; ++i) {
+        TheSslErrors[TheSslErrorArray[i].value] = &TheSslErrorArray[i];
     }
+}
+
+Ssl::ssl_error_t Ssl::GetErrorCode(const char *name)
+{
+    for (int i = 0; TheSslErrorArray[i].name != NULL; i++) {
+        if (strcmp(name, TheSslErrorArray[i].name) == 0)
+            return TheSslErrorArray[i].value;
+    }
+    return SSL_ERROR_NONE;
 }
 
 Ssl::ssl_error_t
@@ -162,14 +106,9 @@ Ssl::ParseErrorString(const char *name)
 {
     assert(name);
 
-    if (TheSslDetail.empty())
-        loadSslDetailMap();
-
-    typedef SslErrorDetails::const_iterator SEDCI;
-    for (SEDCI i = TheSslDetail.begin(); i != TheSslDetail.end(); ++i) {
-        if (strcmp(name, i->second->name) == 0)
-            return i->second->value;
-    }
+    const Ssl::ssl_error_t ssl_error = GetErrorCode(name);
+    if (ssl_error != SSL_ERROR_NONE)
+        return ssl_error;
 
     if (xisdigit(*name)) {
         const long int value = strtol(name, NULL, 0);
@@ -182,44 +121,22 @@ Ssl::ParseErrorString(const char *name)
     return SSL_ERROR_SSL; // not reached
 }
 
-static const SslErrorDetailEntry *getErrorRecord(Ssl::ssl_error_t value)
+const char *Ssl::GetErrorName(Ssl::ssl_error_t value)
 {
-    if (TheSslDetail.empty())
-        loadSslDetailMap();
+    if (TheSslErrors.empty())
+        loadSslErrorMap();
 
-    const SslErrorDetails::const_iterator it = TheSslDetail.find(value);
-    if (it != TheSslDetail.end())
-        return it->second;
+    const SslErrors::const_iterator it = TheSslErrors.find(value);
+    if (it != TheSslErrors.end())
+        return it->second->name;
 
     return NULL;
-}
-
-const char *
-Ssl::GetErrorName(Ssl::ssl_error_t value)
-{
-    if (const SslErrorDetailEntry *errorRecord = getErrorRecord(value))
-        return errorRecord->name;
-
-    return NULL;
-}
-
-static const char *getErrorDetail(Ssl::ssl_error_t value)
-{
-    if (const SslErrorDetailEntry *errorRecord = getErrorRecord(value))
-        return errorRecord->detail;
-
-    // we must always return something because ErrorDetail::buildDetail
-    // will hit an assertion
-    return SslErrorDetailDefaultStr;
 }
 
 const char *
 Ssl::GetErrorDescr(Ssl::ssl_error_t value)
 {
-    if (const SslErrorDetailEntry *errorRecord = getErrorRecord(value))
-        return errorRecord->descr;
-
-    return NULL;
+    return ErrorDetailsManager::GetInstance().getDefaultErrorDescr(value);
 }
 
 Ssl::ErrorDetail::err_frm_code Ssl::ErrorDetail::ErrorFormatingCodes[] = {
@@ -320,7 +237,15 @@ const char *Ssl::ErrorDetail::notafter() const
 const char *Ssl::ErrorDetail::err_code() const
 {
     static char tmpBuffer[64];
-    const char *err = GetErrorName(error_no);
+    // We can use the GetErrorName but using the detailEntry is faster,
+    // so try it first.
+    const char *err = detailEntry.name.termedBuf();
+
+    // error details not loaded yet or not defined in error_details.txt,
+    // try the GetErrorName...
+    if (!err)
+        err = GetErrorName(error_no);
+
     if (!err) {
         snprintf(tmpBuffer, 64, "%d", (int)error_no);
         err = tmpBuffer;
@@ -333,7 +258,9 @@ const char *Ssl::ErrorDetail::err_code() const
  */
 const char *Ssl::ErrorDetail::err_descr() const
 {
-    if (const char *err = GetErrorDescr(error_no))
+    if (error_no == SSL_ERROR_NONE)
+        return "[No Error]";
+    if (const char *err = detailEntry.descr.termedBuf())
         return err;
     return "[Not available]";
 }
@@ -372,10 +299,16 @@ int Ssl::ErrorDetail::convert(const char *code, const char **value) const
  */
 void Ssl::ErrorDetail::buildDetail() const
 {
-    char const *s = getErrorDetail(error_no);
+    char const *s = NULL;
     char const *p;
     char const *t;
     int code_len = 0;
+
+    if (ErrorDetailsManager::GetInstance().getErrorDetail(error_no, request.raw(), detailEntry))
+        s = detailEntry.detail.termedBuf();
+
+    if (!s)
+        s = SslErrorDetailDefaultStr;
 
     assert(s);
     while ((p = strchr(s, '%'))) {
@@ -405,12 +338,17 @@ const String &Ssl::ErrorDetail::toString() const
 Ssl::ErrorDetail::ErrorDetail( Ssl::ssl_error_t err_no, X509 *cert): error_no (err_no)
 {
     peer_cert.reset(X509_dup(cert));
+    detailEntry.error_no = SSL_ERROR_NONE;
 }
 
 Ssl::ErrorDetail::ErrorDetail(Ssl::ErrorDetail const &anErrDetail)
 {
     error_no = anErrDetail.error_no;
+    request = anErrDetail.request;
+
     if (anErrDetail.peer_cert.get()) {
         peer_cert.reset(X509_dup(anErrDetail.peer_cert.get()));
     }
+
+    detailEntry = anErrDetail.detailEntry;
 }

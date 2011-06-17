@@ -17,11 +17,18 @@ rm errpages.pot
 # make a temp directory for all our workings...
 mkdir pot
 
-# Generate per-page disctionaries ...
+# Generate per-page dictionaries ...
 for f in `ls -1 ./templates/`; do
-	if test "${f}" != "generic" ; then
+	case ${f} in
+	error-details.txt)
+		../scripts/mk-error-details-po.pl ./templates/${f} > ./pot/${f}.pot
+		;;
+	ERR_*)
 		html2po -i ./templates/${f} -P --duplicates=merge -o ./pot/${f}.pot
-	fi
+		;;
+	*)
+		echo "SKIP: ${f}"
+	esac
 done
 
 # merge and sort the per-page .pot into a single master
