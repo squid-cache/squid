@@ -85,8 +85,6 @@ void Adaptation::Icap::ServiceRep::noteFailure()
 Comm::ConnectionPointer
 Adaptation::Icap::ServiceRep::getConnection(bool retriableXact, bool &reused)
 {
-    Ip::Address client_addr;
-
     Comm::ConnectionPointer connection;
 
     /* 2011-06-17: rousskov:
@@ -108,22 +106,12 @@ Adaptation::Icap::ServiceRep::getConnection(bool retriableXact, bool &reused)
     else
         theIdleConns.closeN(1);
 
-    reused = Comm::IsConnOpen(connection); // reused a persistent connection
-
-    if (!reused) { // need a new connection
-        Ip::Address outgoing;  // default: IP6_ANY_ADDR
-        if (!Ip::EnableIpv6)
-            outgoing.SetIPv4();
-        else if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK &&  !cfg().ipv6) {
-            /* split-stack for now requires default IPv4-only socket */
-            outgoing.SetIPv4();
-        }
-        connection = comm_open(SOCK_STREAM, 0, outgoing, COMM_NONBLOCKING, cfg().uri.termedBuf());
-    } else
+    if (!(reused = Comm::IsConnOpen(connection)))
+        connection = new Comm::Connection;
+    else {
         debugs(93,3, HERE << "reused pconn " << connection);
-
-    if (Comm::IsConnOpen(connection))
         ++theBusyConns;
+    }
 
     return connection;
 }
