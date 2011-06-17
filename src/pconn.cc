@@ -57,8 +57,8 @@ IdleConnList::IdleConnList(const char *key, PconnPool *thePool) : parent(thePool
 
 IdleConnList::~IdleConnList()
 {
-
-    parent->unlinkList(this);
+    if (parent)
+        parent->unlinkList(this);
 
     if (nfds_alloc == PCONN_FDS_SZ)
         pconn_fds_pool->freeOne(fds);
@@ -97,7 +97,53 @@ IdleConnList::removeFD(int fd)
     if (parent)
         parent->noteConnectionRemoved();
 
-    if (--nfds == 0) {
+    if (parent && --nfds == 0) {
+        debugs(48, 3, "IdleConnList::removeFD: deleting " << hashKeyStr(&hash));
+        delete this;
+    }
+}
+
+// almost a duplicate of removeFD. But drops multiple entries.
+void
+IdleConnList::closeN(size_t n)
+{
+    if (n < 1) {
+        debugs(48, 2, HERE << "Nothing to do.");
+        return;
+    } else if (n < (size_t)count()) {
+        debugs(48, 2, HERE << "Closing all entries.");
+        while (nfds >= 0) {
+            int fd = fds[--nfds];
+            fds[nfds] = -1;
+            clearHandlers(fd);
+            comm_close(fd);
+            if (parent)
+                parent->noteConnectionRemoved();
+        }
+    } else {
+        debugs(48, 2, HERE << "Closing " << n << " of " << nfds << " entries.");
+
+        size_t index = 0;
+        // ensure the first N entries are closed
+        while (index < n) {
+            int fd = fds[--nfds];
+            fds[nfds] = -1;
+            clearHandlers(fd);
+            comm_close(fd);
+            if (parent)
+                parent->noteConnectionRemoved();
+        }
+        // shuffle the list N down.
+        for (;index < (size_t)nfds; index++) {
+            fds[index - n] = fds[index];
+        }
+        // ensure the last N entries are unset
+        while (index < ((size_t)nfds) + n) {
+            fds[index] = -1;
+        }
+    }
+
+    if (parent && nfds == 0) {
         debugs(48, 3, "IdleConnList::removeFD: deleting " << hashKeyStr(&hash));
         delete this;
     }
