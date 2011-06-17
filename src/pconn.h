@@ -38,6 +38,9 @@ public:
     /// Pass control of the connection to the idle list.
     void push(const Comm::ConnectionPointer &conn);
 
+    /// get first conn which is not pending read fd.
+    Comm::ConnectionPointer pop();
+
     /** Search the list for a connection which matches the 'key' details
      * and pop it off the list.
      * The list is created based on remote IP:port hash. This further filters
@@ -49,6 +52,7 @@ public:
     void clearHandlers(const Comm::ConnectionPointer &conn);
 
     int count() const { return size_; }
+    void closeN(size_t count);
 
 private:
     bool removeAt(int index);

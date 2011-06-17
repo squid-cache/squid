@@ -176,9 +176,9 @@ inline std::ostream &
 operator << (std::ostream &os, const Comm::Connection &conn)
 {
     os << "local=" << conn.local << " remote=" << conn.remote;
-    if (fd >= 0)
+    if (conn.fd >= 0)
         os << " FD " << conn.fd;
-    if (flags != COMM_UNSET)
+    if (conn.flags != COMM_UNSET)
         os << " flags=" << conn.flags;
 #if USE_IDENT
     if (*conn.rfc931)

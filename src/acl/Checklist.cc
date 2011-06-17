@@ -340,26 +340,20 @@ ACLChecklist::fastCheck()
     PROF_start(aclCheckFast);
     currentAnswer(ACCESS_DENIED);
     debugs(28, 5, "aclCheckFast: list: " << accessList);
-
-    while (accessList) {
-        preCheck();
-        matchAclListFast(accessList->aclList);
-
-        if (finished()) {
+    const acl_access *acl = cbdataReference(accessList);
+    while (acl != NULL && cbdataReferenceValid(acl)) {
+        currentAnswer(acl->allow);
+        if (matchAclListFast(acl->aclList)) {
             PROF_stop(aclCheckFast);
-            cbdataReferenceDone(accessList);
+            cbdataReferenceDone(acl);
             return currentAnswer() == ACCESS_ALLOWED;
         }
 
         /*
          * Reference the next access entry
          */
-        const acl_access *A = accessList;
-
-        assert (A);
-
-        accessList = cbdataReference(A->next);
-
+        const acl_access *A = acl;
+        acl = cbdataReference(acl->next);
         cbdataReferenceDone(A);
     }
 

@@ -251,6 +251,7 @@ rad_auth_config(const char *cfname)
         if (!memcmp(line, "port", 4))
             sscanf(line, "port %s", svc_name);
     }
+    fclose(cf);
     if (srv && crt)
         return 0;
     return -1;

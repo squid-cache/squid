@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-05-04 13:58+1200\n"
-"PO-Revision-Date: 2011-05-04 04:34+0200\n"
+"PO-Revision-Date: 2011-06-16 14:59+0200\n"
 "Last-Translator: Amos <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: en\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Pootle 2.0.5\n"
+"X-Generator: Pootle 2.0.6\n"
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:3
@@ -1550,6 +1550,11 @@ msgid ""
 "trusted domains specifyng the username in the domain\\eusername Microsoft "
 "notation."
 msgstr ""
+"Usage is simple. It accepts a username and password on standard input and "
+"will return OK if the username/password is valid for the domain/machine, or "
+"ERR if there was some problem.  It is possible to authenticate against NT "
+"trusted domains specifyng the username in the domain\\eusername Microsoft "
+"notation."
 
 #. type: Plain text
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:36
@@ -1580,7 +1585,6 @@ msgstr "The default Domain against to authenticate."
 #. logon from the network\"" 
 #. type: Plain text
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:55
-#, fuzzy
 #| msgid ""
 #| "Users that are allowed to access the web proxy must have the Windows NT "
 #| "User Rights \"logon from the network\" and must be included in the NT "
@@ -1591,8 +1595,8 @@ msgid ""
 "in the Authenticator's command line."
 msgstr ""
 "Users that are allowed to access the web proxy must have the Windows NT User "
-"Rights \"logon from the network\" and must be included in the NT LOCAL User "
-"Groups specified in the Authenticator's command line."
+"Rights I<\\&\\&> and must be included in the NT LOCAL User Groups specified "
+"in the Authenticator's command line."
 
 #. type: Plain text
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:58
@@ -1944,10 +1948,9 @@ msgstr "B<3. Active Directory Canonical name>"
 
 #. type: Plain text
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:89
-#, fuzzy
 #| msgid "Examples:"
 msgid "As Exampled:"
-msgstr "Examples:"
+msgstr "As Exampled:"
 
 #. type: Plain text
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:99
@@ -2323,6 +2326,10 @@ msgid ""
 "servers have the latest service packs installed, and that your servers are "
 "properly synchronizing partitions."
 msgstr ""
+"I *STRONGLY RECOMMEND* using the latest version of the Novell Client in all "
+"situations B<before> seeking support! You may also need to make sure your "
+"servers have the latest service packs installed, and that your servers are "
+"properly synchronizing partitions."
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:7
@@ -2345,10 +2352,13 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:22
+#, fuzzy
 msgid ""
 "It works by reading a pair composed by an ip address and an username on "
 "STDIN and matching it against a configuration file."
 msgstr ""
+"It works by reading a pair composed by an IP address and an username on "
+"STDIN and matching it against a configuration file."
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:33
@@ -3349,10 +3359,9 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/ntlm_auth/SSPI/ntlm_sspi_auth.8:79
-#, fuzzy
 #| msgid "Refer to Squid documentation for more details on B<squid.conf>"
 msgid "Refer to Squid documentation for more details."
-msgstr "Refer to Squid documentation for more details on B<squid.conf>"
+msgstr "Refer to Squid documentation for more details."
 
 #. type: Plain text
 #: helpers/ntlm_auth/SSPI/ntlm_sspi_auth.8:87
@@ -3527,7 +3536,6 @@ msgstr ""
 
 #. type: Plain text
 #: src/squid.8.in:112
-#, fuzzy
 msgid "Use specified syslog facility. Implies B<-s>"
 msgstr "Use specified syslog facility. Implies B<-s>"
 
@@ -3610,7 +3618,6 @@ msgstr "Squid configuration files located in @SYSCONFDIR@/:"
 
 #. type: Plain text
 #: src/squid.8.in:179
-#, fuzzy
 msgid ""
 "The main configuration file. You must initially make changes to this file "
 "for B<squid> to work. For example, the default configuration only allows "
@@ -3618,8 +3625,9 @@ msgid ""
 "even that."
 msgstr ""
 "The main configuration file. You must initially make changes to this file "
-"for B<squid> to work. For example, the default configuration does not allow "
-"access from any browser."
+"for B<squid> to work. For example, the default configuration only allows "
+"access from RFC private LAN networks.  Some packaging distributions block "
+"even that."
 
 #. type: Plain text
 #: src/squid.8.in:183 src/squid.8.in:189

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-05-04 13:57+1300\n"
-"PO-Revision-Date: 2011-05-04 04:20+0200\n"
+"PO-Revision-Date: 2011-06-16 14:55+0200\n"
 "Last-Translator: Amos <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: en\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Pootle 2.0.5\n"
+"X-Generator: Pootle 2.0.6\n"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:29
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:29
@@ -19,16 +19,16 @@ msgstr ""
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:29
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:30
 msgid "%F"
-msgstr ""
+msgstr "%F"
 
 #: templates/ERR_INVALID_REQ+html.body.div.blockquote.pre:23
 #: templates/ERR_INVALID_RESP+html.body.div.blockquote.pre:23
 msgid "%R"
-msgstr ""
+msgstr "%R"
 
 #: templates/ERR_ESI+html.body.div.blockquote.pre:28
 msgid "%Z"
-msgstr ""
+msgstr "%Z"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:24
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:24
@@ -36,19 +36,19 @@ msgstr ""
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:24
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:25
 msgid "%f"
-msgstr ""
+msgstr "%f"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:31
 msgid "%g"
-msgstr ""
+msgstr "%g"
 
 #: templates/ERR_DIR_LISTING+html.body.div.blockquote.pre:22
 #: templates/ERR_DNS_FAIL+html.body.div.blockquote.pre:28
 msgid "%z"
-msgstr ""
+msgstr "%z"
 
 #: templates/ERR_DIR_LISTING+html.body.div.table.tr.th:28
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
