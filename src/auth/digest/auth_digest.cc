@@ -65,8 +65,6 @@ static hash_table *digest_nonce_cache;
 static int authdigest_initialised = 0;
 static MemAllocator *digest_nonce_pool = NULL;
 
-// CBDATA_TYPE(DigestAuthenticateStateData);
-
 enum http_digest_attr_type {
     DIGEST_USERNAME,
     DIGEST_REALM,
@@ -590,8 +588,6 @@ Auth::Digest::Config::init(Auth::Config * scheme)
         digestauthenticators->ipc_type = IPC_STREAM;
 
         helperOpenServers(digestauthenticators);
-
-        CBDATA_INIT_TYPE(authenticateStateData);
     }
 }
 
@@ -629,20 +625,16 @@ Auth::Digest::Config::done()
     safe_free(digestAuthRealm);
 }
 
-Auth::Digest::Config::Config()
-{
-    /* TODO: move into initialisation list */
-    /* 5 minutes */
-    nonceGCInterval = 5 * 60;
-    /* 30 minutes */
-    noncemaxduration = 30 * 60;
-    /* 50 requests */
-    noncemaxuses = 50;
-    /* Not strict nonce count behaviour */
-    NonceStrictness = 0;
-    /* Verify nonce count */
-    CheckNonceCount = 1;
-}
+Auth::Digest::Config::Config() :
+        digestAuthRealm(NULL),
+        nonceGCInterval(5*60),
+        noncemaxduration(30*60),
+        noncemaxuses(50),
+        NonceStrictness(0),
+        CheckNonceCount(1),
+        PostWorkaround(0),
+        utf8(0)
+{}
 
 void
 Auth::Digest::Config::parse(Auth::Config * scheme, int n_configured, char *param_str)

@@ -97,11 +97,6 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
 
     debugs(29, 8, HERE << "credentials state is '" << user()->credentials() << "'");
 
-    authenticateStateData *r = cbdataAlloc(authenticateStateData);
-    r->handler = handler;
-    r->data = cbdataReference(data);
-    r->auth_user_request = this;
-
     if (user()->credentials() == Auth::Pending) {
         snprintf(buf, sizeof(buf), "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
     } else {
@@ -111,7 +106,9 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
     waiting = 1;
 
     safe_free(client_blob);
-    helperStatefulSubmit(negotiateauthenticators, buf, AuthNegotiateUserRequest::HandleReply, r, authserver);
+
+    helperStatefulSubmit(negotiateauthenticators, buf, AuthNegotiateUserRequest::HandleReply,
+                         new Auth::StateData(this, handler, data), authserver);
 }
 
 /**
@@ -234,18 +231,15 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * c
 void
 AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
 {
-    authenticateStateData *r = static_cast<authenticateStateData *>(data);
+    Auth::StateData *r = static_cast<Auth::StateData *>(data);
 
-    int valid;
     char *blob, *arg = NULL;
 
     debugs(29, 8, HERE << "helper: '" << lastserver << "' sent us '" << (reply ? reply : "<NULL>") << "'");
-    valid = cbdataReferenceValid(r->data);
 
-    if (!valid) {
+    if (!cbdataReferenceValid(r->data)) {
         debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication invalid callback data. helper '" << lastserver << "'.");
-        cbdataReferenceDone(r->data);
-        authenticateStateFree(r);
+        delete r;
         return;
     }
 
@@ -367,8 +361,7 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
 
     lm_request->request = NULL;
     r->handler(r->data, NULL);
-    cbdataReferenceDone(r->data);
-    authenticateStateFree(r);
+    delete r;
 }
 
 void
