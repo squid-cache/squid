@@ -35,6 +35,7 @@ public:
 
     int findFDIndex(int fd); ///< search from the end of array
     void removeFD(int fd);
+    void closeN(size_t count);
     void push(int fd);
     int findUseableFD();     ///< find first from the end not pending read fd.
     void clearHandlers(int fd);
