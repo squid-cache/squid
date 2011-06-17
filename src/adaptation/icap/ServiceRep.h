@@ -110,9 +110,9 @@ public:
     bool wantsPreview(const String &urlPath, size_t &wantedSize) const;
     bool allows204() const;
     bool allows206() const;
-    int getConnection(bool isRetriable, bool &isReused);
-    void putConnection(int fd, bool isReusable, const char *comment);
-    void noteConnectionUse(int fd);
+    Comm::ConnectionPointer getConnection(bool isRetriable, bool &isReused);
+    void putConnection(const Comm::ConnectionPointer &conn, bool isReusable, const char *comment);
+    void noteConnectionUse(const Comm::ConnectionPointer &conn);
 
     void noteFailure(); // called by transactions to report service failure
 

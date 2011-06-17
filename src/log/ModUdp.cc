@@ -32,6 +32,7 @@
 
 #include "squid.h"
 #include "comm.h"
+#include "comm/Connection.h"
 #include "log/File.h"
 #include "log/ModUdp.h"
 #include "Parsing.h"

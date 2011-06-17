@@ -105,6 +105,9 @@ fd_close(int fd)
 {
     fde *F = &fd_table[fd];
 
+    assert(fd >= 0);
+    assert(F->flags.open == 1);
+
     if (F->type == FD_FILE) {
         assert(F->read_handler == NULL);
         assert(F->write_handler == NULL);

@@ -36,6 +36,7 @@
 
 #include "StoreIOBuffer.h"
 #include "comm.h"
+#include "comm/forward.h"
 #include "forward.h"
 #include "Server.h"
 #include "ChunkedCodingParser.h"
@@ -53,7 +54,7 @@ public:
                                        HttpHeader * hdr_out,
                                        const http_state_flags flags);
 
-    virtual int dataDescriptor() const;
+    virtual const Comm::ConnectionPointer & dataConnection() const;
     /* should be private */
     bool sendRequest();
     void processReplyHeader();
@@ -66,7 +67,6 @@ public:
     int eof;			/* reached end-of-object? */
     int lastChunk;		/* reached last chunk of a chunk-encoded reply */
     HttpRequest *orig_request;
-    int fd;
     http_state_flags flags;
     size_t read_sz;
     int header_bytes_read;	// to find end of response,
@@ -86,6 +86,12 @@ protected:
     void handle1xx(HttpReply *msg);
 
 private:
+    /**
+     * The current server connection.
+     * Maybe open, closed, or NULL.
+     * Use doneWithServer() to check if the server is available for use.
+     */
+    Comm::ConnectionPointer serverConnection;
     AsyncCall::Pointer closeHandler;
     enum ConnectionStatus {
         INCOMPLETE_MSG,

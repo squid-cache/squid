@@ -40,6 +40,7 @@
 #include "acl/RegexData.h"
 #include "acl/DomainData.h"
 #include "HttpRequest.h"
+#include "ipcache.h"
 
 DestinationDomainLookup DestinationDomainLookup::instance_;
 

@@ -6,21 +6,28 @@
 #ifndef SQUID_COMMCALLS_H
 #define SQUID_COMMCALLS_H
 
-#include "comm.h"
-#include "ConnectionDetail.h"
-#include "DnsLookupDetails.h"
 #include "base/AsyncCall.h"
 #include "base/AsyncJobCalls.h"
+#include "comm_err_t.h"
+#include "comm/forward.h"
 
 /* CommCalls implement AsyncCall interface for comm_* callbacks.
  * The classes cover two call dialer kinds:
  *     - A C-style call using a function pointer (depricated);
  *     - A C++-style call to an AsyncJob child.
- * and three comm_* callback kinds:
- *     - accept (IOACB),
- *     - connect (CNCB),
- *     - I/O (IOCB).
+ * and several comm_* callback kinds:
+ *     - accept (IOACB)
+ *     - connect (CNCB)
+ *     - I/O (IOCB)
+ *     - timeout (CTCB)
  */
+
+typedef void IOACB(int fd, const Comm::ConnectionPointer &details, comm_err_t flag, int xerrno, void *data);
+typedef void CNCB(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data);
+typedef void IOCB(const Comm::ConnectionPointer &conn, char *, size_t size, comm_err_t flag, int xerrno, void *data);
+
+class CommTimeoutCbParams;
+typedef void CTCB(const CommTimeoutCbParams &params);
 
 /*
  * TODO: When there are no function-pointer-based callbacks left, all
@@ -51,10 +58,22 @@ public:
 
 public:
     void *data; // cbdata-protected
-    int fd;
-    int xerrno;
-    comm_err_t flag;
 
+    /** The connection which this call pertains to.
+     * \itemize On accept() calls this is the new client connection.
+     * \itemize On connect() finished calls this is the newely opened connection.
+     * \itemize On write calls this is the connection just written to.
+     * \itemize On read calls this is the connection just read from.
+     * \itemize On close calls this describes the connection which is now closed.
+     * \itemize On timeouts this is the connection whose operation timed out.
+     *          NP: timeouts might also return to the connect/read/write handler with COMM_ERR_TIMEOUT.
+     */
+    Comm::ConnectionPointer conn;
+
+    comm_err_t flag;  ///< comm layer result status.
+    int xerrno;      ///< The last errno to occur. non-zero if flag is COMM_ERR.
+
+    int fd; // raw FD which the call was about. use conn instead for new code.
 private:
     // should not be needed and not yet implemented
     CommCommonCbParams &operator =(const CommCommonCbParams &params);
@@ -65,12 +84,6 @@ class CommAcceptCbParams: public CommCommonCbParams
 {
 public:
     CommAcceptCbParams(void *aData);
-
-    void print(std::ostream &os) const;
-
-public:
-    ConnectionDetail details;
-    int nfd; // TODO: rename to fdNew or somesuch
 };
 
 // connect parameters
@@ -80,11 +93,6 @@ public:
     CommConnectCbParams(void *aData);
 
     bool syncWithComm(); // see CommCommonCbParams::syncWithComm
-
-    void print(std::ostream &os) const;
-
-public:
-    DnsLookupDetails dns;
 };
 
 // read/write (I/O) parameters
@@ -179,6 +187,8 @@ public:
     typedef RefCount<CommAcceptCbPtrFun> Pointer;
 
     CommAcceptCbPtrFun(IOACB *aHandler, const CommAcceptCbParams &aParams);
+    CommAcceptCbPtrFun(const CommAcceptCbPtrFun &o);
+
     void dial();
 
     virtual void print(std::ostream &os) const;
@@ -243,13 +253,13 @@ class CommTimeoutCbPtrFun:public CallDialer,
 public:
     typedef CommTimeoutCbParams Params;
 
-    CommTimeoutCbPtrFun(PF *aHandler, const Params &aParams);
+    CommTimeoutCbPtrFun(CTCB *aHandler, const Params &aParams);
     void dial();
 
     virtual void print(std::ostream &os) const;
 
 public:
-    PF *handler;
+    CTCB *handler;
 };
 
 // AsyncCall to comm handlers implemented as global functions.

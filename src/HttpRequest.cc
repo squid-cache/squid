@@ -35,6 +35,7 @@
  */
 
 #include "squid.h"
+#include "DnsLookupDetails.h"
 #include "HttpRequest.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -95,10 +96,6 @@ HttpRequest::init()
     imslen = 0;
     lastmod = -1;
     client_addr.SetEmpty();
-#if USE_SQUID_EUI
-    client_eui48.clear();
-    client_eui64.clear();
-#endif
     my_addr.SetEmpty();
     body_pipe = NULL;
     // hier
@@ -240,10 +237,6 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
 #if FOLLOW_X_FORWARDED_FOR
     indirect_client_addr = aReq->indirect_client_addr;
 #endif
-#if USE_SQUID_EUI
-    client_eui48 = aReq->client_eui48;
-    client_eui64 = aReq->client_eui64;
-#endif
     my_addr = aReq->my_addr;
 
     dnsWait = aReq->dnsWait;
@@ -264,6 +257,8 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
 #if USE_AUTH
     auth_user_request = aReq->auth_user_request;
 #endif
+
+    // main property is which connection the request was received on (if any)
     clientConnectionManager = aReq->clientConnectionManager;
     return true;
 }

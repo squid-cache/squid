@@ -1,12 +1,13 @@
 /* Inline QOS functions */
+#include "comm/Connection.h"
 
 int
-Ip::Qos::setSockTos(int fd, tos_t tos)
+Ip::Qos::setSockTos(const Comm::ConnectionPointer &conn, tos_t tos)
 {
 #ifdef IP_TOS
-    int x = setsockopt(fd, IPPROTO_IP, IP_TOS, &tos, sizeof(tos_t));
+    int x = setsockopt(conn->fd, IPPROTO_IP, IP_TOS, &tos, sizeof(tos_t));
     if (x < 0)
-        debugs(50, 2, "Ip::Qos::setSockTos: setsockopt(IP_TOS) on FD " << fd << ": " << xstrerror());
+        debugs(50, 2, "Ip::Qos::setSockTos: setsockopt(IP_TOS) on " << conn << ": " << xstrerror());
     return x;
 #else
     debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(IP_TOS) not supported on this platform");
@@ -15,12 +16,12 @@ Ip::Qos::setSockTos(int fd, tos_t tos)
 }
 
 int
-Ip::Qos::setSockNfmark(int fd, nfmark_t mark)
+Ip::Qos::setSockNfmark(const Comm::ConnectionPointer &conn, nfmark_t mark)
 {
 #if SO_MARK && USE_LIBCAP
-    int x = setsockopt(fd, SOL_SOCKET, SO_MARK, &mark, sizeof(nfmark_t));
+    int x = setsockopt(conn->fd, SOL_SOCKET, SO_MARK, &mark, sizeof(nfmark_t));
     if (x < 0)
-        debugs(50, 2, "setSockNfmark: setsockopt(SO_MARK) on FD " << fd << ": " << xstrerror());
+        debugs(50, 2, "setSockNfmark: setsockopt(SO_MARK) on " << conn << ": " << xstrerror());
     return x;
 #elif USE_LIBCAP
     debugs(50, DBG_IMPORTANT, "WARNING: setsockopt(SO_MARK) not supported on this platform");

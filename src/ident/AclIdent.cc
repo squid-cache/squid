@@ -42,6 +42,7 @@
 #include "acl/RegexData.h"
 #include "acl/UserData.h"
 #include "client_side.h"
+#include "comm/Connection.h"
 #include "ident/AclIdent.h"
 #include "ident/Ident.h"
 
@@ -86,8 +87,8 @@ ACLIdent::match(ACLChecklist *cl)
     ACLFilledChecklist *checklist = Filled(cl);
     if (checklist->rfc931[0]) {
         return data->match(checklist->rfc931);
-    } else if (checklist->conn() != NULL && checklist->conn()->rfc931[0]) {
-        return data->match(checklist->conn()->rfc931);
+    } else if (checklist->conn() != NULL && checklist->conn()->clientConnection != NULL && checklist->conn()->clientConnection->rfc931[0]) {
+        return data->match(checklist->conn()->clientConnection->rfc931);
     } else {
         debugs(28, 3, HERE << "switching to ident lookup state");
         checklist->changeState(IdentLookup::Instance());
@@ -126,10 +127,10 @@ void
 IdentLookup::checkForAsync(ACLChecklist *cl)const
 {
     ACLFilledChecklist *checklist = Filled(cl);
-    if (checklist->conn() != NULL) {
+    if (checklist->conn() != NULL && Comm::IsConnOpen(checklist->conn()->clientConnection)) {
         debugs(28, 3, HERE << "Doing ident lookup" );
         checklist->asyncInProgress(true);
-        Ident::Start(checklist->conn()->me, checklist->conn()->peer, LookupDone, checklist);
+        Ident::Start(checklist->conn()->clientConnection, LookupDone, checklist);
     } else {
         debugs(28, DBG_IMPORTANT, "IdentLookup::checkForAsync: Can't start ident lookup. No client connection" );
         checklist->currentAnswer(ACCESS_DENIED);
@@ -153,8 +154,8 @@ IdentLookup::LookupDone(const char *ident, void *data)
      * Cache the ident result in the connection, to avoid redoing ident lookup
      * over and over on persistent connections
      */
-    if (checklist->conn() != NULL && !checklist->conn()->rfc931[0])
-        xstrncpy(checklist->conn()->rfc931, checklist->rfc931, USER_IDENT_SZ);
+    if (checklist->conn() != NULL && checklist->conn()->clientConnection != NULL && !checklist->conn()->clientConnection->rfc931[0])
+        xstrncpy(checklist->conn()->clientConnection->rfc931, checklist->rfc931, USER_IDENT_SZ);
 
     checklist->asyncInProgress(false);
     checklist->changeState(ACLChecklist::NullState::Instance());

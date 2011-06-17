@@ -10,6 +10,7 @@
 #include "adaptation/icap/OptXact.h"
 #include "adaptation/icap/ServiceRep.h"
 #include "base/TextException.h"
+#include "comm/Connection.h"
 #include "ConfigParser.h"
 #include "ip/tools.h"
 #include "HttpReply.h"
@@ -81,11 +82,10 @@ void Adaptation::Icap::ServiceRep::noteFailure()
 }
 
 // returns a persistent or brand new connection; negative int on failures
-int Adaptation::Icap::ServiceRep::getConnection(bool retriableXact, bool &reused)
+Comm::ConnectionPointer
+Adaptation::Icap::ServiceRep::getConnection(bool retriableXact, bool &reused)
 {
-    Ip::Address client_addr;
-
-    int connection = -1;
+    Comm::ConnectionPointer connection;
 
     /* 2011-06-17: rousskov:
      *  There are two things that happen at the same time in pop(). Both are important.
@@ -102,43 +102,33 @@ int Adaptation::Icap::ServiceRep::getConnection(bool retriableXact, bool &reused
      * In other words, (2) tells us to close one FD for each new one we open due to retriable.
      */
     if (retriableXact)
-        connection = theIdleConns.findUseableFD();
+        connection = theIdleConns.pop();
     else
         theIdleConns.closeN(1);
 
-    reused = connection >= 0; // reused a persistent connection
-
-    if (!reused) { // need a new connection
-        Ip::Address outgoing;  // default: IP6_ANY_ADDR
-        if (!Ip::EnableIpv6)
-            outgoing.SetIPv4();
-        else if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK &&  !cfg().ipv6) {
-            /* split-stack for now requires default IPv4-only socket */
-            outgoing.SetIPv4();
-        }
-        connection = comm_open(SOCK_STREAM, 0, outgoing, COMM_NONBLOCKING, cfg().uri.termedBuf());
-    }
-
-    if (connection >= 0)
+    if (!(reused = Comm::IsConnOpen(connection)))
+        connection = new Comm::Connection;
+    else {
+        debugs(93,3, HERE << "reused pconn " << connection);
         ++theBusyConns;
+    }
 
     return connection;
 }
 
 // pools connection if it is reusable or closes it
-void Adaptation::Icap::ServiceRep::putConnection(int fd, bool isReusable, const char *comment)
+void Adaptation::Icap::ServiceRep::putConnection(const Comm::ConnectionPointer &conn, bool isReusable, const char *comment)
 {
-    Must(fd >= 0);
+    Must(Comm::IsConnOpen(conn));
     // do not pool an idle connection if we owe connections
     if (isReusable && excessConnections() == 0) {
         debugs(93, 3, HERE << "pushing pconn" << comment);
-        commSetTimeout(fd, -1, NULL, NULL);
-        Ip::Address anyAddr;
-        theIdleConns.push(fd);
+        commUnsetConnTimeout(conn);
+        theIdleConns.push(conn);
     } else {
         debugs(93, 3, HERE << "closing pconn" << comment);
         // comm_close will clear timeout
-        comm_close(fd);
+        conn->close();
     }
 
     Must(theBusyConns > 0);
@@ -148,10 +138,10 @@ void Adaptation::Icap::ServiceRep::putConnection(int fd, bool isReusable, const 
 }
 
 // a wrapper to avoid exposing theIdleConns
-void Adaptation::Icap::ServiceRep::noteConnectionUse(int fd)
+void Adaptation::Icap::ServiceRep::noteConnectionUse(const Comm::ConnectionPointer &conn)
 {
-    Must(fd >= 0);
-    fd_table[fd].noteUse(NULL); // pconn re-use but not via PconnPool API
+    Must(Comm::IsConnOpen(conn));
+    fd_table[conn->fd].noteUse(NULL); // pconn re-use but not via PconnPool API
 }
 
 void Adaptation::Icap::ServiceRep::setMaxConnections()
@@ -566,9 +556,11 @@ void Adaptation::Icap::ServiceRep::handleNewOptions(Adaptation::Icap::Options *n
 
     scheduleUpdate(optionsFetchTime());
 
+    // XXX: this whole feature bases on the false assumption a service only has one IP
     setMaxConnections();
     const int excess = excessConnections();
     // if we owe connections and have idle pconns, close the latter
+    // XXX:  but ... idle pconn to *where*?
     if (excess && theIdleConns.count() > 0) {
         const int n = min(excess, theIdleConns.count());
         debugs(93,5, HERE << "closing " << n << " pconns to relief debt");

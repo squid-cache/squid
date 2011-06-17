@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "comm/Connection.h"
 #include "MemObject.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
