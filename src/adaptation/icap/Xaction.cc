@@ -124,6 +124,10 @@ Adaptation::Icap::Xaction::openConnection()
     // Attempt to open a new connection...
     debugs(93,3, typeName << " opens connection to " << s.cfg().host.termedBuf() << ":" << s.cfg().port);
 
+    // TODO: find the IPs and attempt each one if this is a named service.
+    connection->remote = s.cfg().host.termedBuf();
+    connection->remote.SetPort(s.cfg().port);
+
     // TODO: service bypass status may differ from that of a transaction
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommTimedout",
