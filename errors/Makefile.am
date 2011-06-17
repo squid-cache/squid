@@ -17,6 +17,7 @@ include $(srcdir)/language.list
 CLEANFILES = $(TRANSLATE_LANGUAGES) translate-warn
 EXTRA_DIST = \
 	$(ERROR_TEMPLATES) \
+	templates/error-details.txt \
 	language.list \
 	template.list \
 	aliases alias-link.sh alias-upgrade errorpage.css TRANSLATORS COPYRIGHT
@@ -46,10 +47,11 @@ NOTIDY=`$(PO2HTML) --help | grep -o "\-\-notidy"`
 	    mkdir -p $(top_builddir)/errors/$$lang; \
 	    echo -n "Translate '$$lang' ..."; \
 	    for f in $(ERROR_TEMPLATES); do \
-			page=`basename $$f`; \
-			$(PO2HTML) $(NOTIDY) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/$$f >$(top_builddir)/errors/$$lang/$$page || exit 1; \
-		done; \
-		echo "done."; \
+		page=`basename $$f`; \
+		$(PO2HTML) $(NOTIDY) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/$$f >$(top_builddir)/errors/$$lang/$$page || exit 1; \
+	    done; \
+	    $(PO2TEXT) -t $(top_srcdir)/errors/templates/error-details.txt -i $(top_srcdir)/errors/$$lang.po > $(top_builddir)/errors/$$lang/error-details.txt || exit 1; \
+	    echo "done."; \
 	fi; \
 	touch $@
 
@@ -70,7 +72,7 @@ install-data-local: translate
 	    if test -d $(srcdir)/$$l || test -d $(builddir)/$$l; then \
 		$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
 	    fi; \
-	    for f in $(ERROR_TEMPLATES); do \
+	    for f in $(ERROR_TEMPLATES) templates/error-details.txt; do \
 		page=`basename $$f`; \
 		if test -f $(builddir)/$$l/$$page; then \
 		    echo "$(INSTALL_DATA) $(builddir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
@@ -91,14 +93,14 @@ uninstall-local:
 	  l=`basename $$l .lang`; \
 	  echo "Located $$l for uninstall ..."; \
 	  if test -d $(srcdir)/$$l; then \
-		for f in $(srcdir)/$$l/ERR_*; do \
+		for f in $(srcdir)/$$l/ERR_* $(srcdir)/$$l/error-details.txt; do \
 			if test -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; then \
 		        	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
 			fi; \
 		done; \
 	  fi ; \
 	  if test -d $(builddir)/$$l; then \
-		for f in $(builddir)/$$l/ERR_*; do \
+		for f in $(builddir)/$$l/ERR_* $(builddir)/$$l/error-details.txt; do \
 			if test -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; then \
 		        	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
 			fi; \
@@ -119,8 +121,8 @@ dist-hook: translate
 	  lang=`basename $$lang .lang`; \
 	  if test -d $$lang ; then \
 		mkdir -p $(distdir)/$$lang; \
-		cp -p $(top_builddir)/errors/$$lang/ERR_*  $(distdir)/$$lang \
-		  || exit 1; \
+		cp -p $(top_builddir)/errors/$$lang/ERR_*  $(distdir)/$$lang || exit 1; \
+		cp -p $(top_builddir)/errors/$$lang/error-details.txt $(distdir)/$$lang || exit 1; \
 	  fi; \
 	done
 
