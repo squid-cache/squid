@@ -656,6 +656,7 @@ helperCreate(const char *name)
     CBDATA_INIT_TYPE(helper);
     hlp = cbdataAlloc(helper);
     hlp->id_name = name;
+    hlp->eom = '\n';
     return hlp;
 }
 
@@ -666,6 +667,7 @@ helperStatefulCreate(const char *name)
     CBDATA_INIT_TYPE(statefulhelper);
     hlp = cbdataAlloc(statefulhelper);
     hlp->id_name = name;
+    hlp->eom = '\n';
     return hlp;
 }
 
@@ -925,30 +927,25 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         srv->rbuf[0] = '\0';
     }
 
-    if (hlp->return_full_reply) {
-        debugs(84, 3, HERE << "Return entire buffer");
-        helperReturnBuffer(0, srv, hlp, srv->rbuf, srv->rbuf + srv->roffset);
-    } else {
-        while ((t = strchr(srv->rbuf, '\n'))) {
-            /* end of reply found */
-            char *msg = srv->rbuf;
-            int i = 0;
-            debugs(84, 3, "helperHandleRead: end of reply found");
+    while ((t = strchr(srv->rbuf, hlp->eom))) {
+        /* end of reply found */
+        char *msg = srv->rbuf;
+        int i = 0;
+        debugs(84, 3, "helperHandleRead: end of reply found");
 
-            if (t > srv->rbuf && t[-1] == '\r')
-                t[-1] = '\0';
+        if (t > srv->rbuf && t[-1] == '\r' && hlp->eom == '\n')
+            t[-1] = '\0';
 
-            *t++ = '\0';
+        *t++ = '\0';
 
-            if (hlp->concurrency) {
-                i = strtol(msg, &msg, 10);
+        if (hlp->concurrency) {
+            i = strtol(msg, &msg, 10);
 
-                while (*msg && xisspace(*msg))
-                    msg++;
-            }
-
-            helperReturnBuffer(i, srv, hlp, msg, t);
+            while (*msg && xisspace(*msg))
+                msg++;
         }
+
+        helperReturnBuffer(i, srv, hlp, msg, t);
     }
 
     if (srv->rfd != -1)
@@ -994,12 +991,12 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
         srv->roffset = 0;
     }
 
-    if ((t = strchr(srv->rbuf, '\n'))) {
+    if ((t = strchr(srv->rbuf, hlp->eom))) {
         /* end of reply found */
         int called = 1;
         debugs(84, 3, "helperStatefulHandleRead: end of reply found");
 
-        if (t > srv->rbuf && t[-1] == '\r')
+        if (t > srv->rbuf && t[-1] == '\r' && hlp->eom == '\n')
             t[-1] = '\0';
 
         *t = '\0';

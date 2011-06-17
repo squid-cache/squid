@@ -66,6 +66,7 @@ struct _helper {
     unsigned int concurrency;
     time_t last_queue_warn;
     time_t last_restart;
+    char eom;   ///< The char which marks the end of (response) message, normally '\n'
 
     struct {
         int requests;
@@ -73,8 +74,6 @@ struct _helper {
         int queue_size;
         int avg_svc_time;
     } stats;
-    /// True if callback expects the whole helper output, as a c-string.
-    bool return_full_reply;
 };
 
 struct _helper_stateful {
@@ -92,6 +91,7 @@ struct _helper_stateful {
     HLPSONEQ *OnEmptyQueue;
     time_t last_queue_warn;
     time_t last_restart;
+    char eom;   ///< The char which marks the end of (response) message, normally '\n'
 
     struct {
         int requests;
