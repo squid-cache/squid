@@ -206,6 +206,7 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
         return;
     }
 
+    debugs(61,6, HERE << "sending '" << buf << "' to the helper");
     helperSubmit(redirectors, buf, redirectHandleReply, r);
 }
 
