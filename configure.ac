@@ -3323,10 +3323,13 @@ SQUID_YESNO([$enableval],
 dnl Squid now has .po translation capability, given the right toolkit
 if test "x${enable_translation:=yes}" = "xyes" ; then
   AX_WITH_PROG([PO2HTML],[po2html])
+  AX_WITH_PROG([PO2TEXT],[po2txt])
 else
   PO2HTML="off"
+  PO2TEXT="off"
 fi
 AC_SUBST(PO2HTML)
+AC_SUBST(PO2TEXT)
 
 dnl Squid now has limited locale handling ...
 dnl on error pages

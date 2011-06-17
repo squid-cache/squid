@@ -385,7 +385,7 @@ HttpHeader::HttpHeader() : owner (hoNone), len (0)
 
 HttpHeader::HttpHeader(const http_hdr_owner_type anOwner): owner(anOwner), len(0)
 {
-    assert(anOwner > hoNone && anOwner <= hoReply);
+    assert(anOwner > hoNone && anOwner < hoEnd);
     debugs(55, 7, "init-ing hdr: " << this << " owner: " << owner);
     httpHeaderMaskInit(&mask, 0);
 }
@@ -420,7 +420,7 @@ HttpHeader::clean()
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry *e;
 
-    assert(owner > hoNone && owner <= hoReply);
+    assert(owner > hoNone && owner < hoEnd);
     debugs(55, 7, "cleaning hdr: " << this << " owner: " << owner);
 
     PROF_start(HttpHeaderClean);
@@ -436,24 +436,26 @@ HttpHeader::clean()
      * arrays.
      */
 
-    if (0 != entries.count)
-        statHistCount(&HttpHeaderStats[owner].hdrUCountDistr, entries.count);
+    if (owner <= hoReply) {
+        if (0 != entries.count)
+            statHistCount(&HttpHeaderStats[owner].hdrUCountDistr, entries.count);
 
-    HttpHeaderStats[owner].destroyedCount++;
+        HttpHeaderStats[owner].destroyedCount++;
 
-    HttpHeaderStats[owner].busyDestroyedCount += entries.count > 0;
+        HttpHeaderStats[owner].busyDestroyedCount += entries.count > 0;
 
-    while ((e = getEntry(&pos))) {
-        /* tmp hack to try to avoid coredumps */
+        while ((e = getEntry(&pos))) {
+            /* tmp hack to try to avoid coredumps */
 
-        if (e->id < 0 || e->id >= HDR_ENUM_END) {
-            debugs(55, 0, "HttpHeader::clean BUG: entry[" << pos << "] is invalid (" << e->id << "). Ignored.");
-        } else {
-            statHistCount(&HttpHeaderStats[owner].fieldTypeDistr, e->id);
-            /* yes, this deletion leaves us in an inconsistent state */
-            delete e;
+            if (e->id < 0 || e->id >= HDR_ENUM_END) {
+                debugs(55, 0, "HttpHeader::clean BUG: entry[" << pos << "] is invalid (" << e->id << "). Ignored.");
+            } else {
+                statHistCount(&HttpHeaderStats[owner].fieldTypeDistr, e->id);
+                /* yes, this deletion leaves us in an inconsistent state */
+                delete e;
+            }
         }
-    }
+    } // if (owner <= hoReply)
     entries.clean();
     httpHeaderMaskInit(&mask, 0);
     len = 0;
