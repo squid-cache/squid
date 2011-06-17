@@ -53,12 +53,12 @@ protected:
     void handleSnmpResponse(const Snmp::Response& response);
 #endif
     /// calls comm_open_listener()
-    int openListenSocket(const SharedListenRequest& request, int &errNo);
+    Comm::ConnectionPointer openListenSocket(const SharedListenRequest& request, int &errNo);
 
 private:
     StrandCoords strands_; ///< registered processes and threads
 
-    typedef std::map<OpenListenerParams, int> Listeners; ///< params:fd map
+    typedef std::map<OpenListenerParams, Comm::ConnectionPointer> Listeners; ///< params:fd map
     Listeners listeners; ///< cached comm_open_listener() results
 
     static Coordinator* TheInstance; ///< the only class instance in existence

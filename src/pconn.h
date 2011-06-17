@@ -26,35 +26,65 @@ class PconnPool;
 /// \ingroup PConnAPI
 #define PCONN_HIST_SZ (1<<16)
 
-/// \ingroup PConnAPI
+/** \ingroup PConnAPI
+ * A list of connections currently open to a particular destination end-point.
+ */
 class IdleConnList
 {
 public:
     IdleConnList(const char *key, PconnPool *parent);
     ~IdleConnList();
 
-    int findFDIndex(int fd); ///< search from the end of array
-    void removeFD(int fd);
-    void closeN(size_t count);
-    void push(int fd);
-    int findUseableFD();     ///< find first from the end not pending read fd.
-    void clearHandlers(int fd);
+    /// Pass control of the connection to the idle list.
+    void push(const Comm::ConnectionPointer &conn);
 
-    int count() const { return nfds; }
+    /// get first conn which is not pending read fd.
+    Comm::ConnectionPointer pop();
+
+    /** Search the list for a connection which matches the 'key' details
+     * and pop it off the list.
+     * The list is created based on remote IP:port hash. This further filters
+     * the choices based on specific local-end details requested.
+     * If nothing usable is found the a nil pointer is returned.
+     */
+    Comm::ConnectionPointer findUseable(const Comm::ConnectionPointer &key);
+
+    void clearHandlers(const Comm::ConnectionPointer &conn);
+
+    int count() const { return size_; }
+    void closeN(size_t count);
 
 private:
-    static IOCB read;
-    static PF timeout;
+    bool removeAt(int index);
+    int findIndexOf(const Comm::ConnectionPointer &conn) const;
+    static IOCB Read;
+    static CTCB Timeout;
 
 public:
     hash_link hash;             /** must be first */
 
 private:
-    int *fds;
-    int nfds_alloc;
-    int nfds;
-    PconnPool *parent;
-    char fakeReadBuf[4096];
+    /** List of connections we are holding.
+     * Sorted as FIFO list for most efficient speeds on pop() and findUsable()
+     * The worst-case pop() and scans occur on timeout and link closure events
+     * where timing is less critical. Occasional slow additions are okay.
+     */
+    Comm::ConnectionPointer *theList_;
+
+    /// Number of entries theList can currently hold without re-allocating (capacity).
+    int capacity_;
+    ///< Number of in-use entries in theList
+    int size_;
+
+    /** The pool containing this sub-list.
+     * The parent performs all stats accounting, and
+     * will delete us when it dies. It persists for the
+     * full duration of our existence.
+     */
+    PconnPool *parent_;
+
+    char fakeReadBuf_[4096]; // TODO: kill magic number.
+
     CBDATA_CLASS2(IdleConnList);
 };
 
@@ -82,20 +112,30 @@ public:
     ~PconnPool();
 
     void moduleInit();
-    void push(int fd, const char *host, u_short port, const char *domain, Ip::Address &client_address);
-    int pop(const char *host, u_short port, const char *domain, Ip::Address &client_address, bool retriable);
-    void noteUses(int uses);
-    void dumpHist(StoreEntry *e);
-    void dumpHash(StoreEntry *e);
+    void push(const Comm::ConnectionPointer &serverConn, const char *domain);
+
+    /**
+     * Updates destLink to point at an existing open connection if available and retriable.
+     * Otherwise, return false.
+     *
+     * We close available persistent connection if the caller transaction is not
+     * retriable to avoid having a growing number of open connections when many
+     * transactions create persistent connections but are not retriable.
+     */
+    Comm::ConnectionPointer pop(const Comm::ConnectionPointer &destLink, const char *domain, bool retriable);
+    void count(int uses);
+    void dumpHist(StoreEntry *e) const;
+    void dumpHash(StoreEntry *e) const;
     void unlinkList(IdleConnList *list);
-    void closeN(int n, const char *host, u_short port, const char *domain, Ip::Address &client_address);
+    void noteUses(int uses);
+    void closeN(int n, const Comm::ConnectionPointer &destLink, const char *domain);
     int count() const { return theCount; }
     void noteConnectionAdded() { ++theCount; }
     void noteConnectionRemoved() { assert(theCount > 0); --theCount; }
 
 private:
 
-    static const char *key(const char *host, u_short port, const char *domain, Ip::Address &client_address);
+    static const char *key(const Comm::ConnectionPointer &destLink, const char *domain);
 
     int hist[PCONN_HIST_SZ];
     hash_table *table;
@@ -107,7 +147,9 @@ private:
 class StoreEntry;
 class PconnPool;
 
-/// \ingroup PConnAPI
+/** \ingroup PConnAPI
+ * The global registry of persistent connection pools.
+ */
 class PconnModule
 {
 

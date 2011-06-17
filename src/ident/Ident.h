@@ -12,8 +12,7 @@
 #if USE_IDENT
 
 #include "cbdata.h"
-
-#include "ip/forward.h"
+#include "comm/forward.h"
 
 namespace Ident
 {
@@ -26,7 +25,7 @@ namespace Ident
  * Self-registers with a global ident lookup manager,
  * will call Ident::Init() itself if the manager has not been initialized already.
  */
-void Start(Ip::Address &me, Ip::Address &my_peer, IDCB * callback, void *cbdata);
+void Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *cbdata);
 
 /**
  \ingroup IdentAPI

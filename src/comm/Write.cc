@@ -2,6 +2,7 @@
 #if USE_DELAY_POOLS
 #include "ClientInfo.h"
 #endif
+#include "comm/Connection.h"
 #include "comm/IoCallback.h"
 #include "comm/Write.h"
 #include "fde.h"
@@ -9,23 +10,24 @@
 #include "MemBuf.h"
 
 void
-Comm::Write(int fd, MemBuf *mb, AsyncCall::Pointer &callback)
+Comm::Write(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Pointer &callback)
 {
-    Comm::Write(fd, mb->buf, mb->size, callback, mb->freeFunc());
+    Comm::Write(conn, mb->buf, mb->size, callback, mb->freeFunc());
 }
 
 void
-Comm::Write(int fd, const char *buf, int size, AsyncCall::Pointer &callback, FREE * free_func)
+Comm::Write(const Comm::ConnectionPointer &conn, const char *buf, int size, AsyncCall::Pointer &callback, FREE * free_func)
 {
-    debugs(5, 5, HERE << "FD " << fd << ": sz " << size << ": asynCall " << callback);
+    debugs(5, 5, HERE << conn << ": sz " << size << ": asynCall " << callback);
 
     /* Make sure we are open, not closing, and not writing */
-    assert(fd_table[fd].flags.open);
-    assert(!fd_table[fd].closing());
-    Comm::IoCallback *ccb = COMMIO_FD_WRITECB(fd);
+    assert(fd_table[conn->fd].flags.open);
+    assert(!fd_table[conn->fd].closing());
+    Comm::IoCallback *ccb = COMMIO_FD_WRITECB(conn->fd);
     assert(!ccb->active());
 
-    fd_table[fd].writeStart = squid_curtime;
+    fd_table[conn->fd].writeStart = squid_curtime;
+    ccb->conn = conn;
     /* Queue the write */
     ccb->setCallback(IOCB_WRITE, callback, (char *)buf, free_func, size);
     ccb->selectOrQueueWrite();
@@ -33,7 +35,7 @@ Comm::Write(int fd, const char *buf, int size, AsyncCall::Pointer &callback, FRE
 
 /** Write to FD.
  * This function is used by the lowest level of IO loop which only has access to FD numbers.
- * We have to use the comm iocb_table to map FD numbers to waiting data.
+ * We have to use the comm iocb_table to map FD numbers to waiting data and Comm::Connections.
  * Once the write has been concluded we schedule the waiting call with success/fail results.
  */
 void
@@ -43,10 +45,10 @@ Comm::HandleWrite(int fd, void *data)
     int len = 0;
     int nleft;
 
-    assert(state->fd == fd);
+    assert(state->conn != NULL && state->conn->fd == fd);
 
     PROF_start(commHandleWrite);
-    debugs(5, 5, HERE << "FD " << state->fd << ": off " <<
+    debugs(5, 5, HERE << state->conn << ": off " <<
            (long int) state->offset << ", sz " << (long int) state->size << ".");
 
     nleft = state->size - state->offset;
@@ -76,7 +78,7 @@ Comm::HandleWrite(int fd, void *data)
 
             const int nleft_corrected = min(nleft, quota);
             if (nleft != nleft_corrected) {
-                debugs(5, 5, HERE << "FD " << fd << " writes only " <<
+                debugs(5, 5, HERE << state->conn << " writes only " <<
                        nleft_corrected << " out of " << nleft);
                 nleft = nleft_corrected;
             }

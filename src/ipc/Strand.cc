@@ -6,7 +6,9 @@
  */
 
 #include "config.h"
+#include "base/Subscription.h"
 #include "base/TextException.h"
+#include "comm/Connection.h"
 #include "ipc/Strand.h"
 #include "ipc/StrandCoord.h"
 #include "ipc/Messages.h"

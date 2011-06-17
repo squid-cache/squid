@@ -34,6 +34,7 @@
 
 #include "config.h"
 #include "AccessLogEntry.h"
+#include "comm/Connection.h"
 #include "log/File.h"
 #include "log/Formats.h"
 #include "log/Gadgets.h"
@@ -152,11 +153,12 @@ Log::Format::SquidCustom(AccessLogEntry * al, customlog * log)
 
 #if USE_SQUID_EUI
         case LFT_CLIENT_EUI:
-            if (al->request) {
-                if (al->cache.caddr.IsIPv4())
-                    al->request->client_eui48.encode(tmp, 1024);
+            // TODO make the ACL checklist have a direct link to any TCP details.
+            if (al->request && al->request->clientConnectionManager.valid() && al->request->clientConnectionManager->clientConnection != NULL) {
+                if (al->request->clientConnectionManager->clientConnection->remote.IsIPv4())
+                    al->request->clientConnectionManager->clientConnection->remoteEui48.encode(tmp, 1024);
                 else
-                    al->request->client_eui64.encode(tmp, 1024);
+                    al->request->clientConnectionManager->clientConnection->remoteEui64.encode(tmp, 1024);
                 out = tmp;
             }
             break;

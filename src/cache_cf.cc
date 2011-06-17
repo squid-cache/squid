@@ -683,12 +683,9 @@ configDoConfigure(void)
     else
         Config.appendDomainLen = 0;
 
-    if (Config.retry.maxtries > 10)
-        fatal("maximum_single_addr_tries cannot be larger than 10");
-
-    if (Config.retry.maxtries < 1) {
-        debugs(3, 0, "WARNING: resetting 'maximum_single_addr_tries to 1");
-        Config.retry.maxtries = 1;
+    if (Config.connect_retries > 10) {
+        debugs(0,DBG_CRITICAL, "WARNING: connect_retries cannot be larger than 10. Resetting to 10.");
+        Config.connect_retries = 10;
     }
 
     requirePathnameExists("MIME Config Table", Config.mimeTablePathname);
@@ -2358,7 +2355,7 @@ parse_peer(peer ** head)
 
     p->icp.version = ICP_VERSION_CURRENT;
 
-    p->test_fd = -1;
+    p->testing_now = false;
 
 #if USE_CACHE_DIGESTS
 
@@ -3560,7 +3557,7 @@ parse_http_port_option(http_port_list * s, char *token)
         if (Ip::EnableIpv6)
             debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
         if ( !s->s.SetIPv4() ) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot NAT intercept (protocol does not provide NAT)" << s->s );
             self_destruct();
         }
     } else if (strcmp(token, "tproxy") == 0) {

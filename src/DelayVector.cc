@@ -41,6 +41,7 @@
 
 #if USE_DELAY_POOLS
 #include "squid.h"
+#include "comm/Connection.h"
 #include "DelayVector.h"
 #include "CommRead.h"
 

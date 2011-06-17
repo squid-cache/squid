@@ -33,19 +33,20 @@
  */
 
 #include "squid.h"
+#include "base/AsyncCall.h"
 #include "StoreIOBuffer.h"
 #include "comm.h"
 #include "event.h"
 #include "fde.h"
 #include "comm/AcceptLimiter.h"
 #include "comm/comm_internal.h"
+#include "comm/Connection.h"
 #include "comm/IoCallback.h"
 #include "comm/Loops.h"
 #include "comm/Write.h"
 #include "comm/TcpAcceptor.h"
 #include "CommIO.h"
 #include "CommRead.h"
-#include "ConnectionDetail.h"
 #include "MemBuf.h"
 #include "pconn.h"
 #include "SquidTime.h"
@@ -75,7 +76,7 @@
 
 static void commStopHalfClosedMonitor(int fd);
 static IOCB commHalfClosedReader;
-static void comm_init_opened(int new_socket, Ip::Address &addr, tos_t tos, nfmark_t nfmark, const char *note, struct addrinfo *AI);
+static void comm_init_opened(const Comm::ConnectionPointer &conn, tos_t tos, nfmark_t nfmark, const char *note, struct addrinfo *AI);
 static int comm_apply_flags(int new_socket, Ip::Address &addr, int flags, struct addrinfo *AI);
 
 #if USE_DELAY_POOLS
@@ -83,38 +84,6 @@ CBDATA_CLASS_INIT(CommQuotaQueue);
 
 static void commHandleWriteHelper(void * data);
 #endif
-
-class ConnectStateData
-{
-
-public:
-    void *operator new (size_t);
-    void operator delete (void *);
-    static void Connect (int fd, void *me);
-    void connect();
-    void callCallback(comm_err_t status, int xerrno);
-    void defaults();
-
-// defaults given by client
-    char *host;
-    u_short default_port;
-    Ip::Address default_addr;
-    // NP: CANNOT store the default addr:port together as it gets set/reset differently.
-
-    DnsLookupDetails dns; ///< host lookup details
-    Ip::Address S;
-    AsyncCall::Pointer callback;
-
-    int fd;
-    int tries;
-    int addrcount;
-    int connstart;
-
-private:
-    int commResetFD();
-    int commRetryConnect();
-    CBDATA_CLASS(ConnectStateData);
-};
 
 /* STATIC */
 
@@ -130,13 +99,6 @@ static void commSetNoLinger(int);
 static void commSetTcpNoDelay(int);
 #endif
 static void commSetTcpRcvbuf(int, int);
-static PF commConnectFree;
-static IPH commConnectDnsHandle;
-
-typedef enum {
-    COMM_CB_READ = 1,
-    COMM_CB_DERIVED
-} comm_callback_t;
 
 static MemAllocator *conn_close_pool = NULL;
 fd_debug_t *fdd_table = NULL;
@@ -192,35 +154,28 @@ commHandleRead(int fd, void *data)
  * completes, on error, or on file descriptor close.
  */
 void
-comm_read(int fd, char *buf, int size, IOCB *handler, void *handler_data)
+comm_read(const Comm::ConnectionPointer &conn, char *buf, int size, AsyncCall::Pointer &callback)
 {
-    AsyncCall::Pointer call = commCbCall(5,4, "SomeCommReadHandler",
-                                         CommIoCbPtrFun(handler, handler_data));
-    comm_read(fd, buf, size, call);
-}
-
-void
-comm_read(int fd, char *buf, int size, AsyncCall::Pointer &callback)
-{
-    debugs(5, 5, "comm_read, queueing read for FD " << fd << "; asynCall " << callback);
+    debugs(5, 5, "comm_read, queueing read for " << conn << "; asynCall " << callback);
 
     /* Make sure we are open and not closing */
-    assert(isOpen(fd));
-    assert(!fd_table[fd].closing());
-    Comm::IoCallback *ccb = COMMIO_FD_READCB(fd);
+    assert(Comm::IsConnOpen(conn));
+    assert(!fd_table[conn->fd].closing());
+    Comm::IoCallback *ccb = COMMIO_FD_READCB(conn->fd);
 
     // Make sure we are either not reading or just passively monitoring.
     // Active/passive conflicts are OK and simply cancel passive monitoring.
     if (ccb->active()) {
         // if the assertion below fails, we have an active comm_read conflict
-        assert(fd_table[fd].halfClosedReader != NULL);
-        commStopHalfClosedMonitor(fd);
+        assert(fd_table[conn->fd].halfClosedReader != NULL);
+        commStopHalfClosedMonitor(conn->fd);
         assert(!ccb->active());
     }
+    ccb->conn = conn;
 
     /* Queue the read */
     ccb->setCallback(Comm::IOCB_READ, callback, (char *)buf, NULL, size);
-    Comm::SetSelect(fd, COMM_SELECT_READ, commHandleRead, ccb, 0);
+    Comm::SetSelect(conn->fd, COMM_SELECT_READ, commHandleRead, ccb, 0);
 }
 
 /**
@@ -247,6 +202,7 @@ comm_empty_os_read_buffers(int fd)
 
 /**
  * Return whether the FD has a pending completed callback.
+ * NP: does not work.
  */
 int
 comm_has_pending_read_callback(int fd)
@@ -437,16 +393,12 @@ comm_local_port(int fd)
 
     temp.FreeAddrInfo(addr);
 
-    F->local_addr.SetPort(temp.GetPort());
-
-#if 0 // seems to undo comm_open actions on the FD ...
-    // grab default socket information for this address
-    temp.GetAddrInfo(addr);
-
-    F->sock_family = addr->ai_family;
-
-    temp.FreeAddrInfo(addr);
-#endif
+    if (F->local_addr.IsAnyAddr()) {
+        /* save the whole local address, not just the port. */
+        F->local_addr = temp;
+    } else {
+        F->local_addr.SetPort(temp.GetPort());
+    }
 
     debugs(5, 6, "comm_local_port: FD " << fd << ": port " << F->local_addr.GetPort() << "(family=" << F->sock_family << ")");
     return F->local_addr.GetPort();
@@ -479,6 +431,19 @@ comm_open(int sock_type,
           const char *note)
 {
     return comm_openex(sock_type, proto, addr, flags, 0, 0, note);
+}
+
+void
+comm_open_listener(int sock_type,
+                   int proto,
+                   Comm::ConnectionPointer &conn,
+                   const char *note)
+{
+    /* all listener sockets require bind() */
+    conn->flags |= COMM_DOBIND;
+
+    /* attempt native enabled port. */
+    conn->fd = comm_openex(sock_type, proto, conn->local, conn->flags, 0, 0, note);
 }
 
 int
@@ -597,62 +562,63 @@ comm_openex(int sock_type,
         return -1;
     }
 
-    debugs(50, 3, "comm_openex: Opened socket FD " << new_socket << " : family=" << AI->ai_family << ", type=" << AI->ai_socktype << ", protocol=" << AI->ai_protocol );
+    // XXX: temporary for the transition. comm_openex will eventually have a conn to play with.
+    Comm::ConnectionPointer conn = new Comm::Connection;
+    conn->local = addr;
+    conn->fd = new_socket;
+
+    debugs(50, 3, "comm_openex: Opened socket " << conn << " : family=" << AI->ai_family << ", type=" << AI->ai_socktype << ", protocol=" << AI->ai_protocol );
 
     /* set TOS if needed */
     if (tos)
-        Ip::Qos::setSockTos(new_socket, tos);
+        Ip::Qos::setSockTos(conn, tos);
 
     /* set netfilter mark if needed */
     if (nfmark)
-        Ip::Qos::setSockNfmark(new_socket, nfmark);
+        Ip::Qos::setSockNfmark(conn, nfmark);
 
     if ( Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && addr.IsIPv6() )
-        comm_set_v6only(new_socket, 1);
+        comm_set_v6only(conn->fd, 1);
 
     /* Windows Vista supports Dual-Sockets. BUT defaults them to V6ONLY. Turn it OFF. */
     /* Other OS may have this administratively disabled for general use. Same deal. */
     if ( Ip::EnableIpv6&IPV6_SPECIAL_V4MAPPING && addr.IsIPv6() )
-        comm_set_v6only(new_socket, 0);
+        comm_set_v6only(conn->fd, 0);
 
-    comm_init_opened(new_socket, addr, tos, nfmark, note, AI);
-    new_socket = comm_apply_flags(new_socket, addr, flags, AI);
+    comm_init_opened(conn, tos, nfmark, note, AI);
+    new_socket = comm_apply_flags(conn->fd, addr, flags, AI);
 
     addr.FreeAddrInfo(AI);
 
     PROF_stop(comm_open);
 
+    // XXX transition only. prevent conn from closing the new FD on function exit.
+    conn->fd = -1;
     return new_socket;
 }
 
 /// update FD tables after a local or remote (IPC) comm_openex();
 void
-comm_init_opened(int new_socket,
-                 Ip::Address &addr,
+comm_init_opened(const Comm::ConnectionPointer &conn,
                  tos_t tos,
                  nfmark_t nfmark,
                  const char *note,
                  struct addrinfo *AI)
 {
-    assert(new_socket >= 0);
+    assert(Comm::IsConnOpen(conn));
     assert(AI);
 
-    fde *F = NULL;
-
     /* update fdstat */
-    debugs(5, 5, "comm_open: FD " << new_socket << " is a new socket");
+    debugs(5, 5, HERE << conn << " is a new socket");
 
-    assert(!isOpen(new_socket));
-    fd_open(new_socket, FD_SOCKET, note);
+    assert(!isOpen(conn->fd)); // NP: global isOpen checks the fde entry for openness not the Comm::Connection
+    fd_open(conn->fd, FD_SOCKET, note);
 
-    fdd_table[new_socket].close_file = NULL;
+    fdd_table[conn->fd].close_file = NULL;
+    fdd_table[conn->fd].close_line = 0;
 
-    fdd_table[new_socket].close_line = 0;
-
-    F = &fd_table[new_socket];
-
-    F->local_addr = addr;
-
+    fde *F = &fd_table[conn->fd];
+    F->local_addr = conn->local;
     F->tosToServer = tos;
 
     F->nfmarkToServer = nfmark;
@@ -724,37 +690,35 @@ comm_apply_flags(int new_socket,
 }
 
 void
-comm_import_opened(int fd,
-                   Ip::Address &addr,
-                   int flags,
+comm_import_opened(const Comm::ConnectionPointer &conn,
                    const char *note,
                    struct addrinfo *AI)
 {
-    debugs(5, 2, HERE << " FD " << fd << " at " << addr);
-    assert(fd >= 0);
+    debugs(5, 2, HERE << conn);
+    assert(Comm::IsConnOpen(conn));
     assert(AI);
 
-    comm_init_opened(fd, addr, 0, 0, note, AI);
+    comm_init_opened(conn, 0, 0, note, AI);
 
-    if (!(flags & COMM_NOCLOEXEC))
-        fd_table[fd].flags.close_on_exec = 1;
+    if (!(conn->flags & COMM_NOCLOEXEC))
+        fd_table[conn->fd].flags.close_on_exec = 1;
 
-    if (addr.GetPort() > (u_short) 0) {
+    if (conn->local.GetPort() > (u_short) 0) {
 #ifdef _SQUID_MSWIN_
-        if (sock_type != SOCK_DGRAM)
+        if (AI->ai_socktype != SOCK_DGRAM)
 #endif
-            fd_table[fd].flags.nolinger = 1;
+            fd_table[conn->fd].flags.nolinger = 1;
     }
 
-    if ((flags & COMM_TRANSPARENT))
-        fd_table[fd].flags.transparent = 1;
+    if ((conn->flags & COMM_TRANSPARENT))
+        fd_table[conn->fd].flags.transparent = 1;
 
-    if (flags & COMM_NONBLOCKING)
-        fd_table[fd].flags.nonblocking = 1;
+    if (conn->flags & COMM_NONBLOCKING)
+        fd_table[conn->fd].flags.nonblocking = 1;
 
 #ifdef TCP_NODELAY
     if (AI->ai_socktype == SOCK_STREAM)
-        fd_table[fd].flags.nodelay = 1;
+        fd_table[conn->fd].flags.nodelay = 1;
 #endif
 
     /* no fd_table[fd].flags. updates needed for these conditions:
@@ -763,354 +727,9 @@ comm_import_opened(int fd,
      */
 }
 
-
-CBDATA_CLASS_INIT(ConnectStateData);
-
-void *
-ConnectStateData::operator new (size_t size)
-{
-    CBDATA_INIT_TYPE(ConnectStateData);
-    return cbdataAlloc(ConnectStateData);
-}
-
-void
-ConnectStateData::operator delete (void *address)
-{
-    cbdataFree(address);
-}
-
-
-
-void
-commConnectStart(int fd, const char *host, u_short port, AsyncCall::Pointer &cb)
-{
-    debugs(cb->debugSection, cb->debugLevel, "commConnectStart: FD " << fd <<
-           ", cb " << cb << ", " << host << ":" << port); // TODO: just print *cb
-
-    ConnectStateData *cs;
-    cs = new ConnectStateData;
-    cs->fd = fd;
-    cs->host = xstrdup(host);
-    cs->default_port = port;
-    cs->callback = cb;
-
-    comm_add_close_handler(fd, commConnectFree, cs);
-    ipcache_nbgethostbyname(host, commConnectDnsHandle, cs);
-}
-
-// TODO: Remove this and similar callback registration functions by replacing
-// (callback,data) parameters with an AsyncCall so that we do not have to use
-// a generic call name and debug level when creating an AsyncCall. This will
-// also cut the number of callback registration routines in half.
-void
-commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *data)
-{
-    debugs(5, 5, "commConnectStart: FD " << fd << ", data " << data << ", " << host << ":" << port);
-    AsyncCall::Pointer call = commCbCall(5,3,
-                                         "SomeCommConnectHandler", CommConnectCbPtrFun(callback, data));
-    commConnectStart(fd, host, port, call);
-}
-
-static void
-commConnectDnsHandle(const ipcache_addrs *ia, const DnsLookupDetails &details, void *data)
-{
-    ConnectStateData *cs = (ConnectStateData *)data;
-    cs->dns = details;
-
-    if (ia == NULL) {
-        debugs(5, 3, "commConnectDnsHandle: Unknown host: " << cs->host);
-        cs->callCallback(COMM_ERR_DNS, 0);
-        return;
-    }
-
-    assert(ia->cur < ia->count);
-
-    cs->default_addr = ia->in_addrs[ia->cur];
-
-    if (Config.onoff.balance_on_multiple_ip)
-        ipcacheCycleAddr(cs->host, NULL);
-
-    cs->addrcount = ia->count;
-
-    cs->connstart = squid_curtime;
-
-    cs->connect();
-}
-
-void
-ConnectStateData::callCallback(comm_err_t status, int xerrno)
-{
-    debugs(5, 3, "commConnectCallback: FD " << fd);
-
-    comm_remove_close_handler(fd, commConnectFree, this);
-    commSetTimeout(fd, -1, NULL, NULL);
-
-    typedef CommConnectCbParams Params;
-    Params &params = GetCommParams<Params>(callback);
-    params.fd = fd;
-    params.dns = dns;
-    params.flag = status;
-    params.xerrno = xerrno;
-    ScheduleCallHere(callback);
-    callback = NULL;
-
-    commConnectFree(fd, this);
-}
-
-static void
-commConnectFree(int fd, void *data)
-{
-    ConnectStateData *cs = (ConnectStateData *)data;
-    debugs(5, 3, "commConnectFree: FD " << fd);
-//    delete cs->callback;
-    cs->callback = NULL;
-    safe_free(cs->host);
-    delete cs;
-}
-
-static void
-copyFDFlags(int to, fde *F)
-{
-    if (F->flags.close_on_exec)
-        commSetCloseOnExec(to);
-
-    if (F->flags.nonblocking)
-        commSetNonBlocking(to);
-
-#ifdef TCP_NODELAY
-
-    if (F->flags.nodelay)
-        commSetTcpNoDelay(to);
-
-#endif
-
-    if (Config.tcpRcvBufsz > 0)
-        commSetTcpRcvbuf(to, Config.tcpRcvBufsz);
-}
-
-/* Reset FD so that we can connect() again */
+// Legacy pre-AsyncCalls API for FD timeouts.
 int
-ConnectStateData::commResetFD()
-{
-
-// XXX: do we have to check this?
-//
-//    if (!cbdataReferenceValid(callback.data))
-//        return 0;
-
-    statCounter.syscalls.sock.sockets++;
-
-    fde *F = &fd_table[fd];
-
-    struct addrinfo *AI = NULL;
-    F->local_addr.GetAddrInfo(AI);
-    int new_family = AI->ai_family;
-
-    int fd2 = socket(new_family, AI->ai_socktype, AI->ai_protocol);
-
-    if (fd2 < 0) {
-        debugs(5, DBG_CRITICAL, HERE << "WARNING: FD " << fd2 << " socket failed to allocate: " << xstrerror());
-
-        if (ENFILE == errno || EMFILE == errno)
-            fdAdjustReserved();
-
-        F->local_addr.FreeAddrInfo(AI);
-        return 0;
-    }
-
-#ifdef _SQUID_MSWIN_
-
-    /* On Windows dup2() can't work correctly on Sockets, the          */
-    /* workaround is to close the destination Socket before call them. */
-    close(fd);
-
-#endif
-
-    if (dup2(fd2, fd) < 0) {
-        debugs(5, DBG_CRITICAL, HERE << "WARNING: dup2(FD " << fd2 << ", FD " << fd << ") failed: " << xstrerror());
-
-        if (ENFILE == errno || EMFILE == errno)
-            fdAdjustReserved();
-
-        close(fd2);
-
-        F->local_addr.FreeAddrInfo(AI);
-        return 0;
-    }
-    Comm::ResetSelect(fd);
-
-    close(fd2);
-
-    debugs(50, 3, "commResetFD: Reset socket FD " << fd << "->" << fd2 << " : family=" << new_family );
-
-    /* INET6: copy the new sockets family type to the FDE table */
-    F->sock_family = new_family;
-
-    F->flags.called_connect = 0;
-
-    /*
-     * yuck, this has assumptions about comm_open() arguments for
-     * the original socket
-     */
-
-    /* MUST be done before binding or face OS Error: "(99) Cannot assign requested address"... */
-    if ( F->flags.transparent ) {
-        comm_set_transparent(fd);
-    }
-
-    if (commBind(fd, *AI) != COMM_OK) {
-        debugs(5, DBG_CRITICAL, "WARNING: Reset of FD " << fd << " for " << F->local_addr << " failed to bind: " << xstrerror());
-        F->local_addr.FreeAddrInfo(AI);
-        return 0;
-    }
-    F->local_addr.FreeAddrInfo(AI);
-
-    if (F->tosToServer)
-        Ip::Qos::setSockTos(fd, F->tosToServer);
-
-    if (F->nfmarkToServer)
-        Ip::Qos::setSockNfmark(fd, F->nfmarkToServer);
-
-    if ( Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && F->local_addr.IsIPv6() )
-        comm_set_v6only(fd, 1);
-
-    copyFDFlags(fd, F);
-
-    return 1;
-}
-
-int
-ConnectStateData::commRetryConnect()
-{
-    assert(addrcount > 0);
-
-    if (addrcount == 1) {
-        if (tries >= Config.retry.maxtries)
-            return 0;
-
-        if (squid_curtime - connstart > Config.Timeout.connect)
-            return 0;
-    } else {
-        if (tries > addrcount) {
-            /* Flush bad address count in case we are
-             * skipping over incompatible protocol
-             */
-            ipcacheMarkAllGood(host);
-            return 0;
-        }
-    }
-
-    return commResetFD();
-}
-
-static void
-commReconnect(void *data)
-{
-    ConnectStateData *cs = (ConnectStateData *)data;
-    ipcache_nbgethostbyname(cs->host, commConnectDnsHandle, cs);
-}
-
-/** Connect SOCK to specified DEST_PORT at DEST_HOST. */
-void
-ConnectStateData::Connect(int fd, void *me)
-{
-    ConnectStateData *cs = (ConnectStateData *)me;
-    assert (cs->fd == fd);
-    cs->connect();
-}
-
-void
-ConnectStateData::defaults()
-{
-    S = default_addr;
-    S.SetPort(default_port);
-}
-
-void
-ConnectStateData::connect()
-{
-    defaults();
-
-    debugs(5,5, HERE << "to " << S);
-
-    switch (comm_connect_addr(fd, S) ) {
-
-    case COMM_INPROGRESS:
-        debugs(5, 5, HERE << "FD " << fd << ": COMM_INPROGRESS");
-        Comm::SetSelect(fd, COMM_SELECT_WRITE, ConnectStateData::Connect, this, 0);
-        break;
-
-    case COMM_OK:
-        debugs(5, 5, HERE << "FD " << fd << ": COMM_OK - connected");
-        ipcacheMarkGoodAddr(host, S);
-        callCallback(COMM_OK, 0);
-        break;
-
-    case COMM_ERR_PROTOCOL:
-        debugs(5, 5, HERE "FD " << fd << ": COMM_ERR_PROTOCOL - try again");
-        /* problem using the desired protocol over this socket.
-         * skip to the next address and hope it's more compatible
-         * but do not mark the current address as bad
-         */
-        tries++;
-        if (commRetryConnect()) {
-            /* Force an addr cycle to move forward to the next possible address */
-            ipcacheCycleAddr(host, NULL);
-            eventAdd("commReconnect", commReconnect, this, this->addrcount == 1 ? 0.05 : 0.0, 0);
-        } else {
-            debugs(5, 5, HERE << "FD " << fd << ": COMM_ERR_PROTOCOL - ERR tried too many times already.");
-            callCallback(COMM_ERR_CONNECT, errno);
-        }
-        break;
-
-    default:
-        debugs(5, 5, HERE "FD " << fd << ": * - try again");
-        tries++;
-        ipcacheMarkBadAddr(host, S);
-
-#if USE_ICMP
-        if (Config.onoff.test_reachability)
-            netdbDeleteAddrNetwork(S);
-#endif
-
-        if (commRetryConnect()) {
-            eventAdd("commReconnect", commReconnect, this, this->addrcount == 1 ? 0.05 : 0.0, 0);
-        } else {
-            debugs(5, 5, HERE << "FD " << fd << ": * - ERR tried too many times already.");
-            callCallback(COMM_ERR_CONNECT, errno);
-        }
-    }
-}
-/*
-int
-commSetTimeout_old(int fd, int timeout, PF * handler, void *data)
-{
-    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
-    assert(fd >= 0);
-    assert(fd < Squid_MaxFD);
-    fde *F = &fd_table[fd];
-    assert(F->flags.open);
-
-    if (timeout < 0) {
-        cbdataReferenceDone(F->timeout_data);
-        F->timeout_handler = NULL;
-        F->timeout = 0;
-    } else {
-        if (handler) {
-            cbdataReferenceDone(F->timeout_data);
-            F->timeout_handler = handler;
-            F->timeout_data = cbdataReference(data);
-        }
-
-        F->timeout = squid_curtime + (time_t) timeout;
-    }
-
-    return F->timeout;
-}
-*/
-
-int
-commSetTimeout(int fd, int timeout, PF * handler, void *data)
+commSetTimeout(int fd, int timeout, CTCB * handler, void *data)
 {
     AsyncCall::Pointer call;
     debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
@@ -1121,8 +740,10 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
     return commSetTimeout(fd, timeout, call);
 }
 
-
-int commSetTimeout(int fd, int timeout, AsyncCall::Pointer &callback)
+// Legacy pre-Comm::Connection API for FD timeouts
+// still used by non-socket FD code dealing with pipes and IPC sockets.
+int
+commSetTimeout(int fd, int timeout, AsyncCall::Pointer &callback)
 {
     debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
     assert(fd >= 0);
@@ -1145,7 +766,40 @@ int commSetTimeout(int fd, int timeout, AsyncCall::Pointer &callback)
     }
 
     return F->timeout;
+}
 
+int
+commSetConnTimeout(const Comm::ConnectionPointer &conn, int timeout, AsyncCall::Pointer &callback)
+{
+    debugs(5, 3, HERE << conn << " timeout " << timeout);
+    assert(Comm::IsConnOpen(conn));
+    assert(conn->fd < Squid_MaxFD);
+    fde *F = &fd_table[conn->fd];
+    assert(F->flags.open);
+
+    if (timeout < 0) {
+        F->timeoutHandler = NULL;
+        F->timeout = 0;
+    } else {
+        if (callback != NULL) {
+            typedef CommTimeoutCbParams Params;
+            Params &params = GetCommParams<Params>(callback);
+            params.conn = conn;
+            F->timeoutHandler = callback;
+        }
+
+        F->timeout = squid_curtime + (time_t) timeout;
+    }
+
+    return F->timeout;
+}
+
+int
+commUnsetConnTimeout(const Comm::ConnectionPointer &conn)
+{
+    debugs(5, 3, HERE << "Remove timeout for " << conn);
+    AsyncCall::Pointer nil;
+    return commSetConnTimeout(conn, -1, nil);
 }
 
 int
@@ -1367,9 +1021,22 @@ comm_lingering_close(int fd)
  * closed, TCP generates a RESET
  */
 void
-comm_reset_close(int fd)
+comm_reset_close(Comm::ConnectionPointer &conn)
 {
+    struct linger L;
+    L.l_onoff = 1;
+    L.l_linger = 0;
 
+    if (setsockopt(conn->fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0)
+        debugs(50, DBG_CRITICAL, "ERROR: Closing " << conn << " with TCP RST: " << xstrerror());
+
+    conn->close();
+}
+
+// Legacy close function.
+void
+old_comm_reset_close(int fd)
+{
     struct linger L;
     L.l_onoff = 1;
     L.l_linger = 0;
@@ -2108,7 +1775,7 @@ commCloseAllSockets(void)
             ScheduleCallHere(callback);
         } else {
             debugs(5, 5, "commCloseAllSockets: FD " << fd << ": calling comm_reset_close()");
-            comm_reset_close(fd);
+            old_comm_reset_close(fd);
         }
     }
 }
@@ -2260,13 +1927,15 @@ commHalfClosedCheck(void *)
     typedef DescriptorSet::const_iterator DSCI;
     const DSCI end = TheHalfClosed->end();
     for (DSCI i = TheHalfClosed->begin(); i != end; ++i) {
-        const int fd = *i;
-        if (!fd_table[fd].halfClosedReader) { // not reading already
+        Comm::ConnectionPointer c = new Comm::Connection; // XXX: temporary. make HalfClosed a list of these.
+        c->fd = *i;
+        if (!fd_table[c->fd].halfClosedReader) { // not reading already
             AsyncCall::Pointer call = commCbCall(5,4, "commHalfClosedReader",
                                                  CommIoCbPtrFun(&commHalfClosedReader, NULL));
-            comm_read(fd, NULL, 0, call);
-            fd_table[fd].halfClosedReader = call;
-        }
+            comm_read(c, NULL, 0, call);
+            fd_table[c->fd].halfClosedReader = call;
+        } else
+            c->fd = -1; // XXX: temporary. prevent c replacement erase closing listed FD
     }
 
     WillCheckHalfClosed = false; // as far as we know
@@ -2298,13 +1967,14 @@ commStopHalfClosedMonitor(int const fd)
 
 /// I/O handler for the possibly half-closed connection monitoring code
 static void
-commHalfClosedReader(int fd, char *, size_t size, comm_err_t flag, int, void *)
+commHalfClosedReader(const Comm::ConnectionPointer &conn, char *, size_t size, comm_err_t flag, int, void *)
 {
     // there cannot be more data coming in on half-closed connections
     assert(size == 0);
-    assert(commHasHalfClosedMonitor(fd)); // or we would have canceled the read
+    assert(conn != NULL);
+    assert(commHasHalfClosedMonitor(conn->fd)); // or we would have canceled the read
 
-    fd_table[fd].halfClosedReader = NULL; // done reading, for now
+    fd_table[conn->fd].halfClosedReader = NULL; // done reading, for now
 
     // nothing to do if fd is being closed
     if (flag == COMM_ERR_CLOSING)
@@ -2312,8 +1982,8 @@ commHalfClosedReader(int fd, char *, size_t size, comm_err_t flag, int, void *)
 
     // if read failed, close the connection
     if (flag != COMM_OK) {
-        debugs(5, 3, "commHalfClosedReader: closing FD " << fd);
-        comm_close(fd);
+        debugs(5, 3, HERE << "closing " << conn);
+        conn->close();
         return;
     }
 
@@ -2322,10 +1992,10 @@ commHalfClosedReader(int fd, char *, size_t size, comm_err_t flag, int, void *)
 }
 
 
-CommRead::CommRead() : fd(-1), buf(NULL), len(0), callback(NULL) {}
+CommRead::CommRead() : conn(NULL), buf(NULL), len(0), callback(NULL) {}
 
-CommRead::CommRead(int fd_, char *buf_, int len_, AsyncCall::Pointer &callback_)
-        : fd(fd_), buf(buf_), len(len_), callback(callback_) {}
+CommRead::CommRead(const Comm::ConnectionPointer &c, char *buf_, int len_, AsyncCall::Pointer &callback_)
+        : conn(c), buf(buf_), len(len_), callback(callback_) {}
 
 DeferredRead::DeferredRead () : theReader(NULL), theContext(NULL), theRead(), cancelled(false) {}
 
@@ -2346,7 +2016,7 @@ template cbdata_type CbDataList<DeferredRead>::CBDATA_CbDataList;
 void
 DeferredReadManager::delayRead(DeferredRead const &aRead)
 {
-    debugs(5, 3, "Adding deferred read on FD " << aRead.theRead.fd);
+    debugs(5, 3, "Adding deferred read on " << aRead.theRead.conn);
     CbDataList<DeferredRead> *temp = deferredReads.push_back(aRead);
 
     // We have to use a global function as a closer and point to temp
@@ -2355,7 +2025,7 @@ DeferredReadManager::delayRead(DeferredRead const &aRead)
     AsyncCall::Pointer closer = commCbCall(5,4,
                                            "DeferredReadManager::CloseHandler",
                                            CommCloseCbPtrFun(&CloseHandler, temp));
-    comm_add_close_handler(aRead.theRead.fd, closer);
+    comm_add_close_handler(aRead.theRead.conn->fd, closer);
     temp->element.closer = closer; // remeber so that we can cancel
 }
 
@@ -2378,7 +2048,7 @@ DeferredReadManager::popHead(CbDataListContainer<DeferredRead> &deferredReads)
 
     DeferredRead &read = deferredReads.head->element;
     if (!read.cancelled) {
-        comm_remove_close_handler(read.theRead.fd, read.closer);
+        comm_remove_close_handler(read.theRead.conn->fd, read.closer);
         read.closer = NULL;
     }
 
@@ -2428,10 +2098,10 @@ DeferredReadManager::kickARead(DeferredRead const &aRead)
     if (aRead.cancelled)
         return;
 
-    if (aRead.theRead.fd>=0 && fd_table[aRead.theRead.fd].closing())
+    if (Comm::IsConnOpen(aRead.theRead.conn) && fd_table[aRead.theRead.conn->fd].closing())
         return;
 
-    debugs(5, 3, "Kicking deferred read on FD " << aRead.theRead.fd);
+    debugs(5, 3, "Kicking deferred read on " << aRead.theRead.conn);
 
     aRead.theReader(aRead.theContext, aRead.theRead);
 }
@@ -2440,10 +2110,6 @@ void
 DeferredRead::markCancelled()
 {
     cancelled = true;
-}
-
-ConnectionDetail::ConnectionDetail() : me(), peer()
-{
 }
 
 int

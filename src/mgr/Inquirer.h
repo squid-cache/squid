@@ -8,6 +8,7 @@
 #ifndef SQUID_MGR_INQUIRER_H
 #define SQUID_MGR_INQUIRER_H
 
+#include "comm/forward.h"
 #include "ipc/Inquirer.h"
 #include "mgr/Action.h"
 
@@ -44,7 +45,7 @@ private:
 private:
     Action::Pointer aggrAction; //< action to aggregate
 
-    int fd; ///< HTTP client socket descriptor
+    Comm::ConnectionPointer conn; ///< HTTP client socket descriptor
 
     AsyncCall::Pointer writer; ///< comm_write callback
     AsyncCall::Pointer closer; ///< comm_close handler

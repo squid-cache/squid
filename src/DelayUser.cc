@@ -42,6 +42,7 @@
 #include "DelayUser.h"
 #include "auth/UserRequest.h"
 #include "auth/User.h"
+#include "comm/Connection.h"
 #include "NullDelayId.h"
 #include "Store.h"
 

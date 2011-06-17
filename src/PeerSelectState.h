@@ -33,9 +33,37 @@
 #ifndef   SQUID_PEERSELECTSTATE_H
 #define   SQUID_PEERSELECTSTATE_H
 
+#include "Array.h"
 #include "cbdata.h"
+#include "comm/forward.h"
+#include "hier_code.h"
 #include "PingData.h"
 #include "ip/Address.h"
+
+class HttpRequest;
+class StoreEntry;
+
+typedef void PSC(Comm::ConnectionList *, void *);
+
+SQUIDCEXTERN void peerSelect(Comm::ConnectionList *, HttpRequest *, StoreEntry *, PSC *, void *data);
+SQUIDCEXTERN void peerSelectInit(void);
+
+/**
+ * A peer which has been selected as a possible destination.
+ * Listed as pointers here so as to prevent duplicates being added but will
+ * be converted to a set of IP address path options before handing back out
+ * to the caller.
+ *
+ * Certain connection flags and outgoing settings will also be looked up and
+ * set based on the received request and peer settings before handing back.
+ */
+class FwdServer
+{
+public:
+    peer *_peer;                /* NULL --> origin server */
+    hier_code code;
+    FwdServer *next;
+};
 
 class ps_state
 {
@@ -50,7 +78,10 @@ public:
     int direct;
     PSC *callback;
     void *callback_data;
-    FwdServer *servers;
+
+    Comm::ConnectionList *paths;    ///< the callers paths array. to be filled with our final results.
+    FwdServer *servers;    ///< temporary linked list of peers we will pass back.
+
     /*
      * Why are these Ip::Address instead of peer *?  Because a
      * peer structure can become invalid during the peer selection
