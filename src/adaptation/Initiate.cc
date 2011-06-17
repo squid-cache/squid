@@ -27,6 +27,22 @@ private:
     AnswerDialer &operator =(const AnswerDialer &); // not implemented
 };
 
+/// Calls expectNoConsumption() if noteAdaptationAnswer async call is
+/// scheduled but never fired (e.g., because the HTTP transaction aborts).
+class AnswerCall: public AsyncCallT<AnswerDialer>{
+    AnswerCall(const char *aName, const AnswerDialer &aDialer) :
+        AsyncCallT<AnswerDialer>(93, 5, aName, aDialer), fired(false) {}
+    virtual void fire() {
+        fired = true; 
+        AsyncCallT<AnswerDialer>::fire();
+    }
+    virtual ~AnswerCall() {
+        if (!fired && dialer.arg1.message != NULL && dialer.arg1.message->body_pipe != NULL)
+            dialer.arg1.message->body_pipe->expectNoConsumption();
+    }
+    bool fired; ///< whether we fired the call
+};
+
 } // namespace Adaptation
 
 
@@ -73,8 +89,9 @@ void Adaptation::Initiate::clearInitiator()
 void Adaptation::Initiate::sendAnswer(HttpMsg *msg)
 {
     assert(msg);
-    CallJob(93, 5, __FILE__, __LINE__, "Initiator::noteAdaptationAnswer",
-            AnswerDialer(theInitiator, &Initiator::noteAdaptationAnswer, msg));
+    AsyncCall::Pointer call = new AnswerCall("Initiator::noteAdaptationAnswer",
+                                             AnswerDialer(theInitiator, &Initiator::noteAdaptationAnswer, answer));
+    ScheduleCallHere(call);
     clearInitiator();
 }
 
