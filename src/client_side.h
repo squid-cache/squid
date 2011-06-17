@@ -43,6 +43,7 @@
 #include "eui/Eui48.h"
 #include "eui/Eui64.h"
 #include "HttpControlMsg.h"
+#include "HttpParser.h"
 #include "RefCount.h"
 #include "StoreIOBuffer.h"
 
@@ -50,7 +51,6 @@ class ConnStateData;
 class ClientHttpRequest;
 class clientStreamNode;
 class ChunkedCodingParser;
-class HttpParser;
 
 /**
  * Badly named.
