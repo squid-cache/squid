@@ -220,7 +220,9 @@ errorInitialize(void)
         error_stylesheet.Printf("%s",tmpl.text());
     }
 
+#if USE_SSL
     Ssl::errorDetailInitialize();
+#endif
 }
 
 void
@@ -240,7 +242,9 @@ errorClean(void)
 
     error_page_count = 0;
 
+#if USE_SSL
     Ssl::errorDetailClean();
+#endif
 }
 
 /// \ingroup ErrorPageInternal
