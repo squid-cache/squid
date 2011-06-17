@@ -181,8 +181,6 @@ Auth::Negotiate::Config::init(Auth::Config * scheme)
         negotiateauthenticators->ipc_type = IPC_STREAM;
 
         helperStatefulOpenServers(negotiateauthenticators);
-
-        CBDATA_INIT_TYPE(authenticateStateData);
     }
 }
 

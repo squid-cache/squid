@@ -131,12 +131,24 @@ struct logformat_token_table_entry logformat_token_table[] = {
 
     {"mt", LFT_MIME_TYPE},
 
+    {">rm", LFT_CLIENT_REQ_METHOD},
+    {">ru", LFT_CLIENT_REQ_URI},
+    {">rp", LFT_CLIENT_REQ_URLPATH},
+    /*{">rq", LFT_CLIENT_REQ_QUERY},*/
+    {">rv", LFT_CLIENT_REQ_VERSION},
+
     {"rm", LFT_REQUEST_METHOD},
     {"ru", LFT_REQUEST_URI},	/* doesn't include the query-string */
-    {"rp", LFT_REQUEST_URLPATH},	/* doesn't include the host */
+    {"rp", LFT_REQUEST_URLPATH_OLD_31},
     /* { "rq", LFT_REQUEST_QUERY }, * /     / * the query-string, INCLUDING the leading ? */
-    {">v", LFT_REQUEST_VERSION},
+    {">v", LFT_REQUEST_VERSION_OLD_2X},
     {"rv", LFT_REQUEST_VERSION},
+
+    {"<rm", LFT_SERVER_REQ_METHOD},
+    {"<ru", LFT_SERVER_REQ_URI},
+    {"<rp", LFT_SERVER_REQ_URLPATH},
+    /*{"<rq", LFT_SERVER_REQ_QUERY},*/
+    {"<rv", LFT_SERVER_REQ_VERSION},
 
     { ">st", LFT_REQUEST_SIZE_TOTAL },
     /*{ ">sl", LFT_REQUEST_SIZE_LINE }, * / / * the request line "GET ... " */
@@ -461,6 +473,16 @@ done:
     case LFT_PEER_LOCAL_IP_OLD_27:
         debugs(46, 0, "WARNING: The \"oa\" formatting code is deprecated. Use the \"<la\" instead.");
         lt->type = LFT_PEER_LOCAL_IP;
+        break;
+
+    case LFT_REQUEST_URLPATH_OLD_31:
+        debugs(46, 0, "WARNING: The \"rp\" formatting code is deprecated. Use the \">rp\" instead.");
+        lt->type = LFT_CLIENT_REQ_URLPATH;
+        break;
+
+    case LFT_REQUEST_VERSION_OLD_2X:
+        debugs(46, 0, "WARNING: The \">v\" formatting code is deprecated. Use the \">rv\" instead.");
+        lt->type = LFT_REQUEST_VERSION;
         break;
 
     default:

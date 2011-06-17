@@ -60,13 +60,9 @@ IdleConnList::IdleConnList(const char *key, PconnPool *thePool) :
 
 IdleConnList::~IdleConnList()
 {
-    parent_->unlinkList(this);
+    if (parent_)
+        parent_->unlinkList(this);
 
-/* TODO: re-attach to MemPools.
-    if (capacity_ == PCONN_FDS_SZ)
-        pconn_fds_pool->freeOne(theList_);
-    else
-*/
     delete[] theList_;
 
     xfree(hash.key);
@@ -106,14 +102,61 @@ IdleConnList::removeAt(int index)
         theList_[index] = theList_[index + 1];
     theList_[size_-1] = NULL;
 
-    if (parent_)
+    if (parent_) {
         parent_->noteConnectionRemoved();
 
-    if (--size_ == 0) {
+        if (--size_ == 0) {
+            debugs(48, 3, HERE << "deleting " << hashKeyStr(&hash));
+            delete this;
+        }
+    }
+    return true;
+}
+
+// almost a duplicate of removeFD. But drops multiple entries.
+void
+IdleConnList::closeN(size_t n)
+{
+    if (n < 1) {
+        debugs(48, 2, HERE << "Nothing to do.");
+        return;
+    } else if (n < (size_t)count()) {
+        debugs(48, 2, HERE << "Closing all entries.");
+        while (size_ >= 0) {
+            const Comm::ConnectionPointer &conn = theList_[--size_];
+            theList_[size_] = NULL;
+            clearHandlers(conn);
+            conn->close();
+            if (parent_)
+                parent_->noteConnectionRemoved();
+        }
+    } else {
+        debugs(48, 2, HERE << "Closing " << n << " of " << size_ << " entries.");
+
+        size_t index = 0;
+        // ensure the first N entries are closed
+        while (index < n) {
+            const Comm::ConnectionPointer &conn = theList_[--size_];
+            theList_[size_] = NULL;
+            clearHandlers(conn);
+            conn->close();
+            if (parent_)
+                parent_->noteConnectionRemoved();
+        }
+        // shuffle the list N down.
+        for (;index < (size_t)size_; index++) {
+            theList_[index - n] = theList_[index];
+        }
+        // ensure the last N entries are unset
+        while (index < ((size_t)size_) + n) {
+            theList_[index] = NULL;
+        }
+    }
+
+    if (parent_ && size_ == 0) {
         debugs(48, 3, HERE << "deleting " << hashKeyStr(&hash));
         delete this;
     }
-    return true;
 }
 
 void
@@ -148,6 +191,32 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
     AsyncCall::Pointer timeoutCall = commCbCall(5,4, "IdleConnList::Read",
                                                 CommTimeoutCbPtrFun(IdleConnList::Timeout, this));
     commSetConnTimeout(conn, Config.Timeout.pconn, timeoutCall);
+}
+
+Comm::ConnectionPointer
+IdleConnList::pop()
+{
+    for (int i=size_-1; i>=0; i--) {
+
+        // Is the FD pending completion of the closure callback?
+        // this flag is set while our early-read/close handler is
+        // waiting for a remote response. It gets unset when the
+        // handler is scheduled.
+        if (!fd_table[theList_[i]->fd].flags.read_pending)
+            continue;
+
+        // connection already closed. useless.
+        if (!Comm::IsConnOpen(theList_[i]))
+            continue;
+
+        // finally, a match. pop and return it.
+        Comm::ConnectionPointer result = theList_[i];
+        /* may delete this */
+        removeAt(i);
+        return result;
+    }
+
+    return Comm::ConnectionPointer();
 }
 
 /*

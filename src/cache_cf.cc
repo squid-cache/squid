@@ -494,7 +494,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
 
         trim_trailing_ws(tmp_line);
         ProcessMacros(tmp_line, tmp_line_len);
-        debugs(3, 5, "Processing: '" << tmp_line << "'");
+        debugs(3, (opt_parse_cfg_only?1:5), "Processing: " << tmp_line);
 
         if (const char* expr = FindStatement(tmp_line, "if")) {
             if_states.push_back(EvalBoolExpr(expr)); // store last if-statement meaning
@@ -2983,6 +2983,11 @@ free_string(char **var)
 void
 parse_eol(char *volatile *var)
 {
+    if (!var) {
+        self_destruct();
+        return;
+    }
+
     unsigned char *token = (unsigned char *) strtok(NULL, null_string);
     safe_free(*var);
 

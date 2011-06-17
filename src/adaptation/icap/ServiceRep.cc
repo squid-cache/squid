@@ -25,7 +25,7 @@ Adaptation::Icap::ServiceRep::ServiceRep(const ServiceConfigPointer &svcCfg):
         theBusyConns(0),
         theAllWaiters(0),
         connOverloadReported(false),
-        theIdleConns("ICAP Service"),
+        theIdleConns("ICAP Service",NULL),
         isSuspended(0), notifying(false),
         updateScheduled(false),
         wasAnnouncedUp(true), // do not announce an "up" service at startup
@@ -85,23 +85,44 @@ void Adaptation::Icap::ServiceRep::noteFailure()
 Comm::ConnectionPointer
 Adaptation::Icap::ServiceRep::getConnection(bool retriableXact, bool &reused)
 {
-    Comm::ConnectionPointer connection = new Comm::Connection;
+    Ip::Address client_addr;
 
-    /* NP: set these here because it applies whether a pconn or a new conn is used */
+    Comm::ConnectionPointer connection;
 
-    // TODO: Avoid blocking lookup if s.cfg().host is a hostname
-    connection->remote = cfg().host.termedBuf();
-    connection->remote.SetPort(cfg().port);
+    /* 2011-06-17: rousskov:
+     *  There are two things that happen at the same time in pop(). Both are important.
+     *    1) Ensure that we can use a pconn for this transaction.
+     *    2) Ensure that the number of idle pconns does not grow without bounds.
+     *
+     * Both happen in the beginning of the transaction. Both are dictated by real-world problems.
+     * retriable means you can repeat the request if you suspect the first try failed due to a pconn race.
+     * HTTP and ICAP rules prohibit the use of pconns for non-retriable requests.
+     *
+     * If there are zero idle connections, (2) is irrelevant. (2) is only relevant when there are many
+     * idle connections and we should not open more connections without closing some idle ones,
+     * or instead of just opening a new connection and leaving idle connections as is.
+     * In other words, (2) tells us to close one FD for each new one we open due to retriable.
+     */
+    if (retriableXact)
+        connection = theIdleConns.pop();
+    else
+        theIdleConns.closeN(1);
 
-    // TODO: check whether NULL domain is appropriate here
-    theIdleConns.pop(connection, NULL, retriableXact);
-    reused = connection->isOpen(); // reused a persistent connection
+    reused = Comm::IsConnOpen(connection); // reused a persistent connection
 
-    if (reused)
+    if (!reused) { // need a new connection
+        Ip::Address outgoing;  // default: IP6_ANY_ADDR
+        if (!Ip::EnableIpv6)
+            outgoing.SetIPv4();
+        else if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK &&  !cfg().ipv6) {
+            /* split-stack for now requires default IPv4-only socket */
+            outgoing.SetIPv4();
+        }
+        connection = comm_open(SOCK_STREAM, 0, outgoing, COMM_NONBLOCKING, cfg().uri.termedBuf());
+    } else
         debugs(93,3, HERE << "reused pconn " << connection);
-    // else, return unopened Comm::Connection for caller to open.
 
-    if (connection->isOpen())
+    if (Comm::IsConnOpen(connection))
         ++theBusyConns;
 
     return connection;
@@ -115,7 +136,7 @@ void Adaptation::Icap::ServiceRep::putConnection(const Comm::ConnectionPointer &
     if (isReusable && excessConnections() == 0) {
         debugs(93, 3, HERE << "pushing pconn" << comment);
         commUnsetConnTimeout(conn);
-        theIdleConns.push(conn, NULL);
+        theIdleConns.push(conn);
     } else {
         debugs(93, 3, HERE << "closing pconn" << comment);
         // comm_close will clear timeout
@@ -132,7 +153,7 @@ void Adaptation::Icap::ServiceRep::putConnection(const Comm::ConnectionPointer &
 void Adaptation::Icap::ServiceRep::noteConnectionUse(const Comm::ConnectionPointer &conn)
 {
     Must(Comm::IsConnOpen(conn));
-    fd_table[conn->fd].noteUse(&theIdleConns);
+    fd_table[conn->fd].noteUse(NULL); // pconn re-use but not via PconnPool API
 }
 
 void Adaptation::Icap::ServiceRep::setMaxConnections()
@@ -555,7 +576,7 @@ void Adaptation::Icap::ServiceRep::handleNewOptions(Adaptation::Icap::Options *n
     if (excess && theIdleConns.count() > 0) {
         const int n = min(excess, theIdleConns.count());
         debugs(93,5, HERE << "closing " << n << " pconns to relief debt");
-        theIdleConns.closeN(n, Comm::ConnectionPointer(), cfg().host.termedBuf());
+        theIdleConns.closeN(n);
     }
 
     scheduleNotification();
