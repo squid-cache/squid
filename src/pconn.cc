@@ -134,7 +134,7 @@ IdleConnList::closeN(size_t n)
                 parent->noteConnectionRemoved();
         }
         // shuffle the list N down.
-        for (;index < (size_t)nfds; index++) {
+        for (; index < (size_t)nfds; index++) {
             fds[index - n] = fds[index];
         }
         // ensure the last N entries are unset
