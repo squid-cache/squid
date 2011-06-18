@@ -8,15 +8,16 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
 "POT-Creation-Date: 2011-05-04 13:58+1200\n"
-"PO-Revision-Date: 2010-01-16 02:05+0000\n"
-"Last-Translator: Amos Jeffries <Unknown>\n"
+"PO-Revision-Date: 2011-06-16 14:43+0200\n"
+"Last-Translator: Amos <squid3@treenet.co.nz>\n"
 "Language-Team: English (Australia) <en_AU@li.org>\n"
-"Language: \n"
+"Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Pootle 2.0.6\n"
 "X-Launchpad-Export-Date: 2010-01-16 02:12+0000\n"
-"X-Generator: Launchpad (build Unknown)\n"
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:3
@@ -116,35 +117,30 @@ msgstr "This has the following advantages over the NCSA module:"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:25
-#, fuzzy
 #| msgid "Allows authentication of all known local users"
 msgid "- Allows authentication of all known local users"
-msgstr "Allows authentication of all known local users"
+msgstr "- Allows authentication of all known local users"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:28
-#, fuzzy
 msgid "- Allows authentication through nsswitch.conf"
-msgstr "Allows authentication through"
+msgstr "- Allows authentication through nsswitch.conf"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:31
-#, fuzzy
 #| msgid "Can handle NIS(+) requests"
 msgid "- Can handle NIS(+) requests"
-msgstr "Can handle NIS(+) requests"
+msgstr "- Can handle NIS(+) requests"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:34
-#, fuzzy
 msgid "- Can handle LDAP requests"
-msgstr "Can handle LDAP request"
+msgstr "- Can handle LDAP requests"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:37
-#, fuzzy
 msgid "- Can handle PAM requests"
-msgstr "Can handle PAM request"
+msgstr "- Can handle PAM requests"
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:38
@@ -331,13 +327,12 @@ msgstr ""
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:97
 #: helpers/ntlm_auth/SSPI/ntlm_sspi_auth.8:109 tools/cachemgr.cgi.8.in:59
 #: tools/squidclient.1:193
-#, fuzzy
 msgid ""
 "Distributed under the GNU General Public License (GNU GPL) version 2 or "
 "later (GPLv2+)."
 msgstr ""
 "Distributed under the GNU General Public License (GNU GPL) version 2 or "
-"later (GPL2+)."
+"later (GPLv2+)."
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:82
@@ -916,7 +911,6 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:212
-#, fuzzy
 #| msgid ""
 #| "Specify an alternate TCP port where the ldap server is listening if other "
 #| "than the default LDAP port 389. Can also be specified within the server "
@@ -926,17 +920,16 @@ msgid ""
 "than the default LDAP port 389. Can also be specified within the server "
 "specification by using servername:port syntax."
 msgstr ""
-"Specify an alternate TCP port where the ldap server is listening if other "
+"Specify an alternate TCP port where the LDAP server is listening if other "
 "than the default LDAP port 389. Can also be specified within the server "
-"specificiation by using servername:port syntax."
+"specification by using servername:port syntax."
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:218
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:206
-#, fuzzy
 #| msgid "LDAP protocol version. Defaults to 2 if not specified."
 msgid "LDAP protocol version. Defaults to B<3> if not specified."
-msgstr "LDAP protocol version. Defaults to 2 if not specified."
+msgstr "LDAP protocol version. Defaults to B<3> if not specified."
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:222
@@ -987,7 +980,6 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:256
-#, fuzzy
 #| msgid ""
 #| "If you have sub-domains then you need to use a search filter approach to "
 #| "locate your user DNs as these can no longer be constructed direcly from "
@@ -998,12 +990,11 @@ msgid ""
 "base DN and login name alone:"
 msgstr ""
 "If you have sub-domains then you need to use a search filter approach to "
-"locate your user DNs as these can no longer be constructed direcly from the "
+"locate your user DNs as these can no longer be constructed directly from the "
 "base DN and login name alone:"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:263
-#, fuzzy
 #| msgid ""
 #| "And similarily if you only want to allow access to users having a "
 #| "specific attribute"
@@ -1011,7 +1002,7 @@ msgid ""
 "And similarly if you only want to allow access to users having a specific "
 "attribute"
 msgstr ""
-"And similarily if you only want to allow access to users having a specific "
+"And similarly if you only want to allow access to users having a specific "
 "attribute"
 
 #. type: Plain text
@@ -1458,10 +1449,10 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:38
-#, fuzzy, no-wrap
+#, no-wrap
 #| msgid "Squid PAM Basic authentication helper"
 msgid " - use PAM authentication database\n"
-msgstr "Squid PAM Basic authentication helper"
+msgstr " - use PAM authentication database\n"
 
 #. type: Plain text
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:41
@@ -1505,19 +1496,17 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:7
-#, fuzzy
 #| msgid "Squid PAM Basic authentication helper"
 msgid "Basic authentication protocol"
-msgstr "Squid PAM Basic authentication helper"
+msgstr "Basic authentication protocol"
 
 #. type: Plain text
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:9
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:9
 #: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:9
-#, fuzzy
 #| msgid "Version 1.0"
 msgid "Version 2.0"
-msgstr "Version 1.0"
+msgstr "Version 2.0"
 
 #. type: Plain text
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:14
@@ -1563,10 +1552,9 @@ msgstr ""
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:35
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:23
 #: helpers/ntlm_auth/SSPI/ntlm_sspi_auth.8:33
-#, fuzzy
 #| msgid "Write debugging to stderr also."
 msgid "Write debug info to stderr."
-msgstr "Write debugging to stderr also."
+msgstr "Write debug info to stderr."
 
 #. type: Plain text
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:44
@@ -1619,10 +1607,10 @@ msgstr ""
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:84
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:172
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:116
-#, fuzzy, no-wrap
+#, no-wrap
 #| msgid "QUESTIONS"
 msgid "TESTING"
-msgstr "QUESTIONS"
+msgstr "TESTING"
 
 #. type: Plain text
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:98
@@ -1681,17 +1669,15 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/SSPI/basic_sspi_auth.8:126
 #: helpers/digest_auth/file/digest_file_auth.8:64
-#, fuzzy
 #| msgid "Based on original code by"
 msgid "Based on prior work by"
-msgstr "Based on original code by"
+msgstr "Based on prior work by"
 
 #. type: Plain text
 #: helpers/digest_auth/file/digest_file_auth.8:7
-#, fuzzy
 #| msgid "LDAP authentication helper for Squid"
 msgid "File based digest authentication helper for Squid."
-msgstr "LDAP authentication helper for Squid"
+msgstr "File based digest authentication helper for Squid."
 
 #. type: Plain text
 #: helpers/digest_auth/file/digest_file_auth.8:14 tools/squidclient.1:34
@@ -1999,17 +1985,15 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/external_acl/AD_group/ext_ad_group_acl.8:235
-#, fuzzy
 #| msgid "Based on prior work in B<squid_ldap_auth> by"
 msgid "Based on prior work in B<mswin_check_lm_group (ext_lm_group_acl)>"
-msgstr "Based on prior work in B<squid_ldap_auth> by"
+msgstr "Based on prior work in B<mswin_check_lm_group (ext_lm_group_acl)>"
 
 #. type: Plain text
 #: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:7
-#, fuzzy
 #| msgid "Squid LDAP external acl group helper"
 msgid "Squid eDirectory IP Lookup Helper"
-msgstr "Squid LDAP external acl group helper"
+msgstr "Squid eDirectory IP Lookup Helper"
 
 #. type: Plain text
 #: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:17
@@ -2018,17 +2002,15 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:21
-#, fuzzy
 #| msgid "version"
 msgid "LDAP version"
-msgstr "version"
+msgstr "LDAP version"
 
 #. type: Plain text
 #: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:23
-#, fuzzy
 #| msgid "base DN"
 msgid "basedn"
-msgstr "base DN"
+msgstr "basedn"
 
 #. type: Plain text
 #: helpers/external_acl/eDirectory_userip/ext_edirectory_userip_acl.8:25
@@ -2221,10 +2203,9 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:14
-#, fuzzy
 #| msgid "service name"
 msgid "file name"
-msgstr "service name"
+msgstr "file name"
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:19
@@ -2263,9 +2244,8 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:53
-#, fuzzy
 msgid "The configuration file format is as follows:"
-msgstr "The main configuration file for the Sample MSNT authenticator."
+msgstr "The configuration file format is as follows:"
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:62
@@ -2289,21 +2269,18 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:7
-#, fuzzy
 #| msgid "Squid LDAP external acl group helper"
 msgid "Squid LDAP external acl group helper for Kerberos or NTLM credentials."
-msgstr "Squid LDAP external acl group helper"
+msgstr "Squid LDAP external acl group helper for Kerberos or NTLM credentials."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:9
-#, fuzzy
 #| msgid "Version 1.0"
 msgid "Version 1.3.0sq"
-msgstr "Version 1.0"
+msgstr "Version 1.3.0sq"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:21
-#, fuzzy
 #| msgid ""
 #| "B<squid_ldap_group> allows Squid to connect to a LDAP directory to "
 #| "authorize users via LDAP groups.  LDAP options are specified as "
@@ -2318,11 +2295,11 @@ msgid ""
 "user@REALM, NDOMAIN\\euser) to be checked against the LDAP directory are "
 "specified on subsequent lines of input to the helper, one username per line."
 msgstr ""
-"B<squid_ldap_group> allows Squid to connect to a LDAP directory to authorize "
-"users via LDAP groups.  LDAP options are specified as parameters on the "
-"command line, while the username(s) and group(s) to be checked against the "
-"LDAP directory are specified on subsequent lines of input to the helper, one "
-"username/group pair per line separated by a space."
+"B<ext_kerberos_ldap_group_acl> is an installed binary and allows Squid to "
+"connect to a LDAP directory to authorize users via LDAP groups. Options are "
+"specified as parameters on the command line, while the username (e.g. user, "
+"user@REALM, NDOMAIN\\euser) to be checked against the LDAP directory are "
+"specified on subsequent lines of input to the helper, one username per line."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:28
@@ -2347,7 +2324,6 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:47
-#, fuzzy
 #| msgid ""
 #| "As expected by the B<external_acl_type> construct of Squid, after "
 #| "specifying a username and group followed by a new line, this helper will "
@@ -2360,26 +2336,25 @@ msgid ""
 "helper will produce either B<OK> or B<ERR> on the following line to show if "
 "the user is a member of the specified group."
 msgstr ""
-"As expected by the B<external_acl_type> construct of Squid, after specifying "
-"a username and group followed by a new line, this helper will produce either "
-"B<OK> or B<ERR> on the following line to show if the user is a member of the "
-"specified group."
+"Different group names can be specified for different domains using a "
+"group@domain syntax.  As expected by the B<external_acl_type> construct of "
+"Squid, after specifying a username and group followed by a new line, this "
+"helper will produce either B<OK> or B<ERR> on the following line to show if "
+"the user is a member of the specified group."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:55
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:26
-#, fuzzy
 #| msgid "Write debugging to stderr also."
 msgid "Write debug messages to stderr."
-msgstr "Write debugging to stderr also."
+msgstr "Write debug messages to stderr."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:58
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:29
-#, fuzzy
 #| msgid "Verbose. Print outgoing message to stderr."
 msgid "Write informational messages to stderr."
-msgstr "Verbose. Print outgoing message to stderr."
+msgstr "Write informational messages to stderr."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:61
@@ -2437,7 +2412,6 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:91
-#, fuzzy
 #| msgid ""
 #| "As the password needs to be printed in plain text in your Squid "
 #| "configuration and will be sent on the command line to the helper it is "
@@ -2453,18 +2427,16 @@ msgid ""
 "used from a process listing."
 msgstr ""
 "As the password needs to be printed in plain text in your Squid "
-"configuration and will be sent on the command line to the helper it is "
-"strongly recommended to use a account with minimal associated privileges.  "
-"This to limit the damage in case someone could get hold of a copy of your "
-"Squid configuration file or extracts the password used from a process "
-"listing."
+"configuration it is strongly recommended to use a account with minimal "
+"associated privileges.  This to limit the damage in case someone could get "
+"hold of a copy of your Squid configuration file or extracts the password "
+"used from a process listing."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:95
-#, fuzzy
 #| msgid "LDAP server name"
 msgid "LDAP server bind path."
-msgstr "LDAP server name"
+msgstr "LDAP server bind path."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:98
@@ -2664,7 +2636,6 @@ msgstr "Version 2.17"
 
 #. type: Plain text
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:33
-#, fuzzy
 #| msgid ""
 #| "B<squid_ldap_group> allows Squid to connect to a LDAP directory to "
 #| "authorize users via LDAP groups.  LDAP options are specified as "
@@ -2679,11 +2650,11 @@ msgid ""
 "against the LDAP directory are specified on subsequent lines of input to the "
 "helper, one username/group pair per line separated by a space."
 msgstr ""
-"B<squid_ldap_group> allows Squid to connect to a LDAP directory to authorize "
-"users via LDAP groups.  LDAP options are specified as parameters on the "
-"command line, while the username(s) and group(s) to be checked against the "
-"LDAP directory are specified on subsequent lines of input to the helper, one "
-"username/group pair per line separated by a space."
+"B<ext_ldap_group_acl> allows Squid to connect to a LDAP directory to "
+"authorize users via LDAP groups.  LDAP options are specified as parameters "
+"on the command line, while the username(s) and group(s) to be checked "
+"against the LDAP directory are specified on subsequent lines of input to the "
+"helper, one username/group pair per line separated by a space."
 
 #. type: Plain text
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:44
@@ -2744,7 +2715,6 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:82
-#, fuzzy
 #| msgid ""
 #| "Debug mode where each step taken will get reported in detail.  Useful for "
 #| "understanding what goes wrong if the results is not what is expected."
@@ -2753,11 +2723,10 @@ msgid ""
 "understanding what goes wrong if the result is not what was expected."
 msgstr ""
 "Debug mode where each step taken will get reported in detail.  Useful for "
-"understanding what goes wrong if the results is not what is expected."
+"understanding what goes wrong if the result is not what was expected."
 
 #. type: Plain text
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:87
-#, fuzzy
 #| msgid ""
 #| "The DN and password to bind as while performing searches. Required if the "
 #| "directory does not allow anonymous searches."
@@ -2766,7 +2735,7 @@ msgid ""
 "LDAP directory does not allow anonymous searches."
 msgstr ""
 "The DN and password to bind as while performing searches. Required if the "
-"directory does not allow anonymous searches."
+"LDAP directory does not allow anonymous searches."
 
 #. type: Plain text
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:93
@@ -2841,7 +2810,6 @@ msgstr "Strip Kerberos Realm component from user names (@ separated)"
 
 #. type: Plain text
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:158
-#, fuzzy
 #| msgid ""
 #| "Specify an alternate TCP port where the ldap server is listening if other "
 #| "than the default LDAP port 389."
@@ -2849,7 +2817,7 @@ msgid ""
 "Specify an alternate TCP port where the LDAP server is listening if other "
 "than the default LDAP port 389."
 msgstr ""
-"Specify an alternate TCP port where the ldap server is listening if other "
+"Specify an alternate TCP port where the LDAP server is listening if other "
 "than the default LDAP port 389."
 
 #. type: Plain text
@@ -2886,7 +2854,6 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:216
-#, fuzzy
 #| msgid ""
 #| "This helper is intended to be used as an B<external_acl_type> helper in "
 #| "B<squid.conf.>"
@@ -2895,11 +2862,10 @@ msgid ""
 "B<squid.conf .>"
 msgstr ""
 "This helper is intended to be used as an B<external_acl_type> helper in "
-"B<squid.conf.>"
+"B<squid.conf .>"
 
 #. type: Plain text
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:231
-#, fuzzy
 #| msgid ""
 #| "B<NOTE:> When constructing search filters it is recommended to first test "
 #| "the filter using B<ldapsearch> to verify that the filter matches what you "
@@ -2911,7 +2877,7 @@ msgid ""
 msgstr ""
 "B<NOTE:> When constructing search filters it is recommended to first test "
 "the filter using B<ldapsearch> to verify that the filter matches what you "
-"expect before you attempt to use B<squid_ldap_group>"
+"expect before you attempt to use B<ext_ldap_group_acl>"
 
 #. type: Plain text
 #: helpers/external_acl/LDAP_group/ext_ldap_group_acl.8:240
@@ -2935,10 +2901,9 @@ msgstr "Your favorite LDAP documentation"
 #. type: Plain text
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:9
 #: helpers/ntlm_auth/SSPI/ntlm_sspi_auth.8:10
-#, fuzzy
 #| msgid "Version 1.0"
 msgid "Version 1.22"
-msgstr "Version 1.0"
+msgstr "Version 1.22"
 
 #. type: Plain text
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:19
@@ -3034,24 +2999,21 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:161
-#, fuzzy
 #| msgid "With contributions from many others."
 msgid "with contributions by"
-msgstr "With contributions from many others."
+msgstr "with contributions by"
 
 #. type: Plain text
 #: helpers/external_acl/LM_group/ext_lm_group_acl.8:166
-#, fuzzy
 #| msgid "Based on prior work in B<squid_ldap_auth> by"
 msgid "Based in part on prior work in B<check_group> by"
-msgstr "Based on prior work in B<squid_ldap_auth> by"
+msgstr "Based in part on prior work in B<check_group> by"
 
 #. type: Plain text
 #: helpers/external_acl/session/ext_session_acl.8:7
-#, fuzzy
 #| msgid "Squid session tracking external acl group helper."
 msgid "Squid session tracking external acl helper."
-msgstr "Squid session tracking external acl group helper."
+msgstr "Squid session tracking external acl helper."
 
 #. type: Plain text
 #: helpers/external_acl/session/ext_session_acl.8:16
@@ -3060,7 +3022,6 @@ msgstr "database"
 
 #. type: Plain text
 #: helpers/external_acl/session/ext_session_acl.8:23
-#, fuzzy
 #| msgid ""
 #| "B<squid_session> maintains a concept of sessions by monitoring requests "
 #| "and timing out sessions if no requests have been seen for the idle "
@@ -3070,8 +3031,9 @@ msgid ""
 "and timing out sessions if no requests have been seen for the idle timeout "
 "timer."
 msgstr ""
-"B<squid_session> maintains a concept of sessions by monitoring requests and "
-"timing out sessions if no requests have been seen for the idle timeout timer."
+"B<ext_session_acl> maintains a concept of sessions by monitoring requests "
+"and timing out sessions if no requests have been seen for the idle timeout "
+"timer."
 
 #. type: Plain text
 #: helpers/external_acl/session/ext_session_acl.8:25
@@ -3121,7 +3083,6 @@ msgstr "Configuration example using the default automatic mode"
 
 #. type: Plain text
 #: helpers/external_acl/session/ext_session_acl.8:66
-#, fuzzy
 #| msgid ""
 #| "Then set up http://your.server.example.com/bannerpage to display a "
 #| "session startup page and then redirect the user back to the requested URL "
@@ -3131,16 +3092,15 @@ msgid ""
 "session startup page and then redirect the user back to the requested URL "
 "given in the url query parameter."
 msgstr ""
-"Then set up http://your.server.example.com/bannerpage to display a session "
-"startup page and then redirect the user back to the requested URL given in "
-"the url query parameter."
+"Then set up B<http://your.server.example.com/bannerpage> to display a "
+"session startup page and then redirect the user back to the requested URL "
+"given in the url query parameter."
 
 #. type: Plain text
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:7
-#, fuzzy
 #| msgid "Squid UNIX Group helper"
 msgid "Squid UNIX Group ACL helper"
-msgstr "Squid UNIX Group helper"
+msgstr "Squid UNIX Group ACL helper"
 
 #. type: Plain text
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:11
@@ -3150,7 +3110,6 @@ msgstr "group"
 
 #. type: Plain text
 #: helpers/external_acl/unix_group/ext_unix_group_acl.8:18
-#, fuzzy
 #| msgid ""
 #| "B<squid_unix_group> allows Squid to base access controls on users "
 #| "memberships in UNIX groups."
@@ -3158,7 +3117,7 @@ msgid ""
 "B<ext_unix_group_acl> allows Squid to base access controls on users "
 "memberships in UNIX groups."
 msgstr ""
-"B<squid_unix_group> allows Squid to base access controls on users "
+"B<ext_unix_group_acl> allows Squid to base access controls on users "
 "memberships in UNIX groups."
 
 #. type: Plain text
@@ -3209,17 +3168,15 @@ msgstr "Additionally bugs or bug-fixes can be reported to"
 
 #. type: Plain text
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:7
-#, fuzzy
 #| msgid "Squid PAM Basic authentication helper"
 msgid "Squid kerberos based authentication helper"
-msgstr "Squid PAM Basic authentication helper"
+msgstr "Squid kerberos based authentication helper"
 
 #. type: Plain text
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:9
-#, fuzzy
 #| msgid "Version 1.0"
 msgid "Version 3.0.4sq"
-msgstr "Version 1.0"
+msgstr "Version 3.0.4sq"
 
 #. type: Plain text
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:18
@@ -3240,7 +3197,6 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/negotiate_auth/kerberos/negotiate_kerberos_auth.8:42
-#, fuzzy
 #| msgid ""
 #| "This helper is intended to be used as an B<external_acl_type> helper in "
 #| "B<squid.conf.>"
@@ -3248,7 +3204,7 @@ msgid ""
 "This helper is intended to be used as an B<authentication> helper in B<squid."
 "conf.>"
 msgstr ""
-"This helper is intended to be used as an B<external_acl_type> helper in "
+"This helper is intended to be used as an B<authentication> helper in "
 "B<squid.conf.>"
 
 #. type: Plain text
@@ -3327,10 +3283,9 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/ntlm_auth/SSPI/ntlm_sspi_auth.8:29
-#, fuzzy
 #| msgid "Specifies a group name to match."
 msgid "Specify a Windows Local Group name allowed to authenticate."
-msgstr "Specifies a group name to match."
+msgstr "Specify a Windows Local Group name allowed to authenticate."
 
 #. type: Plain text
 #: helpers/ntlm_auth/SSPI/ntlm_sspi_auth.8:37
@@ -3397,10 +3352,9 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/ntlm_auth/SSPI/ntlm_sspi_auth.8:98
-#, fuzzy
 #| msgid "Based on original code by"
 msgid "Based on prior work in by"
-msgstr "Based on original code by"
+msgstr "Based on prior work in by"
 
 #. type: Plain text
 #: src/squid.8.in:7
@@ -3409,15 +3363,13 @@ msgstr ""
 
 #. type: Plain text
 #: src/squid.8.in:13
-#, fuzzy
 msgid "facility"
-msgstr "I<facility>"
+msgstr "facility"
 
 #. type: Plain text
 #: src/squid.8.in:15
-#, fuzzy
 msgid "config-file"
-msgstr "config file"
+msgstr "config-file"
 
 #. type: Plain text
 #: src/squid.8.in:19
@@ -3426,18 +3378,16 @@ msgstr ""
 
 #. type: Plain text
 #: src/squid.8.in:21
-#, fuzzy
 msgid "service-name"
-msgstr "service name"
+msgstr "service-name"
 
 #. type: Plain text
 #: src/squid.8.in:23
 msgid "command-line"
-msgstr ""
+msgstr "command-line"
 
 #. type: Plain text
 #: src/squid.8.in:32
-#, fuzzy
 msgid ""
 "B<squid> is a high-performance proxy caching server for web clients, "
 "supporting FTP, gopher, ICAP, ICP, HTCP and HTTP data objects.  Unlike "
@@ -3446,38 +3396,35 @@ msgid ""
 msgstr ""
 "B<squid> is a high-performance proxy caching server for web clients, "
 "supporting FTP, gopher, ICAP, ICP, HTCP and HTTP data objects.  Unlike "
-"traditional caching software, B<squid> handles all requests in a single, non-"
+"traditional caching software, Squid handles all requests in a single, non-"
 "blocking process."
 
 #. type: Plain text
 #: src/squid.8.in:36
-#, fuzzy
 msgid ""
 "Squid keeps meta data and especially hot objects cached in RAM, caches DNS "
 "lookups, supports non-blocking DNS lookups, and implements negative caching "
 "of failed requests."
 msgstr ""
-"B<squid> keeps meta data and especially hot objects cached in RAM, caches "
-"DNS lookups, supports non-blocking DNS lookups, and implements negative "
-"caching of failed requests."
+"Squid keeps meta data and especially hot objects cached in RAM, caches DNS "
+"lookups, supports non-blocking DNS lookups, and implements negative caching "
+"of failed requests."
 
 #. type: Plain text
 #: src/squid.8.in:41
-#, fuzzy
 msgid ""
 "Squid supports SSL, extensive access controls, and full request logging.  By "
 "using the lightweight Internet Cache Protocols ICP, HTCP or CARP, Squid "
 "caches can be arranged in a hierarchy or mesh for additional bandwidth "
 "savings."
 msgstr ""
-"B<squid> supports SSL, extensive access controls, and full request logging.  "
-"By using the lightweight Internet Cache Protocols ICP, HTCP or CARP, "
-"B<squid> caches can be arranged in a hierarchy or mesh for additional "
-"bandwidth savings."
+"Squid supports SSL, extensive access controls, and full request logging.  By "
+"using the lightweight Internet Cache Protocols ICP, HTCP or CARP, Squid "
+"caches can be arranged in a hierarchy or mesh for additional bandwidth "
+"savings."
 
 #. type: Plain text
 #: src/squid.8.in:49
-#, fuzzy
 msgid ""
 "Squid consists of a main server program B<squid> , some optional programs "
 "for custom processing and authentication, and some management and client "
@@ -3485,21 +3432,19 @@ msgid ""
 "processes, each of which can perform parallel lookups.  This reduces the "
 "amount of time the cache waits for results."
 msgstr ""
-"B<squid> consists of a main server program squid, some optional programs for "
-"custom processing and authentication, and some management and client tools.  "
-"When squid starts up, it spawns a configurable number of helper processes, "
-"each of which can perform parallel lookups.  This reduces the amount of time "
-"the cache waits for results."
+"Squid consists of a main server program B<squid> , some optional programs "
+"for custom processing and authentication, and some management and client "
+"tools.  When squid starts up, it spawns a configurable number of helper "
+"processes, each of which can perform parallel lookups.  This reduces the "
+"amount of time the cache waits for results."
 
 #. type: Plain text
 #: src/squid.8.in:51
-#, fuzzy
 msgid "Squid is derived from the ARPA-funded Harvest Project."
-msgstr "B<squid> is derived from the ARPA-funded Harvest Project"
+msgstr "Squid is derived from the ARPA-funded Harvest Project."
 
 #. type: Plain text
 #: src/squid.8.in:57
-#, fuzzy
 msgid ""
 "This manual page only lists the command line arguments.  For details on how "
 "to configure Squid see the file B<@SYSCONFDIR@/squid.conf.documented,> the "
@@ -3507,20 +3452,18 @@ msgid ""
 "configuration manual on the Squid home page"
 msgstr ""
 "This manual page only lists the command line arguments.  For details on how "
-"to configure B<squid> see the file B<@SYSCONFDIR@/squid.conf.documented,> "
-"the Squid wiki FAQ and examples at http://wiki.squid-cache.org/ , or the "
-"configuration manual on the B<squid> home page http://www.squid-cache.org/"
-"Doc/config/"
+"to configure Squid see the file B<@SYSCONFDIR@/squid.conf.documented,> the "
+"Squid wiki FAQ and examples at http://wiki.squid-cache.org/ , or the "
+"configuration manual on the Squid home page"
 
 #. type: Plain text
 #: src/squid.8.in:66
-#, fuzzy
 msgid ""
 "Specify HTTP port number where Squid should listen for requests, in addition "
 "to any B<http_port> specifications in B<squid.conf>"
 msgstr ""
 "Specify HTTP port number where Squid should listen for requests, in addition "
-"to any http_port specifications in squid.conf."
+"to any B<http_port> specifications in B<squid.conf>"
 
 #. type: Plain text
 #: src/squid.8.in:70
@@ -3534,7 +3477,6 @@ msgstr "Write debugging to stderr also."
 
 #. type: Plain text
 #: src/squid.8.in:86
-#, fuzzy
 msgid ""
 "Use the given config-file instead of B<@SYSCONFDIR@/squid.conf .> If the "
 "file name starts with a B<!> or B<|> then it is assumed to be an external "
@@ -3542,11 +3484,11 @@ msgid ""
 "configuration before it is being read by Squid.  To facilitate this Squid "
 "also understands the common #line notion to indicate the real source file."
 msgstr ""
-"Use the given config-file instead of I<@SYSCONFDIR@/squid.conf>.  If the "
-"file name starts with a ! or | then it is assumed to be an external command "
-"or command line. Can for example be used to pre-process the configuration "
-"before it is being read by Squid. To facilitate this Squid also understands "
-"the common #line notion to indicate the real source file."
+"Use the given config-file instead of B<@SYSCONFDIR@/squid.conf .> If the "
+"file name starts with a B<!> or B<|> then it is assumed to be an external "
+"command or command line.  Can for example be used to pre-process the "
+"configuration before it is being read by Squid.  To facilitate this Squid "
+"also understands the common #line notion to indicate the real source file."
 
 #. type: Plain text
 #: src/squid.8.in:90
@@ -3560,9 +3502,8 @@ msgstr "Print help message."
 
 #. type: Plain text
 #: src/squid.8.in:100
-#, fuzzy
 msgid "Install as a Windows Service (see B<-n> option)."
-msgstr "Install as a Windows Service (see -n option)."
+msgstr "Install as a Windows Service (see B<-n> option)."
 
 #. type: Plain text
 #: src/squid.8.in:107
@@ -3573,9 +3514,8 @@ msgstr ""
 
 #. type: Plain text
 #: src/squid.8.in:112
-#, fuzzy
 msgid "Use specified syslog facility. Implies B<-s>"
-msgstr "Use specified syslog facility. implies -s"
+msgstr "Use specified syslog facility. Implies B<-s>"
 
 #. type: Plain text
 #: src/squid.8.in:117
@@ -3598,9 +3538,8 @@ msgstr "Set Windows Service Command line options in Registry."
 
 #. type: Plain text
 #: src/squid.8.in:131
-#, fuzzy
 msgid "Remove a Windows Service (see B<-n> option)."
-msgstr "Install as a Windows Service (see -n option)."
+msgstr "Remove a Windows Service (see B<-n> option)."
 
 #. type: Plain text
 #: src/squid.8.in:137
@@ -3657,16 +3596,16 @@ msgstr ""
 
 #. type: Plain text
 #: src/squid.8.in:179
-#, fuzzy
 msgid ""
 "The main configuration file. You must initially make changes to this file "
 "for B<squid> to work. For example, the default configuration only allows "
 "access from RFC private LAN networks.  Some packaging distributions block "
 "even that."
 msgstr ""
-"The main configuration file.  You must initially make changes to this file "
-"for B<squid> to work.  For example, the default configuration does not allow "
-"access from any browser."
+"The main configuration file. You must initially make changes to this file "
+"for B<squid> to work. For example, the default configuration only allows "
+"access from RFC private LAN networks.  Some packaging distributions block "
+"even that."
 
 #. type: Plain text
 #: src/squid.8.in:183 src/squid.8.in:189
@@ -3692,9 +3631,8 @@ msgstr ""
 
 #. type: Plain text
 #: src/squid.8.in:199
-#, fuzzy
 msgid "The main configuration file for the web B<cachemgr.cgi> tools."
-msgstr "The main configuration file for the Sample MSNT authenticator."
+msgstr "The main configuration file for the web B<cachemgr.cgi> tools."
 
 #. type: Plain text
 #: src/squid.8.in:202
@@ -3703,14 +3641,13 @@ msgstr "The main configuration file for the Sample MSNT authenticator."
 
 #. type: Plain text
 #: src/squid.8.in:207
-#, fuzzy
 msgid ""
 "CSS Stylesheet to control the display of generated error pages.  Use this to "
 "set any company branding you need, it will apply to every language Squid "
 "provides error pages for."
 msgstr ""
 "CSS Stylesheet to control the display of generated error pages.  Use this to "
-"set any company branding you need, it will apply to every Language Squid "
+"set any company branding you need, it will apply to every language Squid "
 "provides error pages for."
 
 #. type: Plain text
@@ -3725,9 +3662,8 @@ msgstr "MIME type mappings for FTP gatewaying"
 
 #. type: Plain text
 #: src/squid.8.in:216
-#, fuzzy
 msgid "Location of Squid error pages and templates."
-msgstr "Location of B<squid> error pages and templates."
+msgstr "Location of Squid error pages and templates."
 
 #. type: Plain text
 #: src/squid.8.in:219
@@ -3755,7 +3691,6 @@ msgstr ""
 
 #. type: Plain text
 #: src/squid.8.in:241
-#, fuzzy
 msgid ""
 "This program is free software; you can redistribute it and/or modify it "
 "under the terms of the GNU General Public License (version 2) as published "
@@ -3764,10 +3699,12 @@ msgid ""
 "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General "
 "Public License for more details."
 msgstr ""
-"This file is distributed in the hope that it will be useful, but WITHOUT ANY "
-"WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS "
-"FOR A PARTICULAR PURPOSE. See the GNU General Public License for more "
-"details."
+"This program is free software; you can redistribute it and/or modify it "
+"under the terms of the GNU General Public License (version 2) as published "
+"by the Free Software Foundation.  It is distributed in the hope that it will "
+"be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of "
+"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General "
+"Public License for more details."
 
 #. type: Plain text
 #: src/squid.8.in:243
