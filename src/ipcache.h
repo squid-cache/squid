@@ -1,7 +1,8 @@
 #ifndef _SQUID_IPCACHE_H
 #define _SQUID_IPCACHE_H
 
-namespace Ip {
+namespace Ip
+{
 class Address;
 }
 

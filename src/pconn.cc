@@ -144,7 +144,7 @@ IdleConnList::closeN(size_t n)
                 parent_->noteConnectionRemoved();
         }
         // shuffle the list N down.
-        for (;index < (size_t)size_; index++) {
+        for (; index < (size_t)size_; index++) {
             theList_[index - n] = theList_[index];
         }
         // ensure the last N entries are unset
@@ -186,10 +186,10 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
 
     theList_[size_++] = conn;
     AsyncCall::Pointer readCall = commCbCall(5,4, "IdleConnList::Read",
-                                             CommIoCbPtrFun(IdleConnList::Read, this));
+                                  CommIoCbPtrFun(IdleConnList::Read, this));
     comm_read(conn, fakeReadBuf_, sizeof(fakeReadBuf_), readCall);
     AsyncCall::Pointer timeoutCall = commCbCall(5,4, "IdleConnList::Read",
-                                                CommTimeoutCbPtrFun(IdleConnList::Timeout, this));
+                                     CommTimeoutCbPtrFun(IdleConnList::Timeout, this));
     commSetConnTimeout(conn, Config.Timeout.pconn, timeoutCall);
 }
 

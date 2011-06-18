@@ -102,13 +102,13 @@ whoisStart(FwdState * fwd)
     snprintf(buf, l, SQUIDSTRINGPH"\r\n", SQUIDSTRINGPRINT(str_print));
 
     AsyncCall::Pointer writeCall = commCbCall(5,5, "whoisWriteComplete",
-                                              CommIoCbPtrFun(whoisWriteComplete, p));
+                                   CommIoCbPtrFun(whoisWriteComplete, p));
     Comm::Write(fwd->serverConnection(), buf, strlen(buf), writeCall, NULL);
     AsyncCall::Pointer readCall = commCbCall(5,4, "whoisReadReply",
-                                             CommIoCbPtrFun(whoisReadReply, p));
+                                  CommIoCbPtrFun(whoisReadReply, p));
     comm_read(fwd->serverConnection(), p->buf, BUFSIZ, readCall);
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "whoisTimeout",
-                                                CommTimeoutCbPtrFun(whoisTimeout, p));
+                                     CommTimeoutCbPtrFun(whoisTimeout, p));
     commSetConnTimeout(fwd->serverConnection(), Config.Timeout.read, timeoutCall);
 }
 

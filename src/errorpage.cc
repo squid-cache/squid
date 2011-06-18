@@ -136,7 +136,8 @@ static IOCB errorSendComplete;
 
 /// \ingroup ErrorPageInternal
 /// manages an error page template
-class ErrorPageFile: public TemplateFile {
+class ErrorPageFile: public TemplateFile
+{
 public:
     ErrorPageFile(const char *name): TemplateFile(name) { textBuf.init();}
 
@@ -366,14 +367,13 @@ TemplateFile::loadFromFile(const char *path)
 
 bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos)
 {
-    while(pos < hdr.size()) {
+    while (pos < hdr.size()) {
         char *dt = lang;
 
         if (!pos) {
             /* skip any initial whitespace. */
             while (pos < hdr.size() && xisspace(hdr[pos])) pos++;
-        }
-        else {
+        } else {
             // IFF we terminated the tag on whitespace or ';' we need to skip to the next ',' or end of header.
             while (pos < hdr.size() && hdr[pos] != ',') pos++;
             if (hdr[pos] == ',') pos++;

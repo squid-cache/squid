@@ -4,7 +4,8 @@
 #include "Array.h"
 #include "RefCount.h"
 
-namespace Comm {
+namespace Comm
+{
 
 class Connection;
 

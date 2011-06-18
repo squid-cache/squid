@@ -1036,6 +1036,6 @@ gopherStart(FwdState * fwd)
     gopherState->serverConn = fwd->serverConnection();
     gopherSendRequest(fwd->serverConnection()->fd, gopherState);
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "gopherTimeout",
-                                                CommTimeoutCbPtrFun(gopherTimeout, gopherState));
+                                     CommTimeoutCbPtrFun(gopherTimeout, gopherState));
     commSetConnTimeout(fwd->serverConnection(), Config.Timeout.read, timeoutCall);
 }

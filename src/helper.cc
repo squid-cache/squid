@@ -93,15 +93,15 @@ HelperServerBase::closePipesSafely()
     writePipe->close();
 
 #ifdef _SQUID_MSWIN_
-        if (hIpc) {
-            if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
-                getCurrentTime();
-                debugs(84, DBG_IMPORTANT, "WARNING: " << hlp->id_name <<
-                       " #" << no << " (" << hlp->cmdline->key << "," <<
-                       (long int)pid << ") didn't exit in 5 seconds");
-            }
-            CloseHandle(hIpc);
+    if (hIpc) {
+        if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
+            getCurrentTime();
+            debugs(84, DBG_IMPORTANT, "WARNING: " << hlp->id_name <<
+                   " #" << no << " (" << hlp->cmdline->key << "," <<
+                   (long int)pid << ") didn't exit in 5 seconds");
         }
+        CloseHandle(hIpc);
+    }
 #endif
 }
 
@@ -120,15 +120,15 @@ HelperServerBase::closeWritePipeSafely()
     writePipe->close();
 
 #ifdef _SQUID_MSWIN_
-        if (hIpc) {
-            if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
-                getCurrentTime();
-                debugs(84, DBG_IMPORTANT, "WARNING: " << hlp->id_name <<
-                       " #" << no << " (" << hlp->cmdline->key << "," <<
-                       (long int)pid << ") didn't exit in 5 seconds");
-            }
-            CloseHandle(hIpc);
+    if (hIpc) {
+        if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
+            getCurrentTime();
+            debugs(84, DBG_IMPORTANT, "WARNING: " << hlp->id_name <<
+                   " #" << no << " (" << hlp->cmdline->key << "," <<
+                   (long int)pid << ") didn't exit in 5 seconds");
         }
+        CloseHandle(hIpc);
+    }
 #endif
 }
 

@@ -13,7 +13,8 @@
 namespace Ssl
 {
 
-class ErrorDetailEntry {
+class ErrorDetailEntry
+{
 public:
     Ssl::ssl_error_t error_no; ///< The SSL error code
     String name; ///< a name for the error
@@ -46,7 +47,8 @@ public:
  * It is used to load, manage and query multiple ErrorDetailLists
  * objects.
  */
-class ErrorDetailsManager {
+class ErrorDetailsManager
+{
 public:
     ErrorDetailsManager();
 

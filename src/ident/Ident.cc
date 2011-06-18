@@ -157,10 +157,10 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int x
     AsyncCall::Pointer nil;
     Comm::Write(conn, &mb, nil);
     AsyncCall::Pointer readCall = commCbCall(5,4, "Ident::ReadReply",
-                                             CommIoCbPtrFun(Ident::ReadReply, state));
+                                  CommIoCbPtrFun(Ident::ReadReply, state));
     comm_read(conn, state->buf, IDENT_BUFSIZE, readCall);
     AsyncCall::Pointer timeoutCall = commCbCall(5,4, "Ident::Timeout",
-                                                CommTimeoutCbPtrFun(Ident::Timeout, state));
+                                     CommTimeoutCbPtrFun(Ident::Timeout, state));
     commSetConnTimeout(conn, Ident::TheConfig.timeout, timeoutCall);
 }
 

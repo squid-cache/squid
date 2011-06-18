@@ -253,7 +253,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
 
             // for TPROXY we must skip unusable addresses.
             if (psstate->request->flags.spoof_client_ip && !(fs->_peer && fs->_peer->options.no_tproxy) ) {
-                if(ia->in_addrs[n].IsIPv4() != psstate->request->client_addr.IsIPv4()) {
+                if (ia->in_addrs[n].IsIPv4() != psstate->request->client_addr.IsIPv4()) {
                     // we CAN'T spoof the address on this link. find another.
                     continue;
                 }
