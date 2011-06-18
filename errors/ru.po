@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-04 13:57+1300\n"
+"POT-Creation-Date: 2011-06-18 18:27+1300\n"
 "PO-Revision-Date: 2009-06-14 11:47+0000\n"
 "Last-Translator: Amos Jeffries <Unknown>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -44,6 +44,38 @@ msgstr ""
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:31
 msgid "%g"
 msgstr ""
+
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:61
+msgid "%ssl_error_descr"
+msgstr "%ssl_error_descr"
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.detail:89
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.detail:109
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.detail:117
+msgid "%ssl_error_descr: %ssl_ca_name"
+msgstr "%ssl_error_descr: %ssl_ca_name"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:5
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.detail:9
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.detail:13
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.detail:21
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.detail:25
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.detail:37
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.detail:41
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.detail:53
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.detail:57
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.detail:77
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.detail:81
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.detail:85
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.detail:93
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.detail:97
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.detail:101
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.detail:105
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.detail:113
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.detail:121
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.detail:125
+msgid "%ssl_error_descr: %ssl_subject"
+msgstr "%ssl_error_descr: %ssl_subject"
 
 #: templates/ERR_DIR_LISTING+html.body.div.blockquote.pre:22
 #: templates/ERR_DNS_FAIL+html.body.div.blockquote.pre:28
@@ -132,14 +164,38 @@ msgid ""
 "request."
 msgstr "Ошибка отправки данных. Повторите запрос"
 
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:125
+msgid "Application verification failure"
+msgstr "Application verification failure"
+
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:28
 msgid ""
 "At least one precondition specified by the HTTP client in the request header "
 "has failed."
 msgstr ""
 
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h2:16
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.blockquote.p:24
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:117
+msgid "Authority and issuer serial number mismatch"
+msgstr "Authority and issuer serial number mismatch"
+
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:113
+msgid "Authority and subject key identifier mismatch"
+msgstr "Authority and subject key identifier mismatch"
+
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:41
+msgid "CRL has expired"
+msgstr "CRL has expired"
+
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.descr:37
+msgid "CRL is not yet valid"
+msgstr "CRL is not yet valid"
+
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:25
+msgid "CRL signature failure"
+msgstr "CRL signature failure"
+
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h2:15
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.blockquote.p:23
 msgid "Cache Access Denied."
 msgstr "Доступ к кэшу запрещён."
 
@@ -151,6 +207,34 @@ msgstr "Доступ к управлению кэшем запрещён."
 #: templates/ERR_URN_RESOLVE+html.body.div.blockquote.p:23
 msgid "Cannot Resolve URN"
 msgstr "Невозможно определить URN"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:81
+msgid "Certificate chain too long"
+msgstr "Certificate chain too long"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:33
+msgid "Certificate has expired"
+msgstr "Certificate has expired"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:29
+msgid "Certificate is not yet valid"
+msgstr "Certificate is not yet valid"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:101
+msgid "Certificate not trusted"
+msgstr "Certificate not trusted"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:105
+msgid "Certificate rejected"
+msgstr "Certificate rejected"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:85
+msgid "Certificate revoked"
+msgstr "Certificate revoked"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:21
+msgid "Certificate signature failure"
+msgstr "Certificate signature failure"
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.blockquote.p:23
 msgid "Connection Lifetime Expired"
@@ -181,11 +265,12 @@ msgid "Directory: <a href=\"%U\">%U</a>/"
 msgstr "Каталог: <a href=\"%U\">%U</a>/"
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.h1:14
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h1:14
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.h1:14
 #: templates/ERR_AGENT_WPAD+html.body.div.h1:14
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h1:15
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h1:14
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h1:14
-#: templates/ERR_CANNOT_FORWARD+html.body.div.h1:15
+#: templates/ERR_CANNOT_FORWARD+html.body.div.h1:14
 #: templates/ERR_CONNECT_FAIL+html.body.div.h1:14
 #: templates/ERR_DNS_FAIL+html.body.div.h1:14
 #: templates/ERR_ESI+html.body.div.h1:14
@@ -232,6 +317,7 @@ msgid "ERROR: FTP upload failed"
 msgstr "ОШИБКА: Отправка по FTP не удалась"
 
 #: templates/ERR_ACCESS_DENIED+html.head.title:4
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.head.title:4
 #: templates/ERR_CANNOT_FORWARD+html.head.title:4
 #: templates/ERR_CONNECT_FAIL+html.head.title:4
 #: templates/ERR_DNS_FAIL+html.head.title:4
@@ -314,6 +400,22 @@ msgstr "Для браузера Internet Explorer перейдите в: <ul>"
 msgid "For Opera browsers go to: <ul>"
 msgstr "Для браузера Opera перейдите в: <ul>"
 
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:53
+msgid "Format error in CRL's lastUpdate field"
+msgstr "Format error in CRL's lastUpdate field"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:57
+msgid "Format error in CRL's nextUpdate field"
+msgstr "Format error in CRL's nextUpdate field"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:49
+msgid "Format error in certificate's notAfter field"
+msgstr "Format error in certificate's notAfter field"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:45
+msgid "Format error in certificate's notBefore field"
+msgstr "Format error in certificate's notBefore field"
+
 #: templates/ERR_FORWARDING_DENIED+html.body.div.blockquote.p:23
 msgid "Forwarding Denied."
 msgstr "Пересылка запрещена."
@@ -323,11 +425,12 @@ msgid "Gateway Proxy Failure"
 msgstr ""
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:34
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:35
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:56
 #: templates/ERR_AGENT_WPAD+html.body.div.p:56
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:36
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:35
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:35
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:36
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:35
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:37
 #: templates/ERR_DIR_LISTING+html.body.div.p:38
 #: templates/ERR_DNS_FAIL+html.body.div.p:39
@@ -343,7 +446,7 @@ msgstr ""
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:40
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.p:36
 #: templates/ERR_ICAP_FAILURE+html.body.div.p:41
-#: templates/ERR_INVALID_REQ+html.body.div.p:43
+#: templates/ERR_INVALID_REQ+html.body.div.p:49
 #: templates/ERR_INVALID_RESP+html.body.div.p:36
 #: templates/ERR_INVALID_URL+html.body.div.p:42
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:34
@@ -411,9 +514,17 @@ msgstr "Недопустимое двойное экранирование в п
 msgid "In the HTTP proxy box type the proxy name %h and port %b."
 msgstr "В поле ввода HTTP прокси введите имя прокси %h и порт 3128"
 
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:89
+msgid "Invalid CA certificate"
+msgstr "Invalid CA certificate"
+
 #: templates/ERR_INVALID_URL+html.body.div.blockquote.p:23
 msgid "Invalid URL"
 msgstr "Недопустимый URL"
+
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:121
+msgid "Key usage does not include certificate signing"
+msgstr "Key usage does not include certificate signing"
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:30
 msgid "Missing HTTP Identifier (HTTP/1.0)."
@@ -447,7 +558,15 @@ msgstr "Wais Relay не определен"
 msgid "Operation successful"
 msgstr "Операция завершилась успешно"
 
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:29
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.descr:61
+msgid "Out of memory"
+msgstr "Out of memory"
+
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:93
+msgid "Path length constraint exceeded"
+msgstr "Path length constraint exceeded"
+
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:28
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
@@ -485,6 +604,33 @@ msgstr "Время ожидания при чтении истекло"
 msgid "Request is too large."
 msgstr "Запрос слишком велик."
 
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:1
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:73
+msgid "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
+msgstr "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:29
+msgid "SSL Certficate is not valid before: %ssl_notbefore"
+msgstr "SSL Certficate is not valid before: %ssl_notbefore"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.detail:33
+msgid "SSL Certificate expired on: %ssl_notafter"
+msgstr "SSL Certificate expired on: %ssl_notafter"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.detail:49
+msgid ""
+"SSL Certificate has invalid expiration date (the 'not after' field): "
+"%ssl_subject"
+msgstr ""
+"SSL Certificate has invalid expiration date (the 'not after' field): "
+"%ssl_subject"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:45
+msgid ""
+"SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
+msgstr ""
+"SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
+
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:30
 #, fuzzy
 msgid "Select Auto-detect proxy settings for this network"
@@ -497,6 +643,22 @@ msgstr "Выберите Автоматически определять нас�
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:46
 msgid "Select Use Automatic proxy configuration"
 msgstr "Выберите Использовать Автоматическое определение прокси"
+
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:65
+msgid "Self signed certificate"
+msgstr "Self signed certificate"
+
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.descr:69
+msgid "Self signed certificate in certificate chain"
+msgstr "Self signed certificate in certificate chain"
+
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.detail:69
+msgid "Self-signed SSL Certificate in chain: %ssl_subject"
+msgstr "Self-signed SSL Certificate in chain: %ssl_subject"
+
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.detail:65
+msgid "Self-signed SSL Certificate: %ssl_subject"
+msgstr "Self-signed SSL Certificate: %ssl_subject"
 
 #: templates/ERR_SOCKET_FAILURE+html.body.div.blockquote.p:23
 msgid "Socket Failure"
@@ -520,7 +682,7 @@ msgstr ""
 "Извините, Вы не можете запросить %U из системы управления кэшем до тех пор, "
 "пока не пройдете аутентификацию."
 
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:27
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:26
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
@@ -563,6 +725,10 @@ msgstr ""
 msgid "Squid sent the following FTP command:"
 msgstr "Squid послал следующую команду FTP:"
 
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:109
+msgid "Subject issuer mismatch"
+msgstr "Subject issuer mismatch"
+
 #: templates/ERR_DNS_FAIL+html.body.div.p:26
 msgid "The DNS server returned:"
 msgstr "Сервер DNS ответил:"
@@ -592,9 +758,10 @@ msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
 msgstr "Следующий URL не может быть получен: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:20
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:21
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:20
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:20
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:20
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:21
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:20
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:20
 #: templates/ERR_DNS_FAIL+html.body.div.p:20
 #: templates/ERR_ESI+html.body.div.p:20
@@ -637,7 +804,8 @@ msgid "The request or reply is too large."
 msgstr "Запрос или ответ слишком велик."
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.h2:15
-#: templates/ERR_CANNOT_FORWARD+html.body.div.h2:16
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h2:15
+#: templates/ERR_CANNOT_FORWARD+html.body.div.h2:15
 #: templates/ERR_CONNECT_FAIL+html.body.div.h2:15
 #: templates/ERR_DNS_FAIL+html.body.div.h2:15
 #: templates/ERR_ESI+html.body.div.h2:15
@@ -694,6 +862,7 @@ msgid ""
 msgstr ""
 "Для этого кэша не определен узел Wais Relay. Обратитесь к администратору."
 
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:27
 #: templates/ERR_TOO_BIG+html.body.div.p:28
 msgid ""
 "These limits have been established by the Internet Service Provider who "
@@ -794,7 +963,13 @@ msgstr ""
 "узел не поддерживает безопасные соединения или кэш не удовлетворён "
 "удостоверением безопасности узла."
 
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:27
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:26
+msgid ""
+"This proxy limits your time online with a quota. Your time budget is now "
+"empty but will be refilled when the configured time period starts again."
+msgstr ""
+
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:26
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches. The most likely cause for this error is that the cache administrator "
@@ -806,6 +981,10 @@ msgstr ""
 "ошибки является то, что кэш-администратор запретил подключаться к серверам "
 "интернета напрямую, а все вышестоящие кэширующие прокси-серверы в данный "
 "момент не доступны."
+
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.blockquote.p:23
+msgid "Time Quota Exceeded."
+msgstr ""
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:37
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:37
@@ -831,13 +1010,45 @@ msgstr ""
 "Инструменты -&gt; Настройки -&gt; Дополнительно -&gt; Сеть -&gt; Прокси-"
 "серверы"
 
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:17
+msgid "Unable to decode issuer (CA) public key: %ssl_ca_name"
+msgstr "Unable to decode issuer (CA) public key: %ssl_ca_name"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.descr:17
+msgid "Unable to decode issuer public key"
+msgstr "Unable to decode issuer public key"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:13
+msgid "Unable to decrypt CRL's signature"
+msgstr "Unable to decrypt CRL's signature"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.descr:9
+msgid "Unable to decrypt certificate's signature"
+msgstr "Unable to decrypt certificate's signature"
+
 #: templates/ERR_DNS_FAIL+html.body.div.blockquote.p:23
 msgid "Unable to determine IP address from host name <q>%H</q>"
 msgstr "Невозможно определить IP-адрес по имени узла <q>%H</q>"
 
-#: templates/ERR_CANNOT_FORWARD+html.body.div.blockquote.p:24
+#: templates/ERR_CANNOT_FORWARD+html.body.div.blockquote.p:23
 msgid "Unable to forward this request at this time."
 msgstr "Невозможно переслать этот запрос в данное время."
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.descr:5
+msgid "Unable to get certificate CRL"
+msgstr "Unable to get certificate CRL"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.descr:1
+msgid "Unable to get issuer certificate"
+msgstr "Unable to get issuer certificate"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:73
+msgid "Unable to get local issuer certificate"
+msgstr "Unable to get local issuer certificate"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:77
+msgid "Unable to verify the first certificate"
+msgstr "Unable to verify the first certificate"
 
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h2:15
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.blockquote.p:23
@@ -847,6 +1058,10 @@ msgstr "Неподдерживаемая версия HTTP"
 #: templates/ERR_UNSUP_REQ+html.body.div.blockquote.p:23
 msgid "Unsupported Request Method and Protocol"
 msgstr "Неподдерживаемый метод запроса или протокол"
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:97
+msgid "Unsupported certificate purpose"
+msgstr "Unsupported certificate purpose"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.blockquote.p:23
 msgid ""
@@ -885,9 +1100,10 @@ msgstr ""
 "Необходимо произвести настройку вашего браузера для использования этой сети"
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:28
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:29
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:50
 #: templates/ERR_AGENT_WPAD+html.body.div.p:50
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:29
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:28
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:30
 #: templates/ERR_DNS_FAIL+html.body.div.p:33
 #: templates/ERR_FORWARDING_DENIED+html.body.div.p:28

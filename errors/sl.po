@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-05-04 13:57+1300\n"
+"POT-Creation-Date: 2011-06-18 18:27+1300\n"
 "PO-Revision-Date: 2011-05-24 10:57+0200\n"
 "Last-Translator: Aleksa <susulic@gmail.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -10,8 +10,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || "
-"n%100==4 ? 2 : 3);\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n"
+"%100==4 ? 2 : 3);\n"
 "X-Generator: Pootle 2.0.6\n"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:29
@@ -46,6 +46,38 @@ msgstr "%f"
 msgid "%g"
 msgstr "%g"
 
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:61
+msgid "%ssl_error_descr"
+msgstr "%ssl_error_descr"
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.detail:89
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.detail:109
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.detail:117
+msgid "%ssl_error_descr: %ssl_ca_name"
+msgstr "%ssl_error_descr: %ssl_ca_name"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:5
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.detail:9
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.detail:13
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.detail:21
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.detail:25
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.detail:37
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.detail:41
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.detail:53
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.detail:57
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.detail:77
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.detail:81
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.detail:85
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.detail:93
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.detail:97
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.detail:101
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.detail:105
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.detail:113
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.detail:121
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.detail:125
+msgid "%ssl_error_descr: %ssl_subject"
+msgstr "%ssl_error_descr: %ssl_subject"
+
 #: templates/ERR_DIR_LISTING+html.body.div.blockquote.pre:22
 #: templates/ERR_DNS_FAIL+html.body.div.blockquote.pre:28
 msgid "%z"
@@ -53,7 +85,8 @@ msgstr "%z"
 
 #: templates/ERR_DIR_LISTING+html.body.div.table.tr.th:28
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
-msgstr "<a href=\"../\">Nadrejeni imenik</a> (<a href=\"/\">Korenski imenik</a>)"
+msgstr ""
+"<a href=\"../\">Nadrejeni imenik</a> (<a href=\"/\">Korenski imenik</a>)"
 
 #: templates/ERR_INVALID_REQ+html.body.div.p:20
 msgid ""
@@ -98,16 +131,16 @@ msgid ""
 "incorrect."
 msgstr ""
 "Vaša zahteva trenutno ni odobrena, ker to preprečujejo nastavitve nadzora "
-"dostopa. Obrnite se na svojega ponudnika storitev, če se vam zdi, da "
-"je to neutemeljeno."
+"dostopa. Obrnite se na svojega ponudnika storitev, če se vam zdi, da je to "
+"neutemeljeno."
 
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.p:20
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"Spodletela je avtentikacija FTP med poskusom nalaganja naslova URL: <a "
-"href=\"%U\">%U</a>"
+"Spodletela je avtentikacija FTP med poskusom nalaganja naslova URL: <a href="
+"\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.p:20
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.p:20
@@ -134,6 +167,10 @@ msgid ""
 "request."
 msgstr "Med pisanjem v omrežje je prišlo do napake. Ponovite zahtevo!"
 
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:125
+msgid "Application verification failure"
+msgstr "Application verification failure"
+
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:28
 msgid ""
 "At least one precondition specified by the HTTP client in the request header "
@@ -142,8 +179,28 @@ msgstr ""
 "Vsaj eden izmed pogojev, ki jih je odjemalec HTTP navedel v zaglavju "
 "zahteve, je spodletel."
 
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h2:16
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.blockquote.p:24
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:117
+msgid "Authority and issuer serial number mismatch"
+msgstr "Authority and issuer serial number mismatch"
+
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:113
+msgid "Authority and subject key identifier mismatch"
+msgstr "Authority and subject key identifier mismatch"
+
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:41
+msgid "CRL has expired"
+msgstr "CRL has expired"
+
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.descr:37
+msgid "CRL is not yet valid"
+msgstr "CRL is not yet valid"
+
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:25
+msgid "CRL signature failure"
+msgstr "CRL signature failure"
+
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h2:15
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.blockquote.p:23
 msgid "Cache Access Denied."
 msgstr "Dostop do predpomnilnika zavrnjen."
 
@@ -155,6 +212,34 @@ msgstr "Dostop do upravitelja predpomnilnika zavrnjen."
 #: templates/ERR_URN_RESOLVE+html.body.div.blockquote.p:23
 msgid "Cannot Resolve URN"
 msgstr "Ni mogoče razrešiti imena URN"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:81
+msgid "Certificate chain too long"
+msgstr "Certificate chain too long"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:33
+msgid "Certificate has expired"
+msgstr "Certificate has expired"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:29
+msgid "Certificate is not yet valid"
+msgstr "Certificate is not yet valid"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:101
+msgid "Certificate not trusted"
+msgstr "Certificate not trusted"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:105
+msgid "Certificate rejected"
+msgstr "Certificate rejected"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:85
+msgid "Certificate revoked"
+msgstr "Certificate revoked"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:21
+msgid "Certificate signature failure"
+msgstr "Certificate signature failure"
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.blockquote.p:23
 msgid "Connection Lifetime Expired"
@@ -185,11 +270,12 @@ msgid "Directory: <a href=\"%U\">%U</a>/"
 msgstr "Mapa: <a href=\"%U\">%U</a>/"
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.h1:14
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h1:14
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.h1:14
 #: templates/ERR_AGENT_WPAD+html.body.div.h1:14
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h1:15
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h1:14
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h1:14
-#: templates/ERR_CANNOT_FORWARD+html.body.div.h1:15
+#: templates/ERR_CANNOT_FORWARD+html.body.div.h1:14
 #: templates/ERR_CONNECT_FAIL+html.body.div.h1:14
 #: templates/ERR_DNS_FAIL+html.body.div.h1:14
 #: templates/ERR_ESI+html.body.div.h1:14
@@ -236,6 +322,7 @@ msgid "ERROR: FTP upload failed"
 msgstr "NAPAKA: Pošiljanje prek FTP spodletelo"
 
 #: templates/ERR_ACCESS_DENIED+html.head.title:4
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.head.title:4
 #: templates/ERR_CANNOT_FORWARD+html.head.title:4
 #: templates/ERR_CONNECT_FAIL+html.head.title:4
 #: templates/ERR_DNS_FAIL+html.head.title:4
@@ -316,6 +403,22 @@ msgstr "Za brskalnike Internet Explorer pojdite na: <ul>"
 msgid "For Opera browsers go to: <ul>"
 msgstr "Za brskalnike Opera pojdite na: <ul>"
 
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:53
+msgid "Format error in CRL's lastUpdate field"
+msgstr "Format error in CRL's lastUpdate field"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:57
+msgid "Format error in CRL's nextUpdate field"
+msgstr "Format error in CRL's nextUpdate field"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:49
+msgid "Format error in certificate's notAfter field"
+msgstr "Format error in certificate's notAfter field"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:45
+msgid "Format error in certificate's notBefore field"
+msgstr "Format error in certificate's notBefore field"
+
 #: templates/ERR_FORWARDING_DENIED+html.body.div.blockquote.p:23
 msgid "Forwarding Denied."
 msgstr "Posredovanje zavrnjeno."
@@ -325,11 +428,12 @@ msgid "Gateway Proxy Failure"
 msgstr "Napaka posredniškega prehoda"
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:34
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:35
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:56
 #: templates/ERR_AGENT_WPAD+html.body.div.p:56
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:36
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:35
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:35
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:36
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:35
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:37
 #: templates/ERR_DIR_LISTING+html.body.div.p:38
 #: templates/ERR_DNS_FAIL+html.body.div.p:39
@@ -345,7 +449,7 @@ msgstr "Napaka posredniškega prehoda"
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:40
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.p:36
 #: templates/ERR_ICAP_FAILURE+html.body.div.p:41
-#: templates/ERR_INVALID_REQ+html.body.div.p:43
+#: templates/ERR_INVALID_REQ+html.body.div.p:49
 #: templates/ERR_INVALID_RESP+html.body.div.p:36
 #: templates/ERR_INVALID_URL+html.body.div.p:42
 #: templates/ERR_LIFETIME_EXP+html.body.div.p:34
@@ -416,9 +520,17 @@ msgstr ""
 "V polje za posredniški strežnik HTTP vnesite ime posredniškega strežnika %h "
 "in vrata %b."
 
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:89
+msgid "Invalid CA certificate"
+msgstr "Invalid CA certificate"
+
 #: templates/ERR_INVALID_URL+html.body.div.blockquote.p:23
 msgid "Invalid URL"
 msgstr "Neveljaven naslov URL"
+
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:121
+msgid "Key usage does not include certificate signing"
+msgstr "Key usage does not include certificate signing"
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:30
 msgid "Missing HTTP Identifier (HTTP/1.0)."
@@ -451,15 +563,23 @@ msgstr "Ni relejnega strežnika WAIS"
 msgid "Operation successful"
 msgstr "Dejanje je uspelo"
 
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:29
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.descr:61
+msgid "Out of memory"
+msgstr "Out of memory"
+
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:93
+msgid "Path length constraint exceeded"
+msgstr "Path length constraint exceeded"
+
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:28
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
 "Obrnite se na <a href=\"mailto:%w%W\">skrbnika predpomnilnika</a>, če imate "
-"težave pri avtentikaciji, ali pa <a href=\"http://%h/cgi-"
-"bin/chpasswd.cgi\">spremenite</a> svoje privzeto geslo."
+"težave pri avtentikaciji, ali pa <a href=\"http://%h/cgi-bin/chpasswd.cgi"
+"\">spremenite</a> svoje privzeto geslo."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:28
 msgid ""
@@ -489,6 +609,33 @@ msgstr "Potekel je čas pri branju"
 msgid "Request is too large."
 msgstr "Zahteva je preobsežna."
 
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:1
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:73
+msgid "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
+msgstr "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:29
+msgid "SSL Certficate is not valid before: %ssl_notbefore"
+msgstr "SSL Certficate is not valid before: %ssl_notbefore"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.detail:33
+msgid "SSL Certificate expired on: %ssl_notafter"
+msgstr "SSL Certificate expired on: %ssl_notafter"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.detail:49
+msgid ""
+"SSL Certificate has invalid expiration date (the 'not after' field): "
+"%ssl_subject"
+msgstr ""
+"SSL Certificate has invalid expiration date (the 'not after' field): "
+"%ssl_subject"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:45
+msgid ""
+"SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
+msgstr ""
+"SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
+
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:30
 msgid "Select Auto-detect proxy settings for this network"
 msgstr "Za to omrežje izberite samozaznavo nastavitev posredniškega strežnika"
@@ -500,6 +647,22 @@ msgstr "Izberite samodejno zaznavo nastavitev"
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:46
 msgid "Select Use Automatic proxy configuration"
 msgstr "Izberite uporabo samodejne konfiguracije posredniškega strežnika"
+
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:65
+msgid "Self signed certificate"
+msgstr "Self signed certificate"
+
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.descr:69
+msgid "Self signed certificate in certificate chain"
+msgstr "Self signed certificate in certificate chain"
+
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.detail:69
+msgid "Self-signed SSL Certificate in chain: %ssl_subject"
+msgstr "Self-signed SSL Certificate in chain: %ssl_subject"
+
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.detail:65
+msgid "Self-signed SSL Certificate: %ssl_subject"
+msgstr "Self-signed SSL Certificate: %ssl_subject"
 
 #: templates/ERR_SOCKET_FAILURE+html.body.div.blockquote.p:23
 msgid "Socket Failure"
@@ -523,7 +686,7 @@ msgstr ""
 "Žal trenutno ne morete zahtevati %U od tega upravitelja predpomnilnika, "
 "dokler ne potrdite svoje istovetnosti."
 
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:27
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:26
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
@@ -566,6 +729,10 @@ msgstr ""
 msgid "Squid sent the following FTP command:"
 msgstr "Squid je poslal naslednji ukaz FTP:"
 
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:109
+msgid "Subject issuer mismatch"
+msgstr "Subject issuer mismatch"
+
 #: templates/ERR_DNS_FAIL+html.body.div.p:26
 msgid "The DNS server returned:"
 msgstr "Strežnik DNS je odgovoril:"
@@ -577,8 +744,8 @@ msgstr "Opravilnik ESI je odgovoril:"
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:20
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"Strežnik FTP je bil prezaseden, da bi naložil naslov URL: <a href=\"%U\">%"
-"U</a>"
+"Strežnik FTP je bil prezaseden, da bi naložil naslov URL: <a href=\"%U\">%U</"
+"a>"
 
 #: templates/ERR_INVALID_RESP+html.body.div.p:26
 msgid ""
@@ -597,9 +764,10 @@ msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
 msgstr "Naslednjega naslova URL ni bilo mogoče naložiti: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:20
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:21
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:20
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:20
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:20
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:21
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:20
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:20
 #: templates/ERR_DNS_FAIL+html.body.div.p:20
 #: templates/ERR_ESI+html.body.div.p:20
@@ -626,16 +794,13 @@ msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"Prišlo je do napake med poskusom nalaganja naslova URL: <a href=\"%U\">%"
-"U</a>"
+"Prišlo je do napake med poskusom nalaganja naslova URL: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_URN_RESOLVE+html.body.div.p:20
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
-msgstr ""
-"Prišlo je do napake med poskusom nalaganja URN: <a href=\"%U\">%"
-"U</a>"
+msgstr "Prišlo je do napake med poskusom nalaganja URN: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:28
 msgid "The remote host or network may be down. Please try the request again."
@@ -648,7 +813,8 @@ msgid "The request or reply is too large."
 msgstr "Zahteva ali odgovor sta preobsežna."
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.h2:15
-#: templates/ERR_CANNOT_FORWARD+html.body.div.h2:16
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h2:15
+#: templates/ERR_CANNOT_FORWARD+html.body.div.h2:15
 #: templates/ERR_CONNECT_FAIL+html.body.div.h2:15
 #: templates/ERR_DNS_FAIL+html.body.div.h2:15
 #: templates/ERR_ESI+html.body.div.h2:15
@@ -705,6 +871,7 @@ msgstr ""
 "Za ta predpomnilnik ni določen noben relejni strežnik WAIS! Znesite se nad "
 "skrbnikom."
 
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:27
 #: templates/ERR_TOO_BIG+html.body.div.p:28
 msgid ""
 "These limits have been established by the Internet Service Provider who "
@@ -804,7 +971,13 @@ msgstr ""
 "je, da oddaljeni gostitelj ne podpira varnih povezav ali pa njegova "
 "varnostna poverila ne zadoščajo temu predpomnilniku."
 
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:27
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:26
+msgid ""
+"This proxy limits your time online with a quota. Your time budget is now "
+"empty but will be refilled when the configured time period starts again."
+msgstr ""
+
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:26
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches. The most likely cause for this error is that the cache administrator "
@@ -817,13 +990,17 @@ msgstr ""
 "povezave z izvornimi strežniki, nastavljeni nadrejeni predpomnilniki pa so "
 "trenutno vsi nedosegljivi."
 
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.blockquote.p:23
+msgid "Time Quota Exceeded."
+msgstr ""
+
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:37
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:37
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
 msgstr ""
-"Orodja -&gt; Internetne možnosti -&gt; Povezava -&gt; Nastavitve LAN "
-"-&gt;Proxy"
+"Orodja -&gt; Internetne možnosti -&gt; Povezava -&gt; Nastavitve LAN -&gt;"
+"Proxy"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:29
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:29
@@ -840,13 +1017,45 @@ msgstr ""
 "Orodja -&gt; Nastavitve -&gt; Napredno -&gt; Omrežje -&gt; Posredovalni "
 "strežniki"
 
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:17
+msgid "Unable to decode issuer (CA) public key: %ssl_ca_name"
+msgstr "Unable to decode issuer (CA) public key: %ssl_ca_name"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.descr:17
+msgid "Unable to decode issuer public key"
+msgstr "Unable to decode issuer public key"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:13
+msgid "Unable to decrypt CRL's signature"
+msgstr "Unable to decrypt CRL's signature"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.descr:9
+msgid "Unable to decrypt certificate's signature"
+msgstr "Unable to decrypt certificate's signature"
+
 #: templates/ERR_DNS_FAIL+html.body.div.blockquote.p:23
 msgid "Unable to determine IP address from host name <q>%H</q>"
 msgstr "Ni možno določiti naslova IP iz imena gostitelja <q>%H</q>"
 
-#: templates/ERR_CANNOT_FORWARD+html.body.div.blockquote.p:24
+#: templates/ERR_CANNOT_FORWARD+html.body.div.blockquote.p:23
 msgid "Unable to forward this request at this time."
 msgstr "Te zahteve trenutno ni mogoče posredovati."
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.descr:5
+msgid "Unable to get certificate CRL"
+msgstr "Unable to get certificate CRL"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.descr:1
+msgid "Unable to get issuer certificate"
+msgstr "Unable to get issuer certificate"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:73
+msgid "Unable to get local issuer certificate"
+msgstr "Unable to get local issuer certificate"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:77
+msgid "Unable to verify the first certificate"
+msgstr "Unable to verify the first certificate"
 
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h2:15
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.blockquote.p:23
@@ -857,13 +1066,17 @@ msgstr "Nepodprta različica HTTP"
 msgid "Unsupported Request Method and Protocol"
 msgstr "Nepodprta metoda zahteve in protokol"
 
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:97
+msgid "Unsupported certificate purpose"
+msgstr "Unsupported certificate purpose"
+
 #: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.blockquote.p:23
 msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
 msgstr ""
-"V predpomnilniku ni najti veljavnega dokumenta, podana pa je bila "
-"direktiva <q>only-if-cached</q>."
+"V predpomnilniku ni najti veljavnega dokumenta, podana pa je bila direktiva "
+"<q>only-if-cached</q>."
 
 #: templates/ERR_AGENT_CONFIGURE+html.head.title:4
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.h2:15
@@ -882,9 +1095,9 @@ msgid ""
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
-"Podali ste zahtevo s predpomnilniško kontrolno direktivo <q>only-if-"
-"cached</q>. Dokumenta ni bilo mogoče najti v predpomnilniku <em>ali pa</em> "
-"je zahteval ponovno preverjanje, ki ga direktiva <q>only-if-cached</q> ne "
+"Podali ste zahtevo s predpomnilniško kontrolno direktivo <q>only-if-cached</"
+"q>. Dokumenta ni bilo mogoče najti v predpomnilniku <em>ali pa</em> je "
+"zahteval ponovno preverjanje, ki ga direktiva <q>only-if-cached</q> ne "
 "dopušča."
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.blockquote.p:21
@@ -896,9 +1109,10 @@ msgstr ""
 "to omrežje."
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:28
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:29
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:50
 #: templates/ERR_AGENT_WPAD+html.body.div.p:50
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:29
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:28
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:30
 #: templates/ERR_DNS_FAIL+html.body.div.p:33
 #: templates/ERR_FORWARDING_DENIED+html.body.div.p:28
@@ -934,8 +1148,8 @@ msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
-"Po potrebi vam lahko skrbnik vašega predpomnilnika natančneje razloži, "
-"za kakšne vrste težavo gre."
+"Po potrebi vam lahko skrbnik vašega predpomnilnika natančneje razloži, za "
+"kakšne vrste težavo gre."
 
 #: templates/ERR_ESI+html.body.div.p:33
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
