@@ -157,7 +157,11 @@ typedef enum {
     hoHtcpReply,
 #endif
     hoRequest,
-    hoReply
+    hoReply,
+#if USE_SSL
+    hoErrorDetail,
+#endif
+    hoEnd
 } http_hdr_owner_type;
 
 struct _HttpHeaderFieldAttrs {

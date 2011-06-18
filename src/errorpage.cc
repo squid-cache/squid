@@ -128,13 +128,30 @@ static int error_page_count = 0;
 /// \ingroup ErrorPageInternal
 static MemBuf error_stylesheet;
 
-static char *errorTryLoadText(const char *page_name, const char *dir, bool silent = false);
-static char *errorLoadText(const char *page_name);
 static const char *errorFindHardText(err_type type);
 static ErrorDynamicPageInfo *errorDynamicPageInfoCreate(int id, const char *page_name);
 static void errorDynamicPageInfoDestroy(ErrorDynamicPageInfo * info);
 static IOCB errorSendComplete;
 
+/// \ingroup ErrorPageInternal
+/// manages an error page template
+class ErrorPageFile: public TemplateFile {
+public:
+    ErrorPageFile(const char *name): TemplateFile(name) { textBuf.init();}
+
+    /// The template text data read from disk
+    const char *text() { return textBuf.content(); }
+
+private:
+    /// stores the data read from disk to a local buffer
+    virtual bool parse(const char *buf, int len, bool eof) {
+        if (len)
+            textBuf.append(buf, len);
+        return true;
+    }
+
+    MemBuf textBuf; ///< A buffer to store the error page
+};
 
 /// \ingroup ErrorPageInternal
 err_type &operator++ (err_type &anErr)
@@ -173,8 +190,8 @@ errorInitialize(void)
              *  (a) default language translation directory (error_default_language)
              *  (b) admin specified custom directory (error_directory)
              */
-            error_text[i] = errorLoadText(err_type_str[i]);
-
+            ErrorPageFile  errTmpl(err_type_str[i]);
+            error_text[i] = errTmpl.loadDefault() ? xstrdup(errTmpl.text()) : NULL;
         } else {
             /** \par
              * Index any unknown file names used by deny_info.
@@ -188,7 +205,8 @@ errorInitialize(void)
 
             if (strchr(pg, ':') == NULL) {
                 /** But only if they are not redirection URL. */
-                error_text[i] = errorLoadText(pg);
+                ErrorPageFile  errTmpl(pg);
+                error_text[i] = errTmpl.loadDefault() ? xstrdup(errTmpl.text()) : NULL;
             }
         }
     }
@@ -197,12 +215,14 @@ errorInitialize(void)
 
     // look for and load stylesheet into global MemBuf for it.
     if (Config.errorStylesheet) {
-        char *temp = errorTryLoadText(Config.errorStylesheet,NULL);
-        if (temp) {
-            error_stylesheet.Printf("%s",temp);
-            safe_free(temp);
-        }
+        ErrorPageFile  tmpl("StylesSheet");
+        tmpl.loadFromFile(Config.errorStylesheet);
+        error_stylesheet.Printf("%s",tmpl.text());
     }
+
+#if USE_SSL
+    Ssl::errorDetailInitialize();
+#endif
 }
 
 void
@@ -221,6 +241,10 @@ errorClean(void)
         errorDynamicPageInfoDestroy(ErrorDynamicPages.pop_back());
 
     error_page_count = 0;
+
+#if USE_SSL
+    Ssl::errorDetailClean();
+#endif
 }
 
 /// \ingroup ErrorPageInternal
@@ -236,63 +260,79 @@ errorFindHardText(err_type type)
     return NULL;
 }
 
-/**
- * \ingroup ErrorPageInternal
- *
- * Load into the in-memory error text Index a file probably available at:
- *  (a) admin specified custom directory (error_directory)
- *  (b) default language translation directory (error_default_language)
- *  (c) English sub-directory where errors should ALWAYS exist
- */
-static char *
-errorLoadText(const char *page_name)
+TemplateFile::TemplateFile(const char *name): silent(false), wasLoaded(false), templateName(name)
 {
-    char *text = NULL;
+    assert(name);
+}
+
+bool
+TemplateFile::loadDefault()
+{
+    if (loaded()) // already loaded?
+        return true;
 
     /** test error_directory configured location */
-    if (Config.errorDirectory)
-        text = errorTryLoadText(page_name, Config.errorDirectory);
+    if (Config.errorDirectory) {
+        char path[MAXPATHLEN];
+        snprintf(path, sizeof(path), "%s/%s", Config.errorDirectory, templateName.termedBuf());
+        loadFromFile(path);
+    }
 
 #if USE_ERR_LOCALES
     /** test error_default_language location */
-    if (!text && Config.errorDefaultLanguage) {
-        char dir[256];
-        snprintf(dir,256,"%s/%s", DEFAULT_SQUID_ERROR_DIR, Config.errorDefaultLanguage);
-        text = errorTryLoadText(page_name, dir);
-        if (!text) {
+    if (!loaded() && Config.errorDefaultLanguage) {
+        if (!tryLoadTemplate(Config.errorDefaultLanguage)) {
             debugs(1, DBG_CRITICAL, "Unable to load default error language files. Reset to backups.");
         }
     }
 #endif
 
     /* test default location if failed (templates == English translation base templates) */
-    if (!text) {
-        text = errorTryLoadText(page_name, DEFAULT_SQUID_ERROR_DIR"/templates");
+    if (!loaded()) {
+        tryLoadTemplate("templates");
     }
 
     /* giving up if failed */
-    if (!text)
+    if (!loaded())
         fatal("failed to find or read error text file.");
 
-    return text;
+    return true;
 }
 
-/// \ingroup ErrorPageInternal
-static char *
-errorTryLoadText(const char *page_name, const char *dir, bool silent)
+bool
+TemplateFile::tryLoadTemplate(const char *lang)
+{
+    assert(lang);
+
+    char path[MAXPATHLEN];
+    /* TODO: prep the directory path string to prevent snprintf ... */
+    snprintf(path, sizeof(path), "%s/%s/%s",
+             DEFAULT_SQUID_ERROR_DIR, lang, templateName.termedBuf());
+    path[MAXPATHLEN-1] = '\0';
+
+    if (loadFromFile(path))
+        return true;
+
+#if HAVE_GLOB
+    if ( strlen(lang) == 2) {
+        /* TODO glob the error directory for sub-dirs matching: <tag> '-*'   */
+        /* use first result. */
+        debugs(4,2, HERE << "wildcard fallback errors not coded yet.");
+    }
+#endif
+
+    return false;
+}
+
+bool
+TemplateFile::loadFromFile(const char *path)
 {
     int fd;
-    char path[MAXPATHLEN];
     char buf[4096];
-    char *text;
     ssize_t len;
-    MemBuf textbuf;
 
-    // maybe received compound parts, maybe an absolute page_name and no dir
-    if (dir)
-        snprintf(path, sizeof(path), "%s/%s", dir, page_name);
-    else
-        snprintf(path, sizeof(path), "%s", page_name);
+    if (loaded()) // already loaded?
+        return true;
 
     fd = file_open(path, O_RDONLY | O_TEXT);
 
@@ -300,14 +340,18 @@ errorTryLoadText(const char *page_name, const char *dir, bool silent)
         /* with dynamic locale negotiation we may see some failures before a success. */
         if (!silent)
             debugs(4, DBG_CRITICAL, HERE << "'" << path << "': " << xstrerror());
-        return NULL;
+        wasLoaded = false;
+        return wasLoaded;
     }
-
-    textbuf.init();
 
     while ((len = FD_READ_METHOD(fd, buf, sizeof(buf))) > 0) {
-        textbuf.append(buf, len);
+        if (!parse(buf, len, false)) {
+            debugs(4, DBG_CRITICAL, HERE << " parse error while reading template file: " << path);
+            wasLoaded = false;
+            return wasLoaded;
+        }
     }
+    parse(buf, 0, true);
 
     if (len < 0) {
         debugs(4, DBG_CRITICAL, HERE << "failed to fully read: '" << path << "': " << xstrerror());
@@ -315,14 +359,100 @@ errorTryLoadText(const char *page_name, const char *dir, bool silent)
 
     file_close(fd);
 
-    /* Shrink memory size down to exact size. MemBuf has a tencendy
-     * to be rather large..
-     */
-    text = xstrdup(textbuf.buf);
+    wasLoaded = true;
+    return wasLoaded;
+}
 
-    textbuf.clean();
+bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos)
+{
+    while(pos < hdr.size()) {
+        char *dt = lang;
 
-    return text;
+        if (!pos) {
+            /* skip any initial whitespace. */
+            while (pos < hdr.size() && xisspace(hdr[pos])) pos++;
+        }
+        else {
+            // IFF we terminated the tag on whitespace or ';' we need to skip to the next ',' or end of header.
+            while (pos < hdr.size() && hdr[pos] != ',') pos++;
+            if (hdr[pos] == ',') pos++;
+        }
+
+        /*
+         * Header value format:
+         *  - sequence of whitespace delimited tags
+         *  - each tag may suffix with ';'.* which we can ignore.
+         *  - IFF a tag contains only two characters we can wildcard ANY translations matching: <it> '-'? .*
+         *    with preference given to an exact match.
+         */
+        bool invalid_byte = false;
+        while (pos < hdr.size() && hdr[pos] != ';' && hdr[pos] != ',' && !xisspace(hdr[pos]) && dt < (lang + (langLen -1)) ) {
+            if (!invalid_byte) {
+#if USE_HTTP_VIOLATIONS
+                // if accepting violations we may as well accept some broken browsers
+                //  which may send us the right code, wrong ISO formatting.
+                if (hdr[pos] == '_')
+                    *dt = '-';
+                else
+#endif
+                    *dt = xtolower(hdr[pos]);
+                // valid codes only contain A-Z, hyphen (-) and *
+                if (*dt != '-' && *dt != '*' && (*dt < 'a' || *dt > 'z') )
+                    invalid_byte = true;
+                else
+                    dt++; // move to next destination byte.
+            }
+            pos++;
+        }
+        *dt++ = '\0'; // nul-terminated the filename content string before system use.
+
+        debugs(4, 9, HERE << "STATE: dt='" << dt << "', lang='" << lang << "', pos=" << pos << ", buf='" << ((pos < hdr.size()) ? hdr.substr(pos,hdr.size()) : "") << "'");
+
+        /* if we found anything we might use, try it. */
+        if (*lang != '\0' && !invalid_byte)
+            return true;
+    }
+    return false;
+}
+
+bool
+TemplateFile::loadFor(HttpRequest *request)
+{
+    String hdr;
+
+#if USE_ERR_LOCALES
+    if (loaded()) // already loaded?
+        return true;
+
+    if (!request || !request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr) )
+        return false;
+
+    char lang[256];
+    size_t pos = 0; // current parsing position in header string
+
+    debugs(4, 6, HERE << "Testing Header: '" << hdr << "'");
+
+    while ( strHdrAcptLangGetItem(hdr, lang, 256, pos) ) {
+
+        /* wildcard uses the configured default language */
+        if (lang[0] == '*' && lang[1] == '\0') {
+            debugs(4, 6, HERE << "Found language '" << lang << "'. Using configured default.");
+            return false;
+        }
+
+        debugs(4, 6, HERE << "Found language '" << lang << "', testing for available template");
+
+        if (tryLoadTemplate(lang)) {
+            /* store the language we found for the Content-Language reply header */
+            errLanguage = lang;
+            break;
+        } else if (Config.errorLogMissingLanguages) {
+            debugs(4, DBG_IMPORTANT, "WARNING: Error Pages Missing Language: " << lang);
+        }
+    }
+#endif
+
+    return loaded();
 }
 
 /// \ingroup ErrorPageInternal
@@ -686,6 +816,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
 #if USE_SSL
         // currently only SSL error details implemented
         else if (detail) {
+            detail->useRequest(request);
             const String &errDetail = detail->toString();
             if (errDetail.defined()) {
                 MemBuf *detail_mb  = ConvertText(errDetail.termedBuf(), false);
@@ -1076,103 +1207,21 @@ ErrorState::BuildContent()
     assert(page_id > ERR_NONE && page_id < error_page_count);
 
 #if USE_ERR_LOCALES
-    String hdr;
-    char dir[256];
-    int l = 0;
-    const char *freePage = NULL;
+    ErrorPageFile  *localeTmpl = NULL;
 
     /** error_directory option in squid.conf overrides translations.
      * Custom errors are always found either in error_directory or the templates directory.
      * Otherwise locate the Accept-Language header
      */
-    if (!Config.errorDirectory && page_id < ERR_MAX && request && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr) ) {
+    if (!Config.errorDirectory && page_id < ERR_MAX) {
+        if (err_language && err_language != Config.errorDefaultLanguage)
+            safe_free(err_language);
 
-        size_t pos = 0; // current parsing position in header string
-        char *reset = NULL; // where to reset the p pointer for each new tag file
-        char *dt = NULL;
-
-        /* prep the directory path string to prevent snprintf ... */
-        l = strlen(DEFAULT_SQUID_ERROR_DIR);
-        memcpy(dir, DEFAULT_SQUID_ERROR_DIR, l);
-        dir[ l++ ] = '/';
-        reset = dt = dir + l;
-
-        debugs(4, 6, HERE << "Testing Header: '" << hdr << "'");
-
-        while ( pos < hdr.size() ) {
-
-            /* skip any initial whitespace. */
-            while (pos < hdr.size() && xisspace(hdr[pos])) pos++;
-
-            /*
-             * Header value format:
-             *  - sequence of whitespace delimited tags
-             *  - each tag may suffix with ';'.* which we can ignore.
-             *  - IFF a tag contains only two characters we can wildcard ANY translations matching: <it> '-'? .*
-             *    with preference given to an exact match.
-             */
-            bool invalid_byte = false;
-            while (pos < hdr.size() && hdr[pos] != ';' && hdr[pos] != ',' && !xisspace(hdr[pos]) && dt < (dir+256) ) {
-                if (!invalid_byte) {
-#if USE_HTTP_VIOLATIONS
-                    // if accepting violations we may as well accept some broken browsers
-                    //  which may send us the right code, wrong ISO formatting.
-                    if (hdr[pos] == '_')
-                        *dt = '-';
-                    else
-#endif
-                        *dt = xtolower(hdr[pos]);
-                    // valid codes only contain A-Z, hyphen (-) and *
-                    if (*dt != '-' && *dt != '*' && (*dt < 'a' || *dt > 'z') )
-                        invalid_byte = true;
-                    else
-                        dt++; // move to next destination byte.
-                }
-                pos++;
-            }
-            *dt++ = '\0'; // nul-terminated the filename content string before system use.
-
-            debugs(4, 9, HERE << "STATE: dt='" << dt << "', reset='" << reset << "', pos=" << pos << ", buf='" << ((pos < hdr.size()) ? hdr.substr(pos,hdr.size()) : "") << "'");
-
-            /* if we found anything we might use, try it. */
-            if (*reset != '\0' && !invalid_byte) {
-
-                /* wildcard uses the configured default language */
-                if (reset[0] == '*' && reset[1] == '\0') {
-                    debugs(4, 6, HERE << "Found language '" << reset << "'. Using configured default.");
-                    m = error_text[page_id];
-                    if (!Config.errorDirectory)
-                        err_language = Config.errorDefaultLanguage;
-                    break;
-                }
-
-                debugs(4, 6, HERE << "Found language '" << reset << "', testing for available template in: '" << dir << "'");
-
-                m = errorTryLoadText( err_type_str[page_id], dir, false);
-
-                if (m) {
-                    /* store the language we found for the Content-Language reply header */
-                    err_language = xstrdup(reset);
-                    freePage = m;
-                    break;
-                } else if (Config.errorLogMissingLanguages) {
-                    debugs(4, DBG_IMPORTANT, "WARNING: Error Pages Missing Language: " << reset);
-                }
-
-#if HAVE_GLOB
-                if ( (dt - reset) == 2) {
-                    /* TODO glob the error directory for sub-dirs matching: <tag> '-*'   */
-                    /* use first result. */
-                    debugs(4,2, HERE << "wildcard fallback errors not coded yet.");
-                }
-#endif
-            }
-
-            dt = reset; // reset for next tag testing. we replace the failed name instead of cloning.
-
-            // IFF we terminated the tag on whitespace or ';' we need to skip to the next ',' or end of header.
-            while (pos < hdr.size() && hdr[pos] != ',') pos++;
-            if (hdr[pos] == ',') pos++;
+        localeTmpl = new ErrorPageFile(err_type_str[page_id]);
+        if (localeTmpl->loadFor(request)) {
+            m = localeTmpl->text();
+            assert(localeTmpl->language());
+            err_language = xstrdup(localeTmpl->language());
         }
     }
 #endif /* USE_ERR_LOCALES */
@@ -1192,9 +1241,9 @@ ErrorState::BuildContent()
 
     MemBuf *result = ConvertText(m, true);
 #if USE_ERR_LOCALES
-    safe_free(freePage);
+    if (localeTmpl)
+        delete localeTmpl;
 #endif
-
     return result;
 }
 

@@ -55,6 +55,18 @@
  \ingroup ServerProtocol
  */
 
+// Custom SSL errors; assumes all official errors are positive
+#define SQUID_X509_V_ERR_DOMAIN_MISMATCH -1
+// All SSL errors range: from smallest (negative) custom to largest SSL error
+#define SQUID_SSL_ERROR_MIN SQUID_X509_V_ERR_DOMAIN_MISMATCH
+#define SQUID_SSL_ERROR_MAX INT_MAX
+
+namespace Ssl
+{
+/// Squid defined error code (<0),  an error code returned by SSL X509 api, or SSL_ERROR_NONE
+typedef int ssl_error_t;
+} //namespace Ssl
+
 /// \ingroup ServerProtocolSSLAPI
 SSL_CTX *sslCreateServerContext(const char *certfile, const char *keyfile, int version, const char *cipher, const char *options, const char *flags, const char *clientCA, const char *CAfile, const char *CApath, const char *CRLfile, const char *dhpath, const char *context);
 
