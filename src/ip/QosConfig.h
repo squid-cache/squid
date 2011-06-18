@@ -2,6 +2,7 @@
 #define SQUID_QOSCONFIG_H
 
 #include "hier_code.h"
+#include "ip/forward.h"
 
 #if HAVE_LIBNETFILTER_CONNTRACK_LIBNETFILTER_CONNTRACK_H
 #include <libnetfilter_conntrack/libnetfilter_conntrack.h>
@@ -32,20 +33,19 @@ namespace Qos
 * Function to retrieve the TOS value of the inbound packet.
 * Called by FwdState::dispatch if QOS options are enabled.
 * Bug 2537: This part of ZPH only applies to patched Linux kernels
-* @param server_fd Server side descriptor of connection to get TOS for
+* @param server    Server side descriptor of connection to get TOS for
 * @param clientFde Pointer to client side fde instance to set tosFromServer in
 */
-void getTosFromServer(const int server_fd, fde *clientFde);
+void getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde);
 
 /**
 * Function to retrieve the netfilter mark value of the connection
 * to the upstream server. Called by FwdState::dispatch if QOS
 * options are enabled.
-* @param server_fd Server side descriptor of connection to get mark for
-* @param servFde Pointer to server side fde instance to get mark for
+* @param server    Server side descriptor of connection to get mark for
 * @param clientFde Pointer to client side fde instance to set nfmarkFromServer in
 */
-void getNfmarkFromServer(const int server_fd, const fde *servFde, const fde *clientFde);
+void getNfmarkFromServer(const Comm::ConnectionPointer &server, const fde *clientFde);
 
 #if USE_LIBNETFILTERCONNTRACK
 /**
@@ -65,52 +65,52 @@ int getNfMarkCallback(enum nf_conntrack_msg_type type, struct nf_conntrack *ct, 
 * TOS value to set on packets when items have not been retrieved from
 * local cache. Called by clientReplyContext::sendMoreData if QOS is
 * enabled for TOS.
-* @param fd Descriptor of socket to set the TOS for
+* @param conn     Descriptor of socket to set the TOS for
 * @param hierCode Hier code of request
 */
-int doTosLocalMiss(const int fd, const hier_code hierCode);
+int doTosLocalMiss(const Comm::ConnectionPointer &conn, const hier_code hierCode);
 
 /**
 * Function to work out and then apply to the socket the appropriate
 * netfilter mark value to set on packets when items have not been
 * retrieved from local cache. Called by clientReplyContext::sendMoreData
 * if QOS is enabled for TOS.
-* @param fd Descriptor of socket to set the mark for
+* @param conn     Descriptor of socket to set the mark for
 * @param hierCode Hier code of request
 */
-int doNfmarkLocalMiss(const int fd, const hier_code hierCode);
+int doNfmarkLocalMiss(const Comm::ConnectionPointer &conn, const hier_code hierCode);
 
 /**
 * Function to work out and then apply to the socket the appropriate
 * TOS value to set on packets when items *have* been retrieved from
 * local cache. Called by clientReplyContext::doGetMoreData if QOS is
 * enabled for TOS.
-* @param fd Descriptor of socket to set the TOS for
+* @param conn Descriptor of socket to set the TOS for
 */
-int doTosLocalHit(const int fd);
+int doTosLocalHit(const Comm::ConnectionPointer &conn);
 
 /**
 * Function to work out and then apply to the socket the appropriate
 * netfilter mark value to set on packets when items *have* been
 * retrieved from local cache. Called by clientReplyContext::doGetMoreData
 * if QOS is enabled for TOS.
-* @param fd Descriptor of socket to set the mark for
+* @param conn Descriptor of socket to set the mark for
 */
-int doNfmarkLocalHit(const int fd);
+int doNfmarkLocalHit(const Comm::ConnectionPointer &conn);
 
 /**
 * Function to set the TOS value of packets. Sets the value on the socket
 * which then gets copied to the packets.
-* @param fd Descriptor of socket to set the TOS for
+* @param conn Descriptor of socket to set the TOS for
 */
-_SQUID_INLINE_ int setSockTos(int fd, tos_t tos);
+_SQUID_INLINE_ int setSockTos(const Comm::ConnectionPointer &conn, tos_t tos);
 
 /**
 * Function to set the netfilter mark value of packets. Sets the value on the
 * socket which then gets copied to the packets. Called from Ip::Qos::doNfmarkLocalMiss
-* @param fd Descriptor of socket to set the mark for
+* @param conn Descriptor of socket to set the mark for
 */
-_SQUID_INLINE_ int setSockNfmark(int fd, nfmark_t mark);
+_SQUID_INLINE_ int setSockNfmark(const Comm::ConnectionPointer &conn, nfmark_t mark);
 
 /**
  * QOS configuration class. Contains all the parameters for QOS functions as well

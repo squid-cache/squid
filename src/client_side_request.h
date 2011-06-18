@@ -72,7 +72,7 @@ public:
 #if USE_ADAPTATION
     void *toCbdata() { return this; }
 #endif
-    ClientHttpRequest(ConnStateData *);
+    ClientHttpRequest(ConnStateData *csd);
     ~ClientHttpRequest();
     /* Not implemented - present to prevent synthetic operations */
     ClientHttpRequest(ClientHttpRequest const &);
@@ -95,6 +95,12 @@ public:
 
     _SQUID_INLINE_ ConnStateData * getConn() const;
     _SQUID_INLINE_ void setConn(ConnStateData *);
+
+    /** Details of the client socket which produced us.
+     * Treat as read-only for the lifetime of this HTTP request.
+     */
+    Comm::ConnectionPointer clientConnection;
+
     HttpRequest *request;		/* Parsed URL ... */
     char *uri;
     char *log_uri;

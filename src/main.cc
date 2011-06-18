@@ -34,12 +34,20 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#if USE_ADAPTATION
+#include "adaptation/Config.h"
+#endif
+#if USE_ECAP
+#include "adaptation/ecap/Config.h"
+#endif
 #if ICAP_CLIENT
+#include "adaptation/icap/Config.h"
 #include "adaptation/icap/icap_log.h"
 #endif
 #if USE_AUTH
 #include "auth/Gadgets.h"
 #endif
+#include "base/Subscription.h"
 #include "base/TextException.h"
 #if USE_DELAY_POOLS
 #include "ClientDelayConfig.h"
@@ -54,6 +62,8 @@
 #include "event.h"
 #include "EventLoop.h"
 #include "ExternalACL.h"
+#include "fs/Module.h"
+#include "PeerSelectState.h"
 #include "Store.h"
 #include "ICP.h"
 #include "ident/Ident.h"

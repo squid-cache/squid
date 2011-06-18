@@ -1,16 +1,17 @@
 #include "squid.h"
 #include "fde.h"
+#include "comm/Connection.h"
 #include "CommCalls.h"
 
 /* CommCommonCbParams */
 
 CommCommonCbParams::CommCommonCbParams(void *aData):
-        data(cbdataReference(aData)), fd(-1), xerrno(0), flag(COMM_OK)
+        data(cbdataReference(aData)), conn(), flag(COMM_OK), xerrno(0), fd(-1)
 {
 }
 
 CommCommonCbParams::CommCommonCbParams(const CommCommonCbParams &p):
-        data(cbdataReference(p.data)), fd(p.fd), xerrno(p.xerrno), flag(p.flag)
+        data(cbdataReference(p.data)), conn(p.conn), flag(p.flag), xerrno(p.xerrno), fd(p.fd)
 {
 }
 
@@ -22,7 +23,11 @@ CommCommonCbParams::~CommCommonCbParams()
 void
 CommCommonCbParams::print(std::ostream &os) const
 {
-    os << "FD " << fd;
+    if (conn != NULL)
+        os << conn;
+    else
+        os << "FD " << fd;
+
     if (xerrno)
         os << ", errno=" << xerrno;
     if (flag != COMM_OK)
@@ -34,17 +39,9 @@ CommCommonCbParams::print(std::ostream &os) const
 
 /* CommAcceptCbParams */
 
-CommAcceptCbParams::CommAcceptCbParams(void *aData): CommCommonCbParams(aData),
-        nfd(-1)
+CommAcceptCbParams::CommAcceptCbParams(void *aData):
+        CommCommonCbParams(aData)
 {
-}
-
-void
-CommAcceptCbParams::print(std::ostream &os) const
-{
-    CommCommonCbParams::print(os);
-    if (nfd >= 0)
-        os << ", newFD " << nfd;
 }
 
 
@@ -61,17 +58,10 @@ CommConnectCbParams::syncWithComm()
     // drop the call if the call was scheduled before comm_close but
     // is being fired after comm_close
     if (fd >= 0 && fd_table[fd].closing()) {
-        debugs(5, 3, HERE << "droppin late connect call: FD " << fd);
+        debugs(5, 3, HERE << "dropping late connect call: FD " << fd);
         return false;
     }
     return true; // now we are in sync and can handle the call
-}
-
-void
-CommConnectCbParams::print(std::ostream &os) const
-{
-    CommCommonCbParams::print(os);
-    os << ", " << dns;
 }
 
 /* CommIoCbParams */
@@ -86,8 +76,8 @@ CommIoCbParams::syncWithComm()
 {
     // change parameters if the call was scheduled before comm_close but
     // is being fired after comm_close
-    if (fd >= 0 && fd_table[fd].closing() && flag != COMM_ERR_CLOSING) {
-        debugs(5, 3, HERE << "converting late call to COMM_ERR_CLOSING: FD " << fd);
+    if (conn->fd >= 0 && fd_table[conn->fd].closing() && flag != COMM_ERR_CLOSING) {
+        debugs(5, 3, HERE << "converting late call to COMM_ERR_CLOSING: " << conn);
         flag = COMM_ERR_CLOSING;
         size = 0;
     }
@@ -130,10 +120,16 @@ CommAcceptCbPtrFun::CommAcceptCbPtrFun(IOACB *aHandler,
 {
 }
 
+CommAcceptCbPtrFun::CommAcceptCbPtrFun(const CommAcceptCbPtrFun &o):
+        CommDialerParamsT<CommAcceptCbParams>(o.params),
+        handler(o.handler)
+{
+}
+
 void
 CommAcceptCbPtrFun::dial()
 {
-    handler(params.fd, params.nfd, &params.details, params.flag, params.xerrno, params.data);
+    handler(params.fd, params.conn, params.flag, params.xerrno, params.data);
 }
 
 void
@@ -157,7 +153,7 @@ CommConnectCbPtrFun::CommConnectCbPtrFun(CNCB *aHandler,
 void
 CommConnectCbPtrFun::dial()
 {
-    handler(params.fd, params.dns, params.flag, params.xerrno, params.data);
+    handler(params.conn, params.flag, params.xerrno, params.data);
 }
 
 void
@@ -180,7 +176,7 @@ CommIoCbPtrFun::CommIoCbPtrFun(IOCB *aHandler, const CommIoCbParams &aParams):
 void
 CommIoCbPtrFun::dial()
 {
-    handler(params.fd, params.buf, params.size, params.flag, params.xerrno, params.data);
+    handler(params.conn, params.buf, params.size, params.flag, params.xerrno, params.data);
 }
 
 void
@@ -217,7 +213,7 @@ CommCloseCbPtrFun::print(std::ostream &os) const
 
 /* CommTimeoutCbPtrFun */
 
-CommTimeoutCbPtrFun::CommTimeoutCbPtrFun(PF *aHandler,
+CommTimeoutCbPtrFun::CommTimeoutCbPtrFun(CTCB *aHandler,
         const CommTimeoutCbParams &aParams):
         CommDialerParamsT<CommTimeoutCbParams>(aParams),
         handler(aHandler)
@@ -227,7 +223,7 @@ CommTimeoutCbPtrFun::CommTimeoutCbPtrFun(PF *aHandler,
 void
 CommTimeoutCbPtrFun::dial()
 {
-    handler(params.fd, params.data);
+    handler(params);
 }
 
 void

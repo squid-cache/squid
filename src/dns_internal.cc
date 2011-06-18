@@ -33,6 +33,8 @@
  */
 
 #include "squid.h"
+#include "comm/Connection.h"
+#include "comm/ConnOpener.h"
 #include "comm.h"
 #include "comm/Loops.h"
 #include "comm/Write.h"
@@ -152,7 +154,7 @@ InstanceIdDefinitions(idns_query,  "dns");
 
 struct _nsvc {
     int ns;
-    int fd;
+    Comm::ConnectionPointer conn;
     unsigned short msglen;
     int read_msglen;
     MemBuf *msg;
@@ -234,6 +236,9 @@ static void idnsCacheQuery(idns_query * q);
 static void idnsSendQuery(idns_query * q);
 static IOCB idnsReadVCHeader;
 static void idnsDoSendQueryVC(nsvc *vc);
+static CNCB idnsInitVCConnected;
+static IOCB idnsReadVC;
+static IOCB idnsSentQueryVC;
 
 static int idnsFromKnownNameserver(Ip::Address const &from);
 static idns_query *idnsFindQuery(unsigned short id);
@@ -242,6 +247,7 @@ static PF idnsRead;
 static EVH idnsCheckQueue;
 static void idnsTickleQueue(void);
 static void idnsRcodeCount(int, int);
+static void idnsVCClosed(int fd, void *data);
 static unsigned short idnsQueryID(void);
 
 static void
@@ -732,18 +738,19 @@ idnsTickleQueue(void)
 }
 
 static void
-idnsSentQueryVC(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
+idnsSentQueryVC(const Comm::ConnectionPointer &conn, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
     if (flag == COMM_ERR_CLOSING)
         return;
 
-    if (fd_table[fd].closing())
+    // XXX: irrelevant now that we have conn pointer?
+    if (!Comm::IsConnOpen(conn) || fd_table[conn->fd].closing())
         return;
 
     if (flag != COMM_OK || size <= 0) {
-        comm_close(fd);
+        conn->close();
         return;
     }
 
@@ -769,32 +776,36 @@ idnsDoSendQueryVC(nsvc *vc)
     // Comm needs seconds but idnsCheckQueue() will check the exact timeout
     const int timeout = (Config.Timeout.idns_query % 1000 ?
                          Config.Timeout.idns_query + 1000 : Config.Timeout.idns_query) / 1000;
+    AsyncCall::Pointer nil;
 
-    commSetTimeout(vc->fd, timeout, NULL, NULL);
+    commSetConnTimeout(vc->conn, timeout, nil);
 
     AsyncCall::Pointer call = commCbCall(78, 5, "idnsSentQueryVC",
                                          CommIoCbPtrFun(&idnsSentQueryVC, vc));
-
-    Comm::Write(vc->fd, mb, call);
+    Comm::Write(vc->conn, mb, call);
 
     delete mb;
 }
 
 static void
-idnsInitVCConnected(int fd, const DnsLookupDetails &details, comm_err_t status, int xerrno, void *data)
+idnsInitVCConnected(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
-    if (status != COMM_OK) {
+    if (status != COMM_OK || !conn) {
         char buf[MAX_IPSTRLEN] = "";
         if (vc->ns < nns)
             nameservers[vc->ns].S.NtoA(buf,MAX_IPSTRLEN);
-        debugs(78, 1, HERE << "Failed to connect to nameserver " << buf << " using TCP: " << details);
-        comm_close(fd);
+        debugs(78, 1, HERE << "Failed to connect to nameserver " << buf << " using TCP.");
         return;
     }
 
-    comm_read(fd, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
+    vc->conn = conn;
+
+    comm_add_close_handler(conn->fd, idnsVCClosed, vc);
+    AsyncCall::Pointer call = commCbCall(5,4, "idnsReadVCHeader",
+                                         CommIoCbPtrFun(idnsReadVCHeader, vc));
+    comm_read(conn, (char *)&vc->msglen, 2, call);
     vc->busy = 0;
     idnsDoSendQueryVC(vc);
 }
@@ -805,6 +816,7 @@ idnsVCClosed(int fd, void *data)
     nsvc * vc = (nsvc *)data;
     delete vc->queue;
     delete vc->msg;
+    vc->conn = NULL;
     if (vc->ns < nns) // XXX: idnsShutdown may have freed nameservers[]
         nameservers[vc->ns].vc = NULL;
     cbdataFree(vc);
@@ -813,44 +825,29 @@ idnsVCClosed(int fd, void *data)
 static void
 idnsInitVC(int ns)
 {
-    char buf[MAX_IPSTRLEN];
-
     nsvc *vc = cbdataAlloc(nsvc);
     assert(ns < nns);
+    assert(vc->conn == NULL); // MUST be NULL from the construction process!
     nameservers[ns].vc = vc;
     vc->ns = ns;
-
-    Ip::Address addr;
-
-    if (!Config.Addrs.udp_outgoing.IsNoAddr())
-        addr = Config.Addrs.udp_outgoing;
-    else
-        addr = Config.Addrs.udp_incoming;
-
-    if (nameservers[ns].S.IsIPv4() && !addr.SetIPv4()) {
-        debugs(31, DBG_CRITICAL, "ERROR: Cannot contact DNS nameserver " << nameservers[ns].S << " from " << addr);
-        addr.SetAnyAddr();
-        addr.SetIPv4();
-    }
-
     vc->queue = new MemBuf;
-
     vc->msg = new MemBuf;
-
-    vc->fd = comm_open(SOCK_STREAM,
-                       IPPROTO_TCP,
-                       addr,
-                       COMM_NONBLOCKING,
-                       "DNS TCP Socket");
-
-    if (vc->fd < 0)
-        fatal("Could not create a DNS socket");
-
-    comm_add_close_handler(vc->fd, idnsVCClosed, vc);
-
     vc->busy = 1;
 
-    commConnectStart(vc->fd, nameservers[ns].S.NtoA(buf,MAX_IPSTRLEN), nameservers[ns].S.GetPort(), idnsInitVCConnected, vc);
+    Comm::ConnectionPointer conn = new Comm::Connection();
+
+    if (!Config.Addrs.udp_outgoing.IsNoAddr())
+        conn->local = Config.Addrs.udp_outgoing;
+    else
+        conn->local = Config.Addrs.udp_incoming;
+
+    conn->remote = nameservers[ns].S;
+
+    AsyncCall::Pointer call = commCbCall(78,3, "idnsInitVCConnected", CommConnectCbPtrFun(idnsInitVCConnected, vc));
+
+    Comm::ConnOpener *cs = new Comm::ConnOpener(conn, call, Config.Timeout.connect);
+    cs->setHost("DNS TCP Socket");
+    AsyncJob::Start(cs);
 }
 
 static void
@@ -1385,7 +1382,7 @@ idnsCheckQueue(void *unused)
 }
 
 static void
-idnsReadVC(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+idnsReadVC(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
@@ -1393,29 +1390,32 @@ idnsReadVC(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *dat
         return;
 
     if (flag != COMM_OK || len <= 0) {
-        comm_close(fd);
+        if (Comm::IsConnOpen(conn))
+            conn->close();
         return;
     }
 
     vc->msg->size += len;       // XXX should not access -> size directly
 
     if (vc->msg->contentSize() < vc->msglen) {
-        comm_read(fd, buf + len, vc->msglen - vc->msg->contentSize(), idnsReadVC, vc);
+        AsyncCall::Pointer call = commCbCall(5,4, "idnsReadVC",
+                                             CommIoCbPtrFun(idnsReadVC, vc));
+        comm_read(conn, buf+len, vc->msglen - vc->msg->contentSize(), call);
         return;
     }
 
     assert(vc->ns < nns);
-    debugs(78, 3, "idnsReadVC: FD " << fd << ": received " <<
-           (int) vc->msg->contentSize() << " bytes via tcp from " <<
-           nameservers[vc->ns].S << ".");
+    debugs(78, 3, HERE << conn << ": received " << vc->msg->contentSize() << " bytes via TCP from " << nameservers[vc->ns].S << ".");
 
     idnsGrokReply(vc->msg->buf, vc->msg->contentSize(), vc->ns);
     vc->msg->clean();
-    comm_read(fd, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
+    AsyncCall::Pointer call = commCbCall(5,4, "idnsReadVCHeader",
+                                         CommIoCbPtrFun(idnsReadVCHeader, vc));
+    comm_read(conn, (char *)&vc->msglen, 2, call);
 }
 
 static void
-idnsReadVCHeader(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+idnsReadVCHeader(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
@@ -1423,7 +1423,8 @@ idnsReadVCHeader(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         return;
 
     if (flag != COMM_OK || len <= 0) {
-        comm_close(fd);
+        if (Comm::IsConnOpen(conn))
+            conn->close();
         return;
     }
 
@@ -1432,7 +1433,9 @@ idnsReadVCHeader(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
     assert(vc->read_msglen <= 2);
 
     if (vc->read_msglen < 2) {
-        comm_read(fd, buf + len, 2 - vc->read_msglen, idnsReadVCHeader, vc);
+        AsyncCall::Pointer call = commCbCall(5,4, "idnsReadVCHeader",
+                                             CommIoCbPtrFun(idnsReadVCHeader, vc));
+        comm_read(conn, buf+len, 2 - vc->read_msglen, call);
         return;
     }
 
@@ -1441,7 +1444,9 @@ idnsReadVCHeader(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
     vc->msglen = ntohs(vc->msglen);
 
     vc->msg->init(vc->msglen, vc->msglen);
-    comm_read(fd, vc->msg->buf, vc->msglen, idnsReadVC, vc);
+    AsyncCall::Pointer call = commCbCall(5,4, "idnsReadVC",
+                                         CommIoCbPtrFun(idnsReadVC, vc));
+    comm_read(conn, vc->msg->buf, vc->msglen, call);
 }
 
 /*
@@ -1583,8 +1588,8 @@ idnsShutdown(void)
 
     for (int i = 0; i < nns; i++) {
         if (nsvc *vc = nameservers[i].vc) {
-            if (vc->fd >= 0)
-                comm_close(vc->fd);
+            if (Comm::IsConnOpen(vc->conn))
+                vc->conn->close();
         }
     }
 

@@ -36,6 +36,7 @@
 #include "config.h"
 #include "base/TextException.h"
 #include "CacheManager.h"
+#include "comm/Connection.h"
 #include "Debug.h"
 #include "errorpage.h"
 #include "fde.h"
@@ -105,6 +106,12 @@ CacheManager::registerProfile(char const * action, char const * desc, OBJH * han
     registerProfile(profile);
 }
 
+/**
+ * \ingroup CacheManagerAPI
+ * Registers a C++-style action, via a pointer to a subclass of
+ * a CacheManagerAction object, whose run() method will be invoked when
+ * CacheManager identifies that the user has requested the action.
+ */
 void
 CacheManager::registerProfile(char const * action, char const * desc,
                               ClassActionCreator::Handler *handler,
@@ -306,7 +313,7 @@ CacheManager::CheckPassword(const Mgr::Command &cmd)
  * all needed internal work and renders the response.
  */
 void
-CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
+CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request, StoreEntry * entry)
 {
     ErrorState *err = NULL;
     debugs(16, 3, "CacheManager::Start: '" << entry->url() << "'" );
@@ -324,7 +331,7 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
 
     entry->expires = squid_curtime;
 
-    debugs(16, 5, "CacheManager: " << fd_table[fd].ipaddr << " requesting '" << actionName << "'");
+    debugs(16, 5, "CacheManager: " << client << " requesting '" << actionName << "'");
 
     /* get additional info from request headers */
     ParseHeaders(request, cmd->params);
@@ -344,12 +351,12 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
         if (cmd->params.password.size()) {
             debugs(16, DBG_IMPORTANT, "CacheManager: " <<
                    userName << "@" <<
-                   fd_table[fd].ipaddr << ": incorrect password for '" <<
+                   client << ": incorrect password for '" <<
                    actionName << "'" );
         } else {
             debugs(16, DBG_IMPORTANT, "CacheManager: " <<
                    userName << "@" <<
-                   fd_table[fd].ipaddr << ": password needed for '" <<
+                   client << ": password needed for '" <<
                    actionName << "'" );
         }
 
@@ -377,11 +384,12 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
 
     debugs(16, 2, "CacheManager: " <<
            userName << "@" <<
-           fd_table[fd].ipaddr << " requesting '" <<
+           client << " requesting '" <<
            actionName << "'" );
 
     if (UsingSmp() && IamWorkerProcess()) {
-        AsyncJob::Start(new Mgr::Forwarder(fd, cmd->params, request, entry));
+        // is client the right connection to pass here?
+        AsyncJob::Start(new Mgr::Forwarder(client, cmd->params, request, entry));
         return;
     }
 

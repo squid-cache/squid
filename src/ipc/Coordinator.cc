@@ -7,9 +7,11 @@
 
 
 #include "config.h"
+#include "base/Subscription.h"
 #include "base/TextException.h"
 #include "CacheManager.h"
 #include "comm.h"
+#include "comm/Connection.h"
 #include "ipc/Coordinator.h"
 #include "ipc/SharedListen.h"
 #include "mgr/Inquirer.h"
@@ -119,14 +121,14 @@ Ipc::Coordinator::handleSharedListenRequest(const SharedListenRequest& request)
            " needs shared listen FD for " << request.params.addr);
     Listeners::const_iterator i = listeners.find(request.params);
     int errNo = 0;
-    const int sock = (i != listeners.end()) ?
-                     i->second : openListenSocket(request, errNo);
+    const Comm::ConnectionPointer c = (i != listeners.end()) ?
+                                      i->second : openListenSocket(request, errNo);
 
-    debugs(54, 3, HERE << "sending shared listen FD " << sock << " for " <<
+    debugs(54, 3, HERE << "sending shared listen " << c << " for " <<
            request.params.addr << " to kid" << request.requestorId <<
            " mapId=" << request.mapId);
 
-    SharedListenResponse response(sock, errNo, request.mapId);
+    SharedListenResponse response(c, errNo, request.mapId);
     TypedMsgHdr message;
     response.pack(message);
     SendMessage(MakeAddr(strandAddrPfx, request.requestorId), message);
@@ -176,7 +178,7 @@ Ipc::Coordinator::handleSnmpResponse(const Snmp::Response& response)
 }
 #endif
 
-int
+Comm::ConnectionPointer
 Ipc::Coordinator::openListenSocket(const SharedListenRequest& request,
                                    int &errNo)
 {
@@ -185,19 +187,23 @@ Ipc::Coordinator::openListenSocket(const SharedListenRequest& request,
     debugs(54, 6, HERE << "opening listen FD at " << p.addr << " for kid" <<
            request.requestorId);
 
-    Ip::Address addr = p.addr; // comm_open_listener may modify it
+    Comm::ConnectionPointer conn = new Comm::Connection;
+    conn->local = p.addr; // comm_open_listener may modify it
+    conn->flags = p.flags;
 
     enter_suid();
-    const int sock = comm_open_listener(p.sock_type, p.proto, addr, p.flags,
-                                        FdNote(p.fdNote));
-    errNo = (sock >= 0) ? 0 : errno;
+    comm_open_listener(p.sock_type, p.proto, conn, FdNote(p.fdNote));
+    errNo = Comm::IsConnOpen(conn) ? 0 : errno;
     leave_suid();
 
-    // cache positive results
-    if (sock >= 0)
-        listeners[request.params] = sock;
+    debugs(54, 6, HERE << "tried listening on " << conn << " for kid" <<
+           request.requestorId);
 
-    return sock;
+    // cache positive results
+    if (Comm::IsConnOpen(conn))
+        listeners[request.params] = conn;
+
+    return conn;
 }
 
 void Ipc::Coordinator::broadcastSignal(int sig) const

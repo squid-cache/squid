@@ -39,6 +39,7 @@
 #include "auth/UserRequest.h"
 #endif
 #include "cbdata.h"
+#include "comm/forward.h"
 #include "ip/Address.h"
 #include "MemBuf.h"
 #if USE_SSL
@@ -201,7 +202,7 @@ SQUIDCEXTERN void errorClean(void);
  * This function generates a error page from the info contained
  * by err and then sends it to the client.
  * The callback function errorSendComplete() is called after
- * the page has been written to the client socket (fd).
+ * the page has been written to the client (clientConn).
  * errorSendComplete() deallocates err.  We need to add
  * err to the cbdata because comm_write() requires it
  * for all callback data pointers.
@@ -212,10 +213,10 @@ SQUIDCEXTERN void errorClean(void);
  *     for errors and use errorAppendEntry() to account for
  *     persistent/pipeline connections.
  *
- \param fd      socket where page object is to be written
- \param err     This object is destroyed after use in this function.
+ \param clientConn  socket where page object is to be written
+ \param err         This object is destroyed after use in this function.
  */
-SQUIDCEXTERN void errorSend(int fd, ErrorState *err);
+SQUIDCEXTERN void errorSend(const Comm::ConnectionPointer &conn, ErrorState *err);
 
 /**
  \ingroup ErrorPageAPI
@@ -255,10 +256,11 @@ SQUIDCEXTERN const char *errorPageName(int pageId); ///< error ID to string
  * loads text templates used for error pages and details;
  * supports translation of templates
  */
-class TemplateFile {
+class TemplateFile
+{
 public:
     TemplateFile(const char *name);
-    virtual ~TemplateFile(){}
+    virtual ~TemplateFile() {}
 
     /// return true if the data loaded from disk without any problem
     bool loaded() const {return wasLoaded;}

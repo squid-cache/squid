@@ -32,9 +32,12 @@
 
 #include "squid.h"
 #include "cbdata.h"
+#include "CacheManager.h"
+#include "DnsLookupDetails.h"
 #include "event.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
+#include "ipcache.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -625,9 +628,9 @@ ipcacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error_m
  * of scheduling an async call. This reentrant behavior means that the
  * user job must be extra careful after calling ipcache_nbgethostbyname,
  * especially if the handler destroys the job. Moreover, the job has
- * no way of knowing whether the reentrant call happened. commConnectStart
- * protects the job by scheduling an async call, but some user code calls
- * ipcache_nbgethostbyname directly.
+ * no way of knowing whether the reentrant call happened.
+ * Comm::Connection setup usually protects the job by scheduling an async call,
+ * but some user code calls ipcache_nbgethostbyname directly.
  */
 void
 ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)

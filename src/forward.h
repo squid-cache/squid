@@ -7,8 +7,10 @@ class ErrorState;
 class HttpRequest;
 
 #include "comm.h"
-#include "hier_code.h"
+#include "comm/Connection.h"
+#include "fde.h"
 #include "ip/Address.h"
+#include "Array.h"
 
 /**
  * Returns the TOS value that we should be setting on the connection
@@ -23,14 +25,6 @@ tos_t GetTosToServer(HttpRequest * request);
 nfmark_t GetNfmarkToServer(HttpRequest * request);
 
 
-class FwdServer
-{
-public:
-    peer *_peer;                /* NULL --> origin server */
-    hier_code code;
-    FwdServer *next;
-};
-
 class FwdState : public RefCountable
 {
 public:
@@ -38,10 +32,10 @@ public:
     ~FwdState();
     static void initModule();
 
-    static void fwdStart(int fd, StoreEntry *, HttpRequest *);
-    void startComplete(FwdServer *);
-    void startFail();
+    static void fwdStart(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *);
+    void startConnectionOrFail();
     void fail(ErrorState *err);
+    void unregister(Comm::ConnectionPointer &conn);
     void unregister(int fd);
     void complete();
     void handleUnregisteredServerEnd();
@@ -49,28 +43,25 @@ public:
     bool reforwardableStatus(http_status s);
     void serverClosed(int fd);
     void connectStart();
-    void connectDone(int server_fd, const DnsLookupDetails &dns, comm_err_t status, int xerrno);
+    void connectDone(const Comm::ConnectionPointer & conn, comm_err_t status, int xerrno);
     void connectTimeout(int fd);
     void initiateSSL();
     void negotiateSSL(int fd);
     bool checkRetry();
     bool checkRetriable();
     void dispatch();
-    void pconnPush(int fd, const peer *_peer, const HttpRequest *req, const char *domain, Ip::Address &client_addr);
+    void pconnPush(Comm::ConnectionPointer & conn, const char *domain);
 
     bool dontRetry() { return flags.dont_retry; }
 
     void dontRetry(bool val) { flags.dont_retry = val; }
 
-    bool ftpPasvFailed() { return flags.ftp_pasv_failed; }
-
-    void ftpPasvFailed(bool val) { flags.ftp_pasv_failed = val; }
-
-    static void serversFree(FwdServer **);
+    /** return a ConnectionPointer to the current server connection (may or may not be open) */
+    Comm::ConnectionPointer const & serverConnection() const { return serverConn; };
 
 private:
     // hidden for safer management of self; use static fwdStart
-    FwdState(int fd, StoreEntry *, HttpRequest *);
+    FwdState(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *);
     void start(Pointer aSelf);
 
     static void logReplyStatus(int tries, http_status status);
@@ -84,25 +75,31 @@ private:
 public:
     StoreEntry *entry;
     HttpRequest *request;
-    int server_fd;
-    FwdServer *servers;
     static void abort(void*);
 
 private:
     Pointer self;
     ErrorState *err;
-    int client_fd;
+    Comm::ConnectionPointer clientConn;        ///< a possibly open connection to the client.
     time_t start_t;
     int n_tries;
     int origin_tries;
 
+    // AsyncCalls which we set and may need cancelling.
     struct {
+        AsyncCall::Pointer connector;  ///< a call linking us to the ConnOpener producing serverConn.
+    } calls;
+
+    struct {
+        unsigned int connected_okay:1; ///< TCP link ever opened properly. This affects retry of POST,PUT,CONNECT,etc
         unsigned int dont_retry:1;
-        unsigned int ftp_pasv_failed:1;
         unsigned int forward_completed:1;
     } flags;
 
-    Ip::Address src; /* Client address for this connection. Needed for transparent operations. */
+    /** connections to open, in order, until successful */
+    Comm::ConnectionList serverDestinations;
+
+    Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
 
     // NP: keep this last. It plays with private/public
     CBDATA_CLASS2(FwdState);

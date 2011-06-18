@@ -71,13 +71,13 @@ public:
     bool encode(char *buf, const int len);
 
     // lookup an EUI-64 address via IPv6 SLAAC or NDP
-    bool lookup(Ip::Address &c);
+    bool lookup(const Ip::Address &c);
 
     // lookup an EUI-64 address via IPv6 NDP
-    bool lookupNdp(Ip::Address &c);
+    bool lookupNdp(const Ip::Address &c);
 
     // lookup an EUI-64 address via decoding the IPv6 address SLAAC data
-    bool lookupSlaac(Ip::Address &c);
+    bool lookupSlaac(const Ip::Address &c);
 
 private:
     unsigned char eui[SZ_EUI64_BUF];

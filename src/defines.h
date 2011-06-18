@@ -62,12 +62,6 @@
 #define COMM_SELECT_READ   (0x1)
 #define COMM_SELECT_WRITE  (0x2)
 
-#define COMM_NONBLOCKING	0x01
-#define COMM_NOCLOEXEC		0x02
-#define COMM_REUSEADDR		0x04
-#define COMM_TRANSPARENT	0x08
-#define COMM_DOBIND		0x10
-
 #define DISK_OK                   (0)
 #define DISK_ERROR               (-1)
 #define DISK_EOF                 (-2)

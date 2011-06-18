@@ -41,6 +41,7 @@
 #include "esi/Esi.h"
 #include "clientStream.h"
 #include "client_side_request.h"
+#include "comm/Connection.h"
 #include "errorpage.h"
 #include "esi/Segment.h"
 #include "esi/Element.h"
@@ -1459,7 +1460,8 @@ ESIContext::fail ()
     /* don't honour range requests - for errors we send it all */
     flags.error = 1;
     /* create an error object */
-    ErrorState * err = clientBuildError(errorpage, errorstatus, NULL, http->getConn()->peer, http->request);
+    // XXX: with the in-direction on remote IP. does the http->getConn()->clientConnection exist?
+    ErrorState * err = clientBuildError(errorpage, errorstatus, NULL, http->getConn()->clientConnection->remote, http->request);
     err->err_msg = errormessage;
     errormessage = NULL;
     rep = err->BuildHttpReply();

@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "base/TextException.h"
+#include "comm/Connection.h"
 #include "comm/Write.h"
 #include "CommCalls.h"
 #include "HttpReply.h"
@@ -30,24 +31,25 @@ CBDATA_NAMESPACED_CLASS_INIT(Mgr, Inquirer);
 Mgr::Inquirer::Inquirer(Action::Pointer anAction,
                         const Request &aCause, const Ipc::StrandCoords &coords):
         Ipc::Inquirer(aCause.clone(), applyQueryParams(coords, aCause.params.queryParams), anAction->atomic() ? 10 : 100),
-        aggrAction(anAction),
-        fd(Ipc::ImportFdIntoComm(aCause.fd, SOCK_STREAM, IPPROTO_TCP, Ipc::fdnHttpSocket))
+        aggrAction(anAction)
 {
-    debugs(16, 5, HERE << "FD " << fd << " action: " << aggrAction);
+    conn = aCause.conn;
+    Ipc::ImportFdIntoComm(conn, SOCK_STREAM, IPPROTO_TCP, Ipc::fdnHttpSocket);
+
+    debugs(16, 5, HERE << conn << " action: " << aggrAction);
 
     closer = asyncCall(16, 5, "Mgr::Inquirer::noteCommClosed",
                        CommCbMemFunT<Inquirer, CommCloseCbParams>(this, &Inquirer::noteCommClosed));
-    comm_add_close_handler(fd, closer);
+    comm_add_close_handler(conn->fd, closer);
 }
 
 /// closes our copy of the client HTTP connection socket
 void
 Mgr::Inquirer::cleanup()
 {
-    if (fd >= 0) {
+    if (Comm::IsConnOpen(conn)) {
         removeCloseHandler();
-        comm_close(fd);
-        fd = -1;
+        conn->close();
     }
 }
 
@@ -55,7 +57,7 @@ void
 Mgr::Inquirer::removeCloseHandler()
 {
     if (closer != NULL) {
-        comm_remove_close_handler(fd, closer);
+        comm_remove_close_handler(conn->fd, closer);
         closer = NULL;
     }
 }
@@ -65,7 +67,7 @@ Mgr::Inquirer::start()
 {
     debugs(16, 5, HERE);
     Ipc::Inquirer::start();
-    Must(fd >= 0);
+    Must(Comm::IsConnOpen(conn));
     Must(aggrAction != NULL);
 
     std::auto_ptr<MemBuf> replyBuf;
@@ -85,7 +87,7 @@ Mgr::Inquirer::start()
     }
     writer = asyncCall(16, 5, "Mgr::Inquirer::noteWroteHeader",
                        CommCbMemFunT<Inquirer, CommIoCbParams>(this, &Inquirer::noteWroteHeader));
-    Comm::Write(fd, replyBuf.get(), writer);
+    Comm::Write(conn, replyBuf.get(), writer);
 }
 
 /// called when we wrote the response header
@@ -95,7 +97,7 @@ Mgr::Inquirer::noteWroteHeader(const CommIoCbParams& params)
     debugs(16, 5, HERE);
     writer = NULL;
     Must(params.flag == COMM_OK);
-    Must(params.fd == fd);
+    Must(params.conn.getRaw() == conn.getRaw());
     Must(params.size != 0);
     // start inquiries at the initial pos
     inquire();
@@ -106,8 +108,8 @@ void
 Mgr::Inquirer::noteCommClosed(const CommCloseCbParams& params)
 {
     debugs(16, 5, HERE);
-    Must(fd < 0 || fd == params.fd);
-    fd = -1;
+    Must(!Comm::IsConnOpen(conn) && params.conn.getRaw() == conn.getRaw());
+    conn = NULL;
     mustStop("commClosed");
 }
 
@@ -125,8 +127,8 @@ Mgr::Inquirer::sendResponse()
 {
     if (!strands.empty() && aggrAction->aggregatable()) {
         removeCloseHandler();
-        AsyncJob::Start(new ActionWriter(aggrAction, fd));
-        fd = -1; // should not close fd because we passed it to ActionWriter
+        AsyncJob::Start(new ActionWriter(aggrAction, conn));
+        conn = NULL; // should not close because we passed it to ActionWriter
     }
 }
 

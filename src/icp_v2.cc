@@ -40,6 +40,7 @@
 #include "comm.h"
 #include "comm/Loops.h"
 #include "ICP.h"
+#include "comm/Connection.h"
 #include "HttpRequest.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Acl.h"
@@ -51,6 +52,7 @@
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "ipc/StartListening.h"
+#include "ipcache.h"
 #include "rfc1738.h"
 
 /// dials icpIncomingConnectionOpened call
@@ -58,24 +60,19 @@ class IcpListeningStartedDialer: public CallDialer,
         public Ipc::StartListeningCb
 {
 public:
-    typedef void (*Handler)(int fd, int errNo, Ip::Address& addr);
-    IcpListeningStartedDialer(Handler aHandler, Ip::Address& anAddr):
-            handler(aHandler), addr(anAddr) {}
+    typedef void (*Handler)(int errNo);
+    IcpListeningStartedDialer(Handler aHandler):
+            handler(aHandler) {}
 
-    virtual void print(std::ostream &os) const {
-        startPrint(os) <<
-        ", address=" << addr << ')';
-    }
-
+    virtual void print(std::ostream &os) const { startPrint(os) << ')'; }
     virtual bool canDial(AsyncCall &) const { return true; }
-    virtual void dial(AsyncCall &) { (handler)(fd, errNo, addr); }
+    virtual void dial(AsyncCall &) { (handler)(errNo); }
 
 public:
     Handler handler;
-    Ip::Address addr;
 };
 
-static void icpIncomingConnectionOpened(int fd, int errNo, Ip::Address& addr);
+static void icpIncomingConnectionOpened(int errNo);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpLogIcp(const Ip::Address &, log_type, int, const char *, int);
@@ -99,7 +96,24 @@ static icpUdpData *IcpQueueHead = NULL;
 static icpUdpData *IcpQueueTail = NULL;
 
 /// \ingroup ServerProtocolICPInternal2
-Ip::Address theOutICPAddr;
+Comm::ConnectionPointer icpIncomingConn = NULL;
+/// \ingroup ServerProtocolICPInternal2
+Comm::ConnectionPointer icpOutgoingConn = NULL;
+
+/** \ingroup ServerProtocolICPInternal2
+ * ICP v2 uses the outgoing address as host ID.
+ * NP: this *may* be identical to icpOutgoingConn->local
+ * but when IN/OUT sockets are shared we can't guarantee that
+ * so a separate variable is used for now.
+ *
+ * We have one for private use (sent only by this local cache)
+ * and one for public use (for external caches to contact us)
+ */
+Ip::Address theIcpPrivateHostID;
+
+/// \see theIcpPrivateHostID
+Ip::Address theIcpPublicHostID;
+
 
 /* icp_common_t */
 _icp_common_t::_icp_common_t() : opcode(ICP_INVALID), version(0), length(0), reqnum(0), flags(0), pad(0), shostid(0)
@@ -285,7 +299,7 @@ _icp_common_t::createMessage(
 
     headerp->pad = htonl(pad);
 
-    theOutICPAddr.GetInAddr( *((struct in_addr*)&headerp->shostid) );
+    theIcpPrivateHostID.GetInAddr( *((struct in_addr*)&headerp->shostid) );
 
     urloffset = buf + sizeof(icp_common_t);
 
@@ -664,7 +678,7 @@ icpHandleUdp(int sock, void *data)
 
         icp_version = (int) buf[1];	/* cheat! */
 
-        if (theOutICPAddr == from)
+        if (icpOutgoingConn->local == from)
             // ignore ICP packets which loop back (multicast usually)
             debugs(12, 4, "icpHandleUdp: Ignoring UDP packet sent by myself");
         else if (icp_version == ICP_VERSION_2)
@@ -681,103 +695,108 @@ void
 icpConnectionsOpen(void)
 {
     uint16_t port;
-    Ip::Address addr;
 
     if ((port = Config.Port.icp) <= 0)
         return;
 
-    addr = Config.Addrs.udp_incoming;
-    addr.SetPort(port);
+    icpIncomingConn = new Comm::Connection;
+    icpIncomingConn->local = Config.Addrs.udp_incoming;
+    icpIncomingConn->local.SetPort(port);
 
-    if (!Ip::EnableIpv6 && !addr.SetIPv4()) {
-        debugs(12, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << addr << " is not an IPv4 address.");
+    if (!Ip::EnableIpv6 && !icpIncomingConn->local.SetIPv4()) {
+        debugs(12, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << icpIncomingConn->local << " is not an IPv4 address.");
         fatal("ICP port cannot be opened.");
     }
     /* split-stack for now requires default IPv4-only ICP */
-    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && addr.IsAnyAddr()) {
-        addr.SetIPv4();
+    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && icpIncomingConn->local.IsAnyAddr()) {
+        icpIncomingConn->local.SetIPv4();
     }
 
     AsyncCall::Pointer call = asyncCall(12, 2,
                                         "icpIncomingConnectionOpened",
-                                        IcpListeningStartedDialer(&icpIncomingConnectionOpened, addr));
+                                        IcpListeningStartedDialer(&icpIncomingConnectionOpened));
 
     Ipc::StartListening(SOCK_DGRAM,
                         IPPROTO_UDP,
-                        addr,
-                        COMM_NONBLOCKING,
+                        icpIncomingConn,
                         Ipc::fdnInIcpSocket, call);
 
-    addr.SetEmpty(); // clear for next use.
-    addr = Config.Addrs.udp_outgoing;
-    if ( !addr.IsNoAddr() ) {
-        enter_suid();
-        addr.SetPort(port);
+    if ( !Config.Addrs.udp_outgoing.IsNoAddr() ) {
+        icpOutgoingConn = new Comm::Connection;
+        icpOutgoingConn->local = Config.Addrs.udp_outgoing;
+        icpOutgoingConn->local.SetPort(port);
 
-        if (!Ip::EnableIpv6 && !addr.SetIPv4()) {
-            debugs(49, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << addr << " is not an IPv4 address.");
+        if (!Ip::EnableIpv6 && !icpOutgoingConn->local.SetIPv4()) {
+            debugs(49, DBG_CRITICAL, "ERROR: IPv6 is disabled. " << icpOutgoingConn->local << " is not an IPv4 address.");
             fatal("ICP port cannot be opened.");
         }
         /* split-stack for now requires default IPv4-only ICP */
-        if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && addr.IsAnyAddr()) {
-            addr.SetIPv4();
+        if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && icpOutgoingConn->local.IsAnyAddr()) {
+            icpOutgoingConn->local.SetIPv4();
         }
 
-        theOutIcpConnection = comm_open_listener(SOCK_DGRAM,
-                              IPPROTO_UDP,
-                              addr,
-                              COMM_NONBLOCKING,
-                              "ICP Port");
+        enter_suid();
+        comm_open_listener(SOCK_DGRAM, IPPROTO_UDP, icpOutgoingConn, "Outgoing ICP Port");
         leave_suid();
 
-        if (theOutIcpConnection < 0)
+        if (!Comm::IsConnOpen(icpOutgoingConn))
             fatal("Cannot open Outgoing ICP Port");
 
-        Comm::SetSelect(theOutIcpConnection, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
+        debugs(12, DBG_CRITICAL, "Sending ICP messages from " << icpOutgoingConn->local);
 
-        debugs(12, 1, "Outgoing ICP messages on port " << addr.GetPort() << ", FD " << theOutIcpConnection << ".");
-
-        fd_note(theOutIcpConnection, "Outgoing ICP socket");
+        Comm::SetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
+        fd_note(icpOutgoingConn->fd, "Outgoing ICP socket");
         icpGetOutgoingIpAddress();
     }
 }
 
+// Ensure that we have the IP address(es) to use for Host ID.
+// The outgoing address is used as 'private' host ID used only on packets we send
 static void
 icpGetOutgoingIpAddress()
 {
     struct addrinfo *xai = NULL;
-    theOutICPAddr.SetEmpty();
-    theOutICPAddr.InitAddrInfo(xai);
-
-    if (getsockname(theOutIcpConnection, xai->ai_addr, &xai->ai_addrlen) < 0)
-        debugs(50, 1, "theOutIcpConnection FD " << theOutIcpConnection << ": getsockname: " << xstrerror());
+    theIcpPrivateHostID.SetEmpty();
+    theIcpPrivateHostID.InitAddrInfo(xai);
+    if (getsockname(icpOutgoingConn->fd, xai->ai_addr, &xai->ai_addrlen) < 0)
+        debugs(50, DBG_IMPORTANT, "ERROR: Unable to identify ICP host ID to use for " << icpOutgoingConn
+               << ": getsockname: " << xstrerror());
     else
-        theOutICPAddr = *xai;
-
-    theOutICPAddr.FreeAddrInfo(xai);
+        theIcpPrivateHostID = *xai;
+    theIcpPrivateHostID.FreeAddrInfo(xai);
 }
 
 static void
-icpIncomingConnectionOpened(int fd, int errNo, Ip::Address& addr)
+icpIncomingConnectionOpened(int errNo)
 {
-    theInIcpConnection = fd;
-
-    if (theInIcpConnection < 0)
+    if (!Comm::IsConnOpen(icpIncomingConn))
         fatal("Cannot open ICP Port");
 
-    Comm::SetSelect(theInIcpConnection, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
+    Comm::SetSelect(icpIncomingConn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
 
     for (const wordlist *s = Config.mcast_group_list; s; s = s->next)
-        ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL);
+        ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL); // XXX: pass the icpIncomingConn for mcastJoinGroups usage.
 
-    debugs(12, 1, "Accepting ICP messages at " << addr << ", FD " << theInIcpConnection << ".");
+    debugs(12, DBG_IMPORTANT, "Accepting ICP messages on " << icpIncomingConn->local);
 
-    fd_note(theInIcpConnection, "Incoming ICP socket");
+    fd_note(icpIncomingConn->fd, "Incoming ICP port");
 
     if (Config.Addrs.udp_outgoing.IsNoAddr()) {
-        theOutIcpConnection = theInIcpConnection;
+        icpOutgoingConn = icpIncomingConn;
+        debugs(12, DBG_IMPORTANT, "Sending ICP messages from " << icpOutgoingConn->local);
         icpGetOutgoingIpAddress();
     }
+
+    // Ensure that we have the IP address(es) to use for Host ID.
+    // The listening address is used as 'public' host ID which can be used to contact us
+    struct addrinfo *xai = NULL;
+    theIcpPublicHostID.InitAddrInfo(xai); // reset xai
+    if (getsockname(icpIncomingConn->fd, xai->ai_addr, &xai->ai_addrlen) < 0)
+        debugs(50, DBG_IMPORTANT, "ERROR: Unable to identify ICP host ID to use for " << icpIncomingConn
+               << ": getsockname: " << xstrerror());
+    else
+        theIcpPublicHostID = *xai;
+    theIcpPublicHostID.FreeAddrInfo(xai);
 }
 
 /**
@@ -787,21 +806,16 @@ icpIncomingConnectionOpened(int fd, int errNo, Ip::Address& addr)
 void
 icpConnectionShutdown(void)
 {
-    if (theInIcpConnection < 0)
+    if (!Comm::IsConnOpen(icpIncomingConn))
         return;
 
-    if (theInIcpConnection != theOutIcpConnection) {
-        debugs(12, 1, "FD " << theInIcpConnection << " Closing ICP connection");
-        comm_close(theInIcpConnection);
-    }
+    debugs(12, DBG_IMPORTANT, "Stop receiving ICP on " << icpIncomingConn->local);
 
-    /**
-     * Here we set 'theInIcpConnection' to -1 even though the ICP 'in'
-     * and 'out' sockets might be just one FD.  This prevents this
-     * function from executing repeatedly.  When we are really ready to
-     * exit or restart, main will comm_close the 'out' descriptor.
+    /** Release the 'in' socket for lazy closure.
+     * in and out sockets may be sharing one same FD.
+     * This prevents this function from executing repeatedly.
      */
-    theInIcpConnection = -1;
+    icpIncomingConn = NULL;
 
     /**
      * Normally we only write to the outgoing ICP socket, but
@@ -809,9 +823,9 @@ icpConnectionShutdown(void)
      * to that specific interface.  During shutdown, we must
      * disable reading on the outgoing socket.
      */
-    assert(theOutIcpConnection > -1);
+    assert(Comm::IsConnOpen(icpOutgoingConn));
 
-    Comm::SetSelect(theOutIcpConnection, COMM_SELECT_READ, NULL, NULL, 0);
+    Comm::SetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, NULL, NULL, 0);
 }
 
 void
@@ -819,10 +833,9 @@ icpConnectionClose(void)
 {
     icpConnectionShutdown();
 
-    if (theOutIcpConnection > -1) {
-        debugs(12, 1, "FD " << theOutIcpConnection << " Closing ICP connection");
-        comm_close(theOutIcpConnection);
-        theOutIcpConnection = -1;
+    if (icpOutgoingConn != NULL) {
+        debugs(12, DBG_IMPORTANT, "Stop sending ICP from " << icpOutgoingConn->local);
+        icpOutgoingConn = NULL;
     }
 }
 

@@ -5,7 +5,7 @@
 #include <map>
 #endif
 
-struct SslErrorEntry{
+struct SslErrorEntry {
     Ssl::ssl_error_t value;
     const char *name;
 };

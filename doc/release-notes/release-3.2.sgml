@@ -369,6 +369,10 @@ This section gives a thorough account of those changes in three categories:
 	<tag>cpu_affinity_map</tag>
 	<p>New setting for SMP support to map Squid processes onto specific CPU cores.
 
+	<tag>connect_retries</tag>
+	<p>Replacement for <em>maximum_single_addr_tries</em>, but instead of only applying to hosts with single addresses.
+	   This directive applies to all hosts, extending the number of connection attempts to each IP address. =======
+
 	<tag>dns_packet_max</tag>
 	<p>New setting to configure maximum number of bytes packet size to advertise via EDNS.
 	   Set to "none" (the initial default) to disable EDNS large packet support.
@@ -569,6 +573,10 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>log_fqdn</tag>
 	<p>Obsolete. Replaced by automatic detection of the %>A logformat tag.
+
+	<tag>maximum_single_addr_tries</tag>
+	<p>The behaviour controlled by this directive is no longer possible.
+	   It has been replaced by <em>connect_retries</em> option which operates a little differently.
 
 	<tag>referer_log</tag>
 	<p>Replaced by the <em>referrer</em> format option on an <em>access_log</em> directive.

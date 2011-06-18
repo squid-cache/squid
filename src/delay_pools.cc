@@ -65,6 +65,7 @@
 #include "DelayUser.h"
 #include "DelayTagged.h"
 #include "ip/Address.h"
+#include "comm/Connection.h"
 
 /// \ingroup DelayPoolsInternal
 long DelayPools::MemoryUsed = 0;

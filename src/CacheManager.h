@@ -34,6 +34,7 @@
 #ifndef SQUID_CACHEMANAGER_H
 #define SQUID_CACHEMANAGER_H
 
+#include "comm/forward.h"
 #include "mgr/Action.h"
 #include "mgr/ActionProfile.h"
 #include "mgr/Command.h"
@@ -72,7 +73,7 @@ public:
     Mgr::Action::Pointer createRequestedAction(const Mgr::ActionParams &);
     const Menu& menu() const { return menu_; }
 
-    void Start(int fd, HttpRequest * request, StoreEntry * entry);
+    void Start(const Comm::ConnectionPointer &client, HttpRequest * request, StoreEntry * entry);
 
     static CacheManager* GetInstance();
     const char *ActionProtection(const Mgr::ActionProfilePointer &profile);

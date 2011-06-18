@@ -8,6 +8,7 @@
 #ifndef SQUID_SNMPX_INQUIRER_H
 #define SQUID_SNMPX_INQUIRER_H
 
+#include "comm/forward.h"
 #include "ipc/Inquirer.h"
 #include "snmp/forward.h"
 #include "snmp/Pdu.h"
@@ -41,7 +42,7 @@ private:
 
 private:
     Pdu aggrPdu; ///< aggregated pdu
-    int fd; ///< client connection descriptor
+    Comm::ConnectionPointer conn; ///< client connection descriptor
 
     AsyncCall::Pointer writer; ///< comm_write callback
     AsyncCall::Pointer closer; ///< comm_close handler

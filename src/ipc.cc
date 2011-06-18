@@ -31,7 +31,7 @@
  */
 
 #include "squid.h"
-#include "comm.h"
+#include "comm/Connection.h"
 #include "fde.h"
 #include "ip/Address.h"
 #include "rfc1738.h"
@@ -129,18 +129,18 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
         if (pipe(p2c) < 0) {
             debugs(54, 0, "ipcCreate: pipe: " << xstrerror());
-            return -1;
+            return -1; // maybe ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
+        fd_open(prfd = p2c[0], FD_PIPE, "IPC FIFO Parent Read");
+        fd_open(cwfd = p2c[1], FD_PIPE, "IPC FIFO Child Write");
 
         if (pipe(c2p) < 0) {
             debugs(54, 0, "ipcCreate: pipe: " << xstrerror());
-            return -1;
+            return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
-
-        fd_open(prfd = p2c[0], FD_PIPE, "IPC FIFO Parent Read");
-        fd_open(cwfd = p2c[1], FD_PIPE, "IPC FIFO Child Write");
         fd_open(crfd = c2p[0], FD_PIPE, "IPC FIFO Child Read");
         fd_open(pwfd = c2p[1], FD_PIPE, "IPC FIFO Parent Write");
+
 #if HAVE_SOCKETPAIR && defined(AF_UNIX)
 
     } else if (type == IPC_UNIX_STREAM) {

@@ -2477,6 +2477,9 @@ LOC: Config.forward_max_tries
 DOC_START
 	Controls how many different forward paths Squid will try
 	before giving up. See also forward_timeout.
+	
+	NOTE: connect_retries (default: none) can make each of these
+	possible forwarding paths be tried multiple times.
 DOC_END
 
 NAME: hierarchy_stoplist
@@ -7309,21 +7312,24 @@ DOC_START
 	see also refresh_pattern for a more selective approach.
 DOC_END
 
-NAME: maximum_single_addr_tries
+NAME: connect_retries
 TYPE: int
-LOC: Config.retry.maxtries
-DEFAULT: 1
+LOC: Config.connect_retries
+DEFAULT: 0
 DOC_START
-	This sets the maximum number of connection attempts for a
-	host that only has one address (for multiple-address hosts,
-	each address is tried once).
+	This sets the maximum number of connection attempts made for each
+	TCP connection. The connect_retries attempts must all still
+	complete within the connection timeout period.
 
-	The default value is one attempt, the (not recommended)
-	maximum is 255 tries.  A warning message will be generated
-	if it is set to a value greater than ten.
+	The default is not to re-try if the first connection attempt fails.
+	The (not recommended) maximum is 10 tries.
 
-	Note: This is in addition to the request re-forwarding which
-	takes place if Squid fails to get a satisfying response.
+	A warning message will be generated if it is set to a too-high
+	value and the configured value will be over-ridden.
+
+	Note: These re-tries are in addition to forward_max_tries
+	which limit how many different addresses may be tried to find
+	a useful server.
 DOC_END
 
 NAME: retry_on_error

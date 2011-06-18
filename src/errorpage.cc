@@ -32,6 +32,7 @@
  *
  */
 #include "config.h"
+#include "comm/Connection.h"
 #include "comm/Write.h"
 #include "errorpage.h"
 #if USE_AUTH
@@ -135,7 +136,8 @@ static IOCB errorSendComplete;
 
 /// \ingroup ErrorPageInternal
 /// manages an error page template
-class ErrorPageFile: public TemplateFile {
+class ErrorPageFile: public TemplateFile
+{
 public:
     ErrorPageFile(const char *name): TemplateFile(name) { textBuf.init();}
 
@@ -365,14 +367,13 @@ TemplateFile::loadFromFile(const char *path)
 
 bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos)
 {
-    while(pos < hdr.size()) {
+    while (pos < hdr.size()) {
         char *dt = lang;
 
         if (!pos) {
             /* skip any initial whitespace. */
             while (pos < hdr.size() && xisspace(hdr[pos])) pos++;
-        }
-        else {
+        } else {
             // IFF we terminated the tag on whitespace or ';' we need to skip to the next ',' or end of header.
             while (pos < hdr.size() && hdr[pos] != ',') pos++;
             if (hdr[pos] == ',') pos++;
@@ -615,11 +616,11 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
 }
 
 void
-errorSend(int fd, ErrorState * err)
+errorSend(const Comm::ConnectionPointer &conn, ErrorState * err)
 {
     HttpReply *rep;
-    debugs(4, 3, "errorSend: FD " << fd << ", err=" << err);
-    assert(fd >= 0);
+    debugs(4, 3, HERE << conn << ", err=" << err);
+    assert(Comm::IsConnOpen(conn));
     /*
      * ugh, this is how we make sure error codes get back to
      * the client side for logging and error tracking.
@@ -636,7 +637,7 @@ errorSend(int fd, ErrorState * err)
     MemBuf *mb = rep->pack();
     AsyncCall::Pointer call = commCbCall(78, 5, "errorSendComplete",
                                          CommIoCbPtrFun(&errorSendComplete, err));
-    Comm::Write(fd, mb, call);
+    Comm::Write(conn, mb, call);
     delete mb;
 
     delete rep;
@@ -652,18 +653,18 @@ errorSend(int fd, ErrorState * err)
  *     closing the FD, otherwise we do it ourselves.
  */
 static void
-errorSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
+errorSendComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
 {
     ErrorState *err = static_cast<ErrorState *>(data);
-    debugs(4, 3, "errorSendComplete: FD " << fd << ", size=" << size);
+    debugs(4, 3, HERE << conn << ", size=" << size);
 
     if (errflag != COMM_ERR_CLOSING) {
         if (err->callback) {
             debugs(4, 3, "errorSendComplete: callback");
-            err->callback(fd, err->callback_data, size);
+            err->callback(conn->fd, err->callback_data, size);
         } else {
-            comm_close(fd);
             debugs(4, 3, "errorSendComplete: comm_close");
+            conn->close();
         }
     }
 

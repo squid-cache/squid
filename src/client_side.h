@@ -40,8 +40,6 @@
 #include "BodyPipe.h"
 #include "comm.h"
 #include "CommCalls.h"
-#include "eui/Eui48.h"
-#include "eui/Eui64.h"
 #include "HttpControlMsg.h"
 #include "HttpParser.h"
 #include "RefCount.h"
@@ -87,8 +85,10 @@ public:
     ClientSocketContext();
     ~ClientSocketContext();
     bool startOfOutput() const;
-    void writeComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag);
+    void writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag);
     void keepaliveNextRequest();
+
+    Comm::ConnectionPointer clientConnection; /// details about the client connection socket.
     ClientHttpRequest *http;	/* we own this */
     HttpReply *reply;
     char reqbuf[HTTP_REQBUF_SZ];
@@ -127,7 +127,6 @@ public:
     size_t lengthToSend(Range<int64_t> const &available);
     void noteSentBodyBytes(size_t);
     void buildRangeHeader(HttpReply * rep);
-    int fd() const;
     clientStreamNode * getTail() const;
     clientStreamNode * getClientReplyContext() const;
     void connIsFinished();
@@ -141,8 +140,8 @@ public:
     void writeControlMsg(HttpControlMsg &msg);
 
 protected:
-    static void WroteControlMsg(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data);
-    void wroteControlMsg(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno);
+    static IOCB WroteControlMsg;
+    void wroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno);
 
 private:
     CBDATA_CLASS(ClientSocketContext);
@@ -202,7 +201,8 @@ public:
     // HttpControlMsgSink API
     virtual void sendControlMsg(HttpControlMsg msg);
 
-    int fd;
+    // Client TCP connection details from comm layer.
+    Comm::ConnectionPointer clientConnection;
 
     struct In {
         In();
@@ -237,25 +237,15 @@ public:
      */
     ClientSocketContext::Pointer currentobject;
 
-    Ip::Address peer;
-
-    Ip::Address me;
-
     Ip::Address log_addr;
-    char rfc931[USER_IDENT_SZ];
     int nrequests;
-
-#if USE_SQUID_EUI
-    Eui::Eui48 peer_eui48;
-    Eui::Eui64 peer_eui64;
-#endif
 
     struct {
         bool readMore; ///< needs comm_read (for this request or new requests)
         bool swanSang; // XXX: temporary flag to check proper cleanup
     } flags;
     struct {
-        int fd;                 /* pinned server side connection */
+        Comm::ConnectionPointer serverConnection; /* pinned server side connection */
         char *host;             /* host name of pinned connection */
         int port;               /* port of pinned connection */
         bool pinned;             /* this connection was pinned */
@@ -267,7 +257,6 @@ public:
     http_port_list *port;
 
     bool transparent() const;
-    void transparent(bool const);
     bool reading() const;
     void stopReading(); ///< cancels comm_read if it is scheduled
 
@@ -284,7 +273,7 @@ public:
     /**
      * Correlate the current ConnStateData object with the pinning_fd socket descriptor.
      */
-    void pinConnection(int fd, HttpRequest *request, struct peer *peer, bool auth);
+    void pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, struct peer *peer, bool auth);
     /**
      * Decorrelate the ConnStateData object from its pinned peer
      */
@@ -294,9 +283,9 @@ public:
      * if pinned info is not valid.
      \param request   if it is not NULL also checks if the pinning info refers to the request client side HttpRequest
      \param peer      if it is not NULL also check if the peer is the pinning peer
-     \return          The fd of the server side connection or -1 if fails.
+     \return          The details of the server side connection (may be closed if failures were present).
      */
-    int validatePinnedConnection(HttpRequest *request, const struct peer *peer);
+    const Comm::ConnectionPointer validatePinnedConnection(HttpRequest *request, const struct peer *peer);
     /**
      * returts the pinned peer if exists, NULL otherwise
      */
@@ -351,7 +340,6 @@ private:
 
     // XXX: CBDATA plays with public/private and leaves the following 'private' fields all public... :(
     CBDATA_CLASS2(ConnStateData);
-    bool transparent_;
     bool closing_;
 
     bool switchedToHttps_;
