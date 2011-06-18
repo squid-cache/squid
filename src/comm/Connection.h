@@ -58,7 +58,8 @@
 
 struct peer;
 
-namespace Comm {
+namespace Comm
+{
 
 /* TODO: make these a struct of boolean flags members in the connection instead of a bitmap.
  * we can't do that until all non-comm code uses Commm::Connection objects to create FD

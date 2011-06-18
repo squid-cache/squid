@@ -309,7 +309,7 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
     /* Bump the source connection read timeout on any activity */
     if (Comm::IsConnOpen(from.conn)) {
         AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
-                                                    CommTimeoutCbPtrFun(tunnelTimeout, this));
+                                         CommTimeoutCbPtrFun(tunnelTimeout, this));
         commSetConnTimeout(from.conn, Config.Timeout.read, timeoutCall);
     }
 
@@ -582,7 +582,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
     }
 
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
-                                                CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
+                                     CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
     commSetConnTimeout(conn, Config.Timeout.read, timeoutCall);
 }
 
@@ -642,7 +642,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
                            tunnelState);
 
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
-                                                CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
+                                     CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
     commSetConnTimeout(tunnelState->client.conn, Config.Timeout.lifetime, timeoutCall);
 
     peerSelect(&(tunnelState->serverDestinations), request,
@@ -676,11 +676,11 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     mb.append("\r\n", 2);
 
     AsyncCall::Pointer writeCall = commCbCall(5,5, "tunnelConnectedWriteDone",
-                                              CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
+                                   CommIoCbPtrFun(tunnelConnectedWriteDone, tunnelState));
     Comm::Write(srv, &mb, writeCall);
 
     AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "tunnelTimeout",
-                                                CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
+                                     CommTimeoutCbPtrFun(tunnelTimeout, tunnelState));
     commSetConnTimeout(srv, Config.Timeout.read, timeoutCall);
 }
 

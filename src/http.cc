@@ -1395,8 +1395,7 @@ HttpStateData::processReplyBody()
         (void) 0;
     } else
         switch (persistentConnStatus()) {
-        case INCOMPLETE_MSG:
-            {
+        case INCOMPLETE_MSG: {
             debugs(11, 5, "processReplyBody: INCOMPLETE_MSG from " << serverConnection);
             /* Wait for more data or EOF condition */
             AsyncCall::Pointer nil;
@@ -1407,8 +1406,8 @@ HttpStateData::processReplyBody()
             }
 
             flags.do_next_read = 1;
-            }
-            break;
+        }
+        break;
 
         case COMPLETE_PERSISTENT_MSG:
             debugs(11, 5, "processReplyBody: COMPLETE_PERSISTENT_MSG from " << serverConnection);

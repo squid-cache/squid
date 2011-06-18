@@ -18,6 +18,7 @@ section 03    Configuration Settings
 section 04    Error Generation
 section 05    Comm
 section 05    Listener Socket Handler
+section 05    Socket Connection Opener
 section 05    Socket Functions
 section 06    Disk I/O Routines
 section 07    Multicast

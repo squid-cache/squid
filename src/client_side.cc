@@ -2733,7 +2733,7 @@ ConnStateData::clientParseRequests()
         if (context) {
             debugs(33, 5, HERE << clientConnection << ": parsed a request");
             AsyncCall::Pointer timeoutCall = commCbCall(5, 4, "clientLifetimeTimeout",
-                                                        CommTimeoutCbPtrFun(clientLifetimeTimeout, context->http));
+                                             CommTimeoutCbPtrFun(clientLifetimeTimeout, context->http));
             commSetConnTimeout(clientConnection, Config.Timeout.lifetime, timeoutCall);
 
             clientProcessRequest(this, &parser_, context, method, http_ver);

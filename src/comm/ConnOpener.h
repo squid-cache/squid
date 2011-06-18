@@ -8,7 +8,8 @@
 #include "comm_err_t.h"
 #include "comm/forward.h"
 
-namespace Comm {
+namespace Comm
+{
 
 /**
  * Async-opener of a Comm connection.

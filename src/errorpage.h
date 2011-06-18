@@ -256,10 +256,11 @@ SQUIDCEXTERN const char *errorPageName(int pageId); ///< error ID to string
  * loads text templates used for error pages and details;
  * supports translation of templates
  */
-class TemplateFile {
+class TemplateFile
+{
 public:
     TemplateFile(const char *name);
-    virtual ~TemplateFile(){}
+    virtual ~TemplateFile() {}
 
     /// return true if the data loaded from disk without any problem
     bool loaded() const {return wasLoaded;}
