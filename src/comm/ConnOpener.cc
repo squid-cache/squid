@@ -12,8 +12,9 @@
 #include "ipcache.h"
 #include "SquidTime.h"
 
-namespace Comm {
-    CBDATA_CLASS_INIT(ConnOpener);
+namespace Comm
+{
+CBDATA_CLASS_INIT(ConnOpener);
 };
 
 Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &c, AsyncCall::Pointer &handler, time_t ctimeout) :
@@ -232,7 +233,7 @@ Comm::ConnOpener::connect()
         failRetries_++;
 
         // check for timeout FIRST.
-        if(squid_curtime - connectStart_ > connectTimeout_) {
+        if (squid_curtime - connectStart_ > connectTimeout_) {
             debugs(5, 5, HERE << conn_ << ": * - ERR took too long to receive response.");
             calls_.earlyAbort_->cancel("Comm::ConnOpener::connect timed out");
             calls_.earlyAbort_ = NULL;

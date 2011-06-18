@@ -17,10 +17,12 @@ namespace Ssl
 {
 
 /// manages error detail templates
-class ErrorDetailFile : public TemplateFile{
+class ErrorDetailFile : public TemplateFile
+{
 public:
     explicit ErrorDetailFile(ErrorDetailsList::Pointer const details): TemplateFile("error-details.txt") {
-        buf.init(); theDetails = details;
+        buf.init();
+        theDetails = details;
     }
 
 private:
@@ -97,8 +99,8 @@ Ssl::ErrorDetailsList::Pointer Ssl::ErrorDetailsManager::getCachedDetails(const 
     Cache::iterator it;
     it = cache.find(lang);
     if (it != cache.end()) {
-            debugs(83, 8, HERE << "Found template details in cache for language: " << lang);
-            return it->second;
+        debugs(83, 8, HERE << "Found template details in cache for language: " << lang);
+        return it->second;
     }
 
     return NULL;
@@ -130,7 +132,7 @@ Ssl::ErrorDetailsManager::getErrorDetail(Ssl::ssl_error_t value, HttpRequest *re
             debugs(83, 8, HERE << "Creating new ErrDetailList to read from disk");
             errDetails = new ErrorDetailsList();
             ErrorDetailFile detailTmpl(errDetails);
-            if(detailTmpl.loadFor(request)) {
+            if (detailTmpl.loadFor(request)) {
                 if (detailTmpl.language()) {
                     debugs(83, 8, HERE << "Found details on disk for language " << detailTmpl.language());
                     errDetails->errLanguage = detailTmpl.language();
@@ -166,7 +168,8 @@ Ssl::ErrorDetailsManager::getDefaultErrorDetail(Ssl::ssl_error_t value)
 }
 
 // Use HttpHeaders parser to parse error-details.txt files
-class DetailEntryParser: public HttpHeader {
+class DetailEntryParser: public HttpHeader
+{
 public:
     DetailEntryParser():HttpHeader(hoErrorDetail) {}
 };
@@ -194,8 +197,8 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
         //ignore spaces, new lines and comment lines (starting with #) at the beggining
         const char *s;
         for (s = buf.content(); (*s == '\n' || *s == ' '  || *s == '\t' || *s == '#')  && s < e; s++) {
-            if(*s == '#')
-                while(s<e &&  *s != '\n') s++; // skip untill the end of line
+            if (*s == '#')
+                while (s<e &&  *s != '\n') s++; // skip untill the end of line
         }
 
         if ( s != e) {

@@ -285,7 +285,7 @@ comm_poll_icp_incoming(void)
         fds[nfds++] = icpIncomingConn->fd;
 
     if (icpIncomingConn != icpOutgoingConn && Comm::IsConnOpen(icpOutgoingConn))
-            fds[nfds++] = icpOutgoingConn->fd;
+        fds[nfds++] = icpOutgoingConn->fd;
 
     if (nfds == 0)
         return;

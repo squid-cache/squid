@@ -122,7 +122,7 @@ Ipc::Coordinator::handleSharedListenRequest(const SharedListenRequest& request)
     Listeners::const_iterator i = listeners.find(request.params);
     int errNo = 0;
     const Comm::ConnectionPointer c = (i != listeners.end()) ?
-                     i->second : openListenSocket(request, errNo);
+                                      i->second : openListenSocket(request, errNo);
 
     debugs(54, 3, HERE << "sending shared listen " << c << " for " <<
            request.params.addr << " to kid" << request.requestorId <<
