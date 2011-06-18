@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.12.2 release notes</title>
+<title>Squid 3.1.12.3 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.12.2
+The Squid Team are pleased to announce the release of Squid-3.1.12.3
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -231,7 +231,7 @@ Updates can be downloaded from <url url="http://www.squid-cache.org/Versions/lan
 
 <sect1>Connection Pinning (for NTLM Auth Passthrough)
 
-<p>Details in <url url="http://wiki.squid-cache.org/Features/ConnPinn" name="The Squid wiki">
+<p>Details in <url url="http://wiki.squid-cache.org/Features/ConnPin" name="The Squid wiki">
 
 <p>Squid 3.1 includes the much asked for Connection Pinning feature from Squid 2.6.
 
@@ -1227,9 +1227,11 @@ NOCOMMENT_START
 
 	<tag>logformat</tag>
 	<p>New log format tag sets %icap::* %adapt::* for adaptation information.
-	   %Hs tag deprecated and replaced by request/reply specific &gt;Hs and &lt;Hs
-	   new %&gt;ha option to log HTTP request headers after adaptation and redirection.
-	   HTTP request/reply format tags may now be optionally prefixed with http::.
+	<p>%Hs tag deprecated and replaced by request/reply specific &gt;Hs and &lt;Hs
+	<p>New <em>%&lt;la</em> Local IP address of the last server or peer connection. Ported from 2.7 where it is called <em>%oa</em>.
+	<p>New <em>%&lt;lp</em> Local port number of the last server or peer connection.
+	<p>New <em>%&gt;ha,/em> to log HTTP request headers after adaptation and redirection.
+	<p>HTTP request/reply format tags may now be optionally prefixed with http::.
 	   Old forms will be deprecated in some as yet undecided future release.
 	<verb>
 		dt		Total time spent making DNS lookups (milliseconds)
@@ -1544,6 +1546,9 @@ This section gives an account of those changes in three categories:
 	<tag>incoming_rate</tag>
 	<p>Obsolete.
 
+	<tag>logformat</tag>
+	<p><em>%oa</em> tag replaced by <em>%&lt;la</em>
+
 	<tag>redirector_bypass</tag>
 	<p>Replaced by <em>url_rewrite_bypass</em>
 
@@ -1712,7 +1717,6 @@ This section gives an account of those changes in three categories:
 	<p>Not yet ported from 2.7.
 
 	<tag>logformat</tag>
-	<p><em>%oa</em> tag not yet ported from 2.7
 	<p><em>%sn</em> tag not yet ported from 2.7
 
 	<tag>max_stale</tag>

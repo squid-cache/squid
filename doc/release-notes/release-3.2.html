@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
- <TITLE>Squid 3.2.0.7 release notes</TITLE>
+ <TITLE>Squid 3.2.0.9 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.2.0.7 release notes</H1>
+<H1>Squid 3.2.0.9 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -69,7 +69,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.2.0.7 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.2.0.9 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.2/">http://www.squid-cache.org/Versions/v3/3.2/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -481,6 +481,10 @@ client-side delay pool for the request.</P>
 <DT><B>cpu_affinity_map</B><DD>
 <P>New setting for SMP support to map Squid processes onto specific CPU cores.</P>
 
+<DT><B>connect_retries</B><DD>
+<P>Replacement for <EM>maximum_single_addr_tries</EM>, but instead of only applying to hosts with single addresses.
+This directive applies to all hosts, extending the number of connection attempts to each IP address.</P>
+
 <DT><B>dns_packet_max</B><DD>
 <P>New setting to configure maximum number of bytes packet size to advertise via EDNS.
 Set to "none" (the initial default) to disable EDNS large packet support.</P>
@@ -587,11 +591,16 @@ The old form is deprecated but still accepted.</P>
 
 <DT><B>deny_info</B><DD>
 <P>Support URL format tags. For dynamically generated URL in denial redirect.</P>
+<P>Support the full range of 200-599 HTTP status codes.
+3xx status only available when redirecting to a URI.
+Other status only available when supplying an error template body.</P>
 
 <DT><B>external_acl_type</B><DD>
 <P>New format tags and option parameters:</P>
 <P><EM>%SRCEUI48</EM> EUI-48 / MAC address of client from ARP lookup.</P>
 <P><EM>%SRCEUI64</EM> EUI-64 of clients with SLAAC address.</P>
+<P><EM>%EXT_LOG</EM> log= message returned by previous external ACL calls. An updated version may be returned.</P>
+<P><EM>%EXT_TAG</EM> tag= value returned by previous external ACL calls. Tag may not be altered once set.</P>
 <P><EM>children-max=N</EM> determins maximum number of helper processes used.</P>
 <P><EM>children-startup=N</EM> determins minimum number of helper processes used.</P>
 <P><EM>children-idle=N</EM> determines how many helper to retain as buffer against sudden traffic loads.</P>
@@ -612,8 +621,6 @@ which applies to both ICAP and eCAP.</P>
 <DT><B>logformat</B><DD>
 <P><EM>%&gt;bs</EM> Number of HTTP-equivalent message body bytes received from the next hop.</P>
 <P><EM>icap::%&gt;bs</EM> Number of message body bytes received from the ICAP server.</P>
-<P><EM>%&lt;la</EM> Local IP address of the last server or peer connection. Ported from 2.7 where it is called <EM>%oa</EM>.</P>
-<P><EM>%&lt;lp</EM> Local port number of the last server or peer connection.</P>
 <P><EM>%sn</EM> Unique sequence number per log line. Ported from 2.7</P>
 <P><EM>%&gt;eui</EM> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
 Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.</P>
@@ -643,6 +650,9 @@ This will be included by default if available (see the --without-netfilter-connt
 <DT><B>refresh_pattern</B><DD>
 <P>New option <EM>max-stale=</EM> to provide a maximum staleness factor. Squid won't
 serve objects more stale than this even if it failed to validate the object.</P>
+
+<DT><B>tcp_outgoing_address</B><DD>
+<P>This parameter is now compatible with persistent server connections.</P>
 
 <DT><B>tcp_outgoing_mark</B><DD>
 <P>New configuration parameter <EM>tcp_outgoing_mark</EM></P>
@@ -687,6 +697,10 @@ serve objects more stale than this even if it failed to validate the object.</P>
 
 <DT><B>log_fqdn</B><DD>
 <P>Obsolete. Replaced by automatic detection of the %>A logformat tag.</P>
+
+<DT><B>maximum_single_addr_tries</B><DD>
+<P>The behaviour controlled by this directive is no longer possible.
+It has been replaced by <EM>connect_retries</EM> option which operates a little differently.</P>
 
 <DT><B>referer_log</B><DD>
 <P>Replaced by the <EM>referrer</EM> format option on an <EM>access_log</EM> directive.</P>
@@ -824,6 +838,14 @@ default is to auto-detect the library and use where available.</P>
 <DT><B>auth_param</B><DD>
 <P><EM>blankpassword</EM> option for basic scheme removed.</P>
 
+<DT><B>authenticate_ip_shortcircuit_access</B><DD>
+<P>Not safe for general use.
+An external_acl_type helper may be used to bypass authentication if that is suitable.</P>
+
+<DT><B>authenticate_ip_shortcircuit_ttl</B><DD>
+<P>Not safe for general use.
+An external_acl_type helper may be used to bypass authentication if that is suitable.</P>
+
 <DT><B>cache_peer</B><DD>
 <P><EM>http11</EM> Obsolete.</P>
 
@@ -957,12 +979,6 @@ default is to auto-detect the library and use where available.</P>
 <DT><B>acl</B><DD>
 <P><EM>urllogin</EM> option not yet ported from 2.6</P>
 <P><EM>urlgroup</EM> option not yet ported from 2.6</P>
-
-<DT><B>authenticate_ip_shortcircuit_access</B><DD>
-<P>Not yet ported from 2.7</P>
-
-<DT><B>authenticate_ip_shortcircuit_ttl</B><DD>
-<P>Not yet ported from 2.7</P>
 
 <DT><B>broken_vary_encoding</B><DD>
 <P>Not yet ported from 2.6</P>
