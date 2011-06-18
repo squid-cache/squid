@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.0.8 release notes</title>
+<title>Squid 3.2.0.9 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.0.8 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.0.9 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -371,7 +371,7 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>connect_retries</tag>
 	<p>Replacement for <em>maximum_single_addr_tries</em>, but instead of only applying to hosts with single addresses.
-	   This directive applies to all hosts, extending the number of connection attempts to each IP address. =======
+	   This directive applies to all hosts, extending the number of connection attempts to each IP address.
 
 	<tag>dns_packet_max</tag>
 	<p>New setting to configure maximum number of bytes packet size to advertise via EDNS.
@@ -531,6 +531,9 @@ This section gives a thorough account of those changes in three categories:
 	<tag>refresh_pattern</tag>
 	<p>New option <em>max-stale=</em> to provide a maximum staleness factor. Squid won't
 	   serve objects more stale than this even if it failed to validate the object.
+
+	<tag>tcp_outgoing_address</tag>
+	<p>This parameter is now compatible with persistent server connections.
 
 	<tag>tcp_outgoing_mark</tag>
 	<p>New configuration parameter <em>tcp_outgoing_mark</em>
@@ -699,6 +702,14 @@ This section gives an account of those changes in three categories:
 	<tag>auth_param</tag>
 	<p><em>blankpassword</em> option for basic scheme removed.
 
+	<tag>authenticate_ip_shortcircuit_access</tag>
+	<p>Not safe for general use.
+	  An external_acl_type helper may be used to bypass authentication if that is suitable.
+
+	<tag>authenticate_ip_shortcircuit_ttl</tag>
+	<p>Not safe for general use.
+	  An external_acl_type helper may be used to bypass authentication if that is suitable.
+
 	<tag>cache_peer</tag>
 	<p><em>http11</em> Obsolete.
 
@@ -823,12 +834,6 @@ This section gives an account of those changes in three categories:
 	<tag>acl</tag>
 	<p><em>urllogin</em> option not yet ported from 2.6
 	<p><em>urlgroup</em> option not yet ported from 2.6
-
-	<tag>authenticate_ip_shortcircuit_access</tag>
-	<p>Not yet ported from 2.7
-
-	<tag>authenticate_ip_shortcircuit_ttl</tag>
-	<p>Not yet ported from 2.7
 
 	<tag>broken_vary_encoding</tag>
 	<p>Not yet ported from 2.6

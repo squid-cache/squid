@@ -1,3 +1,19 @@
+Changes to squid-3.2.0.9 (18 Jun 2011):
+
+	- Bug 3159: delay pools --disable-auth compile problems
+	- HTTP/1.1: Support multiline quoted-string header fields
+	- HTTP/1.1: Send 505 Unsupported Version on mangled version codes
+	- Support configurable and translated SSL error details messages
+	- Add log format codes for split client/server views of HTTP request line
+	- Major upgrade of TCP connection handling
+		- Support split-stack IPv6 to servers
+		- Support persistent connections with tcp_outgoing_address/tcp_outgoing_tos
+		- Optimized persistent connection handling
+		- Optimized FTP data connection handling
+		- Optimized TCP failure recovery
+	- ... and all bug fixes and updates from 3.1.12.3
+	- ... and many code polish, documentation and translation cleanups
+
 Changes to squid-3.2.0.8 (30 May 2011):
 
 	- Bug 3214: "helperHandleRead: unexpected read from ssl_crtd" errors.
@@ -179,6 +195,19 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many code cleanups
 	- ... and a great many testing improvements
 	- ... and many documentation updates
+
+Changes to squid-3.1.12.3 (18 Jun 2011):
+
+	- Bug 3236: Port of %oa, %<lp and %<lp and %<la log format options
+	- Bug 3214: unexpected read from ssl_crtd
+	- Bug 3153: Prevent ICAP RESPMOD transactions getting stuck with the adapted body
+	- Fix RADIUS helper resource leak
+	- Fix segfault parsing digest auth realm
+	- Fix segfault in parse_eol()
+	- Fixed bypass of SSL certificate validation errors
+	- Warn about myip/myport problems on interception proxies
+	- Polish: display easily grepped config lines on -k parse
+	- Fix squidclient -V option and allow non-HTTP protocols to be tested
 
 Changes to squid-3.1.12.2 (30 May 2011):
 
