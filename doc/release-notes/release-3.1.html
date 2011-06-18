@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
- <TITLE>Squid 3.1.12.1 release notes</TITLE>
+ <TITLE>Squid 3.1.12.3 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.12.1 release notes</H1>
+<H1>Squid 3.1.12.3 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -71,7 +71,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.12.1</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.12.3</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -308,7 +308,7 @@ or the <EM>err_page_stylesheet</EM> option in squid.conf.</P>
 </H2>
 
 <P>Details in 
-<A HREF="http://wiki.squid-cache.org/Features/ConnPinn">The Squid wiki</A></P>
+<A HREF="http://wiki.squid-cache.org/Features/ConnPin">The Squid wiki</A></P>
 
 <P>Squid 3.1 includes the much asked for Connection Pinning feature from Squid 2.6.</P>
 
@@ -1269,6 +1269,9 @@ contained in the directory it points at. If absent, error page localization will
 <DT><B>debug_options rotate=</B><DD>
 <P>New parameter rotate=N to control number of cache.log rotations independent of other logs.</P>
 
+<DT><B>deny_info</B><DD>
+<P>Support 307 status for redirecting CONNECT tunnels with HTTPS traffic.</P>
+
 <DT><B>external_acl_type</B><DD>
 <P>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between Squid and its helpers.
 Please be aware of some limits to these options. These options only affet the transport protocol used
@@ -1406,10 +1409,12 @@ For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy
 <P>No longer controls cache.log rotation. Use debug_options rotate=N instead.</P>
 
 <DT><B>logformat</B><DD>
-<P>New log format tag sets %icap::* %adapt::* for adaptation information.
-%Hs tag deprecated and replaced by request/reply specific &gt;Hs and &lt;Hs
-new %&gt;ha option to log HTTP request headers after adaptation and redirection.
-HTTP request/reply format tags may now be optionally prefixed with http::.
+<P>New log format tag sets %icap::* %adapt::* for adaptation information.</P>
+<P>%Hs tag deprecated and replaced by request/reply specific &gt;Hs and &lt;Hs</P>
+<P>New <EM>%&lt;la</EM> Local IP address of the last server or peer connection. Ported from 2.7 where it is called <EM>%oa</EM>.</P>
+<P>New <EM>%&lt;lp</EM> Local port number of the last server or peer connection.</P>
+<P>New <EM>%&gt;ha</EM> to log HTTP request headers after adaptation and redirection.</P>
+<P>HTTP request/reply format tags may now be optionally prefixed with http::.
 Old forms will be deprecated in some as yet undecided future release.
 <PRE>
                 dt              Total time spent making DNS lookups (milliseconds)
@@ -1769,6 +1774,9 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 <DT><B>incoming_rate</B><DD>
 <P>Obsolete.</P>
 
+<DT><B>logformat</B><DD>
+<P><EM>%oa</EM> tag replaced by <EM>%&lt;la</EM></P>
+
 <DT><B>redirector_bypass</B><DD>
 <P>Replaced by <EM>url_rewrite_bypass</EM></P>
 
@@ -1946,7 +1954,6 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 <P>Not yet ported from 2.7.</P>
 
 <DT><B>logformat</B><DD>
-<P><EM>%oa</EM> tag not yet ported from 2.7</P>
 <P><EM>%sn</EM> tag not yet ported from 2.7</P>
 
 <DT><B>max_stale</B><DD>
