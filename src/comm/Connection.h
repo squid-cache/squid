@@ -112,7 +112,7 @@ public:
      * The caller is responsible for all CBDATA operations regarding the
      * used of the pointer returned.
      */
-    peer * const getPeer() const;
+    peer * getPeer() const;
 
     /** alter the stored peer pointer.
      * Perform appropriate CBDATA operations for locking the peer pointer

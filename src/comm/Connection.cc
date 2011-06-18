@@ -68,7 +68,7 @@ Comm::Connection::close()
     }
 }
 
-peer * const
+peer *
 Comm::Connection::getPeer() const
 {
     if (cbdataReferenceValid(_peer))

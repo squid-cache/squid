@@ -17,7 +17,7 @@ Comm::Connection::Connection() STUB
 Comm::Connection::~Connection() STUB
 Comm::ConnectionPointer Comm::Connection::copyDetails() const STUB_RETVAL(NULL)
 void Comm::Connection::close() STUB
-peer * const Comm::Connection::getPeer() const STUB_RETVAL(NULL)
+peer * Comm::Connection::getPeer() const STUB_RETVAL(NULL)
 void Comm::Connection::setPeer(peer * p) STUB
 
 #include "comm/ConnOpener.h"
