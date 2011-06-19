@@ -210,11 +210,17 @@ peerSelectDnsPaths(ps_state *psstate)
 
     if (psstate->paths->size() < 1) {
         debugs(44, DBG_IMPORTANT, "Failed to select source for '" << psstate->entry->url() << "'" );
-        debugs(44, DBG_IMPORTANT, "  always_direct = " << psstate->always_direct  );
-        debugs(44, DBG_IMPORTANT, "   never_direct = " << psstate->never_direct  );
+        debugs(44, DBG_IMPORTANT, "  always_direct = " << (psstate->always_direct==1?"YES":(psstate->always_direct==0?"NO":"maybe")));
+        debugs(44, DBG_IMPORTANT, "   never_direct = " << (psstate->never_direct==1?"YES":(psstate->never_direct==0?"NO":"maybe")));
         debugs(44, DBG_IMPORTANT, "       timedout = " << psstate->ping.timedout  );
     } else {
-        debugs(44, 2, "Found IP destination for: " << psstate->entry->url() << "'");
+        debugs(44, 2, "Found sources for '" << psstate->entry->url() << "'" );
+        debugs(44, 2, "  always_direct = " << (psstate->always_direct?"YES":(psstate->always_direct==0?"NO":"maybe")));
+        for (size_t i = 0; i < psstate->paths->size(); i++) {
+            debugs(44, 2, "   cache_peer = " << (*psstate->paths)[i]);
+        }
+        debugs(44, 2, "   never_direct = " << (psstate->never_direct?"YES":(psstate->never_direct==0?"NO":"maybe")));
+        debugs(44, 2, "       timedout = " << psstate->ping.timedout  );
     }
 
     psstate->ping.stop = current_time;
