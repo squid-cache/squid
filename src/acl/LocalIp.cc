@@ -55,5 +55,5 @@ ACLLocalIP::match(ACLChecklist *checklist)
 ACL *
 ACLLocalIP::clone() const
 {
-    return new ACLocalIP(*this);
+    return new ACLLocalIP(*this);
 }

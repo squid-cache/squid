@@ -101,7 +101,7 @@ ACL::Prototype ACLMaxConnection::RegistryProtoype(&ACLMaxConnection::RegistryEnt
 ACLMaxConnection ACLMaxConnection::RegistryEntry_("maxconn");
 ACL::Prototype ACLMethod::RegistryProtoype(&ACLMethod::RegistryEntry_, "method");
 ACLStrategised<HttpRequestMethod> ACLMethod::RegistryEntry_(new ACLMethodData, ACLMethodStrategy::Instance(), "method");
-ACL::Prototype ACLLocatIP::RegistryProtoype(&ACLLocalIP::RegistryEntry_, "localip");
+ACL::Prototype ACLLocalIP::RegistryProtoype(&ACLLocalIP::RegistryEntry_, "localip");
 ACLLocalIP ACLLocalIP::RegistryEntry_;
 ACL::Prototype ACLLocalPort::RegistryProtoype(&ACLLocalPort::RegistryEntry_, "localport");
 ACLStrategised<int> ACLLocalPort::RegistryEntry_(new ACLIntRange, ACLLocalPortStrategy::Instance(), "localport");
