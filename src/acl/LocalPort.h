@@ -32,36 +32,36 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLMYPORT_H
-#define SQUID_ACLMYPORT_H
+#ifndef SQUID_ACLLOCALPORT_H
+#define SQUID_ACLLOCALPORT_H
 
 #include "acl/Strategy.h"
 #include "acl/Strategised.h"
 
 /// \ingroup ACLAPI
-class ACLMyPortStrategy : public ACLStrategy<int>
+class ACLLocalPortStrategy : public ACLStrategy<int>
 {
 
 public:
     virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
-    static ACLMyPortStrategy *Instance();
+    static ACLLocalPortStrategy *Instance();
     /**
      * Not implemented to prevent copies of the instance.
      \par
      * Not private to prevent brain dead g+++ warnings about
      * private constructors with no friends
      */
-    ACLMyPortStrategy(ACLMyPortStrategy const &);
+    ACLLocalPortStrategy(ACLLocalPortStrategy const &);
 
 private:
-    static ACLMyPortStrategy Instance_;
-    ACLMyPortStrategy() {}
+    static ACLLocalPortStrategy Instance_;
+    ACLLocalPortStrategy() {}
 
-    ACLMyPortStrategy&operator=(ACLMyPortStrategy const &);
+    ACLLocalPortStrategy&operator=(ACLLocalPortStrategy const &);
 };
 
 /// \ingroup ACLAPI
-class ACLMyPort
+class ACLLocalPort
 {
 
 private:
@@ -69,4 +69,4 @@ private:
     static ACLStrategised<int> RegistryEntry_;
 };
 
-#endif /* SQUID_ACLMYPORT_H */
+#endif /* SQUID_ACLLOCALPORT_H */

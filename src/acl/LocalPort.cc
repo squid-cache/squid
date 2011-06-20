@@ -1,3 +1,4 @@
+
 /*
  * $Id$
  *
@@ -32,28 +33,21 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLMYIP_H
-#define SQUID_ACLMYIP_H
+#include "squid.h"
+#include "acl/LocalPort.h"
+#include "acl/IntRange.h"
+#include "acl/Checklist.h"
 
-#include "acl/Ip.h"
-
-/// \ingroup ACLAPI
-class ACLMyIP : public ACLIP
+int
+ACLLocalPortStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
+    return data->match (checklist->my_addr.GetPort());
+}
 
-public:
-    MEMPROXY_CLASS(ACLMyIP);
-    static ACLMyIP const &RegistryEntry();
+ACLLocalPortStrategy *
+ACLLocalPortStrategy::Instance()
+{
+    return &Instance_;
+}
 
-    virtual char const *typeString() const;
-    virtual int match(ACLChecklist *checklist);
-    virtual ACL *clone()const;
-
-private:
-    static Prototype RegistryProtoype;
-    static ACLMyIP RegistryEntry_;
-};
-
-MEMPROXY_CLASS_INLINE(ACLMyIP);
-
-#endif /* SQUID_ACLMYIP_H */
+ACLLocalPortStrategy ACLLocalPortStrategy::Instance_;

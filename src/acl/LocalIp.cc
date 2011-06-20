@@ -34,17 +34,17 @@
  */
 
 #include "squid.h"
-#include "acl/MyIp.h"
+#include "acl/LocalIp.h"
 #include "acl/FilledChecklist.h"
 
 char const *
-ACLMyIP::typeString() const
+ACLLocalIP::typeString() const
 {
-    return "myip";
+    return "localip";
 }
 
 int
-ACLMyIP::match(ACLChecklist *checklist)
+ACLLocalIP::match(ACLChecklist *checklist)
 {
     return ACLIP::match (Filled(checklist)->my_addr);
 }
@@ -53,7 +53,7 @@ ACLMyIP::match(ACLChecklist *checklist)
 
 
 ACL *
-ACLMyIP::clone() const
+ACLLocalIP::clone() const
 {
-    return new ACLMyIP(*this);
+    return new ACLocalIP(*this);
 }

@@ -31,11 +31,11 @@
 #include "acl/HttpStatus.h"
 #include "acl/IntRange.h"
 #include "acl/Ip.h"
+#include "acl/LocalIp.h"
+#include "acl/LocalPort.h"
 #include "acl/MaxConnection.h"
 #include "acl/MethodData.h"
 #include "acl/Method.h"
-#include "acl/MyIp.h"
-#include "acl/MyPort.h"
 #include "acl/MyPortName.h"
 #include "acl/PeerName.h"
 #include "acl/ProtocolData.h"
@@ -101,10 +101,10 @@ ACL::Prototype ACLMaxConnection::RegistryProtoype(&ACLMaxConnection::RegistryEnt
 ACLMaxConnection ACLMaxConnection::RegistryEntry_("maxconn");
 ACL::Prototype ACLMethod::RegistryProtoype(&ACLMethod::RegistryEntry_, "method");
 ACLStrategised<HttpRequestMethod> ACLMethod::RegistryEntry_(new ACLMethodData, ACLMethodStrategy::Instance(), "method");
-ACL::Prototype ACLMyIP::RegistryProtoype(&ACLMyIP::RegistryEntry_, "myip");
-ACLMyIP ACLMyIP::RegistryEntry_;
-ACL::Prototype ACLMyPort::RegistryProtoype(&ACLMyPort::RegistryEntry_, "myport");
-ACLStrategised<int> ACLMyPort::RegistryEntry_(new ACLIntRange, ACLMyPortStrategy::Instance(), "myport");
+ACL::Prototype ACLLocatIP::RegistryProtoype(&ACLLocalIP::RegistryEntry_, "localip");
+ACLLocalIP ACLLocalIP::RegistryEntry_;
+ACL::Prototype ACLLocalPort::RegistryProtoype(&ACLLocalPort::RegistryEntry_, "localport");
+ACLStrategised<int> ACLLocalPort::RegistryEntry_(new ACLIntRange, ACLLocalPortStrategy::Instance(), "localport");
 ACL::Prototype ACLMyPortName::RegistryProtoype(&ACLMyPortName::RegistryEntry_, "myportname");
 ACLStrategised<const char *> ACLMyPortName::RegistryEntry_(new ACLStringData, ACLMyPortNameStrategy::Instance(), "myportname");
 ACL::Prototype ACLPeerName::RegistryProtoype(&ACLPeerName::RegistryEntry_, "peername");
