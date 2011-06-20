@@ -831,15 +831,11 @@ FwdState::connectStart()
 
     // Use pconn to avoid opening a new connection.
     const char *host;
-    int port;
     if (serverDestinations[0]->getPeer()) {
         host = serverDestinations[0]->getPeer()->host;
-        port = serverDestinations[0]->getPeer()->http_port;
     } else {
         host = request->GetHost();
-        port = request->port;
     }
-    serverDestinations[0]->remote.SetPort(port);
     Comm::ConnectionPointer temp = fwdPconnPool->pop(serverDestinations[0], host, checkRetriable());
 
     // if we found an open persistent connection to use. use it.
