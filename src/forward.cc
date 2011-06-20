@@ -93,7 +93,7 @@ FwdState::abort(void* d)
 
 FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRequest * r)
 {
-    debugs(17, 1, HERE << "Forwarding client request " << client << ", url=" << e->url() );
+    debugs(17, 2, HERE << "Forwarding client request " << client << ", url=" << e->url() );
     entry = e;
     clientConn = client;
     request = HTTPMSGLOCK(r);
