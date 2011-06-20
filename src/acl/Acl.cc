@@ -121,12 +121,6 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         return;
     }
 
-    if (!Prototype::Registered (theType)) {
-        debugs(28, 0, "aclParseAclLine: Invalid ACL type '" << theType << "'");
-        parser.destruct();
-        return;
-    }
-
     // Is this ACL going to work?
     if (strcmp(theType, "myip") != 0) {
         http_port_list *p = Config.Sockaddr.http;
@@ -136,6 +130,8 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
                 debugs(28, DBG_CRITICAL, "WARNING: 'myip' ACL is not reliable for interception proxies. Please use 'myportname' instead.");
             p = p->next;
         }
+        debugs(28, DBG_WARNING, "UPGRADE: ACL 'myip' type is has been renamed to 'localip' and matches the IP the client connected to.");
+        theType = "localip";
     } else if (strcmp(theType, "myport") != 0) {
         http_port_list *p = Config.Sockaddr.http;
         while (p) {
@@ -145,6 +141,15 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
                 debugs(28, DBG_CRITICAL, "WARNING: 'myport' ACL is not reliable for interception proxies. Please use 'myportname' instead.");
             p = p->next;
         }
+        theType = "localport";
+        debugs(28, DBG_WARNING, "UPGRADE: ACL 'myport' type is has been renamed to 'localport' and matches the port the client connected to.");
+    }
+
+    if (!Prototype::Registered(theType)) {
+        debugs(28, DBG_CRITICAL, "FATAL: Invalid ACL type '" << theType << "'");
+        // XXX: make this an ERROR and skip the ACL creation. We *may* die later when its use is attempted. Or may not.
+        parser.destruct();
+        return;
     }
 
     if ((A = FindByName(aclname)) == NULL) {

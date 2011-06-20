@@ -448,8 +448,13 @@ This section gives a thorough account of those changes in three categories:
 	<p>New format <em>referrer</em> to log with the format prevously used by referer_log directive.
 	<p>New format <em>useragent</em> to log with the format prevously used by useragent_log directive.
 
-	<tag>acl random</tag>
+	<tag>acl : random, localip, localport</tag>
 	<p>New type <em>random</em>. Pseudo-randomly match requests based on a configured probability.
+	<p>Renamed <em>myip</em> to <em>localip</em>. It matches the IP which the client connected to.
+	<p>Renamed <em>myport</em> to <em>localport</em>. It matches the port which the client connected to.
+	<p>The <em>localip</em>/<em>localport</em> differ from earlier releases where they matched a mix of
+	   of an invalid IP and port 0, the client destination IP/port or the Squid listening IP/port.
+	   This definition is now consistent across all modes of traffic received by Squid.
 
 	<tag>auth_param</tag>
 	<p>New options for Basic, Digest, NTLM, Negotiate <em>children</em> settings.
