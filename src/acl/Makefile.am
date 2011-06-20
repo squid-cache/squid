@@ -61,16 +61,16 @@ libacls_la_SOURCES = \
 	HttpStatus.h \
 	Ip.cc \
 	Ip.h \
+	LocalIp.cc \
+	LocalIp.h \
+	LocalPort.cc \
+	LocalPort.h \
 	MaxConnection.cc \
 	MaxConnection.h \
 	Method.cc \
 	MethodData.cc \
 	MethodData.h \
 	Method.h \
-	MyIp.cc \
-	MyIp.h \
-	MyPort.cc \
-	MyPort.h \
 	MyPortName.cc \
 	MyPortName.h \
 	PeerName.cc \

@@ -657,10 +657,10 @@ DOC_START
 
 	***** ACL TYPES AVAILABLE *****
 
-	acl aclname src ip-address/netmask ...	# clients IP address [fast]
-	acl aclname src addr1-addr2/netmask ...	# range of addresses [fast]
-	acl aclname dst ip-address/netmask ...	# URL host's IP address [slow]
-	acl aclname myip ip-address/netmask ...	# local socket IP address [fast]
+	acl aclname src ip-address/mask ...	# clients IP address [fast]
+	acl aclname src addr1-addr2/mask ...	# range of addresses [fast]
+	acl aclname dst ip-address/mask ...	# URL host's IP address [slow]
+	acl aclname localip ip-address/mask ... # IP address the client connected to [fast]
 
 	acl aclname arp      mac-address ... (xx:xx:xx:xx:xx:xx notation)
 	  # The arp ACL requires the special configure option --enable-arp-acl.
@@ -721,7 +721,9 @@ DOC_START
 
 	acl aclname port 80 70 21 0-1024...   # destination TCP port [fast]
 	                                      # ranges are alloed
-	acl aclname myport 3128 ...	          # local socket TCP port [fast]
+	acl aclname localport 3128 ...	      # TCP port the client connected to [fast]
+	                                      # NP: for interception mode this is usually '80'
+
 	acl aclname myportname 3128 ...       # http(s)_port name [fast]
 
 	acl aclname proto HTTP FTP ...        # request protocol [fast]
