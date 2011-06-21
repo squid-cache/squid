@@ -18,6 +18,7 @@
 #include "fs/rock/RockIoState.h"
 #include "fs/rock/RockIoRequests.h"
 #include "fs/rock/RockRebuild.h"
+#include "ipc/mem/Pages.h"
 
 const int64_t Rock::SwapDir::HeaderSize = 16*1024;
 
@@ -353,6 +354,11 @@ Rock::SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load)
     if (!map)
         return false;
 
+    if (Ipc::Mem::IoPageLevel() > Ipc::Mem::IoPageLimit()) {
+        debugs(47, 5, HERE << "too few shared pages for IPC IO left");
+        return false;
+    }
+
     if (io->shedLoad())
         return false;
 
@@ -436,6 +442,11 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
 
     if (e.swap_filen < 0) { 
         debugs(47,4, HERE << e);
+        return NULL;
+    }
+
+    if (Ipc::Mem::IoPageLevel() > Ipc::Mem::IoPageLimit()) {
+        debugs(47, 5, HERE << "too few shared pages for IPC IO left");
         return NULL;
     }
 
