@@ -47,20 +47,46 @@ Ipc::Mem::PagePointer(const PageId &page)
 }
 
 size_t
-Ipc::Mem::Limit()
+Ipc::Mem::PageLimit()
+{
+    return ThePagePool ? ThePagePool->capacity() : 0;
+}
+
+size_t
+Ipc::Mem::CachePageLimit()
 {
     // TODO: adjust cache_mem description to say that in SMP mode,
     // in-transit objects are not allocated using cache_mem. Eventually,
     // they should not use cache_mem even if shared memory is not used:
     // in-transit objects have nothing to do with caching.
-    return Config.memMaxSize;
+    return Config.memMaxSize > 0 ? Config.memMaxSize / PageSize() : 0;
 }
 
 size_t
-Ipc::Mem::Level()
+Ipc::Mem::IoPageLimit()
 {
-    return ThePagePool ?
-        (ThePagePool->capacity() - ThePagePool->size()) * PageSize() : 0;
+    // XXX: this should be independent from memory cache pages
+    return CachePageLimit();
+}
+
+size_t
+Ipc::Mem::PageLevel()
+{
+    return ThePagePool ? ThePagePool->capacity() - ThePagePool->size() : 0;
+}
+
+size_t
+Ipc::Mem::CachePageLevel()
+{
+    // TODO: make a separate counter for shared memory pages for memory cache
+    return PageLevel();
+}
+
+size_t
+Ipc::Mem::IoPageLevel()
+{
+    // TODO: make a separate counter for shared memory pages for IPC IO
+    return PageLevel();
 }
 
 /// initializes shared memory pages
@@ -86,13 +112,13 @@ void SharedMemPagesRr::run(const RunnerRegistry &)
 
     // When cache_dirs start using shared memory pages, they would
     // need to communicate their needs to us somehow.
-    if (!Ipc::Mem::Limit())
+    if (Config.memMaxSize <= 0)
         return;
 
-    if (Ipc::Mem::Limit() < Ipc::Mem::PageSize()) {
+    if (Ipc::Mem::CachePageLimit() <= 0) {
         if (IamMasterProcess()) {
             debugs(54, DBG_IMPORTANT, "WARNING: mem-cache size is too small ("
-                   << (Ipc::Mem::Limit() / 1024.0) << " KB), should be >= " <<
+                   << (Config.memMaxSize / 1024.0) << " KB), should be >= " <<
                    (Ipc::Mem::PageSize() / 1024.0) << " KB");
         }
         return;
@@ -100,7 +126,8 @@ void SharedMemPagesRr::run(const RunnerRegistry &)
 
     if (IamMasterProcess()) {
         Must(!owner);
-        const size_t capacity = Ipc::Mem::Limit() / Ipc::Mem::PageSize();
+        // reserve 10% for IPC IO
+        const size_t capacity = Ipc::Mem::CachePageLimit() * 1.1;
         owner = Ipc::Mem::PagePool::Init(PagePoolId, capacity, Ipc::Mem::PageSize());
     }
 

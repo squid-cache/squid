@@ -290,7 +290,8 @@ bool
 MemStore::copyToShm(StoreEntry &e, MemStoreMap::Extras &extras)
 {
     Ipc::Mem::PageId page;
-    if (!Ipc::Mem::GetPage(page)) {
+    if (Ipc::Mem::CachePageLevel() > Ipc::Mem::CachePageLimit() ||
+        !Ipc::Mem::GetPage(page)) {
         debugs(20, 5, HERE << "No mem-cache page for " << e);
         return false; // GetPage is responsible for any cleanup on failures
     }
