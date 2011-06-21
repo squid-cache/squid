@@ -13,7 +13,10 @@ public:
     bool statsCalled;
 
     virtual uint64_t maxSize() const;
+    virtual uint64_t currentSize() const;
+    virtual uint64_t currentCount() const;
     virtual void stat(StoreEntry &) const; /* output stats to the provided store entry */
+    virtual void swappedOut(const StoreEntry &e) {}
 
     virtual void reconfigure(int, char*);
     virtual void init();
