@@ -39,6 +39,24 @@ TestStore::minSize() const
     return 1;
 }
 
+uint64_t
+TestStore::currentSize() const
+{
+    return 2;
+}
+
+uint64_t
+TestStore::currentCount() const
+{
+    return 2;
+}
+
+int64_t
+TestStore::maxObjectSize() const
+{
+    return 1;
+}
+
 void
 TestStore::stat(StoreEntry &) const
 {

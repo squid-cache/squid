@@ -17,6 +17,7 @@ bool StoreEntry::checkDeferRead(int fd) const STUB_RETVAL(false)
 const char *StoreEntry::getMD5Text() const STUB_RETVAL(NULL)
 StoreEntry::StoreEntry() STUB
 StoreEntry::StoreEntry(const char *url, const char *log_url) STUB
+StoreEntry::~StoreEntry() STUB
 HttpReply const *StoreEntry::getReply() const STUB_RETVAL(NULL)
 void StoreEntry::write(StoreIOBuffer) STUB
 bool StoreEntry::isAccepting() const STUB_RETVAL(false)
@@ -103,6 +104,12 @@ void Store::create() STUB
 void Store::diskFull() STUB
 void Store::sync() STUB
 void Store::unlink(StoreEntry &) STUB
+
+std::ostream &operator <<(std::ostream &os, const StoreEntry &)
+{
+    STUB
+    return os;
+}
 
 SQUIDCEXTERN size_t storeEntryInUse() STUB_RETVAL(0)
 SQUIDCEXTERN const char *storeEntryFlags(const StoreEntry *) STUB_RETVAL(NULL)

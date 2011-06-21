@@ -7,6 +7,7 @@
 #define SQUID_IPC_QUEUE_H
 
 #include "Array.h"
+#include "Debug.h"
 #include "base/InstanceId.h"
 #include "ipc/AtomicWord.h"
 #include "ipc/mem/Pointer.h"
