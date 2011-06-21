@@ -46,8 +46,7 @@ storeRebuildComplete(struct _store_rebuild_data *dc)
 {}
 
 bool
-storeRebuildLoadEntry(MemBuf &buf, StoreEntry &e, cache_key *key,
-    struct _store_rebuild_data &counts, uint64_t expectedSize)
+storeRebuildLoadEntry(int, int, MemBuf&, _store_rebuild_data&)
 {
     return false;
 }
@@ -57,4 +56,10 @@ storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key,
     struct _store_rebuild_data &counts)
 {
    return false;
+}
+
+bool
+storeRebuildParseEntry(MemBuf &, StoreEntry &, cache_key *, struct _store_rebuild_data &, uint64_t)
+{
+    return false;
 }
