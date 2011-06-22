@@ -2574,6 +2574,7 @@ tests_testRock_SOURCES = \
 	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_client_side_request.cc \
 	tests/stub_comm.cc \
 	tests/stub_CommIO.cc \
 	tests/stub_debug.cc \
