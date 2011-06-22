@@ -36,7 +36,10 @@
 #include "squid.h"
 #include "acl/DestinationIp.h"
 #include "acl/FilledChecklist.h"
+#include "comm/Connection.h"
 #include "HttpRequest.h"
+// for Config.*
+#include "structs.h"
 
 char const *
 ACLDestinationIP::typeString() const
@@ -48,6 +51,17 @@ int
 ACLDestinationIP::match(ACLChecklist *cl)
 {
     ACLFilledChecklist *checklist = Filled(cl);
+
+    // Bug 3243: CVE 2009-0801
+    // Bypass of browser same-origin access control in intercepted communication
+    // To resolve this we will force DIRECT and only to the original client destination.
+    // In which case, we also need this ACL to accurately match the destination
+    if (Config.onoff.client_dst_passthru && checklist->request &&
+            (checklist->request->flags.intercepted || checklist->request->flags.spoof_client_ip)) {
+        assert(checklist->conn() && checklist->conn()->clientConnection != NULL);
+        return ACLIP::match(checklist->conn()->clientConnection->local);
+    }
+
     const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->GetHost(), IP_LOOKUP_IF_MISS);
 
     if (ia) {

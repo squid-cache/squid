@@ -116,7 +116,24 @@ void FwdState::start(Pointer aSelf)
     // Otherwise we are going to leak our object.
 
     entry->registerAbort(FwdState::abort, this);
-    peerSelect(&serverDestinations, request, entry, fwdPeerSelectionCompleteWrapper, this);
+
+    // Bug 3243: CVE 2009-0801
+    // Bypass of browser same-origin access control in intercepted communication
+    // To resolve this we must force DIRECT and only to the original client destination.
+    if (Config.onoff.client_dst_passthru && request &&
+            (request->flags.intercepted || request->flags.spoof_client_ip)) {
+        Comm::ConnectionPointer p = new Comm::Connection();
+        p->remote = clientConn->local;
+        p->peerType = ORIGINAL_DST;
+        getOutgoingAddress(request, p);
+        serverDestinations.push_back(p);
+
+        // destination "found". continue with the forwarding.
+        startConnectionOrFail();
+    } else {
+        // do full route options selection
+        peerSelect(&serverDestinations, request, entry, fwdPeerSelectionCompleteWrapper, this);
+    }
 }
 
 void
