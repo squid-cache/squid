@@ -2591,7 +2591,8 @@ tests_testRock_SOURCES = \
 	time.cc \
 	url.cc \
 	URLScheme.cc \
-	wordlist.cc
+	wordlist.cc \
+	$(DELAY_POOL_SOURCE)
 nodist_tests_testRock_SOURCES = \
 	swap_log_op.cc \
 	SquidMath.cc \
