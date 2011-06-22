@@ -659,14 +659,17 @@ testIpAddress::testAddrInfo()
     CPPUNIT_ASSERT_EQUAL( expect->ai_addrlen, ipval->ai_addrlen );
 
 #if 0
+    printf("sizeof IN(%d), IN6(%d), STORAGE(%d), \n",
+           sizeof(struct sockaddr_in), sizeof(struct sockaddr_in6), sizeof(struct sockaddr_storage));
+
     p = (unsigned int*)(expect->ai_addr);
-    printf("\nSYS-ADDR: (%d)  %x %x %x %x %x %x %x %x ...",
-           expect->ai_addrlen,
+    printf("\nSYS-ADDR: (%d) {%d} %x %x %x %x %x %x %x %x ...",
+           expect->ai_addrlen, sizeof(*p),
            p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7] );
 
     p = (unsigned int*)(ipval->ai_addr);
-    printf("\nSQD-ADDR: (%d) %x %x %x %x %x %x %x %x ...",
-           ipval->ai_addrlen,
+    printf("\nSQD-ADDR: (%d) {%d} %x %x %x %x %x %x %x %x ...",
+           ipval->ai_addrlen, sizeof(*p),
            p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7] );
     printf("\n");
 #if HAVE_SS_LEN_IN_SS
@@ -690,10 +693,23 @@ testIpAddress::testAddrInfo()
                           ((struct sockaddr_in*)ipval->ai_addr)->sin_len );
     CPPUNIT_ASSERT_EQUAL( (socklen_t)((struct sockaddr_in*)ipval->ai_addr)->sin_len, ipval->ai_addrlen );
 #endif
-    CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in6*)expect->ai_addr)->sin6_family,
-                          ((struct sockaddr_in6*)ipval->ai_addr)->sin6_family );
-    CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in6*)expect->ai_addr)->sin6_port,
-                          ((struct sockaddr_in6*)ipval->ai_addr)->sin6_port );
+
+    if (expect->ai_addrlen == sizeof(struct sockaddr_in)) {
+//printf("FAMILY %d %d\n", ((struct sockaddr_in*)expect->ai_addr)->sin_family, ((struct sockaddr_in*)ipval->ai_addr)->sin_family);
+        CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in*)expect->ai_addr)->sin_family,
+                              ((struct sockaddr_in*)ipval->ai_addr)->sin_family );
+//printf("PORT %d %d\n", ((struct sockaddr_in*)expect->ai_addr)->sin_port, ((struct sockaddr_in*)ipval->ai_addr)->sin_port);
+        CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in*)expect->ai_addr)->sin_port,
+                              ((struct sockaddr_in*)ipval->ai_addr)->sin_port );
+    }
+    if (expect->ai_addrlen == sizeof(struct sockaddr_in6)) {
+//printf("FAMILY %d %d\n", ((struct sockaddr_in6*)expect->ai_addr)->sin6_family, ((struct sockaddr_in6*)ipval->ai_addr)->sin6_family);
+        CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in6*)expect->ai_addr)->sin6_family,
+                              ((struct sockaddr_in6*)ipval->ai_addr)->sin6_family );
+//printf("PORT %d %d\n", ((struct sockaddr_in6*)expect->ai_addr)->sin6_port, ((struct sockaddr_in6*)ipval->ai_addr)->sin6_port);
+        CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in6*)expect->ai_addr)->sin6_port,
+                              ((struct sockaddr_in6*)ipval->ai_addr)->sin6_port );
+    }
 
     CPPUNIT_ASSERT( memcmp( expect->ai_addr, ipval->ai_addr, expect->ai_addrlen ) == 0 );
 
