@@ -180,14 +180,19 @@ Mem::Stats(StoreEntry * sentry)
  */
 
 /*
- * we have a limit on _total_ amount of idle memory so we ignore
- * max_pages for now
+ * we have a limit on _total_ amount of idle memory so we ignore max_pages for now.
+ * Will ignore repeated calls for the same pool type.
+ *
+ * Relies on Mem::Init() having been called beforehand.
  */
 void
 memDataInit(mem_type type, const char *name, size_t size, int max_pages_notused, bool zeroOnPush)
 {
     assert(name && size);
-    assert(MemPools[type] == NULL);
+
+    if (MemPools[type] != NULL)
+        return;
+
     MemPools[type] = memPoolCreate(name, size);
     MemPools[type]->zeroOnPush(zeroOnPush);
 }
