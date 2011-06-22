@@ -436,6 +436,7 @@ struct SquidConfig {
         int WIN32_IpAddrChangeMonitor;
         int memory_cache_first;
         int memory_cache_disk;
+        int client_dst_passthru;
     } onoff;
 
     int forward_max_tries;
