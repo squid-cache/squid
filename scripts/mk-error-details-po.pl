@@ -7,7 +7,7 @@
 #     mk-error-details-po.pl error-details.txt
 #
 # This script read the error-details.txt error details template, and prints to the
-# std output the  contents of a possible .po file.
+# std output the contents of a .PO file template for translation.
 # The error-details.txt file consist of records like the following:
 #
 #  name: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT
@@ -56,7 +56,8 @@ while(my $line = <IN>) {
 foreach my $poRec (@PO_RECORDS) {
     print $poRec->{"comment"};
     print "msgid ".$poRec->{"msgid"}."\n";
-    print "msgstr ".$poRec->{"msgstr"}."\n\n";
+    # Being a template msgstr is always empty awaiting translated texts.
+    print "msgstr \"\"\n\n";
 }
 
 exit(0);
@@ -92,12 +93,10 @@ sub processRecord
     
     $poRecDetail{"comment"} = "#: $File+".$currentRec{"name"}.".detail:$lnumber\n";
     $poRecDetail{"msgid"} = $currentRec{"detail"};
-    $poRecDetail{"msgstr"} = $currentRec{"detail"};
     merge(\@$RECS, \%poRecDetail);
 
     $poRecDescr{"comment"} = "#: $File+".$currentRec{"name"}.".descr:$lnumber\n";
     $poRecDescr{"msgid"} = $currentRec{"descr"};
-    $poRecDescr{"msgstr"} = $currentRec{"descr"};
     merge(\@$RECS, \%poRecDescr);
 }
 
