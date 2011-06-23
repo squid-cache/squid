@@ -231,7 +231,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             }
         }
     }
-    
+
     if (!ok) {
         if (const char *err_descr = Ssl::GetErrorDescr(error_no))
             debugs(83, 5, err_descr << ": " << buffer);
