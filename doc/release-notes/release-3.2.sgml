@@ -543,6 +543,7 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>tcp_outgoing_address</tag>
 	<p>This parameter is now compatible with persistent server connections.
+	   The IPv6 magic 'to_ipv6' hacks needed in 3.1 are now no longer necessary.
 
 	<tag>tcp_outgoing_mark</tag>
 	<p>New configuration parameter <em>tcp_outgoing_mark</em>
