@@ -60,13 +60,9 @@ typedef struct _dread_ctrl dread_ctrl;
 
 typedef struct _dwrite_q dwrite_q;
 
-typedef struct _ETag ETag;
-
 typedef struct _fileMap fileMap;
 
 typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;
-
-typedef struct _TimeOrTag TimeOrTag;
 
 typedef struct _HttpHeaderStat HttpHeaderStat;
 

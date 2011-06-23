@@ -129,6 +129,7 @@
 #include "ssl/certificate_db.h"
 #endif
 #include "Store.h"
+#include "TimeOrTag.h"
 
 #if HAVE_LIMITS
 #include <limits>

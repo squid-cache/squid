@@ -219,13 +219,6 @@ SQUIDCEXTERN int httpAnonHdrAllowed(http_hdr_type hdr_id);
 SQUIDCEXTERN int httpAnonHdrDenied(http_hdr_type hdr_id);
 SQUIDCEXTERN const char *httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
 
-/* ETag */
-SQUIDCEXTERN int etagParseInit(ETag * etag, const char *str);
-/// whether etags are strong-equal
-SQUIDCEXTERN bool etagIsStrongEqual(const ETag &tag1, const ETag &tag2);
-/// whether etags are weak-equal
-SQUIDCEXTERN bool etagIsWeakEqual(const ETag &tag1, const ETag &tag2);
-
 #include "HttpStatusCode.h"
 SQUIDCEXTERN const char *httpStatusString(http_status status);
 

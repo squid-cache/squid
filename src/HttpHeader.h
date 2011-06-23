@@ -177,14 +177,6 @@ typedef ssize_t HttpHeaderPos;
 /* use this and only this to initialize HttpHeaderPos */
 #define HttpHeaderInitPos (-1)
 
-/* these two are defined in  structs.h */
-
-/// \todo CLEANUP: Kill this.
-typedef struct _TimeOrTag TimeOrTag;
-
-/// \todo CLEANUP: Kill this.
-typedef struct _ETag ETag;
-
 class HttpHeaderEntry
 {
 
@@ -203,6 +195,9 @@ public:
 };
 
 MEMPROXY_CLASS_INLINE(HttpHeaderEntry);
+
+class ETag;
+class TimeOrTag;
 
 class HttpHeader
 {
