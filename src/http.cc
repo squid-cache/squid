@@ -1209,6 +1209,9 @@ HttpStateData::processReply()
             return; // TODO: send errors to ICAP
 
         adaptOrFinalizeReply();
+        // adaptOrFinalizeReply() may abort or otherwise "close" the entry
+        if (!entry->isAccepting())
+            return;
     }
 
     // kick more reads if needed and/or process the response body, if any
