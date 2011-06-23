@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
+#include "ETag.h"
 #include "event.h"
 #include "fde.h"
 #include "Store.h"
