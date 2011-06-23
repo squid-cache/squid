@@ -42,6 +42,7 @@
 #include "mgr/Registration.h"
 #include "rfc1123.h"
 #include "Store.h"
+#include "TimeOrTag.h"
 
 /*
  * On naming conventions:

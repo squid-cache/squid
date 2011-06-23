@@ -310,6 +310,7 @@ squid_SOURCES = \
 	errorpage.cc \
 	errorpage.h \
 	ETag.cc \
+	ETag.h \
 	event.cc \
 	event.h \
 	EventLoop.h \
@@ -469,6 +470,7 @@ squid_SOURCES = \
 	SwapDir.cc \
 	SwapDir.h \
 	time.cc \
+	TimeOrTag.h \
 	tools.cc \
 	tunnel.cc \
 	typedefs.h \
