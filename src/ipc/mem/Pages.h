@@ -33,7 +33,7 @@ size_t PageLimit();
 /// use at any time
 size_t CachePageLimit();
 
-/// the total number of shared memory pages for IPC IO that can be in
+/// the total number of shared memory pages for IPC I/O that can be in
 /// use at any time
 size_t IoPageLimit();
 
@@ -43,7 +43,7 @@ size_t PageLevel();
 /// approximate total number of shared memory pages for memory cache used now
 size_t CachePageLevel();
 
-/// approximate total number of shared memory pages for IPC IO used now
+/// approximate total number of shared memory pages for IPC I/O used now
 size_t IoPageLevel();
 
 /// approximate total number of shared memory pages we can allocate now
@@ -53,7 +53,7 @@ inline size_t PagesAvailable() { return PageLimit() - PageLevel(); }
 /// allocate now
 inline size_t CachePagesAvailable() { return CachePageLimit() - CachePageLevel(); }
 
-/// approximate total number of shared memory pages for IPC IO we can allocate now
+/// approximate total number of shared memory pages for IPC I/O we can allocate now
 inline size_t IoPagesAvailable() { return IoPageLimit() - IoPageLevel(); }
 
 /// returns page size in bytes; all pages are assumed to be the same size
