@@ -1208,8 +1208,7 @@ HttpStateData::processReply()
         if (!continueAfterParsingHeader()) // parsing error or need more data
             return; // TODO: send errors to ICAP
 
-        adaptOrFinalizeReply();
-        // adaptOrFinalizeReply() may abort or otherwise "close" the entry
+        adaptOrFinalizeReply(); // may write to, abort, or "close" the entry
         if (!entry->isAccepting())
             return;
     }
