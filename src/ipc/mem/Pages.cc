@@ -85,7 +85,7 @@ Ipc::Mem::CachePageLevel()
 size_t
 Ipc::Mem::IoPageLevel()
 {
-    // TODO: make a separate counter for shared memory pages for IPC IO
+    // TODO: make a separate counter for shared memory pages for IPC I/O
     return PageLevel();
 }
 
@@ -126,7 +126,7 @@ void SharedMemPagesRr::run(const RunnerRegistry &)
 
     if (IamMasterProcess()) {
         Must(!owner);
-        // reserve 10% for IPC IO
+        // reserve 10% for IPC I/O
         const size_t capacity = Ipc::Mem::CachePageLimit() * 1.1;
         owner = Ipc::Mem::PagePool::Init(PagePoolId, capacity, Ipc::Mem::PageSize());
     }
