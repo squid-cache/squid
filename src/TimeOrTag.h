@@ -6,7 +6,8 @@
 /**
  * Some fields can hold either time or etag specs (e.g. If-Range)
  */
-class TimeOrTag {
+class TimeOrTag
+{
 public:
     ETag tag;                   /* entity tag */
     time_t time;
