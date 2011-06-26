@@ -659,17 +659,6 @@ struct _dwrite_q {
     FREE *free_func;
 };
 
-
-/* ETag support is rudimantal;
- * this struct is likely to change
- * Note: "str" points to memory in HttpHeaderEntry (for now)
- *       so ETags should be used as tmp variables only (for now) */
-
-struct _ETag {
-    const char *str;		/* quoted-string */
-    int weak;			/* true if it is a weak validator */
-};
-
 struct _fde_disk {
     DWCB *wrt_handle;
     void *wrt_handle_data;
@@ -720,14 +709,6 @@ public:
     int stale_if_error;
     int min_fresh;
     String other;
-};
-
-/* some fields can hold either time or etag specs (e.g. If-Range) */
-
-struct _TimeOrTag {
-    ETag tag;			/* entity tag */
-    time_t time;
-    int valid;			/* true if struct is usable */
 };
 
 /* per field statistics */
