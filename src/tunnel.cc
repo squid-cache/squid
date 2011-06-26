@@ -523,21 +523,6 @@ static void
 tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
-    HttpRequest *request = tunnelState->request;
-    ErrorState *err = NULL;
-
-#if USE_DELAY_POOLS
-    /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
-    if (conn->getPeer() && conn->getPeer()->options.no_delay)
-        tunnelState->server.setDelayId(DelayId());
-#endif
-
-    if (conn != NULL && conn->getPeer())
-        hierarchyNote(&tunnelState->request->hier, conn->peerType, conn->getPeer()->host);
-    else if (Config.onoff.log_ip_on_direct)
-        hierarchyNote(&tunnelState->request->hier, conn->peerType, fd_table[conn->fd].ipaddr);
-    else
-        hierarchyNote(&tunnelState->request->hier, conn->peerType, tunnelState->getHost());
 
     if (status != COMM_OK) {
         /* At this point only the TCP handshake has failed. no data has been passed.
@@ -551,7 +536,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
             cs->setHost(tunnelState->url);
             AsyncJob::Start(cs);
         } else {
-            err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
+            ErrorState *err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, tunnelState->request);
             *tunnelState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
             err->xerrno = xerrno;
             // on timeout is this still:    err->xerrno = ETIMEDOUT;
@@ -563,8 +548,23 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
         return;
     }
 
+#if USE_DELAY_POOLS
+    /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
+    if (conn->getPeer() && conn->getPeer()->options.no_delay)
+        tunnelState->server.setDelayId(DelayId());
+#endif
+
+    if (conn != NULL && conn->getPeer())
+        hierarchyNote(&tunnelState->request->hier, conn->peerType, conn->getPeer()->host);
+    else if (Config.onoff.log_ip_on_direct) {
+        conn->remote.NtoA(fd_table[conn->fd].ipaddr,sizeof(fd_table[conn->fd].ipaddr));
+        hierarchyNote(&tunnelState->request->hier, conn->peerType, fd_table[conn->fd].ipaddr);
+    } else
+        hierarchyNote(&tunnelState->request->hier, conn->peerType, tunnelState->getHost());
+
+
     tunnelState->server.conn = conn;
-    request->peer_host = conn->getPeer() ? conn->getPeer()->host : NULL;
+    tunnelState->request->peer_host = conn->getPeer() ? conn->getPeer()->host : NULL;
     comm_add_close_handler(conn->fd, tunnelServerClosed, tunnelState);
 
     if (conn->getPeer()) {
