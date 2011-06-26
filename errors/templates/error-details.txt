@@ -1,3 +1,7 @@
+name: SQUID_X509_V_ERR_DOMAIN_MISMATCH
+detail: "%ssl_error_descr: %ssl_subject"
+descr: "Certificate does not match domainname"
+
 name: X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT
 detail: "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
 descr: "Unable to get issuer certificate"

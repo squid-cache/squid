@@ -16,8 +16,10 @@ typedef std::map<Ssl::ssl_error_t, const SslErrorEntry *> SslErrors;
 SslErrors TheSslErrors;
 
 static SslErrorEntry TheSslErrorArray[] = {
+    {SQUID_X509_V_ERR_DOMAIN_MISMATCH,
+        "SQUID_X509_V_ERR_DOMAIN_MISMATCH"},
     {X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
-        "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT"},
+     "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT"},
     {X509_V_ERR_UNABLE_TO_GET_CRL,
      "X509_V_ERR_UNABLE_TO_GET_CRL"},
     {X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE,
