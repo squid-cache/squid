@@ -6,7 +6,10 @@ noinst_LTLIBRARIES = libsslsquid.la libsslutil.la
 EXTRA_PROGRAMS = \
 	ssl_crtd
 
-EXTRA_DIST = stub_libsslsquid.cc stub_libsslutil.cc
+EXTRA_DIST = \
+	stub_libsslsquid.cc \
+	stub_libsslutil.cc \
+	ssl_crtd.8
 
 if USE_SSL_CRTD
 SSL_CRTD = ssl_crtd
