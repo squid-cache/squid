@@ -39,6 +39,11 @@ public:
     static size_t SharedMemorySize(const uint32_t aPoolId, const unsigned int capacity, const size_t pageSize);
     size_t sharedMemorySize() const;
 
+    /// shared memory size required only by PageStack, excluding
+    /// shared counters and page data
+    static size_t StackSize(const unsigned int capacity);
+    size_t stackSize() const;
+
 private:
     /// stack index and size type (may temporary go negative)
     typedef int Offset;

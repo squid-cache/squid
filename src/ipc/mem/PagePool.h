@@ -6,6 +6,7 @@
 #ifndef SQUID_IPC_MEM_PAGE_POOL_H
 #define SQUID_IPC_MEM_PAGE_POOL_H
 
+#include "ipc/mem/Page.h"
 #include "ipc/mem/PageStack.h"
 #include "ipc/mem/Pointer.h"
 
@@ -28,17 +29,23 @@ public:
     size_t pageSize() const { return pageIndex->pageSize(); }
     /// lower bound for the number of free pages
     unsigned int size() const { return pageIndex->size(); }
+    /// approximate number of shared memory pages used now
+    size_t level() const { return capacity() - size(); }
+    /// approximate number of shared memory pages used now for given purpose
+    size_t level(const int purpose) const;
 
     /// sets page ID and returns true unless no free pages are found
-    bool get(PageId &page) { return pageIndex->pop(page); }
+    bool get(const PageId::Purpose purpose, PageId &page);
     /// makes identified page available as a free page to future get() callers
-    void put(PageId &page) { return pageIndex->push(page); }
+    void put(PageId &page);
     /// converts page handler into a temporary writeable shared memory pointer
     char *pagePointer(const PageId &page);
 
 private:
     Ipc::Mem::Pointer<PageStack> pageIndex; ///< free pages index
-    char *theBuf; ///< pages storage
+    /// number of shared memory pages used now for each purpose
+    AtomicWord *const theLevels;
+    char *const theBuf; ///< pages storage
 };
 
 } // namespace Mem
