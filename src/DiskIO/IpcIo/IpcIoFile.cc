@@ -309,9 +309,9 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
             ipcIo.len = pending->readRequest->len;
         } else { // pending->writeRequest
             Must(pending->writeRequest->len <= Ipc::Mem::PageSize());
-            if (!Ipc::Mem::GetPage(ipcIo.page)) {
+            if (!Ipc::Mem::GetPage(Ipc::Mem::PageId::ioPage, ipcIo.page)) {
                 ipcIo.len = 0;
-                throw TexcHere("run out of shared memory pages");
+                throw TexcHere("run out of shared memory pages for IPC I/O");
             }
             ipcIo.command = IpcIo::cmdWrite;
             ipcIo.offset = pending->writeRequest->offset;
@@ -551,9 +551,9 @@ static int TheFile = -1; ///< db file descriptor
 static void
 diskerRead(IpcIoMsg &ipcIo)
 {
-    if (!Ipc::Mem::GetPage(ipcIo.page)) {
+    if (!Ipc::Mem::GetPage(Ipc::Mem::PageId::ioPage, ipcIo.page)) {
         ipcIo.len = 0;
-        debugs(47,5, HERE << "run out of shared memory pages");
+        debugs(47,5, HERE << "run out of shared memory pages for IPC I/O");
         return;
     }
 

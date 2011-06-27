@@ -23,11 +23,43 @@ Ipc::Mem::PagePool::Init(const char *const id, const unsigned int capacity, cons
 }
 
 Ipc::Mem::PagePool::PagePool(const char *const id):
-    pageIndex(shm_old(PageStack)(id))
+    pageIndex(shm_old(PageStack)(id)),
+    theLevels(reinterpret_cast<AtomicWord *>(
+              reinterpret_cast<char *>(pageIndex.getRaw()) +
+              pageIndex->stackSize())),
+    theBuf(reinterpret_cast<char *>(theLevels + PageId::maxPurpose))
 {
-    const size_t pagesDataOffset =
-        pageIndex->sharedMemorySize() - capacity() * pageSize();
-    theBuf = reinterpret_cast<char *>(pageIndex.getRaw()) + pagesDataOffset;
+}
+
+size_t
+Ipc::Mem::PagePool::level(const int purpose) const
+{
+    Must(0 <= purpose && purpose < PageId::maxPurpose);
+    return theLevels[purpose];
+}
+
+bool
+Ipc::Mem::PagePool::get(const PageId::Purpose purpose, PageId &page)
+{
+    Must(0 <= purpose && purpose < PageId::maxPurpose);
+    if (pageIndex->pop(page)) {
+        page.purpose = purpose;
+        ++theLevels[purpose];
+        return true;
+    }
+    return false;
+}
+
+void
+Ipc::Mem::PagePool::put(PageId &page)
+{
+    if (!page)
+        return;
+
+    Must(0 <= page.purpose && page.purpose < PageId::maxPurpose);
+    --theLevels[page.purpose];
+    page.purpose = PageId::maxPurpose;
+    return pageIndex->push(page);
 }
 
 char *

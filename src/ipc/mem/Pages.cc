@@ -27,9 +27,10 @@ Ipc::Mem::PageSize() {
 }
 
 bool
-Ipc::Mem::GetPage(PageId &page)
+Ipc::Mem::GetPage(const PageId::Purpose purpose, PageId &page)
 {
-    return ThePagePool ? ThePagePool->get(page) : false;
+    return ThePagePool && PagesAvailable(purpose) > 0 ?
+        ThePagePool->get(purpose, page) : false;
 }
 
 void
@@ -49,44 +50,41 @@ Ipc::Mem::PagePointer(const PageId &page)
 size_t
 Ipc::Mem::PageLimit()
 {
-    return ThePagePool ? ThePagePool->capacity() : 0;
+    size_t limit = 0;
+    for (int i = 0; i < PageId::maxPurpose; ++i)
+        limit += PageLimit(i);
+    return limit;
 }
 
 size_t
-Ipc::Mem::CachePageLimit()
+Ipc::Mem::PageLimit(const int purpose)
 {
-    // TODO: adjust cache_mem description to say that in SMP mode,
-    // in-transit objects are not allocated using cache_mem. Eventually,
-    // they should not use cache_mem even if shared memory is not used:
-    // in-transit objects have nothing to do with caching.
-    return Config.memMaxSize > 0 ? Config.memMaxSize / PageSize() : 0;
-}
-
-size_t
-Ipc::Mem::IoPageLimit()
-{
-    // XXX: this should be independent from memory cache pages
-    return CachePageLimit();
+    switch (purpose) {
+    case PageId::cachePage:
+        // TODO: adjust cache_mem description to say that in SMP mode,
+        // in-transit objects are not allocated using cache_mem. Eventually,
+        // they should not use cache_mem even if shared memory is not used:
+        // in-transit objects have nothing to do with caching.
+        return Config.memMaxSize > 0 ? Config.memMaxSize / PageSize() : 0;
+    case PageId::ioPage:
+        // XXX: this should be independent from memory cache pages
+        return PageLimit(PageId::cachePage) * 0.5;
+    default:
+        Must(false);
+    }
+    return 0;
 }
 
 size_t
 Ipc::Mem::PageLevel()
 {
-    return ThePagePool ? ThePagePool->capacity() - ThePagePool->size() : 0;
+    return ThePagePool ? ThePagePool->level() : 0;
 }
 
 size_t
-Ipc::Mem::CachePageLevel()
+Ipc::Mem::PageLevel(const int purpose)
 {
-    // TODO: make a separate counter for shared memory pages for memory cache
-    return PageLevel();
-}
-
-size_t
-Ipc::Mem::IoPageLevel()
-{
-    // TODO: make a separate counter for shared memory pages for IPC I/O
-    return PageLevel();
+    return ThePagePool ? ThePagePool->level(purpose) : 0;
 }
 
 /// initializes shared memory pages
@@ -115,7 +113,7 @@ void SharedMemPagesRr::run(const RunnerRegistry &)
     if (Config.memMaxSize <= 0)
         return;
 
-    if (Ipc::Mem::CachePageLimit() <= 0) {
+    if (Ipc::Mem::PageLimit() <= 0) {
         if (IamMasterProcess()) {
             debugs(54, DBG_IMPORTANT, "WARNING: mem-cache size is too small ("
                    << (Config.memMaxSize / 1024.0) << " KB), should be >= " <<
@@ -126,9 +124,7 @@ void SharedMemPagesRr::run(const RunnerRegistry &)
 
     if (IamMasterProcess()) {
         Must(!owner);
-        // reserve 10% for IPC I/O
-        const size_t capacity = Ipc::Mem::CachePageLimit() * 1.1;
-        owner = Ipc::Mem::PagePool::Init(PagePoolId, capacity, Ipc::Mem::PageSize());
+        owner = Ipc::Mem::PagePool::Init(PagePoolId, Ipc::Mem::PageLimit(), Ipc::Mem::PageSize());
     }
 
     Must(!ThePagePool);
