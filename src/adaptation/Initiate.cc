@@ -31,6 +31,7 @@ private:
 /// scheduled but never fired (e.g., because the HTTP transaction aborts).
 class AnswerCall: public AsyncCallT<AnswerDialer>
 {
+public:
     AnswerCall(const char *aName, const AnswerDialer &aDialer) :
             AsyncCallT<AnswerDialer>(93, 5, aName, aDialer), fired(false) {}
     virtual void fire() {
@@ -38,9 +39,11 @@ class AnswerCall: public AsyncCallT<AnswerDialer>
         AsyncCallT<AnswerDialer>::fire();
     }
     virtual ~AnswerCall() {
-        if (!fired && dialer.arg1.message != NULL && dialer.arg1.message->body_pipe != NULL)
-            dialer.arg1.message->body_pipe->expectNoConsumption();
+        if (!fired && dialer.arg1 != NULL && dialer.arg1->body_pipe != NULL)
+            dialer.arg1->body_pipe->expectNoConsumption();
     }
+
+private:
     bool fired; ///< whether we fired the call
 };
 
@@ -91,7 +94,7 @@ void Adaptation::Initiate::sendAnswer(HttpMsg *msg)
 {
     assert(msg);
     AsyncCall::Pointer call = new AnswerCall("Initiator::noteAdaptationAnswer",
-            AnswerDialer(theInitiator, &Initiator::noteAdaptationAnswer, answer));
+            AnswerDialer(theInitiator, &Initiator::noteAdaptationAnswer, msg));
     ScheduleCallHere(call);
     clearInitiator();
 }
