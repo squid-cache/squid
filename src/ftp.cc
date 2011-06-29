@@ -2368,7 +2368,6 @@ ftpReadEPSV(FtpStateData* ftpState)
 {
     int code = ftpState->ctrl.replycode;
     char h1, h2, h3, h4;
-    int n;
     u_short port;
     Ip::Address ipa_remote;
     int fd = ftpState->data.fd;
@@ -2436,7 +2435,7 @@ ftpReadEPSV(FtpStateData* ftpState)
 
     buf = ftpState->ctrl.last_reply + strcspn(ftpState->ctrl.last_reply, "(");
 
-    n = sscanf(buf, "(%c%c%c%hu%c)", &h1, &h2, &h3, &port, &h4);
+    sscanf(buf, "(%c%c%c%hu%c)", &h1, &h2, &h3, &port, &h4);
 
     if (h1 != h2 || h1 != h3 || h1 != h4) {
         debugs(9, DBG_IMPORTANT, "Invalid EPSV reply from " <<
