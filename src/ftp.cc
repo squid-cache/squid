@@ -2945,14 +2945,6 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
         return;
     }
 
-    if (io.flag != COMM_OK) {
-        data.close();
-        debugs(9, DBG_IMPORTANT, "FTP AcceptDataConnection: FD " << io.fd << ": " << xstrerr(io.xerrno));
-        /** \todo Need to send error message on control channel*/
-        ftpFail(this);
-        return;
-    }
-
     /* data listening conn is no longer even open. abort. */
     if (!Comm::IsConnOpen(data.conn)) {
         data.clear(); // ensure that it's cleared and not just closed.
