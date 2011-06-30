@@ -247,7 +247,7 @@ static bool proccessNewRequest(Ssl::CrtdMessage const & request_message, std::st
         throw std::runtime_error("Cannot write ssl certificate or/and private key to memory.");
 
     Ssl::CrtdMessage response_message;
-    response_message.setCode("ok");
+    response_message.setCode("OK");
     response_message.setBody(bufferToWrite);
 
     // Use the '\1' char as end-of-message character
