@@ -199,7 +199,7 @@ bool IpAddress::IsIPv6() const
 
 bool IpAddress::IsAnyAddr() const
 {
-    return IN6_IS_ADDR_UNSPECIFIED( &m_SocketAddr.sin6_addr );
+    return IN6_IS_ADDR_UNSPECIFIED( &m_SocketAddr.sin6_addr ) || IN6_ARE_ADDR_EQUAL( &m_SocketAddr.sin6_addr, &v4_anyaddr);
 }
 
 /// NOTE: Does NOT clear the Port stored. Ony the Address and Type.
