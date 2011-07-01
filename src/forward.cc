@@ -756,8 +756,10 @@ FwdState::connectDone(int aServerFD, const DnsLookupDetails &dns, comm_err_t sta
 
         if ((fs->_peer && fs->_peer->use_ssl) ||
                 (!fs->_peer && request->protocol == PROTO_HTTPS)) {
-            initiateSSL();
-            return;
+            if (fs->code != PINNED) {
+                initiateSSL();
+                return;
+            }
         }
 
 #endif
