@@ -196,6 +196,12 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many testing improvements
 	- ... and many documentation updates
 
+Changes to squid-3.1.13 (01 Jul 2011):
+
+	- Regression Bug 3239: problems with myip/myport upgrade
+	- Bug 3153: hung ICAP RESPMOD transactions
+	- Update ssl_crtd to use 'OK' status inline with other helpers
+
 Changes to squid-3.1.12.3 (18 Jun 2011):
 
 	- Bug 3236: Port of %oa, %<lp and %<lp and %<la log format options
