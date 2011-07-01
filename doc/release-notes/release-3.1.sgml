@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.12.3 release notes</title>
+<title>Squid 3.1.13 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.12.3
+The Squid Team are pleased to announce the release of Squid-3.1.13
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -24,7 +24,8 @@ We welcome feedback and bug reports. If you find a new bug, please see <url url=
 
 <sect1>Known issues
 <p>
-Although this release is deemed good enough for use in many setups, please note the existence of <url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;target_milestone=3.1&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;cmdtype=doit&amp;order=bugs.bug_severity" name="open bugs against Squid-3.1">.
+Although this release is deemed good enough for use in many setups, please note the existence of 
+<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;target_milestone=3.1&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;cmdtype=doit&amp;order=bugs.bug_severity" name="open bugs against Squid-3.1">.
 
 <p>Some issues to note as currently known in this release which are not able to be fixed in the 3.1 series are:
 
@@ -38,6 +39,7 @@ Although this release is deemed good enough for use in many setups, please note 
 <itemize>
 	<item>Windows support is still largely missing.
 	<item>AIX support for building with the IBM compiler is broken.
+	<item>OpenSSL 1.0.0 support is incomplete.
 </itemize>
 
 
@@ -1134,7 +1136,7 @@ NOCOMMENT_START
 	X-Forwarded-For header.
 
 	If set to "truncate", Squid will remove all existing
-	X-Forwarded-For entries, and place itself as the sole entry.
+	X-Forwarded-For entries, and place the client IP as the sole entry.
 	</verb>
 
 	<tag>header_replace</tag>
@@ -1442,27 +1444,6 @@ This section gives an account of those changes in three categories:
            or localization tools are not available.
         <p>A copy of the latest translated files can instead be downloaded from
 <url url="http://www.squid-cache.org/Versions/langpack/" name="http://www.squid-cache.org/Versions/langpack/">
-
-        <tag>--with-dns-cname</tag>
-        <p>Enable CNAME recursion within the Internal DNS resolver stub squid uses.
-           This has no effect on the external DNS helper.
-        <p>Please note this extension is still experimental and may encounter problems.
-	   To see if it is actually needed you can run squid without it for a period and
-	   check the CNAME-Only Requests statistics squid maintains.
-	<p>If it produces ongoing serious problems the external helper may be needed
-	   but please report the bugs anyway.
-
-	<tag>--with-libexpat / --without-libexpat</tag>
-	<p>Require libexpat XML parser to be built into Squid for ESI parsing.
-	   Build will fail if this option is used and the library is not present.
-	   Default is to auto-detect it when using ESI and ignore if not present.
-	   Use --without-libexpat to prevent it being auto-detected.
-
-	<tag>--with-libxml2 / --without-libxml2</tag>
-	<p>Require libxml2 XML parser to be built into Squid for ESI parsing.
-	   Build will fail if this option is used and the library is not present.
-	   Default is to auto-detect it when building with ESI.
-	   Use --without-libxml2 to prevent it being auto-detected.
 
 	<tag>--with-logdir=PATH</tag>
 	<p>Allow build-time configuration of Default location for Squid logs.
