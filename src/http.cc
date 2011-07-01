@@ -2103,7 +2103,7 @@ HttpStateData::sendRequest()
         flags.keepalive = 1;
 
     if (_peer) {
-        /*The old code here was 
+        /*The old code here was
           if (neighborType(_peer, request) == PEER_SIBLING && ...
           which is equivalent to:
           if (neighborType(_peer, NULL) == PEER_SIBLING && ...
