@@ -98,17 +98,17 @@ IdleConnList::removeAt(int index)
         return false;
 
     // shuffle the remaining entries to fill the new gap.
-    for (; index < size_ - 1; index++)
+    for (; index < size_ - 2; index++)
         theList_[index] = theList_[index + 1];
     theList_[size_-1] = NULL;
 
     if (parent_) {
         parent_->noteConnectionRemoved();
+    }
 
-        if (--size_ == 0) {
-            debugs(48, 3, HERE << "deleting " << hashKeyStr(&hash));
-            delete this;
-        }
+    if (--size_ == 0) {
+        debugs(48, 3, HERE << "deleting " << hashKeyStr(&hash));
+        delete this;
     }
     return true;
 }
@@ -142,6 +142,7 @@ IdleConnList::closeN(size_t n)
             conn->close();
             if (parent_)
                 parent_->noteConnectionRemoved();
+            ++index;
         }
         // shuffle the list N down.
         for (; index < (size_t)size_; index++) {
