@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.12.3 release notes</title>
+<title>Squid 3.1.13 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.12.3
+The Squid Team are pleased to announce the release of Squid-3.1.13
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -24,7 +24,8 @@ We welcome feedback and bug reports. If you find a new bug, please see <url url=
 
 <sect1>Known issues
 <p>
-Although this release is deemed good enough for use in many setups, please note the existence of <url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&target_milestone=3.1&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&cmdtype=doit&order=bugs.bug_severity" name="open bugs against Squid-3.1">.
+Although this release is deemed good enough for use in many setups, please note the existence of 
+<url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;target_milestone=3.1&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;cmdtype=doit&amp;order=bugs.bug_severity" name="open bugs against Squid-3.1">.
 
 <p>Some issues to note as currently known in this release which are not able to be fixed in the 3.1 series are:
 
@@ -38,6 +39,7 @@ Although this release is deemed good enough for use in many setups, please note 
 <itemize>
 	<item>Windows support is still largely missing.
 	<item>AIX support for building with the IBM compiler is broken.
+	<item>OpenSSL 1.0.0 support is incomplete.
 </itemize>
 
 
@@ -1230,7 +1232,7 @@ NOCOMMENT_START
 	<p>%Hs tag deprecated and replaced by request/reply specific &gt;Hs and &lt;Hs
 	<p>New <em>%&lt;la</em> Local IP address of the last server or peer connection. Ported from 2.7 where it is called <em>%oa</em>.
 	<p>New <em>%&lt;lp</em> Local port number of the last server or peer connection.
-	<p>New <em>%&gt;ha,/em> to log HTTP request headers after adaptation and redirection.
+	<p>New <em>%&gt;ha</em> to log HTTP request headers after adaptation and redirection.
 	<p>HTTP request/reply format tags may now be optionally prefixed with http::.
 	   Old forms will be deprecated in some as yet undecided future release.
 	<verb>
