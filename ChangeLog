@@ -1,3 +1,7 @@
+Changes to squid-3.1.14 (04 Jul 2011):
+
+	- Regression Bug 3261: Could not create a DNS socket and exit
+
 Changes to squid-3.1.13 (01 Jul 2011):
 
 	- Regression Bug 3239: problems with myip/myport upgrade
@@ -879,7 +883,7 @@ authorative for this release and mirrored here for reference only.
 	- the mailto links on Squid's ERR pages now contain data about the
 	  occurred error by default, so that the email will contain this data in
 	  its body. This feature can be disabled via the email_err_data directive.
-	  (Clemens Löser)
+	  (Clemens L?ser)
 	- COSS now uses a file called stripe and the path in squid.conf is the
 	  directory this is placed in. Additionally squid -z will create the
 	  COSS swapfile.
