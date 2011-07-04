@@ -1492,7 +1492,7 @@ idnsInit(void)
         Ip::Address addrB = addrA;
         addrA.SetIPv4();
 
-        if (Ip::EnableIpv6 && (addrB.IsAnyAddr() || addrB.IsIPv6())) {
+        if (Ip::EnableIpv6 && addrB.IsIPv6()) {
             debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addrB);
             DnsSocketB = comm_open_listener(SOCK_DGRAM,
                                             IPPROTO_UDP,
@@ -1501,7 +1501,7 @@ idnsInit(void)
                                             "DNS Socket IPv6");
         }
 
-        if (addrA.IsAnyAddr() || addrA.IsIPv4()) {
+        if (addrA.IsIPv4()) {
             debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addrA);
             DnsSocketA = comm_open_listener(SOCK_DGRAM,
                                             IPPROTO_UDP,
