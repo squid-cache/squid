@@ -1031,7 +1031,7 @@ NOCOMMENT_START
 # Recommended minimum Access Permission configuration:
 #
 # Only allow cachemgr access from localhost
-http_access allow manager localhost
+http_access allow localhost manager
 http_access deny manager
 
 # Deny requests to certain unsafe ports
