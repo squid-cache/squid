@@ -196,6 +196,10 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many testing improvements
 	- ... and many documentation updates
 
+Changes to squid-3.1.14 (04 Jul 2011):
+
+	- Regression Bug 3261: Could not create a DNS socket and exit
+
 Changes to squid-3.1.13 (01 Jul 2011):
 
 	- Regression Bug 3239: problems with myip/myport upgrade
