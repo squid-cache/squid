@@ -862,7 +862,7 @@ NOCOMMENT_START
 #
 # Recommended minimum configuration:
 #
-acl manager proto cache_object
+acl manager url_regex -i ^cache_object:// +i ^https?://[^/]+/squid-internal-mgr/
 acl localhost src 127.0.0.1/32 ::1
 acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
 
