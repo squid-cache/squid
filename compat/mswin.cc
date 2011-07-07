@@ -406,7 +406,7 @@ void syslog(int priority, const char *fmt, ...)
         }
 
         ReportEventA(ms_eventlog, logtype, 0, 0, NULL, 1, 0,
-            str, NULL);
+            &str, NULL);
 }
 
 
