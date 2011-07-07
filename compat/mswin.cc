@@ -362,8 +362,8 @@ void openlog(const char *ident, int logopt, int facility)
 
         ms_eventlog = RegisterEventSourceA(NULL, ident);
 
-        if (!ms_eventlog)
-                warning("RegisterEventSource() failed: %lu", GetLastError());
+		// note: RegisterEventAtSourceA may fail and return NULL.
+        //   in that case we'll just retry at the next message or not log
 }
 #define SYSLOG_MAX_MSG_SIZE 1024
 void syslog(int priority, const char *fmt, ...)
