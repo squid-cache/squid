@@ -98,18 +98,18 @@ IdleConnList::removeAt(int index)
         return false;
 
     // shuffle the remaining entries to fill the new gap.
-    for (; index < size_ - 2; index++)
+    for (; index < size_ - 1; index++)
         theList_[index] = theList_[index + 1];
-    theList_[size_-1] = NULL;
+    theList_[--size_] = NULL;
 
     if (parent_) {
         parent_->noteConnectionRemoved();
+        if (size_ == 0) {
+            debugs(48, 3, HERE << "deleting " << hashKeyStr(&hash));
+            delete this;
+        }
     }
 
-    if (--size_ == 0) {
-        debugs(48, 3, HERE << "deleting " << hashKeyStr(&hash));
-        delete this;
-    }
     return true;
 }
 
@@ -123,7 +123,7 @@ IdleConnList::closeN(size_t n)
     } else if (n < (size_t)count()) {
         debugs(48, 2, HERE << "Closing all entries.");
         while (size_ >= 0) {
-            const Comm::ConnectionPointer &conn = theList_[--size_];
+            const Comm::ConnectionPointer conn = theList_[--size_];
             theList_[size_] = NULL;
             clearHandlers(conn);
             conn->close();
@@ -136,7 +136,7 @@ IdleConnList::closeN(size_t n)
         size_t index = 0;
         // ensure the first N entries are closed
         while (index < n) {
-            const Comm::ConnectionPointer &conn = theList_[--size_];
+            const Comm::ConnectionPointer conn = theList_[--size_];
             theList_[size_] = NULL;
             clearHandlers(conn);
             conn->close();
@@ -189,7 +189,7 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
     AsyncCall::Pointer readCall = commCbCall(5,4, "IdleConnList::Read",
                                   CommIoCbPtrFun(IdleConnList::Read, this));
     comm_read(conn, fakeReadBuf_, sizeof(fakeReadBuf_), readCall);
-    AsyncCall::Pointer timeoutCall = commCbCall(5,4, "IdleConnList::Read",
+    AsyncCall::Pointer timeoutCall = commCbCall(5,4, "IdleConnList::Timeout",
                                      CommTimeoutCbPtrFun(IdleConnList::Timeout, this));
     commSetConnTimeout(conn, Config.Timeout.pconn, timeoutCall);
 }
@@ -203,8 +203,10 @@ IdleConnList::pop()
         // this flag is set while our early-read/close handler is
         // waiting for a remote response. It gets unset when the
         // handler is scheduled.
-        if (!fd_table[theList_[i]->fd].flags.read_pending)
-            continue;
+        //The following check is disabled for now until we have a 
+        // correct implementation of the read_pending flag
+        //if (!fd_table[theList_[i]->fd].flags.read_pending)
+        //    continue;
 
         // connection already closed. useless.
         if (!Comm::IsConnOpen(theList_[i]))
@@ -214,6 +216,7 @@ IdleConnList::pop()
         Comm::ConnectionPointer result = theList_[i];
         /* may delete this */
         removeAt(i);
+        clearHandlers(result);
         return result;
     }
 
@@ -243,8 +246,10 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &key)
         // this flag is set while our early-read/close handler is
         // waiting for a remote response. It gets unset when the
         // handler is scheduled.
-        if (!fd_table[theList_[i]->fd].flags.read_pending)
-            continue;
+        //The following check is disabled for now until we have a 
+        // correct implementation of the read_pending flag
+        //if (!fd_table[theList_[i]->fd].flags.read_pending)
+        //    continue;
 
         // connection already closed. useless.
         if (!Comm::IsConnOpen(theList_[i]))
@@ -262,6 +267,7 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &key)
         Comm::ConnectionPointer result = theList_[i];
         /* may delete this */
         removeAt(i);
+        clearHandlers(result);
         return result;
     }
 
