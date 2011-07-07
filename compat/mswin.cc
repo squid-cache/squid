@@ -353,5 +353,62 @@ WIN32_maperror(unsigned long WIN32_oserrno)
         errno = EINVAL;
 }
 
+/* syslog emulation layer derived from git */
+static HANDLE ms_eventlog;
+void openlog(const char *ident, int logopt, int facility)
+{
+        if (ms_eventlog)
+                return;
+
+        ms_eventlog = RegisterEventSourceA(NULL, ident);
+
+        if (!ms_eventlog)
+                warning("RegisterEventSource() failed: %lu", GetLastError());
+}
+#define SYSLOG_MAX_MSG_SIZE 1024
+void syslog(int priority, const char *fmt, ...)
+{
+        WORD logtype;
+        char str[SYSLOG_MAX_MSG_SIZE];
+        int str_len;
+        va_list ap;
+
+        if (!ms_eventlog)
+                return;
+
+        va_start(ap, fmt);
+        str_len = vsnprintf(str, SYSLOG_MAX_MSG_SIZE-1, fmt, ap);
+        va_end(ap);
+
+        if (str_len < 0) {
+        	/* vsnprintf failed */
+            return;
+        }
+
+        switch (priority) {
+        case LOG_EMERG:
+        case LOG_ALERT:
+        case LOG_CRIT:
+        case LOG_ERR:
+                logtype = EVENTLOG_ERROR_TYPE;
+                break;
+
+        case LOG_WARNING:
+                logtype = EVENTLOG_WARNING_TYPE;
+                break;
+
+        case LOG_NOTICE:
+        case LOG_INFO:
+        case LOG_DEBUG:
+        default:
+                logtype = EVENTLOG_INFORMATION_TYPE;
+                break;
+        }
+
+        ReportEventA(ms_eventlog, logtype, 0, 0, NULL, 1, 0,
+            str, NULL);
+}
+
+
 /* note: this is all MSWindows-specific code; all of it should be conditional */
 #endif /* _SQUID_WINDOWS_ */
