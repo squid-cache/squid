@@ -35,6 +35,10 @@
 #ifndef SQUID_HTTPVERSION_H
 #define SQUID_HTTPVERSION_H
 
+#if HAVE_OSTREAM
+#include <ostream>
+#endif
+
 class HttpVersion
 {
 
@@ -84,5 +88,11 @@ public:
         return !(*this < that);
     }
 };
+
+inline std::ostream &
+operator << (std::ostream &os, const HttpVersion &v)
+{
+    return (os << v.major << '.' << v.minor);
+}
 
 #endif /* SQUID_HTTPVERSION_H */
