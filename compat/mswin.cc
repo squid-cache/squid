@@ -366,10 +366,11 @@ void openlog(const char *ident, int logopt, int facility)
         //   in that case we'll just retry at the next message or not log
 }
 #define SYSLOG_MAX_MSG_SIZE 1024
+
 void syslog(int priority, const char *fmt, ...)
 {
         WORD logtype;
-        char str[SYSLOG_MAX_MSG_SIZE];
+        char *str=static_cast<char *>(xmalloc(SYSLOG_MAX_MSG_SIZE));
         int str_len;
         va_list ap;
 
@@ -405,8 +406,9 @@ void syslog(int priority, const char *fmt, ...)
                 break;
         }
 
+        //Windows API suck. They are overengineered
         ReportEventA(ms_eventlog, logtype, 0, 0, NULL, 1, 0,
-            &str, NULL);
+            const_cast<const char **>(&str), NULL);
 }
 
 
