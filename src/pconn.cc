@@ -135,7 +135,7 @@ IdleConnList::closeN(size_t n)
 
         size_t index;
         // ensure the first N entries are closed
-        for(index = 0; index < n; index++) {
+        for (index = 0; index < n; index++) {
             const Comm::ConnectionPointer conn = theList_[index];
             theList_[index] = NULL;
             clearHandlers(conn);
@@ -203,7 +203,7 @@ IdleConnList::pop()
         // this flag is set while our early-read/close handler is
         // waiting for a remote response. It gets unset when the
         // handler is scheduled.
-        //The following check is disabled for now until we have a 
+        //The following check is disabled for now until we have a
         // correct implementation of the read_pending flag
         //if (!fd_table[theList_[i]->fd].flags.read_pending)
         //    continue;
@@ -246,7 +246,7 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &key)
         // this flag is set while our early-read/close handler is
         // waiting for a remote response. It gets unset when the
         // handler is scheduled.
-        //The following check is disabled for now until we have a 
+        //The following check is disabled for now until we have a
         // correct implementation of the read_pending flag
         //if (!fd_table[theList_[i]->fd].flags.read_pending)
         //    continue;
