@@ -442,6 +442,11 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
         if ((token = strchr(config_input_line, '\r')))
             *token = '\0';
 
+        // strip any prefix whitespace off the line.
+        const char *p = skip_ws(config_input_line);
+        if (config_input_line != p)
+            memmove(config_input_line, p, strlen(p)+1);
+
         if (strncmp(config_input_line, "#line ", 6) == 0) {
             static char new_file_name[1024];
             static char *file;
