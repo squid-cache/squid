@@ -243,7 +243,7 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nh, 
 
     ls = margs->lservs;
     while (ls) {
-        debug((char *) "%s| %s: DEBUG: Ldap server loop: lserver@domain %s@%s\n", LogTime(), PROGRAM, ls->lserver, ls->domain);
+        debug((char *) "%s| %s: DEBUG: Ldap server loop: lserver@domain %s@%s\n", LogTime(), PROGRAM, ls->lserver, ls->domain?ls->domain:"NULL");
         if (ls->domain && !strcasecmp(ls->domain, domain)) {
             debug((char *) "%s| %s: DEBUG: Found lserver@domain %s@%s\n", LogTime(), PROGRAM, ls->lserver, ls->domain);
             hp = (struct hstruct *) xrealloc(hp, sizeof(struct hstruct) * (nhosts + 1));
@@ -252,6 +252,15 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nh, 
             hp[nhosts].priority = -2;
             hp[nhosts].weight = -2;
             nhosts++;
+        } else if ( !ls->domain || !strcasecmp(ls->domain, "") ) {
+            debug((char *) "%s| %s: DEBUG: Found lserver@domain %s@%s\n", LogTime(), PROGRAM, ls->lserver, ls->domain?ls->domain:"NULL");
+            hp = (struct hstruct *) xrealloc(hp, sizeof(struct hstruct) * (nhosts + 1));
+            hp[nhosts].host = strdup(ls->lserver);
+            hp[nhosts].port = -1;
+            hp[nhosts].priority = -2;
+            hp[nhosts].weight = -2;
+            nhosts++;
+
         }
         ls = ls->next;
     }
@@ -390,6 +399,8 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nh, 
 #endif
         goto cleanup;
     }
+
+cleanup:
     nhosts = get_hostname_list(margs, &hp, nh, domain);
 
     debug("%s| %s: DEBUG: Adding %s to list\n", LogTime(), PROGRAM, domain);
@@ -432,14 +443,6 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nh, 
             debug((char *) "%s| %s: DEBUG: Host: %s Port: %d Priority: %d Weight: %d\n", LogTime(), PROGRAM, hp[i].host, hp[i].port, hp[i].priority, hp[i].weight);
         }
     }
-    if (buffer)
-        xfree(buffer);
-    if (service)
-        xfree(service);
-    *hlist = hp;
-    return (nhosts);
-
-cleanup:
     if (buffer)
         xfree(buffer);
     if (service)
