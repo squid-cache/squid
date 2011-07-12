@@ -237,7 +237,7 @@ main(int argc, char *const argv[])
 
     init_args(&margs);
 
-    while (-1 != (opt = getopt(argc, argv, "diasg:D:N:u:U:t:T:p:l:b:m:h"))) {
+    while (-1 != (opt = getopt(argc, argv, "diasg:D:N:S:u:U:t:T:p:l:b:m:h"))) {
         switch (opt) {
         case 'd':
             debug_enabled = 1;
