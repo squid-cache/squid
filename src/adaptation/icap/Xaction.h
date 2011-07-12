@@ -41,6 +41,7 @@
 #include "adaptation/Initiate.h"
 #include "AccessLogEntry.h"
 #include "HttpReply.h"
+#include "ipcache.h"
 
 class CommConnectCbParams;
 
@@ -133,6 +134,7 @@ public:
     // custom exception handling and end-of-call checks
     virtual void callException(const std::exception  &e);
     virtual void callEnd();
+    void dnsLookupDone(const ipcache_addrs *ia);
 
 protected:
     // logging

@@ -25,17 +25,19 @@ Adaptation::Icap::ServiceRep::ServiceRep(const ServiceConfigPointer &svcCfg):
         theBusyConns(0),
         theAllWaiters(0),
         connOverloadReported(false),
-        theIdleConns("ICAP Service",NULL),
+        theIdleConns(NULL),
         isSuspended(0), notifying(false),
         updateScheduled(false),
         wasAnnouncedUp(true), // do not announce an "up" service at startup
         isDetached(false)
 {
     setMaxConnections();
+    theIdleConns = new IdleConnList("ICAP Service", NULL);
 }
 
 Adaptation::Icap::ServiceRep::~ServiceRep()
 {
+    delete theIdleConns;
     Must(!theOptionsFetcher);
     delete theOptions;
 }
@@ -102,17 +104,13 @@ Adaptation::Icap::ServiceRep::getConnection(bool retriableXact, bool &reused)
      * In other words, (2) tells us to close one FD for each new one we open due to retriable.
      */
     if (retriableXact)
-        connection = theIdleConns.pop();
+        connection = theIdleConns->pop();
     else
-        theIdleConns.closeN(1);
+        theIdleConns->closeN(1);
 
-    if (!(reused = Comm::IsConnOpen(connection)))
-        connection = new Comm::Connection;
-    else {
-        debugs(93,3, HERE << "reused pconn " << connection);
-        ++theBusyConns;
-    }
-
+    reused = Comm::IsConnOpen(connection);
+    ++theBusyConns;
+    debugs(93,3, HERE << "got connection: " << connection);
     return connection;
 }
 
@@ -124,7 +122,7 @@ void Adaptation::Icap::ServiceRep::putConnection(const Comm::ConnectionPointer &
     if (isReusable && excessConnections() == 0) {
         debugs(93, 3, HERE << "pushing pconn" << comment);
         commUnsetConnTimeout(conn);
-        theIdleConns.push(conn);
+        theIdleConns->push(conn);
     } else {
         debugs(93, 3, HERE << "closing pconn" << comment);
         // comm_close will clear timeout
@@ -142,6 +140,12 @@ void Adaptation::Icap::ServiceRep::noteConnectionUse(const Comm::ConnectionPoint
 {
     Must(Comm::IsConnOpen(conn));
     fd_table[conn->fd].noteUse(NULL); // pconn re-use but not via PconnPool API
+}
+
+void Adaptation::Icap::ServiceRep::noteConnectionFailed(const char *comment)
+{
+    debugs(93, 3, HERE << "Connection failed: " << comment);
+    --theBusyConns;
 }
 
 void Adaptation::Icap::ServiceRep::setMaxConnections()
@@ -171,8 +175,8 @@ int Adaptation::Icap::ServiceRep::availableConnections() const
     if (!available && !connOverloadReported) {
         debugs(93, DBG_IMPORTANT, "WARNING: ICAP Max-Connections limit " <<
                "exceeded for service " << cfg().uri << ". Open connections now: " <<
-               theBusyConns + theIdleConns.count() << ", including " <<
-               theIdleConns.count() << " idle persistent connections.");
+               theBusyConns + theIdleConns->count() << ", including " <<
+               theIdleConns->count() << " idle persistent connections.");
         connOverloadReported = true;
     }
 
@@ -191,7 +195,7 @@ int Adaptation::Icap::ServiceRep::excessConnections() const
     // Waiters affect the number of needed connections but a needed
     // connection may still be excessive from Max-Connections p.o.v.
     // so we should not account for waiting transaction needs here.
-    const int debt =  theBusyConns + theIdleConns.count() - theMaxConnections;
+    const int debt =  theBusyConns + theIdleConns->count() - theMaxConnections;
     if (debt > 0)
         return debt;
     else
@@ -378,7 +382,7 @@ void Adaptation::Icap::ServiceRep::callWhenAvailable(AsyncCall::Pointer &cb, boo
     debugs(93,8, "ICAPServiceRep::callWhenAvailable");
     Must(cb!=NULL);
     Must(up());
-    Must(!theIdleConns.count()); // or we should not be waiting
+    Must(!theIdleConns->count()); // or we should not be waiting
 
     Client i;
     i.service = Pointer(this);
@@ -560,11 +564,10 @@ void Adaptation::Icap::ServiceRep::handleNewOptions(Adaptation::Icap::Options *n
     setMaxConnections();
     const int excess = excessConnections();
     // if we owe connections and have idle pconns, close the latter
-    // XXX:  but ... idle pconn to *where*?
-    if (excess && theIdleConns.count() > 0) {
-        const int n = min(excess, theIdleConns.count());
+    if (excess && theIdleConns->count() > 0) {
+        const int n = min(excess, theIdleConns->count());
         debugs(93,5, HERE << "closing " << n << " pconns to relief debt");
-        theIdleConns.closeN(n);
+        theIdleConns->closeN(n);
     }
 
     scheduleNotification();
