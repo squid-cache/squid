@@ -1,8 +1,6 @@
 #ifndef _SQUID_COMM_COMM_ERR_T_H
 #define _SQUID_COMM_COMM_ERR_T_H
 
-#include "config.h"
-
 typedef enum {
     COMM_OK = 0,
     COMM_ERROR = -1,
