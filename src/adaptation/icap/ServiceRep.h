@@ -113,6 +113,7 @@ public:
     Comm::ConnectionPointer getConnection(bool isRetriable, bool &isReused);
     void putConnection(const Comm::ConnectionPointer &conn, bool isReusable, const char *comment);
     void noteConnectionUse(const Comm::ConnectionPointer &conn);
+    void noteConnectionFailed(const char *comment);
 
     void noteFailure(); // called by transactions to report service failure
 
@@ -160,7 +161,7 @@ private:
     int theMaxConnections; ///< the maximum allowed connections to the service
     // TODO: use a better type like the FadingCounter for connOverloadReported
     mutable bool connOverloadReported; ///< whether we reported exceeding theMaxConnections
-    IdleConnList theIdleConns; ///< idle persistent connection pool
+    IdleConnList *theIdleConns; ///< idle persistent connection pool
 
     FadingCounter theSessionFailures;
     const char *isSuspended; // also stores suspension reason for debugging
