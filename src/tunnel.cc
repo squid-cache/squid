@@ -555,7 +555,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
 #endif
 
     if (conn != NULL && conn->getPeer())
-        hierarchyNote(&tunnelState->request->hier, conn->peerType, conn->getPeer()->host);
+        hierarchyNote(&tunnelState->request->hier, conn->peerType, conn->getPeer()->name);
     else if (Config.onoff.log_ip_on_direct) {
         conn->remote.NtoA(fd_table[conn->fd].ipaddr,sizeof(fd_table[conn->fd].ipaddr));
         hierarchyNote(&tunnelState->request->hier, conn->peerType, fd_table[conn->fd].ipaddr);
