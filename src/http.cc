@@ -83,7 +83,7 @@ CBDATA_CLASS_INIT(HttpStateData);
 static const char *const crlf = "\r\n";
 
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
-static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, HttpRequest * request, const HttpRequest * orig_request,
+static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request,
         HttpHeader * hdr_out, const int we_do_ranges, const http_state_flags);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"), ServerStateData(theFwdState),
@@ -96,39 +96,16 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
     serverConnection = fwd->serverConnection();
     readBuf = new MemBuf;
     readBuf->init(16*1024, 256*1024);
-    orig_request = HTTPMSGLOCK(fwd->request);
 
     // reset peer response time stats for %<pt
-    orig_request->hier.peer_http_request_sent.tv_sec = 0;
-    orig_request->hier.peer_http_request_sent.tv_usec = 0;
+    request->hier.peer_http_request_sent.tv_sec = 0;
+    request->hier.peer_http_request_sent.tv_usec = 0;
 
     if (fwd->serverConnection() != NULL)
         _peer = cbdataReference(fwd->serverConnection()->getPeer());         /* might be NULL */
 
     if (_peer) {
-        const char *url;
-
-        if (_peer->options.originserver)
-            url = orig_request->urlpath.termedBuf();
-        else
-            url = entry->url();
-
-        HttpRequest * proxy_req = new HttpRequest(orig_request->method, orig_request->protocol, url);
-
-        proxy_req->SetHost(_peer->host);
-
-        proxy_req->port = _peer->http_port;
-
-        proxy_req->flags = orig_request->flags;
-
-        proxy_req->lastmod = orig_request->lastmod;
-
-        proxy_req->flags.proxying = 1;
-
-        HTTPMSGUNLOCK(request);
-
-        request = HTTPMSGLOCK(proxy_req);
-
+        request->flags.proxying = 1;
         /*
          * This NEIGHBOR_PROXY_ONLY check probably shouldn't be here.
          * We might end up getting the object from somewhere else if,
@@ -163,8 +140,6 @@ HttpStateData::~HttpStateData()
 
     if (httpChunkDecoder)
         delete httpChunkDecoder;
-
-    HTTPMSGUNLOCK(orig_request);
 
     cbdataReferenceDone(_peer);
 
@@ -733,7 +708,7 @@ HttpStateData::processReplyHeader()
     }
 
     if (!peerSupportsConnectionPinning())
-        orig_request->flags.connection_auth_disabled = 1;
+        request->flags.connection_auth_disabled = 1;
 
     HttpReply *vrep = setVirginReply(newrep);
     flags.headers_parsed = 1;
@@ -748,7 +723,7 @@ HttpStateData::processReplyHeader()
      * Parse the header and remove all referenced headers
      */
 
-    orig_request->hier.peer_reply_status = newrep->sline.status;
+    request->hier.peer_reply_status = newrep->sline.status;
 
     ctx_exit(ctx);
 }
@@ -763,7 +738,7 @@ HttpStateData::handle1xx(HttpReply *reply)
     Must(!flags.handling1xx);
     flags.handling1xx = true;
 
-    if (!orig_request->canHandle1xx()) {
+    if (!request->canHandle1xx()) {
         debugs(11, 2, HERE << "ignoring client-unsupported 1xx");
         proceedAfter1xx();
         return;
@@ -788,7 +763,7 @@ HttpStateData::handle1xx(HttpReply *reply)
     typedef NullaryMemFunT<HttpStateData> CbDialer;
     const AsyncCall::Pointer cb = JobCallback(11, 3, CbDialer, this,
                                   HttpStateData::proceedAfter1xx);
-    CallJobHere1(11, 4, orig_request->clientConnectionManager, ConnStateData,
+    CallJobHere1(11, 4, request->clientConnectionManager, ConnStateData,
                  ConnStateData::sendControlMsg, HttpControlMsg(msg, cb));
     // If the call is not fired, then the Sink is gone, and HttpStateData
     // will terminate due to an aborted store entry or another similar error.
@@ -899,7 +874,7 @@ HttpStateData::haveParsedReplyHeaders()
             || rep->header.has(HDR_X_ACCELERATOR_VARY)
 #endif
        ) {
-        const char *vary = httpMakeVaryMark(orig_request, rep);
+        const char *vary = httpMakeVaryMark(request, rep);
 
         if (!vary) {
             entry->makePrivate();
@@ -984,7 +959,7 @@ HttpStateData::statusIfComplete() const
      * connection.
      */
     if (!flags.request_sent) {
-        debugs(11, 2, "statusIfComplete: Request not yet fully sent \"" << RequestMethodStr(orig_request->method) << " " << entry->url() << "\"" );
+        debugs(11, 2, "statusIfComplete: Request not yet fully sent \"" << RequestMethodStr(request->method) << " " << entry->url() << "\"" );
         return COMPLETE_NONPERSISTENT_MSG;
     }
 
@@ -1136,8 +1111,8 @@ HttpStateData::readReply(const CommIoCbParams &io)
         IOStats.Http.read_hist[bin]++;
 
         // update peer response time stats (%<pt)
-        const timeval &sent = orig_request->hier.peer_http_request_sent;
-        orig_request->hier.peer_response_time =
+        const timeval &sent = request->hier.peer_http_request_sent;
+        request->hier.peer_response_time =
             sent.tv_sec ? tvSubMsec(sent, current_time) : -1;
     }
 
@@ -1249,7 +1224,7 @@ HttpStateData::continueAfterParsingHeader()
             const http_status s = vrep->sline.status;
             const HttpVersion &v = vrep->sline.version;
             if (s == HTTP_INVALID_HEADER && v != HttpVersion(0,9)) {
-                debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Bad header encountered from " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
+                debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Bad header encountered from " << entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
                 error = ERR_INVALID_RESP;
             } else if (s == HTTP_HEADER_TOO_LARGE) {
                 fwd->dontRetry(true);
@@ -1259,18 +1234,18 @@ HttpStateData::continueAfterParsingHeader()
             }
         } else {
             // parsed headers but got no reply
-            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: No reply at all for " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
+            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: No reply at all for " << entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
             error = ERR_INVALID_RESP;
         }
     } else {
         assert(eof);
         if (readBuf->hasContent()) {
             error = ERR_INVALID_RESP;
-            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Headers did not parse at all for " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
+            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Headers did not parse at all for " << entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
         } else {
             error = ERR_ZERO_SIZE_OBJECT;
-            debugs(11, (orig_request->flags.accelerated?DBG_IMPORTANT:2), "WARNING: HTTP: Invalid Response: No object data received for " <<
-                   entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
+            debugs(11, (request->flags.accelerated?DBG_IMPORTANT:2), "WARNING: HTTP: Invalid Response: No object data received for " <<
+                   entry->url() << " AKA " << request->GetHost() << request->urlpath.termedBuf() );
         }
     }
 
@@ -1419,8 +1394,8 @@ HttpStateData::processReplyBody()
             closeHandler = NULL;
             fwd->unregister(serverConnection);
 
-            if (orig_request->flags.spoof_client_ip)
-                client_addr = orig_request->client_addr;
+            if (request->flags.spoof_client_ip)
+                client_addr = request->client_addr;
 
 
             if (request->flags.pinned) {
@@ -1429,11 +1404,11 @@ HttpStateData::processReplyBody()
                 ispinned = true;
             }
 
-            if (orig_request->pinnedConnection() && ispinned) {
-                orig_request->pinnedConnection()->pinConnection(serverConnection, orig_request, _peer,
+            if (request->pinnedConnection() && ispinned) {
+                request->pinnedConnection()->pinConnection(serverConnection, request, _peer,
                         (request->flags.connection_auth != 0));
             } else {
-                fwd->pconnPush(serverConnection, request->GetHost());
+                fwd->pconnPush(serverConnection, request->peer_host ? request->peer_host : request->GetHost());
             }
 
             serverConnection = NULL;
@@ -1529,7 +1504,7 @@ HttpStateData::sendComplete()
 
     flags.request_sent = 1;
 
-    orig_request->hier.peer_http_request_sent = current_time;
+    request->hier.peer_http_request_sent = current_time;
 }
 
 // Close the HTTP server connection. Used by serverComplete().
@@ -1556,7 +1531,7 @@ HttpStateData::doneWithServer() const
  * Fixup authentication request headers for special cases
  */
 static void
-httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const HttpHeader * hdr_in, HttpHeader * hdr_out, http_state_flags flags)
+httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHeader * hdr_out, http_state_flags flags)
 {
     http_hdr_type header = flags.originpeer ? HDR_AUTHORIZATION : HDR_PROXY_AUTHORIZATION;
 
@@ -1565,7 +1540,7 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
         return;
 
     /* Needs to be explicitly enabled */
-    if (!orig_request->peer_login)
+    if (!request->peer_login)
         return;
 
     /* Maybe already dealt with? */
@@ -1573,11 +1548,11 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
         return;
 
     /* Nothing to do here for PASSTHRU */
-    if (strcmp(orig_request->peer_login, "PASSTHRU") == 0)
+    if (strcmp(request->peer_login, "PASSTHRU") == 0)
         return;
 
     /* PROXYPASS is a special case, single-signon to servers with the proxy password (basic only) */
-    if (flags.originpeer && strcmp(orig_request->peer_login, "PROXYPASS") == 0 && hdr_in->has(HDR_PROXY_AUTHORIZATION)) {
+    if (flags.originpeer && strcmp(request->peer_login, "PROXYPASS") == 0 && hdr_in->has(HDR_PROXY_AUTHORIZATION)) {
         const char *auth = hdr_in->getStr(HDR_PROXY_AUTHORIZATION);
 
         if (auth && strncasecmp(auth, "basic ", 6) == 0) {
@@ -1587,18 +1562,18 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
     }
 
     /* Special mode to pass the username to the upstream cache */
-    if (*orig_request->peer_login == '*') {
+    if (*request->peer_login == '*') {
         char loginbuf[256];
         const char *username = "-";
 
-        if (orig_request->extacl_user.size())
-            username = orig_request->extacl_user.termedBuf();
+        if (request->extacl_user.size())
+            username = request->extacl_user.termedBuf();
 #if USE_AUTH
-        else if (orig_request->auth_user_request != NULL)
-            username = orig_request->auth_user_request->username();
+        else if (request->auth_user_request != NULL)
+            username = request->auth_user_request->username();
 #endif
 
-        snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
+        snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, request->peer_login + 1);
 
         httpHeaderPutStrf(hdr_out, header, "Basic %s",
                           old_base64_encode(loginbuf));
@@ -1606,13 +1581,13 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
     }
 
     /* external_acl provided credentials */
-    if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size() &&
-            (strcmp(orig_request->peer_login, "PASS") == 0 ||
-             strcmp(orig_request->peer_login, "PROXYPASS") == 0)) {
+    if (request->extacl_user.size() && request->extacl_passwd.size() &&
+            (strcmp(request->peer_login, "PASS") == 0 ||
+             strcmp(request->peer_login, "PROXYPASS") == 0)) {
         char loginbuf[256];
         snprintf(loginbuf, sizeof(loginbuf), SQUIDSTRINGPH ":" SQUIDSTRINGPH,
-                 SQUIDSTRINGPRINT(orig_request->extacl_user),
-                 SQUIDSTRINGPRINT(orig_request->extacl_passwd));
+                 SQUIDSTRINGPRINT(request->extacl_user),
+                 SQUIDSTRINGPRINT(request->extacl_passwd));
         httpHeaderPutStrf(hdr_out, header, "Basic %s",
                           old_base64_encode(loginbuf));
         return;
@@ -1620,13 +1595,13 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
 
     /* Kerberos login to peer */
 #if HAVE_AUTH_MODULE_NEGOTIATE && HAVE_KRB5 && HAVE_GSSAPI
-    if (strncmp(orig_request->peer_login, "NEGOTIATE",strlen("NEGOTIATE")) == 0) {
+    if (strncmp(request->peer_login, "NEGOTIATE",strlen("NEGOTIATE")) == 0) {
         char *Token=NULL;
         char *PrincipalName=NULL,*p;
-        if ((p=strchr(orig_request->peer_login,':')) != NULL ) {
+        if ((p=strchr(request->peer_login,':')) != NULL ) {
             PrincipalName=++p;
         }
-        Token = peer_proxy_negotiate_auth(PrincipalName,request->peer_host);
+        Token = peer_proxy_negotiate_auth(PrincipalName, request->peer_host);
         if (Token) {
             httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Negotiate %s",Token);
         }
@@ -1635,7 +1610,7 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
 #endif /* HAVE_KRB5 && HAVE_GSSAPI */
 
     httpHeaderPutStrf(hdr_out, header, "Basic %s",
-                      old_base64_encode(orig_request->peer_login));
+                      old_base64_encode(request->peer_login));
     return;
 }
 
@@ -1646,7 +1621,6 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
  */
 void
 HttpStateData::httpBuildRequestHeader(HttpRequest * request,
-                                      HttpRequest * orig_request,
                                       StoreEntry * entry,
                                       HttpHeader * hdr_out,
                                       const http_state_flags flags)
@@ -1655,7 +1629,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 #define BBUF_SZ (MAX_URL+32)
     LOCAL_ARRAY(char, bbuf, BBUF_SZ);
     LOCAL_ARRAY(char, ntoabuf, MAX_IPSTRLEN);
-    const HttpHeader *hdr_in = &orig_request->header;
+    const HttpHeader *hdr_in = &request->header;
     const HttpHeaderEntry *e = NULL;
     HttpHeaderPos pos = HttpHeaderInitPos;
     assert (hdr_out->owner == hoRequest);
@@ -1664,23 +1638,23 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     if (request->lastmod > -1)
         hdr_out->putTime(HDR_IF_MODIFIED_SINCE, request->lastmod);
 
-    bool we_do_ranges = decideIfWeDoRanges (orig_request);
+    bool we_do_ranges = decideIfWeDoRanges (request);
 
     String strConnection (hdr_in->getList(HDR_CONNECTION));
 
     while ((e = hdr_in->getEntry(&pos)))
-        copyOneHeaderFromClientsideRequestToUpstreamRequest(e, strConnection, request, orig_request, hdr_out, we_do_ranges, flags);
+        copyOneHeaderFromClientsideRequestToUpstreamRequest(e, strConnection, request, hdr_out, we_do_ranges, flags);
 
     /* Abstraction break: We should interpret multipart/byterange responses
      * into offset-length data, and this works around our inability to do so.
      */
-    if (!we_do_ranges && orig_request->multipartRangeRequest()) {
+    if (!we_do_ranges && request->multipartRangeRequest()) {
         /* don't cache the result */
-        orig_request->flags.cachable = 0;
+        request->flags.cachable = 0;
         /* pretend it's not a range request */
-        delete orig_request->range;
-        orig_request->range = NULL;
-        orig_request->flags.range = 0;
+        delete request->range;
+        request->range = NULL;
+        request->flags.range = 0;
     }
 
     /* append Via */
@@ -1688,14 +1662,14 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         String strVia;
         strVia = hdr_in->getList(HDR_VIA);
         snprintf(bbuf, BBUF_SZ, "%d.%d %s",
-                 orig_request->http_ver.major,
-                 orig_request->http_ver.minor, ThisCache);
+                 request->http_ver.major,
+                 request->http_ver.minor, ThisCache);
         strListAdd(&strVia, bbuf, ',');
         hdr_out->putStr(HDR_VIA, strVia.termedBuf());
         strVia.clean();
     }
 
-    if (orig_request->flags.accelerated) {
+    if (request->flags.accelerated) {
         /* Append Surrogate-Capabilities */
         String strSurrogate(hdr_in->getList(HDR_SURROGATE_CAPABILITY));
 #if USE_SQUID_ESI
@@ -1720,17 +1694,17 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
             static int warnedCount = 0;
             if (warnedCount++ < 100) {
-                const char *url = entry ? entry->url() : urlCanonical(orig_request);
+                const char *url = entry ? entry->url() : urlCanonical(request);
                 debugs(11, 1, "Warning: likely forwarding loop with " << url);
             }
         }
 
         if (strcmp(opt_forwarded_for, "on") == 0) {
             /** If set to ON - append client IP or 'unknown'. */
-            if ( orig_request->client_addr.IsNoAddr() )
+            if ( request->client_addr.IsNoAddr() )
                 strListAdd(&strFwd, "unknown", ',');
             else
-                strListAdd(&strFwd, orig_request->client_addr.NtoA(ntoabuf, MAX_IPSTRLEN), ',');
+                strListAdd(&strFwd, request->client_addr.NtoA(ntoabuf, MAX_IPSTRLEN), ',');
         } else if (strcmp(opt_forwarded_for, "off") == 0) {
             /** If set to OFF - append 'unknown'. */
             strListAdd(&strFwd, "unknown", ',');
@@ -1738,10 +1712,10 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             /** If set to TRANSPARENT - pass through unchanged. */
         } else if (strcmp(opt_forwarded_for, "truncate") == 0) {
             /** If set to TRUNCATE - drop existing list and replace with client IP or 'unknown'. */
-            if ( orig_request->client_addr.IsNoAddr() )
+            if ( request->client_addr.IsNoAddr() )
                 strFwd = "unknown";
             else
-                strFwd = orig_request->client_addr.NtoA(ntoabuf, MAX_IPSTRLEN);
+                strFwd = request->client_addr.NtoA(ntoabuf, MAX_IPSTRLEN);
         }
         if (strFwd.size() > 0)
             hdr_out->putStr(HDR_X_FORWARDED_FOR, strFwd.termedBuf());
@@ -1750,28 +1724,28 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
     /* append Host if not there already */
     if (!hdr_out->has(HDR_HOST)) {
-        if (orig_request->peer_domain) {
-            hdr_out->putStr(HDR_HOST, orig_request->peer_domain);
-        } else if (orig_request->port == urlDefaultPort(orig_request->protocol)) {
+        if (request->peer_domain) {
+            hdr_out->putStr(HDR_HOST, request->peer_domain);
+        } else if (request->port == urlDefaultPort(request->protocol)) {
             /* use port# only if not default */
-            hdr_out->putStr(HDR_HOST, orig_request->GetHost());
+            hdr_out->putStr(HDR_HOST, request->GetHost());
         } else {
             httpHeaderPutStrf(hdr_out, HDR_HOST, "%s:%d",
-                              orig_request->GetHost(),
-                              (int) orig_request->port);
+                              request->GetHost(),
+                              (int) request->port);
         }
     }
 
     /* append Authorization if known in URL, not in header and going direct */
     if (!hdr_out->has(HDR_AUTHORIZATION)) {
-        if (!request->flags.proxying && *request->login) {
+        if (!request->flags.proxying && request->login && *request->login) {
             httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
                               old_base64_encode(request->login));
         }
     }
 
     /* Fixup (Proxy-)Authorization special cases. Plain relaying dealt with above */
-    httpFixupAuthentication(request, orig_request, hdr_in, hdr_out, flags);
+    httpFixupAuthentication(request, hdr_in, hdr_out, flags);
 
     /* append Cache-Control, add max-age if not there already */
     {
@@ -1782,18 +1756,16 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
 #if 0 /* see bug 2330 */
         /* Set no-cache if determined needed but not found */
-        if (orig_request->flags.nocache)
+        if (request->flags.nocache)
             EBIT_SET(cc->mask, CC_NO_CACHE);
 #endif
 
         /* Add max-age only without no-cache */
         if (!EBIT_TEST(cc->mask, CC_MAX_AGE) && !EBIT_TEST(cc->mask, CC_NO_CACHE)) {
             const char *url =
-                entry ? entry->url() : urlCanonical(orig_request);
+                entry ? entry->url() : urlCanonical(request);
             httpHdrCcSetMaxAge(cc, getMaxAge(url));
 
-            if (request->urlpath.size())
-                assert(strstr(url, request->urlpath.termedBuf()));
         }
 
         /* Enforce sibling relations */
@@ -1834,7 +1806,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
  * to our outgoing fetch request.
  */
 void
-copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, HttpRequest * request, const HttpRequest * orig_request, HttpHeader * hdr_out, const int we_do_ranges, const http_state_flags flags)
+copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request, HttpHeader * hdr_out, const int we_do_ranges, const http_state_flags flags)
 {
     debugs(11, 5, "httpBuildRequestHeader: " << e->name << ": " << e->value );
 
@@ -1847,10 +1819,10 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
          * Only pass on proxy authentication to peers for which
          * authentication forwarding is explicitly enabled
          */
-        if (!flags.originpeer && flags.proxying && orig_request->peer_login &&
-                (strcmp(orig_request->peer_login, "PASS") == 0 ||
-                 strcmp(orig_request->peer_login, "PROXYPASS") == 0 ||
-                 strcmp(orig_request->peer_login, "PASSTHRU") == 0)) {
+        if (!flags.originpeer && flags.proxying && request->peer_login &&
+                (strcmp(request->peer_login, "PASS") == 0 ||
+                 strcmp(request->peer_login, "PROXYPASS") == 0 ||
+                 strcmp(request->peer_login, "PASSTHRU") == 0)) {
             hdr_out->addEntry(e->clone());
         }
         break;
@@ -1879,10 +1851,10 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
             /** \note In accelerators, only forward authentication if enabled
              * (see also httpFixupAuthentication for special cases)
              */
-            if (orig_request->peer_login &&
-                    (strcmp(orig_request->peer_login, "PASS") == 0 ||
-                     strcmp(orig_request->peer_login, "PASSTHRU") == 0 ||
-                     strcmp(orig_request->peer_login, "PROXYPASS") == 0)) {
+            if (request->peer_login &&
+                    (strcmp(request->peer_login, "PASS") == 0 ||
+                     strcmp(request->peer_login, "PASSTHRU") == 0 ||
+                     strcmp(request->peer_login, "PROXYPASS") == 0)) {
                 hdr_out->addEntry(e->clone());
             }
         }
@@ -1896,19 +1868,19 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
          * went through our redirector and the admin configured
          * 'redir_rewrites_host' to be off.
          */
-        if (orig_request->peer_domain)
-            hdr_out->putStr(HDR_HOST, orig_request->peer_domain);
+        if (request->peer_domain)
+            hdr_out->putStr(HDR_HOST, request->peer_domain);
         else if (request->flags.redirected && !Config.onoff.redir_rewrites_host)
             hdr_out->addEntry(e->clone());
         else {
             /* use port# only if not default */
 
-            if (orig_request->port == urlDefaultPort(orig_request->protocol)) {
-                hdr_out->putStr(HDR_HOST, orig_request->GetHost());
+            if (request->port == urlDefaultPort(request->protocol)) {
+                hdr_out->putStr(HDR_HOST, request->GetHost());
             } else {
                 httpHeaderPutStrf(hdr_out, HDR_HOST, "%s:%d",
-                                  orig_request->GetHost(),
-                                  (int) orig_request->port);
+                                  request->GetHost(),
+                                  (int) request->port);
             }
         }
 
@@ -1927,7 +1899,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
     case HDR_MAX_FORWARDS:
         /** \par Max-Forwards:
          * pass only on TRACE or OPTIONS requests */
-        if (orig_request->method == METHOD_TRACE || orig_request->method == METHOD_OPTIONS) {
+        if (request->method == METHOD_TRACE || request->method == METHOD_OPTIONS) {
             const int64_t hops = e->getInt64();
 
             if (hops > 0)
@@ -1999,7 +1971,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 }
 
 bool
-HttpStateData::decideIfWeDoRanges (HttpRequest * orig_request)
+HttpStateData::decideIfWeDoRanges (HttpRequest * request)
 {
     bool result = true;
     /* decide if we want to do Ranges ourselves
@@ -2013,15 +1985,15 @@ HttpStateData::decideIfWeDoRanges (HttpRequest * orig_request)
      *  the server and fetch only the requested content)
      */
 
-    int64_t roffLimit = orig_request->getRangeOffsetLimit();
+    int64_t roffLimit = request->getRangeOffsetLimit();
 
-    if (NULL == orig_request->range || !orig_request->flags.cachable
-            || orig_request->range->offsetLimitExceeded(roffLimit) || orig_request->flags.connection_auth)
+    if (NULL == request->range || !request->flags.cachable
+            || request->range->offsetLimitExceeded(roffLimit) || request->flags.connection_auth)
         result = false;
 
     debugs(11, 8, "decideIfWeDoRanges: range specs: " <<
-           orig_request->range << ", cachable: " <<
-           orig_request->flags.cachable << "; we_do_ranges: " << result);
+           request->range << ", cachable: " <<
+           request->flags.cachable << "; we_do_ranges: " << result);
 
     return result;
 }
@@ -2029,27 +2001,29 @@ HttpStateData::decideIfWeDoRanges (HttpRequest * orig_request)
 /* build request prefix and append it to a given MemBuf;
  * return the length of the prefix */
 mb_size_t
-HttpStateData::buildRequestPrefix(HttpRequest * aRequest,
-                                  HttpRequest * original_request,
-                                  StoreEntry * sentry,
-                                  MemBuf * mb)
+HttpStateData::buildRequestPrefix(MemBuf * mb)
 {
     const int offset = mb->size;
     HttpVersion httpver(1,1);
+    const char * url;
+    if (_peer && !_peer->options.originserver)
+        url = entry->url();
+    else
+        url = request->urlpath.termedBuf();
     mb->Printf("%s %s HTTP/%d.%d\r\n",
-               RequestMethodStr(aRequest->method),
-               aRequest->urlpath.size() ? aRequest->urlpath.termedBuf() : "/",
+               RequestMethodStr(request->method),
+               url && *url ? url : "/",
                httpver.major,httpver.minor);
     /* build and pack headers */
     {
         HttpHeader hdr(hoRequest);
         Packer p;
-        httpBuildRequestHeader(aRequest, original_request, sentry, &hdr, flags);
+        httpBuildRequestHeader(request, entry, &hdr, flags);
 
-        if (aRequest->flags.pinned && aRequest->flags.connection_auth)
-            aRequest->flags.auth_sent = 1;
+        if (request->flags.pinned && request->flags.connection_auth)
+            request->flags.auth_sent = 1;
         else if (hdr.has(HDR_AUTHORIZATION))
-            aRequest->flags.auth_sent = 1;
+            request->flags.auth_sent = 1;
 
         packerToMemInit(&p, mb);
         hdr.packInto(&p);
@@ -2082,7 +2056,7 @@ HttpStateData::sendRequest()
     flags.do_next_read = 1;
     maybeReadVirginBody();
 
-    if (orig_request->body_pipe != NULL) {
+    if (request->body_pipe != NULL) {
         if (!startRequestBodyFlow()) // register to receive body data
             return false;
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
@@ -2091,7 +2065,7 @@ HttpStateData::sendRequest()
 
         Must(!flags.chunked_request);
         // use chunked encoding if we do not know the length
-        if (orig_request->content_length < 0)
+        if (request->content_length < 0)
             flags.chunked_request = 1;
     } else {
         assert(!requestBodySource);
@@ -2116,7 +2090,7 @@ HttpStateData::sendRequest()
     /*
      * Is keep-alive okay for all request methods?
      */
-    if (orig_request->flags.must_keepalive)
+    if (request->flags.must_keepalive)
         flags.keepalive = 1;
     else if (!Config.onoff.server_pconns)
         flags.keepalive = 0;
@@ -2129,6 +2103,17 @@ HttpStateData::sendRequest()
         flags.keepalive = 1;
 
     if (_peer) {
+        /*The old code here was
+          if (neighborType(_peer, request) == PEER_SIBLING && ...
+          which is equivalent to:
+          if (neighborType(_peer, NULL) == PEER_SIBLING && ...
+          or better:
+          if (((_peer->type == PEER_MULTICAST && p->options.mcast_siblings) ||
+                 _peer->type == PEER_SIBLINGS ) && _peer->options.allow_miss)
+               flags.only_if_cached = 1;
+
+           But I suppose it was a bug
+         */
         if (neighborType(_peer, request) == PEER_SIBLING &&
                 !_peer->options.allow_miss)
             flags.only_if_cached = 1;
@@ -2138,7 +2123,7 @@ HttpStateData::sendRequest()
 
     mb.init();
     request->peer_host=_peer?_peer->host:NULL;
-    buildRequestPrefix(request, orig_request, entry, &mb);
+    buildRequestPrefix(&mb);
     debugs(11, 6, HERE << serverConnection << ":\n" << mb.buf);
     Comm::Write(serverConnection, &mb, requestSender);
 
@@ -2286,7 +2271,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
 
         if (flags.headers_parsed && !flags.abuse_detected) {
             flags.abuse_detected = 1;
-            debugs(11, 1, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << orig_request->client_addr << "' -> '" << entry->url() << "'" );
+            debugs(11, 1, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << request->client_addr << "' -> '" << entry->url() << "'" );
 
             if (virginReply()->sline.status == HTTP_INVALID_HEADER) {
                 serverConnection->close();
@@ -2344,10 +2329,4 @@ HttpStateData::abortTransaction(const char *reason)
 
     fwd->handleUnregisteredServerEnd();
     deleteThis("HttpStateData::abortTransaction");
-}
-
-HttpRequest *
-HttpStateData::originalRequest()
-{
-    return orig_request;
 }
