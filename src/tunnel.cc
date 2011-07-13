@@ -470,7 +470,7 @@ tunnelConnectTimeout(int fd, void *data)
     if (tunnelState->servers) {
         if (tunnelState->servers->_peer)
             hierarchyNote(&tunnelState->request->hier, tunnelState->servers->code,
-                          tunnelState->servers->_peer->host);
+                          tunnelState->servers->_peer->name);
         else if (Config.onoff.log_ip_on_direct)
             hierarchyNote(&tunnelState->request->hier, tunnelState->servers->code,
                           fd_table[tunnelState->server.fd()].ipaddr);
@@ -560,7 +560,7 @@ tunnelConnectDone(int fdnotused, const DnsLookupDetails &dns, comm_err_t status,
 
     if (tunnelState->servers->_peer)
         hierarchyNote(&tunnelState->request->hier, tunnelState->servers->code,
-                      tunnelState->servers->_peer->host);
+                      tunnelState->servers->_peer->name);
     else if (Config.onoff.log_ip_on_direct)
         hierarchyNote(&tunnelState->request->hier, tunnelState->servers->code,
                       fd_table[tunnelState->server.fd()].ipaddr);
