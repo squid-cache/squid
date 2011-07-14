@@ -156,7 +156,7 @@ Comm::ConnOpener::start()
         }
     }
 
-    typedef CommCbMemFunT<Comm::ConnOpener, CommConnectCbParams> abortDialer;
+    typedef CommCbMemFunT<Comm::ConnOpener, CommCloseCbParams> abortDialer;
     calls_.earlyAbort_ = JobCallback(5, 4, abortDialer, this, Comm::ConnOpener::earlyAbort);
     comm_add_close_handler(conn_->fd, calls_.earlyAbort_);
 
@@ -279,7 +279,7 @@ Comm::ConnOpener::lookupLocalAddress()
  * Handles the case(s) when a partially setup connection gets closed early.
  */
 void
-Comm::ConnOpener::earlyAbort(const CommConnectCbParams &io)
+Comm::ConnOpener::earlyAbort(const CommCloseCbParams &io)
 {
     debugs(5, 3, HERE << io.conn);
     doneConnecting(COMM_ERR_CLOSING, io.xerrno); // NP: is closing or shutdown better?
