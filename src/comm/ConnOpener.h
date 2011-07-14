@@ -34,7 +34,7 @@ private:
     ConnOpener(const ConnOpener &);
     ConnOpener & operator =(const ConnOpener &c);
 
-    void earlyAbort(const CommConnectCbParams &);
+    void earlyAbort(const CommCloseCbParams &);
     void timeout(const CommTimeoutCbParams &);
     void doneConnecting(comm_err_t status, int xerrno);
     static void InProgressConnectRetry(int fd, void *data);
