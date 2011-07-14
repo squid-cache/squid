@@ -3614,10 +3614,15 @@ parse_http_port_option(http_port_list * s, char *token)
         s->protocol = xstrdup(token + 9);
     } else if (strcmp(token, "allow-direct") == 0) {
         if (!s->accel) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: allow-direct option requires Acceleration mode flag.");
             self_destruct();
         }
         s->allow_direct = 1;
+    } else if (strcmp(token, "act-as-origin") == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_IMPORTANT, "ERROR: http(s)_port: act-as-origin option requires Acceleration mode flag.");
+        } else
+            s->actAsOrigin = 1;
     } else if (strcmp(token, "ignore-cc") == 0) {
 #if !USE_HTTP_VIOLATIONS
         if (!s->accel) {
