@@ -2064,8 +2064,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     ConnStateData * conn = http->getConn();
 
-    // AYJ: this seems a bit weird to ignore CLOSED but drop on closing.
-    if (conn != NULL && Comm::IsConnOpen(conn->clientConnection) && fd_table[conn->clientConnection->fd].closing()) {
+    if (conn == NULL || !conn->isOpen()) {
         // too late, our conn is closing
         // TODO: should we also quit?
         debugs(33,3, HERE << "not sending more data to a closing " << conn->clientConnection);
