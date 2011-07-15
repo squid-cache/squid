@@ -1297,23 +1297,23 @@ clientReplyContext::buildReplyHeader()
             hdr->insertTime(HDR_DATE, squid_curtime);
         } else if (http->getConn() && http->getConn()->port->actAsOrigin) {
             // Swap the Date: header to current time if we are simulating an origin
-	    HttpHeaderEntry *h = hdr->findEntry(HDR_DATE);
-	    if (h)
-		hdr->putExt("X-Origin-Date", h->value.termedBuf());
+            HttpHeaderEntry *h = hdr->findEntry(HDR_DATE);
+            if (h)
+                hdr->putExt("X-Origin-Date", h->value.termedBuf());
             hdr->delById(HDR_DATE);
             hdr->insertTime(HDR_DATE, squid_curtime);
-	    h = hdr->findEntry(HDR_EXPIRES);
-	    if (h && http->storeEntry()->expires >= 0) {
-		hdr->putExt("X-Origin-Expires", h->value.termedBuf());
-		hdr->delById(HDR_EXPIRES);
-		hdr->insertTime(HDR_EXPIRES, squid_curtime + http->storeEntry()->expires - http->storeEntry()->timestamp);
-	    }
+            h = hdr->findEntry(HDR_EXPIRES);
+            if (h && http->storeEntry()->expires >= 0) {
+                hdr->putExt("X-Origin-Expires", h->value.termedBuf());
+                hdr->delById(HDR_EXPIRES);
+                hdr->insertTime(HDR_EXPIRES, squid_curtime + http->storeEntry()->expires - http->storeEntry()->timestamp);
+            }
             if (http->storeEntry()->timestamp <= squid_curtime) {
                 // put X-Cache-Age: instead of Age:
-		char age[64];
-		snprintf(age, sizeof(age), "%ld", (long int) squid_curtime - http->storeEntry()->timestamp);
-		hdr->putExt("X-Cache-Age", age);
- 	    }
+                char age[64];
+                snprintf(age, sizeof(age), "%ld", (long int) squid_curtime - http->storeEntry()->timestamp);
+                hdr->putExt("X-Cache-Age", age);
+            }
         } else if (http->storeEntry()->timestamp <= squid_curtime) {
             hdr->putInt(HDR_AGE,
                         squid_curtime - http->storeEntry()->timestamp);
