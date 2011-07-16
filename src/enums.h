@@ -216,21 +216,23 @@ typedef enum {
     MEM_CLIENT_INFO,
     MEM_LINK_LIST,
     MEM_DLINK_NODE,
-    MEM_DONTFREE,
     MEM_DREAD_CTRL,
     MEM_DWRITE_Q,
-    MEM_FQDNCACHE_ENTRY,
-    MEM_FWD_SERVER,
     MEM_HTTP_HDR_CC,
     MEM_HTTP_HDR_CONTENT_RANGE,
-    MEM_IPCACHE_ENTRY,
     MEM_MD5_DIGEST,
     MEM_NETDBENTRY,
     MEM_NET_DB_NAME,
     MEM_RELIST,
+    // IMPORTANT: leave this here. pools above are initialized early with memInit()
+    MEM_DONTFREE,
+    // following pools are initialized late by their component if needed (or never)
+    MEM_FQDNCACHE_ENTRY,
+    MEM_FWD_SERVER,
 #if !USE_DNSSERVERS
     MEM_IDNS_QUERY,
 #endif
+    MEM_IPCACHE_ENTRY,
     MEM_MAX
 } mem_type;
 
