@@ -136,9 +136,6 @@ interaction(
 {
     const char *dflt = interact->defresult;
 
-    int noecho = 0;
-    int challenge = 0;
-
     flags = flags;
     switch (interact->id) {
     case SASL_CB_GETREALM:
@@ -152,18 +149,14 @@ interaction(
     case SASL_CB_PASS:
         if (defaults)
             dflt = defaults->passwd;
-        noecho = 1;
         break;
     case SASL_CB_USER:
         if (defaults)
             dflt = defaults->authzid;
         break;
     case SASL_CB_NOECHOPROMPT:
-        noecho = 1;
-        challenge = 1;
         break;
     case SASL_CB_ECHOPROMPT:
-        challenge = 1;
         break;
     }
 
