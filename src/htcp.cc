@@ -848,18 +848,17 @@ htcpUnpackDetail(char *buf, int sz)
     return d;
 }
 
-static int
-htcpAccessCheck(acl_access * acl, htcpSpecifier * s, Ip::Address &from)
+static bool
+htcpAccessAllowed(acl_access * acl, htcpSpecifier * s, Ip::Address &from)
 {
     /* default deny if no access list present */
     if (!acl)
-        return 0;
+        return false;
 
     ACLFilledChecklist checklist(acl, s->request, NULL);
     checklist.src_addr = from;
     checklist.my_addr.SetNoAddr();
-    int result = checklist.fastCheck();
-    return result;
+    return (checklist.fastCheck() == ACCESS_ALLOWED);
 }
 
 static void
@@ -1206,7 +1205,7 @@ htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, Ip::Address &from
         return;
     }
 
-    if (!htcpAccessCheck(Config.accessList.htcp, s, from)) {
+    if (!htcpAccessAllowed(Config.accessList.htcp, s, from)) {
         debugs(31, 2, "htcpHandleTstRequest: Access denied");
         htcpLogHtcp(from, dhdr->opcode, LOG_UDP_DENIED, s->uri);
         htcpFreeSpecifier(s);
@@ -1279,7 +1278,7 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
         return;
     }
 
-    if (!htcpAccessCheck(Config.accessList.htcp_clr, s, from)) {
+    if (!htcpAccessAllowed(Config.accessList.htcp_clr, s, from)) {
         debugs(31, 2, "htcpHandleClr: Access denied");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_DENIED, s->uri);
         htcpFreeSpecifier(s);

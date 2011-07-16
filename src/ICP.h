@@ -131,7 +131,7 @@ extern Ip::Address theIcpPublicHostID;
 HttpRequest* icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from);
 
 /// \ingroup ServerProtocolICPAPI
-int icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request);
+bool icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request);
 
 /// \ingroup ServerProtocolICPAPI
 SQUIDCEXTERN void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from);
