@@ -171,9 +171,9 @@ Mgr::Inquirer::applyQueryParams(const Ipc::StrandCoords& aStrands, const QueryPa
         }
     }
 
-    debugs(0, 0, HERE << "strands kid IDs = ");
+    debugs(16, 4, HERE << "strands kid IDs = ");
     for (Ipc::StrandCoords::const_iterator iter = sc.begin(); iter != sc.end(); ++iter) {
-        debugs(0, 0, HERE << iter->kidId);
+        debugs(16, 4, HERE << iter->kidId);
     }
 
     return sc;
