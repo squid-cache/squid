@@ -240,7 +240,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 
         if (check) {
             Filled(check)->ssl_error = error_no;
-            if (check->fastCheck()) {
+            if (check->fastCheck() == ACCESS_ALLOWED) {
                 debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
                 ok = 1;
             } else {

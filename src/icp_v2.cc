@@ -445,18 +445,17 @@ icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
     }
 }
 
-int
+bool
 icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
 {
     /* absent an explicit allow, we deny all */
     if (!Config.accessList.icp)
-        return 0;
+        return true;
 
     ACLFilledChecklist checklist(Config.accessList.icp, icp_request, NULL);
     checklist.src_addr = from;
     checklist.my_addr.SetNoAddr();
-    int result = checklist.fastCheck();
-    return result;
+    return (checklist.fastCheck() == ACCESS_ALLOWED);
 }
 
 char const *

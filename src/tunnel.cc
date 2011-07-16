@@ -617,7 +617,6 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     /* Create state structure. */
     TunnelStateData *tunnelState = NULL;
     ErrorState *err = NULL;
-    int answer;
     HttpRequest *request = http->request;
     char *url = http->uri;
 
@@ -635,9 +634,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
         ACLFilledChecklist ch(Config.accessList.miss, request, NULL);
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
-        answer = ch.fastCheck();
-
-        if (answer == 0) {
+        if (ch.fastCheck() == ACCESS_DENIED) {
             debugs(26, 4, HERE << "MISS access forbidden.");
             err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN, request);
             *status_ptr = HTTP_FORBIDDEN;

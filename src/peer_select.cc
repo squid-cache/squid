@@ -171,22 +171,22 @@ peerSelect(Comm::ConnectionList * paths,
 }
 
 static void
-peerCheckNeverDirectDone(int answer, void *data)
+peerCheckNeverDirectDone(allow_t answer, void *data)
 {
     ps_state *psstate = (ps_state *) data;
     psstate->acl_checklist = NULL;
     debugs(44, 3, "peerCheckNeverDirectDone: " << answer);
-    psstate->never_direct = answer ? 1 : -1;
+    psstate->never_direct = answer;
     peerSelectFoo(psstate);
 }
 
 static void
-peerCheckAlwaysDirectDone(int answer, void *data)
+peerCheckAlwaysDirectDone(allow_t answer, void *data)
 {
     ps_state *psstate = (ps_state *)data;
     psstate->acl_checklist = NULL;
     debugs(44, 3, "peerCheckAlwaysDirectDone: " << answer);
-    psstate->always_direct = answer ? 1 : -1;
+    psstate->always_direct = answer;
     peerSelectFoo(psstate);
 }
 
@@ -346,7 +346,7 @@ peerSelectFoo(ps_state * ps)
 
     /** If we don't known whether DIRECT is permitted ... */
     if (ps->direct == DIRECT_UNKNOWN) {
-        if (ps->always_direct == 0 && Config.accessList.AlwaysDirect) {
+        if (ps->always_direct == ACCESS_DUNNO && Config.accessList.AlwaysDirect) {
             /** check always_direct; */
             ps->acl_checklist = new ACLFilledChecklist(
                 Config.accessList.AlwaysDirect,
@@ -354,10 +354,10 @@ peerSelectFoo(ps_state * ps)
                 NULL);		/* ident */
             ps->acl_checklist->nonBlockingCheck(peerCheckAlwaysDirectDone, ps);
             return;
-        } else if (ps->always_direct > 0) {
+        } else if (ps->always_direct == ACCESS_ALLOWED) {
             /** if always_direct says YES, do that. */
             ps->direct = DIRECT_YES;
-        } else if (ps->never_direct == 0 && Config.accessList.NeverDirect) {
+        } else if (ps->never_direct == ACCESS_DUNNO && Config.accessList.NeverDirect) {
             /** check never_direct; */
             ps->acl_checklist = new ACLFilledChecklist(
                 Config.accessList.NeverDirect,
@@ -366,7 +366,7 @@ peerSelectFoo(ps_state * ps)
             ps->acl_checklist->nonBlockingCheck(peerCheckNeverDirectDone,
                                                 ps);
             return;
-        } else if (ps->never_direct > 0) {
+        } else if (ps->never_direct == ACCESS_ALLOWED) {
             /** if always_direct says NO, do that. */
             ps->direct = DIRECT_NO;
         } else if (request->flags.no_direct) {
@@ -427,7 +427,7 @@ peerSelectFoo(ps_state * ps)
     peerSelectDnsPaths(ps);
 }
 
-int peerAllowedToUse(const peer * p, HttpRequest * request);
+bool peerAllowedToUse(const peer * p, HttpRequest * request);
 
 /**
  * peerSelectPinned
@@ -867,8 +867,8 @@ ps_state::operator new(size_t)
 
 ps_state::ps_state() : request (NULL),
         entry (NULL),
-        always_direct (0),
-        never_direct (0),
+        always_direct(ACCESS_DUNNO),
+        never_direct(ACCESS_DUNNO),
         direct (0),
         callback (NULL),
         callback_data (NULL),
