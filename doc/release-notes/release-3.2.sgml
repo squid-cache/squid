@@ -487,6 +487,11 @@ This section gives a thorough account of those changes in three categories:
 	<p><em>children-idle=N</em> determines how many helper to retain as buffer against sudden traffic loads.
 	<p>Deprecated <em>children=N</em> in favor of <em>children-max=N</em>.
 
+	<tag>http_port act-as-origin</tag>
+	<p><em>act-as-origin</em> ported from 2.7.
+	   This option corrects several HTTP header issues when operating as a reverse proxy and cache.
+	   Notably the externally visible aging of objects stored in the server-side cache.
+
 	<tag>icap_send_client_ip</tag>
 	<p>Deprecated in favor of adaptation_send_client_ip
 	which applies to both ICAP and eCAP.</p>
@@ -869,7 +874,6 @@ This section gives an account of those changes in three categories:
 	<p>Not yet ported from 2.7
 
 	<tag>http_port</tag>
-	<p><em>act-as-origin</em> not yet ported from 2.7
 	<p><em>urlgroup=</em> not yet ported from 2.6
 
 	<tag>ignore_ims_on_miss</tag>

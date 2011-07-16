@@ -1329,6 +1329,11 @@ DOC_START
 	   protocol=	Protocol to reconstruct accelerated requests with.
 			Defaults to http://.
 
+	   act-as-origin
+			Act as if this Squid is the origin server.
+			This currently means generate new Date: and Expires:
+			headers on HIT instead of adding Age:.
+
 	   ignore-cc	Ignore request Cache-Control headers.
 
 	   		Warning: This option violates HTTP specifications if
