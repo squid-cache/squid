@@ -1920,7 +1920,7 @@ clientReplyContext::processReplyAccess ()
             http->logType == LOG_TCP_DENIED_REPLY ||
             alwaysAllowResponse(reply->sline.status)) {
         headers_sz = reply->hdr_sz;
-        processReplyAccessResult(1);
+        processReplyAccessResult(ACCESS_ALLOWED);
         return;
     }
 
@@ -1934,7 +1934,7 @@ clientReplyContext::processReplyAccess ()
 
     /** check for absent access controls (permit by default) */
     if (!Config.accessList.reply) {
-        processReplyAccessResult(1);
+        processReplyAccessResult(ACCESS_ALLOWED);
         return;
     }
 
@@ -1946,22 +1946,20 @@ clientReplyContext::processReplyAccess ()
 }
 
 void
-clientReplyContext::ProcessReplyAccessResult (int rv, void *voidMe)
+clientReplyContext::ProcessReplyAccessResult(allow_t rv, void *voidMe)
 {
     clientReplyContext *me = static_cast<clientReplyContext *>(voidMe);
     me->processReplyAccessResult(rv);
 }
 
 void
-clientReplyContext::processReplyAccessResult(bool accessAllowed)
+clientReplyContext::processReplyAccessResult(const allow_t &accessAllowed)
 {
     debugs(88, 2, "The reply for " << RequestMethodStr(http->request->method)
-           << " " << http->uri << " is "
-           << ( accessAllowed ? "ALLOWED" : "DENIED")
-           << ", because it matched '"
+           << " " << http->uri << " is " << accessAllowed << ", because it matched '"
            << (AclMatchedName ? AclMatchedName : "NO ACL's") << "'" );
 
-    if (!accessAllowed) {
+    if (accessAllowed != ACCESS_ALLOWED) {
         ErrorState *err;
         err_type page_id;
         page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, 1);

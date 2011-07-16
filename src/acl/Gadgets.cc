@@ -196,7 +196,7 @@ aclParseAccessLine(ConfigParser &parser, acl_access ** head)
     for (B = *head, T = head; B; T = &B->next, B = B->next);
     *T = A;
 
-    /* We lock _acl_access structures in ACLChecklist::check() */
+    /* We lock _acl_access structures in ACLChecklist::matchNonBlocking() */
 }
 
 void

@@ -55,7 +55,7 @@
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
 
-int peerAllowedToUse(const peer *, HttpRequest *);
+bool peerAllowedToUse(const peer *, HttpRequest *);
 static int peerWouldBePinged(const peer *, HttpRequest *);
 static void neighborRemove(peer *);
 static void neighborAlive(peer *, const MemObject *, const icp_common_t *);
@@ -138,18 +138,14 @@ neighborType(const peer * p, const HttpRequest * request)
     return p->type;
 }
 
-/*
- * peerAllowedToUse
- *
- * this function figures out if it is appropriate to fetch REQUEST
- * from PEER.
+/**
+ * \return Whether it is appropriate to fetch REQUEST from PEER.
  */
-int
+bool
 peerAllowedToUse(const peer * p, HttpRequest * request)
 {
 
     const struct _domain_ping *d = NULL;
-    int do_ping = 1;
     assert(request != NULL);
 
     if (neighborType(p, request) == PEER_SIBLING) {
@@ -159,28 +155,27 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
             debugs(15, 2, "peerAllowedToUse(" << p->name << ", " << request->GetHost() << ") : multicast-siblings optimization match");
 #endif
         if (request->flags.nocache)
-            return 0;
+            return false;
 
         if (request->flags.refresh)
-            return 0;
+            return false;
 
         if (request->flags.loopdetect)
-            return 0;
+            return false;
 
         if (request->flags.need_validation)
-            return 0;
+            return false;
     }
 
     // CONNECT requests are proxy requests. Not to be forwarded to origin servers.
     // Unless the destination port matches, in which case we MAY perform a 'DIRECT' to this peer.
     if (p->options.originserver && request->method == METHOD_CONNECT && request->port != p->in_addr.GetPort())
-        return 0;
+        return false;
 
     if (p->peer_domain == NULL && p->access == NULL)
-        return do_ping;
+        return true;
 
-    do_ping = 0;
-
+    bool do_ping = false;
     for (d = p->peer_domain; d; d = d->next) {
         if (0 == matchDomainName(request->GetHost(), d->domain)) {
             do_ping = d->do_ping;
@@ -190,8 +185,8 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
         do_ping = !d->do_ping;
     }
 
-    if (p->peer_domain && 0 == do_ping)
-        return do_ping;
+    if (p->peer_domain && !do_ping)
+        return false;
 
     if (p->access == NULL)
         return do_ping;
@@ -211,7 +206,7 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
 
 #endif
 
-    return checklist.fastCheck();
+    return (checklist.fastCheck() == ACCESS_ALLOWED);
 }
 
 /* Return TRUE if it is okay to send an ICP request to this peer.   */

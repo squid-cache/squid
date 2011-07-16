@@ -26,11 +26,11 @@ public:
     bool httpStateIsValid();
     void clientAccessCheck();
     void clientAccessCheck2();
-    void clientAccessCheckDone(int answer);
+    void clientAccessCheckDone(const allow_t &answer);
     void clientRedirectStart();
     void clientRedirectDone(char *result);
     void checkNoCache();
-    void checkNoCacheDone(int answer);
+    void checkNoCacheDone(const allow_t &answer);
 #if USE_ADAPTATION
 
     void adaptationAccessCheck();

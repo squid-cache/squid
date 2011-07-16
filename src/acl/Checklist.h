@@ -35,6 +35,9 @@
 
 #include "acl/Acl.h"
 
+/// ACL checklist callback
+typedef void ACLCB(allow_t, void *);
+
 /** \ingroup ACLAPI
     Base class for maintaining Squid and transaction state for access checks.
 	Provides basic ACL checking methods. Its only child, ACLFilledChecklist,
@@ -93,7 +96,7 @@ public:
      * The callback specified will be called with true/false
      * when the results of the ACL tests are known.
      */
-    void nonBlockingCheck(PF * callback, void *callback_data);
+    void nonBlockingCheck(ACLCB * callback, void *callback_data);
 
     /**
      * Trigger a blocking access check for a set of *_access options.
@@ -107,34 +110,20 @@ public:
      * knowledge of the ACL usage rather than depend on this default.
      * That will also save on work setting up ACLChecklist fields for a no-op.
      *
-     * \retval  1/true    Access Allowed
-     * \retval 0/false    Access Denied
+     * \retval ACCESS_DUNNO     Unable to determine any result
+     * \retval ACCESS_ALLOWED   Access Allowed
+     * \retval ACCESS_DENIED    Access Denied
      */
-    int fastCheck();
+    allow_t const & fastCheck();
 
     /**
-     * Trigger a blocking access check for a single ACL line (a AND b AND c).
+     * A version of fastCheck() for use when there is a one-line set of ACLs
+     * to be tested and a match determins the result action to be done.
      *
-     * ACLs which cannot be satisfied directly from available data are ignored.
-     * This means any proxy_auth, external_acl, DNS lookups, Ident lookups etc
-     * which have not already been performed and cached will not be checked.
-     *
-     * \retval  1/true    Access Allowed
-     * \retval 0/false    Access Denied
+     * \retval ACCESS_DUNNO     Unable to determine any result
+     * \retval ACCESS_ALLOWED   ACLs all matched
      */
-    bool matchAclListFast(const ACLList * list);
-
-    /**
-     * Attempt to check the current checklist against current data.
-     * This is the core routine behind all ACL test routines.
-     * As much as possible of current tests are performed immediately
-     * and the result is maybe delayed to wait for async lookups.
-     *
-     * When all tests are done callback is presented with one of:
-     *  - ACCESS_ALLOWED     Access explicitly Allowed
-     *  - ACCESS_DENIED      Access explicitly Denied
-     */
-    void check();
+    allow_t const & fastCheck(const ACLList * list);
 
     bool asyncInProgress() const;
     void asyncInProgress(bool const);
@@ -163,13 +152,24 @@ private:
 public:
     const acl_access *accessList;
 
-    PF *callback;
+    ACLCB *callback;
     void *callback_data;
+
+    /**
+     * Attempt to check the current checklist against current data.
+     * This is the core routine behind all ACL test routines.
+     * As much as possible of current tests are performed immediately
+     * and the result is maybe delayed to wait for async lookups.
+     *
+     * When all tests are done callback is presented with one of:
+     *  - ACCESS_ALLOWED     Access explicitly Allowed
+     *  - ACCESS_DENIED      Access explicitly Denied
+     */
+    void matchNonBlocking();
 
 private: /* internal methods */
     void preCheck();
     void matchAclList(const ACLList * list, bool const fast);
-    void matchAclListSlow(const ACLList * list);
 
     bool async_;
     bool finished_;

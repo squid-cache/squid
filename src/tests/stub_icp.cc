@@ -22,7 +22,7 @@ Comm::ConnectionPointer icpOutgoingConn;
 Ip::Address theIcpPublicHostID;
 
 HttpRequest* icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from) STUB_RETVAL(NULL)
-int icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request) STUB_RETVAL(0)
+bool icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request) STUB_RETVAL(false)
 void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from) STUB
 icp_opcode icpGetCommonOpcode() STUB_RETVAL(ICP_INVALID)
 int icpUdpSend(int, const Ip::Address &, icp_common_t *, log_type, int) STUB_RETVAL(0)

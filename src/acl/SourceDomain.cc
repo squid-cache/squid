@@ -66,7 +66,7 @@ SourceDomainLookup::LookupDone(const char *fqdn, const DnsLookupDetails &details
     checklist->changeState (ACLChecklist::NullState::Instance());
     checklist->markSourceDomainChecked();
     checklist->request->recordLookup(details);
-    checklist->check();
+    checklist->matchNonBlocking();
 }
 
 

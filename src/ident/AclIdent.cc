@@ -159,7 +159,7 @@ IdentLookup::LookupDone(const char *ident, void *data)
 
     checklist->asyncInProgress(false);
     checklist->changeState(ACLChecklist::NullState::Instance());
-    checklist->check();
+    checklist->matchNonBlocking();
 }
 
 #endif /* USE_IDENT */

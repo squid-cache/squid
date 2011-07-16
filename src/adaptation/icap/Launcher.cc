@@ -136,7 +136,7 @@ bool Adaptation::Icap::Launcher::canRepeat(Adaptation::Icap::XactAbortInfo &info
         new ACLFilledChecklist(TheConfig.repeat, info.icapRequest, dash_str);
     cl->reply = HTTPMSGLOCK(info.icapReply);
 
-    const bool result = cl->fastCheck();
+    bool result = cl->fastCheck() == ACCESS_ALLOWED;
     delete cl;
     return result;
 }
