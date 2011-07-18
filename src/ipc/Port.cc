@@ -12,8 +12,8 @@
 #include "comm/Connection.h"
 #include "ipc/Port.h"
 
-const char Ipc::coordinatorAddr[] = DEFAULT_PREFIX "/var/run/coordinator.ipc";
-const char Ipc::strandAddrPfx[] = DEFAULT_PREFIX "/var/run/squid";
+const char Ipc::coordinatorAddr[] = DEFAULT_STATEDIR "/coordinator.ipc";
+const char Ipc::strandAddrPfx[] = DEFAULT_STATEDIR "/kid";
 
 
 Ipc::Port::Port(const String& aListenAddr):
