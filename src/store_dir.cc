@@ -169,7 +169,10 @@ SwapDir::objectSizeIsAcceptable(int64_t objsize) const
         return false;
 
     // Else, make sure that the object size will fit.
-    return min_objsize <= objsize && max_objsize > objsize;
+    if (max_objsize == -1 && min_objsize <= objsize)
+        return true;
+    else
+        return min_objsize <= objsize && max_objsize > objsize;
 }
 
 
