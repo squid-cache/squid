@@ -3,15 +3,15 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-06-22 13:27+1300\n"
-"PO-Revision-Date: 2010-06-10 10:13+0200\n"
-"Last-Translator: Robert Förster <Dessa@gmake.de>\n"
+"PO-Revision-Date: 2011-06-25 02:39+0200\n"
+"Last-Translator: Robert <Dessa@gmake.de>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Pootle 2.0.1\n"
+"X-Generator: Pootle 2.1.6\n"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:29
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:29
@@ -19,16 +19,16 @@ msgstr ""
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:29
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:30
 msgid "%F"
-msgstr ""
+msgstr "%F"
 
 #: templates/ERR_INVALID_REQ+html.body.div.blockquote.pre:23
 #: templates/ERR_INVALID_RESP+html.body.div.blockquote.pre:23
 msgid "%R"
-msgstr ""
+msgstr "%R"
 
 #: templates/ERR_ESI+html.body.div.blockquote.pre:28
 msgid "%Z"
-msgstr ""
+msgstr "%Z"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:24
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:24
@@ -36,14 +36,14 @@ msgstr ""
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:24
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:25
 msgid "%f"
-msgstr ""
+msgstr "%f"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:31
 msgid "%g"
-msgstr ""
+msgstr "%g"
 
 #: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:61
 msgid "%ssl_error_descr"
@@ -80,7 +80,7 @@ msgstr "%ssl_error_descr: %ssl_subject"
 #: templates/ERR_DIR_LISTING+html.body.div.blockquote.pre:22
 #: templates/ERR_DNS_FAIL+html.body.div.blockquote.pre:28
 msgid "%z"
-msgstr ""
+msgstr "%z"
 
 #: templates/ERR_DIR_LISTING+html.body.div.table.tr.th:28
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -122,6 +122,8 @@ msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
 "request from being completed."
 msgstr ""
+"Ein nicht-behebbarer interner Fehler oder ein Konfigurationsproblem "
+"verhindert die Ausführung der Anfrage."
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.blockquote.p:23
 msgid "Access Denied."
@@ -182,6 +184,8 @@ msgid ""
 "At least one precondition specified by the HTTP client in the request header "
 "has failed."
 msgstr ""
+"Mindestens eine Bedingung, die vom HTTP Client vorrausgesetzt wird, wurde "
+"nicht erfüllt."
 
 #: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:117
 msgid "Authority and issuer serial number mismatch"
@@ -369,14 +373,12 @@ msgstr "ESI-Verarbeitung fehlgeschlagen."
 
 #: templates/ERR_FTP_PUT_CREATED+html.head.title:4
 #: templates/ERR_FTP_PUT_MODIFIED+html.head.title:4
-#, fuzzy
 msgid "FTP PUT Successful."
-msgstr "FTP PUT erfolgreich: Datei erstellt"
+msgstr "FTP PUT Erfolgreich."
 
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.h2:15
-#, fuzzy
 msgid "FTP PUT upload failed"
-msgstr "FTP PUT/Upload fehlgeschlagen"
+msgstr "FTP PUT Upload fehlgeschlagen"
 
 #: templates/ERR_FTP_DISABLED+html.body.div.blockquote.p:23
 msgid "FTP is Disabled"
@@ -518,9 +520,8 @@ msgstr "Ungültiger Doppel-Escape im URL-Pfad"
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:30
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:38
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:46
-#, fuzzy
 msgid "In the HTTP proxy box type the proxy name %h and port %b."
-msgstr "Im HTTP Proxy Feld geben sie den Proxy Namen %h und Port 3128 ein."
+msgstr "Im HTTP Proxy Feld geben sie den Proxy Namen %h und Port %b ein."
 
 #: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:89
 msgid "Invalid CA certificate"
@@ -599,7 +600,7 @@ msgstr ""
 
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:23
 msgid "Precondition Failed."
-msgstr ""
+msgstr "Bedingung nicht Erfüllt."
 
 #: templates/ERR_READ_ERROR+html.body.div.blockquote.p:23
 msgid "Read Error"
@@ -641,9 +642,8 @@ msgstr ""
 "SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
 
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:30
-#, fuzzy
 msgid "Select Auto-detect proxy settings for this network"
-msgstr "Automatische Suche von Einstellungen"
+msgstr "Wählen sie Automatische Suche von Einstellungen für dieses Netzwerk"
 
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:38
 msgid "Select Automatically detect settings"
@@ -957,7 +957,7 @@ msgstr ""
 
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.p:26
 msgid "This means:"
-msgstr ""
+msgstr "Dies Bedeutet:"
 
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.p:33
 msgid ""
