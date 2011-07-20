@@ -128,7 +128,7 @@ Ipc::Coordinator::handleSharedListenRequest(const SharedListenRequest& request)
            request.params.addr << " to kid" << request.requestorId <<
            " mapId=" << request.mapId);
 
-    SharedListenResponse response(c, errNo, request.mapId);
+    SharedListenResponse response(c->fd, errNo, request.mapId);
     TypedMsgHdr message;
     response.pack(message);
     SendMessage(MakeAddr(strandAddrPfx, request.requestorId), message);
