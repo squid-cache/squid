@@ -60,12 +60,12 @@ public:
 class SharedListenResponse
 {
 public:
-    SharedListenResponse(const Comm::ConnectionPointer &c, int errNo, int mapId);
+    SharedListenResponse(int fd, int errNo, int mapId);
     explicit SharedListenResponse(const TypedMsgHdr &hdrMsg); ///< from recvmsg()
     void pack(TypedMsgHdr &hdrMsg) const; ///< prepare for sendmsg()
 
 public:
-    Comm::ConnectionPointer conn; ///< opened listening socket or -1
+    int fd; ///< opened listening socket or -1
     int errNo; ///< errno value from comm_open_sharedListen() call
     int mapId; ///< to map future response to the requestor's callback
 };
