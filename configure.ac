@@ -1634,13 +1634,13 @@ AC_ARG_ENABLE(leakfinder,
 
 follow_xff=1
 AC_ARG_ENABLE(follow-x-forwarded-for,
-  AS_HELP_STRING([--enable-follow-x-forwarded-for],[Enable support for following the X-Forwarded-For
+  AS_HELP_STRING([--disable-follow-x-forwarded-for],[Disable support for following the X-Forwarded-For
                  HTTP header to try to find the IP address of the
                  original or indirect client when a request has
                  been forwarded through other proxies.]),
-[ if test "$enableval" = "yes" ; then
-    AC_MSG_NOTICE([follow X-Forwarded-For enabled])
-    follow_xff=1
+[ if test "$enableval" = "no" ; then
+    AC_MSG_NOTICE([Disabling follow X-Forwarded-For])
+    follow_xff=0
   fi
 ])
 if test $follow_xff = 1; then
