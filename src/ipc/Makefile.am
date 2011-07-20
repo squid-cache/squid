@@ -39,4 +39,4 @@ libipc_la_SOURCES = \
 DEFS += -DDEFAULT_STATEDIR=\"$(localstatedir)/run/squid\"
 
 install-data-local:
-        $(mkinstalldirs) $(DESTDIR)$(localstatedir)/run/squid;
+	$(mkinstalldirs) $(DESTDIR)$(localstatedir)/run/squid;
