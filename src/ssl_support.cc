@@ -178,8 +178,10 @@ int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_fun
             }
             ASN1_STRING *cn_data = check->d.dNSName;
 
-            if ( (*check_func)(check_data, cn_data) == 0)
+            if ( (*check_func)(check_data, cn_data) == 0) {
+                sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
                 return 1;
+            }
         }
         sk_GENERAL_NAME_pop_free(altnames, GENERAL_NAME_free);
     }
