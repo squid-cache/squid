@@ -2270,12 +2270,20 @@ DOC_START
 			The first principal from the default keytab or defined by
 			the environment variable KRB5_KTNAME will be used. 
 	
+			WARNING: The connection may transmit requests from multiple
+			clients. Negotiate often assumes end-to-end authentication
+			and a single-client. Which is not strictly true here.
+	
 	login=NEGOTIATE:principal_name
 			If this is a personal/workgroup proxy and your parent
 			requires a secure proxy authentication. 
 			The principal principal_name from the default keytab or
 			defined by the environment variable KRB5_KTNAME will be
 			used.
+	
+			WARNING: The connection may transmit requests from multiple
+			clients. Negotiate often assumes end-to-end authentication
+			and a single-client. Which is not strictly true here.
 	
 	connection-auth=on|off
 			Tell Squid that this peer does or not support Microsoft
