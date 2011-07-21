@@ -88,7 +88,7 @@ Ipc::SharedListenResponse::SharedListenResponse(int aFd, int anErrNo, int aMapId
 }
 
 Ipc::SharedListenResponse::SharedListenResponse(const TypedMsgHdr &hdrMsg):
-    fd(-1), errNo(0), mapId(-1)
+        fd(-1), errNo(0), mapId(-1)
 {
     hdrMsg.checkType(mtSharedListenResponse);
     hdrMsg.getPod(*this);
