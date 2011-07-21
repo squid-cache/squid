@@ -30,6 +30,10 @@ void
 Ipc::StartListening(int sock_type, int proto, const Comm::ConnectionPointer &listenConn,
                     FdNoteId fdNote, AsyncCall::Pointer &callback)
 {
+    StartListeningCb *cbd = dynamic_cast<StartListeningCb*>(callback->getDialer());
+    Must(cbd);
+    cbd->conn = listenConn;
+
     if (UsingSmp()) { // if SMP is on, share
         OpenListenerParams p;
         p.sock_type = sock_type;
@@ -40,10 +44,6 @@ Ipc::StartListening(int sock_type, int proto, const Comm::ConnectionPointer &lis
         Ipc::JoinSharedListen(p, callback);
         return; // wait for the call back
     }
-
-    StartListeningCb *cbd = dynamic_cast<StartListeningCb*>(callback->getDialer());
-    Must(cbd);
-    cbd->conn = listenConn;
 
     enter_suid();
     comm_open_listener(sock_type, proto, cbd->conn, FdNote(fdNote));
