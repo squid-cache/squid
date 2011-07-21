@@ -88,8 +88,7 @@
 static const char *const crlf = "\r\n";
 
 #if FOLLOW_X_FORWARDED_FOR
-static void
-clientFollowXForwardedForCheck(int answer, void *data);
+static void clientFollowXForwardedForCheck(allow_t answer, void *data);
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
 CBDATA_CLASS_INIT(ClientRequestContext);
@@ -112,14 +111,14 @@ ClientRequestContext::operator delete (void *address)
 
 /* Local functions */
 /* other */
-static void clientAccessCheckDoneWrapper(int, void *);
+static void clientAccessCheckDoneWrapper(allow_t, void *);
 #if USE_SSL
-static void sslBumpAccessCheckDoneWrapper(int, void *);
+static void sslBumpAccessCheckDoneWrapper(allow_t, void *);
 #endif
 static int clientHierarchical(ClientHttpRequest * http);
 static void clientInterpretRequestHeaders(ClientHttpRequest * http);
 static RH clientRedirectDoneWrapper;
-static PF checkNoCacheDoneWrapper;
+static void checkNoCacheDoneWrapper(allow_t, void *);
 extern "C" CSR clientGetMoreData;
 extern "C" CSS clientReplyStatus;
 extern "C" CSD clientReplyDetach;
@@ -438,7 +437,7 @@ ClientRequestContext::httpStateIsValid()
  * ++ indirect_client_addr contains the remote direct client from the trusted peers viewpoint.
  */
 static void
-clientFollowXForwardedForCheck(int answer, void *data)
+clientFollowXForwardedForCheck(allow_t answer, void *data)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *) data;
 
@@ -570,7 +569,7 @@ ClientRequestContext::clientAccessCheck2()
 }
 
 void
-clientAccessCheckDoneWrapper(int answer, void *data)
+clientAccessCheckDoneWrapper(allow_t answer, void *data)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *) data;
 
@@ -581,15 +580,14 @@ clientAccessCheckDoneWrapper(int answer, void *data)
 }
 
 void
-ClientRequestContext::clientAccessCheckDone(int answer)
+ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 {
     acl_checklist = NULL;
     err_type page_id;
     http_status status;
     debugs(85, 2, "The request " <<
            RequestMethodStr(http->request->method) << " " <<
-           http->uri << " is " <<
-           (answer == ACCESS_ALLOWED ? "ALLOWED" : "DENIED") <<
+           http->uri << " is " << answer <<
            ", because it matched '" <<
            (AclMatchedName ? AclMatchedName : "NO ACL's") << "'" );
 
@@ -717,7 +715,7 @@ ClientRequestContext::adaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
 #endif
 
 static void
-clientRedirectAccessCheckDone(int answer, void *data)
+clientRedirectAccessCheckDone(allow_t answer, void *data)
 {
     ClientRequestContext *context = (ClientRequestContext *)data;
     ClientHttpRequest *http = context->http;
@@ -1096,12 +1094,12 @@ ClientRequestContext::checkNoCache()
         acl_checklist->nonBlockingCheck(checkNoCacheDoneWrapper, this);
     } else {
         /* unless otherwise specified, we try to cache. */
-        checkNoCacheDone(1);
+        checkNoCacheDone(ACCESS_ALLOWED);
     }
 }
 
 static void
-checkNoCacheDoneWrapper(int answer, void *data)
+checkNoCacheDoneWrapper(allow_t answer, void *data)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *) data;
 
@@ -1112,10 +1110,10 @@ checkNoCacheDoneWrapper(int answer, void *data)
 }
 
 void
-ClientRequestContext::checkNoCacheDone(int answer)
+ClientRequestContext::checkNoCacheDone(const allow_t &answer)
 {
     acl_checklist = NULL;
-    http->request->flags.cachable = answer;
+    http->request->flags.cachable = (answer == ACCESS_ALLOWED);
     http->doCallouts();
 }
 
@@ -1141,7 +1139,7 @@ ClientRequestContext::sslBumpAccessCheck()
  * as ACLFilledChecklist callback
  */
 static void
-sslBumpAccessCheckDoneWrapper(int answer, void *data)
+sslBumpAccessCheckDoneWrapper(allow_t answer, void *data)
 {
     ClientRequestContext *calloutContext = static_cast<ClientRequestContext *>(data);
 

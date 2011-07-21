@@ -1562,7 +1562,7 @@ ExternalACLLookup::LookupDone(void *data, void *result)
     checklist->extacl_entry = cbdataReference((external_acl_entry *)result);
     checklist->asyncInProgress(false);
     checklist->changeState (ACLChecklist::NullState::Instance());
-    checklist->check();
+    checklist->matchNonBlocking();
 }
 
 /* This registers "external" in the registry. To do dynamic definitions

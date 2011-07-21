@@ -209,9 +209,7 @@ FwdState::fwdStart(const Comm::ConnectionPointer &clientConn, StoreEntry *entry,
         ACLFilledChecklist ch(Config.accessList.miss, request, NULL);
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
-        int answer = ch.fastCheck();
-
-        if (answer == 0) {
+        if (ch.fastCheck() == ACCESS_DENIED) {
             err_type page_id;
             page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, 1);
 
@@ -804,7 +802,9 @@ FwdState::connectStart()
         return;
     }
 
-    request->flags.pinned = 0;
+    request->flags.pinned = 0; // XXX: what if the ConnStateData set this to flag existing credentials?
+    // XXX: answer: the peer selection *should* catch it and give us only the pinned peer. so we reverse the =0 step below.
+    // XXX: also, logs will now lie if pinning is broken and leads to an error message.
     if (serverDestinations[0]->peerType == PINNED) {
         ConnStateData *pinned_connection = request->pinnedConnection();
         assert(pinned_connection);
@@ -1212,7 +1212,7 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
     acl_tos *l;
 
     for (l = head; l; l = l->next) {
-        if (!l->aclList || ch->matchAclListFast(l->aclList))
+        if (!l->aclList || ch->fastCheck(l->aclList) == ACCESS_ALLOWED)
             return l->tos;
     }
 
@@ -1226,7 +1226,7 @@ aclMapNfmark(acl_nfmark * head, ACLChecklist * ch)
     acl_nfmark *l;
 
     for (l = head; l; l = l->next) {
-        if (!l->aclList || ch->matchAclListFast(l->aclList))
+        if (!l->aclList || ch->fastCheck(l->aclList) == ACCESS_ALLOWED)
             return l->nfmark;
     }
 
@@ -1284,7 +1284,7 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
         if (conn->remote.IsIPv4() != l->addr.IsIPv4()) continue;
 
         /* check ACLs for this outgoing address */
-        if (!l->aclList || ch.matchAclListFast(l->aclList)) {
+        if (!l->aclList || ch.fastCheck(l->aclList) == ACCESS_ALLOWED) {
             conn->local = l->addr;
             return;
         }

@@ -33,6 +33,7 @@
 #ifndef   SQUID_PEERSELECTSTATE_H
 #define   SQUID_PEERSELECTSTATE_H
 
+#include "acl/Checklist.h"
 #include "Array.h"
 #include "cbdata.h"
 #include "comm/forward.h"
@@ -73,9 +74,9 @@ public:
     ps_state();
     HttpRequest *request;
     StoreEntry *entry;
-    int always_direct;
-    int never_direct;
-    int direct;
+    allow_t always_direct;
+    allow_t never_direct;
+    int direct;   // TODO: fold always_direct/never_direct/prefer_direct into this now that ACL can do a multi-state result.
     PSC *callback;
     void *callback_data;
 
