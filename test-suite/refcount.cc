@@ -139,6 +139,8 @@ main (int argc, char **argv)
     {
         ToRefCount anObject (new _ToRefCount);
         _ToRefCount *aPointer = anObject.getRaw();
+        if (aPointer == NULL)
+            exit(3);
         aPointer = NULL;
     }
     /* Create a doubley inheriting refcount instance,
