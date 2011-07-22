@@ -540,12 +540,10 @@ peerGetSomeParent(ps_state * ps)
     if (ps->direct == DIRECT_YES)
         return;
 
-    if ((p = getDefaultParent(request))) {
-        code = DEFAULT_PARENT;
+    if ((p = peerSourceHashSelectParent(request))) {
+        code = SOURCEHASH_PARENT;
     } else if ((p = peerUserHashSelectParent(request))) {
         code = USERHASH_PARENT;
-    } else if ((p = peerSourceHashSelectParent(request))) {
-        code = SOURCEHASH_PARENT;
     } else if ((p = carpSelectParent(request))) {
         code = CARP;
     } else if ((p = getRoundRobinParent(request))) {
@@ -554,8 +552,8 @@ peerGetSomeParent(ps_state * ps)
         code = ROUNDROBIN_PARENT;
     } else if ((p = getFirstUpParent(request))) {
         code = FIRSTUP_PARENT;
-    } else if ((p = getAnyParent(request))) {
-        code = ANY_OLD_PARENT;
+    } else if ((p = getDefaultParent(request))) {
+        code = DEFAULT_PARENT;
     }
 
     if (code != HIER_NONE) {

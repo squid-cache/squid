@@ -388,7 +388,6 @@ SQUIDCEXTERN peer *getRoundRobinParent(HttpRequest * request);
 SQUIDCEXTERN peer *getWeightedRoundRobinParent(HttpRequest * request);
 SQUIDCEXTERN void peerClearRRStart(void);
 SQUIDCEXTERN void peerClearRR(void);
-SQUIDCEXTERN peer *getAnyParent(HttpRequest * request);
 SQUIDCEXTERN lookup_t peerDigestLookup(peer * p, HttpRequest * request);
 SQUIDCEXTERN peer *neighborsDigestSelect(HttpRequest * request);
 SQUIDCEXTERN void peerNoteDigestLookup(HttpRequest * request, peer * p, lookup_t lookup);

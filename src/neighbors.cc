@@ -477,33 +477,6 @@ getDefaultParent(HttpRequest * request)
     return NULL;
 }
 
-/*
- * XXX DW thinks this function is equivalent to/redundant with
- * getFirstUpParent().  peerHTTPOkay() only returns true if the
- * peer is UP anyway, so this function would not return a
- * DOWN parent.
- */
-peer *
-getAnyParent(HttpRequest * request)
-{
-    peer *p = NULL;
-
-    for (p = Config.peers; p; p = p->next) {
-        if (neighborType(p, request) != PEER_PARENT)
-            continue;
-
-        if (!peerHTTPOkay(p, request))
-            continue;
-
-        debugs(15, 3, "getAnyParent: returning " << p->host);
-
-        return p;
-    }
-
-    debugs(15, 3, "getAnyParent: returning NULL");
-    return NULL;
-}
-
 peer *
 getNextPeer(peer * p)
 {
