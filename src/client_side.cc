@@ -2006,9 +2006,26 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         return;
     }
 
+    if (vport < 0)
+        vport = http->getConn()->clientConnection->local.GetPort();
+
     const bool switchedToHttps = conn->switchedToHttps();
     const bool tryHostHeader = vhost || switchedToHttps;
     if (tryHostHeader && (host = mime_get_header(req_hdr, "Host")) != NULL) {
+        debugs(33, 5, "ACCEL VHOST REWRITE: vhost=" << host << " + vport=" << vport);
+        char thost[256];
+        if (vport > 0) {
+            thost[0] = '\0';
+            char *t = NULL;
+            if (host[strlen(host)] != ']' && (t = strrchr(host,':')) != NULL) {
+                strncpy(thost, host, (t-host));
+                snprintf(thost+(t-host), sizeof(thost)-(t-host), ":%d", vport);
+                host = thost;
+            } else if (!t) {
+                snprintf(thost, sizeof(thost), "%s:%d",host, vport);
+                host = thost;
+            }
+        } // else nothing to alter port-wise.
         int url_sz = strlen(url) + 32 + Config.appendDomainLen +
                      strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
@@ -2016,24 +2033,22 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
                                "https" : conn->port->protocol;
         snprintf(http->uri, url_sz, "%s://%s%s", protocol, host, url);
         debugs(33, 5, "ACCEL VHOST REWRITE: '" << http->uri << "'");
-    } else if (conn->port->defaultsite) {
+    } else if (conn->port->defaultsite /* && !vhost */) {
+        debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: defaultsite=" << conn->port->defaultsite << " + vport=" << vport);
         int url_sz = strlen(url) + 32 + Config.appendDomainLen +
                      strlen(conn->port->defaultsite);
         http->uri = (char *)xcalloc(url_sz, 1);
-        snprintf(http->uri, url_sz, "%s://%s%s",
-                 conn->port->protocol, conn->port->defaultsite, url);
+        char vportStr[32];
+        vportStr[0] = '\0';
+        if (vport > 0) {
+            snprintf(vportStr, sizeof(vportStr),":%d",vport);
+        }
+        snprintf(http->uri, url_sz, "%s://%s%s%s",
+                 conn->port->protocol, conn->port->defaultsite, vportStr, url);
         debugs(33, 5, "ACCEL DEFAULTSITE REWRITE: '" << http->uri <<"'");
-    } else if (vport == -1) {
-        /* Put the local socket IP address as the hostname.  */
-        int url_sz = strlen(url) + 32 + Config.appendDomainLen;
-        http->uri = (char *)xcalloc(url_sz, 1);
-        http->getConn()->clientConnection->local.ToHostname(ipbuf,MAX_IPSTRLEN);
-        snprintf(http->uri, url_sz, "%s://%s:%d%s",
-                 http->getConn()->port->protocol,
-                 ipbuf, http->getConn()->clientConnection->local.GetPort(), url);
-        debugs(33, 5, "ACCEL VPORT REWRITE: '" << http->uri << "'");
-    } else if (vport > 0) {
-        /* Put the local socket IP address as the hostname, but static port  */
+    } else if (vport > 0 /* && (!vhost || no Host:) */) {
+        debugs(33, 5, "ACCEL VPORT REWRITE: http_port IP + vport=" << vport);
+        /* Put the local socket IP address as the hostname, with whatever vport we found  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
         http->getConn()->clientConnection->local.ToHostname(ipbuf,MAX_IPSTRLEN);
@@ -2223,6 +2238,7 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
 
 #endif
 
+    debugs(33,5, HERE << "repare absolute URL from " << (csd->transparent()?"intercept":(csd->port->accel ? "accel":"")));
     /* Rewrite the URL in transparent or accelerator mode */
     /* NP: there are several cases to traverse here:
      *  - standard mode (forward proxy)
