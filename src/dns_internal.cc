@@ -225,7 +225,7 @@ static void idnsAddPathComponent(const char *buf);
 static void idnsFreeNameservers(void);
 static void idnsFreeSearchpath(void);
 static void idnsParseNameservers(void);
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
 static void idnsParseResolvConf(void);
 #endif
 #if _SQUID_WINDOWS_
@@ -356,7 +356,7 @@ idnsParseNameservers(void)
     }
 }
 
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
 static void
 idnsParseResolvConf(void)
 {
@@ -1278,7 +1278,7 @@ idnsRead(int fd, void *data)
             if (ignoreErrno(errno))
                 break;
 
-#ifdef _SQUID_LINUX_
+#if _SQUID_LINUX_
             /* Some Linux systems seem to set the FD for reading and then
              * return ECONNREFUSED when sendto() fails and generates an ICMP
              * port unreachable message. */
@@ -1530,7 +1530,7 @@ idnsInit(void)
 
     assert(0 == nns);
     idnsParseNameservers();
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
 
     if (0 == nns)
         idnsParseResolvConf();

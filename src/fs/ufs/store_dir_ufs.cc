@@ -502,7 +502,7 @@ UFSSwapDir::createDirectory(const char *aPath, int should_exist)
             fatalf("Swap directory %s is not a directory.", aPath);
         }
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
     } else if (0 == mkdir(aPath)) {
 #else
@@ -1090,7 +1090,7 @@ UFSSwapDir::DirClean(int swap_index)
     if (dir_pointer == NULL) {
         if (errno == ENOENT) {
             debugs(36, 0, "storeDirClean: WARNING: Creating " << p1);
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
             if (mkdir(p1) == 0)
 #else
