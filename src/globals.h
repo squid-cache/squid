@@ -135,7 +135,7 @@ extern "C" {
     extern int64_t store_maxobjsize;	/* -1 */
     extern hash_table *proxy_auth_username_cache;	/* NULL */
     extern int incoming_sockets_accepted;
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
     extern unsigned int WIN32_Socks_initialized;	/* 0 */
 #endif

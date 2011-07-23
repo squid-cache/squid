@@ -64,7 +64,7 @@ static void _db_print_syslog(const char *format, va_list args);
 static void _db_print_stderr(const char *format, va_list args);
 static void _db_print_file(const char *format, va_list args);
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 SQUIDCEXTERN LPCRITICAL_SECTION dbg_mutex;
 typedef BOOL (WINAPI * PFInitializeCriticalSectionAndSpinCount) (LPCRITICAL_SECTION, DWORD);
 #endif
@@ -78,7 +78,7 @@ _db_print(const char *format,...)
     va_list args2;
     va_list args3;
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     /* Multiple WIN32 threads may call this simultaneously */
 
     if (!dbg_mutex) {
@@ -131,7 +131,7 @@ _db_print(const char *format,...)
     _db_print_syslog(format, args3);
 #endif
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     LeaveCriticalSection(dbg_mutex);
 #endif
 
@@ -487,7 +487,7 @@ _db_rotate_log(void)
         i--;
         snprintf(from, MAXPATHLEN, "%s.%d", debug_log_file, i - 1);
         snprintf(to, MAXPATHLEN, "%s.%d", debug_log_file, i);
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
         remove
         (to);
 #endif
@@ -498,14 +498,14 @@ _db_rotate_log(void)
      * You can't rename open files on Microsoft "operating systems"
      * so we close before renaming.
      */
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     if (debug_log != stderr)
         fclose(debug_log);
 #endif
     /* Rotate the current log to .0 */
     if (Debug::rotateNumber > 0) {
         snprintf(to, MAXPATHLEN, "%s.%d", debug_log_file, 0);
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
         remove
         (to);
 #endif

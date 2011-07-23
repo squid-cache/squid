@@ -73,7 +73,7 @@
 #if HAVE_NETDB_H
 #include <netdb.h>
 #endif
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 #undef IN_ADDR
 #include <ws2tcpip.h>
 #endif

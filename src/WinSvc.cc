@@ -37,7 +37,7 @@
 #include "squid.h"
 #include "squid_windows.h"
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 #ifndef _MSWSOCK_
 #include <mswsock.h>
 #endif
@@ -401,7 +401,7 @@ WIN32_Abort(int sig)
     WIN32_Exit();
 }
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 void
 WIN32_IpAddrChangeMonitorExit()
 {
@@ -417,7 +417,7 @@ WIN32_IpAddrChangeMonitorExit()
 void
 WIN32_Exit()
 {
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     Win32SockCleanup();
 #endif
 #if USE_WIN32_SERVICE
@@ -430,7 +430,7 @@ WIN32_Exit()
     }
 
 #endif
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     if (dbg_mutex)
         DeleteCriticalSection(dbg_mutex);
 
@@ -442,7 +442,7 @@ WIN32_Exit()
     _exit(0);
 }
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 static DWORD WINAPI
 WIN32_IpAddrChangeMonitor(LPVOID lpParam)
 {
@@ -580,7 +580,7 @@ int WIN32_Subsystem_Init(int * argc, char *** argv)
         svcStatus.dwCheckPoint = 0;
         svcStatus.dwWaitHint = 10000;
         SetServiceStatus(svcHandle, &svcStatus);
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
         _setmaxstdio(Squid_MaxFD);
 #endif
@@ -588,7 +588,7 @@ int WIN32_Subsystem_Init(int * argc, char *** argv)
     }
 
 #endif /* USE_WIN32_SERVICE */
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     if (Win32SockInit() < 0)
         return 1;
 
@@ -964,7 +964,7 @@ int main(int argc, char **argv)
         }
     } else {
         WIN32_run_mode = _WIN_SQUID_RUN_MODE_INTERACTIVE;
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
         opt_no_daemon = 1;
 

@@ -189,7 +189,7 @@ comm_read(const Comm::ConnectionPointer &conn, char *buf, int size, AsyncCall::P
 static void
 comm_empty_os_read_buffers(int fd)
 {
-#ifdef _SQUID_LINUX_
+#if _SQUID_LINUX_
     /* prevent those nasty RST packets */
     char buf[SQUID_TCP_SO_RCVBUF];
 
@@ -645,7 +645,7 @@ comm_apply_flags(int new_socket,
         commSetReuseAddr(new_socket);
 
     if (addr.GetPort() > (u_short) 0) {
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
         if (sock_type != SOCK_DGRAM)
 #endif
             commSetNoLinger(new_socket);
@@ -704,7 +704,7 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
         fd_table[conn->fd].flags.close_on_exec = 1;
 
     if (conn->local.GetPort() > (u_short) 0) {
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
         if (AI->ai_socktype != SOCK_DGRAM)
 #endif
             fd_table[conn->fd].flags.nolinger = 1;
@@ -910,7 +910,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
      * we leak memory on many connect requests because of EINPROGRESS.
      * If you find that this code is needed, please file a bug report. */
 #if 0
-#ifdef _SQUID_LINUX_
+#if _SQUID_LINUX_
     /* 2007-11-27:
      * Linux Debian replaces our allocated AI pointer with garbage when
      * connect() fails. This leads to segmentation faults deallocating
@@ -1204,7 +1204,7 @@ comm_udp_sendto(int fd,
     if (x >= 0)
         return x;
 
-#ifdef _SQUID_LINUX_
+#if _SQUID_LINUX_
 
     if (ECONNREFUSED != errno)
 #endif
@@ -1324,7 +1324,7 @@ commSetTcpRcvbuf(int fd, int size)
 int
 commSetNonBlocking(int fd)
 {
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
     int flags;
     int dummy = 0;
 #endif
@@ -1344,7 +1344,7 @@ commSetNonBlocking(int fd)
     } else {
 #endif
 #endif
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
 
         if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
             debugs(50, 0, "FD " << fd << ": fcntl F_GETFL: " << xstrerror());
@@ -1368,7 +1368,7 @@ commSetNonBlocking(int fd)
 int
 commUnsetNonBlocking(int fd)
 {
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     int nonblocking = FALSE;
 
     if (ioctlsocket(fd, FIONBIO, (unsigned long *) &nonblocking) < 0) {

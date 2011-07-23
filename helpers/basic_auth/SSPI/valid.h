@@ -88,7 +88,7 @@ static void
 debug(char *format,...)
 {
 #ifdef DEBUG
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     if (debug_enabled) {
         va_list args;
 
