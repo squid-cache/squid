@@ -1,7 +1,7 @@
 #ifndef SQUID_OS_DRAGONFLY_H
 #define SQUID_OS_DRAGONFLY_H
 
-#ifdef _SQUID_DRAGONFLY_
+#if _SQUID_DRAGONFLY_
 
 /****************************************************************************
  *--------------------------------------------------------------------------*

@@ -646,7 +646,7 @@ icpHandleUdp(int sock, void *data)
             if (ignoreErrno(errno))
                 break;
 
-#ifdef _SQUID_LINUX_
+#if _SQUID_LINUX_
             /* Some Linux systems seem to set the FD for reading and then
              * return ECONNREFUSED when sendto() fails and generates an ICMP
              * port unreachable message. */

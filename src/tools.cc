@@ -72,7 +72,7 @@ extern void log_trace_init(char *);
 static void restoreCapabilities(int keep);
 int DebugSignal = -1;
 
-#ifdef _SQUID_LINUX_
+#if _SQUID_LINUX_
 /* Workaround for crappy glic header files */
 SQUIDCEXTERN int backtrace(void *, int);
 SQUIDCEXTERN void backtrace_symbols_fd(void *, int, int);
@@ -338,7 +338,7 @@ death(int sig)
         fprintf(debug_log, "FATAL: Received signal %d...dying.\n", sig);
 
 #if PRINT_STACK_TRACE
-#ifdef _SQUID_HPUX_
+#if _SQUID_HPUX_
     {
         extern void U_STACK_TRACE(void);	/* link with -lcl */
         fflush(debug_log);
@@ -558,8 +558,8 @@ debug_trap(const char *message)
 void
 sig_child(int sig)
 {
-#ifndef _SQUID_MSWIN_
-#ifdef _SQUID_NEXT_
+#if !_SQUID_MSWIN_
+#if _SQUID_NEXT_
     union wait status;
 #else
 
@@ -569,7 +569,7 @@ sig_child(int sig)
     pid_t pid;
 
     do {
-#ifdef _SQUID_NEXT_
+#if _SQUID_NEXT_
         pid = wait3(&status, WNOHANG, NULL);
 #else
 
@@ -1076,7 +1076,7 @@ squid_signal(int sig, SIGHDLR * func, int flags)
         debugs(50, 0, "sigaction: sig=" << sig << " func=" << func << ": " << xstrerror());
 
 #else
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     /*
     On Windows, only SIGINT, SIGILL, SIGFPE, SIGTERM, SIGBREAK, SIGABRT and SIGSEGV signals
     are supported, so we must care of don't call signal() for other value.

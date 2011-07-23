@@ -45,7 +45,7 @@
 #if HAVE_NETINET_IP_H
 #include <netinet/ip.h>
 #endif
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 #include <ws2tcpip.h>
 #endif
 #if HAVE_NETDB_H

@@ -153,9 +153,9 @@ int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
 bool setClientSNI(SSL *ssl, const char *fqdn);
 } //namespace Ssl
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 
 /** \cond AUTODOCS-IGNORE */
 namespace Squid
