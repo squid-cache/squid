@@ -661,7 +661,7 @@ SQUIDCEXTERN void cacheDigestGuessStatsUpdate(cd_guess_stats * stats, int real_h
 SQUIDCEXTERN void cacheDigestGuessStatsReport(const cd_guess_stats * stats, StoreEntry * sentry, const char *label);
 SQUIDCEXTERN void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e);
 
-SQUIDCEXTERN void internalStart(HttpRequest *, StoreEntry *);
+SQUIDCEXTERN void internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest *, StoreEntry *);
 SQUIDCEXTERN int internalCheck(const char *urlpath);
 SQUIDCEXTERN int internalStaticCheck(const char *urlpath);
 SQUIDCEXTERN char *internalLocalUri(const char *dir, const char *name);

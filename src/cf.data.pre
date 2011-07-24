@@ -860,7 +860,7 @@ NOCOMMENT_START
 #
 # Recommended minimum configuration:
 #
-acl manager proto cache_object
+acl manager url_regex -i ^cache_object:// +i ^https?://[^/]+/squid-internal-mgr/
 acl localhost src 127.0.0.1/32 ::1
 acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
 
@@ -1029,7 +1029,7 @@ NOCOMMENT_START
 # Recommended minimum Access Permission configuration:
 #
 # Only allow cachemgr access from localhost
-http_access allow manager localhost
+http_access allow localhost manager
 http_access deny manager
 
 # Deny requests to certain unsafe ports

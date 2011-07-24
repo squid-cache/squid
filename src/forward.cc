@@ -245,7 +245,7 @@ FwdState::fwdStart(const Comm::ConnectionPointer &clientConn, StoreEntry *entry,
     switch (request->protocol) {
 
     case AnyP::PROTO_INTERNAL:
-        internalStart(request, entry);
+        internalStart(clientConn, request, entry);
         return;
 
     case AnyP::PROTO_CACHE_OBJECT:
