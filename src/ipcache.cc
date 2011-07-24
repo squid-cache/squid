@@ -652,7 +652,6 @@ ipcacheHandleReply(void *data, char *reply)
 ipcacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error_message)
 #endif
 {
-    int done;
     ipcache_entry *i;
     static_cast<generic_cbdata *>(data)->unwrap(&i);
     IpcacheStats.replies++;
@@ -660,11 +659,10 @@ ipcacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error_m
     statHistCount(&statCounter.dns.svc_time, age);
 
 #if USE_DNSSERVERS
-
-    done = ipcacheParse(i, reply);
+    ipcacheParse(i, reply);
 #else
 
-    done = ipcacheParse(i, answers, na, error_message);
+    int done = ipcacheParse(i, answers, na, error_message);
 
     /* If we have not produced either IPs or Error immediately, wait for recursion to finish. */
     if (done != 0 || error_message != NULL)

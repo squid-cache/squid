@@ -3730,6 +3730,9 @@ on_failure:
             POP_FAILURE_POINT(sdummy, pdummy,
                               dummy_low_reg, dummy_high_reg,
                               reg_dummy, reg_dummy, reg_info_dummy);
+            /* avoid GCC 4.6 set but unused variables warning. Does not matter here. */
+            if (pdummy || sdummy)
+                (void)0;
         }
         /* Note fall through.  */
 
