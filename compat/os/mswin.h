@@ -825,6 +825,27 @@ void openlog(const char *ident, int logopt, int facility);
 void syslog(int priority, const char *fmt, ...);
 #endif
 
+#if _SQUID_MINGW_
+/* broken mingw header... */
+# ifdef WSA_CMSG_FIRSTHDR
+#  define CMSG_FIRSTHDR(x) WSA_CMSG_FIRSTHDR(x)
+# endif
+# ifdef WSA_CMSG_NXTHDR
+#  define CMSG_NXTHDR(x, y) WSA_CMSG_NXTHDR(x, y)
+# endif
+# ifdef WSA_CMSG_DATA
+#  define CMSG_DATA(x) WSA_CMSG_DATA(x)
+# endif
+# ifdef WSA_CMSG_LEN
+#  define CMSG_LEN(x) WSA_CMSG_LEN(x)
+# endif
+# ifdef WSA_CMSG_SPACE
+#  define CMSG_SPACE(x) WSA_CMSG_SPACE(x)
+# endif
+# ifdef WSA_CMSG_FIRSTHDR
+#  define CMSG_FIRSTHDR(x) WSA_CMSG_FIRSTHDR(x)
+# endif
+#endif
 
 #endif /* _SQUID_WINDOWS_ */
 #endif /* SQUID_OS_MSWIN_H */
