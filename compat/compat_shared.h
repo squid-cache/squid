@@ -220,5 +220,9 @@ max(A const & lhs, A const & rhs)
 #define SA_RESETHAND SA_ONESHOT
 #endif
 
+/* NULL is not always provided. */
+#ifndef NULL
+#define NULL ((void *)0)
+#endif
 
 #endif /* _SQUID_COMPAT_SHARED_H */
