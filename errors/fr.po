@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-06-22 13:27+1300\n"
-"PO-Revision-Date: 2011-05-30 17:27+0200\n"
+"PO-Revision-Date: 2011-07-03 20:46+0200\n"
 "Last-Translator: Bernard <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Pootle 2.0.6\n"
+"X-Generator: Pootle 2.1.6\n"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:29
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:29
@@ -1004,6 +1004,9 @@ msgid ""
 "This proxy limits your time online with a quota. Your time budget is now "
 "empty but will be refilled when the configured time period starts again."
 msgstr ""
+"Ce proxy utilise un quota qui limite le temps de connexion. Le crédit de "
+"votre quota est actuellement vide, mais il sera de nouveau crédité lorsque "
+"vous allez redémarrer le proxy."
 
 #: templates/ERR_CANNOT_FORWARD+html.body.div.p:26
 msgid ""
@@ -1019,7 +1022,7 @@ msgstr ""
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.blockquote.p:23
 msgid "Time Quota Exceeded."
-msgstr ""
+msgstr "Le temps de connexion de votre quota est dépassé."
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:37
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:37
