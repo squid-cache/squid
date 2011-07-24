@@ -439,6 +439,7 @@ struct SquidConfig {
     } onoff;
 
     int forward_max_tries;
+    int connect_retries;
 
     class ACL *aclList;
 
@@ -516,7 +517,6 @@ struct SquidConfig {
     char *errorStylesheet;
 
     struct {
-        int maxtries;
         int onerror;
     } retry;
 
@@ -659,17 +659,6 @@ struct _dwrite_q {
     FREE *free_func;
 };
 
-
-/* ETag support is rudimantal;
- * this struct is likely to change
- * Note: "str" points to memory in HttpHeaderEntry (for now)
- *       so ETags should be used as tmp variables only (for now) */
-
-struct _ETag {
-    const char *str;		/* quoted-string */
-    int weak;			/* true if it is a weak validator */
-};
-
 struct _fde_disk {
     DWCB *wrt_handle;
     void *wrt_handle_data;
@@ -722,14 +711,6 @@ public:
     String other;
 };
 
-/* some fields can hold either time or etag specs (e.g. If-Range) */
-
-struct _TimeOrTag {
-    ETag tag;			/* entity tag */
-    time_t time;
-    int valid;			/* true if struct is usable */
-};
-
 /* per field statistics */
 
 class HttpHeaderFieldStat
@@ -775,14 +756,6 @@ struct _http_state_flags {
     unsigned int chunked:1; ///< reading a chunked response; TODO: rename
     unsigned int chunked_request:1; ///< writing a chunked request
     unsigned int sentLastChunk:1; ///< do not try to write last-chunk again
-};
-
-struct _ipcache_addrs {
-    Ip::Address *in_addrs;
-    unsigned char *bad_mask;
-    unsigned char count;
-    unsigned char cur;
-    unsigned char badcount;
 };
 
 struct _domain_ping {
@@ -920,7 +893,7 @@ struct peer {
     int n_addresses;
     int rr_count;
     peer *next;
-    int test_fd;
+    int testing_now;
 
     struct {
         unsigned int hash;

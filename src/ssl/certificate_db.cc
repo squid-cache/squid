@@ -36,7 +36,7 @@ Ssl::FileLocker::FileLocker(std::string const & filename)
 
 Ssl::FileLocker::~FileLocker()
 {
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     if (hFile != INVALID_HANDLE_VALUE) {
         UnlockFile(hFile, 0, 0, 1, 0);
         CloseHandle(hFile);

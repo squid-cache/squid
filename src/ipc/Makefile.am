@@ -35,3 +35,8 @@ libipc_la_SOURCES = \
 	Inquirer.h \
 	Request.h \
 	Response.h
+
+DEFS += -DDEFAULT_STATEDIR=\"$(localstatedir)/run/squid\"
+
+install-data-local:
+	$(mkinstalldirs) $(DESTDIR)$(localstatedir)/run/squid;

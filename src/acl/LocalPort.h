@@ -1,6 +1,6 @@
 /*
- * DEBUG: section 05    Socket Functions
- * AUTHOR: Robert Collins
+ * $Id$
+ *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -32,21 +32,41 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef _SQUIDCONNECTIONDETAIL_H_
-#define _SQUIDCONNECTIONDETAIL_H_
+#ifndef SQUID_ACLLOCALPORT_H
+#define SQUID_ACLLOCALPORT_H
 
-#include "ip/Address.h"
+#include "acl/Strategy.h"
+#include "acl/Strategised.h"
 
-class ConnectionDetail
+/// \ingroup ACLAPI
+class ACLLocalPortStrategy : public ACLStrategy<int>
 {
 
 public:
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
+    static ACLLocalPortStrategy *Instance();
+    /**
+     * Not implemented to prevent copies of the instance.
+     \par
+     * Not private to prevent brain dead g+++ warnings about
+     * private constructors with no friends
+     */
+    ACLLocalPortStrategy(ACLLocalPortStrategy const &);
 
-    ConnectionDetail();
+private:
+    static ACLLocalPortStrategy Instance_;
+    ACLLocalPortStrategy() {}
 
-    Ip::Address me;
-
-    Ip::Address peer;
+    ACLLocalPortStrategy&operator=(ACLLocalPortStrategy const &);
 };
 
-#endif
+/// \ingroup ACLAPI
+class ACLLocalPort
+{
+
+private:
+    static ACL::Prototype RegistryProtoype;
+    static ACLStrategised<int> RegistryEntry_;
+};
+
+#endif /* SQUID_ACLLOCALPORT_H */

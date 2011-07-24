@@ -2630,14 +2630,14 @@ AC_ARG_ENABLE(ipv6,
   AS_HELP_STRING([--disable-ipv6],[Disable IPv6 support. The default is to probe system capabilities on startup.]), [
 SQUID_YESNO([$enableval],[unrecognized argument to --disable-ipv6: $enableval])
 ])
-AC_MSG_RESULT(${use_ipng:=yes})
-SQUID_DEFINE_BOOL(USE_IPV6,$use_ipng,[Enable support for IPv6 ])
+AC_MSG_RESULT(${enable_ipv6:=yes})
+SQUID_DEFINE_BOOL(USE_IPV6,$enable_ipv6,[Enable support for IPv6 ])
 
-if test "x$use_ipng" = "xyes" ; then
+if test "x$enable_ipv6" = "xyes" ; then
   SQUID_CHECK_SIN6_LEN_IN_SAI
-  SQUID_CHECK_SS_LEN_IN_SOCKADDR_STORAGE
-  SQUID_CHECK_SIN_LEN_IN_SOCKADDR_IN
 fi
+SQUID_CHECK_SS_LEN_IN_SOCKADDR_STORAGE
+SQUID_CHECK_SIN_LEN_IN_SOCKADDR_IN
 
 
 dnl Check for libcrypt
@@ -3350,10 +3350,13 @@ SQUID_YESNO([$enableval],
 dnl Squid now has .po translation capability, given the right toolkit
 if test "x${enable_translation:=yes}" = "xyes" ; then
   AX_WITH_PROG([PO2HTML],[po2html])
+  AX_WITH_PROG([PO2TEXT],[po2txt])
 else
   PO2HTML="off"
+  PO2TEXT="off"
 fi
 AC_SUBST(PO2HTML)
+AC_SUBST(PO2TEXT)
 
 dnl Squid now has limited locale handling ...
 dnl on error pages

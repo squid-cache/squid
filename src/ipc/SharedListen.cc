@@ -9,13 +9,13 @@
 #include <map>
 #include "comm.h"
 #include "base/TextException.h"
+#include "comm/Connection.h"
 #include "ipc/Port.h"
 #include "ipc/Messages.h"
 #include "ipc/Kids.h"
 #include "ipc/TypedMsgHdr.h"
 #include "ipc/StartListening.h"
 #include "ipc/SharedListen.h"
-
 
 /// holds information necessary to handle JoinListen response
 class PendingOpenRequest
@@ -93,6 +93,7 @@ Ipc::SharedListenResponse::SharedListenResponse(const TypedMsgHdr &hdrMsg):
     hdrMsg.checkType(mtSharedListenResponse);
     hdrMsg.getPod(*this);
     fd = hdrMsg.getFd();
+    // other conn details are passed in OpenListenerParams and filled out by SharedListenJoin()
 }
 
 void Ipc::SharedListenResponse::pack(TypedMsgHdr &hdrMsg) const
@@ -125,9 +126,8 @@ void Ipc::JoinSharedListen(const OpenListenerParams &params,
 
 void Ipc::SharedListenJoined(const SharedListenResponse &response)
 {
-    const int fd = response.fd;
-
-    debugs(54, 3, HERE << "got listening FD " << fd << " errNo=" <<
+    // Dont debugs c fully since only FD is filled right now.
+    debugs(54, 3, HERE << "got listening FD " << response.fd << " errNo=" <<
            response.errNo << " mapId=" << response.mapId);
 
     Must(TheSharedListenRequestMap.find(response.mapId) != TheSharedListenRequestMap.end());
@@ -135,20 +135,25 @@ void Ipc::SharedListenJoined(const SharedListenResponse &response)
     Must(por.callback != NULL);
     TheSharedListenRequestMap.erase(response.mapId);
 
-    if (fd >= 0) {
+    StartListeningCb *cbd = dynamic_cast<StartListeningCb*>(por.callback->getDialer());
+    assert(cbd && cbd->conn != NULL);
+    Must(cbd && cbd->conn != NULL);
+    cbd->conn->fd = response.fd;
+
+    if (Comm::IsConnOpen(cbd->conn)) {
         OpenListenerParams &p = por.params;
+        cbd->conn->local = p.addr;
+        cbd->conn->flags = p.flags;
+        // XXX: leave the comm AI stuff to comm_import_opened()?
         struct addrinfo *AI = NULL;
         p.addr.GetAddrInfo(AI);
         AI->ai_socktype = p.sock_type;
         AI->ai_protocol = p.proto;
-        comm_import_opened(fd, p.addr, p.flags, FdNote(p.fdNote), AI);
+        comm_import_opened(cbd->conn, FdNote(p.fdNote), AI);
         p.addr.FreeAddrInfo(AI);
     }
 
-    StartListeningCb *cbd =
-        dynamic_cast<StartListeningCb*>(por.callback->getDialer());
-    Must(cbd);
-    cbd->fd = fd;
     cbd->errNo = response.errNo;
+    cbd->handlerSubscription = por.params.handlerSubscription;
     ScheduleCallHere(por.callback);
 }

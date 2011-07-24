@@ -433,7 +433,7 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, int req_or_rep)
 
     ACLFilledChecklist checklist(hm->access_list, request, NULL);
 
-    if (checklist.fastCheck()) {
+    if (checklist.fastCheck() == ACCESS_ALLOWED) {
         /* aclCheckFast returns true for allow. */
         retval = 1;
     } else if (NULL == hm->replacement) {

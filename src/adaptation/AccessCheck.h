@@ -1,6 +1,7 @@
 #ifndef SQUID_ADAPTATION__ACCESS_CHECK_H
 #define SQUID_ADAPTATION__ACCESS_CHECK_H
 
+#include "acl/Acl.h"
 #include "base/AsyncJob.h"
 #include "adaptation/Elements.h"
 #include "adaptation/forward.h"
@@ -47,8 +48,8 @@ private:
 
 public:
     void checkCandidates();
-    static void AccessCheckCallbackWrapper(int, void*);
-    void noteAnswer(int answer);
+    static void AccessCheckCallbackWrapper(allow_t, void*);
+    void noteAnswer(allow_t answer);
 
 protected:
     // AsyncJob API

@@ -32,10 +32,10 @@
  *
  */
 #include "config.h"
-
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
 #include "ConfigParser.h"
+#include "Debug.h"
 #include "dlink.h"
 #include "ProtoPort.h"
 
@@ -113,7 +113,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 
     xstrncpy(aclname, t, ACL_NAME_SZ);
     /* snarf the ACL type */
-    char *theType;
+    const char *theType;
 
     if ((theType = strtok(NULL, w_space)) == NULL) {
         debugs(28, 0, "aclParseAclLine: missing ACL type.");
@@ -121,14 +121,8 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         return;
     }
 
-    if (!Prototype::Registered (theType)) {
-        debugs(28, 0, "aclParseAclLine: Invalid ACL type '" << theType << "'");
-        parser.destruct();
-        return;
-    }
-
     // Is this ACL going to work?
-    if (strcmp(theType, "myip") != 0) {
+    if (strcmp(theType, "myip") == 0) {
         http_port_list *p = Config.Sockaddr.http;
         while (p) {
             // Bug 3239: not reliable when there is interception traffic coming
@@ -136,7 +130,9 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
                 debugs(28, DBG_CRITICAL, "WARNING: 'myip' ACL is not reliable for interception proxies. Please use 'myportname' instead.");
             p = p->next;
         }
-    } else if (strcmp(theType, "myport") != 0) {
+        debugs(28, DBG_IMPORTANT, "UPGRADE: ACL 'myip' type is has been renamed to 'localip' and matches the IP the client connected to.");
+        theType = "localip";
+    } else if (strcmp(theType, "myport") == 0) {
         http_port_list *p = Config.Sockaddr.http;
         while (p) {
             // Bug 3239: not reliable when there is interception traffic coming
@@ -145,6 +141,15 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
                 debugs(28, DBG_CRITICAL, "WARNING: 'myport' ACL is not reliable for interception proxies. Please use 'myportname' instead.");
             p = p->next;
         }
+        theType = "localport";
+        debugs(28, DBG_IMPORTANT, "UPGRADE: ACL 'myport' type is has been renamed to 'localport' and matches the port the client connected to.");
+    }
+
+    if (!Prototype::Registered(theType)) {
+        debugs(28, DBG_CRITICAL, "FATAL: Invalid ACL type '" << theType << "'");
+        // XXX: make this an ERROR and skip the ACL creation. We *may* die later when its use is attempted. Or may not.
+        parser.destruct();
+        return;
     }
 
     if ((A = FindByName(aclname)) == NULL) {

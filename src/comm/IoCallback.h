@@ -3,6 +3,7 @@
 
 #include "base/AsyncCall.h"
 #include "comm_err_t.h"
+#include "comm/forward.h"
 
 namespace Comm
 {
@@ -19,7 +20,7 @@ class IoCallback
 {
 public:
     iocb_type type;
-    int fd;
+    Comm::ConnectionPointer conn;
     AsyncCall::Pointer callback;
     char *buf;
     FREE *freefunc;

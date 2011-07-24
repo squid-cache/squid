@@ -46,6 +46,7 @@
 #include "acl/DestinationAsn.h"
 #include "acl/DestinationIp.h"
 #include "HttpReply.h"
+#include "ipcache.h"
 #include "forward.h"
 #include "wordlist.h"
 
@@ -249,7 +250,7 @@ asnCacheStart(int as)
     if ((e = storeGetPublic(asres, METHOD_GET)) == NULL) {
         e = storeCreateEntry(asres, asres, request_flags(), METHOD_GET);
         asState->sc = storeClientListAdd(e, asState);
-        FwdState::fwdStart(-1, e, asState->request);
+        FwdState::fwdStart(Comm::ConnectionPointer(), e, asState->request);
     } else {
 
         e->lock();

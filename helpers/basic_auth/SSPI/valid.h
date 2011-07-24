@@ -82,7 +82,7 @@ extern const char * errormsg;
 					<< "): " << X; \
 					}
 #else /* DEBUG */
-#define debug(X)		/* */
+#define debug(X...)		/* */
 #endif /* DEBUG */
 
 int Valid_User(char *,char *, char *);

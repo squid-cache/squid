@@ -1,5 +1,6 @@
 #include "config.h"
 #include "comm/AcceptLimiter.h"
+#include "comm/Connection.h"
 #include "comm/TcpAcceptor.h"
 #include "fde.h"
 
@@ -14,7 +15,7 @@ void
 Comm::AcceptLimiter::defer(Comm::TcpAcceptor *afd)
 {
     afd->isLimited++;
-    debugs(5, 5, HERE << "FD " << afd->fd << " x" << afd->isLimited);
+    debugs(5, 5, HERE << afd->conn << " x" << afd->isLimited);
     deferred.push_back(afd);
 }
 
@@ -25,7 +26,7 @@ Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor *afd)
         if (deferred[i] == afd) {
             deferred[i]->isLimited--;
             deferred[i] = NULL; // fast. kick() will skip empty entries later.
-            debugs(5, 5, HERE << "FD " << afd->fd << " x" << afd->isLimited);
+            debugs(5, 5, HERE << afd->conn << " x" << afd->isLimited);
         }
     }
 }

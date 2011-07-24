@@ -209,7 +209,7 @@ void Win32SockCleanup(void)
     return;
 }
 
-#endif /* _SQUID_MSWIN_ */
+#endif
 
 static const char *
 safe_str(const char *str)

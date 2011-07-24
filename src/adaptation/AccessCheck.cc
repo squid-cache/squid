@@ -139,7 +139,7 @@ Adaptation::AccessCheck::checkCandidates()
 }
 
 void
-Adaptation::AccessCheck::AccessCheckCallbackWrapper(int answer, void *data)
+Adaptation::AccessCheck::AccessCheckCallbackWrapper(allow_t answer, void *data)
 {
     debugs(93, 8, HERE << "callback answer=" << answer);
     AccessCheck *ac = (AccessCheck*)data;
@@ -150,23 +150,22 @@ Adaptation::AccessCheck::AccessCheckCallbackWrapper(int answer, void *data)
      */
 
     // convert to async call to get async call protections and features
-    typedef UnaryMemFunT<AccessCheck, int> MyDialer;
+    typedef UnaryMemFunT<AccessCheck, allow_t> MyDialer;
     AsyncCall::Pointer call =
         asyncCall(93,7, "Adaptation::AccessCheck::noteAnswer",
-                  MyDialer(ac, &Adaptation::AccessCheck::noteAnswer,
-                           answer==ACCESS_ALLOWED));
+                  MyDialer(ac, &Adaptation::AccessCheck::noteAnswer, answer));
     ScheduleCallHere(call);
 
 }
 
 /// process the results of the ACL check
 void
-Adaptation::AccessCheck::noteAnswer(int answer)
+Adaptation::AccessCheck::noteAnswer(allow_t answer)
 {
     Must(!candidates.empty()); // the candidate we were checking must be there
     debugs(93,5, HERE << topCandidate() << " answer=" << answer);
 
-    if (answer) { // the rule matched
+    if (answer == ACCESS_ALLOWED) { // the rule matched
         ServiceGroupPointer g = topGroup();
         if (g != NULL) { // the corresponding group found
             callBack(g);

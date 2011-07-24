@@ -127,7 +127,7 @@ Win32SockCleanup(void)
     WSACleanup();
     return;
 }
-#endif /* _SQUID_MSWIN_ */
+#endif
 
 /*
  *    Diff two timeval, b - a

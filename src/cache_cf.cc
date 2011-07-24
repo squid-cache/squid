@@ -442,6 +442,11 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
         if ((token = strchr(config_input_line, '\r')))
             *token = '\0';
 
+        // strip any prefix whitespace off the line.
+        const char *p = skip_ws(config_input_line);
+        if (config_input_line != p)
+            memmove(config_input_line, p, strlen(p)+1);
+
         if (strncmp(config_input_line, "#line ", 6) == 0) {
             static char new_file_name[1024];
             static char *file;
@@ -683,12 +688,9 @@ configDoConfigure(void)
     else
         Config.appendDomainLen = 0;
 
-    if (Config.retry.maxtries > 10)
-        fatal("maximum_single_addr_tries cannot be larger than 10");
-
-    if (Config.retry.maxtries < 1) {
-        debugs(3, 0, "WARNING: resetting 'maximum_single_addr_tries to 1");
-        Config.retry.maxtries = 1;
+    if (Config.connect_retries > 10) {
+        debugs(0,DBG_CRITICAL, "WARNING: connect_retries cannot be larger than 10. Resetting to 10.");
+        Config.connect_retries = 10;
     }
 
     requirePathnameExists("MIME Config Table", Config.mimeTablePathname);
@@ -2358,7 +2360,7 @@ parse_peer(peer ** head)
 
     p->icp.version = ICP_VERSION_CURRENT;
 
-    p->test_fd = -1;
+    p->testing_now = false;
 
 #if USE_CACHE_DIGESTS
 
@@ -2986,6 +2988,11 @@ free_string(char **var)
 void
 parse_eol(char *volatile *var)
 {
+    if (!var) {
+        self_destruct();
+        return;
+    }
+
     unsigned char *token = (unsigned char *) strtok(NULL, null_string);
     safe_free(*var);
 
@@ -3555,7 +3562,7 @@ parse_http_port_option(http_port_list * s, char *token)
         if (Ip::EnableIpv6)
             debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
         if ( !s->s.SetIPv4() ) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot NAT intercept (protocol does not provide NAT)" << s->s );
             self_destruct();
         }
     } else if (strcmp(token, "tproxy") == 0) {
@@ -3607,10 +3614,15 @@ parse_http_port_option(http_port_list * s, char *token)
         s->protocol = xstrdup(token + 9);
     } else if (strcmp(token, "allow-direct") == 0) {
         if (!s->accel) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: allow-direct option requires Acceleration mode flag.");
             self_destruct();
         }
         s->allow_direct = 1;
+    } else if (strcmp(token, "act-as-origin") == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_IMPORTANT, "ERROR: http(s)_port: act-as-origin option requires Acceleration mode flag.");
+        } else
+            s->actAsOrigin = 1;
     } else if (strcmp(token, "ignore-cc") == 0) {
 #if !USE_HTTP_VIOLATIONS
         if (!s->accel) {

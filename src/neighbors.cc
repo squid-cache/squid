@@ -33,11 +33,14 @@
 #include "squid.h"
 #include "ProtoPort.h"
 #include "acl/FilledChecklist.h"
+#include "comm/Connection.h"
+#include "comm/ConnOpener.h"
 #include "event.h"
 #include "htcp.h"
 #include "HttpRequest.h"
 #include "ICP.h"
 #include "ip/tools.h"
+#include "ipcache.h"
 #include "MemObject.h"
 #include "PeerDigest.h"
 #include "PeerSelectState.h"
@@ -52,7 +55,7 @@
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
 
-int peerAllowedToUse(const peer *, HttpRequest *);
+bool peerAllowedToUse(const peer *, HttpRequest *);
 static int peerWouldBePinged(const peer *, HttpRequest *);
 static void neighborRemove(peer *);
 static void neighborAlive(peer *, const MemObject *, const icp_common_t *);
@@ -62,7 +65,7 @@ static void neighborAliveHtcp(peer *, const MemObject *, const htcpReplyData *);
 static void neighborCountIgnored(peer *);
 static void peerRefreshDNS(void *);
 static IPH peerDNSConfigure;
-static int peerProbeConnect(peer *);
+static bool peerProbeConnect(peer *);
 static CNCB peerProbeConnectDone;
 static void peerCountMcastPeersDone(void *data);
 static void peerCountMcastPeersStart(void *data);
@@ -135,18 +138,14 @@ neighborType(const peer * p, const HttpRequest * request)
     return p->type;
 }
 
-/*
- * peerAllowedToUse
- *
- * this function figures out if it is appropriate to fetch REQUEST
- * from PEER.
+/**
+ * \return Whether it is appropriate to fetch REQUEST from PEER.
  */
-int
+bool
 peerAllowedToUse(const peer * p, HttpRequest * request)
 {
 
     const struct _domain_ping *d = NULL;
-    int do_ping = 1;
     assert(request != NULL);
 
     if (neighborType(p, request) == PEER_SIBLING) {
@@ -156,28 +155,27 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
             debugs(15, 2, "peerAllowedToUse(" << p->name << ", " << request->GetHost() << ") : multicast-siblings optimization match");
 #endif
         if (request->flags.nocache)
-            return 0;
+            return false;
 
         if (request->flags.refresh)
-            return 0;
+            return false;
 
         if (request->flags.loopdetect)
-            return 0;
+            return false;
 
         if (request->flags.need_validation)
-            return 0;
+            return false;
     }
 
     // CONNECT requests are proxy requests. Not to be forwarded to origin servers.
     // Unless the destination port matches, in which case we MAY perform a 'DIRECT' to this peer.
     if (p->options.originserver && request->method == METHOD_CONNECT && request->port != p->in_addr.GetPort())
-        return 0;
+        return false;
 
     if (p->peer_domain == NULL && p->access == NULL)
-        return do_ping;
+        return true;
 
-    do_ping = 0;
-
+    bool do_ping = false;
     for (d = p->peer_domain; d; d = d->next) {
         if (0 == matchDomainName(request->GetHost(), d->domain)) {
             do_ping = d->do_ping;
@@ -187,8 +185,8 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
         do_ping = !d->do_ping;
     }
 
-    if (p->peer_domain && 0 == do_ping)
-        return do_ping;
+    if (p->peer_domain && !do_ping)
+        return false;
 
     if (p->access == NULL)
         return do_ping;
@@ -208,20 +206,17 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
 
 #endif
 
-    return checklist.fastCheck();
+    return (checklist.fastCheck() == ACCESS_ALLOWED);
 }
 
 /* Return TRUE if it is okay to send an ICP request to this peer.   */
 static int
 peerWouldBePinged(const peer * p, HttpRequest * request)
 {
-    if (!peerAllowedToUse(p, request))
+    if (p->icp.port == 0)
         return 0;
 
     if (p->options.no_query)
-        return 0;
-
-    if (p->options.background_ping && (squid_curtime - p->stats.last_query < Config.backgroundPingRate))
         return 0;
 
     if (p->options.mcast_responder)
@@ -230,7 +225,7 @@ peerWouldBePinged(const peer * p, HttpRequest * request)
     if (p->n_addresses == 0)
         return 0;
 
-    if (p->icp.port == 0)
+    if (p->options.background_ping && (squid_curtime - p->stats.last_query < Config.backgroundPingRate))
         return 0;
 
     /* the case below seems strange, but can happen if the
@@ -238,6 +233,9 @@ peerWouldBePinged(const peer * p, HttpRequest * request)
     if (p->type == PEER_SIBLING)
         if (!request->flags.hierarchical)
             return 0;
+
+    if (!peerAllowedToUse(p, request))
+        return 0;
 
     /* Ping dead peers every timeout interval */
     if (squid_curtime - p->stats.last_query > Config.Timeout.deadPeer)
@@ -253,15 +251,15 @@ peerWouldBePinged(const peer * p, HttpRequest * request)
 int
 peerHTTPOkay(const peer * p, HttpRequest * request)
 {
+    if (p->max_conn)
+        if (p->stats.conn_open >= p->max_conn)
+            return 0;
+
     if (!peerAllowedToUse(p, request))
         return 0;
 
     if (!neighborUp(p))
         return 0;
-
-    if (p->max_conn)
-        if (p->stats.conn_open >= p->max_conn)
-            return 0;
 
     return 1;
 }
@@ -478,33 +476,6 @@ getDefaultParent(HttpRequest * request)
     return NULL;
 }
 
-/*
- * XXX DW thinks this function is equivalent to/redundant with
- * getFirstUpParent().  peerHTTPOkay() only returns true if the
- * peer is UP anyway, so this function would not return a
- * DOWN parent.
- */
-peer *
-getAnyParent(HttpRequest * request)
-{
-    peer *p = NULL;
-
-    for (p = Config.peers; p; p = p->next) {
-        if (neighborType(p, request) != PEER_PARENT)
-            continue;
-
-        if (!peerHTTPOkay(p, request))
-            continue;
-
-        debugs(15, 3, "getAnyParent: returning " << p->host);
-
-        return p;
-    }
-
-    debugs(15, 3, "getAnyParent: returning NULL");
-    return NULL;
-}
-
 peer *
 getNextPeer(peer * p)
 {
@@ -550,7 +521,7 @@ neighborsRegisterWithCacheManager()
                         "Peer Cache Statistics",
                         neighborDumpPeers, 0, 1);
 
-    if (theInIcpConnection >= 0) {
+    if (Comm::IsConnOpen(icpIncomingConn)) {
         Mgr::RegisterAction("non_peers",
                             "List of Unknown sites sending ICP messages",
                             neighborDumpNonPeers, 0, 1);
@@ -560,23 +531,14 @@ neighborsRegisterWithCacheManager()
 void
 neighbors_init(void)
 {
-    Ip::Address nul;
-    struct addrinfo *AI = NULL;
     struct servent *sep = NULL;
     const char *me = getMyHostname();
     peer *thisPeer = NULL;
     peer *next = NULL;
-    int fd = theInIcpConnection;
 
     neighborsRegisterWithCacheManager();
 
-    /* setup addrinfo for use */
-    nul.InitAddrInfo(AI);
-
-    if (fd >= 0) {
-
-        if (getsockname(fd, AI->ai_addr, &AI->ai_addrlen) < 0)
-            debugs(15, 1, "getsockname(" << fd << "," << AI->ai_addr << "," << &AI->ai_addrlen << ") failed.");
+    if (Comm::IsConnOpen(icpIncomingConn)) {
 
         for (thisPeer = Config.peers; thisPeer; thisPeer = next) {
             http_port_list *s = NULL;
@@ -610,14 +572,12 @@ neighbors_init(void)
         echo_hdr.reqnum = 0;
         echo_hdr.flags = 0;
         echo_hdr.pad = 0;
-        nul = *AI;
-        nul.GetInAddr( *((struct in_addr*)&echo_hdr.shostid) );
+        theIcpPublicHostID.GetInAddr( *((struct in_addr*)&echo_hdr.shostid) );
         sep = getservbyname("echo", "udp");
         echo_port = sep ? ntohs((u_short) sep->s_port) : 7;
     }
 
     first_ping = Config.peers;
-    nul.FreeAddrInfo(AI);
 }
 
 int
@@ -683,19 +643,19 @@ neighborsUdpPing(HttpRequest * request,
         } else
 #endif
         {
-            if (Config.Port.icp <= 0 || theOutIcpConnection <= 0) {
+            if (Config.Port.icp <= 0 || !Comm::IsConnOpen(icpOutgoingConn)) {
                 debugs(15, DBG_CRITICAL, "ICP is disabled! Cannot send ICP request to peer.");
                 continue;
             } else {
 
                 if (p->type == PEER_MULTICAST)
-                    mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
+                    mcastSetTtl(icpOutgoingConn->fd, p->mcast.ttl);
 
                 if (p->icp.port == echo_port) {
                     debugs(15, 4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping");
                     echo_hdr.reqnum = reqnum;
                     query = _icp_common_t::createMessage(ICP_DECHO, 0, url, reqnum, 0);
-                    icpUdpSend(theOutIcpConnection,p->in_addr,query,LOG_ICP_QUERY,0);
+                    icpUdpSend(icpOutgoingConn->fd, p->in_addr, query, LOG_ICP_QUERY, 0);
                 } else {
                     flags = 0;
 
@@ -705,7 +665,7 @@ neighborsUdpPing(HttpRequest * request,
 
                     query = _icp_common_t::createMessage(ICP_QUERY, flags, url, reqnum, 0);
 
-                    icpUdpSend(theOutIcpConnection, p->in_addr, query, LOG_ICP_QUERY, 0);
+                    icpUdpSend(icpOutgoingConn->fd, p->in_addr, query, LOG_ICP_QUERY, 0);
                 }
             }
         }
@@ -1345,82 +1305,43 @@ peerConnectSucceded(peer * p)
         p->tcp_up = p->connect_fail_limit;
 }
 
-/// called by Comm when test_fd is closed while connect is in progress
-static void
-peerProbeClosed(int fd, void *data)
-{
-    peer *p = (peer*)data;
-    p->test_fd = -1;
-    // it is a failure because we failed to connect
-    peerConnectFailedSilent(p);
-}
-
-static void
-peerProbeConnectTimeout(int fd, void *data)
-{
-    peer * p = (peer *)data;
-    comm_remove_close_handler(fd, &peerProbeClosed, p);
-    comm_close(fd);
-    p->test_fd = -1;
-    peerConnectFailedSilent(p);
-}
-
 /*
 * peerProbeConnect will be called on dead peers by neighborUp
 */
-static int
+static bool
 peerProbeConnect(peer * p)
 {
-    int fd;
-    time_t ctimeout = p->connect_timeout > 0 ? p->connect_timeout
-                      : Config.Timeout.peer_connect;
-    int ret = squid_curtime - p->stats.last_connect_failure > ctimeout * 10;
+    time_t ctimeout = p->connect_timeout > 0 ? p->connect_timeout : Config.Timeout.peer_connect;
+    bool ret = (squid_curtime - p->stats.last_connect_failure) > (ctimeout * 10);
 
-    if (p->test_fd != -1)
+    if (p->testing_now > 0)
         return ret;/* probe already running */
 
     if (squid_curtime - p->stats.last_connect_probe == 0)
         return ret;/* don't probe to often */
 
-    Ip::Address temp(getOutgoingAddr(NULL,p));
+    /* for each IP address of this peer. find one that we can connect to and probe it. */
+    for (int i = 0; i < p->n_addresses; i++) {
+        Comm::ConnectionPointer conn = new Comm::Connection;
+        conn->remote = p->addresses[i];
+        conn->remote.SetPort(p->http_port);
+        getOutgoingAddress(NULL, conn);
 
-    // if IPv6 is disabled try to force IPv4-only outgoing.
-    if (!Ip::EnableIpv6 && !temp.SetIPv4()) {
-        debugs(50, DBG_IMPORTANT, "WARNING: IPv6 is disabled. Failed to use " << temp << " to probe " << p->host);
-        return ret;
+        p->testing_now++;
+
+        AsyncCall::Pointer call = commCbCall(15,3, "peerProbeConnectDone", CommConnectCbPtrFun(peerProbeConnectDone, p));
+        Comm::ConnOpener *cs = new Comm::ConnOpener(conn, call, ctimeout);
+        cs->setHost(p->host);
+        AsyncJob::Start(cs);
     }
-
-    // if IPv6 is split-stack, prefer IPv4
-    if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK) {
-        // NP: This is not a great choice of default,
-        // but with the current Internet being IPv4-majority has a higher success rate.
-        // if setting to IPv4 fails we dont care, that just means to use IPv6 outgoing.
-        temp.SetIPv4();
-    }
-
-    fd = comm_open(SOCK_STREAM, IPPROTO_TCP, temp, COMM_NONBLOCKING, p->host);
-
-    if (fd < 0)
-        return ret;
-
-    comm_add_close_handler(fd, &peerProbeClosed, p);
-    commSetTimeout(fd, ctimeout, peerProbeConnectTimeout, p);
-
-    p->test_fd = fd;
 
     p->stats.last_connect_probe = squid_curtime;
-
-    commConnectStart(p->test_fd,
-                     p->host,
-                     p->http_port,
-                     peerProbeConnectDone,
-                     p);
 
     return ret;
 }
 
 static void
-peerProbeConnectDone(int fd, const DnsLookupDetails &, comm_err_t status, int xerrno, void *data)
+peerProbeConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     peer *p = (peer*)data;
 
@@ -1430,9 +1351,7 @@ peerProbeConnectDone(int fd, const DnsLookupDetails &, comm_err_t status, int xe
         peerConnectFailedSilent(p);
     }
 
-    comm_remove_close_handler(fd, &peerProbeClosed, p);
-    comm_close(fd);
-    p->test_fd = -1;
+    p->testing_now--;
     return;
 }
 
@@ -1478,15 +1397,11 @@ peerCountMcastPeersStart(void *data)
     mem->start_ping = current_time;
     mem->ping_reply_callback = peerCountHandleIcpReply;
     mem->ircb_data = psstate;
-    mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
+    mcastSetTtl(icpOutgoingConn->fd, p->mcast.ttl);
     p->mcast.id = mem->id;
     reqnum = icpSetCacheKey((const cache_key *)fake->key);
     query = _icp_common_t::createMessage(ICP_QUERY, 0, url, reqnum, 0);
-    icpUdpSend(theOutIcpConnection,
-               p->in_addr,
-               query,
-               LOG_ICP_QUERY,
-               0);
+    icpUdpSend(icpOutgoingConn->fd, p->in_addr, query, LOG_ICP_QUERY, 0);
     fake->ping_status = PING_WAITING;
     eventAdd("peerCountMcastPeersDone",
              peerCountMcastPeersDone,

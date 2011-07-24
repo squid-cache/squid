@@ -170,7 +170,7 @@ ProxyAuthLookup::LookupDone(void *data, char *result)
 
     checklist->asyncInProgress(false);
     checklist->changeState (ACLChecklist::NullState::Instance());
-    checklist->check();
+    checklist->matchNonBlocking();
 }
 
 void

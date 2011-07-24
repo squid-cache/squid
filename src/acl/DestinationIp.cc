@@ -94,7 +94,7 @@ DestinationIPLookup::LookupDone(const ipcache_addrs *, const DnsLookupDetails &d
     checklist->request->recordLookup(details);
     checklist->asyncInProgress(false);
     checklist->changeState (ACLChecklist::NullState::Instance());
-    checklist->check();
+    checklist->matchNonBlocking();
 }
 
 

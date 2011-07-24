@@ -39,7 +39,9 @@
 #include "auth/UserRequest.h"
 #endif
 #include "cbdata.h"
+#include "comm/forward.h"
 #include "ip/Address.h"
+#include "MemBuf.h"
 #if USE_SSL
 #include "ssl/ErrorDetail.h"
 #endif
@@ -200,7 +202,7 @@ SQUIDCEXTERN void errorClean(void);
  * This function generates a error page from the info contained
  * by err and then sends it to the client.
  * The callback function errorSendComplete() is called after
- * the page has been written to the client socket (fd).
+ * the page has been written to the client (clientConn).
  * errorSendComplete() deallocates err.  We need to add
  * err to the cbdata because comm_write() requires it
  * for all callback data pointers.
@@ -211,10 +213,10 @@ SQUIDCEXTERN void errorClean(void);
  *     for errors and use errorAppendEntry() to account for
  *     persistent/pipeline connections.
  *
- \param fd      socket where page object is to be written
- \param err     This object is destroyed after use in this function.
+ \param clientConn  socket where page object is to be written
+ \param err         This object is destroyed after use in this function.
  */
-SQUIDCEXTERN void errorSend(int fd, ErrorState *err);
+SQUIDCEXTERN void errorSend(const Comm::ConnectionPointer &conn, ErrorState *err);
 
 /**
  \ingroup ErrorPageAPI
@@ -248,4 +250,72 @@ SQUIDCEXTERN err_type errorReservePageId(const char *page_name);
 SQUIDCEXTERN ErrorState *errorCon(err_type type, http_status, HttpRequest * request);
 SQUIDCEXTERN const char *errorPageName(int pageId); ///< error ID to string
 
+/**
+ \ingroup ErrorPageAPI
+ *
+ * loads text templates used for error pages and details;
+ * supports translation of templates
+ */
+class TemplateFile
+{
+public:
+    TemplateFile(const char *name);
+    virtual ~TemplateFile() {}
+
+    /// return true if the data loaded from disk without any problem
+    bool loaded() const {return wasLoaded;}
+
+    /**
+     * Load the page_name template from a file which  probably exist at:
+     *  (a) admin specified custom directory (error_directory)
+     *  (b) default language translation directory (error_default_language)
+     *  (c) English sub-directory where errors should ALWAYS exist
+     */
+    bool loadDefault();
+
+    /**
+     * Load an error template for a given HTTP request. This function examines the
+     * Accept-Language header and select the first available template. If the default
+     * template selected (eg because of a "Accept-Language: *"), or not available
+     * template found this function return false.
+     */
+    bool loadFor(HttpRequest *request);
+
+    /**
+     * Load the file given by "path". It uses the "parse()" method.
+     * On success return true and sets the "defined" member
+     */
+    bool loadFromFile(const char *path);
+
+    /// The language used for the template
+    const char *language() {return errLanguage.termedBuf();}
+
+    bool silent; ///< Whether to print error messages on cache.log file or not. It is user defined.
+
+protected:
+    /// Used to parse (if parsing required) the template data .
+    virtual bool parse(const char *buf, int len, bool eof) = 0;
+
+    /**
+     * Try to load the "page_name" template for a given language "lang"
+     * from squid errors directory
+     \return true on success false otherwise
+     */
+    bool tryLoadTemplate(const char *lang);
+
+    bool wasLoaded; ///< True if the template data read from disk without any problem
+    String errLanguage; ///< The error language of the template.
+    String templateName; ///< The name of the template
+};
+
+/**
+ * Parses the Accept-Language header value and return one language item on
+ * each call.
+ * \param hdr is the Accept-Language header value
+ * \param lang a buffer given by the user to store parsed language
+ * \param langlen the length of the lang buffer
+ * \param pos it is used to store the state of parsing. Must be "0" on first call
+ * \return true on success, false otherwise
+ */
+bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &pos);
 #endif /* SQUID_ERRORPAGE_H */

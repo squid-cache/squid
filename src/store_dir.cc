@@ -106,7 +106,7 @@ StoreController::createOneStore(Store &aStore)
      * The following is a workaround for create store directories sequentially
      * when running on native Windows port.
      */
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
 
     if (fork())
         return;
@@ -115,7 +115,7 @@ StoreController::createOneStore(Store &aStore)
 
     aStore.create();
 
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
 
     exit(0);
 
@@ -127,13 +127,13 @@ StoreController::create()
 {
     swapDir->create();
 
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
 
     pid_t pid;
 
     do {
         int status;
-#ifdef _SQUID_NEXT_
+#if _SQUID_NEXT_
 
         pid = wait3(&status, WNOHANG, NULL);
 #else
@@ -169,7 +169,10 @@ SwapDir::objectSizeIsAcceptable(int64_t objsize) const
         return false;
 
     // Else, make sure that the object size will fit.
-    return min_objsize <= objsize && max_objsize > objsize;
+    if (max_objsize == -1 && min_objsize <= objsize)
+        return true;
+    else
+        return min_objsize <= objsize && max_objsize > objsize;
 }
 
 

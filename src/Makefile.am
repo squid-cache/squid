@@ -47,8 +47,8 @@ DIST_SUBDIRS += ip icmp ident log ipc mgr
 if ENABLE_SSL
 SUBDIRS += ssl
 SSL_LIBS = \
-	ssl/libsslutil.la \
-	ssl/libsslsquid.la
+	ssl/libsslsquid.la \
+	ssl/libsslutil.la
 else
 SSL_LOCAL_LIBS =
 endif
@@ -289,7 +289,6 @@ squid_SOURCES = \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	ConfigParser.h \
-	ConnectionDetail.h \
 	CpuAffinity.cc \
 	CpuAffinity.h \
 	CpuAffinityMap.cc \
@@ -311,6 +310,7 @@ squid_SOURCES = \
 	errorpage.cc \
 	errorpage.h \
 	ETag.cc \
+	ETag.h \
 	event.cc \
 	event.h \
 	EventLoop.h \
@@ -378,6 +378,7 @@ squid_SOURCES = \
 	internal.cc \
 	$(IPC_SOURCE) \
 	ipcache.cc \
+	ipcache.h \
 	$(LEAKFINDERSOURCE) \
 	list.cc \
 	lookup_t.h \
@@ -469,6 +470,7 @@ squid_SOURCES = \
 	SwapDir.cc \
 	SwapDir.h \
 	time.cc \
+	TimeOrTag.h \
 	tools.cc \
 	tunnel.cc \
 	typedefs.h \
@@ -614,6 +616,12 @@ INCLUDES += $(KRB5INCS)
 
 
 unlinkd_SOURCES = unlinkd_daemon.cc
+unlinkd_LDADD = \
+	ipc/libipc.la \
+	ip/libip.la \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+
 dnsserver_SOURCES = dnsserver.cc SquidNew.cc tests/stub_debug.cc test_tools.cc time.cc
 recv_announce_SOURCES = recv-announce.cc
 
@@ -624,7 +632,7 @@ recv_announce_SOURCES = recv-announce.cc
 ## ACLChecklist.cc wants ACLProxyAuth.cc directly
 ## ACLProxyAuth.cc wants ACLUserData
 ## ACLProxyAuth.cc wants ACLRegexData
-## cache_cf.cc wants libauth.la
+## cache_cf.cc wants $(AUTH_LIBS)
 ## cache_cf.cc wants Swapdir
 ## cache_cf.cc wants ProtoPort
 ## client_side wants client_db
@@ -1064,7 +1072,7 @@ tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 ## acl needs wordlist. wordlist needs MemBug
 ## MemBuf needs mem, MemBuf needs event,
 ## event needs cbdata.
-## ACLMaxUserUP needs libauth.la
+## ACLMaxUserUP needs $(AUTH_LIBS)
 ## ACLMaxUserIP needs ACLChecklist
 ## AuthUser request needs HttpHeader, which brings in 
 ##	ETag.cc \
@@ -1078,12 +1086,14 @@ tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 ##	Packer.cc \
 ##	StatHist.cc \
 ##	String.cc \
+##
+##	disk.cc \
+##	fs/libfs.la \
 tests_testACLMaxUserIP_SOURCES= \
 	cbdata.cc \
 	ClientInfo.h \
 	ConfigOption.cc \
 	ConfigParser.cc \
-	disk.cc \
 	DiskIO/ReadRequest.cc \
 	DiskIO/WriteRequest.cc \
 	ETag.cc \
@@ -1163,7 +1173,6 @@ tests_testACLMaxUserIP_LDADD= \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
-	fs/libfs.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1369,6 +1378,8 @@ tests_testCacheManager_DEPENDENCIES = \
 	$(REPL_OBJS) \
 	$(SQUID_CPPUNIT_LA)
 
+#	tests/stub_CommIO.cc \
+#	tests/stub_comm.cc
 tests_testDiskIO_SOURCES = \
 	CacheDigest.cc \
 	cbdata.cc \
@@ -1429,17 +1440,21 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_acl.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_client_db.cc \
 	tests/stub_client_side_request.cc \
-	tests/stub_comm.cc \
-	tests/stub_CommIO.cc \
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
 	tests/stub_helper.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_http.cc \
+	tests/stub_icp.cc \
 	tests/stub_internal.cc \
+	tests/stub_ipc.cc \
+	tests/stub_ipcache.cc \
+	tests/stub_libicmp.cc \
 	tests/stub_mime.cc \
+	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
 	tests/stub_store_client.cc \
 	tests/stub_store_rebuild.cc \
@@ -1474,15 +1489,18 @@ tests_testDiskIO_LDADD = \
 	eui/libeui.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
-	base/libbase.la \
 	libsquid.la \
+	comm/libcomm.la \
+	base/libbase.la \
 	ip/libip.la \
 	fs/libfs.la \
+	ipc/libipc.la \
 	$(REPL_OBJS) \
 	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
 	acl/libapi.la \
 	mgr/libmgr.la \
+	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2412,12 +2430,15 @@ tests_testUfs_SOURCES = \
 	tests/testMain.cc \
 	tests/testUfs.h \
 	tests/stub_cache_manager.cc \
+	tests/stub_client_db.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_icp.cc \
+	tests/stub_ipc.cc \
+	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
 	tests/stub_TypedMsgHdr.cc \
 	tests/stub_UdsOp.cc \
 	tests/stub_internal.cc \
-	tests/stub_CommIO.cc \
 	tests/stub_store_rebuild.cc \
 	fd.cc \
 	disk.cc \
@@ -2462,7 +2483,6 @@ tests_testUfs_SOURCES = \
 	tests/stub_helper.cc \
 	cbdata.cc \
 	String.cc \
-	tests/stub_comm.cc \
 	tests/stub_debug.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_http.cc \
@@ -2503,7 +2523,6 @@ nodist_tests_testUfs_SOURCES = \
 	SquidMath.h \
 	swap_log_op.cc
 tests_testUfs_LDADD = \
-	anyp/libanyp.la \
 	CommCalls.o \
 	DnsLookupDetails.o \
 	$(AUTH_ACL_LIBS) \
@@ -2520,9 +2539,14 @@ tests_testUfs_LDADD = \
 	ipc/libipc.la \
 	mgr/libmgr.la \
 	$(REPL_OBJS) \
+	acl/libacls.la \
+	anyp/libanyp.la \
 	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
-	acl/libapi.la \
+	$(SSL_LIBS) \
+	comm/libcomm.la \
+	base/libbase.la \
+	ip/libip.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2647,11 +2671,14 @@ tests_testCoss_LDADD = \
 	$(REPL_OBJS) \
 	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
+	$(COMMON_LIBS) \
+	libsquid.la \
 	acl/libapi.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SQUID_CPPUNIT_LIBS) \
+	$(REGEXLIB) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)

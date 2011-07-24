@@ -20,7 +20,7 @@ namespace Mgr
 class Request: public Ipc::Request
 {
 public:
-    Request(int aRequestorId, unsigned int aRequestId, int aFd,
+    Request(int aRequestorId, unsigned int aRequestId, const Comm::ConnectionPointer &aConn,
             const ActionParams &aParams);
 
     explicit Request(const Ipc::TypedMsgHdr& msg); ///< from recvmsg()
@@ -32,7 +32,7 @@ private:
     Request(const Request& request);
 
 public:
-    int fd; ///< HTTP client connection descriptor
+    Comm::ConnectionPointer conn; ///< HTTP client connection descriptor
 
     ActionParams params; ///< action name and parameters
 };

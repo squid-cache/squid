@@ -657,10 +657,10 @@ DOC_START
 
 	***** ACL TYPES AVAILABLE *****
 
-	acl aclname src ip-address/netmask ...	# clients IP address [fast]
-	acl aclname src addr1-addr2/netmask ...	# range of addresses [fast]
-	acl aclname dst ip-address/netmask ...	# URL host's IP address [slow]
-	acl aclname myip ip-address/netmask ...	# local socket IP address [fast]
+	acl aclname src ip-address/mask ...	# clients IP address [fast]
+	acl aclname src addr1-addr2/mask ...	# range of addresses [fast]
+	acl aclname dst ip-address/mask ...	# URL host's IP address [slow]
+	acl aclname localip ip-address/mask ... # IP address the client connected to [fast]
 
 	acl aclname arp      mac-address ... (xx:xx:xx:xx:xx:xx notation)
 	  # The arp ACL requires the special configure option --enable-arp-acl.
@@ -721,7 +721,9 @@ DOC_START
 
 	acl aclname port 80 70 21 0-1024...   # destination TCP port [fast]
 	                                      # ranges are alloed
-	acl aclname myport 3128 ...	          # local socket TCP port [fast]
+	acl aclname localport 3128 ...	      # TCP port the client connected to [fast]
+	                                      # NP: for interception mode this is usually '80'
+
 	acl aclname myportname 3128 ...       # http(s)_port name [fast]
 
 	acl aclname proto HTTP FTP ...        # request protocol [fast]
@@ -860,7 +862,7 @@ NOCOMMENT_START
 #
 # Recommended minimum configuration:
 #
-acl manager proto cache_object
+acl manager url_regex -i ^cache_object:// +i ^https?://[^/]+/squid-internal-mgr/
 acl localhost src 127.0.0.1/32 ::1
 acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
 
@@ -1029,7 +1031,7 @@ NOCOMMENT_START
 # Recommended minimum Access Permission configuration:
 #
 # Only allow cachemgr access from localhost
-http_access allow manager localhost
+http_access allow localhost manager
 http_access deny manager
 
 # Deny requests to certain unsafe ports
@@ -1318,16 +1320,22 @@ DOC_START
 			Implies accel.
 
 	   vhost	Using the Host header for virtual domain support.
-			Also uses the port as specified in Host: header.
+			Also uses the port as specified in Host: header unless
+			overridden by the vport option.
 
-	   vport	IP based virtual host support. Using the http_port number
-			in passed on Host: headers.
+	   vport	Virtual host port support. Using the http_port number
+			instead of the port passed on Host: headers.
 
-	   vport=NN	Uses the specified port number rather than the
-			http_port number.
+	   vport=NN	Virtual host port support. Using the specified port
+			number instead of the port passed on Host: headers.
 
 	   protocol=	Protocol to reconstruct accelerated requests with.
 			Defaults to http://.
+
+	   act-as-origin
+			Act as if this Squid is the origin server.
+			This currently means generate new Date: and Expires:
+			headers on HIT instead of adding Age:.
 
 	   ignore-cc	Ignore request Cache-Control headers.
 
@@ -1738,66 +1746,38 @@ DOC_START
 
 	tcp_outgoing_address ipaddr [[!]aclname] ...
 
-	Example where requests from 10.0.0.0/24 will be forwarded
-	with source address 10.1.0.1, 10.0.2.0/24 forwarded with
-	source address 10.1.0.2 and the rest will be forwarded with
-	source address 10.1.0.3.
+	For example;
+		Forwarding clients with dedicated IPs for certain subnets.
 
-	acl normal_service_net src 10.0.0.0/24
-	acl good_service_net src 10.0.2.0/24
-	tcp_outgoing_address 10.1.0.1 normal_service_net
-	tcp_outgoing_address 10.1.0.2 good_service_net
-	tcp_outgoing_address 10.1.0.3
+	  acl normal_service_net src 10.0.0.0/24
+	  acl good_service_net src 10.0.2.0/24
+
+	  tcp_outgoing_address 2001:db8::c001 good_service_net
+	  tcp_outgoing_address 10.1.0.2 good_service_net
+
+	  tcp_outgoing_address 2001:db8::beef normal_service_net
+	  tcp_outgoing_address 10.1.0.1 normal_service_net
+
+	  tcp_outgoing_address 2001:db8::1
+	  tcp_outgoing_address 10.1.0.3
 
 	Processing proceeds in the order specified, and stops at first fully
 	matching line.
 
-	Note: The use of this directive using client dependent ACLs is
+	Squid will add an implicit IP version test to each line.
+	Requests going to IPv4 websites will use the outgoing 10.1.0.* addresses.
+	Requests going to IPv6 websites will use the outgoing 2001:db8:* addresses.
+
+
+	NOTE: The use of this directive using client dependent ACLs is
 	incompatible with the use of server side persistent connections. To
 	ensure correct results it is best to set server_persistent_connections
 	to off when using this directive in such configurations.
 
-	Note: The use of this directive to set a local IP on outgoing TCP links
+	NOTE: The use of this directive to set a local IP on outgoing TCP links
 	is incompatible with using TPROXY to set client IP out outbound TCP links.
-	When needing to contact peers use the no-tproxy cache_peer option to
-	re-enable normal forwarding such as this.
-
-        IPv6 Magic:
-
-	Squid is built with a capability of bridging the IPv4 and IPv6 
-	internets.
-	tcp_outgoing_address as exampled above breaks this bridging by forcing
-	all outbound traffic through a certain IPv4 which may be on the wrong
-	side of the IPv4/IPv6 boundary.
-
-	To operate with tcp_outgoing_address and keep the bridging benefits
-	an additional ACL needs to be used which ensures the IPv6-bound traffic
-	is never forced or permitted out the IPv4 interface.
-
-	# IPv6 destination test along with a dummy access control to perofrm the required DNS
-	# This MUST be place before any ALLOW rules.
-	acl to_ipv6 dst ipv6
-	http_access deny ipv6 !all
-
-	tcp_outgoing_address 2001:db8::c001 good_service_net to_ipv6
-	tcp_outgoing_address 10.1.0.2 good_service_net !to_ipv6
-
-	tcp_outgoing_address 2001:db8::beef normal_service_net to_ipv6
-	tcp_outgoing_address 10.1.0.1 normal_service_net !to_ipv6
-
-	tcp_outgoing_address 2001:db8::1 to_ipv6
-	tcp_outgoing_address 10.1.0.3 !to_ipv6
-
-	WARNING:
-	  'dst ipv6' bases its selection assuming DIRECT access.
-	  If peers are used the peername ACL are needed to select outgoing
-	  address which can link to the peer.
-
-	  'dst ipv6' is a slow ACL. It will only work here if 'dst' is used
-	  previously in the http_access rules to locate the destination IP.
-	  Some more magic may be needed for that:
-	    http_access allow to_ipv6 !all
-	  (meaning, allow if to IPv6 but not from anywhere ;)
+	When needing to contact peers use the no-tproxy cache_peer option and the
+	client_dst_passthru directive re-enable normal forwarding such as this.
 
 DOC_END
 
@@ -2265,12 +2245,20 @@ DOC_START
 			The first principal from the default keytab or defined by
 			the environment variable KRB5_KTNAME will be used. 
 	
+			WARNING: The connection may transmit requests from multiple
+			clients. Negotiate often assumes end-to-end authentication
+			and a single-client. Which is not strictly true here.
+	
 	login=NEGOTIATE:principal_name
 			If this is a personal/workgroup proxy and your parent
 			requires a secure proxy authentication. 
 			The principal principal_name from the default keytab or
 			defined by the environment variable KRB5_KTNAME will be
 			used.
+	
+			WARNING: The connection may transmit requests from multiple
+			clients. Negotiate often assumes end-to-end authentication
+			and a single-client. Which is not strictly true here.
 	
 	connection-auth=on|off
 			Tell Squid that this peer does or not support Microsoft
@@ -2477,6 +2465,9 @@ LOC: Config.forward_max_tries
 DOC_START
 	Controls how many different forward paths Squid will try
 	before giving up. See also forward_timeout.
+	
+	NOTE: connect_retries (default: none) can make each of these
+	possible forwarding paths be tried multiple times.
 DOC_END
 
 NAME: hierarchy_stoplist
@@ -7309,21 +7300,24 @@ DOC_START
 	see also refresh_pattern for a more selective approach.
 DOC_END
 
-NAME: maximum_single_addr_tries
+NAME: connect_retries
 TYPE: int
-LOC: Config.retry.maxtries
-DEFAULT: 1
+LOC: Config.connect_retries
+DEFAULT: 0
 DOC_START
-	This sets the maximum number of connection attempts for a
-	host that only has one address (for multiple-address hosts,
-	each address is tried once).
+	This sets the maximum number of connection attempts made for each
+	TCP connection. The connect_retries attempts must all still
+	complete within the connection timeout period.
 
-	The default value is one attempt, the (not recommended)
-	maximum is 255 tries.  A warning message will be generated
-	if it is set to a value greater than ten.
+	The default is not to re-try if the first connection attempt fails.
+	The (not recommended) maximum is 10 tries.
 
-	Note: This is in addition to the request re-forwarding which
-	takes place if Squid fails to get a satisfying response.
+	A warning message will be generated if it is set to a too-high
+	value and the configured value will be over-ridden.
+
+	Note: These re-tries are in addition to forward_max_tries
+	which limit how many different addresses may be tried to find
+	a useful server.
 DOC_END
 
 NAME: retry_on_error

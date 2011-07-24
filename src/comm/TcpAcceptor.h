@@ -5,6 +5,7 @@
 #include "base/Subscription.h"
 #include "CommCalls.h"
 #include "comm_err_t.h"
+#include "comm/forward.h"
 #include "comm/TcpAcceptor.h"
 #include "ip/Address.h"
 
@@ -18,8 +19,8 @@ namespace Comm
 class AcceptLimiter;
 
 /**
- * Listens on an FD for new incoming connections and
- * emits an active FD descriptor for the new client.
+ * Listens on a Comm::Connection for new incoming connections and
+ * emits an active Comm::Connection descriptor for the new client.
  *
  * Handles all event limiting required to quash inbound connection
  * floods within the global FD limits of available Squid_MaxFD and
@@ -40,8 +41,7 @@ private:
     TcpAcceptor(const TcpAcceptor &); // not implemented.
 
 public:
-    TcpAcceptor(const int listenFd, const Ip::Address &laddr, int flags,
-                const char *note, const Subscription::Pointer &aSub);
+    TcpAcceptor(const Comm::ConnectionPointer &conn, const char *note, const Subscription::Pointer &aSub);
 
     /** Subscribe a handler to receive calls back about new connections.
      * Unsubscribes any existing subscribed handler.
@@ -60,15 +60,10 @@ public:
     void acceptNext();
 
     /// Call the subscribed callback handler with details about a new connection.
-    void notify(const comm_err_t flags, const ConnectionDetail &newConnDetails, const int newFd) const;
+    void notify(const comm_err_t flag, const Comm::ConnectionPointer &details) const;
 
     /// errno code of the last accept() or listen() action if one occurred.
     int errcode;
-
-    /// conn being listened on for new connections
-    /// Reserved for read-only use.
-    // NP: public only until we can hide it behind connection handles
-    int fd;
 
 protected:
     friend class AcceptLimiter;
@@ -77,8 +72,9 @@ protected:
 private:
     Subscription::Pointer theCallSub;    ///< used to generate AsyncCalls handling our events.
 
-    /// IP Address and port being listened on
-    Ip::Address local_addr;
+    /// conn being listened on for new connections
+    /// Reserved for read-only use.
+    ConnectionPointer conn;
 
     /// Method to test if there are enough file descriptors to open a new client connection
     /// if not the accept() will be postponed
@@ -88,7 +84,7 @@ private:
     static void doAccept(int fd, void *data);
 
     void acceptOne();
-    comm_err_t oldAccept(ConnectionDetail &newConnDetails, int *fd);
+    comm_err_t oldAccept(Comm::ConnectionPointer &details);
     void setListen();
 
     CBDATA_CLASS2(TcpAcceptor);

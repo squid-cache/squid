@@ -34,12 +34,20 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#if USE_ADAPTATION
+#include "adaptation/Config.h"
+#endif
+#if USE_ECAP
+#include "adaptation/ecap/Config.h"
+#endif
 #if ICAP_CLIENT
+#include "adaptation/icap/Config.h"
 #include "adaptation/icap/icap_log.h"
 #endif
 #if USE_AUTH
 #include "auth/Gadgets.h"
 #endif
+#include "base/Subscription.h"
 #include "base/TextException.h"
 #if USE_DELAY_POOLS
 #include "ClientDelayConfig.h"
@@ -54,6 +62,8 @@
 #include "event.h"
 #include "EventLoop.h"
 #include "ExternalACL.h"
+#include "fs/Module.h"
+#include "PeerSelectState.h"
 #include "Store.h"
 #include "ICP.h"
 #include "ident/Ident.h"
@@ -119,7 +129,7 @@ void WINAPI WIN32_svcHandler(DWORD);
 
 #endif
 
-#ifndef SQUID_BUILD_INFO
+#if !defined(SQUID_BUILD_INFO)
 #define SQUID_BUILD_INFO ""
 #endif
 
@@ -909,7 +919,7 @@ setEffectiveUser(void)
 {
     keepCapabilities();
     leave_suid();		/* Run as non privilegied user */
-#ifdef _SQUID_OS2_
+#if _SQUID_OS2_
 
     return;
 #endif
@@ -1582,7 +1592,7 @@ mainStartScript(const char *prog)
         _exit(-1);
     } else {
         do {
-#ifdef _SQUID_NEXT_
+#if _SQUID_NEXT_
             union wait status;
             rpid = wait4(cpid, &status, 0, NULL);
 #else
@@ -1627,7 +1637,7 @@ watch_child(char *argv[])
 {
 #if !_SQUID_MSWIN_
     char *prog;
-#ifdef _SQUID_NEXT_
+#if _SQUID_NEXT_
 
     union wait status;
 #else
@@ -1723,7 +1733,7 @@ watch_child(char *argv[])
 
         squid_signal(SIGINT, SIG_IGN, SA_RESTART);
 
-#ifdef _SQUID_NEXT_
+#if _SQUID_NEXT_
 
         pid = wait3(&status, 0, NULL);
 
@@ -1756,7 +1766,7 @@ watch_child(char *argv[])
             } else {
                 syslog(LOG_NOTICE, "Squid Parent: unknown child process %d exited", pid);
             }
-#ifdef _SQUID_NEXT_
+#if _SQUID_NEXT_
         } while ((pid = wait3(&status, WNOHANG, NULL)) > 0);
 #else
         }

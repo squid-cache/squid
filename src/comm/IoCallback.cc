@@ -1,5 +1,6 @@
 #include "config.h"
 #include "ClientInfo.h"
+#include "comm/Connection.h"
 #include "comm/IoCallback.h"
 #include "comm/Loops.h"
 #include "comm/Write.h"
@@ -15,9 +16,7 @@ Comm::CallbackTableInit()
     iocb_table = static_cast<CbEntry*>(xcalloc(Squid_MaxFD, sizeof(CbEntry)));
     for (int pos = 0; pos < Squid_MaxFD; pos++) {
         iocb_table[pos].fd = pos;
-        iocb_table[pos].readcb.fd = pos;
         iocb_table[pos].readcb.type = IOCB_READ;
-        iocb_table[pos].writecb.fd = pos;
         iocb_table[pos].writecb.type = IOCB_WRITE;
     }
 }
@@ -25,6 +24,11 @@ Comm::CallbackTableInit()
 void
 Comm::CallbackTableDestruct()
 {
+    // release any Comm::Connections being held.
+    for (int pos = 0; pos < Squid_MaxFD; pos++) {
+        iocb_table[pos].readcb.conn = NULL;
+        iocb_table[pos].writecb.conn = NULL;
+    }
     safe_free(iocb_table);
 }
 
@@ -57,16 +61,16 @@ Comm::IoCallback::selectOrQueueWrite()
 {
 #if USE_DELAY_POOLS
     // stand in line if there is one
-    if (ClientInfo *clientInfo = fd_table[fd].clientInfo) {
+    if (ClientInfo *clientInfo = fd_table[conn->fd].clientInfo) {
         if (clientInfo->writeLimitingActive) {
-            quotaQueueReserv = clientInfo->quotaEnqueue(fd);
+            quotaQueueReserv = clientInfo->quotaEnqueue(conn->fd);
             clientInfo->kickQuotaQueue();
             return;
         }
     }
 #endif
 
-    SetSelect(fd, COMM_SELECT_WRITE, Comm::HandleWrite, this, 0);
+    SetSelect(conn->fd, COMM_SELECT_WRITE, Comm::HandleWrite, this, 0);
 }
 
 void
@@ -83,6 +87,7 @@ Comm::IoCallback::cancel(const char *reason)
 void
 Comm::IoCallback::reset()
 {
+    conn = NULL;
     if (freefunc) {
         freefunc(buf);
         buf = NULL;
@@ -99,7 +104,7 @@ Comm::IoCallback::reset()
 void
 Comm::IoCallback::finish(comm_err_t code, int xerrn)
 {
-    debugs(5, 3, HERE << "called for FD " << fd << " (" << code << ", " << xerrno << ")");
+    debugs(5, 3, HERE << "called for " << conn << " (" << code << ", " << xerrno << ")");
     assert(active());
 
     /* free data */
@@ -112,7 +117,8 @@ Comm::IoCallback::finish(comm_err_t code, int xerrn)
     if (callback != NULL) {
         typedef CommIoCbParams Params;
         Params &params = GetCommParams<Params>(callback);
-        params.fd = fd;
+        if (conn != NULL) params.fd = conn->fd; // for legacy write handlers...
+        params.conn = conn;
         params.buf = buf;
         params.size = offset;
         params.flag = code;

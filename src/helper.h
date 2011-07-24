@@ -35,14 +35,11 @@
 
 #include "squid.h"
 #include "cbdata.h"
+#include "comm/forward.h"
 #include "ip/Address.h"
 #include "HelperChildConfig.h"
 
 class helper_request;
-
-typedef struct _helper_flags helper_flags;
-
-typedef struct _helper_stateful_flags helper_stateful_flags;
 
 typedef void HLPSCB(void *, void *lastserver, char *buf);
 
@@ -96,11 +93,23 @@ private:
 class HelperServerBase
 {
 public:
+    /** Closes pipes to the helper safely.
+     * Handles the case where the read and write pipes are the same FD.
+     */
+    void closePipesSafely();
+
+    /** Closes the reading pipe.
+     * If the read and write sockets are the same the write pipe will
+     * also be closed. Otherwise its left open for later handling.
+     */
+    void closeWritePipeSafely();
+
+public:
     int index;
     int pid;
     Ip::Address addr;
-    int rfd;
-    int wfd;
+    Comm::ConnectionPointer readPipe;
+    Comm::ConnectionPointer writePipe;
     void *hIpc;
 
     char *rbuf;
@@ -111,6 +120,15 @@ public:
     struct timeval answer_time;
 
     dlink_node link;
+
+    struct _helper_flags {
+        unsigned int busy:1;
+        unsigned int writing:1;
+        unsigned int closing:1;
+        unsigned int shutdown:1;
+        unsigned int reserved:1;
+    } flags;
+
 };
 
 class helper_server : public HelperServerBase
@@ -121,12 +139,6 @@ public:
 
     helper *parent;
     helper_request **requests;
-
-    struct _helper_flags {
-        unsigned int writing:1;
-        unsigned int closing:1;
-        unsigned int shutdown:1;
-    } flags;
 
     struct {
         int uses;
@@ -144,13 +156,6 @@ public:
 
     statefulhelper *parent;
     helper_stateful_request *request;
-
-    struct _helper_stateful_flags {
-        unsigned int busy:1;
-        unsigned int closing:1;
-        unsigned int shutdown:1;
-        unsigned int reserved:1;
-    } flags;
 
     struct {
         int uses;

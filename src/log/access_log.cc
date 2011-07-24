@@ -111,7 +111,7 @@ accessLogLogTo(customlog* log, AccessLogEntry * al, ACLChecklist * checklist)
         xstrncpy(al->hier.host, dash_str, SQUIDHOSTNAMELEN);
 
     for (; log; log = log->next) {
-        if (checklist && log->aclList && !checklist->matchAclListFast(log->aclList))
+        if (log->aclList && checklist && checklist->fastCheck(log->aclList) != ACCESS_ALLOWED)
             continue;
 
         if (log->logfile) {
