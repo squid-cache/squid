@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
- <TITLE>Squid 3.2.0.9 release notes</TITLE>
+ <TITLE>Squid 3.2.0.10 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.2.0.9 release notes</H1>
+<H1>Squid 3.2.0.10 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -33,6 +33,8 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <LI><A NAME="toc2.7">2.7</A> <A HREF="#ss2.7">Surrogate/1.0 protocol extensions to HTTP</A>
 <LI><A NAME="toc2.8">2.8</A> <A HREF="#ss2.8">Logging Infrastructure Updated</A>
 <LI><A NAME="toc2.9">2.9</A> <A HREF="#ss2.9">Client Bandwidth Limits</A>
+<LI><A NAME="toc2.10">2.10</A> <A HREF="#ss2.10">Better eCAP Suport</A>
+<LI><A NAME="toc2.11">2.11</A> <A HREF="#ss2.11">Cache Manager access changes</A>
 </UL>
 <P>
 <H2><A NAME="toc3">3.</A> <A HREF="#s3">Changes to squid.conf since Squid-3.1</A></H2>
@@ -69,7 +71,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.2.0.9 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.2.0.10 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.2/">http://www.squid-cache.org/Versions/v3/3.2/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -104,6 +106,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <LI>Logging Infrastructure Updated</LI>
 <LI>Client Bandwidth Limits</LI>
 <LI>Better eCAP support</LI>
+<LI>Cache Manager access changes</LI>
 </UL>
 </P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
@@ -397,6 +400,7 @@ required to store a long period of access.log and needs to conserve disk space.<
 <P>The referer_log and useragent_log directives have been converted to built-in log formats.
 These logs are now created using an access_log line with the format "referrer" or "useragent".</P>
 
+
 <H2><A NAME="ss2.9">2.9</A> <A HREF="#toc2.9">Client Bandwidth Limits</A>
 </H2>
 
@@ -427,6 +431,35 @@ algorithm. If a bucket becomes empty, the first client among those sharing
 the bucket is delayed by 1 second before it can attempt to receive more
 response data from Squid.  This delay may need to be lowered in 
 high-bandwidth environments.</P>
+
+
+<H2><A NAME="ss2.10">2.10</A> <A HREF="#toc2.10">Better eCAP Suport</A>
+</H2>
+
+<P>Support for libecap version 0.2.0 has been added with this series of Squid. Bringing
+better support for body handling, and logging.</P>
+
+
+<H2><A NAME="ss2.11">2.11</A> <A HREF="#toc2.11">Cache Manager access changes</A>
+</H2>
+
+<P>The Squid Cache Manager has previously only been accessible under the cache_object://
+URL scheme. Which has restricted its reporting to tools which can send arbitrary
+URI to the proxy.</P>
+
+<P>This version of Squid now provides access through the http:// and https:// URL schemes
+allowing web browsers access without having to use the cachemgr.cgi gateway and enabling
+the use of HTTPS security were desired.</P>
+
+<P>The cache manager is available under the path prefix /squid-internal-mgr/. For example
+the URL http://example/com/squid-internal-mgr/menu will bring up the manager menu. This
+means there are some configuration changes required to lock down manager access.
+The <EM>manager</EM> ACL needs changing to:
+<PRE>
+        acl manager url_regex -i ^cache_object:// ^https?://[^/]+/squid-internal-mgr/
+</PRE>
+</P>
+
 
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes to squid.conf since Squid-3.1</A></H2>
 
@@ -569,6 +602,12 @@ New installs, or installs with no logs configured explicitly will use this modul
 
 <DT><B>acl random</B><DD>
 <P>New type <EM>random</EM>. Pseudo-randomly match requests based on a configured probability.</P>
+<P>The <EM>manager</EM> ACL requires adjustment to cover new cache manager access:
+<PRE>
+                acl manager url_regex -i ^cache_object:// ^https?://[^/]+/squid-internal-mgr/
+        
+</PRE>
+</P>
 
 <DT><B>auth_param</B><DD>
 <P>New options for Basic, Digest, NTLM, Negotiate <EM>children</EM> settings.
@@ -605,6 +644,11 @@ Other status only available when supplying an error template body.</P>
 <P><EM>children-startup=N</EM> determins minimum number of helper processes used.</P>
 <P><EM>children-idle=N</EM> determines how many helper to retain as buffer against sudden traffic loads.</P>
 <P>Deprecated <EM>children=N</EM> in favor of <EM>children-max=N</EM>.</P>
+
+<DT><B>http_port act-as-origin</B><DD>
+<P><EM>act-as-origin</EM> ported from 2.7.
+This option corrects several HTTP header issues when operating as a reverse proxy and cache.
+Notably the externally visible aging of objects stored in the server-side cache.</P>
 
 <DT><B>icap_send_client_ip</B><DD>
 <P>Deprecated in favor of adaptation_send_client_ip
@@ -652,7 +696,8 @@ This will be included by default if available (see the --without-netfilter-connt
 serve objects more stale than this even if it failed to validate the object.</P>
 
 <DT><B>tcp_outgoing_address</B><DD>
-<P>This parameter is now compatible with persistent server connections.</P>
+<P>This parameter is now compatible with persistent server connections.
+The IPv6 magic 'to_ipv6' hacks needed in 3.1 are now no longer necessary.</P>
 
 <DT><B>tcp_outgoing_mark</B><DD>
 <P>New configuration parameter <EM>tcp_outgoing_mark</EM></P>
@@ -1014,7 +1059,6 @@ An external_acl_type helper may be used to bypass authentication if that is suit
 <P>Not yet ported from 2.7</P>
 
 <DT><B>http_port</B><DD>
-<P><EM>act-as-origin</EM> not yet ported from 2.7</P>
 <P><EM>urlgroup=</EM> not yet ported from 2.6</P>
 
 <DT><B>ignore_ims_on_miss</B><DD>

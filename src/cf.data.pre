@@ -1744,66 +1744,38 @@ DOC_START
 
 	tcp_outgoing_address ipaddr [[!]aclname] ...
 
-	Example where requests from 10.0.0.0/24 will be forwarded
-	with source address 10.1.0.1, 10.0.2.0/24 forwarded with
-	source address 10.1.0.2 and the rest will be forwarded with
-	source address 10.1.0.3.
+	For example;
+		Forwarding clients with dedicated IPs for certain subnets.
 
-	acl normal_service_net src 10.0.0.0/24
-	acl good_service_net src 10.0.2.0/24
-	tcp_outgoing_address 10.1.0.1 normal_service_net
-	tcp_outgoing_address 10.1.0.2 good_service_net
-	tcp_outgoing_address 10.1.0.3
+	  acl normal_service_net src 10.0.0.0/24
+	  acl good_service_net src 10.0.2.0/24
+
+	  tcp_outgoing_address 2001:db8::c001 good_service_net
+	  tcp_outgoing_address 10.1.0.2 good_service_net
+
+	  tcp_outgoing_address 2001:db8::beef normal_service_net
+	  tcp_outgoing_address 10.1.0.1 normal_service_net
+
+	  tcp_outgoing_address 2001:db8::1
+	  tcp_outgoing_address 10.1.0.3
 
 	Processing proceeds in the order specified, and stops at first fully
 	matching line.
 
-	Note: The use of this directive using client dependent ACLs is
+	Squid will add an implicit IP version test to each line.
+	Requests going to IPv4 websites will use the outgoing 10.1.0.* addresses.
+	Requests going to IPv6 websites will use the outgoing 2001:db8:* addresses.
+
+
+	NOTE: The use of this directive using client dependent ACLs is
 	incompatible with the use of server side persistent connections. To
 	ensure correct results it is best to set server_persistent_connections
 	to off when using this directive in such configurations.
 
-	Note: The use of this directive to set a local IP on outgoing TCP links
+	NOTE: The use of this directive to set a local IP on outgoing TCP links
 	is incompatible with using TPROXY to set client IP out outbound TCP links.
-	When needing to contact peers use the no-tproxy cache_peer option to
-	re-enable normal forwarding such as this.
-
-        IPv6 Magic:
-
-	Squid is built with a capability of bridging the IPv4 and IPv6 
-	internets.
-	tcp_outgoing_address as exampled above breaks this bridging by forcing
-	all outbound traffic through a certain IPv4 which may be on the wrong
-	side of the IPv4/IPv6 boundary.
-
-	To operate with tcp_outgoing_address and keep the bridging benefits
-	an additional ACL needs to be used which ensures the IPv6-bound traffic
-	is never forced or permitted out the IPv4 interface.
-
-	# IPv6 destination test along with a dummy access control to perofrm the required DNS
-	# This MUST be place before any ALLOW rules.
-	acl to_ipv6 dst ipv6
-	http_access deny ipv6 !all
-
-	tcp_outgoing_address 2001:db8::c001 good_service_net to_ipv6
-	tcp_outgoing_address 10.1.0.2 good_service_net !to_ipv6
-
-	tcp_outgoing_address 2001:db8::beef normal_service_net to_ipv6
-	tcp_outgoing_address 10.1.0.1 normal_service_net !to_ipv6
-
-	tcp_outgoing_address 2001:db8::1 to_ipv6
-	tcp_outgoing_address 10.1.0.3 !to_ipv6
-
-	WARNING:
-	  'dst ipv6' bases its selection assuming DIRECT access.
-	  If peers are used the peername ACL are needed to select outgoing
-	  address which can link to the peer.
-
-	  'dst ipv6' is a slow ACL. It will only work here if 'dst' is used
-	  previously in the http_access rules to locate the destination IP.
-	  Some more magic may be needed for that:
-	    http_access allow to_ipv6 !all
-	  (meaning, allow if to IPv6 but not from anywhere ;)
+	When needing to contact peers use the no-tproxy cache_peer option and the
+	client_dst_passthru directive re-enable normal forwarding such as this.
 
 DOC_END
 

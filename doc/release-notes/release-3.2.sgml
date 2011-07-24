@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.0.9 release notes</title>
+<title>Squid 3.2.0.10 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.0.9 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.0.10 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -43,6 +43,7 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 	<item>Logging Infrastructure Updated
 	<item>Client Bandwidth Limits
 	<item>Better eCAP support
+	<item>Cache Manager access changes
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -292,6 +293,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>The referer_log and useragent_log directives have been converted to built-in log formats.
   These logs are now created using an access_log line with the format "referrer" or "useragent".
 
+
 <sect1> Client Bandwidth Limits
 <p>In mobile environments, Squid may need to limit Squid-to-client bandwidth
    available to individual users, identified by their IP addresses. The IP
@@ -320,6 +322,30 @@ Most user-facing changes are reflected in squid.conf (see below).
    the bucket is delayed by 1 second before it can attempt to receive more
    response data from Squid.  This delay may need to be lowered in 
    high-bandwidth environments.
+
+
+<sect1>Better eCAP Suport
+<p>Support for libecap version 0.2.0 has been added with this series of Squid. Bringing
+   better support for body handling, and logging.
+
+
+<sect1>Cache Manager access changes
+<p>The Squid Cache Manager has previously only been accessible under the cache_object://
+   URL scheme. Which has restricted its reporting to tools which can send arbitrary
+   URI to the proxy.
+
+<p>This version of Squid now provides access through the http:// and https:// URL schemes
+   allowing web browsers access without having to use the cachemgr.cgi gateway and enabling
+   the use of HTTPS security were desired.
+
+<p>The cache manager is available under the path prefix /squid-internal-mgr/. For example
+   the URL http://example/com/squid-internal-mgr/menu will bring up the manager menu. This
+   means there are some configuration changes required to lock down manager access.
+   The <em>manager</em> ACL needs changing to:
+<verb>
+	acl manager url_regex -i ^cache_object:// ^https?://[^/]+/squid-internal-mgr/
+</verb>
+
 
 <sect>Changes to squid.conf since Squid-3.1
 <p>
@@ -450,6 +476,10 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>acl random</tag>
 	<p>New type <em>random</em>. Pseudo-randomly match requests based on a configured probability.
+	<p>The <em>manager</em> ACL requires adjustment to cover new cache manager access:
+        <verb>
+		acl manager url_regex -i ^cache_object:// ^https?://[^/]+/squid-internal-mgr/
+        </verb>
 
 	<tag>auth_param</tag>
 	<p>New options for Basic, Digest, NTLM, Negotiate <em>children</em> settings.
@@ -539,6 +569,7 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>tcp_outgoing_address</tag>
 	<p>This parameter is now compatible with persistent server connections.
+	   The IPv6 magic 'to_ipv6' hacks needed in 3.1 are now no longer necessary.
 
 	<tag>tcp_outgoing_mark</tag>
 	<p>New configuration parameter <em>tcp_outgoing_mark</em>

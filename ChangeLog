@@ -1,3 +1,28 @@
+Changes to squid-3.2.0.10 (24 Jul 2011):
+
+	- Port from 2.7: act-as-origin for reverse proxy ports
+	- Regression fix: broken --disable-ipv6
+	- Regression fix: negative cacheing on unknown or -1 expiry timestamp
+	- Regression fix: vhost and defaultsite causing vport to be ignored
+	- Regression fix: several errors in persistent connection handling
+	- Regression Bug 3280: allow max-size unset and min-size=N for large objects
+	- Regression Bug 3245: reconfigure assertion in MemPools[type]
+	- Regression Bug 3274: assertion failed: CommCalls.h:144: "dp"
+	- Regression Bug 3273: assertion comm.cc:775: Comm::IsConnOpen(conn)
+	- Regression Bug 3269: cache.log applyQueryParams messages
+	- Regression Bug 3264: Segmentation Fault in src/ipc/Strand.cc(54) receive: 3
+	- Regression Bug 3246: assertion client_side.cc:1407 connIsUsable(http->getConn())
+	- Bug 3267: workers IPC mount points disobey --localstatedir
+	- Bug 3248: login=NEGOTIATE sends wrong auth header to origin peers
+	- Bug 3247: Domain from URL Stripped when going through peers
+	- Bug 3244: wrong port for peer relayed requests
+	- Bug 3195: kerberos_ldap_group will not build without kerberos
+	- Bug 2862: add http(s):// support to cache manager
+	- kerberos_ldap_group: several fixes to -S option
+	- ssl_crtd: Add man(8) file
+	- ... and several pieces of code cleanup and polishing.
+	- ... and most bug fixes and updates from 3.1.14 and 3.1.15
+
 Changes to squid-3.2.0.9 (18 Jun 2011):
 
 	- Bug 3159: delay pools --disable-auth compile problems
