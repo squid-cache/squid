@@ -78,6 +78,11 @@ for FILENAME in `ls -1`; do
 	esac
 
 	#
+	# Scan for incorrect use of #ifdef/#ifndef
+	#
+	grep -R -E "ifn?def .*_SQUID_" ./* | grep -v -E "_H$" | while read f; do echo "PROBLEM?: ${f}"; done
+
+	#
 	# DEBUG Section list maintenance
 	#
 	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' >>${ROOT}/doc/debug-sections.tmp

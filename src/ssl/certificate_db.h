@@ -22,7 +22,7 @@ public:
     /// Unlock file
     ~FileLocker();
 private:
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     HANDLE hFile; ///< Windows file handle.
 #else
     int fd; ///< Linux file descriptor.

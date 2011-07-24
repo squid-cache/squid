@@ -689,7 +689,7 @@ SQUIDCEXTERN void *leakFreeFL(void *, const char *, int);
  * prototypes for system functions missing from system includes
  */
 
-#ifdef _SQUID_SOLARIS_
+#if _SQUID_SOLARIS_
 
 SQUIDCEXTERN int getrusage(int, struct rusage *);
 SQUIDCEXTERN int getpagesize(void);
@@ -719,7 +719,7 @@ SQUIDCEXTERN void WIN32_InstallService(void);
 SQUIDCEXTERN void WIN32_RemoveService(void);
 SQUIDCEXTERN int SquidMain(int, char **);
 #endif /* _SQUID_WINDOWS_ */
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
 SQUIDCEXTERN int WIN32_pipe(int[2]);
 

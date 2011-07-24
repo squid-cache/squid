@@ -491,7 +491,7 @@ main(int argc, char *argv[])
         }
     }
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     {
         WSADATA wsaData;
 
@@ -505,7 +505,7 @@ main(int argc, char *argv[])
         memset(request, '\0', REQ_SZ);
 
         if (fgets(request, REQ_SZ, stdin) == NULL) {
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
             WSACleanup();
 #endif
             exit(1);

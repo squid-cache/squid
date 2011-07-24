@@ -36,7 +36,7 @@ Ssl::FileLocker::FileLocker(std::string const & filename)
 
 Ssl::FileLocker::~FileLocker()
 {
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     if (hFile != INVALID_HANDLE_VALUE) {
         UnlockFile(hFile, 0, 0, 1, 0);
         CloseHandle(hFile);
@@ -258,14 +258,14 @@ void Ssl::CertificateDb::create(std::string const & db_path, int serial)
     std::string cert_full(db_path + "/" + cert_dir);
     std::string size_full(db_path + "/" + size_file);
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     if (mkdir(db_path.c_str()))
 #else
     if (mkdir(db_path.c_str(), 0777))
 #endif
         throw std::runtime_error("Cannot create " + db_path);
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     if (mkdir(cert_full.c_str()))
 #else
     if (mkdir(cert_full.c_str(), 0777))

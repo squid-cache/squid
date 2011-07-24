@@ -203,7 +203,7 @@ CacheManager::ParseUrl(const char *url)
     if (t < 2)
         xstrncpy(request, "menu", MAX_URL);
 
-#ifdef _SQUID_OS2_
+#if _SQUID_OS2_
     if (t == 2 && request[0] == '\0') {
         /*
          * emx's sscanf insists of returning 2 because it sets request

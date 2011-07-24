@@ -44,7 +44,7 @@
 typedef int64_t	off64_t;
 #endif
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
 union sigval {
     int sival_int; /* integer value */
