@@ -1318,13 +1318,14 @@ DOC_START
 			Implies accel.
 
 	   vhost	Using the Host header for virtual domain support.
-			Also uses the port as specified in Host: header.
+			Also uses the port as specified in Host: header unless
+			overridden by the vport option.
 
-	   vport	IP based virtual host support. Using the http_port number
-			in passed on Host: headers.
+	   vport	Virtual host port support. Using the http_port number
+			instead of the port passed on Host: headers.
 
-	   vport=NN	Uses the specified port number rather than the
-			http_port number.
+	   vport=NN	Virtual host port support. Using the specified port
+			number instead of the port passed on Host: headers.
 
 	   protocol=	Protocol to reconstruct accelerated requests with.
 			Defaults to http://.
