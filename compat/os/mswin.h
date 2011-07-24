@@ -58,7 +58,7 @@
    causing the fail of the build process. The following
    #define will disable that definition
  */
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !NOMINMAX
 #define NOMINMAX
 #endif
 
