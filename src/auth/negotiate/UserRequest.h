@@ -2,13 +2,12 @@
 #define _SQUID_SRC_AUTH_NEGOTIATE_USERREQUEST_H
 
 #include "auth/UserRequest.h"
-#include "helper.h"
 #include "MemPool.h"
 
 class ConnStateData;
 class HttpReply;
 class HttpRequest;
-struct helper_stateful_server;
+class helper_stateful_server;
 
 /// \ingroup AuthNegotiateAPI
 class AuthNegotiateUserRequest : public AuthUserRequest
