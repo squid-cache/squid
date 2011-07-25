@@ -78,7 +78,7 @@ xcalloc(size_t n, size_t sz)
     if (p == NULL) {
         if (failure_notify) {
             static char msg[128];
-            snprintf(msg, 128, "xcalloc: Unable to allocate %Zu blocks of %Zu bytes!\n", n, sz);
+            snprintf(msg, 128, "xcalloc: Unable to allocate %lu blocks of %lu bytes!\n", (unsigned long)n, (unsigned long)sz);
             failure_notify(msg);
         } else {
             perror("xcalloc");
