@@ -845,6 +845,23 @@ void syslog(int priority, const char *fmt, ...);
 # ifdef WSA_CMSG_FIRSTHDR
 #  define CMSG_FIRSTHDR(x) WSA_CMSG_FIRSTHDR(x)
 # endif
+
+/* MinGW missing bits from sys/wait.h */
+/* A status looks like:
+ *  <2 bytes info> <2 bytes code>
+ *
+ *  <code> == 0, child has exited, info is the exit value
+ *  <code> == 1..7e, child has exited, info is the signal number.
+ *  <code> == 7f, child has stopped, info was the signal number.
+ *  <code> == 80, there was a core dump.
+ */
+#define WIFEXITED(w)    (((w) & 0xff) == 0)
+#define WIFSIGNALED(w)  (((w) & 0x7f) > 0 && (((w) & 0x7f) < 0x7f))
+#define WIFSTOPPED(w)   (((w) & 0xff) == 0x7f)
+#define WEXITSTATUS(w)  (((w) >> 8) & 0xff)
+#define WTERMSIG(w) ((w) & 0x7f)
+#define WSTOPSIG    WEXITSTATUS
+
 #endif
 
 #endif /* _SQUID_WINDOWS_ */
