@@ -479,7 +479,7 @@ authDigestUserFindUsername(const char *username)
     AuthUserHashPointer *usernamehash;
     debugs(29, 9, HERE << "Looking for user '" << username << "'");
 
-    if (username && (usernamehash = static_cast < auth_user_hash_pointer * >(hash_lookup(proxy_auth_username_cache, username)))) {
+    if (username && (usernamehash = static_cast < AuthUserHashPointer * >(hash_lookup(proxy_auth_username_cache, username)))) {
         while ((usernamehash->user()->auth_type != Auth::AUTH_DIGEST) && (usernamehash->next))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
 
