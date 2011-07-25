@@ -3518,7 +3518,7 @@ parse_http_port_specification(http_port_list * s, char *token)
         if (!Ip::EnableIpv6)
             s->s.SetIPv4();
         debugs(3, 3, "http(s)_port: found Listen on wildcard address: *:" << s->s.GetPort() );
-    } else if ( s->s = host ) { /* check/parse numeric IPA */
+    } else if ( (s->s = host) ) { /* check/parse numeric IPA */
         s->s.SetPort(port);
         if (!Ip::EnableIpv6)
             s->s.SetIPv4();
