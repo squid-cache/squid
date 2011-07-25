@@ -47,10 +47,6 @@ typedef struct {
     size_t kb;
 } kb_t;
 
-/// \ingroup AuthAPI
-/// \deprecated Use AuthUserHashPointer instead.
-typedef struct AuthUserHashPointer auth_user_hash_pointer;
-
 struct http_port_list;
 struct https_port_list;
 
