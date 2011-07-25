@@ -265,7 +265,7 @@ Comm::ConnOpener::lookupLocalAddress()
     conn_->local.InitAddrInfo(addr);
 
     /* NP: cast required for systems which still define ai_addrlen as size_t */
-    if (getsockname(conn_->fd, addr->ai_addr, (socklen_t*&(addr->ai_addrlen)) != 0) {
+    if (getsockname(conn_->fd, addr->ai_addr, (socklen_t*)&(addr->ai_addrlen)) != 0) {
         debugs(50, DBG_IMPORTANT, "ERROR: Failed to retrieve TCP/UDP details for socket: " << conn_ << ": " << xstrerror());
         conn_->local.FreeAddrInfo(addr);
         return;
