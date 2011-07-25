@@ -1169,14 +1169,16 @@ DOC_START
 			accelerators should consider the default.
 			Implies accel.
 
-	   vhost	Accelerator mode using Host header for virtual
-			domain support. Implies accel.
+	   vhost	Accelerator mode using Host header for virtual domain support.
+			Also uses the port as specified in Host: header unless
+			overridden by the vport option. Implies accel.
 
-	   vport	Accelerator with IP based virtual host support.
+	   vport	Virtual host port support. Using the http_port number
+			instead of the port passed on Host: headers. Implies accel.
+
+	   vport=NN	Virtual host port support. Using the specified port
+			number instead of the port passed on Host: headers.
 			Implies accel.
-
-	   vport=NN	As above, but uses specified port number rather
-			than the http_port number. Implies accel.
 
 	   protocol=	Protocol to reconstruct accelerated requests with.
 			Defaults to http.
