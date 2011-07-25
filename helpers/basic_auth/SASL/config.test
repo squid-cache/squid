@@ -1,10 +1,8 @@
 #!/bin/sh
-if [ -f /usr/include/sasl.h -o -f /usr/include/sasl/sasl.h ]; then
-	if [ -f /usr/lib/libsasl.a -o -f /usr/lib/libsasl2.a ]; then
-		exit 0
-	fi
-	if [ -f /usr/lib/libsasl.la -o -f /usr/lib/libsasl2.la ]; then
-		exit 0
-	fi
+if [ -f /usr/include/sasl.h ]; then
+	exit 0
+fi
+if [ -f /usr/include/sasl/sasl.h ]; then
+	exit 0
 fi
 exit 1
