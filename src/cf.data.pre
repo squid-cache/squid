@@ -1292,8 +1292,9 @@ DOC_START
 			connections using the client IP address.
 			NP: disables authentication and maybe IPv6 on the port.
 
-	   accel	Accelerator mode. Also needs at least one of
-			vhost / vport / defaultsite.
+	   accel	Accelerator mode. Using the HTTP/1.1 Host header for
+			virtual domain support. Also uses the port as specified
+			in Host: header unless overridden by the vport option.
 
 	   ssl-bump 	Intercept each CONNECT request matching ssl_bump ACL,
 			establish secure connection with the client and with
@@ -1309,38 +1310,38 @@ DOC_START
 
 	Accelerator Mode Options:
 
+	   act-as-origin
+			Act as if this Squid is the origin server.
+			This currently means generate new Date: and Expires:
+			headers on HIT instead of adding Age:.
+
 	   allow-direct	Allow direct forwarding in accelerator mode. Normally
 			accelerated requests are denied direct forwarding as if
 			never_direct was used.
+
+			WARNING: this option opens accelerator mode to security
+			vulnerabilities usually only affecting in interception mode.
 
 	   defaultsite=domainname
 			What to use for the Host: header if it is not present
 			in a request. Determines what site (not origin server)
 			accelerators should consider the default.
-			Implies accel.
 
-	   vhost	Using the Host header for virtual domain support.
-			Also uses the port as specified in Host: header unless
-			overridden by the vport option.
+	   ignore-cc	Ignore request Cache-Control headers.
+
+			WARNING: This option violates HTTP specifications if
+			used in non-accelerator setups.
+
+	   no-vhost	Disable using HTTP/1.1 Host header for virtual domain support.
+
+	   protocol=	Protocol to reconstruct accelerated requests with.
+			Defaults to http://.
 
 	   vport	Virtual host port support. Using the http_port number
 			instead of the port passed on Host: headers.
 
 	   vport=NN	Virtual host port support. Using the specified port
 			number instead of the port passed on Host: headers.
-
-	   protocol=	Protocol to reconstruct accelerated requests with.
-			Defaults to http://.
-
-	   act-as-origin
-			Act as if this Squid is the origin server.
-			This currently means generate new Date: and Expires:
-			headers on HIT instead of adding Age:.
-
-	   ignore-cc	Ignore request Cache-Control headers.
-
-	   		Warning: This option violates HTTP specifications if
-			used in non-accelerator setups.
 
 
 	SSL Bump Mode Options:
