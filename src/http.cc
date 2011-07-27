@@ -687,7 +687,8 @@ HttpStateData::processReplyHeader()
             return;
         }
 
-        debugs(11, 9, "GOT HTTP REPLY HDR:\n---------\n" << readBuf->content() << "\n----------");
+        debugs(11, 2, "HTTP Server " << serverConnection);
+        debugs(11, 2, "HTTP Server REPLY:\n---------\n" << readBuf->content() << "\n----------");
 
         header_bytes_read = headersEnd(readBuf->content(), readBuf->contentSize());
         readBuf->consume(header_bytes_read);
@@ -2124,9 +2125,11 @@ HttpStateData::sendRequest()
     mb.init();
     request->peer_host=_peer?_peer->host:NULL;
     buildRequestPrefix(&mb);
-    debugs(11, 6, HERE << serverConnection << ":\n" << mb.buf);
-    Comm::Write(serverConnection, &mb, requestSender);
 
+    debugs(11, 2, "HTTP Server " << serverConnection);
+    debugs(11, 2, "HTTP Server REQUEST:\n---------\n" << mb.buf << "\n----------");
+
+    Comm::Write(serverConnection, &mb, requestSender);
     return true;
 }
 
