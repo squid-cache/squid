@@ -77,7 +77,6 @@ static OBJH neighborDumpPeers;
 static OBJH neighborDumpNonPeers;
 static void dump_peers(StoreEntry * sentry, peer * peers);
 
-static icp_common_t echo_hdr;
 static u_short echo_port;
 
 static int NLateReplies = 0;
@@ -565,17 +564,8 @@ neighbors_init(void)
 
     peerRefreshDNS((void *) 1);
 
-    if (echo_hdr.opcode == ICP_INVALID) {
-        echo_hdr.opcode = ICP_SECHO;
-        echo_hdr.version = ICP_VERSION_CURRENT;
-        echo_hdr.length = 0;
-        echo_hdr.reqnum = 0;
-        echo_hdr.flags = 0;
-        echo_hdr.pad = 0;
-        theIcpPublicHostID.GetInAddr( *((struct in_addr*)&echo_hdr.shostid) );
-        sep = getservbyname("echo", "udp");
-        echo_port = sep ? ntohs((u_short) sep->s_port) : 7;
-    }
+    sep = getservbyname("echo", "udp");
+    echo_port = sep ? ntohs((u_short) sep->s_port) : 7;
 
     first_ping = Config.peers;
 }
@@ -653,7 +643,6 @@ neighborsUdpPing(HttpRequest * request,
 
                 if (p->icp.port == echo_port) {
                     debugs(15, 4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping");
-                    echo_hdr.reqnum = reqnum;
                     query = _icp_common_t::createMessage(ICP_DECHO, 0, url, reqnum, 0);
                     icpUdpSend(icpOutgoingConn->fd, p->in_addr, query, LOG_ICP_QUERY, 0);
                 } else {
