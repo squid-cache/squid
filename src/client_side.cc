@@ -3027,6 +3027,10 @@ ConnStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer )
     if (!handleRequestBodyData())
         return;
 
+    // too late to read more body
+    if (!isOpen() || closing())
+        return;
+
     readSomeData();
 }
 
