@@ -393,6 +393,7 @@ statObjects(void *data)
         cbdataFree(state);
         return;
     } else if (state->sentry->checkDeferRead(-1)) {
+        state->sentry->flush();
         eventAdd("statObjects", statObjects, state, 0.1, 1);
         return;
     }
