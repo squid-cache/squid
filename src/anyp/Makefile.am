@@ -5,7 +5,8 @@ noinst_LTLIBRARIES = libanyp.la
 
 libanyp_la_SOURCES = \
 	ProtocolType.cc \
-	ProtocolType.h
+	ProtocolType.h \
+	ProtocolVersion.h
 
 ProtocolType.cc: ProtocolType.h $(top_srcdir)/src/mk-string-arrays.awk
 	($(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk <$(srcdir)/ProtocolType.h | sed -e 's%PROTO_%%' >$@) || ($(RM) -f $@ && exit 1)
