@@ -408,7 +408,7 @@ void Ssl::CertificateDb::load()
 #endif
 
     if (corrupt)
-        throw std::runtime_error("The SSL certificate database " + db_path + " is curruted. Please rebuild");
+        throw std::runtime_error("The SSL certificate database " + db_path + " is corrupted. Please rebuild");
 
     db.reset(temp_db.release());
 }
