@@ -35,64 +35,14 @@
 #ifndef SQUID_HTTPVERSION_H
 #define SQUID_HTTPVERSION_H
 
-#if HAVE_OSTREAM
-#include <ostream>
-#endif
+#include "anyp/ProtocolVersion.h"
 
-class HttpVersion
+class HttpVersion : public AnyP::ProtocolVersion
 {
-
 public:
-    HttpVersion() {
-        major = 0;
-        minor = 0;
-    }
+    HttpVersion() : AnyP::ProtocolVersion(AnyP::PROTO_HTTP,0,0) {}
 
-    HttpVersion(unsigned int aMajor, unsigned int aMinor) {
-        major = aMajor;
-        minor = aMinor;
-    }
-
-    unsigned int major;
-    unsigned int minor;
-
-    bool operator==(const HttpVersion& that) const {
-        if (this->major != that.major)
-            return false;
-
-        if (this->minor != that.minor)
-            return false;
-
-        return true;
-    }
-
-    bool operator!=(const HttpVersion& that) const {
-        return ((this->major != that.major) || (this->minor != that.minor));
-    }
-
-    bool operator <(const HttpVersion& that) const {
-        return (this->major < that.major ||
-                (this->major == that.major && this->minor < that.minor));
-    }
-
-    bool operator >(const HttpVersion& that) const {
-        return (this->major > that.major ||
-                (this->major == that.major && this->minor > that.minor));
-    }
-
-    bool operator <=(const HttpVersion& that) const {
-        return !(*this > that);
-    }
-
-    bool operator >=(const HttpVersion& that) const {
-        return !(*this < that);
-    }
+    HttpVersion(unsigned int aMajor, unsigned int aMinor) : AnyP::ProtocolVersion(AnyP::PROTO_HTTP,aMajor,aMinor) {}
 };
-
-inline std::ostream &
-operator << (std::ostream &os, const HttpVersion &v)
-{
-    return (os << v.major << '.' << v.minor);
-}
 
 #endif /* SQUID_HTTPVERSION_H */
