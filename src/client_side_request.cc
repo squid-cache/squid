@@ -1067,7 +1067,7 @@ ClientRequestContext::clientRedirectDone(char *result)
                 http->request = HTTPMSGLOCK(new_request);
             } else {
                 debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid request: " <<
-                       old_request->method << " " << result << " HTTP/1.1");
+                       old_request->method << " " << result << " " << old_request->http_ver);
                 delete new_request;
             }
         }
