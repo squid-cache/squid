@@ -125,7 +125,7 @@ AuthBasicUserRequest::module_start(RH * handler, void *data)
     if (sz<=0) {
         debugs(9, DBG_CRITICAL, "ERROR: Basic Authentication Failure. Can not build helper validation request.");
         handler(data, NULL);
-    } else if (sz>=sizeof(buf)) {
+    } else if (static_cast<size_t>(sz) >= sizeof(buf)) {
         debugs(9, DBG_CRITICAL, "ERROR: Basic Authentication Failure. user:password exceeds " << sizeof(buf) << " bytes.");
         handler(data, NULL);
     } else
