@@ -17,8 +17,8 @@ public:
     // BUG: major() and minor() are macros.
     //      we can't use a fast constructor syntax without renaming them globally
     ProtocolVersion() : protocol(PROTO_NONE) {
-         major = 0;
-         minor = 0;
+        major = 0;
+        minor = 0;
     }
 
     ProtocolVersion(ProtocolType which, unsigned int aMajor, unsigned int aMinor) : protocol(which) {
