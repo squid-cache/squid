@@ -54,10 +54,9 @@
 #include "SquidTime.h"
 
 /* Basic Scheme */
-static HLPCB authenticateBasicHandleReply;
 static AUTHSSTATS authenticateBasicStats;
 
-static helper *basicauthenticators = NULL;
+helper *basicauthenticators = NULL;
 
 static int authbasic_initialised = 0;
 
@@ -133,62 +132,6 @@ Auth::Basic::Config::done()
 
     if (basicAuthRealm)
         safe_free(basicAuthRealm);
-}
-
-static void
-authenticateBasicHandleReply(void *data, char *reply)
-{
-    Auth::StateData *r = static_cast<Auth::StateData *>(data);
-    BasicAuthQueueNode *tmpnode;
-    char *t = NULL;
-    void *cbdata;
-    debugs(29, 9, HERE << "{" << (reply ? reply : "<NULL>") << "}");
-
-    if (reply) {
-        if ((t = strchr(reply, ' ')))
-            *t++ = '\0';
-
-        if (*reply == '\0')
-            reply = NULL;
-    }
-
-    assert(r->auth_user_request != NULL);
-    assert(r->auth_user_request->user()->auth_type == Auth::AUTH_BASIC);
-
-    /* this is okay since we only play with the Auth::Basic::User child fields below
-     * and dont pass the pointer itself anywhere */
-    Auth::Basic::User *basic_auth = dynamic_cast<Auth::Basic::User *>(r->auth_user_request->user().getRaw());
-
-    assert(basic_auth != NULL);
-
-    if (reply && (strncasecmp(reply, "OK", 2) == 0))
-        basic_auth->credentials(Auth::Ok);
-    else {
-        basic_auth->credentials(Auth::Failed);
-
-        if (t && *t)
-            r->auth_user_request->setDenyMessage(t);
-    }
-
-    basic_auth->expiretime = squid_curtime;
-
-    if (cbdataReferenceValidDone(r->data, &cbdata))
-        r->handler(cbdata, NULL);
-
-    cbdataReferenceDone(r->data);
-
-    while (basic_auth->auth_queue) {
-        tmpnode = basic_auth->auth_queue->next;
-
-        if (cbdataReferenceValidDone(basic_auth->auth_queue->data, &cbdata))
-            basic_auth->auth_queue->handler(cbdata, NULL);
-
-        xfree(basic_auth->auth_queue);
-
-        basic_auth->auth_queue = tmpnode;
-    }
-
-    delete r;
 }
 
 void
@@ -425,41 +368,4 @@ Auth::Basic::Config::registerWithCacheManager(void)
     Mgr::RegisterAction("basicauthenticator",
                         "Basic User Authenticator Stats",
                         authenticateBasicStats, 0, 1);
-}
-
-// XXX: this is a auth management function. Surely not in scope for the credentials storage object
-void
-Auth::Basic::User::queueRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data)
-{
-    BasicAuthQueueNode *node;
-    node = static_cast<BasicAuthQueueNode *>(xcalloc(1, sizeof(BasicAuthQueueNode)));
-    assert(node);
-    /* save the details */
-    node->next = auth_queue;
-    auth_queue = node;
-    node->auth_user_request = auth_user_request;
-    node->handler = handler;
-    node->data = cbdataReference(data);
-}
-
-// XXX: this is a auth management function. Surely not in scope for the credentials storage object
-void
-Auth::Basic::User::submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data)
-{
-    /* mark the user as having verification in progress */
-    credentials(Auth::Pending);
-    char buf[8192];
-    char user[1024], pass[1024];
-    if (static_cast<Auth::Basic::Config*>(config)->utf8) {
-        latin1_to_utf8(user, sizeof(user), username());
-        latin1_to_utf8(pass, sizeof(pass), passwd);
-        xstrncpy(user, rfc1738_escape(user), sizeof(user));
-        xstrncpy(pass, rfc1738_escape(pass), sizeof(pass));
-    } else {
-        xstrncpy(user, rfc1738_escape(username()), sizeof(user));
-        xstrncpy(pass, rfc1738_escape(passwd), sizeof(pass));
-    }
-    snprintf(buf, sizeof(buf), "%s %s\n", user, pass);
-    helperSubmit(basicauthenticators, buf, authenticateBasicHandleReply,
-                 new Auth::StateData(auth_user_request, handler, data));
 }

@@ -22,6 +22,9 @@ public:
     virtual void authenticate(HttpRequest * request, ConnStateData *conn, http_hdr_type type);
     virtual Auth::Direction module_direction();
     virtual void module_start(RH *, void *);
+
+private:
+    static HLPCB HandleReply;
 };
 
 MEMPROXY_CLASS_INLINE(AuthBasicUserRequest);
