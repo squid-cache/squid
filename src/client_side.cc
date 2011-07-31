@@ -374,6 +374,9 @@ ClientSocketContext::writeControlMsg(HttpControlMsg &msg)
 
     MemBuf *mb = rep->pack();
 
+    debugs(11, 2, "HTTP Client " << clientConnection);
+    debugs(11, 2, "HTTP Client CONTROL MSG:\n---------\n" << mb->buf << "\n----------");
+
     AsyncCall::Pointer call = commCbCall(33, 5, "ClientSocketContext::wroteControlMsg",
                                          CommIoCbPtrFun(&WroteControlMsg, this));
     Comm::Write(clientConnection, mb, call);
@@ -1352,6 +1355,11 @@ ClientSocketContext::sendStartOfMessage(HttpReply * rep, StoreIOBuffer bodyData)
     prepareReply(rep);
     assert (rep);
     MemBuf *mb = rep->pack();
+
+    // dump now, so we dont output any body.
+    debugs(11, 2, "HTTP Client " << clientConnection);
+    debugs(11, 2, "HTTP Client REPLY:\n---------\n" << mb->buf << "\n----------");
+
     /* Save length of headers for persistent conn checks */
     http->out.headers_sz = mb->contentSize();
 #if HEADERS_LOG
@@ -2274,6 +2282,11 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
     }
 
     debugs(33, 5, "parseHttpRequest: Complete request received");
+
+    // XXX: crop this dump at the end of headers. No need for extras
+    debugs(11, 2, "HTTP Client " << csd->clientConnection);
+    debugs(11, 2, "HTTP Client REQUEST:\n---------\n" << (hp->buf) + hp->req.m_start << "\n----------");
+
     result->flags.parsed_ok = 1;
     xfree(url);
     return result;
