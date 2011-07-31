@@ -83,9 +83,6 @@ static void icpHandleIcpV2(int, Ip::Address &, char *, int);
 /// \ingroup ServerProtocolICPInternal2
 static void icpCount(void *, int, size_t, int);
 
-/// \ingroup ServerProtocolICPInternal2
-static void icpGetOutgoingIpAddress();
-
 /**
  \ingroup ServerProtocolICPInternal2
  * IcpQueueHead is global so comm_incoming() knows whether or not
@@ -99,21 +96,6 @@ static icpUdpData *IcpQueueTail = NULL;
 Comm::ConnectionPointer icpIncomingConn = NULL;
 /// \ingroup ServerProtocolICPInternal2
 Comm::ConnectionPointer icpOutgoingConn = NULL;
-
-/** \ingroup ServerProtocolICPInternal2
- * ICP v2 uses the outgoing address as host ID.
- * NP: this *may* be identical to icpOutgoingConn->local
- * but when IN/OUT sockets are shared we can't guarantee that
- * so a separate variable is used for now.
- *
- * We have one for private use (sent only by this local cache)
- * and one for public use (for external caches to contact us)
- */
-Ip::Address theIcpPrivateHostID;
-
-/// \see theIcpPrivateHostID
-Ip::Address theIcpPublicHostID;
-
 
 /* icp_common_t */
 _icp_common_t::_icp_common_t() : opcode(ICP_INVALID), version(0), length(0), reqnum(0), flags(0), pad(0), shostid(0)
@@ -299,7 +281,7 @@ _icp_common_t::createMessage(
 
     headerp->pad = htonl(pad);
 
-    theIcpPrivateHostID.GetInAddr( *((struct in_addr*)&headerp->shostid) );
+    headerp->shostid = 0;
 
     urloffset = buf + sizeof(icp_common_t);
 
@@ -745,24 +727,7 @@ icpConnectionsOpen(void)
 
         Comm::SetSelect(icpOutgoingConn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
         fd_note(icpOutgoingConn->fd, "Outgoing ICP socket");
-        icpGetOutgoingIpAddress();
     }
-}
-
-// Ensure that we have the IP address(es) to use for Host ID.
-// The outgoing address is used as 'private' host ID used only on packets we send
-static void
-icpGetOutgoingIpAddress()
-{
-    struct addrinfo *xai = NULL;
-    theIcpPrivateHostID.SetEmpty();
-    theIcpPrivateHostID.InitAddrInfo(xai);
-    if (getsockname(icpOutgoingConn->fd, xai->ai_addr, &xai->ai_addrlen) < 0)
-        debugs(50, DBG_IMPORTANT, "ERROR: Unable to identify ICP host ID to use for " << icpOutgoingConn
-               << ": getsockname: " << xstrerror());
-    else
-        theIcpPrivateHostID = *xai;
-    theIcpPrivateHostID.FreeAddrInfo(xai);
 }
 
 static void
@@ -783,19 +748,7 @@ icpIncomingConnectionOpened(int errNo)
     if (Config.Addrs.udp_outgoing.IsNoAddr()) {
         icpOutgoingConn = icpIncomingConn;
         debugs(12, DBG_IMPORTANT, "Sending ICP messages from " << icpOutgoingConn->local);
-        icpGetOutgoingIpAddress();
     }
-
-    // Ensure that we have the IP address(es) to use for Host ID.
-    // The listening address is used as 'public' host ID which can be used to contact us
-    struct addrinfo *xai = NULL;
-    theIcpPublicHostID.InitAddrInfo(xai); // reset xai
-    if (getsockname(icpIncomingConn->fd, xai->ai_addr, &xai->ai_addrlen) < 0)
-        debugs(50, DBG_IMPORTANT, "ERROR: Unable to identify ICP host ID to use for " << icpIncomingConn
-               << ": getsockname: " << xstrerror());
-    else
-        theIcpPublicHostID = *xai;
-    theIcpPublicHostID.FreeAddrInfo(xai);
 }
 
 /**
