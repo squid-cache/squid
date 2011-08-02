@@ -70,7 +70,10 @@ protected:
             return traits_type::eof();
 
         if (aChar != traits_type::eof()) {
-            char chars[1] = {aChar};
+            // NP: cast because GCC promotes int_type to 32-bit type
+            //     std::basic_streambuf<char>::int_type {aka int}
+            //     despite the definition with 8-bit type value.
+            char chars[1] = {char(aChar)};
 
             if (aChar != traits_type::eof())
                 theEntry->append(chars, 1);
