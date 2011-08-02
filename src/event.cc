@@ -238,7 +238,7 @@ int
 EventScheduler::checkEvents(int timeout)
 {
 
-    struct ev_entry *event = NULL;
+    ev_entry *event = NULL;
 
     if (NULL == tasks)
         return checkDelay();
@@ -291,7 +291,7 @@ void
 EventScheduler::dump(StoreEntry * sentry)
 {
 
-    struct ev_entry *e = tasks;
+    ev_entry *e = tasks;
 
     if (last_event_ran)
         storeAppendPrintf(sentry, "Last event to run: %s\n\n", last_event_ran);
@@ -314,7 +314,7 @@ bool
 EventScheduler::find(EVH * func, void * arg)
 {
 
-    struct ev_entry *event;
+    ev_entry *event;
 
     for (event = tasks; event != NULL; event = event->next) {
         if (event->func == func && event->arg == arg)
@@ -337,9 +337,9 @@ EventScheduler::schedule(const char *name, EVH * func, void *arg, double when, i
     // must fire in the submission order. We cannot use current_dtime for them
     // because it may decrease if system clock is adjusted backwards.
     const double timestamp = when > 0.0 ? current_dtime + when : 0;
-    struct ev_entry *event = new ev_entry(name, func, arg, timestamp, weight, cbdata);
+    ev_entry *event = new ev_entry(name, func, arg, timestamp, weight, cbdata);
 
-    struct ev_entry **E;
+    ev_entry **E;
     debugs(41, 7, HERE << "schedule: Adding '" << name << "', in " << when << " seconds");
     /* Insert after the last event with the same or earlier time */
 
