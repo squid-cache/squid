@@ -347,7 +347,7 @@ wccpAssignBuckets(void)
 
     buckets = buf + wab_len + cache_len;
 
-    memset(wccp_assign_bucket, '\0', sizeof(wccp_assign_bucket));
+    memset(wccp_assign_bucket, '\0', sizeof(*wccp_assign_bucket));
 
     memset(buckets, 0xFF, WCCP_BUCKETS);
 
