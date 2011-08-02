@@ -17,6 +17,7 @@ libcompat_squid_a_SOURCES = \
 	compat.h \
 	compat_shared.h \
 	cpu.h \
+	cppunit.h \
 	debug.cc \
 	debug.h \
 	drand48.h \

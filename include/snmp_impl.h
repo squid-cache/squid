@@ -47,20 +47,6 @@ SOFTWARE.
 
 #define SID_MAX_LEN	64
 
-#if 0 /* defines performed globally by config.h */
-
-#ifndef NULL
-#define NULL 0
-#endif
-
-#ifndef TRUE
-#define TRUE	1
-#endif
-#ifndef FALSE
-#define FALSE	0
-#endif
-#endif /* dead code. */
-
 #define READ	    1
 #define WRITE	    0
 
