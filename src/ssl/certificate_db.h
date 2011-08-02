@@ -10,6 +10,9 @@
 #if HAVE_STRING
 #include <string>
 #endif
+#if HAVE_OPENSSL_OPENSSLV_H
+#include <openssl/opensslv.h>
+#endif
 
 namespace Ssl
 {
@@ -110,10 +113,25 @@ private:
 
     /// Definitions required by openSSL, to use the index_* functions defined above
     ///with TXT_DB_create_index.
+#if OPENSSL_VERSION_NUMBER > 0x10000000L
+    static unsigned long index_serial_LHASH_HASH(const void *a) {
+        return index_serial_hash((const char **)a);
+    }
+    static int index_serial_LHASH_COMP(const void *arg1, const void *arg2) {
+        return index_serial_cmp((const char **)arg1, (const char **)arg2);
+    }
+    static unsigned long index_name_LHASH_HASH(const void *a) {
+        return index_name_hash((const char **)a);
+    }
+    static int index_name_LHASH_COMP(const void *arg1, const void *arg2) {
+        return index_name_cmp((const char **)arg1, (const char **)arg2);
+    }
+#else
     static IMPLEMENT_LHASH_HASH_FN(index_serial_hash,const char **)
     static IMPLEMENT_LHASH_COMP_FN(index_serial_cmp,const char **)
     static IMPLEMENT_LHASH_HASH_FN(index_name_hash,const char **)
     static IMPLEMENT_LHASH_COMP_FN(index_name_cmp,const char **)
+#endif
 
     static const std::string serial_file; ///< Base name of the file to store serial number.
     static const std::string db_file; ///< Base name of the database index file.

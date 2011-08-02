@@ -394,14 +394,22 @@ void Ssl::CertificateDb::load()
         corrupt = true;
 
     // Create indexes in db.
+#if OPENSSL_VERSION_NUMBER > 0x10000000L
+    if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlSerial, NULL, LHASH_HASH_FN(index_serial), LHASH_COMP_FN(index_serial)))
+        corrupt = true;
+
+    if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlName, NULL, LHASH_HASH_FN(index_name), LHASH_COMP_FN(index_name)))
+        corrupt = true;
+#else
     if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlSerial, NULL, LHASH_HASH_FN(index_serial_hash), LHASH_COMP_FN(index_serial_cmp)))
         corrupt = true;
 
     if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlName, NULL, LHASH_HASH_FN(index_name_hash), LHASH_COMP_FN(index_name_cmp)))
         corrupt = true;
+#endif
 
     if (corrupt)
-        throw std::runtime_error("The SSL certificate database " + db_path + " is curruted. Please rebuild");
+        throw std::runtime_error("The SSL certificate database " + db_path + " is corrupted. Please rebuild");
 
     db.reset(temp_db.release());
 }
@@ -426,13 +434,22 @@ bool Ssl::CertificateDb::deleteInvalidCertificate()
         return false;
 
     bool removed_one = false;
+#if OPENSSL_VERSION_NUMBER > 0x10000000L
+    for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); i++) {
+        const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
+#else
     for (int i = 0; i < sk_num(db.get()->data); i++) {
         const char ** current_row = ((const char **)sk_value(db.get()->data, i));
+#endif
 
         if (!sslDateIsInTheFuture(current_row[cnlExp_date])) {
             std::string filename(cert_full + "/" + current_row[cnlSerial] + ".pem");
             FileLocker cert_locker(filename);
+#if OPENSSL_VERSION_NUMBER > 0x10000000L
+            sk_OPENSSL_PSTRING_delete(db.get()->data, i);
+#else
             sk_delete(db.get()->data, i);
+#endif
             subSize(filename);
             remove(filename.c_str());
             removed_one = true;
@@ -450,12 +467,27 @@ bool Ssl::CertificateDb::deleteOldestCertificate()
     if (!db)
         return false;
 
+#if OPENSSL_VERSION_NUMBER > 0x10000000L
+    if (sk_OPENSSL_PSTRING_num(db.get()->data) == 0)
+#else
     if (sk_num(db.get()->data) == 0)
+#endif
         return false;
 
-    std::string filename(cert_full + "/" + ((const char **)sk_value(db.get()->data, 0))[cnlSerial] + ".pem");
+#if OPENSSL_VERSION_NUMBER > 0x10000000L
+    const char **row = (const char **)sk_OPENSSL_PSTRING_value(db.get()->data, 0);
+#else
+    const char **row = (const char **)sk_value(db.get()->data, 0);
+#endif
+    std::string filename(cert_full + "/" + row[cnlSerial] + ".pem");
     FileLocker cert_locker(filename);
+
+#if OPENSSL_VERSION_NUMBER > 0x10000000L
+    sk_OPENSSL_PSTRING_delete(db.get()->data, 0);
+#else
     sk_delete(db.get()->data, 0);
+#endif
+
     subSize(filename);
     remove(filename.c_str());
 
@@ -467,12 +499,21 @@ bool Ssl::CertificateDb::deleteByHostname(std::string const & host)
     if (!db)
         return false;
 
+#if OPENSSL_VERSION_NUMBER > 0x10000000L
+    for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); i++) {
+        const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
+#else
     for (int i = 0; i < sk_num(db.get()->data); i++) {
         const char ** current_row = ((const char **)sk_value(db.get()->data, i));
+#endif
         if (host == current_row[cnlName]) {
             std::string filename(cert_full + "/" + current_row[cnlSerial] + ".pem");
             FileLocker cert_locker(filename);
+#if OPENSSL_VERSION_NUMBER > 0x10000000L
+            sk_OPENSSL_PSTRING_delete(db.get()->data, i);
+#else
             sk_delete(db.get()->data, i);
+#endif
             subSize(filename);
             remove(filename.c_str());
             return true;
