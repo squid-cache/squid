@@ -181,7 +181,7 @@ carpSelectParent(HttpRequest * request)
 
     /* select peer */
     for (k = 0; k < n_carp_peers; k++) {
-    	String key;
+        String key;
         tp = carp_peers[k];
         if (tp->options.carp_key.set) {
             //this code follows urlCanonical's pattern.
@@ -213,7 +213,7 @@ carpSelectParent(HttpRequest * request)
                 if ((pos=request->urlpath.find('?'))!=String::npos)
                     key.append(request->urlpath.substr(pos,request->urlpath.size()));
             }
-    	}
+        }
         // if the url-based key is empty, e.g. because the user is
         // asking to balance on the path but the request doesn't supply any,
         // then fall back to canonical URL
