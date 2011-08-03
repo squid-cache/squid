@@ -519,6 +519,133 @@ clientFollowXForwardedForCheck(allow_t answer, void *data)
 }
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
+static void
+hostHeaderIpVerifyWrapper(const ipcache_addrs* ia, const DnsLookupDetails &dns, void *data)
+{
+    ClientRequestContext *c = static_cast<ClientRequestContext*>(data);
+    c->hostHeaderIpVerify(ia, dns);
+}
+
+void
+ClientRequestContext::hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLookupDetails &dns)
+{
+    Comm::ConnectionPointer clientConn = http->getConn()->clientConnection;
+
+    // note the DNS details for the transaction stats.
+    http->request->recordLookup(dns);
+
+    if (ia != NULL && ia->count > 0) {
+        // Is the NAT destination IP in DNS?
+        for (int i = 0; i < ia->count; i++) {
+            if (clientConn->local.matchIPAddr(ia->in_addrs[i]) == 0) {
+                debugs(85, 3, HERE << "validate IP " << clientConn->local << " possible from Host:");
+                http->doCallouts();
+                return;
+            }
+            debugs(85, 3, HERE << "validate IP " << clientConn->local << " non-match from Host: IP " << ia->in_addrs[i]);
+        }
+    }
+    debugs(85, 3, HERE << "FAIL: validate IP " << clientConn->local << " possible from Host:");
+    hostHeaderVerifyFailed();
+}
+
+void
+ClientRequestContext::hostHeaderVerifyFailed()
+{
+    debugs(85, 1, "SECURITY ALERT: Host: header forgery detected from " << http->getConn()->clientConnection);
+
+    // IP address validation for Host: failed. reject the connection.
+    clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
+    clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+    assert (repContext);
+    repContext->setReplyToError(ERR_INVALID_REQ, HTTP_CONFLICT,
+                                http->request->method, NULL,
+                                http->getConn()->clientConnection->remote,
+                                http->request,
+                                NULL,
+#if USE_AUTH
+                                http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
+                                http->getConn()->auth_user_request : http->request->auth_user_request);
+#else
+                                NULL);
+#endif
+    node = (clientStreamNode *)http->client_stream.tail->data;
+    clientStreamRead(node, http, node->readBuffer);
+}
+
+void
+ClientRequestContext::hostHeaderVerify()
+{
+    // Require a Host: header.
+    const char *host = http->request->header.getStr(HDR_HOST);
+    char *hostB = NULL;
+
+    if (!host) {
+        // TODO: dump out the HTTP/1.1 error about missing host header.
+        // otherwise this is fine, can't forge a header value when its not even set.
+        debugs(85, 3, HERE << "validate skipped with no Host: header present.");
+        http->doCallouts();
+        return;
+    }
+
+    // Locate if there is a port attached, strip ready for IP lookup
+    char *portStr = NULL;
+    uint16_t port = 0;
+    if (host[0] == '[') {
+        // IPv6 literal.
+        // check for a port?
+        hostB = xstrdup(host+1);
+        portStr = strchr(hostB, ']');
+        if (!portStr) {
+            safe_free(hostB); // well, that wasn't an IPv6 literal.
+        } else {
+            *portStr = '\0';
+            if (*(++portStr) == ':')
+                port = xatoi(++portStr);
+            else
+                portStr=NULL; // no port to check.
+        }
+        if (hostB)
+            host = hostB; // point host at the local version for lookup
+    } else if (strrchr(host, ':') != NULL) {
+        // Domain or IPv4 literal with port
+        hostB = xstrdup(host);
+        portStr = strrchr(hostB, ':');
+        *portStr = '\0';
+        port = xatoi(++portStr);
+        host = hostB; // point host at the local version for lookup
+    }
+
+    debugs(85, 3, HERE << "validate host=" << host << ", port=" << port << ", portStr=" << (portStr?portStr:"NULL"));
+    if (http->request->flags.intercepted || http->request->flags.spoof_client_ip) {
+        // verify the port (if any) matches the apparent destination
+        if (portStr && port != http->getConn()->clientConnection->local.GetPort()) {
+            debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.GetPort() << " matches Host: port " << port << "((" << portStr);
+            hostHeaderVerifyFailed();
+            safe_free(hostB);
+            return;
+        }
+        // XXX: match the scheme default port against the apparent destination
+
+        // verify the destination DNS is one of the Host: headers IPs
+        ipcache_nbgethostbyname(host, hostHeaderIpVerifyWrapper, this);
+        safe_free(hostB);
+        return;
+    }
+    safe_free(hostB);
+
+    // Verify forward-proxy requested URL domain matches the Host: header
+    host = http->request->header.getStr(HDR_HOST);
+    if (strcmp(host, http->request->GetHost()) != 0) {
+        debugs(85, 3, HERE << "FAIL on validate URL domain " << http->request->GetHost() << " matches Host: " << host);
+        hostHeaderVerifyFailed();
+        return;
+    }
+
+    debugs(85, 3, HERE << "validate passed.");
+    http->doCallouts();
+}
+
 /* This is the entry point for external users of the client_side routines */
 void
 ClientRequestContext::clientAccessCheck()
@@ -1331,6 +1458,14 @@ ClientHttpRequest::doCallouts()
     /*Save the original request for logging purposes*/
     if (!calloutContext->http->al.request)
         calloutContext->http->al.request = HTTPMSGLOCK(request);
+
+    // CVE-2009-0801: verify the Host: header is consistent with other known details.
+    if (!calloutContext->host_header_verify_done) {
+        debugs(83, 3, HERE << "Doing calloutContext->hostHeaderVerify()");
+        calloutContext->host_header_verify_done = true;
+        calloutContext->hostHeaderVerify();
+        return;
+    }
 
     if (!calloutContext->http_access_done) {
         debugs(83, 3, HERE << "Doing calloutContext->clientAccessCheck()");
