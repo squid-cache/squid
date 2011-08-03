@@ -3,6 +3,7 @@
 
 class ACLChecklist;
 class ClientHttpRequest;
+class DnsLookupDetails;
 
 /* for RefCountable */
 #include "RefCount.h"
@@ -24,6 +25,9 @@ public:
     ~ClientRequestContext();
 
     bool httpStateIsValid();
+    void hostHeaderVerify();
+    void hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLookupDetails &dns);
+    void hostHeaderVerifyFailed();
     void clientAccessCheck();
     void clientAccessCheck2();
     void clientAccessCheckDone(const allow_t &answer);
@@ -51,6 +55,7 @@ public:
     ACLChecklist *acl_checklist;        /* need ptr back so we can unreg if needed */
     int redirect_state;
 
+    bool host_header_verify_done;
     bool http_access_done;
     bool adapted_http_access_done;
 #if USE_ADAPTATION
