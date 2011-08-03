@@ -18,12 +18,14 @@ Adaptation::Ecap::Config::~Config()
 {
 }
 
-void
+bool
 Adaptation::Ecap::Config::finalize()
 {
-    Adaptation::Config::finalize();
+    if (!Adaptation::Config::finalize())
+        return false;
     Host::Register();
     CheckUnusedAdapterServices(AllServices());
+    return true;
 }
 
 Adaptation::ServiceConfig *
