@@ -73,7 +73,9 @@ public:
         CompositeSelectionDetails() {}
 
         Ip::Address src_addr;
+#if USE_AUTH
         AuthUserRequest::Pointer user;
+#endif
         String tag;
     };
 
