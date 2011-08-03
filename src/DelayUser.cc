@@ -37,7 +37,7 @@
 
 #include "config.h"
 
-#if USE_DELAY_POOLS
+#if USE_DELAY_POOLS && USE_AUTH
 #include "squid.h"
 #include "DelayUser.h"
 #include "auth/UserRequest.h"
@@ -235,4 +235,4 @@ DelayUser::Id::bytesIn(int qty)
     theBucket->theBucket.bytesIn(qty);
 }
 
-#endif
+#endif /* USE_DELAY_POOLS && USE_AUTH */
