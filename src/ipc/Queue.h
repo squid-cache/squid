@@ -94,6 +94,9 @@ public:
     /// returns true iff the caller must notify the reader of the pushed item
     template<class Value> bool push(const Value &value, QueueReader *const reader = NULL);
 
+    /// returns true iff the value was set; the value may be stale!
+    template<class Value> bool peek(Value &value) const;
+
 private:
 
     unsigned int theIn; ///< input index, used only in push()
@@ -179,8 +182,13 @@ public:
     /// calls OneToOneUniQueue::push() using the given process queue
     template <class Value> bool push(const int remoteProcessId, const Value &value);
 
+    /// calls OneToOneUniQueue::peek() using the given process queue
+    template<class Value> bool peek(const int remoteProcessId, Value &value) const;
+
 private:
     bool validProcessId(const Group group, const int processId) const;
+    int oneToOneQueueIndex(const Group fromGroup, const int fromProcessId, const Group toGroup, const int toProcessId) const;
+    const OneToOneUniQueue &oneToOneQueue(const Group fromGroup, const int fromProcessId, const Group toGroup, const int toProcessId) const;
     OneToOneUniQueue &oneToOneQueue(const Group fromGroup, const int fromProcessId, const Group toGroup, const int toProcessId);
     QueueReader &reader(const Group group, const int processId);
     int remoteGroupSize() const { return theLocalGroup == groupA ? metadata->theGroupBSize : metadata->theGroupASize; }
@@ -226,6 +234,22 @@ OneToOneUniQueue::pop(Value &value, QueueReader *const reader)
     memcpy(&value, theBuffer + pos, sizeof(value));
     --theSize;
 
+    return true;
+}
+
+template <class Value>
+bool
+OneToOneUniQueue::peek(Value &value) const
+{
+    if (sizeof(value) > theMaxItemSize)
+        throw ItemTooLarge();
+
+    if (empty())
+        return false;
+
+    // the reader may pop() before we copy; making this method imprecise
+    const unsigned int pos = (theOut % theCapacity) * theMaxItemSize;
+    memcpy(&value, theBuffer + pos, sizeof(value));
     return true;
 }
 
@@ -294,6 +318,19 @@ FewToFewBiQueue::push(const int remoteProcessId, const Value &value)
     QueueReader &remoteReader = reader(remoteGroup(), remoteProcessId);
     debugs(54, 7, HERE << "pushing from " << theLocalProcessId << " to " << remoteProcessId << " at " << remoteQueue.size());
     return remoteQueue.push(value, &remoteReader);
+}
+
+template <class Value>
+bool
+FewToFewBiQueue::peek(const int remoteProcessId, Value &value) const
+{
+    // we may be called before remote process configured its queue end
+    if (!validProcessId(remoteGroup(), remoteProcessId))
+        return false;
+
+    const OneToOneUniQueue &remoteQueue = oneToOneQueue(theLocalGroup, theLocalProcessId, remoteGroup(), remoteProcessId);
+    debugs(54, 7, HERE << "peeking from " << theLocalProcessId << " to " << remoteProcessId << " at " << remoteQueue.size());
+    return remoteQueue.peek(value);
 }
 
 } // namespace Ipc

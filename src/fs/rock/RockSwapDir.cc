@@ -43,7 +43,7 @@ Rock::SwapDir::search(String const url, HttpRequest *)
 StoreEntry *
 Rock::SwapDir::get(const cache_key *key)
 {
-    if (!map)
+    if (!map || !theFile || !theFile->canRead())
         return NULL;
 
     sfileno fileno;
