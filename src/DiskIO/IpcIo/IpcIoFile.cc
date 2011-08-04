@@ -17,6 +17,7 @@
 #include "ipc/StrandSearch.h"
 #include "ipc/UdsOp.h"
 #include "ipc/mem/Pages.h"
+#include "SquidTime.h"
 
 CBDATA_CLASS_INIT(IpcIoFile);
 
@@ -159,13 +160,13 @@ IpcIoFile::close()
 bool
 IpcIoFile::canRead() const
 {
-    return diskId >= 0;
+    return diskId >= 0 && canWait();
 }
 
 bool
 IpcIoFile::canWrite() const
 {
-    return diskId >= 0;
+    return diskId >= 0 && canWait();
 }
 
 bool
@@ -304,6 +305,7 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
     IpcIoMsg ipcIo;
     try {
         ipcIo.requestId = lastRequestId;
+        ipcIo.start = current_time;
         if (pending->readRequest) {
             ipcIo.command = IpcIo::cmdRead;
             ipcIo.offset = pending->readRequest->offset;
@@ -338,6 +340,25 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
         pending->completeIo(NULL); // XXX: should distinguish this from timeout
         delete pending;
     }
+}
+
+/// whether we think there is enough time to complete the I/O
+bool
+IpcIoFile::canWait() const {
+    if (!Config.Timeout.disk_io)
+        return true; // no timeout specified
+
+    IpcIoMsg oldestIo;
+    if (!queue->peek(diskId, oldestIo) || oldestIo.start.tv_sec <= 0)
+        return true; // we cannot estimate expected wait time; assume it is OK
+
+    const int expectedWait = tvSubMsec(oldestIo.start, current_time);
+    if (expectedWait < 0 ||
+        static_cast<time_msec_t>(expectedWait) < Config.Timeout.disk_io)
+        return true; // expected wait time is acceptible
+
+    debugs(47,2, HERE << "cannot wait: " << expectedWait);
+    return false; // do not want to wait that long
 }
 
 /// called when coordinator responds to worker open request
@@ -517,6 +538,7 @@ IpcIoFile::getFD() const
 IpcIoMsg::IpcIoMsg():
     requestId(0), offset(0), len(0), command(IpcIo::cmdNone), xerrno(0)
 {
+    start.tv_sec = 0;
 }
 
 /* IpcIoPendingRequest */

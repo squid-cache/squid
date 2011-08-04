@@ -162,12 +162,12 @@ Ipc::FewToFewBiQueue::validProcessId(const Group group, const int processId) con
     return false;
 }
 
-Ipc::OneToOneUniQueue &
-Ipc::FewToFewBiQueue::oneToOneQueue(const Group fromGroup, const int fromProcessId, const Group toGroup, const int toProcessId)
+int
+Ipc::FewToFewBiQueue::oneToOneQueueIndex(const Group fromGroup, const int fromProcessId, const Group toGroup, const int toProcessId) const
 {
     Must(fromGroup != toGroup);
-    Must(validProcessId(fromGroup, fromProcessId));
-    Must(validProcessId(toGroup, toProcessId));
+    assert(validProcessId(fromGroup, fromProcessId));
+    assert(validProcessId(toGroup, toProcessId));
     int index1;
     int index2;
     int offset;
@@ -181,7 +181,19 @@ Ipc::FewToFewBiQueue::oneToOneQueue(const Group fromGroup, const int fromProcess
         offset = metadata->theGroupASize * metadata->theGroupBSize;
     }
     const int index = offset + index1 * metadata->theGroupBSize + index2;
-    return (*queues)[index];
+    return index;
+}
+
+Ipc::OneToOneUniQueue &
+Ipc::FewToFewBiQueue::oneToOneQueue(const Group fromGroup, const int fromProcessId, const Group toGroup, const int toProcessId)
+{
+    return (*queues)[oneToOneQueueIndex(fromGroup, fromProcessId, toGroup, toProcessId)];
+}
+
+const Ipc::OneToOneUniQueue &
+Ipc::FewToFewBiQueue::oneToOneQueue(const Group fromGroup, const int fromProcessId, const Group toGroup, const int toProcessId) const
+{
+    return (*queues)[oneToOneQueueIndex(fromGroup, fromProcessId, toGroup, toProcessId)];
 }
 
 Ipc::QueueReader &

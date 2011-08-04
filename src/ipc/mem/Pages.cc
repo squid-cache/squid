@@ -68,7 +68,7 @@ Ipc::Mem::PageLimit(const int purpose)
         return Config.memMaxSize > 0 ? Config.memMaxSize / PageSize() : 0;
     case PageId::ioPage:
         // XXX: this should be independent from memory cache pages
-        return PageLimit(PageId::cachePage) * 0.5;
+        return PageLimit(PageId::cachePage)/2;
     default:
         Must(false);
     }

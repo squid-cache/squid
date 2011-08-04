@@ -214,6 +214,7 @@ struct SquidConfig {
         int icp_query_max;	/* msec */
         int icp_query_min;	/* msec */
         int mcast_icp_query;	/* msec */
+        time_msec_t disk_io;
 
 #if !USE_DNSSERVERS
 

@@ -53,7 +53,6 @@ void
 Rock::IoState::read_(char *buf, size_t len, off_t coreOff, STRCB *cb, void *data)
 {
     assert(theFile != NULL);
-    assert(theFile->canRead());
     assert(coreOff >= 0);
     offset_ = coreOff;
 
@@ -109,7 +108,6 @@ void
 Rock::IoState::startWriting()
 {
     assert(theFile != NULL);
-    assert(theFile->canWrite());
     assert(!theBuf.isNull());
 
     // TODO: if DiskIO module is mmap-based, we should be writing whole pages
