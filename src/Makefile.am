@@ -30,8 +30,8 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= base anyp comm eui acl fs repl
-DIST_SUBDIRS = base anyp comm eui acl fs repl
+SUBDIRS	= base anyp comm eui acl format fs repl
+DIST_SUBDIRS = base anyp comm eui acl format fs repl
 
 if ENABLE_AUTH
 SUBDIRS += auth
@@ -559,6 +559,7 @@ squid_LDADD = \
 	eui/libeui.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	log/liblog.la \
+	format/libformat.la \
 	$(XTRA_OBJS) \
 	$(DISK_LINKOBJS) \
 	$(REPL_OBJS) \
@@ -597,6 +598,7 @@ squid_DEPENDENCIES = \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
+	format/libformat.la \
 	ipc/libipc.la \
 	mgr/libmgr.la
 
@@ -1358,6 +1360,7 @@ tests_testCacheManager_LDADD = \
 	comm/libcomm.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	log/liblog.la \
+	format/libformat.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
@@ -1674,6 +1677,7 @@ tests_testEvent_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
 	log/liblog.la \
+	format/libformat.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
@@ -1850,6 +1854,7 @@ tests_testEventLoop_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
 	log/liblog.la \
+	format/libformat.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
@@ -2021,6 +2026,7 @@ tests_test_http_range_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
 	log/liblog.la \
+	format/libformat.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
@@ -2227,6 +2233,7 @@ tests_testHttpRequest_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
 	log/liblog.la \
+	format/libformat.la \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
@@ -2965,6 +2972,7 @@ tests_testURL_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
 	log/liblog.la \
+	format/libformat.la \
 	$(REGEXLIB) \
 	$(REPL_OBJS) \
 	$(ADAPTATION_LIBS) \

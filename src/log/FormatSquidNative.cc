@@ -34,10 +34,10 @@
 
 #include "config.h"
 #include "AccessLogEntry.h"
+#include "format/Quoting.h"
+#include "format/Tokens.h"
 #include "log/File.h"
 #include "log/Formats.h"
-#include "log/Gadgets.h"
-#include "log/Tokens.h"
 #include "SquidTime.h"
 
 void
@@ -46,18 +46,18 @@ Log::Format::SquidNative(AccessLogEntry * al, Logfile * logfile)
     const char *user = NULL;
     char clientip[MAX_IPSTRLEN];
 
-    user = FormatName(al->cache.authuser);
+    user = ::Format::QuoteUrlEncodeUsername(al->cache.authuser);
 
     if (!user)
-        user = FormatName(al->cache.extuser);
+        user = ::Format::QuoteUrlEncodeUsername(al->cache.extuser);
 
 #if USE_SSL
     if (!user)
-        user = FormatName(al->cache.ssluser);
+        user = ::Format::QuoteUrlEncodeUsername(al->cache.ssluser);
 #endif
 
     if (!user)
-        user = FormatName(al->cache.rfc931);
+        user = ::Format::QuoteUrlEncodeUsername(al->cache.rfc931);
 
     if (user && !*user)
         safe_free(user);
@@ -67,7 +67,7 @@ Log::Format::SquidNative(AccessLogEntry * al, Logfile * logfile)
                   (int) current_time.tv_usec / 1000,
                   al->cache.msec,
                   al->cache.caddr.NtoA(clientip, MAX_IPSTRLEN),
-                  log_tags[al->cache.code],
+                  ::Format::log_tags[al->cache.code],
                   al->http.statusSfx(),
                   al->http.code,
                   al->cache.replySize,
@@ -83,8 +83,8 @@ Log::Format::SquidNative(AccessLogEntry * al, Logfile * logfile)
     safe_free(user);
 
     if (Config.onoff.log_mime_hdrs) {
-        char *ereq = QuoteMimeBlob(al->headers.request);
-        char *erep = QuoteMimeBlob(al->headers.reply);
+        char *ereq = ::Format::QuoteMimeBlob(al->headers.request);
+        char *erep = ::Format::QuoteMimeBlob(al->headers.reply);
         logfilePrintf(logfile, " [%s] [%s]\n", ereq, erep);
         safe_free(ereq);
         safe_free(erep);

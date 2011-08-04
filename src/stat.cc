@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "event.h"
+#include "format/Tokens.h"
 #include "StoreClient.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -42,7 +43,6 @@
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "HttpRequest.h"
-#include "log/Tokens.h"
 #include "MemObject.h"
 #include "fde.h"
 #include "mem_node.h"
@@ -2038,7 +2038,7 @@ statClientRequests(StoreEntry * s)
         }
 
         storeAppendPrintf(s, "uri %s\n", http->uri);
-        storeAppendPrintf(s, "logType %s\n", log_tags[http->logType]);
+        storeAppendPrintf(s, "logType %s\n", Format::log_tags[http->logType]);
         storeAppendPrintf(s, "out.offset %ld, out.size %lu\n",
                           (long int) http->out.offset, (unsigned long int) http->out.size);
         storeAppendPrintf(s, "req_sz %ld\n", (long int) http->req_sz);

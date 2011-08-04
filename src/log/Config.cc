@@ -1,6 +1,5 @@
 #include "config.h"
 #include "log/Config.h"
-#include "log/Tokens.h"
 #include "protos.h"
 
 Log::LogConfig Log::TheConfig;
@@ -18,11 +17,11 @@ Log::LogConfig::parseFormats()
         return;
     }
 
-    debugs(3, 2, "Logformat for '" << name << "' is '" << def << "'");
+    debugs(3, 2, "Log Format for '" << name << "' is '" << def << "'");
 
-    logformat *nlf = new logformat(name);
+    ::Format::Format *nlf = new ::Format::Format(name);
 
-    if (!accessLogParseLogFormat(&nlf->format, def)) {
+    if (!nlf->parse(def)) {
         self_destruct();
         return;
     }
