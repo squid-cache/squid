@@ -4108,7 +4108,11 @@ parse_access_log(customlog ** logs)
 
     if (strcmp(filename, "none") == 0) {
         cl->type = Log::Format::CLF_NONE;
-        goto done;
+        aclParseAclList(LegacyParser, &cl->aclList);
+        while (*logs)
+            logs = &(*logs)->next;
+        *logs = cl;
+        return;
     }
 
     if ((logdef_name = strtok(NULL, w_space)) == NULL)
@@ -4156,7 +4160,6 @@ parse_access_log(customlog ** logs)
         return;
     }
 
-done:
     aclParseAclList(LegacyParser, &cl->aclList);
 
     while (*logs)
