@@ -37,6 +37,7 @@ public:
     Ipc::Mem::PageId page;
 
     IpcIo::Command command; ///< what disker is supposed to do or did
+    struct timeval start; ///< when the I/O request was converted to IpcIoMsg
 
     int xerrno; ///< I/O error code or zero
 };
@@ -75,6 +76,7 @@ protected:
     void openCompleted(const Ipc::StrandSearchResponse *const response);
     void readCompleted(ReadRequest *readRequest, IpcIoMsg *const response);
     void writeCompleted(WriteRequest *writeRequest, const IpcIoMsg *const response);
+    bool canWait() const;
 
 private:
     void trackPendingRequest(IpcIoPendingRequest *const pending);
