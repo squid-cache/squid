@@ -37,7 +37,7 @@
 #include "comm/Connection.h"
 #include "comm/Write.h"
 #include "helper.h"
-#include "log/Gadgets.h"
+#include "format/Quoting.h"
 #include "MemBuf.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
@@ -507,7 +507,7 @@ helperStats(StoreEntry * sentry, helper * hlp, const char *label)
                           srv->flags.shutdown ? 'S' : ' ',
                           tt < 0.0 ? 0.0 : tt,
                           (int) srv->roffset,
-                          srv->requests[0] ? Log::QuoteMimeBlob(srv->requests[0]->buf) : "(none)");
+                          srv->requests[0] ? Format::QuoteMimeBlob(srv->requests[0]->buf) : "(none)");
     }
 
     storeAppendPrintf(sentry, "\nFlags key:\n\n");
@@ -561,7 +561,7 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
                           srv->request ? (srv->request->placeholder ? 'P' : ' ') : ' ',
                                   tt < 0.0 ? 0.0 : tt,
                                   (int) srv->roffset,
-                                  srv->request ? Log::QuoteMimeBlob(srv->request->buf) : "(none)");
+                                  srv->request ? Format::QuoteMimeBlob(srv->request->buf) : "(none)");
     }
 
     storeAppendPrintf(sentry, "\nFlags key:\n\n");

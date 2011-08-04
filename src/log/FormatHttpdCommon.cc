@@ -34,18 +34,18 @@
 
 #include "config.h"
 #include "AccessLogEntry.h"
+#include "format/Quoting.h"
+#include "format/Tokens.h"
 #include "log/File.h"
 #include "log/Formats.h"
-#include "log/Gadgets.h"
-#include "log/Tokens.h"
 #include "SquidTime.h"
 
 void
 Log::Format::HttpdCommon(AccessLogEntry * al, Logfile * logfile)
 {
     char clientip[MAX_IPSTRLEN];
-    const char *user_auth = FormatName(al->cache.authuser);
-    const char *user_ident = FormatName(al->cache.rfc931);
+    const char *user_auth = ::Format::QuoteUrlEncodeUsername(al->cache.authuser);
+    const char *user_ident = ::Format::QuoteUrlEncodeUsername(al->cache.rfc931);
 
     logfilePrintf(logfile, "%s %s %s [%s] \"%s %s %s/%d.%d\" %d %"PRId64" %s%s:%s%s",
                   al->cache.caddr.NtoA(clientip,MAX_IPSTRLEN),
@@ -58,7 +58,7 @@ Log::Format::HttpdCommon(AccessLogEntry * al, Logfile * logfile)
                   al->http.version.major, al->http.version.minor,
                   al->http.code,
                   al->cache.replySize,
-                  log_tags[al->cache.code],
+                  ::Format::log_tags[al->cache.code],
                   al->http.statusSfx(),
                   hier_code_str[al->hier.code],
                   (Config.onoff.log_mime_hdrs?"":"\n"));
@@ -67,8 +67,8 @@ Log::Format::HttpdCommon(AccessLogEntry * al, Logfile * logfile)
     safe_free(user_ident);
 
     if (Config.onoff.log_mime_hdrs) {
-        char *ereq = QuoteMimeBlob(al->headers.request);
-        char *erep = QuoteMimeBlob(al->headers.reply);
+        char *ereq = ::Format::QuoteMimeBlob(al->headers.request);
+        char *erep = ::Format::QuoteMimeBlob(al->headers.reply);
         logfilePrintf(logfile, " [%s] [%s]\n", ereq, erep);
         safe_free(ereq);
         safe_free(erep);

@@ -1,7 +1,7 @@
 #ifndef SQUID_SRC_LOG_CONFIG_H
 #define SQUID_SRC_LOG_CONFIG_H
 
-#include "log/Tokens.h"
+#include "format/Format.h"
 
 class StoreEntry;
 
@@ -13,14 +13,22 @@ class LogConfig
 public:
     void parseFormats();
     void dumpFormats(StoreEntry *e, const char *name) {
-        accessLogDumpLogFormat(e, name, logformats);
+        logformats->dump(e, name);
     }
 
     /// File path to logging daemon executable
     char *logfile_daemon;
 
     /// Linked list of custom log formats
-    logformat *logformats;
+    ::Format::Format *logformats;
+
+#if USE_ADAPTATION
+    bool hasAdaptToken;
+#endif
+
+#if ICAP_CLIENT
+    bool hasIcapToken;
+#endif
 };
 
 extern LogConfig TheConfig;

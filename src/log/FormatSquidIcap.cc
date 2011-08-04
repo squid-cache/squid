@@ -37,10 +37,10 @@
 #if ICAP_CLIENT
 
 #include "AccessLogEntry.h"
+#include "format/Quoting.h"
 #include "HttpRequest.h"
 #include "log/File.h"
 #include "log/Formats.h"
-#include "log/Gadgets.h"
 #include "SquidTime.h"
 
 void
@@ -59,18 +59,18 @@ Log::Format::SquidIcap(AccessLogEntry * al, Logfile * logfile)
             client = al->cache.caddr.NtoA(clientbuf, MAX_IPSTRLEN);
     }
 
-    user = Log::FormatName(al->cache.authuser);
+    user = ::Format::QuoteUrlEncodeUsername(al->cache.authuser);
 
     if (!user)
-        user = Log::FormatName(al->cache.extuser);
+        user = ::Format::QuoteUrlEncodeUsername(al->cache.extuser);
 
 #if USE_SSL
     if (!user)
-        user = Log::FormatName(al->cache.ssluser);
+        user = ::Format::QuoteUrlEncodeUsername(al->cache.ssluser);
 #endif
 
     if (!user)
-        user = Log::FormatName(al->cache.rfc931);
+        user = ::Format::QuoteUrlEncodeUsername(al->cache.rfc931);
 
     if (user && !*user)
         safe_free(user);

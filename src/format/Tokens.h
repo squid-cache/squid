@@ -1,45 +1,25 @@
-/*
- * $Id$
- *
- * DEBUG: section 46    Access Log
- * AUTHOR: Duane Wessels
- *
- * SQUID Web Proxy Cache          http://www.squid-cache.org/
- * ----------------------------------------------------------
- *
- *  Squid is the result of efforts by numerous individuals from
- *  the Internet community; see the CONTRIBUTORS file for full
- *  details.   Many organizations have provided support for Squid's
- *  development; see the SPONSORS file for full details.  Squid is
- *  Copyrighted (C) 2001 by the Regents of the University of
- *  California; see the COPYRIGHT file for full details.  Squid
- *  incorporates software developed and/or copyrighted by other
- *  sources; see the CREDITS file for full details.
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
- */
-#ifndef _SQUID_LOG_TOKENS_H
-#define _SQUID_LOG_TOKENS_H
+#ifndef _SQUID_FMT_TOKENS_H
+#define _SQUID_FMT_TOKENS_H
 
-class StoreEntry;
+/*
+ * Squid configuration allows users to define custom formats in
+ * several components.
+ * - logging
+ * - external ACL input
+ * - deny page URL
+ *
+ * These enumerations and classes define the API for parsing of
+ * format directives to define these patterns. Along with output
+ * functionality to produce formatted buffers.
+ */
+
+namespace Format
+{
 
 #define LOG_BUF_SZ (MAX_URL<<2)
 
 /*
- * Bytecodes for the configureable logformat stuff
+ * Bytecodes for the configureable format stuff
  */
 typedef enum {
     LFT_NONE,			/* dummy */
@@ -182,9 +162,10 @@ typedef enum {
 #endif
 
     LFT_PERCENT			/* special string cases for escaped chars */
-} logformat_bcode_t;
+} ByteCode_t;
 
-enum log_quote {
+/// Quoting style for a format output.
+enum Quoting {
     LOG_QUOTE_NONE = 0,
     LOG_QUOTE_QUOTES,
     LOG_QUOTE_MIMEBLOB,
@@ -192,11 +173,20 @@ enum log_quote {
     LOG_QUOTE_RAW
 };
 
-/* FIXME: public class so we can pre-define its type. */
-class logformat_token
+// XXX: inherit from linked list
+class Token
 {
 public:
-    logformat_bcode_t type;
+    Token() {};
+    ~Token();
+
+    /** parses a single token. Returns the token length in characters,
+     * and fills in this item with the token information.
+     * def is for sure null-terminated.
+     */
+    int parse(char *def, enum Quoting *quote);
+
+    ByteCode_t type;
     union {
         char *string;
 
@@ -209,56 +199,23 @@ public:
     } data;
     unsigned char width;
     unsigned char precision;
-    enum log_quote quote;
+    enum Quoting quote;
     unsigned int left:1;
     unsigned int space:1;
     unsigned int zero:1;
     int divisor;
-    logformat_token *next;	/* todo: move from linked list to array */
+    Token *next;	/* todo: move from linked list to array */
 };
 
-struct logformat_token_table_entry {
+struct TokenTableEntry {
     const char *config;
-    logformat_bcode_t token_type;
+    ByteCode_t token_type;
     int options;
 };
 
-class logformat
-{
-public:
-    logformat(const char *name);
-    ~logformat();
-
-    char *name;
-    logformat_token *format;
-    logformat *next;
-};
-
 extern const char *log_tags[];
-extern struct logformat_token_table_entry logformat_token_table[];
+extern struct TokenTableEntry TokenTable[];
 
-#if USE_ADAPTATION
-extern bool alLogformatHasAdaptToken;
-#endif
+} // namespace Format
 
-#if ICAP_CLIENT
-extern bool alLogformatHasIcapToken;
-#endif
-
-/* parses a single token. Returns the token length in characters,
- * and fills in the lt item with the token information.
- * def is for sure null-terminated
- */
-int accessLogGetNewLogFormatToken(logformat_token * lt, char *def, enum log_quote *quote);
-
-/* very inefficent parser, but who cares, this needs to be simple */
-/* First off, let's tokenize, we'll optimize in a second pass.
- * A token can either be a %-prefixed sequence (usually a dynamic
- * token but it can be an escaped sequence), or a string. */
-int accessLogParseLogFormat(logformat_token ** fmt, char *def);
-
-void accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definitions);
-
-void accessLogFreeLogFormat(logformat_token ** tokens);
-
-#endif /* _SQUID_LOG_TOKENS_H */
+#endif /* _SQUID_FMT_TOKENS_H */

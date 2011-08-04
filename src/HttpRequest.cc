@@ -41,6 +41,7 @@
 #include "auth/UserRequest.h"
 #endif
 #include "HttpHeaderRange.h"
+#include "log/Config.h"
 #include "MemBuf.h"
 #include "Store.h"
 #if ICAP_CLIENT
@@ -438,8 +439,7 @@ Adaptation::Icap::History::Pointer
 HttpRequest::icapHistory() const
 {
     if (!icapHistory_) {
-        if ((LogfileStatus == LOG_ENABLE && alLogformatHasIcapToken) ||
-                IcapLogfileStatus == LOG_ENABLE) {
+        if (Log::TheConfig.hasIcapToken || IcapLogfileStatus == LOG_ENABLE) {
             icapHistory_ = new Adaptation::Icap::History();
             debugs(93,4, HERE << "made " << icapHistory_ << " for " << this);
         }
@@ -464,9 +464,7 @@ HttpRequest::adaptHistory(bool createIfNone) const
 Adaptation::History::Pointer
 HttpRequest::adaptLogHistory() const
 {
-    const bool loggingNeedsHistory = (LogfileStatus == LOG_ENABLE) &&
-                                     alLogformatHasAdaptToken; // TODO: make global to remove this method?
-    return HttpRequest::adaptHistory(loggingNeedsHistory);
+    return HttpRequest::adaptHistory(Log::TheConfig.hasAdaptToken);
 }
 
 void
