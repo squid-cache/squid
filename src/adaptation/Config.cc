@@ -71,7 +71,7 @@ Adaptation::Config::removeService(const String& service)
             if (*it == service) {
                 group->removedServices.push_back(service);
                 group->services.prune(service);
-                debugs(93, 5, HERE << "adaptation service " << service << 
+                debugs(93, 5, HERE << "adaptation service " << service <<
                        " removed from group " << group->id);
                 break;
             }
