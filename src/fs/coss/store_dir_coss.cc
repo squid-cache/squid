@@ -1008,7 +1008,7 @@ CossSwapDir::parse(int anIndex, char *aPath)
 
     path = xstrdup(aPath);
 
-    max_size = i << 20; // MBytes to Bytes
+    max_size = static_cast<uint64_t>(i) << 20; // MBytes to Bytes
 
     parseOptions(0);
 
@@ -1046,7 +1046,7 @@ CossSwapDir::reconfigure(int index, char *path)
     if (i <= 0)
         fatal("storeCossDirParse: invalid size value");
 
-    const uint64_t size = i << 20; // MBytes to Bytes
+    const uint64_t size = static_cast<uint64_t>(i) << 20; // MBytes to Bytes
 
     if (size == maxSize())
         debugs(3, 1, "Cache COSS dir '" << path << "' size remains unchanged at " << i << " MB");
