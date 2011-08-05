@@ -141,21 +141,27 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
     else
         r->client_addr.SetNoAddr();
     r->client_ident = NULL;
-
-    if (http->request->auth_user_request)
+    if (http->request->auth_user_request != NULL) {
         r->client_ident = http->request->auth_user_request->username();
-    else if (http->request->extacl_user.defined()) {
+        debugs(61, 5, HERE << "auth-user=" << (r->client_ident?r->client_ident:"NULL"));
+    }
+
+    if (!r->client_ident && http->request->extacl_user.defined()) {
         r->client_ident = http->request->extacl_user.termedBuf();
+        debugs(61, 5, HERE << "acl-user=" << (r->client_ident?r->client_ident:"NULL"));
     }
 
     if (!r->client_ident && (conn != NULL && conn->rfc931[0]))
         r->client_ident = conn->rfc931;
+        debugs(61, 5, HERE << "ident-user=" << (r->client_ident?r->client_ident:"NULL"));
+    }
 
 #if USE_SSL
 
     if (!r->client_ident && conn != NULL)
         r->client_ident = sslGetUserEmail(fd_table[conn->fd].ssl);
-
+        debugs(61, 5, HERE << "ssl-user=" << (r->client_ident?r->client_ident:"NULL"));
+    }
 #endif
 
     if (!r->client_ident)
