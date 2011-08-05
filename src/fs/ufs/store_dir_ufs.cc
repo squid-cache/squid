@@ -80,7 +80,7 @@ UFSSwapDir::parseSizeL1L2()
     if (i <= 0)
         fatal("UFSSwapDir::parseSizeL1L2: invalid size value");
 
-    const uint64_t size = i << 20; // MBytes to Bytes
+    const uint64_t size = static_cast<uint64_t>(i) << 20; // MBytes to Bytes
 
     /* just reconfigure it */
     if (reconfiguring) {
