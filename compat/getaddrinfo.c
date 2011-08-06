@@ -73,10 +73,6 @@
 #if HAVE_NETDB_H
 #include <netdb.h>
 #endif
-#if _SQUID_MSWIN_
-#undef IN_ADDR
-#include <ws2tcpip.h>
-#endif
 
 static struct addrinfo *
 dup_addrinfo (struct addrinfo *info, void *addr, size_t addrlen) {
@@ -185,7 +181,9 @@ xgetaddrinfo (const char *nodename, const char *servname,
         return (*res == NULL) ? EAI_MEMORY : 0;
     }
 
+#if HAVE_H_ERRNO
     h_errno = 0;
+#endif
     errno = 0;
     hp = gethostbyname(nodename);
     if (hp == NULL) {

@@ -60,7 +60,7 @@ extern "C" {
      * Structure of an IEEE EUI-64.
      */
     struct eui64 {
-        u_char octet[EUI64_LEN];
+        uint8_t octet[EUI64_LEN];
     };
 
     int eui64_aton(const char *a, struct eui64 *e);
