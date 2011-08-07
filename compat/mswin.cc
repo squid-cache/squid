@@ -38,8 +38,8 @@
 #include "util.h"
 
 /* The following code section is part of an EXPERIMENTAL native */
-/* Windows NT/2000 Squid port - Compiles only on MS Visual C++  */
-#if defined(_SQUID_MSWIN_)
+/* Windows NT/2000 Squid port - Compiles only on MS Visual C++ or MinGW */
+#if _SQUID_MSWIN_ || _SQUID_MINGW_
 
 #undef strerror
 #define sys_nerr _sys_nerr
