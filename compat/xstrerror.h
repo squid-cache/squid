@@ -10,6 +10,7 @@
 
 /** Provide the textual display of a system error number.
  * A string is always returned.
+ * On MS Windows the native Win32 errors are also translated.
  */
 extern const char * xstrerr(int error);
 
