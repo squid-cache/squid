@@ -173,19 +173,19 @@ Ip::Address::IsSockAddr() const
 bool
 Ip::Address::IsIPv4() const
 {
-    return IsAnyAddr() || IsNoAddr() || IN6_IS_ADDR_V4MAPPED( &m_SocketAddr.sin6_addr );
+    return IN6_IS_ADDR_V4MAPPED( &m_SocketAddr.sin6_addr );
 }
 
 bool
 Ip::Address::IsIPv6() const
 {
-    return IsAnyAddr() || IsNoAddr() || !IN6_IS_ADDR_V4MAPPED( &m_SocketAddr.sin6_addr );
+    return !IsIPv4();
 }
 
 bool
 Ip::Address::IsAnyAddr() const
 {
-    return IN6_IS_ADDR_UNSPECIFIED( &m_SocketAddr.sin6_addr );
+    return IN6_IS_ADDR_UNSPECIFIED( &m_SocketAddr.sin6_addr ) || IN6_ARE_ADDR_EQUAL( &m_SocketAddr.sin6_addr, &v4_anyaddr); ;
 }
 
 /// NOTE: Does NOT clear the Port stored. Ony the Address and Type.
@@ -237,6 +237,11 @@ Ip::Address::SetIPv4()
         return true;
     }
 
+    if ( IsNoAddr() ) {
+        m_SocketAddr.sin6_addr = v4_noaddr;
+        return true;
+    }
+
     if ( IsIPv4())
         return true;
 
@@ -279,7 +284,8 @@ bool
 Ip::Address::IsNoAddr() const
 {
     // IFF the address == 0xff..ff (all ones)
-    return IN6_ARE_ADDR_EQUAL( &m_SocketAddr.sin6_addr, &v6_noaddr );
+    return IN6_ARE_ADDR_EQUAL( &m_SocketAddr.sin6_addr, &v6_noaddr )
+        || IN6_ARE_ADDR_EQUAL( &m_SocketAddr.sin6_addr, &v4_noaddr );
 }
 
 void
