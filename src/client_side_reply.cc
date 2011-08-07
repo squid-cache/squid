@@ -55,11 +55,11 @@
 #endif
 #include "fde.h"
 #include "forward.h"
+#include "format/Tokens.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
 #include "ipcache.h"
-#include "log/Tokens.h"
 #include "MemObject.h"
 #include "ProtoPort.h"
 #include "SquidTime.h"
@@ -605,7 +605,7 @@ clientReplyContext::processMiss()
     if (http->storeEntry()) {
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
             debugs(88, 0, "clientProcessMiss: miss on a special object (" << url << ").");
-            debugs(88, 0, "\tlog_type = " << log_tags[http->logType]);
+            debugs(88, 0, "\tlog_type = " << Format::log_tags[http->logType]);
             http->storeEntry()->dump(1);
         }
 

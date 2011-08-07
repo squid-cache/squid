@@ -67,12 +67,6 @@ static const char rcsid[] = "inet_pton.c,v 1.2.206.2 2005/07/28 07:43:18 marka E
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
-#if HAVE_WINSOCK2_H
-#include <winsock2.h>
-#ifndef EAFNOSUPPORT
-#define EAFNOSUPPORT WSAEAFNOSUPPORT
-#endif
-#endif
 
 #if ! defined(NS_INADDRSZ)
 #define NS_INADDRSZ      4

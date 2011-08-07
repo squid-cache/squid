@@ -32,7 +32,6 @@ dnl e.g. SQUID_SAVEFLAGS([foo]) will save CFLAGS to foo_CFLAGS etc.
 dnl Saved variables are:
 dnl CFLAGS, CXXFLAGS, LDFLAGS, LIBS plus any variables specified as
 dnl second argument
-
 AC_DEFUN([SQUID_STATE_SAVE],[
 # save state, key is $1
 $1_CFLAGS="${CFLAGS}"
@@ -250,4 +249,3 @@ AS_IF([test "$ac_res" != no],
       [$4])
 AS_VAR_POPDEF([ac_Search])dnl
 ])
-

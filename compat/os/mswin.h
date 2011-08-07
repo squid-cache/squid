@@ -34,8 +34,6 @@
 #ifndef SQUID_OS_MSWIN_H
 #define SQUID_OS_MSWIN_H
 
-#include "config.h"
-
 #if _SQUID_WINDOWS_
 
 #if HAVE_FCNTL_H

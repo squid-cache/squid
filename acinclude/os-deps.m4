@@ -874,11 +874,11 @@ AC_DEFUN([SQUID_CHECK_FUNCTIONAL_CPU_PROFILER],[
   )
 ])
 
-# check whether recv takes a char* or void* as a second argument
+dnl check whether recv takes a char* or void* as a second argument
 AC_DEFUN([SQUID_CHECK_RECV_ARG_TYPE],[
   AC_CACHE_CHECK([whether recv takes a pointer to void or char as second argument],
-	  squid_cv_recv_second_arg_type, [
-		  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+         squid_cv_recv_second_arg_type, [
+                 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
@@ -890,7 +890,7 @@ AC_DEFUN([SQUID_CHECK_RECV_ARG_TYPE],[
 #include <winsock.h>
 #endif
 int main (int argc, char ** argv) {
-	void *buf;
+       void *buf;
   recv(0,buf,0,0);
 }
 ]])],[squid_cv_recv_second_arg_type=void],

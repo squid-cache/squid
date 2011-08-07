@@ -53,15 +53,6 @@
 //DEAD?: extern int httpRequestHdrAllowedByName(http_hdr_type id);
 extern void httpRequestPack(void *obj, Packer *p);
 
-// TODO: Move these three to access_log.h or AccessLogEntry.h
-#if USE_ADAPTATION
-extern bool alLogformatHasAdaptToken;
-#endif
-#if ICAP_CLIENT
-extern bool alLogformatHasIcapToken;
-#endif
-extern int LogfileStatus;
-
 class HttpHdrRange;
 class DnsLookupDetails;
 

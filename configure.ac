@@ -21,8 +21,11 @@ m4_include([acinclude/krb5.m4])
 m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
 m4_include([acinclude/lib-checks.m4])
+m4_include([acinclude/ax_cxx_compile_stdcxx_0x.m4])
+m4_include([acinclude/ax_cxx_0x_types.m4])
 
 PRESET_CFLAGS="$CFLAGS"
+PRESET_CXXFLAGS="$CXXFLAGS"
 PRESET_LDFLAGS="$LDFLAGS"
 
 dnl Set default LDFLAGS
@@ -52,6 +55,12 @@ AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 # functions available on some Unix sysems (e.g. Solaris)
 if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
 	AC_USE_SYSTEM_EXTENSIONS
+fi
+
+# Check for C++0x compiler support
+AX_CXX_COMPILE_STDCXX_0X
+if test "x$ax_cv_cxx_compile_cxx0x_cxx" = "xyes"; then
+    CXXFLAGS="$CXXFLAGS -std=c++0x"
 fi
 
 # test for programs
@@ -2282,6 +2291,7 @@ AC_CHECK_HEADERS( \
   netinet/ip_fil_compat.h \
   openssl/err.h \
   openssl/md5.h \
+  openssl/opensslv.h \
   openssl/ssl.h \
   openssl/x509v3.h \
   netinet/tcp.h \
@@ -2456,6 +2466,10 @@ AC_CHECK_SIZEOF(size_t)
 #need the define for overflow checks
 AC_CHECK_SIZEOF(off_t)
 AC_CHECK_SIZEOF(size_t)
+
+dnl Some C++0x types we try to use
+AX_CXX_TYPE_NULLPTR
+AX_CXX_TYPE_UNIQUE_PTR
 
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.
@@ -3433,6 +3447,7 @@ AC_CONFIG_FILES([\
 	src/comm/Makefile \
 	src/esi/Makefile \
 	src/eui/Makefile \
+	src/format/Makefile \
 	src/icmp/Makefile \
 	src/ident/Makefile \
 	src/ip/Makefile \

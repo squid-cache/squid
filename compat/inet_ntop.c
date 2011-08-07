@@ -74,13 +74,6 @@ static const char rcsid[] = "inet_ntop.c,v 1.1.2.1.8.2 2005/11/03 23:08:40 marka
 #include <string.h>
 #endif
 
-#if HAVE_WINSOCK2_H
-#include <winsock2.h>
-#ifndef EAFNOSUPPORT
-#define EAFNOSUPPORT WSAEAFNOSUPPORT
-#endif
-#endif
-
 #if ! defined(NS_INADDRSZ)
 #define NS_INADDRSZ      4
 #endif

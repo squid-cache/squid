@@ -47,13 +47,13 @@
 #include "eui/Eui48.h"
 #include "eui/Eui64.h"
 #endif
+#include "format/Tokens.h"
 #include "hier_code.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "log/Config.h"
 #include "log/File.h"
 #include "log/Formats.h"
-#include "log/Gadgets.h"
-#include "log/Tokens.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "rfc1738.h"
@@ -297,10 +297,10 @@ accessLogInit(void)
     accessLogRegisterWithCacheManager();
 
 #if USE_ADAPTATION
-    alLogformatHasAdaptToken = false;
+    Log::TheConfig.hasAdaptToken = false;
 #endif
 #if ICAP_CLIENT
-    alLogformatHasIcapToken = false;
+    Log::TheConfig.hasIcapToken = false;
 #endif
 
     for (log = Config.Log.accesslogs; log; log = log->next) {
@@ -312,17 +312,17 @@ accessLogInit(void)
         LogfileStatus = LOG_ENABLE;
 
 #if USE_ADAPTATION
-        for (logformat_token * curr_token = (log->logFormat?log->logFormat->format:NULL); curr_token; curr_token = curr_token->next) {
-            if (curr_token->type == LTF_ADAPTATION_SUM_XACT_TIMES ||
-                    curr_token->type == LTF_ADAPTATION_ALL_XACT_TIMES ||
-                    curr_token->type == LFT_ADAPTATION_LAST_HEADER ||
-                    curr_token->type == LFT_ADAPTATION_LAST_HEADER_ELEM ||
-                    curr_token->type == LFT_ADAPTATION_LAST_ALL_HEADERS) {
-                alLogformatHasAdaptToken = true;
+        for (Format::Token * curr_token = (log->logFormat?log->logFormat->format:NULL); curr_token; curr_token = curr_token->next) {
+            if (curr_token->type == Format::LTF_ADAPTATION_SUM_XACT_TIMES ||
+                    curr_token->type == Format::LTF_ADAPTATION_ALL_XACT_TIMES ||
+                    curr_token->type == Format::LFT_ADAPTATION_LAST_HEADER ||
+                    curr_token->type == Format::LFT_ADAPTATION_LAST_HEADER_ELEM ||
+                    curr_token->type == Format::LFT_ADAPTATION_LAST_ALL_HEADERS) {
+                Log::TheConfig.hasAdaptToken = true;
             }
 #if ICAP_CLIENT
-            if (curr_token->type == LFT_ICAP_TOTAL_TIME) {
-                alLogformatHasIcapToken = true;
+            if (curr_token->type == Format::LFT_ICAP_TOTAL_TIME) {
+                Log::TheConfig.hasIcapToken = true;
             }
 #endif
         }

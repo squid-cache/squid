@@ -644,13 +644,8 @@ main(int argc, char *argv[])
         if (put_file) {
             int x;
             lseek(put_fd, 0, SEEK_SET);
-#if _SQUID_WINDOWS_
-
             while ((x = read(put_fd, buf, sizeof(buf))) > 0) {
-#else
 
-            while ((x = myread(put_fd, buf, sizeof(buf))) > 0) {
-#endif
                 x = mywrite(conn, buf, x);
 
                 total_bytes += x;
@@ -666,7 +661,6 @@ main(int argc, char *argv[])
 
 #if _SQUID_WINDOWS_
         setmode(1, O_BINARY);
-
 #endif
 
         while ((len = myread(conn, buf, sizeof(buf))) > 0) {
@@ -678,7 +672,6 @@ main(int argc, char *argv[])
 
 #if _SQUID_WINDOWS_
         setmode(1, O_TEXT);
-
 #endif
 
         (void) close(conn);	/* done with socket */

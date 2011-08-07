@@ -182,7 +182,6 @@ xgetaddrinfo (const char *nodename, const char *servname,
     }
 
 #if HAVE_H_ERRNO
-    // on Windows it's not a global but a function
     h_errno = 0;
 #endif
     errno = 0;

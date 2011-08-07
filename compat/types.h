@@ -127,8 +127,8 @@
 #define PRIuSIZE "I32u"
 #elif _SQUID_MINGW_ && SIZEOF_SIZE_T == 8
 #define PRIuSIZE "I64u"
-#elif !_SQUID_MINGW_
-#define PRIuSIZE "zu"
+#elif !_SQUID_MINGW_ && SIZEOF_SIZE_T == 8
+#define PRIuSIZE "lu"
 #endif
 #endif
 
@@ -146,6 +146,14 @@ typedef int socklen_t;
 
 #ifndef HAVE_MTYP_T
 typedef long mtyp_t;
+#endif
+
+#ifndef NULL
+#if defined(__cplusplus) && HAVE_NULLPTR
+#define NULL nullptr
+#else
+#define NULL 0
+#endif
 #endif
 
 #endif /* SQUID_TYPES_H */

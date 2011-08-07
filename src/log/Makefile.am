@@ -17,8 +17,6 @@ liblog_la_SOURCES = \
 	FormatSquidNative.cc \
 	FormatSquidReferer.cc \
 	FormatSquidUseragent.cc \
-	Gadgets.cc \
-	Gadgets.h \
 	ModDaemon.cc \
 	ModDaemon.h \
 	ModStdio.cc \
@@ -28,7 +26,5 @@ liblog_la_SOURCES = \
 	ModTcp.cc \
 	ModTcp.h \
 	ModUdp.cc \
-	ModUdp.h \
-	Tokens.cc \
-	Tokens.h
+	ModUdp.h
 

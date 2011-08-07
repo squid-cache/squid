@@ -1,8 +1,6 @@
 #ifndef COMPAT_DEBUG_H
 #define COMPAT_DEBUG_H
 
-#include "config.h"
-
 /*
  * A debug method for use of external helpers and tools.
  * It shunts the debug messages down stderr for logging by Squid

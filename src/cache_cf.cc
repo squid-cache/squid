@@ -60,6 +60,7 @@
 #if USE_SQUID_ESI
 #include "esi/Parser.h"
 #endif
+#include "format/Format.h"
 #include "HttpRequestMethod.h"
 #include "ident/Config.h"
 #include "ip/Intercept.h"
@@ -2244,6 +2245,28 @@ parse_peer(peer ** head)
                 fatalf("parse_peer: non-parent carp peer %s/%d\n", p->host, p->http_port);
 
             p->options.carp = 1;
+        } else if (!strncasecmp(token, "carp-key=", 9)) {
+            if (p->options.carp != 1)
+                fatalf("parse_peer: carp-key specified on non-carp peer %s/%d\n", p->host, p->http_port);
+            p->options.carp_key.set=1;
+            char *nextkey=token+strlen("carp-key="), *key=nextkey;
+            for (; key; key = nextkey) {
+                nextkey=strchr(key,',');
+                if (nextkey) ++nextkey; // skip the comma, any
+                if (0==strncasecmp(key,"scheme",6)) {
+                    p->options.carp_key.scheme=1;
+                } else if (0==strncasecmp(key,"host",4)) {
+                    p->options.carp_key.host=1;
+                } else if (0==strncasecmp(key,"port",4)) {
+                    p->options.carp_key.port=1;
+                } else if (0==strncasecmp(key,"path",4)) {
+                    p->options.carp_key.path=1;
+                } else if (0==strncasecmp(key,"params",6)) {
+                    p->options.carp_key.params=1;
+                } else {
+                    fatalf("invalid carp-key '%s'",key);
+                }
+            }
         } else if (!strcasecmp(token, "userhash")) {
 #if USE_AUTH
             if (p->type != PEER_PARENT)
@@ -3518,7 +3541,7 @@ parse_http_port_specification(http_port_list * s, char *token)
         if (!Ip::EnableIpv6)
             s->s.SetIPv4();
         debugs(3, 3, "http(s)_port: found Listen on wildcard address: *:" << s->s.GetPort() );
-    } else if ( s->s = host ) { /* check/parse numeric IPA */
+    } else if ( (s->s = host) ) { /* check/parse numeric IPA */
         s->s.SetPort(port);
         if (!Ip::EnableIpv6)
             s->s.SetIPv4();
@@ -3546,7 +3569,7 @@ parse_http_port_option(http_port_list * s, char *token)
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Accelerator mode requires its own port. It cannot be shared with other modes.");
             self_destruct();
         }
-        s->accel = 1;
+        s->accel = s->vhost = 1;
     } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
         if (s->accel || s->spoof_client_ip) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Intercept mode requires its own interception port. It cannot be shared with other modes.");
@@ -3590,10 +3613,14 @@ parse_http_port_option(http_port_list * s, char *token)
         s->defaultsite = xstrdup(token + 12);
     } else if (strcmp(token, "vhost") == 0) {
         if (!s->accel) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vhost option requires Acceleration mode flag.");
-            self_destruct();
+            debugs(3, DBG_CRITICAL, "WARNING: http(s)_port: vhost option is deprecated. Use 'accel' mode flag instead.");
         }
-        s->vhost = 1;
+        s->accel = s->vhost = 1;
+    } else if (strcmp(token, "no-vhost") == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_IMPORTANT, "ERROR: http(s)_port: no-vhost option requires Acceleration mode flag.");
+        }
+        s->vhost = 0;
     } else if (strcmp(token, "vport") == 0) {
         if (!s->accel) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
@@ -4071,10 +4098,8 @@ static void
 parse_access_log(customlog ** logs)
 {
     const char *filename, *logdef_name;
-    customlog *cl;
-    logformat *lf;
 
-    cl = (customlog *)xcalloc(1, sizeof(*cl));
+    customlog *cl = (customlog *)xcalloc(1, sizeof(*cl));
 
     if ((filename = strtok(NULL, w_space)) == NULL) {
         self_destruct();
@@ -4083,7 +4108,11 @@ parse_access_log(customlog ** logs)
 
     if (strcmp(filename, "none") == 0) {
         cl->type = Log::Format::CLF_NONE;
-        goto done;
+        aclParseAclList(LegacyParser, &cl->aclList);
+        while (*logs)
+            logs = &(*logs)->next;
+        *logs = cl;
+        return;
     }
 
     if ((logdef_name = strtok(NULL, w_space)) == NULL)
@@ -4094,7 +4123,7 @@ parse_access_log(customlog ** logs)
     cl->filename = xstrdup(filename);
 
     /* look for the definition pointer corresponding to this name */
-    lf = Log::TheConfig.logformats;
+    Format::Format *lf = Log::TheConfig.logformats;
 
     while (lf != NULL) {
         debugs(3, 9, "Comparing against '" << lf->name << "'");
@@ -4131,7 +4160,6 @@ parse_access_log(customlog ** logs)
         return;
     }
 
-done:
     aclParseAclList(LegacyParser, &cl->aclList);
 
     while (*logs)

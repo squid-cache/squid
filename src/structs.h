@@ -436,6 +436,7 @@ struct SquidConfig {
         int WIN32_IpAddrChangeMonitor;
         int memory_cache_first;
         int memory_cache_disk;
+        int client_dst_passthru;
     } onoff;
 
     int forward_max_tries;
@@ -855,6 +856,14 @@ struct peer {
 #endif
         unsigned int allow_miss:1;
         unsigned int carp:1;
+        struct {
+            unsigned int set:1; //If false, whole url is to be used. Overrides others
+            unsigned int scheme:1;
+            unsigned int host:1;
+            unsigned int port:1;
+            unsigned int path:1;
+            unsigned int params:1;
+        } carp_key;
 #if USE_AUTH
         unsigned int userhash:1;
 #endif
@@ -1280,13 +1289,13 @@ struct _store_rebuild_data {
 };
 
 class Logfile;
-class logformat;
 
+#include "format/Format.h"
 #include "log/Formats.h"
 struct _customlog {
     char *filename;
     ACLList *aclList;
-    logformat *logFormat;
+    Format::Format *logFormat;
     Logfile *logfile;
     customlog *next;
     Log::Format::log_type type;
