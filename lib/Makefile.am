@@ -20,10 +20,8 @@ install-strip: all
 
 if ENABLE_WIN32SPECIFIC
 LIBSSPWIN32=libsspwin32.la
-WIN32SRC = win32lib.c
 else
 LIBSSPWIN32=
-WIN32SRC=
 EXTRA_LTLIBRARIES = \
 	libsspwin32.la
 endif
@@ -40,8 +38,7 @@ noinst_LTLIBRARIES = \
 EXTRA_libmiscutil_la_SOURCES = \
 	dirent.c \
 	encrypt.c \
-	getopt.c \
-	win32lib.c
+	getopt.c
 
 libmiscencoding_la_SOURCES = \
 	base64.c \
@@ -72,8 +69,7 @@ libmiscutil_la_SOURCES = \
 	Splay.cc \
 	stub_memaccount.c \
 	util.c \
-	xusleep.c \
-	$(WIN32SRC)
+	xusleep.c
 
 # $(top_srcdir)/include/version.h should be a dependency
 libsspwin32_la_SOURCES = \
