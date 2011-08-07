@@ -38,7 +38,7 @@
 #include "rfc1123.h"
 #include "SquidTime.h"
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 /** \cond AUTODOCS-IGNORE */
 using namespace Squid;
 /** \endcond */
@@ -147,7 +147,7 @@ static struct stat sb;
 int total_bytes = 0;
 int io_timeout = 120;
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 void
 Win32SockCleanup(void)
 {
@@ -385,7 +385,7 @@ main(int argc, char *argv[])
                 break;
             }
     }
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     {
         WSADATA wsaData;
         WSAStartup(2, &wsaData);
@@ -644,13 +644,8 @@ main(int argc, char *argv[])
         if (put_file) {
             int x;
             lseek(put_fd, 0, SEEK_SET);
-#if _SQUID_MSWIN_
-
             while ((x = read(put_fd, buf, sizeof(buf))) > 0) {
-#else
 
-            while ((x = myread(put_fd, buf, sizeof(buf))) > 0) {
-#endif
                 x = mywrite(conn, buf, x);
 
                 total_bytes += x;
@@ -664,9 +659,8 @@ main(int argc, char *argv[])
         }
         /* Read the data */
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
         setmode(1, O_BINARY);
-
 #endif
 
         while ((len = myread(conn, buf, sizeof(buf))) > 0) {
@@ -676,9 +670,8 @@ main(int argc, char *argv[])
                 perror("client: ERROR writing to stdout");
         }
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
         setmode(1, O_TEXT);
-
 #endif
 
         (void) close(conn);	/* done with socket */
@@ -822,24 +815,22 @@ set_our_signal(void)
 static ssize_t
 myread(int fd, void *buf, size_t len)
 {
-#if !_SQUID_MSWIN_
+#if _SQUID_WINDOWS_
+    return recv(fd, buf, len, 0);
+#else
     alarm(io_timeout);
     return read(fd, buf, len);
-#else
-
-    return recv(fd, buf, len, 0);
 #endif
 }
 
 static ssize_t
 mywrite(int fd, void *buf, size_t len)
 {
-#if !_SQUID_MSWIN_
+#if _SQUID_WINDOWS_
+    return send(fd, buf, len, 0);
+#else
     alarm(io_timeout);
     return write(fd, buf, len);
-#else
-
-    return send(fd, buf, len, 0);
 #endif
 }
 
