@@ -202,7 +202,8 @@ main(int argc, char *argv[])
      *-------------------------------------------------------------------*/
     fp.open(type_depend, std::ifstream::in);
     if (fp.fail()) {
-        perror(input_filename);
+    	std::cerr << "error while opening type dependencies file '" <<
+            input_filename << "': " << strerror(errno) << std::endl;
         exit(1);
     }
 
@@ -233,7 +234,8 @@ main(int argc, char *argv[])
 
     fp.open(input_filename, std::ifstream::in);
     if (fp.fail()) {
-        perror(input_filename);
+        std::cerr << "error while opening input file '" <<
+            input_filename << "': " << strerror(errno) << std::endl;
         exit(1);
     }
 
@@ -453,7 +455,8 @@ main(int argc, char *argv[])
 
     std::ofstream fout(output_filename,std::ostream::out);
     if (!fout.good()) {
-        perror(output_filename);
+        std::cerr << "error while opening output .c file '" <<
+            output_filename << "': " << strerror(errno) << std::endl;
         exit(1);
     }
 
@@ -483,7 +486,8 @@ main(int argc, char *argv[])
     /* Open output x.conf file */
     fout.open(conf_filename,std::ostream::out);
     if (!fout.good()) {
-        perror(conf_filename);
+        std::cerr << "error while opening output conf file '" <<
+            output_filename << "': " << strerror(errno) << std::endl;
         exit(1);
     }
 
@@ -493,7 +497,8 @@ main(int argc, char *argv[])
 
     fout.open(conf_filename_short,std::ostream::out);
     if (!fout.good()) {
-        perror(conf_filename_short);
+        std::cerr << "error while opening output short conf file '" <<
+            output_filename << "': " << strerror(errno) << std::endl;
         exit(1);
     }
     gen_conf(entries, fout, 0);
