@@ -56,6 +56,9 @@
 #if HAVE_STRING_H
 #include <ctype.h>
 #endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 #include "cf_gen_defines.cci"
 
