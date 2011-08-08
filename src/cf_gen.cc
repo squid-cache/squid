@@ -48,6 +48,8 @@
 #include "config.h"
 #include "util.h"
 
+#include <iostream>
+#include <fstream>
 #if HAVE_STRING_H
 #include <string.h>
 #endif
@@ -118,14 +120,14 @@ typedef struct Type {
 } Type;
 
 static const char WS[] = " \t\n";
-static int gen_default(Entry *, FILE *);
-static void gen_parse(Entry *, FILE *);
-static void gen_parse_entry(Entry *entry, FILE *fp);
-static void gen_parse_alias(char *, EntryAlias *, Entry *, FILE *);
-static void gen_dump(Entry *, FILE *);
-static void gen_free(Entry *, FILE *);
-static void gen_conf(Entry *, FILE *, bool verbose_output);
-static void gen_default_if_none(Entry *, FILE *);
+static int gen_default(Entry *, std::ostream &);
+static void gen_parse(Entry *, std::ostream &);
+static void gen_parse_entry(Entry *entry, std::ostream&);
+static void gen_parse_alias(char *, EntryAlias *, Entry *, std::ostream &);
+static void gen_dump(Entry *, std::ostream&);
+static void gen_free(Entry *, std::ostream&);
+static void gen_conf(Entry *, std::ostream&, bool verbose_output);
+static void gen_default_if_none(Entry *, std::ostream&);
 
 
 static void
@@ -154,27 +156,26 @@ checkDepend(const char *directive, const char *name, const Type *types, const En
                     break;
             }
             if (!entry) {
-                fprintf(stderr, "ERROR: '%s' (%s) depends on '%s'\n", directive, name, dep->name);
+                std::cerr << "ERROR: '" << directive << "' (" << name << ") depends on '" << dep->name << "'\n";
                 exit(1);
             }
         }
         return;
     }
-    fprintf(stderr, "ERROR: Dependencies for cf.data type '%s' used in '%s' not defined\n", name, directive);
+    std::cerr << "ERROR: Dependencies for cf.data type '" << name << "' used in ' " << directive << "' not defined\n" ;
     exit(1);
 }
 
 static void
 usage(const char *program_name)
 {
-    fprintf(stderr, "Usage: %s cf.data cf.data.depend\n", program_name);
+    std::cerr << "Usage: " << program_name << " cf.data cf.data.depend\n";
     exit(1);
 }
 
 int
 main(int argc, char *argv[])
 {
-    FILE *fp;
     char *input_filename;
     const char *output_filename = _PATH_PARSER;
     const char *conf_filename = _PATH_SQUID_CONF;
@@ -187,14 +188,8 @@ main(int argc, char *argv[])
     enum State state;
     int rc = 0;
     char *ptr = NULL;
-#if _SQUID_OS2_
-
-    const char *rmode = "rt";
-#else
-
-    const char *rmode = "r";
-#endif
     char buff[MAX_LINE];
+    std::ifstream fp;
 
     if (argc != 3)
         usage(argv[0]);
@@ -205,12 +200,14 @@ main(int argc, char *argv[])
     /*-------------------------------------------------------------------*
      * Parse type dependencies
      *-------------------------------------------------------------------*/
-    if ((fp = fopen(type_depend, rmode)) == NULL) {
+    fp.open(type_depend, std::ifstream::in);
+    if (fp.fail()) {
         perror(input_filename);
         exit(1);
     }
 
-    while ((NULL != fgets(buff, MAX_LINE, fp))) {
+    while (fp.good()) {
+        fp.getline(buff,MAX_LINE);
         const char *type = strtok(buff, WS);
         const char *dep;
         if (!type || type[0] == '#')
@@ -226,7 +223,7 @@ main(int argc, char *argv[])
         t->next = types;
         types = t;
     }
-    fclose(fp);
+    fp.close();
 
     /*-------------------------------------------------------------------*
      * Parse input file
@@ -234,23 +231,16 @@ main(int argc, char *argv[])
 
     /* Open input file */
 
-    if ((fp = fopen(input_filename, rmode)) == NULL) {
+    fp.open(input_filename, std::ifstream::in);
+    if (fp.fail()) {
         perror(input_filename);
         exit(1);
     }
 
-#if _SQUID_WINDOWS_
-    setmode(fileno(fp), O_TEXT);
-
-#endif
-
     state = sSTART;
 
-    while (feof(fp) == 0 && state != sEXIT) {
+    while (fp.getline(buff,MAX_LINE), fp.good() && state != sEXIT) {
         char *t;
-
-        if (NULL == fgets(buff, MAX_LINE, fp))
-            break;
 
         linenum++;
 
@@ -268,7 +258,7 @@ main(int argc, char *argv[])
                 char *name, *aliasname;
 
                 if ((name = strtok(buff + 5, WS)) == NULL) {
-                    printf("Error in input file\n");
+                    std::cerr << "Error in input file\n";
                     exit(1);
                 }
 
@@ -291,8 +281,8 @@ main(int argc, char *argv[])
                 curr->loc = xstrdup("none");
                 state = sDOC;
             } else {
-                printf("Error on line %d\n", linenum);
-                printf("--> %s\n", buff);
+                std::cerr << "Error on line " << linenum << std::endl <<
+                    "--> " << buff << std::endl;
                 exit(1);
             }
 
@@ -326,14 +316,14 @@ main(int argc, char *argv[])
                 lineAdd(&curr->default_if_none, ptr);
             } else if (!strncmp(buff, "LOC:", 4)) {
                 if ((ptr = strtok(buff + 4, WS)) == NULL) {
-                    printf("Error on line %d\n", linenum);
+                    std::cerr << "Error on line " << linenum << std::endl;
                     exit(1);
                 }
 
                 curr->loc = xstrdup(ptr);
             } else if (!strncmp(buff, "TYPE:", 5)) {
                 if ((ptr = strtok(buff + 5, WS)) == NULL) {
-                    printf("Error on line %d\n", linenum);
+                    std::cerr << "Error on line " << linenum << std::endl;
                     exit(1);
                 }
 
@@ -347,7 +337,7 @@ main(int argc, char *argv[])
                 curr->type = xstrdup(ptr);
             } else if (!strncmp(buff, "IFDEF:", 6)) {
                 if ((ptr = strtok(buff + 6, WS)) == NULL) {
-                    printf("Error on line %d\n", linenum);
+                    std::cerr << "Error on line " << linenum << std::endl;
                     exit(1);
                 }
 
@@ -360,7 +350,7 @@ main(int argc, char *argv[])
                 entries = curr;
                 state = sSTART;
             } else {
-                printf("Error on line %d\n", linenum);
+                std::cerr << "Error on line " << linenum << std::endl;
                 exit(1);
             }
 
@@ -427,10 +417,11 @@ main(int argc, char *argv[])
             assert(0);		/* should never get here */
             break;
         }
+
     }
 
     if (state != sEXIT) {
-        printf("Error unexpected EOF\n");
+        std::cerr << "Error: unexpected EOF\n";
         exit(1);
     } else {
         /* reverse order of entries */
@@ -448,7 +439,7 @@ main(int argc, char *argv[])
         entries = head;
     }
 
-    fclose(fp);
+    fp.close();
 
     /*-------------------------------------------------------------------*
      * Generate default_all()
@@ -460,74 +451,63 @@ main(int argc, char *argv[])
 
     /* Open output x.c file */
 
-    if ((fp = fopen(output_filename, "w")) == NULL) {
+    std::ofstream fout(output_filename,std::ostream::out);
+    if (!fout.good()) {
         perror(output_filename);
         exit(1);
     }
 
-#if _SQUID_WINDOWS_
-    setmode(fileno(fp), O_TEXT);
-#endif
-
-    fprintf(fp,
-            "/*\n"
-            " * Generated automatically from %s by %s\n"
+    fout <<  "/*\n" <<
+            " * Generated automatically from " << input_filename << " by " <<
+            argv[0] << "\n"
             " *\n"
             " * Abstract: This file contains routines used to configure the\n"
             " *           variables in the squid server.\n"
             " */\n"
             "\n"
             "#include \"config.h\"\n"
-            "\n",
-            input_filename, argv[0]
-           );
+            "\n";
 
-    rc = gen_default(entries, fp);
+    rc = gen_default(entries, fout);
 
-    gen_default_if_none(entries, fp);
+    gen_default_if_none(entries, fout);
 
-    gen_parse(entries, fp);
+    gen_parse(entries, fout);
 
-    gen_dump(entries, fp);
+    gen_dump(entries, fout);
 
-    gen_free(entries, fp);
+    gen_free(entries, fout);
 
-    fclose(fp);
+    fout.close();
 
     /* Open output x.conf file */
-    if ((fp = fopen(conf_filename, "w")) == NULL) {
+    fout.open(conf_filename,std::ostream::out);
+    if (!fout.good()) {
         perror(conf_filename);
         exit(1);
     }
 
-#if _SQUID_WINDOWS_
-    setmode(fileno(fp), O_TEXT);
-#endif
+    gen_conf(entries, fout, 1);
 
-    gen_conf(entries, fp, 1);
+    fout.close();
 
-    fclose(fp);
-
-    if ((fp = fopen(conf_filename_short, "w")) == NULL) {
+    fout.open(conf_filename_short,std::ostream::out);
+    if (!fout.good()) {
         perror(conf_filename_short);
         exit(1);
     }
-#if _SQUID_WINDOWS_
-    setmode(fileno(fp), O_TEXT);
-#endif
-    gen_conf(entries, fp, 0);
-    fclose(fp);
+    gen_conf(entries, fout, 0);
+    fout.close();
 
     return (rc);
 }
 
 static int
-gen_default(Entry * head, FILE * fp)
+gen_default(Entry * head, std::ostream &fout)
 {
     Entry *entry;
     int rc = 0;
-    fprintf(fp,
-            "static void\n"
+    fout << "static void\n"
             "default_line(const char *s)\n"
             "{\n"
             "\tLOCAL_ARRAY(char, tmp_line, BUFSIZ);\n"
@@ -535,15 +515,12 @@ gen_default(Entry * head, FILE * fp)
             "\txstrncpy(config_input_line, s, BUFSIZ);\n"
             "\tconfig_lineno++;\n"
             "\tparse_line(tmp_line);\n"
-            "}\n"
-           );
-    fprintf(fp,
-            "static void\n"
+            "}\n";
+    fout << "static void\n"
             "default_all(void)\n"
             "{\n"
             "\tcfg_filename = \"Default Configuration\";\n"
-            "\tconfig_lineno = 0;\n"
-           );
+            "\tconfig_lineno = 0;\n";
 
     for (entry = head; entry != NULL; entry = entry->next) {
         assert(entry->name);
@@ -556,47 +533,43 @@ gen_default(Entry * head, FILE * fp)
             continue;
 
         if (entry->loc == NULL) {
-            fprintf(stderr, "NO LOCATION FOR %s\n", entry->name);
+            std::cerr << "NO LOCATION FOR " << entry->name << std::endl;
             rc |= 1;
             continue;
         }
 
         if (entry->default_value == NULL && entry->default_if_none == NULL) {
-            fprintf(stderr, "NO DEFAULT FOR %s\n", entry->name);
+            std::cerr << "NO DEFAULT FOR " << entry->name << std::endl;
             rc |= 1;
             continue;
         }
 
         if (entry->default_value == NULL || strcmp(entry->default_value, "none") == 0) {
-            fprintf(fp, "\t/* No default for %s */\n", entry->name);
+            fout << "\t/* No default for " << entry->name << " */\n";
         } else {
             if (entry->ifdef)
-                fprintf(fp, "#if %s\n", entry->ifdef);
+                fout << "#if " << entry->ifdef << std::endl;
 
-            fprintf(fp, "\tdefault_line(\"%s %s\");\n",
-                    entry->name,
-                    entry->default_value);
+            fout << "\tdefault_line(\"" << entry->name << " " << 
+                entry->default_value << "\");\n";
 
             if (entry->ifdef)
-                fprintf(fp, "#endif\n");
-        }
+                fout << "#endif\n"; }
     }
 
-    fprintf(fp, "\tcfg_filename = NULL;\n");
-    fprintf(fp, "}\n\n");
+    fout << "\tcfg_filename = NULL;\n"
+        "}\n\n";
     return rc;
 }
 
 static void
-gen_default_if_none(Entry * head, FILE * fp)
+gen_default_if_none(Entry * head, std::ostream &fout)
 {
     Entry *entry;
     Line *line;
-    fprintf(fp,
-            "static void\n"
+    fout << "static void\n"
             "defaults_if_none(void)\n"
-            "{\n"
-           );
+            "{\n";
 
     for (entry = head; entry != NULL; entry = entry->next) {
         assert(entry->name);
@@ -608,67 +581,57 @@ gen_default_if_none(Entry * head, FILE * fp)
             continue;
 
         if (entry->ifdef)
-            fprintf(fp, "#if %s\n", entry->ifdef);
+            fout << "#if " << entry->ifdef << std::endl;
 
         if (entry->default_if_none) {
-            fprintf(fp,
-                    "\tif (check_null_%s(%s)) {\n",
-                    entry->type,
-                    entry->loc);
+            fout << "\tif (check_null_" << entry->type << "(" <<
+                entry->loc << ")) {\n";
 
             for (line = entry->default_if_none; line; line = line->next)
-                fprintf(fp,
-                        "\t\tdefault_line(\"%s %s\");\n",
-                        entry->name,
-                        line->data);
+                fout << "\t\tdefault_line(\"" << entry->name << " " <<
+                    line->data <<"\");\n";
 
-            fprintf(fp, "\t}\n");
+            fout << "\t}\n";
         }
 
         if (entry->ifdef)
-            fprintf(fp, "#endif\n");
+            fout << "#endif\n";
     }
 
-    fprintf(fp, "}\n\n");
+    fout << "}\n\n";
 }
 
 void
-gen_parse_alias(char *name, EntryAlias *alias, Entry *entry, FILE *fp)
+gen_parse_alias(char *name, EntryAlias *alias, Entry *entry, std::ostream &fout)
 {
-    fprintf(fp, "\tif (!strcmp(token, \"%s\")) {\n", name);
+    fout << "\tif (!strcmp(token, \"" << name << "\")) {\n";
 
     if (strcmp(entry->type,"obsolete") == 0) {
-        fprintf(fp, "\t\tdebugs(0, DBG_CRITICAL, \"ERROR: Directive '%s' is obsolete.\");\n", name);
+        fout << "\t\tdebugs(0, DBG_CRITICAL, \"ERROR: Directive '" << name << "' is obsolete.\");\n";
         for (Line *line = entry->doc; line != NULL; line = line->next) {
             // offset line to strip initial whitespace tab byte
-            fprintf(fp, "\t\tdebugs(0, opt_parse_cfg_only?0:1, \"%s : %s\");\n", name, &line->data[1]);
+            fout << "\t\tdebugs(0, opt_parse_cfg_only?0:1, \"" << name << " : " << &line->data[1] << "\");\n";
         }
-        fprintf(fp, "\t\tparse_obsolete(token);\n");
+        fout << "\t\tparse_obsolete(token);\n";
     } else if (!entry->loc || strcmp(entry->loc, "none") == 0) {
-        fprintf(fp,
-                "\t\tparse_%s();\n",
-                entry->type
-               );
+        fout << "\t\tparse_" << entry->type << "();\n";
     } else {
-        fprintf(fp,
-                "\t\tparse_%s(&%s%s);\n",
-                entry->type, entry->loc,
-                entry->array_flag ? "[0]" : ""
-               );
+        fout << "\t\tparse_" << entry->type << "(&" << entry->loc <<
+            (entry->array_flag ? "[0]" : "") << ");\n";
     }
 
-    fprintf(fp,"\t\treturn 1;\n");
-    fprintf(fp,"\t};\n");
+    fout << "\t\treturn 1;\n";
+    fout << "\t};\n";
 }
 
 void
-gen_parse_entry(Entry *entry, FILE *fp)
+gen_parse_entry(Entry *entry, std::ostream &fout)
 {
     if (strcmp(entry->name, "comment") == 0)
         return;
 
     if (entry->ifdef)
-        fprintf(fp, "#if %s\n", entry->ifdef);
+        fout << "#if " << entry->ifdef << std::endl;
 
     char *name = entry->name;
 
@@ -677,7 +640,7 @@ gen_parse_entry(Entry *entry, FILE *fp)
     bool more;
 
     do {
-        gen_parse_alias (name, alias,entry, fp);
+        gen_parse_alias (name, alias,entry, fout);
         more = false;
 
         if (alias) {
@@ -688,40 +651,37 @@ gen_parse_entry(Entry *entry, FILE *fp)
     } while (more);
 
     if (entry->ifdef)
-        fprintf(fp, "#endif\n");
+        fout << "#endif\n";
 }
 
 static void
-gen_parse(Entry * head, FILE * fp)
+gen_parse(Entry * head, std::ostream &fout)
 {
-    fprintf(fp,
+    fout <<
             "static int\n"
             "parse_line(char *buff)\n"
             "{\n"
             "\tchar\t*token;\n"
             "\tif ((token = strtok(buff, w_space)) == NULL) \n"
-            "\t\treturn 1;\t/* ignore empty lines */\n"
-           );
+            "\t\treturn 1;\t/* ignore empty lines */\n";
 
     for (Entry *entry = head; entry != NULL; entry = entry->next)
-        gen_parse_entry (entry, fp);
+        gen_parse_entry (entry, fout);
 
-    fprintf(fp,
-            "\treturn 0; /* failure */\n"
-            "}\n\n"
-           );
+    fout << "\treturn 0; /* failure */\n"
+            "}\n\n";
+
 }
 
 static void
-gen_dump(Entry * head, FILE * fp)
+gen_dump(Entry * head, std::ostream &fout)
 {
     Entry *entry;
-    fprintf(fp,
+    fout <<
             "static void\n"
             "dump_config(StoreEntry *entry)\n"
             "{\n"
-            "    debugs(5, 4, HERE);\n"
-           );
+            "    debugs(5, 4, HERE);\n";
 
     for (entry = head; entry != NULL; entry = entry->next) {
 
@@ -732,30 +692,27 @@ gen_dump(Entry * head, FILE * fp)
             continue;
 
         if (entry->ifdef)
-            fprintf(fp, "#if %s\n", entry->ifdef);
+            fout << "#if " << entry->ifdef << std::endl;
 
-        fprintf(fp, "\tdump_%s(entry, \"%s\", %s);\n",
-                entry->type,
-                entry->name,
-                entry->loc);
+        fout << "\tdump_" << entry->type << "(entry, \"" << entry->name <<
+            "\", " << entry->loc << ");\n";
 
         if (entry->ifdef)
-            fprintf(fp, "#endif\n");
+            fout << "#endif\n";
     }
 
-    fprintf(fp, "}\n\n");
+    fout << "}\n\n";
 }
 
 static void
-gen_free(Entry * head, FILE * fp)
+gen_free(Entry * head, std::ostream &fout)
 {
     Entry *entry;
-    fprintf(fp,
+    fout <<
             "static void\n"
             "free_all(void)\n"
             "{\n"
-            "    debugs(5, 4, HERE);\n"
-           );
+            "    debugs(5, 4, HERE);\n";
 
     for (entry = head; entry != NULL; entry = entry->next) {
         if (!entry->loc || strcmp(entry->loc, "none") == 0)
@@ -765,17 +722,16 @@ gen_free(Entry * head, FILE * fp)
             continue;
 
         if (entry->ifdef)
-            fprintf(fp, "#if %s\n", entry->ifdef);
+            fout << "#if " << entry->ifdef << std::endl;
 
-        fprintf(fp, "\tfree_%s(&%s%s);\n",
-                entry->type, entry->loc,
-                entry->array_flag ? "[0]" : "");
+        fout << "\tfree_" << entry->type << "(&" << entry->loc <<
+            (entry->array_flag ? "[0]" : "") << ");\n";
 
         if (entry->ifdef)
-            fprintf(fp, "#endif\n");
+            fout << "#endif\n";
     }
 
-    fprintf(fp, "}\n\n");
+    fout << "}\n\n";
 }
 
 static int
@@ -807,7 +763,7 @@ available_if(char *name)
 }
 
 static void
-gen_conf(Entry * head, FILE * fp, bool verbose_output)
+gen_conf(Entry * head, std::ostream &fout, bool verbose_output)
 {
     Entry *entry;
     char buf[8192];
@@ -822,25 +778,27 @@ gen_conf(Entry * head, FILE * fp, bool verbose_output)
         else if (!strcmp(entry->name, "obsolete"))
             (void) 0;
         else if (verbose_output) {
-            fprintf(fp, "#  TAG: %s", entry->name);
+            fout << "#  TAG: " << entry->name;
 
             if (entry->comment)
-                fprintf(fp, "\t%s", entry->comment);
+                fout << "\t" << entry->comment;
 
-            fprintf(fp, "\n");
+            fout << std::endl;
         }
 
         if (!defined(entry->ifdef)) {
             if (verbose_output) {
-                fprintf(fp, "# Note: This option is only available if Squid is rebuilt with the\n");
-                fprintf(fp, "#       %s\n#\n", available_if(entry->ifdef));
+
+                fout << "# Note: This option is only available if "
+                    "Squid is rebuilt with the\n" <<
+                    "#       " << available_if(entry->ifdef) << "\n#\n";
             }
             enabled = 0;
         }
 
         if (verbose_output) {
             for (line = entry->doc; line != NULL; line = line->next) {
-                fprintf(fp, "#%s\n", line->data);
+                fout << "#" << line->data << std::endl;
             }
         }
 
@@ -861,32 +819,32 @@ gen_conf(Entry * head, FILE * fp, bool verbose_output)
             lineAdd(&def, "none");
 
         if (verbose_output && def && (entry->doc || entry->nocomment)) {
-            fprintf(fp, "#Default:\n");
+            fout << "#Default:\n";
             while (def != NULL) {
                 line = def;
                 def = line->next;
-                fprintf(fp, "# %s\n", line->data);
+                fout << "# " << line->data << std::endl;
                 xfree(line->data);
                 xfree(line);
             }
         }
 
         if (verbose_output && entry->nocomment)
-            fprintf(fp, "#\n");
+            fout << "#" << std::endl;
 
         if (enabled || verbose_output) {
             for (line = entry->nocomment; line != NULL; line = line->next) {
                 if (!line->data)
                     continue;
                 if (!enabled && line->data[0] != '#')
-                    fprintf(fp, "#%s\n", line->data);
+                    fout << "#" << line->data << std::endl;
                 else
-                    fprintf(fp, "%s\n", line->data);
+                    fout << line->data << std::endl;
             }
         }
 
         if (verbose_output && entry->doc != NULL) {
-            fprintf(fp, "\n");
+            fout << std::endl;
         }
     }
 }
