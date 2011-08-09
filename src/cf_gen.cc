@@ -205,8 +205,8 @@ main(int argc, char *argv[])
      *-------------------------------------------------------------------*/
     fp.open(type_depend, std::ifstream::in);
     if (fp.fail()) {
-    	std::cerr << "error while opening type dependencies file '" <<
-            input_filename << "': " << strerror(errno) << std::endl;
+        std::cerr << "error while opening type dependencies file '" <<
+                  input_filename << "': " << strerror(errno) << std::endl;
         exit(1);
     }
 
@@ -238,7 +238,7 @@ main(int argc, char *argv[])
     fp.open(input_filename, std::ifstream::in);
     if (fp.fail()) {
         std::cerr << "error while opening input file '" <<
-            input_filename << "': " << strerror(errno) << std::endl;
+                  input_filename << "': " << strerror(errno) << std::endl;
         exit(1);
     }
 
@@ -287,7 +287,7 @@ main(int argc, char *argv[])
                 state = sDOC;
             } else {
                 std::cerr << "Error on line " << linenum << std::endl <<
-                    "--> " << buff << std::endl;
+                          "--> " << buff << std::endl;
                 exit(1);
             }
 
@@ -459,20 +459,20 @@ main(int argc, char *argv[])
     std::ofstream fout(output_filename,std::ostream::out);
     if (!fout.good()) {
         std::cerr << "error while opening output .c file '" <<
-            output_filename << "': " << strerror(errno) << std::endl;
+                  output_filename << "': " << strerror(errno) << std::endl;
         exit(1);
     }
 
     fout <<  "/*\n" <<
-            " * Generated automatically from " << input_filename << " by " <<
-            argv[0] << "\n"
-            " *\n"
-            " * Abstract: This file contains routines used to configure the\n"
-            " *           variables in the squid server.\n"
-            " */\n"
-            "\n"
-            "#include \"config.h\"\n"
-            "\n";
+    " * Generated automatically from " << input_filename << " by " <<
+    argv[0] << "\n"
+    " *\n"
+    " * Abstract: This file contains routines used to configure the\n"
+    " *           variables in the squid server.\n"
+    " */\n"
+    "\n"
+    "#include \"config.h\"\n"
+    "\n";
 
     rc = gen_default(entries, fout);
 
@@ -490,7 +490,7 @@ main(int argc, char *argv[])
     fout.open(conf_filename,std::ostream::out);
     if (!fout.good()) {
         std::cerr << "error while opening output conf file '" <<
-            output_filename << "': " << strerror(errno) << std::endl;
+                  output_filename << "': " << strerror(errno) << std::endl;
         exit(1);
     }
 
@@ -501,7 +501,7 @@ main(int argc, char *argv[])
     fout.open(conf_filename_short,std::ostream::out);
     if (!fout.good()) {
         std::cerr << "error while opening output short conf file '" <<
-            output_filename << "': " << strerror(errno) << std::endl;
+                  output_filename << "': " << strerror(errno) << std::endl;
         exit(1);
     }
     gen_conf(entries, fout, 0);
@@ -516,19 +516,19 @@ gen_default(Entry * head, std::ostream &fout)
     Entry *entry;
     int rc = 0;
     fout << "static void\n"
-            "default_line(const char *s)\n"
-            "{\n"
-            "\tLOCAL_ARRAY(char, tmp_line, BUFSIZ);\n"
-            "\txstrncpy(tmp_line, s, BUFSIZ);\n"
-            "\txstrncpy(config_input_line, s, BUFSIZ);\n"
-            "\tconfig_lineno++;\n"
-            "\tparse_line(tmp_line);\n"
-            "}\n";
+    "default_line(const char *s)\n"
+    "{\n"
+    "\tLOCAL_ARRAY(char, tmp_line, BUFSIZ);\n"
+    "\txstrncpy(tmp_line, s, BUFSIZ);\n"
+    "\txstrncpy(config_input_line, s, BUFSIZ);\n"
+    "\tconfig_lineno++;\n"
+    "\tparse_line(tmp_line);\n"
+    "}\n";
     fout << "static void\n"
-            "default_all(void)\n"
-            "{\n"
-            "\tcfg_filename = \"Default Configuration\";\n"
-            "\tconfig_lineno = 0;\n";
+    "default_all(void)\n"
+    "{\n"
+    "\tcfg_filename = \"Default Configuration\";\n"
+    "\tconfig_lineno = 0;\n";
 
     for (entry = head; entry != NULL; entry = entry->next) {
         assert(entry->name);
@@ -558,15 +558,16 @@ gen_default(Entry * head, std::ostream &fout)
             if (entry->ifdef)
                 fout << "#if " << entry->ifdef << std::endl;
 
-            fout << "\tdefault_line(\"" << entry->name << " " << 
-                entry->default_value << "\");\n";
+            fout << "\tdefault_line(\"" << entry->name << " " <<
+            entry->default_value << "\");\n";
 
             if (entry->ifdef)
-                fout << "#endif\n"; }
+                fout << "#endif\n";
+        }
     }
 
     fout << "\tcfg_filename = NULL;\n"
-        "}\n\n";
+    "}\n\n";
     return rc;
 }
 
@@ -576,8 +577,8 @@ gen_default_if_none(Entry * head, std::ostream &fout)
     Entry *entry;
     Line *line;
     fout << "static void\n"
-            "defaults_if_none(void)\n"
-            "{\n";
+    "defaults_if_none(void)\n"
+    "{\n";
 
     for (entry = head; entry != NULL; entry = entry->next) {
         assert(entry->name);
@@ -593,11 +594,11 @@ gen_default_if_none(Entry * head, std::ostream &fout)
 
         if (entry->default_if_none) {
             fout << "\tif (check_null_" << entry->type << "(" <<
-                entry->loc << ")) {\n";
+            entry->loc << ")) {\n";
 
             for (line = entry->default_if_none; line; line = line->next)
                 fout << "\t\tdefault_line(\"" << entry->name << " " <<
-                    line->data <<"\");\n";
+                line->data <<"\");\n";
 
             fout << "\t}\n";
         }
@@ -625,7 +626,7 @@ gen_parse_alias(char *name, EntryAlias *alias, Entry *entry, std::ostream &fout)
         fout << "\t\tparse_" << entry->type << "();\n";
     } else {
         fout << "\t\tparse_" << entry->type << "(&" << entry->loc <<
-            (entry->array_flag ? "[0]" : "") << ");\n";
+        (entry->array_flag ? "[0]" : "") << ");\n";
     }
 
     fout << "\t\treturn 1;\n";
@@ -666,18 +667,18 @@ static void
 gen_parse(Entry * head, std::ostream &fout)
 {
     fout <<
-            "static int\n"
-            "parse_line(char *buff)\n"
-            "{\n"
-            "\tchar\t*token;\n"
-            "\tif ((token = strtok(buff, w_space)) == NULL) \n"
-            "\t\treturn 1;\t/* ignore empty lines */\n";
+    "static int\n"
+    "parse_line(char *buff)\n"
+    "{\n"
+    "\tchar\t*token;\n"
+    "\tif ((token = strtok(buff, w_space)) == NULL) \n"
+    "\t\treturn 1;\t/* ignore empty lines */\n";
 
     for (Entry *entry = head; entry != NULL; entry = entry->next)
         gen_parse_entry (entry, fout);
 
     fout << "\treturn 0; /* failure */\n"
-            "}\n\n";
+    "}\n\n";
 
 }
 
@@ -686,10 +687,10 @@ gen_dump(Entry * head, std::ostream &fout)
 {
     Entry *entry;
     fout <<
-            "static void\n"
-            "dump_config(StoreEntry *entry)\n"
-            "{\n"
-            "    debugs(5, 4, HERE);\n";
+    "static void\n"
+    "dump_config(StoreEntry *entry)\n"
+    "{\n"
+    "    debugs(5, 4, HERE);\n";
 
     for (entry = head; entry != NULL; entry = entry->next) {
 
@@ -703,7 +704,7 @@ gen_dump(Entry * head, std::ostream &fout)
             fout << "#if " << entry->ifdef << std::endl;
 
         fout << "\tdump_" << entry->type << "(entry, \"" << entry->name <<
-            "\", " << entry->loc << ");\n";
+        "\", " << entry->loc << ");\n";
 
         if (entry->ifdef)
             fout << "#endif\n";
@@ -717,10 +718,10 @@ gen_free(Entry * head, std::ostream &fout)
 {
     Entry *entry;
     fout <<
-            "static void\n"
-            "free_all(void)\n"
-            "{\n"
-            "    debugs(5, 4, HERE);\n";
+    "static void\n"
+    "free_all(void)\n"
+    "{\n"
+    "    debugs(5, 4, HERE);\n";
 
     for (entry = head; entry != NULL; entry = entry->next) {
         if (!entry->loc || strcmp(entry->loc, "none") == 0)
@@ -733,7 +734,7 @@ gen_free(Entry * head, std::ostream &fout)
             fout << "#if " << entry->ifdef << std::endl;
 
         fout << "\tfree_" << entry->type << "(&" << entry->loc <<
-            (entry->array_flag ? "[0]" : "") << ");\n";
+        (entry->array_flag ? "[0]" : "") << ");\n";
 
         if (entry->ifdef)
             fout << "#endif\n";
@@ -798,8 +799,8 @@ gen_conf(Entry * head, std::ostream &fout, bool verbose_output)
             if (verbose_output) {
 
                 fout << "# Note: This option is only available if "
-                    "Squid is rebuilt with the\n" <<
-                    "#       " << available_if(entry->ifdef) << "\n#\n";
+                "Squid is rebuilt with the\n" <<
+                "#       " << available_if(entry->ifdef) << "\n#\n";
             }
             enabled = 0;
         }
