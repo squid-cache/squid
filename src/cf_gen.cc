@@ -45,6 +45,15 @@
  *			 administrator.
  *****************************************************************************/
 
+/*
+ * hack around a bug in intel's c++ compiler's libraries which do not
+ * correctly support 64-bit iostreams
+ */
+#if defined(__INTEL_COMPILER) && defined(_FILE_OFFSET_BITS) && \
+   _FILE_OFFSET_BITS==64
+#undef _FILE_OFFSET_BITS
+#endif
+
 #include "config.h"
 #include "util.h"
 
