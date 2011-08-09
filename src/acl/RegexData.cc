@@ -124,7 +124,7 @@ ACLRegexData::dump()
     return W;
 }
 
-static char *
+static const char *
 removeUnnecessaryWildcards(char * t)
 {
     char * orig = t;
@@ -318,13 +318,13 @@ aclParseRegexList(relist **curlist)
     debugs(28, 2, HERE << "aclParseRegexList: new Regex line or file");
 
     while ((t = ConfigParser::strtokFile()) != NULL) {
-        t = removeUnnecessaryWildcards(t);
-        if (strlen(t) > BUFSIZ-1) {
+        const char *clean = removeUnnecessaryWildcards(t);
+        if (strlen(clean) > BUFSIZ-1) {
             debugs(28, DBG_CRITICAL, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-            debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression. Larger than " << BUFSIZ-1 << " characters: '" << wl->key << "'");
+            debugs(28, DBG_CRITICAL, "ERROR: Skipping regular expression. Larger than " << BUFSIZ-1 << " characters: '" << clean << "'");
         } else {
-            debugs(28, 3, "aclParseRegexList: buffering RE '" << t << "'");
-            wordlistAdd(&wl, t);
+            debugs(28, 3, "aclParseRegexList: buffering RE '" << clean << "'");
+            wordlistAdd(&wl, clean);
         }
     }
 
