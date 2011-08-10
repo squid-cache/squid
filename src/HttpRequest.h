@@ -53,15 +53,6 @@
 //DEAD?: extern int httpRequestHdrAllowedByName(http_hdr_type id);
 extern void httpRequestPack(void *obj, Packer *p);
 
-// TODO: Move these three to access_log.h or AccessLogEntry.h
-#if USE_ADAPTATION
-extern bool alLogformatHasAdaptToken;
-#endif
-#if ICAP_CLIENT
-extern bool alLogformatHasIcapToken;
-#endif
-extern int LogfileStatus;
-
 class HttpHdrRange;
 class DnsLookupDetails;
 
@@ -176,13 +167,6 @@ public:
 #if FOLLOW_X_FORWARDED_FOR
     Ip::Address indirect_client_addr;
 #endif /* FOLLOW_X_FORWARDED_FOR */
-
-#if USE_SQUID_EUI
-    /* TODO these might be merged into one field if we can reliably map the EUI-48 into EUI-64
-       there are some OS differences in the upper bytes. */
-    Eui::Eui48 client_eui48;
-    Eui::Eui64 client_eui64;
-#endif
 
     Ip::Address my_addr;
 

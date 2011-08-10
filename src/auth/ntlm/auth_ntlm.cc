@@ -168,8 +168,6 @@ Auth::Ntlm::Config::init(Auth::Config * scheme)
         ntlmauthenticators->ipc_type = IPC_STREAM;
 
         helperStatefulOpenServers(ntlmauthenticators);
-
-        CBDATA_INIT_TYPE(authenticateStateData);
     }
 }
 

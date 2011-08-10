@@ -1,19 +1,19 @@
-#ifndef _SQUID_LOG_GADGETS_H
-#define _SQUID_LOG_GADGETS_H
+#ifndef _SQUID_FORMAT_QUOTING_H
+#define _SQUID_FORMAT_QUOTING_H
 
-namespace Log
+namespace Format
 {
 
 /// Safely URL-encode a username.
 /// Accepts NULL or empty strings.
-char * FormatName(const char *name);
+extern char * QuoteUrlEncodeUsername(const char *name);
 
 /** URL-style encoding on a MIME headers blob.
  * May accept NULL or empty strings.
  * \return A dynamically allocated string. recipient is responsible for free()'ing
  */
-char *QuoteMimeBlob(const char *header);
+extern char *QuoteMimeBlob(const char *header);
 
-}; // namespace Log
+}; // namespace Format
 
-#endif /* _SQUID_LOG_GADGETS_H */
+#endif /* _SQUID_FORMAT_QUOTING_H */

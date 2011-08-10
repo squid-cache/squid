@@ -48,6 +48,7 @@
 */
 #include "auth/Config.h"
 #include "auth/Scheme.h"
+#include "comm/Connection.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 
@@ -346,7 +347,9 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
     debugs(29, 9, HERE << "header " << (proxy_auth ? proxy_auth : "-") << ".");
 
     if (*auth_user_request == NULL) {
-        debugs(29, 9, HERE << "This is a new checklist test on FD:" << (conn != NULL ? conn->fd : -1)  );
+        if (conn != NULL) {
+            debugs(29, 9, HERE << "This is a new checklist test on:" << conn->clientConnection);
+        }
 
         if (proxy_auth && request->auth_user_request == NULL && conn != NULL && conn->auth_user_request != NULL) {
             Auth::Config * scheme = Auth::Config::Find(proxy_auth);

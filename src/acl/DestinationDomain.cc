@@ -40,6 +40,7 @@
 #include "acl/RegexData.h"
 #include "acl/DomainData.h"
 #include "HttpRequest.h"
+#include "ipcache.h"
 
 DestinationDomainLookup DestinationDomainLookup::instance_;
 
@@ -67,7 +68,7 @@ DestinationDomainLookup::LookupDone(const char *fqdn, const DnsLookupDetails &de
     checklist->changeState (ACLChecklist::NullState::Instance());
     checklist->markDestinationDomainChecked();
     checklist->request->recordLookup(details);
-    checklist->check();
+    checklist->matchNonBlocking();
 }
 
 

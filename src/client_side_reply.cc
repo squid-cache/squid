@@ -55,11 +55,13 @@
 #endif
 #include "fde.h"
 #include "forward.h"
+#include "format/Tokens.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
-#include "log/Tokens.h"
+#include "ipcache.h"
 #include "MemObject.h"
+#include "ProtoPort.h"
 #include "SquidTime.h"
 #include "StoreClient.h"
 #include "Store.h"
@@ -274,9 +276,9 @@ clientReplyContext::processExpired()
      * A refcounted pointer so that FwdState stays around as long as
      * this clientReplyContext does
      */
-    FwdState::fwdStart(http->getConn() != NULL ? http->getConn()->fd : -1,
-                       http->storeEntry(),
-                       http->request);
+    Comm::ConnectionPointer conn = http->getConn() != NULL ? http->getConn()->clientConnection : NULL;
+    FwdState::fwdStart(conn, http->storeEntry(), http->request);
+
     /* Register with storage manager to receive updates when data comes in. */
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED))
@@ -603,7 +605,7 @@ clientReplyContext::processMiss()
     if (http->storeEntry()) {
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
             debugs(88, 0, "clientProcessMiss: miss on a special object (" << url << ").");
-            debugs(88, 0, "\tlog_type = " << log_tags[http->logType]);
+            debugs(88, 0, "\tlog_type = " << Format::log_tags[http->logType]);
             http->storeEntry()->dump(1);
         }
 
@@ -631,7 +633,7 @@ clientReplyContext::processMiss()
     if (r->flags.loopdetect &&
             (http->flags.accel || http->flags.intercepted)) {
         http->al.http.code = HTTP_FORBIDDEN;
-        err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->peer, http->request);
+        err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->clientConnection->remote, http->request);
         createStoreEntry(r->method, request_flags());
         errorAppendEntry(http->storeEntry(), err);
         triggerInitialStoreRead();
@@ -662,9 +664,8 @@ clientReplyContext::processMiss()
         assert(r->clientConnectionManager == http->getConn());
 
         /** Start forwarding to get the new object from network */
-        FwdState::fwdStart(http->getConn() != NULL ? http->getConn()->fd : -1,
-                           http->storeEntry(),
-                           r);
+        Comm::ConnectionPointer conn = http->getConn() != NULL ? http->getConn()->clientConnection : NULL;
+        FwdState::fwdStart(conn, http->storeEntry(), r);
     }
 }
 
@@ -677,11 +678,11 @@ clientReplyContext::processMiss()
 void
 clientReplyContext::processOnlyIfCachedMiss()
 {
-    ErrorState *err = NULL;
     debugs(88, 4, "clientProcessOnlyIfCachedMiss: '" <<
            RequestMethodStr(http->request->method) << " " << http->uri << "'");
     http->al.http.code = HTTP_GATEWAY_TIMEOUT;
-    err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, HTTP_GATEWAY_TIMEOUT, NULL, http->getConn()->peer, http->request);
+    ErrorState *err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, HTTP_GATEWAY_TIMEOUT, NULL,
+                                       http->getConn()->clientConnection->remote, http->request);
     removeClientStoreReference(&sc, http);
     startError(err);
 }
@@ -847,7 +848,8 @@ clientReplyContext::purgeFoundObject(StoreEntry *entry)
 
     if (EBIT_TEST(entry->flags, ENTRY_SPECIAL)) {
         http->logType = LOG_TCP_DENIED;
-        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->peer, http->request);
+        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL,
+                                           http->getConn()->clientConnection->remote, http->request);
         startError(err);
         return;
     }
@@ -885,7 +887,7 @@ clientReplyContext::purgeRequest()
 
     if (!Config2.onoff.enable_purge) {
         http->logType = LOG_TCP_DENIED;
-        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->peer, http->request);
+        ErrorState *err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->clientConnection->remote, http->request);
         startError(err);
         return;
     }
@@ -1258,9 +1260,9 @@ clientReplyContext::buildReplyHeader()
         hdr->delById(HDR_SET_COOKIE);
     // TODO: RFC 2965 : Must honour Cache-Control: no-cache="set-cookie2" and remove header.
 
-    // if there is not configured a peer proxy with login=PASS option enabled
+    // if there is not configured a peer proxy with login=PASS or login=PASSTHRU option enabled
     // remove the Proxy-Authenticate header
-    if ( !(request->peer_login && strcmp(request->peer_login,"PASS") ==0))
+    if ( !request->peer_login || (strcmp(request->peer_login,"PASS") != 0 && strcmp(request->peer_login,"PASSTHRU") != 0))
         reply->header.delById(HDR_PROXY_AUTHENTICATE);
 
     reply->header.removeHopByHopEntries();
@@ -1295,6 +1297,25 @@ clientReplyContext::buildReplyHeader()
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
             hdr->delById(HDR_DATE);
             hdr->insertTime(HDR_DATE, squid_curtime);
+        } else if (http->getConn() && http->getConn()->port->actAsOrigin) {
+            // Swap the Date: header to current time if we are simulating an origin
+            HttpHeaderEntry *h = hdr->findEntry(HDR_DATE);
+            if (h)
+                hdr->putExt("X-Origin-Date", h->value.termedBuf());
+            hdr->delById(HDR_DATE);
+            hdr->insertTime(HDR_DATE, squid_curtime);
+            h = hdr->findEntry(HDR_EXPIRES);
+            if (h && http->storeEntry()->expires >= 0) {
+                hdr->putExt("X-Origin-Expires", h->value.termedBuf());
+                hdr->delById(HDR_EXPIRES);
+                hdr->insertTime(HDR_EXPIRES, squid_curtime + http->storeEntry()->expires - http->storeEntry()->timestamp);
+            }
+            if (http->storeEntry()->timestamp <= squid_curtime) {
+                // put X-Cache-Age: instead of Age:
+                char age[64];
+                snprintf(age, sizeof(age), "%ld", (long int) squid_curtime - http->storeEntry()->timestamp);
+                hdr->putExt("X-Cache-Age", age);
+            }
         } else if (http->storeEntry()->timestamp <= squid_curtime) {
             hdr->putInt(HDR_AGE,
                         squid_curtime - http->storeEntry()->timestamp);
@@ -1727,11 +1748,11 @@ clientReplyContext::doGetMoreData()
         assert(http->out.offset == 0);
 
         if (Ip::Qos::TheConfig.isHitTosActive()) {
-            Ip::Qos::doTosLocalHit(http->getConn()->fd);
+            Ip::Qos::doTosLocalHit(http->getConn()->clientConnection);
         }
 
         if (Ip::Qos::TheConfig.isHitNfmarkActive()) {
-            Ip::Qos::doNfmarkLocalHit(http->getConn()->fd);
+            Ip::Qos::doNfmarkLocalHit(http->getConn()->clientConnection);
         }
 
         localTempBuffer.offset = reqofs;
@@ -1832,7 +1853,7 @@ clientReplyContext::sendBodyTooLargeError()
     tmp_noaddr.SetNoAddr(); // TODO: make a global const
     http->logType = LOG_TCP_DENIED_REPLY;
     ErrorState *err = clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
-                                       http->getConn() != NULL ? http->getConn()->peer : tmp_noaddr,
+                                       http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmp_noaddr,
                                        http->request);
     removeClientStoreReference(&(sc), http);
     HTTPMSGUNLOCK(reply);
@@ -1847,7 +1868,7 @@ clientReplyContext::sendPreconditionFailedError()
     http->logType = LOG_TCP_HIT;
     ErrorState *const err =
         clientBuildError(ERR_PRECONDITION_FAILED, HTTP_PRECONDITION_FAILED,
-                         NULL, http->getConn()->peer, http->request);
+                         NULL, http->getConn()->clientConnection->remote, http->request);
     removeClientStoreReference(&sc, http);
     HTTPMSGUNLOCK(reply);
     startError(err);
@@ -1866,6 +1887,7 @@ clientReplyContext::sendNotModified()
     e = http->storeEntry();
     // Copy timestamp from the original entry so the 304
     // reply has a meaningful Age: header.
+    e->timestampsSet();
     e->timestamp = timestamp;
     e->replaceHttpReply(temprep);
     e->complete();
@@ -1900,7 +1922,7 @@ clientReplyContext::processReplyAccess ()
             http->logType == LOG_TCP_DENIED_REPLY ||
             alwaysAllowResponse(reply->sline.status)) {
         headers_sz = reply->hdr_sz;
-        processReplyAccessResult(1);
+        processReplyAccessResult(ACCESS_ALLOWED);
         return;
     }
 
@@ -1914,7 +1936,7 @@ clientReplyContext::processReplyAccess ()
 
     /** check for absent access controls (permit by default) */
     if (!Config.accessList.reply) {
-        processReplyAccessResult(1);
+        processReplyAccessResult(ACCESS_ALLOWED);
         return;
     }
 
@@ -1926,22 +1948,20 @@ clientReplyContext::processReplyAccess ()
 }
 
 void
-clientReplyContext::ProcessReplyAccessResult (int rv, void *voidMe)
+clientReplyContext::ProcessReplyAccessResult(allow_t rv, void *voidMe)
 {
     clientReplyContext *me = static_cast<clientReplyContext *>(voidMe);
     me->processReplyAccessResult(rv);
 }
 
 void
-clientReplyContext::processReplyAccessResult(bool accessAllowed)
+clientReplyContext::processReplyAccessResult(const allow_t &accessAllowed)
 {
     debugs(88, 2, "The reply for " << RequestMethodStr(http->request->method)
-           << " " << http->uri << " is "
-           << ( accessAllowed ? "ALLOWED" : "DENIED")
-           << ", because it matched '"
+           << " " << http->uri << " is " << accessAllowed << ", because it matched '"
            << (AclMatchedName ? AclMatchedName : "NO ACL's") << "'" );
 
-    if (!accessAllowed) {
+    if (accessAllowed != ACCESS_ALLOWED) {
         ErrorState *err;
         err_type page_id;
         page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, 1);
@@ -1954,7 +1974,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
         Ip::Address tmp_noaddr;
         tmp_noaddr.SetNoAddr();
         err = clientBuildError(page_id, HTTP_FORBIDDEN, NULL,
-                               http->getConn() != NULL ? http->getConn()->peer : tmp_noaddr,
+                               http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmp_noaddr,
                                http->request);
 
         removeClientStoreReference(&sc, http);
@@ -2044,10 +2064,10 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 
     ConnStateData * conn = http->getConn();
 
-    int fd = conn != NULL ? conn->fd : -1;
-    if (fd >= 0 && fd_table[fd].closing()) { // too late, our conn is closing
-        // TODO: should we also quit when fd is negative?
-        debugs(33,3, HERE << "not sending more data to a closing FD " << fd);
+    if (conn == NULL || !conn->isOpen()) {
+        // too late, our conn is closing
+        // TODO: should we also quit?
+        debugs(33,3, HERE << "not sending more data to a closing " << conn->clientConnection);
         return;
     }
 
@@ -2059,13 +2079,12 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         memcpy(buf, result.data, result.length);
     }
 
-    if (reqofs==0 && !logTypeIsATcpHit(http->logType)) {
-        assert(fd >= 0); // the beginning of this method implies fd may be -1
+    if (reqofs==0 && !logTypeIsATcpHit(http->logType) && Comm::IsConnOpen(conn->clientConnection)) {
         if (Ip::Qos::TheConfig.isHitTosActive()) {
-            Ip::Qos::doTosLocalMiss(fd, http->request->hier.code);
+            Ip::Qos::doTosLocalMiss(conn->clientConnection, http->request->hier.code);
         }
         if (Ip::Qos::TheConfig.isHitNfmarkActive()) {
-            Ip::Qos::doNfmarkLocalMiss(fd, http->request->hier.code);
+            Ip::Qos::doNfmarkLocalMiss(conn->clientConnection, http->request->hier.code);
         }
     }
 
@@ -2088,7 +2107,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
            reqofs << " bytes (" << result.length <<
            " new bytes)");
     debugs(88, 5, "clientReplyContext::sendMoreData:"
-           " FD " << fd <<
+           << conn->clientConnection <<
            " '" << entry->url() << "'" <<
            " out.offset=" << http->out.offset);
 

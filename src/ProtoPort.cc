@@ -9,11 +9,11 @@
 #include <limits>
 #endif
 
-http_port_list::http_port_list(const char *aProtocol) :
-        listenFd(-1)
+http_port_list::http_port_list(const char *aProtocol)
 #if USE_SSL
-        , http(*this)
-        , dynamicCertMemCacheSize(std::numeric_limits<size_t>::max())
+        :
+        http(*this),
+        dynamicCertMemCacheSize(std::numeric_limits<size_t>::max())
 #endif
 {
     protocol = xstrdup(aProtocol);
@@ -21,9 +21,9 @@ http_port_list::http_port_list(const char *aProtocol) :
 
 http_port_list::~http_port_list()
 {
-    if (listenFd >= 0) {
-        comm_close(listenFd);
-        listenFd = -1;
+    if (Comm::IsConnOpen(listenConn)) {
+        listenConn->close();
+        listenConn = NULL;
     }
 
     safe_free(name);

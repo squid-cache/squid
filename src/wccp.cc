@@ -38,6 +38,7 @@
 
 #include "squid.h"
 #include "comm.h"
+#include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "event.h"
 
@@ -130,7 +131,6 @@ wccpInit(void)
 void
 wccpConnectionOpen(void)
 {
-    struct addrinfo *router = NULL, *local = NULL;
     debugs(80, 5, "wccpConnectionOpen: Called");
 
     if (Config.Wccp.router.IsAnyAddr()) {
@@ -164,21 +164,21 @@ wccpConnectionOpen(void)
 
     debugs(80, 1, "Accepting WCCPv1 messages on " << Config.Wccp.address << ", FD " << theWccpConnection << ".");
 
-    Config.Wccp.router.GetAddrInfo(router,AF_INET);
 
-    if (connect(theWccpConnection, router->ai_addr, router->ai_addrlen))
+    // Sadly WCCP only does IPv4
+
+    struct sockaddr_in router;
+    Config.Wccp.router.GetSockAddr(router);
+    if (connect(theWccpConnection, (struct sockaddr*)&router, sizeof(router)))
         fatal("Unable to connect WCCP out socket");
 
-    Config.Wccp.router.FreeAddrInfo(router);
-
-    Config.Wccp.address.InitAddrInfo(local);
-
-    if (getsockname(theWccpConnection, local->ai_addr, &local->ai_addrlen))
+    struct sockaddr_in local;
+    memset(&local, '\0', sizeof(local));
+    socklen_t slen = sizeof(local);
+    if (getsockname(theWccpConnection, (struct sockaddr*)&local, &slen))
         fatal("Unable to getsockname on WCCP out socket");
 
-    local_ip = *local;
-
-    Config.Wccp.address.FreeAddrInfo(local);
+    local_ip = local;
 }
 
 
@@ -345,7 +345,7 @@ wccpAssignBuckets(void)
 
     buckets = buf + wab_len + cache_len;
 
-    memset(wccp_assign_bucket, '\0', sizeof(wccp_assign_bucket));
+    memset(wccp_assign_bucket, '\0', sizeof(*wccp_assign_bucket));
 
     memset(buckets, 0xFF, WCCP_BUCKETS);
 

@@ -59,6 +59,63 @@ Adaptation::Config::newServiceConfig() const
 }
 
 void
+Adaptation::Config::removeService(const String& service)
+{
+    removeRule(service);
+    const Groups& groups = AllGroups();
+    for (unsigned int i = 0; i < groups.size(); ) {
+        const ServiceGroupPointer group = groups[i];
+        const ServiceGroup::Store& services = group->services;
+        typedef ServiceGroup::Store::const_iterator SGSI;
+        for (SGSI it = services.begin(); it != services.end(); ++it) {
+            if (*it == service) {
+                group->removedServices.push_back(service);
+                group->services.prune(service);
+                debugs(93, 5, HERE << "adaptation service " << service <<
+                       " removed from group " << group->id);
+                break;
+            }
+        }
+        if (services.empty()) {
+            removeRule(group->id);
+            AllGroups().prune(group);
+        } else {
+            ++i;
+        }
+    }
+}
+
+void
+Adaptation::Config::removeRule(const String& id)
+{
+    typedef AccessRules::const_iterator ARI;
+    const AccessRules& rules = AllRules();
+    for (ARI it = rules.begin(); it != rules.end(); ++it) {
+        AccessRule* rule = *it;
+        if (rule->groupId == id) {
+            debugs(93, 5, HERE << "removing access rules for:" << id);
+            AllRules().prune(rule);
+            delete (rule);
+            break;
+        }
+    }
+}
+
+void
+Adaptation::Config::clear()
+{
+    debugs(93, 3, HERE << "rules: " << AllRules().size() << ", groups: " <<
+           AllGroups().size() << ", services: " << serviceConfigs.size());
+    typedef ServiceConfigs::const_iterator SCI;
+    const ServiceConfigs& configs = serviceConfigs;
+    for (SCI cfg = configs.begin(); cfg != configs.end(); ++cfg)
+        removeService((*cfg)->key);
+    serviceConfigs.clean();
+    debugs(93, 3, HERE << "rules: " << AllRules().size() << ", groups: " <<
+           AllGroups().size() << ", services: " << serviceConfigs.size());
+}
+
+void
 Adaptation::Config::parseService()
 {
     ServiceConfigPointer cfg = newServiceConfig();
@@ -94,9 +151,14 @@ Adaptation::Config::dumpService(StoreEntry *entry, const char *name) const
     }
 }
 
-void
+bool
 Adaptation::Config::finalize()
 {
+    if (!onoff) {
+        clear();
+        return false;
+    }
+
     // create service reps from service configs
     int created = 0;
 
@@ -120,6 +182,7 @@ Adaptation::Config::finalize()
 
     // services remember their configs; we do not have to
     serviceConfigs.clean();
+    return true;
 }
 
 // poor man for_each

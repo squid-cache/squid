@@ -239,7 +239,6 @@ public:
 
 class ACLChecklist;
 class StoreEntry;
-class logformat_token;
 
 /* Should be in 'AccessLog.h' as the driver */
 extern void accessLogLogTo(customlog* log, AccessLogEntry* al, ACLChecklist* checklist = NULL);
@@ -249,8 +248,5 @@ extern void accessLogClose(void);
 extern void accessLogInit(void);
 extern void accessLogFreeMemory(AccessLogEntry * aLogEntry);
 extern const char *accessLogTime(time_t);
-extern int accessLogParseLogFormat(logformat_token ** fmt, char *def);
-extern void accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definitions);
-extern void accessLogFreeLogFormat(logformat_token ** fmt);
 
 #endif /* SQUID_HTTPACCESSLOGENTRY_H */

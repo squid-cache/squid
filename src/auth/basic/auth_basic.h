@@ -61,4 +61,6 @@ private:
 } // namespace Basic
 } // namespace Auth
 
+extern helper *basicauthenticators;
+
 #endif /* __AUTH_BASIC_H__ */

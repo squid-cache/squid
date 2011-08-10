@@ -102,7 +102,9 @@ SQUIDCEXTERN void xfreeaddrinfo (struct addrinfo *ai);
 
 /* Convert error return from getaddrinfo() to string */
 SQUIDCEXTERN const char *xgai_strerror (int code);
+#if !defined(gai_strerror)
 #define gai_strerror	xgai_strerror
+#endif
 
 #endif /* HAVE_GETADDRINFO */
 #endif /* _getaddrinfo_h */

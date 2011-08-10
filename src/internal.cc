@@ -34,6 +34,8 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
+#include "comm/Connection.h"
 #include "errorpage.h"
 #include "Store.h"
 #include "HttpRequest.h"
@@ -48,11 +50,11 @@
  * return HTTP_NOT_FOUND for others
  */
 void
-internalStart(HttpRequest * request, StoreEntry * entry)
+internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, StoreEntry * entry)
 {
     ErrorState *err;
     const char *upath = request->urlpath.termedBuf();
-    debugs(76, 3, "internalStart: " << request->client_addr << " requesting '" << upath << "'");
+    debugs(76, 3, HERE << clientConn << " requesting '" << upath << "'");
 
     if (0 == strcmp(upath, "/squid-internal-dynamic/netdb")) {
         netdbBinaryExchange(entry);
@@ -69,6 +71,8 @@ internalStart(HttpRequest * request, StoreEntry * entry)
         entry->replaceHttpReply(reply);
         entry->append(msgbuf, strlen(msgbuf));
         entry->complete();
+    } else if (0 == strncmp(upath, "/squid-internal-mgr/", 20)) {
+        CacheManager::GetInstance()->Start(clientConn, request, entry);
     } else {
         debugObj(76, 1, "internalStart: unknown request:\n",
                  request, (ObjPackMethod) & httpRequestPack);

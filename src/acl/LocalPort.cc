@@ -1,8 +1,7 @@
+
 /*
  * $Id$
  *
- * DEBUG: section 28    Access Control
- * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -30,30 +29,25 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
 #include "squid.h"
-#include "acl/MyIp.h"
-#include "acl/FilledChecklist.h"
-
-char const *
-ACLMyIP::typeString() const
-{
-    return "myip";
-}
+#include "acl/LocalPort.h"
+#include "acl/IntRange.h"
+#include "acl/Checklist.h"
 
 int
-ACLMyIP::match(ACLChecklist *checklist)
+ACLLocalPortStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
-    return ACLIP::match (Filled(checklist)->my_addr);
+    return data->match (checklist->my_addr.GetPort());
 }
 
-
-
-
-ACL *
-ACLMyIP::clone() const
+ACLLocalPortStrategy *
+ACLLocalPortStrategy::Instance()
 {
-    return new ACLMyIP(*this);
+    return &Instance_;
 }
+
+ACLLocalPortStrategy ACLLocalPortStrategy::Instance_;

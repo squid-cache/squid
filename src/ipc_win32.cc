@@ -576,8 +576,7 @@ ipc_thread_1(void *in_params)
         hProcess = pi.hProcess;
     } else {
         pid = -1;
-        WIN32_maperror(GetLastError());
-        x = errno;
+        x = GetLastError();
     }
 
     dup2(t1, 0);

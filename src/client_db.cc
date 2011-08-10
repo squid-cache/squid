@@ -34,9 +34,9 @@
 
 #include "squid.h"
 #include "event.h"
+#include "format/Tokens.h"
 #include "ClientInfo.h"
 #include "ip/Address.h"
-#include "log/Tokens.h"
 #include "mgr/Registration.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
@@ -310,7 +310,7 @@ clientdbDump(StoreEntry * sentry)
             if (LOG_UDP_HIT == l)
                 icp_hits += c->Icp.result_hist[l];
 
-            storeAppendPrintf(sentry, "        %-20.20s %7d %3d%%\n",log_tags[l], c->Icp.result_hist[l], Math::intPercent(c->Icp.result_hist[l], c->Icp.n_requests));
+            storeAppendPrintf(sentry, "        %-20.20s %7d %3d%%\n",Format::log_tags[l], c->Icp.result_hist[l], Math::intPercent(c->Icp.result_hist[l], c->Icp.n_requests));
         }
 
         storeAppendPrintf(sentry, "    HTTP Requests %d\n", c->Http.n_requests);
@@ -326,7 +326,7 @@ clientdbDump(StoreEntry * sentry)
 
             storeAppendPrintf(sentry,
                               "        %-20.20s %7d %3d%%\n",
-                              log_tags[l],
+                              Format::log_tags[l],
                               c->Http.result_hist[l],
                               Math::intPercent(c->Http.result_hist[l], c->Http.n_requests));
         }

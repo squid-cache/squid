@@ -34,6 +34,9 @@
  */
 
 #include "squid.h"
+#include "CacheManager.h"
+#include "comm/Connection.h"
+#include "ETag.h"
 #include "event.h"
 #include "fde.h"
 #include "Store.h"
@@ -220,14 +223,14 @@ void
 StoreEntry::DeferReader(void *theContext, CommRead const &aRead)
 {
     StoreEntry *anEntry = (StoreEntry *)theContext;
-    anEntry->delayAwareRead(aRead.fd,
+    anEntry->delayAwareRead(aRead.conn,
                             aRead.buf,
                             aRead.len,
                             aRead.callback);
 }
 
 void
-StoreEntry::delayAwareRead(int fd, char *buf, int len, AsyncCall::Pointer callback)
+StoreEntry::delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int len, AsyncCall::Pointer callback)
 {
     size_t amountToRead = bytesWanted(Range<size_t>(0, len));
     /* sketch: readdeferer* = getdeferer.
@@ -241,31 +244,30 @@ StoreEntry::delayAwareRead(int fd, char *buf, int len, AsyncCall::Pointer callba
 #if USE_DELAY_POOLS
         if (!mem_obj->readAheadPolicyCanRead()) {
 #endif
-            mem_obj->delayRead(DeferredRead(DeferReader, this, CommRead(fd, buf, len, callback)));
+            mem_obj->delayRead(DeferredRead(DeferReader, this, CommRead(conn, buf, len, callback)));
             return;
 #if USE_DELAY_POOLS
         }
 
         /* delay id limit */
-        mem_obj->mostBytesAllowed().delayRead(DeferredRead(DeferReader, this, CommRead(fd, buf, len, callback)));
-
+        mem_obj->mostBytesAllowed().delayRead(DeferredRead(DeferReader, this, CommRead(conn, buf, len, callback)));
         return;
 
 #endif
 
     }
 
-    if (fd_table[fd].closing()) {
+    if (fd_table[conn->fd].closing()) {
         // Readers must have closing callbacks if they want to be notified. No
         // readers appeared to care around 2009/12/14 as they skipped reading
         // for other reasons. Closing may already be true at the delyaAwareRead
         // call time or may happen while we wait after delayRead() above.
-        debugs(20, 3, HERE << "wont read from closing FD " << fd << " for " <<
+        debugs(20, 3, HERE << "wont read from closing " << conn << " for " <<
                callback);
         return; // the read callback will never be called
     }
 
-    comm_read(fd, buf, amountToRead, callback);
+    comm_read(conn, buf, amountToRead, callback);
 }
 
 size_t
@@ -1478,7 +1480,9 @@ StoreEntry::checkNegativeHit() const
 void
 StoreEntry::negativeCache()
 {
-    if (expires == 0)
+    // XXX: should make the default for expires 0 instead of -1
+    //      so we can distinguish "Expires: -1" from nothing.
+    if (expires <= 0)
 #if USE_HTTP_VIOLATIONS
         expires = squid_curtime + Config.negativeTtl;
 #else

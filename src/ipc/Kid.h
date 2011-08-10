@@ -14,7 +14,7 @@
 class Kid
 {
 public:
-#ifdef _SQUID_NEXT_
+#if _SQUID_NEXT_
     typedef union wait status_type;
 #else
     typedef int status_type;

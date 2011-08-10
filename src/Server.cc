@@ -35,10 +35,11 @@
 #include "squid.h"
 #include "acl/Gadgets.h"
 #include "base/TextException.h"
+#include "comm/Connection.h"
+#include "comm/forward.h"
 #include "comm/Write.h"
 #include "Server.h"
 #include "Store.h"
-#include "fde.h" /* for fd_table[fd].closing */
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "errorpage.h"
@@ -405,22 +406,16 @@ ServerStateData::sentRequestBody(const CommIoCbParams &io)
         debugs(9,3, HERE << "waiting for body production end or abort");
 }
 
-bool
-ServerStateData::canSend(int fd) const
-{
-    return fd >= 0 && !fd_table[fd].closing();
-}
-
 void
 ServerStateData::sendMoreRequestBody()
 {
     assert(requestBodySource != NULL);
     assert(!requestSender);
 
-    const int fd = dataDescriptor();
+    const Comm::ConnectionPointer conn = dataConnection();
 
-    if (!canSend(fd)) {
-        debugs(9,3, HERE << "cannot send request body to closing FD " << fd);
+    if (!Comm::IsConnOpen(conn)) {
+        debugs(9,3, HERE << "cannot send request body to closing " << conn);
         return; // wait for the kid's close handler; TODO: assert(closer);
     }
 
@@ -428,9 +423,8 @@ ServerStateData::sendMoreRequestBody()
     if (getMoreRequestBody(buf) && buf.contentSize() > 0) {
         debugs(9,3, HERE << "will write " << buf.contentSize() << " request body bytes");
         typedef CommCbMemFunT<ServerStateData, CommIoCbParams> Dialer;
-        requestSender = JobCallback(93,3,
-                                    Dialer, this, ServerStateData::sentRequestBody);
-        Comm::Write(fd, &buf, requestSender);
+        requestSender = JobCallback(93,3, Dialer, this, ServerStateData::sentRequestBody);
+        Comm::Write(conn, &buf, requestSender);
     } else {
         debugs(9,3, HERE << "will wait for more request body bytes or eof");
         requestSender = NULL;
@@ -686,8 +680,17 @@ ServerStateData::noteAdaptationAnswer(const Adaptation::Answer &answer)
 void
 ServerStateData::handleAdaptedHeader(HttpMsg *msg)
 {
-    if (abortOnBadEntry("entry went bad while waiting for adapted headers"))
+    if (abortOnBadEntry("entry went bad while waiting for adapted headers")) {
+        // If the adapted response has a body, the ICAP side needs to know
+        // that nobody will consume that body. We will be destroyed upon
+        // return. Tell the ICAP side that it is on its own.
+        HttpReply *rep = dynamic_cast<HttpReply*>(msg);
+        assert(rep);
+        if (rep->body_pipe != NULL)
+            rep->body_pipe->expectNoConsumption();
+
         return;
+    }
 
     HttpReply *rep = dynamic_cast<HttpReply*>(msg);
     assert(rep);

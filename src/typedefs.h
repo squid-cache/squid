@@ -47,10 +47,6 @@ typedef struct {
     size_t kb;
 } kb_t;
 
-/// \ingroup AuthAPI
-/// \deprecated Use AuthUserHashPointer instead.
-typedef struct AuthUserHashPointer auth_user_hash_pointer;
-
 struct http_port_list;
 struct https_port_list;
 
@@ -60,21 +56,15 @@ typedef struct _dread_ctrl dread_ctrl;
 
 typedef struct _dwrite_q dwrite_q;
 
-typedef struct _ETag ETag;
-
 typedef struct _fileMap fileMap;
 
 typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;
-
-typedef struct _TimeOrTag TimeOrTag;
 
 typedef struct _HttpHeaderStat HttpHeaderStat;
 
 typedef struct _HttpBody HttpBody;
 
 typedef struct _ConnCloseHelperData ConnCloseHelperData;
-
-typedef struct _ipcache_addrs ipcache_addrs;
 
 typedef struct _domain_ping domain_ping;
 
@@ -147,13 +137,10 @@ typedef void DTCB(int errflag, void *data);	/* disk trunc CB */
 class DnsLookupDetails;
 typedef void FQDNH(const char *, const DnsLookupDetails &details, void *);
 typedef void IDCB(const char *ident, void *data);
-typedef void IPH(const ipcache_addrs *, const DnsLookupDetails &details, void *);
 
 #include "anyp/ProtocolType.h"
 typedef void IRCB(struct peer *, peer_t, AnyP::ProtocolType, void *, void *data);
 
-class FwdServer;
-typedef void PSC(FwdServer *, void *);
 typedef void RH(void *data, char *);
 /* in wordlist.h */
 

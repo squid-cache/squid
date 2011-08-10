@@ -41,7 +41,7 @@ CacheManager::createNamedAction(char const* action)
 }
 
 void
-CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
+CacheManager::Start(const Comm::ConnectionPointer &conn, HttpRequest * request, StoreEntry * entry)
 {
     return;
 }

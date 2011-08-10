@@ -34,13 +34,14 @@
 #ifndef SQUID_ICAPXACTION_H
 #define SQUID_ICAPXACTION_H
 
-#include "comm.h"
+#include "comm/forward.h"
 #include "CommCalls.h"
 #include "MemBuf.h"
 #include "adaptation/icap/ServiceRep.h"
 #include "adaptation/Initiate.h"
 #include "AccessLogEntry.h"
 #include "HttpReply.h"
+#include "ipcache.h"
 
 class CommConnectCbParams;
 
@@ -102,6 +103,7 @@ protected:
     void openConnection();
     void closeConnection();
     void dieOnConnectionFailure();
+    bool haveConnection() const;
 
     void scheduleRead();
     void scheduleWrite(MemBuf &buf);
@@ -132,6 +134,7 @@ public:
     // custom exception handling and end-of-call checks
     virtual void callException(const std::exception  &e);
     virtual void callEnd();
+    void dnsLookupDone(const ipcache_addrs *ia);
 
 protected:
     // logging
@@ -146,7 +149,7 @@ private:
     void maybeLog();
 
 protected:
-    int connection;     // FD of the ICAP server connection
+    Comm::ConnectionPointer connection;     ///< ICAP server connection
     Adaptation::Icap::ServiceRep::Pointer theService;
 
     /*

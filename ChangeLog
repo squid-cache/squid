@@ -1,3 +1,60 @@
+Changes to squid-3.2.0.10 (24 Jul 2011):
+
+	- Port from 2.7: act-as-origin for reverse proxy ports
+	- Regression fix: broken --disable-ipv6
+	- Regression fix: negative cacheing on unknown or -1 expiry timestamp
+	- Regression fix: vhost and defaultsite causing vport to be ignored
+	- Regression fix: several errors in persistent connection handling
+	- Regression Bug 3280: allow max-size unset and min-size=N for large objects
+	- Regression Bug 3245: reconfigure assertion in MemPools[type]
+	- Regression Bug 3274: assertion failed: CommCalls.h:144: "dp"
+	- Regression Bug 3273: assertion comm.cc:775: Comm::IsConnOpen(conn)
+	- Regression Bug 3269: cache.log applyQueryParams messages
+	- Regression Bug 3264: Segmentation Fault in src/ipc/Strand.cc(54) receive: 3
+	- Regression Bug 3246: assertion client_side.cc:1407 connIsUsable(http->getConn())
+	- Bug 3267: workers IPC mount points disobey --localstatedir
+	- Bug 3248: login=NEGOTIATE sends wrong auth header to origin peers
+	- Bug 3247: Domain from URL Stripped when going through peers
+	- Bug 3244: wrong port for peer relayed requests
+	- Bug 3195: kerberos_ldap_group will not build without kerberos
+	- Bug 2862: add http(s):// support to cache manager
+	- kerberos_ldap_group: several fixes to -S option
+	- ssl_crtd: Add man(8) file
+	- ... and several pieces of code cleanup and polishing.
+	- ... and most bug fixes and updates from 3.1.14 and 3.1.15
+
+Changes to squid-3.2.0.9 (18 Jun 2011):
+
+	- Bug 3159: delay pools --disable-auth compile problems
+	- HTTP/1.1: Support multiline quoted-string header fields
+	- HTTP/1.1: Send 505 Unsupported Version on mangled version codes
+	- Support configurable and translated SSL error details messages
+	- Add log format codes for split client/server views of HTTP request line
+	- Major upgrade of TCP connection handling
+		- Support split-stack IPv6 to servers
+		- Support persistent connections with tcp_outgoing_address/tcp_outgoing_tos
+		- Optimized persistent connection handling
+		- Optimized FTP data connection handling
+		- Optimized TCP failure recovery
+	- ... and all bug fixes and updates from 3.1.12.3
+	- ... and many code polish, documentation and translation cleanups
+
+Changes to squid-3.2.0.8 (30 May 2011):
+
+	- Bug 3214: "helperHandleRead: unexpected read from ssl_crtd" errors.
+	- Bug 3043: Properly detect Iphlpapi.h on windows
+	- Bug 2055: Honor ICAP Max-Connections
+	- Fix NTLM/Negotiate reply auth PASSTHRU to peers
+	- Support SSL SNI to origin servers
+	- Add %EXT_LOG and %EXT_TAG external_acl_type format options
+	- Add %b tag for proxy listening port display in error pages
+	- Optimize base64 encoding/decoding
+	- Require libcap before enabling netfilter MARK support
+	- Require libtool 2.2
+	- Bundle pkg.m4 from pkg-config 0.25 for OS without pkg-config
+	- ... and all bug fixes and updates from 3.1.12.2
+	- ... and some documentation and code polishing
+
 Changes to squid-3.2.0.7 (19 Apr 2011):
 
 	- Regression fix: NTLM and Negotiate auth assertion "RefCountCount() == 2"
@@ -163,6 +220,49 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many code cleanups
 	- ... and a great many testing improvements
 	- ... and many documentation updates
+
+Changes to squid-3.1.14 (04 Jul 2011):
+
+	- Regression Bug 3261: Could not create a DNS socket and exit
+
+Changes to squid-3.1.13 (01 Jul 2011):
+
+	- Regression Bug 3239: problems with myip/myport upgrade
+	- Bug 3153: hung ICAP RESPMOD transactions
+	- Update ssl_crtd to use 'OK' status inline with other helpers
+
+Changes to squid-3.1.12.3 (18 Jun 2011):
+
+	- Bug 3236: Port of %oa, %<lp and %<lp and %<la log format options
+	- Bug 3214: unexpected read from ssl_crtd
+	- Bug 3153: Prevent ICAP RESPMOD transactions getting stuck with the adapted body
+	- Fix RADIUS helper resource leak
+	- Fix segfault parsing digest auth realm
+	- Fix segfault in parse_eol()
+	- Fixed bypass of SSL certificate validation errors
+	- Warn about myip/myport problems on interception proxies
+	- Polish: display easily grepped config lines on -k parse
+	- Fix squidclient -V option and allow non-HTTP protocols to be tested
+
+Changes to squid-3.1.12.2 (30 May 2011):
+
+	- Bug 3226: Tags from external ACLs do not correctly expire
+	- Bug 3215: Malformed IPv6 DNS reverse lookup
+	- Bug 3209: ssl-bumped requests forwarded unencrypted to the parent proxies/caches
+	- Bug 3205: SSL-bump starts then hangs
+	- Bug 3178: gcc-4.6 complains unused variables
+	- Bug 3122: Unknown record type in WCCPv2 Packet (6)
+	- Bug 2965 (partial): Compile errors on MinGW
+	- Fix to only ssl-bump CONNECT requests if they are about to be tunneled
+	- Fix cache manager display of -i/+i in regex ACL config display
+	- Fix cache manager display of cache_peer options userhash and sourcehash 
+	- Fix URL re-writer loosing many transaction details
+	- Fix always-true comparison in ICAP for some 32-bit platforms
+	- Support for 'slow' group ACLs in ssl_bump access control
+	- Support OpenSSL 1.0.0 built without SSLv2
+	- Support GCC 4.6 and binutils-gold
+	- Add CSS id attribute to BODY tag of generated error pages.
+	- Display WARNING and ERROR when max_filedescriptors has failed
 
 Changes to squid-3.1.12.1 (19 Apr 2011):
 

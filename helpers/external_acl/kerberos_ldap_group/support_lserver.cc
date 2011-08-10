@@ -100,11 +100,7 @@ create_ls(struct main_args *margs)
             }
             lsspn = lssp;
             np = p;		/* after : starts new group name */
-            if (!lssp->domain || !strcmp(lssp->domain, "")) {
-                debug((char *) "%s| %s: DEBUG: No domain defined for ldap server %s\n", LogTime(), PROGRAM, lssp->lserver);
-                return (1);
-            }
-            debug((char *) "%s| %s: DEBUG: ldap server %s  Domain %s\n", LogTime(), PROGRAM, lssp->lserver, lssp->domain);
+            debug((char *) "%s| %s: DEBUG: ldap server %s Domain %s\n", LogTime(), PROGRAM, lssp->lserver, lssp->domain?lssp->domain:"NULL");
         } else
             p++;
     }
@@ -120,11 +116,7 @@ create_ls(struct main_args *margs)
         if (lsspn)		/* Have already an existing structure */
             lssp->next = lsspn;
     }
-    if (!lssp->domain || !strcmp(lssp->domain, "")) {
-        debug((char *) "%s| %s: DEBUG: No domain defined for ldap server %s\n", LogTime(), PROGRAM, lssp->lserver);
-        return (1);
-    }
-    debug((char *) "%s| %s: DEBUG: ldap server %s  Domain %s\n", LogTime(), PROGRAM, lssp->lserver, lssp->domain);
+    debug((char *) "%s| %s: DEBUG: ldap server %s Domain %s\n", LogTime(), PROGRAM, lssp->lserver, lssp->domain?lssp->domain:"NULL");
 
     margs->lservs = lssp;
     return (0);

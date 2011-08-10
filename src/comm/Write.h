@@ -2,6 +2,7 @@
 #define _SQUID_COMM_IOWRITE_H
 
 #include "base/AsyncCall.h"
+#include "comm/forward.h"
 
 namespace Comm
 {
@@ -12,16 +13,16 @@ namespace Comm
  *
  * free_func is used to free the passed buffer when the write has completed.
  */
-void Write(int fd, const char *buf, int size, AsyncCall::Pointer &callback, FREE *free_func);
+void Write(const Comm::ConnectionPointer &conn, const char *buf, int size, AsyncCall::Pointer &callback, FREE *free_func);
 
 /**
  * Queue a write. callback is scheduled when the write
  * completes, on error, or on file descriptor close.
  */
-void Write(int fd, MemBuf *mb, AsyncCall::Pointer &callback);
+void Write(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Pointer &callback);
 
 /// Cancel the write pending on FD. No action if none pending.
-void WriteCancel(int fd, const char *reason);
+void WriteCancel(const Comm::ConnectionPointer &conn, const char *reason);
 
 // callback handler to process an FD which is available for writing.
 extern PF HandleWrite;
