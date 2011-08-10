@@ -21,8 +21,11 @@ m4_include([acinclude/krb5.m4])
 m4_include([acinclude/pam.m4])
 m4_include([acinclude/pkg.m4])
 m4_include([acinclude/lib-checks.m4])
+m4_include([acinclude/ax_cxx_compile_stdcxx_0x.m4])
+m4_include([acinclude/ax_cxx_0x_types.m4])
 
 PRESET_CFLAGS="$CFLAGS"
+PRESET_CXXFLAGS="$CXXFLAGS"
 PRESET_LDFLAGS="$LDFLAGS"
 
 dnl Set default LDFLAGS
@@ -52,6 +55,12 @@ AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 # functions available on some Unix sysems (e.g. Solaris)
 if test "x$squid_host_os" = "solaris" -a "x$GCC" != "x" ; then
 	AC_USE_SYSTEM_EXTENSIONS
+fi
+
+# Check for C++0x compiler support
+AX_CXX_COMPILE_STDCXX_0X
+if test "x$ax_cv_cxx_compile_cxx0x_cxx" = "xyes"; then
+    CXXFLAGS="$CXXFLAGS -std=c++0x"
 fi
 
 # test for programs
@@ -2301,6 +2310,7 @@ AC_CHECK_HEADERS( \
   netinet/ip_fil_compat.h \
   openssl/err.h \
   openssl/md5.h \
+  openssl/opensslv.h \
   openssl/ssl.h \
   openssl/x509v3.h \
   netinet/tcp.h \
@@ -2472,6 +2482,11 @@ AC_CHECK_SIZEOF(int64_t)
 AC_CHECK_SIZEOF(long)
 #need the define for overflow checks
 AC_CHECK_SIZEOF(off_t)
+AC_CHECK_SIZEOF(size_t)
+
+dnl Some C++0x types we try to use
+AX_CXX_TYPE_NULLPTR
+AX_CXX_TYPE_UNIQUE_PTR
 
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.
@@ -2646,14 +2661,14 @@ AC_ARG_ENABLE(ipv6,
   AS_HELP_STRING([--disable-ipv6],[Disable IPv6 support. The default is to probe system capabilities on startup.]), [
 SQUID_YESNO([$enableval],[unrecognized argument to --disable-ipv6: $enableval])
 ])
-AC_MSG_RESULT(${use_ipng:=yes})
-SQUID_DEFINE_BOOL(USE_IPV6,$use_ipng,[Enable support for IPv6 ])
+AC_MSG_RESULT(${enable_ipv6:=yes})
+SQUID_DEFINE_BOOL(USE_IPV6,$enable_ipv6,[Enable support for IPv6 ])
 
-if test "x$use_ipng" = "xyes" ; then
+if test "x$enable_ipv6" = "xyes" ; then
   SQUID_CHECK_SIN6_LEN_IN_SAI
-  SQUID_CHECK_SS_LEN_IN_SOCKADDR_STORAGE
-  SQUID_CHECK_SIN_LEN_IN_SOCKADDR_IN
 fi
+SQUID_CHECK_SS_LEN_IN_SOCKADDR_STORAGE
+SQUID_CHECK_SIN_LEN_IN_SOCKADDR_IN
 
 
 dnl Check for libcrypt
@@ -3366,10 +3381,13 @@ SQUID_YESNO([$enableval],
 dnl Squid now has .po translation capability, given the right toolkit
 if test "x${enable_translation:=yes}" = "xyes" ; then
   AX_WITH_PROG([PO2HTML],[po2html])
+  AX_WITH_PROG([PO2TEXT],[po2txt])
 else
   PO2HTML="off"
+  PO2TEXT="off"
 fi
 AC_SUBST(PO2HTML)
+AC_SUBST(PO2TEXT)
 
 dnl Squid now has limited locale handling ...
 dnl on error pages
@@ -3446,6 +3464,7 @@ AC_CONFIG_FILES([\
 	src/comm/Makefile \
 	src/esi/Makefile \
 	src/eui/Makefile \
+	src/format/Makefile \
 	src/icmp/Makefile \
 	src/ident/Makefile \
 	src/ip/Makefile \

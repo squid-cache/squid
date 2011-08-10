@@ -8,6 +8,8 @@
 #include "config.h"
 #include "base/TextException.h"
 #include "CommCalls.h"
+#include "comm.h"
+#include "comm/Connection.h"
 #include "ipc/UdsOp.h"
 #include "snmp_core.h"
 #include "snmp/Inquirer.h"
@@ -20,27 +22,30 @@ CBDATA_NAMESPACED_CLASS_INIT(Snmp, Inquirer);
 
 Snmp::Inquirer::Inquirer(const Request& aRequest, const Ipc::StrandCoords& coords):
         Ipc::Inquirer(aRequest.clone(), coords, 2),
-        aggrPdu(aRequest.pdu),
-        fd(ImportFdIntoComm(aRequest.fd, SOCK_DGRAM, IPPROTO_UDP, Ipc::fdnInSnmpSocket))
+        aggrPdu(aRequest.pdu)
 {
+    conn = new Comm::Connection;
+    conn->fd = aRequest.fd;
+    ImportFdIntoComm(conn, SOCK_DGRAM, IPPROTO_UDP, Ipc::fdnInSnmpSocket);
+
     debugs(49, 5, HERE);
     closer = asyncCall(49, 5, "Snmp::Inquirer::noteCommClosed",
                        CommCbMemFunT<Inquirer, CommCloseCbParams>(this, &Inquirer::noteCommClosed));
-    comm_add_close_handler(fd, closer);
+    comm_add_close_handler(conn->fd, closer);
 }
 
 /// closes our copy of the client connection socket
 void
 Snmp::Inquirer::cleanup()
 {
-    if (fd >= 0) {
+    if (Comm::IsConnOpen(conn)) {
         if (closer != NULL) {
-            comm_remove_close_handler(fd, closer);
+            comm_remove_close_handler(conn->fd, closer);
             closer = NULL;
         }
-        comm_close(fd);
-        fd = -1;
+        conn->close();
     }
+    conn = NULL;
 }
 
 void
@@ -48,7 +53,7 @@ Snmp::Inquirer::start()
 {
     debugs(49, 5, HERE);
     Ipc::Inquirer::start();
-    Must(fd >= 0);
+    Must(Comm::IsConnOpen(conn));
     inquire();
 }
 
@@ -77,8 +82,8 @@ void
 Snmp::Inquirer::noteCommClosed(const CommCloseCbParams& params)
 {
     debugs(49, 5, HERE);
-    Must(fd < 0 || fd == params.fd);
-    fd = -1;
+    Must(!Comm::IsConnOpen(conn) || conn->fd == params.conn->fd);
+    conn = NULL;
     mustStop("commClosed");
 }
 
@@ -98,5 +103,5 @@ Snmp::Inquirer::sendResponse()
     int len = sizeof(buffer);
     Snmp::Request& req = static_cast<Snmp::Request&>(*request);
     snmp_build(&req.session, &aggrPdu, buffer, &len);
-    comm_udp_sendto(fd, req.address, buffer, len);
+    comm_udp_sendto(conn->fd, req.address, buffer, len);
 }

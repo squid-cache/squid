@@ -64,7 +64,7 @@ public:
     bool encode(char *buf, const int len);
 
     // lookup an EUI-48 / MAC address via ARP
-    bool lookup(Ip::Address &c);
+    bool lookup(const Ip::Address &c);
 
 private:
     unsigned char eui[SZ_EUI48_BUF];

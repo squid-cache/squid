@@ -97,17 +97,9 @@ extern "C" {
     extern int opt_create_swap_dirs;	/* 0 */
     extern int opt_store_doublecheck;	/* 0 */
     extern int syslog_enable;	/* 0 */
-    extern int theInIcpConnection;	/* -1 */
-    extern int theOutIcpConnection;	/* -1 */
     extern int DnsSocketA;		/* -1 */
     extern int DnsSocketB;		/* -1 */
-#if SQUID_SNMP
-
-    extern int theInSnmpConnection;	/* -1 */
-    extern int theOutSnmpConnection;	/* -1 */
-    extern char *snmp_agentinfo;
-#endif
-
+    extern int n_disk_objects;	/* 0 */
     extern iostats IOStats;
 
     extern struct acl_deny_info_list *DenyInfoList;	/* NULL */
@@ -142,7 +134,7 @@ extern "C" {
     extern int64_t store_maxobjsize;	/* -1 */
     extern hash_table *proxy_auth_username_cache;	/* NULL */
     extern int incoming_sockets_accepted;
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
     extern unsigned int WIN32_Socks_initialized;	/* 0 */
 #endif

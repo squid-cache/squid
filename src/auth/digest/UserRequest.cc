@@ -247,7 +247,6 @@ AuthDigestUserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int accel)
 void
 AuthDigestUserRequest::module_start(RH * handler, void *data)
 {
-    authenticateStateData *r = NULL;
     char buf[8192];
 
     assert(user() != NULL && user()->auth_type == Auth::AUTH_DIGEST);
@@ -259,10 +258,6 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
         return;
     }
 
-    r = cbdataAlloc(authenticateStateData);
-    r->handler = handler;
-    r->data = cbdataReference(data);
-    r->auth_user_request = static_cast<AuthUserRequest*>(this);
     if (static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->utf8) {
         char userstr[1024];
         latin1_to_utf8(userstr, sizeof(userstr), user()->username());
@@ -271,13 +266,14 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
         snprintf(buf, 8192, "\"%s\":\"%s\"\n", user()->username(), realm);
     }
 
-    helperSubmit(digestauthenticators, buf, AuthDigestUserRequest::HandleReply, r);
+    helperSubmit(digestauthenticators, buf, AuthDigestUserRequest::HandleReply,
+                 new Auth::StateData(this, handler, data));
 }
 
 void
 AuthDigestUserRequest::HandleReply(void *data, char *reply)
 {
-    authenticateStateData *replyData = static_cast < authenticateStateData * >(data);
+    Auth::StateData *replyData = static_cast<Auth::StateData *>(data);
     char *t = NULL;
     void *cbdata;
     debugs(29, 9, HERE << "{" << (reply ? reply : "<NULL>") << "}");
@@ -315,7 +311,5 @@ AuthDigestUserRequest::HandleReply(void *data, char *reply)
     if (cbdataReferenceValidDone(replyData->data, &cbdata))
         replyData->handler(cbdata, NULL);
 
-    replyData->auth_user_request = NULL;
-
-    cbdataFree(replyData);
+    delete replyData;
 }

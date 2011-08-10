@@ -52,7 +52,7 @@
 #endif
 
 /* Linux uses its own field names. */
-#if defined (_SQUID_LINUX_)
+#if _SQUID_LINUX_
 #ifdef icmp_id
 #undef icmp_id
 #endif
@@ -86,7 +86,7 @@
 #if _SQUID_WINDOWS_
 #include "fde.h"
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>

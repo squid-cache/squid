@@ -33,11 +33,9 @@
  */
 
 #include "squid.h"
-#include "compat/initgroups.h"
-#include "compat/getaddrinfo.h"
-#include "compat/getnameinfo.h"
-#include "compat/tempnam.h"
+#include "base/Subscription.h"
 #include "fde.h"
+#include "ICP.h"
 #include "ip/Intercept.h"
 #include "ip/QosConfig.h"
 #include "MemBuf.h"
@@ -46,6 +44,7 @@
 #include "SquidTime.h"
 #include "ipc/Kids.h"
 #include "ipc/Coordinator.h"
+#include "ipcache.h"
 #include "SwapDir.h"
 #include "wordlist.h"
 
@@ -73,7 +72,7 @@ extern void log_trace_init(char *);
 static void restoreCapabilities(int keep);
 int DebugSignal = -1;
 
-#ifdef _SQUID_LINUX_
+#if _SQUID_LINUX_
 /* Workaround for crappy glic header files */
 SQUIDCEXTERN int backtrace(void *, int);
 SQUIDCEXTERN void backtrace_symbols_fd(void *, int, int);
@@ -92,16 +91,16 @@ releaseServerSockets(void)
     int i;
     /* Release the main ports as early as possible */
 
+    // clear both http_port and https_port lists.
     for (i = 0; i < NHttpSockets; i++) {
         if (HttpSockets[i] >= 0)
             close(HttpSockets[i]);
     }
 
-    if (theInIcpConnection >= 0)
-        close(theInIcpConnection);
+    // clear icp_port's
+    icpConnectionClose();
 
-    if (theOutIcpConnection >= 0 && theOutIcpConnection != theInIcpConnection)
-        close(theOutIcpConnection);
+    // XXX: Why not the HTCP, SNMP, DNS ports as well?
 }
 
 static char *
@@ -339,7 +338,7 @@ death(int sig)
         fprintf(debug_log, "FATAL: Received signal %d...dying.\n", sig);
 
 #if PRINT_STACK_TRACE
-#ifdef _SQUID_HPUX_
+#if _SQUID_HPUX_
     {
         extern void U_STACK_TRACE(void);	/* link with -lcl */
         fflush(debug_log);
@@ -559,8 +558,8 @@ debug_trap(const char *message)
 void
 sig_child(int sig)
 {
-#ifndef _SQUID_MSWIN_
-#ifdef _SQUID_NEXT_
+#if !_SQUID_MSWIN_
+#if _SQUID_NEXT_
     union wait status;
 #else
 
@@ -570,7 +569,7 @@ sig_child(int sig)
     pid_t pid;
 
     do {
-#ifdef _SQUID_NEXT_
+#if _SQUID_NEXT_
         pid = wait3(&status, WNOHANG, NULL);
 #else
 
@@ -1099,7 +1098,7 @@ squid_signal(int sig, SIGHDLR * func, int flags)
         debugs(50, 0, "sigaction: sig=" << sig << " func=" << func << ": " << xstrerror());
 
 #else
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
     /*
     On Windows, only SIGINT, SIGILL, SIGFPE, SIGTERM, SIGBREAK, SIGABRT and SIGSEGV signals
     are supported, so we must care of don't call signal() for other value.
@@ -1268,19 +1267,22 @@ parseEtcHosts(void)
 int
 getMyPort(void)
 {
-    if (Config.Sockaddr.http)
-        return Config.Sockaddr.http->s.GetPort();
+    if (Config.Sockaddr.http) {
+        // skip any special mode ports
+        http_port_list *p = Config.Sockaddr.http;
+        while (p->intercepted || p->accel || p->spoof_client_ip)
+            p = p->next;
+        if (p)
+            return p->s.GetPort();
+    }
 
 #if USE_SSL
-
     if (Config.Sockaddr.https)
         return Config.Sockaddr.https->http.s.GetPort();
-
 #endif
 
-    fatal("No port defined");
-
-    return 0;			/* NOT REACHED */
+    debugs(21, DBG_CRITICAL, "ERROR: No forward-proxy ports configured.");
+    return 0; // Invalid port. This will result in invalid URLs on bad configurations.
 }
 
 /*

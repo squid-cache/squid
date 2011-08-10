@@ -18,6 +18,7 @@ section 03    Configuration Settings
 section 04    Error Generation
 section 05    Comm
 section 05    Listener Socket Handler
+section 05    Socket Connection Opener
 section 05    Socket Functions
 section 06    Disk I/O Routines
 section 07    Multicast
@@ -84,7 +85,6 @@ section 46    Access Log - Squid ICAP Logging
 section 46    Access Log - Squid format
 section 46    Access Log - Squid referer format
 section 46    Access Log - Squid useragent format
-section 46    Access Log Format Tokens
 section 47    Store COSS Directory Routines
 section 47    Store Directory Routines
 section 48    Persistent Connections

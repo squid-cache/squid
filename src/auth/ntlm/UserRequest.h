@@ -8,7 +8,7 @@
 class ConnStateData;
 class HttpReply;
 class HttpRequest;
-struct helper_stateful_server;
+class helper_stateful_server;
 
 class AuthNTLMUserRequest : public AuthUserRequest
 {

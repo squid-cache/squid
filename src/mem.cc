@@ -180,14 +180,19 @@ Mem::Stats(StoreEntry * sentry)
  */
 
 /*
- * we have a limit on _total_ amount of idle memory so we ignore
- * max_pages for now
+ * we have a limit on _total_ amount of idle memory so we ignore max_pages for now.
+ * Will ignore repeated calls for the same pool type.
+ *
+ * Relies on Mem::Init() having been called beforehand.
  */
 void
 memDataInit(mem_type type, const char *name, size_t size, int max_pages_notused, bool zeroOnPush)
 {
     assert(name && size);
-    assert(MemPools[type] == NULL);
+
+    if (MemPools[type] != NULL)
+        return;
+
     MemPools[type] = memPoolCreate(name, size);
     MemPools[type]->zeroOnPush(zeroOnPush);
 }
@@ -197,6 +202,7 @@ memDataInit(mem_type type, const char *name, size_t size, int max_pages_notused,
 void *
 memAllocate(mem_type type)
 {
+    assert(MemPools[type]);
     return MemPools[type]->alloc();
 }
 
@@ -204,6 +210,7 @@ memAllocate(mem_type type)
 void
 memFree(void *p, int type)
 {
+    assert(MemPools[type]);
     MemPools[type]->freeOne(p);
 }
 
@@ -498,15 +505,13 @@ mem_type &operator++ (mem_type &aMem)
 void
 memCheckInit(void)
 {
-    mem_type t;
+    mem_type t = MEM_NONE;
 
-    for (t = MEM_NONE, ++t; t < MEM_MAX; ++t) {
-        if (MEM_DONTFREE == t)
-            continue;
-
+    while (++t < MEM_DONTFREE) {
         /*
          * If you hit this assertion, then you forgot to add a
          * memDataInit() line for type 't'.
+         * Or placed the pool type in the wrong section of the enum list.
          */
         assert(MemPools[t]);
     }

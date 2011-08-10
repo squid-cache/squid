@@ -57,6 +57,7 @@
 
 #if USE_ICMP
 #include "icmp/IcmpSquid.h"
+#include "ipcache.h"
 #include "StoreClient.h"
 
 #define	NETDB_REQBUF_SZ	4096
@@ -1336,7 +1337,7 @@ netdbExchangeStart(void *data)
 
     urlCanonical(ex->r);
 
-    FwdState::fwdStart(-1, ex->e, ex->r);
+    FwdState::fwdStart(Comm::ConnectionPointer(), ex->e, ex->r);
 
 #endif
 }

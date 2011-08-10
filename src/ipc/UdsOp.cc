@@ -9,6 +9,7 @@
 #include "config.h"
 #include "comm.h"
 #include "CommCalls.h"
+#include "comm/Connection.h"
 #include "comm/Write.h"
 #include "base/TextException.h"
 #include "ipc/UdsOp.h"
@@ -17,8 +18,7 @@
 Ipc::UdsOp::UdsOp(const String& pathAddr):
         AsyncJob("Ipc::UdsOp"),
         address(PathToAddress(pathAddr)),
-        options(COMM_NONBLOCKING),
-        fd_(-1)
+        options(COMM_NONBLOCKING)
 {
     debugs(54, 5, HERE << '[' << this << "] pathAddr=" << pathAddr);
 }
@@ -26,8 +26,9 @@ Ipc::UdsOp::UdsOp(const String& pathAddr):
 Ipc::UdsOp::~UdsOp()
 {
     debugs(54, 5, HERE << '[' << this << ']');
-    if (fd_ >= 0)
-        comm_close(fd_);
+    if (Comm::IsConnOpen(conn_))
+        conn_->close();
+    conn_ = NULL;
 }
 
 void Ipc::UdsOp::setOptions(int newOptions)
@@ -35,15 +36,18 @@ void Ipc::UdsOp::setOptions(int newOptions)
     options = newOptions;
 }
 
-int Ipc::UdsOp::fd()
+Comm::ConnectionPointer &
+Ipc::UdsOp::conn()
 {
-    if (fd_ < 0) {
+    if (!Comm::IsConnOpen(conn_)) {
         if (options & COMM_DOBIND)
             unlink(address.sun_path);
-        fd_ = comm_open_uds(SOCK_DGRAM, 0, &address, options);
-        Must(fd_ >= 0);
+        if (conn_ == NULL)
+            conn_ = new Comm::Connection;
+        conn_->fd = comm_open_uds(SOCK_DGRAM, 0, &address, options);
+        Must(Comm::IsConnOpen(conn_));
     }
-    return fd_;
+    return conn_;
 }
 
 void Ipc::UdsOp::setTimeout(int seconds, const char *handlerName)
@@ -51,12 +55,12 @@ void Ipc::UdsOp::setTimeout(int seconds, const char *handlerName)
     typedef CommCbMemFunT<UdsOp, CommTimeoutCbParams> Dialer;
     AsyncCall::Pointer handler = asyncCall(54,5, handlerName,
                                            Dialer(CbcPointer<UdsOp>(this), &UdsOp::noteTimeout));
-    commSetTimeout(fd(), seconds, handler);
+    commSetConnTimeout(conn(), seconds, handler);
 }
 
 void Ipc::UdsOp::clearTimeout()
 {
-    commSetTimeout(fd(), -1, NULL, NULL); // TODO: add Comm::ClearTimeout(fd)
+    commUnsetConnTimeout(conn());
 }
 
 void Ipc::UdsOp::noteTimeout(const CommTimeoutCbParams &)
@@ -107,17 +111,17 @@ void Ipc::UdsSender::write()
     typedef CommCbMemFunT<UdsSender, CommIoCbParams> Dialer;
     AsyncCall::Pointer writeHandler = JobCallback(54, 5,
                                       Dialer, this, UdsSender::wrote);
-    Comm::Write(fd(), message.raw(), message.size(), writeHandler, NULL);
+    Comm::Write(conn(), message.raw(), message.size(), writeHandler, NULL);
     writing = true;
 }
 
 void Ipc::UdsSender::wrote(const CommIoCbParams& params)
 {
-    debugs(54, 5, HERE << "FD " << params.fd << " flag " << params.flag << " retries " << retries << " [" << this << ']');
+    debugs(54, 5, HERE << params.conn << " flag " << params.flag << " retries " << retries << " [" << this << ']');
     writing = false;
     if (params.flag != COMM_OK && retries-- > 0) {
         sleep(1); // do not spend all tries at once; XXX: use an async timed event instead of blocking here; store the time when we started writing so that we do not sleep if not needed?
-        write(); // XXX: should we close on error so that fd() reopens?
+        write(); // XXX: should we close on error so that conn() reopens?
     }
 }
 
@@ -133,22 +137,22 @@ void Ipc::SendMessage(const String& toAddress, const TypedMsgHdr &message)
     AsyncJob::Start(new UdsSender(toAddress, message));
 }
 
-int Ipc::ImportFdIntoComm(int fd, int socktype, int protocol, Ipc::FdNoteId noteId)
+const Comm::ConnectionPointer &
+Ipc::ImportFdIntoComm(const Comm::ConnectionPointer &conn, int socktype, int protocol, Ipc::FdNoteId noteId)
 {
     struct sockaddr_in addr;
     socklen_t len = sizeof(addr);
-    if (getsockname(fd, reinterpret_cast<sockaddr*>(&addr), &len) == 0) {
-        Ip::Address ipAddr(addr);
+    if (getsockname(conn->fd, reinterpret_cast<sockaddr*>(&addr), &len) == 0) {
+        conn->remote = addr;
         struct addrinfo* addr_info = NULL;
-        ipAddr.GetAddrInfo(addr_info);
+        conn->remote.GetAddrInfo(addr_info);
         addr_info->ai_socktype = socktype;
         addr_info->ai_protocol = protocol;
-        comm_import_opened(fd, ipAddr, COMM_NONBLOCKING, Ipc::FdNote(noteId), addr_info);
-        ipAddr.FreeAddrInfo(addr_info);
+        comm_import_opened(conn, Ipc::FdNote(noteId), addr_info);
+        conn->remote.FreeAddrInfo(addr_info);
     } else {
-        debugs(54, DBG_CRITICAL, HERE << "ERROR: FD " << fd << ' ' << xstrerror());
-        ::close(fd);
-        fd = -1;
+        debugs(54, DBG_CRITICAL, "ERROR: Ipc::ImportFdIntoComm: " << conn << ' ' << xstrerror());
+        conn->close();
     }
-    return fd;
+    return conn;
 }

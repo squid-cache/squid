@@ -112,9 +112,10 @@ public:
     bool wantsPreview(const String &urlPath, size_t &wantedSize) const;
     bool allows204() const;
     bool allows206() const;
-    int getConnection(bool isRetriable, bool &isReused);
-    void putConnection(int fd, bool isReusable, bool sendReset, const char *comment);
-    void noteConnectionUse(int fd);
+    Comm::ConnectionPointer getConnection(bool isRetriable, bool &isReused);
+    void putConnection(const Comm::ConnectionPointer &conn, bool isReusable, bool sendReset, const char *comment);
+    void noteConnectionUse(const Comm::ConnectionPointer &conn);
+    void noteConnectionFailed(const char *comment);
 
     void noteFailure(); // called by transactions to report service failure
 
@@ -162,7 +163,7 @@ private:
     int theMaxConnections; ///< the maximum allowed connections to the service
     // TODO: use a better type like the FadingCounter for connOverloadReported
     mutable bool connOverloadReported; ///< whether we reported exceeding theMaxConnections
-    PconnPool theIdleConns; ///< idle persistent connection pool
+    IdleConnList *theIdleConns; ///< idle persistent connection pool
 
     FadingCounter theSessionFailures;
     const char *isSuspended; // also stores suspension reason for debugging

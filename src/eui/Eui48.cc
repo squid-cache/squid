@@ -156,7 +156,7 @@ Eui::Eui48::encode(char *buf, const int len)
 
 // return binary representation of the EUI
 bool
-Eui::Eui48::lookup(Ip::Address &c)
+Eui::Eui48::lookup(const Ip::Address &c)
 {
     struct arpreq arpReq;
 #if !_SQUID_WINDOWS_

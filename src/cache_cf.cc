@@ -60,6 +60,7 @@
 #if USE_SQUID_ESI
 #include "esi/Parser.h"
 #endif
+#include "format/Format.h"
 #include "HttpRequestMethod.h"
 #include "ident/Config.h"
 #include "ip/Intercept.h"
@@ -146,7 +147,7 @@ static void configDoConfigure(void);
 static void parse_refreshpattern(refresh_t **);
 static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
 static void parseTimeLine(time_msec_t * tptr, const char *units, bool allowMsec);
-static void parse_ushort(u_short * var);
+static void parse_u_short(u_short * var);
 static void parse_string(char **);
 static void default_all(void);
 static void defaults_if_none(void);
@@ -442,6 +443,11 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
         if ((token = strchr(config_input_line, '\r')))
             *token = '\0';
 
+        // strip any prefix whitespace off the line.
+        const char *p = skip_ws(config_input_line);
+        if (config_input_line != p)
+            memmove(config_input_line, p, strlen(p)+1);
+
         if (strncmp(config_input_line, "#line ", 6) == 0) {
             static char new_file_name[1024];
             static char *file;
@@ -494,7 +500,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
 
         trim_trailing_ws(tmp_line);
         ProcessMacros(tmp_line, tmp_line_len);
-        debugs(3, 5, "Processing: '" << tmp_line << "'");
+        debugs(3, (opt_parse_cfg_only?1:5), "Processing: " << tmp_line);
 
         if (const char* expr = FindStatement(tmp_line, "if")) {
             if_states.push_back(EvalBoolExpr(expr)); // store last if-statement meaning
@@ -683,12 +689,9 @@ configDoConfigure(void)
     else
         Config.appendDomainLen = 0;
 
-    if (Config.retry.maxtries > 10)
-        fatal("maximum_single_addr_tries cannot be larger than 10");
-
-    if (Config.retry.maxtries < 1) {
-        debugs(3, 0, "WARNING: resetting 'maximum_single_addr_tries to 1");
-        Config.retry.maxtries = 1;
+    if (Config.connect_retries > 10) {
+        debugs(0,DBG_CRITICAL, "WARNING: connect_retries cannot be larger than 10. Resetting to 10.");
+        Config.connect_retries = 10;
     }
 
     requirePathnameExists("MIME Config Table", Config.mimeTablePathname);
@@ -1597,7 +1600,7 @@ free_acl_b_size_t(acl_size_t ** head)
 #include "DelayPools.h"
 #include "DelayConfig.h"
 /* do nothing - free_delay_pool_count is the magic free function.
- * this is why delay_pool_count isn't just marked TYPE: ushort
+ * this is why delay_pool_count isn't just marked TYPE: u_short
  */
 #define free_delay_pool_class(X)
 #define free_delay_pool_access(X)
@@ -1647,7 +1650,7 @@ parse_delay_pool_access(DelayConfig * cfg)
 #if USE_DELAY_POOLS
 #include "ClientDelayConfig.h"
 /* do nothing - free_client_delay_pool_count is the magic free function.
- * this is why client_delay_pool_count isn't just marked TYPE: ushort
+ * this is why client_delay_pool_count isn't just marked TYPE: u_short
  */
 
 #define free_client_delay_pool_access(X)
@@ -2233,6 +2236,28 @@ parse_peer(peer ** head)
                 fatalf("parse_peer: non-parent carp peer %s/%d\n", p->host, p->http_port);
 
             p->options.carp = 1;
+        } else if (!strncasecmp(token, "carp-key=", 9)) {
+            if (p->options.carp != 1)
+                fatalf("parse_peer: carp-key specified on non-carp peer %s/%d\n", p->host, p->http_port);
+            p->options.carp_key.set=1;
+            char *nextkey=token+strlen("carp-key="), *key=nextkey;
+            for (; key; key = nextkey) {
+                nextkey=strchr(key,',');
+                if (nextkey) ++nextkey; // skip the comma, any
+                if (0==strncasecmp(key,"scheme",6)) {
+                    p->options.carp_key.scheme=1;
+                } else if (0==strncasecmp(key,"host",4)) {
+                    p->options.carp_key.host=1;
+                } else if (0==strncasecmp(key,"port",4)) {
+                    p->options.carp_key.port=1;
+                } else if (0==strncasecmp(key,"path",4)) {
+                    p->options.carp_key.path=1;
+                } else if (0==strncasecmp(key,"params",6)) {
+                    p->options.carp_key.params=1;
+                } else {
+                    fatalf("invalid carp-key '%s'",key);
+                }
+            }
         } else if (!strcasecmp(token, "userhash")) {
 #if USE_AUTH
             if (p->type != PEER_PARENT)
@@ -2349,7 +2374,7 @@ parse_peer(peer ** head)
 
     p->icp.version = ICP_VERSION_CURRENT;
 
-    p->test_fd = -1;
+    p->testing_now = false;
 
 #if USE_CACHE_DIGESTS
 
@@ -2977,6 +3002,11 @@ free_string(char **var)
 void
 parse_eol(char *volatile *var)
 {
+    if (!var) {
+        self_destruct();
+        return;
+    }
+
     unsigned char *token = (unsigned char *) strtok(NULL, null_string);
     safe_free(*var);
 
@@ -3156,19 +3186,19 @@ free_b_int64_t(int64_t * var)
 #define free_kb_int64_t free_b_int64_t
 
 static void
-dump_ushort(StoreEntry * entry, const char *name, u_short var)
+dump_u_short(StoreEntry * entry, const char *name, u_short var)
 {
     storeAppendPrintf(entry, "%s %d\n", name, var);
 }
 
 static void
-free_ushort(u_short * u)
+free_u_short(u_short * u)
 {
     *u = 0;
 }
 
 static void
-parse_ushort(u_short * var)
+parse_u_short(u_short * var)
 {
     ConfigParser::ParseUShort(var);
 }
@@ -3540,7 +3570,7 @@ parse_http_port_specification(http_port_list * s, char *token)
         if (!Ip::EnableIpv6)
             s->s.SetIPv4();
         debugs(3, 3, "http(s)_port: found Listen on wildcard address: *:" << s->s.GetPort() );
-    } else if ( s->s = host ) { /* check/parse numeric IPA */
+    } else if ( (s->s = host) ) { /* check/parse numeric IPA */
         s->s.SetPort(port);
         if (!Ip::EnableIpv6)
             s->s.SetIPv4();
@@ -3568,7 +3598,7 @@ parse_http_port_option(http_port_list * s, char *token)
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Accelerator mode requires its own port. It cannot be shared with other modes.");
             self_destruct();
         }
-        s->accel = 1;
+        s->accel = s->vhost = 1;
     } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
         if (s->accel || s->spoof_client_ip) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Intercept mode requires its own interception port. It cannot be shared with other modes.");
@@ -3584,7 +3614,7 @@ parse_http_port_option(http_port_list * s, char *token)
         if (Ip::EnableIpv6)
             debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
         if ( !s->s.SetIPv4() ) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot NAT intercept (protocol does not provide NAT)" << s->s );
             self_destruct();
         }
     } else if (strcmp(token, "tproxy") == 0) {
@@ -3612,10 +3642,14 @@ parse_http_port_option(http_port_list * s, char *token)
         s->defaultsite = xstrdup(token + 12);
     } else if (strcmp(token, "vhost") == 0) {
         if (!s->accel) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vhost option requires Acceleration mode flag.");
-            self_destruct();
+            debugs(3, DBG_CRITICAL, "WARNING: http(s)_port: vhost option is deprecated. Use 'accel' mode flag instead.");
         }
-        s->vhost = 1;
+        s->accel = s->vhost = 1;
+    } else if (strcmp(token, "no-vhost") == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_IMPORTANT, "ERROR: http(s)_port: no-vhost option requires Acceleration mode flag.");
+        }
+        s->vhost = 0;
     } else if (strcmp(token, "vport") == 0) {
         if (!s->accel) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
@@ -3636,10 +3670,15 @@ parse_http_port_option(http_port_list * s, char *token)
         s->protocol = xstrdup(token + 9);
     } else if (strcmp(token, "allow-direct") == 0) {
         if (!s->accel) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: allow-direct option requires Acceleration mode flag.");
             self_destruct();
         }
         s->allow_direct = 1;
+    } else if (strcmp(token, "act-as-origin") == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_IMPORTANT, "ERROR: http(s)_port: act-as-origin option requires Acceleration mode flag.");
+        } else
+            s->actAsOrigin = 1;
     } else if (strcmp(token, "ignore-cc") == 0) {
 #if !USE_HTTP_VIOLATIONS
         if (!s->accel) {
@@ -4088,10 +4127,8 @@ static void
 parse_access_log(customlog ** logs)
 {
     const char *filename, *logdef_name;
-    customlog *cl;
-    logformat *lf;
 
-    cl = (customlog *)xcalloc(1, sizeof(*cl));
+    customlog *cl = (customlog *)xcalloc(1, sizeof(*cl));
 
     if ((filename = strtok(NULL, w_space)) == NULL) {
         self_destruct();
@@ -4100,7 +4137,11 @@ parse_access_log(customlog ** logs)
 
     if (strcmp(filename, "none") == 0) {
         cl->type = Log::Format::CLF_NONE;
-        goto done;
+        aclParseAclList(LegacyParser, &cl->aclList);
+        while (*logs)
+            logs = &(*logs)->next;
+        *logs = cl;
+        return;
     }
 
     if ((logdef_name = strtok(NULL, w_space)) == NULL)
@@ -4111,7 +4152,7 @@ parse_access_log(customlog ** logs)
     cl->filename = xstrdup(filename);
 
     /* look for the definition pointer corresponding to this name */
-    lf = Log::TheConfig.logformats;
+    Format::Format *lf = Log::TheConfig.logformats;
 
     while (lf != NULL) {
         debugs(3, 9, "Comparing against '" << lf->name << "'");
@@ -4148,7 +4189,6 @@ parse_access_log(customlog ** logs)
         return;
     }
 
-done:
     aclParseAclList(LegacyParser, &cl->aclList);
 
     while (*logs)

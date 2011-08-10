@@ -1,6 +1,7 @@
 #include "squid.h"
 
 #include "acl/Gadgets.h"
+#include "comm/Connection.h"
 #include "ConfigParser.h"
 #include "fde.h"
 #include "hier_code.h"
@@ -11,17 +12,17 @@
 /* Qos namespace */
 
 void
-Ip::Qos::getTosFromServer(const int server_fd, fde *clientFde)
+Ip::Qos::getTosFromServer(const Comm::ConnectionPointer &server, fde *clientFde)
 {
 #if USE_QOS_TOS && _SQUID_LINUX_
     /* Bug 2537: This part of ZPH only applies to patched Linux kernels. */
     tos_t tos = 1;
     int tos_len = sizeof(tos);
     clientFde->tosFromServer = 0;
-    if (setsockopt(server_fd,SOL_IP,IP_RECVTOS,&tos,tos_len)==0) {
+    if (setsockopt(server->fd,SOL_IP,IP_RECVTOS,&tos,tos_len)==0) {
         unsigned char buf[512];
         int len = 512;
-        if (getsockopt(server_fd,SOL_IP,IP_PKTOPTIONS,buf,(socklen_t*)&len) == 0) {
+        if (getsockopt(server->fd,SOL_IP,IP_PKTOPTIONS,buf,(socklen_t*)&len) == 0) {
             /* Parse the PKTOPTIONS structure to locate the TOS data message
              * prepared in the kernel by the ZPH incoming TCP TOS preserving
              * patch.
@@ -40,15 +41,15 @@ Ip::Qos::getTosFromServer(const int server_fd, fde *clientFde)
                 pbuf += CMSG_LEN(o->cmsg_len);
             }
         } else {
-            debugs(33, 1, "QOS: error in getsockopt(IP_PKTOPTIONS) on FD " << server_fd << " " << xstrerror());
+            debugs(33, DBG_IMPORTANT, "QOS: error in getsockopt(IP_PKTOPTIONS) on " << server << " " << xstrerror());
         }
     } else {
-        debugs(33, 1, "QOS: error in setsockopt(IP_RECVTOS) on FD " << server_fd << " " << xstrerror());
+        debugs(33, DBG_IMPORTANT, "QOS: error in setsockopt(IP_RECVTOS) on " << server << " " << xstrerror());
     }
 #endif
 }
 
-void Ip::Qos::getNfmarkFromServer(const int server_fd, const fde *servFde, const fde *clientFde)
+void Ip::Qos::getNfmarkFromServer(const Comm::ConnectionPointer &server, const fde *clientFde)
 {
 #if USE_LIBNETFILTERCONNTRACK
     /* Allocate a new conntrack */
@@ -59,34 +60,27 @@ void Ip::Qos::getNfmarkFromServer(const int server_fd, const fde *servFde, const
          * port numbers.
          */
 
-        Ip::Address serv_fde_local_conn;
-        struct addrinfo *addr = NULL;
-        serv_fde_local_conn.InitAddrInfo(addr);
-        getsockname(server_fd, addr->ai_addr, &(addr->ai_addrlen));
-        serv_fde_local_conn = *addr;
-        serv_fde_local_conn.GetAddrInfo(addr);
-
-        unsigned short serv_fde_local_port = ((struct sockaddr_in*)addr->ai_addr)->sin_port;
-        struct in6_addr serv_fde_local_ip6;
-        struct in_addr serv_fde_local_ip;
-
-        if (Ip::EnableIpv6 && serv_fde_local_conn.IsIPv6()) {
-            serv_fde_local_ip6 = ((struct sockaddr_in6*)addr->ai_addr)->sin6_addr;
+        if (Ip::EnableIpv6 && server->local.IsIPv6()) {
             nfct_set_attr_u8(ct, ATTR_L3PROTO, AF_INET6);
             struct in6_addr serv_fde_remote_ip6;
-            inet_pton(AF_INET6,servFde->ipaddr,(struct in6_addr*)&serv_fde_remote_ip6);
+            server->remote.GetInAddr(serv_fde_remote_ip6);
             nfct_set_attr(ct, ATTR_IPV6_DST, serv_fde_remote_ip6.s6_addr);
+            struct in6_addr serv_fde_local_ip6;
+            server->local.GetInAddr(serv_fde_local_ip6);
             nfct_set_attr(ct, ATTR_IPV6_SRC, serv_fde_local_ip6.s6_addr);
         } else {
-            serv_fde_local_ip = ((struct sockaddr_in*)addr->ai_addr)->sin_addr;
             nfct_set_attr_u8(ct, ATTR_L3PROTO, AF_INET);
-            nfct_set_attr_u32(ct, ATTR_IPV4_DST, inet_addr(servFde->ipaddr));
+            struct in_addr serv_fde_remote_ip;
+            server->remote.GetInAddr(serv_fde_remote_ip);
+            nfct_set_attr_u32(ct, ATTR_IPV4_DST, serv_fde_remote_ip.s_addr);
+            struct in_addr serv_fde_local_ip;
+            server->local.GetInAddr(serv_fde_local_ip);
             nfct_set_attr_u32(ct, ATTR_IPV4_SRC, serv_fde_local_ip.s_addr);
         }
 
         nfct_set_attr_u8(ct, ATTR_L4PROTO, IPPROTO_TCP);
-        nfct_set_attr_u16(ct, ATTR_PORT_DST, htons(servFde->remote_port));
-        nfct_set_attr_u16(ct, ATTR_PORT_SRC, serv_fde_local_port);
+        nfct_set_attr_u16(ct, ATTR_PORT_DST, htons(server->remote.GetPort()));
+        nfct_set_attr_u16(ct, ATTR_PORT_SRC, htons(server->local.GetPort()));
 
         /* Open a handle to the conntrack */
         if (struct nfct_handle *h = nfct_open(CONNTRACK, 0)) {
@@ -96,15 +90,12 @@ void Ip::Qos::getNfmarkFromServer(const int server_fd, const fde *servFde, const
             int x = nfct_query(h, NFCT_Q_GET, ct);
             if (x == -1) {
                 debugs(17, 2, "QOS: Failed to retrieve connection mark: (" << x << ") " << strerror(errno)
-                       << " (Destination " << servFde->ipaddr << ":" << servFde->remote_port
-                       << ", source " << serv_fde_local_conn << ")" );
+                       << " (Destination " << server->remote << ", source " << server->local << ")" );
             }
-
             nfct_close(h);
         } else {
             debugs(17, 2, "QOS: Failed to open conntrack handle for upstream netfilter mark retrieval.");
         }
-        serv_fde_local_conn.FreeAddrInfo(addr);
         nfct_destroy(ct);
 
     } else {
@@ -128,7 +119,7 @@ Ip::Qos::getNfMarkCallback(enum nf_conntrack_msg_type type,
 #endif
 
 int
-Ip::Qos::doTosLocalMiss(const int fd, const hier_code hierCode)
+Ip::Qos::doTosLocalMiss(const Comm::ConnectionPointer &conn, const hier_code hierCode)
 {
     tos_t tos = 0;
     if (Ip::Qos::TheConfig.tosSiblingHit && hierCode==SIBLING_HIT) {
@@ -141,14 +132,14 @@ Ip::Qos::doTosLocalMiss(const int fd, const hier_code hierCode)
         tos = Ip::Qos::TheConfig.tosMiss;
         debugs(33, 2, "QOS: Cache miss, setting TOS=" << int(tos));
     } else if (Ip::Qos::TheConfig.preserveMissTos && Ip::Qos::TheConfig.preserveMissTosMask) {
-        tos = fd_table[fd].tosFromServer & Ip::Qos::TheConfig.preserveMissTosMask;
+        tos = fd_table[conn->fd].tosFromServer & Ip::Qos::TheConfig.preserveMissTosMask;
         debugs(33, 2, "QOS: Preserving TOS on miss, TOS=" << int(tos));
     }
-    return setSockTos(fd, tos);
+    return setSockTos(conn, tos);
 }
 
 int
-Ip::Qos::doNfmarkLocalMiss(const int fd, const hier_code hierCode)
+Ip::Qos::doNfmarkLocalMiss(const Comm::ConnectionPointer &conn, const hier_code hierCode)
 {
     nfmark_t mark = 0;
     if (Ip::Qos::TheConfig.markSiblingHit && hierCode==SIBLING_HIT) {
@@ -161,24 +152,24 @@ Ip::Qos::doNfmarkLocalMiss(const int fd, const hier_code hierCode)
         mark = Ip::Qos::TheConfig.markMiss;
         debugs(33, 2, "QOS: Cache miss, setting Mark=" << mark);
     } else if (Ip::Qos::TheConfig.preserveMissMark) {
-        mark = fd_table[fd].nfmarkFromServer & Ip::Qos::TheConfig.preserveMissMarkMask;
+        mark = fd_table[conn->fd].nfmarkFromServer & Ip::Qos::TheConfig.preserveMissMarkMask;
         debugs(33, 2, "QOS: Preserving mark on miss, Mark=" << mark);
     }
-    return setSockNfmark(fd, mark);
+    return setSockNfmark(conn, mark);
 }
 
 int
-Ip::Qos::doTosLocalHit(const int fd)
+Ip::Qos::doTosLocalHit(const Comm::ConnectionPointer &conn)
 {
     debugs(33, 2, "QOS: Setting TOS for local hit, TOS=" << int(Ip::Qos::TheConfig.tosLocalHit));
-    return setSockTos(fd, Ip::Qos::TheConfig.tosLocalHit);
+    return setSockTos(conn, Ip::Qos::TheConfig.tosLocalHit);
 }
 
 int
-Ip::Qos::doNfmarkLocalHit(const int fd)
+Ip::Qos::doNfmarkLocalHit(const Comm::ConnectionPointer &conn)
 {
     debugs(33, 2, "QOS: Setting netfilter mark for local hit, mark=" << Ip::Qos::TheConfig.markLocalHit);
-    return setSockNfmark(fd, Ip::Qos::TheConfig.markLocalHit);
+    return setSockNfmark(conn, Ip::Qos::TheConfig.markLocalHit);
 }
 
 /* Qos::Config class */

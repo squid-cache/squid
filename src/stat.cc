@@ -34,14 +34,15 @@
 
 #include "squid.h"
 #include "event.h"
+#include "format/Tokens.h"
 #include "StoreClient.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
+#include "comm/Connection.h"
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "HttpRequest.h"
-#include "log/Tokens.h"
 #include "MemObject.h"
 #include "fde.h"
 #include "mem_node.h"
@@ -392,6 +393,7 @@ statObjects(void *data)
         cbdataFree(state);
         return;
     } else if (state->sentry->checkDeferRead(-1)) {
+        state->sentry->flush();
         eventAdd("statObjects", statObjects, state, 0.1, 1);
         return;
     }
@@ -2012,7 +2014,6 @@ statClientRequests(StoreEntry * s)
     dlink_node *i;
     ClientHttpRequest *http;
     StoreEntry *e;
-    int fd;
     char buf[MAX_IPSTRLEN];
 
     for (i = ClientActiveRequests.head; i; i = i->next) {
@@ -2023,24 +2024,22 @@ statClientRequests(StoreEntry * s)
         storeAppendPrintf(s, "Connection: %p\n", conn);
 
         if (conn != NULL) {
-            fd = conn->fd;
+            const int fd = conn->clientConnection->fd;
             storeAppendPrintf(s, "\tFD %d, read %"PRId64", wrote %"PRId64"\n", fd,
                               fd_table[fd].bytes_read, fd_table[fd].bytes_written);
             storeAppendPrintf(s, "\tFD desc: %s\n", fd_table[fd].desc);
             storeAppendPrintf(s, "\tin: buf %p, offset %ld, size %ld\n",
                               conn->in.buf, (long int) conn->in.notYetUsed, (long int) conn->in.allocatedSize);
-            storeAppendPrintf(s, "\tpeer: %s:%d\n",
-                              conn->peer.NtoA(buf,MAX_IPSTRLEN),
-                              conn->peer.GetPort());
-            storeAppendPrintf(s, "\tme: %s:%d\n",
-                              conn->me.NtoA(buf,MAX_IPSTRLEN),
-                              conn->me.GetPort());
+            storeAppendPrintf(s, "\tremote: %s\n",
+                              conn->clientConnection->remote.ToURL(buf,MAX_IPSTRLEN));
+            storeAppendPrintf(s, "\tlocal: %s\n",
+                              conn->clientConnection->local.ToURL(buf,MAX_IPSTRLEN));
             storeAppendPrintf(s, "\tnrequests: %d\n",
                               conn->nrequests);
         }
 
         storeAppendPrintf(s, "uri %s\n", http->uri);
-        storeAppendPrintf(s, "logType %s\n", log_tags[http->logType]);
+        storeAppendPrintf(s, "logType %s\n", Format::log_tags[http->logType]);
         storeAppendPrintf(s, "out.offset %ld, out.size %lu\n",
                           (long int) http->out.offset, (unsigned long int) http->out.size);
         storeAppendPrintf(s, "req_sz %ld\n", (long int) http->req_sz);
@@ -2065,13 +2064,13 @@ statClientRequests(StoreEntry * s)
                 p = http->request->extacl_user.termedBuf();
             }
 
-        if (!p && (conn != NULL && conn->rfc931[0]))
-            p = conn->rfc931;
+        if (!p && conn != NULL && conn->clientConnection->rfc931[0])
+            p = conn->clientConnection->rfc931;
 
 #if USE_SSL
 
-        if (!p && conn != NULL)
-            p = sslGetUserEmail(fd_table[conn->fd].ssl);
+        if (!p && conn != NULL && Comm::IsConnOpen(conn->clientConnection))
+            p = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl);
 
 #endif
 

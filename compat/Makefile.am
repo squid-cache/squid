@@ -17,6 +17,7 @@ libcompat_squid_a_SOURCES = \
 	compat.h \
 	compat_shared.h \
 	cpu.h \
+	cppunit.h \
 	debug.cc \
 	debug.h \
 	drand48.h \
@@ -55,8 +56,9 @@ libcompat_squid_a_SOURCES = \
 	os/freebsd.h \
 	os/hpux.h \
 	os/linux.h \
-	os/mswin.h \
 	os/macosx.h \
+	os/mswin.h \
+	mswin.cc \
 	os/netbsd.h \
 	os/next.h \
 	os/openbsd.h \

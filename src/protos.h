@@ -219,13 +219,6 @@ SQUIDCEXTERN int httpAnonHdrAllowed(http_hdr_type hdr_id);
 SQUIDCEXTERN int httpAnonHdrDenied(http_hdr_type hdr_id);
 SQUIDCEXTERN const char *httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
 
-/* ETag */
-SQUIDCEXTERN int etagParseInit(ETag * etag, const char *str);
-/// whether etags are strong-equal
-SQUIDCEXTERN bool etagIsStrongEqual(const ETag &tag1, const ETag &tag2);
-/// whether etags are weak-equal
-SQUIDCEXTERN bool etagIsWeakEqual(const ETag &tag1, const ETag &tag2);
-
 #include "HttpStatusCode.h"
 SQUIDCEXTERN const char *httpStatusString(http_status status);
 
@@ -323,23 +316,6 @@ extern void wccp2ConnectionOpen(void);
 extern void wccp2ConnectionClose(void);
 #endif /* USE_WCCPv2 */
 
-void ipcache_purgelru(void *);
-SQUIDCEXTERN void ipcache_nbgethostbyname(const char *name,
-        IPH * handler,
-        void *handlerData);
-SQUIDCEXTERN const ipcache_addrs *ipcache_gethostbyname(const char *, int flags);
-SQUIDCEXTERN void ipcacheInvalidate(const char *);
-SQUIDCEXTERN void ipcacheInvalidateNegative(const char *);
-SQUIDCEXTERN void ipcache_init(void);
-SQUIDCEXTERN void ipcacheCycleAddr(const char *name, ipcache_addrs *);
-SQUIDCEXTERN void ipcacheMarkBadAddr(const char *name, const Ip::Address &);
-SQUIDCEXTERN void ipcacheMarkGoodAddr(const char *name, const Ip::Address &);
-SQUIDCEXTERN void ipcacheMarkAllGood(const char *name);
-SQUIDCEXTERN void ipcacheFreeMemory(void);
-SQUIDCEXTERN ipcache_addrs *ipcacheCheckNumeric(const char *name);
-SQUIDCEXTERN void ipcache_restart(void);
-SQUIDCEXTERN int ipcacheAddEntryFromHosts(const char *name, const char *ipaddr);
-
 SQUIDCEXTERN char *mime_get_header(const char *mime, const char *header);
 SQUIDCEXTERN char *mime_get_header_field(const char *mime, const char *name, const char *prefix);
 SQUIDCEXTERN size_t headersEnd(const char *, size_t);
@@ -354,6 +330,7 @@ SQUIDCEXTERN char mimeGetTransferMode(const char *fn);
 SQUIDCEXTERN int mimeGetDownloadOption(const char *fn);
 SQUIDCEXTERN int mimeGetViewOption(const char *fn);
 
+#include "ipcache.h"
 SQUIDCEXTERN int mcastSetTtl(int, int);
 SQUIDCEXTERN IPH mcastJoinGroups;
 
@@ -383,7 +360,6 @@ SQUIDCEXTERN peer *getRoundRobinParent(HttpRequest * request);
 SQUIDCEXTERN peer *getWeightedRoundRobinParent(HttpRequest * request);
 SQUIDCEXTERN void peerClearRRStart(void);
 SQUIDCEXTERN void peerClearRR(void);
-SQUIDCEXTERN peer *getAnyParent(HttpRequest * request);
 SQUIDCEXTERN lookup_t peerDigestLookup(peer * p, HttpRequest * request);
 SQUIDCEXTERN peer *neighborsDigestSelect(HttpRequest * request);
 SQUIDCEXTERN void peerNoteDigestLookup(HttpRequest * request, peer * p, lookup_t lookup);
@@ -399,9 +375,6 @@ SQUIDCEXTERN int peerHTTPOkay(const peer *, HttpRequest *);
 
 SQUIDCEXTERN peer *whichPeer(const Ip::Address &from);
 
-SQUIDCEXTERN void peerSelect(HttpRequest *, StoreEntry *, PSC *, void *data);
-SQUIDCEXTERN void peerSelectInit(void);
-
 /* peer_digest.c */
 class PeerDigest;
 SQUIDCEXTERN PeerDigest *peerDigestCreate(peer * p);
@@ -409,6 +382,8 @@ SQUIDCEXTERN void peerDigestNeeded(PeerDigest * pd);
 SQUIDCEXTERN void peerDigestNotePeerGone(PeerDigest * pd);
 SQUIDCEXTERN void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
 
+#include "comm/forward.h"
+extern void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
 extern Ip::Address getOutgoingAddr(HttpRequest * request, struct peer *dst_peer);
 
 SQUIDCEXTERN void urnStart(HttpRequest *, StoreEntry *);
@@ -698,7 +673,7 @@ SQUIDCEXTERN void cacheDigestGuessStatsUpdate(cd_guess_stats * stats, int real_h
 SQUIDCEXTERN void cacheDigestGuessStatsReport(const cd_guess_stats * stats, StoreEntry * sentry, const char *label);
 SQUIDCEXTERN void cacheDigestReport(CacheDigest * cd, const char *label, StoreEntry * e);
 
-SQUIDCEXTERN void internalStart(HttpRequest *, StoreEntry *);
+SQUIDCEXTERN void internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest *, StoreEntry *);
 SQUIDCEXTERN int internalCheck(const char *urlpath);
 SQUIDCEXTERN int internalStaticCheck(const char *urlpath);
 SQUIDCEXTERN char *internalLocalUri(const char *dir, const char *name);
@@ -726,7 +701,7 @@ SQUIDCEXTERN void *leakFreeFL(void *, const char *, int);
  * prototypes for system functions missing from system includes
  */
 
-#ifdef _SQUID_SOLARIS_
+#if _SQUID_SOLARIS_
 
 SQUIDCEXTERN int getrusage(int, struct rusage *);
 SQUIDCEXTERN int getpagesize(void);
@@ -756,7 +731,7 @@ SQUIDCEXTERN void WIN32_InstallService(void);
 SQUIDCEXTERN void WIN32_RemoveService(void);
 SQUIDCEXTERN int SquidMain(int, char **);
 #endif /* _SQUID_WINDOWS_ */
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
 SQUIDCEXTERN int WIN32_pipe(int[2]);
 

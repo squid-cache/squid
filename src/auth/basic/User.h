@@ -23,9 +23,6 @@ public:
     User(Auth::Config *);
     ~User();
     bool authenticated() const;
-    void queueRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data);
-    void submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data);
-
     bool valid() const;
 
     /** Update the cached password for a username. */

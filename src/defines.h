@@ -62,12 +62,6 @@
 #define COMM_SELECT_READ   (0x1)
 #define COMM_SELECT_WRITE  (0x2)
 
-#define COMM_NONBLOCKING	0x01
-#define COMM_NOCLOEXEC		0x02
-#define COMM_REUSEADDR		0x04
-#define COMM_TRANSPARENT	0x08
-#define COMM_DOBIND		0x10
-
 #define DISK_OK                   (0)
 #define DISK_ERROR               (-1)
 #define DISK_EOF                 (-2)
@@ -217,7 +211,7 @@
 /*
  * Max number of ICP messages to receive per call to icpHandleUdp
  */
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 #define INCOMING_ICP_MAX 1
 #else
 #define INCOMING_ICP_MAX 15
@@ -225,7 +219,7 @@
 /*
  * Max number of DNS messages to receive per call to DNS read handler
  */
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 #define INCOMING_DNS_MAX 1
 #else
 #define INCOMING_DNS_MAX 15
@@ -234,7 +228,7 @@
  * Max number of HTTP connections to accept per call to httpAccept
  * and PER HTTP PORT
  */
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 #define INCOMING_HTTP_MAX 1
 #else
 #define INCOMING_HTTP_MAX 10

@@ -34,6 +34,10 @@
  */
 
 #include "squid.h"
+#include "comm/Connection.h"
+// XXX: for icpIncomingConn - need to pass it as a generic parameter.
+#include "ICP.h"
+#include "ipcache.h"
 
 int
 mcastSetTtl(int fd, int mcast_ttl)
@@ -53,12 +57,8 @@ void
 mcastJoinGroups(const ipcache_addrs *ia, const DnsLookupDetails &, void *datanotused)
 {
 #ifdef IP_MULTICAST_TTL
-    int fd = theInIcpConnection;
-
     struct ip_mreq mr;
     int i;
-    int x;
-    char c = 0;
 
     if (ia == NULL) {
         debugs(7, 0, "comm_join_mcast_groups: Unknown host");
@@ -76,16 +76,13 @@ mcastJoinGroups(const ipcache_addrs *ia, const DnsLookupDetails &, void *datanot
         ia->in_addrs[i].GetInAddr(mr.imr_multiaddr);
 
         mr.imr_interface.s_addr = INADDR_ANY;
-        x = setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
-                       (char *) &mr, sizeof(struct ip_mreq));
 
-        if (x < 0)
-            debugs(7, 1, "comm_join_mcast_groups: FD " << fd << ", IP=" << ia->in_addrs[i]);
+        if (setsockopt(icpIncomingConn->fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *) &mr, sizeof(struct ip_mreq)) < 0)
+            debugs(7, DBG_IMPORTANT, "ERROR: Join failed for " << icpIncomingConn << ", Multicast IP=" << ia->in_addrs[i]);
 
-        x = setsockopt(fd, IPPROTO_IP, IP_MULTICAST_LOOP, &c, 1);
-
-        if (x < 0)
-            debugs(7, 1, "Can't disable multicast loopback: " << xstrerror());
+        char c = 0;
+        if (setsockopt(icpIncomingConn->fd, IPPROTO_IP, IP_MULTICAST_LOOP, &c, 1) < 0)
+            debugs(7, DBG_IMPORTANT, "ERROR: " << icpIncomingConn << " can't disable multicast loopback: " << xstrerror());
     }
 
 #endif

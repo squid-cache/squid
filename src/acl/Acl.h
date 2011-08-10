@@ -107,6 +107,7 @@ public:
 typedef enum {
     ACCESS_DENIED,
     ACCESS_ALLOWED,
+    ACCESS_DUNNO,
     ACCESS_REQ_PROXY_AUTH
 } allow_t;
 

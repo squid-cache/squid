@@ -125,8 +125,8 @@ private:
     StoreIOBuffer holdingBuffer;
     HttpReply *reply;
     void processReplyAccess();
-    static PF ProcessReplyAccessResult;
-    void processReplyAccessResult(bool accessAllowed);
+    static ACLCB ProcessReplyAccessResult;
+    void processReplyAccessResult(const allow_t &accessAllowed);
     void cloneReply();
     void buildReplyHeader ();
     bool alwaysAllowResponse(http_status sline) const;

@@ -187,7 +187,7 @@ main(int argc, char *argv[])
     enum State state;
     int rc = 0;
     char *ptr = NULL;
-#ifdef _SQUID_OS2_
+#if _SQUID_OS2_
 
     const char *rmode = "rt";
 #else
