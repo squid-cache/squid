@@ -50,7 +50,7 @@
  * correctly support 64-bit iostreams
  */
 #if defined(__INTEL_COMPILER) && defined(_FILE_OFFSET_BITS) && \
-   _FILE_OFFSET_BITS==64
+_FILE_OFFSET_BITS==64
 #undef _FILE_OFFSET_BITS
 #endif
 
