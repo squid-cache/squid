@@ -215,7 +215,7 @@ main(int argc, char *argv[])
     fp.open(type_depend, std::ifstream::in);
     if (fp.fail()) {
         std::cerr << "error while opening type dependencies file '" <<
-                  input_filename << "': " << strerror(errno) << std::endl;
+                  type_depend << "': " << strerror(errno) << std::endl;
         exit(1);
     }
 
@@ -237,13 +237,13 @@ main(int argc, char *argv[])
         types = t;
     }
     fp.close();
+    fp.clear(); // BSD does not reste flags in close().
 
     /*-------------------------------------------------------------------*
      * Parse input file
      *-------------------------------------------------------------------*/
 
     /* Open input file */
-
     fp.open(input_filename, std::ifstream::in);
     if (fp.fail()) {
         std::cerr << "error while opening input file '" <<
