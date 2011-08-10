@@ -157,7 +157,11 @@ typedef enum {
     hoHtcpReply,
 #endif
     hoRequest,
-    hoReply
+    hoReply,
+#if USE_SSL
+    hoErrorDetail,
+#endif
+    hoEnd
 } http_hdr_owner_type;
 
 struct _HttpHeaderFieldAttrs {
@@ -172,14 +176,6 @@ typedef ssize_t HttpHeaderPos;
 
 /* use this and only this to initialize HttpHeaderPos */
 #define HttpHeaderInitPos (-1)
-
-/* these two are defined in  structs.h */
-
-/// \todo CLEANUP: Kill this.
-typedef struct _TimeOrTag TimeOrTag;
-
-/// \todo CLEANUP: Kill this.
-typedef struct _ETag ETag;
 
 class HttpHeaderEntry
 {
@@ -199,6 +195,9 @@ public:
 };
 
 MEMPROXY_CLASS_INLINE(HttpHeaderEntry);
+
+class ETag;
+class TimeOrTag;
 
 class HttpHeader
 {

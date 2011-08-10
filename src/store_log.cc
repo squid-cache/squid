@@ -33,9 +33,9 @@
  */
 
 #include "squid.h"
+#include "format/Tokens.h"
 #include "HttpReply.h"
 #include "log/File.h"
-#include "log/Tokens.h"
 #include "MemObject.h"
 #include "mgr/Registration.h"
 #include "Store.h"

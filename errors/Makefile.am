@@ -11,95 +11,15 @@ DEFAULT_ERROR_DIR	= $(errordir)
 DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 
 ## List of automated translations possible:
-ERROR_TEMPLATES =  \
-	templates/ERR_ACCESS_DENIED \
-	templates/ERR_ACL_TIME_QUOTA_EXCEEDED \
-	templates/ERR_CACHE_ACCESS_DENIED \
-	templates/ERR_CACHE_MGR_ACCESS_DENIED \
-	templates/ERR_CANNOT_FORWARD \
-	templates/ERR_CONNECT_FAIL \
-	templates/ERR_DIR_LISTING \
-	templates/ERR_DNS_FAIL \
-	templates/ERR_ESI \
-	templates/ERR_FORWARDING_DENIED \
-	templates/ERR_FTP_DISABLED \
-	templates/ERR_FTP_FAILURE \
-	templates/ERR_FTP_FORBIDDEN \
-	templates/ERR_FTP_NOT_FOUND \
-	templates/ERR_FTP_PUT_CREATED \
-	templates/ERR_FTP_PUT_ERROR \
-	templates/ERR_FTP_PUT_MODIFIED \
-	templates/ERR_FTP_UNAVAILABLE \
-	templates/ERR_GATEWAY_FAILURE \
-	templates/ERR_ICAP_FAILURE \
-	templates/ERR_INVALID_REQ \
-	templates/ERR_INVALID_RESP \
-	templates/ERR_INVALID_URL \
-	templates/ERR_LIFETIME_EXP \
-	templates/ERR_NO_RELAY \
-	templates/ERR_ONLY_IF_CACHED_MISS \
-	templates/ERR_PRECONDITION_FAILED \
-	templates/ERR_READ_ERROR \
-	templates/ERR_READ_TIMEOUT \
-	templates/ERR_SECURE_CONNECT_FAIL \
-	templates/ERR_SHUTTING_DOWN \
-	templates/ERR_SOCKET_FAILURE \
-	templates/ERR_TOO_BIG \
-	templates/ERR_UNSUP_HTTPVERSION \
-	templates/ERR_UNSUP_REQ \
-	templates/ERR_URN_RESOLVE \
-	templates/ERR_WRITE_ERROR \
-	templates/ERR_ZERO_SIZE_OBJECT
-
-TRANSLATE_LANGUAGES = \
-	af.lang \
-	ar.lang \
-	az.lang \
-	bg.lang \
-	ca.lang \
-	cs.lang \
-	da.lang \
-	de.lang \
-	el.lang \
-	en.lang \
-	es.lang \
-	et.lang \
-	fa.lang \
-	fi.lang \
-	fr.lang \
-	he.lang \
-	hu.lang \
-	hy.lang \
-	id.lang \
-	it.lang \
-	ja.lang \
-	ko.lang \
-	lt.lang \
-	lv.lang \
-	ms.lang \
-	nl.lang \
-	oc.lang \
-	pl.lang \
-	pt-br.lang \
-	pt.lang \
-	ro.lang \
-	ru.lang \
-	sk.lang \
-	sl.lang \
-	sr-cyrl.lang \
-	sr-latn.lang \
-	sv.lang \
-	th.lang \
-	tr.lang \
-	uk.lang \
-	uz.lang \
-	vi.lang \
-	zh-cn.lang \
-	zh-tw.lang
+include $(srcdir)/template.list
+include $(srcdir)/language.list
 
 CLEANFILES = $(TRANSLATE_LANGUAGES) translate-warn
 EXTRA_DIST = \
 	$(ERROR_TEMPLATES) \
+	templates/error-details.txt \
+	language.list \
+	template.list \
 	aliases alias-link.sh alias-upgrade errorpage.css TRANSLATORS COPYRIGHT
 
 all: all-am
@@ -127,10 +47,11 @@ NOTIDY=`$(PO2HTML) --help | grep -o "\-\-notidy"`
 	    mkdir -p $(top_builddir)/errors/$$lang; \
 	    echo -n "Translate '$$lang' ..."; \
 	    for f in $(ERROR_TEMPLATES); do \
-			page=`basename $$f`; \
-			$(PO2HTML) $(NOTIDY) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/$$f >$(top_builddir)/errors/$$lang/$$page || exit 1; \
-		done; \
-		echo "done."; \
+		page=`basename $$f`; \
+		$(PO2HTML) $(NOTIDY) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/$$f >$(top_builddir)/errors/$$lang/$$page || exit 1; \
+	    done; \
+	    $(PO2TEXT) -t $(top_srcdir)/errors/templates/error-details.txt -i $(top_srcdir)/errors/$$lang.po > $(top_builddir)/errors/$$lang/error-details.txt || exit 1; \
+	    echo "done."; \
 	fi; \
 	touch $@
 
@@ -151,7 +72,7 @@ install-data-local: translate
 	    if test -d $(srcdir)/$$l || test -d $(builddir)/$$l; then \
 		$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
 	    fi; \
-	    for f in $(ERROR_TEMPLATES); do \
+	    for f in $(ERROR_TEMPLATES) templates/error-details.txt; do \
 		page=`basename $$f`; \
 		if test -f $(builddir)/$$l/$$page; then \
 		    echo "$(INSTALL_DATA) $(builddir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
@@ -172,14 +93,14 @@ uninstall-local:
 	  l=`basename $$l .lang`; \
 	  echo "Located $$l for uninstall ..."; \
 	  if test -d $(srcdir)/$$l; then \
-		for f in $(srcdir)/$$l/ERR_*; do \
+		for f in $(srcdir)/$$l/ERR_* $(srcdir)/$$l/error-details.txt; do \
 			if test -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; then \
 		        	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
 			fi; \
 		done; \
 	  fi ; \
 	  if test -d $(builddir)/$$l; then \
-		for f in $(builddir)/$$l/ERR_*; do \
+		for f in $(builddir)/$$l/ERR_* $(builddir)/$$l/error-details.txt; do \
 			if test -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; then \
 		        	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
 			fi; \
@@ -200,8 +121,8 @@ dist-hook: translate
 	  lang=`basename $$lang .lang`; \
 	  if test -d $$lang ; then \
 		mkdir -p $(distdir)/$$lang; \
-		cp -p $(top_builddir)/errors/$$lang/ERR_*  $(distdir)/$$lang \
-		  || exit 1; \
+		cp -p $(top_builddir)/errors/$$lang/ERR_*  $(distdir)/$$lang || exit 1; \
+		cp -p $(top_builddir)/errors/$$lang/error-details.txt $(distdir)/$$lang || exit 1; \
 	  fi; \
 	done
 

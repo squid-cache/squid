@@ -5,7 +5,7 @@
 #include "config.h"
 #include "psignal.h"
 
-#if _SQUID_AIX_
+#if _SQUID_AIX_ || _SQUID_MINGW_
 extern const char* const sys_siglist[];
 #define _sys_nsig 64
 #define _sys_siglist sys_siglist

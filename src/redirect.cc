@@ -37,6 +37,7 @@
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
+#include "comm/Connection.h"
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "fde.h"
@@ -147,22 +148,29 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
         r->client_addr.SetNoAddr();
     r->client_ident = NULL;
 #if USE_AUTH
-    if (http->request->auth_user_request != NULL)
+    if (http->request->auth_user_request != NULL) {
         r->client_ident = http->request->auth_user_request->username();
-    else
+        debugs(61, 5, HERE << "auth-user=" << (r->client_ident?r->client_ident:"NULL"));
+    }
 #endif
-        if (http->request->extacl_user.defined()) {
-            r->client_ident = http->request->extacl_user.termedBuf();
-        }
 
-    if (!r->client_ident && (conn != NULL && conn->rfc931[0]))
-        r->client_ident = conn->rfc931;
+    // HttpRequest initializes with null_string. So we must check both defined() and size()
+    if (!r->client_ident && http->request->extacl_user.defined() && http->request->extacl_user.size()) {
+        r->client_ident = http->request->extacl_user.termedBuf();
+        debugs(61, 5, HERE << "acl-user=" << (r->client_ident?r->client_ident:"NULL"));
+    }
+
+    if (!r->client_ident && conn != NULL && conn->clientConnection != NULL && conn->clientConnection->rfc931[0]) {
+        r->client_ident = conn->clientConnection->rfc931;
+        debugs(61, 5, HERE << "ident-user=" << (r->client_ident?r->client_ident:"NULL"));
+    }
 
 #if USE_SSL
 
-    if (!r->client_ident && conn != NULL)
-        r->client_ident = sslGetUserEmail(fd_table[conn->fd].ssl);
-
+    if (!r->client_ident && conn != NULL && Comm::IsConnOpen(conn->clientConnection)) {
+        r->client_ident = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl);
+        debugs(61, 5, HERE << "ssl-user=" << (r->client_ident?r->client_ident:"NULL"));
+    }
 #endif
 
     if (!r->client_ident)
@@ -202,7 +210,8 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
         tmpnoaddr.SetNoAddr();
         repContext->setReplyToError(ERR_GATEWAY_FAILURE, status,
                                     http->request->method, NULL,
-                                    http->getConn() != NULL ? http->getConn()->peer : tmpnoaddr,
+                                    http->getConn() != NULL && http->getConn()->clientConnection != NULL ?
+                                    http->getConn()->clientConnection->remote : tmpnoaddr,
                                     http->request,
                                     NULL,
 #if USE_AUTH
@@ -217,6 +226,7 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
         return;
     }
 
+    debugs(61,6, HERE << "sending '" << buf << "' to the helper");
     helperSubmit(redirectors, buf, redirectHandleReply, r);
 }
 

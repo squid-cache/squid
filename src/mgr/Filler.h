@@ -8,6 +8,7 @@
 #ifndef SQUID_MGR_FILLER_H
 #define SQUID_MGR_FILLER_H
 
+#include "comm/forward.h"
 #include "HttpRequestMethod.h"
 #include "mgr/Action.h"
 #include "mgr/StoreToCommWriter.h"
@@ -19,7 +20,7 @@ namespace Mgr
 class Filler: public StoreToCommWriter
 {
 public:
-    Filler(const Action::Pointer &anAction, int aFd, unsigned int aRequestId);
+    Filler(const Action::Pointer &anAction, const Comm::ConnectionPointer &conn, unsigned int aRequestId);
 
 protected:
     /* AsyncJob API */

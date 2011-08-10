@@ -62,7 +62,7 @@ protected:
     void handleSnmpResponse(const Snmp::Response& response);
 #endif
     /// calls comm_open_listener()
-    int openListenSocket(const SharedListenRequest& request, int &errNo);
+    Comm::ConnectionPointer openListenSocket(const SharedListenRequest& request, int &errNo);
 
 private:
     StrandCoords strands_; ///< registered processes and threads
@@ -70,7 +70,7 @@ private:
     typedef std::list<StrandSearchRequest> Searchers; ///< search requests
     Searchers searchers; ///< yet unanswered search requests in arrival order
 
-    typedef std::map<OpenListenerParams, int> Listeners; ///< params:fd map
+    typedef std::map<OpenListenerParams, Comm::ConnectionPointer> Listeners; ///< params:connection map
     Listeners listeners; ///< cached comm_open_listener() results
 
     static Coordinator* TheInstance; ///< the only class instance in existence

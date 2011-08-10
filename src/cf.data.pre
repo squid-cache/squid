@@ -657,10 +657,10 @@ DOC_START
 
 	***** ACL TYPES AVAILABLE *****
 
-	acl aclname src ip-address/netmask ...	# clients IP address [fast]
-	acl aclname src addr1-addr2/netmask ...	# range of addresses [fast]
-	acl aclname dst ip-address/netmask ...	# URL host's IP address [slow]
-	acl aclname myip ip-address/netmask ...	# local socket IP address [fast]
+	acl aclname src ip-address/mask ...	# clients IP address [fast]
+	acl aclname src addr1-addr2/mask ...	# range of addresses [fast]
+	acl aclname dst ip-address/mask ...	# URL host's IP address [slow]
+	acl aclname localip ip-address/mask ... # IP address the client connected to [fast]
 
 	acl aclname arp      mac-address ... (xx:xx:xx:xx:xx:xx notation)
 	  # The arp ACL requires the special configure option --enable-arp-acl.
@@ -721,7 +721,9 @@ DOC_START
 
 	acl aclname port 80 70 21 0-1024...   # destination TCP port [fast]
 	                                      # ranges are alloed
-	acl aclname myport 3128 ...	          # local socket TCP port [fast]
+	acl aclname localport 3128 ...	      # TCP port the client connected to [fast]
+	                                      # NP: for interception mode this is usually '80'
+
 	acl aclname myportname 3128 ...       # http(s)_port name [fast]
 
 	acl aclname proto HTTP FTP ...        # request protocol [fast]
@@ -860,7 +862,7 @@ NOCOMMENT_START
 #
 # Recommended minimum configuration:
 #
-acl manager proto cache_object
+acl manager url_regex -i ^cache_object:// +i ^https?://[^/]+/squid-internal-mgr/
 acl localhost src 127.0.0.1/32 ::1
 acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
 
@@ -1029,7 +1031,7 @@ NOCOMMENT_START
 # Recommended minimum Access Permission configuration:
 #
 # Only allow cachemgr access from localhost
-http_access allow manager localhost
+http_access allow localhost manager
 http_access deny manager
 
 # Deny requests to certain unsafe ports
@@ -1290,8 +1292,7 @@ DOC_START
 			connections using the client IP address.
 			NP: disables authentication and maybe IPv6 on the port.
 
-	   accel	Accelerator mode. Also needs at least one of
-			vhost / vport / defaultsite.
+	   accel	Accelerator / reverse proxy mode
 
 	   ssl-bump 	Intercept each CONNECT request matching ssl_bump ACL,
 			establish secure connection with the client and with
@@ -1307,32 +1308,41 @@ DOC_START
 
 	Accelerator Mode Options:
 
-	   allow-direct	Allow direct forwarding in accelerator mode. Normally
-			accelerated requests are denied direct forwarding as if
-			never_direct was used.
-
 	   defaultsite=domainname
 			What to use for the Host: header if it is not present
 			in a request. Determines what site (not origin server)
 			accelerators should consider the default.
-			Implies accel.
 
-	   vhost	Using the Host header for virtual domain support.
-			Also uses the port as specified in Host: header.
-
-	   vport	IP based virtual host support. Using the http_port number
-			in passed on Host: headers.
-
-	   vport=NN	Uses the specified port number rather than the
-			http_port number.
+	   no-vhost	Disable using HTTP/1.1 Host header for virtual domain support.
 
 	   protocol=	Protocol to reconstruct accelerated requests with.
-			Defaults to http://.
+			Defaults to http for http_port and https for
+			https_port
+
+	   vport	Virtual host port support. Using the http_port number
+			instead of the port passed on Host: headers.
+
+	   vport=NN	Virtual host port support. Using the specified port
+			number instead of the port passed on Host: headers.
+
+	   act-as-origin
+			Act as if this Squid is the origin server.
+			This currently means generate new Date: and Expires:
+			headers on HIT instead of adding Age:.
 
 	   ignore-cc	Ignore request Cache-Control headers.
 
-	   		Warning: This option violates HTTP specifications if
+			WARNING: This option violates HTTP specifications if
 			used in non-accelerator setups.
+
+	   allow-direct	Allow direct forwarding in accelerator mode. Normally
+			accelerated requests are denied direct forwarding as if
+			never_direct was used.
+
+			WARNING: this option opens accelerator mode to security
+			vulnerabilities usually only affecting in interception
+			mode. Make sure to protect forwarding with suitable
+			http_access rules when using this.
 
 
 	SSL Bump Mode Options:
@@ -1468,7 +1478,7 @@ TYPE: https_port_list
 DEFAULT: none
 LOC: Config.Sockaddr.https
 DOC_START
-	Usage:  [ip:]port cert=certificate.pem [key=key.pem] [options...]
+	Usage:  [ip:]port cert=certificate.pem [key=key.pem] [mode] [options...]
 
 	The socket address where Squid will listen for HTTPS client
 	requests.
@@ -1480,21 +1490,17 @@ DOC_START
 	You may specify multiple socket addresses on multiple lines,
 	each with their own SSL certificate and/or options.
 
-	Options:
+	Modes:
 
-	   accel	Accelerator mode. Also needs at least one of
-			defaultsite or vhost.
+	   accel	Accelerator / reverse proxy mode
 
-	   defaultsite=	The name of the https site presented on
-	   		this port. Implies accel.
+	Omitting the mode flag causes default forward proxy mode to be used.
 
-	   vhost	Accelerator mode using Host header for virtual
-			domain support. Requires a wildcard certificate
-			or other certificate valid for more than one domain.
-			Implies accel.
 
-	   protocol=	Protocol to reconstruct accelerated requests with.
-			Defaults to https.
+	See http_port for a list of generic options
+
+
+	SSL Options:
 
 	   cert=	Path to SSL certificate (PEM format).
 
@@ -1557,14 +1563,6 @@ DOC_START
 				client certificate chain.
 
 	   sslcontext=	SSL session ID context identifier.
-
-	   vport	Accelerator with IP based virtual host support.
-
-	   vport=NN	As above, but uses specified port number rather
-			than the https_port number. Implies accel.
-
-	   name=	Specifies a internal name for the port. Defaults to
-			the port specification (port or addr:port)
 
 DOC_END
 
@@ -1738,66 +1736,68 @@ DOC_START
 
 	tcp_outgoing_address ipaddr [[!]aclname] ...
 
-	Example where requests from 10.0.0.0/24 will be forwarded
-	with source address 10.1.0.1, 10.0.2.0/24 forwarded with
-	source address 10.1.0.2 and the rest will be forwarded with
-	source address 10.1.0.3.
+	For example;
+		Forwarding clients with dedicated IPs for certain subnets.
 
-	acl normal_service_net src 10.0.0.0/24
-	acl good_service_net src 10.0.2.0/24
-	tcp_outgoing_address 10.1.0.1 normal_service_net
-	tcp_outgoing_address 10.1.0.2 good_service_net
-	tcp_outgoing_address 10.1.0.3
+	  acl normal_service_net src 10.0.0.0/24
+	  acl good_service_net src 10.0.2.0/24
+
+	  tcp_outgoing_address 2001:db8::c001 good_service_net
+	  tcp_outgoing_address 10.1.0.2 good_service_net
+
+	  tcp_outgoing_address 2001:db8::beef normal_service_net
+	  tcp_outgoing_address 10.1.0.1 normal_service_net
+
+	  tcp_outgoing_address 2001:db8::1
+	  tcp_outgoing_address 10.1.0.3
 
 	Processing proceeds in the order specified, and stops at first fully
 	matching line.
 
-	Note: The use of this directive using client dependent ACLs is
+	Squid will add an implicit IP version test to each line.
+	Requests going to IPv4 websites will use the outgoing 10.1.0.* addresses.
+	Requests going to IPv6 websites will use the outgoing 2001:db8:* addresses.
+
+
+	NOTE: The use of this directive using client dependent ACLs is
 	incompatible with the use of server side persistent connections. To
 	ensure correct results it is best to set server_persistent_connections
 	to off when using this directive in such configurations.
 
-	Note: The use of this directive to set a local IP on outgoing TCP links
+	NOTE: The use of this directive to set a local IP on outgoing TCP links
 	is incompatible with using TPROXY to set client IP out outbound TCP links.
-	When needing to contact peers use the no-tproxy cache_peer option to
-	re-enable normal forwarding such as this.
+	When needing to contact peers use the no-tproxy cache_peer option and the
+	client_dst_passthru directive re-enable normal forwarding such as this.
 
-        IPv6 Magic:
+DOC_END
 
-	Squid is built with a capability of bridging the IPv4 and IPv6 
-	internets.
-	tcp_outgoing_address as exampled above breaks this bridging by forcing
-	all outbound traffic through a certain IPv4 which may be on the wrong
-	side of the IPv4/IPv6 boundary.
-
-	To operate with tcp_outgoing_address and keep the bridging benefits
-	an additional ACL needs to be used which ensures the IPv6-bound traffic
-	is never forced or permitted out the IPv4 interface.
-
-	# IPv6 destination test along with a dummy access control to perofrm the required DNS
-	# This MUST be place before any ALLOW rules.
-	acl to_ipv6 dst ipv6
-	http_access deny ipv6 !all
-
-	tcp_outgoing_address 2001:db8::c001 good_service_net to_ipv6
-	tcp_outgoing_address 10.1.0.2 good_service_net !to_ipv6
-
-	tcp_outgoing_address 2001:db8::beef normal_service_net to_ipv6
-	tcp_outgoing_address 10.1.0.1 normal_service_net !to_ipv6
-
-	tcp_outgoing_address 2001:db8::1 to_ipv6
-	tcp_outgoing_address 10.1.0.3 !to_ipv6
-
-	WARNING:
-	  'dst ipv6' bases its selection assuming DIRECT access.
-	  If peers are used the peername ACL are needed to select outgoing
-	  address which can link to the peer.
-
-	  'dst ipv6' is a slow ACL. It will only work here if 'dst' is used
-	  previously in the http_access rules to locate the destination IP.
-	  Some more magic may be needed for that:
-	    http_access allow to_ipv6 !all
-	  (meaning, allow if to IPv6 but not from anywhere ;)
+NAME: client_dst_passthru
+TYPE: onoff
+DEFAULT: on
+LOC: Config.onoff.client_dst_passthru
+DOC_START
+	With NAT or TPROXY intercepted traffic Squid may pass the request
+	directly to the original client destination IP or seek a faster
+	source.
+	
+	This option (on by default) prevents cache_peer and alternative DNS
+	entries being used on intercepted traffic. Both of which lead to
+	the security vulnerability outlined below.
+	
+	SECURITY WARNING:
+	
+	This directive should only be disabled if cache_peer are required.
+	
+	As described in CVE-2009-0801 when the Host: header alone is used
+	to determine the destination of a request it becomes trivial for
+	malicious scripts on remote websites to bypass browser same-origin
+	security policy and sandboxing protections.
+	
+	The cause of this is that such applets are allowed to perform their
+	own HTTP stack, in which case the same-origin policy of the browser
+	sandbox only verifies that the applet tries to contact the same IP
+	as from where it was loaded at the IP level. The Host: header may
+	be different from the connected IP and approved origin.
 
 DOC_END
 
@@ -2198,6 +2198,14 @@ DOC_START
 			than the Squid default location.
 	
 	
+	==== CARP OPTIONS ====
+	
+	carp-key=key-specification
+			use a different key than the full URL to hash against the peer.
+			the key-specification is a comma-separated list of the keywords			
+			scheme, host, port, path, params
+			Order is not important.
+	
 	==== ACCELERATOR / REVERSE-PROXY OPTIONS ====
 	
 	originserver	Causes this parent to be contacted as an origin server.
@@ -2265,12 +2273,20 @@ DOC_START
 			The first principal from the default keytab or defined by
 			the environment variable KRB5_KTNAME will be used. 
 	
+			WARNING: The connection may transmit requests from multiple
+			clients. Negotiate often assumes end-to-end authentication
+			and a single-client. Which is not strictly true here.
+	
 	login=NEGOTIATE:principal_name
 			If this is a personal/workgroup proxy and your parent
 			requires a secure proxy authentication. 
 			The principal principal_name from the default keytab or
 			defined by the environment variable KRB5_KTNAME will be
 			used.
+	
+			WARNING: The connection may transmit requests from multiple
+			clients. Negotiate often assumes end-to-end authentication
+			and a single-client. Which is not strictly true here.
 	
 	connection-auth=on|off
 			Tell Squid that this peer does or not support Microsoft
@@ -2477,6 +2493,9 @@ LOC: Config.forward_max_tries
 DOC_START
 	Controls how many different forward paths Squid will try
 	before giving up. See also forward_timeout.
+	
+	NOTE: connect_retries (default: none) can make each of these
+	possible forwarding paths be tried multiple times.
 DOC_END
 
 NAME: hierarchy_stoplist
@@ -2488,12 +2507,11 @@ DOC_START
 	be handled directly by this cache.  In other words, use this
 	to not query neighbor caches for certain objects.  You may
 	list this option multiple times.
-	Note: never_direct overrides this option.
-NOCOMMENT_START
 
-# We recommend you to use at least the following line.
-hierarchy_stoplist cgi-bin ?
-NOCOMMENT_END
+	Example:
+		hierarchy_stoplist cgi-bin ?
+
+	Note: never_direct overrides this option.
 DOC_END
 
 COMMENT_START
@@ -2936,9 +2954,17 @@ DOC_START
 		[http::]Sh	Squid hierarchy status (DEFAULT_PARENT etc)
 		[http::]mt	MIME content type
 		[http::]rm	Request method (GET/POST etc)
-		[http::]ru	Request URL
+		[http::]>rm	Request method from client
+		[http::]<rm	Request method sent to server or peer
+		[http::]ru	Request URL from client (historic, filtered for logging)
+		[http::]>ru	Request URL from client
+		[http::]<ru	Request URL sent to server or peer
 		[http::]rp	Request URL-Path excluding hostname
+		[http::]>rp	Request URL-Path excluding hostname from client
+		[http::]<rp	Request URL-Path excluding hostname sento to server or peer
 		[http::]rv	Request protocol version
+		[http::]>rv	Request protocol version from client
+		[http::]<rv	Request protocol version sent to server or peer
 		[http::]et	Tag returned by external acl
 		[http::]ea	Log string returned by external acl
 		[http::]<st	Sent reply size including HTTP headers
@@ -4805,7 +4831,7 @@ LOC: Config.Announce.file
 DOC_NONE
 
 NAME: announce_port
-TYPE: ushort
+TYPE: u_short
 DEFAULT: 3131
 LOC: Config.Announce.port
 DOC_START
@@ -5047,7 +5073,7 @@ DOC_END
 
 NAME: delay_initial_bucket_level
 COMMENT: (percent, 0-100)
-TYPE: ushort
+TYPE: u_short
 DEFAULT: 50
 IFDEF: USE_DELAY_POOLS
 LOC: Config.Delay.initial
@@ -5079,7 +5105,7 @@ DOC_END
 
 NAME: client_delay_initial_bucket_level
 COMMENT: (percent, 0-no_limit)
-TYPE: ushort
+TYPE: u_short
 DEFAULT: 50
 IFDEF: USE_DELAY_POOLS
 LOC: Config.ClientDelay.initial
@@ -5489,7 +5515,7 @@ COMMENT_START
 COMMENT_END
 
 NAME: snmp_port
-TYPE: ushort
+TYPE: u_short
 LOC: Config.Port.snmp
 DEFAULT: 0
 IFDEF: SQUID_SNMP
@@ -5561,7 +5587,7 @@ COMMENT_START
 COMMENT_END
 
 NAME: icp_port udp_port
-TYPE: ushort
+TYPE: u_short
 DEFAULT: 0
 LOC: Config.Port.icp
 DOC_START
@@ -5575,7 +5601,7 @@ DOC_END
 
 NAME: htcp_port
 IFDEF: USE_HTCP
-TYPE: ushort
+TYPE: u_short
 DEFAULT: 0
 LOC: Config.Port.htcp
 DOC_START
@@ -5836,7 +5862,7 @@ DOC_END
 
 NAME: mcast_miss_ttl
 IFDEF: MULTICAST_MISS_STREAM
-TYPE: ushort
+TYPE: u_short
 LOC: Config.mcast_miss.ttl
 DEFAULT: 16
 DOC_START
@@ -5847,7 +5873,7 @@ DOC_END
 
 NAME: mcast_miss_port
 IFDEF: MULTICAST_MISS_STREAM
-TYPE: ushort
+TYPE: u_short
 LOC: Config.mcast_miss.port
 DEFAULT: 3135
 DOC_START
@@ -7342,21 +7368,24 @@ DOC_START
 	see also refresh_pattern for a more selective approach.
 DOC_END
 
-NAME: maximum_single_addr_tries
+NAME: connect_retries
 TYPE: int
-LOC: Config.retry.maxtries
-DEFAULT: 1
+LOC: Config.connect_retries
+DEFAULT: 0
 DOC_START
-	This sets the maximum number of connection attempts for a
-	host that only has one address (for multiple-address hosts,
-	each address is tried once).
+	This sets the maximum number of connection attempts made for each
+	TCP connection. The connect_retries attempts must all still
+	complete within the connection timeout period.
 
-	The default value is one attempt, the (not recommended)
-	maximum is 255 tries.  A warning message will be generated
-	if it is set to a value greater than ten.
+	The default is not to re-try if the first connection attempt fails.
+	The (not recommended) maximum is 10 tries.
 
-	Note: This is in addition to the request re-forwarding which
-	takes place if Squid fails to get a satisfying response.
+	A warning message will be generated if it is set to a too-high
+	value and the configured value will be over-ridden.
+
+	Note: These re-tries are in addition to forward_max_tries
+	which limit how many different addresses may be tried to find
+	a useful server.
 DOC_END
 
 NAME: retry_on_error

@@ -9,6 +9,7 @@
 #define SQUID_IPC_FORWARDER_H
 
 #include "base/AsyncJob.h"
+#include "mgr/ActionParams.h"
 #include "ipc/Request.h"
 #include <map>
 

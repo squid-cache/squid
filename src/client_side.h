@@ -40,9 +40,8 @@
 #include "BodyPipe.h"
 #include "comm.h"
 #include "CommCalls.h"
-#include "eui/Eui48.h"
-#include "eui/Eui64.h"
 #include "HttpControlMsg.h"
+#include "HttpParser.h"
 #include "RefCount.h"
 #include "StoreIOBuffer.h"
 
@@ -50,8 +49,32 @@ class ConnStateData;
 class ClientHttpRequest;
 class clientStreamNode;
 class ChunkedCodingParser;
-class HttpParser;
 
+/**
+ * Badly named.
+ * This is in fact the processing context for a single HTTP request.
+ *
+ * Managing what has been done, and what happens next to the data buffer
+ * holding what we hope is an HTTP request.
+ *
+ * Parsing is still a mess of global functions done in conjunction with the
+ * real socket controller which generated ClientHttpRequest.
+ * It also generates one of us and passes us control from there based on
+ * the results of the parse.
+ *
+ * After that all the request interpretation and adaptation is in our scope.
+ * Then finally the reply fetcher is created by this and we get the result
+ * back. Which we then have to manage writing of it to the ConnStateData.
+ *
+ * The socket level management is done by a ConnStateData which owns us.
+ * The scope of this objects control over a socket consists of the data
+ * buffer received from ConnStateData with an initially unknown length.
+ * When that length is known it sets the end bounary of our acces to the
+ * buffer.
+ *
+ * The individual processing actions are done by other Jobs which we
+ * kick off as needed.
+ */
 class ClientSocketContext : public RefCountable
 {
 
@@ -62,8 +85,10 @@ public:
     ClientSocketContext();
     ~ClientSocketContext();
     bool startOfOutput() const;
-    void writeComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag);
+    void writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag);
     void keepaliveNextRequest();
+
+    Comm::ConnectionPointer clientConnection; /// details about the client connection socket.
     ClientHttpRequest *http;	/* we own this */
     HttpReply *reply;
     char reqbuf[HTTP_REQBUF_SZ];
@@ -102,7 +127,6 @@ public:
     size_t lengthToSend(Range<int64_t> const &available);
     void noteSentBodyBytes(size_t);
     void buildRangeHeader(HttpReply * rep);
-    int fd() const;
     clientStreamNode * getTail() const;
     clientStreamNode * getClientReplyContext() const;
     void connIsFinished();
@@ -116,8 +140,8 @@ public:
     void writeControlMsg(HttpControlMsg &msg);
 
 protected:
-    static void WroteControlMsg(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data);
-    void wroteControlMsg(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno);
+    static IOCB WroteControlMsg;
+    void wroteControlMsg(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag, int xerrno);
 
 private:
     CBDATA_CLASS(ClientSocketContext);
@@ -137,7 +161,20 @@ private:
 
 class ConnectionDetail;
 
-/** A connection to a socket */
+/**
+ * Manages a connection to a client.
+ *
+ * Multiple requests (up to 2) can be pipelined. This object is responsible for managing
+ * which one is currently being fulfilled and what happens to the queue if the current one
+ * causes the client connection to be closed early.
+ *
+ * Act as a manager for the connection and passes data in buffer to the current parser.
+ * the parser has ambiguous scope at present due to being made from global functions
+ * I believe this object uses the parser to identify boundaries and kick off the
+ * actual HTTP request handling objects (ClientSocketContext, ClientHttpRequest, HttpRequest)
+ *
+ * If the above can be confirmed accurate we can call this object PipelineManager or similar
+ */
 class ConnStateData : public BodyProducer, public HttpControlMsgSink
 {
 
@@ -164,7 +201,8 @@ public:
     // HttpControlMsgSink API
     virtual void sendControlMsg(HttpControlMsg msg);
 
-    int fd;
+    // Client TCP connection details from comm layer.
+    Comm::ConnectionPointer clientConnection;
 
     struct In {
         In();
@@ -199,25 +237,15 @@ public:
      */
     ClientSocketContext::Pointer currentobject;
 
-    Ip::Address peer;
-
-    Ip::Address me;
-
     Ip::Address log_addr;
-    char rfc931[USER_IDENT_SZ];
     int nrequests;
-
-#if USE_SQUID_EUI
-    Eui::Eui48 peer_eui48;
-    Eui::Eui64 peer_eui64;
-#endif
 
     struct {
         bool readMore; ///< needs comm_read (for this request or new requests)
         bool swanSang; // XXX: temporary flag to check proper cleanup
     } flags;
     struct {
-        int fd;                 /* pinned server side connection */
+        Comm::ConnectionPointer serverConnection; /* pinned server side connection */
         char *host;             /* host name of pinned connection */
         int port;               /* port of pinned connection */
         bool pinned;             /* this connection was pinned */
@@ -229,7 +257,6 @@ public:
     http_port_list *port;
 
     bool transparent() const;
-    void transparent(bool const);
     bool reading() const;
     void stopReading(); ///< cancels comm_read if it is scheduled
 
@@ -246,7 +273,7 @@ public:
     /**
      * Correlate the current ConnStateData object with the pinning_fd socket descriptor.
      */
-    void pinConnection(int fd, HttpRequest *request, struct peer *peer, bool auth);
+    void pinConnection(const Comm::ConnectionPointer &pinServerConn, HttpRequest *request, struct peer *peer, bool auth);
     /**
      * Decorrelate the ConnStateData object from its pinned peer
      */
@@ -256,9 +283,9 @@ public:
      * if pinned info is not valid.
      \param request   if it is not NULL also checks if the pinning info refers to the request client side HttpRequest
      \param peer      if it is not NULL also check if the peer is the pinning peer
-     \return          The fd of the server side connection or -1 if fails.
+     \return          The details of the server side connection (may be closed if failures were present).
      */
-    int validatePinnedConnection(HttpRequest *request, const struct peer *peer);
+    const Comm::ConnectionPointer validatePinnedConnection(HttpRequest *request, const struct peer *peer);
     /**
      * returts the pinned peer if exists, NULL otherwise
      */
@@ -313,7 +340,6 @@ private:
 
     // XXX: CBDATA plays with public/private and leaves the following 'private' fields all public... :(
     CBDATA_CLASS2(ConnStateData);
-    bool transparent_;
     bool closing_;
 
     bool switchedToHttps_;

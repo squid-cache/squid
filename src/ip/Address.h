@@ -45,7 +45,7 @@
 #if HAVE_NETINET_IP_H
 #include <netinet/ip.h>
 #endif
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 #include <ws2tcpip.h>
 #endif
 #if HAVE_NETDB_H
@@ -75,7 +75,7 @@ class Address
 public:
     /** @name Constructors and Destructor */
     /*@{*/
-    Address();
+    Address() { SetEmpty(); }
     Address(const Address &);
 
     /**
@@ -94,8 +94,7 @@ public:
     Address(const struct hostent &);
     Address(const struct addrinfo &);
     Address(const char*);
-    /// Default destructor.
-    ~Address();
+    ~Address() {}
     /*@}*/
 
     /** @name Assignment Operators */
@@ -124,16 +123,14 @@ public:
     /* methods */
 
     /** Test whether content can be used as an IPv4 address
-     \retval true  if content was received as an IPv4 address
      \retval true  if content was received as an IPv4-Mapped address
      \retval false if content was received as a non-mapped IPv6 native address.
      */
     bool IsIPv4() const;
 
     /** Test whether content can be used as an IPv6 address.
-     \retval true  if --enable-ipv6 has been compiled.
-     \retval false if --disable-ipv6 has been compiled.
-     \retval false if --with-ipv6-split-stack has been compiled AND content is IPv4-mapped.
+     \retval true  if content is a non IPv4-mapped address.
+     \retval false if content is IPv4-mapped.
      */
     bool IsIPv6() const;
 

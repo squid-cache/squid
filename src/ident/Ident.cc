@@ -37,6 +37,9 @@
 #if USE_IDENT
 
 #include "comm.h"
+#include "comm/Connection.h"
+#include "comm/ConnOpener.h"
+#include "CommCalls.h"
 #include "comm/Write.h"
 #include "ident/Config.h"
 #include "ident/Ident.h"
@@ -47,6 +50,7 @@ namespace Ident
 
 #define IDENT_PORT 113
 #define IDENT_KEY_SZ 50
+#define IDENT_BUFSIZE 4096
 
 typedef struct _IdentClient {
     IDCB *callback;
@@ -57,18 +61,15 @@ typedef struct _IdentClient {
 
 typedef struct _IdentStateData {
     hash_link hash;		/* must be first */
-    int fd;			/* IDENT fd */
-
-    Ip::Address me;
-    Ip::Address my_peer;
+    Comm::ConnectionPointer conn;
     IdentClient *clients;
-    char buf[4096];
+    char buf[IDENT_BUFSIZE];
 } IdentStateData;
 
-// TODO: make these all a series of Async jobs. They are self-contained callbacks now.
+// TODO: make these all a series of Async job calls. They are self-contained callbacks now.
 static IOCB ReadReply;
 static PF Close;
-static PF Timeout;
+static CTCB Timeout;
 static CNCB ConnectDone;
 static hash_table *ident_hash = NULL;
 static void ClientAdd(IdentStateData * state, IDCB * callback, void *callback_data);
@@ -104,36 +105,37 @@ Ident::Close(int fdnotused, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
     identCallback(state, NULL);
-    comm_close(state->fd);
+    state->conn->close();
     hash_remove_link(ident_hash, (hash_link *) state);
     xfree(state->hash.key);
     cbdataFree(state);
 }
 
 void
-Ident::Timeout(int fd, void *data)
+Ident::Timeout(const CommTimeoutCbParams &io)
 {
-    IdentStateData *state = (IdentStateData *)data;
-    debugs(30, 3, "identTimeout: FD " << fd << ", " << state->my_peer);
-
-    comm_close(fd);
+    debugs(30, 3, HERE << io.conn);
+    io.conn->close();
 }
 
 void
-Ident::ConnectDone(int fd, const DnsLookupDetails &, comm_err_t status, int xerrno, void *data)
+Ident::ConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
-    IdentClient *c;
 
     if (status != COMM_OK) {
-        /* Failed to connect */
-        comm_close(fd);
+        if (status == COMM_TIMEOUT) {
+            debugs(30, 3, "IDENT connection timeout to " << state->conn->remote);
+        }
         return;
     }
+
+    assert(conn != NULL && conn == state->conn);
 
     /*
      * see if any of our clients still care
      */
+    IdentClient *c;
     for (c = state->clients; c; c = c->next) {
         if (cbdataReferenceValid(c->callback_data))
             break;
@@ -141,33 +143,39 @@ Ident::ConnectDone(int fd, const DnsLookupDetails &, comm_err_t status, int xerr
 
     if (c == NULL) {
         /* no clients care */
-        comm_close(fd);
+        conn->close();
         return;
     }
+
+    comm_add_close_handler(conn->fd, Ident::Close, state);
 
     MemBuf mb;
     mb.init();
     mb.Printf("%d, %d\r\n",
-              state->my_peer.GetPort(),
-              state->me.GetPort());
-
+              conn->remote.GetPort(),
+              conn->local.GetPort());
     AsyncCall::Pointer nil;
-    Comm::Write(fd, &mb, nil);
-    comm_read(fd, state->buf, BUFSIZ, Ident::ReadReply, state);
-    commSetTimeout(fd, Ident::TheConfig.timeout, Ident::Timeout, state);
+    Comm::Write(conn, &mb, nil);
+    AsyncCall::Pointer readCall = commCbCall(5,4, "Ident::ReadReply",
+                                  CommIoCbPtrFun(Ident::ReadReply, state));
+    comm_read(conn, state->buf, IDENT_BUFSIZE, readCall);
+    AsyncCall::Pointer timeoutCall = commCbCall(5,4, "Ident::Timeout",
+                                     CommTimeoutCbPtrFun(Ident::Timeout, state));
+    commSetConnTimeout(conn, Ident::TheConfig.timeout, timeoutCall);
 }
 
 void
-Ident::ReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+Ident::ReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
     char *ident = NULL;
     char *t = NULL;
 
-    assert (buf == state->buf);
+    assert(buf == state->buf);
+    assert(conn->fd == state->conn->fd);
 
     if (flag != COMM_OK || len <= 0) {
-        comm_close(fd);
+        state->conn->close();
         return;
     }
 
@@ -184,7 +192,7 @@ Ident::ReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
     if ((t = strchr(buf, '\n')))
         *t = '\0';
 
-    debugs(30, 5, "identReadReply: FD " << fd << ": Read '" << buf << "'");
+    debugs(30, 5, HERE << conn << ": Read '" << buf << "'");
 
     if (strstr(buf, "USERID")) {
         if ((ident = strrchr(buf, ':'))) {
@@ -193,7 +201,7 @@ Ident::ReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         }
     }
 
-    comm_close(fd);
+    state->conn->close();
 }
 
 void
@@ -216,17 +224,15 @@ CBDATA_TYPE(IdentStateData);
  * start a TCP connection to the peer host on port 113
  */
 void
-Ident::Start(Ip::Address &me, Ip::Address &my_peer, IDCB * callback, void *data)
+Ident::Start(const Comm::ConnectionPointer &conn, IDCB * callback, void *data)
 {
     IdentStateData *state;
-    int fd;
     char key1[IDENT_KEY_SZ];
     char key2[IDENT_KEY_SZ];
     char key[IDENT_KEY_SZ];
-    char ntoabuf[MAX_IPSTRLEN];
 
-    me.ToURL(key1, IDENT_KEY_SZ);
-    my_peer.ToURL(key2, IDENT_KEY_SZ);
+    conn->local.ToURL(key1, IDENT_KEY_SZ);
+    conn->remote.ToURL(key2, IDENT_KEY_SZ);
     snprintf(key, IDENT_KEY_SZ, "%s,%s", key1, key2);
 
     if (!ident_hash) {
@@ -237,33 +243,20 @@ Ident::Start(Ip::Address &me, Ip::Address &my_peer, IDCB * callback, void *data)
         return;
     }
 
-    Ip::Address addr = me;
-    addr.SetPort(0); // NP: use random port for secure outbound to IDENT_PORT
-
-    fd = comm_open_listener(SOCK_STREAM,
-                            IPPROTO_TCP,
-                            addr,
-                            COMM_NONBLOCKING,
-                            "ident");
-
-    if (fd == COMM_ERROR) {
-        /* Failed to get a local socket */
-        callback(NULL, data);
-        return;
-    }
-
     CBDATA_INIT_TYPE(IdentStateData);
     state = cbdataAlloc(IdentStateData);
     state->hash.key = xstrdup(key);
-    state->fd = fd;
-    state->me = me;
-    state->my_peer = my_peer;
+
+    // copy the conn details. We dont want the original FD to be re-used by IDENT.
+    state->conn = conn->copyDetails();
+    // NP: use random port for secure outbound to IDENT_PORT
+    state->conn->local.SetPort(0);
+
     ClientAdd(state, callback, data);
     hash_join(ident_hash, &state->hash);
-    comm_add_close_handler(fd, Ident::Close, state);
-    commSetTimeout(fd, Ident::TheConfig.timeout, Ident::Timeout, state);
-    state->my_peer.NtoA(ntoabuf,MAX_IPSTRLEN);
-    commConnectStart(fd, ntoabuf, IDENT_PORT, Ident::ConnectDone, state);
+
+    AsyncCall::Pointer call = commCbCall(30,3, "Ident::ConnectDone", CommConnectCbPtrFun(Ident::ConnectDone, state));
+    AsyncJob::Start(new Comm::ConnOpener(state->conn, call, Ident::TheConfig.timeout));
 }
 
 void

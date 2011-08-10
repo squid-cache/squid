@@ -44,8 +44,7 @@ percent(int a, int b)
 void
 death(int sig)
 {
-    fprintf(stderr, "Not implemented");
-    exit(1);
+    fatal("tools.cc required");
 }
 
 void*
@@ -81,4 +80,16 @@ UsingSmp()
 {
     fprintf(stderr, "Not implemented");
     return false;
+}
+
+void
+logsFlush(void)
+{
+    fatal("tools.cc required");
+}
+
+void
+no_suid(void)
+{
+    fatal("tools.cc required");
 }

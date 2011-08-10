@@ -34,13 +34,21 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#if USE_ADAPTATION
+#include "adaptation/Config.h"
+#endif
+#if USE_ECAP
+#include "adaptation/ecap/Config.h"
+#endif
 #if ICAP_CLIENT
+#include "adaptation/icap/Config.h"
 #include "adaptation/icap/icap_log.h"
 #endif
 #if USE_AUTH
 #include "auth/Gadgets.h"
 #endif
 #include "base/RunnersRegistry.h"
+#include "base/Subscription.h"
 #include "base/TextException.h"
 #if USE_DELAY_POOLS
 #include "ClientDelayConfig.h"
@@ -55,6 +63,8 @@
 #include "event.h"
 #include "EventLoop.h"
 #include "ExternalACL.h"
+#include "fs/Module.h"
+#include "PeerSelectState.h"
 #include "Store.h"
 #include "ICP.h"
 #include "ident/Ident.h"
@@ -121,7 +131,7 @@ void WINAPI WIN32_svcHandler(DWORD);
 
 #endif
 
-#ifndef SQUID_BUILD_INFO
+#if !defined(SQUID_BUILD_INFO)
 #define SQUID_BUILD_INFO ""
 #endif
 
@@ -159,7 +169,7 @@ static void SquidShutdown(void);
 static void mainSetCwd(void);
 static int checkRunningPid(void);
 
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
 static const char *squid_start_script = "squid_start";
 #endif
 
@@ -582,7 +592,7 @@ rotate_logs(int sig)
 {
     do_rotate = 1;
     RotateSignal = sig;
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
 #if !HAVE_SIGACTION
 
     signal(sig, rotate_logs);
@@ -596,7 +606,7 @@ reconfigure(int sig)
 {
     do_reconfigure = 1;
     ReconfigureSignal = sig;
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
 #if !HAVE_SIGACTION
 
     signal(sig, reconfigure);
@@ -625,7 +635,7 @@ shut_down(int sig)
                    " pid " << ppid << ": " << xstrerror());
     }
 
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
 #if KILL_PARENT_OPT
 
     if (!IamMasterProcess() && ppid > 1) {
@@ -917,7 +927,7 @@ setEffectiveUser(void)
 {
     keepCapabilities();
     leave_suid();		/* Run as non privilegied user */
-#ifdef _SQUID_OS2_
+#if _SQUID_OS2_
 
     return;
 #endif
@@ -1004,7 +1014,7 @@ mainInitialize(void)
     setSystemLimits();
     debugs(1, 1, "With " << Squid_MaxFD << " file descriptors available");
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 
     debugs(1, 1, "With " << _getmaxstdio() << " CRT stdio descriptors available");
 
@@ -1543,7 +1553,7 @@ sendSignal(void)
             WIN32_sendSignal(opt_send_signal);
             exit(0);
         } else
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
         {
             fprintf(stderr, "%s: ERROR: Could not send ", APP_SHORTNAME);
             fprintf(stderr, "signal to Squid Service:\n");
@@ -1578,7 +1588,7 @@ sendSignal(void)
     exit(0);
 }
 
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
 /*
  * This function is run when Squid is in daemon mode, just
  * before the parent forks and starts up the child process.
@@ -1608,7 +1618,7 @@ mainStartScript(const char *prog)
         _exit(-1);
     } else {
         do {
-#ifdef _SQUID_NEXT_
+#if _SQUID_NEXT_
             union wait status;
             rpid = wait4(cpid, &status, 0, NULL);
 #else
@@ -1651,9 +1661,9 @@ checkRunningPid(void)
 static void
 watch_child(char *argv[])
 {
-#ifndef _SQUID_MSWIN_
+#if !_SQUID_MSWIN_
     char *prog;
-#ifdef _SQUID_NEXT_
+#if _SQUID_NEXT_
 
     union wait status;
 #else
@@ -1752,7 +1762,7 @@ watch_child(char *argv[])
 
         squid_signal(SIGINT, SIG_IGN, SA_RESTART);
 
-#ifdef _SQUID_NEXT_
+#if _SQUID_NEXT_
 
         pid = wait3(&status, 0, NULL);
 
@@ -1788,7 +1798,7 @@ watch_child(char *argv[])
             } else {
                 syslog(LOG_NOTICE, "Squid Parent: unknown child process %d exited", pid);
             }
-#ifdef _SQUID_NEXT_
+#if _SQUID_NEXT_
         } while ((pid = wait3(&status, WNOHANG, NULL)) > 0);
 #else
         }

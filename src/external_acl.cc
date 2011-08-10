@@ -59,6 +59,7 @@
 #endif
 #include "ip/tools.h"
 #include "client_side.h"
+#include "comm/Connection.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "helper.h"
@@ -800,12 +801,9 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
 
             if (acl->def->theHelper->stats.queue_size <= (int)acl->def->theHelper->childs.n_active) {
                 debugs(82, 2, "aclMatchExternal: \"" << key << "\": queueing a call.");
-                ch->changeState (ExternalACLLookup::Instance());
-
-                if (entry == NULL) {
-                    debugs(82, 2, "aclMatchExternal: \"" << key << "\": return -1.");
-                    return -1;
-                }
+                ch->changeState(ExternalACLLookup::Instance());
+                debugs(82, 2, "aclMatchExternal: \"" << key << "\": return -1.");
+                return -1; // to get here we have to have an expired cache entry. MUST not use.
             } else {
                 if (!entry) {
                     debugs(82, 1, "aclMatchExternal: '" << acl->def->name <<
@@ -934,12 +932,14 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
 #if USE_SQUID_EUI
         case _external_acl_format::EXT_ACL_SRCEUI48:
-            if (request->client_eui48.encode(buf, sizeof(buf)))
+            if (request->clientConnectionManager.valid() && request->clientConnectionManager->clientConnection != NULL &&
+                    request->clientConnectionManager->clientConnection->remoteEui48.encode(buf, sizeof(buf)))
                 str = buf;
             break;
 
         case _external_acl_format::EXT_ACL_SRCEUI64:
-            if (request->client_eui64.encode(buf, sizeof(buf)))
+            if (request->clientConnectionManager.valid() && request->clientConnectionManager->clientConnection != NULL &&
+                    request->clientConnectionManager->clientConnection->remoteEui64.encode(buf, sizeof(buf)))
                 str = buf;
             break;
 #endif
@@ -1029,8 +1029,8 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
         case _external_acl_format::EXT_ACL_USER_CERT_RAW:
 
-            if (ch->conn() != NULL) {
-                SSL *ssl = fd_table[ch->conn()->fd].ssl;
+            if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
+                SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
 
                 if (ssl)
                     str = sslGetUserCertificatePEM(ssl);
@@ -1040,8 +1040,8 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
         case _external_acl_format::EXT_ACL_USER_CERTCHAIN_RAW:
 
-            if (ch->conn() != NULL) {
-                SSL *ssl = fd_table[ch->conn()->fd].ssl;
+            if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
+                SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
 
                 if (ssl)
                     str = sslGetUserCertificateChainPEM(ssl);
@@ -1051,8 +1051,8 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
         case _external_acl_format::EXT_ACL_USER_CERT:
 
-            if (ch->conn() != NULL) {
-                SSL *ssl = fd_table[ch->conn()->fd].ssl;
+            if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
+                SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
 
                 if (ssl)
                     str = sslGetUserAttribute(ssl, format->header);
@@ -1062,8 +1062,8 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
         case _external_acl_format::EXT_ACL_CA_CERT:
 
-            if (ch->conn() != NULL) {
-                SSL *ssl = fd_table[ch->conn()->fd].ssl;
+            if (ch->conn() != NULL && Comm::IsConnOpen(ch->conn()->clientConnection)) {
+                SSL *ssl = fd_table[ch->conn()->clientConnection->fd].ssl;
 
                 if (ssl)
                     str = sslGetCAAttribute(ssl, format->header);
@@ -1562,7 +1562,7 @@ ExternalACLLookup::LookupDone(void *data, void *result)
     checklist->extacl_entry = cbdataReference((external_acl_entry *)result);
     checklist->asyncInProgress(false);
     checklist->changeState (ACLChecklist::NullState::Instance());
-    checklist->check();
+    checklist->matchNonBlocking();
 }
 
 /* This registers "external" in the registry. To do dynamic definitions

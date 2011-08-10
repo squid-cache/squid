@@ -10,6 +10,7 @@
 #include "adaptation/icap/OptXact.h"
 #include "adaptation/icap/ServiceRep.h"
 #include "base/TextException.h"
+#include "comm/Connection.h"
 #include "ConfigParser.h"
 #include "ip/tools.h"
 #include "HttpReply.h"
@@ -24,17 +25,19 @@ Adaptation::Icap::ServiceRep::ServiceRep(const ServiceConfigPointer &svcCfg):
         theBusyConns(0),
         theAllWaiters(0),
         connOverloadReported(false),
-        theIdleConns("ICAP Service"),
+        theIdleConns(NULL),
         isSuspended(0), notifying(false),
         updateScheduled(false),
         wasAnnouncedUp(true), // do not announce an "up" service at startup
         isDetached(false)
 {
     setMaxConnections();
+    theIdleConns = new IdleConnList("ICAP Service", NULL);
 }
 
 Adaptation::Icap::ServiceRep::~ServiceRep()
 {
+    delete theIdleConns;
     Must(!theOptionsFetcher);
     delete theOptions;
 }
@@ -81,50 +84,54 @@ void Adaptation::Icap::ServiceRep::noteFailure()
 }
 
 // returns a persistent or brand new connection; negative int on failures
-int Adaptation::Icap::ServiceRep::getConnection(bool retriableXact, bool &reused)
+Comm::ConnectionPointer
+Adaptation::Icap::ServiceRep::getConnection(bool retriableXact, bool &reused)
 {
-    Ip::Address client_addr;
+    Comm::ConnectionPointer connection;
 
-    int connection = theIdleConns.pop(cfg().host.termedBuf(), cfg().port, NULL, client_addr,
-                                      retriableXact);
+    /* 2011-06-17: rousskov:
+     *  There are two things that happen at the same time in pop(). Both are important.
+     *    1) Ensure that we can use a pconn for this transaction.
+     *    2) Ensure that the number of idle pconns does not grow without bounds.
+     *
+     * Both happen in the beginning of the transaction. Both are dictated by real-world problems.
+     * retriable means you can repeat the request if you suspect the first try failed due to a pconn race.
+     * HTTP and ICAP rules prohibit the use of pconns for non-retriable requests.
+     *
+     * If there are zero idle connections, (2) is irrelevant. (2) is only relevant when there are many
+     * idle connections and we should not open more connections without closing some idle ones,
+     * or instead of just opening a new connection and leaving idle connections as is.
+     * In other words, (2) tells us to close one FD for each new one we open due to retriable.
+     */
+    if (retriableXact)
+        connection = theIdleConns->pop();
+    else
+        theIdleConns->closeN(1);
 
-    reused = connection >= 0; // reused a persistent connection
-
-    if (!reused) { // need a new connection
-        Ip::Address outgoing;  // default: IP6_ANY_ADDR
-        if (!Ip::EnableIpv6)
-            outgoing.SetIPv4();
-        else if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK &&  !cfg().ipv6) {
-            /* split-stack for now requires default IPv4-only socket */
-            outgoing.SetIPv4();
-        }
-        connection = comm_open(SOCK_STREAM, 0, outgoing, COMM_NONBLOCKING, cfg().uri.termedBuf());
-    }
-
-    if (connection >= 0)
-        ++theBusyConns;
-
+    reused = Comm::IsConnOpen(connection);
+    ++theBusyConns;
+    debugs(93,3, HERE << "got connection: " << connection);
     return connection;
 }
 
 // pools connection if it is reusable or closes it
-void Adaptation::Icap::ServiceRep::putConnection(int fd, bool isReusable, bool sendReset, const char *comment)
+void Adaptation::Icap::ServiceRep::putConnection(const Comm::ConnectionPointer &conn, bool isReusable, bool sendReset, const char *comment)
 {
-    Must(fd >= 0);
+    Must(Comm::IsConnOpen(conn));
     // do not pool an idle connection if we owe connections
     if (isReusable && excessConnections() == 0) {
         debugs(93, 3, HERE << "pushing pconn" << comment);
-        commSetTimeout(fd, -1, NULL, NULL);
-        Ip::Address anyAddr;
-        theIdleConns.push(fd, cfg().host.termedBuf(), cfg().port, NULL, anyAddr);
+        commUnsetConnTimeout(conn);
+        theIdleConns->push(conn);
     } else {
         debugs(93, 3, HERE << (sendReset ? "RST" : "FIN") << "-closing " <<
                comment);
-        // comm_close will clear timeout
+        // comm_close called from Connection::close will clear timeout
+        // TODO: add "bool sendReset = false" to Connection::close()?
         if (sendReset)
-            comm_reset_close(fd);
+            comm_reset_close(conn);
         else
-            comm_close(fd);
+            conn->close();
     }
 
     Must(theBusyConns > 0);
@@ -134,10 +141,16 @@ void Adaptation::Icap::ServiceRep::putConnection(int fd, bool isReusable, bool s
 }
 
 // a wrapper to avoid exposing theIdleConns
-void Adaptation::Icap::ServiceRep::noteConnectionUse(int fd)
+void Adaptation::Icap::ServiceRep::noteConnectionUse(const Comm::ConnectionPointer &conn)
 {
-    Must(fd >= 0);
-    fd_table[fd].noteUse(&theIdleConns);
+    Must(Comm::IsConnOpen(conn));
+    fd_table[conn->fd].noteUse(NULL); // pconn re-use but not via PconnPool API
+}
+
+void Adaptation::Icap::ServiceRep::noteConnectionFailed(const char *comment)
+{
+    debugs(93, 3, HERE << "Connection failed: " << comment);
+    --theBusyConns;
 }
 
 void Adaptation::Icap::ServiceRep::setMaxConnections()
@@ -167,8 +180,8 @@ int Adaptation::Icap::ServiceRep::availableConnections() const
     if (!available && !connOverloadReported) {
         debugs(93, DBG_IMPORTANT, "WARNING: ICAP Max-Connections limit " <<
                "exceeded for service " << cfg().uri << ". Open connections now: " <<
-               theBusyConns + theIdleConns.count() << ", including " <<
-               theIdleConns.count() << " idle persistent connections.");
+               theBusyConns + theIdleConns->count() << ", including " <<
+               theIdleConns->count() << " idle persistent connections.");
         connOverloadReported = true;
     }
 
@@ -187,7 +200,7 @@ int Adaptation::Icap::ServiceRep::excessConnections() const
     // Waiters affect the number of needed connections but a needed
     // connection may still be excessive from Max-Connections p.o.v.
     // so we should not account for waiting transaction needs here.
-    const int debt =  theBusyConns + theIdleConns.count() - theMaxConnections;
+    const int debt =  theBusyConns + theIdleConns->count() - theMaxConnections;
     if (debt > 0)
         return debt;
     else
@@ -374,7 +387,7 @@ void Adaptation::Icap::ServiceRep::callWhenAvailable(AsyncCall::Pointer &cb, boo
     debugs(93,8, "ICAPServiceRep::callWhenAvailable");
     Must(cb!=NULL);
     Must(up());
-    Must(!theIdleConns.count()); // or we should not be waiting
+    Must(!theIdleConns->count()); // or we should not be waiting
 
     Client i;
     i.service = Pointer(this);
@@ -552,14 +565,14 @@ void Adaptation::Icap::ServiceRep::handleNewOptions(Adaptation::Icap::Options *n
 
     scheduleUpdate(optionsFetchTime());
 
+    // XXX: this whole feature bases on the false assumption a service only has one IP
     setMaxConnections();
     const int excess = excessConnections();
     // if we owe connections and have idle pconns, close the latter
-    if (excess && theIdleConns.count() > 0) {
-        const int n = min(excess, theIdleConns.count());
+    if (excess && theIdleConns->count() > 0) {
+        const int n = min(excess, theIdleConns->count());
         debugs(93,5, HERE << "closing " << n << " pconns to relief debt");
-        Ip::Address anyAddr;
-        theIdleConns.closeN(n, cfg().host.termedBuf(), cfg().port, NULL, anyAddr);
+        theIdleConns->closeN(n);
     }
 
     scheduleNotification();

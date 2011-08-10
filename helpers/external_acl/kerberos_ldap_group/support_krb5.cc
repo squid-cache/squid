@@ -25,7 +25,7 @@
 #include "config.h"
 #include "util.h"
 
-#ifdef HAVE_LDAP
+#if defined(HAVE_LDAP) && defined(HAVE_KRB5)
 
 #include "support.h"
 

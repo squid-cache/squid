@@ -6,6 +6,7 @@
  */
 
 #include "config.h"
+#include "comm/Connection.h"
 #include "HttpReply.h"
 #include "ipc/Port.h"
 #include "mgr/ActionCreator.h"
@@ -69,7 +70,7 @@ Mgr::Action::respond(const Request& request)
     // Assume most kid classes are fully aggregatable (i.e., they do not dump
     // local info at all). Do not import the remote HTTP fd into our Comm
     // space; collect and send an IPC msg with collected info to Coordinator.
-    ::close(request.fd);
+    request.conn->close();
     collect();
     sendResponse(request.requestId);
 }

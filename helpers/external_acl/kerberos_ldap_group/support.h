@@ -28,24 +28,6 @@
 #include <string.h>
 #endif
 
-#if HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif HAVE_GSSAPI_H
-#include <gssapi.h>
-#endif /* HAVE_GSSAPI_GSSAPI_H/HAVE_GSSAPI_H */
-
-#if !HAVE_HEIMDAL_KERBEROS
-#if HAVE_GSSAPI_GSSAPI_KRB5_H
-#include <gssapi/gssapi_krb5.h>
-#endif
-#if HAVE_GSSAPI_GSSAPI_GENERIC_H
-#include <gssapi/gssapi_generic.h>
-#endif
-#if HAVE_GSSAPI_GSSAPI_EXT_H
-#include <gssapi/gssapi_ext.h>
-#endif
-#endif
-
 #if HAVE_KRB5_H
 #if HAVE_BROKEN_SOLARIS_KRB5_H
 #warn "Warning! You have a broken Solaris <krb5.h> system header"
@@ -70,10 +52,6 @@ extern "C" {
 #elif HAVE_HEIMDAL_KERBEROS
 #define error_message(code) krb5_get_err_text(kparam.context,code)
 #endif /* HAVE_COM_ERR_H */
-
-#ifndef gss_nt_service_name
-#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
-#endif
 
 #define LDAP_DEPRECATED 1
 #ifdef HAVE_LDAP_REBIND_FUNCTION
@@ -180,8 +158,10 @@ int create_gd(struct main_args *margs);
 int create_nd(struct main_args *margs);
 int create_ls(struct main_args *margs);
 
+#ifdef HAVE_KRB5
 int krb5_create_cache(struct main_args *margs, char *domain);
 void krb5_cleanup(void);
+#endif
 
 int get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nhosts, char *domain);
 int get_hostname_list(struct main_args *margs, struct hstruct **hlist, int nhosts, char *name);

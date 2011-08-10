@@ -56,6 +56,7 @@ public:
     String kind;
     Id id;
     Store services;
+    Store removedServices;///< the disabled services in the case ecap or icap is disabled
 
     Method method; /// based on the first added service
     VectPoint point; /// based on the first added service

@@ -1,6 +1,8 @@
 /*
  * $Id$
  *
+ * DEBUG: section 28    Access Control
+ * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -28,45 +30,30 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLMYPORT_H
-#define SQUID_ACLMYPORT_H
+#include "squid.h"
+#include "acl/LocalIp.h"
+#include "acl/FilledChecklist.h"
 
-#include "acl/Strategy.h"
-#include "acl/Strategised.h"
-
-/// \ingroup ACLAPI
-class ACLMyPortStrategy : public ACLStrategy<int>
+char const *
+ACLLocalIP::typeString() const
 {
+    return "localip";
+}
 
-public:
-    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
-    static ACLMyPortStrategy *Instance();
-    /**
-     * Not implemented to prevent copies of the instance.
-     \par
-     * Not private to prevent brain dead g+++ warnings about
-     * private constructors with no friends
-     */
-    ACLMyPortStrategy(ACLMyPortStrategy const &);
-
-private:
-    static ACLMyPortStrategy Instance_;
-    ACLMyPortStrategy() {}
-
-    ACLMyPortStrategy&operator=(ACLMyPortStrategy const &);
-};
-
-/// \ingroup ACLAPI
-class ACLMyPort
+int
+ACLLocalIP::match(ACLChecklist *checklist)
 {
+    return ACLIP::match (Filled(checklist)->my_addr);
+}
 
-private:
-    static ACL::Prototype RegistryProtoype;
-    static ACLStrategised<int> RegistryEntry_;
-};
 
-#endif /* SQUID_ACLMYPORT_H */
+
+
+ACL *
+ACLLocalIP::clone() const
+{
+    return new ACLLocalIP(*this);
+}

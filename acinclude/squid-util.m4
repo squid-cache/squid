@@ -221,3 +221,31 @@ AC_DEFUN([SQUID_EMBED_BUILD_INFO],[
        [Squid extended build info field for "squid -v" output])
   fi
 ])
+
+dnl like AC_SEARCH_LIBS, with an extra argument which is
+dnl a prefix to the test program
+AC_DEFUN([SQUID_SEARCH_LIBS],
+[AS_VAR_PUSHDEF([ac_Search], [ac_cv_search_$1])dnl
+AC_CACHE_CHECK([for library containing $1], [ac_Search],
+[ac_func_search_save_LIBS=$LIBS
+AC_LANG_CONFTEST([AC_LANG_PROGRAM([$6], [$1()])])
+for ac_lib in '' $2; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib $5 $ac_func_search_save_LIBS"
+  fi
+  AC_LINK_IFELSE([], [AS_VAR_SET([ac_Search], [$ac_res])])
+  AS_VAR_SET_IF([ac_Search], [break])
+done
+AS_VAR_SET_IF([ac_Search], , [AS_VAR_SET([ac_Search], [no])])
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS])
+ac_res=AS_VAR_GET([ac_Search])
+AS_IF([test "$ac_res" != no],
+  [test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+  $3],
+      [$4])
+AS_VAR_POPDEF([ac_Search])dnl
+])

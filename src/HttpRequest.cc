@@ -35,11 +35,13 @@
  */
 
 #include "squid.h"
+#include "DnsLookupDetails.h"
 #include "HttpRequest.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
 #include "HttpHeaderRange.h"
+#include "log/Config.h"
 #include "MemBuf.h"
 #include "Store.h"
 #if ICAP_CLIENT
@@ -95,10 +97,6 @@ HttpRequest::init()
     imslen = 0;
     lastmod = -1;
     client_addr.SetEmpty();
-#if USE_SQUID_EUI
-    client_eui48.clear();
-    client_eui64.clear();
-#endif
     my_addr.SetEmpty();
     body_pipe = NULL;
     // hier
@@ -240,10 +238,6 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
 #if FOLLOW_X_FORWARDED_FOR
     indirect_client_addr = aReq->indirect_client_addr;
 #endif
-#if USE_SQUID_EUI
-    client_eui48 = aReq->client_eui48;
-    client_eui64 = aReq->client_eui64;
-#endif
     my_addr = aReq->my_addr;
 
     dnsWait = aReq->dnsWait;
@@ -264,6 +258,8 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
 #if USE_AUTH
     auth_user_request = aReq->auth_user_request;
 #endif
+
+    // main property is which connection the request was received on (if any)
     clientConnectionManager = aReq->clientConnectionManager;
     return true;
 }
@@ -443,8 +439,7 @@ Adaptation::Icap::History::Pointer
 HttpRequest::icapHistory() const
 {
     if (!icapHistory_) {
-        if ((LogfileStatus == LOG_ENABLE && alLogformatHasIcapToken) ||
-                IcapLogfileStatus == LOG_ENABLE) {
+        if (Log::TheConfig.hasIcapToken || IcapLogfileStatus == LOG_ENABLE) {
             icapHistory_ = new Adaptation::Icap::History();
             debugs(93,4, HERE << "made " << icapHistory_ << " for " << this);
         }
@@ -469,9 +464,7 @@ HttpRequest::adaptHistory(bool createIfNone) const
 Adaptation::History::Pointer
 HttpRequest::adaptLogHistory() const
 {
-    const bool loggingNeedsHistory = (LogfileStatus == LOG_ENABLE) &&
-                                     alLogformatHasAdaptToken; // TODO: make global to remove this method?
-    return HttpRequest::adaptHistory(loggingNeedsHistory);
+    return HttpRequest::adaptHistory(Log::TheConfig.hasAdaptToken);
 }
 
 void
@@ -671,7 +664,7 @@ HttpRequest::getRangeOffsetLimit()
 
     for (acl_size_t *l = Config.rangeOffsetLimit; l; l = l -> next) {
         /* if there is no ACL list or if the ACLs listed match use this limit value */
-        if (!l->aclList || ch.matchAclListFast(l->aclList)) {
+        if (!l->aclList || ch.fastCheck(l->aclList) == ACCESS_ALLOWED) {
             debugs(58, 4, HERE << "rangeOffsetLimit=" << rangeOffsetLimit);
             rangeOffsetLimit = l->size; // may be -1
             break;

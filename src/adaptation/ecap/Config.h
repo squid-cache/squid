@@ -38,7 +38,7 @@ public:
     Config();
     ~Config();
 
-    virtual void finalize();
+    virtual bool finalize();
 
 protected:
     virtual Adaptation::ServiceConfig *newServiceConfig() const;

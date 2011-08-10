@@ -158,10 +158,6 @@ static int re_match_2(struct re_pattern_buffer * buffer, const char *string1,
 #define ISUPPER(c) (isascii ((unsigned char)c) && isupper ((unsigned char)c))
 #define ISXDIGIT(c) (isascii ((unsigned char)c) && isxdigit ((unsigned char)c))
 
-#ifndef NULL
-#define NULL 0
-#endif
-
 /* We remove any previous definition of `SIGN_EXTEND_CHAR',
  * since ours (we hope) works properly with all combinations of
  * machines, compilers, `char' and `unsigned char' argument types.
@@ -3730,6 +3726,9 @@ on_failure:
             POP_FAILURE_POINT(sdummy, pdummy,
                               dummy_low_reg, dummy_high_reg,
                               reg_dummy, reg_dummy, reg_info_dummy);
+            /* avoid GCC 4.6 set but unused variables warning. Does not matter here. */
+            if (pdummy || sdummy)
+                (void)0;
         }
         /* Note fall through.  */
 
