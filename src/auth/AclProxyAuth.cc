@@ -181,7 +181,7 @@ ProxyAuthNeeded::checkForAsync(ACLChecklist *checklist) const
      * The request is denied.
      */
     debugs(28, 6, "ACLChecklist::checkForAsync: requiring Proxy Auth header.");
-    checklist->currentAnswer(ACCESS_REQ_PROXY_AUTH);
+    checklist->currentAnswer(ACCESS_AUTH_REQUIRED);
     checklist->changeState (ACLChecklist::NullState::Instance());
     checklist->markFinished();
 }

@@ -105,10 +105,16 @@ public:
 
 /// \ingroup ACLAPI
 typedef enum {
+    // Authorization ACL result states
     ACCESS_DENIED,
     ACCESS_ALLOWED,
     ACCESS_DUNNO,
-    ACCESS_REQ_PROXY_AUTH
+
+    // Authentication ACL result states
+    ACCESS_AUTH_OK = ACCESS_ALLOWED,
+    ACCESS_AUTH_REQUIRED,    // Missing Credentials
+    ACCESS_AUTH_EXPIRED_OK,  // Expired now. Were Okay.
+    ACCESS_AUTH_EXPIRED_BAD  // Expired now. Were Failed.
 } allow_t;
 
 /// \ingroup ACLAPI
