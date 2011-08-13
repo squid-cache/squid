@@ -794,10 +794,21 @@ fi
 dnl checks the winsock library to use (ws2_32 or wsock32)
 dnl may set ac_cv_func_select as a side effect
 AC_DEFUN([SQUID_CHECK_WINSOCK_LIB],[
+  AC_CHECK_HEADERS(winsock2.h winsock.h)
   SQUID_STATE_SAVE(winsock)
-  AC_SEARCH_LIBS([closesocket],[ws2_32 wsock32])
+  SQUID_SEARCH_LIBS([squid_getprotobynumber],[ws2_32 wsock32],,,,[
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#elif HAVE_WINSOCK_H
+#include <winsock.h>
+#endif
+/* ugly hack. */
+void squid_getprotobynumber(void) {
+    getprotobynumber(1);
+}
+  ])
   AC_MSG_CHECKING([for winsock library])
-  case "$ac_cv_search_closesocket" in
+  case "$ac_cv_search_squid_getprotobynumber" in
     "no")
       AC_MSG_RESULT([winsock library not found])
       ;;
@@ -806,14 +817,15 @@ AC_DEFUN([SQUID_CHECK_WINSOCK_LIB],[
       ;;
     "-lws2_32")
       AC_MSG_RESULT([winsock2])
+      XTRA_LIBS="-lws2_32 $XTRA_LIBS"
       ac_cv_func_select='yes'
       ;;
     "-lwsock32")
       AC_MSG_RESULT([winsock])
+      XTRA_LIBS="-lwsock32 $XTRA_LIBS"
       ac_cv_func_select='yes'
       ;;
   esac
-  AC_CHECK_HEADERS(winsock2.h winsock.h)
   SQUID_STATE_ROLLBACK(winsock)
 ])
 
@@ -860,4 +872,31 @@ AC_DEFUN([SQUID_CHECK_FUNCTIONAL_CPU_PROFILER],[
   squid_cv_cpu_profiler_works=yes],[
   squid_cv_cpu_profiler_works=no])
   )
+])
+
+dnl check whether recv takes a char* or void* as a second argument
+AC_DEFUN([SQUID_CHECK_RECV_ARG_TYPE],[
+  AC_CACHE_CHECK([whether recv takes a pointer to void or char as second argument],
+         squid_cv_recv_second_arg_type, [
+                 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <sys/types.h>
+#if HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
+#if HAVE_WINSOCK_H
+#include <winsock.h>
+#endif
+int main (int argc, char ** argv) {
+       void *buf;
+  recv(0,buf,0,0);
+}
+]])],[squid_cv_recv_second_arg_type=void],
+     [squid_cv_recv_second_arg_type=char])
+  AC_MSG_RESULT($squid_cv_recv_second_arg_type*)
+  ])
+  AC_DEFINE_UNQUOTED(RECV_ARG_TYPE,$squid_cv_recv_second_arg_type,
+    [Base type of the second argument to recv(2)])
 ])
