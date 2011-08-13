@@ -41,7 +41,7 @@ testIpAddress::testDefaults()
     /* test stored values */
     CPPUNIT_ASSERT( anIPA.IsAnyAddr() );
     CPPUNIT_ASSERT( !anIPA.IsNoAddr() );
-    CPPUNIT_ASSERT( anIPA.IsIPv4() );
+    CPPUNIT_ASSERT( !anIPA.IsIPv4() );
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
     CPPUNIT_ASSERT_EQUAL( (u_short) 0 , anIPA.GetPort() );
     CPPUNIT_ASSERT( anIPA.IsIPv6() );
@@ -297,7 +297,7 @@ testIpAddress::testSetEmpty()
     /* test stored values after empty */
     CPPUNIT_ASSERT( anIPA.IsAnyAddr() );
     CPPUNIT_ASSERT( !anIPA.IsNoAddr() );
-    CPPUNIT_ASSERT( anIPA.IsIPv4() );
+    CPPUNIT_ASSERT( !anIPA.IsIPv4() );
     CPPUNIT_ASSERT( anIPA.IsIPv6() );
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
     CPPUNIT_ASSERT_EQUAL( (u_short) 0 , anIPA.GetPort() );
