@@ -66,10 +66,10 @@
 #include "comm/Write.h"
 #include "compat/inet_pton.h"
 #include "fde.h"
+#include "format/Tokens.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
-#include "log/Tokens.h"
 #include "MemObject.h"
 #include "ProtoPort.h"
 #include "Store.h"
@@ -1314,7 +1314,7 @@ ClientHttpRequest::httpStart()
 {
     PROF_start(httpStart);
     logType = LOG_TAG_NONE;
-    debugs(85, 4, "ClientHttpRequest::httpStart: " << log_tags[logType] << " for '" << uri << "'");
+    debugs(85, 4, "ClientHttpRequest::httpStart: " << Format::log_tags[logType] << " for '" << uri << "'");
 
     /* no one should have touched this */
     assert(out.offset == 0);

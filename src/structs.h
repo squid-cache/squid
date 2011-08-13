@@ -1281,13 +1281,13 @@ struct _store_rebuild_data {
 };
 
 class Logfile;
-class logformat;
 
+#include "format/Format.h"
 #include "log/Formats.h"
 struct _customlog {
     char *filename;
     ACLList *aclList;
-    logformat *logFormat;
+    Format::Format *logFormat;
     Logfile *logfile;
     customlog *next;
     Log::Format::log_type type;

@@ -3407,6 +3407,7 @@ AC_CONFIG_FILES([\
 	src/comm/Makefile \
 	src/esi/Makefile \
 	src/eui/Makefile \
+	src/format/Makefile \
 	src/icmp/Makefile \
 	src/ident/Makefile \
 	src/ip/Makefile \

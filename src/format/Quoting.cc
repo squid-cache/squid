@@ -1,5 +1,5 @@
 #include "config.h"
-#include "log/Gadgets.h"
+#include "format/Quoting.h"
 
 static const char c2x[] =
     "000102030405060708090a0b0c0d0e0f"
@@ -70,7 +70,7 @@ username_quote(const char *header)
 #endif // DEAD
 
 char *
-Log::FormatName(const char *name)
+Format::QuoteUrlEncodeUsername(const char *name)
 {
     if (NULL == name)
         return NULL;
@@ -83,7 +83,7 @@ Log::FormatName(const char *name)
 }
 
 char *
-Log::QuoteMimeBlob(const char *header)
+Format::QuoteMimeBlob(const char *header)
 {
     int c;
     int i;

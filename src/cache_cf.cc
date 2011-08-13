@@ -60,6 +60,7 @@
 #if USE_SQUID_ESI
 #include "esi/Parser.h"
 #endif
+#include "format/Format.h"
 #include "HttpRequestMethod.h"
 #include "ident/Config.h"
 #include "ip/Intercept.h"
@@ -4071,10 +4072,8 @@ static void
 parse_access_log(customlog ** logs)
 {
     const char *filename, *logdef_name;
-    customlog *cl;
-    logformat *lf;
 
-    cl = (customlog *)xcalloc(1, sizeof(*cl));
+    customlog *cl = (customlog *)xcalloc(1, sizeof(*cl));
 
     if ((filename = strtok(NULL, w_space)) == NULL) {
         self_destruct();
@@ -4094,7 +4093,7 @@ parse_access_log(customlog ** logs)
     cl->filename = xstrdup(filename);
 
     /* look for the definition pointer corresponding to this name */
-    lf = Log::TheConfig.logformats;
+    Format::Format *lf = Log::TheConfig.logformats;
 
     while (lf != NULL) {
         debugs(3, 9, "Comparing against '" << lf->name << "'");
