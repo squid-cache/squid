@@ -292,8 +292,6 @@ compileUnoptimisedREs(relist **curlist, wordlist * wl)
         ;
 
     while (wl != NULL) {
-        int RElen;
-        RElen = strlen( wl->key );
         if (strcmp(wl->key, "-i") == 0) {
             flags |= REG_ICASE;
         } else if (strcmp(wl->key, "+i") == 0) {
