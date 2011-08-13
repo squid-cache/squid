@@ -3547,7 +3547,7 @@ parse_http_port_option(http_port_list * s, char *token)
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Accelerator mode requires its own port. It cannot be shared with other modes.");
             self_destruct();
         }
-        s->accel = 1;
+        s->accel = s->vhost = 1;
     } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
         if (s->accel || s->spoof_client_ip) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Intercept mode requires its own interception port. It cannot be shared with other modes.");
@@ -3591,10 +3591,14 @@ parse_http_port_option(http_port_list * s, char *token)
         s->defaultsite = xstrdup(token + 12);
     } else if (strcmp(token, "vhost") == 0) {
         if (!s->accel) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vhost option requires Acceleration mode flag.");
-            self_destruct();
+            debugs(3, DBG_CRITICAL, "WARNING: http(s)_port: vhost option is deprecated. Use 'accel' mode flag instead.");
         }
-        s->vhost = 1;
+        s->accel = s->vhost = 1;
+    } else if (strcmp(token, "no-vhost") == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_IMPORTANT, "ERROR: http(s)_port: no-vhost option requires Acceleration mode flag.");
+        }
+        s->vhost = 0;
     } else if (strcmp(token, "vport") == 0) {
         if (!s->accel) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");

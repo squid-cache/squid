@@ -1290,8 +1290,7 @@ DOC_START
 			connections using the client IP address.
 			NP: disables authentication and maybe IPv6 on the port.
 
-	   accel	Accelerator mode. Also needs at least one of
-			vhost / vport / defaultsite.
+	   accel	Accelerator / reverse proxy mode
 
 	   ssl-bump 	Intercept each CONNECT request matching ssl_bump ACL,
 			establish secure connection with the client and with
@@ -1307,28 +1306,22 @@ DOC_START
 
 	Accelerator Mode Options:
 
-	   allow-direct	Allow direct forwarding in accelerator mode. Normally
-			accelerated requests are denied direct forwarding as if
-			never_direct was used.
-
 	   defaultsite=domainname
 			What to use for the Host: header if it is not present
 			in a request. Determines what site (not origin server)
 			accelerators should consider the default.
-			Implies accel.
 
-	   vhost	Using the Host header for virtual domain support.
-			Also uses the port as specified in Host: header unless
-			overridden by the vport option.
+	   no-vhost	Disable using HTTP/1.1 Host header for virtual domain support.
+
+	   protocol=	Protocol to reconstruct accelerated requests with.
+			Defaults to http for http_port and https for
+			https_port
 
 	   vport	Virtual host port support. Using the http_port number
 			instead of the port passed on Host: headers.
 
 	   vport=NN	Virtual host port support. Using the specified port
 			number instead of the port passed on Host: headers.
-
-	   protocol=	Protocol to reconstruct accelerated requests with.
-			Defaults to http://.
 
 	   act-as-origin
 			Act as if this Squid is the origin server.
@@ -1337,8 +1330,17 @@ DOC_START
 
 	   ignore-cc	Ignore request Cache-Control headers.
 
-	   		Warning: This option violates HTTP specifications if
+			WARNING: This option violates HTTP specifications if
 			used in non-accelerator setups.
+
+	   allow-direct	Allow direct forwarding in accelerator mode. Normally
+			accelerated requests are denied direct forwarding as if
+			never_direct was used.
+
+			WARNING: this option opens accelerator mode to security
+			vulnerabilities usually only affecting in interception
+			mode. Make sure to protect forwarding with suitable
+			http_access rules when using this.
 
 
 	SSL Bump Mode Options:
@@ -1474,7 +1476,7 @@ TYPE: https_port_list
 DEFAULT: none
 LOC: Config.Sockaddr.https
 DOC_START
-	Usage:  [ip:]port cert=certificate.pem [key=key.pem] [options...]
+	Usage:  [ip:]port cert=certificate.pem [key=key.pem] [mode] [options...]
 
 	The socket address where Squid will listen for HTTPS client
 	requests.
@@ -1486,21 +1488,17 @@ DOC_START
 	You may specify multiple socket addresses on multiple lines,
 	each with their own SSL certificate and/or options.
 
-	Options:
+	Modes:
 
-	   accel	Accelerator mode. Also needs at least one of
-			defaultsite or vhost.
+	   accel	Accelerator / reverse proxy mode
 
-	   defaultsite=	The name of the https site presented on
-	   		this port. Implies accel.
+	Omitting the mode flag causes default forward proxy mode to be used.
 
-	   vhost	Accelerator mode using Host header for virtual
-			domain support. Requires a wildcard certificate
-			or other certificate valid for more than one domain.
-			Implies accel.
 
-	   protocol=	Protocol to reconstruct accelerated requests with.
-			Defaults to https.
+	See http_port for a list of generic options
+
+
+	SSL Options:
 
 	   cert=	Path to SSL certificate (PEM format).
 
@@ -1563,14 +1561,6 @@ DOC_START
 				client certificate chain.
 
 	   sslcontext=	SSL session ID context identifier.
-
-	   vport	Accelerator with IP based virtual host support.
-
-	   vport=NN	As above, but uses specified port number rather
-			than the https_port number. Implies accel.
-
-	   name=	Specifies a internal name for the port. Defaults to
-			the port specification (port or addr:port)
 
 DOC_END
 

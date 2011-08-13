@@ -521,10 +521,12 @@ This section gives a thorough account of those changes in three categories:
 	<p><em>children-idle=N</em> determines how many helper to retain as buffer against sudden traffic loads.
 	<p>Deprecated <em>children=N</em> in favor of <em>children-max=N</em>.
 
-	<tag>http_port act-as-origin</tag>
+	<tag>http_port act-as-origin vhost no-vhost</tag>
 	<p><em>act-as-origin</em> ported from 2.7.
 	   This option corrects several HTTP header issues when operating as a reverse proxy and cache.
 	   Notably the externally visible aging of objects stored in the server-side cache.
+	<p><em>vhost</em> is deprecated. <em>accel</em> mode, reverse proxy, now defaults to always enable HTTP/1.1 virtual domain support.
+	<p><em>no-vhost</em> option is added to disable the new reverse proxy behaviour.
 
 	<tag>icap_send_client_ip</tag>
 	<p>Deprecated in favor of adaptation_send_client_ip
