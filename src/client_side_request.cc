@@ -728,7 +728,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 
     if (answer != ACCESS_ALLOWED) {
         /* Send an error */
-        int require_auth = (answer == ACCESS_REQ_PROXY_AUTH || aclIsProxyAuth(AclMatchedName));
+        int require_auth = (answer == ACCESS_AUTH_REQUIRED || aclIsProxyAuth(AclMatchedName));
         debugs(85, 5, "Access Denied: " << http->uri);
         debugs(85, 5, "AclMatchedName = " << (AclMatchedName ? AclMatchedName : "<null>"));
 #if USE_AUTH
@@ -742,7 +742,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
          * the clientCreateStoreEntry() call just below.  Pedro Ribeiro
          * <pribeiro@isel.pt>
          */
-        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, answer != ACCESS_REQ_PROXY_AUTH);
+        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, answer != ACCESS_AUTH_REQUIRED);
 
         http->logType = LOG_TCP_DENIED;
 
