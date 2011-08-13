@@ -39,6 +39,16 @@ Adaptation::ServiceGroup::finalize()
     // 2) warn if all-same services have different bypass status
     // 3) warn if there are seemingly identical services in the group
     // TODO: optimize by remembering ServicePointers rather than IDs
+    if (!removedServices.empty()) {
+        String s;
+        for (Store::iterator it = removedServices.begin(); it != removedServices.end(); ++it) {
+            s.append(*it);
+            s.append(',');
+        }
+        s.cut(s.size() - 1);
+        debugs(93, DBG_IMPORTANT, "Adaptation group '" << id << "' contains disabled member(s) after reconfiguration: " << s);
+        removedServices.clean();
+    }
 
     String baselineKey;
     bool baselineBypass = false;

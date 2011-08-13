@@ -54,11 +54,26 @@ public:
     void dumpService(StoreEntry *, const char *) const;
     ServicePointer findService(const String&);
 
-    virtual void finalize();
+    /**
+     * Creates and starts the adaptation services. In the case the adaptation
+     * mechanism is disabled then removes any reference to the services from
+     * access rules and service groups, and returns false.
+     * \return true if the services are ready and running, false otherwise
+     */
+    virtual bool finalize();
 
 protected:
+    /// Removes any reference to the services  from configuration
+    virtual void clear();
+
     /// creates service configuration object that will parse and keep cfg info
     virtual ServiceConfig *newServiceConfig() const;
+
+    /// Removes the given service from all service groups.
+    void removeService(const String& service);
+
+    /// Removes access rules of the given service or group
+    void removeRule(const String& id);
 
 private:
     Config(const Config &); // unsupported
