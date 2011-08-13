@@ -54,6 +54,7 @@
 #endif
 #include "err_detail_type.h"
 #include "errorpage.h"
+#include "fde.h"
 #include "http.h"
 #include "HttpControlMsg.h"
 #include "HttpHdrContRange.h"
@@ -1428,6 +1429,10 @@ HttpStateData::processReplyBody()
 void
 HttpStateData::maybeReadVirginBody()
 {
+    // too late to read
+    if (!Comm::IsConnOpen(serverConnection) || fd_table[serverConnection->fd].closing())
+        return;
+
     // we may need to grow the buffer if headers do not fit
     const int minRead = flags.headers_parsed ? 0 :1024;
     const int read_size = replyBodySpace(*readBuf, minRead);
