@@ -237,7 +237,7 @@ main(int argc, char *argv[])
         types = t;
     }
     fp.close();
-    fp.clear(); // BSD does not reste flags in close().
+    fp.clear(); // BSD does not reset flags in close().
 
     /*-------------------------------------------------------------------*
      * Parse input file
