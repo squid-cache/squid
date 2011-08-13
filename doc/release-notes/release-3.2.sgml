@@ -392,6 +392,10 @@ This section gives a thorough account of those changes in three categories:
 	<p>New setting for client bandwith limits to determines the 
 	  client-side delay pool for the request.
 
+	<tag>client_dst_passthru</tag>
+	<p>New setting to disable Host: header security on interception proxies.
+	   Impacts cache integrity/reliability and client browser security.
+
 	<tag>cpu_affinity_map</tag>
 	<p>New setting for SMP support to map Squid processes onto specific CPU cores.
 
