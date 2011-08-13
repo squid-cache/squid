@@ -856,6 +856,14 @@ struct peer {
 #endif
         unsigned int allow_miss:1;
         unsigned int carp:1;
+        struct {
+            unsigned int set:1; //If false, whole url is to be used. Overrides others
+            unsigned int scheme:1;
+            unsigned int host:1;
+            unsigned int port:1;
+            unsigned int path:1;
+            unsigned int params:1;
+        } carp_key;
 #if USE_AUTH
         unsigned int userhash:1;
 #endif

@@ -2196,6 +2196,14 @@ DOC_START
 			than the Squid default location.
 	
 	
+	==== CARP OPTIONS ====
+	
+	carp-key=key-specification
+			use a different key than the full URL to hash against the peer.
+			the key-specification is a comma-separated list of the keywords			
+			scheme, host, port, path, params
+			Order is not important.
+	
 	==== ACCELERATOR / REVERSE-PROXY OPTIONS ====
 	
 	originserver	Causes this parent to be contacted as an origin server.
