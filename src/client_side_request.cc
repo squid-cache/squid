@@ -546,13 +546,14 @@ ClientRequestContext::hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLooku
         }
     }
     debugs(85, 3, HERE << "FAIL: validate IP " << clientConn->local << " possible from Host:");
-    hostHeaderVerifyFailed();
+    hostHeaderVerifyFailed("local IP", "any domain IP");
 }
 
 void
-ClientRequestContext::hostHeaderVerifyFailed()
+ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
 {
-    debugs(85, 1, "SECURITY ALERT: Host: header forgery detected from " << http->getConn()->clientConnection);
+    debugs(85, 1, "SECURITY ALERT: Host: header forgery detected from " << http->getConn()->clientConnection <<
+           " (" << A << " does not match " << B << ")");
 
     // IP address validation for Host: failed. reject the connection.
     clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
@@ -620,8 +621,9 @@ ClientRequestContext::hostHeaderVerify()
     if (http->request->flags.intercepted || http->request->flags.spoof_client_ip) {
         // verify the port (if any) matches the apparent destination
         if (portStr && port != http->getConn()->clientConnection->local.GetPort()) {
-            debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.GetPort() << " matches Host: port " << port << "((" << portStr);
-            hostHeaderVerifyFailed();
+            debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.GetPort() <<
+                   " matches Host: port " << port << " (" << portStr << ")");
+            hostHeaderVerifyFailed("intercepted port", portStr);
             safe_free(hostB);
             return;
         }
@@ -638,7 +640,7 @@ ClientRequestContext::hostHeaderVerify()
     host = http->request->header.getStr(HDR_HOST);
     if (strcmp(host, http->request->GetHost()) != 0) {
         debugs(85, 3, HERE << "FAIL on validate URL domain " << http->request->GetHost() << " matches Host: " << host);
-        hostHeaderVerifyFailed();
+        hostHeaderVerifyFailed(host, http->request->GetHost());
         return;
     }
 
