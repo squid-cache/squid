@@ -69,7 +69,7 @@ ExternalACLEntry::operator delete (void *address)
 ExternalACLEntry::ExternalACLEntry()
 {
     lru.next = lru.prev = NULL;
-    result = 0;
+    result = ACCESS_DENIED;
     date = 0;
     def = NULL;
 }
