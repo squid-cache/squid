@@ -3629,9 +3629,6 @@ clientHttpConnectionsOpen(void)
             Ssl::TheGlobalContextStorage.addLocalStorage(s->s, s->dynamicCertMemCacheSize == std::numeric_limits<size_t>::max() ? 4194304 : s->dynamicCertMemCacheSize);
         }
 #endif
-#if USE_SSL_CRTD
-        Ssl::Helper::GetInstance();
-#endif //USE_SSL_CRTD
 
         // Fill out a Comm::Connection which IPC will open as a listener for us
         //  then pass back when active so we can start a TcpAcceptor subscription.
