@@ -111,7 +111,6 @@ typedef enum {
     ACCESS_DUNNO,
 
     // Authentication ACL result states
-    ACCESS_AUTH_OK = ACCESS_ALLOWED,
     ACCESS_AUTH_REQUIRED,    // Missing Credentials
     ACCESS_AUTH_EXPIRED_OK,  // Expired now. Were Okay.
     ACCESS_AUTH_EXPIRED_BAD  // Expired now. Were Failed.
