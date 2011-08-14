@@ -1042,6 +1042,10 @@ mainInitialize(void)
 
 #endif
 
+#if USE_SSL_CRTD
+    Ssl::Helper::GetInstance()->Init();
+#endif
+
     redirectInit();
 #if USE_AUTH
     authenticateInit(&Auth::TheConfig);
