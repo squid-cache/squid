@@ -79,14 +79,26 @@ ACLProxyAuth::parse()
 int
 ACLProxyAuth::match(ACLChecklist *checklist)
 {
-    int ti;
+    allow_t answer = AuthenticateAcl(checklist);
+    checklist->currentAnswer(answer);
 
-    if ((ti = AuthenticateAcl(checklist)) != 1)
-        return ti;
+    // convert to tri-state ACL match 1,0,-1
+    switch(answer)
+    {
+    case ACCESS_ALLOWED:
+    case ACCESS_AUTH_EXPIRED_OK:
+        // check for a match
+        return matchProxyAuth(checklist);
 
-    ti = matchProxyAuth(checklist);
+    case ACCESS_DENIED:
+    case ACCESS_AUTH_EXPIRED_BAD:
+        return 0; // non-match
 
-    return ti;
+    case ACCESS_DUNNO:
+    case ACCESS_AUTH_REQUIRED:
+    default:
+        return -1; // other
+    }
 }
 
 wordlist *
