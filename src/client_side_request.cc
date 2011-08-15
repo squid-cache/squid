@@ -546,13 +546,14 @@ ClientRequestContext::hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLooku
         }
     }
     debugs(85, 3, HERE << "FAIL: validate IP " << clientConn->local << " possible from Host:");
-    hostHeaderVerifyFailed();
+    hostHeaderVerifyFailed("local IP", "any domain IP");
 }
 
 void
-ClientRequestContext::hostHeaderVerifyFailed()
+ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
 {
-    debugs(85, 1, "SECURITY ALERT: Host: header forgery detected from " << http->getConn()->clientConnection);
+    debugs(85, 1, "SECURITY ALERT: Host: header forgery detected from " << http->getConn()->clientConnection <<
+           " (" << A << " does not match " << B << ")");
 
     // IP address validation for Host: failed. reject the connection.
     clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
@@ -618,32 +619,35 @@ ClientRequestContext::hostHeaderVerify()
 
     debugs(85, 3, HERE << "validate host=" << host << ", port=" << port << ", portStr=" << (portStr?portStr:"NULL"));
     if (http->request->flags.intercepted || http->request->flags.spoof_client_ip) {
-        // verify the port (if any) matches the apparent destination
+        // verify the Host: port (if any) matches the apparent destination
         if (portStr && port != http->getConn()->clientConnection->local.GetPort()) {
-            debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.GetPort() << " matches Host: port " << port << "((" << portStr);
-            hostHeaderVerifyFailed();
-            safe_free(hostB);
-            return;
-        }
-        // XXX: match the scheme default port against the apparent destination
+            debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.GetPort() <<
+                   " matches Host: port " << port << " (" << portStr << ")");
+            hostHeaderVerifyFailed("intercepted port", portStr);
+        } else {
+            // XXX: match the scheme default port against the apparent destination
 
-        // verify the destination DNS is one of the Host: headers IPs
-        ipcache_nbgethostbyname(host, hostHeaderIpVerifyWrapper, this);
-        safe_free(hostB);
-        return;
+            // verify the destination DNS is one of the Host: headers IPs
+            ipcache_nbgethostbyname(host, hostHeaderIpVerifyWrapper, this);
+        }
+    } else if (strcmp(host, http->request->GetHost()) != 0) {
+        // Verify forward-proxy requested URL domain matches the Host: header
+        debugs(85, 3, HERE << "FAIL on validate URL domain " << http->request->GetHost() << " matches Host: " << host);
+        hostHeaderVerifyFailed(host, http->request->GetHost());
+    } else if (portStr && port != http->request->port) {
+        // Verify forward-proxy requested URL domain matches the Host: header
+        debugs(85, 3, HERE << "FAIL on validate URL port " << http->request->port << " matches Host: port " << portStr);
+        hostHeaderVerifyFailed("URL port", portStr);
+    } else if (!portStr && http->request->port != urlDefaultPort(http->request->protocol)) {
+        // Verify forward-proxy requested URL domain matches the Host: header
+        debugs(85, 3, HERE << "FAIL on validate URL port " << http->request->port << " matches Host: default port " << urlDefaultPort(http->request->protocol));
+        hostHeaderVerifyFailed("URL port", "default port");
+    } else {
+        // Okay no problem.
+        debugs(85, 3, HERE << "validate passed.");
+        http->doCallouts();
     }
     safe_free(hostB);
-
-    // Verify forward-proxy requested URL domain matches the Host: header
-    host = http->request->header.getStr(HDR_HOST);
-    if (strcmp(host, http->request->GetHost()) != 0) {
-        debugs(85, 3, HERE << "FAIL on validate URL domain " << http->request->GetHost() << " matches Host: " << host);
-        hostHeaderVerifyFailed();
-        return;
-    }
-
-    debugs(85, 3, HERE << "validate passed.");
-    http->doCallouts();
 }
 
 /* This is the entry point for external users of the client_side routines */
