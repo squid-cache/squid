@@ -850,8 +850,7 @@ ACLExternal::match(ACLChecklist *checklist)
     checklist->currentAnswer(answer);
 
     // convert to tri-state ACL match 1,0,-1
-    switch(answer)
-    {
+    switch (answer) {
     case ACCESS_ALLOWED:
     case ACCESS_AUTH_EXPIRED_OK:
         return 1; // match
