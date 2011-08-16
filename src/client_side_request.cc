@@ -638,8 +638,9 @@ ClientRequestContext::hostHeaderVerify()
         // Verify forward-proxy requested URL domain matches the Host: header
         debugs(85, 3, HERE << "FAIL on validate URL port " << http->request->port << " matches Host: port " << portStr);
         hostHeaderVerifyFailed("URL port", portStr);
-    } else if (!portStr && http->request->port != urlDefaultPort(http->request->protocol)) {
+    } else if (!portStr && http->request->method != METHOD_CONNECT && http->request->port != urlDefaultPort(http->request->protocol)) {
         // Verify forward-proxy requested URL domain matches the Host: header
+        // Special case: we don't have a default-port to check for CONNECT. Assume URL is correct.
         debugs(85, 3, HERE << "FAIL on validate URL port " << http->request->port << " matches Host: default port " << urlDefaultPort(http->request->protocol));
         hostHeaderVerifyFailed("URL port", "default port");
     } else {
