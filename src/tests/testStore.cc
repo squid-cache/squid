@@ -6,9 +6,6 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testStore );
 
-// Stubs so this test will link cleanly
-#include "comm/stub_libcomm.cc"
-
 int
 TestStore::callback()
 {

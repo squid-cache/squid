@@ -2083,7 +2083,9 @@ tests_testHttpParser_SOURCES = \
 	MemBuf.cc \
 	MemBuf.h \
 	mem.cc \
+	String.cc \
 	structs.h \
+	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
 	tests/stub_event.cc \
@@ -2091,7 +2093,8 @@ tests_testHttpParser_SOURCES = \
 	tests/testHttpParser.cc \
 	tests/testHttpParser.h \
 	tests/testMain.cc \
-	time.cc
+	time.cc \
+	wordlist.cc
 nodist_tests_testHttpParser_SOURCES = \
 	$(TESTSOURCES)
 tests_testHttpParser_LDADD= \
@@ -2352,6 +2355,7 @@ tests_testStore_SOURCES= \
 	tests/stub_http.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_libcomm.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_mime.cc \
@@ -2657,6 +2661,7 @@ tests_testRock_SOURCES = \
 	tests/stub_http.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_libcomm.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_mime.cc \
 	tests/stub_Port.cc \
@@ -2706,10 +2711,12 @@ tests_testCoss_SOURCES = \
 	tests/testMain.cc \
 	tests/testCoss.h \
 	tests/stub_cache_manager.cc \
+	tests/stub_client_db.cc \
 	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_internal.cc \
-	tests/stub_CommIO.cc \
+	tests/stub_ipc.cc \
+	tests/stub_pconn.cc \
 	tests/stub_store_rebuild.cc \
 	fd.cc \
 	disk.cc \
@@ -2754,7 +2761,6 @@ tests_testCoss_SOURCES = \
 	tests/stub_helper.cc \
 	cbdata.cc \
 	String.cc \
-	tests/stub_comm.cc \
 	tests/stub_client_side_request.cc \
 	tests/stub_http.cc \
 	mem_node.cc \
@@ -2808,6 +2814,7 @@ tests_testCoss_LDADD = \
 	$(AUTH_LIBS) \
 	acl/libapi.la \
 	libsquid.la \
+	comm/libcomm.la \
 	ip/libip.la \
 	fs/libfs.la \
 	mgr/libmgr.la \
@@ -2815,7 +2822,7 @@ tests_testCoss_LDADD = \
 	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
 	$(COMMON_LIBS) \
-	libsquid.la \
+	$(SSL_LIBS) \
 	acl/libapi.la \
 	ipc/libipc.la \
 	base/libbase.la \
