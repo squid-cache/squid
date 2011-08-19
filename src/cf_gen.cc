@@ -54,27 +54,14 @@ _FILE_OFFSET_BITS==64
 #undef _FILE_OFFSET_BITS
 #endif
 
-#include "config.h"
-#include "util.h"
-
-#include <iostream>
+#include <cassert>
+#include <cctype>
+#include <cerrno>
+#include <cstring>
 #include <fstream>
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_STRING_H
-#include <ctype.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
+#include <iostream>
 
 #include "cf_gen_defines.cci"
-
-/* libmisc pulls in dependency on time.cc via new() / mem
- * but for cross-compilers we cannot link to the available time.o
- */
-#include "time.cc"
 
 #define MAX_LINE	1024	/* longest configuration line */
 #define _PATH_PARSER		"cf_parser.cci"
@@ -90,81 +77,107 @@ enum State {
     sEXIT
 };
 
-typedef struct Line {
-    char *data;
+// TODO: inherit all these from link lists.
 
-    struct Line *next;
-} Line;
+class Line
+{
+public:
+    Line(const char *str) : data(str), next(NULL) {}
+    ~Line() {}
 
-typedef struct EntryAlias {
+    std::string data;
+    Line *next;
+};
 
-    struct EntryAlias *next;
-    char *name;
-} EntryAlias;
+class EntryAlias
+{
+public:
+    EntryAlias(const char *str) : name(str), next(NULL) {}
+    ~EntryAlias() {}
 
-typedef struct Entry {
-    char *name;
+    std::string name;
+    EntryAlias *next;
+};
+
+class Entry
+{
+public:
+    Entry(const char *str) :
+            name(str), alias(), type(), loc(),
+            default_value(), default_if_none(),
+            comment(), ifdef(), doc(), nocomment(),
+            next(NULL) {}
+    ~Entry() {}
+
+    std::string name;
     EntryAlias *alias;
-    char *type;
-    char *loc;
-    char *default_value;
+    std::string type;
+    std::string loc;
+    std::string default_value;
     Line *default_if_none;
-    char *comment;
-    char *ifdef;
+    std::string comment;
+    std::string ifdef;
     Line *doc;
     Line *nocomment;
     int array_flag;
 
-    struct Entry *next;
-} Entry;
+    Entry *next;
+};
 
-typedef struct TypeDep {
-    char *name;
+class TypeDep
+{
+public:
+    TypeDep(const char *str) : name(str), next(NULL) {}
+    ~TypeDep() {}
 
+    std::string name;
     TypeDep *next;
-} TypeDep;
+};
 
-typedef struct Type {
-    char *name;
+class Type
+{
+public:
+    Type(const char *str) : name(str), next(NULL) {}
+    ~Type() {}
+
+    std::string name;
     TypeDep *depend;
-
-    struct Type *next;
-} Type;
+    Type *next;
+};
 
 static const char WS[] = " \t\n";
 static int gen_default(Entry *, std::ostream &);
 static void gen_parse(Entry *, std::ostream &);
 static void gen_parse_entry(Entry *entry, std::ostream&);
-static void gen_parse_alias(char *, EntryAlias *, Entry *, std::ostream &);
+static void gen_parse_alias(const std::string &, EntryAlias *, Entry *, std::ostream &);
 static void gen_dump(Entry *, std::ostream&);
 static void gen_free(Entry *, std::ostream&);
 static void gen_conf(Entry *, std::ostream&, bool verbose_output);
 static void gen_default_if_none(Entry *, std::ostream&);
 
-
 static void
 lineAdd(Line ** L, const char *str)
 {
+    assert(str);
+
     while (*L)
         L = &(*L)->next;
 
-    *L = (Line *)xcalloc(1, sizeof(Line));
-
-    (*L)->data = xstrdup(str);
+    *L = new Line(str);
 }
 
 static void
-checkDepend(const char *directive, const char *name, const Type *types, const Entry *entries)
+checkDepend(const std::string &directive, const char *name, const Type *types, const Entry *entries)
 {
     const Type *type;
     for (type = types; type; type = type->next) {
         const TypeDep *dep;
-        if (strcmp(type->name, name) != 0)
+        if (type->name.compare(name) != 0)
             continue;
         for (dep = type->depend; dep; dep = dep->next) {
             const Entry *entry;
             for (entry = entries; entry; entry = entry->next) {
-                if (strcmp(entry->name, dep->name) == 0)
+                if (entry->name.compare(dep->name) == 0)
                     break;
             }
             if (!entry) {
@@ -225,11 +238,9 @@ main(int argc, char *argv[])
         const char *dep;
         if (!type || type[0] == '#')
             continue;
-        Type *t = (Type *)xcalloc(1, sizeof(*t));
-        t->name = xstrdup(type);
+        Type *t = new Type(type);
         while ((dep = strtok(NULL, WS)) != NULL) {
-            TypeDep *d = (TypeDep *)xcalloc(1, sizeof(*d));
-            d->name = xstrdup(dep);
+            TypeDep *d = new TypeDep(dep);
             d->next = t->depend;
             t->depend = d;
         }
@@ -276,13 +287,11 @@ main(int argc, char *argv[])
                     exit(1);
                 }
 
-                curr = (Entry *)xcalloc(1, sizeof(Entry));
-                curr->name = xstrdup(name);
+                curr = new Entry(name);
 
                 while ((aliasname = strtok(NULL, WS)) != NULL) {
-                    EntryAlias *alias = (EntryAlias *)xcalloc(1, sizeof(EntryAlias));
+                    EntryAlias *alias = new EntryAlias(aliasname);
                     alias->next = curr->alias;
-                    alias->name = xstrdup(aliasname);
                     curr->alias = alias;
                 }
 
@@ -290,9 +299,8 @@ main(int argc, char *argv[])
             } else if (!strcmp(buff, "EOF")) {
                 state = sEXIT;
             } else if (!strcmp(buff, "COMMENT_START")) {
-                curr = (Entry *)xcalloc(1, sizeof(Entry));
-                curr->name = xstrdup("comment");
-                curr->loc = xstrdup("none");
+                curr = new Entry("comment");
+                curr->loc = "none";
                 state = sDOC;
             } else {
                 std::cerr << "Error on line " << linenum << std::endl <<
@@ -310,21 +318,21 @@ main(int argc, char *argv[])
             } else if (!strncmp(buff, "COMMENT:", 8)) {
                 ptr = buff + 8;
 
-                while (xisspace(*ptr))
+                while (isspace((unsigned char)*ptr))
                     ptr++;
 
-                curr->comment = xstrdup(ptr);
+                curr->comment = ptr;
             } else if (!strncmp(buff, "DEFAULT:", 8)) {
                 ptr = buff + 8;
 
-                while (xisspace(*ptr))
+                while (isspace((unsigned char)*ptr))
                     ptr++;
 
-                curr->default_value = xstrdup(ptr);
+                curr->default_value = ptr;
             } else if (!strncmp(buff, "DEFAULT_IF_NONE:", 16)) {
                 ptr = buff + 16;
 
-                while (xisspace(*ptr))
+                while (isspace((unsigned char)*ptr))
                     ptr++;
 
                 lineAdd(&curr->default_if_none, ptr);
@@ -334,7 +342,7 @@ main(int argc, char *argv[])
                     exit(1);
                 }
 
-                curr->loc = xstrdup(ptr);
+                curr->loc = ptr;
             } else if (!strncmp(buff, "TYPE:", 5)) {
                 if ((ptr = strtok(buff + 5, WS)) == NULL) {
                     std::cerr << "Error on line " << linenum << std::endl;
@@ -348,14 +356,14 @@ main(int argc, char *argv[])
                 }
 
                 checkDepend(curr->name, ptr, types, entries);
-                curr->type = xstrdup(ptr);
+                curr->type = ptr;
             } else if (!strncmp(buff, "IFDEF:", 6)) {
                 if ((ptr = strtok(buff + 6, WS)) == NULL) {
                     std::cerr << "Error on line " << linenum << std::endl;
                     exit(1);
                 }
 
-                curr->ifdef = xstrdup(ptr);
+                curr->ifdef = ptr;
             } else if (!strcmp(buff, "DOC_START")) {
                 state = sDOC;
             } else if (!strcmp(buff, "DOC_NONE")) {
@@ -392,9 +400,9 @@ main(int argc, char *argv[])
                 state = sSTART;
             } else if (!strcmp(buff, "NOCOMMENT_START")) {
                 state = sNOCOMMENT;
-            } else {
-                Line *line = (Line *)xcalloc(1, sizeof(Line));
-                line->data = xstrdup(buff);
+            } else { // if (buff != NULL) {
+                assert(buff != NULL);
+                Line *line = new Line(buff);
                 line->next = curr->doc;
                 curr->doc = line;
             }
@@ -418,9 +426,9 @@ main(int argc, char *argv[])
 
                 curr->nocomment = head;
                 state = sDOC;
-            } else {
-                Line *line = (Line *)xcalloc(1, sizeof(Line));
-                line->data = xstrdup(buff);
+            } else { // if (buff != NULL) {
+                assert(buff != NULL);
+                Line *line = new Line(buff);
                 line->next = curr->nocomment;
                 curr->nocomment = line;
             }
@@ -540,37 +548,37 @@ gen_default(Entry * head, std::ostream &fout)
     "\tconfig_lineno = 0;\n";
 
     for (entry = head; entry != NULL; entry = entry->next) {
-        assert(entry->name);
+        assert(entry->name.size());
         assert(entry != entry->next);
 
-        if (!strcmp(entry->name, "comment"))
+        if (!entry->name.compare("comment"))
             continue;
 
-        if (!strcmp(entry->type, "obsolete"))
+        if (!entry->type.compare("obsolete"))
             continue;
 
-        if (entry->loc == NULL) {
+        if (!entry->loc.size()) {
             std::cerr << "NO LOCATION FOR " << entry->name << std::endl;
             rc |= 1;
             continue;
         }
 
-        if (entry->default_value == NULL && entry->default_if_none == NULL) {
+        if (!entry->default_value.size() && entry->default_if_none == NULL) {
             std::cerr << "NO DEFAULT FOR " << entry->name << std::endl;
             rc |= 1;
             continue;
         }
 
-        if (entry->default_value == NULL || strcmp(entry->default_value, "none") == 0) {
+        if (!entry->default_value.size() || entry->default_value.compare("none") == 0) {
             fout << "\t/* No default for " << entry->name << " */\n";
         } else {
-            if (entry->ifdef)
+            if (entry->ifdef.size())
                 fout << "#if " << entry->ifdef << std::endl;
 
             fout << "\tdefault_line(\"" << entry->name << " " <<
             entry->default_value << "\");\n";
 
-            if (entry->ifdef)
+            if (entry->ifdef.size())
                 fout << "#endif\n";
         }
     }
@@ -590,15 +598,15 @@ gen_default_if_none(Entry * head, std::ostream &fout)
     "{\n";
 
     for (entry = head; entry != NULL; entry = entry->next) {
-        assert(entry->name);
+        assert(entry->name.size());
 
-        if (!entry->loc)
+        if (!entry->loc.size())
             continue;
 
         if (entry->default_if_none == NULL)
             continue;
 
-        if (entry->ifdef)
+        if (entry->ifdef.size())
             fout << "#if " << entry->ifdef << std::endl;
 
         if (entry->default_if_none) {
@@ -612,7 +620,7 @@ gen_default_if_none(Entry * head, std::ostream &fout)
             fout << "\t}\n";
         }
 
-        if (entry->ifdef)
+        if (entry->ifdef.size())
             fout << "#endif\n";
     }
 
@@ -620,18 +628,18 @@ gen_default_if_none(Entry * head, std::ostream &fout)
 }
 
 void
-gen_parse_alias(char *name, EntryAlias *alias, Entry *entry, std::ostream &fout)
+gen_parse_alias(const std::string &name, EntryAlias *alias, Entry *entry, std::ostream &fout)
 {
     fout << "\tif (!strcmp(token, \"" << name << "\")) {\n";
 
-    if (strcmp(entry->type,"obsolete") == 0) {
+    if (entry->type.compare("obsolete") == 0) {
         fout << "\t\tdebugs(0, DBG_CRITICAL, \"ERROR: Directive '" << name << "' is obsolete.\");\n";
         for (Line *line = entry->doc; line != NULL; line = line->next) {
             // offset line to strip initial whitespace tab byte
             fout << "\t\tdebugs(0, opt_parse_cfg_only?0:1, \"" << name << " : " << &line->data[1] << "\");\n";
         }
         fout << "\t\tparse_obsolete(token);\n";
-    } else if (!entry->loc || strcmp(entry->loc, "none") == 0) {
+    } else if (!entry->loc.size() || entry->loc.compare("none") == 0) {
         fout << "\t\tparse_" << entry->type << "();\n";
     } else {
         fout << "\t\tparse_" << entry->type << "(&" << entry->loc <<
@@ -645,20 +653,20 @@ gen_parse_alias(char *name, EntryAlias *alias, Entry *entry, std::ostream &fout)
 void
 gen_parse_entry(Entry *entry, std::ostream &fout)
 {
-    if (strcmp(entry->name, "comment") == 0)
+    if (entry->name.compare("comment") == 0)
         return;
 
-    if (entry->ifdef)
+    if (entry->ifdef.size())
         fout << "#if " << entry->ifdef << std::endl;
 
-    char *name = entry->name;
+    std::string &name = entry->name;
 
     EntryAlias *alias = entry->alias;
 
     bool more;
 
     do {
-        gen_parse_alias (name, alias,entry, fout);
+        gen_parse_alias(name, alias, entry, fout);
         more = false;
 
         if (alias) {
@@ -668,7 +676,7 @@ gen_parse_entry(Entry *entry, std::ostream &fout)
         }
     } while (more);
 
-    if (entry->ifdef)
+    if (entry->ifdef.size())
         fout << "#endif\n";
 }
 
@@ -703,19 +711,19 @@ gen_dump(Entry * head, std::ostream &fout)
 
     for (entry = head; entry != NULL; entry = entry->next) {
 
-        if (!entry->loc || strcmp(entry->loc, "none") == 0)
+        if (!entry->loc.size() || entry->loc.compare("none") == 0)
             continue;
 
-        if (strcmp(entry->name, "comment") == 0)
+        if (entry->name.compare("comment") == 0)
             continue;
 
-        if (entry->ifdef)
+        if (entry->ifdef.size())
             fout << "#if " << entry->ifdef << std::endl;
 
         fout << "\tdump_" << entry->type << "(entry, \"" << entry->name <<
         "\", " << entry->loc << ");\n";
 
-        if (entry->ifdef)
+        if (entry->ifdef.size())
             fout << "#endif\n";
     }
 
@@ -733,51 +741,50 @@ gen_free(Entry * head, std::ostream &fout)
     "    debugs(5, 4, HERE);\n";
 
     for (entry = head; entry != NULL; entry = entry->next) {
-        if (!entry->loc || strcmp(entry->loc, "none") == 0)
+        if (!entry->loc.size() || entry->loc.compare("none") == 0)
             continue;
 
-        if (strcmp(entry->name, "comment") == 0)
+        if (entry->name.compare("comment") == 0)
             continue;
 
-        if (entry->ifdef)
+        if (entry->ifdef.size())
             fout << "#if " << entry->ifdef << std::endl;
 
         fout << "\tfree_" << entry->type << "(&" << entry->loc <<
         (entry->array_flag ? "[0]" : "") << ");\n";
 
-        if (entry->ifdef)
+        if (entry->ifdef.size())
             fout << "#endif\n";
     }
 
     fout << "}\n\n";
 }
 
-static int
-defined(char *name)
+static bool
+defined(const std::string &name)
 {
-    int i = 0;
+    if (!name.size())
+        return true;
 
-    if (!name)
-        return 1;
-
-    for (i = 0; strcmp(defines[i].name, name) != 0; i++) {
-        assert(defines[i].name);
+    for (int i = 0; defines[i].name; i++) {
+        if (name.compare(defines[i].name) == 0)
+            return defines[i].defined;
     }
 
-    return defines[i].defined;
+    return false;
 }
 
 static const char *
-available_if(char *name)
+available_if(const std::string &name)
 {
-    int i = 0;
-    assert(name);
+    assert(name.size());
 
-    for (i = 0; strcmp(defines[i].name, name) != 0; i++) {
-        assert(defines[i].name);
+    for (int i = 0; defines[i].name; i++) {
+        if (name.compare(defines[i].name) != 0)
+            return defines[i].enable;
     }
 
-    return defines[i].enable;
+    return name.c_str();
 }
 
 static void
@@ -791,14 +798,14 @@ gen_conf(Entry * head, std::ostream &fout, bool verbose_output)
         Line *line;
         int enabled = 1;
 
-        if (!strcmp(entry->name, "comment"))
+        if (!entry->name.compare("comment"))
             (void) 0;
-        else if (!strcmp(entry->name, "obsolete"))
+        else if (!entry->name.compare("obsolete"))
             (void) 0;
         else if (verbose_output) {
             fout << "#  TAG: " << entry->name;
 
-            if (entry->comment)
+            if (entry->comment.size())
                 fout << "\t" << entry->comment;
 
             fout << std::endl;
@@ -820,20 +827,20 @@ gen_conf(Entry * head, std::ostream &fout, bool verbose_output)
             }
         }
 
-        if (entry->default_value && strcmp(entry->default_value, "none") != 0) {
-            snprintf(buf, sizeof(buf), "%s %s", entry->name, entry->default_value);
+        if (entry->default_value.size() && entry->default_value.compare("none") != 0) {
+            snprintf(buf, sizeof(buf), "%s %s", entry->name.c_str(), entry->default_value.c_str());
             lineAdd(&def, buf);
         }
 
         if (entry->default_if_none) {
-            for (line = entry->default_if_none; line; line = line->next) {
-                snprintf(buf, sizeof(buf), "%s %s", entry->name, line->data);
+            for (line = entry->default_if_none; line != NULL; line = line->next) {
+                snprintf(buf, sizeof(buf), "%s %s", entry->name.c_str(), line->data.c_str());
                 lineAdd(&def, buf);
             }
         }
 
         if (!def && entry->doc && !entry->nocomment &&
-                strcmp(entry->name, "comment") != 0)
+                entry->name.compare("comment") != 0)
             lineAdd(&def, "none");
 
         if (verbose_output && def && (entry->doc || entry->nocomment)) {
@@ -841,9 +848,9 @@ gen_conf(Entry * head, std::ostream &fout, bool verbose_output)
             while (def != NULL) {
                 line = def;
                 def = line->next;
+                line->next = NULL; // unlink to simplify delete
                 fout << "# " << line->data << std::endl;
-                xfree(line->data);
-                xfree(line);
+                delete line;
             }
         }
 
@@ -852,7 +859,7 @@ gen_conf(Entry * head, std::ostream &fout, bool verbose_output)
 
         if (enabled || verbose_output) {
             for (line = entry->nocomment; line != NULL; line = line->next) {
-                if (!line->data)
+                if (!line->data.size())
                     continue;
                 if (!enabled && line->data[0] != '#')
                     fout << "#" << line->data << std::endl;

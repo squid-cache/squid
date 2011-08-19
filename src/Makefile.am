@@ -207,11 +207,8 @@ libexec_PROGRAMS = \
 
 cf_gen_SOURCES = cf_gen.cc
 nodist_cf_gen_HEADER = cf_gen_defines.cci
-cf_gen_LDADD= \
-	$(COMPAT_LIB) \
-	$(EPOLL_LIBS) \
-	$(MINGW_LIBS) \
-	$(XTRA_LIBS)
+## cf_gen must be stand-alone executable. It is a purely build-time executable.
+cf_gen_LDADD=
 cf_gen.$(OBJEXT): cf_gen_defines.cci
 
 ## cf_gen.cc needs src/cf_gen_defines.cci
