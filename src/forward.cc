@@ -285,14 +285,30 @@ FwdState::fwdStart(const Comm::ConnectionPointer &clientConn, StoreEntry *entry,
 void
 FwdState::startConnectionOrFail()
 {
-    debugs(17, 3, HERE << entry->url() );
+    debugs(17, 3, HERE << entry->url());
 
     if (serverDestinations.size() > 0) {
+        // Ditch error page if it was created before.
+        // A new one will be created if there's another problem
+        if (err) {
+            errorStateFree(err);
+            err = NULL;
+        }
+
+        // Update the logging information about this new server connection.
+        // Done here before anything else so the errors get logged for
+        // this server link regardless of what happens when connecting to it.
+        // IF sucessfuly connected this top destination will become the serverConnection().
+        request->hier.note(serverDestinations[0], request->GetHost());
+
         connectStart();
     } else {
-        debugs(17, 3, HERE << entry->url()  );
-        ErrorState *anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, request);
-        anErr->xerrno = errno;
+        debugs(17, 3, HERE << entry->url());
+        ErrorState *anErr = NULL;
+        if (err) {
+            anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_INTERNAL_SERVER_ERROR, request);
+            anErr->xerrno = errno;
+        } // else use actual error from last connection attempt
         fail(anErr);
         self = NULL;       // refcounted
     }
@@ -355,7 +371,6 @@ FwdState::complete()
     logReplyStatus(n_tries, entry->getReply()->sline.status);
 
     if (reforward()) {
-        assert(serverDestinations.size() > 0);
         debugs(17, 3, HERE << "re-forwarding " << entry->getReply()->sline.status << " " << entry->url());
 
         if (Comm::IsConnOpen(serverConn))
@@ -363,10 +378,10 @@ FwdState::complete()
 
         entry->reset();
 
-        /* the call to reforward() has already dropped the last path off the
-         * selection list. all we have now are the next path(s) to be tried.
-         */
-        connectStart();
+        // drop the last path off the selection list. try the next one.
+        serverDestinations.shift();
+        startConnectionOrFail();
+
     } else {
         if (Comm::IsConnOpen(serverConn))
             debugs(17, 3, HERE << "server FD " << serverConnection()->fd << " not re-forwarding status " << entry->getReply()->sline.status);
@@ -523,27 +538,9 @@ FwdState::retryOrBail()
 {
     if (checkRetry()) {
         debugs(17, 3, HERE << "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
-
         serverDestinations.shift(); // last one failed. try another.
-
-        if (serverDestinations.size() > 0) {
-            /* Ditch error page if it was created before.
-             * A new one will be created if there's another problem */
-            if (err) {
-                errorStateFree(err);
-                err = NULL;
-            }
-
-            connectStart();
-            return;
-        }
-        // else bail. no more serverDestinations possible to try.
-
-        // produce cannot-forward error, but only if no more specific one exists
-        if (!err) {
-            ErrorState *anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_INTERNAL_SERVER_ERROR, request);
-            errorAppendEntry(entry, anErr);
-        }
+        startConnectionOrFail();
+        return;
     }
 
     // TODO: should we call completed() here and move doneWithRetries there?
@@ -735,8 +732,6 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
     if (serverConnection()->getPeer())
         peerConnectSucceded(serverConnection()->getPeer());
 
-    updateHierarchyInfo();
-
 #if USE_SSL
     if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
             (!serverConnection()->getPeer() && request->protocol == AnyP::PROTO_HTTPS)) {
@@ -755,9 +750,6 @@ FwdState::connectTimeout(int fd)
     debugs(17, 2, "fwdConnectTimeout: FD " << fd << ": '" << entry->url() << "'" );
     assert(serverDestinations[0] != NULL);
     assert(fd == serverDestinations[0]->fd);
-
-    if (Config.onoff.log_ip_on_direct && serverDestinations[0]->peerType == HIER_DIRECT)
-        updateHierarchyInfo();
 
     if (entry->isEmpty()) {
         ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_GATEWAY_TIMEOUT, request);
@@ -830,7 +822,6 @@ FwdState::connectStart()
             request->flags.pinned = 1;
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = 1;
-            updateHierarchyInfo();
             dispatch();
             return;
         }
@@ -859,7 +850,6 @@ FwdState::connectStart()
         if (!serverConnection()->getPeer())
             origin_tries++;
 
-        updateHierarchyInfo();
         comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
 
         /* Update server side TOS and Netfilter mark on the connection. */
@@ -1050,9 +1040,8 @@ FwdState::reforward()
     if (request->bodyNibbled())
         return 0;
 
-    serverDestinations.shift();
-
-    if (serverDestinations.size() == 0) {
+    if (serverDestinations.size() <= 1) {
+        // NP: <= 1 since total count includes the recently failed one.
         debugs(17, 3, HERE << "No alternative forwarding paths left");
         return 0;
     }
@@ -1172,29 +1161,6 @@ FwdState::logReplyStatus(int tries, http_status status)
 
     FwdReplyCodes[tries][status]++;
 }
-
-/** From Comment #5 by Henrik Nordstrom made at
-http://www.squid-cache.org/bugs/show_bug.cgi?id=2391 on 2008-09-19
-
-updateHierarchyInfo should be called each time a new path has been
-selected or when more information about the path is available (i.e. the
-server IP), and when it's called it needs to be given reasonable
-arguments describing the now selected path..
-
-It does not matter from a functional perspective if it gets called a few
-times more than what is really needed, but calling it too often may
-obviously hurt performance.
-*/
-// updates HierarchyLogEntry, guessing nextHop and its format
-void
-FwdState::updateHierarchyInfo()
-{
-    assert(request);
-    assert(serverDestinations.size() > 0);
-
-    request->hier.note(serverConnection(), request->GetHost());
-}
-
 
 /**** PRIVATE NON-MEMBER FUNCTIONS ********************************************/
 
