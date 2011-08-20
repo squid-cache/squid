@@ -728,11 +728,6 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
 
     serverConn = conn;
 
-#if REDUNDANT_NOW
-    if (Config.onoff.log_ip_on_direct && serverConnection()->peerType == HIER_DIRECT)
-        updateHierarchyInfo();
-#endif
-
     debugs(17, 3, HERE << serverConnection() << ": '" << entry->url() << "'" );
 
     comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
@@ -1195,24 +1190,9 @@ void
 FwdState::updateHierarchyInfo()
 {
     assert(request);
-
     assert(serverDestinations.size() > 0);
 
-    char nextHop[256];
-
-    if (serverConnection()->getPeer()) {
-        // went to peer, log peer host name
-        snprintf(nextHop,256,"%s", serverConnection()->getPeer()->name);
-    } else {
-        // went DIRECT, must honor log_ip_on_direct
-        if (!Config.onoff.log_ip_on_direct)
-            snprintf(nextHop,256,"%s",request->GetHost()); // domain name
-        else
-            serverConnection()->remote.NtoA(nextHop, 256);
-    }
-
-    assert(nextHop[0]);
-    hierarchyNote(&request->hier, serverConnection()->peerType, nextHop);
+    request->hier.note(serverConnection(), request->GetHost());
 }
 
 

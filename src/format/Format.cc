@@ -361,31 +361,30 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             /* case LFT_SERVER_PORT: */
 
         case LFT_LOCAL_IP:
-            if (al->request) {
-                out = al->request->my_addr.NtoA(tmp,sizeof(tmp));
+            if (al->tcpClient != NULL) {
+                out = al->tcpClient->local.NtoA(tmp,sizeof(tmp));
             }
-
             break;
 
         case LFT_LOCAL_PORT:
-            if (al->request) {
-                outint = al->request->my_addr.GetPort();
+            if (al->tcpClient != NULL) {
+                outint = al->tcpClient->local.GetPort();
                 doint = 1;
             }
-
             break;
 
             // the fmt->type can not be LFT_PEER_LOCAL_IP_OLD_27
             // but compiler complains if ommited
         case LFT_PEER_LOCAL_IP_OLD_27:
         case LFT_PEER_LOCAL_IP:
-            if (!al->hier.peer_local_addr.IsAnyAddr()) {
-                out = al->hier.peer_local_addr.NtoA(tmp,sizeof(tmp));
+            if (al->hier.tcpServer != NULL) {
+                out = al->hier.tcpServer->local.NtoA(tmp,sizeof(tmp));
             }
             break;
 
         case LFT_PEER_LOCAL_PORT:
-            if ((outint = al->hier.peer_local_addr.GetPort())) {
+            if (al->hier.tcpServer != NULL) {
+                outint = al->hier.tcpServer->local.GetPort();
                 doint = 1;
             }
 
