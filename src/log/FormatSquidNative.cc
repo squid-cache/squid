@@ -43,10 +43,9 @@
 void
 Log::Format::SquidNative(AccessLogEntry * al, Logfile * logfile)
 {
-    const char *user = NULL;
-    char clientip[MAX_IPSTRLEN];
+    char hierHost[MAX_IPSTRLEN];
 
-    user = ::Format::QuoteUrlEncodeUsername(al->cache.authuser);
+    const char *user = ::Format::QuoteUrlEncodeUsername(al->cache.authuser);
 
     if (!user)
         user = ::Format::QuoteUrlEncodeUsername(al->cache.extuser);
@@ -62,11 +61,17 @@ Log::Format::SquidNative(AccessLogEntry * al, Logfile * logfile)
     if (user && !*user)
         safe_free(user);
 
+    char clientip[MAX_IPSTRLEN];
+    if (al->tcpClient != NULL)
+        al->tcpClient->remote.NtoA(clientip, sizeof(clientip));
+    else
+        al->cache.caddr.NtoA(clientip, sizeof(clientip));
+
     logfilePrintf(logfile, "%9ld.%03d %6d %s %s%s/%03d %"PRId64" %s %s %s %s%s/%s %s%s",
                   (long int) current_time.tv_sec,
                   (int) current_time.tv_usec / 1000,
                   al->cache.msec,
-                  al->cache.caddr.NtoA(clientip, MAX_IPSTRLEN),
+                  clientip,
                   ::Format::log_tags[al->cache.code],
                   al->http.statusSfx(),
                   al->http.code,
@@ -76,7 +81,7 @@ Log::Format::SquidNative(AccessLogEntry * al, Logfile * logfile)
                   user ? user : dash_str,
                   al->hier.ping.timedout ? "TIMEOUT_" : "",
                   hier_code_str[al->hier.code],
-                  al->hier.host,
+                  al->hier.tcpServer != NULL ? al->hier.tcpServer->remote.NtoA(hierHost, sizeof(hierHost)) : "-",
                   al->http.content_type,
                   (Config.onoff.log_mime_hdrs?"":"\n"));
 
