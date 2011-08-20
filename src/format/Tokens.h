@@ -177,7 +177,16 @@ enum Quoting {
 class Token
 {
 public:
-    Token() {};
+    Token() : type(LFT_NONE),
+            width(0),
+            precision(0),
+            quote(LOG_QUOTE_NONE),
+            left(0),
+            space(0),
+            zero(0),
+            divisor(0),
+            next(NULL)
+    { data.string = NULL; };
     ~Token();
 
     /** parses a single token. Returns the token length in characters,
