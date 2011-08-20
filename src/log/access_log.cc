@@ -252,7 +252,7 @@ HierarchyLogEntry::HierarchyLogEntry() :
         peer_reply_status(HTTP_STATUS_NONE),
         peer_response_time(-1),
         total_response_time(-1),
-        peer_local_addr(),
+        tcpServer(NULL),
         bodyBytesRead(-1)
 {
     memset(host, '\0', SQUIDHOSTNAMELEN);
@@ -272,13 +272,26 @@ HierarchyLogEntry::HierarchyLogEntry() :
 }
 
 void
-hierarchyNote(HierarchyLogEntry * hl,
-              hier_code code,
-              const char *cache_peer)
+HierarchyLogEntry::note(const Comm::ConnectionPointer &server, const char *requestedHost)
 {
-    assert(hl != NULL);
-    hl->code = code;
-    xstrncpy(hl->host, cache_peer, SQUIDHOSTNAMELEN);
+    tcpServer = server;
+    if (tcpServer == NULL) {
+       code = HIER_NONE;
+       xstrncpy(host, requestedHost, sizeof(host));
+    } else {
+        code = tcpServer->peerType;
+
+        if (tcpServer->getPeer()) {
+            // went to peer, log peer host name
+            xstrncpy(host, tcpServer->getPeer()->name, sizeof(host));
+        } else {
+            // went DIRECT, must honor log_ip_on_direct
+            if (!Config.onoff.log_ip_on_direct)
+                xstrncpy(host, requestedHost, sizeof(host));
+            else
+                tcpServer->remote.NtoA(host, 256);
+        }
+    }
 }
 
 static void

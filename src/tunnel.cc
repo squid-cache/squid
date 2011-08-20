@@ -571,14 +571,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
         tunnelState->server.setDelayId(DelayId());
 #endif
 
-    if (conn != NULL && conn->getPeer())
-        hierarchyNote(&tunnelState->request->hier, conn->peerType, conn->getPeer()->name);
-    else if (Config.onoff.log_ip_on_direct) {
-        conn->remote.NtoA(fd_table[conn->fd].ipaddr,sizeof(fd_table[conn->fd].ipaddr));
-        hierarchyNote(&tunnelState->request->hier, conn->peerType, fd_table[conn->fd].ipaddr);
-    } else
-        hierarchyNote(&tunnelState->request->hier, conn->peerType, tunnelState->getHost());
-
+    tunnelState->request->hier.note(conn, tunnelState->getHost());
 
     tunnelState->server.conn = conn;
     tunnelState->request->peer_host = conn->getPeer() ? conn->getPeer()->host : NULL;
