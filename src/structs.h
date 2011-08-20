@@ -407,7 +407,6 @@ struct SquidConfig {
         int digest_generation;
 #endif
 
-        int log_ip_on_direct;
         int ie_refresh;
         int vary_ignore_expire;
         int pipeline_prefetch;
