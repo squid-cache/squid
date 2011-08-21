@@ -30,6 +30,7 @@
 #ifndef SQUID_HTTPACCESSLOGENTRY_H
 #define SQUID_HTTPACCESSLOGENTRY_H
 
+#include "comm/Connection.h"
 #include "HttpVersion.h"
 #include "HttpRequestMethod.h"
 #include "HierarchyLogEntry.h"
@@ -47,10 +48,15 @@ class AccessLogEntry
 {
 
 public:
-    AccessLogEntry() : url(NULL) , reply(NULL), request(NULL),
+    AccessLogEntry() : url(NULL), tcpClient(), reply(NULL), request(NULL),
             adapted_request(NULL) {}
 
     const char *url;
+
+    /// TCP/IP level details about the client connection
+    Comm::ConnectionPointer tcpClient;
+    // TCP/IP level details about the server or peer connection
+    // are stored in hier.tcpServer
 
     /** \brief This subclass holds log info for HTTP protocol
      * \todo Inner class declarations should be moved outside
