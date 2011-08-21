@@ -119,7 +119,7 @@ xmalloc(size_t sz)
     if (p == NULL) {
         if (failure_notify) {
             static char msg[128];
-            snprintf(msg, 128, "xmalloc: Unable to allocate %Zu bytes!\n", sz);
+            snprintf(msg, 128, "xmalloc: Unable to allocate %lu bytes!\n", (unsigned long)sz);
             failure_notify(msg);
         } else {
             perror("malloc");
@@ -167,7 +167,7 @@ xrealloc(void *s, size_t sz)
     if (p == NULL) {
         if (failure_notify) {
             static char msg[128];
-            snprintf(msg, 128, "xrealloc: Unable to reallocate %Zu bytes!\n", sz);
+            snprintf(msg, 128, "xrealloc: Unable to reallocate %lu bytes!\n", (unsigned long)sz);
             failure_notify(msg);
         } else {
             perror("realloc");
