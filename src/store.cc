@@ -1510,6 +1510,14 @@ StoreEntry::timestampsSet()
     if (served_date < 0 || served_date > squid_curtime)
         served_date = squid_curtime;
 
+    /* Bug 1791:
+     * If the returned Date: is more than 24 hours older than
+     * the squid_curtime, then one of us needs to use NTP to set our
+     * clock.  We'll pretend that our clock is right.
+     */
+    else if (served_date < (squid_curtime - 24 * 60 * 60) )
+        served_date = squid_curtime;
+
     /*
      * Compensate with Age header if origin server clock is ahead
      * of us and there is a cache in between us and the origin
