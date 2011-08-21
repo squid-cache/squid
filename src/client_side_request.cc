@@ -1782,7 +1782,7 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
 #endif
 
     request->detailError(ERR_ICAP_FAILURE, errDetail);
-    c->flags.reaMore = true;
+    c->flags.readMore = true;
     node = (clientStreamNode *)client_stream.tail->data;
     clientStreamRead(node, this, node->readBuffer);
 }
