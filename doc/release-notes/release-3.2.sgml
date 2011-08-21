@@ -541,14 +541,17 @@ This section gives a thorough account of those changes in three categories:
 	which applies to both ICAP and eCAP.</p>
 
 	<tag>logformat</tag>
+	<p><em>%&lt;a</em> Server or Peer IP address from the last server connection (next hop).
         <p><em>%&gt;bs</em> Number of HTTP-equivalent message body bytes received from the next hop.
         <p><em>icap::%&gt;bs</em> Number of message body bytes received from the ICAP server.
 	<p><em>%sn</em> Unique sequence number per log line. Ported from 2.7
-	<p><em>%&gt;eui</em> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
+	<p><em>%&gt;eui</em> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6).
 	   Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.
-        <p><em>%err_code</em> The ID of an error response served by Squid or
-          a similar internal error identifier
+        <p><em>%err_code</em> The ID of an error response served by Squid or a similar internal error identifier
         <p><em>%err_detail</em> Additional err_code-dependent error information.
+	<p><em>%&gt;la</em> Rename of %la to indicate being a client connection detail.
+	<p><em>%&gt;lp</em> Rename of %lp to indicate being a client connection detail.
+	<p><em>%&lt;p</em> Server or Peer port number from the last server connection (next hop).
 
 	<tag>memory_pools_limit</tag>
 	<p>Memory limits have been revised and corrected from 3.1.4 onwards.
@@ -616,6 +619,9 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>log_fqdn</tag>
 	<p>Obsolete. Replaced by automatic detection of the %>A logformat tag.
+
+	<tag>log_ip_on_direct</tag>
+	<p>Obsolete. Use a custom log with <em>%&lt;A</em> format tag to receive server FQDN or peer name.
 
 	<tag>maximum_single_addr_tries</tag>
 	<p>The behaviour controlled by this directive is no longer possible.

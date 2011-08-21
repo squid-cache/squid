@@ -2885,10 +2885,13 @@ DOC_START
 		>a	Client source IP address
 		>A	Client FQDN
 		>p	Client source port
-		>eui	Client EUI (MAC address, EUI-48 or EUI-64 identifier)
-		<A	Server IP address or peer name
-		la	Local IP address (http_port)
-		lp	Local port number (http_port)
+		>eui	Client source EUI (MAC address, EUI-48 or EUI-64 identifier)
+		>la	Local IP address the client connected to
+		>lp	Local port number the client connected to
+
+		<a	Server IP address of the last server or peer connection
+		<A	Server FQDN or peer name
+		<p	Server port number of the last server or peer connection
 		<la	Local IP address of the last server or peer connection
 		<lp     Local port number of the last server or peer connection
 
@@ -2903,7 +2906,17 @@ DOC_START
 		tr	Response time (milliseconds)
 		dt	Total time spent making DNS lookups (milliseconds)
 
-	HTTP cache related format codes:
+	Access Control related format codes:
+
+		et	Tag returned by external acl
+		ea	Log string returned by external acl
+		un	User name (any available)
+		ul	User name from authentication
+		ue	User name from external acl helper
+		ui	User name from ident
+		us	User name from SSL
+
+	HTTP related format codes:
 
 		[http::]>h	Original request header. Optional header name argument
 				on the format header[:[separator]element]
@@ -2911,11 +2924,6 @@ DOC_START
 				Optional header name argument as for >h
 		[http::]<h	Reply header. Optional header name argument
 				as for >h
-		[http::]un	User name
-		[http::]ul	User name from authentication
-		[http::]ui	User name from ident
-		[http::]us	User name from SSL
-		[http::]ue	User name from external acl helper
 		[http::]>Hs	HTTP status code sent to the client
 		[http::]<Hs	HTTP status code received from the next hop
 		[http::]<bs	Number of HTTP-equivalent message body bytes 
@@ -2923,8 +2931,6 @@ DOC_START
 				transfer encoding and control messages.
 				Generated FTP/Gopher listings are treated as
 				received bodies.
-		[http::]Ss	Squid request status (TCP_MISS etc)
-		[http::]Sh	Squid hierarchy status (DEFAULT_PARENT etc)
 		[http::]mt	MIME content type
 		[http::]rm	Request method (GET/POST etc)
 		[http::]>rm	Request method from client
@@ -2938,8 +2944,6 @@ DOC_START
 		[http::]rv	Request protocol version
 		[http::]>rv	Request protocol version from client
 		[http::]<rv	Request protocol version sent to server or peer
-		[http::]et	Tag returned by external acl
-		[http::]ea	Log string returned by external acl
 		[http::]<st	Sent reply size including HTTP headers
 		[http::]>st	Received request size including HTTP headers. In the
 				case of chunked requests the chunked encoding metadata
@@ -2956,6 +2960,11 @@ DOC_START
 				starts with the first connect request (or write I/O)
 				sent to the first selected peer. The timer stops
 				with the last I/O with the last peer.
+
+	Squid handling related format codes:
+
+		Ss	Squid request status (TCP_MISS etc)
+		Sh	Squid hierarchy status (DEFAULT_PARENT etc)
 
 	If ICAP is enabled, the following code becomes available (as
 	well as ICAP log codes documented with the icap_log option):
@@ -2997,18 +3006,19 @@ DOC_START
 
 	The default formats available (which do not need re-defining) are:
 
-logformat squid      %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %un %Sh/%<A %mt
+logformat squid      %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %un %Sh/%<a %mt
 logformat common     %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
 logformat combined   %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
 logformat referrer   %ts.%03tu %>a %{Referer}>h %ru
 logformat useragent  %>a [%tl] "%{User-Agent}>h"
 
-	When the log_mime_hdrs directive is set to ON. The squid, common and combined
-	formats have a safely encoded copy of the mime headers appended to each line
-	within a pair of brackets.
+	NOTE: When the log_mime_hdrs directive is set to ON.
+		The squid, common and combined formats have a safely encoded copy
+		of the mime headers appended to each line within a pair of brackets.
 
-	The common and combined formats are not quite true to the Apache definition.
-	The logs from Squid contain an extra status and hierarchy code appended.
+	NOTE: The common and combined formats are not quite true to the Apache definition.
+		The logs from Squid contain an extra status and hierarchy code appended.
+
 DOC_END
 
 NAME: access_log cache_access_log
@@ -3275,14 +3285,9 @@ DOC_START
 DOC_END
 
 NAME: log_ip_on_direct
-COMMENT: on|off
-TYPE: onoff
-DEFAULT: on
-LOC: Config.onoff.log_ip_on_direct
+TYPE: obsolete
 DOC_START
-	Log the destination IP address in the hierarchy log tag when going
-	direct. Earlier Squid versions logged the hostname here. If you
-	prefer the old way set this to off.
+	Remove this option from your config. To log server or peer names use %<A in the log format.
 DOC_END
 
 NAME: mime_table

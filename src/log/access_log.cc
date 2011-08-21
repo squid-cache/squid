@@ -276,8 +276,8 @@ HierarchyLogEntry::note(const Comm::ConnectionPointer &server, const char *reque
 {
     tcpServer = server;
     if (tcpServer == NULL) {
-       code = HIER_NONE;
-       xstrncpy(host, requestedHost, sizeof(host));
+        code = HIER_NONE;
+        xstrncpy(host, requestedHost, sizeof(host));
     } else {
         code = tcpServer->peerType;
 
@@ -285,11 +285,7 @@ HierarchyLogEntry::note(const Comm::ConnectionPointer &server, const char *reque
             // went to peer, log peer host name
             xstrncpy(host, tcpServer->getPeer()->name, sizeof(host));
         } else {
-            // went DIRECT, must honor log_ip_on_direct
-            if (!Config.onoff.log_ip_on_direct)
-                xstrncpy(host, requestedHost, sizeof(host));
-            else
-                tcpServer->remote.NtoA(host, 256);
+            xstrncpy(host, requestedHost, sizeof(host));
         }
     }
 }
