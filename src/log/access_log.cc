@@ -276,8 +276,8 @@ HierarchyLogEntry::note(const Comm::ConnectionPointer &server, const char *reque
 {
     tcpServer = server;
     if (tcpServer == NULL) {
-       code = HIER_NONE;
-       xstrncpy(host, requestedHost, sizeof(host));
+        code = HIER_NONE;
+        xstrncpy(host, requestedHost, sizeof(host));
     } else {
         code = tcpServer->peerType;
 
