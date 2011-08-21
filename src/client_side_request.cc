@@ -789,6 +789,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 #else
                                     NULL);
 #endif
+        http->getConn()->flags.readMore = true; // resume any pipeline reads.
         node = (clientStreamNode *)http->client_stream.tail->data;
         clientStreamRead(node, http, node->readBuffer);
         return;
@@ -1778,7 +1779,7 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
 #endif
 
     request->detailError(ERR_ICAP_FAILURE, errDetail);
-
+    c->flags.readMore = true;
     node = (clientStreamNode *)client_stream.tail->data;
     clientStreamRead(node, this, node->readBuffer);
 }
