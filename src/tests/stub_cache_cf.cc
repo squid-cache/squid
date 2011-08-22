@@ -115,11 +115,6 @@ dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
     fatal("not implemented 11");
 }
 
-YesNoNone::YesNoNone()
-{
-    /* ignore this for testing  */
-}
-
 YesNoNone::operator void*() const
 {
     /* ignore this for testing  */

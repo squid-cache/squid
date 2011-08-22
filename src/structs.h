@@ -152,7 +152,7 @@ class SwapDir;
 class YesNoNone {
 // TODO: generalize to non-boolean option types
 public:
-    YesNoNone();
+    YesNoNone(): option(0) {}
 
     /// returns true iff enabled; asserts if the option has not been configured
     operator void *() const; // TODO: use a fancy/safer version of the operator
