@@ -2564,6 +2564,7 @@ AC_SEARCH_LIBS([bind],[socket])
 AC_SEARCH_LIBS([opcom_stack_trace],[opcom_stack])
 AC_SEARCH_LIBS([strlcpy], [bsd])
 AC_SEARCH_LIBS([yp_match], [nsl nss_nis nss_nisplus])
+AC_SEARCH_LIBS([shm_open], [rt])
 dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
 if test "x$squid_host_os" = "xmingw" ; then
   SQUID_CHECK_WINSOCK_LIB
