@@ -3347,10 +3347,6 @@ dump_removalpolicy(StoreEntry * entry, const char *name, RemovalPolicySettings *
     storeAppendPrintf(entry, "\n");
 }
 
-YesNoNone::YesNoNone(): option(0)
-{
-}
-
 void
 YesNoNone::configure(bool beSet)
 {
