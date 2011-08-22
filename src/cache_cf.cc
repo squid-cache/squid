@@ -3049,7 +3049,6 @@ free_time_t(time_t * var)
     *var = 0;
 }
 
-#if !USE_DNSSERVERS
 static void
 dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
 {
@@ -3070,7 +3069,6 @@ free_time_msec(time_msec_t * var)
 {
     *var = 0;
 }
-#endif
 
 #if UNUSED_CODE
 static void
