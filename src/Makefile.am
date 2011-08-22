@@ -2606,6 +2606,7 @@ tests_testUfs_DEPENDENCIES = \
 
 tests_testRock_SOURCES = \
 	cbdata.cc \
+	CacheDigest.cc \
 	ConfigOption.cc \
 	ConfigParser.cc \
 	disk.cc \
