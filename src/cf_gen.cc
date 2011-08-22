@@ -460,7 +460,7 @@ gen_default(const EntryList &head, std::ostream &fout)
 {
     int rc = 0;
     fout << "static void" << std::endl <<
-    "default_line(const char *s)" << std::endl << 
+    "default_line(const char *s)" << std::endl <<
     "{" << std::endl <<
     "    LOCAL_ARRAY(char, tmp_line, BUFSIZ);" << std::endl <<
     "    xstrncpy(tmp_line, s, BUFSIZ);" << std::endl <<
