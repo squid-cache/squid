@@ -672,6 +672,7 @@ for module in $squid_disk_module_candidates none; do
       DISK_LIBS="$DISK_LIBS libIpcIo.a"
       DISK_MODULES="$DISK_MODULES IpcIo"
       DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/IpcIo/IpcIoDiskIOModule.o"
+      AC_DEFINE(USE_DISKIO_IPCIO, 1, [Enable DiskIO IpcIo module.])
       ;;
 
     Blocking)
