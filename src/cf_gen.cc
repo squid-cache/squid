@@ -59,6 +59,7 @@ _FILE_OFFSET_BITS==64
 #include <cassert>
 #include <cctype>
 #include <cerrno>
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <iostream>
