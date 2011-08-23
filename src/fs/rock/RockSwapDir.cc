@@ -46,8 +46,8 @@ Rock::SwapDir::get(const cache_key *key)
     if (!map || !theFile || !theFile->canRead())
         return NULL;
 
-    sfileno fileno;
-    const Ipc::StoreMapSlot *const slot = map->openForReading(key, fileno);
+    sfileno filen;
+    const Ipc::StoreMapSlot *const slot = map->openForReading(key, filen);
     if (!slot)
         return NULL;
 
@@ -57,7 +57,7 @@ Rock::SwapDir::get(const cache_key *key)
     StoreEntry *e = new StoreEntry();
     e->lock_count = 0;
     e->swap_dirn = index;
-    e->swap_filen = fileno;
+    e->swap_filen = filen;
     e->swap_file_sz = basics.swap_file_sz;
     e->lastref = basics.lastref;
     e->timestamp = basics.timestamp;
@@ -322,20 +322,20 @@ Rock::SwapDir::rebuild() {
 /* Add a new object to the cache with empty memory copy and pointer to disk
  * use to rebuild store from disk. Based on UFSSwapDir::addDiskRestore */
 bool
-Rock::SwapDir::addEntry(const int fileno, const DbCellHeader &header, const StoreEntry &from)
+Rock::SwapDir::addEntry(const int filen, const DbCellHeader &header, const StoreEntry &from)
 {
     debugs(47, 8, HERE << &from << ' ' << from.getMD5Text() <<
-       ", fileno="<< std::setfill('0') << std::hex << std::uppercase <<
-       std::setw(8) << fileno);
+       ", filen="<< std::setfill('0') << std::hex << std::uppercase <<
+       std::setw(8) << filen);
 
     sfileno newLocation = 0;
     if (Ipc::StoreMapSlot *slot = map->openForWriting(reinterpret_cast<const cache_key *>(from.key), newLocation)) {
-        if (fileno == newLocation) {
+        if (filen == newLocation) {
             slot->set(from);
-            map->extras(fileno) = header;
+            map->extras(filen) = header;
         } // else some other, newer entry got into our cell
         map->closeForWriting(newLocation, false);
-        return fileno == newLocation;
+        return filen == newLocation;
     }
 
     return false;
@@ -386,16 +386,16 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
     const int64_t payloadEnd = sizeof(DbCellHeader) + header.payloadSize;
     assert(payloadEnd <= max_objsize);
 
-    sfileno fileno;
+    sfileno filen;
     Ipc::StoreMapSlot *const slot =
-        map->openForWriting(reinterpret_cast<const cache_key *>(e.key), fileno);
+        map->openForWriting(reinterpret_cast<const cache_key *>(e.key), filen);
     if (!slot) {
         debugs(47, 5, HERE << "Rock::SwapDir::createStoreIO: map->add failed");
         return NULL;
     }
     e.swap_file_sz = header.payloadSize; // and will be copied to the map
     slot->set(e);
-    map->extras(fileno) = header;
+    map->extras(filen) = header;
 
     // XXX: We rely on our caller, storeSwapOutStart(), to set e.fileno.
     // If that does not happen, the entry will not decrement the read level!
@@ -403,11 +403,11 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
     IoState *sio = new IoState(this, &e, cbFile, cbIo, data);
 
     sio->swap_dirn = index;
-    sio->swap_filen = fileno;
+    sio->swap_filen = filen;
     sio->payloadEnd = payloadEnd;
     sio->diskOffset = diskOffset(sio->swap_filen);
 
-    debugs(47,5, HERE << "dir " << index << " created new fileno " <<
+    debugs(47,5, HERE << "dir " << index << " created new filen " <<
         std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
         sio->swap_filen << std::dec << " at " << sio->diskOffset);
 
@@ -468,7 +468,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
     sio->payloadEnd = sizeof(DbCellHeader) + map->extras(e.swap_filen).payloadSize;
     assert(sio->payloadEnd <= max_objsize); // the payload fits the slot
 
-    debugs(47,5, HERE << "dir " << index << " has old fileno: " <<
+    debugs(47,5, HERE << "dir " << index << " has old filen: " <<
         std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
         sio->swap_filen);
 

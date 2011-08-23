@@ -36,7 +36,7 @@ private:
 
     int fd; // store db file descriptor
     int64_t dbOffset;
-    int fileno;
+    int filen;
 
     struct _store_rebuild_data counts;
 
