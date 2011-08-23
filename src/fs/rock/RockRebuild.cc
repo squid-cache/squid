@@ -18,7 +18,7 @@ Rock::Rebuild::Rebuild(SwapDir *dir): AsyncJob("Rock::Rebuild"),
     dbEntryLimit(0),
     fd(-1),
     dbOffset(0),
-    fileno(0)
+    filen(0)
 {
     assert(sd);
     memset(&counts, 0, sizeof(counts));
@@ -56,7 +56,7 @@ Rock::Rebuild::start() {
         failure("cannot read db header", errno);
 
     dbOffset = SwapDir::HeaderSize;
-    fileno = 0;    
+    filen = 0;    
 
     checkpoint();
 }
@@ -84,13 +84,13 @@ Rock::Rebuild::Steps(void *data)
 
 void
 Rock::Rebuild::steps() {
-    debugs(47,5, HERE << sd->index << " fileno " << fileno << " at " <<
+    debugs(47,5, HERE << sd->index << " filen " << filen << " at " <<
         dbOffset << " <= " << dbSize);
 
     const int maxCount = dbEntryLimit;
     const int wantedCount = opt_foreground_rebuild ? maxCount : 50;
     const int stepCount = min(wantedCount, maxCount);
-    for (int i = 0; i < stepCount && dbOffset < dbSize; ++i, ++fileno) {
+    for (int i = 0; i < stepCount && dbOffset < dbSize; ++i, ++filen) {
         doOneEntry();
         dbOffset += dbEntrySize;
 
@@ -103,7 +103,7 @@ Rock::Rebuild::steps() {
 
 void
 Rock::Rebuild::doOneEntry() {
-    debugs(47,5, HERE << sd->index << " fileno " << fileno << " at " <<
+    debugs(47,5, HERE << sd->index << " filen " << filen << " at " <<
         dbOffset << " <= " << dbSize);
 
     ++counts.scancount;
@@ -141,7 +141,7 @@ Rock::Rebuild::doOneEntry() {
         // skip empty slots
         if (loadedE.swap_filen > 0 || loadedE.swap_file_sz > 0) {
             counts.invalid++;
-            //sd->unlink(fileno); leave garbage on disk, it should not hurt
+            //sd->unlink(filen); leave garbage on disk, it should not hurt
         }
         return;
 	}
@@ -153,7 +153,7 @@ Rock::Rebuild::doOneEntry() {
     counts.objcount++;
     // loadedE->dump(5);
 
-    sd->addEntry(fileno, header, loadedE);
+    sd->addEntry(filen, header, loadedE);
 }
 
 void
@@ -166,7 +166,7 @@ Rock::Rebuild::swanSong() {
 
 void
 Rock::Rebuild::failure(const char *msg, int errNo) {
-    debugs(47,5, HERE << sd->index << " fileno " << fileno << " at " <<
+    debugs(47,5, HERE << sd->index << " filen " << filen << " at " <<
         dbOffset << " <= " << dbSize);
 
     if (errNo)
