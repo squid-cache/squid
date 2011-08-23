@@ -2662,6 +2662,7 @@ tests_testRock_SOURCES = \
 	tests/stub_http.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_ipc_TypedMsgHdr.cc \
 	tests/stub_libcomm.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_mime.cc \
@@ -2693,7 +2694,6 @@ tests_testRock_LDADD = \
 	acl/libstate.la \
 	eui/libeui.la \
 	mgr/libmgr.la \
-	ipc/libipc.la \
 	base/libbase.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
