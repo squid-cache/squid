@@ -118,11 +118,11 @@ make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_1 v3 3.1 3
 #../commit/bootstrap squid-3.0
 #make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_0 v3 3.0 3
 
-../commit/bootstrap squid-2
-make_snapshot ../commit/squid-2/mksnapshot.sh HEAD v2 HEAD 3
+#../commit/bootstrap squid-2
+#make_snapshot ../commit/squid-2/mksnapshot.sh HEAD v2 HEAD 3
 
-../commit/bootstrap squid-2.7
-make_snapshot ../commit/squid-2.7/mksnapshot.sh SQUID_2_7 v2 2.7 3
+#../commit/bootstrap squid-2.7
+#make_snapshot ../commit/squid-2.7/mksnapshot.sh SQUID_2_7 v2 2.7 3
 
 #../commit/bootstrap squid-2.6
 #make_snapshot ../commit/squid-2.6/mksnapshot.sh SQUID_2_6 v2 2.6 3
