@@ -151,7 +151,7 @@ MmappedFile::read(ReadRequest *aRequest)
     assert(!error_); // TODO: propagate instead?
 
     assert(minOffset < 0 || minOffset <= aRequest->offset);
-    assert(maxOffset < 0 || aRequest->offset + aRequest->len <= (uint64_t)maxOffset);
+    assert(maxOffset < 0 || static_cast<uint64_t>(aRequest->offset + aRequest->len) <= static_cast<uint64_t>(maxOffset));
 
     Mmapping mapping(fd, aRequest->len, PROT_READ, MAP_PRIVATE | MAP_NORESERVE,
         aRequest->offset);
@@ -182,7 +182,7 @@ MmappedFile::write(WriteRequest *aRequest)
     assert(!error_); // TODO: propagate instead?
 
     assert(minOffset < 0 || minOffset <= aRequest->offset);
-    assert(maxOffset < 0 || aRequest->offset + aRequest->len <= (uint64_t)maxOffset);
+    assert(maxOffset < 0 || static_cast<uint64_t>(aRequest->offset + aRequest->len) <= static_cast<uint64_t>(maxOffset));
 
     const ssize_t written =
         pwrite(fd, aRequest->buf, aRequest->len, aRequest->offset);
