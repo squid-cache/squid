@@ -1266,6 +1266,7 @@ tests_testCacheManager_SOURCES = \
 	CpuAffinitySet.cc \
 	CpuAffinitySet.h \
 	$(DELAY_POOL_SOURCE) \
+	$(DISKIO_SOURCE) \
 	disk.cc \
 	dlink.h \
 	dlink.cc \
@@ -1277,6 +1278,7 @@ tests_testCacheManager_SOURCES = \
 	ExternalACLEntry.cc \
 	fd.cc \
 	fde.cc \
+	filemap.cc \
 	forward.cc \
 	fqdncache.cc \
 	ftp.cc \
@@ -1354,6 +1356,7 @@ tests_testCacheManager_SOURCES = \
 	tools.cc \
 	tunnel.cc \
 	SwapDir.cc MemStore.cc \
+	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
@@ -1363,7 +1366,8 @@ tests_testCacheManager_SOURCES = \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testCacheManager_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	$(DISKIO_GEN_SOURCE)
 # comm.cc only requires comm/libcomm.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
 	$(AUTH_ACL_LIBS) \
@@ -1377,19 +1381,20 @@ tests_testCacheManager_LDADD = \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
-	$(SNMP_LIBS) \
 	comm/libcomm.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	log/liblog.la \
 	format/libformat.la \
 	$(REPL_OBJS) \
+	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
 	anyp/libanyp.la \
+	ipc/libipc.la \
+	mgr/libmgr.la \
+	$(SNMP_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -1568,6 +1573,7 @@ tests_testEvent_SOURCES = \
 	CpuAffinitySet.h \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
+	$(DISKIO_SOURCE) \
 	disk.cc \
 	dlink.h \
 	dlink.cc \
@@ -1582,6 +1588,7 @@ tests_testEvent_SOURCES = \
 	FadingCounter.cc \
 	fd.cc \
 	fde.cc \
+	filemap.cc \
 	forward.cc \
 	fqdncache.cc \
 	ftp.cc \
@@ -1675,6 +1682,7 @@ tests_testEvent_SOURCES = \
 	tools.cc \
 	tunnel.cc \
 	MemStore.cc \
+	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
@@ -1683,7 +1691,8 @@ tests_testEvent_SOURCES = \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testEvent_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	$(DISKIO_GEN_SOURCE)
 tests_testEvent_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
@@ -1696,10 +1705,7 @@ tests_testEvent_LDADD = \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
 	anyp/libanyp.la \
-	$(SNMP_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
 	log/liblog.la \
@@ -1711,7 +1717,11 @@ tests_testEvent_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
+	ipc/libipc.la \
+	mgr/libmgr.la \
+	$(SNMP_LIBS) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
@@ -1748,6 +1758,7 @@ tests_testEventLoop_SOURCES = \
 	CpuAffinitySet.h \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
+	$(DISKIO_SOURCE) \
 	disk.cc \
 	dlink.h \
 	dlink.cc \
@@ -1762,6 +1773,7 @@ tests_testEventLoop_SOURCES = \
 	FadingCounter.cc \
 	fd.cc \
 	fde.cc \
+	filemap.cc \
 	forward.cc \
 	fqdncache.cc \
 	ftp.cc \
@@ -1854,6 +1866,7 @@ tests_testEventLoop_SOURCES = \
 	tools.cc \
 	tunnel.cc \
 	MemStore.cc \
+	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
@@ -1862,7 +1875,8 @@ tests_testEventLoop_SOURCES = \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testEventLoop_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	$(DISKIO_GEN_SOURCE)
 tests_testEventLoop_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
@@ -1875,10 +1889,7 @@ tests_testEventLoop_LDADD = \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
 	anyp/libanyp.la \
-	$(SNMP_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
 	log/liblog.la \
@@ -1890,7 +1901,11 @@ tests_testEventLoop_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
+	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
+	ipc/libipc.la \
+	mgr/libmgr.la \
+	$(SNMP_LIBS) \
 	$(REGEXLIB) \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
@@ -1928,6 +1943,7 @@ tests_test_http_range_SOURCES = \
 	CpuAffinitySet.h \
 	debug.cc \
 	$(DELAY_POOL_SOURCE) \
+	$(DISKIO_SOURCE) \
 	disk.cc \
 	dlink.h \
 	dlink.cc \
@@ -1940,6 +1956,7 @@ tests_test_http_range_SOURCES = \
 	FadingCounter.cc \
 	fd.cc \
 	fde.cc \
+	filemap.cc \
 	forward.cc \
 	fqdncache.cc \
 	ftp.cc \
@@ -2028,6 +2045,7 @@ tests_test_http_range_SOURCES = \
 	time.cc \
 	tools.cc \
 	tunnel.cc \
+	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
@@ -2036,7 +2054,8 @@ tests_test_http_range_SOURCES = \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_test_http_range_SOURCES = \
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES) \
+	$(DISKIO_GEN_SOURCE)
 tests_test_http_range_LDADD = \
 	$(AUTH_ACL_LIBS) \
 	ident/libident.la \
@@ -2045,22 +2064,24 @@ tests_test_http_range_LDADD = \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
 	acl/libapi.la \
-	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
-	ipc/libipc.la \
-	mgr/libmgr.la \
 	anyp/libanyp.la \
-	$(SNMP_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	comm/libcomm.la \
 	log/liblog.la \
 	format/libformat.la \
 	$(REPL_OBJS) \
+	$(DISK_LIBS) \
+	$(DISK_OS_LIBS) \
 	$(ADAPTATION_LIBS) \
 	$(ESI_LIBS) \
 	$(SSL_LIBS) \
+	ipc/libipc.la \
+	base/libbase.la \
+	mgr/libmgr.la \
+	$(SNMP_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2255,11 +2276,11 @@ tests_testHttpRequest_LDADD = \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
 	acl/libapi.la \
-	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
 	ipc/libipc.la \
+	base/libbase.la \
 	mgr/libmgr.la \
 	anyp/libanyp.la \
 	$(SNMP_LIBS) \
