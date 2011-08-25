@@ -44,7 +44,7 @@
 #ifndef SQUID_EXTERNALACLENTRY_H
 #define SQUID_EXTERNALACLENTRY_H
 
-
+#include "acl/Acl.h"
 #include "cbdata.h"
 
 /******************************************************************
@@ -58,9 +58,9 @@ class ExternalACLEntryData
 {
 
 public:
-    ExternalACLEntryData() : result (-1) {}
+    ExternalACLEntryData() : result(ACCESS_DUNNO) {}
 
-    int result;
+    allow_t result;
 #if USE_AUTH
     // TODO use an AuthUser to hold this info
     String user;
@@ -89,7 +89,7 @@ public:
 
     void update(ExternalACLEntryData const &);
     dlink_node lru;
-    int result;
+    allow_t result;
     time_t date;
 #if USE_AUTH
     String user;

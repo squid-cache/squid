@@ -193,21 +193,15 @@ CacheManager::ParseUrl(const char *url)
     int len = strlen(url);
     Must(len > 0);
     t = sscanf(url, "cache_object://%[^/]/%[^@?]%n@%[^?]?%s", host, request, &pos, password, params);
+    if (t < 3) {
+        t = sscanf(url, "cache_object://%[^/]/%[^?]%n?%s", host, request, &pos, params);
+    }
     if (t < 1) {
         t = sscanf(url, "http://%[^/]/squid-internal-mgr/%[^?]%n?%s", host, request, &pos, params);
     }
     if (t < 1) {
         t = sscanf(url, "https://%[^/]/squid-internal-mgr/%[^?]%n?%s", host, request, &pos, params);
     }
-    debugs(16, 3, HERE << "HTTPS: t=" << t << ", host='" << host << "', request='" << request << "', pos=" << pos <<
-           ", password='" << password << "', params='" << params << "'");
-
-    if (pos >0 && url[pos] == '?') {
-        ++pos;
-        if (pos < len)
-            xstrncpy(params, url + pos, sizeof(params));
-    }
-
     if (t < 2)
         xstrncpy(request, "menu", MAX_URL);
 
@@ -220,6 +214,9 @@ CacheManager::ParseUrl(const char *url)
         xstrncpy(request, "menu", MAX_URL);
     }
 #endif
+
+    debugs(16, 3, HERE << "MGR request: t=" << t << ", host='" << host << "', request='" << request << "', pos=" << pos <<
+           ", password='" << password << "', params='" << params << "'");
 
     Mgr::ActionProfile::Pointer profile = findAction(request);
     if (!profile) {

@@ -17,6 +17,13 @@ httpd\-style password file when using basic HTTP authentication.
 This password file can be manipulated using
 .B htpasswd.
 .
+.PP
+.This authenticator accepts:
+.BR
+* MD5 - with optional salt and magic strings
+.BR
+* DES - for passwords 8 characters or less in length
+.
 .SH OPTIONS
 The only parameter is the password file.
 It must have permissions to be read by the user that Squid is running as.
@@ -28,6 +35,12 @@ It must have permissions to be read by the user that Squid is running as.
 .PP
 .B basic_ncsa_auth
 must have access to the password file to be executed.
+.
+.SH KNOWN ISSUES
+.PP
+DES functionality (used by htpasswd by default) silently truncates passwords to 8 characters.
+Allowing login with password values shorter than the one desired.
+This authenticator will reject login with long passwords when using DES.
 .
 .SH AUTHOR
 This manual was written by

@@ -108,7 +108,6 @@ main(int argc, char *const argv[])
     char tbuff[MAX_AUTHTOKEN_LEN];
     char buff[MAX_AUTHTOKEN_LEN+2];
     char *c;
-    static int err = 0;
     int debug = 0;
     int length;
     int nstart = 0, kstart = 0;
@@ -299,20 +298,16 @@ main(int argc, char *const argv[])
         if (c) {
             *c = '\0';
             length = c - buf;
+            if (debug)
+                fprintf(stderr, "%s| %s: Got '%s' from squid (length: %d).\n",
+                        LogTime(), PROGRAM, buf, length);
         } else {
-            err = 1;
-        }
-        if (err) {
             if (debug)
                 fprintf(stderr, "%s| %s: Oversized message\n", LogTime(),
                         PROGRAM);
             fprintf(stdout, "BH Oversized message\n");
-            err = 0;
             continue;
         }
-        if (debug)
-            fprintf(stderr, "%s| %s: Got '%s' from squid (length: %d).\n",
-                    LogTime(), PROGRAM, buf, length);
 
         if (buf[0] == '\0') {
             if (debug)

@@ -13,6 +13,7 @@
  * - extra fields in the password file are ignored; this makes it
  *   possible to use a Unix password file but I do not recommend that.
  *
+ *  MD5 without salt and magic strings - Added by Ramon de Carvalho and Rodrigo Rubira Branco
  */
 
 #include "config.h"
@@ -139,12 +140,13 @@ main(int argc, char **argv)
         if (u == NULL) {
             SEND_ERR("No such user");
 #if HAVE_CRYPT
-        } else if (strcmp(u->passwd, (char *) crypt(passwd, u->passwd)) == 0) {
+        } else if (strlen(passwd) <= 8 && strcmp(u->passwd, (char *) crypt(passwd, u->passwd)) == 0) {
+            // Bug 3107: crypt() DES functionality silently truncates long passwords.
             SEND_OK("");
 #endif
         } else if (strcmp(u->passwd, (char *) crypt_md5(passwd, u->passwd)) == 0) {
             SEND_OK("");
-        } else if (strcmp(u->passwd, (char *) md5sum(passwd)) == 0) {	/* md5 without salt and magic strings - Added by Ramon de Carvalho and Rodrigo Rubira Branco */
+        } else if (strcmp(u->passwd, (char *) md5sum(passwd)) == 0) {
             SEND_OK("");
         } else {
             SEND_ERR("Wrong password");

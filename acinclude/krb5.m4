@@ -122,7 +122,7 @@ KRB5INT_BEGIN_DECLS
 #endif
 #endif
 #include <krb5.h>
-main()
+int main(int argc, char *argv[])
 {
     krb5_context context;
     krb5_ccache cc;
