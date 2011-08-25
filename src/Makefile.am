@@ -209,11 +209,8 @@ libexec_PROGRAMS = \
 
 cf_gen_SOURCES = cf_gen.cc
 nodist_cf_gen_HEADER = cf_gen_defines.cci
-cf_gen_LDADD= \
-	$(COMPAT_LIB) \
-	$(EPOLL_LIBS) \
-	$(MINGW_LIBS) \
-	$(XTRA_LIBS)
+## cf_gen must be stand-alone executable. It is a purely build-time executable.
+cf_gen_LDADD=
 cf_gen.$(OBJEXT): cf_gen_defines.cci
 
 ## cf_gen.cc needs src/cf_gen_defines.cci
@@ -892,6 +889,10 @@ test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key
 
 ## If autodependency works well this is not needed anymore
 cache_cf.o: cf_parser.cci
+
+# cf_gen builds the configuration files.
+cf_gen$(EXEEXT): $(cf_gen_SOURCES) $(cf_gen_DEPENDENCIES)
+	$(HOSTCXX) -o $@ $(srcdir)/cf_gen.cc -I$(srcdir) -I$(top_builddir)/include/ -I$(top_builddir)/src
 
 # squid.conf.default is built by cf_gen when making cf_parser.cci
 squid.conf.default squid.conf.documented: cf_parser.cci

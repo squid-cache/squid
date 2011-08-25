@@ -27,7 +27,7 @@ public:
     bool httpStateIsValid();
     void hostHeaderVerify();
     void hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLookupDetails &dns);
-    void hostHeaderVerifyFailed();
+    void hostHeaderVerifyFailed(const char *A, const char *B);
     void clientAccessCheck();
     void clientAccessCheck2();
     void clientAccessCheckDone(const allow_t &answer);

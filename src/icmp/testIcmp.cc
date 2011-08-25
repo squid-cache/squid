@@ -15,7 +15,9 @@ void
 testIcmp::testChecksum()
 {
     stubIcmp icmp;
-    short unsigned int buf[10] = {htons(1),htons(2),htons(3),htons(4),htons(5),htons(6),htons(7),htons(8),htons(9), htons(10)};
+    uint16_t buf[10], tmpval;
+    for (tmpval=0; tmpval < 10; ++tmpval)
+        buf[tmpval]=htons(1+tmpval);
 
     // NULL data
     CPPUNIT_ASSERT_EQUAL((int)htons(0xffff), icmp.testChecksum(NULL,0));

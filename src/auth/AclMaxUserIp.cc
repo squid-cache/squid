@@ -150,16 +150,28 @@ int
 ACLMaxUserIP::match(ACLChecklist *cl)
 {
     ACLFilledChecklist *checklist = Filled(cl);
+    allow_t answer = AuthenticateAcl(checklist);
+    checklist->currentAnswer(answer);
     int ti;
 
-    if ((ti = AuthenticateAcl(checklist)) != 1)
+    // convert to tri-state ACL match 1,0,-1
+    switch (answer) {
+    case ACCESS_ALLOWED:
+    case ACCESS_AUTH_EXPIRED_OK:
+        // check for a match
+        ti = match(checklist->auth_user_request, checklist->src_addr);
+        checklist->auth_user_request = NULL;
         return ti;
 
-    ti = match(checklist->auth_user_request, checklist->src_addr);
+    case ACCESS_DENIED:
+    case ACCESS_AUTH_EXPIRED_BAD:
+        return 0; // non-match
 
-    checklist->auth_user_request = NULL;
-
-    return ti;
+    case ACCESS_DUNNO:
+    case ACCESS_AUTH_REQUIRED:
+    default:
+        return -1; // other
+    }
 }
 
 wordlist *

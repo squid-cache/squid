@@ -3,6 +3,7 @@
  */
 
 #include "config.h"
+#include "ProtoPort.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
 #include "SquidTime.h"
@@ -16,7 +17,6 @@ Ssl::Helper * Ssl::Helper::GetInstance()
 
 Ssl::Helper::Helper()
 {
-    Init();
 }
 
 Ssl::Helper::~Helper()
@@ -26,8 +26,20 @@ Ssl::Helper::~Helper()
 
 void Ssl::Helper::Init()
 {
-    if (ssl_crtd == NULL)
-        ssl_crtd = new helper("ssl_crtd");
+    assert(ssl_crtd == NULL);
+
+    bool useSslBump = false;
+    for (http_port_list *s = ::Config.Sockaddr.http; s; s = s->next) {
+        if (s->sslBump) {
+            useSslBump = true;
+            break;
+        }
+    }
+
+    if (!useSslBump)
+        return;
+
+    ssl_crtd = new helper("ssl_crtd");
     ssl_crtd->childs = Ssl::TheConfig.ssl_crtdChildren;
     ssl_crtd->ipc_type = IPC_STREAM;
     // The crtd messages may contain the eol ('\n') character. We are
@@ -69,8 +81,6 @@ void Ssl::Helper::Shutdown()
         return;
     helperShutdown(ssl_crtd);
     wordlistDestroy(&ssl_crtd->cmdline);
-    if (!shutting_down)
-        return;
     delete ssl_crtd;
     ssl_crtd = NULL;
 }
@@ -78,6 +88,7 @@ void Ssl::Helper::Shutdown()
 void Ssl::Helper::sslSubmit(CrtdMessage const & message, HLPCB * callback, void * data)
 {
     static time_t first_warn = 0;
+    assert(ssl_crtd);
 
     if (ssl_crtd->stats.queue_size >= (int)(ssl_crtd->childs.n_running * 2)) {
         if (first_warn == 0)

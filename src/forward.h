@@ -33,7 +33,12 @@ public:
     static void initModule();
 
     static void fwdStart(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *);
+
+    /// This is the real beginning of server connection. Call it whenever
+    /// the forwarding server destination has changed and a new one needs to be opened.
+    /// Produces the cannot-forward error on fail if no better error exists.
     void startConnectionOrFail();
+
     void fail(ErrorState *err);
     void unregister(Comm::ConnectionPointer &conn);
     void unregister(int fd);
@@ -65,7 +70,6 @@ private:
     void start(Pointer aSelf);
 
     static void logReplyStatus(int tries, http_status status);
-    void updateHierarchyInfo();
     void doneWithRetries();
     void completed();
     void retryOrBail();
