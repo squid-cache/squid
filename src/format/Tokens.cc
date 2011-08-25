@@ -35,21 +35,21 @@ struct Format::TokenTableEntry Format::TokenTable[] = {
     {">a", LFT_CLIENT_IP_ADDRESS},
     {">p", LFT_CLIENT_PORT},
     {">A", LFT_CLIENT_FQDN},
-#if USE_SQUID_EUI
     {">eui", LFT_CLIENT_EUI},
-#endif
 
-    /*{ "<a", LFT_SERVER_IP_ADDRESS }, */
-    /*{ "<p", LFT_SERVER_PORT }, */
-    {"<A", LFT_SERVER_IP_OR_PEER_NAME},
+    {"<a", LFT_SERVER_IP_ADDRESS},
+    {"<p", LFT_SERVER_PORT},
+    {"<A", LFT_SERVER_FQDN_OR_PEER_NAME},
 
-    {"la", LFT_LOCAL_IP},
-    {"lp", LFT_LOCAL_PORT},
+    {">la", LFT_CLIENT_LOCAL_IP},
+    {"la", LFT_CLIENT_LOCAL_IP_OLD_31},
+    {">lp", LFT_CLIENT_LOCAL_PORT},
+    {"lp", LFT_CLIENT_LOCAL_PORT_OLD_31},
     /*{ "lA", LFT_LOCAL_NAME }, */
 
-    {"<la", LFT_PEER_LOCAL_IP},
-    {"oa", LFT_PEER_LOCAL_IP_OLD_27},
-    {"<lp", LFT_PEER_LOCAL_PORT},
+    {"<la", LFT_SERVER_LOCAL_IP},
+    {"oa", LFT_SERVER_LOCAL_IP_OLD_27},
+    {"<lp", LFT_SERVER_LOCAL_PORT},
     /* {"ot", LFT_PEER_OUTGOING_TOS}, */
 
     {"ts", LFT_TIME_SECONDS_SINCE_EPOCH},
@@ -420,7 +420,6 @@ done:
             if (!divisor)
                 divisor = 0;
         }
-
         break;
 
     case LFT_HTTP_SENT_STATUS_CODE_OLD_30:
@@ -428,9 +427,19 @@ done:
         type = LFT_HTTP_SENT_STATUS_CODE;
         break;
 
-    case LFT_PEER_LOCAL_IP_OLD_27:
+    case LFT_CLIENT_LOCAL_IP_OLD_31:
+        debugs(46, 0, "WARNING: The \"la\" formatting code is deprecated. Use the \">la\" instead.");
+        type = LFT_CLIENT_LOCAL_IP;
+        break;
+
+    case LFT_CLIENT_LOCAL_PORT_OLD_31:
+        debugs(46, 0, "WARNING: The \"lp\" formatting code is deprecated. Use the \">lp\" instead.");
+        type = LFT_CLIENT_LOCAL_PORT;
+        break;
+
+    case LFT_SERVER_LOCAL_IP_OLD_27:
         debugs(46, 0, "WARNING: The \"oa\" formatting code is deprecated. Use the \"<la\" instead.");
-        type = LFT_PEER_LOCAL_IP;
+        type = LFT_SERVER_LOCAL_IP;
         break;
 
     case LFT_REQUEST_URLPATH_OLD_31:
@@ -442,6 +451,12 @@ done:
         debugs(46, 0, "WARNING: The \">v\" formatting code is deprecated. Use the \">rv\" instead.");
         type = LFT_REQUEST_VERSION;
         break;
+
+#if !USE_SQUID_EUI
+    case LFT_CLIENT_EUI:
+        debugs(46, 0, "WARNING: The \">eui\" formatting code requires EUI features which are disabled in this Squid.");
+        break;
+#endif
 
     default:
         break;

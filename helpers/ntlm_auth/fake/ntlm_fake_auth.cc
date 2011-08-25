@@ -60,11 +60,11 @@
 #include "ntlmauth/support_bits.cci"
 //#include "util.h"
 
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
 #if HAVE_STRING_H
 #include <string.h>
+#endif
+#if HAVE_CTYPE_H
+#include <ctype.h>
 #endif
 #if HAVE_CRYPT_H
 #include <crypt.h>
@@ -74,6 +74,15 @@
 #endif
 #if HAVE_GETOPT_H
 #include <getopt.h>
+#endif
+#if HAVE_STDIO_H
+#include <stdio.h>
+#endif
+#if HAVE_STDINT_H
+#include <stdint.h>
+#endif
+#if HAVE_INTTYPES_H
+#include <inttypes.h>
 #endif
 
 /* A couple of harmless helper macros */
@@ -190,7 +199,7 @@ main(int argc, char *argv[])
         } else
             debug("Got '%s' from Squid\n", buf);
 
-        if (strncasecmp(buf, "YR", 2) == 0) {
+        if (strncmp(buf, "YR", 2) == 0) {
             char nonce[NTLM_NONCE_LEN];
             ntlm_challenge chal;
             ntlm_make_nonce(nonce);
@@ -211,7 +220,7 @@ main(int argc, char *argv[])
                 hex_dump((unsigned char *)&chal, len);
             } else
                 SEND2("TT %s", data);
-        } else if (strncasecmp(buf, "KK ", 3) == 0) {
+        } else if (strncmp(buf, "KK ", 3) == 0) {
             if (!packet) {
                 SEND("BH received KK with no data! user=");
             } else if (ntlm_validate_packet(packet, NTLM_AUTHENTICATE) == NTLM_ERR_NONE) {

@@ -78,11 +78,10 @@ public:
     {
 
     public:
-        Connection() : len (0), buf ((char *)xmalloc(SQUID_TCP_SO_RCVBUF)), size_ptr(NULL) {}
+        Connection() : len (0), buf(), size_ptr(NULL) { buf.init(SQUID_TCP_SO_RCVBUF,SQUID_TCP_SO_RCVBUF); }
+        ~Connection() {};
 
-        ~Connection();
-
-        int bytesWanted(int lower=0, int upper = INT_MAX) const;
+        int bytesWanted() const;
         void bytesIn(int const &);
 #if USE_DELAY_POOLS
 
@@ -92,9 +91,9 @@ public:
         void error(int const xerrno);
         int debugLevelForError(int const xerrno) const;
         void closeIfOpen();
-        void dataSent (size_t amount);
+        void dataSent(size_t amount);
         int len;
-        char *buf;
+        MemBuf buf;
         int64_t *size_ptr;		/* pointer to size in an ConnStateData for logging */
 
         Comm::ConnectionPointer conn;    ///< The currently connected connection.
@@ -113,7 +112,7 @@ public:
 
 private:
     CBDATA_CLASS(TunnelStateData);
-    void copy (size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, IOCB *);
+    void copy(size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, AsyncCall::Pointer &);
     void readServer(char *buf, size_t len, comm_err_t errcode, int xerrno);
     void readClient(char *buf, size_t len, comm_err_t errcode, int xerrno);
     void writeClientDone(char *buf, size_t len, comm_err_t flag, int xerrno);
@@ -180,19 +179,13 @@ tunnelStateFree(TunnelStateData * tunnelState)
     delete tunnelState;
 }
 
-TunnelStateData::Connection::~Connection()
-{
-    safe_free(buf);
-}
-
 int
-TunnelStateData::Connection::bytesWanted(int lowerbound, int upperbound) const
+TunnelStateData::Connection::bytesWanted() const
 {
 #if USE_DELAY_POOLS
-    return delayId.bytesWanted(lowerbound, upperbound);
+    return delayId.bytesWanted(1, buf.spaceSize());
 #else
-
-    return upperbound;
+    return buf.spaceSize();
 #endif
 }
 
@@ -253,7 +246,10 @@ TunnelStateData::readServer(char *buf, size_t len, comm_err_t errcode, int xerrn
         kb_incr(&statCounter.server.other.kbytes_in, len);
     }
 
-    copy (len, errcode, xerrno, server, client, WriteClientDone);
+    AsyncCall::Pointer call = commCbCall(5,5, "TunnelStateData::WriteClientDone",
+                                         CommIoCbPtrFun(WriteClientDone, this));
+
+    copy (len, errcode, xerrno, server, client, call);
 }
 
 void
@@ -296,11 +292,14 @@ TunnelStateData::readClient(char *buf, size_t len, comm_err_t errcode, int xerrn
         kb_incr(&statCounter.client_http.kbytes_in, len);
     }
 
-    copy (len, errcode, xerrno, client, server, WriteServerDone);
+    AsyncCall::Pointer call = commCbCall(5,5, "TunnelStateData::WriteServerDone",
+                                         CommIoCbPtrFun(WriteServerDone, this));
+
+    copy (len, errcode, xerrno, client, server, call);
 }
 
 void
-TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, IOCB *completion)
+TunnelStateData::copy(size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, AsyncCall::Pointer &call)
 {
     debugs(26, 3, HERE << "from={" << from.conn << "}, to={" << to.conn << "}");
 
@@ -329,9 +328,7 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
         }
     } else if (cbdataReferenceValid(this)) {
         debugs(26, 3, HERE << "Schedule Write");
-        AsyncCall::Pointer call = commCbCall(5,5, "TunnelBlindCopyWriteHandler",
-                                             CommIoCbPtrFun(completion, this));
-        Comm::Write(to.conn, from.buf, len, call, NULL);
+        Comm::Write(to.conn, &from.buf, call);
     }
 
     cbdataInternalUnlock(this);	/* ??? */
@@ -476,7 +473,7 @@ TunnelStateData::copyRead(Connection &from, IOCB *completion)
     assert(from.len == 0);
     AsyncCall::Pointer call = commCbCall(5,4, "TunnelBlindCopyReadHandler",
                                          CommIoCbPtrFun(completion, this));
-    comm_read(from.conn, from.buf, from.bytesWanted(1, SQUID_TCP_SO_RCVBUF), call);
+    comm_read(from.conn, from.buf.space(), from.bytesWanted(), call);
 }
 
 /**
@@ -574,14 +571,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
         tunnelState->server.setDelayId(DelayId());
 #endif
 
-    if (conn != NULL && conn->getPeer())
-        hierarchyNote(&tunnelState->request->hier, conn->peerType, conn->getPeer()->name);
-    else if (Config.onoff.log_ip_on_direct) {
-        conn->remote.NtoA(fd_table[conn->fd].ipaddr,sizeof(fd_table[conn->fd].ipaddr));
-        hierarchyNote(&tunnelState->request->hier, conn->peerType, fd_table[conn->fd].ipaddr);
-    } else
-        hierarchyNote(&tunnelState->request->hier, conn->peerType, tunnelState->getHost());
-
+    tunnelState->request->hier.note(conn, tunnelState->getHost());
 
     tunnelState->server.conn = conn;
     tunnelState->request->peer_host = conn->getPeer() ? conn->getPeer()->host : NULL;
@@ -626,7 +616,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
      * be allowed.  yuck, I know.
      */
 
-    if (!request->client_addr.IsNoAddr() && Config.accessList.miss) {
+    if (Config.accessList.miss && !request->client_addr.IsNoAddr()) {
         /*
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          * default is to allow.

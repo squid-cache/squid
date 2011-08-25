@@ -3607,9 +3607,6 @@ static void
 clientHttpConnectionsOpen(void)
 {
     http_port_list *s = NULL;
-#if USE_SSL
-    int bumpCount = 0; // counts http_ports with sslBump option
-#endif
 
     for (s = Config.Sockaddr.http; s; s = s->next) {
         if (MAXHTTPPORTS == NHttpSockets) {
@@ -3619,21 +3616,20 @@ clientHttpConnectionsOpen(void)
         }
 
 #if USE_SSL
-        if (s->sslBump &&
-                !s->staticSslContext && !s->generateHostCertificates) {
-            debugs(1, 1, "Will not bump SSL at http_port " <<
-                   s->http.s << " due to SSL initialization failure.");
+        if (s->sslBump && !Config.accessList.ssl_bump) {
+            debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << s->protocol << "_port " << s->http.s);
+            s->sslBump = 0;
+        }
+
+        if (s->sslBump && !s->staticSslContext && !s->generateHostCertificates) {
+            debugs(1, DBG_IMPORTANT, "Will not bump SSL at http_port " << s->http.s << " due to SSL initialization failure.");
             s->sslBump = 0;
         }
         if (s->sslBump) {
-            ++bumpCount;
             // Create ssl_ctx cache for this port.
             Ssl::TheGlobalContextStorage.addLocalStorage(s->s, s->dynamicCertMemCacheSize == std::numeric_limits<size_t>::max() ? 4194304 : s->dynamicCertMemCacheSize);
         }
 #endif
-#if USE_SSL_CRTD
-        Ssl::Helper::GetInstance();
-#endif //USE_SSL_CRTD
 
         // Fill out a Comm::Connection which IPC will open as a listener for us
         //  then pass back when active so we can start a TcpAcceptor subscription.
@@ -3652,13 +3648,6 @@ clientHttpConnectionsOpen(void)
 
         HttpSockets[NHttpSockets++] = -1; // set in clientListenerConnectionOpened
     }
-
-#if USE_SSL
-    if (bumpCount && !Config.accessList.ssl_bump)
-        debugs(33, 1, "WARNING: http_port(s) with SslBump found, but no " <<
-               std::endl << "\tssl_bump ACL configured. No requests will be " <<
-               "bumped.");
-#endif
 }
 
 #if USE_SSL

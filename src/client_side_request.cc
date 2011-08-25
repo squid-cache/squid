@@ -175,7 +175,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 {
     start_time = current_time;
     setConn(aConn);
-    clientConnection = aConn->clientConnection;
+    al.tcpClient = clientConnection = aConn->clientConnection;
     dlinkAdd(this, &active, &ClientActiveRequests);
 #if USE_ADAPTATION
     request_satisfaction_mode = false;
@@ -546,13 +546,14 @@ ClientRequestContext::hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLooku
         }
     }
     debugs(85, 3, HERE << "FAIL: validate IP " << clientConn->local << " possible from Host:");
-    hostHeaderVerifyFailed();
+    hostHeaderVerifyFailed("local IP", "any domain IP");
 }
 
 void
-ClientRequestContext::hostHeaderVerifyFailed()
+ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
 {
-    debugs(85, 1, "SECURITY ALERT: Host: header forgery detected from " << http->getConn()->clientConnection);
+    debugs(85, 1, "SECURITY ALERT: Host: header forgery detected from " << http->getConn()->clientConnection <<
+           " (" << A << " does not match " << B << ")");
 
     // IP address validation for Host: failed. reject the connection.
     clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
@@ -618,32 +619,36 @@ ClientRequestContext::hostHeaderVerify()
 
     debugs(85, 3, HERE << "validate host=" << host << ", port=" << port << ", portStr=" << (portStr?portStr:"NULL"));
     if (http->request->flags.intercepted || http->request->flags.spoof_client_ip) {
-        // verify the port (if any) matches the apparent destination
+        // verify the Host: port (if any) matches the apparent destination
         if (portStr && port != http->getConn()->clientConnection->local.GetPort()) {
-            debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.GetPort() << " matches Host: port " << port << "((" << portStr);
-            hostHeaderVerifyFailed();
-            safe_free(hostB);
-            return;
-        }
-        // XXX: match the scheme default port against the apparent destination
+            debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.GetPort() <<
+                   " matches Host: port " << port << " (" << portStr << ")");
+            hostHeaderVerifyFailed("intercepted port", portStr);
+        } else {
+            // XXX: match the scheme default port against the apparent destination
 
-        // verify the destination DNS is one of the Host: headers IPs
-        ipcache_nbgethostbyname(host, hostHeaderIpVerifyWrapper, this);
-        safe_free(hostB);
-        return;
+            // verify the destination DNS is one of the Host: headers IPs
+            ipcache_nbgethostbyname(host, hostHeaderIpVerifyWrapper, this);
+        }
+    } else if (strcmp(host, http->request->GetHost()) != 0) {
+        // Verify forward-proxy requested URL domain matches the Host: header
+        debugs(85, 3, HERE << "FAIL on validate URL domain " << http->request->GetHost() << " matches Host: " << host);
+        hostHeaderVerifyFailed(host, http->request->GetHost());
+    } else if (portStr && port != http->request->port) {
+        // Verify forward-proxy requested URL domain matches the Host: header
+        debugs(85, 3, HERE << "FAIL on validate URL port " << http->request->port << " matches Host: port " << portStr);
+        hostHeaderVerifyFailed("URL port", portStr);
+    } else if (!portStr && http->request->method != METHOD_CONNECT && http->request->port != urlDefaultPort(http->request->protocol)) {
+        // Verify forward-proxy requested URL domain matches the Host: header
+        // Special case: we don't have a default-port to check for CONNECT. Assume URL is correct.
+        debugs(85, 3, HERE << "FAIL on validate URL port " << http->request->port << " matches Host: default port " << urlDefaultPort(http->request->protocol));
+        hostHeaderVerifyFailed("URL port", "default port");
+    } else {
+        // Okay no problem.
+        debugs(85, 3, HERE << "validate passed.");
+        http->doCallouts();
     }
     safe_free(hostB);
-
-    // Verify forward-proxy requested URL domain matches the Host: header
-    host = http->request->header.getStr(HDR_HOST);
-    if (strcmp(host, http->request->GetHost()) != 0) {
-        debugs(85, 3, HERE << "FAIL on validate URL domain " << http->request->GetHost() << " matches Host: " << host);
-        hostHeaderVerifyFailed();
-        return;
-    }
-
-    debugs(85, 3, HERE << "validate passed.");
-    http->doCallouts();
 }
 
 /* This is the entry point for external users of the client_side routines */
@@ -726,13 +731,16 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
         proxy_auth_msg = http->request->auth_user_request->denyMessage("<null>");
 #endif
 
-    if (answer != ACCESS_ALLOWED) {
-        /* Send an error */
-        int require_auth = (answer == ACCESS_REQ_PROXY_AUTH || aclIsProxyAuth(AclMatchedName));
+    if (answer != ACCESS_ALLOWED && answer != ACCESS_AUTH_EXPIRED_OK) {
+        // auth has a grace period where credentials can be expired but okay not to challenge.
+
+        /* Send an auth challenge or error */
+        // XXX: do we still need aclIsProxyAuth() ?
+        bool auth_challenge = (answer == ACCESS_AUTH_REQUIRED || answer == ACCESS_AUTH_EXPIRED_BAD || aclIsProxyAuth(AclMatchedName));
         debugs(85, 5, "Access Denied: " << http->uri);
         debugs(85, 5, "AclMatchedName = " << (AclMatchedName ? AclMatchedName : "<null>"));
 #if USE_AUTH
-        if (require_auth)
+        if (auth_challenge)
             debugs(33, 5, "Proxy Auth Message = " << (proxy_auth_msg ? proxy_auth_msg : "<null>"));
 #endif
 
@@ -742,11 +750,11 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
          * the clientCreateStoreEntry() call just below.  Pedro Ribeiro
          * <pribeiro@isel.pt>
          */
-        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, answer != ACCESS_REQ_PROXY_AUTH);
+        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, answer != ACCESS_AUTH_REQUIRED);
 
         http->logType = LOG_TCP_DENIED;
 
-        if (require_auth) {
+        if (auth_challenge) {
 #if USE_AUTH
             if (!http->flags.accel) {
                 /* Proxy authorisation needed */
@@ -784,12 +792,13 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 #else
                                     NULL);
 #endif
+        http->getConn()->flags.readMore = true; // resume any pipeline reads.
         node = (clientStreamNode *)http->client_stream.tail->data;
         clientStreamRead(node, http, node->readBuffer);
         return;
     }
 
-    /* ACCESS_ALLOWED continues here ... */
+    /* ACCESS_ALLOWED (or auth in grace period ACCESS_AUTH_EXPIRED_OK) continues here ... */
     safe_free(http->uri);
 
     http->uri = xstrdup(urlCanonical(http->request));
@@ -1773,7 +1782,7 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
 #endif
 
     request->detailError(ERR_ICAP_FAILURE, errDetail);
-
+    c->flags.readMore = true;
     node = (clientStreamNode *)client_stream.tail->data;
     clientStreamRead(node, this, node->readBuffer);
 }
