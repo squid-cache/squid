@@ -63,7 +63,7 @@ class ConfigParser
 
 public:
     void destruct();
-    static void ParseUShort(u_short *var);
+    static void ParseUShort(unsigned short *var);
     static void ParseBool(bool *var);
     static void ParseString(char **var);
     static void ParseString(String *var);
