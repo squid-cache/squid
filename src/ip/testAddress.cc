@@ -43,7 +43,7 @@ testIpAddress::testDefaults()
     CPPUNIT_ASSERT( !anIPA.IsNoAddr() );
     CPPUNIT_ASSERT( !anIPA.IsIPv4() );
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (u_short) 0 , anIPA.GetPort() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.GetPort() );
     CPPUNIT_ASSERT( anIPA.IsIPv6() );
 }
 
@@ -64,7 +64,7 @@ testIpAddress::testInAddrConstructor()
     CPPUNIT_ASSERT( anIPA.IsIPv4() );
     CPPUNIT_ASSERT( !anIPA.IsIPv6() );
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (u_short) 0 , anIPA.GetPort() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.GetPort() );
     anIPA.GetInAddr(outval);
     CPPUNIT_ASSERT( memcmp(&inval, &outval, sizeof(struct in_addr)) == 0 );
 }
@@ -88,7 +88,7 @@ testIpAddress::testInAddr6Constructor()
     CPPUNIT_ASSERT( !anIPA.IsIPv4() );
     CPPUNIT_ASSERT( anIPA.IsIPv6() );
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (u_short) 0 , anIPA.GetPort() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.GetPort() );
     anIPA.GetInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &inval, &outval, sizeof(struct in6_addr)) == 0 );
 }
@@ -117,7 +117,7 @@ testIpAddress::testSockAddrConstructor()
     CPPUNIT_ASSERT( anIPA.IsIPv4() );
     CPPUNIT_ASSERT( !anIPA.IsIPv6() );
     CPPUNIT_ASSERT( anIPA.IsSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (u_short) 80 , anIPA.GetPort() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 80 , anIPA.GetPort() );
     anIPA.GetSockAddr(outsock);
     CPPUNIT_ASSERT( memcmp( &insock, &outsock, sizeof(struct sockaddr_in)) == 0 );
 }
@@ -149,7 +149,7 @@ testIpAddress::testSockAddr6Constructor()
     CPPUNIT_ASSERT( !anIPA.IsIPv4() );
     CPPUNIT_ASSERT( anIPA.IsIPv6() );
     CPPUNIT_ASSERT( anIPA.IsSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (u_short) 80 , anIPA.GetPort() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 80 , anIPA.GetPort() );
     anIPA.GetSockAddr(outsock);
     CPPUNIT_ASSERT( memcmp( &insock, &outsock, sizeof(struct sockaddr_in6)) == 0 );
 }
@@ -181,7 +181,7 @@ testIpAddress::testCopyConstructor()
     CPPUNIT_ASSERT( outIPA.IsIPv4() );
     CPPUNIT_ASSERT( !outIPA.IsIPv6() );
     CPPUNIT_ASSERT( outIPA.IsSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (u_short) 80 , outIPA.GetPort() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 80 , outIPA.GetPort() );
     outIPA.GetSockAddr(outsock);
     CPPUNIT_ASSERT( memcmp( &insock, &outsock, sizeof(struct sockaddr_in)) == 0 );
 }
@@ -206,7 +206,7 @@ testIpAddress::testHostentConstructor()
     CPPUNIT_ASSERT( anIPA.IsIPv4() );
     CPPUNIT_ASSERT( !anIPA.IsIPv6() );
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (u_short) 0 , anIPA.GetPort() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.GetPort() );
     anIPA.GetInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
 }
@@ -226,7 +226,7 @@ testIpAddress::testStringConstructor()
     CPPUNIT_ASSERT( !anIPA.IsNoAddr() );
     CPPUNIT_ASSERT( anIPA.IsIPv4() );
     CPPUNIT_ASSERT( !anIPA.IsIPv6() );
-    CPPUNIT_ASSERT_EQUAL( (u_short) 0 , anIPA.GetPort() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.GetPort() );
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
     anIPA.GetInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
@@ -251,7 +251,7 @@ testIpAddress::testStringConstructor()
     CPPUNIT_ASSERT( !bnIPA.IsIPv4() );
     CPPUNIT_ASSERT(  bnIPA.IsIPv6() );
     CPPUNIT_ASSERT( !bnIPA.IsSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (u_short) 0 , bnIPA.GetPort() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , bnIPA.GetPort() );
     bnIPA.GetInAddr(outval6);
     CPPUNIT_ASSERT( memcmp( &expectv6, &outval6, sizeof(struct in6_addr)) == 0 );
 
@@ -269,7 +269,7 @@ testIpAddress::testStringConstructor()
     CPPUNIT_ASSERT( !cnIPA.IsIPv4() );
     CPPUNIT_ASSERT( cnIPA.IsIPv6() );
     CPPUNIT_ASSERT( !cnIPA.IsSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (u_short) 0 , cnIPA.GetPort() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , cnIPA.GetPort() );
     cnIPA.GetInAddr(outval6);
     CPPUNIT_ASSERT( memcmp( &expectv6, &outval6, sizeof(struct in6_addr)) == 0 );
 }
@@ -290,7 +290,7 @@ testIpAddress::testSetEmpty()
     CPPUNIT_ASSERT( anIPA.IsIPv4() );
     CPPUNIT_ASSERT( !anIPA.IsIPv6() );
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (u_short) 0 , anIPA.GetPort() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.GetPort() );
 
     anIPA.SetEmpty();
 
@@ -300,7 +300,7 @@ testIpAddress::testSetEmpty()
     CPPUNIT_ASSERT( !anIPA.IsIPv4() );
     CPPUNIT_ASSERT( anIPA.IsIPv6() );
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
-    CPPUNIT_ASSERT_EQUAL( (u_short) 0 , anIPA.GetPort() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.GetPort() );
 }
 
 void
@@ -740,7 +740,7 @@ testIpAddress::testBugNullingDisplay()
     CPPUNIT_ASSERT( !anIPA.IsNoAddr() );
     CPPUNIT_ASSERT( anIPA.IsIPv4() );
     CPPUNIT_ASSERT( !anIPA.IsIPv6() );
-    CPPUNIT_ASSERT_EQUAL( (u_short) 0 , anIPA.GetPort() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.GetPort() );
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
     anIPA.GetInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
@@ -754,7 +754,7 @@ testIpAddress::testBugNullingDisplay()
     CPPUNIT_ASSERT( !anIPA.IsNoAddr() );
     CPPUNIT_ASSERT( anIPA.IsIPv4() );
     CPPUNIT_ASSERT( !anIPA.IsIPv6() );
-    CPPUNIT_ASSERT_EQUAL( (u_short) 0 , anIPA.GetPort() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.GetPort() );
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
     anIPA.GetInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
@@ -769,7 +769,7 @@ testIpAddress::testBugNullingDisplay()
     CPPUNIT_ASSERT( !anIPA.IsNoAddr() );
     CPPUNIT_ASSERT( anIPA.IsIPv4() );
     CPPUNIT_ASSERT( !anIPA.IsIPv6() );
-    CPPUNIT_ASSERT_EQUAL( (u_short) 0 , anIPA.GetPort() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.GetPort() );
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
     anIPA.GetInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
@@ -783,7 +783,7 @@ testIpAddress::testBugNullingDisplay()
     CPPUNIT_ASSERT( !anIPA.IsNoAddr() );
     CPPUNIT_ASSERT( anIPA.IsIPv4() );
     CPPUNIT_ASSERT( !anIPA.IsIPv6() );
-    CPPUNIT_ASSERT_EQUAL( (u_short) 0 , anIPA.GetPort() );
+    CPPUNIT_ASSERT_EQUAL( (unsigned short) 0 , anIPA.GetPort() );
     CPPUNIT_ASSERT( !anIPA.IsSockAddr() );
     anIPA.GetInAddr(outval);
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );

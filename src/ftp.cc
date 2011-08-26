@@ -223,7 +223,7 @@ public:
     struct DataChannel: public FtpChannel {
         MemBuf *readBuf;
         char *host;
-        u_short port;
+        unsigned short port;
         bool read_pending;
     } data;
 
@@ -2431,7 +2431,7 @@ ftpReadEPSV(FtpStateData* ftpState)
     buf = ftpState->ctrl.last_reply + strcspn(ftpState->ctrl.last_reply, "(");
 
     char h1, h2, h3, h4;
-    u_short port;
+    unsigned short port;
     int n = sscanf(buf, "(%c%c%c%hu%c)", &h1, &h2, &h3, &port, &h4);
 
     if (n < 4 || h1 != h2 || h1 != h3 || h1 != h4) {
@@ -2644,7 +2644,7 @@ ftpReadPasv(FtpStateData * ftpState)
     int h1, h2, h3, h4;
     int p1, p2;
     int n;
-    u_short port;
+    unsigned short port;
     Ip::Address ipa_remote;
     char *buf;
     LOCAL_ARRAY(char, ipaddr, 1024);

@@ -111,7 +111,7 @@ GetInteger(void)
     return i;
 }
 
-u_short
+unsigned short
 GetShort(void)
 {
     char *token = strtok(NULL, w_space);
