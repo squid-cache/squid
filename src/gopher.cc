@@ -484,6 +484,11 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
             *(gopherState->buf) = '\0';
         } else {
 
+            if ((len - (pos - inbuf)) > TEMP_BUF_SIZE) {
+                debugs(10, 1, "GopherHTML: Buffer overflow. Lost some data on URL: " << entry->url());
+                len = TEMP_BUF_SIZE;
+            }
+
             lpos = (char *) memccpy(line, pos, '\n', len - (pos - inbuf));
 
             if (lpos)
