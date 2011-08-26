@@ -37,7 +37,7 @@
 typedef struct pw_auth_hdr {
     u_char		code;
     u_char		id;
-    u_short		length;
+    uint16_t		length;
     u_char		vector[AUTH_VECTOR_LEN];
     u_char		data[2];
 } AUTH_HDR;

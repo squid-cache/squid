@@ -362,7 +362,7 @@ comm_has_incomplete_write(int fd)
  */
 
 /* Return the local port associated with fd. */
-u_short
+unsigned short
 comm_local_port(int fd)
 {
     Ip::Address temp;
@@ -644,7 +644,7 @@ comm_apply_flags(int new_socket,
     if ((flags & COMM_REUSEADDR))
         commSetReuseAddr(new_socket);
 
-    if (addr.GetPort() > (u_short) 0) {
+    if (addr.GetPort() > (unsigned short) 0) {
 #if _SQUID_MSWIN_
         if (sock_type != SOCK_DGRAM)
 #endif
@@ -703,7 +703,7 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
     if (!(conn->flags & COMM_NOCLOEXEC))
         fd_table[conn->fd].flags.close_on_exec = 1;
 
-    if (conn->local.GetPort() > (u_short) 0) {
+    if (conn->local.GetPort() > (unsigned short) 0) {
 #if _SQUID_MSWIN_
         if (AI->ai_socktype != SOCK_DGRAM)
 #endif
