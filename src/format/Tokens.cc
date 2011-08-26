@@ -32,7 +32,8 @@ const char *Format::log_tags[] = {
 
 // Due to token overlaps between 1 and 2 letter tokens (Bug 3310)
 // We split the token table into sets determined by the token length
-namespace Format {
+namespace Format
+{
 
 /// 1-char tokens.
 static struct TokenTableEntry TokenTable1C[] = {
@@ -353,7 +354,7 @@ Format::Token::parse(char *def, Quoting *quoting)
         cur = scanForToken(TokenTableMisc, cur);
         // scan for 2-char tokens
         if (type == LFT_NONE) {
-        debugs(46, 5, HERE << "scan for possible 2C token");
+            debugs(46, 5, HERE << "scan for possible 2C token");
             cur = scanForToken(TokenTable2C, cur);
         }
         // finally scan for 1-char tokens.
