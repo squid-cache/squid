@@ -54,7 +54,7 @@ extern int64_t GetInteger64(void);
  */
 extern int GetInteger(void);
 
-extern u_short GetShort(void);
+extern unsigned short GetShort(void);
 
 // on success, returns true and sets *p (if any) to the end of the integer
 extern bool StringToInt(const char *str, int &result, const char **p, int base);

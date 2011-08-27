@@ -78,8 +78,8 @@ struct StoreMetaStd {
   time_t  expires;
   time_t  lastmod;
   size_t  swap_file_sz;
-  u_short refcount;
-  u_short flags;
+  uint16_t refcount;
+  uint16_t flags;
 };
 
 struct StoreMetaStdLFS {
@@ -87,9 +87,9 @@ struct StoreMetaStdLFS {
   time_t  lastref;
   time_t  expires;
   time_t  lastmod;
-  uint64_t  swap_file_sz;
-  u_short refcount;
-  u_short flags;
+  uint64_t swap_file_sz;
+  uint16_t refcount;
+  uint16_t flags;
 };
 
 struct SquidTLV {

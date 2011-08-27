@@ -147,7 +147,7 @@ static void configDoConfigure(void);
 static void parse_refreshpattern(refresh_t **);
 static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
 static void parseTimeLine(time_msec_t * tptr, const char *units, bool allowMsec);
-static void parse_u_short(u_short * var);
+static void parse_u_short(unsigned short * var);
 static void parse_string(char **);
 static void default_all(void);
 static void defaults_if_none(void);
@@ -2090,7 +2090,7 @@ isUnsignedNumeric(const char *str, size_t len)
  \param proto	'tcp' or 'udp' for protocol
  \returns       Port the named service is supposed to be listening on.
  */
-static u_short
+static unsigned short
 GetService(const char *proto)
 {
     struct servent *port = NULL;
@@ -2104,7 +2104,7 @@ GetService(const char *proto)
     if ( !isUnsignedNumeric(token, strlen(token)) )
         port = getservbyname(token, proto);
     if (port != NULL) {
-        return ntohs((u_short)port->s_port);
+        return ntohs((unsigned short)port->s_port);
     }
     /** Or a numeric translation of the config text. */
     return xatos(token);
@@ -2114,7 +2114,7 @@ GetService(const char *proto)
  \returns       Port the named TCP service is supposed to be listening on.
  \copydoc GetService(const char *proto)
  */
-inline u_short
+inline unsigned short
 GetTcpService(void)
 {
     return GetService("tcp");
@@ -2124,7 +2124,7 @@ GetTcpService(void)
  \returns       Port the named UDP service is supposed to be listening on.
  \copydoc GetService(const char *proto)
  */
-inline u_short
+inline unsigned short
 GetUdpService(void)
 {
     return GetService("udp");
@@ -3195,25 +3195,25 @@ free_b_int64_t(int64_t * var)
 #define free_kb_int64_t free_b_int64_t
 
 static void
-dump_u_short(StoreEntry * entry, const char *name, u_short var)
+dump_u_short(StoreEntry * entry, const char *name, unsigned short var)
 {
     storeAppendPrintf(entry, "%s %d\n", name, var);
 }
 
 static void
-free_u_short(u_short * u)
+free_u_short(unsigned short * u)
 {
     *u = 0;
 }
 
 static void
-parse_u_short(u_short * var)
+parse_u_short(unsigned short * var)
 {
     ConfigParser::ParseUShort(var);
 }
 
 void
-ConfigParser::ParseUShort(u_short *var)
+ConfigParser::ParseUShort(unsigned short *var)
 {
     *var = GetShort();
 }
