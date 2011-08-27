@@ -8,6 +8,12 @@
 #include <syslog.h>
 #include <sys/types.h>
 #include <rpc/rpc.h>
+
+#if _SQUID_FREEBSD_  && !defined(BOOL_DEFINED)
+// BUG: FreeBSD rpcsvc/yp_* headers try to redefine bool unless we match their non-standard hack.
+#define BOOL_DEFINED
+#endif
+
 #include <rpcsvc/ypclnt.h>
 #include <rpcsvc/yp_prot.h>
 
