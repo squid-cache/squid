@@ -108,6 +108,14 @@ SQUIDCEXTERN void xfreeaddrinfo (struct addrinfo *ai);
 
 /* Convert error return from getaddrinfo() to string */
 SQUIDCEXTERN const char *xgai_strerror (int code);
+<<<<<<< TREE
+=======
+#if !defined(gai_strerror)
+>>>>>>> MERGE-SOURCE
+<<<<<<< TREE
+=======
+#endif
+>>>>>>> MERGE-SOURCE
 
 #endif /* HAVE_GETADDRINFO */
 
