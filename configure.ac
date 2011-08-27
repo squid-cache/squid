@@ -37,6 +37,12 @@ AC_PROG_CXX
 AC_LANG([C++])
 AC_CANONICAL_HOST
 
+# might be cross-compiling
+if test "x$HOSTCXX" = "x"; then
+  HOSTCXX="$CXX"
+fi
+AC_SUBST(HOSTCXX)
+
 AC_MSG_CHECKING([simplified host os])
 simple_host_os=`echo $host_os|sed 's/[0-9].*//g;s/-.*//g'`
 squid_host_os_version=`echo $host_os|tr -d "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"`
