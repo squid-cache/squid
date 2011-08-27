@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.14 release notes</title>
+<title>Squid 3.1.15 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.14
+The Squid Team are pleased to announce the release of Squid-3.1.15
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -1010,7 +1010,7 @@ NOCOMMENT_START
 	<tag>auth_param ntlm, basic, digest</tag>
 	<p>BASIC, DIGEST:  New parameter option <em>utf8 on|off</em> to permit helpers to selectively process UTF-8 characters even though
 	   HTTP accepts only ISO-8859-1.</p>
-	<p>NCSA authenticator updated to reject passwords with more than 8 characters when using DES encryption method.
+	<p>NCSA authenticator updated in 3.1.15 to alert if passwords with more than 8 characters are used with DES encryption method.
 	<p>NTLM: The helper binary bundled with Squid under the name <em>ntlm_auth</em> has been renamed to accurately reflect
 	   its real behavior and to prevent confusion with the more useful Samba helper using the same name.
 	<p>Despite being used for NTLM, the helper does not in fact provide true NTLM function. What it does provide is
