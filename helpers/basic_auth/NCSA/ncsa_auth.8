@@ -26,13 +26,29 @@ ncsa_auth \- NCSA httpd-style password file authentication helper for Squid
 The only parameter is the password file.  It must have permissions to be read by the user that Squid is running as (cache_effective_user in squid.conf).
 .PP
 This password file can be manipulated using htpasswd.
+.
+.PP
+.This authenticator accepts:
+.BR
+* MD5 - with optional salt and magic strings
+.BR
+* DES - for passwords 8 characters or less in length
+.
 .SH OPTIONS
 Only specify the password file name.
 .SH EXAMPLE
 \fBncsa_auth\fP /etc/squid/squid.pass
 .SH SECURITY
 \fBncsa_auth\fP must have access to the password file to be executed.
+.
+.SH KNOWN ISSUES
+.PP
+DES functionality (used by htpasswd by default) silently truncates passwords to 8 characters.
+Allowing login with password values shorter than the one desired.
+This authenticator will reject login with long passwords when using DES.
+.
 .SH SEE ALSO
 \fBhtpasswd\fP(1), \fBsquid\fP(8)
+.
 .SH AUTHOR
 Manpage written by Rodrigo Rubira Branco <rrbranco@br.ibm.com>

@@ -15,6 +15,7 @@
  * - extra fields in the password file are ignored; this makes it
  *   possible to use a Unix password file but I do not recommend that.
  *
+ *  MD5 without salt and magic strings - Added by Ramon de Carvalho and Rodrigo Rubira Branco
  */
 
 #include "config.h"
@@ -144,12 +145,18 @@ main(int argc, char **argv)
         if (u == NULL) {
             printf("ERR No such user\n");
 #if HAVE_CRYPT
-        } else if (strcmp(u->passwd, (char *) crypt(passwd, u->passwd)) == 0) {
+        } else if (strlen(passwd) <= 8 && strcmp(u->passwd, (char *) crypt(passwd, u->passwd)) == 0) {
+            // Bug 3107: crypt() DES functionality silently truncates long passwords.
+            printf("OK\n");
+        } else if (strlen(passwd) > 8 && strcmp(u->passwd, (char *) crypt(passwd, u->passwd)) == 0) {
+            // Bug 3107: crypt() DES functionality silently truncates long passwords.
+            fprintf(stderr, "SECURITY ALERT: NCSA DES algorithm truncating user %s password to 8 bytes. Upgrade to MD5.", user);
+            // Highly Unsafe: permit a transition period for admin to update passwords.
             printf("OK\n");
 #endif
         } else if (strcmp(u->passwd, (char *) crypt_md5(passwd, u->passwd)) == 0) {
             printf("OK\n");
-        } else if (strcmp(u->passwd, (char *) md5sum(passwd)) == 0) {	/* md5 without salt and magic strings - Added by Ramon de Carvalho and Rodrigo Rubira Branco */
+        } else if (strcmp(u->passwd, (char *) md5sum(passwd)) == 0) {
             printf("OK\n");
         } else {
             printf("ERR Wrong password\n");
