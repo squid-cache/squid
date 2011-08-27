@@ -425,7 +425,6 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
         return;
     }
 
-    inbuf[len] = '\0';
     String outbuf;
 
     if (!gopherState->HTML_header_added) {
@@ -441,75 +440,48 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
         gopherState->HTML_pre = 1;
     }
 
-    while ((pos != NULL) && (pos < inbuf + len)) {
-
+    while (pos < inbuf + len) {
+        int llen;
+        int left = len - (pos - inbuf);
+        lpos = (char *)memchr(pos, '\n', left);
+        if (lpos) {
+            lpos++;             /* Next line is after \n */
+            llen = lpos - pos;
+        } else {
+            llen = left;
+        }
+        if (gopherState->len + llen >= TEMP_BUF_SIZE) {
+            debugs(10, 1, "GopherHTML: Buffer overflow. Lost some data on URL: " << entry->url()  );
+            llen = TEMP_BUF_SIZE - gopherState->len - 1;
+        }
+        if (!lpos) {
+            /* there is no complete line in inbuf */
+            /* copy it to temp buffer */
+            /* note: llen is adjusted above */
+            xmemcpy(gopherState->buf + gopherState->len, pos, llen);
+            gopherState->len += llen;
+            break;
+        }
+        if (!lpos) {
+            /* there is no complete line in inbuf */
+            /* copy it to temp buffer */
+            /* note: llen is adjusted above */
+            xmemcpy(gopherState->buf + gopherState->len, pos, llen);
+            gopherState->len += llen;
+            break;
+        }
         if (gopherState->len != 0) {
             /* there is something left from last tx. */
-            xstrncpy(line, gopherState->buf, gopherState->len + 1);
-
-            if (gopherState->len + len > TEMP_BUF_SIZE) {
-                debugs(10, 1, "GopherHTML: Buffer overflow. Lost some data on URL: " << entry->url()  );
-                len = TEMP_BUF_SIZE - gopherState->len;
-            }
-
-            lpos = (char *) memccpy(line + gopherState->len, inbuf, '\n', len);
-
-            if (lpos)
-                *lpos = '\0';
-            else {
-                /* there is no complete line in inbuf */
-                /* copy it to temp buffer */
-
-                if (gopherState->len + len > TEMP_BUF_SIZE) {
-                    debugs(10, 1, "GopherHTML: Buffer overflow. Lost some data on URL: " << entry->url()  );
-                    len = TEMP_BUF_SIZE - gopherState->len;
-                }
-
-                xmemcpy(gopherState->buf + gopherState->len, inbuf, len);
-                gopherState->len += len;
-                return;
-            }
-
-            /* skip one line */
-            pos = (char *) memchr(pos, '\n', len);
-
-            if (pos)
-                pos++;
-
-            /* we're done with the remain from last tx. */
+            xmemcpy(line, gopherState->buf, gopherState->len);
+            xmemcpy(line + gopherState->len, pos, llen);
+            llen += gopherState->len;
             gopherState->len = 0;
-
-            *(gopherState->buf) = '\0';
         } else {
-
-            lpos = (char *) memccpy(line, pos, '\n', len - (pos - inbuf));
-
-            if (lpos)
-                *lpos = '\0';
-            else {
-                /* there is no complete line in inbuf */
-                /* copy it to temp buffer */
-
-                if ((len - (pos - inbuf)) > TEMP_BUF_SIZE) {
-                    debugs(10, 1, "GopherHTML: Buffer overflow. Lost some data on URL: " << entry->url()  );
-                    len = TEMP_BUF_SIZE;
-                }
-
-                if (len > (pos - inbuf)) {
-                    xmemcpy(gopherState->buf, pos, len - (pos - inbuf));
-                    gopherState->len = len - (pos - inbuf);
-                }
-
-                break;
-            }
-
-            /* skip one line */
-            pos = (char *) memchr(pos, '\n', len);
-
-            if (pos)
-                pos++;
-
+            xmemcpy(line, pos, llen);
         }
+        line[llen + 1] = '\0';
+        /* move input to next line */
+        pos = lpos;
 
         /* at this point. We should have one line in buffer to process */
 
