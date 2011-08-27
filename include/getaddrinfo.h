@@ -111,11 +111,11 @@ SQUIDCEXTERN const char *xgai_strerror (int code);
 <<<<<<< TREE
 =======
 #if !defined(gai_strerror)
->>>>>>> MERGE-SOURCE
-<<<<<<< TREE
-=======
+    >>>>>>> MERGE-SOURCE
+    <<<<<<< TREE
+    =======
 #endif
->>>>>>> MERGE-SOURCE
+        >>>>>>> MERGE-SOURCE
 
 #endif /* HAVE_GETADDRINFO */
 
