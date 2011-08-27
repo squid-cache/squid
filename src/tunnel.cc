@@ -619,7 +619,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
      * be allowed.  yuck, I know.
      */
 
-    if (!request->client_addr.IsNoAddr() && Config.accessList.miss) {
+    if (Config.accessList.miss && !request->client_addr.IsNoAddr()) {
         /*
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          * default is to allow.
