@@ -43,8 +43,9 @@ if [ ! -f $tmpdir/configure ]; then
 fi
 
 cd $tmpdir
-eval `grep "^ *VERSION=" configure | sed -e 's/-BZR//'`
-eval `grep "^ *PACKAGE=" configure`
+./bootstrap.sh
+eval `grep "^ *PACKAGE_VERSION=" configure | sed -e 's/-BZR//' | sed -e 's/PACKAGE_//'`
+eval `grep "^ *PACKAGE_TARNAME=" configure | sed -e 's/_TARNAME//'`
 if [ ${name} != ${PACKAGE}-${VERSION} ]; then
 	echo "ERROR! The tag and configure version numbers do not match!"
 	echo "${name} != ${PACKAGE}-${VERSION}"
