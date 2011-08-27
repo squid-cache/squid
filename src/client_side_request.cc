@@ -637,7 +637,7 @@ ClientRequestContext::clientAccessCheckDone(int answer)
                                     NULL,
                                     http->getConn() != NULL && http->getConn()->auth_user_request ?
                                     http->getConn()->auth_user_request : http->request->auth_user_request);
-
+        http->getConn()->flags.readMoreRequests = true; // resume any pipeline reads.
         node = (clientStreamNode *)http->client_stream.tail->data;
         clientStreamRead(node, http, node->readBuffer);
         return;
@@ -1558,7 +1558,7 @@ ClientHttpRequest::handleAdaptationFailure(bool bypassable)
                                 (c != NULL ? c->peer : noAddr), request, NULL,
                                 (c != NULL && c->auth_user_request ?
                                  c->auth_user_request : request->auth_user_request));
-
+    c->flags.readMoreRequests = true;
     node = (clientStreamNode *)client_stream.tail->data;
     clientStreamRead(node, this, node->readBuffer);
 }
