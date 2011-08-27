@@ -3,7 +3,7 @@ BEGIN {
 	print "/* Generated automatically from cf.data.pre"
 	print " * DO NOT EDIT"
 	print "*/"
-	print "#include \"config.h\""
+	print "#include \"autoconf.h\""
 	print "static struct { const char *name; const char *enable; int defined;} defines[] = {"
 	define["DELAY_POOLS"]="--enable-delay-pools"
 	define["FOLLOW_X_FORWARDED_FOR"]="--enable-follow-x-forwarded-for"
