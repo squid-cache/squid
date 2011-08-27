@@ -1,3 +1,24 @@
+Changes to squid-3.1.15 (28 Aug 2011):
+
+	- Regression fix: vhost and defaultsite causing vport to be ignored
+	- Bug #3232: fails to compile with OpenSSL v1.0.0
+	- Bug #3222: cache_peer name is not logging on CONNECT
+	- Bug #3131: fd_table[fd].closing() assert from ConnStateData::noteMoreBodySpaceAvailable()
+	- Bug #3217: "!fd_table[fd].closing()" from ServerStateData::noteMoreBodySpaceAvailable
+	- Bug #3213: https sites (CONNECT) not open when using NTLM
+	- Bug #3114: Memory leak in SSL certificate verify code
+	- Bug #3107: ncsa_auth DES silently truncates passwords to 8 bytes
+	- Bug #2662: cf_gen failure when cross compiling
+	- Bug #2655: passing wrong the username to the url_rewrite_program
+	- Bug #2495: ignore whitespace prefix on config lines
+	- Bug #2051: 'default' cache_peer option does not match documentation
+	- Bug #1842: Optimize order of tests in peerWouldBePinged() and peerHTTPOkay()
+	- Bug #1791: timestampsSet does not validate Date: if server sends very old date
+	- Correct parsing of large Gopher indexes
+	- Enable negative cacheing on unknown or -1 expiry timestamp
+	- Migrate cf_gen tool from C-style to C++
+	- ... and several documentation and compiler warning fixes
+
 Changes to squid-3.1.14 (04 Jul 2011):
 
 	- Regression Bug 3261: Could not create a DNS socket and exit
@@ -571,6 +592,21 @@ Changes to squid-3.1.0.1 (27 Oct 2008):
 	- Follow_x_forwarder_for ported from 2.6
 	- Bug #2223: Follow XFF extensions added
 	- ... and many code and documentation cleanups
+
+Changes to squid-3.0.STABLE26 (28 Aug 2011):
+
+	- Regression: header_replace for reply headers
+	- Bug 3183: Invalid URL accepted with url host part of only '@'.
+	- Bug 3107: ncsa_auth DES silently truncates passwords to 8 bytes
+	- Bug 3056: comm.cc "!fd_table[fd].closing()" assertion from helperServerFree
+	- Bug 2991: Wrong parameters to fcntl() in commSetCloseOnExec()
+	- Bug 2933: Verification of the max. port number for WCCP2 dynamic service
+	- Bug 2922: Fix assertion failed: HttpHeader.cc: "Headers[id].stat.aliveCount"
+	- Regression Bug 2899: Restore lost rfc1738_unescape() data type
+	- Regression Bug 2879: headers end finding
+	- Bug 2876: FD_SETSIZE override not working on all linux distributions
+	- Check for NULL and empty strings before calling str*cmp().
+	- Correct parsing of large Gopher indexes
 
 Changes to squid-3.0.STABLE25 (14 Mar 2010):
 
