@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.0.STABLE25 release notes</title>
+<title>Squid 3.0.STABLE26 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,13 +13,14 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.0.STABLE25.
+The Squid Team are pleased to announce the release of Squid-3.0.STABLE26.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.0/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
 A large number of the show-stopper bugs have been fixed along with general improvements to the ICAP support and additional Languages.
 
-We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/TroubleShooting#head-7067fc0034ce967e67911becaabb8c95a34d576d"> for how to submit a report with a stack trace.
+We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting"> for how to submit a 
+report with a stack trace.
 
 <sect>Known issues
 <p>
@@ -158,8 +159,8 @@ In the following example the command line of the "squidsvc" Squid service is set
 <tag>PSAPI.DLL (Process Status Helper) Considerations</tag>
 
 The process status helper functions make it easier for you to obtain information about
-processes and device drivers running on Microsoft® Windows NT®/Windows® 2000. These
-functions are available in PSAPI.DLL, which is distributed in the Microsoft® Platform
+processes and device drivers running on Microsoft? Windows NT?/Windows? 2000. These
+functions are available in PSAPI.DLL, which is distributed in the Microsoft? Platform
 Software Development Kit (SDK). The same information is generally available through the
 performance data in the registry, but it is more difficult to get to it. PSAPI.DLL is
 freely redistributable.
@@ -616,6 +617,8 @@ See the accf_http(9) man page.
 	<p>Common options <em>no-store</em>, replaces the older <em>read-only</em> option
 
 	<tag>auth_param</tag>
+	<p>NCSA authenticator updated in 3.0.STALE26 to alert if passwords with more
+	    than 8 characters are used with DES encryption method.
 	<p>Removed Basic auth options:
 	<verb>
     blankpasswor, not yet ported to squid-3.

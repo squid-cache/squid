@@ -1,3 +1,18 @@
+Changes to squid-3.0.STABLE26 (28 Aug 2011):
+
+	- Regression: header_replace for reply headers
+	- Bug 3183: Invalid URL accepted with url host part of only '@'.
+	- Bug 3107: ncsa_auth DES silently truncates passwords to 8 bytes
+	- Bug 3056: comm.cc "!fd_table[fd].closing()" assertion from helperServerFree
+	- Bug 2991: Wrong parameters to fcntl() in commSetCloseOnExec()
+	- Bug 2933: Verification of the max. port number for WCCP2 dynamic service
+	- Bug 2922: Fix assertion failed: HttpHeader.cc: "Headers[id].stat.aliveCount"
+	- Regression Bug 2899: Restore lost rfc1738_unescape() data type
+	- Regression Bug 2879: headers end finding
+	- Bug 2876: FD_SETSIZE override not working on all linux distributions
+	- Check for NULL and empty strings before calling str*cmp().
+	- Correct parsing of large Gopher indexes
+
 Changes to squid-3.0.STABLE25 (14 Mar 2010):
 
 	- Bug 2845: Rework the http digest auth parser
@@ -309,7 +324,7 @@ authorative for this release and mirrored here for reference only.
 	- the mailto links on Squid's ERR pages now contain data about the
 	  occurred error by default, so that the email will contain this data in
 	  its body. This feature can be disabled via the email_err_data directive.
-	  (Clemens Löser)
+	  (Clemens L?ser)
 	- COSS now uses a file called stripe and the path in squid.conf is the
 	  directory this is placed in. Additionally squid -z will create the
 	  COSS swapfile.
