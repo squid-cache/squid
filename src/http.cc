@@ -1394,6 +1394,10 @@ HttpStateData::processReplyBody()
 void
 HttpStateData::maybeReadVirginBody()
 {
+    // too late to read
+    if (fd >= 0 && fd_table[fd].closing())
+        return;
+
     // we may need to grow the buffer if headers do not fit
     const int minRead = flags.headers_parsed ? 0 :1024;
     const int read_size = replyBodySpace(*readBuf, minRead);

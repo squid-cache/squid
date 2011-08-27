@@ -1295,7 +1295,8 @@ FtpStateData::dataComplete()
 void
 FtpStateData::maybeReadVirginBody()
 {
-    if (data.fd < 0)
+    // too late to read
+    if (data.fd < 0 || fd_table[data.conn->fd].closing())
         return;
 
     if (data.read_pending)
