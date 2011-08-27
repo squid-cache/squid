@@ -610,7 +610,7 @@ SQUIDCEXTERN char *urlCanonicalClean(const HttpRequest *);
 SQUIDCEXTERN const char *urlCanonicalFakeHttps(const HttpRequest * request);
 SQUIDCEXTERN bool urlIsRelative(const char *);
 SQUIDCEXTERN char *urlMakeAbsolute(const HttpRequest *, const char *);
-SQUIDCEXTERN char *urlRInternal(const char *host, u_short port, const char *dir, const char *name);
+SQUIDCEXTERN char *urlRInternal(const char *host, unsigned short port, const char *dir, const char *name);
 SQUIDCEXTERN char *urlInternal(const char *dir, const char *name);
 SQUIDCEXTERN int matchDomainName(const char *host, const char *domain);
 SQUIDCEXTERN int urlCheckRequest(const HttpRequest *);
@@ -684,7 +684,7 @@ SQUIDCEXTERN void internalStart(HttpRequest *, StoreEntry *);
 SQUIDCEXTERN int internalCheck(const char *urlpath);
 SQUIDCEXTERN int internalStaticCheck(const char *urlpath);
 SQUIDCEXTERN char *internalLocalUri(const char *dir, const char *name);
-SQUIDCEXTERN char *internalRemoteUri(const char *, u_short, const char *, const char *);
+SQUIDCEXTERN char *internalRemoteUri(const char *, unsigned short, const char *, const char *);
 SQUIDCEXTERN const char *internalHostname(void);
 SQUIDCEXTERN int internalHostnameIs(const char *);
 

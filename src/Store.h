@@ -139,15 +139,15 @@ public:
     time_t expires;
     time_t lastmod;
     uint64_t swap_file_sz;
-    u_short refcount;
-    u_short flags;
+    uint16_t refcount;
+    uint16_t flags;
     /* END OF ON-DISK STORE_META_STD */
 
     sfileno swap_filen:25;
 
     sdirno swap_dirn:7;
 
-    u_short lock_count;		/* Assume < 65536! */
+    unsigned short lock_count;		/* Assume < 65536! */
 
     mem_status_t mem_status:3;
 

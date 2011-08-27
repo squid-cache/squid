@@ -176,7 +176,6 @@ typedef unsigned long ino_t;
 #define SIGUSR1 30	/* user defined signal 1 */
 #define SIGUSR2 31	/* user defined signal 2 */
 
-typedef unsigned short int ushort;
 #if !_SQUID_CYGWIN_
 typedef int uid_t;
 typedef int gid_t;

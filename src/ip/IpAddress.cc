@@ -741,12 +741,14 @@ bool IpAddress::operator <(const IpAddress &rhs) const
     return ( matchIPAddr(rhs) < 0);
 }
 
-u_short IpAddress::GetPort() const
+unsigned short
+IpAddress::GetPort() const
 {
     return ntohs( m_SocketAddr.sin6_port );
 }
 
-u_short IpAddress::SetPort(u_short prt)
+unsigned short
+IpAddress::SetPort(unsigned short prt)
 {
     m_SocketAddr.sin6_port = htons(prt);
 

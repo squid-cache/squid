@@ -64,7 +64,7 @@ public:
     bool noConnections() const;
     char *url;
     char *host;			/* either request->host or proxy host */
-    u_short port;
+    unsigned short port;
     HttpRequest *request;
     FwdServer *servers;
 

@@ -53,7 +53,7 @@ public:
     void noteUse(PconnPool *);
 
     unsigned int type;
-    u_short remote_port;
+    unsigned short remote_port;
 
     IpAddress local_addr;
     unsigned char tos;

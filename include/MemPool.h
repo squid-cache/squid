@@ -58,7 +58,7 @@
 /// \ingroup MemPoolsAPI
 #define MEM_MIN_FREE  32
 /// \ingroup MemPoolsAPI
-#define MEM_MAX_FREE  65535	/* ushort is max number of items per chunk */
+#define MEM_MAX_FREE  65535	/* unsigned short is max number of items per chunk */
 
 class MemImplementingAllocator;
 class MemPoolStats;

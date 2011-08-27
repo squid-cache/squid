@@ -1633,7 +1633,7 @@ wccp2AssignBuckets(void *voidnotused)
     int router_len;
     int bucket_counter;
     uint32_t service_flags;
-    u_short port = WCCP_PORT;
+    unsigned short port = WCCP_PORT;
 
     /* Packet segments */
 

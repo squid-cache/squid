@@ -158,7 +158,7 @@ Icmp6::SendEcho(IpAddress &to, int opcode, const char *payload, int len)
     icmp->icmp6_code = 0;
     icmp->icmp6_cksum = 0;
     icmp->icmp6_id = icmp_ident;
-    icmp->icmp6_seq = (u_short) icmp_pkts_sent++;
+    icmp->icmp6_seq = (unsigned short) icmp_pkts_sent++;
 
     icmp6_pktsize = sizeof(struct icmp6_hdr);
 
@@ -179,7 +179,7 @@ Icmp6::SendEcho(IpAddress &to, int opcode, const char *payload, int len)
         icmp6_pktsize += len;
     }
 
-    icmp->icmp6_cksum = CheckSum((u_short *) icmp, icmp6_pktsize);
+    icmp->icmp6_cksum = CheckSum((unsigned short *) icmp, icmp6_pktsize);
 
     to.GetAddrInfo(S);
     ((sockaddr_in6*)S->ai_addr)->sin6_port = 0;

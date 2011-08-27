@@ -43,7 +43,7 @@ void
 testHttpRequest::testCreateFromUrlAndMethod()
 {
     /* vanilla url */
-    ushort expected_port;
+    unsigned short expected_port;
     char * url = xstrdup("http://foo:90/bar");
     HttpRequest *aRequest = HttpRequest::CreateFromUrlAndMethod(url, METHOD_GET);
     expected_port = 90;
@@ -93,7 +93,7 @@ void
 testHttpRequest::testCreateFromUrl()
 {
     /* vanilla url */
-    ushort expected_port;
+    unsigned short expected_port;
     char * url = xstrdup("http://foo:90/bar");
     HttpRequest *aRequest = HttpRequest::CreateFromUrl(url);
     expected_port = 90;
@@ -112,7 +112,7 @@ testHttpRequest::testCreateFromUrl()
 void
 testHttpRequest::testIPv6HostColonBug()
 {
-    ushort expected_port;
+    unsigned short expected_port;
     char * url = NULL;
     HttpRequest *aRequest = NULL;
 

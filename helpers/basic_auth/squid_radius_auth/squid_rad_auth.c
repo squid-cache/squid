@@ -175,7 +175,7 @@ md5_calc(uint8_t out[16], void *in, size_t len)
  *    Receive and verify the result.
  */
 static int
-result_recv(u_int32_t host, u_short udp_port, char *buffer, int length)
+result_recv(uint32_t host, unsigned short udp_port, char *buffer, int length)
 {
     AUTH_HDR *auth;
     int totallen;
@@ -292,7 +292,7 @@ static int
 authenticate(int socket_fd, const char *username, const char *passwd)
 {
     AUTH_HDR *auth;
-    u_short total_length;
+    unsigned short total_length;
     u_char *ptr;
     int length;
     char passbuf[MAXPASS];
@@ -457,7 +457,7 @@ main(int argc, char **argv)
     struct sockaddr_in salocal;
     struct sockaddr_in saremote;
     struct servent *svp;
-    u_short svc_port;
+    unsigned short svc_port;
     char username[MAXPWNAM];
     char passwd[MAXPASS];
     char *ptr;
@@ -519,7 +519,7 @@ main(int argc, char **argv)
      */
     svp = getservbyname(svc_name, "udp");
     if (svp != NULL)
-        svc_port = ntohs((u_short) svp->s_port);
+        svc_port = ntohs((unsigned short) svp->s_port);
     else
         svc_port = atoi(svc_name);
     if (svc_port == 0)

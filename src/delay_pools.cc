@@ -667,7 +667,7 @@ DelayPools::pools()
 }
 
 void
-DelayPools::pools (u_short newPools)
+DelayPools::pools(unsigned short newPools)
 {
     if (pools()) {
         debugs(3, 0, "parse_delay_pool_count: multiple delay_pools lines, aborting all previous delay_pools config");

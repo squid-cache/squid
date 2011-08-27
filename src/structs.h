@@ -105,7 +105,7 @@ struct acl_size_t {
 };
 
 struct ushortlist {
-    u_short i;
+    unsigned short i;
     ushortlist *next;
 };
 
@@ -192,14 +192,14 @@ struct SquidConfig {
     acl_size_t *ReplyBodySize;
 
     struct {
-        u_short icp;
+        unsigned short icp;
 #if USE_HTCP
 
-        u_short htcp;
+        unsigned short htcp;
 #endif
 #if SQUID_SNMP
 
-        u_short snmp;
+        unsigned short snmp;
 #endif
     } Port;
 
@@ -332,7 +332,7 @@ struct SquidConfig {
         char *host;
         char *file;
         time_t period;
-        u_short port;
+        unsigned short port;
     } Announce;
 
     struct {
@@ -848,18 +848,18 @@ struct peer {
     struct {
         int version;
         int counts[ICP_END+1];
-        u_short port;
+        unsigned short port;
     } icp;
 
 #if USE_HTCP
     struct {
         double version;
         int counts[2];
-        u_short port;
+        unsigned short port;
     } htcp;
 #endif
 
-    u_short http_port;
+    unsigned short http_port;
     domain_ping *peer_domain;
     domain_type *typelist;
     acl_access *access;

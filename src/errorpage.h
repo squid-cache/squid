@@ -132,7 +132,7 @@ public:
     HttpRequest *request;
     char *url;
     int xerrno;
-    u_short port;
+    unsigned short port;
     String dnsError; ///< DNS lookup error message
     time_t ttl;
 

@@ -104,8 +104,8 @@ struct MetaStd {
     time_t expires;
     time_t lastmod;
     size_t swap_file_sz;
-    u_short refcount;
-    u_short flags;
+    uint16_t refcount;
+    uint16_t flags;
 };
 
 struct MetaStdLfs {
@@ -114,8 +114,8 @@ struct MetaStdLfs {
     time_t expires;
     time_t lastmod;
     uint64_t swap_file_sz;
-    u_short refcount;
-    u_short flags;
+    uint16_t refcount;
+    uint16_t flags;
 };
 
 struct DumpStoreMeta : public unary_function<StoreMeta, void> {

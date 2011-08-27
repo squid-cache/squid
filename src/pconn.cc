@@ -177,7 +177,7 @@ IdleConnList::timeout(int fd, void *data)
 /* ========== PconnPool PRIVATE FUNCTIONS ============================================ */
 
 const char *
-PconnPool::key(const char *host, u_short port, const char *domain, IpAddress &client_address)
+PconnPool::key(const char *host, unsigned short port, const char *domain, IpAddress &client_address)
 {
     LOCAL_ARRAY(char, buf, SQUIDHOSTNAMELEN * 3 + 10);
     char ntoabuf[MAX_IPSTRLEN];
@@ -248,7 +248,7 @@ PconnPool::~PconnPool()
 }
 
 void
-PconnPool::push(int fd, const char *host, u_short port, const char *domain, IpAddress &client_address)
+PconnPool::push(int fd, const char *host, unsigned short port, const char *domain, IpAddress &client_address)
 {
     IdleConnList *list;
     const char *aKey;
@@ -293,7 +293,7 @@ PconnPool::push(int fd, const char *host, u_short port, const char *domain, IpAd
  * transactions create persistent connections but are not retriable.
  */
 int
-PconnPool::pop(const char *host, u_short port, const char *domain, IpAddress &client_address, bool isRetriable)
+PconnPool::pop(const char *host, unsigned short port, const char *domain, IpAddress &client_address, bool isRetriable)
 {
     const char * aKey = key(host, port, domain, client_address);
 

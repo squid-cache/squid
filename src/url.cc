@@ -446,7 +446,7 @@ urlParseFinish(const HttpRequestMethod& method,
 
     request->SetHost(host);
     xstrncpy(request->login, login, MAX_LOGIN_SZ);
-    request->port = (u_short) port;
+    request->port = (unsigned short) port;
     return request;
 }
 

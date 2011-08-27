@@ -38,8 +38,8 @@ struct snmp_session {
     int retries;		/* Number of retries before timeout. */
     int timeout;		/* Number of uS until first timeout, then exponential backoff */
     char *peername;		/* Domain name or dotted IP address of default peer */
-    u_short remote_port;	/* UDP port number of peer. */
-    u_short local_port;		/* My UDP port number, 0 for default, picked randomly */
+    unsigned short remote_port;	/* UDP port number of peer. */
+    unsigned short local_port;		/* My UDP port number, 0 for default, picked randomly */
 };
 
 #define RECEIVED_MESSAGE   1

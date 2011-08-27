@@ -52,7 +52,7 @@
 void
 DelayConfig::parsePoolCount()
 {
-    u_short pools_;
+    unsigned short pools_;
     ConfigParser::ParseUShort(&pools_);
     DelayPools::pools(pools_);
 }
@@ -60,7 +60,7 @@ DelayConfig::parsePoolCount()
 void
 DelayConfig::parsePoolClass()
 {
-    ushort pool;
+    unsigned short pool;
 
     ConfigParser::ParseUShort(&pool);
 
@@ -69,7 +69,7 @@ DelayConfig::parsePoolClass()
         return;
     }
 
-    ushort delay_class_;
+    unsigned short delay_class_;
     ConfigParser::ParseUShort(&delay_class_);
 
     if (delay_class_ < 1 || delay_class_ > 5) {
@@ -85,7 +85,7 @@ DelayConfig::parsePoolClass()
 void
 DelayConfig::parsePoolRates()
 {
-    ushort pool;
+    unsigned short pool;
     ConfigParser::ParseUShort(&pool);
 
     if (pool < 1 || pool > DelayPools::pools()) {
@@ -106,7 +106,7 @@ DelayConfig::parsePoolRates()
 void
 DelayConfig::parsePoolAccess(ConfigParser &parser)
 {
-    ushort pool;
+    unsigned short pool;
 
     ConfigParser::ParseUShort(&pool);
 

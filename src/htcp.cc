@@ -447,12 +447,12 @@ htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff)
 static ssize_t
 htcpBuildClrOpData(char *buf, size_t buflen, htcpStuff * stuff)
 {
-    u_short reason;
+    unsigned short reason;
 
     switch (stuff->rr) {
     case RR_REQUEST:
         debugs(31, 3, "htcpBuildClrOpData: RR_REQUEST");
-        reason = htons((u_short)stuff->reason);
+        reason = htons((unsigned short)stuff->reason);
         xmemcpy(buf, &reason, 2);
         return htcpBuildSpecifier(buf + 2, buflen - 2, stuff) + 2;
     case RR_RESPONSE:

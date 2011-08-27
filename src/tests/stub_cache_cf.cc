@@ -104,7 +104,7 @@ strtokFile(void)
 }
 
 void
-ConfigParser::ParseUShort(u_short *var)
+ConfigParser::ParseUShort(unsigned short *var)
 {
     fatal("not implemented 10");
 }

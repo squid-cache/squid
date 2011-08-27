@@ -211,7 +211,7 @@ char *
 ntlmGetString(ntlmhdr * hdr, strhdr * str, int flags)
 {
     static char buf[512];
-    u_short *s, c;
+    unsigned short *s, c;
     char *d, *sc;
     int l, o;
 
@@ -225,7 +225,7 @@ ntlmGetString(ntlmhdr * hdr, strhdr * str, int flags)
     }
     if ((flags & NEGOTIATE_ASCII) == 0) {
         /* UNICODE string */
-        s = (u_short *) ((char *) hdr + o);
+        s = (unsigned short *) ((char *) hdr + o);
         d = buf;
 
         for (l >>= 1; l; s++, l--) {

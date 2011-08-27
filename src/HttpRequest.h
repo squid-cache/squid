@@ -151,7 +151,7 @@ public:
 
     AuthUserRequest *auth_user_request;
 
-    u_short port;
+    unsigned short port;
 
     String urlpath;
 

@@ -176,7 +176,7 @@ public:
      \retval 0 Port is unset or an error occured.
      \retval n Port associated with this address in host native -endian.
      */
-    u_short GetPort() const;
+    unsigned short GetPort() const;
 
     /** Set the Port value for an address.
      *  Replaces any previously existing Port value.
@@ -184,7 +184,7 @@ public:
      \retval 0 Port is unset or an error occured.
      \retval n Port associated with this address in host native -endian.
      */
-    u_short SetPort(u_short port);
+    unsigned short SetPort(unsigned short port);
 
     /// Set object to contain the specific IP case ANY_ADDR (format-neutral).
     /// see IsAnyAddr() for more detail.

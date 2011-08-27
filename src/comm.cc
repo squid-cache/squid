@@ -207,7 +207,7 @@ public:
 
 // defaults given by client
     char *host;
-    u_short default_port;
+    unsigned short default_port;
     IpAddress default_addr;
     // NP: CANNOT store the default addr:port together as it gets set/reset differently.
 
@@ -546,7 +546,7 @@ comm_has_incomplete_write(int fd)
  */
 
 /* Return the local port associated with fd. */
-u_short
+unsigned short
 comm_local_port(int fd)
 {
     IpAddress temp;
@@ -794,7 +794,7 @@ comm_openex(int sock_type,
     if ((flags & COMM_REUSEADDR))
         commSetReuseAddr(new_socket);
 
-    if (addr.GetPort() > (u_short) 0) {
+    if (addr.GetPort() > (unsigned short) 0) {
 #ifdef _SQUID_MSWIN_
         if (sock_type != SOCK_DGRAM)
 #endif
@@ -863,7 +863,7 @@ ConnectStateData::operator delete (void *address)
 
 
 void
-commConnectStart(int fd, const char *host, u_short port, AsyncCall::Pointer &cb)
+commConnectStart(int fd, const char *host, unsigned short port, AsyncCall::Pointer &cb)
 {
     debugs(cb->debugSection, cb->debugLevel, "commConnectStart: FD " << fd <<
            ", cb " << cb << ", " << host << ":" << port); // TODO: just print *cb
@@ -884,7 +884,7 @@ commConnectStart(int fd, const char *host, u_short port, AsyncCall::Pointer &cb)
 // a generic call name and debug level when creating an AsyncCall. This will
 // also cut the number of callback registration routines in half.
 void
-commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *data)
+commConnectStart(int fd, const char *host, unsigned short port, CNCB * callback, void *data)
 {
     debugs(5, 5, "commConnectStart: FD " << fd << ", data " << data << ", " << host << ":" << port);
     AsyncCall::Pointer call = commCbCall(5,3,

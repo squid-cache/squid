@@ -920,7 +920,7 @@ mainInitialize(void)
     setEffectiveUser();
 
     if (icpPortNumOverride != 1)
-        Config.Port.icp = (u_short) icpPortNumOverride;
+        Config.Port.icp = (unsigned short) icpPortNumOverride;
 
     _db_init(Debug::cache_log, Debug::debugOptions);
 

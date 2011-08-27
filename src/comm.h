@@ -46,8 +46,8 @@ SQUIDCEXTERN void comm_reset_close(int fd);
 #if LINGERING_CLOSE
 SQUIDCEXTERN void comm_lingering_close(int fd);
 #endif
-SQUIDCEXTERN void commConnectStart(int fd, const char *, u_short, CNCB *, void *);
-void commConnectStart(int fd, const char *, u_short, AsyncCall::Pointer &cb);
+SQUIDCEXTERN void commConnectStart(int fd, const char *, unsigned short, CNCB *, void *);
+void commConnectStart(int fd, const char *, unsigned short, AsyncCall::Pointer &cb);
 
 SQUIDCEXTERN int comm_connect_addr(int sock, const IpAddress &addr);
 SQUIDCEXTERN void comm_init(void);
@@ -73,7 +73,7 @@ SQUIDCEXTERN int comm_open(int, int, IpAddress &, int, const char *note);
 SQUIDCEXTERN int comm_open_listener(int sock_type, int proto, IpAddress &addr, int flags, const char *note);
 
 SQUIDCEXTERN int comm_openex(int, int, IpAddress &, int, unsigned char TOS, const char *);
-SQUIDCEXTERN u_short comm_local_port(int fd);
+SQUIDCEXTERN unsigned short comm_local_port(int fd);
 SQUIDCEXTERN int comm_set_tos(int fd, int tos);
 
 SQUIDCEXTERN void commSetSelect(int, unsigned int, PF *, void *, time_t);

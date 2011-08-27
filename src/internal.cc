@@ -93,7 +93,7 @@ internalStaticCheck(const char *urlpath)
  * makes internal url with a given host and port (remote internal url)
  */
 char *
-internalRemoteUri(const char *host, u_short port, const char *dir, const char *name)
+internalRemoteUri(const char *host, unsigned short port, const char *dir, const char *name)
 {
     static char lc_host[SQUIDHOSTNAMELEN];
     assert(host && name);

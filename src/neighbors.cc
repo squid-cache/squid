@@ -74,7 +74,7 @@ static OBJH neighborDumpNonPeers;
 static void dump_peers(StoreEntry * sentry, peer * peers);
 
 static icp_common_t echo_hdr;
-static u_short echo_port;
+static unsigned short echo_port;
 
 static int NLateReplies = 0;
 static peer *first_ping = NULL;
@@ -586,7 +586,7 @@ neighbors_init(void)
         nul = *AI;
         nul.GetInAddr( *((struct in_addr*)&echo_hdr.shostid) );
         sep = getservbyname("echo", "udp");
-        echo_port = sep ? ntohs((u_short) sep->s_port) : 7;
+        echo_port = sep ? ntohs((unsigned short) sep->s_port) : 7;
     }
 
     first_ping = Config.peers;
