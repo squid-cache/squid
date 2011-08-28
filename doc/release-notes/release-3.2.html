@@ -25,17 +25,18 @@ for Applied Network Research and members of the Web Caching community.</EM>
 
 <UL>
 <LI><A NAME="toc2.1">2.1</A> <A HREF="#ss2.1">Fixed CVE-2009-0801 : NAT interception vulnerability to malicious clients.</A>
-<LI><A NAME="toc2.2">2.2</A> <A HREF="#ss2.2">SMP scalability</A>
-<LI><A NAME="toc2.3">2.3</A> <A HREF="#ss2.3">Helper Multiplexer</A>
-<LI><A NAME="toc2.4">2.4</A> <A HREF="#ss2.4">Helpers On-Demand</A>
-<LI><A NAME="toc2.5">2.5</A> <A HREF="#ss2.5">Helper Name Changes</A>
-<LI><A NAME="toc2.6">2.6</A> <A HREF="#ss2.6">Multi-Lingual manuals</A>
-<LI><A NAME="toc2.7">2.7</A> <A HREF="#ss2.7">Solaris 10 pthreads Support (Experimental)</A>
-<LI><A NAME="toc2.8">2.8</A> <A HREF="#ss2.8">Surrogate/1.0 protocol extensions to HTTP</A>
-<LI><A NAME="toc2.9">2.9</A> <A HREF="#ss2.9">Logging Infrastructure Updated</A>
-<LI><A NAME="toc2.10">2.10</A> <A HREF="#ss2.10">Client Bandwidth Limits</A>
-<LI><A NAME="toc2.11">2.11</A> <A HREF="#ss2.11">Better eCAP Suport</A>
-<LI><A NAME="toc2.12">2.12</A> <A HREF="#ss2.12">Cache Manager access changes</A>
+<LI><A NAME="toc2.2">2.2</A> <A HREF="#ss2.2">NCSA helper DES algorithm password limits</A>
+<LI><A NAME="toc2.3">2.3</A> <A HREF="#ss2.3">SMP scalability</A>
+<LI><A NAME="toc2.4">2.4</A> <A HREF="#ss2.4">Helper Multiplexer</A>
+<LI><A NAME="toc2.5">2.5</A> <A HREF="#ss2.5">Helpers On-Demand</A>
+<LI><A NAME="toc2.6">2.6</A> <A HREF="#ss2.6">Helper Name Changes</A>
+<LI><A NAME="toc2.7">2.7</A> <A HREF="#ss2.7">Multi-Lingual manuals</A>
+<LI><A NAME="toc2.8">2.8</A> <A HREF="#ss2.8">Solaris 10 pthreads Support (Experimental)</A>
+<LI><A NAME="toc2.9">2.9</A> <A HREF="#ss2.9">Surrogate/1.0 protocol extensions to HTTP</A>
+<LI><A NAME="toc2.10">2.10</A> <A HREF="#ss2.10">Logging Infrastructure Updated</A>
+<LI><A NAME="toc2.11">2.11</A> <A HREF="#ss2.11">Client Bandwidth Limits</A>
+<LI><A NAME="toc2.12">2.12</A> <A HREF="#ss2.12">Better eCAP Suport</A>
+<LI><A NAME="toc2.13">2.13</A> <A HREF="#ss2.13">Cache Manager access changes</A>
 </UL>
 <P>
 <H2><A NAME="toc3">3.</A> <A HREF="#s3">Changes to squid.conf since Squid-3.1</A></H2>
@@ -100,6 +101,7 @@ report with a stack trace.</P>
 <P>The most important of these new features are:
 <UL>
 <LI>Fixed CVE-2009-0801 : NAT interception vulnerability to malicious clients.</LI>
+<LI>NCSA helper DES algorithm password limits</LI>
 <LI>SMP scalability</LI>
 <LI>Helper Multiplexer and On-Demand</LI>
 <LI>Helper Name Changes</LI>
@@ -132,7 +134,27 @@ DNS entries.</P>
 error status page.</P>
 
 
-<H2><A NAME="ss2.2">2.2</A> <A HREF="#toc2.2">SMP scalability</A>
+<H2><A NAME="ss2.2">2.2</A> <A HREF="#toc2.2">NCSA helper DES algorithm password limits</A>
+</H2>
+
+<P>Details in Advisory 
+<A HREF="http://www.squid-cache.org/Advisories/SQUID-2011_1.txt">SQUID-2011:2</A></P>
+
+<P>The DES algorithm used by the NCSA Basic authentication helper has an
+limit of 8 bytes but some implementations do not error when truncating
+longer passwords down to this unsafe level.</P>
+
+<P>This both significantly lowers the threshold of difficulty decrypting
+captured password files and hides from users the fact that the extra bits
+of their chosen long password is not being utilized.</P>
+
+<P>The NCSA helper bundled with Squid will prevent passwords longer than 8
+characters being sent to the DES algorithm. The MD5 hash algorithm which
+supports longer than 8 character passwords is also supported by this helper
+and should be used instead.</P>
+
+
+<H2><A NAME="ss2.3">2.3</A> <A HREF="#toc2.3">SMP scalability</A>
 </H2>
 
 <P>The new "workers" squid.conf option can be used to launch multiple worker
@@ -178,7 +200,7 @@ worker customization in SMP mode. For details, search for "Conditional
 configuration" and "SMP-Related Macros" sections in squid.conf.documented.</P>
 
 
-<H2><A NAME="ss2.3">2.3</A> <A HREF="#toc2.3">Helper Multiplexer</A>
+<H2><A NAME="ss2.4">2.4</A> <A HREF="#toc2.4">Helper Multiplexer</A>
 </H2>
 
 <P>The helper multiplexer's purpose is to relieve some of the burden
@@ -226,7 +248,7 @@ the reduction in direct helper spawned by Squid can result in a great reduction 
 </P>
 
 
-<H2><A NAME="ss2.4">2.4</A> <A HREF="#toc2.4">Helpers On-Demand</A>
+<H2><A NAME="ss2.5">2.5</A> <A HREF="#toc2.5">Helpers On-Demand</A>
 </H2>
 
 <P>Traditionally Squid has been configured with a fixed number of helpers and started them during
@@ -262,7 +284,7 @@ When client requests threaten to overload the running helpers an additional 2 wi
 of starting the maximum number of helpers will occur.</P>
 
 
-<H2><A NAME="ss2.5">2.5</A> <A HREF="#toc2.5">Helper Name Changes</A>
+<H2><A NAME="ss2.6">2.6</A> <A HREF="#toc2.6">Helper Name Changes</A>
 </H2>
 
 <P>To improve the understanding of what each helper does and where it should be used the helper binaries
@@ -344,7 +366,7 @@ For several helpers the directory name used in --enable-X-helpers configure opti
 </P>
 
 
-<H2><A NAME="ss2.6">2.6</A> <A HREF="#toc2.6">Multi-Lingual manuals</A>
+<H2><A NAME="ss2.7">2.7</A> <A HREF="#toc2.7">Multi-Lingual manuals</A>
 </H2>
 
 <P>The man(8) and man(1) pages bundled with Squid are now provided online for all
@@ -357,7 +379,7 @@ versions and beginning with 3.2 they are available in languages other than Engli
 This move begins the Localization of the internal administrator facing manuals.</P>
 
 
-<H2><A NAME="ss2.7">2.7</A> <A HREF="#toc2.7">Solaris 10 pthreads Support (Experimental)</A>
+<H2><A NAME="ss2.8">2.8</A> <A HREF="#toc2.8">Solaris 10 pthreads Support (Experimental)</A>
 </H2>
 
 <P>Automatic detection and use of the pthreads library available from Solaris 10</P>
@@ -369,7 +391,7 @@ are now available in Solaris 10.</P>
 We recommend giving AUFS a try for faster disk storage and encourage feedback.</P>
 
 
-<H2><A NAME="ss2.8">2.8</A> <A HREF="#toc2.8">Surrogate/1.0 protocol extensions to HTTP</A>
+<H2><A NAME="ss2.9">2.9</A> <A HREF="#toc2.9">Surrogate/1.0 protocol extensions to HTTP</A>
 </H2>
 
 <P>The <EM>Surrogate</EM> extensions to HTTP protocol enable an origin web server to specify separate
@@ -394,7 +416,7 @@ and for some uses desirable to receive external reverse-proxies <EM>Surrogate-Ca
 is required to prevent an unacceptable surrogate ID of 'localhost' being generated.</P>
 
 
-<H2><A NAME="ss2.9">2.9</A> <A HREF="#toc2.9">Logging Infrastructure Updated</A>
+<H2><A NAME="ss2.10">2.10</A> <A HREF="#toc2.10">Logging Infrastructure Updated</A>
 </H2>
 
 <P>The advanced logging modules introduced in Squid-2.7 are now available from Squid-3.2.</P>
@@ -421,7 +443,7 @@ required to store a long period of access.log and needs to conserve disk space.<
 These logs are now created using an access_log line with the format "referrer" or "useragent".</P>
 
 
-<H2><A NAME="ss2.10">2.10</A> <A HREF="#toc2.10">Client Bandwidth Limits</A>
+<H2><A NAME="ss2.11">2.11</A> <A HREF="#toc2.11">Client Bandwidth Limits</A>
 </H2>
 
 <P>In mobile environments, Squid may need to limit Squid-to-client bandwidth
@@ -453,14 +475,14 @@ response data from Squid.  This delay may need to be lowered in
 high-bandwidth environments.</P>
 
 
-<H2><A NAME="ss2.11">2.11</A> <A HREF="#toc2.11">Better eCAP Suport</A>
+<H2><A NAME="ss2.12">2.12</A> <A HREF="#toc2.12">Better eCAP Suport</A>
 </H2>
 
 <P>Support for libecap version 0.2.0 has been added with this series of Squid. Bringing
 better support for body handling, and logging.</P>
 
 
-<H2><A NAME="ss2.12">2.12</A> <A HREF="#toc2.12">Cache Manager access changes</A>
+<H2><A NAME="ss2.13">2.13</A> <A HREF="#toc2.13">Cache Manager access changes</A>
 </H2>
 
 <P>The Squid Cache Manager has previously only been accessible under the cache_object://

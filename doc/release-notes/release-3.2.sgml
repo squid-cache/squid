@@ -36,6 +36,7 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 <p>The most important of these new features are:
 <itemize>
 	<item>Fixed CVE-2009-0801 : NAT interception vulnerability to malicious clients.
+	<item>NCSA helper DES algorithm password limits
 	<item>SMP scalability
 	<item>Helper Multiplexer and On-Demand
 	<item>Helper Name Changes
@@ -63,6 +64,23 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>When the Host: authority contradicts another authority source Squid will log
   "SECURITY ALERT: Host: header forgery detected" and respond with a 409 Conflict
   error status page.
+
+
+<sect1>NCSA helper DES algorithm password limits
+<p>Details in Advisory <url url="http://www.squid-cache.org/Advisories/SQUID-2011_1.txt" name="SQUID-2011:2">
+
+<p>The DES algorithm used by the NCSA Basic authentication helper has an
+   limit of 8 bytes but some implementations do not error when truncating
+   longer passwords down to this unsafe level.
+
+<p>This both significantly lowers the threshold of difficulty decrypting
+   captured password files and hides from users the fact that the extra bits
+   of their chosen long password is not being utilized.
+
+<p>The NCSA helper bundled with Squid will prevent passwords longer than 8
+   characters being sent to the DES algorithm. The MD5 hash algorithm which
+   supports longer than 8 character passwords is also supported by this helper
+   and should be used instead.
 
 
 <sect1>SMP scalability
