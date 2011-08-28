@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
- <TITLE>Squid 3.2.0.10 release notes</TITLE>
+ <TITLE>Squid 3.2.0.11 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.2.0.10 release notes</H1>
+<H1>Squid 3.2.0.11 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -24,17 +24,18 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <H2><A NAME="toc2">2.</A> <A HREF="#s2">Major new features since Squid-3.1</A></H2>
 
 <UL>
-<LI><A NAME="toc2.1">2.1</A> <A HREF="#ss2.1">SMP scalability</A>
-<LI><A NAME="toc2.2">2.2</A> <A HREF="#ss2.2">Helper Multiplexer</A>
-<LI><A NAME="toc2.3">2.3</A> <A HREF="#ss2.3">Helpers On-Demand</A>
-<LI><A NAME="toc2.4">2.4</A> <A HREF="#ss2.4">Helper Name Changes</A>
-<LI><A NAME="toc2.5">2.5</A> <A HREF="#ss2.5">Multi-Lingual manuals</A>
-<LI><A NAME="toc2.6">2.6</A> <A HREF="#ss2.6">Solaris 10 pthreads Support (Experimental)</A>
-<LI><A NAME="toc2.7">2.7</A> <A HREF="#ss2.7">Surrogate/1.0 protocol extensions to HTTP</A>
-<LI><A NAME="toc2.8">2.8</A> <A HREF="#ss2.8">Logging Infrastructure Updated</A>
-<LI><A NAME="toc2.9">2.9</A> <A HREF="#ss2.9">Client Bandwidth Limits</A>
-<LI><A NAME="toc2.10">2.10</A> <A HREF="#ss2.10">Better eCAP Suport</A>
-<LI><A NAME="toc2.11">2.11</A> <A HREF="#ss2.11">Cache Manager access changes</A>
+<LI><A NAME="toc2.1">2.1</A> <A HREF="#ss2.1">Fixed CVE-2009-0801 : NAT interception vulnerability to malicious clients.</A>
+<LI><A NAME="toc2.2">2.2</A> <A HREF="#ss2.2">SMP scalability</A>
+<LI><A NAME="toc2.3">2.3</A> <A HREF="#ss2.3">Helper Multiplexer</A>
+<LI><A NAME="toc2.4">2.4</A> <A HREF="#ss2.4">Helpers On-Demand</A>
+<LI><A NAME="toc2.5">2.5</A> <A HREF="#ss2.5">Helper Name Changes</A>
+<LI><A NAME="toc2.6">2.6</A> <A HREF="#ss2.6">Multi-Lingual manuals</A>
+<LI><A NAME="toc2.7">2.7</A> <A HREF="#ss2.7">Solaris 10 pthreads Support (Experimental)</A>
+<LI><A NAME="toc2.8">2.8</A> <A HREF="#ss2.8">Surrogate/1.0 protocol extensions to HTTP</A>
+<LI><A NAME="toc2.9">2.9</A> <A HREF="#ss2.9">Logging Infrastructure Updated</A>
+<LI><A NAME="toc2.10">2.10</A> <A HREF="#ss2.10">Client Bandwidth Limits</A>
+<LI><A NAME="toc2.11">2.11</A> <A HREF="#ss2.11">Better eCAP Suport</A>
+<LI><A NAME="toc2.12">2.12</A> <A HREF="#ss2.12">Cache Manager access changes</A>
 </UL>
 <P>
 <H2><A NAME="toc3">3.</A> <A HREF="#s3">Changes to squid.conf since Squid-3.1</A></H2>
@@ -71,13 +72,14 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.2.0.10 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.2.0.11 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.2/">http://www.squid-cache.org/Versions/v3/3.2/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
 <P>While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.</P>
 <P>We welcome feedback and bug reports. If you find a bug, please see 
-<A HREF="http://wiki.squid-cache.org/SquidFaq/TroubleShooting#head-7067fc0034ce967e67911becaabb8c95a34d576d">http://wiki.squid-cache.org/SquidFaq/TroubleShooting#head-7067fc0034ce967e67911becaabb8c95a34d576d</A> for how to submit a report with a stack trace.</P>
+<A HREF="http://wiki.squid-cache.org/SquidFaq/BugReporting">http://wiki.squid-cache.org/SquidFaq/BugReporting</A> for how to submit a 
+report with a stack trace.</P>
 
 <H2><A NAME="ss1.1">1.1</A> <A HREF="#toc1.1">Known issues</A>
 </H2>
@@ -97,6 +99,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 
 <P>The most important of these new features are:
 <UL>
+<LI>Fixed CVE-2009-0801 : NAT interception vulnerability to malicious clients.</LI>
 <LI>SMP scalability</LI>
 <LI>Helper Multiplexer and On-Demand</LI>
 <LI>Helper Name Changes</LI>
@@ -112,7 +115,24 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
 
 
-<H2><A NAME="ss2.1">2.1</A> <A HREF="#toc2.1">SMP scalability</A>
+<H2><A NAME="ss2.1">2.1</A> <A HREF="#toc2.1">Fixed CVE-2009-0801 : NAT interception vulnerability to malicious clients.</A>
+</H2>
+
+<P>Details in Advisory 
+<A HREF="http://www.squid-cache.org/Advisories/SQUID-2011_1.txt">SQUID-2011:1</A></P>
+
+<P>Squid locates the authority-URL details available in an HTTP request as
+defined by RFC 2616 and validates that all found representations are
+<EM>textually</EM> equivalent. In the case of intercepted traffic the
+client destination IP is also compared to the Host: authority domains
+DNS entries.</P>
+
+<P>When the Host: authority contradicts another authority source Squid will log
+"SECURITY ALERT: Host: header forgery detected" and respond with a 409 Conflict
+error status page.</P>
+
+
+<H2><A NAME="ss2.2">2.2</A> <A HREF="#toc2.2">SMP scalability</A>
 </H2>
 
 <P>The new "workers" squid.conf option can be used to launch multiple worker
@@ -158,7 +178,7 @@ worker customization in SMP mode. For details, search for "Conditional
 configuration" and "SMP-Related Macros" sections in squid.conf.documented.</P>
 
 
-<H2><A NAME="ss2.2">2.2</A> <A HREF="#toc2.2">Helper Multiplexer</A>
+<H2><A NAME="ss2.3">2.3</A> <A HREF="#toc2.3">Helper Multiplexer</A>
 </H2>
 
 <P>The helper multiplexer's purpose is to relieve some of the burden
@@ -206,7 +226,7 @@ the reduction in direct helper spawned by Squid can result in a great reduction 
 </P>
 
 
-<H2><A NAME="ss2.3">2.3</A> <A HREF="#toc2.3">Helpers On-Demand</A>
+<H2><A NAME="ss2.4">2.4</A> <A HREF="#toc2.4">Helpers On-Demand</A>
 </H2>
 
 <P>Traditionally Squid has been configured with a fixed number of helpers and started them during
@@ -242,7 +262,7 @@ When client requests threaten to overload the running helpers an additional 2 wi
 of starting the maximum number of helpers will occur.</P>
 
 
-<H2><A NAME="ss2.4">2.4</A> <A HREF="#toc2.4">Helper Name Changes</A>
+<H2><A NAME="ss2.5">2.5</A> <A HREF="#toc2.5">Helper Name Changes</A>
 </H2>
 
 <P>To improve the understanding of what each helper does and where it should be used the helper binaries
@@ -324,7 +344,7 @@ For several helpers the directory name used in --enable-X-helpers configure opti
 </P>
 
 
-<H2><A NAME="ss2.5">2.5</A> <A HREF="#toc2.5">Multi-Lingual manuals</A>
+<H2><A NAME="ss2.6">2.6</A> <A HREF="#toc2.6">Multi-Lingual manuals</A>
 </H2>
 
 <P>The man(8) and man(1) pages bundled with Squid are now provided online for all
@@ -337,7 +357,7 @@ versions and beginning with 3.2 they are available in languages other than Engli
 This move begins the Localization of the internal administrator facing manuals.</P>
 
 
-<H2><A NAME="ss2.6">2.6</A> <A HREF="#toc2.6">Solaris 10 pthreads Support (Experimental)</A>
+<H2><A NAME="ss2.7">2.7</A> <A HREF="#toc2.7">Solaris 10 pthreads Support (Experimental)</A>
 </H2>
 
 <P>Automatic detection and use of the pthreads library available from Solaris 10</P>
@@ -349,7 +369,7 @@ are now available in Solaris 10.</P>
 We recommend giving AUFS a try for faster disk storage and encourage feedback.</P>
 
 
-<H2><A NAME="ss2.7">2.7</A> <A HREF="#toc2.7">Surrogate/1.0 protocol extensions to HTTP</A>
+<H2><A NAME="ss2.8">2.8</A> <A HREF="#toc2.8">Surrogate/1.0 protocol extensions to HTTP</A>
 </H2>
 
 <P>The <EM>Surrogate</EM> extensions to HTTP protocol enable an origin web server to specify separate
@@ -374,7 +394,7 @@ and for some uses desirable to receive external reverse-proxies <EM>Surrogate-Ca
 is required to prevent an unacceptable surrogate ID of 'localhost' being generated.</P>
 
 
-<H2><A NAME="ss2.8">2.8</A> <A HREF="#toc2.8">Logging Infrastructure Updated</A>
+<H2><A NAME="ss2.9">2.9</A> <A HREF="#toc2.9">Logging Infrastructure Updated</A>
 </H2>
 
 <P>The advanced logging modules introduced in Squid-2.7 are now available from Squid-3.2.</P>
@@ -401,7 +421,7 @@ required to store a long period of access.log and needs to conserve disk space.<
 These logs are now created using an access_log line with the format "referrer" or "useragent".</P>
 
 
-<H2><A NAME="ss2.9">2.9</A> <A HREF="#toc2.9">Client Bandwidth Limits</A>
+<H2><A NAME="ss2.10">2.10</A> <A HREF="#toc2.10">Client Bandwidth Limits</A>
 </H2>
 
 <P>In mobile environments, Squid may need to limit Squid-to-client bandwidth
@@ -433,14 +453,14 @@ response data from Squid.  This delay may need to be lowered in
 high-bandwidth environments.</P>
 
 
-<H2><A NAME="ss2.10">2.10</A> <A HREF="#toc2.10">Better eCAP Suport</A>
+<H2><A NAME="ss2.11">2.11</A> <A HREF="#toc2.11">Better eCAP Suport</A>
 </H2>
 
 <P>Support for libecap version 0.2.0 has been added with this series of Squid. Bringing
 better support for body handling, and logging.</P>
 
 
-<H2><A NAME="ss2.11">2.11</A> <A HREF="#toc2.11">Cache Manager access changes</A>
+<H2><A NAME="ss2.12">2.12</A> <A HREF="#toc2.12">Cache Manager access changes</A>
 </H2>
 
 <P>The Squid Cache Manager has previously only been accessible under the cache_object://
@@ -510,6 +530,13 @@ bandwidth limits.</P>
 <DT><B>client_delay_access</B><DD>
 <P>New setting for client bandwith limits to determines the 
 client-side delay pool for the request.</P>
+
+<DT><B>client_dst_passthru</B><DD>
+<P>New setting to disable extra Host: header security on interception proxies.
+Impacts cache integrity/reliability and client browser security.</P>
+<P><EM>IMPORTANT:</EM> disabling this directive only allows Squid to change the
+destination IP to another source indicated by Host: domain DNS or
+cache_peer configuration. It <EM>does not</EM> affect Host: validation.</P>
 
 <DT><B>cpu_affinity_map</B><DD>
 <P>New setting for SMP support to map Squid processes onto specific CPU cores.</P>
@@ -600,8 +627,13 @@ New installs, or installs with no logs configured explicitly will use this modul
 <P>New format <EM>referrer</EM> to log with the format prevously used by referer_log directive.</P>
 <P>New format <EM>useragent</EM> to log with the format prevously used by useragent_log directive.</P>
 
-<DT><B>acl random</B><DD>
+<DT><B>acl : random, localip, localport</B><DD>
 <P>New type <EM>random</EM>. Pseudo-randomly match requests based on a configured probability.</P>
+<P>Renamed <EM>myip</EM> to <EM>localip</EM>. It matches the IP which the client connected to.</P>
+<P>Renamed <EM>myport</EM> to <EM>localport</EM>. It matches the port which the client connected to.</P>
+<P>The <EM>localip</EM>/<EM>localport</EM> differ from earlier releases where they matched a mix of
+of an invalid IP and port 0, the client destination IP/port or the Squid listening IP/port.
+This definition is now consistent across all modes of traffic received by Squid.</P>
 <P>The <EM>manager</EM> ACL requires adjustment to cover new cache manager access:
 <PRE>
                 acl manager url_regex -i ^cache_object:// ^https?://[^/]+/squid-internal-mgr/
@@ -645,10 +677,12 @@ Other status only available when supplying an error template body.</P>
 <P><EM>children-idle=N</EM> determines how many helper to retain as buffer against sudden traffic loads.</P>
 <P>Deprecated <EM>children=N</EM> in favor of <EM>children-max=N</EM>.</P>
 
-<DT><B>http_port act-as-origin</B><DD>
+<DT><B>http_port act-as-origin vhost no-vhost</B><DD>
 <P><EM>act-as-origin</EM> ported from 2.7.
 This option corrects several HTTP header issues when operating as a reverse proxy and cache.
 Notably the externally visible aging of objects stored in the server-side cache.</P>
+<P><EM>vhost</EM> is deprecated. <EM>accel</EM> mode, reverse proxy, now defaults to always enable HTTP/1.1 virtual domain support.</P>
+<P><EM>no-vhost</EM> option is added to disable the new reverse proxy behaviour.</P>
 
 <DT><B>icap_send_client_ip</B><DD>
 <P>Deprecated in favor of adaptation_send_client_ip
@@ -663,14 +697,17 @@ which applies to both ICAP and eCAP.</P>
 which applies to both ICAP and eCAP.</P>
 
 <DT><B>logformat</B><DD>
+<P><EM>%&lt;a</EM> Server or Peer IP address from the last server connection (next hop).</P>
 <P><EM>%&gt;bs</EM> Number of HTTP-equivalent message body bytes received from the next hop.</P>
 <P><EM>icap::%&gt;bs</EM> Number of message body bytes received from the ICAP server.</P>
 <P><EM>%sn</EM> Unique sequence number per log line. Ported from 2.7</P>
-<P><EM>%&gt;eui</EM> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
+<P><EM>%&gt;eui</EM> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6).
 Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.</P>
-<P><EM>%err_code</EM> The ID of an error response served by Squid or
-a similar internal error identifier</P>
+<P><EM>%err_code</EM> The ID of an error response served by Squid or a similar internal error identifier</P>
 <P><EM>%err_detail</EM> Additional err_code-dependent error information.</P>
+<P><EM>%&gt;la</EM> Rename of %la to indicate being a client connection detail.</P>
+<P><EM>%&gt;lp</EM> Rename of %lp to indicate being a client connection detail.</P>
+<P><EM>%&lt;p</EM> Server or Peer port number from the last server connection (next hop).</P>
 
 <DT><B>memory_pools_limit</B><DD>
 <P>Memory limits have been revised and corrected from 3.1.4 onwards.</P>
@@ -742,6 +779,9 @@ The IPv6 magic 'to_ipv6' hacks needed in 3.1 are now no longer necessary.</P>
 
 <DT><B>log_fqdn</B><DD>
 <P>Obsolete. Replaced by automatic detection of the %>A logformat tag.</P>
+
+<DT><B>log_ip_on_direct</B><DD>
+<P>Obsolete. Use a custom log with <EM>%&lt;A</EM> format tag to receive server FQDN or peer name.</P>
 
 <DT><B>maximum_single_addr_tries</B><DD>
 <P>The behaviour controlled by this directive is no longer possible.
