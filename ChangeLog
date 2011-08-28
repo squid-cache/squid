@@ -1,6 +1,7 @@
 Changes to squid-3.1.15 (28 Aug 2011):
 
 	- Regression fix: vhost and defaultsite causing vport to be ignored
+	- Regression Bug 3295: broken escaping in rfc1738_do_escape
 	- Bug #3232: fails to compile with OpenSSL v1.0.0
 	- Bug #3222: cache_peer name is not logging on CONNECT
 	- Bug #3131: fd_table[fd].closing() assert from ConnStateData::noteMoreBodySpaceAvailable()
@@ -16,6 +17,7 @@ Changes to squid-3.1.15 (28 Aug 2011):
 	- Bug #1791: timestampsSet does not validate Date: if server sends very old date
 	- Correct parsing of large Gopher indexes
 	- Enable negative cacheing on unknown or -1 expiry timestamp
+	- Remove hierarchy_stoplist default value
 	- Migrate cf_gen tool from C-style to C++
 	- ... and several documentation and compiler warning fixes
 

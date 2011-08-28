@@ -90,7 +90,7 @@ While this release is not fully bug-free we believe it is ready for use in produ
 <P>
 <UL>
 <LI>The lack of some features available in Squid-2.x series. See the regression sections below for full details.</LI>
-<LI>CVE-2009-0801 : NAT interception vulnerability to malicious clients.</LI>
+<LI>CVE-2009-0801 : NAT interception vulnerability to malicious clients. This is fixed in 3.2 series.</LI>
 </UL>
 </P>
 
@@ -1320,6 +1320,9 @@ format, so all helpers will need to be checked and converted to cope with such i
 
 <DT><B>header_replace</B><DD>
 <P>Deprecated. Use request_header_replace or reply_header_replace instead.</P>
+
+<DT><B>hierarchy_stoplist</B><DD>
+<P>Default value altered to no content, allowing dynamic websites to be fetched through peers.</P>
 
 <DT><B>http_port transparent intercept ssl-bump connection-auth[=on|off] ignore-cc</B><DD>
 <P>Option 'transparent' is being deprecated in favour of 'intercept' which more clearly identifies what the option does.
