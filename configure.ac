@@ -470,6 +470,11 @@ if test "x$with_dl" = "xyes"; then
   AC_MSG_NOTICE([With dl])
 fi
 
+AC_SEARCH_LIBS([shm_open], [rt])
+if test "x$ac_cv_search_shm_open" != "xno" ; then
+  AC_DEFINE(HAVE_SHM,1,[Support shared memory features])
+fi
+
 AC_MSG_CHECKING([for DiskIO modules to be enabled])
 squid_disk_module_candidates=""
 squid_opt_enable_diskio="auto"  #values: no, yes, "auto"(=yes+detect modules)
@@ -500,6 +505,10 @@ case $enableval in
 if test "x$squid_opt_enable_diskio" = "xauto"; then
     squid_opt_enable_diskio="yes"
     SQUID_LOOK_FOR_MODULES([$srcdir/src/DiskIO],[squid_disk_module_candidates])
+    if test "x$ac_cv_search_shm_open" = "xno" ; then
+        # disable IpcIo
+        squid_disk_module_candidates=`echo $squid_disk_module_candidates|sed 's/IpcIo//'`
+    fi
 fi
 
 AC_MSG_RESULT([${squid_disk_module_candidates:-none}])
@@ -675,6 +684,9 @@ for module in $squid_disk_module_candidates none; do
 
     IpcIo)
       AC_MSG_NOTICE([Enabling IpcIo DiskIO module])
+      if test "x$ac_cv_search_shm_open" = "xno" ; then
+        AC_MSG_ERROR([DiskIO IpcIo module requires shared memory support])
+      fi
       DISK_LIBS="$DISK_LIBS libIpcIo.a"
       DISK_MODULES="$DISK_MODULES IpcIo"
       DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/IpcIo/IpcIoDiskIOModule.o"
@@ -738,6 +750,10 @@ if test "x$squid_opt_enable_storeio" = "xauto"; then
   SQUID_LOOK_FOR_MODULES([$srcdir/src/fs],[squid_storeio_module_candidates])
   # disable coss
   squid_storeio_module_candidates=`echo $squid_storeio_module_candidates|sed 's/coss//'`
+  if test "x$ac_cv_search_shm_open" = "xno" ; then
+    # disable rock
+    squid_storeio_module_candidates=`echo $squid_storeio_module_candidates|sed 's/rock//'`
+  fi
   AC_MSG_RESULT([$squid_storeio_module_candidates])
 fi
 
@@ -772,6 +788,9 @@ for fs in $squid_storeio_module_candidates none; do
 	if ! test "x$squid_disk_module_candidates_IpcIo" = "xyes" -a \
 	  "x$squid_disk_module_candidates_Blocking" = "xyes"; then
 	  AC_MSG_ERROR([Storage module Rock requires IpcIo and Blocking DiskIO modules])
+	fi
+	if test "x$ac_cv_search_shm_open" = "xno" ; then
+	  AC_MSG_ERROR([Storage module Rock requires shared memory support])
 	fi
 	STORE_TESTS="$STORE_TESTS tests/testRock$EXEEXT"
 	;;
@@ -2351,6 +2370,7 @@ AC_CHECK_HEADERS( \
   sys/param.h \
   sys/prctl.h \
   sys/md5.h \
+  sys/mman.h \
   sys/msg.h \
   sys/resource.h \
   sys/select.h \
@@ -2571,7 +2591,7 @@ AC_SEARCH_LIBS([bind],[socket])
 AC_SEARCH_LIBS([opcom_stack_trace],[opcom_stack])
 AC_SEARCH_LIBS([strlcpy], [bsd])
 AC_SEARCH_LIBS([yp_match], [nsl nss_nis nss_nisplus])
-AC_SEARCH_LIBS([shm_open], [rt])
+
 dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
 if test "x$squid_host_os" = "xmingw" ; then
   SQUID_CHECK_WINSOCK_LIB

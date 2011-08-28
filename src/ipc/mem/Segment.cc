@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "base/TextException.h"
+#include "compat/shm.h"
 #include "ipc/mem/Segment.h"
 #include "protos.h"
 
@@ -30,6 +31,15 @@ Ipc::Mem::Segment::~Segment() {
     }
     if (doUnlink)
         unlink();
+}
+
+bool
+Ipc::Mem::Segment::Enabled() {
+#if HAVE_SHM
+    return true;
+#else
+    return false;
+#endif
 }
 
 void

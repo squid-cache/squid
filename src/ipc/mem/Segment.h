@@ -19,6 +19,9 @@ public:
     Segment(const char *const id);
     ~Segment();
 
+    /// Whether shared memory support is available
+    static bool Enabled();
+
     /// Create a new shared memory segment. Fails if a segment with
     /// the same name already exists. Unlinks the segment on destruction.
     void create(const off_t aSize);
