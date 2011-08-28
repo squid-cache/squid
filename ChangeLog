@@ -1,3 +1,28 @@
+Changes to squid-3.2.0.11 (28 Aug 2011):
+
+	- Bug 3243: CVE-2009-0801 Bypass of browser same-origin access control
+		- Host: authority validation of intercepted destination IP
+		- Host: authority validation of request URL
+		- Host: authority validation of CONNECT tunnel destination
+		- Preserve client destination IP in intercepted communication
+	- Regression Bug 3316: Failed to connect to nameserver using TCP
+	- Regression Bug 3311: segmentation fault in getMyPort() with only intercept port set
+	- Regression Bug 3310: %<pt translates as %<p
+	- Regression Bug 3301: ERR_DNS_FAIL never shown (partial)
+	- Regression Bug 3288: %<la and %<lp not displaying
+	- Bug 3289: cache manager parameters not parsed without password
+	- Bug 2279: Log Format options to log server source IP and port
+	- Bug 3211: ssl_crtd start even if no ssl-bump port is configured
+	- Bug 3138: squidclient mgr:objects/mgr:vm_objects never ends
+	- Bug 3118: ecap_enable on forces icap_enable on
+	- Bug 3107: ncsa_auth DES silently truncates passwords to 8 bytes
+	- Default to vhost for accelerator mode (reverse proxy)
+	- Display HTTP protocol syntax at section 11 level 2
+	- Support for using custom keys in CARP parents
+	- Optimize regular expression ACLs
+	- ... and a lot of code portability fixes
+	- ... and all bugs and polish changes from 3.1.15
+
 Changes to squid-3.2.0.10 (24 Jul 2011):
 
 	- Port from 2.7: act-as-origin for reverse proxy ports
@@ -224,6 +249,7 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 Changes to squid-3.1.15 (28 Aug 2011):
 
 	- Regression fix: vhost and defaultsite causing vport to be ignored
+	- Regression Bug 3295: broken escaping in rfc1738_do_escape
 	- Bug #3232: fails to compile with OpenSSL v1.0.0
 	- Bug #3222: cache_peer name is not logging on CONNECT
 	- Bug #3131: fd_table[fd].closing() assert from ConnStateData::noteMoreBodySpaceAvailable()
@@ -239,6 +265,7 @@ Changes to squid-3.1.15 (28 Aug 2011):
 	- Bug #1791: timestampsSet does not validate Date: if server sends very old date
 	- Correct parsing of large Gopher indexes
 	- Enable negative cacheing on unknown or -1 expiry timestamp
+	- Remove hierarchy_stoplist default value
 	- Migrate cf_gen tool from C-style to C++
 	- ... and several documentation and compiler warning fixes
 
