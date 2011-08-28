@@ -1143,6 +1143,9 @@ NOCOMMENT_START
 	<tag>header_replace</tag>
 	<p>Deprecated. Use request_header_replace or reply_header_replace instead.
 
+	<tag>hierarchy_stoplist</tag>
+	<p>Default value altered to no content, allowing dynamic websites to be fetched through peers.
+
 	<tag>http_port transparent intercept ssl-bump connection-auth[=on|off] ignore-cc</tag>
 	<p>Option 'transparent' is being deprecated in favour of 'intercept' which more clearly identifies what the option does.
 	For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy using TPROXY support.</p>

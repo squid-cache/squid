@@ -2185,12 +2185,11 @@ DOC_START
 	be handled directly by this cache.  In other words, use this
 	to not query neighbor caches for certain objects.  You may
 	list this option multiple times.
-	Note: never_direct overrides this option.
-NOCOMMENT_START
 
-# We recommend you to use at least the following line.
-hierarchy_stoplist cgi-bin ?
-NOCOMMENT_END
+	Example:
+		hierarchy_stoplist cgi-bin ?
+
+	Note: never_direct overrides this option.
 DOC_END
 
 COMMENT_START
