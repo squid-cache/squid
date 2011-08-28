@@ -1248,7 +1248,7 @@ getMyPort(void)
     if (Config.Sockaddr.http) {
         // skip any special mode ports
         http_port_list *p = Config.Sockaddr.http;
-        while (p->intercepted || p->accel || p->spoof_client_ip)
+        while (p && (p->intercepted || p->accel || p->spoof_client_ip))
             p = p->next;
         if (p)
             return p->s.GetPort();
