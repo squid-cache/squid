@@ -139,12 +139,12 @@ wccpConnectionOpen(void)
     }
 
     if ( !Config.Wccp.router.SetIPv4() ) {
-        debugs(1, 1, "WCCPv1 Disabled. Router " << Config.Wccp.router << " is not IPv4.");
+        debugs(80, DBG_CRITICAL, "WCCPv1 Disabled. Router " << Config.Wccp.router << " is not an IPv4 address.");
         return;
     }
 
     if ( !Config.Wccp.address.SetIPv4() ) {
-        debugs(1, 1, "WCCPv1 Disabled. Local address " << Config.Wccp.address << " is not IPv4.");
+        debugs(80, DBG_CRITICAL, "WCCPv1 Disabled. Local address " << Config.Wccp.address << " is not an IPv4 address.");
         return;
     }
 

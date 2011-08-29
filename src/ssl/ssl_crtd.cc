@@ -123,6 +123,8 @@ static size_t parseBytesUnits(const char * unit)
     if (!strncasecmp(unit, B_GBYTES_STR, strlen(B_GBYTES_STR)))
         return 1 << 30;
 
+    std::cerr << "WARNING: Unknown bytes unit '" << unit << "'" << std::endl;
+
     return 0;
 }
 
