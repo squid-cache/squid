@@ -985,12 +985,12 @@ wccp2ConnectionOpen(void)
     debugs(80, 5, "wccp2ConnectionOpen: Called");
 
     if (wccp2_numrouters == 0 || !wccp2_service_list_head) {
-        debugs(80, 2, "WCCPv2 Disabled.");
+        debugs(80, 2, "WCCPv2 Disabled. No IPv4 Router(s) configured.");
         return;
     }
 
     if ( !Config.Wccp2.address.SetIPv4() ) {
-        debugs(80, 0, "WCCPv2 Disabled. " << Config.Wccp2.address << " is not an IPv4 address.");
+        debugs(80, DBG_CRITICAL, "WCCPv2 Disabled. Local address " << Config.Wccp2.address << " is not an IPv4 address.");
         return;
     }
 
@@ -2135,7 +2135,7 @@ parse_wccp2_service(void *v)
     service_id = GetInteger();
 
     if (service_id < 0 || service_id > 255) {
-        debugs(80, 0, "wccp2ParseServiceInfo: service info id " << service_id << " is out of range (0..255)");
+        debugs(80, DBG_CRITICAL, "ERROR: invalid WCCP service id " << service_id << " (must be between 0 .. 255)");
         self_destruct();
     }
 
@@ -2306,7 +2306,7 @@ parse_wccp2_service_info(void *v)
     service_id = GetInteger();
 
     if (service_id < 0 || service_id > 255) {
-        debugs(80, 1, "parse_wccp2_service_info: invalid service id " << service_id << " (must be between 0 .. 255)");
+        debugs(80, DBG_CRITICAL, "ERROR: invalid WCCP service id " << service_id << " (must be between 0 .. 255)");
         self_destruct();
     }
 
