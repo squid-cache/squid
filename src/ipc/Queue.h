@@ -328,9 +328,16 @@ FewToFewBiQueue::peek(const int remoteProcessId, Value &value) const
     if (!validProcessId(remoteGroup(), remoteProcessId))
         return false;
 
-    const OneToOneUniQueue &remoteQueue = oneToOneQueue(theLocalGroup, theLocalProcessId, remoteGroup(), remoteProcessId);
-    debugs(54, 7, HERE << "peeking from " << theLocalProcessId << " to " << remoteProcessId << " at " << remoteQueue.size());
-    return remoteQueue.peek(value);
+    // we need the oldest value, so start with the incoming, them-to-us queue:
+    const OneToOneUniQueue &inQueue = oneToOneQueue(remoteGroup(), remoteProcessId, theLocalGroup, theLocalProcessId);
+    debugs(54, 2, HERE << "peeking from " << remoteProcessId << " to " << theLocalProcessId << " at " << inQueue.size());
+    if (inQueue.peek(value))
+        return true;
+
+    // if the incoming queue is empty, check the outgoing, us-to-them queue:
+    const OneToOneUniQueue &outQueue = oneToOneQueue(theLocalGroup, theLocalProcessId, remoteGroup(), remoteProcessId);
+    debugs(54, 2, HERE << "peeking from " << theLocalProcessId << " to " << remoteProcessId << " at " << outQueue.size());
+    return outQueue.peek(value);
 }
 
 } // namespace Ipc
