@@ -93,6 +93,7 @@ private:
     static void HandleResponses(const char *const when);
     void handleResponse(IpcIoMsg &ipcIo);
 
+    static void DiskerHandleMoreRequests(void*);
     static void DiskerHandleRequests();
     static void DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo);
 
@@ -124,6 +125,9 @@ private:
 
     typedef Ipc::FewToFewBiQueue Queue;
     static std::auto_ptr<Queue> queue; ///< IPC queue
+
+    /// whether we are waiting for an event to handle still queued I/O requests
+    static bool DiskerHandleMoreRequestsScheduled;
 
     CBDATA_CLASS2(IpcIoFile);
 };
