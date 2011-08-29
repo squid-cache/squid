@@ -29,6 +29,8 @@ IpcIoFile::IpcIoFileList IpcIoFile::WaitingForOpen;
 IpcIoFile::IpcIoFilesMap IpcIoFile::IpcIoFiles;
 std::auto_ptr<IpcIoFile::Queue> IpcIoFile::queue;
 
+bool IpcIoFile::DiskerHandleMoreRequestsScheduled = false;
+
 static bool DiskerOpen(const String &path, int flags, mode_t mode);
 static void DiskerClose(const String &path);
 
@@ -357,7 +359,8 @@ IpcIoFile::canWait() const {
         static_cast<time_msec_t>(expectedWait) < Config.Timeout.disk_io)
         return true; // expected wait time is acceptible
 
-    debugs(47,2, HERE << "cannot wait: " << expectedWait);
+    debugs(47,2, HERE << "cannot wait: " << expectedWait <<
+           " oldest: " << SipcIo(KidIdentifier, oldestIo, diskId));
     return false; // do not want to wait that long
 }
 
@@ -576,7 +579,7 @@ diskerRead(IpcIoMsg &ipcIo)
 {
     if (!Ipc::Mem::GetPage(Ipc::Mem::PageId::ioPage, ipcIo.page)) {
         ipcIo.len = 0;
-        debugs(47,5, HERE << "run out of shared memory pages for IPC I/O");
+        debugs(47,2, HERE << "run out of shared memory pages for IPC I/O");
         return;
     }
 
@@ -623,17 +626,36 @@ diskerWrite(IpcIoMsg &ipcIo)
     Ipc::Mem::PutPage(ipcIo.page);
 }
 
+
+void
+IpcIoFile::DiskerHandleMoreRequests(void*)
+{
+    debugs(47, 7, HERE << "resuming handling requests");
+    DiskerHandleMoreRequestsScheduled = false;
+    IpcIoFile::DiskerHandleRequests();
+}
+
 void
 IpcIoFile::DiskerHandleRequests()
 {
+    // Balance our desire to maximize the number of concurrent I/O requests
+    // (for the OS to reorder to minimize seek time) with a requirement to
+    // send 1st-I/O notification messages, process Coordinator events, etc.
+    const int maxPopped = 1;
+    int popped = 0;
     int workerId = 0;
     IpcIoMsg ipcIo;
-    while (queue->pop(workerId, ipcIo))
+    for (; popped < maxPopped && queue->pop(workerId, ipcIo); ++popped)
         DiskerHandleRequest(workerId, ipcIo);
 
-    // TODO: If the loop keeps on looping, we probably should take a break
-    // once in a while to update clock, read Coordinator messages, etc. 
-    // This can be combined with "elevator" optimization where we get up to N
+    if (popped >= maxPopped && !DiskerHandleMoreRequestsScheduled) {
+        eventAdd("IpcIoFile::DiskerHandleMoreRequests",
+                 &IpcIoFile::DiskerHandleMoreRequests,
+                 NULL, 0.001, 0, false);
+        DiskerHandleMoreRequestsScheduled = true;
+    }
+
+    // TODO: consider adding an "elevator" optimization where we pop a few
     // requests first, then reorder the popped requests to optimize seek time,
     // then do I/O, then take a break, and come back for the next set of I/O
     // requests.
