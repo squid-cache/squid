@@ -121,9 +121,9 @@ static struct TokenTableEntry TokenTable2C[] = {
     /*{"<rq", LFT_SERVER_REQ_QUERY},*/
     {"<rv", LFT_SERVER_REQ_VERSION},
 
-    { ">st", LFT_REQUEST_SIZE_TOTAL },
+    {">st", LFT_REQUEST_SIZE_TOTAL },
     /*{ ">sl", LFT_REQUEST_SIZE_LINE }, * / / * the request line "GET ... " */
-    { ">sh", LFT_REQUEST_SIZE_HEADERS },
+    {">sh", LFT_REQUEST_SIZE_HEADERS },
     /*{ ">sb", LFT_REQUEST_SIZE_BODY }, */
     /*{ ">sB", LFT_REQUEST_SIZE_BODY_NO_TE }, */
 
@@ -131,7 +131,7 @@ static struct TokenTableEntry TokenTable2C[] = {
     {"<sH", LFT_REPLY_HIGHOFFSET},
     {"<sS", LFT_REPLY_OBJECTSIZE},
     /*{ "<sl", LFT_REPLY_SIZE_LINE }, * /   / * the reply line (protocol, code, text) */
-    { "<sh", LFT_REPLY_SIZE_HEADERS },
+    {"<sh", LFT_REPLY_SIZE_HEADERS },
     /*{ "<sb", LFT_REPLY_SIZE_BODY }, */
     /*{ "<sB", LFT_REPLY_SIZE_BODY_NO_TE }, */
 
@@ -146,9 +146,9 @@ static struct TokenTableEntry TokenTable2C[] = {
 #if USE_ADAPTATION
 /// Adaptation (adapt::) tokens
 static struct TokenTableEntry TokenTableAdapt[] = {
-    {"adapt::all_trs", LTF_ADAPTATION_ALL_XACT_TIMES},
-    {"adapt::sum_trs", LTF_ADAPTATION_SUM_XACT_TIMES},
-    {"adapt::<last_h", LFT_ADAPTATION_LAST_HEADER},
+    {"all_trs", LTF_ADAPTATION_ALL_XACT_TIMES},
+    {"sum_trs", LTF_ADAPTATION_SUM_XACT_TIMES},
+    {"<last_h", LFT_ADAPTATION_LAST_HEADER},
     {NULL, LFT_NONE}		/* this must be last */
 };
 #endif
@@ -156,24 +156,24 @@ static struct TokenTableEntry TokenTableAdapt[] = {
 #if ICAP_CLIENT
 /// ICAP (icap::) tokens
 static struct TokenTableEntry TokenTableIcap[] = {
-    {"icap::tt", LFT_ICAP_TOTAL_TIME},
-    {"icap::<last_h", LFT_ADAPTATION_LAST_HEADER}, // deprecated
+    {"tt", LFT_ICAP_TOTAL_TIME},
+    {"<last_h", LFT_ADAPTATION_LAST_HEADER}, // deprecated
 
-    {"icap::<A",  LFT_ICAP_ADDR},
-    {"icap::<service_name",  LFT_ICAP_SERV_NAME},
-    {"icap::ru",  LFT_ICAP_REQUEST_URI},
-    {"icap::rm",  LFT_ICAP_REQUEST_METHOD},
-    {"icap::>st",  LFT_ICAP_BYTES_SENT},
-    {"icap::<st",  LFT_ICAP_BYTES_READ},
-    {"icap::<bs", LFT_ICAP_BODY_BYTES_READ},
+    {"<A",  LFT_ICAP_ADDR},
+    {"<service_name",  LFT_ICAP_SERV_NAME},
+    {"ru",  LFT_ICAP_REQUEST_URI},
+    {"rm",  LFT_ICAP_REQUEST_METHOD},
+    {">st",  LFT_ICAP_BYTES_SENT},
+    {"<st",  LFT_ICAP_BYTES_READ},
+    {"<bs", LFT_ICAP_BODY_BYTES_READ},
 
-    {"icap::>h",  LFT_ICAP_REQ_HEADER},
-    {"icap::<h",  LFT_ICAP_REP_HEADER},
+    {">h",  LFT_ICAP_REQ_HEADER},
+    {"<h",  LFT_ICAP_REP_HEADER},
 
-    {"icap::tr",  LFT_ICAP_TR_RESPONSE_TIME},
-    {"icap::tio",  LFT_ICAP_IO_TIME},
-    {"icap::to",  LFT_ICAP_OUTCOME},
-    {"icap::Hs",  LFT_ICAP_STATUS_CODE},
+    {"tr",  LFT_ICAP_TR_RESPONSE_TIME},
+    {"tio",  LFT_ICAP_IO_TIME},
+    {"to",  LFT_ICAP_OUTCOME},
+    {"Hs",  LFT_ICAP_STATUS_CODE},
 
     {NULL, LFT_NONE}		/* this must be last */
 };
@@ -182,8 +182,8 @@ static struct TokenTableEntry TokenTableIcap[] = {
 /// Miscellaneous >2 byte tokens
 static struct TokenTableEntry TokenTableMisc[] = {
     {">eui", LFT_CLIENT_EUI},
-    { "err_code", LFT_SQUID_ERROR },
-    { "err_detail", LFT_SQUID_ERROR_DETAIL },
+    {"err_code", LFT_SQUID_ERROR },
+    {"err_detail", LFT_SQUID_ERROR_DETAIL },
     {NULL, LFT_NONE}		/* this must be last */
 };
 
