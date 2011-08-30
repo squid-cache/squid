@@ -202,7 +202,7 @@ IpcIoFile::readCompleted(ReadRequest *readRequest,
 {
     bool ioError = false;
     if (!response) {
-        debugs(79,1, HERE << "error: timeout");
+        debugs(79, 3, HERE << "error: timeout");
         ioError = true; // I/O timeout does not warrant setting error_?
     } else {
         if (response->xerrno) {
@@ -252,7 +252,7 @@ IpcIoFile::writeCompleted(WriteRequest *writeRequest,
 {
     bool ioError = false;
     if (!response) {
-        debugs(79,1, HERE << "error: timeout");
+        debugs(79, 3, HERE << "error: timeout");
         ioError = true; // I/O timeout does not warrant setting error_?
     } else
     if (response->xerrno) {
@@ -335,11 +335,11 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
                SipcIo(KidIdentifier, ipcIo, diskId)); // TODO: report queue len
         // TODO: grow queue size
  
-        pending->completeIo(NULL); // XXX: should distinguish this from timeout
+        pending->completeIo(NULL);
         delete pending;
     } catch (const TextException &e) {
         debugs(47, DBG_IMPORTANT, HERE << e.what());
-        pending->completeIo(NULL); // XXX: should distinguish this from timeout
+        pending->completeIo(NULL);
         delete pending;
     }
 }
@@ -474,6 +474,25 @@ IpcIoFile::checkTimeouts()
 {
     timeoutCheckScheduled = false;
 
+    // last chance to recover in case a notification message was lost, etc.
+    const RequestMap::size_type timeoutsBefore = olderRequests->size();
+    HandleResponses("before timeout");
+    const RequestMap::size_type timeoutsNow = olderRequests->size();
+
+    if (timeoutsBefore > timeoutsNow) { // some requests were rescued
+        // notification message lost or significantly delayed?
+        debugs(47, DBG_IMPORTANT, "WARNING: communication with disker " <<
+               "may be too slow or disrupted for about " <<
+               Timeout << "s; rescued " << (timeoutsBefore - timeoutsNow) <<
+               " out of " << timeoutsBefore << " I/Os");
+    }
+
+    if (timeoutsNow) {
+        debugs(47, DBG_IMPORTANT, "WARNING: abandoning " <<
+               timeoutsNow << " I/Os after at least " <<
+               Timeout << "s timeout");
+    }
+
     // any old request would have timed out by now
     typedef RequestMap::const_iterator RMCI;
     for (RMCI i = olderRequests->begin(); i != olderRequests->end(); ++i) {
@@ -489,7 +508,7 @@ IpcIoFile::checkTimeouts()
     olderRequests->clear();
 
     swap(olderRequests, newerRequests); // switches pointers around
-    if (!olderRequests->empty())
+    if (!olderRequests->empty() && !timeoutCheckScheduled)
         scheduleTimeoutCheck();
 }
 
