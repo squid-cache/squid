@@ -1026,7 +1026,7 @@ DOC_END
 NAME: miss_access
 TYPE: acl_access
 LOC: Config.accessList.miss
-DEFAULT: allow all
+DEFAULT_IF_NONE: allow all
 DOC_START
 	Use to force your neighbors to use you as a sibling instead of
 	a parent.  For example:
