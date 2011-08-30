@@ -117,7 +117,7 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     icmp->icmp_code = 0;
     icmp->icmp_cksum = 0;
     icmp->icmp_id = icmp_ident;
-    icmp->icmp_seq = (u_short) icmp_pkts_sent++;
+    icmp->icmp_seq = (unsigned short) icmp_pkts_sent++;
 
     // Construct ICMP packet data content
     echo = (icmpEchoData *) (icmp + 1);
@@ -135,13 +135,13 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
         icmp_pktsize += len;
     }
 
-    icmp->icmp_cksum = CheckSum((u_short *) icmp, icmp_pktsize);
+    icmp->icmp_cksum = CheckSum((unsigned short *) icmp, icmp_pktsize);
 
     to.GetAddrInfo(S);
     ((sockaddr_in*)S->ai_addr)->sin_port = 0;
     assert(icmp_pktsize <= MAX_PKT4_SZ);
 
-    debugs(42, 2, HERE << "Send ICMP packet to " << to << ".");
+    debugs(42, 5, HERE << "Send ICMP packet to " << to << ".");
 
     x = sendto(icmp_sock,
                (const void *) pkt,

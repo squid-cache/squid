@@ -119,7 +119,7 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
     int32_t o;			/* offset */
     static char buf[NTLM_MAX_FIELD_LENGTH];
     lstring rv;
-    u_short *s, c;
+    unsigned short *s, c;
     char *d, *sc;
 
     lstring_zero(rv);
@@ -135,7 +135,7 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
     rv.str = (char *)packet + o;
     if ((flags & NTLM_NEGOTIATE_ASCII) == 0) {
         /* UNICODE string */
-        s = (u_short *) ((char *) packet + o);
+        s = (unsigned short *) ((char *) packet + o);
         rv.str = d = buf;
 
         for (l >>= 1; l; s++, l--) {

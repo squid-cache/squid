@@ -146,14 +146,14 @@ public:
      * Since its a 16-bit quantity, it is susceptible to overflow
      * if a single object is accessed 65,536 times before being replaced.
      */
-    u_short refcount;
+    uint16_t refcount;
 
     /**
      * A copy of the StoreEntry flags field. Used as a sanity
      * check when rebuilding the cache at startup. Objects that
      * have the KEY_PRIVATE flag set are not added back to the cache.
      */
-    u_short flags;
+    uint16_t flags;
 
     /**
      * The 128-bit MD5 hash for this object.
