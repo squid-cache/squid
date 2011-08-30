@@ -1072,7 +1072,7 @@ setSystemLimits(void)
 
 #if HAVE_SETRLIMIT && defined(RLIMIT_VMEM)
     if (getrlimit(RLIMIT_VMEM, &rl) < 0) {
-        debugs(50, 0, "getrlimit: RLIMIT_VMEM: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "getrlimit: RLIMIT_VMEM: " << xstrerror());
     } else if (rl.rlim_max > rl.rlim_cur) {
         rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 
@@ -1095,7 +1095,7 @@ squid_signal(int sig, SIGHDLR * func, int flags)
     sigemptyset(&sa.sa_mask);
 
     if (sigaction(sig, &sa, NULL) < 0)
-        debugs(50, 0, "sigaction: sig=" << sig << " func=" << func << ": " << xstrerror());
+        debugs(50, DBG_CRITICAL, "sigaction: sig=" << sig << " func=" << func << ": " << xstrerror());
 
 #else
 #if _SQUID_MSWIN_
@@ -1270,7 +1270,7 @@ getMyPort(void)
     if (Config.Sockaddr.http) {
         // skip any special mode ports
         http_port_list *p = Config.Sockaddr.http;
-        while (p->intercepted || p->accel || p->spoof_client_ip)
+        while (p && (p->intercepted || p->accel || p->spoof_client_ip))
             p = p->next;
         if (p)
             return p->s.GetPort();

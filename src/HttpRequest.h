@@ -148,7 +148,7 @@ public:
 #if USE_AUTH
     AuthUserRequest::Pointer auth_user_request;
 #endif
-    u_short port;
+    unsigned short port;
 
     String urlpath;
 

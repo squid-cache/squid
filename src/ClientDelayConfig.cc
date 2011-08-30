@@ -49,7 +49,7 @@ void ClientDelayConfig::parsePoolCount()
         debugs(3, 0, "parse_client_delay_pool_count: multiple client_delay_pools lines, aborting all previous client_delay_pools config");
         clean();
     }
-    u_short pools_;
+    unsigned short pools_;
     ConfigParser::ParseUShort(&pools_);
     for (int i = 0; i < pools_; i++) {
         pools.push_back(ClientDelayPool());
@@ -58,7 +58,7 @@ void ClientDelayConfig::parsePoolCount()
 
 void ClientDelayConfig::parsePoolRates()
 {
-    u_short pool;
+    unsigned short pool;
     ConfigParser::ParseUShort(&pool);
 
     if (pool < 1 || pool > pools.size()) {
@@ -74,7 +74,7 @@ void ClientDelayConfig::parsePoolRates()
 
 void ClientDelayConfig::parsePoolAccess(ConfigParser &parser)
 {
-    u_short pool;
+    unsigned short pool;
 
     ConfigParser::ParseUShort(&pool);
 

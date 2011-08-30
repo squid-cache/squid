@@ -63,8 +63,8 @@ public:
         time_t expires;
         time_t lastmod;
         uint32_t swap_file_sz;
-        u_short refcount;
-        u_short flags;
+        uint16_t refcount;
+        uint16_t flags;
         unsigned char key[SQUID_MD5_DIGEST_LENGTH];
     };
     UFSSwapLogParser_v1_32bs(FILE *fp):UFSSwapLogParser(fp) {
@@ -111,8 +111,8 @@ public:
         int32_t expires;
         int32_t lastmod;
         uint32_t swap_file_sz;
-        u_short refcount;
-        u_short flags;
+        uint16_t refcount;
+        uint16_t flags;
         unsigned char key[SQUID_MD5_DIGEST_LENGTH];
     };
     UFSSwapLogParser_v1_32bst(FILE *fp):UFSSwapLogParser(fp) {
@@ -157,8 +157,8 @@ public:
         time_t expires;
         time_t lastmod;
         uint64_t swap_file_sz;
-        u_short refcount;
-        u_short flags;
+        uint16_t refcount;
+        uint16_t flags;
         unsigned char key[SQUID_MD5_DIGEST_LENGTH];
     };
     UFSSwapLogParser_v1_64bfn(FILE *fp):UFSSwapLogParser(fp) {

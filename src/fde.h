@@ -57,7 +57,7 @@ public:
 
 public:
     unsigned int type;
-    u_short remote_port;
+    unsigned short remote_port;
 
     Ip::Address local_addr;
     tos_t tosToServer;          /**< The TOS value for packets going towards the server.

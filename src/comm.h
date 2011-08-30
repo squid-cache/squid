@@ -52,7 +52,7 @@ extern int comm_open_listener(int sock_type, int proto, Ip::Address &addr, int f
 extern void comm_open_listener(int sock_type, int proto, Comm::ConnectionPointer &conn, const char *note);
 
 SQUIDCEXTERN int comm_openex(int, int, Ip::Address &, int, tos_t tos, nfmark_t nfmark, const char *);
-SQUIDCEXTERN u_short comm_local_port(int fd);
+SQUIDCEXTERN unsigned short comm_local_port(int fd);
 
 SQUIDCEXTERN int comm_udp_sendto(int sock, const Ip::Address &to, const void *buf, int buflen);
 SQUIDCEXTERN void commCallCloseHandlers(int fd);
