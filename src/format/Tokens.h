@@ -174,11 +174,18 @@ enum Quoting {
     LOG_QUOTE_RAW
 };
 
+struct TokenTableEntry {
+    const char *config;
+    ByteCode_t token_type;
+    int options;
+};
+
 // XXX: inherit from linked list
 class Token
 {
 public:
     Token() : type(LFT_NONE),
+            label(NULL),
             width(0),
             precision(0),
             quote(LOG_QUOTE_NONE),
@@ -197,6 +204,7 @@ public:
     int parse(char *def, enum Quoting *quote);
 
     ByteCode_t type;
+    const char *label;
     union {
         char *string;
 
@@ -215,16 +223,12 @@ public:
     unsigned int zero:1;
     int divisor;
     Token *next;	/* todo: move from linked list to array */
-};
 
-struct TokenTableEntry {
-    const char *config;
-    ByteCode_t token_type;
-    int options;
+private:
+    char *scanForToken(const struct TokenTableEntry *table, char *cur);
 };
 
 extern const char *log_tags[];
-extern struct TokenTableEntry TokenTable[];
 
 } // namespace Format
 

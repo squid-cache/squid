@@ -78,10 +78,11 @@ public:
     {
 
     public:
-        Connection() : len (0), buf(), size_ptr(NULL) { buf.init(SQUID_TCP_SO_RCVBUF,SQUID_TCP_SO_RCVBUF); }
-        ~Connection() {};
+        Connection() : len (0), buf ((char *)xmalloc(SQUID_TCP_SO_RCVBUF)), size_ptr(NULL) {}
 
-        int bytesWanted() const;
+        ~Connection();
+
+        int bytesWanted(int lower=0, int upper = INT_MAX) const;
         void bytesIn(int const &);
 #if USE_DELAY_POOLS
 
@@ -91,9 +92,9 @@ public:
         void error(int const xerrno);
         int debugLevelForError(int const xerrno) const;
         void closeIfOpen();
-        void dataSent(size_t amount);
+        void dataSent (size_t amount);
         int len;
-        MemBuf buf;
+        char *buf;
         int64_t *size_ptr;		/* pointer to size in an ConnStateData for logging */
 
         Comm::ConnectionPointer conn;    ///< The currently connected connection.
@@ -112,7 +113,7 @@ public:
 
 private:
     CBDATA_CLASS(TunnelStateData);
-    void copy(size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, AsyncCall::Pointer &);
+    void copy (size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, IOCB *);
     void readServer(char *buf, size_t len, comm_err_t errcode, int xerrno);
     void readClient(char *buf, size_t len, comm_err_t errcode, int xerrno);
     void writeClientDone(char *buf, size_t len, comm_err_t flag, int xerrno);
@@ -179,13 +180,19 @@ tunnelStateFree(TunnelStateData * tunnelState)
     delete tunnelState;
 }
 
+TunnelStateData::Connection::~Connection()
+{
+    safe_free(buf);
+}
+
 int
-TunnelStateData::Connection::bytesWanted() const
+TunnelStateData::Connection::bytesWanted(int lowerbound, int upperbound) const
 {
 #if USE_DELAY_POOLS
-    return delayId.bytesWanted(1, buf.spaceSize());
+    return delayId.bytesWanted(lowerbound, upperbound);
 #else
-    return buf.spaceSize();
+
+    return upperbound;
 #endif
 }
 
@@ -246,10 +253,7 @@ TunnelStateData::readServer(char *buf, size_t len, comm_err_t errcode, int xerrn
         kb_incr(&statCounter.server.other.kbytes_in, len);
     }
 
-    AsyncCall::Pointer call = commCbCall(5,5, "TunnelStateData::WriteClientDone",
-                                         CommIoCbPtrFun(WriteClientDone, this));
-
-    copy (len, errcode, xerrno, server, client, call);
+    copy (len, errcode, xerrno, server, client, WriteClientDone);
 }
 
 void
@@ -292,14 +296,11 @@ TunnelStateData::readClient(char *buf, size_t len, comm_err_t errcode, int xerrn
         kb_incr(&statCounter.client_http.kbytes_in, len);
     }
 
-    AsyncCall::Pointer call = commCbCall(5,5, "TunnelStateData::WriteServerDone",
-                                         CommIoCbPtrFun(WriteServerDone, this));
-
-    copy (len, errcode, xerrno, client, server, call);
+    copy (len, errcode, xerrno, client, server, WriteServerDone);
 }
 
 void
-TunnelStateData::copy(size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, AsyncCall::Pointer &call)
+TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, IOCB *completion)
 {
     debugs(26, 3, HERE << "from={" << from.conn << "}, to={" << to.conn << "}");
 
@@ -328,7 +329,9 @@ TunnelStateData::copy(size_t len, comm_err_t errcode, int xerrno, Connection &fr
         }
     } else if (cbdataReferenceValid(this)) {
         debugs(26, 3, HERE << "Schedule Write");
-        Comm::Write(to.conn, &from.buf, call);
+        AsyncCall::Pointer call = commCbCall(5,5, "TunnelBlindCopyWriteHandler",
+                                             CommIoCbPtrFun(completion, this));
+        Comm::Write(to.conn, from.buf, len, call, NULL);
     }
 
     cbdataInternalUnlock(this);	/* ??? */
@@ -473,7 +476,7 @@ TunnelStateData::copyRead(Connection &from, IOCB *completion)
     assert(from.len == 0);
     AsyncCall::Pointer call = commCbCall(5,4, "TunnelBlindCopyReadHandler",
                                          CommIoCbPtrFun(completion, this));
-    comm_read(from.conn, from.buf.space(), from.bytesWanted(), call);
+    comm_read(from.conn, from.buf, from.bytesWanted(1, SQUID_TCP_SO_RCVBUF), call);
 }
 
 /**

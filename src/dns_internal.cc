@@ -843,6 +843,10 @@ idnsInitVC(int ns)
 
     conn->remote = nameservers[ns].S;
 
+    if (conn->remote.IsIPv4()) {
+        conn->local.SetIPv4();
+    }
+
     AsyncCall::Pointer call = commCbCall(78,3, "idnsInitVCConnected", CommConnectCbPtrFun(idnsInitVCConnected, vc));
 
     Comm::ConnOpener *cs = new Comm::ConnOpener(conn, call, Config.Timeout.connect);

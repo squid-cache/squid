@@ -303,13 +303,13 @@ FwdState::startConnectionOrFail()
 
         connectStart();
     } else {
-        debugs(17, 3, HERE << entry->url());
-        ErrorState *anErr = NULL;
-        if (err) {
+        debugs(17, 3, HERE << "Connection failed: " << entry->url());
+        if (!err) {
+            ErrorState *anErr = NULL;
             anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_INTERNAL_SERVER_ERROR, request);
             anErr->xerrno = errno;
+            fail(anErr);
         } // else use actual error from last connection attempt
-        fail(anErr);
         self = NULL;       // refcounted
     }
 }

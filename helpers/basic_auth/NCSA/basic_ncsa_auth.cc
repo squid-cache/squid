@@ -143,6 +143,9 @@ main(int argc, char **argv)
         } else if (strlen(passwd) <= 8 && strcmp(u->passwd, (char *) crypt(passwd, u->passwd)) == 0) {
             // Bug 3107: crypt() DES functionality silently truncates long passwords.
             SEND_OK("");
+        } else if (strlen(passwd) > 8 && strcmp(u->passwd, (char *) crypt(passwd, u->passwd)) == 0) {
+            // Bug 3107: crypt() DES functionality silently truncates long passwords.
+            SEND_ERR("Password too long. Only 8 characters accepted.");
 #endif
         } else if (strcmp(u->passwd, (char *) crypt_md5(passwd, u->passwd)) == 0) {
             SEND_OK("");

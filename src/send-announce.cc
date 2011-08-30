@@ -65,7 +65,7 @@ send_announce(const ipcache_addrs *ia, const DnsLookupDetails &, void *junk)
 
     char *host = Config.Announce.host;
     char *file = NULL;
-    u_short port = Config.Announce.port;
+    unsigned short port = Config.Announce.port;
     int l;
     int n;
     int fd;

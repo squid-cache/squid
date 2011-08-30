@@ -253,8 +253,8 @@ struct InitStoreEntry : public unary_function<StoreMeta, void> {
                 time_t expires;
                 time_t lastmod;
                 size_t swap_file_sz;
-                u_short refcount;
-                u_short flags;
+                uint16_t refcount;
+                uint16_t flags;
             } *tmp;
             tmp = (struct old_metahdr *)x.value;
             assert(x.length == STORE_HDR_METASIZE_OLD);

@@ -156,7 +156,7 @@ int flags;
     const struct afd *afd;
     struct servent *sp;
     struct hostent *hp;
-    u_short port;
+    unsigned short port;
     int family, i;
     const char *addr;
     uint32_t v4a;
