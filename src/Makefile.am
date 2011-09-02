@@ -341,7 +341,8 @@ squid_SOURCES = \
 	HttpStatusCode.h \
 	HttpStatusLine.cc \
 	HttpStatusLine.h \
-	HttpHdrCc.cc \
+	HttpHeaderCacheControl.h \
+	HttpHeaderCacheControl.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrSc.h \
@@ -1015,7 +1016,8 @@ tests_testHttpReply_SOURCES=\
 	cbdata.h \
 	ETag.cc \
 	HttpBody.cc \
-	HttpHdrCc.cc \
+	HttpHeaderCacheControl.h \
+	HttpHeaderCacheControl.cc \
 	HttpHdrContRange.cc \
 	HttpHdrContRange.h \
 	HttpHdrRange.cc \
@@ -1082,7 +1084,7 @@ tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 ##	HttpHeader.cc \
 ##	HttpHeaderTools.cc \
 ##	HttpHdrContRange.cc \
-##	HttpHdrCc.cc \
+##	HttpHeaderCacheControl.cc \
 ##	HttpHdrRange.cc \
 ##	HttpHdrSc.cc \
 ##	HttpHdrScTarget.cc \
@@ -1108,7 +1110,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	HttpHeaderTools.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
-	HttpHdrCc.cc \
+	HttpHeaderCacheControl.h \
+	HttpHeaderCacheControl.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
@@ -1268,7 +1271,8 @@ tests_testCacheManager_SOURCES = \
 	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
-	HttpHdrCc.cc \
+	HttpHeaderCacheControl.h \
+	HttpHeaderCacheControl.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -1399,7 +1403,8 @@ tests_testDiskIO_SOURCES = \
 	fd.cc \
 	filemap.cc \
 	HttpBody.cc \
-	HttpHdrCc.cc \
+	HttpHeaderCacheControl.h \
+	HttpHeaderCacheControl.cc \
 	HttpHdrContRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
@@ -1571,7 +1576,8 @@ tests_testEvent_SOURCES = \
 	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
-	HttpHdrCc.cc \
+	HttpHeaderCacheControl.h \
+	HttpHeaderCacheControl.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -1749,7 +1755,8 @@ tests_testEventLoop_SOURCES = \
 	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
-	HttpHdrCc.cc \
+	HttpHeaderCacheControl.h \
+	HttpHeaderCacheControl.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -1923,7 +1930,8 @@ tests_test_http_range_SOURCES = \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
-	HttpHdrCc.cc \
+	HttpHeaderCacheControl.h \
+	HttpHeaderCacheControl.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -2140,7 +2148,8 @@ tests_testHttpRequest_SOURCES = \
 	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
-	HttpHdrCc.cc \
+	HttpHeaderCacheControl.h \
+	HttpHeaderCacheControl.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -2270,7 +2279,8 @@ tests_testStore_SOURCES= \
 	event.cc \
 	EventLoop.cc \
 	filemap.cc \
-	HttpHdrCc.cc \
+	HttpHeaderCacheControl.h \
+	HttpHeaderCacheControl.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -2504,7 +2514,8 @@ tests_testUfs_SOURCES = \
 	MemBuf.cc \
 	HttpHdrContRange.cc \
 	Packer.cc \
-	HttpHdrCc.cc \
+	HttpHeaderCacheControl.h \
+	HttpHeaderCacheControl.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
@@ -2634,7 +2645,8 @@ tests_testCoss_SOURCES = \
 	MemBuf.cc \
 	HttpHdrContRange.cc \
 	Packer.cc \
-	HttpHdrCc.cc \
+	HttpHeaderCacheControl.h \
+	HttpHeaderCacheControl.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
@@ -2758,7 +2770,8 @@ tests_testNull_SOURCES = \
 	MemBuf.cc \
 	HttpHdrContRange.cc \
 	Packer.cc \
-	HttpHdrCc.cc \
+	HttpHeaderCacheControl.h \
+	HttpHeaderCacheControl.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
@@ -2860,7 +2873,8 @@ tests_testURL_SOURCES = \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
-	HttpHdrCc.cc \
+	HttpHeaderCacheControl.h \
+	HttpHeaderCacheControl.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
