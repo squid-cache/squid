@@ -552,8 +552,10 @@ ClientRequestContext::hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLooku
 void
 ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
 {
-    debugs(85, 1, "SECURITY ALERT: Host: header forgery detected from " << http->getConn()->clientConnection <<
-           " (" << A << " does not match " << B << ")");
+    debugs(85, DBG_IMPORTANT, "SECURITY ALERT: Host header forgery detected on " <<
+           http->getConn()->clientConnection << " (" << A << " does not match " << B << ")");
+    debugs(85, DBG_IMPORTANT, "SECURITY ALERT: By user agent: " << http->request->header.getStr(HDR_USER_AGENT));
+    debugs(85, DBG_IMPORTANT, "SECURITY ALERT: on URL: " << urlCanonical(http->request));
 
     // IP address validation for Host: failed. reject the connection.
     clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
@@ -579,7 +581,6 @@ ClientRequestContext::hostHeaderVerify()
 {
     // Require a Host: header.
     const char *host = http->request->header.getStr(HDR_HOST);
-    char *hostB = NULL;
 
     if (!host) {
         // TODO: dump out the HTTP/1.1 error about missing host header.
@@ -589,32 +590,34 @@ ClientRequestContext::hostHeaderVerify()
         return;
     }
 
+    if (http->request->flags.internal) {
+        // TODO: kill this when URL handling allows partial URLs out of accel mode
+        //       and we no longer screw with the URL just to add our internal host there
+        debugs(85, 6, HERE << "validate skipped due to internal composite URL.");
+        http->doCallouts();
+        return;
+    }
+
     // Locate if there is a port attached, strip ready for IP lookup
     char *portStr = NULL;
-    uint16_t port = 0;
+    char *hostB = xstrdup(host);
+    host = hostB;
     if (host[0] == '[') {
         // IPv6 literal.
-        // check for a port?
-        hostB = xstrdup(host+1);
         portStr = strchr(hostB, ']');
-        if (!portStr) {
-            safe_free(hostB); // well, that wasn't an IPv6 literal.
-        } else {
-            *portStr = '\0';
-            if (*(++portStr) == ':')
-                port = xatoi(++portStr);
-            else
-                portStr=NULL; // no port to check.
+        if (portStr && *(++portStr) != ':') {
+            portStr = NULL;
         }
-        if (hostB)
-            host = hostB; // point host at the local version for lookup
-    } else if (strrchr(host, ':') != NULL) {
+    } else {
         // Domain or IPv4 literal with port
-        hostB = xstrdup(host);
         portStr = strrchr(hostB, ':');
-        *portStr = '\0';
-        port = xatoi(++portStr);
-        host = hostB; // point host at the local version for lookup
+    }
+
+    uint16_t port = 0;
+    if (portStr) {
+        *portStr = '\0'; // strip the ':'
+        if (*(++portStr) != '\0')
+            port = xatoi(portStr);
     }
 
     debugs(85, 3, HERE << "validate host=" << host << ", port=" << port << ", portStr=" << (portStr?portStr:"NULL"));
@@ -630,7 +633,11 @@ ClientRequestContext::hostHeaderVerify()
             // verify the destination DNS is one of the Host: headers IPs
             ipcache_nbgethostbyname(host, hostHeaderIpVerifyWrapper, this);
         }
-    } else if (strcmp(host, http->request->GetHost()) != 0) {
+    } else if (strlen(host) != strlen(http->request->GetHost())) {
+        // Verify forward-proxy requested URL domain matches the Host: header
+        debugs(85, 3, HERE << "FAIL on validate URL domain length " << http->request->GetHost() << " matches Host: " << host);
+        hostHeaderVerifyFailed(host, http->request->GetHost());
+    } else if (matchDomainName(host, http->request->GetHost()) != 0) {
         // Verify forward-proxy requested URL domain matches the Host: header
         debugs(85, 3, HERE << "FAIL on validate URL domain " << http->request->GetHost() << " matches Host: " << host);
         hostHeaderVerifyFailed(host, http->request->GetHost());
