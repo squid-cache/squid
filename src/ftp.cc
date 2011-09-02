@@ -3232,7 +3232,7 @@ ftpReadRetr(FtpStateData * ftpState)
 
     if (code == 125 || (code == 150 && Comm::IsConnOpen(ftpState->data.conn))) {
         /* Begin data transfer */
-        debugs(9, 3, HERE << "reading data channel");
+        debugs(9, 3, HERE << "begin data transfer from " << ftpState->data.conn->remote << " (" << ftpState->data.conn->local << ")");
         ftpState->switchTimeoutToDataChannel();
         ftpState->maybeReadVirginBody();
         ftpState->state = READING_DATA;
