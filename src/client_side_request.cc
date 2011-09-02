@@ -581,7 +581,6 @@ ClientRequestContext::hostHeaderVerify()
 {
     // Require a Host: header.
     const char *host = http->request->header.getStr(HDR_HOST);
-    char *hostB = NULL;
 
     if (!host) {
         // TODO: dump out the HTTP/1.1 error about missing host header.
@@ -601,27 +600,24 @@ ClientRequestContext::hostHeaderVerify()
 
     // Locate if there is a port attached, strip ready for IP lookup
     char *portStr = NULL;
-    uint16_t port = 0;
+    char *hostB = xstrdup(host);
+    host = hostB;
     if (host[0] == '[') {
         // IPv6 literal.
-        hostB = xstrdup(host);
         portStr = strchr(hostB, ']');
-        if (portStr) {
-            if (*(++portStr) == ':') {
-                *portStr = '\0';
-                port = xatoi(++portStr);
-            } else {
-                portStr=NULL; // no port to check.
-            }
+        if (portStr && *(++portStr) != ':') {
+            portStr = NULL;
         }
-        host = hostB; // point host at the local version for lookup
-    } else if (strrchr(host, ':') != NULL) {
+    } else {
         // Domain or IPv4 literal with port
-        hostB = xstrdup(host);
         portStr = strrchr(hostB, ':');
-        *portStr = '\0';
-        port = xatoi(++portStr);
-        host = hostB; // point host at the local version for lookup
+    }
+
+    uint16_t port = 0;
+    if (portStr) {
+        *portStr = '\0'; // strip the ':'
+        if (*(++portStr) != '\0')
+            port = xatoi(portStr);
     }
 
     debugs(85, 3, HERE << "validate host=" << host << ", port=" << port << ", portStr=" << (portStr?portStr:"NULL"));
