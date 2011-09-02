@@ -1164,18 +1164,23 @@ TYPE: acl_access
 LOC: Config.accessList.miss
 DEFAULT: none
 DOC_START
-	Use to force your neighbors to use you as a sibling instead of
-	a parent.  For example:
+	Determins whether network access is permitted when satisfying a request.
+
+	For example;
+	    to force your neighbors to use you as a sibling instead of
+	    a parent.
 
 		acl localclients src 172.16.0.0/16
 		miss_access allow localclients
 		miss_access deny  !localclients
 
-	This means only your local clients are allowed to fetch
-	MISSES and all other clients can only fetch HITS.
+	This means only your local clients are allowed to fetch relayed/MISS
+	replies from the network and all other clients can only fetch cached
+	objects (HITs).
 
-	By default, allow all clients who passed the http_access rules
-	to fetch MISSES from us.
+
+	The default for this setting allows all clients who passed the
+	http_access rules to relay via this proxy.
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
