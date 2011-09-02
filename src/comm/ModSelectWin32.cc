@@ -138,7 +138,9 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
     fde *F = &fd_table[fd];
     assert(fd >= 0);
     assert(F->flags.open);
-    debugs(5, 5, "commSetSelect: FD " << fd << " type " << type);
+    debugs(5, 5, HERE << "FD " << fd << ", type=" << type <<
+           ", handler=" << handler << ", client_data=" << client_data <<
+           ", timeout=" << timeout);
 
     if (type & COMM_SELECT_READ) {
         F->read_handler = handler;
@@ -608,7 +610,7 @@ Comm::DoSelect(int msec)
             }
 
             F = &fd_table[fd];
-            debugs(5, 5, "comm_select: FD " << fd << " ready for writing");
+            debugs(5, 6, "comm_select: FD " << fd << " ready for writing");
 
             if ((hdl = F->write_handler)) {
                 F->write_handler = NULL;
