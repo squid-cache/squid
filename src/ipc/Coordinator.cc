@@ -66,9 +66,9 @@ void Ipc::Coordinator::registerStrand(const StrandCoord& strand)
         if (i->tag == strand.tag) {
             notifySearcher(*i, strand);
             i = searchers.erase(i);
-		} else {
+        } else {
             ++i;
-		}
+        }
     }
 }
 
@@ -195,7 +195,7 @@ Ipc::Coordinator::handleSearchRequest(const Ipc::StrandSearchRequest &request)
     if (strand) {
         notifySearcher(request, *strand);
         return;
-	}
+    }
 
     searchers.push_back(request);
     debugs(54, 3, HERE << "cannot yet tell kid" << request.requestorId <<
