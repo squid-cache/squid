@@ -654,7 +654,7 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
         debugs(83, 5, "Using SSLv2.");
         method = SSLv2_server_method();
 #else
-        debugs(83, 1, "SSLv2 is not available in this Proxy.");
+        debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
         return NULL;
 #endif
         break;
@@ -711,31 +711,33 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
         }
     }
 
-    debugs(83, 1, "Using certificate in " << certfile);
+    debugs(83, DBG_IMPORTANT, "Using certificate in " << certfile);
 
     if (!SSL_CTX_use_certificate_chain_file(sslContext, certfile)) {
         ssl_error = ERR_get_error();
-        debugs(83, 0, "Failed to acquire SSL certificate '" << certfile << "': " << ERR_error_string(ssl_error, NULL)  );
-        goto error;
+        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL certificate '" << certfile << "': " << ERR_error_string(ssl_error, NULL));
+        SSL_CTX_free(sslContext);
+        return NULL;
     }
 
-    debugs(83, 1, "Using private key in " << keyfile);
+    debugs(83, DBG_IMPORTANT, "Using private key in " << keyfile);
     ssl_ask_password(sslContext, keyfile);
 
     if (!SSL_CTX_use_PrivateKey_file(sslContext, keyfile, SSL_FILETYPE_PEM)) {
         ssl_error = ERR_get_error();
-        debugs(83, 0, "Failed to acquire SSL private key '" << keyfile << "': " << ERR_error_string(ssl_error, NULL)  );
-        goto error;
+        debugs(83, DBG_CRITICAL, "ERROR: Failed to acquire SSL private key '" << keyfile << "': " << ERR_error_string(ssl_error, NULL));
+        SSL_CTX_free(sslContext);
+        return NULL;
     }
 
     debugs(83, 5, "Comparing private and public SSL keys.");
 
     if (!SSL_CTX_check_private_key(sslContext)) {
         ssl_error = ERR_get_error();
-        debugs(83, 0, "SSL private key '" <<
-               certfile << "' does not match public key '" <<
-               keyfile << "': " << ERR_error_string(ssl_error, NULL)  );
-        goto error;
+        debugs(83, DBG_CRITICAL, "ERROR: SSL private key '" << certfile << "' does not match public key '" <<
+               keyfile << "': " << ERR_error_string(ssl_error, NULL));
+        SSL_CTX_free(sslContext);
+        return NULL;
     }
 
     debugs(83, 9, "Setting RSA key generation callback.");
@@ -745,15 +747,13 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
 
     if ((CAfile || CApath) && !SSL_CTX_load_verify_locations(sslContext, CAfile, CApath)) {
         ssl_error = ERR_get_error();
-        debugs(83, 1, "Error setting CA certificate locations: " << ERR_error_string(ssl_error, NULL)  );
-        debugs(83, 1, "continuing anyway..." );
+        debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate locations: " << ERR_error_string(ssl_error, NULL));
     }
 
     if (!(fl & SSL_FLAG_NO_DEFAULT_CA) &&
             !SSL_CTX_set_default_verify_paths(sslContext)) {
         ssl_error = ERR_get_error();
-        debugs(83, 1, "Error setting default CA certificate location: " << ERR_error_string(ssl_error, NULL)  );
-        debugs(83, 1, "continuing anyway..." );
+        debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting default CA certificate location: " << ERR_error_string(ssl_error, NULL));
     }
 
     if (clientCA) {
@@ -762,8 +762,9 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
         cert_names = SSL_load_client_CA_file(clientCA);
 
         if (cert_names == NULL) {
-            debugs(83, 1, "Error loading the client CA certificates from '" << clientCA << "\': " << ERR_error_string(ERR_get_error(),NULL)  );
-            goto error;
+            debugs(83, DBG_IMPORTANT, "ERROR: loading the client CA certificates from '" << clientCA << "\': " << ERR_error_string(ERR_get_error(),NULL));
+            SSL_CTX_free(sslContext);
+            return NULL;
         }
 
         ERR_clear_error();
@@ -806,10 +807,10 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
         }
 
         if (!dh)
-            debugs(83, 1, "WARNING: Failed to read DH parameters '" << dhfile << "'");
+            debugs(83, DBG_IMPORTANT, "WARNING: Failed to read DH parameters '" << dhfile << "'");
         else if (dh && DH_check(dh, &codes) == 0) {
             if (codes) {
-                debugs(83, 1, "WARNING: Failed to verify DH parameters '" << dhfile  << "' (" << std::hex << codes  << ")");
+                debugs(83, DBG_IMPORTANT, "WARNING: Failed to verify DH parameters '" << dhfile  << "' (" << std::hex << codes  << ")");
                 DH_free(dh);
                 dh = NULL;
             }
@@ -823,11 +824,6 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
         SSL_CTX_set_ex_data(sslContext, ssl_ctx_ex_index_dont_verify_domain, (void *) -1);
 
     return sslContext;
-
-error:
-    SSL_CTX_free(sslContext);
-
-    return NULL;
 }
 
 SSL_CTX *
@@ -857,7 +853,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
         debugs(83, 5, "Using SSLv2.");
         method = SSLv2_client_method();
 #else
-        debugs(83, 1, "SSLv2 is not available in this Proxy.");
+        debugs(83, DBG_IMPORTANT, "SSLv2 is not available in this Proxy.");
         return NULL;
 #endif
         break;
@@ -931,7 +927,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
     SSL_CTX_set_tmp_rsa_callback(sslContext, ssl_temp_rsa_cb);
 
     if (fl & SSL_FLAG_DONT_VERIFY_PEER) {
-        debugs(83, 1, "NOTICE: Peer certificates are not verified for validity!");
+        debugs(83, 2, "NOTICE: Peer certificates are not verified for validity!");
         SSL_CTX_set_verify(sslContext, SSL_VERIFY_NONE, NULL);
     } else {
         debugs(83, 9, "Setting certificate verification callback.");
@@ -942,8 +938,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
 
     if ((CAfile || CApath) && !SSL_CTX_load_verify_locations(sslContext, CAfile, CApath)) {
         ssl_error = ERR_get_error();
-        debugs(83, 1, "Error setting CA certificate locations: " << ERR_error_string(ssl_error, NULL));
-        debugs(83, 1, "continuing anyway..." );
+        debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting CA certificate locations: " << ERR_error_string(ssl_error, NULL));
     }
 
     if (CRLfile) {
@@ -962,8 +957,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
     if (!(fl & SSL_FLAG_NO_DEFAULT_CA) &&
             !SSL_CTX_set_default_verify_paths(sslContext)) {
         ssl_error = ERR_get_error();
-        debugs(83, 1, "Error setting default CA certificate location: " << ERR_error_string(ssl_error, NULL)  );
-        debugs(83, 1, "continuing anyway...");
+        debugs(83, DBG_IMPORTANT, "WARNING: Ignoring error setting default CA certificate location: " << ERR_error_string(ssl_error, NULL));
     }
 
     return sslContext;

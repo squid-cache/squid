@@ -2011,6 +2011,9 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
     if (internalCheck(url)) {
         /* prepend our name & port */
         http->uri = xstrdup(internalLocalUri(NULL, url));
+        // We just re-wrote the URL. Must replace the Host: header.
+        //  But have not parsed there yet!! flag for local-only handling.
+        http->flags.internal = 1;
         return;
     }
 
