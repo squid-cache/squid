@@ -466,8 +466,10 @@ squid_SOURCES = \
 	Server.h \
 	structs.h \
 	swap_log_op.h \
-	SwapDir.cc MemStore.cc \
-	SwapDir.h MemStore.h \
+	SwapDir.cc \
+	SwapDir.h \
+	MemStore.cc \
+	MemStore.h \
 	time.cc \
 	TimeOrTag.h \
 	tools.cc \
@@ -1356,7 +1358,8 @@ tests_testCacheManager_SOURCES = \
 	StoreSwapLogData.cc \
 	tools.cc \
 	tunnel.cc \
-	SwapDir.cc MemStore.cc \
+	SwapDir.cc \
+	MemStore.cc \
 	$(UNLINKDSOURCE) \
 	url.cc \
 	URLScheme.cc \
@@ -2258,7 +2261,8 @@ tests_testHttpRequest_SOURCES = \
 	event.cc \
 	tools.cc \
 	tunnel.cc \
-	SwapDir.cc MemStore.cc \
+	SwapDir.cc \
+	MemStore.cc \
 	url.cc \
 	URLScheme.cc \
 	urn.cc \
@@ -3098,7 +3102,8 @@ tests_testURL_SOURCES = \
 	StoreMetaVary.cc \
 	StoreSwapLogData.cc \
 	String.cc \
-	SwapDir.cc MemStore.cc \
+	SwapDir.cc \
+	MemStore.cc \
 	tests/stub_debug.cc \
 	tests/stub_DiskIOModule.cc \
 	tests/stub_main_cc.cc \
