@@ -247,13 +247,9 @@ void
 Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time_t timeout)
 {
     assert(fd >= 0);
-    debugs(
-        5,
-        DEBUG_DEVPOLL ? 0 : 8,
-        HERE << "FD " << fd << ",type=" << type
-        << ",handler=" << handler << ",client_data=" << client_data
-        << ",timeout=" << timeout << ")"
-    );
+    debugs(5, 5, HERE << "FD " << fd << ", type=" << type <<
+           ", handler=" << handler << ", client_data=" << client_data <<
+           ", timeout=" << timeout);
 
     /* POLLIN/POLLOUT are defined in <sys/poll.h> */
     fde *F = &fd_table[fd];

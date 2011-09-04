@@ -279,7 +279,13 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
 
             // check for a configured outgoing address for this destination...
             getOutgoingAddress(psstate->request, p);
-            psstate->paths->push_back(p);
+            if (p->remote.IsIPv4() && !p->local.SetIPv4()) {
+                // This should never happen. getOutgoing should match by family or skip.
+                assert(p->local.IsAnyAddr());
+                continue;
+            } else {
+                psstate->paths->push_back(p);
+            }
         }
     } else {
         debugs(44, 3, HERE << "Unknown host: " << fs->_peer ? fs->_peer->host : psstate->request->GetHost());
