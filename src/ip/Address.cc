@@ -826,7 +826,10 @@ Ip::Address::NtoA(char* buf, const unsigned int blen, int force) const
     /* some external code may have blindly memset a parent. */
     /* thats okay, our default is known */
     if ( IsAnyAddr() ) {
-        memcpy(buf,"::\0", min(static_cast<unsigned int>(3),blen));
+        if (IsIPv6())
+            memcpy(buf,"::\0", min(static_cast<unsigned int>(3),blen));
+        else if (IsIPv4())
+            memcpy(buf,"0.0.0.0\0", min(static_cast<unsigned int>(8),blen));
         return buf;
     }
 

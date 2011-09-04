@@ -12,6 +12,8 @@
 #include "SquidTime.h"
 #include "Store.h"
 
+/// Convert a string to NULL pointer if it is ""
+#define strOrNull(s) ((s)==NULL||(s)[0]=='\0'?NULL:(s))
 
 Format::Format::Format(const char *n) :
         format(NULL),
@@ -726,44 +728,27 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             break;
 
         case LFT_USER_NAME:
-            out = QuoteUrlEncodeUsername(al->cache.authuser);
-
+            out = strOrNull(al->cache.authuser);
             if (!out)
-                out = QuoteUrlEncodeUsername(al->cache.extuser);
-
+                out = strOrNull(al->cache.extuser);
 #if USE_SSL
-
             if (!out)
-                out = QuoteUrlEncodeUsername(al->cache.ssluser);
-
+                out = strOrNull(al->cache.ssluser);
 #endif
-
             if (!out)
-                out = QuoteUrlEncodeUsername(al->cache.rfc931);
-
-            dofree = 1;
-
+                out = strOrNull(al->cache.rfc931);
             break;
 
         case LFT_USER_LOGIN:
-            out = QuoteUrlEncodeUsername(al->cache.authuser);
-
-            dofree = 1;
-
+            out = strOrNull(al->cache.authuser);
             break;
 
         case LFT_USER_IDENT:
-            out = QuoteUrlEncodeUsername(al->cache.rfc931);
-
-            dofree = 1;
-
+            out = strOrNull(al->cache.rfc931);
             break;
 
         case LFT_USER_EXTERNAL:
-            out = QuoteUrlEncodeUsername(al->cache.extuser);
-
-            dofree = 1;
-
+            out = strOrNull(al->cache.extuser);
             break;
 
             /* case LFT_USER_REALM: */

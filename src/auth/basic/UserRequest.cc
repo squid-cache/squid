@@ -140,7 +140,7 @@ AuthBasicUserRequest::HandleReply(void *data, char *reply)
     BasicAuthQueueNode *tmpnode;
     char *t = NULL;
     void *cbdata;
-    debugs(29, 9, HERE << "{" << (reply ? reply : "<NULL>") << "}");
+    debugs(29, 5, HERE << "{" << (reply ? reply : "<NULL>") << "}");
 
     if (reply) {
         if ((t = strchr(reply, ' ')))
