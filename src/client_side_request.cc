@@ -870,7 +870,7 @@ clientRedirectAccessCheckDone(allow_t answer, void *data)
 void
 ClientRequestContext::clientRedirectStart()
 {
-    debugs(33, 5, "clientRedirectStart: '" << http->uri << "'");
+    debugs(33, 5, HERE << "'" << http->uri << "'");
 
     if (Config.accessList.redirector) {
         acl_checklist = clientAclChecklistCreate(Config.accessList.redirector, http);

@@ -2212,12 +2212,12 @@ HttpStateData::finishingBrokenPost()
     }
 
     if (!Comm::IsConnOpen(serverConnection)) {
-        debugs(11,2, HERE << "ignoring broken POST for closed " << serverConnection);
+        debugs(11, 3, HERE << "ignoring broken POST for closed " << serverConnection);
         assert(closeHandler != NULL);
         return true; // prevent caller from proceeding as if nothing happened
     }
 
-    debugs(11, 2, "finishingBrokenPost: fixing broken POST");
+    debugs(11, 3, "finishingBrokenPost: fixing broken POST");
     typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
     requestSender = JobCallback(11,5,
                                 Dialer, this, HttpStateData::wroteLast);

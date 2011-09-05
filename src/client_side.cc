@@ -3423,7 +3423,7 @@ httpsAccept(int, const Comm::ConnectionPointer& details, comm_err_t flag, int xe
     if (!(ssl = httpsCreate(details, sslContext)))
         return;
 
-    debugs(33, 5, HERE << details << " accepted, starting SSL negotiation.");
+    debugs(33, 4, HERE << details << " accepted, starting SSL negotiation.");
     fd_note(details->fd, "client https connect");
 
     if (s->http.tcp_keepalive.enabled) {
