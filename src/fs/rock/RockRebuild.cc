@@ -138,16 +138,16 @@ Rock::Rebuild::doOneEntry() {
     // get our header
     DbCellHeader header;
     if (buf.contentSize() < static_cast<mb_size_t>(sizeof(header))) {
-        debugs(47, 1, "cache_dir[" << sd->index << "]: " <<
-            "truncated swap entry meta data at " << dbOffset);
+        debugs(47, DBG_IMPORTANT, "WARNING: cache_dir[" << sd->index << "]: " <<
+            "Ignoring truncated cache entry meta data at " << dbOffset);
         counts.invalid++;
         return;
     }
     memcpy(&header, buf.content(), sizeof(header));
 
     if (!header.sane()) {
-        debugs(47, 1, "cache_dir[" << sd->index << "]: " <<
-            "malformed rock db cell header at " << dbOffset);
+        debugs(47, DBG_IMPORTANT, "WARNING: cache_dir[" << sd->index << "]: " <<
+            "Ignoring malformed cache entry meta data at " << dbOffset);
         counts.invalid++;
         return;
     }
