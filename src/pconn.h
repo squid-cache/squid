@@ -55,8 +55,10 @@ public:
     void closeN(size_t count);
 
 private:
+    bool isAvailable(int i) const;
     bool removeAt(int index);
     int findIndexOf(const Comm::ConnectionPointer &conn) const;
+    void findAndClose(const Comm::ConnectionPointer &conn);
     static IOCB Read;
     static CTCB Timeout;
 
