@@ -53,9 +53,9 @@ storeRebuildLoadEntry(int, int, MemBuf&, _store_rebuild_data&)
 
 bool
 storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key,
-    struct _store_rebuild_data &counts)
+                      struct _store_rebuild_data &counts)
 {
-   return false;
+    return false;
 }
 
 bool

@@ -10,14 +10,17 @@
 #include "ipc/mem/PageStack.h"
 #include "ipc/mem/Pointer.h"
 
-namespace Ipc {
+namespace Ipc
+{
 
-namespace Mem {
+namespace Mem
+{
 
 /// Atomic container of shared memory pages. Implemented using a collection of
 /// Segments, each with a PageStack index of free pages. All pools must be
 /// created by a single process.
-class PagePool {
+class PagePool
+{
 public:
     typedef Ipc::Mem::Owner<PageStack> Owner;
 

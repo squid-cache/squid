@@ -10,9 +10,11 @@
 #include "ipc/mem/Segment.h"
 #include "RefCount.h"
 
-namespace Ipc {
+namespace Ipc
+{
 
-namespace Mem {
+namespace Mem
+{
 
 /// allocates/deallocates shared memory; creates and later destroys a
 /// Class object using that memory
@@ -86,7 +88,7 @@ public:
 
 template <class Class>
 Owner<Class>::Owner(const char *const id, const off_t sharedSize):
-    theSegment(id), theObject(NULL)
+        theSegment(id), theObject(NULL)
 {
     theSegment.create(sharedSize);
     Must(theSegment.mem());

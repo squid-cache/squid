@@ -36,7 +36,8 @@ Rock::SwapDir::~SwapDir()
 StoreSearch *
 Rock::SwapDir::search(String const url, HttpRequest *)
 {
-    assert(false); return NULL; // XXX: implement
+    assert(false);
+    return NULL; // XXX: implement
 }
 
 // called when Squid core needs a StoreEntry with a given key
@@ -155,10 +156,10 @@ Rock::SwapDir::create()
 #endif
         if (res != 0) {
             debugs(47, DBG_CRITICAL, "Failed to create Rock db dir " << path <<
-                ": " << xstrerror());
+                   ": " << xstrerror());
             fatal("Rock Store db creation error");
-		}
-	}
+        }
+    }
 
 #if SLOWLY_FILL_WITH_ZEROS
     /* TODO just set the file size */
@@ -170,22 +171,22 @@ Rock::SwapDir::create()
     for (off_t offset = 0; offset < maxSize(); offset += sizeof(block)) {
         if (write(swap, block, sizeof(block)) != sizeof(block)) {
             debugs(47,0, "Failed to create Rock Store db in " << filePath <<
-                ": " << xstrerror());
+                   ": " << xstrerror());
             fatal("Rock Store db creation error");
-		}
-	}
+        }
+    }
     close(swap);
 #else
     const int swap = open(filePath, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, 0600);
     if (swap < 0) {
         debugs(47,0, "Failed to initialize Rock Store db in " << filePath <<
-            "; create error: " << xstrerror());
+               "; create error: " << xstrerror());
         fatal("Rock Store db creation error");
     }
 
     if (ftruncate(swap, maxSize()) != 0) {
         debugs(47,0, "Failed to initialize Rock Store db in " << filePath <<
-            "; truncate error: " << xstrerror());
+               "; truncate error: " << xstrerror());
         fatal("Rock Store db creation error");
     }
 
@@ -193,7 +194,7 @@ Rock::SwapDir::create()
     memset(header, '\0', sizeof(header));
     if (write(swap, header, sizeof(header)) != sizeof(header)) {
         debugs(47,0, "Failed to initialize Rock Store db in " << filePath <<
-                "; write error: " << xstrerror());
+               "; write error: " << xstrerror());
         fatal("Rock Store db initialization error");
     }
     close(swap);
@@ -310,12 +311,13 @@ Rock::SwapDir::validateOptions()
         debugs(47, 0, "\tusable db size:  " << diskOffsetLimit() << " bytes");
         debugs(47, 0, "\tdisk space waste: " << totalWaste << " bytes");
         debugs(47, 0, "WARNING: Rock store config wastes space.");
-	}
+    }
     */
 }
 
 void
-Rock::SwapDir::rebuild() {
+Rock::SwapDir::rebuild()
+{
     //++StoreController::store_dirs_rebuilding; // see Rock::SwapDir::init()
     AsyncJob::Start(new Rebuild(this));
 }
@@ -326,8 +328,8 @@ bool
 Rock::SwapDir::addEntry(const int filen, const DbCellHeader &header, const StoreEntry &from)
 {
     debugs(47, 8, HERE << &from << ' ' << from.getMD5Text() <<
-       ", filen="<< std::setfill('0') << std::hex << std::uppercase <<
-       std::setw(8) << filen);
+           ", filen="<< std::setfill('0') << std::hex << std::uppercase <<
+           std::setw(8) << filen);
 
     sfileno newLocation = 0;
     if (Ipc::StoreMapSlot *slot = map->openForWriting(reinterpret_cast<const cache_key *>(from.key), newLocation)) {
@@ -409,8 +411,8 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
     sio->diskOffset = diskOffset(sio->swap_filen);
 
     debugs(47,5, HERE << "dir " << index << " created new filen " <<
-        std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
-        sio->swap_filen << std::dec << " at " << sio->diskOffset);
+           std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
+           sio->swap_filen << std::dec << " at " << sio->diskOffset);
 
     assert(sio->diskOffset + payloadEnd <= diskOffsetLimit());
 
@@ -443,7 +445,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
         return NULL;
     }
 
-    if (e.swap_filen < 0) { 
+    if (e.swap_filen < 0) {
         debugs(47,4, HERE << e);
         return NULL;
     }
@@ -470,8 +472,8 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
     assert(sio->payloadEnd <= max_objsize); // the payload fits the slot
 
     debugs(47,5, HERE << "dir " << index << " has old filen: " <<
-        std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
-        sio->swap_filen);
+           std::setfill('0') << std::hex << std::uppercase << std::setw(8) <<
+           sio->swap_filen);
 
     assert(slot->basics.swap_file_sz > 0);
     assert(slot->basics.swap_file_sz == e.swap_file_sz);
@@ -494,8 +496,8 @@ Rock::SwapDir::ioCompletedNotification()
                xstrerror());
 
     debugs(47, 2, "Rock cache_dir[" << index << "] limits: " <<
-        std::setw(12) << maxSize() << " disk bytes and " <<
-        std::setw(7) << map->entryLimit() << " entries");
+           std::setw(12) << maxSize() << " disk bytes and " <<
+           std::setw(7) << map->entryLimit() << " entries");
 
     rebuild();
 }
@@ -557,17 +559,18 @@ Rock::SwapDir::full() const
 // storeSwapOutFileClosed calls this nethod on DISK_NO_SPACE_LEFT,
 // but it should not happen for us
 void
-Rock::SwapDir::diskFull() {
+Rock::SwapDir::diskFull()
+{
     debugs(20, DBG_IMPORTANT, "Internal ERROR: No space left with " <<
-        "rock cache_dir: " << filePath);
+           "rock cache_dir: " << filePath);
 }
 
 /// purge while full(); it should be sufficient to purge just one
 void
 Rock::SwapDir::maintain()
 {
-    debugs(47,3, HERE << "cache_dir[" << index << "] guards: " << 
-        !repl << !map << !full() << StoreController::store_dirs_rebuilding);
+    debugs(47,3, HERE << "cache_dir[" << index << "] guards: " <<
+           !repl << !map << !full() << StoreController::store_dirs_rebuilding);
 
     if (!repl)
         return; // no means (cannot find a victim)
@@ -596,19 +599,19 @@ Rock::SwapDir::maintain()
     for (; freed < maxFreed && full(); ++freed) {
         if (StoreEntry *e = walker->Next(walker))
             e->release(); // will call our unlink() method
-		else
+        else
             break; // no more objects
-	}
+    }
 
     debugs(47,2, HERE << "Rock cache_dir[" << index << "] freed " << freed <<
-        " scanned " << walker->scanned << '/' << walker->locked);
+           " scanned " << walker->scanned << '/' << walker->locked);
 
     walker->Done(walker);
 
     if (full()) {
         debugs(47,0, "ERROR: Rock cache_dir[" << index << "] " <<
-            "is still full after freeing " << freed << " entries. A bug?");
-	}
+               "is still full after freeing " << freed << " entries. A bug?");
+    }
 }
 
 void
@@ -671,7 +674,7 @@ Rock::SwapDir::statfs(StoreEntry &e) const
         if (limit > 0) {
             const int entryCount = map->entryCount();
             storeAppendPrintf(&e, "Current entries: %9d %.2f%%\n",
-                entryCount, (100.0 * entryCount / limit));
+                              entryCount, (100.0 * entryCount / limit));
 
             if (limit < 100) { // XXX: otherwise too expensive to count
                 Ipc::ReadWriteLockStats stats;
@@ -679,10 +682,10 @@ Rock::SwapDir::statfs(StoreEntry &e) const
                 stats.dump(e);
             }
         }
-    }    
+    }
 
     storeAppendPrintf(&e, "Pending operations: %d out of %d\n",
-        store_open_disk_fd, Config.max_open_disk_fds);
+                      store_open_disk_fd, Config.max_open_disk_fds);
 
     storeAppendPrintf(&e, "Flags:");
 

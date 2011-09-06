@@ -75,7 +75,7 @@ static STDIRSELECT storeDirSelectSwapDirLeastLoad;
 int StoreController::store_dirs_rebuilding = 1;
 
 StoreController::StoreController() : swapDir (new StoreHashIndex())
-    , memStore(NULL)
+        , memStore(NULL)
 {}
 
 StoreController::~StoreController()
@@ -736,14 +736,14 @@ StoreController::get(const cache_key *key)
 
             if (StoreEntry *e = sd->get(key)) {
                 debugs(20, 3, HERE << "cache_dir " << idx <<
-                    " got cached entry: " << *e);
+                       " got cached entry: " << *e);
                 return e;
             }
         }
     }
 
     debugs(20, 4, HERE << "none of " << Config.cacheSwap.n_configured <<
-        " cache_dirs have " << storeKeyText(key));
+           " cache_dirs have " << storeKeyText(key));
     return NULL;
 }
 
@@ -762,8 +762,8 @@ StoreController::handleIdleEntry(StoreEntry &e)
         // leave keepInLocalMemory false; memStore maintains its own cache
     } else {
         keepInLocalMemory = e.memoryCachable() && // entry is in good shape and
-            // the local memory cache is not overflowing
-            (mem_node::InUseCount() <= store_pages_max);
+                            // the local memory cache is not overflowing
+                            (mem_node::InUseCount() <= store_pages_max);
     }
 
     // An idle, unlocked entry that belongs to a SwapDir which controls
@@ -874,7 +874,7 @@ StoreHashIndex::init()
     store_hash_buckets = storeKeyHashBuckets(buckets);
     debugs(20, 1, "Using " << store_hash_buckets << " Store buckets");
     debugs(20, 1, "Max Mem  size: " << ( Config.memMaxSize >> 10) << " KB" <<
-        (Config.memShared ? " [shared]" : ""));
+           (Config.memShared ? " [shared]" : ""));
     debugs(20, 1, "Max Swap size: " << (Store::Root().maxSize() >> 10) << " KB");
 
     store_table = hash_create(storeKeyHashCmp,

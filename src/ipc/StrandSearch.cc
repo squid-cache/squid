@@ -17,7 +17,7 @@ Ipc::StrandSearchRequest::StrandSearchRequest(): requestorId(-1)
 }
 
 Ipc::StrandSearchRequest::StrandSearchRequest(const TypedMsgHdr &hdrMsg):
-    requestorId(-1)
+        requestorId(-1)
 {
     hdrMsg.checkType(mtStrandSearchRequest);
     hdrMsg.getPod(requestorId);
@@ -35,7 +35,7 @@ void Ipc::StrandSearchRequest::pack(TypedMsgHdr &hdrMsg) const
 /* StrandSearchResponse */
 
 Ipc::StrandSearchResponse::StrandSearchResponse(const Ipc::StrandCoord &aStrand):
-    strand(aStrand)
+        strand(aStrand)
 {
 }
 

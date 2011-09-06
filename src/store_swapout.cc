@@ -213,7 +213,7 @@ StoreEntry::swapOut()
     if (store_status != STORE_OK) {
         const int64_t expectedSize = mem_obj->expectedReplySize();
         const int64_t maxKnownSize = expectedSize < 0 ?
-            swapout_maxsize : expectedSize;
+                                     swapout_maxsize : expectedSize;
         debugs(20, 7, HERE << "storeSwapOut: maxKnownSize= " << maxKnownSize);
 
         if (maxKnownSize < store_maxobjsize) {
@@ -226,9 +226,9 @@ StoreEntry::swapOut()
              * Should we add an option to limit this memory consumption?
              */
             debugs(20, 5, "storeSwapOut: Deferring swapout start for " <<
-                (store_maxobjsize - maxKnownSize) << " bytes");
+                   (store_maxobjsize - maxKnownSize) << " bytes");
             return;
-         }
+        }
     }
 
 // TODO: it is better to trim as soon as we swap something out, not before

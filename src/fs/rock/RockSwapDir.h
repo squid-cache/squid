@@ -11,7 +11,8 @@ class DiskFile;
 class ReadRequest;
 class WriteRequest;
 
-namespace Rock {
+namespace Rock
+{
 
 class Rebuild;
 

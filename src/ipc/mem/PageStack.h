@@ -8,16 +8,19 @@
 
 #include "ipc/AtomicWord.h"
 
-namespace Ipc {
+namespace Ipc
+{
 
-namespace Mem {
+namespace Mem
+{
 
 class PageId;
 
 /// Atomic container of "free" page numbers inside a single SharedMemory space.
 /// Assumptions: all page numbers are unique, positive, have an known maximum,
 /// and can be temporary unavailable as long as they are never trully lost.
-class PageStack {
+class PageStack
+{
 public:
     typedef uint32_t Value; ///< stack item type (a free page number)
 

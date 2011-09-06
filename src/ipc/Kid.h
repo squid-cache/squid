@@ -88,7 +88,7 @@ private:
 
 // TODO: processes may not be kids; is there a better place to put this?
 
-/// process kinds 
+/// process kinds
 typedef enum {
     pkOther  = 0, ///< we do not know or do not care
     pkCoordinator = 1, ///< manages all other kids

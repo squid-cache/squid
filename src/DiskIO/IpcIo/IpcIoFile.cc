@@ -37,7 +37,7 @@ static void DiskerClose(const String &path);
 /// IpcIo wrapper for debugs() streams; XXX: find a better class name
 struct SipcIo {
     SipcIo(int aWorker, const IpcIoMsg &aMsg, int aDisker):
-        worker(aWorker), msg(aMsg), disker(aDisker) {}
+            worker(aWorker), msg(aMsg), disker(aDisker) {}
 
     int worker;
     const IpcIoMsg &msg;
@@ -48,14 +48,14 @@ std::ostream &
 operator <<(std::ostream &os, const SipcIo &sio)
 {
     return os << "ipcIo" << sio.worker << '.' << sio.msg.requestId <<
-        (sio.msg.command == IpcIo::cmdRead ? 'r' : 'w') << sio.disker;
+           (sio.msg.command == IpcIo::cmdRead ? 'r' : 'w') << sio.disker;
 }
 
 
 IpcIoFile::IpcIoFile(char const *aDb):
-    dbName(aDb), diskId(-1), error_(false), lastRequestId(0),
-    olderRequests(&requestMap1), newerRequests(&requestMap2),
-    timeoutCheckScheduled(false)
+        dbName(aDb), diskId(-1), error_(false), lastRequestId(0),
+        olderRequests(&requestMap1), newerRequests(&requestMap2),
+        timeoutCheckScheduled(false)
 {
 }
 
@@ -114,7 +114,8 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 }
 
 void
-IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response) {
+IpcIoFile::openCompleted(const Ipc::StrandSearchResponse *const response)
+{
     Must(diskId < 0); // we do not know our disker yet
 
     if (!response) {
@@ -181,7 +182,7 @@ void
 IpcIoFile::read(ReadRequest *readRequest)
 {
     debugs(79,3, HERE << "(disker" << diskId << ", " << readRequest->len << ", " <<
-        readRequest->offset << ")");
+           readRequest->offset << ")");
 
     assert(ioRequestor != NULL);
     assert(readRequest->len >= 0);
@@ -208,9 +209,7 @@ IpcIoFile::readCompleted(ReadRequest *readRequest,
         if (response->xerrno) {
             debugs(79,1, HERE << "error: " << xstrerr(response->xerrno));
             ioError = error_ = true;
-        }
-        else
-        if (!response->page) {
+        } else if (!response->page) {
             debugs(79,1, HERE << "error: run out of shared memory pages");
             ioError = true;
         } else {
@@ -222,7 +221,7 @@ IpcIoFile::readCompleted(ReadRequest *readRequest,
     }
 
     const ssize_t rlen = ioError ? -1 : (ssize_t)readRequest->len;
-    const int errflag = ioError ? DISK_ERROR : DISK_OK;
+    const int errflag = ioError ? DISK_ERROR :DISK_OK;
     ioRequestor->readCompleted(readRequest->buf, rlen, errflag, readRequest);
 }
 
@@ -230,7 +229,7 @@ void
 IpcIoFile::write(WriteRequest *writeRequest)
 {
     debugs(79,3, HERE << "(disker" << diskId << ", " << writeRequest->len << ", " <<
-        writeRequest->offset << ")");
+           writeRequest->offset << ")");
 
     assert(ioRequestor != NULL);
     assert(writeRequest->len >= 0);
@@ -254,12 +253,10 @@ IpcIoFile::writeCompleted(WriteRequest *writeRequest,
     if (!response) {
         debugs(79, 3, HERE << "error: timeout");
         ioError = true; // I/O timeout does not warrant setting error_?
-    } else
-    if (response->xerrno) {
+    } else if (response->xerrno) {
         debugs(79,1, HERE << "error: " << xstrerr(response->xerrno));
         ioError = error_ = true;
-    } else
-    if (response->len != writeRequest->len) {
+    } else if (response->len != writeRequest->len) {
         debugs(79,1, HERE << "problem: " << response->len << " < " << writeRequest->len);
         error_ = true;
     }
@@ -269,11 +266,11 @@ IpcIoFile::writeCompleted(WriteRequest *writeRequest,
 
     if (!ioError) {
         debugs(79,5, HERE << "wrote " << writeRequest->len << " to disker" <<
-            diskId << " at " << writeRequest->offset);
-	}
+               diskId << " at " << writeRequest->offset);
+    }
 
     const ssize_t rlen = ioError ? 0 : (ssize_t)writeRequest->len;
-    const int errflag = ioError ? DISK_ERROR : DISK_OK;
+    const int errflag = ioError ? DISK_ERROR :DISK_OK;
     ioRequestor->writeCompleted(errflag, rlen, writeRequest);
 }
 
@@ -334,7 +331,7 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
         debugs(47, DBG_IMPORTANT, "Worker I/O push queue overflow: " <<
                SipcIo(KidIdentifier, ipcIo, diskId)); // TODO: report queue len
         // TODO: grow queue size
- 
+
         pending->completeIo(NULL);
         delete pending;
     } catch (const TextException &e) {
@@ -346,7 +343,8 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
 
 /// whether we think there is enough time to complete the I/O
 bool
-IpcIoFile::canWait() const {
+IpcIoFile::canWait() const
+{
     if (!Config.Timeout.disk_io)
         return true; // no timeout specified
 
@@ -356,7 +354,7 @@ IpcIoFile::canWait() const {
 
     const int expectedWait = tvSubMsec(oldestIo.start, current_time);
     if (expectedWait < 0 ||
-        static_cast<time_msec_t>(expectedWait) < Config.Timeout.disk_io)
+            static_cast<time_msec_t>(expectedWait) < Config.Timeout.disk_io)
         return true; // expected wait time is acceptible
 
     debugs(47,2, HERE << "cannot wait: " << expectedWait <<
@@ -370,7 +368,7 @@ IpcIoFile::HandleOpenResponse(const Ipc::StrandSearchResponse &response)
 {
     debugs(47, 7, HERE << "coordinator response to open request");
     for (IpcIoFileList::iterator i = WaitingForOpen.begin();
-         i != WaitingForOpen.end(); ++i) {
+            i != WaitingForOpen.end(); ++i) {
         if (response.strand.tag == (*i)->dbName) {
             (*i)->openCompleted(&response);
             WaitingForOpen.erase(i);
@@ -402,7 +400,7 @@ IpcIoFile::handleResponse(IpcIoMsg &ipcIo)
 {
     const int requestId = ipcIo.requestId;
     debugs(47, 7, HERE << "popped disker response: " <<
-        SipcIo(KidIdentifier, ipcIo, diskId));
+           SipcIo(KidIdentifier, ipcIo, diskId));
 
     Must(requestId);
     if (IpcIoPendingRequest *const pending = dequeueRequest(requestId)) {
@@ -448,7 +446,7 @@ IpcIoFile::OpenTimeout(void *const param)
     const IpcIoFile *const ipcIoFile =
         reinterpret_cast<const IpcIoFile *>(param);
     for (IpcIoFileList::iterator i = WaitingForOpen.begin();
-         i != WaitingForOpen.end(); ++i) {
+            i != WaitingForOpen.end(); ++i) {
         if (*i == ipcIoFile) {
             (*i)->openCompleted(NULL);
             WaitingForOpen.erase(i);
@@ -558,7 +556,7 @@ IpcIoFile::getFD() const
 /* IpcIoMsg */
 
 IpcIoMsg::IpcIoMsg():
-    requestId(0), offset(0), len(0), command(IpcIo::cmdNone), xerrno(0)
+        requestId(0), offset(0), len(0), command(IpcIo::cmdNone), xerrno(0)
 {
     start.tv_sec = 0;
 }
@@ -566,7 +564,7 @@ IpcIoMsg::IpcIoMsg():
 /* IpcIoPendingRequest */
 
 IpcIoPendingRequest::IpcIoPendingRequest(const IpcIoFile::Pointer &aFile):
-    file(aFile), readRequest(NULL), writeRequest(NULL)
+        file(aFile), readRequest(NULL), writeRequest(NULL)
 {
     Must(file != NULL);
     if (++file->lastRequestId == 0) // don't use zero value as requestId
@@ -578,8 +576,7 @@ IpcIoPendingRequest::completeIo(IpcIoMsg *const response)
 {
     if (readRequest)
         file->readCompleted(readRequest, response);
-    else
-    if (writeRequest)
+    else if (writeRequest)
         file->writeCompleted(writeRequest, response);
     else {
         Must(!response); // only timeouts are handled here
@@ -611,13 +608,13 @@ diskerRead(IpcIoMsg &ipcIo)
         ipcIo.xerrno = 0;
         const size_t len = static_cast<size_t>(read); // safe because read > 0
         debugs(47,8, HERE << "disker" << KidIdentifier << " read " <<
-            (len == ipcIo.len ? "all " : "just ") << read);
+               (len == ipcIo.len ? "all " : "just ") << read);
         ipcIo.len = len;
     } else {
         ipcIo.xerrno = errno;
         ipcIo.len = 0;
         debugs(47,5, HERE << "disker" << KidIdentifier << " read error: " <<
-            ipcIo.xerrno);
+               ipcIo.xerrno);
     }
 }
 
@@ -633,7 +630,7 @@ diskerWrite(IpcIoMsg &ipcIo)
         ipcIo.xerrno = 0;
         const size_t len = static_cast<size_t>(wrote); // safe because wrote > 0
         debugs(47,8, HERE << "disker" << KidIdentifier << " wrote " <<
-            (len == ipcIo.len ? "all " : "just ") << wrote);
+               (len == ipcIo.len ? "all " : "just ") << wrote);
         ipcIo.len = len;
     } else {
         ipcIo.xerrno = errno;
@@ -679,12 +676,12 @@ IpcIoFile::DiskerHandleRequests()
                 // the gap must be positive for select(2) to be given a chance
                 const double minBreakSecs = 0.001;
                 eventAdd("IpcIoFile::DiskerHandleMoreRequests",
-                     &IpcIoFile::DiskerHandleMoreRequests,
-                     NULL, minBreakSecs, 0, false);
+                         &IpcIoFile::DiskerHandleMoreRequests,
+                         NULL, minBreakSecs, 0, false);
                 DiskerHandleMoreRequestsScheduled = true;
             }
             debugs(47, 3, HERE << "pausing after " << popped << " I/Os in " <<
-               elapsedMsec << "ms; " << (elapsedMsec/popped) << "ms per I/O");
+                   elapsedMsec << "ms; " << (elapsedMsec/popped) << "ms per I/O");
             break;
         }
     }

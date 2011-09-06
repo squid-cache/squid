@@ -28,7 +28,8 @@ MemStore::~MemStore()
 }
 
 void
-MemStore::init() {
+MemStore::init()
+{
     const int64_t entryLimit = EntryLimit();
     if (entryLimit <= 0)
         return; // no memory cache configured or a misconfiguration
@@ -62,15 +63,15 @@ MemStore::stat(StoreEntry &e) const
         storeAppendPrintf(&e, "Maximum entries: %9d\n", limit);
         if (limit > 0) {
             storeAppendPrintf(&e, "Current entries: %"PRId64" %.2f%%\n",
-                currentCount(), (100.0 * currentCount() / limit));
+                              currentCount(), (100.0 * currentCount() / limit));
 
             if (limit < 100) { // XXX: otherwise too expensive to count
                 Ipc::ReadWriteLockStats stats;
                 map->updateStats(stats);
                 stats.dump(e);
-			}
-		}
-	}    
+            }
+        }
+    }
 }
 
 void
@@ -198,7 +199,7 @@ MemStore::copyFromShm(StoreEntry &e, const MemStoreMap::Extras &extras)
     const Ipc::Mem::PageId &page = extras.page;
 
     StoreIOBuffer sourceBuf(extras.storedSize, 0,
-                              static_cast<char*>(PagePointer(page)));
+                            static_cast<char*>(PagePointer(page)));
 
     // XXX: We do not know the URLs yet, only the key, but we need to parse and
     // store the response for the Root().get() callers to be happy because they
@@ -300,7 +301,7 @@ MemStore::copyToShm(StoreEntry &e, MemStoreMap::Extras &extras)
 
     StoreIOBuffer sharedSpace(bufSize, 0,
                               static_cast<char*>(PagePointer(page)));
-    
+
     // check that we kept everything or purge incomplete/sparse cached entry
     const ssize_t copied = e.mem_obj->data_hdr.copy(sharedSpace);
     if (eSize != copied) {
@@ -362,14 +363,12 @@ void MemStoreRr::run(const RunnerRegistry &)
     // decide whether to use a shared memory cache if the user did not specify
     if (!Config.memShared.configured()) {
         Config.memShared.configure(AtomicOperationsSupported &&
-            Ipc::Mem::Segment::Enabled() && UsingSmp() &&
-            Config.memMaxSize > 0);
-    } else
-    if (Config.memShared && !AtomicOperationsSupported) {
+                                   Ipc::Mem::Segment::Enabled() && UsingSmp() &&
+                                   Config.memMaxSize > 0);
+    } else if (Config.memShared && !AtomicOperationsSupported) {
         // bail if the user wants shared memory cache but we cannot support it
         fatal("memory_cache_shared is on, but no support for atomic operations detected");
-    } else
-    if (Config.memShared && !Ipc::Mem::Segment::Enabled()) {
+    } else if (Config.memShared && !Ipc::Mem::Segment::Enabled()) {
         fatal("memory_cache_shared is on, but no support for shared memory detected");
     }
 

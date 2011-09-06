@@ -199,7 +199,7 @@ Ipc::Coordinator::handleSearchRequest(const Ipc::StrandSearchRequest &request)
 
     searchers.push_back(request);
     debugs(54, 3, HERE << "cannot yet tell kid" << request.requestorId <<
-        " who " << request.tag << " is");
+           " who " << request.tag << " is");
 }
 
 void
@@ -207,7 +207,7 @@ Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
                                  const StrandCoord& strand)
 {
     debugs(54, 3, HERE << "tell kid" << request.requestorId << " that " <<
-        request.tag << " is kid" << strand.kidId);
+           request.tag << " is kid" << strand.kidId);
     const StrandSearchResponse response(strand);
     TypedMsgHdr message;
     response.pack(message);

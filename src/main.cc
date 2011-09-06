@@ -1247,7 +1247,7 @@ SquidMainSafe(int argc, char **argv)
         return SquidMain(argc, argv);
     } catch (const std::exception &e) {
         debugs(1, DBG_CRITICAL, "FATAL: dying from an unhandled exception: " <<
-            e.what());
+               e.what());
         throw;
     } catch (...) {
         debugs(1, DBG_CRITICAL, "FATAL: dying from an unhandled exception.");
@@ -1269,11 +1269,9 @@ ConfigureCurrentKid(const char *processName)
             xstrncpy(TheKidName, processName + 1, nameLen + 1);
             if (!strcmp(TheKidName, "squid-coord"))
                 TheProcessKind = pkCoordinator;
-            else
-            if (!strcmp(TheKidName, "squid"))
+            else if (!strcmp(TheKidName, "squid"))
                 TheProcessKind = pkWorker;
-            else
-            if (!strcmp(TheKidName, "squid-disk"))
+            else if (!strcmp(TheKidName, "squid-disk"))
                 TheProcessKind = pkDisker;
             else
                 TheProcessKind = pkOther; // including coordinator
@@ -1759,7 +1757,7 @@ watch_child(char *argv[])
 
             kid.start(pid);
             syslog(LOG_NOTICE, "Squid Parent: %s process %d started",
-                kid.name().termedBuf(), pid);
+                   kid.name().termedBuf(), pid);
         }
 
         /* parent */

@@ -8,9 +8,11 @@
 
 #include "ipc/mem/Page.h"
 
-namespace Ipc {
+namespace Ipc
+{
 
-namespace Mem {
+namespace Mem
+{
 
 /* Single page manipulation */
 

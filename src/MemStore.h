@@ -18,7 +18,8 @@ typedef Ipc::StoreMapWithExtras<MemStoreMapExtras> MemStoreMap;
 
 /// Stores HTTP entities in RAM. Current implementation uses shared memory.
 /// Unlike a disk store (SwapDir), operations are synchronous (and fast).
-class MemStore: public Store, public Ipc::StoreMapCleaner {
+class MemStore: public Store, public Ipc::StoreMapCleaner
+{
 public:
     MemStore();
     virtual ~MemStore();

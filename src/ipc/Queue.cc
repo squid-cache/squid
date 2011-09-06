@@ -69,8 +69,8 @@ Ipc::QueueReaders::SharedMemorySize(const int capacity)
 // OneToOneUniQueue
 
 Ipc::OneToOneUniQueue::OneToOneUniQueue(const unsigned int aMaxItemSize, const int aCapacity):
-    theIn(0), theOut(0), theSize(0), theMaxItemSize(aMaxItemSize),
-    theCapacity(aCapacity)
+        theIn(0), theOut(0), theSize(0), theMaxItemSize(aMaxItemSize),
+        theCapacity(aCapacity)
 {
     Must(theMaxItemSize > 0);
     Must(theCapacity > 0);
@@ -135,11 +135,11 @@ Ipc::FewToFewBiQueue::Init(const String &id, const int groupASize, const int gro
 }
 
 Ipc::FewToFewBiQueue::FewToFewBiQueue(const String &id, const Group aLocalGroup, const int aLocalProcessId):
-    metadata(shm_old(Metadata)(MetadataId(id).termedBuf())),
-    queues(shm_old(OneToOneUniQueues)(QueuesId(id).termedBuf())),
-    readers(shm_old(QueueReaders)(ReadersId(id).termedBuf())),
-    theLocalGroup(aLocalGroup), theLocalProcessId(aLocalProcessId),
-    theLastPopProcessId(readers->theCapacity)
+        metadata(shm_old(Metadata)(MetadataId(id).termedBuf())),
+        queues(shm_old(OneToOneUniQueues)(QueuesId(id).termedBuf())),
+        readers(shm_old(QueueReaders)(ReadersId(id).termedBuf())),
+        theLocalGroup(aLocalGroup), theLocalProcessId(aLocalProcessId),
+        theLastPopProcessId(readers->theCapacity)
 {
     Must(queues->theCapacity == metadata->theGroupASize * metadata->theGroupBSize * 2);
     Must(readers->theCapacity == metadata->theGroupASize + metadata->theGroupBSize);
@@ -154,10 +154,10 @@ Ipc::FewToFewBiQueue::validProcessId(const Group group, const int processId) con
     switch (group) {
     case groupA:
         return metadata->theGroupAIdOffset <= processId &&
-            processId < metadata->theGroupAIdOffset + metadata->theGroupASize;
+               processId < metadata->theGroupAIdOffset + metadata->theGroupASize;
     case groupB:
         return metadata->theGroupBIdOffset <= processId &&
-            processId < metadata->theGroupBIdOffset + metadata->theGroupBSize;
+               processId < metadata->theGroupBIdOffset + metadata->theGroupBSize;
     }
     return false;
 }
@@ -201,8 +201,8 @@ Ipc::FewToFewBiQueue::reader(const Group group, const int processId)
 {
     Must(validProcessId(group, processId));
     const int index =  group == groupA ?
-        processId - metadata->theGroupAIdOffset :
-        metadata->theGroupASize + processId - metadata->theGroupBIdOffset;
+                       processId - metadata->theGroupAIdOffset :
+                       metadata->theGroupASize + processId - metadata->theGroupBIdOffset;
     return readers->theReaders[index];
 }
 
@@ -222,17 +222,17 @@ Ipc::FewToFewBiQueue::clearReaderSignal(const int remoteProcessId)
 }
 
 Ipc::FewToFewBiQueue::Metadata::Metadata(const int aGroupASize, const int aGroupAIdOffset, const int aGroupBSize, const int aGroupBIdOffset):
-    theGroupASize(aGroupASize), theGroupAIdOffset(aGroupAIdOffset),
-    theGroupBSize(aGroupBSize), theGroupBIdOffset(aGroupBIdOffset)
+        theGroupASize(aGroupASize), theGroupAIdOffset(aGroupAIdOffset),
+        theGroupBSize(aGroupBSize), theGroupBIdOffset(aGroupBIdOffset)
 {
     Must(theGroupASize > 0);
     Must(theGroupBSize > 0);
 }
 
 Ipc::FewToFewBiQueue::Owner::Owner(const String &id, const int groupASize, const int groupAIdOffset, const int groupBSize, const int groupBIdOffset, const unsigned int maxItemSize, const int capacity):
-    metadataOwner(shm_new(Metadata)(MetadataId(id).termedBuf(), groupASize, groupAIdOffset, groupBSize, groupBIdOffset)),
-    queuesOwner(shm_new(OneToOneUniQueues)(QueuesId(id).termedBuf(), groupASize*groupBSize*2, maxItemSize, capacity)),
-    readersOwner(shm_new(QueueReaders)(ReadersId(id).termedBuf(), groupASize+groupBSize))
+        metadataOwner(shm_new(Metadata)(MetadataId(id).termedBuf(), groupASize, groupAIdOffset, groupBSize, groupBIdOffset)),
+        queuesOwner(shm_new(OneToOneUniQueues)(QueuesId(id).termedBuf(), groupASize*groupBSize*2, maxItemSize, capacity)),
+        readersOwner(shm_new(QueueReaders)(ReadersId(id).termedBuf(), groupASize+groupBSize))
 {
 }
 
