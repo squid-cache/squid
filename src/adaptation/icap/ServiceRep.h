@@ -95,8 +95,6 @@ public:
 
     virtual void finalize();
 
-    void invalidate(); // call when the service is no longer needed or valid
-
     virtual bool probed() const; // see comments above
     virtual bool up() const; // see comments above
     bool availableForNew() const; ///< a new transaction may start communicating with the service
