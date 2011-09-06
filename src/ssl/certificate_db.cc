@@ -393,7 +393,7 @@ void Ssl::CertificateDb::load()
         corrupt = true;
 
     // Create indexes in db.
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
     if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlSerial, NULL, LHASH_HASH_FN(index_serial), LHASH_COMP_FN(index_serial)))
         corrupt = true;
 
@@ -433,7 +433,7 @@ bool Ssl::CertificateDb::deleteInvalidCertificate()
         return false;
 
     bool removed_one = false;
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
     for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); i++) {
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
 #else
@@ -444,7 +444,7 @@ bool Ssl::CertificateDb::deleteInvalidCertificate()
         if (!sslDateIsInTheFuture(current_row[cnlExp_date])) {
             std::string filename(cert_full + "/" + current_row[cnlSerial] + ".pem");
             FileLocker cert_locker(filename);
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
             sk_OPENSSL_PSTRING_delete(db.get()->data, i);
 #else
             sk_delete(db.get()->data, i);
@@ -466,14 +466,14 @@ bool Ssl::CertificateDb::deleteOldestCertificate()
     if (!db)
         return false;
 
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
     if (sk_OPENSSL_PSTRING_num(db.get()->data) == 0)
 #else
     if (sk_num(db.get()->data) == 0)
 #endif
         return false;
 
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
     const char **row = (const char **)sk_OPENSSL_PSTRING_value(db.get()->data, 0);
 #else
     const char **row = (const char **)sk_value(db.get()->data, 0);
@@ -481,7 +481,7 @@ bool Ssl::CertificateDb::deleteOldestCertificate()
     std::string filename(cert_full + "/" + row[cnlSerial] + ".pem");
     FileLocker cert_locker(filename);
 
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
     sk_OPENSSL_PSTRING_delete(db.get()->data, 0);
 #else
     sk_delete(db.get()->data, 0);
@@ -498,7 +498,7 @@ bool Ssl::CertificateDb::deleteByHostname(std::string const & host)
     if (!db)
         return false;
 
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
     for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); i++) {
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
 #else
@@ -508,7 +508,7 @@ bool Ssl::CertificateDb::deleteByHostname(std::string const & host)
         if (host == current_row[cnlName]) {
             std::string filename(cert_full + "/" + current_row[cnlSerial] + ".pem");
             FileLocker cert_locker(filename);
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
             sk_OPENSSL_PSTRING_delete(db.get()->data, i);
 #else
             sk_delete(db.get()->data, i);
