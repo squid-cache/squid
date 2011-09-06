@@ -355,7 +355,7 @@ Rock::SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load)
     if (!map)
         return false;
 
-    // Do not start I/O transaction is there are less than 10% free pages left.
+    // Do not start I/O transaction if there are less than 10% free pages left.
     // TODO: reserve page instead
     if (Ipc::Mem::PageLevel(Ipc::Mem::PageId::ioPage) >= 0.9 * Ipc::Mem::PageLimit(Ipc::Mem::PageId::ioPage)) {
         debugs(47, 5, HERE << "too few shared pages for IPC I/O left");
@@ -448,7 +448,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
         return NULL;
     }
 
-    // Do not start I/O transaction is there are less than 10% free pages left.
+    // Do not start I/O transaction if there are less than 10% free pages left.
     // TODO: reserve page instead
     if (Ipc::Mem::PageLevel(Ipc::Mem::PageId::ioPage) >= 0.9 * Ipc::Mem::PageLimit(Ipc::Mem::PageId::ioPage)) {
         debugs(47, 5, HERE << "too few shared pages for IPC I/O left");
