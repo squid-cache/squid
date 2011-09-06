@@ -2900,9 +2900,12 @@ DOC_START
 		'	output as-is
 
 		-	left aligned
-		width	minimum and/or maximum field width: [min][.max]
+
+		width	minimum and/or maximum field width:
+			    [width_min][.width_max]
 			When minimum starts with 0, the field is zero-padded.
 			String values exceeding maximum width are truncated.
+
 		{arg}	argument such as header name etc
 
 	Format codes:
