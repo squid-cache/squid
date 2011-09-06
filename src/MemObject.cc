@@ -264,7 +264,8 @@ MemObject::size() const
 }
 
 int64_t
-MemObject::expectedReplySize() const {
+MemObject::expectedReplySize() const
+{
     debugs(20, 7, HERE << "object_sz: " << object_sz);
     if (object_sz >= 0) // complete() has been called; we know the exact answer
         return object_sz;

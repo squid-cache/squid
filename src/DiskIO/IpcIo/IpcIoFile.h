@@ -11,12 +11,14 @@
 #include <map>
 #include <memory>
 
-namespace Ipc {
+namespace Ipc
+{
 class FewToFewBiQueue;
 } // Ipc
 
 // TODO: expand to all classes
-namespace IpcIo {
+namespace IpcIo
+{
 
 /// what kind of I/O the disker needs to do or have done
 typedef enum { cmdNone, cmdOpen, cmdRead, cmdWrite } Command;
@@ -25,7 +27,8 @@ typedef enum { cmdNone, cmdOpen, cmdRead, cmdWrite } Command;
 
 
 /// converts DiskIO requests to IPC queue messages
-class IpcIoMsg {
+class IpcIoMsg
+{
 public:
     IpcIoMsg();
 

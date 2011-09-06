@@ -15,13 +15,13 @@
 #include "fs/rock/RockSwapDir.h"
 
 Rock::IoState::IoState(SwapDir *dir,
-    StoreEntry *anEntry,
-    StoreIOState::STFNCB *cbFile,
-    StoreIOState::STIOCB *cbIo,
-    void *data):
-    slotSize(0),
-    diskOffset(-1),
-    payloadEnd(-1)
+                       StoreEntry *anEntry,
+                       StoreIOState::STFNCB *cbFile,
+                       StoreIOState::STIOCB *cbIo,
+                       void *data):
+        slotSize(0),
+        diskOffset(-1),
+        payloadEnd(-1)
 {
     e = anEntry;
     // swap_filen, swap_dirn, diskOffset, and payloadEnd are set by the caller
@@ -58,7 +58,7 @@ Rock::IoState::read_(char *buf, size_t len, off_t coreOff, STRCB *cb, void *data
 
     // we skip our cell header; it is only read when building the map
     const int64_t cellOffset = sizeof(DbCellHeader) +
-        static_cast<int64_t>(coreOff);
+                               static_cast<int64_t>(coreOff);
     assert(cellOffset <= payloadEnd);
 
     // Core specifies buffer length, but we must not exceed stored entry size
@@ -71,7 +71,7 @@ Rock::IoState::read_(char *buf, size_t len, off_t coreOff, STRCB *cb, void *data
     read.callback_data = cbdataReference(data);
 
     theFile->read(new ReadRequest(
-                  ::ReadRequest(buf, diskOffset + cellOffset, len), this));
+                      ::ReadRequest(buf, diskOffset + cellOffset, len), this));
 }
 
 // We only buffer data here; we actually write when close() is called.
@@ -114,15 +114,15 @@ Rock::IoState::startWriting()
     // to avoid triggering read-page;new_head+old_tail;write-page overheads
 
     debugs(79, 5, HERE << swap_filen << " at " << diskOffset << '+' <<
-        theBuf.contentSize());
+           theBuf.contentSize());
 
     assert(theBuf.contentSize() <= slotSize);
     // theFile->write may call writeCompleted immediatelly
     theFile->write(new WriteRequest(::WriteRequest(theBuf.content(),
-                   diskOffset, theBuf.contentSize(), theBuf.freeFunc()), this));
+                                    diskOffset, theBuf.contentSize(), theBuf.freeFunc()), this));
 }
 
-// 
+//
 void
 Rock::IoState::finishedWriting(const int errFlag)
 {
@@ -134,33 +134,33 @@ void
 Rock::IoState::close(int how)
 {
     debugs(79, 3, HERE << swap_filen << " accumulated: " << offset_ <<
-        " how=" << how);
+           " how=" << how);
     if (how == wroteAll && !theBuf.isNull())
         startWriting();
     else
         callBack(how == writerGone ? DISK_ERROR : 0); // TODO: add DISK_CALLER_GONE
 }
 
-/// close callback (STIOCB) dialer: breaks dependencies and 
+/// close callback (STIOCB) dialer: breaks dependencies and
 /// counts IOState concurrency level
-class StoreIOStateCb: public CallDialer 
+class StoreIOStateCb: public CallDialer
 {
 public:
     StoreIOStateCb(StoreIOState::STIOCB *cb, void *data, int err, const Rock::IoState::Pointer &anSio):
-        callback(NULL),
-        callback_data(NULL),
-        errflag(err),
-        sio(anSio) {
+            callback(NULL),
+            callback_data(NULL),
+            errflag(err),
+            sio(anSio) {
 
         callback = cb;
         callback_data = cbdataReference(data);
     }
 
     StoreIOStateCb(const StoreIOStateCb &cb):
-        callback(NULL),
-        callback_data(NULL),
-        errflag(cb.errflag),
-        sio(cb.sio) {
+            callback(NULL),
+            callback_data(NULL),
+            errflag(cb.errflag),
+            sio(cb.sio) {
 
         callback = cb.callback;
         callback_data = cbdataReference(cb.callback_data);
@@ -201,7 +201,7 @@ Rock::IoState::callBack(int errflag)
     theFile = NULL;
 
     AsyncCall::Pointer call = asyncCall(79,3, "SomeIoStateCloseCb",
-        StoreIOStateCb(callback, callback_data, errflag, this));
+                                        StoreIOStateCb(callback, callback_data, errflag, this));
     ScheduleCallHere(call);
 
     callback = NULL;

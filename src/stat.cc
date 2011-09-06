@@ -557,7 +557,7 @@ GetInfo(Mgr::InfoActionData& stats)
 
     stats.n_disk_objects = Store::Root().currentCount();
     stats.objects_size = stats.n_disk_objects > 0 ?
-        stats.store_swap_size / stats.n_disk_objects : 0.0;
+                         stats.store_swap_size / stats.n_disk_objects : 0.0;
 
     stats.unlink_requests = statCounter.unlink.requests;
 

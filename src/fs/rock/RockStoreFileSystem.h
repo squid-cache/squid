@@ -3,7 +3,8 @@
 
 #include "StoreFileSystem.h"
 
-namespace Rock {
+namespace Rock
+{
 
 /// \ingroup Rock, FileSystems
 class StoreFileSystem: public ::StoreFileSystem

@@ -15,11 +15,13 @@
 
 class String;
 
-namespace Ipc {
+namespace Ipc
+{
 
 /// State of the reading end of a queue (i.e., of the code calling pop()).
 /// Multiple queues attached to one reader share this state.
-class QueueReader {
+class QueueReader
+{
 public:
     QueueReader(); // the initial state is "blocked without a signal"
 
@@ -49,7 +51,8 @@ public:
 };
 
 /// shared array of QueueReaders
-class QueueReaders {
+class QueueReaders
+{
 public:
     QueueReaders(const int aCapacity);
     size_t sharedMemorySize() const;
@@ -69,7 +72,8 @@ public:
  * queue is full, the writer will just not push and come back later (with a
  * different value). We can add support for blocked writers if needed.
  */
-class OneToOneUniQueue {
+class OneToOneUniQueue
+{
 public:
     // pop() and push() exceptions; TODO: use TextException instead
     class Full {};
@@ -110,7 +114,8 @@ private:
 };
 
 /// shared array of OneToOneUniQueues
-class OneToOneUniQueues {
+class OneToOneUniQueues
+{
 public:
     OneToOneUniQueues(const int aCapacity, const unsigned int maxItemSize, const int queueCapacity);
 
@@ -135,7 +140,8 @@ public:
  * communicate. Process in each group has a unique integer ID in
  * [groupIdOffset, groupIdOffset + groupSize) range.
  */
-class FewToFewBiQueue {
+class FewToFewBiQueue
+{
 public:
     typedef OneToOneUniQueue::Full Full;
     typedef OneToOneUniQueue::ItemTooLarge ItemTooLarge;
@@ -154,7 +160,8 @@ private:
     };
 
 public:
-    class Owner {
+    class Owner
+    {
     public:
         Owner(const String &id, const int groupASize, const int groupAIdOffset, const int groupBSize, const int groupBIdOffset, const unsigned int maxItemSize, const int capacity);
         ~Owner();

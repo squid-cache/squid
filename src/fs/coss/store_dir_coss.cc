@@ -473,15 +473,15 @@ storeCossRebuildFromSwapLog(void *data)
         rb->counts.objcount++;
 
         e = rb->sd->addDiskRestore(s.key,
-                                    s.swap_filen,
-                                    s.swap_file_sz,
-                                    s.expires,
-                                    s.timestamp,
-                                    s.lastref,
-                                    s.lastmod,
-                                    s.refcount,
-                                    s.flags,
-                                    (int) rb->flags.clean);
+                                   s.swap_filen,
+                                   s.swap_file_sz,
+                                   s.expires,
+                                   s.timestamp,
+                                   s.lastref,
+                                   s.lastmod,
+                                   s.refcount,
+                                   s.flags,
+                                   (int) rb->flags.clean);
 
         storeDirSwapLog(e, SWAP_LOG_ADD);
     }
@@ -493,15 +493,15 @@ storeCossRebuildFromSwapLog(void *data)
  * use to rebuild store from disk. */
 StoreEntry *
 CossSwapDir::addDiskRestore(const cache_key *const key,
-                        int file_number,
-                        uint64_t swap_file_sz,
-                        time_t expires,
-                        time_t timestamp,
-                        time_t lastref,
-                        time_t lastmod,
-                        uint32_t refcount,
-                        uint16_t flags,
-                        int clean)
+                            int file_number,
+                            uint64_t swap_file_sz,
+                            time_t expires,
+                            time_t timestamp,
+                            time_t lastref,
+                            time_t lastmod,
+                            uint32_t refcount,
+                            uint16_t flags,
+                            int clean)
 {
     StoreEntry *e = NULL;
     debugs(47, 5, "storeCossAddDiskRestore: " << storeKeyText(key)  <<

@@ -149,7 +149,8 @@ class SwapDir;
 /// Used for boolean enabled/disabled options with complex default logic.
 /// Allows Squid to compute the right default after configuration.
 /// Checks that not-yet-defined option values are not used.
-class YesNoNone {
+class YesNoNone
+{
 // TODO: generalize to non-boolean option types
 public:
     YesNoNone(): option(0) {}
@@ -157,7 +158,7 @@ public:
     /// returns true iff enabled; asserts if the option has not been configured
     operator void *() const; // TODO: use a fancy/safer version of the operator
 
-    /// enables or disables the option; 
+    /// enables or disables the option;
     void configure(bool beSet);
 
     /// whether the option was enabled or disabled, by user or Squid

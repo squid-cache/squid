@@ -5,8 +5,10 @@
  * DEBUG: section 47    Store Directory Routines
  */
 
-#include "MmappedIOStrategy.h"
+#include "config.h"
 #include "MmappedFile.h"
+#include "MmappedIOStrategy.h"
+
 bool
 MmappedIOStrategy::shedLoad()
 {

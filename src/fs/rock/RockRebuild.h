@@ -1,17 +1,18 @@
 #ifndef SQUID_FS_ROCK_REBUILD_H
 #define SQUID_FS_ROCK_REBUILD_H
 
-#include "config.h"
 #include "base/AsyncJob.h"
 #include "structs.h"
 
-namespace Rock {
+namespace Rock
+{
 
 class SwapDir;
 
 /// \ingroup Rock
 /// manages store rebuild process: loading meta information from db on disk
-class Rebuild: public AsyncJob {
+class Rebuild: public AsyncJob
+{
 public:
     Rebuild(SwapDir *dir);
     ~Rebuild();

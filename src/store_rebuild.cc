@@ -295,7 +295,7 @@ storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf,
     if (len < 0) {
         const int xerrno = errno;
         debugs(47, DBG_IMPORTANT, "WARNING: cache_dir[" << diskIndex << "]: " <<
-            "Ignoring cached entry after meta data read failure: " << xstrerr(xerrno));
+               "Ignoring cached entry after meta data read failure: " << xstrerr(xerrno));
         return false;
     }
 
@@ -355,8 +355,7 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
                    "SIZE MISMATCH " << tmpe.swap_file_sz << "!=" << expectedSize);
             return false;
         }
-    } else
-    if (tmpe.swap_file_sz <= 0) {
+    } else if (tmpe.swap_file_sz <= 0) {
         debugs(47, DBG_IMPORTANT, "WARNING: Ignoring cache entry with " <<
                "unknown size: " << tmpe);
         return false;

@@ -13,13 +13,13 @@
 CBDATA_NAMESPACED_CLASS_INIT(Rock, Rebuild);
 
 Rock::Rebuild::Rebuild(SwapDir *dir): AsyncJob("Rock::Rebuild"),
-    sd(dir),
-    dbSize(0),
-    dbEntrySize(0),
-    dbEntryLimit(0),
-    fd(-1),
-    dbOffset(0),
-    filen(0)
+        sd(dir),
+        dbSize(0),
+        dbEntrySize(0),
+        dbEntryLimit(0),
+        fd(-1),
+        dbOffset(0),
+        filen(0)
 {
     assert(sd);
     memset(&counts, 0, sizeof(counts));
@@ -36,11 +36,12 @@ Rock::Rebuild::~Rebuild()
 
 /// prepares and initiates entry loading sequence
 void
-Rock::Rebuild::start() {
+Rock::Rebuild::start()
+{
     // in SMP mode, only the disker is responsible for populating the map
     if (UsingSmp() && !IamDiskProcess()) {
         debugs(47, 2, "Non-disker skips rebuilding of cache_dir #" <<
-           sd->index << " from " << sd->filePath);
+               sd->index << " from " << sd->filePath);
         mustStop("non-disker");
         return;
     }
@@ -57,7 +58,7 @@ Rock::Rebuild::start() {
         failure("cannot read db header", errno);
 
     dbOffset = SwapDir::HeaderSize;
-    filen = 0;    
+    filen = 0;
 
     checkpoint();
 }
@@ -84,12 +85,13 @@ Rock::Rebuild::Steps(void *data)
 }
 
 void
-Rock::Rebuild::steps() {
+Rock::Rebuild::steps()
+{
     debugs(47,5, HERE << sd->index << " filen " << filen << " at " <<
-        dbOffset << " <= " << dbSize);
+           dbOffset << " <= " << dbSize);
 
     // Balance our desire to maximize the number of entries processed at once
-    // (and, hence, minimize overheads and total rebuild time) with a 
+    // (and, hence, minimize overheads and total rebuild time) with a
     // requirement to also process Coordinator events, disk I/Os, etc.
     const int maxSpentMsec = 50; // keep small: most RAM I/Os are under 1ms
     const timeval loopStart = current_time;
@@ -111,7 +113,7 @@ Rock::Rebuild::steps() {
         const double elapsedMsec = tvSubMsec(loopStart, current_time);
         if (elapsedMsec > maxSpentMsec || elapsedMsec < 0) {
             debugs(47, 5, HERE << "pausing after " << loaded << " entries in " <<
-               elapsedMsec << "ms; " << (elapsedMsec/loaded) << "ms per entry");
+                   elapsedMsec << "ms; " << (elapsedMsec/loaded) << "ms per entry");
             break;
         }
     }
@@ -120,9 +122,10 @@ Rock::Rebuild::steps() {
 }
 
 void
-Rock::Rebuild::doOneEntry() {
+Rock::Rebuild::doOneEntry()
+{
     debugs(47,5, HERE << sd->index << " filen " << filen << " at " <<
-        dbOffset << " <= " << dbSize);
+           dbOffset << " <= " << dbSize);
 
     ++counts.scancount;
 
@@ -139,7 +142,7 @@ Rock::Rebuild::doOneEntry() {
     DbCellHeader header;
     if (buf.contentSize() < static_cast<mb_size_t>(sizeof(header))) {
         debugs(47, DBG_IMPORTANT, "WARNING: cache_dir[" << sd->index << "]: " <<
-            "Ignoring truncated cache entry meta data at " << dbOffset);
+               "Ignoring truncated cache entry meta data at " << dbOffset);
         counts.invalid++;
         return;
     }
@@ -147,7 +150,7 @@ Rock::Rebuild::doOneEntry() {
 
     if (!header.sane()) {
         debugs(47, DBG_IMPORTANT, "WARNING: cache_dir[" << sd->index << "]: " <<
-            "Ignoring malformed cache entry meta data at " << dbOffset);
+               "Ignoring malformed cache entry meta data at " << dbOffset);
         counts.invalid++;
         return;
     }
@@ -162,7 +165,7 @@ Rock::Rebuild::doOneEntry() {
             //sd->unlink(filen); leave garbage on disk, it should not hurt
         }
         return;
-	}
+    }
 
     assert(loadedE.swap_filen < dbEntryLimit);
     if (!storeRebuildKeepEntry(loadedE, key, counts))
@@ -175,17 +178,19 @@ Rock::Rebuild::doOneEntry() {
 }
 
 void
-Rock::Rebuild::swanSong() {
+Rock::Rebuild::swanSong()
+{
     debugs(47,3, HERE << "cache_dir #" << sd->index << " rebuild level: " <<
-        StoreController::store_dirs_rebuilding);
+           StoreController::store_dirs_rebuilding);
     --StoreController::store_dirs_rebuilding;
     storeRebuildComplete(&counts);
 }
 
 void
-Rock::Rebuild::failure(const char *msg, int errNo) {
+Rock::Rebuild::failure(const char *msg, int errNo)
+{
     debugs(47,5, HERE << sd->index << " filen " << filen << " at " <<
-        dbOffset << " <= " << dbSize);
+           dbOffset << " <= " << dbSize);
 
     if (errNo)
         debugs(47,0, "Rock cache_dir rebuild failure: " << xstrerr(errNo));
@@ -193,5 +198,5 @@ Rock::Rebuild::failure(const char *msg, int errNo) {
 
     assert(sd);
     fatalf("Rock cache_dir[%d] rebuild of %s failed: %s.",
-        sd->index, sd->filePath, msg);
+           sd->index, sd->filePath, msg);
 }

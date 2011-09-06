@@ -5,12 +5,14 @@
 
 class StoreEntry;
 
-namespace Ipc {
+namespace Ipc
+{
 
 class ReadWriteLockStats;
 
 /// an atomic readers-writer or shared-exclusive lock suitable for maps/tables
-class ReadWriteLock {
+class ReadWriteLock
+{
 public:
     // default constructor is OK because of shared memory zero-initialization
 
@@ -30,7 +32,8 @@ public:
 
 
 /// approximate stats of a set of ReadWriteLocks
-class ReadWriteLockStats {
+class ReadWriteLockStats
+{
 public:
     ReadWriteLockStats();
 

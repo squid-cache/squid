@@ -29,9 +29,6 @@ libufs_la_SOURCES = \
 	ufs/ufscommon.h 
 
 librock_la_SOURCES = \
-	rock/RockCommon.cc \
-	rock/RockCommon.h \
-	rock/RockFile.cc \
 	rock/RockFile.h \
 	rock/RockIoState.cc \
 	rock/RockIoState.h \

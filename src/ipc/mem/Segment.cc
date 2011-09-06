@@ -18,12 +18,13 @@
 #include <unistd.h>
 
 Ipc::Mem::Segment::Segment(const char *const id):
-    theName(GenerateName(id)), theFD(-1), theMem(NULL),
-    theSize(0), theReserved(0), doUnlink(false)
+        theName(GenerateName(id)), theFD(-1), theMem(NULL),
+        theSize(0), theReserved(0), doUnlink(false)
 {
 }
 
-Ipc::Mem::Segment::~Segment() {
+Ipc::Mem::Segment::~Segment()
+{
     if (theFD >= 0) {
         detach();
         if (close(theFD) != 0)
@@ -34,7 +35,8 @@ Ipc::Mem::Segment::~Segment() {
 }
 
 bool
-Ipc::Mem::Segment::Enabled() {
+Ipc::Mem::Segment::Enabled()
+{
 #if HAVE_SHM
     return true;
 #else

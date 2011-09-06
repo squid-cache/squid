@@ -4,16 +4,18 @@
  * DEBUG: section 47    Store Directory Routines
  */
 
-#include "DiskIO/Mmapped/MmappedFile.h"
-#include <sys/mman.h>
+#include "config.h"
 #include "DiskIO/IORequestor.h"
+#include "DiskIO/Mmapped/MmappedFile.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#include <sys/mman.h>
 
 CBDATA_CLASS_INIT(MmappedFile);
 
 // helper class to deal with mmap(2) offset alignment and other low-level specs
-class Mmapping {
+class Mmapping
+{
 public:
     Mmapping(int fd, size_t length, int prot, int flags, off_t offset);
     ~Mmapping();
@@ -51,7 +53,7 @@ MmappedFile::operator delete(void *address)
 }
 
 MmappedFile::MmappedFile(char const *aPath): fd(-1),
-    minOffset(0), maxOffset(-1), error_(false)
+        minOffset(0), maxOffset(-1), error_(false)
 {
     assert(aPath);
     path_ = xstrdup(aPath);
@@ -77,7 +79,7 @@ MmappedFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
     if (fd < 0) {
         debugs(79,3, HERE << "open error: " << xstrerror());
         error_ = true;
-	} else {
+    } else {
         store_open_disk_fd++;
         debugs(79,3, HERE << "FD " << fd);
 
@@ -85,7 +87,7 @@ MmappedFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
         struct stat sb;
         if (fstat(fd, &sb) == 0)
             maxOffset = sb.st_size; // we do not expect it to change
-	}
+    }
 
     callback->ioCompletedNotification();
 }
@@ -107,7 +109,7 @@ void MmappedFile::doClose()
         file_close(fd);
         fd = -1;
         store_open_disk_fd--;
-	}
+    }
 }
 
 void
@@ -141,7 +143,7 @@ void
 MmappedFile::read(ReadRequest *aRequest)
 {
     debugs(79,3, HERE << "(FD " << fd << ", " << aRequest->len << ", " <<
-        aRequest->offset << ")");
+           aRequest->offset << ")");
 
     assert(fd >= 0);
     assert(ioRequestor != NULL);
@@ -154,17 +156,17 @@ MmappedFile::read(ReadRequest *aRequest)
     assert(maxOffset < 0 || static_cast<uint64_t>(aRequest->offset + aRequest->len) <= static_cast<uint64_t>(maxOffset));
 
     Mmapping mapping(fd, aRequest->len, PROT_READ, MAP_PRIVATE | MAP_NORESERVE,
-        aRequest->offset);
+                     aRequest->offset);
 
     bool done = false;
-	if (void *buf = mapping.map()) {
+    if (void *buf = mapping.map()) {
         memcpy(aRequest->buf, buf, aRequest->len);
         done = mapping.unmap();
-	}
+    }
     error_ = !done;
 
     const ssize_t rlen = error_ ? -1 : (ssize_t)aRequest->len;
-    const int errflag = error_ ? DISK_ERROR : DISK_OK;
+    const int errflag = error_ ? DISK_ERROR :DISK_OK;
     ioRequestor->readCompleted(aRequest->buf, rlen, errflag, aRequest);
 }
 
@@ -172,7 +174,7 @@ void
 MmappedFile::write(WriteRequest *aRequest)
 {
     debugs(79,3, HERE << "(FD " << fd << ", " << aRequest->len << ", " <<
-        aRequest->offset << ")");
+           aRequest->offset << ")");
 
     assert(fd >= 0);
     assert(ioRequestor != NULL);
@@ -189,8 +191,7 @@ MmappedFile::write(WriteRequest *aRequest)
     if (written < 0) {
         debugs(79,1, HERE << "error: " << xstrerr(errno));
         error_ = true;
-    } else
-    if (static_cast<size_t>(written) != aRequest->len) {
+    } else if (static_cast<size_t>(written) != aRequest->len) {
         debugs(79,1, HERE << "problem: " << written << " < " << aRequest->len);
         error_ = true;
     }
@@ -202,10 +203,10 @@ MmappedFile::write(WriteRequest *aRequest)
         debugs(79,5, HERE << "wrote " << aRequest->len << " to FD " << fd << " at " << aRequest->offset);
     } else {
         doClose();
-	}
+    }
 
     const ssize_t rlen = error_ ? 0 : (ssize_t)aRequest->len;
-    const int errflag = error_ ? DISK_ERROR : DISK_OK;
+    const int errflag = error_ ? DISK_ERROR :DISK_OK;
     ioRequestor->writeCompleted(errflag, rlen, aRequest);
 }
 
@@ -217,8 +218,8 @@ MmappedFile::ioInProgress() const
 }
 
 Mmapping::Mmapping(int aFd, size_t aLength, int aProt, int aFlags, off_t anOffset):
-    fd(aFd), length(aLength), prot(aProt), flags(aFlags), offset(anOffset),
-    delta(-1), buf(NULL)
+        fd(aFd), length(aLength), prot(aProt), flags(aFlags), offset(anOffset),
+        delta(-1), buf(NULL)
 {
 }
 
@@ -240,7 +241,7 @@ Mmapping::map()
     if (buf == MAP_FAILED) {
         const int errNo = errno;
         debugs(79,3, HERE << "error FD " << fd << "mmap(" << length << '+' <<
-            delta << ", " << offset << '-' << delta << "): " << xstrerr(errNo));
+               delta << ", " << offset << '-' << delta << "): " << xstrerr(errNo));
         buf = NULL;
         return NULL;
     }
@@ -252,7 +253,7 @@ bool
 Mmapping::unmap()
 {
     debugs(79,9, HERE << "FD " << fd <<
-        " munmap(" << buf << ", " << length << '+' << delta << ')');
+           " munmap(" << buf << ", " << length << '+' << delta << ')');
 
     if (!buf) // forgot or failed to map
         return false;
@@ -261,8 +262,8 @@ Mmapping::unmap()
     if (error) {
         const int errNo = errno;
         debugs(79,3, HERE << "error FD " << fd <<
-            " munmap(" << buf << ", " << length << '+' << delta << "): " <<
-            "): " << xstrerr(errNo));
+               " munmap(" << buf << ", " << length << '+' << delta << "): " <<
+               "): " << xstrerr(errNo));
     }
     buf = NULL;
     return !error;

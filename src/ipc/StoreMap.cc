@@ -26,7 +26,7 @@ Ipc::StoreMap::Init(const char *const path, const int limit)
 }
 
 Ipc::StoreMap::StoreMap(const char *const aPath): cleaner(NULL), path(aPath),
-    shared(shm_old(Shared)(aPath))
+        shared(shm_old(Shared)(aPath))
 {
     assert(shared->limit > 0); // we should not be created otherwise
     debugs(54, 5, HERE << "attached map [" << path << "] created: " <<
@@ -129,7 +129,7 @@ void
 Ipc::StoreMap::free(const sfileno fileno)
 {
     debugs(54, 5, HERE << " marking slot at " << fileno << " to be freed in"
-               " map [" << path << ']');
+           " map [" << path << ']');
 
     assert(valid(fileno));
     Slot &s = shared->slots[fileno];
@@ -307,7 +307,7 @@ Ipc::StoreMapSlot::set(const StoreEntry &from)
 /* Ipc::StoreMap::Shared */
 
 Ipc::StoreMap::Shared::Shared(const int aLimit, const size_t anExtrasSize):
-    limit(aLimit), extrasSize(anExtrasSize), count(0)
+        limit(aLimit), extrasSize(anExtrasSize), count(0)
 {
 }
 

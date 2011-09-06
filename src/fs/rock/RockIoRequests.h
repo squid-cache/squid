@@ -7,7 +7,8 @@
 
 class DiskFile;
 
-namespace Rock {
+namespace Rock
+{
 
 /// \ingroup Rock
 class ReadRequest: public ::ReadRequest

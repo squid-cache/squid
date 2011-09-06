@@ -550,8 +550,7 @@ StoreEntry::unlock()
 
     assert(storePendingNClients(this) == 0);
 
-    if (EBIT_TEST(flags, RELEASE_REQUEST))
-    {
+    if (EBIT_TEST(flags, RELEASE_REQUEST)) {
         this->release();
         return 0;
     }
@@ -1449,7 +1448,7 @@ StoreEntry::memoryCachable() const
         const int64_t expectedSize = mem_obj->expectedReplySize();
         // objects of unknown size are not allowed into memory cache, for now
         if (expectedSize < 0 ||
-            expectedSize > static_cast<int64_t>(Config.Store.maxInMemObjSize))
+                expectedSize > static_cast<int64_t>(Config.Store.maxInMemObjSize))
             return 0;
     }
 
@@ -1858,7 +1857,7 @@ StoreEntry::startWriting()
 
     assert (isEmpty());
     assert(mem_obj);
-    
+
     const HttpReply *rep = getReply();
     assert(rep);
 
@@ -1944,7 +1943,7 @@ StoreEntry::swapoutPossible()
         debugs(20, 7, "storeSwapOut: expectedEnd = " << expectedEnd);
         if (expectedEnd > store_maxobjsize) {
             debugs(20, 3, "storeSwapOut: will not fit: " << expectedEnd <<
-                " > " << store_maxobjsize);
+                   " > " << store_maxobjsize);
             decision = MemObject::SwapOut::swImpossible;
             return false; // known to outgrow the limit eventually
         }
@@ -1953,7 +1952,7 @@ StoreEntry::swapoutPossible()
         const int64_t currentEnd = mem_obj->endOffset();
         if (currentEnd > store_maxobjsize) {
             debugs(20, 3, "storeSwapOut: does not fit: " << currentEnd <<
-                " > " << store_maxobjsize);
+                   " > " << store_maxobjsize);
             decision = MemObject::SwapOut::swImpossible;
             return false; // already does not fit and may only get bigger
         }
@@ -1961,7 +1960,7 @@ StoreEntry::swapoutPossible()
         // prevent default swPossible answer for yet unknown length
         if (expectedEnd < 0) {
             debugs(20, 3, "storeSwapOut: wait for more info: " <<
-                store_maxobjsize);
+                   store_maxobjsize);
             return false; // may fit later, but will be rejected now
         }
     }
@@ -2118,8 +2117,8 @@ StoreEntry::isAccepting() const
 std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
 {
     return os << e.swap_filen << '@' << e.swap_dirn << '=' <<
-        e.mem_status << '/' << e.ping_status << '/' << e.store_status << '/' <<
-        e.swap_status;
+           e.mem_status << '/' << e.ping_status << '/' << e.store_status << '/' <<
+           e.swap_status;
 }
 
 /* NullStoreEntry */

@@ -4,6 +4,7 @@
  * DEBUG: section 92    Storage File System
  */
 
+#include "config.h"
 #include "fs/rock/RockStoreFileSystem.h"
 #include "fs/rock/RockSwapDir.h"
 
