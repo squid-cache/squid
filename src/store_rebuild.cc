@@ -294,8 +294,8 @@ storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf,
     statCounter.syscalls.disk.reads++;
     if (len < 0) {
         const int xerrno = errno;
-        debugs(47, 1, "cache_dir[" << diskIndex << "]: " <<
-            "failed to read swap entry meta data: " << xstrerr(xerrno));
+        debugs(47, DBG_IMPORTANT, "WARNING: cache_dir[" << diskIndex << "]: " <<
+            "Ignoring cached entry after meta data read failure: " << xstrerr(xerrno));
         return false;
     }
 
@@ -316,13 +316,14 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
     }
 
     if (!aBuilder.isBufferSane()) {
-        debugs(47,1, "Warning: Ignoring malformed cache entry.");
+        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring malformed cache entry.");
         return false;
     }
 
     StoreMeta *tlv_list = aBuilder.createStoreMeta();
     if (!tlv_list) {
-        debugs(47, 1, HERE << "failed to get swap entry meta data list");
+        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring cache entry with invalid " <<
+               "meta data");
         return false;
     }
 
@@ -337,7 +338,7 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
     tlv_list = NULL;
 
     if (storeKeyNull(key)) {
-        debugs(47,1, HERE << "NULL swap entry key");
+        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring keyless cache entry");
         return false;
     }
 
@@ -350,13 +351,14 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
         } else if (tmpe.swap_file_sz == (uint64_t)(expectedSize - swap_hdr_len)) {
             tmpe.swap_file_sz = expectedSize;
         } else if (tmpe.swap_file_sz != expectedSize) {
-            debugs(47, 1, HERE << "swap entry SIZE MISMATCH " <<
-                   tmpe.swap_file_sz << "!=" << expectedSize);
+            debugs(47, DBG_IMPORTANT, "WARNING: Ignoring cache entry due to a " <<
+                   "SIZE MISMATCH " << tmpe.swap_file_sz << "!=" << expectedSize);
             return false;
         }
     } else
     if (tmpe.swap_file_sz <= 0) {
-        debugs(47, 1, HERE << "missing swap entry size: " << tmpe);
+        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring cache entry with " <<
+               "unknown size: " << tmpe);
         return false;
     }
 
