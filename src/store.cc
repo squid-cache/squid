@@ -1948,11 +1948,6 @@ StoreEntry::swapoutPossible()
             decision = MemObject::SwapOut::swImpossible;
             return false; // known to outgrow the limit eventually
         }
-        if (expectedEnd < 0) {
-            debugs(20, 3, "storeSwapOut: wait for more info: " <<
-                store_maxobjsize);
-            return false; // may fit later, but will be rejected now
-        }
 
         // use current minimum (always known)
         const int64_t currentEnd = mem_obj->endOffset();
@@ -1961,6 +1956,13 @@ StoreEntry::swapoutPossible()
                 " > " << store_maxobjsize);
             decision = MemObject::SwapOut::swImpossible;
             return false; // already does not fit and may only get bigger
+        }
+
+        // prevent default swPossible answer for yet unknown length
+        if (expectedEnd < 0) {
+            debugs(20, 3, "storeSwapOut: wait for more info: " <<
+                store_maxobjsize);
+            return false; // may fit later, but will be rejected now
         }
     }
 
