@@ -5,8 +5,10 @@
  * DEBUG: section 47    Store Directory Routines
  */
 
-#include "IpcIoIOStrategy.h"
+#include "config.h"
 #include "IpcIoFile.h"
+#include "IpcIoIOStrategy.h"
+
 bool
 IpcIoIOStrategy::shedLoad()
 {

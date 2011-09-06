@@ -86,9 +86,9 @@ public:
     virtual void write(char const *buf, size_t size, off_t offset, FREE * free_func) = 0;
 
     typedef enum {
-       wroteAll, ///< success: caller supplied all data it wanted to swap out
-       writerGone, ///< failure: caller left before swapping out everything
-       readerDone ///< success or failure: either way, stop swapping in
+        wroteAll, ///< success: caller supplied all data it wanted to swap out
+        writerGone, ///< failure: caller left before swapping out everything
+        readerDone ///< success or failure: either way, stop swapping in
     } CloseHow;
     virtual void close(int how) = 0; ///< finish or abort swapping per CloseHow
 

@@ -8,12 +8,15 @@
 
 #include "SquidString.h"
 
-namespace Ipc {
+namespace Ipc
+{
 
-namespace Mem {
+namespace Mem
+{
 
 /// POSIX shared memory segment
-class Segment {
+class Segment
+{
 public:
     /// Create a shared memory segment.
     Segment(const char *const id);

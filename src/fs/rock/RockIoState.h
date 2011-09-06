@@ -6,7 +6,8 @@
 
 class DiskFile;
 
-namespace Rock {
+namespace Rock
+{
 
 class SwapDir;
 

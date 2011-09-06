@@ -10,12 +10,15 @@
 #include <iosfwd>
 #endif
 
-namespace Ipc {
+namespace Ipc
+{
 
-namespace Mem {
+namespace Mem
+{
 
 /// Shared memory page identifier, address, or handler
-class PageId {
+class PageId
+{
 public:
     PageId(): pool(0), number(0), purpose(maxPurpose) {}
 

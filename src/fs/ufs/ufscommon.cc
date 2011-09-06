@@ -405,7 +405,7 @@ RebuildState::rebuildFromDirectory()
 
         StoreEntry tmpe;
         const bool loaded = storeRebuildParseEntry(buf, tmpe, key, counts,
-            (int64_t)sb.st_size);
+                            (int64_t)sb.st_size);
 
         file_close(fd);
         store_open_disk_fd--;

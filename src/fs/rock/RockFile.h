@@ -3,7 +3,8 @@
 
 // XXX: rename to fs/rock/RockDbCell.{cc,h}
 
-namespace Rock {
+namespace Rock
+{
 
 /// \ingroup Rock
 /// meta-information at the beginning of every db cell

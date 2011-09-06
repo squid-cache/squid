@@ -5,10 +5,12 @@
 #include "ipc/mem/Pointer.h"
 #include "typedefs.h"
 
-namespace Ipc {
+namespace Ipc
+{
 
 /// a StoreMap element, holding basic shareable StoreEntry info
-class StoreMapSlot {
+class StoreMapSlot
+{
 public:
     StoreMapSlot();
 
@@ -33,20 +35,20 @@ public:
         uint64_t swap_file_sz;
         uint16_t refcount;
         uint16_t flags;
-	} basics;
+    } basics;
 
     /// possible persistent states
     typedef enum {
         Empty, ///< ready for writing, with nothing of value
         Writeable, ///< transitions from Empty to Readable
         Readable, ///< ready for reading
-	} State;
+    } State;
     State state; ///< current state
 };
 
 class StoreMapCleaner;
 
-/// map of StoreMapSlots indexed by their keys, with read/write slot locking 
+/// map of StoreMapSlots indexed by their keys, with read/write slot locking
 /// kids extend to store custom data
 class StoreMap
 {
@@ -54,8 +56,7 @@ public:
     typedef StoreMapSlot Slot;
 
 private:
-    struct Shared
-    {
+    struct Shared {
         Shared(const int aLimit, const size_t anExtrasSize);
         size_t sharedMemorySize() const;
         static size_t SharedMemorySize(const int limit, const size_t anExtrasSize);
@@ -115,7 +116,7 @@ private:
     int slotIndexByKey(const cache_key *const key) const;
     Slot &slotByKey(const cache_key *const key);
 
-	Slot *openForReading(Slot &s);
+    Slot *openForReading(Slot &s);
     void abortWriting(const sfileno fileno);
     void freeIfNeeded(Slot &s);
     void freeLocked(Slot &s, bool keepLocked);
@@ -166,7 +167,7 @@ StoreMapWithExtras<ExtrasT>::Init(const char *const path, const int limit)
 
 template <class ExtrasT>
 StoreMapWithExtras<ExtrasT>::StoreMapWithExtras(const char *const path):
-    StoreMap(path)
+        StoreMap(path)
 {
     const size_t sharedSizeWithoutExtras =
         Shared::SharedMemorySize(entryLimit(), 0);
