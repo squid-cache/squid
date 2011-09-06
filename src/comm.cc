@@ -106,7 +106,7 @@ fd_debug_t *fdd_table = NULL;
 bool
 isOpen(const int fd)
 {
-    return fd >= 0 && fd_table[fd].flags.open != 0;
+    return fd >= 0 && fd_table && fd_table[fd].flags.open != 0;
 }
 
 /**
