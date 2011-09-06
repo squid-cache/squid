@@ -2,13 +2,21 @@
 #define SQUID_BASE_RUNNERSREGISTRY_H
 
 /**
- * This API allows different modules to register with a well-known registry,
+ * This API allows virtually any module to register with a well-known registry,
  * be activated by some central processor at some registry-specific time, and
  * be deactiveated by some central processor at some registry-specific time.
  *
  * For example, main.cc may activate registered I/O modules after parsing
  * squid.conf and deactivate them before exiting.
  *
+ * A module in this context is code providing a functionality or service to the
+ * rest of Squid, such as src/DiskIO/Blocking, src/fs/ufs, or Cache Manager. A 
+ * module must declare a RegisteredRunner child class to implement activation and
+ * deactivation logic using the run() method and destructor, respectively.
+ *
+ * This API allows the registry to determine the right [de]activation time for
+ * each group of similar modules, without knowing any module specifics.
+ * 
  */
 
 /// well-known registries (currently, deactivation is not performed for these)
