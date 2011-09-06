@@ -1021,7 +1021,7 @@ comm_lingering_close(int fd)
  * closed, TCP generates a RESET
  */
 void
-comm_reset_close(Comm::ConnectionPointer &conn)
+comm_reset_close(const Comm::ConnectionPointer &conn)
 {
     struct linger L;
     L.l_onoff = 1;
