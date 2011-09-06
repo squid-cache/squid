@@ -19,10 +19,8 @@
 #if SQUID_SNMP
 #include "snmp/forward.h"
 #endif
-
 #include <list>
 #include <map>
-
 
 namespace Ipc
 {
