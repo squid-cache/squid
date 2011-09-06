@@ -147,14 +147,14 @@ Rock::SwapDir::create()
 
     struct stat swap_sb;
     if (::stat(path, &swap_sb) < 0) {
-        debugs (47, 1, "Creating Rock db directory: " << path);
+        debugs (47, DBG_IMPORTANT, "Creating Rock db directory: " << path);
 #ifdef _SQUID_MSWIN_
         const int res = mkdir(path);
 #else
         const int res = mkdir(path, 0700);
 #endif
         if (res != 0) {
-            debugs(47,0, "Failed to create Rock db dir " << path <<
+            debugs(47, DBG_CRITICAL, "Failed to create Rock db dir " << path <<
                 ": " << xstrerror());
             fatal("Rock Store db creation error");
 		}
@@ -219,7 +219,8 @@ Rock::SwapDir::init()
         io = m->createStrategy();
         io->init();
     } else {
-        debugs(47,1, "Rock store is missing DiskIO module: " << ioModule);
+        debugs(47, DBG_CRITICAL, "FATAL: Rock store is missing DiskIO module: " <<
+               ioModule);
         fatal("Rock Store missing a required DiskIO module");
     }
 
@@ -485,19 +486,14 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
 void
 Rock::SwapDir::ioCompletedNotification()
 {
-    if (!theFile) {
-        debugs(47, 1, HERE << filePath << ": initialization failure or " <<
-            "premature close of rock db file");
+    if (!theFile)
         fatalf("Rock cache_dir failed to initialize db file: %s", filePath);
-    }
 
-    if (theFile->error()) {
-        debugs(47, 1, HERE << filePath << ": " << xstrerror());
-        fatalf("Rock cache_dir failed to open db file: %s", filePath);
-	}
+    if (theFile->error())
+        fatalf("Rock cache_dir at %s failed to open db file: %s", filePath,
+               xstrerror());
 
-    // TODO: lower debugging level
-    debugs(47,1, "Rock cache_dir[" << index << "] limits: " << 
+    debugs(47, 2, "Rock cache_dir[" << index << "] limits: " <<
         std::setw(12) << maxSize() << " disk bytes and " <<
         std::setw(7) << map->entryLimit() << " entries");
 
@@ -562,8 +558,8 @@ Rock::SwapDir::full() const
 // but it should not happen for us
 void
 Rock::SwapDir::diskFull() {
-    debugs(20,1, "Internal ERROR: No space left error with rock cache_dir: " <<
-        filePath);
+    debugs(20, DBG_IMPORTANT, "Internal ERROR: No space left with " <<
+        "rock cache_dir: " << filePath);
 }
 
 /// purge while full(); it should be sufficient to purge just one
