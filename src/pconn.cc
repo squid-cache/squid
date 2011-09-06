@@ -89,6 +89,7 @@ IdleConnList::findIndexOf(const Comm::ConnectionPointer &conn) const
 }
 
 /** Remove the entry at specified index.
+ * May perform a shuffle of list entries to fill the gap.
  * \retval false The index is not an in-use entry.
  */
 bool
@@ -194,22 +195,35 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
     commSetConnTimeout(conn, Config.Timeout.pconn, timeoutCall);
 }
 
+/// Determine whether an entry in the idle list is available for use.
+/// Returns false if the entry is unset, closed or closing.
+bool
+IdleConnList::isAvailable(int i) const
+{
+    const Comm::ConnectionPointer &conn = theList_[i];
+
+    // connection already closed. useless.
+    if (!Comm::IsConnOpen(conn))
+        return false;
+
+    // our connection early-read/close handler is scheduled to run already. unsafe
+    if (!COMMIO_FD_READCB(conn->fd)->active())
+        return false;
+
+    return true;
+}
+
 Comm::ConnectionPointer
 IdleConnList::pop()
 {
     for (int i=size_-1; i>=0; i--) {
 
-        // Is the FD pending completion of the closure callback?
-        // this flag is set while our early-read/close handler is
-        // waiting for a remote response. It gets unset when the
-        // handler is scheduled.
-        //The following check is disabled for now until we have a
-        // correct implementation of the read_pending flag
-        //if (!fd_table[theList_[i]->fd].flags.read_pending)
-        //    continue;
+        if (!isAvailable(i))
+            continue;
 
-        // connection already closed. useless.
-        if (!Comm::IsConnOpen(theList_[i]))
+        // our connection timeout handler is scheduled to run already. unsafe for now.
+        // TODO: cancel the pending timeout callback and allow re-use of the conn.
+        if (fd_table[theList_[i]->fd].timeoutHandler == NULL)
             continue;
 
         // finally, a match. pop and return it.
@@ -242,17 +256,7 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &key)
 
     for (int i=size_-1; i>=0; i--) {
 
-        // Is the FD pending completion of the closure callback?
-        // this flag is set while our early-read/close handler is
-        // waiting for a remote response. It gets unset when the
-        // handler is scheduled.
-        //The following check is disabled for now until we have a
-        // correct implementation of the read_pending flag
-        //if (!fd_table[theList_[i]->fd].flags.read_pending)
-        //    continue;
-
-        // connection already closed. useless.
-        if (!Comm::IsConnOpen(theList_[i]))
+        if (!isAvailable(i))
             continue;
 
         // local end port is required, but dont match.
@@ -261,6 +265,11 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &key)
 
         // local address is required, but does not match.
         if (keyCheckAddr && key->local.matchIPAddr(theList_[i]->local) != 0)
+            continue;
+
+        // our connection timeout handler is scheduled to run already. unsafe for now.
+        // TODO: cancel the pending timeout callback and allow re-use of the conn.
+        if (fd_table[theList_[i]->fd].timeoutHandler == NULL)
             continue;
 
         // finally, a match. pop and return it.
@@ -274,27 +283,33 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &key)
     return Comm::ConnectionPointer();
 }
 
+/* might delete list */
+void
+IdleConnList::findAndClose(const Comm::ConnectionPointer &conn)
+{
+    const int index = findIndexOf(conn);
+    if (index >= 0) {
+        /* might delete this */
+        removeAt(index);
+        clearHandlers(conn);
+        conn->close();
+    }
+}
+
 void
 IdleConnList::Read(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     debugs(48, 3, HERE << len << " bytes from " << conn);
 
     if (flag == COMM_ERR_CLOSING) {
-        /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
+        debugs(48, 3, HERE << "COMM_ERR_CLOSING from " << conn);
+        /* Bail out on COMM_ERR_CLOSING - may happen when shutdown aborts our idle FD */
         return;
     }
 
     IdleConnList *list = (IdleConnList *) data;
-    int index = list->findIndexOf(conn);
-    if (index >= 0) {
-        /* might delete list */
-        list->removeAt(index);
-        list->clearHandlers(conn);
-    }
-    // else we lost a race.
-    // Somebody started using the pconn since the remote end disconnected.
-    // pass the closure info on!
-    conn->close();
+    /* may delete list/data */
+    list->findAndClose(conn);
 }
 
 void
@@ -302,13 +317,8 @@ IdleConnList::Timeout(const CommTimeoutCbParams &io)
 {
     debugs(48, 3, HERE << io.conn);
     IdleConnList *list = static_cast<IdleConnList *>(io.data);
-    int index = list->findIndexOf(io.conn);
-    assert(index>=0);
-    if (index >= 0) {
-        /* might delete list */
-        list->removeAt(index);
-        io.conn->close();
-    }
+    /* may delete list/data */
+    list->findAndClose(io.conn);
 }
 
 /* ========== PconnPool PRIVATE FUNCTIONS ============================================ */
