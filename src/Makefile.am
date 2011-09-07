@@ -2712,11 +2712,11 @@ tests_testRock_LDADD = \
 	ip/libip.la \
 	$(AUTH_LIBS) \
 	$(COMMON_LIBS) \
-        $(REPL_OBJS) \
-        $(DISK_LIBS) \
-        $(DISK_OS_LIBS) \
+	$(REPL_OBJS) \
+	$(DISK_LIBS) \
+	$(DISK_OS_LIBS) \
 	acl/libacls.la \
-        acl/libapi.la \
+	acl/libapi.la \
 	acl/libstate.la \
 	eui/libeui.la \
 	mgr/libmgr.la \
@@ -2725,7 +2725,7 @@ tests_testRock_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
-        $(SQUID_CPPUNIT_LIBS) \
+	$(SQUID_CPPUNIT_LIBS) \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
