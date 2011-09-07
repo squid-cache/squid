@@ -205,7 +205,7 @@ void Adaptation::Icap::Xaction::closeConnection()
             disableRetries();
 
         const bool reset = !reuseConnection &&
-            (al.icap.outcome == xoGone || al.icap.outcome == xoError);
+                           (al.icap.outcome == xoGone || al.icap.outcome == xoError);
 
         Adaptation::Icap::ServiceRep &s = service();
         s.putConnection(connection, reuseConnection, reset, status());
