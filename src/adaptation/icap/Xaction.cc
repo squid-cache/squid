@@ -161,6 +161,11 @@ Adaptation::Icap::Xaction::dnsLookupDone(const ipcache_addrs *ia)
     connection->remote = ia->in_addrs[ia->cur];
     connection->remote.SetPort(s.cfg().port);
     getOutgoingAddress(NULL, connection);
+    if (connection->remote.IsIPv4() && !connection->local.SetIPv4()) {
+        // This should never happen. getOutgoing should match by family or skip.
+        Must(connection->local.IsAnyAddr());
+        return;
+    }
 
     // TODO: service bypass status may differ from that of a transaction
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> ConnectDialer;
