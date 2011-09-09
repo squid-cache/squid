@@ -392,7 +392,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
      * NOTE: max-stale config blocks the overrides.
      */
     int max_stale = (R->max_stale >= 0 ? R->max_stale : Config.maxStale);
-    if ( max_stale >= 0 && staleness < max_stale) {
+    if ( max_stale >= 0 && staleness > max_stale) {
         debugs(22, 3, "refreshCheck: YES: max-stale limit");
         if (request)
             request->flags.fail_on_validation_err = 1;
