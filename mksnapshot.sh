@@ -55,7 +55,7 @@ echo "REVISION: ${revision}"
 echo "STARTDIR: ${startdir}"
 echo "TMPDIR: ${tmpdir}"
 
-#./test-builds.sh --cleanup || exit 1
+./test-builds.sh --cleanup || exit 1
 ./configure --silent --enable-build-info="DATE: ${date} REVISION: ${revision}"
 make -s dist-all
 
