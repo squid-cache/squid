@@ -3360,10 +3360,10 @@ YesNoNone::operator void*() const
 }
 
 
-static void
-free_YesNoNone(YesNoNone *option)
+inline void
+free_YesNoNone(YesNoNone *)
 {
-    return;
+    // do nothing: no explicit cleanup is required
 }
 
 static void
