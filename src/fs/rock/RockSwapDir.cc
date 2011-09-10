@@ -5,10 +5,6 @@
  */
 
 #include "config.h"
-#include "Parsing.h"
-#include <iomanip>
-#include "MemObject.h"
-#include "SquidMath.h"
 #include "base/RunnersRegistry.h"
 #include "ConfigOption.h"
 #include "DiskIO/DiskIOModule.h"
@@ -20,6 +16,10 @@
 #include "fs/rock/RockIoRequests.h"
 #include "fs/rock/RockRebuild.h"
 #include "ipc/mem/Pages.h"
+#include "MemObject.h"
+#include "Parsing.h"
+#include "SquidMath.h"
+#include <iomanip>
 
 const int64_t Rock::SwapDir::HeaderSize = 16*1024;
 
@@ -150,11 +150,7 @@ Rock::SwapDir::create()
     struct stat swap_sb;
     if (::stat(path, &swap_sb) < 0) {
         debugs (47, DBG_IMPORTANT, "Creating Rock db directory: " << path);
-#ifdef _SQUID_MSWIN_
-        const int res = mkdir(path);
-#else
         const int res = mkdir(path, 0700);
-#endif
         if (res != 0) {
             debugs(47, DBG_CRITICAL, "Failed to create Rock db dir " << path <<
                    ": " << xstrerror());
@@ -163,7 +159,6 @@ Rock::SwapDir::create()
     }
 
 #if SLOWLY_FILL_WITH_ZEROS
-    /* TODO just set the file size */
     char block[1024];
     Must(maxSize() % sizeof(block) == 0);
     memset(block, '\0', sizeof(block));
@@ -171,7 +166,7 @@ Rock::SwapDir::create()
     const int swap = open(filePath, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, 0600);
     for (off_t offset = 0; offset < maxSize(); offset += sizeof(block)) {
         if (write(swap, block, sizeof(block)) != sizeof(block)) {
-            debugs(47,0, "Failed to create Rock Store db in " << filePath <<
+            debugs(47, DBG_CRITICAL, "ERROR: Failed to create Rock Store db in " << filePath <<
                    ": " << xstrerror());
             fatal("Rock Store db creation error");
         }
@@ -180,13 +175,13 @@ Rock::SwapDir::create()
 #else
     const int swap = open(filePath, O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, 0600);
     if (swap < 0) {
-        debugs(47,0, "Failed to initialize Rock Store db in " << filePath <<
+        debugs(47, DBG_CRITICAL, "ERROR: Failed to initialize Rock Store db in " << filePath <<
                "; create error: " << xstrerror());
         fatal("Rock Store db creation error");
     }
 
     if (ftruncate(swap, maxSize()) != 0) {
-        debugs(47,0, "Failed to initialize Rock Store db in " << filePath <<
+        debugs(47, DBG_CRITICAL, "ERROR: Failed to initialize Rock Store db in " << filePath <<
                "; truncate error: " << xstrerror());
         fatal("Rock Store db creation error");
     }
@@ -194,13 +189,12 @@ Rock::SwapDir::create()
     char header[HeaderSize];
     memset(header, '\0', sizeof(header));
     if (write(swap, header, sizeof(header)) != sizeof(header)) {
-        debugs(47,0, "Failed to initialize Rock Store db in " << filePath <<
+        debugs(47, DBG_CRITICAL, "ERROR: Failed to initialize Rock Store db in " << filePath <<
                "; write error: " << xstrerror());
         fatal("Rock Store db initialization error");
     }
     close(swap);
 #endif
-
 }
 
 void
@@ -444,7 +438,7 @@ Rock::SwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreI
     Ipc::StoreMapSlot *const slot =
         map->openForWriting(reinterpret_cast<const cache_key *>(e.key), filen);
     if (!slot) {
-        debugs(47, 5, HERE << "Rock::SwapDir::createStoreIO: map->add failed");
+        debugs(47, 5, HERE << "map->add failed");
         return NULL;
     }
     e.swap_file_sz = header.payloadSize; // and will be copied to the map
@@ -612,8 +606,8 @@ Rock::SwapDir::full() const
 void
 Rock::SwapDir::diskFull()
 {
-    debugs(20, DBG_IMPORTANT, "Internal ERROR: No space left with " <<
-           "rock cache_dir: " << filePath);
+    debugs(20, DBG_IMPORTANT, "BUG: No space left with rock cache_dir: " <<
+           filePath);
 }
 
 /// purge while full(); it should be sufficient to purge just one
@@ -660,7 +654,7 @@ Rock::SwapDir::maintain()
     walker->Done(walker);
 
     if (full()) {
-        debugs(47,0, "ERROR: Rock cache_dir[" << index << "] " <<
+        debugs(47, DBG_CRITICAL, "ERROR: Rock cache_dir[" << index << "] " <<
                "is still full after freeing " << freed << " entries. A bug?");
     }
 }
