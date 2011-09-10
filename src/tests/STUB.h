@@ -4,7 +4,7 @@
 /** \group STUB
  *
  *  A set of useful macros to create stub_* files.
- * 
+ *
  * Intended for use building unit tests, if a stubbed function is called
  * by any code it is linked to it will abort with a message indicating
  * which API file is missing from the linked dependencies.
