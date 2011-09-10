@@ -2723,6 +2723,7 @@ ftpReadPasv(FtpStateData * ftpState)
 
     Comm::ConnectionPointer conn = new Comm::Connection;
     conn->local = ftpState->ctrl.conn->local;
+    conn->local.SetPort(0);
     conn->remote = ipaddr;
     conn->remote.SetPort(port);
 
