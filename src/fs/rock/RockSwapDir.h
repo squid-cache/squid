@@ -4,7 +4,7 @@
 #include "SwapDir.h"
 #include "DiskIO/DiskFile.h"
 #include "DiskIO/IORequestor.h"
-#include "fs/rock/RockFile.h"
+#include "fs/rock/RockDbCell.h"
 #include "ipc/StoreMap.h"
 
 class DiskIOStrategy;

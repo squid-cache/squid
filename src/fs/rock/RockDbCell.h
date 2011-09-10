@@ -1,13 +1,13 @@
 #ifndef SQUID_FS_ROCK_DB_CELL_H
 #define SQUID_FS_ROCK_DB_CELL_H
 
-// XXX: rename to fs/rock/RockDbCell.{cc,h}
-
 namespace Rock
 {
 
-/// \ingroup Rock
-/// meta-information at the beginning of every db cell
+/** \ingroup Rock
+ * Meta-information at the beginning of every db cell.
+ * Stored on disk and used as sizeof() argument so it must remain POD.
+ */
 class DbCellHeader
 {
 public:
