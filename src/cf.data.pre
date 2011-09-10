@@ -2764,6 +2764,14 @@ DOC_START
 	slot size is specified in bytes using the max-size option. See
 	below for more info on the max-size option.
 
+	swap-timeout=msec: Squid will not start writing a miss to or
+	reading a hit from disk if it estimates that the swap operation
+	will take more than the specified number of milliseconds. By
+	default and when set to zero, disables the disk I/O time limit
+	enforcement. Ignored when using blocking I/O module because
+	blocking synchronous I/O does not allow Squid to estimate the
+	expected swap wait time.
+
 	The coss store type:
 
 	NP: COSS filesystem in Squid-3 has been deemed too unstable for
@@ -4656,21 +4664,6 @@ DOC_START
 	users, you might be susceptible to denial-of-service by having
 	many ident requests going at once.
 DOC_END
-
-NAME: disk_io_timeout
-TYPE: time_msec
-DEFAULT: 0 milliseconds
-LOC: Config.Timeout.disk_io
-DOC_START
-	Squid will not start a new disk I/O operation if it estimates that the
-	operation will take more than the specified disk I/O timeout.
-	Only Rock Store supports this timeout for now.
-
-	By default and when set to zero, disables the disk I/O time limit
-	enforcement.
-DOC_END
-
-
 
 NAME: shutdown_lifetime
 COMMENT: time-units

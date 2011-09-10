@@ -57,6 +57,7 @@ public:
     virtual ~IpcIoFile();
 
     /* DiskFile API */
+    virtual void configure(const Config &cfg);
     virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback);
     virtual void create(int flags, mode_t mode, RefCount<IORequestor> callback);
     virtual void read(ReadRequest *);
@@ -73,6 +74,8 @@ public:
 
     /// handle queue push notifications from worker or disker
     static void HandleNotification(const Ipc::TypedMsgHdr &msg);
+
+    DiskFile::Config config; ///< supported configuration options
 
 protected:
     friend class IpcIoPendingRequest;

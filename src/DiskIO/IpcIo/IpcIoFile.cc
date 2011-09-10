@@ -71,6 +71,13 @@ IpcIoFile::~IpcIoFile()
 }
 
 void
+IpcIoFile::configure(const Config &cfg)
+{
+    DiskFile::configure(cfg);
+    config = cfg;
+}
+
+void
 IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 {
     ioRequestor = callback;
@@ -345,7 +352,7 @@ IpcIoFile::push(IpcIoPendingRequest *const pending)
 bool
 IpcIoFile::canWait() const
 {
-    if (!Config.Timeout.disk_io)
+    if (!config.ioTimeout)
         return true; // no timeout specified
 
     IpcIoMsg oldestIo;
@@ -354,7 +361,7 @@ IpcIoFile::canWait() const
 
     const int expectedWait = tvSubMsec(oldestIo.start, current_time);
     if (expectedWait < 0 ||
-            static_cast<time_msec_t>(expectedWait) < Config.Timeout.disk_io)
+            static_cast<time_msec_t>(expectedWait) < config.ioTimeout)
         return true; // expected wait time is acceptible
 
     debugs(47,2, HERE << "cannot wait: " << expectedWait <<

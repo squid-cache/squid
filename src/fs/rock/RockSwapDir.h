@@ -2,12 +2,12 @@
 #define SQUID_FS_ROCK_SWAP_DIR_H
 
 #include "SwapDir.h"
+#include "DiskIO/DiskFile.h"
 #include "DiskIO/IORequestor.h"
 #include "fs/rock/RockFile.h"
 #include "ipc/StoreMap.h"
 
 class DiskIOStrategy;
-class DiskFile;
 class ReadRequest;
 class WriteRequest;
 
@@ -43,6 +43,7 @@ protected:
     virtual bool needsDiskStrand() const;
     virtual void create();
     virtual void init();
+    virtual ConfigOption *getOptionTree() const;
     virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const;
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
@@ -62,6 +63,8 @@ protected:
     virtual void parse(int index, char *path);
     void parseSize(); ///< parses anonymous cache_dir size option
     void validateOptions(); ///< warns of configuration problems; may quit
+    bool parseTimeOption(char const *option, const char *value, int reconfiguring);
+    void dumpTimeOption(StoreEntry * e) const;
 
     void rebuild(); ///< starts loading and validating stored entry metadata
     ///< used to add entries successfully loaded during rebuild
@@ -82,6 +85,9 @@ private:
     DiskIOStrategy *io;
     RefCount<DiskFile> theFile; ///< cache storage for this cache_dir
     DirMap *map;
+
+    /* configurable options */
+    DiskFile::Config fileConfig; ///< file-level configuration options
 
     static const int64_t HeaderSize; ///< on-disk db header size
 };
