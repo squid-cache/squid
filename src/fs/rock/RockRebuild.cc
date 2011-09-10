@@ -7,7 +7,7 @@
 #include "config.h"
 #include "fs/rock/RockRebuild.h"
 #include "fs/rock/RockSwapDir.h"
-#include "fs/rock/RockFile.h"
+#include "fs/rock/RockDbCell.h"
 #include "SquidTime.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Rock, Rebuild);

@@ -29,7 +29,7 @@ libufs_la_SOURCES = \
 	ufs/ufscommon.h 
 
 librock_la_SOURCES = \
-	rock/RockFile.h \
+	rock/RockDbCell.h \
 	rock/RockIoState.cc \
 	rock/RockIoState.h \
 	rock/RockIoRequests.cc \
