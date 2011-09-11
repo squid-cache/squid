@@ -1023,12 +1023,8 @@ CossSwapDir::parse(int anIndex, char *aPath)
         fatalf("COSS max-size option must be less than COSS_MEMBUF_SZ (%d)\n",
                COSS_MEMBUF_SZ);
 
-    /*
-     * check that we won't overflow sfileno later.  0xFFFFFF is the
-     * largest possible sfileno, assuming sfileno is a 25-bit
-     * signed integer, as defined in structs.h.
-     */
-    const uint64_t max_offset = (uint64_t) 0xFFFFFF << blksz_bits;
+    // check that we won't overflow sfileno later.
+    const uint64_t max_offset = (uint64_t)SwapFilenMax << blksz_bits;
 
     if (maxSize() > max_offset) {
         debugs(47, 0, "COSS block-size = " << (1<<blksz_bits) << " bytes");

@@ -33,7 +33,7 @@ public:
     virtual bool doReportStat() const;
     virtual void swappedOut(const StoreEntry &e);
 
-    int64_t entryLimitHigh() const { return 0xFFFFFF; } /// Core sfileno maximum
+    int64_t entryLimitHigh() const { return SwapFilenMax; } ///< Core limit
     int64_t entryLimitAllowed() const;
 
     typedef Ipc::StoreMapWithExtras<DbCellHeader> DirMap;
