@@ -524,7 +524,7 @@ struct SquidConfig {
         RefCount<SwapDir> *swapDirs;
         int n_allocated;
         int n_configured;
-        ///< number of disk processes required to support all cache_dirs
+        /// number of disk processes required to support all cache_dirs
         int n_strands;
     } cacheSwap;
     /*
