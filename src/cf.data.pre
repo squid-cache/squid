@@ -2560,6 +2560,11 @@ DOC_START
 	decreases, blocks will be freed until the high-water mark is
 	reached.  Thereafter, blocks will be used to store hot
 	objects.
+
+	If shared memory caching is enabled, Squid does not use the shared
+	cache space for in-transit objects, but they still consume as much
+	local memory as they need. For more details about the shared memory
+	cache, see memory_cache_shared.
 DOC_END
 
 NAME: maximum_object_size_in_memory
