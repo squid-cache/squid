@@ -9,7 +9,6 @@
 #include "ipc/forward.h"
 #include "ipc/StrandCoord.h"
 #include "SquidString.h"
-#include <sys/types.h>
 
 namespace Ipc
 {

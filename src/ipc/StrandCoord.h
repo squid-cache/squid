@@ -8,7 +8,6 @@
 
 #include "ipc/forward.h"
 #include "SquidString.h"
-#include <sys/types.h>
 
 namespace Ipc
 {
