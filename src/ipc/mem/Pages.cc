@@ -62,10 +62,6 @@ Ipc::Mem::PageLimit(const int purpose)
 {
     switch (purpose) {
     case PageId::cachePage:
-        // TODO: adjust cache_mem description to say that in SMP mode,
-        // in-transit objects are not allocated using cache_mem. Eventually,
-        // they should not use cache_mem even if shared memory is not used:
-        // in-transit objects have nothing to do with caching.
         return Config.memMaxSize > 0 ? Config.memMaxSize / PageSize() : 0;
     case PageId::ioPage:
         // XXX: this should be independent from memory cache pages
