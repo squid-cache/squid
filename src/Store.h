@@ -73,6 +73,9 @@ typedef struct {
 
 extern StoreIoStats store_io_stats;
 
+/// maximum number of entries per cache_dir
+enum { SwapFilenMax = 0xFFFFFF }; // keep in sync with StoreEntry::swap_filen
+
 /**
  \ingroup StoreAPI
  */
@@ -160,7 +163,8 @@ public:
     uint16_t flags;
     /* END OF ON-DISK STORE_META_STD */
 
-    sfileno swap_filen:25;
+    /// unique ID inside a cache_dir for swapped out entries; -1 for others
+    sfileno swap_filen:25; // keep in sync with SwapFilenMax
 
     sdirno swap_dirn:7;
 
