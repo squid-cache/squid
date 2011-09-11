@@ -186,7 +186,6 @@ EXTRA_PROGRAMS = \
 	recv-announce \
 	tests/testUfs \
 	tests/testCoss \
-	tests/testRock \
 	tests/testNull \
 	ufsdump
 
@@ -2628,109 +2627,6 @@ tests_testUfs_LDADD = \
 	$(XTRA_LIBS)
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
 tests_testUfs_DEPENDENCIES = \
-	$(SWAP_TEST_DS)
-
-tests_testRock_SOURCES = \
-	cbdata.cc \
-	CacheDigest.cc \
-	ConfigOption.cc \
-	ConfigParser.cc \
-	disk.cc \
-	ETag.cc \
-	event.cc \
-	fd.cc \
-	HttpHdrCc.cc \
-	HttpHdrContRange.cc \
-	HttpHdrRange.cc \
-	HttpHdrSc.cc \
-	HttpHdrScTarget.cc \
-	HttpHeader.cc \
-	HttpHeaderTools.cc \
-	HttpMsg.cc \
-	HttpRequestMethod.cc \
-	int.cc \
-	mem.cc \
-	MemBuf.cc \
-	MemObject.cc \
-	mem_node.cc \
-	Packer.cc \
-	Parsing.cc \
-	StatHist.cc \
-	stmem.cc \
-	store.cc \
-	StoreIOState.cc \
-	StoreMeta.cc \
-	StoreMetaMD5.cc \
-	StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc \
-	StoreMetaURL.cc \
-	StoreMetaUnpacker.cc \
-	StoreMetaVary.cc \
-	store_dir.cc \
-	store_io.cc \
-	store_key_md5.cc \
-	store_swapmeta.cc \
-	store_swapout.cc \
-	String.cc \
-	SwapDir.cc \
-	tests/testRock.cc \
-	tests/testMain.cc \
-	tests/testRock.h \
-	tests/stub_access_log.cc \
-	tests/stub_cache_cf.cc \
-	tests/stub_cache_manager.cc \
-	tests/stub_client_side_request.cc \
-	tests/stub_comm.cc \
-	tests/stub_CommIO.cc \
-	tests/stub_debug.cc \
-	tests/stub_errorpage.cc \
-	tests/stub_HelperChildConfig.cc \
-	tests/stub_http.cc \
-	tests/stub_HttpReply.cc \
-	tests/stub_HttpRequest.cc \
-	tests/stub_ipc_TypedMsgHdr.cc \
-	tests/stub_libcomm.cc \
-	tests/stub_MemStore.cc \
-	tests/stub_mime.cc \
-	tests/stub_Port.cc \
-	tests/stub_store_client.cc \
-	tests/stub_tools.cc \
-	tests/stub_UdsOp.cc \
-	time.cc \
-	url.cc \
-	URLScheme.cc \
-	wordlist.cc \
-	$(DELAY_POOL_SOURCE)
-nodist_tests_testRock_SOURCES = \
-	swap_log_op.cc \
-	SquidMath.cc \
-	SquidMath.h \
-	$(TESTSOURCES)
-tests_testRock_LDADD = \
-	anyp/libanyp.la \
-	libsquid.la \
-	ip/libip.la \
-	$(AUTH_LIBS) \
-	$(COMMON_LIBS) \
-	$(REPL_OBJS) \
-	$(DISK_LIBS) \
-	$(DISK_OS_LIBS) \
-	acl/libacls.la \
-	acl/libapi.la \
-	acl/libstate.la \
-	eui/libeui.la \
-	mgr/libmgr.la \
-	base/libbase.la \
-	$(top_builddir)/lib/libmisccontainers.la \
-	$(top_builddir)/lib/libmiscencoding.la \
-	$(top_builddir)/lib/libmiscutil.la \
-	$(REGEXLIB) \
-	$(SQUID_CPPUNIT_LIBS) \
-	$(SSLLIB) \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-tests_testRock_LDFLAGS = $(LIBADD_DL)
-tests_testRock_DEPENDENCIES = \
 	$(SWAP_TEST_DS)
 
 tests_testCoss_SOURCES = \
