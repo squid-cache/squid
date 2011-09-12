@@ -261,6 +261,8 @@ Rock::SwapDir::parse(int anIndex, char *aPath)
 void
 Rock::SwapDir::reconfigure(int, char *)
 {
+    // TODO: do not update a parameter if we cannot propagate that change
+    // TODO: warn if reconfigure changes any parameter that we cannot update
     parseSize();
     parseOptions(1);
     // TODO: can we reconfigure the replacement policy (repl)?
@@ -333,14 +335,11 @@ Rock::SwapDir::validateOptions()
     if (max_objsize <= 0)
         fatal("Rock store requires a positive max-size");
 
-    /* XXX: should we support resize?
-    map->resize(entryLimitAllowed()); // the map may decide to use an even lower limit
-    */
-
-    /* XXX: misplaced, map is not yet created
+#if THIS_CODE_IS_FIXED_AND_MOVED
+    // XXX: should not use map as it is not yet created
     // XXX: max_size is in Bytes now
-    // Note: We could try to shrink max_size now. It is stored in KB so we
-    // may not be able to make it match the end of the last entry exactly.
+    // XXX: Use DBG_IMPORTANT (and DBG_CRITICAL if opt_parse_cfg_only?)
+    // TODO: Shrink max_size to avoid waste?
     const int64_t mapRoundWasteMx = max_objsize*sizeof(long)*8;
     const int64_t sizeRoundWasteMx = 1024; // max_size stored in KB
     const int64_t roundingWasteMx = max(mapRoundWasteMx, sizeRoundWasteMx);
@@ -357,7 +356,7 @@ Rock::SwapDir::validateOptions()
         debugs(47, 0, "\tdisk space waste: " << totalWaste << " bytes");
         debugs(47, 0, "WARNING: Rock store config wastes space.");
     }
-    */
+#endif
 }
 
 void
@@ -766,6 +765,7 @@ void RockSwapDirRr::run(const RunnerRegistry &)
         Must(owners.empty());
         for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
             if (const Rock::SwapDir *const sd = dynamic_cast<Rock::SwapDir *>(INDEXSD(i))) {
+                // TODO: check whether entryLimitAllowed() has map here
                 Rock::SwapDir::DirMap::Owner *const owner = Rock::SwapDir::DirMap::Init(sd->path, sd->entryLimitAllowed());
                 owners.push_back(owner);
             }
