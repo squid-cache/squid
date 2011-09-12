@@ -1319,7 +1319,11 @@ HttpHeader::getCc() const
 
     getList(HDR_CACHE_CONTROL, &s);
 
-    cc = httpHdrCcParseCreate(&s);
+    cc=new HttpHdrCc();
+    if (!cc->parseInit(s)) {
+        delete cc;
+        cc = NULL;
+    }
 
     HttpHeaderStats[owner].ccParsedCount++;
 

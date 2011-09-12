@@ -98,23 +98,9 @@ httpHdrCcCleanModule(void)
     // HdrCcNameToIdMap is self-cleaning
 }
 
-/* creates an cc object from a 0-terminating string */
-HttpHdrCc *
-httpHdrCcParseCreate(const String * str)
-{
-    HttpHdrCc *cc = new HttpHdrCc();
-
-    if (!cc->parseInit(str)) {
-        delete cc;
-        cc = NULL;
-    }
-
-    return cc;
-}
-
 /* parses a 0-terminating string and inits cc */
 bool
-HttpHdrCc::parseInit(const String * str)
+HttpHdrCc::parseInit(const String & str)
 {
     const char *item;
     const char *p;		/* '=' parameter */
@@ -122,11 +108,10 @@ HttpHdrCc::parseInit(const String * str)
     http_hdr_cc_type type;
     int ilen;
     int nlen;
-    assert(str);
 
     /* iterate through comma separated list */
 
-    while (strListGetItem(str, ',', &item, &ilen, &pos)) {
+    while (strListGetItem(&str, ',', &item, &ilen, &pos)) {
         String tmpstr;
         /* isolate directive name */
 
