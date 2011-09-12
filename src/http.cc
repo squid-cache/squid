@@ -1770,7 +1770,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         if (!EBIT_TEST(cc->mask, CC_MAX_AGE) && !EBIT_TEST(cc->mask, CC_NO_CACHE)) {
             const char *url =
                 entry ? entry->url() : urlCanonical(request);
-            httpHdrCcSetMaxAge(cc, getMaxAge(url));
+            cc->setMaxAge(getMaxAge(url));
 
         }
 

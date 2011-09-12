@@ -244,30 +244,26 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
                      SQUIDSTRINGPRINT(cc->other));
 }
 
-/* negative max_age will clean old max_Age setting */
 void
-httpHdrCcSetMaxAge(HttpHdrCc * cc, int max_age)
+HttpHdrCc::setMaxAge(int max_age_)
 {
-    assert(cc);
-    cc->max_age = max_age;
+    max_age = max_age_;
 
-    if (max_age >= 0)
-        EBIT_SET(cc->mask, CC_MAX_AGE);
+    if (max_age_ >= 0)
+        EBIT_SET(mask, CC_MAX_AGE);
     else
-        EBIT_CLR(cc->mask, CC_MAX_AGE);
+        EBIT_CLR(mask, CC_MAX_AGE);
 }
 
-/* negative s_maxage will clean old s-maxage setting */
 void
-httpHdrCcSetSMaxAge(HttpHdrCc * cc, int s_maxage)
+HttpHdrCc::setSMaxAge(int s_maxage_)
 {
-    assert(cc);
-    cc->s_maxage = s_maxage;
+    s_maxage = s_maxage_;
 
-    if (s_maxage >= 0)
-        EBIT_SET(cc->mask, CC_S_MAXAGE);
+    if (s_maxage_ >= 0)
+        EBIT_SET(mask, CC_S_MAXAGE);
     else
-        EBIT_CLR(cc->mask, CC_S_MAXAGE);
+        EBIT_CLR(mask, CC_S_MAXAGE);
 }
 
 void
