@@ -56,12 +56,10 @@ public:
             mask(0), max_age(max_age_), s_maxage(s_maxage_),
             max_stale(max_stale_), stale_if_error(0),
             min_fresh(min_fresh_) {}
+    /// (re)initialize by parsing the supplied Cache-control header string
+    bool parseInit(const String &s);
 
     MEMPROXY_CLASS(HttpHdrCc);
-
-//TODO: make private:
-    /// (re)initialize by parsing the supplied Cache-control header string
-    bool parseInit(const String *s);
 
 };
 
