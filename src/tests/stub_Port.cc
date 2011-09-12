@@ -7,8 +7,4 @@
 const char Ipc::coordinatorAddr[] = "";
 const char Ipc::strandAddrPfx[] = "";
 
-String Ipc::Port::MakeAddr(char const*, int)
-{
-    STUB
-    return "";
-}
+String Ipc::Port::MakeAddr(char const*, int) STUB_RETVAL("")

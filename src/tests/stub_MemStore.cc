@@ -20,57 +20,12 @@ void MemStore::cleanReadable(const sfileno) STUB
 void MemStore::get(String const, STOREGETCLIENT, void *) STUB
 void MemStore::init() STUB
 void MemStore::stat(StoreEntry &) const STUB
-
-int MemStore::callback()
-{
-    STUB
-    return 0;
-}
-
-StoreEntry *MemStore::get(const cache_key *)
-{
-    STUB
-    return NULL;
-}
-
-uint64_t MemStore::maxSize() const
-{
-    STUB
-    return 0;
-}
-
-uint64_t MemStore::minSize() const
-{
-    STUB
-    return 0;
-}
-
-uint64_t MemStore::currentSize() const
-{
-    STUB
-    return 0;
-}
-
-uint64_t MemStore::currentCount() const
-{
-    STUB
-    return 0;
-}
-
-int64_t MemStore::maxObjectSize() const
-{
-    STUB
-    return 0;
-}
-
-StoreSearch *MemStore::search(String const, HttpRequest *)
-{
-    STUB
-    return NULL;
-}
-
-bool MemStore::dereference(StoreEntry &)
-{
-    STUB
-    return false;
-}
+int MemStore::callback() STUB_RETVAL(0)
+StoreEntry *MemStore::get(const cache_key *) STUB_RETVAL(NULL)
+uint64_t MemStore::maxSize() const STUB_RETVAL(0)
+uint64_t MemStore::minSize() const STUB_RETVAL(0)
+uint64_t MemStore::currentSize() const STUB_RETVAL(0)
+uint64_t MemStore::currentCount() const STUB_RETVAL(0)
+int64_t MemStore::maxObjectSize() const STUB_RETVAL(0)
+StoreSearch *MemStore::search(String const, HttpRequest *) STUB_RETVAL(NULL)
+bool MemStore::dereference(StoreEntry &) STUB_RETVAL(false)
