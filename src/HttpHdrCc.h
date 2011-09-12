@@ -1,5 +1,5 @@
 /*
- * HttpHeaderCacheControl.h
+ * HttpHdrCc.h
  *
  *  Created on: Sep 2, 2011
  *      Author: Francesco Chemolli
@@ -38,7 +38,10 @@
 #include "MemPool.h"
 #include "SquidString.h"
 
-/* http cache control header field */
+/** Http Cache-control header representation
+ *
+ * Store, parse and output the Cache-control HTTP header.
+ */
 class HttpHdrCc
 {
 
@@ -56,7 +59,16 @@ public:
             mask(0), max_age(max_age_), s_maxage(s_maxage_),
             max_stale(max_stale_), stale_if_error(0),
             min_fresh(min_fresh_) {}
-    /// (re)initialize by parsing the supplied Cache-control header string
+
+    /** reset the structure to a clear state.
+     *
+     */
+    void clear();
+    /**parses the supplied string filling in HttpHdrCc's fields.
+     *
+     * \note: internal structures are not cleaned-up beforehand.
+     *        caller must explicitly clear() beforehand if he wants that
+     */
     bool parseInit(const String &s);
     /** set the max_age value
      *

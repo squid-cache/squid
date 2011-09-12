@@ -67,7 +67,7 @@
 #include "compat/inet_pton.h"
 #include "fde.h"
 #include "format/Tokens.h"
-#include "HttpHeaderCacheControl.h"
+#include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
