@@ -70,7 +70,7 @@ static HttpHeaderCcFields CcAttrs[CC_ENUM_END] = {
 typedef std::map<String,http_hdr_cc_type> HdrCcNameToIdMap_t;
 static HdrCcNameToIdMap_t HdrCcNameToIdMap;
 
-// iterate over a table of http_header_cc_type structs
+/// iterate over a table of http_header_cc_type structs
 http_hdr_cc_type &operator++ (http_hdr_cc_type &aHeader)
 {
     int tmp = (int)aHeader;
@@ -79,8 +79,7 @@ http_hdr_cc_type &operator++ (http_hdr_cc_type &aHeader)
 }
 
 
-/* module initialization */
-
+/// Module initialization hook
 void
 httpHdrCcInitModule(void)
 {
@@ -92,6 +91,7 @@ httpHdrCcInitModule(void)
     }
 }
 
+/// Module cleanup hook.
 void
 httpHdrCcCleanModule(void)
 {
