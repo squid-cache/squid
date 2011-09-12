@@ -640,7 +640,10 @@ ClientHttpRequest::logRequest()
 
     al.cache.caddr.SetNoAddr();
 
-    if (getConn() != NULL) al.cache.caddr = getConn()->log_addr;
+    if (getConn() != NULL) {
+        al.cache.caddr = getConn()->log_addr;
+        al.cache.port =  cbdataReference(getConn()->port);
+    }
 
     al.cache.requestSize = req_sz;
     al.cache.requestHeadersSize = req_sz;
