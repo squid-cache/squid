@@ -48,7 +48,7 @@ typedef struct {
     HttpHeaderFieldStat stat;
 } HttpHeaderCcFields;
 
-/* order must match that of enum http_hdr_cc_type */
+/* order must match that of enum http_hdr_cc_type. The constraint is verified at initialization time */
 static HttpHeaderCcFields CcAttrs[CC_ENUM_END] = {
         {"public", CC_PUBLIC},
         {"private", CC_PRIVATE},
@@ -66,9 +66,11 @@ static HttpHeaderCcFields CcAttrs[CC_ENUM_END] = {
         {"Other,", CC_OTHER} /* ',' will protect from matches */
 };
 
+/// Map an header name to its type, to expedite parsing
 typedef std::map<String,http_hdr_cc_type> HdrCcNameToIdMap_t;
 static HdrCcNameToIdMap_t HdrCcNameToIdMap;
 
+// iterate over a table of http_header_cc_type structs
 http_hdr_cc_type &operator++ (http_hdr_cc_type &aHeader)
 {
     int tmp = (int)aHeader;
@@ -100,22 +102,14 @@ httpHdrCcCleanModule(void)
     // HdrCcNameToIdMap is self-cleaning
 }
 
-/* implementation */
-
-HttpHdrCc *
-httpHdrCcCreate(void)
-{
-    return new HttpHdrCc();
-}
-
 /* creates an cc object from a 0-terminating string */
 HttpHdrCc *
 httpHdrCcParseCreate(const String * str)
 {
-    HttpHdrCc *cc = httpHdrCcCreate();
+    HttpHdrCc *cc = new HttpHdrCc();
 
     if (!httpHdrCcParseInit(cc, str)) {
-        httpHdrCcDestroy(cc);
+        delete cc;
         cc = NULL;
     }
 

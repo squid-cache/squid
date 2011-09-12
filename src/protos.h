@@ -237,7 +237,6 @@ SQUIDCEXTERN void httpBodyPackInto(const HttpBody * body, Packer * p);
 /* Http Cache Control Header Field */
 SQUIDCEXTERN void httpHdrCcInitModule(void);
 SQUIDCEXTERN void httpHdrCcCleanModule(void);
-SQUIDCEXTERN HttpHdrCc *httpHdrCcCreate(void);
 SQUIDCEXTERN HttpHdrCc *httpHdrCcParseCreate(const String * str);
 SQUIDCEXTERN void httpHdrCcDestroy(HttpHdrCc * cc);
 SQUIDCEXTERN HttpHdrCc *httpHdrCcDup(const HttpHdrCc * cc);
