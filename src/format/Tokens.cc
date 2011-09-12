@@ -62,9 +62,9 @@ static struct TokenTableEntry TokenTable1C[] = {
 static struct TokenTableEntry TokenTable2C[] = {
 
     {">la", LFT_CLIENT_LOCAL_IP},
-    {"la", LFT_CLIENT_LOCAL_IP_OLD_31},
+    {"la", LFT_LOCAL_LISTENING_IP},
     {">lp", LFT_CLIENT_LOCAL_PORT},
-    {"lp", LFT_CLIENT_LOCAL_PORT_OLD_31},
+    {"lp", LFT_LOCAL_LISTENING_PORT},
     /*{ "lA", LFT_LOCAL_NAME }, */
 
     {"<la", LFT_SERVER_LOCAL_IP},
@@ -494,16 +494,6 @@ done:
     case LFT_HTTP_SENT_STATUS_CODE_OLD_30:
         debugs(46, 0, "WARNING: The \"Hs\" formatting code is deprecated. Use the \">Hs\" instead.");
         type = LFT_HTTP_SENT_STATUS_CODE;
-        break;
-
-    case LFT_CLIENT_LOCAL_IP_OLD_31:
-        debugs(46, 0, "WARNING: The \"la\" formatting code is deprecated. Use the \">la\" instead.");
-        type = LFT_CLIENT_LOCAL_IP;
-        break;
-
-    case LFT_CLIENT_LOCAL_PORT_OLD_31:
-        debugs(46, 0, "WARNING: The \"lp\" formatting code is deprecated. Use the \">lp\" instead.");
-        type = LFT_CLIENT_LOCAL_PORT;
         break;
 
     case LFT_SERVER_LOCAL_IP_OLD_27:

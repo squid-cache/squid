@@ -204,5 +204,5 @@ operator<<(std::ostream& os, String const &aString)
 bool
 operator<(const String &a, const String &b)
 {
-    return a.cmp(b)<0;
+    return a.cmp(b) < 0;
 }

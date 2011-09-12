@@ -1341,7 +1341,8 @@ peerProbeConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int
     }
 
     p->testing_now--;
-    return;
+    conn->close();
+    // TODO: log this traffic.
 }
 
 static void

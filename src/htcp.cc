@@ -1171,7 +1171,6 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from
 }
 
 static void
-
 htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, Ip::Address &from)
 {
     /* buf should be a SPECIFIER */
@@ -1193,27 +1192,27 @@ htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, Ip::Address &from
     s->setDataHeader(dhdr);
 
     if (NULL == s) {
-        debugs(31, 2, "htcpHandleTstRequest: htcpUnpackSpecifier failed");
+        debugs(31, 3, "htcpHandleTstRequest: htcpUnpackSpecifier failed");
         htcpLogHtcp(from, dhdr->opcode, LOG_UDP_INVALID, dash_str);
         return;
     }
 
     if (!s->request) {
-        debugs(31, 2, "htcpHandleTstRequest: failed to parse request");
+        debugs(31, 3, "htcpHandleTstRequest: failed to parse request");
         htcpLogHtcp(from, dhdr->opcode, LOG_UDP_INVALID, dash_str);
         htcpFreeSpecifier(s);
         return;
     }
 
     if (!htcpAccessAllowed(Config.accessList.htcp, s, from)) {
-        debugs(31, 2, "htcpHandleTstRequest: Access denied");
+        debugs(31, 3, "htcpHandleTstRequest: Access denied");
         htcpLogHtcp(from, dhdr->opcode, LOG_UDP_DENIED, s->uri);
         htcpFreeSpecifier(s);
         return;
     }
 
-    debugs(31, 3, "htcpHandleTstRequest: " << s->method << " " << s->uri << " " << s->version);
-    debugs(31, 3, "htcpHandleTstRequest: " << s->req_hdrs);
+    debugs(31, 2, "HTCP TST request: " << s->method << " " << s->uri << " " << s->version);
+    debugs(31, 2, "HTCP TST headers: " << s->req_hdrs);
     s->checkHit();
 }
 
@@ -1251,7 +1250,7 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
     htcpSpecifier *s;
     /* buf[0/1] is reserved and reason */
     int reason = buf[1] << 4;
-    debugs(31, 3, "htcpHandleClr: reason=" << reason);
+    debugs(31, 2, "HTCP CLR reason: " << reason);
     buf += 2;
     sz -= 2;
 
@@ -1272,21 +1271,21 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, Ip::Address &from)
     }
 
     if (!s->request) {
-        debugs(31, 2, "htcpHandleTstRequest: failed to parse request");
+        debugs(31, 3, "htcpHandleTstRequest: failed to parse request");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str);
         htcpFreeSpecifier(s);
         return;
     }
 
     if (!htcpAccessAllowed(Config.accessList.htcp_clr, s, from)) {
-        debugs(31, 2, "htcpHandleClr: Access denied");
+        debugs(31, 3, "htcpHandleClr: Access denied");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_DENIED, s->uri);
         htcpFreeSpecifier(s);
         return;
     }
 
-    debugs(31, 5, "htcpHandleClr: " << s->method << " " << s->uri << " " << s->version);
-    debugs(31, 5, "htcpHandleClr: request headers: " << s->req_hdrs);
+    debugs(31, 2, "HTCP CLR request: " << s->method << " " << s->uri << " " << s->version);
+    debugs(31, 2, "HTCP CLR headers: " << s->req_hdrs);
 
     /* Release objects from cache
      * analog to clientPurgeRequest in client_side.c

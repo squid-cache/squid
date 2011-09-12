@@ -12,6 +12,8 @@
 #include "SquidTime.h"
 #include "Store.h"
 
+/// Convert a string to NULL pointer if it is ""
+#define strOrNull(s) ((s)==NULL||(s)[0]=='\0'?NULL:(s))
 
 Format::Format::Format(const char *n) :
         format(NULL),
@@ -365,14 +367,32 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             }
             break;
 
-        case LFT_CLIENT_LOCAL_IP_OLD_31:
+        case LFT_LOCAL_LISTENING_IP: {
+            // avoid logging a dash if we have reliable info
+            const bool interceptedAtKnownPort = (al->request->flags.spoof_client_ip ||
+                                                 al->request->flags.intercepted) && al->cache.port;
+            if (interceptedAtKnownPort) {
+                const bool portAddressConfigured = !al->cache.port->s.IsAnyAddr();
+                if (portAddressConfigured)
+                    out = al->cache.port->s.NtoA(tmp, sizeof(tmp));
+            } else if (al->tcpClient != NULL)
+                out = al->tcpClient->local.NtoA(tmp, sizeof(tmp));
+        }
+        break;
+
         case LFT_CLIENT_LOCAL_IP:
             if (al->tcpClient != NULL) {
                 out = al->tcpClient->local.NtoA(tmp,sizeof(tmp));
             }
             break;
 
-        case LFT_CLIENT_LOCAL_PORT_OLD_31:
+        case LFT_LOCAL_LISTENING_PORT:
+            if (al->cache.port) {
+                outint = al->cache.port->s.GetPort();
+                doint = 1;
+            }
+            break;
+
         case LFT_CLIENT_LOCAL_PORT:
             if (al->tcpClient != NULL) {
                 outint = al->tcpClient->local.GetPort();
@@ -726,44 +746,27 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             break;
 
         case LFT_USER_NAME:
-            out = QuoteUrlEncodeUsername(al->cache.authuser);
-
+            out = strOrNull(al->cache.authuser);
             if (!out)
-                out = QuoteUrlEncodeUsername(al->cache.extuser);
-
+                out = strOrNull(al->cache.extuser);
 #if USE_SSL
-
             if (!out)
-                out = QuoteUrlEncodeUsername(al->cache.ssluser);
-
+                out = strOrNull(al->cache.ssluser);
 #endif
-
             if (!out)
-                out = QuoteUrlEncodeUsername(al->cache.rfc931);
-
-            dofree = 1;
-
+                out = strOrNull(al->cache.rfc931);
             break;
 
         case LFT_USER_LOGIN:
-            out = QuoteUrlEncodeUsername(al->cache.authuser);
-
-            dofree = 1;
-
+            out = strOrNull(al->cache.authuser);
             break;
 
         case LFT_USER_IDENT:
-            out = QuoteUrlEncodeUsername(al->cache.rfc931);
-
-            dofree = 1;
-
+            out = strOrNull(al->cache.rfc931);
             break;
 
         case LFT_USER_EXTERNAL:
-            out = QuoteUrlEncodeUsername(al->cache.extuser);
-
-            dofree = 1;
-
+            out = strOrNull(al->cache.extuser);
             break;
 
             /* case LFT_USER_REALM: */
@@ -1049,11 +1052,18 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
                 }
             }
 
-            if (fmt->width) {
+            // enforce width limits if configured
+            const bool haveMaxWidth = fmt->precision && !doint && !dooff;
+            if (haveMaxWidth || fmt->width) {
+                const int minWidth = fmt->width ?
+                                     static_cast<int>(fmt->width) : 0;
+                const int maxWidth = haveMaxWidth ?
+                                     static_cast<int>(fmt->precision) : strlen(out);
+
                 if (fmt->left)
-                    mb.Printf("%-*s", (int) fmt->width, out);
+                    mb.Printf("%-*.*s", minWidth, maxWidth, out);
                 else
-                    mb.Printf("%*s", (int) fmt->width, out);
+                    mb.Printf("%*.*s", minWidth, maxWidth, out);
             } else
                 mb.append(out, strlen(out));
         } else {

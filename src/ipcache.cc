@@ -487,6 +487,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
         return -1;
     }
 
+    debugs(14, 3, "ipcacheParse: " << nr << " answers for '" << name << "'");
     assert(answers);
 
     for (k = 0; k < nr; k++) {

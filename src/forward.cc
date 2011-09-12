@@ -1199,8 +1199,12 @@ aclMapNfmark(acl_nfmark * head, ACLChecklist * ch)
 void
 getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
 {
-    /* skip if an outgoing address is already set. */
+    // skip if an outgoing address is already set.
     if (!conn->local.IsAnyAddr()) return;
+
+    // ensure that at minimum the wildcard local matches remote protocol
+    if (conn->remote.IsIPv4())
+        conn->local.SetIPv4();
 
     // maybe use TPROXY client address
     if (request && request->flags.spoof_client_ip) {
