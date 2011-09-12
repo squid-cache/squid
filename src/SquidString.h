@@ -181,6 +181,8 @@ private:
 
 _SQUID_INLINE_ std::ostream & operator<<(std::ostream& os, String const &aString);
 
+_SQUID_INLINE_ bool operator<(const String &a, const String &b);
+
 #if _USE_INLINE_
 #include "String.cci"
 #endif

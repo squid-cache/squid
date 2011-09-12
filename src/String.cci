@@ -200,3 +200,9 @@ operator<<(std::ostream& os, String const &aString)
     os.write(aString.rawBuf(),aString.size());
     return os;
 }
+
+bool
+operator<(const String &a, const String &b)
+{
+    return a.cmp(b) < 0;
+}
