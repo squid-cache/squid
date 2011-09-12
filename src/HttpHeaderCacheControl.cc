@@ -79,10 +79,6 @@ http_hdr_cc_type &operator++ (http_hdr_cc_type &aHeader)
 }
 
 
-/* local prototypes */
-static int httpHdrCcParseInit(HttpHdrCc * cc, const String * str);
-
-
 /* module initialization */
 
 void
@@ -108,7 +104,7 @@ httpHdrCcParseCreate(const String * str)
 {
     HttpHdrCc *cc = new HttpHdrCc();
 
-    if (!httpHdrCcParseInit(cc, str)) {
+    if (!cc->parseInit(str)) {
         delete cc;
         cc = NULL;
     }
@@ -117,8 +113,8 @@ httpHdrCcParseCreate(const String * str)
 }
 
 /* parses a 0-terminating string and inits cc */
-static int
-httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
+bool
+HttpHdrCc::parseInit(const String * str)
 {
     const char *item;
     const char *p;		/* '=' parameter */
@@ -126,7 +122,7 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
     http_hdr_cc_type type;
     int ilen;
     int nlen;
-    assert(cc && str);
+    assert(str);
 
     /* iterate through comma separated list */
 
@@ -149,14 +145,14 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
             type=i->second;
 
         // ignore known duplicate directives
-        if (EBIT_TEST(cc->mask, type)) {
+        if (EBIT_TEST(mask, type)) {
             if (type != CC_OTHER) {
                 debugs(65, 2, "hdr cc: ignoring duplicate cache-directive: near '" << item << "' in '" << str << "'");
                 CcAttrs[type].stat.repCount++;
                 continue;
             }
         } else {
-            EBIT_SET(cc->mask, type);
+            EBIT_SET(mask, type);
         }
 
         /* post-processing special cases */
@@ -164,57 +160,57 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
 
         case CC_MAX_AGE:
 
-            if (!p || !httpHeaderParseInt(p, &cc->max_age)) {
+            if (!p || !httpHeaderParseInt(p, &max_age)) {
                 debugs(65, 2, "cc: invalid max-age specs near '" << item << "'");
-                cc->max_age = -1;
-                EBIT_CLR(cc->mask, type);
+                max_age = -1;
+                EBIT_CLR(mask, type);
             }
 
             break;
 
         case CC_S_MAXAGE:
 
-            if (!p || !httpHeaderParseInt(p, &cc->s_maxage)) {
+            if (!p || !httpHeaderParseInt(p, &s_maxage)) {
                 debugs(65, 2, "cc: invalid s-maxage specs near '" << item << "'");
-                cc->s_maxage = -1;
-                EBIT_CLR(cc->mask, type);
+                s_maxage = -1;
+                EBIT_CLR(mask, type);
             }
 
             break;
 
         case CC_MAX_STALE:
 
-            if (!p || !httpHeaderParseInt(p, &cc->max_stale)) {
+            if (!p || !httpHeaderParseInt(p, &max_stale)) {
                 debugs(65, 2, "cc: max-stale directive is valid without value");
-                cc->max_stale = -1;
+                max_stale = -1;
             }
 
             break;
 
         case CC_MIN_FRESH:
 
-            if (!p || !httpHeaderParseInt(p, &cc->min_fresh)) {
+            if (!p || !httpHeaderParseInt(p, &min_fresh)) {
                 debugs(65, 2, "cc: invalid min-fresh specs near '" << item << "'");
-                cc->min_fresh = -1;
-                EBIT_CLR(cc->mask, type);
+                min_fresh = -1;
+                EBIT_CLR(mask, type);
             }
 
             break;
 
         case CC_STALE_IF_ERROR:
-            if (!p || !httpHeaderParseInt(p, &cc->stale_if_error)) {
+            if (!p || !httpHeaderParseInt(p, &stale_if_error)) {
                 debugs(65, 2, "cc: invalid stale-if-error specs near '" << item << "'");
-                cc->stale_if_error = -1;
-                EBIT_CLR(cc->mask, type);
+                stale_if_error = -1;
+                EBIT_CLR(mask, type);
             }
             break;
 
         case CC_OTHER:
 
-            if (cc->other.size())
-                cc->other.append(", ");
+            if (other.size())
+                other.append(", ");
 
-            cc->other.append(item, ilen);
+            other.append(item, ilen);
 
             break;
 
@@ -224,7 +220,7 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
         }
     }
 
-    return cc->mask != 0;
+    return (mask != 0);
 }
 
 void
