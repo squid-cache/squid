@@ -58,6 +58,11 @@ public:
             min_fresh(min_fresh_) {}
 
     MEMPROXY_CLASS(HttpHdrCc);
+
+//TODO: make private:
+    /// (re)initialize by parsing the supplied Cache-control header string
+    bool parseInit(const String *s);
+
 };
 
 MEMPROXY_CLASS_INLINE(HttpHdrCc);
