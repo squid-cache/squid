@@ -175,8 +175,7 @@ peerCheckNeverDirectDone(allow_t answer, void *data)
     psstate->acl_checklist = NULL;
     debugs(44, 3, "peerCheckNeverDirectDone: " << answer);
     psstate->never_direct = answer;
-    switch(answer)
-    {
+    switch (answer) {
     case ACCESS_ALLOWED:
         /** if always_direct says YES, do that. */
         psstate->direct = DIRECT_YES;
@@ -186,7 +185,7 @@ peerCheckNeverDirectDone(allow_t answer, void *data)
         break;
     default: // Oops. Failed to get a result.
         debugs(44, DBG_IMPORTANT, "WARNING: never_direct resulted in " << answer << ". Username ACLs are not reliable here.");
-	assert(answer != ACCESS_DUNNO);
+        assert(answer != ACCESS_DUNNO);
     }
     peerSelectFoo(psstate);
 }
@@ -198,8 +197,7 @@ peerCheckAlwaysDirectDone(allow_t answer, void *data)
     psstate->acl_checklist = NULL;
     debugs(44, 3, "peerCheckAlwaysDirectDone: " << answer);
     psstate->always_direct = answer;
-    switch(answer)
-    {
+    switch (answer) {
     case ACCESS_ALLOWED:
         /** if always_direct says YES, do that. */
         psstate->direct = DIRECT_YES;
@@ -209,7 +207,7 @@ peerCheckAlwaysDirectDone(allow_t answer, void *data)
         break;
     default: // Oops. Failed to get a result.
         debugs(44, DBG_IMPORTANT, "WARNING: always_direct resulted in " << answer << ". Username ACLs are not reliable here.");
-	assert(answer != ACCESS_DUNNO);
+        assert(answer != ACCESS_DUNNO);
     }
     peerSelectFoo(psstate);
 }
