@@ -341,8 +341,8 @@ squid_SOURCES = \
 	HttpStatusCode.h \
 	HttpStatusLine.cc \
 	HttpStatusLine.h \
-	HttpHeaderCacheControl.h \
-	HttpHeaderCacheControl.cc \
+	HttpHdrCc.h \
+	HttpHdrCc.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrSc.h \
@@ -1016,8 +1016,8 @@ tests_testHttpReply_SOURCES=\
 	cbdata.h \
 	ETag.cc \
 	HttpBody.cc \
-	HttpHeaderCacheControl.h \
-	HttpHeaderCacheControl.cc \
+	HttpHdrCc.h \
+	HttpHdrCc.cc \
 	HttpHdrContRange.cc \
 	HttpHdrContRange.h \
 	HttpHdrRange.cc \
@@ -1074,7 +1074,7 @@ tests_testHttpReply_LDADD=\
 tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 
 ## Tests for the ACLMaxUserIP class
-## acl needs wordlist. wordlist needs MemBug
+## acl needs wordlist. wordlist needs MemBuf
 ## MemBuf needs mem, MemBuf needs event,
 ## event needs cbdata.
 ## ACLMaxUserUP needs $(AUTH_LIBS)
@@ -1084,7 +1084,7 @@ tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 ##	HttpHeader.cc \
 ##	HttpHeaderTools.cc \
 ##	HttpHdrContRange.cc \
-##	HttpHeaderCacheControl.cc \
+##	HttpHdrCc.cc \
 ##	HttpHdrRange.cc \
 ##	HttpHdrSc.cc \
 ##	HttpHdrScTarget.cc \
@@ -1110,8 +1110,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	HttpHeaderTools.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
-	HttpHeaderCacheControl.h \
-	HttpHeaderCacheControl.cc \
+	HttpHdrCc.h \
+	HttpHdrCc.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
@@ -1271,8 +1271,8 @@ tests_testCacheManager_SOURCES = \
 	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
-	HttpHeaderCacheControl.h \
-	HttpHeaderCacheControl.cc \
+	HttpHdrCc.h \
+	HttpHdrCc.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -1403,8 +1403,8 @@ tests_testDiskIO_SOURCES = \
 	fd.cc \
 	filemap.cc \
 	HttpBody.cc \
-	HttpHeaderCacheControl.h \
-	HttpHeaderCacheControl.cc \
+	HttpHdrCc.h \
+	HttpHdrCc.cc \
 	HttpHdrContRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
@@ -1576,8 +1576,8 @@ tests_testEvent_SOURCES = \
 	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
-	HttpHeaderCacheControl.h \
-	HttpHeaderCacheControl.cc \
+	HttpHdrCc.h \
+	HttpHdrCc.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -1755,8 +1755,8 @@ tests_testEventLoop_SOURCES = \
 	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
-	HttpHeaderCacheControl.h \
-	HttpHeaderCacheControl.cc \
+	HttpHdrCc.h \
+	HttpHdrCc.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -1930,8 +1930,8 @@ tests_test_http_range_SOURCES = \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
-	HttpHeaderCacheControl.h \
-	HttpHeaderCacheControl.cc \
+	HttpHdrCc.h \
+	HttpHdrCc.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -2148,8 +2148,8 @@ tests_testHttpRequest_SOURCES = \
 	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
-	HttpHeaderCacheControl.h \
-	HttpHeaderCacheControl.cc \
+	HttpHdrCc.h \
+	HttpHdrCc.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -2279,8 +2279,8 @@ tests_testStore_SOURCES= \
 	event.cc \
 	EventLoop.cc \
 	filemap.cc \
-	HttpHeaderCacheControl.h \
-	HttpHeaderCacheControl.cc \
+	HttpHdrCc.h \
+	HttpHdrCc.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -2514,8 +2514,8 @@ tests_testUfs_SOURCES = \
 	MemBuf.cc \
 	HttpHdrContRange.cc \
 	Packer.cc \
-	HttpHeaderCacheControl.h \
-	HttpHeaderCacheControl.cc \
+	HttpHdrCc.h \
+	HttpHdrCc.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
@@ -2645,8 +2645,8 @@ tests_testCoss_SOURCES = \
 	MemBuf.cc \
 	HttpHdrContRange.cc \
 	Packer.cc \
-	HttpHeaderCacheControl.h \
-	HttpHeaderCacheControl.cc \
+	HttpHdrCc.h \
+	HttpHdrCc.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
@@ -2770,8 +2770,8 @@ tests_testNull_SOURCES = \
 	MemBuf.cc \
 	HttpHdrContRange.cc \
 	Packer.cc \
-	HttpHeaderCacheControl.h \
-	HttpHeaderCacheControl.cc \
+	HttpHdrCc.h \
+	HttpHdrCc.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
@@ -2873,8 +2873,8 @@ tests_testURL_SOURCES = \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
-	HttpHeaderCacheControl.h \
-	HttpHeaderCacheControl.cc \
+	HttpHdrCc.h \
+	HttpHdrCc.cc \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \

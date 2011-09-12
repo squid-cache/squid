@@ -1,9 +1,8 @@
 
 /*
- * $Id$
  *
  * DEBUG: section 65    HTTP Cache Control Header
- * AUTHOR: Alex Rousskov
+ * AUTHOR: Alex Rousskov, Francesco Chemolli
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -36,28 +35,42 @@
 #include "squid.h"
 #include "Store.h"
 #include "HttpHeader.h"
+#include "HttpHdrCc.h"
 
-/* this table is used for parsing cache control header */
-static const HttpHeaderFieldAttrs CcAttrs[CC_ENUM_END] = {
-    {"public", (http_hdr_type)CC_PUBLIC},
+#if HAVE_MAP
+#include <map>
+#endif
 
-    {"private", (http_hdr_type)CC_PRIVATE},
-    {"no-cache", (http_hdr_type)CC_NO_CACHE},
-    {"no-store", (http_hdr_type)CC_NO_STORE},
-    {"no-transform", (http_hdr_type)CC_NO_TRANSFORM},
-    {"must-revalidate", (http_hdr_type)CC_MUST_REVALIDATE},
-    {"proxy-revalidate", (http_hdr_type)CC_PROXY_REVALIDATE},
-    {"only-if-cached", (http_hdr_type)CC_ONLY_IF_CACHED},
-    {"max-age", (http_hdr_type)CC_MAX_AGE},
-    {"s-maxage", (http_hdr_type)CC_S_MAXAGE},
-    {"max-stale", (http_hdr_type)CC_MAX_STALE},
-    {"stale-if-error", (http_hdr_type)CC_STALE_IF_ERROR},
-    {"min-fresh", (http_hdr_type)CC_MIN_FRESH},
-    {"Other,", (http_hdr_type)CC_OTHER}	/* ',' will protect from matches */
+/* this table is used for parsing cache control header and statistics */
+typedef struct {
+    const char *name;
+    http_hdr_cc_type id;
+    HttpHeaderFieldStat stat;
+} HttpHeaderCcFields;
+
+/* order must match that of enum http_hdr_cc_type. The constraint is verified at initialization time */
+static HttpHeaderCcFields CcAttrs[CC_ENUM_END] = {
+        {"public", CC_PUBLIC},
+        {"private", CC_PRIVATE},
+        {"no-cache", CC_NO_CACHE},
+        {"no-store", CC_NO_STORE},
+        {"no-transform", CC_NO_TRANSFORM},
+        {"must-revalidate", CC_MUST_REVALIDATE},
+        {"proxy-revalidate", CC_PROXY_REVALIDATE},
+        {"max-age", CC_MAX_AGE},
+        {"s-maxage", CC_S_MAXAGE},
+        {"max-stale", CC_MAX_STALE},
+        {"min-fresh", CC_MIN_FRESH},
+        {"only-if-cached", CC_ONLY_IF_CACHED},
+        {"stale-if-error", CC_STALE_IF_ERROR},
+        {"Other,", CC_OTHER} /* ',' will protect from matches */
 };
 
-HttpHeaderFieldInfo *CcFieldsInfo = NULL;
+/// Map an header name to its type, to expedite parsing
+typedef std::map<String,http_hdr_cc_type> HdrCcNameToIdMap_t;
+static HdrCcNameToIdMap_t HdrCcNameToIdMap;
 
+// iterate over a table of http_header_cc_type structs
 http_hdr_cc_type &operator++ (http_hdr_cc_type &aHeader)
 {
     int tmp = (int)aHeader;
@@ -66,52 +79,41 @@ http_hdr_cc_type &operator++ (http_hdr_cc_type &aHeader)
 }
 
 
-/* local prototypes */
-static int httpHdrCcParseInit(HttpHdrCc * cc, const String * str);
-
-
 /* module initialization */
 
 void
 httpHdrCcInitModule(void)
 {
-    CcFieldsInfo = httpHeaderBuildFieldsInfo(CcAttrs, CC_ENUM_END);
+    int32_t i;
+    /* build lookup and accounting structures */
+    for (i=0;i<CC_ENUM_END;i++) {
+        assert(i==CcAttrs[i].id); /* verify assumption: the id is the key into the array */
+        HdrCcNameToIdMap[CcAttrs[i].name]=CcAttrs[i].id;
+    }
 }
 
 void
 httpHdrCcCleanModule(void)
 {
-    httpHeaderDestroyFieldsInfo(CcFieldsInfo, CC_ENUM_END);
-    CcFieldsInfo = NULL;
+    // HdrCcNameToIdMap is self-cleaning
 }
 
-/* implementation */
-
-HttpHdrCc *
-httpHdrCcCreate(void)
+void
+HttpHdrCc::clear()
 {
-    HttpHdrCc *cc = (HttpHdrCc *)memAllocate(MEM_HTTP_HDR_CC);
-    cc->max_age = cc->s_maxage = cc->max_stale = cc->min_fresh = -1;
-    return cc;
+    mask=0;
+    max_age=-1;
+    mask=0;
+    max_age=-1;
+    s_maxage=-1;
+    max_stale=-1;
+    stale_if_error=0;
+    min_fresh=-1;
+    other.clean();
 }
 
-/* creates an cc object from a 0-terminating string */
-HttpHdrCc *
-httpHdrCcParseCreate(const String * str)
-{
-    HttpHdrCc *cc = httpHdrCcCreate();
-
-    if (!httpHdrCcParseInit(cc, str)) {
-        httpHdrCcDestroy(cc);
-        cc = NULL;
-    }
-
-    return cc;
-}
-
-/* parses a 0-terminating string and inits cc */
-static int
-httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
+bool
+HttpHdrCc::parseInit(const String & str)
 {
     const char *item;
     const char *p;		/* '=' parameter */
@@ -119,11 +121,11 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
     http_hdr_cc_type type;
     int ilen;
     int nlen;
-    assert(cc && str);
 
     /* iterate through comma separated list */
 
-    while (strListGetItem(str, ',', &item, &ilen, &pos)) {
+    while (strListGetItem(&str, ',', &item, &ilen, &pos)) {
+        String tmpstr;
         /* isolate directive name */
 
         if ((p = (const char *)memchr(item, '=', ilen)) && (p - item < ilen))
@@ -132,23 +134,23 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
             nlen = ilen;
 
         /* find type */
-        type = (http_hdr_cc_type ) httpHeaderIdByName(item, nlen,
-                CcFieldsInfo, CC_ENUM_END);
-
-        if (type < 0) {
-            debugs(65, 2, "hdr cc: unknown cache-directive: near '" << item << "' in '" << str << "'");
-            type = CC_OTHER;
-        }
+        tmpstr.limitInit(item,nlen);
+        HdrCcNameToIdMap_t::iterator i;
+        i=HdrCcNameToIdMap.find(tmpstr);
+        if (i==HdrCcNameToIdMap.end())
+            type=CC_OTHER;
+        else
+            type=i->second;
 
         // ignore known duplicate directives
-        if (EBIT_TEST(cc->mask, type)) {
+        if (EBIT_TEST(mask, type)) {
             if (type != CC_OTHER) {
                 debugs(65, 2, "hdr cc: ignoring duplicate cache-directive: near '" << item << "' in '" << str << "'");
-                CcFieldsInfo[type].stat.repCount++;
+                CcAttrs[type].stat.repCount++;
                 continue;
             }
         } else {
-            EBIT_SET(cc->mask, type);
+            EBIT_SET(mask, type);
         }
 
         /* post-processing special cases */
@@ -156,57 +158,57 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
 
         case CC_MAX_AGE:
 
-            if (!p || !httpHeaderParseInt(p, &cc->max_age)) {
+            if (!p || !httpHeaderParseInt(p, &max_age)) {
                 debugs(65, 2, "cc: invalid max-age specs near '" << item << "'");
-                cc->max_age = -1;
-                EBIT_CLR(cc->mask, type);
+                max_age = -1;
+                EBIT_CLR(mask, type);
             }
 
             break;
 
         case CC_S_MAXAGE:
 
-            if (!p || !httpHeaderParseInt(p, &cc->s_maxage)) {
+            if (!p || !httpHeaderParseInt(p, &s_maxage)) {
                 debugs(65, 2, "cc: invalid s-maxage specs near '" << item << "'");
-                cc->s_maxage = -1;
-                EBIT_CLR(cc->mask, type);
+                s_maxage = -1;
+                EBIT_CLR(mask, type);
             }
 
             break;
 
         case CC_MAX_STALE:
 
-            if (!p || !httpHeaderParseInt(p, &cc->max_stale)) {
+            if (!p || !httpHeaderParseInt(p, &max_stale)) {
                 debugs(65, 2, "cc: max-stale directive is valid without value");
-                cc->max_stale = -1;
+                max_stale = -1;
             }
 
             break;
 
         case CC_MIN_FRESH:
 
-            if (!p || !httpHeaderParseInt(p, &cc->min_fresh)) {
+            if (!p || !httpHeaderParseInt(p, &min_fresh)) {
                 debugs(65, 2, "cc: invalid min-fresh specs near '" << item << "'");
-                cc->min_fresh = -1;
-                EBIT_CLR(cc->mask, type);
+                min_fresh = -1;
+                EBIT_CLR(mask, type);
             }
 
             break;
 
         case CC_STALE_IF_ERROR:
-            if (!p || !httpHeaderParseInt(p, &cc->stale_if_error)) {
+            if (!p || !httpHeaderParseInt(p, &stale_if_error)) {
                 debugs(65, 2, "cc: invalid stale-if-error specs near '" << item << "'");
-                cc->stale_if_error = -1;
-                EBIT_CLR(cc->mask, type);
+                stale_if_error = -1;
+                EBIT_CLR(mask, type);
             }
             break;
 
         case CC_OTHER:
 
-            if (cc->other.size())
-                cc->other.append(", ");
+            if (other.size())
+                other.append(", ");
 
-            cc->other.append(item, ilen);
+            other.append(item, ilen);
 
             break;
 
@@ -216,18 +218,7 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
         }
     }
 
-    return cc->mask != 0;
-}
-
-void
-httpHdrCcDestroy(HttpHdrCc * cc)
-{
-    assert(cc);
-
-    if (cc->other.defined())
-        cc->other.clean();
-
-    memFree(cc, MEM_HTTP_HDR_CC);
+    return (mask != 0);
 }
 
 void
@@ -241,8 +232,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
         if (EBIT_TEST(cc->mask, flag) && flag != CC_OTHER) {
 
             /* print option name */
-            packerPrintf(p, (pcount ? ", " SQUIDSTRINGPH : SQUIDSTRINGPH),
-                         SQUIDSTRINGPRINT(CcFieldsInfo[flag].name));
+            packerPrintf(p, (pcount ? ", %s": "%s") , CcAttrs[flag].name);
 
             /* handle options with values */
 
@@ -267,30 +257,26 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
                      SQUIDSTRINGPRINT(cc->other));
 }
 
-/* negative max_age will clean old max_Age setting */
 void
-httpHdrCcSetMaxAge(HttpHdrCc * cc, int max_age)
+HttpHdrCc::setMaxAge(int max_age_)
 {
-    assert(cc);
-    cc->max_age = max_age;
+    max_age = max_age_;
 
-    if (max_age >= 0)
-        EBIT_SET(cc->mask, CC_MAX_AGE);
+    if (max_age_ >= 0)
+        EBIT_SET(mask, CC_MAX_AGE);
     else
-        EBIT_CLR(cc->mask, CC_MAX_AGE);
+        EBIT_CLR(mask, CC_MAX_AGE);
 }
 
-/* negative s_maxage will clean old s-maxage setting */
 void
-httpHdrCcSetSMaxAge(HttpHdrCc * cc, int s_maxage)
+HttpHdrCc::setSMaxAge(int s_maxage_)
 {
-    assert(cc);
-    cc->s_maxage = s_maxage;
+    s_maxage = s_maxage_;
 
-    if (s_maxage >= 0)
-        EBIT_SET(cc->mask, CC_S_MAXAGE);
+    if (s_maxage_ >= 0)
+        EBIT_SET(mask, CC_S_MAXAGE);
     else
-        EBIT_CLR(cc->mask, CC_S_MAXAGE);
+        EBIT_CLR(mask, CC_S_MAXAGE);
 }
 
 void
@@ -310,7 +296,7 @@ httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int c
     extern const HttpHeaderStat *dump_stat;	/* argh! */
     const int id = (int) val;
     const int valid_id = id >= 0 && id < CC_ENUM_END;
-    const char *name = valid_id ? CcFieldsInfo[id].name.termedBuf() : "INVALID";
+    const char *name = valid_id ? CcAttrs[id].name : "INVALID";
 
     if (count || valid_id)
         storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
