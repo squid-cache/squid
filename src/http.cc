@@ -1780,7 +1780,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
         hdr_out->putCc(cc);
 
-        httpHdrCcDestroy(cc);
+        delete cc;
     }
 
     /* maybe append Connection: keep-alive */
