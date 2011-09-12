@@ -58,6 +58,17 @@ public:
             min_fresh(min_fresh_) {}
     /// (re)initialize by parsing the supplied Cache-control header string
     bool parseInit(const String &s);
+    /** set the max_age value
+     *
+     * \param max_age the new max age. Values <0 clear it.
+     */
+    void setMaxAge(int32_t max_age);
+
+    /** set the s-maxage
+     *
+     * \param s_maxage the new max age. Values <0 clear it.
+     */
+    void setSMaxAge(int32_t s_maxage);
 
     MEMPROXY_CLASS(HttpHdrCc);
 
