@@ -39,6 +39,7 @@
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
 #endif
+#include "ProtoPort.h"
 
 /* forward decls */
 class HttpReply;
@@ -148,6 +149,7 @@ public:
 
         const char *ssluser;
 #endif
+        http_port_list *port;
 
     } cache;
 

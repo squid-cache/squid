@@ -19,9 +19,12 @@
  *
  */
 
-/// well-known registries (currently, deactivation is not performed for these)
+/// well-known registries
 typedef enum {
-    rrAfterConfig, ///< activated by main.cc after parsing squid.conf
+    /// managed by main.cc; activated after parsing squid.conf and
+    /// deactivated before freeing configuration-related memory or exit()-ing
+    rrAfterConfig,
+
     rrEnd ///< not a real registry, just a label to mark the end of enum
 } RunnerRegistry;
 

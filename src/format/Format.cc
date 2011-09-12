@@ -367,14 +367,32 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             }
             break;
 
-        case LFT_CLIENT_LOCAL_IP_OLD_31:
+        case LFT_LOCAL_LISTENING_IP: {
+            // avoid logging a dash if we have reliable info
+            const bool interceptedAtKnownPort = (al->request->flags.spoof_client_ip ||
+                                                 al->request->flags.intercepted) && al->cache.port;
+            if (interceptedAtKnownPort) {
+                const bool portAddressConfigured = !al->cache.port->s.IsAnyAddr();
+                if (portAddressConfigured)
+                    out = al->cache.port->s.NtoA(tmp, sizeof(tmp));
+            } else if (al->tcpClient != NULL)
+                out = al->tcpClient->local.NtoA(tmp, sizeof(tmp));
+        }
+        break;
+
         case LFT_CLIENT_LOCAL_IP:
             if (al->tcpClient != NULL) {
                 out = al->tcpClient->local.NtoA(tmp,sizeof(tmp));
             }
             break;
 
-        case LFT_CLIENT_LOCAL_PORT_OLD_31:
+        case LFT_LOCAL_LISTENING_PORT:
+            if (al->cache.port) {
+                outint = al->cache.port->s.GetPort();
+                doint = 1;
+            }
+            break;
+
         case LFT_CLIENT_LOCAL_PORT:
             if (al->tcpClient != NULL) {
                 outint = al->tcpClient->local.GetPort();

@@ -596,6 +596,7 @@ accessLogFreeMemory(AccessLogEntry * aLogEntry)
     HTTPMSGUNLOCK(aLogEntry->icap.reply);
     HTTPMSGUNLOCK(aLogEntry->icap.request);
 #endif
+    cbdataReferenceDone(aLogEntry->cache.port);
 }
 
 int
