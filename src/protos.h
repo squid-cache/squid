@@ -237,7 +237,6 @@ SQUIDCEXTERN void httpBodyPackInto(const HttpBody * body, Packer * p);
 /* Http Cache Control Header Field */
 SQUIDCEXTERN void httpHdrCcInitModule(void);
 SQUIDCEXTERN void httpHdrCcCleanModule(void);
-SQUIDCEXTERN void httpHdrCcDestroy(HttpHdrCc * cc);
 SQUIDCEXTERN HttpHdrCc *httpHdrCcDup(const HttpHdrCc * cc);
 SQUIDCEXTERN void httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p);
 SQUIDCEXTERN void httpHdrCcSetMaxAge(HttpHdrCc * cc, int max_age);

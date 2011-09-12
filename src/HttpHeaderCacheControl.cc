@@ -209,13 +209,6 @@ HttpHdrCc::parseInit(const String & str)
 }
 
 void
-httpHdrCcDestroy(HttpHdrCc * cc)
-{
-    assert(cc);
-    delete cc;
-}
-
-void
 httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
 {
     http_hdr_cc_type flag;

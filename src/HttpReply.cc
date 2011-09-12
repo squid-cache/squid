@@ -402,7 +402,7 @@ HttpReply::hdrCacheClean()
     content_type.clean();
 
     if (cache_control) {
-        httpHdrCcDestroy(cache_control);
+        delete cache_control;
         cache_control = NULL;
     }
 
