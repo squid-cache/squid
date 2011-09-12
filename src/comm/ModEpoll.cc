@@ -132,7 +132,7 @@ Comm::SetSelect(int fd, unsigned int type, PF * handler, void *client_data, time
 
     struct epoll_event ev;
     assert(fd >= 0);
-    debugs(5, DEBUG_EPOLL ? 0 : 8, HERE << "FD " << fd << ", type=" << type <<
+    debugs(5, 5, HERE << "FD " << fd << ", type=" << type <<
            ", handler=" << handler << ", client_data=" << client_data <<
            ", timeout=" << timeout);
 

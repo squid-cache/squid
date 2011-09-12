@@ -640,7 +640,10 @@ ClientHttpRequest::logRequest()
 
     al.cache.caddr.SetNoAddr();
 
-    if (getConn() != NULL) al.cache.caddr = getConn()->log_addr;
+    if (getConn() != NULL) {
+        al.cache.caddr = getConn()->log_addr;
+        al.cache.port =  cbdataReference(getConn()->port);
+    }
 
     al.cache.requestSize = req_sz;
     al.cache.requestHeadersSize = req_sz;
@@ -2011,6 +2014,9 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
     if (internalCheck(url)) {
         /* prepend our name & port */
         http->uri = xstrdup(internalLocalUri(NULL, url));
+        // We just re-wrote the URL. Must replace the Host: header.
+        //  But have not parsed there yet!! flag for local-only handling.
+        http->flags.internal = 1;
         return;
     }
 

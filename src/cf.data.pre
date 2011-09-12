@@ -2876,8 +2876,12 @@ DOC_START
 		'	output as-is
 
 		-	left aligned
-		width	field width. If starting with 0 the
-			output is zero padded
+
+		width	minimum and/or maximum field width:
+			    [width_min][.width_max]
+			When minimum starts with 0, the field is zero-padded.
+			String values exceeding maximum width are truncated.
+
 		{arg}	argument such as header name etc
 
 	Format codes:
@@ -2896,6 +2900,9 @@ DOC_START
 		>eui	Client source EUI (MAC address, EUI-48 or EUI-64 identifier)
 		>la	Local IP address the client connected to
 		>lp	Local port number the client connected to
+
+		la	Local listening IP address the client connection was connected to.
+		lp	Local listening port number the client connection was connected to.
 
 		<a	Server IP address of the last server or peer connection
 		<A	Server FQDN or peer name
@@ -3014,9 +3021,9 @@ DOC_START
 
 	The default formats available (which do not need re-defining) are:
 
-logformat squid      %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %un %Sh/%<a %mt
-logformat common     %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
-logformat combined   %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
+logformat squid      %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %[un %Sh/%<a %mt
+logformat common     %>a %[ui %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
+logformat combined   %>a %[ui %[un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
 logformat referrer   %ts.%03tu %>a %{Referer}>h %ru
 logformat useragent  %>a [%tl] "%{User-Agent}>h"
 
@@ -3697,12 +3704,20 @@ TYPE: onoff
 DEFAULT: on
 LOC: Config.onoff.redir_rewrites_host
 DOC_START
-	By default Squid rewrites any Host: header in redirected
-	requests.  If you are running an accelerator this may
-	not be a wanted effect of a redirector.
-
+	To preserve same-origin security policies in browsers and
+	prevent Host: header forgery by redirectors Squid rewrites
+	any Host: header in redirected requests.
+	
+	If you are running an accelerator this may not be a wanted
+	effect of a redirector. This directive enables you disable
+	Host: alteration in reverse-proxy traffic.
+	
 	WARNING: Entries are cached on the result of the URL rewriting
 	process, so be careful if you have domain-virtual hosts.
+	
+	WARNING: Squid and other software verifies the URL and Host
+	are matching, so be careful not to relay through other proxies
+	or inspecting firewalls with this disabled.
 DOC_END
 
 NAME: url_rewrite_access redirector_access
@@ -6570,11 +6585,12 @@ DOC_START
 		returning a chain of services to be used next. The services
 		are specified using the X-Next-Services ICAP response header
 		value, formatted as a comma-separated list of service names.
-		Each named service should be configured in squid.conf and
-		should have the same method and vectoring point as the current
-		ICAP transaction.  Services violating these rules are ignored.
-		An empty X-Next-Services value results in an empty plan which
-		ends the current adaptation. 
+		Each named service should be configured in squid.conf. Other
+		services are ignored. An empty X-Next-Services value results
+		in an empty plan which ends the current adaptation.
+
+		Dynamic adaptation plan may cross or cover multiple supported
+		vectoring points in their natural processing order.
 
 		Routing is not allowed by default: the ICAP X-Next-Services
 		response header is ignored.
@@ -7365,10 +7381,16 @@ TYPE: onoff
 LOC: Config.retry.onerror
 DEFAULT: off
 DOC_START
-	If set to on Squid will automatically retry requests when
-	receiving an error response. This is mainly useful if you
-	are in a complex cache hierarchy to work around access
-	control errors.
+	If set to ON Squid will automatically retry requests when
+	receiving an error response with status 403 (Forbidden),
+	500 (Internal Error), 501 or 503 (Service not available).
+	Status 502 and 504 (Gateway errors) are always retried.
+	
+	This is mainly useful if you are in a complex cache hierarchy to
+	work around access control errors.
+	
+	NOTE: This retry will attempt to find another working destination.
+	Which is different from the server which just failed.
 DOC_END
 
 NAME: as_whois_server

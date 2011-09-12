@@ -76,6 +76,7 @@ file_map_grow(fileMap * fm)
     assert(fm->max_n_files <= (1 << 24));	/* swap_filen is 25 bits, signed */
     fm->nwords = fm->max_n_files >> LONG_BIT_SHIFT;
     debugs(8, 3, "file_map_grow: creating space for " << fm->max_n_files << " files");
+    debugs(8, 5, "--> " << fm->nwords << " words of " << sizeof(*fm->file_map) << " bytes each");
     fm->file_map = (unsigned long *)xcalloc(fm->nwords, sizeof(*fm->file_map));
     debugs(8, 3, "copying " << old_sz << " old bytes");
     memcpy(fm->file_map, old_map, old_sz);

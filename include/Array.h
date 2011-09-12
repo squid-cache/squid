@@ -97,6 +97,8 @@ public:
     Vector &operator += (E item) {push_back(item); return *this;};
 
     void insert (E);
+    const E &front() const;
+    E &front();
     E &back();
     E pop_back();
     E shift();         // aka pop_front
@@ -248,6 +250,22 @@ Vector<E>::back()
 {
     assert (size());
     return items[size() - 1];
+}
+
+template<class E>
+const E &
+Vector<E>::front() const
+{
+    assert (size());
+    return items[0];
+}
+
+template<class E>
+E &
+Vector<E>::front()
+{
+    assert (size());
+    return items[0];
 }
 
 template<class E>

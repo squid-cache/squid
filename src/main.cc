@@ -47,6 +47,7 @@
 #if USE_AUTH
 #include "auth/Gadgets.h"
 #endif
+#include "base/RunnersRegistry.h"
 #include "base/Subscription.h"
 #include "base/TextException.h"
 #if USE_DELAY_POOLS
@@ -1427,6 +1428,11 @@ SquidMain(int argc, char **argv)
         /* NOTREACHED */
     }
 
+    debugs(1,2, HERE << "Doing post-config initialization\n");
+    leave_suid();
+    ActivateRegistered(rrAfterConfig);
+    enter_suid();
+
     if (!opt_no_daemon && Config.workers > 0)
         watch_child(argv);
 
@@ -1785,6 +1791,10 @@ watch_child(char *argv[])
 #endif
 
         if (!TheKids.someRunning() && !TheKids.shouldRestartSome()) {
+            leave_suid();
+            DeactivateRegistered(rrAfterConfig);
+            enter_suid();
+
             if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
                 syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
                 exit(1);
@@ -1884,6 +1894,7 @@ SquidShutdown()
     Store::Root().sync();		/* Flush log close */
     StoreFileSystem::FreeAllFs();
     DiskIOModule::FreeAllModules();
+    DeactivateRegistered(rrAfterConfig);
 #if LEAK_CHECK_MODE && 0 /* doesn't work at the moment */
 
     configFreeMemory();
