@@ -462,7 +462,7 @@ MimeIcon::created (StoreEntry *newEntry)
 
     reply->setHeaders(HTTP_OK, NULL, mimeGetContentType(icon), sb.st_size, sb.st_mtime, -1);
 
-    reply->cache_control = httpHdrCcCreate();
+    reply->cache_control = new HttpHdrCc();
 
     httpHdrCcSetMaxAge(reply->cache_control, 86400);
 

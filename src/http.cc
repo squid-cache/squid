@@ -1758,7 +1758,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         HttpHdrCc *cc = hdr_in->getCc();
 
         if (!cc)
-            cc = httpHdrCcCreate();
+            cc = new HttpHdrCc();
 
 #if 0 /* see bug 2330 */
         /* Set no-cache if determined needed but not found */
