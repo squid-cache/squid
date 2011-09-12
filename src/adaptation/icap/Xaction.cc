@@ -204,8 +204,11 @@ void Adaptation::Icap::Xaction::closeConnection()
         if (reuseConnection)
             disableRetries();
 
+        const bool reset = !reuseConnection &&
+                           (al.icap.outcome == xoGone || al.icap.outcome == xoError);
+
         Adaptation::Icap::ServiceRep &s = service();
-        s.putConnection(connection, reuseConnection, status());
+        s.putConnection(connection, reuseConnection, reset, status());
 
         writer = NULL;
         reader = NULL;
@@ -476,8 +479,10 @@ void Adaptation::Icap::Xaction::noteInitiatorAborted()
 {
 
     if (theInitiator.set()) {
+        debugs(93,4, HERE << "Initiator gone before ICAP transaction ended");
         clearInitiator();
         detailError(ERR_DETAIL_ICAP_INIT_GONE);
+        setOutcome(xoGone);
         mustStop("initiator aborted");
     }
 

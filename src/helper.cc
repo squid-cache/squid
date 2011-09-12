@@ -1093,6 +1093,7 @@ GetFirstAvailable(helper * hlp)
     dlink_node *n;
     helper_server *srv;
     helper_server *selected = NULL;
+    debugs(84, 5, "GetFirstAvailable: Running servers " << hlp->childs.n_running);
 
     if (hlp->childs.n_running == 0)
         return NULL;
@@ -1119,12 +1120,17 @@ GetFirstAvailable(helper * hlp)
     }
 
     /* Check for overload */
-    if (!selected)
+    if (!selected) {
+        debugs(84, 5, "GetFirstAvailable: None available.");
         return NULL;
+    }
 
-    if (selected->stats.pending >= (hlp->childs.concurrency ? hlp->childs.concurrency : 1))
+    if (selected->stats.pending >= (hlp->childs.concurrency ? hlp->childs.concurrency : 1)) {
+        debugs(84, 3, "GetFirstAvailable: Least-loaded helper is overloaded!");
         return NULL;
+    }
 
+    debugs(84, 5, "GetFirstAvailable: returning srv-" << selected->index);
     return selected;
 }
 

@@ -115,7 +115,7 @@ Adaptation::Icap::ServiceRep::getConnection(bool retriableXact, bool &reused)
 }
 
 // pools connection if it is reusable or closes it
-void Adaptation::Icap::ServiceRep::putConnection(const Comm::ConnectionPointer &conn, bool isReusable, const char *comment)
+void Adaptation::Icap::ServiceRep::putConnection(const Comm::ConnectionPointer &conn, bool isReusable, bool sendReset, const char *comment)
 {
     Must(Comm::IsConnOpen(conn));
     // do not pool an idle connection if we owe connections
@@ -124,9 +124,14 @@ void Adaptation::Icap::ServiceRep::putConnection(const Comm::ConnectionPointer &
         commUnsetConnTimeout(conn);
         theIdleConns->push(conn);
     } else {
-        debugs(93, 3, HERE << "closing pconn" << comment);
-        // comm_close will clear timeout
-        conn->close();
+        debugs(93, 3, HERE << (sendReset ? "RST" : "FIN") << "-closing " <<
+               comment);
+        // comm_close called from Connection::close will clear timeout
+        // TODO: add "bool sendReset = false" to Connection::close()?
+        if (sendReset)
+            comm_reset_close(conn);
+        else
+            conn->close();
     }
 
     Must(theBusyConns > 0);

@@ -111,7 +111,7 @@ public:
     bool allows204() const;
     bool allows206() const;
     Comm::ConnectionPointer getConnection(bool isRetriable, bool &isReused);
-    void putConnection(const Comm::ConnectionPointer &conn, bool isReusable, const char *comment);
+    void putConnection(const Comm::ConnectionPointer &conn, bool isReusable, bool sendReset, const char *comment);
     void noteConnectionUse(const Comm::ConnectionPointer &conn);
     void noteConnectionFailed(const char *comment);
 
