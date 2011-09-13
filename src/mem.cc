@@ -521,7 +521,8 @@ void
 memClean(void)
 {
     MemPoolGlobalStats stats;
-    MemPools::GetInstance().setIdleLimit(0);
+    if (Config.MemPools.limit > 0) // do not reset if disabled or same
+        MemPools::GetInstance().setIdleLimit(0);
     MemPools::GetInstance().clean(0);
     memPoolGetGlobalStats(&stats);
 

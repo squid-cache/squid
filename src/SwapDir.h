@@ -37,14 +37,14 @@
 
 /* forward decls */
 class RemovalPolicy;
+class MemStore;
 
 /* Store dir configuration routines */
 /* SwapDir *sd, char *path ( + char *opt later when the strtok mess is gone) */
 
 class ConfigOption;
 
-/* New class that replaces the static SwapDir methods as part of the Store overhaul */
-
+/// hides memory/disk cache distinction from callers
 class StoreController : public Store
 {
 
@@ -58,6 +58,9 @@ public:
 
     virtual void get(String const, STOREGETCLIENT, void * cbdata);
 
+    /* Store parent API */
+    virtual void handleIdleEntry(StoreEntry &e);
+
     virtual void init();
 
     virtual void maintain(); /* perform regular maintenance should be private and self registered ... */
@@ -65,6 +68,12 @@ public:
     virtual uint64_t maxSize() const;
 
     virtual uint64_t minSize() const;
+
+    virtual uint64_t currentSize() const;
+
+    virtual uint64_t currentCount() const;
+
+    virtual int64_t maxObjectSize() const;
 
     virtual void stat(StoreEntry &) const;
 
@@ -74,9 +83,7 @@ public:
 
     virtual void reference(StoreEntry &);	/* Reference this object */
 
-    virtual void dereference(StoreEntry &);	/* Unreference this object */
-
-    virtual void updateSize(int64_t size, int sign);
+    virtual bool dereference(StoreEntry &);	/* Unreference this object */
 
     /* the number of store dirs being rebuilt. */
     static int store_dirs_rebuilding;
@@ -84,7 +91,8 @@ public:
 private:
     void createOneStore(Store &aStore);
 
-    StorePointer swapDir;
+    StorePointer swapDir; ///< summary view of all disk caches
+    MemStore *memStore; ///< memory cache
 };
 
 /* migrating from the Config based list of swapdirs */
@@ -108,19 +116,22 @@ SQUIDCEXTERN void storeDirLRUAdd(StoreEntry *);
 SQUIDCEXTERN int storeDirGetBlkSize(const char *path, int *blksize);
 SQUIDCEXTERN int storeDirGetUFSStats(const char *, int *, int *, int *, int *);
 
-
+/// manages a single cache_dir
 class SwapDir : public Store
 {
 
 public:
-    SwapDir(char const *aType) : theType (aType), cur_size(0), max_size(0), min_objsize(0), max_objsize(-1), cleanLog(NULL) {
-        fs.blksize = 1024;
-        path = NULL;
-    }
+    typedef RefCount<SwapDir> Pointer;
 
+    SwapDir(char const *aType);
     virtual ~SwapDir();
     virtual void reconfigure(int, char *) = 0;
     char const *type() const;
+
+    virtual bool needsDiskStrand() const; ///< needs a dedicated kid process
+    virtual bool active() const; ///< may be used in this strand
+    /// whether stat should be reported by this SwapDir
+    virtual bool doReportStat() const { return active(); }
 
     /* official Store interface functions */
     virtual void diskFull();
@@ -132,18 +143,27 @@ public:
     virtual uint64_t maxSize() const { return max_size;}
 
     virtual uint64_t minSize() const;
+
+    virtual int64_t maxObjectSize() const { return max_objsize; }
+
     virtual void stat (StoreEntry &anEntry) const;
     virtual StoreSearch *search(String const url, HttpRequest *) = 0;
 
-    virtual void updateSize(int64_t size, int sign);
-
     /* migrated from store_dir.cc */
     bool objectSizeIsAcceptable(int64_t objsize) const;
+
+    /// called when the entry is about to forget its association with cache_dir
+    virtual void disconnect(StoreEntry &) {}
+
+    /// called when entry swap out is complete
+    virtual void swappedOut(const StoreEntry &e) = 0;
 
 protected:
     void parseOptions(int reconfiguring);
     void dumpOptions(StoreEntry * e) const;
     virtual ConfigOption *getOptionTree() const;
+
+    int64_t sizeInBlocks(const int64_t size) const { return (size + fs.blksize - 1) / fs.blksize; }
 
 private:
     bool optionReadOnlyParse(char const *option, const char *value, int reconfiguring);
@@ -152,9 +172,10 @@ private:
     void optionObjectSizeDump(StoreEntry * e) const;
     char const *theType;
 
-public:
-    uint64_t cur_size;        ///< currently used space in the storage area
+protected:
     uint64_t max_size;        ///< maximum allocatable size of the storage area
+
+public:
     char *path;
     int index;			/* This entry's index into the swapDirs array */
     int64_t min_objsize;
@@ -174,11 +195,11 @@ public:
     virtual bool doubleCheck(StoreEntry &);	/* Double check the obj integrity */
     virtual void statfs(StoreEntry &) const;	/* Dump fs statistics */
     virtual void maintain();	/* Replacement maintainence */
-    /* <0 == error. > 1000 == error */
-    virtual int canStore(StoreEntry const &)const = 0; /* Check if the fs will store an object */
+    /// check whether we can store the entry; if we can, report current load
+    virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const = 0;
     /* These two are notifications */
     virtual void reference(StoreEntry &);	/* Reference this object */
-    virtual void dereference(StoreEntry &);	/* Unreference this object */
+    virtual bool dereference(StoreEntry &);	/* Unreference this object */
     virtual int callback();	/* Handle pending callbacks */
     virtual void sync();	/* Sync the store prior to shutdown */
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *) = 0;

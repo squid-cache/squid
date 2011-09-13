@@ -1185,7 +1185,7 @@ HttpStateData::processReply()
         if (!continueAfterParsingHeader()) // parsing error or need more data
             return; // TODO: send errors to ICAP
 
-        adaptOrFinalizeReply();
+        adaptOrFinalizeReply(); // may write to, abort, or "close" the entry
     }
 
     // kick more reads if needed and/or process the response body, if any
@@ -1354,14 +1354,16 @@ HttpStateData::processReplyBody()
      * That means header content has been removed from readBuf and
      * it contains only body data.
      */
-    if (flags.chunked) {
-        if (!decodeAndWriteReplyBody()) {
-            flags.do_next_read = 0;
-            serverComplete();
-            return;
-        }
-    } else
-        writeReplyBody();
+    if (entry->isAccepting()) {
+        if (flags.chunked) {
+            if (!decodeAndWriteReplyBody()) {
+                flags.do_next_read = 0;
+                serverComplete();
+                return;
+            }
+        } else
+            writeReplyBody();
+    }
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         /*

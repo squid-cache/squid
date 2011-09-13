@@ -58,8 +58,8 @@
 class AsyncCall;
 class StoreClient;
 class MemObject;
-class Store;
 class StoreSearch;
+class SwapDir;
 
 typedef struct {
 
@@ -72,6 +72,9 @@ typedef struct {
 } StoreIoStats;
 
 extern StoreIoStats store_io_stats;
+
+/// maximum number of entries per cache_dir
+enum { SwapFilenMax = 0xFFFFFF }; // keep in sync with StoreEntry::swap_filen
 
 /**
  \ingroup StoreAPI
@@ -86,7 +89,7 @@ public:
     virtual const char *getMD5Text() const;
     StoreEntry();
     StoreEntry(const char *url, const char *log_url);
-    virtual ~StoreEntry() {}
+    virtual ~StoreEntry();
 
     virtual HttpReply const *getReply() const;
     virtual void write (StoreIOBuffer);
@@ -96,7 +99,8 @@ public:
     virtual void complete();
     virtual store_client_t storeClientType() const;
     virtual char const *getSerialisedMetaData();
-    virtual void replaceHttpReply(HttpReply *);
+    void replaceHttpReply(HttpReply *, bool andStartWriting = true);
+    void startWriting(); ///< pack and write reply headers and, maybe, body
     virtual bool swapoutPossible();
     virtual void trimMemory();
     void abort();
@@ -111,16 +115,18 @@ public:
     void cacheNegatively();		/** \todo argh, why both? */
     void invokeHandlers();
     void purgeMem();
+    void cacheInMemory(); ///< start or continue storing in memory cache
     void swapOut();
     bool swapOutAble() const;
-    void swapOutFileClose();
+    void swapOutFileClose(int how);
     const char *url() const;
     int checkCachable();
     int checkNegativeHit() const;
     int locked() const;
     int validToSend() const;
-    int keepInMemory() const;
+    bool memoryCachable() const; ///< may be cached in memory
     void createMemObject(const char *, const char *);
+    void hideMemObject(); ///< no mem_obj for callers until createMemObject
     void dump(int debug_lvl) const;
     void hashDelete();
     void hashInsert(const cache_key *);
@@ -142,9 +148,10 @@ public:
     bool hasIfNoneMatchEtag(const HttpRequest &request) const;
 
     /** What store does this entry belong too ? */
-    virtual RefCount<Store> store() const;
+    virtual RefCount<SwapDir> store() const;
 
     MemObject *mem_obj;
+    MemObject *hidden_mem_obj; ///< mem_obj created before URLs were known
     RemovalPolicyNode repl;
     /* START OF ON-DISK STORE_META_STD TLV field */
     time_t timestamp;
@@ -156,7 +163,8 @@ public:
     uint16_t flags;
     /* END OF ON-DISK STORE_META_STD */
 
-    sfileno swap_filen:25;
+    /// unique ID inside a cache_dir for swapped out entries; -1 for others
+    sfileno swap_filen:25; // keep in sync with SwapFilenMax
 
     sdirno swap_dirn:7;
 
@@ -208,6 +216,8 @@ private:
     bool validLength() const;
     bool hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) const;
 };
+
+std::ostream &operator <<(std::ostream &os, const StoreEntry &e);
 
 /// \ingroup StoreAPI
 class NullStoreEntry:public StoreEntry
@@ -296,6 +306,15 @@ public:
     /** The minimum size the store will shrink to via normal housekeeping */
     virtual uint64_t minSize() const = 0;
 
+    /** current store size */
+    virtual uint64_t currentSize() const = 0;
+
+    /** the total number of objects stored */
+    virtual uint64_t currentCount() const = 0;
+
+    /** the maximum object size that can be stored, -1 if unlimited */
+    virtual int64_t maxObjectSize() const = 0;
+
     /**
      * Output stats to the provided store entry.
      \todo make these calls asynchronous
@@ -314,12 +333,15 @@ public:
     /* pulled up from SwapDir for migration.... probably do not belong here */
     virtual void reference(StoreEntry &) = 0;	/* Reference this object */
 
-    virtual void dereference(StoreEntry &) = 0;	/* Unreference this object */
+    /// Undo reference(), returning false iff idle e should be destroyed
+    virtual bool dereference(StoreEntry &e) = 0;
 
     virtual void maintain() = 0; /* perform regular maintenance should be private and self registered ... */
 
-    /* These should really be private */
-    virtual void updateSize(int64_t size, int sign) = 0;
+    // XXX: This method belongs to Store::Root/StoreController, but it is here
+    // because test cases use non-StoreController derivatives as Root
+    /// called when the entry is no longer needed by any transaction
+    virtual void handleIdleEntry(StoreEntry &e) {}
 
 private:
     static RefCount<Store> CurrentRoot;
