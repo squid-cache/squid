@@ -85,4 +85,19 @@ private:
     status_type status; ///< exit status of a stopped kid
 };
 
+
+// TODO: processes may not be kids; is there a better place to put this?
+
+/// process kinds
+typedef enum {
+    pkOther  = 0, ///< we do not know or do not care
+    pkCoordinator = 1, ///< manages all other kids
+    pkWorker = 2, ///< general-purpose worker bee
+    pkDisker = 4, ///< cache_dir manager
+} ProcessKind;
+
+/// ProcessKind for the current process
+extern int TheProcessKind;
+
+
 #endif /* SQUID_IPC_KID_H */

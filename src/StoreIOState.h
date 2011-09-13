@@ -84,13 +84,19 @@ public:
 
     virtual void read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data) = 0;
     virtual void write(char const *buf, size_t size, off_t offset, FREE * free_func) = 0;
-    virtual void close() = 0;
+
+    typedef enum {
+        wroteAll, ///< success: caller supplied all data it wanted to swap out
+        writerGone, ///< failure: caller left before swapping out everything
+        readerDone ///< success or failure: either way, stop swapping in
+    } CloseHow;
+    virtual void close(int how) = 0; ///< finish or abort swapping per CloseHow
 
     sdirno swap_dirn;
     sfileno swap_filen;
     StoreEntry *e;		/* Need this so the FS layers can play god */
     mode_t mode;
-    off_t offset_;		/* current on-disk offset pointer */
+    off_t offset_; ///< number of bytes written or read for this entry so far
     STFNCB *file_callback;	/* called on delayed sfileno assignments */
     STIOCB *callback;
     void *callback_data;
@@ -107,7 +113,7 @@ public:
 
 StoreIOState::Pointer storeCreate(StoreEntry *, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
 StoreIOState::Pointer storeOpen(StoreEntry *, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
-SQUIDCEXTERN void storeClose(StoreIOState::Pointer);
+SQUIDCEXTERN void storeClose(StoreIOState::Pointer, int how);
 SQUIDCEXTERN void storeRead(StoreIOState::Pointer, char *, size_t, off_t, StoreIOState::STRCB *, void *);
 SQUIDCEXTERN void storeIOWrite(StoreIOState::Pointer, char const *, size_t, off_t, FREE *);
 

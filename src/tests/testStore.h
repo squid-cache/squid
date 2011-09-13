@@ -59,13 +59,17 @@ public:
 
     virtual uint64_t minSize() const;
 
+    virtual uint64_t currentSize() const;
+
+    virtual uint64_t currentCount() const;
+
+    virtual int64_t maxObjectSize() const;
+
     virtual void stat(StoreEntry &) const; /* output stats to the provided store entry */
 
     virtual void reference(StoreEntry &) {}	/* Reference this object */
 
-    virtual void dereference(StoreEntry &) {}	/* Unreference this object */
-
-    virtual void updateSize(int64_t size, int sign) {}
+    virtual bool dereference(StoreEntry &) { return true; }
 
     virtual StoreSearch *search(String const url, HttpRequest *);
 };

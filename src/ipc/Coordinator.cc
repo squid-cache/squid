@@ -49,10 +49,27 @@ Ipc::StrandCoord* Ipc::Coordinator::findStrand(int kidId)
 
 void Ipc::Coordinator::registerStrand(const StrandCoord& strand)
 {
-    if (StrandCoord* found = findStrand(strand.kidId))
+    debugs(54, 3, HERE << "registering kid" << strand.kidId <<
+           ' ' << strand.tag);
+    if (StrandCoord* found = findStrand(strand.kidId)) {
+        const String oldTag = found->tag;
         *found = strand;
-    else
+        if (oldTag.size() && !strand.tag.size())
+            found->tag = oldTag; // keep more detailed info (XXX?)
+    } else {
         strands_.push_back(strand);
+    }
+
+    // notify searchers waiting for this new strand, if any
+    typedef Searchers::iterator SRI;
+    for (SRI i = searchers.begin(); i != searchers.end();) {
+        if (i->tag == strand.tag) {
+            notifySearcher(*i, strand);
+            i = searchers.erase(i);
+        } else {
+            ++i;
+        }
+    }
 }
 
 void Ipc::Coordinator::receive(const TypedMsgHdr& message)
@@ -60,8 +77,16 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
     switch (message.type()) {
     case mtRegistration:
         debugs(54, 6, HERE << "Registration request");
-        handleRegistrationRequest(StrandCoord(message));
+        handleRegistrationRequest(HereIamMessage(message));
         break;
+
+    case mtStrandSearchRequest: {
+        const StrandSearchRequest sr(message);
+        debugs(54, 6, HERE << "Strand search request: " << sr.requestorId <<
+               " tag: " << sr.tag);
+        handleSearchRequest(sr);
+        break;
+    }
 
     case mtSharedListenRequest:
         debugs(54, 6, HERE << "Shared listen request");
@@ -104,14 +129,14 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
     }
 }
 
-void Ipc::Coordinator::handleRegistrationRequest(const StrandCoord& strand)
+void Ipc::Coordinator::handleRegistrationRequest(const HereIamMessage& msg)
 {
-    registerStrand(strand);
+    registerStrand(msg.strand);
 
     // send back an acknowledgement; TODO: remove as not needed?
     TypedMsgHdr message;
-    strand.pack(message);
-    SendMessage(MakeAddr(strandAddrPfx, strand.kidId), message);
+    msg.pack(message);
+    SendMessage(MakeAddr(strandAddrPfx, msg.strand.kidId), message);
 }
 
 void
@@ -154,6 +179,39 @@ void
 Ipc::Coordinator::handleCacheMgrResponse(const Mgr::Response& response)
 {
     Mgr::Inquirer::HandleRemoteAck(response);
+}
+
+void
+Ipc::Coordinator::handleSearchRequest(const Ipc::StrandSearchRequest &request)
+{
+    // do we know of a strand with the given search tag?
+    const StrandCoord *strand = NULL;
+    typedef StrandCoords::const_iterator SCCI;
+    for (SCCI i = strands_.begin(); !strand && i != strands_.end(); ++i) {
+        if (i->tag == request.tag)
+            strand = &(*i);
+    }
+
+    if (strand) {
+        notifySearcher(request, *strand);
+        return;
+    }
+
+    searchers.push_back(request);
+    debugs(54, 3, HERE << "cannot yet tell kid" << request.requestorId <<
+           " who " << request.tag << " is");
+}
+
+void
+Ipc::Coordinator::notifySearcher(const Ipc::StrandSearchRequest &request,
+                                 const StrandCoord& strand)
+{
+    debugs(54, 3, HERE << "tell kid" << request.requestorId << " that " <<
+           request.tag << " is kid" << strand.kidId);
+    const StrandSearchResponse response(strand);
+    TypedMsgHdr message;
+    response.pack(message);
+    SendMessage(MakeAddr(strandAddrPfx, request.requestorId), message);
 }
 
 #if SQUID_SNMP

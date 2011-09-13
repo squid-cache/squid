@@ -41,6 +41,7 @@ class StoreMetaUnpacker
 public:
     StoreMetaUnpacker (const char *buf, ssize_t bufferLength, int *hdrlen);
     StoreMeta *createStoreMeta();
+    bool isBufferZero(); ///< all-zeros buffer, implies !isBufferSane
     bool isBufferSane();
 
 private:

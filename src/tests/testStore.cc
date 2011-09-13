@@ -6,9 +6,6 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testStore );
 
-// Stubs so this test will link cleanly
-#include "comm/stub_libcomm.cc"
-
 int
 TestStore::callback()
 {
@@ -38,6 +35,24 @@ TestStore::maxSize() const
 
 uint64_t
 TestStore::minSize() const
+{
+    return 1;
+}
+
+uint64_t
+TestStore::currentSize() const
+{
+    return 2;
+}
+
+uint64_t
+TestStore::currentCount() const
+{
+    return 2;
+}
+
+int64_t
+TestStore::maxObjectSize() const
 {
     return 1;
 }
