@@ -144,7 +144,30 @@ struct relist {
 class CpuAffinityMap;
 class RemovalPolicySettings;
 class external_acl;
-class Store;
+class SwapDir;
+
+/// Used for boolean enabled/disabled options with complex default logic.
+/// Allows Squid to compute the right default after configuration.
+/// Checks that not-yet-defined option values are not used.
+class YesNoNone
+{
+// TODO: generalize to non-boolean option types
+public:
+    YesNoNone(): option(0) {}
+
+    /// returns true iff enabled; asserts if the option has not been configured
+    operator void *() const; // TODO: use a fancy/safer version of the operator
+
+    /// enables or disables the option;
+    void configure(bool beSet);
+
+    /// whether the option was enabled or disabled, by user or Squid
+    bool configured() const { return option != 0; }
+
+private:
+    enum { optUnspecified = -1, optDisabled = 0, optEnabled = 1 };
+    int option; ///< configured value or zero
+};
 
 struct SquidConfig {
 
@@ -155,6 +178,8 @@ struct SquidConfig {
         int highWaterMark;
         int lowWaterMark;
     } Swap;
+
+    YesNoNone memShared; ///< whether the memory cache is shared among workers
     size_t memMaxSize;
 
     struct {
@@ -496,9 +521,11 @@ struct SquidConfig {
     refresh_t *Refresh;
 
     struct _cacheSwap {
-        RefCount<class Store> *swapDirs;
+        RefCount<SwapDir> *swapDirs;
         int n_allocated;
         int n_configured;
+        /// number of disk processes required to support all cache_dirs
+        int n_strands;
     } cacheSwap;
     /*
      * I'm sick of having to keep doing this ..

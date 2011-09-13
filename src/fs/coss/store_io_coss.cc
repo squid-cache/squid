@@ -83,8 +83,7 @@ CossSwapDir::allocate(const StoreEntry * e, int which)
         allocsize = e->objectLen() + e->mem_obj->swap_hdr_sz;
 
     /* Check if we have overflowed the disk .. */
-    /* max_size is int, so cast to (off_t) *before* bit-shifting */
-    if ((current_offset + allocsize) > ((off_t)max_size << 10)) {
+    if (current_offset + allocsize > static_cast<int64_t>(maxSize())) {
         /*
          * tried to allocate past the end of the disk, so wrap
          * back to the beginning
@@ -134,6 +133,10 @@ void
 CossSwapDir::unlink(StoreEntry & e)
 {
     debugs(79, 3, "storeCossUnlink: offset " << e.swap_filen);
+    if (e.swap_status == SWAPOUT_DONE && EBIT_TEST(e.flags, ENTRY_VALIDATED)) {
+        cur_size -= fs.blksize * sizeInBlocks(e.swap_file_sz);
+        --n_disk_objects;
+    }
     StoreFScoss::GetInstance().stats.unlink.ops++;
     StoreFScoss::GetInstance().stats.unlink.success++;
     storeCossRemove(this, &e);
@@ -275,8 +278,9 @@ CossSwapDir::openStoreIO(StoreEntry & e, StoreIOState::STFNCB * file_callback,
     return sio;
 }
 
+/// COSS does not distinguish different closure types
 void
-CossState::close()
+CossState::close(int)
 {
     debugs(79, 3, "storeCossClose: offset " << swap_filen);
 
