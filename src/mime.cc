@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "HttpHdrCc.h"
 #include "Store.h"
 #include "StoreClient.h"
 #include "HttpReply.h"

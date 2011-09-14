@@ -38,6 +38,7 @@
 #include "Store.h"
 #include "HttpReply.h"
 #include "HttpHdrContRange.h"
+#include "HttpHdrCc.h"
 #include "HttpHdrSc.h"
 #include "acl/FilledChecklist.h"
 #include "HttpRequest.h"

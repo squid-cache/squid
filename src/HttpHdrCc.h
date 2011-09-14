@@ -1,8 +1,6 @@
 /*
  * HttpHdrCc.h
  *
- *  Created on: Sep 2, 2011
- *      Author: Francesco Chemolli
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -38,52 +36,46 @@
 #include "MemPool.h"
 #include "SquidString.h"
 
-/** Http Cache-control header representation
+/** Http Cache-Control header representation
  *
- * Store, parse and output the Cache-control HTTP header.
+ * Store and parse the Cache-Control HTTP header.
  */
 class HttpHdrCc
 {
 
 public:
-    int32_t mask;
-    int32_t max_age;
-    int32_t s_maxage;
-    int32_t max_stale;
-    int32_t stale_if_error;
-    int32_t min_fresh;
-    String other;
+    explicit HttpHdrCc() :
+            mask(0), max_age(-1), s_maxage(-1),
+            max_stale(-1), stale_if_error(0),
+            min_fresh(-1) {}
 
-    HttpHdrCc(int32_t max_age_=-1, int32_t s_maxage_=-1,
-            int32_t max_stale_=-1, int32_t min_fresh_=-1) :
-            mask(0), max_age(max_age_), s_maxage(s_maxage_),
-            max_stale(max_stale_), stale_if_error(0),
-            min_fresh(min_fresh_) {}
-
-    /** reset the structure to a clear state.
-     *
-     */
+    /// reset to the after-default-construction state.
     void clear();
-    /**parses the supplied string filling in HttpHdrCc's fields.
+
+    /**parse the supplied string filling in HttpHdrCc's fields.
      *
      * \note: internal structures are not cleaned-up beforehand.
      *        caller must explicitly clear() beforehand if he wants that
      */
-    bool parseInit(const String &s);
+    bool parse(const String &s);
+
     /** set the max_age value
      *
      * \param max_age the new max age. Values <0 clear it.
      */
     void setMaxAge(int32_t max_age);
 
-    /** set the s-maxage
-     *
-     * \param s_maxage the new max age. Values <0 clear it.
-     */
-    void setSMaxAge(int32_t s_maxage);
-
     MEMPROXY_CLASS(HttpHdrCc);
 
+    /// bit-mask for the various Cc directives, keyed on http_hdr_cc_type
+    int32_t mask;
+    int32_t max_age;
+    int32_t s_maxage;
+    int32_t max_stale;
+    int32_t stale_if_error;
+    int32_t min_fresh;
+    /// comma-separated string accumulating unknown Cache-control directives.
+    String other;
 };
 
 MEMPROXY_CLASS_INLINE(HttpHdrCc);

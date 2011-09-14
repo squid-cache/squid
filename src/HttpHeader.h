@@ -37,7 +37,6 @@
 #include "HttpHeaderRange.h"
 /* HttpHeader holds a HttpHeaderMask */
 #include "HttpHeaderMask.h"
-#include "HttpHdrCc.h"
 
 
 /* class forward declarations */
