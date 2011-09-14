@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "base64.h"
 #include "HttpHdrContRange.h"
+#include "HttpHdrCc.h"
 #include "HttpHdrSc.h"
 #include "HttpHeader.h"
 #include "MemBuf.h"
@@ -1312,15 +1313,19 @@ HttpHeader::getCc() const
 {
     HttpHdrCc *cc;
     String s;
+    bool gotList;
 
     if (!CBIT_TEST(mask, HDR_CACHE_CONTROL))
         return NULL;
     PROF_start(HttpHeader_getCc);
 
-    getList(HDR_CACHE_CONTROL, &s);
+    gotList=getList(HDR_CACHE_CONTROL, &s);
 
     cc=new HttpHdrCc();
-    if (!cc->parseInit(s)) {
+    if (!gotList)
+        return cc;
+
+    if (!cc->parse(s)) {
         delete cc;
         cc = NULL;
     }

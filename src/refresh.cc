@@ -38,6 +38,7 @@
 #endif
 
 #include "squid.h"
+#include "HttpHdrCc.h"
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "MemObject.h"
