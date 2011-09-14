@@ -156,8 +156,6 @@ peerSelect(Comm::ConnectionList * paths,
 
     psstate->callback_data = cbdataReference(callback_data);
 
-    psstate->direct = DIRECT_UNKNOWN;
-
 #if USE_CACHE_DIGESTS
 
     request->hier.peer_select_start = current_time;
@@ -177,6 +175,18 @@ peerCheckNeverDirectDone(allow_t answer, void *data)
     psstate->acl_checklist = NULL;
     debugs(44, 3, "peerCheckNeverDirectDone: " << answer);
     psstate->never_direct = answer;
+    switch (answer) {
+    case ACCESS_ALLOWED:
+        /** if always_direct says YES, do that. */
+        psstate->direct = DIRECT_YES;
+        debugs(44, 3, HERE << "direct = " << DirectStr[psstate->direct] << " (never_direct allow)");
+        break;
+    case ACCESS_DENIED: // not relevant.
+        break;
+    default: // Oops. Failed to get a result.
+        debugs(44, DBG_IMPORTANT, "WARNING: never_direct resulted in " << answer << ". Username ACLs are not reliable here.");
+        assert(answer != ACCESS_DUNNO);
+    }
     peerSelectFoo(psstate);
 }
 
@@ -187,6 +197,18 @@ peerCheckAlwaysDirectDone(allow_t answer, void *data)
     psstate->acl_checklist = NULL;
     debugs(44, 3, "peerCheckAlwaysDirectDone: " << answer);
     psstate->always_direct = answer;
+    switch (answer) {
+    case ACCESS_ALLOWED:
+        /** if always_direct says YES, do that. */
+        psstate->direct = DIRECT_YES;
+        debugs(44, 3, HERE << "direct = " << DirectStr[psstate->direct] << " (always_direct allow)");
+        break;
+    case ACCESS_DENIED: // not relevant.
+        break;
+    default: // Oops. Failed to get a result.
+        debugs(44, DBG_IMPORTANT, "WARNING: always_direct resulted in " << answer << ". Username ACLs are not reliable here.");
+        assert(answer != ACCESS_DUNNO);
+    }
     peerSelectFoo(psstate);
 }
 
@@ -344,41 +366,34 @@ peerSelectFoo(ps_state * ps)
     HttpRequest *request = ps->request;
     debugs(44, 3, "peerSelectFoo: '" << RequestMethodStr(request->method) << " " << request->GetHost() << "'");
 
-    /** If we don't known whether DIRECT is permitted ... */
+    /** If we don't know whether DIRECT is permitted ... */
     if (ps->direct == DIRECT_UNKNOWN) {
-        if (ps->always_direct == ACCESS_DUNNO && Config.accessList.AlwaysDirect) {
+        if (ps->always_direct == ACCESS_DUNNO) {
+            debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (always_direct to be checked)");
             /** check always_direct; */
-            ps->acl_checklist = new ACLFilledChecklist(
-                Config.accessList.AlwaysDirect,
-                request,
-                NULL);		/* ident */
+            ps->acl_checklist = new ACLFilledChecklist(Config.accessList.AlwaysDirect, request, NULL);
             ps->acl_checklist->nonBlockingCheck(peerCheckAlwaysDirectDone, ps);
             return;
-        } else if (ps->always_direct == ACCESS_ALLOWED) {
-            /** if always_direct says YES, do that. */
-            ps->direct = DIRECT_YES;
-        } else if (ps->never_direct == ACCESS_DUNNO && Config.accessList.NeverDirect) {
+        } else if (ps->never_direct == ACCESS_DUNNO) {
+            debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (never_direct to be checked)");
             /** check never_direct; */
-            ps->acl_checklist = new ACLFilledChecklist(
-                Config.accessList.NeverDirect,
-                request,
-                NULL);		/* ident */
-            ps->acl_checklist->nonBlockingCheck(peerCheckNeverDirectDone,
-                                                ps);
+            ps->acl_checklist = new ACLFilledChecklist(Config.accessList.NeverDirect, request, NULL);
+            ps->acl_checklist->nonBlockingCheck(peerCheckNeverDirectDone, ps);
             return;
-        } else if (ps->never_direct == ACCESS_ALLOWED) {
-            /** if always_direct says NO, do that. */
-            ps->direct = DIRECT_NO;
         } else if (request->flags.no_direct) {
             /** if we are accelerating, direct is not an option. */
             ps->direct = DIRECT_NO;
+            debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (forced non-direct)");
         } else if (request->flags.loopdetect) {
             /** if we are in a forwarding-loop, direct is not an option. */
             ps->direct = DIRECT_YES;
+            debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (forwarding loop detected)");
         } else if (peerCheckNetdbDirect(ps)) {
             ps->direct = DIRECT_YES;
+            debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (checkNetdbDirect)");
         } else {
             ps->direct = DIRECT_MAYBE;
+            debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct] << " (default)");
         }
 
         debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct]);
@@ -865,9 +880,9 @@ ps_state::operator new(size_t)
 
 ps_state::ps_state() : request (NULL),
         entry (NULL),
-        always_direct(ACCESS_DUNNO),
-        never_direct(ACCESS_DUNNO),
-        direct (0),
+        always_direct(Config.accessList.AlwaysDirect?ACCESS_DUNNO:ACCESS_DENIED),
+        never_direct(Config.accessList.NeverDirect?ACCESS_DUNNO:ACCESS_DENIED),
+        direct(DIRECT_UNKNOWN),
         callback (NULL),
         callback_data (NULL),
         servers (NULL),
