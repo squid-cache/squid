@@ -212,10 +212,10 @@ HttpHdrCc::parse(const String & str)
 
         case CC_OTHER:
 
-            if (other.size())
-                other.append(", ");
+            if (cc->other.size())
+                cc->other.append(", ");
 
-            other.append(item, ilen);
+            cc->other.append(item, ilen);
 
             break;
 
