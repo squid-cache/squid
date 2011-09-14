@@ -310,12 +310,14 @@ Rock::SwapDir::parseTimeOption(char const *option, const char *value, int reconf
     if (!value)
         self_destruct();
 
-    const time_msec_t newTime = strtoll(value, NULL, 10);
-
-    if (newTime < 0) {
-        debugs(3, DBG_CRITICAL, "FATAL: cache_dir " << path << ' ' << option << " must not be negative but is: " << newTime);
+    // TODO: handle time units and detect parsing errors better
+    const int64_t parsedValue = strtoll(value, NULL, 10);
+    if (parsedValue < 0) {
+        debugs(3, DBG_CRITICAL, "FATAL: cache_dir " << path << ' ' << option << " must not be negative but is: " << parsedValue);
         self_destruct();
     }
+
+    const time_msec_t newTime = static_cast<time_msec_t>(parsedValue);
 
     if (reconfiguring && *storedTime != newTime)
         debugs(3, DBG_IMPORTANT, "cache_dir " << path << ' ' << option << " is now " << newTime);
