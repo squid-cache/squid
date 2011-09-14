@@ -2899,6 +2899,9 @@ DOC_START
 		>la	Local IP address the client connected to
 		>lp	Local port number the client connected to
 
+		la	Local listening IP address the client connection was connected to.
+		lp	Local listening port number the client connection was connected to.
+
 		<a	Server IP address of the last server or peer connection
 		<A	Server FQDN or peer name
 		<p	Server port number of the last server or peer connection
