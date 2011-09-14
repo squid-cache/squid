@@ -41,6 +41,12 @@ Rock::SwapDir::search(String const url, HttpRequest *)
     return NULL; // XXX: implement
 }
 
+void
+Rock::SwapDir::get(String const key, STOREGETCLIENT cb, void *data)
+{
+    ::SwapDir::get(key, cb, data);
+}
+
 // called when Squid core needs a StoreEntry with a given key
 StoreEntry *
 Rock::SwapDir::get(const cache_key *key)
