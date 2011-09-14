@@ -453,7 +453,6 @@ Mem::Init(void)
     memDataInit(MEM_DLINK_NODE, "dlink_node", sizeof(dlink_node), 10);
     memDataInit(MEM_DREAD_CTRL, "dread_ctrl", sizeof(dread_ctrl), 0);
     memDataInit(MEM_DWRITE_Q, "dwrite_q", sizeof(dwrite_q), 0);
-    memDataInit(MEM_HTTP_HDR_CC, "HttpHdrCc", sizeof(HttpHdrCc), 0);
     memDataInit(MEM_HTTP_HDR_CONTENT_RANGE, "HttpHdrContRange", sizeof(HttpHdrContRange), 0);
     memDataInit(MEM_NETDBENTRY, "netdbEntry", sizeof(netdbEntry), 0);
     memDataInit(MEM_NET_DB_NAME, "net_db_name", sizeof(net_db_name), 0);

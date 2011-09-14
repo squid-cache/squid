@@ -58,6 +58,7 @@
 #include "http.h"
 #include "HttpControlMsg.h"
 #include "HttpHdrContRange.h"
+#include "HttpHdrCc.h"
 #include "HttpHdrSc.h"
 #include "HttpHdrScTarget.h"
 #include "HttpReply.h"

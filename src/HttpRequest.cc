@@ -37,6 +37,7 @@
 #include "squid.h"
 #include "DnsLookupDetails.h"
 #include "HttpRequest.h"
+#include "HttpHdrCc.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
