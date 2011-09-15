@@ -102,6 +102,7 @@ private:
     static void DiskerHandleMoreRequests(void*);
     static void DiskerHandleRequests();
     static void DiskerHandleRequest(const int workerId, IpcIoMsg &ipcIo);
+    static bool WaitBeforePop();
 
 private:
     const String dbName; ///< the name of the file we are managing
