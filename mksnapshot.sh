@@ -1,5 +1,5 @@
 #!/bin/sh -e
-
+echo "RUN: $0"
 if [ $# -lt 1 ]; then
 	echo "Usage: $0 [branch]"
 	echo "Where [branch] is the path under /bzr/ to the branch to snapshot."
@@ -17,9 +17,6 @@ branchpath=${1:-trunk}
 tag=${2:-`basename $branchpath`}
 startdir=${PWD}
 date=`env TZ=GMT date +%Y%m%d`
-revision=`bzr revno`
-
-suffix="${date}-r${revision}"
 
 tmpdir=${TMPDIR:-${PWD}}/${module}-${tag}-mksnapshot
 
@@ -36,6 +33,8 @@ if [ ! -f ${tmpdir}/configure ]; then
 fi
 
 cd ${tmpdir}
+revision=`bzr revno ${BZRROOT}/${module}/${branchpath}`
+suffix="${date}-r${revision}"
 eval `grep "^ *PACKAGE_VERSION=" configure | sed -e 's/-BZR//' | sed -e 's/PACKAGE_//'`
 eval `grep "^ *PACKAGE_TARNAME=" configure | sed -e 's/_TARNAME//'`
 ed -s configure.ac <<EOS
