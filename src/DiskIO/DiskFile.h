@@ -47,7 +47,21 @@ class DiskFile : public RefCountable
 {
 
 public:
+
+    /// generally useful configuration options supported by some children
+    class Config
+    {
+    public:
+        Config(): ioTimeout(0) {}
+
+        /// canRead/Write should return false if expected I/O delay exceeds it
+        time_msec_t ioTimeout; // not enforced if zero, which is the default
+    };
+
     typedef RefCount<DiskFile> Pointer;
+
+    /// notes supported configuration options; kids must call this first
+    virtual void configure(const Config &cfg) {}
 
     virtual void open(int flags, mode_t mode, RefCount<IORequestor> callback) = 0;
     virtual void create(int flags, mode_t mode, RefCount<IORequestor> callback) = 0;

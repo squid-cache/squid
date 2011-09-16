@@ -74,7 +74,6 @@ storeCleanup(void *datanotused)
     size_t statCount = 500;
 
     while (statCount-- && !currentSearch->isDone() && currentSearch->next()) {
-        ++validated;
         StoreEntry *e;
 
         e = currentSearch->currentItem();
@@ -99,7 +98,6 @@ storeCleanup(void *datanotused)
          * Only set the file bit if we know its a valid entry
          * otherwise, set it in the validation procedure
          */
-        e->store()->updateSize(e->swap_file_sz, 1);
 
         if ((++validated & 0x3FFFF) == 0)
             /* TODO format the int with with a stream operator */
@@ -109,7 +107,7 @@ storeCleanup(void *datanotused)
     if (currentSearch->isDone()) {
         debugs(20, 1, "  Completed Validation Procedure");
         debugs(20, 1, "  Validated " << validated << " Entries");
-        debugs(20, 1, "  store_swap_size = " << store_swap_size);
+        debugs(20, 1, "  store_swap_size = " << Store::Root().currentSize() / 1024.0 << " KB");
         StoreController::store_dirs_rebuilding--;
         assert(0 == StoreController::store_dirs_rebuilding);
 
@@ -230,4 +228,189 @@ storeRebuildProgress(int sd_index, int total, int sofar)
 
     debugs(20, 1, "Store rebuilding is "<< std::setw(4)<< std::setprecision(2) << 100.0 * n / d << "% complete");
     last_report = squid_curtime;
+}
+
+#include "fde.h"
+#include "StoreMetaUnpacker.h"
+#include "StoreMeta.h"
+#include "Generic.h"
+
+struct InitStoreEntry : public unary_function<StoreMeta, void> {
+    InitStoreEntry(StoreEntry *anEntry, cache_key *aKey):what(anEntry),index(aKey) {}
+
+    void operator()(StoreMeta const &x) {
+        switch (x.getType()) {
+
+        case STORE_META_KEY:
+            assert(x.length == SQUID_MD5_DIGEST_LENGTH);
+            memcpy(index, x.value, SQUID_MD5_DIGEST_LENGTH);
+            break;
+
+        case STORE_META_STD:
+            struct old_metahdr {
+                time_t timestamp;
+                time_t lastref;
+                time_t expires;
+                time_t lastmod;
+                size_t swap_file_sz;
+                uint16_t refcount;
+                uint16_t flags;
+            } *tmp;
+            tmp = (struct old_metahdr *)x.value;
+            assert(x.length == STORE_HDR_METASIZE_OLD);
+            what->timestamp = tmp->timestamp;
+            what->lastref = tmp->lastref;
+            what->expires = tmp->expires;
+            what->lastmod = tmp->lastmod;
+            what->swap_file_sz = tmp->swap_file_sz;
+            what->refcount = tmp->refcount;
+            what->flags = tmp->flags;
+            break;
+
+        case STORE_META_STD_LFS:
+            assert(x.length == STORE_HDR_METASIZE);
+            memcpy(&what->timestamp, x.value, STORE_HDR_METASIZE);
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    StoreEntry *what;
+    cache_key *index;
+};
+
+bool
+storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf,
+                      struct _store_rebuild_data &counts)
+{
+    if (fd < 0)
+        return false;
+
+    assert(buf.hasSpace()); // caller must allocate
+
+    const int len = FD_READ_METHOD(fd, buf.space(), buf.spaceSize());
+    statCounter.syscalls.disk.reads++;
+    if (len < 0) {
+        const int xerrno = errno;
+        debugs(47, DBG_IMPORTANT, "WARNING: cache_dir[" << diskIndex << "]: " <<
+               "Ignoring cached entry after meta data read failure: " << xstrerr(xerrno));
+        return false;
+    }
+
+    buf.appended(len);
+    return true;
+}
+
+bool
+storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
+                       struct _store_rebuild_data &counts,
+                       uint64_t expectedSize)
+{
+    int swap_hdr_len = 0;
+    StoreMetaUnpacker aBuilder(buf.content(), buf.contentSize(), &swap_hdr_len);
+    if (aBuilder.isBufferZero()) {
+        debugs(47,5, HERE << "skipping empty record.");
+        return false;
+    }
+
+    if (!aBuilder.isBufferSane()) {
+        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring malformed cache entry.");
+        return false;
+    }
+
+    StoreMeta *tlv_list = aBuilder.createStoreMeta();
+    if (!tlv_list) {
+        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring cache entry with invalid " <<
+               "meta data");
+        return false;
+    }
+
+    // TODO: consume parsed metadata?
+
+    debugs(47,7, HERE << "successful swap meta unpacking");
+    memset(key, '\0', SQUID_MD5_DIGEST_LENGTH);
+
+    InitStoreEntry visitor(&tmpe, key);
+    for_each(*tlv_list, visitor);
+    storeSwapTLVFree(tlv_list);
+    tlv_list = NULL;
+
+    if (storeKeyNull(key)) {
+        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring keyless cache entry");
+        return false;
+    }
+
+    tmpe.key = key;
+    /* check sizes */
+
+    if (expectedSize > 0) {
+        if (tmpe.swap_file_sz == 0) {
+            tmpe.swap_file_sz = expectedSize;
+        } else if (tmpe.swap_file_sz == (uint64_t)(expectedSize - swap_hdr_len)) {
+            tmpe.swap_file_sz = expectedSize;
+        } else if (tmpe.swap_file_sz != expectedSize) {
+            debugs(47, DBG_IMPORTANT, "WARNING: Ignoring cache entry due to a " <<
+                   "SIZE MISMATCH " << tmpe.swap_file_sz << "!=" << expectedSize);
+            return false;
+        }
+    } else if (tmpe.swap_file_sz <= 0) {
+        debugs(47, DBG_IMPORTANT, "WARNING: Ignoring cache entry with " <<
+               "unknown size: " << tmpe);
+        return false;
+    }
+
+    if (EBIT_TEST(tmpe.flags, KEY_PRIVATE)) {
+        counts.badflags++;
+        return false;
+    }
+
+    return true;
+}
+
+bool
+storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key,
+                      struct _store_rebuild_data &counts)
+{
+    /* this needs to become
+     * 1) unpack url
+     * 2) make synthetic request with headers ?? or otherwise search
+     * for a matching object in the store
+     * TODO FIXME change to new async api
+     * TODO FIXME I think there is a race condition here with the
+     * async api :
+     * store A reads in object foo, searchs for it, and finds nothing.
+     * store B reads in object foo, searchs for it, finds nothing.
+     * store A gets called back with nothing, so registers the object
+     * store B gets called back with nothing, so registers the object,
+     * which will conflict when the in core index gets around to scanning
+     * store B.
+     *
+     * this suggests that rather than searching for duplicates, the
+     * index rebuild should just assume its the most recent accurate
+     * store entry and whoever indexes the stores handles duplicates.
+     */
+    if (StoreEntry *e = Store::Root().get(key)) {
+
+        if (e->lastref >= tmpe.lastref) {
+            /* key already exists, old entry is newer */
+            /* keep old, ignore new */
+            counts.dupcount++;
+
+            // For some stores, get() creates/unpacks a store entry. Signal
+            // such stores that we will no longer use the get() result:
+            e->lock();
+            e->unlock();
+
+            return false;
+        } else {
+            /* URL already exists, this swapfile not being used */
+            /* junk old, load new */
+            e->release();	/* release old entry */
+            counts.dupcount++;
+        }
+    }
+
+    return true;
 }

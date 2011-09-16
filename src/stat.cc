@@ -548,14 +548,16 @@ GetInfo(Mgr::InfoActionData& stats)
     stats.request_hit_disk_ratio5 = statRequestHitDiskRatio(5);
     stats.request_hit_disk_ratio60 = statRequestHitDiskRatio(60);
 
-    stats.store_swap_size = store_swap_size;
+    stats.store_swap_size = Store::Root().currentSize() / 1024.0;
     stats.store_swap_max_size = Store::Root().maxSize();
 
     stats.store_mem_size = mem_node::StoreMemSize();
     stats.store_pages_max = store_pages_max;
     stats.store_mem_used = mem_node::InUseCount();
 
-    stats.objects_size = n_disk_objects ? (double) store_swap_size / n_disk_objects : 0.0;
+    stats.n_disk_objects = Store::Root().currentCount();
+    stats.objects_size = stats.n_disk_objects > 0 ?
+                         stats.store_swap_size / stats.n_disk_objects : 0.0;
 
     stats.unlink_requests = statCounter.unlink.requests;
 
@@ -668,7 +670,6 @@ GetInfo(Mgr::InfoActionData& stats)
     stats.store_entries = StoreEntry::inUseCount();
     stats.store_mem_entries = MemObject::inUseCount();
     stats.hot_obj_count = hot_obj_count;
-    stats.n_disk_objects = n_disk_objects;
 }
 
 void

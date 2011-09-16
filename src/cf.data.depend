@@ -45,6 +45,7 @@ int
 kb_int64_t
 kb_size_t
 logformat
+YesNoNone
 memcachemode
 obsolete
 onoff

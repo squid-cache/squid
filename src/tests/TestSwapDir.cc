@@ -9,6 +9,18 @@ TestSwapDir::maxSize() const
     return 3;
 }
 
+uint64_t
+TestSwapDir::currentSize() const
+{
+    return 2;
+}
+
+uint64_t
+TestSwapDir::currentCount() const
+{
+    return 2;
+}
+
 void
 TestSwapDir::stat(StoreEntry &) const
 {
@@ -23,9 +35,10 @@ void
 TestSwapDir::init()
 {}
 
-int
-TestSwapDir::canStore(const StoreEntry&) const
+bool
+TestSwapDir::canStore(const StoreEntry &, int64_t, int &load) const
 {
+    load = 0;
     return true;
 }
 

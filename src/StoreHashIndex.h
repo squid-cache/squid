@@ -67,21 +67,26 @@ public:
 
     virtual uint64_t minSize() const;
 
+    virtual uint64_t currentSize() const;
+
+    virtual uint64_t currentCount() const;
+
+    virtual int64_t maxObjectSize() const;
+
     virtual void stat(StoreEntry&) const;
 
     virtual void reference(StoreEntry&);
 
-    virtual void dereference(StoreEntry&);
+    virtual bool dereference(StoreEntry&);
 
     virtual void maintain();
-
-    virtual void updateSize(int64_t, int);
 
     virtual StoreSearch *search(String const url, HttpRequest *);
 
 private:
     /* migration logic */
     StorePointer store(int const x) const;
+    SwapDir &dir(int const idx) const;
 };
 
 class StoreHashIndexEntry : public StoreEntry

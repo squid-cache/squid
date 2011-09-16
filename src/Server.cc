@@ -163,8 +163,10 @@ ServerStateData::setFinalReply(HttpReply *rep)
     assert(rep);
     theFinalReply = HTTPMSGLOCK(rep);
 
-    entry->replaceHttpReply(theFinalReply);
-    haveParsedReplyHeaders();
+    // give entry the reply because haveParsedReplyHeaders() expects it there
+    entry->replaceHttpReply(theFinalReply, false); // but do not write yet
+    haveParsedReplyHeaders(); // update the entry/reply (e.g., set timestamps)
+    entry->startWriting(); // write the updated entry to store
 
     return theFinalReply;
 }
@@ -382,10 +384,10 @@ ServerStateData::sentRequestBody(const CommIoCbParams &io)
     }
 
     if (io.flag) {
-        debugs(11, 1, "sentRequestBody error: FD " << io.fd << ": " << xstrerr(errno));
+        debugs(11, 1, "sentRequestBody error: FD " << io.fd << ": " << xstrerr(io.xerrno));
         ErrorState *err;
         err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY, fwd->request);
-        err->xerrno = errno;
+        err->xerrno = io.xerrno;
         fwd->fail(err);
         abortTransaction("I/O error while sending request body");
         return;
@@ -520,7 +522,7 @@ ServerStateData::maybePurgeOthers()
     purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_CONTENT_LOCATION);
 }
 
-// called (usually by kids) when we have final (possibly adapted) reply headers
+/// called when we have final (possibly adapted) reply headers; kids extend
 void
 ServerStateData::haveParsedReplyHeaders()
 {

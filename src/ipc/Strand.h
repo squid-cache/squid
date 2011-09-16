@@ -8,6 +8,7 @@
 #ifndef SQUID_IPC_STRAND_H
 #define SQUID_IPC_STRAND_H
 
+#include "ipc/forward.h"
 #include "ipc/Port.h"
 #include "mgr/forward.h"
 #if SQUID_SNMP
@@ -33,7 +34,7 @@ protected:
 
 private:
     void registerSelf(); /// let Coordinator know this strand exists
-    void handleRegistrationResponse(const StrandCoord &strand);
+    void handleRegistrationResponse(const HereIamMessage &msg);
     void handleCacheMgrRequest(const Mgr::Request& request);
     void handleCacheMgrResponse(const Mgr::Response& response);
 #if SQUID_SNMP

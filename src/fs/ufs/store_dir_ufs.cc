@@ -57,13 +57,17 @@ int *UFSSwapDir::UFSDirToGlobalDirMapping = NULL;
  * object is able to be stored on this filesystem. UFS filesystems will
  * happily store anything as long as the LRU time isn't too small.
  */
-int
-UFSSwapDir::canStore(StoreEntry const &e)const
+bool
+UFSSwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
 {
-    if (IO->shedLoad())
-        return -1;
+    if (!SwapDir::canStore(e, diskSpaceNeeded, load))
+        return false;
 
-    return IO->load();
+    if (IO->shedLoad())
+        return false;
+
+    load = IO->load();
+    return true;
 }
 
 
@@ -76,14 +80,14 @@ UFSSwapDir::parseSizeL1L2()
     if (i <= 0)
         fatal("UFSSwapDir::parseSizeL1L2: invalid size value");
 
-    size_t size = i << 10;		/* Mbytes to kbytes */
+    const uint64_t size = static_cast<uint64_t>(i) << 20; // MBytes to Bytes
 
     /* just reconfigure it */
     if (reconfiguring) {
-        if (size == max_size)
-            debugs(3, 2, "Cache dir '" << path << "' size remains unchanged at " << size << " KB");
+        if (size == maxSize())
+            debugs(3, 2, "Cache dir '" << path << "' size remains unchanged at " << i << " MB");
         else
-            debugs(3, 1, "Cache dir '" << path << "' size changed to " << size << " KB");
+            debugs(3, 1, "Cache dir '" << path << "' size changed to " << i << " MB");
     }
 
     max_size = size;
@@ -242,7 +246,7 @@ UFSSwapDir::create()
     createSwapSubDirs();
 }
 
-UFSSwapDir::UFSSwapDir(char const *aType, const char *anIOType) : SwapDir(aType), IO(NULL), map(file_map_create()), suggest(0), swaplog_fd (-1), currentIOOptions(new ConfigOptionVector()), ioType(xstrdup(anIOType))
+UFSSwapDir::UFSSwapDir(char const *aType, const char *anIOType) : SwapDir(aType), IO(NULL), map(file_map_create()), suggest(0), swaplog_fd (-1), currentIOOptions(new ConfigOptionVector()), ioType(xstrdup(anIOType)), cur_size(0), n_disk_objects(0)
 {
     /* modulename is only set to disk modules that are built, by configure,
      * so the Find call should never return NULL here.
@@ -312,10 +316,10 @@ UFSSwapDir::statfs(StoreEntry & sentry) const
     int x;
     storeAppendPrintf(&sentry, "First level subdirectories: %d\n", l1);
     storeAppendPrintf(&sentry, "Second level subdirectories: %d\n", l2);
-    storeAppendPrintf(&sentry, "Maximum Size: %"PRIu64" KB\n", max_size);
-    storeAppendPrintf(&sentry, "Current Size: %"PRIu64" KB\n", cur_size);
+    storeAppendPrintf(&sentry, "Maximum Size: %"PRIu64" KB\n", maxSize() >> 10);
+    storeAppendPrintf(&sentry, "Current Size: %.2f KB\n", currentSize() / 1024.0);
     storeAppendPrintf(&sentry, "Percent Used: %0.2f%%\n",
-                      (double)(100.0 * cur_size) / (double)max_size);
+                      Math::doublePercent(currentSize(), maxSize()));
     storeAppendPrintf(&sentry, "Filemap bits in use: %d of %d (%d%%)\n",
                       map->n_files_in_map, map->max_n_files,
                       Math::intPercent(map->n_files_in_map, map->max_n_files));
@@ -361,7 +365,7 @@ UFSSwapDir::maintain()
 
     RemovalPurgeWalker *walker;
 
-    double f = (double) (cur_size - minSize()) / (max_size - minSize());
+    double f = (double) (currentSize() - minSize()) / (maxSize() - minSize());
 
     f = f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f;
 
@@ -378,7 +382,7 @@ UFSSwapDir::maintain()
     walker = repl->PurgeInit(repl, max_scan);
 
     while (1) {
-        if (cur_size < minSize())
+        if (currentSize() < minSize())
             break;
 
         if (removed >= max_remove)
@@ -420,13 +424,15 @@ UFSSwapDir::reference(StoreEntry &e)
  * This routine is called whenever the last reference to an object is
  * removed, to maintain replacement information within the storage fs.
  */
-void
+bool
 UFSSwapDir::dereference(StoreEntry & e)
 {
     debugs(47, 3, "UFSSwapDir::dereference: referencing " << &e << " " << e.swap_dirn << "/" << e.swap_filen);
 
     if (repl->Dereferenced)
         repl->Dereferenced(repl, &e, &e.repl);
+
+    return true; // keep e in the global store_table
 }
 
 StoreIOState::Pointer
@@ -713,6 +719,8 @@ UFSSwapDir::addDiskRestore(const cache_key * key,
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
     mapBitSet(e->swap_filen);
+    cur_size += fs.blksize * sizeInBlocks(e->swap_file_sz);
+    ++n_disk_objects;
     e->hashInsert(key);	/* do it after we clear KEY_PRIVATE */
     replacementAdd (e);
     return e;
@@ -1284,6 +1292,10 @@ UFSSwapDir::unlink(StoreEntry & e)
 {
     debugs(79, 3, "storeUfsUnlink: dirno " << index  << ", fileno "<<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << e.swap_filen);
+    if (e.swap_status == SWAPOUT_DONE && EBIT_TEST(e.flags, ENTRY_VALIDATED)) {
+        cur_size -= fs.blksize * sizeInBlocks(e.swap_file_sz);
+        --n_disk_objects;
+    }
     replacementRemove(&e);
     mapBitReset(e.swap_filen);
     UFSSwapDir::unlinkFile(e.swap_filen);
@@ -1322,7 +1334,7 @@ UFSSwapDir::replacementRemove(StoreEntry * e)
 void
 UFSSwapDir::dump(StoreEntry & entry) const
 {
-    storeAppendPrintf(&entry, " %"PRIu64" %d %d", (max_size >> 10), l1, l2);
+    storeAppendPrintf(&entry, " %"PRIu64" %d %d", maxSize() >> 20, l1, l2);
     dumpOptions(&entry);
 }
 
@@ -1357,6 +1369,13 @@ void
 UFSSwapDir::sync()
 {
     IO->sync();
+}
+
+void
+UFSSwapDir::swappedOut(const StoreEntry &e)
+{
+    cur_size += fs.blksize * sizeInBlocks(e.swap_file_sz);
+    ++n_disk_objects;
 }
 
 StoreSearch *

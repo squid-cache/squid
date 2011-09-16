@@ -1821,11 +1821,11 @@ ClientSocketContext::initiateClose(const char *reason)
 void
 ClientSocketContext::writeComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t size, comm_err_t errflag)
 {
-    StoreEntry *entry = http->storeEntry();
+    const StoreEntry *entry = http->storeEntry();
     http->out.size += size;
     debugs(33, 5, HERE << conn << ", sz " << size <<
            ", err " << errflag << ", off " << http->out.size << ", len " <<
-           entry ? entry->objectLen() : 0);
+           (entry ? entry->objectLen() : 0));
     clientUpdateSocketStats(http->logType, size);
 
     /* Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up */
@@ -2301,8 +2301,10 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
 int
 ConnStateData::getAvailableBufferLength() const
 {
-    int result = in.allocatedSize - in.notYetUsed - 1;
-    assert (result >= 0);
+    assert (in.allocatedSize > in.notYetUsed); // allocated more than used
+    const size_t result = in.allocatedSize - in.notYetUsed - 1;
+    // huge request_header_max_size may lead to more than INT_MAX unused space
+    assert (static_cast<ssize_t>(result) <= INT_MAX);
     return result;
 }
 
