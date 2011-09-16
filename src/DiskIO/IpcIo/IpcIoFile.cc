@@ -192,7 +192,6 @@ IpcIoFile::read(ReadRequest *readRequest)
            readRequest->offset << ")");
 
     assert(ioRequestor != NULL);
-    assert(readRequest->len >= 0);
     assert(readRequest->offset >= 0);
     Must(!error_);
 
@@ -239,7 +238,6 @@ IpcIoFile::write(WriteRequest *writeRequest)
            writeRequest->offset << ")");
 
     assert(ioRequestor != NULL);
-    assert(writeRequest->len >= 0);
     assert(writeRequest->len > 0); // TODO: work around mmap failures on zero-len?
     assert(writeRequest->offset >= 0);
     Must(!error_);
