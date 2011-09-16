@@ -72,6 +72,15 @@ MemObject::inUseCount()
     return Pool().inUseCount();
 }
 
+void
+MemObject::resetUrls(char const *aUrl, char const *aLog_url)
+{
+    safe_free(url);
+    safe_free(log_url);    /* XXX account log_url */
+    log_url = xstrdup(aLog_url);
+    url = xstrdup(aUrl);
+}
+
 MemObject::MemObject(char const *aUrl, char const *aLog_url)
 {
     debugs(20, 3, HERE << "new MemObject " << this);
@@ -91,6 +100,8 @@ MemObject::MemObject(char const *aUrl, char const *aLog_url)
     object_sz = -1;
 
     /* XXX account log_url */
+
+    swapout.decision = SwapOut::swNeedsCheck;
 }
 
 MemObject::~MemObject()
@@ -234,6 +245,15 @@ MemObject::endOffset () const
     return data_hdr.endOffset();
 }
 
+void
+MemObject::markEndOfReplyHeaders()
+{
+    const int hdr_sz = endOffset();
+    assert(hdr_sz >= 0);
+    assert(_reply);
+    _reply->hdr_sz = hdr_sz;
+}
+
 int64_t
 MemObject::size() const
 {
@@ -241,6 +261,23 @@ MemObject::size() const
         return endOffset();
 
     return object_sz;
+}
+
+int64_t
+MemObject::expectedReplySize() const
+{
+    debugs(20, 7, HERE << "object_sz: " << object_sz);
+    if (object_sz >= 0) // complete() has been called; we know the exact answer
+        return object_sz;
+
+    if (_reply) {
+        const int64_t clen = _reply->bodySize(method);
+        debugs(20, 7, HERE << "clen: " << clen);
+        if (clen >= 0 && _reply->hdr_sz > 0) // yuck: HttpMsg sets hdr_sz to 0
+            return clen + _reply->hdr_sz;
+    }
+
+    return -1; // not enough information to predict
 }
 
 void
@@ -342,7 +379,7 @@ MemObject::trimSwappable()
      * there will be a chunk of the data which is not in memory
      * and is not yet on disk.
      * The -1 makes sure the page isn't freed until storeSwapOut has
-     * walked to the next page. (mem->swapout.memnode)
+     * walked to the next page.
      */
     int64_t on_disk;
 

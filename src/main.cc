@@ -669,8 +669,8 @@ serverConnectionsOpen(void)
         wccp2ConnectionOpen();
 #endif
     }
-    // Coordinator does not start proxying services
-    if (!IamCoordinatorProcess()) {
+    // start various proxying services if we are responsible for them
+    if (IamWorkerProcess()) {
         clientOpenListenSockets();
         icpConnectionsOpen();
 #if USE_HTCP
@@ -712,7 +712,7 @@ serverConnectionsClose(void)
         wccp2ConnectionClose();
 #endif
     }
-    if (!IamCoordinatorProcess()) {
+    if (IamWorkerProcess()) {
         clientHttpConnectionsClose();
         icpConnectionShutdown();
 #if USE_HTCP
@@ -1008,6 +1008,9 @@ mainInitialize(void)
 #endif
 
     debugs(1, 1, "Process ID " << getpid());
+
+    debugs(1, 1, "Process Roles:" << ProcessRoles());
+
     setSystemLimits();
     debugs(1, 1, "With " << Squid_MaxFD << " file descriptors available");
 
@@ -1243,10 +1246,11 @@ SquidMainSafe(int argc, char **argv)
     try {
         return SquidMain(argc, argv);
     } catch (const std::exception &e) {
-        std::cerr << "dying from an unhandled exception: " << e.what() << std::endl;
+        debugs(1, DBG_CRITICAL, "FATAL: dying from an unhandled exception: " <<
+               e.what());
         throw;
     } catch (...) {
-        std::cerr << "dying from an unhandled exception." << std::endl;
+        debugs(1, DBG_CRITICAL, "FATAL: dying from an unhandled exception.");
         throw;
     }
     return -1; // not reached
@@ -1263,6 +1267,14 @@ ConfigureCurrentKid(const char *processName)
             const size_t nameLen = idStart - (processName + 1);
             assert(nameLen < sizeof(TheKidName));
             xstrncpy(TheKidName, processName + 1, nameLen + 1);
+            if (!strcmp(TheKidName, "squid-coord"))
+                TheProcessKind = pkCoordinator;
+            else if (!strcmp(TheKidName, "squid"))
+                TheProcessKind = pkWorker;
+            else if (!strcmp(TheKidName, "squid-disk"))
+                TheProcessKind = pkDisker;
+            else
+                TheProcessKind = pkOther; // including coordinator
         }
     } else {
         xstrncpy(TheKidName, APP_SHORTNAME, sizeof(TheKidName));
@@ -1507,7 +1519,7 @@ SquidMain(int argc, char **argv)
 
     if (IamCoordinatorProcess())
         AsyncJob::Start(Ipc::Coordinator::Instance());
-    else if (UsingSmp() && IamWorkerProcess())
+    else if (UsingSmp() && (IamWorkerProcess() || IamDiskProcess()))
         AsyncJob::Start(new Ipc::Strand);
 
     /* at this point we are finished the synchronous startup. */
@@ -1720,7 +1732,9 @@ watch_child(char *argv[])
                Config.workers);
         // but we keep going in hope that user knows best
     }
-    TheKids.init(Config.workers);
+    TheKids.init();
+
+    syslog(LOG_NOTICE, "Squid Parent: will start %d kids", (int)TheKids.count());
 
     // keep [re]starting kids until it is time to quit
     for (;;) {
@@ -1742,7 +1756,8 @@ watch_child(char *argv[])
             }
 
             kid.start(pid);
-            syslog(LOG_NOTICE, "Squid Parent: child process %d started", pid);
+            syslog(LOG_NOTICE, "Squid Parent: %s process %d started",
+                   kid.name().termedBuf(), pid);
         }
 
         /* parent */
@@ -1766,19 +1781,22 @@ watch_child(char *argv[])
                 kid->stop(status);
                 if (kid->calledExit()) {
                     syslog(LOG_NOTICE,
-                           "Squid Parent: child process %d exited with status %d",
+                           "Squid Parent: %s process %d exited with status %d",
+                           kid->name().termedBuf(),
                            kid->getPid(), kid->exitStatus());
                 } else if (kid->signaled()) {
                     syslog(LOG_NOTICE,
-                           "Squid Parent: child process %d exited due to signal %d with status %d",
+                           "Squid Parent: %s process %d exited due to signal %d with status %d",
+                           kid->name().termedBuf(),
                            kid->getPid(), kid->termSignal(), kid->exitStatus());
                 } else {
-                    syslog(LOG_NOTICE, "Squid Parent: child process %d exited", kid->getPid());
+                    syslog(LOG_NOTICE, "Squid Parent: %s process %d exited",
+                           kid->name().termedBuf(), kid->getPid());
                 }
                 if (kid->hopeless()) {
-                    syslog(LOG_NOTICE, "Squid Parent: child process %d will not"
+                    syslog(LOG_NOTICE, "Squid Parent: %s process %d will not"
                            " be restarted due to repeated, frequent failures",
-                           kid->getPid());
+                           kid->name().termedBuf(), kid->getPid());
                 }
             } else {
                 syslog(LOG_NOTICE, "Squid Parent: unknown child process %d exited", pid);

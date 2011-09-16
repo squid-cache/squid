@@ -1,6 +1,6 @@
 include $(top_srcdir)/src/Common.am
 
-EXTRA_LTLIBRARIES = libaufs.la libdiskd.la libcoss.la libufs.la
+EXTRA_LTLIBRARIES = libaufs.la libdiskd.la libcoss.la libufs.la librock.la
 noinst_LTLIBRARIES =  $(STORE_LIBS_TO_BUILD) libfs.la
 
 # aufs is a "fake" legacy store
@@ -28,6 +28,19 @@ libufs_la_SOURCES = \
 	ufs/ufscommon.cc \
 	ufs/ufscommon.h 
 
+librock_la_SOURCES = \
+	rock/RockDbCell.h \
+	rock/RockIoState.cc \
+	rock/RockIoState.h \
+	rock/RockIoRequests.cc \
+	rock/RockIoRequests.h \
+	rock/RockRebuild.cc \
+	rock/RockRebuild.h \
+	rock/RockStoreFileSystem.cc \
+	rock/RockStoreFileSystem.h \
+	rock/RockSwapDir.cc \
+	rock/RockSwapDir.h
+
 libfs_la_SOURCES = Module.cc Module.h
 libfs_la_LIBADD =  $(STORE_LIBS_TO_BUILD)
 libfs_la_DEPENDENCIES = $(STORE_LIBS_TO_BUILD)
@@ -44,13 +57,15 @@ coss/all: libcoss.la
 coss/clean: clean
 ufs/all: libufs.la
 ufs/clean: clean
+rock/all: librock.la
+rock/clean: clean
 
 
 TESTS += testHeaders
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
-testHeaders: $(srcdir)/ufs/*.h $(srcdir)/coss/*.h
+testHeaders: $(srcdir)/ufs/*.h $(srcdir)/coss/*.h $(srcdir)/rock/*.h
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" $^ || exit 1
 ## diskd/ has no .h files
 ## aufs/ has no .h files

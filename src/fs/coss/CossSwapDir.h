@@ -37,7 +37,7 @@ public:
     virtual StoreSearch *search(String const url, HttpRequest *);
     virtual void unlink (StoreEntry &);
     virtual void statfs (StoreEntry &)const;
-    virtual int canStore(StoreEntry const &)const;
+    virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const;
     virtual int callback();
     virtual void sync();
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
@@ -49,6 +49,9 @@ public:
     virtual void logEntry(const StoreEntry & e, int op) const;
     virtual void parse (int index, char *path);
     virtual void reconfigure (int, char *);
+    virtual void swappedOut(const StoreEntry &e);
+    virtual uint64_t currentSize() const { return cur_size; }
+    virtual uint64_t currentCount() const { return n_disk_objects; }
     /* internals */
     virtual off_t storeCossFilenoToDiskOffset(sfileno);
     virtual sfileno storeCossDiskOffsetToFileno(off_t);
@@ -76,6 +79,16 @@ public:
     CossMemBuf *createMemBuf(off_t start, sfileno curfn, int *collision);
     sfileno allocate(const StoreEntry * e, int which);
     void startMembuf();
+    StoreEntry *addDiskRestore(const cache_key *const key,
+                               int file_number,
+                               uint64_t swap_file_sz,
+                               time_t expires,
+                               time_t timestamp,
+                               time_t lastref,
+                               time_t lastmod,
+                               uint32_t refcount,
+                               uint16_t flags,
+                               int clean);
 
 private:
     void changeIO(DiskIOModule *module);
@@ -88,6 +101,8 @@ private:
     const char *ioModule;
     mutable ConfigOptionVector *currentIOOptions;
     const char *stripe_path;
+    uint64_t cur_size; ///< currently used space in the storage area
+    uint64_t n_disk_objects; ///< total number of objects stored
 };
 
 /// \ingroup COSS

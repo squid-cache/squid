@@ -5,7 +5,7 @@
 #define STUB_API "comm/libcomm.la"
 #include "tests/STUB.h"
 
-#include "AcceptLimiter.h"
+#include "comm/AcceptLimiter.h"
 Comm::AcceptLimiter dummy;
 Comm::AcceptLimiter & Comm::AcceptLimiter::Instance() STUB_RETVAL(dummy)
 void Comm::AcceptLimiter::defer(Comm::TcpAcceptor *afd) STUB

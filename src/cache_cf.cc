@@ -614,7 +614,7 @@ configDoConfigure(void)
     if (0 == Store::Root().maxSize())
         /* people might want a zero-sized cache on purpose */
         (void) 0;
-    else if (Store::Root().maxSize() < (Config.memMaxSize >> 10))
+    else if (Store::Root().maxSize() < Config.memMaxSize)
         /* This is bogus. folk with NULL caches will want this */
         debugs(3, 0, "WARNING cache_mem is larger than total disk cache space!");
 
@@ -1921,18 +1921,6 @@ find_fstype(char *type)
 static void
 parse_cachedir(SquidConfig::_cacheSwap * swap)
 {
-    // The workers option must preceed cache_dir for the IamWorkerProcess check
-    // below to work. TODO: Redo IamWorkerProcess to work w/o Config and remove
-    if (KidIdentifier > 1 && Config.workers == 1) {
-        debugs(3, DBG_CRITICAL,
-               "FATAL: cache_dir found before the workers option. Reorder.");
-        self_destruct();
-    }
-
-    // Among all processes, only workers may need and can handle cache_dir.
-    if (!IamWorkerProcess())
-        return;
-
     char *type_str;
     char *path_str;
     RefCount<SwapDir> sd;
@@ -1998,6 +1986,9 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
     sd->parse(swap->n_configured, path_str);
 
     ++swap->n_configured;
+
+    if (sd->needsDiskStrand())
+        ++swap->n_strands;
 
     /* Update the max object size */
     update_maxobjsize();
@@ -3356,6 +3347,40 @@ dump_removalpolicy(StoreEntry * entry, const char *name, RemovalPolicySettings *
     }
 
     storeAppendPrintf(entry, "\n");
+}
+
+void
+YesNoNone::configure(bool beSet)
+{
+    option = beSet ? +1 : -1;
+}
+
+YesNoNone::operator void*() const
+{
+    assert(option != 0); // must call configure() first
+    return option > 0 ? (void*)this : NULL;
+}
+
+
+inline void
+free_YesNoNone(YesNoNone *)
+{
+    // do nothing: no explicit cleanup is required
+}
+
+static void
+parse_YesNoNone(YesNoNone *option)
+{
+    int value = 0;
+    parse_onoff(&value);
+    option->configure(value > 0);
+}
+
+static void
+dump_YesNoNone(StoreEntry * entry, const char *name, YesNoNone &option)
+{
+    if (option.configured())
+        dump_onoff(entry, name, option ? 1 : 0);
 }
 
 static void
