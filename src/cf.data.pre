@@ -6682,10 +6682,16 @@ TYPE: onoff
 LOC: Config.retry.onerror
 DEFAULT: off
 DOC_START
-	If set to on Squid will automatically retry requests when
-	receiving an error response. This is mainly useful if you
-	are in a complex cache hierarchy to work around access
-	control errors.
+	If set to ON Squid will automatically retry requests when
+	receiving an error response with status 403 (Forbidden),
+	500 (Internal Error), 501 or 503 (Service not available).
+	Status 502 and 504 (Gateway errors) are always retried.
+	
+	This is mainly useful if you are in a complex cache hierarchy to
+	work around access control errors.
+	
+	NOTE: This retry will attempt to find another working destination.
+	Which is different from the server which just failed.
 DOC_END
 
 NAME: as_whois_server
