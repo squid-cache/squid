@@ -6421,6 +6421,7 @@ NAME: ignore_unknown_nameservers
 TYPE: onoff
 LOC: Config.onoff.ignore_unknown_nameservers
 DEFAULT: on
+IFDEF: !USE_DNSSERVERS
 DOC_START
 	By default Squid checks that DNS responses are received
 	from the same IP addresses they are sent to.  If they
@@ -6433,6 +6434,7 @@ NAME: dns_v4_fallback
 TYPE: onoff
 DEFAULT: on
 LOC: Config.onoff.dns_require_A
+IFDEF: !USE_DNSSERVERS
 DOC_START
 	Standard practice with DNS is to lookup either A or AAAA records
 	and use the results if it succeeds. Only looking up the other if
