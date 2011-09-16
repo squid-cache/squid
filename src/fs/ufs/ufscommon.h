@@ -62,9 +62,9 @@ public:
     virtual void unlink(StoreEntry &);
     virtual void statfs(StoreEntry &)const;
     virtual void maintain();
-    virtual int canStore(StoreEntry const &)const;
+    virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const;
     virtual void reference(StoreEntry &);
-    virtual void dereference(StoreEntry &);
+    virtual bool dereference(StoreEntry &);
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual void openLog();
@@ -76,6 +76,9 @@ public:
     virtual void reconfigure(int, char *);
     virtual int callback();
     virtual void sync();
+    virtual void swappedOut(const StoreEntry &e);
+    virtual uint64_t currentSize() const { return cur_size; }
+    virtual uint64_t currentCount() const { return n_disk_objects; }
 
     void unlinkFile(sfileno f);
     // move down when unlink is a virtual method
@@ -135,7 +138,8 @@ private:
     void optionIODump(StoreEntry * e) const;
     mutable ConfigOptionVector *currentIOOptions;
     char const *ioType;
-
+    uint64_t cur_size; ///< currently used space in the storage area
+    uint64_t n_disk_objects; ///< total number of objects stored
 };
 
 #include "RefCount.h"
@@ -206,7 +210,7 @@ public:
     void operator delete (void *);
     UFSStoreState(SwapDir * SD, StoreEntry * anEntry, STIOCB * callback_, void *callback_data_);
     ~UFSStoreState();
-    virtual void close();
+    virtual void close(int how);
     virtual void closeCompleted();
     // protected:
     virtual void ioCompletedNotification();

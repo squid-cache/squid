@@ -32,6 +32,7 @@ libcompat_squid_a_SOURCES = \
 	initgroups.h \
 	osdetect.h \
 	psignal.h \
+	shm.h \
 	stdio.h \
 	stdvarargs.h \
 	strnstr.cc \

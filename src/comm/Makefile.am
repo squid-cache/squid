@@ -27,5 +27,3 @@ libcomm_la_SOURCES= \
 	Write.h \
 	\
 	comm_internal.h
-
-EXTRA_DIST= stub_libcomm.cc

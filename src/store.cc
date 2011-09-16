@@ -49,6 +49,7 @@
 #include "mem_node.h"
 #include "StoreMeta.h"
 #include "SwapDir.h"
+#include "StoreIOState.h"
 #if USE_DELAY_POOLS
 #include "DelayPools.h"
 #endif
@@ -256,6 +257,16 @@ StoreEntry::delayAwareRead(const Comm::ConnectionPointer &conn, char *buf, int l
 
     }
 
+    if (fd_table[conn->fd].closing()) {
+        // Readers must have closing callbacks if they want to be notified. No
+        // readers appeared to care around 2009/12/14 as they skipped reading
+        // for other reasons. Closing may already be true at the delyaAwareRead
+        // call time or may happen while we wait after delayRead() above.
+        debugs(20, 3, HERE << "wont read from closing " << conn << " for " <<
+               callback);
+        return; // the read callback will never be called
+    }
+
     comm_read(conn, buf, amountToRead, callback);
 }
 
@@ -305,6 +316,13 @@ StoreEntry::storeClientType() const
      * offset 0 in the memory object is the HTTP headers.
      */
 
+    if (mem_status == IN_MEMORY && UsingSmp()) {
+        // clients of an object cached in shared memory are memory clients
+        return STORE_MEM_CLIENT;
+    }
+
+    assert(mem_obj);
+
     if (mem_obj->inmem_lo)
         return STORE_DISK_CLIENT;
 
@@ -319,6 +337,7 @@ StoreEntry::storeClientType() const
 
         if (mem_obj->inmem_lo == 0 && !isEmpty()) {
             if (swap_status == SWAPOUT_DONE) {
+                debugs(20,7, HERE << mem_obj << " lo: " << mem_obj->inmem_lo << " hi: " << mem_obj->endOffset() << " size: " << mem_obj->object_sz);
                 if (mem_obj->endOffset() == mem_obj->object_sz) {
                     /* hot object fully swapped in */
                     return STORE_MEM_CLIENT;
@@ -354,26 +373,41 @@ StoreEntry::storeClientType() const
     return STORE_DISK_CLIENT;
 }
 
-StoreEntry::StoreEntry()
+StoreEntry::StoreEntry():
+        hidden_mem_obj(NULL),
+        swap_file_sz(0)
 {
     debugs(20, 3, HERE << "new StoreEntry " << this);
     mem_obj = NULL;
 
     expires = lastmod = lastref = timestamp = -1;
 
+    swap_status = SWAPOUT_NONE;
     swap_filen = -1;
     swap_dirn = -1;
 }
 
-StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl)
+StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl):
+        hidden_mem_obj(NULL),
+        swap_file_sz(0)
 {
     debugs(20, 3, HERE << "new StoreEntry " << this);
     mem_obj = new MemObject(aUrl, aLogUrl);
 
     expires = lastmod = lastref = timestamp = -1;
 
+    swap_status = SWAPOUT_NONE;
     swap_filen = -1;
     swap_dirn = -1;
+}
+
+StoreEntry::~StoreEntry()
+{
+    if (swap_filen >= 0) {
+        SwapDir &sd = dynamic_cast<SwapDir&>(*store());
+        sd.disconnect(*this);
+    }
+    delete hidden_mem_obj;
 }
 
 void
@@ -384,6 +418,18 @@ StoreEntry::destroyMemObject()
     MemObject *mem = mem_obj;
     mem_obj = NULL;
     delete mem;
+    delete hidden_mem_obj;
+    hidden_mem_obj = NULL;
+}
+
+void
+StoreEntry::hideMemObject()
+{
+    debugs(20, 3, HERE << "hiding " << mem_obj);
+    assert(mem_obj);
+    assert(!hidden_mem_obj);
+    hidden_mem_obj = mem_obj;
+    mem_obj = NULL;
 }
 
 void
@@ -504,22 +550,15 @@ StoreEntry::unlock()
 
     assert(storePendingNClients(this) == 0);
 
-    if (EBIT_TEST(flags, RELEASE_REQUEST))
+    if (EBIT_TEST(flags, RELEASE_REQUEST)) {
         this->release();
-    else if (keepInMemory()) {
-        Store::Root().dereference(*this);
-        setMemStatus(IN_MEMORY);
-        mem_obj->unlinkRequest();
-    } else {
-        Store::Root().dereference(*this);
-
-        if (EBIT_TEST(flags, KEY_PRIVATE))
-            debugs(20, 1, "WARNING: " << __FILE__ << ":" << __LINE__ << ": found KEY_PRIVATE");
-
-        /* StoreEntry::purgeMem may free e */
-        purgeMem();
+        return 0;
     }
 
+    if (EBIT_TEST(flags, KEY_PRIVATE))
+        debugs(20, 1, "WARNING: " << __FILE__ << ":" << __LINE__ << ": found KEY_PRIVATE");
+
+    Store::Root().handleIdleEntry(*this); // may delete us
     return 0;
 }
 
@@ -687,6 +726,8 @@ StoreEntry::setPublicKey()
             }
         }
 
+        // TODO: storeGetPublic() calls below may create unlocked entries.
+        // We should add/use storeHas() API or lock/unlock those entries.
         if (mem_obj->vary_headers && !storeGetPublic(mem_obj->url, mem_obj->method)) {
             /* Create "vary" base object */
             String vary;
@@ -776,9 +817,6 @@ storeCreateEntry(const char *url, const char *log_url, request_flags flags, cons
 
     e->store_status = STORE_PENDING;
     e->setMemStatus(NOT_IN_MEMORY);
-    e->swap_status = SWAPOUT_NONE;
-    e->swap_filen = -1;
-    e->swap_dirn = -1;
     e->refcount = 0;
     e->lastref = squid_curtime;
     e->timestamp = -1;          /* set in StoreEntry::timestampsSet() */
@@ -925,6 +963,8 @@ StoreEntry::checkTooSmall()
     return 0;
 }
 
+// TODO: remove checks already performed by swapoutPossible()
+// TODO: move "too many open..." checks outside -- we are called too early/late
 int
 StoreEntry::checkCachable()
 {
@@ -1081,16 +1121,6 @@ StoreEntry::abort()
 
     store_status = STORE_OK;
 
-    /*
-     * We assign an object length here.  The only other place we assign
-     * the object length is in storeComplete()
-     */
-    /* RBC: What do we need an object length for? we've just aborted the
-     * request, the request is private and negatively cached. Surely
-     * the object length is inappropriate to set.
-     */
-    mem_obj->object_sz = mem_obj->endOffset();
-
     /* Notify the server side */
 
     /*
@@ -1114,8 +1144,8 @@ StoreEntry::abort()
     /* Notify the client side */
     invokeHandlers();
 
-    /* Close any swapout file */
-    swapOutFileClose();
+    // abort swap out, invalidating what was created so far (release follows)
+    swapOutFileClose(StoreIOState::writerGone);
 
     unlock();       /* unlock */
 }
@@ -1204,10 +1234,11 @@ StoreController::maintain()
 
     /* this should be emitted by the oversize dir, not globally */
 
-    if (store_swap_size > Store::Root().maxSize()) {
+    if (Store::Root().currentSize() > Store::Root().maxSize()) {
         if (squid_curtime - last_warn_time > 10) {
-            debugs(20, 0, "WARNING: Disk space over limit: " << store_swap_size << " KB > "
-                   << Store::Root().maxSize() << " KB");
+            debugs(20, DBG_CRITICAL, "WARNING: Disk space over limit: "
+                   << Store::Root().currentSize() / 1024.0 << " KB > "
+                   << (Store::Root().maxSize() >> 10) << " KB");
             last_warn_time = squid_curtime;
         }
     }
@@ -1246,31 +1277,23 @@ StoreEntry::release()
             lock_count++;
             setReleaseFlag();
             LateReleaseStack.push_back(this);
-            PROF_stop(storeRelease);
-            return;
         } else {
             destroyStoreEntry(static_cast<hash_link *>(this));
+            // "this" is no longer valid
         }
+
+        PROF_stop(storeRelease);
+        return;
     }
 
     storeLog(STORE_LOG_RELEASE, this);
 
     if (swap_filen > -1) {
-        unlink();
-
-        if (swap_status == SWAPOUT_DONE)
-            if (EBIT_TEST(flags, ENTRY_VALIDATED))
-                store()->updateSize(swap_file_sz, -1);
-
+        // log before unlink() below clears swap_filen
         if (!EBIT_TEST(flags, KEY_PRIVATE))
             storeDirSwapLog(this, SWAP_LOG_DEL);
 
-#if 0
-        /* From 2.4. I think we do this in storeUnlink? */
-        storeSwapFileNumberSet(this, -1);
-
-#endif
-
+        unlink();
     }
 
     setMemStatus(NOT_IN_MEMORY);
@@ -1291,7 +1314,7 @@ storeLateRelease(void *unused)
     }
 
     for (i = 0; i < 10; i++) {
-        e = LateReleaseStack.pop();
+        e = LateReleaseStack.count ? LateReleaseStack.pop() : NULL;
 
         if (e == NULL) {
             /* done! */
@@ -1406,8 +1429,8 @@ storeConfigure(void)
     store_pages_max = Config.memMaxSize / sizeof(mem_node);
 }
 
-int
-StoreEntry::keepInMemory() const
+bool
+StoreEntry::memoryCachable() const
 {
     if (mem_obj == NULL)
         return 0;
@@ -1420,6 +1443,14 @@ StoreEntry::keepInMemory() const
 
     if (!Config.onoff.memory_cache_first && swap_status == SWAPOUT_DONE && refcount == 1)
         return 0;
+
+    if (UsingSmp()) {
+        const int64_t expectedSize = mem_obj->expectedReplySize();
+        // objects of unknown size are not allowed into memory cache, for now
+        if (expectedSize < 0 ||
+                expectedSize > static_cast<int64_t>(Config.Store.maxInMemObjSize))
+            return 0;
+    }
 
     return 1;
 }
@@ -1596,6 +1627,15 @@ StoreEntry::setMemStatus(mem_status_t new_status)
     if (new_status == mem_status)
         return;
 
+    if (UsingSmp()) {
+        assert(new_status != IN_MEMORY); // we do not call this otherwise
+        // This method was designed to update replacement policy, not to
+        // actually purge something from the memory cache (TODO: rename?).
+        // Shared memory cache does not have a policy that needs updates.
+        mem_status = new_status;
+        return;
+    }
+
     assert(mem_obj != NULL);
 
     if (new_status == IN_MEMORY) {
@@ -1605,10 +1645,10 @@ StoreEntry::setMemStatus(mem_status_t new_status)
             debugs(20, 4, "StoreEntry::setMemStatus: not inserting special " << mem_obj->url << " into policy");
         } else {
             mem_policy->Add(mem_policy, this, &mem_obj->repl);
-            debugs(20, 4, "StoreEntry::setMemStatus: inserted mem node " << mem_obj->url);
+            debugs(20, 4, "StoreEntry::setMemStatus: inserted mem node " << mem_obj->url << " key: " << getMD5Text());
         }
 
-        hot_obj_count++;
+        hot_obj_count++; // TODO: maintain for the shared hot cache as well
     } else {
         if (EBIT_TEST(flags, ENTRY_SPECIAL)) {
             debugs(20, 4, "StoreEntry::setMemStatus: special entry " << mem_obj->url);
@@ -1639,6 +1679,14 @@ StoreEntry::createMemObject(const char *aUrl, const char *aLogUrl)
 {
     if (mem_obj)
         return;
+
+    if (hidden_mem_obj) {
+        debugs(20, 3, HERE << "restoring " << hidden_mem_obj);
+        mem_obj = hidden_mem_obj;
+        hidden_mem_obj = NULL;
+        mem_obj->resetUrls(aUrl, aLogUrl);
+        return;
+    }
 
     mem_obj = new MemObject(aUrl, aLogUrl);
 }
@@ -1781,10 +1829,9 @@ storeSwapFileNumberSet(StoreEntry * e, sfileno filn)
  * a new reply. This eats the reply.
  */
 void
-StoreEntry::replaceHttpReply(HttpReply *rep)
+StoreEntry::replaceHttpReply(HttpReply *rep, bool andStartWriting)
 {
     debugs(20, 3, "StoreEntry::replaceHttpReply: " << url());
-    Packer p;
 
     if (!mem_obj) {
         debugs(20, 0, "Attempt to replace object with no in-memory representation");
@@ -1793,18 +1840,31 @@ StoreEntry::replaceHttpReply(HttpReply *rep)
 
     mem_obj->replaceHttpReply(rep);
 
+    if (andStartWriting)
+        startWriting();
+}
+
+
+void
+StoreEntry::startWriting()
+{
+    Packer p;
+
     /* TODO: when we store headers serparately remove the header portion */
     /* TODO: mark the length of the headers ? */
     /* We ONLY want the headers */
     packerToStoreInit(&p, this);
 
     assert (isEmpty());
+    assert(mem_obj);
 
-    getReply()->packHeadersInto(&p);
+    const HttpReply *rep = getReply();
+    assert(rep);
 
-    rep->hdr_sz = mem_obj->endOffset();
+    rep->packHeadersInto(&p);
+    mem_obj->markEndOfReplyHeaders();
 
-    httpBodyPackInto(&getReply()->body, &p);
+    httpBodyPackInto(&rep->body, &p);
 
     packerClean(&p);
 }
@@ -1825,21 +1885,87 @@ StoreEntry::getSerialisedMetaData()
 bool
 StoreEntry::swapoutPossible()
 {
+    if (!Config.cacheSwap.n_configured)
+        return false;
+
     /* should we swap something out to disk? */
     debugs(20, 7, "storeSwapOut: " << url());
     debugs(20, 7, "storeSwapOut: store_status = " << storeStatusStr[store_status]);
 
+    assert(mem_obj);
+    MemObject::SwapOut::Decision &decision = mem_obj->swapout.decision;
+
+    // if we decided that swapout is not possible, do not repeat same checks
+    if (decision == MemObject::SwapOut::swImpossible) {
+        debugs(20, 3, "storeSwapOut: already rejected");
+        return false;
+    }
+
+    // this flag may change so we must check it even if we already said "yes"
     if (EBIT_TEST(flags, ENTRY_ABORTED)) {
         assert(EBIT_TEST(flags, RELEASE_REQUEST));
-        swapOutFileClose();
+        // StoreEntry::abort() already closed the swap out file, if any
+        decision = MemObject::SwapOut::swImpossible;
+        return false;
+    }
+
+    // if we decided that swapout is possible, do not repeat same checks
+    if (decision == MemObject::SwapOut::swPossible) {
+        debugs(20, 3, "storeSwapOut: already allowed");
+        return true;
+    }
+
+    // if we are swapping out already, do not repeat same checks
+    if (swap_status != SWAPOUT_NONE) {
+        debugs(20, 3, "storeSwapOut: already started");
+        decision = MemObject::SwapOut::swPossible;
+        return true;
+    }
+
+    if (!checkCachable()) {
+        debugs(20, 3, "storeSwapOut: not cachable");
+        decision = MemObject::SwapOut::swImpossible;
         return false;
     }
 
     if (EBIT_TEST(flags, ENTRY_SPECIAL)) {
         debugs(20, 3, "storeSwapOut: " << url() << " SPECIAL");
+        decision = MemObject::SwapOut::swImpossible;
         return false;
     }
 
+    // check cache_dir max-size limit if all cache_dirs have it
+    if (store_maxobjsize >= 0) {
+        // TODO: add estimated store metadata size to be conservative
+
+        // use guaranteed maximum if it is known
+        const int64_t expectedEnd = mem_obj->expectedReplySize();
+        debugs(20, 7, "storeSwapOut: expectedEnd = " << expectedEnd);
+        if (expectedEnd > store_maxobjsize) {
+            debugs(20, 3, "storeSwapOut: will not fit: " << expectedEnd <<
+                   " > " << store_maxobjsize);
+            decision = MemObject::SwapOut::swImpossible;
+            return false; // known to outgrow the limit eventually
+        }
+
+        // use current minimum (always known)
+        const int64_t currentEnd = mem_obj->endOffset();
+        if (currentEnd > store_maxobjsize) {
+            debugs(20, 3, "storeSwapOut: does not fit: " << currentEnd <<
+                   " > " << store_maxobjsize);
+            decision = MemObject::SwapOut::swImpossible;
+            return false; // already does not fit and may only get bigger
+        }
+
+        // prevent default swPossible answer for yet unknown length
+        if (expectedEnd < 0) {
+            debugs(20, 3, "storeSwapOut: wait for more info: " <<
+                   store_maxobjsize);
+            return false; // may fit later, but will be rejected now
+        }
+    }
+
+    decision = MemObject::SwapOut::swPossible;
     return true;
 }
 
@@ -1956,7 +2082,7 @@ StoreEntry::hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) con
     return matched;
 }
 
-StorePointer
+SwapDir::Pointer
 StoreEntry::store() const
 {
     assert(0 <= swap_dirn && swap_dirn < Config.cacheSwap.n_configured);
@@ -1966,7 +2092,10 @@ StoreEntry::store() const
 void
 StoreEntry::unlink()
 {
-    store()->unlink(*this);
+    store()->unlink(*this); // implies disconnect()
+    swap_filen = -1;
+    swap_dirn = -1;
+    swap_status = SWAPOUT_NONE;
 }
 
 /*
@@ -1983,6 +2112,13 @@ StoreEntry::isAccepting() const
         return false;
 
     return true;
+}
+
+std::ostream &operator <<(std::ostream &os, const StoreEntry &e)
+{
+    return os << e.swap_filen << '@' << e.swap_dirn << '=' <<
+           e.mem_status << '/' << e.ping_status << '/' << e.store_status << '/' <<
+           e.swap_status;
 }
 
 /* NullStoreEntry */

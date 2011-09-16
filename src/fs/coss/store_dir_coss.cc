@@ -49,7 +49,7 @@
 #include "StoreFScoss.h"
 #include "Parsing.h"
 #include "swap_log_op.h"
-//#include "SquidMath.h"
+#include "SquidMath.h"
 
 #define STORE_META_BUFSZ 4096
 
@@ -74,16 +74,6 @@ struct _RebuildState {
 
 static char *storeCossDirSwapLogFile(SwapDir *, const char *);
 static EVH storeCossRebuildFromSwapLog;
-static StoreEntry *storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * key,
-        int file_number,
-        uint64_t swap_file_sz,
-        time_t expires,
-        time_t timestamp,
-        time_t lastref,
-        time_t lastmod,
-        uint32_t refcount,
-        uint16_t flags,
-        int clean);
 static void storeCossDirRebuild(CossSwapDir * sd);
 static void storeCossDirCloseTmpSwapLog(CossSwapDir * sd);
 static FILE *storeCossDirOpenTmpSwapLog(CossSwapDir *, int *, int *);
@@ -358,7 +348,7 @@ storeCossRemove(CossSwapDir * sd, StoreEntry * e)
     CossIndexNode *coss_node = (CossIndexNode *)e->repl.data;
     e->repl.data = NULL;
     dlinkDelete(&coss_node->node, &sd->cossindex);
-    coss_index_pool->free(coss_node);
+    coss_index_pool->freeOne(coss_node);
     sd->count -= 1;
 }
 
@@ -427,9 +417,8 @@ storeCossRebuildFromSwapLog(void *data)
                 /*
                  * Make sure we don't unlink the file, it might be
                  * in use by a subsequent entry.  Also note that
-                 * we don't have to subtract from store_swap_size
-                 * because adding to store_swap_size happens in
-                 * the cleanup procedure.
+                 * we don't have to subtract from cur_size because
+                 * adding to cur_size happens in the cleanup procedure.
                  */
                 e->expireNow();
                 e->releaseRequest();
@@ -481,19 +470,18 @@ storeCossRebuildFromSwapLog(void *data)
             continue;
         }
 
-        /* update store_swap_size */
         rb->counts.objcount++;
 
-        e = storeCossAddDiskRestore(rb->sd, s.key,
-                                    s.swap_filen,
-                                    s.swap_file_sz,
-                                    s.expires,
-                                    s.timestamp,
-                                    s.lastref,
-                                    s.lastmod,
-                                    s.refcount,
-                                    s.flags,
-                                    (int) rb->flags.clean);
+        e = rb->sd->addDiskRestore(s.key,
+                                   s.swap_filen,
+                                   s.swap_file_sz,
+                                   s.expires,
+                                   s.timestamp,
+                                   s.lastref,
+                                   s.lastmod,
+                                   s.refcount,
+                                   s.flags,
+                                   (int) rb->flags.clean);
 
         storeDirSwapLog(e, SWAP_LOG_ADD);
     }
@@ -503,17 +491,17 @@ storeCossRebuildFromSwapLog(void *data)
 
 /* Add a new object to the cache with empty memory copy and pointer to disk
  * use to rebuild store from disk. */
-static StoreEntry *
-storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * key,
-                        int file_number,
-                        uint64_t swap_file_sz,
-                        time_t expires,
-                        time_t timestamp,
-                        time_t lastref,
-                        time_t lastmod,
-                        uint32_t refcount,
-                        uint16_t flags,
-                        int clean)
+StoreEntry *
+CossSwapDir::addDiskRestore(const cache_key *const key,
+                            int file_number,
+                            uint64_t swap_file_sz,
+                            time_t expires,
+                            time_t timestamp,
+                            time_t lastref,
+                            time_t lastmod,
+                            uint32_t refcount,
+                            uint16_t flags,
+                            int clean)
 {
     StoreEntry *e = NULL;
     debugs(47, 5, "storeCossAddDiskRestore: " << storeKeyText(key)  <<
@@ -524,7 +512,7 @@ storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * key,
      * already in use! */
     e = new StoreEntry();
     e->store_status = STORE_OK;
-    e->swap_dirn = SD->index;
+    e->swap_dirn = index;
     e->setMemStatus(NOT_IN_MEMORY);
     e->swap_status = SWAPOUT_DONE;
     e->swap_filen = file_number;
@@ -541,8 +529,10 @@ storeCossAddDiskRestore(CossSwapDir * SD, const cache_key * key,
     EBIT_CLR(e->flags, KEY_PRIVATE);
     e->ping_status = PING_NONE;
     EBIT_CLR(e->flags, ENTRY_VALIDATED);
+    cur_size += fs.blksize * sizeInBlocks(e->swap_file_sz);
+    ++n_disk_objects;
     e->hashInsert(key);	/* do it after we clear KEY_PRIVATE */
-    storeCossAdd(SD, e);
+    storeCossAdd(this, e);
     assert(e->swap_filen >= 0);
     return e;
 }
@@ -925,13 +915,12 @@ CossSwapDir::create()
     swap = open(stripePath(), O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0600);
 
     /* TODO just set the file size */
-    /* swap size is in K */
-    char *block[1024];
+    char block[1024];
+    Must(maxSize() % sizeof(block) == 0);
+    memset(block, '\0', sizeof(block));
 
-    memset(&block, '\0', 1024);
-
-    for (off_t offset = 0; offset < max_size; ++offset) {
-        if (write (swap, block, 1024) < 1024) {
+    for (uint64_t offset = 0; offset < maxSize(); offset += sizeof(block)) {
+        if (write (swap, block, sizeof(block)) != sizeof(block)) {
             debugs (47, 0, "Failed to create COSS swap space in " << path);
         }
     }
@@ -959,26 +948,14 @@ CossSwapDir::~CossSwapDir()
     safe_free(stripe_path);
 }
 
-/*
- * storeCossDirCheckObj
- *
- * This routine is called by storeDirSelectSwapDir to see if the given
- * object is able to be stored on this filesystem. COSS filesystems will
- * not store everything. We don't check for maxobjsize here since its
- * done by the upper layers.
- */
-int
-CossSwapDir::canStore(StoreEntry const &e)const
+bool
+CossSwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
 {
+    if (!SwapDir::canStore(e, diskSpaceNeeded, load))
+        return false;
 
-    /* Check if the object is a special object, we can't cache these */
-
-    if (EBIT_TEST(e.flags, ENTRY_SPECIAL))
-        return -1;
-
-    /* Otherwise, we're ok */
-    /* Return load, cs->aq.aq_numpending out of MAX_ASYNCOP */
-    return io->load();
+    load = io->load();
+    return true;
 }
 
 /*
@@ -996,10 +973,10 @@ void
 CossSwapDir::statfs(StoreEntry & sentry) const
 {
     storeAppendPrintf(&sentry, "\n");
-    storeAppendPrintf(&sentry, "Maximum Size: %lu KB\n", max_size);
-    storeAppendPrintf(&sentry, "Current Size: %lu KB\n", cur_size);
+    storeAppendPrintf(&sentry, "Maximum Size: %"PRIu64" KB\n", maxSize() >> 10);
+    storeAppendPrintf(&sentry, "Current Size: %.2f KB\n", currentSize() / 1024.0);
     storeAppendPrintf(&sentry, "Percent Used: %0.2f%%\n",
-                      (100.0 * (double)cur_size / (double)max_size) );
+                      Math::doublePercent(currentSize(), maxSize()) );
     storeAppendPrintf(&sentry, "Number of object collisions: %d\n", (int) numcollisions);
 #if 0
     /* is this applicable? I Hope not .. */
@@ -1023,21 +1000,15 @@ CossSwapDir::statfs(StoreEntry & sentry) const
 void
 CossSwapDir::parse(int anIndex, char *aPath)
 {
-    unsigned int i;
-    unsigned int size;
-    off_t max_offset;
-
-    i = GetInteger();
-    size = i << 10;		/* Mbytes to Kbytes */
-
-    if (size <= 0)
+    const int i = GetInteger();
+    if (i <= 0)
         fatal("storeCossDirParse: invalid size value");
 
     index = anIndex;
 
     path = xstrdup(aPath);
 
-    max_size = size;
+    max_size = static_cast<uint64_t>(i) << 20; // MBytes to Bytes
 
     parseOptions(0);
 
@@ -1052,17 +1023,13 @@ CossSwapDir::parse(int anIndex, char *aPath)
         fatalf("COSS max-size option must be less than COSS_MEMBUF_SZ (%d)\n",
                COSS_MEMBUF_SZ);
 
-    /*
-     * check that we won't overflow sfileno later.  0xFFFFFF is the
-     * largest possible sfileno, assuming sfileno is a 25-bit
-     * signed integer, as defined in structs.h.
-     */
-    max_offset = (off_t) 0xFFFFFF << blksz_bits;
+    // check that we won't overflow sfileno later.
+    const uint64_t max_offset = (uint64_t)SwapFilenMax << blksz_bits;
 
-    if ((off_t)max_size > (max_offset>>10)) {
+    if (maxSize() > max_offset) {
         debugs(47, 0, "COSS block-size = " << (1<<blksz_bits) << " bytes");
         debugs(47,0, "COSS largest file offset = " << (max_offset >> 10) << " KB");
-        debugs(47, 0, "COSS cache_dir size = " << max_size << " KB");
+        debugs(47, 0, "COSS cache_dir size = " << (maxSize() >> 10) << " KB");
         fatal("COSS cache_dir size exceeds largest offset\n");
     }
 }
@@ -1071,19 +1038,16 @@ CossSwapDir::parse(int anIndex, char *aPath)
 void
 CossSwapDir::reconfigure(int index, char *path)
 {
-    unsigned int i;
-    unsigned int size;
-
-    i = GetInteger();
-    size = i << 10;		/* Mbytes to Kbytes */
-
-    if (size <= 0)
+    const int i = GetInteger();
+    if (i <= 0)
         fatal("storeCossDirParse: invalid size value");
 
-    if (size == (size_t)max_size)
-        debugs(3, 1, "Cache COSS dir '" << path << "' size remains unchanged at " << size << " KB");
+    const uint64_t size = static_cast<uint64_t>(i) << 20; // MBytes to Bytes
+
+    if (size == maxSize())
+        debugs(3, 1, "Cache COSS dir '" << path << "' size remains unchanged at " << i << " MB");
     else {
-        debugs(3, 1, "Cache COSS dir '" << path << "' size changed to " << size << " KB");
+        debugs(3, 1, "Cache COSS dir '" << path << "' size changed to " << i << " MB");
         max_size = size;
     }
 
@@ -1093,13 +1057,20 @@ CossSwapDir::reconfigure(int index, char *path)
 }
 
 void
+CossSwapDir::swappedOut(const StoreEntry &e)
+{
+    cur_size += fs.blksize * sizeInBlocks(e.swap_file_sz);
+    ++n_disk_objects;
+}
+
+void
 CossSwapDir::dump(StoreEntry &entry)const
 {
-    storeAppendPrintf(&entry, " %lu", (max_size >> 10));
+    storeAppendPrintf(&entry, " %"PRIu64, maxSize() >> 20);
     dumpOptions(&entry);
 }
 
-CossSwapDir::CossSwapDir() : SwapDir ("coss"), swaplog_fd(-1), count(0), current_membuf (NULL), current_offset(0), numcollisions(0),  blksz_bits(0), io (NULL), ioModule(NULL), currentIOOptions(new ConfigOptionVector()), stripe_path(NULL)
+CossSwapDir::CossSwapDir() : SwapDir ("coss"), swaplog_fd(-1), count(0), current_membuf (NULL), current_offset(0), numcollisions(0),  blksz_bits(0), io (NULL), ioModule(NULL), currentIOOptions(new ConfigOptionVector()), stripe_path(NULL), cur_size(0), n_disk_objects(0)
 {
     membufs.head = NULL;
     membufs.tail = NULL;

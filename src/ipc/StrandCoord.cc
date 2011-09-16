@@ -7,6 +7,7 @@
 
 
 #include "config.h"
+#include "Debug.h"
 #include "ipc/Messages.h"
 #include "ipc/StrandCoord.h"
 #include "ipc/TypedMsgHdr.h"
@@ -20,14 +21,35 @@ Ipc::StrandCoord::StrandCoord(int aKidId, pid_t aPid): kidId(aKidId), pid(aPid)
 {
 }
 
-Ipc::StrandCoord::StrandCoord(const TypedMsgHdr &hdrMsg): kidId(-1), pid(0)
+void
+Ipc::StrandCoord::unpack(const TypedMsgHdr &hdrMsg)
 {
-    hdrMsg.checkType(mtRegistration);
-    hdrMsg.getPod(*this);
+    hdrMsg.getPod(kidId);
+    hdrMsg.getPod(pid);
+    hdrMsg.getString(tag);
 }
 
 void Ipc::StrandCoord::pack(TypedMsgHdr &hdrMsg) const
 {
+    hdrMsg.putPod(kidId);
+    hdrMsg.putPod(pid);
+    hdrMsg.putString(tag);
+}
+
+
+Ipc::HereIamMessage::HereIamMessage(const StrandCoord &aStrand):
+        strand(aStrand)
+{
+}
+
+Ipc::HereIamMessage::HereIamMessage(const TypedMsgHdr &hdrMsg)
+{
+    hdrMsg.checkType(mtRegistration);
+    strand.unpack(hdrMsg);
+}
+
+void Ipc::HereIamMessage::pack(TypedMsgHdr &hdrMsg) const
+{
     hdrMsg.setType(mtRegistration);
-    hdrMsg.putPod(*this);
+    strand.pack(hdrMsg);
 }
