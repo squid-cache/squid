@@ -462,14 +462,6 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
             gopherState->len += llen;
             break;
         }
-        if (!lpos) {
-            /* there is no complete line in inbuf */
-            /* copy it to temp buffer */
-            /* note: llen is adjusted above */
-            xmemcpy(gopherState->buf + gopherState->len, pos, llen);
-            gopherState->len += llen;
-            break;
-        }
         if (gopherState->len != 0) {
             /* there is something left from last tx. */
             xmemcpy(line, gopherState->buf, gopherState->len);
