@@ -1,3 +1,21 @@
+Changes to squid-3.2.0.12 (17 Sep 2011):
+
+	- Regression Bug 3335: ICAP service is down
+	- Regression Bug 3322: adapt:: and icap:: format codes do not parse
+	- Regression Bug 3303: Support for non-English usernames in log files
+	- Regression Bug 3259: assertion failed: Connection.cc:29: 'fd<0' after REVIVED PARENT
+	- Regression: %I shows hostname on SSL error page
+	- Regression: FTP outgoing port always 'in use' on PASV connections
+	- Bug 3337: (partial) status 200 is not accepted for deny_info
+	- Bug 3319: Inconsistencies in error messages
+	- Bug 3281: pconn in-use while closing assertion
+	- Bug 3243: Fix cases: raw-IPv6, case variant FQDN, internal request
+	- Fixed max-stale check. Entities not exceeding max-stale were marked as stale
+	- Adjust format code %la for intercepted connections
+	- Log ICAP_ERR_GONE ICAP transaction outcome when ICAP initiator disappears early
+	- Send RST packet when closing an ICAP connection after a transaction error
+	- Support maximum field width for string access.log fields
+
 Changes to squid-3.2.0.11 (28 Aug 2011):
 
 	- Bug 3243: CVE-2009-0801 Bypass of browser same-origin access control
