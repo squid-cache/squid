@@ -334,8 +334,8 @@ HttpReply::hdrExpirationTime()
             if (cache_control->s_maxage >= 0)
                 return date + cache_control->s_maxage;
 
-            if (cache_control->max_age >= 0)
-                return date + cache_control->max_age;
+            if (cache_control->getMaxAge() >= 0)
+                return date + cache_control->getMaxAge();
         } else {
             /*
              * Conservatively handle the case when we have a max-age
@@ -345,7 +345,7 @@ HttpReply::hdrExpirationTime()
             if (cache_control->s_maxage >= 0)
                 return squid_curtime;
 
-            if (cache_control->max_age >= 0)
+            if (cache_control->getMaxAge() >= 0)
                 return squid_curtime;
         }
     }

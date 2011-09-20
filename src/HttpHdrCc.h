@@ -49,32 +49,20 @@ public:
             max_stale(-1), stale_if_error(0),
             min_fresh(-1) {}
 
-    /// reset to the after-default-construction state.
     void clear();
-
-    /**parse the supplied string filling in HttpHdrCc's fields.
-     *
-     * \note: internal structures are not cleaned-up beforehand.
-     *        caller must explicitly clear() beforehand if he wants that
-     */
-    bool parse(const String &s);
-
-    /** set the max_age value
-     *
-     * \param max_age the new max age. Values <0 clear it.
-     */
+    bool parse(const String & s);
     void setMaxAge(int32_t max_age);
-
+    int32_t getMaxAge() const;
     MEMPROXY_CLASS(HttpHdrCc);
 
-    /// bit-mask for the various Cc directives, keyed on http_hdr_cc_type
     int32_t mask;
+private:
     int32_t max_age;
+public:
     int32_t s_maxage;
     int32_t max_stale;
     int32_t stale_if_error;
     int32_t min_fresh;
-    /// comma-separated string accumulating unknown Cache-control directives.
     String other;
 };
 
