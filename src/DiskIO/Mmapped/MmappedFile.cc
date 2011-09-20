@@ -147,7 +147,6 @@ MmappedFile::read(ReadRequest *aRequest)
 
     assert(fd >= 0);
     assert(ioRequestor != NULL);
-    assert(aRequest->len >= 0);
     assert(aRequest->len > 0); // TODO: work around mmap failures on zero-len?
     assert(aRequest->offset >= 0);
     assert(!error_); // TODO: propagate instead?
@@ -178,7 +177,6 @@ MmappedFile::write(WriteRequest *aRequest)
 
     assert(fd >= 0);
     assert(ioRequestor != NULL);
-    assert(aRequest->len >= 0);
     assert(aRequest->len > 0); // TODO: work around mmap failures on zero-len?
     assert(aRequest->offset >= 0);
     assert(!error_); // TODO: propagate instead?

@@ -182,10 +182,13 @@ peerCheckNeverDirectDone(allow_t answer, void *data)
         debugs(44, 3, HERE << "direct = " << DirectStr[psstate->direct] << " (never_direct allow)");
         break;
     case ACCESS_DENIED: // not relevant.
+    case ACCESS_DUNNO:  // not relevant.
         break;
-    default: // Oops. Failed to get a result.
+    case ACCESS_AUTH_REQUIRED:
+    case ACCESS_AUTH_EXPIRED_OK:
+    case ACCESS_AUTH_EXPIRED_BAD:
         debugs(44, DBG_IMPORTANT, "WARNING: never_direct resulted in " << answer << ". Username ACLs are not reliable here.");
-        assert(answer != ACCESS_DUNNO);
+        break;
     }
     peerSelectFoo(psstate);
 }
@@ -204,10 +207,13 @@ peerCheckAlwaysDirectDone(allow_t answer, void *data)
         debugs(44, 3, HERE << "direct = " << DirectStr[psstate->direct] << " (always_direct allow)");
         break;
     case ACCESS_DENIED: // not relevant.
+    case ACCESS_DUNNO:  // not relevant.
         break;
-    default: // Oops. Failed to get a result.
+    case ACCESS_AUTH_REQUIRED:
+    case ACCESS_AUTH_EXPIRED_OK:
+    case ACCESS_AUTH_EXPIRED_BAD:
         debugs(44, DBG_IMPORTANT, "WARNING: always_direct resulted in " << answer << ". Username ACLs are not reliable here.");
-        assert(answer != ACCESS_DUNNO);
+        break;
     }
     peerSelectFoo(psstate);
 }
