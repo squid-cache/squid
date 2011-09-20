@@ -164,11 +164,12 @@ HttpHdrCc::parse(const String & str)
         switch (type) {
 
         case CC_MAX_AGE:
-
-            if (!p || !httpHeaderParseInt(p, &cc->max_age)) {
+            int32_t ma;
+            if (!p || !httpHeaderParseInt(p, &ma)) {
                 debugs(65, 2, "cc: invalid max-age specs near '" << item << "'");
-                cc->max_age = -1;
-                EBIT_CLR(cc->mask, type);
+                cc->setMaxAge(-1);
+            } else {
+                cc->setMaxAge(ma);
             }
 
             break;
@@ -244,7 +245,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
             /* handle options with values */
 
             if (flag == CC_MAX_AGE)
-                packerPrintf(p, "=%d", (int) cc->max_age);
+                packerPrintf(p, "=%d", (int) cc->getMaxAge());
 
             if (flag == CC_S_MAXAGE)
                 packerPrintf(p, "=%d", (int) cc->s_maxage);
@@ -267,12 +268,14 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
 void
 HttpHdrCc::setMaxAge(int max_age_)
 {
-    max_age = max_age_;
 
-    if (max_age_ >= 0)
+    if (max_age_ >= 0) {
         EBIT_SET(mask, CC_MAX_AGE);
-    else
+        max_age = max_age_;
+    } else {
         EBIT_CLR(mask, CC_MAX_AGE);
+        max_age=-1;
+    }
 }
 
 void
@@ -298,3 +301,10 @@ httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int c
         storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",
                           id, name, count, xdiv(count, dump_stat->ccParsedCount));
 }
+
+int32_t HttpHdrCc::getMaxAge() const
+{
+    return max_age;
+}
+
+
