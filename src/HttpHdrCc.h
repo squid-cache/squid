@@ -45,9 +45,10 @@ class HttpHdrCc
 
 public:
 	static const int32_t MAX_AGE_UNSET=-1; //max-age is unset
+	static const int32_t S_MAXAGE_UNSET=-1; //max-age is unset
 
     explicit HttpHdrCc() :
-            mask(0), max_age(MAX_AGE_UNSET), s_maxage(-1),
+            mask(0), max_age(MAX_AGE_UNSET), s_maxage(S_MAXAGE_UNSET),
             max_stale(-1), stale_if_error(0),
             min_fresh(-1) {}
 
@@ -57,13 +58,17 @@ public:
     void setMaxAge(int32_t max_age);
     int32_t getMaxAge() const;
 
+    void setSMaxAge(int32_t s_maxage);
+    int32_t getSMaxAge() const;
+
+
     MEMPROXY_CLASS(HttpHdrCc);
 
     int32_t mask;
 private:
     int32_t max_age;
-public:
     int32_t s_maxage;
+public:
     int32_t max_stale;
     int32_t stale_if_error;
     int32_t min_fresh;

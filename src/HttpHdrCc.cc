@@ -178,8 +178,7 @@ HttpHdrCc::parse(const String & str)
 
             if (!p || !httpHeaderParseInt(p, &cc->s_maxage)) {
                 debugs(65, 2, "cc: invalid s-maxage specs near '" << item << "'");
-                cc->s_maxage = -1;
-                EBIT_CLR(cc->mask, type);
+                cc->setSMaxAge(S_MAXAGE_UNSET);
             }
 
             break;
@@ -248,7 +247,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
                 packerPrintf(p, "=%d", (int) cc->getMaxAge());
 
             if (flag == CC_S_MAXAGE)
-                packerPrintf(p, "=%d", (int) cc->s_maxage);
+                packerPrintf(p, "=%d", (int) cc->getSMaxAge());
 
             if (flag == CC_MAX_STALE && cc->max_stale >= 0)
                 packerPrintf(p, "=%d", (int) cc->max_stale);
@@ -263,19 +262,6 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
     if (cc->other.size() != 0)
         packerPrintf(p, (pcount ? ", " SQUIDSTRINGPH : SQUIDSTRINGPH),
                      SQUIDSTRINGPRINT(cc->other));
-}
-
-void
-HttpHdrCc::setMaxAge(int max_age_)
-{
-
-    if (max_age_ >= 0) {
-        EBIT_SET(mask, CC_MAX_AGE);
-        max_age = max_age_;
-    } else {
-        EBIT_CLR(mask, CC_MAX_AGE);
-        max_age=MAX_AGE_UNSET;
-    }
 }
 
 void
@@ -302,9 +288,36 @@ httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int c
                           id, name, count, xdiv(count, dump_stat->ccParsedCount));
 }
 
+void
+HttpHdrCc::setMaxAge(int max_age_)
+{
+
+    if (max_age_ >= 0) {
+        EBIT_SET(mask, CC_MAX_AGE);
+        max_age = max_age_;
+    } else {
+        EBIT_CLR(mask, CC_MAX_AGE);
+        max_age=MAX_AGE_UNSET;
+    }
+}
+
 int32_t HttpHdrCc::getMaxAge() const
 {
     return max_age;
 }
 
+void HttpHdrCc::setSMaxAge(int32_t s_maxage)
+{
+	if (s_maxage >= 0) {
+		EBIT_SET(mask, CC_S_MAXAGE);
+		this->s_maxage=s_maxage;
+	} else {
+		this->s_maxage=S_MAXAGE_UNSET;
+		EBIT_CLR(mask, CC_S_MAXAGE);
+	}
+}
 
+int32_t HttpHdrCc::getSMaxAge() const
+{
+	return s_maxage;
+}
