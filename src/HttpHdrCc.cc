@@ -167,7 +167,7 @@ HttpHdrCc::parse(const String & str)
             int32_t ma;
             if (!p || !httpHeaderParseInt(p, &ma)) {
                 debugs(65, 2, "cc: invalid max-age specs near '" << item << "'");
-                cc->setMaxAge(-1);
+                cc->setMaxAge(MAX_AGE_UNSET);
             } else {
                 cc->setMaxAge(ma);
             }
@@ -274,7 +274,7 @@ HttpHdrCc::setMaxAge(int max_age_)
         max_age = max_age_;
     } else {
         EBIT_CLR(mask, CC_MAX_AGE);
-        max_age=-1;
+        max_age=MAX_AGE_UNSET;
     }
 }
 
