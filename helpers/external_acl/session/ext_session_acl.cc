@@ -52,6 +52,7 @@
 #endif
 
 static int session_ttl = 3600;
+static int fixed_timeout = 0;
 char *db_path = NULL;
 const char *program_name;
 
@@ -101,6 +102,7 @@ static void session_login(const char *details, size_t len)
     data.data = &now;
     data.size = sizeof(now);
     db->put(db, &key, &data, 0);
+    db->sync(db, 0);
 }
 
 static void session_logout(const char *details, size_t len)
@@ -113,8 +115,9 @@ static void session_logout(const char *details, size_t len)
 
 static void usage(void)
 {
-    fprintf(stderr, "Usage: %s [-t session_timeout] [-b dbpath] [-a]\n", program_name);
-    fprintf(stderr, "	-t sessiontimeout	Idle timeout after which sessions will be forgotten\n");
+    fprintf(stderr, "Usage: %s [-t|-T session_timeout] [-b dbpath] [-a]\n", program_name);
+    fprintf(stderr, "	-t sessiontimeout	Idle timeout after which sessions will be forgotten (user activity will reset)\n");
+    fprintf(stderr, "	-T sessiontimeout	Fixed timeout after which sessions will be forgotten (regardless of user activity)\n");
     fprintf(stderr, "	-b dbpath		Path where persistent session database will be kept\n");
     fprintf(stderr, "	-a			Active mode requiring LOGIN argument to start a session\n");
 }
@@ -126,8 +129,10 @@ int main(int argc, char **argv)
 
     program_name = argv[0];
 
-    while ((opt = getopt(argc, argv, "t:b:a?")) != -1) {
+    while ((opt = getopt(argc, argv, "t:T:b:a?")) != -1) {
         switch (opt) {
+        case 'T':
+            fixed_timeout = 1;
         case 't':
             session_ttl = strtol(optarg, NULL, 0);
             break;
@@ -150,8 +155,13 @@ int main(int argc, char **argv)
 
     while (fgets(request, HELPER_INPUT_BUFFER, stdin)) {
         int action = 0;
-        const char *user_key = strtok(request, " \n");
+        const char *channel_id = strtok(request, " ");
         const char *detail = strtok(NULL, "\n");
+        if (detail == NULL) {
+            // Only 1 paramater supplied. We are expecting at least 2 (including the channel ID)
+            fprintf(stderr, "FATAL: %s is concurrent and requires the concurrency option to be specified.\n", program_name);
+            exit(1);
+        }
         const char *lastdetail = strrchr(detail, ' ');
         size_t detail_len = strlen(detail);
         if (lastdetail) {
@@ -165,18 +175,20 @@ int main(int argc, char **argv)
         }
         if (action == -1) {
             session_logout(detail, detail_len);
-            printf("%s OK message=\"Bye\"\n", user_key);
+            printf("%s OK message=\"Bye\"\n", channel_id);
         } else if (action == 1) {
             session_login(detail, detail_len);
-            printf("%s OK message=\"Welcome\"\n", user_key);
+            printf("%s OK message=\"Welcome\"\n", channel_id);
         } else if (session_active(detail, detail_len)) {
-            session_login(detail, detail_len);
-            printf("%s OK\n", user_key);
+            if (fixed_timeout == 0) {
+                session_login(detail, detail_len);
+            }
+            printf("%s OK\n", channel_id);
         } else if (default_action == 1) {
             session_login(detail, detail_len);
-            printf("%s ERR message=\"Welcome\"\n", user_key);
+            printf("%s ERR message=\"Welcome\"\n", channel_id);
         } else {
-            printf("%s ERR message=\"No session available\"\n", user_key);
+            printf("%s ERR message=\"No session available\"\n", channel_id);
         }
     }
     shutdown_db();
