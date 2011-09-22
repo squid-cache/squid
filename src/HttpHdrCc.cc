@@ -187,7 +187,7 @@ HttpHdrCc::parse(const String & str)
 
             if (!p || !httpHeaderParseInt(p, &cc->max_stale)) {
                 debugs(65, 2, "cc: max-stale directive is valid without value");
-                cc->max_stale = -1;
+                cc->setMaxStale(MAX_STALE_ALWAYS);
             }
 
             break;
@@ -249,8 +249,8 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
             if (flag == CC_S_MAXAGE)
                 packerPrintf(p, "=%d", (int) cc->getSMaxAge());
 
-            if (flag == CC_MAX_STALE && cc->max_stale >= 0)
-                packerPrintf(p, "=%d", (int) cc->max_stale);
+            if (flag == CC_MAX_STALE && cc->getMaxStale() >= 0)
+                packerPrintf(p, "=%d", (int) cc->getMaxStale());
 
             if (flag == CC_MIN_FRESH)
                 packerPrintf(p, "=%d", (int) cc->min_fresh);
@@ -312,12 +312,27 @@ void HttpHdrCc::setSMaxAge(int32_t s_maxage)
 		EBIT_SET(mask, CC_S_MAXAGE);
 		this->s_maxage=s_maxage;
 	} else {
-		this->s_maxage=S_MAXAGE_UNSET;
 		EBIT_CLR(mask, CC_S_MAXAGE);
+		this->s_maxage=S_MAXAGE_UNSET;
 	}
 }
 
 int32_t HttpHdrCc::getSMaxAge() const
 {
 	return s_maxage;
+}
+
+void HttpHdrCc::setMaxStale(int32_t max_stale)
+{
+	if (max_stale>=0 || max_stale==MAX_STALE_ALWAYS) {
+		EBIT_SET(mask,CC_MAX_STALE);
+		this->max_stale=max_stale;
+	} else {
+		EBIT_CLR(mask, CC_MAX_STALE);
+		this->max_stale=MAX_STALE_UNSET;
+	}
+}
+int32_t HttpHdrCc::getMaxStale() const
+{
+	return max_stale;
 }

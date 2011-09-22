@@ -354,12 +354,12 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
                 }
             }
 
-            if (EBIT_TEST(cc->mask, CC_MAX_STALE) && staleness > -1) {
-                if (cc->max_stale < 0) {
+            if (cc->getMaxStale()>=0 && staleness > -1) {
+                if (cc->getMaxStale()==HttpHdrCc::MAX_STALE_ALWAYS) {
                     /* max-stale directive without a value */
                     debugs(22, 3, "refreshCheck: NO: max-stale wildcard");
                     return FRESH_REQUEST_MAX_STALE_ALL;
-                } else if (staleness < cc->max_stale) {
+                } else if (staleness < cc->getMaxStale()) {
                     debugs(22, 3, "refreshCheck: NO: staleness < max-stale");
                     return FRESH_REQUEST_MAX_STALE_VALUE;
                 }
