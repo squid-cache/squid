@@ -2558,6 +2558,11 @@ DOC_START
 	decreases, blocks will be freed until the high-water mark is
 	reached.  Thereafter, blocks will be used to store hot
 	objects.
+
+	If shared memory caching is enabled, Squid does not use the shared
+	cache space for in-transit objects, but they still consume as much
+	local memory as they need. For more details about the shared memory
+	cache, see memory_cache_shared.
 DOC_END
 
 NAME: maximum_object_size_in_memory
@@ -2570,6 +2575,34 @@ DOC_START
 	the memory cache. This should be set high enough to keep objects
 	accessed frequently in memory to improve performance whilst low
 	enough to keep larger objects from hoarding cache_mem.
+DOC_END
+
+NAME: memory_cache_shared
+COMMENT: on|off
+TYPE: YesNoNone
+LOC: Config.memShared
+DEFAULT: none
+DEFAULT_DOC: "on" where supported if doing memory caching with multiple SMP workers.
+DOC_START
+	Controls whether the memory cache is shared among SMP workers.
+
+	The shared memory cache is meant to occupy cache_mem bytes and replace
+	the non-shared memory cache, although some entities may still be
+	cached locally by workers for now (e.g., internal and in-transit
+	objects may be served from a local memory cache even if shared memory
+	caching is enabled).
+
+	By default, the memory cache is shared if and only if all of the
+	following conditions are satisfied: Squid runs in SMP mode with
+	multiple workers, cache_mem is positive, and Squid environment
+	supports required IPC primitives (e.g., POSIX shared memory segments
+	and GCC-style atomic operations).
+
+	To avoid blocking locks, shared memory uses opportunistic algorithms
+	that do not guarantee that every cachable entity that could have been
+	shared among SMP workers will actually be shared.
+
+	Currently, entities exceeding 32KB in size cannot be shared.
 DOC_END
 
 NAME: memory_cache_mode
@@ -2723,6 +2756,24 @@ DOC_START
 	ratio.  If Q1 > Q2, the cache directory is optimized for
 	higher hit ratio at the expense of an increase in response
 	time.
+
+	The rock store type:
+
+	    cache_dir rock Directory-Name Mbytes <max-size=bytes>
+
+	The Rock Store type is a database-style storage. All cached
+	entries are stored in a "database" file, using fixed-size slots,
+	one entry per slot. The database size is specified in MB. The
+	slot size is specified in bytes using the max-size option. See
+	below for more info on the max-size option.
+
+	swap-timeout=msec: Squid will not start writing a miss to or
+	reading a hit from disk if it estimates that the swap operation
+	will take more than the specified number of milliseconds. By
+	default and when set to zero, disables the disk I/O time limit
+	enforcement. Ignored when using blocking I/O module because
+	blocking synchronous I/O does not allow Squid to estimate the
+	expected swap wait time.
 
 	The coss store type:
 
@@ -4069,8 +4120,8 @@ DOC_START
 DOC_END
 
 NAME: store_avg_object_size
-COMMENT: (kbytes)
-TYPE: kb_int64_t
+COMMENT: (bytes)
+TYPE: b_int64_t
 DEFAULT: 13 KB
 LOC: Config.Store.avgObjectSize
 DOC_START

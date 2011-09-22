@@ -85,6 +85,7 @@ mem_hdr::freeContent()
 {
     nodes.destroy(SplayNode<mem_node *>::DefaultFree);
     inmem_hi = 0;
+    debugs(19, 9, HERE << this << " hi: " << inmem_hi);
 }
 
 bool
@@ -144,12 +145,15 @@ mem_hdr::writeAvailable(mem_node *aNode, int64_t location, size_t amount, char c
 
     memcpy(aNode->nodeBuffer.data + aNode->nodeBuffer.length, source, copyLen);
 
+    debugs(19, 9, HERE << this << " hi: " << inmem_hi);
     if (inmem_hi <= location)
         inmem_hi = location + copyLen;
 
     /* Adjust the ptr and len according to what was deposited in the page */
     aNode->nodeBuffer.length += copyLen;
 
+    debugs(19, 9, HERE << this << " hi: " << inmem_hi);
+    debugs(19, 9, HERE << this << " hi: " << endOffset());
     return copyLen;
 }
 
@@ -176,7 +180,7 @@ mem_hdr::makeAppendSpace()
 void
 mem_hdr::internalAppend(const char *data, int len)
 {
-    debugs(19, 6, "memInternalAppend: len " << len);
+    debugs(19, 6, "memInternalAppend: " << this << " len " << len);
 
     while (len > 0) {
         makeAppendSpace();
@@ -194,6 +198,7 @@ mem_hdr::internalAppend(const char *data, int len)
 mem_node *
 mem_hdr::getBlockContainingLocation (int64_t location) const
 {
+    // Optimize: do not create a whole mem_node just to store location
     mem_node target (location);
     target.nodeBuffer.length = 1;
     mem_node *const *result = nodes.find (&target, NodeCompare);
@@ -245,7 +250,7 @@ mem_hdr::copy(StoreIOBuffer const &target) const
 {
 
     assert(target.range().end > target.range().start);
-    debugs(19, 6, "memCopy: " << target.range());
+    debugs(19, 6, "memCopy: " << this << " " << target.range());
 
     /* we shouldn't ever ask for absent offsets */
 
@@ -361,7 +366,7 @@ bool
 mem_hdr::write (StoreIOBuffer const &writeBuffer)
 {
     PROF_start(mem_hdr_write);
-    debugs(19, 6, "mem_hdr::write: " << writeBuffer.range() << " object end " << endOffset());
+    debugs(19, 6, "mem_hdr::write: " << this << " " << writeBuffer.range() << " object end " << endOffset());
 
     if (unionNotEmpty(writeBuffer)) {
         debugs(19,0,"mem_hdr::write: writeBuffer: " << writeBuffer.range());
@@ -391,7 +396,9 @@ mem_hdr::write (StoreIOBuffer const &writeBuffer)
 }
 
 mem_hdr::mem_hdr() : inmem_hi(0)
-{}
+{
+    debugs(19, 9, HERE << this << " hi: " << inmem_hi);
+}
 
 mem_hdr::~mem_hdr()
 {

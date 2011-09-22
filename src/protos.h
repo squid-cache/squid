@@ -511,6 +511,14 @@ SQUIDCEXTERN void storeRebuildStart(void);
 SQUIDCEXTERN void storeRebuildComplete(struct _store_rebuild_data *);
 SQUIDCEXTERN void storeRebuildProgress(int sd_index, int total, int sofar);
 
+/// loads entry from disk; fills supplied memory buffer on success
+bool storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, struct _store_rebuild_data &counts);
+/// parses entry buffer and validates entry metadata; fills e on success
+bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, struct _store_rebuild_data &counts, uint64_t expectedSize);
+/// checks whether the loaded entry should be kept; updates counters
+bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, struct _store_rebuild_data &counts);
+
+
 /*
  * store_swapin.c
  */
@@ -559,12 +567,16 @@ SQUIDCEXTERN bool IamPrimaryProcess();
 SQUIDCEXTERN bool IamCoordinatorProcess();
 /// whether the current process handles HTTP transactions and such
 SQUIDCEXTERN bool IamWorkerProcess();
+/// whether the current process is dedicated to managing a cache_dir
+bool IamDiskProcess();
 /// Whether we are running in daemon mode
 SQUIDCEXTERN bool InDaemonMode(); // try using specific Iam*() checks above first
 /// Whether there should be more than one worker process running
 SQUIDCEXTERN bool UsingSmp(); // try using specific Iam*() checks above first
 /// number of Kid processes as defined in src/ipc/Kid.h
 SQUIDCEXTERN int NumberOfKids();
+/// a string describing this process roles such as worker or coordinator
+String ProcessRoles();
 SQUIDCEXTERN int DebugSignal;
 
 /* AYJ debugs function to show locations being reset with memset() */

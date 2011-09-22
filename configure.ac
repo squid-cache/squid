@@ -367,6 +367,29 @@ SQUID_DEFINE_BOOL(_USE_INLINE_,$enable_inline,
 # to be used by sub-commands
 export enable_inline
 
+dnl
+dnl Check for atomic operations support in the compiler
+dnl
+AC_MSG_CHECKING([for atomic operations support])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    int n = 0;
+]],[[
+    __sync_add_and_fetch(&n, 10); // n becomes 10
+    __sync_fetch_and_add(&n, 20); // n becomes 30
+    __sync_sub_and_fetch(&n, 15); // n becomes 15
+    __sync_bool_compare_and_swap(&n, 15, 201); // n becomes 201
+    __sync_fetch_and_and(&n, 200); // n becomes 200
+    return (n == 200) ? 0 : -1;
+]])],
+[
+    AC_DEFINE(HAVE_ATOMIC_OPS,1,
+        [Define to 1 if you have __sync_add_and_fetch() and such])
+    AC_MSG_RESULT(yes)
+],[
+    AC_MSG_RESULT(no)
+])
+
+
 AC_ARG_ENABLE(debug-cbdata,
   AS_HELP_STRING([--enable-debug-cbdata],
       [Provide some debug information in cbdata]), [ 
@@ -439,6 +462,11 @@ if test "x$with_dl" = "xyes"; then
   AC_MSG_NOTICE([With dl])
 fi
 
+AC_SEARCH_LIBS([shm_open], [rt])
+if test "x$ac_cv_search_shm_open" != "xno" ; then
+  AC_DEFINE(HAVE_SHM,1,[Support shared memory features])
+fi
+
 AC_MSG_CHECKING([for DiskIO modules to be enabled])
 squid_disk_module_candidates=""
 squid_opt_enable_diskio="auto"  #values: no, yes, "auto"(=yes+detect modules)
@@ -469,6 +497,10 @@ case $enableval in
 if test "x$squid_opt_enable_diskio" = "xauto"; then
     squid_opt_enable_diskio="yes"
     SQUID_LOOK_FOR_MODULES([$srcdir/src/DiskIO],[squid_disk_module_candidates])
+    if test "x$ac_cv_search_shm_open" = "xno" ; then
+        # disable IpcIo
+        squid_disk_module_candidates=`echo $squid_disk_module_candidates|sed 's/IpcIo//'`
+    fi
 fi
 
 AC_MSG_RESULT([${squid_disk_module_candidates:-none}])
@@ -635,6 +667,24 @@ for module in $squid_disk_module_candidates none; do
       fi
       ;;
 
+    Mmapped)
+      AC_MSG_NOTICE([Enabling Mmapped DiskIO module])
+      DISK_LIBS="$DISK_LIBS libMmapped.a"
+      DISK_MODULES="$DISK_MODULES Mmapped"
+      DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/Mmapped/MmappedDiskIOModule.o"
+      ;;
+
+    IpcIo)
+      AC_MSG_NOTICE([Enabling IpcIo DiskIO module])
+      if test "x$ac_cv_search_shm_open" = "xno" ; then
+        AC_MSG_ERROR([DiskIO IpcIo module requires shared memory support])
+      fi
+      DISK_LIBS="$DISK_LIBS libIpcIo.a"
+      DISK_MODULES="$DISK_MODULES IpcIo"
+      DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/IpcIo/IpcIoDiskIOModule.o"
+      AC_DEFINE(USE_DISKIO_IPCIO, 1, [Enable DiskIO IpcIo module.])
+      ;;
+
     Blocking)
       AC_MSG_NOTICE([Enabling Blocking DiskIO module])
       DISK_LIBS="$DISK_LIBS libBlocking.a"
@@ -692,6 +742,10 @@ if test "x$squid_opt_enable_storeio" = "xauto"; then
   SQUID_LOOK_FOR_MODULES([$srcdir/src/fs],[squid_storeio_module_candidates])
   # disable coss
   squid_storeio_module_candidates=`echo $squid_storeio_module_candidates|sed 's/coss//'`
+  if test "x$ac_cv_search_shm_open" = "xno" ; then
+    # disable rock
+    squid_storeio_module_candidates=`echo $squid_storeio_module_candidates|sed 's/rock//'`
+  fi
   AC_MSG_RESULT([$squid_storeio_module_candidates])
 fi
 
@@ -722,6 +776,15 @@ for fs in $squid_storeio_module_candidates none; do
       # for STORE_TESTS substition
       STORE_TESTS="$STORE_TESTS tests/testCoss$EXEEXT"
       ;;
+    rock)
+	if ! test "x$squid_disk_module_candidates_IpcIo" = "xyes" -a \
+	  "x$squid_disk_module_candidates_Blocking" = "xyes"; then
+	  AC_MSG_ERROR([Storage module Rock requires IpcIo and Blocking DiskIO modules])
+	fi
+	if test "x$ac_cv_search_shm_open" = "xno" ; then
+	  AC_MSG_ERROR([Storage module Rock requires shared memory support])
+	fi
+	;;
     ufs)
       STORE_TESTS="$STORE_TESTS tests/testUfs$EXEEXT"
     esac
@@ -733,6 +796,7 @@ AH_TEMPLATE(HAVE_FS_UFS, "Define to 1 if ufs filesystem module is build")
 AH_TEMPLATE(HAVE_FS_AUFS, "Define to 1 if aufs filesystem module is build")
 AH_TEMPLATE(HAVE_FS_DISKD, "Define to 1 if diskd filesystem module is build")
 AH_TEMPLATE(HAVE_FS_COSS, "Define to 1 if coss filesystem module is build")
+AH_TEMPLATE(HAVE_FS_ROCK, "Define to 1 if rock filesystem module is build")
 
 
 dnl got final squid_storeio_module_candidates, build library lists
@@ -2297,6 +2361,7 @@ AC_CHECK_HEADERS( \
   sys/param.h \
   sys/prctl.h \
   sys/md5.h \
+  sys/mman.h \
   sys/msg.h \
   sys/resource.h \
   sys/select.h \

@@ -231,12 +231,14 @@ diskHandleWrite(int fd, void *notused)
 
     assert(fdd->write_q->len > fdd->write_q->buf_offset);
 
-    debugs(6, 3, "diskHandleWrite: FD " << fd << " writing " << (fdd->write_q->len - fdd->write_q->buf_offset) << " bytes");
+    debugs(6, 3, "diskHandleWrite: FD " << fd << " writing " <<
+           (fdd->write_q->len - fdd->write_q->buf_offset) << " bytes at " <<
+           fdd->write_q->file_offset);
 
     errno = 0;
 
     if (fdd->write_q->file_offset != -1)
-        lseek(fd, fdd->write_q->file_offset, SEEK_SET);
+        lseek(fd, fdd->write_q->file_offset, SEEK_SET); /* XXX ignore return? */
 
     len = FD_WRITE_METHOD(fd,
                           fdd->write_q->buf + fdd->write_q->buf_offset,
@@ -433,7 +435,11 @@ diskHandleRead(int fd, void *data)
 
     PROF_start(diskHandleRead);
 
+#if WRITES_MAINTAIN_DISK_OFFSET
     if (F->disk.offset != ctrl_dat->offset) {
+#else
+    {
+#endif
         debugs(6, 3, "diskHandleRead: FD " << fd << " seeking to offset " << ctrl_dat->offset);
         lseek(fd, ctrl_dat->offset, SEEK_SET);	/* XXX ignore return? */
         statCounter.syscalls.disk.seeks++;

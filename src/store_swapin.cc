@@ -50,6 +50,9 @@ storeSwapInStart(store_client * sc)
         return;
     }
 
+    if (e->mem_status != NOT_IN_MEMORY)
+        debugs(20, 3, HERE << "already IN_MEMORY");
+
     debugs(20, 3, "storeSwapInStart: called for : " << e->swap_dirn << " " <<
            std::hex << std::setw(8) << std::setfill('0') << std::uppercase <<
            e->swap_filen << " " <<  e->getMD5Text());
@@ -94,6 +97,7 @@ storeSwapInFileNotify(void *data, int errflag, StoreIOState::Pointer self)
            e->swap_dirn << " to " << sc->swapin_sio->swap_filen << "/" <<
            sc->swapin_sio->swap_dirn);
 
+    assert(e->swap_filen < 0); // if this fails, call SwapDir::disconnect(e)
     e->swap_filen = sc->swapin_sio->swap_filen;
     e->swap_dirn = sc->swapin_sio->swap_dirn;
 }

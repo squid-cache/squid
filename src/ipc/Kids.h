@@ -21,8 +21,8 @@ private:
     Kids& operator= (const Kids&); ///< not implemented
 
 public:
-    /// maintain n kids
-    void init(size_t n);
+    /// initialize all kid records based on Config
+    void init();
 
     /// returns kid by pid
     Kid* find(pid_t pid);

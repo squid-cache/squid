@@ -507,7 +507,7 @@ storeDigestCalcCap(void)
      * number of _entries_ we want to pre-allocate for.
      */
     const int hi_cap = Store::Root().maxSize() / Config.Store.avgObjectSize;
-    const int lo_cap = 1 + store_swap_size / Config.Store.avgObjectSize;
+    const int lo_cap = 1 + Store::Root().currentSize() / Config.Store.avgObjectSize;
     const int e_count = StoreEntry::inUseCount();
     int cap = e_count ? e_count :hi_cap;
     debugs(71, 2, "storeDigestCalcCap: have: " << e_count << ", want " << cap <<

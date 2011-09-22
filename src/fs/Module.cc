@@ -22,6 +22,12 @@ static StoreFSufs<UFSSwapDir> *AufsInstance;
 static StoreFSufs<UFSSwapDir> *DiskdInstance;
 #endif
 
+#if HAVE_FS_ROCK
+#include "fs/rock/RockStoreFileSystem.h"
+static Rock::StoreFileSystem *RockInstance = NULL;
+#endif
+
+
 /* TODO: Modify coss code to:
  * (a) remove the StoreFScoss::GetInstance method,
  * (b) declare the StoreFScoss::stats  as static and
@@ -48,6 +54,10 @@ void Fs::Init()
     DiskdInstance = new StoreFSufs<UFSSwapDir>("DiskDaemon", "diskd");;
 #endif
 
+#if HAVE_FS_ROCK
+    RockInstance = new Rock::StoreFileSystem();
+#endif
+
 }
 
 
@@ -64,6 +74,10 @@ void Fs::Clean()
 
 #if HAVE_FS_DISKD
     delete DiskdInstance;
+#endif
+
+#if HAVE_FS_ROCK
+    delete RockInstance;
 #endif
 
 }

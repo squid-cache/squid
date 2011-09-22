@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "ipc/Kids.h"
+#include "protos.h"
 
 Kids TheKids;
 KidName TheKidName;
@@ -16,26 +17,31 @@ Kids::Kids()
 }
 
 /// maintain n kids
-void Kids::init(size_t n)
+void Kids::init()
 {
-    assert(n > 0);
-
     if (storage.size() > 0)
         storage.clean();
 
-    storage.reserve(n);
+    storage.reserve(NumberOfKids());
 
     char kid_name[32];
 
-    // add Kid records for all n main strands
-    for (size_t i = 1; i <= n; ++i) {
-        snprintf(kid_name, sizeof(kid_name), "(squid-%d)", (int)i);
+    // add Kid records for all workers
+    for (int i = 0; i < Config.workers; ++i) {
+        snprintf(kid_name, sizeof(kid_name), "(squid-%d)", (int)(storage.size()+1));
+        storage.push_back(Kid(kid_name));
+    }
+
+    // add Kid records for all disk processes
+    // (XXX: some cache_dirs do not need this)
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        snprintf(kid_name, sizeof(kid_name), "(squid-disk-%d)", (int)(storage.size()+1));
         storage.push_back(Kid(kid_name));
     }
 
     // if coordination is needed, add a Kid record for Coordinator
-    if (n > 1) {
-        snprintf(kid_name, sizeof(kid_name), "(squid-coord-%d)", (int)(n + 1));
+    if (storage.size() > 1) {
+        snprintf(kid_name, sizeof(kid_name), "(squid-coord-%d)", (int)(storage.size()+1));
         storage.push_back(Kid(kid_name));
     }
 }
