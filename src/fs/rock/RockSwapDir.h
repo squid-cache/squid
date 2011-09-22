@@ -45,6 +45,7 @@ protected:
     virtual void create();
     virtual void init();
     virtual ConfigOption *getOptionTree() const;
+    virtual bool allowOptionReconfigure(const char *const option) const;
     virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const;
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
     virtual StoreIOState::Pointer openStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
@@ -62,7 +63,7 @@ protected:
     virtual void writeCompleted(int errflag, size_t len, RefCount< ::WriteRequest>);
 
     virtual void parse(int index, char *path);
-    void parseSize(); ///< parses anonymous cache_dir size option
+    void parseSize(const bool reconfiguring); ///< parses anonymous cache_dir size option
     void validateOptions(); ///< warns of configuration problems; may quit
     bool parseTimeOption(char const *option, const char *value, int reconfiguring);
     void dumpTimeOption(StoreEntry * e) const;
