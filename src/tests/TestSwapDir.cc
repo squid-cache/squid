@@ -28,7 +28,7 @@ TestSwapDir::stat(StoreEntry &) const
 }
 
 void
-TestSwapDir::reconfigure(int, char*)
+TestSwapDir::reconfigure()
 {}
 
 void

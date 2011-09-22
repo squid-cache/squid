@@ -18,7 +18,7 @@ public:
     virtual void stat(StoreEntry &) const; /* output stats to the provided store entry */
     virtual void swappedOut(const StoreEntry &e) {}
 
-    virtual void reconfigure(int, char*);
+    virtual void reconfigure();
     virtual void init();
     virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const;
     virtual StoreIOState::Pointer createStoreIO(StoreEntry &, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);
