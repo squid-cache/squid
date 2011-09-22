@@ -1959,7 +1959,7 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
                 return;
             }
 
-            sd->reconfigure (i, path_str);
+            sd->reconfigure();
 
             update_maxobjsize();
 
