@@ -168,8 +168,7 @@ Ipc::Coordinator::handleCacheMgrRequest(const Mgr::Request& request)
         Mgr::Action::Pointer action =
             CacheManager::GetInstance()->createRequestedAction(request.params);
         AsyncJob::Start(new Mgr::Inquirer(action, request, strands_));
-    }
-    catch (const std::exception &ex) {
+    } catch (const std::exception &ex) {
         debugs(54, DBG_IMPORTANT, "BUG: cannot aggregate mgr:" <<
                request.params.actionName << ": " << ex.what());
         // TODO: Avoid half-baked Connections or teach them how to close.
