@@ -928,7 +928,8 @@ no_cache:
     if (!ignoreCacheControl && rep->cache_control) {
         if (EBIT_TEST(rep->cache_control->mask, CC_PROXY_REVALIDATE) ||
                 EBIT_TEST(rep->cache_control->mask, CC_MUST_REVALIDATE) ||
-                EBIT_TEST(rep->cache_control->mask, CC_S_MAXAGE))
+                rep->cache_control->getSMaxAge() != HttpHdrCc::S_MAXAGE_UNSET
+                )
             EBIT_SET(entry->flags, ENTRY_REVALIDATE);
     }
 
@@ -1770,7 +1771,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 #endif
 
         /* Add max-age only without no-cache */
-        if (!EBIT_TEST(cc->mask, CC_MAX_AGE) && !EBIT_TEST(cc->mask, CC_NO_CACHE)) {
+        if (cc->getMaxAge()==HttpHdrCc::MAX_AGE_UNSET && !EBIT_TEST(cc->mask, CC_NO_CACHE)) {
             const char *url =
                 entry ? entry->url() : urlCanonical(request);
             cc->setMaxAge(getMaxAge(url));
