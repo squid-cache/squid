@@ -205,8 +205,7 @@ HttpHdrCc::parse(const String & str)
         case CC_STALE_IF_ERROR:
             if (!p || !httpHeaderParseInt(p, &cc->stale_if_error)) {
                 debugs(65, 2, "cc: invalid stale-if-error specs near '" << item << "'");
-                cc->stale_if_error = -1;
-                EBIT_CLR(cc->mask, type);
+                cc->setStaleIfError(STALE_IF_ERROR_UNSET);
             }
             break;
 
@@ -301,12 +300,14 @@ HttpHdrCc::setMaxAge(int max_age_)
     }
 }
 
-int32_t HttpHdrCc::getMaxAge() const
+int32_t
+HttpHdrCc::getMaxAge() const
 {
     return max_age;
 }
 
-void HttpHdrCc::setSMaxAge(int32_t s_maxage)
+void
+HttpHdrCc::setSMaxAge(int32_t s_maxage)
 {
 	if (s_maxage >= 0) {
 		EBIT_SET(mask, CC_S_MAXAGE);
@@ -317,12 +318,14 @@ void HttpHdrCc::setSMaxAge(int32_t s_maxage)
 	}
 }
 
-int32_t HttpHdrCc::getSMaxAge() const
+int32_t
+HttpHdrCc::getSMaxAge() const
 {
 	return s_maxage;
 }
 
-void HttpHdrCc::setMaxStale(int32_t max_stale)
+void
+HttpHdrCc::setMaxStale(int32_t max_stale)
 {
 	if (max_stale>=0 || max_stale==MAX_STALE_ALWAYS) {
 		EBIT_SET(mask,CC_MAX_STALE);
@@ -332,7 +335,26 @@ void HttpHdrCc::setMaxStale(int32_t max_stale)
 		this->max_stale=MAX_STALE_UNSET;
 	}
 }
-int32_t HttpHdrCc::getMaxStale() const
+int32_t
+HttpHdrCc::getMaxStale() const
 {
 	return max_stale;
+}
+
+void
+HttpHdrCc::setStaleIfError(int32_t stale_if_error)
+{
+	if (stale_if_error >= 0) {
+        EBIT_SET(mask, CC_STALE_IF_ERROR);
+        this->stale_if_error=stale_if_error;
+	} else {
+        EBIT_CLR(mask, CC_STALE_IF_ERROR);
+        this->stale_if_error=STALE_IF_ERROR_UNSET;
+	}
+}
+
+int32_t
+HttpHdrCc::getStaleIfError() const
+{
+	return stale_if_error;
 }

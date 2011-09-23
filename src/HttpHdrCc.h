@@ -48,10 +48,11 @@ public:
 	static const int32_t S_MAXAGE_UNSET=-1; //s-maxage is unset
 	static const int32_t MAX_STALE_UNSET=-1; //max-stale is unset
 	static const int32_t MAX_STALE_ALWAYS=-2; //max-stale is set to no value
+	static const int32_t STALE_IF_ERROR_UNSET=-1; //stale_if_error is unset
 
     explicit HttpHdrCc() :
             mask(0), max_age(MAX_AGE_UNSET), s_maxage(S_MAXAGE_UNSET),
-            max_stale(MAX_STALE_UNSET), stale_if_error(0),
+            max_stale(MAX_STALE_UNSET), stale_if_error(STALE_IF_ERROR_UNSET),
             min_fresh(-1) {}
 
     void clear();
@@ -66,6 +67,9 @@ public:
     void setMaxStale(int32_t max_stale);
     int32_t getMaxStale() const;
 
+    void setStaleIfError(int32_t stale_if_error);
+    int32_t getStaleIfError() const;
+
     MEMPROXY_CLASS(HttpHdrCc);
 
     int32_t mask;
@@ -73,8 +77,8 @@ private:
     int32_t max_age;
     int32_t s_maxage;
     int32_t max_stale;
-public:
     int32_t stale_if_error;
+public:
     int32_t min_fresh;
     String other;
 };
