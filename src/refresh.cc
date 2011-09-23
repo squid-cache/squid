@@ -287,8 +287,8 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     // stale-if-error requires any failure be passed thru when its period is over.
     if (request && entry->mem_obj && entry->mem_obj->getReply() && entry->mem_obj->getReply()->cache_control &&
-            EBIT_TEST(entry->mem_obj->getReply()->cache_control->mask, CC_STALE_IF_ERROR) &&
-            entry->mem_obj->getReply()->cache_control->stale_if_error < staleness) {
+    		entry->mem_obj->getReply()->cache_control->getStaleIfError() != HttpHdrCc::STALE_IF_ERROR_UNSET &&
+            entry->mem_obj->getReply()->cache_control->getStaleIfError() < staleness) {
 
         debugs(22, 3, "refreshCheck: stale-if-error period expired.");
         request->flags.fail_on_validation_err = 1;
