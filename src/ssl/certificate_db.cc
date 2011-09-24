@@ -438,7 +438,7 @@ void Ssl::CertificateDb::deleteRow(const char **row, int rowIndex)
 #else
     sk_delete(db.get()->data, rowIndex);
 #endif
-    
+
     const Columns db_indexes[]={cnlSerial, cnlName};
     for (unsigned int i = 0; i < countof(db_indexes); i++) {
 #if OPENSSL_VERSION_NUMBER >= 0x1000004fL
@@ -449,7 +449,7 @@ void Ssl::CertificateDb::deleteRow(const char **row, int rowIndex)
             lh_delete(fieldIndex, row);
 #endif
     }
-    
+
     subSize(filename);
     int ret = remove(filename.c_str());
     if (ret < 0)
