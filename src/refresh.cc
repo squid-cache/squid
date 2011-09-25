@@ -268,14 +268,15 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     if (request && !request->flags.ignore_cc) {
         const HttpHdrCc *const cc = request->cache_control;
-        if (cc && cc->min_fresh > 0) {
+        const int32_t minFresh=cc->getMinFresh();
+        if (cc && minFresh!=HttpHdrCc::MIN_FRESH_UNSET) {
             debugs(22, 3, "\tage + min-fresh:\t" << age << " + " <<
-                   cc->min_fresh << " = " << age + cc->min_fresh);
+            		minFresh << " = " << age + minFresh);
             debugs(22, 3, "\tcheck_time + min-fresh:\t" << check_time << " + "
-                   << cc->min_fresh << " = " <<
-                   mkrfc1123(check_time + cc->min_fresh));
-            age += cc->min_fresh;
-            check_time += cc->min_fresh;
+                   << minFresh << " = " <<
+                   mkrfc1123(check_time + minFresh));
+            age += minFresh;
+            check_time += minFresh;
         }
     }
 
