@@ -1,0 +1,122 @@
+/*
+ *
+ * DEBUG: section 65    HTTP Cache Control Header
+ *
+ * SQUID Web Proxy Cache          http://www.squid-cache.org/
+ * ----------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from
+ *  the Internet community; see the CONTRIBUTORS file for full
+ *  details.   Many organizations have provided support for Squid's
+ *  development; see the SPONSORS file for full details.  Squid is
+ *  Copyrighted (C) 2001 by the Regents of the University of
+ *  California; see the COPYRIGHT file for full details.  Squid
+ *  incorporates software developed and/or copyrighted by other
+ *  sources; see the CREDITS file for full details.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+ *
+ */
+
+
+void
+HttpHdrCc::setMaxAge(int max_age_)
+{
+
+    if (max_age_ >= 0) {
+        EBIT_SET(mask, CC_MAX_AGE);
+        max_age = max_age_;
+    } else {
+        EBIT_CLR(mask, CC_MAX_AGE);
+        max_age=MAX_AGE_UNSET;
+    }
+}
+
+int32_t
+HttpHdrCc::getMaxAge() const
+{
+    return max_age;
+}
+
+void
+HttpHdrCc::setSMaxAge(int32_t s_maxage)
+{
+    if (s_maxage >= 0) {
+        EBIT_SET(mask, CC_S_MAXAGE);
+        this->s_maxage=s_maxage;
+    } else {
+        EBIT_CLR(mask, CC_S_MAXAGE);
+        this->s_maxage=S_MAXAGE_UNSET;
+    }
+}
+
+int32_t
+HttpHdrCc::getSMaxAge() const
+{
+    return s_maxage;
+}
+
+void
+HttpHdrCc::setMaxStale(int32_t max_stale)
+{
+    if (max_stale>=0 || max_stale==MAX_STALE_ALWAYS) {
+        EBIT_SET(mask,CC_MAX_STALE);
+        this->max_stale=max_stale;
+    } else {
+        EBIT_CLR(mask, CC_MAX_STALE);
+        this->max_stale=MAX_STALE_UNSET;
+    }
+}
+int32_t
+HttpHdrCc::getMaxStale() const
+{
+    return max_stale;
+}
+
+void
+HttpHdrCc::setStaleIfError(int32_t stale_if_error)
+{
+    if (stale_if_error >= 0) {
+        EBIT_SET(mask, CC_STALE_IF_ERROR);
+        this->stale_if_error=stale_if_error;
+    } else {
+        EBIT_CLR(mask, CC_STALE_IF_ERROR);
+        this->stale_if_error=STALE_IF_ERROR_UNSET;
+    }
+}
+
+int32_t
+HttpHdrCc::getStaleIfError() const
+{
+    return stale_if_error;
+}
+
+void
+HttpHdrCc::setMinFresh(int32_t min_fresh)
+{
+    if (min_fresh >= 0) {
+        EBIT_SET(mask, CC_MIN_FRESH);
+        this->min_fresh=min_fresh;
+    } else {
+        EBIT_CLR(mask, CC_MIN_FRESH);
+        this->min_fresh=STALE_IF_ERROR_UNSET;
+    }
+}
+
+int32_t
+HttpHdrCc::getMinFresh() const
+{
+    return min_fresh;
+}

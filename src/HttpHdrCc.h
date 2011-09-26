@@ -59,20 +59,20 @@ public:
     void clear();
     bool parse(const String & s);
 
-    void setMaxAge(int32_t max_age);
-    int32_t getMaxAge() const;
+    _SQUID_INLINE_ void setMaxAge(int32_t max_age);
+    _SQUID_INLINE_ int32_t getMaxAge() const;
 
-    void setSMaxAge(int32_t s_maxage);
-    int32_t getSMaxAge() const;
+    _SQUID_INLINE_ void setSMaxAge(int32_t s_maxage);
+    _SQUID_INLINE_ int32_t getSMaxAge() const;
 
-    void setMaxStale(int32_t max_stale);
-    int32_t getMaxStale() const;
+    _SQUID_INLINE_ void setMaxStale(int32_t max_stale);
+    _SQUID_INLINE_ int32_t getMaxStale() const;
 
-    void setStaleIfError(int32_t stale_if_error);
-    int32_t getStaleIfError() const;
+    _SQUID_INLINE_ void setStaleIfError(int32_t stale_if_error);
+    _SQUID_INLINE_ int32_t getStaleIfError() const;
 
-    void setMinFresh(int32_t min_fresh);
-    int32_t getMinFresh() const;
+    _SQUID_INLINE_ void setMinFresh(int32_t min_fresh);
+    _SQUID_INLINE_ int32_t getMinFresh() const;
 
     MEMPROXY_CLASS(HttpHdrCc);
 
@@ -88,5 +88,9 @@ public:
 };
 
 MEMPROXY_CLASS_INLINE(HttpHdrCc);
+
+#if _USE_INLINE_
+#include "HttpHdrCc.cci"
+#endif
 
 #endif /* SQUID_HTTPHDRCC_H */
