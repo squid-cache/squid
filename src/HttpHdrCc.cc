@@ -1,4 +1,3 @@
-
 /*
  *
  * DEBUG: section 65    HTTP Cache Control Header
@@ -286,92 +285,6 @@ httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int c
                           id, name, count, xdiv(count, dump_stat->ccParsedCount));
 }
 
-void
-HttpHdrCc::setMaxAge(int max_age_)
-{
-
-    if (max_age_ >= 0) {
-        EBIT_SET(mask, CC_MAX_AGE);
-        max_age = max_age_;
-    } else {
-        EBIT_CLR(mask, CC_MAX_AGE);
-        max_age=MAX_AGE_UNSET;
-    }
-}
-
-int32_t
-HttpHdrCc::getMaxAge() const
-{
-    return max_age;
-}
-
-void
-HttpHdrCc::setSMaxAge(int32_t s_maxage)
-{
-	if (s_maxage >= 0) {
-		EBIT_SET(mask, CC_S_MAXAGE);
-		this->s_maxage=s_maxage;
-	} else {
-		EBIT_CLR(mask, CC_S_MAXAGE);
-		this->s_maxage=S_MAXAGE_UNSET;
-	}
-}
-
-int32_t
-HttpHdrCc::getSMaxAge() const
-{
-	return s_maxage;
-}
-
-void
-HttpHdrCc::setMaxStale(int32_t max_stale)
-{
-	if (max_stale>=0 || max_stale==MAX_STALE_ALWAYS) {
-		EBIT_SET(mask,CC_MAX_STALE);
-		this->max_stale=max_stale;
-	} else {
-		EBIT_CLR(mask, CC_MAX_STALE);
-		this->max_stale=MAX_STALE_UNSET;
-	}
-}
-int32_t
-HttpHdrCc::getMaxStale() const
-{
-	return max_stale;
-}
-
-void
-HttpHdrCc::setStaleIfError(int32_t stale_if_error)
-{
-	if (stale_if_error >= 0) {
-        EBIT_SET(mask, CC_STALE_IF_ERROR);
-        this->stale_if_error=stale_if_error;
-	} else {
-        EBIT_CLR(mask, CC_STALE_IF_ERROR);
-        this->stale_if_error=STALE_IF_ERROR_UNSET;
-	}
-}
-
-int32_t
-HttpHdrCc::getStaleIfError() const
-{
-	return stale_if_error;
-}
-
-void
-HttpHdrCc::setMinFresh(int32_t min_fresh)
-{
-	if (min_fresh >= 0) {
-        EBIT_SET(mask, CC_MIN_FRESH);
-        this->min_fresh=min_fresh;
-	} else {
-        EBIT_CLR(mask, CC_MIN_FRESH);
-        this->min_fresh=STALE_IF_ERROR_UNSET;
-	}
-}
-
-int32_t
-HttpHdrCc::getMinFresh() const
-{
-	return min_fresh;
-}
+#if !_USE_INLINE_
+#include "HttpHdrCc.cci"
+#endif
