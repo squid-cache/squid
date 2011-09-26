@@ -55,7 +55,7 @@ class strblob {
     size_t theLen;
 };
 
-/* this table is used for parsing cache control header and statistics */
+/* a row in the table used for parsing cache control header and statistics */
 typedef struct {
     const char *name;
     http_hdr_cc_type id;
