@@ -344,6 +344,7 @@ squid_SOURCES = \
 	HttpStatusLine.h \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
+	HttpHdrCc.cci \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrSc.h \
@@ -1037,6 +1038,7 @@ tests_testHttpReply_SOURCES=\
 	HttpBody.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
+	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrContRange.h \
 	HttpHdrRange.cc \
@@ -1133,6 +1135,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	HttpHdrRange.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
+	HttpHdrCc.cci \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	HttpMsg.cc \
@@ -1299,6 +1302,7 @@ tests_testCacheManager_SOURCES = \
 	HttpHeaderTools.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
+	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -1436,6 +1440,7 @@ tests_testDiskIO_SOURCES = \
 	HttpBody.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
+	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
@@ -1612,6 +1617,7 @@ tests_testEvent_SOURCES = \
 	HttpHeaderTools.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
+	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -1798,6 +1804,7 @@ tests_testEventLoop_SOURCES = \
 	HttpHeaderTools.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
+	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -1980,6 +1987,7 @@ tests_test_http_range_SOURCES = \
 	HttpBody.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
+	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -2206,6 +2214,7 @@ tests_testHttpRequest_SOURCES = \
 	HttpHeaderTools.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
+	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -2339,6 +2348,7 @@ tests_testStore_SOURCES= \
 	filemap.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
+	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
@@ -2578,6 +2588,7 @@ tests_testUfs_SOURCES = \
 	Packer.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
+	HttpHdrCc.cci \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
@@ -2709,6 +2720,7 @@ tests_testCoss_SOURCES = \
 	Packer.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
+	HttpHdrCc.cci \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
@@ -2839,6 +2851,7 @@ tests_testNull_SOURCES = \
 	Packer.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
+	HttpHdrCc.cci \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
@@ -2942,6 +2955,7 @@ tests_testURL_SOURCES = \
 	HttpBody.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
+	HttpHdrCc.cci \
 	HttpHdrContRange.cc \
 	HttpHdrRange.cc \
 	HttpHdrSc.cc \
