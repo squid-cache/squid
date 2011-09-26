@@ -196,8 +196,7 @@ HttpHdrCc::parse(const String & str)
 
             if (!p || !httpHeaderParseInt(p, &cc->min_fresh)) {
                 debugs(65, 2, "cc: invalid min-fresh specs near '" << item << "'");
-                cc->min_fresh = -1;
-                EBIT_CLR(cc->mask, type);
+                cc->setMinFresh(MIN_FRESH_UNSET);
             }
 
             break;
@@ -252,7 +251,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
                 packerPrintf(p, "=%d", (int) cc->getMaxStale());
 
             if (flag == CC_MIN_FRESH)
-                packerPrintf(p, "=%d", (int) cc->min_fresh);
+                packerPrintf(p, "=%d", (int) cc->getMinFresh());
 
             ++pcount;
         }
@@ -357,4 +356,22 @@ int32_t
 HttpHdrCc::getStaleIfError() const
 {
 	return stale_if_error;
+}
+
+void
+HttpHdrCc::setMinFresh(int32_t min_fresh)
+{
+	if (min_fresh >= 0) {
+        EBIT_SET(mask, CC_MIN_FRESH);
+        this->min_fresh=min_fresh;
+	} else {
+        EBIT_CLR(mask, CC_MIN_FRESH);
+        this->min_fresh=STALE_IF_ERROR_UNSET;
+	}
+}
+
+int32_t
+HttpHdrCc::getMinFresh() const
+{
+	return min_fresh;
 }
