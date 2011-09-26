@@ -679,7 +679,7 @@ IpcIoFile::WaitBeforePop()
         return false;
     }
 
-    static timeval LastIo;
+    static timeval LastIo = current_time;
 
     const double ioDuration = 1.0 / maxRate; // ideal distance between two I/Os
     // do not accumulate more than 100ms or 100 I/Os, whichever is smaller
