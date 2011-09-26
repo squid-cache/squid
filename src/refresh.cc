@@ -336,7 +336,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
 #endif
         if (NULL != cc) {
-            if (cc->getMaxAge() >= 0) {
+            if (cc->getMaxAge() != HttpHdrCc::MAX_AGE_UNSET) {
 #if USE_HTTP_VIOLATIONS
                 if (R->flags.ignore_reload && cc->getMaxAge() == 0) {
                     debugs(22, 3, "refreshCheck: MAYBE: client-max-age = 0 and ignore-reload");
