@@ -51,31 +51,44 @@ public:
 	static const int32_t STALE_IF_ERROR_UNSET=-1; //stale_if_error is unset
 	static const int32_t MIN_FRESH_UNSET=-1; //min_fresh is unset
 
-    explicit HttpHdrCc() :
+    HttpHdrCc() :
             mask(0), max_age(MAX_AGE_UNSET), s_maxage(S_MAXAGE_UNSET),
             max_stale(MAX_STALE_UNSET), stale_if_error(STALE_IF_ERROR_UNSET),
             min_fresh(MIN_FRESH_UNSET) {}
 
+    /// reset data-members to default state
     void clear();
+
+    /// parse a header-string and fill in appropriate values.
     bool parse(const String & s);
 
+    /// max-age setter. Clear by setting to MAX_AGE_UNSET
     _SQUID_INLINE_ void setMaxAge(int32_t max_age);
     _SQUID_INLINE_ int32_t getMaxAge() const;
 
+    /// s-maxage setter. Clear by setting to S_MAXAGE_UNSET
     _SQUID_INLINE_ void setSMaxAge(int32_t s_maxage);
     _SQUID_INLINE_ int32_t getSMaxAge() const;
 
+    /// max-stale setter. Clear by setting to MAX_STALE_UNSET
     _SQUID_INLINE_ void setMaxStale(int32_t max_stale);
     _SQUID_INLINE_ int32_t getMaxStale() const;
 
+    /// stale-if-error setter. Clear by setting to STALE_IF_ERROR_UNSET
     _SQUID_INLINE_ void setStaleIfError(int32_t stale_if_error);
     _SQUID_INLINE_ int32_t getStaleIfError() const;
 
+    /// min-fresh setter. Clear by setting to MIN_FRESH_UNSET
     _SQUID_INLINE_ void setMinFresh(int32_t min_fresh);
     _SQUID_INLINE_ int32_t getMinFresh() const;
 
     MEMPROXY_CLASS(HttpHdrCc);
 
+    /** bit-mask representing what header values are set among those
+     * recognized by squid.
+     *
+     * managed via EBIT_SET/TEST/CLR
+     */
     int32_t mask;
 private:
     int32_t max_age;
@@ -84,6 +97,9 @@ private:
     int32_t stale_if_error;
     int32_t min_fresh;
 public:
+    /**comma-separated representation of the header values which were
+     * received but are not recognized.
+     */
     String other;
 };
 
