@@ -32,38 +32,19 @@
 
 
 void
-HttpHdrCc::setMaxAge(int max_age_)
+HttpHdrCc::sMaxAge(int32_t s_maxage)
 {
-    /* keeping the mask in sync is needed e.g. for the packer functions */
-    if (max_age_ >= 0) {
-        set(CC_MAX_AGE);
-        max_age = max_age_;
-    } else {
-        set(CC_MAX_AGE,false);
-        max_age=MAX_AGE_UNSET;
-    }
-}
-
-int32_t
-HttpHdrCc::getMaxAge() const
-{
-    return max_age;
-}
-
-void
-HttpHdrCc::setSMaxAge(int32_t s_maxage)
-{
-    if (s_maxage >= 0) {
-        set(CC_S_MAXAGE);
+    if (s_maxage>=0) {
+        setMask(CC_S_MAXAGE);
         this->s_maxage=s_maxage;
     } else {
-        set(CC_S_MAXAGE,false);
-        this->s_maxage=S_MAXAGE_UNSET;
+        setMask(CC_S_MAXAGE,false);
+        this->s_maxage=S_MAXAGE_UNKNOWN;
     }
 }
 
 int32_t
-HttpHdrCc::getSMaxAge() const
+HttpHdrCc::sMaxAge() const
 {
     return s_maxage;
 }
@@ -72,11 +53,11 @@ void
 HttpHdrCc::setMaxStale(int32_t max_stale)
 {
     if (max_stale>=0 || max_stale==MAX_STALE_ALWAYS) {
-        set(CC_MAX_STALE);
+        setMask(CC_MAX_STALE);
         this->max_stale=max_stale;
     } else {
-        set(CC_MAX_STALE,false);
-        this->max_stale=MAX_STALE_UNSET;
+        setMask(CC_MAX_STALE,false);
+        this->max_stale=MAX_STALE_UNKNOWN;
     }
 }
 int32_t
@@ -89,11 +70,11 @@ void
 HttpHdrCc::setStaleIfError(int32_t stale_if_error)
 {
     if (stale_if_error >= 0) {
-        set(CC_STALE_IF_ERROR);
+        setMask(CC_STALE_IF_ERROR);
         this->stale_if_error=stale_if_error;
     } else {
-        set(CC_STALE_IF_ERROR,false);
-        this->stale_if_error=STALE_IF_ERROR_UNSET;
+        setMask(CC_STALE_IF_ERROR,false);
+        this->stale_if_error=STALE_IF_ERROR_UNKNOWN;
     }
 }
 
@@ -107,11 +88,11 @@ void
 HttpHdrCc::setMinFresh(int32_t min_fresh)
 {
     if (min_fresh >= 0) {
-        set(CC_MIN_FRESH);
+        setMask(CC_MIN_FRESH);
         this->min_fresh=min_fresh;
     } else {
-        set(CC_MIN_FRESH,false);
-        this->min_fresh=MIN_FRESH_UNSET;
+        setMask(CC_MIN_FRESH,false);
+        this->min_fresh=MIN_FRESH_UNKNOWN;
     }
 }
 
@@ -132,6 +113,15 @@ void
 HttpHdrCc::set(http_hdr_cc_type id, bool newval)
 {
     assert(id>=CC_PUBLIC && id < CC_ENUM_END);
+    assert(id!=CC_MAX_AGE && id != CC_S_MAXAGE &&
+            id != CC_MAX_STALE && id != CC_STALE_IF_ERROR &&
+            id != CC_MIN_FRESH);
+    setMask(id,newval);
+}
+
+void
+HttpHdrCc::setMask(http_hdr_cc_type id, bool newval)
+{
     if (newval)
         EBIT_SET(mask,id);
     else
