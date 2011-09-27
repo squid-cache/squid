@@ -94,8 +94,8 @@ public:
      *
      * managed via EBIT_SET/TEST/CLR
      */
-    int32_t mask;
 private:
+    int32_t mask;
     int32_t max_age;
     int32_t s_maxage;
     int32_t max_stale;
