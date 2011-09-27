@@ -268,7 +268,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     if (request && !request->flags.ignore_cc) {
         const HttpHdrCc *const cc = request->cache_control;
-        if (cc && cc->getMinFresh()!=HttpHdrCc::MIN_FRESH_UNSET) {
+        if (cc && cc->getMinFresh()!=HttpHdrCc::MIN_FRESH_UNKNOWN) {
             const int32_t minFresh=cc->getMinFresh();
             debugs(22, 3, "\tage + min-fresh:\t" << age << " + " <<
             		minFresh << " = " << age + minFresh);
@@ -288,7 +288,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     // stale-if-error requires any failure be passed thru when its period is over.
     if (request && entry->mem_obj && entry->mem_obj->getReply() && entry->mem_obj->getReply()->cache_control &&
-    		entry->mem_obj->getReply()->cache_control->getStaleIfError() != HttpHdrCc::STALE_IF_ERROR_UNSET &&
+    		entry->mem_obj->getReply()->cache_control->getStaleIfError() != HttpHdrCc::STALE_IF_ERROR_UNKNOWN &&
             entry->mem_obj->getReply()->cache_control->getStaleIfError() < staleness) {
 
         debugs(22, 3, "refreshCheck: stale-if-error period expired.");
@@ -336,19 +336,19 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
 #endif
         if (NULL != cc) {
-            if (cc->getMaxAge() != HttpHdrCc::MAX_AGE_UNSET) {
+            if (cc->isSet(CC_MAX_AGE)) {
 #if USE_HTTP_VIOLATIONS
-                if (R->flags.ignore_reload && cc->getMaxAge() == 0) {
+                if (R->flags.ignore_reload && cc->maxAge() == 0) {
                     debugs(22, 3, "refreshCheck: MAYBE: client-max-age = 0 and ignore-reload");
                 } else
 #endif
                 {
-                    if (cc->getMaxAge() == 0) {
+                    if (cc->maxAge() == 0) {
                         debugs(22, 3, "refreshCheck: YES: client-max-age = 0");
                         return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
                     }
 
-                    if (age > cc->getMaxAge()) {
+                    if (age > cc->maxAge()) {
                         debugs(22, 3, "refreshCheck: YES: age > client-max-age");
                         return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
                     }

@@ -125,8 +125,7 @@ HttpHdrCc::parse(const String & str)
             nlen = ilen;
 
         /* find type */
-        const StringArea tmpstr(item,nlen);
-        const CcNameToIdMap_t::const_iterator i=CcNameToIdMap.find(tmpstr);
+        const CcNameToIdMap_t::const_iterator i=CcNameToIdMap.find(StringArea(item,nlen));
         if (i==CcNameToIdMap.end())
             type=CC_OTHER;
         else
@@ -139,20 +138,18 @@ HttpHdrCc::parse(const String & str)
                 ++CcAttrs[type].stat.repCount;
                 continue;
             }
-        } else {
-            set(type);
         }
 
-        /* post-processing special cases */
+        /* post-processing, including special cases */
         switch (type) {
 
         case CC_MAX_AGE:
             int32_t ma;
             if (!p || !httpHeaderParseInt(p, &ma)) {
                 debugs(65, 2, "cc: invalid max-age specs near '" << item << "'");
-                setMaxAge(MAX_AGE_UNSET);
+                maxAge(MAX_AGE_UNKNOWN);
             } else {
-                setMaxAge(ma);
+                maxAge(ma);
             }
 
             break;
@@ -161,7 +158,7 @@ HttpHdrCc::parse(const String & str)
 
             if (!p || !httpHeaderParseInt(p, &s_maxage)) {
                 debugs(65, 2, "cc: invalid s-maxage specs near '" << item << "'");
-                setSMaxAge(S_MAXAGE_UNSET);
+                sMaxAge(S_MAXAGE_UNKNOWN);
             }
 
             break;
@@ -179,7 +176,7 @@ HttpHdrCc::parse(const String & str)
 
             if (!p || !httpHeaderParseInt(p, &min_fresh)) {
                 debugs(65, 2, "cc: invalid min-fresh specs near '" << item << "'");
-                setMinFresh(MIN_FRESH_UNSET);
+                setMinFresh(MIN_FRESH_UNKNOWN);
             }
 
             break;
@@ -187,7 +184,7 @@ HttpHdrCc::parse(const String & str)
         case CC_STALE_IF_ERROR:
             if (!p || !httpHeaderParseInt(p, &stale_if_error)) {
                 debugs(65, 2, "cc: invalid stale-if-error specs near '" << item << "'");
-                setStaleIfError(STALE_IF_ERROR_UNSET);
+                setStaleIfError(STALE_IF_ERROR_UNKNOWN);
             }
             break;
 
@@ -201,6 +198,8 @@ HttpHdrCc::parse(const String & str)
             break;
 
         default:
+
+            set(type);
             /* note that we ignore most of '=' specs (RFCVIOLATION) */
             break;
         }
@@ -225,10 +224,10 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
             /* handle options with values */
 
             if (flag == CC_MAX_AGE)
-                packerPrintf(p, "=%d", (int) cc->getMaxAge());
+                packerPrintf(p, "=%d", (int) cc->maxAge());
 
             if (flag == CC_S_MAXAGE)
-                packerPrintf(p, "=%d", (int) cc->getSMaxAge());
+                packerPrintf(p, "=%d", (int) cc->sMaxAge());
 
             if (flag == CC_MAX_STALE && cc->getMaxStale() >= 0)
                 packerPrintf(p, "=%d", (int) cc->getMaxStale());
