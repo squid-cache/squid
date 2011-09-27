@@ -331,7 +331,6 @@ HttpStateData::cacheableReply()
 {
     HttpReply const *rep = finalReply();
     HttpHeader const *hdr = &rep->header;
-    const int cc_mask = (rep->cache_control) ? rep->cache_control->mask : 0;
     const char *v;
 #if USE_HTTP_VIOLATIONS
 
@@ -354,22 +353,23 @@ HttpStateData::cacheableReply()
 
     // RFC 2616: do not cache replies to responses with no-store CC directive
     if (request && request->cache_control &&
-            EBIT_TEST(request->cache_control->mask, CC_NO_STORE) &&
+            request->cache_control->isSet(CC_NO_STORE) &&
             !REFRESH_OVERRIDE(ignore_no_store))
         return 0;
 
     if (!ignoreCacheControl) {
-        if (EBIT_TEST(cc_mask, CC_PRIVATE)) {
+        const HttpHdrCc* cc=request->cache_control;
+        if (cc->isSet(CC_PRIVATE)) {
             if (!REFRESH_OVERRIDE(ignore_private))
                 return 0;
         }
 
-        if (EBIT_TEST(cc_mask, CC_NO_CACHE)) {
+        if (cc->isSet(CC_NO_CACHE)) {
             if (!REFRESH_OVERRIDE(ignore_no_cache))
                 return 0;
         }
 
-        if (EBIT_TEST(cc_mask, CC_NO_STORE)) {
+        if (cc->isSet(CC_NO_STORE)) {
             if (!REFRESH_OVERRIDE(ignore_no_store))
                 return 0;
         }
@@ -382,7 +382,7 @@ HttpStateData::cacheableReply()
          * RFC 2068, sec 14.9.4
          */
 
-        if (!EBIT_TEST(cc_mask, CC_PUBLIC)) {
+        if (!request->cache_control->isSet(CC_PUBLIC)) {
             if (!REFRESH_OVERRIDE(ignore_auth))
                 return 0;
         }
@@ -926,8 +926,8 @@ HttpStateData::haveParsedReplyHeaders()
 no_cache:
 
     if (!ignoreCacheControl && rep->cache_control) {
-        if (EBIT_TEST(rep->cache_control->mask, CC_PROXY_REVALIDATE) ||
-                EBIT_TEST(rep->cache_control->mask, CC_MUST_REVALIDATE) ||
+        if (rep->cache_control->isSet(CC_PROXY_REVALIDATE) ||
+                rep->cache_control->isSet(CC_MUST_REVALIDATE) ||
                 rep->cache_control->getSMaxAge() != HttpHdrCc::S_MAXAGE_UNSET
                 )
             EBIT_SET(entry->flags, ENTRY_REVALIDATE);
@@ -1771,7 +1771,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 #endif
 
         /* Add max-age only without no-cache */
-        if (cc->getMaxAge()==HttpHdrCc::MAX_AGE_UNSET && !EBIT_TEST(cc->mask, CC_NO_CACHE)) {
+        if (cc->getMaxAge()==HttpHdrCc::MAX_AGE_UNSET && !cc->isSet(CC_NO_CACHE)) {
             const char *url =
                 entry ? entry->url() : urlCanonical(request);
             cc->setMaxAge(getMaxAge(url));
@@ -1780,7 +1780,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
         /* Enforce sibling relations */
         if (flags.only_if_cached)
-            EBIT_SET(cc->mask, CC_ONLY_IF_CACHED);
+            cc->set(CC_ONLY_IF_CACHED);
 
         hdr_out->putCc(cc);
 

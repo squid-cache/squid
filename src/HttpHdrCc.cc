@@ -113,7 +113,6 @@ HttpHdrCc::parse(const String & str)
     http_hdr_cc_type type;
     int ilen;
     int nlen;
-    HttpHdrCc *cc=this; //TODO: remove after review
 
     /* iterate through comma separated list */
 
@@ -134,14 +133,14 @@ HttpHdrCc::parse(const String & str)
             type=i->second;
 
         // ignore known duplicate directives
-        if (EBIT_TEST(cc->mask, type)) {
+        if (isSet(type)) {
             if (type != CC_OTHER) {
                 debugs(65, 2, "hdr cc: ignoring duplicate cache-directive: near '" << item << "' in '" << str << "'");
                 ++CcAttrs[type].stat.repCount;
                 continue;
             }
         } else {
-            EBIT_SET(cc->mask, type);
+            set(type);
         }
 
         /* post-processing special cases */
@@ -151,53 +150,53 @@ HttpHdrCc::parse(const String & str)
             int32_t ma;
             if (!p || !httpHeaderParseInt(p, &ma)) {
                 debugs(65, 2, "cc: invalid max-age specs near '" << item << "'");
-                cc->setMaxAge(MAX_AGE_UNSET);
+                setMaxAge(MAX_AGE_UNSET);
             } else {
-                cc->setMaxAge(ma);
+                setMaxAge(ma);
             }
 
             break;
 
         case CC_S_MAXAGE:
 
-            if (!p || !httpHeaderParseInt(p, &cc->s_maxage)) {
+            if (!p || !httpHeaderParseInt(p, &s_maxage)) {
                 debugs(65, 2, "cc: invalid s-maxage specs near '" << item << "'");
-                cc->setSMaxAge(S_MAXAGE_UNSET);
+                setSMaxAge(S_MAXAGE_UNSET);
             }
 
             break;
 
         case CC_MAX_STALE:
 
-            if (!p || !httpHeaderParseInt(p, &cc->max_stale)) {
+            if (!p || !httpHeaderParseInt(p, &max_stale)) {
                 debugs(65, 2, "cc: max-stale directive is valid without value");
-                cc->setMaxStale(MAX_STALE_ALWAYS);
+                setMaxStale(MAX_STALE_ALWAYS);
             }
 
             break;
 
         case CC_MIN_FRESH:
 
-            if (!p || !httpHeaderParseInt(p, &cc->min_fresh)) {
+            if (!p || !httpHeaderParseInt(p, &min_fresh)) {
                 debugs(65, 2, "cc: invalid min-fresh specs near '" << item << "'");
-                cc->setMinFresh(MIN_FRESH_UNSET);
+                setMinFresh(MIN_FRESH_UNSET);
             }
 
             break;
 
         case CC_STALE_IF_ERROR:
-            if (!p || !httpHeaderParseInt(p, &cc->stale_if_error)) {
+            if (!p || !httpHeaderParseInt(p, &stale_if_error)) {
                 debugs(65, 2, "cc: invalid stale-if-error specs near '" << item << "'");
-                cc->setStaleIfError(STALE_IF_ERROR_UNSET);
+                setStaleIfError(STALE_IF_ERROR_UNSET);
             }
             break;
 
         case CC_OTHER:
 
-            if (cc->other.size())
-                cc->other.append(", ");
+            if (other.size())
+                other.append(", ");
 
-            cc->other.append(item, ilen);
+            other.append(item, ilen);
 
             break;
 
@@ -207,7 +206,7 @@ HttpHdrCc::parse(const String & str)
         }
     }
 
-    return (cc->mask != 0);
+    return (mask != 0);
 }
 
 void
@@ -218,7 +217,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
     assert(cc && p);
 
     for (flag = CC_PUBLIC; flag < CC_ENUM_END; ++flag) {
-        if (EBIT_TEST(cc->mask, flag) && flag != CC_OTHER) {
+        if (cc->isSet(flag) && flag != CC_OTHER) {
 
             /* print option name */
             packerPrintf(p, (pcount ? ", %s": "%s") , CcAttrs[flag].name);
@@ -253,7 +252,7 @@ httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist)
     assert(cc);
 
     for (c = CC_PUBLIC; c < CC_ENUM_END; ++c)
-        if (EBIT_TEST(cc->mask, c))
+        if (cc->isSet(c))
             statHistCount(hist, c);
 }
 
