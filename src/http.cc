@@ -357,7 +357,7 @@ HttpStateData::cacheableReply()
             !REFRESH_OVERRIDE(ignore_no_store))
         return 0;
 
-    if (!ignoreCacheControl) {
+    if (!ignoreCacheControl && request->cache_control != NULL) {
         const HttpHdrCc* cc=request->cache_control;
         if (cc->isSet(CC_PRIVATE)) {
             if (!REFRESH_OVERRIDE(ignore_private))
@@ -928,7 +928,7 @@ no_cache:
     if (!ignoreCacheControl && rep->cache_control) {
         if (rep->cache_control->isSet(CC_PROXY_REVALIDATE) ||
                 rep->cache_control->isSet(CC_MUST_REVALIDATE) ||
-                rep->cache_control->getSMaxAge() != HttpHdrCc::S_MAXAGE_UNSET
+                rep->cache_control->sMaxAge() != HttpHdrCc::S_MAXAGE_UNKNOWN
                 )
             EBIT_SET(entry->flags, ENTRY_REVALIDATE);
     }
@@ -1771,10 +1771,10 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 #endif
 
         /* Add max-age only without no-cache */
-        if (cc->getMaxAge()==HttpHdrCc::MAX_AGE_UNSET && !cc->isSet(CC_NO_CACHE)) {
+        if (cc->isSet(CC_MAX_AGE) && !cc->isSet(CC_NO_CACHE)) {
             const char *url =
                 entry ? entry->url() : urlCanonical(request);
-            cc->setMaxAge(getMaxAge(url));
+            cc->maxAge(getMaxAge(url));
 
         }
 

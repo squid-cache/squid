@@ -465,7 +465,7 @@ MimeIcon::created (StoreEntry *newEntry)
 
     reply->cache_control = new HttpHdrCc();
 
-    reply->cache_control->setMaxAge(86400);
+    reply->cache_control->maxAge(86400);
 
     reply->header.putCc(reply->cache_control);
 
