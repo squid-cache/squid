@@ -111,7 +111,7 @@ HttpHdrCc::setMinFresh(int32_t min_fresh)
         this->min_fresh=min_fresh;
     } else {
         EBIT_CLR(mask, CC_MIN_FRESH);
-        this->min_fresh=STALE_IF_ERROR_UNSET;
+        this->min_fresh=MIN_FRESH_UNSET;
     }
 }
 
