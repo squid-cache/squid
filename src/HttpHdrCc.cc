@@ -31,6 +31,7 @@
  */
 
 #include "squid.h"
+#include "base/StringArea.h"
 #include "Store.h"
 #include "HttpHeader.h"
 #include "HttpHdrCc.h"
@@ -38,22 +39,6 @@
 #if HAVE_MAP
 #include <map>
 #endif
-
-/** dumb char* /length combo for quick lookups.
- *
- * Data is not copied.
- * Validity of the pointed-to storage is responsibility of the caller.
- * */
-class strblob {
-    public:
-    strblob(const char * ptr, size_t len): thePtr(ptr), theLen(len) {}
-    bool operator==(strblob &s) const { return theLen==s.theLen && 0==strncmp(thePtr,s.thePtr,theLen); }
-    bool operator< ( const strblob &s2) const { return strncmp(thePtr,s2.thePtr,theLen) < 0; }
-
-    private:
-    const char *thePtr;
-    size_t theLen;
-};
 
 /* a row in the table used for parsing cache control header and statistics */
 typedef struct {
@@ -81,7 +66,7 @@ static HttpHeaderCcFields CcAttrs[CC_ENUM_END] = {
 };
 
 /// Map an header name to its type, to expedite parsing
-typedef std::map<const strblob,http_hdr_cc_type> CcNameToIdMap_t;
+typedef std::map<const StringArea,http_hdr_cc_type> CcNameToIdMap_t;
 static CcNameToIdMap_t CcNameToIdMap;
 
 /// iterate over a table of http_header_cc_type structs
@@ -99,10 +84,10 @@ httpHdrCcInitModule(void)
 {
     /* build lookup and accounting structures */
     for (int32_t i = 0;i < CC_ENUM_END; ++i) {
-        const HttpHeaderCcFields *f=&CcAttrs[i];
-        assert(i == f->id); /* verify assumption: the id is the key into the array */
-        const strblob k(f->name,strlen(f->name));
-        CcNameToIdMap[k]=f->id;
+        const HttpHeaderCcFields &f=CcAttrs[i];
+        assert(i == f.id); /* verify assumption: the id is the key into the array */
+        const StringArea k(f.name,strlen(f.name));
+        CcNameToIdMap[k]=f.id;
     }
 }
 
@@ -141,8 +126,8 @@ HttpHdrCc::parse(const String & str)
             nlen = ilen;
 
         /* find type */
-        const strblob tmpstr(item,nlen);
-        const CcNameToIdMap_t::iterator i=CcNameToIdMap.find(tmpstr);
+        const StringArea tmpstr(item,nlen);
+        const CcNameToIdMap_t::const_iterator i=CcNameToIdMap.find(tmpstr);
         if (i==CcNameToIdMap.end())
             type=CC_OTHER;
         else

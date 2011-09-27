@@ -19,4 +19,5 @@ libbase_la_SOURCES = \
 	RunnersRegistry.h \
 	Subscription.h \
 	TextException.cc \
-	TextException.h
+	TextException.h \
+	StringArea.h
