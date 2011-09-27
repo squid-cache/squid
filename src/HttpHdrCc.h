@@ -62,6 +62,11 @@ public:
     /// parse a header-string and fill in appropriate values.
     bool parse(const String & s);
 
+    /// set an attribute value or clear it (by supplying false as the second argument)
+    _SQUID_INLINE_ void set(http_hdr_cc_type id, bool newval=true);
+    /// check whether the attribute value supplied by id is set
+    _SQUID_INLINE_ bool isSet(http_hdr_cc_type id) const;
+
     /// max-age setter. Clear by setting to MAX_AGE_UNSET
     _SQUID_INLINE_ void setMaxAge(int32_t max_age);
     _SQUID_INLINE_ int32_t getMaxAge() const;
