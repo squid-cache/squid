@@ -34,7 +34,7 @@
 void
 HttpHdrCc::setMaxAge(int max_age_)
 {
-
+    /* keeping the mask in sync is needed e.g. for the packer functions */
     if (max_age_ >= 0) {
         set(CC_MAX_AGE);
         max_age = max_age_;
