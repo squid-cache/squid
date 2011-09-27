@@ -1311,19 +1311,14 @@ HttpHeader::getLastStr(http_hdr_type id) const
 HttpHdrCc *
 HttpHeader::getCc() const
 {
-    HttpHdrCc *cc;
-    String s;
-    bool gotList;
-
     if (!CBIT_TEST(mask, HDR_CACHE_CONTROL))
         return NULL;
     PROF_start(HttpHeader_getCc);
 
-    gotList=getList(HDR_CACHE_CONTROL, &s);
+    String s;
+    getList(HDR_CACHE_CONTROL, &s);
 
-    cc=new HttpHdrCc();
-    if (!gotList)
-        return cc;
+    HttpHdrCc *cc=new HttpHdrCc();
 
     if (!cc->parse(s)) {
         delete cc;

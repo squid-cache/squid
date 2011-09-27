@@ -1097,7 +1097,7 @@ tests_testHttpReply_LDADD=\
 tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 
 ## Tests for the ACLMaxUserIP class
-## acl needs wordlist. wordlist needs MemBuf
+## acl needs wordlist. wordlist needs MemBug
 ## MemBuf needs mem, MemBuf needs event,
 ## event needs cbdata.
 ## ACLMaxUserUP needs $(AUTH_LIBS)
