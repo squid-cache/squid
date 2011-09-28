@@ -195,7 +195,7 @@ ClientHttpRequest::onlyIfCached()const
 {
     assert(request);
     return request->cache_control &&
-           request->cache_control->isSet(CC_ONLY_IF_CACHED);
+           request->cache_control->onlyIfCached();
 }
 
 /*
@@ -1020,7 +1020,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         }
 
         if (request->cache_control)
-            if (request->cache_control->isSet(CC_NO_CACHE))
+            if (request->cache_control->noCache())
                 no_cache++;
 
         /*

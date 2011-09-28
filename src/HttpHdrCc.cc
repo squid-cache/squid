@@ -140,66 +140,64 @@ HttpHdrCc::parse(const String & str)
             }
         }
 
-        /* post-processing, including special cases */
+        /* special-case-parsing and attribute-setting */
         switch (type) {
 
         case CC_MAX_AGE:
             int32_t ma;
             if (!p || !httpHeaderParseInt(p, &ma)) {
                 debugs(65, 2, "cc: invalid max-age specs near '" << item << "'");
-                maxAge(MAX_AGE_UNKNOWN);
+                clearMaxAge();
             } else {
                 maxAge(ma);
             }
-
             break;
 
         case CC_S_MAXAGE:
-
             if (!p || !httpHeaderParseInt(p, &s_maxage)) {
                 debugs(65, 2, "cc: invalid s-maxage specs near '" << item << "'");
-                sMaxAge(S_MAXAGE_UNKNOWN);
+                clearSMaxAge();
             }
-
             break;
 
         case CC_MAX_STALE:
-
             if (!p || !httpHeaderParseInt(p, &max_stale)) {
                 debugs(65, 2, "cc: max-stale directive is valid without value");
-                setMaxStale(MAX_STALE_ALWAYS);
+                maxStale(MAX_STALE_ALWAYS);
             }
-
             break;
 
         case CC_MIN_FRESH:
-
             if (!p || !httpHeaderParseInt(p, &min_fresh)) {
                 debugs(65, 2, "cc: invalid min-fresh specs near '" << item << "'");
-                setMinFresh(MIN_FRESH_UNKNOWN);
+                clearMinFresh();
             }
-
             break;
 
         case CC_STALE_IF_ERROR:
             if (!p || !httpHeaderParseInt(p, &stale_if_error)) {
                 debugs(65, 2, "cc: invalid stale-if-error specs near '" << item << "'");
-                setStaleIfError(STALE_IF_ERROR_UNKNOWN);
+                clearStaleIfError();
             }
             break;
 
-        case CC_OTHER:
+        case CC_PUBLIC: Public(true); break;
+        case CC_PRIVATE: Private(true); break;
+        case CC_NO_CACHE: noCache(true); break;
+        case CC_NO_STORE: noStore(true); break;
+        case CC_NO_TRANSFORM: noTransform(true); break;
+        case CC_MUST_REVALIDATE: mustRevalidate(true); break;
+        case CC_PROXY_REVALIDATE: proxyRevalidate(true); break;
+        case CC_ONLY_IF_CACHED: onlyIfCached(true); break;
 
+        case CC_OTHER:
             if (other.size())
                 other.append(", ");
 
             other.append(item, ilen);
-
             break;
 
         default:
-
-            set(type);
             /* note that we ignore most of '=' specs (RFCVIOLATION) */
             break;
         }
@@ -209,14 +207,14 @@ HttpHdrCc::parse(const String & str)
 }
 
 void
-httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
+HttpHdrCc::packInto(Packer * p) const
 {
     http_hdr_cc_type flag;
     int pcount = 0;
-    assert(cc && p);
+    assert(p);
 
     for (flag = CC_PUBLIC; flag < CC_ENUM_END; ++flag) {
-        if (cc->isSet(flag) && flag != CC_OTHER) {
+        if (isSet(flag) && flag != CC_OTHER) {
 
             /* print option name */
             packerPrintf(p, (pcount ? ", %s": "%s") , CcAttrs[flag].name);
@@ -224,24 +222,24 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
             /* handle options with values */
 
             if (flag == CC_MAX_AGE)
-                packerPrintf(p, "=%d", (int) cc->maxAge());
+                packerPrintf(p, "=%d", (int) maxAge());
 
             if (flag == CC_S_MAXAGE)
-                packerPrintf(p, "=%d", (int) cc->sMaxAge());
+                packerPrintf(p, "=%d", (int) sMaxAge());
 
-            if (flag == CC_MAX_STALE && cc->getMaxStale() >= 0)
-                packerPrintf(p, "=%d", (int) cc->getMaxStale());
+            if (flag == CC_MAX_STALE && maxStale()!=MAX_STALE_ALWAYS)
+                packerPrintf(p, "=%d", (int) maxStale());
 
             if (flag == CC_MIN_FRESH)
-                packerPrintf(p, "=%d", (int) cc->getMinFresh());
+                packerPrintf(p, "=%d", (int) minFresh());
 
             ++pcount;
         }
     }
 
-    if (cc->other.size() != 0)
+    if (other.size() != 0)
         packerPrintf(p, (pcount ? ", " SQUIDSTRINGPH : SQUIDSTRINGPH),
-                     SQUIDSTRINGPRINT(cc->other));
+                     SQUIDSTRINGPRINT(other));
 }
 
 void
