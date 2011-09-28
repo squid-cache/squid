@@ -268,7 +268,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     if (request && !request->flags.ignore_cc) {
         const HttpHdrCc *const cc = request->cache_control;
-        if (cc && cc->haveMinFresh()) {
+        if (cc && cc->hasMinFresh()) {
             const int32_t minFresh=cc->minFresh();
             debugs(22, 3, "\tage + min-fresh:\t" << age << " + " <<
             		minFresh << " = " << age + minFresh);
@@ -288,7 +288,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     // stale-if-error requires any failure be passed thru when its period is over.
     if (request && entry->mem_obj && entry->mem_obj->getReply() && entry->mem_obj->getReply()->cache_control &&
-    		entry->mem_obj->getReply()->cache_control->haveStaleIfError() &&
+    		entry->mem_obj->getReply()->cache_control->hasStaleIfError() &&
             entry->mem_obj->getReply()->cache_control->staleIfError() < staleness) {
 
         debugs(22, 3, "refreshCheck: stale-if-error period expired.");
@@ -336,7 +336,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
 #endif
         if (NULL != cc) {
-            if (cc->haveMaxAge()) {
+            if (cc->hasMaxAge()) {
 #if USE_HTTP_VIOLATIONS
                 if (R->flags.ignore_reload && cc->maxAge() == 0) {
                     debugs(22, 3, "refreshCheck: MAYBE: client-max-age = 0 and ignore-reload");
@@ -355,8 +355,8 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
                 }
             }
 
-            if (cc->haveMaxStale() && staleness > -1) {
-                if (cc->maxStale()==HttpHdrCc::MAX_STALE_ALWAYS) {
+            if (cc->hasMaxStale() && staleness > -1) {
+                if (cc->maxStale()==HttpHdrCc::MAX_STALE_ANY) {
                     /* max-stale directive without a value */
                     debugs(22, 3, "refreshCheck: NO: max-stale wildcard");
                     return FRESH_REQUEST_MAX_STALE_ALL;

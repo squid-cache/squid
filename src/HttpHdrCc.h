@@ -47,7 +47,7 @@ public:
 	static const int32_t MAX_AGE_UNKNOWN=-1; //max-age is unset
 	static const int32_t S_MAXAGE_UNKNOWN=-1; //s-maxage is unset
 	static const int32_t MAX_STALE_UNKNOWN=-1; //max-stale is unset
-	static const int32_t MAX_STALE_ALWAYS=-2; //max-stale is set to no value
+	static const int32_t MAX_STALE_ANY=0x7fffffff; //max-stale is set to no value, meaning "any"
 	static const int32_t STALE_IF_ERROR_UNKNOWN=-1; //stale_if_error is unset
 	static const int32_t MIN_FRESH_UNKNOWN=-1; //min_fresh is unset
 
@@ -63,87 +63,85 @@ public:
     bool parse(const String & s);
 
     //manipulation for Cache-Control: public header
-    inline bool havePublic() const {return isSet(CC_PUBLIC);}
-    inline bool Public() const {return isSet(CC_PUBLIC);}
-    inline void Public(bool newval) {setMask(CC_PUBLIC,newval);}
-    inline void clearPublic() {setMask(CC_PUBLIC,false);}
+    bool hasPublic() const {return isSet(CC_PUBLIC);}
+    bool Public() const {return isSet(CC_PUBLIC);}
+    void Public(bool v) {setMask(CC_PUBLIC,v);}
+    void clearPublic() {setMask(CC_PUBLIC,false);}
 
     //manipulation for Cache-Control: private header
-    inline bool havePrivate() const {return isSet(CC_PRIVATE);}
-    inline bool Private() const {return isSet(CC_PRIVATE);}
-    inline void Private(bool newval) {setMask(CC_PRIVATE,newval);}
-    inline void clearPrivate() {setMask(CC_PRIVATE,false);}
+    bool hasPrivate() const {return isSet(CC_PRIVATE);}
+    bool Private() const {return isSet(CC_PRIVATE);}
+    void Private(bool v) {setMask(CC_PRIVATE,v);}
+    void clearPrivate() {setMask(CC_PRIVATE,false);}
 
     //manipulation for Cache-Control: no-cache header
-    inline bool haveNoCache() const {return isSet(CC_NO_CACHE);}
-    inline bool noCache() const {return isSet(CC_NO_CACHE);}
-    inline void noCache(bool newval) {setMask(CC_NO_CACHE,newval);}
-    inline void clearNoCache() {setMask(CC_NO_CACHE,false);}
+    bool hasNoCache() const {return isSet(CC_NO_CACHE);}
+    bool noCache() const {return isSet(CC_NO_CACHE);}
+    void noCache(bool v) {setMask(CC_NO_CACHE,v);}
+    void clearNoCache() {setMask(CC_NO_CACHE,false);}
 
     //manipulation for Cache-Control: no-store header
-    inline bool haveNoStore() const {return isSet(CC_NO_STORE);}
-    inline bool noStore() const {return isSet(CC_NO_STORE);}
-    inline void noStore(bool newval) {setMask(CC_NO_STORE,newval);}
-    inline void clearNoStore() {setMask(CC_NO_STORE,false);}
+    bool hasNoStore() const {return isSet(CC_NO_STORE);}
+    bool noStore() const {return isSet(CC_NO_STORE);}
+    void noStore(bool v) {setMask(CC_NO_STORE,v);}
+    void clearNoStore() {setMask(CC_NO_STORE,false);}
 
     //manipulation for Cache-Control: no-transform header
-    inline bool haveNoTransform() const {return isSet(CC_NO_TRANSFORM);}
-    inline bool noTransform() const {return isSet(CC_NO_TRANSFORM);}
-    inline void noTransform(bool newval) {setMask(CC_NO_TRANSFORM,newval);}
-    inline void clearNoTransform() {setMask(CC_NO_TRANSFORM,false);}
+    bool hasNoTransform() const {return isSet(CC_NO_TRANSFORM);}
+    bool noTransform() const {return isSet(CC_NO_TRANSFORM);}
+    void noTransform(bool v) {setMask(CC_NO_TRANSFORM,v);}
+    void clearNoTransform() {setMask(CC_NO_TRANSFORM,false);}
 
     //manipulation for Cache-Control: must-revalidate header
-    inline bool haveMustRevalidate() const {return isSet(CC_MUST_REVALIDATE);}
-    inline bool mustRevalidate() const {return isSet(CC_MUST_REVALIDATE);}
-    inline void mustRevalidate(bool newval) {setMask(CC_MUST_REVALIDATE,newval);}
-    inline void clearMustRevalidate() {setMask(CC_MUST_REVALIDATE,false);}
+    bool hasMustRevalidate() const {return isSet(CC_MUST_REVALIDATE);}
+    bool mustRevalidate() const {return isSet(CC_MUST_REVALIDATE);}
+    void mustRevalidate(bool v) {setMask(CC_MUST_REVALIDATE,v);}
+    void clearMustRevalidate() {setMask(CC_MUST_REVALIDATE,false);}
 
     //manipulation for Cache-Control: proxy-revalidate header
-    inline bool haveProxyRevalidate() const {return isSet(CC_PROXY_REVALIDATE);}
-    inline bool proxyRevalidate() const {return isSet(CC_PROXY_REVALIDATE);}
-    inline void proxyRevalidate(bool newval) {setMask(CC_PROXY_REVALIDATE,newval);}
-    inline void clearProxyRevalidate() {setMask(CC_PROXY_REVALIDATE,false);}
+    bool hasProxyRevalidate() const {return isSet(CC_PROXY_REVALIDATE);}
+    bool proxyRevalidate() const {return isSet(CC_PROXY_REVALIDATE);}
+    void proxyRevalidate(bool v) {setMask(CC_PROXY_REVALIDATE,v);}
+    void clearProxyRevalidate() {setMask(CC_PROXY_REVALIDATE,false);}
 
     //manipulation for Cache-Control: max-age header
-    inline bool haveMaxAge() const {return isSet(CC_MAX_AGE);}
-    inline int32_t maxAge() const { return max_age;}
-    inline void maxAge(int32_t newval) {if (newval < 0) return; max_age = newval; setMask(CC_MAX_AGE); }
-    inline void clearMaxAge() {max_age=MAX_AGE_UNKNOWN; setMask(CC_MAX_AGE,false);}
+    bool hasMaxAge() const {return isSet(CC_MAX_AGE);}
+    int32_t maxAge() const { return max_age;}
+    void maxAge(int32_t v) {setValue(max_age,v,CC_MAX_AGE); }
+    void clearMaxAge() {setValue(max_age,MAX_AGE_UNKNOWN,CC_MAX_AGE,false);}
 
     //manipulation for Cache-Control: s-maxage header
-    inline bool haveSMaxAge() const {return isSet(CC_S_MAXAGE);}
-    inline int32_t sMaxAge() const { return s_maxage;}
-    inline void sMaxAge(int32_t newval) {if (newval < 0) return; s_maxage = newval; setMask(CC_S_MAXAGE); }
-    inline void clearSMaxAge() {s_maxage=MAX_AGE_UNKNOWN; setMask(CC_S_MAXAGE,false);}
+    bool hasSMaxAge() const {return isSet(CC_S_MAXAGE);}
+    int32_t sMaxAge() const { return s_maxage;}
+    void sMaxAge(int32_t v) {setValue(s_maxage,v,CC_S_MAXAGE); }
+    void clearSMaxAge() {setValue(s_maxage,MAX_AGE_UNKNOWN,CC_S_MAXAGE,false);}
 
     //manipulation for Cache-Control: max-stale header
-    inline bool haveMaxStale() const {return isSet(CC_MAX_STALE);}
-    inline int32_t maxStale() const { return max_stale;}
-    // max-stale has a special value (MAX_STALE_ALWAYS) which correspond to having
+    bool hasMaxStale() const {return isSet(CC_MAX_STALE);}
+    int32_t maxStale() const { return max_stale;}
+    // max-stale has a special value (MAX_STALE_ANY) which correspond to having
     // the directive without a numeric specification, and directs to consider the object
     // as always-expired.
-    inline void maxStale(int32_t newval) {
-        if (newval < 0 && newval != CC_MAX_STALE) return;
-        max_stale = newval; setMask(CC_MAX_STALE); }
-    inline void clearMaxStale() {max_stale=MAX_STALE_UNKNOWN; setMask(CC_MAX_STALE,false);}
+    void maxStale(int32_t v) {setValue(max_stale,v,CC_MAX_STALE);}
+    void clearMaxStale() {setValue(max_stale,MAX_STALE_UNKNOWN,CC_MAX_STALE,false);}
 
     //manipulation for Cache-Control:min-fresh header
-    inline bool haveMinFresh() const {return isSet(CC_MIN_FRESH);}
-    inline int32_t minFresh() const { return min_fresh;}
-    inline void minFresh(int32_t newval) {if (newval < 0) return; min_fresh = newval; setMask(CC_MIN_FRESH); }
-    inline void clearMinFresh() {min_fresh=MIN_FRESH_UNKNOWN; setMask(CC_MIN_FRESH,false);}
+    bool hasMinFresh() const {return isSet(CC_MIN_FRESH);}
+    int32_t minFresh() const { return min_fresh;}
+    void minFresh(int32_t v) {if (v < 0) return; setValue(min_fresh,v,CC_MIN_FRESH); }
+    void clearMinFresh() {setValue(min_fresh,MIN_FRESH_UNKNOWN,CC_MIN_FRESH,false);}
 
     //manipulation for Cache-Control: only-if-cached header
-    inline bool haveOnlyIfCached() const {return isSet(CC_ONLY_IF_CACHED);}
-    inline bool onlyIfCached() const {return isSet(CC_ONLY_IF_CACHED);}
-    inline void onlyIfCached(bool newval) {setMask(CC_ONLY_IF_CACHED,newval);}
-    inline void clearOnlyIfCached() {setMask(CC_ONLY_IF_CACHED,false);}
+    bool hasOnlyIfCached() const {return isSet(CC_ONLY_IF_CACHED);}
+    bool onlyIfCached() const {return isSet(CC_ONLY_IF_CACHED);}
+    void onlyIfCached(bool v) {setMask(CC_ONLY_IF_CACHED,v);}
+    void clearOnlyIfCached() {setMask(CC_ONLY_IF_CACHED,false);}
 
     //manipulation for Cache-Control: stale-if-error header
-    inline bool haveStaleIfError() const {return isSet(CC_STALE_IF_ERROR);}
-    inline int32_t staleIfError() const { return stale_if_error;}
-    inline void staleIfError(int32_t newval) {if (newval < 0) return; stale_if_error = newval; setMask(CC_STALE_IF_ERROR); }
-    inline void clearStaleIfError() {stale_if_error=STALE_IF_ERROR_UNKNOWN; setMask(CC_STALE_IF_ERROR,false);}
+    bool hasStaleIfError() const {return isSet(CC_STALE_IF_ERROR);}
+    int32_t staleIfError() const { return stale_if_error;}
+    void staleIfError(int32_t v) {setValue(stale_if_error,v,CC_STALE_IF_ERROR); }
+    void clearStaleIfError() {setValue(stale_if_error,STALE_IF_ERROR_UNKNOWN,CC_STALE_IF_ERROR,false);}
 
     /// check whether the attribute value supplied by id is set
     _SQUID_INLINE_ bool isSet(http_hdr_cc_type id) const;
@@ -166,6 +164,7 @@ private:
     int32_t min_fresh;
     /// low-level part of the public set method, performs no checks
     _SQUID_INLINE_ void setMask(http_hdr_cc_type id, bool newval=true);
+    _SQUID_INLINE_ void setValue(int32_t &value, int32_t new_value, http_hdr_cc_type hdr, bool setting=true);
 
 public:
     /**comma-separated representation of the header values which were
