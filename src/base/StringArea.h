@@ -55,9 +55,6 @@ class StringArea {
         return (theLen < s.theLen || (theLen == s.theLen && memcmp(theStart,s.theStart,theLen) < 0)) ; }
 
     private:
-    // default constructor is disabled
-    StringArea();
-
     /// pointed to the externally-managed memory area
     const char *theStart;
     /// length of the string
