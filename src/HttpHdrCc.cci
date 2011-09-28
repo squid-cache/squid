@@ -29,94 +29,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
-
-void
-HttpHdrCc::sMaxAge(int32_t s_maxage)
-{
-    if (s_maxage>=0) {
-        setMask(CC_S_MAXAGE);
-        this->s_maxage=s_maxage;
-    } else {
-        setMask(CC_S_MAXAGE,false);
-        this->s_maxage=S_MAXAGE_UNKNOWN;
-    }
-}
-
-int32_t
-HttpHdrCc::sMaxAge() const
-{
-    return s_maxage;
-}
-
-void
-HttpHdrCc::setMaxStale(int32_t max_stale)
-{
-    if (max_stale>=0 || max_stale==MAX_STALE_ALWAYS) {
-        setMask(CC_MAX_STALE);
-        this->max_stale=max_stale;
-    } else {
-        setMask(CC_MAX_STALE,false);
-        this->max_stale=MAX_STALE_UNKNOWN;
-    }
-}
-int32_t
-HttpHdrCc::getMaxStale() const
-{
-    return max_stale;
-}
-
-void
-HttpHdrCc::setStaleIfError(int32_t stale_if_error)
-{
-    if (stale_if_error >= 0) {
-        setMask(CC_STALE_IF_ERROR);
-        this->stale_if_error=stale_if_error;
-    } else {
-        setMask(CC_STALE_IF_ERROR,false);
-        this->stale_if_error=STALE_IF_ERROR_UNKNOWN;
-    }
-}
-
-int32_t
-HttpHdrCc::getStaleIfError() const
-{
-    return stale_if_error;
-}
-
-void
-HttpHdrCc::setMinFresh(int32_t min_fresh)
-{
-    if (min_fresh >= 0) {
-        setMask(CC_MIN_FRESH);
-        this->min_fresh=min_fresh;
-    } else {
-        setMask(CC_MIN_FRESH,false);
-        this->min_fresh=MIN_FRESH_UNKNOWN;
-    }
-}
-
-int32_t
-HttpHdrCc::getMinFresh() const
-{
-    return min_fresh;
-}
-
 bool
 HttpHdrCc::isSet(http_hdr_cc_type id) const
 {
     assert(id>=CC_PUBLIC && id < CC_ENUM_END);
     return EBIT_TEST(mask,id);
-}
-
-void
-HttpHdrCc::set(http_hdr_cc_type id, bool newval)
-{
-    assert(id>=CC_PUBLIC && id < CC_ENUM_END);
-    assert(id!=CC_MAX_AGE && id != CC_S_MAXAGE &&
-            id != CC_MAX_STALE && id != CC_STALE_IF_ERROR &&
-            id != CC_MIN_FRESH);
-    setMask(id,newval);
 }
 
 void

@@ -353,23 +353,23 @@ HttpStateData::cacheableReply()
 
     // RFC 2616: do not cache replies to responses with no-store CC directive
     if (request && request->cache_control &&
-            request->cache_control->isSet(CC_NO_STORE) &&
+            request->cache_control->noStore() &&
             !REFRESH_OVERRIDE(ignore_no_store))
         return 0;
 
     if (!ignoreCacheControl && request->cache_control != NULL) {
         const HttpHdrCc* cc=request->cache_control;
-        if (cc->isSet(CC_PRIVATE)) {
+        if (cc->Private()) {
             if (!REFRESH_OVERRIDE(ignore_private))
                 return 0;
         }
 
-        if (cc->isSet(CC_NO_CACHE)) {
+        if (cc->noCache()) {
             if (!REFRESH_OVERRIDE(ignore_no_cache))
                 return 0;
         }
 
-        if (cc->isSet(CC_NO_STORE)) {
+        if (cc->noStore()) {
             if (!REFRESH_OVERRIDE(ignore_no_store))
                 return 0;
         }
@@ -382,7 +382,7 @@ HttpStateData::cacheableReply()
          * RFC 2068, sec 14.9.4
          */
 
-        if (!request->cache_control->isSet(CC_PUBLIC)) {
+        if (!request->cache_control->Public()) {
             if (!REFRESH_OVERRIDE(ignore_auth))
                 return 0;
         }
@@ -926,9 +926,9 @@ HttpStateData::haveParsedReplyHeaders()
 no_cache:
 
     if (!ignoreCacheControl && rep->cache_control) {
-        if (rep->cache_control->isSet(CC_PROXY_REVALIDATE) ||
-                rep->cache_control->isSet(CC_MUST_REVALIDATE) ||
-                rep->cache_control->sMaxAge() != HttpHdrCc::S_MAXAGE_UNKNOWN
+        if (rep->cache_control->proxyRevalidate() ||
+                rep->cache_control->mustRevalidate() ||
+                rep->cache_control->haveSMaxAge()
                 )
             EBIT_SET(entry->flags, ENTRY_REVALIDATE);
     }
@@ -1771,7 +1771,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 #endif
 
         /* Add max-age only without no-cache */
-        if (cc->isSet(CC_MAX_AGE) && !cc->isSet(CC_NO_CACHE)) {
+        if (cc->haveMaxAge() && !cc->noCache()) {
             const char *url =
                 entry ? entry->url() : urlCanonical(request);
             cc->maxAge(getMaxAge(url));
@@ -1780,7 +1780,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 
         /* Enforce sibling relations */
         if (flags.only_if_cached)
-            cc->set(CC_ONLY_IF_CACHED);
+            cc->onlyIfCached(true);
 
         hdr_out->putCc(cc);
 

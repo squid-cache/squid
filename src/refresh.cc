@@ -268,8 +268,8 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     if (request && !request->flags.ignore_cc) {
         const HttpHdrCc *const cc = request->cache_control;
-        if (cc && cc->getMinFresh()!=HttpHdrCc::MIN_FRESH_UNKNOWN) {
-            const int32_t minFresh=cc->getMinFresh();
+        if (cc && cc->haveMinFresh()) {
+            const int32_t minFresh=cc->minFresh();
             debugs(22, 3, "\tage + min-fresh:\t" << age << " + " <<
             		minFresh << " = " << age + minFresh);
             debugs(22, 3, "\tcheck_time + min-fresh:\t" << check_time << " + "
@@ -288,8 +288,8 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     // stale-if-error requires any failure be passed thru when its period is over.
     if (request && entry->mem_obj && entry->mem_obj->getReply() && entry->mem_obj->getReply()->cache_control &&
-    		entry->mem_obj->getReply()->cache_control->getStaleIfError() != HttpHdrCc::STALE_IF_ERROR_UNKNOWN &&
-            entry->mem_obj->getReply()->cache_control->getStaleIfError() < staleness) {
+    		entry->mem_obj->getReply()->cache_control->haveStaleIfError() &&
+            entry->mem_obj->getReply()->cache_control->staleIfError() < staleness) {
 
         debugs(22, 3, "refreshCheck: stale-if-error period expired.");
         request->flags.fail_on_validation_err = 1;
@@ -336,7 +336,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
 #endif
         if (NULL != cc) {
-            if (cc->isSet(CC_MAX_AGE)) {
+            if (cc->haveMaxAge()) {
 #if USE_HTTP_VIOLATIONS
                 if (R->flags.ignore_reload && cc->maxAge() == 0) {
                     debugs(22, 3, "refreshCheck: MAYBE: client-max-age = 0 and ignore-reload");
@@ -355,12 +355,12 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
                 }
             }
 
-            if (cc->getMaxStale()>=0 && staleness > -1) {
-                if (cc->getMaxStale()==HttpHdrCc::MAX_STALE_ALWAYS) {
+            if (cc->haveMaxStale() && staleness > -1) {
+                if (cc->maxStale()==HttpHdrCc::MAX_STALE_ALWAYS) {
                     /* max-stale directive without a value */
                     debugs(22, 3, "refreshCheck: NO: max-stale wildcard");
                     return FRESH_REQUEST_MAX_STALE_ALL;
-                } else if (staleness < cc->getMaxStale()) {
+                } else if (staleness < cc->maxStale()) {
                     debugs(22, 3, "refreshCheck: NO: staleness < max-stale");
                     return FRESH_REQUEST_MAX_STALE_VALUE;
                 }

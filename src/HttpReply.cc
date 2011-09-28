@@ -331,10 +331,10 @@ HttpReply::hdrExpirationTime()
 
     if (cache_control) {
         if (date >= 0) {
-            if (cache_control->sMaxAge() != HttpHdrCc::S_MAXAGE_UNKNOWN)
+            if (cache_control->haveSMaxAge())
                 return date + cache_control->sMaxAge();
 
-            if (cache_control->isSet(CC_MAX_AGE))
+            if (cache_control->haveMaxAge())
                 return date + cache_control->maxAge();
         } else {
             /*
@@ -342,10 +342,10 @@ HttpReply::hdrExpirationTime()
              * header, but no Date for reference?
              */
 
-            if (cache_control->sMaxAge() != HttpHdrCc::S_MAXAGE_UNKNOWN)
+            if (cache_control->haveSMaxAge())
                 return squid_curtime;
 
-            if (cache_control->isSet(CC_MAX_AGE))
+            if (cache_control->haveMaxAge())
                 return squid_curtime;
         }
     }
