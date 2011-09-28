@@ -62,22 +62,16 @@ public:
     /// parse a header-string and fill in appropriate values.
     bool parse(const String & s);
 
-    //manipulation for Cache-Control: XXX header
-    //inline bool haveXXX() const {return isSet();}
-    //inline bool XXX() const {return isSet();}
-    //inline void XXX(bool newval) {setMask(,newval);}
-    //inline void clearXXX() {setMask(,false);}
-
     //manipulation for Cache-Control: public header
     inline bool havePublic() const {return isSet(CC_PUBLIC);}
-    inline bool getPublic() const {return isSet(CC_PUBLIC);}
-    inline void setPublic(bool newval) {setMask(CC_PUBLIC,newval);}
+    inline bool Public() const {return isSet(CC_PUBLIC);}
+    inline void Public(bool newval) {setMask(CC_PUBLIC,newval);}
     inline void clearPublic() {setMask(CC_PUBLIC,false);}
 
     //manipulation for Cache-Control: private header
     inline bool havePrivate() const {return isSet(CC_PRIVATE);}
-    inline bool getPrivate() const {return isSet(CC_PRIVATE);}
-    inline void setPrivate(bool newval) {setMask(CC_PRIVATE,newval);}
+    inline bool Private() const {return isSet(CC_PRIVATE);}
+    inline void Private(bool newval) {setMask(CC_PRIVATE,newval);}
     inline void clearPrivate() {setMask(CC_PRIVATE,false);}
 
     //manipulation for Cache-Control: no-cache header
@@ -113,30 +107,48 @@ public:
     //manipulation for Cache-Control: max-age header
     inline bool haveMaxAge() const {return isSet(CC_MAX_AGE);}
     inline int32_t maxAge() const { return max_age;}
-    inline void maxAge(int32_t max_age) {this->max_age = max_age; setMask(CC_MAX_AGE); }
+    inline void maxAge(int32_t newval) {if (newval < 0) return; max_age = newval; setMask(CC_MAX_AGE); }
     inline void clearMaxAge() {max_age=MAX_AGE_UNKNOWN; setMask(CC_MAX_AGE,false);}
 
+    //manipulation for Cache-Control: s-maxage header
+    inline bool haveSMaxAge() const {return isSet(CC_S_MAXAGE);}
+    inline int32_t sMaxAge() const { return s_maxage;}
+    inline void sMaxAge(int32_t newval) {if (newval < 0) return; s_maxage = newval; setMask(CC_S_MAXAGE); }
+    inline void clearSMaxAge() {s_maxage=MAX_AGE_UNKNOWN; setMask(CC_S_MAXAGE,false);}
 
-    /// s-maxage setter. Clear by setting to S_MAXAGE_UNKNOWN
-    _SQUID_INLINE_ void sMaxAge(int32_t s_maxage);
-    _SQUID_INLINE_ int32_t sMaxAge() const;
+    //manipulation for Cache-Control: max-stale header
+    inline bool haveMaxStale() const {return isSet(CC_MAX_STALE);}
+    inline int32_t maxStale() const { return max_stale;}
+    // max-stale has a special value (MAX_STALE_ALWAYS) which correspond to having
+    // the directive without a numeric specification, and directs to consider the object
+    // as always-expired.
+    inline void maxStale(int32_t newval) {
+        if (newval < 0 && newval != CC_MAX_STALE) return;
+        max_stale = newval; setMask(CC_MAX_STALE); }
+    inline void clearMaxStale() {max_stale=MAX_STALE_UNKNOWN; setMask(CC_MAX_STALE,false);}
 
-    /// max-stale setter. Clear by setting to MAX_STALE_UNKNOWN
-    _SQUID_INLINE_ void setMaxStale(int32_t max_stale);
-    _SQUID_INLINE_ int32_t getMaxStale() const;
+    //manipulation for Cache-Control:min-fresh header
+    inline bool haveMinFresh() const {return isSet(CC_MIN_FRESH);}
+    inline int32_t minFresh() const { return min_fresh;}
+    inline void minFresh(int32_t newval) {if (newval < 0) return; min_fresh = newval; setMask(CC_MIN_FRESH); }
+    inline void clearMinFresh() {min_fresh=MIN_FRESH_UNKNOWN; setMask(CC_MIN_FRESH,false);}
 
-    /// stale-if-error setter. Clear by setting to STALE_IF_ERROR_UNKNOWN
-    _SQUID_INLINE_ void setStaleIfError(int32_t stale_if_error);
-    _SQUID_INLINE_ int32_t getStaleIfError() const;
+    //manipulation for Cache-Control: only-if-cached header
+    inline bool haveOnlyIfCached() const {return isSet(CC_ONLY_IF_CACHED);}
+    inline bool onlyIfCached() const {return isSet(CC_ONLY_IF_CACHED);}
+    inline void onlyIfCached(bool newval) {setMask(CC_ONLY_IF_CACHED,newval);}
+    inline void clearOnlyIfCached() {setMask(CC_ONLY_IF_CACHED,false);}
 
-    /// min-fresh setter. Clear by setting to MIN_FRESH_UNKNOWN
-    _SQUID_INLINE_ void setMinFresh(int32_t min_fresh);
-    _SQUID_INLINE_ int32_t getMinFresh() const;
+    //manipulation for Cache-Control: stale-if-error header
+    inline bool haveStaleIfError() const {return isSet(CC_STALE_IF_ERROR);}
+    inline int32_t staleIfError() const { return stale_if_error;}
+    inline void staleIfError(int32_t newval) {if (newval < 0) return; stale_if_error = newval; setMask(CC_STALE_IF_ERROR); }
+    inline void clearStaleIfError() {stale_if_error=STALE_IF_ERROR_UNKNOWN; setMask(CC_STALE_IF_ERROR,false);}
 
-    /// set an attribute value or clear it (by supplying false as the second argument)
-    _SQUID_INLINE_ void set(http_hdr_cc_type id, bool newval=true);
     /// check whether the attribute value supplied by id is set
     _SQUID_INLINE_ bool isSet(http_hdr_cc_type id) const;
+
+    void packInto(Packer * p) const;
 
     MEMPROXY_CLASS(HttpHdrCc);
 

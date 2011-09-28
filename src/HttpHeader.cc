@@ -1152,7 +1152,7 @@ HttpHeader::putCc(const HttpHdrCc * cc)
     /* pack into mb */
     mb.init();
     packerToMemInit(&p, &mb);
-    httpHdrCcPackInto(cc, &p);
+    cc->packInto(&p);
     /* put */
     addEntry(new HttpHeaderEntry(HDR_CACHE_CONTROL, NULL, mb.buf));
     /* cleanup */
