@@ -928,7 +928,7 @@ no_cache:
     if (!ignoreCacheControl && rep->cache_control) {
         if (rep->cache_control->proxyRevalidate() ||
                 rep->cache_control->mustRevalidate() ||
-                rep->cache_control->haveSMaxAge()
+                rep->cache_control->hasSMaxAge()
                 )
             EBIT_SET(entry->flags, ENTRY_REVALIDATE);
     }
@@ -1771,7 +1771,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 #endif
 
         /* Add max-age only without no-cache */
-        if (cc->haveMaxAge() && !cc->noCache()) {
+        if (cc->hasMaxAge() && !cc->noCache()) {
             const char *url =
                 entry ? entry->url() : urlCanonical(request);
             cc->maxAge(getMaxAge(url));

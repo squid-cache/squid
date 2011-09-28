@@ -44,3 +44,20 @@ HttpHdrCc::setMask(http_hdr_cc_type id, bool newval)
     else
         EBIT_CLR(mask,id);
 }
+
+/// set a data member to a new value, and set the corresponding mask-bit.
+/// if setting is false, then the mask-bit is cleared.
+void
+HttpHdrCc::setValue(int32_t &value, int32_t new_value, http_hdr_cc_type hdr, bool setting)
+{
+    if (setting) {
+        if (new_value < 0)
+            debugs(65,3,HERE << "rejecting negative Cache-Control directive " << hdr
+                << " value " << new_value );
+    } else {
+        new_value=-1; //rely on the convention that "unknown" is -1
+    }
+
+    value=new_value;
+    setMask(hdr,setting);
+}

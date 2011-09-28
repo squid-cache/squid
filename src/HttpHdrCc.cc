@@ -69,7 +69,7 @@ static HttpHeaderCcFields CcAttrs[CC_ENUM_END] = {
 typedef std::map<const StringArea,http_hdr_cc_type> CcNameToIdMap_t;
 static CcNameToIdMap_t CcNameToIdMap;
 
-/// iterate over a table of http_header_cc_type structs
+/// used to walk a table of http_header_cc_type structs
 http_hdr_cc_type &operator++ (http_hdr_cc_type &aHeader)
 {
     int tmp = (int)aHeader;
@@ -144,40 +144,47 @@ HttpHdrCc::parse(const String & str)
         switch (type) {
 
         case CC_MAX_AGE:
-            int32_t ma;
-            if (!p || !httpHeaderParseInt(p, &ma)) {
+            if (!p || !httpHeaderParseInt(p, &max_age) || max_age < 0) {
                 debugs(65, 2, "cc: invalid max-age specs near '" << item << "'");
                 clearMaxAge();
             } else {
-                maxAge(ma);
+                setMask(type,true);
             }
             break;
 
         case CC_S_MAXAGE:
-            if (!p || !httpHeaderParseInt(p, &s_maxage)) {
+            if (!p || !httpHeaderParseInt(p, &s_maxage) || s_maxage < 0) {
                 debugs(65, 2, "cc: invalid s-maxage specs near '" << item << "'");
                 clearSMaxAge();
+            } else {
+                setMask(type,true);
             }
             break;
 
         case CC_MAX_STALE:
-            if (!p || !httpHeaderParseInt(p, &max_stale)) {
+            if (!p || !httpHeaderParseInt(p, &max_stale) || max_stale < 0) {
                 debugs(65, 2, "cc: max-stale directive is valid without value");
-                maxStale(MAX_STALE_ALWAYS);
+                maxStale(MAX_STALE_ANY);
+            } else {
+                setMask(type,true);
             }
             break;
 
         case CC_MIN_FRESH:
-            if (!p || !httpHeaderParseInt(p, &min_fresh)) {
+            if (!p || !httpHeaderParseInt(p, &min_fresh) || min_fresh < 0) {
                 debugs(65, 2, "cc: invalid min-fresh specs near '" << item << "'");
                 clearMinFresh();
+            } else {
+                setMask(type,true);
             }
             break;
 
         case CC_STALE_IF_ERROR:
-            if (!p || !httpHeaderParseInt(p, &stale_if_error)) {
+            if (!p || !httpHeaderParseInt(p, &stale_if_error) || stale_if_error < 0) {
                 debugs(65, 2, "cc: invalid stale-if-error specs near '" << item << "'");
                 clearStaleIfError();
+            } else {
+                setMask(type,true);
             }
             break;
 
@@ -227,7 +234,7 @@ HttpHdrCc::packInto(Packer * p) const
             if (flag == CC_S_MAXAGE)
                 packerPrintf(p, "=%d", (int) sMaxAge());
 
-            if (flag == CC_MAX_STALE && maxStale()!=MAX_STALE_ALWAYS)
+            if (flag == CC_MAX_STALE && maxStale()!=MAX_STALE_ANY)
                 packerPrintf(p, "=%d", (int) maxStale());
 
             if (flag == CC_MIN_FRESH)
