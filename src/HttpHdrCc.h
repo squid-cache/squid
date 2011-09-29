@@ -47,7 +47,9 @@ public:
 	static const int32_t MAX_AGE_UNKNOWN=-1; //max-age is unset
 	static const int32_t S_MAXAGE_UNKNOWN=-1; //s-maxage is unset
 	static const int32_t MAX_STALE_UNKNOWN=-1; //max-stale is unset
-	static const int32_t MAX_STALE_ANY=0x7fffffff; //max-stale is set to no value, meaning "any"
+	///used to mark a valueless Cache-Control: max-stale directive, which instructs
+	/// us to treat responses of any age as fresh
+	static const int32_t MAX_STALE_ANY=0x7fffffff;
 	static const int32_t STALE_IF_ERROR_UNKNOWN=-1; //stale_if_error is unset
 	static const int32_t MIN_FRESH_UNKNOWN=-1; //min_fresh is unset
 

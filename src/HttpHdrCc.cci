@@ -51,9 +51,11 @@ void
 HttpHdrCc::setValue(int32_t &value, int32_t new_value, http_hdr_cc_type hdr, bool setting)
 {
     if (setting) {
-        if (new_value < 0)
-            debugs(65,3,HERE << "rejecting negative Cache-Control directive " << hdr
+        if (new_value < 0) {
+            debugs(65,3,HERE << "rejecting negative-value Cache-Control directive " << hdr
                 << " value " << new_value );
+            return;
+        }
     } else {
         new_value=-1; //rely on the convention that "unknown" is -1
     }
