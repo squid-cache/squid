@@ -1953,13 +1953,13 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
 
             sd = dynamic_cast<SwapDir *>(swap->swapDirs[i].getRaw());
 
-            if (sd->type() != StoreFileSystem::FileSystems().items[fs]->type()) {
+            if (strcmp(sd->type(), StoreFileSystem::FileSystems().items[fs]->type()) != 0) {
                 debugs(3, 0, "ERROR: Can't change type of existing cache_dir " <<
                        sd->type() << " " << sd->path << " to " << type_str << ". Restart required");
                 return;
             }
 
-            sd->reconfigure (i, path_str);
+            sd->reconfigure();
 
             update_maxobjsize();
 

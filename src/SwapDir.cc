@@ -310,8 +310,17 @@ SwapDir::optionObjectSizeParse(char const *option, const char *value, int isaRec
 
     int64_t size = strtoll(value, NULL, 10);
 
-    if (isaReconfig && *val != size)
-        debugs(3, 1, "Cache dir '" << path << "' object " << option << " now " << size);
+    if (isaReconfig && *val != size) {
+        if (allowOptionReconfigure(option)) {
+            debugs(3, DBG_IMPORTANT, "cache_dir '" << path << "' object " <<
+                   option << " now " << size << " Bytes");
+        } else {
+            debugs(3, DBG_IMPORTANT, "WARNING: cache_dir '" << path << "' "
+                   "object " << option << " cannot be changed dynamically, " <<
+                   "value left unchanged (" << *val << " Bytes)");
+            return true;
+        }
+    }
 
     *val = size;
 
