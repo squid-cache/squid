@@ -125,7 +125,7 @@ public:
 
     SwapDir(char const *aType);
     virtual ~SwapDir();
-    virtual void reconfigure(int, char *) = 0;
+    virtual void reconfigure() = 0;
     char const *type() const;
 
     virtual bool needsDiskStrand() const; ///< needs a dedicated kid process
@@ -162,6 +162,7 @@ protected:
     void parseOptions(int reconfiguring);
     void dumpOptions(StoreEntry * e) const;
     virtual ConfigOption *getOptionTree() const;
+    virtual bool allowOptionReconfigure(const char *const) const { return true; }
 
     int64_t sizeInBlocks(const int64_t size) const { return (size + fs.blksize - 1) / fs.blksize; }
 

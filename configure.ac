@@ -383,9 +383,10 @@ AC_MSG_CHECKING([for atomic operations support])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     int n = 0;
 ]],[[
-    __sync_add_and_fetch(&n, 1); // n becomes 1
-    __sync_fetch_and_add(&n, 1); // n becomes 2
-    __sync_bool_compare_and_swap(&n, 2, 201); // n becomes 201
+    __sync_add_and_fetch(&n, 10); // n becomes 10
+    __sync_fetch_and_add(&n, 20); // n becomes 30
+    __sync_sub_and_fetch(&n, 15); // n becomes 15
+    __sync_bool_compare_and_swap(&n, 15, 201); // n becomes 201
     __sync_fetch_and_and(&n, 200); // n becomes 200
     return (n == 200) ? 0 : -1;
 ]])],

@@ -48,7 +48,7 @@ public:
     virtual void writeCleanDone();
     virtual void logEntry(const StoreEntry & e, int op) const;
     virtual void parse (int index, char *path);
-    virtual void reconfigure (int, char *);
+    virtual void reconfigure();
     virtual void swappedOut(const StoreEntry &e);
     virtual uint64_t currentSize() const { return cur_size; }
     virtual uint64_t currentCount() const { return n_disk_objects; }

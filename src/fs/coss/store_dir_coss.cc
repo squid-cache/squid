@@ -1036,7 +1036,7 @@ CossSwapDir::parse(int anIndex, char *aPath)
 
 
 void
-CossSwapDir::reconfigure(int index, char *path)
+CossSwapDir::reconfigure()
 {
     const int i = GetInteger();
     if (i <= 0)

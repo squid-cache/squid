@@ -843,7 +843,6 @@ DEFAULT_CACHE_LOG	= $(DEFAULT_LOG_PREFIX)/cache.log
 DEFAULT_ACCESS_LOG	= $(DEFAULT_LOG_PREFIX)/access.log
 DEFAULT_STORE_LOG	= $(DEFAULT_LOG_PREFIX)/store.log
 DEFAULT_NETDB_FILE	= $(DEFAULT_LOG_PREFIX)/netdb.state
-DEFAULT_SWAP_DIR	= $(localstatedir)/cache
 DEFAULT_SSL_DB_DIR	= $(localstatedir)/lib/ssl_db
 DEFAULT_PINGER		= $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_UNLINKD		= $(libexecdir)/`echo unlinkd | sed '$(transform);s/$$/$(EXEEXT)/'`

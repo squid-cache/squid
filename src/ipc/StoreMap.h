@@ -55,8 +55,10 @@ class StoreMap
 public:
     typedef StoreMapSlot Slot;
 
-private:
-    struct Shared {
+    /// data shared across maps in different processes
+    class Shared
+    {
+    public:
         Shared(const int aLimit, const size_t anExtrasSize);
         size_t sharedMemorySize() const;
         static size_t SharedMemorySize(const int limit, const size_t anExtrasSize);
