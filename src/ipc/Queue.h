@@ -49,7 +49,8 @@ public:
     typedef AtomicWord Rate; ///< pop()s per second
     Rate rateLimit; ///< pop()s per second limit if positive
 
-    typedef AtomicWordT<int64_t> AtomicSignedMsec;
+    // we need a signed atomic type because balance may get negative
+    typedef AtomicWordT<int> AtomicSignedMsec;
     typedef AtomicSignedMsec Balance;
     /// how far ahead the reader is compared to a perfect read/sec event rate
     Balance balance;
