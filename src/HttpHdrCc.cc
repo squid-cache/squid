@@ -216,6 +216,10 @@ HttpHdrCc::parse(const String & str)
 void
 HttpHdrCc::packInto(Packer * p) const
 {
+    // optimization: if the mask is empty do nothing
+    if (mask==0)
+        return;
+
     http_hdr_cc_type flag;
     int pcount = 0;
     assert(p);
