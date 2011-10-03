@@ -204,7 +204,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
 
     natLookup.nl_inport = htons(newConn->local.GetPort());
     newConn->local.GetInAddr(natLookup.nl_inip);
-    natLookup.nl_outport = htons(neConn->remote.GetPort());
+    natLookup.nl_outport = htons(newConn->remote.GetPort());
     newConn->remote.GetInAddr(natLookup.nl_outip);
     natLookup.nl_flags = IPN_TCP;
 
