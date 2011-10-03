@@ -698,6 +698,12 @@ IpcIoFile::WaitBeforePop()
         // if we accumulated too much time for future slow I/Os,
         // then shed accumulated time to keep just half of the excess
         const int64_t toSpend = balance - maxImbalance/2;
+
+        if (toSpend/1e3 > Timeout)
+            debugs(47, DBG_IMPORTANT, "WARNING: Rock disker delays I/O " <<
+                   "requests for " << (toSpend/1e3) << " seconds to obey " <<
+                   ioRate << "/sec rate limit");
+
         debugs(47, 3, HERE << "rate limiting by " << toSpend << " ms to get" <<
                (1e3*maxRate) << "/sec rate");
         eventAdd("IpcIoFile::DiskerHandleMoreRequests",
