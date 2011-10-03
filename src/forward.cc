@@ -146,6 +146,11 @@ FwdState::completed()
 
     flags.forward_completed = 1;
 
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
+        debugs(17, 3, HERE << "entry aborted");
+        return ;
+    }
+
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
@@ -361,7 +366,6 @@ FwdState::unregister(int fd)
 void
 FwdState::complete()
 {
-    assert(entry->store_status == STORE_PENDING);
     debugs(17, 3, HERE << entry->url() << "\n\tstatus " << entry->getReply()->sline.status  );
 #if URL_CHECKSUM_DEBUG
 
@@ -1017,6 +1021,12 @@ FwdState::reforward()
 {
     StoreEntry *e = entry;
     http_status s;
+
+    if (EBIT_TEST(e->flags, ENTRY_ABORTED)) {
+        debugs(17, 3, HERE << "entry aborted");
+        return 0;
+    }
+
     assert(e->store_status == STORE_PENDING);
     assert(e->mem_obj);
 #if URL_CHECKSUM_DEBUG

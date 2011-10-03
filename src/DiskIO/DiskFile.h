@@ -49,7 +49,8 @@ class DiskFile : public RefCountable
 public:
 
     /// generally useful configuration options supported by some children
-    class Config {
+    class Config
+    {
     public:
         Config(): ioTimeout(0), ioRate(-1) {}
 

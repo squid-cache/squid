@@ -39,7 +39,9 @@
 #include "auth/UserRequest.h"
 #endif
 #include "SquidTime.h"
+#if USE_SSL
 #include "ssl/ErrorDetailManager.h"
+#endif
 #include "Store.h"
 #include "html_quote.h"
 #include "HttpReply.h"
