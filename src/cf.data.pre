@@ -3444,7 +3444,7 @@ DOC_END
 
 NAME: netdb_filename
 TYPE: string
-DEFAULT: @DEFAULT_NETDB_FILE@
+DEFAULT: stdio:@DEFAULT_NETDB_FILE@
 LOC: Config.netdbFilename
 IFDEF: USE_ICMP
 DOC_START
