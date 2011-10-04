@@ -25,8 +25,7 @@ public:
     /// Whether shared memory support is available
     static bool Enabled();
 
-    /// Create a new shared memory segment. Fails if a segment with
-    /// the same name already exists. Unlinks the segment on destruction.
+    /// Create a new shared memory segment. Unlinks the segment on destruction.
     void create(const off_t aSize);
     void open(); ///< Open an existing shared memory segment.
 
