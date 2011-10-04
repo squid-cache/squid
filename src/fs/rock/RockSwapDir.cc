@@ -254,7 +254,7 @@ Rock::SwapDir::parse(int anIndex, char *aPath)
     fname.append("/rock");
     filePath = xstrdup(fname.termedBuf());
 
-    parseSize();
+    parseSize(false);
     parseOptions(0);
 
     // Current openForWriting() code overwrites the old slot if needed
@@ -265,11 +265,9 @@ Rock::SwapDir::parse(int anIndex, char *aPath)
 }
 
 void
-Rock::SwapDir::reconfigure(int, char *)
+Rock::SwapDir::reconfigure(int, char *aPath)
 {
-    // TODO: do not update a parameter if we cannot propagate that change
-    // TODO: warn if reconfigure changes any parameter that we cannot update
-    parseSize();
+    parseSize(true);
     parseOptions(1);
     // TODO: can we reconfigure the replacement policy (repl)?
     validateOptions();
@@ -277,12 +275,20 @@ Rock::SwapDir::reconfigure(int, char *)
 
 /// parse maximum db disk size
 void
-Rock::SwapDir::parseSize()
+Rock::SwapDir::parseSize(const bool reconfiguring)
 {
     const int i = GetInteger();
     if (i < 0)
         fatal("negative Rock cache_dir size value");
-    max_size = static_cast<uint64_t>(i) << 20; // MBytes to Bytes
+    const uint64_t new_max_size =
+        static_cast<uint64_t>(i) << 20; // MBytes to Bytes
+    if (!reconfiguring)
+        max_size = new_max_size;
+    else if (new_max_size != max_size) {
+        debugs(3, DBG_IMPORTANT, "WARNING: cache_dir '" << path << "' size "
+               "cannot be changed dynamically, value left unchanged (" <<
+               (max_size >> 20) << " MB)");
+    }
 }
 
 ConfigOption *
@@ -292,6 +298,13 @@ Rock::SwapDir::getOptionTree() const
     assert(vector);
     vector->options.push_back(new ConfigOptionAdapter<SwapDir>(*const_cast<SwapDir *>(this), &SwapDir::parseTimeOption, &SwapDir::dumpTimeOption));
     return vector;
+}
+
+bool
+Rock::SwapDir::allowOptionReconfigure(const char *const option) const
+{
+    return strcmp(option, "max-size") != 0 &&
+           ::SwapDir::allowOptionReconfigure(option);
 }
 
 /// parses time-specific options; mimics ::SwapDir::optionObjectSizeParse()
