@@ -38,6 +38,7 @@
 #include "Store.h"
 #include "HttpReply.h"
 #include "HttpHdrContRange.h"
+#include "HttpHdrCc.h"
 #include "HttpHdrSc.h"
 #include "acl/FilledChecklist.h"
 #include "HttpRequest.h"
@@ -330,21 +331,21 @@ HttpReply::hdrExpirationTime()
 
     if (cache_control) {
         if (date >= 0) {
-            if (cache_control->s_maxage >= 0)
-                return date + cache_control->s_maxage;
+            if (cache_control->hasSMaxAge())
+                return date + cache_control->sMaxAge();
 
-            if (cache_control->max_age >= 0)
-                return date + cache_control->max_age;
+            if (cache_control->hasMaxAge())
+                return date + cache_control->maxAge();
         } else {
             /*
              * Conservatively handle the case when we have a max-age
              * header, but no Date for reference?
              */
 
-            if (cache_control->s_maxage >= 0)
+            if (cache_control->hasSMaxAge())
                 return squid_curtime;
 
-            if (cache_control->max_age >= 0)
+            if (cache_control->hasMaxAge())
                 return squid_curtime;
         }
     }
@@ -402,7 +403,7 @@ HttpReply::hdrCacheClean()
     content_type.clean();
 
     if (cache_control) {
-        httpHdrCcDestroy(cache_control);
+        delete cache_control;
         cache_control = NULL;
     }
 
