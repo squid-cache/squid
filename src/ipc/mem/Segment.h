@@ -36,6 +36,13 @@ public:
 
 
 private:
+
+    // not implemented
+    Segment(const Segment &);
+    Segment &operator =(const Segment &);
+
+#if HAVE_SHM
+
     void attach();
     void detach();
     void unlink(); ///< unlink the segment
@@ -43,12 +50,15 @@ private:
 
     static String GenerateName(const char *id);
 
-    // not implemented
-    Segment(const Segment &);
-    Segment &operator =(const Segment &);
+    int theFD; ///< shared memory segment file descriptor
+
+#else // HAVE_SHM
+
+    void checkSupport(const char *const context);
+
+#endif // HAVE_SHM
 
     const String theName; ///< shared memory segment file name
-    int theFD; ///< shared memory segment file descriptor
     void *theMem; ///< pointer to mmapped shared memory segment
     off_t theSize; ///< shared memory segment size
     off_t theReserved; ///< the total number of reserve()d bytes
