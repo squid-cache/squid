@@ -427,6 +427,35 @@ void Ssl::CertificateDb::save()
         throw std::runtime_error("Failed to write " + db_full + " file");
 }
 
+// Normally defined in defines.h file
+#define countof(arr) (sizeof(arr)/sizeof(*arr))
+void Ssl::CertificateDb::deleteRow(const char **row, int rowIndex)
+{
+    const std::string filename(cert_full + "/" + row[cnlSerial] + ".pem");
+    const FileLocker cert_locker(filename);
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+    sk_OPENSSL_PSTRING_delete(db.get()->data, rowIndex);
+#else
+    sk_delete(db.get()->data, rowIndex);
+#endif
+
+    const Columns db_indexes[]={cnlSerial, cnlName};
+    for (unsigned int i = 0; i < countof(db_indexes); i++) {
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+        if (LHASH_OF(OPENSSL_STRING) *fieldIndex =  db.get()->index[db_indexes[i]])
+            lh_OPENSSL_STRING_delete(fieldIndex, (char **)row);
+#else
+        if (LHASH *fieldIndex = db.get()->index[db_indexes[i]])
+            lh_delete(fieldIndex, row);
+#endif
+    }
+
+    subSize(filename);
+    int ret = remove(filename.c_str());
+    if (ret < 0)
+        throw std::runtime_error("Failed to remove certficate file " + filename + " from db");
+}
+
 bool Ssl::CertificateDb::deleteInvalidCertificate()
 {
     if (!db)
@@ -442,15 +471,7 @@ bool Ssl::CertificateDb::deleteInvalidCertificate()
 #endif
 
         if (!sslDateIsInTheFuture(current_row[cnlExp_date])) {
-            std::string filename(cert_full + "/" + current_row[cnlSerial] + ".pem");
-            FileLocker cert_locker(filename);
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
-            sk_OPENSSL_PSTRING_delete(db.get()->data, i);
-#else
-            sk_delete(db.get()->data, i);
-#endif
-            subSize(filename);
-            remove(filename.c_str());
+            deleteRow(current_row, i);
             removed_one = true;
             break;
         }
@@ -478,17 +499,8 @@ bool Ssl::CertificateDb::deleteOldestCertificate()
 #else
     const char **row = (const char **)sk_value(db.get()->data, 0);
 #endif
-    std::string filename(cert_full + "/" + row[cnlSerial] + ".pem");
-    FileLocker cert_locker(filename);
 
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
-    sk_OPENSSL_PSTRING_delete(db.get()->data, 0);
-#else
-    sk_delete(db.get()->data, 0);
-#endif
-
-    subSize(filename);
-    remove(filename.c_str());
+    deleteRow(row, 0);
 
     return true;
 }
@@ -506,15 +518,7 @@ bool Ssl::CertificateDb::deleteByHostname(std::string const & host)
         const char ** current_row = ((const char **)sk_value(db.get()->data, i));
 #endif
         if (host == current_row[cnlName]) {
-            std::string filename(cert_full + "/" + current_row[cnlSerial] + ".pem");
-            FileLocker cert_locker(filename);
-#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
-            sk_OPENSSL_PSTRING_delete(db.get()->data, i);
-#else
-            sk_delete(db.get()->data, i);
-#endif
-            subSize(filename);
-            remove(filename.c_str());
+            deleteRow(current_row, i);
             return true;
         }
     }

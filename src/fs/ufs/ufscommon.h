@@ -73,7 +73,7 @@ public:
     virtual void writeCleanDone();
     virtual void logEntry(const StoreEntry & e, int op) const;
     virtual void parse(int index, char *path);
-    virtual void reconfigure(int, char *);
+    virtual void reconfigure();
     virtual int callback();
     virtual void sync();
     virtual void swappedOut(const StoreEntry &e);
