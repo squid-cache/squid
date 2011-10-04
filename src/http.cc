@@ -1771,7 +1771,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 #endif
 
         /* Add max-age only without no-cache */
-        if (cc->hasMaxAge() && !cc->noCache()) {
+        if (!cc->hasMaxAge() && !cc->noCache()) {
             const char *url =
                 entry ? entry->url() : urlCanonical(request);
             cc->maxAge(getMaxAge(url));
