@@ -215,7 +215,7 @@ Rock::SwapDir::init()
     Must(!map);
     map = new DirMap(path);
 
-    const char *ioModule = UsingSmp() ? "IpcIo" : "Blocking";
+    const char *ioModule = needsDiskStrand() ? "IpcIo" : "Blocking";
     if (DiskIOModule *m = DiskIOModule::Find(ioModule)) {
         debugs(47,2, HERE << "Using DiskIO module: " << ioModule);
         io = m->createStrategy();
@@ -239,7 +239,10 @@ Rock::SwapDir::init()
 bool
 Rock::SwapDir::needsDiskStrand() const
 {
-    return true;
+    const bool wontEvenWorkWithoutDisker = Config.workers > 1;
+    const bool wouldWorkBetterWithDisker = DiskIOModule::Find("IpcIo");
+    return InDaemonMode() && (wontEvenWorkWithoutDisker ||
+        wouldWorkBetterWithDisker);
 }
 
 void

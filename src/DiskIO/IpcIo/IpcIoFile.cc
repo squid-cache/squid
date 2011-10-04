@@ -856,7 +856,7 @@ void IpcIoRr::create(const RunnerRegistry &)
     Must(!owner);
     // XXX: make capacity configurable
     owner = Ipc::FewToFewBiQueue::Init(ShmLabel, Config.workers, 1,
-                                       Config.cacheSwap.n_configured,
+                                       Config.cacheSwap.n_strands,
                                        1 + Config.workers, sizeof(IpcIoMsg),
                                        1024);
 }
