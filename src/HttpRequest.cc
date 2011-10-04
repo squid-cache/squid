@@ -37,6 +37,7 @@
 #include "squid.h"
 #include "DnsLookupDetails.h"
 #include "HttpRequest.h"
+#include "HttpHdrCc.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
@@ -145,7 +146,7 @@ HttpRequest::clean()
     header.clean();
 
     if (cache_control) {
-        httpHdrCcDestroy(cache_control);
+        delete cache_control;
         cache_control = NULL;
     }
 
