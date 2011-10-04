@@ -6,6 +6,7 @@
 #ifndef SQUID_IPC_MEM_SEGMENT_H
 #define SQUID_IPC_MEM_SEGMENT_H
 
+#include "base/RunnersRegistry.h"
 #include "SquidString.h"
 
 namespace Ipc
@@ -63,6 +64,22 @@ private:
     off_t theSize; ///< shared memory segment size
     off_t theReserved; ///< the total number of reserve()d bytes
     bool doUnlink; ///< whether the segment should be unlinked on destruction
+};
+
+/// Base class for runners that create and open shared memory segments.
+/// First may run create() method and then open().
+class RegisteredRunner: public ::RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    virtual void run(const RunnerRegistry &r);
+
+protected:
+    /// called when the runner should create a new memory segment
+    virtual void create(const RunnerRegistry &) = 0;
+    /// called when the runner should open a previously created segment,
+    /// not needed if segments are opened in constructor or init methods
+    virtual void open(const RunnerRegistry &) {}
 };
 
 } // namespace Mem
