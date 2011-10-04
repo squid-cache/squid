@@ -810,12 +810,14 @@ Rock::SwapDir::statfs(StoreEntry &e) const
 
 
 /// initializes shared memory segments used by Rock::SwapDir
-class RockSwapDirRr: public RegisteredRunner
+class RockSwapDirRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void run(const RunnerRegistry &);
     virtual ~RockSwapDirRr();
+
+protected:
+    virtual void create(const RunnerRegistry &);
 
 private:
     Vector<Rock::SwapDir::DirMap::Owner *> owners;
@@ -824,16 +826,15 @@ private:
 RunnerRegistrationEntry(rrAfterConfig, RockSwapDirRr);
 
 
-void RockSwapDirRr::run(const RunnerRegistry &)
+void RockSwapDirRr::create(const RunnerRegistry &)
 {
-    if (IamMasterProcess()) {
-        Must(owners.empty());
-        for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-            if (const Rock::SwapDir *const sd = dynamic_cast<Rock::SwapDir *>(INDEXSD(i))) {
-                // TODO: check whether entryLimitAllowed() has map here
-                Rock::SwapDir::DirMap::Owner *const owner = Rock::SwapDir::DirMap::Init(sd->path, sd->entryLimitAllowed());
-                owners.push_back(owner);
-            }
+    Must(owners.empty());
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        if (const Rock::SwapDir *const sd = dynamic_cast<Rock::SwapDir *>(INDEXSD(i))) {
+            // TODO: check whether entryLimitAllowed() has map here
+            Rock::SwapDir::DirMap::Owner *const owner =
+                Rock::SwapDir::DirMap::Init(sd->path, sd->entryLimitAllowed());
+            owners.push_back(owner);
         }
     }
 }
