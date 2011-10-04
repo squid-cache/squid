@@ -265,7 +265,7 @@ Rock::SwapDir::parse(int anIndex, char *aPath)
 }
 
 void
-Rock::SwapDir::reconfigure(int, char *aPath)
+Rock::SwapDir::reconfigure()
 {
     parseSize(true);
     parseOptions(1);

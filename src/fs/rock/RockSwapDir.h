@@ -24,7 +24,7 @@ public:
     virtual ~SwapDir();
 
     /* public ::SwapDir API */
-    virtual void reconfigure(int, char *);
+    virtual void reconfigure();
     virtual StoreSearch *search(String const url, HttpRequest *);
     virtual StoreEntry *get(const cache_key *key);
     virtual void get(String const, STOREGETCLIENT, void * cbdata);
