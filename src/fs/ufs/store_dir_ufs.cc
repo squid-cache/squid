@@ -110,7 +110,7 @@ UFSSwapDir::parseSizeL1L2()
  */
 
 void
-UFSSwapDir::reconfigure(int aIndex, char *aPath)
+UFSSwapDir::reconfigure()
 {
     parseSizeL1L2();
     parseOptions(1);
