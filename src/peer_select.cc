@@ -184,9 +184,12 @@ peerCheckNeverDirectDone(allow_t answer, void *data)
     case ACCESS_DENIED: // not relevant.
     case ACCESS_DUNNO:  // not relevant.
         break;
+    case ACCESS_REQ_PROXY_AUTH:
+#if WHEN_AUTH_CASES_PORT
     case ACCESS_AUTH_REQUIRED:
     case ACCESS_AUTH_EXPIRED_OK:
     case ACCESS_AUTH_EXPIRED_BAD:
+#endif
         debugs(44, DBG_IMPORTANT, "WARNING: never_direct resulted in " << answer << ". Username ACLs are not reliable here.");
         break;
     }
