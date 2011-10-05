@@ -271,7 +271,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
         if (cc && cc->hasMinFresh()) {
             const int32_t minFresh=cc->minFresh();
             debugs(22, 3, "\tage + min-fresh:\t" << age << " + " <<
-            		minFresh << " = " << age + minFresh);
+                   minFresh << " = " << age + minFresh);
             debugs(22, 3, "\tcheck_time + min-fresh:\t" << check_time << " + "
                    << minFresh << " = " <<
                    mkrfc1123(check_time + minFresh));
@@ -288,7 +288,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     // stale-if-error requires any failure be passed thru when its period is over.
     if (request && entry->mem_obj && entry->mem_obj->getReply() && entry->mem_obj->getReply()->cache_control &&
-    		entry->mem_obj->getReply()->cache_control->hasStaleIfError() &&
+            entry->mem_obj->getReply()->cache_control->hasStaleIfError() &&
             entry->mem_obj->getReply()->cache_control->staleIfError() < staleness) {
 
         debugs(22, 3, "refreshCheck: stale-if-error period expired.");

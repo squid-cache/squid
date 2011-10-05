@@ -45,16 +45,18 @@
  * Not meant for stand-alone storage. Validity of the
  * pointed-to string is responsibility of the caller.
  */
-class StringArea {
-    public:
+class StringArea
+{
+public:
     /// build a StringArea by explicitly assigning pointed-to area and and length
     StringArea(const char * ptr, size_t len): theStart(ptr), theLen(len) {}
     bool operator==(const StringArea &s) const { return theLen==s.theLen && memcmp(theStart,s.theStart,theLen)==0; }
     bool operator!=(const StringArea &s) const { return !operator==(s); }
     bool operator< ( const StringArea &s) const {
-        return (theLen < s.theLen || (theLen == s.theLen && memcmp(theStart,s.theStart,theLen) < 0)) ; }
+        return (theLen < s.theLen || (theLen == s.theLen && memcmp(theStart,s.theStart,theLen) < 0)) ;
+    }
 
-    private:
+private:
     /// pointed to the externally-managed memory area
     const char *theStart;
     /// length of the string
