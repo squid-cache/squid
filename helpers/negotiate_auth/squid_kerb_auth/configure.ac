@@ -377,7 +377,8 @@ return 1;
 #endif
 }],
   ac_cv_have_squid=yes,
-  ac_cv_have_squid=no)
+  ac_cv_have_squid=no,
+  ac_cv_have_squid=yes)
 ])
 LDFLAGS="$LDFLAGS -L../../../lib"
 if test "x$ac_cv_have_squid" = "xyes"; then
