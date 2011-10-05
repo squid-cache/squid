@@ -929,7 +929,7 @@ no_cache:
         if (rep->cache_control->proxyRevalidate() ||
                 rep->cache_control->mustRevalidate() ||
                 rep->cache_control->hasSMaxAge()
-                )
+           )
             EBIT_SET(entry->flags, ENTRY_REVALIDATE);
     }
 

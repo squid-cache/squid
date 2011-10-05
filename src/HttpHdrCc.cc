@@ -49,20 +49,20 @@ typedef struct {
 
 /* order must match that of enum http_hdr_cc_type. The constraint is verified at initialization time */
 static HttpHeaderCcFields CcAttrs[CC_ENUM_END] = {
-        {"public", CC_PUBLIC},
-        {"private", CC_PRIVATE},
-        {"no-cache", CC_NO_CACHE},
-        {"no-store", CC_NO_STORE},
-        {"no-transform", CC_NO_TRANSFORM},
-        {"must-revalidate", CC_MUST_REVALIDATE},
-        {"proxy-revalidate", CC_PROXY_REVALIDATE},
-        {"max-age", CC_MAX_AGE},
-        {"s-maxage", CC_S_MAXAGE},
-        {"max-stale", CC_MAX_STALE},
-        {"min-fresh", CC_MIN_FRESH},
-        {"only-if-cached", CC_ONLY_IF_CACHED},
-        {"stale-if-error", CC_STALE_IF_ERROR},
-        {"Other,", CC_OTHER} /* ',' will protect from matches */
+    {"public", CC_PUBLIC},
+    {"private", CC_PRIVATE},
+    {"no-cache", CC_NO_CACHE},
+    {"no-store", CC_NO_STORE},
+    {"no-transform", CC_NO_TRANSFORM},
+    {"must-revalidate", CC_MUST_REVALIDATE},
+    {"proxy-revalidate", CC_PROXY_REVALIDATE},
+    {"max-age", CC_MAX_AGE},
+    {"s-maxage", CC_S_MAXAGE},
+    {"max-stale", CC_MAX_STALE},
+    {"min-fresh", CC_MIN_FRESH},
+    {"only-if-cached", CC_ONLY_IF_CACHED},
+    {"stale-if-error", CC_STALE_IF_ERROR},
+    {"Other,", CC_OTHER} /* ',' will protect from matches */
 };
 
 /// Map an header name to its type, to expedite parsing
@@ -83,7 +83,7 @@ void
 httpHdrCcInitModule(void)
 {
     /* build lookup and accounting structures */
-    for (int32_t i = 0;i < CC_ENUM_END; ++i) {
+    for (int32_t i = 0; i < CC_ENUM_END; ++i) {
         const HttpHeaderCcFields &f=CcAttrs[i];
         assert(i == f.id); /* verify assumption: the id is the key into the array */
         const StringArea k(f.name,strlen(f.name));
@@ -188,14 +188,30 @@ HttpHdrCc::parse(const String & str)
             }
             break;
 
-        case CC_PUBLIC: Public(true); break;
-        case CC_PRIVATE: Private(true); break;
-        case CC_NO_CACHE: noCache(true); break;
-        case CC_NO_STORE: noStore(true); break;
-        case CC_NO_TRANSFORM: noTransform(true); break;
-        case CC_MUST_REVALIDATE: mustRevalidate(true); break;
-        case CC_PROXY_REVALIDATE: proxyRevalidate(true); break;
-        case CC_ONLY_IF_CACHED: onlyIfCached(true); break;
+        case CC_PUBLIC:
+            Public(true);
+            break;
+        case CC_PRIVATE:
+            Private(true);
+            break;
+        case CC_NO_CACHE:
+            noCache(true);
+            break;
+        case CC_NO_STORE:
+            noStore(true);
+            break;
+        case CC_NO_TRANSFORM:
+            noTransform(true);
+            break;
+        case CC_MUST_REVALIDATE:
+            mustRevalidate(true);
+            break;
+        case CC_PROXY_REVALIDATE:
+            proxyRevalidate(true);
+            break;
+        case CC_ONLY_IF_CACHED:
+            onlyIfCached(true);
+            break;
 
         case CC_OTHER:
             if (other.size())
