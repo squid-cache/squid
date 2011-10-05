@@ -53,7 +53,7 @@ HttpHdrCc::setValue(int32_t &value, int32_t new_value, http_hdr_cc_type hdr, boo
     if (setting) {
         if (new_value < 0) {
             debugs(65,3,HERE << "rejecting negative-value Cache-Control directive " << hdr
-                << " value " << new_value );
+                   << " value " << new_value );
             return;
         }
     } else {
