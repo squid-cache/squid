@@ -6,6 +6,7 @@
 #include "ConfigParser.h"
 #include "adaptation/ServiceConfig.h"
 #include "ip/tools.h"
+#include <set>
 
 Adaptation::ServiceConfig::ServiceConfig():
         port(-1), method(methodNone), point(pointNone),
@@ -69,29 +70,41 @@ Adaptation::ServiceConfig::parse()
     bypass = routing = false;
 
     // handle optional service name=value parameters
-    const char *lastOption = NULL;
     bool grokkedUri = false;
     bool onOverloadSet = false;
+    std::set<std::string> options;
+    
     while (char *option = strtok(NULL, w_space)) {
-        if (strcmp(option, "0") == 0) { // backward compatibility
-            bypass = false;
-            continue;
-        }
-        if (strcmp(option, "1") == 0) { // backward compatibility
-            bypass = true;
-            continue;
-        }
-
         const char *name = option;
-        char *value = strstr(option, "=");
-        if (!value) {
-            lastOption = option;
-            break;
+        const char *value = "";
+        if (strcmp(option, "0") == 0) { // backward compatibility
+            name = "bypass";
+            value = "off";
+            debugs(3, opt_parse_cfg_only?0:1, "UPGRADE: Please use 'bypass=off' option to disable service bypass");
+        }  else if (strcmp(option, "1") == 0) { // backward compatibility
+            name = "bypass";
+            value = "on";
+            debugs(3, opt_parse_cfg_only?0:1, "UPGRADE: Please use 'bypass=on' option to enable service bypass");
+        } else {
+            char *eq = strstr(option, "=");
+            const char *sffx = strstr(option, "://");
+            if (!eq || (sffx && sffx < eq)) { //no "=" or has the form "icap://host?arg=val"
+                name = "uri";
+                value = option;
+            }  else { // a normal name=value option
+                *eq = '\0'; // terminate option name
+                value = eq + 1; // skip '='
+            }
         }
-        *value = '\0'; // terminate option name
-        ++value; // skip '='
 
-        // TODO: warn if option is set twice?
+        // Check if option is set twice
+        if (options.find(name) != options.end()) {
+            debugs(3, DBG_CRITICAL, cfg_filename << ':' << config_lineno << ": " << 
+                   "Duplicate option \"" << name << "\" in adaptation service definition");
+            return false;
+        }
+        options.insert(name);
+
         bool grokked = false;
         if (strcmp(name, "bypass") == 0) {
             grokked = grokBool(bypass, name, value);
@@ -119,14 +132,10 @@ Adaptation::ServiceConfig::parse()
     if (!onOverloadSet)
         onOverload = bypass ? srvBypass : srvWait;
 
-    // what is left must be the service URI
-    if (!grokkedUri && !grokUri(lastOption))
-        return false;
-
-    // there should be nothing else left
-    if (const char *tail = strtok(NULL, w_space)) {
-        debugs(3, 0, cfg_filename << ':' << config_lineno << ": " <<
-               "garbage after adaptation service URI: " << tail);
+    // is the service URI set?
+    if (!grokkedUri) {
+        debugs(3, DBG_CRITICAL, cfg_filename << ':' << config_lineno << ": " << 
+               "No \"uri\" option in adaptation service definition");
         return false;
     }
 
