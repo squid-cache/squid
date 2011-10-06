@@ -215,7 +215,7 @@ Rock::SwapDir::init()
     Must(!map);
     map = new DirMap(path);
 
-    const char *ioModule = UsingSmp() ? "IpcIo" : "Blocking";
+    const char *ioModule = needsDiskStrand() ? "IpcIo" : "Blocking";
     if (DiskIOModule *m = DiskIOModule::Find(ioModule)) {
         debugs(47,2, HERE << "Using DiskIO module: " << ioModule);
         io = m->createStrategy();
@@ -239,7 +239,10 @@ Rock::SwapDir::init()
 bool
 Rock::SwapDir::needsDiskStrand() const
 {
-    return true;
+    const bool wontEvenWorkWithoutDisker = Config.workers > 1;
+    const bool wouldWorkBetterWithDisker = DiskIOModule::Find("IpcIo");
+    return InDaemonMode() && (wontEvenWorkWithoutDisker ||
+        wouldWorkBetterWithDisker);
 }
 
 void
@@ -400,28 +403,25 @@ Rock::SwapDir::validateOptions()
     if (max_objsize <= 0)
         fatal("Rock store requires a positive max-size");
 
-#if THIS_CODE_IS_FIXED_AND_MOVED
-    // XXX: should not use map as it is not yet created
-    // XXX: max_size is in Bytes now
-    // XXX: Use DBG_IMPORTANT (and DBG_CRITICAL if opt_parse_cfg_only?)
-    // TODO: Shrink max_size to avoid waste?
-    const int64_t mapRoundWasteMx = max_objsize*sizeof(long)*8;
-    const int64_t sizeRoundWasteMx = 1024; // max_size stored in KB
-    const int64_t roundingWasteMx = max(mapRoundWasteMx, sizeRoundWasteMx);
-    const int64_t totalWaste = maxSize() - diskOffsetLimit();
-    assert(diskOffsetLimit() <= maxSize());
+    const int64_t maxSizeRoundingWaste = 1024 * 1024; // size is configured in MB
+    const int64_t maxObjectSizeRoundingWaste = maxObjectSize();
+    const int64_t maxRoundingWaste =
+        max(maxSizeRoundingWaste, maxObjectSizeRoundingWaste);
+    const int64_t usableDiskSize = diskOffset(entryLimitAllowed());
+    const int64_t diskWasteSize = maxSize() - usableDiskSize;
+    Must(diskWasteSize >= 0);
 
     // warn if maximum db size is not reachable due to sfileno limit
-    if (map->entryLimit() == entryLimitHigh() && totalWaste > roundingWasteMx) {
-        debugs(47, 0, "Rock store cache_dir[" << index << "]:");
-        debugs(47, 0, "\tmaximum number of entries: " << map->entryLimit());
-        debugs(47, 0, "\tmaximum entry size: " << max_objsize << " bytes");
-        debugs(47, 0, "\tmaximum db size: " << maxSize() << " bytes");
-        debugs(47, 0, "\tusable db size:  " << diskOffsetLimit() << " bytes");
-        debugs(47, 0, "\tdisk space waste: " << totalWaste << " bytes");
-        debugs(47, 0, "WARNING: Rock store config wastes space.");
+    if (entryLimitAllowed() == entryLimitHigh() &&
+        diskWasteSize >= maxRoundingWaste) {
+        debugs(47, DBG_CRITICAL, "Rock store cache_dir[" << index << "] '" << path << "':");
+        debugs(47, DBG_CRITICAL, "\tmaximum number of entries: " << entryLimitAllowed());
+        debugs(47, DBG_CRITICAL, "\tmaximum object size: " << maxObjectSize() << " Bytes");
+        debugs(47, DBG_CRITICAL, "\tmaximum db size: " << maxSize() << " Bytes");
+        debugs(47, DBG_CRITICAL, "\tusable db size:  " << usableDiskSize << " Bytes");
+        debugs(47, DBG_CRITICAL, "\tdisk space waste: " << diskWasteSize << " Bytes");
+        debugs(47, DBG_CRITICAL, "WARNING: Rock store config wastes space.");
     }
-#endif
 }
 
 void
@@ -468,7 +468,8 @@ Rock::SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load)
 
     // Do not start I/O transaction if there are less than 10% free pages left.
     // TODO: reserve page instead
-    if (Ipc::Mem::PageLevel(Ipc::Mem::PageId::ioPage) >= 0.9 * Ipc::Mem::PageLimit(Ipc::Mem::PageId::ioPage)) {
+    if (needsDiskStrand() &&
+        Ipc::Mem::PageLevel(Ipc::Mem::PageId::ioPage) >= 0.9 * Ipc::Mem::PageLimit(Ipc::Mem::PageId::ioPage)) {
         debugs(47, 5, HERE << "too few shared pages for IPC I/O left");
         return false;
     }
@@ -561,7 +562,8 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
 
     // Do not start I/O transaction if there are less than 10% free pages left.
     // TODO: reserve page instead
-    if (Ipc::Mem::PageLevel(Ipc::Mem::PageId::ioPage) >= 0.9 * Ipc::Mem::PageLimit(Ipc::Mem::PageId::ioPage)) {
+    if (needsDiskStrand() &&
+        Ipc::Mem::PageLevel(Ipc::Mem::PageId::ioPage) >= 0.9 * Ipc::Mem::PageLimit(Ipc::Mem::PageId::ioPage)) {
         debugs(47, 5, HERE << "too few shared pages for IPC I/O left");
         return NULL;
     }
@@ -810,12 +812,14 @@ Rock::SwapDir::statfs(StoreEntry &e) const
 
 
 /// initializes shared memory segments used by Rock::SwapDir
-class RockSwapDirRr: public RegisteredRunner
+class RockSwapDirRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
-    virtual void run(const RunnerRegistry &);
     virtual ~RockSwapDirRr();
+
+protected:
+    virtual void create(const RunnerRegistry &);
 
 private:
     Vector<Rock::SwapDir::DirMap::Owner *> owners;
@@ -824,16 +828,14 @@ private:
 RunnerRegistrationEntry(rrAfterConfig, RockSwapDirRr);
 
 
-void RockSwapDirRr::run(const RunnerRegistry &)
+void RockSwapDirRr::create(const RunnerRegistry &)
 {
-    if (IamMasterProcess()) {
-        Must(owners.empty());
-        for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
-            if (const Rock::SwapDir *const sd = dynamic_cast<Rock::SwapDir *>(INDEXSD(i))) {
-                // TODO: check whether entryLimitAllowed() has map here
-                Rock::SwapDir::DirMap::Owner *const owner = Rock::SwapDir::DirMap::Init(sd->path, sd->entryLimitAllowed());
-                owners.push_back(owner);
-            }
+    Must(owners.empty());
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        if (const Rock::SwapDir *const sd = dynamic_cast<Rock::SwapDir *>(INDEXSD(i))) {
+            Rock::SwapDir::DirMap::Owner *const owner =
+                Rock::SwapDir::DirMap::Init(sd->path, sd->entryLimitAllowed());
+            owners.push_back(owner);
         }
     }
 }

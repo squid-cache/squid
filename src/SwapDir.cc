@@ -40,7 +40,7 @@
 
 SwapDir::SwapDir(char const *aType): theType(aType),
         max_size(0),
-        path(NULL), index(-1), min_objsize(0), max_objsize (-1),
+        path(NULL), index(-1), disker(-1), min_objsize(0), max_objsize (-1),
         repl(NULL), removals(0), scanned(0),
         cleanLog(NULL)
 {
@@ -198,7 +198,7 @@ SwapDir::active() const
         return true;
 
     // we are inside a disker dedicated to this disk
-    if (IamDiskProcess() && index == (KidIdentifier-1 - Config.workers))
+    if (KidIdentifier == disker)
         return true;
 
     return false; // Coordinator, wrong disker, etc.

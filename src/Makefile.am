@@ -2162,6 +2162,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/testHttpRequestMethod.h \
 	tests/testHttpRequestMethod.cc \
 	tests/testMain.cc \
+	tests/stub_DiskIOModule.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
 	time.cc \
