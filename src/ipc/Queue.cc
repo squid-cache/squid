@@ -40,7 +40,8 @@ ReadersId(String id)
 
 InstanceIdDefinitions(Ipc::QueueReader, "ipcQR");
 
-Ipc::QueueReader::QueueReader(): popBlocked(1), popSignal(0)
+Ipc::QueueReader::QueueReader(): popBlocked(1), popSignal(0),
+        rateLimit(0), balance(0)
 {
     debugs(54, 7, HERE << "constructed " << id);
 }
@@ -196,14 +197,25 @@ Ipc::FewToFewBiQueue::oneToOneQueue(const Group fromGroup, const int fromProcess
     return (*queues)[oneToOneQueueIndex(fromGroup, fromProcessId, toGroup, toProcessId)];
 }
 
+int
+Ipc::FewToFewBiQueue::readerIndex(const Group group, const int processId) const
+{
+    Must(validProcessId(group, processId));
+    return group == groupA ?
+           processId - metadata->theGroupAIdOffset :
+           metadata->theGroupASize + processId - metadata->theGroupBIdOffset;
+}
+
 Ipc::QueueReader &
 Ipc::FewToFewBiQueue::reader(const Group group, const int processId)
 {
-    Must(validProcessId(group, processId));
-    const int index =  group == groupA ?
-                       processId - metadata->theGroupAIdOffset :
-                       metadata->theGroupASize + processId - metadata->theGroupBIdOffset;
-    return readers->theReaders[index];
+    return readers->theReaders[readerIndex(group, processId)];
+}
+
+const Ipc::QueueReader &
+Ipc::FewToFewBiQueue::reader(const Group group, const int processId) const
+{
+    return readers->theReaders[readerIndex(group, processId)];
 }
 
 void
@@ -219,6 +231,35 @@ Ipc::FewToFewBiQueue::clearReaderSignal(const int remoteProcessId)
     // remoteProcessId queue first; but it does not seem to help much and might
     // introduce some bias so we do not do that for now:
     // theLastPopProcessId = remoteProcessId;
+}
+
+bool
+Ipc::FewToFewBiQueue::popReady() const
+{
+    // mimic FewToFewBiQueue::pop() but quit just before popping
+    int popProcessId = theLastPopProcessId; // preserve for future pop()
+    for (int i = 0; i < remoteGroupSize(); ++i) {
+        if (++popProcessId >= remoteGroupIdOffset() + remoteGroupSize())
+            popProcessId = remoteGroupIdOffset();
+        const OneToOneUniQueue &queue = oneToOneQueue(remoteGroup(), popProcessId, theLocalGroup, theLocalProcessId);
+        if (!queue.empty())
+            return true;
+    }
+    return false; // most likely, no process had anything to pop
+}
+
+Ipc::QueueReader::Balance &
+Ipc::FewToFewBiQueue::localBalance()
+{
+    QueueReader &r = reader(theLocalGroup, theLocalProcessId);
+    return r.balance;
+}
+
+Ipc::QueueReader::Rate &
+Ipc::FewToFewBiQueue::localRateLimit()
+{
+    QueueReader &r = reader(theLocalGroup, theLocalProcessId);
+    return r.rateLimit;
 }
 
 Ipc::FewToFewBiQueue::Metadata::Metadata(const int aGroupASize, const int aGroupAIdOffset, const int aGroupBSize, const int aGroupBIdOffset):

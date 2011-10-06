@@ -67,6 +67,8 @@ protected:
     void validateOptions(); ///< warns of configuration problems; may quit
     bool parseTimeOption(char const *option, const char *value, int reconfiguring);
     void dumpTimeOption(StoreEntry * e) const;
+    bool parseRateOption(char const *option, const char *value, int reconfiguring);
+    void dumpRateOption(StoreEntry * e) const;
 
     void rebuild(); ///< starts loading and validating stored entry metadata
     ///< used to add entries successfully loaded during rebuild

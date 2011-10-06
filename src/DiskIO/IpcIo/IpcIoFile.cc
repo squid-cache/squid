@@ -96,6 +96,9 @@ IpcIoFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
             IpcIoFiles.insert(std::make_pair(diskId, this)).second;
         Must(inserted);
 
+        queue->localRateLimit() =
+            static_cast<Ipc::QueueReader::Rate::Value>(config.ioRate);
+
         Ipc::HereIamMessage ann(Ipc::StrandCoord(KidIdentifier, getpid()));
         ann.strand.tag = dbName;
         Ipc::TypedMsgHdr message;
@@ -649,11 +652,71 @@ diskerWrite(IpcIoMsg &ipcIo)
 
 
 void
-IpcIoFile::DiskerHandleMoreRequests(void*)
+IpcIoFile::DiskerHandleMoreRequests(void *source)
 {
-    debugs(47, 7, HERE << "resuming handling requests");
+    debugs(47, 7, HERE << "resuming handling requests after " <<
+           static_cast<const char *>(source));
     DiskerHandleMoreRequestsScheduled = false;
     IpcIoFile::DiskerHandleRequests();
+}
+
+bool
+IpcIoFile::WaitBeforePop()
+{
+    const Ipc::QueueReader::Rate::Value ioRate = queue->localRateLimit();
+    const double maxRate = ioRate/1e3; // req/ms
+
+    // do we need to enforce configured I/O rate?
+    if (maxRate <= 0)
+        return false;
+
+    // is there an I/O request we could potentially delay?
+    if (!queue->popReady()) {
+        // unlike pop(), popReady() is not reliable and does not block reader
+        // so we must proceed with pop() even if it is likely to fail
+        return false;
+    }
+
+    static timeval LastIo = current_time;
+
+    const double ioDuration = 1.0 / maxRate; // ideal distance between two I/Os
+    // do not accumulate more than 100ms or 100 I/Os, whichever is smaller
+    const int64_t maxImbalance = min(static_cast<int64_t>(100), static_cast<int64_t>(100 * ioDuration));
+
+    const double credit = ioDuration; // what the last I/O should have cost us
+    const double debit = tvSubMsec(LastIo, current_time); // actual distance from the last I/O
+    LastIo = current_time;
+
+    Ipc::QueueReader::Balance &balance = queue->localBalance();
+    balance += static_cast<int64_t>(credit - debit);
+
+    debugs(47, 7, HERE << "rate limiting balance: " << balance << " after +" << credit << " -" << debit);
+
+    if (balance > maxImbalance) {
+        // if we accumulated too much time for future slow I/Os,
+        // then shed accumulated time to keep just half of the excess
+        const int64_t toSpend = balance - maxImbalance/2;
+
+        if (toSpend/1e3 > Timeout)
+            debugs(47, DBG_IMPORTANT, "WARNING: Rock disker delays I/O " <<
+                   "requests for " << (toSpend/1e3) << " seconds to obey " <<
+                   ioRate << "/sec rate limit");
+
+        debugs(47, 3, HERE << "rate limiting by " << toSpend << " ms to get" <<
+               (1e3*maxRate) << "/sec rate");
+        eventAdd("IpcIoFile::DiskerHandleMoreRequests",
+                 &IpcIoFile::DiskerHandleMoreRequests,
+                 const_cast<char*>("rate limiting"),
+                 toSpend/1e3, 0, false);
+        DiskerHandleMoreRequestsScheduled = true;
+        return true;
+    } else
+    if (balance < -maxImbalance) {
+        // do not owe "too much" to avoid "too large" bursts of I/O
+        balance = -maxImbalance;
+    }
+
+    return false;
 }
 
 void
@@ -668,7 +731,7 @@ IpcIoFile::DiskerHandleRequests()
     int popped = 0;
     int workerId = 0;
     IpcIoMsg ipcIo;
-    while (queue->pop(workerId, ipcIo)) {
+    while (!WaitBeforePop() && queue->pop(workerId, ipcIo)) {
         ++popped;
 
         // at least one I/O per call is guaranteed if the queue is not empty
@@ -682,7 +745,8 @@ IpcIoFile::DiskerHandleRequests()
                 const double minBreakSecs = 0.001;
                 eventAdd("IpcIoFile::DiskerHandleMoreRequests",
                          &IpcIoFile::DiskerHandleMoreRequests,
-                         NULL, minBreakSecs, 0, false);
+                         const_cast<char*>("long I/O loop"),
+                         minBreakSecs, 0, false);
                 DiskerHandleMoreRequestsScheduled = true;
             }
             debugs(47, 3, HERE << "pausing after " << popped << " I/Os in " <<
