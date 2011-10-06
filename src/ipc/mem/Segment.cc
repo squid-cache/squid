@@ -267,7 +267,7 @@ Ipc::Mem::RegisteredRunner::run(const RunnerRegistry &r)
 #if HAVE_SHM
     if (IamMasterProcess())
 #else
-    if (IamWorker())
+    if (IamWorkerProcess())
 #endif
         create(r);
 
