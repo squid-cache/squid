@@ -46,10 +46,12 @@ enum { AtomicOperationsSupported = 1 };
 #else
 /// A wrapper to provide AtomicWordT API (and asserting implementation)
 /// where we do not support atomic operations. This avoids ifdefs in core code.
-template <class Value>
+template <class ValueType>
 class AtomicWordT
 {
 public:
+    typedef ValueType Value;
+
     AtomicWordT() {} // leave value unchanged
     AtomicWordT(Value aValue): value(aValue) {} // XXX: unsafe
 
