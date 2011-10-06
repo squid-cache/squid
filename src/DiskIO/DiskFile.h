@@ -52,10 +52,13 @@ public:
     class Config
     {
     public:
-        Config(): ioTimeout(0) {}
+        Config(): ioTimeout(0), ioRate(-1) {}
 
         /// canRead/Write should return false if expected I/O delay exceeds it
         time_msec_t ioTimeout; // not enforced if zero, which is the default
+
+        /// shape I/O request stream to approach that many per second
+        int ioRate; // not enforced if negative, which is the default
     };
 
     typedef RefCount<DiskFile> Pointer;
