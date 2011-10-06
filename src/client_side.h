@@ -262,6 +262,7 @@ public:
 
     bool closing() const;
     void startClosing(const char *reason);
+    void expectNoForwarding(); ///< cleans up virgin request [body] forwarding state
 
     BodyPipe::Pointer expectRequestBody(int64_t size);
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
