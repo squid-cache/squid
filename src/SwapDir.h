@@ -179,6 +179,7 @@ protected:
 public:
     char *path;
     int index;			/* This entry's index into the swapDirs array */
+    int disker; ///< disker kid id dedicated to this SwapDir or -1
     int64_t min_objsize;
     int64_t max_objsize;
     RemovalPolicy *repl;

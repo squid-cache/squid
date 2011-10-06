@@ -6,6 +6,7 @@
  */
 
 #include "config.h"
+#include "base/TextException.h"
 #include "ipc/Kids.h"
 #include "protos.h"
 
@@ -33,8 +34,7 @@ void Kids::init()
     }
 
     // add Kid records for all disk processes
-    // (XXX: some cache_dirs do not need this)
-    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+    for (int i = 0; i < Config.cacheSwap.n_strands; ++i) {
         snprintf(kid_name, sizeof(kid_name), "(squid-disk-%d)", (int)(storage.size()+1));
         storage.push_back(Kid(kid_name));
     }
@@ -44,6 +44,8 @@ void Kids::init()
         snprintf(kid_name, sizeof(kid_name), "(squid-coord-%d)", (int)(storage.size()+1));
         storage.push_back(Kid(kid_name));
     }
+
+    Must(storage.size() == static_cast<size_t>(NumberOfKids()));
 }
 
 /// returns kid by pid

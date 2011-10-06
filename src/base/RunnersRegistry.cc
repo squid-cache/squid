@@ -44,7 +44,6 @@ void
 DeactivateRegistered(const RunnerRegistry &registryId)
 {
     Runners &runners = GetRunners(registryId);
-    typedef Runners::iterator RRI;
     while (!runners.empty()) {
         delete runners.back();
         runners.pop_back();
