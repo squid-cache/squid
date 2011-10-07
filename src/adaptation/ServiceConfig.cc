@@ -73,7 +73,7 @@ Adaptation::ServiceConfig::parse()
     bool grokkedUri = false;
     bool onOverloadSet = false;
     std::set<std::string> options;
-    
+
     while (char *option = strtok(NULL, w_space)) {
         const char *name = option;
         const char *value = "";
@@ -99,7 +99,7 @@ Adaptation::ServiceConfig::parse()
 
         // Check if option is set twice
         if (options.find(name) != options.end()) {
-            debugs(3, DBG_CRITICAL, cfg_filename << ':' << config_lineno << ": " << 
+            debugs(3, DBG_CRITICAL, cfg_filename << ':' << config_lineno << ": " <<
                    "Duplicate option \"" << name << "\" in adaptation service definition");
             return false;
         }
@@ -134,7 +134,7 @@ Adaptation::ServiceConfig::parse()
 
     // is the service URI set?
     if (!grokkedUri) {
-        debugs(3, DBG_CRITICAL, cfg_filename << ':' << config_lineno << ": " << 
+        debugs(3, DBG_CRITICAL, cfg_filename << ':' << config_lineno << ": " <<
                "No \"uri\" option in adaptation service definition");
         return false;
     }
