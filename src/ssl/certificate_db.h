@@ -17,7 +17,8 @@
 namespace Ssl
 {
 /// maintains an exclusive blocking file-based lock
-class Lock {
+class Lock
+{
 public:
     explicit Lock(std::string const &filename); ///<  creates an unlocked lock
     ~Lock(); ///<  releases the lock if it is locked
@@ -46,7 +47,7 @@ private:
     bool weLocked; ///<  whether we locked the lock
     Lock &lock; ///<  the lock we are operating on
     const std::string fileName; ///<  where the lock was needed
-    const int lineNo; ///<  where the lock was needed    
+    const int lineNo; ///<  where the lock was needed
 };
 
 /// convenience macro to pass source code location to Locker and others

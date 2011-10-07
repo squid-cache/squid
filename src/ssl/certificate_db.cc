@@ -26,11 +26,11 @@
 #define HERE "(ssl_crtd) " << __FILE__ << ':' << __LINE__ << ": "
 
 Ssl::Lock::Lock(std::string const &aFilename) :
-    filename(aFilename),
+        filename(aFilename),
 #if _SQUID_MSWIN_
-    hFile(INVALID_HANDLE_VALUE)
+        hFile(INVALID_HANDLE_VALUE)
 #else
-    fd(-1)
+        fd(-1)
 #endif
 {
 }
@@ -66,7 +66,7 @@ void Ssl::Lock::lock()
 }
 
 void Ssl::Lock::unlock()
-{ 
+{
 #if _SQUID_MSWIN_
     if (hFile != INVALID_HANDLE_VALUE) {
         UnlockFile(hFile, 0, 0, 1, 0);
@@ -90,8 +90,8 @@ Ssl::Lock::~Lock()
         unlock();
 }
 
-Ssl::Locker::Locker(Lock &aLock, const char *aFileName, int aLineNo): 
-    weLocked(false), lock(aLock), fileName(aFileName), lineNo(aLineNo)
+Ssl::Locker::Locker(Lock &aLock, const char *aFileName, int aLineNo):
+        weLocked(false), lock(aLock), fileName(aFileName), lineNo(aLineNo)
 {
     if (!lock.locked()) {
         lock.lock();
