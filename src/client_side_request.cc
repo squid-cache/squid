@@ -1788,6 +1788,7 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
 
     request->detailError(ERR_ICAP_FAILURE, errDetail);
     c->flags.readMore = true;
+    c->expectNoForwarding();
     node = (clientStreamNode *)client_stream.tail->data;
     clientStreamRead(node, this, node->readBuffer);
 }
