@@ -6606,17 +6606,19 @@ DEFAULT: none
 DOC_START
 	Defines a single ICAP service using the following format:
 
-	icap_service service_name vectoring_point [options] service_url
+	icap_service id vectoring_point uri [option ...]
 
-	service_name: ID
-		an opaque identifier which must be unique in squid.conf
+	id: ID
+		an opaque identifier or name which is used to direct traffic to
+		this specific service. Must be unique among all adaptation
+		services in squid.conf.
 
 	vectoring_point: reqmod_precache|reqmod_postcache|respmod_precache|respmod_postcache
 		This specifies at which point of transaction processing the
 		ICAP service should be activated. *_postcache vectoring points
 		are not yet supported.
 
-	service_url: icap://servername:port/servicepath
+	uri: icap://servername:port/servicepath
 		ICAP server and service location.
 
 	ICAP does not allow a single service to handle both REQMOD and RESPMOD
@@ -6685,8 +6687,8 @@ DOC_START
 	deprecated but supported for backward compatibility.
 
 Example:
-icap_service svcBlocker reqmod_precache bypass=0 icap://icap1.mydomain.net:1344/reqmod
-icap_service svcLogger reqmod_precache routing=on icap://icap2.mydomain.net:1344/respmod
+icap_service svcBlocker reqmod_precache icap://icap1.mydomain.net:1344/reqmod bypass=0
+icap_service svcLogger reqmod_precache icap://icap2.mydomain.net:1344/respmod routing=on
 DOC_END
 
 NAME: icap_class
@@ -6738,25 +6740,56 @@ DEFAULT: none
 DOC_START
 	Defines a single eCAP service
 
-	ecap_service servicename vectoring_point bypass service_url
+	ecap_service id vectoring_point uri [option ...]
 
-	vectoring_point = reqmod_precache|reqmod_postcache|respmod_precache|respmod_postcache
+        id: ID
+		an opaque identifier or name which is used to direct traffic to
+		this specific service. Must be unique among all adaptation
+		services in squid.conf.
+
+	vectoring_point: reqmod_precache|reqmod_postcache|respmod_precache|respmod_postcache
 		This specifies at which point of transaction processing the
 		eCAP service should be activated. *_postcache vectoring points
 		are not yet supported.
-	bypass = 1|0
-		If set to 1, the eCAP service is treated as optional. If the
-		service cannot be reached or malfunctions, Squid will try to
-		ignore any errors and process the message as if the service
+
+	uri: ecap://vendor/service_name?custom&cgi=style&parameters=optional
+		Squid uses the eCAP service URI to match this configuration
+		line with one of the dynamically loaded services. Each loaded
+		eCAP service must have a unique URI. Obtain the right URI from
+		the service provider.
+
+
+	Service options are separated by white space. eCAP services support
+	the following name=value options:
+
+	bypass=on|off|1|0
+		If set to 'on' or '1', the eCAP service is treated as optional.
+		If the service cannot be reached or malfunctions, Squid will try
+		to ignore any errors and process the message as if the service
 		was not enabled. No all eCAP errors can be bypassed.
-		If set to 0, the eCAP service is treated as essential and all
-		eCAP errors will result in an error page returned to the
+		If set to 'off' or '0', the eCAP service is treated as essential
+		and all eCAP errors will result in an error page returned to the
 		HTTP client.
-	service_url = ecap://vendor/service_name?custom&cgi=style&parameters=optional
+
+                Bypass is off by default: services are treated as essential.
+
+	routing=on|off|1|0
+		If set to 'on' or '1', the eCAP service is allowed to
+		dynamically change the current message adaptation plan by
+		returning a chain of services to be used next.
+
+		Dynamic adaptation plan may cross or cover multiple supported
+		vectoring points in their natural processing order.
+
+		Routing is not allowed by default.
+
+	Older ecap_service format without optional named parameters is
+	deprecated but supported for backward compatibility.
+
 
 Example:
-ecap_service service_1 reqmod_precache 0 ecap://filters-R-us/leakDetector?on_error=block
-ecap_service service_2 respmod_precache 1 icap://filters-R-us/virusFilter?config=/etc/vf.cfg
+ecap_service s1 reqmod_precache ecap://filters.R.us/leakDetector?on_error=block bypass=off
+ecap_service s2 respmod_precache ecap://filters.R.us/virusFilter config=/etc/vf.cfg bypass=on
 DOC_END
 
 NAME: loadable_modules
