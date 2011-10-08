@@ -9,10 +9,12 @@
 #if HAVE_ATOMIC_OPS
 /// Supplies atomic operations for an integral Value in memory shared by kids.
 /// Used to implement non-blocking shared locks, queues, tables, and pools.
-template <class Value>
+template <class ValueType>
 class AtomicWordT
 {
 public:
+    typedef ValueType Value;
+
     AtomicWordT() {} // leave value unchanged
     AtomicWordT(Value aValue): value(aValue) {} // XXX: unsafe
 
@@ -44,10 +46,12 @@ enum { AtomicOperationsSupported = 1 };
 #else
 /// A wrapper to provide AtomicWordT API (and asserting implementation)
 /// where we do not support atomic operations. This avoids ifdefs in core code.
-template <class Value>
+template <class ValueType>
 class AtomicWordT
 {
 public:
+    typedef ValueType Value;
+
     AtomicWordT() {} // leave value unchanged
     AtomicWordT(Value aValue): value(aValue) {} // XXX: unsafe
 

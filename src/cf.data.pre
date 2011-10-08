@@ -2759,7 +2759,7 @@ DOC_START
 
 	The rock store type:
 
-	    cache_dir rock Directory-Name Mbytes <max-size=bytes>
+	    cache_dir rock Directory-Name Mbytes <max-size=bytes> [options]
 
 	The Rock Store type is a database-style storage. All cached
 	entries are stored in a "database" file, using fixed-size slots,
@@ -2774,6 +2774,18 @@ DOC_START
 	enforcement. Ignored when using blocking I/O module because
 	blocking synchronous I/O does not allow Squid to estimate the
 	expected swap wait time.
+
+	max-swap-rate=swaps/sec: Artificially limits disk access using
+	the specified I/O rate limit. Swap in and swap out requests that
+	would cause the average I/O rate to exceed the limit are
+	delayed. This is necessary on file systems that buffer "too
+	many" writes and then start blocking Squid and other processes
+	while committing those writes to disk.  Usually used together
+	with swap-timeout to avoid excessive delays and queue overflows
+	when disk demand exceeds available disk "bandwidth". By default
+	and when set to zero, disables the disk I/O rate limit
+	enforcement. Currently supported by IpcIo module only.
+
 
 	The coss store type:
 

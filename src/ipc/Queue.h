@@ -46,6 +46,15 @@ private:
     AtomicWord popSignal; ///< whether writer has sent and reader has not received notification
 
 public:
+    typedef AtomicWord Rate; ///< pop()s per second
+    Rate rateLimit; ///< pop()s per second limit if positive
+
+    // we need a signed atomic type because balance may get negative
+    typedef AtomicWordT<int> AtomicSignedMsec;
+    typedef AtomicSignedMsec Balance;
+    /// how far ahead the reader is compared to a perfect read/sec event rate
+    Balance balance;
+
     /// unique ID for debugging which reader is used (works across processes)
     const InstanceId<QueueReader> id;
 };
@@ -189,8 +198,18 @@ public:
     /// calls OneToOneUniQueue::push() using the given process queue
     template <class Value> bool push(const int remoteProcessId, const Value &value);
 
+    // TODO: rename to findOldest() or some such
     /// calls OneToOneUniQueue::peek() using the given process queue
     template<class Value> bool peek(const int remoteProcessId, Value &value) const;
+
+    /// returns true if pop() would have probably succeeded but does not pop()
+    bool popReady() const;
+
+    /// returns local reader's balance
+    QueueReader::Balance &localBalance();
+
+    /// returns local reader's rate limit
+    QueueReader::Rate &localRateLimit();
 
 private:
     bool validProcessId(const Group group, const int processId) const;
@@ -198,6 +217,8 @@ private:
     const OneToOneUniQueue &oneToOneQueue(const Group fromGroup, const int fromProcessId, const Group toGroup, const int toProcessId) const;
     OneToOneUniQueue &oneToOneQueue(const Group fromGroup, const int fromProcessId, const Group toGroup, const int toProcessId);
     QueueReader &reader(const Group group, const int processId);
+    const QueueReader &reader(const Group group, const int processId) const;
+    int readerIndex(const Group group, const int processId) const;
     int remoteGroupSize() const { return theLocalGroup == groupA ? metadata->theGroupBSize : metadata->theGroupASize; }
     int remoteGroupIdOffset() const { return theLocalGroup == groupA ? metadata->theGroupBIdOffset : metadata->theGroupAIdOffset; }
 
