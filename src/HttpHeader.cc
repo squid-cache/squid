@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "base64.h"
 #include "HttpHdrContRange.h"
+#include "HttpHdrCc.h"
 #include "HttpHdrSc.h"
 #include "HttpHeader.h"
 #include "MemBuf.h"
@@ -1151,7 +1152,7 @@ HttpHeader::putCc(const HttpHdrCc * cc)
     /* pack into mb */
     mb.init();
     packerToMemInit(&p, &mb);
-    httpHdrCcPackInto(cc, &p);
+    cc->packInto(&p);
     /* put */
     addEntry(new HttpHeaderEntry(HDR_CACHE_CONTROL, NULL, mb.buf));
     /* cleanup */
@@ -1310,16 +1311,19 @@ HttpHeader::getLastStr(http_hdr_type id) const
 HttpHdrCc *
 HttpHeader::getCc() const
 {
-    HttpHdrCc *cc;
-    String s;
-
     if (!CBIT_TEST(mask, HDR_CACHE_CONTROL))
         return NULL;
     PROF_start(HttpHeader_getCc);
 
+    String s;
     getList(HDR_CACHE_CONTROL, &s);
 
-    cc = httpHdrCcParseCreate(&s);
+    HttpHdrCc *cc=new HttpHdrCc();
+
+    if (!cc->parse(s)) {
+        delete cc;
+        cc = NULL;
+    }
 
     HttpHeaderStats[owner].ccParsedCount++;
 

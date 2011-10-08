@@ -67,6 +67,7 @@
 #include "compat/inet_pton.h"
 #include "fde.h"
 #include "format/Tokens.h"
+#include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
@@ -194,7 +195,7 @@ ClientHttpRequest::onlyIfCached()const
 {
     assert(request);
     return request->cache_control &&
-           EBIT_TEST(request->cache_control->mask, CC_ONLY_IF_CACHED);
+           request->cache_control->onlyIfCached();
 }
 
 /*
@@ -1016,7 +1017,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         }
 
         if (request->cache_control)
-            if (EBIT_TEST(request->cache_control->mask, CC_NO_CACHE))
+            if (request->cache_control->noCache())
                 no_cache++;
 
         /*

@@ -1,0 +1,65 @@
+/*
+ *
+ * DEBUG: section 65    HTTP Cache Control Header
+ *
+ * SQUID Web Proxy Cache          http://www.squid-cache.org/
+ * ----------------------------------------------------------
+ *
+ *  Squid is the result of efforts by numerous individuals from
+ *  the Internet community; see the CONTRIBUTORS file for full
+ *  details.   Many organizations have provided support for Squid's
+ *  development; see the SPONSORS file for full details.  Squid is
+ *  Copyrighted (C) 2001 by the Regents of the University of
+ *  California; see the COPYRIGHT file for full details.  Squid
+ *  incorporates software developed and/or copyrighted by other
+ *  sources; see the CREDITS file for full details.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+ *
+ */
+bool
+HttpHdrCc::isSet(http_hdr_cc_type id) const
+{
+    assert(id>=CC_PUBLIC && id < CC_ENUM_END);
+    return EBIT_TEST(mask,id);
+}
+
+void
+HttpHdrCc::setMask(http_hdr_cc_type id, bool newval)
+{
+    if (newval)
+        EBIT_SET(mask,id);
+    else
+        EBIT_CLR(mask,id);
+}
+
+/// set a data member to a new value, and set the corresponding mask-bit.
+/// if setting is false, then the mask-bit is cleared.
+void
+HttpHdrCc::setValue(int32_t &value, int32_t new_value, http_hdr_cc_type hdr, bool setting)
+{
+    if (setting) {
+        if (new_value < 0) {
+            debugs(65,3,HERE << "rejecting negative-value Cache-Control directive " << hdr
+                   << " value " << new_value );
+            return;
+        }
+    } else {
+        new_value=-1; //rely on the convention that "unknown" is -1
+    }
+
+    value=new_value;
+    setMask(hdr,setting);
+}

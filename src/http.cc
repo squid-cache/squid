@@ -58,6 +58,7 @@
 #include "http.h"
 #include "HttpControlMsg.h"
 #include "HttpHdrContRange.h"
+#include "HttpHdrCc.h"
 #include "HttpHdrSc.h"
 #include "HttpHdrScTarget.h"
 #include "HttpReply.h"
@@ -330,7 +331,6 @@ HttpStateData::cacheableReply()
 {
     HttpReply const *rep = finalReply();
     HttpHeader const *hdr = &rep->header;
-    const int cc_mask = (rep->cache_control) ? rep->cache_control->mask : 0;
     const char *v;
 #if USE_HTTP_VIOLATIONS
 
@@ -353,22 +353,23 @@ HttpStateData::cacheableReply()
 
     // RFC 2616: do not cache replies to responses with no-store CC directive
     if (request && request->cache_control &&
-            EBIT_TEST(request->cache_control->mask, CC_NO_STORE) &&
+            request->cache_control->noStore() &&
             !REFRESH_OVERRIDE(ignore_no_store))
         return 0;
 
-    if (!ignoreCacheControl) {
-        if (EBIT_TEST(cc_mask, CC_PRIVATE)) {
+    if (!ignoreCacheControl && request->cache_control != NULL) {
+        const HttpHdrCc* cc=request->cache_control;
+        if (cc->Private()) {
             if (!REFRESH_OVERRIDE(ignore_private))
                 return 0;
         }
 
-        if (EBIT_TEST(cc_mask, CC_NO_CACHE)) {
+        if (cc->noCache()) {
             if (!REFRESH_OVERRIDE(ignore_no_cache))
                 return 0;
         }
 
-        if (EBIT_TEST(cc_mask, CC_NO_STORE)) {
+        if (cc->noStore()) {
             if (!REFRESH_OVERRIDE(ignore_no_store))
                 return 0;
         }
@@ -381,7 +382,7 @@ HttpStateData::cacheableReply()
          * RFC 2068, sec 14.9.4
          */
 
-        if (!EBIT_TEST(cc_mask, CC_PUBLIC)) {
+        if (!request->cache_control->Public()) {
             if (!REFRESH_OVERRIDE(ignore_auth))
                 return 0;
         }
@@ -925,9 +926,10 @@ HttpStateData::haveParsedReplyHeaders()
 no_cache:
 
     if (!ignoreCacheControl && rep->cache_control) {
-        if (EBIT_TEST(rep->cache_control->mask, CC_PROXY_REVALIDATE) ||
-                EBIT_TEST(rep->cache_control->mask, CC_MUST_REVALIDATE) ||
-                EBIT_TEST(rep->cache_control->mask, CC_S_MAXAGE))
+        if (rep->cache_control->proxyRevalidate() ||
+                rep->cache_control->mustRevalidate() ||
+                rep->cache_control->hasSMaxAge()
+           )
             EBIT_SET(entry->flags, ENTRY_REVALIDATE);
     }
 
@@ -1760,7 +1762,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         HttpHdrCc *cc = hdr_in->getCc();
 
         if (!cc)
-            cc = httpHdrCcCreate();
+            cc = new HttpHdrCc();
 
 #if 0 /* see bug 2330 */
         /* Set no-cache if determined needed but not found */
@@ -1769,20 +1771,20 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 #endif
 
         /* Add max-age only without no-cache */
-        if (!EBIT_TEST(cc->mask, CC_MAX_AGE) && !EBIT_TEST(cc->mask, CC_NO_CACHE)) {
+        if (!cc->hasMaxAge() && !cc->noCache()) {
             const char *url =
                 entry ? entry->url() : urlCanonical(request);
-            httpHdrCcSetMaxAge(cc, getMaxAge(url));
+            cc->maxAge(getMaxAge(url));
 
         }
 
         /* Enforce sibling relations */
         if (flags.only_if_cached)
-            EBIT_SET(cc->mask, CC_ONLY_IF_CACHED);
+            cc->onlyIfCached(true);
 
         hdr_out->putCc(cc);
 
-        httpHdrCcDestroy(cc);
+        delete cc;
     }
 
     /* maybe append Connection: keep-alive */

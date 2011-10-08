@@ -38,6 +38,7 @@
 #endif
 
 #include "squid.h"
+#include "HttpHdrCc.h"
 #include "mgr/Registration.h"
 #include "Store.h"
 #include "MemObject.h"
@@ -267,14 +268,15 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     if (request && !request->flags.ignore_cc) {
         const HttpHdrCc *const cc = request->cache_control;
-        if (cc && cc->min_fresh > 0) {
+        if (cc && cc->hasMinFresh()) {
+            const int32_t minFresh=cc->minFresh();
             debugs(22, 3, "\tage + min-fresh:\t" << age << " + " <<
-                   cc->min_fresh << " = " << age + cc->min_fresh);
+                   minFresh << " = " << age + minFresh);
             debugs(22, 3, "\tcheck_time + min-fresh:\t" << check_time << " + "
-                   << cc->min_fresh << " = " <<
-                   mkrfc1123(check_time + cc->min_fresh));
-            age += cc->min_fresh;
-            check_time += cc->min_fresh;
+                   << minFresh << " = " <<
+                   mkrfc1123(check_time + minFresh));
+            age += minFresh;
+            check_time += minFresh;
         }
     }
 
@@ -286,8 +288,8 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     // stale-if-error requires any failure be passed thru when its period is over.
     if (request && entry->mem_obj && entry->mem_obj->getReply() && entry->mem_obj->getReply()->cache_control &&
-            EBIT_TEST(entry->mem_obj->getReply()->cache_control->mask, CC_STALE_IF_ERROR) &&
-            entry->mem_obj->getReply()->cache_control->stale_if_error < staleness) {
+            entry->mem_obj->getReply()->cache_control->hasStaleIfError() &&
+            entry->mem_obj->getReply()->cache_control->staleIfError() < staleness) {
 
         debugs(22, 3, "refreshCheck: stale-if-error period expired.");
         request->flags.fail_on_validation_err = 1;
@@ -334,31 +336,31 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
 #endif
         if (NULL != cc) {
-            if (cc->max_age > -1) {
+            if (cc->hasMaxAge()) {
 #if USE_HTTP_VIOLATIONS
-                if (R->flags.ignore_reload && cc->max_age == 0) {
+                if (R->flags.ignore_reload && cc->maxAge() == 0) {
                     debugs(22, 3, "refreshCheck: MAYBE: client-max-age = 0 and ignore-reload");
                 } else
 #endif
                 {
-                    if (cc->max_age == 0) {
+                    if (cc->maxAge() == 0) {
                         debugs(22, 3, "refreshCheck: YES: client-max-age = 0");
                         return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
                     }
 
-                    if (age > cc->max_age) {
+                    if (age > cc->maxAge()) {
                         debugs(22, 3, "refreshCheck: YES: age > client-max-age");
                         return STALE_EXCEEDS_REQUEST_MAX_AGE_VALUE;
                     }
                 }
             }
 
-            if (EBIT_TEST(cc->mask, CC_MAX_STALE) && staleness > -1) {
-                if (cc->max_stale < 0) {
+            if (cc->hasMaxStale() && staleness > -1) {
+                if (cc->maxStale()==HttpHdrCc::MAX_STALE_ANY) {
                     /* max-stale directive without a value */
                     debugs(22, 3, "refreshCheck: NO: max-stale wildcard");
                     return FRESH_REQUEST_MAX_STALE_ALL;
-                } else if (staleness < cc->max_stale) {
+                } else if (staleness < cc->maxStale()) {
                     debugs(22, 3, "refreshCheck: NO: staleness < max-stale");
                     return FRESH_REQUEST_MAX_STALE_VALUE;
                 }
