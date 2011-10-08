@@ -742,10 +742,6 @@ if test "x$squid_opt_enable_storeio" = "xauto"; then
   SQUID_LOOK_FOR_MODULES([$srcdir/src/fs],[squid_storeio_module_candidates])
   # disable coss
   squid_storeio_module_candidates=`echo $squid_storeio_module_candidates|sed 's/coss//'`
-  if test "x$ac_cv_search_shm_open" = "xno" ; then
-    # disable rock
-    squid_storeio_module_candidates=`echo $squid_storeio_module_candidates|sed 's/rock//'`
-  fi
   AC_MSG_RESULT([$squid_storeio_module_candidates])
 fi
 
@@ -777,12 +773,9 @@ for fs in $squid_storeio_module_candidates none; do
       STORE_TESTS="$STORE_TESTS tests/testCoss$EXEEXT"
       ;;
     rock)
-	if ! test "x$squid_disk_module_candidates_IpcIo" = "xyes" -a \
-	  "x$squid_disk_module_candidates_Blocking" = "xyes"; then
-	  AC_MSG_ERROR([Storage module Rock requires IpcIo and Blocking DiskIO modules])
-	fi
-	if test "x$ac_cv_search_shm_open" = "xno" ; then
-	  AC_MSG_ERROR([Storage module Rock requires shared memory support])
+	if test "x$squid_disk_module_candidates_IpcIo" != "xyes" -a \
+	  "x$squid_disk_module_candidates_Blocking" != "xyes"; then
+	  AC_MSG_ERROR([Storage module Rock requires IpcIo or Blocking DiskIO module])
 	fi
 	;;
     ufs)

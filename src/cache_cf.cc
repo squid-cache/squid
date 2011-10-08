@@ -56,6 +56,7 @@
 #endif
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
+#include "DiskIO/DiskIOModule.h"
 #include "eui/Config.h"
 #if USE_SQUID_ESI
 #include "esi/Parser.h"
@@ -599,6 +600,12 @@ configDoConfigure(void)
         /* Memory-only cache probably in effect. */
         /* turn off the cache rebuild delays... */
         StoreController::store_dirs_rebuilding = 0;
+    } else if (InDaemonMode()) { // no diskers in non-daemon mode
+        for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+            const RefCount<SwapDir> sd = Config.cacheSwap.swapDirs[i];
+            if (sd->needsDiskStrand())
+                sd->disker = Config.workers + (++Config.cacheSwap.n_strands);
+        }
     }
 
     if (Debug::rotateNumber < 0) {
@@ -1986,9 +1993,6 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
     sd->parse(swap->n_configured, path_str);
 
     ++swap->n_configured;
-
-    if (sd->needsDiskStrand())
-        ++swap->n_strands;
 
     /* Update the max object size */
     update_maxobjsize();

@@ -831,13 +831,15 @@ DiskerClose(const String &path)
 
 
 /// initializes shared memory segments used by IpcIoFile
-class IpcIoRr: public RegisteredRunner
+class IpcIoRr: public Ipc::Mem::RegisteredRunner
 {
 public:
     /* RegisteredRunner API */
     IpcIoRr(): owner(NULL) {}
-    virtual void run(const RunnerRegistry &);
     virtual ~IpcIoRr();
+
+protected:
+    virtual void create(const RunnerRegistry &);
 
 private:
     Ipc::FewToFewBiQueue::Owner *owner;
@@ -846,16 +848,17 @@ private:
 RunnerRegistrationEntry(rrAfterConfig, IpcIoRr);
 
 
-void IpcIoRr::run(const RunnerRegistry &)
+void IpcIoRr::create(const RunnerRegistry &)
 {
     if (!UsingSmp())
         return;
 
-    if (IamMasterProcess()) {
-        Must(!owner);
-        // XXX: make capacity configurable
-        owner = Ipc::FewToFewBiQueue::Init(ShmLabel, Config.workers, 1, Config.cacheSwap.n_configured, 1 + Config.workers, sizeof(IpcIoMsg), 1024);
-    }
+    Must(!owner);
+    // XXX: make capacity configurable
+    owner = Ipc::FewToFewBiQueue::Init(ShmLabel, Config.workers, 1,
+                                       Config.cacheSwap.n_strands,
+                                       1 + Config.workers, sizeof(IpcIoMsg),
+                                       1024);
 }
 
 IpcIoRr::~IpcIoRr()

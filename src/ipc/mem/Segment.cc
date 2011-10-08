@@ -16,8 +16,24 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+void *
+Ipc::Mem::Segment::reserve(size_t chunkSize)
+{
+    Must(theMem);
+    // check for overflows
+    // chunkSize >= 0 may result in warnings on systems where off_t is unsigned
+    assert(!chunkSize || static_cast<off_t>(chunkSize) > 0);
+    assert(static_cast<off_t>(chunkSize) <= theSize);
+    assert(theReserved <= theSize - static_cast<off_t>(chunkSize));
+    void *result = reinterpret_cast<char*>(theMem) + theReserved;
+    theReserved += chunkSize;
+    return result;
+}
+
+#if HAVE_SHM
+
 Ipc::Mem::Segment::Segment(const char *const id):
-        theName(GenerateName(id)), theFD(-1), theMem(NULL),
+        theFD(-1), theName(GenerateName(id)), theMem(NULL),
         theSize(0), theReserved(0), doUnlink(false)
 {
 }
@@ -33,14 +49,11 @@ Ipc::Mem::Segment::~Segment()
         unlink();
 }
 
+// fake Ipc::Mem::Segment::Enabled (!HAVE_SHM) is more selective
 bool
 Ipc::Mem::Segment::Enabled()
 {
-#if HAVE_SHM
     return true;
-#else
-    return false;
-#endif
 }
 
 void
@@ -135,20 +148,6 @@ Ipc::Mem::Segment::unlink()
         debugs(54, 3, HERE << "unlinked " << theName << " segment");
 }
 
-void *
-Ipc::Mem::Segment::reserve(size_t chunkSize)
-{
-    Must(theMem);
-    // check for overflows
-    // chunkSize >= 0 may result in warnings on systems where off_t is unsigned
-    assert(!chunkSize || static_cast<off_t>(chunkSize) > 0);
-    assert(static_cast<off_t>(chunkSize) <= theSize);
-    assert(theReserved <= theSize - static_cast<off_t>(chunkSize));
-    void *result = reinterpret_cast<char*>(theMem) + theReserved;
-    theReserved += chunkSize;
-    return result;
-}
-
 /// determines the size of the underlying "file"
 off_t
 Ipc::Mem::Segment::statSize(const char *context) const
@@ -183,4 +182,97 @@ Ipc::Mem::Segment::GenerateName(const char *id)
     }
     name.append(id);
     return name;
+}
+
+#else // HAVE_SHM
+
+#include <map>
+
+typedef std::map<String, Ipc::Mem::Segment *> SegmentMap;
+static SegmentMap Segments;
+
+Ipc::Mem::Segment::Segment(const char *const id):
+    theName(id), theMem(NULL), theSize(0), theReserved(0), doUnlink(false)
+{
+}
+
+Ipc::Mem::Segment::~Segment()
+{
+    if (doUnlink) {
+        delete [] static_cast<char *>(theMem);
+        debugs(54, 3, HERE << "deleted " << theName << " segment");
+    }
+}
+
+bool
+Ipc::Mem::Segment::Enabled()
+{
+    return !InDaemonMode() || (!UsingSmp() && IamWorkerProcess());
+}
+
+void
+Ipc::Mem::Segment::create(const off_t aSize)
+{
+    assert(aSize > 0);
+    assert(!theMem);
+    checkSupport("Fake segment creation");
+
+    const bool inserted = Segments.insert(std::make_pair(theName, this)).second;
+    if (!inserted)
+        fatalf("Duplicate fake segment creation: %s", theName.termedBuf());
+
+    theMem = new char[aSize];
+    theSize = aSize;
+    doUnlink = true;
+
+    debugs(54, 3, HERE << "created " << theName << " fake segment: " << theSize);
+}
+
+void
+Ipc::Mem::Segment::open()
+{
+    assert(!theMem);
+    checkSupport("Fake segment open");
+
+    const SegmentMap::const_iterator i = Segments.find(theName);
+    if (i == Segments.end())
+        fatalf("Fake segment not found: %s", theName.termedBuf());
+
+    const Segment &segment = *i->second;
+    theMem = segment.theMem;
+    theSize = segment.theSize;
+
+    debugs(54, 3, HERE << "opened " << theName << " fake segment: " << theSize);
+}
+
+void
+Ipc::Mem::Segment::checkSupport(const char *const context)
+{
+    if (!Enabled()) {
+        debugs(54, 5, HERE << "True shared memory segments are not supported. "
+               "Cannot fake shared segments in SMP config.");
+        fatalf("%s failed", context);
+    }
+}
+
+#endif // HAVE_SHM
+
+void
+Ipc::Mem::RegisteredRunner::run(const RunnerRegistry &r)
+{
+    // If Squid is built with real segments, we create() real segments
+    // in the master process only.  Otherwise, we create() fake
+    // segments in each worker process.  We assume that only workers
+    // need and can work with fake segments.
+#if HAVE_SHM
+    if (IamMasterProcess())
+#else
+    if (IamWorkerProcess())
+#endif
+        create(r);
+
+    // we assume that master process does not need shared segments
+    // unless it is also a worker
+    if (!InDaemonMode() || !IamMasterProcess())
+        open(r);
 }

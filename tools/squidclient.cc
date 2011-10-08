@@ -211,7 +211,9 @@ main(int argc, char *argv[])
     int keep_alive = 0;
     int opt_noaccept = 0;
     int opt_verbose = 0;
-    int www_neg, proxy_neg;
+#if HAVE_GSSAPI
+    int www_neg = 0, proxy_neg = 0;
+#endif
     const char *hostname, *localhost;
     Ip::Address iaddr;
     char url[BUFSIZ], msg[MESSAGELEN], buf[BUFSIZ];
@@ -243,8 +245,6 @@ main(int argc, char *argv[])
     ping = 0;
     pcount = 0;
     ping_int = 1 * 1000;
-    www_neg = 0;
-    proxy_neg = 0;
 
     if (argc < 2) {
         usage(argv[0]);		/* need URL */
