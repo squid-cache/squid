@@ -1138,7 +1138,7 @@ ErrorState::BuildHttpReply()
     const char *name = errorPageName(page_id);
     /* no LMT for error pages; error pages expire immediately */
 
-    if (name[0] == '3' || (name[0] != '4' && name[0] != '5' && strchr(name, ':'))) {
+    if (name[0] == '3' || (name[0] != '2' && name[0] != '4' && name[0] != '5' && strchr(name, ':'))) {
         /* Redirection */
         http_status status = HTTP_MOVED_TEMPORARILY;
         // Use configured 3xx reply status if set.
