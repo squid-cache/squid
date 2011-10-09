@@ -644,6 +644,7 @@ struct SquidConfig {
     int client_ip_max_connections;
 
     struct {
+        int v4_first;       ///< Place IPv4 first in the order of DNS results.
         ssize_t packet_max; ///< maximum size EDNS advertised for DNS replies.
     } dns;
 };
