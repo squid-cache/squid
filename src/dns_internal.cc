@@ -1217,14 +1217,23 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
 
         debugs(78, 6, HERE << "Merging DNS results " << q->name << " AAAA has " << q->initial_AAAA.count << " RR, A has " << n << " RR");
 
+        if (Config.dns.v4_first) {
+            memcpy( tmp, message->answer, (sizeof(rfc1035_rr)*n) );
+            tmp += n;
+            /* free the RR object without freeing its child strings (they are now taken by the copy above) */
+            safe_free(message->answer);
+        }
+
         memcpy(tmp, q->initial_AAAA.answers, (sizeof(rfc1035_rr)*(q->initial_AAAA.count)) );
         tmp += q->initial_AAAA.count;
         /* free the RR object without freeing its child strings (they are now taken by the copy above) */
         safe_free(q->initial_AAAA.answers);
 
-        memcpy( tmp, message->answer, (sizeof(rfc1035_rr)*n) );
-        /* free the RR object without freeing its child strings (they are now taken by the copy above) */
-        safe_free(message->answer);
+        if (!Config.dns.v4_first) {
+            memcpy( tmp, message->answer, (sizeof(rfc1035_rr)*n) );
+            /* free the RR object without freeing its child strings (they are now taken by the copy above) */
+            safe_free(message->answer);
+        }
 
         n += q->initial_AAAA.count;
         q->initial_AAAA.count = 0;
