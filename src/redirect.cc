@@ -251,7 +251,7 @@ redirectInit(void)
 
     redirectors->cmdline = Config.Program.redirect;
 
-    redirectors->childs = Config.redirectChildren;
+    redirectors->childs.updateLimits(Config.redirectChildren);
 
     redirectors->ipc_type = IPC_STREAM;
 
