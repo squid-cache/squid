@@ -14,7 +14,7 @@ public:
     ~HelperChildConfig();
     HelperChildConfig &operator =(const HelperChildConfig &rhs);
 
-    /*
+    /**
      * When new helpers are needed call this to find out how many more
      * we are allowed to start.
      * \retval 0       No more helpers may be started right now.
@@ -23,6 +23,13 @@ public:
      */
     int needNew() const;
     void parseConfig();
+
+    /**
+     * Update an existing set of details with new start/max/idle/concurrent limits.
+     * This is for parsing new child settings into an object incrementally then updating
+     * the running set without loosing any of the active state or causing races.
+     */
+    HelperChildConfig &updateLimits(const HelperChildConfig &rhs);
 
     /* values from squid.conf */
 public:

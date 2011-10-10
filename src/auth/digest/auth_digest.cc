@@ -583,7 +583,7 @@ Auth::Digest::Config::init(Auth::Config * scheme)
 
         digestauthenticators->cmdline = authenticateProgram;
 
-        digestauthenticators->childs = authenticateChildren;
+        digestauthenticators->childs.updateLimits(authenticateChildren);
 
         digestauthenticators->ipc_type = IPC_STREAM;
 

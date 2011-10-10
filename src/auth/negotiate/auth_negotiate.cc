@@ -176,7 +176,7 @@ Auth::Negotiate::Config::init(Auth::Config * scheme)
 
         negotiateauthenticators->cmdline = authenticateProgram;
 
-        negotiateauthenticators->childs = authenticateChildren;
+        negotiateauthenticators->childs.updateLimits(authenticateChildren);
 
         negotiateauthenticators->ipc_type = IPC_STREAM;
 
