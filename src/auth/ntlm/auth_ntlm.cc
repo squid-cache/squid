@@ -163,7 +163,7 @@ Auth::Ntlm::Config::init(Auth::Config * scheme)
 
         ntlmauthenticators->cmdline = authenticateProgram;
 
-        ntlmauthenticators->childs = authenticateChildren;
+        ntlmauthenticators->childs.updateLimits(authenticateChildren);
 
         ntlmauthenticators->ipc_type = IPC_STREAM;
 
