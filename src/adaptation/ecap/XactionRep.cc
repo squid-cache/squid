@@ -133,6 +133,7 @@ Adaptation::Ecap::XactionRep::clientIpValue() const
 const libecap::Area
 Adaptation::Ecap::XactionRep::usernameValue() const
 {
+#if USE_AUTH
     const HttpRequest *request = dynamic_cast<const HttpRequest*>(theCauseRep ?
                                  theCauseRep->raw().header : theVirginRep.raw().header);
     Must(request);
@@ -140,6 +141,7 @@ Adaptation::Ecap::XactionRep::usernameValue() const
         if (char const *name = request->auth_user_request->username())
             return libecap::Area::FromTempBuffer(name, strlen(name));
     }
+#endif
     return libecap::Area();
 }
 
