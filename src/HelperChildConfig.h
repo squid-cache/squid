@@ -10,9 +10,7 @@
 class HelperChildConfig
 {
 public:
-    HelperChildConfig(const unsigned int m=0, const unsigned int s=0, const unsigned int i=1, const unsigned int cc=0);
-    ~HelperChildConfig();
-    HelperChildConfig &operator =(const HelperChildConfig &rhs);
+    explicit HelperChildConfig(const unsigned int m = 0);
 
     /**
      * When new helpers are needed call this to find out how many more
@@ -62,7 +60,6 @@ public:
     unsigned int concurrency;
 
     /* derived from active operations */
-public:
 
     /**
      * Total helper children objects currently existing.
