@@ -242,7 +242,7 @@ Rock::SwapDir::needsDiskStrand() const
     const bool wontEvenWorkWithoutDisker = Config.workers > 1;
     const bool wouldWorkBetterWithDisker = DiskIOModule::Find("IpcIo");
     return InDaemonMode() && (wontEvenWorkWithoutDisker ||
-        wouldWorkBetterWithDisker);
+                              wouldWorkBetterWithDisker);
 }
 
 void
@@ -413,7 +413,7 @@ Rock::SwapDir::validateOptions()
 
     // warn if maximum db size is not reachable due to sfileno limit
     if (entryLimitAllowed() == entryLimitHigh() &&
-        diskWasteSize >= maxRoundingWaste) {
+            diskWasteSize >= maxRoundingWaste) {
         debugs(47, DBG_CRITICAL, "Rock store cache_dir[" << index << "] '" << path << "':");
         debugs(47, DBG_CRITICAL, "\tmaximum number of entries: " << entryLimitAllowed());
         debugs(47, DBG_CRITICAL, "\tmaximum object size: " << maxObjectSize() << " Bytes");
@@ -469,7 +469,7 @@ Rock::SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load)
     // Do not start I/O transaction if there are less than 10% free pages left.
     // TODO: reserve page instead
     if (needsDiskStrand() &&
-        Ipc::Mem::PageLevel(Ipc::Mem::PageId::ioPage) >= 0.9 * Ipc::Mem::PageLimit(Ipc::Mem::PageId::ioPage)) {
+            Ipc::Mem::PageLevel(Ipc::Mem::PageId::ioPage) >= 0.9 * Ipc::Mem::PageLimit(Ipc::Mem::PageId::ioPage)) {
         debugs(47, 5, HERE << "too few shared pages for IPC I/O left");
         return false;
     }
@@ -563,7 +563,7 @@ Rock::SwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB *cbFile, StoreIOS
     // Do not start I/O transaction if there are less than 10% free pages left.
     // TODO: reserve page instead
     if (needsDiskStrand() &&
-        Ipc::Mem::PageLevel(Ipc::Mem::PageId::ioPage) >= 0.9 * Ipc::Mem::PageLimit(Ipc::Mem::PageId::ioPage)) {
+            Ipc::Mem::PageLevel(Ipc::Mem::PageId::ioPage) >= 0.9 * Ipc::Mem::PageLimit(Ipc::Mem::PageId::ioPage)) {
         debugs(47, 5, HERE << "too few shared pages for IPC I/O left");
         return NULL;
     }

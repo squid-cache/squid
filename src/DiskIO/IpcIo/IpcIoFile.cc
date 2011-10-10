@@ -710,8 +710,7 @@ IpcIoFile::WaitBeforePop()
                  toSpend/1e3, 0, false);
         DiskerHandleMoreRequestsScheduled = true;
         return true;
-    } else
-    if (balance < -maxImbalance) {
+    } else if (balance < -maxImbalance) {
         // do not owe "too much" to avoid "too large" bursts of I/O
         balance = -maxImbalance;
     }
