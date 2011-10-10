@@ -4,24 +4,14 @@
 
 #include <string.h>
 
-HelperChildConfig::HelperChildConfig(const unsigned int m, const unsigned int s, const unsigned int i, const unsigned int cc) :
+HelperChildConfig::HelperChildConfig(const unsigned int m):
         n_max(m),
-        n_startup(s),
-        n_idle(i),
-        concurrency(cc),
+        n_startup(0),
+        n_idle(1),
+        concurrency(0),
         n_running(0),
         n_active(0)
 {}
-
-HelperChildConfig::~HelperChildConfig()
-{}
-
-HelperChildConfig &
-HelperChildConfig::operator =(const HelperChildConfig &rhs)
-{
-    memcpy(this, &rhs, sizeof(HelperChildConfig));
-    return *this;
-}
 
 int
 HelperChildConfig::needNew() const
