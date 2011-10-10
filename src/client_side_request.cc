@@ -634,6 +634,9 @@ ClientRequestContext::hostHeaderVerify()
             // verify the destination DNS is one of the Host: headers IPs
             ipcache_nbgethostbyname(host, hostHeaderIpVerifyWrapper, this);
         }
+    } else if (Config.onoff.hostStrictVerify) {
+        debugs(85, 3, HERE << "validate skipped.");
+        http->doCallouts();
     } else if (strlen(host) != strlen(http->request->GetHost())) {
         // Verify forward-proxy requested URL domain matches the Host: header
         debugs(85, 3, HERE << "FAIL on validate URL domain length " << http->request->GetHost() << " matches Host: " << host);

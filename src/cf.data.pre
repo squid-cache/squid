@@ -1777,6 +1777,23 @@ DOC_START
 
 DOC_END
 
+NAME: host_verify_strict
+TYPE: onoff
+DEFAULT: off
+LOC: Config.onoff.hostStrictVerify
+DOC_START
+	By default Squid performs Host vs IP this validation on intercept
+	and tproxy traffic.
+	
+	This option enables additional strict validation comparisons on
+	forward-proxy and reverse-proxy traffic passing through Squid.
+	
+	These additional texts involve textual domain comparison of the
+	authority form URL found in the request-URL and Host: header. To
+	ensure that the client sends a consistent Host header for the
+	destination server with the URL.
+DOC_END
+
 NAME: client_dst_passthru
 TYPE: onoff
 DEFAULT: on
