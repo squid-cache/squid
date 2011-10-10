@@ -120,7 +120,7 @@ void FwdState::start(Pointer aSelf)
     // Bug 3243: CVE 2009-0801
     // Bypass of browser same-origin access control in intercepted communication
     // To resolve this we must force DIRECT and only to the original client destination.
-    if (Config.onoff.client_dst_passthru && request &&
+    if (Config.onoff.client_dst_passthru && request && !request->flags.redirected &&
             (request->flags.intercepted || request->flags.spoof_client_ip)) {
         Comm::ConnectionPointer p = new Comm::Connection();
         p->remote = clientConn->local;
