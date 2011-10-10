@@ -1508,7 +1508,7 @@ externalAclInit(void)
 
         p->theHelper->cmdline = p->cmdline;
 
-        p->theHelper->childs = p->children;
+        p->theHelper->childs.updateLimits(p->children);
 
         p->theHelper->ipc_type = IPC_TCP_SOCKET;
 

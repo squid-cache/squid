@@ -40,7 +40,7 @@ void Ssl::Helper::Init()
         return;
 
     ssl_crtd = new helper("ssl_crtd");
-    ssl_crtd->childs = Ssl::TheConfig.ssl_crtdChildren;
+    ssl_crtd->childs.updateLimits(Ssl::TheConfig.ssl_crtdChildren);
     ssl_crtd->ipc_type = IPC_STREAM;
     // The crtd messages may contain the eol ('\n') character. We are
     // going to use the '\1' char as the end-of-message mark.

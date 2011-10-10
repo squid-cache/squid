@@ -354,7 +354,7 @@ Auth::Basic::Config::init(Auth::Config * schemeCfg)
 
         basicauthenticators->cmdline = authenticateProgram;
 
-        basicauthenticators->childs = authenticateChildren;
+        basicauthenticators->childs.updateLimits(authenticateChildren);
 
         basicauthenticators->ipc_type = IPC_STREAM;
 
