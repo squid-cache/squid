@@ -1559,6 +1559,7 @@ ClientHttpRequest::handleAdaptationFailure(bool bypassable)
                                 (c != NULL && c->auth_user_request ?
                                  c->auth_user_request : request->auth_user_request));
     c->flags.readMoreRequests = true;
+    c->expectNoForwarding();
     node = (clientStreamNode *)client_stream.tail->data;
     clientStreamRead(node, this, node->readBuffer);
 }
