@@ -479,11 +479,11 @@ rfc1035SetErrno(int n)
 void
 rfc1035RRDestroy(rfc1035_rr ** rr, int n)
 {
-    if (*rr == NULL || n < 1) {
+    if (*rr == NULL) {
         return;
     }
 
-    while (n--) {
+    while (n-- > 0) {
         if ((*rr)[n].rdata)
             xfree((*rr)[n].rdata);
     }
