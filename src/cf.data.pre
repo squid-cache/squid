@@ -6451,6 +6451,25 @@ DOC_START
 		*) May negatively impact connection delay times.
 DOC_END
 
+NAME: dns_v4_first
+TYPE: onoff
+DEFAULT: off
+LOC: Config.dns.v4_first
+IFDEF: !USE_DNSSERVERS
+DOC_START
+	With the IPv6 Internet being as fast or faster than IPv4 Internet
+	for most networks Squid prefers to contact websites over IPv6.
+
+	This option reverses the order of preference to make Squid contact
+	dual-stack websites over IPv4 first. Squid will still perform both
+	IPv6 and IPv4 DNS lookups before connecting.
+
+	WARNING:
+	  This option will restrict the situations under which IPv6
+	  connectivity is used (and tested). Hiding network problems
+	  which would otherwise be detected and warned about.
+DOC_END
+
 NAME: ipcache_size
 COMMENT: (number of entries)
 TYPE: int

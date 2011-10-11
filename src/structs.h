@@ -628,6 +628,9 @@ struct SquidConfig {
 #endif
 
     int client_ip_max_connections;
+    struct {
+        int v4_first;       ///< Place IPv4 first in the order of DNS results.
+    } dns;
 };
 
 SQUIDCEXTERN SquidConfig Config;
