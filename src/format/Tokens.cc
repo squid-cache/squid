@@ -302,10 +302,10 @@ Format::Token::parse(char *def, Quoting *quoting)
     }
 
     if (xisdigit(*cur))
-        width = strtol(cur, &cur, 10);
+        widthMin = strtol(cur, &cur, 10);
 
-    if (*cur == '.')
-        precision = strtol(cur + 1, &cur, 10);
+    if (*cur == '.' && xisdigit(*(++cur)))
+        widthMax = strtol(cur, &cur, 10);
 
     if (*cur == '{') {
         char *cp;
@@ -479,11 +479,11 @@ done:
     case LFT_TIME_SUBSECOND:
         divisor = 1000;
 
-        if (precision) {
+        if (widthMax > 0) {
             int i;
             divisor = 1000000;
 
-            for (i = precision; i > 1; i--)
+            for (i = widthMax; i > 1; i--)
                 divisor /= 10;
 
             if (!divisor)
