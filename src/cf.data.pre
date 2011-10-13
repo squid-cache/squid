@@ -1775,6 +1775,34 @@ DOC_START
 
 DOC_END
 
+NAME: host_verify_strict
+TYPE: onoff
+DEFAULT: off
+LOC: Config.onoff.hostStrictVerify
+DOC_START
+	Regardless of this option setting, when dealing with intercepted
+	traffic, Squid always verifies that the destination IP address matches
+	the Host header domain or IP (called 'authority form URL'). Squid
+	responds with an HTTP 409 (Conflict) error page and logs a security
+	warning if there is no match.
+	
+	When set to ON, Squid verifies that the destination IP address matches
+	the Host header for forward-proxy and reverse-proxy traffic as well. For
+	those traffic types, Squid also enables the following checks, comparing
+	the corresponding Host header and Request-URI components:
+	
+	 * The host names (domain or IP) must be identical,
+	   but valueless or missing Host header disables all checks.
+	   For the two host names to match, both must be either IP or FQDN.
+	
+	 * Port numbers must be identical,
+	   but if a port is missing, the scheme-default port is assumed.
+	
+	This enforcement is performed to satisfy a MUST-level requirement in
+	RFC 2616 section 14.23: "The Host field value MUST represent the naming
+	authority of the origin server or gateway given by the original URL".
+DOC_END
+
 NAME: client_dst_passthru
 TYPE: onoff
 DEFAULT: on
