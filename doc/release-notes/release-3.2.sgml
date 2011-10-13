@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.0.12 release notes</title>
+<title>Squid 3.2.0.13 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.0.12 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.0.13 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -103,13 +103,11 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p>Workers can share logs.
 
-<p>Workers cannot share caches, for now. Cache_dir options must be adjusted to
-   point each disk-caching worker to its own disk area. ICP and HTCP responses
-   are based on the responding worker cache state. Overall, SMP Squid behaves
-   as a Squid farm behind a load-balancer with no cache affinity awareness.
-   This is perfect for non-caching Squids but inappropriate for Squids that
-   must coordinate caching activities (in-between environments are in a gray
-   area requiring case-by-case analysis).
+<p>Workers can share caches. Memory cache is automatically shared when multiple
+   workers are used. Cache_dir are shared when configured with the <em>rock</em>
+   storage type. Cache_dir of other types must be adjusted to point each
+   disk-caching worker to its own disk area. ICP and HTCP responses are based
+   on the responding worker cache state.
 
 <p>Cache manager statistics are reported from a worker point of view, for now.
    Though some reports are combined. SNMP statistics are combined across all
