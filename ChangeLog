@@ -1,3 +1,25 @@
+Changes to squid-3.2.0.13 (14 Oct 2011):
+
+	- Regression Bug 3363: never_direct always 'unable to forward this request at this time'
+	- Regression Bug 3351: FTP timeout causing "store_status == STORE_PENDING" assertion
+	- Regression Bug 3336: reconfigure assertion 'hlp->childs.n_running > 0'
+	- Regression fix: always_direct/never_direct failures
+	- Regression fix: stop an SSL header file being included after --disable-ssl
+	- Regression fix: parse HTTP list headers with embedded 8-bit characters
+	- Bug 3355: configure setting --with-swapdir ignored
+	- Bug 3325: option to selectively enable strict host verify checks
+	- Bug 3337: HTTP status 200 is not accepted for deny_info
+	- Bug 3077: '\' in url query strings cause Digest authentication to fail
+	- Support SMP worker shared memory cache
+	- Support SMP worker shared disk cache (rock)
+	- ext_session_acl: version 1.1
+	- Fix Host verify: do not pinn destination IP if URL re-write has been done
+	- Fix IPF interception
+	- Fix ssl_crtd "Cannot add certificate to db" when updating expired cert
+	- Fix ssl_crtd CertificateDB locking scheme
+	- ... and all changes from 3.1.16
+	- ... and many compile and polishing fixes
+
 Changes to squid-3.2.0.12 (17 Sep 2011):
 
 	- Regression Bug 3335: ICAP service is down
@@ -263,6 +285,19 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many code cleanups
 	- ... and a great many testing improvements
 	- ... and many documentation updates
+
+Changes to squid-3.1.16 (14 Oct 2011):
+
+	- Bug 3373: invalid URL in ERR_CACHE_ACCESS_DENIED
+	- Bug 3368: Unhandled exceptions are not logged (workaround)
+	- Bug 3326: miss_access incorrect default
+	- Bug 3320: miss_access description confusing
+	- Bug 3241: squid_kerb_auth cross compilation fix
+	- Bug 3237: seq fault in free() from rfc1035RRDestroy
+	- Bug 3190: Large HTTP POST stuck after early ICAP 400 error response 
+	- db_auth: display available DSN drivers on connect error
+	- Updated OpenSSL 1.0.0 version checks
+	- ... and several documentation fixes
 
 Changes to squid-3.1.15 (28 Aug 2011):
 
