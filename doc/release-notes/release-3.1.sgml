@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.15 release notes</title>
+<title>Squid 3.1.16 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.15
+The Squid Team are pleased to announce the release of Squid-3.1.16
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -31,12 +31,12 @@ Although this release is deemed good enough for use in many setups, please note 
 
 <itemize>
 	<item>The lack of some features available in Squid-2.x series. See the regression sections below for full details.
-	<item>CVE-2009-0801 : NAT interception vulnerability to malicious clients. This is fixed in 3.2 series.
 </itemize>
 
 <p>Currently known issues which only depends on available developer time and may still be resolved in a future 3.1 release are:
 
 <itemize>
+	<item>CVE-2009-0801 : NAT interception vulnerability to malicious clients. This is fixed in 3.2 series.
 	<item>Windows support is still largely missing.
 	<item>AIX support for building with the IBM compiler is broken.
 	<item>OpenSSL 1.0.0 support is incomplete.
@@ -607,6 +607,10 @@ This section gives a thorough account of those changes in three categories:
                 *) Doubles the load placed by Squid on the DNS network.
                 *) May negatively impact connection delay times.
         </verb>
+
+	<tag>dns_v4_first</tag>
+	<p>Added in 3.1.16. Controls whether IPv4 or IPv6 connection is
+	   attempted first when contacting servers and peers.
 
 	<tag>ecap_enable</tag>
 	<p>Controls whether eCAP support is enabled. Default: OFF
