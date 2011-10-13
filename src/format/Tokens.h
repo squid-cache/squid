@@ -186,8 +186,8 @@ class Token
 public:
     Token() : type(LFT_NONE),
             label(NULL),
-            width(0),
-            precision(0),
+            widthMin(-1),
+            widthMax(-1),
             quote(LOG_QUOTE_NONE),
             left(0),
             space(0),
@@ -215,8 +215,8 @@ public:
         } header;
         char *timespec;
     } data;
-    unsigned int width;
-    unsigned int precision;
+    int widthMin; ///< minimum field width
+    int widthMax; ///< maximum field width
     enum Quoting quote;
     unsigned int left:1;
     unsigned int space:1;
