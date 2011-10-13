@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
- <TITLE>Squid 3.1.15 release notes</TITLE>
+ <TITLE>Squid 3.1.16 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.15 release notes</H1>
+<H1>Squid 3.1.16 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -71,7 +71,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.15</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.16</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -90,13 +90,13 @@ While this release is not fully bug-free we believe it is ready for use in produ
 <P>
 <UL>
 <LI>The lack of some features available in Squid-2.x series. See the regression sections below for full details.</LI>
-<LI>CVE-2009-0801 : NAT interception vulnerability to malicious clients. This is fixed in 3.2 series.</LI>
 </UL>
 </P>
 
 <P>Currently known issues which only depends on available developer time and may still be resolved in a future 3.1 release are:</P>
 <P>
 <UL>
+<LI>CVE-2009-0801 : NAT interception vulnerability to malicious clients. This is fixed in 3.2 series.</LI>
 <LI>Windows support is still largely missing.</LI>
 <LI>AIX support for building with the IBM compiler is broken.</LI>
 <LI>OpenSSL 1.0.0 support is incomplete.</LI>
@@ -728,6 +728,10 @@ Squid will follow a policy of prefering IPv6 links, keeping the IPv4 only as a s
         
 </PRE>
 </P>
+
+<DT><B>dns_v4_first</B><DD>
+<P>Added in 3.1.16. Controls whether IPv4 or IPv6 connection is
+attempted first when contacting servers and peers.</P>
 
 <DT><B>ecap_enable</B><DD>
 <P>Controls whether eCAP support is enabled. Default: OFF</P>

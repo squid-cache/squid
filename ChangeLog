@@ -1,3 +1,16 @@
+Changes to squid-3.1.16 (14 Oct 2011):
+
+	- Bug 3373: invalid URL in ERR_CACHE_ACCESS_DENIED
+	- Bug 3368: Unhandled exceptions are not logged (workaround)
+	- Bug 3326: miss_access incorrect default
+	- Bug 3320: miss_access description confusing
+	- Bug 3241: squid_kerb_auth cross compilation fix
+	- Bug 3237: seq fault in free() from rfc1035RRDestroy
+	- Bug 3190: Large HTTP POST stuck after early ICAP 400 error response 
+	- db_auth: display available DSN drivers on connect error
+	- Updated OpenSSL 1.0.0 version checks
+	- ... and several documentation fixes
+
 Changes to squid-3.1.15 (28 Aug 2011):
 
 	- Regression fix: vhost and defaultsite causing vport to be ignored
@@ -140,7 +153,6 @@ Changes to squid-3.1.10 (22 Dec 2010):
 	- ... and updated documentation
 	- ... and some code optimization/simplification polish
 
->>>>>>> MERGE-SOURCE
 Changes to squid-3.1.9 (25 Oct 2010):
 
 	- Bug 3088: dnsserver is segfaulting
