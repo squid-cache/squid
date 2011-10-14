@@ -382,7 +382,7 @@ HttpStateData::cacheableReply()
          * RFC 2068, sec 14.9.4
          */
 
-        if (!request->cache_control->Public()) {
+        if (!request->cache_control || !request->cache_control->Public()) {
             if (!REFRESH_OVERRIDE(ignore_auth))
                 return 0;
         }
