@@ -208,14 +208,28 @@ public:
     /// returns local reader's balance
     QueueReader::Balance &localBalance();
 
+    /// returns reader's balance for a given remote process
+    const QueueReader::Balance &balance(const int remoteProcessId) const;
+
     /// returns local reader's rate limit
     QueueReader::Rate &localRateLimit();
+
+    /// returns reader's rate limit for a given remote process
+    const QueueReader::Rate &rateLimit(const int remoteProcessId) const;
+
+    /// number of items in incoming queue from a given remote process
+    int inSize(const int remoteProcessId) const { return inQueue(remoteProcessId).size(); }
+
+    /// number of items in outgoing queue to a given remote process
+    int outSize(const int remoteProcessId) const { return outQueue(remoteProcessId).size(); }
 
 private:
     bool validProcessId(const Group group, const int processId) const;
     int oneToOneQueueIndex(const Group fromGroup, const int fromProcessId, const Group toGroup, const int toProcessId) const;
     const OneToOneUniQueue &oneToOneQueue(const Group fromGroup, const int fromProcessId, const Group toGroup, const int toProcessId) const;
     OneToOneUniQueue &oneToOneQueue(const Group fromGroup, const int fromProcessId, const Group toGroup, const int toProcessId);
+    const OneToOneUniQueue &inQueue(const int remoteProcessId) const;
+    const OneToOneUniQueue &outQueue(const int remoteProcessId) const;
     QueueReader &reader(const Group group, const int processId);
     const QueueReader &reader(const Group group, const int processId) const;
     int readerIndex(const Group group, const int processId) const;
@@ -357,15 +371,17 @@ FewToFewBiQueue::peek(const int remoteProcessId, Value &value) const
         return false;
 
     // we need the oldest value, so start with the incoming, them-to-us queue:
-    const OneToOneUniQueue &inQueue = oneToOneQueue(remoteGroup(), remoteProcessId, theLocalGroup, theLocalProcessId);
-    debugs(54, 2, HERE << "peeking from " << remoteProcessId << " to " << theLocalProcessId << " at " << inQueue.size());
-    if (inQueue.peek(value))
+    const OneToOneUniQueue &in = inQueue(remoteProcessId);
+    debugs(54, 2, HERE << "peeking from " << remoteProcessId << " to " <<
+           theLocalProcessId << " at " << in.size());
+    if (in.peek(value))
         return true;
 
     // if the incoming queue is empty, check the outgoing, us-to-them queue:
-    const OneToOneUniQueue &outQueue = oneToOneQueue(theLocalGroup, theLocalProcessId, remoteGroup(), remoteProcessId);
-    debugs(54, 2, HERE << "peeking from " << theLocalProcessId << " to " << remoteProcessId << " at " << outQueue.size());
-    return outQueue.peek(value);
+    const OneToOneUniQueue &out = outQueue(remoteProcessId);
+    debugs(54, 2, HERE << "peeking from " << theLocalProcessId << " to " <<
+           remoteProcessId << " at " << out.size());
+    return out.peek(value);
 }
 
 } // namespace Ipc
