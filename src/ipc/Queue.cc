@@ -197,6 +197,22 @@ Ipc::FewToFewBiQueue::oneToOneQueue(const Group fromGroup, const int fromProcess
     return (*queues)[oneToOneQueueIndex(fromGroup, fromProcessId, toGroup, toProcessId)];
 }
 
+/// incoming queue from a given remote process
+const Ipc::OneToOneUniQueue &
+Ipc::FewToFewBiQueue::inQueue(const int remoteProcessId) const
+{
+    return oneToOneQueue(remoteGroup(), remoteProcessId,
+                         theLocalGroup, theLocalProcessId);
+}
+
+/// outgoing queue to a given remote process
+const Ipc::OneToOneUniQueue &
+Ipc::FewToFewBiQueue::outQueue(const int remoteProcessId) const
+{
+    return oneToOneQueue(theLocalGroup, theLocalProcessId,
+                         remoteGroup(), remoteProcessId);
+}
+
 int
 Ipc::FewToFewBiQueue::readerIndex(const Group group, const int processId) const
 {
@@ -255,10 +271,24 @@ Ipc::FewToFewBiQueue::localBalance()
     return r.balance;
 }
 
+const Ipc::QueueReader::Balance &
+Ipc::FewToFewBiQueue::balance(const int remoteProcessId) const
+{
+    const QueueReader &r = reader(remoteGroup(), remoteProcessId);
+    return r.balance;
+}
+
 Ipc::QueueReader::Rate &
 Ipc::FewToFewBiQueue::localRateLimit()
 {
     QueueReader &r = reader(theLocalGroup, theLocalProcessId);
+    return r.rateLimit;
+}
+
+const Ipc::QueueReader::Rate &
+Ipc::FewToFewBiQueue::rateLimit(const int remoteProcessId) const
+{
+    const QueueReader &r = reader(remoteGroup(), remoteProcessId);
     return r.rateLimit;
 }
 
