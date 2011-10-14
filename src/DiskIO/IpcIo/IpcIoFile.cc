@@ -367,7 +367,7 @@ IpcIoFile::canWait() const
     if (ioRate > 0) {
         // if there are N requests pending, the new one will wait at
         // least N/max-swap-rate seconds
-        rateWait = 1e3 * queue->outSize(diskId) / ioRate;
+        rateWait = static_cast<int>(1e3 * queue->outSize(diskId) / ioRate);
         // adjust N/max-swap-rate value based on the queue "balance"
         // member, in case we have been borrowing time against future
         // I/O already
