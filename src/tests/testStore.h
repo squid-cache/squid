@@ -65,6 +65,8 @@ public:
 
     virtual int64_t maxObjectSize() const;
 
+    virtual void getStats(StoreInfoStats &) const;
+
     virtual void stat(StoreEntry &) const; /* output stats to the provided store entry */
 
     virtual void reference(StoreEntry &) {}	/* Reference this object */

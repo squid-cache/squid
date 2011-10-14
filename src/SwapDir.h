@@ -75,6 +75,7 @@ public:
 
     virtual int64_t maxObjectSize() const;
 
+    virtual void getStats(StoreInfoStats &stats) const;
     virtual void stat(StoreEntry &) const;
 
     virtual void sync();	/* Sync the store prior to shutdown */
@@ -146,6 +147,7 @@ public:
 
     virtual int64_t maxObjectSize() const { return max_objsize; }
 
+    virtual void getStats(StoreInfoStats &stats) const;
     virtual void stat (StoreEntry &anEntry) const;
     virtual StoreSearch *search(String const url, HttpRequest *) = 0;
 
