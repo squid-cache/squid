@@ -33,6 +33,8 @@ public:
     virtual uint64_t currentCount() const;
     virtual bool doReportStat() const;
     virtual void swappedOut(const StoreEntry &e);
+    virtual void create();
+    virtual void parse(int index, char *path);
 
     int64_t entryLimitHigh() const { return SwapFilenMax; } ///< Core limit
     int64_t entryLimitAllowed() const;
@@ -42,7 +44,6 @@ public:
 protected:
     /* protected ::SwapDir API */
     virtual bool needsDiskStrand() const;
-    virtual void create();
     virtual void init();
     virtual ConfigOption *getOptionTree() const;
     virtual bool allowOptionReconfigure(const char *const option) const;
@@ -62,7 +63,6 @@ protected:
     virtual void readCompleted(const char *buf, int len, int errflag, RefCount< ::ReadRequest>);
     virtual void writeCompleted(int errflag, size_t len, RefCount< ::WriteRequest>);
 
-    virtual void parse(int index, char *path);
     void parseSize(const bool reconfiguring); ///< parses anonymous cache_dir size option
     void validateOptions(); ///< warns of configuration problems; may quit
     bool parseTimeOption(char const *option, const char *value, int reconfiguring);
@@ -95,6 +95,22 @@ private:
 
     static const int64_t HeaderSize; ///< on-disk db header size
 };
+
+/// initializes shared memory segments used by Rock::SwapDir
+class SwapDirRr: public Ipc::Mem::RegisteredRunner
+{
+public:
+    /* ::RegisteredRunner API */
+    virtual ~SwapDirRr();
+
+protected:
+    /* Ipc::Mem::RegisteredRunner API */
+    virtual void create(const RunnerRegistry &);
+
+private:
+    Vector<SwapDir::DirMap::Owner *> owners;
+};
+
 
 } // namespace Rock
 
