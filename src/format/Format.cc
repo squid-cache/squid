@@ -1056,7 +1056,7 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             const bool haveMaxWidth = fmt->widthMax >=0 && !doint && !dooff;
             if (haveMaxWidth || fmt->widthMin) {
                 const int minWidth = fmt->widthMin >= 0 ?
-                                     fmt->widthMin : 0;
+                                     fmt->widthMin :0;
                 const int maxWidth = haveMaxWidth ?
                                      fmt->widthMax : strlen(out);
 
