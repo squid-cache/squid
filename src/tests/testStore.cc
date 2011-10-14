@@ -58,6 +58,11 @@ TestStore::maxObjectSize() const
 }
 
 void
+TestStore::getStats(StoreInfoStats &) const
+{
+}
+
+void
 TestStore::stat(StoreEntry &) const
 {
     const_cast<TestStore *>(this)->statsCalled = true;

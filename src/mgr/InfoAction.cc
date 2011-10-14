@@ -58,12 +58,9 @@ Mgr::InfoActionData::operator += (const InfoActionData& stats)
     request_hit_mem_ratio60 += stats.request_hit_mem_ratio60;
     request_hit_disk_ratio5 += stats.request_hit_disk_ratio5;
     request_hit_disk_ratio60 += stats.request_hit_disk_ratio60;
-    store_swap_size += stats.store_swap_size;
-    store_swap_max_size += stats.store_swap_max_size;
-    store_mem_size += stats.store_mem_size;
-    store_pages_max += stats.store_pages_max;
-    store_mem_used += stats.store_mem_used;
-    objects_size += stats.objects_size;
+
+    store += stats.store;
+
     unlink_requests += stats.unlink_requests;
     http_requests5 += stats.http_requests5;
     http_requests60 += stats.http_requests60;
@@ -124,11 +121,6 @@ Mgr::InfoActionData::operator += (const InfoActionData& stats)
     opening_fd += stats.opening_fd;
     num_fd_free += stats.num_fd_free;
     reserved_fd += stats.reserved_fd;
-    store_open_disk_fd += stats.store_open_disk_fd;
-    store_entries += stats.store_entries;
-    store_mem_entries += stats.store_mem_entries;
-    hot_obj_count += stats.hot_obj_count;
-    n_disk_objects += stats.n_disk_objects;
     ++count;
 
     return *this;

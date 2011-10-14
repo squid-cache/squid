@@ -19,6 +19,7 @@ void MemStore::maintain() STUB
 void MemStore::cleanReadable(const sfileno) STUB
 void MemStore::get(String const, STOREGETCLIENT, void *) STUB
 void MemStore::init() STUB
+void MemStore::getStats(StoreInfoStats&) const STUB
 void MemStore::stat(StoreEntry &) const STUB
 int MemStore::callback() STUB_RETVAL(0)
 StoreEntry *MemStore::get(const cache_key *) STUB_RETVAL(NULL)
