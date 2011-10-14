@@ -2728,6 +2728,7 @@ tests_testRock_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_http.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_icp.cc \
 	tests/stub_ipc.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_mime.cc \
