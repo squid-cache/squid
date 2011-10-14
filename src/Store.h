@@ -45,6 +45,7 @@
 #include "comm/forward.h"
 #include "Packer.h"
 #include "RemovalPolicy.h"
+#include "StoreStats.h"
 
 #if USE_SQUID_ESI
 #include "esi/Element.h"
@@ -60,16 +61,6 @@ class StoreClient;
 class MemObject;
 class StoreSearch;
 class SwapDir;
-
-typedef struct {
-
-    struct {
-        int calls;
-        int select_fail;
-        int create_fail;
-        int success;
-    } create;
-} StoreIoStats;
 
 extern StoreIoStats store_io_stats;
 
@@ -314,6 +305,9 @@ public:
 
     /** the maximum object size that can be stored, -1 if unlimited */
     virtual int64_t maxObjectSize() const = 0;
+
+    /// collect cache storage-related statistics
+    virtual void getStats(StoreInfoStats &stats) const = 0;
 
     /**
      * Output stats to the provided store entry.

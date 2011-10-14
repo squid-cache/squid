@@ -9,6 +9,7 @@
 #define SQUID_MGR_INFO_ACTION_H
 
 #include "mgr/Action.h"
+#include "StoreStats.h"
 #include <sys/time.h>
 
 
@@ -48,12 +49,9 @@ public:
     double request_hit_mem_ratio60;
     double request_hit_disk_ratio5;
     double request_hit_disk_ratio60;
-    double store_swap_size;
-    double store_swap_max_size;
-    double store_mem_size;
-    double store_pages_max;
-    double store_mem_used;
-    double objects_size;
+
+    StoreInfoStats store; ///< disk and memory cache statistics
+
     double unlink_requests;
     double http_requests5;
     double http_requests60;
@@ -113,11 +111,6 @@ public:
     double opening_fd;
     double num_fd_free;
     double reserved_fd;
-    double store_open_disk_fd;
-    double store_entries;
-    double store_mem_entries;
-    double hot_obj_count;
-    double n_disk_objects;
     unsigned int count;
 };
 
