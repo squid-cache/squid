@@ -2,10 +2,12 @@
 #define SQUID_STORE_STATS_H
 
 /// High-level store statistics used by mgr:info action. Used inside PODs!
-class StoreInfoStats {
+class StoreInfoStats
+{
 public:
-    /// Info common to memory and disk parts of the storage. Used inside PODs! 
-    class Part {
+    /// Info common to memory and disk parts of the storage. Used inside PODs!
+    class Part
+    {
     public:
         double size; ///< bytes currently in use
         double count; ///< number of cached objects
@@ -19,13 +21,15 @@ public:
     };
 
     /// disk cache (all cache_dirs) storage stats
-    class Swap: public Part {
+    class Swap: public Part
+    {
     public:
         double open_disk_fd; ///< number of opened disk files
     };
 
     /// memory cache (cache_mem) storage stats
-    class Mem: public Part {
+    class Mem: public Part
+    {
     public:
         bool shared; ///< whether memory cache is shared among workers
     };
@@ -45,7 +49,8 @@ public:
 
 // TODO: this should be adjusted for use in StoreIoActionData, DiskdActionData
 /// Store statistics related to low-level I/O.
-class StoreIoStats {
+class StoreIoStats
+{
 public:
     StoreIoStats();
 
