@@ -812,7 +812,7 @@ Rock::SwapDir::statfs(StoreEntry &e) const
 
 namespace Rock
 {
-    RunnerRegistrationEntry(rrAfterConfig, SwapDirRr);
+RunnerRegistrationEntry(rrAfterConfig, SwapDirRr);
 }
 
 void Rock::SwapDirRr::create(const RunnerRegistry &)
