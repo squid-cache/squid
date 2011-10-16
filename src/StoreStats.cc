@@ -19,7 +19,7 @@ StoreInfoStats::StoreInfoStats()
 
 StoreInfoStats &
 StoreInfoStats::operator +=(const StoreInfoStats &stats)
-{ 
+{
     swap.size += stats.swap.size;
     swap.capacity += stats.swap.capacity;
     swap.count += stats.swap.count;
