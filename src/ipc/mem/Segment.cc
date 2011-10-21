@@ -72,7 +72,8 @@ Ipc::Mem::Segment::create(const off_t aSize)
 
     if (ftruncate(theFD, aSize)) {
         debugs(54, 5, HERE << "ftruncate " << theName << ": " << xstrerror());
-        fatal("Ipc::Mem::Segment::create failed to ftruncate");
+        fatalf("Ipc::Mem::Segment::create failed to ftruncate(%s): %s\n",
+               theName.termedBuf(), xstrerror());
     }
 
     assert(statSize("Ipc::Mem::Segment::create") == aSize); // paranoid
@@ -120,7 +121,8 @@ Ipc::Mem::Segment::attach()
         mmap(NULL, theSize, PROT_READ | PROT_WRITE, MAP_SHARED, theFD, 0);
     if (p == MAP_FAILED) {
         debugs(54, 5, HERE << "mmap " << theName << ": " << xstrerror());
-        fatal("Ipc::Mem::Segment::attach failed to mmap");
+        fatalf("Ipc::Mem::Segment::attach failed to mmap(%s): %s\n",
+               theName.termedBuf(), xstrerror());
     }
     theMem = p;
 }
@@ -134,7 +136,8 @@ Ipc::Mem::Segment::detach()
 
     if (munmap(theMem, theSize)) {
         debugs(54, 5, HERE << "munmap " << theName << ": " << xstrerror());
-        fatal("Ipc::Mem::Segment::detach failed to munmap");
+        fatalf("Ipc::Mem::Segment::detach failed to munmap(%s): %s\n",
+               theName.termedBuf(), xstrerror());
     }
     theMem = 0;
 }
@@ -158,11 +161,9 @@ Ipc::Mem::Segment::statSize(const char *context) const
     memset(&s, 0, sizeof(s));
 
     if (fstat(theFD, &s) != 0) {
-        debugs(54, 5, HERE << "fstat " << theName << ": " << xstrerror());
-        String s = context;
-        s.append("failed to fstat(2) ");
-        s.append(theName);
-        fatal(s.termedBuf());
+        debugs(54, 5, HERE << context << " fstat " << theName << ": " << xstrerror());
+        fatalf("Ipc::Mem::Segment::statSize: %s failed to fstat(%s): %s\n",
+               context, theName.termedBuf(), xstrerror());
     }
 
     return s.st_size;
@@ -249,9 +250,11 @@ void
 Ipc::Mem::Segment::checkSupport(const char *const context)
 {
     if (!Enabled()) {
-        debugs(54, 5, HERE << "True shared memory segments are not supported. "
+        debugs(54, 5, HERE << context <<
+               ": True shared memory segments are not supported. "
                "Cannot fake shared segments in SMP config.");
-        fatalf("%s failed", context);
+        fatalf("Ipc::Mem::Segment: Cannot fake shared segments in SMP config (%s)\n",
+               context);
     }
 }
 
