@@ -5,6 +5,7 @@
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "acl/FilledChecklist.h"
+#include "adaptation/Initiator.h"
 #include "adaptation/Service.h"
 #include "adaptation/ServiceGroups.h"
 #include "adaptation/AccessRule.h"
@@ -18,13 +19,13 @@ cbdata_type Adaptation::AccessCheck::CBDATA_AccessCheck = CBDATA_UNKNOWN;
 
 bool
 Adaptation::AccessCheck::Start(Method method, VectPoint vp,
-                               HttpRequest *req, HttpReply *rep, AccessCheckCallback *cb, void *cbdata)
+                               HttpRequest *req, HttpReply *rep, Adaptation::Initiator *initiator)
 {
 
     if (Config::Enabled) {
         // the new check will call the callback and delete self, eventually
         AsyncJob::Start(new AccessCheck( // we do not store so not a CbcPointer
-                            ServiceFilter(method, vp, req, rep), cb, cbdata));
+                            ServiceFilter(method, vp, req, rep), initiator));
         return true;
     }
 
@@ -33,11 +34,9 @@ Adaptation::AccessCheck::Start(Method method, VectPoint vp,
 }
 
 Adaptation::AccessCheck::AccessCheck(const ServiceFilter &aFilter,
-                                     AccessCheckCallback *aCallback,
-                                     void *aCallbackData):
+                                     Adaptation::Initiator *initiator):
         AsyncJob("AccessCheck"), filter(aFilter),
-        callback(aCallback),
-        callback_data(cbdataReference(aCallbackData)),
+        theInitiator(initiator),
         acl_checklist(NULL)
 {
 #if ICAP_CLIENT
@@ -57,8 +56,6 @@ Adaptation::AccessCheck::~AccessCheck()
     if (h != NULL)
         h->stop("ACL");
 #endif
-    if (callback_data)
-        cbdataReferenceDone(callback_data);
 }
 
 void
@@ -185,11 +182,8 @@ void
 Adaptation::AccessCheck::callBack(const ServiceGroupPointer &g)
 {
     debugs(93,3, HERE << g);
-
-    void *validated_cbdata;
-    if (cbdataReferenceValidDone(callback_data, &validated_cbdata)) {
-        callback(g, validated_cbdata);
-    }
+    CallJobHere1(93, 5, theInitiator, Adaptation::Initiator,
+                 noteAdaptationAclCheckDone, g);
     mustStop("done"); // called back or will never be able to call back
 }
 
