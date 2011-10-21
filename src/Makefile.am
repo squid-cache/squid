@@ -2708,6 +2708,7 @@ tests_testRock_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaUnpacker.cc \
 	StoreMetaVary.cc \
+	StoreSwapLogData.cc \
 	store_dir.cc \
 	store_io.cc \
 	store_key_md5.cc \
