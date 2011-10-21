@@ -66,7 +66,8 @@ Ipc::Mem::Segment::create(const off_t aSize)
                      S_IRUSR | S_IWUSR);
     if (theFD < 0) {
         debugs(54, 5, HERE << "shm_open " << theName << ": " << xstrerror());
-        fatal("Ipc::Mem::Segment::create failed to shm_open");
+        fatalf("Ipc::Mem::Segment::create failed to shm_open(%s): %s\n",
+               theName.termedBuf(), xstrerror());
     }
 
     if (ftruncate(theFD, aSize)) {
@@ -93,9 +94,8 @@ Ipc::Mem::Segment::open()
     theFD = shm_open(theName.termedBuf(), O_RDWR, 0);
     if (theFD < 0) {
         debugs(54, 5, HERE << "shm_open " << theName << ": " << xstrerror());
-        String s = "Ipc::Mem::Segment::open failed to shm_open ";
-        s.append(theName);
-        fatal(s.termedBuf());
+        fatalf("Ipc::Mem::Segment::open failed to shm_open(%s): %s\n",
+               theName.termedBuf(), xstrerror());
     }
 
     theSize = statSize("Ipc::Mem::Segment::open");
