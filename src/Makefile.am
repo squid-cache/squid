@@ -2674,6 +2674,7 @@ tests_testRock_SOURCES = \
 	EventLoop.cc \
 	event.cc \
 	fd.cc \
+	filemap.cc \
 	HttpBody.cc \
 	HttpHdrCc.cc \
 	HttpHdrContRange.cc \
@@ -2687,6 +2688,7 @@ tests_testRock_SOURCES = \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
 	int.cc \
+	list.cc \
 	mem.cc \
 	MemBuf.cc \
 	MemObject.cc \
