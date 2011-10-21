@@ -5,6 +5,7 @@
 #include "base/AsyncJob.h"
 #include "adaptation/Elements.h"
 #include "adaptation/forward.h"
+#include "adaptation/Initiator.h"
 #include "adaptation/ServiceFilter.h"
 
 class HttpRequest;
@@ -24,17 +25,16 @@ public:
 
     // use this to start async ACL checks; returns true if started
     static bool Start(Method method, VectPoint vp, HttpRequest *req,
-                      HttpReply *rep, AccessCheckCallback *cb, void *cbdata);
+                      HttpReply *rep, Adaptation::Initiator *initiator);
 
 protected:
     // use Start to start adaptation checks
-    AccessCheck(const ServiceFilter &aFilter, AccessCheckCallback *, void *);
+    AccessCheck(const ServiceFilter &aFilter, Adaptation::Initiator *);
     ~AccessCheck();
 
 private:
     const ServiceFilter filter;
-    AccessCheckCallback *callback;
-    void *callback_data;
+    CbcPointer<Adaptation::Initiator> theInitiator; ///< the job which ordered this access check
     ACLFilledChecklist *acl_checklist;
 
     typedef int Candidate;

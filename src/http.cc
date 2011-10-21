@@ -154,20 +154,11 @@ HttpStateData::dataConnection() const
     return serverConnection;
 }
 
-/*
-static void
-httpStateFree(int fd, void *data)
-{
-    HttpStateData *httpState = static_cast<HttpStateData *>(data);
-    debugs(11, 5, "httpStateFree: FD " << fd << ", httpState=" << data);
-    delete httpState;
-}*/
-
 void
 HttpStateData::httpStateConnClosed(const CommCloseCbParams &params)
 {
     debugs(11, 5, "httpStateFree: FD " << params.fd << ", httpState=" << params.data);
-    deleteThis("HttpStateData::httpStateConnClosed");
+    mustStop("HttpStateData::httpStateConnClosed");
 }
 
 int
@@ -2181,11 +2172,15 @@ void
 httpStart(FwdState *fwd)
 {
     debugs(11, 3, "httpStart: \"" << RequestMethodStr(fwd->request->method) << " " << fwd->entry->url() << "\"" );
-    HttpStateData *httpState = new HttpStateData(fwd);
+    AsyncJob::Start(new HttpStateData(fwd));
+}
 
-    if (!httpState->sendRequest()) {
+void
+HttpStateData::start()
+{
+    if (!sendRequest()) {
         debugs(11, 3, "httpStart: aborted");
-        delete httpState;
+        mustStop("HttpStateData::start failed");
         return;
     }
 
@@ -2341,5 +2336,5 @@ HttpStateData::abortTransaction(const char *reason)
     }
 
     fwd->handleUnregisteredServerEnd();
-    deleteThis("HttpStateData::abortTransaction");
+    mustStop("HttpStateData::abortTransaction");
 }

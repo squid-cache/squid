@@ -234,7 +234,7 @@ private:
 
 public:
     // these should all be private
-    void start();
+    virtual void start();
     void loginParser(const char *, int escaped);
     int restartable();
     void appendSuccessHeader();
@@ -457,7 +457,7 @@ FtpStateData::ctrlClosed(const CommCloseCbParams &io)
 {
     debugs(9, 4, HERE);
     ctrl.clear();
-    deleteThis("FtpStateData::ctrlClosed");
+    mustStop("FtpStateData::ctrlClosed");
 }
 
 /// handler called by Comm when FTP data channel is closed unexpectedly
@@ -1517,8 +1517,7 @@ FtpStateData::buildTitleUrl()
 void
 ftpStart(FwdState * fwd)
 {
-    FtpStateData *ftpState = new FtpStateData(fwd, fwd->serverConnection());
-    ftpState->start();
+    AsyncJob::Start(new FtpStateData(fwd, fwd->serverConnection()));
 }
 
 void
@@ -3877,7 +3876,7 @@ FtpStateData::abortTransaction(const char *reason)
     }
 
     fwd->handleUnregisteredServerEnd();
-    deleteThis("FtpStateData::abortTransaction");
+    mustStop("FtpStateData::abortTransaction");
 }
 
 /// creates a data channel Comm close callback
