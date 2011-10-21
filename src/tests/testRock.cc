@@ -50,7 +50,7 @@ testRock::setUp()
 
     char *path=xstrdup(TESTDIR);
 
-    char *config_line=xstrdup("foo 100 max-size=16384");
+    char *config_line=xstrdup("foo 10 max-size=16384");
 
     strtok(config_line, w_space);
 
