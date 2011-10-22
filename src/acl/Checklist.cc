@@ -350,9 +350,9 @@ ACLChecklist::fastCheck()
     debugs(28, 5, "aclCheckFast: list: " << accessList);
     const acl_access *acl = cbdataReference(accessList);
     while (acl != NULL && cbdataReferenceValid(acl)) {
-        currentAnswer(acl->allow);
         matchAclList(acl->aclList, true);
         if (finished()) {
+            currentAnswer(acl->allow);
             PROF_stop(aclCheckFast);
             cbdataReferenceDone(acl);
             return currentAnswer();
