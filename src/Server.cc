@@ -217,11 +217,11 @@ bool ServerStateData::doneAll() const
 {
     return  doneWithServer() &&
 #if USE_ADAPTATION
-        doneWithAdaptation() &&
-        Adaptation::Initiator::doneAll() &&
-        BodyProducer::doneAll() &&
+            doneWithAdaptation() &&
+            Adaptation::Initiator::doneAll() &&
+            BodyProducer::doneAll() &&
 #endif
-        BodyConsumer::doneAll();
+            BodyConsumer::doneAll();
 }
 
 // FTP side overloads this to work around multiple calls to fwd->complete
