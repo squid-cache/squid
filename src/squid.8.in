@@ -265,7 +265,7 @@ Report ideas for new improvements to the
 .if !'po4a'hide' .B pam_auth "(8), "
 .if !'po4a'hide' .B squid_ldap_auth "(8), "
 .if !'po4a'hide' .B squid_ldap_group "(8), "
-.if !'po4a'hide' .B squid_session "(8), "
+.if !'po4a'hide' .B ext_session_acl "(8), "
 .if !'po4a'hide' .B squid_unix_group "(8), "
 .br
 The Squid FAQ wiki
