@@ -86,8 +86,10 @@ if test "x$ac_cv_path_PERL" = "xnone"; then
 fi
 AC_PATH_PROG(POD2MAN, pod2man, $FALSE)
 
-dnl set $(AR)
-AC_PATH_PROG(AR, ar, $FALSE)
+dnl set $(AR) if not provided by the build environment
+if test "x$AR" = "x"; then
+  AC_PATH_PROG(AR, ar, $FALSE)
+fi
 AR_R="$AR r"
 AC_SUBST(AR_R)
 
