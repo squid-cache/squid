@@ -219,11 +219,11 @@ Format::Format::dump(StoreEntry * entry, const char *name)
                 if (t->zero)
                     entry->append("0", 1);
 
-                if (t->width)
-                    storeAppendPrintf(entry, "%d", (int) t->width);
+                if (t->widthMin >= 0)
+                    storeAppendPrintf(entry, "%d", t->widthMin);
 
-                if (t->precision)
-                    storeAppendPrintf(entry, ".%d", (int) t->precision);
+                if (t->widthMax >= 0)
+                    storeAppendPrintf(entry, ".%d", t->widthMax);
 
                 if (arg)
                     storeAppendPrintf(entry, "{%s}", arg);
@@ -999,11 +999,11 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
         }
 
         if (dooff) {
-            snprintf(tmp, sizeof(tmp), "%0*" PRId64, fmt->zero ? (int) fmt->width : 0, outoff);
+            snprintf(tmp, sizeof(tmp), "%0*" PRId64, fmt->zero && fmt->widthMin >= 0 ? fmt->widthMin : 0, outoff);
             out = tmp;
 
         } else if (doint) {
-            snprintf(tmp, sizeof(tmp), "%0*ld", fmt->zero ? (int) fmt->width : 0, outint);
+            snprintf(tmp, sizeof(tmp), "%0*ld", fmt->zero && fmt->widthMin >= 0 ? fmt->widthMin : 0, outint);
             out = tmp;
         }
 
@@ -1053,12 +1053,12 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             }
 
             // enforce width limits if configured
-            const bool haveMaxWidth = fmt->precision && !doint && !dooff;
-            if (haveMaxWidth || fmt->width) {
-                const int minWidth = fmt->width ?
-                                     static_cast<int>(fmt->width) : 0;
+            const bool haveMaxWidth = fmt->widthMax >=0 && !doint && !dooff;
+            if (haveMaxWidth || fmt->widthMin) {
+                const int minWidth = fmt->widthMin >= 0 ?
+                                     fmt->widthMin :0;
                 const int maxWidth = haveMaxWidth ?
-                                     static_cast<int>(fmt->precision) : strlen(out);
+                                     fmt->widthMax : strlen(out);
 
                 if (fmt->left)
                     mb.Printf("%-*.*s", minWidth, maxWidth, out);
