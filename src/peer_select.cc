@@ -435,8 +435,10 @@ peerSelectFoo(ps_state * ps)
         if (Config.onoff.prefer_direct)
             peerGetSomeDirect(ps);
 
-        if (request->flags.hierarchical || !Config.onoff.nonhierarchical_direct)
+        if (request->flags.hierarchical || !Config.onoff.nonhierarchical_direct) {
             peerGetSomeParent(ps);
+            peerGetAllParents(ps);
+        }
 
         if (!Config.onoff.prefer_direct)
             peerGetSomeDirect(ps);
