@@ -2252,6 +2252,10 @@ else
   AC_MSG_ERROR(Cannot find cppunit at $withval)
 fi
 ])
+SQUID_STATE_SAVE(squid_cppunit_state)
+CXXFLAGS="$CXXFLAGS $SQUID_CPPUNIT_INC"
+AC_CHECK_HEADERS(cppunit/extensions/HelperMacros.h)
+SQUID_STATE_ROLLBACK(squid_cppunit_state)
 AC_SUBST(SQUID_CPPUNIT_LIBS)
 AC_SUBST(SQUID_CPPUNIT_LA)
 AC_SUBST(SQUID_CPPUNIT_INC)
