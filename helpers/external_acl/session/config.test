@@ -1,10 +1,6 @@
 #!/bin/sh
 
-# Actual intended test
-if [ -f /usr/include/db_185.h ]; then
-    exit 0
-fi
-if [ -f /usr/include/db.h ] && grep dbopen /usr/include/db.h; then
+if [ -f /usr/include/db.h ] && grep db_env_create /usr/include/db.h; then
     exit 0
 fi
 exit 1
