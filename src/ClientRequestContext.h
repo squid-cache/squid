@@ -38,7 +38,6 @@ public:
 #if USE_ADAPTATION
 
     void adaptationAccessCheck();
-    void adaptationAclCheckDone(Adaptation::ServiceGroupPointer g);
 #endif
 #if USE_SSL
     /**

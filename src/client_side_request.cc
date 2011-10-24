@@ -815,45 +815,33 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 }
 
 #if USE_ADAPTATION
-static void
-adaptationAclCheckDoneWrapper(Adaptation::ServiceGroupPointer g, void *data)
-{
-    ClientRequestContext *calloutContext = (ClientRequestContext *)data;
-
-    if (!calloutContext->httpStateIsValid())
-        return;
-
-    calloutContext->adaptationAclCheckDone(g);
-}
-
 void
-ClientRequestContext::adaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
+ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
 {
     debugs(93,3,HERE << this << " adaptationAclCheckDone called");
-    assert(http);
 
 #if ICAP_CLIENT
-    Adaptation::Icap::History::Pointer ih = http->request->icapHistory();
+    Adaptation::Icap::History::Pointer ih = request->icapHistory();
     if (ih != NULL) {
-        if (http->getConn() != NULL) {
-            ih->rfc931 = http->getConn()->clientConnection->rfc931;
+        if (getConn() != NULL) {
+            ih->rfc931 = getConn()->clientConnection->rfc931;
 #if USE_SSL
-            assert(http->getConn()->clientConnection != NULL);
-            ih->ssluser = sslGetUserEmail(fd_table[http->getConn()->clientConnection->fd].ssl);
+            assert(getConn()->clientConnection != NULL);
+            ih->ssluser = sslGetUserEmail(fd_table[getConn()->clientConnection->fd].ssl);
 #endif
         }
-        ih->log_uri = http->log_uri;
-        ih->req_sz = http->req_sz;
+        ih->log_uri = log_uri;
+        ih->req_sz = req_sz;
     }
 #endif
 
     if (!g) {
         debugs(85,3, HERE << "no adaptation needed");
-        http->doCallouts();
+        doCallouts();
         return;
     }
 
-    http->startAdaptation(g);
+    startAdaptation(g);
 }
 
 #endif
@@ -1496,7 +1484,7 @@ ClientHttpRequest::doCallouts()
         calloutContext->adaptation_acl_check_done = true;
         if (Adaptation::AccessCheck::Start(
                     Adaptation::methodReqmod, Adaptation::pointPreCache,
-                    request, NULL, adaptationAclCheckDoneWrapper, calloutContext))
+                    request, NULL, this))
             return; // will call callback
     }
 #endif

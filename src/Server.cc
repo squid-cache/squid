@@ -211,29 +211,17 @@ ServerStateData::serverComplete2()
 #endif
 
     completeForwarding();
-    quitIfAllDone();
 }
 
-// When we are done talking to the primary server, we may be still talking
-// to the ICAP service. And vice versa. Here, we quit only if we are done
-// talking to both.
-void ServerStateData::quitIfAllDone()
+bool ServerStateData::doneAll() const
 {
+    return  doneWithServer() &&
 #if USE_ADAPTATION
-    if (!doneWithAdaptation()) {
-        debugs(11,5, HERE << "transaction not done: still talking to ICAP");
-        return;
-    }
+            doneWithAdaptation() &&
+            Adaptation::Initiator::doneAll() &&
+            BodyProducer::doneAll() &&
 #endif
-
-    if (!doneWithServer()) {
-        debugs(11,5, HERE << "transaction not done: still talking to server");
-        return;
-    }
-
-    debugs(11,3, HERE << "transaction done");
-
-    deleteThis("ServerStateData::quitIfAllDone");
+            BodyConsumer::doneAll();
 }
 
 // FTP side overloads this to work around multiple calls to fwd->complete
@@ -766,7 +754,6 @@ ServerStateData::handleAdaptationCompleted()
     }
 
     completeForwarding();
-    quitIfAllDone();
 }
 
 
@@ -827,7 +814,7 @@ ServerStateData::handleAdaptationBlocked(const Adaptation::Answer &answer)
 }
 
 void
-ServerStateData::adaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
+ServerStateData::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
 {
     adaptationAccessCheckPending = false;
 
@@ -852,13 +839,6 @@ ServerStateData::adaptationAclCheckDone(Adaptation::ServiceGroupPointer group)
     startAdaptation(group, originalRequest());
     processReplyBody();
 }
-
-void
-ServerStateData::adaptationAclCheckDoneWrapper(Adaptation::ServiceGroupPointer group, void *data)
-{
-    ServerStateData *state = (ServerStateData *)data;
-    state->adaptationAclCheckDone(group);
-}
 #endif
 
 void
@@ -881,7 +861,7 @@ ServerStateData::adaptOrFinalizeReply()
     // The callback can be called with a NULL service if adaptation is off.
     adaptationAccessCheckPending = Adaptation::AccessCheck::Start(
                                        Adaptation::methodRespmod, Adaptation::pointPreCache,
-                                       originalRequest(), virginReply(), adaptationAclCheckDoneWrapper, this);
+                                       originalRequest(), virginReply(), this);
     debugs(11,5, HERE << "adaptationAccessCheckPending=" << adaptationAccessCheckPending);
     if (adaptationAccessCheckPending)
         return;

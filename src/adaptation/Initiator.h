@@ -23,6 +23,9 @@ public:
     Initiator(): AsyncJob("Initiator") {}
     virtual ~Initiator() {}
 
+    /// AccessCheck calls this back with a possibly nil service group
+    /// to signal whether adaptation is needed and where it should start.
+    virtual void noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group);
     /// called with the initial adaptation decision (adapt, block, error);
     /// virgin and/or adapted body transmission may continue after this
     virtual void noteAdaptationAnswer(const Answer &answer) = 0;
