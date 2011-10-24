@@ -3,6 +3,7 @@
 
 // CPPUNIT test suite uses auto_ptr which is deprecated in C++0x
 
+#if HAVE_CPPUNIT_EXTENSIONS_HELPERMACROS_H
 #if defined(__cplusplus) && HAVE_UNIQUE_PTR
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -29,5 +30,5 @@
 
 
 #endif /* HAVE_UNIQUE_PTR */
-
+#endif /* HAVE_CPPUNIT_EXTENSIONS_HELPERMACROS_H */
 #endif /* SQUID_COMPAT_CPPUNIT_H */
