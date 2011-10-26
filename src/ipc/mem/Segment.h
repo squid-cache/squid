@@ -35,6 +35,8 @@ public:
     void *mem() { return reserve(0); } ///< pointer to the next chunk
     void *reserve(size_t chunkSize); ///< reserve and return the next chunk
 
+    /// common path of all segment names in path-based environments
+    static const char *BasePath;
 
 private:
 

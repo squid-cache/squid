@@ -40,6 +40,9 @@ testRock::setUp()
     if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 
+    // use current directory for shared segments (on path-based OSes)
+    Ipc::Mem::Segment::BasePath = "";
+
     Store::Root(new StoreController);
 
     store = new Rock::SwapDir();
