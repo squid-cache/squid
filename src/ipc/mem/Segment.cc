@@ -16,6 +16,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+
+// test cases change this
+const char *Ipc::Mem::Segment::BasePath = DEFAULT_STATEDIR;
+
 void *
 Ipc::Mem::Segment::reserve(size_t chunkSize)
 {
@@ -169,11 +173,16 @@ Ipc::Mem::Segment::statSize(const char *context) const
     return s.st_size;
 }
 
-/// Generate name for shared memory segment. Replaces all slashes with dots.
+/// Generate name for shared memory segment. Starts with a prefix required
+/// for cross-platform portability and replaces all slashes in ID with dots.
 String
 Ipc::Mem::Segment::GenerateName(const char *id)
 {
-    String name("/squid-");
+    assert(BasePath);
+    static const bool nameIsPath = shm_portable_segment_name_is_path();
+    String name(nameIsPath ? BasePath : "/squid-");
+
+    // append id, replacing slashes with dots
     for (const char *slash = strchr(id, '/'); slash; slash = strchr(id, '/')) {
         if (id != slash) {
             name.append(id, slash - id);
@@ -182,6 +191,8 @@ Ipc::Mem::Segment::GenerateName(const char *id)
         id = slash + 1;
     }
     name.append(id);
+
+    name.append(".shm"); // to distinguish from non-segments when nameIsPath
     return name;
 }
 
