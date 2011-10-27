@@ -356,6 +356,24 @@ MemStore::EntryLimit()
 }
 
 
+/// reports our needs for shared memory pages to Ipc::Mem::Pages
+class MemStoreClaimMemoryNeedsRr: public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    virtual void run(const RunnerRegistry &r);
+};
+
+RunnerRegistrationEntry(rrClaimMemoryNeeds, MemStoreClaimMemoryNeedsRr);
+
+
+void
+MemStoreClaimMemoryNeedsRr::run(const RunnerRegistry &)
+{
+    Ipc::Mem::NotePageNeed(Ipc::Mem::PageId::cachePage, MemStore::EntryLimit());
+}
+
+
 /// initializes shared memory segments used by MemStore
 class MemStoreRr: public Ipc::Mem::RegisteredRunner
 {
@@ -402,8 +420,14 @@ void MemStoreRr::create(const RunnerRegistry &)
 
     Must(!owner);
     const int64_t entryLimit = MemStore::EntryLimit();
-    if (entryLimit <= 0)
+    if (entryLimit <= 0) {
+        if (Config.memMaxSize > 0) {
+            debugs(20, DBG_IMPORTANT, "WARNING: mem-cache size is too small ("
+                   << (Config.memMaxSize / 1024.0) << " KB), should be >= " <<
+                   (Ipc::Mem::PageSize() / 1024.0) << " KB");
+        }
         return; // no memory cache configured or a misconfiguration
+    }
     owner = MemStoreMap::Init(ShmLabel, entryLimit);
 }
 
