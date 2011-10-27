@@ -335,10 +335,13 @@ Rock::SwapDir::parseTimeOption(char const *option, const char *value, int reconf
 
     const time_msec_t newTime = static_cast<time_msec_t>(parsedValue);
 
-    if (reconfiguring && *storedTime != newTime)
-        debugs(3, DBG_IMPORTANT, "cache_dir " << path << ' ' << option << " is now " << newTime);
-
-    *storedTime = newTime;
+    if (!reconfiguring)
+        *storedTime = newTime;
+    else if (*storedTime != newTime) {
+        debugs(3, DBG_IMPORTANT, "WARNING: cache_dir " << path << ' ' << option
+               << " cannot be changed dynamically, value left unchanged: " <<
+               *storedTime);
+    }
 
     return true;
 }
@@ -379,10 +382,13 @@ Rock::SwapDir::parseRateOption(char const *option, const char *value, int isaRec
         self_destruct();
     }
 
-    if (isaReconfig && *storedRate != newRate)
-        debugs(3, DBG_IMPORTANT, "cache_dir " << path << ' ' << option << " is now " << newRate);
-
-    *storedRate = newRate;
+    if (!isaReconfig)
+        *storedRate = newRate;
+    else if (*storedRate != newRate) {
+        debugs(3, DBG_IMPORTANT, "WARNING: cache_dir " << path << ' ' << option
+               << " cannot be changed dynamically, value left unchanged: " <<
+               *storedRate);
+    }
 
     return true;
 }
