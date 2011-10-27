@@ -129,6 +129,13 @@ CossSwapDir::allocate(const StoreEntry * e, int which)
     }
 }
 
+bool
+CossSwapDir::unlinkdUseful() const
+{
+    // no entry-specific files to unlink
+    return false;
+}
+
 void
 CossSwapDir::unlink(StoreEntry & e)
 {

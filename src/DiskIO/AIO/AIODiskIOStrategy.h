@@ -52,6 +52,8 @@ public:
     virtual RefCount<DiskFile> newFile (char const *path);
     /* flush all IO operations  */
     virtual void sync();
+    /** whether the IO Strategy can use unlinkd */
+    virtual bool unlinkdUseful() const;
     /* unlink a file by path */
     virtual void unlinkFile (char const *);
 

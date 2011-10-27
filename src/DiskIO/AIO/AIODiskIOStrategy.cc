@@ -100,6 +100,12 @@ AIODiskIOStrategy::sync()
         callback();
 }
 
+bool
+AIODiskIOStrategy::unlinkdUseful() const
+{
+    return false;
+}
+
 void
 AIODiskIOStrategy::unlinkFile (char const *)
 {}
