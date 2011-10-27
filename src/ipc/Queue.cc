@@ -255,21 +255,6 @@ Ipc::FewToFewBiQueue::clearReaderSignal(const int remoteProcessId)
     // theLastPopProcessId = remoteProcessId;
 }
 
-bool
-Ipc::FewToFewBiQueue::popReady() const
-{
-    // mimic FewToFewBiQueue::pop() but quit just before popping
-    int popProcessId = theLastPopProcessId; // preserve for future pop()
-    for (int i = 0; i < remoteGroupSize(); ++i) {
-        if (++popProcessId >= remoteGroupIdOffset() + remoteGroupSize())
-            popProcessId = remoteGroupIdOffset();
-        const OneToOneUniQueue &queue = oneToOneQueue(remoteGroup(), popProcessId, theLocalGroup, theLocalProcessId);
-        if (!queue.empty())
-            return true;
-    }
-    return false; // most likely, no process had anything to pop
-}
-
 Ipc::QueueReader::Balance &
 Ipc::FewToFewBiQueue::localBalance()
 {
