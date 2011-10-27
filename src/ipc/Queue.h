@@ -205,8 +205,8 @@ public:
     /// us and the given remote process
     template<class Value> bool findOldest(const int remoteProcessId, Value &value) const;
 
-    /// returns true if pop() would have probably succeeded but does not pop()
-    bool popReady() const;
+    /// peeks at the item likely to be pop()ed next
+    template<class Value> bool peek(int &remoteProcessId, Value &value) const;
 
     /// returns local reader's balance
     QueueReader::Balance &localBalance();
@@ -385,6 +385,26 @@ FewToFewBiQueue::findOldest(const int remoteProcessId, Value &value) const
     debugs(54, 2, HERE << "peeking from " << theLocalProcessId << " to " <<
            remoteProcessId << " at " << out.size());
     return out.peek(value);
+}
+
+template <class Value>
+bool
+FewToFewBiQueue::peek(int &remoteProcessId, Value &value) const
+{
+    // mimic FewToFewBiQueue::pop() but quit just before popping
+    int popProcessId = theLastPopProcessId; // preserve for future pop()
+    for (int i = 0; i < remoteGroupSize(); ++i) {
+        if (++popProcessId >= remoteGroupIdOffset() + remoteGroupSize())
+            popProcessId = remoteGroupIdOffset();
+        const OneToOneUniQueue &queue =
+            oneToOneQueue(remoteGroup(), popProcessId,
+                          theLocalGroup, theLocalProcessId);
+        if (queue.peek(value)) {
+            remoteProcessId = popProcessId;
+            return true;
+        }
+    }
+    return false; // most likely, no process had anything to pop
 }
 
 } // namespace Ipc

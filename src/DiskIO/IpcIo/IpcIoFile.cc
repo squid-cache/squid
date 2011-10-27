@@ -690,8 +690,10 @@ IpcIoFile::WaitBeforePop()
         return false;
 
     // is there an I/O request we could potentially delay?
-    if (!queue->popReady()) {
-        // unlike pop(), popReady() is not reliable and does not block reader
+    int processId;
+    IpcIoMsg ipcIo;
+    if (!queue->peek(processId, ipcIo)) {
+        // unlike pop(), peek() is not reliable and does not block reader
         // so we must proceed with pop() even if it is likely to fail
         return false;
     }
@@ -711,9 +713,10 @@ IpcIoFile::WaitBeforePop()
 
     debugs(47, 7, HERE << "rate limiting balance: " << balance << " after +" << credit << " -" << debit);
 
-    if (balance > maxImbalance) {
-        // if we accumulated too much time for future slow I/Os,
-        // then shed accumulated time to keep just half of the excess
+    if (ipcIo.command == IpcIo::cmdWrite && balance > maxImbalance) {
+        // if the next request is (likely) write and we accumulated
+        // too much time for future slow I/Os, then shed accumulated
+        // time to keep just half of the excess
         const int64_t toSpend = balance - maxImbalance/2;
 
         if (toSpend/1e3 > Timeout)
