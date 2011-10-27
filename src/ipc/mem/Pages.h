@@ -51,6 +51,9 @@ inline size_t PagesAvailable(const int purpose) { return PageLimit(purpose) - Pa
 /// returns page size in bytes; all pages are assumed to be the same size
 size_t PageSize();
 
+/// claim the need for a number of pages for a given purpose
+void NotePageNeed(const int purpose, const int count);
+
 } // namespace Mem
 
 } // namespace Ipc

@@ -186,6 +186,9 @@ public:
     enum Group { groupA = 0, groupB = 1 };
     FewToFewBiQueue(const String &id, const Group aLocalGroup, const int aLocalProcessId);
 
+    /// maximum number of items in the queue
+    static int MaxItemsCount(const int groupASize, const int groupBSize, const int capacity);
+
     Group localGroup() const { return theLocalGroup; }
     Group remoteGroup() const { return theLocalGroup == groupA ? groupB : groupA; }
 
