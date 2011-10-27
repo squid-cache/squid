@@ -1248,4 +1248,73 @@ Ssl::setClientSNI(SSL *ssl, const char *fqdn)
 #endif
 }
 
+void Ssl::addChainToSslContext(SSL_CTX *sslContext, STACK_OF(X509) *chain)
+{
+    if (!chain)
+        return;
+
+    for (int i = 0; i < sk_X509_num(chain); i++) {
+        X509 *cert = sk_X509_value(chain, i);
+        if (SSL_CTX_add_extra_chain_cert(sslContext, cert)) {
+            // increase the certificate lock
+            CRYPTO_add(&(cert->references),1,CRYPTO_LOCK_X509);
+        } else {
+            const int ssl_error = ERR_get_error();
+            debugs(83, DBG_IMPORTANT, "WARNING: can not add certificate to SSL context chain: " << ERR_error_string(ssl_error, NULL));
+        }
+    }
+}
+
+/**
+ \ingroup ServerProtocolSSLInternal
+ * Read certificate from file.
+ * See also: static readSslX509Certificate function, gadgets.cc file
+ */
+static X509 * readSslX509CertificatesChain(char const * certFilename,  STACK_OF(X509)* chain)
+{
+    if (!certFilename)
+        return NULL;
+    Ssl::BIO_Pointer bio(BIO_new(BIO_s_file_internal()));
+    if (!bio)
+        return NULL;
+    if (!BIO_read_filename(bio.get(), certFilename))
+        return NULL;
+    X509 *certificate = PEM_read_bio_X509(bio.get(), NULL, NULL, NULL);
+
+    if (certificate && chain) {
+
+        if (X509_check_issued(certificate, certificate) == X509_V_OK) 
+            debugs(83, 5, "Certificate is self-signed, will not be chained");
+        else {
+            if(sk_X509_push(chain, certificate))
+                CRYPTO_add(&(certificate->references), 1, CRYPTO_LOCK_X509);
+            else
+                debugs(83, DBG_IMPORTANT, "WARNING: unable to add signing certificate to cert chain");
+            // and add to the chain any certificate loaded from the file
+            while (X509 *ca = PEM_read_bio_X509(bio.get(), NULL, NULL, NULL)) {
+                if (!sk_X509_push(chain, ca))
+                    debugs(83, DBG_IMPORTANT, "WARNING: unable to add CA certificate to cert chain");
+            }
+        }
+    }
+    
+    return certificate;
+}
+
+void Ssl::readCertChainAndPrivateKeyFromFiles(X509_Pointer & cert, EVP_PKEY_Pointer & pkey, X509_STACK_Pointer & chain, char const * certFilename, char const * keyFilename)
+{
+    if (keyFilename == NULL)
+        keyFilename = certFilename;
+    if (!chain)
+        chain.reset(sk_X509_new_null());
+    if (!chain)
+        debugs(83, DBG_IMPORTANT, "WARNING: unable to allocate memory for cert chain");
+    pkey.reset(readSslPrivateKey(keyFilename));
+    cert.reset(readSslX509CertificatesChain(certFilename, chain.get()));
+    if (!pkey || !cert || !X509_check_private_key(cert.get(), pkey.get())) {
+        pkey.reset(NULL);
+        cert.reset(NULL);
+    }
+}
+
 #endif /* USE_SSL */

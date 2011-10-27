@@ -3469,7 +3469,8 @@ ConnStateData::sslCrtdHandleReply(const char * reply)
                 debugs(33, 5, HERE << "Certificate for " << sslHostName << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
             } else {
                 debugs(33, 5, HERE << "Certificate for " << sslHostName << " was successfully recieved from ssl_crtd");
-                getSslContextDone(Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str()), true);
+                SSL_CTX *ctx = Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str());
+                getSslContextDone(ctx, true);
                 return;
             }
         }
@@ -3523,6 +3524,9 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
 {
     // Try to add generated ssl context to storage.
     if (port->generateHostCertificates && isNew) {
+
+        Ssl::addChainToSslContext(sslContext, port->certsToChain.get());
+
         Ssl::LocalContextStorage & ssl_ctx_cache(Ssl::TheGlobalContextStorage.getLocalStorage(port->s));
         if (sslContext && sslHostName != "") {
             if (!ssl_ctx_cache.add(sslHostName.termedBuf(), sslContext)) {
