@@ -254,6 +254,12 @@ DiskThreadsIOStrategy::newFile (char const *path)
     return new DiskThreadsDiskFile (path, this);
 }
 
+bool
+DiskThreadsIOStrategy::unlinkdUseful() const
+{
+    return false;
+}
+
 void
 DiskThreadsIOStrategy::unlinkFile(char const *path)
 {

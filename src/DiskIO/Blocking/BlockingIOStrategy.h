@@ -45,6 +45,7 @@ public:
     virtual bool shedLoad();
     virtual int load();
     virtual RefCount<DiskFile> newFile(char const *path);
+    virtual bool unlinkdUseful() const;
     virtual void unlinkFile (char const *);
 };
 
