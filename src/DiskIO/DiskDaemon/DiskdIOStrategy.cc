@@ -103,6 +103,12 @@ DiskdIOStrategy::newFile(char const *path)
 DiskdIOStrategy::DiskdIOStrategy() : magic1(64), magic2(72), away(0) , smsgid(-1), rmsgid(-1), wfd(-1) , instanceID(newInstance())
 {}
 
+bool
+DiskdIOStrategy::unlinkdUseful() const
+{
+    return true;
+}
+
 void
 DiskdIOStrategy::unlinkFile(char const *path)
 {

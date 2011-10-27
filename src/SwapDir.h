@@ -133,6 +133,8 @@ public:
     virtual bool active() const; ///< may be used in this strand
     /// whether stat should be reported by this SwapDir
     virtual bool doReportStat() const { return active(); }
+    /// whether SwapDir may benefit from unlinkd
+    virtual bool unlinkdUseful() const = 0;
 
     /* official Store interface functions */
     virtual void diskFull();

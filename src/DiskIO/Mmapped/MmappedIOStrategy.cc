@@ -28,6 +28,12 @@ MmappedIOStrategy::newFile (char const *path)
     return new MmappedFile (path);
 }
 
+bool
+MmappedIOStrategy::unlinkdUseful() const
+{
+    return true;
+}
+
 void
 MmappedIOStrategy::unlinkFile(char const *path)
 {

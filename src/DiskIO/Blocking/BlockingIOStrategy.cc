@@ -57,6 +57,12 @@ BlockingIOStrategy::newFile (char const *path)
     return new BlockingFile (path);
 }
 
+bool
+BlockingIOStrategy::unlinkdUseful() const
+{
+    return true;
+}
+
 void
 BlockingIOStrategy::unlinkFile(char const *path)
 {
