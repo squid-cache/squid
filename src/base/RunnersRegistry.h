@@ -21,6 +21,11 @@
 
 /// well-known registries
 typedef enum {
+    /// managed by main.cc; activated after parsing squid.conf but
+    /// before rrAfterConfig, deactivated after rrAfterConfig but
+    /// before freeing configuration-related memory or exit()-ing
+    rrClaimMemoryNeeds,
+
     /// managed by main.cc; activated after parsing squid.conf and
     /// deactivated before freeing configuration-related memory or exit()-ing
     rrAfterConfig,
