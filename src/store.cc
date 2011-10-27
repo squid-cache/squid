@@ -1627,7 +1627,8 @@ StoreEntry::setMemStatus(mem_status_t new_status)
     if (new_status == mem_status)
         return;
 
-    if (UsingSmp()) {
+    // are we using a shared memory cache?
+    if (Config.memShared && IamWorkerProcess()) {
         assert(new_status != IN_MEMORY); // we do not call this otherwise
         // This method was designed to update replacement policy, not to
         // actually purge something from the memory cache (TODO: rename?).
