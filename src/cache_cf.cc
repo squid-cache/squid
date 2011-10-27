@@ -909,7 +909,7 @@ configDoConfigure(void)
                                        s->cafile, s->capath, s->crlfile, s->dhfile,
                                        s->sslContextSessionId));
 
-            Ssl::readCertAndPrivateKeyFromFiles(s->signingCert, s->signPkey, s->cert, s->key);
+            Ssl::readCertChainAndPrivateKeyFromFiles(s->signingCert, s->signPkey, s->certsToChain, s->cert, s->key);
         }
     }
 

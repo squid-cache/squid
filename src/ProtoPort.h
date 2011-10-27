@@ -72,6 +72,7 @@ struct http_port_list {
     Ssl::SSL_CTX_Pointer staticSslContext; ///< for HTTPS accelerator or static sslBump
     Ssl::X509_Pointer signingCert; ///< x509 certificate for signing generated certificates
     Ssl::EVP_PKEY_Pointer signPkey; ///< private key for sighing generated certificates
+    Ssl::X509_STACK_Pointer certsToChain; ///<  x509 certificates to send with the generated cert
 #endif
 
     CBDATA_CLASS2(http_port_list);

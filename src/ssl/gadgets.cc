@@ -4,6 +4,9 @@
 
 #include "config.h"
 #include "ssl/gadgets.h"
+#if HAVE_OPENSSL_X509V3_H
+#include <openssl/x509v3.h>
+#endif
 
 /**
  \ingroup ServerProtocolSSLInternal
@@ -231,11 +234,7 @@ static X509 * readSslX509Certificate(char const * certFilename)
     return certificate;
 }
 
-/**
- \ingroup ServerProtocolSSLInternal
- * Read private key from file. Make sure that this is not encrypted file.
- */
-static EVP_PKEY * readSslPrivateKey(char const * keyFilename)
+EVP_PKEY * Ssl::readSslPrivateKey(char const * keyFilename)
 {
     if (!keyFilename)
         return NULL;
