@@ -863,7 +863,7 @@ RunnerRegistrationEntry(rrAfterConfig, IpcIoRr);
 
 void IpcIoRr::create(const RunnerRegistry &)
 {
-    if (!UsingSmp())
+    if (Config.cacheSwap.n_strands <= 0)
         return;
 
     Must(!owner);
