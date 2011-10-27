@@ -362,7 +362,7 @@ IpcIoFile::canWait() const
         return true; // no timeout specified
 
     IpcIoMsg oldestIo;
-    if (!queue->peek(diskId, oldestIo) || oldestIo.start.tv_sec <= 0)
+    if (!queue->findOldest(diskId, oldestIo) || oldestIo.start.tv_sec <= 0)
         return true; // we cannot estimate expected wait time; assume it is OK
 
     const int oldestWait = tvSubMsec(oldestIo.start, current_time);
