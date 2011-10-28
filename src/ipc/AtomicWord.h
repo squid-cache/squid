@@ -35,13 +35,13 @@ public:
     Value operator ++(int) { return __sync_fetch_and_add(&value, 1); }
     Value operator --(int) { return __sync_fetch_and_sub(&value, 1); }
 
-    bool swap_if(const int comparand, const int replacement) { return __sync_bool_compare_and_swap(&value, comparand, replacement); }
+    bool swap_if(const Value comparand, const Value replacement) { return __sync_bool_compare_and_swap(&value, comparand, replacement); }
 
     /// v1 = value; value &= v2; return v1;
     Value fetchAndAnd(const Value v2) { return __sync_fetch_and_and(&value, v2); }
 
     // TODO: no need for __sync_bool_compare_and_swap here?
-    bool operator ==(int v2) { return __sync_bool_compare_and_swap(&value, v2, value); }
+    bool operator ==(const Value v2) { return __sync_bool_compare_and_swap(&value, v2, value); }
 
     // TODO: no need for __sync_fetch_and_add here?
     Value get() const { return __sync_fetch_and_add(const_cast<Value*>(&value), 0); }
@@ -71,7 +71,7 @@ public:
     Value operator ++(int) { assert(Enabled()); return value++; }
     Value operator --(int) { assert(Enabled()); return value--; }
 
-    bool swap_if(const int comparand, const int replacement)
+    bool swap_if(const Value comparand, const Value replacement)
     { assert(Enabled()); return value == comparand ? value = replacement, true : false; }
 
     /// v1 = value; value &= v2; return v1;
@@ -79,7 +79,7 @@ public:
     { assert(Enabled()); const Value v1 = value; value &= v2; return v1; }
 
     // TODO: no need for __sync_bool_compare_and_swap here?
-    bool operator ==(const int v2) { assert(Enabled()); return value == v2; }
+    bool operator ==(const Value v2) { assert(Enabled()); return value == v2; }
 
     // TODO: no need for __sync_fetch_and_add here?
     Value get() const { assert(Enabled()); return value; }
