@@ -98,6 +98,9 @@
 static void parse_adaptation_service_set_type();
 static void parse_adaptation_service_chain_type();
 static void parse_adaptation_access_type();
+static void parse_adaptation_meta_type(Adaptation::Config::MetaHeaders *);
+static void dump_adaptation_meta_type(StoreEntry *, const char *, Adaptation::Config::MetaHeaders &);
+static void free_adaptation_meta_type(Adaptation::Config::MetaHeaders *);
 #endif
 
 #if ICAP_CLIENT
@@ -4373,6 +4376,23 @@ parse_adaptation_access_type()
     Adaptation::Config::ParseAccess(LegacyParser);
 }
 
+static void
+parse_adaptation_meta_type(Adaptation::Config::MetaHeaders *)
+{
+    Adaptation::Config::ParseMetaHeader(LegacyParser);
+}
+
+static void
+dump_adaptation_meta_type(StoreEntry *entry, const char *name, Adaptation::Config::MetaHeaders &)
+{
+    Adaptation::Config::DumpMetaHeader(entry, name);
+}
+
+static void
+free_adaptation_meta_type(Adaptation::Config::MetaHeaders *)
+{
+    // Nothing to do, it is released inside Adaptation::Config::freeService()
+}
 #endif /* USE_ADAPTATION */
 
 
