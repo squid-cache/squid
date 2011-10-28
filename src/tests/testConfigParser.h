@@ -1,0 +1,24 @@
+#ifndef SQUID_SRC_TEST_CONFIG_PARSER_H
+#define SQUID_SRC_TEST_CONFIG_PARSER_H
+
+#include <cppunit/extensions/HelperMacros.h>
+
+/*
+ * test the ConfigParser framework
+ */
+
+class testConfigParser : public CPPUNIT_NS::TestFixture
+{
+    CPPUNIT_TEST_SUITE( testConfigParser );
+    CPPUNIT_TEST( testParseQuoted );
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp();
+
+protected:
+    bool doParseQuotedTest(const char *, const char *);
+    void testParseQuoted();
+};
+
+#endif
