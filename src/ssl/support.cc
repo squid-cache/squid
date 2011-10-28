@@ -1283,10 +1283,10 @@ static X509 * readSslX509CertificatesChain(char const * certFilename,  STACK_OF(
 
     if (certificate && chain) {
 
-        if (X509_check_issued(certificate, certificate) == X509_V_OK) 
+        if (X509_check_issued(certificate, certificate) == X509_V_OK)
             debugs(83, 5, "Certificate is self-signed, will not be chained");
         else {
-            if(sk_X509_push(chain, certificate))
+            if (sk_X509_push(chain, certificate))
                 CRYPTO_add(&(certificate->references), 1, CRYPTO_LOCK_X509);
             else
                 debugs(83, DBG_IMPORTANT, "WARNING: unable to add signing certificate to cert chain");
@@ -1297,7 +1297,7 @@ static X509 * readSslX509CertificatesChain(char const * certFilename,  STACK_OF(
             }
         }
     }
-    
+
     return certificate;
 }
 
