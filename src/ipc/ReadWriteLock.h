@@ -26,8 +26,8 @@ public:
     void updateStats(ReadWriteLockStats &stats) const;
 
 public:
-    mutable AtomicWord readers; ///< number of users trying to read
-    AtomicWord writers; ///< number of writers trying to modify protected data
+    mutable Atomic::Word readers; ///< number of users trying to read
+    Atomic::Word writers; ///< number of writers trying to modify protected data
 };
 
 
