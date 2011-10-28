@@ -59,14 +59,14 @@ private:
     const Offset theCapacity; ///< stack capacity, i.e. theItems size
     const size_t thePageSize; ///< page size, used to calculate shared memory size
     /// lower bound for the number of free pages (may get negative!)
-    AtomicWordT<Offset> theSize;
+    Atomic::WordT<Offset> theSize;
 
     /// last readable item index; just a hint, not a guarantee
-    AtomicWordT<Offset> theLastReadable;
+    Atomic::WordT<Offset> theLastReadable;
     /// first writable item index; just a hint, not a guarantee
-    AtomicWordT<Offset> theFirstWritable;
+    Atomic::WordT<Offset> theFirstWritable;
 
-    typedef AtomicWordT<Value> Item;
+    typedef Atomic::WordT<Value> Item;
     Item theItems[]; ///< page number storage
 };
 

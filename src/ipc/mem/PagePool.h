@@ -47,7 +47,7 @@ public:
 private:
     Ipc::Mem::Pointer<PageStack> pageIndex; ///< free pages index
     /// number of shared memory pages used now for each purpose
-    AtomicWord *const theLevels;
+    Atomic::Word *const theLevels;
     char *const theBuf; ///< pages storage
 };
 

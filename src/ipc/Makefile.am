@@ -4,6 +4,7 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libipc.la
 
 libipc_la_SOURCES = \
+	AtomicWord.cc \
 	AtomicWord.h \
 	FdNotes.cc \
 	FdNotes.h \

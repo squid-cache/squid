@@ -22,7 +22,7 @@ public:
 
 public:
     mutable ReadWriteLock lock; ///< protects slot data below
-    AtomicWordT<uint8_t> waitingToBeFreed; ///< may be accessed w/o a lock
+    Atomic::WordT<uint8_t> waitingToBeFreed; ///< may be accessed w/o a lock
 
     uint64_t key[2]; ///< StoreEntry key
 
@@ -65,7 +65,7 @@ public:
 
         const int limit; ///< maximum number of map slots
         const size_t extrasSize; ///< size of slot extra data
-        AtomicWord count; ///< current number of map slots
+        Atomic::Word count; ///< current number of map slots
         Slot slots[]; ///< slots storage
     };
 
