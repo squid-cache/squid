@@ -2099,7 +2099,7 @@ DOC_START
 	cache_peer parent.foo.net       parent    3128  3130  default
 	cache_peer sib1.foo.net         sibling   3128  3130  proxy-only
 	cache_peer sib2.foo.net         sibling   3128  3130  proxy-only
-	cache_peer example.com          parent    80       0  no-query default
+	cache_peer example.com          parent    80       0  default
 	cache_peer cdn.example.com      sibling   3128     0  
 	
 	      type:	either 'parent', 'sibling', or 'multicast'.
@@ -2195,7 +2195,7 @@ DOC_START
 	multicast-siblings
 			To be used only for cache peers of type "multicast".
 			ALL members of this multicast group have "sibling"
-			relationship with it, not "parent".  This is to a mulicast
+			relationship with it, not "parent".  This is to a multicast
 			group when the requested object would be fetched only from
 			a "parent" cache, anyway.  It's useful, e.g., when
 			configuring a pool of redundant Squid proxies, being
