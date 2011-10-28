@@ -42,15 +42,15 @@ public:
     void clearSignal() { unblock(); popSignal.swap_if(1,0); }
 
 private:
-    AtomicWord popBlocked; ///< whether the reader is blocked on pop()
-    AtomicWord popSignal; ///< whether writer has sent and reader has not received notification
+    Atomic::Word popBlocked; ///< whether the reader is blocked on pop()
+    Atomic::Word popSignal; ///< whether writer has sent and reader has not received notification
 
 public:
-    typedef AtomicWord Rate; ///< pop()s per second
+    typedef Atomic::Word Rate; ///< pop()s per second
     Rate rateLimit; ///< pop()s per second limit if positive
 
     // we need a signed atomic type because balance may get negative
-    typedef AtomicWordT<int> AtomicSignedMsec;
+    typedef Atomic::WordT<int> AtomicSignedMsec;
     typedef AtomicSignedMsec Balance;
     /// how far ahead the reader is compared to a perfect read/sec event rate
     Balance balance;
@@ -115,7 +115,7 @@ private:
     unsigned int theIn; ///< input index, used only in push()
     unsigned int theOut; ///< output index, used only in pop()
 
-    AtomicWord theSize; ///< number of items in the queue
+    Atomic::Word theSize; ///< number of items in the queue
     const unsigned int theMaxItemSize; ///< maximum item size
     const int theCapacity; ///< maximum number of items, i.e. theBuffer size
 
