@@ -1004,6 +1004,7 @@ check_PROGRAMS+=\
 	tests/testStore \
 	tests/testString \
 	tests/testURL \
+	tests/testConfigParser \
 	$(STORE_TESTS)
 
 ## NP: required to run the above list. check_PROGRAMS only builds the binaries...
@@ -3233,6 +3234,36 @@ tests_testURL_DEPENDENCIES = \
 	$(REPL_OBJS) \
 	$(SQUID_CPPUNIT_LA)
 
+tests_testConfigParser_SOURCES = \
+	ClientInfo.h \
+	mem.cc \
+	MemBuf.cc \
+	String.cc \
+	ConfigParser.cc \
+	tests/testMain.cc \
+	tests/testConfigParser.cc \
+	tests/testConfigParser.h \
+	tests/stub_cache_cf.cc \
+	tests/stub_cache_manager.cc \
+	tests/stub_debug.cc \
+	tests/stub_HelperChildConfig.cc \
+	time.cc \
+	wordlist.cc
+nodist_tests_testConfigParser_SOURCES = \
+	$(TESTSOURCES)
+tests_testConfigParser_LDADD = \
+	base/libbase.la \
+	libsquid.la \
+	ip/libip.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(REGEXLIB) \
+	$(SQUID_CPPUNIT_LIBS) \
+	$(SSLLIB) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testConfigParser_LDFLAGS = $(LIBADD_DL)
+tests_testConfigParser_DEPENDENCIES = \
+	$(SQUID_CPPUNIT_LA)
 
 TESTS += testHeaders
 

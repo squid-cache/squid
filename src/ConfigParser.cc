@@ -114,3 +114,69 @@ ConfigParser::strtokFile(void)
 
     return t;
 }
+
+void
+ConfigParser::ParseQuotedString(char **var)
+{
+    String sVar;
+    ParseQuotedString(&sVar);
+    *var = xstrdup(sVar.termedBuf());
+}
+
+void
+ConfigParser::ParseQuotedString(String *var)
+{
+    // Get all of the remaining string
+    char *token = strtok(NULL, "");
+    if (token == NULL)
+        self_destruct();
+
+    if (*token != '"') {
+        token = strtok(token, w_space);
+        var->reset(token);
+        return;
+    }
+
+    char  *s = token + 1;
+    /* scan until the end of the quoted string, unescaping " and \  */
+    while (*s && *s != '"') {
+        if (*s == '\\') {
+            const char * next = s+1; // may point to 0
+            memmove(s, next, strlen(next) + 1);
+        }
+        s++;
+    }
+
+    if (*s != '"') {
+        debugs(3, DBG_CRITICAL, "ParseQuotedString: missing '\"' at the end of quoted string" );
+        self_destruct();
+    }
+    strtok(s-1, "\""); /*Reset the strtok to point after the "  */
+    *s = '\0';
+
+    var->reset(token+1);
+}
+
+const char *
+ConfigParser::QuoteString(String &var)
+{
+    static String quotedStr;
+    const char *s = var.termedBuf();
+    bool  needQuote = false;
+
+    for (const char *l = s; !needQuote &&  *l != '\0'; l++  )
+        needQuote = !isalnum(*l);
+
+    if (!needQuote)
+        return s;
+
+    quotedStr.clean();
+    quotedStr.append('"');
+    for (; *s != '\0'; s++) {
+        if (*s == '"' || *s == '\\')
+            quotedStr.append('\\');
+        quotedStr.append(*s);
+    }
+    quotedStr.append('"');
+    return quotedStr.termedBuf();
+}

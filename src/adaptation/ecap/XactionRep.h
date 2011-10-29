@@ -93,6 +93,10 @@ protected:
     const libecap::Area clientIpValue() const;
     const libecap::Area usernameValue() const;
     const libecap::Area masterxSharedValue(const libecap::Name &name) const;
+    /// Return the adaptation meta header value for the given header "name"
+    const libecap::Area metaValue(const libecap::Name &name) const;
+    /// Return the adaptation meta headers and their values
+    void visitEachMetaHeader(libecap::NamedValueVisitor &visitor) const;
 
 private:
     AdapterXaction theMaster; // the actual adaptation xaction we represent

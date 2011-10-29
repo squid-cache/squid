@@ -81,11 +81,13 @@ Adaptation::Ecap::XactionRep::option(const libecap::Name &name) const
         return clientIpValue();
     if (name == libecap::metaUserName)
         return usernameValue();
-    if (name == Adaptation::Config::masterx_shared_name)
+    if (Adaptation::Config::masterx_shared_name && name == Adaptation::Config::masterx_shared_name)
         return masterxSharedValue(name);
 
     // TODO: metaServerIp, metaAuthenticatedUser, and metaAuthenticatedGroups
-    return libecap::Area();
+
+    // If the name is unknown, metaValue returns an emtpy area
+    return metaValue(name);
 }
 
 void
@@ -101,6 +103,8 @@ Adaptation::Ecap::XactionRep::visitEachOption(libecap::NamedValueVisitor &visito
         if (const libecap::Area value = masterxSharedValue(name))
             visitor.visit(name, value);
     }
+
+    visitEachMetaHeader(visitor);
 
     // TODO: metaServerIp, metaAuthenticatedUser, and metaAuthenticatedGroups
 }
@@ -160,6 +164,48 @@ Adaptation::Ecap::XactionRep::masterxSharedValue(const libecap::Name &name) cons
         }
     }
     return libecap::Area();
+}
+
+const libecap::Area
+Adaptation::Ecap::XactionRep::metaValue(const libecap::Name &name) const
+{
+    HttpRequest *request = dynamic_cast<HttpRequest*>(theCauseRep ?
+                           theCauseRep->raw().header : theVirginRep.raw().header);
+    Must(request);
+    HttpReply *reply = dynamic_cast<HttpReply*>(theVirginRep.raw().header);
+
+    if (name.known()) { // must check to avoid empty names matching unset cfg
+        typedef Adaptation::Config::MetaHeaders::iterator ACAMLI;
+        for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
+            if (name == (*i)->name.termedBuf()) {
+                if (const char *value = (*i)->match(request, reply))
+                    return libecap::Area::FromTempString(value);
+                else
+                    return libecap::Area();
+            }
+        }
+    }
+
+    return libecap::Area();
+}
+
+void
+Adaptation::Ecap::XactionRep::visitEachMetaHeader(libecap::NamedValueVisitor &visitor) const
+{
+    HttpRequest *request = dynamic_cast<HttpRequest*>(theCauseRep ?
+                           theCauseRep->raw().header : theVirginRep.raw().header);
+    Must(request);
+    HttpReply *reply = dynamic_cast<HttpReply*>(theVirginRep.raw().header);
+
+    typedef Adaptation::Config::MetaHeaders::iterator ACAMLI;
+    for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
+        const char *v;
+        if (v = (*i)->match(request, reply)) {
+            const libecap::Name name((*i)->name.termedBuf());
+            const libecap::Area value = libecap::Area::FromTempString(v);
+            visitor.visit(name, value);
+        }
+    }
 }
 
 void

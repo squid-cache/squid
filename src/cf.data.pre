@@ -7014,6 +7014,41 @@ Example:
 adaptation_masterx_shared_names X-Subscriber-ID
 DOC_END
 
+NAME: adaptation_meta
+TYPE: adaptation_meta_type
+IFDEF: USE_ADAPTATION
+LOC: Adaptation::Config::metaHeaders
+DEFAULT: none
+DOC_START
+	This option allows Squid administrator to add custom ICAP request
+	headers or eCAP options to Squid ICAP requests or eCAP transactions.
+	Use it to pass custom authentication tokens and other
+	transaction-state related meta information to an ICAP/eCAP service.
+	
+	The addition of a meta header is ACL-driven:
+		adaptation_meta name value [!]aclname ...
+	
+	Processing for a given header name stops after the first ACL list match.
+	Thus, it is impossible to add two headers with the same name. If no ACL
+	lists match for a given header name, no such header is added. For 
+	example:
+	
+		# do not debug transactions except for those that need debugging
+		adaptation_meta X-Debug 1 needs_debugging
+	
+		# log all transactions except for those that must remain secret
+		adaptation_meta X-Log 1 !keep_secret
+	
+		# mark transactions from users in the "G 1" group
+		adaptation_meta X-Authenticated-Groups "G 1" authed_as_G1
+	
+	The "value" parameter may be a regular squid.conf token or a "double
+	quoted string". Within the quoted string, use backslash (\) to escape
+	any character, which is currently only useful for escaping backslashes
+	and double quotes. For example,
+	    "this string has one backslash (\\) and two \"quotes\""
+DOC_END
+
 NAME: icap_retry
 TYPE: acl_access
 IFDEF: ICAP_CLIENT
