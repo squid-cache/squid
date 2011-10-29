@@ -149,6 +149,12 @@ Ipc::FewToFewBiQueue::FewToFewBiQueue(const String &id, const Group aLocalGroup,
     debugs(54, 7, HERE << "queue " << id << " reader: " << localReader.id);
 }
 
+int
+Ipc::FewToFewBiQueue::MaxItemsCount(const int groupASize, const int groupBSize, const int capacity)
+{
+    return capacity * groupASize * groupBSize * 2;
+}
+
 bool
 Ipc::FewToFewBiQueue::validProcessId(const Group group, const int processId) const
 {

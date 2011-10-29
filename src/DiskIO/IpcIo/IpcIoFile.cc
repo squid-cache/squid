@@ -23,6 +23,11 @@ CBDATA_CLASS_INIT(IpcIoFile);
 
 /// shared memory segment path to use for IpcIoFile maps
 static const char *const ShmLabel = "io_file";
+/// a single worker-to-disker or disker-to-worker queue capacity; up
+/// to 2*QueueCapacity I/O requests queued between a single worker and
+/// a single disker
+// TODO: make configurable or compute from squid.conf settings if possible
+static const int QueueCapacity = 1024;
 
 const double IpcIoFile::Timeout = 7; // seconds;  XXX: ALL,9 may require more
 IpcIoFile::IpcIoFileList IpcIoFile::WaitingForOpen;
@@ -843,6 +848,30 @@ DiskerClose(const String &path)
 }
 
 
+/// reports our needs for shared memory pages to Ipc::Mem::Pages
+class IpcIoClaimMemoryNeedsRr: public RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    virtual void run(const RunnerRegistry &r);
+};
+
+RunnerRegistrationEntry(rrClaimMemoryNeeds, IpcIoClaimMemoryNeedsRr);
+
+
+void
+IpcIoClaimMemoryNeedsRr::run(const RunnerRegistry &)
+{
+    const int itemsCount = Ipc::FewToFewBiQueue::MaxItemsCount(
+        ::Config.workers, ::Config.cacheSwap.n_strands, QueueCapacity);
+    // the maximum number of shared I/O pages is approximately the
+    // number of queue slots, we add a fudge factor to that to account
+    // for corner cases where I/O pages are created before queue
+    // limits are checked or destroyed long after the I/O is dequeued
+    Ipc::Mem::NotePageNeed(Ipc::Mem::PageId::ioPage, itemsCount * 1.1);
+}
+
+
 /// initializes shared memory segments used by IpcIoFile
 class IpcIoRr: public Ipc::Mem::RegisteredRunner
 {
@@ -867,11 +896,10 @@ void IpcIoRr::create(const RunnerRegistry &)
         return;
 
     Must(!owner);
-    // XXX: make capacity configurable
     owner = Ipc::FewToFewBiQueue::Init(ShmLabel, Config.workers, 1,
                                        Config.cacheSwap.n_strands,
                                        1 + Config.workers, sizeof(IpcIoMsg),
-                                       1024);
+                                       QueueCapacity);
 }
 
 IpcIoRr::~IpcIoRr()

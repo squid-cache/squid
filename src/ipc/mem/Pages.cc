@@ -19,6 +19,7 @@
 // TODO: make pool id more unique so it does not conflict with other Squids?
 static const char *PagePoolId = "squid-page-pool";
 static Ipc::Mem::PagePool *ThePagePool = 0;
+static int TheLimits[Ipc::Mem::PageId::maxPurpose];
 
 // TODO: make configurable to avoid waste when mem-cached objects are small/big
 size_t
@@ -60,16 +61,17 @@ Ipc::Mem::PageLimit()
 size_t
 Ipc::Mem::PageLimit(const int purpose)
 {
-    switch (purpose) {
-    case PageId::cachePage:
-        return Config.memMaxSize > 0 ? Config.memMaxSize / PageSize() : 0;
-    case PageId::ioPage:
-        // XXX: this should be independent from memory cache pages
-        return PageLimit(PageId::cachePage)/2;
-    default:
-        Must(false);
-    }
-    return 0;
+    Must(0 <= purpose && purpose <= PageId::maxPurpose);
+    return TheLimits[purpose];
+}
+
+// note: adjust this if we start recording needs during reconfigure
+void
+Ipc::Mem::NotePageNeed(const int purpose, const int count)
+{
+    Must(0 <= purpose && purpose <= PageId::maxPurpose);
+    Must(count >= 0);
+    TheLimits[purpose] += count;
 }
 
 size_t
@@ -105,22 +107,8 @@ RunnerRegistrationEntry(rrAfterConfig, SharedMemPagesRr);
 void
 SharedMemPagesRr::run(const RunnerRegistry &r)
 {
-    if (!UsingSmp())
+    if (Ipc::Mem::PageLimit() <= 0)
         return;
-
-    // When cache_dirs start using shared memory pages, they would
-    // need to communicate their needs to us somehow.
-    if (Config.memMaxSize <= 0)
-        return;
-
-    if (Ipc::Mem::PageLimit() <= 0) {
-        if (IamMasterProcess()) {
-            debugs(54, DBG_IMPORTANT, "WARNING: mem-cache size is too small ("
-                   << (Config.memMaxSize / 1024.0) << " KB), should be >= " <<
-                   (Ipc::Mem::PageSize() / 1024.0) << " KB");
-        }
-        return;
-    }
 
     Ipc::Mem::RegisteredRunner::run(r);
 }
