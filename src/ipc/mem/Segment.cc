@@ -221,7 +221,7 @@ Ipc::Mem::Segment::~Segment()
 bool
 Ipc::Mem::Segment::Enabled()
 {
-    return !InDaemonMode() || (!UsingSmp() && IamWorkerProcess());
+    return !UsingSmp() && IamWorkerProcess();
 }
 
 void
