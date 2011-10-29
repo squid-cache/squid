@@ -16,6 +16,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+
+// test cases change this
+const char *Ipc::Mem::Segment::BasePath = DEFAULT_STATEDIR;
+
 void *
 Ipc::Mem::Segment::reserve(size_t chunkSize)
 {
@@ -66,12 +70,14 @@ Ipc::Mem::Segment::create(const off_t aSize)
                      S_IRUSR | S_IWUSR);
     if (theFD < 0) {
         debugs(54, 5, HERE << "shm_open " << theName << ": " << xstrerror());
-        fatal("Ipc::Mem::Segment::create failed to shm_open");
+        fatalf("Ipc::Mem::Segment::create failed to shm_open(%s): %s\n",
+               theName.termedBuf(), xstrerror());
     }
 
     if (ftruncate(theFD, aSize)) {
         debugs(54, 5, HERE << "ftruncate " << theName << ": " << xstrerror());
-        fatal("Ipc::Mem::Segment::create failed to ftruncate");
+        fatalf("Ipc::Mem::Segment::create failed to ftruncate(%s): %s\n",
+               theName.termedBuf(), xstrerror());
     }
 
     assert(statSize("Ipc::Mem::Segment::create") == aSize); // paranoid
@@ -93,9 +99,8 @@ Ipc::Mem::Segment::open()
     theFD = shm_open(theName.termedBuf(), O_RDWR, 0);
     if (theFD < 0) {
         debugs(54, 5, HERE << "shm_open " << theName << ": " << xstrerror());
-        String s = "Ipc::Mem::Segment::open failed to shm_open ";
-        s.append(theName);
-        fatal(s.termedBuf());
+        fatalf("Ipc::Mem::Segment::open failed to shm_open(%s): %s\n",
+               theName.termedBuf(), xstrerror());
     }
 
     theSize = statSize("Ipc::Mem::Segment::open");
@@ -120,7 +125,8 @@ Ipc::Mem::Segment::attach()
         mmap(NULL, theSize, PROT_READ | PROT_WRITE, MAP_SHARED, theFD, 0);
     if (p == MAP_FAILED) {
         debugs(54, 5, HERE << "mmap " << theName << ": " << xstrerror());
-        fatal("Ipc::Mem::Segment::attach failed to mmap");
+        fatalf("Ipc::Mem::Segment::attach failed to mmap(%s): %s\n",
+               theName.termedBuf(), xstrerror());
     }
     theMem = p;
 }
@@ -134,7 +140,8 @@ Ipc::Mem::Segment::detach()
 
     if (munmap(theMem, theSize)) {
         debugs(54, 5, HERE << "munmap " << theName << ": " << xstrerror());
-        fatal("Ipc::Mem::Segment::detach failed to munmap");
+        fatalf("Ipc::Mem::Segment::detach failed to munmap(%s): %s\n",
+               theName.termedBuf(), xstrerror());
     }
     theMem = 0;
 }
@@ -158,21 +165,24 @@ Ipc::Mem::Segment::statSize(const char *context) const
     memset(&s, 0, sizeof(s));
 
     if (fstat(theFD, &s) != 0) {
-        debugs(54, 5, HERE << "fstat " << theName << ": " << xstrerror());
-        String s = context;
-        s.append("failed to fstat(2) ");
-        s.append(theName);
-        fatal(s.termedBuf());
+        debugs(54, 5, HERE << context << " fstat " << theName << ": " << xstrerror());
+        fatalf("Ipc::Mem::Segment::statSize: %s failed to fstat(%s): %s\n",
+               context, theName.termedBuf(), xstrerror());
     }
 
     return s.st_size;
 }
 
-/// Generate name for shared memory segment. Replaces all slashes with dots.
+/// Generate name for shared memory segment. Starts with a prefix required
+/// for cross-platform portability and replaces all slashes in ID with dots.
 String
 Ipc::Mem::Segment::GenerateName(const char *id)
 {
-    String name("/squid-");
+    assert(BasePath);
+    static const bool nameIsPath = shm_portable_segment_name_is_path();
+    String name(nameIsPath ? BasePath : "/squid-");
+
+    // append id, replacing slashes with dots
     for (const char *slash = strchr(id, '/'); slash; slash = strchr(id, '/')) {
         if (id != slash) {
             name.append(id, slash - id);
@@ -181,6 +191,8 @@ Ipc::Mem::Segment::GenerateName(const char *id)
         id = slash + 1;
     }
     name.append(id);
+
+    name.append(".shm"); // to distinguish from non-segments when nameIsPath
     return name;
 }
 
@@ -200,7 +212,9 @@ Ipc::Mem::Segment::~Segment()
 {
     if (doUnlink) {
         delete [] static_cast<char *>(theMem);
-        debugs(54, 3, HERE << "deleted " << theName << " segment");
+        theMem = NULL;
+        Segments.erase(theName);
+        debugs(54, 3, HERE << "unlinked " << theName << " fake segment");
     }
 }
 
@@ -249,9 +263,11 @@ void
 Ipc::Mem::Segment::checkSupport(const char *const context)
 {
     if (!Enabled()) {
-        debugs(54, 5, HERE << "True shared memory segments are not supported. "
+        debugs(54, 5, HERE << context <<
+               ": True shared memory segments are not supported. "
                "Cannot fake shared segments in SMP config.");
-        fatalf("%s failed", context);
+        fatalf("Ipc::Mem::Segment: Cannot fake shared segments in SMP config (%s)\n",
+               context);
     }
 }
 

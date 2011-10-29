@@ -5,7 +5,6 @@
  */
 
 #include "config.h"
-#include "base/RunnersRegistry.h"
 #include "ConfigOption.h"
 #include "DiskIO/DiskIOModule.h"
 #include "DiskIO/DiskIOStrategy.h"
@@ -811,24 +810,12 @@ Rock::SwapDir::statfs(StoreEntry &e) const
 }
 
 
-/// initializes shared memory segments used by Rock::SwapDir
-class RockSwapDirRr: public Ipc::Mem::RegisteredRunner
+namespace Rock
 {
-public:
-    /* RegisteredRunner API */
-    virtual ~RockSwapDirRr();
+RunnerRegistrationEntry(rrAfterConfig, SwapDirRr);
+}
 
-protected:
-    virtual void create(const RunnerRegistry &);
-
-private:
-    Vector<Rock::SwapDir::DirMap::Owner *> owners;
-};
-
-RunnerRegistrationEntry(rrAfterConfig, RockSwapDirRr);
-
-
-void RockSwapDirRr::create(const RunnerRegistry &)
+void Rock::SwapDirRr::create(const RunnerRegistry &)
 {
     Must(owners.empty());
     for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
@@ -840,7 +827,7 @@ void RockSwapDirRr::create(const RunnerRegistry &)
     }
 }
 
-RockSwapDirRr::~RockSwapDirRr()
+Rock::SwapDirRr::~SwapDirRr()
 {
     for (size_t i = 0; i < owners.size(); ++i)
         delete owners[i];

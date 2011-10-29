@@ -779,6 +779,7 @@ for fs in $squid_storeio_module_candidates none; do
 	  "x$squid_disk_module_candidates_Blocking" != "xyes"; then
 	  AC_MSG_ERROR([Storage module Rock requires IpcIo or Blocking DiskIO module])
 	fi
+	STORE_TESTS="$STORE_TESTS tests/testRock$EXEEXT"
 	;;
     ufs)
       STORE_TESTS="$STORE_TESTS tests/testUfs$EXEEXT"

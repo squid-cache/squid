@@ -42,4 +42,8 @@ extern "C" {
 
 #endif /* HAVE_SHM */
 
+
+/// Determines whether segment names are iterpreted as full file paths.
+bool shm_portable_segment_name_is_path();
+
 #endif /* SQUID_COMPAT_CPU_H */
