@@ -2804,9 +2804,13 @@ DOC_START
 	expected swap wait time.
 
 	max-swap-rate=swaps/sec: Artificially limits disk access using
-	the specified I/O rate limit. Swap in and swap out requests that
+	the specified I/O rate limit. Swap out requests that
 	would cause the average I/O rate to exceed the limit are
-	delayed. This is necessary on file systems that buffer "too
+	delayed. Individual swap in requests (i.e., hits or reads) are
+	not delayed, but they do contribute to measured swap rate and
+	since they are placed in the same FIFO queue as swap out
+	requests, they may wait longer if max-swap-rate is smaller.
+	This is necessary on file systems that buffer "too
 	many" writes and then start blocking Squid and other processes
 	while committing those writes to disk.  Usually used together
 	with swap-timeout to avoid excessive delays and queue overflows
