@@ -49,14 +49,16 @@ public:
 
     /**
      * Used to store meta headers. The meta headers are custom
-     * ICAP request headers or ECAP options used to pass custom 
+     * ICAP request headers or ECAP options used to pass custom
      * transaction-state related meta information to a service.
      */
-    class MetaHeader: public RefCountable {
+    class MetaHeader: public RefCountable
+    {
     public:
         typedef RefCount<MetaHeader> Pointer;
         /// Stores a value for the meta header.
-        class Value: public RefCountable {
+        class Value: public RefCountable
+        {
         public:
             typedef RefCount<Value> Pointer;
             String value; ///< a header value
@@ -67,23 +69,23 @@ public:
         typedef Vector<Value::Pointer> Values;
 
         explicit MetaHeader(const String &aName): name(aName) {}
-        
+
         /**
          * Adds a value to the meta header and returns a  pointer to the
          * related Value object.
          */
         Value::Pointer addValue(const String &value);
 
-       /**
-        * Walks through the  possible values list of the  meta and selects 
-        * the first value which matches the given HttpRequest and HttpReply
-        * or NULL if none matches.
-        */
+        /**
+         * Walks through the  possible values list of the  meta and selects
+         * the first value which matches the given HttpRequest and HttpReply
+         * or NULL if none matches.
+         */
         const char *match(HttpRequest *request, HttpReply *reply);
         String name; ///< The meta header name
         Values values; ///< The possible values list for the meta header
     };
-    typedef Vector<MetaHeader::Pointer> MetaHeaders; 
+    typedef Vector<MetaHeader::Pointer> MetaHeaders;
     static MetaHeaders metaHeaders; ///< The list of configured meta headers
 
     /**

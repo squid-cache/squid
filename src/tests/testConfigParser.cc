@@ -38,7 +38,7 @@ bool testConfigParser::doParseQuotedTest(const char *s, const char *expectInterp
     strtok(cfgline, w_space);
     String unEscaped;
     ConfigParser::ParseQuotedString(&unEscaped);
-    
+
     const bool interpOk = (unEscaped.cmp(expectInterp) == 0);
     if (!interpOk) {
         printf("%25s: %s\n%25s: %s\n%25s: %s\n",
@@ -69,9 +69,9 @@ void testConfigParser::testParseQuoted()
                                      "This is a quoted \"string\" by me"));
 
     // escape sequence test: \\"\"\\"
-    CPPUNIT_ASSERT(doParseQuotedTest("\"escape sequence test: \\\\\\\\\\\"\\\\\\\"\\\\\\\\\\\"\"", 
+    CPPUNIT_ASSERT(doParseQuotedTest("\"escape sequence test: \\\\\\\\\\\"\\\\\\\"\\\\\\\\\\\"\"",
                                      "escape sequence test: \\\\\"\\\"\\\\\""));
-    
+
     // \beginning and end test"
     CPPUNIT_ASSERT(doParseQuotedTest("\"\\\\beginning and end test\\\"\"",
                                      "\\beginning and end test\""));

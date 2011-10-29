@@ -1416,9 +1416,9 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
 
     // Adaptation::Config::metaHeaders
     typedef Adaptation::Config::MetaHeaders::iterator ACAMLI;
-    for(ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
+    for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
         HttpRequest *r = virgin.cause ?
-            virgin.cause : dynamic_cast<HttpRequest*>(virgin.header);
+                         virgin.cause : dynamic_cast<HttpRequest*>(virgin.header);
         Must(r);
 
         HttpReply *reply = dynamic_cast<HttpReply*>(virgin.header);
