@@ -124,6 +124,21 @@ bool verifySslCertificateDate(SSL_CTX * sslContext);
 SSL_CTX * generateSslContextUsingPkeyAndCertFromMemory(const char * data);
 
 /**
+  \ingroup ServerProtocolSSLAPI
+  * Adds the certificates in certList to the certificate chain of the SSL context
+ */
+void addChainToSslContext(SSL_CTX *sslContext, STACK_OF(X509) *certList);
+
+/**
+ \ingroup ServerProtocolSSLAPI
+ *  Read certificate, private key and any certificates which must be chained from files.
+ * See also: Ssl::readCertAndPrivateKeyFromFiles function,  defined in gadgets.h
+ * \param certFilename name of file with certificate and certificates which must be chainned.
+ * \param keyFilename name of file with private key.
+ */
+void readCertChainAndPrivateKeyFromFiles(X509_Pointer & cert, EVP_PKEY_Pointer & pkey, X509_STACK_Pointer & chain, char const * certFilename, char const * keyFilename);
+
+/**
    \ingroup ServerProtocolSSLAPI
    * Iterates over the X509 common and alternate names and to see if  matches with given data
    * using the check_func.
