@@ -201,9 +201,9 @@ public:
     /// calls OneToOneUniQueue::push() using the given process queue
     template <class Value> bool push(const int remoteProcessId, const Value &value);
 
-    // TODO: rename to findOldest() or some such
-    /// calls OneToOneUniQueue::peek() using the given process queue
-    template<class Value> bool peek(const int remoteProcessId, Value &value) const;
+    /// finds the oldest item in incoming and outgoing queues between
+    /// us and the given remote process
+    template<class Value> bool findOldest(const int remoteProcessId, Value &value) const;
 
     /// returns true if pop() would have probably succeeded but does not pop()
     bool popReady() const;
@@ -367,7 +367,7 @@ FewToFewBiQueue::push(const int remoteProcessId, const Value &value)
 
 template <class Value>
 bool
-FewToFewBiQueue::peek(const int remoteProcessId, Value &value) const
+FewToFewBiQueue::findOldest(const int remoteProcessId, Value &value) const
 {
     // we may be called before remote process configured its queue end
     if (!validProcessId(remoteGroup(), remoteProcessId))
