@@ -462,6 +462,8 @@ squid_SOURCES = \
 	StoreMetaVary.cc \
 	StoreMetaVary.h \
 	StoreSearch.h \
+	StoreStats.cc \
+	StoreStats.h \
 	StoreSwapLogData.cc \
 	StoreSwapLogData.h \
 	Server.cc \
@@ -1073,6 +1075,7 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_StatHist.cc \
 	tests/stub_store.cc \
+	tests/stub_store_stats.cc \
 	tests/testHttpReply.cc \
 	tests/testHttpReply.h \
 	tests/testMain.cc \
@@ -1177,6 +1180,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_mime.cc \
 	tests/stub_store.cc \
 	tests/stub_store_rebuild.cc \
+	tests/stub_store_stats.cc \
 	tests/stub_store_swapout.cc \
 	tests/stub_tools.cc \
 	tests/stub_cache_manager.cc \
@@ -1251,6 +1255,7 @@ tests_testCacheManager_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_store_stats.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -1503,6 +1508,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_pconn.cc \
 	tests/stub_Port.cc \
 	tests/stub_store_client.cc \
+	tests/stub_store_stats.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_tools.cc \
 	tests/stub_UdsOp.cc \
@@ -1693,6 +1699,7 @@ tests_testEvent_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_store_stats.cc \
 	time.cc \
 	tools.cc \
 	tunnel.cc \
@@ -1879,6 +1886,7 @@ tests_testEventLoop_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_store_stats.cc \
 	time.cc \
 	tools.cc \
 	tunnel.cc \
@@ -2061,6 +2069,7 @@ tests_test_http_range_SOURCES = \
 	tests/stub_ipc_Forwarder.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_MemStore.cc \
+	tests/stub_store_stats.cc \
 	time.cc \
 	tools.cc \
 	tunnel.cc \
@@ -2166,6 +2175,7 @@ tests_testHttpRequest_SOURCES = \
 	tests/stub_DiskIOModule.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_store_stats.cc \
 	time.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
@@ -2407,6 +2417,7 @@ tests_testStore_SOURCES= \
 	tests/stub_mime.cc \
 	tests/stub_Port.cc \
 	tests/stub_store_client.cc \
+	tests/stub_store_stats.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_swapout.cc \
 	tests/stub_tools.cc \
@@ -2531,6 +2542,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_UdsOp.cc \
 	tests/stub_internal.cc \
 	tests/stub_store_rebuild.cc \
+	tests/stub_store_stats.cc \
 	fd.cc \
 	disk.cc \
 	filemap.cc \
@@ -2729,6 +2741,7 @@ tests_testRock_SOURCES = \
 	tests/stub_pconn.cc \
 	tests/stub_store_client.cc \
 	tests/stub_store_rebuild.cc \
+	tests/stub_store_stats.cc \
 	tests/stub_tools.cc \
 	tests/stub_UdsOp.cc \
 	time.cc \
@@ -2787,6 +2800,7 @@ tests_testCoss_SOURCES = \
 	tests/stub_ipc.cc \
 	tests/stub_pconn.cc \
 	tests/stub_store_rebuild.cc \
+	tests/stub_store_stats.cc \
 	fd.cc \
 	disk.cc \
 	filemap.cc \
@@ -2858,6 +2872,7 @@ tests_testCoss_SOURCES = \
 	tests/stub_MemStore.cc \
 	tests/stub_Port.cc \
 	tests/stub_store_client.cc \
+	tests/stub_store_stats.cc \
 	tests/stub_tools.cc \
 	tests/stub_UdsOp.cc \
 	tests/testStoreSupport.cc \
@@ -2916,6 +2931,7 @@ tests_testNull_SOURCES = \
 	tests/stub_internal.cc \
 	tests/stub_CommIO.cc \
 	tests/stub_store_rebuild.cc \
+	tests/stub_store_stats.cc \
 	fd.cc \
 	disk.cc \
 	filemap.cc \
@@ -2987,6 +3003,7 @@ tests_testNull_SOURCES = \
 	tests/stub_access_log.cc \
 	refresh.cc \
 	tests/stub_store_client.cc \
+	tests/stub_store_stats.cc \
 	tests/stub_tools.cc \
 	tests/testStoreSupport.cc \
 	tests/testStoreSupport.h \
@@ -3156,6 +3173,7 @@ tests_testURL_SOURCES = \
 	tests/stub_DiskIOModule.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_ipc_Forwarder.cc \
+	tests/stub_store_stats.cc \
 	tests/testURL.cc \
 	tests/testURL.h \
 	tests/testURLScheme.cc \

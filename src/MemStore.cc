@@ -11,6 +11,7 @@
 #include "ipc/mem/Pages.h"
 #include "MemObject.h"
 #include "MemStore.h"
+#include "StoreStats.h"
 #include "HttpReply.h"
 
 /// shared memory segment path to use for MemStore maps
@@ -49,6 +50,19 @@ MemStore::init()
 
     map = new MemStoreMap(ShmLabel);
     map->cleaner = this;
+}
+
+void
+MemStore::getStats(StoreInfoStats &stats) const
+{
+    const size_t pageSize = Ipc::Mem::PageSize();
+
+    stats.mem.shared = true;
+    stats.mem.capacity =
+        Ipc::Mem::PageLimit(Ipc::Mem::PageId::cachePage) * pageSize;
+    stats.mem.size =
+        Ipc::Mem::PageLevel(Ipc::Mem::PageId::cachePage) * pageSize;
+    stats.mem.count = currentCount();
 }
 
 void
