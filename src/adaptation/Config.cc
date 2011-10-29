@@ -60,7 +60,7 @@ Adaptation::Config::MetaHeader::Value::~Value()
     aclDestroyAclList(&aclList);
 }
 
-Adaptation::Config::MetaHeader::Value::Pointer 
+Adaptation::Config::MetaHeader::Value::Pointer
 Adaptation::Config::MetaHeader::addValue(const String &value)
 {
     Value::Pointer v = new Value(value);
@@ -78,7 +78,7 @@ Adaptation::Config::MetaHeader::match(HttpRequest *request, HttpReply *reply)
         ch.reply = HTTPMSGLOCK(reply);
 
     for (VLI i = values.begin(); i != values.end(); ++i ) {
-        const int ret= ch.fastCheck((*i)->aclList); 
+        const int ret= ch.fastCheck((*i)->aclList);
         debugs(93, 5, HERE << "Check for header name: " << name << ": " << (*i)->value
                <<", HttpRequest: " << request << " HttpReply: " << reply << " matched: " << ret);
         if (ret == ACCESS_ALLOWED)
@@ -87,11 +87,11 @@ Adaptation::Config::MetaHeader::match(HttpRequest *request, HttpReply *reply)
     return NULL;
 }
 
-Adaptation::Config::MetaHeader::Pointer 
+Adaptation::Config::MetaHeader::Pointer
 Adaptation::Config::addMetaHeader(const String &headerName)
 {
     typedef MetaHeaders::iterator AMLI;
-    for(AMLI i = metaHeaders.begin(); i != metaHeaders.end(); ++i) {
+    for (AMLI i = metaHeaders.begin(); i != metaHeaders.end(); ++i) {
         if ((*i)->name == headerName)
             return (*i);
     }
@@ -301,18 +301,18 @@ void
 Adaptation::Config::DumpMetaHeader(StoreEntry *entry, const char *name)
 {
     typedef MetaHeaders::iterator AMLI;
-    for(AMLI m = metaHeaders.begin(); m != metaHeaders.end(); ++m) {
+    for (AMLI m = metaHeaders.begin(); m != metaHeaders.end(); ++m) {
         typedef MetaHeader::Values::iterator VLI;
         for (VLI v =(*m)->values.begin(); v != (*m)->values.end(); ++v ) {
-            storeAppendPrintf(entry, "%s " SQUIDSTRINGPH " %s", 
+            storeAppendPrintf(entry, "%s " SQUIDSTRINGPH " %s",
                               name, SQUIDSTRINGPRINT((*m)->name), ConfigParser::QuoteString((*v)->value));
             dump_acl_list(entry, (*v)->aclList);
             storeAppendPrintf(entry, "\n");
-         }
-    }        
+        }
+    }
 }
 
-void 
+void
 Adaptation::Config::FreeMetaHeader()
 {
     metaHeaders.clean();
