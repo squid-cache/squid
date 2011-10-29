@@ -35,6 +35,7 @@ public:
     virtual void dump(StoreEntry &)const;
     ~CossSwapDir();
     virtual StoreSearch *search(String const url, HttpRequest *);
+    virtual bool unlinkdUseful() const;
     virtual void unlink (StoreEntry &);
     virtual void statfs (StoreEntry &)const;
     virtual bool canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const;

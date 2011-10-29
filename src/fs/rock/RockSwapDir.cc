@@ -749,6 +749,13 @@ Rock::SwapDir::dereference(StoreEntry &e)
     return false;
 }
 
+bool
+Rock::SwapDir::unlinkdUseful() const
+{
+    // no entry-specific files to unlink
+    return false;
+}
+
 void
 Rock::SwapDir::unlink(StoreEntry &e)
 {

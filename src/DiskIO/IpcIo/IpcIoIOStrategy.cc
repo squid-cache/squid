@@ -28,6 +28,12 @@ IpcIoIOStrategy::newFile (char const *path)
     return new IpcIoFile (path);
 }
 
+bool
+IpcIoIOStrategy::unlinkdUseful() const
+{
+    return true;
+}
+
 void
 IpcIoIOStrategy::unlinkFile(char const *path)
 {

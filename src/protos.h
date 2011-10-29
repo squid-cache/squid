@@ -591,6 +591,7 @@ SQUIDCEXTERN void PrintRusage(void);
 SQUIDCEXTERN void dumpMallocStats(void);
 
 #if USE_UNLINKD
+SQUIDCEXTERN bool unlinkdNeeded(void);
 SQUIDCEXTERN void unlinkdInit(void);
 SQUIDCEXTERN void unlinkdClose(void);
 SQUIDCEXTERN void unlinkdUnlink(const char *);

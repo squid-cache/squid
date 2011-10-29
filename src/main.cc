@@ -872,6 +872,11 @@ mainReconfigureFinish(void *)
 
     mimeInit(Config.mimeTablePathname);
 
+#if USE_UNLINKD
+    if (unlinkdNeeded())
+        unlinkdInit();
+#endif
+
 #if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
 #endif
@@ -1085,7 +1090,8 @@ mainInitialize(void)
 
     if (!configured_once) {
 #if USE_UNLINKD
-        unlinkdInit();
+        if (unlinkdNeeded())
+            unlinkdInit();
 #endif
 
         urlInitialize();

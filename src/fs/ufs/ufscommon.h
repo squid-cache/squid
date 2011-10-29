@@ -59,6 +59,7 @@ public:
     ~UFSSwapDir();
     virtual StoreSearch *search(String const url, HttpRequest *);
     virtual bool doubleCheck(StoreEntry &);
+    virtual bool unlinkdUseful() const;
     virtual void unlink(StoreEntry &);
     virtual void statfs(StoreEntry &)const;
     virtual void maintain();

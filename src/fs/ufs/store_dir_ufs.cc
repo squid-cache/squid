@@ -1287,6 +1287,13 @@ UFSSwapDir::unlinkFile(sfileno f)
     IO->unlinkFile(fullPath(f,NULL));
 }
 
+bool
+UFSSwapDir::unlinkdUseful() const
+{
+    // unlinkd may be useful only in workers
+    return IamWorkerProcess() && IO->io->unlinkdUseful();
+}
+
 void
 UFSSwapDir::unlink(StoreEntry & e)
 {
