@@ -103,7 +103,7 @@ Adaptation::Ecap::XactionRep::visitEachOption(libecap::NamedValueVisitor &visito
         if (const libecap::Area value = masterxSharedValue(name))
             visitor.visit(name, value);
     }
-    
+
     visitEachMetaHeader(visitor);
 
     // TODO: metaServerIp, metaAuthenticatedUser, and metaAuthenticatedGroups
@@ -170,13 +170,13 @@ const libecap::Area
 Adaptation::Ecap::XactionRep::metaValue(const libecap::Name &name) const
 {
     HttpRequest *request = dynamic_cast<HttpRequest*>(theCauseRep ?
-                                 theCauseRep->raw().header : theVirginRep.raw().header);
+                           theCauseRep->raw().header : theVirginRep.raw().header);
     Must(request);
     HttpReply *reply = dynamic_cast<HttpReply*>(theVirginRep.raw().header);
 
     if (name.known()) { // must check to avoid empty names matching unset cfg
         typedef Adaptation::Config::MetaHeaders::iterator ACAMLI;
-        for(ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
+        for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
             if (name == (*i)->name.termedBuf()) {
                 if (const char *value = (*i)->match(request, reply))
                     return libecap::Area::FromTempString(value);
@@ -189,16 +189,16 @@ Adaptation::Ecap::XactionRep::metaValue(const libecap::Name &name) const
     return libecap::Area();
 }
 
-void 
+void
 Adaptation::Ecap::XactionRep::visitEachMetaHeader(libecap::NamedValueVisitor &visitor) const
 {
     HttpRequest *request = dynamic_cast<HttpRequest*>(theCauseRep ?
-                                                      theCauseRep->raw().header : theVirginRep.raw().header);
+                           theCauseRep->raw().header : theVirginRep.raw().header);
     Must(request);
     HttpReply *reply = dynamic_cast<HttpReply*>(theVirginRep.raw().header);
-    
+
     typedef Adaptation::Config::MetaHeaders::iterator ACAMLI;
-    for(ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
+    for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
         const char *v;
         if (v = (*i)->match(request, reply)) {
             const libecap::Name name((*i)->name.termedBuf());

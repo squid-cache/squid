@@ -165,15 +165,15 @@ ConfigParser::QuoteString(String &var)
     bool  needQuote = false;
 
     for (const char *l = s; !needQuote &&  *l != '\0'; l++  )
-            needQuote = !isalnum(*l);
+        needQuote = !isalnum(*l);
 
     if (!needQuote)
         return s;
-    
+
     quotedStr.clean();
     quotedStr.append('"');
     for (; *s != '\0'; s++) {
-        if(*s == '"' || *s == '\\')
+        if (*s == '"' || *s == '\\')
             quotedStr.append('\\');
         quotedStr.append(*s);
     }
