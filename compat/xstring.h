@@ -1,5 +1,5 @@
-#ifndef _SQUID_COMPAT_XSTRING_H
-#define _SQUID_COMPAT_XSTRING_H
+#ifndef SQUID_COMPAT_XSTRING_H
+#define SQUID_COMPAT_XSTRING_H
 
 #if HAVE_STRING_H
 #include <string.h>
@@ -54,4 +54,4 @@ extern "C" {
 }
 #endif
 
-#endif /* _SQUID_COMPAT_XSTRING_H */
+#endif /* SQUID_COMPAT_XSTRING_H */

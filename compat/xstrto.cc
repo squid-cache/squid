@@ -1,5 +1,5 @@
-#ifndef _SQUID_XSTRTO_C_
-#define _SQUID_XSTRTO_C_
+#ifndef SQUID_XSTRTO_C_
+#define SQUID_XSTRTO_C_
 
 /*
  *  Shamelessly duplicated from the netfilter iptables sources
@@ -92,4 +92,4 @@ xstrtoui(const char *s, char **end, unsigned int *value,
     return ret;
 }
 
-#endif /* _SQUID_XSTRTO_C_ */
+#endif /* SQUID_XSTRTO_C_ */

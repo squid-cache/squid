@@ -419,26 +419,18 @@ mainParseOptions(int argc, char *argv[])
                 opt_send_signal = SIGHUP;
             else if (!strncmp(optarg, "rotate", strlen(optarg)))
                 /** \li On rotate send SIGQUIT or SIGUSR1. */
-#ifdef _SQUID_LINUX_THREADS_
-
+#if defined(_SQUID_LINUX_THREADS_)
                 opt_send_signal = SIGQUIT;
-
 #else
-
                 opt_send_signal = SIGUSR1;
-
 #endif
 
             else if (!strncmp(optarg, "debug", strlen(optarg)))
                 /** \li On debug send SIGTRAP or SIGUSR2. */
-#ifdef _SQUID_LINUX_THREADS_
-
+#if defined(_SQUID_LINUX_THREADS_)
                 opt_send_signal = SIGTRAP;
-
 #else
-
                 opt_send_signal = SIGUSR2;
-
 #endif
 
             else if (!strncmp(optarg, "shutdown", strlen(optarg)))
@@ -1145,7 +1137,7 @@ mainInitialize(void)
     if (!configured_once)
         writePidFile();		/* write PID file */
 
-#ifdef _SQUID_LINUX_THREADS_
+#if defined(_SQUID_LINUX_THREADS_)
 
     squid_signal(SIGQUIT, rotate_logs, SA_RESTART);
 
