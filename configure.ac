@@ -2256,8 +2256,10 @@ case "$host" in
 	;;
 esac
 
-dnl set $(AR)
-AC_PATH_PROG(AR, ar, $FALSE)
+dnl set $(AR) if not provided by the build environment
+if test "x$AR" = "x"; then
+  AC_PATH_PROG(AR, ar, $FALSE)
+fi
 AR_R="$AR r"
 case "$host" in
 	*-next-nextstep3)
