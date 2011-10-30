@@ -1134,10 +1134,29 @@ AuthDigestConfig::decode(char const *proxy_auth)
             vlen = 0;
         }
 
-        /* parse value. auth-param     = token "=" ( token | quoted-string ) */
         String value;
+
         if (vlen > 0) {
-            if (*p == '"') {
+            // see RFC 2617 section 3.2.1 and 3.2.2 for details on the BNF
+
+            if ( (nlen == 6 && memcmp(item,"domain",6) == 0) || (nlen == 3 && memcmp(item,"uri",3) == 0) ) {
+                // domain is Special. Not a quoted-string, must not be de-quoted. But is wrapped in '"'
+                // BUG 3077: uri= can also be sent to us in a mangled (invalid!) form like domain
+                if (*p == '"' && *(p + vlen-1) == '"') {
+                    value.limitInit(p+1, vlen-2);
+                } else {
+		    value.limitInit(p, vlen);
+		}
+            } else if (nlen == 3 && memcmp(item,"qop",3) == 0) {
+                // qop is more special.
+                // On request this must not be quoted-string de-quoted. But is several values wrapped in '"'
+                // On response this is a single un-quoted token.
+                if (*p == '"' && *(p + vlen-1) == '"') {
+                    value.limitInit(p+1, vlen-2);
+                } else {
+                    value.limitInit(p, vlen);
+                }
+            } else if (*p == '"') {
                 if (!httpHeaderParseQuotedString(p, &value)) {
                     debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << item << "' in '" << temp << "'");
                     continue;
