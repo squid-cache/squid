@@ -1,5 +1,5 @@
-#ifndef _SQUID_COMPAT_STRNSTR_CC_
-#define _SQUID_COMPAT_STRNSTR_CC_
+#ifndef SQUID_COMPAT_STRNSTR_CC_
+#define SQUID_COMPAT_STRNSTR_CC_
 
 /*
  *  Shamelessly duplicated from the FreeBSD public sources
@@ -93,4 +93,4 @@ squid_strnstr(const char *s, const char *find, size_t slen)
 }
 
 #endif /* !HAVE_STRNSTR */
-#endif /* _SQUID_COMPAT_STRNSTR_CC_ */
+#endif /* SQUID_COMPAT_STRNSTR_CC_ */

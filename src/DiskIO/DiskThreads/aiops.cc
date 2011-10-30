@@ -376,7 +376,7 @@ squidaio_thread_loop(void *ptr)
     sigemptyset(&newSig);
     sigaddset(&newSig, SIGPIPE);
     sigaddset(&newSig, SIGCHLD);
-#ifdef _SQUID_LINUX_THREADS_
+#if defined(_SQUID_LINUX_THREADS_)
 
     sigaddset(&newSig, SIGQUIT);
     sigaddset(&newSig, SIGTRAP);
