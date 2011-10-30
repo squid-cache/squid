@@ -32,7 +32,6 @@
 #ifndef SQUID_HTTPHDRCC_H
 #define SQUID_HTTPHDRCC_H
 
-#include "config.h"
 #include "MemPool.h"
 #include "SquidString.h"
 

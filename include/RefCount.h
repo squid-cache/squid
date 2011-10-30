@@ -32,8 +32,8 @@
  *
  */
 
-#ifndef _SQUID_REFCOUNT_H_
-#define _SQUID_REFCOUNT_H_
+#ifndef SQUID_REFCOUNT_H_
+#define SQUID_REFCOUNT_H_
 
 #if HAVE_IOSTREAM
 #include <iostream>
@@ -144,4 +144,4 @@ inline std::ostream &operator <<(std::ostream &os, const RefCount<C> &p)
         return os << "NULL";
 }
 
-#endif /* _SQUID_REFCOUNT_H_ */
+#endif /* SQUID_REFCOUNT_H_ */

@@ -4,8 +4,8 @@
  * Internal declarations for the diskd routines
  */
 
-#ifndef __SQUID_DIOMSG_H__
-#define __SQUID_DIOMSG_H__
+#ifndef SQUID_DIOMSG_H__
+#define SQUID_DIOMSG_H__
 
 enum {
     _MQD_NOP,
@@ -33,4 +33,4 @@ struct diomsg {
     static const int msg_snd_rcv_sz;
 };
 
-#endif /* __SQUID_DIOMSG_H__ */
+#endif /* SQUID_DIOMSG_H__ */

@@ -347,11 +347,11 @@ usage(void)
            );
 }
 
-#ifdef _SQUID_RES_NSADDR6_LARRAY
+#if defined(_SQUID_RES_NSADDR6_LARRAY)
 /// \ingroup dnsserver
 #define _SQUID_RES_NSADDR6_LIST(i)	_SQUID_RES_NSADDR6_LARRAY[i].sin6_addr
 #endif
-#ifdef _SQUID_RES_NSADDR6_LPTR
+#if defined(_SQUID_RES_NSADDR6_LPTR)
 /// \ingroup dnsserver
 #define _SQUID_RES_NSADDR6_LIST(i)	_SQUID_RES_NSADDR6_LPTR[i]->sin6_addr
 #endif
@@ -366,14 +366,14 @@ usage(void)
 void
 squid_res_setservers(int reset)
 {
-#if defined(_SQUID_FREEBSD_) && defined(_SQUID_RES_NSADDR6_COUNT)
+#if _SQUID_FREEBSD_ && defined(_SQUID_RES_NSADDR6_COUNT)
     /* Only seems to be valid on FreeBSD 5.5 where _res_ext was provided without an ns6addr counter! */
     /* Gone again on FreeBSD 6.2 along with _res_ext itself in any form. */
     int ns6count = 0;
 #endif
 #if HAVE_RES_INIT
     Ip::Address ipa;
-#ifdef _SQUID_RES_NSADDR_LIST
+#if defined(_SQUID_RES_NSADDR_LIST)
     extern char *optarg;
 #endif
 #endif

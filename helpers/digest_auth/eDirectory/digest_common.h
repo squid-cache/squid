@@ -8,8 +8,8 @@
  * Copyright (c) 2003  Robert Collins  <robertc@squid-cache.org>
  */
 
-#ifndef   _SQUID_DIGEST_COMMON_H_
-#define   _SQUID_DIGEST_COMMON_H_
+#ifndef SQUID_DIGEST_COMMON_H_
+#define SQUID_DIGEST_COMMON_H_
 
 #if HAVE_STDIO_H
 #include <stdio.h>
@@ -59,4 +59,5 @@ typedef struct _request_data {
  */
 typedef void HandleArguments(int, char **);
 typedef void HHA1Creator(RequestData *);
-#endif /* _SQUID_DIGEST_COMMON_H_ */
+
+#endif /* SQUID_DIGEST_COMMON_H_ */
