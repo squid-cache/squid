@@ -1145,8 +1145,8 @@ AuthDigestConfig::decode(char const *proxy_auth)
                 if (*p == '"' && *(p + vlen-1) == '"') {
                     value.limitInit(p+1, vlen-2);
                 } else {
-		    value.limitInit(p, vlen);
-		}
+                    value.limitInit(p, vlen);
+                }
             } else if (nlen == 3 && memcmp(item,"qop",3) == 0) {
                 // qop is more special.
                 // On request this must not be quoted-string de-quoted. But is several values wrapped in '"'
