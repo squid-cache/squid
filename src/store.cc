@@ -316,7 +316,7 @@ StoreEntry::storeClientType() const
      * offset 0 in the memory object is the HTTP headers.
      */
 
-    if (mem_status == IN_MEMORY && UsingSmp()) {
+    if (mem_status == IN_MEMORY && Config.memShared && IamWorkerProcess()) {
         // clients of an object cached in shared memory are memory clients
         return STORE_MEM_CLIENT;
     }
@@ -1444,7 +1444,7 @@ StoreEntry::memoryCachable() const
     if (!Config.onoff.memory_cache_first && swap_status == SWAPOUT_DONE && refcount == 1)
         return 0;
 
-    if (UsingSmp()) {
+    if (Config.memShared && IamWorkerProcess()) {
         const int64_t expectedSize = mem_obj->expectedReplySize();
         // objects of unknown size are not allowed into memory cache, for now
         if (expectedSize < 0 ||
