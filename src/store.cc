@@ -1170,7 +1170,7 @@ storeGetMemSpace(int size)
 
     last_check = squid_curtime;
 
-    pages_needed = (size / SM_PAGE_SIZE) + 1;
+    pages_needed = (size + SM_PAGE_SIZE-1) / SM_PAGE_SIZE;
 
     if (mem_node::InUseCount() + pages_needed < store_pages_max) {
         PROF_stop(storeGetMemSpace);
