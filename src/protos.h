@@ -272,7 +272,6 @@ SQUIDCEXTERN int httpReqHdrManglersConfigured();
 SQUIDCEXTERN PF snmpHandleUdp;
 SQUIDCEXTERN void snmpInit(void);
 SQUIDCEXTERN void snmpConnectionOpen(void);
-SQUIDCEXTERN void snmpConnectionShutdown(void);
 SQUIDCEXTERN void snmpConnectionClose(void);
 SQUIDCEXTERN const char * snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf);
 

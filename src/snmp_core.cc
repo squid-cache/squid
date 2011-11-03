@@ -92,7 +92,6 @@ extern "C" void snmpSnmplibDebug(int lvl, char *buf);
  * The functions used during startup:
  * snmpInit
  * snmpConnectionOpen
- * snmpConnectionShutdown
  * snmpConnectionClose
  */
 
@@ -357,35 +356,19 @@ snmpPortOpened(const Comm::ConnectionPointer &conn, int errNo)
 }
 
 void
-snmpConnectionShutdown(void)
-{
-    if (!Comm::IsConnOpen(snmpIncomingConn))
-        return;
-
-    // Perform lazy closure. So as not to step on outgoing connection when sharing.
-    debugs(49, DBG_IMPORTANT, "Closing SNMP receiving port " << snmpIncomingConn->local);
-    snmpIncomingConn = NULL;
-
-    /*
-     * Normally we only write to the outgoing SNMP socket, but we
-     * also have a read handler there to catch messages sent to that
-     * specific interface.  During shutdown, we must disable reading
-     * on the outgoing socket.
-     */
-    assert(Comm::IsConnOpen(snmpOutgoingConn));
-
-    Comm::SetSelect(snmpOutgoingConn->fd, COMM_SELECT_READ, NULL, NULL, 0);
-}
-
-void
 snmpConnectionClose(void)
 {
-    snmpConnectionShutdown();
+    if (!Comm::IsConnOpen(snmpIncomingConn)) {
+        debugs(49, DBG_IMPORTANT, "Closing SNMP receiving port " << snmpIncomingConn->local);
+        snmpIncomingConn->close();
+    }
+    snmpIncomingConn = NULL;
 
-    if (!Comm::IsConnOpen(snmpOutgoingConn))
-        return;
-
-    debugs(49, DBG_IMPORTANT, "Closing SNMP sending port " << snmpOutgoingConn->local);
+    if (!Comm::IsConnOpen(snmpOutgoingConn) && snmpIncomingConn != snmpOutgoingConn) {
+        // Perform OUT port closure so as not to step on IN port when sharing a conn.
+        debugs(49, DBG_IMPORTANT, "Closing SNMP sending port " << snmpOutgoingConn->local);
+        snmpOutgoingConn->close();
+    }
     snmpOutgoingConn = NULL;
 }
 
