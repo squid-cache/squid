@@ -670,7 +670,6 @@ serverConnectionsOpen(void)
         htcpInit();
 #endif
 #if SQUID_SNMP
-
         snmpConnectionOpen();
 #endif
 
@@ -714,8 +713,7 @@ serverConnectionsClose(void)
 
         icmpEngine.Close();
 #if SQUID_SNMP
-
-        snmpConnectionShutdown();
+        snmpConnectionClose();
 #endif
 
         asnFreeMemory();
@@ -734,10 +732,6 @@ mainReconfigureStart(void)
 #if USE_HTCP
 
     htcpSocketClose();
-#endif
-#if SQUID_SNMP
-
-    snmpConnectionClose();
 #endif
 #if USE_DNSSERVERS
 
@@ -1867,7 +1861,6 @@ SquidShutdown()
     htcpSocketClose();
 #endif
 #if SQUID_SNMP
-
     snmpConnectionClose();
 #endif
 #if USE_WCCP
