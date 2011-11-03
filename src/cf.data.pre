@@ -3173,11 +3173,11 @@ DOC_START
 	
 	udp	To send each log line as text data to a UDP receiver.
 		Place: The destination host name or IP and port.
-		Place Format:   \\host:port
+		Place Format:   //host:port
 
 	tcp	To send each log line as text data to a TCP receiver.
 		Place: The destination host name or IP and port.
-		Place Format:   \\host:port
+		Place Format:   //host:port
 
 	Default:
 		access_log daemon:@DEFAULT_ACCESS_LOG@ squid
