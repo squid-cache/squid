@@ -634,7 +634,7 @@ ClientRequestContext::hostHeaderVerify()
             // verify the destination DNS is one of the Host: headers IPs
             ipcache_nbgethostbyname(host, hostHeaderIpVerifyWrapper, this);
         }
-    } else if (Config.onoff.hostStrictVerify) {
+    } else if (!Config.onoff.hostStrictVerify) {
         debugs(85, 3, HERE << "validate skipped.");
         http->doCallouts();
     } else if (strlen(host) != strlen(http->request->GetHost())) {
