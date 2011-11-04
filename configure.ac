@@ -2294,6 +2294,7 @@ AC_CHECK_HEADERS( \
   bstring.h \
   cassert \
   crypt.h \
+  cstdarg \
   cstdlib \
   cstring \
   list \
