@@ -31,11 +31,6 @@
  */
 
 #include "config.h"
-//#include "compat/inet_ntop.h"
-//#include "compat/getaddrinfo.h"
-//#include "compat/getnameinfo.h"
-#include "ip/Address.h"
-//#include "util.h"
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -177,8 +172,7 @@ lookup(const char *buf)
     int ttl = 0;
     int retry = 0;
     unsigned int i = 0;
-    Ip::Address ipa;
-    char ntoabuf[MAX_IPSTRLEN];
+    char ntoabuf[256];
     struct addrinfo hints;
     struct addrinfo *AI = NULL;
     struct addrinfo *aiptr = NULL;
@@ -193,11 +187,20 @@ lookup(const char *buf)
         return;
     }
 
-    /* setup 'hints' for the system lookup */
+    /* check if it's already an IP address in text form. */
+    memset(&hints, '\0', sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_flags = AI_NUMERICHOST; // only succeed if its numeric.
+    const bool isDomain = (getaddrinfo(buf,NULL,&hints,&AI) != 0);
+
+    // reset for real lookup
+    freeaddrinfo(AI);
+    AI = NULL;
+
+    // resolve the address/name
     memset(&hints, '\0', sizeof(struct addrinfo));
     hints.ai_family = AF_UNSPEC;
     hints.ai_flags = AI_CANONNAME;
-
     for (;;) {
         if (AI != NULL) {
             freeaddrinfo(AI);
@@ -216,9 +219,7 @@ lookup(const char *buf)
         sleep(1);
     }
 
-    /* check if it's already an IP address in text form. */
-    ipa = buf;
-    if ( ipa.IsAnyAddr() ) {
+    if (isDomain) {
         /* its a domain name. Use the forward-DNS lookup already done */
 
         if (res == 0) {
@@ -234,7 +235,7 @@ lookup(const char *buf)
             i = 0;
             aiptr = AI;
             while (NULL != aiptr && 32 >= i) {
-                memset(ntoabuf, 0, MAX_IPSTRLEN);
+                memset(ntoabuf, 0, sizeof(ntoabuf));
 
                 /* getaddrinfo given a host has a nasty tendency to return duplicate addr's */
                 /* BUT sorted fortunately, so we can drop most of them easily */
@@ -252,10 +253,10 @@ lookup(const char *buf)
                 /* annoying inet_ntop breaks the nice code by requiring the in*_addr */
                 switch (aiptr->ai_family) {
                 case AF_INET:
-                    inet_ntop(aiptr->ai_family, &((struct sockaddr_in*)aiptr->ai_addr)->sin_addr, ntoabuf, MAX_IPSTRLEN);
+                    inet_ntop(aiptr->ai_family, &((struct sockaddr_in*)aiptr->ai_addr)->sin_addr, ntoabuf, sizeof(ntoabuf));
                     break;
                 case AF_INET6:
-                    inet_ntop(aiptr->ai_family, &((struct sockaddr_in6*)aiptr->ai_addr)->sin6_addr, ntoabuf, MAX_IPSTRLEN);
+                    inet_ntop(aiptr->ai_family, &((struct sockaddr_in6*)aiptr->ai_addr)->sin6_addr, ntoabuf, sizeof(ntoabuf));
                     break;
                 default:
                     aiptr = aiptr->ai_next;
@@ -276,7 +277,7 @@ lookup(const char *buf)
          */
         if (NULL != AI && NULL != AI->ai_addr) {
             for (;;) {
-                if ( 0 == (res = getnameinfo(AI->ai_addr, AI->ai_addrlen, ntoabuf, MAX_IPSTRLEN, NULL,0,0)) )
+                if ( 0 == (res = getnameinfo(AI->ai_addr, AI->ai_addrlen, ntoabuf, sizeof(ntoabuf), NULL,0,0)) )
                     break;
 
                 if (res != EAI_AGAIN)
@@ -371,11 +372,8 @@ squid_res_setservers(int reset)
     /* Gone again on FreeBSD 6.2 along with _res_ext itself in any form. */
     int ns6count = 0;
 #endif
-#if HAVE_RES_INIT
-    Ip::Address ipa;
-#if defined(_SQUID_RES_NSADDR_LIST)
+#if HAVE_RES_INIT && defined(_SQUID_RES_NSADDR_LIST)
     extern char *optarg;
-#endif
 #endif
 
 #if HAVE_RES_INIT && (defined(_SQUID_RES_NSADDR_LIST) || defined(_SQUID_RES_NSADDR6_LIST))
@@ -401,35 +399,40 @@ squid_res_setservers(int reset)
      *
      *  BUT, even if _res.nsaddrs is memset to NULL, it resolves IFF IPv6 set in _ext.
      *
-     *  SO, am splittig the IPv4/v6 into the seperate _res fields
+     *  SO, am splitting the IPv4/v6 into the seperate _res fields
      *      and making nscount a total of IPv4+IPv6 /w nscount6 the IPv6 sub-counter
      *	ie. nscount = count(NSv4)+count(NSv6) & nscount6 = count(NSv6)
      *
      * If ANYONE knows better please let us know.
      */
-    if ( !(ipa = optarg) ) {
+    struct addrinfo hints;
+    memset(&hints, '\0', sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_flags = AI_NUMERICHOST; // prevent repeated DNS lookups!
+    struct addrinfo *AI = NULL;
+    if ( getaddrinfo(optarg, NULL, &hints, &AI) != 0) {
         fprintf(stderr, "%s appears to be a bad nameserver FQDN/IP.\n",optarg);
-    } else if ( ipa.IsIPv4() ) {
+    } else if ( AI->ai_family == AF_INET ) {
         if (_SQUID_RES_NSADDR_COUNT == MAXNS) {
             fprintf(stderr, "Too many -s options, only %d are allowed\n", MAXNS);
-            return;
+        } else {
+            _SQUID_RES_NSADDR_LIST[_SQUID_RES_NSADDR_COUNT] = _SQUID_RES_NSADDR_LIST[0];
+            memcpy(&_SQUID_RES_NSADDR_LIST[_SQUID_RES_NSADDR_COUNT++].sin_addr, &((struct sockaddr_in*)AI->ai_addr)->sin_addr, sizeof(struct in_addr));
         }
-        _SQUID_RES_NSADDR_LIST[_SQUID_RES_NSADDR_COUNT] = _SQUID_RES_NSADDR_LIST[0];
-        ipa.GetInAddr(_SQUID_RES_NSADDR_LIST[_SQUID_RES_NSADDR_COUNT++].sin_addr);
-    } else if ( ipa.IsIPv6() ) {
+    } else if ( AI->ai_family == AF_INET6 ) {
 #if USE_IPV6 && defined(_SQUID_RES_NSADDR6_LIST)
         /* because things NEVER seem to resolve in tests without _res.nscount being a total. */
         if (_SQUID_RES_NSADDR_COUNT == MAXNS) {
             fprintf(stderr, "Too many -s options, only %d are allowed\n", MAXNS);
-            return;
+        } else {
+            _SQUID_RES_NSADDR_COUNT++;
+            memcpy(&_SQUID_RES_NSADDR6_LIST(_SQUID_RES_NSADDR6_COUNT++), &((struct sockaddr_in6*)AI->ai_addr)->sin6_addr, sizeof(struct in6_addr));
         }
-        _SQUID_RES_NSADDR_COUNT++;
-
-        ipa.GetInAddr(_SQUID_RES_NSADDR6_LIST(_SQUID_RES_NSADDR6_COUNT++));
 #else
         fprintf(stderr, "IPv6 nameservers not supported on this resolver\n");
 #endif
     }
+    freeaddrinfo(AI);
 
 #else /* !HAVE_RES_INIT || !defined(_SQUID_RES_NSADDR_LIST) */
 
