@@ -128,12 +128,13 @@ Ip::Qos::doTosLocalMiss(const Comm::ConnectionPointer &conn, const hier_code hie
     } else if (Ip::Qos::TheConfig.tosParentHit && hierCode==PARENT_HIT) {
         tos = Ip::Qos::TheConfig.tosParentHit;
         debugs(33, 2, "QOS: Parent Peer hit with hier code=" << hierCode << ", TOS=" << int(tos));
-    } else if (Ip::Qos::TheConfig.tosMiss) {
-        tos = Ip::Qos::TheConfig.tosMiss;
-        debugs(33, 2, "QOS: Cache miss, setting TOS=" << int(tos));
-    } else if (Ip::Qos::TheConfig.preserveMissTos && Ip::Qos::TheConfig.preserveMissTosMask) {
+    } else if (Ip::Qos::TheConfig.preserveMissTos) {
         tos = fd_table[conn->fd].tosFromServer & Ip::Qos::TheConfig.preserveMissTosMask;
+        tos = (tos & ~Ip::Qos::TheConfig.tosMissMask) | (Ip::Qos::TheConfig.tosMiss & Ip::Qos::TheConfig.tosMissMask);
         debugs(33, 2, "QOS: Preserving TOS on miss, TOS=" << int(tos));
+    } else if (Ip::Qos::TheConfig.tosMiss) {
+        tos = Ip::Qos::TheConfig.tosMiss & Ip::Qos::TheConfig.tosMissMask;
+        debugs(33, 2, "QOS: Cache miss, setting TOS=" << int(tos));
     }
     return setSockTos(conn, tos);
 }
@@ -148,12 +149,13 @@ Ip::Qos::doNfmarkLocalMiss(const Comm::ConnectionPointer &conn, const hier_code 
     } else if (Ip::Qos::TheConfig.markParentHit && hierCode==PARENT_HIT) {
         mark = Ip::Qos::TheConfig.markParentHit;
         debugs(33, 2, "QOS: Parent Peer hit with hier code=" << hierCode << ", Mark=" << mark);
-    } else if (Ip::Qos::TheConfig.markMiss) {
-        mark = Ip::Qos::TheConfig.markMiss;
-        debugs(33, 2, "QOS: Cache miss, setting Mark=" << mark);
     } else if (Ip::Qos::TheConfig.preserveMissMark) {
         mark = fd_table[conn->fd].nfmarkFromServer & Ip::Qos::TheConfig.preserveMissMarkMask;
+        mark = (mark & ~Ip::Qos::TheConfig.markMissMask) | (Ip::Qos::TheConfig.markMiss & Ip::Qos::TheConfig.markMissMask);
         debugs(33, 2, "QOS: Preserving mark on miss, Mark=" << mark);
+    } else if (Ip::Qos::TheConfig.markMiss) {
+        mark = Ip::Qos::TheConfig.markMiss & Ip::Qos::TheConfig.markMissMask;
+        debugs(33, 2, "QOS: Cache miss, setting Mark=" << mark);
     }
     return setSockNfmark(conn, mark);
 }
@@ -182,12 +184,14 @@ Ip::Qos::Config::Config()
     tosSiblingHit = 0;
     tosParentHit = 0;
     tosMiss = 0;
+    tosMissMask = 0;
     preserveMissTos = false;
     preserveMissTosMask = 0xFF;
     markLocalHit = 0;
     markSiblingHit = 0;
     markParentHit = 0;
     markMiss = 0;
+    markMissMask = 0;
     preserveMissMark = false;
     preserveMissMarkMask = 0xFFFFFFFF;
 }
@@ -290,18 +294,36 @@ Ip::Qos::Config::parseConfigLine()
 
         } else if (strncmp(token, "miss=",5) == 0) {
 
+            char *end;
             if (mark) {
-                if (!xstrtoui(&token[5], NULL, &markMiss, 0, std::numeric_limits<nfmark_t>::max())) {
+                if (!xstrtoui(&token[5], &end, &markMiss, 0, std::numeric_limits<nfmark_t>::max())) {
                     debugs(3, DBG_CRITICAL, "ERROR: Bad mark miss value " << &token[5]);
                     self_destruct();
                 }
+                if (*end == '/') {
+                    if (!xstrtoui(end + 1, NULL, &markMissMask, 0, std::numeric_limits<nfmark_t>::max())) {
+                        debugs(3, DBG_CRITICAL, "ERROR: Bad mark miss mask value " << (end + 1) << ". Using 0xFFFFFFFF instead.");
+                        markMissMask = 0xFFFFFFFF;
+                    }
+                } else {
+                    markMissMask = 0xFFFFFFFF;
+                }
             } else {
                 unsigned int v = 0;
-                if (!xstrtoui(&token[5], NULL, &v, 0, std::numeric_limits<tos_t>::max())) {
+                if (!xstrtoui(&token[5], &end, &v, 0, std::numeric_limits<tos_t>::max())) {
                     debugs(3, DBG_CRITICAL, "ERROR: Bad TOS miss value " << &token[5]);
                     self_destruct();
                 }
                 tosMiss = (tos_t)v;
+                if (*end == '/') {
+                    if (!xstrtoui(end + 1, NULL, &v, 0, std::numeric_limits<tos_t>::max())) {
+                        debugs(3, DBG_CRITICAL, "ERROR: Bad TOS miss mask value " << (end + 1) << ". Using 0xFF instead.");
+                        tosMissMask = 0xFF;
+                    } else
+                        tosMissMask = (tos_t)v;
+                } else {
+                    tosMissMask = 0xFF;
+                }
             }
 
         } else if (strcmp(token, "disable-preserve-miss") == 0) {
@@ -366,6 +388,9 @@ Ip::Qos::Config::dumpConfigLine(char *entry, const char *name) const
         }
         if (tosMiss > 0) {
             p += snprintf(p, 11, " miss=0x%02X", tosMiss);
+            if (tosMissMask!=0xFFU) {
+                p += snprintf(p, 6, "/0x%02X", markMissMask);
+            }
         }
         if (preserveMissTos == 0) {
             p += snprintf(p, 23, " disable-preserve-miss");
@@ -391,6 +416,9 @@ Ip::Qos::Config::dumpConfigLine(char *entry, const char *name) const
         }
         if (markMiss > 0) {
             p += snprintf(p, 17, " miss=0x%02X", markMiss);
+            if (markMissMask!=0xFFFFFFFFU) {
+                p += snprintf(p, 12, "/0x%02X", markMissMask);
+            }
         }
         if (preserveMissMark == false) {
             p += snprintf(p, 23, " disable-preserve-miss");
