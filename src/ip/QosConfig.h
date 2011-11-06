@@ -158,15 +158,17 @@ public:
     tos_t tosSiblingHit;                ///< TOS value to apply to hits from siblings
     tos_t tosParentHit;                 ///< TOS value to apply to hits from parent
     tos_t tosMiss;                      ///< TOS value to apply to cache misses
+    tos_t tosMissMask;                  ///< Mask for TOS value to apply to cache misses. Applied to the tosMiss value.
     bool preserveMissTos;               ///< Whether to preserve the TOS value of the inbound packet for misses
-    tos_t preserveMissTosMask;          ///< The mask to apply when preserving the TOS of misses
+    tos_t preserveMissTosMask;          ///< The mask to apply when preserving the TOS of misses. Applies to preserved value from upstream.
 
     nfmark_t markLocalHit;              ///< Netfilter mark value to apply to local cache hits
     nfmark_t markSiblingHit;            ///< Netfilter mark value to apply to hits from siblings
     nfmark_t markParentHit;             ///< Netfilter mark value to apply to hits from parent
     nfmark_t markMiss;                  ///< Netfilter mark value to apply to cache misses
+    nfmark_t markMissMask;              ///< Mask for netfilter mark value to apply to cache misses. Applied to the markMiss value.
     bool preserveMissMark;              ///< Whether to preserve netfilter mark value of inbound connection
-    nfmark_t preserveMissMarkMask;      ///< The mask to apply when preserving the netfilter mark of misses
+    nfmark_t preserveMissMarkMask;      ///< The mask to apply when preserving the netfilter mark of misses. Applied to preserved value from upstream.
 
     acl_tos *tosToServer;               ///< The TOS that packets to the web server should be marked with, based on ACL
     acl_tos *tosToClient;               ///< The TOS that packets to the client should be marked with, based on ACL

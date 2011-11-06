@@ -1697,8 +1697,10 @@ DOC_START
 
 	parent-hit=0xFF		Value to mark hits from parent peers.
 
-	miss=0xFF		Value to mark cache misses. Takes precedence
-				over the preserve-miss feature (see below).
+	miss=0xFF[/mask]	Value to mark cache misses. Takes precedence
+				over the preserve-miss feature (see below), unless
+				mask is specified, in which case only the bits
+				specified in the mask are written.
 
 	The TOS variant of the following features are only possible on Linux
 	and require your kernel to be patched with the TOS preserving ZPH
