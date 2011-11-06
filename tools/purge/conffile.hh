@@ -55,9 +55,9 @@ typedef int bool;
 #endif /* __cplusplus */
 
 
-#ifndef DEFAULT_SQUID_CONF
+#if !defined(DEFAULT_SQUID_CONF)
 #define DEFAULT_SQUID_CONF "/usr/local/squid/etc/squid.conf"
-#endif // DEFAULT_SQUID_CONF
+#endif
 
 #include <stdio.h>      // FILE*
 #include <vector>	// minimum STL container

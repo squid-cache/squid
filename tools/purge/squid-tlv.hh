@@ -34,8 +34,8 @@
 // Revision 1.1  1999/06/15 21:10:16  voeckler
 // Initial revision
 //
-#ifndef _SQUID_TLV_HH
-#define _SQUID_TLV_HH
+#ifndef SQUID_TLV_HH
+#define SQUID_TLV_HH
 
 #if !defined(__cplusplus)
 #if defined(__GNUC__) || defined(__GNUG__)
@@ -117,4 +117,4 @@ private:
   SquidTLV* tail;
 };
 
-#endif // _SQUID_TLV_HH
+#endif // SQUID_TLV_HH

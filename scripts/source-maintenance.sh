@@ -34,6 +34,14 @@ srcformat ()
 PWD=`pwd`
 #echo "FORMAT: ${PWD}..."
 
+#
+# Scan for incorrect use of #ifdef/#ifndef
+#
+grep -E "ifn?def .*_SQUID_" ./* | grep -v -E "_H$" | while read f; do echo "PROBLEM?: ${PWD} ${f}"; done
+
+#
+# Scan for file-specific actions
+#
 for FILENAME in `ls -1`; do
 
     case ${FILENAME} in
@@ -65,22 +73,17 @@ for FILENAME in `ls -1`; do
 	case ${FILENAME} in
 	*.c|*.cc)
 		FI=`grep "#include" ${FILENAME} | head -1`;
-		if test "${FI}" != "#include \"config.h\"" -a "${FI}" != "#include \"squid.h\"" ; then
+		if test "${FI}" != "#include \"config.h\"" -a "${FI}" != "#include \"squid.h\"" -a "${FILENAME}" != "cf_gen.cc"; then
 			echo "ERROR: ${PWD}/${FILENAME} does not include config.h or squid.h first!"
 		fi
 		;;
 	*.h|*.cci)
 		FI=`grep "#include \"config.h\"" ${FILENAME}`;
-		if test "x${FI}" != "x" ; then
+		if test "x${FI}" != "x" -a "${FILENAME}" != "squid.h"; then
 			echo "ERROR: ${PWD}/${FILENAME} duplicate include of config.h"
 		fi
 		;;
 	esac
-
-	#
-	# Scan for incorrect use of #ifdef/#ifndef
-	#
-	grep -R -E "ifn?def .*_SQUID_" ./* | grep -v -E "_H$" | while read f; do echo "PROBLEM?: ${f}"; done
 
 	#
 	# DEBUG Section list maintenance
