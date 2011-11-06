@@ -592,6 +592,9 @@ DOC_START
 	  		list separator. ; can be any non-alphanumeric
 			character.
 
+	  %%		The percent sign. Useful for helpers which need
+			an unchanging input format.
+
 	In addition to the above, any string specified in the referencing
 	acl will also be included in the helper request line, after the
 	specified formats (see the "acl external" directive)
