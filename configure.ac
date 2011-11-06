@@ -2279,6 +2279,7 @@ AC_CHECK_HEADERS( \
 	bstring.h \
 	cassert \
 	crypt.h \
+	cstdarg \
 	cstring \
 	ctype.h \
 	errno.h \
