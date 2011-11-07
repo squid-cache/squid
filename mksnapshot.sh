@@ -54,7 +54,8 @@ echo "REVISION: ${revision}"
 echo "STARTDIR: ${startdir}"
 echo "TMPDIR: ${tmpdir}"
 
-./test-builds.sh --cleanup || exit 1
+## Ignore extra build layers. General features building is sufficient for snapshot release.
+./test-builds.sh --cleanup layer-00-default layer-01-maximus layer-01-minimal || exit 1
 ./configure --silent --enable-build-info="DATE: ${date} REVISION: ${revision}"
 make -s dist-all
 
