@@ -1000,7 +1000,7 @@ DOC_START
 
 	SECURITY WARNING: Usage of this option is dangerous
 	and should not be used trivially. Correct configuration
-	of folow_x_forewarded_for with a limited set of trusted
+	of follow_x_forewarded_for with a limited set of trusted
 	sources is required to prevent abuse of your proxy.
 DOC_END
 
