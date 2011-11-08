@@ -192,7 +192,7 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
     comm_read(conn, fakeReadBuf_, sizeof(fakeReadBuf_), readCall);
     AsyncCall::Pointer timeoutCall = commCbCall(5,4, "IdleConnList::Timeout",
                                      CommTimeoutCbPtrFun(IdleConnList::Timeout, this));
-    commSetConnTimeout(conn, Config.Timeout.pconn, timeoutCall);
+    commSetConnTimeout(conn, Config.Timeout.serverIdlePconn, timeoutCall);
 }
 
 /// Determine whether an entry in the idle list is available for use.
@@ -417,7 +417,7 @@ PconnPool::push(const Comm::ConnectionPointer &conn, const char *domain)
     assert(!comm_has_incomplete_write(conn->fd));
 
     LOCAL_ARRAY(char, desc, FD_DESC_SZ);
-    snprintf(desc, FD_DESC_SZ, "Idle: %s", aKey);
+    snprintf(desc, FD_DESC_SZ, "Idle server: %s", aKey);
     fd_note(conn->fd, desc);
     debugs(48, 3, HERE << "pushed " << conn << " for " << aKey);
 }
