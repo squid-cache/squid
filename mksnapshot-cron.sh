@@ -59,7 +59,10 @@ make_snapshot()
     ln -s ${file}.md5 ${dst}/squid-${ver}.snapshot${type}.md5
 
     # cleanup old snapshots
-    ls ${dst}/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]${type} | sed -e 's/.*-\([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'${type}'\)/\1/' | sort -r | tail +${save} | while read f; do
+    ls ${dst}/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-r*[0-9]${type} | \
+		sed -e 's/.*-\([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-r[0-9]+'${type}'\)/\1/' | \
+		sort -r | tail +${save} | \
+    while read f; do
 	rm -f ${dst}/*-${f} ${dst}/*-${f}.md5
     done
 
@@ -102,10 +105,10 @@ chmod 444 /server/httpd/htdocs/squid-cache.org/SPONSORS.new
 mv -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new /server/httpd/htdocs/squid-cache.org/content/SPONSORS.txt
 
 ../commit/bootstrap squid-3.2
-make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_2 v3 3.2 5
+make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_2 v3 3.2 30
 
 ../commit/bootstrap squid-3.1
-make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_1 v3 3.1 3
+make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_1 v3 3.1 30
 
 #../commit/bootstrap squid-3.0
 #make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_0 v3 3.0 3
