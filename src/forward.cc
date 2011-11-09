@@ -626,8 +626,7 @@ FwdState::negotiateSSL(int fd)
                 // and will be released when ssl object destroyed.
                 // Copy errFromFailure to a new Ssl::ErrorDetail object
                 anErr->detail = new Ssl::ErrorDetail(*errFromFailure);
-            }
-            else {
+            } else {
                 // clientCert can be be NULL
                 X509 *client_cert = SSL_get_peer_certificate(ssl);
                 anErr->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, client_cert);
