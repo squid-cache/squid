@@ -767,6 +767,10 @@ idnsDoSendQueryVC(nsvc *vc)
     if (vc->queue->contentSize() == 0)
         return;
 
+    // if retrying after a TC UDP response, our close handler cb may be pending
+    if (fd_table[vc->conn->fd].closing())
+        return;
+
     MemBuf *mb = vc->queue;
 
     vc->queue = new MemBuf;
