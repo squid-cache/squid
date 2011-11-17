@@ -464,13 +464,6 @@ FwdState::checkRetry()
 bool
 FwdState::checkRetriable()
 {
-    /* If there is a request body then Squid can only try once
-     * even if the method is indempotent
-     */
-
-    if (request->body_pipe != NULL)
-        return false;
-
     /* RFC2616 9.1 Safe and Idempotent Methods */
     switch (request->method.id()) {
         /* 9.1.1 Safe Methods */
