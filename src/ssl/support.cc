@@ -252,7 +252,18 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     if (!dont_verify_domain && server) {}
 
     if (!ok && !SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail) ) {
-        Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail(error_no, peer_cert);
+
+        // Find the broken certificate. It may be intermediate.
+        X509 *broken_cert = peer_cert; // reasonable default if search fails
+        // Our SQUID_X509_V_ERR_DOMAIN_MISMATCH implies peer_cert is at fault.
+        if (error_no != SQUID_X509_V_ERR_DOMAIN_MISMATCH) {
+            if (X509 *last_used_cert = X509_STORE_CTX_get_current_cert(ctx))
+                broken_cert = last_used_cert;
+        }
+
+        Ssl::ErrorDetail *errDetail =
+            new Ssl::ErrorDetail(error_no, broken_cert);
+
         if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_error_detail,  errDetail)) {
             debugs(83, 2, "Failed to set Ssl::ErrorDetail in ssl_verify_cb: Certificate " << buffer);
             delete errDetail;
