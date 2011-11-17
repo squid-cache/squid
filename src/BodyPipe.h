@@ -84,7 +84,7 @@ public:
     typedef BodyConsumer Consumer;
     typedef BodyPipeCheckout Checkout;
 
-    enum { MaxCapacity = SQUID_TCP_SO_RCVBUF };
+    enum { MaxCapacity = 64*1024 };
 
     friend class BodyPipeCheckout;
 
