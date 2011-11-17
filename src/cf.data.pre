@@ -4653,13 +4653,13 @@ DOC_START
 	connection establishment.
 DOC_END
 
-NAME: persistent_request_timeout
+NAME: client_idle_pconn_timeout persistent_request_timeout
 TYPE: time_t
-LOC: Config.Timeout.persistent_request
+LOC: Config.Timeout.clientIdlePconn
 DEFAULT: 2 minutes
 DOC_START
 	How long to wait for the next HTTP request on a persistent
-	connection after the previous request completes.
+	client connection after the previous request completes.
 DOC_END
 
 NAME: client_lifetime
@@ -4703,9 +4703,9 @@ DOC_START
 	it is recommended to leave OFF.
 DOC_END
 
-NAME: pconn_timeout
+NAME: server_idle_pconn_timeout pconn_timeout
 TYPE: time_t
-LOC: Config.Timeout.pconn
+LOC: Config.Timeout.serverIdlePconn
 DEFAULT: 1 minute
 DOC_START
 	Timeout for idle persistent connections to servers and other

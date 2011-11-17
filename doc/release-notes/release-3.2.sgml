@@ -431,6 +431,9 @@ This section gives a thorough account of those changes in three categories:
 	   destination IP to another source indicated by Host: domain DNS or
 	   cache_peer configuration. It <em>does not</em> affect Host: validation.
 
+	<tag>client_idle_pconn_timeout</tag>
+	<p>Renamed from <em>persistent_request_timeout</em>.
+
 	<tag>cpu_affinity_map</tag>
 	<p>New setting for SMP support to map Squid processes onto specific CPU cores.
 
@@ -478,6 +481,9 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>logfile_daemon</tag>
 	<p>Ported from 2.7. Specify the file I/O daemon helper to run for logging.
+
+	<tag>server_idle_pconn_timeout</tag>
+	<p>Renamed from <em>pconn_timeout</em>.
 
 	<tag>tproxy_uses_indirect_client</tag>
 	<p>Controls whether the indirect client address found in the X-Forwarded-For
@@ -666,6 +672,12 @@ This section gives a thorough account of those changes in three categories:
 	<tag>maximum_single_addr_tries</tag>
 	<p>The behaviour controlled by this directive is no longer possible.
 	   It has been replaced by <em>connect_retries</em> option which operates a little differently.
+
+	<tag>pconn_timeout</tag>
+	<p>Renamed to <em>server_idle_pconn_timeout</em>
+
+	<tag>persistent_request_timeout</tag>
+	<p>Renamed to <em>client_idle_pconn_timeout</em>
 
 	<tag>referer_log</tag>
 	<p>Replaced by the <em>referrer</em> format option on an <em>access_log</em> directive.

@@ -207,8 +207,8 @@ struct SquidConfig {
         time_t forward;
         time_t peer_connect;
         time_t request;
-        time_t persistent_request;
-        time_t pconn;
+        time_t clientIdlePconn;
+        time_t serverIdlePconn;
         time_t siteSelect;
         time_t deadPeer;
         int icp_query;		/* msec */
