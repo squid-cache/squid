@@ -768,7 +768,6 @@ UFSSwapDir::openTmpSwapLog(int *clean_flag, int *zero_flag)
     struct stat clean_sb;
     FILE *fp;
     int fd;
-    StoreSwapLogHeader *head;
 
     if (::stat(swaplog_path, &log_sb) < 0) {
         debugs(47, 1, "Cache Dir #" << index << ": No log file");
@@ -794,10 +793,11 @@ UFSSwapDir::openTmpSwapLog(int *clean_flag, int *zero_flag)
 
     swaplog_fd = fd;
 
-    head = new StoreSwapLogHeader;
-
-    file_write(swaplog_fd, -1, head, head->record_size,
-               NULL, NULL, FreeHeader);
+    {
+        StoreSwapLogHeader *header = new StoreSwapLogHeader;
+        file_write(swaplog_fd, -1, header, sizeof(*header),
+                   NULL, NULL, FreeHeader);
+    }
 
     /* open a read-only stream of the old log */
     fp = fopen(swaplog_path, "rb");
