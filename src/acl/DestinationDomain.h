@@ -47,6 +47,7 @@ class ACLDestinationDomainStrategy : public ACLStrategy<char const *>
 public:
     virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
     static ACLDestinationDomainStrategy *Instance();
+    virtual bool requiresRequest() const {return true;}
 
     /**
      * Not implemented to prevent copies of the instance.
