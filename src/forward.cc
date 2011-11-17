@@ -581,11 +581,17 @@ FwdState::handleUnregisteredServerEnd()
 void
 FwdState::negotiateSSL(int fd)
 {
+    unsigned long ssl_lib_error = SSL_ERROR_NONE;
     SSL *ssl = fd_table[fd].ssl;
     int ret;
 
     if ((ret = SSL_connect(ssl)) <= 0) {
         int ssl_error = SSL_get_error(ssl, ret);
+#ifdef EPROTO
+        int sysErrNo = EPROTO;
+#else
+        int sysErrNo = EACCES;
+#endif
 
         switch (ssl_error) {
 
@@ -597,18 +603,22 @@ FwdState::negotiateSSL(int fd)
             Comm::SetSelect(fd, COMM_SELECT_WRITE, fwdNegotiateSSLWrapper, this, 0);
             return;
 
-        default:
+        case SSL_ERROR_SSL:
+        case SSL_ERROR_SYSCALL:
+            ssl_lib_error = ERR_get_error();
             debugs(81, 1, "fwdNegotiateSSL: Error negotiating SSL connection on FD " << fd <<
-                   ": " << ERR_error_string(ERR_get_error(), NULL) << " (" << ssl_error <<
+                   ": " << ERR_error_string(ssl_lib_error, NULL) << " (" << ssl_error <<
                    "/" << ret << "/" << errno << ")");
+
+            // store/report errno when ssl_error is SSL_ERROR_SYSCALL, ssl_lib_error is 0, and ret is -1
+            if (ssl_error == SSL_ERROR_SYSCALL && ret == -1 && ssl_lib_error == 0)
+                sysErrNo = errno;
+
+            // falling through to complete error handling
+
+        default:
             ErrorState *const anErr = makeConnectingError(ERR_SECURE_CONNECT_FAIL);
-#ifdef EPROTO
-
-            anErr->xerrno = EPROTO;
-#else
-
-            anErr->xerrno = EACCES;
-#endif
+            anErr->xerrno = sysErrNo;
 
             Ssl::ErrorDetail *errFromFailure = (Ssl::ErrorDetail *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail);
             if (errFromFailure != NULL) {
@@ -616,7 +626,16 @@ FwdState::negotiateSSL(int fd)
                 // and will be released when ssl object destroyed.
                 // Copy errFromFailure to a new Ssl::ErrorDetail object
                 anErr->detail = new Ssl::ErrorDetail(*errFromFailure);
+            } else {
+                // clientCert can be be NULL
+                X509 *client_cert = SSL_get_peer_certificate(ssl);
+                anErr->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, client_cert);
+                if (client_cert)
+                    X509_free(client_cert);
             }
+
+            if (ssl_lib_error != SSL_ERROR_NONE)
+                anErr->detail->setLibError(ssl_lib_error);
 
             fail(anErr);
 

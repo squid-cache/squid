@@ -10,14 +10,16 @@ struct SslErrorEntry {
     const char *name;
 };
 
-static const char *SslErrorDetailDefaultStr = "SSL certificate validation error (%err_name): %ssl_subject";
+static const char *SslErrorDetailDefaultStr = "SSL handshake error (%err_name)";
 //Use std::map to optimize search
 typedef std::map<Ssl::ssl_error_t, const SslErrorEntry *> SslErrors;
 SslErrors TheSslErrors;
 
 static SslErrorEntry TheSslErrorArray[] = {
+    {SQUID_ERR_SSL_HANDSHAKE,
+        "SQUID_ERR_SSL_HANDSHAKE"},
     {SQUID_X509_V_ERR_DOMAIN_MISMATCH,
-        "SQUID_X509_V_ERR_DOMAIN_MISMATCH"},
+     "SQUID_X509_V_ERR_DOMAIN_MISMATCH"},
     {X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
      "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT"},
     {X509_V_ERR_UNABLE_TO_GET_CRL,
@@ -149,6 +151,7 @@ Ssl::ErrorDetail::err_frm_code Ssl::ErrorDetail::ErrorFormatingCodes[] = {
     {"ssl_notafter", &Ssl::ErrorDetail::notafter},
     {"err_name", &Ssl::ErrorDetail::err_code},
     {"ssl_error_descr", &Ssl::ErrorDetail::err_descr},
+    {"ssl_lib_error", &Ssl::ErrorDetail::err_lib_error},
     {NULL,NULL}
 };
 
@@ -267,16 +270,25 @@ const char *Ssl::ErrorDetail::err_descr() const
     return "[Not available]";
 }
 
+const char *Ssl::ErrorDetail::err_lib_error() const
+{
+    if (lib_error_no != SSL_ERROR_NONE)
+        return ERR_error_string(lib_error_no, NULL);
+    else
+        return "[No Error]";
+}
+
 /**
  * It converts the code to a string value. Currently the following
  * formating codes are supported:
- * %err_name: The name of the SSL error
+ * %err_name: The name of a high-level SSL error (e.g., X509_V_ERR_*)
  * %ssl_error_descr: A short description of the SSL error
  * %ssl_cn: The comma-separated list of common and alternate names
  * %ssl_subject: The certificate subject
  * %ssl_ca_name: The certificate issuer name
  * %ssl_notbefore: The certificate "not before" field
  * %ssl_notafter: The certificate "not after" field
+ * %ssl_lib_error: human-readable low-level error string by ERR_error_string(3SSL)
  \retval  the length of the code (the number of characters will be replaced by value)
 */
 int Ssl::ErrorDetail::convert(const char *code, const char **value) const
@@ -337,9 +349,11 @@ const String &Ssl::ErrorDetail::toString() const
    CRYPTO_add(&(cert->references),1,CRYPTO_LOCK_X509);
    peer_cert.reset(cert);
 */
-Ssl::ErrorDetail::ErrorDetail( Ssl::ssl_error_t err_no, X509 *cert): error_no (err_no)
+Ssl::ErrorDetail::ErrorDetail( Ssl::ssl_error_t err_no, X509 *cert): error_no (err_no), lib_error_no(SSL_ERROR_NONE)
 {
-    peer_cert.reset(X509_dup(cert));
+    if (cert)
+        peer_cert.reset(X509_dup(cert));
+
     detailEntry.error_no = SSL_ERROR_NONE;
 }
 
@@ -353,4 +367,6 @@ Ssl::ErrorDetail::ErrorDetail(Ssl::ErrorDetail const &anErrDetail)
     }
 
     detailEntry = anErrDetail.detailEntry;
+
+    lib_error_no = anErrDetail.lib_error_no;
 }

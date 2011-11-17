@@ -56,9 +56,10 @@
  */
 
 // Custom SSL errors; assumes all official errors are positive
+#define SQUID_ERR_SSL_HANDSHAKE -2
 #define SQUID_X509_V_ERR_DOMAIN_MISMATCH -1
 // All SSL errors range: from smallest (negative) custom to largest SSL error
-#define SQUID_SSL_ERROR_MIN SQUID_X509_V_ERR_DOMAIN_MISMATCH
+#define SQUID_SSL_ERROR_MIN SQUID_ERR_SSL_HANDSHAKE
 #define SQUID_SSL_ERROR_MAX INT_MAX
 
 namespace Ssl
