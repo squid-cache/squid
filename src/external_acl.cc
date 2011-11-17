@@ -755,7 +755,14 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
 
     if (entry) {
         if (cbdataReferenceValid(entry) && entry->def == acl->def) {
-            /* Ours, use it.. */
+            /* Ours, use it.. if the key matches */
+            key = makeExternalAclKey(ch, acl);
+            if (strcmp(key, (char*)entry->key) != 0) {
+                debugs(82, 9, HERE << "entry key='" << (char *)entry->key << "', our key='" << key << "' dont match. Discarded.");
+                // too bad. need a new lookup.
+                cbdataReferenceDone(ch->extacl_entry);
+                entry = NULL;
+            }
         } else {
             /* Not valid, or not ours.. get rid of it */
             debugs(82, 9, HERE << "entry " << entry << " not valid or not ours. Discarded.");
