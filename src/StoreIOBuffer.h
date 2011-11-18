@@ -59,6 +59,13 @@ public:
         flags.error = 0;
     }
 
+    StoreIOBuffer(MemBuf *aMemBuf, int64_t anOffset, size_t anLength) :
+            length(anLength),
+            offset (anOffset),
+            data(aMemBuf->content()) {
+        flags.error = 0;
+    }
+
     Range<int64_t> range() const {
         return Range<int64_t>(offset, offset + length);
     }
