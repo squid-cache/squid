@@ -11,6 +11,10 @@
 #include "rfc1738.h"
 #include "SquidTime.h"
 #include "Store.h"
+#if USE_SSL
+#include "ssl/ErrorDetail.h"
+#endif
+
 
 /// Convert a string to NULL pointer if it is ""
 #define strOrNull(s) ((s)==NULL||(s)[0]=='\0'?NULL:(s))
@@ -822,6 +826,14 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             break;
 
         case LFT_SQUID_ERROR_DETAIL:
+#if USE_SSL
+            if (al->request && al->request->errType == ERR_SECURE_CONNECT_FAIL) {
+                if (! (out = Ssl::GetErrorName(al->request->errDetail))) {
+                    snprintf(tmp, sizeof(tmp), "SSL_ERR=%d", al->request->errDetail);
+                    out = tmp;
+                }
+            } else 
+#endif
             if (al->request && al->request->errDetail != ERR_DETAIL_NONE) {
                 if (al->request->errDetail > ERR_DETAIL_START  &&
                         al->request->errDetail < ERR_DETAIL_MAX)

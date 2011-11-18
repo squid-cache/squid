@@ -52,6 +52,8 @@ public:
     void useRequest(HttpRequest *aRequest) { if (aRequest != NULL) request = aRequest;}
     /// The error name to embed in squid error pages
     const char *errorName() const {return err_code();}
+    /// The error no
+    ssl_error_t errorNo() const {return error_no;}
     ///Sets the low-level error returned by OpenSSL ERR_get_error()
     void setLibError(unsigned long lib_err_no) {lib_error_no = lib_err_no;}
 
