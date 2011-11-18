@@ -47,7 +47,7 @@
 #include "eui/Eui48.h"
 #include "eui/Eui64.h"
 #endif
-#include "format/Tokens.h"
+#include "format/Token.h"
 #include "hier_code.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -322,8 +322,8 @@ accessLogInit(void)
 
 #if USE_ADAPTATION
         for (Format::Token * curr_token = (log->logFormat?log->logFormat->format:NULL); curr_token; curr_token = curr_token->next) {
-            if (curr_token->type == Format::LTF_ADAPTATION_SUM_XACT_TIMES ||
-                    curr_token->type == Format::LTF_ADAPTATION_ALL_XACT_TIMES ||
+            if (curr_token->type == Format::LFT_ADAPTATION_SUM_XACT_TIMES ||
+                    curr_token->type == Format::LFT_ADAPTATION_ALL_XACT_TIMES ||
                     curr_token->type == Format::LFT_ADAPTATION_LAST_HEADER ||
                     curr_token->type == Format::LFT_ADAPTATION_LAST_HEADER_ELEM ||
                     curr_token->type == Format::LFT_ADAPTATION_LAST_ALL_HEADERS) {

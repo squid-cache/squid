@@ -34,7 +34,7 @@
 
 #include "squid.h"
 #include "event.h"
-#include "format/Tokens.h"
+#include "format/Token.h"
 #include "StoreClient.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"

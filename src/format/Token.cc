@@ -1,5 +1,7 @@
 #include "config.h"
-#include "format/Tokens.h"
+#include "format/Config.h"
+#include "format/Token.h"
+#include "format/TokenTableEntry.h"
 #include "Store.h"
 
 const char *Format::log_tags[] = {
@@ -36,7 +38,7 @@ namespace Format
 {
 
 /// 1-char tokens.
-static struct TokenTableEntry TokenTable1C[] = {
+static TokenTableEntry TokenTable1C[] = {
 
     {">a", LFT_CLIENT_IP_ADDRESS},
     {">p", LFT_CLIENT_PORT},
@@ -59,7 +61,7 @@ static struct TokenTableEntry TokenTable1C[] = {
 };
 
 /// 2-char tokens
-static struct TokenTableEntry TokenTable2C[] = {
+static TokenTableEntry TokenTable2C[] = {
 
     {">la", LFT_CLIENT_LOCAL_IP},
     {"la", LFT_LOCAL_LISTENING_IP},
@@ -143,19 +145,26 @@ static struct TokenTableEntry TokenTable2C[] = {
     {NULL, LFT_NONE}		/* this must be last */
 };
 
-#if USE_ADAPTATION
-/// Adaptation (adapt::) tokens
-static struct TokenTableEntry TokenTableAdapt[] = {
-    {"all_trs", LTF_ADAPTATION_ALL_XACT_TIMES},
-    {"sum_trs", LTF_ADAPTATION_SUM_XACT_TIMES},
-    {"<last_h", LFT_ADAPTATION_LAST_HEADER},
+/// Miscellaneous >2 byte tokens
+static TokenTableEntry TokenTableMisc[] = {
+    {">eui", LFT_CLIENT_EUI},
+    {"err_code", LFT_SQUID_ERROR },
+    {"err_detail", LFT_SQUID_ERROR_DETAIL },
     {NULL, LFT_NONE}		/* this must be last */
+};
+
+#if USE_ADAPTATION
+static TokenTableEntry TokenTableAdapt[] = {
+    {"all_trs", LFT_ADAPTATION_ALL_XACT_TIMES},
+    {"sum_trs", LFT_ADAPTATION_SUM_XACT_TIMES},
+    {"<last_h", LFT_ADAPTATION_LAST_HEADER},
+    {NULL, LFT_NONE}           /* this must be last */
 };
 #endif
 
 #if ICAP_CLIENT
 /// ICAP (icap::) tokens
-static struct TokenTableEntry TokenTableIcap[] = {
+static TokenTableEntry TokenTableIcap[] = {
     {"tt", LFT_ICAP_TOTAL_TIME},
     {"<last_h", LFT_ADAPTATION_LAST_HEADER}, // deprecated
 
@@ -163,43 +172,53 @@ static struct TokenTableEntry TokenTableIcap[] = {
     {"<service_name",  LFT_ICAP_SERV_NAME},
     {"ru",  LFT_ICAP_REQUEST_URI},
     {"rm",  LFT_ICAP_REQUEST_METHOD},
-    {">st",  LFT_ICAP_BYTES_SENT},
-    {"<st",  LFT_ICAP_BYTES_READ},
+    {">st", LFT_ICAP_BYTES_SENT},
+    {"<st", LFT_ICAP_BYTES_READ},
     {"<bs", LFT_ICAP_BODY_BYTES_READ},
 
     {">h",  LFT_ICAP_REQ_HEADER},
     {"<h",  LFT_ICAP_REP_HEADER},
 
     {"tr",  LFT_ICAP_TR_RESPONSE_TIME},
-    {"tio",  LFT_ICAP_IO_TIME},
+    {"tio", LFT_ICAP_IO_TIME},
     {"to",  LFT_ICAP_OUTCOME},
     {"Hs",  LFT_ICAP_STATUS_CODE},
 
-    {NULL, LFT_NONE}		/* this must be last */
+    {NULL, LFT_NONE}           /* this must be last */
 };
 #endif
 
-/// Miscellaneous >2 byte tokens
-static struct TokenTableEntry TokenTableMisc[] = {
-    {">eui", LFT_CLIENT_EUI},
-    {"err_code", LFT_SQUID_ERROR },
-    {"err_detail", LFT_SQUID_ERROR_DETAIL },
-    {NULL, LFT_NONE}		/* this must be last */
-};
-
 } // namespace Format
+
+/// Register all components custom format tokens
+void
+Format::Token::Init()
+{
+    // TODO standard log tokens
+    // TODO external ACL fmt tokens
+
+#if USE_ADAPTATION
+    TheConfig.registerTokens(String("adapt"),::Format::TokenTableAdapt);
+#endif
+#if ICAP_CLIENT
+    TheConfig.registerTokens(String("icap"),::Format::TokenTableIcap);
+#endif
+
+    // TODO tokens for OpenSSL errors in "ssl::"
+}
 
 /// Scans a token table to see if the next token exists there
 /// returns a pointer to next unparsed byte and updates type member if found
 char *
-Format::Token::scanForToken(const struct TokenTableEntry *table, char *cur)
+Format::Token::scanForToken(TokenTableEntry const table[], char *cur)
 {
-    for (const struct TokenTableEntry *lte = table; lte->config != NULL; lte++) {
-        if (strncmp(lte->config, cur, strlen(lte->config)) == 0) {
-            type = lte->token_type;
-            label = lte->config;
+    for (TokenTableEntry const *lte = table; lte->configTag != NULL; lte++) {
+        debugs(46, 8, HERE << "compare tokens '" << lte->configTag << "' with '" << cur << "'");
+        if (strncmp(lte->configTag, cur, strlen(lte->configTag)) == 0) {
+            type = lte->tokenType;
+            label = lte->configTag;
             debugs(46, 7, HERE << "Found token '" << label << "'");
-            return cur + strlen(lte->config);
+            return cur + strlen(lte->configTag);
         }
     }
     return cur;
@@ -322,26 +341,25 @@ Format::Token::parse(char *def, Quoting *quoting)
 
     type = LFT_NONE;
 
-    // Scan each token namespace
-    if (strncmp(cur, "icap::", 6) == 0) {
-#if ICAP_CLIENT
-        cur += 6;
-        debugs(46, 5, HERE << "scan for icap:: token");
-        cur = scanForToken(TokenTableIcap, cur);
-#else
-        debugs(46, DBG_IMPORTANT, "ERROR: Format uses icap:: token. ICAP disabled!");
-#endif
-    } else if (strncmp(cur, "adapt::", 7) == 0) {
-#if USE_ADAPTATION
-        cur += 7;
-        debugs(46, 5, HERE << "scan for adapt:: token");
-        cur = scanForToken(TokenTableAdapt, cur);
-#else
-        debugs(46, DBG_IMPORTANT, "ERROR: Format uses adapt:: token. Adaptation disabled!");
-#endif
-    } else {
+    // Scan each registered token namespace
+    debugs(46, 9, HERE << "check for token in " << TheConfig.tokens.size() << " namespaces.");
+    for (std::list<TokenNamespace>::const_iterator itr = TheConfig.tokens.begin(); itr != TheConfig.tokens.end(); itr++) {
+        debugs(46, 7, HERE << "check for possible " << itr->prefix << ":: token");
+        const size_t len = itr->prefix.size();
+        if (itr->prefix.cmp(cur, len) == 0 && cur[len] == ':' && cur[len+1] == ':') {
+            debugs(46, 5, HERE << "check for " << itr->prefix << ":: token in '" << cur << "'");
+            const char *old = cur;
+            cur = scanForToken(itr->tokenSet, cur+len+2);
+            if (old != cur) // found
+                break;
+            else // reset to start of namespace
+                cur = cur - len - 2;
+        }
+    }
+
+    if (type == LFT_NONE) {
         // For upward compatibility, assume "http::" prefix as default prefix
-        // for all log access formating codes, except those starting with a
+        // for all log access formatting codes, except those starting with a
         // "%" or a known namespace. (ie "icap::", "adapt::")
         if (strncmp(cur,"http::", 6) == 0 && *(cur+6) != '%' )
             cur += 6;

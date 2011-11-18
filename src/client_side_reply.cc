@@ -55,7 +55,7 @@
 #endif
 #include "fde.h"
 #include "forward.h"
-#include "format/Tokens.h"
+#include "format/Token.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"

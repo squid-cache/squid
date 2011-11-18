@@ -34,7 +34,7 @@
 
 #include "config.h"
 #include "AccessLogEntry.h"
-#include "format/Tokens.h"
+#include "format/Token.h"
 #include "format/Quoting.h"
 #include "HttpRequest.h"
 #include "log/File.h"

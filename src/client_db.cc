@@ -34,7 +34,7 @@
 
 #include "squid.h"
 #include "event.h"
-#include "format/Tokens.h"
+#include "format/Token.h"
 #include "ClientInfo.h"
 #include "ip/Address.h"
 #include "mgr/Registration.h"
