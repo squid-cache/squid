@@ -66,7 +66,7 @@
 #include "comm/Write.h"
 #include "compat/inet_pton.h"
 #include "fde.h"
-#include "format/Tokens.h"
+#include "format/Token.h"
 #include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
