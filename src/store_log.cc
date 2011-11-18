@@ -33,7 +33,7 @@
  */
 
 #include "squid.h"
-#include "format/Tokens.h"
+#include "format/Token.h"
 #include "HttpReply.h"
 #include "log/File.h"
 #include "MemObject.h"

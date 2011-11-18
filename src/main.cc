@@ -63,6 +63,7 @@
 #include "event.h"
 #include "EventLoop.h"
 #include "ExternalACL.h"
+#include "format/Token.h"
 #include "fs/Module.h"
 #include "PeerSelectState.h"
 #include "Store.h"
@@ -1390,6 +1391,8 @@ SquidMain(int argc, char **argv)
         Auth::Init();      /* required for config parsing */
 #endif
         Ip::ProbeTransport(); // determine IPv4 or IPv6 capabilities before parsing.
+
+        Format::Token::Init(); // XXX: temporary. Use a runners registry of pre-parse runners instead.
 
         parse_err = parseConfigFile(ConfigFile);
 

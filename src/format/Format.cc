@@ -5,7 +5,7 @@
 #include "errorpage.h"
 #include "format/Format.h"
 #include "format/Quoting.h"
-#include "format/Tokens.h"
+#include "format/Token.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "rfc1738.h"
@@ -516,7 +516,7 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             break;
 
 #if USE_ADAPTATION
-        case LTF_ADAPTATION_SUM_XACT_TIMES:
+        case LFT_ADAPTATION_SUM_XACT_TIMES:
             if (al->request) {
                 Adaptation::History::Pointer ah = al->request->adaptHistory();
                 if (ah != NULL)
@@ -525,7 +525,7 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             }
             break;
 
-        case LTF_ADAPTATION_ALL_XACT_TIMES:
+        case LFT_ADAPTATION_ALL_XACT_TIMES:
             if (al->request) {
                 Adaptation::History::Pointer ah = al->request->adaptHistory();
                 if (ah != NULL)
