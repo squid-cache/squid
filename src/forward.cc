@@ -332,6 +332,11 @@ FwdState::fail(ErrorState * errorState)
     if (!errorState->request)
         errorState->request = HTTPMSGLOCK(request);
 
+#if USE_SSL
+    if (errorState->type == ERR_SECURE_CONNECT_FAIL && errorState->detail)
+        request->detailError(errorState->type, errorState->detail->errorNo());
+    else
+#endif
     request->detailError(errorState->type, errorState->xerrno);
 }
 
