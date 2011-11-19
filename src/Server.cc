@@ -729,7 +729,6 @@ ServerStateData::handleMoreAdaptedBodyAvailable()
     assert(entry);
 
     size_t contentSize = adaptedBodySource->buf().contentSize();
-    bool consumedPartially = false;
 
     if (!contentSize)
         return; // XXX: bytesWanted asserts on zero-size ranges
@@ -758,7 +757,6 @@ ServerStateData::handleMoreAdaptedBodyAvailable()
         debugs(11, 5, HERE << "postponing storage of " <<
                (contentSize - spaceAvailable) << " body bytes");
         contentSize = spaceAvailable;
-        consumedPartially=true;
     }
     
     debugs(11,5, HERE << "storing " << contentSize << " bytes of adapted " <<
