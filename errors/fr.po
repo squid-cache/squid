@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-06-22 13:27+1300\n"
-"PO-Revision-Date: 2011-10-25 18:07+0200\n"
+"PO-Revision-Date: 2011-11-19 13:45+0200\n"
 "Last-Translator: Bernard <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
@@ -478,7 +478,7 @@ msgstr "Défaillance de la passerelle Proxy"
 #: templates/ERR_WRITE_ERROR+html.body.div.p:36
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:34
 msgid "Generated %T by %h (%s)"
-msgstr "Générer le %T par %h (%s)"
+msgstr "Générer le %t par %h (%s)"
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:34
 msgid ""
@@ -533,7 +533,7 @@ msgstr "Les double espaces ne sont pas valides dans une adresse URL"
 msgid "In the HTTP proxy box type the proxy name %h and port %b."
 msgstr ""
 "Vous devez indiquer dans la fenêtre du proxy HTTP, le nom du proxy %h et le "
-"port 3128"
+"port %b"
 
 #: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:89
 msgid "Invalid CA certificate"
