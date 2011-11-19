@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-06-22 13:27+1300\n"
+"POT-Creation-Date: 2011-11-20 11:40+1300\n"
 "PO-Revision-Date: 2011-09-14 14:07+0200\n"
 "Last-Translator: Administrator <>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -45,35 +45,41 @@ msgstr "%f"
 msgid "%g"
 msgstr "%g"
 
-#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:61
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:69
 msgid "%ssl_error_descr"
 msgstr "%ssl_error_descr"
 
-#: templates/error-details.txt+X509_V_ERR_INVALID_CA.detail:89
-#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.detail:109
-#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.detail:117
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.detail:97
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.detail:117
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.detail:125
 msgid "%ssl_error_descr: %ssl_ca_name"
 msgstr "%ssl_error_descr: %ssl_ca_name"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:5
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.detail:9
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.detail:13
-#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.detail:21
-#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.detail:25
-#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.detail:37
-#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.detail:41
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.detail:53
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.detail:57
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.detail:77
-#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.detail:81
-#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.detail:85
-#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.detail:93
-#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.detail:97
-#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.detail:101
-#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.detail:105
-#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.detail:113
-#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.detail:121
-#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.detail:125
+#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.detail:1
+#, fuzzy
+msgid "%ssl_error_descr: %ssl_lib_error"
+msgstr "%ssl_error_descr: %ssl_ca_name"
+
+#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.detail:5
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:13
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.detail:17
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.detail:21
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.detail:29
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.detail:33
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.detail:45
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.detail:49
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.detail:61
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.detail:65
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.detail:85
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.detail:89
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.detail:93
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.detail:101
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.detail:105
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.detail:109
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.detail:113
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.detail:121
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.detail:129
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.detail:133
 msgid "%ssl_error_descr: %ssl_subject"
 msgstr "%ssl_error_descr: %ssl_subject"
 
@@ -144,7 +150,8 @@ msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
-"קרתה שגיאת פרוטוקול FTP כאשר בוצע ניסיון לגשת אל הכתובת: <a href=\"%U\">%U</a>"
+"קרתה שגיאת פרוטוקול FTP כאשר בוצע ניסיון לגשת אל הכתובת: <a href=\"%U\">%U</"
+"a>"
 
 #: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:33
 msgid "An Illegal response was received from the ICAP server."
@@ -164,7 +171,7 @@ msgid ""
 "request."
 msgstr "ארעה שגיאת תנאי בזמן כתיבת מידע לרשת. אנא נסה שוב."
 
-#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:125
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:133
 msgid "Application verification failure"
 msgstr "אימות הישום נכשל"
 
@@ -174,23 +181,23 @@ msgid ""
 "has failed."
 msgstr "לפחות תנאי מוקדם אחד שצויין על ידי לקוח ה HTTP לא מתקיים"
 
-#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:117
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:125
 msgid "Authority and issuer serial number mismatch"
 msgstr "קיימת אי התאמה בין מספרים סידוריים של רשות החותם למנפיק התעודה"
 
-#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:113
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:121
 msgid "Authority and subject key identifier mismatch"
 msgstr "Authority and subject key identifier mismatch"
 
-#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:41
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:49
 msgid "CRL has expired"
 msgstr "CRL פג תוקף"
 
-#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.descr:37
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.descr:45
 msgid "CRL is not yet valid"
 msgstr "תוקף CRL עוד לא הגיע"
 
-#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:25
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:33
 msgid "CRL signature failure"
 msgstr "שגיאה בחתימת CRL"
 
@@ -209,31 +216,36 @@ msgstr "גישת מנהל לשרת נדחית."
 msgid "Cannot Resolve URN"
 msgstr "לא יכול למצוא"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:81
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:89
 msgid "Certificate chain too long"
 msgstr "Certificate chain too long"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:33
+#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.descr:5
+#, fuzzy
+msgid "Certificate does not match domainname"
+msgstr "מועד תוקף אישור האבטחה עוד לא הגיע"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:41
 msgid "Certificate has expired"
 msgstr "תוקף אישור האבטחה פג"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:29
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:37
 msgid "Certificate is not yet valid"
 msgstr "מועד תוקף אישור האבטחה עוד לא הגיע"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:101
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:109
 msgid "Certificate not trusted"
 msgstr "אישור האבטחה לא מגיע ממקור מהימן"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:105
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:113
 msgid "Certificate rejected"
 msgstr "תעודת האבטחה נדחת"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:85
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:93
 msgid "Certificate revoked"
 msgstr "תעודת האבטחה בוטלה"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:21
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:29
 msgid "Certificate signature failure"
 msgstr "חתימת תעודת האבטחה לקוייה"
 
@@ -403,19 +415,19 @@ msgstr "עבור דפדפן אינטרנט אקספלורר, לך ל: <ul>"
 msgid "For Opera browsers go to: <ul>"
 msgstr "עבור דפדפן אופרה, לך ל: <ul>"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:53
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:61
 msgid "Format error in CRL's lastUpdate field"
 msgstr "פורמט לא נכון בשדה lastUpdate ב CRL"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:57
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:65
 msgid "Format error in CRL's nextUpdate field"
 msgstr "פורמט לא נכון בשדה nextUpdate ב CRL"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:49
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:57
 msgid "Format error in certificate's notAfter field"
 msgstr "שגיאה בתעודת האבטחה בשדה \"לא אחרי\" (notAfter)"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:45
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:53
 msgid "Format error in certificate's notBefore field"
 msgstr "שגיאה בתעודת האבטחה בשדה \"לא לפני\" (notBefore)"
 
@@ -477,6 +489,10 @@ msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr "דרישת HTTP גרסה 1.1: שהתכונה תהיה כלולה מגרסה 1.0"
 
+#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:1
+msgid "Handshake with SSL server failed"
+msgstr ""
+
 #: templates/ERR_URN_RESOLVE+html.body.div.p:26
 msgid "Hey, don't expect too much from URNs on %T :)"
 msgstr "אל תצפה ליותר מדי מ-URN על %T :)"
@@ -522,7 +538,7 @@ msgstr "בריחה כפולה שגויה בנתיב"
 msgid "In the HTTP proxy box type the proxy name %h and port %b."
 msgstr "בתיבת הפרוקסי של HTTP, הקלד את שם שרת הפרוקסי %h ואת הפורט %b"
 
-#: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:89
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:97
 msgid "Invalid CA certificate"
 msgstr "האישור של מנפיק האישורים (CA) לא תקין"
 
@@ -530,7 +546,7 @@ msgstr "האישור של מנפיק האישורים (CA) לא תקין"
 msgid "Invalid URL"
 msgstr "כתובת URL שגויה"
 
-#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:121
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:129
 msgid "Key usage does not include certificate signing"
 msgstr "Key usage does not include certificate signing"
 
@@ -566,23 +582,13 @@ msgstr "אין שרת WAIS"
 msgid "Operation successful"
 msgstr "הפעולה עברה בהצלחה"
 
-#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.descr:61
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.descr:69
 msgid "Out of memory"
 msgstr "אין זיכרון פנוי"
 
-#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:93
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:101
 msgid "Path length constraint exceeded"
 msgstr "Path length constraint exceeded"
-
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:28
-#, fuzzy
-msgid ""
-"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
-"have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
-"chpasswd.cgi\">change</a> your default password."
-msgstr ""
-"אנא צור קשר עם <a href=\"mailto:%w%W\">מנהל השרת</a>אם יש לך בעיות לזהות את "
-"עצמך, או שנה את סיסמאתך."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:28
 #, fuzzy
@@ -595,6 +601,15 @@ msgstr ""
 "אנא צור קשר עם <a href=\"mailto:%w%W\">מנהל השרת</a>אם יש לך בעיות לזהות את "
 "עצמך או, <em>אם הינך מנהל השרת</em>, קרא את ההוראות של Squidעל ממשק הניהול "
 "ובדוק את הלוג, בשביל הודעות שגיאה מפורטות יותר."
+
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:28
+#, fuzzy
+msgid ""
+"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
+"have difficulties authenticating yourself."
+msgstr ""
+"אנא צור קשר עם <a href=\"mailto:%w%W\">מנהל השרת</a>אם יש לך בעיות לזהות את "
+"עצמך, או שנה את סיסמאתך."
 
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:23
 msgid "Precondition Failed."
@@ -612,26 +627,26 @@ msgstr "הקריאה אורכת יותר מידי זמן"
 msgid "Request is too large."
 msgstr "הבקשה גדולה מידי."
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:1
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:73
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:9
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:81
 msgid "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
 msgstr "בעיה באישור האבטחה: מנפיק האישור לא ידוע: %ssl_ca_name"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:29
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:37
 msgid "SSL Certficate is not valid before: %ssl_notbefore"
 msgstr "אישור האבטחה לא תקף לפני: %ssl_notbefore"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.detail:33
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.detail:41
 msgid "SSL Certificate expired on: %ssl_notafter"
 msgstr "אישור האבטחה מסתיים בתאריך: %ssl_notafter"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.detail:49
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.detail:57
 msgid ""
 "SSL Certificate has invalid expiration date (the 'not after' field): "
 "%ssl_subject"
 msgstr "לאישור האבטחה יש תאריך סיום לא חוקי:  %ssl_subject"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:45
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:53
 msgid ""
 "SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
 msgstr "לאישור האבטחה יש תאריך התחלה לא חוקי:  %ssl_subject"
@@ -648,19 +663,19 @@ msgstr "בחר \"איתור הגדרות אוטומטי\""
 msgid "Select Use Automatic proxy configuration"
 msgstr "בחר באיתור הגדרות אוטומטי עבור הגדרת הפרוקסי"
 
-#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:65
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:73
 msgid "Self signed certificate"
 msgstr "אישור חתום בחתימה עצמית"
 
-#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.descr:69
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.descr:77
 msgid "Self signed certificate in certificate chain"
 msgstr "אישור אבטחה חתום בחתימה עצמית בתוך מחרוזת האישורים"
 
-#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.detail:69
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.detail:77
 msgid "Self-signed SSL Certificate in chain: %ssl_subject"
 msgstr "תעודת אבטחה SSL עם חתימה עצמית במחרוזת: %ssl_subject"
 
-#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.detail:65
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.detail:73
 msgid "Self-signed SSL Certificate: %ssl_subject"
 msgstr "תעודת אבטחה SSL עם חתימה עצמית: %ssl_subject"
 
@@ -716,7 +731,8 @@ msgstr "השרת ביטל את הבקשה בגלל שהיא עברה את אור
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
-msgstr "שרת ה Squid לא הצליח ליצור חיבור TCP, כנראה בגלל עומס יתר. אנא נסה שוב."
+msgstr ""
+"שרת ה Squid לא הצליח ליצור חיבור TCP, כנראה בגלל עומס יתר. אנא נסה שוב."
 
 #: templates/ERR_FTP_FAILURE+html.body.div.p:22
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.p:22
@@ -726,7 +742,7 @@ msgstr "שרת ה Squid לא הצליח ליצור חיבור TCP, כנראה ב
 msgid "Squid sent the following FTP command:"
 msgstr "שרת ה Squid שלח את פקודת ה-FTP הבאה:"
 
-#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:109
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:117
 msgid "Subject issuer mismatch"
 msgstr "Subject issuer mismatch"
 
@@ -789,13 +805,15 @@ msgstr "לא ניתן לגשת אל הכתובת: <a href=\"%U\">%U</a>"
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
-msgstr "השגיאה הבאה אירעה בעת ניסיון לפענח את כתובת הURL: <a href=\"%U\">%U</a>"
+msgstr ""
+"השגיאה הבאה אירעה בעת ניסיון לפענח את כתובת הURL: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_URN_RESOLVE+html.body.div.p:20
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
-msgstr "השגיאה הבאה אירעה בזמן ניסיון לפענח את כתובת ה URN: <a href=\"%U\">%U</a>"
+msgstr ""
+"השגיאה הבאה אירעה בזמן ניסיון לפענח את כתובת ה URN: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:28
 #, fuzzy
@@ -991,13 +1009,15 @@ msgstr "הזמן חרג מהמכסה המוגדרת."
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:37
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
-msgstr "כלים -&gt; אפשרויות אינטרנט -&gt; חיבורים -&gt; הגדרות LAN -&gt; פרוקסי"
+msgstr ""
+"כלים -&gt; אפשרויות אינטרנט -&gt; חיבורים -&gt; הגדרות LAN -&gt; פרוקסי"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:29
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:29
 msgid ""
 "Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
-msgstr "כלים -&gt; אפשרויות -&gt; אפשרויות מתקדמות -&gt; רשת -&gt; הגדרות חיבור"
+msgstr ""
+"כלים -&gt; אפשרויות -&gt; אפשרויות מתקדמות -&gt; רשת -&gt; הגדרות חיבור"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:45
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:45
@@ -1005,19 +1025,19 @@ msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
 msgstr "כלים -&gt; העדפות -&gt; הגדרות מתקדמות -&gt; רשת -&gt; שרתי פרוקסי"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:17
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:25
 msgid "Unable to decode issuer (CA) public key: %ssl_ca_name"
 msgstr "לא ניתן לפענח מפתח ציבורי של המנפיק:  %ssl_ca_name"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.descr:17
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.descr:25
 msgid "Unable to decode issuer public key"
 msgstr "לא ניתן לפענח מפתח מונפק ציבורי"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:13
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:21
 msgid "Unable to decrypt CRL's signature"
 msgstr "לא ניתן לפענח חתימה של CRL"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.descr:9
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.descr:17
 msgid "Unable to decrypt certificate's signature"
 msgstr "לא ניתן לפענח את חתימת התעודה"
 
@@ -1029,19 +1049,19 @@ msgstr "לא יכול למצוא כתובת IP בשביל <q>%H</q>"
 msgid "Unable to forward this request at this time."
 msgstr "לא ניתן להעביר את הבקשה בשלב זה."
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.descr:5
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.descr:13
 msgid "Unable to get certificate CRL"
 msgstr "אין אפשרות לקבל את אישור האבטחה CRL"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.descr:1
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.descr:9
 msgid "Unable to get issuer certificate"
 msgstr "לא ניתן לקבל אישור מנפיק"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:73
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:81
 msgid "Unable to get local issuer certificate"
 msgstr "לא ניתן לקבל אישור המונפק מקומית"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:77
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:85
 msgid "Unable to verify the first certificate"
 msgstr "אין אפשרות לאמת את אישור האבטחה הראשון"
 
@@ -1054,7 +1074,7 @@ msgstr "גרסת HTTP לא נתמכת"
 msgid "Unsupported Request Method and Protocol"
 msgstr "שיטת בקשה ופרוטוקול לא נתמכים"
 
-#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:97
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:105
 msgid "Unsupported certificate purpose"
 msgstr "תעודה האבטחה אינה נתמכת למטרה זו"
 
