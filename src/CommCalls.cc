@@ -44,7 +44,6 @@ CommAcceptCbParams::CommAcceptCbParams(void *aData):
 {
 }
 
-
 /* CommConnectCbParams */
 
 CommConnectCbParams::CommConnectCbParams(void *aData):
@@ -128,7 +127,7 @@ CommAcceptCbPtrFun::CommAcceptCbPtrFun(const CommAcceptCbPtrFun &o):
 void
 CommAcceptCbPtrFun::dial()
 {
-    handler(params.fd, params.conn, params.flag, params.xerrno, params.data);
+    handler(params);
 }
 
 void
