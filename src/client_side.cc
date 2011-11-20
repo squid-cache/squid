@@ -3192,37 +3192,37 @@ connStateCreate(const Comm::ConnectionPointer &client, http_port_list *port)
 
 /** Handle a new connection on HTTP socket. */
 void
-httpAccept(int, const Comm::ConnectionPointer &details, comm_err_t flag, int xerrno, void *data)
+httpAccept(const CommAcceptCbParams &params)
 {
-    http_port_list *s = (http_port_list *)data;
+    http_port_list *s = (http_port_list *)params.data;
 
-    if (flag != COMM_OK) {
+    if (params.flag != COMM_OK) {
         // Its possible the call was still queued when the client disconnected
-        debugs(33, 2, "httpAccept: " << s->listenConn << ": accept failure: " << xstrerr(xerrno));
+        debugs(33, 2, "httpAccept: " << s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
         return;
     }
 
-    debugs(33, 4, HERE << details << ": accepted");
-    fd_note(details->fd, "client http connect");
+    debugs(33, 4, HERE << params.conn << ": accepted");
+    fd_note(params.conn->fd, "client http connect");
 
     if (s->tcp_keepalive.enabled) {
-        commSetTcpKeepalive(details->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
+        commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
     }
 
     incoming_sockets_accepted++;
 
     // Socket is ready, setup the connection manager to start using it
-    ConnStateData *connState = connStateCreate(details, s);
+    ConnStateData *connState = connStateCreate(params.conn, s);
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
                                       TimeoutDialer, connState, ConnStateData::requestTimeout);
-    commSetConnTimeout(details, Config.Timeout.read, timeoutCall);
+    commSetConnTimeout(params.conn, Config.Timeout.read, timeoutCall);
 
     connState->readSomeData();
 
 #if USE_DELAY_POOLS
-    fd_table[details->fd].clientInfo = NULL;
+    fd_table[params.conn->fd].clientInfo = NULL;
 
     if (Config.onoff.client_db) {
         /* it was said several times that client write limiter does not work if client_db is disabled */
@@ -3233,8 +3233,8 @@ httpAccept(int, const Comm::ConnectionPointer &details, comm_err_t flag, int xer
         // TODO: we check early to limit error response bandwith but we
         // should recheck when we can honor delay_pool_uses_indirect
         // TODO: we should also pass the port details for myportname here.
-        ch.src_addr = details->remote;
-        ch.my_addr = details->local;
+        ch.src_addr = params.conn->remote;
+        ch.my_addr = params.conn->local;
 
         for (unsigned int pool = 0; pool < pools.size(); pool++) {
 
@@ -3246,11 +3246,11 @@ httpAccept(int, const Comm::ConnectionPointer &details, comm_err_t flag, int xer
 
                     /*  request client information from db after we did all checks
                         this will save hash lookup if client failed checks */
-                    ClientInfo * cli = clientdbGetInfo(details->remote);
+                    ClientInfo * cli = clientdbGetInfo(params.conn->remote);
                     assert(cli);
 
                     /* put client info in FDE */
-                    fd_table[details->fd].clientInfo = cli;
+                    fd_table[params.conn->fd].clientInfo = cli;
 
                     /* setup write limiter for this request */
                     const double burst = floor(0.5 +
@@ -3270,24 +3270,24 @@ httpAccept(int, const Comm::ConnectionPointer &details, comm_err_t flag, int xer
 
 /** Create SSL connection structure and update fd_table */
 static SSL *
-httpsCreate(const Comm::ConnectionPointer &details, SSL_CTX *sslContext)
+httpsCreate(const Comm::ConnectionPointer &conn, SSL_CTX *sslContext)
 {
     SSL *ssl = SSL_new(sslContext);
 
     if (!ssl) {
         const int ssl_error = ERR_get_error();
-        debugs(83, 1, "httpsAccept: Error allocating handle: " << ERR_error_string(ssl_error, NULL)  );
-        details->close();
+        debugs(83, DBG_IMPORTANT, "ERROR: httpsAccept: Error allocating handle: " << ERR_error_string(ssl_error, NULL)  );
+        conn->close();
         return NULL;
     }
 
-    SSL_set_fd(ssl, details->fd);
-    fd_table[details->fd].ssl = ssl;
-    fd_table[details->fd].read_method = &ssl_read_method;
-    fd_table[details->fd].write_method = &ssl_write_method;
+    SSL_set_fd(ssl, conn->fd);
+    fd_table[conn->fd].ssl = ssl;
+    fd_table[conn->fd].read_method = &ssl_read_method;
+    fd_table[conn->fd].write_method = &ssl_write_method;
 
-    debugs(33, 5, "httpsCreate: will negotate SSL on " << details);
-    fd_note(details->fd, "client https start");
+    debugs(33, 5, "httpsCreate: will negotate SSL on " << conn);
+    fd_note(conn->fd, "client https start");
 
     return ssl;
 }
@@ -3413,39 +3413,39 @@ clientNegotiateSSL(int fd, void *data)
 
 /** handle a new HTTPS connection */
 static void
-httpsAccept(int, const Comm::ConnectionPointer& details, comm_err_t flag, int xerrno, void *data)
+httpsAccept(const CommAcceptCbParams &params)
 {
-    https_port_list *s = (https_port_list *)data;
+    https_port_list *s = (https_port_list *)params.data;
 
-    if (flag != COMM_OK) {
+    if (params.flag != COMM_OK) {
         // Its possible the call was still queued when the client disconnected
-        debugs(33, 2, "httpsAccept: " << s->listenConn << ": accept failure: " << xstrerr(xerrno));
+        debugs(33, 2, "httpsAccept: " << s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
         return;
     }
 
     SSL_CTX *sslContext = s->staticSslContext.get();
     SSL *ssl = NULL;
-    if (!(ssl = httpsCreate(details, sslContext)))
+    if (!(ssl = httpsCreate(params.conn, sslContext)))
         return;
 
-    debugs(33, 4, HERE << details << " accepted, starting SSL negotiation.");
-    fd_note(details->fd, "client https connect");
+    debugs(33, 4, HERE << params.conn << " accepted, starting SSL negotiation.");
+    fd_note(params.conn->fd, "client https connect");
 
     if (s->http.tcp_keepalive.enabled) {
-        commSetTcpKeepalive(details->fd, s->http.tcp_keepalive.idle, s->http.tcp_keepalive.interval, s->http.tcp_keepalive.timeout);
+        commSetTcpKeepalive(params.conn->fd, s->http.tcp_keepalive.idle, s->http.tcp_keepalive.interval, s->http.tcp_keepalive.timeout);
     }
 
     incoming_sockets_accepted++;
 
     // Socket is ready, setup the connection manager to start using it
-    ConnStateData *connState = connStateCreate(details, &s->http);
+    ConnStateData *connState = connStateCreate(params.conn, &s->http);
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
                                       TimeoutDialer, connState, ConnStateData::requestTimeout);
-    commSetConnTimeout(details, Config.Timeout.request, timeoutCall);
+    commSetConnTimeout(params.conn, Config.Timeout.request, timeoutCall);
 
-    Comm::SetSelect(details->fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
+    Comm::SetSelect(params.conn->fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
 }
 
 void
