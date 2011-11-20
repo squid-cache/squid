@@ -710,7 +710,7 @@ ServerStateData::resumeBodyStorage()
     if (abortOnBadEntry("store entry aborted while kick producer callback"))
         return;
 
-    if(!adaptedBodySource)
+    if (!adaptedBodySource)
         return;
 
     handleMoreAdaptedBodyAvailable();
@@ -738,7 +738,7 @@ ServerStateData::handleMoreAdaptedBodyAvailable()
     const size_t bytesWanted = entry->bytesWanted(Range<size_t>(0, contentSize));
     const size_t spaceAvailable = bytesWanted >  0 ? (bytesWanted + 1) : 0;
 
-    if (spaceAvailable < contentSize ) { 
+    if (spaceAvailable < contentSize ) {
         // No or partial body data consuming
         typedef NullaryMemFunT<ServerStateData> Dialer;
         AsyncCall::Pointer call = asyncCall(93, 5, "ServerStateData::resumeBodyStorage",
@@ -752,16 +752,16 @@ ServerStateData::handleMoreAdaptedBodyAvailable()
                "response body at offset " << adaptedBodySource->consumedSize());
         return;
     }
-    
+
     if (spaceAvailable < contentSize ) {
         debugs(11, 5, HERE << "postponing storage of " <<
                (contentSize - spaceAvailable) << " body bytes");
         contentSize = spaceAvailable;
     }
-    
+
     debugs(11,5, HERE << "storing " << contentSize << " bytes of adapted " <<
            "response body at offset " << adaptedBodySource->consumedSize());
-    
+
     BodyPipeCheckout bpc(*adaptedBodySource);
     const StoreIOBuffer ioBuf(&bpc.buf, currentOffset, contentSize);
     currentOffset += ioBuf.length;
@@ -776,8 +776,8 @@ ServerStateData::handleAdaptedBodyProductionEnded()
 {
     if (abortOnBadEntry("entry went bad while waiting for adapted body eof"))
         return;
- 
-     // end consumption if we consumed everything
+
+    // end consumption if we consumed everything
     if (adaptedBodySource != NULL && adaptedBodySource->exhausted())
         endAdaptedBodyConsumption();
     // else resumeBodyStorage() will eventually consume the rest

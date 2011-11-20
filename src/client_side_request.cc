@@ -1683,7 +1683,7 @@ ClientHttpRequest::handleAdaptationBlock(const Adaptation::Answer &answer)
 void
 ClientHttpRequest::resumeBodyStorage()
 {
-    if(!adaptedBodySource)
+    if (!adaptedBodySource)
         return;
 
     noteMoreBodyDataAvailable(adaptedBodySource);
