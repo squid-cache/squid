@@ -30,7 +30,7 @@ public:
 };
 
 /// The set of custom formats defined in squid.conf
-/// 
+///
 class FmtConfig
 {
 public:

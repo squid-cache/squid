@@ -19,7 +19,8 @@ namespace Format
 {
 
 /// One entry in a table of format tokens.
-class TokenTableEntry {
+class TokenTableEntry
+{
 public:
     /// the config file ASCII representation for this token
     /// just the base tag bytes, excluding any option syntax bytes
