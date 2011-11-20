@@ -832,22 +832,22 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
                     snprintf(tmp, sizeof(tmp), "SSL_ERR=%d", al->request->errDetail);
                     out = tmp;
                 }
-            } else 
+            } else
 #endif
-            if (al->request && al->request->errDetail != ERR_DETAIL_NONE) {
-                if (al->request->errDetail > ERR_DETAIL_START  &&
-                        al->request->errDetail < ERR_DETAIL_MAX)
-                    out = errorDetailName(al->request->errDetail);
-                else {
-                    if (al->request->errDetail >= ERR_DETAIL_EXCEPTION_START)
-                        snprintf(tmp, sizeof(tmp), "%s=0x%X",
-                                 errorDetailName(al->request->errDetail), (uint32_t) al->request->errDetail);
-                    else
-                        snprintf(tmp, sizeof(tmp), "%s=%d",
-                                 errorDetailName(al->request->errDetail), al->request->errDetail);
-                    out = tmp;
+                if (al->request && al->request->errDetail != ERR_DETAIL_NONE) {
+                    if (al->request->errDetail > ERR_DETAIL_START  &&
+                            al->request->errDetail < ERR_DETAIL_MAX)
+                        out = errorDetailName(al->request->errDetail);
+                    else {
+                        if (al->request->errDetail >= ERR_DETAIL_EXCEPTION_START)
+                            snprintf(tmp, sizeof(tmp), "%s=0x%X",
+                                     errorDetailName(al->request->errDetail), (uint32_t) al->request->errDetail);
+                        else
+                            snprintf(tmp, sizeof(tmp), "%s=%d",
+                                     errorDetailName(al->request->errDetail), al->request->errDetail);
+                        out = tmp;
+                    }
                 }
-            }
             break;
 
         case LFT_SQUID_HIERARCHY:
