@@ -80,7 +80,7 @@ public:
     void kickReads(int const count);
 
 private:
-    static PF CloseHandler;
+    static CLCB CloseHandler;
     static DeferredRead popHead(CbDataListContainer<DeferredRead> &deferredReads);
     void kickARead(DeferredRead const &);
     void flushReads();

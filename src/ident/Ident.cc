@@ -68,7 +68,7 @@ typedef struct _IdentStateData {
 
 // TODO: make these all a series of Async job calls. They are self-contained callbacks now.
 static IOCB ReadReply;
-static PF Close;
+static CLCB Close;
 static CTCB Timeout;
 static CNCB ConnectDone;
 static hash_table *ident_hash = NULL;
@@ -101,9 +101,9 @@ Ident::identCallback(IdentStateData * state, char *result)
 }
 
 void
-Ident::Close(int fdnotused, void *data)
+Ident::Close(const CommCloseCbParams &params)
 {
-    IdentStateData *state = (IdentStateData *)data;
+    IdentStateData *state = (IdentStateData *)params.data;
     identCallback(state, NULL);
     state->conn->close();
     hash_remove_link(ident_hash, (hash_link *) state);

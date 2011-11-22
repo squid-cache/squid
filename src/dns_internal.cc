@@ -247,7 +247,7 @@ static PF idnsRead;
 static EVH idnsCheckQueue;
 static void idnsTickleQueue(void);
 static void idnsRcodeCount(int, int);
-static void idnsVCClosed(int fd, void *data);
+static CLCB idnsVCClosed;
 static unsigned short idnsQueryID(void);
 
 static void
@@ -815,9 +815,9 @@ idnsInitVCConnected(const Comm::ConnectionPointer &conn, comm_err_t status, int 
 }
 
 static void
-idnsVCClosed(int fd, void *data)
+idnsVCClosed(const CommCloseCbParams &params)
 {
-    nsvc * vc = (nsvc *)data;
+    nsvc * vc = (nsvc *)params.data;
     delete vc->queue;
     delete vc->msg;
     vc->conn = NULL;
