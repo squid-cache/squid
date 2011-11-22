@@ -124,8 +124,8 @@ static const char *const conn_established = "HTTP/1.1 200 Connection established
 
 static CNCB tunnelConnectDone;
 static ERCB tunnelErrorComplete;
-static PF tunnelServerClosed;
-static PF tunnelClientClosed;
+static CLCB tunnelServerClosed;
+static CLCB tunnelClientClosed;
 static CTCB tunnelTimeout;
 static PSC tunnelPeerSelectComplete;
 static void tunnelStateFree(TunnelStateData * tunnelState);
@@ -133,10 +133,10 @@ static void tunnelConnected(const Comm::ConnectionPointer &server, void *);
 static void tunnelRelayConnectRequest(const Comm::ConnectionPointer &server, void *);
 
 static void
-tunnelServerClosed(int fd, void *data)
+tunnelServerClosed(const CommCloseCbParams &params)
 {
-    TunnelStateData *tunnelState = (TunnelStateData *)data;
-    debugs(26, 3, HERE << "FD " << fd);
+    TunnelStateData *tunnelState = (TunnelStateData *)params.data;
+    debugs(26, 3, HERE << tunnelState->server.conn);
     tunnelState->server.conn = NULL;
 
     if (tunnelState->noConnections()) {
@@ -151,10 +151,10 @@ tunnelServerClosed(int fd, void *data)
 }
 
 static void
-tunnelClientClosed(int fd, void *data)
+tunnelClientClosed(const CommCloseCbParams &params)
 {
-    TunnelStateData *tunnelState = (TunnelStateData *)data;
-    debugs(26, 3, HERE << "FD " << fd);
+    TunnelStateData *tunnelState = (TunnelStateData *)params.data;
+    debugs(26, 3, HERE << tunnelState->client.conn);
     tunnelState->client.conn = NULL;
 
     if (tunnelState->noConnections()) {
