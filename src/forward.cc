@@ -62,7 +62,7 @@
 #endif
 
 static PSC fwdPeerSelectionCompleteWrapper;
-static PF fwdServerClosedWrapper;
+static CLCB fwdServerClosedWrapper;
 #if USE_SSL
 static PF fwdNegotiateSSLWrapper;
 #endif
@@ -417,10 +417,10 @@ fwdPeerSelectionCompleteWrapper(Comm::ConnectionList * unused, void *data)
 }
 
 static void
-fwdServerClosedWrapper(int fd, void *data)
+fwdServerClosedWrapper(const CommCloseCbParams &params)
 {
-    FwdState *fwd = (FwdState *) data;
-    fwd->serverClosed(fd);
+    FwdState *fwd = (FwdState *)params.data;
+    fwd->serverClosed(params.fd);
 }
 
 #if USE_SSL

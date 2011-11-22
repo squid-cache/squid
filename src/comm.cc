@@ -962,6 +962,7 @@ commCallCloseHandlers(int fd)
         // If call is not canceled schedule it for execution else ignore it
         if (!call->canceled()) {
             debugs(5, 5, "commCallCloseHandlers: ch->handler=" << call);
+            // XXX: this should not be needed. Params can be set by the call creator
             typedef CommCloseCbParams Params;
             Params &params = GetCommParams<Params>(call);
             params.fd = fd;
@@ -998,10 +999,8 @@ void
 comm_lingering_close(int fd)
 {
 #if USE_SSL
-
     if (fd_table[fd].ssl)
-        ssl_shutdown_method(fd);
-
+        ssl_shutdown_method(fd_table[fd].ssl);
 #endif
 
     if (shutdown(fd, 1) < 0) {
@@ -1047,23 +1046,20 @@ old_comm_reset_close(int fd)
     comm_close(fd);
 }
 
-void
-comm_close_start(int fd, void *data)
-{
 #if USE_SSL
-    fde *F = &fd_table[fd];
-    if (F->ssl)
-        ssl_shutdown_method(fd);
-
+void
+commStartSslClose(const CommCloseCbParams &params)
+{
+    assert(&fd_table[params.fd].ssl);
+    ssl_shutdown_method(fd_table[params.fd].ssl);
+}
 #endif
 
-}
-
 void
-comm_close_complete(int fd, void *data)
+comm_close_complete(const CommCloseCbParams &params)
 {
 #if USE_SSL
-    fde *F = &fd_table[fd];
+    fde *F = &fd_table[params.fd];
 
     if (F->ssl) {
         SSL_free(F->ssl);
@@ -1075,13 +1071,12 @@ comm_close_complete(int fd, void *data)
         F->dynamicSslContext = NULL;
     }
 #endif
-    fd_close(fd);		/* update fdstat */
-
-    close(fd);
+    fd_close(params.fd);		/* update fdstat */
+    close(params.fd);
 
     statCounter.syscalls.sock.closes++;
 
-    /* When an fd closes, give accept() a chance, if need be */
+    /* When one connection closes, give accept() a chance, if need be */
     Comm::AcceptLimiter::Instance().kick();
 }
 
@@ -1122,12 +1117,16 @@ _comm_close(int fd, char const *file, int line)
 
     F->flags.close_request = 1;
 
-    AsyncCall::Pointer startCall=commCbCall(5,4, "comm_close_start",
-                                            CommCloseCbPtrFun(comm_close_start, NULL));
-    typedef CommCloseCbParams Params;
-    Params &startParams = GetCommParams<Params>(startCall);
-    startParams.fd = fd;
-    ScheduleCallHere(startCall);
+#if USE_SSL
+    if (F->ssl) {
+        // XXX: make this a generic async call passing one FD parameter. No need to use CommCloseCbParams
+        AsyncCall::Pointer startCall=commCbCall(5,4, "commStartSslClose",
+                                                CommCloseCbPtrFun(commStartSslClose, NULL));
+        CommCloseCbParams &startParams = GetCommParams<CommCloseCbParams>(startCall);
+        startParams.fd = fd;
+        ScheduleCallHere(startCall);
+    }
+#endif
 
     // a half-closed fd may lack a reader, so we stop monitoring explicitly
     if (commHasHalfClosedMonitor(fd))
@@ -1164,7 +1163,7 @@ _comm_close(int fd, char const *file, int line)
 
     AsyncCall::Pointer completeCall=commCbCall(5,4, "comm_close_complete",
                                     CommCloseCbPtrFun(comm_close_complete, NULL));
-    Params &completeParams = GetCommParams<Params>(completeCall);
+    CommCloseCbParams &completeParams = GetCommParams<CommCloseCbParams>(completeCall);
     completeParams.fd = fd;
     // must use async call to wait for all callbacks
     // scheduled before comm_close() to finish
@@ -1215,7 +1214,7 @@ comm_udp_sendto(int fd,
 }
 
 void
-comm_add_close_handler(int fd, PF * handler, void *data)
+comm_add_close_handler(int fd, CLCB * handler, void *data)
 {
     debugs(5, 5, "comm_add_close_handler: FD " << fd << ", handler=" <<
            handler << ", data=" << data);
@@ -1242,7 +1241,7 @@ comm_add_close_handler(int fd, AsyncCall::Pointer &call)
 
 // remove function-based close handler
 void
-comm_remove_close_handler(int fd, PF * handler, void *data)
+comm_remove_close_handler(int fd, CLCB * handler, void *data)
 {
     assert (isOpen(fd));
     /* Find handler in list */
@@ -2022,6 +2021,7 @@ DeferredReadManager::delayRead(DeferredRead const &aRead)
     // We have to use a global function as a closer and point to temp
     // instead of "this" because DeferredReadManager is not a job and
     // is not even cbdata protected
+    // XXX: and yet we use cbdata protection functions on it??
     AsyncCall::Pointer closer = commCbCall(5,4,
                                            "DeferredReadManager::CloseHandler",
                                            CommCloseCbPtrFun(&CloseHandler, temp));
@@ -2030,12 +2030,12 @@ DeferredReadManager::delayRead(DeferredRead const &aRead)
 }
 
 void
-DeferredReadManager::CloseHandler(int fd, void *thecbdata)
+DeferredReadManager::CloseHandler(const CommCloseCbParams &params)
 {
-    if (!cbdataReferenceValid (thecbdata))
+    if (!cbdataReferenceValid(params.data))
         return;
 
-    CbDataList<DeferredRead> *temp = (CbDataList<DeferredRead> *)thecbdata;
+    CbDataList<DeferredRead> *temp = (CbDataList<DeferredRead> *)params.data;
 
     temp->element.closer = NULL;
     temp->element.markCancelled();

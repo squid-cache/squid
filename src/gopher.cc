@@ -141,7 +141,7 @@ typedef struct gopher_ds {
     char replybuf[BUFSIZ];
 } GopherStateData;
 
-static PF gopherStateFree;
+static CLCB gopherStateFree;
 static void gopherMimeCreate(GopherStateData *);
 static void gopher_request_parse(const HttpRequest * req,
                                  char *type_id,
@@ -161,9 +161,9 @@ static char def_gopher_text[] = "text/plain";
 
 /// \ingroup ServerProtocolGopherInternal
 static void
-gopherStateFree(int, void *data)
+gopherStateFree(const CommCloseCbParams &params)
 {
-    GopherStateData *gopherState = (GopherStateData *)data;
+    GopherStateData *gopherState = (GopherStateData *)params.data;
 
     if (gopherState == NULL)
         return;
