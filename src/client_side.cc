@@ -2541,8 +2541,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
      * from the port settings to the request.
      */
     if (http->clientConnection != NULL) {
-        request->flags.intercepted = (http->clientConnection->flags & COMM_INTERCEPTION);
-        request->flags.spoof_client_ip = (http->clientConnection->flags & COMM_TRANSPARENT);
+        request->flags.intercepted = ((http->clientConnection->flags & COMM_INTERCEPTION) != 0);
+        request->flags.spoof_client_ip = ((http->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
     }
 
     if (internalCheck(request->urlpath.termedBuf())) {
