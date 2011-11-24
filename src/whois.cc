@@ -59,7 +59,7 @@ public:
     bool dataWritten;
 };
 
-static PF whoisClose;
+static CLCB whoisClose;
 static CTCB whoisTimeout;
 static IOCB whoisReadReply;
 
@@ -197,10 +197,10 @@ WhoisState::readReply(const Comm::ConnectionPointer &conn, char *aBuffer, size_t
 }
 
 static void
-whoisClose(int fd, void *data)
+whoisClose(const CommCloseCbParams &params)
 {
-    WhoisState *p = (WhoisState *)data;
-    debugs(75, 3, "whoisClose: FD " << fd);
+    WhoisState *p = (WhoisState *)params.data;
+    debugs(75, 3, "whoisClose: FD " << params.fd);
     p->entry->unlock();
     cbdataFree(p);
 }

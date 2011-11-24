@@ -1019,10 +1019,8 @@ ssl_write_method(int fd, const char *buf, int len)
 }
 
 void
-ssl_shutdown_method(int fd)
+ssl_shutdown_method(SSL *ssl)
 {
-    SSL *ssl = fd_table[fd].ssl;
-
     SSL_shutdown(ssl);
 }
 

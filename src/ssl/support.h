@@ -81,7 +81,7 @@ int ssl_read_method(int, char *, int);
 int ssl_write_method(int, const char *, int);
 
 /// \ingroup ServerProtocolSSLAPI
-void ssl_shutdown_method(int);
+void ssl_shutdown_method(SSL *ssl);
 
 
 /// \ingroup ServerProtocolSSLAPI
