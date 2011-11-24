@@ -22,7 +22,9 @@
  *     - timeout (CTCB)
  */
 
-typedef void IOACB(int fd, const Comm::ConnectionPointer &details, comm_err_t flag, int xerrno, void *data);
+class CommAcceptCbParams;
+typedef void IOACB(const CommAcceptCbParams &params);
+
 typedef void CNCB(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data);
 typedef void IOCB(const Comm::ConnectionPointer &conn, char *, size_t size, comm_err_t flag, int xerrno, void *data);
 
