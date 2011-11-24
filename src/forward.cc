@@ -863,7 +863,7 @@ FwdState::connectStart()
     Comm::ConnectionPointer temp = fwdPconnPool->pop(serverDestinations[0], host, checkRetriable());
 
     // if we found an open persistent connection to use. use it.
-    if (temp != NULL && Comm::IsConnOpen(temp)) {
+    if (Comm::IsConnOpen(temp)) {
         serverConn = temp;
         debugs(17, 3, HERE << "reusing pconn " << serverConnection());
         n_tries++;
