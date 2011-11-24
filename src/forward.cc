@@ -337,7 +337,7 @@ FwdState::fail(ErrorState * errorState)
         request->detailError(errorState->type, errorState->detail->errorNo());
     else
 #endif
-    request->detailError(errorState->type, errorState->xerrno);
+        request->detailError(errorState->type, errorState->xerrno);
 }
 
 /**
