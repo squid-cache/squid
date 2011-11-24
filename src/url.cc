@@ -249,8 +249,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         *dst = '\0';
 
         /* Then its :// */
-        /* (XXX yah, I'm not checking we've got enough data left before checking the array..) */
-        if (*src != ':' || *(src + 1) != '/' || *(src + 2) != '/')
+        if ((i+3) > l || *src != ':' || *(src + 1) != '/' || *(src + 2) != '/')
             return NULL;
         i += 3;
         src += 3;
