@@ -190,6 +190,7 @@ struct _external_acl_format {
 #endif
         EXT_ACL_EXT_LOG,
         EXT_ACL_TAG,
+        EXT_ACL_PERCENT,
         EXT_ACL_END
     } type;
     external_acl_format *next;
@@ -471,6 +472,8 @@ parse_externalAclHelper(external_acl ** list)
             format->type = _external_acl_format::EXT_ACL_EXT_LOG;
         else if (strcmp(token, "%TAG") == 0)
             format->type = _external_acl_format::EXT_ACL_TAG;
+        else if (strcmp(token, "%%") == 0)
+            format->type = _external_acl_format::EXT_ACL_PERCENT;
         else {
             debugs(0,0, "ERROR: Unknown Format token " << token);
             self_destruct();
@@ -1088,6 +1091,9 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             break;
         case _external_acl_format::EXT_ACL_TAG:
             str = request->tag.termedBuf();
+            break;
+        case _external_acl_format::EXT_ACL_PERCENT:
+            str = "%";
             break;
         case _external_acl_format::EXT_ACL_UNKNOWN:
 
