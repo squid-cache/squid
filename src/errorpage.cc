@@ -858,7 +858,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
     case 'F':
         if (building_deny_info_url) break;
         /* FTP REPLY LINE */
-        if (ftp.request)
+        if (ftp.reply)
             p = ftp.reply;
         else
             p = "nothing";
