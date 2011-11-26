@@ -1,8 +1,8 @@
 #include "config.h"
 #include "compat/shm.h"
 
-#if defined(__FreeBSD__) && (__FreeBSD__ >= 7)
-#    include <sys/sysctl.h>
+#if _SQUID_FREEBSD_ && (__FreeBSD__ >= 7)
+#include <sys/sysctl.h>
 #endif
 
 
@@ -15,9 +15,9 @@
 bool
 shm_portable_segment_name_is_path()
 {
-#if defined(_SQUID_HPUX_) || defined(_SQUID_OSF_) || defined(__vms) || (defined(_SQUID_FREEBSD_) && (__FreeBSD__ < 7))
+#if _SQUID_HPUX_ || _SQUID_OSF_ || defined(__vms) || (_SQUID_FREEBSD_ && (__FreeBSD__ < 7))
     return true;
-#elif defined(_SQUID_FREEBSD_)
+#elif _SQUID_FREEBSD_
     int jailed = 0;
     size_t len = sizeof(jailed);
     ::sysctlbyname("security.jail.jailed", &jailed, &len, NULL, 0);

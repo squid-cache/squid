@@ -57,7 +57,7 @@ static void WIN32_build_argv (char *);
 #endif
 extern "C" void WINAPI SquidWinSvcMain(DWORD, char **);
 
-#if defined(_SQUID_MSWIN_)
+#if _SQUID_MSWIN_
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 void Squid_Win32InvalidParameterHandler(const wchar_t*, const wchar_t*, const wchar_t*, unsigned int, uintptr_t);
 #endif
@@ -978,7 +978,7 @@ int main(int argc, char **argv)
 
 #endif /* USE_WIN32_SERVICE */
 
-#if defined(_SQUID_MSWIN_)
+#if _SQUID_MSWIN_
 static int Win32SockInit(void)
 {
     int iVersionRequested;
