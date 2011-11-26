@@ -41,10 +41,6 @@ typedef void (*ObjPackMethod) (void *obj, Packer * p);
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif
-#if HAVE_STDARG_H
-#include <stdarg.h>
-#endif
-
 /* append/vprintf's for Packer */
 typedef void (*append_f) (void *, const char *buf, int size);
 typedef void (*vprintf_f) (void *, const char *fmt, va_list args);
