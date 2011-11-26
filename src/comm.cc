@@ -870,7 +870,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
             debugs(14,9, "connecting to: " << address );
         }
     } else {
-#if defined(_SQUID_NEWSOS6_)
+#if _SQUID_NEWSOS6_
         /* Makoto MATSUSHITA <matusita@ics.es.osaka-u.ac.jp> */
 
         connect(sock, AI->ai_addr, AI->ai_addrlen);
@@ -891,7 +891,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
         if (x == 0)
             errno = err;
 
-#if defined(_SQUID_SOLARIS_)
+#if _SQUID_SOLARIS_
         /*
         * Solaris 2.4's socket emulation doesn't allow you
         * to determine the error from a failed non-blocking

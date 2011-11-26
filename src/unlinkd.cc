@@ -215,10 +215,10 @@ unlinkdInit(void)
     localhost.SetLocalhost();
 
     pid = ipcCreate(
-#if USE_POLL && defined(_SQUID_OSF_)
+#if USE_POLL && _SQUID_OSF_
               /* pipes and poll() don't get along on DUNIX -DW */
               IPC_STREAM,
-#elif defined(_SQUID_MSWIN_)
+#elif _SQUID_MSWIN_
               /* select() will fail on a pipe */
               IPC_TCP_SOCKET,
 #else

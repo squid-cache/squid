@@ -127,7 +127,7 @@
  *
  *      Except OpenBSD - htole16 & 32 exist, but not le16toh etc
  */
-#if defined(_SQUID_OPENBSD_)
+#if _SQUID_OPENBSD_
 #  define le16toh(x) htole16(x)
 #  define le32toh(x) htole32(x)
 #endif

@@ -87,8 +87,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     int t1, t2, t3;
     int x;
 
-#if USE_POLL && defined(_SQUID_OSF_)
-
+#if USE_POLL && _SQUID_OSF_
     assert(type != IPC_FIFO);
 #endif
 
