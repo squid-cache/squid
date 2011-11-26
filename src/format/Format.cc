@@ -5,13 +5,19 @@
 #include "errorpage.h"
 #include "format/Format.h"
 #include "format/Quoting.h"
-#include "format/Tokens.h"
+#include "format/Token.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
 #include "Store.h"
+#if USE_SSL
+#include "ssl/ErrorDetail.h"
+#endif
 
+
+/// Convert a string to NULL pointer if it is ""
+#define strOrNull(s) ((s)==NULL||(s)[0]=='\0'?NULL:(s))
 
 Format::Format::Format(const char *n) :
         format(NULL),
@@ -217,21 +223,16 @@ Format::Format::dump(StoreEntry * entry, const char *name)
                 if (t->zero)
                     entry->append("0", 1);
 
-                if (t->width)
-                    storeAppendPrintf(entry, "%d", (int) t->width);
+                if (t->widthMin >= 0)
+                    storeAppendPrintf(entry, "%d", t->widthMin);
 
-                if (t->precision)
-                    storeAppendPrintf(entry, ".%d", (int) t->precision);
+                if (t->widthMax >= 0)
+                    storeAppendPrintf(entry, ".%d", t->widthMax);
 
                 if (arg)
                     storeAppendPrintf(entry, "{%s}", arg);
 
-                for (struct TokenTableEntry *te = TokenTable; te->config != NULL; te++) {
-                    if (te->token_type == type) {
-                        storeAppendPrintf(entry, "%s", te->config);
-                        break;
-                    }
-                }
+                storeAppendPrintf(entry, "%s", t->label);
 
                 if (t->space)
                     entry->append(" ", 1);
@@ -338,8 +339,8 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             }
             break;
 
-#if USE_SQUID_EUI
         case LFT_CLIENT_EUI:
+#if USE_SQUID_EUI
             // TODO make the ACL checklist have a direct link to any TCP details.
             if (al->request && al->request->clientConnectionManager.valid() && al->request->clientConnectionManager->clientConnection != NULL) {
                 if (al->request->clientConnectionManager->clientConnection->remote.IsIPv4())
@@ -348,44 +349,71 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
                     al->request->clientConnectionManager->clientConnection->remoteEui64.encode(tmp, 1024);
                 out = tmp;
             }
-            break;
+#else
+            out = "-";
 #endif
-
-            /* case LFT_SERVER_IP_ADDRESS: */
-
-        case LFT_SERVER_IP_OR_PEER_NAME:
-            out = al->hier.host;
-
             break;
 
-            /* case LFT_SERVER_PORT: */
-
-        case LFT_LOCAL_IP:
-            if (al->request) {
-                out = al->request->my_addr.NtoA(tmp,sizeof(tmp));
+        case LFT_SERVER_IP_ADDRESS:
+            if (al->hier.tcpServer != NULL) {
+                out = al->hier.tcpServer->remote.NtoA(tmp,sizeof(tmp));
             }
-
             break;
 
-        case LFT_LOCAL_PORT:
-            if (al->request) {
-                outint = al->request->my_addr.GetPort();
+        case LFT_SERVER_FQDN_OR_PEER_NAME:
+            out = al->hier.host;
+            break;
+
+        case LFT_SERVER_PORT:
+            if (al->hier.tcpServer != NULL) {
+                outint = al->hier.tcpServer->remote.GetPort();
                 doint = 1;
             }
-
             break;
 
-            // the fmt->type can not be LFT_PEER_LOCAL_IP_OLD_27
-            // but compiler complains if ommited
-        case LFT_PEER_LOCAL_IP_OLD_27:
-        case LFT_PEER_LOCAL_IP:
-            if (!al->hier.peer_local_addr.IsAnyAddr()) {
-                out = al->hier.peer_local_addr.NtoA(tmp,sizeof(tmp));
+        case LFT_LOCAL_LISTENING_IP: {
+            // avoid logging a dash if we have reliable info
+            const bool interceptedAtKnownPort = (al->request->flags.spoof_client_ip ||
+                                                 al->request->flags.intercepted) && al->cache.port;
+            if (interceptedAtKnownPort) {
+                const bool portAddressConfigured = !al->cache.port->s.IsAnyAddr();
+                if (portAddressConfigured)
+                    out = al->cache.port->s.NtoA(tmp, sizeof(tmp));
+            } else if (al->tcpClient != NULL)
+                out = al->tcpClient->local.NtoA(tmp, sizeof(tmp));
+        }
+        break;
+
+        case LFT_CLIENT_LOCAL_IP:
+            if (al->tcpClient != NULL) {
+                out = al->tcpClient->local.NtoA(tmp,sizeof(tmp));
             }
             break;
 
-        case LFT_PEER_LOCAL_PORT:
-            if ((outint = al->hier.peer_local_addr.GetPort())) {
+        case LFT_LOCAL_LISTENING_PORT:
+            if (al->cache.port) {
+                outint = al->cache.port->s.GetPort();
+                doint = 1;
+            }
+            break;
+
+        case LFT_CLIENT_LOCAL_PORT:
+            if (al->tcpClient != NULL) {
+                outint = al->tcpClient->local.GetPort();
+                doint = 1;
+            }
+            break;
+
+        case LFT_SERVER_LOCAL_IP_OLD_27:
+        case LFT_SERVER_LOCAL_IP:
+            if (al->hier.tcpServer != NULL) {
+                out = al->hier.tcpServer->local.NtoA(tmp,sizeof(tmp));
+            }
+            break;
+
+        case LFT_SERVER_LOCAL_PORT:
+            if (al->hier.tcpServer != NULL) {
+                outint = al->hier.tcpServer->local.GetPort();
                 doint = 1;
             }
 
@@ -492,7 +520,7 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             break;
 
 #if USE_ADAPTATION
-        case LTF_ADAPTATION_SUM_XACT_TIMES:
+        case LFT_ADAPTATION_SUM_XACT_TIMES:
             if (al->request) {
                 Adaptation::History::Pointer ah = al->request->adaptHistory();
                 if (ah != NULL)
@@ -501,7 +529,7 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             }
             break;
 
-        case LTF_ADAPTATION_ALL_XACT_TIMES:
+        case LFT_ADAPTATION_ALL_XACT_TIMES:
             if (al->request) {
                 Adaptation::History::Pointer ah = al->request->adaptHistory();
                 if (ah != NULL)
@@ -722,44 +750,27 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             break;
 
         case LFT_USER_NAME:
-            out = QuoteUrlEncodeUsername(al->cache.authuser);
-
+            out = strOrNull(al->cache.authuser);
             if (!out)
-                out = QuoteUrlEncodeUsername(al->cache.extuser);
-
+                out = strOrNull(al->cache.extuser);
 #if USE_SSL
-
             if (!out)
-                out = QuoteUrlEncodeUsername(al->cache.ssluser);
-
+                out = strOrNull(al->cache.ssluser);
 #endif
-
             if (!out)
-                out = QuoteUrlEncodeUsername(al->cache.rfc931);
-
-            dofree = 1;
-
+                out = strOrNull(al->cache.rfc931);
             break;
 
         case LFT_USER_LOGIN:
-            out = QuoteUrlEncodeUsername(al->cache.authuser);
-
-            dofree = 1;
-
+            out = strOrNull(al->cache.authuser);
             break;
 
         case LFT_USER_IDENT:
-            out = QuoteUrlEncodeUsername(al->cache.rfc931);
-
-            dofree = 1;
-
+            out = strOrNull(al->cache.rfc931);
             break;
 
         case LFT_USER_EXTERNAL:
-            out = QuoteUrlEncodeUsername(al->cache.extuser);
-
-            dofree = 1;
-
+            out = strOrNull(al->cache.extuser);
             break;
 
             /* case LFT_USER_REALM: */
@@ -815,20 +826,28 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             break;
 
         case LFT_SQUID_ERROR_DETAIL:
-            if (al->request && al->request->errDetail != ERR_DETAIL_NONE) {
-                if (al->request->errDetail > ERR_DETAIL_START  &&
-                        al->request->errDetail < ERR_DETAIL_MAX)
-                    out = errorDetailName(al->request->errDetail);
-                else {
-                    if (al->request->errDetail >= ERR_DETAIL_EXCEPTION_START)
-                        snprintf(tmp, sizeof(tmp), "%s=0x%X",
-                                 errorDetailName(al->request->errDetail), (uint32_t) al->request->errDetail);
-                    else
-                        snprintf(tmp, sizeof(tmp), "%s=%d",
-                                 errorDetailName(al->request->errDetail), al->request->errDetail);
+#if USE_SSL
+            if (al->request && al->request->errType == ERR_SECURE_CONNECT_FAIL) {
+                if (! (out = Ssl::GetErrorName(al->request->errDetail))) {
+                    snprintf(tmp, sizeof(tmp), "SSL_ERR=%d", al->request->errDetail);
                     out = tmp;
                 }
-            }
+            } else
+#endif
+                if (al->request && al->request->errDetail != ERR_DETAIL_NONE) {
+                    if (al->request->errDetail > ERR_DETAIL_START  &&
+                            al->request->errDetail < ERR_DETAIL_MAX)
+                        out = errorDetailName(al->request->errDetail);
+                    else {
+                        if (al->request->errDetail >= ERR_DETAIL_EXCEPTION_START)
+                            snprintf(tmp, sizeof(tmp), "%s=0x%X",
+                                     errorDetailName(al->request->errDetail), (uint32_t) al->request->errDetail);
+                        else
+                            snprintf(tmp, sizeof(tmp), "%s=%d",
+                                     errorDetailName(al->request->errDetail), al->request->errDetail);
+                        out = tmp;
+                    }
+                }
             break;
 
         case LFT_SQUID_HIERARCHY:
@@ -992,11 +1011,11 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
         }
 
         if (dooff) {
-            snprintf(tmp, sizeof(tmp), "%0*" PRId64, fmt->zero ? (int) fmt->width : 0, outoff);
+            snprintf(tmp, sizeof(tmp), "%0*" PRId64, fmt->zero && fmt->widthMin >= 0 ? fmt->widthMin : 0, outoff);
             out = tmp;
 
         } else if (doint) {
-            snprintf(tmp, sizeof(tmp), "%0*ld", fmt->zero ? (int) fmt->width : 0, outint);
+            snprintf(tmp, sizeof(tmp), "%0*ld", fmt->zero && fmt->widthMin >= 0 ? fmt->widthMin : 0, outint);
             out = tmp;
         }
 
@@ -1045,11 +1064,18 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
                 }
             }
 
-            if (fmt->width) {
+            // enforce width limits if configured
+            const bool haveMaxWidth = fmt->widthMax >=0 && !doint && !dooff;
+            if (haveMaxWidth || fmt->widthMin) {
+                const int minWidth = fmt->widthMin >= 0 ?
+                                     fmt->widthMin :0;
+                const int maxWidth = haveMaxWidth ?
+                                     fmt->widthMax : strlen(out);
+
                 if (fmt->left)
-                    mb.Printf("%-*s", (int) fmt->width, out);
+                    mb.Printf("%-*.*s", minWidth, maxWidth, out);
                 else
-                    mb.Printf("%*s", (int) fmt->width, out);
+                    mb.Printf("%*.*s", minWidth, maxWidth, out);
             } else
                 mb.append(out, strlen(out));
         } else {

@@ -65,7 +65,7 @@ public:
     static void Init();
     static void Update(void *);
     static unsigned short pools();
-    static void pools (u_short pools);
+    static void pools(unsigned short pools);
     static void FreePools();
     static unsigned char *DelayClasses();
     static void registerForUpdates(Updateable *);

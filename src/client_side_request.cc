@@ -66,7 +66,8 @@
 #include "comm/Write.h"
 #include "compat/inet_pton.h"
 #include "fde.h"
-#include "format/Tokens.h"
+#include "format/Token.h"
+#include "HttpHdrCc.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
@@ -175,7 +176,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 {
     start_time = current_time;
     setConn(aConn);
-    clientConnection = aConn->clientConnection;
+    al.tcpClient = clientConnection = aConn->clientConnection;
     dlinkAdd(this, &active, &ClientActiveRequests);
 #if USE_ADAPTATION
     request_satisfaction_mode = false;
@@ -194,7 +195,7 @@ ClientHttpRequest::onlyIfCached()const
 {
     assert(request);
     return request->cache_control &&
-           EBIT_TEST(request->cache_control->mask, CC_ONLY_IF_CACHED);
+           request->cache_control->onlyIfCached();
 }
 
 /*
@@ -546,13 +547,16 @@ ClientRequestContext::hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLooku
         }
     }
     debugs(85, 3, HERE << "FAIL: validate IP " << clientConn->local << " possible from Host:");
-    hostHeaderVerifyFailed();
+    hostHeaderVerifyFailed("local IP", "any domain IP");
 }
 
 void
-ClientRequestContext::hostHeaderVerifyFailed()
+ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
 {
-    debugs(85, 1, "SECURITY ALERT: Host: header forgery detected from " << http->getConn()->clientConnection);
+    debugs(85, DBG_IMPORTANT, "SECURITY ALERT: Host header forgery detected on " <<
+           http->getConn()->clientConnection << " (" << A << " does not match " << B << ")");
+    debugs(85, DBG_IMPORTANT, "SECURITY ALERT: By user agent: " << http->request->header.getStr(HDR_USER_AGENT));
+    debugs(85, DBG_IMPORTANT, "SECURITY ALERT: on URL: " << urlCanonical(http->request));
 
     // IP address validation for Host: failed. reject the connection.
     clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
@@ -578,7 +582,6 @@ ClientRequestContext::hostHeaderVerify()
 {
     // Require a Host: header.
     const char *host = http->request->header.getStr(HDR_HOST);
-    char *hostB = NULL;
 
     if (!host) {
         // TODO: dump out the HTTP/1.1 error about missing host header.
@@ -588,62 +591,75 @@ ClientRequestContext::hostHeaderVerify()
         return;
     }
 
+    if (http->request->flags.internal) {
+        // TODO: kill this when URL handling allows partial URLs out of accel mode
+        //       and we no longer screw with the URL just to add our internal host there
+        debugs(85, 6, HERE << "validate skipped due to internal composite URL.");
+        http->doCallouts();
+        return;
+    }
+
     // Locate if there is a port attached, strip ready for IP lookup
     char *portStr = NULL;
-    uint16_t port = 0;
+    char *hostB = xstrdup(host);
+    host = hostB;
     if (host[0] == '[') {
         // IPv6 literal.
-        // check for a port?
-        hostB = xstrdup(host+1);
         portStr = strchr(hostB, ']');
-        if (!portStr) {
-            safe_free(hostB); // well, that wasn't an IPv6 literal.
-        } else {
-            *portStr = '\0';
-            if (*(++portStr) == ':')
-                port = xatoi(++portStr);
-            else
-                portStr=NULL; // no port to check.
+        if (portStr && *(++portStr) != ':') {
+            portStr = NULL;
         }
-        if (hostB)
-            host = hostB; // point host at the local version for lookup
-    } else if (strrchr(host, ':') != NULL) {
+    } else {
         // Domain or IPv4 literal with port
-        hostB = xstrdup(host);
         portStr = strrchr(hostB, ':');
-        *portStr = '\0';
-        port = xatoi(++portStr);
-        host = hostB; // point host at the local version for lookup
+    }
+
+    uint16_t port = 0;
+    if (portStr) {
+        *portStr = '\0'; // strip the ':'
+        if (*(++portStr) != '\0')
+            port = xatoi(portStr);
     }
 
     debugs(85, 3, HERE << "validate host=" << host << ", port=" << port << ", portStr=" << (portStr?portStr:"NULL"));
     if (http->request->flags.intercepted || http->request->flags.spoof_client_ip) {
-        // verify the port (if any) matches the apparent destination
+        // verify the Host: port (if any) matches the apparent destination
         if (portStr && port != http->getConn()->clientConnection->local.GetPort()) {
-            debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.GetPort() << " matches Host: port " << port << "((" << portStr);
-            hostHeaderVerifyFailed();
-            safe_free(hostB);
-            return;
-        }
-        // XXX: match the scheme default port against the apparent destination
+            debugs(85, 3, HERE << "FAIL on validate port " << http->getConn()->clientConnection->local.GetPort() <<
+                   " matches Host: port " << port << " (" << portStr << ")");
+            hostHeaderVerifyFailed("intercepted port", portStr);
+        } else {
+            // XXX: match the scheme default port against the apparent destination
 
-        // verify the destination DNS is one of the Host: headers IPs
-        ipcache_nbgethostbyname(host, hostHeaderIpVerifyWrapper, this);
-        safe_free(hostB);
-        return;
+            // verify the destination DNS is one of the Host: headers IPs
+            ipcache_nbgethostbyname(host, hostHeaderIpVerifyWrapper, this);
+        }
+    } else if (!Config.onoff.hostStrictVerify) {
+        debugs(85, 3, HERE << "validate skipped.");
+        http->doCallouts();
+    } else if (strlen(host) != strlen(http->request->GetHost())) {
+        // Verify forward-proxy requested URL domain matches the Host: header
+        debugs(85, 3, HERE << "FAIL on validate URL domain length " << http->request->GetHost() << " matches Host: " << host);
+        hostHeaderVerifyFailed(host, http->request->GetHost());
+    } else if (matchDomainName(host, http->request->GetHost()) != 0) {
+        // Verify forward-proxy requested URL domain matches the Host: header
+        debugs(85, 3, HERE << "FAIL on validate URL domain " << http->request->GetHost() << " matches Host: " << host);
+        hostHeaderVerifyFailed(host, http->request->GetHost());
+    } else if (portStr && port != http->request->port) {
+        // Verify forward-proxy requested URL domain matches the Host: header
+        debugs(85, 3, HERE << "FAIL on validate URL port " << http->request->port << " matches Host: port " << portStr);
+        hostHeaderVerifyFailed("URL port", portStr);
+    } else if (!portStr && http->request->method != METHOD_CONNECT && http->request->port != urlDefaultPort(http->request->protocol)) {
+        // Verify forward-proxy requested URL domain matches the Host: header
+        // Special case: we don't have a default-port to check for CONNECT. Assume URL is correct.
+        debugs(85, 3, HERE << "FAIL on validate URL port " << http->request->port << " matches Host: default port " << urlDefaultPort(http->request->protocol));
+        hostHeaderVerifyFailed("URL port", "default port");
+    } else {
+        // Okay no problem.
+        debugs(85, 3, HERE << "validate passed.");
+        http->doCallouts();
     }
     safe_free(hostB);
-
-    // Verify forward-proxy requested URL domain matches the Host: header
-    host = http->request->header.getStr(HDR_HOST);
-    if (strcmp(host, http->request->GetHost()) != 0) {
-        debugs(85, 3, HERE << "FAIL on validate URL domain " << http->request->GetHost() << " matches Host: " << host);
-        hostHeaderVerifyFailed();
-        return;
-    }
-
-    debugs(85, 3, HERE << "validate passed.");
-    http->doCallouts();
 }
 
 /* This is the entry point for external users of the client_side routines */
@@ -726,13 +742,16 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
         proxy_auth_msg = http->request->auth_user_request->denyMessage("<null>");
 #endif
 
-    if (answer != ACCESS_ALLOWED) {
-        /* Send an error */
-        int require_auth = (answer == ACCESS_REQ_PROXY_AUTH || aclIsProxyAuth(AclMatchedName));
+    if (answer != ACCESS_ALLOWED && answer != ACCESS_AUTH_EXPIRED_OK) {
+        // auth has a grace period where credentials can be expired but okay not to challenge.
+
+        /* Send an auth challenge or error */
+        // XXX: do we still need aclIsProxyAuth() ?
+        bool auth_challenge = (answer == ACCESS_AUTH_REQUIRED || answer == ACCESS_AUTH_EXPIRED_BAD || aclIsProxyAuth(AclMatchedName));
         debugs(85, 5, "Access Denied: " << http->uri);
         debugs(85, 5, "AclMatchedName = " << (AclMatchedName ? AclMatchedName : "<null>"));
 #if USE_AUTH
-        if (require_auth)
+        if (auth_challenge)
             debugs(33, 5, "Proxy Auth Message = " << (proxy_auth_msg ? proxy_auth_msg : "<null>"));
 #endif
 
@@ -742,11 +761,11 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
          * the clientCreateStoreEntry() call just below.  Pedro Ribeiro
          * <pribeiro@isel.pt>
          */
-        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, answer != ACCESS_REQ_PROXY_AUTH);
+        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, answer != ACCESS_AUTH_REQUIRED);
 
         http->logType = LOG_TCP_DENIED;
 
-        if (require_auth) {
+        if (auth_challenge) {
 #if USE_AUTH
             if (!http->flags.accel) {
                 /* Proxy authorisation needed */
@@ -784,12 +803,13 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 #else
                                     NULL);
 #endif
+        http->getConn()->flags.readMore = true; // resume any pipeline reads.
         node = (clientStreamNode *)http->client_stream.tail->data;
         clientStreamRead(node, http, node->readBuffer);
         return;
     }
 
-    /* ACCESS_ALLOWED continues here ... */
+    /* ACCESS_ALLOWED (or auth in grace period ACCESS_AUTH_EXPIRED_OK) continues here ... */
     safe_free(http->uri);
 
     http->uri = xstrdup(urlCanonical(http->request));
@@ -798,45 +818,33 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 }
 
 #if USE_ADAPTATION
-static void
-adaptationAclCheckDoneWrapper(Adaptation::ServiceGroupPointer g, void *data)
-{
-    ClientRequestContext *calloutContext = (ClientRequestContext *)data;
-
-    if (!calloutContext->httpStateIsValid())
-        return;
-
-    calloutContext->adaptationAclCheckDone(g);
-}
-
 void
-ClientRequestContext::adaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
+ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
 {
     debugs(93,3,HERE << this << " adaptationAclCheckDone called");
-    assert(http);
 
 #if ICAP_CLIENT
-    Adaptation::Icap::History::Pointer ih = http->request->icapHistory();
+    Adaptation::Icap::History::Pointer ih = request->icapHistory();
     if (ih != NULL) {
-        if (http->getConn() != NULL) {
-            ih->rfc931 = http->getConn()->clientConnection->rfc931;
+        if (getConn() != NULL) {
+            ih->rfc931 = getConn()->clientConnection->rfc931;
 #if USE_SSL
-            assert(http->getConn()->clientConnection != NULL);
-            ih->ssluser = sslGetUserEmail(fd_table[http->getConn()->clientConnection->fd].ssl);
+            assert(getConn()->clientConnection != NULL);
+            ih->ssluser = sslGetUserEmail(fd_table[getConn()->clientConnection->fd].ssl);
 #endif
         }
-        ih->log_uri = http->log_uri;
-        ih->req_sz = http->req_sz;
+        ih->log_uri = log_uri;
+        ih->req_sz = req_sz;
     }
 #endif
 
     if (!g) {
         debugs(85,3, HERE << "no adaptation needed");
-        http->doCallouts();
+        doCallouts();
         return;
     }
 
-    http->startAdaptation(g);
+    startAdaptation(g);
 }
 
 #endif
@@ -857,7 +865,7 @@ clientRedirectAccessCheckDone(allow_t answer, void *data)
 void
 ClientRequestContext::clientRedirectStart()
 {
-    debugs(33, 5, "clientRedirectStart: '" << http->uri << "'");
+    debugs(33, 5, HERE << "'" << http->uri << "'");
 
     if (Config.accessList.redirector) {
         acl_checklist = clientAclChecklistCreate(Config.accessList.redirector, http);
@@ -1003,7 +1011,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         }
 
         if (request->cache_control)
-            if (EBIT_TEST(request->cache_control->mask, CC_NO_CACHE))
+            if (request->cache_control->noCache())
                 no_cache++;
 
         /*
@@ -1479,7 +1487,7 @@ ClientHttpRequest::doCallouts()
         calloutContext->adaptation_acl_check_done = true;
         if (Adaptation::AccessCheck::Start(
                     Adaptation::methodReqmod, Adaptation::pointPreCache,
-                    request, NULL, adaptationAclCheckDoneWrapper, calloutContext))
+                    request, NULL, this))
             return; // will call callback
     }
 #endif
@@ -1673,17 +1681,46 @@ ClientHttpRequest::handleAdaptationBlock(const Adaptation::Answer &answer)
 }
 
 void
+ClientHttpRequest::resumeBodyStorage()
+{
+    if (!adaptedBodySource)
+        return;
+
+    noteMoreBodyDataAvailable(adaptedBodySource);
+}
+
+void
 ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
 {
     assert(request_satisfaction_mode);
     assert(adaptedBodySource != NULL);
 
-    if (const size_t contentSize = adaptedBodySource->buf().contentSize()) {
+    if (size_t contentSize = adaptedBodySource->buf().contentSize()) {
+        // XXX: entry->bytesWanted returns contentSize-1 if entry can accept data.
+        // We have to add 1 to avoid suspending forever.
+        const size_t bytesWanted = storeEntry()->bytesWanted(Range<size_t>(0,contentSize));
+        const size_t spaceAvailable = bytesWanted >  0 ? (bytesWanted + 1) : 0;
+
+        if (spaceAvailable < contentSize ) {
+            // No or partial body data consuming
+            typedef NullaryMemFunT<ClientHttpRequest> Dialer;
+            AsyncCall::Pointer call = asyncCall(93, 5, "ClientHttpRequest::resumeBodyStorage",
+                                                Dialer(this, &ClientHttpRequest::resumeBodyStorage));
+            storeEntry()->deferProducer(call);
+        }
+
+        // XXX: bytesWanted API does not allow us to write just one byte!
+        if (!spaceAvailable && contentSize > 1)
+            return;
+
+        if (spaceAvailable < contentSize )
+            contentSize = spaceAvailable;
+
         BodyPipeCheckout bpc(*adaptedBodySource);
-        const StoreIOBuffer ioBuf(&bpc.buf, request_satisfaction_offset);
+        const StoreIOBuffer ioBuf(&bpc.buf, request_satisfaction_offset, contentSize);
         storeEntry()->write(ioBuf);
-        // assume can write everything
-        request_satisfaction_offset += contentSize;
+        // assume StoreEntry::write() writes the entire ioBuf
+        request_satisfaction_offset += ioBuf.length;
         bpc.buf.consume(contentSize);
         bpc.checkIn();
     }
@@ -1697,13 +1734,9 @@ void
 ClientHttpRequest::noteBodyProductionEnded(BodyPipe::Pointer)
 {
     assert(!virginHeadSource);
-    if (adaptedBodySource != NULL) { // did not end request satisfaction yet
-        // We do not expect more because noteMoreBodyDataAvailable always
-        // consumes everything. We do not even have a mechanism to consume
-        // leftovers after noteMoreBodyDataAvailable notifications seize.
-        assert(adaptedBodySource->exhausted());
+    // should we end request satisfaction now?
+    if (adaptedBodySource != NULL && adaptedBodySource->exhausted())
         endRequestSatisfaction();
-    }
 }
 
 void
@@ -1773,7 +1806,8 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
 #endif
 
     request->detailError(ERR_ICAP_FAILURE, errDetail);
-
+    c->flags.readMore = true;
+    c->expectNoForwarding();
     node = (clientStreamNode *)client_stream.tail->data;
     clientStreamRead(node, this, node->readBuffer);
 }

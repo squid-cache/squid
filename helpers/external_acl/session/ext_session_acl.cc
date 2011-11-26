@@ -23,18 +23,21 @@
 #endif
 #include "helpers/defines.h"
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#if HAVE_UNISTD_H
-#include <unistd.h>
+#if HAVE_DB_H
+#include <db.h>
 #endif
-#include <string.h>
-#include <time.h>
+#include <fcntl.h>
 #if HAVE_GETOPT_H
 #include <getopt.h>
+#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <time.h>
+#if HAVE_UNISTD_H
+#include <unistd.h>
 #endif
 
 /* At this point all Bit Types are already defined, so we must
@@ -45,44 +48,71 @@
 #define        __BIT_TYPES_DEFINED__
 #endif
 
-#if HAVE_DB_185_H
-#include <db_185.h>
-#elif HAVE_DB_H
-#include <db.h>
-#endif
-
 static int session_ttl = 3600;
+static int fixed_timeout = 0;
 char *db_path = NULL;
 const char *program_name;
 
 DB *db = NULL;
+DB_ENV *db_env = NULL;
 
 static void init_db(void)
 {
-    db = dbopen(db_path, O_CREAT | O_RDWR, 0666, DB_BTREE, NULL);
-    if (!db) {
-        fprintf(stderr, "FATAL: %s: Failed to open session db '%s'\n", program_name, db_path);
-        exit(1);
+    struct stat st_buf;
+
+    if (db_path) {
+        if (!stat(db_path, &st_buf)) {
+            if (S_ISDIR (st_buf.st_mode)) {
+                /* If directory then open database environment. This prevents sync problems
+                    between different processes. Otherwise fallback to single file */
+                db_env_create(&db_env, 0);
+                if (db_env->open(db_env, db_path, DB_CREATE | DB_INIT_MPOOL | DB_INIT_LOCK , 0666)) {
+                    fprintf(stderr, "FATAL: %s: Failed to open database environment in '%s'\n", program_name, db_path);
+                    db_env->close(db_env, 0);
+                    exit(1);
+                }
+                db_create(&db, db_env, 0);
+            }
+        }
+    }
+
+    if (db_env) {
+        if (db->open(db, NULL, "session", NULL, DB_BTREE, DB_CREATE, 0666)) {
+            fprintf(stderr, "FATAL: %s: Failed to open db file '%s' in dir '%s'\n",
+                    program_name, "session", db_path);
+            db_env->close(db_env, 0);
+            exit(1);
+        }
+    } else {
+        db_create(&db, NULL, 0);
+        if (db->open(db, NULL, db_path, NULL, DB_BTREE, DB_CREATE, 0666)) {
+            fprintf(stderr, "FATAL: %s: Failed to open session db '%s'\n", program_name, db_path);
+            exit(1);
+        }
     }
 }
 
 static void shutdown_db(void)
 {
-    db->close(db);
+    db->close(db, 0);
+    if (db_env) {
+        db_env->close(db_env, 0);
+    }
 }
 
 int session_is_active = 0;
 
 static int session_active(const char *details, size_t len)
 {
-    DBT key, data;
+    DBT key = {0};
+    DBT data = {0};
     key.data = (void *)details;
     key.size = len;
-    if (db->get(db, &key, &data, 0) == 0) {
+    if (db->get(db, NULL, &key, &data, 0) == 0) {
         time_t timestamp;
         if (data.size != sizeof(timestamp)) {
             fprintf(stderr, "ERROR: %s: CORRUPTED DATABASE (%s)\n", program_name, details);
-            db->del(db, &key, 0);
+            db->del(db, NULL, &key, 0);
             return 0;
         }
         memcpy(&timestamp, data.data, sizeof(timestamp));
@@ -94,27 +124,29 @@ static int session_active(const char *details, size_t len)
 
 static void session_login(const char *details, size_t len)
 {
-    DBT key, data;
-    time_t now = time(NULL);
+    DBT key = {0};
+    DBT data = {0};
     key.data = (void *)details;
     key.size = len;
+    time_t now = time(NULL);
     data.data = &now;
     data.size = sizeof(now);
-    db->put(db, &key, &data, 0);
+    db->put(db, NULL, &key, &data, 0);
 }
 
 static void session_logout(const char *details, size_t len)
 {
-    DBT key;
+    DBT key = {0};
     key.data = (void *)details;
     key.size = len;
-    db->del(db, &key, 0);
+    db->del(db, NULL, &key, 0);
 }
 
 static void usage(void)
 {
-    fprintf(stderr, "Usage: %s [-t session_timeout] [-b dbpath] [-a]\n", program_name);
-    fprintf(stderr, "	-t sessiontimeout	Idle timeout after which sessions will be forgotten\n");
+    fprintf(stderr, "Usage: %s [-t|-T session_timeout] [-b dbpath] [-a]\n", program_name);
+    fprintf(stderr, "	-t sessiontimeout	Idle timeout after which sessions will be forgotten (user activity will reset)\n");
+    fprintf(stderr, "	-T sessiontimeout	Fixed timeout after which sessions will be forgotten (regardless of user activity)\n");
     fprintf(stderr, "	-b dbpath		Path where persistent session database will be kept\n");
     fprintf(stderr, "	-a			Active mode requiring LOGIN argument to start a session\n");
 }
@@ -126,8 +158,10 @@ int main(int argc, char **argv)
 
     program_name = argv[0];
 
-    while ((opt = getopt(argc, argv, "t:b:a?")) != -1) {
+    while ((opt = getopt(argc, argv, "t:T:b:a?")) != -1) {
         switch (opt) {
+        case 'T':
+            fixed_timeout = 1;
         case 't':
             session_ttl = strtol(optarg, NULL, 0);
             break;
@@ -150,33 +184,43 @@ int main(int argc, char **argv)
 
     while (fgets(request, HELPER_INPUT_BUFFER, stdin)) {
         int action = 0;
-        const char *user_key = strtok(request, " \n");
-        const char *detail = strtok(NULL, "\n");
-        const char *lastdetail = strrchr(detail, ' ');
+        const char *channel_id = strtok(request, " ");
+        char *detail = strtok(NULL, "\n");
+        if (detail == NULL) {
+            // Only 1 paramater supplied. We are expecting at least 2 (including the channel ID)
+            fprintf(stderr, "FATAL: %s is concurrent and requires the concurrency option to be specified.\n", program_name);
+            shutdown_db();
+            exit(1);
+        }
+        char *lastdetail = strrchr(detail, ' ');
         size_t detail_len = strlen(detail);
         if (lastdetail) {
             if (strcmp(lastdetail, " LOGIN") == 0) {
                 action = 1;
                 detail_len = (size_t)(lastdetail-detail);
+                *lastdetail = '\0';
             } else if (strcmp(lastdetail, " LOGOUT") == 0) {
                 action = -1;
                 detail_len = (size_t)(lastdetail-detail);
+                *lastdetail = '\0';
             }
         }
         if (action == -1) {
             session_logout(detail, detail_len);
-            printf("%s OK message=\"Bye\"\n", user_key);
+            printf("%s OK message=\"Bye\"\n", channel_id);
         } else if (action == 1) {
             session_login(detail, detail_len);
-            printf("%s OK message=\"Welcome\"\n", user_key);
+            printf("%s OK message=\"Welcome\"\n", channel_id);
         } else if (session_active(detail, detail_len)) {
-            session_login(detail, detail_len);
-            printf("%s OK\n", user_key);
+            if (fixed_timeout == 0) {
+                session_login(detail, detail_len);
+            }
+            printf("%s OK\n", channel_id);
         } else if (default_action == 1) {
             session_login(detail, detail_len);
-            printf("%s ERR message=\"Welcome\"\n", user_key);
+            printf("%s ERR message=\"Welcome\"\n", channel_id);
         } else {
-            printf("%s ERR message=\"No session available\"\n", user_key);
+            printf("%s ERR message=\"No session available\"\n", channel_id);
         }
     }
     shutdown_db();

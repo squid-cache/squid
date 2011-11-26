@@ -77,7 +77,7 @@ static OBJH neighborDumpPeers;
 static OBJH neighborDumpNonPeers;
 static void dump_peers(StoreEntry * sentry, peer * peers);
 
-static u_short echo_port;
+static unsigned short echo_port;
 
 static int NLateReplies = 0;
 static peer *first_ping = NULL;
@@ -565,7 +565,7 @@ neighbors_init(void)
     peerRefreshDNS((void *) 1);
 
     sep = getservbyname("echo", "udp");
-    echo_port = sep ? ntohs((u_short) sep->s_port) : 7;
+    echo_port = sep ? ntohs((unsigned short) sep->s_port) : 7;
 
     first_ping = Config.peers;
 }
@@ -1025,6 +1025,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
     }
 
     if (entry->lock_count == 0) {
+        // TODO: many entries are unlocked; why is this reported at level 1?
         debugs(12, 1, "neighborsUdpAck: '" << storeKeyText(key) << "' has no locks");
         neighborCountIgnored(p);
         return;
@@ -1341,7 +1342,8 @@ peerProbeConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int
     }
 
     p->testing_now--;
-    return;
+    conn->close();
+    // TODO: log this traffic.
 }
 
 static void
@@ -1418,9 +1420,8 @@ peerCountMcastPeersDone(void *data)
 
     cbdataReferenceDone(psstate->callback_data);
 
-    EBIT_SET(fake->flags, ENTRY_ABORTED);
+    fake->abort(); // sets ENTRY_ABORTED and initiates releated cleanup
     HTTPMSGUNLOCK(fake->mem_obj->request);
-    fake->releaseRequest();
     fake->unlock();
     HTTPMSGUNLOCK(psstate->request);
     cbdataFree(psstate);
@@ -1728,6 +1729,7 @@ neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const Ip::Addres
     }
 
     if (e->lock_count == 0) {
+        // TODO: many entries are unlocked; why is this reported at level 1?
         debugs(12, 1, "neighborsUdpAck: '" << storeKeyText(key) << "' has no locks");
         neighborCountIgnored(p);
         return;

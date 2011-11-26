@@ -38,8 +38,18 @@
 #include "StoreFileSystem.h"
 #include "ConfigOption.h"
 
+SwapDir::SwapDir(char const *aType): theType(aType),
+        max_size(0),
+        path(NULL), index(-1), disker(-1), min_objsize(0), max_objsize (-1),
+        repl(NULL), removals(0), scanned(0),
+        cleanLog(NULL)
+{
+    fs.blksize = 1024;
+}
+
 SwapDir::~SwapDir()
 {
+    // TODO: should we delete repl?
     xfree(path);
 }
 
@@ -59,8 +69,22 @@ void
 SwapDir::unlink(StoreEntry &) {}
 
 void
+SwapDir::getStats(StoreInfoStats &stats) const
+{
+    if (!doReportStat())
+        return;
+
+    stats.swap.size = currentSize();
+    stats.swap.capacity = maxSize();
+    stats.swap.count = currentCount();
+}
+
+void
 SwapDir::stat(StoreEntry &output) const
 {
+    if (!doReportStat())
+        return;
+
     storeAppendPrintf(&output, "Store Directory #%d (%s): %s\n", index, type(),
                       path);
     storeAppendPrintf(&output, "FS Block Size %d Bytes\n",
@@ -90,14 +114,41 @@ SwapDir::minSize() const
 void
 SwapDir::reference(StoreEntry &) {}
 
-void
-SwapDir::dereference(StoreEntry &) {}
+bool
+SwapDir::dereference(StoreEntry &)
+{
+    return true; // keep in global store_table
+}
 
 int
 SwapDir::callback()
 {
     return 0;
 }
+
+bool
+SwapDir::canStore(const StoreEntry &e, int64_t diskSpaceNeeded, int &load) const
+{
+    debugs(47,8, HERE << "cache_dir[" << index << "]: needs " <<
+           diskSpaceNeeded << " <? " << max_objsize);
+
+    if (EBIT_TEST(e.flags, ENTRY_SPECIAL))
+        return false; // we do not store Squid-generated entries
+
+    if (!objectSizeIsAcceptable(diskSpaceNeeded))
+        return false; // does not satisfy size limits
+
+    if (flags.read_only)
+        return false; // cannot write at all
+
+    if (currentSize() > maxSize())
+        return false; // already overflowing
+
+    /* Return 999 (99.9%) constant load; TODO: add a named constant for this */
+    load = 999;
+    return true; // kids may provide more tests and should report true load
+}
+
 
 void
 SwapDir::sync() {}
@@ -149,6 +200,25 @@ char const *
 SwapDir::type() const
 {
     return theType;
+}
+
+bool
+SwapDir::active() const
+{
+    if (IamWorkerProcess())
+        return true;
+
+    // we are inside a disker dedicated to this disk
+    if (KidIdentifier == disker)
+        return true;
+
+    return false; // Coordinator, wrong disker, etc.
+}
+
+bool
+SwapDir::needsDiskStrand() const
+{
+    return false;
 }
 
 /* NOT performance critical. Really. Don't bother optimising for speed
@@ -251,8 +321,17 @@ SwapDir::optionObjectSizeParse(char const *option, const char *value, int isaRec
 
     int64_t size = strtoll(value, NULL, 10);
 
-    if (isaReconfig && *val != size)
-        debugs(3, 1, "Cache dir '" << path << "' object " << option << " now " << size);
+    if (isaReconfig && *val != size) {
+        if (allowOptionReconfigure(option)) {
+            debugs(3, DBG_IMPORTANT, "cache_dir '" << path << "' object " <<
+                   option << " now " << size << " Bytes");
+        } else {
+            debugs(3, DBG_IMPORTANT, "WARNING: cache_dir '" << path << "' "
+                   "object " << option << " cannot be changed dynamically, " <<
+                   "value left unchanged (" << *val << " Bytes)");
+            return true;
+        }
+    }
 
     *val = size;
 
@@ -269,13 +348,11 @@ SwapDir::optionObjectSizeDump(StoreEntry * e) const
         storeAppendPrintf(e, " max-size=%"PRId64, max_objsize);
 }
 
-/* Swapdirs do not have an index of their own - thus they ask their parent..
- * but the parent child relationship isn't implemented yet
- */
+// some SwapDirs may maintain their indexes and be able to lookup an entry key
 StoreEntry *
 SwapDir::get(const cache_key *key)
 {
-    return Store::Root().get(key);
+    return NULL;
 }
 
 void

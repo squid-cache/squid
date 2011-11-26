@@ -34,7 +34,7 @@
 
 #include "squid.h"
 #include "event.h"
-#include "format/Tokens.h"
+#include "format/Token.h"
 #include "StoreClient.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
@@ -548,14 +548,7 @@ GetInfo(Mgr::InfoActionData& stats)
     stats.request_hit_disk_ratio5 = statRequestHitDiskRatio(5);
     stats.request_hit_disk_ratio60 = statRequestHitDiskRatio(60);
 
-    stats.store_swap_size = store_swap_size;
-    stats.store_swap_max_size = Store::Root().maxSize();
-
-    stats.store_mem_size = mem_node::StoreMemSize();
-    stats.store_pages_max = store_pages_max;
-    stats.store_mem_used = mem_node::InUseCount();
-
-    stats.objects_size = n_disk_objects ? (double) store_swap_size / n_disk_objects : 0.0;
+    Store::Root().getStats(stats.store);
 
     stats.unlink_requests = statCounter.unlink.requests;
 
@@ -663,12 +656,6 @@ GetInfo(Mgr::InfoActionData& stats)
     stats.opening_fd = Opening_FD;
     stats.num_fd_free = fdNFree();
     stats.reserved_fd = RESERVED_FD;
-    stats.store_open_disk_fd = store_open_disk_fd;
-
-    stats.store_entries = StoreEntry::inUseCount();
-    stats.store_mem_entries = MemObject::inUseCount();
-    stats.hot_obj_count = hot_obj_count;
-    stats.n_disk_objects = n_disk_objects;
 }
 
 void
@@ -751,22 +738,21 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
                       stats.request_hit_disk_ratio60 / fct);
 
     storeAppendPrintf(sentry, "\tStorage Swap size:\t%.0f KB\n",
-                      stats.store_swap_size);
+                      stats.store.swap.size / 1024);
 
     storeAppendPrintf(sentry, "\tStorage Swap capacity:\t%4.1f%% used, %4.1f%% free\n",
-                      Math::doublePercent(stats.store_swap_size, stats.store_swap_max_size),
-                      Math::doublePercent(stats.store_swap_max_size - stats.store_swap_size, stats.store_swap_max_size));
+                      Math::doublePercent(stats.store.swap.size, stats.store.swap.capacity),
+                      Math::doublePercent(stats.store.swap.available(), stats.store.swap.capacity));
 
     storeAppendPrintf(sentry, "\tStorage Mem size:\t%.0f KB\n",
-                      stats.store_mem_size / 1024);
+                      stats.store.mem.size / 1024);
 
-    const double mFree = max(0.0, stats.store_pages_max-stats.store_mem_used);
     storeAppendPrintf(sentry, "\tStorage Mem capacity:\t%4.1f%% used, %4.1f%% free\n",
-                      Math::doublePercent(stats.store_mem_used, stats.store_pages_max),
-                      Math::doublePercent(mFree, stats.store_pages_max));
+                      Math::doublePercent(stats.store.mem.size, stats.store.mem.capacity),
+                      Math::doublePercent(stats.store.mem.available(), stats.store.mem.capacity));
 
     storeAppendPrintf(sentry, "\tMean Object Size:\t%0.2f KB\n",
-                      stats.objects_size / fct);
+                      stats.store.swap.meanObjectSize() / 1024);
 
     storeAppendPrintf(sentry, "\tRequests given to unlinkd:\t%.0f\n",
                       stats.unlink_requests);
@@ -948,17 +934,17 @@ DumpInfo(Mgr::InfoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "\tReserved number of file descriptors:  %4.0f\n",
                       stats.reserved_fd);
     storeAppendPrintf(sentry, "\tStore Disk files open:                %4.0f\n",
-                      stats.store_open_disk_fd);
+                      stats.store.swap.open_disk_fd);
 
     storeAppendPrintf(sentry, "Internal Data Structures:\n");
     storeAppendPrintf(sentry, "\t%6.0f StoreEntries\n",
-                      stats.store_entries);
+                      stats.store.store_entry_count);
     storeAppendPrintf(sentry, "\t%6.0f StoreEntries with MemObjects\n",
-                      stats.store_mem_entries);
+                      stats.store.mem_object_count);
     storeAppendPrintf(sentry, "\t%6.0f Hot Object Cache Items\n",
-                      stats.hot_obj_count);
+                      stats.store.mem.count);
     storeAppendPrintf(sentry, "\t%6.0f on-disk objects\n",
-                      stats.n_disk_objects);
+                      stats.store.swap.count);
 }
 
 void

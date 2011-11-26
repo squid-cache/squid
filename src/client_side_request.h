@@ -180,6 +180,7 @@ private:
     virtual void noteAdaptationAnswer(const Adaptation::Answer &answer);
     void handleAdaptedHeader(HttpMsg *msg);
     void handleAdaptationBlock(const Adaptation::Answer &answer);
+    virtual void noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group);
 
     // BodyConsumer API, called by BodyPipe
     virtual void noteMoreBodyDataAvailable(BodyPipe::Pointer);
@@ -187,6 +188,8 @@ private:
     virtual void noteBodyProducerAborted(BodyPipe::Pointer);
 
     void endRequestSatisfaction();
+    /// called by StoreEntry when it has more buffer space available
+    void resumeBodyStorage();
 
 private:
     CbcPointer<Adaptation::Initiate> virginHeadSource;

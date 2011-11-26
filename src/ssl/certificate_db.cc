@@ -4,6 +4,9 @@
 
 #include "config.h"
 #include "ssl/certificate_db.h"
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 #if HAVE_FSTREAM
 #include <fstream>
 #endif
@@ -20,33 +23,86 @@
 #include <fcntl.h>
 #endif
 
-Ssl::FileLocker::FileLocker(std::string const & filename)
-        :    fd(-1)
+#define HERE "(ssl_crtd) " << __FILE__ << ':' << __LINE__ << ": "
+
+Ssl::Lock::Lock(std::string const &aFilename) :
+        filename(aFilename),
+#if _SQUID_MSWIN_
+        hFile(INVALID_HANDLE_VALUE)
+#else
+        fd(-1)
+#endif
+{
+}
+
+bool Ssl::Lock::locked() const
 {
 #if _SQUID_MSWIN_
-    hFile = CreateFile(TEXT(filename.c_str()), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile != INVALID_HANDLE_VALUE)
-        LockFile(hFile, 0, 0, 1, 0);
+    return hFile != INVALID_HANDLE_VALUE;
 #else
-    fd = open(filename.c_str(), 0);
-    if (fd != -1)
-        flock(fd, LOCK_EX);
+    return fd != -1;
 #endif
 }
 
-Ssl::FileLocker::~FileLocker()
+void Ssl::Lock::lock()
+{
+
+#if _SQUID_MSWIN_
+    hFile = CreateFile(TEXT(filename.c_str()), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+#else
+    fd = open(filename.c_str(), 0);
+    if (fd == -1)
+#endif
+        throw std::runtime_error("Failed to open file " + filename);
+
+
+#if _SQUID_MSWIN_
+    if (!LockFile(hFile, 0, 0, 1, 0))
+#else
+    if (flock(fd, LOCK_EX) != 0)
+#endif
+        throw std::runtime_error("Failed to get a lock of " + filename);
+}
+
+void Ssl::Lock::unlock()
 {
 #if _SQUID_MSWIN_
     if (hFile != INVALID_HANDLE_VALUE) {
         UnlockFile(hFile, 0, 0, 1, 0);
         CloseHandle(hFile);
+        hFile = INVALID_HANDLE_VALUE;
     }
 #else
     if (fd != -1) {
         flock(fd, LOCK_UN);
         close(fd);
+        fd = -1;
     }
 #endif
+    else
+        throw std::runtime_error("Lock is already unlocked for " + filename);
+}
+
+Ssl::Lock::~Lock()
+{
+    if (locked())
+        unlock();
+}
+
+Ssl::Locker::Locker(Lock &aLock, const char *aFileName, int aLineNo):
+        weLocked(false), lock(aLock), fileName(aFileName), lineNo(aLineNo)
+{
+    if (!lock.locked()) {
+        lock.lock();
+        weLocked = true;
+    }
+}
+
+Ssl::Locker::~Locker()
+{
+    if (weLocked)
+        lock.unlock();
 }
 
 Ssl::CertificateDb::Row::Row()
@@ -130,26 +186,26 @@ Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_s
         db(NULL),
         max_db_size(aMax_db_size),
         fs_block_size(aFs_block_size),
+        dbLock(db_full),
+        dbSerialLock(serial_full),
         enabled_disk_store(true)
 {
     if (db_path.empty() && !max_db_size)
         enabled_disk_store = false;
     else if ((db_path.empty() && max_db_size) || (!db_path.empty() && !max_db_size))
         throw std::runtime_error("ssl_crtd is missing the required parameter. There should be -s and -M parameters together.");
-    else
-        load();
 }
 
 bool Ssl::CertificateDb::find(std::string const & host_name, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey)
 {
-    FileLocker db_locker(db_full);
+    const Locker locker(dbLock, Here);
     load();
     return pure_find(host_name, cert, pkey);
 }
 
 bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey)
 {
-    FileLocker db_locker(db_full);
+    const Locker locker(dbLock, Here);
     load();
     if (!db || !cert || !pkey || min_db_size > max_db_size)
         return false;
@@ -195,7 +251,6 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
 
     row.reset();
     std::string filename(cert_full + "/" + serial_string + ".pem");
-    FileLocker cert_locker(filename);
     if (!writeCertAndPrivateKeyToFile(cert, pkey, filename.c_str()))
         return false;
     addSize(filename);
@@ -206,7 +261,7 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
 
 BIGNUM * Ssl::CertificateDb::getCurrentSerialNumber()
 {
-    FileLocker serial_locker(serial_full);
+    const Locker locker(dbSerialLock, Here);
     // load serial number from file.
     Ssl::BIO_Pointer file(BIO_new(BIO_s_file()));
     if (!file)
@@ -289,11 +344,12 @@ void Ssl::CertificateDb::create(std::string const & db_path, int serial)
 void Ssl::CertificateDb::check(std::string const & db_path, size_t max_db_size)
 {
     CertificateDb db(db_path, max_db_size, 0);
+    db.load();
 }
 
 std::string Ssl::CertificateDb::getSNString() const
 {
-    FileLocker serial_locker(serial_full);
+    const Locker locker(dbSerialLock, Here);
     std::ifstream file(serial_full.c_str());
     if (!file)
         return "";
@@ -321,7 +377,6 @@ bool Ssl::CertificateDb::pure_find(std::string const & host_name, Ssl::X509_Poin
 
     // read cert and pkey from file.
     std::string filename(cert_full + "/" + rrow[cnlSerial] + ".pem");
-    FileLocker cert_locker(filename);
     readCertAndPrivateKeyFromFiles(cert, pkey, filename.c_str(), NULL);
     if (!cert || !pkey)
         return false;
@@ -330,19 +385,16 @@ bool Ssl::CertificateDb::pure_find(std::string const & host_name, Ssl::X509_Poin
 
 size_t Ssl::CertificateDb::size() const
 {
-    FileLocker size_locker(size_full);
     return readSize();
 }
 
 void Ssl::CertificateDb::addSize(std::string const & filename)
 {
-    FileLocker size_locker(size_full);
     writeSize(readSize() + getFileSize(filename));
 }
 
 void Ssl::CertificateDb::subSize(std::string const & filename)
 {
-    FileLocker size_locker(size_full);
     writeSize(readSize() - getFileSize(filename));
 }
 
@@ -385,7 +437,7 @@ void Ssl::CertificateDb::load()
         corrupt = true;
 
     // Create indexes in db.
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
     if (!corrupt && !TXT_DB_create_index(temp_db.get(), cnlSerial, NULL, LHASH_HASH_FN(index_serial), LHASH_COMP_FN(index_serial)))
         corrupt = true;
 
@@ -419,13 +471,41 @@ void Ssl::CertificateDb::save()
         throw std::runtime_error("Failed to write " + db_full + " file");
 }
 
+// Normally defined in defines.h file
+#define countof(arr) (sizeof(arr)/sizeof(*arr))
+void Ssl::CertificateDb::deleteRow(const char **row, int rowIndex)
+{
+    const std::string filename(cert_full + "/" + row[cnlSerial] + ".pem");
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+    sk_OPENSSL_PSTRING_delete(db.get()->data, rowIndex);
+#else
+    sk_delete(db.get()->data, rowIndex);
+#endif
+
+    const Columns db_indexes[]={cnlSerial, cnlName};
+    for (unsigned int i = 0; i < countof(db_indexes); i++) {
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
+        if (LHASH_OF(OPENSSL_STRING) *fieldIndex =  db.get()->index[db_indexes[i]])
+            lh_OPENSSL_STRING_delete(fieldIndex, (char **)row);
+#else
+        if (LHASH *fieldIndex = db.get()->index[db_indexes[i]])
+            lh_delete(fieldIndex, row);
+#endif
+    }
+
+    subSize(filename);
+    int ret = remove(filename.c_str());
+    if (ret < 0)
+        throw std::runtime_error("Failed to remove certficate file " + filename + " from db");
+}
+
 bool Ssl::CertificateDb::deleteInvalidCertificate()
 {
     if (!db)
         return false;
 
     bool removed_one = false;
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
     for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); i++) {
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
 #else
@@ -434,15 +514,7 @@ bool Ssl::CertificateDb::deleteInvalidCertificate()
 #endif
 
         if (!sslDateIsInTheFuture(current_row[cnlExp_date])) {
-            std::string filename(cert_full + "/" + current_row[cnlSerial] + ".pem");
-            FileLocker cert_locker(filename);
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
-            sk_OPENSSL_PSTRING_delete(db.get()->data, i);
-#else
-            sk_delete(db.get()->data, i);
-#endif
-            subSize(filename);
-            remove(filename.c_str());
+            deleteRow(current_row, i);
             removed_one = true;
             break;
         }
@@ -458,29 +530,20 @@ bool Ssl::CertificateDb::deleteOldestCertificate()
     if (!db)
         return false;
 
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
     if (sk_OPENSSL_PSTRING_num(db.get()->data) == 0)
 #else
     if (sk_num(db.get()->data) == 0)
 #endif
         return false;
 
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
     const char **row = (const char **)sk_OPENSSL_PSTRING_value(db.get()->data, 0);
 #else
     const char **row = (const char **)sk_value(db.get()->data, 0);
 #endif
-    std::string filename(cert_full + "/" + row[cnlSerial] + ".pem");
-    FileLocker cert_locker(filename);
 
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
-    sk_OPENSSL_PSTRING_delete(db.get()->data, 0);
-#else
-    sk_delete(db.get()->data, 0);
-#endif
-
-    subSize(filename);
-    remove(filename.c_str());
+    deleteRow(row, 0);
 
     return true;
 }
@@ -490,7 +553,7 @@ bool Ssl::CertificateDb::deleteByHostname(std::string const & host)
     if (!db)
         return false;
 
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
+#if OPENSSL_VERSION_NUMBER >= 0x1000004fL
     for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); i++) {
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
 #else
@@ -498,15 +561,7 @@ bool Ssl::CertificateDb::deleteByHostname(std::string const & host)
         const char ** current_row = ((const char **)sk_value(db.get()->data, i));
 #endif
         if (host == current_row[cnlName]) {
-            std::string filename(cert_full + "/" + current_row[cnlSerial] + ".pem");
-            FileLocker cert_locker(filename);
-#if OPENSSL_VERSION_NUMBER > 0x10000000L
-            sk_OPENSSL_PSTRING_delete(db.get()->data, i);
-#else
-            sk_delete(db.get()->data, i);
-#endif
-            subSize(filename);
-            remove(filename.c_str());
+            deleteRow(current_row, i);
             return true;
         }
     }

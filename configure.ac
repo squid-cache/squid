@@ -40,6 +40,12 @@ AC_PROG_CXX
 AC_LANG([C++])
 AC_CANONICAL_HOST
 
+# might be cross-compiling
+if test "x$HOSTCXX" = "x"; then
+  HOSTCXX="$CXX"
+fi
+AC_SUBST(HOSTCXX)
+
 AC_MSG_CHECKING([simplified host os])
 simple_host_os=`echo $host_os|sed 's/[0-9].*//g;s/-.*//g'`
 squid_host_os_version=`echo $host_os|tr -d "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"`
@@ -59,7 +65,8 @@ fi
 
 # Check for C++0x compiler support
 AX_CXX_COMPILE_STDCXX_0X
-if test "x$ax_cv_cxx_compile_cxx0x_cxx" = "xyes"; then
+if test "x$ax_cv_cxx_compile_cxx0x_cxx" = "xyes" -a \
+  "x$squid_host_os" != "xmingw" ; then
     CXXFLAGS="$CXXFLAGS -std=c++0x"
 fi
 
@@ -89,8 +96,10 @@ if test "x$ac_cv_path_PERL" = "xnone"; then
 fi
 AC_PATH_PROG(POD2MAN, pod2man, $FALSE)
 
-dnl set $(AR)
-AC_PATH_PROG(AR, ar, $FALSE)
+dnl set $(AR) if not provided by the build environment
+if test "x$AR" = "x"; then
+  AC_PATH_PROG(AR, ar, $FALSE)
+fi
 AR_R="$AR r"
 AC_SUBST(AR_R)
 
@@ -379,6 +388,29 @@ SQUID_DEFINE_BOOL(_USE_INLINE_,$enable_inline,
 # to be used by sub-commands
 export enable_inline
 
+dnl
+dnl Check for atomic operations support in the compiler
+dnl
+AC_MSG_CHECKING([for atomic operations support])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    int n = 0;
+]],[[
+    __sync_add_and_fetch(&n, 10); // n becomes 10
+    __sync_fetch_and_add(&n, 20); // n becomes 30
+    __sync_sub_and_fetch(&n, 15); // n becomes 15
+    __sync_bool_compare_and_swap(&n, 15, 201); // n becomes 201
+    __sync_fetch_and_and(&n, 200); // n becomes 200
+    return (n == 200) ? 0 : -1;
+]])],
+[
+    AC_DEFINE(HAVE_ATOMIC_OPS,1,
+        [Define to 1 if you have __sync_add_and_fetch() and such])
+    AC_MSG_RESULT(yes)
+],[
+    AC_MSG_RESULT(no)
+])
+
+
 AC_ARG_ENABLE(debug-cbdata,
   AS_HELP_STRING([--enable-debug-cbdata],
       [Provide some debug information in cbdata]), [ 
@@ -451,6 +483,11 @@ if test "x$with_dl" = "xyes"; then
   AC_MSG_NOTICE([With dl])
 fi
 
+AC_SEARCH_LIBS([shm_open], [rt])
+if test "x$ac_cv_search_shm_open" != "xno" ; then
+  AC_DEFINE(HAVE_SHM,1,[Support shared memory features])
+fi
+
 AC_MSG_CHECKING([for DiskIO modules to be enabled])
 squid_disk_module_candidates=""
 squid_opt_enable_diskio="auto"  #values: no, yes, "auto"(=yes+detect modules)
@@ -481,6 +518,10 @@ case $enableval in
 if test "x$squid_opt_enable_diskio" = "xauto"; then
     squid_opt_enable_diskio="yes"
     SQUID_LOOK_FOR_MODULES([$srcdir/src/DiskIO],[squid_disk_module_candidates])
+    if test "x$ac_cv_search_shm_open" = "xno" ; then
+        # disable IpcIo
+        squid_disk_module_candidates=`echo $squid_disk_module_candidates|sed 's/IpcIo//'`
+    fi
 fi
 
 AC_MSG_RESULT([${squid_disk_module_candidates:-none}])
@@ -647,6 +688,24 @@ for module in $squid_disk_module_candidates none; do
       fi
       ;;
 
+    Mmapped)
+      AC_MSG_NOTICE([Enabling Mmapped DiskIO module])
+      DISK_LIBS="$DISK_LIBS libMmapped.a"
+      DISK_MODULES="$DISK_MODULES Mmapped"
+      DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/Mmapped/MmappedDiskIOModule.o"
+      ;;
+
+    IpcIo)
+      AC_MSG_NOTICE([Enabling IpcIo DiskIO module])
+      if test "x$ac_cv_search_shm_open" = "xno" ; then
+        AC_MSG_ERROR([DiskIO IpcIo module requires shared memory support])
+      fi
+      DISK_LIBS="$DISK_LIBS libIpcIo.a"
+      DISK_MODULES="$DISK_MODULES IpcIo"
+      DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/IpcIo/IpcIoDiskIOModule.o"
+      AC_DEFINE(USE_DISKIO_IPCIO, 1, [Enable DiskIO IpcIo module.])
+      ;;
+
     Blocking)
       AC_MSG_NOTICE([Enabling Blocking DiskIO module])
       DISK_LIBS="$DISK_LIBS libBlocking.a"
@@ -734,6 +793,13 @@ for fs in $squid_storeio_module_candidates none; do
       # for STORE_TESTS substition
       STORE_TESTS="$STORE_TESTS tests/testCoss$EXEEXT"
       ;;
+    rock)
+	if test "x$squid_disk_module_candidates_IpcIo" != "xyes" -a \
+	  "x$squid_disk_module_candidates_Blocking" != "xyes"; then
+	  AC_MSG_ERROR([Storage module Rock requires IpcIo or Blocking DiskIO module])
+	fi
+	STORE_TESTS="$STORE_TESTS tests/testRock$EXEEXT"
+	;;
     ufs)
       STORE_TESTS="$STORE_TESTS tests/testUfs$EXEEXT"
     esac
@@ -745,6 +811,7 @@ AH_TEMPLATE(HAVE_FS_UFS, "Define to 1 if ufs filesystem module is build")
 AH_TEMPLATE(HAVE_FS_AUFS, "Define to 1 if aufs filesystem module is build")
 AH_TEMPLATE(HAVE_FS_DISKD, "Define to 1 if diskd filesystem module is build")
 AH_TEMPLATE(HAVE_FS_COSS, "Define to 1 if coss filesystem module is build")
+AH_TEMPLATE(HAVE_FS_ROCK, "Define to 1 if rock filesystem module is build")
 
 
 dnl got final squid_storeio_module_candidates, build library lists
@@ -2211,6 +2278,10 @@ else
   AC_MSG_ERROR(Cannot find cppunit at $withval)
 fi
 ])
+SQUID_STATE_SAVE(squid_cppunit_state)
+CXXFLAGS="$CXXFLAGS $SQUID_CPPUNIT_INC"
+AC_CHECK_HEADERS(cppunit/extensions/HelperMacros.h)
+SQUID_STATE_ROLLBACK(squid_cppunit_state)
 AC_SUBST(SQUID_CPPUNIT_LIBS)
 AC_SUBST(SQUID_CPPUNIT_LA)
 AC_SUBST(SQUID_CPPUNIT_INC)
@@ -2249,6 +2320,7 @@ AC_CHECK_HEADERS( \
   bstring.h \
   cassert \
   crypt.h \
+  cstdarg \
   cstdlib \
   cstring \
   list \
@@ -2325,6 +2397,7 @@ AC_CHECK_HEADERS( \
   sys/param.h \
   sys/prctl.h \
   sys/md5.h \
+  sys/mman.h \
   sys/msg.h \
   sys/resource.h \
   sys/select.h \

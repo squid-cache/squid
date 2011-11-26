@@ -48,7 +48,7 @@ SQUIDCEXTERN int tvSubUsec(struct timeval, struct timeval);
 SQUIDCEXTERN double tvSubDsec(struct timeval, struct timeval);
 SQUIDCEXTERN size_t xcountws(const char *str);
 SQUIDCEXTERN void Tolower(char *);
-#ifdef __cplusplus
+#if defined(__cplusplus)
 /*
  * Any code using libstdc++ must have externally resolvable overloads
  * for void * operator new - which means in the .o for the binary,
@@ -56,8 +56,8 @@ SQUIDCEXTERN void Tolower(char *);
  * so, look in the translation unit containing main() in squid
  * for the extern version in squid
  */
-#ifndef _SQUID_EXTERNNEW_
-#ifdef __GNUC_STDC_INLINE__
+#if !defined(_SQUID_EXTERNNEW_)
+#if defined(__GNUC_STDC_INLINE__)
 #define _SQUID_EXTERNNEW_ extern inline __attribute__((gnu_inline))
 #else
 #define _SQUID_EXTERNNEW_ extern inline

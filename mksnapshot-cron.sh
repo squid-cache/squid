@@ -1,4 +1,4 @@
-#!/bin/sh -ex
+#!/bin/sh -e
 echo "RUN: $0"
 # Nightly cron job to generate snapshot releases
 top=${PWD}
@@ -59,9 +59,15 @@ make_snapshot()
     ln -s ${file}.md5 ${dst}/squid-${ver}.snapshot${type}.md5
 
     # cleanup old snapshots
-    ls ${dst}/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]${type} | sed -e 's/.*-\([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'${type}'\)/\1/' | sort -r | tail +${save} | while read f; do
+    ls ${dst}/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-r*[0-9]${type} | \
+		sed -e 's/.*-\([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-r[0-9]+'${type}'\)/\1/' | \
+		sort -r | tail +${save} | \
+    while read f; do
 	rm -f ${dst}/*-${f} ${dst}/*-${f}.md5
     done
+
+    # update dynamic index pages Last-Modified info
+    touch ${dst}/index.dyn
 
     # Special cases
     case ${file} in
@@ -83,14 +89,6 @@ make_snapshot()
 	;;
     esac
   done
-
-  # update web page
-  if [ -x ${dst}/make.sh ]; then
-    cd ${dst}
-    ./make.sh
-    cd ${top}/../release
-  fi
-
 } }
 
 set +e
@@ -110,19 +108,19 @@ chmod 444 /server/httpd/htdocs/squid-cache.org/SPONSORS.new
 mv -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new /server/httpd/htdocs/squid-cache.org/content/SPONSORS.txt
 
 ../commit/bootstrap squid-3.2
-make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_2 v3 3.2 5
+make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_2 v3 3.2 30
 
 ../commit/bootstrap squid-3.1
-make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_1 v3 3.1 3
+make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_1 v3 3.1 30
 
 #../commit/bootstrap squid-3.0
 #make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_0 v3 3.0 3
 
-../commit/bootstrap squid-2
-make_snapshot ../commit/squid-2/mksnapshot.sh HEAD v2 HEAD 3
+#../commit/bootstrap squid-2
+#make_snapshot ../commit/squid-2/mksnapshot.sh HEAD v2 HEAD 3
 
-../commit/bootstrap squid-2.7
-make_snapshot ../commit/squid-2.7/mksnapshot.sh SQUID_2_7 v2 2.7 3
+#../commit/bootstrap squid-2.7
+#make_snapshot ../commit/squid-2.7/mksnapshot.sh SQUID_2_7 v2 2.7 3
 
 #../commit/bootstrap squid-2.6
 #make_snapshot ../commit/squid-2.6/mksnapshot.sh SQUID_2_6 v2 2.6 3

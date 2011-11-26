@@ -223,7 +223,7 @@ public:
     struct DataChannel: public FtpChannel {
         MemBuf *readBuf;
         char *host;
-        u_short port;
+        unsigned short port;
         bool read_pending;
     } data;
 
@@ -234,7 +234,7 @@ private:
 
 public:
     // these should all be private
-    void start();
+    virtual void start();
     void loginParser(const char *, int escaped);
     int restartable();
     void appendSuccessHeader();
@@ -457,7 +457,7 @@ FtpStateData::ctrlClosed(const CommCloseCbParams &io)
 {
     debugs(9, 4, HERE);
     ctrl.clear();
-    deleteThis("FtpStateData::ctrlClosed");
+    mustStop("FtpStateData::ctrlClosed");
 }
 
 /// handler called by Comm when FTP data channel is closed unexpectedly
@@ -668,6 +668,9 @@ void
 FtpStateData::ftpTimeout(const CommTimeoutCbParams &io)
 {
     debugs(9, 4, HERE << io.conn << ": '" << entry->url() << "'" );
+
+    if (abortOnBadEntry("entry went bad while waiting for a timeout"))
+        return;
 
     if (SENT_PASV == state && io.conn->fd == data.conn->fd) {
         /* stupid ftp.netscape.com */
@@ -1215,7 +1218,8 @@ FtpStateData::dataComplete()
 void
 FtpStateData::maybeReadVirginBody()
 {
-    if (!Comm::IsConnOpen(data.conn))
+    // too late to read
+    if (!Comm::IsConnOpen(data.conn) || fd_table[data.conn->fd].closing())
         return;
 
     if (data.read_pending)
@@ -1513,8 +1517,7 @@ FtpStateData::buildTitleUrl()
 void
 ftpStart(FwdState * fwd)
 {
-    FtpStateData *ftpState = new FtpStateData(fwd, fwd->serverConnection());
-    ftpState->start();
+    AsyncJob::Start(new FtpStateData(fwd, fwd->serverConnection()));
 }
 
 void
@@ -2430,7 +2433,7 @@ ftpReadEPSV(FtpStateData* ftpState)
     buf = ftpState->ctrl.last_reply + strcspn(ftpState->ctrl.last_reply, "(");
 
     char h1, h2, h3, h4;
-    u_short port;
+    unsigned short port;
     int n = sscanf(buf, "(%c%c%c%hu%c)", &h1, &h2, &h3, &port, &h4);
 
     if (n < 4 || h1 != h2 || h1 != h3 || h1 != h4) {
@@ -2643,7 +2646,7 @@ ftpReadPasv(FtpStateData * ftpState)
     int h1, h2, h3, h4;
     int p1, p2;
     int n;
-    u_short port;
+    unsigned short port;
     Ip::Address ipa_remote;
     char *buf;
     LOCAL_ARRAY(char, ipaddr, 1024);
@@ -2722,6 +2725,7 @@ ftpReadPasv(FtpStateData * ftpState)
 
     Comm::ConnectionPointer conn = new Comm::Connection;
     conn->local = ftpState->ctrl.conn->local;
+    conn->local.SetPort(0);
     conn->remote = ipaddr;
     conn->remote.SetPort(port);
 
@@ -3231,7 +3235,7 @@ ftpReadRetr(FtpStateData * ftpState)
 
     if (code == 125 || (code == 150 && Comm::IsConnOpen(ftpState->data.conn))) {
         /* Begin data transfer */
-        debugs(9, 3, HERE << "reading data channel");
+        debugs(9, 3, HERE << "begin data transfer from " << ftpState->data.conn->remote << " (" << ftpState->data.conn->local << ")");
         ftpState->switchTimeoutToDataChannel();
         ftpState->maybeReadVirginBody();
         ftpState->state = READING_DATA;
@@ -3872,7 +3876,7 @@ FtpStateData::abortTransaction(const char *reason)
     }
 
     fwd->handleUnregisteredServerEnd();
-    deleteThis("FtpStateData::abortTransaction");
+    mustStop("FtpStateData::abortTransaction");
 }
 
 /// creates a data channel Comm close callback

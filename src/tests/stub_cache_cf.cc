@@ -104,7 +104,7 @@ strtokFile(void)
 }
 
 void
-ConfigParser::ParseUShort(u_short *var)
+ConfigParser::ParseUShort(unsigned short *var)
 {
     fatal("not implemented 10");
 }
@@ -113,6 +113,12 @@ void
 dump_acl_access(StoreEntry * entry, const char *name, acl_access * head)
 {
     fatal("not implemented 11");
+}
+
+YesNoNone::operator void*() const
+{
+    /* ignore this for testing  */
+    return NULL;
 }
 
 /*

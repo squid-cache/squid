@@ -44,7 +44,6 @@ CommAcceptCbParams::CommAcceptCbParams(void *aData):
 {
 }
 
-
 /* CommConnectCbParams */
 
 CommConnectCbParams::CommConnectCbParams(void *aData):
@@ -128,7 +127,7 @@ CommAcceptCbPtrFun::CommAcceptCbPtrFun(const CommAcceptCbPtrFun &o):
 void
 CommAcceptCbPtrFun::dial()
 {
-    handler(params.fd, params.conn, params.flag, params.xerrno, params.data);
+    handler(params);
 }
 
 void
@@ -189,7 +188,7 @@ CommIoCbPtrFun::print(std::ostream &os) const
 
 /* CommCloseCbPtrFun */
 
-CommCloseCbPtrFun::CommCloseCbPtrFun(PF *aHandler,
+CommCloseCbPtrFun::CommCloseCbPtrFun(CLCB *aHandler,
                                      const CommCloseCbParams &aParams):
         CommDialerParamsT<CommCloseCbParams>(aParams),
         handler(aHandler)
@@ -199,7 +198,7 @@ CommCloseCbPtrFun::CommCloseCbPtrFun(PF *aHandler,
 void
 CommCloseCbPtrFun::dial()
 {
-    handler(params.fd, params.data);
+    handler(params);
 }
 
 void

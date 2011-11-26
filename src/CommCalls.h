@@ -20,14 +20,20 @@
  *     - connect (CNCB)
  *     - I/O (IOCB)
  *     - timeout (CTCB)
+ *     - close (CLCB)
  */
 
-typedef void IOACB(int fd, const Comm::ConnectionPointer &details, comm_err_t flag, int xerrno, void *data);
+class CommAcceptCbParams;
+typedef void IOACB(const CommAcceptCbParams &params);
+
 typedef void CNCB(const Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data);
 typedef void IOCB(const Comm::ConnectionPointer &conn, char *, size_t size, comm_err_t flag, int xerrno, void *data);
 
 class CommTimeoutCbParams;
 typedef void CTCB(const CommTimeoutCbParams &params);
+
+class CommCloseCbParams;
+typedef void CLCB(const CommCloseCbParams &params);
 
 /*
  * TODO: When there are no function-pointer-based callbacks left, all
@@ -231,20 +237,20 @@ public:
 };
 
 
-// close (PF) dialer
+// close (CLCB) dialer
 class CommCloseCbPtrFun: public CallDialer,
         public CommDialerParamsT<CommCloseCbParams>
 {
 public:
     typedef CommCloseCbParams Params;
 
-    CommCloseCbPtrFun(PF *aHandler, const Params &aParams);
+    CommCloseCbPtrFun(CLCB *aHandler, const Params &aParams);
     void dial();
 
     virtual void print(std::ostream &os) const;
 
 public:
-    PF *handler;
+    CLCB *handler;
 };
 
 class CommTimeoutCbPtrFun:public CallDialer,

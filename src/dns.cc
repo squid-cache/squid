@@ -74,7 +74,7 @@ dnsInit(void)
     if (dnsservers == NULL)
         dnsservers = new helper("dnsserver");
 
-    dnsservers->childs = Config.dnsChildren;
+    dnsservers->childs.updateLimits(Config.dnsChildren);
 
     dnsservers->ipc_type = IPC_STREAM;
 

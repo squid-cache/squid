@@ -49,9 +49,13 @@ public:
     ErrorDetail(ssl_error_t err_no, X509 *cert);
     ErrorDetail(ErrorDetail const &);
     const String &toString() const;  ///< An error detail string to embed in squid error pages
-    void useRequest(HttpRequest *aRequest) { if (request != NULL) request = aRequest;}
+    void useRequest(HttpRequest *aRequest) { if (aRequest != NULL) request = aRequest;}
     /// The error name to embed in squid error pages
     const char *errorName() const {return err_code();}
+    /// The error no
+    ssl_error_t errorNo() const {return error_no;}
+    ///Sets the low-level error returned by OpenSSL ERR_get_error()
+    void setLibError(unsigned long lib_err_no) {lib_error_no = lib_err_no;}
 
 private:
     typedef const char * (ErrorDetail::*fmt_action_t)() const;
@@ -73,12 +77,14 @@ private:
     const char *notafter() const;
     const char *err_code() const;
     const char *err_descr() const;
+    const char *err_lib_error() const;
 
     int convert(const char *code, const char **value) const;
     void buildDetail() const;
 
     mutable String errDetailStr; ///< Caches the error detail message
     ssl_error_t error_no;   ///< The error code
+    unsigned long lib_error_no; ///< low-level error returned by OpenSSL ERR_get_error(3SSL)
     X509_Pointer peer_cert; ///< A pointer to the peer certificate
     mutable ErrorDetailEntry detailEntry;
     HttpRequest::Pointer request;

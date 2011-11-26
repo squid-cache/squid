@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.14 release notes</title>
+<title>Squid 3.1.16 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.14
+The Squid Team are pleased to announce the release of Squid-3.1.16
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -31,12 +31,12 @@ Although this release is deemed good enough for use in many setups, please note 
 
 <itemize>
 	<item>The lack of some features available in Squid-2.x series. See the regression sections below for full details.
-	<item>CVE-2009-0801 : NAT interception vulnerability to malicious clients.
 </itemize>
 
 <p>Currently known issues which only depends on available developer time and may still be resolved in a future 3.1 release are:
 
 <itemize>
+	<item>CVE-2009-0801 : NAT interception vulnerability to malicious clients. This is fixed in 3.2 series.
 	<item>Windows support is still largely missing.
 	<item>AIX support for building with the IBM compiler is broken.
 	<item>OpenSSL 1.0.0 support is incomplete.
@@ -608,6 +608,10 @@ This section gives a thorough account of those changes in three categories:
                 *) May negatively impact connection delay times.
         </verb>
 
+	<tag>dns_v4_first</tag>
+	<p>Added in 3.1.16. Controls whether IPv4 or IPv6 connection is
+	   attempted first when contacting servers and peers.
+
 	<tag>ecap_enable</tag>
 	<p>Controls whether eCAP support is enabled. Default: OFF
 
@@ -1010,6 +1014,7 @@ NOCOMMENT_START
 	<tag>auth_param ntlm, basic, digest</tag>
 	<p>BASIC, DIGEST:  New parameter option <em>utf8 on|off</em> to permit helpers to selectively process UTF-8 characters even though
 	   HTTP accepts only ISO-8859-1.</p>
+	<p>NCSA authenticator updated in 3.1.15 to alert if passwords with more than 8 characters are used with DES encryption method.
 	<p>NTLM: The helper binary bundled with Squid under the name <em>ntlm_auth</em> has been renamed to accurately reflect
 	   its real behavior and to prevent confusion with the more useful Samba helper using the same name.
 	<p>Despite being used for NTLM, the helper does not in fact provide true NTLM function. What it does provide is
@@ -1141,6 +1146,9 @@ NOCOMMENT_START
 
 	<tag>header_replace</tag>
 	<p>Deprecated. Use request_header_replace or reply_header_replace instead.
+
+	<tag>hierarchy_stoplist</tag>
+	<p>Default value altered to no content, allowing dynamic websites to be fetched through peers.
 
 	<tag>http_port transparent intercept ssl-bump connection-auth[=on|off] ignore-cc</tag>
 	<p>Option 'transparent' is being deprecated in favour of 'intercept' which more clearly identifies what the option does.

@@ -53,8 +53,8 @@
 
 static IOCB helperHandleRead;
 static IOCB helperStatefulHandleRead;
-static PF helperServerFree;
-static PF helperStatefulServerFree;
+static CLCB helperServerFree;
+static CLCB helperStatefulServerFree;
 static void Enqueue(helper * hlp, helper_request *);
 static helper_request *Dequeue(helper * hlp);
 static helper_stateful_request *StatefulDequeue(statefulhelper * hlp);
@@ -669,9 +669,9 @@ helper::~helper()
 /* ====================================================================== */
 
 static void
-helperServerFree(int fd, void *data)
+helperServerFree(const CommCloseCbParams &params)
 {
-    helper_server *srv = (helper_server *)data;
+    helper_server *srv = (helper_server *)params.data;
     helper *hlp = srv->parent;
     helper_request *r;
     int i, concurrency = hlp->childs.concurrency;
@@ -704,7 +704,7 @@ helperServerFree(int fd, void *data)
     if (!srv->flags.shutdown) {
         assert(hlp->childs.n_active > 0);
         hlp->childs.n_active--;
-        debugs(84, DBG_CRITICAL, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " (FD " << fd << ") exited");
+        debugs(84, DBG_CRITICAL, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " (FD " << params.fd << ") exited");
 
         if (hlp->childs.needNew() > 0) {
             debugs(80, 1, "Too few " << hlp->id_name << " processes are running (need " << hlp->childs.needNew() << "/" << hlp->childs.n_max << ")");
@@ -736,9 +736,9 @@ helperServerFree(int fd, void *data)
 }
 
 static void
-helperStatefulServerFree(int fd, void *data)
+helperStatefulServerFree(const CommCloseCbParams &params)
 {
-    helper_stateful_server *srv = (helper_stateful_server *)data;
+    helper_stateful_server *srv = (helper_stateful_server *)params.data;
     statefulhelper *hlp = srv->parent;
     helper_stateful_request *r;
 
@@ -766,7 +766,7 @@ helperStatefulServerFree(int fd, void *data)
     if (!srv->flags.shutdown) {
         assert( hlp->childs.n_active > 0);
         hlp->childs.n_active--;
-        debugs(84, 0, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " (FD " << fd << ") exited");
+        debugs(84, 0, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " (FD " << params.fd << ") exited");
 
         if (hlp->childs.needNew() > 0) {
             debugs(80, 1, "Too few " << hlp->id_name << " processes are running (need " << hlp->childs.needNew() << "/" << hlp->childs.n_max << ")");
@@ -1093,6 +1093,7 @@ GetFirstAvailable(helper * hlp)
     dlink_node *n;
     helper_server *srv;
     helper_server *selected = NULL;
+    debugs(84, 5, "GetFirstAvailable: Running servers " << hlp->childs.n_running);
 
     if (hlp->childs.n_running == 0)
         return NULL;
@@ -1119,12 +1120,17 @@ GetFirstAvailable(helper * hlp)
     }
 
     /* Check for overload */
-    if (!selected)
+    if (!selected) {
+        debugs(84, 5, "GetFirstAvailable: None available.");
         return NULL;
+    }
 
-    if (selected->stats.pending >= (hlp->childs.concurrency ? hlp->childs.concurrency : 1))
+    if (selected->stats.pending >= (hlp->childs.concurrency ? hlp->childs.concurrency : 1)) {
+        debugs(84, 3, "GetFirstAvailable: Least-loaded helper is overloaded!");
         return NULL;
+    }
 
+    debugs(84, 5, "GetFirstAvailable: returning srv-" << selected->index);
     return selected;
 }
 

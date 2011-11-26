@@ -106,7 +106,7 @@ fd_debug_t *fdd_table = NULL;
 bool
 isOpen(const int fd)
 {
-    return fd >= 0 && fd_table[fd].flags.open != 0;
+    return fd >= 0 && fd_table && fd_table[fd].flags.open != 0;
 }
 
 /**
@@ -362,7 +362,7 @@ comm_has_incomplete_write(int fd)
  */
 
 /* Return the local port associated with fd. */
-u_short
+unsigned short
 comm_local_port(int fd)
 {
     Ip::Address temp;
@@ -644,7 +644,7 @@ comm_apply_flags(int new_socket,
     if ((flags & COMM_REUSEADDR))
         commSetReuseAddr(new_socket);
 
-    if (addr.GetPort() > (u_short) 0) {
+    if (addr.GetPort() > (unsigned short) 0) {
 #if _SQUID_MSWIN_
         if (sock_type != SOCK_DGRAM)
 #endif
@@ -703,7 +703,7 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
     if (!(conn->flags & COMM_NOCLOEXEC))
         fd_table[conn->fd].flags.close_on_exec = 1;
 
-    if (conn->local.GetPort() > (u_short) 0) {
+    if (conn->local.GetPort() > (unsigned short) 0) {
 #if _SQUID_MSWIN_
         if (AI->ai_socktype != SOCK_DGRAM)
 #endif
@@ -870,7 +870,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
             debugs(14,9, "connecting to: " << address );
         }
     } else {
-#if defined(_SQUID_NEWSOS6_)
+#if _SQUID_NEWSOS6_
         /* Makoto MATSUSHITA <matusita@ics.es.osaka-u.ac.jp> */
 
         connect(sock, AI->ai_addr, AI->ai_addrlen);
@@ -891,7 +891,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
         if (x == 0)
             errno = err;
 
-#if defined(_SQUID_SOLARIS_)
+#if _SQUID_SOLARIS_
         /*
         * Solaris 2.4's socket emulation doesn't allow you
         * to determine the error from a failed non-blocking
@@ -962,6 +962,7 @@ commCallCloseHandlers(int fd)
         // If call is not canceled schedule it for execution else ignore it
         if (!call->canceled()) {
             debugs(5, 5, "commCallCloseHandlers: ch->handler=" << call);
+            // XXX: this should not be needed. Params can be set by the call creator
             typedef CommCloseCbParams Params;
             Params &params = GetCommParams<Params>(call);
             params.fd = fd;
@@ -998,10 +999,8 @@ void
 comm_lingering_close(int fd)
 {
 #if USE_SSL
-
     if (fd_table[fd].ssl)
-        ssl_shutdown_method(fd);
-
+        ssl_shutdown_method(fd_table[fd].ssl);
 #endif
 
     if (shutdown(fd, 1) < 0) {
@@ -1021,7 +1020,7 @@ comm_lingering_close(int fd)
  * closed, TCP generates a RESET
  */
 void
-comm_reset_close(Comm::ConnectionPointer &conn)
+comm_reset_close(const Comm::ConnectionPointer &conn)
 {
     struct linger L;
     L.l_onoff = 1;
@@ -1047,23 +1046,20 @@ old_comm_reset_close(int fd)
     comm_close(fd);
 }
 
-void
-comm_close_start(int fd, void *data)
-{
 #if USE_SSL
-    fde *F = &fd_table[fd];
-    if (F->ssl)
-        ssl_shutdown_method(fd);
-
+void
+commStartSslClose(const CommCloseCbParams &params)
+{
+    assert(&fd_table[params.fd].ssl);
+    ssl_shutdown_method(fd_table[params.fd].ssl);
+}
 #endif
 
-}
-
 void
-comm_close_complete(int fd, void *data)
+comm_close_complete(const CommCloseCbParams &params)
 {
 #if USE_SSL
-    fde *F = &fd_table[fd];
+    fde *F = &fd_table[params.fd];
 
     if (F->ssl) {
         SSL_free(F->ssl);
@@ -1075,13 +1071,12 @@ comm_close_complete(int fd, void *data)
         F->dynamicSslContext = NULL;
     }
 #endif
-    fd_close(fd);		/* update fdstat */
-
-    close(fd);
+    fd_close(params.fd);		/* update fdstat */
+    close(params.fd);
 
     statCounter.syscalls.sock.closes++;
 
-    /* When an fd closes, give accept() a chance, if need be */
+    /* When one connection closes, give accept() a chance, if need be */
     Comm::AcceptLimiter::Instance().kick();
 }
 
@@ -1122,12 +1117,16 @@ _comm_close(int fd, char const *file, int line)
 
     F->flags.close_request = 1;
 
-    AsyncCall::Pointer startCall=commCbCall(5,4, "comm_close_start",
-                                            CommCloseCbPtrFun(comm_close_start, NULL));
-    typedef CommCloseCbParams Params;
-    Params &startParams = GetCommParams<Params>(startCall);
-    startParams.fd = fd;
-    ScheduleCallHere(startCall);
+#if USE_SSL
+    if (F->ssl) {
+        // XXX: make this a generic async call passing one FD parameter. No need to use CommCloseCbParams
+        AsyncCall::Pointer startCall=commCbCall(5,4, "commStartSslClose",
+                                                CommCloseCbPtrFun(commStartSslClose, NULL));
+        CommCloseCbParams &startParams = GetCommParams<CommCloseCbParams>(startCall);
+        startParams.fd = fd;
+        ScheduleCallHere(startCall);
+    }
+#endif
 
     // a half-closed fd may lack a reader, so we stop monitoring explicitly
     if (commHasHalfClosedMonitor(fd))
@@ -1164,7 +1163,7 @@ _comm_close(int fd, char const *file, int line)
 
     AsyncCall::Pointer completeCall=commCbCall(5,4, "comm_close_complete",
                                     CommCloseCbPtrFun(comm_close_complete, NULL));
-    Params &completeParams = GetCommParams<Params>(completeCall);
+    CommCloseCbParams &completeParams = GetCommParams<CommCloseCbParams>(completeCall);
     completeParams.fd = fd;
     // must use async call to wait for all callbacks
     // scheduled before comm_close() to finish
@@ -1215,7 +1214,7 @@ comm_udp_sendto(int fd,
 }
 
 void
-comm_add_close_handler(int fd, PF * handler, void *data)
+comm_add_close_handler(int fd, CLCB * handler, void *data)
 {
     debugs(5, 5, "comm_add_close_handler: FD " << fd << ", handler=" <<
            handler << ", data=" << data);
@@ -1242,7 +1241,7 @@ comm_add_close_handler(int fd, AsyncCall::Pointer &call)
 
 // remove function-based close handler
 void
-comm_remove_close_handler(int fd, PF * handler, void *data)
+comm_remove_close_handler(int fd, CLCB * handler, void *data)
 {
     assert (isOpen(fd));
     /* Find handler in list */
@@ -2022,6 +2021,7 @@ DeferredReadManager::delayRead(DeferredRead const &aRead)
     // We have to use a global function as a closer and point to temp
     // instead of "this" because DeferredReadManager is not a job and
     // is not even cbdata protected
+    // XXX: and yet we use cbdata protection functions on it??
     AsyncCall::Pointer closer = commCbCall(5,4,
                                            "DeferredReadManager::CloseHandler",
                                            CommCloseCbPtrFun(&CloseHandler, temp));
@@ -2030,12 +2030,12 @@ DeferredReadManager::delayRead(DeferredRead const &aRead)
 }
 
 void
-DeferredReadManager::CloseHandler(int fd, void *thecbdata)
+DeferredReadManager::CloseHandler(const CommCloseCbParams &params)
 {
-    if (!cbdataReferenceValid (thecbdata))
+    if (!cbdataReferenceValid(params.data))
         return;
 
-    CbDataList<DeferredRead> *temp = (CbDataList<DeferredRead> *)thecbdata;
+    CbDataList<DeferredRead> *temp = (CbDataList<DeferredRead> *)params.data;
 
     temp->element.closer = NULL;
     temp->element.markCancelled();
@@ -2047,6 +2047,19 @@ DeferredReadManager::popHead(CbDataListContainer<DeferredRead> &deferredReads)
     assert (!deferredReads.empty());
 
     DeferredRead &read = deferredReads.head->element;
+
+    // NOTE: at this point the connection has been paused/stalled for an unknown
+    //       amount of time. We must re-validate that it is active and usable.
+
+    // If the connection has been closed already. Cancel this read.
+    if (!Comm::IsConnOpen(read.theRead.conn)) {
+        if (read.closer != NULL) {
+            read.closer->cancel("Connection closed before.");
+            read.closer = NULL;
+        }
+        read.markCancelled();
+    }
+
     if (!read.cancelled) {
         comm_remove_close_handler(read.theRead.conn->fd, read.closer);
         read.closer = NULL;

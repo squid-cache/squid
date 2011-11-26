@@ -159,9 +159,11 @@ void ChunkedCodingParser::parseTrailerHeader()
     size_t crlfEnd = 0;
 
     if (findCrlf(crlfBeg, crlfEnd)) {
-        if (crlfBeg > 0)
 
-            ; //theTrailer.append(theIn->content(), crlfEnd);
+#if TRAILERS_ARE_SUPPORTED
+        if (crlfBeg > 0)
+            theTrailer.append(theIn->content(), crlfEnd);
+#endif
 
         theIn->consume(crlfEnd);
 

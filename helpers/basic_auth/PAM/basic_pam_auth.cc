@@ -93,12 +93,12 @@
 #endif
 
 /* The default PAM service name */
-#ifndef DEFAULT_SQUID_PAM_SERVICE
+#if !defined(DEFAULT_SQUID_PAM_SERVICE)
 #define DEFAULT_SQUID_PAM_SERVICE "squid"
 #endif
 
 /* The default TTL */
-#ifndef DEFAULT_SQUID_PAM_TTL
+#if !defined(DEFAULT_SQUID_PAM_TTL)
 #define DEFAULT_SQUID_PAM_TTL 0
 #endif
 

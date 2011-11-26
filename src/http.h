@@ -102,6 +102,7 @@ private:
     bool continueAfterParsingHeader();
     void truncateVirginBody();
 
+    virtual void start();
     virtual void haveParsedReplyHeaders();
     virtual bool getMoreRequestBody(MemBuf &buf);
     virtual void closeServer(); // end communication with the server

@@ -50,7 +50,7 @@ NOTIDY=`$(PO2HTML) --help | grep -o "\-\-notidy"`
 		page=`basename $$f`; \
 		$(PO2HTML) $(NOTIDY) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/$$f >$(top_builddir)/errors/$$lang/$$page || exit 1; \
 	    done; \
-	    $(PO2TEXT) -t $(top_srcdir)/errors/templates/error-details.txt -i $(top_srcdir)/errors/$$lang.po > $(top_builddir)/errors/$$lang/error-details.txt || exit 1; \
+	    cp $(top_srcdir)/errors/templates/error-details.txt $(top_builddir)/errors/$$lang/error-details.txt || exit 1; \
 	    echo "done."; \
 	fi; \
 	touch $@

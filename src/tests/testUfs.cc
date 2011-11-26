@@ -87,9 +87,7 @@ testUfs::testUfsSearch()
     if (0 > system ("rm -rf " TESTDIR))
         throw std::runtime_error("Failed to clean test work directory");
 
-    StorePointer aRoot (new StoreController);
-
-    Store::Root(aRoot);
+    Store::Root(new StoreController);
 
     SwapDirPointer aStore (new UFSSwapDir("ufs", "Blocking"));
 
@@ -205,11 +203,12 @@ testUfs::testUfsSearch()
     CPPUNIT_ASSERT(search->isDone() == true);
     CPPUNIT_ASSERT(search->currentItem() == NULL);
 
+    Store::Root(NULL);
+
     free_cachedir(&Config.cacheSwap);
 
     /* todo: here we should test a dirty rebuild */
 
-    Store::Root(NULL);
     safe_free(Config.replPolicy->type);
     delete Config.replPolicy;
 
@@ -232,8 +231,7 @@ testUfs::testUfsDefaultEngine()
     // objects such as "StorePointer aRoot" from being called.
     CPPUNIT_ASSERT(!store_table); // or StoreHashIndex ctor will abort below
 
-    StorePointer aRoot (new StoreController);
-    Store::Root(aRoot);
+    Store::Root(new StoreController);
     SwapDirPointer aStore (new UFSSwapDir("ufs", "Blocking"));
     addSwapDir(aStore);
     commonInit();
@@ -249,8 +247,8 @@ testUfs::testUfsDefaultEngine()
     safe_free(config_line);
     CPPUNIT_ASSERT(aStore->IO->io != NULL);
 
-    free_cachedir(&Config.cacheSwap);
     Store::Root(NULL);
+    free_cachedir(&Config.cacheSwap);
     safe_free(Config.replPolicy->type);
     delete Config.replPolicy;
 

@@ -34,8 +34,8 @@
 // Revision 1.1  1999/06/15 21:10:16  voeckler
 // Initial revision
 //
-#ifndef _SQUID_TLV_HH
-#define _SQUID_TLV_HH
+#ifndef SQUID_TLV_HH
+#define SQUID_TLV_HH
 
 #if !defined(__cplusplus)
 #if defined(__GNUC__) || defined(__GNUG__)
@@ -82,8 +82,8 @@ struct StoreMetaStd {
   time_t  expires;
   time_t  lastmod;
   size_t  swap_file_sz;
-  u_short refcount;
-  u_short flags;
+  uint16_t refcount;
+  uint16_t flags;
 };
 
 struct StoreMetaStdLFS {
@@ -91,9 +91,9 @@ struct StoreMetaStdLFS {
   time_t  lastref;
   time_t  expires;
   time_t  lastmod;
-  uint64_t  swap_file_sz;
-  u_short refcount;
-  u_short flags;
+  uint64_t swap_file_sz;
+  uint16_t refcount;
+  uint16_t flags;
 };
 
 struct SquidTLV {
@@ -121,4 +121,4 @@ private:
   SquidTLV* tail;
 };
 
-#endif // _SQUID_TLV_HH
+#endif // SQUID_TLV_HH

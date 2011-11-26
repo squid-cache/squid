@@ -19,7 +19,7 @@ SQUIDCEXTERN void commSetTcpKeepalive(int fd, int idle, int interval, int timeou
 extern void _comm_close(int fd, char const *file, int line);
 #define comm_close(x) (_comm_close((x), __FILE__, __LINE__))
 SQUIDCEXTERN void old_comm_reset_close(int fd);
-SQUIDCEXTERN void comm_reset_close(Comm::ConnectionPointer &conn);
+SQUIDCEXTERN void comm_reset_close(const Comm::ConnectionPointer &conn);
 #if LINGERING_CLOSE
 SQUIDCEXTERN void comm_lingering_close(int fd);
 #endif
@@ -52,7 +52,7 @@ extern int comm_open_listener(int sock_type, int proto, Ip::Address &addr, int f
 extern void comm_open_listener(int sock_type, int proto, Comm::ConnectionPointer &conn, const char *note);
 
 SQUIDCEXTERN int comm_openex(int, int, Ip::Address &, int, tos_t tos, nfmark_t nfmark, const char *);
-SQUIDCEXTERN u_short comm_local_port(int fd);
+SQUIDCEXTERN unsigned short comm_local_port(int fd);
 
 SQUIDCEXTERN int comm_udp_sendto(int sock, const Ip::Address &to, const void *buf, int buflen);
 SQUIDCEXTERN void commCallCloseHandlers(int fd);
@@ -72,9 +72,9 @@ SQUIDCEXTERN void checkTimeouts(void);
 
 
 //typedef void IOACB(int fd, int nfd, Comm::ConnectionPointer details, comm_err_t flag, int xerrno, void *data);
-extern void comm_add_close_handler(int fd, PF *, void *);
+extern void comm_add_close_handler(int fd, CLCB *, void *);
 extern void comm_add_close_handler(int fd, AsyncCall::Pointer &);
-extern void comm_remove_close_handler(int fd, PF *, void *);
+extern void comm_remove_close_handler(int fd, CLCB *, void *);
 extern void comm_remove_close_handler(int fd, AsyncCall::Pointer &);
 
 

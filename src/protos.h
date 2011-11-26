@@ -237,13 +237,6 @@ SQUIDCEXTERN void httpBodyPackInto(const HttpBody * body, Packer * p);
 /* Http Cache Control Header Field */
 SQUIDCEXTERN void httpHdrCcInitModule(void);
 SQUIDCEXTERN void httpHdrCcCleanModule(void);
-SQUIDCEXTERN HttpHdrCc *httpHdrCcCreate(void);
-SQUIDCEXTERN HttpHdrCc *httpHdrCcParseCreate(const String * str);
-SQUIDCEXTERN void httpHdrCcDestroy(HttpHdrCc * cc);
-SQUIDCEXTERN HttpHdrCc *httpHdrCcDup(const HttpHdrCc * cc);
-SQUIDCEXTERN void httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p);
-SQUIDCEXTERN void httpHdrCcSetMaxAge(HttpHdrCc * cc, int max_age);
-SQUIDCEXTERN void httpHdrCcSetSMaxAge(HttpHdrCc * cc, int s_maxage);
 SQUIDCEXTERN void httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist);
 void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 
@@ -279,7 +272,6 @@ SQUIDCEXTERN int httpReqHdrManglersConfigured();
 SQUIDCEXTERN PF snmpHandleUdp;
 SQUIDCEXTERN void snmpInit(void);
 SQUIDCEXTERN void snmpConnectionOpen(void);
-SQUIDCEXTERN void snmpConnectionShutdown(void);
 SQUIDCEXTERN void snmpConnectionClose(void);
 SQUIDCEXTERN const char * snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf);
 
@@ -511,6 +503,14 @@ SQUIDCEXTERN void storeRebuildStart(void);
 SQUIDCEXTERN void storeRebuildComplete(struct _store_rebuild_data *);
 SQUIDCEXTERN void storeRebuildProgress(int sd_index, int total, int sofar);
 
+/// loads entry from disk; fills supplied memory buffer on success
+bool storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf, struct _store_rebuild_data &counts);
+/// parses entry buffer and validates entry metadata; fills e on success
+bool storeRebuildParseEntry(MemBuf &buf, StoreEntry &e, cache_key *key, struct _store_rebuild_data &counts, uint64_t expectedSize);
+/// checks whether the loaded entry should be kept; updates counters
+bool storeRebuildKeepEntry(const StoreEntry &e, const cache_key *key, struct _store_rebuild_data &counts);
+
+
 /*
  * store_swapin.c
  */
@@ -559,12 +559,16 @@ SQUIDCEXTERN bool IamPrimaryProcess();
 SQUIDCEXTERN bool IamCoordinatorProcess();
 /// whether the current process handles HTTP transactions and such
 SQUIDCEXTERN bool IamWorkerProcess();
+/// whether the current process is dedicated to managing a cache_dir
+bool IamDiskProcess();
 /// Whether we are running in daemon mode
 SQUIDCEXTERN bool InDaemonMode(); // try using specific Iam*() checks above first
 /// Whether there should be more than one worker process running
 SQUIDCEXTERN bool UsingSmp(); // try using specific Iam*() checks above first
 /// number of Kid processes as defined in src/ipc/Kid.h
 SQUIDCEXTERN int NumberOfKids();
+/// a string describing this process roles such as worker or coordinator
+String ProcessRoles();
 SQUIDCEXTERN int DebugSignal;
 
 /* AYJ debugs function to show locations being reset with memset() */
@@ -586,6 +590,7 @@ SQUIDCEXTERN void PrintRusage(void);
 SQUIDCEXTERN void dumpMallocStats(void);
 
 #if USE_UNLINKD
+SQUIDCEXTERN bool unlinkdNeeded(void);
 SQUIDCEXTERN void unlinkdInit(void);
 SQUIDCEXTERN void unlinkdClose(void);
 SQUIDCEXTERN void unlinkdUnlink(const char *);
@@ -599,7 +604,7 @@ SQUIDCEXTERN char *urlCanonicalClean(const HttpRequest *);
 SQUIDCEXTERN const char *urlCanonicalFakeHttps(const HttpRequest * request);
 SQUIDCEXTERN bool urlIsRelative(const char *);
 SQUIDCEXTERN char *urlMakeAbsolute(const HttpRequest *, const char *);
-SQUIDCEXTERN char *urlRInternal(const char *host, u_short port, const char *dir, const char *name);
+SQUIDCEXTERN char *urlRInternal(const char *host, unsigned short port, const char *dir, const char *name);
 SQUIDCEXTERN char *urlInternal(const char *dir, const char *name);
 SQUIDCEXTERN int matchDomainName(const char *host, const char *domain);
 SQUIDCEXTERN int urlCheckRequest(const HttpRequest *);
@@ -665,7 +670,7 @@ SQUIDCEXTERN void internalStart(const Comm::ConnectionPointer &clientConn, HttpR
 SQUIDCEXTERN int internalCheck(const char *urlpath);
 SQUIDCEXTERN int internalStaticCheck(const char *urlpath);
 SQUIDCEXTERN char *internalLocalUri(const char *dir, const char *name);
-SQUIDCEXTERN char *internalRemoteUri(const char *, u_short, const char *, const char *);
+SQUIDCEXTERN char *internalRemoteUri(const char *, unsigned short, const char *, const char *);
 SQUIDCEXTERN const char *internalHostname(void);
 SQUIDCEXTERN int internalHostnameIs(const char *);
 

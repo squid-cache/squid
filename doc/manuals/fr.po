@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-02-13 00:05+1400\n"
-"PO-Revision-Date: 2011-02-17 20:57+0200\n"
+"PO-Revision-Date: 2011-11-10 19:34+0200\n"
 "Last-Translator: Bernard <fli4l.charrier@free.fr>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: fr\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Pootle 2.0.5\n"
+"X-Generator: Pootle 2.1.6\n"
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:3 helpers/basic_auth/LDAP/basic_ldap_auth.8:3 helpers/basic_auth/NCSA/basic_ncsa_auth.8:3 helpers/basic_auth/PAM/basic_pam_auth.8:3 helpers/basic_auth/RADIUS/basic_radius_auth.8:3 helpers/external_acl/ldap_group/squid_ldap_group.8:3 helpers/external_acl/session/squid_session.8:3 helpers/external_acl/unix_group/squid_unix_group.8:3 src/squid.8.in:3 tools/cachemgr.cgi.8.in:3 tools/squidclient.1:3
@@ -48,7 +48,7 @@ msgid ""
 msgstr ""
 "B<basic_getpwnam_auth> permet d'authentifier les comptes utilisateurs locaux "
 "de Squid, pour valider le nom d'utilisateur et le mot de passe de "
-"l'authentification de base avec HTTP."
+"l'authentification HTTP de base."
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:21
@@ -60,7 +60,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:23
 msgid "This has the following advantages over the NCSA module:"
-msgstr "Cela a les avantages suivants sur le module NCSA :"
+msgstr "Elles ont les avantages suivants sur le module NCSA :"
 
 #. type: TP
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:23
@@ -107,7 +107,7 @@ msgid ""
 "recommended, but if you absolutely need to then make the program B<setuid> "
 "B<root>"
 msgstr ""
-"quand vous utilisez l'authentification locale dans l'esprit UNIX, le "
+"Quand vous utilisez l'authentification locale dans l'esprit UNIX, le "
 "programme doit être exécuté en tant que root pour accéder à la base de "
 "données des mots de passes. Autrement vous n'aurez pas les autorisations "
 "suffisantes pour accéder à la base de données utilisateurs. L'utilisation "
@@ -233,7 +233,7 @@ msgstr "Aide à l'authentification LDAP pour Squid"
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:12 helpers/basic_auth/LDAP/basic_ldap_auth.8:27 helpers/external_acl/ldap_group/squid_ldap_group.8:14
 msgid "base DN"
-msgstr "Base DN (ou Nom de Domaine)"
+msgstr "Base DN (ou Base de Nom de Domaine)"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:14
@@ -276,8 +276,8 @@ msgid ""
 "separated by a space."
 msgstr ""
 "B<basic_ldap_auth> permet à Squid de se connecter à un annuaire LDAP pour "
-"valider le nom d'utilisateur et le mot de passe de l'authentification de "
-"base avec HTTP. Les options LDAP sont spécifiées par des paramètres en ligne "
+"valider le nom d'utilisateur et le mot de passe de l'authentification HTTP "
+"de base. Les options LDAP sont spécifiées par des paramètres en ligne "
 "de commande, le(s) nom(s) d'utilisateur(s) et le(s) mot(s) de passe(s) sont "
 "vérifiés dans l'annuaire LDAP, les entrées sont vérifiées sur la ligne "
 "suivante, le couple nom d'utilisateur/mot de passe sont sur une ligne et "
@@ -291,7 +291,7 @@ msgid ""
 "either B<OK> or B<ERR> on the following line to show if the specified "
 "credentials are correct according to the LDAP directory."
 msgstr ""
-"Pendant la construction de l'authentification de base Squid et après avoir "
+"Pendant la construction de l'authentification de base de Squid et après avoir "
 "spécifié sur une nouvelle ligne, le nom d'utilisateur et le mot de passe. "
 "Une aide sur la ligne suivante produira soit B<OK> soit B<ERR>, pour "
 "indiquer si les informations d'identification spécifiées sont correctes en "
@@ -413,12 +413,12 @@ msgstr "B<base> seulement un objet,"
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:133 helpers/external_acl/ldap_group/squid_ldap_group.8:181
 msgid "B<one> level below the base object or"
-msgstr "B<one> niveau inférieur de la base de l'objet ou"
+msgstr "B<one> niveau inférieur de la base d'objet ou"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:136 helpers/external_acl/ldap_group/squid_ldap_group.8:184
 msgid "B<sub>tree below the base object"
-msgstr "B<sub> arborescence inférieur de la base de l'objet"
+msgstr "B<sub> arborescence inférieur de la base d'objet"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:142
@@ -709,7 +709,7 @@ msgstr ""
 "B<basic_ncsa_auth> permet à Squid de lire les informations "
 "d'authentification de l'utilisateur et du mot de passe dans NCSA/Apache "
 "httpd/style à partir du fichier mot de passe, lorsque l'on utilise "
-"l'authentification de base avec HTTP."
+"l'authentification HTTP de base."
 
 #. type: Plain text
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:19
@@ -785,7 +785,7 @@ msgid ""
 msgstr ""
 "B<basic_pam_auth> permet à Squid de se connecter sur n'importe quelle base "
 "de données PAM disponible, pour valider le nom d'utilisateur et le mot de "
-"passe pour l'authentification de base HTTP."
+"passe pour l'authentification HTTP de base."
 
 #. type: Plain text
 #: helpers/basic_auth/PAM/basic_pam_auth.8:26
@@ -921,8 +921,8 @@ msgid ""
 "the user name and password of Basic HTTP authentication."
 msgstr ""
 "B<basic_radius_auth> permet à Squid de se connecter à un serveur RADIUS pour "
-"valider le nom d'utilisateur et le mot de passe d'authentification de base "
-"avec HTTP."
+"valider le nom d'utilisateur et le mot de passe d'authentification HTTP de "
+"base."
 
 #. type: Plain text
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:36
@@ -1068,9 +1068,9 @@ msgid ""
 "B<OK> or B<ERR> on the following line to show if the user is a member of the "
 "specified group."
 msgstr ""
-"Comme prévu, on utilise B<external_acl_type> pour a construction de Squid, "
+"Comme prévu, on utilise B<external_acl_type> pour la construction de Squid, "
 "on spécifie pour chaque nouvelle ligne le nom d'utilisateur et le groupe "
-"suivis d'une entrée, sur la ligne suivante sera alors indiqué soit B<OK> "
+"suivis d'une entrée, sur la ligne suivante il sera alors indiqué soit B<OK> "
 "soit B<ERR>, pour aider l'utilisateur à vérifier si le membre appartient "
 "bien au groupe spécifié."
 
@@ -1081,15 +1081,14 @@ msgid ""
 "user name and requested group, and if a match is found it is determined that "
 "the user belongs to the group."
 msgstr ""
-"Le programme fonctionne avec un filtre de recherche, en recherchant dans la "
-"base des utilisateurs, le mon de l'utilisateur et le groupe, si une "
-"correspondance est trouvée il sera précisé que l'utilisateur appartient "
-"bien au groupe."
+"Le programme fonctionne avec un filtre de recherche basé sur l'utilisation du "
+"mon de l'utilisateur et du groupe demandé, si une correspondance est trouvée, "
+"il sera précisé que l'utilisateur appartient bien au groupe."
 
 #. type: Plain text
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:53
 msgid "When to dereference aliases. Defaults to 'never'"
-msgstr "Lorsque il est suivi par un alias. Par défaut 'never' (ou jamais)"
+msgstr "Lorsqu'il est suivi par un alias. Par défaut 'never' (ou jamais)"
 
 #. type: Plain text
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:62
@@ -1097,14 +1096,14 @@ msgid ""
 "B<never> dereference aliases (default), B<always> dereference aliases, only "
 "while B<search>ing or only to B<find> the base object"
 msgstr ""
-"B<never> Ne jamais résoudre les alias, par (défaut), B<always> résous en "
+"B<never> ne jamais résoudre les alias, par (défaut), B<always> résous en "
 "plus les alias, B<search> uniquement pendant une recherche ou B<find> "
 "uniquement pour une recherche dans une base d'objets."
 
 #. type: Plain text
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:67
 msgid "B<REQUIRED.> Specifies the base DN under which the groups are located."
-msgstr "B<REQUIRED.> Spécifie la base DN sous laquel les groupes sont situés."
+msgstr "B<REQUIRED.> spécifie la base DN sous laquel les groupes sont situés."
 
 #. type: Plain text
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:71
@@ -1393,8 +1392,8 @@ msgid ""
 "B<squid_unix_group> allows Squid to base access controls on users "
 "memberships in UNIX groups."
 msgstr ""
-"B<squid_unix_group> permet d'accéder à la base de contrôle Squid, pour faire "
-"appartenir des utilisateurs à un groupe sous UNIX."
+"B<squid_unix_group> permet des contrôles d'accès de base pour Squid, sur "
+"l'adhésion des utilisateurs à des groupes sous UNIX."
 
 #. type: Plain text
 #: helpers/external_acl/unix_group/squid_unix_group.8:23
@@ -1586,7 +1585,7 @@ msgid ""
 msgstr ""
 "Utilisez le fichier-config à la place de B<@SYSCONFDIR@/squid.conf>. Si le "
 "nom du fichier commence avec le caractère B<!> ou B<|> alors il sera "
-"interprété comme une commande externe ou une ligne de commande. cela peut "
+"interprété comme une commande ou une ligne de commande externe. Cela peut "
 "par exemple être utilisée pour pré-traiter une configuration avant qu'elle "
 "ne soit lu par Squid. Pour faciliter la compréhension de Squid utiliser #une "
 "ligne de commentaire pour indiquer la source réelle du fichier."
@@ -1775,7 +1774,7 @@ msgstr "Certains fichiers sont situés ailleurs :"
 #. type: Plain text
 #: src/squid.8.in:212
 msgid "MIME type mappings for FTP gatewaying"
-msgstr "types de fichier d'application MIME pour la fonction gateway FTP."
+msgstr "Types de fichier d'application MIME pour la fonction gateway FTP."
 
 #. type: Plain text
 #: src/squid.8.in:215
@@ -1876,8 +1875,8 @@ msgid ""
 "Configuration examples for many common web servers can be found in the Squid "
 "FAQ wiki."
 msgstr ""
-"Vous peuvez trouver sur wiki des exemples de configuration pour de nombreux "
-"serveurs web commun et des FAQ qui s’appliquer à Squid."
+"Vous peuvez trouver sur wiki FAQ des exemples de configuration pour de "
+"nombreux serveurs web commun qui s’appliquer à Squid."
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:34
@@ -1907,8 +1906,8 @@ msgid ""
 "Specifying :port is optional. If not specified then the default proxy port "
 "is assumed. :* or :any matches any port on the target server."
 msgstr ""
-"Spécification : le port est facultatif. S'il n'est pas spécifié alors le "
-"port par défaut du proxy sera utilisé. Ou spécifier :* tous les ports "
+"La spécification du :port est facultatif. S'il n'est pas spécifié alors le "
+"port par défaut du proxy sera utilisé. :* ou :any spécifie tous les ports "
 "correspondant au serveur cible."
 
 #. type: SH
@@ -1970,7 +1969,7 @@ msgstr "IMS"
 #. type: Plain text
 #: tools/squidclient.1:20
 msgid "ping interval"
-msgstr "Intervalle du ping"
+msgstr "intervalle du ping"
 
 #. type: Plain text
 #: tools/squidclient.1:22
@@ -2000,7 +1999,7 @@ msgstr "utilisateur"
 #. type: Plain text
 #: tools/squidclient.1:40
 msgid "version"
-msgstr "Version"
+msgstr "version"
 
 #. type: Plain text
 #: tools/squidclient.1:42 tools/squidclient.1:44
@@ -2022,16 +2021,16 @@ msgid ""
 "management information are provided."
 msgstr ""
 "B<squidclient> est un outil avec une interface en ligne de commande, pour "
-"accéder aux URL. Il a été conçu pour tester le serveur Web suivant les "
+"accéder aux URLs. Il a été conçu pour tester le serveur Web suivant les "
 "versions HTTP 0.9, 1.0, 1.1 ou un serveur proxy. Cet outil peut être combiné "
-"avec un script pour effectuer des opérations de base HTTP. Certaines "
+"avec un script pour effectuer toutes opérations HTTP de base. Certaines "
 "fonctionnalités supplémentaires sont fournis, pour accéder à la gestion des "
 "informations et aux objet du cache proxy B<squid>."
 
 #. type: Plain text
 #: tools/squidclient.1:60
 msgid "Do NOT include Accept: header."
-msgstr "Dans l'en-tête ne PAS inclure Accept :"
+msgstr "Dans l'en-tête ne PAS inclure Accept:"
 
 #. type: Plain text
 #: tools/squidclient.1:66
@@ -2099,7 +2098,7 @@ msgstr ""
 "I<purge>\n"
 "pour accéder au setup dans\n"
 "B<squid.conf>\n"
-"Similaire à\n"
+"similaire à\n"
 "I<manager>\n"
 "qui peut aussi y accéder. Voici un exemple:\n"
 

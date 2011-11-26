@@ -15,6 +15,9 @@ libbase_la_SOURCES = \
 	TidyPointer.h \
 	CbcPointer.h \
 	InstanceId.h \
+	RunnersRegistry.cc \
+	RunnersRegistry.h \
 	Subscription.h \
 	TextException.cc \
-	TextException.h
+	TextException.h \
+	StringArea.h

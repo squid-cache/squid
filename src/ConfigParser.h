@@ -63,10 +63,13 @@ class ConfigParser
 
 public:
     void destruct();
-    static void ParseUShort(u_short *var);
+    static void ParseUShort(unsigned short *var);
     static void ParseBool(bool *var);
     static void ParseString(char **var);
     static void ParseString(String *var);
+    static void ParseQuotedString(char **var);
+    static void ParseQuotedString(String *var);
+    static const char *QuoteString(String &var);
     static void ParseWordList(wordlist **list);
     static char * strtokFile();
 };

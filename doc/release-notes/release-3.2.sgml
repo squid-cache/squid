@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.0.10 release notes</title>
+<title>Squid 3.2.0.13 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,13 +13,14 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.0.10 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.0.13 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
 While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
 
-We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/TroubleShooting#head-7067fc0034ce967e67911becaabb8c95a34d576d"> for how to submit a report with a stack trace.
+We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/BugReporting"> for how to submit a 
+report with a stack trace.
 
 <sect1>Known issues
 <p>
@@ -34,6 +35,7 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 
 <p>The most important of these new features are:
 <itemize>
+	<item>Fixed CVE-2009-0801 : NAT interception vulnerability to malicious clients.
 	<item>SMP scalability
 	<item>Helper Multiplexer and On-Demand
 	<item>Helper Name Changes
@@ -47,6 +49,20 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
+
+
+<sect1>Fixed CVE-2009-0801 : NAT interception vulnerability to malicious clients.
+<p>Details in Advisory <url url="http://www.squid-cache.org/Advisories/SQUID-2011_1.txt" name="SQUID-2011:1">
+
+<p>Squid locates the authority-URL details available in an HTTP request as
+  defined by RFC 2616 and validates that all found representations are
+  <em>textually</em> equivalent. In the case of intercepted traffic the
+  client destination IP is also compared to the Host: authority domains
+  DNS entries.
+
+<p>When the Host: authority contradicts another authority source Squid will log
+  "SECURITY ALERT: Host: header forgery detected" and respond with a 409 Conflict
+  error status page.
 
 
 <sect1>SMP scalability
@@ -69,13 +85,11 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p>Workers can share logs.
 
-<p>Workers cannot share caches, for now. Cache_dir options must be adjusted to
-   point each disk-caching worker to its own disk area. ICP and HTCP responses
-   are based on the responding worker cache state. Overall, SMP Squid behaves
-   as a Squid farm behind a load-balancer with no cache affinity awareness.
-   This is perfect for non-caching Squids but inappropriate for Squids that
-   must coordinate caching activities (in-between environments are in a gray
-   area requiring case-by-case analysis).
+<p>Workers can share caches. Memory cache is automatically shared when multiple
+   workers are used. Cache_dir are shared when configured with the <em>rock</em>
+   storage type. Cache_dir of other types must be adjusted to point each
+   disk-caching worker to its own disk area. ICP and HTCP responses are based
+   on the responding worker cache state.
 
 <p>Cache manager statistics are reported from a worker point of view, for now.
    Though some reports are combined. SNMP statistics are combined across all
@@ -393,8 +407,14 @@ This section gives a thorough account of those changes in three categories:
 	  client-side delay pool for the request.
 
 	<tag>client_dst_passthru</tag>
-	<p>New setting to disable Host: header security on interception proxies.
+	<p>New setting to disable extra Host: header security on interception proxies.
 	   Impacts cache integrity/reliability and client browser security.
+	<p><em>IMPORTANT:</em> disabling this directive only allows Squid to change the
+	   destination IP to another source indicated by Host: domain DNS or
+	   cache_peer configuration. It <em>does not</em> affect Host: validation.
+
+	<tag>client_idle_pconn_timeout</tag>
+	<p>Renamed from <em>persistent_request_timeout</em>.
 
 	<tag>cpu_affinity_map</tag>
 	<p>New setting for SMP support to map Squid processes onto specific CPU cores.
@@ -443,6 +463,9 @@ This section gives a thorough account of those changes in three categories:
 
 	<tag>logfile_daemon</tag>
 	<p>Ported from 2.7. Specify the file I/O daemon helper to run for logging.
+
+	<tag>server_idle_pconn_timeout</tag>
+	<p>Renamed from <em>pconn_timeout</em>.
 
 	<tag>tproxy_uses_indirect_client</tag>
 	<p>Controls whether the indirect client address found in the X-Forwarded-For
@@ -546,14 +569,17 @@ This section gives a thorough account of those changes in three categories:
 	which applies to both ICAP and eCAP.</p>
 
 	<tag>logformat</tag>
+	<p><em>%&lt;a</em> Server or Peer IP address from the last server connection (next hop).
         <p><em>%&gt;bs</em> Number of HTTP-equivalent message body bytes received from the next hop.
         <p><em>icap::%&gt;bs</em> Number of message body bytes received from the ICAP server.
 	<p><em>%sn</em> Unique sequence number per log line. Ported from 2.7
-	<p><em>%&gt;eui</em> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
+	<p><em>%&gt;eui</em> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6).
 	   Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.
-        <p><em>%err_code</em> The ID of an error response served by Squid or
-          a similar internal error identifier
+        <p><em>%err_code</em> The ID of an error response served by Squid or a similar internal error identifier
         <p><em>%err_detail</em> Additional err_code-dependent error information.
+	<p><em>%&gt;la</em> Rename of %la to indicate being a client connection detail.
+	<p><em>%&gt;lp</em> Rename of %lp to indicate being a client connection detail.
+	<p><em>%&lt;p</em> Server or Peer port number from the last server connection (next hop).
 
 	<tag>memory_pools_limit</tag>
 	<p>Memory limits have been revised and corrected from 3.1.4 onwards.
@@ -622,9 +648,18 @@ This section gives a thorough account of those changes in three categories:
 	<tag>log_fqdn</tag>
 	<p>Obsolete. Replaced by automatic detection of the %>A logformat tag.
 
+	<tag>log_ip_on_direct</tag>
+	<p>Obsolete. Use a custom log with <em>%&lt;A</em> format tag to receive server FQDN or peer name.
+
 	<tag>maximum_single_addr_tries</tag>
 	<p>The behaviour controlled by this directive is no longer possible.
 	   It has been replaced by <em>connect_retries</em> option which operates a little differently.
+
+	<tag>pconn_timeout</tag>
+	<p>Renamed to <em>server_idle_pconn_timeout</em>
+
+	<tag>persistent_request_timeout</tag>
+	<p>Renamed to <em>client_idle_pconn_timeout</em>
 
 	<tag>referer_log</tag>
 	<p>Replaced by the <em>referrer</em> format option on an <em>access_log</em> directive.

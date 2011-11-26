@@ -124,8 +124,8 @@ static const char *const conn_established = "HTTP/1.1 200 Connection established
 
 static CNCB tunnelConnectDone;
 static ERCB tunnelErrorComplete;
-static PF tunnelServerClosed;
-static PF tunnelClientClosed;
+static CLCB tunnelServerClosed;
+static CLCB tunnelClientClosed;
 static CTCB tunnelTimeout;
 static PSC tunnelPeerSelectComplete;
 static void tunnelStateFree(TunnelStateData * tunnelState);
@@ -133,10 +133,10 @@ static void tunnelConnected(const Comm::ConnectionPointer &server, void *);
 static void tunnelRelayConnectRequest(const Comm::ConnectionPointer &server, void *);
 
 static void
-tunnelServerClosed(int fd, void *data)
+tunnelServerClosed(const CommCloseCbParams &params)
 {
-    TunnelStateData *tunnelState = (TunnelStateData *)data;
-    debugs(26, 3, HERE << "FD " << fd);
+    TunnelStateData *tunnelState = (TunnelStateData *)params.data;
+    debugs(26, 3, HERE << tunnelState->server.conn);
     tunnelState->server.conn = NULL;
 
     if (tunnelState->noConnections()) {
@@ -151,10 +151,10 @@ tunnelServerClosed(int fd, void *data)
 }
 
 static void
-tunnelClientClosed(int fd, void *data)
+tunnelClientClosed(const CommCloseCbParams &params)
 {
-    TunnelStateData *tunnelState = (TunnelStateData *)data;
-    debugs(26, 3, HERE << "FD " << fd);
+    TunnelStateData *tunnelState = (TunnelStateData *)params.data;
+    debugs(26, 3, HERE << tunnelState->client.conn);
     tunnelState->client.conn = NULL;
 
     if (tunnelState->noConnections()) {
@@ -574,14 +574,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
         tunnelState->server.setDelayId(DelayId());
 #endif
 
-    if (conn != NULL && conn->getPeer())
-        hierarchyNote(&tunnelState->request->hier, conn->peerType, conn->getPeer()->name);
-    else if (Config.onoff.log_ip_on_direct) {
-        conn->remote.NtoA(fd_table[conn->fd].ipaddr,sizeof(fd_table[conn->fd].ipaddr));
-        hierarchyNote(&tunnelState->request->hier, conn->peerType, fd_table[conn->fd].ipaddr);
-    } else
-        hierarchyNote(&tunnelState->request->hier, conn->peerType, tunnelState->getHost());
-
+    tunnelState->request->hier.note(conn, tunnelState->getHost());
 
     tunnelState->server.conn = conn;
     tunnelState->request->peer_host = conn->getPeer() ? conn->getPeer()->host : NULL;
@@ -626,7 +619,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
      * be allowed.  yuck, I know.
      */
 
-    if (!request->client_addr.IsNoAddr() && Config.accessList.miss) {
+    if (Config.accessList.miss && !request->client_addr.IsNoAddr()) {
         /*
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          * default is to allow.

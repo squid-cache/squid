@@ -58,12 +58,19 @@ public:
     MemObject(char const *, char const *);
     ~MemObject();
 
+    /// replaces construction-time URLs with correct ones; see hidden_mem_obj
+    void resetUrls(char const *aUrl, char const *aLog_url);
+
     void write(StoreIOBuffer, STMCB *, void *);
     void unlinkRequest();
     HttpReply const *getReply() const;
     void replaceHttpReply(HttpReply *newrep);
     void stat (MemBuf * mb) const;
     int64_t endOffset () const;
+    void markEndOfReplyHeaders(); ///< sets _reply->hdr_sz to endOffset()
+    /// negative if unknown; otherwise, expected object_sz, expected endOffset
+    /// maximum, and stored reply headers+body size (all three are the same)
+    int64_t expectedReplySize() const;
     int64_t size() const;
     void reset();
     int64_t lowestMemReaderOffset() const;
@@ -106,9 +113,12 @@ public:
     {
 
     public:
-        int64_t queue_offset;     /* relative to in-mem data */
-        mem_node *memnode;      /* which node we're currently paging out */
+        int64_t queue_offset; ///< number of bytes sent to SwapDir for writing
         StoreIOState::Pointer sio;
+
+        /// Decision states for StoreEntry::swapoutPossible() and related code.
+        typedef enum { swNeedsCheck = 0, swImpossible = -1, swPossible = +1 } Decision;
+        Decision decision; ///< current decision state
     };
 
     SwapOut swapout;

@@ -246,7 +246,7 @@ static PF idnsRead;
 static EVH idnsCheckQueue;
 static void idnsTickleQueue(void);
 static void idnsRcodeCount(int, int);
-static void idnsVCClosed(int fd, void *data);
+static CLCB idnsVCClosed;
 static unsigned short idnsQueryID(void);
 
 static void
@@ -675,7 +675,7 @@ idnsStats(StoreEntry * sentry)
     }
 
     if (Config.dns.packet_max > 0)
-        storeAppendPrintf(sentry, "DNS jumbo-grams: %Zd Bytes\n", Config.dns.packet_max);
+        storeAppendPrintf(sentry, "DNS jumbo-grams: %zd Bytes\n", Config.dns.packet_max);
     else
         storeAppendPrintf(sentry, "DNS jumbo-grams: not working\n");
 
@@ -766,6 +766,10 @@ idnsDoSendQueryVC(nsvc *vc)
     if (vc->queue->contentSize() == 0)
         return;
 
+    // if retrying after a TC UDP response, our close handler cb may be pending
+    if (fd_table[vc->conn->fd].closing())
+        return;
+
     MemBuf *mb = vc->queue;
 
     vc->queue = new MemBuf;
@@ -810,9 +814,9 @@ idnsInitVCConnected(const Comm::ConnectionPointer &conn, comm_err_t status, int 
 }
 
 static void
-idnsVCClosed(int fd, void *data)
+idnsVCClosed(const CommCloseCbParams &params)
 {
-    nsvc * vc = (nsvc *)data;
+    nsvc * vc = (nsvc *)params.data;
     delete vc->queue;
     delete vc->msg;
     vc->conn = NULL;
@@ -841,6 +845,10 @@ idnsInitVC(int ns)
         conn->local = Config.Addrs.udp_incoming;
 
     conn->remote = nameservers[ns].S;
+
+    if (conn->remote.IsIPv4()) {
+        conn->local.SetIPv4();
+    }
 
     AsyncCall::Pointer call = commCbCall(78,3, "idnsInitVCConnected", CommConnectCbPtrFun(idnsInitVCConnected, vc));
 
@@ -1212,25 +1220,35 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
 
         debugs(78, 6, HERE << "Merging DNS results " << q->name << " AAAA has " << q->initial_AAAA.count << " RR, A has " << n << " RR");
 
+        if (Config.dns.v4_first) {
+            memcpy( tmp, message->answer, (sizeof(rfc1035_rr)*n) );
+            tmp += n;
+            /* free the RR object without freeing its child strings (they are now taken by the copy above) */
+            safe_free(message->answer);
+        }
+
         memcpy(tmp, q->initial_AAAA.answers, (sizeof(rfc1035_rr)*(q->initial_AAAA.count)) );
         tmp += q->initial_AAAA.count;
         /* free the RR object without freeing its child strings (they are now taken by the copy above) */
         safe_free(q->initial_AAAA.answers);
 
-        memcpy( tmp, message->answer, (sizeof(rfc1035_rr)*n) );
-        /* free the RR object without freeing its child strings (they are now taken by the copy above) */
-        safe_free(message->answer);
+        if (!Config.dns.v4_first) {
+            memcpy( tmp, message->answer, (sizeof(rfc1035_rr)*n) );
+            /* free the RR object without freeing its child strings (they are now taken by the copy above) */
+            safe_free(message->answer);
+        }
 
-        message->answer = result;
-        message->ancount += q->initial_AAAA.count;
         n += q->initial_AAAA.count;
-        q->initial_AAAA.count=0;
+        q->initial_AAAA.count = 0;
+        message->answer = result;
+        message->ancount = n;
     } else if (q->initial_AAAA.count > 0 && n <= 0) {
         /* initial of dual queries was the only result set. */
         debugs(78, 6, HERE << "Merging DNS results " << q->name << " AAAA has " << q->initial_AAAA.count << " RR, A has " << n << " RR");
         rfc1035RRDestroy(&(message->answer), n);
         message->answer = q->initial_AAAA.answers;
         n = q->initial_AAAA.count;
+        message->ancount = n;
     }
     /* else initial results were empty. just use the final set as authoritative */
 

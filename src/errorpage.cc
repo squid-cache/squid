@@ -39,7 +39,9 @@
 #include "auth/UserRequest.h"
 #endif
 #include "SquidTime.h"
+#if USE_SSL
 #include "ssl/ErrorDetailManager.h"
+#endif
 #include "Store.h"
 #include "html_quote.h"
 #include "HttpReply.h"
@@ -64,7 +66,7 @@
  */
 
 
-#ifndef DEFAULT_SQUID_ERROR_DIR
+#if !defined(DEFAULT_SQUID_ERROR_DIR)
 /** Where to look for errors if config path fails.
  \note Please use ./configure --datadir=/path instead of patching
  */
@@ -485,15 +487,15 @@ errorDynamicPageInfoCreate(int id, const char *page_name)
         self_destruct();
     } else if ( /* >= 200 && */ info->page_redirect < 300 && strchr(&(page_name[4]), ':')) {
         // 2xx require a local template file
-        debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " is not valid on '" << page_name << "'");
+        debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " requires a template on '" << page_name << "'");
         self_destruct();
-    } else if (/* >= 300 && */ info->page_redirect <= 399 && !strchr(&(page_name[4]), ':')) {
+    } else if (info->page_redirect >= 300 && info->page_redirect <= 399 && !strchr(&(page_name[4]), ':')) {
         // 3xx require an absolute URL
-        debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " is not valid on '" << page_name << "'");
+        debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " requires a URL on '" << page_name << "'");
         self_destruct();
     } else if (info->page_redirect >= 400 /* && <= 599 */ && strchr(&(page_name[4]), ':')) {
         // 4xx/5xx require a local template file
-        debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " is not valid on '" << page_name << "'");
+        debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " requires a template on '" << page_name << "'");
         self_destruct();
     }
     // else okay.
@@ -856,7 +858,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
     case 'F':
         if (building_deny_info_url) break;
         /* FTP REPLY LINE */
-        if (ftp.request)
+        if (ftp.reply)
             p = ftp.reply;
         else
             p = "nothing";
@@ -892,8 +894,8 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
         break;
 
     case 'I':
-        if (request && request->hier.host[0] != '\0') // if non-empty string
-            mb.Printf("%s", request->hier.host);
+        if (request && request->hier.tcpServer != NULL)
+            p = request->hier.tcpServer->remote.NtoA(ntoabuf,MAX_IPSTRLEN);
         else if (!building_deny_info_url)
             p = "[unknown]";
         break;
@@ -1136,7 +1138,7 @@ ErrorState::BuildHttpReply()
     const char *name = errorPageName(page_id);
     /* no LMT for error pages; error pages expire immediately */
 
-    if (name[0] == '3' || (name[0] != '4' && name[0] != '5' && strchr(name, ':'))) {
+    if (name[0] == '3' || (name[0] != '2' && name[0] != '4' && name[0] != '5' && strchr(name, ':'))) {
         /* Redirection */
         http_status status = HTTP_MOVED_TEMPORARILY;
         // Use configured 3xx reply status if set.

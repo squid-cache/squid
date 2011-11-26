@@ -117,7 +117,7 @@ struct acl_size_t {
 };
 
 struct ushortlist {
-    u_short i;
+    unsigned short i;
     ushortlist *next;
 };
 
@@ -144,7 +144,30 @@ struct relist {
 class CpuAffinityMap;
 class RemovalPolicySettings;
 class external_acl;
-class Store;
+class SwapDir;
+
+/// Used for boolean enabled/disabled options with complex default logic.
+/// Allows Squid to compute the right default after configuration.
+/// Checks that not-yet-defined option values are not used.
+class YesNoNone
+{
+// TODO: generalize to non-boolean option types
+public:
+    YesNoNone(): option(0) {}
+
+    /// returns true iff enabled; asserts if the option has not been configured
+    operator void *() const; // TODO: use a fancy/safer version of the operator
+
+    /// enables or disables the option;
+    void configure(bool beSet);
+
+    /// whether the option was enabled or disabled, by user or Squid
+    bool configured() const { return option != 0; }
+
+private:
+    enum { optUnspecified = -1, optDisabled = 0, optEnabled = 1 };
+    int option; ///< configured value or zero
+};
 
 struct SquidConfig {
 
@@ -155,6 +178,8 @@ struct SquidConfig {
         int highWaterMark;
         int lowWaterMark;
     } Swap;
+
+    YesNoNone memShared; ///< whether the memory cache is shared among workers
     size_t memMaxSize;
 
     struct {
@@ -182,8 +207,8 @@ struct SquidConfig {
         time_t forward;
         time_t peer_connect;
         time_t request;
-        time_t persistent_request;
-        time_t pconn;
+        time_t clientIdlePconn;
+        time_t serverIdlePconn;
         time_t siteSelect;
         time_t deadPeer;
         int icp_query;		/* msec */
@@ -206,14 +231,14 @@ struct SquidConfig {
     acl_size_t *ReplyBodySize;
 
     struct {
-        u_short icp;
+        unsigned short icp;
 #if USE_HTCP
 
-        u_short htcp;
+        unsigned short htcp;
 #endif
 #if SQUID_SNMP
 
-        u_short snmp;
+        unsigned short snmp;
 #endif
     } Port;
 
@@ -322,7 +347,7 @@ struct SquidConfig {
         char *host;
         char *file;
         time_t period;
-        u_short port;
+        unsigned short port;
     } Announce;
 
     struct {
@@ -407,7 +432,6 @@ struct SquidConfig {
         int digest_generation;
 #endif
 
-        int log_ip_on_direct;
         int ie_refresh;
         int vary_ignore_expire;
         int pipeline_prefetch;
@@ -436,6 +460,7 @@ struct SquidConfig {
         int WIN32_IpAddrChangeMonitor;
         int memory_cache_first;
         int memory_cache_disk;
+        int hostStrictVerify;
         int client_dst_passthru;
     } onoff;
 
@@ -497,9 +522,11 @@ struct SquidConfig {
     refresh_t *Refresh;
 
     struct _cacheSwap {
-        RefCount<class Store> *swapDirs;
+        RefCount<SwapDir> *swapDirs;
         int n_allocated;
         int n_configured;
+        /// number of disk processes required to support all cache_dirs
+        int n_strands;
     } cacheSwap;
     /*
      * I'm sick of having to keep doing this ..
@@ -618,6 +645,7 @@ struct SquidConfig {
     int client_ip_max_connections;
 
     struct {
+        int v4_first;       ///< Place IPv4 first in the order of DNS results.
         ssize_t packet_max; ///< maximum size EDNS advertised for DNS replies.
     } dns;
 };
@@ -695,21 +723,6 @@ class HttpHdrExtField
 {
     String name;		/* field-name  from HTTP/1.1 (no column after name) */
     String value;		/* field-value from HTTP/1.1 */
-};
-
-/* http cache control header field */
-
-class HttpHdrCc
-{
-
-public:
-    int mask;
-    int max_age;
-    int s_maxage;
-    int max_stale;
-    int stale_if_error;
-    int min_fresh;
-    String other;
 };
 
 /* per field statistics */
@@ -816,18 +829,18 @@ struct peer {
     struct {
         int version;
         int counts[ICP_END+1];
-        u_short port;
+        unsigned short port;
     } icp;
 
 #if USE_HTCP
     struct {
         double version;
         int counts[2];
-        u_short port;
+        unsigned short port;
     } htcp;
 #endif
 
-    u_short http_port;
+    unsigned short http_port;
     domain_ping *peer_domain;
     domain_type *typelist;
     acl_access *access;

@@ -62,7 +62,7 @@
 #endif
 
 static PSC fwdPeerSelectionCompleteWrapper;
-static PF fwdServerClosedWrapper;
+static CLCB fwdServerClosedWrapper;
 #if USE_SSL
 static PF fwdNegotiateSSLWrapper;
 #endif
@@ -120,7 +120,7 @@ void FwdState::start(Pointer aSelf)
     // Bug 3243: CVE 2009-0801
     // Bypass of browser same-origin access control in intercepted communication
     // To resolve this we must force DIRECT and only to the original client destination.
-    if (Config.onoff.client_dst_passthru && request &&
+    if (Config.onoff.client_dst_passthru && request && !request->flags.redirected &&
             (request->flags.intercepted || request->flags.spoof_client_ip)) {
         Comm::ConnectionPointer p = new Comm::Connection();
         p->remote = clientConn->local;
@@ -145,6 +145,11 @@ FwdState::completed()
     }
 
     flags.forward_completed = 1;
+
+    if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
+        debugs(17, 3, HERE << "entry aborted");
+        return ;
+    }
 
 #if URL_CHECKSUM_DEBUG
 
@@ -285,15 +290,31 @@ FwdState::fwdStart(const Comm::ConnectionPointer &clientConn, StoreEntry *entry,
 void
 FwdState::startConnectionOrFail()
 {
-    debugs(17, 3, HERE << entry->url() );
+    debugs(17, 3, HERE << entry->url());
 
     if (serverDestinations.size() > 0) {
+        // Ditch error page if it was created before.
+        // A new one will be created if there's another problem
+        if (err) {
+            errorStateFree(err);
+            err = NULL;
+        }
+
+        // Update the logging information about this new server connection.
+        // Done here before anything else so the errors get logged for
+        // this server link regardless of what happens when connecting to it.
+        // IF sucessfuly connected this top destination will become the serverConnection().
+        request->hier.note(serverDestinations[0], request->GetHost());
+
         connectStart();
     } else {
-        debugs(17, 3, HERE << entry->url()  );
-        ErrorState *anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, request);
-        anErr->xerrno = errno;
-        fail(anErr);
+        debugs(17, 3, HERE << "Connection failed: " << entry->url());
+        if (!err) {
+            ErrorState *anErr = NULL;
+            anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_INTERNAL_SERVER_ERROR, request);
+            anErr->xerrno = errno;
+            fail(anErr);
+        } // else use actual error from last connection attempt
         self = NULL;       // refcounted
     }
 }
@@ -311,7 +332,12 @@ FwdState::fail(ErrorState * errorState)
     if (!errorState->request)
         errorState->request = HTTPMSGLOCK(request);
 
-    request->detailError(errorState->type, errorState->xerrno);
+#if USE_SSL
+    if (errorState->type == ERR_SECURE_CONNECT_FAIL && errorState->detail)
+        request->detailError(errorState->type, errorState->detail->errorNo());
+    else
+#endif
+        request->detailError(errorState->type, errorState->xerrno);
 }
 
 /**
@@ -345,7 +371,6 @@ FwdState::unregister(int fd)
 void
 FwdState::complete()
 {
-    assert(entry->store_status == STORE_PENDING);
     debugs(17, 3, HERE << entry->url() << "\n\tstatus " << entry->getReply()->sline.status  );
 #if URL_CHECKSUM_DEBUG
 
@@ -355,7 +380,6 @@ FwdState::complete()
     logReplyStatus(n_tries, entry->getReply()->sline.status);
 
     if (reforward()) {
-        assert(serverDestinations.size() > 0);
         debugs(17, 3, HERE << "re-forwarding " << entry->getReply()->sline.status << " " << entry->url());
 
         if (Comm::IsConnOpen(serverConn))
@@ -363,10 +387,10 @@ FwdState::complete()
 
         entry->reset();
 
-        /* the call to reforward() has already dropped the last path off the
-         * selection list. all we have now are the next path(s) to be tried.
-         */
-        connectStart();
+        // drop the last path off the selection list. try the next one.
+        serverDestinations.shift();
+        startConnectionOrFail();
+
     } else {
         if (Comm::IsConnOpen(serverConn))
             debugs(17, 3, HERE << "server FD " << serverConnection()->fd << " not re-forwarding status " << entry->getReply()->sline.status);
@@ -393,10 +417,10 @@ fwdPeerSelectionCompleteWrapper(Comm::ConnectionList * unused, void *data)
 }
 
 static void
-fwdServerClosedWrapper(int fd, void *data)
+fwdServerClosedWrapper(const CommCloseCbParams &params)
 {
-    FwdState *fwd = (FwdState *) data;
-    fwd->serverClosed(fd);
+    FwdState *fwd = (FwdState *)params.data;
+    fwd->serverClosed(params.fd);
 }
 
 #if USE_SSL
@@ -479,13 +503,6 @@ FwdState::checkRetry()
 bool
 FwdState::checkRetriable()
 {
-    /* If there is a request body then Squid can only try once
-     * even if the method is indempotent
-     */
-
-    if (request->body_pipe != NULL)
-        return false;
-
     /* RFC2616 9.1 Safe and Idempotent Methods */
     switch (request->method.id()) {
         /* 9.1.1 Safe Methods */
@@ -523,27 +540,9 @@ FwdState::retryOrBail()
 {
     if (checkRetry()) {
         debugs(17, 3, HERE << "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
-
         serverDestinations.shift(); // last one failed. try another.
-
-        if (serverDestinations.size() > 0) {
-            /* Ditch error page if it was created before.
-             * A new one will be created if there's another problem */
-            if (err) {
-                errorStateFree(err);
-                err = NULL;
-            }
-
-            connectStart();
-            return;
-        }
-        // else bail. no more serverDestinations possible to try.
-
-        // produce cannot-forward error, but only if no more specific one exists
-        if (!err) {
-            ErrorState *anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_INTERNAL_SERVER_ERROR, request);
-            errorAppendEntry(entry, anErr);
-        }
+        startConnectionOrFail();
+        return;
     }
 
     // TODO: should we call completed() here and move doneWithRetries there?
@@ -580,11 +579,17 @@ FwdState::handleUnregisteredServerEnd()
 void
 FwdState::negotiateSSL(int fd)
 {
+    unsigned long ssl_lib_error = SSL_ERROR_NONE;
     SSL *ssl = fd_table[fd].ssl;
     int ret;
 
     if ((ret = SSL_connect(ssl)) <= 0) {
         int ssl_error = SSL_get_error(ssl, ret);
+#ifdef EPROTO
+        int sysErrNo = EPROTO;
+#else
+        int sysErrNo = EACCES;
+#endif
 
         switch (ssl_error) {
 
@@ -596,18 +601,22 @@ FwdState::negotiateSSL(int fd)
             Comm::SetSelect(fd, COMM_SELECT_WRITE, fwdNegotiateSSLWrapper, this, 0);
             return;
 
-        default:
+        case SSL_ERROR_SSL:
+        case SSL_ERROR_SYSCALL:
+            ssl_lib_error = ERR_get_error();
             debugs(81, 1, "fwdNegotiateSSL: Error negotiating SSL connection on FD " << fd <<
-                   ": " << ERR_error_string(ERR_get_error(), NULL) << " (" << ssl_error <<
+                   ": " << ERR_error_string(ssl_lib_error, NULL) << " (" << ssl_error <<
                    "/" << ret << "/" << errno << ")");
+
+            // store/report errno when ssl_error is SSL_ERROR_SYSCALL, ssl_lib_error is 0, and ret is -1
+            if (ssl_error == SSL_ERROR_SYSCALL && ret == -1 && ssl_lib_error == 0)
+                sysErrNo = errno;
+
+            // falling through to complete error handling
+
+        default:
             ErrorState *const anErr = makeConnectingError(ERR_SECURE_CONNECT_FAIL);
-#ifdef EPROTO
-
-            anErr->xerrno = EPROTO;
-#else
-
-            anErr->xerrno = EACCES;
-#endif
+            anErr->xerrno = sysErrNo;
 
             Ssl::ErrorDetail *errFromFailure = (Ssl::ErrorDetail *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail);
             if (errFromFailure != NULL) {
@@ -615,7 +624,16 @@ FwdState::negotiateSSL(int fd)
                 // and will be released when ssl object destroyed.
                 // Copy errFromFailure to a new Ssl::ErrorDetail object
                 anErr->detail = new Ssl::ErrorDetail(*errFromFailure);
+            } else {
+                // clientCert can be be NULL
+                X509 *client_cert = SSL_get_peer_certificate(ssl);
+                anErr->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, client_cert);
+                if (client_cert)
+                    X509_free(client_cert);
             }
+
+            if (ssl_lib_error != SSL_ERROR_NONE)
+                anErr->detail->setLibError(ssl_lib_error);
 
             fail(anErr);
 
@@ -728,19 +746,12 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
 
     serverConn = conn;
 
-#if REDUNDANT_NOW
-    if (Config.onoff.log_ip_on_direct && serverConnection()->peerType == HIER_DIRECT)
-        updateHierarchyInfo();
-#endif
-
     debugs(17, 3, HERE << serverConnection() << ": '" << entry->url() << "'" );
 
     comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
 
     if (serverConnection()->getPeer())
         peerConnectSucceded(serverConnection()->getPeer());
-
-    updateHierarchyInfo();
 
 #if USE_SSL
     if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
@@ -760,9 +771,6 @@ FwdState::connectTimeout(int fd)
     debugs(17, 2, "fwdConnectTimeout: FD " << fd << ": '" << entry->url() << "'" );
     assert(serverDestinations[0] != NULL);
     assert(fd == serverDestinations[0]->fd);
-
-    if (Config.onoff.log_ip_on_direct && serverDestinations[0]->peerType == HIER_DIRECT)
-        updateHierarchyInfo();
 
     if (entry->isEmpty()) {
         ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_GATEWAY_TIMEOUT, request);
@@ -835,7 +843,6 @@ FwdState::connectStart()
             request->flags.pinned = 1;
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = 1;
-            updateHierarchyInfo();
             dispatch();
             return;
         }
@@ -856,7 +863,7 @@ FwdState::connectStart()
     Comm::ConnectionPointer temp = fwdPconnPool->pop(serverDestinations[0], host, checkRetriable());
 
     // if we found an open persistent connection to use. use it.
-    if (temp != NULL && Comm::IsConnOpen(temp)) {
+    if (Comm::IsConnOpen(temp)) {
         serverConn = temp;
         debugs(17, 3, HERE << "reusing pconn " << serverConnection());
         n_tries++;
@@ -864,7 +871,6 @@ FwdState::connectStart()
         if (!serverConnection()->getPeer())
             origin_tries++;
 
-        updateHierarchyInfo();
         comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
 
         /* Update server side TOS and Netfilter mark on the connection. */
@@ -1032,6 +1038,12 @@ FwdState::reforward()
 {
     StoreEntry *e = entry;
     http_status s;
+
+    if (EBIT_TEST(e->flags, ENTRY_ABORTED)) {
+        debugs(17, 3, HERE << "entry aborted");
+        return 0;
+    }
+
     assert(e->store_status == STORE_PENDING);
     assert(e->mem_obj);
 #if URL_CHECKSUM_DEBUG
@@ -1055,9 +1067,8 @@ FwdState::reforward()
     if (request->bodyNibbled())
         return 0;
 
-    serverDestinations.shift();
-
-    if (serverDestinations.size() == 0) {
+    if (serverDestinations.size() <= 1) {
+        // NP: <= 1 since total count includes the recently failed one.
         debugs(17, 3, HERE << "No alternative forwarding paths left");
         return 0;
     }
@@ -1178,44 +1189,6 @@ FwdState::logReplyStatus(int tries, http_status status)
     FwdReplyCodes[tries][status]++;
 }
 
-/** From Comment #5 by Henrik Nordstrom made at
-http://www.squid-cache.org/bugs/show_bug.cgi?id=2391 on 2008-09-19
-
-updateHierarchyInfo should be called each time a new path has been
-selected or when more information about the path is available (i.e. the
-server IP), and when it's called it needs to be given reasonable
-arguments describing the now selected path..
-
-It does not matter from a functional perspective if it gets called a few
-times more than what is really needed, but calling it too often may
-obviously hurt performance.
-*/
-// updates HierarchyLogEntry, guessing nextHop and its format
-void
-FwdState::updateHierarchyInfo()
-{
-    assert(request);
-
-    assert(serverDestinations.size() > 0);
-
-    char nextHop[256];
-
-    if (serverConnection()->getPeer()) {
-        // went to peer, log peer host name
-        snprintf(nextHop,256,"%s", serverConnection()->getPeer()->name);
-    } else {
-        // went DIRECT, must honor log_ip_on_direct
-        if (!Config.onoff.log_ip_on_direct)
-            snprintf(nextHop,256,"%s",request->GetHost()); // domain name
-        else
-            serverConnection()->remote.NtoA(nextHop, 256);
-    }
-
-    assert(nextHop[0]);
-    hierarchyNote(&request->hier, serverConnection()->peerType, nextHop);
-}
-
-
 /**** PRIVATE NON-MEMBER FUNCTIONS ********************************************/
 
 /*
@@ -1253,8 +1226,12 @@ aclMapNfmark(acl_nfmark * head, ACLChecklist * ch)
 void
 getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
 {
-    /* skip if an outgoing address is already set. */
+    // skip if an outgoing address is already set.
     if (!conn->local.IsAnyAddr()) return;
+
+    // ensure that at minimum the wildcard local matches remote protocol
+    if (conn->remote.IsIPv4())
+        conn->local.SetIPv4();
 
     // maybe use TPROXY client address
     if (request && request->flags.spoof_client_ip) {

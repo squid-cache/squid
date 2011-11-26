@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "SquidTime.h"
+#include "SwapDir.h"
 #include "fde.h"
 #include "xusleep.h"
 
@@ -156,8 +157,7 @@ unlinkdClose(void)
         unlinkd_wfd = -1;
 
         unlinkd_rfd = -1;
-    } else
-        debugs(2, 0, "unlinkdClose: WARNING: unlinkd_wfd is " << unlinkd_wfd);
+    }
 
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
@@ -188,9 +188,25 @@ unlinkdClose(void)
 
 #endif
 
+bool
+unlinkdNeeded(void)
+{
+    // we should start unlinkd if there are any cache_dirs using it
+    for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+        const RefCount<SwapDir> sd = Config.cacheSwap.swapDirs[i];
+        if (sd->unlinkdUseful())
+            return true;
+    }
+
+    return false;
+}
+
 void
 unlinkdInit(void)
 {
+    if (unlinkd_wfd >= 0)
+        return; // unlinkd already started
+
     const char *args[2];
     Ip::Address localhost;
 
@@ -199,7 +215,7 @@ unlinkdInit(void)
     localhost.SetLocalhost();
 
     pid = ipcCreate(
-#if USE_POLL && defined(_SQUID_OSF_)
+#if USE_POLL && _SQUID_OSF_
               /* pipes and poll() don't get along on DUNIX -DW */
               IPC_STREAM,
 #elif _SQUID_MSWIN_

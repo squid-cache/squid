@@ -87,11 +87,9 @@ public:
     virtual  HttpRequest *originalRequest();
 
 #if USE_ADAPTATION
-    void adaptationAclCheckDone(Adaptation::ServiceGroupPointer group);
-    static void adaptationAclCheckDoneWrapper(Adaptation::ServiceGroupPointer group, void *data);
-
-    // ICAPInitiator: start an ICAP transaction and receive adapted headers.
+    // Adaptation::Initiator API: start an ICAP transaction and receive adapted headers.
     virtual void noteAdaptationAnswer(const Adaptation::Answer &answer);
+    virtual void noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer group);
 
     // BodyProducer: provide virgin response body to ICAP.
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer );
@@ -102,14 +100,7 @@ public:
 
 //AsyncJob virtual methods
     virtual void swanSong();
-    virtual bool doneAll() const {
-        return
-#if USE_ADAPTATION
-            Adaptation::Initiator::doneAll() &&
-            BodyProducer::doneAll() &&
-#endif
-            BodyConsumer::doneAll() && false;
-    }
+    virtual bool doneAll() const;
 
 public: // should be protected
     void serverComplete();     /**< call when no server communication is expected */
@@ -156,6 +147,11 @@ protected:
     void handleAdaptationCompleted();
     void handleAdaptationBlocked(const Adaptation::Answer &answer);
     void handleAdaptationAborted(bool bypassable = false);
+
+    /// called by StoreEntry when it has more buffer space available
+    void resumeBodyStorage();
+    /// called when the entire adapted response body is consumed
+    void endAdaptedBodyConsumption();
 #endif
 
 protected:
@@ -198,7 +194,6 @@ protected:
     bool receivedWholeRequestBody; ///< handleRequestBodyProductionEnded called
 
 private:
-    void quitIfAllDone();            /**< successful termination */
     void sendBodyIsTooLargeError();
     void maybePurgeOthers();
 

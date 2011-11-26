@@ -56,6 +56,7 @@
 #endif
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
+#include "DiskIO/DiskIOModule.h"
 #include "eui/Config.h"
 #if USE_SQUID_ESI
 #include "esi/Parser.h"
@@ -97,6 +98,9 @@
 static void parse_adaptation_service_set_type();
 static void parse_adaptation_service_chain_type();
 static void parse_adaptation_access_type();
+static void parse_adaptation_meta_type(Adaptation::Config::MetaHeaders *);
+static void dump_adaptation_meta_type(StoreEntry *, const char *, Adaptation::Config::MetaHeaders &);
+static void free_adaptation_meta_type(Adaptation::Config::MetaHeaders *);
 #endif
 
 #if ICAP_CLIENT
@@ -147,7 +151,7 @@ static void configDoConfigure(void);
 static void parse_refreshpattern(refresh_t **);
 static uint64_t parseTimeUnits(const char *unit,  bool allowMsec);
 static void parseTimeLine(time_msec_t * tptr, const char *units, bool allowMsec);
-static void parse_u_short(u_short * var);
+static void parse_u_short(unsigned short * var);
 static void parse_string(char **);
 static void default_all(void);
 static void defaults_if_none(void);
@@ -599,6 +603,12 @@ configDoConfigure(void)
         /* Memory-only cache probably in effect. */
         /* turn off the cache rebuild delays... */
         StoreController::store_dirs_rebuilding = 0;
+    } else if (InDaemonMode()) { // no diskers in non-daemon mode
+        for (int i = 0; i < Config.cacheSwap.n_configured; ++i) {
+            const RefCount<SwapDir> sd = Config.cacheSwap.swapDirs[i];
+            if (sd->needsDiskStrand())
+                sd->disker = Config.workers + (++Config.cacheSwap.n_strands);
+        }
     }
 
     if (Debug::rotateNumber < 0) {
@@ -614,7 +624,7 @@ configDoConfigure(void)
     if (0 == Store::Root().maxSize())
         /* people might want a zero-sized cache on purpose */
         (void) 0;
-    else if (Store::Root().maxSize() < (Config.memMaxSize >> 10))
+    else if (Store::Root().maxSize() < Config.memMaxSize)
         /* This is bogus. folk with NULL caches will want this */
         debugs(3, 0, "WARNING cache_mem is larger than total disk cache space!");
 
@@ -902,7 +912,7 @@ configDoConfigure(void)
                                        s->cafile, s->capath, s->crlfile, s->dhfile,
                                        s->sslContextSessionId));
 
-            Ssl::readCertAndPrivateKeyFromFiles(s->signingCert, s->signPkey, s->cert, s->key);
+            Ssl::readCertChainAndPrivateKeyFromFiles(s->signingCert, s->signPkey, s->certsToChain, s->cert, s->key);
         }
     }
 
@@ -1921,18 +1931,6 @@ find_fstype(char *type)
 static void
 parse_cachedir(SquidConfig::_cacheSwap * swap)
 {
-    // The workers option must preceed cache_dir for the IamWorkerProcess check
-    // below to work. TODO: Redo IamWorkerProcess to work w/o Config and remove
-    if (KidIdentifier > 1 && Config.workers == 1) {
-        debugs(3, DBG_CRITICAL,
-               "FATAL: cache_dir found before the workers option. Reorder.");
-        self_destruct();
-    }
-
-    // Among all processes, only workers may need and can handle cache_dir.
-    if (!IamWorkerProcess())
-        return;
-
     char *type_str;
     char *path_str;
     RefCount<SwapDir> sd;
@@ -1965,13 +1963,13 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
 
             sd = dynamic_cast<SwapDir *>(swap->swapDirs[i].getRaw());
 
-            if (sd->type() != StoreFileSystem::FileSystems().items[fs]->type()) {
+            if (strcmp(sd->type(), StoreFileSystem::FileSystems().items[fs]->type()) != 0) {
                 debugs(3, 0, "ERROR: Can't change type of existing cache_dir " <<
                        sd->type() << " " << sd->path << " to " << type_str << ". Restart required");
                 return;
             }
 
-            sd->reconfigure (i, path_str);
+            sd->reconfigure();
 
             update_maxobjsize();
 
@@ -2090,7 +2088,7 @@ isUnsignedNumeric(const char *str, size_t len)
  \param proto	'tcp' or 'udp' for protocol
  \returns       Port the named service is supposed to be listening on.
  */
-static u_short
+static unsigned short
 GetService(const char *proto)
 {
     struct servent *port = NULL;
@@ -2104,7 +2102,7 @@ GetService(const char *proto)
     if ( !isUnsignedNumeric(token, strlen(token)) )
         port = getservbyname(token, proto);
     if (port != NULL) {
-        return ntohs((u_short)port->s_port);
+        return ntohs((unsigned short)port->s_port);
     }
     /** Or a numeric translation of the config text. */
     return xatos(token);
@@ -2114,7 +2112,7 @@ GetService(const char *proto)
  \returns       Port the named TCP service is supposed to be listening on.
  \copydoc GetService(const char *proto)
  */
-inline u_short
+inline unsigned short
 GetTcpService(void)
 {
     return GetService("tcp");
@@ -2124,7 +2122,7 @@ GetTcpService(void)
  \returns       Port the named UDP service is supposed to be listening on.
  \copydoc GetService(const char *proto)
  */
-inline u_short
+inline unsigned short
 GetUdpService(void)
 {
     return GetService("udp");
@@ -3195,25 +3193,25 @@ free_b_int64_t(int64_t * var)
 #define free_kb_int64_t free_b_int64_t
 
 static void
-dump_u_short(StoreEntry * entry, const char *name, u_short var)
+dump_u_short(StoreEntry * entry, const char *name, unsigned short var)
 {
     storeAppendPrintf(entry, "%s %d\n", name, var);
 }
 
 static void
-free_u_short(u_short * u)
+free_u_short(unsigned short * u)
 {
     *u = 0;
 }
 
 static void
-parse_u_short(u_short * var)
+parse_u_short(unsigned short * var)
 {
     ConfigParser::ParseUShort(var);
 }
 
 void
-ConfigParser::ParseUShort(u_short *var)
+ConfigParser::ParseUShort(unsigned short *var)
 {
     *var = GetShort();
 }
@@ -3356,6 +3354,40 @@ dump_removalpolicy(StoreEntry * entry, const char *name, RemovalPolicySettings *
     }
 
     storeAppendPrintf(entry, "\n");
+}
+
+void
+YesNoNone::configure(bool beSet)
+{
+    option = beSet ? +1 : -1;
+}
+
+YesNoNone::operator void*() const
+{
+    assert(option != 0); // must call configure() first
+    return option > 0 ? (void*)this : NULL;
+}
+
+
+inline void
+free_YesNoNone(YesNoNone *)
+{
+    // do nothing: no explicit cleanup is required
+}
+
+static void
+parse_YesNoNone(YesNoNone *option)
+{
+    int value = 0;
+    parse_onoff(&value);
+    option->configure(value > 0);
+}
+
+static void
+dump_YesNoNone(StoreEntry * entry, const char *name, YesNoNone &option)
+{
+    if (option.configured())
+        dump_onoff(entry, name, option ? 1 : 0);
 }
 
 static void
@@ -4344,6 +4376,23 @@ parse_adaptation_access_type()
     Adaptation::Config::ParseAccess(LegacyParser);
 }
 
+static void
+parse_adaptation_meta_type(Adaptation::Config::MetaHeaders *)
+{
+    Adaptation::Config::ParseMetaHeader(LegacyParser);
+}
+
+static void
+dump_adaptation_meta_type(StoreEntry *entry, const char *name, Adaptation::Config::MetaHeaders &)
+{
+    Adaptation::Config::DumpMetaHeader(entry, name);
+}
+
+static void
+free_adaptation_meta_type(Adaptation::Config::MetaHeaders *)
+{
+    // Nothing to do, it is released inside Adaptation::Config::freeService()
+}
 #endif /* USE_ADAPTATION */
 
 

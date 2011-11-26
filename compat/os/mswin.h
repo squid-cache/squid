@@ -172,7 +172,6 @@ extern int WIN32_ftruncate(int fd, off_t size);
 #define SIGUSR1 30	/* user defined signal 1 */
 #define SIGUSR2 31	/* user defined signal 2 */
 
-typedef unsigned short int u_short;
 #if _SQUID_MINGW_
 typedef unsigned char boolean;
 typedef unsigned char u_char;

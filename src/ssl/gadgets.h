@@ -39,6 +39,9 @@ namespace Ssl
 CtoCpp1(X509_free, X509 *)
 typedef TidyPointer<X509, X509_free_cpp> X509_Pointer;
 
+CtoCpp1(sk_X509_free, STACK_OF(X509) *)
+typedef TidyPointer<STACK_OF(X509), sk_X509_free_cpp> X509_STACK_Pointer;
+
 CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
 typedef TidyPointer<EVP_PKEY, EVP_PKEY_free_cpp> EVP_PKEY_Pointer;
 
@@ -115,6 +118,12 @@ X509 * signRequest(X509_REQ_Pointer const & request, X509_Pointer const & x509, 
  * variables.
  */
 bool generateSslCertificateAndPrivateKey(char const *host, X509_Pointer const & signedX509, EVP_PKEY_Pointer const & signedPkey, X509_Pointer & cert, EVP_PKEY_Pointer & pkey, BIGNUM const* serial);
+
+/**
+ \ingroup SslCrtdSslAPI
+ * Read private key from file. Make sure that this is not encrypted file.
+ */
+EVP_PKEY * readSslPrivateKey(char const * keyFilename);
 
 /**
  \ingroup SslCrtdSslAPI

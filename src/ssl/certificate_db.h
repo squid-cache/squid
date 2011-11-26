@@ -16,21 +16,42 @@
 
 namespace Ssl
 {
-/// Cross platform file locker.
-class FileLocker
+/// maintains an exclusive blocking file-based lock
+class Lock
 {
 public:
-    /// Lock file
-    FileLocker(std::string const & aFilename);
-    /// Unlock file
-    ~FileLocker();
+    explicit Lock(std::string const &filename); ///<  creates an unlocked lock
+    ~Lock(); ///<  releases the lock if it is locked
+    void lock(); ///<  locks the lock, may block
+    void unlock(); ///<  unlocks locked lock or throws
+    bool locked() const; ///<  whether our lock is locked
+    const char *name() const { return filename.c_str(); }
 private:
+    std::string filename;
 #if _SQUID_MSWIN_
     HANDLE hFile; ///< Windows file handle.
 #else
     int fd; ///< Linux file descriptor.
 #endif
 };
+
+/// an exception-safe way to obtain and release a lock
+class Locker
+{
+public:
+    /// locks the lock if the lock was unlocked
+    Locker(Lock &lock, const char  *aFileName, int lineNo);
+    /// unlocks the lock if it was locked by us
+    ~Locker();
+private:
+    bool weLocked; ///<  whether we locked the lock
+    Lock &lock; ///<  the lock we are operating on
+    const std::string fileName; ///<  where the lock was needed
+    const int lineNo; ///<  where the lock was needed
+};
+
+/// convenience macro to pass source code location to Locker and others
+#define Here __FILE__, __LINE__
 
 /**
  * Database class for storing SSL certificates and their private keys.
@@ -98,6 +119,7 @@ private:
     /// Only find certificate in current db and return it.
     bool pure_find(std::string const & host_name, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey);
 
+    void deleteRow(const char **row, int rowIndex); ///< Delete a row from TXT_DB
     bool deleteInvalidCertificate(); ///< Delete invalid certificate.
     bool deleteOldestCertificate(); ///< Delete oldest certificate.
     bool deleteByHostname(std::string const & host); ///< Delete using host name.
@@ -149,6 +171,8 @@ private:
     TXT_DB_Pointer db; ///< Database with certificates info.
     const size_t max_db_size; ///< Max size of db.
     const size_t fs_block_size; ///< File system block size.
+    mutable Lock dbLock;  ///< protects the database file
+    mutable Lock dbSerialLock; ///< protects the serial number file
 
     bool enabled_disk_store; ///< The storage on the disk is enabled.
 };

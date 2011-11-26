@@ -36,12 +36,28 @@
 
 void
 storeRebuildProgress(int sd_index, int total, int sofar)
-{
-    fatal ("Not implemented");
-}
+{}
 
 void
 
 storeRebuildComplete(struct _store_rebuild_data *dc)
 {}
 
+bool
+storeRebuildLoadEntry(int, int, MemBuf&, _store_rebuild_data&)
+{
+    return false;
+}
+
+bool
+storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key,
+                      struct _store_rebuild_data &counts)
+{
+    return false;
+}
+
+bool
+storeRebuildParseEntry(MemBuf &, StoreEntry &, cache_key *, struct _store_rebuild_data &, uint64_t)
+{
+    return false;
+}

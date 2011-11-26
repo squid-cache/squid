@@ -307,18 +307,9 @@ int
 
 rusage_maxrss(struct rusage *r)
 {
-#if defined(_SQUID_SGI_) && _ABIAPI
+#if _SQUID_SGI_ && _ABIAPI
     return r->ru_pad[0];
-#elif defined(_SQUID_SGI_)
-
-    return r->ru_maxrss;
-#elif defined(_SQUID_OSF_)
-
-    return r->ru_maxrss;
-#elif defined(_SQUID_AIX_)
-
-    return r->ru_maxrss;
-#elif defined(BSD4_4)
+#elif _SQUID_SGI_|| _SQUID_OSF_ || _SQUID_AIX_ || defined(BSD4_4)
 
     return r->ru_maxrss;
 #elif defined(HAVE_GETPAGESIZE) && HAVE_GETPAGESIZE != 0
@@ -337,7 +328,7 @@ int
 
 rusage_pagefaults(struct rusage *r)
 {
-#if defined(_SQUID_SGI_) && _ABIAPI
+#if _SQUID_SGI_ && _ABIAPI
     return r->ru_pad[5];
 #else
 
@@ -383,7 +374,7 @@ death(int sig)
     }
 
 #endif /* _SQUID_HPUX_ */
-#if defined(_SQUID_SOLARIS_) && HAVE_LIBOPCOM_STACK
+#if _SQUID_SOLARIS_ && HAVE_LIBOPCOM_STACK
     {				/* get ftp://opcom.sun.ca/pub/tars/opcom_stack.tar.gz and */
         extern void opcom_stack_trace(void);	/* link with -lopcom_stack */
         fflush(debug_log);
@@ -857,7 +848,13 @@ IamWorkerProcess()
     if (opt_no_daemon || Config.workers == 0)
         return true;
 
-    return 0 < KidIdentifier && KidIdentifier <= Config.workers;
+    return TheProcessKind == pkWorker;
+}
+
+bool
+IamDiskProcess()
+{
+    return TheProcessKind == pkDisker;
 }
 
 bool
@@ -869,13 +866,13 @@ InDaemonMode()
 bool
 UsingSmp()
 {
-    return !opt_no_daemon && Config.workers > 1;
+    return InDaemonMode() && NumberOfKids() > 1;
 }
 
 bool
 IamCoordinatorProcess()
 {
-    return UsingSmp() && KidIdentifier == Config.workers + 1;
+    return TheProcessKind == pkCoordinator;
 }
 
 bool
@@ -887,7 +884,7 @@ IamPrimaryProcess()
 
     // when there is a master and worker process, the master delegates
     // primary functions to its only kid
-    if (Config.workers == 1)
+    if (NumberOfKids() == 1)
         return IamWorkerProcess();
 
     // in SMP mode, multiple kids delegate primary functions to the coordinator
@@ -901,11 +898,27 @@ NumberOfKids()
     if (!InDaemonMode())
         return 0;
 
-    // workers + the coordinator process
-    if (UsingSmp())
-        return Config.workers + 1;
+    // XXX: detect and abort when called before workers/cache_dirs are parsed
 
-    return Config.workers;
+    const int rockDirs = Config.cacheSwap.n_strands;
+
+    const bool needCoord = Config.workers > 1 || rockDirs > 0;
+    return (needCoord ? 1 : 0) + Config.workers + rockDirs;
+}
+
+String
+ProcessRoles()
+{
+    String roles = "";
+    if (IamMasterProcess())
+        roles.append(" master");
+    if (IamCoordinatorProcess())
+        roles.append(" coordinator");
+    if (IamWorkerProcess())
+        roles.append(" worker");
+    if (IamDiskProcess())
+        roles.append(" disker");
+    return roles;
 }
 
 void
@@ -1086,7 +1099,7 @@ setSystemLimits(void)
 
 #if HAVE_SETRLIMIT && defined(RLIMIT_VMEM)
     if (getrlimit(RLIMIT_VMEM, &rl) < 0) {
-        debugs(50, 0, "getrlimit: RLIMIT_VMEM: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "getrlimit: RLIMIT_VMEM: " << xstrerror());
     } else if (rl.rlim_max > rl.rlim_cur) {
         rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 
@@ -1109,7 +1122,7 @@ squid_signal(int sig, SIGHDLR * func, int flags)
     sigemptyset(&sa.sa_mask);
 
     if (sigaction(sig, &sa, NULL) < 0)
-        debugs(50, 0, "sigaction: sig=" << sig << " func=" << func << ": " << xstrerror());
+        debugs(50, DBG_CRITICAL, "sigaction: sig=" << sig << " func=" << func << ": " << xstrerror());
 
 #else
 #if _SQUID_MSWIN_
@@ -1284,7 +1297,7 @@ getMyPort(void)
     if (Config.Sockaddr.http) {
         // skip any special mode ports
         http_port_list *p = Config.Sockaddr.http;
-        while (p->intercepted || p->accel || p->spoof_client_ip)
+        while (p && (p->intercepted || p->accel || p->spoof_client_ip))
             p = p->next;
         if (p)
             return p->s.GetPort();
@@ -1397,7 +1410,7 @@ restoreCapabilities(int keep)
         }
         cap_free(caps);
     }
-#elif defined(_SQUID_LINUX_)
+#elif _SQUID_LINUX_
     Ip::Interceptor.StopTransparency("Missing needed capability support.");
 #endif /* HAVE_SYS_CAPABILITY_H */
 }

@@ -17,6 +17,7 @@ bool StoreEntry::checkDeferRead(int fd) const STUB_RETVAL(false)
 const char *StoreEntry::getMD5Text() const STUB_RETVAL(NULL)
 StoreEntry::StoreEntry() STUB
 StoreEntry::StoreEntry(const char *url, const char *log_url) STUB
+StoreEntry::~StoreEntry() STUB
 HttpReply const *StoreEntry::getReply() const STUB_RETVAL(NULL)
 void StoreEntry::write(StoreIOBuffer) STUB
 bool StoreEntry::isAccepting() const STUB_RETVAL(false)
@@ -24,7 +25,7 @@ size_t StoreEntry::bytesWanted(Range<size_t> const) const STUB_RETVAL(0)
 void StoreEntry::complete() STUB
 store_client_t StoreEntry::storeClientType() const STUB_RETVAL(STORE_NON_CLIENT)
 char const *StoreEntry::getSerialisedMetaData() STUB_RETVAL(NULL)
-void StoreEntry::replaceHttpReply(HttpReply *) STUB
+void StoreEntry::replaceHttpReply(HttpReply *, bool andStartWriting) STUB
 bool StoreEntry::swapoutPossible() STUB_RETVAL(false)
 void StoreEntry::trimMemory() STUB
 void StoreEntry::abort() STUB
@@ -41,14 +42,15 @@ void StoreEntry::invokeHandlers() STUB
 void StoreEntry::purgeMem() STUB
 void StoreEntry::swapOut() STUB
 bool StoreEntry::swapOutAble() const STUB_RETVAL(false)
-void StoreEntry::swapOutFileClose() STUB
+void StoreEntry::swapOutFileClose(int how) STUB
 const char *StoreEntry::url() const STUB_RETVAL(NULL)
 int StoreEntry::checkCachable() STUB_RETVAL(0)
 int StoreEntry::checkNegativeHit() const STUB_RETVAL(0)
 int StoreEntry::locked() const STUB_RETVAL(0)
 int StoreEntry::validToSend() const STUB_RETVAL(0)
-int StoreEntry::keepInMemory() const STUB_RETVAL(0)
+bool StoreEntry::memoryCachable() const STUB_RETVAL(false)
 void StoreEntry::createMemObject(const char *, const char *) STUB
+void StoreEntry::hideMemObject() STUB
 void StoreEntry::dump(int debug_lvl) const STUB
 void StoreEntry::hashDelete() STUB
 void StoreEntry::hashInsert(const cache_key *) STUB
@@ -64,7 +66,7 @@ void StoreEntry::setNoDelay (bool const) STUB
 bool StoreEntry::modifiedSince(HttpRequest * request) const STUB_RETVAL(false)
 bool StoreEntry::hasIfMatchEtag(const HttpRequest &request) const STUB_RETVAL(false)
 bool StoreEntry::hasIfNoneMatchEtag(const HttpRequest &request) const STUB_RETVAL(false)
-RefCount<Store> StoreEntry::store() const STUB_RETVAL(StorePointer())
+RefCount<SwapDir> StoreEntry::store() const STUB_RETVAL(NULL)
 size_t StoreEntry::inUseCount() STUB_RETVAL(0)
 void StoreEntry::getPublicByRequestMethod(StoreClient * aClient, HttpRequest * request, const HttpRequestMethod& method) STUB
 void StoreEntry::getPublicByRequest(StoreClient * aClient, HttpRequest * request) STUB
@@ -102,6 +104,12 @@ void Store::create() STUB
 void Store::diskFull() STUB
 void Store::sync() STUB
 void Store::unlink(StoreEntry &) STUB
+
+std::ostream &operator <<(std::ostream &os, const StoreEntry &)
+{
+    STUB
+    return os;
+}
 
 SQUIDCEXTERN size_t storeEntryInUse() STUB_RETVAL(0)
 SQUIDCEXTERN const char *storeEntryFlags(const StoreEntry *) STUB_RETVAL(NULL)

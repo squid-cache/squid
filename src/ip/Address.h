@@ -127,16 +127,14 @@ public:
     /* methods */
 
     /** Test whether content can be used as an IPv4 address
-     \retval true  if content was received as an IPv4 address
      \retval true  if content was received as an IPv4-Mapped address
      \retval false if content was received as a non-mapped IPv6 native address.
      */
     bool IsIPv4() const;
 
     /** Test whether content can be used as an IPv6 address.
-     \retval true  if --enable-ipv6 has been compiled.
-     \retval false if --disable-ipv6 has been compiled.
-     \retval false if --with-ipv6-split-stack has been compiled AND content is IPv4-mapped.
+     \retval true  if content is a non IPv4-mapped address.
+     \retval false if content is IPv4-mapped.
      */
     bool IsIPv6() const;
 
@@ -190,7 +188,7 @@ public:
      \retval 0 Port is unset or an error occured.
      \retval n Port associated with this address in host native -endian.
      */
-    u_short GetPort() const;
+    unsigned short GetPort() const;
 
     /** Set the Port value for an address.
      *  Replaces any previously existing Port value.
@@ -198,7 +196,7 @@ public:
      \retval 0 Port is unset or an error occured.
      \retval n Port associated with this address in host native -endian.
      */
-    u_short SetPort(u_short port);
+    unsigned short SetPort(unsigned short port);
 
     /// Set object to contain the specific IP case ANY_ADDR (format-neutral).
     /// see IsAnyAddr() for more detail.

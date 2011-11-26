@@ -26,11 +26,9 @@ Comm::Connection::Connection() :
 static int64_t lost_conn = 0;
 Comm::Connection::~Connection()
 {
-    assert(fd < 0); // These should never occur now.
-
     if (fd >= 0) {
-        debugs(5, 0, "NOTE: Orphan Comm::Connection: " << *this);
-        debugs(5, 0, "NOTE: Orphaned Comm::Connections: " << ++lost_conn);
+        debugs(5, 0, "BUG: Orphan Comm::Connection: " << *this);
+        debugs(5, 0, "NOTE: " << ++lost_conn << " Orphans since last started.");
         close();
     }
 

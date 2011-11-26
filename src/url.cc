@@ -250,8 +250,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         *dst = '\0';
 
         /* Then its :// */
-        /* (XXX yah, I'm not checking we've got enough data left before checking the array..) */
-        if (*src != ':' || *(src + 1) != '/' || *(src + 2) != '/')
+        if ((i+3) > l || *src != ':' || *(src + 1) != '/' || *(src + 2) != '/')
             return NULL;
         i += 3;
         src += 3;
@@ -328,7 +327,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
 
         // Bug 3183 sanity check: If scheme is present, host must be too.
         if (protocol != AnyP::PROTO_NONE && (host == NULL || *host == '\0')) {
-            debugs(23, DBG_IMPORTANT, "SECURITY WARNING: Missing hostname in URL '" << url << "'. see access.log for details.");
+            debugs(23, DBG_IMPORTANT, "SECURITY ALERT: Missing hostname in URL '" << url << "'. see access.log for details.");
             return NULL;
         }
 
@@ -447,7 +446,7 @@ urlParseFinish(const HttpRequestMethod& method,
 
     request->SetHost(host);
     xstrncpy(request->login, login, MAX_LOGIN_SZ);
-    request->port = (u_short) port;
+    request->port = (unsigned short) port;
     return request;
 }
 

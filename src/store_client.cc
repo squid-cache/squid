@@ -262,6 +262,11 @@ store_client::copy(StoreEntry * anEntry,
     copying = false;
 
     storeClientCopy2(entry, this);
+
+#if USE_ADAPTATION
+    if (entry)
+        entry->kickProducer();
+#endif
 }
 
 /*
@@ -591,9 +596,14 @@ store_client::unpackHeader(char const *buf, ssize_t len)
 
     storeSwapTLVFree(tlv_list);
 
+    assert(swap_hdr_sz >= 0);
+    assert(entry->swap_file_sz > 0);
+    assert(entry->swap_file_sz >= static_cast<uint64_t>(swap_hdr_sz));
     entry->mem_obj->swap_hdr_sz = swap_hdr_sz;
     entry->mem_obj->object_sz = entry->swap_file_sz - swap_hdr_sz;
-
+    debugs(90, 5, "store_client::unpackHeader: swap_file_sz=" <<
+           entry->swap_file_sz << "( " << swap_hdr_sz << " + " <<
+           entry->mem_obj->object_sz << ")");
 }
 
 void
@@ -696,7 +706,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
         e->swapOut();
 
     if (sc->swapin_sio != NULL) {
-        storeClose(sc->swapin_sio);
+        storeClose(sc->swapin_sio, StoreIOState::readerDone);
         sc->swapin_sio = NULL;
         statCounter.swap.ins++;
     }
@@ -720,6 +730,10 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
         CheckQuickAbort(e);
     else
         mem->kickReads();
+
+#if USE_ADAPTATION
+    e->kickProducer();
+#endif
 
     return 1;
 }

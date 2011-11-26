@@ -190,6 +190,7 @@ struct _external_acl_format {
 #endif
         EXT_ACL_EXT_LOG,
         EXT_ACL_TAG,
+        EXT_ACL_PERCENT,
         EXT_ACL_END
     } type;
     external_acl_format *next;
@@ -471,6 +472,8 @@ parse_externalAclHelper(external_acl ** list)
             format->type = _external_acl_format::EXT_ACL_EXT_LOG;
         else if (strcmp(token, "%TAG") == 0)
             format->type = _external_acl_format::EXT_ACL_TAG;
+        else if (strcmp(token, "%%") == 0)
+            format->type = _external_acl_format::EXT_ACL_PERCENT;
         else {
             debugs(0,0, "ERROR: Unknown Format token " << token);
             self_destruct();
@@ -744,18 +747,23 @@ ACLExternal::~ACLExternal()
     safe_free (class_);
 }
 
-static int
+static allow_t
 aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
 {
-    int result;
-    external_acl_entry *entry;
     const char *key = "";
     debugs(82, 9, HERE << "acl=\"" << acl->def->name << "\"");
-    entry = ch->extacl_entry;
+    external_acl_entry *entry = ch->extacl_entry;
 
     if (entry) {
         if (cbdataReferenceValid(entry) && entry->def == acl->def) {
-            /* Ours, use it.. */
+            /* Ours, use it.. if the key matches */
+            key = makeExternalAclKey(ch, acl);
+            if (strcmp(key, (char*)entry->key) != 0) {
+                debugs(82, 9, HERE << "entry key='" << (char *)entry->key << "', our key='" << key << "' dont match. Discarded.");
+                // too bad. need a new lookup.
+                cbdataReferenceDone(ch->extacl_entry);
+                entry = NULL;
+            }
         } else {
             /* Not valid, or not ours.. get rid of it */
             debugs(82, 9, HERE << "entry " << entry << " not valid or not ours. Discarded.");
@@ -775,43 +783,43 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
         debugs(82, 9, HERE << "No helper entry available");
 #if USE_AUTH
         if (acl->def->require_auth) {
-            int ti;
+            int ti = AuthenticateAcl(ch);
             /* Make sure the user is authenticated */
-            debugs(82, 3, "aclMatchExternal: " << acl->def->name << " check user authenticated.");
-            if ((ti = AuthenticateAcl(ch)) != 1) {
-                debugs(82, 2, "aclMatchExternal: " << acl->def->name << " user not authenticated (" << ti << ")");
-                return ti;
+            debugs(82, 3, HERE << acl->def->name << " check user authenticated.");
+            if (ti != 1) {
+                debugs(82, 2, HERE << acl->def->name << " user not authenticated (" << ti << ")");
+                return ACCESS_AUTH_REQUIRED;
             }
-            debugs(82, 3, "aclMatchExternal: " << acl->def->name << " user is authenticated.");
+            debugs(82, 3, HERE << acl->def->name << " user is authenticated.");
         }
 #endif
         key = makeExternalAclKey(ch, acl);
 
         if (!key) {
             /* Not sufficient data to process */
-            return -1;
+            return ACCESS_DUNNO;
         }
 
         entry = static_cast<external_acl_entry *>(hash_lookup(acl->def->cache, key));
 
         if (!entry || external_acl_grace_expired(acl->def, entry)) {
-            debugs(82, 2, "aclMatchExternal: " << acl->def->name << "(\"" << key << "\") = lookup needed");
-            debugs(82, 2, "aclMatchExternal: \"" << key << "\": entry=@" <<
+            debugs(82, 2, HERE << acl->def->name << "(\"" << key << "\") = lookup needed");
+            debugs(82, 2, HERE << "\"" << key << "\": entry=@" <<
                    entry << ", age=" << (entry ? (long int) squid_curtime - entry->date : 0));
 
             if (acl->def->theHelper->stats.queue_size <= (int)acl->def->theHelper->childs.n_active) {
-                debugs(82, 2, "aclMatchExternal: \"" << key << "\": queueing a call.");
+                debugs(82, 2, HERE << "\"" << key << "\": queueing a call.");
                 ch->changeState(ExternalACLLookup::Instance());
-                debugs(82, 2, "aclMatchExternal: \"" << key << "\": return -1.");
-                return -1; // to get here we have to have an expired cache entry. MUST not use.
+                debugs(82, 2, HERE << "\"" << key << "\": return -1.");
+                return ACCESS_DUNNO; // to get here we have to have an expired cache entry. MUST not use.
             } else {
                 if (!entry) {
-                    debugs(82, 1, "aclMatchExternal: '" << acl->def->name <<
+                    debugs(82, DBG_IMPORTANT, "WARNING: external ACL '" << acl->def->name <<
                            "' queue overload. Request rejected '" << key << "'.");
                     external_acl_message = "SYSTEM TOO BUSY, TRY AGAIN LATER";
-                    return -1;
+                    return ACCESS_DUNNO;
                 } else {
-                    debugs(82, 1, "aclMatchExternal: '" << acl->def->name <<
+                    debugs(82, DBG_IMPORTANT, "WARNING: external ACL '" << acl->def->name <<
                            "' queue overload. Using stale result. '" << key << "'.");
                     /* Fall thru to processing below */
                 }
@@ -820,10 +828,9 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
     }
 
     external_acl_cache_touch(acl->def, entry);
-    result = entry->result;
     external_acl_message = entry->message.termedBuf();
 
-    debugs(82, 2, "aclMatchExternal: " << acl->def->name << " = " << result);
+    debugs(82, 2, HERE << acl->def->name << " = " << entry->result);
 
     if (ch->request) {
 #if USE_AUTH
@@ -843,13 +850,30 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
             ch->request->extacl_message = entry->message;
     }
 
-    return result;
+    return entry->result;
 }
 
 int
 ACLExternal::match(ACLChecklist *checklist)
 {
-    return aclMatchExternal (data, Filled(checklist));
+    allow_t answer = aclMatchExternal(data, Filled(checklist));
+    checklist->currentAnswer(answer);
+
+    // convert to tri-state ACL match 1,0,-1
+    switch (answer) {
+    case ACCESS_ALLOWED:
+    case ACCESS_AUTH_EXPIRED_OK:
+        return 1; // match
+
+    case ACCESS_DENIED:
+    case ACCESS_AUTH_EXPIRED_BAD:
+        return 0; // non-match
+
+    case ACCESS_DUNNO:
+    case ACCESS_AUTH_REQUIRED:
+    default:
+        return -1; // other
+    }
 }
 
 wordlist *
@@ -1082,6 +1106,9 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
         case _external_acl_format::EXT_ACL_TAG:
             str = request->tag.termedBuf();
             break;
+        case _external_acl_format::EXT_ACL_PERCENT:
+            str = "%";
+            break;
         case _external_acl_format::EXT_ACL_UNKNOWN:
 
         case _external_acl_format::EXT_ACL_END:
@@ -1260,7 +1287,7 @@ externalAclHandleReply(void *data, char *reply)
     char *value;
     char *t = NULL;
     ExternalACLEntryData entryData;
-    entryData.result = 0;
+    entryData.result = ACCESS_DENIED;
     external_acl_entry *entry = NULL;
 
     debugs(82, 2, "externalAclHandleReply: reply=\"" << reply << "\"");
@@ -1269,7 +1296,7 @@ externalAclHandleReply(void *data, char *reply)
         status = strwordtok(reply, &t);
 
         if (status && strcmp(status, "OK") == 0)
-            entryData.result = 1;
+            entryData.result = ACCESS_ALLOWED;
 
         while ((token = strwordtok(NULL, &t))) {
             value = strchr(token, '=');
@@ -1346,15 +1373,15 @@ ACLExternal::ExternalAclLookup(ACLChecklist *checklist, ACLExternal * me, EAH * 
     if (acl->def->require_auth) {
         int ti;
         /* Make sure the user is authenticated */
-        debugs(82, 3, "aclMatchExternal: " << acl->def->name << " check user authenticated.");
+        debugs(82, 3, HERE << acl->def->name << " check user authenticated.");
 
         if ((ti = AuthenticateAcl(ch)) != 1) {
-            debugs(82, 1, "externalAclLookup: " << acl->def->name <<
+            debugs(82, DBG_IMPORTANT, "WARNING: " << acl->def->name <<
                    " user authentication failure (" << ti << ", ch=" << ch << ")");
             callback(callback_data, NULL);
             return;
         }
-        debugs(82, 3, "aclMatchExternal: " << acl->def->name << " user is authenticated.");
+        debugs(82, 3, HERE << acl->def->name << " user is authenticated.");
     }
 #endif
 
@@ -1508,7 +1535,7 @@ externalAclInit(void)
 
         p->theHelper->cmdline = p->cmdline;
 
-        p->theHelper->childs = p->children;
+        p->theHelper->childs.updateLimits(p->children);
 
         p->theHelper->ipc_type = IPC_TCP_SOCKET;
 

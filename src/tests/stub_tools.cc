@@ -54,6 +54,44 @@ xmemset(void* dst, int val, size_t sz)
     return memset(dst, val, sz);
 }
 
+bool
+IamWorkerProcess()
+{
+    fprintf(stderr, "Not implemented");
+    return true;
+}
+
+bool
+IamDiskProcess()
+{
+    fprintf(stderr, "Not implemented");
+    return false;
+}
+
+bool
+IamMasterProcess()
+{
+    fprintf(stderr, "Not implemented");
+    // Since most tests run as a single process, this is the best default.
+    // TODO: If some test case uses multiple processes and cares about
+    // its role, we may need to parameterize or remove this stub.
+    return true;
+}
+
+bool
+InDaemonMode()
+{
+    fprintf(stderr, "Not implemented");
+    return false;
+}
+
+bool
+UsingSmp()
+{
+    fprintf(stderr, "Not implemented");
+    return false;
+}
+
 void
 logsFlush(void)
 {

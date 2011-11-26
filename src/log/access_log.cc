@@ -47,7 +47,7 @@
 #include "eui/Eui48.h"
 #include "eui/Eui64.h"
 #endif
-#include "format/Tokens.h"
+#include "format/Token.h"
 #include "hier_code.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -252,7 +252,7 @@ HierarchyLogEntry::HierarchyLogEntry() :
         peer_reply_status(HTTP_STATUS_NONE),
         peer_response_time(-1),
         total_response_time(-1),
-        peer_local_addr(),
+        tcpServer(NULL),
         bodyBytesRead(-1)
 {
     memset(host, '\0', SQUIDHOSTNAMELEN);
@@ -272,13 +272,22 @@ HierarchyLogEntry::HierarchyLogEntry() :
 }
 
 void
-hierarchyNote(HierarchyLogEntry * hl,
-              hier_code code,
-              const char *cache_peer)
+HierarchyLogEntry::note(const Comm::ConnectionPointer &server, const char *requestedHost)
 {
-    assert(hl != NULL);
-    hl->code = code;
-    xstrncpy(hl->host, cache_peer, SQUIDHOSTNAMELEN);
+    tcpServer = server;
+    if (tcpServer == NULL) {
+        code = HIER_NONE;
+        xstrncpy(host, requestedHost, sizeof(host));
+    } else {
+        code = tcpServer->peerType;
+
+        if (tcpServer->getPeer()) {
+            // went to peer, log peer host name
+            xstrncpy(host, tcpServer->getPeer()->name, sizeof(host));
+        } else {
+            xstrncpy(host, requestedHost, sizeof(host));
+        }
+    }
 }
 
 static void
@@ -313,8 +322,8 @@ accessLogInit(void)
 
 #if USE_ADAPTATION
         for (Format::Token * curr_token = (log->logFormat?log->logFormat->format:NULL); curr_token; curr_token = curr_token->next) {
-            if (curr_token->type == Format::LTF_ADAPTATION_SUM_XACT_TIMES ||
-                    curr_token->type == Format::LTF_ADAPTATION_ALL_XACT_TIMES ||
+            if (curr_token->type == Format::LFT_ADAPTATION_SUM_XACT_TIMES ||
+                    curr_token->type == Format::LFT_ADAPTATION_ALL_XACT_TIMES ||
                     curr_token->type == Format::LFT_ADAPTATION_LAST_HEADER ||
                     curr_token->type == Format::LFT_ADAPTATION_LAST_HEADER_ELEM ||
                     curr_token->type == Format::LFT_ADAPTATION_LAST_ALL_HEADERS) {
@@ -587,6 +596,7 @@ accessLogFreeMemory(AccessLogEntry * aLogEntry)
     HTTPMSGUNLOCK(aLogEntry->icap.reply);
     HTTPMSGUNLOCK(aLogEntry->icap.request);
 #endif
+    cbdataReferenceDone(aLogEntry->cache.port);
 }
 
 int

@@ -127,6 +127,12 @@ sub open_db()
     $_dbh = DBI->connect($dsn, $db_user, $db_passwd);
     if (!defined $_dbh) {
     	warn ("Could not connect to $dsn\n");
+	my @driver_names = DBI->available_drivers();
+	my $msg = "DSN drivers apparently installed, available:\n";
+	foreach my $dn (@driver_names) {
+		$msg .= "\t$dn";
+	}
+	warn($msg."\n");
 	return undef;
     }
     my $sql_query;

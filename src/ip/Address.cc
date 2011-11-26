@@ -173,19 +173,19 @@ Ip::Address::IsSockAddr() const
 bool
 Ip::Address::IsIPv4() const
 {
-    return IsAnyAddr() || IsNoAddr() || IN6_IS_ADDR_V4MAPPED( &m_SocketAddr.sin6_addr );
+    return IN6_IS_ADDR_V4MAPPED( &m_SocketAddr.sin6_addr );
 }
 
 bool
 Ip::Address::IsIPv6() const
 {
-    return IsAnyAddr() || IsNoAddr() || !IN6_IS_ADDR_V4MAPPED( &m_SocketAddr.sin6_addr );
+    return !IsIPv4();
 }
 
 bool
 Ip::Address::IsAnyAddr() const
 {
-    return IN6_IS_ADDR_UNSPECIFIED( &m_SocketAddr.sin6_addr );
+    return IN6_IS_ADDR_UNSPECIFIED(&m_SocketAddr.sin6_addr) || IN6_ARE_ADDR_EQUAL(&m_SocketAddr.sin6_addr, &v4_anyaddr);
 }
 
 /// NOTE: Does NOT clear the Port stored. Ony the Address and Type.
@@ -237,6 +237,11 @@ Ip::Address::SetIPv4()
         return true;
     }
 
+    if ( IsNoAddr() ) {
+        m_SocketAddr.sin6_addr = v4_noaddr;
+        return true;
+    }
+
     if ( IsIPv4())
         return true;
 
@@ -271,15 +276,16 @@ Ip::Address::IsSiteLocal6() const
 bool
 Ip::Address::IsSlaac() const
 {
-    return m_SocketAddr.sin6_addr.s6_addr[10] == htons(0xff) &&
-           m_SocketAddr.sin6_addr.s6_addr[11] == htons(0xfe);
+    return m_SocketAddr.sin6_addr.s6_addr[10] == static_cast<uint8_t>(0xff) &&
+           m_SocketAddr.sin6_addr.s6_addr[11] == static_cast<uint8_t>(0xfe);
 }
 
 bool
 Ip::Address::IsNoAddr() const
 {
     // IFF the address == 0xff..ff (all ones)
-    return IN6_ARE_ADDR_EQUAL( &m_SocketAddr.sin6_addr, &v6_noaddr );
+    return IN6_ARE_ADDR_EQUAL( &m_SocketAddr.sin6_addr, &v6_noaddr )
+           || IN6_ARE_ADDR_EQUAL( &m_SocketAddr.sin6_addr, &v4_noaddr );
 }
 
 void
@@ -785,14 +791,14 @@ Ip::Address::operator <(const Ip::Address &rhs) const
     return ( matchIPAddr(rhs) < 0);
 }
 
-u_short
+unsigned short
 Ip::Address::GetPort() const
 {
     return ntohs( m_SocketAddr.sin6_port );
 }
 
-u_short
-Ip::Address::SetPort(u_short prt)
+unsigned short
+Ip::Address::SetPort(unsigned short prt)
 {
     m_SocketAddr.sin6_port = htons(prt);
 
@@ -820,7 +826,10 @@ Ip::Address::NtoA(char* buf, const unsigned int blen, int force) const
     /* some external code may have blindly memset a parent. */
     /* thats okay, our default is known */
     if ( IsAnyAddr() ) {
-        memcpy(buf,"::\0", min(static_cast<unsigned int>(3),blen));
+        if (IsIPv6())
+            memcpy(buf,"::\0", min(static_cast<unsigned int>(3),blen));
+        else if (IsIPv4())
+            memcpy(buf,"0.0.0.0\0", min(static_cast<unsigned int>(8),blen));
         return buf;
     }
 

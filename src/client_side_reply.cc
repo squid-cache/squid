@@ -55,7 +55,7 @@
 #endif
 #include "fde.h"
 #include "forward.h"
-#include "format/Tokens.h"
+#include "format/Token.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
@@ -1044,6 +1044,8 @@ clientReplyContext::checkTransferDone()
 int
 clientReplyContext::storeOKTransferDone() const
 {
+    assert(http->storeEntry()->objectLen() >= 0);
+    assert(http->storeEntry()->objectLen() >= headers_sz);
     if (http->out.offset >= http->storeEntry()->objectLen() - headers_sz) {
         debugs(88,3,HERE << "storeOKTransferDone " <<
                " out.offset=" << http->out.offset <<

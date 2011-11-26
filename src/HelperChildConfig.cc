@@ -4,22 +4,24 @@
 
 #include <string.h>
 
-HelperChildConfig::HelperChildConfig(const unsigned int m, const unsigned int s, const unsigned int i, const unsigned int cc) :
+HelperChildConfig::HelperChildConfig(const unsigned int m):
         n_max(m),
-        n_startup(s),
-        n_idle(i),
-        concurrency(cc),
+        n_startup(0),
+        n_idle(1),
+        concurrency(0),
         n_running(0),
         n_active(0)
 {}
 
-HelperChildConfig::~HelperChildConfig()
-{}
-
 HelperChildConfig &
-HelperChildConfig::operator =(const HelperChildConfig &rhs)
+HelperChildConfig::updateLimits(const HelperChildConfig &rhs)
 {
-    memcpy(this, &rhs, sizeof(HelperChildConfig));
+    // Copy the limits only.
+    // Preserve the local state values (n_running and n_active)
+    n_max = rhs.n_max;
+    n_startup = rhs.n_startup;
+    n_idle = rhs.n_idle;
+    concurrency = rhs.concurrency;
     return *this;
 }
 
