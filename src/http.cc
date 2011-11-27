@@ -180,7 +180,7 @@ HttpStateData::httpTimeout(const CommTimeoutCbParams &params)
     debugs(11, 4, HERE << serverConnection << ": '" << entry->url() << "'" );
 
     if (entry->store_status == STORE_PENDING) {
-        fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, fwd->request));
+        fwd->fail(new ErrorState(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, fwd->request));
     }
 
     serverConnection->close();
@@ -1076,8 +1076,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
         if (ignoreErrno(io.xerrno)) {
             flags.do_next_read = 1;
         } else {
-            ErrorState *err;
-            err = errorCon(ERR_READ_ERROR, HTTP_BAD_GATEWAY, fwd->request);
+            ErrorState *err = new ErrorState(ERR_READ_ERROR, HTTP_BAD_GATEWAY, fwd->request);
             err->xerrno = io.xerrno;
             fwd->fail(err);
             flags.do_next_read = 0;
@@ -1246,7 +1245,7 @@ HttpStateData::continueAfterParsingHeader()
 
     assert(error != ERR_NONE);
     entry->reset();
-    fwd->fail(errorCon(error, HTTP_BAD_GATEWAY, fwd->request));
+    fwd->fail(new ErrorState(error, HTTP_BAD_GATEWAY, fwd->request));
     flags.do_next_read = 0;
     serverConnection->close();
     return false; // quit on error
@@ -1474,8 +1473,7 @@ HttpStateData::wroteLast(const CommIoCbParams &io)
         return;
 
     if (io.flag) {
-        ErrorState *err;
-        err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY, fwd->request);
+        ErrorState *err = new ErrorState(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY, fwd->request);
         err->xerrno = io.xerrno;
         fwd->fail(err);
         serverConnection->close();
@@ -2298,12 +2296,11 @@ HttpStateData::handleRequestBodyProducerAborted()
     ServerStateData::handleRequestBodyProducerAborted();
     if (entry->isEmpty()) {
         debugs(11, 3, "request body aborted: " << serverConnection);
-        ErrorState *err;
         // We usually get here when ICAP REQMOD aborts during body processing.
         // We might also get here if client-side aborts, but then our response
         // should not matter because either client-side will provide its own or
         // there will be no response at all (e.g., if the the client has left).
-        err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, fwd->request);
+        ErrorState *err = new ErrorState(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, fwd->request);
         err->xerrno = ERR_DETAIL_SRV_REQMOD_REQ_BODY;
         fwd->fail(err);
     }
