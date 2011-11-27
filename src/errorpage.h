@@ -95,6 +95,10 @@ class MemBuf;
 class ErrorState
 {
 public:
+    ErrorState(err_type type, http_status, HttpRequest * request);
+    ErrorState(); // not implemented.
+    ~ErrorState();
+
     /**
      * Allocates and initializes an error response
      */
@@ -237,17 +241,8 @@ SQUIDCEXTERN void errorSend(const Comm::ConnectionPointer &conn, ErrorState *err
 SQUIDCEXTERN void errorAppendEntry(StoreEntry *entry, ErrorState *err);
 
 /// \ingroup ErrorPageAPI
-SQUIDCEXTERN void errorStateFree(ErrorState * err);
-
-/// \ingroup ErrorPageAPI
 SQUIDCEXTERN err_type errorReservePageId(const char *page_name);
 
-/**
- \ingroup ErrorPageAPI
- *
- * This function creates a ErrorState object.
- */
-SQUIDCEXTERN ErrorState *errorCon(err_type type, http_status, HttpRequest * request);
 SQUIDCEXTERN const char *errorPageName(int pageId); ///< error ID to string
 
 /**
