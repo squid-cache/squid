@@ -320,12 +320,11 @@ CacheManager::CheckPassword(const Mgr::Command &cmd)
 void
 CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request, StoreEntry * entry)
 {
-    ErrorState *err = NULL;
     debugs(16, 3, "CacheManager::Start: '" << entry->url() << "'" );
 
     Mgr::Command::Pointer cmd = ParseUrl(entry->url());
     if (!cmd) {
-        err = errorCon(ERR_INVALID_URL, HTTP_NOT_FOUND, request);
+        ErrorState *err = new ErrorState(ERR_INVALID_URL, HTTP_NOT_FOUND, request);
         err->url = xstrdup(entry->url());
         errorAppendEntry(entry, err);
         entry->expires = squid_curtime;
@@ -348,9 +347,7 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
 
     if (CheckPassword(*cmd) != 0) {
         /* build error message */
-        ErrorState *errState;
-        HttpReply *rep;
-        errState = errorCon(ERR_CACHE_MGR_ACCESS_DENIED, HTTP_UNAUTHORIZED, request);
+        ErrorState errState(ERR_CACHE_MGR_ACCESS_DENIED, HTTP_UNAUTHORIZED, request);
         /* warn if user specified incorrect password */
 
         if (cmd->params.password.size()) {
@@ -365,9 +362,7 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
                    actionName << "'" );
         }
 
-        rep = errState->BuildHttpReply();
-
-        errorStateFree(errState);
+        HttpReply *rep = errState.BuildHttpReply();
 
 #if HAVE_AUTH_MODULE_BASIC
         /*

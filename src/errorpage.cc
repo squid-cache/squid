@@ -557,24 +557,41 @@ errorPageName(int pageId)
     return "ERR_UNKNOWN";	/* should not happen */
 }
 
-ErrorState *
-errorCon(err_type type, http_status status, HttpRequest * request)
+ErrorState::ErrorState(err_type t, http_status status, HttpRequest * req) :
+        type(t),
+        page_id(t),
+        err_language(NULL),
+        httpStatus(status),
+#if USE_AUTH
+        auth_user_request (NULL),
+#endif
+        request(NULL),
+        url(NULL),
+        xerrno(0),
+        port(0),
+        dnsError(),
+        ttl(0),
+        src_addr(),
+        redirect_url(NULL),
+        callback(NULL),
+        callback_data(NULL),
+        request_hdrs(NULL),
+        err_msg(NULL)
+#if USE_SSL
+        , detail(NULL)
+#endif
 {
-    ErrorState *err = new ErrorState;
-    err->page_id = type;	/* has to be reset manually if needed */
-    err->err_language = NULL;
-    err->type = type;
-    err->httpStatus = status;
-    if (err->page_id >= ERR_MAX && ErrorDynamicPages.items[err->page_id - ERR_MAX]->page_redirect != HTTP_STATUS_NONE)
-        err->httpStatus = ErrorDynamicPages.items[err->page_id - ERR_MAX]->page_redirect;
+    memset(&flags, 0, sizeof(flags));
+    memset(&ftp, 0, sizeof(ftp));
 
-    if (request != NULL) {
-        err->request = HTTPMSGLOCK(request);
-        err->src_addr = request->client_addr;
+    if (page_id >= ERR_MAX && ErrorDynamicPages.items[page_id - ERR_MAX]->page_redirect != HTTP_STATUS_NONE)
+        httpStatus = ErrorDynamicPages.items[page_id - ERR_MAX]->page_redirect;
+
+    if (req != NULL) {
+        request = HTTPMSGLOCK(req);
+        src_addr = req->client_addr;
         request->detailError(type, ERR_DETAIL_NONE);
     }
-
-    return err;
 }
 
 void
@@ -595,7 +612,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
          */
         assert(EBIT_TEST(entry->flags, ENTRY_ABORTED));
         assert(entry->mem_obj->nclients == 0);
-        errorStateFree(err);
+        delete err;
         return;
     }
 
@@ -615,7 +632,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     entry->negativeCache();
     entry->releaseRequest();
     entry->unlock();
-    errorStateFree(err);
+    delete err;
 }
 
 void
@@ -671,31 +688,29 @@ errorSendComplete(const Comm::ConnectionPointer &conn, char *bufnotused, size_t 
         }
     }
 
-    errorStateFree(err);
+    delete err;
 }
 
-void
-errorStateFree(ErrorState * err)
+ErrorState::~ErrorState()
 {
-    HTTPMSGUNLOCK(err->request);
-    safe_free(err->redirect_url);
-    safe_free(err->url);
-    safe_free(err->request_hdrs);
-    wordlistDestroy(&err->ftp.server_msg);
-    safe_free(err->ftp.request);
-    safe_free(err->ftp.reply);
+    HTTPMSGUNLOCK(request);
+    safe_free(redirect_url);
+    safe_free(url);
+    safe_free(request_hdrs);
+    wordlistDestroy(&ftp.server_msg);
+    safe_free(ftp.request);
+    safe_free(ftp.reply);
 #if USE_AUTH
-    err->auth_user_request = NULL;
+    auth_user_request = NULL;
 #endif
-    safe_free(err->err_msg);
+    safe_free(err_msg);
 #if USE_ERR_LOCALES
-    if (err->err_language != Config.errorDefaultLanguage)
+    if (err_language != Config.errorDefaultLanguage)
 #endif
-        safe_free(err->err_language);
+        safe_free(err_language);
 #if USE_SSL
-    delete err->detail;
+    delete detail;
 #endif
-    cbdataFree(err);
 }
 
 int
