@@ -925,8 +925,7 @@ if test "x$squid_opt_use_esi" = "xyes" -a "x$with_libxml2" != "xno" ; then
         CPPFLAGS="-I/usr/local/include/libxml2 $SAVED_CPPFLAGS"
         unset ac_cv_header_libxml_parser_h
         AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include="-I/usr/local/include/libxml2"], [
-          AC_MSG_ERROR([Failed to find libxml2 header file libxml/parser.h])
-	
+          AC_MSG_NOTICE([Failed to find libxml2 header file libxml/parser.h])
         ])
       ])
       CPPFLAGS="$SAVED_CPPFLAGS"
