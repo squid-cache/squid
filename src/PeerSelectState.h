@@ -43,8 +43,9 @@
 
 class HttpRequest;
 class StoreEntry;
+class ErrorState;
 
-typedef void PSC(Comm::ConnectionList *, void *);
+typedef void PSC(Comm::ConnectionList *, ErrorState *, void *);
 
 SQUIDCEXTERN void peerSelect(Comm::ConnectionList *, HttpRequest *, StoreEntry *, PSC *, void *data);
 SQUIDCEXTERN void peerSelectInit(void);
@@ -79,6 +80,7 @@ public:
     int direct;   // TODO: fold always_direct/never_direct/prefer_direct into this now that ACL can do a multi-state result.
     PSC *callback;
     void *callback_data;
+    ErrorState *lastError;
 
     Comm::ConnectionList *paths;    ///< the callers paths array. to be filled with our final results.
     FwdServer *servers;    ///< temporary linked list of peers we will pass back.

@@ -27,7 +27,6 @@ body
 
 <p>Some possible problems are:</p>
 <ul>
-<li id="missing-dns">The domain name <q>%H</q> might not be found in DNS.</li>
 <li id="network-down">An Internet connection needed to access this domains origin servers may be down.</li>
 <li id="no-peer">All configured parent caches may be currently unreachable.</li>
 <li id="permission-denied">The administrator may not allow this cache to make direct connections to origin servers.</li>
