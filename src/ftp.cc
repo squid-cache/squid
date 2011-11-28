@@ -2467,6 +2467,7 @@ ftpReadEPSV(FtpStateData* ftpState)
 
     ftpState->data.port = port;
 
+    safe_free(ftpState->data.host);
     ftpState->data.host = xstrdup(fd_table[ftpState->ctrl.conn->fd].ipaddr);
 
     safe_free(ftpState->ctrl.last_command);
@@ -2712,6 +2713,7 @@ ftpReadPasv(FtpStateData * ftpState)
 
     ftpState->data.port = port;
 
+    safe_free(ftpState->data.host);
     if (Config.Ftp.sanitycheck)
         ftpState->data.host = xstrdup(fd_table[ftpState->ctrl.conn->fd].ipaddr);
     else
@@ -2770,7 +2772,7 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
         ftpState->data.clear();
     else
         ftpState->data.close();
-    ftpState->data.host = NULL;
+    safe_free(ftpState->data.host);
 
     /*
      * Set up a listen socket on the same local address as the
@@ -2980,7 +2982,9 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
     /** On COMM_OK start using the accepted data socket and discard the temporary listen socket. */
     data.close();
     data.opened(io.conn, dataCloser());
-    io.conn->remote.NtoA(data.host,SQUIDHOSTNAMELEN);
+    static char ntoapeer[MAX_IPSTRLEN];
+    io.conn->remote.NtoA(ntoapeer,sizeof(ntoapeer));
+    data.host = xstrdup(ntoapeer);
 
     debugs(9, 3, HERE << "Connected data socket on " <<
            io.conn << ". FD table says: " <<
