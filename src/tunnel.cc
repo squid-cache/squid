@@ -697,20 +697,23 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
 }
 
 static void
-tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, void *data)
+tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, ErrorState *err, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
 
     if (peer_paths == NULL || peer_paths->size() < 1) {
         debugs(26, 3, HERE << "No paths found. Aborting CONNECT");
-        ErrorState *err;
-        err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, tunnelState->request);
-        *tunnelState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
+        if (!err) {
+            err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, tunnelState->request);
+        }
+        *tunnelState->status_ptr = err->httpStatus;
         err->callback = tunnelErrorComplete;
         err->callback_data = tunnelState;
         errorSend(tunnelState->client.conn, err);
         return;
     }
+    delete err;
+
     debugs(26, 3, HERE << "paths=" << peer_paths->size() << ", p[0]={" << (*peer_paths)[0] << "}, serverDest[0]={" <<
            tunnelState->serverDestinations[0] << "}");
 
