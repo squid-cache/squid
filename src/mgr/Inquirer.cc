@@ -75,10 +75,9 @@ Mgr::Inquirer::start()
         LOCAL_ARRAY(char, url, MAX_URL);
         snprintf(url, MAX_URL, "%s", aggrAction->command().params.httpUri.termedBuf());
         HttpRequest *req = HttpRequest::CreateFromUrl(url);
-        ErrorState *err = errorCon(ERR_INVALID_URL, HTTP_NOT_FOUND, req);
-        std::auto_ptr<HttpReply> reply(err->BuildHttpReply());
+        ErrorState err(ERR_INVALID_URL, HTTP_NOT_FOUND, req);
+        std::auto_ptr<HttpReply> reply(err.BuildHttpReply());
         replyBuf.reset(reply->pack());
-        errorStateFree(err);
     } else {
         std::auto_ptr<HttpReply> reply(new HttpReply);
         reply->setHeaders(HTTP_OK, NULL, "text/plain", -1, squid_curtime, squid_curtime);
