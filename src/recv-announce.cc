@@ -86,7 +86,7 @@ main(int argc, char *argv[])
     socklen_t len;
 
     struct hostent *hp = NULL;
-    char logfile[BUFSIZ];
+    const char *logfile;
     char ip[4];
 
     for (len = 0; len < 32; len++) {
@@ -95,9 +95,9 @@ main(int argc, char *argv[])
 
 
     if (argc > 1)
-        strcpy(logfile, argv[1]);
+        logfile = argv[1];
     else
-        strcpy(logfile, "/tmp/recv-announce.log");
+        logfile = "/tmp/recv-announce.log";
 
     close(1);
 
