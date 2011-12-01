@@ -64,13 +64,9 @@ typedef struct _HttpHeaderStat HttpHeaderStat;
 
 typedef struct _HttpBody HttpBody;
 
-typedef struct _ConnCloseHelperData ConnCloseHelperData;
-
 typedef struct _domain_ping domain_ping;
 
 typedef struct _domain_type domain_type;
-
-typedef struct _DynPool DynPool;
 
 typedef struct _DigestFetchState DigestFetchState;
 
@@ -82,15 +78,11 @@ typedef struct _netdbEntry netdbEntry;
 
 typedef struct _icp_common_t icp_common_t;
 
-typedef struct _Meta_data Meta_data;
-
 typedef struct _iostats iostats;
 
 typedef struct _http_state_flags http_state_flags;
 
 typedef struct _header_mangler header_mangler;
-
-typedef struct _body_size body_size;
 
 typedef struct _cachemgr_passwd cachemgr_passwd;
 
