@@ -3478,7 +3478,7 @@ ConnStateData::sslCrtdHandleReply(const char * reply)
     getSslContextDone(NULL);
 }
 
-bool
+void
 ConnStateData::getSslContextStart()
 {
     char const * host = sslHostName.termedBuf();
@@ -3490,7 +3490,8 @@ ConnStateData::getSslContextStart()
             debugs(33, 5, HERE << "SSL certificate for " << host << " have found in cache");
             if (Ssl::verifySslCertificateDate(dynCtx)) {
                 debugs(33, 5, HERE << "Cached SSL certificate for " << host << " is valid");
-                return getSslContextDone(dynCtx);
+                getSslContextDone(dynCtx);
+                return;
             } else {
                 debugs(33, 5, HERE << "Cached SSL certificate for " << host << " is out of date. Delete this certificate from cache");
                 ssl_ctx_cache.remove(host);
@@ -3509,17 +3510,18 @@ ConnStateData::getSslContextStart()
         Ssl::writeCertAndPrivateKeyToMemory(port->signingCert, port->signPkey, bufferToWrite);
         request_message.composeBody(map, bufferToWrite);
         Ssl::Helper::GetInstance()->sslSubmit(request_message, sslCrtdHandleReplyWrapper, this);
-        return true;
+        return;
 #else
         debugs(33, 5, HERE << "Generating SSL certificate for " << host);
         dynCtx = Ssl::generateSslContext(host, port->signingCert, port->signPkey);
-        return getSslContextDone(dynCtx, true);
+        getSslContextDone(dynCtx, true);
+        return;
 #endif //USE_SSL_CRTD
     }
-    return getSslContextDone(NULL);
+    getSslContextDone(NULL);
 }
 
-bool
+void
 ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
 {
     // Try to add generated ssl context to storage.
@@ -3543,7 +3545,7 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
         if (!port->staticSslContext) {
             debugs(83, 1, "Closing SSL " << clientConnection->remote << " as lacking SSL context");
             clientConnection->close();
-            return false;
+            return;
         } else {
             debugs(33, 5, HERE << "Using static ssl context.");
             sslContext = port->staticSslContext.get();
@@ -3552,7 +3554,7 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
 
     SSL *ssl = NULL;
     if (!(ssl = httpsCreate(clientConnection, sslContext)))
-        return false;
+        return;
 
     // commSetConnTimeout() was called for this request before we switched.
 
@@ -3560,10 +3562,9 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, clientNegotiateSSL, this, 0);
     switchedToHttps_ = true;
-    return true;
 }
 
-bool
+void
 ConnStateData::switchToHttps(const char *host)
 {
     assert(!switchedToHttps_);
@@ -3579,7 +3580,7 @@ ConnStateData::switchToHttps(const char *host)
     flags.readMore = true;
     debugs(33, 5, HERE << "converting " << clientConnection << " to SSL");
 
-    return getSslContextStart();
+    getSslContextStart();
 }
 
 #endif /* USE_SSL */

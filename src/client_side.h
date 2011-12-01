@@ -307,19 +307,19 @@ public:
 
 #if USE_SSL
     /// Start to create dynamic SSL_CTX for host or uses static port SSL context.
-    bool getSslContextStart();
+    void getSslContextStart();
     /**
      * Done create dynamic ssl certificate.
      *
      * \param[in] isNew if generated certificate is new, so we need to add this certificate to storage.
      */
-    bool getSslContextDone(SSL_CTX * sslContext, bool isNew = false);
+    void getSslContextDone(SSL_CTX * sslContext, bool isNew = false);
     /// Callback function. It is called when squid receive message from ssl_crtd.
     static void sslCrtdHandleReplyWrapper(void *data, char *reply);
     /// Proccess response from ssl_crtd.
     void sslCrtdHandleReply(const char * reply);
 
-    bool switchToHttps(const char *host);
+    void switchToHttps(const char *host);
     bool switchedToHttps() const { return switchedToHttps_; }
 #else
     bool switchedToHttps() const { return false; }
