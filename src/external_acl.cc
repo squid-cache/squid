@@ -169,6 +169,7 @@ struct _external_acl_format {
         EXT_ACL_USER_CERTCHAIN_RAW,
 #endif
         EXT_ACL_EXT_USER,
+        EXT_ACL_PERCENT,
         EXT_ACL_END
     } type;
     external_acl_format *next;
@@ -420,6 +421,8 @@ parse_externalAclHelper(external_acl ** list)
 #endif
         else if (strcmp(token, "%EXT_USER") == 0)
             format->type = _external_acl_format::EXT_ACL_EXT_USER;
+        else if (strcmp(token, "%%") == 0)
+            format->type = _external_acl_format::EXT_ACL_PERCENT;
         else {
             self_destruct();
         }
@@ -990,6 +993,10 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 
         case _external_acl_format::EXT_ACL_EXT_USER:
             str = request->extacl_user.termedBuf();
+            break;
+
+        case _external_acl_format::EXT_ACL_PERCENT:
+            str = "%";
             break;
 
         case _external_acl_format::EXT_ACL_UNKNOWN:
