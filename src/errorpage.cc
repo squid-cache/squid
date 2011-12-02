@@ -670,7 +670,7 @@ ErrorState::Convert(char token, bool allowRecursion)
 
     case 'F':
         /* FTP REPLY LINE */
-        if (ftp.request)
+        if (ftp.reply)
             p = ftp.reply;
         else
             p = "nothing";
