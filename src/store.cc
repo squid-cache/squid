@@ -366,6 +366,27 @@ StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl)
     swap_dirn = -1;
 }
 
+#if USE_ADAPTATION
+void
+StoreEntry::deferProducer(const AsyncCall::Pointer &producer)
+{
+    if (!deferredProducer)
+        deferredProducer = producer;
+    else
+        debugs(20, 5, HERE << "Deferred producer call is allready set to: " <<
+               *deferredProducer << ", requested call: " << *producer);
+}
+
+void
+StoreEntry::kickProducer()
+{
+    if (deferredProducer != NULL) {
+        ScheduleCallHere(deferredProducer);
+        deferredProducer = NULL;
+    }
+}
+#endif
+
 void
 StoreEntry::destroyMemObject()
 {

@@ -189,8 +189,20 @@ public:
     virtual void lock();
     virtual void release();
 
+#if USE_ADAPTATION
+    /// call back producer when more buffer space is available
+    void deferProducer(const AsyncCall::Pointer &producer);
+    /// calls back producer registered with deferProducer
+    void kickProducer();
+#endif
+
 private:
     static MemAllocator *pool;
+
+#if USE_ADAPTATION
+    /// producer callback registered with deferProducer
+    AsyncCall::Pointer deferredProducer;
+#endif
 
     bool validLength() const;
     bool hasOneOfEtags(const String &reqETags, const bool allowWeakMatch) const;

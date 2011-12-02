@@ -180,6 +180,8 @@ private:
     virtual void noteBodyProducerAborted(BodyPipe::Pointer);
 
     void endRequestSatisfaction();
+    /// called by StoreEntry when it has more buffer space available
+    void resumeBodyStorage();
 
 private:
     CbcPointer<Adaptation::Initiate> virginHeadSource;

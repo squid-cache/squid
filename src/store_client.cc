@@ -262,6 +262,11 @@ store_client::copy(StoreEntry * anEntry,
     copying = false;
 
     storeClientCopy2(entry, this);
+
+#if USE_ADAPTATION
+    if (entry)
+        entry->kickProducer();
+#endif
 }
 
 /*
@@ -693,6 +698,10 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
         CheckQuickAbort(e);
     else
         mem->kickReads();
+
+#if USE_ADAPTATION
+    e->kickProducer();
+#endif
 
     return 1;
 }

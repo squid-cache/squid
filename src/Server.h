@@ -155,6 +155,11 @@ protected:
 
     void handleAdaptationCompleted();
     void handleAdaptationAborted(bool bypassable = false);
+
+    /// called by StoreEntry when it has more buffer space available
+    void resumeBodyStorage();
+    /// called when the entire adapted response body is consumed
+    void endAdaptedBodyConsumption();
 #endif
 
 protected:

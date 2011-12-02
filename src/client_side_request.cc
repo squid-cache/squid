@@ -1473,17 +1473,46 @@ ClientHttpRequest::noteAdaptationQueryAbort(bool final)
 }
 
 void
+ClientHttpRequest::resumeBodyStorage()
+{
+    if (!adaptedBodySource)
+        return;
+
+    noteMoreBodyDataAvailable(adaptedBodySource);
+}
+
+void
 ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
 {
     assert(request_satisfaction_mode);
     assert(adaptedBodySource != NULL);
 
-    if (const size_t contentSize = adaptedBodySource->buf().contentSize()) {
+    if (size_t contentSize = adaptedBodySource->buf().contentSize()) {
+        // XXX: entry->bytesWanted returns contentSize-1 if entry can accept data.
+        // We have to add 1 to avoid suspending forever.
+        const size_t bytesWanted = storeEntry()->bytesWanted(Range<size_t>(0,contentSize));
+        const size_t spaceAvailable = bytesWanted >  0 ? (bytesWanted + 1) : 0;
+
+        if (spaceAvailable < contentSize ) {
+            // No or partial body data consuming
+            typedef NullaryMemFunT<ClientHttpRequest> Dialer;
+            AsyncCall::Pointer call = asyncCall(93, 5, "ClientHttpRequest::resumeBodyStorage",
+                                                Dialer(this, &ClientHttpRequest::resumeBodyStorage));
+            storeEntry()->deferProducer(call);
+        }
+
+        // XXX: bytesWanted API does not allow us to write just one byte!
+        if (!spaceAvailable && contentSize > 1)
+            return;
+
+        if (spaceAvailable < contentSize )
+            contentSize = spaceAvailable;
+
         BodyPipeCheckout bpc(*adaptedBodySource);
-        const StoreIOBuffer ioBuf(&bpc.buf, request_satisfaction_offset);
+        const StoreIOBuffer ioBuf(&bpc.buf, request_satisfaction_offset, contentSize);
         storeEntry()->write(ioBuf);
-        // assume can write everything
-        request_satisfaction_offset += contentSize;
+        // assume StoreEntry::write() writes the entire ioBuf
+        request_satisfaction_offset += ioBuf.length;
         bpc.buf.consume(contentSize);
         bpc.checkIn();
     }
@@ -1497,13 +1526,9 @@ void
 ClientHttpRequest::noteBodyProductionEnded(BodyPipe::Pointer)
 {
     assert(!virginHeadSource);
-    if (adaptedBodySource != NULL) { // did not end request satisfaction yet
-        // We do not expect more because noteMoreBodyDataAvailable always
-        // consumes everything. We do not even have a mechanism to consume
-        // leftovers after noteMoreBodyDataAvailable notifications seize.
-        assert(adaptedBodySource->exhausted());
+    // should we end request satisfaction now?
+    if (adaptedBodySource != NULL && adaptedBodySource->exhausted())
         endRequestSatisfaction();
-    }
 }
 
 void
