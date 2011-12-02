@@ -1302,6 +1302,10 @@ DOC_START
 			    4	TLSv1 only
 
 	   cipher=	Colon separated list of supported ciphers.
+			NOTE: some ciphers such as EDH ciphers depend on
+			      additional settings. If those settings are
+			      omitted the ciphers may be silently ignored
+			      by the OpenSSL library.
 
 	   options=	Various SSL engine options. The most important
 			being:
@@ -1310,8 +1314,8 @@ DOC_START
 			    NO_TLSv1  Disallow the use of TLSv1
 			    SINGLE_DH_USE Always create a new key when using
 				      temporary/ephemeral DH key exchanges
-			See src/ssl_support.c or OpenSSL SSL_CTX_set_options
-			documentation for a complete list of options.
+			See OpenSSL SSL_CTX_set_options documentation for a
+			complete list of options.
 
 	   clientca=	File containing the list of CAs to use when
 			requesting a client certificate.
@@ -1328,7 +1332,10 @@ DOC_START
 			the capath. Implies VERIFY_CRL flag below.
 
 	   dhparams=	File containing DH parameters for temporary/ephemeral
-			DH key exchanges.
+			DH key exchanges. See OpenSSL documentation for details
+			on how to create this file.
+			WARNING: EDH ciphers will be silently disabled if this
+				 option is not set.
 
 	   sslflags=	Various flags modifying the use of SSL:
 			    DELAYED_AUTH
