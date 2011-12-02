@@ -29,24 +29,30 @@
 COMMENT_START
 	WELCOME TO @SQUID@
 	----------------------------
-
-	This is the default Squid configuration file. You may wish
-	to look at the Squid home page (http://www.squid-cache.org/)
-	for the FAQ and other documentation.
-
-	The default Squid config file shows what the defaults for
-	various options happen to be.  If you don't need to change the
-	default, you shouldn't uncomment the line.  Doing so may cause
-	run-time problems.  In some cases "none" refers to no default
-	setting at all, while in other cases it refers to a valid
-	option - the comments for that keyword indicate if this is the
-	case.
+	
+	This is the documentation for the Squid configuration file.
+	This documentation can also be found online at:
+		http://www.squid-cache.org/Doc/config/
+	
+	You may wish to look at the Squid home page and wiki for the
+	FAQ and other documentation:
+		http://www.squid-cache.org/
+		http://wiki.squid-cache.org/SquidFaq
+		http://wiki.squid-cache.org/ConfigExamples
+	
+	This documentation shows what the defaults for various directives
+	happen to be.  If you don't need to change the default, you should
+	leave the line out of your squid.conf in most cases.
+	
+	In some cases "none" refers to no default setting at all,
+	while in other cases it refers to the value of the option
+	- the comments for that keyword indicate if this is the case.
 
 COMMENT_END
 
 COMMENT_START
   Configuration options can be included using the "include" directive.
-  Include takes a list of files to include. Quoting and wildcards is
+  Include takes a list of files to include. Quoting and wildcards are
   supported.
 
   For example,
@@ -73,6 +79,8 @@ COMMENT_START
 	The else part is optional. The keywords "if", "else", and "endif"
 	must be typed on their own lines, as if they were regular
 	configuration directives.
+
+	NOTE: An else-if condition is not supported.
 
 	These individual conditions types are supported:
 
@@ -998,7 +1006,7 @@ DOC_START
 
 	SECURITY WARNING: Usage of this option is dangerous
 	and should not be used trivially. Correct configuration
-	of folow_x_forewarded_for with a limited set of trusted
+	of follow_x_forewarded_for with a limited set of trusted
 	sources is required to prevent abuse of your proxy.
 DOC_END
 
@@ -2109,7 +2117,7 @@ DOC_START
 	cache_peer parent.foo.net       parent    3128  3130  default
 	cache_peer sib1.foo.net         sibling   3128  3130  proxy-only
 	cache_peer sib2.foo.net         sibling   3128  3130  proxy-only
-	cache_peer example.com          parent    80       0  no-query default
+	cache_peer example.com          parent    80       0  default
 	cache_peer cdn.example.com      sibling   3128     0  
 	
 	      type:	either 'parent', 'sibling', or 'multicast'.
@@ -2205,7 +2213,7 @@ DOC_START
 	multicast-siblings
 			To be used only for cache peers of type "multicast".
 			ALL members of this multicast group have "sibling"
-			relationship with it, not "parent".  This is to a mulicast
+			relationship with it, not "parent".  This is to a multicast
 			group when the requested object would be fetched only from
 			a "parent" cache, anyway.  It's useful, e.g., when
 			configuring a pool of redundant Squid proxies, being
@@ -3183,11 +3191,11 @@ DOC_START
 	
 	udp	To send each log line as text data to a UDP receiver.
 		Place: The destination host name or IP and port.
-		Place Format:   \\host:port
+		Place Format:   //host:port
 
 	tcp	To send each log line as text data to a TCP receiver.
 		Place: The destination host name or IP and port.
-		Place Format:   \\host:port
+		Place Format:   //host:port
 
 	Default:
 		access_log daemon:@DEFAULT_ACCESS_LOG@ squid

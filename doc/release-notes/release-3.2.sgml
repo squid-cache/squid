@@ -464,6 +464,9 @@ This section gives a thorough account of those changes in three categories:
 	<p>The else part is optional. The keywords <em>if</em>, <em>else</em> and <em>endif</em> 
 	must be typed on their own lines, as if they were regular configuration directives.
 
+	<tag>logfile_daemon</tag>
+	<p>Ported from 2.7. Specify the file I/O daemon helper to run for logging.
+
 	<tag>max_stale</tag>
 	<p>Places an upper limit on how stale content Squid will serve from the cache if cache validation fails
 
@@ -478,9 +481,6 @@ This section gives a thorough account of those changes in three categories:
 	
 	network   Only objects fetched from network is kept in memory
 	</verb>
-
-	<tag>logfile_daemon</tag>
-	<p>Ported from 2.7. Specify the file I/O daemon helper to run for logging.
 
 	<tag>server_idle_pconn_timeout</tag>
 	<p>Renamed from <em>pconn_timeout</em>.
@@ -634,9 +634,6 @@ This section gives a thorough account of those changes in three categories:
 	<tag>tcp_outgoing_tos</tag>
 	<p>This parameter is now compatible with persistent server connections.
 
-	<tag>windows_ipaddrchangemonitor</tag>
-	<p>Now only available to be set in Windows builds.
-
 	<tag>url_rewrite_children</tag>
 	<p>New options <em>startup=N</em>, <em>idle=N</em>, <em>concurrency=N</em>
 	<itemize>
@@ -644,6 +641,9 @@ This section gives a thorough account of those changes in three categories:
 		<item>idle=N allow fine tuning of how many helper to retain as buffer against sudden traffic loads.
 		<item>concurrency=N was previously called url_rewrite_concurrency as a distinct directive.
 	</itemize>
+
+	<tag>windows_ipaddrchangemonitor</tag>
+	<p>Now only available to be set in Windows builds.
 
 </descrip>
 
@@ -759,7 +759,7 @@ This section gives an account of those changes in three categories:
 <p>
 <descrip>
 	<tag>--enable-auth</tag>
-	<p>No longer takes a list of arguments. This option now is restricted to building with or without for authentication.
+	<p>No longer takes a list of arguments. This option now is restricted to building Squid with or without authentication support.
 	<p>The new <em>--enable-auth-X</em>/<em>--disable-auth-X</em> parameters determine which authentication protocols and helpers are built.
 
 </descrip>

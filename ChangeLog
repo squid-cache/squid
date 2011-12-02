@@ -286,6 +286,25 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many testing improvements
 	- ... and many documentation updates
 
+Changes to squid-3.1.17 (03 Dec 2011):
+
+	- Bug 3432: Crash logging FTP errors
+	- Bug 3428: Active FTP data channel accepted twice
+	- Bug 3423: access violation in URL parser
+	- Bug 3422: Buffer overflow in recv-announce
+	- Bug 3412: External ACL Uses Invalid Cache Entry
+	- Bug 3408: Wrong header length leads to EFAULTs when creating UFS swap.log.new
+	- Bug 3398: persistent server connection closed after PUT/DELETE
+	- Bug 3299: dnsserver: various undefined references
+	- Bug 3077: '\' in url query strings cause Digest authentication to fail
+	- Bug 2910: MemBuf may grow beyond max_capacity
+	- Bug 2619: Excessive RAM growth due to unlimited adapted body data consumption
+	- Bug 1243: Build overrides configured AR setting
+	- Avoid crashes when processing bad X509 common names (CN).
+	- Support %% in external ACL format
+	- ... and several other compile error fixes
+	- ... and several documentation fixes
+
 Changes to squid-3.1.16 (14 Oct 2011):
 
 	- Bug 3373: invalid URL in ERR_CACHE_ACCESS_DENIED
