@@ -91,7 +91,7 @@ typedef enum {
     HDR_IF_MODIFIED_SINCE,              /**< RFC 2608, 2616 */
     HDR_IF_NONE_MATCH,                  /**< RFC 2608, 2616 */
     HDR_IF_RANGE,                       /**< RFC 2608, 2616 */
-    HDR_IF_UNMODIFIED_SINCE,            /**< RFC 2608, 2616 */
+    /*HDR_IF_UNMODIFIED_SINCE,*/        /**< RFC 2608, 2616 */
     HDR_KEEP_ALIVE,                     /**< obsolete HTTP/1.0 header we may need to erase */
     HDR_LAST_MODIFIED,                  /**< RFC 2608, 2616 */
     HDR_LINK,                           /**< RFC 2068 */
@@ -109,8 +109,8 @@ typedef enum {
     HDR_PROXY_SUPPORT,                  /**< RFC 4559 */
     HDR_PUBLIC,                         /**< RFC 2608 */
     HDR_RANGE,                          /**< RFC 2608, 2616 */
-    HDR_REQUEST_RANGE,                  /**< some clients use this, sigh */
     HDR_REFERER,                        /**< RFC 2608, 2616 */
+    HDR_REQUEST_RANGE,                  /**< some clients use this, sigh */
     HDR_RETRY_AFTER,                    /**< RFC 2608, 2616 */
     HDR_SERVER,                         /**< RFC 2608, 2616 */
     HDR_SET_COOKIE,			/**< de-facto standard header we may need to erase */
