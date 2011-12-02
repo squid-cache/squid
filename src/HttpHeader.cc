@@ -99,8 +99,8 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Cookie2", HDR_COOKIE2, ftStr},
     {"Date", HDR_DATE, ftDate_1123},
     {"ETag", HDR_ETAG, ftETag},
-    {"Expires", HDR_EXPIRES, ftDate_1123},
     {"Expect", HDR_EXPECT, ftStr},
+    {"Expires", HDR_EXPIRES, ftDate_1123},
     {"From", HDR_FROM, ftStr},
     {"Host", HDR_HOST, ftStr},
     {"If-Match", HDR_IF_MATCH, ftStr},	/* for now */
@@ -113,6 +113,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Location", HDR_LOCATION, ftStr},
     {"Max-Forwards", HDR_MAX_FORWARDS, ftInt64},
     {"Mime-Version", HDR_MIME_VERSION, ftStr},	/* for now */
+    {"Negotiate", HDR_NEGOTIATE, ftStr},
     {"Pragma", HDR_PRAGMA, ftStr},
     {"Proxy-Authenticate", HDR_PROXY_AUTHENTICATE, ftStr},
     {"Proxy-Authentication-Info", HDR_PROXY_AUTHENTICATION_INFO, ftStr},
@@ -145,7 +146,6 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"X-Forwarded-For", HDR_X_FORWARDED_FOR, ftStr},
     {"X-Request-URI", HDR_X_REQUEST_URI, ftStr},
     {"X-Squid-Error", HDR_X_SQUID_ERROR, ftStr},
-    {"Negotiate", HDR_NEGOTIATE, ftStr},
 #if X_ACCELERATOR_VARY
     {"X-Accelerator-Vary", HDR_X_ACCELERATOR_VARY, ftStr},
 #endif
