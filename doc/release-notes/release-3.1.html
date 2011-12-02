@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
- <TITLE>Squid 3.1.16 release notes</TITLE>
+ <TITLE>Squid 3.1.17 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.16 release notes</H1>
+<H1>Squid 3.1.17 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -71,7 +71,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.16</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.17</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -693,6 +693,10 @@ of ICAP and eCAP adaptations as well as the URL-rewriter alterations.</P>
 </PRE>
 </P>
 
+<DT><B>client_request_buffer_max_size</B><DD>
+<P>New directive added with squid-3.1.10 to set limits on the amount of buffer space allocated
+for receiving upload and request data from clients.</P>
+
 <DT><B>delay_pool_uses_indirect_client</B><DD>
 <P>Whether to use any result found by follow_x_forwarded_for in delay_pool assignment.
 Default: ON
@@ -703,10 +707,6 @@ Default: ON
         
 </PRE>
 </P>
-
-<DT><B>client_request_buffer_max_size</B><DD>
-<P>New directive added with squid-3.1.10 to set limits on the amount of buffer space allocated
-for receiving upload and request data from clients.</P>
 
 <DT><B>dns_v4_fallback</B><DD>
 <P>New option to prevent Squid from always looking up IPv4 regardless of whether IPv6 addresses are found.
@@ -855,28 +855,6 @@ efficient NAT handling and IPv6 protocol support in FTP.</P>
 <DT><B>forward_max_tries</B><DD>
 <P>Controls how many different forward paths Squid will try
 before giving up. Default: 10</P>
-
-<DT><B>reply_header_replace</B><DD>
-<P>This option allows you to change the contents of reply headers.
-<PRE>
-        In Squid 2 header_replace (now deprecated) worked for both requests
-        and replies, while in Squid 3 it only did respect request headers.
-        This option brings back the functionality to replace the contents of
-        reply headers. Consult the documentation for usage details.
-        
-</PRE>
-</P>
-
-<DT><B>request_header_replace</B><DD>
-<P>This option allows you to change the contents of request headers.
-<PRE>
-        To be consistent with the naming changes of header_access in Squid 3
-        (header_access has been split into two options request_header_access
-        and reply_header_access), header_replace (now deprecated) is being
-        replaced by request_header_replace.
-        
-</PRE>
-</P>
 
 <DT><B>icap_log</B><DD>
 <P>New option to write ICAP log files record ICAP transaction summaries, one line per
@@ -1056,6 +1034,71 @@ Default: ON
 </PRE>
 </P>
 
+<DT><B>qos_flows local-hit= sibling-hit= parent-hit=</B><DD>
+<P>
+<PRE>
+        Allows you to select a TOS/DSCP value to mark outgoing
+        connections with, based on where the reply was sourced.
+
+        TOS values really only have local significance - so you should
+        know what you're specifying. For more information, see RFC2474,
+        RFC2475, and RFC3260.
+
+        The TOS/DSCP byte must be exactly that - octet value 0x00-0xFF.
+        Note that in practice often only values up to 0x3F are usable
+        as the two highest bits have been redefined for use by ECN
+        (RFC3168).
+
+        This setting is configured by setting the source TOS values:
+
+        local-hit=0xFF          Value to mark local cache hits.
+
+        sibling-hit=0xFF        Value to mark hits from sibling peers.
+
+        parent-hit=0xFF         Value to mark hits from parent peers.
+
+
+        NOTE: 'miss' preserve feature is only possible on Linux at this time.
+
+        For the following to work correctly, you will need to patch your
+        linux kernel with the TOS preserving ZPH patch.
+        The kernel patch can be downloaded from http://zph.bratcheda.org
+
+        disable-preserve-miss
+                If set, any HTTP response towards clients will
+                have the TOS value of the response comming from the
+                remote server masked with the value of miss-mask.
+        miss-mask=0xFF
+                Allows you to mask certain bits in the TOS received from the
+                remote server, before copying the value to the TOS sent
+                towards clients.
+                Default: 0xFF (TOS from server is not changed).
+        
+</PRE>
+</P>
+
+<DT><B>reply_header_replace</B><DD>
+<P>This option allows you to change the contents of reply headers.
+<PRE>
+        In Squid 2 header_replace (now deprecated) worked for both requests
+        and replies, while in Squid 3 it only did respect request headers.
+        This option brings back the functionality to replace the contents of
+        reply headers. Consult the documentation for usage details.
+        
+</PRE>
+</P>
+
+<DT><B>request_header_replace</B><DD>
+<P>This option allows you to change the contents of request headers.
+<PRE>
+        To be consistent with the naming changes of header_access in Squid 3
+        (header_access has been split into two options request_header_access
+        and reply_header_access), header_replace (now deprecated) is being
+        replaced by request_header_replace.
+        
+</PRE>
+</P>
+
 <DT><B>ssl_bump</B><DD>
 <P>New Access control for which CONNECT requests to an http_port
 marked with an ssl-bump flag are actually "bumped". Please
@@ -1102,49 +1145,6 @@ DEFAULT: None bypassed.
         terminate the transaction. Bypassing validation errors is dangerous
         because an error usually implies that the server cannot be trusted and
         the connection may be insecure.
-        
-</PRE>
-</P>
-
-<DT><B>qos_flows local-hit= sibling-hit= parent-hit=</B><DD>
-<P>
-<PRE>
-        Allows you to select a TOS/DSCP value to mark outgoing
-        connections with, based on where the reply was sourced.
-
-        TOS values really only have local significance - so you should
-        know what you're specifying. For more information, see RFC2474,
-        RFC2475, and RFC3260.
-
-        The TOS/DSCP byte must be exactly that - octet value 0x00-0xFF.
-        Note that in practice often only values up to 0x3F are usable
-        as the two highest bits have been redefined for use by ECN
-        (RFC3168).
-
-        This setting is configured by setting the source TOS values:
-
-        local-hit=0xFF          Value to mark local cache hits.
-
-        sibling-hit=0xFF        Value to mark hits from sibling peers.
-
-        parent-hit=0xFF         Value to mark hits from parent peers.
-
-
-        NOTE: 'miss' preserve feature is only possible on Linux at this time.
-
-        For the following to work correctly, you will need to patch your
-        linux kernel with the TOS preserving ZPH patch.
-        The kernel patch can be downloaded from http://zph.bratcheda.org
-
-        disable-preserve-miss
-                If set, any HTTP response towards clients will
-                have the TOS value of the response comming from the
-                remote server masked with the value of miss-mask.
-        miss-mask=0xFF
-                Allows you to mask certain bits in the TOS received from the
-                remote server, before copying the value to the TOS sent
-                towards clients.
-                Default: 0xFF (TOS from server is not changed).
         
 </PRE>
 </P>
@@ -1257,6 +1257,12 @@ see cache_mem and maximum_object_size_in_memory for size parameters.</P>
 <DT><B>cache_store_log</B><DD>
 <P>Default changed to OFF. Matching long-standing developer recommendations.</P>
 
+<DT><B>debug_options rotate=</B><DD>
+<P>New parameter rotate=N to control number of cache.log rotations independent of other logs.</P>
+
+<DT><B>deny_info</B><DD>
+<P>Support 307 status for redirecting CONNECT tunnels with HTTPS traffic.</P>
+
 <DT><B>error_directory</B><DD>
 <P>Now an optional entry in squid.conf. If present it will force all visitors to receive the error pages
 contained in the directory it points at. If absent, error page localization will be given a chance.
@@ -1272,21 +1278,14 @@ contained in the directory it points at. If absent, error page localization will
 </PRE>
 </P>
 
-<DT><B>debug_options rotate=</B><DD>
-<P>New parameter rotate=N to control number of cache.log rotations independent of other logs.</P>
-
-<DT><B>deny_info</B><DD>
-<P>Support 307 status for redirecting CONNECT tunnels with HTTPS traffic.</P>
-
 <DT><B>external_acl_type</B><DD>
 <P>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between Squid and its helpers.
-Please be aware of some limits to these options. These options only affet the transport protocol used
-to send data to and from the helpers. Squid in IPv6-mode may still send %SRC addresses in IPv4 or IPv6
+Please be aware of some limits to these options. These options only affect the transport protocol used
+to send data to and from the helpers. IPv6 enabled Squid will still send %SRC addresses in IPv4 or IPv6
 format, so all helpers will need to be checked and converted to cope with such information cleanly.
 <PRE>
-          ipv4 / ipv6   IP-mode used to communicate to this helper.
-                        For compatability with older configurations and helpers
-                        the default is 'ipv4'.
+          ipv4 / ipv6   IP transport used to communicate to this helper over localhost.
+                        For compatability with systems lacking IPv6 support in the system kernel the default is 'ipv4'.
         
 </PRE>
 </P>
@@ -1303,6 +1302,7 @@ format, so all helpers will need to be checked and converted to cope with such i
         %&lt;{Hdr:;member}   HTTP reply header list member using ; as
                           list separator. ; can be any non-alphanumeric
                           character.
+        %%                The percent symbol
         
 </PRE>
 </P>
