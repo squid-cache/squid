@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.17 release notes</title>
+<title>Squid 3.1.18 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.17
+The Squid Team are pleased to announce the release of Squid-3.1.18
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -1129,7 +1129,7 @@ NOCOMMENT_START
 	%<{Hdr:;member}   HTTP reply header list member using ; as
 	                  list separator. ; can be any non-alphanumeric
 	                  character.
-	%%                The percent symbol
+	%%                The percent symbol (available from 3.1.17)
 	</verb>
 
 	<tag>forwarded_for</tag>
