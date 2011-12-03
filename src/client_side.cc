@@ -2089,15 +2089,15 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
         int url_sz = strlen(url) + 32 + Config.appendDomainLen +
                      strlen(host);
         http->uri = (char *)xcalloc(url_sz, 1);
-        snprintf(http->uri, url_sz, "http://%s%s", /*conn->port->protocol,*/ host, url);
+        snprintf(http->uri, url_sz, "%s://%s%s", conn->port->protocol, host, url);
         debugs(33, 5, "TRANSPARENT HOST REWRITE: '" << http->uri <<"'");
     } else {
         /* Put the local socket IP address as the hostname.  */
         int url_sz = strlen(url) + 32 + Config.appendDomainLen;
         http->uri = (char *)xcalloc(url_sz, 1);
         http->getConn()->clientConnection->local.ToHostname(ipbuf,MAX_IPSTRLEN),
-        snprintf(http->uri, url_sz, "http://%s:%d%s",
-                 // http->getConn()->port->protocol,
+        snprintf(http->uri, url_sz, "%s://%s:%d%s",
+                 http->getConn()->port->protocol,
                  ipbuf, http->getConn()->clientConnection->local.GetPort(), url);
         debugs(33, 5, "TRANSPARENT REWRITE: '" << http->uri << "'");
     }
@@ -2541,8 +2541,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
      * from the port settings to the request.
      */
     if (http->clientConnection != NULL) {
-        request->flags.intercepted = (http->clientConnection->flags & COMM_INTERCEPTION);
-        request->flags.spoof_client_ip = (http->clientConnection->flags & COMM_TRANSPARENT);
+        request->flags.intercepted = ((http->clientConnection->flags & COMM_INTERCEPTION) != 0);
+        request->flags.spoof_client_ip = ((http->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
     }
 
     if (internalCheck(request->urlpath.termedBuf())) {
@@ -3411,6 +3411,71 @@ clientNegotiateSSL(int fd, void *data)
     conn->readSomeData();
 }
 
+/**
+ * Initializes an ssl connection to squid. 
+ * In the case the SSL_CTX is not given it calls the ConnStateData::switchToHttps method
+ * to start procedure to generate a dynamic SSL_CTX
+ */
+static void
+httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext)
+{
+    SSL *ssl = NULL;
+    assert(connState);
+    const Comm::ConnectionPointer &details = connState->clientConnection;
+
+    if (sslContext && !(ssl = httpsCreate(details, sslContext)))
+        return;
+
+     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
+    AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
+                                      TimeoutDialer, connState, ConnStateData::requestTimeout);
+    commSetConnTimeout(details, Config.Timeout.request, timeoutCall);
+
+    if (ssl) 
+        Comm::SetSelect(details->fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
+    else {
+        char buf[MAX_IPSTRLEN];
+        debugs(33, 4, HERE << details << " try to generate a Dynamic SSL CTX");
+        connState->switchToHttps(details->local.NtoA(buf, sizeof(buf)));
+    }
+}
+
+/**
+ * A callback function to use with the ACLFilledChecklist callback. 
+ * In the case of ACCES_ALLOWED answer initializes an ssl bumped connection,
+ * else revert the connection to tunnel mode.
+ */
+static void
+httpsSslBumpAccessCheckDone(allow_t answer, void *data)
+{
+    ConnStateData *connState = (ConnStateData *) data;
+
+    //if connection closed/closing just return.
+    if (!connState->isOpen())
+        return;
+
+    if (answer == ACCESS_ALLOWED) {
+        debugs(33, 2, HERE << " sslBump done data: " << connState->clientConnection);
+        httpsEstablish(connState, NULL);
+    } else {
+        // fake a CONNECT request to force connState to tunnel
+
+        debugs(33, 2, HERE << " normal SSL connection: " << connState->clientConnection << " revert to tunnel mode");
+        static char ip[MAX_IPSTRLEN];
+        static char reqStr[MAX_IPSTRLEN + 80];
+        connState->clientConnection->local.NtoA(ip, sizeof(ip));
+        snprintf(reqStr, sizeof(reqStr), "CONNECT %s:%d\r\n\r\n", ip, connState->clientConnection->local.GetPort());
+        bool ret = connState->handleReadData(reqStr, strlen(reqStr));
+        if (ret)
+            ret = connState->clientParseRequests();
+
+        if (!ret) {
+            debugs(33, 2, HERE << "Failed to start fake CONNECT request for ssl bumped connection: " << connState->clientConnection);
+            connState->clientConnection->close();
+        }
+    }
+}
+
 /** handle a new HTTPS connection */
 static void
 httpsAccept(const CommAcceptCbParams &params)
@@ -3422,11 +3487,6 @@ httpsAccept(const CommAcceptCbParams &params)
         debugs(33, 2, "httpsAccept: " << s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
         return;
     }
-
-    SSL_CTX *sslContext = s->staticSslContext.get();
-    SSL *ssl = NULL;
-    if (!(ssl = httpsCreate(params.conn, sslContext)))
-        return;
 
     debugs(33, 4, HERE << params.conn << " accepted, starting SSL negotiation.");
     fd_note(params.conn->fd, "client https connect");
@@ -3440,12 +3500,33 @@ httpsAccept(const CommAcceptCbParams &params)
     // Socket is ready, setup the connection manager to start using it
     ConnStateData *connState = connStateCreate(params.conn, &s->http);
 
-    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
-                                      TimeoutDialer, connState, ConnStateData::requestTimeout);
-    commSetConnTimeout(params.conn, Config.Timeout.request, timeoutCall);
+    if (s->sslBump) {
+        assert(params.conn->flags & COMM_TRANSPARENT);
 
-    Comm::SetSelect(params.conn->fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
+        debugs(33, 5, "httpsAccept: accept transparent connection: " << params.conn);
+
+        if (!Config.accessList.ssl_bump) {
+            httpsSslBumpAccessCheckDone(ACCESS_DENIED, connState);
+            return;
+        }
+  
+        // Create a fake HTTP request for ssl_bump ACL check,
+        // using tproxy-provided destination IP and port.
+        HttpRequest *request = new HttpRequest();
+        static char ip[MAX_IPSTRLEN];
+        request->SetHost(params.conn->local.NtoA(ip, sizeof(ip)));
+        request->port = params.conn->local.GetPort();
+        request->myportname = s->name;
+ 
+        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request, NULL);
+        acl_checklist->src_addr = params.conn->remote;
+        acl_checklist->my_addr = s->s;
+        acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, connState);
+        return;
+    } else {
+        SSL_CTX *sslContext = s->staticSslContext.get();
+        httpsEstablish(connState, sslContext);
+    }
 }
 
 void
