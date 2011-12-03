@@ -286,6 +286,10 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many testing improvements
 	- ... and many documentation updates
 
+Changes to squid-3.1.18 (03 Dec 2011):
+
+	- Regression: compile error in FTP
+
 Changes to squid-3.1.17 (03 Dec 2011):
 
 	- Bug 3432: Crash logging FTP errors
