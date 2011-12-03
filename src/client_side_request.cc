@@ -1257,6 +1257,7 @@ bool
 ClientRequestContext::sslBumpAccessCheck()
 {
     if (http->request->method == METHOD_CONNECT &&
+            !http->request->flags.spoof_client_ip && // is not a fake ssl-bumped request from a https port
             Config.accessList.ssl_bump && http->getConn()->port->sslBump) {
         debugs(85, 5, HERE << "SslBump possible, checking ACL");
 
