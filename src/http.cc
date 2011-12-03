@@ -285,12 +285,12 @@ void
 HttpStateData::processSurrogateControl(HttpReply *reply)
 {
     if (request->flags.accelerated && reply->surrogate_control) {
-        HttpHdrScTarget *sctusable = httpHdrScGetMergedTarget(reply->surrogate_control, Config.Accel.surrogate_id);
+        HttpHdrScTarget *sctusable = reply->surrogate_control->getMergedTarget(Config.Accel.surrogate_id);
 
         if (sctusable) {
-            if (EBIT_TEST(sctusable->mask, SC_NO_STORE) ||
+            if (sctusable->noStore() ||
                     (Config.onoff.surrogate_is_remote
-                     && EBIT_TEST(sctusable->mask, SC_NO_STORE_REMOTE))) {
+                     && sctusable->noStoreRemote())) {
                 surrogateNoStore = true;
                 entry->makePrivate();
             }
@@ -299,11 +299,11 @@ HttpStateData::processSurrogateControl(HttpReply *reply)
              * accelerated request or not...
              * Still, this is an abstraction breach. - RC
              */
-            if (sctusable->max_age != -1) {
-                if (sctusable->max_age < sctusable->max_stale)
-                    reply->expires = reply->date + sctusable->max_age;
+            if (sctusable->hasMaxAge()) {
+                if (sctusable->maxAge() < sctusable->maxStale())
+                    reply->expires = reply->date + sctusable->maxAge();
                 else
-                    reply->expires = reply->date + sctusable->max_stale;
+                    reply->expires = reply->date + sctusable->maxStale();
 
                 /* And update the timestamps */
                 entry->timestampsSet();
@@ -312,7 +312,7 @@ HttpStateData::processSurrogateControl(HttpReply *reply)
             /* We ignore cache-control directives as per the Surrogate specification */
             ignoreCacheControl = true;
 
-            httpHdrScTargetDestroy(sctusable);
+            delete sctusable;
         }
     }
 }

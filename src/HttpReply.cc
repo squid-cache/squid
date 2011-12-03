@@ -408,7 +408,7 @@ HttpReply::hdrCacheClean()
     }
 
     if (surrogate_control) {
-        httpHdrScDestroy(surrogate_control);
+        delete surrogate_control;
         surrogate_control = NULL;
     }
 

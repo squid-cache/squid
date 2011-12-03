@@ -1209,7 +1209,7 @@ HttpHeader::putSc(HttpHdrSc *sc)
     /* pack into mb */
     mb.init();
     packerToMemInit(&p, &mb);
-    httpHdrScPackInto(sc, &p);
+    sc->packInto(&p);
     /* put */
     addEntry(new HttpHeaderEntry(HDR_SURROGATE_CONTROL, NULL, mb.buf));
     /* cleanup */
@@ -1366,12 +1366,12 @@ HttpHeader::getSc() const
 
     (void) getList(HDR_SURROGATE_CONTROL, &s);
 
-    HttpHdrSc *sc = httpHdrScParseCreate(&s);
+    HttpHdrSc *sc = httpHdrScParseCreate(s);
 
-    HttpHeaderStats[owner].ccParsedCount++;
+    ++HttpHeaderStats[owner].ccParsedCount;
 
     if (sc)
-        httpHdrScUpdateStats(sc, &HttpHeaderStats[owner].scTypeDistr);
+        sc->updateStats(&HttpHeaderStats[owner].scTypeDistr);
 
     httpHeaderNoteParsedEntry(HDR_SURROGATE_CONTROL, s, !sc);
 
