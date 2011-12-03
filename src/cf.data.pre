@@ -1503,6 +1503,21 @@ DOC_START
 
 	   accel	Accelerator / reverse proxy mode
 
+	   tproxy	Support Linux TPROXY for spoofing outgoing
+			connections using the client IP address.
+			NP: disables authentication and maybe IPv6 on the port.
+
+	   ssl-bump     Intercept each SSL request matching ssl_bump ACL,
+			establish secure connection with the client and with
+			the server, decrypt HTTP messages as they pass through
+			Squid, and treat them as unencrypted HTTP messages,
+			becoming the man-in-the-middle.
+
+			The ssl_bump option is required to fully enable
+			the SslBump feature.
+
+			Requires tproxy.
+
 	Omitting the mode flag causes default forward proxy mode to be used.
 
 
@@ -1572,6 +1587,25 @@ DOC_START
 				client certificate chain.
 
 	   sslcontext=	SSL session ID context identifier.
+
+	   generate-host-certificates[=<on|off>]
+			Dynamically create SSL server certificates for the
+			destination hosts of bumped SSL requests.When
+			enabled, the cert and key options are used to sign
+			generated certificates. Otherwise generated
+			certificate will be selfsigned.
+			If there is CA certificate life time of generated
+			certificate equals lifetime of CA certificate. If
+			generated certificate is selfsigned lifetime is three
+			years.
+			This option is enabled by default when SslBump is used.
+			See the sslBump option above for more information.
+
+	   dynamic_cert_mem_cache_size=SIZE
+			Approximate total RAM size spent on cached generated
+			certificates. If set to zero, caching is disabled. The
+			default value is 4MB. An average XXX-bit certificate
+			consumes about XXX bytes of RAM.
 
 DOC_END
 
