@@ -3121,7 +3121,6 @@ void FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
     data.opened(io.nfd, dataCloser());
     data.port = io.details.peer.GetPort();
 
-    static char ntoapeer[MAX_IPSTRLEN];
     io.details.peer.NtoA(ntoapeer,sizeof(ntoapeer));
     data.host = xstrdup(ntoapeer);
 
