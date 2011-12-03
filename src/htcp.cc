@@ -49,6 +49,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
+#include "compat/xalloc.h"
 
 /// dials htcpIncomingConnectionOpened call
 class HtcpListeningStartedDialer: public CallDialer,
