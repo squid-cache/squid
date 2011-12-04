@@ -358,6 +358,7 @@ squid_SOURCES = \
 	HttpHeaderMask.h \
 	HttpHeaderRange.h \
 	HttpHeaderTools.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpControlMsg.h \
 	HttpMsg.cc \
@@ -1042,6 +1043,7 @@ tests_testHttpReply_SOURCES=\
 	cbdata.cc \
 	cbdata.h \
 	ETag.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -1307,6 +1309,7 @@ tests_testCacheManager_SOURCES = \
 	HelperChildConfig.cc \
 	$(HTCPSOURCE) \
 	http.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
@@ -1447,6 +1450,7 @@ tests_testDiskIO_SOURCES = \
 	event.cc \
 	fd.cc \
 	filemap.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -1623,6 +1627,7 @@ tests_testEvent_SOURCES = \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
@@ -1811,6 +1816,7 @@ tests_testEventLoop_SOURCES = \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
@@ -1997,6 +2003,7 @@ tests_test_http_range_SOURCES = \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -2225,6 +2232,7 @@ tests_testHttpRequest_SOURCES = \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
@@ -2414,6 +2422,8 @@ tests_testStore_SOURCES= \
 	tests/stub_helper.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_http.cc \
+	HttpBody.h \
+	HttpBody.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_libcomm.cc \
@@ -2551,6 +2561,7 @@ tests_testUfs_SOURCES = \
 	fd.cc \
 	disk.cc \
 	filemap.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
@@ -2680,6 +2691,7 @@ tests_testRock_SOURCES = \
 	event.cc \
 	fd.cc \
 	filemap.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHdrCc.cc \
 	HttpHdrContRange.cc \
@@ -2809,6 +2821,7 @@ tests_testCoss_SOURCES = \
 	fd.cc \
 	disk.cc \
 	filemap.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
@@ -2940,6 +2953,7 @@ tests_testNull_SOURCES = \
 	fd.cc \
 	disk.cc \
 	filemap.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
@@ -3098,6 +3112,7 @@ tests_testURL_SOURCES = \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \

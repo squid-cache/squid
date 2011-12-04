@@ -1213,7 +1213,7 @@ ErrorState::BuildHttpReply()
                 rep->header.putStr(HDR_CONTENT_LANGUAGE, "en");
         }
 
-        httpBodySet(&rep->body, content);
+        rep->body.setMb(content);
         /* do not memBufClean() or delete the content, it was absorbed by httpBody */
     }
 
