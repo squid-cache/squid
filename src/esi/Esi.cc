@@ -2433,7 +2433,7 @@ esiEnableProcessing (HttpReply *rep)
 
     if (rep->surrogate_control) {
         HttpHdrScTarget *sctusable =
-                rep->surrogate_control->getMergedTarget(Config.Accel.surrogate_id);
+            rep->surrogate_control->getMergedTarget(Config.Accel.surrogate_id);
 
         if (!sctusable || !sctusable->hasContent())
             /* Nothing generic or targeted at us, or no

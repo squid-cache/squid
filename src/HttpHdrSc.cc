@@ -47,9 +47,9 @@
 
 /* a row in the table used for parsing surrogate-control header and statistics */
 typedef struct {
-	const char *name;
-	http_hdr_sc_type id;
-	HttpHeaderFieldStat stat;
+    const char *name;
+    http_hdr_sc_type id;
+    HttpHeaderFieldStat stat;
 } HttpHeaderScFields;
 
 /* this table is used for parsing surrogate control header */
@@ -189,39 +189,38 @@ HttpHdrSc::parse(const String * str)
             sct->noStoreRemote(true);
             break;
 
-        case SC_MAX_AGE:
-        	{
-        	    int ma;
-        	    if (p && httpHeaderParseInt(p, &ma)) {
-        	        sct->maxAge(ma);
-        	    } else {
-        	        debugs(90, 2, "sc: invalid max-age specs near '" << item << "'");
-        	        sct->clearMaxAge();
-        	    }
+        case SC_MAX_AGE: {
+            int ma;
+            if (p && httpHeaderParseInt(p, &ma)) {
+                sct->maxAge(ma);
+            } else {
+                debugs(90, 2, "sc: invalid max-age specs near '" << item << "'");
+                sct->clearMaxAge();
+            }
 
-        	    if ((p = strchr (p, '+'))) {
-        	        int ms;
-        	        ++p; //skip the + char
-        	        if (httpHeaderParseInt(p, &ms)) {
-        	            sct->maxStale(ms);
-        	        } else {
-        	            debugs(90, 2, "sc: invalid max-stale specs near '" << item << "'");
-        	            sct->clearMaxStale();
-        	            /* leave the max-age alone */
-        	        }
-        	    }
-        	    break;
-        	}
+            if ((p = strchr (p, '+'))) {
+                int ms;
+                ++p; //skip the + char
+                if (httpHeaderParseInt(p, &ms)) {
+                    sct->maxStale(ms);
+                } else {
+                    debugs(90, 2, "sc: invalid max-stale specs near '" << item << "'");
+                    sct->clearMaxStale();
+                    /* leave the max-age alone */
+                }
+            }
+            break;
+        }
 
         case SC_CONTENT:
 
-        	if ( p && httpHeaderParseQuotedString(p, vlen, &sct->content_)) {
-        		sct->setMask(SC_CONTENT,true); // ugly but saves a copy
-        	} else {
+            if ( p && httpHeaderParseQuotedString(p, vlen, &sct->content_)) {
+                sct->setMask(SC_CONTENT,true); // ugly but saves a copy
+            } else {
                 debugs(90, 2, "sc: invalid content= quoted string near '" << item << "'");
                 sct->clearContent();
             }
-        	break;
+            break;
 
         case SC_OTHER:
         default:
@@ -296,7 +295,7 @@ HttpHdrSc::packInto(Packer * p) const
     node = targets.head;
 
     while (node) {
-    	static_cast<HttpHdrScTarget *>(node->data)->packInto(p);
+        static_cast<HttpHdrScTarget *>(node->data)->packInto(p);
         node = node->next;
     }
 }
@@ -321,7 +320,7 @@ HttpHdrSc::updateStats(StatHist * hist) const
     dlink_node *sct = targets.head;
 
     while (sct) {
-    	static_cast<HttpHdrScTarget *>(sct->data)->updateStats(hist);
+        static_cast<HttpHdrScTarget *>(sct->data)->updateStats(hist);
         sct = sct->next;
     }
 }
