@@ -444,7 +444,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
         rep->header.putStr(HDR_LOCATION, min_u->url);
     }
 
-    httpBodySet(&rep->body, mb);
+    rep->body.setMb(mb);
     /* don't clean or delete mb; rep->body owns it now */
     e->replaceHttpReply(rep);
     e->complete();
