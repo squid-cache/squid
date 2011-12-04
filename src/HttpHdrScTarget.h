@@ -49,16 +49,16 @@ class HttpHdrScTarget
     // parsing is done in HttpHdrSc, need to grant them access.
     friend class HttpHdrSc;
 public:
-	static const int MAX_AGE_UNSET=-1; //max-age is unset
-	static const int MAX_STALE_UNSET=0; //max-stale is unset
+    static const int MAX_AGE_UNSET=-1; //max-age is unset
+    static const int MAX_STALE_UNSET=0; //max-stale is unset
 
     HttpHdrScTarget(const char *target_):
-        mask(0), max_age(MAX_AGE_UNSET), max_stale(MAX_STALE_UNSET),target(target_) {}
+            mask(0), max_age(MAX_AGE_UNSET), max_stale(MAX_STALE_UNSET),target(target_) {}
     HttpHdrScTarget(const String &target_):
-        mask(0), max_age(MAX_AGE_UNSET), max_stale(MAX_STALE_UNSET),target(target_) {}
+            mask(0), max_age(MAX_AGE_UNSET), max_stale(MAX_STALE_UNSET),target(target_) {}
     HttpHdrScTarget(const HttpHdrScTarget &t):
-        mask(t.mask), max_age(t.max_age), max_stale(t.max_stale),
-        content_(t.content_), target(t.target) {}
+            mask(t.mask), max_age(t.max_age), max_stale(t.max_stale),
+            content_(t.content_), target(t.target) {}
 
     bool hasNoStore() const {return isSet(SC_NO_STORE); }
     void noStore(bool v) { setMask(SC_NO_STORE,v); }
@@ -72,13 +72,13 @@ public:
 
     bool hasMaxAge() const { return isSet(SC_MAX_AGE); }
     void maxAge(int v) {
-    	if (v >= 0) { //setting
-    		setMask(SC_MAX_AGE,true);
-    		max_age=v;
-    	} else {
-    		setMask(SC_MAX_AGE,false);
-    		max_age=MAX_AGE_UNSET;
-    	}
+        if (v >= 0) { //setting
+            setMask(SC_MAX_AGE,true);
+            max_age=v;
+        } else {
+            setMask(SC_MAX_AGE,false);
+            max_age=MAX_AGE_UNSET;
+        }
     }
     int maxAge() const { return max_age; }
     void clearMaxAge() { setMask(SC_MAX_AGE,false); max_age=MAX_AGE_UNSET; }
@@ -91,8 +91,8 @@ public:
 
     bool hasContent() const { return isSet(SC_CONTENT); }
     void Content(const String &v) {
-    	setMask(SC_CONTENT,true);
-    	content_=v;
+        setMask(SC_CONTENT,true);
+        content_=v;
     }
     String content() const { return content_; }
     void clearContent() { setMask(SC_CONTENT,false); content_.clean(); }
