@@ -1048,7 +1048,7 @@ old_comm_reset_close(int fd)
 
 #if USE_SSL
 void
-commStartSslClose(const CommCloseCbParams &params)
+commStartSslClose(const FdeCbParams &params)
 {
     assert(&fd_table[params.fd].ssl);
     ssl_shutdown_method(fd_table[params.fd].ssl);
@@ -1056,7 +1056,7 @@ commStartSslClose(const CommCloseCbParams &params)
 #endif
 
 void
-comm_close_complete(const CommCloseCbParams &params)
+comm_close_complete(const FdeCbParams &params)
 {
 #if USE_SSL
     fde *F = &fd_table[params.fd];
@@ -1119,10 +1119,9 @@ _comm_close(int fd, char const *file, int line)
 
 #if USE_SSL
     if (F->ssl) {
-        // XXX: make this a generic async call passing one FD parameter. No need to use CommCloseCbParams
         AsyncCall::Pointer startCall=commCbCall(5,4, "commStartSslClose",
-                                                CommCloseCbPtrFun(commStartSslClose, NULL));
-        CommCloseCbParams &startParams = GetCommParams<CommCloseCbParams>(startCall);
+                                                FdeCbPtrFun(commStartSslClose, NULL));
+        FdeCbParams &startParams = GetCommParams<FdeCbParams>(startCall);
         startParams.fd = fd;
         ScheduleCallHere(startCall);
     }
@@ -1162,8 +1161,8 @@ _comm_close(int fd, char const *file, int line)
 
 
     AsyncCall::Pointer completeCall=commCbCall(5,4, "comm_close_complete",
-                                    CommCloseCbPtrFun(comm_close_complete, NULL));
-    CommCloseCbParams &completeParams = GetCommParams<CommCloseCbParams>(completeCall);
+                                    FdeCbPtrFun(comm_close_complete, NULL));
+    FdeCbParams &completeParams = GetCommParams<FdeCbParams>(completeCall);
     completeParams.fd = fd;
     // must use async call to wait for all callbacks
     // scheduled before comm_close() to finish
