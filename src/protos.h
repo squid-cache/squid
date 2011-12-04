@@ -222,18 +222,6 @@ SQUIDCEXTERN const char *httpMakeVaryMark(HttpRequest * request, HttpReply const
 #include "HttpStatusCode.h"
 SQUIDCEXTERN const char *httpStatusString(http_status status);
 
-/* Http Body */
-/* init/clean */
-SQUIDCEXTERN void httpBodyInit(HttpBody * body);
-SQUIDCEXTERN void httpBodyClean(HttpBody * body);
-/* get body ptr (always use this) */
-SQUIDCEXTERN const char *httpBodyPtr(const HttpBody * body);
-/* set body, does not clone mb so you should not reuse it */
-SQUIDCEXTERN void httpBodySet(HttpBody * body, MemBuf * mb);
-
-/* pack */
-SQUIDCEXTERN void httpBodyPackInto(const HttpBody * body, Packer * p);
-
 /* Http Cache Control Header Field */
 SQUIDCEXTERN void httpHdrCcInitModule(void);
 SQUIDCEXTERN void httpHdrCcCleanModule(void);

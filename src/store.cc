@@ -1872,7 +1872,7 @@ StoreEntry::startWriting()
     rep->packHeadersInto(&p);
     mem_obj->markEndOfReplyHeaders();
 
-    httpBodyPackInto(&rep->body, &p);
+    rep->body.packInto(&p);
 
     packerClean(&p);
 }

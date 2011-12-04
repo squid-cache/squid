@@ -704,18 +704,6 @@ struct _fileMap {
     unsigned long *file_map;
 };
 
-/*
- * Note: HttpBody is used only for messages with a small content that is
- * known a priory (e.g., error messages).
- */
-
-class MemBuf;
-
-struct _HttpBody {
-    /* private */
-    MemBuf *mb;
-};
-
 #include "SquidString.h"
 /* http header extention field */
 
