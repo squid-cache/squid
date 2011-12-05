@@ -1,7 +1,7 @@
 #include "squid.h"
 
 // for StatHist definitions
-#include "protos.h"
+#include "StatHist.h"
 
 void
 statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd)

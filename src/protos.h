@@ -222,6 +222,8 @@ SQUIDCEXTERN const char *httpMakeVaryMark(HttpRequest * request, HttpReply const
 #include "HttpStatusCode.h"
 SQUIDCEXTERN const char *httpStatusString(http_status status);
 
+class StatHist;
+
 /* Http Cache Control Header Field */
 SQUIDCEXTERN void httpHdrCcInitModule(void);
 SQUIDCEXTERN void httpHdrCcCleanModule(void);
@@ -399,21 +401,6 @@ SQUIDCEXTERN double statRequestHitRatio(int minutes);
 SQUIDCEXTERN double statRequestHitMemoryRatio(int minutes);
 SQUIDCEXTERN double statRequestHitDiskRatio(int minutes);
 SQUIDCEXTERN double statByteHitRatio(int minutes);
-
-/* StatHist */
-SQUIDCEXTERN void statHistClean(StatHist * H);
-SQUIDCEXTERN void statHistCount(StatHist * H, double val);
-SQUIDCEXTERN void statHistCopy(StatHist * Dest, const StatHist * Orig);
-SQUIDCEXTERN void statHistSafeCopy(StatHist * Dest, const StatHist * Orig);
-SQUIDCEXTERN double statHistDeltaMedian(const StatHist * A, const StatHist * B);
-SQUIDCEXTERN double statHistDeltaPctile(const StatHist * A, const StatHist * B, double pctile);
-SQUIDCEXTERN void statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd);
-SQUIDCEXTERN void statHistLogInit(StatHist * H, int capacity, double min, double max);
-SQUIDCEXTERN void statHistEnumInit(StatHist * H, int last_enum);
-SQUIDCEXTERN void statHistIntInit(StatHist * H, int n);
-SQUIDCEXTERN StatHistBinDumper statHistEnumDumper;
-SQUIDCEXTERN StatHistBinDumper statHistIntDumper;
-
 
 /* mem */
 SQUIDCEXTERN void memClean(void);

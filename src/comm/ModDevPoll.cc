@@ -59,6 +59,7 @@
 #include "fde.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
+#include "StatHist.h"
 #include "Store.h"
 
 #if HAVE_SYS_DEVPOLL_H

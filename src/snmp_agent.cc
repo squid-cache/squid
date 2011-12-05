@@ -36,6 +36,7 @@
 #include "cache_snmp.h"
 #include "Store.h"
 #include "mem_node.h"
+#include "StatHist.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 
