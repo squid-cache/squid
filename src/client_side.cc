@@ -3412,9 +3412,8 @@ clientNegotiateSSL(int fd, void *data)
 }
 
 /**
- * Initializes an ssl connection to squid. 
- * In the case the SSL_CTX is not given it calls the ConnStateData::switchToHttps method
- * to start procedure to generate a dynamic SSL_CTX
+ * If SSL_CTX is given, starts reading the SSL handshake.
+ * Otherwise, calls switchToHttps to generate a dynamic SSL_CTX.
  */
 static void
 httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext)
@@ -3460,11 +3459,11 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
     } else {
         // fake a CONNECT request to force connState to tunnel
 
-        debugs(33, 2, HERE << " normal SSL connection: " << connState->clientConnection << " revert to tunnel mode");
+        debugs(33, 2, HERE << " SslBump denied: " << connState->clientConnection << " revert to tunnel mode");
         static char ip[MAX_IPSTRLEN];
         static char reqStr[MAX_IPSTRLEN + 80];
         connState->clientConnection->local.NtoA(ip, sizeof(ip));
-        snprintf(reqStr, sizeof(reqStr), "CONNECT %s:%d\r\n\r\n", ip, connState->clientConnection->local.GetPort());
+        snprintf(reqStr, sizeof(reqStr), "CONNECT %s:%d HTTP/1.1\r\nHost: %s\r\n\r\n", ip, connState->clientConnection->local.GetPort(), ip);
         bool ret = connState->handleReadData(reqStr, strlen(reqStr));
         if (ret)
             ret = connState->clientParseRequests();
@@ -3501,8 +3500,6 @@ httpsAccept(const CommAcceptCbParams &params)
     ConnStateData *connState = connStateCreate(params.conn, &s->http);
 
     if (s->sslBump) {
-        assert(params.conn->flags & COMM_TRANSPARENT);
-
         debugs(33, 5, "httpsAccept: accept transparent connection: " << params.conn);
 
         if (!Config.accessList.ssl_bump) {
@@ -3514,6 +3511,7 @@ httpsAccept(const CommAcceptCbParams &params)
         // using tproxy-provided destination IP and port.
         HttpRequest *request = new HttpRequest();
         static char ip[MAX_IPSTRLEN];
+        assert(params.conn->flags & COMM_TRANSPARENT);
         request->SetHost(params.conn->local.NtoA(ip, sizeof(ip)));
         request->port = params.conn->local.GetPort();
         request->myportname = s->name;
