@@ -40,7 +40,8 @@ class Packer;
  * This class is useful to represent short HTTP messages, whose
  * contents are known in advance, e.g. error messages
  */
-class HttpBody {
+class HttpBody
+{
 public:
     HttpBody();
     ~HttpBody();

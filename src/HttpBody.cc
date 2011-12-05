@@ -43,14 +43,14 @@ HttpBody::HttpBody() : mb(new MemBuf)
 
 HttpBody::~HttpBody()
 {
-	clear();
-	delete mb;
+    clear();
+    delete mb;
 }
 
 void
 HttpBody::clear()
 {
-    if(!mb->isNull())
+    if (!mb->isNull())
         mb->clean();
 }
 
