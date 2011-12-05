@@ -41,6 +41,7 @@
 #include "ICP.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
+#include "StatHist.h"
 #include "Store.h"
 
 #if HAVE_POLL_H

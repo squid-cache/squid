@@ -1100,24 +1100,11 @@ struct _refresh_t {
 };
 
 /*
- * "very generic" histogram;
- * see important comments on hbase_f restrictions in StatHist.c
- */
-
-struct _StatHist {
-    int *bins;
-    int capacity;
-    double min;
-    double max;
-    double scale;
-    hbase_f *val_in;		/* e.g., log() for log-based histogram */
-    hbase_f *val_out;		/* e.g., exp() for log based histogram */
-};
-
-/*
  * if you add a field to StatCounters,
  * you MUST sync statCountersInitSpecial, statCountersClean, and statCountersCopy
  */
+
+#include "StatHist.h"
 
 struct _StatCounters {
 

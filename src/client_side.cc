@@ -117,6 +117,7 @@
 #include "MemObject.h"
 #include "ProtoPort.h"
 #include "rfc1738.h"
+#include "StatHist.h"
 #include "SquidTime.h"
 #if USE_SSL
 #include "ssl/context_storage.h"

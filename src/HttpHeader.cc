@@ -42,6 +42,7 @@
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "rfc1123.h"
+#include "StatHist.h"
 #include "Store.h"
 #include "TimeOrTag.h"
 
