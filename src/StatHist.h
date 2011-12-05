@@ -1,12 +1,4 @@
-
 /*
- * $Id$
- *
- * DEBUG: section 90    HTTP Cache Control Header
- * AUTHOR: Alex Rousskov
- *         Robert Collins (Surrogate-Control is derived from
- *         		   Cache-Control).
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -33,44 +25,43 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ *  AUTHOR: Francesco Chemolli
  */
 
-#include "squid.h"
-#include "HttpHdrSc.h"
-#include "StatHist.h"
+#ifndef STATHIST_H_
+#define STATHIST_H_
 
-extern http_hdr_sc_type &operator++ (http_hdr_sc_type &aHeader);
-/* copies non-extant fields from new_sc to this sc */
-void
-HttpHdrScTarget::mergeWith(const HttpHdrScTarget * new_sc)
-{
-    assert(new_sc);
-    /* Don't touch the target - this is used to get the operations for a
-     * single surrogate
-     */
+/*
+ * "very generic" histogram;
+ * see important comments on hbase_f restrictions in StatHist.c
+ */
 
-    if (new_sc->hasNoStore())
-        noStore(true);
+class StatHist {
+public:
+    int *bins;
+    int capacity;
+    double min;
+    double max;
+    double scale;
+    hbase_f *val_in;        /* e.g., log() for log-based histogram */
+    hbase_f *val_out;       /* e.g., exp() for log based histogram */
+};
 
-    if (new_sc->hasNoStoreRemote())
-        noStoreRemote(true);
+/* StatHist */
+SQUIDCEXTERN void statHistClean(StatHist * H);
+SQUIDCEXTERN void statHistCount(StatHist * H, double val);
+SQUIDCEXTERN void statHistCopy(StatHist * Dest, const StatHist * Orig);
+SQUIDCEXTERN void statHistSafeCopy(StatHist * Dest, const StatHist * Orig);
+SQUIDCEXTERN double statHistDeltaMedian(const StatHist * A, const StatHist * B);
+SQUIDCEXTERN double statHistDeltaPctile(const StatHist * A, const StatHist * B, double pctile);
+SQUIDCEXTERN void statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd);
+SQUIDCEXTERN void statHistLogInit(StatHist * H, int capacity, double min, double max);
+SQUIDCEXTERN void statHistEnumInit(StatHist * H, int last_enum);
+SQUIDCEXTERN void statHistIntInit(StatHist * H, int n);
+SQUIDCEXTERN StatHistBinDumper statHistEnumDumper;
+SQUIDCEXTERN StatHistBinDumper statHistIntDumper;
 
-    if (new_sc->hasMaxAge() && !hasMaxAge()) {
-        maxAge(new_sc->maxAge());
-        maxStale(new_sc->maxStale());
-    }
 
-    if (new_sc->hasContent() && !hasContent())
-        Content(new_sc->content());
 
-}
 
-void
-HttpHdrScTarget::updateStats(StatHist * hist) const
-{
-    http_hdr_sc_type c;
-
-    for (c = SC_NO_STORE; c < SC_ENUM_END; ++c)
-        if (isSet(c))
-            statHistCount(hist, c);
-}
+#endif /* STATHIST_H_ */

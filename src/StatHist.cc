@@ -46,6 +46,7 @@
  */
 
 #include "squid.h"
+#include "StatHist.h"
 #include "Store.h"
 
 /* Local functions */

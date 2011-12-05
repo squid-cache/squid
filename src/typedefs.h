@@ -92,8 +92,6 @@ typedef struct _StatCounters StatCounters;
 
 typedef struct _storeSwapLogData storeSwapLogData;
 
-typedef struct _StatHist StatHist;
-
 typedef struct _cd_guess_stats cd_guess_stats;
 
 typedef struct _CacheDigest CacheDigest;

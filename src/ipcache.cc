@@ -40,6 +40,7 @@
 #include "ipcache.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
+#include "StatHist.h"
 #include "Store.h"
 #include "wordlist.h"
 

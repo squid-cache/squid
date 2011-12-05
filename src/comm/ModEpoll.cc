@@ -60,6 +60,7 @@
 #include "fde.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
+#include "StatHist.h"
 #include "Store.h"
 
 #define DEBUG_EPOLL 0
