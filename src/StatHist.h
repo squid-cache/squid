@@ -48,6 +48,18 @@ public:
     double scale;
     hbase_f *val_in;        /* e.g., log() for log-based histogram */
     hbase_f *val_out;       /* e.g., exp() for log based histogram */
+    double deltaPctile(const StatHist &B, double pctile) const;
+    double val(int bin) const; //todo: make private
+    void count(double val) const;
+    StatHist &operator=(const StatHist &);
+    StatHist();
+    StatHist(const StatHist&);
+    double deltaMedian(const StatHist &B, double pctile) const;
+    void dump(StoreEntry *sentry, StatHistBinDumper * bd);
+    void logInit(int capacity, double min, double max);
+    void enumInit(int last_enum);
+    void intInit(int n);
+private:
 };
 
 /* StatHist */

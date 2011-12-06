@@ -52,7 +52,6 @@
 /* Local functions */
 static void statHistInit(StatHist * H, int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
 static int statHistBin(const StatHist * H, double v);
-static double statHistVal(const StatHist * H, int bin);
 static StatHistBinDumper statHistBinDumper;
 
 namespace Math
@@ -90,7 +89,7 @@ statHistInit(StatHist * H, int capacity, hbase_f * val_in, hbase_f * val_out, do
     /* a max value should go into the last bin */
     assert(statHistBin(H, max) == H->capacity - 1);
     /* it is hard to test val_out, here is a crude test */
-    assert(((int) floor(0.99 + statHistVal(H, 0) - min)) == 0);
+    assert(((int) floor(0.99 + H->val(0) - min)) == 0);
 }
 
 void
@@ -177,20 +176,20 @@ statHistBin(const StatHist * H, double v)
     return bin;
 }
 
-static double
-statHistVal(const StatHist * H, int bin)
+double
+StatHist::val(int bin) const
 {
-    return H->val_out((double) bin / H->scale) + H->min;
+    return val_out((double) bin / scale) + min;
 }
 
 double
 statHistDeltaMedian(const StatHist * A, const StatHist * B)
 {
-    return statHistDeltaPctile(A, B, 0.5);
+    return A->deltaPctile(*B, 0.5);
 }
 
 double
-statHistDeltaPctile(const StatHist * A, const StatHist * B, double pctile)
+StatHist::deltaPctile(const StatHist & B, double pctile) const
 {
     int i;
     int s1 = 0;
@@ -198,23 +197,25 @@ statHistDeltaPctile(const StatHist * A, const StatHist * B, double pctile)
     int a = 0;
     int b = 0;
     int I = 0;
-    int J = A->capacity;
+    int J = capacity;
     int K;
     double f;
-    int *D = (int *)xcalloc(A->capacity, sizeof(int));
-    assert(A->capacity == B->capacity);
 
-    for (i = 0; i < A->capacity; i++) {
-        D[i] = B->bins[i] - A->bins[i];
+    assert(capacity == B.capacity);
+
+    int *D = (int *)xcalloc(capacity, sizeof(int));
+
+    for (i = 0; i < capacity; ++i) {
+        D[i] = B.bins[i] - bins[i];
         assert(D[i] >= 0);
     }
 
-    for (i = 0; i < A->capacity; i++)
+    for (i = 0; i < capacity; ++i)
         s1 += D[i];
 
     h = int(s1 * pctile);
 
-    for (i = 0; i < A->capacity; i++) {
+    for (i = 0; i < capacity; ++i) {
         J = i;
         b += D[J];
 
@@ -244,7 +245,7 @@ statHistDeltaPctile(const StatHist * A, const StatHist * B, double pctile)
 
     K = (int) floor(f * (double) (J - I) + I);
 
-    return statHistVal(A, K);
+    return val(K);
 }
 
 static void
@@ -265,7 +266,7 @@ statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd)
         bd = statHistBinDumper;
 
     for (i = 0; i < H->capacity; i++) {
-        const double right_border = statHistVal(H, i + 1);
+        const double right_border = H->val(i + 1);
         assert(right_border - left_border > 0.0);
         bd(sentry, i, left_border, right_border - left_border, H->bins[i]);
         left_border = right_border;
