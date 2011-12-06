@@ -55,7 +55,6 @@ public:
     StatHist() : bins(NULL), capacity(0), min(0), max(0), scale(1.0),
             val_in(NULL), val_out(NULL) {};
     StatHist(const StatHist&);
-    double deltaMedian(const StatHist &B, double pctile) const;
     void dump(StoreEntry *sentry, StatHistBinDumper * bd);
     void logInit(int capacity, double min, double max);
     void enumInit(int last_enum);
@@ -66,15 +65,15 @@ private:
 };
 
 /* StatHist */
-SQUIDCEXTERN void statHistCount(StatHist * H, double val);
-SQUIDCEXTERN double statHistDeltaMedian(const StatHist * A, const StatHist * B);
-SQUIDCEXTERN double statHistDeltaPctile(const StatHist * A, const StatHist * B, double pctile);
-SQUIDCEXTERN void statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd);
-SQUIDCEXTERN void statHistLogInit(StatHist * H, int capacity, double min, double max);
-SQUIDCEXTERN void statHistEnumInit(StatHist * H, int last_enum);
-SQUIDCEXTERN void statHistIntInit(StatHist * H, int n);
-SQUIDCEXTERN StatHistBinDumper statHistEnumDumper;
-SQUIDCEXTERN StatHistBinDumper statHistIntDumper;
+void statHistCount(StatHist * H, double val);
+double statHistDeltaMedian(const StatHist & A, const StatHist & B);
+double statHistDeltaPctile(const StatHist & A, const StatHist & B, double pctile);
+void statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd);
+void statHistLogInit(StatHist * H, int capacity, double min, double max);
+void statHistEnumInit(StatHist * H, int last_enum);
+void statHistIntInit(StatHist * H, int n);
+StatHistBinDumper statHistEnumDumper;
+StatHistBinDumper statHistIntDumper;
 
 
 
