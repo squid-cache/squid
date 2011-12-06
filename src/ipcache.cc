@@ -598,7 +598,7 @@ ipcacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error_m
     static_cast<generic_cbdata *>(data)->unwrap(&i);
     IpcacheStats.replies++;
     const int age = i->age();
-    statHistCount(&statCounter.dns.svc_time, age);
+    statCounter.dns.svc_time.count(age);
 
 #if USE_DNSSERVERS
     ipcacheParse(i, reply);

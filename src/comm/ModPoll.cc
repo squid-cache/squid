@@ -306,7 +306,7 @@ comm_poll_icp_incoming(void)
     if (nevents > INCOMING_ICP_MAX)
         nevents = INCOMING_ICP_MAX;
 
-    statHistCount(&statCounter.comm_icp_incoming, nevents);
+    statCounter.comm_icp_incoming.count(nevents);
 }
 
 static void
@@ -340,7 +340,7 @@ comm_poll_http_incoming(void)
     if (nevents > INCOMING_HTTP_MAX)
         nevents = INCOMING_HTTP_MAX;
 
-    statHistCount(&statCounter.comm_http_incoming, nevents);
+    statCounter.comm_http_incoming.count(nevents);
 }
 
 /* poll all sockets; call handlers for those that are ready. */
@@ -450,7 +450,7 @@ Comm::DoSelect(int msec)
         getCurrentTime();
 
         debugs(5, num ? 5 : 8, "comm_poll: " << num << "+" << npending << " FDs ready");
-        statHistCount(&statCounter.select_fds_hist, num);
+        statCounter.select_fds_hist.count(num);
 
         if (num == 0 && npending == 0)
             continue;
@@ -621,7 +621,7 @@ comm_poll_dns_incoming(void)
     if (nevents > INCOMING_DNS_MAX)
         nevents = INCOMING_DNS_MAX;
 
-    statHistCount(&statCounter.comm_dns_incoming, nevents);
+    statCounter.comm_dns_incoming.count(nevents);
 }
 
 

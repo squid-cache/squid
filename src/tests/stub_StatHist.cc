@@ -10,7 +10,7 @@ statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd)
 }
 
 void
-statHistCount(StatHist * H, double val)
+StatHist::count(double val)
 {
     fatal("statHistCount: Not implemented");
 }

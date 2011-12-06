@@ -378,7 +378,7 @@ Comm::DoSelect(int msec)
     PROF_stop(comm_check_incoming);
     getCurrentTime();
 
-    statHistCount(&statCounter.select_fds_hist, num);
+    statCounter.select_fds_hist.count(num);
 
     if (num == 0)
         return COMM_TIMEOUT; /* no error */

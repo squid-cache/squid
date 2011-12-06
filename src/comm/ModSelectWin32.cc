@@ -303,7 +303,7 @@ comm_select_icp_incoming(void)
     if (nevents > INCOMING_ICP_MAX)
         nevents = INCOMING_ICP_MAX;
 
-    statHistCount(&statCounter.comm_icp_incoming, nevents);
+    statCounter.comm_icp_incoming.count(nevents);
 }
 
 static void
@@ -334,7 +334,7 @@ comm_select_http_incoming(void)
     if (nevents > INCOMING_HTTP_MAX)
         nevents = INCOMING_HTTP_MAX;
 
-    statHistCount(&statCounter.comm_http_incoming, nevents);
+    statCounter.comm_http_incoming.count(nevents);
 }
 
 #define DEBUG_FDBITS 0
@@ -471,7 +471,7 @@ Comm::DoSelect(int msec)
 
         debugs(5, num ? 5 : 8, "comm_select: " << num << "+" << pending << " FDs ready");
 
-        statHistCount(&statCounter.select_fds_hist, num);
+        statCounter.select_fds_hist.count(num);
 
         if (num == 0 && pending == 0)
             continue;
@@ -683,7 +683,7 @@ comm_select_dns_incoming(void)
     if (nevents > INCOMING_DNS_MAX)
         nevents = INCOMING_DNS_MAX;
 
-    statHistCount(&statCounter.comm_dns_incoming, nevents);
+    statCounter.comm_dns_incoming.count(nevents);
 }
 
 void

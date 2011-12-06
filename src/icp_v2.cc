@@ -811,7 +811,7 @@ icpCount(void *buf, int which, size_t len, int delay)
             statCounter.icp.replies_sent++;
             kb_incr(&statCounter.icp.r_kbytes_sent, len);
             /* this is the sent-reply service time */
-            statHistCount(&statCounter.icp.reply_svc_time, delay);
+            statCounter.icp.reply_svc_time.count(delay);
         }
 
         if (ICP_HIT == icp->opcode)

@@ -108,28 +108,13 @@ StatHist::operator =(const StatHist & src)
     return *this;
 }
 
-/*
- * same as statHistCopy but will do nothing if capacities do not match; the
- * latter happens, for example, when #peers changes during reconfiguration;
- * if it happens too often we should think about more general solution..
- */
 void
-statHistSafeCopy(StatHist * Dest, const StatHist * Orig)
+StatHist::count(double val)
 {
-    assert(Dest && Orig);
-    assert(Dest->bins);
-
-    if (Dest->capacity == Orig->capacity)
-        *Dest=*Orig;
-}
-
-void
-statHistCount(StatHist * H, double val)
-{
-    const int bin = statHistBin(H, val);
-    assert(H->bins);		/* make sure it got initialized */
-    assert(0 <= bin && bin < H->capacity);
-    H->bins[bin]++;
+    const int bin = statHistBin(this, val);
+    assert(bins);		/* make sure it got initialized */
+    assert(0 <= bin && bin < capacity);
+    ++bins[bin];
 }
 
 static int
