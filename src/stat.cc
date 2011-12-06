@@ -1541,18 +1541,19 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
     statCountersInitSpecial(dest);
     /* now handle special cases */
     /* note: we assert that histogram capacities do not change */
-    statHistCopy(&dest->client_http.all_svc_time, &orig->client_http.all_svc_time);
-    statHistCopy(&dest->client_http.miss_svc_time, &orig->client_http.miss_svc_time);
-    statHistCopy(&dest->client_http.nm_svc_time, &orig->client_http.nm_svc_time);
-    statHistCopy(&dest->client_http.nh_svc_time, &orig->client_http.nh_svc_time);
-    statHistCopy(&dest->client_http.hit_svc_time, &orig->client_http.hit_svc_time);
-    statHistCopy(&dest->icp.query_svc_time, &orig->icp.query_svc_time);
-    statHistCopy(&dest->icp.reply_svc_time, &orig->icp.reply_svc_time);
-    statHistCopy(&dest->dns.svc_time, &orig->dns.svc_time);
-    statHistCopy(&dest->cd.on_xition_count, &orig->cd.on_xition_count);
-    statHistCopy(&dest->comm_icp_incoming, &orig->comm_icp_incoming);
-    statHistCopy(&dest->comm_http_incoming, &orig->comm_http_incoming);
-    statHistCopy(&dest->select_fds_hist, &orig->select_fds_hist);
+    dest->client_http.all_svc_time=orig->client_http.all_svc_time;
+    dest->client_http.miss_svc_time=orig->client_http.miss_svc_time;
+    dest->client_http.nm_svc_time=orig->client_http.nm_svc_time;
+    dest->client_http.nh_svc_time=orig->client_http.nh_svc_time;
+
+    dest->client_http.hit_svc_time=orig->client_http.hit_svc_time;
+    dest->icp.query_svc_time=orig->icp.query_svc_time;
+    dest->icp.reply_svc_time=orig->icp.reply_svc_time;
+    dest->dns.svc_time=orig->dns.svc_time;
+    dest->cd.on_xition_count=orig->cd.on_xition_count;
+    dest->comm_icp_incoming=orig->comm_icp_incoming;
+    dest->comm_http_incoming=orig->comm_http_incoming;
+    dest->select_fds_hist=orig->select_fds_hist;
 }
 
 static void
