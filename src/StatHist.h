@@ -31,6 +31,8 @@
 #ifndef STATHIST_H_
 #define STATHIST_H_
 
+#include "config.h"
+
 /*
  * "very generic" histogram;
  * see important comments on hbase_f restrictions in StatHist.c
@@ -38,6 +40,7 @@
 
 class StatHist {
 public:
+    void clear();
     int *bins;
     int capacity;
     double min;
@@ -48,7 +51,6 @@ public:
 };
 
 /* StatHist */
-SQUIDCEXTERN void statHistClean(StatHist * H);
 SQUIDCEXTERN void statHistCount(StatHist * H, double val);
 SQUIDCEXTERN void statHistCopy(StatHist * Dest, const StatHist * Orig);
 SQUIDCEXTERN void statHistSafeCopy(StatHist * Dest, const StatHist * Orig);

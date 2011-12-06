@@ -94,10 +94,10 @@ statHistInit(StatHist * H, int capacity, hbase_f * val_in, hbase_f * val_out, do
 }
 
 void
-statHistClean(StatHist * H)
+StatHist::clear()
 {
-    xfree(H->bins);
-    H->bins = NULL;
+    xfree(bins);
+    bins = NULL;
 }
 
 /* assumes that somebody already called init for Dest */
