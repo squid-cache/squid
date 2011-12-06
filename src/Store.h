@@ -191,7 +191,7 @@ public:
 
 #if USE_ADAPTATION
     /// call back producer when more buffer space is available
-    void deferProducer(const AsyncCall::Pointer &producer);
+    void deferProducer(AsyncCall::Pointer &producer);
     /// calls back producer registered with deferProducer
     void kickProducer();
 #endif

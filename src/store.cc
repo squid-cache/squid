@@ -368,7 +368,7 @@ StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl)
 
 #if USE_ADAPTATION
 void
-StoreEntry::deferProducer(const AsyncCall::Pointer &producer)
+StoreEntry::deferProducer(AsyncCall::Pointer &producer)
 {
     if (!deferredProducer)
         deferredProducer = producer;
