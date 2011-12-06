@@ -62,6 +62,7 @@ public:
     void intInit(int n);
     void init(int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
 private:
+    int findBin(double v);
 };
 
 /* StatHist */
