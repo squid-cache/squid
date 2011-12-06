@@ -1688,19 +1688,19 @@ httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e)
     storeAppendPrintf(e, "\nField type distribution\n");
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
                       "id", "name", "count", "#/header");
-    statHistDump(&hs->fieldTypeDistr, e, httpHeaderFieldStatDumper);
+    hs->fieldTypeDistr.dump(e, httpHeaderFieldStatDumper);
     storeAppendPrintf(e, "\nCache-control directives distribution\n");
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
                       "id", "name", "count", "#/cc_field");
-    statHistDump(&hs->ccTypeDistr, e, httpHdrCcStatDumper);
+    hs->ccTypeDistr.dump(e, httpHdrCcStatDumper);
     storeAppendPrintf(e, "\nSurrogate-control directives distribution\n");
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
                       "id", "name", "count", "#/sc_field");
-    statHistDump(&hs->scTypeDistr, e, httpHdrScStatDumper);
+    hs->scTypeDistr.dump(e, httpHdrScStatDumper);
     storeAppendPrintf(e, "\nNumber of fields per header distribution\n");
     storeAppendPrintf(e, "%2s\t %-5s\t %5s\t %6s\n",
                       "id", "#flds", "count", "%total");
-    statHistDump(&hs->hdrUCountDistr, e, httpHeaderFldsPerHdrDumper);
+    hs->hdrUCountDistr.dump(e, httpHeaderFldsPerHdrDumper);
     dump_stat = NULL;
 }
 
