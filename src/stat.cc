@@ -1872,31 +1872,31 @@ statPctileSvc(double pctile, int interval, int which)
     switch (which) {
 
     case PCTILE_HTTP:
-        x = statHistDeltaPctile(&l->client_http.all_svc_time, &f->client_http.all_svc_time, pctile);
+        x = l->client_http.all_svc_time.deltaPctile(f->client_http.all_svc_time, pctile);
         break;
 
     case PCTILE_HIT:
-        x = statHistDeltaPctile(&l->client_http.hit_svc_time, &f->client_http.hit_svc_time, pctile);
+        x = l->client_http.hit_svc_time.deltaPctile(f->client_http.hit_svc_time, pctile);
         break;
 
     case PCTILE_MISS:
-        x = statHistDeltaPctile(&l->client_http.miss_svc_time, &f->client_http.miss_svc_time, pctile);
+        x = l->client_http.miss_svc_time.deltaPctile(f->client_http.miss_svc_time, pctile);
         break;
 
     case PCTILE_NM:
-        x = statHistDeltaPctile(&l->client_http.nm_svc_time, &f->client_http.nm_svc_time, pctile);
+        x = l->client_http.nm_svc_time.deltaPctile(f->client_http.nm_svc_time, pctile);
         break;
 
     case PCTILE_NH:
-        x = statHistDeltaPctile(&l->client_http.nh_svc_time, &f->client_http.nh_svc_time, pctile);
+        x = l->client_http.nh_svc_time.deltaPctile(f->client_http.nh_svc_time, pctile);
         break;
 
     case PCTILE_ICP_QUERY:
-        x = statHistDeltaPctile(&l->icp.query_svc_time, &f->icp.query_svc_time, pctile);
+        x = l->icp.query_svc_time.deltaPctile(f->icp.query_svc_time, pctile);
         break;
 
     case PCTILE_DNS:
-        x = statHistDeltaPctile(&l->dns.svc_time, &f->dns.svc_time, pctile);
+        x = l->dns.svc_time.deltaPctile(f->dns.svc_time, pctile);
         break;
 
     default:
