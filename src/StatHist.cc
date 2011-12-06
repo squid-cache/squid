@@ -50,7 +50,6 @@
 #include "Store.h"
 
 /* Local functions */
-static int statHistBin(const StatHist * H, double v);
 static StatHistBinDumper statHistBinDumper;
 
 namespace Math
@@ -78,9 +77,9 @@ StatHist::init(int capacity_, hbase_f * val_in_, hbase_f * val_out_, double min_
 
     /* check that functions are valid */
     /* a min value should go into bin[0] */
-    assert(statHistBin(this, min) == 0);
+    assert(findBin(min) == 0);
     /* a max value should go into the last bin */
-    assert(statHistBin(this, max) == capacity - 1);
+    assert(findBin(max) == capacity - 1);
     /* it is hard to test val_out, here is a crude test */
     assert(((int) floor(0.99 + val(0) - min)) == 0);
 }
@@ -111,34 +110,29 @@ StatHist::operator =(const StatHist & src)
 void
 StatHist::count(double val)
 {
-    const int bin = statHistBin(this, val);
+    const int bin = findBin(val);
     assert(bins);		/* make sure it got initialized */
     assert(0 <= bin && bin < capacity);
     ++bins[bin];
 }
 
-static int
-statHistBin(const StatHist * H, double v)
+int
+StatHist::findBin(double v)
 {
     int bin;
-#if BROKEN_STAT_HIST_BIN
 
-    return 0;
-    /* NOTREACHED */
-#endif
-
-    v -= H->min;		/* offset */
+    v -= min;		/* offset */
 
     if (v <= 0.0)		/* too small */
         return 0;
 
-    bin = (int) floor(H->scale * H->val_in(v) + 0.5);
+    bin = (int) floor(scale * val_in(v) + 0.5);
 
     if (bin < 0)		/* should not happen */
         bin = 0;
 
-    if (bin >= H->capacity)	/* too big */
-        bin = H->capacity - 1;
+    if (bin >= capacity)	/* too big */
+        bin = capacity - 1;
 
     return bin;
 }
