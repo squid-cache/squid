@@ -50,7 +50,7 @@ public:
     hbase_f *val_out;       /* e.g., exp() for log based histogram */
     double deltaPctile(const StatHist &B, double pctile) const;
     double val(int bin) const; //todo: make private
-    void count(double val) const;
+    void count(double val);
     StatHist &operator=(const StatHist &);
     StatHist() : bins(NULL), capacity(0), min(0), max(0), scale(1.0),
             val_in(NULL), val_out(NULL) {};
@@ -66,8 +66,6 @@ private:
 
 /* StatHist */
 SQUIDCEXTERN void statHistCount(StatHist * H, double val);
-SQUIDCEXTERN void statHistCopy(StatHist * Dest, const StatHist * Orig);
-SQUIDCEXTERN void statHistSafeCopy(StatHist * Dest, const StatHist * Orig);
 SQUIDCEXTERN double statHistDeltaMedian(const StatHist * A, const StatHist * B);
 SQUIDCEXTERN double statHistDeltaPctile(const StatHist * A, const StatHist * B, double pctile);
 SQUIDCEXTERN void statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd);

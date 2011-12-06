@@ -441,7 +441,7 @@ HttpHeader::clean()
 
     if (owner <= hoReply) {
         if (0 != entries.count)
-            statHistCount(&HttpHeaderStats[owner].hdrUCountDistr, entries.count);
+            HttpHeaderStats[owner].hdrUCountDistr.count(entries.count);
 
         HttpHeaderStats[owner].destroyedCount++;
 
@@ -453,7 +453,7 @@ HttpHeader::clean()
             if (e->id < 0 || e->id >= HDR_ENUM_END) {
                 debugs(55, 0, "HttpHeader::clean BUG: entry[" << pos << "] is invalid (" << e->id << "). Ignored.");
             } else {
-                statHistCount(&HttpHeaderStats[owner].fieldTypeDistr, e->id);
+                HttpHeaderStats[owner].fieldTypeDistr.count(e->id);
                 /* yes, this deletion leaves us in an inconsistent state */
                 delete e;
             }

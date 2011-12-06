@@ -177,7 +177,7 @@ cacheDigestAdd(CacheDigest * cd, const cache_key * key)
             on_xition_cnt++;
         }
 
-        statHistCount(&statCounter.cd.on_xition_count, on_xition_cnt);
+        statCounter.cd.on_xition_count.count(on_xition_cnt);
     }
 #endif
     cd->count++;
