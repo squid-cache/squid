@@ -218,18 +218,18 @@ statHistBinDumper(StoreEntry * sentry, int idx, double val, double size, int cou
 }
 
 void
-statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd)
+StatHist::dump(StoreEntry * sentry, StatHistBinDumper * bd) const
 {
     int i;
-    double left_border = H->min;
+    double left_border = min;
 
     if (!bd)
         bd = statHistBinDumper;
 
-    for (i = 0; i < H->capacity; i++) {
-        const double right_border = H->val(i + 1);
+    for (i = 0; i < capacity; ++i) {
+        const double right_border = val(i + 1);
         assert(right_border - left_border > 0.0);
-        bd(sentry, i, left_border, right_border - left_border, H->bins[i]);
+        bd(sentry, i, left_border, right_border - left_border, bins[i]);
         left_border = right_border;
     }
 }
