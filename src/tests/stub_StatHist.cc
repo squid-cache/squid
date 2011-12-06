@@ -20,3 +20,9 @@ statHistEnumInit(StatHist * H, int last_enum)
 {
 //NO-OP    fatal("statHistEnumInit: Not implemented");
 }
+
+void
+StatHist::dump(StoreEntry * sentry, StatHistBinDumper * bd) const
+{
+    // noop
+}
