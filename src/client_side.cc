@@ -1520,6 +1520,7 @@ ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredReq
      */
 }
 
+/// called when we have successfully finished writing the response
 void
 ClientSocketContext::keepaliveNextRequest()
 {
@@ -1530,6 +1531,26 @@ ClientSocketContext::keepaliveNextRequest()
 
     if (conn->pinning.pinned && !Comm::IsConnOpen(conn->pinning.serverConnection)) {
         debugs(33, 2, HERE << conn->clientConnection << " Connection was pinned but server side gone. Terminating client connection");
+        conn->clientConnection->close();
+        return;
+    }
+
+    /** \par
+     * We are done with the response, and we are either still receiving request
+     * body (early response!) or have already stopped receiving anything.
+     *
+     * If we are still receiving, then clientParseRequest() below will fail.
+     * (XXX: but then we will call readNextRequest() which may succeed and
+     * execute a smuggled request as we are not done with the current request).
+     *
+     * If we stopped because we got everything, then try the next request.
+     *
+     * If we stopped receiving because of an error, then close now to avoid
+     * getting stuck and to prevent accidental request smuggling.
+     */
+
+    if (const char *reason = conn->stoppedReceiving()) {
+        debugs(33, 3, HERE << "closing for earlier request error: " << reason);
         conn->clientConnection->close();
         return;
     }
@@ -1778,44 +1799,35 @@ ClientSocketContext::doClose()
     clientConnection->close();
 }
 
-/** Called to initiate (and possibly complete) closing of the context.
- * The underlying socket may be already closed */
+/// called when we encounter a response-related error
 void
 ClientSocketContext::initiateClose(const char *reason)
 {
-    debugs(33, 5, HERE << "initiateClose: closing for " << reason);
+    http->getConn()->stopSending(reason); // closes ASAP
+}
 
-    if (http != NULL) {
-        ConnStateData * conn = http->getConn();
+void
+ConnStateData::stopSending(const char *error)
+{
+    debugs(33, 4, HERE << "sending error (" << clientConnection << "): " << error <<
+           "; old receiving error: " <<
+           (stoppedReceiving() ? stoppedReceiving_ : "none"));
 
-        if (conn != NULL) {
-            if (const int64_t expecting = conn->mayNeedToReadMoreBody()) {
-                debugs(33, 5, HERE << "ClientSocketContext::initiateClose: " <<
-                       "closing, but first " << conn << " needs to read " <<
-                       expecting << " request body bytes with " <<
-                       conn->in.notYetUsed << " notYetUsed");
+    if (const char *oldError = stoppedSending()) {
+        debugs(33, 3, HERE << "already stopped sending: " << oldError);
+        return; // nothing has changed as far as this connection is concerned
+    }
+    stoppedSending_ = error;
 
-                if (conn->closing()) {
-                    debugs(33, 2, HERE << "avoiding double-closing " << conn);
-                    return;
-                }
-
-                /*
-                * XXX We assume the reply fits in the TCP transmit
-                * window.  If not the connection may stall while sending
-                * the reply (before reaching here) if the client does not
-                * try to read the response while sending the request body.
-                * As of yet we have not received any complaints indicating
-                * this may be an issue.
-                */
-                conn->startClosing(reason);
-
-                return;
-            }
+    if (!stoppedReceiving()) {
+        if (const int64_t expecting = mayNeedToReadMoreBody()) {
+            debugs(33, 5, HERE << "must still read " << expecting <<
+                   " request body bytes with " << in.notYetUsed << " unused");
+            return; // wait for the request receiver to finish reading
         }
     }
 
-    doClose();
+    clientConnection->close();
 }
 
 void
@@ -2936,10 +2948,11 @@ ConnStateData::handleRequestBodyData()
     if (!bodyPipe) {
         debugs(33,5, HERE << "produced entire request body for " << clientConnection);
 
-        if (closing()) {
+        if (const char *reason = stoppedSending()) {
             /* we've finished reading like good clients,
              * now do the close that initiateClose initiated.
              */
+            debugs(33, 3, HERE << "closing for earlier sending error: " << reason);
             clientConnection->close();
             return false;
         }
@@ -3036,7 +3049,7 @@ ConnStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer )
         return;
 
     // too late to read more body
-    if (!isOpen() || closing())
+    if (!isOpen() || stoppedReceiving())
         return;
 
     readSomeData();
@@ -3045,8 +3058,11 @@ ConnStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer )
 void
 ConnStateData::noteBodyConsumerAborted(BodyPipe::Pointer )
 {
-    if (!closing())
-        startClosing("body consumer aborted");
+    // request reader may get stuck waiting for space if nobody consumes body
+    if (bodyPipe != NULL)
+        bodyPipe->enableAutoConsumption();
+
+    stopReceiving("virgin request body consumer aborted"); // closes ASAP
 }
 
 /** general lifetime handler for HTTP requests */
@@ -3856,8 +3872,9 @@ CBDATA_CLASS_INIT(ConnStateData);
 
 ConnStateData::ConnStateData() :
         AsyncJob("ConnStateData"),
-        closing_(false),
-        switchedToHttps_(false)
+        switchedToHttps_(false),
+        stoppedSending_(NULL),
+        stoppedReceiving_(NULL)
 {
     pinning.pinned = false;
     pinning.auth = false;
@@ -3914,32 +3931,24 @@ ConnStateData::mayNeedToReadMoreBody() const
     return needToProduce - haveAvailable;
 }
 
-bool
-ConnStateData::closing() const
-{
-    return closing_;
-}
-
-/**
- * Called by ClientSocketContext to give the connection a chance to read
- * the entire body before closing the socket.
- */
 void
-ConnStateData::startClosing(const char *reason)
+ConnStateData::stopReceiving(const char *error)
 {
-    debugs(33, 5, HERE << "startClosing " << this << " for " << reason);
-    assert(!closing());
-    closing_ = true;
+    debugs(33, 4, HERE << "receiving error (" << clientConnection << "): " << error <<
+           "; old sending error: " <<
+           (stoppedSending() ? stoppedSending_ : "none"));
 
-    assert(bodyPipe != NULL);
+    if (const char *oldError = stoppedReceiving()) {
+        debugs(33, 3, HERE << "already stopped receiving: " << oldError);
+        return; // nothing has changed as far as this connection is concerned
+    }
 
-    // We do not have to abort the body pipeline because we are going to
-    // read the entire body anyway.
-    // Perhaps an ICAP server wants to log the complete request.
+    stoppedReceiving_ = error;
 
-    // If a consumer abort have caused this closing, we may get stuck
-    // as nobody is consuming our data. Allow auto-consumption.
-    bodyPipe->enableAutoConsumption();
+    if (const char *sendError = stoppedSending()) {
+        debugs(33, 3, HERE << "closing because also stopped sending: " << sendError);
+        clientConnection->close();
+    }
 }
 
 void
