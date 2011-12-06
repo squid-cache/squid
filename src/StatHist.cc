@@ -144,13 +144,13 @@ StatHist::val(int bin) const
 }
 
 double
-statHistDeltaMedian(const StatHist * A, const StatHist * B)
+statHistDeltaMedian(const StatHist & A, const StatHist & B)
 {
-    return A->deltaPctile(*B, 0.5);
+    return statHistDeltaPctile(A,B, 0.5);
 }
 
 double
-StatHist::deltaPctile(const StatHist & B, double pctile) const
+statHistDeltaPctile(const StatHist & A, const StatHist & B, double pctile)
 {
     int i;
     int s1 = 0;
@@ -158,25 +158,25 @@ StatHist::deltaPctile(const StatHist & B, double pctile) const
     int a = 0;
     int b = 0;
     int I = 0;
-    int J = capacity;
+    int J = A.capacity;
     int K;
     double f;
 
-    assert(capacity == B.capacity);
+    assert(A.capacity == B.capacity);
 
-    int *D = (int *)xcalloc(capacity, sizeof(int));
+    int *D = (int *)xcalloc(A.capacity, sizeof(int));
 
-    for (i = 0; i < capacity; ++i) {
-        D[i] = B.bins[i] - bins[i];
+    for (i = 0; i < A.capacity; ++i) {
+        D[i] = B.bins[i] - A.bins[i];
         assert(D[i] >= 0);
     }
 
-    for (i = 0; i < capacity; ++i)
+    for (i = 0; i < A.capacity; ++i)
         s1 += D[i];
 
     h = int(s1 * pctile);
 
-    for (i = 0; i < capacity; ++i) {
+    for (i = 0; i < A.capacity; ++i) {
         J = i;
         b += D[J];
 
@@ -206,7 +206,7 @@ StatHist::deltaPctile(const StatHist & B, double pctile) const
 
     K = (int) floor(f * (double) (J - I) + I);
 
-    return val(K);
+    return A.val(K);
 }
 
 static void
