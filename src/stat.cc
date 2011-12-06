@@ -1091,16 +1091,16 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
     stats.client_http_kbytes_in = XAVG(client_http.kbytes_in.kb);
     stats.client_http_kbytes_out = XAVG(client_http.kbytes_out.kb);
 
-    stats.client_http_all_median_svc_time = statHistDeltaMedian(&l->client_http.all_svc_time,
-                                            &f->client_http.all_svc_time) / 1000.0;
-    stats.client_http_miss_median_svc_time = statHistDeltaMedian(&l->client_http.miss_svc_time,
-            &f->client_http.miss_svc_time) / 1000.0;
-    stats.client_http_nm_median_svc_time = statHistDeltaMedian(&l->client_http.nm_svc_time,
-                                           &f->client_http.nm_svc_time) / 1000.0;
-    stats.client_http_nh_median_svc_time = statHistDeltaMedian(&l->client_http.nh_svc_time,
-                                           &f->client_http.nh_svc_time) / 1000.0;
-    stats.client_http_hit_median_svc_time = statHistDeltaMedian(&l->client_http.hit_svc_time,
-                                            &f->client_http.hit_svc_time) / 1000.0;
+    stats.client_http_all_median_svc_time = statHistDeltaMedian(l->client_http.all_svc_time,
+                                            f->client_http.all_svc_time) / 1000.0;
+    stats.client_http_miss_median_svc_time = statHistDeltaMedian(l->client_http.miss_svc_time,
+            f->client_http.miss_svc_time) / 1000.0;
+    stats.client_http_nm_median_svc_time = statHistDeltaMedian(l->client_http.nm_svc_time,
+                                           f->client_http.nm_svc_time) / 1000.0;
+    stats.client_http_nh_median_svc_time = statHistDeltaMedian(l->client_http.nh_svc_time,
+                                           f->client_http.nh_svc_time) / 1000.0;
+    stats.client_http_hit_median_svc_time = statHistDeltaMedian(l->client_http.hit_svc_time,
+                                            f->client_http.hit_svc_time) / 1000.0;
 
     stats.server_all_requests = XAVG(server.all.requests);
     stats.server_all_errors = XAVG(server.all.errors);
@@ -1137,12 +1137,12 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
     stats.icp_q_kbytes_recv = XAVG(icp.q_kbytes_recv.kb);
     stats.icp_r_kbytes_recv = XAVG(icp.r_kbytes_recv.kb);
 
-    stats.icp_query_median_svc_time = statHistDeltaMedian(&l->icp.query_svc_time,
-                                      &f->icp.query_svc_time) / 1000000.0;
-    stats.icp_reply_median_svc_time = statHistDeltaMedian(&l->icp.reply_svc_time,
-                                      &f->icp.reply_svc_time) / 1000000.0;
-    stats.dns_median_svc_time = statHistDeltaMedian(&l->dns.svc_time,
-                                &f->dns.svc_time) / 1000.0;
+    stats.icp_query_median_svc_time = statHistDeltaMedian(l->icp.query_svc_time,
+                                      f->icp.query_svc_time) / 1000000.0;
+    stats.icp_reply_median_svc_time = statHistDeltaMedian(l->icp.reply_svc_time,
+                                      f->icp.reply_svc_time) / 1000000.0;
+    stats.dns_median_svc_time = statHistDeltaMedian(l->dns.svc_time,
+                                f->dns.svc_time) / 1000.0;
 
     stats.unlink_requests = XAVG(unlink.requests);
     stats.page_faults = XAVG(page_faults);
@@ -1151,7 +1151,7 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
     stats.average_select_fd_period = f->select_fds > l->select_fds ?
                                      (f->select_time - l->select_time) / (f->select_fds - l->select_fds) : 0.0;
 
-    stats.median_select_fds = statHistDeltaMedian(&l->select_fds_hist, &f->select_fds_hist);
+    stats.median_select_fds = statHistDeltaMedian(l->select_fds_hist, f->select_fds_hist);
     stats.swap_outs = XAVG(swap.outs);
     stats.swap_ins = XAVG(swap.ins);
     stats.swap_files_cleaned = XAVG(swap.files_cleaned);
@@ -1873,31 +1873,31 @@ statPctileSvc(double pctile, int interval, int which)
     switch (which) {
 
     case PCTILE_HTTP:
-        x = l->client_http.all_svc_time.deltaPctile(f->client_http.all_svc_time, pctile);
+        x = statHistDeltaPctile(l->client_http.all_svc_time,f->client_http.all_svc_time, pctile);
         break;
 
     case PCTILE_HIT:
-        x = l->client_http.hit_svc_time.deltaPctile(f->client_http.hit_svc_time, pctile);
+        x = statHistDeltaPctile(l->client_http.hit_svc_time,f->client_http.hit_svc_time, pctile);
         break;
 
     case PCTILE_MISS:
-        x = l->client_http.miss_svc_time.deltaPctile(f->client_http.miss_svc_time, pctile);
+        x = statHistDeltaPctile(l->client_http.miss_svc_time,f->client_http.miss_svc_time, pctile);
         break;
 
     case PCTILE_NM:
-        x = l->client_http.nm_svc_time.deltaPctile(f->client_http.nm_svc_time, pctile);
+        x = statHistDeltaPctile(l->client_http.nm_svc_time,f->client_http.nm_svc_time, pctile);
         break;
 
     case PCTILE_NH:
-        x = l->client_http.nh_svc_time.deltaPctile(f->client_http.nh_svc_time, pctile);
+        x = statHistDeltaPctile(l->client_http.nh_svc_time,f->client_http.nh_svc_time, pctile);
         break;
 
     case PCTILE_ICP_QUERY:
-        x = l->icp.query_svc_time.deltaPctile(f->icp.query_svc_time, pctile);
+        x = statHistDeltaPctile(l->icp.query_svc_time,f->icp.query_svc_time, pctile);
         break;
 
     case PCTILE_DNS:
-        x = l->dns.svc_time.deltaPctile(f->dns.svc_time, pctile);
+        x = statHistDeltaPctile(l->dns.svc_time,f->dns.svc_time, pctile);
         break;
 
     default:
