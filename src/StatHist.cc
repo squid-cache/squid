@@ -50,7 +50,6 @@
 #include "Store.h"
 
 /* Local functions */
-static void statHistInit(StatHist * H, int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
 static int statHistBin(const StatHist * H, double v);
 static StatHistBinDumper statHistBinDumper;
 
@@ -62,34 +61,28 @@ hbase_f Null;
 };
 
 /* low level init, higher level functions has less params */
-static void
-statHistInit(StatHist * H, int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max)
+void
+StatHist::init(int capacity_, hbase_f * val_in_, hbase_f * val_out_, double min_, double max_)
 {
-    assert(H);
-    assert(capacity > 0);
-    assert(val_in && val_out);
+    assert(capacity_ > 0);
+    assert(val_in_ && val_out_);
     /* check before we divide to get scale */
-    assert(val_in(max - min) > 0);
-    H->bins = (int *)xcalloc(capacity, sizeof(int));
-    H->min = min;
-    H->max = max;
-    H->capacity = capacity;
-    H->scale = capacity / val_in(max - min);
-    H->val_in = val_in;
-    H->val_out = val_out;
-
-    /* HPUX users: If you get one of the assertions below, please send
-     * [at least] the values of all variables involved in the assertions
-     * when reporting a bug!
-     */
+    assert(val_in_(max_ - min_) > 0);
+    min = min_;
+    max = max_;
+    capacity = capacity_;
+    val_in = val_in_;
+    val_out = val_out_;
+    bins = (int *)xcalloc(capacity, sizeof(int));
+    scale = capacity / val_in(max - min);
 
     /* check that functions are valid */
     /* a min value should go into bin[0] */
-    assert(statHistBin(H, min) == 0);
+    assert(statHistBin(this, min) == 0);
     /* a max value should go into the last bin */
-    assert(statHistBin(H, max) == H->capacity - 1);
+    assert(statHistBin(this, max) == capacity - 1);
     /* it is hard to test val_out, here is a crude test */
-    assert(((int) floor(0.99 + H->val(0) - min)) == 0);
+    assert(((int) floor(0.99 + val(0) - min)) == 0);
 }
 
 void
@@ -124,6 +117,20 @@ statHistCopy(StatHist * Dest, const StatHist * Orig)
            Dest->bins << " from " << Orig->bins);
 
     memcpy(Dest->bins, Orig->bins, Dest->capacity * sizeof(*Dest->bins));
+}
+
+StatHist&
+StatHist::operator =(const StatHist & src)
+{
+    assert(src.bins != NULL);
+    assert(capacity==src.capacity);
+    assert(min==src.min);
+    assert(max==src.max);
+    assert(fabs(scale - src.scale) < 0.0000001);
+    assert(val_in==src.val_in);
+    assert(val_out==src.val_out);
+    memcpy(bins,src.bins,capacity*sizeof(*bins));
+    return *this;
 }
 
 /*
@@ -290,7 +297,7 @@ Math::Exp(double x)
 void
 statHistLogInit(StatHist * H, int capacity, double min, double max)
 {
-    statHistInit(H, capacity, Math::Log, Math::Exp, min, max);
+    H->init(capacity, Math::Log, Math::Exp, min, max);
 }
 
 /* linear histogram for enums */
@@ -304,7 +311,7 @@ Math::Null(double x)
 void
 statHistEnumInit(StatHist * H, int last_enum)
 {
-    statHistInit(H, last_enum + 3, Math::Null, Math::Null, (double) -1, (double) (last_enum + 1 + 1));
+    H->init(last_enum + 3, Math::Null, Math::Null, (double) -1, (double) (last_enum + 1 + 1));
 }
 
 void
@@ -318,7 +325,7 @@ statHistEnumDumper(StoreEntry * sentry, int idx, double val, double size, int co
 void
 statHistIntInit(StatHist * H, int n)
 {
-    statHistInit(H, n, Math::Null, Math::Null, (double) 0, (double) n - 1);
+    H->init(n, Math::Null, Math::Null, (double) 0, (double) n - 1);
 }
 
 void
