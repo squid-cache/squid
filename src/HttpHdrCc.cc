@@ -286,7 +286,7 @@ httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist)
 
     for (c = CC_PUBLIC; c < CC_ENUM_END; ++c)
         if (cc->isSet(c))
-            statHistCount(hist, c);
+            hist->count(c);
 }
 
 void

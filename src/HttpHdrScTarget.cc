@@ -72,5 +72,5 @@ HttpHdrScTarget::updateStats(StatHist * hist) const
 
     for (c = SC_NO_STORE; c < SC_ENUM_END; ++c)
         if (isSet(c))
-            statHistCount(hist, c);
+            hist->count(c);
 }
