@@ -52,13 +52,15 @@ public:
     double val(int bin) const; //todo: make private
     void count(double val) const;
     StatHist &operator=(const StatHist &);
-    StatHist();
+    StatHist() : bins(NULL), capacity(0), min(0), max(0), scale(1.0),
+            val_in(NULL), val_out(NULL) {};
     StatHist(const StatHist&);
     double deltaMedian(const StatHist &B, double pctile) const;
     void dump(StoreEntry *sentry, StatHistBinDumper * bd);
     void logInit(int capacity, double min, double max);
     void enumInit(int last_enum);
     void intInit(int n);
+    void init(int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
 private:
 };
 
