@@ -216,7 +216,6 @@ ACLChecklist::matchAclList(const ACLList * head, bool const fast)
         }
 
         if (!nodeMatched || state_ != NullState::Instance()) {
-            debugs(28, 3, "aclmatchAclList: " << this << " returning false (AND list entry failed to match)");
 
             bool async = state_ != NullState::Instance();
 
@@ -230,6 +229,7 @@ ACLChecklist::matchAclList(const ACLList * head, bool const fast)
                    " finished() = " << finished());
 
             if (finished()) {
+                debugs(28, 3, "aclmatchAclList: " << this << " returning (AND list entry failed to match)");
                 PROF_stop(aclMatchAclList);
                 return;
             }
@@ -240,8 +240,8 @@ ACLChecklist::matchAclList(const ACLList * head, bool const fast)
                 continue;
             }
 
+            debugs(28, 3, "aclmatchAclList: " << this << " returning (AND list entry awaiting an async lookup)");
             PROF_stop(aclMatchAclList);
-
             return;
         }
 
