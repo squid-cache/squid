@@ -696,13 +696,6 @@ struct _fde_disk {
     off_t offset;
 };
 
-struct _fileMap {
-    int max_n_files;
-    int n_files_in_map;
-    int toggle;
-    int nwords;
-    unsigned long *file_map;
-};
 
 #include "SquidString.h"
 /* http header extention field */

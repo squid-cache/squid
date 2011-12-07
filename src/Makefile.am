@@ -323,6 +323,7 @@ squid_SOURCES = \
 	fd.cc \
 	fde.cc \
 	fde.h \
+	FileMap.h \
 	filemap.cc \
 	forward.cc \
 	forward.h \
@@ -1136,6 +1137,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	DiskIO/WriteRequest.cc \
 	ETag.cc \
 	event.cc \
+	FileMap.h \
 	filemap.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
@@ -1298,6 +1300,7 @@ tests_testCacheManager_SOURCES = \
 	ExternalACLEntry.cc \
 	fd.cc \
 	fde.cc \
+	FileMap.h \
 	filemap.cc \
 	forward.cc \
 	fqdncache.cc \
@@ -1449,6 +1452,7 @@ tests_testDiskIO_SOURCES = \
 	EventLoop.cc \
 	event.cc \
 	fd.cc \
+	FileMap.h \
 	filemap.cc \
 	HttpBody.h \
 	HttpBody.cc \
@@ -1616,6 +1620,7 @@ tests_testEvent_SOURCES = \
 	FadingCounter.cc \
 	fd.cc \
 	fde.cc \
+	FileMap.h \
 	filemap.cc \
 	forward.cc \
 	fqdncache.cc \
@@ -1805,6 +1810,7 @@ tests_testEventLoop_SOURCES = \
 	FadingCounter.cc \
 	fd.cc \
 	fde.cc \
+	FileMap.h \
 	filemap.cc \
 	forward.cc \
 	fqdncache.cc \
@@ -1992,6 +1998,7 @@ tests_test_http_range_SOURCES = \
 	FadingCounter.cc \
 	fd.cc \
 	fde.cc \
+	FileMap.h \
 	filemap.cc \
 	forward.cc \
 	fqdncache.cc \
@@ -2369,6 +2376,7 @@ tests_testStore_SOURCES= \
 	ETag.cc \
 	event.cc \
 	EventLoop.cc \
+	FileMap.h \
 	filemap.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -2560,6 +2568,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_store_stats.cc \
 	fd.cc \
 	disk.cc \
+	FileMap.h \
 	filemap.cc \
 	HttpBody.h \
 	HttpBody.cc \
@@ -2690,6 +2699,7 @@ tests_testRock_SOURCES = \
 	EventLoop.cc \
 	event.cc \
 	fd.cc \
+	FileMap.h \
 	filemap.cc \
 	HttpBody.h \
 	HttpBody.cc \
@@ -2820,6 +2830,7 @@ tests_testCoss_SOURCES = \
 	tests/stub_store_stats.cc \
 	fd.cc \
 	disk.cc \
+	FileMap.h \
 	filemap.cc \
 	HttpBody.h \
 	HttpBody.cc \
@@ -2952,6 +2963,7 @@ tests_testNull_SOURCES = \
 	tests/stub_store_stats.cc \
 	fd.cc \
 	disk.cc \
+	FileMap.h \
 	filemap.cc \
 	HttpBody.h \
 	HttpBody.cc \
@@ -3101,6 +3113,7 @@ tests_testURL_SOURCES = \
 	ExternalACLEntry.cc \
 	fd.cc \
 	fde.cc \
+	FileMap.h \
 	filemap.cc \
 	forward.cc \
 	fqdncache.cc \
