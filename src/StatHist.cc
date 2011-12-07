@@ -288,3 +288,8 @@ statHistIntDumper(StoreEntry * sentry, int idx, double val, double size, int cou
     if (count)
         storeAppendPrintf(sentry, "%9d\t%9d\n", (int) val, count);
 }
+
+StatHistLog::StatHistLog(int capacity_, double min_, double max_)
+{
+    init(capacity_, Math::Log, Math::Exp, min_, max_);
+}
