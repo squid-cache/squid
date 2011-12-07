@@ -531,8 +531,8 @@ squid_LDADD = \
 	$(SNMPLIB) \
 	${ADAPTATION_LIBS} \
 	$(ESI_LIBS) \
-	$(SSLLIB) \
 	$(SSL_LIBS) \
+	$(SSLLIB) \
 	-lmiscutil \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
@@ -1203,8 +1203,8 @@ tests_testCacheManager_LDADD = \
 	-L../lib -lmiscutil \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
-	$(SSLLIB) \
 	$(SSL_LIBS) \
+	$(SSLLIB) \
 	$(XTRA_LIBS)
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -1379,8 +1379,8 @@ tests_testEvent_LDADD = \
 	-L../lib -lmiscutil \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
-	$(SSLLIB) \
 	$(SSL_LIBS) \
+	$(SSLLIB) \
 	$(XTRA_LIBS)
 tests_testEvent_LDFLAGS = $(LIBADD_DL)
 tests_testEvent_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -1530,8 +1530,8 @@ tests_testEventLoop_LDADD = \
 	-L../lib -lmiscutil \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
-	$(SSLLIB) \
 	$(SSL_LIBS) \
+	$(SSLLIB) \
 	$(XTRA_LIBS)
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -1676,8 +1676,8 @@ tests_test_http_range_LDADD = \
 	-L../lib -lmiscutil \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
-	$(SSLLIB) \
 	$(SSL_LIBS) \
+	$(SSLLIB) \
 	$(XTRA_LIBS)
 tests_test_http_range_LDFLAGS = $(LIBADD_DL)
 tests_test_http_range_DEPENDENCIES = \
@@ -1827,8 +1827,8 @@ tests_testHttpRequest_LDADD = \
 	-L../lib -lmiscutil \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
-	$(SSLLIB) \
 	$(SSL_LIBS) \
+	$(SSLLIB) \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -2262,8 +2262,8 @@ tests_testURL_LDADD = \
 	-L../lib -lmiscutil \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
-	$(SSLLIB) \
 	$(SSL_LIBS) \
+	$(SSLLIB) \
 	$(XTRA_LIBS)
 tests_testURL_LDFLAGS = $(LIBADD_DL)
 tests_testURL_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
