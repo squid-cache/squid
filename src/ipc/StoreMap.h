@@ -195,7 +195,7 @@ StoreMapWithExtras<ExtrasT>::extras(const sfileno fileno) const
 
 } // namespace Ipc
 
-// We do not reuse struct _fileMap because we cannot control its size,
+// We do not reuse FileMap because we cannot control its size,
 // resulting in sfilenos that are pointing beyond the database.
 
 #endif /* SQUID_IPC_STORE_MAP_H */
