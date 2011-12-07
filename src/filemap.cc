@@ -55,7 +55,7 @@
 #define FM_INITIAL_NUMBER (1<<14)
 
 FileMap::FileMap() :
-    capacity_(FM_INITIAL_NUMBER), used_slots_(0),
+    capacity_(FM_INITIAL_NUMBER), usedSlots_(0),
     nwords(capacity_ >> LONG_BIT_SHIFT)
 {
     debugs(8, 3, HERE << "creating space for " << capacity_ << " files");
@@ -90,7 +90,7 @@ FileMap::setBit(sfileno file_number)
 
     bitmap[file_number >> LONG_BIT_SHIFT] |= bitmask;
 
-    used_slots_++;
+    usedSlots_++;
 
     return file_number;
 }
@@ -107,7 +107,7 @@ FileMap::clearBit(sfileno file_number)
 {
     unsigned long bitmask = (1L << (file_number & LONG_BIT_MASK));
     bitmap[file_number >> LONG_BIT_SHIFT] &= ~bitmask;
-    used_slots_--;
+    usedSlots_--;
 }
 
 bool

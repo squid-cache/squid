@@ -83,7 +83,7 @@ public:
     int capacity() const {return capacity_;}
 
     /// return the number of used slots in the FileMap
-    int numFilesInMap() const {return used_slots_;}
+    int numFilesInMap() const {return usedSlots_;}
 private:
     /// grow the FileMap (size is doubled each time, up to 2^24 bits)
     void grow();
@@ -93,7 +93,7 @@ private:
     /// max number of files which can be tracked in the current store
     sfileno capacity_;
     /// used slots in the map
-    unsigned int used_slots_;
+    unsigned int usedSlots_;
     /// number of "long ints" making up the filemap
     unsigned int nwords;
     unsigned long *bitmap;
