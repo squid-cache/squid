@@ -56,13 +56,20 @@ public:
             val_in(NULL), val_out(NULL) {};
     StatHist(const StatHist&);
     void dump(StoreEntry *sentry, StatHistBinDumper * bd) const;
-    void logInit(int capacity, double min, double max);
     void enumInit(int last_enum);
     void intInit(int n);
     void init(int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
 private:
     int findBin(double v);
 };
+
+class StatHistLog: public StatHist
+{
+    public:
+    StatHistLog(int capacity_, double min_, double max_);
+};
+
+
 
 /* StatHist */
 void statHistCount(StatHist * H, double val);
