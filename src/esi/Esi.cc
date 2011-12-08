@@ -1465,15 +1465,15 @@ ESIContext::fail ()
     err->err_msg = errormessage;
     errormessage = NULL;
     rep = err->BuildHttpReply();
-    assert (rep->body.mb->contentSize() >= 0);
-    size_t errorprogress = rep->body.mb->contentSize();
+    assert (rep->body.hasContent());
+    size_t errorprogress = rep->body.contentSize();
     /* Tell esiSend where to start sending from */
     outbound_offset = 0;
     /* copy the membuf from the reply to outbound */
 
-    while (errorprogress < (size_t)rep->body.mb->contentSize()) {
+    while (errorprogress < (size_t)rep->body.contentSize()) {
         appendOutboundData(new ESISegment);
-        errorprogress += outboundtail->append(rep->body.mb->content() + errorprogress, rep->body.mb->contentSize() - errorprogress);
+        errorprogress += outboundtail->append(rep->body.content() + errorprogress, rep->body.contentSize() - errorprogress);
     }
 
     /* the esiCode now thinks that the error is the outbound,

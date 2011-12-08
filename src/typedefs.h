@@ -62,8 +62,6 @@ typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;
 
 typedef struct _HttpHeaderStat HttpHeaderStat;
 
-typedef struct _HttpBody HttpBody;
-
 typedef struct _domain_ping domain_ping;
 
 typedef struct _domain_type domain_type;

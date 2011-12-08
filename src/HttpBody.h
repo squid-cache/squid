@@ -1,10 +1,4 @@
-
 /*
- * $Id$
- *
- * DEBUG: section 56    HTTP Message Body
- * AUTHOR: Alex Rousskov
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -31,47 +25,54 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ *  Author: kinkie
+ *
  */
 
-#include "squid.h"
-#include "HttpBody.h"
+#ifndef HTTPBODY_H_
+#define HTTPBODY_H_
+
 #include "MemBuf.h"
+class Packer;
 
-
-HttpBody::HttpBody() : mb(new MemBuf)
-{}
-
-HttpBody::~HttpBody()
+/** Representation of a short predetermined message
+ *
+ * This class is useful to represent short HTTP messages, whose
+ * contents are known in advance, e.g. error messages
+ */
+class HttpBody
 {
-    clear();
-    delete mb;
-}
-
-void
-HttpBody::clear()
-{
-    if (!mb->isNull())
-        mb->clean();
-}
-
-/* set body by absorbing mb */
-void
-HttpBody::setMb(MemBuf * mb_)
-{
-    clear();
-    delete mb;
-    /* note: protection against assign-to-self is not needed
-     * as MemBuf doesn't have a copy-constructor. If such a constructor
-     * is ever added, add such protection here.
+public:
+    HttpBody();
+    ~HttpBody();
+    /** absorb the MemBuf, discarding anything currently stored
+     *
+     * After this call the lifetime of the passed MemBuf is managed
+     * by the HttpBody.
      */
-    mb = mb_;		/* absorb */
-}
+    void setMb(MemBuf *);
+    /** output the HttpBody contents into the supplied packer
+     *
+     * \note content is not cleared by the output operation
+     */
+    void packInto(Packer *) const;
 
-void
-HttpBody::packInto(Packer * p) const
-{
-    assert(p);
+    /// clear the HttpBody content
+    void clear();
 
-    if (mb->contentSize())
-        packerAppend(p, mb->content(), mb->contentSize());
-}
+    /// \return true if there is any content in the HttpBody
+    bool hasContent() const { return (mb->contentSize()>0); }
+
+    /// \return size of the HttpBody's message content
+    mb_size_t contentSize() const { return mb->contentSize(); }
+
+    /// \return pointer to the storage of the HttpBody
+    char *content() const { return mb->content(); }
+private:
+    HttpBody& operator=(const HttpBody&); //not implemented
+    HttpBody(const HttpBody&); // not implemented
+    MemBuf *mb;
+};
+
+
+#endif /* HTTPBODY_H_ */
