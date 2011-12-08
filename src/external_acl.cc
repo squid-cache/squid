@@ -915,8 +915,13 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
         switch (format->type) {
 #if USE_AUTH
         case _external_acl_format::EXT_ACL_LOGIN:
-            assert (ch->auth_user_request != NULL);
-            str = ch->auth_user_request->username();
+            // if this ACL line was the cause of credentials fetch
+            // they may not already be in the checklist
+            if (ch->auth_user_request == NULL && ch->request)
+                ch->auth_user_request = ch->request->auth_user_request;
+
+            if (ch->auth_user_request != NULL)
+                str = ch->auth_user_request->username();
             break;
 #endif
 #if USE_IDENT
