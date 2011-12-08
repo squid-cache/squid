@@ -1,11 +1,5 @@
-
 /*
- * $Id$
- *
- * DEBUG: section 90    HTTP Cache Control Header
- * AUTHOR: Alex Rousskov
- *         Robert Collins (Surrogate-Control is derived from
- *         		   Cache-Control).
+ * strnrchr.h
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -32,44 +26,21 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
  */
 
-#include "squid.h"
-#include "HttpHdrSc.h"
+#ifndef COMPAT_STRNRCHR_H_
+#define COMPAT_STRNRCHR_H_
 
-extern http_hdr_sc_type &operator++ (http_hdr_sc_type &aHeader);
-/* copies non-extant fields from new_sc to this sc */
-void
-HttpHdrScTarget::mergeWith(const HttpHdrScTarget * new_sc)
-{
-    assert(new_sc);
-    /* Don't touch the target - this is used to get the operations for a
-     * single surrogate
-     */
+#if HAVE_STDDEF_H
+#include <stddef.h>
+#endif
 
-    if (new_sc->hasNoStore())
-        noStore(true);
+/**
+ * look for the last occurrence of a character in a c-string.
+ *
+ * Scanning starts at the beginning of the c-string, and ends
+ * after count bytes or at the end of the c-string, whichever happens first
+ */
+SQUIDCEXTERN const char *strnrchr(const char *s, size_t count, int c);
 
-    if (new_sc->hasNoStoreRemote())
-        noStoreRemote(true);
-
-    if (new_sc->hasMaxAge() && !hasMaxAge()) {
-        maxAge(new_sc->maxAge());
-        maxStale(new_sc->maxStale());
-    }
-
-    if (new_sc->hasContent() && !hasContent())
-        Content(new_sc->content());
-
-}
-
-void
-HttpHdrScTarget::updateStats(StatHist * hist) const
-{
-    http_hdr_sc_type c;
-
-    for (c = SC_NO_STORE; c < SC_ENUM_END; ++c)
-        if (isSet(c))
-            statHistCount(hist, c);
-}
+#endif /* COMPAT_STRNRCHR_H_ */

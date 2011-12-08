@@ -38,6 +38,8 @@ libcompat_squid_a_SOURCES = \
 	strnstr.cc \
 	strsep.h \
 	strtoll.h \
+	strnrchr.h \
+	strnrchr.c \
 	tempnam.h \
 	types.h \
 	unsafe.h \

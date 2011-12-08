@@ -1,11 +1,5 @@
-
 /*
- * $Id$
- *
- * DEBUG: section 90    HTTP Cache Control Header
- * AUTHOR: Alex Rousskov
- *         Robert Collins (Surrogate-Control is derived from
- *         		   Cache-Control).
+ * strnrchr.c
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -32,44 +26,21 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
  */
 
-#include "squid.h"
-#include "HttpHdrSc.h"
+#include "config.h"
+#include "strnrchr.h"
 
-extern http_hdr_sc_type &operator++ (http_hdr_sc_type &aHeader);
-/* copies non-extant fields from new_sc to this sc */
-void
-HttpHdrScTarget::mergeWith(const HttpHdrScTarget * new_sc)
+const char *
+strnrchr(const char *s, size_t count, int c)
 {
-    assert(new_sc);
-    /* Don't touch the target - this is used to get the operations for a
-     * single surrogate
-     */
-
-    if (new_sc->hasNoStore())
-        noStore(true);
-
-    if (new_sc->hasNoStoreRemote())
-        noStoreRemote(true);
-
-    if (new_sc->hasMaxAge() && !hasMaxAge()) {
-        maxAge(new_sc->maxAge());
-        maxStale(new_sc->maxStale());
+    const char *rv=NULL;
+    const char *l=s;
+    while (count > 0 && *l != 0) {
+        if (*l==c)
+            rv=l;
+        ++l;
+        --count;
     }
-
-    if (new_sc->hasContent() && !hasContent())
-        Content(new_sc->content());
-
-}
-
-void
-HttpHdrScTarget::updateStats(StatHist * hist) const
-{
-    http_hdr_sc_type c;
-
-    for (c = SC_NO_STORE; c < SC_ENUM_END; ++c)
-        if (isSet(c))
-            statHistCount(hist, c);
+    return rv;
 }
