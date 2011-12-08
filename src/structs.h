@@ -697,15 +697,6 @@ struct _fde_disk {
 };
 
 
-#include "SquidString.h"
-/* http header extention field */
-
-class HttpHdrExtField
-{
-    String name;		/* field-name  from HTTP/1.1 (no column after name) */
-    String value;		/* field-value from HTTP/1.1 */
-};
-
 /* per field statistics */
 
 class HttpHeaderFieldStat
@@ -722,6 +713,7 @@ public:
 };
 
 /* compiled version of HttpHeaderFieldAttrs plus stats */
+#include "SquidString.h"
 
 class HttpHeaderFieldInfo
 {
