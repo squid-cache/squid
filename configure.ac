@@ -321,10 +321,6 @@ if test "x$enable_strict_error_checking" != "xno"; then
   SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cxx_option_werror"
 fi
 
-SQUID_CXX_CHECK_ARG_FHUGEOBJECTS
-if test "x$squid_cv_cxx_arg_fhugeobjects" = "xyes"; then
-  SQUID_CXXFLAGS="$SQUID_CXXFLAGS -fhuge-objects"
-fi
 # squid_cv_cc_arg_pipe is set by SQUID_CC_GUESS_OPTIONS
 SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cc_arg_pipe"
 SQUID_CFLAGS="$SQUID_CFLAGS $squid_cv_cc_arg_pipe"
