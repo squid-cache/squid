@@ -43,22 +43,19 @@ HttpBody::HttpBody() : mb(new MemBuf)
 
 HttpBody::~HttpBody()
 {
-    clear();
     delete mb;
 }
 
 void
 HttpBody::clear()
 {
-    if (!mb->isNull())
-        mb->clean();
+    mb->clean();
 }
 
 /* set body by absorbing mb */
 void
 HttpBody::setMb(MemBuf * mb_)
 {
-    clear();
     delete mb;
     /* note: protection against assign-to-self is not needed
      * as MemBuf doesn't have a copy-constructor. If such a constructor
