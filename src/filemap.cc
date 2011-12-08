@@ -55,8 +55,8 @@
 #define FM_INITIAL_NUMBER (1<<14)
 
 FileMap::FileMap() :
-    capacity_(FM_INITIAL_NUMBER), usedSlots_(0),
-    nwords(capacity_ >> LONG_BIT_SHIFT)
+        capacity_(FM_INITIAL_NUMBER), usedSlots_(0),
+        nwords(capacity_ >> LONG_BIT_SHIFT)
 {
     debugs(8, 3, HERE << "creating space for " << capacity_ << " files");
     debugs(8, 5, "--> " << nwords << " words of " << sizeof(*bitmap) << " bytes each");
