@@ -625,7 +625,7 @@ SQUIDCEXTERN pid_t ipcCreate(int type,
                              int *wfd,
                              void **hIpc);
 
-
+class cd_guess_stats;
 /* CacheDigest */
 SQUIDCEXTERN CacheDigest *cacheDigestCreate(int capacity, int bpe);
 SQUIDCEXTERN void cacheDigestDestroy(CacheDigest * cd);
@@ -682,6 +682,7 @@ SQUIDCEXTERN int gethostname(char *, int);
 /*
  * hack to allow snmp access to the statistics counters
  */
+class StatCounters;
 SQUIDCEXTERN StatCounters *snmpStatGet(int);
 
 /* Vary support functions */

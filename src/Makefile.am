@@ -353,6 +353,7 @@ squid_SOURCES = \
 	HttpHdrScTarget.h \
 	HttpHdrContRange.cc \
 	HttpHdrContRange.h \
+	HttpHeaderStat.h \
 	HttpHeader.cc \
 	HttpHeader.h \
 	HttpHeaderMask.h \
@@ -424,6 +425,7 @@ squid_SOURCES = \
 	SquidMath.cc \
 	SquidNew.cc \
 	stat.cc \
+	StatCounters.h \
 	StatHist.h \
 	StatHist.cc \
 	String.cc \
@@ -1081,6 +1083,7 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
+	StatCounters.h \
 	StatHist.h \
 	tests/stub_StatHist.cc \
 	tests/stub_store.cc \
@@ -1158,6 +1161,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	Packer.cc \
 	Parsing.cc \
 	SquidMath.cc \
+	StatCounters.h \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
@@ -1356,6 +1360,7 @@ tests_testCacheManager_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
+	StatCounters.h \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
@@ -1479,6 +1484,7 @@ tests_testDiskIO_SOURCES = \
 	Parsing.cc \
 	refresh.cc \
 	RemovalPolicy.cc \
+	StatCounters.h \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
@@ -1683,6 +1689,7 @@ tests_testEvent_SOURCES = \
 	SquidMath.cc \
 	SquidMath.h \
 	stat.cc \
+	StatCounters.h \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
@@ -1873,6 +1880,7 @@ tests_testEventLoop_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
+	StatCounters.h \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
@@ -2059,6 +2067,7 @@ tests_test_http_range_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
+	StatCounters.h \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
@@ -2284,6 +2293,7 @@ tests_testHttpRequest_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
+	StatCounters.h \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
@@ -2399,6 +2409,7 @@ tests_testStore_SOURCES= \
 	Parsing.cc \
 	RemovalPolicy.cc \
 	refresh.cc \
+	StatCounters.h \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
@@ -2631,6 +2642,7 @@ tests_testUfs_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
+	StatCounters.h \
 	StatHist.h \
 	StatHist.cc \
 	HttpHdrRange.cc \
@@ -2724,6 +2736,7 @@ tests_testRock_SOURCES = \
 	Packer.cc \
 	Parsing.cc \
 	RemovalPolicy.cc \
+	StatCounters.h \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
@@ -2892,6 +2905,7 @@ tests_testCoss_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
+	StatCounters.h \
 	StatHist.h \
 	StatHist.cc \
 	HttpHdrRange.cc \
@@ -3027,6 +3041,7 @@ tests_testNull_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
+	StatCounters.h \
 	StatHist.h \
 	StatHist.cc \
 	HttpHdrRange.cc \
@@ -3177,6 +3192,7 @@ tests_testURL_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
+	StatCounters.h \
 	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
