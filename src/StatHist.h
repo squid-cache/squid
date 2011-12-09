@@ -42,8 +42,6 @@
 class StatHist {
 public:
     void clear();
-    int *bins;
-    int capacity;
     double min;
     double max;
     double scale;
@@ -53,16 +51,18 @@ public:
     double val(int bin) const; //todo: make private
     void count(double val);
     StatHist &operator=(const StatHist &);
-    StatHist() : bins(NULL), capacity(0), min(0), max(0), scale(1.0),
-            val_in(NULL), val_out(NULL) {};
+    StatHist() : scale(1.0) {};
     StatHist(const StatHist&);
     void dump(StoreEntry *sentry, StatHistBinDumper * bd) const;
     void logInit(int capacity, double min, double max);
     void enumInit(int last_enum);
     void intInit(int n);
     void init(int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
+    double deltaPctile(const StatHist & B, double pctile);
 private:
     int findBin(double v);
+    int *bins;
+    int capacity;
 };
 
 /* StatHist */
