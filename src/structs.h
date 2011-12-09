@@ -1118,11 +1118,11 @@ struct _StatCounters {
         kb_t kbytes_in;
         kb_t kbytes_out;
         kb_t hit_kbytes_out;
-        StatHistLog miss_svc_time(300, 0.0, 3600000.0 * 3.0);
-        StatHistLog nm_svc_time(300, 0.0, 3600000.0 * 3.0);
-        StatHistLog nh_svc_time(300, 0.0, 3600000.0 * 3.0);
-        StatHistLog hit_svc_time(300, 0.0, 3600000.0 * 3.0);
-        StatHistLog all_svc_time(300, 0.0, 3600000.0 * 3.0);
+        StatHist miss_svc_time;
+        StatHist nm_svc_time;
+        StatHist nh_svc_time;
+        StatHist hit_svc_time;
+        StatHist all_svc_time;
     } client_http;
 
     struct {
@@ -1152,8 +1152,8 @@ struct _StatCounters {
         kb_t kbytes_recv;
         kb_t q_kbytes_recv;
         kb_t r_kbytes_recv;
-        StatHistLog query_svc_time(300, 0.0, 1000000.0 * 60.0);
-        StatHistLog reply_svc_time(300, 0.0, 1000000.0 * 60.0);
+        StatHist query_svc_time;
+        StatHist reply_svc_time;
         int query_timeouts;
         int times_used;
     } icp;
@@ -1168,7 +1168,7 @@ struct _StatCounters {
     } unlink;
 
     struct {
-        StatHistLog svc_time(300, 0.0, 60000.0 * 10.0);
+        StatHist svc_time;
     } dns;
 
     struct {
