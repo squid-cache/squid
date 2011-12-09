@@ -41,7 +41,8 @@
 /* for ERROR_BUF_SZ, BUFSIZ, MAXHTTPPORTS */
 #include "defines.h"
 
-/* for iostats, StatCounters */
+#include "StatCounters.h"
+/* for iostats */
 #include "structs.h"
 
 

@@ -33,6 +33,7 @@
 #include "squid.h"
 #include "base/StringArea.h"
 #include "HttpHeader.h"
+#include "HttpHeaderStat.h"
 #include "HttpHdrCc.h"
 #include "StatHist.h"
 #include "Store.h"

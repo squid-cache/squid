@@ -40,8 +40,9 @@
 #include "ICP.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
-#include "Store.h"
+#include "StatCounters.h"
 #include "StatHist.h"
+#include "Store.h"
 #include "fde.h"
 
 static int MAX_POLL_TIME = 1000;	/* see also Comm::QuickPollRequired() */
