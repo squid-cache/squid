@@ -60,8 +60,6 @@ typedef struct _fileMap fileMap;
 
 typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;
 
-typedef struct _HttpHeaderStat HttpHeaderStat;
-
 typedef struct _domain_ping domain_ping;
 
 typedef struct _domain_type domain_type;
@@ -88,11 +86,7 @@ typedef struct _refresh_t refresh_t;
 
 typedef struct _CommWriteStateData CommWriteStateData;
 
-typedef struct _StatCounters StatCounters;
-
 typedef struct _storeSwapLogData storeSwapLogData;
-
-typedef struct _cd_guess_stats cd_guess_stats;
 
 typedef struct _CacheDigest CacheDigest;
 

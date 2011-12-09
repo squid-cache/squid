@@ -39,6 +39,7 @@
 #include "HttpHdrCc.h"
 #include "HttpHdrSc.h"
 #include "HttpHeader.h"
+#include "HttpHeaderStat.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "rfc1123.h"

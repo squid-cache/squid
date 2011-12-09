@@ -40,6 +40,7 @@
 #include "fde.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 #include "StatHist.h"
 #include "Store.h"
 
