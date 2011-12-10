@@ -32,5 +32,4 @@
 #include "config.h"
 #include "StatCounters.h"
 
-StatCounters *StatCounters::counters;
 StatCounters statCounter;
