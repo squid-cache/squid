@@ -42,11 +42,6 @@
 class StatHist {
 public:
     void clear();
-    double min;
-    double max;
-    double scale;
-    hbase_f *val_in;        /* e.g., log() for log-based histogram */
-    hbase_f *val_out;       /* e.g., exp() for log based histogram */
     double deltaPctile(const StatHist &B, double pctile) const;
     double val(int bin) const; //todo: make private
     void count(double val);
@@ -63,6 +58,11 @@ private:
     int findBin(double v);
     int *bins;
     int capacity;
+    double min;
+    double max;
+    double scale;
+    hbase_f *val_in;        /* e.g., log() for log-based histogram */
+    hbase_f *val_out;       /* e.g., exp() for log based histogram */
 };
 
 /* StatHist */
