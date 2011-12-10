@@ -427,15 +427,15 @@ clientIdentDone(const char *ident, void *data)
 void
 clientUpdateStatCounters(log_type logType)
 {
-    statCounter.client_http.requests++;
+    ++statCounter.client_http.requests;
 
     if (logTypeIsATcpHit(logType))
-        statCounter.client_http.hits++;
+        ++statCounter.client_http.hits;
 
     if (logType == LOG_TCP_HIT)
-        statCounter.client_http.disk_hits++;
+        ++statCounter.client_http.disk_hits;
     else if (logType == LOG_TCP_MEM_HIT)
-        statCounter.client_http.mem_hits++;
+        ++statCounter.client_http.mem_hits;
 }
 
 void
@@ -2822,7 +2822,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
 
     if (io.flag == COMM_OK) {
         if (io.size > 0) {
-            kb_incr(&statCounter.client_http.kbytes_in, io.size);
+            kb_incr(&(statCounter.client_http.kbytes_in), io.size);
 
             // may comm_close or setReplyToError
             if (!handleReadData(io.buf, io.size))

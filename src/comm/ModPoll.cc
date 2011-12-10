@@ -41,7 +41,7 @@
 #include "ICP.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
-#include "StatHist.h"
+#include "StatCounters.h"
 #include "Store.h"
 
 #if HAVE_POLL_H
@@ -642,7 +642,7 @@ Comm::SelectLoopInit(void)
 static void
 commIncomingStats(StoreEntry * sentry)
 {
-    StatCounters *f = &statCounter;
+    StatCounters *f = StatCounters::GetCounters();
     storeAppendPrintf(sentry, "Current incoming_icp_interval: %d\n",
                       incoming_icp_interval >> INCOMING_FACTOR);
     storeAppendPrintf(sentry, "Current incoming_dns_interval: %d\n",

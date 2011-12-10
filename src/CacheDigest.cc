@@ -34,7 +34,7 @@
  */
 
 #include "squid.h"
-#include "StatHist.h"
+#include "StatCounters.h"
 #include "Store.h"
 
 #if USE_CACHE_DIGESTS

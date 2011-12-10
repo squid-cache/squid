@@ -39,6 +39,7 @@
 #if USE_CACHE_DIGESTS
 
 #include "cbdata.h"
+#include "StatCounters.h" /* for cd_guess_stats */
 
 struct _Version {
     short int current;		/* current version */

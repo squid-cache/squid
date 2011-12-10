@@ -46,6 +46,7 @@
 #include "diomsg.h"
 /* for statfs */
 #include "Store.h"
+#include "StatCounters.h"
 #include "SquidTime.h"
 
 diskd_stats_t diskd_stats;
@@ -293,7 +294,7 @@ void
 DiskdIOStrategy::unlinkDone(diomsg * M)
 {
     debugs(79, 3, "storeDiskdUnlinkDone: file " << shm.buf + M->shm_offset << " status " << M->status);
-    statCounter.syscalls.disk.unlinks++;
+    ++statCounter.syscalls.disk.unlinks;
 
     if (M->status < 0)
         diskd_stats.unlink.fail++;

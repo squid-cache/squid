@@ -54,7 +54,7 @@
 #include "MemBuf.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
-#include "StatHist.h"
+#include "StatCounters.h"
 #include "mgr/CountersAction.h"
 #include "mgr/FunAction.h"
 #include "mgr/InfoAction.h"

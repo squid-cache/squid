@@ -46,7 +46,7 @@
 #include "acl/Acl.h"
 #include "AccessLogEntry.h"
 #include "wordlist.h"
-#include "StatHist.h"
+#include "StatCounters.h"
 #include "SquidTime.h"
 #include "SwapDir.h"
 #include "icmp/net_db.h"
