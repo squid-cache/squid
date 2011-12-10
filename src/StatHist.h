@@ -54,7 +54,7 @@ public:
     void intInit(int n);
     void init(int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
     double deltaPctile(const StatHist & B, double pctile);
-private:
+protected:
     int findBin(double v);
     int *bins;
     int capacity;
@@ -74,8 +74,5 @@ void statHistEnumInit(StatHist * H, int last_enum);
 void statHistIntInit(StatHist * H, int n);
 StatHistBinDumper statHistEnumDumper;
 StatHistBinDumper statHistIntDumper;
-
-
-
 
 #endif /* STATHIST_H_ */
