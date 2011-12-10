@@ -255,9 +255,15 @@ Math::Exp(double x)
 }
 
 void
+StatHist::logInit(int capacity, double min, double max)
+{
+    init(capacity, Math::Log, Math::Exp, min, max);
+}
+
+void
 statHistLogInit(StatHist * H, int capacity, double min, double max)
 {
-    H->init(capacity, Math::Log, Math::Exp, min, max);
+    H->logInit(capacity, min, max);
 }
 
 /* linear histogram for enums */
