@@ -40,6 +40,7 @@
 #include "DiskThreadsIOStrategy.h"
 #include "fde.h"
 #include "mgr/Registration.h"
+#include "StatCounters.h"
 /* for statfs */
 #include "Store.h"
 
@@ -263,6 +264,6 @@ DiskThreadsIOStrategy::unlinkdUseful() const
 void
 DiskThreadsIOStrategy::unlinkFile(char const *path)
 {
-    statCounter.syscalls.disk.unlinks++;
+    ++statCounter.syscalls.disk.unlinks;
     aioUnlink(path, NULL, NULL);
 }

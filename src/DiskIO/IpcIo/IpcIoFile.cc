@@ -17,6 +17,7 @@
 #include "ipc/StrandSearch.h"
 #include "ipc/UdsOp.h"
 #include "ipc/mem/Pages.h"
+#include "StatCounters.h"
 #include "SquidTime.h"
 
 CBDATA_CLASS_INIT(IpcIoFile);
@@ -628,7 +629,7 @@ diskerRead(IpcIoMsg &ipcIo)
 
     char *const buf = Ipc::Mem::PagePointer(ipcIo.page);
     const ssize_t read = pread(TheFile, buf, min(ipcIo.len, Ipc::Mem::PageSize()), ipcIo.offset);
-    statCounter.syscalls.disk.reads++;
+    ++statCounter.syscalls.disk.reads;
     fd_bytes(TheFile, read, FD_READ);
 
     if (read >= 0) {
@@ -650,7 +651,7 @@ diskerWrite(IpcIoMsg &ipcIo)
 {
     const char *const buf = Ipc::Mem::PagePointer(ipcIo.page);
     const ssize_t wrote = pwrite(TheFile, buf, min(ipcIo.len, Ipc::Mem::PageSize()), ipcIo.offset);
-    statCounter.syscalls.disk.writes++;
+    ++statCounter.syscalls.disk.writes;
     fd_bytes(TheFile, wrote, FD_WRITE);
 
     if (wrote >= 0) {
