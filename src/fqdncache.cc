@@ -38,7 +38,7 @@
 #include "event.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
-#include "StatHist.h"
+#include "StatCounters.h"
 #include "Store.h"
 #include "wordlist.h"
 

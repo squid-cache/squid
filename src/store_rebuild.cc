@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "event.h"
+#include "StatCounters.h"
 #include "Store.h"
 #include "SwapDir.h"
 #include "StoreSearch.h"

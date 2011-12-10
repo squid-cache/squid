@@ -82,6 +82,7 @@
 #include "ipc/Strand.h"
 #include "ip/tools.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 #include "SwapDir.h"
 #include "forward.h"
 #include "MemPool.h"
