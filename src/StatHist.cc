@@ -260,12 +260,6 @@ StatHist::logInit(int capacity, double min, double max)
     init(capacity, Math::Log, Math::Exp, min, max);
 }
 
-void
-statHistLogInit(StatHist * H, int capacity, double min, double max)
-{
-    H->logInit(capacity, min, max);
-}
-
 /* linear histogram for enums */
 /* we want to be have [-1,last_enum+1] range to track out of range enums */
 double
@@ -275,10 +269,17 @@ Math::Null(double x)
 }
 
 void
+StatHist::enumInit(int last_enum)
+{
+    init(last_enum + 3, Math::Null, Math::Null, (double) -1, (double) (last_enum + 1 + 1));
+}
+
+void
 statHistEnumInit(StatHist * H, int last_enum)
 {
-    H->init(last_enum + 3, Math::Null, Math::Null, (double) -1, (double) (last_enum + 1 + 1));
+    H->enumInit(last_enum);
 }
+
 
 void
 statHistEnumDumper(StoreEntry * sentry, int idx, double val, double size, int count)

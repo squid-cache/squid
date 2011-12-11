@@ -53,7 +53,6 @@ public:
     void enumInit(int last_enum);
     void intInit(int n);
     void init(int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
-    double deltaPctile(const StatHist & B, double pctile);
 protected:
     int findBin(double v);
     int *bins;
@@ -69,7 +68,6 @@ protected:
 void statHistCount(StatHist * H, double val);
 double statHistDeltaMedian(const StatHist & A, const StatHist & B);
 double statHistDeltaPctile(const StatHist & A, const StatHist & B, double pctile);
-void statHistLogInit(StatHist * H, int capacity, double min, double max);
 void statHistEnumInit(StatHist * H, int last_enum);
 void statHistIntInit(StatHist * H, int n);
 StatHistBinDumper statHistEnumDumper;
