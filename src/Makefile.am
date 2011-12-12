@@ -1087,6 +1087,7 @@ tests_testHttpReply_SOURCES=\
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
+	StatHist.cc \
 	tests/stub_StatHist.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
