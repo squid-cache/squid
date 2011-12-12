@@ -275,24 +275,11 @@ StatHist::enumInit(int last_enum)
 }
 
 void
-statHistEnumInit(StatHist * H, int last_enum)
-{
-    H->enumInit(last_enum);
-}
-
-
-void
 statHistEnumDumper(StoreEntry * sentry, int idx, double val, double size, int count)
 {
     if (count)
         storeAppendPrintf(sentry, "%2d\t %5d\t %5d\n",
                           idx, (int) val, count);
-}
-
-void
-statHistIntInit(StatHist * H, int n)
-{
-    H->init(n, Math::Null, Math::Null, (double) 0, (double) n - 1);
 }
 
 void
