@@ -372,10 +372,10 @@ httpHeaderStatInit(HttpHeaderStat * hs, const char *label)
     assert(label);
     memset(hs, 0, sizeof(HttpHeaderStat));
     hs->label = label;
-    statHistEnumInit(&hs->hdrUCountDistr, 32);	/* not a real enum */
-    statHistEnumInit(&hs->fieldTypeDistr, HDR_ENUM_END);
-    statHistEnumInit(&hs->ccTypeDistr, CC_ENUM_END);
-    statHistEnumInit(&hs->scTypeDistr, SC_ENUM_END);
+    hs->hdrUCountDistr.enumInit(32);	/* not a real enum */
+    hs->fieldTypeDistr.enumInit(HDR_ENUM_END);
+    hs->ccTypeDistr.enumInit(CC_ENUM_END);
+    hs->scTypeDistr.enumInit(SC_ENUM_END);
 }
 
 /*

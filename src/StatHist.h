@@ -31,7 +31,6 @@
 #ifndef STATHIST_H_
 #define STATHIST_H_
 
-#include "config.h"
 #include "typedefs.h"
 
 /*
@@ -68,8 +67,7 @@ protected:
 void statHistCount(StatHist * H, double val);
 double statHistDeltaMedian(const StatHist & A, const StatHist & B);
 double statHistDeltaPctile(const StatHist & A, const StatHist & B, double pctile);
-void statHistEnumInit(StatHist * H, int last_enum);
-void statHistIntInit(StatHist * H, int n);
+//void statHistIntInit(StatHist * H, int n);
 StatHistBinDumper statHistEnumDumper;
 StatHistBinDumper statHistIntDumper;
 
