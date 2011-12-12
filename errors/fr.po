@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-06-22 13:27+1300\n"
-"PO-Revision-Date: 2011-07-03 20:46+0200\n"
+"POT-Creation-Date: 2011-11-20 11:40+1300\n"
+"PO-Revision-Date: 2011-11-20 11:17+0200\n"
 "Last-Translator: Bernard <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
@@ -45,35 +45,41 @@ msgstr "%f"
 msgid "%g"
 msgstr "%g"
 
-#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:61
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:69
 msgid "%ssl_error_descr"
 msgstr "%ssl_error_descr"
 
-#: templates/error-details.txt+X509_V_ERR_INVALID_CA.detail:89
-#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.detail:109
-#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.detail:117
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.detail:97
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.detail:117
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.detail:125
 msgid "%ssl_error_descr: %ssl_ca_name"
 msgstr "%ssl_error_descr: %ssl_ca_name"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:5
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.detail:9
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.detail:13
-#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.detail:21
-#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.detail:25
-#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.detail:37
-#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.detail:41
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.detail:53
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.detail:57
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.detail:77
-#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.detail:81
-#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.detail:85
-#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.detail:93
-#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.detail:97
-#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.detail:101
-#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.detail:105
-#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.detail:113
-#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.detail:121
-#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.detail:125
+#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.detail:1
+#, fuzzy
+msgid "%ssl_error_descr: %ssl_lib_error"
+msgstr "%ssl_error_descr: %ssl_ca_name"
+
+#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.detail:5
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:13
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.detail:17
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.detail:21
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.detail:29
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.detail:33
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.detail:45
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.detail:49
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.detail:61
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.detail:65
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.detail:85
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.detail:89
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.detail:93
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.detail:101
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.detail:105
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.detail:109
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.detail:113
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.detail:121
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.detail:129
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.detail:133
 msgid "%ssl_error_descr: %ssl_subject"
 msgstr "%ssl_error_descr: %ssl_subject"
 
@@ -92,7 +98,7 @@ msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
-"<b>Requête Invalide</b> une erreur a été rencontrée en essayant de traiter "
+"<b>Requête invalide</b> une erreur a été rencontrée en essayant de traiter "
 "la requête :"
 
 #: templates/ERR_INVALID_RESP+html.body.div.p:20
@@ -100,7 +106,7 @@ msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
-"<b>Réponse Invalide</b> une erreur a été rencontrée en essayant de traiter "
+"<b>Réponse invalide</b> une erreur a été rencontrée en essayant de traiter "
 "la requête :"
 
 #: templates/ERR_READ_TIMEOUT+html.body.div.p:28
@@ -158,10 +164,6 @@ msgstr ""
 msgid "An Illegal response was received from the ICAP server."
 msgstr "Une réponse illégale a été reçue par le serveur ICAP."
 
-#
-# Quand pensez-vous?
-# Bernard
-#  
 #: templates/ERR_READ_ERROR+html.body.div.p:28
 msgid ""
 "An error condition occurred while reading data from the network. Please "
@@ -178,9 +180,9 @@ msgstr ""
 "Lors de l'écriture des informations sur le réseau une erreur est survenue. "
 "Veuillez renouveler votre requête."
 
-#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:125
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:133
 msgid "Application verification failure"
-msgstr "Application verification failure"
+msgstr "Échec lors de la vérification d'application"
 
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:28
 msgid ""
@@ -190,25 +192,25 @@ msgstr ""
 "Au moins une précondition indiquée dans l'en-tête de la requête du client "
 "HTTP a échoué."
 
-#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:117
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:125
 msgid "Authority and issuer serial number mismatch"
-msgstr "Authority and issuer serial number mismatch"
+msgstr "L'autorisation du numéro de série de l'émetteur est incorrect"
 
-#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:113
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:121
 msgid "Authority and subject key identifier mismatch"
-msgstr "Authority and subject key identifier mismatch"
+msgstr "L'autorisation de la clé d'identificateur soumis est incorrect"
 
-#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:41
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:49
 msgid "CRL has expired"
-msgstr "CRL has expired"
+msgstr "Le CRL a expiré"
 
-#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.descr:37
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.descr:45
 msgid "CRL is not yet valid"
-msgstr "CRL is not yet valid"
+msgstr "Le CRL n'est pas encore valable"
 
-#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:25
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:33
 msgid "CRL signature failure"
-msgstr "CRL signature failure"
+msgstr "La signature du CRL n'est pas valide"
 
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h2:15
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.blockquote.p:23
@@ -224,33 +226,38 @@ msgstr "Accès au Gestionnaire de Cache Interdit."
 msgid "Cannot Resolve URN"
 msgstr "Impossible de résoudre l'URN"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:81
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:89
 msgid "Certificate chain too long"
-msgstr "Certificate chain too long"
+msgstr "La chaîne du certificats est trop longue"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:33
+#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.descr:5
+#, fuzzy
+msgid "Certificate does not match domainname"
+msgstr "Le certificat n'est pas encore valide"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:41
 msgid "Certificate has expired"
-msgstr "Certificate has expired"
+msgstr "Le certificat a expiré"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:29
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:37
 msgid "Certificate is not yet valid"
-msgstr "Certificate is not yet valid"
+msgstr "Le certificat n'est pas encore valide"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:101
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:109
 msgid "Certificate not trusted"
-msgstr "Certificate not trusted"
+msgstr "Le certificat n'est pas sécurisé"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:105
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:113
 msgid "Certificate rejected"
-msgstr "Certificate rejected"
+msgstr "Le certificat a été rejeté"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:85
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:93
 msgid "Certificate revoked"
-msgstr "Certificate revoked"
+msgstr "Le certificat a été révoqué"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:21
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:29
 msgid "Certificate signature failure"
-msgstr "Certificate signature failure"
+msgstr "La signature du certificat n'est pas valide"
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.blockquote.p:23
 msgid "Connection Lifetime Expired"
@@ -395,7 +402,7 @@ msgstr "Il n'a pas été possible d'établir une connexion sécurisée vers %I"
 
 #: templates/ERR_FTP_PUT_CREATED+html.body.div.h2:15
 msgid "File created"
-msgstr "Le fichier a été créé."
+msgstr "Le fichier a été créé"
 
 #: templates/ERR_FTP_PUT_MODIFIED+html.body.div.h2:15
 msgid "File updated"
@@ -417,21 +424,21 @@ msgstr "Pour configurer Internet Explorer, allez à : <ul>"
 msgid "For Opera browsers go to: <ul>"
 msgstr "Pour configurer Opéra, allez à : <ul>"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:53
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:61
 msgid "Format error in CRL's lastUpdate field"
-msgstr "Format error in CRL's lastUpdate field"
+msgstr "Erreur de format dans le champ lastUpdate du CRL's"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:57
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:65
 msgid "Format error in CRL's nextUpdate field"
-msgstr "Format error in CRL's nextUpdate field"
+msgstr "Erreur de format dans le champ nextUpdate du CRL's"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:49
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:57
 msgid "Format error in certificate's notAfter field"
-msgstr "Format error in certificate's notAfter field"
+msgstr "Erreur de format dans le champ notAfter du certificat's"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:45
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:53
 msgid "Format error in certificate's notBefore field"
-msgstr "Format error in certificate's notBefore field"
+msgstr "Erreur de format dans le champ notBefore du certificat's"
 
 #: templates/ERR_FORWARDING_DENIED+html.body.div.blockquote.p:23
 msgid "Forwarding Denied."
@@ -441,6 +448,7 @@ msgstr "Transmission interdite."
 msgid "Gateway Proxy Failure"
 msgstr "Défaillance de la passerelle Proxy"
 
+# Amos Jeffries a gardé le symbolique %T pour éviter une confusion des fuseaux horaires vers  Squid
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:34
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:35
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:56
@@ -482,12 +490,16 @@ msgstr "Défaillance de la passerelle Proxy"
 #: templates/ERR_WRITE_ERROR+html.body.div.p:36
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:34
 msgid "Generated %T by %h (%s)"
-msgstr "Générer le %T en %h (%s)"
+msgstr "Générer le %T par %h (%s)"
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:34
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr "HTTP/1.1 <q>Expect:</q> cette fonction a besoin du logiciel HTTP/1.0."
+
+#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:1
+msgid "Handshake with SSL server failed"
+msgstr ""
 
 #: templates/ERR_URN_RESOLVE+html.body.div.p:26
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -537,19 +549,19 @@ msgstr "Les double espaces ne sont pas valides dans une adresse URL"
 msgid "In the HTTP proxy box type the proxy name %h and port %b."
 msgstr ""
 "Vous devez indiquer dans la fenêtre du proxy HTTP, le nom du proxy %h et le "
-"port 3128"
+"port %b"
 
-#: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:89
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:97
 msgid "Invalid CA certificate"
-msgstr "Invalid CA certificate"
+msgstr "Le certificat CA est Invalide "
 
 #: templates/ERR_INVALID_URL+html.body.div.blockquote.p:23
 msgid "Invalid URL"
 msgstr "URL invalide"
 
-#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:121
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:129
 msgid "Key usage does not include certificate signing"
-msgstr "Key usage does not include certificate signing"
+msgstr "L'utilisation de la clé ne contient pas de signature certifiée"
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:30
 msgid "Missing HTTP Identifier (HTTP/1.0)."
@@ -583,24 +595,13 @@ msgstr "Aucun relais WAIS"
 msgid "Operation successful"
 msgstr "Opération réussie"
 
-#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.descr:61
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.descr:69
 msgid "Out of memory"
-msgstr "Out of memory"
+msgstr "Mémoire insuffisante"
 
-#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:93
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:101
 msgid "Path length constraint exceeded"
-msgstr "Path length constraint exceeded"
-
-#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:28
-msgid ""
-"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
-"have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
-"chpasswd.cgi\">change</a> your default password."
-msgstr ""
-"S'il vous plait, contacter <a href=\"mailto:%w%W\">l'administrateur du "
-"proxy</a> si vous avez des difficultés pour vous authentifier ou pour <a "
-"href=\"http://%h/cgi-bin/chpasswd.cgi\">changez</a> votre mot de passe par "
-"défaut."
+msgstr "Contrainte de longueur, le nom du chemin est trop long"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:28
 msgid ""
@@ -614,6 +615,17 @@ msgstr ""
 "<em>êtes</em> administrateur, lisez la documentation Squid de l'interface du "
 "gestionnaire de cache, vérifiez aussi les fichiers logs du gestionnaire "
 "cache pour analyser en détails les messages d'erreurs."
+
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:28
+#, fuzzy
+msgid ""
+"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
+"have difficulties authenticating yourself."
+msgstr ""
+"S'il vous plait, contacter <a href=\"mailto:%w%W\">l'administrateur du "
+"proxy</a> si vous avez des difficultés pour vous authentifier ou pour <a "
+"href=\"http://%h/cgi-bin/chpasswd.cgi\">changez</a> votre mot de passe par "
+"défaut."
 
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:23
 msgid "Precondition Failed."
@@ -631,61 +643,65 @@ msgstr "Délai de lecture dépassé"
 msgid "Request is too large."
 msgstr "La requête est trop volumineuse"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:1
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:73
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:9
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:81
 msgid "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
-msgstr "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
+msgstr ""
+"Erreur du certificat SSL: impossibilité d'obtenir le certificat de "
+"l'émetteur : %ssl_ca_name"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:29
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:37
 msgid "SSL Certficate is not valid before: %ssl_notbefore"
-msgstr "SSL Certficate is not valid before: %ssl_notbefore"
+msgstr "Le certificat SSL n'est pas valide avant le: %ssl_notbefore"
 
-#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.detail:33
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.detail:41
 msgid "SSL Certificate expired on: %ssl_notafter"
-msgstr "SSL Certificate expired on: %ssl_notafter"
+msgstr "Le certificat SSL expire le : %ssl_notafter"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.detail:49
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.detail:57
 msgid ""
 "SSL Certificate has invalid expiration date (the 'not after' field): "
 "%ssl_subject"
 msgstr ""
-"SSL Certificate has invalid expiration date (the 'not after' field): "
+"La date d'expiration du certificat SSL est invalide ('pas après' le champ) : "
 "%ssl_subject"
 
-#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:45
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:53
 msgid ""
 "SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
 msgstr ""
-"SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
+"La date de début du certificat SSL est invalide ('pas après' le champ) : "
+"%ssl_subject"
 
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:30
 msgid "Select Auto-detect proxy settings for this network"
 msgstr ""
-"Sélectionnez détection automatique des paramètres de proxy pour ce réseau"
+"Sélectionnez détection automatique dans les paramètres du proxy pour ce "
+"réseau"
 
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:38
 msgid "Select Automatically detect settings"
-msgstr "Sélectionnez la détection automatique des paramètres"
+msgstr "Sélectionnez le paramètre détection automatique"
 
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:46
 msgid "Select Use Automatic proxy configuration"
 msgstr "Utilisez la sélection automatique pour configurer le proxy"
 
-#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:65
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:73
 msgid "Self signed certificate"
-msgstr "Self signed certificate"
+msgstr "Certificat auto-signé"
 
-#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.descr:69
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.descr:77
 msgid "Self signed certificate in certificate chain"
-msgstr "Self signed certificate in certificate chain"
+msgstr "Certificat auto-signé dans la chaîne du certificat"
 
-#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.detail:69
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.detail:77
 msgid "Self-signed SSL Certificate in chain: %ssl_subject"
-msgstr "Self-signed SSL Certificate in chain: %ssl_subject"
+msgstr "Certificat SSL auto-signé dans la chaîne : %ssl_subject"
 
-#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.detail:65
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.detail:73
 msgid "Self-signed SSL Certificate: %ssl_subject"
-msgstr "Self-signed SSL Certificate: %ssl_subject"
+msgstr "Certificat SSL auto-signé : %ssl_subject"
 
 #: templates/ERR_SOCKET_FAILURE+html.body.div.blockquote.p:23
 msgid "Socket Failure"
@@ -707,7 +723,7 @@ msgid ""
 "until you have authenticated yourself."
 msgstr ""
 "Désolé, vous n'êtes pas autorisé à demander la requête %U au travers du "
-"gestionnaire de cache tant que vous ne vous serez pas identifié."
+"gestionnaire de cache tant que vous ne serez pas identifié."
 
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:26
 msgid ""
@@ -715,7 +731,7 @@ msgid ""
 "have authenticated yourself."
 msgstr ""
 "Désolé, vous n'êtes pas autorisé à demander la requête %U de ce cache tant "
-"que vous ne vous serez pas identifié."
+"que vous ne serez pas identifié."
 
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:26
 msgid "Squid did not receive any data for this request."
@@ -753,9 +769,9 @@ msgstr ""
 msgid "Squid sent the following FTP command:"
 msgstr "Squid a envoyé la commande FTP suivante :"
 
-#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:109
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:117
 msgid "Subject issuer mismatch"
-msgstr "Subject issuer mismatch"
+msgstr "Discordance entre le sujet et l'émetteur"
 
 #: templates/ERR_DNS_FAIL+html.body.div.p:26
 msgid "The DNS server returned:"
@@ -895,7 +911,7 @@ msgid ""
 "There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
-"Sur ce proxy Il n'y a pas d'hôte définie pour un relais WAIS! Adressez-vous "
+"Sur ce proxy il n'y a pas d'hôte définie pour le relais WAIS! Adressez-vous "
 "à votre administrateur."
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:27
@@ -1045,21 +1061,23 @@ msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
 msgstr "Outils -&gt; Préférences -&gt; Avancé -&gt; Réseau -&gt; Serveur Proxy"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:17
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:25
 msgid "Unable to decode issuer (CA) public key: %ssl_ca_name"
-msgstr "Unable to decode issuer (CA) public key: %ssl_ca_name"
+msgstr ""
+"Impossible de décoder la clé du certificat publique de l'émetteur : "
+"%ssl_ca_name"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.descr:17
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.descr:25
 msgid "Unable to decode issuer public key"
-msgstr "Unable to decode issuer public key"
+msgstr "Impossible de décoder la clé publique"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:13
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:21
 msgid "Unable to decrypt CRL's signature"
-msgstr "Unable to decrypt CRL's signature"
+msgstr "Impossible de décrypter la signature CRL's"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.descr:9
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.descr:17
 msgid "Unable to decrypt certificate's signature"
-msgstr "Unable to decrypt certificate's signature"
+msgstr "Impossible de décrypter la signature du certificat's"
 
 #: templates/ERR_DNS_FAIL+html.body.div.blockquote.p:23
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -1069,21 +1087,21 @@ msgstr "Impossible de déterminer l'adresse IP du nom d'hôte <q>%H</q>"
 msgid "Unable to forward this request at this time."
 msgstr "En ce moment, il est impossible de retransmettre cette requête."
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.descr:5
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.descr:13
 msgid "Unable to get certificate CRL"
-msgstr "Unable to get certificate CRL"
+msgstr "Impossible d'obtenir un certificat CRL"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.descr:1
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.descr:9
 msgid "Unable to get issuer certificate"
-msgstr "Unable to get issuer certificate"
+msgstr "Impossible d'obtenir un certificat de l'émetteur"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:73
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:81
 msgid "Unable to get local issuer certificate"
-msgstr "Unable to get local issuer certificate"
+msgstr "Impossible d'obtenir un certificat de l'émetteur local"
 
-#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:77
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:85
 msgid "Unable to verify the first certificate"
-msgstr "Unable to verify the first certificate"
+msgstr "Impossible de vérifier le premier certificat"
 
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h2:15
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.blockquote.p:23
@@ -1094,9 +1112,9 @@ msgstr "Version HTTP non supportée"
 msgid "Unsupported Request Method and Protocol"
 msgstr "La méthode de requête et le protocole ne sont pas pris en charge."
 
-#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:97
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:105
 msgid "Unsupported certificate purpose"
-msgstr "Unsupported certificate purpose"
+msgstr "Object du certificat n'est pas supporté"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.blockquote.p:23
 msgid ""
