@@ -31,8 +31,6 @@
 #ifndef STATCOUNTERS_H_
 #define STATCOUNTERS_H_
 
-#include "config.h"
-
 #include "StatHist.h"
 
 #if USE_CACHE_DIGESTS
