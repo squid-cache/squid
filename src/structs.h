@@ -696,22 +696,6 @@ struct _fde_disk {
     off_t offset;
 };
 
-struct _fileMap {
-    int max_n_files;
-    int n_files_in_map;
-    int toggle;
-    int nwords;
-    unsigned long *file_map;
-};
-
-#include "SquidString.h"
-/* http header extention field */
-
-class HttpHdrExtField
-{
-    String name;		/* field-name  from HTTP/1.1 (no column after name) */
-    String value;		/* field-value from HTTP/1.1 */
-};
 
 /* per field statistics */
 
@@ -729,6 +713,7 @@ public:
 };
 
 /* compiled version of HttpHeaderFieldAttrs plus stats */
+#include "SquidString.h"
 
 class HttpHeaderFieldInfo
 {

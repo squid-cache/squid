@@ -1,3 +1,29 @@
+Changes to squid-3.2.0.14 (12 Dec 2011):
+
+	- Bug 3433: Segfault closing SNMP
+	- Bug 3420: Request body consumption races and !theConsumer exception.
+	- Bug 3406: SSL Log Error in debug
+	- Bug 3383: store.cc:1631: "new_status != IN_MEMORY" assertion
+	- Bug 3383: unhandled exception: theGroupBSize > 0
+	- Bug 3377: assertion failed: store.cc:885: "store_status == STORE_PENDING"
+	- Bug 3367: fix inverted check on host_strict_verify
+	- Bug 3366: assertion comm.cc:1276: isOpen(fd) via CompositePoolNode::kickReads
+	- Bug 3364: SNMP Orphans
+	- Bug 3301: ERR_DNS_FAIL never shown
+	- Bug 3150: do not start useless unlinkd
+	- ext_session_acl: version 1.2
+	- Add adaptation_meta option
+	- Add a mask on the qos_flows miss configuration value
+	- Support intermediate CA in ssl-bump traffic certificates
+	- Support SSL certificate failure details on error page
+	- Fix flags for NAT intercept and TPROXY not set correctly
+	- Fix fastCheck() default result on multi-line actions
+	- Fix missing SMP shared memory statistics
+	- Fix Comm::Write closing() assertion when retrying a failed UDP DNS query
+	- ... and several other TCP and SMP support behaviour fixes
+	- ... and many code polishing cleanups and fixed build errors
+	- ... and several documentation polishings
+
 Changes to squid-3.2.0.13 (14 Oct 2011):
 
 	- Regression Bug 3363: never_direct always 'unable to forward this request at this time'
