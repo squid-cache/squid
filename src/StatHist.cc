@@ -87,8 +87,16 @@ StatHist::init(int capacity_, hbase_f * val_in_, hbase_f * val_out_, double min_
 void
 StatHist::clear()
 {
-    xfree(bins);
-    bins = NULL;
+    for(int i=0;i<capacity;++i)
+        bins[i]=0;
+}
+
+StatHist::~StatHist()
+{
+    if (bins != NULL) {
+        xfree(bins);
+        bins = NULL;
+    }
 }
 
 /* assumes that somebody already called init for Dest */
@@ -288,3 +296,4 @@ statHistIntDumper(StoreEntry * sentry, int idx, double val, double size, int cou
     if (count)
         storeAppendPrintf(sentry, "%9d\t%9d\n", (int) val, count);
 }
+
