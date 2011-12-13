@@ -144,14 +144,6 @@ SQUIDCEXTERN void fdDumpOpen(void);
 SQUIDCEXTERN int fdUsageHigh(void);
 SQUIDCEXTERN void fdAdjustReserved(void);
 
-SQUIDCEXTERN fileMap *file_map_create(void);
-SQUIDCEXTERN int file_map_allocate(fileMap *, int);
-SQUIDCEXTERN int file_map_bit_set(fileMap *, int);
-SQUIDCEXTERN int file_map_bit_test(fileMap *, int);
-SQUIDCEXTERN void file_map_bit_reset(fileMap *, int);
-SQUIDCEXTERN void filemapFreeMemory(fileMap *);
-
-
 SQUIDCEXTERN void fqdncache_nbgethostbyaddr(const Ip::Address &, FQDNH *, void *);
 
 SQUIDCEXTERN const char *fqdncache_gethostbyaddr(const Ip::Address &, int flags);
@@ -214,9 +206,6 @@ SQUIDCEXTERN mb_size_t httpBuildRequestPrefix(HttpRequest * request,
         StoreEntry * entry,
         MemBuf * mb,
         http_state_flags);
-SQUIDCEXTERN void httpAnonInitModule(void);
-SQUIDCEXTERN int httpAnonHdrAllowed(http_hdr_type hdr_id);
-SQUIDCEXTERN int httpAnonHdrDenied(http_hdr_type hdr_id);
 SQUIDCEXTERN const char *httpMakeVaryMark(HttpRequest * request, HttpReply const * reply);
 
 #include "HttpStatusCode.h"
