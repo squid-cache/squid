@@ -51,19 +51,39 @@ public:
     StatHist(const StatHist&);
     StatHist &operator=(const StatHist &);
     virtual ~StatHist();
-    /**
+    /** clear the contents of the histograms
      *
+     * \todo remove: this function has been replaced in its purpose
+     *       by the destructor
      */
     void clear();
+
+    /** Calculate the percentile for value pctile for the difference between
+     *  this and the supplied histogram.
+     */
     double deltaPctile(const StatHist &B, double pctile) const;
+    /** obtain the output-transformed value from the specified bin
+     *
+     */
     double val(int bin) const;
+    /** increment the counter for the histogram entry
+     * associated to the supplied value
+     */
     void count(double val);
+    /** iterate the supplied bd function over the histogram values
+     */
     void dump(StoreEntry *sentry, StatHistBinDumper * bd) const;
+    /** Initialize the Histogram using a logarithmic values distribution
+     *
+     */
     void logInit(int capacity, double min, double max);
+    /** initialize the histogram to count occurrences in an enum-represented set
+     *
+     */
     void enumInit(int last_enum);
-    void intInit(int n);
-    void init(int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
 protected:
+    /// low-level initialize function
+    void init(int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
     int findBin(double v);
     int *bins;
     int capacity;
