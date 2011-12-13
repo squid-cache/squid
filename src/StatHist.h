@@ -33,20 +33,31 @@
 
 #include "typedefs.h"
 
-/*
- * "very generic" histogram;
+/** Generic histogram class
+ *
  * see important comments on hbase_f restrictions in StatHist.c
  */
-
 class StatHist {
 public:
-    void clear();
-    double deltaPctile(const StatHist &B, double pctile) const;
-    double val(int bin) const; //todo: make private
-    void count(double val);
-    StatHist &operator=(const StatHist &);
+    /** Default constructor
+     *
+     * \note the default constructor doesn't fully initialize.
+     *       you have to call one of the *init functions to specialize the
+     *       histogram
+     * \todo specialize the class in a small hierarchy so that all
+     *       relevant initializations are done at build-time
+     */
     StatHist() : scale(1.0) {};
     StatHist(const StatHist&);
+    StatHist &operator=(const StatHist &);
+    virtual ~StatHist();
+    /**
+     *
+     */
+    void clear();
+    double deltaPctile(const StatHist &B, double pctile) const;
+    double val(int bin) const;
+    void count(double val);
     void dump(StoreEntry *sentry, StatHistBinDumper * bd) const;
     void logInit(int capacity, double min, double max);
     void enumInit(int last_enum);
@@ -67,7 +78,6 @@ protected:
 void statHistCount(StatHist * H, double val);
 double statHistDeltaMedian(const StatHist & A, const StatHist & B);
 double statHistDeltaPctile(const StatHist & A, const StatHist & B, double pctile);
-//void statHistIntInit(StatHist * H, int n);
 StatHistBinDumper statHistEnumDumper;
 StatHistBinDumper statHistIntDumper;
 
