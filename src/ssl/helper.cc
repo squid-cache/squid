@@ -28,15 +28,12 @@ void Ssl::Helper::Init()
 {
     assert(ssl_crtd == NULL);
 
-    bool useSslBump = false;
-    for (http_port_list *s = ::Config.Sockaddr.http; s; s = s->next) {
-        if (s->sslBump) {
-            useSslBump = true;
-            break;
-        }
-    }
-
-    if (!useSslBump)
+    bool found = false;
+    for (http_port_list *s = ::Config.Sockaddr.http; s && !found; s = s->next)
+        found = s->sslBump;
+    for (http_port_list *s = ::Config.Sockaddr.https; s && !found; s = s->next)
+        found = s->sslBump;
+    if (!found)
         return;
 
     ssl_crtd = new helper("ssl_crtd");
