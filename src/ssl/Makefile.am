@@ -30,6 +30,8 @@ libsslsquid_la_SOURCES = \
 	ErrorDetail.h \
 	ErrorDetailManager.cc \
 	ErrorDetailManager.h \
+	ServerPeeker.cc \
+	ServerPeeker.h \
 	support.cc \
 	support.h
 

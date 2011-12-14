@@ -69,6 +69,7 @@ private:
     FwdState(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *);
     void start(Pointer aSelf);
 
+    void selectPeerForIntercepted();
     static void logReplyStatus(int tries, http_status status);
     void doneWithRetries();
     void completed();

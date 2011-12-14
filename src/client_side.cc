@@ -121,6 +121,7 @@
 #if USE_SSL
 #include "ssl/context_storage.h"
 #include "ssl/helper.h"
+#include "ssl/ServerPeeker.h"
 #include "ssl/support.h"
 #include "ssl/gadgets.h"
 #endif
@@ -3435,7 +3436,7 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext)
     else {
         char buf[MAX_IPSTRLEN];
         debugs(33, 4, HERE << details << " try to generate a Dynamic SSL CTX");
-        connState->switchToHttps(details->local.NtoA(buf, sizeof(buf)));
+        connState->switchToHttps(details->local.NtoA(buf, sizeof(buf)), details->local.GetPort());
     }
 }
 
@@ -3511,7 +3512,7 @@ httpsAccept(const CommAcceptCbParams &params)
         // using tproxy-provided destination IP and port.
         HttpRequest *request = new HttpRequest();
         static char ip[MAX_IPSTRLEN];
-        assert(params.conn->flags & COMM_TRANSPARENT);
+        assert(params.conn->flags & (COMM_TRANSPARENT | COMM_INTERCEPTION));
         request->SetHost(params.conn->local.NtoA(ip, sizeof(ip)));
         request->port = params.conn->local.GetPort();
         request->myportname = s->name;
@@ -3644,7 +3645,7 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
 }
 
 void
-ConnStateData::switchToHttps(const char *host)
+ConnStateData::switchToHttps(const char *host, const int port)
 {
     assert(!switchedToHttps_);
 
@@ -3655,10 +3656,36 @@ ConnStateData::switchToHttps(const char *host)
     freeAllContexts();
     //currentobject->connIsFinished();
 
+    /* careful: freeAllContexts() above frees request, host, etc. */
+
     // We are going to read new request
     flags.readMore = true;
     debugs(33, 5, HERE << "converting " << clientConnection << " to SSL");
 
+    const bool alwaysBumpServerFirst = true;
+    if (alwaysBumpServerFirst) {
+        Must(!httpsPeeker.set());
+        httpsPeeker = AsyncJob::Start(new Ssl::ServerPeeker(
+                                      this, sslHostName.termedBuf(), port));
+        // will call httpsPeeked() with certificate and connection, eventually
+        return;
+    }
+
+    // otherwise, use sslHostName
+    getSslContextStart();
+}
+
+void
+ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
+{
+    Must(httpsPeeker.set());
+    // XXX: handle httpsPeeker errors
+    
+    pinConnection(serverConnection, NULL, NULL, false);
+
+    // XXX: change sslHostName based on httpsPeeker results
+    debugs(33, 5, HERE << "bumped HTTPS server: " << sslHostName);
+    httpsPeeker.clear();
     getSslContextStart();
 }
 
@@ -3757,6 +3784,22 @@ clientHttpsConnectionsOpen(void)
             debugs(1, 1, "Ignoring https_port " << s->http.s <<
                    " due to SSL initialization failure.");
             continue;
+        }
+
+        // TODO: merge with similar code in clientHttpConnectionsOpen()
+        if (s->sslBump && !Config.accessList.ssl_bump) {
+            debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << s->protocol << "_port " << s->http.s);
+            s->sslBump = 0;
+        }
+
+        if (s->sslBump && !s->staticSslContext && !s->generateHostCertificates) {
+            debugs(1, DBG_IMPORTANT, "Will not bump SSL at http_port " << s->http.s << " due to SSL initialization failure.");
+            s->sslBump = 0;
+        }
+
+        if (s->sslBump) {
+            // Create ssl_ctx cache for this port.
+            Ssl::TheGlobalContextStorage.addLocalStorage(s->s, s->dynamicCertMemCacheSize == std::numeric_limits<size_t>::max() ? 4194304 : s->dynamicCertMemCacheSize);
         }
 
         // Fill out a Comm::Connection which IPC will open as a listener for us
@@ -4099,10 +4142,11 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
     clientConnection->close();
 }
 
-/* This is a comm call normally scheduled by comm_close() */
+/// Our close handler called by Comm when the pinned connection is closed
 void
 ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
 {
+    pinning.closeHandler = NULL; // Comm unregisters handlers before calling
     unpinConnection();
 }
 
@@ -4114,22 +4158,30 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
     if (Comm::IsConnOpen(pinning.serverConnection)) {
         if (pinning.serverConnection->fd == pinServer->fd)
             return;
+    }
 
-        unpinConnection(); // clears fields ready for re-use. Prevent close() scheduling our close handler.
-        pinning.serverConnection->close();
-    } else
-        unpinConnection(); // clears fields ready for re-use.
+    unpinConnection(); // closes pinned connection, if any, and resets fields.
 
     pinning.serverConnection = pinServer;
-    pinning.host = xstrdup(request->GetHost());
-    pinning.port = request->port;
+
+    // when pinning an SSL bumped connection, the request may be NULL
+    const char *pinnedHost = "[unknown]";
+    if (request) {
+        pinning.host = xstrdup(request->GetHost());
+        pinning.port = request->port;
+        pinnedHost = pinning.host;
+    } else {
+        pinning.port = pinServer->remote.GetPort();
+    }
     pinning.pinned = true;
     if (aPeer)
         pinning.peer = cbdataReference(aPeer);
     pinning.auth = auth;
     char stmp[MAX_IPSTRLEN];
     snprintf(desc, FD_DESC_SZ, "%s pinned connection for %s (%d)",
-             (auth || !aPeer) ? request->GetHost() : aPeer->name, clientConnection->remote.ToURL(stmp,MAX_IPSTRLEN), clientConnection->fd);
+             (auth || !aPeer) ? pinnedHost : aPeer->name,
+             clientConnection->remote.ToURL(stmp,MAX_IPSTRLEN),
+             clientConnection->fd);
     fd_note(pinning.serverConnection->fd, desc);
 
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
@@ -4171,12 +4223,16 @@ ConnStateData::unpinConnection()
     if (pinning.peer)
         cbdataReferenceDone(pinning.peer);
 
+    if (Comm::IsConnOpen(pinning.serverConnection)) {
     if (pinning.closeHandler != NULL) {
         comm_remove_close_handler(pinning.serverConnection->fd, pinning.closeHandler);
         pinning.closeHandler = NULL;
     }
     /// also close the server side socket, we should not use it for any future requests...
+    // TODO: do not close if called from our close handler?
     pinning.serverConnection->close();
+    }
+
     safe_free(pinning.host);
 
     /* NOTE: pinning.pinned should be kept. This combined with fd == -1 at the end of a request indicates that the host
