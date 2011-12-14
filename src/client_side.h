@@ -306,6 +306,9 @@ public:
     virtual void swanSong();
 
 #if USE_SSL
+    /// called by Ssl::ServerPeeker when it is done bumping the server
+    void httpsPeeked(Comm::ConnectionPointer serverConnection);
+
     /// Start to create dynamic SSL_CTX for host or uses static port SSL context.
     void getSslContextStart();
     /**
@@ -319,7 +322,7 @@ public:
     /// Proccess response from ssl_crtd.
     void sslCrtdHandleReply(const char * reply);
 
-    void switchToHttps(const char *host);
+    void switchToHttps(const char *host, const int port);
     bool switchedToHttps() const { return switchedToHttps_; }
 #else
     bool switchedToHttps() const { return false; }
@@ -343,8 +346,14 @@ private:
     CBDATA_CLASS2(ConnStateData);
     bool closing_;
 
+#if USE_SSL
     bool switchedToHttps_;
     String sslHostName; ///< Host name for SSL certificate generation
+
+    /// a job that connects to the HTTPS server to get its SSL certificate
+    AsyncJob::Pointer httpsPeeker;
+#endif
+
     AsyncCall::Pointer reader; ///< set when we are reading
     BodyPipe::Pointer bodyPipe; // set when we are reading request body
 };

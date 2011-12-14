@@ -122,11 +122,7 @@ void FwdState::start(Pointer aSelf)
     // To resolve this we must force DIRECT and only to the original client destination.
     if (Config.onoff.client_dst_passthru && request && !request->flags.redirected &&
             (request->flags.intercepted || request->flags.spoof_client_ip)) {
-        Comm::ConnectionPointer p = new Comm::Connection();
-        p->remote = clientConn->local;
-        p->peerType = ORIGINAL_DST;
-        getOutgoingAddress(request, p);
-        serverDestinations.push_back(p);
+        selectPeerForIntercepted();
 
         // destination "found". continue with the forwarding.
         startConnectionOrFail();
@@ -134,6 +130,31 @@ void FwdState::start(Pointer aSelf)
         // do full route options selection
         peerSelect(&serverDestinations, request, entry, fwdPeerSelectionCompleteWrapper, this);
     }
+}
+
+/// bypasses peerSelect() when dealing with intercepted requests
+void
+FwdState::selectPeerForIntercepted()
+{
+    // use pinned connection if available
+    Comm::ConnectionPointer p;
+    if (ConnStateData *client = request->pinnedConnection())
+        p = client->validatePinnedConnection(request, NULL);
+
+    if (p != NULL && Comm::IsConnOpen(p)) {
+        debugs(17, 3, HERE << "reusing a pinned conn: " << *p);
+        /* duplicate peerSelectPinned() effects */
+        p->peerType = PINNED;
+        entry->ping_status = PING_DONE;     /* Skip ICP */
+    } else {
+        debugs(17, 3, HERE << "opening a new conn: " << *p);
+        p = new Comm::Connection();
+        p->peerType = ORIGINAL_DST;
+        p->remote = clientConn->local;
+        getOutgoingAddress(request, p);
+    }
+
+    serverDestinations.push_back(p);
 }
 
 void
@@ -755,7 +776,8 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
 
 #if USE_SSL
     if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
-            (!serverConnection()->getPeer() && request->protocol == AnyP::PROTO_HTTPS)) {
+            (!serverConnection()->getPeer() &&
+                (request->protocol == AnyP::PROTO_HTTPS || request->protocol == AnyP::PROTO_SSL_PEEK))) {
         initiateSSL();
         return;
     }
@@ -959,6 +981,16 @@ FwdState::dispatch()
     }
 #endif
 
+#if USE_SSL
+    if (request->protocol == AnyP::PROTO_SSL_PEEK) {
+        CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
+                    ConnStateData::httpsPeeked, serverConnection());
+        unregister(serverConn); // async call owns it now
+        complete(); // destroys us
+        return;
+	}
+#endif
+
     if (serverConnection()->getPeer() != NULL) {
         serverConnection()->getPeer()->stats.fetches++;
         request->peer_login = serverConnection()->getPeer()->login;
@@ -991,6 +1023,10 @@ FwdState::dispatch()
         case AnyP::PROTO_CACHE_OBJECT:
 
         case AnyP::PROTO_INTERNAL:
+
+#if USE_SSL
+        case AnyP::PROTO_SSL_PEEK:
+#endif
 
         case AnyP::PROTO_URN:
             fatal_dump("Should never get here");

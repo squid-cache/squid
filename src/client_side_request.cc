@@ -1373,7 +1373,7 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
         return;
     }
 
-    getConn()->switchToHttps(request->GetHost());
+    getConn()->switchToHttps(request->GetHost(), request->port);
 }
 
 void
