@@ -82,13 +82,19 @@ public:
      */
     void enumInit(int last_enum);
 protected:
-    /// low-level initialize function
+    /// low-level initialize function. called by *Init high-level functions
     void init(int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
+    /// find what entry in the histogram corresponds to v, by applying
+    /// the preset input transformation function
     int findBin(double v);
+    /// the histogram counters
     int *bins;
     int capacity;
+    /// minimum value to be stored, corresponding to the first bin
     double min;
+    /// value of the maximum counter in the histogram
     double max;
+    /// scaling factor when looking for a bin
     double scale;
     hbase_f *val_in;        /* e.g., log() for log-based histogram */
     hbase_f *val_out;       /* e.g., exp() for log based histogram */
