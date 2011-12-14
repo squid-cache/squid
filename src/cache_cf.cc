@@ -4054,13 +4054,14 @@ parse_https_port_list(https_port_list ** head)
         parse_http_port_option(s, token);
     }
 
-    /* ssl-bump requires tproxy and vice versa */
-    if (s->sslBump && !s->spoof_client_ip) {
-        debugs(3, DBG_CRITICAL, "FATAL: ssl-bump on https_port requires tproxy which is missing.");
+    /* ssl-bump requires either tproxy or intercepted, and vice versa */
+    const bool hijacked = s->spoof_client_ip || s->intercepted;
+    if (s->sslBump && !hijacked) {
+        debugs(3, DBG_CRITICAL, "FATAL: ssl-bump on https_port requires tproxy/intercepted which is missing.");
         self_destruct();
     }
-    if (s->spoof_client_ip && !s->sslBump) {
-        debugs(3, DBG_CRITICAL, "FATAL: tproxy on https_port requires ssl-bump which is missing.");
+    if (hijacked && !s->sslBump) {
+        debugs(3, DBG_CRITICAL, "FATAL: tproxy/intercepted on https_port requires ssl-bump which is missing.");
         self_destruct();
     }
 
