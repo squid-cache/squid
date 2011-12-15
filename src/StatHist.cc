@@ -1,7 +1,5 @@
 
 /*
- * $Id$
- *
  * DEBUG: section 62    Generic Histogram
  * AUTHOR: Duane Wessels
  *
@@ -33,21 +31,8 @@
  *
  */
 
-/*
- * Important restrictions on val_in and val_out functions:
- *
- *   - val_in:  ascending, defined on [0, oo), val_in(0) == 0;
- *   - val_out: x == val_out(val_in(x)) where val_in(x) is defined
- *
- *  In practice, the requirements are less strict,
- *  but then it gets hard to define them without math notation.
- *  val_in is applied after offseting the value but before scaling
- *  See log and linear based histograms for examples
- */
-
-#include "squid.h"
+#include "config.h"
 #include "StatHist.h"
-#include "Store.h"
 
 /* Local functions */
 static StatHistBinDumper statHistBinDumper;
@@ -72,7 +57,7 @@ StatHist::init(int capacity_, hbase_f * val_in_, hbase_f * val_out_, double min_
     capacity = capacity_;
     val_in = val_in_;
     val_out = val_out_;
-    bins = (int *)xcalloc(capacity, sizeof(int));
+    bins = static_cast<int *>(xcalloc(capacity, sizeof(int)));
     scale = capacity / val_in(max - min);
 
     /* check that functions are valid */
@@ -99,18 +84,22 @@ StatHist::~StatHist()
     }
 }
 
-/* assumes that somebody already called init for Dest */
-/* TODO: remove assumption */
 StatHist&
 StatHist::operator =(const StatHist & src)
 {
-    assert(src.bins != NULL);
-    assert(capacity==src.capacity);
-    assert(min==src.min);
-    assert(max==src.max);
-    assert(fabs(scale - src.scale) < 0.0000001);
-    assert(val_in==src.val_in);
-    assert(val_out==src.val_out);
+    assert(src.bins != NULL); // TODO: remove after initializing bins at construction time
+    if (capacity != src.capacity) {
+        // need to resize.
+        xfree(bins);
+        bins = static_cast<int *>(xcalloc(src.capacity, sizeof(int)));
+        capacity=src.capacity;
+
+    }
+    min=src.min;
+    max=src.max;
+    scale=src.scale;
+    val_in=src.val_in;
+    val_out=src.val_out;
     memcpy(bins,src.bins,capacity*sizeof(*bins));
     return *this;
 }
@@ -137,7 +126,7 @@ StatHist::findBin(double v)
     bin = (int) floor(scale * val_in(v) + 0.5);
 
     if (bin < 0)		/* should not happen */
-        bin = 0;
+        return 0;
 
     if (bin >= capacity)	/* too big */
         bin = capacity - 1;
@@ -154,13 +143,13 @@ StatHist::val(int bin) const
 double
 statHistDeltaMedian(const StatHist & A, const StatHist & B)
 {
-    return statHistDeltaPctile(A,B, 0.5);
+    return statHistDeltaPctile(A, B, 0.5);
 }
 
 double
 statHistDeltaPctile(const StatHist & A, const StatHist & B, double pctile)
 {
-    return A.deltaPctile(B,pctile);
+    return A.deltaPctile(B, pctile);
 }
 
 double
@@ -178,7 +167,7 @@ StatHist::deltaPctile(const StatHist & B, double pctile) const
 
     assert(capacity == B.capacity);
 
-    int *D = (int *)xcalloc(capacity, sizeof(int));
+    int *D = static_cast<int *>(xcalloc(capacity, sizeof(int)));
 
     for (i = 0; i < capacity; ++i) {
         D[i] = B.bins[i] - bins[i];
@@ -279,7 +268,7 @@ Math::Null(double x)
 void
 StatHist::enumInit(int last_enum)
 {
-    init(last_enum + 3, Math::Null, Math::Null, (double) -1, (double) (last_enum + 1 + 1));
+    init(last_enum + 3, Math::Null, Math::Null, -1.0, (2.0 + last_enum));
 }
 
 void
@@ -296,4 +285,3 @@ statHistIntDumper(StoreEntry * sentry, int idx, double val, double size, int cou
     if (count)
         storeAppendPrintf(sentry, "%9d\t%9d\n", (int) val, count);
 }
-
