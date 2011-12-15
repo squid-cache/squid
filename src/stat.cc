@@ -1091,16 +1091,16 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
     stats.client_http_kbytes_in = XAVG(client_http.kbytes_in.kb);
     stats.client_http_kbytes_out = XAVG(client_http.kbytes_out.kb);
 
-    stats.client_http_all_median_svc_time = statHistDeltaMedian(l->client_http.all_svc_time,
-                                            f->client_http.all_svc_time) / 1000.0;
-    stats.client_http_miss_median_svc_time = statHistDeltaMedian(l->client_http.miss_svc_time,
-            f->client_http.miss_svc_time) / 1000.0;
-    stats.client_http_nm_median_svc_time = statHistDeltaMedian(l->client_http.nm_svc_time,
-                                           f->client_http.nm_svc_time) / 1000.0;
-    stats.client_http_nh_median_svc_time = statHistDeltaMedian(l->client_http.nh_svc_time,
-                                           f->client_http.nh_svc_time) / 1000.0;
-    stats.client_http_hit_median_svc_time = statHistDeltaMedian(l->client_http.hit_svc_time,
-                                            f->client_http.hit_svc_time) / 1000.0;
+    stats.client_http_all_median_svc_time = statHistDeltaMedian(l->client_http.allSvcTime,
+                                            f->client_http.allSvcTime) / 1000.0;
+    stats.client_http_miss_median_svc_time = statHistDeltaMedian(l->client_http.missSvcTime,
+            f->client_http.missSvcTime) / 1000.0;
+    stats.client_http_nm_median_svc_time = statHistDeltaMedian(l->client_http.nearMissSvcTime,
+                                           f->client_http.nearMissSvcTime) / 1000.0;
+    stats.client_http_nh_median_svc_time = statHistDeltaMedian(l->client_http.nearHitSvcTime,
+                                           f->client_http.nearHitSvcTime) / 1000.0;
+    stats.client_http_hit_median_svc_time = statHistDeltaMedian(l->client_http.hitSvcTime,
+                                            f->client_http.hitSvcTime) / 1000.0;
 
     stats.server_all_requests = XAVG(server.all.requests);
     stats.server_all_errors = XAVG(server.all.errors);
@@ -1137,12 +1137,12 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
     stats.icp_q_kbytes_recv = XAVG(icp.q_kbytes_recv.kb);
     stats.icp_r_kbytes_recv = XAVG(icp.r_kbytes_recv.kb);
 
-    stats.icp_query_median_svc_time = statHistDeltaMedian(l->icp.query_svc_time,
-                                      f->icp.query_svc_time) / 1000000.0;
-    stats.icp_reply_median_svc_time = statHistDeltaMedian(l->icp.reply_svc_time,
-                                      f->icp.reply_svc_time) / 1000000.0;
-    stats.dns_median_svc_time = statHistDeltaMedian(l->dns.svc_time,
-                                f->dns.svc_time) / 1000.0;
+    stats.icp_query_median_svc_time = statHistDeltaMedian(l->icp.querySvcTime,
+                                      f->icp.querySvcTime) / 1000000.0;
+    stats.icp_reply_median_svc_time = statHistDeltaMedian(l->icp.replySvcTime,
+                                      f->icp.replySvcTime) / 1000000.0;
+    stats.dns_median_svc_time = statHistDeltaMedian(l->dns.svcTime,
+                                f->dns.svcTime) / 1000.0;
 
     stats.unlink_requests = XAVG(unlink.requests);
     stats.page_faults = XAVG(page_faults);
@@ -1486,20 +1486,20 @@ statCountersInitSpecial(StatCounters * C)
     /*
      * HTTP svc_time hist is kept in milli-seconds; max of 3 hours.
      */
-    C->client_http.all_svc_time.logInit(300, 0.0, 3600000.0 * 3.0);
-    C->client_http.miss_svc_time.logInit(300, 0.0, 3600000.0 * 3.0);
-    C->client_http.nm_svc_time.logInit(300, 0.0, 3600000.0 * 3.0);
-    C->client_http.nh_svc_time.logInit(300, 0.0, 3600000.0 * 3.0);
-    C->client_http.hit_svc_time.logInit(300, 0.0, 3600000.0 * 3.0);
+    C->client_http.allSvcTime.logInit(300, 0.0, 3600000.0 * 3.0);
+    C->client_http.missSvcTime.logInit(300, 0.0, 3600000.0 * 3.0);
+    C->client_http.nearMissSvcTime.logInit(300, 0.0, 3600000.0 * 3.0);
+    C->client_http.nearHitSvcTime.logInit(300, 0.0, 3600000.0 * 3.0);
+    C->client_http.hitSvcTime.logInit(300, 0.0, 3600000.0 * 3.0);
     /*
      * ICP svc_time hist is kept in micro-seconds; max of 1 minute.
      */
-    C->icp.query_svc_time.logInit(300, 0.0, 1000000.0 * 60.0);
-    C->icp.reply_svc_time.logInit(300, 0.0, 1000000.0 * 60.0);
+    C->icp.querySvcTime.logInit(300, 0.0, 1000000.0 * 60.0);
+    C->icp.replySvcTime.logInit(300, 0.0, 1000000.0 * 60.0);
     /*
      * DNS svc_time hist is kept in milli-seconds; max of 10 minutes.
      */
-    C->dns.svc_time.logInit(300, 0.0, 60000.0 * 10.0);
+    C->dns.svcTime.logInit(300, 0.0, 60000.0 * 10.0);
     /*
      * Cache Digest Stuff
      */
@@ -1515,14 +1515,14 @@ static void
 statCountersClean(StatCounters * C)
 {
     assert(C);
-    C->client_http.all_svc_time.clear();
-    C->client_http.miss_svc_time.clear();
-    C->client_http.nm_svc_time.clear();
-    C->client_http.nh_svc_time.clear();
-    C->client_http.hit_svc_time.clear();
-    C->icp.query_svc_time.clear();
-    C->icp.reply_svc_time.clear();
-    C->dns.svc_time.clear();
+    C->client_http.allSvcTime.clear();
+    C->client_http.missSvcTime.clear();
+    C->client_http.nearMissSvcTime.clear();
+    C->client_http.nearHitSvcTime.clear();
+    C->client_http.hitSvcTime.clear();
+    C->icp.querySvcTime.clear();
+    C->icp.replySvcTime.clear();
+    C->dns.svcTime.clear();
     C->cd.on_xition_count.clear();
     C->comm_icp_incoming.clear();
     C->comm_dns_incoming.clear();
@@ -1541,15 +1541,15 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
     statCountersInitSpecial(dest);
     /* now handle special cases */
     /* note: we assert that histogram capacities do not change */
-    dest->client_http.all_svc_time=orig->client_http.all_svc_time;
-    dest->client_http.miss_svc_time=orig->client_http.miss_svc_time;
-    dest->client_http.nm_svc_time=orig->client_http.nm_svc_time;
-    dest->client_http.nh_svc_time=orig->client_http.nh_svc_time;
+    dest->client_http.allSvcTime=orig->client_http.allSvcTime;
+    dest->client_http.missSvcTime=orig->client_http.missSvcTime;
+    dest->client_http.nearMissSvcTime=orig->client_http.nearMissSvcTime;
+    dest->client_http.nearHitSvcTime=orig->client_http.nearHitSvcTime;
 
-    dest->client_http.hit_svc_time=orig->client_http.hit_svc_time;
-    dest->icp.query_svc_time=orig->icp.query_svc_time;
-    dest->icp.reply_svc_time=orig->icp.reply_svc_time;
-    dest->dns.svc_time=orig->dns.svc_time;
+    dest->client_http.hitSvcTime=orig->client_http.hitSvcTime;
+    dest->icp.querySvcTime=orig->icp.querySvcTime;
+    dest->icp.replySvcTime=orig->icp.replySvcTime;
+    dest->dns.svcTime=orig->dns.svcTime;
     dest->cd.on_xition_count=orig->cd.on_xition_count;
     dest->comm_icp_incoming=orig->comm_icp_incoming;
     dest->comm_http_incoming=orig->comm_http_incoming;
@@ -1559,22 +1559,22 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
 static void
 statCountersHistograms(StoreEntry * sentry)
 {
-    storeAppendPrintf(sentry, "client_http.all_svc_time histogram:\n");
-    statCounter.client_http.all_svc_time.dump(sentry, NULL);
-    storeAppendPrintf(sentry, "client_http.miss_svc_time histogram:\n");
-    statCounter.client_http.miss_svc_time.dump(sentry, NULL);
-    storeAppendPrintf(sentry, "client_http.nm_svc_time histogram:\n");
-    statCounter.client_http.nm_svc_time.dump(sentry, NULL);
-    storeAppendPrintf(sentry, "client_http.nh_svc_time histogram:\n");
-    statCounter.client_http.nh_svc_time.dump(sentry, NULL);
-    storeAppendPrintf(sentry, "client_http.hit_svc_time histogram:\n");
-    statCounter.client_http.hit_svc_time.dump(sentry, NULL);
-    storeAppendPrintf(sentry, "icp.query_svc_time histogram:\n");
-    statCounter.icp.query_svc_time.dump(sentry, NULL);
-    storeAppendPrintf(sentry, "icp.reply_svc_time histogram:\n");
-    statCounter.icp.reply_svc_time.dump(sentry, NULL);
+    storeAppendPrintf(sentry, "client_http.allSvcTime histogram:\n");
+    statCounter.client_http.allSvcTime.dump(sentry, NULL);
+    storeAppendPrintf(sentry, "client_http.missSvcTime histogram:\n");
+    statCounter.client_http.missSvcTime.dump(sentry, NULL);
+    storeAppendPrintf(sentry, "client_http.nearMissSvcTime histogram:\n");
+    statCounter.client_http.nearMissSvcTime.dump(sentry, NULL);
+    storeAppendPrintf(sentry, "client_http.nearHitSvcTime histogram:\n");
+    statCounter.client_http.nearHitSvcTime.dump(sentry, NULL);
+    storeAppendPrintf(sentry, "client_http.hitSvcTime histogram:\n");
+    statCounter.client_http.hitSvcTime.dump(sentry, NULL);
+    storeAppendPrintf(sentry, "icp.querySvcTime histogram:\n");
+    statCounter.icp.querySvcTime.dump(sentry, NULL);
+    storeAppendPrintf(sentry, "icp.replySvcTime histogram:\n");
+    statCounter.icp.replySvcTime.dump(sentry, NULL);
     storeAppendPrintf(sentry, "dns.svc_time histogram:\n");
-    statCounter.dns.svc_time.dump(sentry, NULL);
+    statCounter.dns.svcTime.dump(sentry, NULL);
     storeAppendPrintf(sentry, "select_fds_hist histogram:\n");
     statCounter.select_fds_hist.dump(sentry, NULL);
 }
@@ -1872,31 +1872,31 @@ statPctileSvc(double pctile, int interval, int which)
     switch (which) {
 
     case PCTILE_HTTP:
-        x = statHistDeltaPctile(l->client_http.all_svc_time,f->client_http.all_svc_time, pctile);
+        x = statHistDeltaPctile(l->client_http.allSvcTime,f->client_http.allSvcTime, pctile);
         break;
 
     case PCTILE_HIT:
-        x = statHistDeltaPctile(l->client_http.hit_svc_time,f->client_http.hit_svc_time, pctile);
+        x = statHistDeltaPctile(l->client_http.hitSvcTime,f->client_http.hitSvcTime, pctile);
         break;
 
     case PCTILE_MISS:
-        x = statHistDeltaPctile(l->client_http.miss_svc_time,f->client_http.miss_svc_time, pctile);
+        x = statHistDeltaPctile(l->client_http.missSvcTime,f->client_http.missSvcTime, pctile);
         break;
 
     case PCTILE_NM:
-        x = statHistDeltaPctile(l->client_http.nm_svc_time,f->client_http.nm_svc_time, pctile);
+        x = statHistDeltaPctile(l->client_http.nearMissSvcTime,f->client_http.nearMissSvcTime, pctile);
         break;
 
     case PCTILE_NH:
-        x = statHistDeltaPctile(l->client_http.nh_svc_time,f->client_http.nh_svc_time, pctile);
+        x = statHistDeltaPctile(l->client_http.nearHitSvcTime,f->client_http.nearHitSvcTime, pctile);
         break;
 
     case PCTILE_ICP_QUERY:
-        x = statHistDeltaPctile(l->icp.query_svc_time,f->icp.query_svc_time, pctile);
+        x = statHistDeltaPctile(l->icp.querySvcTime,f->icp.querySvcTime, pctile);
         break;
 
     case PCTILE_DNS:
-        x = statHistDeltaPctile(l->dns.svc_time,f->dns.svc_time, pctile);
+        x = statHistDeltaPctile(l->dns.svcTime,f->dns.svcTime, pctile);
         break;
 
     default:

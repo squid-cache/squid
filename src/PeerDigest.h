@@ -39,7 +39,9 @@
 #if USE_CACHE_DIGESTS
 
 #include "cbdata.h"
-#include "StatCounters.h" /* for cd_guess_stats */
+
+/* for CacheDigestGuessStats */
+#include "StatCounters.h"
 
 struct _Version {
     short int current;		/* current version */
@@ -117,7 +119,7 @@ public:
     } times;
 
     struct {
-        cd_guess_stats guess;
+        CacheDigestGuessStats guess;
         int used_count;
 
         struct {
