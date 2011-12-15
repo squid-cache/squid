@@ -101,7 +101,6 @@ protected:
 };
 
 /* StatHist */
-void statHistCount(StatHist * H, double val);
 double statHistDeltaMedian(const StatHist & A, const StatHist & B);
 double statHistDeltaPctile(const StatHist & A, const StatHist & B, double pctile);
 StatHistBinDumper statHistEnumDumper;
