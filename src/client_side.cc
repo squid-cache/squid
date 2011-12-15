@@ -3679,11 +3679,26 @@ void
 ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
 {
     Must(httpsPeeker.set());
-    // XXX: handle httpsPeeker errors
-    
+
+    /* XXX: handle httpsPeeker errors instead of asserting there are none */
+    assert(Comm::IsConnOpen(serverConnection));
+    SSL *ssl = fd_table[serverConnection->fd].ssl;
+    assert(ssl);
+    Ssl::X509_Pointer serverCert(SSL_get_peer_certificate(ssl));
+    assert(serverCert.get() != NULL);
+
+    char name[256] = ""; // stores common name (CN)
+    // TODO: What if CN is a UTF8String? See X509_NAME_get_index_by_NID(3ssl).
+    const int nameLen = X509_NAME_get_text_by_NID(
+        X509_get_subject_name(serverCert.get()),
+                              NID_commonName,  name, sizeof(name));
+    assert(0 < nameLen && nameLen < static_cast<int>(sizeof(name)));
+    debugs(33, 5, HERE << "found HTTPS server " << name << " at bumped " <<
+           *serverConnection);
+    sslHostName = name;
+
     pinConnection(serverConnection, NULL, NULL, false);
 
-    // XXX: change sslHostName based on httpsPeeker results
     debugs(33, 5, HERE << "bumped HTTPS server: " << sslHostName);
     httpsPeeker.clear();
     getSslContextStart();
