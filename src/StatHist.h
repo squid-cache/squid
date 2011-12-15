@@ -1,4 +1,6 @@
 /*
+ * AUTHOR: Francesco Chemolli
+ *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -24,26 +26,33 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
- *  AUTHOR: Francesco Chemolli
  */
 
 #ifndef STATHIST_H_
 #define STATHIST_H_
 
-#include "typedefs.h"
+/* for StoreEntry */
+#include "Store.h"
+
+
+/// function signature for in/out StatHist adaptation
+typedef double hbase_f(double);
+
+/// function signature for StatHist dumping functions
+typedef void StatHistBinDumper(StoreEntry *, int idx, double val, double size, int count);
 
 /** Generic histogram class
  *
- * see important comments on hbase_f restrictions in StatHist.c
+ * see important comments on hbase_f restrictions in StatHist.cc
  */
 class StatHist {
 public:
-    /** Default constructor
-     *
+    /**
      * \note the default constructor doesn't fully initialize.
      *       you have to call one of the *init functions to specialize the
      *       histogram
+     * \todo merge functionality from the *init functions to the constructor and
+     *       drop these
      * \todo specialize the class in a small hierarchy so that all
      *       relevant initializations are done at build-time
      */
@@ -82,7 +91,17 @@ public:
      */
     void enumInit(int last_enum);
 protected:
-    /// low-level initialize function. called by *Init high-level functions
+    /** low-level initialize function. called by *Init high-level functions
+     * \note Important restrictions on val_in and val_out functions:
+     *
+     *   - val_in:  ascending, defined on [0, oo), val_in(0) == 0;
+     *   - val_out: x == val_out(val_in(x)) where val_in(x) is defined
+     *
+     *  In practice, the requirements are less strict,
+     *  but then it gets hard to define them without math notation.
+     *  val_in is applied after offseting the value but before scaling
+     *  See log and linear based histograms for examples
+     */
     void init(int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
     /// find what entry in the histogram corresponds to v, by applying
     /// the preset input transformation function
@@ -100,7 +119,6 @@ protected:
     hbase_f *val_out;       /* e.g., exp() for log based histogram */
 };
 
-/* StatHist */
 double statHistDeltaMedian(const StatHist & A, const StatHist & B);
 double statHistDeltaPctile(const StatHist & A, const StatHist & B, double pctile);
 StatHistBinDumper statHistEnumDumper;

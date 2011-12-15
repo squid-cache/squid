@@ -142,9 +142,6 @@ typedef void HLPSONEQ(void *);
 typedef void HLPCMDOPTS(int *argc, char **argv);
 typedef void IDNSCB(void *, rfc1035_rr *, int, const char *);
 
-typedef double hbase_f(double);
-typedef void StatHistBinDumper(StoreEntry *, int idx, double val, double size, int count);
-
 /* MD5 cache keys */
 typedef unsigned char cache_key;
 
