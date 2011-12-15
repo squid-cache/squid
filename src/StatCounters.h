@@ -1,4 +1,6 @@
 /*
+ * AUTHOR: Francesco Chemolli (Harvest-derived)
+ *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -25,7 +27,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- *  AUTHOR: Francesco Chemolli (Harvest-derived)
  *
  */
 #ifndef STATCOUNTERS_H_
@@ -34,21 +35,21 @@
 #include "StatHist.h"
 
 #if USE_CACHE_DIGESTS
-/* statistics for cache digests and other hit "predictors" */
-class cd_guess_stats {
+/** statistics for cache digests and other hit "predictors" */
+class CacheDigestGuessStats {
 public:
-    /* public, read-only */
-    int true_hits;
-    int false_hits;
-    int true_misses;
-    int false_misses;
-    int close_hits;     /* tmp, remove it later */
+    int trueHits;
+    int falseHits;
+    int trueMisses;
+    int falseMisses;
+    int closeHits;     /// \todo: temporary remove it later
 };
 #endif
 
 
-/*
- * if you add a field to StatCounters,
+/** General collection of process-wide statistics.
+ *
+ * \note if you add a field to StatCounters,
  * you MUST sync statCountersInitSpecial, statCountersClean, and statCountersCopy
  */
 class StatCounters {
@@ -63,11 +64,11 @@ public:
         kb_t kbytes_in;
         kb_t kbytes_out;
         kb_t hit_kbytes_out;
-        StatHist miss_svc_time;
-        StatHist nm_svc_time;
-        StatHist nh_svc_time;
-        StatHist hit_svc_time;
-        StatHist all_svc_time;
+        StatHist missSvcTime;
+        StatHist nearMissSvcTime;
+        StatHist nearHitSvcTime;
+        StatHist hitSvcTime;
+        StatHist allSvcTime;
     } client_http;
 
     struct {
@@ -97,8 +98,8 @@ public:
         kb_t kbytes_recv;
         kb_t q_kbytes_recv;
         kb_t r_kbytes_recv;
-        StatHist query_svc_time;
-        StatHist reply_svc_time;
+        StatHist querySvcTime;
+        StatHist replySvcTime;
         int query_timeouts;
         int times_used;
     } icp;
@@ -113,7 +114,7 @@ public:
     } unlink;
 
     struct {
-        StatHist svc_time;
+        StatHist svcTime;
     } dns;
 
     struct {
@@ -125,7 +126,7 @@ public:
         int msgs_recv;
 #if USE_CACHE_DIGESTS
 
-        cd_guess_stats guess;
+        CacheDigestGuessStats guess;
 #endif
 
         StatHist on_xition_count;
