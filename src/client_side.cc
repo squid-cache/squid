@@ -2547,6 +2547,12 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->flags.sslBumped = conn->switchedToHttps();
     request->flags.ignore_cc = conn->port->ignore_cc;
     request->flags.no_direct = request->flags.accelerated ? !conn->port->allow_direct : 0;
+#if USE_AUTH
+    if (request->flags.sslBumped) {
+        if (conn->auth_user_request != NULL)
+            request->auth_user_request = conn->auth_user_request;
+    }
+#endif
 
     /** \par
      * If transparent or interception mode is working clone the transparent and interception flags

@@ -24,8 +24,9 @@ ACLFilledChecklist::checkCallback(allow_t answer)
     if (auth_user_request != NULL) {
         /* the filled_checklist lock */
         auth_user_request = NULL;
-        /* it might have been connection based */
-        if (conn()) {
+        // It might have been connection based
+        // In the case of sslBump we need to preserve authentication info
+        if (conn() && !conn()->switchedToHttps()) {
             conn()->auth_user_request = NULL;
         }
     }
