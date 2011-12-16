@@ -52,6 +52,11 @@ public:
     AccessLogEntry() : url(NULL), tcpClient(), reply(NULL), request(NULL),
             adapted_request(NULL) {}
 
+    /// Fetch the client IP log string into the given buffer.
+    /// Knows about several alternate locations of the IP
+    /// including indirect forwarded-for IP if configured to log that
+    void getLogClientIp(char *buf, size_t bufsz) const;
+
     const char *url;
 
     /// TCP/IP level details about the client connection

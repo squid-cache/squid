@@ -43,12 +43,14 @@
 void
 Log::Format::HttpdCommon(AccessLogEntry * al, Logfile * logfile)
 {
-    char clientip[MAX_IPSTRLEN];
     const char *user_auth = ::Format::QuoteUrlEncodeUsername(al->cache.authuser);
     const char *user_ident = ::Format::QuoteUrlEncodeUsername(al->cache.rfc931);
 
+    char clientip[MAX_IPSTRLEN];
+    al->getLogClientIp(clientip, MAX_IPSTRLEN);
+
     logfilePrintf(logfile, "%s %s %s [%s] \"%s %s %s/%d.%d\" %d %"PRId64" %s%s:%s%s",
-                  al->cache.caddr.NtoA(clientip,MAX_IPSTRLEN),
+                  clientip,
                   user_ident ? user_ident : dash_str,
                   user_auth ? user_auth : dash_str,
                   Time::FormatHttpd(squid_curtime),
