@@ -108,7 +108,7 @@ namespace Ssl
   \ingroup ServerProtocolSSLAPI
   * Decide on the kind of certificate and generate a CA- or self-signed one
 */
-SSL_CTX *generateSslContext(char const *host, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey);
+SSL_CTX *generateSslContext(char const *host, Ssl::X509_Pointer const & mimicCert, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey);
 
 /**
   \ingroup ServerProtocolSSLAPI
