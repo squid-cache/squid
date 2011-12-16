@@ -93,6 +93,12 @@ bool writeCertAndPrivateKeyToMemory(X509_Pointer const & cert, EVP_PKEY_Pointer 
 
 /**
  \ingroup SslCrtdSslAPI
+ * Append SSL certificate to bufferToWrite.
+ */
+bool appendCertToMemory(X509_Pointer const & cert, std::string & bufferToWrite);
+
+/**
+ \ingroup SslCrtdSslAPI
  * Write private key and SSL certificate to file.
  */
 bool writeCertAndPrivateKeyToFile(X509_Pointer const & cert, EVP_PKEY_Pointer const & pkey, char const * filename);
@@ -102,6 +108,12 @@ bool writeCertAndPrivateKeyToFile(X509_Pointer const & cert, EVP_PKEY_Pointer co
  * Write private key and SSL certificate to memory.
  */
 bool readCertAndPrivateKeyFromMemory(X509_Pointer & cert, EVP_PKEY_Pointer & pkey, char const * bufferToRead);
+
+/**
+ \ingroup SslCrtdSslAPI
+ * Read SSL certificate from memory.
+ */
+bool readCertFromMemory(X509_Pointer & cert, char const * bufferToRead);
 
 /**
  \ingroup SslCrtdSslAPI
@@ -118,6 +130,15 @@ X509 * signRequest(X509_REQ_Pointer const & request, X509_Pointer const & x509, 
  * variables.
  */
 bool generateSslCertificateAndPrivateKey(char const *host, X509_Pointer const & signedX509, EVP_PKEY_Pointer const & signedPkey, X509_Pointer & cert, EVP_PKEY_Pointer & pkey, BIGNUM const* serial);
+
+/**
+ \ingroup SslCrtdSslAPI
+ * Decide on the kind of certificate and generate a CA- or self-signed one.
+ * The  generated certificate will inherite properties from certToMimic
+ * Return generated certificate and private key in resultX509 and resultPkey
+ * variables.
+ */
+bool generateSslCertificate(X509_Pointer const &certToMimic, X509_Pointer const & signedX509, EVP_PKEY_Pointer const & signedPkey, X509_Pointer & cert, EVP_PKEY_Pointer & pkey, BIGNUM const * serial);
 
 /**
  \ingroup SslCrtdSslAPI

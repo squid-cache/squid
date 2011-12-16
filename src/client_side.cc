@@ -3580,6 +3580,12 @@ ConnStateData::getSslContextStart()
             debugs(33, 5, HERE << "SSL certificate for " << host << " haven't found in cache");
         }
 
+        Ssl::X509_Pointer serverCert;
+        if (Comm::IsConnOpen(pinning.serverConnection)) {
+            SSL *ssl = fd_table[pinning.serverConnection->fd].ssl;
+            serverCert.reset(SSL_get_peer_certificate(ssl));
+        }
+
 #if USE_SSL_CRTD
         debugs(33, 5, HERE << "Generating SSL certificate for " << host << " using ssl_crtd.");
         Ssl::CrtdMessage request_message;
@@ -3588,12 +3594,16 @@ ConnStateData::getSslContextStart()
         map.insert(std::make_pair(Ssl::CrtdMessage::param_host, host));
         std::string bufferToWrite;
         Ssl::writeCertAndPrivateKeyToMemory(port->signingCert, port->signPkey, bufferToWrite);
+        if (serverCert.get()) {
+            Ssl::appendCertToMemory(serverCert, bufferToWrite);
+            debugs(33, 5, HERE << "Append Mimic Certificate to body request: " << bufferToWrite);
+        }
         request_message.composeBody(map, bufferToWrite);
         Ssl::Helper::GetInstance()->sslSubmit(request_message, sslCrtdHandleReplyWrapper, this);
         return;
 #else
         debugs(33, 5, HERE << "Generating SSL certificate for " << host);
-        dynCtx = Ssl::generateSslContext(host, port->signingCert, port->signPkey);
+        dynCtx = Ssl::generateSslContext(host, serverCert, port->signingCert, port->signPkey);
         getSslContextDone(dynCtx, true);
         return;
 #endif //USE_SSL_CRTD
