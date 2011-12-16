@@ -945,10 +945,8 @@ void Adaptation::Icap::ModXact::prepEchoing()
     Must(!adapted.header);
     {
         HttpMsg::Pointer newHead;
-        if (const HttpRequest *oldR = dynamic_cast<const HttpRequest*>(oldHead)) {
+        if (dynamic_cast<const HttpRequest*>(oldHead)) {
             HttpRequest::Pointer newR(new HttpRequest);
-            newR->canonical = oldR->canonical ?
-                              xstrdup(oldR->canonical) : NULL; // parse() does not set it
             newHead = newR;
         } else if (dynamic_cast<const HttpReply*>(oldHead)) {
             newHead = new HttpReply;
@@ -964,6 +962,9 @@ void Adaptation::Icap::ModXact::prepEchoing()
     http_status error = HTTP_STATUS_NONE;
 
     Must(adapted.header->parse(&httpBuf, true, &error));
+
+    if (HttpRequest *r = dynamic_cast<HttpRequest*>(adapted.header))
+        urlCanonical(r); // parse does not set HttpRequest::canonical
 
     Must(adapted.header->hdr_sz == httpBuf.contentSize()); // no leftovers
 
