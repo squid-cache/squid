@@ -315,10 +315,8 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             break;
 
         case LFT_CLIENT_IP_ADDRESS:
-            if (al->cache.caddr.IsNoAddr()) // e.g., ICAP OPTIONS lack client
-                out = "-";
-            else
-                out = al->cache.caddr.NtoA(tmp,1024);
+            al->getLogClientIp(tmp, sizeof(tmp));
+            out = tmp;
             break;
 
         case LFT_CLIENT_FQDN:

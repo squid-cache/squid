@@ -43,16 +43,17 @@
 void
 Log::Format::SquidUserAgent(AccessLogEntry * al, Logfile * logfile)
 {
-    char clientip[MAX_IPSTRLEN];
-
     const char *agent = al->request->header.getStr(HDR_USER_AGENT);
 
     // do not log unless there is something to be displayed.
     if (!agent || *agent == '\0')
         return;
 
+    char clientip[MAX_IPSTRLEN];
+    al->getLogClientIp(clientip, MAX_IPSTRLEN);
+
     logfilePrintf(logfile, "%s [%s] \"%s\"\n",
-                  al->cache.caddr.NtoA(clientip,MAX_IPSTRLEN),
+                  clientip,
                   Time::FormatHttpd(squid_curtime),
                   agent);
 }
