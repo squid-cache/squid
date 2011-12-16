@@ -48,6 +48,7 @@
 #include "MemBuf.h"
 #include "forward.h"
 #include "rfc1738.h"
+#include "StatCounters.h"
 #include "SquidTime.h"
 
 /**
@@ -769,8 +770,8 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
         delayId.bytesIn(len);
 #endif
 
-        kb_incr(&statCounter.server.all.kbytes_in, len);
-        kb_incr(&statCounter.server.other.kbytes_in, len);
+        kb_incr(&(statCounter.server.all.kbytes_in), len);
+        kb_incr(&(statCounter.server.other.kbytes_in), len);
     }
 
     debugs(10, 5, HERE << conn << " read len=" << len);
@@ -844,8 +845,8 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, 
 
     if (size > 0) {
         fd_bytes(conn->fd, size, FD_WRITE);
-        kb_incr(&statCounter.server.all.kbytes_out, size);
-        kb_incr(&statCounter.server.other.kbytes_out, size);
+        kb_incr(&(statCounter.server.all.kbytes_out), size);
+        kb_incr(&(statCounter.server.other.kbytes_out), size);
     }
 
     if (errflag) {
