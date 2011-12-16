@@ -1,22 +1,24 @@
-#include "squid.h"
+#include "config.h"
+#include "STUB.h"
+#include "StatHist.h"
 
-// for StatHist definitions
-#include "protos.h"
-
-void
-statHistDump(const StatHist * H, StoreEntry * sentry, StatHistBinDumper * bd)
-{
-    fatal("statHistDump: Not implemented");
-}
+#define STUB_API "StatHist.cc"
 
 void
-statHistCount(StatHist * H, double val)
-{
-    fatal("statHistCount: Not implemented");
-}
+StatHist::init(int capacity_, hbase_f * val_in_, hbase_f * val_out_, double min_, double max_)
+{}
+
+StatHist::~StatHist()
+{}
 
 void
-statHistEnumInit(StatHist * H, int last_enum)
-{
-//NO-OP    fatal("statHistEnumInit: Not implemented");
-}
+StatHist::enumInit(int last_enum)
+{}
+
+void
+StatHist::count(double val)
+{}
+
+void
+StatHist::dump(StoreEntry * sentry, StatHistBinDumper * bd) const
+{}

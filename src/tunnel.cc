@@ -51,6 +51,7 @@
 #include "MemBuf.h"
 #include "http.h"
 #include "PeerSelectState.h"
+#include "StatCounters.h"
 
 class TunnelStateData
 {
@@ -249,8 +250,8 @@ TunnelStateData::readServer(char *buf, size_t len, comm_err_t errcode, int xerrn
 
     if (len > 0) {
         server.bytesIn(len);
-        kb_incr(&statCounter.server.all.kbytes_in, len);
-        kb_incr(&statCounter.server.other.kbytes_in, len);
+        kb_incr(&(statCounter.server.all.kbytes_in), len);
+        kb_incr(&(statCounter.server.other.kbytes_in), len);
     }
 
     copy (len, errcode, xerrno, server, client, WriteClientDone);
@@ -293,7 +294,7 @@ TunnelStateData::readClient(char *buf, size_t len, comm_err_t errcode, int xerrn
 
     if (len > 0) {
         client.bytesIn(len);
-        kb_incr(&statCounter.client_http.kbytes_in, len);
+        kb_incr(&(statCounter.client_http.kbytes_in), len);
     }
 
     copy (len, errcode, xerrno, client, server, WriteServerDone);
@@ -369,8 +370,8 @@ TunnelStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xer
     }
 
     /* Valid data */
-    kb_incr(&statCounter.server.all.kbytes_out, len);
-    kb_incr(&statCounter.server.other.kbytes_out, len);
+    kb_incr(&(statCounter.server.all.kbytes_out), len);
+    kb_incr(&(statCounter.server.other.kbytes_out), len);
     client.dataSent(len);
 
     /* If the other end has closed, so should we */
@@ -432,7 +433,7 @@ TunnelStateData::writeClientDone(char *buf, size_t len, comm_err_t flag, int xer
     }
 
     /* Valid data */
-    kb_incr(&statCounter.client_http.kbytes_out, len);
+    kb_incr(&(statCounter.client_http.kbytes_out), len);
     server.dataSent(len);
 
     /* If the other end has closed, so should we */

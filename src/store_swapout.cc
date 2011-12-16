@@ -41,6 +41,7 @@
 #include "mem_node.h"
 #include "MemObject.h"
 #include "SwapDir.h"
+#include "StatCounters.h"
 #include "swap_log_op.h"
 
 static void storeSwapOutStart(StoreEntry * e);
@@ -365,7 +366,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
             storeDirSwapLog(e, SWAP_LOG_ADD);
         }
 
-        statCounter.swap.outs++;
+        ++statCounter.swap.outs;
     }
 
     debugs(20, 3, "storeSwapOutFileClosed: " << __FILE__ << ":" << __LINE__);
