@@ -56,7 +56,7 @@ public:
      * \todo specialize the class in a small hierarchy so that all
      *       relevant initializations are done at build-time
      */
-    StatHist() : scale(1.0) {};
+    StatHist() : scale_(1.0) {};
     StatHist(const StatHist&);
     StatHist &operator=(const StatHist &);
     virtual ~StatHist();
@@ -108,13 +108,13 @@ protected:
     int findBin(double v);
     /// the histogram counters
     int *bins;
-    int capacity;
+    int capacity_;
     /// minimum value to be stored, corresponding to the first bin
-    double min;
+    double min_;
     /// value of the maximum counter in the histogram
-    double max;
+    double max_;
     /// scaling factor when looking for a bin
-    double scale;
+    double scale_;
     hbase_f *val_in;        /* e.g., log() for log-based histogram */
     hbase_f *val_out;       /* e.g., exp() for log based histogram */
 };
