@@ -160,6 +160,30 @@ bool Ssl::writeCertAndPrivateKeyToMemory(Ssl::X509_Pointer const & cert, Ssl::EV
     return true;
 }
 
+bool Ssl::appendCertToMemory(Ssl::X509_Pointer const & cert, std::string & bufferToWrite)
+{
+    if (!cert)
+        return false;
+
+    BIO_Pointer bio(BIO_new(BIO_s_mem()));
+    if (!bio)
+        return false;
+
+    if (!PEM_write_bio_X509 (bio.get(), cert.get()))
+        return false;
+
+    char *ptr = NULL;
+    long len = BIO_get_mem_data(bio.get(), &ptr);
+    if (!ptr)
+        return false;
+
+    if (!bufferToWrite.empty()) 
+        bufferToWrite.append(" "); // add a space...
+
+    bufferToWrite.append(ptr, len);
+    return true;
+}
+
 bool Ssl::writeCertAndPrivateKeyToFile(Ssl::X509_Pointer const & cert, Ssl::EVP_PKEY_Pointer const & pkey, char const * filename)
 {
     if (!pkey || !cert)
@@ -198,6 +222,19 @@ bool Ssl::readCertAndPrivateKeyFromMemory(Ssl::X509_Pointer & cert, Ssl::EVP_PKE
     return true;
 }
 
+bool Ssl::readCertFromMemory(X509_Pointer & cert, char const * bufferToRead)
+{
+    Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
+    BIO_puts(bio.get(), bufferToRead);
+
+    X509 * certPtr = NULL;
+    cert.reset(PEM_read_bio_X509(bio.get(), &certPtr, 0, 0));
+    if (!cert)
+        return false;
+
+    return true;
+}
+
 bool Ssl::generateSslCertificateAndPrivateKey(char const *host, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey, BIGNUM const * serial)
 {
     pkey.reset(createSslPrivateKey());
@@ -216,6 +253,94 @@ bool Ssl::generateSslCertificateAndPrivateKey(char const *host, Ssl::X509_Pointe
     if (!cert)
         return false;
 
+    return true;
+}
+
+static bool mimicCertificate(Ssl::X509_Pointer & cert, Ssl::X509_Pointer const & caCert, Ssl::X509_Pointer const &certToMimic)
+{ 
+    // not an Ssl::X509_NAME_Pointer because X509_REQ_get_subject_name()
+    // returns a pointer to the existing subject name. Nothing to clean here.
+    X509_NAME *name = X509_get_subject_name(certToMimic.get());
+    if (!name)
+        return false;
+    // X509_set_subject_name will call X509_dup for name 
+    X509_set_subject_name(cert.get(), name);
+
+
+    // We should get caCert notBefore and notAfter fields and do not allow 
+    // notBefore/notAfter values from certToMimic before/after notBefore/notAfter
+    // fields from caCert.
+    // Currently there is not any way in openssl tollkit to compare two ASN1_TIME 
+    // objects.
+    ASN1_TIME *aTime;
+    if ((aTime = X509_get_notBefore(certToMimic.get())) || (aTime = X509_get_notBefore(caCert.get())) ) {
+        if (!X509_set_notBefore(cert.get(), aTime))
+            return false;
+    }
+    else if (!X509_gmtime_adj(X509_get_notBefore(cert.get()), (-2)*24*60*60))
+        return false;
+
+    if ((aTime = X509_get_notAfter(certToMimic.get())) || (aTime = X509_get_notAfter(caCert.get())) ) {
+        if (!X509_set_notAfter(cert.get(), aTime))
+            return NULL;
+    } else if (!X509_gmtime_adj(X509_get_notAfter(cert.get()), 60*60*24*356*3))
+        return NULL;
+
+    
+    unsigned char *alStr;
+    int alLen;
+    alStr = X509_alias_get0(certToMimic.get(), &alLen);
+    if (alStr) {
+        X509_alias_set1(cert.get(), alStr, alLen);
+    }
+
+    // Add subjectAltName extension used to support multiple hostnames with one certificate
+    int pos=X509_get_ext_by_NID (certToMimic.get(), OBJ_sn2nid("subjectAltName"), -1);
+    X509_EXTENSION *ext=X509_get_ext(certToMimic.get(), pos); 
+    if (ext)
+        X509_add_ext(cert.get(), ext, -1);
+
+    return true;
+}
+
+bool Ssl::generateSslCertificate(Ssl::X509_Pointer const &certToMimic, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey, Ssl::X509_Pointer & certToStore, Ssl::EVP_PKEY_Pointer & pkey, BIGNUM const * serial)
+{
+    if (!certToMimic.get())
+        return false;
+
+    pkey.reset(createSslPrivateKey());
+    if (!pkey)
+        return false;
+
+    Ssl::X509_Pointer cert(X509_new());
+    if (!cert)
+        return false;
+
+    // Set pub key and serial given by the caller
+    if (!X509_set_pubkey(cert.get(), pkey.get()))
+        return false;
+    if (!setSerialNumber(X509_get_serialNumber(cert.get()), serial))
+        return false;
+
+    // inherit properties from certToMimic
+    if (!mimicCertificate(cert, signedX509, certToMimic))
+        return false;
+
+    // Set issuer name, from CA or our subject name for self signed cert
+    if (!X509_set_issuer_name(cert.get(), signedX509.get() ? X509_get_subject_name(signedX509.get()) : X509_get_subject_name(cert.get())))
+        return false;
+
+    /*Now sign the request */
+    int ret = 0;
+    if (signedPkey.get())
+        ret = X509_sign(cert.get(), signedPkey.get(), EVP_sha1());
+    else //else sign with self key (self signed request)
+        ret = X509_sign(cert.get(), pkey.get(), EVP_sha1());
+
+    if (!ret)
+        return false;
+
+    certToStore.reset(cert.release());
     return true;
 }
 

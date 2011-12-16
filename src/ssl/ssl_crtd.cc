@@ -83,6 +83,7 @@ usage: ssl_crtd -g -s ssl_store_path
  \endverbatim
  */
 
+#define CERT_BEGIN_STR "-----BEGIN CERTIFICATE"
 static const char *const B_KBYTES_STR = "KB";
 static const char *const B_MBYTES_STR = "MB";
 static const char *const B_GBYTES_STR = "GB";
@@ -224,7 +225,25 @@ static bool proccessNewRequest(Ssl::CrtdMessage const & request_message, std::st
 
     Ssl::X509_Pointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
-    db.find("/CN=" + host, cert, pkey);
+    Ssl::X509_Pointer certToMimic;
+    
+    const char *s;
+    std::string cert_subject;
+    if ((s = strstr(body_part.c_str(), CERT_BEGIN_STR))) {
+        s += strlen(CERT_BEGIN_STR);
+        if ((s = strstr(s, CERT_BEGIN_STR))) {
+            Ssl::readCertFromMemory(certToMimic, s);
+            if (certToMimic.get()) {
+                char buf[1024];
+                cert_subject = X509_NAME_oneline(X509_get_subject_name(certToMimic.get()), buf, sizeof(buf));
+            }
+        }
+    }
+
+    if (cert_subject.empty())
+        cert_subject = "/CN=" + host;
+
+    db.find(cert_subject, cert, pkey);
 
     if (!cert || !pkey) {
         Ssl::X509_Pointer certToSign;
@@ -233,8 +252,13 @@ static bool proccessNewRequest(Ssl::CrtdMessage const & request_message, std::st
 
         Ssl::BIGNUM_Pointer serial(db.getCurrentSerialNumber());
 
-        if (!Ssl::generateSslCertificateAndPrivateKey(host.c_str(), certToSign, pkeyToSign, cert, pkey, serial.get()))
-            throw std::runtime_error("Cannot create ssl certificate or private key.");
+        if (certToMimic.get()) {
+            Ssl::generateSslCertificate(certToMimic, certToSign, pkeyToSign, cert, pkey, serial.get());
+        }
+        else 
+            if (!Ssl::generateSslCertificateAndPrivateKey(host.c_str(), certToSign, pkeyToSign, cert, pkey, serial.get()))
+                throw std::runtime_error("Cannot create ssl certificate or private key.");
+
         if (!db.addCertAndPrivateKey(cert, pkey) && db.IsEnabledDiskStore())
             throw std::runtime_error("Cannot add certificate to db.");
     }
