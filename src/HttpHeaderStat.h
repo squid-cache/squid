@@ -11,7 +11,8 @@
 /* per header statistics */
 
 #include "StatHist.h"
-class HttpHeaderStat {
+class HttpHeaderStat
+{
 public:
     const char *label;
     HttpHeaderMask *owner_mask;

@@ -72,7 +72,7 @@ StatHist::init(int newCapacity, hbase_f * val_in_, hbase_f * val_out_, double ne
 void
 StatHist::clear()
 {
-    for(int i=0;i<capacity_;++i)
+    for (int i=0; i<capacity_; ++i)
         bins[i]=0;
 }
 
