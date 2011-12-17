@@ -45,7 +45,8 @@ typedef void StatHistBinDumper(StoreEntry *, int idx, double val, double size, i
  *
  * see important comments on hbase_f restrictions in StatHist.cc
  */
-class StatHist {
+class StatHist
+{
 public:
     /**
      * \note the default constructor doesn't fully initialize.
