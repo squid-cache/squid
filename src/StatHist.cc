@@ -106,6 +106,16 @@ StatHist::operator =(const StatHist & src)
     return *this;
 }
 
+StatHist::StatHist(const StatHist &src) :
+        capacity_(src.capacity_), min_(src.min_), max_(src.max_),
+        scale_(src.scale_), val_in(src.val_in), val_out(src.val_out)
+{
+    if(src.bins!=NULL) {
+        bins = static_cast<int *>(xcalloc(src.capacity_, sizeof(int)));
+        memcpy(bins,src.bins,capacity_*sizeof(*bins));
+    }
+}
+
 void
 StatHist::count(double val)
 {

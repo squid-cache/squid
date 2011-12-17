@@ -56,8 +56,10 @@ public:
      *       relevant initializations are done at build-time
      */
     StatHist() : scale_(1.0) {}
-    StatHist &operator=(const StatHist &);
+    StatHist(const StatHist&); //not needed
     ~StatHist();
+
+    StatHist &operator=(const StatHist &);
     /** clear the contents of the histograms
      *
      * \todo remove: this function has been replaced in its purpose
@@ -81,11 +83,9 @@ public:
      */
     void dump(StoreEntry *sentry, StatHistBinDumper * bd) const;
     /** Initialize the Histogram using a logarithmic values distribution
-     *
      */
     void logInit(int capacity, double min, double max);
     /** initialize the histogram to count occurrences in an enum-represented set
-     *
      */
     void enumInit(int last_enum);
 protected:
@@ -115,8 +115,6 @@ protected:
     double scale_;
     hbase_f *val_in;        /* e.g., log() for log-based histogram */
     hbase_f *val_out;       /* e.g., exp() for log based histogram */
-private:
-    StatHist(const StatHist&); //not needed
 };
 
 double statHistDeltaMedian(const StatHist & A, const StatHist & B);
