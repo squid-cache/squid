@@ -250,7 +250,7 @@ IcmpSquid::Open(void)
 
     Comm::SetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, NULL, 0);
 
-    commSetTimeout(icmp_sock, -1, NULL, NULL);
+    commUnsetFdTimeout(icmp_sock);
 
     debugs(37, 1, HERE << "Pinger socket opened on FD " << icmp_sock);
 
