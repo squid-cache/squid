@@ -36,7 +36,8 @@
 
 #if USE_CACHE_DIGESTS
 /** statistics for cache digests and other hit "predictors" */
-class CacheDigestGuessStats {
+class CacheDigestGuessStats
+{
 public:
     int trueHits;
     int falseHits;
@@ -52,7 +53,8 @@ public:
  * \note if you add a field to StatCounters,
  * you MUST sync statCountersInitSpecial, statCountersClean, and statCountersCopy
  */
-class StatCounters {
+class StatCounters
+{
 public:
     struct {
         int clients;
