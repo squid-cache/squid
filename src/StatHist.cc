@@ -87,6 +87,8 @@ StatHist::~StatHist()
 StatHist&
 StatHist::operator =(const StatHist & src)
 {
+    if (this==&src) //handle self-assignment
+        return *this;
     assert(src.bins != NULL); // TODO: remove after initializing bins at construction time
     if (capacity_ != src.capacity_) {
         // need to resize.

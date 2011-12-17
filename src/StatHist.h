@@ -1,6 +1,4 @@
 /*
- * AUTHOR: Francesco Chemolli
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -57,10 +55,9 @@ public:
      * \todo specialize the class in a small hierarchy so that all
      *       relevant initializations are done at build-time
      */
-    StatHist() : scale_(1.0) {};
-    StatHist(const StatHist&);
+    StatHist() : scale_(1.0) {}
     StatHist &operator=(const StatHist &);
-    virtual ~StatHist();
+    ~StatHist();
     /** clear the contents of the histograms
      *
      * \todo remove: this function has been replaced in its purpose
@@ -118,6 +115,8 @@ protected:
     double scale_;
     hbase_f *val_in;        /* e.g., log() for log-based histogram */
     hbase_f *val_out;       /* e.g., exp() for log based histogram */
+private:
+    StatHist(const StatHist&); //not needed
 };
 
 double statHistDeltaMedian(const StatHist & A, const StatHist & B);
