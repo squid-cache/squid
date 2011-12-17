@@ -56,8 +56,9 @@ SQUIDCEXTERN unsigned short comm_local_port(int fd);
 
 SQUIDCEXTERN int comm_udp_sendto(int sock, const Ip::Address &to, const void *buf, int buflen);
 SQUIDCEXTERN void commCallCloseHandlers(int fd);
-SQUIDCEXTERN int commSetTimeout(int fd, int, CTCB *, void *);
-extern int commSetTimeout(int fd, int, AsyncCall::Pointer &callback);
+
+/// clear a timeout handler by FD number
+extern void commUnsetFdTimeout(int fd);
 
 /**
  * Set or clear the timeout for some action on an active connection.
