@@ -47,9 +47,6 @@ typedef struct {
     size_t kb;
 } kb_t;
 
-struct http_port_list;
-struct https_port_list;
-
 typedef struct _close_handler close_handler;
 
 typedef struct _dread_ctrl dread_ctrl;
