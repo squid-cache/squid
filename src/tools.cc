@@ -610,7 +610,7 @@ getMyHostname(void)
 #if USE_SSL
 
     if (Config.Sockaddr.https && sa.IsAnyAddr())
-        sa = Config.Sockaddr.https->http.s;
+        sa = Config.Sockaddr.https->s;
 
 #endif
 
@@ -1269,7 +1269,7 @@ getMyPort(void)
 
 #if USE_SSL
     if (Config.Sockaddr.https)
-        return Config.Sockaddr.https->http.s.GetPort();
+        return Config.Sockaddr.https->s.GetPort();
 #endif
 
     debugs(21, DBG_CRITICAL, "ERROR: No forward-proxy ports configured.");

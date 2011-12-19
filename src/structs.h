@@ -144,6 +144,8 @@ struct relist {
 class CpuAffinityMap;
 class RemovalPolicySettings;
 class external_acl;
+class Store;
+struct http_port_list;
 class SwapDir;
 
 /// Used for boolean enabled/disabled options with complex default logic.
@@ -245,8 +247,7 @@ struct SquidConfig {
     struct {
         http_port_list *http;
 #if USE_SSL
-
-        https_port_list *https;
+        http_port_list *https;
 #endif
 
     } Sockaddr;

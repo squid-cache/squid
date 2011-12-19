@@ -51,9 +51,6 @@ struct http_port_list {
     Comm::ConnectionPointer listenConn;
 
 #if USE_SSL
-    // XXX: temporary hack to ease move of SSL options to http_port
-    http_port_list &http;
-
     char *cert;
     char *key;
     int version;
@@ -77,14 +74,5 @@ struct http_port_list {
 
     CBDATA_CLASS2(http_port_list);
 };
-
-
-#if USE_SSL
-
-struct https_port_list: public http_port_list {
-    https_port_list();
-};
-
-#endif
 
 #endif /* SQUID_PROTO_PORT_H */
