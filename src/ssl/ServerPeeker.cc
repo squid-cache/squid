@@ -21,8 +21,7 @@ Ssl::ServerPeeker::ServerPeeker(ConnStateData *anInitiator,
     AsyncJob("Ssl::ServerPeeker"),
     initiator(anInitiator),
     clientConnection(anInitiator->clientConnection),
-    request(new HttpRequest),
-    entry(NULL)
+    request(new HttpRequest)
 {
     debugs(33, 4, HERE << "will peek at " << host << ':' << port);
 
@@ -30,20 +29,25 @@ Ssl::ServerPeeker::ServerPeeker(ConnStateData *anInitiator,
     request->port = port;
     request->protocol = AnyP::PROTO_SSL_PEEK;
     request->clientConnectionManager = initiator;
+    const char *uri = urlCanonical(request);
+    entry = storeCreateEntry(uri, uri, request->flags, request->method);
+}
+
+Ssl::ServerPeeker::~ServerPeeker()
+{
+    if (entry)
+        entry->unlock();
 }
 
 void
 Ssl::ServerPeeker::start()
 {
-    const char *uri = urlCanonical(request);
-    entry = storeCreateEntry(uri, uri, request->flags, request->method);
-
     FwdState::fwdStart(clientConnection, entry, request);
+}
 
-    // XXX: wait for FwdState to tell us the connection is ready
-
-    // TODO: send our answer to the initiator
-    // CallJobHere(33, 4, initiator, ConnStateData, ConnStateData::httpsPeeked);
+void Ssl::ServerPeeker::noteHttpsPeeked(Comm::ConnectionPointer &serverConnection)
+{
+    assert(initiator.raw());
     initiator.clear(); // will trigger the end of the job
 }
 
