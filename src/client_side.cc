@@ -810,6 +810,11 @@ ConnStateData::~ConnStateData()
 
     if (bodyPipe != NULL)
         stopProducingFor(bodyPipe, false);
+   
+#if USE_SSL 
+    if (bumpErrorEntry)
+        bumpErrorEntry->unlock();
+#endif
 }
 
 /**
@@ -2639,6 +2644,25 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         conn->flags.readMore = false;
     }
 
+#if USE_SSL
+    if (conn->switchedToHttps() && conn->bumpServerFirstErrorEntry() &&
+        !Comm::IsConnOpen(conn->pinning.serverConnection)) {
+        //Failed? Here we should get the error from conn and send it to client
+        // The error stored in ConnStateData::bumpFirstEntry, replace the 
+        // ClientHttpRequest store entry with this.
+        clientStreamNode *node = context->getClientReplyContext();
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert (repContext);
+        debugs(33, 5, "Connection first has failed for " << http->uri << ". Respond with an error");
+        StoreEntry *e = conn->bumpServerFirstErrorEntry();
+        Must(e && !e->isEmpty());
+        repContext->setReplyToStoreEntry(e);
+        context->pullData();
+        conn->flags.readMore = false;
+        goto finish;
+    }
+#endif
+
     /* Do we expect a request-body? */
     expectBody = chunked || request->content_length > 0;
     if (!context->mayUseConnection() && expectBody) {
@@ -3580,12 +3604,6 @@ ConnStateData::getSslContextStart()
             debugs(33, 5, HERE << "SSL certificate for " << host << " haven't found in cache");
         }
 
-        Ssl::X509_Pointer serverCert;
-        if (Comm::IsConnOpen(pinning.serverConnection)) {
-            SSL *ssl = fd_table[pinning.serverConnection->fd].ssl;
-            serverCert.reset(SSL_get_peer_certificate(ssl));
-        }
-
 #if USE_SSL_CRTD
         debugs(33, 5, HERE << "Generating SSL certificate for " << host << " using ssl_crtd.");
         Ssl::CrtdMessage request_message;
@@ -3594,8 +3612,8 @@ ConnStateData::getSslContextStart()
         map.insert(std::make_pair(Ssl::CrtdMessage::param_host, host));
         std::string bufferToWrite;
         Ssl::writeCertAndPrivateKeyToMemory(port->signingCert, port->signPkey, bufferToWrite);
-        if (serverCert.get()) {
-            Ssl::appendCertToMemory(serverCert, bufferToWrite);
+        if (bumpServerCert.get()) {
+            Ssl::appendCertToMemory(bumpServerCert, bufferToWrite);
             debugs(33, 5, HERE << "Append Mimic Certificate to body request: " << bufferToWrite);
         }
         request_message.composeBody(map, bufferToWrite);
@@ -3603,7 +3621,7 @@ ConnStateData::getSslContextStart()
         return;
 #else
         debugs(33, 5, HERE << "Generating SSL certificate for " << host);
-        dynCtx = Ssl::generateSslContext(host, serverCert, port->signingCert, port->signPkey);
+        dynCtx = Ssl::generateSslContext(host, bumpServerCert, port->signingCert, port->signPkey);
         getSslContextDone(dynCtx, true);
         return;
 #endif //USE_SSL_CRTD
@@ -3675,9 +3693,12 @@ ConnStateData::switchToHttps(const char *host, const int port)
     const bool alwaysBumpServerFirst = true;
     if (alwaysBumpServerFirst) {
         Must(!httpsPeeker.set());
-        httpsPeeker = AsyncJob::Start(new Ssl::ServerPeeker(
-                                      this, sslHostName.termedBuf(), port));
+        httpsPeeker = new Ssl::ServerPeeker(this, sslHostName.termedBuf(), port);
+        bumpErrorEntry = httpsPeeker->storeEntry();
+        Must(bumpErrorEntry);
+        bumpErrorEntry->lock();
         // will call httpsPeeked() with certificate and connection, eventually
+        AsyncJob::Start(httpsPeeker.raw());
         return;
     }
 
@@ -3690,26 +3711,30 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
 {
     Must(httpsPeeker.set());
 
-    /* XXX: handle httpsPeeker errors instead of asserting there are none */
-    assert(Comm::IsConnOpen(serverConnection));
-    SSL *ssl = fd_table[serverConnection->fd].ssl;
-    assert(ssl);
-    Ssl::X509_Pointer serverCert(SSL_get_peer_certificate(ssl));
-    assert(serverCert.get() != NULL);
+    if (Comm::IsConnOpen(serverConnection)) {
+        SSL *ssl = fd_table[serverConnection->fd].ssl;
+        assert(ssl);
+        Ssl::X509_Pointer serverCert(SSL_get_peer_certificate(ssl));
+        assert(serverCert.get() != NULL);
 
-    char name[256] = ""; // stores common name (CN)
-    // TODO: What if CN is a UTF8String? See X509_NAME_get_index_by_NID(3ssl).
-    const int nameLen = X509_NAME_get_text_by_NID(
-        X509_get_subject_name(serverCert.get()),
-                              NID_commonName,  name, sizeof(name));
-    assert(0 < nameLen && nameLen < static_cast<int>(sizeof(name)));
-    debugs(33, 5, HERE << "found HTTPS server " << name << " at bumped " <<
-           *serverConnection);
-    sslHostName = name;
+        char name[256] = ""; // stores common name (CN)
+        // TODO: What if CN is a UTF8String? See X509_NAME_get_index_by_NID(3ssl).
+        const int nameLen = X509_NAME_get_text_by_NID(
+            X509_get_subject_name(serverCert.get()),
+            NID_commonName,  name, sizeof(name));
+        assert(0 < nameLen && nameLen < static_cast<int>(sizeof(name)));
+        debugs(33, 5, HERE << "found HTTPS server " << name << " at bumped " <<
+               *serverConnection);
+        sslHostName = name;
 
-    pinConnection(serverConnection, NULL, NULL, false);
+        pinConnection(serverConnection, NULL, NULL, false);
 
-    debugs(33, 5, HERE << "bumped HTTPS server: " << sslHostName);
+        debugs(33, 5, HERE << "bumped HTTPS server: " << sslHostName);
+    } else
+        debugs(33, 5, HERE << "Error while bumped HTTPS server: " << sslHostName);
+
+    if (httpsPeeker.valid())
+        httpsPeeker->noteHttpsPeeked(serverConnection);
     httpsPeeker.clear();
     getSslContextStart();
 }
@@ -4004,8 +4029,10 @@ CBDATA_CLASS_INIT(ConnStateData);
 
 ConnStateData::ConnStateData() :
         AsyncJob("ConnStateData"),
-        closing_(false),
-        switchedToHttps_(false)
+        closing_(false)
+#if USE_SSL
+        ,switchedToHttps_(false)
+#endif
 {
     pinning.pinned = false;
     pinning.auth = false;

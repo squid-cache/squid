@@ -128,6 +128,18 @@ clientReplyContext::setReplyToError(
     /* Now the caller reads to get this */
 }
 
+void clientReplyContext::setReplyToStoreEntry(StoreEntry *entry)
+{
+    sc = storeClientListAdd(entry, this);
+#if USE_DELAY_POOLS
+    sc->setDelayId(DelayId::DelayClient(http));
+#endif
+    reqofs = 0;
+    reqsize = 0;
+    flags.storelogiccomplete = 1;
+    http->storeEntry(entry);
+}
+
 void
 clientReplyContext::removeStoreReference(store_client ** scp,
         StoreEntry ** ep)

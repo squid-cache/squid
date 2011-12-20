@@ -71,6 +71,8 @@ public:
     void identifyFoundObject(StoreEntry *entry);
     int storeOKTransferDone() const;
     int storeNotOKTransferDone() const;
+    /// Replaces the store entry with the given and awaiting the client side to read it
+    void setReplyToStoreEntry(StoreEntry *entry);
     void setReplyToError(err_type, http_status, const HttpRequestMethod&, char const *, Ip::Address &, HttpRequest *, const char *,
 #if USE_AUTH
                          AuthUserRequest::Pointer);

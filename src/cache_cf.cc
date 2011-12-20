@@ -928,6 +928,9 @@ configDoConfigure(void)
                                        s->version, s->cipher, s->options, s->sslflags, s->clientca,
                                        s->cafile, s->capath, s->crlfile, s->dhfile,
                                        s->sslContextSessionId));
+
+            if (s->cert && s->key && s->sslBump)
+                Ssl::readCertChainAndPrivateKeyFromFiles(s->signingCert, s->signPkey, s->certsToChain, s->cert, s->key);
         }
     }
 
