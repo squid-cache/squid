@@ -59,6 +59,7 @@
 #if USE_SSL
 #include "ssl/support.h"
 #include "ssl/ErrorDetail.h"
+#include "ssl/ServerPeeker.h"
 #endif
 
 static PSC fwdPeerSelectionCompleteWrapper;
@@ -147,11 +148,11 @@ FwdState::selectPeerForIntercepted()
         p->peerType = PINNED;
         entry->ping_status = PING_DONE;     /* Skip ICP */
     } else {
-        debugs(17, 3, HERE << "opening a new conn: " << *p);
         p = new Comm::Connection();
         p->peerType = ORIGINAL_DST;
         p->remote = clientConn->local;
         getOutgoingAddress(request, p);
+        debugs(17, 3, HERE << "opening a new conn: " << *p);
     }
 
     serverDestinations.push_back(p);
@@ -336,6 +337,14 @@ FwdState::startConnectionOrFail()
             anErr->xerrno = errno;
             fail(anErr);
         } // else use actual error from last connection attempt
+#if USE_SSL
+        if (request->protocol == AnyP::PROTO_SSL_PEEK && request->clientConnectionManager.valid()) {
+            errorAppendEntry(entry, err); // will free err
+            err = NULL;
+            CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
+                         ConnStateData::httpsPeeked, Comm::ConnectionPointer(NULL));
+        }
+#endif
         self = NULL;       // refcounted
     }
 }
@@ -646,15 +655,21 @@ FwdState::negotiateSSL(int fd)
                 // Copy errFromFailure to a new Ssl::ErrorDetail object
                 anErr->detail = new Ssl::ErrorDetail(*errFromFailure);
             } else {
-                // clientCert can be be NULL
-                X509 *client_cert = SSL_get_peer_certificate(ssl);
-                anErr->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, client_cert);
-                if (client_cert)
-                    X509_free(client_cert);
+                // server_cert can be be NULL
+                X509 *server_cert = SSL_get_peer_certificate(ssl);
+                anErr->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, server_cert);
+                X509_free(server_cert);
             }
 
             if (ssl_lib_error != SSL_ERROR_NONE)
                 anErr->detail->setLibError(ssl_lib_error);
+
+            if (request->clientConnectionManager.valid()) {
+                // Get the server certificate from ErrorDetail object and store it 
+                // to connection manager
+                X509 *x509 = anErr->detail->peerCert();
+                request->clientConnectionManager->setBumpServerCert(X509_dup(x509));
+            }
 
             fail(anErr);
 
@@ -666,6 +681,9 @@ FwdState::negotiateSSL(int fd)
             return;
         }
     }
+    
+    if (request->clientConnectionManager.valid())
+        request->clientConnectionManager->setBumpServerCert(SSL_get_peer_certificate(ssl));
 
     if (serverConnection()->getPeer() && !SSL_session_reused(ssl)) {
         if (serverConnection()->getPeer()->sslSession)
@@ -984,11 +1002,11 @@ FwdState::dispatch()
 #if USE_SSL
     if (request->protocol == AnyP::PROTO_SSL_PEEK) {
         CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
-                    ConnStateData::httpsPeeked, serverConnection());
+                     ConnStateData::httpsPeeked, serverConnection());
         unregister(serverConn); // async call owns it now
         complete(); // destroys us
         return;
-	}
+    }
 #endif
 
     if (serverConnection()->getPeer() != NULL) {

@@ -56,7 +56,8 @@ public:
     ssl_error_t errorNo() const {return error_no;}
     ///Sets the low-level error returned by OpenSSL ERR_get_error()
     void setLibError(unsigned long lib_err_no) {lib_error_no = lib_err_no;}
-
+    ///The peer certificate
+    X509 *peerCert() { return peer_cert.get(); }
 private:
     typedef const char * (ErrorDetail::*fmt_action_t)() const;
     /**

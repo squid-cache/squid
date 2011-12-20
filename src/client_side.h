@@ -44,6 +44,9 @@
 #include "HttpParser.h"
 #include "RefCount.h"
 #include "StoreIOBuffer.h"
+#if USE_SSL
+#include "ssl/support.h"
+#endif
 
 class ConnStateData;
 class ClientHttpRequest;
@@ -160,7 +163,11 @@ private:
 
 
 class ConnectionDetail;
-
+#if USE_SSL
+namespace Ssl {
+    class ServerPeeker;
+}
+#endif
 /**
  * Manages a connection to a client.
  *
@@ -324,6 +331,9 @@ public:
 
     void switchToHttps(const char *host, const int port);
     bool switchedToHttps() const { return switchedToHttps_; }
+    /// Holds the squid error reply in the case of bump server first error 
+    StoreEntry *bumpServerFirstErrorEntry() const {return bumpErrorEntry;}
+    void setBumpServerCert(X509 *serverCert) {bumpServerCert.reset(serverCert);}
 #else
     bool switchedToHttps() const { return false; }
 #endif
@@ -351,7 +361,9 @@ private:
     String sslHostName; ///< Host name for SSL certificate generation
 
     /// a job that connects to the HTTPS server to get its SSL certificate
-    AsyncJob::Pointer httpsPeeker;
+    CbcPointer<Ssl::ServerPeeker> httpsPeeker;
+    StoreEntry *bumpErrorEntry;
+    Ssl::X509_Pointer bumpServerCert;
 #endif
 
     AsyncCall::Pointer reader; ///< set when we are reading

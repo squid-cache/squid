@@ -32,10 +32,12 @@ public:
     explicit ServerPeeker(ConnStateData *anInitiator, const char *host, const int port);
 
     /* AsyncJob API */
-    //virtual ~ServerPeeker();
+    virtual ~ServerPeeker();
     virtual void start();
     virtual bool doneAll() const;
     virtual void swanSong();
+    StoreEntry *storeEntry() {return entry;}
+    void noteHttpsPeeked(Comm::ConnectionPointer &serverConnection);
 
 private:
     /// connection manager waiting for peeked server info
