@@ -1331,4 +1331,21 @@ void Ssl::readCertChainAndPrivateKeyFromFiles(X509_Pointer & cert, EVP_PKEY_Poin
     }
 }
 
+const char *Ssl::CommonHostName(X509 *x509)
+{
+    static char name[256] = ""; // stores common name (CN)
+
+    if (!x509)
+        return NULL;
+
+    // TODO: What if CN is a UTF8String? See X509_NAME_get_index_by_NID(3ssl).
+    const int nameLen = X509_NAME_get_text_by_NID(
+        X509_get_subject_name(x509),
+        NID_commonName,  name, sizeof(name));
+
+    if (nameLen > 0)
+        return name;
+
+    return NULL;
+}
 #endif /* USE_SSL */
