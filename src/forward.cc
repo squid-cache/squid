@@ -645,32 +645,47 @@ FwdState::negotiateSSL(int fd)
             // falling through to complete error handling
 
         default:
-            ErrorState *const anErr = makeConnectingError(ERR_SECURE_CONNECT_FAIL);
-            anErr->xerrno = sysErrNo;
-
+            // TODO: move into a method before merge
+            Ssl::ErrorDetail *errDetails;
             Ssl::ErrorDetail *errFromFailure = (Ssl::ErrorDetail *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail);
             if (errFromFailure != NULL) {
                 // The errFromFailure is attached to the ssl object
                 // and will be released when ssl object destroyed.
                 // Copy errFromFailure to a new Ssl::ErrorDetail object
-                anErr->detail = new Ssl::ErrorDetail(*errFromFailure);
+                errDetails = new Ssl::ErrorDetail(*errFromFailure);
             } else {
                 // server_cert can be be NULL
                 X509 *server_cert = SSL_get_peer_certificate(ssl);
-                anErr->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, server_cert);
+                errDetails = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, server_cert);
                 X509_free(server_cert);
             }
 
             if (ssl_lib_error != SSL_ERROR_NONE)
-                anErr->detail->setLibError(ssl_lib_error);
+                errDetails->setLibError(ssl_lib_error);
 
+            X509 *srvX509 = errDetails->peerCert();
             if (request->clientConnectionManager.valid()) {
                 // Get the server certificate from ErrorDetail object and store it 
                 // to connection manager
-                X509 *x509 = anErr->detail->peerCert();
-                request->clientConnectionManager->setBumpServerCert(X509_dup(x509));
+                request->clientConnectionManager->setBumpServerCert(X509_dup(srvX509));
             }
 
+            HttpRequest *fakeRequest = NULL;
+            if (request->protocol == AnyP::PROTO_SSL_PEEK && srvX509 != NULL) {
+                // Create a fake request, with HTTPS protocol and host name the CN name from
+                // server certificate if exist, to provide a more user friendly  URL on error page
+                fakeRequest = request->clone();
+                fakeRequest->protocol = AnyP::PROTO_HTTPS;
+                safe_free(fakeRequest->canonical); // force re-build url canonical               
+                const char *name = Ssl::CommonHostName(srvX509);
+                if (name)
+                    fakeRequest->SetHost(name);
+
+                debugs(83, 1, HERE << "Create a Fake request with URL :" << urlCanonical(fakeRequest)  << " and hostname: "<< fakeRequest->GetHost());
+            }
+            ErrorState *const anErr = makeConnectingError(ERR_SECURE_CONNECT_FAIL, fakeRequest);
+            anErr->xerrno = sysErrNo;
+            anErr->detail = errDetails;
             fail(anErr);
 
             if (serverConnection()->getPeer()) {
@@ -1139,10 +1154,10 @@ FwdState::reforward()
  * proxy-revalidate, must-revalidate or s-maxage Cache-Control directive.
  */
 ErrorState *
-FwdState::makeConnectingError(const err_type type) const
+FwdState::makeConnectingError(const err_type type, HttpRequest *useRequest) const
 {
     return errorCon(type, request->flags.need_validation ?
-                    HTTP_GATEWAY_TIMEOUT : HTTP_SERVICE_UNAVAILABLE, request);
+                    HTTP_GATEWAY_TIMEOUT : HTTP_SERVICE_UNAVAILABLE, useRequest != NULL? useRequest : request);
 }
 
 static void
