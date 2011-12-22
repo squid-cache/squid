@@ -1361,6 +1361,28 @@ DOC_START
 
 
 	SSL Bump Mode Options:
+	    In addition to these options ssl-bump requires TLS/SSL options.
+
+	   generate-host-certificates[=<on|off>]
+			Dynamically create SSL server certificates for the
+			destination hosts of bumped CONNECT requests.When 
+			enabled, the cert and key options are used to sign
+			generated certificates. Otherwise generated
+			certificate will be selfsigned.
+			If there is a CA certificate lifetime of the generated 
+			certificate equals lifetime of the CA certificate. If
+			generated certificate is selfsigned lifetime is three 
+			years.
+			This option is enabled by default when ssl-bump is used.
+			See the ssl-bump option above for more information.
+			
+	   dynamic_cert_mem_cache_size=SIZE
+			Approximate total RAM size spent on cached generated
+			certificates. If set to zero, caching is disabled. The
+			default value is 4MB. An average XXX-bit certificate
+			consumes about XXX bytes of RAM.
+
+	TLS / SSL Options:
 
 	   cert=	Path to SSL certificate (PEM format).
 
@@ -1431,25 +1453,6 @@ DOC_START
 
 	   sslcontext=	SSL session ID context identifier.
 
-	   generate-host-certificates[=<on|off>]
-			Dynamically create SSL server certificates for the
-			destination hosts of bumped CONNECT requests.When 
-			enabled, the cert and key options are used to sign
-			generated certificates. Otherwise generated
-			certificate will be selfsigned.
-			If there is CA certificate life time of generated 
-			certificate equals lifetime of CA certificate. If
-			generated certificate is selfsigned lifetime is three 
-			years.
-			This option is enabled by default when SslBump is used.
-			See the sslBump option above for more information.
-			
-	   dynamic_cert_mem_cache_size=SIZE
-			Approximate total RAM size spent on cached generated
-			certificates. If set to zero, caching is disabled. The
-			default value is 4MB. An average XXX-bit certificate
-			consumes about XXX bytes of RAM.
-
 	Other Options:
 
 	   connection-auth[=on|off]
@@ -1502,90 +1505,16 @@ LOC: Config.Sockaddr.https
 DOC_START
 	Usage:  [ip:]port cert=certificate.pem [key=key.pem] [mode] [options...]
 
-	The socket address where Squid will listen for HTTPS client
-	requests.
+	The socket address where Squid will listen for client requests made
+	over TLS or SSL connections. Commonly referred to as HTTPS.
 
-	This is really only useful for situations where you are running
-	squid in accelerator mode and you want to do the SSL work at the
-	accelerator level.
+	This is most useful for situations where you are running squid in
+	accelerator mode and you want to do the SSL work at the accelerator level.
 
 	You may specify multiple socket addresses on multiple lines,
 	each with their own SSL certificate and/or options.
 
-	Modes:
-
-	   accel	Accelerator / reverse proxy mode
-
-	Omitting the mode flag causes default forward proxy mode to be used.
-
-
-	See http_port for a list of generic options
-
-
-	SSL Options:
-
-	   cert=	Path to SSL certificate (PEM format).
-
-	   key=		Path to SSL private key file (PEM format)
-			if not specified, the certificate file is
-			assumed to be a combined certificate and
-			key file.
-
-	   version=	The version of SSL/TLS supported
-			    1	automatic (default)
-			    2	SSLv2 only
-			    3	SSLv3 only
-			    4	TLSv1 only
-
-	   cipher=	Colon separated list of supported ciphers.
-
-	   options=	Various SSL engine options. The most important
-			being:
-			    NO_SSLv2  Disallow the use of SSLv2
-			    NO_SSLv3  Disallow the use of SSLv3
-			    NO_TLSv1  Disallow the use of TLSv1
-			    SINGLE_DH_USE Always create a new key when using
-				      temporary/ephemeral DH key exchanges
-			See src/ssl_support.c or OpenSSL SSL_CTX_set_options
-			documentation for a complete list of options.
-
-	   clientca=	File containing the list of CAs to use when
-			requesting a client certificate.
-
-	   cafile=	File containing additional CA certificates to
-			use when verifying client certificates. If unset
-			clientca will be used.
-
-	   capath=	Directory containing additional CA certificates
-			and CRL lists to use when verifying client certificates.
-
-	   crlfile=	File of additional CRL lists to use when verifying
-			the client certificate, in addition to CRLs stored in
-			the capath. Implies VERIFY_CRL flag below.
-
-	   dhparams=	File containing DH parameters for temporary/ephemeral
-			DH key exchanges.
-
-	   sslflags=	Various flags modifying the use of SSL:
-			    DELAYED_AUTH
-				Don't request client certificates
-				immediately, but wait until acl processing
-				requires a certificate (not yet implemented).
-			    NO_DEFAULT_CA
-				Don't use the default CA lists built in
-				to OpenSSL.
-			    NO_SESSION_REUSE
-				Don't allow for session reuse. Each connection
-				will result in a new SSL session.
-			    VERIFY_CRL
-				Verify CRL lists when accepting client
-				certificates.
-			    VERIFY_CRL_ALL
-				Verify CRL lists for all certificates in the
-				client certificate chain.
-
-	   sslcontext=	SSL session ID context identifier.
-
+	See http_port for a list of available options.
 DOC_END
 
 NAME: tcp_outgoing_tos tcp_outgoing_ds tcp_outgoing_dscp

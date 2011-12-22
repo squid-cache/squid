@@ -3437,7 +3437,7 @@ clientNegotiateSSL(int fd, void *data)
 static void
 httpsAccept(const CommAcceptCbParams &params)
 {
-    https_port_list *s = (https_port_list *)params.data;
+    http_port_list *s = (http_port_list *)params.data;
 
     if (params.flag != COMM_OK) {
         // Its possible the call was still queued when the client disconnected
@@ -3453,14 +3453,14 @@ httpsAccept(const CommAcceptCbParams &params)
     debugs(33, 4, HERE << params.conn << " accepted, starting SSL negotiation.");
     fd_note(params.conn->fd, "client https connect");
 
-    if (s->http.tcp_keepalive.enabled) {
-        commSetTcpKeepalive(params.conn->fd, s->http.tcp_keepalive.idle, s->http.tcp_keepalive.interval, s->http.tcp_keepalive.timeout);
+    if (s->tcp_keepalive.enabled) {
+        commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
     }
 
     incoming_sockets_accepted++;
 
     // Socket is ready, setup the connection manager to start using it
-    ConnStateData *connState = connStateCreate(params.conn, &s->http);
+    ConnStateData *connState = connStateCreate(params.conn, s);
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
@@ -3649,12 +3649,12 @@ clientHttpConnectionsOpen(void)
 
 #if USE_SSL
         if (s->sslBump && !Config.accessList.ssl_bump) {
-            debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << s->protocol << "_port " << s->http.s);
+            debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << s->protocol << "_port " << s->s);
             s->sslBump = 0;
         }
 
         if (s->sslBump && !s->staticSslContext && !s->generateHostCertificates) {
-            debugs(1, DBG_IMPORTANT, "Will not bump SSL at http_port " << s->http.s << " due to SSL initialization failure.");
+            debugs(1, DBG_IMPORTANT, "Will not bump SSL at http_port " << s->s << " due to SSL initialization failure.");
             s->sslBump = 0;
         }
         if (s->sslBump) {
@@ -3686,9 +3686,9 @@ clientHttpConnectionsOpen(void)
 static void
 clientHttpsConnectionsOpen(void)
 {
-    https_port_list *s;
+    http_port_list *s;
 
-    for (s = Config.Sockaddr.https; s; s = (https_port_list *)s->http.next) {
+    for (s = Config.Sockaddr.https; s; s = s->next) {
         if (MAXHTTPPORTS == NHttpSockets) {
             debugs(1, 1, "Ignoring 'https_port' lines exceeding the limit.");
             debugs(1, 1, "The limit is " << MAXHTTPPORTS << " HTTPS ports.");
@@ -3696,16 +3696,16 @@ clientHttpsConnectionsOpen(void)
         }
 
         if (!s->staticSslContext) {
-            debugs(1, 1, "Ignoring https_port " << s->http.s <<
+            debugs(1, 1, "Ignoring https_port " << s->s <<
                    " due to SSL initialization failure.");
             continue;
         }
 
         // Fill out a Comm::Connection which IPC will open as a listener for us
-        s->http.listenConn = new Comm::Connection;
-        s->http.listenConn->local = s->http.s;
-        s->http.listenConn->flags = COMM_NONBLOCKING | (s->http.spoof_client_ip ? COMM_TRANSPARENT : 0) |
-                                    (s->http.intercepted ? COMM_INTERCEPTION : 0);
+        s->listenConn = new Comm::Connection;
+        s->listenConn->local = s->s;
+        s->listenConn->flags = COMM_NONBLOCKING | (s->spoof_client_ip ? COMM_TRANSPARENT : 0) |
+                               (s->intercepted ? COMM_INTERCEPTION : 0);
 
         // setup the subscriptions such that new connections accepted by listenConn are handled by HTTPS
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
@@ -3714,7 +3714,7 @@ clientHttpsConnectionsOpen(void)
 
         AsyncCall::Pointer listenCall = asyncCall(33, 2, "clientListenerConnectionOpened",
                                         ListeningStartedDialer(&clientListenerConnectionOpened,
-                                                               &s->http, Ipc::fdnHttpsSocket, sub));
+                                                               s, Ipc::fdnHttpsSocket, sub));
         Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpsSocket, listenCall);
         HttpSockets[NHttpSockets++] = -1;
     }
