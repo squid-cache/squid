@@ -764,7 +764,10 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 
         if (require_auth) {
 #if USE_AUTH
-            if (!http->flags.accel) {
+            if (http->request->flags.sslBumped) {
+                /*SSL Bumped request, authentication is not possible*/
+                status = HTTP_FORBIDDEN;
+            } else if (!http->flags.accel) {
                 /* Proxy authorisation needed */
                 status = HTTP_PROXY_AUTHENTICATION_REQUIRED;
             } else {
@@ -1369,6 +1372,11 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
         return;
     }
 
+#if USE_AUTH
+    // Preserve authentication info for the ssl-bumped request
+    if (request->auth_user_request != NULL)
+        getConn()->auth_user_request = request->auth_user_request;
+#endif
     getConn()->switchToHttps(request->GetHost());
 }
 
