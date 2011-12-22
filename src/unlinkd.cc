@@ -242,9 +242,8 @@ unlinkdInit(void)
 
     fd_note(unlinkd_rfd, "unlinkd -> squid");
 
-    commSetTimeout(unlinkd_rfd, -1, NULL, NULL);
-
-    commSetTimeout(unlinkd_wfd, -1, NULL, NULL);
+    commUnsetFdTimeout(unlinkd_rfd);
+    commUnsetFdTimeout(unlinkd_wfd);
 
     /*
     * unlinkd_rfd should already be non-blocking because of

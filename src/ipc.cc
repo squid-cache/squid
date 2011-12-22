@@ -268,7 +268,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
             return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
         }
 
-        commSetTimeout(prfd, -1, NULL, NULL);
+        commUnsetFdTimeout(prfd);
         commSetNonBlocking(prfd);
         commSetNonBlocking(pwfd);
 

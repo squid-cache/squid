@@ -112,11 +112,10 @@ ignoreErrno(int ierrno)
     return -1;
 }
 
-int
-commSetTimeout(int fd, int timeout, PF * handler, void *data)
+void
+commUnsetFdTimeout(int fd)
 {
     fatal ("Not implemented");
-    return -1;
 }
 
 int

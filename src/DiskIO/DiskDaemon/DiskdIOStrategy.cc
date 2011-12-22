@@ -209,7 +209,7 @@ DiskdIOStrategy::init()
 
     fd_note(wfd, "squid -> diskd");
 
-    commSetTimeout(wfd, -1, NULL, NULL);
+    commUnsetFdTimeout(wfd);
     commSetNonBlocking(wfd);
     Comm::QuickPollRequired();
 }

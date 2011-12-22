@@ -727,45 +727,19 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
      */
 }
 
-// Legacy pre-AsyncCalls API for FD timeouts.
-int
-commSetTimeout(int fd, int timeout, CTCB * handler, void *data)
+// XXX: now that raw-FD timeouts are only unset for pipes and files this SHOULD be a no-op.
+// With handler already unset. Leaving this present until that can be verified for all code paths.
+void
+commUnsetFdTimeout(int fd)
 {
-    AsyncCall::Pointer call;
-    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
-    if (handler != NULL)
-        call=commCbCall(5,4, "SomeTimeoutHandler", CommTimeoutCbPtrFun(handler, data));
-    else
-        call = NULL;
-    return commSetTimeout(fd, timeout, call);
-}
-
-// Legacy pre-Comm::Connection API for FD timeouts
-// still used by non-socket FD code dealing with pipes and IPC sockets.
-int
-commSetTimeout(int fd, int timeout, AsyncCall::Pointer &callback)
-{
-    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
+    debugs(5, 3, HERE << "Remove timeout for FD " << fd);
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
     fde *F = &fd_table[fd];
     assert(F->flags.open);
 
-    if (timeout < 0) {
-        F->timeoutHandler = NULL;
-        F->timeout = 0;
-    } else {
-        if (callback != NULL) {
-            typedef CommTimeoutCbParams Params;
-            Params &params = GetCommParams<Params>(callback);
-            params.fd = fd;
-            F->timeoutHandler = callback;
-        }
-
-        F->timeout = squid_curtime + (time_t) timeout;
-    }
-
-    return F->timeout;
+    F->timeoutHandler = NULL;
+    F->timeout = 0;
 }
 
 int
@@ -986,10 +960,10 @@ commLingerClose(int fd, void *unused)
 }
 
 static void
-commLingerTimeout(int fd, void *unused)
+commLingerTimeout(const FdeCbParams &params)
 {
-    debugs(5, 3, "commLingerTimeout: FD " << fd);
-    comm_close(fd);
+    debugs(5, 3, "commLingerTimeout: FD " << params.fd);
+    comm_close(params.fd);
 }
 
 /*
@@ -1009,7 +983,18 @@ comm_lingering_close(int fd)
     }
 
     fd_note(fd, "lingering close");
-    commSetTimeout(fd, 10, commLingerTimeout, NULL);
+    AsyncCall::Pointer call = commCbCall(5,4, "commLingerTimeout", FdeCbPtrFun(commLingerTimeout, NULL));
+
+    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
+    assert(fd_table[fd].flags.open);
+    if (callback != NULL) {
+        typedef FdeCbParams Params;
+        Params &params = GetCommParams<Params>(callback);
+        params.fd = fd;
+        fd_table[fd].timeoutHandler = callback;
+        fd_table[fd].timeout = squid_curtime + static_cast<time_t>(10);
+    }
+
     Comm::SetSelect(fd, COMM_SELECT_READ, commLingerClose, NULL, 0);
 }
 
@@ -1130,7 +1115,7 @@ _comm_close(int fd, char const *file, int line)
     // a half-closed fd may lack a reader, so we stop monitoring explicitly
     if (commHasHalfClosedMonitor(fd))
         commStopHalfClosedMonitor(fd);
-    commSetTimeout(fd, -1, NULL, NULL);
+    commUnsetFdTimeout(fd);
 
     // notify read/write handlers after canceling select reservations, if any
     if (COMMIO_FD_WRITECB(fd)->active()) {
