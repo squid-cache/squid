@@ -167,6 +167,13 @@ int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
    \return true if SNI set false otherwise
 */
 bool setClientSNI(SSL *ssl, const char *fqdn);
+
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Returns CN from the certificate, suitable for use as a host name.
+   * Uses static memory to temporary store the extracted name.
+*/
+const char *CommonHostName(X509 *x509);
 } //namespace Ssl
 
 #if _SQUID_MSWIN_
