@@ -936,10 +936,6 @@ commCallCloseHandlers(int fd)
         // If call is not canceled schedule it for execution else ignore it
         if (!call->canceled()) {
             debugs(5, 5, "commCallCloseHandlers: ch->handler=" << call);
-            // XXX: this should not be needed. Params can be set by the call creator
-            typedef CommCloseCbParams Params;
-            Params &params = GetCommParams<Params>(call);
-            params.fd = fd;
             ScheduleCallHere(call);
         }
     }
