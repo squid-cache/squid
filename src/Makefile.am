@@ -253,6 +253,7 @@ libsquid_la_SOURCES = \
 
 squid_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
+	AccessLogEntry.cc \
 	AccessLogEntry.h \
 	AsyncEngine.cc \
 	AsyncEngine.h \
@@ -1251,6 +1252,7 @@ tests_testBoilerplate_DEPENDENCIES = \
 
 ## Tests of the CacheManager module.
 tests_testCacheManager_SOURCES = \
+	AccessLogEntry.cc \
 	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	HttpParser.cc \
@@ -1583,6 +1585,7 @@ tests_testDiskIO_DEPENDENCIES = \
 
 ## Tests of the Even module.
 tests_testEvent_SOURCES = \
+	AccessLogEntry.cc \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	CacheDigest.cc \
@@ -1773,6 +1776,7 @@ tests_testEvent_DEPENDENCIES = \
 
 ## Tests of the EventLoop module.
 tests_testEventLoop_SOURCES = \
+	AccessLogEntry.cc \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	CacheDigest.cc \
@@ -1961,6 +1965,7 @@ tests_testEventLoop_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 
 tests_test_http_range_SOURCES = \
+	AccessLogEntry.cc \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	cache_cf.cc \
@@ -2179,6 +2184,7 @@ tests_testHttpParser_DEPENDENCIES = \
 
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
+	AccessLogEntry.cc \
 	$(ACL_REGISTRATION_SOURCES) \
 	HttpParser.cc \
 	HttpParser.h \
@@ -3079,6 +3085,7 @@ tests_testNull_DEPENDENCIES = \
 ## Tests of the URL module.
 ## TODO: Trim this down once the insanity is over.
 tests_testURL_SOURCES = \
+	AccessLogEntry.cc \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	cache_cf.cc \
