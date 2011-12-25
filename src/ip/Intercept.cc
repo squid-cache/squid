@@ -189,7 +189,7 @@ Ip::Intercept::IpfInterception(const Comm::ConnectionPointer &newConn, int silen
     int x;
 
     // all fields must be set to 0
-    memset(natLookup, 0, sizeof(natLookup));
+    memset(&natLookup, 0, sizeof(natLookup));
     // for NAT lookup set local and remote IP:port's
     natLookup.nl_inport = htons(newConn->local.GetPort());
     newConn->local.GetInAddr(natLookup.nl_inip);
