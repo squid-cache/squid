@@ -15,7 +15,7 @@ namespace Auth
 class StateData
 {
 public:
-    StateData(const AuthUserRequest::Pointer &r, RH *h, void *d) :
+    StateData(const UserRequest::Pointer &r, RH *h, void *d) :
             data(cbdataReference(d)),
             auth_user_request(r),
             handler(h) {}
@@ -26,7 +26,7 @@ public:
     }
 
     void *data;
-    AuthUserRequest::Pointer auth_user_request;
+    UserRequest::Pointer auth_user_request;
     RH *handler;
 
 private:

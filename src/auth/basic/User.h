@@ -34,7 +34,7 @@ public:
     BasicAuthQueueNode *auth_queue;
 
 private:
-    AuthUserRequest::Pointer currentRequest;
+    Auth::UserRequest::Pointer currentRequest;
 };
 
 MEMPROXY_CLASS_INLINE(Auth::Basic::User);

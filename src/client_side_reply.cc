@@ -102,7 +102,7 @@ clientReplyContext::setReplyToError(
     err_type err, http_status status, const HttpRequestMethod& method, char const *uri,
     Ip::Address &addr, HttpRequest * failedrequest, const char *unparsedrequest,
 #if USE_AUTH
-    AuthUserRequest::Pointer auth_user_request
+    Auth::UserRequest::Pointer auth_user_request
 #else
     void*
 #endif
