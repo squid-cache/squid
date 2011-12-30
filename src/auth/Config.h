@@ -63,7 +63,7 @@ class Config
 {
 
 public:
-    static AuthUserRequest::Pointer CreateAuthUser(const char *proxy_auth);
+    static UserRequest::Pointer CreateAuthUser(const char *proxy_auth);
 
     static Config *Find(const char *proxy_auth);
     Config() : authenticateChildren(20), authenticateProgram(NULL) {}
@@ -83,12 +83,12 @@ public:
      \par
      * Responsible for decoding the passed authentication header, creating or
      * linking to a AuthUser object and for storing any needed details to complete
-     * authentication in AuthUserRequest::authenticate().
+     * authentication in Auth::UserRequest::authenticate().
      *
      \param proxy_auth	Login Pattern to parse.
      \retval *		Details needed to authenticate.
      */
-    virtual AuthUserRequest::Pointer decode(char const *proxy_auth) = 0;
+    virtual UserRequest::Pointer decode(char const *proxy_auth) = 0;
 
     /**
      * squid is finished with this config, release any unneeded resources.
@@ -122,7 +122,7 @@ public:
     virtual void dump(StoreEntry *, const char *, Config *) = 0;
 
     /** add headers as needed when challenging for auth */
-    virtual void fixHeader(AuthUserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *) = 0;
+    virtual void fixHeader(UserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *) = 0;
 
     /** prepare to handle requests */
     virtual void init(Config *) = 0;

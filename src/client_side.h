@@ -228,7 +228,7 @@ public:
      * note this is ONLY connection based because NTLM and Negotiate is against HTTP spec.
      * the user details for connection based authentication
      */
-    AuthUserRequest::Pointer auth_user_request;
+    Auth::UserRequest::Pointer auth_user_request;
 #endif
 
     /**

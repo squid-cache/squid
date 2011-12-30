@@ -213,10 +213,8 @@ Auth::Negotiate::Config::configured() const
 /* Negotiate Scheme */
 
 void
-Auth::Negotiate::Config::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type reqType, HttpRequest * request)
+Auth::Negotiate::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type reqType, HttpRequest * request)
 {
-    AuthNegotiateUserRequest *negotiate_request;
-
     if (!authenticateProgram)
         return;
 
@@ -235,7 +233,7 @@ Auth::Negotiate::Config::fixHeader(AuthUserRequest::Pointer auth_user_request, H
             request->flags.proxy_keepalive = 0;
         }
     } else {
-        negotiate_request = dynamic_cast<AuthNegotiateUserRequest *>(auth_user_request.getRaw());
+        Auth::Negotiate::UserRequest *negotiate_request = dynamic_cast<Auth::Negotiate::UserRequest *>(auth_user_request.getRaw());
         assert(negotiate_request != NULL);
 
         switch (negotiate_request->user()->credentials()) {
@@ -292,11 +290,11 @@ authenticateNegotiateStats(StoreEntry * sentry)
  * Decode a Negotiate [Proxy-]Auth string, placing the results in the passed
  * Auth_user structure.
  */
-AuthUserRequest::Pointer
+Auth::UserRequest::Pointer
 Auth::Negotiate::Config::decode(char const *proxy_auth)
 {
     Auth::Negotiate::User *newUser = new Auth::Negotiate::User(&negotiateConfig);
-    AuthUserRequest *auth_user_request = new AuthNegotiateUserRequest();
+    Auth::UserRequest *auth_user_request = new Auth::Negotiate::UserRequest();
     assert(auth_user_request->user() == NULL);
 
     auth_user_request->user(newUser);

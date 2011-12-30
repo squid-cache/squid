@@ -27,11 +27,11 @@ public:
     Config();
     virtual bool active() const;
     virtual bool configured() const;
-    virtual AuthUserRequest::Pointer decode(char const *proxy_auth);
+    virtual Auth::UserRequest::Pointer decode(char const *proxy_auth);
     virtual void done();
     virtual void rotateHelpers();
     virtual void dump(StoreEntry *, const char *, Auth::Config *);
-    virtual void fixHeader(AuthUserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *);
+    virtual void fixHeader(Auth::UserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *);
     virtual void init(Auth::Config *);
     virtual void parse(Auth::Config *, int, char *);
     virtual void registerWithCacheManager(void);

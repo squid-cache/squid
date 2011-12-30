@@ -150,7 +150,7 @@ public:
     char *err_language;
     http_status httpStatus;
 #if USE_AUTH
-    AuthUserRequest::Pointer auth_user_request;
+    Auth::UserRequest::Pointer auth_user_request;
 #endif
     HttpRequest *request;
     char *url;
