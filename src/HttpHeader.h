@@ -101,6 +101,7 @@ typedef enum {
     HDR_MIME_VERSION,                   /**< RFC 2626 */
     HDR_NEGOTIATE,                      /**< experimental RFC 2295. Why only this one from 2295? */
     /*HDR_OVERWRITE,*/                  /* RFC 2518 */
+    HDR_ORIGIN,                         /* CORS Draft specification (see http://www.w3.org/TR/cors/) */
     HDR_PRAGMA,                         /**< deprecated RFC 2068,2616 header we may need to erase */
     HDR_PROXY_AUTHENTICATE,             /**< RFC 2608, 2616, 2617 */
     HDR_PROXY_AUTHENTICATION_INFO,      /**< RFC 2617 */

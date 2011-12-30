@@ -371,6 +371,14 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
          */
         rep->header.putAuth("Basic", actionName);
 #endif
+        // Allow cachemgr and other XHR scripts access to our version string
+        if (request->header.has(HDR_ORIGIN)) {
+            rep->header.putExt("Access-Control-Allow-Origin",request->header.getStr(HDR_ORIGIN));
+#if HAVE_AUTH_MODULE_BASIC
+            rep->header.putExt("Access-Control-Allow-Credentials","true");
+#endif
+            rep->header.putExt("Access-Control-Expose-Headers","Server");
+        }
 
         /* store the reply */
         entry->replaceHttpReply(rep);
@@ -380,6 +388,10 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
         entry->complete();
 
         return;
+    }
+
+    if (request->header.has(HDR_ORIGIN)) {
+        cmd->params.httpOrigin = request->header.getStr(HDR_ORIGIN);
     }
 
     debugs(16, 2, "CacheManager: " <<
