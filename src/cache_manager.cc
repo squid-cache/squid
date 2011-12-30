@@ -203,7 +203,7 @@ CacheManager::ParseUrl(const char *url)
         t = sscanf(url, "https://%[^/]/squid-internal-mgr/%[^?]%n?%s", host, request, &pos, params);
     }
     if (t < 2)
-        xstrncpy(request, "menu", MAX_URL);
+        xstrncpy(request, "index", MAX_URL);
 
 #if _SQUID_OS2_
     if (t == 2 && request[0] == '\0') {
@@ -211,7 +211,7 @@ CacheManager::ParseUrl(const char *url)
          * emx's sscanf insists of returning 2 because it sets request
          * to null
          */
-        xstrncpy(request, "menu", MAX_URL);
+        xstrncpy(request, "index", MAX_URL);
     }
 #endif
 
@@ -398,6 +398,26 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
            userName << "@" <<
            client << " requesting '" <<
            actionName << "'" );
+
+    // special case: /squid-internal-mgr/ index page
+    if (!strcmp(cmd->profile->name, "index")) {
+        ErrorState err(MGR_INDEX, HTTP_OK, request);
+        err.url = xstrdup(entry->url());
+        HttpReply *rep = err.BuildHttpReply();
+        if (strncmp(rep->body.content(),"Internal Error:", 15) == 0)
+            rep->sline.status = HTTP_NOT_FOUND;
+        // Allow cachemgr and other XHR scripts access to our version string
+        if (request->header.has(HDR_ORIGIN)) {
+            rep->header.putExt("Access-Control-Allow-Origin",request->header.getStr(HDR_ORIGIN));
+#if HAVE_AUTH_MODULE_BASIC
+            rep->header.putExt("Access-Control-Allow-Credentials","true");
+#endif
+            rep->header.putExt("Access-Control-Expose-Headers","Server");
+        }
+        entry->replaceHttpReply(rep);
+        entry->complete();
+        return;
+    }
 
     if (UsingSmp() && IamWorkerProcess()) {
         // is client the right connection to pass here?
