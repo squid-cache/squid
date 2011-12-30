@@ -146,7 +146,7 @@ private:
 public:
     Ip::Address host_addr;
 #if USE_AUTH
-    AuthUserRequest::Pointer auth_user_request;
+    Auth::UserRequest::Pointer auth_user_request;
 #endif
     unsigned short port;
 

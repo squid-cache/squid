@@ -56,7 +56,7 @@ public:
 
     char rfc931[USER_IDENT_SZ];
 #if USE_AUTH
-    AuthUserRequest::Pointer auth_user_request;
+    Auth::UserRequest::Pointer auth_user_request;
 #endif
 #if SQUID_SNMP
     char *snmp_community;

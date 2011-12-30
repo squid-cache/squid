@@ -26,6 +26,8 @@ ACLFilledChecklist::checkCallback(allow_t answer)
         auth_user_request = NULL;
         // It might have been connection based
         // In the case of sslBump we need to preserve authentication info
+        // XXX: need to re-evaluate this. ACL tests should not be playing with
+        // XXX: wider scoped TCP connection state, even if the helper lookup is stuck.
         if (conn() && !conn()->switchedToHttps()) {
             conn()->auth_user_request = NULL;
         }

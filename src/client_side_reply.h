@@ -73,7 +73,7 @@ public:
     int storeNotOKTransferDone() const;
     void setReplyToError(err_type, http_status, const HttpRequestMethod&, char const *, Ip::Address &, HttpRequest *, const char *,
 #if USE_AUTH
-                         AuthUserRequest::Pointer);
+                         Auth::UserRequest::Pointer);
 #else
                          void * unused);
 #endif
