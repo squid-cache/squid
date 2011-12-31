@@ -123,8 +123,7 @@ typedef enum {
 inline std::ostream &
 operator <<(std::ostream &o, const allow_t a)
 {
-    switch(a)
-    {
+    switch (a) {
     case ACCESS_DENIED:
         o << "DENIED";
         break;
