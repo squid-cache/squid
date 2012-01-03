@@ -218,8 +218,7 @@ struct SquidConfig {
         int icp_query_min;	/* msec */
         int mcast_icp_query;	/* msec */
 
-#if !USE_DNSSERVERS
-
+#if !USE_DNSHELPER
         time_msec_t idns_retransmit;
         time_msec_t idns_query;
 #endif
@@ -303,7 +302,7 @@ struct SquidConfig {
     char *effectiveGroup;
 
     struct {
-#if USE_DNSSERVERS
+#if USE_DNSHELPER
         char *dnsserver;
 #endif
 
@@ -320,8 +319,7 @@ struct SquidConfig {
 #endif
 
     } Program;
-#if USE_DNSSERVERS
-
+#if USE_DNSHELPER
     HelperChildConfig dnsChildren;
 #endif
 

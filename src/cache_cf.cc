@@ -161,7 +161,7 @@ static void parseBytesLine(size_t * bptr, const char *units);
 #if USE_SSL
 static void parseBytesOptionValue(size_t * bptr, const char *units, char const * value);
 #endif
-#if !USE_DNSSERVERS
+#if !USE_DNSHELPER
 static void parseBytesLineSigned(ssize_t * bptr, const char *units);
 #endif
 static size_t parseBytesUnits(const char *unit);
@@ -639,11 +639,9 @@ configDoConfigure(void)
     else
         visible_appname_string = (char const *)APP_FULLNAME;
 
-#if USE_DNSSERVERS
-
+#if USE_DNSHELPER
     if (Config.dnsChildren.n_max < 1)
-        fatal("No dnsservers allocated");
-
+        fatal("No DNS helpers allocated");
 #endif
 
     if (Config.Program.redirect) {
@@ -704,8 +702,7 @@ configDoConfigure(void)
     }
 
     requirePathnameExists("MIME Config Table", Config.mimeTablePathname);
-#if USE_DNSSERVERS
-
+#if USE_DNSHELPER
     requirePathnameExists("cache_dns_program", Config.Program.dnsserver);
 #endif
 #if USE_UNLINKD
@@ -1136,7 +1133,7 @@ parseBytesLine(size_t * bptr, const char *units)
         self_destruct();
 }
 
-#if !USE_DNSSERVERS
+#if !USE_DNSHELPER
 static void
 parseBytesLineSigned(ssize_t * bptr, const char *units)
 {
@@ -3055,7 +3052,7 @@ free_time_t(time_t * var)
     *var = 0;
 }
 
-#if !USE_DNSSERVERS
+#if !USE_DNSHELPER
 static void
 dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
 {
@@ -3092,7 +3089,7 @@ dump_b_size_t(StoreEntry * entry, const char *name, size_t var)
     storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
 }
 
-#if !USE_DNSSERVERS
+#if !USE_DNSHELPER
 static void
 dump_b_ssize_t(StoreEntry * entry, const char *name, ssize_t var)
 {
@@ -3136,7 +3133,7 @@ parse_b_size_t(size_t * var)
     parseBytesLine(var, B_BYTES_STR);
 }
 
-#if !USE_DNSSERVERS
+#if !USE_DNSHELPER
 static void
 parse_b_ssize_t(ssize_t * var)
 {
@@ -3170,7 +3167,7 @@ free_size_t(size_t * var)
     *var = 0;
 }
 
-#if !USE_DNSSERVERS
+#if !USE_DNSHELPER
 static void
 free_ssize_t(ssize_t * var)
 {

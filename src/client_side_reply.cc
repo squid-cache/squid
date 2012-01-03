@@ -1565,15 +1565,11 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
       */
     if (r->flags.nocache) {
 
-#if USE_DNSSERVERS
-
+#if USE_DNSHELPER
         ipcacheInvalidate(r->GetHost());
-
 #else
-
         ipcacheInvalidateNegative(r->GetHost());
-
-#endif /* USE_DNSSERVERS */
+#endif /* USE_DNSHELPER */
 
     }
 
@@ -1581,15 +1577,11 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     else if (r->flags.nocache_hack) {
 
-#if USE_DNSSERVERS
-
+#if USE_DNSHELPER
         ipcacheInvalidate(r->GetHost());
-
 #else
-
         ipcacheInvalidateNegative(r->GetHost());
-
-#endif /* USE_DNSSERVERS */
+#endif /* USE_DNSHELPER */
 
     }
 
