@@ -873,18 +873,22 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         request->flags.auth = 1;
 
     ConnStateData *http_conn = http->getConn();
-    assert(http_conn);
-    request->flags.connection_auth_disabled = http_conn->port->connection_auth_disabled;
-    if (!request->flags.connection_auth_disabled) {
-        if (http_conn->pinning.fd != -1) {
-            if (http_conn->pinning.auth) {
-                request->flags.connection_auth = 1;
-                request->flags.auth = 1;
-            } else {
-                request->flags.connection_proxy_auth = 1;
+    if (http_conn) {
+        request->flags.connection_auth_disabled = http_conn->port->connection_auth_disabled;
+        if (!request->flags.connection_auth_disabled) {
+            if (http_conn->pinning.fd != -1) {
+                if (http_conn->pinning.auth) {
+                    request->flags.connection_auth = 1;
+                    request->flags.auth = 1;
+                } else {
+                    request->flags.connection_proxy_auth = 1;
+                }
+                request->setPinnedConnection(http_conn);
             }
-            request->setPinnedConnection(http_conn);
         }
+    } else {
+        // internal requests and ESI don't have client conn.
+        request->flags.connection_auth_disabled = 1;
     }
 
     /* check if connection auth is used, and flag as candidate for pinning
