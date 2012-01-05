@@ -194,15 +194,6 @@ xrealloc(void *s, size_t sz)
 }
 
 void
-xfree(void *s)
-{
-    if (s == NULL)
-        return;
-
-    free_const(s);
-}
-
-void
 free_const(const void *s_const)
 {
     void *s = const_cast<void *>(s_const);
