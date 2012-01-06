@@ -200,6 +200,11 @@ static int check_domain( void *check_data, ASN1_STRING *cn_data)
     return matchDomainName(server, cn[0] == '*' ? cn + 1 : cn);
 }
 
+bool Ssl::checkX509ServerValidity(X509 *cert, const char *server)
+{
+    return matchX509CommonNames(cert, (void *)server, check_domain);
+}
+
 /// \ingroup ServerProtocolSSLInternal
 static int
 ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
@@ -222,9 +227,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         debugs(83, 5, "SSL Certificate signature OK: " << buffer);
 
         if (server) {
-            int found = Ssl::matchX509CommonNames(peer_cert, (void *)server, check_domain);
-
-            if (!found) {
+            if (!Ssl::checkX509ServerValidity(peer_cert, server)) {
                 debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << buffer << " does not match domainname " << server);
                 ok = 0;
                 error_no = SQUID_X509_V_ERR_DOMAIN_MISMATCH;

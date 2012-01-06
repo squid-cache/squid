@@ -104,6 +104,7 @@
 #include "comm/Loops.h"
 #include "comm/Write.h"
 #include "comm/TcpAcceptor.h"
+#include "errorpage.h"
 #include "eui/Config.h"
 #include "fde.h"
 #include "HttpHdrContRange.h"
@@ -2444,6 +2445,67 @@ ConnStateData::clientAfterReadingRequests()
         readSomeData();
 }
 
+#if USE_SSL
+bool ConnStateData::serveDelayedError(ClientSocketContext *context)
+{
+    ClientHttpRequest *http = context->http;
+    StoreEntry *e = bumpServerFirstErrorEntry();
+    if (!e)
+        return false;
+
+    if (!e->isEmpty()) {
+        //Failed? Here we should get the error from conn and send it to client
+        // The error stored in ConnStateData::bumpFirstEntry, replace the
+        // ClientHttpRequest store entry with this.
+        clientStreamNode *node = context->getClientReplyContext();
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert (repContext);
+        debugs(33, 5, "Connection first has failed for " << http->uri << ". Respond with an error");
+        repContext->setReplyToStoreEntry(e);
+        context->pullData();
+        flags.readMore = false;
+        return true;
+    }
+
+    // We are in ssl-bump first mode. We have not the server connect name when
+    // we connected to server so we have to check certificates subject with our server name
+    if (X509 *server_cert = getBumpServerCert()) {
+        HttpRequest *request = http->request;
+        if (!Ssl::checkX509ServerValidity(server_cert, request->GetHost())) {
+            debugs(33, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate does not match domainname " << request->GetHost());
+
+            ACLFilledChecklist check(Config.ssl_client.cert_error, request, dash_str);
+            if (Comm::IsConnOpen(pinning.serverConnection))
+                check.fd(pinning.serverConnection->fd);
+
+            if (check.fastCheck() != ACCESS_ALLOWED) {
+                clientStreamNode *node = context->getClientReplyContext();
+                clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+                assert (repContext);
+
+                // Create an error object and fill it
+                ErrorState *err = errorCon(ERR_SECURE_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
+                err->src_addr = clientConnection->remote;
+#ifdef EPROTO
+                err->xerrno = EPROTO;
+#else
+                err->xerrno = EACCES;
+#endif
+                Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail( SQUID_X509_V_ERR_DOMAIN_MISMATCH, server_cert);
+                err->detail = errDetail;
+                repContext->setReplyToError(request->method, err);
+                assert(context->http->out.offset == 0);
+                context->pullData();
+                flags.readMore = false;
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+#endif //USE_SSL
+
 static void
 clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *context, const HttpRequestMethod& method, HttpVersion http_ver)
 {
@@ -2645,22 +2707,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     }
 
 #if USE_SSL
-    if (conn->switchedToHttps() && conn->bumpServerFirstErrorEntry() &&
-        !Comm::IsConnOpen(conn->pinning.serverConnection)) {
-        //Failed? Here we should get the error from conn and send it to client
-        // The error stored in ConnStateData::bumpFirstEntry, replace the 
-        // ClientHttpRequest store entry with this.
-        clientStreamNode *node = context->getClientReplyContext();
-        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert (repContext);
-        debugs(33, 5, "Connection first has failed for " << http->uri << ". Respond with an error");
-        StoreEntry *e = conn->bumpServerFirstErrorEntry();
-        Must(e && !e->isEmpty());
-        repContext->setReplyToStoreEntry(e);
-        context->pullData();
-        conn->flags.readMore = false;
+    if (conn->switchedToHttps() && conn->serveDelayedError(context))
         goto finish;
-    }
 #endif
 
     /* Do we expect a request-body? */

@@ -334,6 +334,8 @@ public:
     /// Holds the squid error reply in the case of bump server first error 
     StoreEntry *bumpServerFirstErrorEntry() const {return bumpErrorEntry;}
     void setBumpServerCert(X509 *serverCert) {bumpServerCert.reset(serverCert);}
+    X509 *getBumpServerCert() {return bumpServerCert.get();}
+    bool serveDelayedError(ClientSocketContext *context);
 #else
     bool switchedToHttps() const { return false; }
 #endif

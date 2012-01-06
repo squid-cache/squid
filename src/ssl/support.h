@@ -152,6 +152,15 @@ int matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(vo
 
 /**
    \ingroup ServerProtocolSSLAPI
+   * Check if the certificate is valid for a server
+   \param cert  The X509 cert to check.
+   \param server The server name.
+   \return   true if the certificate is valid for the server or false otherwise.
+ */
+bool checkX509ServerValidity(X509 *cert, const char *server);
+
+/**
+   \ingroup ServerProtocolSSLAPI
    * Convert a given ASN1_TIME to a string form.
    \param tm the time in ASN1_TIME form
    \param buf the buffer to write the output

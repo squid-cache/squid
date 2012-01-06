@@ -113,16 +113,21 @@ clientReplyContext::setReplyToError(
     if (unparsedrequest)
         errstate->request_hdrs = xstrdup(unparsedrequest);
 
-    if (status == HTTP_NOT_IMPLEMENTED && http->request)
+#if USE_AUTH
+    errstate->auth_user_request = auth_user_request;
+#endif
+    setReplyToError(method, errstate);
+}
+
+void clientReplyContext::setReplyToError(const HttpRequestMethod& method, ErrorState *errstate)
+{
+    if (errstate->httpStatus == HTTP_NOT_IMPLEMENTED && http->request)
         /* prevent confusion over whether we default to persistent or not */
         http->request->flags.proxy_keepalive = 0;
 
     http->al.http.code = errstate->httpStatus;
 
     createStoreEntry(method, request_flags());
-#if USE_AUTH
-    errstate->auth_user_request = auth_user_request;
-#endif
     assert(errstate->callback_data == NULL);
     errorAppendEntry(http->storeEntry(), errstate);
     /* Now the caller reads to get this */
