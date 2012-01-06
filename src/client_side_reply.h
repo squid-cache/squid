@@ -79,6 +79,7 @@ public:
 #else
                          void * unused);
 #endif
+    void setReplyToError(const HttpRequestMethod& method, ErrorState *errstate);
     void createStoreEntry(const HttpRequestMethod& m, request_flags flags);
     void removeStoreReference(store_client ** scp, StoreEntry ** ep);
     void removeClientStoreReference(store_client **scp, ClientHttpRequest *http);

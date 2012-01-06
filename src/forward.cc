@@ -756,7 +756,9 @@ FwdState::initiateSSL()
             SSL_set_session(ssl, peer->sslSession);
 
     } else {
-        SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)request->GetHost());
+        if (request->protocol != AnyP::PROTO_SSL_PEEK)
+            SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)request->GetHost());
+        // else  we do not have the ssl server name yet, but only its IP address.
 
         // We need to set SNI TLS extension only in the case we are
         // connecting direct to origin server
