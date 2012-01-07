@@ -39,7 +39,7 @@ AuthenticateAcl(ACLChecklist *ch)
 
     /* get authed here */
     /* Note: this fills in auth_user_request when applicable */
-    const AuthAclState result = AuthUserRequest::tryToAuthenticateAndSetAuthUser(
+    const AuthAclState result = Auth::UserRequest::tryToAuthenticateAndSetAuthUser(
                                     &checklist->auth_user_request, headertype, request,
                                     checklist->conn(), checklist->src_addr);
     switch (result) {

@@ -112,7 +112,7 @@ ACLMaxUserIP::parse()
  * 1 : Match
  */
 int
-ACLMaxUserIP::match(AuthUserRequest::Pointer auth_user_request, Ip::Address const &src_addr)
+ACLMaxUserIP::match(Auth::UserRequest::Pointer auth_user_request, Ip::Address const &src_addr)
 {
     /*
      * the logic for flush the ip list when the limit is hit vs keep

@@ -32,8 +32,8 @@
  *
  */
 
-#ifndef SQUID_AUTHUSERREQUEST_H
-#define SQUID_AUTHUSERREQUEST_H
+#ifndef SQUID_AUTH_USERREQUEST_H
+#define SQUID_AUTH_USERREQUEST_H
 
 #if USE_AUTH
 
@@ -77,19 +77,22 @@ enum Direction {
     CRED_LOOKUP = -1,   ///< Credentials need to be validated with the backend helper
     CRED_ERROR = -2     ///< ERROR in the auth module. Cannot determine the state of this request.
 };
-} // namespace Auth
 
 /**
- \ingroup AuthAPI
  * This is a short lived structure is the visible aspect of the authentication framework.
  *
  * It and its children hold the state data while processing authentication for a client request.
  * The AuthenticationStateData object is merely a CBDATA wrapper for one of these.
  */
-class AuthUserRequest : public RefCountable
+class UserRequest : public RefCountable
 {
 public:
-    typedef RefCount<AuthUserRequest> Pointer;
+    typedef RefCount<Auth::UserRequest> Pointer;
+
+    UserRequest();
+    virtual ~UserRequest();
+    void *operator new(size_t byteCount);
+    void operator delete(void *address);
 
 public:
     /**
@@ -97,7 +100,7 @@ public:
      * it has request specific data, and links to user specific data
      * the user
      */
-    Auth::User::Pointer _auth_user;
+    User::Pointer _auth_user;
 
     /**
      *  Used by squid to determine what the next step in performing authentication for a given scheme is.
@@ -111,7 +114,7 @@ public:
      *				Squid will return the appropriate status code (401 or 407) and call the registered
      *				FixError function to allow the auth module to insert it's challenge.
      */
-    Auth::Direction direction();
+    Direction direction();
 
     /**
      * Used by squid to determine whether the auth scheme has successfully authenticated the user request.
@@ -136,7 +139,7 @@ public:
     virtual void authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type) = 0;
 
     /* template method - what needs to be done next? advertise schemes, challenge, handle error, nothing? */
-    virtual Auth::Direction module_direction() = 0;
+    virtual Direction module_direction() = 0;
 
     /* add the [Proxy-]Authentication-Info header */
     virtual void addAuthenticationInfoHeader(HttpReply * rep, int accel);
@@ -155,20 +158,33 @@ public:
      */
     virtual void module_start(RH *handler, void *data) = 0;
 
-    virtual Auth::User::Pointer user() {return _auth_user;}
+    // User credentials object this UserRequest is managing
+    virtual User::Pointer user() {return _auth_user;}
+    virtual const User::Pointer user() const {return _auth_user;}
+    virtual void user(User::Pointer aUser) {_auth_user=aUser;}
 
-    virtual const Auth::User::Pointer user() const {return _auth_user;}
+    /**
+     * Locate user credentials in one of several locations. Begin authentication if needed.
+     *
+     * Credentials may be found in one of the following locations (listed by order of preference):
+     * - the source passed as parameter aUR
+     * - cached in the HttpRequest parameter from a previous authentication of this request
+     * - cached in the ConnStateData paremeter from a previous authentication of this connection
+     *   (only applies to some situations. ie NTLM, Negotiate, Kerberos auth schemes,
+     *    or decrypted SSL requests from inside an authenticated CONNECT tunnel)
+     * - cached in the user credentials cache from a previous authentication of the same credentials
+     *   (only applies to cacheable authentication methods, ie Basic auth)
+     * - new credentials created from HTTP headers in this request
+     *
+     * The found credentials are returned in aUR and if successfully authenticated
+     * may now be cached in one or more of the above locations.
+     *
+     * \return Some AUTH_ACL_* state
+     */
+    static AuthAclState tryToAuthenticateAndSetAuthUser(UserRequest::Pointer *aUR, http_hdr_type, HttpRequest *, ConnStateData *, Ip::Address &);
 
-    virtual void user(Auth::User::Pointer aUser) {_auth_user=aUser;}
-
-    static AuthAclState tryToAuthenticateAndSetAuthUser(AuthUserRequest::Pointer *, http_hdr_type, HttpRequest *, ConnStateData *, Ip::Address &);
-    static void addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal);
-
-    AuthUserRequest();
-
-    virtual ~AuthUserRequest();
-    void *operator new(size_t byteCount);
-    void operator delete(void *address);
+    /// Add the appropriate [Proxy-]Authenticate header to the given reply
+    static void addReplyAuthHeader(HttpReply * rep, UserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal);
 
     void start( RH * handler, void *data);
     char const * denyMessage(char const * const default_message = NULL);
@@ -189,13 +205,13 @@ public:
      */
     char const *username() const;
 
-    Auth::Scheme::Pointer scheme() const;
+    Scheme::Pointer scheme() const;
 
     virtual const char * connLastHeader();
 
 private:
 
-    static AuthAclState authenticate(AuthUserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, Ip::Address &src_addr);
+    static AuthAclState authenticate(UserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, Ip::Address &src_addr);
 
     /** return a message on the 407 error pages */
     char *message;
@@ -208,23 +224,25 @@ private:
     AuthAclState lastReply;
 };
 
+} // namespace Auth
+
 /* AuthUserRequest */
 
 /// \ingroup AuthAPI
-extern void authenticateFixHeader(HttpReply *, AuthUserRequest::Pointer, HttpRequest *, int, int);
+extern void authenticateFixHeader(HttpReply *, Auth::UserRequest::Pointer, HttpRequest *, int, int);
 /// \ingroup AuthAPI
-extern void authenticateAddTrailer(HttpReply *, AuthUserRequest::Pointer, HttpRequest *, int);
+extern void authenticateAddTrailer(HttpReply *, Auth::UserRequest::Pointer, HttpRequest *, int);
 
 /// \ingroup AuthAPI
-extern void authenticateAuthUserRequestRemoveIp(AuthUserRequest::Pointer, Ip::Address const &);
+extern void authenticateAuthUserRequestRemoveIp(Auth::UserRequest::Pointer, Ip::Address const &);
 /// \ingroup AuthAPI
-extern void authenticateAuthUserRequestClearIp(AuthUserRequest::Pointer);
+extern void authenticateAuthUserRequestClearIp(Auth::UserRequest::Pointer);
 /// \ingroup AuthAPI
-extern int authenticateAuthUserRequestIPCount(AuthUserRequest::Pointer);
+extern int authenticateAuthUserRequestIPCount(Auth::UserRequest::Pointer);
 
 /// \ingroup AuthAPI
-/// See AuthUserRequest::authenticated()
-extern int authenticateUserAuthenticated(AuthUserRequest::Pointer);
+/// See Auth::UserRequest::authenticated()
+extern int authenticateUserAuthenticated(Auth::UserRequest::Pointer);
 
 #endif /* USE_AUTH */
 #endif /* SQUID_AUTHUSERREQUEST_H */
