@@ -2023,15 +2023,6 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
             url = (char *) "/";
     }
 
-    if (internalCheck(url)) {
-        /* prepend our name & port */
-        http->uri = xstrdup(internalLocalUri(NULL, url));
-        // We just re-wrote the URL. Must replace the Host: header.
-        //  But have not parsed there yet!! flag for local-only handling.
-        http->flags.internal = 1;
-        return;
-    }
-
     if (vport < 0)
         vport = http->getConn()->clientConnection->local.GetPort();
 
@@ -2280,15 +2271,17 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
         /* intercept or transparent mode, properly working with no failures */
         prepareTransparentURL(csd, http, url, req_hdr);
 
-    } else if (csd->port->accel || csd->switchedToHttps()) {
-        /* accelerator mode */
-        prepareAcceleratedURL(csd, http, url, req_hdr);
-
     } else if (internalCheck(url)) {
         /* internal URL mode */
         /* prepend our name & port */
         http->uri = xstrdup(internalLocalUri(NULL, url));
-        http->flags.accel = 1;
+        // We just re-wrote the URL. Must replace the Host: header.
+        //  But have not parsed there yet!! flag for local-only handling.
+        http->flags.internal = 1;
+
+    } else if (csd->port->accel || csd->switchedToHttps()) {
+        /* accelerator mode */
+        prepareAcceleratedURL(csd, http, url, req_hdr);
     }
 
     if (!http->uri) {
