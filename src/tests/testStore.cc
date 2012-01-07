@@ -23,7 +23,6 @@ TestStore::get(String, void (*)(StoreEntry*, void*), void*)
 {}
 
 void
-
 TestStore::init()
 {}
 
