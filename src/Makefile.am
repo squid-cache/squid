@@ -1091,6 +1091,7 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_StatHist.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
+	tests/stub_tools.cc \
 	tests/testHttpReply.cc \
 	tests/testHttpReply.h \
 	tests/testMain.cc \
@@ -2186,6 +2187,7 @@ tests_testHttpParser_SOURCES = \
 	tests/stub_debug.cc \
 	tests/stub_event.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_tools.cc \
 	tests/testHttpParser.cc \
 	tests/testHttpParser.h \
 	tests/testMain.cc \
@@ -2426,6 +2428,7 @@ tests_testStore_SOURCES= \
 	mem.cc \
 	mem_node.cc \
 	MemBuf.cc \
+	MemObject.cc \
 	Packer.cc \
 	Parsing.cc \
 	RemovalPolicy.cc \
@@ -2470,7 +2473,6 @@ tests_testStore_SOURCES= \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_libcomm.cc \
-	tests/stub_MemObject.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_mime.cc \
 	tests/stub_Port.cc \
@@ -2548,6 +2550,7 @@ tests_testString_SOURCES = \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_tools.cc \
 	time.cc \
 	wordlist.cc
 nodist_tests_testString_SOURCES = \
@@ -2811,7 +2814,6 @@ tests_testRock_SOURCES = \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_tools.cc \
-	tests/stub_UdsOp.cc \
 	time.cc \
 	url.cc \
 	URLScheme.cc \
@@ -2852,7 +2854,7 @@ tests_testRock_LDADD = \
 	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testRock_LDFLAGS = $(LIBADD_DL)
+tests_testRock_LDFLAGS = $(INCLUDES) $(LIBADD_DL)
 tests_testRock_DEPENDENCIES = \
 	$(SWAP_TEST_DS)
 
@@ -3330,6 +3332,7 @@ tests_testConfigParser_SOURCES = \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_tools.cc \
 	time.cc \
 	wordlist.cc
 nodist_tests_testConfigParser_SOURCES = \
