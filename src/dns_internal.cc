@@ -60,7 +60,7 @@
    #ifndef to exclude the internal DNS code from compile process when
    using external DNS process.
  */
-#if !USE_DNSSERVERS
+#if !USE_DNSHELPER
 #if _SQUID_WINDOWS_
 #define REG_TCPIP_PARA_INTERFACES "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces"
 #define REG_TCPIP_PARA "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"
@@ -820,7 +820,7 @@ idnsVCClosed(const CommCloseCbParams &params)
     delete vc->queue;
     delete vc->msg;
     vc->conn = NULL;
-    if (vc->ns < nns) // XXX: idnsShutdown may have freed nameservers[]
+    if (vc->ns < nns) // XXX: dnsShutdown may have freed nameservers[]
         nameservers[vc->ns].vc = NULL;
     cbdataFree(vc);
 }
@@ -1491,7 +1491,7 @@ idnsRegisterWithCacheManager(void)
 }
 
 void
-idnsInit(void)
+dnsInit(void)
 {
     static int init = 0;
 
@@ -1588,7 +1588,7 @@ idnsInit(void)
 }
 
 void
-idnsShutdown(void)
+dnsShutdown(void)
 {
     if (DnsSocketA < 0 && DnsSocketB < 0)
         return;
@@ -1762,7 +1762,7 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
  * The function to return the DNS via SNMP
  */
 variable_list *
-snmp_netIdnsFn(variable_list * Var, snint * ErrP)
+snmp_netDnsFn(variable_list * Var, snint * ErrP)
 {
     int i, n = 0;
     variable_list *Answer = NULL;
@@ -1810,4 +1810,4 @@ snmp_netIdnsFn(variable_list * Var, snint * ErrP)
 }
 
 #endif /*SQUID_SNMP */
-#endif /* USE_DNSSERVERS */
+#endif /* USE_DNSHELPER */

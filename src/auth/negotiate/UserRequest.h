@@ -9,18 +9,23 @@ class HttpReply;
 class HttpRequest;
 class helper_stateful_server;
 
+namespace Auth
+{
+namespace Negotiate
+{
+
 /// \ingroup AuthNegotiateAPI
-class AuthNegotiateUserRequest : public AuthUserRequest
+class UserRequest : public Auth::UserRequest
 {
 
 public:
-    MEMPROXY_CLASS(AuthNegotiateUserRequest);
+    MEMPROXY_CLASS(Auth::Negotiate::UserRequest);
 
-    AuthNegotiateUserRequest();
-    virtual ~AuthNegotiateUserRequest();
+    UserRequest();
+    virtual ~UserRequest();
     virtual int authenticated() const;
     virtual void authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type);
-    virtual Auth::Direction module_direction();
+    virtual Direction module_direction();
     virtual void onConnectionClose(ConnStateData *);
     virtual void module_start(RH *, void *);
 
@@ -50,6 +55,9 @@ private:
     static HLPSCB HandleReply;
 };
 
-MEMPROXY_CLASS_INLINE(AuthNegotiateUserRequest);
+} // namespace Negotiate
+} // namespace Auth
+
+MEMPROXY_CLASS_INLINE(Auth::Negotiate::UserRequest);
 
 #endif /* _SQUID_SRC_AUTH_NEGOTIATE_USERREQUEST_H */

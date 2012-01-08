@@ -36,6 +36,7 @@
 #include "comm/Loops.h"
 #include "fde.h"
 #include "MemBuf.h"
+#include "StatCounters.h"
 
 static PF diskHandleRead;
 static PF diskHandleWrite;
@@ -442,7 +443,7 @@ diskHandleRead(int fd, void *data)
 #endif
         debugs(6, 3, "diskHandleRead: FD " << fd << " seeking to offset " << ctrl_dat->offset);
         lseek(fd, ctrl_dat->offset, SEEK_SET);	/* XXX ignore return? */
-        statCounter.syscalls.disk.seeks++;
+        ++statCounter.syscalls.disk.seeks;
         F->disk.offset = ctrl_dat->offset;
     }
 

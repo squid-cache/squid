@@ -340,10 +340,6 @@ if test "x$enable_strict_error_checking" != "xno"; then
   SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cxx_option_werror"
 fi
 
-SQUID_CXX_CHECK_ARG_FHUGEOBJECTS
-if test "x$squid_cv_cxx_arg_fhugeobjects" = "xyes"; then
-  SQUID_CXXFLAGS="$SQUID_CXXFLAGS -fhuge-objects"
-fi
 # squid_cv_cc_arg_pipe is set by SQUID_CC_GUESS_OPTIONS
 SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cc_arg_pipe"
 SQUID_CFLAGS="$SQUID_CFLAGS $squid_cv_cc_arg_pipe"
@@ -923,29 +919,29 @@ AC_ARG_WITH(libxml2, AS_HELP_STRING([--without-libxml2],[Do not use libxml2 for 
 if test "x$squid_opt_use_esi" = "xyes" -a "x$with_libxml2" != "xno" ; then
   AC_CHECK_LIB([xml2], [main], [XMLLIB="-lxml2"; HAVE_LIBXML2=1])
   dnl Find the main header and include path...
-  ac_cv_libxml2_include='no'
-  AC_CHECK_HEADERS([libxml/parser.h], [], [
+  AC_CACHE_CHECK([location of libxml2 include files], [ac_cv_libxml2_include], [
+    AC_CHECK_HEADERS([libxml/parser.h], [], [
       AC_MSG_NOTICE([Testing in /usr/include/libxml2])
       SAVED_CPPFLAGS="$CPPFLAGS"
       CPPFLAGS="-I/usr/include/libxml2 $CPPFLAGS"
       unset ac_cv_header_libxml_parser_h
-      AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include="/usr/include/libxml2"], [])
-      CPPFLAGS="$SAVED_CPPFLAGS"
-      if test "x$ac_cv_libxml2_include" = "xno"; then
-          AC_MSG_NOTICE([Testing in /usr/local/include/libxml2])
-          SAVED_CPPFLAGS="$CPPFLAGS"
-          CPPFLAGS="-I/usr/local/include/libxml2 $CPPFLAGS"
-          unset ac_cv_header_libxml_parser_h
-          AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include="/usr/local/include/libxml2"], [])
-          CPPFLAGS="$SAVED_CPPFLAGS"
-      fi
+      AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include="-I/usr/include/libxml2"], [
+        AC_MSG_NOTICE([Testing in /usr/local/include/libxml2])
+        CPPFLAGS="-I/usr/local/include/libxml2 $SAVED_CPPFLAGS"
+        unset ac_cv_header_libxml_parser_h
+        AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include="-I/usr/local/include/libxml2"], [
+          AC_MSG_NOTICE([Failed to find libxml2 header file libxml/parser.h])
+        ])
       ])
-  if test "x$ac_cv_libxml2_include" != "xno"; then
-      SQUID_CXXFLAGS="-I$ac_cv_libxml2_include $SQUID_CXXFLAGS"
-      CPPFLAGS="-I$ac_cv_libxml2_include $CPPFLAGS"
+      CPPFLAGS="$SAVED_CPPFLAGS"
+    ])
+  ])
+  if test "x$ac_cv_libxml2_include" != "x"; then
+      SQUID_CXXFLAGS="$ac_cv_libxml2_include $SQUID_CXXFLAGS"
+      CPPFLAGS="$ac_cv_libxml2_include $CPPFLAGS"
   fi
-  dnl Now that we know where to look find the other headers...
-  AC_CHECK_HEADERS(libxml/HTMLparser.h libxml/HTMLtree.h)
+  dnl Now that we know where to look find the headers...
+  AC_CHECK_HEADERS(libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h)
   AC_DEFINE_UNQUOTED(HAVE_LIBXML2, $HAVE_LIBXML2, [Define to 1 if you have the libxml2 library])
   if test "x$with_libxml2" = "xyes" -a "$HAVE_LIBXML2" != "1" ; then
     AC_MSG_ERROR([Required library libxml2 is not able to be found.])
@@ -1617,19 +1613,19 @@ AC_ARG_ENABLE(ident-lookups,
 AC_MSG_NOTICE([Support for Ident lookups enabled: ${enable_ident_lookups:=yes}])
 SQUID_DEFINE_BOOL(USE_IDENT,$enable_ident_lookups,[Support for Ident (RFC 931) lookups])
 
-squid_opt_use_dnsserver="no"
+squid_opt_use_dnshelper="no"
 AC_ARG_ENABLE(internal-dns,
   AS_HELP_STRING([--disable-internal-dns],
            [Prevents Squid from directly sending and receiving DNS messages, 
             and instead enables the old external 'dnsserver' processes.]), [
   if test "x$enableval" = "xno" ; then
     AC_MSG_WARN([Disabling Internal DNS queries])
-    squid_opt_use_dnsserver="yes"
+    squid_opt_use_dnshelper="yes"
   fi
 ])
-SQUID_DEFINE_BOOL(USE_DNSSERVERS,$squid_opt_use_dnsserver,
+SQUID_DEFINE_BOOL(USE_DNSHELPER,$squid_opt_use_dnshelper,
   [Use dnsserver processes instead of the internal DNS protocol support])
-AM_CONDITIONAL([USE_DNSSERVER],[test "x$squid_opt_use_dnsserver" = "xyes" ])
+AM_CONDITIONAL([ENABLE_DNSHELPER],[test "x$squid_opt_use_dnshelper" = "xyes" ])
 
 
 AM_CONDITIONAL(USE_SSL_CRTD, false)
@@ -3417,7 +3413,7 @@ SQUID_DETECT_TCP_RECV_BUFSIZE
 SQUID_CHECK_NEED_SYS_ERRLIST
 SQUID_CHECK_MAXPATHLEN
 
-if test "x$squid_opt_use_dnsserver" = "xyes"; then
+if test "x$squid_opt_use_dnshelper" = "xyes"; then
   SQUID_CHECK_LIBRESOLV_DNS_TTL_HACK
   SQUID_CHECK_RESOLVER_FIELDS
 fi

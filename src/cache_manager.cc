@@ -203,7 +203,7 @@ CacheManager::ParseUrl(const char *url)
         t = sscanf(url, "https://%[^/]/squid-internal-mgr/%[^?]%n?%s", host, request, &pos, params);
     }
     if (t < 2)
-        xstrncpy(request, "menu", MAX_URL);
+        xstrncpy(request, "index", MAX_URL);
 
 #if _SQUID_OS2_
     if (t == 2 && request[0] == '\0') {
@@ -211,7 +211,7 @@ CacheManager::ParseUrl(const char *url)
          * emx's sscanf insists of returning 2 because it sets request
          * to null
          */
-        xstrncpy(request, "menu", MAX_URL);
+        xstrncpy(request, "index", MAX_URL);
     }
 #endif
 
@@ -320,12 +320,11 @@ CacheManager::CheckPassword(const Mgr::Command &cmd)
 void
 CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request, StoreEntry * entry)
 {
-    ErrorState *err = NULL;
     debugs(16, 3, "CacheManager::Start: '" << entry->url() << "'" );
 
     Mgr::Command::Pointer cmd = ParseUrl(entry->url());
     if (!cmd) {
-        err = errorCon(ERR_INVALID_URL, HTTP_NOT_FOUND, request);
+        ErrorState *err = new ErrorState(ERR_INVALID_URL, HTTP_NOT_FOUND, request);
         err->url = xstrdup(entry->url());
         errorAppendEntry(entry, err);
         entry->expires = squid_curtime;
@@ -348,9 +347,7 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
 
     if (CheckPassword(*cmd) != 0) {
         /* build error message */
-        ErrorState *errState;
-        HttpReply *rep;
-        errState = errorCon(ERR_CACHE_MGR_ACCESS_DENIED, HTTP_UNAUTHORIZED, request);
+        ErrorState errState(ERR_CACHE_MGR_ACCESS_DENIED, HTTP_UNAUTHORIZED, request);
         /* warn if user specified incorrect password */
 
         if (cmd->params.password.size()) {
@@ -365,9 +362,7 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
                    actionName << "'" );
         }
 
-        rep = errState->BuildHttpReply();
-
-        errorStateFree(errState);
+        HttpReply *rep = errState.BuildHttpReply();
 
 #if HAVE_AUTH_MODULE_BASIC
         /*
@@ -376,6 +371,14 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
          */
         rep->header.putAuth("Basic", actionName);
 #endif
+        // Allow cachemgr and other XHR scripts access to our version string
+        if (request->header.has(HDR_ORIGIN)) {
+            rep->header.putExt("Access-Control-Allow-Origin",request->header.getStr(HDR_ORIGIN));
+#if HAVE_AUTH_MODULE_BASIC
+            rep->header.putExt("Access-Control-Allow-Credentials","true");
+#endif
+            rep->header.putExt("Access-Control-Expose-Headers","Server");
+        }
 
         /* store the reply */
         entry->replaceHttpReply(rep);
@@ -387,10 +390,34 @@ CacheManager::Start(const Comm::ConnectionPointer &client, HttpRequest * request
         return;
     }
 
+    if (request->header.has(HDR_ORIGIN)) {
+        cmd->params.httpOrigin = request->header.getStr(HDR_ORIGIN);
+    }
+
     debugs(16, 2, "CacheManager: " <<
            userName << "@" <<
            client << " requesting '" <<
            actionName << "'" );
+
+    // special case: /squid-internal-mgr/ index page
+    if (!strcmp(cmd->profile->name, "index")) {
+        ErrorState err(MGR_INDEX, HTTP_OK, request);
+        err.url = xstrdup(entry->url());
+        HttpReply *rep = err.BuildHttpReply();
+        if (strncmp(rep->body.content(),"Internal Error:", 15) == 0)
+            rep->sline.status = HTTP_NOT_FOUND;
+        // Allow cachemgr and other XHR scripts access to our version string
+        if (request->header.has(HDR_ORIGIN)) {
+            rep->header.putExt("Access-Control-Allow-Origin",request->header.getStr(HDR_ORIGIN));
+#if HAVE_AUTH_MODULE_BASIC
+            rep->header.putExt("Access-Control-Allow-Credentials","true");
+#endif
+            rep->header.putExt("Access-Control-Expose-Headers","Server");
+        }
+        entry->replaceHttpReply(rep);
+        entry->complete();
+        return;
+    }
 
     if (UsingSmp() && IamWorkerProcess()) {
         // is client the right connection to pass here?

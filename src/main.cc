@@ -66,6 +66,7 @@
 #include "format/Token.h"
 #include "fs/Module.h"
 #include "PeerSelectState.h"
+#include "SquidDns.h"
 #include "Store.h"
 #include "ICP.h"
 #include "ident/Ident.h"
@@ -82,6 +83,7 @@
 #include "ipc/Strand.h"
 #include "ip/tools.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 #include "SwapDir.h"
 #include "forward.h"
 #include "MemPool.h"
@@ -727,13 +729,7 @@ mainReconfigureStart(void)
 
     htcpSocketClose();
 #endif
-#if USE_DNSSERVERS
-
     dnsShutdown();
-#else
-
-    idnsShutdown();
-#endif
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
@@ -816,13 +812,7 @@ mainReconfigureFinish(void *)
     icapLogOpen();
 #endif
     storeLogOpen();
-#if USE_DNSSERVERS
-
     dnsInit();
-#else
-
-    idnsInit();
-#endif
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Init();
 #endif
@@ -880,7 +870,7 @@ static void
 mainRotate(void)
 {
     icmpEngine.Close();
-#if USE_DNSSERVERS
+#if USE_DNSHELPER
     dnsShutdown();
 #endif
     redirectShutdown();
@@ -897,7 +887,7 @@ mainRotate(void)
     icapLogRotate();               /*icap.log*/
 #endif
     icmpEngine.Open();
-#if USE_DNSSERVERS
+#if USE_DNSHELPER
     dnsInit();
 #endif
     redirectInit();
@@ -1021,15 +1011,7 @@ mainInitialize(void)
 
     parseEtcHosts();
 
-#if USE_DNSSERVERS
-
     dnsInit();
-
-#else
-
-    idnsInit();
-
-#endif
 
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Init();
@@ -1839,13 +1821,7 @@ SquidShutdown()
 #endif
 
     debugs(1, 1, "Shutting down...");
-#if USE_DNSSERVERS
-
     dnsShutdown();
-#else
-
-    idnsShutdown();
-#endif
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif

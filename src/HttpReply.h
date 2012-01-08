@@ -32,6 +32,7 @@
 #ifndef SQUID_HTTPREPLY_H
 #define SQUID_HTTPREPLY_H
 
+#include "HttpBody.h"
 #include "HttpMsg.h"
 #include "HttpStatusLine.h"
 

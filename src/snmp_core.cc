@@ -236,15 +236,9 @@ snmpInit(void)
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.2", FQDN_GHBN, snmp_netFqdnFn, static_Inst, atSum);
 
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.4", NET_DNS_CACHE, NULL, NULL);
-#if USE_DNSSERVERS
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.3", DNS_REQ, snmp_netDnsFn, static_Inst, atSum);
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.3", DNS_REP, snmp_netDnsFn, static_Inst, atSum);
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.3", DNS_SERVERS, snmp_netDnsFn, static_Inst, atSum);
-#else
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.3", DNS_REQ, snmp_netIdnsFn, static_Inst, atSum);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.3", DNS_REP, snmp_netIdnsFn, static_Inst, atSum);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.3", DNS_SERVERS, snmp_netIdnsFn, static_Inst, atSum);
-#endif
 
     /* SQ_MESH - 1.3.6.1.4.1.3495.1.5 */
     snmpAddNodeStr("1.3.6.1.4.1.3495.1", 5, NULL, NULL);
@@ -358,13 +352,13 @@ snmpPortOpened(const Comm::ConnectionPointer &conn, int errNo)
 void
 snmpConnectionClose(void)
 {
-    if (!Comm::IsConnOpen(snmpIncomingConn)) {
+    if (Comm::IsConnOpen(snmpIncomingConn)) {
         debugs(49, DBG_IMPORTANT, "Closing SNMP receiving port " << snmpIncomingConn->local);
         snmpIncomingConn->close();
     }
     snmpIncomingConn = NULL;
 
-    if (!Comm::IsConnOpen(snmpOutgoingConn) && snmpIncomingConn != snmpOutgoingConn) {
+    if (Comm::IsConnOpen(snmpOutgoingConn) && snmpIncomingConn != snmpOutgoingConn) {
         // Perform OUT port closure so as not to step on IN port when sharing a conn.
         debugs(49, DBG_IMPORTANT, "Closing SNMP sending port " << snmpOutgoingConn->local);
         snmpOutgoingConn->close();

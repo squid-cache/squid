@@ -68,6 +68,7 @@
 #include "protos.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 #include "Store.h"
 
 
@@ -180,7 +181,7 @@ HttpStateData::httpTimeout(const CommTimeoutCbParams &params)
     debugs(11, 4, HERE << serverConnection << ": '" << entry->url() << "'" );
 
     if (entry->store_status == STORE_PENDING) {
-        fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, fwd->request));
+        fwd->fail(new ErrorState(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, fwd->request));
     }
 
     serverConnection->close();
@@ -285,12 +286,12 @@ void
 HttpStateData::processSurrogateControl(HttpReply *reply)
 {
     if (request->flags.accelerated && reply->surrogate_control) {
-        HttpHdrScTarget *sctusable = httpHdrScGetMergedTarget(reply->surrogate_control, Config.Accel.surrogate_id);
+        HttpHdrScTarget *sctusable = reply->surrogate_control->getMergedTarget(Config.Accel.surrogate_id);
 
         if (sctusable) {
-            if (EBIT_TEST(sctusable->mask, SC_NO_STORE) ||
+            if (sctusable->noStore() ||
                     (Config.onoff.surrogate_is_remote
-                     && EBIT_TEST(sctusable->mask, SC_NO_STORE_REMOTE))) {
+                     && sctusable->noStoreRemote())) {
                 surrogateNoStore = true;
                 entry->makePrivate();
             }
@@ -299,11 +300,11 @@ HttpStateData::processSurrogateControl(HttpReply *reply)
              * accelerated request or not...
              * Still, this is an abstraction breach. - RC
              */
-            if (sctusable->max_age != -1) {
-                if (sctusable->max_age < sctusable->max_stale)
-                    reply->expires = reply->date + sctusable->max_age;
+            if (sctusable->hasMaxAge()) {
+                if (sctusable->maxAge() < sctusable->maxStale())
+                    reply->expires = reply->date + sctusable->maxAge();
                 else
-                    reply->expires = reply->date + sctusable->max_stale;
+                    reply->expires = reply->date + sctusable->maxStale();
 
                 /* And update the timestamps */
                 entry->timestampsSet();
@@ -312,7 +313,7 @@ HttpStateData::processSurrogateControl(HttpReply *reply)
             /* We ignore cache-control directives as per the Surrogate specification */
             ignoreCacheControl = true;
 
-            httpHdrScTargetDestroy(sctusable);
+            delete sctusable;
         }
     }
 }
@@ -1076,8 +1077,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
         if (ignoreErrno(io.xerrno)) {
             flags.do_next_read = 1;
         } else {
-            ErrorState *err;
-            err = errorCon(ERR_READ_ERROR, HTTP_BAD_GATEWAY, fwd->request);
+            ErrorState *err = new ErrorState(ERR_READ_ERROR, HTTP_BAD_GATEWAY, fwd->request);
             err->xerrno = io.xerrno;
             fwd->fail(err);
             flags.do_next_read = 0;
@@ -1096,8 +1096,8 @@ HttpStateData::readReply(const CommIoCbParams &io)
         delayId.bytesIn(len);
 #endif
 
-        kb_incr(&statCounter.server.all.kbytes_in, len);
-        kb_incr(&statCounter.server.http.kbytes_in, len);
+        kb_incr(&(statCounter.server.all.kbytes_in), len);
+        kb_incr(&(statCounter.server.http.kbytes_in), len);
         IOStats.Http.reads++;
 
         for (clen = len - 1, bin = 0; clen; bin++)
@@ -1246,7 +1246,7 @@ HttpStateData::continueAfterParsingHeader()
 
     assert(error != ERR_NONE);
     entry->reset();
-    fwd->fail(errorCon(error, HTTP_BAD_GATEWAY, fwd->request));
+    fwd->fail(new ErrorState(error, HTTP_BAD_GATEWAY, fwd->request));
     flags.do_next_read = 0;
     serverConnection->close();
     return false; // quit on error
@@ -1466,16 +1466,15 @@ HttpStateData::wroteLast(const CommIoCbParams &io)
 
     if (io.size > 0) {
         fd_bytes(io.fd, io.size, FD_WRITE);
-        kb_incr(&statCounter.server.all.kbytes_out, io.size);
-        kb_incr(&statCounter.server.http.kbytes_out, io.size);
+        kb_incr(&(statCounter.server.all.kbytes_out), io.size);
+        kb_incr(&(statCounter.server.http.kbytes_out), io.size);
     }
 
     if (io.flag == COMM_ERR_CLOSING)
         return;
 
     if (io.flag) {
-        ErrorState *err;
-        err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY, fwd->request);
+        ErrorState *err = new ErrorState(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY, fwd->request);
         err->xerrno = io.xerrno;
         fwd->fail(err);
         serverConnection->close();
@@ -2298,12 +2297,11 @@ HttpStateData::handleRequestBodyProducerAborted()
     ServerStateData::handleRequestBodyProducerAborted();
     if (entry->isEmpty()) {
         debugs(11, 3, "request body aborted: " << serverConnection);
-        ErrorState *err;
         // We usually get here when ICAP REQMOD aborts during body processing.
         // We might also get here if client-side aborts, but then our response
         // should not matter because either client-side will provide its own or
         // there will be no response at all (e.g., if the the client has left).
-        err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, fwd->request);
+        ErrorState *err = new ErrorState(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, fwd->request);
         err->xerrno = ERR_DETAIL_SRV_REQMOD_REQ_BODY;
         fwd->fail(err);
     }

@@ -41,9 +41,11 @@
 #include "ConfigOption.h"
 #include "DiskIO/DiskIOStrategy.h"
 #include "DiskIO/DiskIOModule.h"
+#include "FileMap.h"
 #include "Parsing.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 #include "SwapDir.h"
 #include "swap_log_op.h"
 
@@ -246,7 +248,7 @@ UFSSwapDir::create()
     createSwapSubDirs();
 }
 
-UFSSwapDir::UFSSwapDir(char const *aType, const char *anIOType) : SwapDir(aType), IO(NULL), map(file_map_create()), suggest(0), swaplog_fd (-1), currentIOOptions(new ConfigOptionVector()), ioType(xstrdup(anIOType)), cur_size(0), n_disk_objects(0)
+UFSSwapDir::UFSSwapDir(char const *aType, const char *anIOType) : SwapDir(aType), IO(NULL), map(new FileMap()), suggest(0), swaplog_fd (-1), currentIOOptions(new ConfigOptionVector()), ioType(xstrdup(anIOType)), cur_size(0), n_disk_objects(0)
 {
     /* modulename is only set to disk modules that are built, by configure,
      * so the Find call should never return NULL here.
@@ -261,7 +263,7 @@ UFSSwapDir::~UFSSwapDir()
         swaplog_fd = -1;
     }
 
-    filemapFreeMemory(map);
+    delete map;
 
     if (IO)
         delete IO;
@@ -321,8 +323,8 @@ UFSSwapDir::statfs(StoreEntry & sentry) const
     storeAppendPrintf(&sentry, "Percent Used: %0.2f%%\n",
                       Math::doublePercent(currentSize(), maxSize()));
     storeAppendPrintf(&sentry, "Filemap bits in use: %d of %d (%d%%)\n",
-                      map->n_files_in_map, map->max_n_files,
-                      Math::intPercent(map->n_files_in_map, map->max_n_files));
+                      map->numFilesInMap(), map->capacity(),
+                      Math::intPercent(map->numFilesInMap(), map->capacity()));
     x = storeDirGetUFSStats(path, &totl_kb, &free_kb, &totl_in, &free_in);
 
     if (0 == x) {
@@ -450,36 +452,36 @@ UFSSwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, Sto
 int
 UFSSwapDir::mapBitTest(sfileno filn)
 {
-    return file_map_bit_test(map, filn);
+    return map->testBit(filn);
 }
 
 void
 UFSSwapDir::mapBitSet(sfileno filn)
 {
-    file_map_bit_set(map, filn);
+    map->setBit(filn);
 }
 
 void
 UFSSwapDir::mapBitReset(sfileno filn)
 {
     /*
-     * We have to test the bit before calling file_map_bit_reset.
-     * file_map_bit_reset doesn't do bounds checking.  It assumes
+     * We have to test the bit before calling clearBit as
+     * it doesn't do bounds checking and blindly assumes
      * filn is a valid file number, but it might not be because
      * the map is dynamic in size.  Also clearing an already clear
      * bit puts the map counter of-of-whack.
      */
 
-    if (file_map_bit_test(map, filn))
-        file_map_bit_reset(map, filn);
+    if (map->testBit(filn))
+        map->clearBit(filn);
 }
 
 int
 UFSSwapDir::mapBitAllocate()
 {
     int fn;
-    fn = file_map_allocate(map, suggest);
-    file_map_bit_set(map, fn);
+    fn = map->allocate(suggest);
+    map->setBit(fn);
     suggest = fn + 1;
     return fn;
 }
@@ -736,14 +738,15 @@ UFSSwapDir::closeTmpSwapLog()
     file_close(swaplog_fd);
 
     if (xrename(new_path, swaplog_path) < 0) {
-        fatal("commonUfsDirCloseTmpSwapLog: rename failed");
+        debugs(50, DBG_IMPORTANT, "ERROR: " << swaplog_path << ": " << xstrerror());
+        fatalf("Failed to rename log file %s to %s.new", swaplog_path, swaplog_path);
     }
 
     fd = file_open(swaplog_path, O_WRONLY | O_CREAT | O_BINARY);
 
     if (fd < 0) {
-        debugs(50, 1, "" << swaplog_path << ": " << xstrerror());
-        fatal("commonUfsDirCloseTmpSwapLog: Failed to open swap log.");
+        debugs(50, DBG_IMPORTANT, "ERROR: " << swaplog_path << ": " << xstrerror());
+        fatalf("Failed to open swap log %s", swaplog_path);
     }
 
     safe_free(swaplog_path);
@@ -1130,7 +1133,7 @@ UFSSwapDir::DirClean(int swap_index)
         debugs(36, 3, "storeDirClean: Cleaning file "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << files[n]);
         snprintf(p2, MAXPATHLEN + 1, "%s/%08X", p1, files[n]);
         safeunlink(p2, 0);
-        statCounter.swap.files_cleaned++;
+        ++statCounter.swap.files_cleaned;
     }
 
     debugs(36, 3, "Cleaned " << k << " unused files from " << p1);
@@ -1249,7 +1252,7 @@ UFSSwapDir::validFileno(sfileno filn, int flag) const
      * be considered invalid.
      */
     if (flag)
-        if (filn > map->max_n_files)
+        if (filn > map->capacity())
             return 0;
 
     return 1;

@@ -48,6 +48,7 @@
 #include "MemBuf.h"
 #include "forward.h"
 #include "rfc1738.h"
+#include "StatCounters.h"
 #include "SquidTime.h"
 
 /**
@@ -721,7 +722,7 @@ gopherTimeout(const CommTimeoutCbParams &io)
     GopherStateData *gopherState = static_cast<GopherStateData *>(io.data);
     debugs(10, 4, HERE << io.conn << ": '" << gopherState->entry->url() << "'" );
 
-    gopherState->fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, gopherState->fwd->request));
+    gopherState->fwd->fail(new ErrorState(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, gopherState->fwd->request));
 
     if (Comm::IsConnOpen(io.conn))
         io.conn->close();
@@ -769,8 +770,8 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
         delayId.bytesIn(len);
 #endif
 
-        kb_incr(&statCounter.server.all.kbytes_in, len);
-        kb_incr(&statCounter.server.other.kbytes_in, len);
+        kb_incr(&(statCounter.server.all.kbytes_in), len);
+        kb_incr(&(statCounter.server.other.kbytes_in), len);
     }
 
     debugs(10, 5, HERE << conn << " read len=" << len);
@@ -800,14 +801,13 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
                                                  CommIoCbPtrFun(gopherReadReply, gopherState));
             comm_read(conn, buf, read_sz, call);
         } else {
-            ErrorState *err;
-            err = errorCon(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, gopherState->fwd->request);
+            ErrorState *err = new ErrorState(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, gopherState->fwd->request);
             err->xerrno = errno;
             gopherState->fwd->fail(err);
             gopherState->serverConn->close();
         }
     } else if (len == 0 && entry->isEmpty()) {
-        gopherState->fwd->fail(errorCon(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE, gopherState->fwd->request));
+        gopherState->fwd->fail(new ErrorState(ERR_ZERO_SIZE_OBJECT, HTTP_SERVICE_UNAVAILABLE, gopherState->fwd->request));
         gopherState->serverConn->close();
     } else if (len == 0) {
         /* Connection closed; retrieval done. */
@@ -845,13 +845,13 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, 
 
     if (size > 0) {
         fd_bytes(conn->fd, size, FD_WRITE);
-        kb_incr(&statCounter.server.all.kbytes_out, size);
-        kb_incr(&statCounter.server.other.kbytes_out, size);
+        kb_incr(&(statCounter.server.all.kbytes_out), size);
+        kb_incr(&(statCounter.server.other.kbytes_out), size);
     }
 
     if (errflag) {
         ErrorState *err;
-        err = errorCon(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE, gopherState->fwd->request);
+        err = new ErrorState(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE, gopherState->fwd->request);
         err->xerrno = errno;
         err->port = gopherState->fwd->request->port;
         err->url = xstrdup(entry->url());

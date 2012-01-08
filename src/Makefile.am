@@ -7,15 +7,17 @@
 include $(top_srcdir)/src/Common.am
 
 AUTOMAKE_OPTIONS = subdir-objects
-if USE_DNSSERVER
+
+if ENABLE_DNSHELPER
 DNSSOURCE = dns.cc
-DNSSERVER = dnsserver
+DNSHELPER = dnsserver
 else
 DNSSOURCE = dns_internal.cc
-DNSSERVER =
+DNSHELPER =
 endif
 
 DNSSOURCE += \
+	SquidDns.h \
 	DnsLookupDetails.h \
 	DnsLookupDetails.cc
 
@@ -203,7 +205,7 @@ bin_PROGRAMS =
 
 
 libexec_PROGRAMS = \
-	$(DNSSERVER) \
+	$(DNSHELPER) \
 	$(DISK_PROGRAMS) \
 	$(UNLINKD)
 
@@ -253,6 +255,7 @@ libsquid_la_SOURCES = \
 
 squid_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
+	AccessLogEntry.cc \
 	AccessLogEntry.h \
 	AsyncEngine.cc \
 	AsyncEngine.h \
@@ -323,6 +326,7 @@ squid_SOURCES = \
 	fd.cc \
 	fde.cc \
 	fde.h \
+	FileMap.h \
 	filemap.cc \
 	forward.cc \
 	forward.h \
@@ -353,11 +357,13 @@ squid_SOURCES = \
 	HttpHdrScTarget.h \
 	HttpHdrContRange.cc \
 	HttpHdrContRange.h \
+	HttpHeaderStat.h \
 	HttpHeader.cc \
 	HttpHeader.h \
 	HttpHeaderMask.h \
 	HttpHeaderRange.h \
 	HttpHeaderTools.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpControlMsg.h \
 	HttpMsg.cc \
@@ -423,6 +429,9 @@ squid_SOURCES = \
 	SquidMath.cc \
 	SquidNew.cc \
 	stat.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	String.cc \
 	stmem.cc \
@@ -624,14 +633,11 @@ INCLUDES += $(KRB5INCS)
 
 unlinkd_SOURCES = unlinkd_daemon.cc
 unlinkd_LDADD = \
-	ipc/libipc.la \
-	ip/libip.la \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
 ## dnsserver is a standalone helper. Do not link to any internal libraries
 dnsserver_SOURCES = dnsserver.cc
-## SquidNew.cc tests/stub_debug.cc test_tools.cc time.cc
 dnsserver_LDADD = $(COMPAT_LIB)
 
 recv_announce_SOURCES = recv-announce.cc
@@ -1042,6 +1048,7 @@ tests_testHttpReply_SOURCES=\
 	cbdata.cc \
 	cbdata.h \
 	ETag.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -1078,6 +1085,9 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	tests/stub_StatHist.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
@@ -1134,6 +1144,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	DiskIO/WriteRequest.cc \
 	ETag.cc \
 	event.cc \
+	FileMap.h \
 	filemap.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
@@ -1154,6 +1165,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	Packer.cc \
 	Parsing.cc \
 	SquidMath.cc \
+	StatCounters.h \
+	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
 	String.cc \
@@ -1247,6 +1260,7 @@ tests_testBoilerplate_DEPENDENCIES = \
 
 ## Tests of the CacheManager module.
 tests_testCacheManager_SOURCES = \
+	AccessLogEntry.cc \
 	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	HttpParser.cc \
@@ -1296,6 +1310,7 @@ tests_testCacheManager_SOURCES = \
 	ExternalACLEntry.cc \
 	fd.cc \
 	fde.cc \
+	FileMap.h \
 	filemap.cc \
 	forward.cc \
 	fqdncache.cc \
@@ -1307,6 +1322,7 @@ tests_testCacheManager_SOURCES = \
 	HelperChildConfig.cc \
 	$(HTCPSOURCE) \
 	http.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
@@ -1350,6 +1366,9 @@ tests_testCacheManager_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
 	store.cc \
@@ -1446,7 +1465,9 @@ tests_testDiskIO_SOURCES = \
 	EventLoop.cc \
 	event.cc \
 	fd.cc \
+	FileMap.h \
 	filemap.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -1471,6 +1492,9 @@ tests_testDiskIO_SOURCES = \
 	Parsing.cc \
 	refresh.cc \
 	RemovalPolicy.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
 	StoreFileSystem.cc \
@@ -1575,6 +1599,7 @@ tests_testDiskIO_DEPENDENCIES = \
 
 ## Tests of the Even module.
 tests_testEvent_SOURCES = \
+	AccessLogEntry.cc \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	CacheDigest.cc \
@@ -1612,6 +1637,7 @@ tests_testEvent_SOURCES = \
 	FadingCounter.cc \
 	fd.cc \
 	fde.cc \
+	FileMap.h \
 	filemap.cc \
 	forward.cc \
 	fqdncache.cc \
@@ -1623,6 +1649,7 @@ tests_testEvent_SOURCES = \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
@@ -1673,6 +1700,9 @@ tests_testEvent_SOURCES = \
 	SquidMath.cc \
 	SquidMath.h \
 	stat.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
 	store.cc \
@@ -1763,6 +1793,7 @@ tests_testEvent_DEPENDENCIES = \
 
 ## Tests of the EventLoop module.
 tests_testEventLoop_SOURCES = \
+	AccessLogEntry.cc \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	CacheDigest.cc \
@@ -1800,6 +1831,7 @@ tests_testEventLoop_SOURCES = \
 	FadingCounter.cc \
 	fd.cc \
 	fde.cc \
+	FileMap.h \
 	filemap.cc \
 	forward.cc \
 	fqdncache.cc \
@@ -1811,6 +1843,7 @@ tests_testEventLoop_SOURCES = \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
@@ -1861,6 +1894,9 @@ tests_testEventLoop_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
 	store.cc \
@@ -1949,6 +1985,7 @@ tests_testEventLoop_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
 
 tests_test_http_range_SOURCES = \
+	AccessLogEntry.cc \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	cache_cf.cc \
@@ -1986,6 +2023,7 @@ tests_test_http_range_SOURCES = \
 	FadingCounter.cc \
 	fd.cc \
 	fde.cc \
+	FileMap.h \
 	filemap.cc \
 	forward.cc \
 	fqdncache.cc \
@@ -1997,6 +2035,7 @@ tests_test_http_range_SOURCES = \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -2045,6 +2084,9 @@ tests_test_http_range_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
 	store.cc \
@@ -2165,6 +2207,7 @@ tests_testHttpParser_DEPENDENCIES = \
 
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
+	AccessLogEntry.cc \
 	$(ACL_REGISTRATION_SOURCES) \
 	HttpParser.cc \
 	HttpParser.h \
@@ -2225,6 +2268,7 @@ tests_testHttpRequest_SOURCES = \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
@@ -2268,6 +2312,9 @@ tests_testHttpRequest_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
 	store.cc \
@@ -2361,6 +2408,7 @@ tests_testStore_SOURCES= \
 	ETag.cc \
 	event.cc \
 	EventLoop.cc \
+	FileMap.h \
 	filemap.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -2382,6 +2430,9 @@ tests_testStore_SOURCES= \
 	Parsing.cc \
 	RemovalPolicy.cc \
 	refresh.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
 	store.cc \
@@ -2414,6 +2465,8 @@ tests_testStore_SOURCES= \
 	tests/stub_helper.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_http.cc \
+	HttpBody.h \
+	HttpBody.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_libcomm.cc \
@@ -2550,7 +2603,9 @@ tests_testUfs_SOURCES = \
 	tests/stub_store_stats.cc \
 	fd.cc \
 	disk.cc \
+	FileMap.h \
 	filemap.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
@@ -2610,6 +2665,9 @@ tests_testUfs_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	HttpHdrRange.cc \
 	ETag.cc \
@@ -2679,7 +2737,9 @@ tests_testRock_SOURCES = \
 	EventLoop.cc \
 	event.cc \
 	fd.cc \
+	FileMap.h \
 	filemap.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHdrCc.cc \
 	HttpHdrContRange.cc \
@@ -2701,6 +2761,9 @@ tests_testRock_SOURCES = \
 	Packer.cc \
 	Parsing.cc \
 	RemovalPolicy.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
 	store.cc \
@@ -2808,7 +2871,9 @@ tests_testCoss_SOURCES = \
 	tests/stub_store_stats.cc \
 	fd.cc \
 	disk.cc \
+	FileMap.h \
 	filemap.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
@@ -2867,6 +2932,9 @@ tests_testCoss_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	HttpHdrRange.cc \
 	ETag.cc \
@@ -2939,7 +3007,9 @@ tests_testNull_SOURCES = \
 	tests/stub_store_stats.cc \
 	fd.cc \
 	disk.cc \
+	FileMap.h \
 	filemap.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
@@ -3000,6 +3070,9 @@ tests_testNull_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	HttpHdrRange.cc \
 	ETag.cc \
@@ -3053,6 +3126,7 @@ tests_testNull_DEPENDENCIES = \
 ## Tests of the URL module.
 ## TODO: Trim this down once the insanity is over.
 tests_testURL_SOURCES = \
+	AccessLogEntry.cc \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	cache_cf.cc \
@@ -3087,6 +3161,7 @@ tests_testURL_SOURCES = \
 	ExternalACLEntry.cc \
 	fd.cc \
 	fde.cc \
+	FileMap.h \
 	filemap.cc \
 	forward.cc \
 	fqdncache.cc \
@@ -3098,6 +3173,7 @@ tests_testURL_SOURCES = \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
+	HttpBody.h \
 	HttpBody.cc \
 	HttpHdrCc.h \
 	HttpHdrCc.cc \
@@ -3148,6 +3224,9 @@ tests_testURL_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
 	store.cc \

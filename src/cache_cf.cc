@@ -161,7 +161,7 @@ static void parseBytesLine(size_t * bptr, const char *units);
 #if USE_SSL
 static void parseBytesOptionValue(size_t * bptr, const char *units, char const * value);
 #endif
-#if !USE_DNSSERVERS
+#if !USE_DNSHELPER
 static void parseBytesLineSigned(ssize_t * bptr, const char *units);
 #endif
 static size_t parseBytesUnits(const char *unit);
@@ -189,17 +189,16 @@ static int check_null_IpAddress_list(const Ip::Address_list *);
 #endif /* CURRENTLY_UNUSED */
 #endif /* USE_WCCPv2 */
 
-static void parse_http_port_list(http_port_list **);
+static void parsePortList(http_port_list **, const char *protocol);
+#define parse_http_port_list(l) parsePortList((l),"http")
 static void dump_http_port_list(StoreEntry *, const char *, const http_port_list *);
 static void free_http_port_list(http_port_list **);
 
 #if USE_SSL
-static void parse_https_port_list(https_port_list **);
-static void dump_https_port_list(StoreEntry *, const char *, const https_port_list *);
-static void free_https_port_list(https_port_list **);
-#if 0
-static int check_null_https_port_list(const https_port_list *);
-#endif
+#define parse_https_port_list(l) parsePortList((l),"https")
+#define dump_https_port_list(e,n,l) dump_http_port_list((e),(n),(l))
+#define free_https_port_list(l) free_http_port_list((l))
+#define check_null_https_port_list(l) check_null_http_port_list((l))
 #endif /* USE_SSL */
 
 static void parse_b_size_t(size_t * var);
@@ -640,11 +639,9 @@ configDoConfigure(void)
     else
         visible_appname_string = (char const *)APP_FULLNAME;
 
-#if USE_DNSSERVERS
-
+#if USE_DNSHELPER
     if (Config.dnsChildren.n_max < 1)
-        fatal("No dnsservers allocated");
-
+        fatal("No DNS helpers allocated");
 #endif
 
     if (Config.Program.redirect) {
@@ -705,8 +702,7 @@ configDoConfigure(void)
     }
 
     requirePathnameExists("MIME Config Table", Config.mimeTablePathname);
-#if USE_DNSSERVERS
-
+#if USE_DNSHELPER
     requirePathnameExists("cache_dns_program", Config.Program.dnsserver);
 #endif
 #if USE_UNLINKD
@@ -904,7 +900,7 @@ configDoConfigure(void)
             if (!s->cert && !s->key)
                 continue;
 
-            debugs(3, 1, "Initializing http_port " << s->http.s << " SSL context");
+            debugs(3, 1, "Initializing http_port " << s->s << " SSL context");
 
             s->staticSslContext.reset(
                 sslCreateServerContext(s->cert, s->key,
@@ -918,10 +914,10 @@ configDoConfigure(void)
 
     {
 
-        https_port_list *s;
+        http_port_list *s;
 
-        for (s = Config.Sockaddr.https; s != NULL; s = (https_port_list *) s->http.next) {
-            debugs(3, 1, "Initializing https_port " << s->http.s << " SSL context");
+        for (s = Config.Sockaddr.https; s != NULL; s = s->next) {
+            debugs(3, 1, "Initializing https_port " << s->s << " SSL context");
 
             s->staticSslContext.reset(
                 sslCreateServerContext(s->cert, s->key,
@@ -1137,7 +1133,7 @@ parseBytesLine(size_t * bptr, const char *units)
         self_destruct();
 }
 
-#if !USE_DNSSERVERS
+#if !USE_DNSHELPER
 static void
 parseBytesLineSigned(ssize_t * bptr, const char *units)
 {
@@ -3056,7 +3052,7 @@ free_time_t(time_t * var)
     *var = 0;
 }
 
-#if !USE_DNSSERVERS
+#if !USE_DNSHELPER
 static void
 dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
 {
@@ -3093,7 +3089,7 @@ dump_b_size_t(StoreEntry * entry, const char *name, size_t var)
     storeAppendPrintf(entry, "%s %d %s\n", name, (int) var, B_BYTES_STR);
 }
 
-#if !USE_DNSSERVERS
+#if !USE_DNSHELPER
 static void
 dump_b_ssize_t(StoreEntry * entry, const char *name, ssize_t var)
 {
@@ -3137,7 +3133,7 @@ parse_b_size_t(size_t * var)
     parseBytesLine(var, B_BYTES_STR);
 }
 
-#if !USE_DNSSERVERS
+#if !USE_DNSHELPER
 static void
 parse_b_ssize_t(ssize_t * var)
 {
@@ -3171,7 +3167,7 @@ free_size_t(size_t * var)
     *var = 0;
 }
 
-#if !USE_DNSSERVERS
+#if !USE_DNSHELPER
 static void
 free_ssize_t(ssize_t * var)
 {
@@ -3518,7 +3514,7 @@ check_null_IpAddress_list(const Ip::Address_list * s)
 CBDATA_CLASS_INIT(http_port_list);
 
 static void
-parse_http_port_specification(http_port_list * s, char *token)
+parsePortSpecification(http_port_list * s, char *token)
 {
     char *host = NULL;
     unsigned short port = 0;
@@ -3534,16 +3530,16 @@ parse_http_port_specification(http_port_list * s, char *token)
         host = token + 1;
         t = strchr(host, ']');
         if (!t) {
-            debugs(3, 0, "http(s)_port: missing ']' on IPv6 address: " << token);
+            debugs(3, DBG_CRITICAL, s->protocol << "_port: missing ']' on IPv6 address: " << token);
             self_destruct();
         }
         *t++ = '\0';
         if (*t != ':') {
-            debugs(3, 0, "http(s)_port: missing Port in: " << token);
+            debugs(3, DBG_CRITICAL, s->protocol << "_port: missing Port in: " << token);
             self_destruct();
         }
         if (!Ip::EnableIpv6) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 is not available.");
+            debugs(3, DBG_CRITICAL, "FATAL: " << s->protocol << "_port: IPv6 is not available.");
             self_destruct();
         }
         port = xatos(t + 1);
@@ -3556,14 +3552,14 @@ parse_http_port_specification(http_port_list * s, char *token)
 
     } else if ((port = strtol(token, &junk, 10)), !*junk) {
         /* port */
-        debugs(3, 3, "http(s)_port: found Listen on Port: " << port);
+        debugs(3, 3, s->protocol << "_port: found Listen on Port: " << port);
     } else {
-        debugs(3, 0, "http(s)_port: missing Port: " << token);
+        debugs(3, DBG_CRITICAL, s->protocol << "_port: missing Port: " << token);
         self_destruct();
     }
 
-    if (port == 0) {
-        debugs(3, 0, "http(s)_port: Port cannot be 0: " << token);
+    if (port == 0 && host != NULL) {
+        debugs(3, DBG_CRITICAL, s->protocol << "_port: Port cannot be 0: " << token);
         self_destruct();
     }
 
@@ -3572,21 +3568,21 @@ parse_http_port_specification(http_port_list * s, char *token)
         s->s.SetPort(port);
         if (!Ip::EnableIpv6)
             s->s.SetIPv4();
-        debugs(3, 3, "http(s)_port: found Listen on wildcard address: *:" << s->s.GetPort() );
+        debugs(3, 3, s->protocol << "_port: found Listen on wildcard address: *:" << s->s.GetPort() );
     } else if ( (s->s = host) ) { /* check/parse numeric IPA */
         s->s.SetPort(port);
         if (!Ip::EnableIpv6)
             s->s.SetIPv4();
-        debugs(3, 3, "http(s)_port: Listen on Host/IP: " << host << " --> " << s->s);
+        debugs(3, 3, s->protocol << "_port: Listen on Host/IP: " << host << " --> " << s->s);
     } else if ( s->s.GetHostByName(host) ) { /* check/parse for FQDN */
         /* dont use ipcache */
         s->defaultsite = xstrdup(host);
         s->s.SetPort(port);
         if (!Ip::EnableIpv6)
             s->s.SetIPv4();
-        debugs(3, 3, "http(s)_port: found Listen as Host " << s->defaultsite << " on IP: " << s->s);
+        debugs(3, 3, s->protocol << "_port: found Listen as Host " << s->defaultsite << " on IP: " << s->s);
     } else {
-        debugs(3, 0, "http(s)_port: failed to resolve Host/IP: " << host);
+        debugs(3, DBG_CRITICAL, s->protocol << "_port: failed to resolve Host/IP: " << host);
         self_destruct();
     }
 }
@@ -3790,18 +3786,11 @@ parse_http_port_option(http_port_list * s, char *token)
     }
 }
 
-static http_port_list *
-create_http_port(char *portspec)
-{
-    http_port_list *s = new http_port_list("http");
-    parse_http_port_specification(s, portspec);
-    return s;
-}
-
 void
 add_http_port(char *portspec)
 {
-    http_port_list *s = create_http_port(portspec);
+    http_port_list *s = new http_port_list("http");
+    parsePortSpecification(s, portspec);
     // we may need to merge better of the above returns a list with clones
     assert(s->next == NULL);
     s->next = Config.Sockaddr.http;
@@ -3859,7 +3848,7 @@ clone_http_port_list(http_port_list *a)
 }
 
 static void
-parse_http_port_list(http_port_list ** head)
+parsePortList(http_port_list ** head, const char *protocol)
 {
     char *token = strtok(NULL, w_space);
 
@@ -3868,7 +3857,8 @@ parse_http_port_list(http_port_list ** head)
         return;
     }
 
-    http_port_list *s = create_http_port(token);
+    http_port_list *s = new http_port_list(protocol);
+    parsePortSpecification(s, token);
 
     /* parse options ... */
     while ((token = strtok(NULL, w_space))) {
@@ -3879,7 +3869,7 @@ parse_http_port_list(http_port_list ** head)
         // clone the port options from *s to *(s->next)
         s->next = clone_http_port_list(s);
         s->next->s.SetIPv4();
-        debugs(3, 3, "http(s)_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
+        debugs(3, 3, protocol << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
     }
 
     while (*head)
@@ -4031,59 +4021,6 @@ free_http_port_list(http_port_list ** head)
         delete s;
     }
 }
-
-#if USE_SSL
-
-// TODO: merge better with parse_http_port_list
-static void
-parse_https_port_list(https_port_list ** head)
-{
-    char *token;
-    https_port_list *s;
-
-    token = strtok(NULL, w_space);
-
-    if (!token)
-        self_destruct();
-
-    s = new https_port_list;
-    parse_http_port_specification(&s->http, token);
-
-    /* parse options ... */
-    while ((token = strtok(NULL, w_space))) {
-        parse_http_port_option(s, token);
-    }
-
-    while (*head) {
-        http_port_list ** headTmp = &(*head)->http.next;
-        head = (https_port_list **)headTmp;
-    }
-
-    *head = s;
-}
-
-static void
-dump_https_port_list(StoreEntry * e, const char *n, const https_port_list * s)
-{
-    dump_http_port_list(e, n, s);
-}
-
-static void
-free_https_port_list(https_port_list ** head)
-{
-    free_http_port_list((http_port_list**)head);
-}
-
-#if 0
-static int
-check_null_https_port_list(const https_port_list * s)
-{
-    return NULL == s;
-}
-
-#endif
-
-#endif /* USE_SSL */
 
 void
 configFreeMemory(void)

@@ -102,7 +102,7 @@ clientReplyContext::setReplyToError(
     err_type err, http_status status, const HttpRequestMethod& method, char const *uri,
     Ip::Address &addr, HttpRequest * failedrequest, const char *unparsedrequest,
 #if USE_AUTH
-    AuthUserRequest::Pointer auth_user_request
+    Auth::UserRequest::Pointer auth_user_request
 #else
     void*
 #endif
@@ -1565,15 +1565,11 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
       */
     if (r->flags.nocache) {
 
-#if USE_DNSSERVERS
-
+#if USE_DNSHELPER
         ipcacheInvalidate(r->GetHost());
-
 #else
-
         ipcacheInvalidateNegative(r->GetHost());
-
-#endif /* USE_DNSSERVERS */
+#endif /* USE_DNSHELPER */
 
     }
 
@@ -1581,15 +1577,11 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     else if (r->flags.nocache_hack) {
 
-#if USE_DNSSERVERS
-
+#if USE_DNSHELPER
         ipcacheInvalidate(r->GetHost());
-
 #else
-
         ipcacheInvalidateNegative(r->GetHost());
-
-#endif /* USE_DNSSERVERS */
+#endif /* USE_DNSHELPER */
 
     }
 
@@ -2193,7 +2185,7 @@ ErrorState *
 clientBuildError(err_type page_id, http_status status, char const *url,
                  Ip::Address &src_addr, HttpRequest * request)
 {
-    ErrorState *err = errorCon(page_id, status, request);
+    ErrorState *err = new ErrorState(page_id, status, request);
     err->src_addr = src_addr;
 
     if (url)

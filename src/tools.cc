@@ -646,7 +646,7 @@ getMyHostname(void)
 #if USE_SSL
 
     if (Config.Sockaddr.https && sa.IsAnyAddr())
-        sa = Config.Sockaddr.https->http.s;
+        sa = Config.Sockaddr.https->s;
 
 #endif
 
@@ -1294,18 +1294,23 @@ parseEtcHosts(void)
 int
 getMyPort(void)
 {
-    if (Config.Sockaddr.http) {
-        // skip any special mode ports
-        http_port_list *p = Config.Sockaddr.http;
-        while (p && (p->intercepted || p->accel || p->spoof_client_ip))
+    http_port_list *p = NULL;
+    if ((p = Config.Sockaddr.http)) {
+        // skip any special interception ports
+        while (p && (p->intercepted || p->spoof_client_ip))
             p = p->next;
         if (p)
             return p->s.GetPort();
     }
 
 #if USE_SSL
-    if (Config.Sockaddr.https)
-        return Config.Sockaddr.https->http.s.GetPort();
+    if ((p = Config.Sockaddr.https)) {
+        // skip any special interception ports
+        while (p && (p->intercepted || p->spoof_client_ip))
+            p = p->next;
+        if (p)
+            return p->s.GetPort();
+    }
 #endif
 
     debugs(21, DBG_CRITICAL, "ERROR: No forward-proxy ports configured.");

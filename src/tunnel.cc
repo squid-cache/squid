@@ -51,6 +51,7 @@
 #include "MemBuf.h"
 #include "http.h"
 #include "PeerSelectState.h"
+#include "StatCounters.h"
 
 class TunnelStateData
 {
@@ -249,8 +250,8 @@ TunnelStateData::readServer(char *buf, size_t len, comm_err_t errcode, int xerrn
 
     if (len > 0) {
         server.bytesIn(len);
-        kb_incr(&statCounter.server.all.kbytes_in, len);
-        kb_incr(&statCounter.server.other.kbytes_in, len);
+        kb_incr(&(statCounter.server.all.kbytes_in), len);
+        kb_incr(&(statCounter.server.other.kbytes_in), len);
     }
 
     copy (len, errcode, xerrno, server, client, WriteClientDone);
@@ -293,7 +294,7 @@ TunnelStateData::readClient(char *buf, size_t len, comm_err_t errcode, int xerrn
 
     if (len > 0) {
         client.bytesIn(len);
-        kb_incr(&statCounter.client_http.kbytes_in, len);
+        kb_incr(&(statCounter.client_http.kbytes_in), len);
     }
 
     copy (len, errcode, xerrno, client, server, WriteServerDone);
@@ -369,8 +370,8 @@ TunnelStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xer
     }
 
     /* Valid data */
-    kb_incr(&statCounter.server.all.kbytes_out, len);
-    kb_incr(&statCounter.server.other.kbytes_out, len);
+    kb_incr(&(statCounter.server.all.kbytes_out), len);
+    kb_incr(&(statCounter.server.other.kbytes_out), len);
     client.dataSent(len);
 
     /* If the other end has closed, so should we */
@@ -432,7 +433,7 @@ TunnelStateData::writeClientDone(char *buf, size_t len, comm_err_t flag, int xer
     }
 
     /* Valid data */
-    kb_incr(&statCounter.client_http.kbytes_out, len);
+    kb_incr(&(statCounter.client_http.kbytes_out), len);
     server.dataSent(len);
 
     /* If the other end has closed, so should we */
@@ -556,7 +557,7 @@ tunnelConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int xe
             AsyncJob::Start(cs);
         } else {
             debugs(26, 4, HERE << "terminate with error.");
-            ErrorState *err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, tunnelState->request);
+            ErrorState *err = new ErrorState(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, tunnelState->request);
             *tunnelState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
             err->xerrno = xerrno;
             // on timeout is this still:    err->xerrno = ETIMEDOUT;
@@ -629,7 +630,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
         ch.my_addr = request->my_addr;
         if (ch.fastCheck() == ACCESS_DENIED) {
             debugs(26, 4, HERE << "MISS access forbidden.");
-            err = errorCon(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN, request);
+            err = new ErrorState(ERR_FORWARDING_DENIED, HTTP_FORBIDDEN, request);
             *status_ptr = HTTP_FORBIDDEN;
             errorSend(http->getConn()->clientConnection, err);
             return;
@@ -697,20 +698,23 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
 }
 
 static void
-tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, void *data)
+tunnelPeerSelectComplete(Comm::ConnectionList *peer_paths, ErrorState *err, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
 
     if (peer_paths == NULL || peer_paths->size() < 1) {
         debugs(26, 3, HERE << "No paths found. Aborting CONNECT");
-        ErrorState *err;
-        err = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, tunnelState->request);
-        *tunnelState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
+        if (!err) {
+            err = new ErrorState(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, tunnelState->request);
+        }
+        *tunnelState->status_ptr = err->httpStatus;
         err->callback = tunnelErrorComplete;
         err->callback_data = tunnelState;
         errorSend(tunnelState->client.conn, err);
         return;
     }
+    delete err;
+
     debugs(26, 3, HERE << "paths=" << peer_paths->size() << ", p[0]={" << (*peer_paths)[0] << "}, serverDest[0]={" <<
            tunnelState->serverDestinations[0] << "}");
 

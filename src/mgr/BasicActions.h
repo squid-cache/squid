@@ -16,6 +16,22 @@
 namespace Mgr
 {
 
+/// A dummy action placeholder for the no-action requests
+/// a templated Cache Manager index ('home') page.
+/// Display output is produced directly by the receiving worker
+/// without invoking the co-ordinator or action Job.
+class IndexAction: public Action
+{
+public:
+    static Pointer Create(const CommandPointer &cmd);
+    /* Action API */
+    virtual void dump(StoreEntry *entry);
+
+protected:
+    IndexAction(const CommandPointer &cmd);
+};
+
+
 /// returns available Cache Manager actions and their access requirements
 class MenuAction: public Action
 {

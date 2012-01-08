@@ -52,6 +52,9 @@ typedef enum {
     /* ICAP Errors */
     ERR_ICAP_FAILURE,
 
+    /* Cache Manager */
+    MGR_INDEX,
+
     /* Squid problem */
     ERR_GATEWAY_FAILURE,
 

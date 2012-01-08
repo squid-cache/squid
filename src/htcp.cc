@@ -47,8 +47,10 @@
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 #include "Store.h"
 #include "StoreClient.h"
+#include "compat/xalloc.h"
 
 /// dials htcpIncomingConnectionOpened call
 class HtcpListeningStartedDialer: public CallDialer,

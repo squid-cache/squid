@@ -29,6 +29,7 @@ public:
     String httpUri; ///< HTTP request URI
     _method_t httpMethod; ///< HTTP request method
     request_flags httpFlags; ///< HTTP request flags
+    String httpOrigin;       ///< HTTP Origin: header (if any)
 
     /* action parameters extracted from the client HTTP request */
     String actionName; ///< action name (and credentials realm)

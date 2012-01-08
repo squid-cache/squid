@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-02-13 00:05+1400\n"
-"PO-Revision-Date: 2011-11-10 19:34+0200\n"
+"PO-Revision-Date: 2011-12-18 19:02+0200\n"
 "Last-Translator: Bernard <fli4l.charrier@free.fr>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: fr\n"
@@ -60,7 +60,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:23
 msgid "This has the following advantages over the NCSA module:"
-msgstr "Elles ont les avantages suivants sur le module NCSA :"
+msgstr "Elles ont les avantages suivantes sur le module NCSA :"
 
 #. type: TP
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:23
