@@ -218,6 +218,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     const char *server = (const char *)SSL_get_ex_data(ssl, ssl_ex_index_server);
     void *dont_verify_domain = SSL_CTX_get_ex_data(sslctx, ssl_ctx_ex_index_dont_verify_domain);
     ACLChecklist *check = (ACLChecklist*)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
+    X509 *peeked_cert = (X509 *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_peeked_cert);
     X509 *peer_cert = ctx->cert;
 
     X509_NAME_oneline(X509_get_subject_name(peer_cert), buffer,
@@ -232,6 +233,15 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
                 ok = 0;
                 error_no = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
             }
+        }
+    }
+
+    if (ok && peeked_cert) {
+        /*Check if the already peeked certificate match the new one*/
+        if (X509_cmp(peer_cert, peeked_cert) != 0) {
+            debugs(83, 2, "SQUID_X509_V_ERR_CERT_CHANGE: Certificate " << buffer << " does not match peeked certificate");
+            ok = 0;
+            error_no =  SQUID_X509_V_ERR_CERT_CHANGE;
         }
     }
 
@@ -570,6 +580,15 @@ ssl_free_ErrorDetail(void *, void *ptr, CRYPTO_EX_DATA *,
     delete errDetail;
 }
 
+// "free" function for X509 certificates
+static void
+ssl_free_X509(void *, void *ptr, CRYPTO_EX_DATA *,
+                     int, long, void *)
+{
+    X509  *cert = static_cast <X509 *>(ptr);
+    X509_free(cert);
+}
+
 /// \ingroup ServerProtocolSSLInternal
 static void
 ssl_initialize(void)
@@ -609,6 +628,7 @@ ssl_initialize(void)
     ssl_ctx_ex_index_dont_verify_domain = SSL_CTX_get_ex_new_index(0, (void *) "dont_verify_domain", NULL, NULL, NULL);
     ssl_ex_index_cert_error_check = SSL_get_ex_new_index(0, (void *) "cert_error_check", NULL, &ssl_dupAclChecklist, &ssl_freeAclChecklist);
     ssl_ex_index_ssl_error_detail = SSL_get_ex_new_index(0, (void *) "ssl_error_detail", NULL, NULL, &ssl_free_ErrorDetail);
+    ssl_ex_index_ssl_peeked_cert  = SSL_get_ex_new_index(0, (void *) "ssl_peeked_cert", NULL, NULL, &ssl_free_X509);
 }
 
 /// \ingroup ServerProtocolSSLInternal
@@ -1235,7 +1255,7 @@ SSL_CTX * Ssl::generateSslContext(char const *host, Ssl::X509_Pointer const & mi
     return createSSLContext(cert, pkey);
 }
 
-bool Ssl::verifySslCertificateDate(SSL_CTX * sslContext)
+bool Ssl::verifySslCertificate(SSL_CTX * sslContext, X509 *checkCert)
 {
     // Temporary ssl for getting X509 certificate from SSL_CTX.
     Ssl::SSL_Pointer ssl(SSL_new(sslContext));
@@ -1243,7 +1263,13 @@ bool Ssl::verifySslCertificateDate(SSL_CTX * sslContext)
     ASN1_TIME * time_notBefore = X509_get_notBefore(cert);
     ASN1_TIME * time_notAfter = X509_get_notAfter(cert);
     bool ret = (X509_cmp_current_time(time_notBefore) < 0 && X509_cmp_current_time(time_notAfter) > 0);
-    return ret;
+    if (!ret)
+        return false;
+
+    if (checkCert)
+         return ssl_match_certificates(cert, checkCert);
+
+    return true;
 }
 
 bool
