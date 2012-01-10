@@ -161,5 +161,11 @@ void readCertAndPrivateKeyFromFiles(X509_Pointer & cert, EVP_PKEY_Pointer & pkey
 */
 bool sslDateIsInTheFuture(char const * date);
 
+/**
+ \ingroup SslCrtdSslAPI
+ * Check if the major (mimicked) fields of the two certificates matches
+ \return true if the certificates matches false otherwise.
+*/
+bool ssl_match_certificates(X509 *peer_cert, X509 *peeked_cert);
 } // namespace Ssl
 #endif // SQUID_SSL_GADGETS_H

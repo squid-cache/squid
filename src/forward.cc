@@ -773,6 +773,13 @@ FwdState::initiateSSL()
         SSL_set_ex_data(ssl, ssl_ex_index_cert_error_check, check);
     }
 
+    // store peeked cert to check SQUID_X509_V_ERR_CERT_CHANGE
+    X509 *peeked_cert;
+    if (request->clientConnectionManager.valid() &&  (peeked_cert = request->clientConnectionManager->getBumpServerCert())) {
+        CRYPTO_add(&(peeked_cert->references),1,CRYPTO_LOCK_X509);
+        SSL_set_ex_data(ssl, ssl_ex_index_ssl_peeked_cert, peeked_cert);
+    }
+
     fd_table[fd].ssl = ssl;
     fd_table[fd].read_method = &ssl_read_method;
     fd_table[fd].write_method = &ssl_write_method;

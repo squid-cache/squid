@@ -56,10 +56,11 @@
  */
 
 // Custom SSL errors; assumes all official errors are positive
+#define SQUID_X509_V_ERR_CERT_CHANGE -3
 #define SQUID_ERR_SSL_HANDSHAKE -2
 #define SQUID_X509_V_ERR_DOMAIN_MISMATCH -1
 // All SSL errors range: from smallest (negative) custom to largest SSL error
-#define SQUID_SSL_ERROR_MIN SQUID_ERR_SSL_HANDSHAKE
+#define SQUID_SSL_ERROR_MIN SQUID_X509_V_ERR_CERT_CHANGE
 #define SQUID_SSL_ERROR_MAX INT_MAX
 
 namespace Ssl
@@ -112,10 +113,12 @@ SSL_CTX *generateSslContext(char const *host, Ssl::X509_Pointer const & mimicCer
 
 /**
   \ingroup ServerProtocolSSLAPI
-  * Check date of certificate signature. If there is out of date error fucntion
-  * returns false, true otherwise.
+  * Check if the certificate of the given context is still valid
+  \param sslContext The context to check
+  \param checkCert Also check if the context certificate matches this certificate
+  \return true if the contexts certificate is valid, false otherwise
  */
-bool verifySslCertificateDate(SSL_CTX * sslContext);
+bool verifySslCertificate(SSL_CTX * sslContext, X509 *checkCert = NULL);
 
 /**
   \ingroup ServerProtocolSSLAPI
