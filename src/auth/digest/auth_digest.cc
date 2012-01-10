@@ -490,10 +490,10 @@ authDigestUserFindUsername(const char *username)
     AuthUser *auth_user;
     debugs(29, 9, HERE << "Looking for user '" << username << "'");
 
-    if (username && (usernamehash = static_cast < auth_user_hash_pointer * >(hash_lookup(proxy_auth_username_cache, username)))) {
+    if (username && (usernamehash = static_cast < AuthUserHashPointer * >(hash_lookup(proxy_auth_username_cache, username)))) {
         while ((usernamehash->user()->auth_type != AUTH_DIGEST) &&
                 (usernamehash->next))
-            usernamehash = static_cast < auth_user_hash_pointer * >(usernamehash->next);
+            usernamehash = static_cast < AuthUserHashPointer * >(usernamehash->next);
 
         auth_user = NULL;
 
@@ -515,7 +515,7 @@ authDigestUserShutdown(void)
     AuthUser *auth_user;
     hash_first(proxy_auth_username_cache);
 
-    while ((usernamehash = ((auth_user_hash_pointer *) hash_next(proxy_auth_username_cache)))) {
+    while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
         auth_user = usernamehash->user();
 
         if (strcmp(auth_user->config->type(), "digest") == 0)

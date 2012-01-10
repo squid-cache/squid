@@ -49,11 +49,6 @@ typedef struct {
 //UNUSED		typedef struct _acl_deny_info_list acl_deny_info_list;
 //UNUSED		typedef class AuthUser auth_user_t;
 
-
-/// \ingroup AuthAPI
-/// \deprecated Use AuthUserHashPointer instead.
-typedef struct AuthUserHashPointer auth_user_hash_pointer;
-
 /// \ingroup AuthAPI
 /// \deprecated Use AuthUserIP instead.
 typedef struct AuthUserIP auth_user_ip_t;

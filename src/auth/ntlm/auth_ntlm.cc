@@ -393,7 +393,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         debugs(29, 4, "AuthNTLMUserRequest::authenticate: authenticated user " << ntlm_user->username());
         /* see if this is an existing user with a different proxy_auth
          * string */
-        auth_user_hash_pointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, ntlm_user->username()));
+        AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, ntlm_user->username()));
         AuthUser *local_auth_user = ntlm_request->user();
         while (usernamehash && (usernamehash->user()->auth_type != AUTH_NTLM || strcmp(usernamehash->user()->username(), ntlm_user->username()) != 0))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
