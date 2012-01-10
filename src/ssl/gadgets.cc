@@ -396,3 +396,93 @@ bool Ssl::sslDateIsInTheFuture(char const * date)
 
     return (X509_cmp_current_time(&tm) > 0);
 }
+
+/// Print the time represented by a ASN1_TIME struct to a string using GeneralizedTime format
+static bool asn1timeToGeneralizedTimeStr(ASN1_TIME *aTime, char *buf, int bufLen)
+{
+    // ASN1_Time  holds time to UTCTime or GeneralizedTime form. 
+    // UTCTime has the form YYMMDDHHMMSS[Z | [+|-]offset]
+    // GeneralizedTime has the form YYYYMMDDHHMMSS[Z | [+|-] offset]
+
+    // length should have space for data plus 2 extra bytes for the two extra year fields
+    // plus the '\0' char.
+    if ((aTime->length + 3) > bufLen)
+        return false;
+
+    char *str;
+    if (aTime->type == V_ASN1_UTCTIME) {
+        if (aTime->data[0] > '5') { // RFC 2459, section 4.1.2.5.1
+            buf[0] = '1';
+            buf[1] = '9';
+        } else {
+            buf[0] = '2';
+            buf[1] = '0';
+        }
+        str = buf +2;
+    }
+    else // if (aTime->type == V_ASN1_GENERALIZEDTIME)
+        str = buf;
+
+    memcpy(str, aTime->data, aTime->length);
+    str[aTime->length] = '\0';
+    return true;
+}
+
+static int asn1time_cmp(ASN1_TIME *asnTime1, ASN1_TIME *asnTime2)
+{
+    char strTime1[64], strTime2[64];
+    if (!asn1timeToGeneralizedTimeStr(asnTime1, strTime1, sizeof(strTime1)))
+        return -1;
+    if (!asn1timeToGeneralizedTimeStr(asnTime2, strTime2, sizeof(strTime2)))
+        return -1;
+    
+    return strcmp(strTime1, strTime2);
+}
+
+bool Ssl::ssl_match_certificates(X509 *cert1, X509 *cert2)
+{
+    assert(cert1 && cert2);
+    X509_NAME *cert1_name = X509_get_subject_name(cert1);
+    X509_NAME *cert2_name = X509_get_subject_name(cert2);
+    if (X509_NAME_cmp(cert1_name, cert2_name) != 0)
+        return false;
+ 
+    ASN1_TIME *aTime = X509_get_notBefore(cert1);
+    ASN1_TIME *bTime = X509_get_notBefore(cert2);
+    if (asn1time_cmp(aTime, bTime) != 0)
+        return false;
+
+    aTime = X509_get_notAfter(cert1);
+    bTime = X509_get_notAfter(cert2);
+    if (asn1time_cmp(aTime, bTime) != 0)
+        return false;
+    
+    char *alStr1;
+    int alLen;
+    alStr1 = (char *)X509_alias_get0(cert1, &alLen);
+    char *alStr2  = (char *)X509_alias_get0(cert2, &alLen);
+    if ((!alStr1 && alStr2) || (alStr1 && !alStr2) ||
+        (alStr1 && alStr2 && strcmp(alStr1, alStr2)) != 0)
+        return false;
+    
+    // Compare subjectAltName extension
+    STACK_OF(GENERAL_NAME) * cert1_altnames;
+    cert1_altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert1, NID_subject_alt_name, NULL, NULL);
+    STACK_OF(GENERAL_NAME) * cert2_altnames;
+    cert2_altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert2, NID_subject_alt_name, NULL, NULL);
+    bool match = true;
+    if (cert1_altnames) {
+        int numalts = sk_GENERAL_NAME_num(cert1_altnames);
+        for (int i = 0; match && i < numalts; i++) {
+            const GENERAL_NAME *aName = sk_GENERAL_NAME_value(cert1_altnames, i);
+            match = sk_GENERAL_NAME_find(cert2_altnames, aName);
+        }
+    }
+    else if (cert2_altnames)
+        match = false;
+ 
+    sk_GENERAL_NAME_pop_free(cert1_altnames, GENERAL_NAME_free);
+    sk_GENERAL_NAME_pop_free(cert2_altnames, GENERAL_NAME_free);
+
+    return match;
+}

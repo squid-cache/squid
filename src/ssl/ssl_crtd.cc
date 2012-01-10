@@ -245,6 +245,15 @@ static bool proccessNewRequest(Ssl::CrtdMessage const & request_message, std::st
 
     db.find(cert_subject, cert, pkey);
 
+    if (cert.get() && certToMimic.get()) {
+        if (!Ssl::ssl_match_certificates(cert.get(), certToMimic.get())) {
+            // The certificate changed (renewed or other reason).
+            // Generete a new one with the updated fields.
+            cert.reset(NULL);
+            pkey.reset(NULL);
+        }
+    }
+
     if (!cert || !pkey) {
         Ssl::X509_Pointer certToSign;
         Ssl::EVP_PKEY_Pointer pkeyToSign;
