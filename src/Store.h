@@ -251,7 +251,7 @@ private:
     char const *getSerialisedMetaData();
     bool mayStartSwapout() {return false;}
 
-    void trimMemory() {}
+    void trimMemory(const bool preserveSwappable) {}
 
 
     static NullStoreEntry _instance;
