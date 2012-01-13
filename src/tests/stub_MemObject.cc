@@ -47,3 +47,4 @@ int64_t MemObject::expectedReplySize() const STUB_RETVAL(0)
 void MemObject::resetUrls(char const*, char const*) STUB
 void MemObject::markEndOfReplyHeaders() STUB
 size_t MemObject::inUseCount() STUB_RETVAL(0)
+int64_t MemObject::availableForSwapOut() const STUB_RETVAL(0)
