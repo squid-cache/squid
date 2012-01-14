@@ -1,7 +1,8 @@
 #ifndef SQUID_DNS_H
 #define SQUID_DNS_H
 
-namespace Ip {
+namespace Ip
+{
 class Address;
 }
 

@@ -92,8 +92,9 @@ public:
     virtual char const *getSerialisedMetaData();
     void replaceHttpReply(HttpReply *, bool andStartWriting = true);
     void startWriting(); ///< pack and write reply headers and, maybe, body
-    virtual bool swapoutPossible();
-    virtual void trimMemory();
+    /// whether we may start writing to disk (now or in the future)
+    virtual bool mayStartSwapOut();
+    virtual void trimMemory(const bool preserveSwappable);
     void abort();
     void unlink();
     void makePublic();
@@ -108,7 +109,8 @@ public:
     void purgeMem();
     void cacheInMemory(); ///< start or continue storing in memory cache
     void swapOut();
-    bool swapOutAble() const;
+    /// whether we are in the process of writing this entry to disk
+    bool swappingOut() const { return swap_status == SWAPOUT_WRITING; }
     void swapOutFileClose(int how);
     const char *url() const;
     int checkCachable();
@@ -247,9 +249,9 @@ private:
     store_client_t storeClientType() const {return STORE_MEM_CLIENT;}
 
     char const *getSerialisedMetaData();
-    bool swapoutPossible() {return false;}
+    bool mayStartSwapout() {return false;}
 
-    void trimMemory() {}
+    void trimMemory(const bool preserveSwappable) {}
 
 
     static NullStoreEntry _instance;

@@ -45,11 +45,9 @@ public:
 
     virtual int callback();
 
-    virtual StoreEntry* get
-    (const cache_key*);
+    virtual StoreEntry* get(const cache_key*);
 
-    virtual void get
-    (String, void (*)(StoreEntry*, void*), void*);
+    virtual void get(String, void (*)(StoreEntry*, void*), void*);
 
     virtual void init();
 
