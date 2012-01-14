@@ -20,5 +20,3 @@ libsnmp_la_SOURCES = \
 	Session.h \
 	Var.cc \
 	Var.h
-
-DEFS += -DDEFAULT_PREFIX=\"$(prefix)\"
