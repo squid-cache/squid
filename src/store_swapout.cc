@@ -197,7 +197,7 @@ StoreEntry::swapOut()
     }
 
     const bool weAreOrMayBeSwappingOut = swappingOut() || mayStartSwapOut();
- 
+
     trimMemory(weAreOrMayBeSwappingOut);
 
     if (!weAreOrMayBeSwappingOut)
@@ -434,7 +434,7 @@ StoreEntry::mayStartSwapOut()
 
         if (store_status != STORE_OK) {
             const int64_t maxKnownSize = expectedEnd < 0 ?
-                                          mem_obj->availableForSwapOut() : expectedEnd;
+                                         mem_obj->availableForSwapOut() : expectedEnd;
             debugs(20, 7, HERE << "maxKnownSize= " << maxKnownSize);
             if (maxKnownSize < store_maxobjsize) {
                 /*
