@@ -3767,8 +3767,8 @@ clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 CBDATA_CLASS_INIT(ConnStateData);
 
 ConnStateData::ConnStateData() :AsyncJob("ConnStateData"), transparent_ (false),
-    switchedToHttps_(false),
-    stoppedSending_(NULL), stoppedReceiving_(NULL)
+        switchedToHttps_(false),
+        stoppedSending_(NULL), stoppedReceiving_(NULL)
 {
     pinning.fd = -1;
     pinning.pinned = false;
