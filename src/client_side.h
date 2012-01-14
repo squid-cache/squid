@@ -214,8 +214,15 @@ public:
     bool reading() const;
     void stopReading(); ///< cancels comm_read if it is scheduled
 
-    bool closing() const;
-    void startClosing(const char *reason);
+    /// true if we stopped receiving the request
+    const char *stoppedReceiving() const { return stoppedReceiving_; }
+    /// true if we stopped sending the response
+    const char *stoppedSending() const { return stoppedSending_; }
+    /// note request receiving error and close as soon as we write the response
+    void stopReceiving(const char *error);
+    /// note response sending error and close as soon as we read the request
+    void stopSending(const char *error);
+
     void expectNoForwarding(); ///< cleans up virgin request [body] forwarding state
 
     BodyPipe::Pointer expectRequestBody(int64_t size);
@@ -293,9 +300,14 @@ private:
 private:
     CBDATA_CLASS2(ConnStateData);
     bool transparent_;
-    bool closing_;
 
     bool switchedToHttps_;
+
+    /// the reason why we no longer write the response or nil
+    const char *stoppedSending_;
+    /// the reason why we no longer read the request or nil
+    const char *stoppedReceiving_;
+
     String sslHostName; ///< Host name for SSL certificate generation
     AsyncCall::Pointer reader; ///< set when we are reading
     BodyPipe::Pointer bodyPipe; // set when we are reading request body
