@@ -86,7 +86,7 @@ assert_copydir( const char* copydir )
     		!( (st.st_uid == geteuid() && ( (st.st_mode & S_IWUSR) > 0 )) ||
     		(st.st_gid == getegid() && ( (st.st_mode & S_IWGRP) > 0 )) ||
     		((st.st_mode & S_IWOTH) > 0) ) ) {
-        std::cerr << "copy dir \"" << copydir "\" is not accessible to me\n";
+        std::cerr << "copy dir \"" << copydir << "\" is not accessible to me" << std::endl;
         return -1;
     }
 #endif
