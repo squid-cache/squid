@@ -123,14 +123,19 @@
 #endif
 
 #ifndef PRIuSIZE
-#if _SQUID_MINGW_ && SIZEOF_SIZE_T == 4
+// TODO: check for support of %zu and use where possible
+#if SIZEOF_SIZE_T == 4 && _SQUID_MINGW_
 #define PRIuSIZE "I32u"
-#elif _SQUID_MINGW_ && SIZEOF_SIZE_T == 8
+#elif SIZEOF_SIZE_T == 4
+#define PRIuSIZE "u"
+#elif SIZEOF_SIZE_T == 8 && _SQUID_MINGW_
 #define PRIuSIZE "I64u"
-#elif !_SQUID_MINGW_ && SIZEOF_SIZE_T == 8
+#elif SIZEOF_SIZE_T == 8
 #define PRIuSIZE "lu"
+#else
+#error size_t is not 32-bit or 64-bit
 #endif
-#endif
+#endif /* PRIuSIZE */
 
 #ifndef HAVE_MODE_T
 typedef unsigned short mode_t;
