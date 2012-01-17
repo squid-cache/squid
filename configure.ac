@@ -1578,19 +1578,19 @@ AC_ARG_ENABLE(ident-lookups,
 AC_MSG_NOTICE([Support for Ident lookups enabled: ${enable_ident_lookups:=yes}])
 SQUID_DEFINE_BOOL(USE_IDENT,$enable_ident_lookups,[Support for Ident (RFC 931) lookups])
 
-squid_opt_use_dnsserver="no"
+squid_opt_use_dnshelper="no"
 AC_ARG_ENABLE(internal-dns,
   AS_HELP_STRING([--disable-internal-dns],
            [Prevents Squid from directly sending and receiving DNS messages, 
             and instead enables the old external 'dnsserver' processes.]), [
   if test "x$enableval" = "xno" ; then
     AC_MSG_WARN([Disabling Internal DNS queries])
-    squid_opt_use_dnsserver="yes"
+    squid_opt_use_dnshelper="yes"
   fi
 ])
-SQUID_DEFINE_BOOL(USE_DNSSERVERS,$squid_opt_use_dnsserver,
+SQUID_DEFINE_BOOL(USE_DNSHELPER,$squid_opt_use_dnshelper,
   [Use dnsserver processes instead of the internal DNS protocol support])
-AM_CONDITIONAL([USE_DNSSERVER],[test "x$squid_opt_use_dnsserver" = "xyes" ])
+AM_CONDITIONAL([ENABLE_DNSHELPER],[test "x$squid_opt_use_dnshelper" = "xyes" ])
 
 
 AM_CONDITIONAL(USE_SSL_CRTD, false)
@@ -3368,7 +3368,7 @@ SQUID_DETECT_TCP_RECV_BUFSIZE
 SQUID_CHECK_NEED_SYS_ERRLIST
 SQUID_CHECK_MAXPATHLEN
 
-if test "x$squid_opt_use_dnsserver" = "xyes"; then
+if test "x$squid_opt_use_dnshelper" = "xyes"; then
   SQUID_CHECK_LIBRESOLV_DNS_TTL_HACK
   SQUID_CHECK_RESOLVER_FIELDS
 fi

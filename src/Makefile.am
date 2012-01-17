@@ -7,15 +7,17 @@
 include $(top_srcdir)/src/Common.am
 
 AUTOMAKE_OPTIONS = subdir-objects
-if USE_DNSSERVER
+
+if ENABLE_DNSHELPER
 DNSSOURCE = dns.cc
-DNSSERVER = dnsserver
+DNSHELPER = dnsserver
 else
 DNSSOURCE = dns_internal.cc
-DNSSERVER =
+DNSHELPER =
 endif
 
 DNSSOURCE += \
+	SquidDns.h \
 	DnsLookupDetails.h \
 	DnsLookupDetails.cc
 
@@ -203,7 +205,7 @@ bin_PROGRAMS =
 
 
 libexec_PROGRAMS = \
-	$(DNSSERVER) \
+	$(DNSHELPER) \
 	$(DISK_PROGRAMS) \
 	$(UNLINKD)
 
@@ -632,7 +634,6 @@ unlinkd_LDADD = \
 
 ## dnsserver is a standalone helper. Do not link to any internal libraries
 dnsserver_SOURCES = dnsserver.cc
-## SquidNew.cc tests/stub_debug.cc test_tools.cc time.cc
 dnsserver_LDADD = $(COMPAT_LIB)
 
 recv_announce_SOURCES = recv-announce.cc

@@ -125,17 +125,6 @@ SQUIDCEXTERN void file_write_mbuf(int fd, off_t, MemBuf mb, DWCB * handler, void
 SQUIDCEXTERN void file_read(int, char *, int, off_t, DRCB *, void *);
 SQUIDCEXTERN void disk_init(void);
 
-SQUIDCEXTERN void dnsShutdown(void);
-SQUIDCEXTERN void dnsInit(void);
-SQUIDCEXTERN void dnsSubmit(const char *lookup, HLPCB * callback, void *data);
-
-/* dns_internal.c */
-SQUIDCEXTERN void idnsInit(void);
-SQUIDCEXTERN void idnsShutdown(void);
-SQUIDCEXTERN void idnsALookup(const char *, IDNSCB *, void *);
-
-SQUIDCEXTERN void idnsPTRLookup(const Ip::Address &, IDNSCB *, void *);
-
 SQUIDCEXTERN void fd_close(int fd);
 SQUIDCEXTERN void fd_open(int fd, unsigned int type, const char *);
 SQUIDCEXTERN void fd_note(int fd, const char *);
@@ -264,11 +253,7 @@ extern variable_list *snmp_prfProtoFn(variable_list *, snint *);
 extern variable_list *snmp_prfPeerFn(variable_list *, snint *);
 extern variable_list *snmp_netIpFn(variable_list *, snint *);
 extern variable_list *snmp_netFqdnFn(variable_list *, snint *);
-#if USE_DNSSERVERS
 extern variable_list *snmp_netDnsFn(variable_list *, snint *);
-#else
-extern variable_list *snmp_netIdnsFn(variable_list *, snint *);
-#endif /* USE_DNSSERVERS */
 extern variable_list *snmp_meshPtblFn(variable_list *, snint *);
 extern variable_list *snmp_meshCtblFn(variable_list *, snint *);
 #endif /* SQUID_SNMP */
