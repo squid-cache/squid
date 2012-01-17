@@ -1146,7 +1146,7 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
                 rfc1035MessageDestroy(&slave->message);
                 cbdataFree(slave);
             }
-            
+
             // Build new query
             q->query_id = idnsQueryID();
             debugs(78, 3, "idnsGrokReply: Trying A Query for " << q->name);
@@ -1183,7 +1183,7 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
     /* Merge results */
     message = q->message;
     n = q->ancount;
-    
+
     while ( (q2 = q->slave) ) {
         debugs(78, 6, HERE << "Merging DNS results " << q->name << " A has " << n << " RR, AAAA has " << q2->ancount << " RR");
         q->slave = q2->slave;
@@ -1622,7 +1622,7 @@ idnsSendSlaveAAAAQuery(idns_query *master)
     q->query_id = idnsQueryID();
     q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query, Config.dns.packet_max);
     q->slave = master->slave;
-    
+
     debugs(78, 3, "idnsALookup: buf is " << q->sz << " bytes for " << q->name <<
            ", id = 0x" << std::hex << q->query_id);
     if (!q->sz) {
