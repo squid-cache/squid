@@ -371,8 +371,10 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
 
         case LFT_LOCAL_LISTENING_IP: {
             // avoid logging a dash if we have reliable info
-            const bool interceptedAtKnownPort = (al->request->flags.spoof_client_ip ||
-                                                 al->request->flags.intercepted) && al->cache.port;
+            const bool interceptedAtKnownPort = al->request ?
+                                                (al->request->flags.spoof_client_ip ||
+                                                 al->request->flags.intercepted) && al->cache.port :
+                                                false;
             if (interceptedAtKnownPort) {
                 const bool portAddressConfigured = !al->cache.port->s.IsAnyAddr();
                 if (portAddressConfigured)
