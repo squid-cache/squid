@@ -2701,7 +2701,7 @@ finish:
      * be freed and the above connNoteUseOfBuffer() would hit an
      * assertion, not to mention that we were accessing freed memory.
      */
-    if (http->request->flags.resetTCP() && Comm::IsConnOpen(conn->clientConnection)) {
+    if (request && request->flags.resetTCP() && Comm::IsConnOpen(conn->clientConnection)) {
         debugs(33, 3, HERE << "Sending TCP RST on " << conn->clientConnection);
         conn->flags.readMore = false;
         comm_reset_close(conn->clientConnection);
