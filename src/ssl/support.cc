@@ -333,7 +333,7 @@ ssl_options[] = {
 #endif
 #if SSL_OP_ALL
     {
-        "ALL", SSL_OP_ALL
+        "ALL", (long)SSL_OP_ALL
     },
 #endif
 #if SSL_OP_SINGLE_DH_USE
