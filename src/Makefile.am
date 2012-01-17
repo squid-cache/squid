@@ -627,8 +627,6 @@ INCLUDES += $(KRB5INCS)
 
 unlinkd_SOURCES = unlinkd_daemon.cc
 unlinkd_LDADD = \
-	ipc/libipc.la \
-	ip/libip.la \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
