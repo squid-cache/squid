@@ -55,11 +55,14 @@ public:
      * \todo specialize the class in a small hierarchy so that all
      *       relevant initializations are done at build-time
      */
-    StatHist() : scale_(1.0) {}
+    StatHist();
     StatHist(const StatHist&); //not needed
     ~StatHist();
 
+    typedef uint64_t bins_type;
+
     StatHist &operator=(const StatHist &);
+
     /** clear the contents of the histograms
      *
      * \todo remove: this function has been replaced in its purpose
@@ -74,7 +77,7 @@ public:
     /** obtain the output-transformed value from the specified bin
      *
      */
-    double val(int bin) const;
+    double val(unsigned int bin) const;
     /** increment the counter for the histogram entry
      * associated to the supplied value
      */
@@ -84,10 +87,10 @@ public:
     void dump(StoreEntry *sentry, StatHistBinDumper * bd) const;
     /** Initialize the Histogram using a logarithmic values distribution
      */
-    void logInit(int capacity, double min, double max);
+    void logInit(unsigned int capacity, double min, double max);
     /** initialize the histogram to count occurrences in an enum-represented set
      */
-    void enumInit(int last_enum);
+    void enumInit(unsigned int last_enum);
 protected:
     /** low-level initialize function. called by *Init high-level functions
      * \note Important restrictions on val_in and val_out functions:
@@ -100,13 +103,13 @@ protected:
      *  val_in is applied after offseting the value but before scaling
      *  See log and linear based histograms for examples
      */
-    void init(int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
+    void init(unsigned int capacity, hbase_f * val_in, hbase_f * val_out, double min, double max);
     /// find what entry in the histogram corresponds to v, by applying
     /// the preset input transformation function
-    int findBin(double v);
+    unsigned int findBin(double v);
     /// the histogram counters
-    int *bins;
-    int capacity_;
+    bins_type *bins;
+    unsigned int capacity_;
     /// minimum value to be stored, corresponding to the first bin
     double min_;
     /// value of the maximum counter in the histogram
@@ -121,5 +124,36 @@ double statHistDeltaMedian(const StatHist & A, const StatHist & B);
 double statHistDeltaPctile(const StatHist & A, const StatHist & B, double pctile);
 StatHistBinDumper statHistEnumDumper;
 StatHistBinDumper statHistIntDumper;
+
+inline StatHist&
+StatHist::operator =(const StatHist & src)
+{
+    if (this==&src) //handle self-assignment
+        return *this;
+    xfree(bins); // xfree can handle NULL pointers, no need to check
+    capacity_=src.capacity_;
+    bins = static_cast<bins_type *>(xcalloc(src.capacity_, sizeof(bins_type)));
+    min_=src.min_;
+    max_=src.max_;
+    scale_=src.scale_;
+    val_in=src.val_in;
+    val_out=src.val_out;
+    memcpy(bins,src.bins,capacity_*sizeof(*bins));
+    return *this;
+}
+
+inline
+StatHist::StatHist() :
+        bins(NULL), capacity_(0), min_(0), max_(0),
+        scale_(1.0), val_in(NULL), val_out(NULL)
+{}
+
+inline
+StatHist::~StatHist()
+{
+    xfree(bins); //can handle case of bins being NULL
+    bins=NULL;
+    capacity_=0; //mark as destructed, may be needed for troubleshooting
+}
 
 #endif /* STATHIST_H_ */
