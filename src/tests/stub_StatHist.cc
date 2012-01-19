@@ -1,24 +1,39 @@
 #include "config.h"
+#define STUB_API "StatHist.cc"
 #include "STUB.h"
 #include "StatHist.h"
 
-#define STUB_API "StatHist.cc"
-
-void
-StatHist::init(int capacity_, hbase_f * val_in_, hbase_f * val_out_, double min_, double max_)
-{}
-
-StatHist::~StatHist()
-{}
-
-void
-StatHist::enumInit(int last_enum)
-{}
-
-void
-StatHist::count(double val)
-{}
 
 void
 StatHist::dump(StoreEntry * sentry, StatHistBinDumper * bd) const
 {}
+
+void
+StatHist::enumInit(unsigned int i)
+{}
+
+void
+StatHist::count(double d)
+{}
+
+double
+statHistDeltaMedian(const StatHist & A, const StatHist & B)
+STUB_RETVAL(0.0)
+
+double
+statHistDeltaPctile(const StatHist & A, const StatHist & B, double pctile)
+STUB_RETVAL(0.0)
+
+void
+StatHist::clear()
+STUB
+
+void
+StatHist::logInit(unsigned int i, double d1, double d2)
+STUB
+
+class StoreEntry;
+void
+statHistIntDumper(StoreEntry * sentry, int idx, double val, double size, int count)
+STUB
+
