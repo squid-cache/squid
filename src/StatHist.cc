@@ -46,10 +46,8 @@ hbase_f Null;
 
 /* low level init, higher level functions has less params */
 void
-StatHist::init(int newCapacity, hbase_f * val_in_, hbase_f * val_out_, double newMin, double newMax)
+StatHist::init(unsigned int newCapacity, hbase_f * val_in_, hbase_f * val_out_, double newMin, double newMax)
 {
-    assert(newCapacity > 0);
-    assert(val_in_ && val_out_);
     /* check before we divide to get scale_ */
     assert(val_in_(newMax - newMin) > 0);
     min_ = newMin;
@@ -57,53 +55,15 @@ StatHist::init(int newCapacity, hbase_f * val_in_, hbase_f * val_out_, double ne
     capacity_ = newCapacity;
     val_in = val_in_;
     val_out = val_out_;
-    bins = static_cast<int *>(xcalloc(capacity_, sizeof(int)));
+    bins = static_cast<bins_type *>(xcalloc(capacity_, sizeof(bins_type)));
     scale_ = capacity_ / val_in(max_ - min_);
-
-    /* check that functions are valid */
-    /* a min value should go into bin[0] */
-    assert(findBin(min_) == 0);
-    /* a max value should go into the last bin */
-    assert(findBin(max_) == capacity_ - 1);
-    /* it is hard to test val_out, here is a crude test */
-    assert(((int) floor(0.99 + val(0) - min_)) == 0);
 }
 
 void
 StatHist::clear()
 {
-    for (int i=0; i<capacity_; ++i)
+    for (unsigned int i=0; i<capacity_; ++i)
         bins[i]=0;
-}
-
-StatHist::~StatHist()
-{
-    if (bins != NULL) {
-        xfree(bins);
-        bins = NULL;
-    }
-}
-
-StatHist&
-StatHist::operator =(const StatHist & src)
-{
-    if (this==&src) //handle self-assignment
-        return *this;
-    assert(src.bins != NULL); // TODO: remove after initializing bins at construction time
-    if (capacity_ != src.capacity_) {
-        // need to resize.
-        xfree(bins);
-        bins = static_cast<int *>(xcalloc(src.capacity_, sizeof(int)));
-        capacity_=src.capacity_;
-
-    }
-    min_=src.min_;
-    max_=src.max_;
-    scale_=src.scale_;
-    val_in=src.val_in;
-    val_out=src.val_out;
-    memcpy(bins,src.bins,capacity_*sizeof(*bins));
-    return *this;
 }
 
 StatHist::StatHist(const StatHist &src) :
@@ -111,7 +71,7 @@ StatHist::StatHist(const StatHist &src) :
         scale_(src.scale_), val_in(src.val_in), val_out(src.val_out)
 {
     if (src.bins!=NULL) {
-        bins = static_cast<int *>(xcalloc(src.capacity_, sizeof(int)));
+        bins = static_cast<bins_type *>(xcalloc(src.capacity_, sizeof(int)));
         memcpy(bins,src.bins,capacity_*sizeof(*bins));
     }
 }
@@ -119,26 +79,27 @@ StatHist::StatHist(const StatHist &src) :
 void
 StatHist::count(double val)
 {
-    const int bin = findBin(val);
-    assert(bins);		/* make sure it got initialized */
-    assert(0 <= bin && bin < capacity_);
+    if (bins==NULL) //do not count before initialization or after destruction
+        return;
+    const unsigned int bin = findBin(val);
     ++bins[bin];
 }
 
-int
+unsigned int
 StatHist::findBin(double v)
 {
-    int bin;
 
     v -= min_;		/* offset */
 
     if (v <= 0.0)		/* too small */
         return 0;
 
-    bin = (int) floor(scale_ * val_in(v) + 0.5);
+    unsigned int bin;
+    double tmp_bin=floor(scale_ * val_in(v) + 0.5);
 
-    if (bin < 0)		/* should not happen */
+    if (tmp_bin < 0.0) // should not happen
         return 0;
+    bin = static_cast <unsigned int>(tmp_bin);
 
     if (bin >= capacity_)	/* too big */
         bin = capacity_ - 1;
@@ -147,7 +108,7 @@ StatHist::findBin(double v)
 }
 
 double
-StatHist::val(int bin) const
+StatHist::val(unsigned int bin) const
 {
     return val_out((double) bin / scale_) + min_;
 }
@@ -167,14 +128,14 @@ statHistDeltaPctile(const StatHist & A, const StatHist & B, double pctile)
 double
 StatHist::deltaPctile(const StatHist & B, double pctile) const
 {
-    int i;
-    int s1 = 0;
-    int h = 0;
-    int a = 0;
-    int b = 0;
-    int I = 0;
-    int J = capacity_;
-    int K;
+    unsigned int i;
+    bins_type s1 = 0;
+    bins_type h = 0;
+    bins_type a = 0;
+    bins_type b = 0;
+    unsigned int I = 0;
+    unsigned int J = capacity_;
+    unsigned int K;
     double f;
 
     assert(capacity_ == B.capacity_);
@@ -219,7 +180,7 @@ StatHist::deltaPctile(const StatHist & B, double pctile) const
 
     f = (h - a) / (b - a);
 
-    K = (int) floor(f * (double) (J - I) + I);
+    K = (unsigned int) floor(f * (double) (J - I) + I);
 
     return val(K);
 }
@@ -235,13 +196,12 @@ statHistBinDumper(StoreEntry * sentry, int idx, double val, double size, int cou
 void
 StatHist::dump(StoreEntry * sentry, StatHistBinDumper * bd) const
 {
-    int i;
     double left_border = min_;
 
     if (!bd)
         bd = statHistBinDumper;
 
-    for (i = 0; i < capacity_; ++i) {
+    for (unsigned int i = 0; i < capacity_; ++i) {
         const double right_border = val(i + 1);
         assert(right_border - left_border > 0.0);
         bd(sentry, i, left_border, right_border - left_border, bins[i]);
@@ -264,7 +224,7 @@ Math::Exp(double x)
 }
 
 void
-StatHist::logInit(int capacity, double min, double max)
+StatHist::logInit(unsigned int capacity, double min, double max)
 {
     init(capacity, Math::Log, Math::Exp, min, max);
 }
@@ -278,7 +238,7 @@ Math::Null(double x)
 }
 
 void
-StatHist::enumInit(int last_enum)
+StatHist::enumInit(unsigned int last_enum)
 {
     init(last_enum + 3, Math::Null, Math::Null, -1.0, (2.0 + last_enum));
 }
