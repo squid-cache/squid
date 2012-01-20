@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "fde.h"
 #include "SquidTime.h"
 #include "Store.h"

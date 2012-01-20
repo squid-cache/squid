@@ -36,7 +36,7 @@
 #ifndef SQUID_CONFIGPARSER_H
 #define SQUID_CONFIGPARSER_H
 
-#include "squid.h"
+#include "squid-old.h"
 
 /**
  * Limit to how long any given config line may be.

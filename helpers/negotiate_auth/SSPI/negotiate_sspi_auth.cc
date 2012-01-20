@@ -36,7 +36,7 @@
  *
  *
  */
-#include "config.h"
+#include "squid.h"
 #include "helpers/defines.h"
 #include "libntlmauth/support_bits.cci"
 #include "sspwin32.h"

@@ -2,7 +2,7 @@
  * $Id$
  */
 
-#include "config.h"
+#include "squid.h"
 #include "uudecode.h"
 
 /* aaaack but it's fast and const should make it shared text page. */

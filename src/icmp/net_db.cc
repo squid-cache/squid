@@ -38,7 +38,7 @@
  * (adrian@squid-cache.org) to sort them out.
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "icmp/net_db.h"
 #include "log/File.h"
 #include "cbdata.h"

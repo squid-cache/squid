@@ -37,7 +37,7 @@
 #define USE_POSIX_REGEX		/* put before includes; always use POSIX */
 #endif
 
-#include "squid.h"
+#include "squid-old.h"
 #include "HttpHdrCc.h"
 #include "mgr/Registration.h"
 #include "Store.h"

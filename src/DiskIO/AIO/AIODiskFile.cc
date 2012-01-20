@@ -44,7 +44,7 @@
  * per storedir it should work just fine.
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "AIODiskFile.h"
 #include "AIODiskIOStrategy.h"
 #include "DiskIO/IORequestor.h"

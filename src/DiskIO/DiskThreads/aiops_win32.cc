@@ -34,7 +34,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "squid_windows.h"
 #include "CommIO.h"
 #include "DiskThreads.h"

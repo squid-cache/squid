@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "auth/ntlm/auth_ntlm.h"
 #include "auth/ntlm/UserRequest.h"
 #include "auth/State.h"

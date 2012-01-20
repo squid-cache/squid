@@ -3,7 +3,7 @@
  * From NCSA Authentication module
  */
 
-#include "config.h"
+#include "squid.h"
 #include "hash.h"
 #include "nis_support.h"
 #include "rfc1738.h"

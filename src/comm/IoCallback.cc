@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "ClientInfo.h"
 #include "comm/Connection.h"
 #include "comm/IoCallback.h"

@@ -40,7 +40,7 @@
  */
 
 
-#include "config.h"
+#include "squid.h"
 #include "Array.h"
 
 #if HAVE_ASSERT_H

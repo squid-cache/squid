@@ -7,7 +7,7 @@
  *      gcc -Wall md5-test.c -I../include md5.o
  */
 
-#include "config.h"
+#include "squid.h"
 #include "md5.h"
 #include "stdio.h"
 

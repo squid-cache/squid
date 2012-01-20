@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "format/Config.h"
 #include "format/Token.h"
 #include "format/TokenTableEntry.h"

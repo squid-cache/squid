@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "StoreMetaURL.h"
 #include "Store.h"
 #include "MemObject.h"

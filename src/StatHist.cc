@@ -31,7 +31,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "StatHist.h"
 
 /* Local functions */

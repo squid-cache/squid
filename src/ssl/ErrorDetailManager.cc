@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "ErrorDetail.h"
 #include "errorpage.h"
 #include "ErrorDetailManager.h"

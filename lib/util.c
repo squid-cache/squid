@@ -34,7 +34,7 @@
 
 #define _etext etext
 
-#include "config.h"
+#include "squid.h"
 #include "profiler/Profiler.h"
 #include "util.h"
 

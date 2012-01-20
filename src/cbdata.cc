@@ -48,7 +48,7 @@
  * when finished.
  */
 
-#include "config.h"
+#include "squid.h"
 #include "cbdata.h"
 #include "mgr/Registration.h"
 #include "Store.h"

@@ -2,7 +2,7 @@
  * DEBUG: section 93    Adaptation
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "adaptation/Message.h"
 #include "base/TextException.h"
 #include "HttpMsg.h"

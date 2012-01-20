@@ -31,7 +31,7 @@
  ***************************************************************************/
 
 #if HAVE_CONFIG_H
-#include "config.h"
+#include "squid.h"
 #endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>

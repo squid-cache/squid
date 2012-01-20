@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "format/Quoting.h"
 
 static const char c2x[] =

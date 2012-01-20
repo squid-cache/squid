@@ -38,7 +38,7 @@
  * UDP replies with TC set should be retried via TCP
  */
 
-#include "config.h"
+#include "squid.h"
 #include "util.h"
 
 #if HAVE_STDIO_H

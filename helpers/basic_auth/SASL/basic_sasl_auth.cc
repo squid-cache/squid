@@ -26,7 +26,7 @@
  *             or with SASL2: gcc -Wall -o sasl_auth sasl_auth.c -lsasl2
  *
  */
-#include "config.h"
+#include "squid.h"
 #include "helpers/defines.h"
 #include "rfc1738.h"
 #include "util.h"

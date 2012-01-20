@@ -6,7 +6,7 @@
  */
 
 
-#include "config.h"
+#include "squid.h"
 #include "Debug.h"
 #include "ipc/Messages.h"
 #include "ipc/StrandCoord.h"

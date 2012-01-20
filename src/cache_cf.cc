@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 #include "acl/Acl.h"
 #include "acl/Gadgets.h"

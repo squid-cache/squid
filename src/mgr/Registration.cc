@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "CacheManager.h"
 #include "mgr/Registration.h"
 

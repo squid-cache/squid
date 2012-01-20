@@ -33,7 +33,7 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "acl/UrlPort.h"
 #include "acl/IntRange.h"
 #include "acl/Checklist.h"

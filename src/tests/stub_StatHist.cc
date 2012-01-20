@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #define STUB_API "StatHist.cc"
 #include "STUB.h"
 #include "StatHist.h"

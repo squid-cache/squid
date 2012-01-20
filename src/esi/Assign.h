@@ -36,7 +36,7 @@
 #ifndef SQUID_ESIASSIGN_H
 #define SQUID_ESIASSIGN_H
 
-#include "squid.h"
+#include "squid-old.h"
 #include "esi/Element.h"
 #include "SquidString.h"
 #include "esi/VarState.h"

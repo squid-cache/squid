@@ -31,7 +31,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 
 void xassert(const char *expr, const char *file, int line)
 {
