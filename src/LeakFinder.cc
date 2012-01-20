@@ -36,7 +36,7 @@
  * Use these to find memory leaks
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "LeakFinder.h"
 #include "Store.h"
 #include "SquidTime.h"

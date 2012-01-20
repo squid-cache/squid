@@ -34,7 +34,7 @@
 
 #define SQUID_HELPER 1
 
-#include "config.h"
+#include "squid.h"
 
 #if HAVE_PATHS_H
 #include <paths.h>

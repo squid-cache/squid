@@ -1,7 +1,7 @@
 #ifndef __COMM_H__
 #define __COMM_H__
 
-#include "squid.h"
+#include "squid-old.h"
 #include "AsyncEngine.h"
 #include "base/AsyncCall.h"
 #include "CommCalls.h"

@@ -1,6 +1,6 @@
-#include "config.h"
-
 #include "squid.h"
+
+#include "squid-old.h"
 #include "TestSwapDir.h"
 
 uint64_t

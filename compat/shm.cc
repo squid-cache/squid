@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "compat/shm.h"
 
 #if _SQUID_FREEBSD_ && (__FreeBSD__ >= 7)

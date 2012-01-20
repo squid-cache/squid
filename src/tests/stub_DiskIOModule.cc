@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 
 #define STUB_API "DiskIOModule.cc"
 #include "tests/STUB.h"

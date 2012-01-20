@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "ipc/UdsOp.h"
 
 #define STUB_API "UdsOp.cc"

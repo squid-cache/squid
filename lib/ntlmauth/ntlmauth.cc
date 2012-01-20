@@ -25,7 +25,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 
 #if HAVE_STRING_H
 #include <string.h>

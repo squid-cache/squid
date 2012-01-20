@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "AccessLogEntry.h"
 #if USE_ADAPTATION
 #include "adaptation/Config.h"

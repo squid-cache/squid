@@ -39,10 +39,10 @@
  \ingroup DelayPoolsAPI
  */
 
-#include "config.h"
+#include "squid.h"
 
 #if USE_DELAY_POOLS
-#include "squid.h"
+#include "squid-old.h"
 #include "mgr/Registration.h"
 #include "DelaySpec.h"
 #include "DelayPools.h"

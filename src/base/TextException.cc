@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "base/TextException.h"
 #include "Debug.h"
 #include "util.h"

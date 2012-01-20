@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "wordlist.h"
 
 #define STUB_API "wordlist.cc"

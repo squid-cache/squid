@@ -34,7 +34,7 @@
 #ifndef SQUID_ASYNCENGINE_H
 #define SQUID_ASYNCENGINE_H
 
-#include "squid.h"
+#include "squid-old.h"
 
 
 /* Abstract interface for async engines which an event loop can utilise.

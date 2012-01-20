@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "base/TextException.h"
 #include "Parsing.h"
 #include "ChunkedCodingParser.h"

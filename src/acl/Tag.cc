@@ -34,7 +34,7 @@
  * Copyright (c) 2009, Henrik Nordstrom <henrik@henriknordstrom.net>
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "acl/Tag.h"
 #include "acl/StringData.h"
 #include "acl/Checklist.h"

@@ -31,7 +31,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "client_side_request.h"
 #include "Store.h"
 

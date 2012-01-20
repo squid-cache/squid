@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "base/AsyncJob.h"
 #include "structs.h"
 

@@ -29,7 +29,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "StatCounters.h"
 
 StatCounters statCounter;

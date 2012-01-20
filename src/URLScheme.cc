@@ -33,7 +33,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "URLScheme.h"
 #include "wordlist.h"
 

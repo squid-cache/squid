@@ -34,7 +34,7 @@
  * as published by the Free Software Foundation; either version 2,
  * or (at your option) any later version.
  */
-#include "config.h"
+#include "squid.h"
 #include "helpers/defines.h"
 #include "rfc1738.h"
 #include "util.h"

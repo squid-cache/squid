@@ -35,10 +35,10 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "config.h"
+#include "squid.h"
 
 #if USE_DELAY_POOLS && USE_AUTH
-#include "squid.h"
+#include "squid-old.h"
 #include "DelayUser.h"
 #include "auth/UserRequest.h"
 #include "auth/User.h"

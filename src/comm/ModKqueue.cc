@@ -52,11 +52,11 @@
  * so deferred reads aren't required.
  *  -- adrian
  */
-#include "config.h"
+#include "squid.h"
 
 #if USE_KQUEUE
 
-#include "squid.h"
+#include "squid-old.h"
 #include "comm/Loops.h"
 #include "fde.h"
 #include "Store.h"
