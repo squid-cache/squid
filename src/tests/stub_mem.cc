@@ -51,7 +51,7 @@ memReallocBuf(void *oldbuf, size_t net_size, size_t * gross_size)
 static void
 cxx_xfree(void * ptr)
 {
-	    xfree(ptr);
+    xfree(ptr);
 }
 
 FREE *
