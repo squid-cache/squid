@@ -16,9 +16,9 @@ class testStatHist : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testStatHistLog );
     CPPUNIT_TEST_SUITE_END();
 
-    public:
+public:
 
-    protected:
+protected:
     void testStatHistBaseEquality();
     void testStatHistBaseAssignment();
     void testStatHistLog();
