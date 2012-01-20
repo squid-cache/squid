@@ -23,11 +23,11 @@ InspectingStatHist::operator ==(const InspectingStatHist & src)
 {
     assert(bins != NULL && src.bins != NULL); // TODO: remove after initializing bins at construction time
     if (capacity_ != src.capacity_ ||
-                    min_!=src.min_ ||
-                    max_!=src.max_ ||
-                    scale_!=src.scale_ ||
-                    val_in!=src.val_in ||
-                    val_out!=src.val_out)
+            min_!=src.min_ ||
+            max_!=src.max_ ||
+            scale_!=src.scale_ ||
+            val_in!=src.val_in ||
+            val_out!=src.val_out)
         return false;
     return (memcmp(bins,src.bins,capacity_*sizeof(*bins))==0);
 }
