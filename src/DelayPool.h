@@ -40,7 +40,7 @@
 #define DELAYPOOL_H
 
 #if USE_DELAY_POOLS
-#include "squid.h"
+#include "squid-old.h"
 #include "CompositePoolNode.h"
 
 class StoreEntry;

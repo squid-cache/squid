@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "AccessLogEntry.h"
 #include "comm/Connection.h"
 #include "err_detail_type.h"

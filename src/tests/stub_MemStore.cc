@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "MemStore.h"
 
 #define STUB_API "MemStore.cc"

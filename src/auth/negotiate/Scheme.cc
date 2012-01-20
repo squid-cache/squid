@@ -30,7 +30,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "auth/negotiate/Scheme.h"
 #include "helper.h"
 

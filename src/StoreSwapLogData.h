@@ -59,7 +59,7 @@
  *      the value for MemObject->swap_hdr_sz.
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 /*
  * Do we need to have the dirn in here? I don't think so, since we already

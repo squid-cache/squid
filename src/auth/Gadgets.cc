@@ -36,7 +36,7 @@
  * They DO NOT perform access control or auditing.
  * See acl.c for access control and client_side.c for auditing */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
 #include "client_side.h"

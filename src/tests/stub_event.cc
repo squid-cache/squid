@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "event.h"
 
 #define STUB_API "event.cc"

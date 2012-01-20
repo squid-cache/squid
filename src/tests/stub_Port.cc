@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "ipc/Port.h"
 
 #define STUB_API "ipc/Port.cc"

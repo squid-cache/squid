@@ -34,7 +34,7 @@
  */
 
 
-#include "squid.h"
+#include "squid-old.h"
 #include "DiskThreadsDiskFile.h"
 #include "Store.h"
 #include "Generic.h"

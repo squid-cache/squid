@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include <map>
 #include "comm.h"
 #include "base/TextException.h"

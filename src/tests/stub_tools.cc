@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 // tool functions still defined in protos.h - TODO extract
 #include "protos.h"
 

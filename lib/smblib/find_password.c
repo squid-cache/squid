@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 /* Find passwords ... */
 /* We do it in a brute force way ... Cycle through all the possible passwords
    sending a logon to see if all it works ... We have to wait for any timeout

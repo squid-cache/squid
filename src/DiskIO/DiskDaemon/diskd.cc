@@ -32,7 +32,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "DiskIO/DiskDaemon/diomsg.h"
 #include "hash.h"
 

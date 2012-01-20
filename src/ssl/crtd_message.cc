@@ -2,7 +2,7 @@
  * $Id$
  */
 
-#include "config.h"
+#include "squid.h"
 #include "ssl/crtd_message.h"
 #if HAVE_CSTDLIB
 #include <cstdlib>

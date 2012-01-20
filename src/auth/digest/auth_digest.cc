@@ -37,7 +37,7 @@
  * See acl.c for access control and client_side.c for auditing */
 
 
-#include "squid.h"
+#include "squid-old.h"
 #include "rfc2617.h"
 #include "auth/digest/auth_digest.h"
 #include "auth/digest/Scheme.h"

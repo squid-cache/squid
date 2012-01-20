@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "mgr/Registration.h"
 #include "radix.h"
 #include "HttpRequest.h"

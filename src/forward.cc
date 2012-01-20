@@ -31,7 +31,7 @@
  */
 
 
-#include "squid.h"
+#include "squid-old.h"
 #include "forward.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"

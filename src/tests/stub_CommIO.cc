@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "CommIO.h"
 
 #define STUB_API "CommIO.cc"

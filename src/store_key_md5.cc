@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "HttpRequest.h"
 
 static cache_key null_key[SQUID_MD5_DIGEST_LENGTH];

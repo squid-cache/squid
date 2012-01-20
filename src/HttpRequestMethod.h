@@ -33,7 +33,7 @@
 #ifndef SQUID_HTTPREQUESTMETHOD_H
 #define SQUID_HTTPREQUESTMETHOD_H
 
-#include "squid.h"
+#include "squid-old.h"
 #include <iosfwd>
 #include "SquidString.h"
 

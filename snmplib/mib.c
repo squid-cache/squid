@@ -22,7 +22,7 @@ SOFTWARE.
 ******************************************************************/
 
 #define SQUID_NO_STRING_BUFFER_PROTECT 1
-#include "config.h"
+#include "squid.h"
 
 #include <stdio.h>
 

@@ -40,7 +40,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
-#include "config.h"
+#include "squid.h"
 #include "helpers/defines.h"
 #include "rfc1738.h"
 #include "util.h"

@@ -33,7 +33,7 @@
 #ifndef SQUID_HELPER_H
 #define SQUID_HELPER_H
 
-#include "squid.h"
+#include "squid-old.h"
 #include "base/AsyncCall.h"
 #include "cbdata.h"
 #include "comm/forward.h"

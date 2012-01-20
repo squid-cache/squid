@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 
 /*
  * From:    richard@hekkihek.hacom.nl (Richard Huveneers)

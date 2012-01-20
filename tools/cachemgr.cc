@@ -30,7 +30,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "base64.h"
 #include "getfullhostname.h"
 #include "html_quote.h"

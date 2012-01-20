@@ -34,7 +34,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "Store.h"
 #include "HttpRequest.h"
 #include "mgr/Registration.h"

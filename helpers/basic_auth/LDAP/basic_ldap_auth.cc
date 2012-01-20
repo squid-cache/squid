@@ -82,7 +82,7 @@
  *             - Allow full filter specifications in -f
  */
 
-#include "config.h"
+#include "squid.h"
 
 #define LDAP_DEPRECATED 1
 

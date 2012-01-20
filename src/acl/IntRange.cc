@@ -34,7 +34,7 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "acl/IntRange.h"
 #include "wordlist.h"
 #include "Parsing.h"
