@@ -114,6 +114,10 @@ typedef struct _link_list link_list;
 
 typedef struct _customlog customlog;
 
+#if USE_SSL
+typedef struct _sslproxy_cert_adapt sslproxy_cert_adapt;
+#endif
+
 #if SQUID_SNMP
 typedef variable_list *(oid_ParseFn) (variable_list *, snint *);
 

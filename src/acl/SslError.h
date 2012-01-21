@@ -7,8 +7,9 @@
 #define SQUID_ACLSSL_ERROR_H
 #include "acl/Strategy.h"
 #include "acl/Strategised.h"
+#include "ssl/support.h"
 
-class ACLSslErrorStrategy : public ACLStrategy<int>
+class ACLSslErrorStrategy : public ACLStrategy<Ssl::Errors const&>
 {
 
 public:
@@ -31,7 +32,7 @@ class ACLSslError
 
 private:
     static ACL::Prototype RegistryProtoype;
-    static ACLStrategised<int> RegistryEntry_;
+    static ACLStrategised<Ssl::Errors const&> RegistryEntry_;
 };
 
 #endif /* SQUID_ACLSSL_ERROR_H */

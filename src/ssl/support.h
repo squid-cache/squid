@@ -67,6 +67,10 @@ namespace Ssl
 {
 /// Squid defined error code (<0),  an error code returned by SSL X509 api, or SSL_ERROR_NONE
 typedef int ssl_error_t;
+
+/// \ingroup ServerProtocolSSLAPI
+/// SSL error codes in the order they were encountered
+typedef std::vector<ssl_error_t> Errors;
 } //namespace Ssl
 
 /// \ingroup ServerProtocolSSLAPI
@@ -109,7 +113,7 @@ namespace Ssl
   \ingroup ServerProtocolSSLAPI
   * Decide on the kind of certificate and generate a CA- or self-signed one
 */
-SSL_CTX *generateSslContext(char const *host, Ssl::X509_Pointer const & mimicCert, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey);
+    SSL_CTX *generateSslContext(char const *host, Ssl::X509_Pointer const & mimicCert, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey, CrtdMessage::BodyParams const & mimicExceptions);
 
 /**
   \ingroup ServerProtocolSSLAPI

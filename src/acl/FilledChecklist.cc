@@ -63,9 +63,6 @@ ACLFilledChecklist::ACLFilledChecklist() :
 #if SQUID_SNMP
         snmp_community(NULL),
 #endif
-#if USE_SSL
-        ssl_error(0),
-#endif
         extacl_entry (NULL),
         conn_(NULL),
         fd_(-1),
@@ -174,9 +171,6 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
 #endif
 #if SQUID_SNMP
         snmp_community(NULL),
-#endif
-#if USE_SSL
-        ssl_error(0),
 #endif
         extacl_entry (NULL),
         conn_(NULL),

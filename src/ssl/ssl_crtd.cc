@@ -243,6 +243,20 @@ static bool proccessNewRequest(Ssl::CrtdMessage const & request_message, std::st
     if (cert_subject.empty())
         cert_subject = "/CN=" + host;
 
+    i = map.find(Ssl::CrtdMessage::param_SetValidAfter);
+    if (i != map.end() && strcasecmp(i->second.c_str(), "on") == 0)
+        cert_subject.append("+SetValidAfter=on");
+    
+    i = map.find(Ssl::CrtdMessage::param_SetValidBefore);
+    if (i != map.end() && strcasecmp(i->second.c_str(), "on") == 0)
+        cert_subject.append("+SetValidBefore=on");
+
+    i = map.find(Ssl::CrtdMessage::param_SetCommonName);
+    if (i != map.end()) {
+        cert_subject.append("+SetCommonName=");
+        cert_subject.append(i->second);
+    }
+
     db.find(cert_subject, cert, pkey);
 
     if (cert.get() && certToMimic.get()) {
@@ -262,13 +276,13 @@ static bool proccessNewRequest(Ssl::CrtdMessage const & request_message, std::st
         Ssl::BIGNUM_Pointer serial(db.getCurrentSerialNumber());
 
         if (certToMimic.get()) {
-            Ssl::generateSslCertificate(certToMimic, certToSign, pkeyToSign, cert, pkey, serial.get());
+            Ssl::generateSslCertificate(certToMimic, certToSign, pkeyToSign, cert, pkey, serial.get(), map);
         }
         else 
             if (!Ssl::generateSslCertificateAndPrivateKey(host.c_str(), certToSign, pkeyToSign, cert, pkey, serial.get()))
                 throw std::runtime_error("Cannot create ssl certificate or private key.");
 
-        if (!db.addCertAndPrivateKey(cert, pkey) && db.IsEnabledDiskStore())
+        if (!db.addCertAndPrivateKey(cert, pkey, cert_subject) && db.IsEnabledDiskStore())
             throw std::runtime_error("Cannot add certificate to db.");
     }
 

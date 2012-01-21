@@ -65,6 +65,12 @@ public:
     static const std::string code_new_certificate;
     /// Parameter name for passing hostname
     static const std::string param_host;
+    /// Parameter name for passing SetValidAfter cert adaptation variable
+    static const std::string param_SetValidAfter;
+    /// Parameter name for passing SetValidBefore cert adaptation variable
+    static const std::string param_SetValidBefore;
+    /// Parameter name for passing SetCommonName cert adaptation variable
+    static const std::string param_SetCommonName;
 private:
     enum ParseState {
         BEFORE_CODE,

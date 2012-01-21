@@ -22,9 +22,14 @@ ACLSslErrorData::~ACLSslErrorData()
 }
 
 bool
-ACLSslErrorData::match(Ssl::ssl_error_t toFind)
+ACLSslErrorData::match(Ssl::Errors const &toFind)
 {
-    return values->findAndTune (toFind);
+    typedef std::vector<Ssl::ssl_error_t>::const_iterator SEsI;
+    for (SEsI it = toFind.begin() ; it != toFind.end(); it++ ) {
+        if (values->findAndTune (*it))
+            return true;
+    }
+    return false;
 }
 
 /* explicit instantiation required for some systems */
@@ -67,7 +72,7 @@ ACLSslErrorData::empty() const
     return values == NULL;
 }
 
-ACLData<Ssl::ssl_error_t> *
+ACLSslErrorData *
 ACLSslErrorData::clone() const
 {
     /* Splay trees don't clone yet. */

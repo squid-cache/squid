@@ -246,13 +246,28 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     }
 
     if (!ok) {
+        Ssl::Errors *errNoList = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_sslerrno));
+        if (!errNoList) {
+            errNoList = new Ssl::Errors;
+            if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_error_sslerrno,  (void *)errNoList)) {
+                debugs(83, 2, "Failed to set ssl error_no in ssl_verify_cb: Certificate " << buffer);
+                delete errNoList;
+                errNoList = NULL;
+            }
+        }
+
+        if (errNoList) // Append the err no to the SSL errors lists.
+            errNoList->push_back(error_no);
+
         if (const char *err_descr = Ssl::GetErrorDescr(error_no))
             debugs(83, 5, err_descr << ": " << buffer);
         else
             debugs(83, DBG_IMPORTANT, "SSL unknown certificate error " << error_no << " in " << buffer);
 
         if (check) {
-            Filled(check)->ssl_error = error_no;
+            ACLFilledChecklist *filledCheck = Filled(check);
+            filledCheck->sslErrorList.clear();
+            filledCheck->sslErrorList.push_back(error_no);
             if (check->fastCheck() == ACCESS_ALLOWED) {
                 debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
                 ok = 1;
@@ -580,6 +595,14 @@ ssl_free_ErrorDetail(void *, void *ptr, CRYPTO_EX_DATA *,
     delete errDetail;
 }
 
+static void
+ssl_free_SslErrNoList(void *, void *ptr, CRYPTO_EX_DATA *,
+                     int, long, void *)
+{
+    Ssl::Errors *errNo = static_cast <Ssl::Errors *>(ptr);
+    delete errNo;
+}
+
 // "free" function for X509 certificates
 static void
 ssl_free_X509(void *, void *ptr, CRYPTO_EX_DATA *,
@@ -629,6 +652,7 @@ ssl_initialize(void)
     ssl_ex_index_cert_error_check = SSL_get_ex_new_index(0, (void *) "cert_error_check", NULL, &ssl_dupAclChecklist, &ssl_freeAclChecklist);
     ssl_ex_index_ssl_error_detail = SSL_get_ex_new_index(0, (void *) "ssl_error_detail", NULL, NULL, &ssl_free_ErrorDetail);
     ssl_ex_index_ssl_peeked_cert  = SSL_get_ex_new_index(0, (void *) "ssl_peeked_cert", NULL, NULL, &ssl_free_X509);
+    ssl_ex_index_ssl_error_sslerrno =  SSL_get_ex_new_index(0, (void *) "ssl_error_sslerrno", NULL, NULL, &ssl_free_SslErrNoList);
 }
 
 /// \ingroup ServerProtocolSSLInternal
@@ -1234,12 +1258,12 @@ SSL_CTX * Ssl::generateSslContextUsingPkeyAndCertFromMemory(const char * data)
     return createSSLContext(cert, pkey);
 }
 
-SSL_CTX * Ssl::generateSslContext(char const *host, Ssl::X509_Pointer const & mimicCert, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey)
+SSL_CTX * Ssl::generateSslContext(char const *host, Ssl::X509_Pointer const & mimicCert, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey, Ssl::CrtdMessage::BodyParams const &mimicExceptions)
 {
     Ssl::X509_Pointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
     if (mimicCert .get()) {
-        if (!generateSslCertificate(mimicCert, signedX509, signedPkey, cert, pkey, NULL))
+        if (!generateSslCertificate(mimicCert, signedX509, signedPkey, cert, pkey, NULL, mimicExceptions))
             return NULL;
     }
     else if (!generateSslCertificateAndPrivateKey(host, signedX509, signedPkey, cert, pkey, NULL)) {
