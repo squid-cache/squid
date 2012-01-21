@@ -256,7 +256,31 @@ bool Ssl::generateSslCertificateAndPrivateKey(char const *host, Ssl::X509_Pointe
     return true;
 }
 
-static bool mimicCertificate(Ssl::X509_Pointer & cert, Ssl::X509_Pointer const & caCert, Ssl::X509_Pointer const &certToMimic)
+// Replace certs common name with the given
+static bool replaceCommonName(Ssl::X509_Pointer & cert, const char *cn)
+{
+    X509_NAME *name = X509_get_subject_name(cert.get());
+    if (!name)
+        return false;
+    // Remove the CN part:
+    int loc = X509_NAME_get_index_by_NID(name, NID_commonName, -1);
+    X509_NAME_ENTRY *tmp = X509_NAME_get_entry(name, loc);
+    X509_NAME_delete_entry(name, loc);
+    X509_NAME_ENTRY_free(tmp);
+
+    // Add a new CN
+    return X509_NAME_add_entry_by_NID(name, NID_commonName, MBSTRING_ASC,
+                                      (unsigned char *)cn, -1, -1, 0);
+}
+
+const char *Ssl::CertAdaptAlgorithmStr[] = {
+    "setValidAfter",
+    "setValidBefore",
+    "setCommonName",
+    NULL
+};
+
+static bool mimicCertificate(Ssl::X509_Pointer & cert, Ssl::X509_Pointer const & caCert, Ssl::X509_Pointer const &certToMimic,  Ssl::CrtdMessage::BodyParams const &exceptions)
 { 
     // not an Ssl::X509_NAME_Pointer because X509_REQ_get_subject_name()
     // returns a pointer to the existing subject name. Nothing to clean here.
@@ -266,27 +290,46 @@ static bool mimicCertificate(Ssl::X509_Pointer & cert, Ssl::X509_Pointer const &
     // X509_set_subject_name will call X509_dup for name 
     X509_set_subject_name(cert.get(), name);
 
+    Ssl::CrtdMessage::BodyParams::const_iterator it;
+    it = exceptions.find(sslCertAdaptAlgoritm(Ssl::algSetCommonName));
+    if (it != exceptions.end()) {
+        // In this case the CN of the certificate given by the exceptions 
+        // and should be replaced
+        const char *cn = it->second.c_str();
+        if (cn && !replaceCommonName(cert, cn))
+            return false;
+    }
 
     // We should get caCert notBefore and notAfter fields and do not allow 
     // notBefore/notAfter values from certToMimic before/after notBefore/notAfter
     // fields from caCert.
     // Currently there is not any way in openssl tollkit to compare two ASN1_TIME 
     // objects.
-    ASN1_TIME *aTime;
-    if ((aTime = X509_get_notBefore(certToMimic.get())) || (aTime = X509_get_notBefore(caCert.get())) ) {
+    ASN1_TIME *aTime = NULL;
+    it = exceptions.find(sslCertAdaptAlgoritm(Ssl::algSetValidBefore));
+    if (it == exceptions.end() || strcasecmp(it->second.c_str(), "on") != 0)
+        aTime = X509_get_notBefore(certToMimic.get());
+    if (!aTime)
+        aTime = X509_get_notBefore(caCert.get());
+
+    if (aTime) {
         if (!X509_set_notBefore(cert.get(), aTime))
             return false;
     }
     else if (!X509_gmtime_adj(X509_get_notBefore(cert.get()), (-2)*24*60*60))
         return false;
 
-    if ((aTime = X509_get_notAfter(certToMimic.get())) || (aTime = X509_get_notAfter(caCert.get())) ) {
+    aTime = NULL;
+     it = exceptions.find(sslCertAdaptAlgoritm(Ssl::algSetValidAfter));
+    if (it == exceptions.end() || strcasecmp(it->second.c_str(), "on") != 0)
+        aTime = X509_get_notAfter(certToMimic.get());
+    if (!aTime)
+        aTime = X509_get_notAfter(caCert.get());
+    if (aTime) {
         if (!X509_set_notAfter(cert.get(), aTime))
             return NULL;
     } else if (!X509_gmtime_adj(X509_get_notAfter(cert.get()), 60*60*24*356*3))
         return NULL;
-
-    
     unsigned char *alStr;
     int alLen;
     alStr = X509_alias_get0(certToMimic.get(), &alLen);
@@ -303,7 +346,7 @@ static bool mimicCertificate(Ssl::X509_Pointer & cert, Ssl::X509_Pointer const &
     return true;
 }
 
-bool Ssl::generateSslCertificate(Ssl::X509_Pointer const &certToMimic, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey, Ssl::X509_Pointer & certToStore, Ssl::EVP_PKEY_Pointer & pkey, BIGNUM const * serial)
+bool Ssl::generateSslCertificate(Ssl::X509_Pointer const &certToMimic, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey, Ssl::X509_Pointer & certToStore, Ssl::EVP_PKEY_Pointer & pkey, BIGNUM const * serial, Ssl::CrtdMessage::BodyParams const &mimicExceptions)
 {
     if (!certToMimic.get())
         return false;
@@ -323,7 +366,7 @@ bool Ssl::generateSslCertificate(Ssl::X509_Pointer const &certToMimic, Ssl::X509
         return false;
 
     // inherit properties from certToMimic
-    if (!mimicCertificate(cert, signedX509, certToMimic))
+    if (!mimicCertificate(cert, signedX509, certToMimic, mimicExceptions))
         return false;
 
     // Set issuer name, from CA or our subject name for self signed cert

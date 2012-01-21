@@ -335,6 +335,10 @@ public:
     StoreEntry *bumpServerFirstErrorEntry() const {return bumpErrorEntry;}
     void setBumpServerCert(X509 *serverCert) {bumpServerCert.reset(serverCert);}
     X509 *getBumpServerCert() {return bumpServerCert.get();}
+    void setBumpSslErrorList(Ssl::Errors &errNoList) {bumpSslErrorNoList = errNoList;}
+    /// Fill the certAdaptParams with the required data for certificate adaptation
+    /// and create the key for storing/retrieve the certificate to/from the cache
+    void buildSslCertAdaptParams(Ssl::CrtdMessage::BodyParams &certAdaptParams);
     bool serveDelayedError(ClientSocketContext *context);
 #else
     bool switchedToHttps() const { return false; }
@@ -360,12 +364,16 @@ private:
 
 #if USE_SSL
     bool switchedToHttps_;
-    String sslHostName; ///< Host name for SSL certificate generation
+    /// The SSL server host name appears in CONNECT request or the server ip address for the intercepted requests
+    String sslConnectHostOrIp; ///< The SSL server host name as passed in the CONNECT request
+    String sslCommonName; ///< CN name for SSL certificate generation
+    String sslBumpCertKey; ///< Key to use to store/retrieve generated certificate
 
     /// a job that connects to the HTTPS server to get its SSL certificate
     CbcPointer<Ssl::ServerPeeker> httpsPeeker;
     StoreEntry *bumpErrorEntry;
     Ssl::X509_Pointer bumpServerCert;
+    Ssl::Errors bumpSslErrorNoList; ///< The list of SSL certificate errors which ignored
 #endif
 
     AsyncCall::Pointer reader; ///< set when we are reading

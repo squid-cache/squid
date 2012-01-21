@@ -10,8 +10,9 @@
 #include "CbDataList.h"
 #include "ssl/support.h"
 #include "ssl/ErrorDetail.h"
+#include <vector>
 
-class ACLSslErrorData : public ACLData<Ssl::ssl_error_t>
+class ACLSslErrorData : public ACLData<Ssl::Errors const&>
 {
 
 public:
@@ -21,11 +22,11 @@ public:
     ACLSslErrorData(ACLSslErrorData const &);
     ACLSslErrorData &operator= (ACLSslErrorData const &);
     virtual ~ACLSslErrorData();
-    bool match(Ssl::ssl_error_t);
+    bool match(Ssl::Errors const &);
     wordlist *dump();
     void parse();
     bool empty() const;
-    virtual ACLData<Ssl::ssl_error_t> *clone() const;
+    virtual  ACLSslErrorData *clone() const;
 
     CbDataList<Ssl::ssl_error_t> *values;
 };

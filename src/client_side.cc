@@ -3615,12 +3615,12 @@ ConnStateData::sslCrtdHandleReply(const char * reply)
     } else {
         Ssl::CrtdMessage reply_message;
         if (reply_message.parse(reply, strlen(reply)) != Ssl::CrtdMessage::OK) {
-            debugs(33, 5, HERE << "Reply from ssl_crtd for " << sslHostName << " is incorrect");
+            debugs(33, 5, HERE << "Reply from ssl_crtd for " << sslConnectHostOrIp << " is incorrect");
         } else {
             if (reply_message.getCode() != "OK") {
-                debugs(33, 5, HERE << "Certificate for " << sslHostName << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
+                debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
             } else {
-                debugs(33, 5, HERE << "Certificate for " << sslHostName << " was successfully recieved from ssl_crtd");
+                debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " was successfully recieved from ssl_crtd");
                 SSL_CTX *ctx = Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str());
                 getSslContextDone(ctx, true);
                 return;
@@ -3630,34 +3630,91 @@ ConnStateData::sslCrtdHandleReply(const char * reply)
     getSslContextDone(NULL);
 }
 
+void ConnStateData::buildSslCertAdaptParams(Ssl::CrtdMessage::BodyParams &certAdaptParams)
+{
+    // Build a key to use for storing/retrieving certificates to cache
+    sslBumpCertKey = sslCommonName.defined() ? sslCommonName : sslConnectHostOrIp;
+
+    // fake certificate adaptation requires bump-server-first mode
+    if (!bumpServerFirstErrorEntry())
+        return;
+
+    HttpRequest *fakeRequest =  new HttpRequest();
+    fakeRequest->SetHost(sslConnectHostOrIp.termedBuf());
+    fakeRequest->port = clientConnection->local.GetPort();
+    fakeRequest->protocol = AnyP::PROTO_HTTPS;
+ 
+    ACLFilledChecklist checklist(NULL, fakeRequest, 
+                                 clientConnection != NULL ? clientConnection->rfc931 : dash_str);
+    checklist.conn(this);
+    checklist.src_addr = clientConnection->remote;
+    checklist.my_addr = clientConnection->local;
+    checklist.sslErrorList = bumpSslErrorNoList;
+
+    for (sslproxy_cert_adapt *ca = Config.ssl_client.cert_adapt; ca != NULL; ca = ca->next) {
+        if (ca->aclList && checklist.fastCheck(ca->aclList) == ACCESS_ALLOWED) {
+            const char *alg = Ssl::CertAdaptAlgorithmStr[ca->alg];
+            const char *param = ca->param;
+  
+            // if already set ignore
+            if (certAdaptParams.find(alg) != certAdaptParams.end())
+                continue;
+
+            // if not param defined for Common Name adaptation use hostname from 
+            // the CONNECT request
+            if (!param && ca->alg == Ssl::algSetCommonName)
+                param = sslConnectHostOrIp.termedBuf();
+
+            assert(alg && param);
+            debugs(33, 5, HERE << "Matches certificate adaptation aglorithm: " << 
+                   alg << " param: " << param);
+
+            // append to the certificate adaptation parameters
+            certAdaptParams.insert( std::make_pair(alg, param));
+
+            // And also build the key used to store certificate to cache.
+            sslBumpCertKey.append("+");
+            sslBumpCertKey.append(alg);
+            sslBumpCertKey.append("=");
+            sslBumpCertKey.append(param);
+        }
+    }    
+}
+
 void
 ConnStateData::getSslContextStart()
 {
-    char const * host = sslHostName.termedBuf();
-    if (port->generateHostCertificates && host && strcmp(host, "") != 0) {
-        debugs(33, 5, HERE << "Finding SSL certificate for " << host << " in cache");
+    if (port->generateHostCertificates) {
+        Ssl::CrtdMessage::BodyParams certAdaptParams;
+        buildSslCertAdaptParams(certAdaptParams);
+        assert(sslBumpCertKey.defined() && sslBumpCertKey[0] != '\0');
+
+            debugs(33, 5, HERE << "Finding SSL certificate for " << sslBumpCertKey << " in cache");
         Ssl::LocalContextStorage & ssl_ctx_cache(Ssl::TheGlobalContextStorage.getLocalStorage(port->s));
-        SSL_CTX * dynCtx = ssl_ctx_cache.find(host);
+        SSL_CTX * dynCtx = ssl_ctx_cache.find(sslBumpCertKey.termedBuf());
         if (dynCtx) {
-            debugs(33, 5, HERE << "SSL certificate for " << host << " have found in cache");
+            debugs(33, 5, HERE << "SSL certificate for " << sslBumpCertKey << " have found in cache");
             if (Ssl::verifySslCertificate(dynCtx, bumpServerCert.get())) {
-                debugs(33, 5, HERE << "Cached SSL certificate for " << host << " is valid");
+                debugs(33, 5, HERE << "Cached SSL certificate for " << sslBumpCertKey << " is valid");
                 getSslContextDone(dynCtx);
                 return;
             } else {
-                debugs(33, 5, HERE << "Cached SSL certificate for " << host << " is out of date. Delete this certificate from cache");
-                ssl_ctx_cache.remove(host);
+                debugs(33, 5, HERE << "Cached SSL certificate for " << sslBumpCertKey << " is out of date. Delete this certificate from cache");
+                ssl_ctx_cache.remove(sslBumpCertKey.termedBuf());
             }
         } else {
-            debugs(33, 5, HERE << "SSL certificate for " << host << " haven't found in cache");
+            debugs(33, 5, HERE << "SSL certificate for " << sslBumpCertKey << " haven't found in cache");
         }
 
+        char const * host = sslCommonName.defined() ? sslCommonName.termedBuf() : sslConnectHostOrIp.termedBuf();
 #if USE_SSL_CRTD
         debugs(33, 5, HERE << "Generating SSL certificate for " << host << " using ssl_crtd.");
         Ssl::CrtdMessage request_message;
         request_message.setCode(Ssl::CrtdMessage::code_new_certificate);
         Ssl::CrtdMessage::BodyParams map;
         map.insert(std::make_pair(Ssl::CrtdMessage::param_host, host));
+        /*Append parameters for cert adaptation*/
+        map.insert(certAdaptParams.begin(), certAdaptParams.end());
         std::string bufferToWrite;
         Ssl::writeCertAndPrivateKeyToMemory(port->signingCert, port->signPkey, bufferToWrite);
         if (bumpServerCert.get()) {
@@ -3665,11 +3722,12 @@ ConnStateData::getSslContextStart()
             debugs(33, 5, HERE << "Append Mimic Certificate to body request: " << bufferToWrite);
         }
         request_message.composeBody(map, bufferToWrite);
+        debugs(33, 5, HERE << "SSL crtd request: " << request_message.compose().c_str());
         Ssl::Helper::GetInstance()->sslSubmit(request_message, sslCrtdHandleReplyWrapper, this);
         return;
 #else
         debugs(33, 5, HERE << "Generating SSL certificate for " << host);
-        dynCtx = Ssl::generateSslContext(host, bumpServerCert, port->signingCert, port->signPkey);
+        dynCtx = Ssl::generateSslContext(host, bumpServerCert, port->signingCert, port->signPkey, certAdaptParams);
         getSslContextDone(dynCtx, true);
         return;
 #endif //USE_SSL_CRTD
@@ -3686,13 +3744,14 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
         Ssl::addChainToSslContext(sslContext, port->certsToChain.get());
 
         Ssl::LocalContextStorage & ssl_ctx_cache(Ssl::TheGlobalContextStorage.getLocalStorage(port->s));
-        if (sslContext && sslHostName != "") {
-            if (!ssl_ctx_cache.add(sslHostName.termedBuf(), sslContext)) {
+        assert(sslBumpCertKey.defined() && sslBumpCertKey[0] != '\0');
+        if (sslContext) {
+            if (!ssl_ctx_cache.add(sslBumpCertKey.termedBuf(), sslContext)) {
                 // If it is not in storage delete after using. Else storage deleted it.
                 fd_table[clientConnection->fd].dynamicSslContext = sslContext;
             }
         } else {
-            debugs(33, 2, HERE << "Failed to generate SSL cert for " << sslHostName);
+            debugs(33, 2, HERE << "Failed to generate SSL cert for " << sslConnectHostOrIp);
         }
     }
 
@@ -3725,7 +3784,8 @@ ConnStateData::switchToHttps(const char *host, const int port)
 {
     assert(!switchedToHttps_);
 
-    sslHostName = host;
+    sslConnectHostOrIp = host;
+    sslCommonName = host;
 
     //HTTPMSGLOCK(currentobject->http->request);
     assert(areAllContextsForThisConnection());
@@ -3741,7 +3801,7 @@ ConnStateData::switchToHttps(const char *host, const int port)
     const bool alwaysBumpServerFirst = true;
     if (alwaysBumpServerFirst) {
         Must(!httpsPeeker.set());
-        httpsPeeker = new Ssl::ServerPeeker(this, sslHostName.termedBuf(), port);
+        httpsPeeker = new Ssl::ServerPeeker(this, sslConnectHostOrIp.termedBuf(), port);
         bumpErrorEntry = httpsPeeker->storeEntry();
         Must(bumpErrorEntry);
         bumpErrorEntry->lock();
@@ -3750,7 +3810,7 @@ ConnStateData::switchToHttps(const char *host, const int port)
         return;
     }
 
-    // otherwise, use sslHostName
+    // otherwise, use sslConnectHostOrIp
     getSslContextStart();
 }
 
@@ -3764,16 +3824,16 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
         assert(ssl);
         Ssl::X509_Pointer serverCert(SSL_get_peer_certificate(ssl));
         assert(serverCert.get() != NULL);
-        sslHostName = Ssl::CommonHostName(serverCert.get());
-        assert(sslHostName.defined());
-        debugs(33, 5, HERE << "found HTTPS server " << sslHostName << " at bumped " <<
+        sslCommonName = Ssl::CommonHostName(serverCert.get());
+        assert(sslCommonName.defined());
+        debugs(33, 5, HERE << "found HTTPS server CN " << sslCommonName << " at bumped " <<
                *serverConnection);
 
         pinConnection(serverConnection, NULL, NULL, false);
 
-        debugs(33, 5, HERE << "bumped HTTPS server: " << sslHostName);
+        debugs(33, 5, HERE << "bumped HTTPS server: " << sslConnectHostOrIp);
     } else
-        debugs(33, 5, HERE << "Error while bumped HTTPS server: " << sslHostName);
+        debugs(33, 5, HERE << "Error while bumped HTTPS server: " << sslConnectHostOrIp);
 
     if (httpsPeeker.valid())
         httpsPeeker->noteHttpsPeeked(serverConnection);

@@ -2052,6 +2052,35 @@ DOC_START
 	Default setting:  sslproxy_cert_error deny all
 DOC_END
 
+NAME: sslproxy_cert_adapt 
+IFDEF: USE_SSL
+DEFAULT: none
+TYPE: sslproxy_cert_adapt
+LOC: Config.ssl_client.cert_adapt
+DOC_START
+	
+	sslproxy_cert_adapt <adaptation algorithm> acl ...
+
+	The following certificate adaptation algorithms supported:
+	   setValidAfter
+		sets the "Not After" property to the "Not After" propery of
+		the ca certificate used to sign generated certificates
+	   setValidBefore
+		sets the "Not Before" property to the "Not Before" property of
+		the ca certificate used to sign generated certificates
+	   setCommonName
+		sets certificate Subject.CN property to the
+		host name  from specified as a CN parameter (setCommonName{CN})
+		or, if no explicit CN parameter was specified, extracted from
+		the CONNECT request. It is a misconfiguration to use setName
+	 	without an explicit parameter for intercepted or tproxied SSL
+		transactions. 
+		
+	When the acl(s) match, the corresponding adaptation algorithm is
+	applied to the fake/generated certificate. Otherwise, the
+	default mimicking action takes place.
+DOC_END
+
 NAME: sslpassword_program
 IFDEF: USE_SSL
 DEFAULT: none

@@ -3,6 +3,7 @@
  */
 
 #include "config.h"
+#include "ssl/gadgets.h"
 #include "ssl/crtd_message.h"
 #if HAVE_CSTDLIB
 #include <cstdlib>
@@ -175,3 +176,6 @@ void Ssl::CrtdMessage::composeBody(CrtdMessage::BodyParams const & map, std::str
 
 const std::string Ssl::CrtdMessage::code_new_certificate("new_certificate");
 const std::string Ssl::CrtdMessage::param_host("host");
+const std::string Ssl::CrtdMessage::param_SetValidAfter(Ssl::CertAdaptAlgorithmStr[algSetValidAfter]);
+const std::string Ssl::CrtdMessage::param_SetValidBefore(Ssl::CertAdaptAlgorithmStr[algSetValidBefore]);
+const std::string Ssl::CrtdMessage::param_SetCommonName(Ssl::CertAdaptAlgorithmStr[algSetCommonName]);

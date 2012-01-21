@@ -69,3 +69,4 @@ wccp2_amethod
 wccp2_service
 wccp2_service_info
 wordlist
+sslproxy_cert_adapt	acl

@@ -96,7 +96,7 @@ public:
     /// Find certificate and private key for host name
     bool find(std::string const & host_name, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey);
     /// Save certificate to disk.
-    bool addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey);
+    bool addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey, std::string const & useName);
     /// Get a serial number to use for generating a new certificate.
     BIGNUM * getCurrentSerialNumber();
     /// Create and initialize a database  under the  db_path
