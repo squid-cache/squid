@@ -30,9 +30,7 @@
  *
  ***************************************************************************/
 
-#if HAVE_CONFIG_H
 #include "squid.h"
-#endif /* HAVE_CONFIG_H */
 
 #include <stdio.h>
 #include "snmp_api_error.h"
