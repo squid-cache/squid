@@ -68,7 +68,7 @@ for FILENAME in `ls -1`; do
 	fi
 
 	#
-	# REQUIRE config.h/squid.h as first #include
+	# REQUIRE squid.h/squid-old.h as first #include
 	#
 	case ${FILENAME} in
 	*.c|*.cc)
