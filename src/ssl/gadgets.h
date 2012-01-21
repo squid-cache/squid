@@ -6,6 +6,7 @@
 #define SQUID_SSL_GADGETS_H
 
 #include "base/TidyPointer.h"
+#include "ssl/crtd_message.h"
 
 #if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
@@ -133,12 +134,36 @@ bool generateSslCertificateAndPrivateKey(char const *host, X509_Pointer const & 
 
 /**
  \ingroup SslCrtdSslAPI
+ * Supported certificate adaptation algorithms
+ */
+enum CertAdaptAlgorithm {algSetValidAfter = 0, algSetValidBefore, algSetCommonName, algEnd};
+
+/**
+ \ingroup SslCrtdSslAPI
+ * Short names for certificate adaptation algorithms
+ */
+extern const char *CertAdaptAlgorithmStr[];
+
+/**
+ \ingroup SslCrtdSslAPI
+ * Return the short name of the adaptation algorithm "alg"
+ */
+inline const char *sslCertAdaptAlgoritm(int alg)
+{
+    if (alg >=0 && alg < Ssl::algEnd)
+        return Ssl::CertAdaptAlgorithmStr[alg];
+
+    return NULL;
+}
+
+/**
+ \ingroup SslCrtdSslAPI
  * Decide on the kind of certificate and generate a CA- or self-signed one.
  * The  generated certificate will inherite properties from certToMimic
  * Return generated certificate and private key in resultX509 and resultPkey
  * variables.
  */
-bool generateSslCertificate(X509_Pointer const &certToMimic, X509_Pointer const & signedX509, EVP_PKEY_Pointer const & signedPkey, X509_Pointer & cert, EVP_PKEY_Pointer & pkey, BIGNUM const * serial);
+bool generateSslCertificate(X509_Pointer const &certToMimic, X509_Pointer const & signedX509, EVP_PKEY_Pointer const & signedPkey, X509_Pointer & cert, EVP_PKEY_Pointer & pkey, BIGNUM const * serial, CrtdMessage::BodyParams const & mimicExceptions);
 
 /**
  \ingroup SslCrtdSslAPI

@@ -5,6 +5,9 @@
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
+#if USE_SSL
+#include "ssl/support.h"
+#endif
 
 class ExternalACLEntry;
 class ConnStateData;
@@ -63,7 +66,7 @@ public:
 #endif
 
 #if USE_SSL
-    int ssl_error;
+    Ssl::Errors sslErrorList;
 #endif
 
     ExternalACLEntry *extacl_entry;

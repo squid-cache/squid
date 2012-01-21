@@ -203,7 +203,7 @@ bool Ssl::CertificateDb::find(std::string const & host_name, Ssl::X509_Pointer &
     return pure_find(host_name, cert, pkey);
 }
 
-bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey)
+bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey, std::string const & useName)
 {
     const Locker locker(dbLock, Here);
     load();
@@ -224,7 +224,7 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
 
     {
         TidyPointer<char, tidyFree> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), NULL, 0));
-        if (pure_find(subject.get(), cert, pkey))
+        if (pure_find(useName.empty() ? subject.get() : useName, cert, pkey))
             return true;
     }
     // check db size.
@@ -241,7 +241,9 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
     ASN1_UTCTIME * tm = X509_get_notAfter(cert.get());
     row.setValue(cnlExp_date, std::string(reinterpret_cast<char *>(tm->data), tm->length).c_str());
     row.setValue(cnlFile, "unknown");
-    {
+    if (!useName.empty())
+        row.setValue(cnlName, useName.c_str());
+    else {
         TidyPointer<char, tidyFree> subject(X509_NAME_oneline(X509_get_subject_name(cert.get()), NULL, 0));
         row.setValue(cnlName, subject.get());
     }
