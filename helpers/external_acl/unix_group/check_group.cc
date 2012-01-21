@@ -80,7 +80,7 @@
 #endif
 
 /*
- * Verify if user�s primary group matches groupname
+ * Verify if user's primary group matches groupname
  * Returns 0 if user is not on the group
  * Returns 1 otherwise
  */
