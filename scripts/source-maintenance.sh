@@ -79,7 +79,7 @@ for FILENAME in `ls -1`; do
 		;;
 	*.h|*.cci)
 		FI=`grep "#include \"squid.h\"" ${FILENAME}`;
-		if test "x${FI}" != "x" -a "${FILENAME}" != "squid.h"; then
+		if test "x${FI}" != "x" -a "${FILENAME}" != "squid-old.h" ; then
 			echo "ERROR: ${PWD}/${FILENAME} duplicate include of squid.h"
 		fi
 		;;
@@ -111,7 +111,7 @@ for FILENAME in `ls -1`; do
 
     esac
 
-    if test "$FILENAME" = "libltdl" ; then
+    if test "$FILENAME" = "libltdl" -o "$FILENAME" = "libTrie" ; then
         :
     elif test -d $FILENAME ; then
 	cd $FILENAME
