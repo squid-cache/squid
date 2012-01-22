@@ -35,7 +35,7 @@
 #ifndef SQUID_CLIENTSIDEREQUEST_H
 #define SQUID_CLIENTSIDEREQUEST_H
 
-#include "squid.h"
+#include "squid-old.h"
 #include "HttpHeader.h"
 #include "clientStream.h"
 #include "client_side.h"

@@ -31,13 +31,13 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#include "config.h"
+#include "squid.h"
 
 /* for ClientActiveRequests global */
 #include "dlink.h"
 
 /* old includes without reasons given. */
-#include "squid.h"
+#include "squid-old.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #if USE_AUTH

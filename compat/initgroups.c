@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "compat/initgroups.h"
 
 #if HAVE_GRP_H

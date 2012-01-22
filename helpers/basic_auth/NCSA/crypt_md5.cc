@@ -14,7 +14,7 @@
  * Origin: Id: crypt.c,v 1.3 1995/05/30 05:42:22 rgrimes Exp
  *
  */
-#include "config.h"
+#include "squid.h"
 
 #if HAVE_STRING_H
 #include <string.h>

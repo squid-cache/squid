@@ -30,7 +30,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "cbdata.h"
 #include "CacheManager.h"
 #include "DnsLookupDetails.h"

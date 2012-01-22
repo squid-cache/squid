@@ -33,7 +33,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "RemovalPolicy.h"
 
 CBDATA_CLASS_INIT(RemovalPolicy);

@@ -29,7 +29,7 @@
 /*
  * Hosted at http://sourceforge.net/projects/squidkerbauth
  */
-#include "config.h"
+#include "squid.h"
 #include "helpers/defines.h"
 #include "util.h"
 

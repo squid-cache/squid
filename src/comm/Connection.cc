@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "cbdata.h"
 #include "comm.h"
 #include "comm/Connection.h"

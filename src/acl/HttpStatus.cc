@@ -34,11 +34,11 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "config.h"
+#include "squid.h"
 #if _SQUID_CYGWIN_
 #include <squid_windows.h>
 #endif
-#include "squid.h"
+#include "squid-old.h"
 
 #include "acl/HttpStatus.h"
 #include "acl/FilledChecklist.h"

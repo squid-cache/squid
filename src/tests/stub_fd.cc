@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "fde.h"
 
 #define STUB_API "fd.cc"

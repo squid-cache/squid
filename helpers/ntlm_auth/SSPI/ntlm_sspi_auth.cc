@@ -63,7 +63,7 @@
 
 typedef unsigned char uchar;
 
-#include "config.h"
+#include "squid.h"
 #include "helpers/defines.h"
 #include "libntlmauth/ntlmauth.h"
 #include "libntlmauth/support_bits.h"

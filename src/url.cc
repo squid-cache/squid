@@ -33,7 +33,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "URL.h"
 #include "HttpRequest.h"
 #include "URLScheme.h"

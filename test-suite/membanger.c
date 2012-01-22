@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "hash.h"
 
 #if HAVE_UNISTD_H

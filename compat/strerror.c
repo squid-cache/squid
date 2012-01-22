@@ -32,7 +32,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 
 #if HAVE_ERRNO_H
 #include <errno.h>

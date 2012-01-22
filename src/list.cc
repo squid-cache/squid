@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 /* This should go away, in favour of the List template class */
 

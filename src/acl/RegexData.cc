@@ -36,7 +36,7 @@
  * Copyright (c) 2011, Marcus Kool
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "acl/RegexData.h"
 #include "acl/Checklist.h"
 #include "acl/Acl.h"

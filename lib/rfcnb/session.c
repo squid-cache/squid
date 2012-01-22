@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 
 /* UNIX RFCNB (RFC1001/RFC1002) NetBIOS implementation
  *

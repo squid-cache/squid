@@ -23,7 +23,7 @@ SOFTWARE.
 /*
  * parse.c
  */
-#include "config.h"
+#include "squid.h"
 
 #include <stdio.h>
 

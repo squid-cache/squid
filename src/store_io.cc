@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "Store.h"
 #include "MemObject.h"
 #include "SwapDir.h"

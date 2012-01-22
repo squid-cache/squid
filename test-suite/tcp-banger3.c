@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 
 /*
  * On some systems, FD_SETSIZE is set to something lower than the

@@ -5,7 +5,7 @@
  * ldap_backend.c
  * AUTHOR: Flavio Pescuma, MARA Systems AB <flavio@marasystems.com>
  */
-#include "config.h"
+#include "squid.h"
 #include "util.h"
 
 #define LDAP_DEPRECATED 1

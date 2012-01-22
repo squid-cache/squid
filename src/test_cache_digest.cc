@@ -36,7 +36,7 @@
  * Test-suite for playing with cache digests
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 typedef struct {
     int query_count;

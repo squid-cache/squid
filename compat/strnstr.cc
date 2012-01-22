@@ -17,7 +17,7 @@
  *  Original License and code follows.
  */
 
-#include "config.h"
+#include "squid.h"
 
 #if !HAVE_STRNSTR
 

@@ -32,7 +32,7 @@
 #ifndef SQUID_H
 #define SQUID_H
 
-#include "config.h"
+#include "squid.h"
 
 #if _SQUID_MSWIN_
 /** \cond AUTODOCS-IGNORE */

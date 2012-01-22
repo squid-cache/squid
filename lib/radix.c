@@ -64,7 +64,7 @@
  *      @(#)radix.c     8.4 (Berkeley) 11/2/94
  */
 
-#include "config.h"
+#include "squid.h"
 #include "radix.h"
 #include "util.h"
 

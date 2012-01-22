@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 
 #include <cppunit/BriefTestProgressListener.h>
 #include <cppunit/CompilerOutputter.h>

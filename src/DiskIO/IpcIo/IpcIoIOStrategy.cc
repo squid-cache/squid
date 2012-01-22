@@ -5,7 +5,7 @@
  * DEBUG: section 47    Store Directory Routines
  */
 
-#include "config.h"
+#include "squid.h"
 #include "IpcIoFile.h"
 #include "IpcIoIOStrategy.h"
 

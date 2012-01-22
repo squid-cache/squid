@@ -30,7 +30,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "auth/ntlm/auth_ntlm.h"
 #include "auth/ntlm/Scheme.h"
 #include "helper.h"

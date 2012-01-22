@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "mem_node.h"
 
 #define STUB_API "mem_node.cc"

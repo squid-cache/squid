@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "base/TextException.h"
 #include "compat/shm.h"
 #include "ipc/mem/Segment.h"

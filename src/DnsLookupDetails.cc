@@ -2,7 +2,7 @@
  * DEBUG: section 78    DNS lookups
  */
 
-#include "config.h"
+#include "squid.h"
 #include "DnsLookupDetails.h"
 
 DnsLookupDetails::DnsLookupDetails(): wait(-1)

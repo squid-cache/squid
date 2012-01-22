@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "helper.h"
 
 #define STUB_API "helper.cc"

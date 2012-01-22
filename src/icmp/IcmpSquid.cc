@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "comm.h"
 #include "comm/Loops.h"
 #include "icmp/IcmpSquid.h"

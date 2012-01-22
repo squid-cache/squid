@@ -36,7 +36,7 @@
 #ifndef SQUID_ELEMENTLIST_H
 #define SQUID_ELEMENTLIST_H
 
-#include "squid.h"
+#include "squid-old.h"
 #include "esi/Element.h"
 
 class ElementList

@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "globals.h"
 #include "ipc/Kid.h"
 

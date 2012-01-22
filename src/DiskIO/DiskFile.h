@@ -33,7 +33,7 @@
 #ifndef SQUID_DISKFILE_H
 #define SQUID_DISKFILE_H
 
-#include "squid.h"
+#include "squid-old.h"
 
 #include "RefCount.h"
 

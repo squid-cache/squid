@@ -35,7 +35,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "HttpHdrSc.h"
 #include "StatHist.h"
 
