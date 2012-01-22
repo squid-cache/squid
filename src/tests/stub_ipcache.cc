@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "ipcache.h"
 
 #define STUB_API "ipcache.cc"

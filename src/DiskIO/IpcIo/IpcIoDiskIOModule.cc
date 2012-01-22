@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "IpcIoDiskIOModule.h"
 #include "IpcIoIOStrategy.h"
 

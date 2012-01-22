@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "rfc2671.h"
 #include "rfc1035.h"
 

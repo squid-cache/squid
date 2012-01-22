@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
 #include "errorpage.h"

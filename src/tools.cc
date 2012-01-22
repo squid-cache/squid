@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "base/Subscription.h"
 #include "fde.h"
 #include "ICP.h"

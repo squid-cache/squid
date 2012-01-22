@@ -31,13 +31,13 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#include "config.h"
+#include "squid.h"
 
 /* for ClientActiveRequests global */
 #include "dlink.h"
 
 /* old includes without reasons given. */
-#include "squid.h"
+#include "squid-old.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #if USE_AUTH
@@ -367,6 +367,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     // origin replied 304
     if (status == HTTP_NOT_MODIFIED) {
         http->logType = LOG_TCP_REFRESH_UNMODIFIED;
+        http->request->flags.stale_if_hit = 0; // old_entry is no longer stale
 
         // update headers on existing entry
         old_rep->updateOnNotModified(http->storeEntry()->getReply());

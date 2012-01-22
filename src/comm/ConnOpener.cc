@@ -2,7 +2,7 @@
  * DEBUG: section 05    Socket Connection Opener
  */
 
-#include "config.h"
+#include "squid.h"
 #include "comm/ConnOpener.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"

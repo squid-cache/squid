@@ -34,7 +34,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "util.h"
 
 /* The following code section is part of an EXPERIMENTAL native */

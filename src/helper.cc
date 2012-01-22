@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "base/AsyncCbdataCalls.h"
 #include "comm.h"
 #include "comm/Connection.h"

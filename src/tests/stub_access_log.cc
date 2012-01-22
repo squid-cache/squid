@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "HierarchyLogEntry.h"
 
 #define STUB_API "access.log.cc"

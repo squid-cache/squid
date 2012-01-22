@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #if USE_DELAY_POOLS
 #include "ClientInfo.h"
 #endif

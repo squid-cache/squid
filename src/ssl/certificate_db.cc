@@ -2,7 +2,7 @@
  * $Id$
  */
 
-#include "config.h"
+#include "squid.h"
 #include "ssl/certificate_db.h"
 #if HAVE_ERRNO_H
 #include <errno.h>

@@ -33,7 +33,7 @@
 #ifndef SQUID_STORESEARCH_H
 #define SQUID_STORESEARCH_H
 
-#include "squid.h"
+#include "squid-old.h"
 #include "RefCount.h"
 #include "Store.h"
 

@@ -34,7 +34,7 @@
 
 #define SQUID_HELPER 1
 
-#include "squid.h"
+#include "squid-old.h"
 
 #if USE_ICMP
 

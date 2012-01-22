@@ -40,7 +40,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "mgr/Registration.h"
 #include "ExternalACL.h"
 #include "ExternalACLEntry.h"

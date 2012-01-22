@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "ipc/mem/Page.h"
 
 #if HAVE_IOSTREAM

@@ -32,7 +32,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "StoreMeta.h"
 #include "StoreMetaUnpacker.h"
 #include "Store.h"

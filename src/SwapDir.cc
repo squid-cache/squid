@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "compat/strtoll.h"
 #include "SwapDir.h"
 #include "StoreFileSystem.h"

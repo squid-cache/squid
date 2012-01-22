@@ -34,7 +34,7 @@
 #ifndef SQUID_COMPLETIONDISPATCHER_H
 #define SQUID_COMPLETIONDISPATCHER_H
 
-#include "squid.h"
+#include "squid-old.h"
 
 
 /* Dispatch code to handle events that have completed. Completed events are queued

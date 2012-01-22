@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "compat/xstrerror.h"
 
 #if HAVE_STRING_H

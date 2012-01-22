@@ -42,7 +42,7 @@
 #pragma implementation
 #endif
 
-#include "config.h"
+#include "squid.h"
 #include "copyout.hh"
 
 //#include <assert.h>

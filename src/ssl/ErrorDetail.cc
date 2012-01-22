@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "errorpage.h"
 #include "ssl/ErrorDetail.h"
 #if HAVE_MAP

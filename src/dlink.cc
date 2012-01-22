@@ -1,7 +1,7 @@
 /*
  * $Id$
  */
-#include "config.h"
+#include "squid.h"
 #include "dlink.h"
 
 /* dlink are Mem-pooled */

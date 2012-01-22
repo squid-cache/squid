@@ -33,7 +33,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "base64.h"
 #include "ntlmauth/ntlmauth.h"
 #include "sspwin32.h"

@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 #if _SQUID_MSWIN_
 #if HAVE_WIN32_PSAPI

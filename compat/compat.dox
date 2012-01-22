@@ -69,10 +69,12 @@ The strict dependency requirements which exist within the compat API make includ
 individual part separately a risky operation.
 
 \par
-Squid coding guidelines require each .c and .cc file to include config.h or squid.h first
-in their included files. config.h begin with an order-specific sequence of defines and
+Squid coding guidelines require each .c and .cc file to include squid-old.h or squid.h first
+in their included files. squid.h begin with an order-specific sequence of defines and
 includes compat/compat.h to incorporate the compat layer appropriately in every soure file.
-squid.h begins by including config.h to prepare for its sub-includes and definitions.
+squid-old.h begins by including squid.h to prepare for its sub-includes and definitions.
+It is recommended to include squid.h and not squid-old.h for new developments; squid-old.h
+is being deprecated.
 
 \par
 Internally the compat/ directory contains the public API file compat/compat.h which structures

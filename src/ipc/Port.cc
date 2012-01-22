@@ -6,7 +6,7 @@
  */
 
 
-#include "config.h"
+#include "squid.h"
 #include "comm.h"
 #include "CommCalls.h"
 #include "comm/Connection.h"

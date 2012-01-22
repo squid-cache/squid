@@ -33,7 +33,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "ETag.h"
 
 #if HAVE_CSTRING

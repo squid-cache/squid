@@ -33,7 +33,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "wordlist.h"
 #include "MemBuf.h"
 

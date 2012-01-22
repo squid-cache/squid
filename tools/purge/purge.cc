@@ -97,7 +97,7 @@
 #pragma implementation
 #endif
 
-#include "config.h"
+#include "squid.h"
 // for xstrdup
 #include "util.h"
 

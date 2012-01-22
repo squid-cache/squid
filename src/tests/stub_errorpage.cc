@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "errorpage.h"
 
 #define STUB_API "errorpage.cc"

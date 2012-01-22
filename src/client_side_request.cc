@@ -42,7 +42,7 @@
  * From that point on it's up to reply management.
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #if USE_ADAPTATION

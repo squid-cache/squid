@@ -1,5 +1,5 @@
 #define SQUID_UNIT_TEST 1
-#include "config.h"
+#include "squid.h"
 
 #include <cppunit/BriefTestProgressListener.h>
 #include <cppunit/TextTestProgressListener.h>
