@@ -12,7 +12,7 @@
  *
  * It should not be included directly in any of the squid sources.
  * If your code requires any symbols from here you should be importing
- * squid.h at the top line of your .cc or file.
+ * squid.h at the top line of your .cc file.
  */
 
 
