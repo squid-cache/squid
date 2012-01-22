@@ -1,7 +1,7 @@
 /*
  * DEBUG: section 93    eCAP Interface
  */
-#include "squid.h"
+#include "squid-old.h"
 #include <list>
 #include <libecap/adapter/service.h>
 #include <libecap/common/options.h>

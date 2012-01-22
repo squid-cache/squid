@@ -81,7 +81,7 @@
  * data flow.
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 #include "acl/FilledChecklist.h"
 #if USE_AUTH

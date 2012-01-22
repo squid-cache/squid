@@ -4,7 +4,7 @@
  * DEBUG: section 47    Store Directory Routines
  */
 
-#include "config.h"
+#include "squid.h"
 #include "base/RunnersRegistry.h"
 #include "base/TextException.h"
 #include "DiskIO/IORequestor.h"

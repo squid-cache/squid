@@ -33,7 +33,7 @@
  * Copyright (c) 2004, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "auth/Scheme.h"
 #include "auth/Gadgets.h"
 #include "auth/Config.h"

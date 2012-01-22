@@ -1,5 +1,5 @@
 #define SQUID_UNIT_TEST 1
-#include "squid.h"
+#include "squid-old.h"
 #include "testCoss.h"
 #include "Store.h"
 #include "SwapDir.h"

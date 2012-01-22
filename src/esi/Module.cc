@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "esi/Module.h"
 #include "esi/CustomParser.h"
 #include "esi/Libxml2Parser.h"

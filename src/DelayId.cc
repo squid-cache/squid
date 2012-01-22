@@ -37,14 +37,14 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "config.h"
+#include "squid.h"
 
 /* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the delay pools code from compile process when not needed.
  */
 #if USE_DELAY_POOLS
 
-#include "squid.h"
+#include "squid-old.h"
 #include "DelayId.h"
 #include "client_side_request.h"
 #include "acl/FilledChecklist.h"

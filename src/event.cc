@@ -32,7 +32,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "compat/drand48.h"
 #include "event.h"
 #include "mgr/Registration.h"

@@ -18,7 +18,7 @@
  *
  *  Original License and code follows.
  */
-#include "config.h"
+#include "squid.h"
 
 /*	KAME: getnameinfo.c,v 1.72 2005/01/13 04:12:03 itojun Exp 	*/
 

@@ -30,7 +30,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "structs.h"
 
 #include "ConfigParser.h"

@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "comm/Connection.h"
 // XXX: for icpIncomingConn - need to pass it as a generic parameter.
 #include "ICP.h"

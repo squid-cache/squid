@@ -81,7 +81,7 @@
  *   Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "config.h"
+#include "squid.h"
 #if HAVE_ASSERT_H
 #include <assert.h>
 #endif

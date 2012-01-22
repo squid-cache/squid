@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "adaptation/Config.h"
 #include "adaptation/History.h"
 #include "base/TextException.h"

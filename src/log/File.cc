@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "fde.h"
 #include "log/File.h"
 #include "log/ModDaemon.h"

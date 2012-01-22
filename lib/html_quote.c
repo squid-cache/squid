@@ -32,7 +32,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "html_quote.h"
 
 #if HAVE_STDIO_H

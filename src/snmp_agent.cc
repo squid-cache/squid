@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "cache_snmp.h"
 #include "Store.h"
 #include "mem_node.h"

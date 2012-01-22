@@ -35,7 +35,7 @@
 
 #define _SQUID_EXTERNNEW_
 
-#include "squid.h"
+#include "squid-old.h"
 
 
 #ifdef __SUNPRO_CC

@@ -33,7 +33,7 @@
  */
 
 
-#include "squid.h"
+#include "squid-old.h"
 #include "AccessLogEntry.h"
 
 // Store.h Required by configuration directives parsing/dumping only

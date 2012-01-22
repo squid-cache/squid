@@ -1,7 +1,7 @@
 /*
  * STUB file for the pconn.cc API
  */
-#include "config.h"
+#include "squid.h"
 #include "pconn.h"
 #include "comm/Connection.h"
 

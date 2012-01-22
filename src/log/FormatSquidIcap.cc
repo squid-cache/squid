@@ -32,7 +32,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 
 #if ICAP_CLIENT
 

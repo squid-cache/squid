@@ -32,7 +32,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "base64.h"
 #include "ip/Address.h"
 #include "rfc1123.h"

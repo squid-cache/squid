@@ -45,7 +45,7 @@
  * and many others
  */
 
-#include "config.h"
+#include "squid.h"
 #include "helpers/defines.h"
 #include "md5.h"
 #include "radius.h"

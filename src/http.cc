@@ -38,7 +38,7 @@
  * have a look into http-anon.c to get more informations.
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 #include "acl/FilledChecklist.h"
 #if USE_AUTH

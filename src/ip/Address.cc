@@ -34,7 +34,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "compat/inet_ntop.h"
 #include "compat/getaddrinfo.h"
 #include "Debug.h"

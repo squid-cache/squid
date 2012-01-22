@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 
 #include "ConfigParser.h"
 #include "adaptation/Config.h"

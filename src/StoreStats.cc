@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "protos.h" /* for xmemset only */
 #include "StoreStats.h"
 

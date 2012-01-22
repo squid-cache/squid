@@ -6,7 +6,7 @@
  * Encoders adopted from http://ftp.sunet.se/pub2/gnu/vm/base64-encode.c with adjustments.
  */
 
-#include "config.h"
+#include "squid.h"
 #include "base64.h"
 
 #if HAVE_STDIO_H

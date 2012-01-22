@@ -6,7 +6,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "base/AsyncCallQueue.h"
 #include "base/AsyncCall.h"
 

@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "format/Config.h"
 #include "protos.h"
 #include <list>

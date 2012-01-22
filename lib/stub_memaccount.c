@@ -3,7 +3,7 @@
  */
 
 /* Stub function for programs not implementing statMemoryAccounted */
-#include "config.h"
+#include "squid.h"
 #include "util.h"
 int
 statMemoryAccounted(void)

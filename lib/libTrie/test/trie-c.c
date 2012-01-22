@@ -17,7 +17,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "Trie.h"
 #include <stdio.h>
 

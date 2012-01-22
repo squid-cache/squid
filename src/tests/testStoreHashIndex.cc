@@ -1,6 +1,6 @@
 #define SQUID_UNIT_TEST 1
 
-#include "squid.h"
+#include "squid-old.h"
 
 #include "testStoreHashIndex.h"
 #include "Store.h"

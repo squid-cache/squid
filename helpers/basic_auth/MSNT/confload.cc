@@ -11,7 +11,7 @@
  */
 
 /* Squid provides a number of portability overrides */
-#include "config.h"
+#include "squid.h"
 
 #include <stdio.h>
 #include <stdlib.h>

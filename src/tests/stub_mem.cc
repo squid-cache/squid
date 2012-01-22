@@ -2,7 +2,7 @@
  * stub file for mem.cc
  */
 
-#include "config.h"
+#include "squid.h"
 
 #define STUB_API "stub_mem.cc"
 #include "STUB.h"

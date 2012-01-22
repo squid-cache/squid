@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "comm.h"
 #include "comm/ConnOpener.h"
 #include "CommCalls.h"

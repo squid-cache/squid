@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "comm/Connection.h"
 #include "ICP.h"
 #include "icp_opcode.h"

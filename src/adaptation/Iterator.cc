@@ -2,7 +2,7 @@
  * DEBUG: section 93    Adaptation
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "adaptation/Answer.h"
 #include "adaptation/Config.h"
 #include "adaptation/Iterator.h"

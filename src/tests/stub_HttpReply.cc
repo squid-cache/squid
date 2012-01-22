@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "HttpReply.h"
 
 #define STUB_API "HttpReply.cc"

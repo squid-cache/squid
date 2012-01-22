@@ -4,7 +4,7 @@
  * DEBUG: section 79    Disk IO Routines
  */
 
-#include "config.h"
+#include "squid.h"
 #include "fs/rock/RockRebuild.h"
 #include "fs/rock/RockSwapDir.h"
 #include "fs/rock/RockDbCell.h"
