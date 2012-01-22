@@ -25,7 +25,7 @@
  * Hosted at http://sourceforge.net/projects/squidkerbauth
  */
 
-#include "config.h"
+#include "squid.h"
 
 #if HAVE_GSSAPI
 

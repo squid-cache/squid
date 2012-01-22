@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "protos.h"
 
 #define STUB_API "internal.cc"

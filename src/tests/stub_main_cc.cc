@@ -33,7 +33,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 
 void
 shut_down(int)

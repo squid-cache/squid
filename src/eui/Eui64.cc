@@ -5,7 +5,7 @@
  * Copyright (c) 2009, Amos Jeffries <squid3@treenet.co.nz>
  */
 
-#include "config.h"
+#include "squid.h"
 
 #if USE_SQUID_EUI
 

@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "esi/Parser.h"
 
 char *ESIParser::Type = NULL;

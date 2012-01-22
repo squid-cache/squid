@@ -34,7 +34,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "squid_windows.h"
 
 #if _SQUID_MSWIN_

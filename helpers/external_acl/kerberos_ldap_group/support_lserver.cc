@@ -22,7 +22,7 @@
  * -----------------------------------------------------------------------------
  */
 
-#include "config.h"
+#include "squid.h"
 #include "util.h"
 
 #ifdef HAVE_LDAP

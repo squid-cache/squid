@@ -32,7 +32,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "StoreSwapLogData.h"
 #include "swap_log_op.h"
 

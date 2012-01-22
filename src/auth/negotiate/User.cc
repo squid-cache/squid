@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "auth/Config.h"
 #include "auth/negotiate/User.h"
 #include "Debug.h"

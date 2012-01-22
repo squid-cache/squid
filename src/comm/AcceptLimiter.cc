@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "comm/AcceptLimiter.h"
 #include "comm/Connection.h"
 #include "comm/TcpAcceptor.h"

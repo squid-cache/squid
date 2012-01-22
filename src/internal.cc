@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "errorpage.h"

@@ -37,7 +37,7 @@
  * Copyright (C) 1999 by Hewlett Packard
  ****************************************************************************/
 
-#include "config.h"
+#include "squid.h"
 #include "heap.h"
 
 #if HAVE_STDLIB_H

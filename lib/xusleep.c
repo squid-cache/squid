@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "profiler/Profiler.h"
 #include "xusleep.h"
 

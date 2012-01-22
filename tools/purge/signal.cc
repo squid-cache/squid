@@ -49,7 +49,7 @@
 #pragma implementation
 #endif
 
-#include "config.h"
+#include "squid.h"
 #include "signal.hh"
 
 //#include <sys/types.h>

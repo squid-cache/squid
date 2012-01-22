@@ -16,7 +16,7 @@
  *
  *  Original License and code follows.
  */
-#include "config.h"
+#include "squid.h"
 
 /*
  *  This file is part of libESMTP, a library for submission of RFC 2822

@@ -31,7 +31,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 #ifndef SQUID_TYPEDEFS_H
 #define SQUID_TYPEDEFS_H

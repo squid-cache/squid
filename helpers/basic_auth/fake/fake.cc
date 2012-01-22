@@ -12,7 +12,7 @@
  * squid under the same conditions as the main squid application.
  */
 
-#include "config.h"
+#include "squid.h"
 #include "helpers/defines.h"
 
 #if HAVE_CSTRING

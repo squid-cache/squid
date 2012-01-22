@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "event.h"
 #include "mgr/Registration.h"
 #include "ClientInfo.h"

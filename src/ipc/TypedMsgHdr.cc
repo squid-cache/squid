@@ -6,7 +6,7 @@
  */
 
 
-#include "config.h"
+#include "squid.h"
 #include <string.h>
 #include "protos.h"
 #include "base/TextException.h"

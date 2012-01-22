@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "adaptation/icap/History.h"
 #include "globals.h"
 #include "SquidTime.h"

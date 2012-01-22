@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "StoreMeta.h"
 
 #define STUB_API "store_swapout.cc"

@@ -35,7 +35,7 @@
 
 /*TODO: remove this file as unused*/
 
-#include "config.h"
+#include "squid.h"
 #if 0
 #include "StoreFileSystem.h"
 #endif

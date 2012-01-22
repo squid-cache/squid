@@ -1,2 +1,2 @@
-#include "config.h"
+#include "squid.h"
 // TBD

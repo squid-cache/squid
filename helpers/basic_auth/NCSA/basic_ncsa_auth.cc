@@ -16,7 +16,7 @@
  *  MD5 without salt and magic strings - Added by Ramon de Carvalho and Rodrigo Rubira Branco
  */
 
-#include "config.h"
+#include "squid.h"
 #include "crypt_md5.h"
 #include "hash.h"
 #include "helpers/defines.h"

@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "ipc/AtomicWord.h"
 #include "protos.h"
 

@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "esi/CustomParser.h"
 #include "Trie.h"
 #include "TrieCharTransform.h"

@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "auth/Config.h"
 #include "auth/UserRequest.h"
 

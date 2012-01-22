@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 
 #define STUB_API "StoreStats.cc"
 #include "tests/STUB.h"

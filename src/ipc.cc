@@ -30,7 +30,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "comm/Connection.h"
 #include "fde.h"
 #include "ip/Address.h"
