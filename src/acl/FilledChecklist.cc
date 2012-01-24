@@ -63,6 +63,7 @@ ACLFilledChecklist::ACLFilledChecklist() :
 #if SQUID_SNMP
         snmp_community(NULL),
 #endif
+        sslErrorList(NULL),
         extacl_entry (NULL),
         conn_(NULL),
         fd_(-1),
@@ -90,6 +91,8 @@ ACLFilledChecklist::~ACLFilledChecklist()
     HTTPMSGUNLOCK(reply);
 
     cbdataReferenceDone(conn_);
+
+    cbdataReferenceDone(sslErrorList);
 
     debugs(28, 4, HERE << "ACLFilledChecklist destroyed " << this);
 }
@@ -172,6 +175,7 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
 #if SQUID_SNMP
         snmp_community(NULL),
 #endif
+        sslErrorList(NULL),
         extacl_entry (NULL),
         conn_(NULL),
         fd_(-1),

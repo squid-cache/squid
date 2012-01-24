@@ -248,16 +248,15 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     if (!ok) {
         Ssl::Errors *errNoList = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_sslerrno));
         if (!errNoList) {
-            errNoList = new Ssl::Errors;
+            errNoList = new Ssl::Errors(error_no);
             if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_error_sslerrno,  (void *)errNoList)) {
                 debugs(83, 2, "Failed to set ssl error_no in ssl_verify_cb: Certificate " << buffer);
                 delete errNoList;
                 errNoList = NULL;
             }
         }
-
-        if (errNoList) // Append the err no to the SSL errors lists.
-            errNoList->push_back(error_no);
+        else // Append the err no to the SSL errors lists.
+            errNoList->push_back_unique(error_no);
 
         if (const char *err_descr = Ssl::GetErrorDescr(error_no))
             debugs(83, 5, err_descr << ": " << buffer);
@@ -266,14 +265,17 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 
         if (check) {
             ACLFilledChecklist *filledCheck = Filled(check);
-            filledCheck->sslErrorList.clear();
-            filledCheck->sslErrorList.push_back(error_no);
+            assert(filledCheck->sslErrorList == NULL);
+            filledCheck->sslErrorList = new Ssl::Errors(error_no);
             if (check->fastCheck() == ACCESS_ALLOWED) {
                 debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
                 ok = 1;
             } else {
                 debugs(83, 5, "confirming SSL error " << error_no);
             }
+            // Delete the ssl error list
+            delete filledCheck->sslErrorList;
+            filledCheck->sslErrorList = NULL;
         }
     }
 

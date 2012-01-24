@@ -66,7 +66,7 @@ public:
 #endif
 
 #if USE_SSL
-    Ssl::Errors sslErrorList;
+    Ssl::Errors *sslErrorList;
 #endif
 
     ExternalACLEntry *extacl_entry;
