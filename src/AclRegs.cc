@@ -137,7 +137,7 @@ ACLStrategised<int> ACLUrlPort::RegistryEntry_(new ACLIntRange, ACLUrlPortStrate
 
 #if USE_SSL
 ACL::Prototype ACLSslError::RegistryProtoype(&ACLSslError::RegistryEntry_, "ssl_error");
-ACLStrategised<Ssl::Errors const &> ACLSslError::RegistryEntry_(new ACLSslErrorData, ACLSslErrorStrategy::Instance(), "ssl_error");
+ACLStrategised<const Ssl::Errors *> ACLSslError::RegistryEntry_(new ACLSslErrorData, ACLSslErrorStrategy::Instance(), "ssl_error");
 ACL::Prototype ACLCertificate::UserRegistryProtoype(&ACLCertificate::UserRegistryEntry_, "user_cert");
 ACLStrategised<SSL *> ACLCertificate::UserRegistryEntry_(new ACLCertificateData (sslGetUserAttribute), ACLCertificateStrategy::Instance(), "user_cert");
 ACL::Prototype ACLCertificate::CARegistryProtoype(&ACLCertificate::CARegistryEntry_, "ca_cert");

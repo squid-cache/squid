@@ -35,6 +35,7 @@
 #ifndef SQUID_SSL_SUPPORT_H
 #define SQUID_SSL_SUPPORT_H
 
+#include "CbDataList.h"
 #include "ssl/gadgets.h"
 
 #if HAVE_OPENSSL_SSL_H
@@ -68,9 +69,8 @@ namespace Ssl
 /// Squid defined error code (<0),  an error code returned by SSL X509 api, or SSL_ERROR_NONE
 typedef int ssl_error_t;
 
-/// \ingroup ServerProtocolSSLAPI
-/// SSL error codes in the order they were encountered
-typedef std::vector<ssl_error_t> Errors;
+typedef CbDataList<Ssl::ssl_error_t> Errors;
+
 } //namespace Ssl
 
 /// \ingroup ServerProtocolSSLAPI
