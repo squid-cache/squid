@@ -17,6 +17,7 @@
 #if HAVE_SYS_UN_H
 #include <sys/un.h>
 #endif
+#include "compat/cmsg.h"
 
 class String;
 

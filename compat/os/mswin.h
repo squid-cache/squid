@@ -827,46 +827,6 @@ void syslog(int priority, const char *fmt, ...);
 
 #if _SQUID_MINGW_
 /* broken mingw header... */
-# ifdef WSA_CMSG_FIRSTHDR
-#  define CMSG_FIRSTHDR(x) WSA_CMSG_FIRSTHDR(x)
-# endif
-# ifdef WSA_CMSG_NXTHDR
-#  define CMSG_NXTHDR(x, y) WSA_CMSG_NXTHDR(x, y)
-# endif
-# ifdef WSA_CMSG_DATA
-#  define CMSG_DATA(x) WSA_CMSG_DATA(x)
-# endif
-# ifdef WSA_CMSG_LEN
-#  define CMSG_LEN(x) WSA_CMSG_LEN(x)
-# endif
-# ifdef WSA_CMSG_SPACE
-#  define CMSG_SPACE(x) WSA_CMSG_SPACE(x)
-# endif
-# ifdef WSA_CMSG_FIRSTHDR
-#  define CMSG_FIRSTHDR(x) WSA_CMSG_FIRSTHDR(x)
-# endif
-
-struct msghdr {
-    void *msg_name;             /* Address to send to/receive from.  */
-    socklen_t msg_namelen;      /* Length of address data.  */
-
-    struct iovec *msg_iov;      /* Vector of data to send/receive into.  */
-    size_t msg_iovlen;          /* Number of elements in the vector.  */
-
-    void *msg_control;          /* Ancillary data (eg BSD filedesc passing). */
-    size_t msg_controllen;      /* Ancillary data buffer length.
-                                   !! The type should be socklen_t but the
-                                   definition of the kernel is incompatible
-                                   with this.  */
-
-    int msg_flags;              /* Flags on received message.  */
-};
-struct iovec {
-
-};
-struct sockaddr_un {
-        char sun_path[256];   /* pathname */
-};
 
 /* MinGW missing bits from sys/wait.h */
 /* A status looks like:
