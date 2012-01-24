@@ -335,7 +335,7 @@ public:
     StoreEntry *bumpServerFirstErrorEntry() const {return bumpErrorEntry;}
     void setBumpServerCert(X509 *serverCert) {bumpServerCert.reset(serverCert);}
     X509 *getBumpServerCert() {return bumpServerCert.get();}
-    void setBumpSslErrorList(Ssl::Errors &errNoList) {bumpSslErrorNoList = errNoList;}
+    void setBumpSslErrorList(Ssl::Errors *errNoList) {bumpSslErrorNoList = cbdataReference(errNoList);}
     /// Fill the certAdaptParams with the required data for certificate adaptation
     /// and create the key for storing/retrieve the certificate to/from the cache
     void buildSslCertAdaptParams(Ssl::CrtdMessage::BodyParams &certAdaptParams);
@@ -373,7 +373,7 @@ private:
     CbcPointer<Ssl::ServerPeeker> httpsPeeker;
     StoreEntry *bumpErrorEntry;
     Ssl::X509_Pointer bumpServerCert;
-    Ssl::Errors bumpSslErrorNoList; ///< The list of SSL certificate errors which ignored
+    Ssl::Errors *bumpSslErrorNoList; ///< The list of SSL certificate errors which ignored
 #endif
 
     AsyncCall::Pointer reader; ///< set when we are reading

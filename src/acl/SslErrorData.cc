@@ -22,11 +22,11 @@ ACLSslErrorData::~ACLSslErrorData()
 }
 
 bool
-ACLSslErrorData::match(Ssl::Errors const &toFind)
+ACLSslErrorData::match(const Ssl::Errors *toFind)
 {
-    typedef std::vector<Ssl::ssl_error_t>::const_iterator SEsI;
-    for (SEsI it = toFind.begin() ; it != toFind.end(); it++ ) {
-        if (values->findAndTune (*it))
+    const Ssl::Errors * err;
+    for (err = toFind ; err != NULL; err = err->next ) {
+        if (values->findAndTune (err->element))
             return true;
     }
     return false;
@@ -35,14 +35,14 @@ ACLSslErrorData::match(Ssl::Errors const &toFind)
 /* explicit instantiation required for some systems */
 /** \cond AUTODOCS-IGNORE */
 // AYJ: 2009-05-20 : Removing. clashes with template <int> instantiation for other ACLs.
-// template cbdata_type CbDataList<Ssl::ssl_error_t>::CBDATA_CbDataList;
+// template cbdata_type Ssl::Errors::CBDATA_CbDataList;
 /** \endcond */
 
 wordlist *
 ACLSslErrorData::dump()
 {
     wordlist *W = NULL;
-    CbDataList<Ssl::ssl_error_t> *data = values;
+    Ssl::Errors *data = values;
 
     while (data != NULL) {
         wordlistAdd(&W, Ssl::GetErrorName(data->element));
@@ -55,12 +55,12 @@ ACLSslErrorData::dump()
 void
 ACLSslErrorData::parse()
 {
-    CbDataList<Ssl::ssl_error_t> **Tail;
+    Ssl::Errors **Tail;
     char *t = NULL;
 
     for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-        CbDataList<Ssl::ssl_error_t> *q = new CbDataList<Ssl::ssl_error_t>(Ssl::ParseErrorString(t));
+        Ssl::Errors *q = new Ssl::Errors(Ssl::ParseErrorString(t));
         *(Tail) = q;
         Tail = &q->next;
     }

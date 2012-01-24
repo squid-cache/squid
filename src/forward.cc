@@ -671,7 +671,7 @@ FwdState::negotiateSSL(int fd)
 
                 // if there is a list of ssl errors, pass it to connection manager
                 if (Ssl::Errors *errNoList = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_sslerrno)))
-                    request->clientConnectionManager->setBumpSslErrorList(*errNoList);
+                    request->clientConnectionManager->setBumpSslErrorList(errNoList);
             }
 
             HttpRequest *fakeRequest = NULL;
@@ -704,7 +704,7 @@ FwdState::negotiateSSL(int fd)
     if (request->clientConnectionManager.valid()) {
         request->clientConnectionManager->setBumpServerCert(SSL_get_peer_certificate(ssl));
         if (Ssl::Errors *errNoList = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_sslerrno)))
-            request->clientConnectionManager->setBumpSslErrorList(*errNoList);
+            request->clientConnectionManager->setBumpSslErrorList(errNoList);
     }
 
     if (serverConnection()->getPeer() && !SSL_session_reused(ssl)) {

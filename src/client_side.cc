@@ -816,6 +816,8 @@ ConnStateData::~ConnStateData()
     if (bumpErrorEntry)
         bumpErrorEntry->unlock();
 #endif
+
+    cbdataReferenceDone(bumpSslErrorNoList);
 }
 
 /**
@@ -3649,7 +3651,7 @@ void ConnStateData::buildSslCertAdaptParams(Ssl::CrtdMessage::BodyParams &certAd
     checklist.conn(this);
     checklist.src_addr = clientConnection->remote;
     checklist.my_addr = clientConnection->local;
-    checklist.sslErrorList = bumpSslErrorNoList;
+    checklist.sslErrorList = cbdataReference(bumpSslErrorNoList);
 
     for (sslproxy_cert_adapt *ca = Config.ssl_client.cert_adapt; ca != NULL; ca = ca->next) {
         if (ca->aclList && checklist.fastCheck(ca->aclList) == ACCESS_ALLOWED) {

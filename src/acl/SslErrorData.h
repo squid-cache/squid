@@ -12,7 +12,7 @@
 #include "ssl/ErrorDetail.h"
 #include <vector>
 
-class ACLSslErrorData : public ACLData<Ssl::Errors const&>
+class ACLSslErrorData : public ACLData<const Ssl::Errors *>
 {
 
 public:
@@ -22,13 +22,13 @@ public:
     ACLSslErrorData(ACLSslErrorData const &);
     ACLSslErrorData &operator= (ACLSslErrorData const &);
     virtual ~ACLSslErrorData();
-    bool match(Ssl::Errors const &);
+    bool match(const Ssl::Errors *);
     wordlist *dump();
     void parse();
     bool empty() const;
     virtual  ACLSslErrorData *clone() const;
 
-    CbDataList<Ssl::ssl_error_t> *values;
+    Ssl::Errors *values;
 };
 
 MEMPROXY_CLASS_INLINE(ACLSslErrorData);

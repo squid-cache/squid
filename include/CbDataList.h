@@ -44,6 +44,7 @@ public:
     CbDataList (C const &);
     ~CbDataList();
 
+    bool push_back_unique(C const &);
     bool find(C const &)const;
     bool findAndTune(C const &);
     CbDataList *next;
@@ -123,6 +124,20 @@ CbDataList<C>::~CbDataList()
 {
     if (next)
         delete next;
+}
+
+template <class C>
+bool
+CbDataList<C>::push_back_unique(C const &toAdd)
+{
+    CbDataList<C> *last;
+    for (last = this; last->next; last = last->next) {
+        if (last->element == toAdd)
+            return false;
+    }
+
+    last->next = new CbDataList<C> (toAdd);
+    return true;
 }
 
 template <class C>
