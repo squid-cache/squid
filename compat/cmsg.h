@@ -7,12 +7,13 @@
 
 /* mostly windows-specific */
 #ifndef CMSG_SPACE
-typedef struct  {
+struct cmsghdr{
         unsigned int    cmsg_len;
         int  cmsg_level;
         int     cmsg_type;
+        unsigned char cmsg_data[16]; /* dummy */
         /* followed by UCHAR cmsg_data[]; */
-} cmsghdr;
+} ;
 
 /* lifted off https://metacpan.org/source/SAMPO/Socket-PassAccessRights-0.03/passfd.c */
 #ifndef CMSG_DATA
@@ -25,8 +26,8 @@ typedef struct  {
 
 #ifndef CMSG_FIRSTHDR
 # define CMSG_FIRSTHDR(mhdr) \
-  ((size_t) (mhdr)->msg_controllen >= sizeof ( cmsghdr)        \
-   ? ( cmsghdr *) (mhdr)->msg_control : ( cmsghdr *) NULL)
+  ((size_t) (mhdr)->msg_controllen >= sizeof (struct cmsghdr)        \
+   ? (struct cmsghdr *) (mhdr)->msg_control : (struct cmsghdr *) NULL)
 #endif
 
 #ifndef CMSG_ALIGN
@@ -36,11 +37,11 @@ typedef struct  {
 
 #ifndef CMSG_SPACE
 # define CMSG_SPACE(len) (CMSG_ALIGN (len) \
-             + CMSG_ALIGN (sizeof ( cmsghdr)))
+             + CMSG_ALIGN (sizeof (struct cmsghdr)))
 #endif
 
 #ifndef CMSG_LEN
-# define CMSG_LEN(len)   (CMSG_ALIGN (sizeof ( cmsghdr)) + (len))
+# define CMSG_LEN(len)   (CMSG_ALIGN (sizeof (struct cmsghdr)) + (len))
 #endif
 
 struct msghdr {
@@ -61,12 +62,31 @@ struct msghdr {
 
 
 struct iovec {
-
+	void *iov_base;
+	size_t iov_len;
 };
 struct sockaddr_un {
-        char sun_path[256];   /* pathname */
+	char sun_family;
+    char sun_path[256];   /* pathname */
 };
+# define SUN_LEN(ptr) ((size_t) (((struct sockaddr_un *) 0)->sun_path)        \
+        + strlen ((ptr)->sun_path))
+
 
 #endif /* CMSG_SPACE */
+
+#ifndef SCM_RIGHTS
+#define SCM_RIGHTS 1
+#endif
+#ifndef SCM_CREDENTIALS
+#define SCM_CREDENTIALS 2
+#endif
+#ifndef SCM_SECURITY
+#define SCM_SECURITY 3
+#endif
+
+#ifndef AF_LOCAL
+#define AF_LOCAL 1
+#endif
 
 #endif /* CMSG_H_ */
