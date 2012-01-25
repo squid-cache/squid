@@ -509,18 +509,21 @@ gethostbyaddr(const void * a, size_t l, int t)
         errno = WSAGetLastError();
     return result;
 }
-#define gethostbyaddr(a,l,t) Squid::gethostbyaddr(a,l,t)
+using Squid::gethostbyaddr;
+//#define gethostbyaddr(a,l,t) Squid::gethostbyaddr(a,l,t)
 
 inline int
-getsockname(int s, struct sockaddr * n, socklen_t * l)
+getsockname(int s, struct sockaddr * n, size_t * l)
 {
-    if ((::getsockname(_get_osfhandle(s), n, l)) == SOCKET_ERROR) {
+    int i=*l;
+	if (::getsockname(_get_osfhandle(s), n,&i) == SOCKET_ERROR) {
         errno = WSAGetLastError();
         return -1;
     } else
         return 0;
 }
-#define getsockname(s,a,l) Squid::getsockname(s,a,l)
+using Squid::getsockname;
+//#define getsockname(s,a,l) Squid::getsockname(s,a,l)
 
 inline int
 gethostname(char * n, size_t l)
@@ -531,7 +534,8 @@ gethostname(char * n, size_t l)
     } else
         return 0;
 }
-#define gethostname(n,l) Squid::gethostname(n,l)
+using Squid::gethostname;
+//#define gethostname(n,l) Squid::gethostname(n,l)
 
 inline int
 getsockopt(int s, int l, int o, void * v, socklen_t * n)

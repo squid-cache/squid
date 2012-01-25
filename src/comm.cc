@@ -64,8 +64,8 @@
 #endif
 
 #include "cbdata.h"
-#if _SQUID_CYGWIN_
-#include <sys/ioctl.h>
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
 #endif
 #ifdef HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
@@ -327,7 +327,7 @@ comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, Ip::Address &from)
 
     from.InitAddrInfo(AI);
 
-    x = recvfrom(fd, buf, len, flags, AI->ai_addr, &AI->ai_addrlen);
+    x = Squid::recvfrom(fd, buf, len, flags, AI->ai_addr, &AI->ai_addrlen);
 
     from = *AI;
 
@@ -346,7 +346,7 @@ comm_udp_recv(int fd, void *buf, size_t len, int flags)
 ssize_t
 comm_udp_send(int s, const void *buf, size_t len, int flags)
 {
-    return send(s, buf, len, flags);
+    return Squid::send(s, buf, len, flags);
 }
 
 
@@ -385,7 +385,7 @@ comm_local_port(int fd)
 
     temp.InitAddrInfo(addr);
 
-    if (getsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
+    if (Squid::getsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
         debugs(50, 1, "comm_local_port: Failed to retrieve TCP/UDP port number for socket: FD " << fd << ": " << xstrerror());
         temp.FreeAddrInfo(addr);
         return 0;
@@ -861,7 +861,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
 #else
         errlen = sizeof(err);
 
-        x = getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errlen);
+        x = Squid::getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &errlen);
 
         if (x == 0)
             errno = err;
@@ -1175,7 +1175,7 @@ comm_udp_sendto(int fd,
 
     to_addr.GetAddrInfo(AI, fd_table[fd].sock_family);
 
-    x = sendto(fd, buf, len, 0, AI->ai_addr, AI->ai_addrlen);
+    x = Squid::sendto(fd, buf, len, 0, AI->ai_addr, AI->ai_addrlen);
 
     to_addr.FreeAddrInfo(AI);
 
@@ -1315,7 +1315,7 @@ commSetNonBlocking(int fd)
     if (fd_table[fd].type != FD_PIPE) {
 #endif
 
-        if (ioctl(fd, FIONBIO, &nonblocking) < 0) {
+        if (Squid::ioctl(fd, FIONBIO, &nonblocking) < 0) {
             debugs(50, 0, "commSetNonBlocking: FD " << fd << ": " << xstrerror() << " " << fd_table[fd].type);
             return COMM_ERROR;
         }
@@ -1326,7 +1326,7 @@ commSetNonBlocking(int fd)
 #endif
 #if !_SQUID_MSWIN_
 
-        if ((flags = fcntl(fd, F_GETFL, dummy)) < 0) {
+        if ((flags = Squid::fcntl(fd, F_GETFL, dummy)) < 0) {
             debugs(50, 0, "FD " << fd << ": fcntl F_GETFL: " << xstrerror());
             return COMM_ERROR;
         }
