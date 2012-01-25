@@ -575,7 +575,8 @@ listen(int s, int b)
     } else
         return 0;
 }
-#define listen(s,b) Squid::listen(s,b)
+//#define listen(s,b) Squid::listen(s,b)
+using Squid::listen;
 
 inline ssize_t
 recv(int s, void * b, size_t l, int f)
@@ -590,16 +591,17 @@ recv(int s, void * b, size_t l, int f)
 #define recv(s,b,l,f) Squid::recv(s,b,l,f)
 
 inline ssize_t
-recvfrom(int s, void * b, size_t l, int f, struct sockaddr * fr, socklen_t * fl)
+recvfrom(int s, void * b, size_t l, int f, struct sockaddr * fr, size_t * fl)
 {
     ssize_t result;
-    if ((result = ::recvfrom(_get_osfhandle(s), (char *)b, l, f, fr, fl)) == SOCKET_ERROR) {
+    int ifl=*fl;
+    if ((result = ::recvfrom(_get_osfhandle(s), (char *)b, l, f, fr, &ifl)) == SOCKET_ERROR) {
         errno = WSAGetLastError();
         return -1;
     } else
         return result;
 }
-#define recvfrom(s,b,l,f,fr,fl) Squid::recvfrom(s,b,l,f,fr,fl)
+using Squid::recvfrom;
 
 inline int
 select(int n, fd_set * r, fd_set * w, fd_set * e, struct timeval * t)
@@ -623,7 +625,8 @@ send(int s, const void * b, size_t l, int f)
     } else
         return result;
 }
-#define send(s,b,l,f) Squid::send(s,b,l,f)
+using Squid::send;
+//#define send(s,b,l,f) Squid::send(s,b,l,f)
 
 inline ssize_t
 sendto(int s, const void * b, size_t l, int f, const struct sockaddr * t, socklen_t tl)
