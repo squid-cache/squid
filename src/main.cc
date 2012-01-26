@@ -1419,6 +1419,7 @@ SquidMain(int argc, char **argv)
 
     debugs(1,2, HERE << "Doing post-config initialization\n");
     leave_suid();
+    ActivateRegistered(rrFinalizeConfig);
     ActivateRegistered(rrClaimMemoryNeeds);
     ActivateRegistered(rrAfterConfig);
     enter_suid();
@@ -1790,6 +1791,7 @@ watch_child(char *argv[])
             leave_suid();
             DeactivateRegistered(rrAfterConfig);
             DeactivateRegistered(rrClaimMemoryNeeds);
+            DeactivateRegistered(rrFinalizeConfig);
             enter_suid();
 
             if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
@@ -1886,6 +1888,7 @@ SquidShutdown()
     DiskIOModule::FreeAllModules();
     DeactivateRegistered(rrAfterConfig);
     DeactivateRegistered(rrClaimMemoryNeeds);
+    DeactivateRegistered(rrFinalizeConfig);
 #if LEAK_CHECK_MODE && 0 /* doesn't work at the moment */
 
     configFreeMemory();
