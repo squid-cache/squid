@@ -37,6 +37,7 @@
 #include "ufscommon.h"
 #include "Store.h"
 #include "fde.h"
+#include "SquidTime.h"
 #include "StoreMeta.h"
 #include "Generic.h"
 #include "StoreMetaUnpacker.h"
@@ -299,7 +300,6 @@ int UFSSwapLogParser::SwapLogEntries()
 
 RebuildState::RebuildState (RefCount<UFSSwapDir> aSwapDir) : sd (aSwapDir),LogParser(NULL), e(NULL), fromLog(true), _done (false)
 {
-    speed = opt_foreground_rebuild ? 1 << 30 : 50;
     /*
      * If the swap.state file exists in the cache_dir, then
      * we'll use commonUfsDirRebuildFromSwapLog(), otherwise we'll
@@ -345,7 +345,7 @@ RebuildState::RebuildStep(void *data)
     rb->rebuildStep();
 
     if (!rb->isDone())
-        eventAdd("storeRebuild", RebuildStep, rb, 0.0, 1);
+        eventAdd("storeRebuild", RebuildStep, rb, 0.01, 1);
     else {
         StoreController::store_dirs_rebuilding--;
         storeRebuildComplete(&rb->counts);
@@ -353,19 +353,47 @@ RebuildState::RebuildStep(void *data)
     }
 }
 
+/// load entries from swap.state or files until we run out of entries or time
 void
 RebuildState::rebuildStep()
 {
-    if (fromLog)
-        rebuildFromSwapLog();
-    else
-        rebuildFromDirectory();
+    currentEntry(NULL);
+
+    // Balance our desire to maximize the number of entries processed at once
+    // (and, hence, minimize overheads and total rebuild time) with a
+    // requirement to also process Coordinator events, disk I/Os, etc.
+    const int maxSpentMsec = 50; // keep small: most RAM I/Os are under 1ms
+    const timeval loopStart = current_time;
+
+    const int totalEntries = LogParser ? LogParser->SwapLogEntries() : -1;
+
+    while (!isDone()) {
+        if (fromLog)
+            rebuildFromSwapLog();
+        else
+            rebuildFromDirectory();
+
+        // TODO: teach storeRebuildProgress to handle totalEntries <= 0
+        if (totalEntries > 0 && (n_read % 4000 == 0))
+            storeRebuildProgress(sd->index, totalEntries, n_read);
+
+        if (opt_foreground_rebuild)
+            continue; // skip "few entries at a time" check below
+
+        getCurrentTime();
+        const double elapsedMsec = tvSubMsec(loopStart, current_time);
+        if (elapsedMsec > maxSpentMsec || elapsedMsec < 0) {
+            debugs(47, 5, HERE << "pausing after " << n_read << " entries in " <<
+                   elapsedMsec << "ms; " << (elapsedMsec/n_read) << "ms per entry");
+            break;
+        }
+    }
 }
 
+/// process one cache file
 void
 RebuildState::rebuildFromDirectory()
 {
-    currentEntry(NULL);
     cache_key key[SQUID_MD5_DIGEST_LENGTH];
 
     struct stat sb;
@@ -373,7 +401,6 @@ RebuildState::rebuildFromDirectory()
     assert(this != NULL);
     debugs(47, 3, "commonUfsDirRebuildFromDirectory: DIR #" << sd->index);
 
-    for (int count = 0; count < speed; count++) {
         assert(fd == -1);
         sfileno filn = 0;
         int size;
@@ -384,7 +411,7 @@ RebuildState::rebuildFromDirectory()
             _done = true;
             return;
         } else if (fd < 0) {
-            continue;
+            return;
         }
 
         assert(fd > -1);
@@ -395,7 +422,7 @@ RebuildState::rebuildFromDirectory()
             file_close(fd);
             store_open_disk_fd--;
             fd = -1;
-            continue;
+            return;
         }
 
         MemBuf buf;
@@ -414,11 +441,11 @@ RebuildState::rebuildFromDirectory()
         if (!loaded) {
             // XXX: shouldn't this be a call to commonUfsUnlink?
             sd->unlinkFile(filn); // should we unlink in all failure cases?
-            continue;
+            return;
         }
 
         if (!storeRebuildKeepEntry(tmpe, key, counts))
-            continue;
+            return;
 
         counts.objcount++;
         // tmpe.dump(5);
@@ -433,8 +460,6 @@ RebuildState::rebuildFromDirectory()
                                         tmpe.flags,		/* flags */
                                         (int) flags.clean));
         storeDirSwapLog(currentEntry(), SWAP_LOG_ADD);
-    }
-
 }
 
 StoreEntry *
@@ -449,14 +474,10 @@ RebuildState::currentEntry(StoreEntry *newValue)
     e = newValue;
 }
 
+/// process one swap log entry
 void
 RebuildState::rebuildFromSwapLog()
 {
-    currentEntry (NULL);
-    double x;
-    /* load a number of objects per invocation */
-
-    for (int count = 0; count < speed; count++) {
         StoreSwapLogData swapData;
 
         if (LogParser->ReadRecord(swapData) != 1) {
@@ -471,10 +492,10 @@ RebuildState::rebuildFromSwapLog()
         n_read++;
 
         if (swapData.op <= SWAP_LOG_NOP)
-            continue;
+            return;
 
         if (swapData.op >= SWAP_LOG_MAX)
-            continue;
+            return;
 
         /*
          * BC: during 2.4 development, we changed the way swap file
@@ -527,8 +548,9 @@ RebuildState::rebuildFromSwapLog()
                 counts.objcount--;
                 counts.cancelcount++;
             }
-            continue;
+            return;
         } else {
+            const double
             x = ::log(static_cast<double>(++counts.bad_log_op)) / ::log(10.0);
 
             if (0.0 == x - (double) (int) x)
@@ -536,26 +558,19 @@ RebuildState::rebuildFromSwapLog()
 
             counts.invalid++;
 
-            continue;
+            return;
         }
 
-        if ((++counts.scancount & 0xFFF) == 0) {
-
-            int swap_entries = LogParser->SwapLogEntries();
-
-            if (0 != swap_entries )
-                storeRebuildProgress(sd->index,
-                                     swap_entries, n_read);
-        }
+        ++counts.scancount; // XXX: should not this be incremented earlier?
 
         if (!sd->validFileno(swapData.swap_filen, 0)) {
             counts.invalid++;
-            continue;
+            return;
         }
 
         if (EBIT_TEST(swapData.flags, KEY_PRIVATE)) {
             counts.badflags++;
-            continue;
+            return;
         }
 
         /* this needs to become
@@ -579,7 +594,7 @@ RebuildState::rebuildFromSwapLog()
         if (used && !disk_entry_newer) {
             /* log entry is old, ignore it */
             counts.clashcount++;
-            continue;
+            return;
         } else if (used && currentEntry() && currentEntry()->swap_filen == swapData.swap_filen && currentEntry()->swap_dirn == sd->index) {
             /* swapfile taken, same URL, newer, update meta */
 
@@ -595,7 +610,7 @@ RebuildState::rebuildFromSwapLog()
                 debug_trap("commonUfsDirRebuildFromSwapLog: bad condition");
                 debugs(47, 1, "\tSee " << __FILE__ << ":" << __LINE__);
             }
-            continue;
+            return;
         } else if (used) {
             /* swapfile in use, not by this URL, log entry is newer */
             /* This is sorta bad: the log entry should NOT be newer at this
@@ -617,12 +632,12 @@ RebuildState::rebuildFromSwapLog()
              * and the validation procedure hasn't run. */
             assert(flags.need_to_validate);
             counts.clashcount++;
-            continue;
+            return;
         } else if (currentEntry() && !disk_entry_newer) {
             /* key already exists, current entry is newer */
             /* keep old, ignore new */
             counts.dupcount++;
-            continue;
+            return;
         } else if (currentEntry()) {
             /* key already exists, this swapfile not being used */
             /* junk old, load new */
@@ -660,8 +675,6 @@ RebuildState::rebuildFromSwapLog()
                                         (int) flags.clean));
 
         storeDirSwapLog(currentEntry(), SWAP_LOG_ADD);
-    }
-
 }
 
 int
@@ -770,25 +783,6 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
 
     *filn_p = fn;
     return fd;
-}
-
-void
-RebuildState::next(void (aCallback)(void *aCallbackDataarg), void *aCallbackData)
-{
-    /* for now, we don't cache at all */
-    speed = 1;
-    currentEntry(NULL);
-
-    while (!isDone() && currentEntry() == NULL)
-        rebuildStep();
-
-    aCallback(aCallbackData);
-}
-
-bool
-RebuildState::next()
-{
-    return false;
 }
 
 bool
