@@ -904,7 +904,7 @@ configDoConfigure(void)
         http_port_list *s;
 
         for (s = Config.Sockaddr.http; s != NULL; s = (http_port_list *) s->next) {
-            if (!s->cert && !s->key)
+            if (!s->cert)
                 continue;
 
             debugs(3, 1, "Initializing http_port " << s->http.s << " SSL context");
@@ -932,7 +932,7 @@ configDoConfigure(void)
                                        s->cafile, s->capath, s->crlfile, s->dhfile,
                                        s->sslContextSessionId));
 
-            if (s->cert && s->key && s->sslBump)
+            if (s->cert && s->sslBump)
                 Ssl::readCertChainAndPrivateKeyFromFiles(s->signingCert, s->signPkey, s->certsToChain, s->cert, s->key);
         }
     }
