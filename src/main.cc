@@ -868,8 +868,6 @@ mainReconfigureFinish(void *)
 
     writePidFile();		/* write PID file */
 
-    debugs(1, 1, "Ready to serve requests.");
-
     reconfiguring = 0;
 }
 
@@ -1170,8 +1168,6 @@ mainInitialize(void)
 #if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
 #endif
-
-    debugs(1, 1, "Ready to serve requests.");
 
     if (!configured_once) {
         eventAdd("storeMaintain", Store::Maintain, NULL, 1.0, 1);
