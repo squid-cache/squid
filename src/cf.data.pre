@@ -111,6 +111,12 @@ DOC_START
 	Remove this line. The HTTP/1.1 feature is now fully supported by default.
 DOC_END
 
+NAME: dns_v4_fallback
+TYPE: obsolete
+DOC_START
+	Remove this line.
+DOC_END
+
 NAME: ftp_list_width
 TYPE: obsolete
 DOC_START
