@@ -1409,13 +1409,17 @@ DOC_START
 			      omitted the ciphers may be silently ignored
 			      by the OpenSSL library.
 
-	   options=	Various SSL engine options. The most important
+	   options=	Various SSL implementation options. The most important
 			being:
 			    NO_SSLv2  Disallow the use of SSLv2
 			    NO_SSLv3  Disallow the use of SSLv3
 			    NO_TLSv1  Disallow the use of TLSv1
 			    SINGLE_DH_USE Always create a new key when using
 				      temporary/ephemeral DH key exchanges
+			    ALL       Enable various bug workarounds
+				      suggested as "harmless" by OpenSSL
+				      Be warned that this reduces SSL/TLS
+				      strength to some attacks.
 			See OpenSSL SSL_CTX_set_options documentation for a
 			complete list of options.
 
@@ -1846,18 +1850,24 @@ DEFAULT: none
 LOC: Config.ssl_client.options
 TYPE: string
 DOC_START
-	SSL engine options to use when proxying https:// URLs
+	SSL implementation options to use when proxying https:// URLs
 	
 	The most important being:
 
-		NO_SSLv2  Disallow the use of SSLv2
-		NO_SSLv3  Disallow the use of SSLv3
-		NO_TLSv1  Disallow the use of TLSv1
-		SINGLE_DH_USE
-			Always create a new key when using
-			temporary/ephemeral DH key exchanges
+	    NO_SSLv2  Disallow the use of SSLv2
+	    NO_SSLv3  Disallow the use of SSLv3
+	    NO_TLSv1  Disallow the use of TLSv1
+	    SINGLE_DH_USE
+		      Always create a new key when using temporary/ephemeral
+		      DH key exchanges
+	    SSL_OP_NO_TICKET
+		      Disable use of RFC5077 session tickets. Some servers
+		      may have problems understanding the TLS extension due
+		      to ambiguous specification in RFC4507.
+	    ALL       Enable various bug workarounds suggested as "harmless"
+		      by OpenSSL. Be warned that this may reduce SSL/TLS
+		      strength to some attacks.
 	
-	These options vary depending on your SSL engine.
 	See the OpenSSL SSL_CTX_set_options documentation for a
 	complete list of possible options.
 DOC_END
@@ -2307,12 +2317,21 @@ DOC_START
 	sslcipher=...	The list of valid SSL ciphers to use when connecting
 			to this peer.
 	
-	ssloptions=... 	Specify various SSL engine options:
-				NO_SSLv2  Disallow the use of SSLv2
-				NO_SSLv3  Disallow the use of SSLv3
-				NO_TLSv1  Disallow the use of TLSv1
-			See src/ssl_support.c or the OpenSSL documentation for
-			a more complete list.
+	ssloptions=... 	Specify various SSL implementation options:
+
+			    NO_SSLv2  Disallow the use of SSLv2
+			    NO_SSLv3  Disallow the use of SSLv3
+			    NO_TLSv1  Disallow the use of TLSv1
+			    SINGLE_DH_USE
+				      Always create a new key when using
+				      temporary/ephemeral DH key exchanges
+			    ALL       Enable various bug workarounds
+				      suggested as "harmless" by OpenSSL
+				      Be warned that this reduces SSL/TLS
+				      strength to some attacks.
+
+			See the OpenSSL SSL_CTX_set_options documentation for a
+			more complete list.
 	
 	sslcafile=... 	A file containing additional CA certificates to use
 			when verifying the peer certificate.

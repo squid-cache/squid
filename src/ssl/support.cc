@@ -403,7 +403,7 @@ ssl_options[] = {
 static long
 ssl_parse_options(const char *options)
 {
-    long op = SSL_OP_ALL;
+    long op = 0;
     char *tmp;
     char *option;
 
