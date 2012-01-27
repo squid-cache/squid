@@ -15,6 +15,23 @@
 #include "Store.h"
 
 
+Mgr::IndexAction::Pointer
+Mgr::IndexAction::Create(const Command::Pointer &cmd)
+{
+    return new IndexAction(cmd);
+}
+
+Mgr::IndexAction::IndexAction(const Command::Pointer &cmd): Action(cmd)
+{
+    debugs(16, 5, HERE);
+}
+
+void
+Mgr::IndexAction::dump(StoreEntry* entry)
+{
+    debugs(16, 5, HERE);
+}
+
 Mgr::MenuAction::Pointer
 Mgr::MenuAction::Create(const Command::Pointer &cmd)
 {
@@ -128,9 +145,10 @@ Mgr::OfflineToggleAction::dump(StoreEntry* entry)
 void
 Mgr::RegisterBasics()
 {
+    RegisterAction("index", "Cache Manager Interface", &Mgr::IndexAction::Create, 0, 1);
+    RegisterAction("menu", "Cache Manager Menu", &Mgr::MenuAction::Create, 0, 1);
     RegisterAction("offline_toggle", "Toggle offline_mode setting", &Mgr::OfflineToggleAction::Create, 1, 1);
     RegisterAction("shutdown", "Shut Down the Squid Process", &Mgr::ShutdownAction::Create, 1, 1);
     RegisterAction("reconfigure", "Reconfigure Squid", &Mgr::ReconfigureAction::Create, 1, 1);
     RegisterAction("rotate", "Rotate Squid Logs", &Mgr::RotateAction::Create, 1, 1);
-    RegisterAction("menu", "Cache Manager Menu", &Mgr::MenuAction::Create, 0, 1);
 }

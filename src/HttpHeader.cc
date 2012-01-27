@@ -114,6 +114,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Max-Forwards", HDR_MAX_FORWARDS, ftInt64},
     {"Mime-Version", HDR_MIME_VERSION, ftStr},	/* for now */
     {"Negotiate", HDR_NEGOTIATE, ftStr},
+    {"Origin", HDR_ORIGIN, ftStr},
     {"Pragma", HDR_PRAGMA, ftStr},
     {"Proxy-Authenticate", HDR_PROXY_AUTHENTICATE, ftStr},
     {"Proxy-Authentication-Info", HDR_PROXY_AUTHENTICATION_INFO, ftStr},
@@ -229,6 +230,7 @@ static http_hdr_type ReplyHeadersArr[] = {
     HDR_ACCEPT_RANGES, HDR_AGE,
     HDR_LOCATION, HDR_MAX_FORWARDS,
     HDR_MIME_VERSION, HDR_PUBLIC, HDR_RETRY_AFTER, HDR_SERVER, HDR_SET_COOKIE, HDR_SET_COOKIE2,
+    HDR_ORIGIN,
     HDR_VARY,
     HDR_WARNING, HDR_PROXY_CONNECTION, HDR_X_CACHE,
     HDR_X_CACHE_LOOKUP,
@@ -247,7 +249,9 @@ static HttpHeaderMask RequestHeadersMask;	/* set run-time using RequestHeaders *
 static http_hdr_type RequestHeadersArr[] = {
     HDR_AUTHORIZATION, HDR_FROM, HDR_HOST,
     HDR_IF_MATCH, HDR_IF_MODIFIED_SINCE, HDR_IF_NONE_MATCH,
-    HDR_IF_RANGE, HDR_MAX_FORWARDS, HDR_PROXY_CONNECTION,
+    HDR_IF_RANGE, HDR_MAX_FORWARDS,
+    HDR_ORIGIN,
+    HDR_PROXY_CONNECTION,
     HDR_PROXY_AUTHORIZATION, HDR_RANGE, HDR_REFERER, HDR_REQUEST_RANGE,
     HDR_USER_AGENT, HDR_X_FORWARDED_FOR, HDR_SURROGATE_CAPABILITY
 };
