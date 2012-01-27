@@ -46,6 +46,9 @@
 #include "ssl/support.h"
 #include "ssl/gadgets.h"
 
+Ssl::X509_Pointer Ssl::SquidCaCert;
+Ssl::EVP_PKEY_Pointer Ssl::SquidCaCertKey;
+
 /**
  \defgroup ServerProtocolSSLInternal Server-Side SSL Internals
  \ingroup ServerProtocolSSLAPI
@@ -648,6 +651,13 @@ ssl_initialize(void)
 #endif
 
     }
+
+    // Generate the self-signed Ssl::SquidCaCert, using the "SquidLocalCa" as CN
+    Ssl::CertificateProperties certProperties;
+    certProperties.commonName = "Squid CA for Untrusted Certificates";
+    certProperties.signAlgorithm = Ssl::algSignSelf;
+    bool ret = Ssl::generateSslCertificate(Ssl::SquidCaCert, Ssl::SquidCaCertKey, certProperties);
+    assert(ret);
 
     ssl_ex_index_server = SSL_get_ex_new_index(0, (void *) "server", NULL, NULL, NULL);
     ssl_ctx_ex_index_dont_verify_domain = SSL_CTX_get_ex_new_index(0, (void *) "dont_verify_domain", NULL, NULL, NULL);
@@ -1260,17 +1270,12 @@ SSL_CTX * Ssl::generateSslContextUsingPkeyAndCertFromMemory(const char * data)
     return createSSLContext(cert, pkey);
 }
 
-SSL_CTX * Ssl::generateSslContext(char const *host, Ssl::X509_Pointer const & mimicCert, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey, Ssl::CrtdMessage::BodyParams const &mimicExceptions)
+SSL_CTX * Ssl::generateSslContext(CertificateProperties const &properties)
 {
     Ssl::X509_Pointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
-    if (mimicCert .get()) {
-        if (!generateSslCertificate(mimicCert, signedX509, signedPkey, cert, pkey, NULL, mimicExceptions))
-            return NULL;
-    }
-    else if (!generateSslCertificateAndPrivateKey(host, signedX509, signedPkey, cert, pkey, NULL)) {
+    if (!generateSslCertificate(cert, pkey, properties))
         return NULL;
-    }
 
     if (!cert)
         return NULL;

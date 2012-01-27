@@ -629,6 +629,7 @@ struct SquidConfig {
         char *flags;
         acl_access *cert_error;
         SSL_CTX *sslContext;
+        sslproxy_cert_sign *cert_sign;
         sslproxy_cert_adapt *cert_adapt;
     } ssl_client;
 #endif
@@ -1303,6 +1304,12 @@ struct _store_rebuild_data {
 };
 
 #if USE_SSL
+struct _sslproxy_cert_sign {
+    int alg;
+    ACLList *aclList;
+    sslproxy_cert_sign *next;
+};
+
 struct _sslproxy_cert_adapt {
     int alg;
     char *param;
