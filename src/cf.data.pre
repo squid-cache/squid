@@ -2052,6 +2052,30 @@ DOC_START
 	Default setting:  sslproxy_cert_error deny all
 DOC_END
 
+NAME: sslproxy_cert_sign
+IFDEF: USE_SSL
+DEFAULT: none
+TYPE: sslproxy_cert_sign
+LOC: Config.ssl_client.cert_sign
+DOC_START
+
+        sslproxy_cert_sign <adaptation algorithm> acl ...
+
+        The following certificate signing algorithms supported:
+	   signTrusted
+		the current signing algorithm using a configured CA certificate
+		that is usually placed in and trusted by end-user browsers
+	   signUntrusted
+		sign to guarantee an X509_V_ERR_CERT_UNTRUSTED browser error
+	   signSelf
+		sign using a self-signed certificate with the right CN to
+		generate a X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT error in the
+		browser.
+
+        When the acl(s) match, the corresponding signing algorithm is used to
+        generate the certificate. Otherwise, the default signing algorithm used
+DOC_END
+
 NAME: sslproxy_cert_adapt 
 IFDEF: USE_SSL
 DEFAULT: none

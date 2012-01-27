@@ -3632,14 +3632,18 @@ ConnStateData::sslCrtdHandleReply(const char * reply)
     getSslContextDone(NULL);
 }
 
-void ConnStateData::buildSslCertAdaptParams(Ssl::CrtdMessage::BodyParams &certAdaptParams)
+void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties, Ssl::CrtdMessage::BodyParams &certAdaptParams)
 {
     // Build a key to use for storing/retrieving certificates to cache
     sslBumpCertKey = sslCommonName.defined() ? sslCommonName : sslConnectHostOrIp;
+    certProperties.commonName = sslBumpCertKey.termedBuf();
 
     // fake certificate adaptation requires bump-server-first mode
     if (!bumpServerFirstErrorEntry())
         return;
+
+    if (X509 *mimicCert = bumpServerCert.get())
+        certProperties.mimicCert.resetAndLock(mimicCert);
 
     HttpRequest *fakeRequest =  new HttpRequest();
     fakeRequest->SetHost(sslConnectHostOrIp.termedBuf());
@@ -3664,8 +3668,16 @@ void ConnStateData::buildSslCertAdaptParams(Ssl::CrtdMessage::BodyParams &certAd
 
             // if not param defined for Common Name adaptation use hostname from 
             // the CONNECT request
-            if (!param && ca->alg == Ssl::algSetCommonName)
-                param = sslConnectHostOrIp.termedBuf();
+            if (ca->alg == Ssl::algSetCommonName) {
+                if (!param)
+                    param = sslConnectHostOrIp.termedBuf();
+                certProperties.commonName = param;
+                certProperties.setCommonName = true;
+            }
+            else if(ca->alg == Ssl::algSetValidAfter)
+                certProperties.setValidAfter = true;
+            else if(ca->alg == Ssl::algSetValidBefore)
+                certProperties.setValidBefore = true;
 
             assert(alg && param);
             debugs(33, 5, HERE << "Matches certificate adaptation aglorithm: " << 
@@ -3680,7 +3692,71 @@ void ConnStateData::buildSslCertAdaptParams(Ssl::CrtdMessage::BodyParams &certAd
             sslBumpCertKey.append("=");
             sslBumpCertKey.append(param);
         }
-    }    
+    }
+
+    certProperties.signAlgorithm = Ssl::algSignEnd;
+    for (sslproxy_cert_sign *sg = Config.ssl_client.cert_sign; sg != NULL; sg = sg->next) {
+        if (sg->aclList && checklist.fastCheck(sg->aclList) == ACCESS_ALLOWED) {
+            const char *sgAlg = Ssl::CertSignAlgorithmStr[sg->alg];
+            certProperties.signAlgorithm = (Ssl::CertSignAlgorithm)sg->alg;
+            certAdaptParams.insert( std::make_pair(Ssl::CrtdMessage::param_Sign, sgAlg));
+            sslBumpCertKey.append("+Sign=");
+            sslBumpCertKey.append(sgAlg);
+            break;
+        }
+    }
+
+    if (certProperties.signAlgorithm == Ssl::algSignEnd) {
+        // Use the default algorithm
+        //Temporary code....
+        // TODO: implement the following using acls:
+        Ssl::ssl_error_t selfSignErrors[] = {X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT, 0};
+        Ssl::ssl_error_t unTrustedErrors[] = {X509_V_ERR_INVALID_CA, 
+                                              X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN, 
+                                              X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE,
+                                              X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
+                                              X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY,
+                                              X509_V_ERR_CERT_UNTRUSTED,0};
+        for (int i = 0; selfSignErrors[i] != 0; i++) {
+            if (bumpSslErrorNoList->find(selfSignErrors[i])) {
+                certProperties.signAlgorithm = Ssl::algSignSelf;
+                const char *sgAlg = Ssl::CertSignAlgorithmStr[Ssl::algSignSelf];
+                sslBumpCertKey.append("+Sign=");
+                sslBumpCertKey.append(sgAlg);
+                certAdaptParams.insert( std::make_pair(Ssl::CrtdMessage::param_Sign, sgAlg));
+                break;
+            }  
+        }
+        if (certProperties.signAlgorithm == Ssl::algSignEnd) {
+            for (int i = 0; unTrustedErrors[i] != 0; i++) {
+                if (bumpSslErrorNoList->find(selfSignErrors[i])) {
+                    certProperties.signAlgorithm = Ssl::algSignUntrusted;
+                    const char *sgAlg = Ssl::CertSignAlgorithmStr[Ssl::algSignUntrusted];
+                    sslBumpCertKey.append("+Sign=");
+                    sslBumpCertKey.append(sgAlg);
+                    certAdaptParams.insert( std::make_pair(Ssl::CrtdMessage::param_Sign, sgAlg));
+                    break;
+                }  
+            }
+        }
+        if (certProperties.signAlgorithm == Ssl::algSignEnd)
+            certProperties.signAlgorithm = Ssl::algSignTrusted;
+        //End of Temporary code....
+    }
+
+    if (certProperties.signAlgorithm == Ssl::algSignUntrusted) {
+        assert(Ssl::SquidCaCert.get() && Ssl::SquidCaCertKey.get());
+        certProperties.signWithX509.resetAndLock(Ssl::SquidCaCert.get());
+        certProperties.signWithPkey.resetAndLock(Ssl::SquidCaCertKey.get());
+    }
+    else {
+        if (port->signingCert.get())
+            certProperties.signWithX509.resetAndLock(port->signingCert.get());
+
+        if (port->signPkey.get())
+            certProperties.signWithPkey.resetAndLock(port->signPkey.get());
+    }
+    signAlgorithm = certProperties.signAlgorithm;
 }
 
 void
@@ -3688,10 +3764,11 @@ ConnStateData::getSslContextStart()
 {
     if (port->generateHostCertificates) {
         Ssl::CrtdMessage::BodyParams certAdaptParams;
-        buildSslCertAdaptParams(certAdaptParams);
+        Ssl::CertificateProperties certProperties;
+        buildSslCertGenerationParams(certProperties, certAdaptParams);
         assert(sslBumpCertKey.defined() && sslBumpCertKey[0] != '\0');
 
-            debugs(33, 5, HERE << "Finding SSL certificate for " << sslBumpCertKey << " in cache");
+        debugs(33, 5, HERE << "Finding SSL certificate for " << sslBumpCertKey << " in cache");
         Ssl::LocalContextStorage & ssl_ctx_cache(Ssl::TheGlobalContextStorage.getLocalStorage(port->s));
         SSL_CTX * dynCtx = ssl_ctx_cache.find(sslBumpCertKey.termedBuf());
         if (dynCtx) {
@@ -3708,19 +3785,18 @@ ConnStateData::getSslContextStart()
             debugs(33, 5, HERE << "SSL certificate for " << sslBumpCertKey << " haven't found in cache");
         }
 
-        char const * host = sslCommonName.defined() ? sslCommonName.termedBuf() : sslConnectHostOrIp.termedBuf();
 #if USE_SSL_CRTD
-        debugs(33, 5, HERE << "Generating SSL certificate for " << host << " using ssl_crtd.");
+        debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName << " using ssl_crtd.");
         Ssl::CrtdMessage request_message;
         request_message.setCode(Ssl::CrtdMessage::code_new_certificate);
         Ssl::CrtdMessage::BodyParams map;
-        map.insert(std::make_pair(Ssl::CrtdMessage::param_host, host));
+        map.insert(std::make_pair(Ssl::CrtdMessage::param_host, certProperties.commonName));
         /*Append parameters for cert adaptation*/
         map.insert(certAdaptParams.begin(), certAdaptParams.end());
         std::string bufferToWrite;
-        Ssl::writeCertAndPrivateKeyToMemory(port->signingCert, port->signPkey, bufferToWrite);
-        if (bumpServerCert.get()) {
-            Ssl::appendCertToMemory(bumpServerCert, bufferToWrite);
+        Ssl::writeCertAndPrivateKeyToMemory(certProperties.signWithX509, certProperties.signWithPkey, bufferToWrite);
+        if (certProperties.mimicCert.get()) {
+            Ssl::appendCertToMemory(certProperties.mimicCert, bufferToWrite);
             debugs(33, 5, HERE << "Append Mimic Certificate to body request: " << bufferToWrite);
         }
         request_message.composeBody(map, bufferToWrite);
@@ -3728,8 +3804,8 @@ ConnStateData::getSslContextStart()
         Ssl::Helper::GetInstance()->sslSubmit(request_message, sslCrtdHandleReplyWrapper, this);
         return;
 #else
-        debugs(33, 5, HERE << "Generating SSL certificate for " << host);
-        dynCtx = Ssl::generateSslContext(host, bumpServerCert, port->signingCert, port->signPkey, certAdaptParams);
+        debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName);
+        dynCtx = Ssl::generateSslContext(certProperties);
         getSslContextDone(dynCtx, true);
         return;
 #endif //USE_SSL_CRTD
@@ -3743,7 +3819,9 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
     // Try to add generated ssl context to storage.
     if (port->generateHostCertificates && isNew) {
 
-        Ssl::addChainToSslContext(sslContext, port->certsToChain.get());
+        if (signAlgorithm == Ssl::algSignTrusted)
+            Ssl::addChainToSslContext(sslContext, port->certsToChain.get());
+        //else it is self-signed or untrusted do not attrach any certificate
 
         Ssl::LocalContextStorage & ssl_ctx_cache(Ssl::TheGlobalContextStorage.getLocalStorage(port->s));
         assert(sslBumpCertKey.defined() && sslBumpCertKey[0] != '\0');

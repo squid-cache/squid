@@ -213,54 +213,72 @@ static void usage()
 static bool proccessNewRequest(Ssl::CrtdMessage const & request_message, std::string const & db_path, size_t max_db_size, size_t fs_block_size)
 {
     Ssl::CrtdMessage::BodyParams map;
+    Ssl::CertificateProperties certProperties;
     std::string body_part;
     request_message.parseBody(map, body_part);
 
     Ssl::CrtdMessage::BodyParams::iterator i = map.find(Ssl::CrtdMessage::param_host);
     if (i == map.end())
         throw std::runtime_error("Cannot find \"" + Ssl::CrtdMessage::param_host + "\" parameter in request message.");
-    std::string host = i->second;
+    certProperties.commonName = i->second;
 
     Ssl::CertificateDb db(db_path, max_db_size, fs_block_size);
 
     Ssl::X509_Pointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
-    Ssl::X509_Pointer certToMimic;
     
     const char *s;
     std::string cert_subject;
     if ((s = strstr(body_part.c_str(), CERT_BEGIN_STR))) {
         s += strlen(CERT_BEGIN_STR);
         if ((s = strstr(s, CERT_BEGIN_STR))) {
-            Ssl::readCertFromMemory(certToMimic, s);
-            if (certToMimic.get()) {
+            Ssl::readCertFromMemory(certProperties.mimicCert, s);
+            if (certProperties.mimicCert.get()) {
                 char buf[1024];
-                cert_subject = X509_NAME_oneline(X509_get_subject_name(certToMimic.get()), buf, sizeof(buf));
+                cert_subject = X509_NAME_oneline(X509_get_subject_name(certProperties.mimicCert.get()), buf, sizeof(buf));
             }
         }
     }
 
     if (cert_subject.empty())
-        cert_subject = "/CN=" + host;
+        cert_subject = "/CN=" + certProperties.commonName;
 
     i = map.find(Ssl::CrtdMessage::param_SetValidAfter);
-    if (i != map.end() && strcasecmp(i->second.c_str(), "on") == 0)
+    if (i != map.end() && strcasecmp(i->second.c_str(), "on") == 0) {
         cert_subject.append("+SetValidAfter=on");
+        certProperties.setValidAfter = true;
+    }
     
     i = map.find(Ssl::CrtdMessage::param_SetValidBefore);
-    if (i != map.end() && strcasecmp(i->second.c_str(), "on") == 0)
+    if (i != map.end() && strcasecmp(i->second.c_str(), "on") == 0) {
         cert_subject.append("+SetValidBefore=on");
+        certProperties.setValidBefore = true;
+    }
 
     i = map.find(Ssl::CrtdMessage::param_SetCommonName);
     if (i != map.end()) {
         cert_subject.append("+SetCommonName=");
         cert_subject.append(i->second);
+        // use this as Common Name  instead of the hostname 
+        // defined with host or Common Name from mimic cert
+        certProperties.commonName = i->second;
+        certProperties.setCommonName = true;
     }
+
+    i = map.find(Ssl::CrtdMessage::param_Sign);
+    if (i != map.end()) {
+        cert_subject.append("+Sign=");
+        cert_subject.append(i->second);
+        if ((certProperties.signAlgorithm = Ssl::certSignAlgorithmId(i->second.c_str())) == Ssl::algSignEnd)
+            throw std::runtime_error("Wrong signing algoritm:" + i->second);
+    }
+    else
+        certProperties.signAlgorithm = Ssl::algSignTrusted;
 
     db.find(cert_subject, cert, pkey);
 
-    if (cert.get() && certToMimic.get()) {
-        if (!Ssl::ssl_match_certificates(cert.get(), certToMimic.get())) {
+    if (cert.get() && certProperties.mimicCert.get()) {
+        if (!Ssl::ssl_match_certificates(cert.get(), certProperties.mimicCert.get())) {
             // The certificate changed (renewed or other reason).
             // Generete a new one with the updated fields.
             cert.reset(NULL);
@@ -269,18 +287,15 @@ static bool proccessNewRequest(Ssl::CrtdMessage const & request_message, std::st
     }
 
     if (!cert || !pkey) {
-        Ssl::X509_Pointer certToSign;
-        Ssl::EVP_PKEY_Pointer pkeyToSign;
-        Ssl::readCertAndPrivateKeyFromMemory(certToSign, pkeyToSign, body_part.c_str());
+        if (certProperties.signAlgorithm != Ssl::algSignSelf) {
+            if (!Ssl::readCertAndPrivateKeyFromMemory(certProperties.signWithX509, certProperties.signWithPkey, body_part.c_str()))
+                throw std::runtime_error("Broken signing certificate!");
+        } /*else Squid did not send certificate to sign the generated certificate*/
+        
+        certProperties.serial.reset(db.getCurrentSerialNumber());
 
-        Ssl::BIGNUM_Pointer serial(db.getCurrentSerialNumber());
-
-        if (certToMimic.get()) {
-            Ssl::generateSslCertificate(certToMimic, certToSign, pkeyToSign, cert, pkey, serial.get(), map);
-        }
-        else 
-            if (!Ssl::generateSslCertificateAndPrivateKey(host.c_str(), certToSign, pkeyToSign, cert, pkey, serial.get()))
-                throw std::runtime_error("Cannot create ssl certificate or private key.");
+        if (!Ssl::generateSslCertificate(cert, pkey, certProperties))
+            throw std::runtime_error("Cannot create ssl certificate or private key.");
 
         if (!db.addCertAndPrivateKey(cert, pkey, cert_subject) && db.IsEnabledDiskStore())
             throw std::runtime_error("Cannot add certificate to db.");

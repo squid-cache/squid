@@ -338,7 +338,7 @@ public:
     void setBumpSslErrorList(Ssl::Errors *errNoList) {bumpSslErrorNoList = cbdataReference(errNoList);}
     /// Fill the certAdaptParams with the required data for certificate adaptation
     /// and create the key for storing/retrieve the certificate to/from the cache
-    void buildSslCertAdaptParams(Ssl::CrtdMessage::BodyParams &certAdaptParams);
+    void buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties, Ssl::CrtdMessage::BodyParams &certAdaptParams);
     bool serveDelayedError(ClientSocketContext *context);
 #else
     bool switchedToHttps() const { return false; }
@@ -374,6 +374,7 @@ private:
     StoreEntry *bumpErrorEntry;
     Ssl::X509_Pointer bumpServerCert;
     Ssl::Errors *bumpSslErrorNoList; ///< The list of SSL certificate errors which ignored
+    Ssl::CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
 #endif
 
     AsyncCall::Pointer reader; ///< set when we are reading
