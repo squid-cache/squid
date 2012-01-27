@@ -347,7 +347,7 @@ MemStore::cleanReadable(const sfileno fileno)
 int64_t
 MemStore::EntryLimit()
 {
-    if (!Config.memMaxSize)
+    if (!Config.memShared || !Config.memMaxSize)
         return 0; // no memory cache configured
 
     const int64_t entrySize = Ipc::Mem::PageSize(); // for now
@@ -374,6 +374,35 @@ MemStoreClaimMemoryNeedsRr::run(const RunnerRegistry &)
 }
 
 
+/// decides whether to use a shared memory cache or checks its configuration
+class MemStoreCfgRr: public ::RegisteredRunner
+{
+public:
+    /* RegisteredRunner API */
+    virtual void run(const RunnerRegistry &);
+};
+
+RunnerRegistrationEntry(rrFinalizeConfig, MemStoreCfgRr);
+
+void MemStoreCfgRr::run(const RunnerRegistry &r)
+{
+    // decide whether to use a shared memory cache if the user did not specify
+    if (!Config.memShared.configured()) {
+        Config.memShared.configure(Ipc::Atomic::Enabled() &&
+                                   Ipc::Mem::Segment::Enabled() && UsingSmp() &&
+                                   Config.memMaxSize > 0);
+    } else if (Config.memShared && !Ipc::Atomic::Enabled()) {
+        // bail if the user wants shared memory cache but we cannot support it
+        fatal("memory_cache_shared is on, but no support for atomic operations detected");
+    } else if (Config.memShared && !Ipc::Mem::Segment::Enabled()) {
+        fatal("memory_cache_shared is on, but no support for shared memory detected");
+    } else if (Config.memShared && !UsingSmp()) {
+        debugs(20, DBG_IMPORTANT, "WARNING: memory_cache_shared is on, but only"
+               " a single worker is running");
+    }
+}
+
+
 /// initializes shared memory segments used by MemStore
 class MemStoreRr: public Ipc::Mem::RegisteredRunner
 {
@@ -395,21 +424,7 @@ RunnerRegistrationEntry(rrAfterConfig, MemStoreRr);
 
 void MemStoreRr::run(const RunnerRegistry &r)
 {
-    // decide whether to use a shared memory cache if the user did not specify
-    if (!Config.memShared.configured()) {
-        Config.memShared.configure(Ipc::Atomic::Enabled() &&
-                                   Ipc::Mem::Segment::Enabled() && UsingSmp() &&
-                                   Config.memMaxSize > 0);
-    } else if (Config.memShared && !Ipc::Atomic::Enabled()) {
-        // bail if the user wants shared memory cache but we cannot support it
-        fatal("memory_cache_shared is on, but no support for atomic operations detected");
-    } else if (Config.memShared && !Ipc::Mem::Segment::Enabled()) {
-        fatal("memory_cache_shared is on, but no support for shared memory detected");
-    } else if (Config.memShared && !UsingSmp()) {
-        debugs(20, DBG_IMPORTANT, "WARNING: memory_cache_shared is on, but only"
-               " a single worker is running");
-    }
-
+    assert(Config.memShared.configured());
     Ipc::Mem::RegisteredRunner::run(r);
 }
 
