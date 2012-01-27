@@ -111,6 +111,12 @@ DOC_START
 	Remove this line. The HTTP/1.1 feature is now fully supported by default.
 DOC_END
 
+NAME: dns_v4_fallback
+TYPE: obsolete
+DOC_START
+	Remove this line.
+DOC_END
+
 NAME: ftp_list_width
 TYPE: obsolete
 DOC_START
@@ -7234,27 +7240,6 @@ DOC_START
 	don't match, Squid ignores the response and writes a warning
 	message to cache.log.  You can allow responses from unknown
 	nameservers by setting this option to 'off'.
-DOC_END
-
-NAME: dns_v4_fallback
-TYPE: onoff
-DEFAULT: on
-LOC: Config.onoff.dns_require_A
-IFDEF: !USE_DNSHELPER
-DOC_START
-	Standard practice with DNS is to lookup either A or AAAA records
-	and use the results if it succeeds. Only looking up the other if
-	the first attempt fails or otherwise produces no results.
-
-	That policy however will cause squid to produce error pages for some
-	servers that advertise AAAA but are unreachable over IPv6.
-
-	If this is ON  squid will always lookup both AAAA and A, using both.
-	If this is OFF squid will lookup AAAA and only try A if none found.
-
-	WARNING: There are some possibly unwanted side-effects with this on:
-		*) Doubles the load placed by squid on the DNS network.
-		*) May negatively impact connection delay times.
 DOC_END
 
 NAME: dns_v4_first
