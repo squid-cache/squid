@@ -56,7 +56,7 @@ IcmpPinger::~IcmpPinger()
     Close();
 }
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 void
 Win32SockCleanup(void)
 {
@@ -68,7 +68,7 @@ Win32SockCleanup(void)
 int
 IcmpPinger::Open(void)
 {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
     WSADATA wsaData;
     WSAPROTOCOL_INFO wpi;
@@ -150,7 +150,7 @@ IcmpPinger::Open(void)
 
     return icmp_sock;
 
-#else /* !_SQUID_MSWIN_ */
+#else /* !_SQUID_WINDOWS_ */
 
     /* non-windows apps use stdin/out pipes as the squid channel(s) */
     socket_from_squid = 0; // use STDIN macro ??
@@ -162,7 +162,7 @@ IcmpPinger::Open(void)
 void
 IcmpPinger::Close(void)
 {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
     shutdown(icmp_sock, SD_BOTH);
     close(icmp_sock);

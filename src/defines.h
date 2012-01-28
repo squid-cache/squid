@@ -211,7 +211,7 @@
 /*
  * Max number of ICP messages to receive per call to icpHandleUdp
  */
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 #define INCOMING_ICP_MAX 1
 #else
 #define INCOMING_ICP_MAX 15
@@ -219,7 +219,7 @@
 /*
  * Max number of DNS messages to receive per call to DNS read handler
  */
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 #define INCOMING_DNS_MAX 1
 #else
 #define INCOMING_DNS_MAX 15
@@ -228,7 +228,7 @@
  * Max number of HTTP connections to accept per call to httpAccept
  * and PER HTTP PORT
  */
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 #define INCOMING_HTTP_MAX 1
 #else
 #define INCOMING_HTTP_MAX 10

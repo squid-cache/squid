@@ -673,7 +673,7 @@ SQUIDCEXTERN void WIN32_InstallService(void);
 SQUIDCEXTERN void WIN32_RemoveService(void);
 SQUIDCEXTERN int SquidMain(int, char **);
 #endif /* _SQUID_WINDOWS_ */
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
 SQUIDCEXTERN int WIN32_pipe(int[2]);
 

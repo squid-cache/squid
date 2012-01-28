@@ -86,7 +86,7 @@
 #if _SQUID_WINDOWS_
 #include "fde.h"
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
@@ -126,7 +126,7 @@ typedef struct icmphdr {
     uint32_t timestamp;        /* not part of ICMP, but we need it */
 } icmphdr;
 
-#endif  /* _SQUID_MSWIN_ */
+#endif  /* _SQUID_WINDOWS_ */
 
 #ifndef ICMP_ECHO
 #define ICMP_ECHO 8

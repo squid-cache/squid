@@ -34,7 +34,7 @@
 
 #include "squid.h"
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 /** \cond AUTODOCS-IGNORE */
 using namespace Squid;
 /** \endcond */
