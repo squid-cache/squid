@@ -51,6 +51,9 @@
 #endif
 
 /* module globals */
+#if 1 || !HAVE_GETPAGESIZE
+static size_t getpagesize() { return 4096; }
+#endif
 const size_t squidSystemPageSize=getpagesize();
 
 /* local prototypes */
