@@ -120,7 +120,7 @@ static int retries = 30;
 
 char progname[] = "basic_radius_auth";
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 void
 Win32SockCleanup(void)
 {
@@ -498,7 +498,7 @@ main(int argc, char **argv)
         fprintf(stderr, "FATAL: %s: Shared secret not specified\n", argv[0]);
         exit(1);
     }
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     {
         WSADATA wsaData;
         WSAStartup(2, &wsaData);

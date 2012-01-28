@@ -26,7 +26,7 @@
 
 #include "digest_common.h"
 
-#if _SQUID_MSWIN_            /* Native Windows port and MinGW */
+#if _SQUID_WINDOWS_            /* Native Windows port and MinGW */
 
 #define snprintf _snprintf
 #include <windows.h>

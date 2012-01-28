@@ -36,7 +36,7 @@
 
 #include "squid-old.h"
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 #ifndef _MSWSOCK_
 #include <mswsock.h>
 #endif
@@ -56,7 +56,7 @@ static void WIN32_build_argv (char *);
 #endif
 extern "C" void WINAPI SquidWinSvcMain(DWORD, char **);
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 void Squid_Win32InvalidParameterHandler(const wchar_t*, const wchar_t*, const wchar_t*, unsigned int, uintptr_t);
 #endif
@@ -66,7 +66,7 @@ SQUIDCEXTERN LPCRITICAL_SECTION dbg_mutex;
 void WIN32_ExceptionHandlerCleanup(void);
 static int s_iInitCount = 0;
 static HANDLE NotifyAddrChange_thread = INVALID_HANDLE_VALUE;
-#endif /* _SQUID_MSWIN_ */
+#endif /* _SQUID_WINDOWS_ */
 
 static int Squid_Aborting = 0;
 
@@ -400,7 +400,7 @@ WIN32_Abort(int sig)
     WIN32_Exit();
 }
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 void
 WIN32_IpAddrChangeMonitorExit()
 {
@@ -416,7 +416,7 @@ WIN32_IpAddrChangeMonitorExit()
 void
 WIN32_Exit()
 {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     Win32SockCleanup();
 #endif
 #if USE_WIN32_SERVICE
@@ -429,7 +429,7 @@ WIN32_Exit()
     }
 
 #endif
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     if (dbg_mutex)
         DeleteCriticalSection(dbg_mutex);
 
@@ -441,7 +441,7 @@ WIN32_Exit()
     _exit(0);
 }
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 static DWORD WINAPI
 WIN32_IpAddrChangeMonitor(LPVOID lpParam)
 {
@@ -483,7 +483,7 @@ WIN32_IpAddrChangeMonitorInit()
     }
     return status;
 }
-#endif /* _SQUID_MSWIN_ */
+#endif /* _SQUID_WINDOWS_ */
 
 int WIN32_Subsystem_Init(int * argc, char *** argv)
 {
@@ -579,7 +579,7 @@ int WIN32_Subsystem_Init(int * argc, char *** argv)
         svcStatus.dwCheckPoint = 0;
         svcStatus.dwWaitHint = 10000;
         SetServiceStatus(svcHandle, &svcStatus);
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
         _setmaxstdio(Squid_MaxFD);
 #endif
@@ -587,7 +587,7 @@ int WIN32_Subsystem_Init(int * argc, char *** argv)
     }
 
 #endif /* USE_WIN32_SERVICE */
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     if (Win32SockInit() < 0)
         return 1;
 
@@ -963,7 +963,7 @@ int main(int argc, char **argv)
         }
     } else {
         WIN32_run_mode = _WIN_SQUID_RUN_MODE_INTERACTIVE;
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 
         opt_no_daemon = 1;
 
@@ -977,7 +977,7 @@ int main(int argc, char **argv)
 
 #endif /* USE_WIN32_SERVICE */
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
 static int Win32SockInit(void)
 {
     int iVersionRequested;
