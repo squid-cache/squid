@@ -35,6 +35,7 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
+#include "compat/strsep.h"
 #include "ipc/StartListening.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
