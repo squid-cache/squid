@@ -35,6 +35,7 @@
 
 #include "squid-old.h"
 #include "comm.h"
+#include "comm/Connection.h" /* for COMM_* */
 #include "fde.h"
 #include "ip/Address.h"
 #include "rfc1738.h"
@@ -276,7 +277,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         return ipcCloseAllFD(prfd, pwfd, -1, -1);
     }
 
-    x = send(pwfd, (const void *)ok_string, strlen(ok_string), 0);
+    x = Squid::send(pwfd, ok_string, strlen(ok_string), 0);
 
     if (x < 0) {
         debugs(54, 0, "ipcCreate: PARENT: OK write test failed");
@@ -350,7 +351,7 @@ ipcSend(int cwfd, const char *buf, int len)
 {
     int x;
 
-    x = send(cwfd, (const void *)buf, len, 0);
+    x = Squid::send(cwfd, buf, len, 0);
 
     if (x < 0) {
         debugs(54, 0, "sendto FD " << cwfd << ": " << xstrerror());
@@ -424,7 +425,7 @@ ipc_thread_1(void *in_params)
             goto cleanup;
     }
 
-    x = send(cwfd, (const void *)hello_string, strlen(hello_string) + 1, 0);
+    x = Squid::send(cwfd, hello_string, strlen(hello_string) + 1, 0);
 
     if (x < 0) {
         debugs(54, 0, "sendto FD " << cwfd << ": " << xstrerror());
@@ -660,7 +661,7 @@ ipc_thread_1(void *in_params)
             goto cleanup;
         }
 
-        x = send(pwfd_ipc, (const void *)ok_string, strlen(ok_string), 0);
+        x = Squid::send(pwfd_ipc, ok_string, strlen(ok_string), 0);
         x = recv(prfd_ipc, (void *)(buf1 + 200), 8191 - 200, 0);
         assert((size_t) x == strlen(ok_string)
                && !strncmp(ok_string, buf1 + 200, strlen(ok_string)));
@@ -729,7 +730,7 @@ ipc_thread_1(void *in_params)
         if (type == IPC_TCP_SOCKET)
             x = write(c2p[1], buf1, x);
         else
-            x = send(pwfd_ipc, (const void *)buf1, x, 0);
+            x = Squid::send(pwfd_ipc, buf1, x, 0);
 
         if (x <= 0) {
             debugs(54, 3, "ipc(" << prog << "," << pid << "): " << x << " bytes written to " << prog << ". Exiting...");
@@ -749,7 +750,7 @@ cleanup:
         ipcCloseAllFD(-1, -1, crfd, cwfd);
 
     if (prfd_ipc != -1) {
-        send(crfd_ipc, (const void *)shutdown_string, strlen(shutdown_string), 0);
+        Squid::send(crfd_ipc, shutdown_string, strlen(shutdown_string), 0);
         shutdown(crfd_ipc, SD_BOTH);
         shutdown(prfd_ipc, SD_BOTH);
     }
@@ -838,7 +839,7 @@ ipc_thread_2(void *in_params)
 
         debugs(54, 5, "ipc(" << prog << "," << pid << "): received from child : " << rfc1738_escape_unescaped(buf2));
 
-        x = send(send_fd, (const void *)buf2, x, 0);
+        x = Squid::send(send_fd, buf2, x, 0);
 
         if ((x <= 0 && type == IPC_TCP_SOCKET) ||
                 (x < 0 && type == IPC_UDP_SOCKET)) {
