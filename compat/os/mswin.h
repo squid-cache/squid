@@ -226,7 +226,7 @@ struct timezone {
 
 #include <process.h>
 #include <errno.h>
-#if _SQUID_MSWIN_ || _SQUID_MINGW_
+#if _SQUID_WINDOWS_ || _SQUID_MINGW_
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
 #elif HAVE_WINSOCK_H
@@ -234,7 +234,7 @@ struct timezone {
 #endif
 #undef IN_ADDR
 #include <ws2tcpip.h>
-#endif /* _SQUID_MSWIN_ || _SQUID_MINGW_ */
+#endif /* _SQUID_WINDOWS_ || _SQUID_MINGW_ */
 
 #if (EAI_NODATA == EAI_NONAME)
 #undef EAI_NODATA
@@ -620,10 +620,10 @@ select(int n, fd_set * r, fd_set * w, fd_set * e, struct timeval * t)
 #define select(n,r,w,e,t) Squid::select(n,r,w,e,t)
 
 inline ssize_t
-send(int s, const void * b, size_t l, int f)
+send(int s, const char * b, size_t l, int f)
 {
     ssize_t result;
-    if ((result = ::send(_get_osfhandle(s), (char *)b, l, f)) == SOCKET_ERROR) {
+    if ((result = ::send(_get_osfhandle(s), b, l, f)) == SOCKET_ERROR) {
         errno = WSAGetLastError();
         return -1;
     } else
@@ -680,6 +680,13 @@ socket(int f, int t, int p)
         return _open_osfhandle(result, 0);
 }
 #define socket(f,t,p) Squid::socket(f,t,p)
+
+inline int
+pipe(int pipefd[2])
+{
+	return _pipe(pipefd,4096,_O_BINARY);
+}
+using Squid::pipe;
 
 inline
 int WSAAsyncSelect(int s, HWND h, unsigned int w, long e)
@@ -851,6 +858,15 @@ void syslog(int priority, const char *fmt, ...);
 #define WTERMSIG(w) ((w) & 0x7f)
 #define WSTOPSIG    WEXITSTATUS
 
+#endif
+
+/* prototypes */
+void WIN32_maperror(unsigned long WIN32_oserrno);
+#if !HAVE_GETPAGESIZE
+inline size_t
+getpagesize() {
+	return 4096;
+}
 #endif
 
 #endif /* _SQUID_WINDOWS_ */

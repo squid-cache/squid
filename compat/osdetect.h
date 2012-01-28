@@ -80,7 +80,7 @@
 //       gets detected and a macro defined for it.
 
 // the old name for MSVC *and* MingW (TODO: remove from use)
-#define _SQUID_MSWIN_ 1
+#define _SQUID_WINDOWS_ 1
 
 #elif defined(__APPLE__)
 #define _SQUID_APPLE_ 1
