@@ -80,7 +80,7 @@ CBDATA_TYPE(helper_stateful_server);
 void
 HelperServerBase::closePipesSafely()
 {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     int no = index + 1;
 
     shutdown(writePipe->fd, SD_BOTH);
@@ -93,13 +93,13 @@ HelperServerBase::closePipesSafely()
         readPipe->close();
     writePipe->close();
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();
-            debugs(84, DBG_IMPORTANT, "WARNING: " << hlp->id_name <<
-                   " #" << no << " (" << hlp->cmdline->key << "," <<
-                   (long int)pid << ") didn't exit in 5 seconds");
+            debugs(84, DBG_IMPORTANT, "WARNING: helper PID " <<
+            		(long int)pid << " (#" << no
+            		<< ") didn't exit in 5 seconds");
         }
         CloseHandle(hIpc);
     }
@@ -109,7 +109,7 @@ HelperServerBase::closePipesSafely()
 void
 HelperServerBase::closeWritePipeSafely()
 {
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     int no = index + 1;
 
     shutdown(writePipe->fd, (readPipe->fd == writePipe->fd ? SD_BOTH : SD_SEND));
@@ -120,13 +120,13 @@ HelperServerBase::closeWritePipeSafely()
         readPipe->fd = -1;
     writePipe->close();
 
-#if _SQUID_MSWIN_
+#if _SQUID_WINDOWS_
     if (hIpc) {
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();
-            debugs(84, DBG_IMPORTANT, "WARNING: " << hlp->id_name <<
-                   " #" << no << " (" << hlp->cmdline->key << "," <<
-                   (long int)pid << ") didn't exit in 5 seconds");
+            debugs(84, DBG_IMPORTANT, "WARNING: helper PID " <<
+            		(long int)pid << " (#" << no
+            		<< ") didn't exit in 5 seconds");
         }
         CloseHandle(hIpc);
     }
