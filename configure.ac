@@ -388,7 +388,7 @@ dnl
 dnl Check for atomic operations support in the compiler
 dnl
 AC_MSG_CHECKING([for atomic operations support])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[
     int n = 0;
 ]],[[
     __sync_add_and_fetch(&n, 10); // n becomes 10
