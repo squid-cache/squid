@@ -677,7 +677,7 @@ SQUIDCEXTERN int SquidMain(int, char **);
 
 SQUIDCEXTERN int WIN32_pipe(int[2]);
 
-SQUIDCEXTERN int WIN32_getrusage(int, struct rusage *);
+//SQUIDCEXTERN int WIN32_getrusage(int, struct rusage *);
 SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
 
 SQUIDCEXTERN int Win32__WSAFDIsSet(int fd, fd_set* set);

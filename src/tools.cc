@@ -51,6 +51,9 @@
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
 #endif
+#if HAVE_WIN32_PSAPI
+#include <psapi.h>
+#endif
 
 #define DEAD_MSG "\
 The Squid Cache (version %s) died.\n\
@@ -236,7 +239,7 @@ void
 squid_getrusage(struct rusage *r)
 {
     memset(r, '\0', sizeof(struct rusage));
-#if HAVE_GETRUSAGE && defined(RUSAGE_SELF)
+#if HAVE_GETRUSAGE && defined(RUSAGE_SELF) && !_SQUID_WINDOWS_
 #if _SQUID_SOLARIS_
     /* Solaris 2.5 has getrusage() permission bug -- Arjan de Vet */
     enter_suid();
@@ -266,18 +269,18 @@ squid_getrusage(struct rusage *r)
                 int64_t tUser64 = *ptUser / 10;
                 int64_t *ptKernel = (int64_t *)&ftKernel;
                 int64_t tKernel64 = *ptKernel / 10;
-                usage->ru_utime.tv_sec =(long)(tUser64 / 1000000);
-                usage->ru_stime.tv_sec =(long)(tKernel64 / 1000000);
-                usage->ru_utime.tv_usec =(long)(tUser64 % 1000000);
-                usage->ru_stime.tv_usec =(long)(tKernel64 % 1000000);
+                r->ru_utime.tv_sec =(long)(tUser64 / 1000000);
+                r->ru_stime.tv_sec =(long)(tKernel64 / 1000000);
+                r->ru_utime.tv_usec =(long)(tUser64 % 1000000);
+                r->ru_stime.tv_usec =(long)(tKernel64 % 1000000);
             } else {
                 CloseHandle( hProcess );
                 return;
             }
         }
         if (GetProcessMemoryInfo( hProcess, &pmc, sizeof(pmc))) {
-            usage->ru_maxrss=(DWORD)(pmc.WorkingSetSize / getpagesize());
-            usage->ru_majflt=pmc.PageFaultCount;
+            r->ru_maxrss=(DWORD)(pmc.WorkingSetSize / getpagesize());
+            r->ru_majflt=pmc.PageFaultCount;
         } else {
             CloseHandle( hProcess );
             return;

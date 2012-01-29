@@ -765,7 +765,7 @@ int WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
 #define	RUSAGE_SELF	0		/* calling process */
 #define	RUSAGE_CHILDREN	-1		/* terminated child processes */
 
-#define HAVE_RUSAGE 1
+//#define HAVE_RUSAGE 2
 struct rusage {
     struct timeval ru_utime;	/* user time used */
     struct timeval ru_stime;	/* system time used */
@@ -858,16 +858,10 @@ void syslog(int priority, const char *fmt, ...);
 #define WTERMSIG(w) ((w) & 0x7f)
 #define WSTOPSIG    WEXITSTATUS
 
+
 #endif
 
 /* prototypes */
 void WIN32_maperror(unsigned long WIN32_oserrno);
-#if !HAVE_GETPAGESIZE
-inline size_t
-getpagesize() {
-	return 4096;
-}
-#endif
-
 #endif /* _SQUID_WINDOWS_ */
 #endif /* SQUID_OS_MSWIN_H */

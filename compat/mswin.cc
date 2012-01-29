@@ -77,6 +77,55 @@ getpagesize()
 }
 #endif /* HAVE_GETPAGESIZE > 1 */
 
+#if 0
+#if HAVE_GETRUSAGE > 1 && defined(_SQUID_MINGW_)
+#define DELTA_EPOCHS_MSEC 11644473600000000ULL
+void
+winFileTimeToStructTimeval(FILETIME *ft, struct timeval *tv)
+{
+	int64_t tmp;
+	// extract high- and low- bytes
+	tmp |= ft->dwHighDateTime;
+	tmp <<= 32;
+	tmp |= ft->dwLowDateTime;
+	// convert to microseconds
+	tmp /= 10;
+	// adapt to different epochs (Windows' is Jan 1, 1601)
+	tmp-=DELTA_EPOCHS_MSEC;
+	// fill in timeval;
+	tv->tv_sec=(long)(tmp/1000000UL); // MSFT can't even get timeval right..
+	tv->tv_usec=(long)(tmp%1000000UL);
+}
+int
+getrusage(int who, struct rusage *usage)
+{
+	memset(usage,0,sizeof(usage));
+	if (who!=RUSAGE_SELF)
+		return 0;
+	HANDLE hProc;
+	PROCESS_MEMORY_COUNTERS pc;
+	hProc=OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+			FALSE, GetCurrentProcessId());
+	if (hProc==NULL) {
+		errno=EINVAL;
+		return -1
+	}
+	if (GetProcessMemoryInfo(hProc,&pc,sizeof(pc))) {
+		usage->maxrss=pc.PeakWorkingSetSize;
+		usage->ru_majflt=pc.PageFaultCount;
+		usage->ru_ixrss=pc.WorkingSetSize;
+	}
+	FILETIME ctime, etime; /* creation and exit times (unused) */
+	FILETIME utime, stime; /* user and system times */
+	if (GetProcessTimes(hProc,&ctime,&etime,&stime,&utime)) {
+		winFileTimeToStructTimeval(&stime,&usage->ru_stime);
+		winFileTimeToStructTimeval(&utime,&usage->ru_utime);
+	}
+	return 0;
+}
+#endif
+#endif
+
 int
 chroot(const char *dirname)
 {
