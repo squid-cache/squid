@@ -34,6 +34,7 @@
 
 #include "squid-old.h"
 #include "base/Subscription.h"
+#include "compat/initgroups.h"
 #include "fde.h"
 #include "ICP.h"
 #include "ip/Intercept.h"

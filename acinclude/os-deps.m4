@@ -242,11 +242,10 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-#if HAVE_WINSOCK_H
-#include <winsock.h>
-#endif
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
+#elif HAVE_WINSOCK_H
+#include <winsock.h>
 #endif
 int main(int argc, char **argv) {
 	FILE *fp = fopen("conftestval", "w");
@@ -422,11 +421,10 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
-#if HAVE_WINSOCK_H
-#include <winsock.h>
-#endif
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
+#elif HAVE_WINSOCK_H
+#include <winsock.h>
 #endif
 int main(int argc, char **argv)
 {
@@ -473,11 +471,10 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
-#if HAVE_WINSOCK_H
-#include <winsock.h>
-#endif
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
+#elif HAVE_WINSOCK_H
+#include <winsock.h>
 #endif
 int main(int argc, char **argv)
 {
@@ -524,11 +521,10 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
-#if HAVE_WINSOCK_H
-#include <winsock.h>
-#endif
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
+#elif HAVE_WINSOCK_H
+#include <winsock.h>
 #endif
 int main(int argc, char **argv)
 {
@@ -579,11 +575,10 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
-#if HAVE_WINSOCK_H
-#include <winsock.h>
-#endif
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
+#elif HAVE_WINSOCK_H
+#include <winsock.h>
 #endif
 int main(int argc, char **argv)
 {
@@ -885,8 +880,7 @@ AC_DEFUN([SQUID_CHECK_RECV_ARG_TYPE],[
 #endif
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
-#endif
-#if HAVE_WINSOCK_H
+#elif HAVE_WINSOCK_H
 #include <winsock.h>
 #endif
 int main (int argc, char ** argv) {

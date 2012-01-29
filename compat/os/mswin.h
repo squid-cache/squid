@@ -36,6 +36,16 @@
 
 #if _SQUID_WINDOWS_
 
+/* we target Windows XP and later - some API are missing otherwise */
+#if _SQUID_MINGW_
+#if WINVER < 0x0501
+#undef WINVER
+#define WINVER 0x0501
+#undef _WIN32_WINNT
+#define _WIN32_WINNT WINVER
+#endif
+#endif /* _SQUID_MINGW_ */
+
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
@@ -794,14 +804,46 @@ SQUIDCEXTERN int statfs(const char *, struct statfs *);
 SQUIDCEXTERN struct passwd * getpwnam(char *unused);
 SQUIDCEXTERN struct group * getgrnam(char *unused);
 
-#define geteuid(X)  static_cast<uid_t>(100)
-#define seteuid(X)  (void)0
-#define getuid(X)   static_cast<uid_t>(100)
-#define setuid(X)   (void)0
-#define getegid(X)  static_cast<gid_t>(100)
-#define setegid(X)  (void)0
-#define getgid(X)   static_cast<gid_t>(100)
-#define setgid(X)   (void)0
+static inline uid_t
+geteuid(void)
+{
+	return 100;
+}
+static inline int
+seteuid (uid_t euid)
+{
+	return 0;
+}
+static inline uid_t
+getuid(void)
+{
+	return 100;
+}
+static inline int
+setuid (uid_t uid)
+{
+	return 0;
+}
+static inline gid_t
+getegid(void)
+{
+	return 100;
+}
+static inline int
+setegid (gid_t egid)
+{
+	return 0;
+}
+static inline int
+getgid(void)
+{
+	return 100;
+}
+static inline int
+setgid (gid_t gid)
+{
+	return 0;
+}
 
 /* for some reason autoconf misdetects getpagesize.. */
 #if HAVE_GETPAGESIZE

@@ -48,8 +48,7 @@
 #endif
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
-#endif
-#if HAVE_WINSOCK_H
+#elif HAVE_WINSOCK_H
 #include <winsock.h>
 #endif
 #if HAVE_NETDB_H
