@@ -1601,7 +1601,7 @@ wccp2HereIam(void *voidnotused)
                                 &service_list_ptr->wccp_packet,
                                 service_list_ptr->wccp_packet_size);
             } else {
-                send(theWccp2Connection,
+                Squid::send(theWccp2Connection,
                      &service_list_ptr->wccp_packet,
                      service_list_ptr->wccp_packet_size,
                      0);

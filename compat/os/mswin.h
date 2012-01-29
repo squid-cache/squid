@@ -803,9 +803,14 @@ SQUIDCEXTERN struct group * getgrnam(char *unused);
 #define getgid(X)   static_cast<gid_t>(100)
 #define setgid(X)   (void)0
 
+/* for some reason autoconf misdetects getpagesize.. */
+#if HAVE_GETPAGESIZE
+#undef HAVE_GETPAGESIZE
+#endif
+
 #if !HAVE_GETPAGESIZE
-/* Windows may lack getpagesize() prototype */
-SQUIDCEXTERN size_t getpagesize();
+/* And now we define a compatibility layer */
+size_t getpagesize();
 #define HAVE_GETPAGESIZE 2
 #endif
 
