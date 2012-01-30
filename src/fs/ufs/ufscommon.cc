@@ -491,11 +491,10 @@ RebuildState::rebuildFromSwapLog()
 
     n_read++;
 
-    if (swapData.op <= SWAP_LOG_NOP)
+    if (!swapData.sane()) {
+        counts.invalid++;
         return;
-
-    if (swapData.op >= SWAP_LOG_MAX)
-        return;
+    }
 
     /*
      * BC: during 2.4 development, we changed the way swap file
