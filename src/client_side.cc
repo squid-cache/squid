@@ -2477,10 +2477,14 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
             debugs(33, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate does not match domainname " << request->GetHost());
 
             ACLFilledChecklist check(Config.ssl_client.cert_error, request, dash_str);
+            check.sslErrorList = new Ssl::Errors(SQUID_X509_V_ERR_DOMAIN_MISMATCH);
             if (Comm::IsConnOpen(pinning.serverConnection))
                 check.fd(pinning.serverConnection->fd);
+            bool allowDomainMismatch = (check.fastCheck() == ACCESS_ALLOWED);
+            delete check.sslErrorList;
+            check.sslErrorList = NULL;
 
-            if (check.fastCheck() != ACCESS_ALLOWED) {
+            if (!allowDomainMismatch) {
                 clientStreamNode *node = context->getClientReplyContext();
                 clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
                 assert (repContext);
