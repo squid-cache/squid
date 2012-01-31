@@ -552,11 +552,18 @@ for module in $squid_disk_module_candidates none; do
   fi
   case "$module" in
     DiskDaemon)
-      AC_MSG_NOTICE([Enabling DiskDaemon DiskIO module])
-      DISK_LIBS="$DISK_LIBS libDiskDaemon.a"
-      DISK_MODULES="$DISK_MODULES DiskDaemon"
-      DISK_PROGRAMS="$DISK_PROGRAMS DiskIO/DiskDaemon/diskd"
-      DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskDaemon/DiskDaemonDiskIOModule.o"
+      case "$squid_host_os" in
+        mingw)
+          AC_MSG_NOTICE(["DiskDaemon not supported on MinGW"])
+          ;;
+        *)
+          AC_MSG_NOTICE([Enabling DiskDaemon DiskIO module])
+          DISK_LIBS="$DISK_LIBS libDiskDaemon.a"
+          DISK_MODULES="$DISK_MODULES DiskDaemon"
+          DISK_PROGRAMS="$DISK_PROGRAMS DiskIO/DiskDaemon/diskd"
+          DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskDaemon/DiskDaemonDiskIOModule.o"
+          ;;
+        esac
       ;;
     DiskThreads)
       squid_opt_use_diskthreads="yes"
