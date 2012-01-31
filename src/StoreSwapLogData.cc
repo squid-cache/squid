@@ -51,12 +51,12 @@ StoreSwapLogData::sane() const
 
     // Check what we safely can; for some fields any value might be valid
     return SWAP_LOG_NOP < op && op < SWAP_LOG_MAX &&
-        swap_filen >= 0 &&
-        timestamp >= minTime &&
-        lastref >= minTime &&
-        expires >= minTime &&
-        lastmod >= minTime &&
-        swap_file_sz > 0; // because swap headers ought to consume space
+           swap_filen >= 0 &&
+           timestamp >= minTime &&
+           lastref >= minTime &&
+           expires >= minTime &&
+           lastmod >= minTime &&
+           swap_file_sz > 0; // because swap headers ought to consume space
 }
 
 StoreSwapLogHeader::StoreSwapLogHeader():op(SWAP_LOG_VERSION), version(1)
