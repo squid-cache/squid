@@ -685,7 +685,9 @@ FwdState::negotiateSSL(int fd)
                 if (name)
                     fakeRequest->SetHost(name);
 
-                debugs(83, 1, HERE << "Create a Fake request with URL :" << urlCanonical(fakeRequest)  << " and hostname: "<< fakeRequest->GetHost());
+                debugs(83, 3, HERE << "Created a fake request for " <<
+                       urlCanonical(fakeRequest)  << " with " <<
+                       fakeRequest->GetHost() << " hostname");
             }
             ErrorState *const anErr = makeConnectingError(ERR_SECURE_CONNECT_FAIL, fakeRequest);
             anErr->xerrno = sysErrNo;

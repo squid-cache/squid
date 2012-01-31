@@ -3801,7 +3801,7 @@ ConnStateData::getSslContextStart()
         Ssl::writeCertAndPrivateKeyToMemory(certProperties.signWithX509, certProperties.signWithPkey, bufferToWrite);
         if (certProperties.mimicCert.get()) {
             Ssl::appendCertToMemory(certProperties.mimicCert, bufferToWrite);
-            debugs(33, 5, HERE << "Append Mimic Certificate to body request: " << bufferToWrite);
+            debugs(33, 5, HERE << "Appended certificate to mimic: " << bufferToWrite);
         }
         request_message.composeBody(map, bufferToWrite);
         debugs(33, 5, HERE << "SSL crtd request: " << request_message.compose().c_str());
@@ -3917,7 +3917,7 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
 
         debugs(33, 5, HERE << "bumped HTTPS server: " << sslConnectHostOrIp);
     } else
-        debugs(33, 5, HERE << "Error while bumped HTTPS server: " << sslConnectHostOrIp);
+        debugs(33, 5, HERE << "Error while bumping: " << sslConnectHostOrIp);
 
     if (httpsPeeker.valid())
         httpsPeeker->noteHttpsPeeked(serverConnection);
