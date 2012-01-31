@@ -827,7 +827,7 @@ static ssize_t
 mywrite(int fd, void *buf, size_t len)
 {
 #if _SQUID_WINDOWS_
-    return Squid::send(fd, buf, len, 0);
+    return Squid::send(fd, static_cast<char*>(buf), len, 0);
 #else
     alarm(io_timeout);
     return write(fd, buf, len);
