@@ -9,7 +9,9 @@
 #include "DiskIO/Mmapped/MmappedFile.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#if HAVE_SYS_MMAN_H
 #include <sys/mman.h>
+#endif
 
 CBDATA_CLASS_INIT(MmappedFile);
 
