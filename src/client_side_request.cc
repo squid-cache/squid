@@ -1373,6 +1373,10 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
         return;
     }
 
+    // We lack HttpReply which logRequest() uses to log the status code.
+    // TODO: Use HttpReply instead of the "200 Connection established" string.
+    al.http.code = 200;
+
     getConn()->switchToHttps(request->GetHost(), request->port);
 }
 
