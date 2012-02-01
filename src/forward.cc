@@ -913,6 +913,7 @@ FwdState::connectStart()
             request->flags.pinned = 1;
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = 1;
+            comm_add_close_handler(serverConn->fd, fwdServerClosedWrapper, this);
             dispatch();
             return;
         }
