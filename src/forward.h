@@ -74,7 +74,7 @@ private:
     void doneWithRetries();
     void completed();
     void retryOrBail();
-    ErrorState *makeConnectingError(const err_type type, HttpRequest *useRequest = NULL) const;
+    ErrorState *makeConnectingError(const err_type type) const;
     static void RegisterWithCacheManager(void);
 
 public:
