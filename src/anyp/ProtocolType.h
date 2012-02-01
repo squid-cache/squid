@@ -29,9 +29,6 @@ typedef enum {
     PROTO_WHOIS,
     PROTO_INTERNAL, // miss on an internal object such as an icon
     PROTO_ICY,
-#if USE_SSL
-    PROTO_SSL_PEEK, // an internal request to peek at an HTTPS server
-#endif
     PROTO_UNKNOWN,
     PROTO_MAX
 } ProtocolType;

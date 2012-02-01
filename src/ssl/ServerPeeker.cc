@@ -24,10 +24,10 @@ Ssl::ServerPeeker::ServerPeeker(ConnStateData *anInitiator,
     request(new HttpRequest)
 {
     debugs(33, 4, HERE << "will peek at " << host << ':' << port);
-
+    request->flags.sslPeek = 1;
     request->SetHost(host);
     request->port = port;
-    request->protocol = AnyP::PROTO_SSL_PEEK;
+    request->protocol = AnyP::PROTO_HTTPS;
     request->clientConnectionManager = initiator;
     const char *uri = urlCanonical(request);
     entry = storeCreateEntry(uri, uri, request->flags, request->method);

@@ -338,7 +338,7 @@ FwdState::startConnectionOrFail()
             fail(anErr);
         } // else use actual error from last connection attempt
 #if USE_SSL
-        if (request->protocol == AnyP::PROTO_SSL_PEEK && request->clientConnectionManager.valid()) {
+        if (request->flags.sslPeek && request->clientConnectionManager.valid()) {
             errorAppendEntry(entry, err); // will free err
             err = NULL;
             CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
@@ -674,22 +674,16 @@ FwdState::negotiateSSL(int fd)
                     request->clientConnectionManager->setBumpSslErrorList(errNoList);
             }
 
-            HttpRequest *fakeRequest = NULL;
-            if (request->protocol == AnyP::PROTO_SSL_PEEK && srvX509 != NULL) {
-                // Create a fake request, with HTTPS protocol and host name the CN name from
-                // server certificate if exist, to provide a more user friendly  URL on error page
-                fakeRequest = request->clone();
-                fakeRequest->protocol = AnyP::PROTO_HTTPS;
-                safe_free(fakeRequest->canonical); // force re-build url canonical               
-                const char *name = Ssl::CommonHostName(srvX509);
-                if (name)
-                    fakeRequest->SetHost(name);
-
-                debugs(83, 3, HERE << "Created a fake request for " <<
-                       urlCanonical(fakeRequest)  << " with " <<
-                       fakeRequest->GetHost() << " hostname");
+            if (request->flags.sslPeek) {
+                // If possible, set host name to server certificate CN.
+                if (srvX509) {
+                    if (const char *name = Ssl::CommonHostName(srvX509)) {
+                        request->SetHost(name);
+                        debugs(83, 3, HERE << "reset request host: " << name);
+                    }
+                }
             }
-            ErrorState *const anErr = makeConnectingError(ERR_SECURE_CONNECT_FAIL, fakeRequest);
+            ErrorState *const anErr = makeConnectingError(ERR_SECURE_CONNECT_FAIL);
             anErr->xerrno = sysErrNo;
             anErr->detail = errDetails;
             fail(anErr);
@@ -765,13 +759,17 @@ FwdState::initiateSSL()
             SSL_set_session(ssl, peer->sslSession);
 
     } else {
-        if (request->protocol != AnyP::PROTO_SSL_PEEK)
-            SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)request->GetHost());
-        // else  we do not have the ssl server name yet, but only its IP address.
+        // While we are peeking at the certificate, we do not know the server
+        // name that the client will request (after interception or CONNECT).
+        if (!request->flags.sslPeek) {
+            const char *hostname = request->GetHost();
+            SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostname);
 
-        // We need to set SNI TLS extension only in the case we are
-        // connecting direct to origin server
-        Ssl::setClientSNI(ssl, request->GetHost());
+            // Use SNI TLS extension only when we connect directly
+            // to the origin server and we know the server host name
+            if (!request->GetHostIsNumeric())
+                Ssl::setClientSNI(ssl, hostname);
+        }
     }
 
     // Create the ACL check list now, while we have access to more info.
@@ -827,8 +825,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
 
 #if USE_SSL
     if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
-            (!serverConnection()->getPeer() &&
-                (request->protocol == AnyP::PROTO_HTTPS || request->protocol == AnyP::PROTO_SSL_PEEK))) {
+            (!serverConnection()->getPeer() && request->protocol == AnyP::PROTO_HTTPS)) {
         initiateSSL();
         return;
     }
@@ -1033,7 +1030,7 @@ FwdState::dispatch()
 #endif
 
 #if USE_SSL
-    if (request->protocol == AnyP::PROTO_SSL_PEEK) {
+    if (request->flags.sslPeek) {
         CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                      ConnStateData::httpsPeeked, serverConnection());
         unregister(serverConn); // async call owns it now
@@ -1048,6 +1045,7 @@ FwdState::dispatch()
         request->peer_domain = serverConnection()->getPeer()->domain;
         httpStart(this);
     } else {
+        assert(!request->flags.sslPeek);
         request->peer_login = NULL;
         request->peer_domain = NULL;
 
@@ -1074,10 +1072,6 @@ FwdState::dispatch()
         case AnyP::PROTO_CACHE_OBJECT:
 
         case AnyP::PROTO_INTERNAL:
-
-#if USE_SSL
-        case AnyP::PROTO_SSL_PEEK:
-#endif
 
         case AnyP::PROTO_URN:
             fatal_dump("Should never get here");
@@ -1172,10 +1166,10 @@ FwdState::reforward()
  * proxy-revalidate, must-revalidate or s-maxage Cache-Control directive.
  */
 ErrorState *
-FwdState::makeConnectingError(const err_type type, HttpRequest *useRequest) const
+FwdState::makeConnectingError(const err_type type) const
 {
     return errorCon(type, request->flags.need_validation ?
-                    HTTP_GATEWAY_TIMEOUT : HTTP_SERVICE_UNAVAILABLE, useRequest != NULL? useRequest : request);
+                    HTTP_GATEWAY_TIMEOUT : HTTP_SERVICE_UNAVAILABLE, request);
 }
 
 static void
