@@ -52,6 +52,9 @@
 #if HAVE_STRING_H
 #include <string.h>
 #endif /* HAVE_FCNTL_H */
+#if HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif /* HAVE_SYS_STAT_H */
 
 #define ACL WindowsACL
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
