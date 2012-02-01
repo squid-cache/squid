@@ -36,6 +36,7 @@
 #include "squid-old.h"
 #include "comm.h"
 #include "aio_win32.h"
+#include "StatCounters.h"
 
 #if _SQUID_WINDOWS_
 VOID CALLBACK IoCompletionRoutine(DWORD dwErrorCode,
