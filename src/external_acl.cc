@@ -681,6 +681,27 @@ ACLExternal::~ACLExternal()
     safe_free (class_);
 }
 
+static void
+copyResultsFromEntry(HttpRequest *req, external_acl_entry *entry)
+{
+    if (req) {
+        if (entry->user.size())
+            req->extacl_user = entry->user;
+
+        if (entry->password.size())
+            req->extacl_passwd = entry->password;
+
+        if (!req->tag.size())
+            req->tag = entry->tag;
+
+        if (entry->log.size())
+            req->extacl_log = entry->log;
+
+        if (entry->message.size())
+            req->extacl_message = entry->message;
+    }
+}
+
 static int
 aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
 {
@@ -762,24 +783,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
     external_acl_message = entry->message.termedBuf();
 
     debugs(82, 2, "aclMatchExternal: " << acl->def->name << " = " << result);
-
-    if (ch->request) {
-        if (entry->user.size())
-            ch->request->extacl_user = entry->user;
-
-        if (entry->password.size())
-            ch->request->extacl_passwd = entry->password;
-
-        if (!ch->request->tag.size())
-            ch->request->tag = entry->tag;
-
-        if (entry->log.size())
-            ch->request->extacl_log = entry->log;
-
-        if (entry->message.size())
-            ch->request->extacl_message = entry->message;
-    }
-
+    copyResultsFromEntry(ch->request, entry);
     return result;
 }
 
@@ -1353,7 +1357,7 @@ ACLExternal::ExternalAclLookup(ACLChecklist *checklist, ACLExternal * me, EAH * 
                    (long unsigned int) entry->date << ", result=" <<
                    entry->result << ", user=" << entry->user << " tag=" <<
                    entry->tag << " log=" << entry->log << " }");
-
+            copyResultsFromEntry(ch->request, entry);
         }
 
         callback(callback_data, entry);
