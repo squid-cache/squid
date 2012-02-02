@@ -634,6 +634,13 @@ DOC_END
 NAME: acl
 TYPE: acl
 LOC: Config.aclList
+IFDEF USE_SSL
+DEFAULT: ssl::certHasExpired ssl_error X509_V_ERR_CERT_HAS_EXPIRED
+DEFAULT: ssl::certNotYetValid ssl_error X509_V_ERR_CERT_NOT_YET_VALID
+DEFAULT: ssl::certDomainMismatch ssl_error SQUID_X509_V_ERR_DOMAIN_MISMATCH
+DEFAULT: ssl::certUntrusted ssl_error X509_V_ERR_INVALID_CA X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY X509_V_ERR_CERT_UNTRUSTED
+DEFAULT: ssl::certSelfSigned ssl_error X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT
+ENDIF
 DEFAULT: all src all
 DEFAULT: manager url_regex -i ^cache_object:// +i ^https?://[^/]+/squid-internal-mgr/
 DEFAULT: localhost src 127.0.0.1/32 ::1
@@ -857,6 +864,30 @@ DOC_START
 	  # NOTE: This has no effect in http_access rules. It only has
 	  # effect in rules that affect the reply data stream such as
 	  # http_reply_access.
+
+IFDEF USE_SSL
+	acl aclname ssl_error errorname
+	  # match against SSL certificate validation error [fast]
+	  # For valid error names see in @DEFAULT_ERROR_DIR@/templates/error-details.txt template file
+	  # The user aditionaly can use as error name the following error name
+	  # shortcuts:
+	  #  [ssl::]certHasExpired: certificate "not after" field is in the past
+	  #  [ssl::]certNotYetValid: certificate "not before" field is in the 
+	  #       future
+	  #  [ssl::]certDomainMismatch: The certificate CN domain does not match
+	  #       connecting host name
+	  #  [ssl::]certUntrusted: The certificate is untrusted because of an
+	  #       error says that the certificate issuer is not trusted.
+	  #  [ssl::]certSelfSigned: The certificate is self signed
+	  #
+	  # The ssl::certHasExpired, ssl::certNotYetValid ssl::certDomainMismatch,
+	  # ssl::certUntrusted and ssl::certSelfSigned also exists as predefined
+	  # acl lists.
+	  #
+	  # NOTE: The ssl_error acl has effect only when used with
+	  # sslproxy_cert_error, sslproxy_cert_sign and sslproxy_cert_adapt
+	  # access lists.
+ENDIF
 
 	Examples:
 		acl macaddress arp 09:00:2b:23:45:67
@@ -2072,8 +2103,13 @@ DOC_START
 		generate a X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT error in the
 		browser.
 
-        When the acl(s) match, the corresponding signing algorithm is used to
-        generate the certificate. Otherwise, the default signing algorithm used
+	This clause only supports fast acl types.
+
+	When the acl(s) match, the corresponding signing algorithm is used to
+	generate the certificate. Otherwise, the default signing algorithm used
+
+	BUG: The SQUID_X509_V_ERR_DOMAIN_MISMATCH and ssl:certDomainMismatch ssl
+	errors can not be used with ssl_error acl type.
 DOC_END
 
 NAME: sslproxy_cert_adapt 
@@ -2100,9 +2136,14 @@ DOC_START
 	 	without an explicit parameter for intercepted or tproxied SSL
 		transactions. 
 		
+	This clause only supports fast acl types.
+
 	When the acl(s) match, the corresponding adaptation algorithm is
 	applied to the fake/generated certificate. Otherwise, the
 	default mimicking action takes place.
+
+	BUG: The SQUID_X509_V_ERR_DOMAIN_MISMATCH and ssl:certDomainMismatch ssl
+	errors can not be used with ssl_error acl type
 DOC_END
 
 NAME: sslpassword_program

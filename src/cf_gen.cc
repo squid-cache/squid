@@ -64,6 +64,7 @@ _FILE_OFFSET_BITS==64
 #include <fstream>
 #include <iostream>
 #include <list>
+#include <stack>
 
 #include "cf_gen_defines.cci"
 
@@ -151,6 +152,7 @@ static void gen_dump(const EntryList &, std::ostream&);
 static void gen_free(const EntryList &, std::ostream&);
 static void gen_conf(const EntryList &, std::ostream&, bool verbose_output);
 static void gen_default_if_none(const EntryList &, std::ostream&);
+static bool isDefined(const std::string &name);
 
 static void
 checkDepend(const std::string &directive, const char *name, const TypeList &types, const EntryList &entries)
@@ -198,6 +200,7 @@ main(int argc, char *argv[])
     char *ptr = NULL;
     char buff[MAX_LINE];
     std::ifstream fp;
+    std::stack<std::string> IFDEFS;
 
     if (argc != 3)
         usage(argv[0]);
@@ -252,6 +255,22 @@ main(int argc, char *argv[])
         if ((t = strchr(buff, '\n')))
             *t = '\0';
 
+        if(strncmp(buff, "IFDEF ", 6) == 0) {
+            if ((ptr = strtok(buff + 6, WS)) == NULL) {
+                std::cerr << "Missing IFDEF parameter on line" << linenum << std::endl;
+                exit(1);
+            }
+            IFDEFS.push(ptr);
+            std::cerr << "Entering IFDEF " << ptr << std::endl;
+            continue;
+        } else if (strcmp(buff, "ENDIF") == 0) {
+            if (IFDEFS.size() == 0) {
+                std::cerr << "ENDIF without IFDEF before on line " << linenum << std::endl;
+                exit(1);
+            }
+            IFDEFS.pop();
+        }
+        else if (!IFDEFS.size() || isDefined(IFDEFS.top()))
         switch (state) {
 
         case sSTART:
