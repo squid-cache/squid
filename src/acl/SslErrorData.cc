@@ -60,9 +60,9 @@ ACLSslErrorData::parse()
 
     for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-        Ssl::Errors *q = new Ssl::Errors(Ssl::ParseErrorString(t));
+        Ssl::Errors *q = Ssl::ParseErrorString(t);
         *(Tail) = q;
-        Tail = &q->next;
+        Tail = &q->tail()->next;
     }
 }
 

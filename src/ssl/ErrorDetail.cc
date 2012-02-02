@@ -90,12 +90,57 @@ static SslErrorEntry TheSslErrorArray[] = {
     {SSL_ERROR_NONE, NULL}
 };
 
+struct SslErrorAlias {
+    const char *name;
+    const Ssl::ssl_error_t *errors;
+};
+
+static const Ssl::ssl_error_t hasExpired[] = {X509_V_ERR_CERT_HAS_EXPIRED, SSL_ERROR_NONE};
+static const Ssl::ssl_error_t notYetValid[] = {X509_V_ERR_CERT_NOT_YET_VALID, SSL_ERROR_NONE};
+static const Ssl::ssl_error_t domainMismatch[] = {SQUID_X509_V_ERR_DOMAIN_MISMATCH, SSL_ERROR_NONE};
+static const Ssl::ssl_error_t certUntrusted[] = {X509_V_ERR_INVALID_CA,
+                                                X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN,
+                                                X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE,
+                                                X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
+                                                X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY,
+                                                X509_V_ERR_CERT_UNTRUSTED, SSL_ERROR_NONE};
+static const Ssl::ssl_error_t certSelfSigned[] = {X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT, SSL_ERROR_NONE};
+
+// The list of error name shortcuts  for use with ssl_error acls.
+// The keys without the "ssl::" scope prefix allow shorter error
+// names within the SSL options scope. This is easier than
+// carefully stripping the scope prefix in Ssl::ParseErrorString()
+static SslErrorAlias TheSslErrorShortcutsArray[] = {
+    {"ssl::certHasExpired", hasExpired},
+    {"certHasExpired", hasExpired},
+    {"ssl::certNotYetValid", notYetValid},
+    {"certNotYetValid", notYetValid},
+    {"ssl::certDomainMismatch", domainMismatch},
+    {"certDomainMismatch", domainMismatch},
+    {"ssl::certUntrusted", certUntrusted},
+    {"certUntrusted", certUntrusted},
+    {"ssl::certSelfSigned", certSelfSigned},
+    {"certSelfSigned", certSelfSigned},
+    {NULL, NULL}
+};
+
+//Use std::map to optimize search
+typedef std::map<std::string, const Ssl::ssl_error_t *> SslErrorShortcuts;
+SslErrorShortcuts TheSslErrorShortcuts;
+
 static void loadSslErrorMap()
 {
     assert(TheSslErrors.empty());
     for (int i = 0; TheSslErrorArray[i].name; ++i) {
         TheSslErrors[TheSslErrorArray[i].value] = &TheSslErrorArray[i];
     }
+}
+
+static void loadSslErrorShortcutsMap()
+{
+    assert(TheSslErrorShortcuts.empty());
+    for (int i = 0; TheSslErrorShortcutsArray[i].name; i++)
+        TheSslErrorShortcuts[TheSslErrorShortcutsArray[i].name] = TheSslErrorShortcutsArray[i].errors;
 }
 
 Ssl::ssl_error_t Ssl::GetErrorCode(const char *name)
@@ -107,24 +152,38 @@ Ssl::ssl_error_t Ssl::GetErrorCode(const char *name)
     return SSL_ERROR_NONE;
 }
 
-Ssl::ssl_error_t
+Ssl::Errors *
 Ssl::ParseErrorString(const char *name)
 {
     assert(name);
 
     const Ssl::ssl_error_t ssl_error = GetErrorCode(name);
     if (ssl_error != SSL_ERROR_NONE)
-        return ssl_error;
+        return new Ssl::Errors(ssl_error);
 
     if (xisdigit(*name)) {
         const long int value = strtol(name, NULL, 0);
         if (SQUID_SSL_ERROR_MIN <= value && value <= SQUID_SSL_ERROR_MAX)
-            return value;
+            return new Ssl::Errors(value);
         fatalf("Too small or too bug SSL error code '%s'", name);
     }
 
+    if (TheSslErrorShortcuts.empty())
+        loadSslErrorShortcutsMap();
+
+    const SslErrorShortcuts::const_iterator it = TheSslErrorShortcuts.find(name);
+    if (it != TheSslErrorShortcuts.end()) {
+        // Should not be empty...
+        assert(it->second[0] != SSL_ERROR_NONE); 
+        Ssl::Errors *errors = new Ssl::Errors(it->second[0]);
+        for (int i =1; it->second[i] != SSL_ERROR_NONE; i++) {
+            errors->push_back_unique(it->second[i]);
+        }
+        return errors;
+    }
+
     fatalf("Unknown SSL error name '%s'", name);
-    return SSL_ERROR_SSL; // not reached
+    return NULL; // not reached
 }
 
 const char *Ssl::GetErrorName(Ssl::ssl_error_t value)

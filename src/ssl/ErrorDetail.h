@@ -15,10 +15,12 @@ namespace Ssl
 {
 /**
   \ingroup ServerProtocolSSLAPI
- * The ssl_error_t representation of the error described by "name".
+ * The Ssl::Errors representation of the error described by "name".
+ * The result may be a single element of a list of errors, and needs to be
+ * released by the caller.
  * This function also parses numeric arguments.
  */
-ssl_error_t ParseErrorString(const char *name);
+Ssl::Errors *ParseErrorString(const char *name);
 
 /**
    \ingroup ServerProtocolSSLAPI

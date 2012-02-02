@@ -47,6 +47,8 @@ public:
     bool push_back_unique(C const &);
     bool find(C const &)const;
     bool findAndTune(C const &);
+    /// iterates entire list to return the last element holder
+    CbDataList *tail();
     CbDataList *next;
     C element;
     bool empty() const { return this == NULL; }
@@ -139,6 +141,16 @@ CbDataList<C>::push_back_unique(C const &toAdd)
     last->next = new CbDataList<C> (toAdd);
     return true;
 }
+
+template <class C>
+CbDataList<C> *
+CbDataList<C>::tail()
+{
+    CbDataList<C> *last;
+    for (last = this; last->next; last = last->next);
+    return last;
+}
+
 
 template <class C>
 bool
