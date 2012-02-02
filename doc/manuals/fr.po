@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-02-13 00:05+1400\n"
-"PO-Revision-Date: 2012-02-02 00:24+0200\n"
+"PO-Revision-Date: 2012-02-02 16:58+0200\n"
 "Last-Translator: Bernard <fli4l.charrier@free.fr>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: fr\n"
@@ -2156,7 +2156,8 @@ msgstr "Commentaire. Impression des messages sortant, des erreurs standard."
 #: tools/squidclient.1:154
 msgid "HTTP Version. Use '-' for HTTP/0.9 omitted case"
 msgstr ""
-"Version HTTP. Utiliser le caractère '-' pour passer le cas de la version HTTP/0.9"
+"Version HTTP. Utiliser le caractère '-' pour omettre le cas de la version "
+"HTTP/0.9"
 
 #. type: Plain text
 #: tools/squidclient.1:158
