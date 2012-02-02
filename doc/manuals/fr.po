@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-02-13 00:05+1400\n"
-"PO-Revision-Date: 2012-01-12 20:56+0200\n"
+"PO-Revision-Date: 2012-02-02 00:24+0200\n"
 "Last-Translator: Bernard <fli4l.charrier@free.fr>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: fr\n"
@@ -331,11 +331,10 @@ msgid ""
 "hierarchy below the base DN, or if the login name is not what builds the "
 "user specific part of the users DN."
 msgstr ""
-"B<filter> permet de faire une recherche dans le LDAP et de localiser "
-"l'utilisateur DN (ou nom de domaine). Cela est requis si les utilisateurs "
-"sont dans une hiérarchie au-dessous de la base DN, ou si le nom "
-"d'identifiant ne fait pas partie spécifiques de la construction des "
-"utilisateurs DN."
+"B<filter> permet de faire une recherche dans le LDAP pour localiser "
+"l'utilisateur DN (ou Nom de Domaine). Cela est requis si les utilisateurs "
+"sont dans une hiérarchie au-dessous de la base DN, ou si l'identifiant ne "
+"fait pas partie spécifiques de la construction des utilisateurs DN."
 
 #. uid\=%s\""
 #. type: Plain text
@@ -346,7 +345,7 @@ msgid ""
 "detailed description of LDAP search filter syntax see RFC2254."
 msgstr ""
 "Le filtre de recherche peut contenir jusqu'à 15 caractères, par ex. B<%s> "
-"sera remplacé par le nom d'utilisateur, comme dans B<\\&\\&> pour les "
+"sera remplacé par le nom de l'utilisateur, comme dans B<\\&\\&> pour les "
 "annuaires RFC2037. Voir RFC2254 pour une description détaillée des syntaxes "
 "du filtre de recherche LDAP."
 
@@ -366,10 +365,10 @@ msgid ""
 "Combined with the base DN to construct the users DN when no search filter is "
 "specified ( B<-f> option). Defaults to B<uid>"
 msgstr ""
-"Spécifie le nom attribuer dans la DN, qui contient le nom "
-"utilisateur/identifiant. Combiné avec la base DN pour construire les "
-"utilisateurs DN quand aucun filtre de recherche n'est spécifié (B<-f> "
-"option). Par défaut B<uid>"
+"Spécifie le nom attribuer dans le DN, qui contient le nom "
+"d'utilisateur/identifiant. Combiné avec la base DN pour construire les "
+"utilisateurs DN quand aucun filtre de recherche n'est spécifié, (option "
+"B<-f>). Par défaut B<uid>"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:108
@@ -381,11 +380,11 @@ msgid ""
 "search for your users DN ( B<-f> option)."
 msgstr ""
 "B<Note:> n'est possible que si tous les utilisateurs sont directement situés "
-"dans arborescence LDAP et que le nom de l'identifiant soit utilisé pour "
-"nommer chaque objet de l'utilisateur. Si votre arborescence LDAP ne "
-"correspond pas à ces critères ou si vous souhaitez filtrer les utilisateurs "
-"valides, vous devez utiliser le filtre de recherche avec (l'option B<-f>) "
-"pour rechercher les utilisateurs DN (ou nom de domaine)."
+"dans arborescence LDAP et que l'identifiant soit utilisé pour nommer chaque "
+"objet de l'utilisateur. Si votre arborescence LDAP ne correspond pas à ces "
+"critères ou si vous souhaitez filtrer les utilisateurs valides, vous devez "
+"utiliser le filtre de recherche avec (l'option B<-f>) pour rechercher les "
+"utilisateurs DN (ou nom de domaine)."
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:118
@@ -463,7 +462,7 @@ msgid ""
 msgstr ""
 "Avec l'ancienne version peu sûre, les paramètres avaient deux avantages : le "
 "mot de passe n'apparaissait pas dans le processus d'enregistrement, le mot "
-"de passe n'était pas compromis, mais si quelqu'un récupère le fichier de "
+"de passe n'était pas compromis, même si quelqu'un récupère le fichier de "
 "configuration squid sans avoir récupère le fichier secret."
 
 #. type: Plain text
@@ -507,7 +506,7 @@ msgstr "Ne pas faire suivre les références"
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:187
 msgid "when to dereference aliases. Defaults to B<never>"
-msgstr "lorsque elles sont suivi par un alias. Par défaut B<never> (ou jamais)"
+msgstr "lorsqu'elles sont suivi par un alias. Par défaut B<never>"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:196
@@ -526,8 +525,8 @@ msgid ""
 "libraries).  Servers can also be specified last on the command line."
 msgstr ""
 "Spécifier un serveur LDAP, avec une connexion LDAP par URI (nécessite une "
-"bibliothèque OpenLDAP). Les serveurs peuvent également être spécifiée en "
-"dernier par ligne de commande."
+"bibliothèque OpenLDAP). Les serveurs peuvent également être spécifiée sur la "
+"dernière ligne de commande."
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:206
@@ -586,8 +585,9 @@ msgid ""
 "Debug mode where each step taken will get reported in detail.  Useful for "
 "understanding what goes wrong if the results is not what is expected."
 msgstr ""
-"Mode Déboguage, chaque étape sera enregistrée en détail. S'utile pour "
-"comprendre ce qui a mal tourne ou si les résultats ne sont pas ceux attendus."
+"Mode Déboguage, chaque étape sera enregistrée en détail. S'utilise pour "
+"comprendre ce qui a mal tourne ou si les résultats ne sont pas ceux "
+"attendus."
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:246
@@ -609,8 +609,8 @@ msgid ""
 msgstr ""
 "Si vous avez des sous-domaines, vous devez utiliser une Méthode de filtre de "
 "recherche pour localiser vos utilisateurs DNs, car ils ne pourront plus "
-"être construits directement seulement à partir du nom de l'identifiant dans "
-"la base DN :"
+"être construits directement seulement à partir de l'identifiant dans la base "
+"DN :"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:257
@@ -692,8 +692,8 @@ msgstr ""
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:7
 msgid "NCSA httpd-style password file authentication helper for Squid"
 msgstr ""
-"Aide à l'authentification du fichier de mot de passe pour Squid pour le "
-"NCSA httpd-style"
+"Aide à l'authentification du fichier de mot de passe pour Squid avec le NCSA "
+"httpd-style"
 
 #. type: Plain text
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:11
@@ -736,7 +736,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:35
 msgid "Based on original documentation by"
-msgstr "Basé sur la documentation originaux écrit par"
+msgstr "Basé sur la documentation original écrit par"
 
 #. type: Plain text
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:43
@@ -807,8 +807,8 @@ msgid ""
 msgstr ""
 "Valide les connexions persistants PAM où une connexion dans la base de "
 "données PAM qui sera gardé ouvert et réutilisé pour une nouvelle "
-"identification. Avec TTL on spécifie temps (en secondes) pour maintenir la "
-"connexion ouverte. Par défaut on ne doit pas garder les connexions PAM "
+"identification. Avec TTL on spécifie le temps (en secondes) pour maintenir "
+"la connexion ouverte. Par défaut on ne doit pas garder les connexions PAM "
 "ouvertes. Notez s'il vous plaît que l'utilisation de la connexions PAM "
 "persistants, est légèrement en dehors de la spécification PAM et ne peut pas "
 "fonctionner avec toutes les configurations PAM."
@@ -878,7 +878,8 @@ msgstr "La documentation de ce programme a été écrite par"
 #. type: Plain text
 #: helpers/basic_auth/PAM/basic_pam_auth.8:88
 msgid "Squid B<basic_pam_auth> and this manual is Copyright 1999,2002,2003"
-msgstr "Squid B<basic_pam_auth> et ce manuel a un Copyright depuis 1999,2002,2003"
+msgstr ""
+"Squid B<basic_pam_auth> et ce manuel a un Copyright depuis 1999, 2002, 2003"
 
 #. type: Plain text
 #: helpers/basic_auth/PAM/basic_pam_auth.8:114
@@ -922,8 +923,8 @@ msgid ""
 "the user name and password of Basic HTTP authentication."
 msgstr ""
 "B<basic_radius_auth> permet à Squid de se connecter à un serveur RADIUS pour "
-"valider le nom d'utilisateur et le mot de passe d'authentification HTTP de "
-"base."
+"valider le nom d'utilisateur et le mot de passe de l'authentification HTTP "
+"de base."
 
 #. type: Plain text
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:36
@@ -938,7 +939,7 @@ msgstr ""
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:40
 msgid "Alternative method of specifying the server to connect to"
 msgstr ""
-"Autre méthode pour spécifier un serveur, sur lequel nous devons nous "
+"Autre méthode pour spécifier un serveur, sur lequel vous devez vous "
 "connecter"
 
 #. type: Plain text
@@ -1089,7 +1090,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:53
 msgid "When to dereference aliases. Defaults to 'never'"
-msgstr "Lorsqu'il est suivi par un alias. Par défaut 'never' (ou jamais)"
+msgstr "Lorsqu'il est suivi par un alias. Par défaut 'never'"
 
 #. type: Plain text
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:62
@@ -1118,8 +1119,8 @@ msgid ""
 "Specify timeout used when connecting to LDAP servers (requires Netscape LDAP "
 "API libraries)"
 msgstr ""
-"Spécifier le temps pause, lors d'une connecter aux serveurs LDAP "
-"(requies une bibliothèques API pour Netscape LDAP)"
+"Spécifier le temps de pause, lors d'une connexion aux serveurs LDAP (requies "
+"une bibliothèques API pour Netscape LDAP)"
 
 #. type: Plain text
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:87
@@ -1249,7 +1250,7 @@ msgid ""
 msgstr ""
 "Attribut LDAP pour la construction des utilisateurs DN, avec le nom "
 "d'utilisateur et la base DN, sans avoir besoin de rechercher un utilisateur. "
-"Un maximum de 16 entrées pour B<%s> sont pris en charge."
+"Un maximum de 16 caractères pour B<%s> sont pris en charge."
 
 #. type: Plain text
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:214
@@ -1876,7 +1877,7 @@ msgid ""
 "Configuration examples for many common web servers can be found in the Squid "
 "FAQ wiki."
 msgstr ""
-"Vous peuvez trouver sur wiki FAQ des exemples de configuration pour de "
+"Vous pouvez trouver sur wiki FAQ des exemples de configuration pour de "
 "nombreux serveurs web commun qui s’appliquer à Squid."
 
 #. type: Plain text
