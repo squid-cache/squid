@@ -86,6 +86,9 @@ public:
     MEMPROXY_CLASS(StoreSwapLogData);
     StoreSwapLogData();
 
+    /// consistency self-check: whether the data appears to make sense
+    bool sane() const;
+
     /**
      * Either SWAP_LOG_ADD when an object is added to the disk storage,
      * or SWAP_LOG_DEL when an object is deleted.
