@@ -155,6 +155,7 @@ static void parse_u_short(unsigned short * var);
 static void parse_string(char **);
 static void default_all(void);
 static void defaults_if_none(void);
+static void defaults_postscriptum(void);
 static int parse_line(char *);
 static void parse_obsolete(const char *);
 static void parseBytesLine(size_t * bptr, const char *units);
@@ -571,6 +572,8 @@ parseConfigFile(const char *file_name)
     err_count = parseOneConfigFile(file_name, 0);
 
     defaults_if_none();
+
+    defaults_postscriptum();
 
     /*
      * We must call configDoConfigure() before leave_suid() because

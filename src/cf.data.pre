@@ -2086,6 +2086,9 @@ DOC_END
 NAME: sslproxy_cert_sign
 IFDEF: USE_SSL
 DEFAULT: none
+POSTSCRIPTUM: signUntrusted ssl::certUntrusted
+POSTSCRIPTUM: signSelf ssl::certSelfSigned
+POSTSCRIPTUM: signTrusted all
 TYPE: sslproxy_cert_sign
 LOC: Config.ssl_client.cert_sign
 DOC_START
