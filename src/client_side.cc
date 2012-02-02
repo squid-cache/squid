@@ -3712,43 +3712,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
         }
     }
 
-    if (certProperties.signAlgorithm == Ssl::algSignEnd) {
-        // Use the default algorithm
-        //Temporary code....
-        // TODO: implement the following using acls:
-        Ssl::ssl_error_t selfSignErrors[] = {X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT, 0};
-        Ssl::ssl_error_t unTrustedErrors[] = {X509_V_ERR_INVALID_CA, 
-                                              X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN, 
-                                              X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE,
-                                              X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
-                                              X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY,
-                                              X509_V_ERR_CERT_UNTRUSTED,0};
-        for (int i = 0; selfSignErrors[i] != 0; i++) {
-            if (bumpSslErrorNoList->find(selfSignErrors[i])) {
-                certProperties.signAlgorithm = Ssl::algSignSelf;
-                const char *sgAlg = Ssl::CertSignAlgorithmStr[Ssl::algSignSelf];
-                sslBumpCertKey.append("+Sign=");
-                sslBumpCertKey.append(sgAlg);
-                certAdaptParams.insert( std::make_pair(Ssl::CrtdMessage::param_Sign, sgAlg));
-                break;
-            }  
-        }
-        if (certProperties.signAlgorithm == Ssl::algSignEnd) {
-            for (int i = 0; unTrustedErrors[i] != 0; i++) {
-                if (bumpSslErrorNoList->find(selfSignErrors[i])) {
-                    certProperties.signAlgorithm = Ssl::algSignUntrusted;
-                    const char *sgAlg = Ssl::CertSignAlgorithmStr[Ssl::algSignUntrusted];
-                    sslBumpCertKey.append("+Sign=");
-                    sslBumpCertKey.append(sgAlg);
-                    certAdaptParams.insert( std::make_pair(Ssl::CrtdMessage::param_Sign, sgAlg));
-                    break;
-                }  
-            }
-        }
-        if (certProperties.signAlgorithm == Ssl::algSignEnd)
-            certProperties.signAlgorithm = Ssl::algSignTrusted;
-        //End of Temporary code....
-    }
+    assert(certProperties.signAlgorithm != Ssl::algSignEnd);
 
     if (certProperties.signAlgorithm == Ssl::algSignUntrusted) {
         assert(Ssl::SquidCaCert.get() && Ssl::SquidCaCertKey.get());
