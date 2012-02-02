@@ -295,7 +295,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         }
 
         Ssl::ErrorDetail *errDetail =
-            new Ssl::ErrorDetail(error_no, broken_cert);
+            new Ssl::ErrorDetail(error_no, peer_cert, broken_cert);
 
         if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_error_detail,  errDetail)) {
             debugs(83, 2, "Failed to set Ssl::ErrorDetail in ssl_verify_cb: Certificate " << buffer);

@@ -656,18 +656,17 @@ FwdState::negotiateSSL(int fd)
             } else {
                 // server_cert can be be NULL
                 X509 *server_cert = SSL_get_peer_certificate(ssl);
-                errDetails = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, server_cert);
+                errDetails = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, server_cert, NULL);
                 X509_free(server_cert);
             }
 
             if (ssl_lib_error != SSL_ERROR_NONE)
                 errDetails->setLibError(ssl_lib_error);
 
-            X509 *srvX509 = errDetails->peerCert();
             if (request->clientConnectionManager.valid()) {
                 // Get the server certificate from ErrorDetail object and store it 
                 // to connection manager
-                request->clientConnectionManager->setBumpServerCert(X509_dup(srvX509));
+                request->clientConnectionManager->setBumpServerCert(X509_dup(errDetails->peerCert()));
 
                 // if there is a list of ssl errors, pass it to connection manager
                 if (Ssl::Errors *errNoList = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_sslerrno)))
@@ -676,7 +675,7 @@ FwdState::negotiateSSL(int fd)
 
             if (request->flags.sslPeek) {
                 // If possible, set host name to server certificate CN.
-                if (srvX509) {
+                if (X509 *srvX509 = errDetails->brokenCert()) {
                     if (const char *name = Ssl::CommonHostName(srvX509)) {
                         request->SetHost(name);
                         debugs(83, 3, HERE << "reset request host: " << name);

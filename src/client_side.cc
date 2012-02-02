@@ -2497,7 +2497,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 #else
                 err->xerrno = EACCES;
 #endif
-                Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail( SQUID_X509_V_ERR_DOMAIN_MISMATCH, server_cert);
+                Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail( SQUID_X509_V_ERR_DOMAIN_MISMATCH, server_cert, NULL);
                 err->detail = errDetail;
                 repContext->setReplyToError(request->method, err);
                 assert(context->http->out.offset == 0);
