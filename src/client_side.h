@@ -342,7 +342,7 @@ public:
     void setBumpSslErrorList(Ssl::Errors *errNoList) {bumpSslErrorNoList = cbdataReference(errNoList);}
     /// Fill the certAdaptParams with the required data for certificate adaptation
     /// and create the key for storing/retrieve the certificate to/from the cache
-    void buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties, Ssl::CrtdMessage::BodyParams &certAdaptParams);
+    void buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties);
     bool serveDelayedError(ClientSocketContext *context);
 #else
     bool switchedToHttps() const { return false; }
