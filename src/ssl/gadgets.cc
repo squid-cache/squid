@@ -193,14 +193,17 @@ Ssl::CertificateProperties::CertificateProperties(): serial(NULL),
 std::string & Ssl::CertificateProperties::dbKey() const
 {
     static std::string certKey;
+    certKey.clear();
     certKey.reserve(4096);
     if (mimicCert.get()) {
         char buf[1024];
-        certKey = X509_NAME_oneline(X509_get_subject_name(mimicCert.get()), buf, sizeof(buf));
+        certKey.append(X509_NAME_oneline(X509_get_subject_name(mimicCert.get()), buf, sizeof(buf)));
     }
 
-    if (certKey.empty())
-        certKey = "/CN=" + commonName;
+    if (certKey.empty()) {
+        certKey.append("/CN=", 4);
+        certKey.append(commonName);
+    }
 
     if (setValidAfter)
         certKey.append("+SetValidAfter=on", 17);
