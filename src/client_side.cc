@@ -2447,6 +2447,18 @@ ConnStateData::clientAfterReadingRequests()
         readSomeData();
 }
 
+void
+ConnStateData::quitAfterError(HttpRequest *request)
+{
+    // From HTTP p.o.v., we do not have to close after every error detected
+    // at the client-side, but many such errors do require closure and the
+    // client-side code is bad at handling errors so we play it safe.
+    if (request)
+        request->flags.proxy_keepalive = 0;
+    flags.readMore = false;
+    debugs(33,4, HERE << "Will close after error: " << clientConnection);
+}
+
 #if USE_SSL
 bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 {
@@ -2456,6 +2468,8 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
         return false;
 
     if (!e->isEmpty()) {
+        quitAfterError(http->request);
+
         //Failed? Here we should get the error from conn and send it to client
         // The error stored in ConnStateData::bumpFirstEntry, replace the
         // ClientHttpRequest store entry with this.
@@ -2465,7 +2479,6 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
         debugs(33, 5, "Connection first has failed for " << http->uri << ". Respond with an error");
         repContext->setReplyToStoreEntry(e);
         context->pullData();
-        flags.readMore = false;
         return true;
     }
 
@@ -2485,6 +2498,8 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
             check.sslErrorList = NULL;
 
             if (!allowDomainMismatch) {
+                quitAfterError(request);
+
                 clientStreamNode *node = context->getClientReplyContext();
                 clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
                 assert (repContext);
@@ -2502,7 +2517,6 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
                 repContext->setReplyToError(request->method, err);
                 assert(context->http->out.offset == 0);
                 context->pullData();
-                flags.readMore = false;
                 return true;
             }
         }
@@ -2530,6 +2544,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if (context->flags.parsed_ok == 0) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 2, "clientProcessRequest: Invalid Request");
+        conn->quitAfterError(NULL);
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
@@ -2548,13 +2563,13 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         }
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMore = false;
         goto finish;
     }
 
     if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Invalid URL: " << http->uri);
+        conn->quitAfterError(request);
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
@@ -2562,7 +2577,6 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         repContext->setReplyToError(ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMore = false;
         goto finish;
     }
 
@@ -2574,6 +2588,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Unsupported HTTP version discovered. :\n" << HttpParserHdrBuf(hp));
+        conn->quitAfterError(request);
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
@@ -2582,7 +2597,6 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
                                     conn->clientConnection->remote, NULL, HttpParserHdrBuf(hp), NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMore = false;
         goto finish;
     }
 
@@ -2592,6 +2606,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if (http_ver.major >= 1 && !request->parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp))) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Failed to parse request headers:\n" << HttpParserHdrBuf(hp));
+        conn->quitAfterError(request);
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
@@ -2599,7 +2614,6 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMore = false;
         goto finish;
     }
 
@@ -2665,13 +2679,13 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
                          (request->header.getInt64(HDR_MAX_FORWARDS) == 0);
     if (!urlCheckRequest(request) || mustReplyToOptions || unsupportedTe) {
         clientStreamNode *node = context->getClientReplyContext();
+        conn->quitAfterError(request);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_UNSUP_REQ, HTTP_NOT_IMPLEMENTED, request->method, NULL,
                                     conn->clientConnection->remote, request, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMore = false;
         goto finish;
     }
 
@@ -2680,12 +2694,12 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
+        conn->quitAfterError(request);
         repContext->setReplyToError(ERR_INVALID_REQ,
                                     HTTP_LENGTH_REQUIRED, request->method, NULL,
                                     conn->clientConnection->remote, request, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMore = false;
         goto finish;
     }
 
@@ -2696,11 +2710,11 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             clientStreamNode *node = context->getClientReplyContext();
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
+            conn->quitAfterError(request);
             repContext->setReplyToError(ERR_INVALID_REQ, HTTP_EXPECTATION_FAILED, request->method, http->uri,
                                         conn->clientConnection->remote, request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
-            conn->flags.readMore = false;
             goto finish;
         }
     }
@@ -2735,12 +2749,12 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             clientStreamNode *node = context->getClientReplyContext();
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
+            conn->quitAfterError(request);
             repContext->setReplyToError(ERR_TOO_BIG,
                                         HTTP_REQUEST_ENTITY_TOO_LARGE, METHOD_NONE, NULL,
                                         conn->clientConnection->remote, http->request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
-            conn->flags.readMore = false;
             goto finish;
         }
 
