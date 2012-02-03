@@ -605,6 +605,13 @@ HttpRequest::CreateFromUrl(char * url)
 bool
 HttpRequest::cacheable() const
 {
+    // Intercepted request with Host: header which cannot be trusted.
+    // Because it failed verification, or someone bypassed the security tests
+    // we cannot cache the reponse for sharing between clients.
+    // TODO: update cache to store for particular clients only (going to same Host: and destination IP)
+    if (!flags.hostVerified && (flags.intercepted || flags.spoof_client_ip))
+        return false;
+
     if (protocol == AnyP::PROTO_HTTP)
         return httpCachable(method);
 
