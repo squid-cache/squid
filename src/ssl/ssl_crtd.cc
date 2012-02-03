@@ -83,7 +83,6 @@ usage: ssl_crtd -g -s ssl_store_path
  \endverbatim
  */
 
-#define CERT_BEGIN_STR "-----BEGIN CERTIFICATE"
 static const char *const B_KBYTES_STR = "KB";
 static const char *const B_MBYTES_STR = "MB";
 static const char *const B_GBYTES_STR = "GB";
@@ -210,71 +209,18 @@ static void usage()
  \ingroup ssl_crtd
  * Proccess new request message.
  */
-static bool proccessNewRequest(Ssl::CrtdMessage const & request_message, std::string const & db_path, size_t max_db_size, size_t fs_block_size)
+static bool proccessNewRequest(Ssl::CrtdMessage & request_message, std::string const & db_path, size_t max_db_size, size_t fs_block_size)
 {
-    Ssl::CrtdMessage::BodyParams map;
     Ssl::CertificateProperties certProperties;
-    std::string body_part;
-    request_message.parseBody(map, body_part);
-
-    Ssl::CrtdMessage::BodyParams::iterator i = map.find(Ssl::CrtdMessage::param_host);
-    if (i == map.end())
-        throw std::runtime_error("Cannot find \"" + Ssl::CrtdMessage::param_host + "\" parameter in request message.");
-    certProperties.commonName = i->second;
+    std::string error;
+    if (!request_message.parseRequest(certProperties, error))
+        throw std::runtime_error("Error while parsing the crtd request" + error);
 
     Ssl::CertificateDb db(db_path, max_db_size, fs_block_size);
-
     Ssl::X509_Pointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
+    std::string &cert_subject = certProperties.dbKey();
     
-    const char *s;
-    std::string cert_subject;
-    if ((s = strstr(body_part.c_str(), CERT_BEGIN_STR))) {
-        s += strlen(CERT_BEGIN_STR);
-        if ((s = strstr(s, CERT_BEGIN_STR))) {
-            Ssl::readCertFromMemory(certProperties.mimicCert, s);
-            if (certProperties.mimicCert.get()) {
-                char buf[1024];
-                cert_subject = X509_NAME_oneline(X509_get_subject_name(certProperties.mimicCert.get()), buf, sizeof(buf));
-            }
-        }
-    }
-
-    if (cert_subject.empty())
-        cert_subject = "/CN=" + certProperties.commonName;
-
-    i = map.find(Ssl::CrtdMessage::param_SetValidAfter);
-    if (i != map.end() && strcasecmp(i->second.c_str(), "on") == 0) {
-        cert_subject.append("+SetValidAfter=on");
-        certProperties.setValidAfter = true;
-    }
-    
-    i = map.find(Ssl::CrtdMessage::param_SetValidBefore);
-    if (i != map.end() && strcasecmp(i->second.c_str(), "on") == 0) {
-        cert_subject.append("+SetValidBefore=on");
-        certProperties.setValidBefore = true;
-    }
-
-    i = map.find(Ssl::CrtdMessage::param_SetCommonName);
-    if (i != map.end()) {
-        cert_subject.append("+SetCommonName=");
-        cert_subject.append(i->second);
-        // use this as Common Name  instead of the hostname 
-        // defined with host or Common Name from mimic cert
-        certProperties.commonName = i->second;
-        certProperties.setCommonName = true;
-    }
-
-    i = map.find(Ssl::CrtdMessage::param_Sign);
-    if (i != map.end()) {
-        cert_subject.append("+Sign=");
-        cert_subject.append(i->second);
-        if ((certProperties.signAlgorithm = Ssl::certSignAlgorithmId(i->second.c_str())) == Ssl::algSignEnd)
-            throw std::runtime_error("Wrong signing algoritm:" + i->second);
-    }
-    else
-        certProperties.signAlgorithm = Ssl::algSignTrusted;
-
     db.find(cert_subject, cert, pkey);
 
     if (cert.get() && certProperties.mimicCert.get()) {
@@ -286,12 +232,7 @@ static bool proccessNewRequest(Ssl::CrtdMessage const & request_message, std::st
         }
     }
 
-    if (!cert || !pkey) {
-        if (certProperties.signAlgorithm != Ssl::algSignSelf) {
-            if (!Ssl::readCertAndPrivateKeyFromMemory(certProperties.signWithX509, certProperties.signWithPkey, body_part.c_str()))
-                throw std::runtime_error("Broken signing certificate!");
-        } /*else Squid did not send certificate to sign the generated certificate*/
-        
+    if (!cert || !pkey) {        
         certProperties.serial.reset(db.getCurrentSerialNumber());
 
         if (!Ssl::generateSslCertificate(cert, pkey, certProperties))

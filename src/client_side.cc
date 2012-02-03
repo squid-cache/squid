@@ -3652,11 +3652,9 @@ ConnStateData::sslCrtdHandleReply(const char * reply)
     getSslContextDone(NULL);
 }
 
-void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties, Ssl::CrtdMessage::BodyParams &certAdaptParams)
+void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties)
 {
-    // Build a key to use for storing/retrieving certificates to cache
-    sslBumpCertKey = sslCommonName.defined() ? sslCommonName : sslConnectHostOrIp;
-    certProperties.commonName = sslBumpCertKey.termedBuf();
+    certProperties.commonName =  sslCommonName.defined() ? sslCommonName.termedBuf() : sslConnectHostOrIp.termedBuf();
 
     // fake certificate adaptation requires bump-server-first mode
     if (!bumpServerFirstErrorEntry())
@@ -3682,46 +3680,29 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
             const char *alg = Ssl::CertAdaptAlgorithmStr[ca->alg];
             const char *param = ca->param;
   
-            // if already set ignore
-            if (certAdaptParams.find(alg) != certAdaptParams.end())
-                continue;
-
             // if not param defined for Common Name adaptation use hostname from 
             // the CONNECT request
-            if (ca->alg == Ssl::algSetCommonName) {
+            if (ca->alg == Ssl::algSetCommonName && !certProperties.setCommonName) {
                 if (!param)
                     param = sslConnectHostOrIp.termedBuf();
                 certProperties.commonName = param;
                 certProperties.setCommonName = true;
             }
-            else if(ca->alg == Ssl::algSetValidAfter)
+            else if(ca->alg == Ssl::algSetValidAfter && !certProperties.setValidAfter)
                 certProperties.setValidAfter = true;
-            else if(ca->alg == Ssl::algSetValidBefore)
+            else if(ca->alg == Ssl::algSetValidBefore && !certProperties.setValidBefore)
                 certProperties.setValidBefore = true;
 
             assert(alg && param);
             debugs(33, 5, HERE << "Matches certificate adaptation aglorithm: " << 
                    alg << " param: " << param);
-
-            // append to the certificate adaptation parameters
-            certAdaptParams.insert( std::make_pair(alg, param));
-
-            // And also build the key used to store certificate to cache.
-            sslBumpCertKey.append("+");
-            sslBumpCertKey.append(alg);
-            sslBumpCertKey.append("=");
-            sslBumpCertKey.append(param);
         }
     }
 
     certProperties.signAlgorithm = Ssl::algSignEnd;
     for (sslproxy_cert_sign *sg = Config.ssl_client.cert_sign; sg != NULL; sg = sg->next) {
         if (sg->aclList && checklist.fastCheck(sg->aclList) == ACCESS_ALLOWED) {
-            const char *sgAlg = Ssl::CertSignAlgorithmStr[sg->alg];
             certProperties.signAlgorithm = (Ssl::CertSignAlgorithm)sg->alg;
-            certAdaptParams.insert( std::make_pair(Ssl::CrtdMessage::param_Sign, sgAlg));
-            sslBumpCertKey.append("+Sign=");
-            sslBumpCertKey.append(sgAlg);
             break;
         }
     }
@@ -3747,9 +3728,9 @@ void
 ConnStateData::getSslContextStart()
 {
     if (port->generateHostCertificates) {
-        Ssl::CrtdMessage::BodyParams certAdaptParams;
         Ssl::CertificateProperties certProperties;
-        buildSslCertGenerationParams(certProperties, certAdaptParams);
+        buildSslCertGenerationParams(certProperties);
+        sslBumpCertKey = certProperties.dbKey().c_str();
         assert(sslBumpCertKey.defined() && sslBumpCertKey[0] != '\0');
 
         debugs(33, 5, HERE << "Finding SSL certificate for " << sslBumpCertKey << " in cache");
@@ -3773,17 +3754,7 @@ ConnStateData::getSslContextStart()
         debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName << " using ssl_crtd.");
         Ssl::CrtdMessage request_message;
         request_message.setCode(Ssl::CrtdMessage::code_new_certificate);
-        Ssl::CrtdMessage::BodyParams map;
-        map.insert(std::make_pair(Ssl::CrtdMessage::param_host, certProperties.commonName));
-        /*Append parameters for cert adaptation*/
-        map.insert(certAdaptParams.begin(), certAdaptParams.end());
-        std::string bufferToWrite;
-        Ssl::writeCertAndPrivateKeyToMemory(certProperties.signWithX509, certProperties.signWithPkey, bufferToWrite);
-        if (certProperties.mimicCert.get()) {
-            Ssl::appendCertToMemory(certProperties.mimicCert, bufferToWrite);
-            debugs(33, 5, HERE << "Appended certificate to mimic: " << bufferToWrite);
-        }
-        request_message.composeBody(map, bufferToWrite);
+        request_message.composeRequest(certProperties);
         debugs(33, 5, HERE << "SSL crtd request: " << request_message.compose().c_str());
         Ssl::Helper::GetInstance()->sslSubmit(request_message, sslCrtdHandleReplyWrapper, this);
         return;
