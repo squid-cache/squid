@@ -264,9 +264,9 @@ static bool buildCertificate(Ssl::X509_Pointer & cert, Ssl::CertificatePropertie
         aTime = X509_get_notAfter(properties.signWithX509.get());
     if (aTime) {
         if (!X509_set_notAfter(cert.get(), aTime))
-            return NULL;
+            return false;
     } else if (!X509_gmtime_adj(X509_get_notAfter(cert.get()), 60*60*24*356*3))
-        return NULL;
+        return false;
 
     if (properties.mimicCert.get()) {
         unsigned char *alStr;
