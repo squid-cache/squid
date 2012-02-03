@@ -210,6 +210,9 @@ public:
     bool setCommonName; ///< Replace the CN field of the mimicing subject with the given
     std::string commonName; ///< A CN to use for the generated certificate
     CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
+    /// Returns certificate database primary key. New fake certificates
+    /// purge old fake certificates with the same key.
+    std::string & dbKey() const;
 private:
     CertificateProperties(CertificateProperties &);
     CertificateProperties &operator =(CertificateProperties const &);
