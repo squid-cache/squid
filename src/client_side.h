@@ -312,6 +312,10 @@ public:
     virtual bool doneAll() const { return BodyProducer::doneAll() && false;}
     virtual void swanSong();
 
+    /// Changes state so that we close the connection and quit after serving
+    /// the client-side-detected error response instead of getting stuck.
+    void quitAfterError(HttpRequest *request); // meant to be private
+
 #if USE_SSL
     /// called by Ssl::ServerPeeker when it is done bumping the server
     void httpsPeeked(Comm::ConnectionPointer serverConnection);
