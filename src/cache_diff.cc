@@ -180,7 +180,7 @@ cacheIndexScan(CacheIndex * idx, const char *fname, FILE * file)
     while (fread(&s, sizeof(s), 1, file) == 1) {
         count++;
         idx->scanned_count++;
-        /* if (s.op <= SWAP_LOG_NOP || s.op >= SWAP_LOG_MAX)
+        /* if (!s.sane())
          * continue; */
 
         if (s.op == SWAP_LOG_ADD) {
