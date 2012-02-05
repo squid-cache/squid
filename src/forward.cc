@@ -675,7 +675,7 @@ FwdState::negotiateSSL(int fd)
 
             if (request->flags.sslPeek) {
                 // If possible, set host name to server certificate CN.
-                if (X509 *srvX509 = errDetails->brokenCert()) {
+                if (X509 *srvX509 = errDetails->peerCert()) {
                     if (const char *name = Ssl::CommonHostName(srvX509)) {
                         request->SetHost(name);
                         debugs(83, 3, HERE << "reset request host: " << name);
