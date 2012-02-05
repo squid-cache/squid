@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
- <TITLE>Squid 3.2.0.14 release notes</TITLE>
+ <TITLE>Squid 3.2.0.15 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.2.0.14 release notes</H1>
+<H1>Squid 3.2.0.15 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -72,7 +72,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.2.0.14 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.2.0.15 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.2/">http://www.squid-cache.org/Versions/v3/3.2/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -479,6 +479,16 @@ The <EM>manager</EM> ACL needs changing to:
 </PRE>
 </P>
 
+<P>The manager prefix /squid-internal-mgr/ with no action attempts to load an optional
+template MGR_INDEX which may be installed amongst in the Squid error templates.
+This template is not supplied with Squid but intended to be supplied by separate
+cache manager applications as their front page embedding all scripts, accessors or
+redirects required for their initial GUI display.</P>
+
+<P>Version 3.2 of the CGI cache manager tool now presents XHR scripted probes to detect
+proxies presenting these manager index pagess and provides direct HTTP/HTTPS web links
+to those managers.</P>
+
 
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes to squid.conf since Squid-3.1</A></H2>
 
@@ -594,6 +604,10 @@ must be typed on their own lines, as if they were regular configuration directiv
 </PRE>
 </P>
 
+<DT><B>memory_cache_shared</B><DD>
+<P>Controls whether the memory cache is shared among SMP workers.</P>
+<P>Currently, entities exceeding 32KB in size cannot be shared.</P>
+
 <DT><B>server_idle_pconn_timeout</B><DD>
 <P>Renamed from <EM>pconn_timeout</EM>.</P>
 
@@ -674,6 +688,9 @@ The old form is deprecated but still accepted.</P>
 <P>Support the full range of 200-599 HTTP status codes.
 3xx status only available when redirecting to a URI.
 Other status only available when supplying an error template body.</P>
+
+<DT><B>dns_v4_fallback</B><DD>
+<P>Obsoleted by DNS parallel lookups.</P>
 
 <DT><B>external_acl_type</B><DD>
 <P>New format tags and option parameters:</P>

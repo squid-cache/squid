@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.17 release notes</title>
+<title>Squid 3.1.19 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.18
+The Squid Team are pleased to announce the release of Squid-3.1.19
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -64,7 +64,7 @@ The most important of these new features are:
 	<item>eCAP Adaptation Module support
 	<item>ICAP Bypass and Retry enhancements
 	<item>ICY streaming protocol support
-	<item>Dynamic SSL Certificate Generation (3.1.12.1 and later)
+	<item>Dynamic SSL Certificate Generation (3.1.13 and later)
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).

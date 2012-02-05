@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.0.14 release notes</title>
+<title>Squid 3.2.0.15 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.0.14 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.0.15 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -379,6 +379,16 @@ Most user-facing changes are reflected in squid.conf (see below).
 	acl manager url_regex -i ^cache_object:// ^https?://[^/]+/squid-internal-mgr/
 </verb>
 
+<p>The manager prefix /squid-internal-mgr/ with no action attempts to load an optional
+   template MGR_INDEX which may be installed amongst in the Squid error templates.
+   This template is not supplied with Squid but intended to be supplied by separate
+   cache manager applications as their front page embedding all scripts, accessors or
+   redirects required for their initial GUI display.
+
+<p>Version 3.2 of the CGI cache manager tool now presents XHR scripted probes to detect
+   proxies presenting these manager index pagess and provides direct HTTP/HTTPS web links
+   to those managers.
+
 
 <sect>Changes to squid.conf since Squid-3.1
 <p>
@@ -487,6 +497,10 @@ This section gives a thorough account of those changes in three categories:
 	network   Only objects fetched from network is kept in memory
 	</verb>
 
+	<tag>memory_cache_shared</tag>
+	<p>Controls whether the memory cache is shared among SMP workers.
+	<p>Currently, entities exceeding 32KB in size cannot be shared.
+
 	<tag>server_idle_pconn_timeout</tag>
 	<p>Renamed from <em>pconn_timeout</em>.
 
@@ -560,6 +574,9 @@ This section gives a thorough account of those changes in three categories:
 	<p>Support the full range of 200-599 HTTP status codes.
 	   3xx status only available when redirecting to a URI.
 	   Other status only available when supplying an error template body.
+
+	<tag>dns_v4_fallback</tag>
+	<p>Obsoleted by DNS parallel lookups.
 
 	<tag>external_acl_type</tag>
 	<p>New format tags and option parameters:
