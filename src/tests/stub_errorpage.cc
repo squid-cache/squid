@@ -62,7 +62,7 @@ TemplateFile::loadDefault()
     return false;
 }
 
-TemplateFile::TemplateFile(char const*)
+TemplateFile::TemplateFile(char const*, err_type)
 {
     fatal("Not implemented");
 }

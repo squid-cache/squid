@@ -254,7 +254,7 @@ SQUIDCEXTERN const char *errorPageName(int pageId); ///< error ID to string
 class TemplateFile
 {
 public:
-    TemplateFile(const char *name);
+    TemplateFile(const char *name, const err_type code);
     virtual ~TemplateFile() {}
 
     /// return true if the data loaded from disk without any problem
@@ -301,6 +301,7 @@ protected:
     bool wasLoaded; ///< True if the template data read from disk without any problem
     String errLanguage; ///< The error language of the template.
     String templateName; ///< The name of the template
+    err_type templateCode; ///< The internal code for this template.
 };
 
 /**

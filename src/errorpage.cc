@@ -142,7 +142,7 @@ static IOCB errorSendComplete;
 class ErrorPageFile: public TemplateFile
 {
 public:
-    ErrorPageFile(const char *name): TemplateFile(name) { textBuf.init();}
+    ErrorPageFile(const char *name, const err_type code): TemplateFile(name,code) { textBuf.init();}
 
     /// The template text data read from disk
     const char *text() { return textBuf.content(); }
@@ -195,7 +195,7 @@ errorInitialize(void)
              *  (a) default language translation directory (error_default_language)
              *  (b) admin specified custom directory (error_directory)
              */
-            ErrorPageFile  errTmpl(err_type_str[i]);
+            ErrorPageFile errTmpl(err_type_str[i], i);
             error_text[i] = errTmpl.loadDefault() ? xstrdup(errTmpl.text()) : NULL;
         } else {
             /** \par
@@ -210,7 +210,7 @@ errorInitialize(void)
 
             if (strchr(pg, ':') == NULL) {
                 /** But only if they are not redirection URL. */
-                ErrorPageFile  errTmpl(pg);
+                ErrorPageFile errTmpl(pg, ERR_MAX);
                 error_text[i] = errTmpl.loadDefault() ? xstrdup(errTmpl.text()) : NULL;
             }
         }
@@ -220,7 +220,7 @@ errorInitialize(void)
 
     // look for and load stylesheet into global MemBuf for it.
     if (Config.errorStylesheet) {
-        ErrorPageFile  tmpl("StylesSheet");
+        ErrorPageFile tmpl("StylesSheet", ERR_MAX);
         tmpl.loadFromFile(Config.errorStylesheet);
         error_stylesheet.Printf("%s",tmpl.text());
     }
@@ -265,7 +265,7 @@ errorFindHardText(err_type type)
     return NULL;
 }
 
-TemplateFile::TemplateFile(const char *name): silent(false), wasLoaded(false), templateName(name)
+TemplateFile::TemplateFile(const char *name, const err_type code): silent(false), wasLoaded(false), templateName(name), templateCode(code)
 {
     assert(name);
 }
@@ -287,7 +287,7 @@ TemplateFile::loadDefault()
     /** test error_default_language location */
     if (!loaded() && Config.errorDefaultLanguage) {
         if (!tryLoadTemplate(Config.errorDefaultLanguage)) {
-            debugs(1, DBG_CRITICAL, "Unable to load default error language files. Reset to backups.");
+            debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "Unable to load default error language files. Reset to backups.");
         }
     }
 #endif
@@ -299,7 +299,7 @@ TemplateFile::loadDefault()
 
     /* giving up if failed */
     if (!loaded()) {
-        debugs(1, DBG_CRITICAL, "WARNING: failed to find or read error text file " << templateName);
+        debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "WARNING: failed to find or read error text file " << templateName);
         parse("Internal Error: Missing Template ", 33, '\0');
         parse(templateName.termedBuf(), templateName.size(), '\0');
     }
@@ -346,7 +346,7 @@ TemplateFile::loadFromFile(const char *path)
 
     if (fd < 0) {
         /* with dynamic locale negotiation we may see some failures before a success. */
-        if (!silent)
+        if (!silent && templateCode < TCP_RESET)
             debugs(4, DBG_CRITICAL, HERE << "'" << path << "': " << xstrerror());
         wasLoaded = false;
         return wasLoaded;
@@ -1231,7 +1231,7 @@ ErrorState::BuildContent()
     assert(page_id > ERR_NONE && page_id < error_page_count);
 
 #if USE_ERR_LOCALES
-    ErrorPageFile  *localeTmpl = NULL;
+    ErrorPageFile *localeTmpl = NULL;
 
     /** error_directory option in squid.conf overrides translations.
      * Custom errors are always found either in error_directory or the templates directory.
@@ -1241,7 +1241,7 @@ ErrorState::BuildContent()
         if (err_language && err_language != Config.errorDefaultLanguage)
             safe_free(err_language);
 
-        localeTmpl = new ErrorPageFile(err_type_str[page_id]);
+        localeTmpl = new ErrorPageFile(err_type_str[page_id], static_cast<err_type>(page_id));
         if (localeTmpl->loadFor(request)) {
             m = localeTmpl->text();
             assert(localeTmpl->language());
