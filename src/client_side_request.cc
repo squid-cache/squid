@@ -553,6 +553,21 @@ ClientRequestContext::hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLooku
 void
 ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
 {
+    // IP address validation for Host: failed. Admin wants to ignore them.
+    // NP: we do not yet handle CONNECT tunnels well, so ignore for them
+    if (!Config.onoff.hostStrictVerify && http->request->method != METHOD_CONNECT) {
+        debugs(85, 3, "SECURITY ALERT: Host header forgery detected on " << http->getConn()->clientConnection <<
+               " (" << A << " does not match " << B << ") on URL: " << urlCanonical(http->request));
+
+        // NP: it is tempting to use 'flags.nocache' but that is all about READing cache data.
+        // The problems here are about WRITE for new cache content, which means flags.cachable
+        http->request->flags.cachable = 0; // MUST NOT cache (for now)
+        // XXX: when we have updated the cache key to base on raw-IP + URI this cacheable limit can go.
+        http->request->flags.hierarchical = 0; // MUST NOT pass to peers (for now)
+        // XXX: when we have sorted out the best way to relay requests properly to peers this hierarchical limit can go.
+        return;
+    }
+
     debugs(85, DBG_IMPORTANT, "SECURITY ALERT: Host header forgery detected on " <<
            http->getConn()->clientConnection << " (" << A << " does not match " << B << ")");
     debugs(85, DBG_IMPORTANT, "SECURITY ALERT: By user agent: " << http->request->header.getStr(HDR_USER_AGENT));
@@ -562,7 +577,7 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
     clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
     clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
     assert (repContext);
-    repContext->setReplyToError(ERR_INVALID_REQ, HTTP_CONFLICT,
+    repContext->setReplyToError(ERR_CONFLICT_HOST, HTTP_CONFLICT,
                                 http->request->method, NULL,
                                 http->getConn()->clientConnection->remote,
                                 http->request,
@@ -657,6 +672,7 @@ ClientRequestContext::hostHeaderVerify()
     } else {
         // Okay no problem.
         debugs(85, 3, HERE << "validate passed.");
+        http->request->flags.hostVerified = 1;
         http->doCallouts();
     }
     safe_free(hostB);
@@ -881,6 +897,10 @@ clientHierarchical(ClientHttpRequest * http)
     HttpRequest *request = http->request;
     HttpRequestMethod method = request->method;
     const wordlist *p = NULL;
+
+    // intercepted requests MUST NOT (yet) be sent to peers unless verified
+    if (!request->flags.hostVerified && (request->flags.intercepted || request->flags.spoof_client_ip))
+        return 0;
 
     /*
      * IMS needs a private key, so we can use the hierarchy for IMS only if our

@@ -978,7 +978,9 @@ struct _iostats {
 
 
 struct request_flags {
-    request_flags(): range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),fail_on_validation_err(0),stale_if_hit(0),accelerated(0),ignore_cc(0),intercepted(0),spoof_client_ip(0),internal(0),internalclient(0),must_keepalive(0),chunked_reply(0),stream_error(0),sslBumped(0),destinationIPLookedUp_(0) {
+    request_flags(): range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),fail_on_validation_err(0),stale_if_hit(0),accelerated(0),ignore_cc(0),intercepted(0),
+            hostVerified(0),
+            spoof_client_ip(0),internal(0),internalclient(0),must_keepalive(0),chunked_reply(0),stream_error(0),sslBumped(0),destinationIPLookedUp_(0) {
 #if USE_HTTP_VIOLATIONS
         nocache_hack = 0;
 #endif
@@ -988,10 +990,10 @@ struct request_flags {
     }
 
     unsigned int range:1;
-    unsigned int nocache:1;
+    unsigned int nocache:1;            ///< whether the response to this request may be READ from cache
     unsigned int ims:1;
     unsigned int auth:1;
-    unsigned int cachable:1;
+    unsigned int cachable:1;           ///< whether the response to thie request may be stored in the cache
     unsigned int hierarchical:1;
     unsigned int loopdetect:1;
     unsigned int proxy_keepalive:1;
@@ -1007,7 +1009,8 @@ unsigned int proxying:
 #endif
     unsigned int accelerated:1;
     unsigned int ignore_cc:1;
-    unsigned int intercepted:1;  /**< transparently intercepted request */
+    unsigned int intercepted:1;        ///< intercepted request
+    unsigned int hostVerified:1;       ///< whether the Host: header passed verification
     unsigned int spoof_client_ip:1;  /**< spoof client ip if possible */
     unsigned int internal:1;
     unsigned int internalclient:1;
