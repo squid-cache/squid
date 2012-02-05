@@ -1,3 +1,24 @@
+Changes to squid-3.2.0.15 (06 Feb 2011):
+
+	- Bug 3472: segfault with the message 'urlParse: URL too large'
+	- Bug 3471: segfault when %la formating code used
+	- Bug 3449: part 3: shm_open can fail with a mangled path
+	- Bug 3449: part 4: shm_open failed (fixing memory_cache_shared defaults)
+	- Bug 3448: 204 response problem in adaptation chains
+	- Bug 3447: assertion failed: CommCalls.h:150: "dp"
+	- Bug 3461: build regression in IPFilter NAT
+	- Bug 3413: raise cbdata lock limits
+	- Bug 3391: forwarded_for log functionality broken
+	- Bug 3268: Squid cannot do anything else during ufs/diskd rebuild
+	- Bug 3268: remove wrong 'Ready to serve requests.' message
+	- Bug 2519: ssl_bump + Authentication (LDAP Digest) issues
+	- Disable OpenSSL SSL/TLS bug workarounds by default
+	- Send DNS A and AAAA queries in parallel
+	- Cache Manager migration support
+	- Allow service of internal requests over reverse-proxy ports
+	- Fix trimMemory for unswappable objects
+	- ... and several build and polish fixes
+
 Changes to squid-3.2.0.14 (12 Dec 2011):
 
 	- Bug 3433: Segfault closing SNMP
@@ -311,6 +332,20 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many code cleanups
 	- ... and a great many testing improvements
 	- ... and many documentation updates
+
+Changes to squid-3.1.19 (06 Feb 2011):
+
+	- Regression Bug 3441: part 2: Prevent further cache size corruption of swap.state
+	- Bug 3473: erase last uses of obsolete auth_user_hash_pointer
+	- Bug 3470: GCC 4.7
+	- Bug 3442: assertion failed: external_acl.cc:908: ch->auth_user_request != NULL
+	- Bug 3441: part 1: Minimize cache size corruption by malformed swap.state
+	- Bug 3440: compile error in Adaptation
+	- Bug 3420: Request body consumption races and !theConsumer exception
+	- Bug 3370: external ACL sometimes skipping
+	- Bug 3085: Crash when parsing esi:include
+	- HTTP/1.1: do not add 110 and 111 Warnings to revalidated responses
+	- Fix SSL library dependency fixes
 
 Changes to squid-3.1.18 (03 Dec 2011):
 
