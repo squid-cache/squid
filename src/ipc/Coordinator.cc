@@ -6,7 +6,7 @@
  */
 
 
-#include "config.h"
+#include "squid.h"
 #include "base/Subscription.h"
 #include "base/TextException.h"
 #include "CacheManager.h"

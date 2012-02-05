@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "DnsLookupDetails.h"
 #include "errorpage.h"
 #include "event.h"

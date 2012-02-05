@@ -2,7 +2,7 @@
  * $Id$
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "base/AsyncCall.h"
 #include "base/AsyncCallQueue.h"
 #include "cbdata.h"

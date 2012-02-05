@@ -33,6 +33,8 @@
  */
 
 #include "squid.h"
+#include "fatal.h"
+#include "protos.h"
 
 size_t
 headersEnd(const char *mime, size_t l)

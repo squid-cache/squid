@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "fatal.h"
 
 char *
 internalLocalUri(const char *dir, const char *name)

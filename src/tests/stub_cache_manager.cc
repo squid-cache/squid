@@ -29,7 +29,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "CacheManager.h"
 #include "mgr/Registration.h"
 

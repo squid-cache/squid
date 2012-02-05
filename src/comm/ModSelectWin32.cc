@@ -31,11 +31,11 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 
 #if USE_SELECT_WIN32
 
-#include "squid.h"
+#include "squid-old.h"
 #include "comm/Loops.h"
 #include "fde.h"
 #include "mgr/Registration.h"

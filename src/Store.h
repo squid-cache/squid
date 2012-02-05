@@ -37,7 +37,7 @@
  \ingroup FileSystems
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "StoreIOBuffer.h"
 #include "Range.h"
 #include "RefCount.h"

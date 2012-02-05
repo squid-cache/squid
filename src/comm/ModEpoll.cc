@@ -51,11 +51,11 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 
 #if USE_EPOLL
 
-#include "squid.h"
+#include "squid-old.h"
 #include "comm/Loops.h"
 #include "fde.h"
 #include "mgr/Registration.h"

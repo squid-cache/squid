@@ -55,7 +55,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "compat/inet_pton.h"
 #include "util.h"
 

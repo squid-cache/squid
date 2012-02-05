@@ -1,7 +1,7 @@
 /*
  * $Id$
  */
-#include "config.h"
+#include "squid.h"
 #include "ssl/Config.h"
 
 Ssl::Config Ssl::TheConfig;

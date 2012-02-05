@@ -33,9 +33,9 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid.h"
-#include "acl/MyIp.h"
+#include "squid-old.h"
 #include "acl/FilledChecklist.h"
+#include "acl/MyIp.h"
 
 char const *
 ACLMyIP::typeString() const

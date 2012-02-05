@@ -5,7 +5,7 @@
 // XXX: This file is made of large pieces of src/tools.cc
 // with only a few minor modifications. TODO: redesign or delete.
 
-#include "squid.h"
+#include "squid-old.h"
 
 void
 xassert(const char *msg, const char *file, int line)

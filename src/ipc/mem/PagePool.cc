@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "base/TextException.h"
 #include "ipc/mem/Page.h"
 #include "ipc/mem/PagePool.h"

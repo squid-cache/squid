@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 // because ipcCreate is defined in protos.h still
 #include "protos.h"
 

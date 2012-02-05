@@ -2,7 +2,7 @@
  * Author:   Jens-S. V?ckler <voeckler@rvs.uni-hannover.de>
  * Ripped from Purge tool implementation.
  */
-#include "config.h"
+#include "squid.h"
 #include "psignal.h"
 
 #if _SQUID_AIX_ || _SQUID_MINGW_

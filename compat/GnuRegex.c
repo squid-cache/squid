@@ -32,7 +32,7 @@
 #define _GNU_SOURCE 1
 #endif
 
-#include "config.h"
+#include "squid.h"
 
 #if USE_GNUREGEX /* only if squid needs it. Usually not */
 

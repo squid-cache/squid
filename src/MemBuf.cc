@@ -101,7 +101,7 @@
 
 /* if you have configure you can use this */
 #if defined(HAVE_CONFIG_H)
-#include "config.h"
+#include "squid.h"
 #endif
 
 #ifdef VA_COPY
@@ -113,7 +113,7 @@
 #define VA_COPY __va_copy
 #endif
 
-#include "squid.h"
+#include "squid-old.h"
 #include "MemBuf.h"
 
 /* local constants */

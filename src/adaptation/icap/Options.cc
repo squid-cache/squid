@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/Options.h"
 #include "base/TextException.h"

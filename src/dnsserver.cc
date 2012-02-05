@@ -30,7 +30,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 
 #if HAVE_UNISTD_H
 #include <unistd.h>

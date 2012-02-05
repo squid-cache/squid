@@ -2,7 +2,7 @@
  * $Id$
  */
 
-#include "config.h"
+#include "squid.h"
 #include "ip/Address.h"
 // just for the global definition of Config and Config2
 #include "structs.h"

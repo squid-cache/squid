@@ -27,9 +27,7 @@
  *
  **********************************************************************/
 
-#include "config.h"
-
-#include "config.h"
+#include "squid.h"
 
 #include <stdio.h>
 

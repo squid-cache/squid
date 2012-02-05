@@ -32,7 +32,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "AccessLogEntry.h"
 #include "format/Token.h"
 #include "format/Quoting.h"

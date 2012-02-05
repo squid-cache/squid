@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Acl.h"

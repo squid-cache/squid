@@ -33,13 +33,16 @@
  */
 
 #include "squid.h"
+#include "fatal.h"
 
+#if 0
 /* wrong stub file... */
 void
 storeUnlink(StoreEntry * e)
 {
     fatal ("Not implemented");
 }
+#endif
 
 #include "StoreMeta.h"
 

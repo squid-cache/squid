@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 /* because the clientdb API is defined in protos.h still */
 #include "protos.h"
 

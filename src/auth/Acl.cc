@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "acl/Acl.h"
 #include "acl/FilledChecklist.h"
 #include "auth/UserRequest.h"

@@ -113,7 +113,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "profiler/Profiler.h"
 
 #if USE_XPROF_STATS

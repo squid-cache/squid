@@ -35,10 +35,10 @@
 
 /* TODO: remove this file as unused */
 
-#include "config.h"
+#include "squid.h"
 
 #if 0
-#include "squid.h"
+#include "squid-old.h"
 #include "StoreFileSystem.h"
 #include "DiskIO/DiskIOModule.h"
 #endif

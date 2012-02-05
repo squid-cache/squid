@@ -35,7 +35,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "HttpHdrSc.h"
 
 extern http_hdr_sc_type &operator++ (http_hdr_sc_type &aHeader);

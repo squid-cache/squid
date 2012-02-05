@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "fde.h"
 #include "comm/Connection.h"
 #include "CommCalls.h"

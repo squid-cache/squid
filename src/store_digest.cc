@@ -40,7 +40,7 @@
  *       storeDigestRebuild/write schedule to be activated
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "event.h"
 #include "mgr/Registration.h"
 #if USE_CACHE_DIGESTS

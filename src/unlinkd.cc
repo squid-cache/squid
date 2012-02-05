@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "SquidTime.h"
 #include "SwapDir.h"
 #include "fde.h"

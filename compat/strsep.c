@@ -17,7 +17,7 @@
  * USA.
  */
 
-#include "config.h"
+#include "squid.h"
 #include "compat/strsep.h"
 
 #include <string.h>

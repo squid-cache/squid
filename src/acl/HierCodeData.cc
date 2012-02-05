@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "acl/HierCodeData.h"
 #include "acl/Checklist.h"
 #include "hier_code.h"

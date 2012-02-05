@@ -2,7 +2,7 @@
  * $Id$
  * DEBUG: section 93    eCAP Interface
  */
-#include "squid.h"
+#include "squid-old.h"
 
 #include "adaptation/ecap/Host.h"
 #include "adaptation/ecap/ServiceRep.h"

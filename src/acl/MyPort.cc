@@ -33,10 +33,10 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid.h"
-#include "acl/MyPort.h"
+#include "squid-old.h"
 #include "acl/IntRange.h"
 #include "acl/Checklist.h"
+#include "acl/MyPort.h"
 
 int
 ACLMyPortStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)

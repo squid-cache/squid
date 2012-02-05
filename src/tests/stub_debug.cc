@@ -2,7 +2,7 @@
  * A stub implementation of the Debug.h API.
  * For use by test binaries which do not need the full context debugging
  */
-#include "config.h"
+#include "squid.h"
 #include "Debug.h"
 
 #if HAVE_STDIO_H

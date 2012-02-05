@@ -22,7 +22,7 @@
  * -----------------------------------------------------------------------------
  */
 
-#include "config.h"
+#include "squid.h"
 #include "util.h"
 
 #if defined(HAVE_LDAP) && defined(HAVE_KRB5)

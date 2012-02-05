@@ -34,7 +34,7 @@
 #ifndef   SQUID_PEERDIGEST_H
 #define   SQUID_PEERDIGEST_H
 
-#include "squid.h"
+#include "squid-old.h"
 
 #if USE_CACHE_DIGESTS
 

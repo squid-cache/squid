@@ -21,7 +21,7 @@
  *  Original License and code follows.
  */
 
-#include "config.h"
+#include "squid.h"
 
 #if !HAVE_INET_NTOP
 #include "inet_ntop.h"

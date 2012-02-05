@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 const char *
 httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)

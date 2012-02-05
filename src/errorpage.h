@@ -34,7 +34,7 @@
 #ifndef   SQUID_ERRORPAGE_H
 #define   SQUID_ERRORPAGE_H
 
-#include "squid.h"
+#include "squid-old.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif

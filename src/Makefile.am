@@ -423,7 +423,7 @@ squid_SOURCES = \
 	send-announce.cc \
 	$(SBUF_SOURCE) \
 	$(SNMP_SOURCE) \
-	squid.h \
+	squid-old.h \
 	SquidMath.h \
 	SquidMath.cc \
 	SquidNew.cc \
@@ -687,7 +687,7 @@ ufsdump_SOURCES = \
 	tests/stub_HelperChildConfig.cc \
 	HttpRequestMethod.cc \
 	RemovalPolicy.cc \
-	squid.h \
+	squid-old.h \
 	$(WIN32_SOURCE) \
 	tests/stub_fd.cc
 ufsdump_LDADD = \

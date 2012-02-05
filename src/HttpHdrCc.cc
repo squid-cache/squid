@@ -30,7 +30,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "base/StringArea.h"
 #include "Store.h"
 #include "HttpHeader.h"

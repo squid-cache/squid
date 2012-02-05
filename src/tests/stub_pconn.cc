@@ -2,7 +2,7 @@
  * STUB file for the pconn.cc API
  * Functions here are inactive.
  */
-#include "config.h"
+#include "squid.h"
 #include "pconn.h"
 #include "comm/Connection.h"
 

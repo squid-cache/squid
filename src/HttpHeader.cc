@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "base64.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrCc.h"

@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "base/RunnersRegistry.h"
 #include <list>
 #include <map>
