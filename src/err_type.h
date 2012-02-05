@@ -53,9 +53,6 @@ typedef enum {
     /* ICAP Errors */
     ERR_ICAP_FAILURE,
 
-    /* Cache Manager */
-    MGR_INDEX,
-
     /* Squid problem */
     ERR_GATEWAY_FAILURE,
 
@@ -63,7 +60,13 @@ typedef enum {
     ERR_DIR_LISTING,            /* Display of remote directory (FTP, Gopher) */
     ERR_SQUID_SIGNATURE,        /* not really an error */
     ERR_SHUTTING_DOWN,
-    TCP_RESET,
+
+    // NOTE: error types defined below TCP_RESET are optional and do not generate
+    //       a log warning if the files are missing
+    TCP_RESET,                  // Send TCP RST packet instead of error page
+
+    /* Cache Manager GUI can install a manager index/home page */
+    MGR_INDEX,
 
     ERR_MAX
 } err_type;
