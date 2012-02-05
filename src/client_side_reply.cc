@@ -1475,6 +1475,10 @@ clientReplyContext::buildReplyHeader()
     } else if (fdUsageHigh()&& !request->flags.must_keepalive) {
         debugs(88, 3, "clientBuildReplyHeader: Not many unused FDs, can't keep-alive");
         request->flags.proxy_keepalive = 0;
+    } else if (request->flags.sslBumped && !reply->persistent()) {
+        // We do not really have to close, but we pretend we are a tunnel.
+        debugs(88, 3, "clientBuildReplyHeader: bumped reply forces close");
+        request->flags.proxy_keepalive = 0;
     }
 
     // Decide if we send chunked reply
