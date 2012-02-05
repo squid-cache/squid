@@ -20,7 +20,7 @@ namespace Ssl
 class ErrorDetailFile : public TemplateFile
 {
 public:
-    explicit ErrorDetailFile(ErrorDetailsList::Pointer const details): TemplateFile("error-details.txt") {
+    explicit ErrorDetailFile(ErrorDetailsList::Pointer const details): TemplateFile("error-details.txt", ERR_NONE) {
         buf.init();
         theDetails = details;
     }
