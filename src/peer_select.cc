@@ -320,7 +320,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
             psstate->paths->push_back(p);
         }
     } else {
-        debugs(44, 3, HERE << "Unknown host: " << fs->_peer ? fs->_peer->host : psstate->request->GetHost());
+        debugs(44, 3, HERE << "Unknown host: " << (fs->_peer ? fs->_peer->host : psstate->request->GetHost()));
         // discard any previous error.
         delete psstate->lastError;
         psstate->lastError = NULL;
