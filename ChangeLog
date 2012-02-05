@@ -1,3 +1,17 @@
+Changes to squid-3.1.19 (06 Feb 2011):
+
+	- Regression Bug 3441: part 2: Prevent further cache size corruption of swap.state
+	- Bug 3473: erase last uses of obsolete auth_user_hash_pointer
+	- Bug 3470: GCC 4.7
+	- Bug 3442: assertion failed: external_acl.cc:908: ch->auth_user_request != NULL
+	- Bug 3441: part 1: Minimize cache size corruption by malformed swap.state
+	- Bug 3440: compile error in Adaptation
+	- Bug 3420: Request body consumption races and !theConsumer exception
+	- Bug 3370: external ACL sometimes skipping
+	- Bug 3085: Crash when parsing esi:include
+	- HTTP/1.1: do not add 110 and 111 Warnings to revalidated responses
+	- Fix SSL library dependency fixes
+
 Changes to squid-3.1.18 (03 Dec 2011):
 
 	- Regression: compile error in FTP
