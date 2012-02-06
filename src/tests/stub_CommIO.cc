@@ -1,5 +1,5 @@
-#include "squid-old.h"
-#include "CommIO.h"
+#include "squid.h"
+#include "DiskIO/DiskThreads/CommIO.h"
 
 #define STUB_API "CommIO.cc"
 #include "tests/STUB.h"

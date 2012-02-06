@@ -1,5 +1,5 @@
-#ifndef __COMMIO_H__
-#define __COMMIO_H__
+#ifndef SQUID_SRC_DISKIO_DISKTHREADS_COMMIO_H
+#define SQUID_SRC_DISKIO_DISKTHREADS_COMMIO_H
 
 #include "fde.h"
 
@@ -35,4 +35,4 @@ CommIO::NotifyIOCompleted()
     }
 };
 
-#endif
+#endif /* SQUID_SRC_DISKIO_DISKTHREADS_COMMIO_H */
