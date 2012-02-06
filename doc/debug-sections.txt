@@ -17,6 +17,7 @@ section 03    Configuration File Parsing
 section 03    Configuration Settings
 section 04    Error Generation
 section 05    Comm
+section 05    Disk I/O pipe manager
 section 05    Listener Socket Handler
 section 05    Socket Connection Opener
 section 05    Socket Functions
