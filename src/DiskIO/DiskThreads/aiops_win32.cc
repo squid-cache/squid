@@ -36,7 +36,7 @@
 
 #include "squid-old.h"
 #include "squid_windows.h"
-#include "CommIO.h"
+#include "DiskIO/DiskThreads/CommIO.h"
 #include "DiskThreads.h"
 #include "SquidTime.h"
 #include "Store.h"

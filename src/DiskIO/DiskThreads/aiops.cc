@@ -49,7 +49,7 @@
 #if HAVE_SCHED_H
 #include	<sched.h>
 #endif
-#include "CommIO.h"
+#include "DiskIO/DiskThreads/CommIO.h"
 #include "SquidTime.h"
 #include "Store.h"
 
