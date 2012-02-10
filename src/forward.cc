@@ -998,19 +998,10 @@ FwdState::dispatch()
         case AnyP::PROTO_WAIS:	/* Not implemented */
 
         default:
-            debugs(17, 1, "fwdDispatch: Cannot retrieve '" << entry->url() << "'" );
+            debugs(17, DBG_IMPORTANT, "WARNING: Cannot retrieve '" << entry->url() << "'.");
             ErrorState *anErr = new ErrorState(ERR_UNSUP_REQ, HTTP_BAD_REQUEST, request);
             fail(anErr);
-            /*
-             * Force a persistent connection to be closed because
-             * some Netscape browsers have a bug that sends CONNECT
-             * requests as GET's over persistent connections.
-             */
-            request->flags.proxy_keepalive = 0;
-            /*
-             * Set the dont_retry flag because this is not a
-             * transient (network) error; its a bug.
-             */
+            // Set the dont_retry flag because this is not a transient (network) error.
             flags.dont_retry = 1;
             if (Comm::IsConnOpen(serverConn)) {
                 serverConn->close();
