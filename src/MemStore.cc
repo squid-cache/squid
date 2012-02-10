@@ -259,8 +259,25 @@ MemStore::considerKeeping(StoreEntry &e)
         return; // cannot keep due to entry state or properties
     }
 
+    // since we copy everything at once, we can only keep complete entries
+    if (e.store_status != STORE_OK) {
+        debugs(20, 7, HERE << "Incomplete: " << e);
+        return;
+    }
+
     assert(e.mem_obj);
-    if (!willFit(e.mem_obj->endOffset())) {
+
+    const int64_t loadedSize = e.mem_obj->endOffset();
+    const int64_t expectedSize = e.mem_obj->expectedReplySize();
+
+    // since we copy everything at once, we can only keep fully loaded entries
+    if (loadedSize != expectedSize) {
+        debugs(20, 7, HERE << "partially loaded: " << loadedSize << " != " <<
+               expectedSize);
+        return;
+    }
+
+    if (!willFit(expectedSize)) {
         debugs(20, 5, HERE << "No mem-cache space for " << e);
         return; // failed to free enough space
     }
