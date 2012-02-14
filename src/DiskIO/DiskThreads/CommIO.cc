@@ -35,7 +35,6 @@
 #include "squid.h"
 #include "comm/Loops.h"
 #include "DiskIO/DiskThreads/CommIO.h"
-#include "fde.h"
 
 void
 CommIO::Initialise()
