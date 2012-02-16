@@ -922,6 +922,12 @@ configDoConfigure(void)
                                        s->sslContextSessionId));
 
             Ssl::readCertChainAndPrivateKeyFromFiles(s->signingCert, s->signPkey, s->certsToChain, s->cert, s->key);
+
+            if (!s->signPkey)
+                debugs(3, DBG_IMPORTANT, "No SSL private key configured for  http_port " << s->http.s);
+
+            Ssl::generateUntrustedCert(s->untrustedSigningCert, s->untrustedSignPkey,
+                                       s->signingCert, s->signPkey);
         }
     }
 
@@ -938,8 +944,14 @@ configDoConfigure(void)
                                        s->cafile, s->capath, s->crlfile, s->dhfile,
                                        s->sslContextSessionId));
 
-            if (s->cert && s->sslBump)
+            if (s->cert && s->sslBump) {
                 Ssl::readCertChainAndPrivateKeyFromFiles(s->signingCert, s->signPkey, s->certsToChain, s->cert, s->key);
+                if (!s->signPkey)
+                    debugs(3, DBG_IMPORTANT, "No SSL private key configured for  https_port " << s->http.s);
+
+                Ssl::generateUntrustedCert(s->untrustedSigningCert, s->untrustedSignPkey,
+                                           s->signingCert, s->signPkey);
+            }
         }
     }
 

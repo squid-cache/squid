@@ -46,9 +46,6 @@
 #include "ssl/support.h"
 #include "ssl/gadgets.h"
 
-Ssl::X509_Pointer Ssl::SquidCaCert;
-Ssl::EVP_PKEY_Pointer Ssl::SquidCaCertKey;
-
 /**
  \defgroup ServerProtocolSSLInternal Server-Side SSL Internals
  \ingroup ServerProtocolSSLAPI
@@ -651,13 +648,6 @@ ssl_initialize(void)
 #endif
 
     }
-
-    // Generate the self-signed Ssl::SquidCaCert, using the "SquidLocalCa" as CN
-    Ssl::CertificateProperties certProperties;
-    certProperties.commonName = "Squid CA for Untrusted Certificates";
-    certProperties.signAlgorithm = Ssl::algSignSelf;
-    bool ret = Ssl::generateSslCertificate(Ssl::SquidCaCert, Ssl::SquidCaCertKey, certProperties);
-    assert(ret);
 
     ssl_ex_index_server = SSL_get_ex_new_index(0, (void *) "server", NULL, NULL, NULL);
     ssl_ctx_ex_index_dont_verify_domain = SSL_CTX_get_ex_new_index(0, (void *) "dont_verify_domain", NULL, NULL, NULL);
@@ -1391,21 +1381,57 @@ void Ssl::readCertChainAndPrivateKeyFromFiles(X509_Pointer & cert, EVP_PKEY_Poin
     }
 }
 
-const char *Ssl::CommonHostName(X509 *x509)
+static const char *getSubjectEntry(X509 *x509, int nid)
 {
-    static char name[256] = ""; // stores common name (CN)
+    static char name[1024] = ""; // stores common name (CN)
 
     if (!x509)
         return NULL;
 
-    // TODO: What if CN is a UTF8String? See X509_NAME_get_index_by_NID(3ssl).
+    // TODO: What if the entry is a UTF8String? See X509_NAME_get_index_by_NID(3ssl).
     const int nameLen = X509_NAME_get_text_by_NID(
         X509_get_subject_name(x509),
-        NID_commonName,  name, sizeof(name));
+        nid,  name, sizeof(name));
 
     if (nameLen > 0)
         return name;
 
     return NULL;
 }
+
+const char *Ssl::CommonHostName(X509 *x509)
+{
+    return getSubjectEntry(x509, NID_commonName);
+}
+
+static const char *getOrganization(X509 *x509)
+{
+    return getSubjectEntry(x509, NID_organizationName);
+}
+
+bool Ssl::generateUntrustedCert(X509_Pointer &untrustedCert, EVP_PKEY_Pointer &untrustedPkey, X509_Pointer const  &cert, EVP_PKEY_Pointer const & pkey)
+{
+    // Generate the self-signed certificate, using a hard-coded subject prefix
+    Ssl::CertificateProperties certProperties;
+    if (const char *cn = CommonHostName(cert.get())) {
+        certProperties.commonName = "Not trusted by \"";
+        certProperties.commonName += cn;
+        certProperties.commonName += "\"";
+    }
+    else if (const char *org = getOrganization(cert.get())) {
+        certProperties.commonName =  "Not trusted by \"";
+        certProperties.commonName += org;
+        certProperties.commonName += "\"";
+    }
+    else
+        certProperties.commonName =  "Not trusted";
+    certProperties.setCommonName = true;
+    // O, OU, and other CA subject fields will be mimicked
+    // Expiration date and other common properties will be mimicked
+    certProperties.signAlgorithm = Ssl::algSignSelf;
+    certProperties.signWithPkey.resetAndLock(pkey.get());
+    certProperties.mimicCert.resetAndLock(cert.get());
+    return Ssl::generateSslCertificate(untrustedCert, untrustedPkey, certProperties);
+}
+
 #endif /* USE_SSL */

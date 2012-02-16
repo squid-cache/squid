@@ -109,19 +109,11 @@ const char *sslGetUserCertificateChainPEM(SSL *ssl);
 
 namespace Ssl
 {
-
 /**
   \ingroup ServerProtocolSSLAPI
-  * A temporary self-signed certificate generated on squid start up, to be
-  * used to sign the generated untrusted certificates.
+  * Generate a certificate to be used as untrusted signing certificate, based on a trusted CA
 */
-extern X509_Pointer SquidCaCert;
-
-/**
-  \ingroup ServerProtocolSSLAPI
-  * The key of the SquidCaCert certificate.
-*/
-extern EVP_PKEY_Pointer SquidCaCertKey;
+bool generateUntrustedCert(X509_Pointer & untrustedCert, EVP_PKEY_Pointer & untrustedPkey, X509_Pointer const & cert, EVP_PKEY_Pointer const & pkey);
 
 /**
   \ingroup ServerProtocolSSLAPI
