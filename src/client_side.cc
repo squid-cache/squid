@@ -3710,9 +3710,8 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
     assert(certProperties.signAlgorithm != Ssl::algSignEnd);
 
     if (certProperties.signAlgorithm == Ssl::algSignUntrusted) {
-        assert(Ssl::SquidCaCert.get() && Ssl::SquidCaCertKey.get());
-        certProperties.signWithX509.resetAndLock(Ssl::SquidCaCert.get());
-        certProperties.signWithPkey.resetAndLock(Ssl::SquidCaCertKey.get());
+        certProperties.signWithX509.resetAndLock(port->untrustedSigningCert.get());
+        certProperties.signWithPkey.resetAndLock(port->untrustedSignPkey.get());
     }
     else {
         if (port->signingCert.get())

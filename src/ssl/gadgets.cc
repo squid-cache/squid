@@ -292,7 +292,12 @@ static bool buildCertificate(Ssl::X509_Pointer & cert, Ssl::CertificatePropertie
 bool Ssl::generateSslCertificate(Ssl::X509_Pointer & certToStore, Ssl::EVP_PKEY_Pointer & pkeyToStore, Ssl::CertificateProperties const &properties)
 {
     Ssl::EVP_PKEY_Pointer pkey;
-    pkey.reset(createSslPrivateKey());
+    // Use signing certificates private key as generated certificate private key
+    if (properties.signWithPkey.get())
+        pkey.resetAndLock(properties.signWithPkey.get());
+    else // if not exist generate one
+        pkey.reset(createSslPrivateKey());
+
     if (!pkey)
         return false;
 

@@ -73,6 +73,8 @@ struct http_port_list {
     Ssl::X509_Pointer signingCert; ///< x509 certificate for signing generated certificates
     Ssl::EVP_PKEY_Pointer signPkey; ///< private key for sighing generated certificates
     Ssl::X509_STACK_Pointer certsToChain; ///<  x509 certificates to send with the generated cert
+    Ssl::X509_Pointer untrustedSigningCert; ///< x509 certificate for signing untrusted generated certificates
+    Ssl::EVP_PKEY_Pointer untrustedSignPkey; ///< private key for signing untrusted generated certificates
 #endif
 
     CBDATA_CLASS2(http_port_list);
