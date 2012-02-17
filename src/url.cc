@@ -125,6 +125,12 @@ urlParseProtocol(const char *b, const char *e)
     if (strncasecmp(b, "file", len) == 0)
         return AnyP::PROTO_FTP;
 
+    if (strncasecmp(b, "coap", len) == 0)
+        return AnyP::PROTO_COAP;
+
+    if (strncasecmp(b, "coaps", len) == 0)
+        return AnyP::PROTO_COAPS;
+
     if (strncasecmp(b, "gopher", len) == 0)
         return AnyP::PROTO_GOPHER;
 
@@ -159,6 +165,12 @@ urlDefaultPort(AnyP::ProtocolType p)
 
     case AnyP::PROTO_FTP:
         return 21;
+
+    case AnyP::PROTO_COAP:
+    case AnyP::PROTO_COAPS:
+        // coaps:// default is TBA as of draft-ietf-core-coap-08.
+        // Assuming IANA policy of allocating same port for base and TLS protocol versions will occur.
+        return 5683;
 
     case AnyP::PROTO_GOPHER:
         return 70;
