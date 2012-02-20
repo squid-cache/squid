@@ -98,6 +98,7 @@ FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRe
     entry = e;
     clientConn = client;
     request = HTTPMSGLOCK(r);
+    pconnRace = raceImpossible;
     start_t = squid_curtime;
     serverDestinations.reserve(Config.forward_max_tries);
     e->lock();
@@ -362,6 +363,11 @@ FwdState::fail(ErrorState * errorState)
     if (!errorState->request)
         errorState->request = HTTPMSGLOCK(request);
 
+    if (pconnRace == racePossible && err->type == ERR_ZERO_SIZE_OBJECT) {
+        debugs(17, 5, HERE << "pconn race happened");
+        pconnRace = raceHappened;
+    }
+
 #if USE_SSL
     if (errorState->type == ERR_SECURE_CONNECT_FAIL && errorState->detail)
         request->detailError(errorState->type, errorState->detail->errorNo());
@@ -570,7 +576,11 @@ FwdState::retryOrBail()
 {
     if (checkRetry()) {
         debugs(17, 3, HERE << "re-forwarding (" << n_tries << " tries, " << (squid_curtime - start_t) << " secs)");
-        serverDestinations.shift(); // last one failed. try another.
+        // we should retry the same destination if it failed due to pconn race
+        if (pconnRace == raceHappened)
+            debugs(17, 4, HERE << "retrying the same destination");
+        else
+            serverDestinations.shift(); // last one failed. try another.
         startConnectionOrFail();
         return;
     }
@@ -822,6 +832,12 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
     if (serverConnection()->getPeer())
         peerConnectSucceded(serverConnection()->getPeer());
 
+    if (request->flags.canRePin && request->clientConnectionManager.valid()) {
+        debugs(17, 3, HERE << "repinning " << serverConn);
+        request->clientConnectionManager->pinConnection(serverConn,
+            request, serverConn->getPeer(), request->flags.auth);
+    }
+
 #if USE_SSL
     if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
             (!serverConnection()->getPeer() && request->protocol == AnyP::PROTO_HTTPS)) {
@@ -901,8 +917,11 @@ FwdState::connectStart()
     // XXX: also, logs will now lie if pinning is broken and leads to an error message.
     if (serverDestinations[0]->peerType == PINNED) {
         ConnStateData *pinned_connection = request->pinnedConnection();
-        assert(pinned_connection);
-        serverConn = pinned_connection->validatePinnedConnection(request, serverDestinations[0]->getPeer());
+        // pinned_connection may become nil after a pconn race
+        if (pinned_connection)
+            serverConn = pinned_connection->validatePinnedConnection(request, serverDestinations[0]->getPeer());
+        else
+            serverConn = NULL;
         if (Comm::IsConnOpen(serverConn)) {
 #if 0
             if (!serverConn->getPeer())
@@ -913,14 +932,21 @@ FwdState::connectStart()
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = 1;
             comm_add_close_handler(serverConn->fd, fwdServerClosedWrapper, this);
+            // the server may close the pinned connection before this request
+            pconnRace = racePossible;
             dispatch();
             return;
         }
-        /* Failure. Fall back on next path */
-        debugs(17,2,HERE << " Pinned connection " << pinned_connection << " not valid.");
-        serverDestinations.shift();
-        startConnectionOrFail();
-        return;
+        /* Failure. Fall back on next path unless we can re-pin */
+        debugs(17,2,HERE << "Pinned connection failed: " << pinned_connection);
+        if (pconnRace != raceHappened || !request->flags.canRePin) {
+            serverDestinations.shift();
+            pconnRace = raceImpossible;
+            startConnectionOrFail();
+            return;
+        }
+        debugs(17,3, HERE << "There was a pconn race. Will try to repin.");
+        // and fall through to regular handling
     }
 
     // Use pconn to avoid opening a new connection.
@@ -930,10 +956,19 @@ FwdState::connectStart()
     } else {
         host = request->GetHost();
     }
-    Comm::ConnectionPointer temp = fwdPconnPool->pop(serverDestinations[0], host, checkRetriable());
+
+    Comm::ConnectionPointer temp;
+    // Avoid pconns after races so that the same client does not suffer twice.
+    // This does not increase the total number of connections because we just
+    // closed the connection that failed the race. And re-pinning assumes this.
+    if (pconnRace != raceHappened)
+        temp = fwdPconnPool->pop(serverDestinations[0], host, checkRetriable());
+    
+    const bool openedPconn = Comm::IsConnOpen(temp);
+    pconnRace = openedPconn ? racePossible : raceImpossible;
 
     // if we found an open persistent connection to use. use it.
-    if (Comm::IsConnOpen(temp)) {
+    if (openedPconn) {
         serverConn = temp;
         debugs(17, 3, HERE << "reusing pconn " << serverConnection());
         n_tries++;
@@ -958,6 +993,12 @@ FwdState::connectStart()
         dispatch();
         return;
     }
+
+    // We will try to open a new connection, possibly to the same destination.
+    // We reset serverDestinations[0] in case we are using it again because
+    // ConnOpener modifies its destination argument.
+    serverDestinations[0]->local.SetPort(0);
+    serverConn = NULL;
 
 #if URL_CHECKSUM_DEBUG
     entry->mem_obj->checkUrlChecksum();
