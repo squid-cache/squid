@@ -1318,7 +1318,7 @@ void Ssl::readCertChainAndPrivateKeyFromFiles(X509_Pointer & cert, EVP_PKEY_Poin
         chain.reset(sk_X509_new_null());
     if (!chain)
         debugs(83, DBG_IMPORTANT, "WARNING: unable to allocate memory for cert chain");
-    pkey.reset(readSslPrivateKey(keyFilename));
+    pkey.reset(readSslPrivateKey(keyFilename, ssl_ask_password_cb));
     cert.reset(readSslX509CertificatesChain(certFilename, chain.get()));
     if (!pkey || !cert || !X509_check_private_key(cert.get(), pkey.get())) {
         pkey.reset(NULL);
