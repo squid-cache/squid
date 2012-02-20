@@ -2621,6 +2621,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     request->flags.accelerated = http->flags.accel;
     request->flags.sslBumped = conn->switchedToHttps();
+    request->flags.canRePin = request->flags.sslBumped && conn->pinning.pinned;
     request->flags.ignore_cc = conn->port->ignore_cc;
     // TODO: decouple http->flags.accel from request->flags.sslBumped
     request->flags.no_direct = (request->flags.accelerated && !request->flags.sslBumped) ?
@@ -4334,8 +4335,12 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
 void
 ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
 {
-    pinning.closeHandler = NULL; // Comm unregisters handlers before calling
-    unpinConnection();
+    // it might be possible for FwdState to repin a failed connection sooner
+    // than this close callback is called for the failed connection
+    if (pinning.serverConnection == io.conn) {
+        pinning.closeHandler = NULL; // Comm unregisters handlers before calling
+        unpinConnection();
+    }
 }
 
 void
@@ -4351,6 +4356,8 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
     unpinConnection(); // closes pinned connection, if any, and resets fields.
 
     pinning.serverConnection = pinServer;
+
+    debugs(33, 3, HERE << pinning.serverConnection);
 
     // when pinning an SSL bumped connection, the request may be NULL
     const char *pinnedHost = "[unknown]";
@@ -4375,12 +4382,18 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
     pinning.closeHandler = JobCallback(33, 5,
                                        Dialer, this, ConnStateData::clientPinnedConnectionClosed);
+    // remember the pinned connection so that cb does not unpin a fresher one
+    typedef CommCloseCbParams Params;
+    Params &params = GetCommParams<Params>(pinning.closeHandler);
+    params.conn = pinning.serverConnection;
     comm_add_close_handler(pinning.serverConnection->fd, pinning.closeHandler);
 }
 
 const Comm::ConnectionPointer
 ConnStateData::validatePinnedConnection(HttpRequest *request, const struct peer *aPeer)
 {
+    debugs(33, 7, HERE << pinning.serverConnection);
+
     bool valid = true;
     if (!Comm::IsConnOpen(pinning.serverConnection))
         valid = false;
@@ -4408,6 +4421,8 @@ ConnStateData::validatePinnedConnection(HttpRequest *request, const struct peer 
 void
 ConnStateData::unpinConnection()
 {
+    debugs(33, 3, HERE << pinning.serverConnection);
+
     if (pinning.peer)
         cbdataReferenceDone(pinning.peer);
 
