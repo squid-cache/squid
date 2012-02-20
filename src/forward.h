@@ -105,6 +105,10 @@ private:
 
     Comm::ConnectionPointer serverConn; ///< a successfully opened connection to a server.
 
+    /// possible pconn race states
+    typedef enum { raceImpossible, racePossible, raceHappened } PconnRace;
+    PconnRace pconnRace; ///< current pconn race state
+
     // NP: keep this last. It plays with private/public
     CBDATA_CLASS2(FwdState);
 };
