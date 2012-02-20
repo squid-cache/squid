@@ -221,11 +221,11 @@ Ssl::ErrorDetail::err_frm_code Ssl::ErrorDetail::ErrorFormatingCodes[] = {
  */
 const char  *Ssl::ErrorDetail::subject() const
 {
-    if (!peer_cert)
+    if (!broken_cert)
         return "[Not available]";
 
     static char tmpBuffer[256]; // A temporary buffer
-    X509_NAME_oneline(X509_get_subject_name(peer_cert.get()), tmpBuffer,
+    X509_NAME_oneline(X509_get_subject_name(broken_cert.get()), tmpBuffer,
                       sizeof(tmpBuffer));
     return tmpBuffer;
 }
@@ -247,12 +247,12 @@ static int copy_cn(void *check_data,  ASN1_STRING *cn_data)
  */
 const char *Ssl::ErrorDetail::cn() const
 {
-    if (!peer_cert)
+    if (!broken_cert)
         return "[Not available]";
 
     static String tmpStr;  ///< A temporary string buffer
     tmpStr.clean();
-    Ssl::matchX509CommonNames(peer_cert.get(), &tmpStr, copy_cn);
+    Ssl::matchX509CommonNames(broken_cert.get(), &tmpStr, copy_cn);
     return tmpStr.termedBuf();
 }
 
@@ -261,11 +261,11 @@ const char *Ssl::ErrorDetail::cn() const
  */
 const char *Ssl::ErrorDetail::ca_name() const
 {
-    if (!peer_cert)
+    if (!broken_cert)
         return "[Not available]";
 
     static char tmpBuffer[256]; // A temporary buffer
-    X509_NAME_oneline(X509_get_issuer_name(peer_cert.get()), tmpBuffer, sizeof(tmpBuffer));
+    X509_NAME_oneline(X509_get_issuer_name(broken_cert.get()), tmpBuffer, sizeof(tmpBuffer));
     return tmpBuffer;
 }
 
@@ -274,11 +274,11 @@ const char *Ssl::ErrorDetail::ca_name() const
  */
 const char *Ssl::ErrorDetail::notbefore() const
 {
-    if (!peer_cert)
+    if (!broken_cert)
         return "[Not available]";
 
     static char tmpBuffer[256]; // A temporary buffer
-    ASN1_UTCTIME * tm = X509_get_notBefore(peer_cert.get());
+    ASN1_UTCTIME * tm = X509_get_notBefore(broken_cert.get());
     Ssl::asn1timeToString(tm, tmpBuffer, sizeof(tmpBuffer));
     return tmpBuffer;
 }
@@ -288,11 +288,11 @@ const char *Ssl::ErrorDetail::notbefore() const
  */
 const char *Ssl::ErrorDetail::notafter() const
 {
-    if (!peer_cert)
+    if (!broken_cert)
         return "[Not available]";
 
     static char tmpBuffer[256]; // A temporary buffer
-    ASN1_UTCTIME * tm = X509_get_notAfter(peer_cert.get());
+    ASN1_UTCTIME * tm = X509_get_notAfter(broken_cert.get());
     Ssl::asn1timeToString(tm, tmpBuffer, sizeof(tmpBuffer));
     return tmpBuffer;
 }
@@ -340,16 +340,20 @@ const char *Ssl::ErrorDetail::err_lib_error() const
 }
 
 /**
- * It converts the code to a string value. Currently the following
- * formating codes are supported:
+ * It converts the code to a string value. Supported formating codes are:
+ *
+ * Error meta information:
  * %err_name: The name of a high-level SSL error (e.g., X509_V_ERR_*)
  * %ssl_error_descr: A short description of the SSL error
+ * %ssl_lib_error: human-readable low-level error string by ERR_error_string(3SSL)
+ *
+ * Certificate information extracted from broken (not necessarily peer!) cert
  * %ssl_cn: The comma-separated list of common and alternate names
  * %ssl_subject: The certificate subject
  * %ssl_ca_name: The certificate issuer name
  * %ssl_notbefore: The certificate "not before" field
  * %ssl_notafter: The certificate "not after" field
- * %ssl_lib_error: human-readable low-level error string by ERR_error_string(3SSL)
+ * 
  \retval  the length of the code (the number of characters will be replaced by value)
 */
 int Ssl::ErrorDetail::convert(const char *code, const char **value) const
