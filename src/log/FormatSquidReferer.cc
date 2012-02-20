@@ -43,6 +43,10 @@
 void
 Log::Format::SquidReferer(AccessLogEntry *al, Logfile *logfile)
 {
+    // do not log unless there is something to be displayed
+    if (!al || !al->request)
+        return;
+
     const char *referer = al->request->header.getStr(HDR_REFERER);
 
     // do not log unless there is something to be displayed
