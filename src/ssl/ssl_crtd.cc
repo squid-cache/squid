@@ -214,7 +214,7 @@ static bool proccessNewRequest(Ssl::CrtdMessage & request_message, std::string c
     Ssl::CertificateProperties certProperties;
     std::string error;
     if (!request_message.parseRequest(certProperties, error))
-        throw std::runtime_error("Error while parsing the crtd request" + error);
+        throw std::runtime_error("Error while parsing the crtd request: " + error);
 
     Ssl::CertificateDb db(db_path, max_db_size, fs_block_size);
     Ssl::X509_Pointer cert;

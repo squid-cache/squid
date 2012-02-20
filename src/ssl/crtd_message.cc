@@ -174,14 +174,15 @@ void Ssl::CrtdMessage::composeBody(CrtdMessage::BodyParams const & map, std::str
         body += '\n' + other_part;
 }
 
-bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, std::string error)
+
+bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, std::string &error)
 {
     Ssl::CrtdMessage::BodyParams map;
     std::string certs_part;
     parseBody(map, certs_part);
     Ssl::CrtdMessage::BodyParams::iterator i = map.find(Ssl::CrtdMessage::param_host);
     if (i == map.end()) {
-        error = "Parse request: Cannot find \"host\" parameter in request message";
+        error = "Cannot find \"host\" parameter in request message";
         return false;
     }
     certProperties.commonName = i->second;
@@ -205,7 +206,7 @@ bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, 
     i = map.find(Ssl::CrtdMessage::param_Sign);
     if (i != map.end()) {
         if ((certProperties.signAlgorithm = Ssl::certSignAlgorithmId(i->second.c_str())) == Ssl::algSignEnd) {
-            error = "Parse request: Wrong signing algoritm: " + i->second;
+            error = "Wrong signing algoritm: " + i->second;
             return false;
         }
     }
@@ -214,7 +215,7 @@ bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, 
 
     if (certProperties.signAlgorithm != Ssl::algSignSelf && 
         !Ssl::readCertAndPrivateKeyFromMemory(certProperties.signWithX509, certProperties.signWithPkey, certs_part.c_str())) {
-        error = "Parse request: Broken signing certificate!";
+        error = "Broken signing certificate!";
         return false;
     }
 
