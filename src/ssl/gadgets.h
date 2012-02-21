@@ -204,7 +204,6 @@ public:
     X509_Pointer mimicCert; ///< Certificate to mimic
     X509_Pointer signWithX509; ///< Certificate to sign the generated request
     EVP_PKEY_Pointer signWithPkey; ///< The key of the signing certificate
-    BIGNUM_Pointer serial; ///< Use this serial for generated certificate
     bool setValidAfter; ///< Do not mimic "Not Valid After" field 
     bool setValidBefore; ///< Do not mimic "Not Valid Before" field
     bool setCommonName; ///< Replace the CN field of the mimicing subject with the given
