@@ -877,7 +877,7 @@ FwdState::connectStart()
     // closed the connection that failed the race. And re-pinning assumes this.
     if (pconnRace != raceHappened)
         temp = fwdPconnPool->pop(serverDestinations[0], host, checkRetriable());
-    
+
     const bool openedPconn = Comm::IsConnOpen(temp);
     pconnRace = openedPconn ? racePossible : raceImpossible;
 
