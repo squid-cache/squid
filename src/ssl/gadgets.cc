@@ -183,7 +183,7 @@ const char *Ssl::CertAdaptAlgorithmStr[] = {
     NULL
 };
 
-Ssl::CertificateProperties::CertificateProperties(): serial(NULL),
+Ssl::CertificateProperties::CertificateProperties():
                                                      setValidAfter(false),
                                                      setValidBefore(false),
                                                      setCommonName(false),
@@ -289,14 +289,14 @@ static bool buildCertificate(Ssl::X509_Pointer & cert, Ssl::CertificatePropertie
     return true;
 }
 
-bool Ssl::generateSslCertificate(Ssl::X509_Pointer & certToStore, Ssl::EVP_PKEY_Pointer & pkeyToStore, Ssl::CertificateProperties const &properties)
+static bool generateFakeSslCertificate(Ssl::X509_Pointer & certToStore, Ssl::EVP_PKEY_Pointer & pkeyToStore, Ssl::CertificateProperties const &properties,  Ssl::BIGNUM_Pointer const &serial)
 {
     Ssl::EVP_PKEY_Pointer pkey;
     // Use signing certificates private key as generated certificate private key
     if (properties.signWithPkey.get())
         pkey.resetAndLock(properties.signWithPkey.get());
     else // if not exist generate one
-        pkey.reset(createSslPrivateKey());
+        pkey.reset(Ssl::createSslPrivateKey());
 
     if (!pkey)
         return false;
@@ -308,7 +308,7 @@ bool Ssl::generateSslCertificate(Ssl::X509_Pointer & certToStore, Ssl::EVP_PKEY_
     // Set pub key and serial given by the caller
     if (!X509_set_pubkey(cert.get(), pkey.get()))
         return false;
-    if (!setSerialNumber(X509_get_serialNumber(cert.get()), properties.serial.get()))
+    if (!setSerialNumber(X509_get_serialNumber(cert.get()), serial.get()))
         return false;
 
     // Fill the certificate with the required properties
@@ -336,6 +336,68 @@ bool Ssl::generateSslCertificate(Ssl::X509_Pointer & certToStore, Ssl::EVP_PKEY_
     certToStore.reset(cert.release());
     pkeyToStore.reset(pkey.release());
     return true;
+}
+
+/// Return the SHA1 digest of the DER encoded version of the certificate
+/// stored in a BIGNUM
+static BIGNUM *x509Fingerprint(Ssl::X509_Pointer const & cert)
+{
+    unsigned int n;
+    unsigned char md[EVP_MAX_MD_SIZE];
+
+    if (!X509_digest(cert.get(),EVP_sha1(),md,&n))
+        return NULL;
+
+    assert(n == 20); //for sha1 n is 20 (for md5 n is 16)
+
+    BIGNUM *r = NULL;
+    r = BN_bin2bn(md, n, NULL);
+    return r;
+}
+
+/// Generate a unique serial number based on a Ssl::CertificateProperties object 
+/// for a new generated certificate 
+static bool createSerial(Ssl::BIGNUM_Pointer &serial, Ssl::CertificateProperties const &properties)
+{
+    Ssl::EVP_PKEY_Pointer fakePkey;
+    Ssl::X509_Pointer fakeCert;
+
+    serial.reset(BN_new());
+    BN_zero(serial.get());
+    if (!generateFakeSslCertificate(fakeCert, fakePkey, properties, serial))
+        return false;
+
+    // The x509Fingerprint return an SHA1 hash.
+    // both SHA1 hash and maximum serial number size are 20 bytes.
+    BIGNUM *r = x509Fingerprint(fakeCert);
+    if (!r)
+        return false;
+
+    // if the serial is "0" set it to '1'
+    if (BN_is_zero(r))
+        BN_one(r);
+
+    // According the RFC 5280, serial is an 20 bytes ASN.1 INTEGER (a signed big integer)
+    // and the maximum value for X.509 certificate serial number is 2^159-1 and
+    // the minimum 0. If the first bit of the serial is '1' ( eg 2^160-1),
+    // will result to a negative integer.
+    // To handle this, if the produced serial is greater than 2^159-1
+    // truncate the last bit
+    if (BN_is_bit_set(r, 159))
+        BN_clear_bit(r, 159);
+
+    serial.reset(r);
+    return true;
+}
+
+bool Ssl::generateSslCertificate(Ssl::X509_Pointer & certToStore, Ssl::EVP_PKEY_Pointer & pkeyToStore, Ssl::CertificateProperties const &properties)
+{
+    Ssl::BIGNUM_Pointer serial;
+
+    if (!createSerial(serial, properties))
+        return false;
+
+    return  generateFakeSslCertificate(certToStore, pkeyToStore, properties, serial);
 }
 
 /**
