@@ -231,7 +231,7 @@ bool generateSslCertificate(X509_Pointer & cert, EVP_PKEY_Pointer & pkey, Certif
  \ingroup SslCrtdSslAPI
  * Read private key from file. Make sure that this is not encrypted file.
  */
-EVP_PKEY * readSslPrivateKey(char const * keyFilename);
+EVP_PKEY * readSslPrivateKey(char const * keyFilename, pem_password_cb *passwd_callback = NULL);
 
 /**
  \ingroup SslCrtdSslAPI
