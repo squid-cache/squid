@@ -72,14 +72,9 @@ usage: ssl_crtd -hv -s ssl_storage_path -M storage_max_size
         Create new private key and certificate request for "host.dom".
         Sign new request by received certificate and private key.
 
-usage: ssl_crtd -c -s ssl_store_path\n -n new_serial_number
+usage: ssl_crtd -c -s ssl_store_path\n
     -c                   Init ssl db directories and exit.
-    -n new_serial_number HEX serial number to use when initializing db.
-                         The default value of serial number is
-                         the number of seconds since Epoch minus 1200000000
 
-usage: ssl_crtd -g -s ssl_store_path
-    -g                   Show current serial number and exit.
  \endverbatim
  */
 
@@ -195,13 +190,8 @@ static void usage()
         "-----END RSA PRIVATE KEY-----\n"
         "\tCreate new private key and certificate request for \"host.dom\"\n"
         "\tSign new request by received certificate and private key.\n"
-        "usage: ssl_crtd -c -s ssl_store_path -n new_serial_number\n"
-        "\t-c                   Init ssl db directories and exit.\n"
-        "\t-n new_serial_number HEX serial number to use when initializing db.\n"
-        "\t                     The default value of serial number is\n"
-        "\t                     the number of seconds since Epoch minus 1200000000\n"
-        "usage: ssl_crtd -g -s ssl_store_path\n"
-        "\t-g                   Show current serial number and exit.";
+        "usage: ssl_crtd -c -s ssl_store_path\n"
+        "\t-c                   Init ssl db directories and exit.\n";
     std::cerr << help_string << std::endl;
 }
 
@@ -233,8 +223,6 @@ static bool proccessNewRequest(Ssl::CrtdMessage & request_message, std::string c
     }
 
     if (!cert || !pkey) {        
-        certProperties.serial.reset(db.getCurrentSerialNumber());
-
         if (!Ssl::generateSslCertificate(cert, pkey, certProperties))
             throw std::runtime_error("Cannot create ssl certificate or private key.");
 
@@ -263,12 +251,10 @@ static bool proccessNewRequest(Ssl::CrtdMessage & request_message, std::string c
 int main(int argc, char *argv[])
 {
     try {
-        int serial = (getCurrentTime() -  1200000000);
         size_t max_db_size = 0;
         size_t fs_block_size = 2048;
         char c;
         bool create_new_db = false;
-        bool show_sn = false;
         std::string db_path;
         // proccess options.
         while ((c = getopt(argc, argv, "dcghvs:M:b:n:")) != -1) {
@@ -284,11 +270,6 @@ int main(int argc, char *argv[])
             case 's':
                 db_path = optarg;
                 break;
-            case 'n': {
-                std::stringstream sn_stream(optarg);
-                sn_stream >> std::hex >> serial;
-                break;
-            }
             case 'M':
                 if (!parseBytesOptionValue(&max_db_size, optarg)) {
                     throw std::runtime_error("Error when parsing -M options value");
@@ -301,9 +282,6 @@ int main(int argc, char *argv[])
             case 'c':
                 create_new_db = true;
                 break;
-            case 'g':
-                show_sn = true;
-                break;
             case 'h':
                 usage();
                 exit(0);
@@ -314,16 +292,11 @@ int main(int argc, char *argv[])
 
         if (create_new_db) {
             std::cout << "Initialization SSL db..." << std::endl;
-            Ssl::CertificateDb::create(db_path, serial);
+            Ssl::CertificateDb::create(db_path);
             std::cout << "Done" << std::endl;
             exit(0);
         }
 
-        if (show_sn) {
-            Ssl::CertificateDb db(db_path, 4096, 0);
-            std::cout << db.getSNString() << std::endl;
-            exit(0);
-        }
         {
             Ssl::CertificateDb::check(db_path, max_db_size);
         }
