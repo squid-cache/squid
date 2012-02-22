@@ -3738,7 +3738,7 @@ ConnStateData::getSslContextStart()
         SSL_CTX * dynCtx = ssl_ctx_cache.find(sslBumpCertKey.termedBuf());
         if (dynCtx) {
             debugs(33, 5, HERE << "SSL certificate for " << sslBumpCertKey << " have found in cache");
-            if (Ssl::verifySslCertificate(dynCtx, bumpServerCert.get())) {
+            if (Ssl::verifySslCertificate(dynCtx, certProperties)) {
                 debugs(33, 5, HERE << "Cached SSL certificate for " << sslBumpCertKey << " is valid");
                 getSslContextDone(dynCtx);
                 return;

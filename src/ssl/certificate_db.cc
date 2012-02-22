@@ -200,6 +200,20 @@ bool Ssl::CertificateDb::find(std::string const & host_name, Ssl::X509_Pointer &
     return pure_find(host_name, cert, pkey);
 }
 
+bool Ssl::CertificateDb::purgeCert(std::string const & key)
+{
+    const Locker locker(dbLock, Here);
+    load();
+    if (!db)
+        return false;
+
+    if (!deleteByHostname(key))
+        return false;
+
+    save();
+    return true;
+}
+
 bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey, std::string const & useName)
 {
     const Locker locker(dbLock, Here);
