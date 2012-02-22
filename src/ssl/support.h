@@ -125,10 +125,10 @@ SSL_CTX * generateSslContext(CertificateProperties const &properties);
   \ingroup ServerProtocolSSLAPI
   * Check if the certificate of the given context is still valid
   \param sslContext The context to check
-  \param checkCert Also check if the context certificate matches this certificate
+  \param properties Check if the context certificate matches the given properties
   \return true if the contexts certificate is valid, false otherwise
  */
-bool verifySslCertificate(SSL_CTX * sslContext, X509 *checkCert = NULL);
+bool verifySslCertificate(SSL_CTX * sslContext,  CertificateProperties const &properties);
 
 /**
   \ingroup ServerProtocolSSLAPI

@@ -94,6 +94,8 @@ public:
     CertificateDb(std::string const & db_path, size_t aMax_db_size, size_t aFs_block_size);
     /// Find certificate and private key for host name
     bool find(std::string const & host_name, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey);
+    /// Delete a certificate from database
+    bool purgeCert(std::string const & key);
     /// Save certificate to disk.
     bool addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey, std::string const & useName);
     /// Create and initialize a database  under the  db_path
