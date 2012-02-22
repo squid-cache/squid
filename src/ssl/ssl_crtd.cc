@@ -213,12 +213,13 @@ static bool proccessNewRequest(Ssl::CrtdMessage & request_message, std::string c
     
     db.find(cert_subject, cert, pkey);
 
-    if (cert.get() && certProperties.mimicCert.get()) {
-        if (!Ssl::ssl_match_certificates(cert.get(), certProperties.mimicCert.get())) {
+    if (cert.get()) {
+        if (!Ssl::certificateMatchesProperties(cert.get(), certProperties)) {
             // The certificate changed (renewed or other reason).
             // Generete a new one with the updated fields.
             cert.reset(NULL);
             pkey.reset(NULL);
+            db.purgeCert(cert_subject);
         }
     }
 

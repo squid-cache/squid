@@ -338,9 +338,33 @@ static bool generateFakeSslCertificate(Ssl::X509_Pointer & certToStore, Ssl::EVP
     return true;
 }
 
+static  BIGNUM *createCertSerial(unsigned char *md, unsigned int n)
+{
+    
+    assert(n == 20); //for sha1 n is 20 (for md5 n is 16)
+
+    BIGNUM *serial = NULL;
+    serial = BN_bin2bn(md, n, NULL);
+
+    // if the serial is "0" set it to '1'
+    if (BN_is_zero(serial))
+        BN_one(serial);
+
+    // According the RFC 5280, serial is an 20 bytes ASN.1 INTEGER (a signed big integer)
+    // and the maximum value for X.509 certificate serial number is 2^159-1 and
+    // the minimum 0. If the first bit of the serial is '1' ( eg 2^160-1),
+    // will result to a negative integer.
+    // To handle this, if the produced serial is greater than 2^159-1
+    // truncate the last bit
+    if (BN_is_bit_set(serial, 159))
+        BN_clear_bit(serial, 159);
+
+    return serial;
+}
+
 /// Return the SHA1 digest of the DER encoded version of the certificate
 /// stored in a BIGNUM
-static BIGNUM *x509Fingerprint(Ssl::X509_Pointer const & cert)
+static BIGNUM *x509Digest(Ssl::X509_Pointer const & cert)
 {
     unsigned int n;
     unsigned char md[EVP_MAX_MD_SIZE];
@@ -348,11 +372,18 @@ static BIGNUM *x509Fingerprint(Ssl::X509_Pointer const & cert)
     if (!X509_digest(cert.get(),EVP_sha1(),md,&n))
         return NULL;
 
-    assert(n == 20); //for sha1 n is 20 (for md5 n is 16)
+    return createCertSerial(md, n);
+}
 
-    BIGNUM *r = NULL;
-    r = BN_bin2bn(md, n, NULL);
-    return r;
+static BIGNUM *x509Pubkeydigest(Ssl::X509_Pointer const & cert)
+{
+    unsigned int n;
+    unsigned char md[EVP_MAX_MD_SIZE];
+
+    if (!X509_pubkey_digest(cert.get(),EVP_sha1(),md,&n))
+        return NULL;
+
+    return createCertSerial(md, n);
 }
 
 /// Generate a unique serial number based on a Ssl::CertificateProperties object 
@@ -362,29 +393,16 @@ static bool createSerial(Ssl::BIGNUM_Pointer &serial, Ssl::CertificateProperties
     Ssl::EVP_PKEY_Pointer fakePkey;
     Ssl::X509_Pointer fakeCert;
 
-    serial.reset(BN_new());
-    BN_zero(serial.get());
+    serial.reset(x509Pubkeydigest(properties.signWithX509));
+
     if (!generateFakeSslCertificate(fakeCert, fakePkey, properties, serial))
         return false;
 
     // The x509Fingerprint return an SHA1 hash.
     // both SHA1 hash and maximum serial number size are 20 bytes.
-    BIGNUM *r = x509Fingerprint(fakeCert);
+    BIGNUM *r = x509Digest(fakeCert);
     if (!r)
         return false;
-
-    // if the serial is "0" set it to '1'
-    if (BN_is_zero(r))
-        BN_one(r);
-
-    // According the RFC 5280, serial is an 20 bytes ASN.1 INTEGER (a signed big integer)
-    // and the maximum value for X.509 certificate serial number is 2^159-1 and
-    // the minimum 0. If the first bit of the serial is '1' ( eg 2^160-1),
-    // will result to a negative integer.
-    // To handle this, if the produced serial is greater than 2^159-1
-    // truncate the last bit
-    if (BN_is_bit_set(r, 159))
-        BN_clear_bit(r, 159);
 
     serial.reset(r);
     return true;
@@ -495,27 +513,55 @@ static int asn1time_cmp(ASN1_TIME *asnTime1, ASN1_TIME *asnTime2)
     return strcmp(strTime1, strTime2);
 }
 
-bool Ssl::ssl_match_certificates(X509 *cert1, X509 *cert2)
+bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &properties)
 {
-    assert(cert1 && cert2);
-    X509_NAME *cert1_name = X509_get_subject_name(cert1);
-    X509_NAME *cert2_name = X509_get_subject_name(cert2);
-    if (X509_NAME_cmp(cert1_name, cert2_name) != 0)
-        return false;
- 
-    ASN1_TIME *aTime = X509_get_notBefore(cert1);
-    ASN1_TIME *bTime = X509_get_notBefore(cert2);
-    if (asn1time_cmp(aTime, bTime) != 0)
-        return false;
+    assert(cert);
 
-    aTime = X509_get_notAfter(cert1);
-    bTime = X509_get_notAfter(cert2);
-    if (asn1time_cmp(aTime, bTime) != 0)
-        return false;
+    // For non self-signed certificates we have to check if the signing certificate changed
+    if (properties.signAlgorithm != Ssl::algSignSelf) {
+        if (X509_check_issued(properties.signWithX509.get(), cert) != X509_V_OK)
+            return false;
+    }
+    
+    X509 *cert2 = properties.mimicCert.get();
+    // If there is not certificate to mimic stop here
+    if (!cert2)
+        return true;
+
+    if (!properties.setCommonName) {
+        X509_NAME *cert1_name = X509_get_subject_name(cert);
+        X509_NAME *cert2_name = X509_get_subject_name(cert2);
+        if (X509_NAME_cmp(cert1_name, cert2_name) != 0)
+            return false;
+    }
+    /* else {
+       if (properties.commonName != Ssl::CommonHostName(cert))
+           return false;
+       This function normaly called to verify a cached certificate matches the 
+       specifications given by properties parameter.
+       The cached certificate retrieved from the cache using a key which has
+       as part the properties.commonName. This is enough to assume that the 
+       cached cert has in its subject the properties.commonName as cn field.
+       }
+     */
+ 
+    if (!properties.setValidBefore) {
+        ASN1_TIME *aTime = X509_get_notBefore(cert);
+        ASN1_TIME *bTime = X509_get_notBefore(cert2);
+        if (asn1time_cmp(aTime, bTime) != 0)
+            return false;
+    }
+
+    if (!properties.setValidAfter) {
+        ASN1_TIME *aTime = X509_get_notAfter(cert);
+        ASN1_TIME *bTime = X509_get_notAfter(cert2);
+        if (asn1time_cmp(aTime, bTime) != 0)
+            return false;
+    }
     
     char *alStr1;
     int alLen;
-    alStr1 = (char *)X509_alias_get0(cert1, &alLen);
+    alStr1 = (char *)X509_alias_get0(cert, &alLen);
     char *alStr2  = (char *)X509_alias_get0(cert2, &alLen);
     if ((!alStr1 && alStr2) || (alStr1 && !alStr2) ||
         (alStr1 && alStr2 && strcmp(alStr1, alStr2)) != 0)
@@ -523,7 +569,7 @@ bool Ssl::ssl_match_certificates(X509 *cert1, X509 *cert2)
     
     // Compare subjectAltName extension
     STACK_OF(GENERAL_NAME) * cert1_altnames;
-    cert1_altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert1, NID_subject_alt_name, NULL, NULL);
+    cert1_altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
     STACK_OF(GENERAL_NAME) * cert2_altnames;
     cert2_altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert2, NID_subject_alt_name, NULL, NULL);
     bool match = true;

@@ -249,9 +249,10 @@ bool sslDateIsInTheFuture(char const * date);
 
 /**
  \ingroup SslCrtdSslAPI
- * Check if the major (mimicked) fields of the two certificates matches
+ * Check if the major fields of a certificates matches the properties given by
+ * a CertficateProperties object
  \return true if the certificates matches false otherwise.
 */
-bool ssl_match_certificates(X509 *peer_cert, X509 *peeked_cert);
+bool certificateMatchesProperties(X509 *peer_cert, CertificateProperties const &properties);
 } // namespace Ssl
 #endif // SQUID_SSL_GADGETS_H

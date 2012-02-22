@@ -1276,7 +1276,7 @@ SSL_CTX * Ssl::generateSslContext(CertificateProperties const &properties)
     return createSSLContext(cert, pkey);
 }
 
-bool Ssl::verifySslCertificate(SSL_CTX * sslContext, X509 *checkCert)
+bool Ssl::verifySslCertificate(SSL_CTX * sslContext, CertificateProperties const &properties)
 {
     // Temporary ssl for getting X509 certificate from SSL_CTX.
     Ssl::SSL_Pointer ssl(SSL_new(sslContext));
@@ -1287,10 +1287,7 @@ bool Ssl::verifySslCertificate(SSL_CTX * sslContext, X509 *checkCert)
     if (!ret)
         return false;
 
-    if (checkCert)
-         return ssl_match_certificates(cert, checkCert);
-
-    return true;
+    return certificateMatchesProperties(cert, properties);
 }
 
 bool
