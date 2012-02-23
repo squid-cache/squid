@@ -3661,51 +3661,61 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
     if (!bumpServerFirstErrorEntry())
         return;
 
-    if (X509 *mimicCert = bumpServerCert.get())
-        certProperties.mimicCert.resetAndLock(mimicCert);
+    // In the case of error while connecting to secure server, use a fake trusted certificate,
+    // with no mimicked fields and no adaptation algorithms
+    if (bumpServerFirstErrorEntry()->isEmpty()) {
+        if (X509 *mimicCert = bumpServerCert.get())
+            certProperties.mimicCert.resetAndLock(mimicCert);
 
-    HttpRequest *fakeRequest =  new HttpRequest();
-    fakeRequest->SetHost(sslConnectHostOrIp.termedBuf());
-    fakeRequest->port = clientConnection->local.GetPort();
-    fakeRequest->protocol = AnyP::PROTO_HTTPS;
+        HttpRequest *fakeRequest =  new HttpRequest();
+        fakeRequest->SetHost(sslConnectHostOrIp.termedBuf());
+        fakeRequest->port = clientConnection->local.GetPort();
+        fakeRequest->protocol = AnyP::PROTO_HTTPS;
  
-    ACLFilledChecklist checklist(NULL, fakeRequest, 
-                                 clientConnection != NULL ? clientConnection->rfc931 : dash_str);
-    checklist.conn(this);
-    checklist.src_addr = clientConnection->remote;
-    checklist.my_addr = clientConnection->local;
-    checklist.sslErrorList = cbdataReference(bumpSslErrorNoList);
+        ACLFilledChecklist checklist(NULL, fakeRequest, 
+                                     clientConnection != NULL ? clientConnection->rfc931 : dash_str);
+        checklist.conn(this);
+        checklist.src_addr = clientConnection->remote;
+        checklist.my_addr = clientConnection->local;
+        checklist.sslErrorList = cbdataReference(bumpSslErrorNoList);
 
-    for (sslproxy_cert_adapt *ca = Config.ssl_client.cert_adapt; ca != NULL; ca = ca->next) {
-        if (ca->aclList && checklist.fastCheck(ca->aclList) == ACCESS_ALLOWED) {
-            const char *alg = Ssl::CertAdaptAlgorithmStr[ca->alg];
-            const char *param = ca->param;
+        for (sslproxy_cert_adapt *ca = Config.ssl_client.cert_adapt; ca != NULL; ca = ca->next) {
+            if (ca->aclList && checklist.fastCheck(ca->aclList) == ACCESS_ALLOWED) {
+                const char *alg = Ssl::CertAdaptAlgorithmStr[ca->alg];
+                const char *param = ca->param;
   
-            // if not param defined for Common Name adaptation use hostname from 
-            // the CONNECT request
-            if (ca->alg == Ssl::algSetCommonName && !certProperties.setCommonName) {
-                if (!param)
-                    param = sslConnectHostOrIp.termedBuf();
-                certProperties.commonName = param;
-                certProperties.setCommonName = true;
+                // if not param defined for Common Name adaptation use hostname from 
+                // the CONNECT request
+                if (ca->alg == Ssl::algSetCommonName && !certProperties.setCommonName) {
+                    if (!param)
+                        param = sslConnectHostOrIp.termedBuf();
+                    certProperties.commonName = param;
+                    certProperties.setCommonName = true;
+                }
+                else if(ca->alg == Ssl::algSetValidAfter && !certProperties.setValidAfter)
+                    certProperties.setValidAfter = true;
+                else if(ca->alg == Ssl::algSetValidBefore && !certProperties.setValidBefore)
+                    certProperties.setValidBefore = true;
+
+                assert(alg && param);
+                debugs(33, 5, HERE << "Matches certificate adaptation aglorithm: " << 
+                       alg << " param: " << param);
             }
-            else if(ca->alg == Ssl::algSetValidAfter && !certProperties.setValidAfter)
-                certProperties.setValidAfter = true;
-            else if(ca->alg == Ssl::algSetValidBefore && !certProperties.setValidBefore)
-                certProperties.setValidBefore = true;
-
-            assert(alg && param);
-            debugs(33, 5, HERE << "Matches certificate adaptation aglorithm: " << 
-                   alg << " param: " << param);
         }
-    }
 
-    certProperties.signAlgorithm = Ssl::algSignEnd;
-    for (sslproxy_cert_sign *sg = Config.ssl_client.cert_sign; sg != NULL; sg = sg->next) {
-        if (sg->aclList && checklist.fastCheck(sg->aclList) == ACCESS_ALLOWED) {
-            certProperties.signAlgorithm = (Ssl::CertSignAlgorithm)sg->alg;
-            break;
+        certProperties.signAlgorithm = Ssl::algSignEnd;
+        for (sslproxy_cert_sign *sg = Config.ssl_client.cert_sign; sg != NULL; sg = sg->next) {
+            if (sg->aclList && checklist.fastCheck(sg->aclList) == ACCESS_ALLOWED) {
+                certProperties.signAlgorithm = (Ssl::CertSignAlgorithm)sg->alg;
+                break;
+            }
         }
+    } else {// if (!bumpServerFirstErrorEntry()->isEmpty())
+        // Use trusted certificate for a Squid-generated error
+        // or the user would have to add a security exception
+        // just to see the error page. We will close the connection
+        // so that the trust is not extended to non-Squid content.
+        certProperties.signAlgorithm = Ssl::algSignTrusted;
     }
 
     assert(certProperties.signAlgorithm != Ssl::algSignEnd);
@@ -3860,15 +3870,17 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
         Ssl::X509_Pointer serverCert(SSL_get_peer_certificate(ssl));
         assert(serverCert.get() != NULL);
         sslCommonName = Ssl::CommonHostName(serverCert.get());
-        assert(sslCommonName.defined());
-        debugs(33, 5, HERE << "found HTTPS server CN " << sslCommonName << " at bumped " <<
-               *serverConnection);
+        debugs(33, 5, HERE << "HTTPS server CN: " << sslCommonName << 
+               " bumped: " << *serverConnection);
 
         pinConnection(serverConnection, NULL, NULL, false);
 
         debugs(33, 5, HERE << "bumped HTTPS server: " << sslConnectHostOrIp);
-    } else
+    } else {
         debugs(33, 5, HERE << "Error while bumping: " << sslConnectHostOrIp);
+        if (bumpServerCert.get())
+            sslCommonName = Ssl::CommonHostName(bumpServerCert.get());
+    }
 
     if (httpsPeeker.valid())
         httpsPeeker->noteHttpsPeeked(serverConnection);
