@@ -33,7 +33,7 @@
  * CopyRight (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 #include <sys/ipc.h>
 #include <sys/msg.h>
@@ -47,6 +47,7 @@
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#include "StatCounters.h"
 CBDATA_CLASS_INIT(DiskdFile);
 
 void *
@@ -275,7 +276,7 @@ DiskdFile::completed(diomsg *M)
 void
 DiskdFile::openDone(diomsg *M)
 {
-    statCounter.syscalls.disk.opens++;
+    ++statCounter.syscalls.disk.opens;
     debugs(79, 3, "storeDiskdOpenDone: status " << M->status);
 
     if (M->status < 0) {
@@ -292,7 +293,7 @@ DiskdFile::openDone(diomsg *M)
 void
 DiskdFile::createDone(diomsg *M)
 {
-    statCounter.syscalls.disk.opens++;
+    ++statCounter.syscalls.disk.opens;
     debugs(79, 3, "storeDiskdCreateDone: status " << M->status);
 
     if (M->status < 0) {
@@ -355,7 +356,7 @@ DiskdFile::ioCompleted()
 void
 DiskdFile::closeDone(diomsg * M)
 {
-    statCounter.syscalls.disk.closes++;
+    ++statCounter.syscalls.disk.closes;
     debugs(79, 3, "DiskdFile::closeDone: status " << M->status);
 
     if (M->status < 0) {
@@ -376,7 +377,7 @@ DiskdFile::closeDone(diomsg * M)
 void
 DiskdFile::readDone(diomsg * M)
 {
-    statCounter.syscalls.disk.reads++;
+    ++statCounter.syscalls.disk.reads;
     debugs(79, 3, "DiskdFile::readDone: status " << M->status);
     assert (M->requestor);
     ReadRequest::Pointer readRequest = dynamic_cast<ReadRequest *>(M->requestor);
@@ -400,7 +401,7 @@ DiskdFile::readDone(diomsg * M)
 void
 DiskdFile::writeDone(diomsg *M)
 {
-    statCounter.syscalls.disk.writes++;
+    ++statCounter.syscalls.disk.writes;
     debugs(79, 3, "storeDiskdWriteDone: status " << M->status);
     assert (M->requestor);
     WriteRequest::Pointer writeRequest = dynamic_cast<WriteRequest *>(M->requestor);

@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 
 /* $Id$
 
@@ -11,7 +11,7 @@
 #define CHANGE_FD_SETSIZE 1
 
 /* Cannot increase FD_SETSIZE on Linux */
-#if defined(_SQUID_LINUX_)
+#if _SQUID_LINUX_
 #undef CHANGE_FD_SETSIZE
 #define CHANGE_FD_SETSIZE 0
 #endif
@@ -20,7 +20,7 @@
  * to return EINVAL. */
 /* Marian Durkovic <marian@svf.stuba.sk> */
 /* Peter Wemm <peter@spinner.DIALix.COM> */
-#if defined(_SQUID_FREEBSD_)
+#if _SQUID_FREEBSD_
 #include <osreldate.h>
 #if __FreeBSD_version < 220000
 #undef CHANGE_FD_SETSIZE

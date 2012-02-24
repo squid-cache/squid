@@ -35,117 +35,42 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "HttpHdrSc.h"
-
-/* local prototypes */
-
-/* module initialization */
-
-/* implementation */
-
-HttpHdrScTarget *
-httpHdrScTargetCreate(char const *target)
-{
-    HttpHdrScTarget *sc = new HttpHdrScTarget();
-    sc->max_age = -1;
-    /* max_stale is specified as 0 if not specified in the header */
-    sc->target = target;
-    return sc;
-}
-
-void
-httpHdrScTargetDestroy(HttpHdrScTarget * sc)
-{
-    assert(sc);
-    sc->target.clean();
-    sc->content.clean();
-    delete sc;
-}
-
-HttpHdrScTarget *
-httpHdrScTargetDup(const HttpHdrScTarget * sc)
-{
-    HttpHdrScTarget *dup;
-    assert(sc);
-    dup = httpHdrScTargetCreate(sc->target.termedBuf());
-    dup->mask = sc->mask;
-    dup->max_age = sc->max_age;
-    dup->content = sc->content;
-    return dup;
-}
-
-/* union of two targets */
-void
-httpHdrScTargetJoinWith(HttpHdrScTarget * sc, const HttpHdrScTarget * new_sc)
-{
-    assert(sc && new_sc);
-    /* TODO: check both targets are the same */
-
-    if (sc->max_age < 0)
-        sc->max_age = new_sc->max_age;
-
-    if (sc->max_stale < new_sc->max_stale)
-        sc->max_stale = new_sc->max_stale;
-
-    /* RC TODO: copy unique missing content stringlist entries */
-    sc->mask |= new_sc->mask;
-}
+#include "StatHist.h"
 
 extern http_hdr_sc_type &operator++ (http_hdr_sc_type &aHeader);
-extern int operator - (http_hdr_sc_type const &anSc, http_hdr_sc_type const &anSc2);
 /* copies non-extant fields from new_sc to this sc */
 void
-httpHdrScTargetMergeWith(HttpHdrScTarget * sc, const HttpHdrScTarget * new_sc)
+HttpHdrScTarget::mergeWith(const HttpHdrScTarget * new_sc)
 {
-    http_hdr_sc_type c;
-    assert(sc && new_sc);
+    assert(new_sc);
     /* Don't touch the target - this is used to get the operations for a
      * single surrogate
      */
 
-    for (c = SC_NO_STORE; c < SC_ENUM_END; ++c)
-        if (!EBIT_TEST(sc->mask, c) && EBIT_TEST(new_sc->mask,c)) {
-            EBIT_SET(sc->mask, c);
+    if (new_sc->hasNoStore())
+        noStore(true);
 
-            switch (c) {
+    if (new_sc->hasNoStoreRemote())
+        noStoreRemote(true);
 
-            case SC_MAX_AGE:
-                sc->max_age = new_sc->max_age;
-                sc->max_stale = new_sc->max_stale;
-                break;
+    if (new_sc->hasMaxAge() && !hasMaxAge()) {
+        maxAge(new_sc->maxAge());
+        maxStale(new_sc->maxStale());
+    }
 
-            case SC_CONTENT:
-                assert (sc->content.size() == 0);
-                sc->content = new_sc->content;
-                break;
+    if (new_sc->hasContent() && !hasContent())
+        Content(new_sc->content());
 
-            default:
-                break;
-            }
-        }
-}
-
-/* negative max_age will clean old max_Age setting */
-void
-httpHdrScTargetSetMaxAge(HttpHdrScTarget * sc, int max_age)
-{
-    assert(sc);
-    sc->max_age = max_age;
-
-    if (max_age >= 0)
-        EBIT_SET(sc->mask, SC_MAX_AGE);
-    else
-        EBIT_CLR(sc->mask, SC_MAX_AGE);
 }
 
 void
-httpHdrScTargetUpdateStats(const HttpHdrScTarget * sc, StatHist * hist)
+HttpHdrScTarget::updateStats(StatHist * hist) const
 {
     http_hdr_sc_type c;
-    assert(sc);
 
     for (c = SC_NO_STORE; c < SC_ENUM_END; ++c)
-        if (EBIT_TEST(sc->mask, c))
-            statHistCount(hist, c);
+        if (isSet(c))
+            hist->count(c);
 }

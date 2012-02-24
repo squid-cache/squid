@@ -33,7 +33,7 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "config.h"
+#include "squid.h"
 #include "ConfigParser.h"
 #include "globals.h"
 

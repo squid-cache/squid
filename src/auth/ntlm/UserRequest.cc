@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "auth/ntlm/auth_ntlm.h"
 #include "auth/ntlm/UserRequest.h"
 #include "auth/State.h"
@@ -6,7 +6,7 @@
 #include "HttpRequest.h"
 #include "SquidTime.h"
 
-AuthNTLMUserRequest::AuthNTLMUserRequest()
+Auth::Ntlm::UserRequest::UserRequest()
 {
     waiting=0;
     client_blob=0;
@@ -15,7 +15,7 @@ AuthNTLMUserRequest::AuthNTLMUserRequest()
     request=NULL;
 }
 
-AuthNTLMUserRequest::~AuthNTLMUserRequest()
+Auth::Ntlm::UserRequest::~UserRequest()
 {
     assert(RefCountCount()==0);
     safe_free(server_blob);
@@ -30,13 +30,13 @@ AuthNTLMUserRequest::~AuthNTLMUserRequest()
 }
 
 const char *
-AuthNTLMUserRequest::connLastHeader()
+Auth::Ntlm::UserRequest::connLastHeader()
 {
     return NULL;
 }
 
 int
-AuthNTLMUserRequest::authenticated() const
+Auth::Ntlm::UserRequest::authenticated() const
 {
     if (user() != NULL && user()->credentials() == Auth::Ok) {
         debugs(29, 9, HERE << "user authenticated.");
@@ -48,9 +48,9 @@ AuthNTLMUserRequest::authenticated() const
 }
 
 Auth::Direction
-AuthNTLMUserRequest::module_direction()
+Auth::Ntlm::UserRequest::module_direction()
 {
-    /* null auth_user is checked for by AuthUserRequest::direction() */
+    /* null auth_user is checked for by Auth::UserRequest::direction() */
 
     if (waiting || client_blob)
         return Auth::CRED_LOOKUP; /* need helper response to continue */
@@ -77,7 +77,7 @@ AuthNTLMUserRequest::module_direction()
 }
 
 void
-AuthNTLMUserRequest::module_start(RH * handler, void *data)
+Auth::Ntlm::UserRequest::module_start(RH * handler, void *data)
 {
     static char buf[MAX_AUTHTOKEN_LEN];
 
@@ -101,7 +101,7 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
     waiting = 1;
 
     safe_free(client_blob);
-    helperStatefulSubmit(ntlmauthenticators, buf, AuthNTLMUserRequest::HandleReply,
+    helperStatefulSubmit(ntlmauthenticators, buf, Auth::Ntlm::UserRequest::HandleReply,
                          new Auth::StateData(this, handler, data), authserver);
 }
 
@@ -110,7 +110,7 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
  * for this request connections use.
  */
 void
-AuthNTLMUserRequest::releaseAuthServer()
+Auth::Ntlm::UserRequest::releaseAuthServer()
 {
     if (authserver) {
         debugs(29, 6, HERE << "releasing NTLM auth server '" << authserver << "'");
@@ -121,14 +121,14 @@ AuthNTLMUserRequest::releaseAuthServer()
 }
 
 void
-AuthNTLMUserRequest::onConnectionClose(ConnStateData *conn)
+Auth::Ntlm::UserRequest::onConnectionClose(ConnStateData *conn)
 {
     assert(conn != NULL);
 
-    debugs(29, 8, "AuthNTLMUserRequest::onConnectionClose: closing connection '" << conn << "' (this is '" << this << "')");
+    debugs(29, 8, HERE << "closing connection '" << conn << "' (this is '" << this << "')");
 
     if (conn->auth_user_request == NULL) {
-        debugs(29, 8, "AuthNTLMUserRequest::onConnectionClose: no auth_user_request");
+        debugs(29, 8, HERE << "no auth_user_request");
         return;
     }
 
@@ -141,7 +141,7 @@ AuthNTLMUserRequest::onConnectionClose(ConnStateData *conn)
 }
 
 void
-AuthNTLMUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, http_hdr_type type)
+Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, http_hdr_type type)
 {
     assert(this);
 
@@ -212,7 +212,7 @@ AuthNTLMUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, 
         break;
 
     case Auth::Ok:
-        fatal("AuthNTLMUserRequest::authenticate: unexpect auth state DONE! Report a bug to the squid developers.\n");
+        fatal("Auth::Ntlm::UserRequest::authenticate: unexpect auth state DONE! Report a bug to the squid developers.\n");
         break;
 
     case Auth::Failed:
@@ -223,7 +223,7 @@ AuthNTLMUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, 
 }
 
 void
-AuthNTLMUserRequest::HandleReply(void *data, void *lastserver, char *reply)
+Auth::Ntlm::UserRequest::HandleReply(void *data, void *lastserver, char *reply)
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
     char *blob;
@@ -241,10 +241,10 @@ AuthNTLMUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         reply = (char *)"BH Internal error";
     }
 
-    AuthUserRequest::Pointer auth_user_request = r->auth_user_request;
+    Auth::UserRequest::Pointer auth_user_request = r->auth_user_request;
     assert(auth_user_request != NULL);
 
-    AuthNTLMUserRequest *lm_request = dynamic_cast<AuthNTLMUserRequest *>(auth_user_request.getRaw());
+    Auth::Ntlm::UserRequest *lm_request = dynamic_cast<Auth::Ntlm::UserRequest *>(auth_user_request.getRaw());
     assert(lm_request != NULL);
     assert(lm_request->waiting);
 

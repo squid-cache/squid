@@ -53,7 +53,7 @@
  * that though */
 #define IGNORANCE_IS_BLISS
 
-#include "config.h"
+#include "squid.h"
 #include "base64.h"
 #include "helpers/defines.h"
 #include "ntlmauth/ntlmauth.h"

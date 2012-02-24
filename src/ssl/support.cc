@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 /* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the SSL code from compile process when not needed.
@@ -363,7 +363,7 @@ ssl_options[] = {
 #endif
 #if SSL_OP_ALL
     {
-        "ALL", SSL_OP_ALL
+        "ALL", (long)SSL_OP_ALL
     },
 #endif
 #if SSL_OP_SINGLE_DH_USE
@@ -433,7 +433,7 @@ ssl_options[] = {
 static long
 ssl_parse_options(const char *options)
 {
-    long op = SSL_OP_ALL;
+    long op = 0;
     char *tmp;
     char *option;
 

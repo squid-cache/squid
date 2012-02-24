@@ -30,16 +30,7 @@ extern "C" {
     void *xrealloc(void *s, size_t sz);
 
     /**
-     *  xfree() - same as free(3).  Used for portability.
-     *   Will not call free(3) if s == NULL.
-     *
-     * Define failure_notify to receive error message.
-     * otherwise perror() is used to display it.
-     */
-    void xfree(void *s);
-
-    /**
-     * xxfree() / free_const() - Same as free(3).  Used for portability.
+     * free_const() - Same as free(3).  Used for portability.
      * Accepts pointers to dynamically allocated const data.
      *
      * Define failure_notify to receive error message.
@@ -47,10 +38,21 @@ extern "C" {
      */
     void free_const(const void *s);
 
-/// Backward compatibility alias for free_const(const void *s)
-#define xxfree(x)  free_const((x))
+    /**
+     *  xfree() - same as free(3).  Used for portability.
+     * Accepts pointers to dynamically allocated const data.
+     * Will not call free(3) if the pointer is NULL.
+     *
+     * Pointer is left with a value on completion.
+     * Use safe_free() if the pointer needs to be set to NULL afterward.
+     *
+     * Define failure_notify to receive error message.
+     * otherwise perror() is used to display it.
+     */
+    static inline void xfree(const void *p) { if (p) free_const(p); }
 
     /**
+     *  safe_free() - same as free(3).  Used for portability.
      * Accepts pointers to dynamically allocated const data.
      * Will not call free(3) if the pointer is NULL.
      * Sets the pointer to NULL on completion.
@@ -60,7 +62,7 @@ extern "C" {
      * Define failure_notify to receive error message.
      * otherwise perror() is used to display it.
      */
-#define safe_free(x)    while (x) { xxfree(x); (x) = NULL; }
+#define safe_free(x)    while ((x)) { free_const((x)); (x) = NULL; }
 
 #ifdef __cplusplus
 }

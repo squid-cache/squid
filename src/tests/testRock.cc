@@ -1,5 +1,5 @@
 #define SQUID_UNIT_TEST 1
-#include "config.h"
+#include "squid.h"
 
 #include "DiskIO/DiskIOModule.h"
 #include "HttpHeader.h"
@@ -41,7 +41,7 @@ testRock::setUp()
         throw std::runtime_error("Failed to clean test work directory");
 
     // use current directory for shared segments (on path-based OSes)
-    Ipc::Mem::Segment::BasePath = "";
+    Ipc::Mem::Segment::BasePath = ".";
 
     Store::Root(new StoreController);
 

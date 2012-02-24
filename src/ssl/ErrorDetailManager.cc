@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "ErrorDetail.h"
 #include "errorpage.h"
 #include "ErrorDetailManager.h"
@@ -20,7 +20,7 @@ namespace Ssl
 class ErrorDetailFile : public TemplateFile
 {
 public:
-    explicit ErrorDetailFile(ErrorDetailsList::Pointer const details): TemplateFile("error-details.txt") {
+    explicit ErrorDetailFile(ErrorDetailsList::Pointer const details): TemplateFile("error-details.txt", ERR_NONE) {
         buf.init();
         theDetails = details;
     }
@@ -209,14 +209,14 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
                 return false;
             }
 
-            const char *errorName = parser.getByName("name").termedBuf();
-            if (!errorName) {
+            const String errorName = parser.getByName("name");
+            if (!errorName.size()) {
                 debugs(83, DBG_IMPORTANT, HERE <<
                        "WARNING! invalid or no error detail name on:" << s);
                 return false;
             }
 
-            Ssl::ssl_error_t ssl_error = Ssl::GetErrorCode(errorName);
+            Ssl::ssl_error_t ssl_error = Ssl::GetErrorCode(errorName.termedBuf());
             if (ssl_error == SSL_ERROR_NONE) {
                 debugs(83, DBG_IMPORTANT, HERE <<
                        "WARNING! invalid error detail name: " << errorName);

@@ -63,7 +63,7 @@
  *      ICP_OP_MISS_NOFETCH for sites which it cannot ping.
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "SquidTime.h"
 
 #if USE_ICMP

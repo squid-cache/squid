@@ -4,7 +4,7 @@
  * DEBUG: section 47    Store Directory Routines
  */
 
-#include "config.h"
+#include "squid.h"
 #include "ConfigOption.h"
 #include "DiskIO/DiskIOModule.h"
 #include "DiskIO/DiskIOStrategy.h"

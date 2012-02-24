@@ -39,7 +39,7 @@
 #pragma implementation
 #endif
 
-#include "config.h"
+#include "squid.h"
 //#include <assert.h>
 #include "squid-tlv.hh"
 

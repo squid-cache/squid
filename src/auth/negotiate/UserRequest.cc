@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "auth/negotiate/auth_negotiate.h"
 #include "auth/negotiate/UserRequest.h"
 #include "auth/State.h"
@@ -8,7 +8,7 @@
 #include "HttpRequest.h"
 #include "SquidTime.h"
 
-AuthNegotiateUserRequest::AuthNegotiateUserRequest()
+Auth::Negotiate::UserRequest::UserRequest()
 {
     waiting=0;
     client_blob=0;
@@ -17,7 +17,7 @@ AuthNegotiateUserRequest::AuthNegotiateUserRequest()
     request=NULL;
 }
 
-AuthNegotiateUserRequest::~AuthNegotiateUserRequest()
+Auth::Negotiate::UserRequest::~UserRequest()
 {
     assert(RefCountCount()==0);
     safe_free(server_blob);
@@ -32,13 +32,13 @@ AuthNegotiateUserRequest::~AuthNegotiateUserRequest()
 }
 
 const char *
-AuthNegotiateUserRequest::connLastHeader()
+Auth::Negotiate::UserRequest::connLastHeader()
 {
     return NULL;
 }
 
 int
-AuthNegotiateUserRequest::authenticated() const
+Auth::Negotiate::UserRequest::authenticated() const
 {
     if (user() != NULL && user()->credentials() == Auth::Ok) {
         debugs(29, 9, HERE << "user authenticated.");
@@ -50,9 +50,9 @@ AuthNegotiateUserRequest::authenticated() const
 }
 
 Auth::Direction
-AuthNegotiateUserRequest::module_direction()
+Auth::Negotiate::UserRequest::module_direction()
 {
-    /* null auth_user is checked for by AuthUserRequest::direction() */
+    /* null auth_user is checked for by Auth::UserRequest::direction() */
 
     if (waiting || client_blob)
         return Auth::CRED_LOOKUP; /* need helper response to continue */
@@ -79,7 +79,7 @@ AuthNegotiateUserRequest::module_direction()
 }
 
 void
-AuthNegotiateUserRequest::module_start(RH * handler, void *data)
+Auth::Negotiate::UserRequest::module_start(RH * handler, void *data)
 {
     static char buf[MAX_AUTHTOKEN_LEN];
 
@@ -107,7 +107,7 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
 
     safe_free(client_blob);
 
-    helperStatefulSubmit(negotiateauthenticators, buf, AuthNegotiateUserRequest::HandleReply,
+    helperStatefulSubmit(negotiateauthenticators, buf, Auth::Negotiate::UserRequest::HandleReply,
                          new Auth::StateData(this, handler, data), authserver);
 }
 
@@ -116,7 +116,7 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
  * for this request connections use.
  */
 void
-AuthNegotiateUserRequest::releaseAuthServer()
+Auth::Negotiate::UserRequest::releaseAuthServer()
 {
     if (authserver) {
         debugs(29, 6, HERE << "releasing Negotiate auth server '" << authserver << "'");
@@ -128,14 +128,14 @@ AuthNegotiateUserRequest::releaseAuthServer()
 
 /* clear any connection related authentication details */
 void
-AuthNegotiateUserRequest::onConnectionClose(ConnStateData *conn)
+Auth::Negotiate::UserRequest::onConnectionClose(ConnStateData *conn)
 {
     assert(conn != NULL);
 
-    debugs(29, 8, "AuthNegotiateUserRequest::onConnectionClose: closing connection '" << conn << "' (this is '" << this << "')");
+    debugs(29, 8, HERE << "closing connection '" << conn << "' (this is '" << this << "')");
 
     if (conn->auth_user_request == NULL) {
-        debugs(29, 8, "AuthNegotiateUserRequest::onConnectionClose: no auth_user_request");
+        debugs(29, 8, HERE << "no auth_user_request");
         return;
     }
 
@@ -148,7 +148,7 @@ AuthNegotiateUserRequest::onConnectionClose(ConnStateData *conn)
 }
 
 void
-AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, http_hdr_type type)
+Auth::Negotiate::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, http_hdr_type type)
 {
     assert(this);
 
@@ -218,7 +218,7 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * c
         break;
 
     case Auth::Ok:
-        fatal("AuthNegotiateUserRequest::authenticate: unexpected auth state DONE! Report a bug to the squid developers.\n");
+        fatal("Auth::Negotiate::UserRequest::authenticate: unexpected auth state DONE! Report a bug to the squid developers.\n");
         break;
 
     case Auth::Failed:
@@ -229,7 +229,7 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * c
 }
 
 void
-AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
+Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *reply)
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
 
@@ -248,10 +248,10 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         reply = (char *)"BH Internal error";
     }
 
-    AuthUserRequest::Pointer auth_user_request = r->auth_user_request;
+    Auth::UserRequest::Pointer auth_user_request = r->auth_user_request;
     assert(auth_user_request != NULL);
 
-    AuthNegotiateUserRequest *lm_request = dynamic_cast<AuthNegotiateUserRequest *>(auth_user_request.getRaw());
+    Auth::Negotiate::UserRequest *lm_request = dynamic_cast<Auth::Negotiate::UserRequest *>(auth_user_request.getRaw());
     assert(lm_request != NULL);
     assert(lm_request->waiting);
 
@@ -365,7 +365,7 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
 }
 
 void
-AuthNegotiateUserRequest::addAuthenticationInfoHeader(HttpReply * rep, int accel)
+Auth::Negotiate::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int accel)
 {
     http_hdr_type type;
 

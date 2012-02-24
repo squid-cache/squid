@@ -24,7 +24,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "helpers/defines.h"
 #include "rfc1738.h"
 //#include "util.h"

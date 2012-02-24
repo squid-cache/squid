@@ -47,19 +47,6 @@ AC_DEFUN([SQUID_CC_CHECK_ARGUMENT],[
   }])
 ])
 
-# check if the c++ compiler supports the -fhuge-objects flag
-# sets the variable squid_cv_cxx_arg_fhugeobjects to either "yes" or "no"
-#
-AC_DEFUN([SQUID_CXX_CHECK_ARG_FHUGEOBJECTS],[
-  AC_LANG_PUSH([C++])
-  if test "$GCC" = "yes"; then
-    SQUID_CC_CHECK_ARGUMENT([squid_cv_cxx_arg_fhugeobjects],[-Werror -fhuge-objects])
-  else
-    squid_cv_cxx_arg_fhugeobjects=no
-  fi
-  AC_LANG_POP([C++])
-])
-
 # detect what kind of compiler we're using, either by using hints from
 # autoconf itself, or by using predefined preprocessor macros
 # sets the variable squid_cv_compiler to one of

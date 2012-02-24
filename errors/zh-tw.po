@@ -2,16 +2,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-11-20 11:40+1300\n"
-"PO-Revision-Date: 2009-06-05 16:09+1300\n"
-"Last-Translator: Erick C. Chang <erick@mail.thu.edu.tw>\n"
+"POT-Creation-Date: 2012-02-06 18:41+1300\n"
+"PO-Revision-Date: 2011-07-15 08:10+0200\n"
+"Last-Translator: Anonymous Pootle User\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: zh_TW\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Pootle 1.2.1\n"
+"X-Generator: Pootle 2.1.6\n"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:29
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:29
@@ -137,6 +137,10 @@ msgstr ""
 "欲連結之網站的存取控制設定目前禁止了您的連線要求，如果您覺得得到這樣的訊息並"
 "不正確，請與提供網路服務的管理者聯繫。"
 
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:31
+msgid "All configured parent caches may be currently unreachable."
+msgstr ""
+
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.p:20
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
@@ -153,6 +157,12 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:33
 msgid "An Illegal response was received from the ICAP server."
+msgstr ""
+
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:30
+msgid ""
+"An Internet connection needed to access this domains origin servers may be "
+"down."
 msgstr ""
 
 #: templates/ERR_READ_ERROR+html.body.div.p:28
@@ -282,6 +292,7 @@ msgstr ""
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h1:14
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h1:14
 #: templates/ERR_CANNOT_FORWARD+html.body.div.h1:14
+#: templates/ERR_CONFLICT_HOST+html.body.div.h1:14
 #: templates/ERR_CONNECT_FAIL+html.body.div.h1:14
 #: templates/ERR_DNS_FAIL+html.body.div.h1:14
 #: templates/ERR_ESI+html.body.div.h1:14
@@ -330,6 +341,7 @@ msgstr "錯誤: 檔案傳輸上傳（PUT）失敗"
 #: templates/ERR_ACCESS_DENIED+html.head.title:4
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.head.title:4
 #: templates/ERR_CANNOT_FORWARD+html.head.title:4
+#: templates/ERR_CONFLICT_HOST+html.head.title:4
 #: templates/ERR_CONNECT_FAIL+html.head.title:4
 #: templates/ERR_DNS_FAIL+html.head.title:4
 #: templates/ERR_ESI+html.head.title:4
@@ -442,7 +454,8 @@ msgstr ""
 #: templates/ERR_AGENT_WPAD+html.body.div.p:56
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:35
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:35
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:35
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:42
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:40
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:37
 #: templates/ERR_DIR_LISTING+html.body.div.p:38
 #: templates/ERR_DNS_FAIL+html.body.div.p:39
@@ -679,6 +692,8 @@ msgstr "Socket 建立失敗"
 msgid "Some aspect of the requested URL is incorrect."
 msgstr "欲連結的位置有一些不正確。"
 
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:28
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:28
 #: templates/ERR_ICAP_FAILURE+html.body.div.p:30
 #: templates/ERR_INVALID_REQ+html.body.div.p:26
 #: templates/ERR_INVALID_URL+html.body.div.p:28
@@ -765,6 +780,17 @@ msgstr ""
 msgid "The ICAP server is not reachable."
 msgstr ""
 
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:32
+msgid ""
+"The administrator may not allow this cache to make direct connections to "
+"origin servers."
+msgstr ""
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:30
+msgid ""
+"The domain may have moved very recently. Trying again will resolve that."
+msgstr ""
+
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.p:20
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
 msgstr ""
@@ -774,6 +800,7 @@ msgstr ""
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:20
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:20
 #: templates/ERR_CANNOT_FORWARD+html.body.div.p:20
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:20
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:20
 #: templates/ERR_DNS_FAIL+html.body.div.p:20
 #: templates/ERR_ESI+html.body.div.p:20
@@ -819,6 +846,7 @@ msgstr ""
 #: templates/ERR_ACCESS_DENIED+html.body.div.h2:15
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h2:15
 #: templates/ERR_CANNOT_FORWARD+html.body.div.h2:15
+#: templates/ERR_CONFLICT_HOST+html.body.div.h2:15
 #: templates/ERR_CONNECT_FAIL+html.body.div.h2:15
 #: templates/ERR_DNS_FAIL+html.body.div.h2:15
 #: templates/ERR_ESI+html.body.div.h2:15
@@ -866,6 +894,12 @@ msgstr ""
 #: templates/ERR_WRITE_ERROR+html.body.div.p:26
 msgid "The system returned: <i>%E</i>"
 msgstr "系統回應了下列錯誤訊息：<i>%E</i>"
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:31
+msgid ""
+"The website may require you to use a local country-based version. Using your "
+"ISP provided DNS server(s) should resolve that."
+msgstr ""
 
 #: templates/ERR_NO_RELAY+html.body.div.p:26
 #, fuzzy
@@ -941,6 +975,12 @@ msgid ""
 "Please report this error to the webmaster."
 msgstr ""
 
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:26
+msgid ""
+"This means the domain name you are trying to access apparently no longer "
+"exists on the machine you are requesting it from."
+msgstr ""
+
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.p:26
 msgid "This means:"
 msgstr ""
@@ -967,16 +1007,10 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_CANNOT_FORWARD+html.body.div.p:26
-#, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches. The most likely cause for this error is that the cache administrator "
-"does not allow this cache to make direct connections to origin servers, and "
-"all configured parent caches are currently unreachable."
+"caches."
 msgstr ""
-"您的連結要求無法被轉向原始網站伺服器或其他的上層快取伺服器，發生這個問題的最"
-"可能的原因可能是網路快取伺服器管理者不允許本伺服器逕行直接連結原始的網頁位"
-"置，或是 所有本伺服器設定的上層伺服器目前都暫時無法連結上。"
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.blockquote.p:23
 msgid "Time Quota Exceeded."
@@ -998,6 +1032,10 @@ msgstr ""
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:45
 msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
+msgstr ""
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.blockquote.pre:23
+msgid "URI Host Conflict"
 msgstr ""
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:25
@@ -1092,7 +1130,8 @@ msgstr ""
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:29
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:50
 #: templates/ERR_AGENT_WPAD+html.body.div.p:50
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:28
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:35
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:34
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:30
 #: templates/ERR_DNS_FAIL+html.body.div.p:33
 #: templates/ERR_FORWARDING_DENIED+html.body.div.p:28
@@ -1142,6 +1181,18 @@ msgstr "大小為零的資料回應"
 
 #~ msgid "FTP PUT Successful: File Updated"
 #~ msgstr "檔案傳輸 PUT 指令成功完成：檔案已被更新"
+
+#, fuzzy
+msgid ""
+"This request could not be forwarded to the origin server or to any parent "
+"caches. The most likely cause for this error is that the cache "
+"administrator does not allow this cache to make direct connections to "
+"origin servers, and all configured parent caches are currently "
+"unreachable."
+msgstr ""
+"您的連結要求無法被轉向原始網站伺服器或其他的上層快取伺服器，發生這個問題的"
+"最可能的原因可能是網路快取伺服器管理者不允許本伺服器逕行直接連結原始的網頁"
+"位置，或是 所有本伺服器設定的上層伺服器目前都暫時無法連結上。"
 
 #~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
 #~ msgstr "當嘗試上傳（PUT）下列位置時：<a href=\"%U\">%U</a>"

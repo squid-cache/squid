@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "auth/digest/auth_digest.h"
 #include "auth/digest/User.h"
 #include "auth/digest/UserRequest.h"
@@ -8,7 +8,7 @@
 #include "HttpRequest.h"
 #include "SquidTime.h"
 
-AuthDigestUserRequest::AuthDigestUserRequest() :
+Auth::Digest::UserRequest::UserRequest() :
         nonceb64(NULL),
         cnonce(NULL),
         realm(NULL),
@@ -25,7 +25,7 @@ AuthDigestUserRequest::AuthDigestUserRequest() :
  * Delete the digest request structure.
  * Does NOT delete related AuthUser structures
  */
-AuthDigestUserRequest::~AuthDigestUserRequest()
+Auth::Digest::UserRequest::~UserRequest()
 {
     assert(RefCountCount()==0);
 
@@ -44,7 +44,7 @@ AuthDigestUserRequest::~AuthDigestUserRequest()
 }
 
 int
-AuthDigestUserRequest::authenticated() const
+Auth::Digest::UserRequest::authenticated() const
 {
     if (user() != NULL && user()->credentials() == Auth::Ok)
         return 1;
@@ -55,7 +55,7 @@ AuthDigestUserRequest::authenticated() const
 /** log a digest user in
  */
 void
-AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
+Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
 {
     HASHHEX SESSIONKEY;
     HASHHEX HA2 = "";
@@ -71,7 +71,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
     Auth::Digest::User *digest_user = dynamic_cast<Auth::Digest::User*>(auth_user.getRaw());
     assert(digest_user != NULL);
 
-    AuthDigestUserRequest *digest_request = this;
+    Auth::Digest::UserRequest *digest_request = this;
 
     /* do we have the HA1 */
     if (!digest_user->HA1created) {
@@ -131,7 +131,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
                 }
 
                 if (last_broken_addr != request->client_addr) {
-                    debugs(29, 1, "\nDigest POST bug detected from " <<
+                    debugs(29, DBG_IMPORTANT, "Digest POST bug detected from " <<
                            request->client_addr << " using '" <<
                            (useragent ? useragent : "-") <<
                            "'. Please upgrade browser. See Bug #630 for details.");
@@ -148,7 +148,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
 
         /* check for stale nonce */
         if (!authDigestNonceIsValid(digest_request->nonce, digest_request->nc)) {
-            debugs(29, 3, "authenticateDigestAuthenticateuser: user '" << auth_user->username() << "' validated OK but nonce stale");
+            debugs(29, 3, HERE << "user '" << auth_user->username() << "' validated OK but nonce stale");
             auth_user->credentials(Auth::Failed);
             digest_request->setDenyMessage("Stale nonce");
             return;
@@ -158,7 +158,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
     auth_user->credentials(Auth::Ok);
 
     /* password was checked and did match */
-    debugs(29, 4, "authenticateDigestAuthenticateuser: user '" << auth_user->username() << "' validated OK");
+    debugs(29, 4, HERE << "user '" << auth_user->username() << "' validated OK");
 
     /* auth_user is now linked, we reset these values
      * after external auth occurs anyway */
@@ -167,7 +167,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
 }
 
 Auth::Direction
-AuthDigestUserRequest::module_direction()
+Auth::Digest::UserRequest::module_direction()
 {
     if (user()->auth_type != Auth::AUTH_DIGEST)
         return Auth::CRED_ERROR;
@@ -191,7 +191,7 @@ AuthDigestUserRequest::module_direction()
 }
 
 void
-AuthDigestUserRequest::addAuthenticationInfoHeader(HttpReply * rep, int accel)
+Auth::Digest::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int accel)
 {
     http_hdr_type type;
 
@@ -211,14 +211,14 @@ AuthDigestUserRequest::addAuthenticationInfoHeader(HttpReply * rep, int accel)
 
     if ((static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->authenticateProgram) && authDigestNonceLastRequest(nonce)) {
         flags.authinfo_sent = 1;
-        debugs(29, 9, "authDigestAddHead: Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceb64(nonce) << "\"");
+        debugs(29, 9, HERE << "Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceb64(nonce) << "\"");
         httpHeaderPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceb64(nonce));
     }
 }
 
 #if WAITING_FOR_TE
 void
-AuthDigestUserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int accel)
+Auth::Digest::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int accel)
 {
     int type;
 
@@ -237,7 +237,7 @@ AuthDigestUserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int accel)
     type = accel ? HDR_AUTHENTICATION_INFO : HDR_PROXY_AUTHENTICATION_INFO;
 
     if ((static_cast<Auth::Digest::Config*>(digestScheme::GetInstance()->getConfig())->authenticate) && authDigestNonceLastRequest(nonce)) {
-        debugs(29, 9, "authDigestAddTrailer: Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceb64(nonce) << "\"");
+        debugs(29, 9, HERE << "Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceb64(nonce) << "\"");
         httpTrailerPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceb64(nonce));
     }
 }
@@ -245,12 +245,12 @@ AuthDigestUserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int accel)
 
 /* send the initial data to a digest authenticator module */
 void
-AuthDigestUserRequest::module_start(RH * handler, void *data)
+Auth::Digest::UserRequest::module_start(RH * handler, void *data)
 {
     char buf[8192];
 
     assert(user() != NULL && user()->auth_type == Auth::AUTH_DIGEST);
-    debugs(29, 9, "authenticateStart: '\"" << user()->username() << "\":\"" << realm << "\"'");
+    debugs(29, 9, HERE << "'\"" << user()->username() << "\":\"" << realm << "\"'");
 
     if (static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: No Digest authentication program configured.");
@@ -266,12 +266,12 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
         snprintf(buf, 8192, "\"%s\":\"%s\"\n", user()->username(), realm);
     }
 
-    helperSubmit(digestauthenticators, buf, AuthDigestUserRequest::HandleReply,
+    helperSubmit(digestauthenticators, buf, Auth::Digest::UserRequest::HandleReply,
                  new Auth::StateData(this, handler, data));
 }
 
 void
-AuthDigestUserRequest::HandleReply(void *data, char *reply)
+Auth::Digest::UserRequest::HandleReply(void *data, char *reply)
 {
     Auth::StateData *replyData = static_cast<Auth::StateData *>(data);
     char *t = NULL;
@@ -287,11 +287,11 @@ AuthDigestUserRequest::HandleReply(void *data, char *reply)
     }
 
     assert(replyData->auth_user_request != NULL);
-    AuthUserRequest::Pointer auth_user_request = replyData->auth_user_request;
+    Auth::UserRequest::Pointer auth_user_request = replyData->auth_user_request;
 
     if (reply && (strncasecmp(reply, "ERR", 3) == 0)) {
         /* allow this because the digest_request pointer is purely local */
-        AuthDigestUserRequest *digest_request = dynamic_cast<AuthDigestUserRequest *>(auth_user_request.getRaw());
+        Auth::Digest::UserRequest *digest_request = dynamic_cast<Auth::Digest::UserRequest *>(auth_user_request.getRaw());
         assert(digest_request);
 
         digest_request->user()->credentials(Auth::Failed);

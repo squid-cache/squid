@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "fatal.h"
 
 /* Stub File for the ssl/libsslsquid.la convenience library */

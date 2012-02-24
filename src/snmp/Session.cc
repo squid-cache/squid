@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "base/TextException.h"
 #include "ipc/TypedMsgHdr.h"
 #include "protos.h"

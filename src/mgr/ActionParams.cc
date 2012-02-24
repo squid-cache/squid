@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "base/TextException.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/ActionParams.h"
@@ -23,6 +23,7 @@ Mgr::ActionParams::ActionParams(const Ipc::TypedMsgHdr &msg)
     httpMethod = static_cast<_method_t>(m);
 
     msg.getPod(httpFlags);
+    msg.getString(httpOrigin);
 
     msg.getString(actionName);
     msg.getString(userName);
@@ -36,6 +37,7 @@ Mgr::ActionParams::pack(Ipc::TypedMsgHdr &msg) const
     msg.putString(httpUri);
     msg.putInt(httpMethod);
     msg.putPod(httpFlags);
+    msg.putString(httpOrigin);
 
     msg.putString(actionName);
     msg.putString(userName);

@@ -1,7 +1,7 @@
 /*
  * $Id$
  */
-#include "config.h"
+#include "squid.h"
 #include "Store.h"
 #include "StoreEntryStream.h"
 #include "ssl/context_storage.h"

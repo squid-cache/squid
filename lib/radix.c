@@ -64,7 +64,9 @@
  *      @(#)radix.c     8.4 (Berkeley) 11/2/94
  */
 
-#include "config.h"
+#include "squid.h"
+#include "radix.h"
+#include "util.h"
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -104,10 +106,6 @@
 #if HAVE_ASSERT_H
 #include <assert.h>
 #endif
-
-#include "util.h"
-
-#include "radix.h"
 
 int squid_max_keylen;
 struct squid_radix_mask *squid_rn_mkfreelist;

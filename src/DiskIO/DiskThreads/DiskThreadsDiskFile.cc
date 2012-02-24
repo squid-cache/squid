@@ -34,13 +34,14 @@
  */
 
 
-#include "squid.h"
+#include "squid-old.h"
 #include "DiskThreadsDiskFile.h"
 #include "Store.h"
 #include "Generic.h"
 #include "DiskIO/IORequestor.h"
 #include "DiskIO/ReadRequest.h"
 #include "DiskIO/WriteRequest.h"
+#include "StatCounters.h"
 
 /* === PUBLIC =========================================================== */
 
@@ -83,7 +84,7 @@ DiskThreadsDiskFile::~DiskThreadsDiskFile()
 void
 DiskThreadsDiskFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 {
-    statCounter.syscalls.disk.opens++;
+    ++statCounter.syscalls.disk.opens;
 #if !ASYNC_OPEN
 
     fd = file_open(path_, flags);
@@ -118,7 +119,7 @@ DiskThreadsDiskFile::read(ReadRequest * request)
     debugs(79, 3, "DiskThreadsDiskFile::read: " << this << ", size " << request->len);
     assert (fd > -1);
     assert (ioRequestor.getRaw());
-    statCounter.syscalls.disk.reads++;
+    ++statCounter.syscalls.disk.reads;
     ++inProgressIOs;
 #if ASYNC_READ
 
@@ -132,7 +133,7 @@ DiskThreadsDiskFile::read(ReadRequest * request)
 void
 DiskThreadsDiskFile::create(int flags, mode_t mode, RefCount<IORequestor> callback)
 {
-    statCounter.syscalls.disk.opens++;
+    ++statCounter.syscalls.disk.opens;
 #if !ASYNC_CREATE
 
     int fd = file_open(path_, flags);
@@ -203,7 +204,7 @@ DiskThreadsDiskFile::openDone(int unused, const char *unused2, int anFD, int err
 void DiskThreadsDiskFile::doClose()
 {
     if (fd > -1) {
-        statCounter.syscalls.disk.closes++;
+        ++statCounter.syscalls.disk.closes;
 #if ASYNC_CLOSE
 
         aioClose(fd);
@@ -246,7 +247,7 @@ void
 DiskThreadsDiskFile::write(WriteRequest * writeRequest)
 {
     debugs(79, 3, "DiskThreadsDiskFile::write: FD " << fd);
-    statCounter.syscalls.disk.writes++;
+    ++statCounter.syscalls.disk.writes;
     ++inProgressIOs;
 #if ASYNC_WRITE
 

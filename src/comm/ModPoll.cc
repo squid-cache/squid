@@ -30,17 +30,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#include "config.h"
+#include "squid.h"
 
 #if USE_POLL
 
-#include "squid.h"
+#include "squid-old.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "fde.h"
 #include "ICP.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 #include "Store.h"
 
 #if HAVE_POLL_H
@@ -305,7 +306,7 @@ comm_poll_icp_incoming(void)
     if (nevents > INCOMING_ICP_MAX)
         nevents = INCOMING_ICP_MAX;
 
-    statHistCount(&statCounter.comm_icp_incoming, nevents);
+    statCounter.comm_icp_incoming.count(nevents);
 }
 
 static void
@@ -339,7 +340,7 @@ comm_poll_http_incoming(void)
     if (nevents > INCOMING_HTTP_MAX)
         nevents = INCOMING_HTTP_MAX;
 
-    statHistCount(&statCounter.comm_http_incoming, nevents);
+    statCounter.comm_http_incoming.count(nevents);
 }
 
 /* poll all sockets; call handlers for those that are ready. */
@@ -449,7 +450,7 @@ Comm::DoSelect(int msec)
         getCurrentTime();
 
         debugs(5, num ? 5 : 8, "comm_poll: " << num << "+" << npending << " FDs ready");
-        statHistCount(&statCounter.select_fds_hist, num);
+        statCounter.select_fds_hist.count(num);
 
         if (num == 0 && npending == 0)
             continue;
@@ -620,7 +621,7 @@ comm_poll_dns_incoming(void)
     if (nevents > INCOMING_DNS_MAX)
         nevents = INCOMING_DNS_MAX;
 
-    statHistCount(&statCounter.comm_dns_incoming, nevents);
+    statCounter.comm_dns_incoming.count(nevents);
 }
 
 
@@ -641,7 +642,6 @@ Comm::SelectLoopInit(void)
 static void
 commIncomingStats(StoreEntry * sentry)
 {
-    StatCounters *f = &statCounter;
     storeAppendPrintf(sentry, "Current incoming_icp_interval: %d\n",
                       incoming_icp_interval >> INCOMING_FACTOR);
     storeAppendPrintf(sentry, "Current incoming_dns_interval: %d\n",
@@ -651,11 +651,11 @@ commIncomingStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\n");
     storeAppendPrintf(sentry, "Histogram of events per incoming socket type\n");
     storeAppendPrintf(sentry, "ICP Messages handled per comm_poll_icp_incoming() call:\n");
-    statHistDump(&f->comm_icp_incoming, sentry, statHistIntDumper);
+    statCounter.comm_icp_incoming.dump(sentry, statHistIntDumper);
     storeAppendPrintf(sentry, "DNS Messages handled per comm_poll_dns_incoming() call:\n");
-    statHistDump(&f->comm_dns_incoming, sentry, statHistIntDumper);
+    statCounter.comm_dns_incoming.dump(sentry, statHistIntDumper);
     storeAppendPrintf(sentry, "HTTP Messages handled per comm_poll_http_incoming() call:\n");
-    statHistDump(&f->comm_http_incoming, sentry, statHistIntDumper);
+    statCounter.comm_http_incoming.dump(sentry, statHistIntDumper);
 }
 
 /* Called by async-io or diskd to speed up the polling */

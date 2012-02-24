@@ -29,7 +29,7 @@
  * Still in the public domain.
  *
  */
-#include "config.h"
+#include "squid.h"
 #include "md5.h"
 
 #if HAVE_STRING_H

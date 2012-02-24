@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "base/TextException.h"
 #include "CpuAffinity.h"
 #include "CpuAffinityMap.h"

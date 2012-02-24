@@ -8,7 +8,7 @@
  * temp file is written in /tmp.
  */
 
-#include "config.h"
+#include "squid.h"
 #include "compat/tempnam.h"
 
 #if HAVE_LIBC_H

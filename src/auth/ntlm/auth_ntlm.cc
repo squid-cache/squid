@@ -37,7 +37,7 @@
  * See acl.c for access control and client_side.c for auditing */
 
 
-#include "squid.h"
+#include "squid-old.h"
 #include "auth/Gadgets.h"
 #include "auth/ntlm/auth_ntlm.h"
 #include "auth/ntlm/Scheme.h"
@@ -200,7 +200,7 @@ Auth::Ntlm::Config::configured() const
 /* NTLM Scheme */
 
 void
-Auth::Ntlm::Config::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
+Auth::Ntlm::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
     if (!authenticateProgram)
         return;
@@ -219,7 +219,7 @@ Auth::Ntlm::Config::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpRe
             request->flags.proxy_keepalive = 0;
         }
     } else {
-        AuthNTLMUserRequest *ntlm_request = dynamic_cast<AuthNTLMUserRequest *>(auth_user_request.getRaw());
+        Auth::Ntlm::UserRequest *ntlm_request = dynamic_cast<Auth::Ntlm::UserRequest *>(auth_user_request.getRaw());
         assert(ntlm_request != NULL);
 
         switch (ntlm_request->user()->credentials()) {
@@ -267,11 +267,11 @@ authenticateNTLMStats(StoreEntry * sentry)
  * Decode a NTLM [Proxy-]Auth string, placing the results in the passed
  * Auth_user structure.
  */
-AuthUserRequest::Pointer
+Auth::UserRequest::Pointer
 Auth::Ntlm::Config::decode(char const *proxy_auth)
 {
     Auth::Ntlm::User *newUser = new Auth::Ntlm::User(Auth::Config::Find("ntlm"));
-    AuthUserRequest::Pointer auth_user_request = new AuthNTLMUserRequest();
+    Auth::UserRequest::Pointer auth_user_request = new Auth::Ntlm::UserRequest();
     assert(auth_user_request->user() == NULL);
 
     auth_user_request->user(newUser);

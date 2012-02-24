@@ -21,13 +21,20 @@
 
 /// well-known registries
 typedef enum {
-    /// managed by main.cc; activated after parsing squid.conf but
-    /// before rrAfterConfig, deactivated after rrAfterConfig but
-    /// before freeing configuration-related memory or exit()-ing
+    /// Managed by main.cc. Activated after parsing squid.conf and
+    /// deactivated before freeing configuration-related memory or exit()-ing.
+    /// Meant for setting configuration options that depend on other
+    /// configuration options and were not explicitly configured.
+    rrFinalizeConfig,
+
+    /// Managed by main.cc. Activated after rrFinalizeConfig and
+    /// deactivated before rrFinalizeConfig. Meant for announcing
+    /// memory reservations before memory is allocated.
     rrClaimMemoryNeeds,
 
-    /// managed by main.cc; activated after parsing squid.conf and
-    /// deactivated before freeing configuration-related memory or exit()-ing
+    /// Managed by main.cc. Activated after rrClaimMemoryNeeds and
+    /// deactivated before rrClaimMemoryNeeds. Meant for activating
+    /// modules and features based on the finalized configuration.
     rrAfterConfig,
 
     rrEnd ///< not a real registry, just a label to mark the end of enum

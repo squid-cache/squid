@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "base/Subscription.h"
 #include "fde.h"
 #include "ICP.h"
@@ -271,18 +271,9 @@ int
 
 rusage_maxrss(struct rusage *r)
 {
-#if defined(_SQUID_SGI_) && _ABIAPI
+#if _SQUID_SGI_ && _ABIAPI
     return r->ru_pad[0];
-#elif defined(_SQUID_SGI_)
-
-    return r->ru_maxrss;
-#elif defined(_SQUID_OSF_)
-
-    return r->ru_maxrss;
-#elif defined(_SQUID_AIX_)
-
-    return r->ru_maxrss;
-#elif defined(BSD4_4)
+#elif _SQUID_SGI_|| _SQUID_OSF_ || _SQUID_AIX_ || defined(BSD4_4)
 
     return r->ru_maxrss;
 #elif defined(HAVE_GETPAGESIZE) && HAVE_GETPAGESIZE != 0
@@ -301,7 +292,7 @@ int
 
 rusage_pagefaults(struct rusage *r)
 {
-#if defined(_SQUID_SGI_) && _ABIAPI
+#if _SQUID_SGI_ && _ABIAPI
     return r->ru_pad[5];
 #else
 
@@ -347,7 +338,7 @@ death(int sig)
     }
 
 #endif /* _SQUID_HPUX_ */
-#if defined(_SQUID_SOLARIS_) && HAVE_LIBOPCOM_STACK
+#if _SQUID_SOLARIS_ && HAVE_LIBOPCOM_STACK
     {				/* get ftp://opcom.sun.ca/pub/tars/opcom_stack.tar.gz and */
         extern void opcom_stack_trace(void);	/* link with -lopcom_stack */
         fflush(debug_log);
@@ -368,7 +359,7 @@ death(int sig)
 #endif
 #endif /* PRINT_STACK_TRACE */
 
-#if SA_RESETHAND == 0 && !defined(_SQUID_MSWIN_)
+#if SA_RESETHAND == 0 && !_SQUID_MSWIN_
     signal(SIGSEGV, SIG_DFL);
 
     signal(SIGBUS, SIG_DFL);
@@ -619,7 +610,7 @@ getMyHostname(void)
 #if USE_SSL
 
     if (Config.Sockaddr.https && sa.IsAnyAddr())
-        sa = Config.Sockaddr.https->http.s;
+        sa = Config.Sockaddr.https->s;
 
 #endif
 
@@ -1267,18 +1258,23 @@ parseEtcHosts(void)
 int
 getMyPort(void)
 {
-    if (Config.Sockaddr.http) {
-        // skip any special mode ports
-        http_port_list *p = Config.Sockaddr.http;
-        while (p && (p->intercepted || p->accel || p->spoof_client_ip))
+    http_port_list *p = NULL;
+    if ((p = Config.Sockaddr.http)) {
+        // skip any special interception ports
+        while (p && (p->intercepted || p->spoof_client_ip))
             p = p->next;
         if (p)
             return p->s.GetPort();
     }
 
 #if USE_SSL
-    if (Config.Sockaddr.https)
-        return Config.Sockaddr.https->http.s.GetPort();
+    if ((p = Config.Sockaddr.https)) {
+        // skip any special interception ports
+        while (p && (p->intercepted || p->spoof_client_ip))
+            p = p->next;
+        if (p)
+            return p->s.GetPort();
+    }
 #endif
 
     debugs(21, DBG_CRITICAL, "ERROR: No forward-proxy ports configured.");
@@ -1383,7 +1379,7 @@ restoreCapabilities(int keep)
         }
         cap_free(caps);
     }
-#elif defined(_SQUID_LINUX_)
+#elif _SQUID_LINUX_
     Ip::Interceptor.StopTransparency("Missing needed capability support.");
 #endif /* HAVE_SYS_CAPABILITY_H */
 }

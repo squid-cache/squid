@@ -32,10 +32,12 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "cache_snmp.h"
 #include "Store.h"
 #include "mem_node.h"
+#include "StatCounters.h"
+#include "StatHist.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 
@@ -572,35 +574,35 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
             break;
 
         case PERF_MEDIAN_HTTP_ALL:
-            x = statHistDeltaMedian(&l->client_http.all_svc_time,
-                                    &f->client_http.all_svc_time);
+            x = statHistDeltaMedian(l->client_http.allSvcTime,
+                                    f->client_http.allSvcTime);
             break;
 
         case PERF_MEDIAN_HTTP_MISS:
-            x = statHistDeltaMedian(&l->client_http.miss_svc_time,
-                                    &f->client_http.miss_svc_time);
+            x = statHistDeltaMedian(l->client_http.missSvcTime,
+                                    f->client_http.missSvcTime);
             break;
 
         case PERF_MEDIAN_HTTP_NM:
-            x = statHistDeltaMedian(&l->client_http.nm_svc_time,
-                                    &f->client_http.nm_svc_time);
+            x = statHistDeltaMedian(l->client_http.nearMissSvcTime,
+                                    f->client_http.nearMissSvcTime);
             break;
 
         case PERF_MEDIAN_HTTP_HIT:
-            x = statHistDeltaMedian(&l->client_http.hit_svc_time,
-                                    &f->client_http.hit_svc_time);
+            x = statHistDeltaMedian(l->client_http.hitSvcTime,
+                                    f->client_http.hitSvcTime);
             break;
 
         case PERF_MEDIAN_ICP_QUERY:
-            x = statHistDeltaMedian(&l->icp.query_svc_time, &f->icp.query_svc_time);
+            x = statHistDeltaMedian(l->icp.querySvcTime, f->icp.querySvcTime);
             break;
 
         case PERF_MEDIAN_ICP_REPLY:
-            x = statHistDeltaMedian(&l->icp.reply_svc_time, &f->icp.reply_svc_time);
+            x = statHistDeltaMedian(l->icp.replySvcTime, f->icp.replySvcTime);
             break;
 
         case PERF_MEDIAN_DNS:
-            x = statHistDeltaMedian(&l->dns.svc_time, &f->dns.svc_time);
+            x = statHistDeltaMedian(l->dns.svcTime, f->dns.svcTime);
             break;
 
         case PERF_MEDIAN_RHR:
@@ -612,8 +614,8 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
             break;
 
         case PERF_MEDIAN_HTTP_NH:
-            x = statHistDeltaMedian(&l->client_http.nh_svc_time,
-                                    &f->client_http.nh_svc_time);
+            x = statHistDeltaMedian(l->client_http.nearHitSvcTime,
+                                    f->client_http.nearHitSvcTime);
             break;
 
         default:

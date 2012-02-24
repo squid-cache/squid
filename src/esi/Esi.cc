@@ -31,7 +31,7 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 /* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the ESI code from compile process when not needed.
@@ -1465,15 +1465,15 @@ ESIContext::fail ()
     err->err_msg = errormessage;
     errormessage = NULL;
     rep = err->BuildHttpReply();
-    assert (rep->body.mb->contentSize() >= 0);
-    size_t errorprogress = rep->body.mb->contentSize();
+    assert (rep->body.hasContent());
+    size_t errorprogress = rep->body.contentSize();
     /* Tell esiSend where to start sending from */
     outbound_offset = 0;
     /* copy the membuf from the reply to outbound */
 
-    while (errorprogress < (size_t)rep->body.mb->contentSize()) {
+    while (errorprogress < (size_t)rep->body.contentSize()) {
         appendOutboundData(new ESISegment);
-        errorprogress += outboundtail->append(rep->body.mb->content() + errorprogress, rep->body.mb->contentSize() - errorprogress);
+        errorprogress += outboundtail->append(rep->body.content() + errorprogress, rep->body.contentSize() - errorprogress);
     }
 
     /* the esiCode now thinks that the error is the outbound,
@@ -2432,19 +2432,19 @@ esiEnableProcessing (HttpReply *rep)
     int rv = 0;
 
     if (rep->surrogate_control) {
-        HttpHdrScTarget *sctusable = httpHdrScGetMergedTarget (rep->surrogate_control,
-                                     Config.Accel.surrogate_id);
+        HttpHdrScTarget *sctusable =
+            rep->surrogate_control->getMergedTarget(Config.Accel.surrogate_id);
 
-        if (!sctusable || sctusable->content.size() == 0)
+        if (!sctusable || !sctusable->hasContent())
             /* Nothing generic or targeted at us, or no
              * content processing requested
              */
             return 0;
 
-        if (sctusable->content.pos("ESI/1.0") != NULL)
+        if (sctusable->content().pos("ESI/1.0") != NULL)
             rv = 1;
 
-        httpHdrScTargetDestroy (sctusable);
+        delete sctusable;
     }
 
     return rv;

@@ -37,7 +37,7 @@
  * See acl.c for access control and client_side.c for auditing */
 
 
-#include "squid.h"
+#include "squid-old.h"
 #include "auth/basic/auth_basic.h"
 #include "auth/basic/Scheme.h"
 #include "auth/basic/User.h"
@@ -95,7 +95,7 @@ Auth::Basic::Config::type() const
 }
 
 void
-Auth::Basic::Config::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
+Auth::Basic::Config::fixHeader(Auth::UserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
     if (authenticateProgram) {
         debugs(29, 9, HERE << "Sending type:" << hdrType << " header: 'Basic realm=\"" << basicAuthRealm << "\"'");
@@ -258,10 +258,10 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader)
  * "cannot decode credentials". Use the message field to return a
  * descriptive message to the user.
  */
-AuthUserRequest::Pointer
+Auth::UserRequest::Pointer
 Auth::Basic::Config::decode(char const *proxy_auth)
 {
-    AuthUserRequest::Pointer auth_user_request = dynamic_cast<AuthUserRequest*>(new AuthBasicUserRequest);
+    Auth::UserRequest::Pointer auth_user_request = dynamic_cast<Auth::UserRequest*>(new Auth::Basic::UserRequest);
     /* decode the username */
 
     // retrieve the cleartext (in a dynamically allocated char*)

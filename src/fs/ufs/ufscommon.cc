@@ -33,10 +33,11 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "config.h"
+#include "squid.h"
 #include "ufscommon.h"
 #include "Store.h"
 #include "fde.h"
+#include "SquidTime.h"
 #include "StoreMeta.h"
 #include "Generic.h"
 #include "StoreMetaUnpacker.h"
@@ -299,7 +300,6 @@ int UFSSwapLogParser::SwapLogEntries()
 
 RebuildState::RebuildState (RefCount<UFSSwapDir> aSwapDir) : sd (aSwapDir),LogParser(NULL), e(NULL), fromLog(true), _done (false)
 {
-    speed = opt_foreground_rebuild ? 1 << 30 : 50;
     /*
      * If the swap.state file exists in the cache_dir, then
      * we'll use commonUfsDirRebuildFromSwapLog(), otherwise we'll
@@ -345,7 +345,7 @@ RebuildState::RebuildStep(void *data)
     rb->rebuildStep();
 
     if (!rb->isDone())
-        eventAdd("storeRebuild", RebuildStep, rb, 0.0, 1);
+        eventAdd("storeRebuild", RebuildStep, rb, 0.01, 1);
     else {
         StoreController::store_dirs_rebuilding--;
         storeRebuildComplete(&rb->counts);
@@ -353,19 +353,47 @@ RebuildState::RebuildStep(void *data)
     }
 }
 
+/// load entries from swap.state or files until we run out of entries or time
 void
 RebuildState::rebuildStep()
 {
-    if (fromLog)
-        rebuildFromSwapLog();
-    else
-        rebuildFromDirectory();
+    currentEntry(NULL);
+
+    // Balance our desire to maximize the number of entries processed at once
+    // (and, hence, minimize overheads and total rebuild time) with a
+    // requirement to also process Coordinator events, disk I/Os, etc.
+    const int maxSpentMsec = 50; // keep small: most RAM I/Os are under 1ms
+    const timeval loopStart = current_time;
+
+    const int totalEntries = LogParser ? LogParser->SwapLogEntries() : -1;
+
+    while (!isDone()) {
+        if (fromLog)
+            rebuildFromSwapLog();
+        else
+            rebuildFromDirectory();
+
+        // TODO: teach storeRebuildProgress to handle totalEntries <= 0
+        if (totalEntries > 0 && (n_read % 4000 == 0))
+            storeRebuildProgress(sd->index, totalEntries, n_read);
+
+        if (opt_foreground_rebuild)
+            continue; // skip "few entries at a time" check below
+
+        getCurrentTime();
+        const double elapsedMsec = tvSubMsec(loopStart, current_time);
+        if (elapsedMsec > maxSpentMsec || elapsedMsec < 0) {
+            debugs(47, 5, HERE << "pausing after " << n_read << " entries in " <<
+                   elapsedMsec << "ms; " << (elapsedMsec/n_read) << "ms per entry");
+            break;
+        }
+    }
 }
 
+/// process one cache file
 void
 RebuildState::rebuildFromDirectory()
 {
-    currentEntry(NULL);
     cache_key key[SQUID_MD5_DIGEST_LENGTH];
 
     struct stat sb;
@@ -373,68 +401,65 @@ RebuildState::rebuildFromDirectory()
     assert(this != NULL);
     debugs(47, 3, "commonUfsDirRebuildFromDirectory: DIR #" << sd->index);
 
-    for (int count = 0; count < speed; count++) {
-        assert(fd == -1);
-        sfileno filn = 0;
-        int size;
-        fd = getNextFile(&filn, &size);
+    assert(fd == -1);
+    sfileno filn = 0;
+    int size;
+    fd = getNextFile(&filn, &size);
 
-        if (fd == -2) {
-            debugs(47, 1, "Done scanning " << sd->path << " swaplog (" << n_read << " entries)");
-            _done = true;
-            return;
-        } else if (fd < 0) {
-            continue;
-        }
+    if (fd == -2) {
+        debugs(47, 1, "Done scanning " << sd->path << " swaplog (" << n_read << " entries)");
+        _done = true;
+        return;
+    } else if (fd < 0) {
+        return;
+    }
 
-        assert(fd > -1);
-        /* lets get file stats here */
+    assert(fd > -1);
+    /* lets get file stats here */
 
-        if (fstat(fd, &sb) < 0) {
-            debugs(47, 1, "commonUfsDirRebuildFromDirectory: fstat(FD " << fd << "): " << xstrerror());
-            file_close(fd);
-            store_open_disk_fd--;
-            fd = -1;
-            continue;
-        }
-
-        MemBuf buf;
-        buf.init(SM_PAGE_SIZE, SM_PAGE_SIZE);
-        if (!storeRebuildLoadEntry(fd, sd->index, buf, counts))
-            return;
-
-        StoreEntry tmpe;
-        const bool loaded = storeRebuildParseEntry(buf, tmpe, key, counts,
-                            (int64_t)sb.st_size);
-
+    if (fstat(fd, &sb) < 0) {
+        debugs(47, 1, "commonUfsDirRebuildFromDirectory: fstat(FD " << fd << "): " << xstrerror());
         file_close(fd);
         store_open_disk_fd--;
         fd = -1;
-
-        if (!loaded) {
-            // XXX: shouldn't this be a call to commonUfsUnlink?
-            sd->unlinkFile(filn); // should we unlink in all failure cases?
-            continue;
-        }
-
-        if (!storeRebuildKeepEntry(tmpe, key, counts))
-            continue;
-
-        counts.objcount++;
-        // tmpe.dump(5);
-        currentEntry(sd->addDiskRestore(key,
-                                        filn,
-                                        tmpe.swap_file_sz,
-                                        tmpe.expires,
-                                        tmpe.timestamp,
-                                        tmpe.lastref,
-                                        tmpe.lastmod,
-                                        tmpe.refcount,	/* refcount */
-                                        tmpe.flags,		/* flags */
-                                        (int) flags.clean));
-        storeDirSwapLog(currentEntry(), SWAP_LOG_ADD);
+        return;
     }
 
+    MemBuf buf;
+    buf.init(SM_PAGE_SIZE, SM_PAGE_SIZE);
+    if (!storeRebuildLoadEntry(fd, sd->index, buf, counts))
+        return;
+
+    StoreEntry tmpe;
+    const bool loaded = storeRebuildParseEntry(buf, tmpe, key, counts,
+                        (int64_t)sb.st_size);
+
+    file_close(fd);
+    store_open_disk_fd--;
+    fd = -1;
+
+    if (!loaded) {
+        // XXX: shouldn't this be a call to commonUfsUnlink?
+        sd->unlinkFile(filn); // should we unlink in all failure cases?
+        return;
+    }
+
+    if (!storeRebuildKeepEntry(tmpe, key, counts))
+        return;
+
+    counts.objcount++;
+    // tmpe.dump(5);
+    currentEntry(sd->addDiskRestore(key,
+                                    filn,
+                                    tmpe.swap_file_sz,
+                                    tmpe.expires,
+                                    tmpe.timestamp,
+                                    tmpe.lastref,
+                                    tmpe.lastmod,
+                                    tmpe.refcount,	/* refcount */
+                                    tmpe.flags,		/* flags */
+                                    (int) flags.clean));
+    storeDirSwapLog(currentEntry(), SWAP_LOG_ADD);
 }
 
 StoreEntry *
@@ -449,115 +474,48 @@ RebuildState::currentEntry(StoreEntry *newValue)
     e = newValue;
 }
 
+/// process one swap log entry
 void
 RebuildState::rebuildFromSwapLog()
 {
-    currentEntry (NULL);
-    double x;
-    /* load a number of objects per invocation */
+    StoreSwapLogData swapData;
 
-    for (int count = 0; count < speed; count++) {
-        StoreSwapLogData swapData;
+    if (LogParser->ReadRecord(swapData) != 1) {
+        debugs(47, 1, "Done reading " << sd->path << " swaplog (" << n_read << " entries)");
+        LogParser->Close();
+        delete LogParser;
+        LogParser = NULL;
+        _done = true;
+        return;
+    }
 
-        if (LogParser->ReadRecord(swapData) != 1) {
-            debugs(47, 1, "Done reading " << sd->path << " swaplog (" << n_read << " entries)");
-            LogParser->Close();
-            delete LogParser;
-            LogParser = NULL;
-            _done = true;
-            return;
-        }
+    n_read++;
 
-        n_read++;
+    if (!swapData.sane()) {
+        counts.invalid++;
+        return;
+    }
 
-        if (swapData.op <= SWAP_LOG_NOP)
-            continue;
+    /*
+     * BC: during 2.4 development, we changed the way swap file
+     * numbers are assigned and stored.  The high 16 bits used
+     * to encode the SD index number.  There used to be a call
+     * to storeDirProperFileno here that re-assigned the index
+     * bits.  Now, for backwards compatibility, we just need
+     * to mask it off.
+     */
+    swapData.swap_filen &= 0x00FFFFFF;
 
-        if (swapData.op >= SWAP_LOG_MAX)
-            continue;
+    debugs(47, 3, "commonUfsDirRebuildFromSwapLog: " <<
+           swap_log_op_str[(int) swapData.op]  << " " <<
+           storeKeyText(swapData.key)  << " "<< std::setfill('0') <<
+           std::hex << std::uppercase << std::setw(8) <<
+           swapData.swap_filen);
 
-        /*
-         * BC: during 2.4 development, we changed the way swap file
-         * numbers are assigned and stored.  The high 16 bits used
-         * to encode the SD index number.  There used to be a call
-         * to storeDirProperFileno here that re-assigned the index
-         * bits.  Now, for backwards compatibility, we just need
-         * to mask it off.
-         */
-        swapData.swap_filen &= 0x00FFFFFF;
-
-        debugs(47, 3, "commonUfsDirRebuildFromSwapLog: " <<
-               swap_log_op_str[(int) swapData.op]  << " " <<
-               storeKeyText(swapData.key)  << " "<< std::setfill('0') <<
-               std::hex << std::uppercase << std::setw(8) <<
-               swapData.swap_filen);
-
-        if (swapData.op == SWAP_LOG_ADD) {
-            (void) 0;
-        } else if (swapData.op == SWAP_LOG_DEL) {
-            /* Delete unless we already have a newer copy anywhere in any store */
-            /* this needs to become
-             * 1) unpack url
-             * 2) make synthetic request with headers ?? or otherwise search
-             * for a matching object in the store
-             * TODO FIXME change to new async api
-             */
-            currentEntry (Store::Root().get(swapData.key));
-
-            if (currentEntry() != NULL && swapData.lastref >= e->lastref) {
-                /*
-                 * Make sure we don't unlink the file, it might be
-                 * in use by a subsequent entry.  Also note that
-                 * we don't have to subtract from cur_size because
-                 * adding to cur_size happens in the cleanup procedure.
-                 */
-                currentEntry()->expireNow();
-                currentEntry()->releaseRequest();
-
-                if (currentEntry()->swap_filen > -1) {
-                    UFSSwapDir *sdForThisEntry = dynamic_cast<UFSSwapDir *>(INDEXSD(currentEntry()->swap_dirn));
-                    assert (sdForThisEntry);
-                    sdForThisEntry->replacementRemove(currentEntry());
-                    sdForThisEntry->mapBitReset(currentEntry()->swap_filen);
-                    currentEntry()->swap_filen = -1;
-                    currentEntry()->swap_dirn = -1;
-                }
-
-                currentEntry()->release();
-                counts.objcount--;
-                counts.cancelcount++;
-            }
-            continue;
-        } else {
-            x = ::log(static_cast<double>(++counts.bad_log_op)) / ::log(10.0);
-
-            if (0.0 == x - (double) (int) x)
-                debugs(47, 1, "WARNING: " << counts.bad_log_op << " invalid swap log entries found");
-
-            counts.invalid++;
-
-            continue;
-        }
-
-        if ((++counts.scancount & 0xFFF) == 0) {
-
-            int swap_entries = LogParser->SwapLogEntries();
-
-            if (0 != swap_entries )
-                storeRebuildProgress(sd->index,
-                                     swap_entries, n_read);
-        }
-
-        if (!sd->validFileno(swapData.swap_filen, 0)) {
-            counts.invalid++;
-            continue;
-        }
-
-        if (EBIT_TEST(swapData.flags, KEY_PRIVATE)) {
-            counts.badflags++;
-            continue;
-        }
-
+    if (swapData.op == SWAP_LOG_ADD) {
+        (void) 0;
+    } else if (swapData.op == SWAP_LOG_DEL) {
+        /* Delete unless we already have a newer copy anywhere in any store */
         /* this needs to become
          * 1) unpack url
          * 2) make synthetic request with headers ?? or otherwise search
@@ -566,102 +524,156 @@ RebuildState::rebuildFromSwapLog()
          */
         currentEntry (Store::Root().get(swapData.key));
 
-        int used;			/* is swapfile already in use? */
-
-        used = sd->mapBitTest(swapData.swap_filen);
-
-        /* If this URL already exists in the cache, does the swap log
-         * appear to have a newer entry?  Compare 'lastref' from the
-         * swap log to e->lastref. */
-        /* is the log entry newer than current entry? */
-        int disk_entry_newer = currentEntry() ? (swapData.lastref > currentEntry()->lastref ? 1 : 0) : 0;
-
-        if (used && !disk_entry_newer) {
-            /* log entry is old, ignore it */
-            counts.clashcount++;
-            continue;
-        } else if (used && currentEntry() && currentEntry()->swap_filen == swapData.swap_filen && currentEntry()->swap_dirn == sd->index) {
-            /* swapfile taken, same URL, newer, update meta */
-
-            if (currentEntry()->store_status == STORE_OK) {
-                currentEntry()->lastref = swapData.timestamp;
-                currentEntry()->timestamp = swapData.timestamp;
-                currentEntry()->expires = swapData.expires;
-                currentEntry()->lastmod = swapData.lastmod;
-                currentEntry()->flags = swapData.flags;
-                currentEntry()->refcount += swapData.refcount;
-                sd->dereference(*currentEntry());
-            } else {
-                debug_trap("commonUfsDirRebuildFromSwapLog: bad condition");
-                debugs(47, 1, "\tSee " << __FILE__ << ":" << __LINE__);
-            }
-            continue;
-        } else if (used) {
-            /* swapfile in use, not by this URL, log entry is newer */
-            /* This is sorta bad: the log entry should NOT be newer at this
-             * point.  If the log is dirty, the filesize check should have
-             * caught this.  If the log is clean, there should never be a
-             * newer entry. */
-            debugs(47, 1, "WARNING: newer swaplog entry for dirno " <<
-                   sd->index  << ", fileno "<< std::setfill('0') << std::hex <<
-                   std::uppercase << std::setw(8) << swapData.swap_filen);
-
-            /* I'm tempted to remove the swapfile here just to be safe,
-             * but there is a bad race condition in the NOVM version if
-             * the swapfile has recently been opened for writing, but
-             * not yet opened for reading.  Because we can't map
-             * swapfiles back to StoreEntrys, we don't know the state
-             * of the entry using that file.  */
-            /* We'll assume the existing entry is valid, probably because
-             * were in a slow rebuild and the the swap file number got taken
-             * and the validation procedure hasn't run. */
-            assert(flags.need_to_validate);
-            counts.clashcount++;
-            continue;
-        } else if (currentEntry() && !disk_entry_newer) {
-            /* key already exists, current entry is newer */
-            /* keep old, ignore new */
-            counts.dupcount++;
-            continue;
-        } else if (currentEntry()) {
-            /* key already exists, this swapfile not being used */
-            /* junk old, load new */
+        if (currentEntry() != NULL && swapData.lastref >= e->lastref) {
+            /*
+             * Make sure we don't unlink the file, it might be
+             * in use by a subsequent entry.  Also note that
+             * we don't have to subtract from cur_size because
+             * adding to cur_size happens in the cleanup procedure.
+             */
             currentEntry()->expireNow();
             currentEntry()->releaseRequest();
 
             if (currentEntry()->swap_filen > -1) {
                 UFSSwapDir *sdForThisEntry = dynamic_cast<UFSSwapDir *>(INDEXSD(currentEntry()->swap_dirn));
+                assert (sdForThisEntry);
                 sdForThisEntry->replacementRemove(currentEntry());
-                /* Make sure we don't actually unlink the file */
                 sdForThisEntry->mapBitReset(currentEntry()->swap_filen);
                 currentEntry()->swap_filen = -1;
                 currentEntry()->swap_dirn = -1;
             }
 
             currentEntry()->release();
-            counts.dupcount++;
-        } else {
-            /* URL doesnt exist, swapfile not in use */
-            /* load new */
-            (void) 0;
+            counts.objcount--;
+            counts.cancelcount++;
         }
+        return;
+    } else {
+        const double
+        x = ::log(static_cast<double>(++counts.bad_log_op)) / ::log(10.0);
 
-        counts.objcount++;
+        if (0.0 == x - (double) (int) x)
+            debugs(47, 1, "WARNING: " << counts.bad_log_op << " invalid swap log entries found");
 
-        currentEntry(sd->addDiskRestore(swapData.key,
-                                        swapData.swap_filen,
-                                        swapData.swap_file_sz,
-                                        swapData.expires,
-                                        swapData.timestamp,
-                                        swapData.lastref,
-                                        swapData.lastmod,
-                                        swapData.refcount,
-                                        swapData.flags,
-                                        (int) flags.clean));
+        counts.invalid++;
 
-        storeDirSwapLog(currentEntry(), SWAP_LOG_ADD);
+        return;
     }
 
+    ++counts.scancount; // XXX: should not this be incremented earlier?
+
+    if (!sd->validFileno(swapData.swap_filen, 0)) {
+        counts.invalid++;
+        return;
+    }
+
+    if (EBIT_TEST(swapData.flags, KEY_PRIVATE)) {
+        counts.badflags++;
+        return;
+    }
+
+    /* this needs to become
+     * 1) unpack url
+     * 2) make synthetic request with headers ?? or otherwise search
+     * for a matching object in the store
+     * TODO FIXME change to new async api
+     */
+    currentEntry (Store::Root().get(swapData.key));
+
+    int used;			/* is swapfile already in use? */
+
+    used = sd->mapBitTest(swapData.swap_filen);
+
+    /* If this URL already exists in the cache, does the swap log
+     * appear to have a newer entry?  Compare 'lastref' from the
+     * swap log to e->lastref. */
+    /* is the log entry newer than current entry? */
+    int disk_entry_newer = currentEntry() ? (swapData.lastref > currentEntry()->lastref ? 1 : 0) : 0;
+
+    if (used && !disk_entry_newer) {
+        /* log entry is old, ignore it */
+        counts.clashcount++;
+        return;
+    } else if (used && currentEntry() && currentEntry()->swap_filen == swapData.swap_filen && currentEntry()->swap_dirn == sd->index) {
+        /* swapfile taken, same URL, newer, update meta */
+
+        if (currentEntry()->store_status == STORE_OK) {
+            currentEntry()->lastref = swapData.timestamp;
+            currentEntry()->timestamp = swapData.timestamp;
+            currentEntry()->expires = swapData.expires;
+            currentEntry()->lastmod = swapData.lastmod;
+            currentEntry()->flags = swapData.flags;
+            currentEntry()->refcount += swapData.refcount;
+            sd->dereference(*currentEntry());
+        } else {
+            debug_trap("commonUfsDirRebuildFromSwapLog: bad condition");
+            debugs(47, 1, "\tSee " << __FILE__ << ":" << __LINE__);
+        }
+        return;
+    } else if (used) {
+        /* swapfile in use, not by this URL, log entry is newer */
+        /* This is sorta bad: the log entry should NOT be newer at this
+         * point.  If the log is dirty, the filesize check should have
+         * caught this.  If the log is clean, there should never be a
+         * newer entry. */
+        debugs(47, 1, "WARNING: newer swaplog entry for dirno " <<
+               sd->index  << ", fileno "<< std::setfill('0') << std::hex <<
+               std::uppercase << std::setw(8) << swapData.swap_filen);
+
+        /* I'm tempted to remove the swapfile here just to be safe,
+         * but there is a bad race condition in the NOVM version if
+         * the swapfile has recently been opened for writing, but
+         * not yet opened for reading.  Because we can't map
+         * swapfiles back to StoreEntrys, we don't know the state
+         * of the entry using that file.  */
+        /* We'll assume the existing entry is valid, probably because
+         * were in a slow rebuild and the the swap file number got taken
+         * and the validation procedure hasn't run. */
+        assert(flags.need_to_validate);
+        counts.clashcount++;
+        return;
+    } else if (currentEntry() && !disk_entry_newer) {
+        /* key already exists, current entry is newer */
+        /* keep old, ignore new */
+        counts.dupcount++;
+        return;
+    } else if (currentEntry()) {
+        /* key already exists, this swapfile not being used */
+        /* junk old, load new */
+        currentEntry()->expireNow();
+        currentEntry()->releaseRequest();
+
+        if (currentEntry()->swap_filen > -1) {
+            UFSSwapDir *sdForThisEntry = dynamic_cast<UFSSwapDir *>(INDEXSD(currentEntry()->swap_dirn));
+            sdForThisEntry->replacementRemove(currentEntry());
+            /* Make sure we don't actually unlink the file */
+            sdForThisEntry->mapBitReset(currentEntry()->swap_filen);
+            currentEntry()->swap_filen = -1;
+            currentEntry()->swap_dirn = -1;
+        }
+
+        currentEntry()->release();
+        counts.dupcount++;
+    } else {
+        /* URL doesnt exist, swapfile not in use */
+        /* load new */
+        (void) 0;
+    }
+
+    counts.objcount++;
+
+    currentEntry(sd->addDiskRestore(swapData.key,
+                                    swapData.swap_filen,
+                                    swapData.swap_file_sz,
+                                    swapData.expires,
+                                    swapData.timestamp,
+                                    swapData.lastref,
+                                    swapData.lastmod,
+                                    swapData.refcount,
+                                    swapData.flags,
+                                    (int) flags.clean));
+
+    storeDirSwapLog(currentEntry(), SWAP_LOG_ADD);
 }
 
 int
@@ -770,25 +782,6 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
 
     *filn_p = fn;
     return fd;
-}
-
-void
-RebuildState::next(void (aCallback)(void *aCallbackDataarg), void *aCallbackData)
-{
-    /* for now, we don't cache at all */
-    speed = 1;
-    currentEntry(NULL);
-
-    while (!isDone() && currentEntry() == NULL)
-        rebuildStep();
-
-    aCallback(aCallbackData);
-}
-
-bool
-RebuildState::next()
-{
-    return false;
 }
 
 bool

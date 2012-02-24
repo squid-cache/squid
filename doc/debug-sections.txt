@@ -17,6 +17,7 @@ section 03    Configuration File Parsing
 section 03    Configuration Settings
 section 04    Error Generation
 section 05    Comm
+section 05    Disk I/O pipe manager
 section 05    Listener Socket Handler
 section 05    Socket Connection Opener
 section 05    Socket Functions
@@ -113,7 +114,6 @@ section 65    HTTP Cache Control Header
 section 66    HTTP Header Tools
 section 67    String
 section 68    HTTP Content-Range Header
-section 69    HTTP Header: Extension Field
 section 70    Cache Digest
 section 71    Store Digest Manager
 section 72    Peer Digest Routines

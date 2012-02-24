@@ -30,7 +30,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 #if USE_WCCPv2
 

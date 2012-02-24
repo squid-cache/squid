@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 
 #include "client_side.h"
 #include "forward.h"

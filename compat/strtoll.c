@@ -33,7 +33,7 @@
 
 /* modified for long long <mgd@swarm.org> 1999-08-12 */
 
-#include "config.h"
+#include "squid.h"
 #include "compat/strtoll.h"
 
 #if HAVE_CTYPE_H

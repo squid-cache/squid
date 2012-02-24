@@ -35,6 +35,7 @@ typedef enum {
     ERR_INVALID_URL,
     ERR_ZERO_SIZE_OBJECT,
     ERR_PRECONDITION_FAILED,
+    ERR_CONFLICT_HOST,
 
     /* FTP Errors */
     ERR_FTP_DISABLED,
@@ -59,7 +60,13 @@ typedef enum {
     ERR_DIR_LISTING,            /* Display of remote directory (FTP, Gopher) */
     ERR_SQUID_SIGNATURE,        /* not really an error */
     ERR_SHUTTING_DOWN,
-    TCP_RESET,
+
+    // NOTE: error types defined below TCP_RESET are optional and do not generate
+    //       a log warning if the files are missing
+    TCP_RESET,                  // Send TCP RST packet instead of error page
+
+    /* Cache Manager GUI can install a manager index/home page */
+    MGR_INDEX,
 
     ERR_MAX
 } err_type;

@@ -2,7 +2,7 @@
  * $Id$
  */
 
-#include "config.h"
+#include "squid.h"
 #include "helpers/defines.h"
 #include "ssl/gadgets.h"
 #include "ssl/crtd_message.h"

@@ -1,3 +1,50 @@
+Changes to squid-3.2.0.15 (06 Feb 2011):
+
+	- Bug 3472: segfault with the message 'urlParse: URL too large'
+	- Bug 3471: segfault when %la formating code used
+	- Bug 3449: part 3: shm_open can fail with a mangled path
+	- Bug 3449: part 4: shm_open failed (fixing memory_cache_shared defaults)
+	- Bug 3448: 204 response problem in adaptation chains
+	- Bug 3447: assertion failed: CommCalls.h:150: "dp"
+	- Bug 3461: build regression in IPFilter NAT
+	- Bug 3413: raise cbdata lock limits
+	- Bug 3391: forwarded_for log functionality broken
+	- Bug 3268: Squid cannot do anything else during ufs/diskd rebuild
+	- Bug 3268: remove wrong 'Ready to serve requests.' message
+	- Bug 2519: ssl_bump + Authentication (LDAP Digest) issues
+	- Disable OpenSSL SSL/TLS bug workarounds by default
+	- Send DNS A and AAAA queries in parallel
+	- Cache Manager migration support
+	- Allow service of internal requests over reverse-proxy ports
+	- Fix trimMemory for unswappable objects
+	- ... and several build and polish fixes
+
+Changes to squid-3.2.0.14 (12 Dec 2011):
+
+	- Bug 3433: Segfault closing SNMP
+	- Bug 3420: Request body consumption races and !theConsumer exception.
+	- Bug 3406: SSL Log Error in debug
+	- Bug 3383: store.cc:1631: "new_status != IN_MEMORY" assertion
+	- Bug 3383: unhandled exception: theGroupBSize > 0
+	- Bug 3377: assertion failed: store.cc:885: "store_status == STORE_PENDING"
+	- Bug 3367: fix inverted check on host_strict_verify
+	- Bug 3366: assertion comm.cc:1276: isOpen(fd) via CompositePoolNode::kickReads
+	- Bug 3364: SNMP Orphans
+	- Bug 3301: ERR_DNS_FAIL never shown
+	- Bug 3150: do not start useless unlinkd
+	- ext_session_acl: version 1.2
+	- Add adaptation_meta option
+	- Add a mask on the qos_flows miss configuration value
+	- Support intermediate CA in ssl-bump traffic certificates
+	- Support SSL certificate failure details on error page
+	- Fix flags for NAT intercept and TPROXY not set correctly
+	- Fix fastCheck() default result on multi-line actions
+	- Fix missing SMP shared memory statistics
+	- Fix Comm::Write closing() assertion when retrying a failed UDP DNS query
+	- ... and several other TCP and SMP support behaviour fixes
+	- ... and many code polishing cleanups and fixed build errors
+	- ... and several documentation polishings
+
 Changes to squid-3.2.0.13 (14 Oct 2011):
 
 	- Regression Bug 3363: never_direct always 'unable to forward this request at this time'
@@ -285,6 +332,43 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many code cleanups
 	- ... and a great many testing improvements
 	- ... and many documentation updates
+
+Changes to squid-3.1.19 (06 Feb 2011):
+
+	- Regression Bug 3441: part 2: Prevent further cache size corruption of swap.state
+	- Bug 3473: erase last uses of obsolete auth_user_hash_pointer
+	- Bug 3470: GCC 4.7
+	- Bug 3442: assertion failed: external_acl.cc:908: ch->auth_user_request != NULL
+	- Bug 3441: part 1: Minimize cache size corruption by malformed swap.state
+	- Bug 3440: compile error in Adaptation
+	- Bug 3420: Request body consumption races and !theConsumer exception
+	- Bug 3370: external ACL sometimes skipping
+	- Bug 3085: Crash when parsing esi:include
+	- HTTP/1.1: do not add 110 and 111 Warnings to revalidated responses
+	- Fix SSL library dependency fixes
+
+Changes to squid-3.1.18 (03 Dec 2011):
+
+	- Regression: compile error in FTP
+
+Changes to squid-3.1.17 (03 Dec 2011):
+
+	- Bug 3432: Crash logging FTP errors
+	- Bug 3428: Active FTP data channel accepted twice
+	- Bug 3423: access violation in URL parser
+	- Bug 3422: Buffer overflow in recv-announce
+	- Bug 3412: External ACL Uses Invalid Cache Entry
+	- Bug 3408: Wrong header length leads to EFAULTs when creating UFS swap.log.new
+	- Bug 3398: persistent server connection closed after PUT/DELETE
+	- Bug 3299: dnsserver: various undefined references
+	- Bug 3077: '\' in url query strings cause Digest authentication to fail
+	- Bug 2910: MemBuf may grow beyond max_capacity
+	- Bug 2619: Excessive RAM growth due to unlimited adapted body data consumption
+	- Bug 1243: Build overrides configured AR setting
+	- Avoid crashes when processing bad X509 common names (CN).
+	- Support %% in external ACL format
+	- ... and several other compile error fixes
+	- ... and several documentation fixes
 
 Changes to squid-3.1.16 (14 Oct 2011):
 

@@ -34,7 +34,7 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "acl/FilledChecklist.h"
 #include "auth/Acl.h"
 #include "auth/AclMaxUserIp.h"
@@ -112,7 +112,7 @@ ACLMaxUserIP::parse()
  * 1 : Match
  */
 int
-ACLMaxUserIP::match(AuthUserRequest::Pointer auth_user_request, Ip::Address const &src_addr)
+ACLMaxUserIP::match(Auth::UserRequest::Pointer auth_user_request, Ip::Address const &src_addr)
 {
     /*
      * the logic for flush the ip list when the limit is hit vs keep

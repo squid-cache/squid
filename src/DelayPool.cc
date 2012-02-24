@@ -36,7 +36,7 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "config.h"
+#include "squid.h"
 
 #if USE_DELAY_POOLS
 #include "DelayPool.h"

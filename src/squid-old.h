@@ -32,7 +32,7 @@
 #ifndef SQUID_H
 #define SQUID_H
 
-#include "config.h"
+#include "squid.h"
 
 #if _SQUID_MSWIN_
 /** \cond AUTODOCS-IGNORE */
@@ -149,7 +149,7 @@ using namespace Squid;
 #define LOCAL_ARRAY(type,name,size) static type name[size]
 #endif
 
-#if defined(_SQUID_NEXT_) && !defined(S_ISDIR)
+#if _SQUID_NEXT_ && !defined(S_ISDIR)
 #define S_ISDIR(mode) (((mode) & (_S_IFMT)) == (_S_IFDIR))
 #endif
 

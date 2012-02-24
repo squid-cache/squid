@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "compat/xalloc.h"
 #include "profiler/Profiler.h"
 
@@ -191,15 +191,6 @@ xrealloc(void *s, size_t sz)
 #endif
     PROF_stop(xrealloc);
     return (p);
-}
-
-void
-xfree(void *s)
-{
-    if (s == NULL)
-        return;
-
-    free_const(s);
 }
 
 void

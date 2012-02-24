@@ -2,7 +2,7 @@
  * DEBUG: section 93    ICAP (RFC 3507) Client
  */
 
-#include "config.h"
+#include "squid.h"
 #include "adaptation/Answer.h"
 #include "base/AsyncJobCalls.h"
 

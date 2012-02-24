@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "Store.h"
 #include "wordlist.h"
 #include "SquidTime.h"
@@ -44,7 +44,7 @@
    #if to include the external DNS code in compile process when
    using external DNS.
  */
-#if USE_DNSSERVERS
+#if USE_DNSHELPER
 
 static helper *dnsservers = NULL;
 
@@ -180,4 +180,4 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
 }
 
 #endif /* SQUID_SNMP */
-#endif /* USE_DNSSERVERS */
+#endif /* USE_DNSHELPER */

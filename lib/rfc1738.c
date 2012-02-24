@@ -32,7 +32,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "rfc1738.h"
 
 #if HAVE_STDIO_H

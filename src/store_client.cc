@@ -34,12 +34,13 @@
  * Portions copyright (c) 2003 Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "event.h"
 #include "StoreClient.h"
 #include "Store.h"
 #include "HttpReply.h"
 #include "MemObject.h"
+#include "StatCounters.h"
 #include "StoreMeta.h"
 #include "StoreMetaUnpacker.h"
 #if USE_DELAY_POOLS
@@ -194,7 +195,7 @@ store_client::store_client(StoreEntry *e) : entry (e)
     if (getType() == STORE_DISK_CLIENT)
         /* assert we'll be able to get the data we want */
         /* maybe we should open swapin_sio here */
-        assert(entry->swap_filen > -1 || entry->swapOutAble());
+        assert(entry->swap_filen > -1 || entry->swappingOut());
 
 #if STORE_CLIENT_LIST_DEBUG
 

@@ -11,7 +11,7 @@
 \par
         If you need to use specific width types - such as
         a 16 bit unsigned integer, use one of the following types. To access
-        them simply include "config.h".
+        them simply include "squid.h".
 
 \verbatim
         int16_t    -  16 bit signed.

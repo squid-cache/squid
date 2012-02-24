@@ -41,7 +41,7 @@
  *  http://www.hpl.hp.com/techreports/1999/HPL-1999-69.html
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "heap.h"
 #include "store_heap_replacement.h"
 #include "Store.h"

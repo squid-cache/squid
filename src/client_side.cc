@@ -81,7 +81,7 @@
  * data flow.
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 #include "acl/FilledChecklist.h"
 #if USE_AUTH
@@ -118,6 +118,8 @@
 #include "MemObject.h"
 #include "ProtoPort.h"
 #include "rfc1738.h"
+#include "StatCounters.h"
+#include "StatHist.h"
 #include "SquidTime.h"
 #if USE_SSL
 #include "ssl/context_storage.h"
@@ -427,21 +429,21 @@ clientIdentDone(const char *ident, void *data)
 void
 clientUpdateStatCounters(log_type logType)
 {
-    statCounter.client_http.requests++;
+    ++statCounter.client_http.requests;
 
     if (logTypeIsATcpHit(logType))
-        statCounter.client_http.hits++;
+        ++statCounter.client_http.hits;
 
     if (logType == LOG_TCP_HIT)
-        statCounter.client_http.disk_hits++;
+        ++statCounter.client_http.disk_hits;
     else if (logType == LOG_TCP_MEM_HIT)
-        statCounter.client_http.mem_hits++;
+        ++statCounter.client_http.mem_hits;
 }
 
 void
 clientUpdateStatHistCounters(log_type logType, int svc_time)
 {
-    statHistCount(&statCounter.client_http.all_svc_time, svc_time);
+    statCounter.client_http.allSvcTime.count(svc_time);
     /**
      * The idea here is not to be complete, but to get service times
      * for only well-defined types.  For example, we don't include
@@ -452,11 +454,11 @@ clientUpdateStatHistCounters(log_type logType, int svc_time)
     switch (logType) {
 
     case LOG_TCP_REFRESH_UNMODIFIED:
-        statHistCount(&statCounter.client_http.nh_svc_time, svc_time);
+        statCounter.client_http.nearHitSvcTime.count(svc_time);
         break;
 
     case LOG_TCP_IMS_HIT:
-        statHistCount(&statCounter.client_http.nm_svc_time, svc_time);
+        statCounter.client_http.nearMissSvcTime.count(svc_time);
         break;
 
     case LOG_TCP_HIT:
@@ -464,13 +466,13 @@ clientUpdateStatHistCounters(log_type logType, int svc_time)
     case LOG_TCP_MEM_HIT:
 
     case LOG_TCP_OFFLINE_HIT:
-        statHistCount(&statCounter.client_http.hit_svc_time, svc_time);
+        statCounter.client_http.hitSvcTime.count(svc_time);
         break;
 
     case LOG_TCP_MISS:
 
     case LOG_TCP_CLIENT_REFRESH_MISS:
-        statHistCount(&statCounter.client_http.miss_svc_time, svc_time);
+        statCounter.client_http.missSvcTime.count(svc_time);
         break;
 
     default:
@@ -514,8 +516,7 @@ clientUpdateHierCounters(HierarchyLogEntry * someEntry)
         i = &someEntry->ping;
 
         if (clientPingHasFinished(i))
-            statHistCount(&statCounter.icp.query_svc_time,
-                          tvSubUsec(i->start, i->stop));
+            statCounter.icp.querySvcTime.count(tvSubUsec(i->start, i->stop));
 
         if (i->timeout)
             statCounter.icp.query_timeouts++;
@@ -1529,6 +1530,7 @@ ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredReq
      */
 }
 
+/// called when we have successfully finished writing the response
 void
 ClientSocketContext::keepaliveNextRequest()
 {
@@ -1539,6 +1541,26 @@ ClientSocketContext::keepaliveNextRequest()
 
     if (conn->pinning.pinned && !Comm::IsConnOpen(conn->pinning.serverConnection)) {
         debugs(33, 2, HERE << conn->clientConnection << " Connection was pinned but server side gone. Terminating client connection");
+        conn->clientConnection->close();
+        return;
+    }
+
+    /** \par
+     * We are done with the response, and we are either still receiving request
+     * body (early response!) or have already stopped receiving anything.
+     *
+     * If we are still receiving, then clientParseRequest() below will fail.
+     * (XXX: but then we will call readNextRequest() which may succeed and
+     * execute a smuggled request as we are not done with the current request).
+     *
+     * If we stopped because we got everything, then try the next request.
+     *
+     * If we stopped receiving because of an error, then close now to avoid
+     * getting stuck and to prevent accidental request smuggling.
+     */
+
+    if (const char *reason = conn->stoppedReceiving()) {
+        debugs(33, 3, HERE << "closing for earlier request error: " << reason);
         conn->clientConnection->close();
         return;
     }
@@ -1787,44 +1809,35 @@ ClientSocketContext::doClose()
     clientConnection->close();
 }
 
-/** Called to initiate (and possibly complete) closing of the context.
- * The underlying socket may be already closed */
+/// called when we encounter a response-related error
 void
 ClientSocketContext::initiateClose(const char *reason)
 {
-    debugs(33, 5, HERE << "initiateClose: closing for " << reason);
+    http->getConn()->stopSending(reason); // closes ASAP
+}
 
-    if (http != NULL) {
-        ConnStateData * conn = http->getConn();
+void
+ConnStateData::stopSending(const char *error)
+{
+    debugs(33, 4, HERE << "sending error (" << clientConnection << "): " << error <<
+           "; old receiving error: " <<
+           (stoppedReceiving() ? stoppedReceiving_ : "none"));
 
-        if (conn != NULL) {
-            if (const int64_t expecting = conn->mayNeedToReadMoreBody()) {
-                debugs(33, 5, HERE << "ClientSocketContext::initiateClose: " <<
-                       "closing, but first " << conn << " needs to read " <<
-                       expecting << " request body bytes with " <<
-                       conn->in.notYetUsed << " notYetUsed");
+    if (const char *oldError = stoppedSending()) {
+        debugs(33, 3, HERE << "already stopped sending: " << oldError);
+        return; // nothing has changed as far as this connection is concerned
+    }
+    stoppedSending_ = error;
 
-                if (conn->closing()) {
-                    debugs(33, 2, HERE << "avoiding double-closing " << conn);
-                    return;
-                }
-
-                /*
-                * XXX We assume the reply fits in the TCP transmit
-                * window.  If not the connection may stall while sending
-                * the reply (before reaching here) if the client does not
-                * try to read the response while sending the request body.
-                * As of yet we have not received any complaints indicating
-                * this may be an issue.
-                */
-                conn->startClosing(reason);
-
-                return;
-            }
+    if (!stoppedReceiving()) {
+        if (const int64_t expecting = mayNeedToReadMoreBody()) {
+            debugs(33, 5, HERE << "must still read " << expecting <<
+                   " request body bytes with " << in.notYetUsed << " unused");
+            return; // wait for the request receiver to finish reading
         }
     }
 
-    doClose();
+    clientConnection->close();
 }
 
 void
@@ -2018,15 +2031,6 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 
         if (!url)
             url = (char *) "/";
-    }
-
-    if (internalCheck(url)) {
-        /* prepend our name & port */
-        http->uri = xstrdup(internalLocalUri(NULL, url));
-        // We just re-wrote the URL. Must replace the Host: header.
-        //  But have not parsed there yet!! flag for local-only handling.
-        http->flags.internal = 1;
-        return;
     }
 
     if (vport < 0)
@@ -2277,15 +2281,17 @@ parseHttpRequest(ConnStateData *csd, HttpParser *hp, HttpRequestMethod * method_
         /* intercept or transparent mode, properly working with no failures */
         prepareTransparentURL(csd, http, url, req_hdr);
 
-    } else if (csd->port->accel || csd->switchedToHttps()) {
-        /* accelerator mode */
-        prepareAcceleratedURL(csd, http, url, req_hdr);
-
     } else if (internalCheck(url)) {
         /* internal URL mode */
         /* prepend our name & port */
         http->uri = xstrdup(internalLocalUri(NULL, url));
-        http->flags.accel = 1;
+        // We just re-wrote the URL. Must replace the Host: header.
+        //  But have not parsed there yet!! flag for local-only handling.
+        http->flags.internal = 1;
+
+    } else if (csd->port->accel || csd->switchedToHttps()) {
+        /* accelerator mode */
+        prepareAcceleratedURL(csd, http, url, req_hdr);
     }
 
     if (!http->uri) {
@@ -2505,7 +2511,8 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
                 assert (repContext);
 
                 // Create an error object and fill it
-                ErrorState *err = errorCon(ERR_SECURE_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
+                ErrorState *err = new ErrorState(ERR_SECURE_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
+
                 err->src_addr = clientConnection->remote;
 #ifdef EPROTO
                 err->xerrno = EPROTO;
@@ -2626,6 +2633,12 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     // TODO: decouple http->flags.accel from request->flags.sslBumped
     request->flags.no_direct = (request->flags.accelerated && !request->flags.sslBumped) ?
         !conn->port->allow_direct : 0;
+#if USE_AUTH
+    if (request->flags.sslBumped) {
+        if (conn->auth_user_request != NULL)
+            request->auth_user_request = conn->auth_user_request;
+    }
+#endif
 
     /** \par
      * If transparent or interception mode is working clone the transparent and interception flags
@@ -2786,7 +2799,7 @@ finish:
      * be freed and the above connNoteUseOfBuffer() would hit an
      * assertion, not to mention that we were accessing freed memory.
      */
-    if (http->request->flags.resetTCP() && Comm::IsConnOpen(conn->clientConnection)) {
+    if (request && request->flags.resetTCP() && Comm::IsConnOpen(conn->clientConnection)) {
         debugs(33, 3, HERE << "Sending TCP RST on " << conn->clientConnection);
         conn->flags.readMore = false;
         comm_reset_close(conn->clientConnection);
@@ -2917,7 +2930,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
 
     if (io.flag == COMM_OK) {
         if (io.size > 0) {
-            kb_incr(&statCounter.client_http.kbytes_in, io.size);
+            kb_incr(&(statCounter.client_http.kbytes_in), io.size);
 
             // may comm_close or setReplyToError
             if (!handleReadData(io.buf, io.size))
@@ -3032,10 +3045,11 @@ ConnStateData::handleRequestBodyData()
     if (!bodyPipe) {
         debugs(33,5, HERE << "produced entire request body for " << clientConnection);
 
-        if (closing()) {
+        if (const char *reason = stoppedSending()) {
             /* we've finished reading like good clients,
              * now do the close that initiateClose initiated.
              */
+            debugs(33, 3, HERE << "closing for earlier sending error: " << reason);
             clientConnection->close();
             return false;
         }
@@ -3132,7 +3146,7 @@ ConnStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer )
         return;
 
     // too late to read more body
-    if (!isOpen() || closing())
+    if (!isOpen() || stoppedReceiving())
         return;
 
     readSomeData();
@@ -3141,8 +3155,11 @@ ConnStateData::noteMoreBodySpaceAvailable(BodyPipe::Pointer )
 void
 ConnStateData::noteBodyConsumerAborted(BodyPipe::Pointer )
 {
-    if (!closing())
-        startClosing("body consumer aborted");
+    // request reader may get stuck waiting for space if nobody consumes body
+    if (bodyPipe != NULL)
+        bodyPipe->enableAutoConsumption();
+
+    stopReceiving("virgin request body consumer aborted"); // closes ASAP
 }
 
 /** general lifetime handler for HTTP requests */
@@ -3575,7 +3592,7 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
 static void
 httpsAccept(const CommAcceptCbParams &params)
 {
-    https_port_list *s = (https_port_list *)params.data;
+    http_port_list *s = (http_port_list *)params.data;
 
     if (params.flag != COMM_OK) {
         // Its possible the call was still queued when the client disconnected
@@ -3586,14 +3603,14 @@ httpsAccept(const CommAcceptCbParams &params)
     debugs(33, 4, HERE << params.conn << " accepted, starting SSL negotiation.");
     fd_note(params.conn->fd, "client https connect");
 
-    if (s->http.tcp_keepalive.enabled) {
-        commSetTcpKeepalive(params.conn->fd, s->http.tcp_keepalive.idle, s->http.tcp_keepalive.interval, s->http.tcp_keepalive.timeout);
+    if (s->tcp_keepalive.enabled) {
+        commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
     }
 
     incoming_sockets_accepted++;
 
     // Socket is ready, setup the connection manager to start using it
-    ConnStateData *connState = connStateCreate(params.conn, &s->http);
+    ConnStateData *connState = connStateCreate(params.conn, s);
 
     if (s->sslBump) {
         debugs(33, 5, "httpsAccept: accept transparent connection: " << params.conn);
@@ -3933,12 +3950,12 @@ clientHttpConnectionsOpen(void)
 
 #if USE_SSL
         if (s->sslBump && !Config.accessList.ssl_bump) {
-            debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << s->protocol << "_port " << s->http.s);
+            debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << s->protocol << "_port " << s->s);
             s->sslBump = 0;
         }
 
         if (s->sslBump && !s->staticSslContext && !s->generateHostCertificates) {
-            debugs(1, DBG_IMPORTANT, "Will not bump SSL at http_port " << s->http.s << " due to SSL initialization failure.");
+            debugs(1, DBG_IMPORTANT, "Will not bump SSL at http_port " << s->s << " due to SSL initialization failure.");
             s->sslBump = 0;
         }
         if (s->sslBump) {
@@ -3970,9 +3987,9 @@ clientHttpConnectionsOpen(void)
 static void
 clientHttpsConnectionsOpen(void)
 {
-    https_port_list *s;
+    http_port_list *s;
 
-    for (s = Config.Sockaddr.https; s; s = (https_port_list *)s->http.next) {
+    for (s = Config.Sockaddr.https; s; s = s->next) {
         if (MAXHTTPPORTS == NHttpSockets) {
             debugs(1, 1, "Ignoring 'https_port' lines exceeding the limit.");
             debugs(1, 1, "The limit is " << MAXHTTPPORTS << " HTTPS ports.");
@@ -3980,19 +3997,19 @@ clientHttpsConnectionsOpen(void)
         }
 
         if (!s->staticSslContext) {
-            debugs(1, 1, "Ignoring https_port " << s->http.s <<
+            debugs(1, 1, "Ignoring https_port " << s->s <<
                    " due to SSL initialization failure.");
             continue;
         }
 
         // TODO: merge with similar code in clientHttpConnectionsOpen()
         if (s->sslBump && !Config.accessList.ssl_bump) {
-            debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << s->protocol << "_port " << s->http.s);
+            debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << s->protocol << "_port " << s->s);
             s->sslBump = 0;
         }
 
         if (s->sslBump && !s->staticSslContext && !s->generateHostCertificates) {
-            debugs(1, DBG_IMPORTANT, "Will not bump SSL at http_port " << s->http.s << " due to SSL initialization failure.");
+            debugs(1, DBG_IMPORTANT, "Will not bump SSL at http_port " << s->s << " due to SSL initialization failure.");
             s->sslBump = 0;
         }
 
@@ -4002,10 +4019,10 @@ clientHttpsConnectionsOpen(void)
         }
 
         // Fill out a Comm::Connection which IPC will open as a listener for us
-        s->http.listenConn = new Comm::Connection;
-        s->http.listenConn->local = s->http.s;
-        s->http.listenConn->flags = COMM_NONBLOCKING | (s->http.spoof_client_ip ? COMM_TRANSPARENT : 0) |
-                                    (s->http.intercepted ? COMM_INTERCEPTION : 0);
+        s->listenConn = new Comm::Connection;
+        s->listenConn->local = s->s;
+        s->listenConn->flags = COMM_NONBLOCKING | (s->spoof_client_ip ? COMM_TRANSPARENT : 0) |
+                               (s->intercepted ? COMM_INTERCEPTION : 0);
 
         // setup the subscriptions such that new connections accepted by listenConn are handled by HTTPS
         typedef CommCbFunPtrCallT<CommAcceptCbPtrFun> AcceptCall;
@@ -4014,7 +4031,7 @@ clientHttpsConnectionsOpen(void)
 
         AsyncCall::Pointer listenCall = asyncCall(33, 2, "clientListenerConnectionOpened",
                                         ListeningStartedDialer(&clientListenerConnectionOpened,
-                                                               &s->http, Ipc::fdnHttpsSocket, sub));
+                                                               s, Ipc::fdnHttpsSocket, sub));
         Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpsSocket, listenCall);
         HttpSockets[NHttpSockets++] = -1;
     }
@@ -4178,10 +4195,11 @@ CBDATA_CLASS_INIT(ConnStateData);
 
 ConnStateData::ConnStateData() :
         AsyncJob("ConnStateData"),
-        closing_(false)
 #if USE_SSL
-        ,switchedToHttps_(false)
+        switchedToHttps_(false),
 #endif
+        stoppedSending_(NULL),
+        stoppedReceiving_(NULL)
 {
     pinning.pinned = false;
     pinning.auth = false;
@@ -4238,32 +4256,24 @@ ConnStateData::mayNeedToReadMoreBody() const
     return needToProduce - haveAvailable;
 }
 
-bool
-ConnStateData::closing() const
-{
-    return closing_;
-}
-
-/**
- * Called by ClientSocketContext to give the connection a chance to read
- * the entire body before closing the socket.
- */
 void
-ConnStateData::startClosing(const char *reason)
+ConnStateData::stopReceiving(const char *error)
 {
-    debugs(33, 5, HERE << "startClosing " << this << " for " << reason);
-    assert(!closing());
-    closing_ = true;
+    debugs(33, 4, HERE << "receiving error (" << clientConnection << "): " << error <<
+           "; old sending error: " <<
+           (stoppedSending() ? stoppedSending_ : "none"));
 
-    assert(bodyPipe != NULL);
+    if (const char *oldError = stoppedReceiving()) {
+        debugs(33, 3, HERE << "already stopped receiving: " << oldError);
+        return; // nothing has changed as far as this connection is concerned
+    }
 
-    // We do not have to abort the body pipeline because we are going to
-    // read the entire body anyway.
-    // Perhaps an ICAP server wants to log the complete request.
+    stoppedReceiving_ = error;
 
-    // If a consumer abort have caused this closing, we may get stuck
-    // as nobody is consuming our data. Allow auto-consumption.
-    bodyPipe->enableAutoConsumption();
+    if (const char *sendError = stoppedSending()) {
+        debugs(33, 3, HERE << "closing because also stopped sending: " << sendError);
+        clientConnection->close();
+    }
 }
 
 void
