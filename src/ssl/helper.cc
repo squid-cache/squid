@@ -2,7 +2,7 @@
  * 2008/11/14
  */
 
-#include "config.h"
+#include "squid.h"
 #include "ProtoPort.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"

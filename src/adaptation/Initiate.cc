@@ -2,7 +2,7 @@
  * DEBUG: section 93    ICAP (RFC 3507) Client
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "HttpMsg.h"
 #include "adaptation/Answer.h"
 #include "adaptation/Initiator.h"

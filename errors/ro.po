@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-11-20 11:40+1300\n"
-"PO-Revision-Date: 2010-03-20 16:29+0200\n"
+"POT-Creation-Date: 2012-02-06 18:41+1300\n"
+"PO-Revision-Date: 2010-03-20 14:31+0200\n"
 "Last-Translator: Arthur <arthur@psw.ro>\n"
 "Language-Team: Romanian <ro@li.org>\n"
 "Language: ro\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2);;\n"
-"X-Generator: Pootle 2.0.1\n"
+"X-Generator: Pootle 2.1.6\n"
 "X-Launchpad-Export-Date: 2009-01-18 05:16+0000\n"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:29
@@ -149,6 +149,10 @@ msgstr ""
 "fie permisă în acest moment. Vă rugăm contactaţi furnizorul de servicii dacă "
 "credeţi că acest lucru nu este corect."
 
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:31
+msgid "All configured parent caches may be currently unreachable."
+msgstr ""
+
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.p:20
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
@@ -169,6 +173,12 @@ msgstr ""
 #: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:33
 msgid "An Illegal response was received from the ICAP server."
 msgstr "S-a recepţionat un răspuns ilegal de la serverul ICAP."
+
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:30
+msgid ""
+"An Internet connection needed to access this domains origin servers may be "
+"down."
+msgstr ""
 
 #: templates/ERR_READ_ERROR+html.body.div.p:28
 msgid ""
@@ -298,6 +308,7 @@ msgstr "Directorul: <a href=\"%U\">%U</a>/"
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h1:14
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h1:14
 #: templates/ERR_CANNOT_FORWARD+html.body.div.h1:14
+#: templates/ERR_CONFLICT_HOST+html.body.div.h1:14
 #: templates/ERR_CONNECT_FAIL+html.body.div.h1:14
 #: templates/ERR_DNS_FAIL+html.body.div.h1:14
 #: templates/ERR_ESI+html.body.div.h1:14
@@ -346,6 +357,7 @@ msgstr "EROARE: Operaţia FTP de încărcare a eşuat"
 #: templates/ERR_ACCESS_DENIED+html.head.title:4
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.head.title:4
 #: templates/ERR_CANNOT_FORWARD+html.head.title:4
+#: templates/ERR_CONFLICT_HOST+html.head.title:4
 #: templates/ERR_CONNECT_FAIL+html.head.title:4
 #: templates/ERR_DNS_FAIL+html.head.title:4
 #: templates/ERR_ESI+html.head.title:4
@@ -458,7 +470,8 @@ msgstr ""
 #: templates/ERR_AGENT_WPAD+html.body.div.p:56
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:35
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:35
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:35
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:42
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:40
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:37
 #: templates/ERR_DIR_LISTING+html.body.div.p:38
 #: templates/ERR_DNS_FAIL+html.body.div.p:39
@@ -707,6 +720,8 @@ msgstr "Eroare de Socket"
 msgid "Some aspect of the requested URL is incorrect."
 msgstr "O parte a URL-ului cerut este incorectă."
 
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:28
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:28
 #: templates/ERR_ICAP_FAILURE+html.body.div.p:30
 #: templates/ERR_INVALID_REQ+html.body.div.p:26
 #: templates/ERR_INVALID_URL+html.body.div.p:28
@@ -794,6 +809,17 @@ msgstr ""
 msgid "The ICAP server is not reachable."
 msgstr "Serverul ICAP nu poate fi contactat."
 
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:32
+msgid ""
+"The administrator may not allow this cache to make direct connections to "
+"origin servers."
+msgstr ""
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:30
+msgid ""
+"The domain may have moved very recently. Trying again will resolve that."
+msgstr ""
+
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.p:20
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
 msgstr "URL-ul următor nu a putut fi accesat: <a href=\"%U\">%U</a>"
@@ -803,6 +829,7 @@ msgstr "URL-ul următor nu a putut fi accesat: <a href=\"%U\">%U</a>"
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:20
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:20
 #: templates/ERR_CANNOT_FORWARD+html.body.div.p:20
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:20
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:20
 #: templates/ERR_DNS_FAIL+html.body.div.p:20
 #: templates/ERR_ESI+html.body.div.p:20
@@ -853,6 +880,7 @@ msgstr "Cererea sau răspunsul este prea mare."
 #: templates/ERR_ACCESS_DENIED+html.body.div.h2:15
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h2:15
 #: templates/ERR_CANNOT_FORWARD+html.body.div.h2:15
+#: templates/ERR_CONFLICT_HOST+html.body.div.h2:15
 #: templates/ERR_CONNECT_FAIL+html.body.div.h2:15
 #: templates/ERR_DNS_FAIL+html.body.div.h2:15
 #: templates/ERR_ESI+html.body.div.h2:15
@@ -900,6 +928,12 @@ msgstr "Răspunsul serverului a fost:"
 #: templates/ERR_WRITE_ERROR+html.body.div.p:26
 msgid "The system returned: <i>%E</i>"
 msgstr "Sistemul de operare a returnat mesajul: <i>%E</i>"
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:31
+msgid ""
+"The website may require you to use a local country-based version. Using your "
+"ISP provided DNS server(s) should resolve that."
+msgstr ""
 
 #: templates/ERR_NO_RELAY+html.body.div.p:26
 msgid ""
@@ -987,6 +1021,12 @@ msgstr ""
 "Aceasta înseamnă ca proxy-ul intermediar nu a putut procesa modelul ESI. Vă "
 "rugăm să raportaţi această eroare webmaster-ului."
 
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:26
+msgid ""
+"This means the domain name you are trying to access apparently no longer "
+"exists on the machine you are requesting it from."
+msgstr ""
+
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.p:26
 msgid "This means:"
 msgstr ""
@@ -1022,15 +1062,8 @@ msgstr ""
 #: templates/ERR_CANNOT_FORWARD+html.body.div.p:26
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches. The most likely cause for this error is that the cache administrator "
-"does not allow this cache to make direct connections to origin servers, and "
-"all configured parent caches are currently unreachable."
+"caches."
 msgstr ""
-"Această cerere nu a putut fi înaintată către serverul de origine sau un "
-"cache părinte. Cea mai probabilă cauză de eroare este că administratorul "
-"cache-ului nu permite acestui cache să facă conexiuni directe către "
-"serverele de origine şi toate cache-urile părinte nu pot fi contactate în "
-"acest moment."
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.blockquote.p:23
 msgid "Time Quota Exceeded."
@@ -1056,6 +1089,10 @@ msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
 msgstr ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.blockquote.pre:23
+msgid "URI Host Conflict"
+msgstr ""
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:25
 msgid "Unable to decode issuer (CA) public key: %ssl_ca_name"
@@ -1152,7 +1189,8 @@ msgstr ""
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:29
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:50
 #: templates/ERR_AGENT_WPAD+html.body.div.p:50
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:28
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:35
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:34
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:30
 #: templates/ERR_DNS_FAIL+html.body.div.p:33
 #: templates/ERR_FORWARDING_DENIED+html.body.div.p:28
@@ -1207,6 +1245,19 @@ msgstr "Răspuns de lungime zero"
 
 #~ msgid "Parent Directory"
 #~ msgstr "Director părinte"
+
+msgid ""
+"This request could not be forwarded to the origin server or to any parent "
+"caches. The most likely cause for this error is that the cache "
+"administrator does not allow this cache to make direct connections to "
+"origin servers, and all configured parent caches are currently "
+"unreachable."
+msgstr ""
+"Această cerere nu a putut fi înaintată către serverul de origine sau un "
+"cache părinte. Cea mai probabilă cauză de eroare este că administratorul "
+"cache-ului nu permite acestui cache să facă conexiuni directe către "
+"serverele de origine şi toate cache-urile părinte nu pot fi contactate în "
+"acest moment."
 
 #~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
 #~ msgstr "În timp ce făceam PUT la următorul URL: <a href=\"%U\">%U</a>"

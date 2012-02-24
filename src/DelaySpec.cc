@@ -37,10 +37,10 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "config.h"
+#include "squid.h"
 
 #if USE_DELAY_POOLS
-#include "squid.h"
+#include "squid-old.h"
 #include "DelaySpec.h"
 #include "Store.h"
 #include "Parsing.h"

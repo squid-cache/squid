@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "comm.h"
 #include "comm/ConnOpener.h"
 #include "CommCalls.h"
@@ -54,6 +54,7 @@
 #include "Server.h"
 #include "SquidString.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 #include "Store.h"
 #include "URLScheme.h"
 #include "wordlist.h"
@@ -1257,8 +1258,8 @@ FtpStateData::dataRead(const CommIoCbParams &io)
     debugs(9, 3, HERE << "ftpDataRead: FD " << io.fd << " Read " << io.size << " bytes");
 
     if (io.size > 0) {
-        kb_incr(&statCounter.server.all.kbytes_in, io.size);
-        kb_incr(&statCounter.server.ftp.kbytes_in, io.size);
+        kb_incr(&(statCounter.server.all.kbytes_in), io.size);
+        kb_incr(&(statCounter.server.ftp.kbytes_in), io.size);
     }
 
     if (io.flag == COMM_ERR_CLOSING)
@@ -1613,8 +1614,8 @@ FtpStateData::ftpWriteCommandCallback(const CommIoCbParams &io)
 
     if (io.size > 0) {
         fd_bytes(io.fd, io.size, FD_WRITE);
-        kb_incr(&statCounter.server.all.kbytes_out, io.size);
-        kb_incr(&statCounter.server.ftp.kbytes_out, io.size);
+        kb_incr(&(statCounter.server.all.kbytes_out), io.size);
+        kb_incr(&(statCounter.server.ftp.kbytes_out), io.size);
     }
 
     if (io.flag == COMM_ERR_CLOSING)
@@ -1754,8 +1755,8 @@ void FtpStateData::ftpReadControlReply(const CommIoCbParams &io)
     debugs(9, 3, "ftpReadControlReply: FD " << io.fd << ", Read " << io.size << " bytes");
 
     if (io.size > 0) {
-        kb_incr(&statCounter.server.all.kbytes_in, io.size);
-        kb_incr(&statCounter.server.ftp.kbytes_in, io.size);
+        kb_incr(&(statCounter.server.all.kbytes_in), io.size);
+        kb_incr(&(statCounter.server.ftp.kbytes_in), io.size);
     }
 
     if (io.flag == COMM_ERR_CLOSING)
@@ -1897,16 +1898,16 @@ FtpStateData::loginFailed()
     if ((state == SENT_USER || state == SENT_PASS) && ctrl.replycode >= 400) {
         if (ctrl.replycode == 421 || ctrl.replycode == 426) {
             // 421/426 - Service Overload - retry permitted.
-            err = errorCon(ERR_FTP_UNAVAILABLE, HTTP_SERVICE_UNAVAILABLE, fwd->request);
+            err = new ErrorState(ERR_FTP_UNAVAILABLE, HTTP_SERVICE_UNAVAILABLE, fwd->request);
         } else if (ctrl.replycode >= 430 && ctrl.replycode <= 439) {
             // 43x - Invalid or Credential Error - retry challenge required.
-            err = errorCon(ERR_FTP_FORBIDDEN, HTTP_UNAUTHORIZED, fwd->request);
+            err = new ErrorState(ERR_FTP_FORBIDDEN, HTTP_UNAUTHORIZED, fwd->request);
         } else if (ctrl.replycode >= 530 && ctrl.replycode <= 539) {
             // 53x - Credentials Missing - retry challenge required
             if (password_url) // but they were in the URI! major fail.
-                err = errorCon(ERR_FTP_FORBIDDEN, HTTP_FORBIDDEN, fwd->request);
+                err = new ErrorState(ERR_FTP_FORBIDDEN, HTTP_FORBIDDEN, fwd->request);
             else
-                err = errorCon(ERR_FTP_FORBIDDEN, HTTP_UNAUTHORIZED, fwd->request);
+                err = new ErrorState(ERR_FTP_FORBIDDEN, HTTP_UNAUTHORIZED, fwd->request);
         }
     }
 
@@ -1941,7 +1942,7 @@ FtpStateData::loginFailed()
 
 
     HttpReply *newrep = err->BuildHttpReply();
-    errorStateFree(err);
+    delete err;
 
 #if HAVE_AUTH_MODULE_BASIC
     /* add Authenticate header */
@@ -2467,6 +2468,7 @@ ftpReadEPSV(FtpStateData* ftpState)
 
     ftpState->data.port = port;
 
+    safe_free(ftpState->data.host);
     ftpState->data.host = xstrdup(fd_table[ftpState->ctrl.conn->fd].ipaddr);
 
     safe_free(ftpState->ctrl.last_command);
@@ -2712,6 +2714,7 @@ ftpReadPasv(FtpStateData * ftpState)
 
     ftpState->data.port = port;
 
+    safe_free(ftpState->data.host);
     if (Config.Ftp.sanitycheck)
         ftpState->data.host = xstrdup(fd_table[ftpState->ctrl.conn->fd].ipaddr);
     else
@@ -2765,12 +2768,14 @@ static void
 ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
 {
     /// Close old data channels, if any. We may open a new one below.
-    if ((ftpState->data.conn->flags & COMM_REUSEADDR))
-        // NP: in fact it points to the control channel. just clear it.
-        ftpState->data.clear();
-    else
-        ftpState->data.close();
-    ftpState->data.host = NULL;
+    if (ftpState->data.conn != NULL) {
+        if ((ftpState->data.conn->flags & COMM_REUSEADDR))
+            // NP: in fact it points to the control channel. just clear it.
+            ftpState->data.clear();
+        else
+            ftpState->data.close();
+    }
+    safe_free(ftpState->data.host);
 
     /*
      * Set up a listen socket on the same local address as the
@@ -2980,7 +2985,9 @@ FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
     /** On COMM_OK start using the accepted data socket and discard the temporary listen socket. */
     data.close();
     data.opened(io.conn, dataCloser());
-    io.conn->remote.NtoA(data.host,SQUIDHOSTNAMELEN);
+    static char ntoapeer[MAX_IPSTRLEN];
+    io.conn->remote.NtoA(ntoapeer,sizeof(ntoapeer));
+    data.host = xstrdup(ntoapeer);
 
     debugs(9, 3, HERE << "Connected data socket on " <<
            io.conn << ". FD table says: " <<
@@ -3263,13 +3270,12 @@ FtpStateData::completedListing()
 {
     assert(entry);
     entry->lock();
-    ErrorState *ferr = errorCon(ERR_DIR_LISTING, HTTP_OK, request);
-    ferr->ftp.listing = &listing;
-    ferr->ftp.cwd_msg = xstrdup(cwd_message.size()? cwd_message.termedBuf() : "");
-    ferr->ftp.server_msg = ctrl.message;
+    ErrorState ferr(ERR_DIR_LISTING, HTTP_OK, request);
+    ferr.ftp.listing = &listing;
+    ferr.ftp.cwd_msg = xstrdup(cwd_message.size()? cwd_message.termedBuf() : "");
+    ferr.ftp.server_msg = ctrl.message;
     ctrl.message = NULL;
-    entry->replaceHttpReply( ferr->BuildHttpReply() );
-    errorStateFree(ferr);
+    entry->replaceHttpReply( ferr.BuildHttpReply() );
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     entry->flush();
     entry->unlock();
@@ -3314,7 +3320,7 @@ void
 FtpStateData::sentRequestBody(const CommIoCbParams &io)
 {
     if (io.size > 0)
-        kb_incr(&statCounter.server.ftp.kbytes_out, io.size);
+        kb_incr(&(statCounter.server.ftp.kbytes_out), io.size);
     ServerStateData::sentRequestBody(io);
 }
 
@@ -3471,12 +3477,10 @@ FtpStateData::failed(err_type error, int xerrno)
 void
 FtpStateData::failedErrorMessage(err_type error, int xerrno)
 {
-    ErrorState *ftperr;
+    ErrorState *ftperr = NULL;
     const char *command, *reply;
 
     /* Translate FTP errors into HTTP errors */
-    ftperr = NULL;
-
     switch (error) {
 
     case ERR_NONE:
@@ -3489,12 +3493,12 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
 
             if (ctrl.replycode > 500)
                 if (password_url)
-                    ftperr = errorCon(ERR_FTP_FORBIDDEN, HTTP_FORBIDDEN, fwd->request);
+                    ftperr = new ErrorState(ERR_FTP_FORBIDDEN, HTTP_FORBIDDEN, fwd->request);
                 else
-                    ftperr = errorCon(ERR_FTP_FORBIDDEN, HTTP_UNAUTHORIZED, fwd->request);
+                    ftperr = new ErrorState(ERR_FTP_FORBIDDEN, HTTP_UNAUTHORIZED, fwd->request);
 
             else if (ctrl.replycode == 421)
-                ftperr = errorCon(ERR_FTP_UNAVAILABLE, HTTP_SERVICE_UNAVAILABLE, fwd->request);
+                ftperr = new ErrorState(ERR_FTP_UNAVAILABLE, HTTP_SERVICE_UNAVAILABLE, fwd->request);
 
             break;
 
@@ -3502,7 +3506,7 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
 
         case SENT_RETR:
             if (ctrl.replycode == 550)
-                ftperr = errorCon(ERR_FTP_NOT_FOUND, HTTP_NOT_FOUND, fwd->request);
+                ftperr = new ErrorState(ERR_FTP_NOT_FOUND, HTTP_NOT_FOUND, fwd->request);
 
             break;
 
@@ -3513,16 +3517,16 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
         break;
 
     case ERR_READ_TIMEOUT:
-        ftperr = errorCon(error, HTTP_GATEWAY_TIMEOUT, fwd->request);
+        ftperr = new ErrorState(error, HTTP_GATEWAY_TIMEOUT, fwd->request);
         break;
 
     default:
-        ftperr = errorCon(error, HTTP_BAD_GATEWAY, fwd->request);
+        ftperr = new ErrorState(error, HTTP_BAD_GATEWAY, fwd->request);
         break;
     }
 
     if (ftperr == NULL)
-        ftperr = errorCon(ERR_FTP_FAILURE, HTTP_BAD_GATEWAY, fwd->request);
+        ftperr = new ErrorState(ERR_FTP_FAILURE, HTTP_BAD_GATEWAY, fwd->request);
 
     ftperr->xerrno = xerrno;
 
@@ -3549,14 +3553,13 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
         ftperr->ftp.reply = xstrdup(reply);
 
     entry->replaceHttpReply( ftperr->BuildHttpReply() );
-    errorStateFree(ftperr);
+    delete ftperr;
 }
 
 /// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendReply(FtpStateData * ftpState)
 {
-    ErrorState *err;
     int code = ftpState->ctrl.replycode;
     http_status http_code;
     err_type err_code = ERR_NONE;
@@ -3580,22 +3583,21 @@ ftpSendReply(FtpStateData * ftpState)
     if (ftpState->request)
         ftpState->request->detailError(err_code, code);
 
-    err = errorCon(err_code, http_code, ftpState->request);
+    ErrorState err(err_code, http_code, ftpState->request);
 
     if (ftpState->old_request)
-        err->ftp.request = xstrdup(ftpState->old_request);
+        err.ftp.request = xstrdup(ftpState->old_request);
     else
-        err->ftp.request = xstrdup(ftpState->ctrl.last_command);
+        err.ftp.request = xstrdup(ftpState->ctrl.last_command);
 
     if (ftpState->old_reply)
-        err->ftp.reply = xstrdup(ftpState->old_reply);
+        err.ftp.reply = xstrdup(ftpState->old_reply);
     else if (ftpState->ctrl.last_reply)
-        err->ftp.reply = xstrdup(ftpState->ctrl.last_reply);
+        err.ftp.reply = xstrdup(ftpState->ctrl.last_reply);
     else
-        err->ftp.reply = xstrdup("");
+        err.ftp.reply = xstrdup("");
 
-    ftpState->entry->replaceHttpReply( err->BuildHttpReply() );
-    errorStateFree(err);
+    ftpState->entry->replaceHttpReply( err.BuildHttpReply() );
 
     ftpSendQuit(ftpState);
 }
@@ -3705,9 +3707,8 @@ FtpStateData::haveParsedReplyHeaders()
 HttpReply *
 FtpStateData::ftpAuthRequired(HttpRequest * request, const char *realm)
 {
-    ErrorState *err = errorCon(ERR_CACHE_ACCESS_DENIED, HTTP_UNAUTHORIZED, request);
-    HttpReply *newrep = err->BuildHttpReply();
-    errorStateFree(err);
+    ErrorState err(ERR_CACHE_ACCESS_DENIED, HTTP_UNAUTHORIZED, request);
+    HttpReply *newrep = err.BuildHttpReply();
 #if HAVE_AUTH_MODULE_BASIC
     /* add Authenticate header */
     newrep->header.putAuth("Basic", realm);
@@ -3909,10 +3910,9 @@ FtpChannel::close()
     // channels with active listeners will be closed when the listener handler dies.
     if (Comm::IsConnOpen(conn)) {
         comm_remove_close_handler(conn->fd, closer);
-        closer = NULL;
         conn->close(); // we do not expect to be called back
     }
-    conn = NULL;
+    clear();
 }
 
 void

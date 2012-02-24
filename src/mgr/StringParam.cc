@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "ipc/TypedMsgHdr.h"
 #include "mgr/StringParam.h"
 

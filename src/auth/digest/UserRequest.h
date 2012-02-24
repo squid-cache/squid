@@ -9,21 +9,26 @@ class ConnStateData;
 class HttpReply;
 class HttpRequest;
 
+namespace Auth
+{
+namespace Digest
+{
+
 /**
- * The AuthDigestUserRequest structure is what follows the http_request around
+ * The UserRequest structure is what follows the http_request around
  */
-class AuthDigestUserRequest : public AuthUserRequest
+class UserRequest : public Auth::UserRequest
 {
 
 public:
-    MEMPROXY_CLASS(AuthDigestUserRequest);
+    MEMPROXY_CLASS(Auth::Digest::UserRequest);
 
-    AuthDigestUserRequest();
-    virtual ~AuthDigestUserRequest();
+    UserRequest();
+    virtual ~UserRequest();
 
     virtual int authenticated() const;
     virtual void authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type);
-    virtual Auth::Direction module_direction();
+    virtual Direction module_direction();
     virtual void addAuthenticationInfoHeader(HttpReply * rep, int accel);
 #if WAITING_FOR_TE
     virtual void addAuthenticationInfoTrailer(HttpReply * rep, int accel);
@@ -53,6 +58,9 @@ private:
     static HLPCB HandleReply;
 };
 
-MEMPROXY_CLASS_INLINE(AuthDigestUserRequest);
+} // namespace Digest
+} // namespace Auth
+
+MEMPROXY_CLASS_INLINE(Auth::Digest::UserRequest);
 
 #endif /* _SQUID_SRC_AUTH_DIGEST_USERREQUEST_H */

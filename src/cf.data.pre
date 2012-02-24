@@ -29,24 +29,30 @@
 COMMENT_START
 	WELCOME TO @SQUID@
 	----------------------------
-
-	This is the default Squid configuration file. You may wish
-	to look at the Squid home page (http://www.squid-cache.org/)
-	for the FAQ and other documentation.
-
-	The default Squid config file shows what the defaults for
-	various options happen to be.  If you don't need to change the
-	default, you shouldn't uncomment the line.  Doing so may cause
-	run-time problems.  In some cases "none" refers to no default
-	setting at all, while in other cases it refers to a valid
-	option - the comments for that keyword indicate if this is the
-	case.
+	
+	This is the documentation for the Squid configuration file.
+	This documentation can also be found online at:
+		http://www.squid-cache.org/Doc/config/
+	
+	You may wish to look at the Squid home page and wiki for the
+	FAQ and other documentation:
+		http://www.squid-cache.org/
+		http://wiki.squid-cache.org/SquidFaq
+		http://wiki.squid-cache.org/ConfigExamples
+	
+	This documentation shows what the defaults for various directives
+	happen to be.  If you don't need to change the default, you should
+	leave the line out of your squid.conf in most cases.
+	
+	In some cases "none" refers to no default setting at all,
+	while in other cases it refers to the value of the option
+	- the comments for that keyword indicate if this is the case.
 
 COMMENT_END
 
 COMMENT_START
   Configuration options can be included using the "include" directive.
-  Include takes a list of files to include. Quoting and wildcards is
+  Include takes a list of files to include. Quoting and wildcards are
   supported.
 
   For example,
@@ -73,6 +79,8 @@ COMMENT_START
 	The else part is optional. The keywords "if", "else", and "endif"
 	must be typed on their own lines, as if they were regular
 	configuration directives.
+
+	NOTE: An else-if condition is not supported.
 
 	These individual conditions types are supported:
 
@@ -101,6 +109,12 @@ NAME: ignore_expect_100
 TYPE: obsolete
 DOC_START
 	Remove this line. The HTTP/1.1 feature is now fully supported by default.
+DOC_END
+
+NAME: dns_v4_fallback
+TYPE: obsolete
+DOC_START
+	Remove this line.
 DOC_END
 
 NAME: ftp_list_width
@@ -1386,6 +1400,28 @@ DOC_START
 
 
 	SSL Bump Mode Options:
+	    In addition to these options ssl-bump requires TLS/SSL options.
+
+	   generate-host-certificates[=<on|off>]
+			Dynamically create SSL server certificates for the
+			destination hosts of bumped CONNECT requests.When 
+			enabled, the cert and key options are used to sign
+			generated certificates. Otherwise generated
+			certificate will be selfsigned.
+			If there is a CA certificate lifetime of the generated 
+			certificate equals lifetime of the CA certificate. If
+			generated certificate is selfsigned lifetime is three 
+			years.
+			This option is enabled by default when ssl-bump is used.
+			See the ssl-bump option above for more information.
+			
+	   dynamic_cert_mem_cache_size=SIZE
+			Approximate total RAM size spent on cached generated
+			certificates. If set to zero, caching is disabled. The
+			default value is 4MB. An average XXX-bit certificate
+			consumes about XXX bytes of RAM.
+
+	TLS / SSL Options:
 
 	   cert=	Path to SSL certificate (PEM format).
 
@@ -1401,16 +1437,24 @@ DOC_START
 			    4	TLSv1 only
 
 	   cipher=	Colon separated list of supported ciphers.
+			NOTE: some ciphers such as EDH ciphers depend on
+			      additional settings. If those settings are
+			      omitted the ciphers may be silently ignored
+			      by the OpenSSL library.
 
-	   options=	Various SSL engine options. The most important
+	   options=	Various SSL implementation options. The most important
 			being:
 			    NO_SSLv2  Disallow the use of SSLv2
 			    NO_SSLv3  Disallow the use of SSLv3
 			    NO_TLSv1  Disallow the use of TLSv1
 			    SINGLE_DH_USE Always create a new key when using
 				      temporary/ephemeral DH key exchanges
-			See src/ssl_support.c or OpenSSL SSL_CTX_set_options
-			documentation for a complete list of options.
+			    ALL       Enable various bug workarounds
+				      suggested as "harmless" by OpenSSL
+				      Be warned that this reduces SSL/TLS
+				      strength to some attacks.
+			See OpenSSL SSL_CTX_set_options documentation for a
+			complete list of options.
 
 	   clientca=	File containing the list of CAs to use when
 			requesting a client certificate.
@@ -1427,7 +1471,10 @@ DOC_START
 			the capath. Implies VERIFY_CRL flag below.
 
 	   dhparams=	File containing DH parameters for temporary/ephemeral
-			DH key exchanges.
+			DH key exchanges. See OpenSSL documentation for details
+			on how to create this file.
+			WARNING: EDH ciphers will be silently disabled if this
+				 option is not set.
 
 	   sslflags=	Various flags modifying the use of SSL:
 			    DELAYED_AUTH
@@ -1448,25 +1495,6 @@ DOC_START
 				client certificate chain.
 
 	   sslcontext=	SSL session ID context identifier.
-
-	   generate-host-certificates[=<on|off>]
-			Dynamically create SSL server certificates for the
-			destination hosts of bumped CONNECT requests.When 
-			enabled, the cert and key options are used to sign
-			generated certificates. Otherwise generated
-			certificate will be selfsigned.
-			If there is CA certificate life time of generated 
-			certificate equals lifetime of CA certificate. If
-			generated certificate is selfsigned lifetime is three 
-			years.
-			This option is enabled by default when SslBump is used.
-			See the sslBump option above for more information.
-			
-	   dynamic_cert_mem_cache_size=SIZE
-			Approximate total RAM size spent on cached generated
-			certificates. If set to zero, caching is disabled. The
-			default value is 4MB. An average XXX-bit certificate
-			consumes about XXX bytes of RAM.
 
 	Other Options:
 
@@ -1520,12 +1548,11 @@ LOC: Config.Sockaddr.https
 DOC_START
 	Usage:  [ip:]port cert=certificate.pem [key=key.pem] [mode] [options...]
 
-	The socket address where Squid will listen for HTTPS client
-	requests.
+	The socket address where Squid will listen for client requests made
+	over TLS or SSL connections. Commonly referred to as HTTPS.
 
-	This is really only useful for situations where you are running
-	squid in accelerator mode and you want to do the SSL work at the
-	accelerator level.
+	This is most useful for situations where you are running squid in
+	accelerator mode and you want to do the SSL work at the accelerator level.
 
 	You may specify multiple socket addresses on multiple lines,
 	each with their own SSL certificate and/or options.
@@ -1638,6 +1665,7 @@ DOC_START
 			default value is 4MB. An average XXX-bit certificate
 			consumes about XXX bytes of RAM.
 
+	See http_port for a list of available options.
 DOC_END
 
 NAME: tcp_outgoing_tos tcp_outgoing_ds tcp_outgoing_dscp
@@ -1854,25 +1882,48 @@ LOC: Config.onoff.hostStrictVerify
 DOC_START
 	Regardless of this option setting, when dealing with intercepted
 	traffic, Squid always verifies that the destination IP address matches
-	the Host header domain or IP (called 'authority form URL'). Squid
-	responds with an HTTP 409 (Conflict) error page and logs a security
-	warning if there is no match.
-	
-	When set to ON, Squid verifies that the destination IP address matches
-	the Host header for forward-proxy and reverse-proxy traffic as well. For
-	those traffic types, Squid also enables the following checks, comparing
-	the corresponding Host header and Request-URI components:
-	
-	 * The host names (domain or IP) must be identical,
-	   but valueless or missing Host header disables all checks.
-	   For the two host names to match, both must be either IP or FQDN.
-	
-	 * Port numbers must be identical,
-	   but if a port is missing, the scheme-default port is assumed.
+	the Host header domain or IP (called 'authority form URL').
 	
 	This enforcement is performed to satisfy a MUST-level requirement in
 	RFC 2616 section 14.23: "The Host field value MUST represent the naming
 	authority of the origin server or gateway given by the original URL".
+	
+	When set to ON:
+		Squid always responds with an HTTP 409 (Conflict) error
+		page and logs a security warning if there is no match.
+	
+		Squid verifies that the destination IP address matches
+		the Host header for forward-proxy and reverse-proxy traffic
+		as well. For those traffic types, Squid also enables the
+		following checks, comparing the corresponding Host header
+		and Request-URI components:
+	
+		 * The host names (domain or IP) must be identical,
+		   but valueless or missing Host header disables all checks.
+		   For the two host names to match, both must be either IP
+		   or FQDN.
+	
+		 * Port numbers must be identical, but if a port is missing
+		   the scheme-default port is assumed.
+	
+	
+	When set to OFF (the default):
+		Squid allows suspicious requests to continue but logs a
+		security warning and blocks caching of the response.
+	
+		 * Forward-proxy traffic is not checked at all.
+	
+		 * Reverse-proxy traffic is not checked at all.
+	
+		 * Intercepted traffic which passes verification is handled
+		   normally.
+	
+		For now it also forces suspicious requests to go DIRECT to the
+		original destination, overriding client_dst_passthru for
+		intercepted requests which fail Host: verification.
+	
+		For now suspicious intercepted CONNECT requests are always
+		responded to with an HTTP 409 (Conflict) error page.
 DOC_END
 
 NAME: client_dst_passthru
@@ -1963,18 +2014,24 @@ DEFAULT: none
 LOC: Config.ssl_client.options
 TYPE: string
 DOC_START
-	SSL engine options to use when proxying https:// URLs
+	SSL implementation options to use when proxying https:// URLs
 	
 	The most important being:
 
-		NO_SSLv2  Disallow the use of SSLv2
-		NO_SSLv3  Disallow the use of SSLv3
-		NO_TLSv1  Disallow the use of TLSv1
-		SINGLE_DH_USE
-			Always create a new key when using
-			temporary/ephemeral DH key exchanges
+	    NO_SSLv2  Disallow the use of SSLv2
+	    NO_SSLv3  Disallow the use of SSLv3
+	    NO_TLSv1  Disallow the use of TLSv1
+	    SINGLE_DH_USE
+		      Always create a new key when using temporary/ephemeral
+		      DH key exchanges
+	    SSL_OP_NO_TICKET
+		      Disable use of RFC5077 session tickets. Some servers
+		      may have problems understanding the TLS extension due
+		      to ambiguous specification in RFC4507.
+	    ALL       Enable various bug workarounds suggested as "harmless"
+		      by OpenSSL. Be warned that this may reduce SSL/TLS
+		      strength to some attacks.
 	
-	These options vary depending on your SSL engine.
 	See the OpenSSL SSL_CTX_set_options documentation for a
 	complete list of possible options.
 DOC_END
@@ -2490,12 +2547,21 @@ DOC_START
 	sslcipher=...	The list of valid SSL ciphers to use when connecting
 			to this peer.
 	
-	ssloptions=... 	Specify various SSL engine options:
-				NO_SSLv2  Disallow the use of SSLv2
-				NO_SSLv3  Disallow the use of SSLv3
-				NO_TLSv1  Disallow the use of TLSv1
-			See src/ssl_support.c or the OpenSSL documentation for
-			a more complete list.
+	ssloptions=... 	Specify various SSL implementation options:
+
+			    NO_SSLv2  Disallow the use of SSLv2
+			    NO_SSLv3  Disallow the use of SSLv3
+			    NO_TLSv1  Disallow the use of TLSv1
+			    SINGLE_DH_USE
+				      Always create a new key when using
+				      temporary/ephemeral DH key exchanges
+			    ALL       Enable various bug workarounds
+				      suggested as "harmless" by OpenSSL
+				      Be warned that this reduces SSL/TLS
+				      strength to some attacks.
+
+			See the OpenSSL SSL_CTX_set_options documentation for a
+			more complete list.
 	
 	sslcafile=... 	A file containing additional CA certificates to use
 			when verifying the peer certificate.
@@ -7251,7 +7317,7 @@ DOC_END
 
 NAME: cache_dns_program
 TYPE: string
-IFDEF: USE_DNSSERVERS
+IFDEF: USE_DNSHELPER
 DEFAULT: @DEFAULT_DNSSERVER@
 LOC: Config.Program.dnsserver
 DOC_START
@@ -7260,7 +7326,7 @@ DOC_END
 
 NAME: dns_children
 TYPE: HelperChildConfig
-IFDEF: USE_DNSSERVERS
+IFDEF: USE_DNSHELPER
 DEFAULT: 32 startup=1 idle=1
 LOC: Config.dnsChildren
 DOC_START
@@ -7294,7 +7360,7 @@ NAME: dns_retransmit_interval
 TYPE: time_msec
 DEFAULT: 5 seconds
 LOC: Config.Timeout.idns_retransmit
-IFDEF: !USE_DNSSERVERS
+IFDEF: !USE_DNSHELPER
 DOC_START
 	Initial retransmit interval for DNS queries. The interval is
 	doubled each time all configured DNS servers have been tried.
@@ -7304,7 +7370,7 @@ NAME: dns_timeout
 TYPE: time_msec
 DEFAULT: 30 seconds
 LOC: Config.Timeout.idns_query
-IFDEF: !USE_DNSSERVERS
+IFDEF: !USE_DNSHELPER
 DOC_START
 	DNS Query timeout. If no response is received to a DNS query
 	within this time all DNS servers for the queried domain
@@ -7315,7 +7381,7 @@ NAME: dns_packet_max
 TYPE: b_ssize_t
 DEFAULT: none
 LOC: Config.dns.packet_max
-IFDEF: !USE_DNSSERVERS
+IFDEF: !USE_DNSHELPER
 DOC_START
 	Maximum number of bytes packet size to advertise via EDNS.
 	Set to "none" to disable EDNS large packet support.
@@ -7416,7 +7482,7 @@ NAME: ignore_unknown_nameservers
 TYPE: onoff
 LOC: Config.onoff.ignore_unknown_nameservers
 DEFAULT: on
-IFDEF: !USE_DNSSERVERS
+IFDEF: !USE_DNSHELPER
 DOC_START
 	By default Squid checks that DNS responses are received
 	from the same IP addresses they are sent to.  If they
@@ -7425,32 +7491,11 @@ DOC_START
 	nameservers by setting this option to 'off'.
 DOC_END
 
-NAME: dns_v4_fallback
-TYPE: onoff
-DEFAULT: on
-LOC: Config.onoff.dns_require_A
-IFDEF: !USE_DNSSERVERS
-DOC_START
-	Standard practice with DNS is to lookup either A or AAAA records
-	and use the results if it succeeds. Only looking up the other if
-	the first attempt fails or otherwise produces no results.
-
-	That policy however will cause squid to produce error pages for some
-	servers that advertise AAAA but are unreachable over IPv6.
-
-	If this is ON  squid will always lookup both AAAA and A, using both.
-	If this is OFF squid will lookup AAAA and only try A if none found.
-
-	WARNING: There are some possibly unwanted side-effects with this on:
-		*) Doubles the load placed by squid on the DNS network.
-		*) May negatively impact connection delay times.
-DOC_END
-
 NAME: dns_v4_first
 TYPE: onoff
 DEFAULT: off
 LOC: Config.dns.v4_first
-IFDEF: !USE_DNSSERVERS
+IFDEF: !USE_DNSHELPER
 DOC_START
 	With the IPv6 Internet being as fast or faster than IPv4 Internet
 	for most networks Squid prefers to contact websites over IPv6.

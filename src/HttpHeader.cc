@@ -33,15 +33,17 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "base64.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrCc.h"
 #include "HttpHdrSc.h"
 #include "HttpHeader.h"
+#include "HttpHeaderStat.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "rfc1123.h"
+#include "StatHist.h"
 #include "Store.h"
 #include "TimeOrTag.h"
 
@@ -99,8 +101,8 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Cookie2", HDR_COOKIE2, ftStr},
     {"Date", HDR_DATE, ftDate_1123},
     {"ETag", HDR_ETAG, ftETag},
-    {"Expires", HDR_EXPIRES, ftDate_1123},
     {"Expect", HDR_EXPECT, ftStr},
+    {"Expires", HDR_EXPIRES, ftDate_1123},
     {"From", HDR_FROM, ftStr},
     {"Host", HDR_HOST, ftStr},
     {"If-Match", HDR_IF_MATCH, ftStr},	/* for now */
@@ -113,6 +115,8 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Location", HDR_LOCATION, ftStr},
     {"Max-Forwards", HDR_MAX_FORWARDS, ftInt64},
     {"Mime-Version", HDR_MIME_VERSION, ftStr},	/* for now */
+    {"Negotiate", HDR_NEGOTIATE, ftStr},
+    {"Origin", HDR_ORIGIN, ftStr},
     {"Pragma", HDR_PRAGMA, ftStr},
     {"Proxy-Authenticate", HDR_PROXY_AUTHENTICATE, ftStr},
     {"Proxy-Authentication-Info", HDR_PROXY_AUTHENTICATION_INFO, ftStr},
@@ -145,7 +149,6 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"X-Forwarded-For", HDR_X_FORWARDED_FOR, ftStr},
     {"X-Request-URI", HDR_X_REQUEST_URI, ftStr},
     {"X-Squid-Error", HDR_X_SQUID_ERROR, ftStr},
-    {"Negotiate", HDR_NEGOTIATE, ftStr},
 #if X_ACCELERATOR_VARY
     {"X-Accelerator-Vary", HDR_X_ACCELERATOR_VARY, ftStr},
 #endif
@@ -229,6 +232,7 @@ static http_hdr_type ReplyHeadersArr[] = {
     HDR_ACCEPT_RANGES, HDR_AGE,
     HDR_LOCATION, HDR_MAX_FORWARDS,
     HDR_MIME_VERSION, HDR_PUBLIC, HDR_RETRY_AFTER, HDR_SERVER, HDR_SET_COOKIE, HDR_SET_COOKIE2,
+    HDR_ORIGIN,
     HDR_VARY,
     HDR_WARNING, HDR_PROXY_CONNECTION, HDR_X_CACHE,
     HDR_X_CACHE_LOOKUP,
@@ -247,7 +251,9 @@ static HttpHeaderMask RequestHeadersMask;	/* set run-time using RequestHeaders *
 static http_hdr_type RequestHeadersArr[] = {
     HDR_AUTHORIZATION, HDR_FROM, HDR_HOST,
     HDR_IF_MATCH, HDR_IF_MODIFIED_SINCE, HDR_IF_NONE_MATCH,
-    HDR_IF_RANGE, HDR_MAX_FORWARDS, HDR_PROXY_CONNECTION,
+    HDR_IF_RANGE, HDR_MAX_FORWARDS,
+    HDR_ORIGIN,
+    HDR_PROXY_CONNECTION,
     HDR_PROXY_AUTHORIZATION, HDR_RANGE, HDR_REFERER, HDR_REQUEST_RANGE,
     HDR_USER_AGENT, HDR_X_FORWARDED_FOR, HDR_SURROGATE_CAPABILITY
 };
@@ -370,10 +376,10 @@ httpHeaderStatInit(HttpHeaderStat * hs, const char *label)
     assert(label);
     memset(hs, 0, sizeof(HttpHeaderStat));
     hs->label = label;
-    statHistEnumInit(&hs->hdrUCountDistr, 32);	/* not a real enum */
-    statHistEnumInit(&hs->fieldTypeDistr, HDR_ENUM_END);
-    statHistEnumInit(&hs->ccTypeDistr, CC_ENUM_END);
-    statHistEnumInit(&hs->scTypeDistr, SC_ENUM_END);
+    hs->hdrUCountDistr.enumInit(32);	/* not a real enum */
+    hs->fieldTypeDistr.enumInit(HDR_ENUM_END);
+    hs->ccTypeDistr.enumInit(CC_ENUM_END);
+    hs->scTypeDistr.enumInit(SC_ENUM_END);
 }
 
 /*
@@ -440,7 +446,7 @@ HttpHeader::clean()
 
     if (owner <= hoReply) {
         if (0 != entries.count)
-            statHistCount(&HttpHeaderStats[owner].hdrUCountDistr, entries.count);
+            HttpHeaderStats[owner].hdrUCountDistr.count(entries.count);
 
         HttpHeaderStats[owner].destroyedCount++;
 
@@ -452,7 +458,7 @@ HttpHeader::clean()
             if (e->id < 0 || e->id >= HDR_ENUM_END) {
                 debugs(55, 0, "HttpHeader::clean BUG: entry[" << pos << "] is invalid (" << e->id << "). Ignored.");
             } else {
-                statHistCount(&HttpHeaderStats[owner].fieldTypeDistr, e->id);
+                HttpHeaderStats[owner].fieldTypeDistr.count(e->id);
                 /* yes, this deletion leaves us in an inconsistent state */
                 delete e;
             }
@@ -1209,7 +1215,7 @@ HttpHeader::putSc(HttpHdrSc *sc)
     /* pack into mb */
     mb.init();
     packerToMemInit(&p, &mb);
-    httpHdrScPackInto(sc, &p);
+    sc->packInto(&p);
     /* put */
     addEntry(new HttpHeaderEntry(HDR_SURROGATE_CONTROL, NULL, mb.buf));
     /* cleanup */
@@ -1366,12 +1372,12 @@ HttpHeader::getSc() const
 
     (void) getList(HDR_SURROGATE_CONTROL, &s);
 
-    HttpHdrSc *sc = httpHdrScParseCreate(&s);
+    HttpHdrSc *sc = httpHdrScParseCreate(s);
 
-    HttpHeaderStats[owner].ccParsedCount++;
+    ++HttpHeaderStats[owner].ccParsedCount;
 
     if (sc)
-        httpHdrScUpdateStats(sc, &HttpHeaderStats[owner].scTypeDistr);
+        sc->updateStats(&HttpHeaderStats[owner].scTypeDistr);
 
     httpHeaderNoteParsedEntry(HDR_SURROGATE_CONTROL, s, !sc);
 
@@ -1687,19 +1693,19 @@ httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e)
     storeAppendPrintf(e, "\nField type distribution\n");
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
                       "id", "name", "count", "#/header");
-    statHistDump(&hs->fieldTypeDistr, e, httpHeaderFieldStatDumper);
+    hs->fieldTypeDistr.dump(e, httpHeaderFieldStatDumper);
     storeAppendPrintf(e, "\nCache-control directives distribution\n");
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
                       "id", "name", "count", "#/cc_field");
-    statHistDump(&hs->ccTypeDistr, e, httpHdrCcStatDumper);
+    hs->ccTypeDistr.dump(e, httpHdrCcStatDumper);
     storeAppendPrintf(e, "\nSurrogate-control directives distribution\n");
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
                       "id", "name", "count", "#/sc_field");
-    statHistDump(&hs->scTypeDistr, e, httpHdrScStatDumper);
+    hs->scTypeDistr.dump(e, httpHdrScStatDumper);
     storeAppendPrintf(e, "\nNumber of fields per header distribution\n");
     storeAppendPrintf(e, "%2s\t %-5s\t %5s\t %6s\n",
                       "id", "#flds", "count", "%total");
-    statHistDump(&hs->hdrUCountDistr, e, httpHeaderFldsPerHdrDumper);
+    hs->hdrUCountDistr.dump(e, httpHeaderFldsPerHdrDumper);
     dump_stat = NULL;
 }
 

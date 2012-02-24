@@ -1,22 +1,27 @@
 #ifndef _SQUID_SRC_AUTH_BASIC_USERREQUEST_H
 #define _SQUID_SRC_AUTH_BASIC_USERREQUEST_H
 
-#include "MemPool.h"
 #include "auth/UserRequest.h"
+#include "MemPool.h"
 
 class ConnStateData;
 class HttpRequest;
 
-/* follows the http request around */
-
-class AuthBasicUserRequest : public AuthUserRequest
+namespace Auth
 {
 
-public:
-    MEMPROXY_CLASS(AuthBasicUserRequest);
+namespace Basic
+{
 
-    AuthBasicUserRequest() {};
-    virtual ~AuthBasicUserRequest() { assert(RefCountCount()==0); };
+/* follows the http request around */
+
+class UserRequest : public Auth::UserRequest
+{
+public:
+    MEMPROXY_CLASS(Auth::Basic::UserRequest);
+
+    UserRequest() {}
+    virtual ~UserRequest() { assert(RefCountCount()==0); }
 
     virtual int authenticated() const;
     virtual void authenticate(HttpRequest * request, ConnStateData *conn, http_hdr_type type);
@@ -27,6 +32,9 @@ private:
     static HLPCB HandleReply;
 };
 
-MEMPROXY_CLASS_INLINE(AuthBasicUserRequest);
+} // namespace Basic
+} // namespace Auth
+
+MEMPROXY_CLASS_INLINE(Auth::Basic::UserRequest);
 
 #endif /* _SQUID_SRC_AUTH_BASIC_USERREQUEST_H */

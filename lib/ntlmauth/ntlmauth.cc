@@ -25,7 +25,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 
 #if HAVE_STRING_H
 #include <string.h>
@@ -274,8 +274,10 @@ ntlm_unpack_auth(const ntlm_authenticate *auth, char *user, char *domain, const 
         domain[rv.l] = '\0';
         debug("ntlm_unpack_auth: Domain '%s'.\n", domain);
     }
-    if (rv.l >= size)
+    if (rv.l >= size) {
+        debug("ntlm_unpack_auth: Domain length %d too big for %d byte packet.\n", rv.l , size);
         return NTLM_ERR_BLOB;
+    }
 
     rv = ntlm_fetch_string(&auth->hdr, size, &auth->user, auth->flags);
     if (rv.l > 0) {

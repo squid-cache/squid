@@ -48,7 +48,7 @@
  * when finished.
  */
 
-#include "config.h"
+#include "squid.h"
 #include "cbdata.h"
 #include "mgr/Registration.h"
 #include "Store.h"
@@ -108,7 +108,7 @@ public:
 
     ~cbdata();
     int valid;
-    int locks;
+    int32_t locks;
     cbdata_type type;
 #if USE_CBDATA_DEBUG
 
@@ -419,7 +419,7 @@ cbdataInternalLock(const void *p)
 
     c->check(__LINE__);
 
-    assert(c->locks < 65535);
+    assert(c->locks < INT_MAX);
 
     c->locks++;
 }

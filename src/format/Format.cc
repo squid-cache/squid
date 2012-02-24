@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "AccessLogEntry.h"
 #include "comm/Connection.h"
 #include "err_detail_type.h"
@@ -315,10 +315,8 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             break;
 
         case LFT_CLIENT_IP_ADDRESS:
-            if (al->cache.caddr.IsNoAddr()) // e.g., ICAP OPTIONS lack client
-                out = "-";
-            else
-                out = al->cache.caddr.NtoA(tmp,1024);
+            al->getLogClientIp(tmp, sizeof(tmp));
+            out = tmp;
             break;
 
         case LFT_CLIENT_FQDN:
@@ -373,8 +371,10 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
 
         case LFT_LOCAL_LISTENING_IP: {
             // avoid logging a dash if we have reliable info
-            const bool interceptedAtKnownPort = (al->request->flags.spoof_client_ip ||
-                                                 al->request->flags.intercepted) && al->cache.port;
+            const bool interceptedAtKnownPort = al->request ?
+                                                (al->request->flags.spoof_client_ip ||
+                                                 al->request->flags.intercepted) && al->cache.port :
+                                                false;
             if (interceptedAtKnownPort) {
                 const bool portAddressConfigured = !al->cache.port->s.IsAnyAddr();
                 if (portAddressConfigured)

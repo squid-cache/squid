@@ -144,6 +144,8 @@ struct relist {
 class CpuAffinityMap;
 class RemovalPolicySettings;
 class external_acl;
+class Store;
+struct http_port_list;
 class SwapDir;
 
 /// Used for boolean enabled/disabled options with complex default logic.
@@ -216,8 +218,7 @@ struct SquidConfig {
         int icp_query_min;	/* msec */
         int mcast_icp_query;	/* msec */
 
-#if !USE_DNSSERVERS
-
+#if !USE_DNSHELPER
         time_msec_t idns_retransmit;
         time_msec_t idns_query;
 #endif
@@ -245,8 +246,7 @@ struct SquidConfig {
     struct {
         http_port_list *http;
 #if USE_SSL
-
-        https_port_list *https;
+        http_port_list *https;
 #endif
 
     } Sockaddr;
@@ -302,7 +302,7 @@ struct SquidConfig {
     char *effectiveGroup;
 
     struct {
-#if USE_DNSSERVERS
+#if USE_DNSHELPER
         char *dnsserver;
 #endif
 
@@ -319,8 +319,7 @@ struct SquidConfig {
 #endif
 
     } Program;
-#if USE_DNSSERVERS
-
+#if USE_DNSHELPER
     HelperChildConfig dnsChildren;
 #endif
 
@@ -446,7 +445,6 @@ struct SquidConfig {
         int emailErrData;
         int httpd_suppress_version_string;
         int global_internal_static;
-        int dns_require_A;
 
 #if FOLLOW_X_FORWARDED_FOR
         int acl_uses_indirect_client;
@@ -698,34 +696,6 @@ struct _fde_disk {
     off_t offset;
 };
 
-struct _fileMap {
-    int max_n_files;
-    int n_files_in_map;
-    int toggle;
-    int nwords;
-    unsigned long *file_map;
-};
-
-/*
- * Note: HttpBody is used only for messages with a small content that is
- * known a priory (e.g., error messages).
- */
-
-class MemBuf;
-
-struct _HttpBody {
-    /* private */
-    MemBuf *mb;
-};
-
-#include "SquidString.h"
-/* http header extention field */
-
-class HttpHdrExtField
-{
-    String name;		/* field-name  from HTTP/1.1 (no column after name) */
-    String value;		/* field-value from HTTP/1.1 */
-};
 
 /* per field statistics */
 
@@ -743,6 +713,7 @@ public:
 };
 
 /* compiled version of HttpHeaderFieldAttrs plus stats */
+#include "SquidString.h"
 
 class HttpHeaderFieldInfo
 {
@@ -785,21 +756,6 @@ struct _domain_type {
     peer_t type;
     domain_type *next;
 };
-
-#if USE_CACHE_DIGESTS
-
-/* statistics for cache digests and other hit "predictors" */
-
-struct _cd_guess_stats {
-    /* public, read-only */
-    int true_hits;
-    int false_hits;
-    int true_misses;
-    int false_misses;
-    int close_hits;		/* tmp, remove it later */
-};
-
-#endif
 
 class PeerDigest;
 
@@ -1009,7 +965,7 @@ struct _iostats {
 
 
 struct request_flags {
-    request_flags(): range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),fail_on_validation_err(0),stale_if_hit(0),accelerated(0),ignore_cc(0),intercepted(0),spoof_client_ip(0),internal(0),internalclient(0),must_keepalive(0),pinned(0),canRePin(0),chunked_reply(0),stream_error(0),sslPeek(0),sslBumped(0),destinationIPLookedUp_(0) {
+    request_flags(): range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),fail_on_validation_err(0),stale_if_hit(0),accelerated(0),ignore_cc(0),intercepted(0),hostVerified(0),spoof_client_ip(0),internal(0),internalclient(0),must_keepalive(0),pinned(0),canRePin(0),chunked_reply(0),stream_error(0),sslPeek(0),sslBumped(0),destinationIPLookedUp_(0) {
 #if USE_HTTP_VIOLATIONS
         nocache_hack = 0;
 #endif
@@ -1019,10 +975,10 @@ struct request_flags {
     }
 
     unsigned int range:1;
-    unsigned int nocache:1;
+    unsigned int nocache:1;            ///< whether the response to this request may be READ from cache
     unsigned int ims:1;
     unsigned int auth:1;
-    unsigned int cachable:1;
+    unsigned int cachable:1;           ///< whether the response to thie request may be stored in the cache
     unsigned int hierarchical:1;
     unsigned int loopdetect:1;
     unsigned int proxy_keepalive:1;
@@ -1038,7 +994,8 @@ unsigned int proxying:
 #endif
     unsigned int accelerated:1;
     unsigned int ignore_cc:1;
-    unsigned int intercepted:1;  /**< transparently intercepted request */
+    unsigned int intercepted:1;        ///< intercepted request
+    unsigned int hostVerified:1;       ///< whether the Host: header passed verification
     unsigned int spoof_client_ip:1;  /**< spoof client ip if possible */
     unsigned int internal:1;
     unsigned int internalclient:1;
@@ -1113,171 +1070,6 @@ struct _refresh_t {
 #endif
     } flags;
     int max_stale;
-};
-
-/*
- * "very generic" histogram;
- * see important comments on hbase_f restrictions in StatHist.c
- */
-
-struct _StatHist {
-    int *bins;
-    int capacity;
-    double min;
-    double max;
-    double scale;
-    hbase_f *val_in;		/* e.g., log() for log-based histogram */
-    hbase_f *val_out;		/* e.g., exp() for log based histogram */
-};
-
-/*
- * if you add a field to StatCounters,
- * you MUST sync statCountersInitSpecial, statCountersClean, and statCountersCopy
- */
-
-struct _StatCounters {
-
-    struct {
-        int clients;
-        int requests;
-        int hits;
-        int mem_hits;
-        int disk_hits;
-        int errors;
-        kb_t kbytes_in;
-        kb_t kbytes_out;
-        kb_t hit_kbytes_out;
-        StatHist miss_svc_time;
-        StatHist nm_svc_time;
-        StatHist nh_svc_time;
-        StatHist hit_svc_time;
-        StatHist all_svc_time;
-    } client_http;
-
-    struct {
-
-        struct {
-            int requests;
-            int errors;
-            kb_t kbytes_in;
-            kb_t kbytes_out;
-        } all , http, ftp, other;
-    } server;
-
-    struct {
-        int pkts_sent;
-        int queries_sent;
-        int replies_sent;
-        int pkts_recv;
-        int queries_recv;
-        int replies_recv;
-        int hits_sent;
-        int hits_recv;
-        int replies_queued;
-        int replies_dropped;
-        kb_t kbytes_sent;
-        kb_t q_kbytes_sent;
-        kb_t r_kbytes_sent;
-        kb_t kbytes_recv;
-        kb_t q_kbytes_recv;
-        kb_t r_kbytes_recv;
-        StatHist query_svc_time;
-        StatHist reply_svc_time;
-        int query_timeouts;
-        int times_used;
-    } icp;
-
-    struct {
-        int pkts_sent;
-        int pkts_recv;
-    } htcp;
-
-    struct {
-        int requests;
-    } unlink;
-
-    struct {
-        StatHist svc_time;
-    } dns;
-
-    struct {
-        int times_used;
-        kb_t kbytes_sent;
-        kb_t kbytes_recv;
-        kb_t memory;
-        int msgs_sent;
-        int msgs_recv;
-#if USE_CACHE_DIGESTS
-
-        cd_guess_stats guess;
-#endif
-
-        StatHist on_xition_count;
-    } cd;
-
-    struct {
-        int times_used;
-    } netdb;
-    int page_faults;
-    unsigned long int select_loops;
-    int select_fds;
-    double select_time;
-    double cputime;
-
-    struct timeval timestamp;
-    StatHist comm_icp_incoming;
-    StatHist comm_dns_incoming;
-    StatHist comm_http_incoming;
-    StatHist select_fds_hist;
-
-    struct {
-        struct {
-            int opens;
-            int closes;
-            int reads;
-            int writes;
-            int seeks;
-            int unlinks;
-        } disk;
-
-        struct {
-            int accepts;
-            int sockets;
-            int connects;
-            int binds;
-            int closes;
-            int reads;
-            int writes;
-            int recvfroms;
-            int sendtos;
-        } sock;
-        int selects;
-    } syscalls;
-    int aborted_requests;
-
-    struct {
-        int files_cleaned;
-        int outs;
-        int ins;
-    } swap;
-};
-
-/* per header statistics */
-
-struct _HttpHeaderStat {
-    const char *label;
-    HttpHeaderMask *owner_mask;
-
-    StatHist hdrUCountDistr;
-    StatHist fieldTypeDistr;
-    StatHist ccTypeDistr;
-    StatHist scTypeDistr;
-
-    int parsedCount;
-    int ccParsedCount;
-    int scParsedCount;
-    int destroyedCount;
-    int busyDestroyedCount;
 };
 
 

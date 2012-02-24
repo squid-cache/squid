@@ -36,7 +36,7 @@
 #error "_REENTRANT MUST be defined to build squid async io support."
 #endif
 
-#include "squid.h"
+#include "squid-old.h"
 #include "DiskThreads.h"
 
 #include	<stdio.h>
@@ -49,7 +49,7 @@
 #if HAVE_SCHED_H
 #include	<sched.h>
 #endif
-#include "CommIO.h"
+#include "DiskIO/DiskThreads/CommIO.h"
 #include "SquidTime.h"
 #include "Store.h"
 

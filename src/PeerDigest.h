@@ -34,11 +34,14 @@
 #ifndef   SQUID_PEERDIGEST_H
 #define   SQUID_PEERDIGEST_H
 
-#include "squid.h"
+#include "squid-old.h"
 
 #if USE_CACHE_DIGESTS
 
 #include "cbdata.h"
+
+/* for CacheDigestGuessStats */
+#include "StatCounters.h"
 
 struct _Version {
     short int current;		/* current version */
@@ -116,7 +119,7 @@ public:
     } times;
 
     struct {
-        cd_guess_stats guess;
+        CacheDigestGuessStats guess;
         int used_count;
 
         struct {

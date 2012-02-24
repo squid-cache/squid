@@ -32,7 +32,7 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "base/AsyncCall.h"
 #include "StoreIOBuffer.h"
 #include "comm.h"
@@ -45,7 +45,6 @@
 #include "comm/Loops.h"
 #include "comm/Write.h"
 #include "comm/TcpAcceptor.h"
-#include "CommIO.h"
 #include "CommRead.h"
 #include "MemBuf.h"
 #include "pconn.h"
@@ -58,6 +57,7 @@
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "ClientInfo.h"
+#include "StatCounters.h"
 #if USE_SSL
 #include "ssl/support.h"
 #endif
@@ -727,45 +727,19 @@ comm_import_opened(const Comm::ConnectionPointer &conn,
      */
 }
 
-// Legacy pre-AsyncCalls API for FD timeouts.
-int
-commSetTimeout(int fd, int timeout, CTCB * handler, void *data)
+// XXX: now that raw-FD timeouts are only unset for pipes and files this SHOULD be a no-op.
+// With handler already unset. Leaving this present until that can be verified for all code paths.
+void
+commUnsetFdTimeout(int fd)
 {
-    AsyncCall::Pointer call;
-    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
-    if (handler != NULL)
-        call=commCbCall(5,4, "SomeTimeoutHandler", CommTimeoutCbPtrFun(handler, data));
-    else
-        call = NULL;
-    return commSetTimeout(fd, timeout, call);
-}
-
-// Legacy pre-Comm::Connection API for FD timeouts
-// still used by non-socket FD code dealing with pipes and IPC sockets.
-int
-commSetTimeout(int fd, int timeout, AsyncCall::Pointer &callback)
-{
-    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
+    debugs(5, 3, HERE << "Remove timeout for FD " << fd);
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
     fde *F = &fd_table[fd];
     assert(F->flags.open);
 
-    if (timeout < 0) {
-        F->timeoutHandler = NULL;
-        F->timeout = 0;
-    } else {
-        if (callback != NULL) {
-            typedef CommTimeoutCbParams Params;
-            Params &params = GetCommParams<Params>(callback);
-            params.fd = fd;
-            F->timeoutHandler = callback;
-        }
-
-        F->timeout = squid_curtime + (time_t) timeout;
-    }
-
-    return F->timeout;
+    F->timeoutHandler = NULL;
+    F->timeout = 0;
 }
 
 int
@@ -870,7 +844,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
             debugs(14,9, "connecting to: " << address );
         }
     } else {
-#if defined(_SQUID_NEWSOS6_)
+#if _SQUID_NEWSOS6_
         /* Makoto MATSUSHITA <matusita@ics.es.osaka-u.ac.jp> */
 
         connect(sock, AI->ai_addr, AI->ai_addrlen);
@@ -891,7 +865,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
         if (x == 0)
             errno = err;
 
-#if defined(_SQUID_SOLARIS_)
+#if _SQUID_SOLARIS_
         /*
         * Solaris 2.4's socket emulation doesn't allow you
         * to determine the error from a failed non-blocking
@@ -962,10 +936,6 @@ commCallCloseHandlers(int fd)
         // If call is not canceled schedule it for execution else ignore it
         if (!call->canceled()) {
             debugs(5, 5, "commCallCloseHandlers: ch->handler=" << call);
-            // XXX: this should not be needed. Params can be set by the call creator
-            typedef CommCloseCbParams Params;
-            Params &params = GetCommParams<Params>(call);
-            params.fd = fd;
             ScheduleCallHere(call);
         }
     }
@@ -986,10 +956,10 @@ commLingerClose(int fd, void *unused)
 }
 
 static void
-commLingerTimeout(int fd, void *unused)
+commLingerTimeout(const FdeCbParams &params)
 {
-    debugs(5, 3, "commLingerTimeout: FD " << fd);
-    comm_close(fd);
+    debugs(5, 3, "commLingerTimeout: FD " << params.fd);
+    comm_close(params.fd);
 }
 
 /*
@@ -1009,7 +979,18 @@ comm_lingering_close(int fd)
     }
 
     fd_note(fd, "lingering close");
-    commSetTimeout(fd, 10, commLingerTimeout, NULL);
+    AsyncCall::Pointer call = commCbCall(5,4, "commLingerTimeout", FdeCbPtrFun(commLingerTimeout, NULL));
+
+    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
+    assert(fd_table[fd].flags.open);
+    if (callback != NULL) {
+        typedef FdeCbParams Params;
+        Params &params = GetCommParams<Params>(callback);
+        params.fd = fd;
+        fd_table[fd].timeoutHandler = callback;
+        fd_table[fd].timeout = squid_curtime + static_cast<time_t>(10);
+    }
+
     Comm::SetSelect(fd, COMM_SELECT_READ, commLingerClose, NULL, 0);
 }
 
@@ -1048,7 +1029,7 @@ old_comm_reset_close(int fd)
 
 #if USE_SSL
 void
-commStartSslClose(const CommCloseCbParams &params)
+commStartSslClose(const FdeCbParams &params)
 {
     assert(&fd_table[params.fd].ssl);
     ssl_shutdown_method(fd_table[params.fd].ssl);
@@ -1056,7 +1037,7 @@ commStartSslClose(const CommCloseCbParams &params)
 #endif
 
 void
-comm_close_complete(const CommCloseCbParams &params)
+comm_close_complete(const FdeCbParams &params)
 {
 #if USE_SSL
     fde *F = &fd_table[params.fd];
@@ -1119,10 +1100,9 @@ _comm_close(int fd, char const *file, int line)
 
 #if USE_SSL
     if (F->ssl) {
-        // XXX: make this a generic async call passing one FD parameter. No need to use CommCloseCbParams
         AsyncCall::Pointer startCall=commCbCall(5,4, "commStartSslClose",
-                                                CommCloseCbPtrFun(commStartSslClose, NULL));
-        CommCloseCbParams &startParams = GetCommParams<CommCloseCbParams>(startCall);
+                                                FdeCbPtrFun(commStartSslClose, NULL));
+        FdeCbParams &startParams = GetCommParams<FdeCbParams>(startCall);
         startParams.fd = fd;
         ScheduleCallHere(startCall);
     }
@@ -1131,7 +1111,7 @@ _comm_close(int fd, char const *file, int line)
     // a half-closed fd may lack a reader, so we stop monitoring explicitly
     if (commHasHalfClosedMonitor(fd))
         commStopHalfClosedMonitor(fd);
-    commSetTimeout(fd, -1, NULL, NULL);
+    commUnsetFdTimeout(fd);
 
     // notify read/write handlers after canceling select reservations, if any
     if (COMMIO_FD_WRITECB(fd)->active()) {
@@ -1162,8 +1142,8 @@ _comm_close(int fd, char const *file, int line)
 
 
     AsyncCall::Pointer completeCall=commCbCall(5,4, "comm_close_complete",
-                                    CommCloseCbPtrFun(comm_close_complete, NULL));
-    CommCloseCbParams &completeParams = GetCommParams<CommCloseCbParams>(completeCall);
+                                    FdeCbPtrFun(comm_close_complete, NULL));
+    FdeCbParams &completeParams = GetCommParams<FdeCbParams>(completeCall);
     completeParams.fd = fd;
     // must use async call to wait for all callbacks
     // scheduled before comm_close() to finish
@@ -1838,60 +1818,6 @@ checkTimeouts(void)
     }
 }
 
-void CommIO::Initialise()
-{
-    /* Initialize done pipe signal */
-    int DonePipe[2];
-    if (pipe(DonePipe)) {}
-    DoneFD = DonePipe[1];
-    DoneReadFD = DonePipe[0];
-    fd_open(DoneReadFD, FD_PIPE, "async-io completetion event: main");
-    fd_open(DoneFD, FD_PIPE, "async-io completetion event: threads");
-    commSetNonBlocking(DoneReadFD);
-    commSetNonBlocking(DoneFD);
-    Comm::SetSelect(DoneReadFD, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
-    Initialised = true;
-}
-
-void CommIO::NotifyIOClose()
-{
-    /* Close done pipe signal */
-    FlushPipe();
-    close(DoneFD);
-    close(DoneReadFD);
-    fd_close(DoneFD);
-    fd_close(DoneReadFD);
-    Initialised = false;
-}
-
-bool CommIO::Initialised = false;
-bool CommIO::DoneSignalled = false;
-int CommIO::DoneFD = -1;
-int CommIO::DoneReadFD = -1;
-
-void
-CommIO::FlushPipe()
-{
-    char buf[256];
-    FD_READ_METHOD(DoneReadFD, buf, sizeof(buf));
-}
-
-void
-CommIO::NULLFDHandler(int fd, void *data)
-{
-    FlushPipe();
-    Comm::SetSelect(fd, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
-}
-
-void
-CommIO::ResetNotifications()
-{
-    if (DoneSignalled) {
-        FlushPipe();
-        DoneSignalled = false;
-    }
-}
-
 /// Start waiting for a possibly half-closed connection to close
 // by scheduling a read callback to a monitoring handler that
 // will close the connection on read errors.
@@ -2047,6 +1973,19 @@ DeferredReadManager::popHead(CbDataListContainer<DeferredRead> &deferredReads)
     assert (!deferredReads.empty());
 
     DeferredRead &read = deferredReads.head->element;
+
+    // NOTE: at this point the connection has been paused/stalled for an unknown
+    //       amount of time. We must re-validate that it is active and usable.
+
+    // If the connection has been closed already. Cancel this read.
+    if (!Comm::IsConnOpen(read.theRead.conn)) {
+        if (read.closer != NULL) {
+            read.closer->cancel("Connection closed before.");
+            read.closer = NULL;
+        }
+        read.markCancelled();
+    }
+
     if (!read.cancelled) {
         comm_remove_close_handler(read.theRead.conn->fd, read.closer);
         read.closer = NULL;

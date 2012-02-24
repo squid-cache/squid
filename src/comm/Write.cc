@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #if USE_DELAY_POOLS
 #include "ClientInfo.h"
 #endif
@@ -6,6 +6,7 @@
 #include "comm/IoCallback.h"
 #include "comm/Write.h"
 #include "fde.h"
+#include "StatCounters.h"
 #include "SquidTime.h"
 #include "MemBuf.h"
 
@@ -108,7 +109,7 @@ Comm::HandleWrite(int fd, void *data)
 #endif /* USE_DELAY_POOLS */
 
     fd_bytes(fd, len, FD_WRITE);
-    statCounter.syscalls.sock.writes++;
+    ++statCounter.syscalls.sock.writes;
     // After each successful partial write,
     // reset fde::writeStart to the current time.
     fd_table[fd].writeStart = squid_curtime;

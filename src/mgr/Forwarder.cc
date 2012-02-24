@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "base/AsyncJobCalls.h"
 #include "base/TextException.h"
 #include "CommCalls.h"
@@ -72,14 +72,14 @@ void
 Mgr::Forwarder::handleError()
 {
     debugs(16, DBG_CRITICAL, "ERROR: uri " << entry->url() << " exceeds buffer size");
-    sendError(errorCon(ERR_INVALID_URL, HTTP_REQUEST_URI_TOO_LARGE, httpRequest));
+    sendError(new ErrorState(ERR_INVALID_URL, HTTP_REQUEST_URI_TOO_LARGE, httpRequest));
     mustStop("long URI");
 }
 
 void
 Mgr::Forwarder::handleTimeout()
 {
-    sendError(errorCon(ERR_LIFETIME_EXP, HTTP_REQUEST_TIMEOUT, httpRequest));
+    sendError(new ErrorState(ERR_LIFETIME_EXP, HTTP_REQUEST_TIMEOUT, httpRequest));
     Ipc::Forwarder::handleTimeout();
 }
 
@@ -87,7 +87,7 @@ void
 Mgr::Forwarder::handleException(const std::exception& e)
 {
     if (entry != NULL && httpRequest != NULL && Comm::IsConnOpen(conn))
-        sendError(errorCon(ERR_INVALID_RESP, HTTP_INTERNAL_SERVER_ERROR, httpRequest));
+        sendError(new ErrorState(ERR_INVALID_RESP, HTTP_INTERNAL_SERVER_ERROR, httpRequest));
     Ipc::Forwarder::handleException(e);
 }
 
@@ -124,7 +124,7 @@ Mgr::Forwarder::sendError(ErrorState *error)
     entry->buffer();
     entry->replaceHttpReply(error->BuildHttpReply());
     entry->expires = squid_curtime;
-    errorStateFree(error);
+    delete error;
     entry->flush();
     entry->complete();
 }

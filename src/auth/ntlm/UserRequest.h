@@ -10,14 +10,19 @@ class HttpReply;
 class HttpRequest;
 class helper_stateful_server;
 
-class AuthNTLMUserRequest : public AuthUserRequest
+namespace Auth
+{
+namespace Ntlm
+{
+
+class UserRequest : public Auth::UserRequest
 {
 
 public:
-    MEMPROXY_CLASS(AuthNTLMUserRequest);
+    MEMPROXY_CLASS(Auth::Ntlm::UserRequest);
 
-    AuthNTLMUserRequest();
-    virtual ~AuthNTLMUserRequest();
+    UserRequest();
+    virtual ~UserRequest();
     virtual int authenticated() const;
     virtual void authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type);
     virtual Auth::Direction module_direction();
@@ -29,9 +34,6 @@ public:
     /* we need to store the helper server between requests */
     helper_stateful_server *authserver;
     void releaseAuthServer(void); ///< Release authserver NTLM helpers properly when finished or abandoning.
-
-    /* what connection is this associated with */
-//    ConnStateData * conn;
 
     /* our current blob to pass to the client */
     char *server_blob;
@@ -49,6 +51,9 @@ private:
     static HLPSCB HandleReply;
 };
 
-MEMPROXY_CLASS_INLINE(AuthNTLMUserRequest);
+} // namespace Ntlm
+} // namespace Auth
+
+MEMPROXY_CLASS_INLINE(Auth::Ntlm::UserRequest);
 
 #endif /* _SQUID_SRC_AUTH_NTLM_USERREQUEST_H */

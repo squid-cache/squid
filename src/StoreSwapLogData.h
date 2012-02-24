@@ -59,7 +59,7 @@
  *      the value for MemObject->swap_hdr_sz.
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 /*
  * Do we need to have the dirn in here? I don't think so, since we already
@@ -85,6 +85,9 @@ class StoreSwapLogData
 public:
     MEMPROXY_CLASS(StoreSwapLogData);
     StoreSwapLogData();
+
+    /// consistency self-check: whether the data appears to make sense
+    bool sane() const;
 
     /**
      * Either SWAP_LOG_ADD when an object is added to the disk storage,

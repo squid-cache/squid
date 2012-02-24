@@ -31,13 +31,13 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#include "config.h"
+#include "squid.h"
 
 /* for ClientActiveRequests global */
 #include "dlink.h"
 
 /* old includes without reasons given. */
-#include "squid.h"
+#include "squid-old.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #if USE_AUTH
@@ -102,7 +102,7 @@ clientReplyContext::setReplyToError(
     err_type err, http_status status, const HttpRequestMethod& method, char const *uri,
     Ip::Address &addr, HttpRequest * failedrequest, const char *unparsedrequest,
 #if USE_AUTH
-    AuthUserRequest::Pointer auth_user_request
+    Auth::UserRequest::Pointer auth_user_request
 #else
     void*
 #endif
@@ -384,6 +384,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     // origin replied 304
     if (status == HTTP_NOT_MODIFIED) {
         http->logType = LOG_TCP_REFRESH_UNMODIFIED;
+        http->request->flags.stale_if_hit = 0; // old_entry is no longer stale
 
         // update headers on existing entry
         old_rep->updateOnNotModified(http->storeEntry()->getReply());
@@ -1586,15 +1587,11 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
       */
     if (r->flags.nocache) {
 
-#if USE_DNSSERVERS
-
+#if USE_DNSHELPER
         ipcacheInvalidate(r->GetHost());
-
 #else
-
         ipcacheInvalidateNegative(r->GetHost());
-
-#endif /* USE_DNSSERVERS */
+#endif /* USE_DNSHELPER */
 
     }
 
@@ -1602,15 +1599,11 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     else if (r->flags.nocache_hack) {
 
-#if USE_DNSSERVERS
-
+#if USE_DNSHELPER
         ipcacheInvalidate(r->GetHost());
-
 #else
-
         ipcacheInvalidateNegative(r->GetHost());
-
-#endif /* USE_DNSSERVERS */
+#endif /* USE_DNSHELPER */
 
     }
 
@@ -2214,7 +2207,7 @@ ErrorState *
 clientBuildError(err_type page_id, http_status status, char const *url,
                  Ip::Address &src_addr, HttpRequest * request)
 {
-    ErrorState *err = errorCon(page_id, status, request);
+    ErrorState *err = new ErrorState(page_id, status, request);
     err->src_addr = src_addr;
 
     if (url)

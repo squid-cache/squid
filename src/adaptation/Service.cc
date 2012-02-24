@@ -2,7 +2,7 @@
  * DEBUG: section 93    Adaptation
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "HttpRequest.h"
 #include "adaptation/ServiceFilter.h"
 #include "adaptation/Service.h"

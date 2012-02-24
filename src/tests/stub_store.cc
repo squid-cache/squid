@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 
 #define STUB_API "store.cc"
 #include "tests/STUB.h"
@@ -26,8 +26,8 @@ void StoreEntry::complete() STUB
 store_client_t StoreEntry::storeClientType() const STUB_RETVAL(STORE_NON_CLIENT)
 char const *StoreEntry::getSerialisedMetaData() STUB_RETVAL(NULL)
 void StoreEntry::replaceHttpReply(HttpReply *, bool andStartWriting) STUB
-bool StoreEntry::swapoutPossible() STUB_RETVAL(false)
-void StoreEntry::trimMemory() STUB
+bool StoreEntry::mayStartSwapOut() STUB_RETVAL(false)
+void StoreEntry::trimMemory(const bool preserveSwappable) STUB
 void StoreEntry::abort() STUB
 void StoreEntry::unlink() STUB
 void StoreEntry::makePublic() STUB
@@ -41,7 +41,6 @@ void StoreEntry::cacheNegatively() STUB
 void StoreEntry::invokeHandlers() STUB
 void StoreEntry::purgeMem() STUB
 void StoreEntry::swapOut() STUB
-bool StoreEntry::swapOutAble() const STUB_RETVAL(false)
 void StoreEntry::swapOutFileClose(int how) STUB
 const char *StoreEntry::url() const STUB_RETVAL(NULL)
 int StoreEntry::checkCachable() STUB_RETVAL(0)

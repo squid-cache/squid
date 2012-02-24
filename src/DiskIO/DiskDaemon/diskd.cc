@@ -32,14 +32,19 @@
  *
  */
 
-#include "config.h"
 #include "squid.h"
+#include "DiskIO/DiskDaemon/diomsg.h"
+#include "hash.h"
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <sys/shm.h>
-
-#include "DiskIO/DiskDaemon/diomsg.h"
+#if HAVE_IOSTREAM
+#include <iostream>
+#endif
 
 void
 xassert(const char *msg, const char *file, int line)

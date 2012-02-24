@@ -1,67 +1,11 @@
-/*
- * $Id$
- *
- * DEBUG: section 84    Helper process maintenance
- * AUTHOR: Robert Collins
- *
- * SQUID Web Proxy Cache          http://www.squid-cache.org/
- * ----------------------------------------------------------
- *
- *  Squid is the result of efforts by numerous individuals from
- *  the Internet community; see the CONTRIBUTORS file for full
- *  details.   Many organizations have provided support for Squid's
- *  development; see the SPONSORS file for full details.  Squid is
- *  Copyrighted (C) 2001 by the Regents of the University of
- *  California; see the COPYRIGHT file for full details.  Squid
- *  incorporates software developed and/or copyrighted by other
- *  sources; see the CREDITS file for full details.
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *
- */
-
-#include "config.h"
+#include "squid.h"
 #include "fde.h"
 
-int
-fdNFree(void)
-{
-    fatal ("Not Implemented");
-    return -1;
-}
+#define STUB_API "fd.cc"
+#include "tests/STUB.h"
 
-void
-fd_open(int fd, unsigned int type, const char *desc)
-{
-    fatal ("Not Implemented");
-}
-
-void
-fd_close(int fd)
-{
-    fatal ("Not Implemented");
-}
-
-void
-fd_bytes(int fd, int len, unsigned int type)
-{
-    fatal ("Not Implemented");
-}
-
-void
-fd_note(int fd, const char *s)
-{
-    fatal ("Not Implemented");
-}
+int fdNFree(void) STUB_RETVAL(-1)
+void fd_open(int fd, unsigned int type, const char *desc) STUB
+void fd_close(int fd) STUB
+void fd_bytes(int fd, int len, unsigned int type) STUB
+void fd_note(int fd, const char *s) STUB

@@ -46,7 +46,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include <string.h>
 #include "rfc2617.h"
 #include "md5.h"

@@ -18,6 +18,8 @@ typedef enum {
     PROTO_HTTP,
     PROTO_FTP,
     PROTO_HTTPS,
+    PROTO_COAP,
+    PROTO_COAPS,
     PROTO_GOPHER,
     PROTO_WAIS,
     PROTO_CACHE_OBJECT,

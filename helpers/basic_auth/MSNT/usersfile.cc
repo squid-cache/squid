@@ -8,7 +8,7 @@
  * The code originated from denyusers.c.
  */
 
-#include "config.h"
+#include "squid.h"
 #include "util.h"
 
 #include <stdio.h>

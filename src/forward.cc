@@ -31,7 +31,7 @@
  */
 
 
-#include "squid.h"
+#include "squid-old.h"
 #include "forward.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
@@ -122,10 +122,10 @@ void FwdState::start(Pointer aSelf)
     // Bug 3243: CVE 2009-0801
     // Bypass of browser same-origin access control in intercepted communication
     // To resolve this we must force DIRECT and only to the original client destination.
-    if (Config.onoff.client_dst_passthru && request && !request->flags.redirected &&
-            (request->flags.intercepted || request->flags.spoof_client_ip)) {
+    const bool isIntercepted = request && !request->flags.redirected && (request->flags.intercepted || request->flags.spoof_client_ip);
+    const bool useOriginalDst = Config.onoff.client_dst_passthru || (request && !request->flags.hostVerified);
+    if (isIntercepted && useOriginalDst) {
         selectPeerForIntercepted();
-
         // destination "found". continue with the forwarding.
         startConnectionOrFail();
     } else {
@@ -207,8 +207,7 @@ FwdState::~FwdState()
 
     HTTPMSGUNLOCK(request);
 
-    if (err)
-        errorStateFree(err);
+    delete err;
 
     entry->unregisterAbort();
 
@@ -261,10 +260,8 @@ FwdState::fwdStart(const Comm::ConnectionPointer &clientConn, StoreEntry *entry,
             if (page_id == ERR_NONE)
                 page_id = ERR_FORWARDING_DENIED;
 
-            ErrorState *anErr = errorCon(page_id, HTTP_FORBIDDEN, request);
-
+            ErrorState *anErr = new ErrorState(page_id, HTTP_FORBIDDEN, request);
             errorAppendEntry(entry, anErr);	// frees anErr
-
             return;
         }
     }
@@ -282,7 +279,7 @@ FwdState::fwdStart(const Comm::ConnectionPointer &clientConn, StoreEntry *entry,
 
     if (shutting_down) {
         /* more yuck */
-        ErrorState *anErr = errorCon(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE, request);
+        ErrorState *anErr = new ErrorState(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE, request);
         errorAppendEntry(entry, anErr);	// frees anErr
         return;
     }
@@ -318,10 +315,8 @@ FwdState::startConnectionOrFail()
     if (serverDestinations.size() > 0) {
         // Ditch error page if it was created before.
         // A new one will be created if there's another problem
-        if (err) {
-            errorStateFree(err);
-            err = NULL;
-        }
+        delete err;
+        err = NULL;
 
         // Update the logging information about this new server connection.
         // Done here before anything else so the errors get logged for
@@ -333,8 +328,7 @@ FwdState::startConnectionOrFail()
     } else {
         debugs(17, 3, HERE << "Connection failed: " << entry->url());
         if (!err) {
-            ErrorState *anErr = NULL;
-            anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_INTERNAL_SERVER_ERROR, request);
+            ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, HTTP_INTERNAL_SERVER_ERROR, request);
             anErr->xerrno = errno;
             fail(anErr);
         } // else use actual error from last connection attempt
@@ -355,9 +349,7 @@ FwdState::fail(ErrorState * errorState)
 {
     debugs(17, 3, HERE << err_type_str[errorState->type] << " \"" << httpStatusString(errorState->httpStatus) << "\"\n\t" << entry->url()  );
 
-    if (err)
-        errorStateFree(err);
-
+    delete err;
     err = errorState;
 
     if (!errorState->request)
@@ -446,9 +438,11 @@ FwdState::complete()
 /**** CALLBACK WRAPPERS ************************************************************/
 
 static void
-fwdPeerSelectionCompleteWrapper(Comm::ConnectionList * unused, void *data)
+fwdPeerSelectionCompleteWrapper(Comm::ConnectionList * unused, ErrorState *err, void *data)
 {
     FwdState *fwd = (FwdState *) data;
+    if (err)
+        fwd->fail(err);
     fwd->startConnectionOrFail();
 }
 
@@ -589,7 +583,7 @@ FwdState::retryOrBail()
     doneWithRetries();
 
     if (self != NULL && !err && shutting_down) {
-        ErrorState *anErr = errorCon(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE, request);
+        ErrorState *anErr = new ErrorState(ERR_SHUTTING_DOWN, HTTP_SERVICE_UNAVAILABLE, request);
         errorAppendEntry(entry, anErr);
     }
 
@@ -741,7 +735,7 @@ FwdState::initiateSSL()
 
     if ((ssl = SSL_new(sslContext)) == NULL) {
         debugs(83, 1, "fwdInitiateSSL: Error allocating handle: " << ERR_error_string(ERR_get_error(), NULL)  );
-        ErrorState *anErr = errorCon(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
+        ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
         anErr->xerrno = errno;
         fail(anErr);
         self = NULL;		// refcounted
@@ -858,7 +852,7 @@ FwdState::connectTimeout(int fd)
     assert(fd == serverDestinations[0]->fd);
 
     if (entry->isEmpty()) {
-        ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_GATEWAY_TIMEOUT, request);
+        ErrorState *anErr = new ErrorState(ERR_CONNECT_FAIL, HTTP_GATEWAY_TIMEOUT, request);
         anErr->xerrno = ETIMEDOUT;
         fail(anErr);
 
@@ -906,7 +900,7 @@ FwdState::connectStart()
 
     if (serverDestinations[0]->getPeer() && request->flags.sslBumped == true) {
         debugs(50, 4, "fwdConnectStart: Ssl bumped connections through parrent proxy are not allowed");
-        ErrorState *anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, request);
+        ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, request);
         fail(anErr);
         self = NULL; // refcounted
         return;
@@ -963,7 +957,7 @@ FwdState::connectStart()
     // closed the connection that failed the race. And re-pinning assumes this.
     if (pconnRace != raceHappened)
         temp = fwdPconnPool->pop(serverDestinations[0], host, checkRetriable());
-    
+
     const bool openedPconn = Comm::IsConnOpen(temp);
     pconnRace = openedPconn ? racePossible : raceImpossible;
 
@@ -1125,19 +1119,10 @@ FwdState::dispatch()
         case AnyP::PROTO_WAIS:	/* Not implemented */
 
         default:
-            debugs(17, 1, "fwdDispatch: Cannot retrieve '" << entry->url() << "'" );
-            ErrorState *anErr = errorCon(ERR_UNSUP_REQ, HTTP_BAD_REQUEST, request);
+            debugs(17, DBG_IMPORTANT, "WARNING: Cannot retrieve '" << entry->url() << "'.");
+            ErrorState *anErr = new ErrorState(ERR_UNSUP_REQ, HTTP_BAD_REQUEST, request);
             fail(anErr);
-            /*
-             * Force a persistent connection to be closed because
-             * some Netscape browsers have a bug that sends CONNECT
-             * requests as GET's over persistent connections.
-             */
-            request->flags.proxy_keepalive = 0;
-            /*
-             * Set the dont_retry flag because this is not a
-             * transient (network) error; its a bug.
-             */
+            // Set the dont_retry flag because this is not a transient (network) error.
             flags.dont_retry = 1;
             if (Comm::IsConnOpen(serverConn)) {
                 serverConn->close();
@@ -1209,8 +1194,8 @@ FwdState::reforward()
 ErrorState *
 FwdState::makeConnectingError(const err_type type) const
 {
-    return errorCon(type, request->flags.need_validation ?
-                    HTTP_GATEWAY_TIMEOUT : HTTP_SERVICE_UNAVAILABLE, request);
+    return new ErrorState(type, request->flags.need_validation ?
+                          HTTP_GATEWAY_TIMEOUT : HTTP_SERVICE_UNAVAILABLE, request);
 }
 
 static void

@@ -33,9 +33,10 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "SquidTime.h"
 #include "Store.h"
+#include "HttpBody.h"
 #include "HttpReply.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrCc.h"
@@ -94,7 +95,6 @@ HttpReply::~HttpReply()
 void
 HttpReply::init()
 {
-    httpBodyInit(&body);
     hdrCacheInit();
     httpStatusLineInit(&sline);
     pstate = psReadyToParseStartLine;
@@ -121,7 +121,7 @@ HttpReply::clean()
     // points to a pipe that is owned and initiated by another object.
     body_pipe = NULL;
 
-    httpBodyClean(&body);
+    body.clear();
     hdrCacheClean();
     header.clean();
     httpStatusLineClean(&sline);
@@ -140,7 +140,7 @@ void
 HttpReply::packInto(Packer * p)
 {
     packHeadersInto(p);
-    httpBodyPackInto(&body, p);
+    body.packInto(p);
 }
 
 /* create memBuf, create mem-based packer, pack, destroy packer, return MemBuf */
@@ -408,7 +408,7 @@ HttpReply::hdrCacheClean()
     }
 
     if (surrogate_control) {
-        httpHdrScDestroy(surrogate_control);
+        delete surrogate_control;
         surrogate_control = NULL;
     }
 

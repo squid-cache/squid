@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
 #include "comm/Write.h"
@@ -79,14 +79,13 @@ Mgr::Inquirer::start()
         LOCAL_ARRAY(char, url, MAX_URL);
         snprintf(url, MAX_URL, "%s", aggrAction->command().params.httpUri.termedBuf());
         HttpRequest *req = HttpRequest::CreateFromUrl(url);
-        ErrorState *err = errorCon(ERR_INVALID_URL, HTTP_NOT_FOUND, req);
+        ErrorState err(ERR_INVALID_URL, HTTP_NOT_FOUND, req);
 #if HAVE_UNIQUE_PTR
-        std::unique_ptr<HttpReply> reply(err->BuildHttpReply());
+        std::unique_ptr<HttpReply> reply(err.BuildHttpReply());
 #else
-        std::auto_ptr<HttpReply> reply(err->BuildHttpReply());
+        std::auto_ptr<HttpReply> reply(err.BuildHttpReply());
 #endif
         replyBuf.reset(reply->pack());
-        errorStateFree(err);
     } else {
 #if HAVE_UNIQUE_PTR
         std::unique_ptr<HttpReply> reply(new HttpReply);

@@ -25,7 +25,7 @@
  * Hosted at http://sourceforge.net/projects/squidkerbauth
  */
 
-#include "config.h"
+#include "squid.h"
 #include "base64.h"
 
 #if HAVE_STRING_H

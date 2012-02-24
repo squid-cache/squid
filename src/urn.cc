@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "errorpage.h"
 #include "StoreClient.h"
 #include "Store.h"
@@ -221,7 +221,7 @@ UrnState::setUriResFromRequest(HttpRequest *r)
 
     if (urlres_r == NULL) {
         debugs(52, 3, "urnStart: Bad uri-res URL " << urlres);
-        ErrorState *err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND, r);
+        ErrorState *err = new ErrorState(ERR_URN_RESOLVE, HTTP_NOT_FOUND, r);
         err->url = urlres;
         urlres = NULL;
         errorAppendEntry(entry, err);
@@ -373,7 +373,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     if (rep->sline.status != HTTP_OK) {
         debugs(52, 3, "urnHandleReply: failed.");
-        err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND, urnState->request);
+        err = new ErrorState(ERR_URN_RESOLVE, HTTP_NOT_FOUND, urnState->request);
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
         delete rep;
@@ -395,7 +395,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     if (urls == NULL) {		/* unkown URN error */
         debugs(52, 3, "urnTranslateDone: unknown URN " << e->url()  );
-        err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND, urnState->request);
+        err = new ErrorState(ERR_URN_RESOLVE, HTTP_NOT_FOUND, urnState->request);
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
         urnHandleReplyError(urnState, urlres_e);
@@ -444,7 +444,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
         rep->header.putStr(HDR_LOCATION, min_u->url);
     }
 
-    httpBodySet(&rep->body, mb);
+    rep->body.setMb(mb);
     /* don't clean or delete mb; rep->body owns it now */
     e->replaceHttpReply(rep);
     e->complete();

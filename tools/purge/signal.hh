@@ -51,7 +51,7 @@
 #ifndef _SIGNAL_HH
 #define _SIGNAL_HH
 
-#include "config.h"
+#include "squid.h"
 
 #if HAVE_SIGNAL_H
 #include <signal.h>

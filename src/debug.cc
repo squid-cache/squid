@@ -32,7 +32,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "Debug.h"
 #include "SquidTime.h"
 #include "util.h"

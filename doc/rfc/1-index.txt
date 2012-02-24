@@ -65,6 +65,7 @@ rfc2428.txt
 	FTP Extensions for IPv6 and NATs
 
 rfc2518.txt
+rfc4918.txt
 	HTTP Extensions for Distributed Authoring -- WEBDAV
 	Numerous extension methods to HTTP
 

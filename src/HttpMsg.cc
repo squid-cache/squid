@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "HttpMsg.h"
 #include "MemBuf.h"
 

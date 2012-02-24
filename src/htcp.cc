@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Acl.h"
@@ -47,8 +47,10 @@
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 #include "Store.h"
 #include "StoreClient.h"
+#include "compat/xalloc.h"
 
 /// dials htcpIncomingConnectionOpened call
 class HtcpListeningStartedDialer: public CallDialer,

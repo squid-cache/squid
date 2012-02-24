@@ -37,7 +37,7 @@
  * mail@joachim-bauch.de
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 #if USE_SQUID_ESI && HAVE_LIBXML2
 

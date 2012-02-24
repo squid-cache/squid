@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "cbdata.h"
 #include "StoreClient.h"
 #include "Store.h"
@@ -41,6 +41,7 @@
 #include "mem_node.h"
 #include "MemObject.h"
 #include "SwapDir.h"
+#include "StatCounters.h"
 #include "swap_log_op.h"
 
 static void storeSwapOutStart(StoreEntry * e);
@@ -187,8 +188,20 @@ StoreEntry::swapOut()
     if (!mem_obj)
         return;
 
-    if (!swapoutPossible())
+    // this flag may change so we must check even if we are swappingOut
+    if (EBIT_TEST(flags, ENTRY_ABORTED)) {
+        assert(EBIT_TEST(flags, RELEASE_REQUEST));
+        // StoreEntry::abort() already closed the swap out file, if any
+        // no trimming: data producer must stop production if ENTRY_ABORTED
         return;
+    }
+
+    const bool weAreOrMayBeSwappingOut = swappingOut() || mayStartSwapOut();
+
+    trimMemory(weAreOrMayBeSwappingOut);
+
+    if (!weAreOrMayBeSwappingOut)
+        return; // nothing else to do
 
     // Aborted entries have STORE_OK, but swapoutPossible rejects them. Thus,
     // store_status == STORE_OK below means we got everything we wanted.
@@ -200,39 +213,10 @@ StoreEntry::swapOut()
     if (mem_obj->swapout.sio != NULL)
         debugs(20, 7, "storeSwapOut: storeOffset() = " << mem_obj->swapout.sio->offset()  );
 
-    // buffered bytes we have not swapped out yet
-    int64_t swapout_maxsize = mem_obj->endOffset() - mem_obj->swapout.queue_offset;
-
-    assert(swapout_maxsize >= 0);
-
     int64_t const lowest_offset = mem_obj->lowestMemReaderOffset();
 
     debugs(20, 7, HERE << "storeSwapOut: lowest_offset = " << lowest_offset);
 
-    // Check to see whether we're going to defer the swapout based upon size
-    if (store_status != STORE_OK) {
-        const int64_t expectedSize = mem_obj->expectedReplySize();
-        const int64_t maxKnownSize = expectedSize < 0 ?
-                                     swapout_maxsize : expectedSize;
-        debugs(20, 7, HERE << "storeSwapOut: maxKnownSize= " << maxKnownSize);
-
-        if (maxKnownSize < store_maxobjsize) {
-            /*
-             * NOTE: the store_maxobjsize here is the max of optional
-             * max-size values from 'cache_dir' lines.  It is not the
-             * same as 'maximum_object_size'.  By default, store_maxobjsize
-             * will be set to -1.  However, I am worried that this
-             * deferance may consume a lot of memory in some cases.
-             * Should we add an option to limit this memory consumption?
-             */
-            debugs(20, 5, "storeSwapOut: Deferring swapout start for " <<
-                   (store_maxobjsize - maxKnownSize) << " bytes");
-            return;
-        }
-    }
-
-// TODO: it is better to trim as soon as we swap something out, not before
-    trimMemory();
 #if SIZEOF_OFF_T <= 4
 
     if (mem_obj->endOffset() > 0x7FFF0000) {
@@ -245,9 +229,9 @@ StoreEntry::swapOut()
     if (swap_status == SWAPOUT_WRITING)
         assert(mem_obj->inmem_lo <=  mem_obj->objectBytesOnDisk() );
 
-    if (!swapOutAble())
-        return;
-
+    // buffered bytes we have not swapped out yet
+    const int64_t swapout_maxsize = mem_obj->availableForSwapOut();
+    assert(swapout_maxsize >= 0);
     debugs(20, 7, "storeSwapOut: swapout_size = " << swapout_maxsize);
 
     if (swapout_maxsize == 0) { // swapped everything we got
@@ -365,7 +349,7 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
             storeDirSwapLog(e, SWAP_LOG_ADD);
         }
 
-        statCounter.swap.outs++;
+        ++statCounter.swap.outs;
     }
 
     debugs(20, 3, "storeSwapOutFileClosed: " << __FILE__ << ":" << __LINE__);
@@ -373,19 +357,107 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
     e->unlock();
 }
 
-/*
- * Is this entry a candidate for writing to disk?
- */
 bool
-StoreEntry::swapOutAble() const
+StoreEntry::mayStartSwapOut()
 {
     dlink_node *node;
 
-    if (mem_obj->swapout.sio != NULL)
-        return true;
+    // must be checked in the caller
+    assert(!EBIT_TEST(flags, ENTRY_ABORTED));
+    assert(!swappingOut());
 
-    if (mem_obj->inmem_lo > 0)
+    if (!Config.cacheSwap.n_configured)
         return false;
+
+    assert(mem_obj);
+    MemObject::SwapOut::Decision &decision = mem_obj->swapout.decision;
+
+    // if we decided that swapout is not possible, do not repeat same checks
+    if (decision == MemObject::SwapOut::swImpossible) {
+        debugs(20, 3, HERE << " already rejected");
+        return false;
+    }
+
+    // if we decided that swapout is possible, do not repeat same checks
+    if (decision == MemObject::SwapOut::swPossible) {
+        debugs(20, 3,  HERE << "already allowed");
+        return true;
+    }
+
+    // if we swapped out already, do not start over
+    if (swap_status == SWAPOUT_DONE) {
+        debugs(20, 3,  HERE << "already did");
+        decision = MemObject::SwapOut::swImpossible;
+        return false;
+    }
+
+    if (!checkCachable()) {
+        debugs(20, 3,  HERE << "not cachable");
+        decision = MemObject::SwapOut::swImpossible;
+        return false;
+    }
+
+    if (EBIT_TEST(flags, ENTRY_SPECIAL)) {
+        debugs(20, 3,  HERE  << url() << " SPECIAL");
+        decision = MemObject::SwapOut::swImpossible;
+        return false;
+    }
+
+    // check cache_dir max-size limit if all cache_dirs have it
+    if (store_maxobjsize >= 0) {
+        // TODO: add estimated store metadata size to be conservative
+
+        // use guaranteed maximum if it is known
+        const int64_t expectedEnd = mem_obj->expectedReplySize();
+        debugs(20, 7,  HERE << "expectedEnd = " << expectedEnd);
+        if (expectedEnd > store_maxobjsize) {
+            debugs(20, 3,  HERE << "will not fit: " << expectedEnd <<
+                   " > " << store_maxobjsize);
+            decision = MemObject::SwapOut::swImpossible;
+            return false; // known to outgrow the limit eventually
+        }
+
+        // use current minimum (always known)
+        const int64_t currentEnd = mem_obj->endOffset();
+        if (currentEnd > store_maxobjsize) {
+            debugs(20, 3,  HERE << "does not fit: " << currentEnd <<
+                   " > " << store_maxobjsize);
+            decision = MemObject::SwapOut::swImpossible;
+            return false; // already does not fit and may only get bigger
+        }
+
+        // prevent default swPossible answer for yet unknown length
+        if (expectedEnd < 0) {
+            debugs(20, 3,  HERE << "wait for more info: " <<
+                   store_maxobjsize);
+            return false; // may fit later, but will be rejected now
+        }
+
+        if (store_status != STORE_OK) {
+            const int64_t maxKnownSize = expectedEnd < 0 ?
+                                         mem_obj->availableForSwapOut() : expectedEnd;
+            debugs(20, 7, HERE << "maxKnownSize= " << maxKnownSize);
+            if (maxKnownSize < store_maxobjsize) {
+                /*
+                 * NOTE: the store_maxobjsize here is the max of optional
+                 * max-size values from 'cache_dir' lines.  It is not the
+                 * same as 'maximum_object_size'.  By default, store_maxobjsize
+                 * will be set to -1.  However, I am worried that this
+                 * deferance may consume a lot of memory in some cases.
+                 * Should we add an option to limit this memory consumption?
+                 */
+                debugs(20, 5,  HERE << "Deferring swapout start for " <<
+                       (store_maxobjsize - maxKnownSize) << " bytes");
+                return false;
+            }
+        }
+    }
+
+    if (mem_obj->inmem_lo > 0) {
+        debugs(20, 3, "storeSwapOut: (inmem_lo > 0)  imem_lo:" <<  mem_obj->inmem_lo);
+        decision = MemObject::SwapOut::swImpossible;
+        return false;
+    }
 
     /*
      * If there are DISK clients, we must write to disk
@@ -394,21 +466,29 @@ StoreEntry::swapOutAble() const
      * therefore this should be an assert?
      * RBC 20030708: We can use disk to avoid mem races, so this shouldn't be
      * an assert.
+     *
+     * XXX: Not clear what "mem races" the above refers to, especially when
+     * dealing with non-cachable objects that cannot have multiple clients.
+     *
+     * XXX: If STORE_DISK_CLIENT needs SwapOut::swPossible, we have to check
+     * for that flag earlier, but forcing swapping may contradict max-size or
+     * other swapability restrictions. Change storeClientType() and/or its
+     * callers to take swap-in availability into account.
      */
     for (node = mem_obj->clients.head; node; node = node->next) {
-        if (((store_client *) node->data)->getType() == STORE_DISK_CLIENT)
+        if (((store_client *) node->data)->getType() == STORE_DISK_CLIENT) {
+            debugs(20, 3, HERE << "DISK client found");
+            decision = MemObject::SwapOut::swPossible;
             return true;
+        }
     }
 
-    /* Don't pollute the disk with icons and other special entries */
-    if (EBIT_TEST(flags, ENTRY_SPECIAL))
+    if (!mem_obj->isContiguous()) {
+        debugs(20, 3, "storeSwapOut: not Contiguous");
+        decision = MemObject::SwapOut::swImpossible;
         return false;
+    }
 
-    if (!EBIT_TEST(flags, ENTRY_CACHABLE))
-        return false;
-
-    if (!mem_obj->isContiguous())
-        return false;
-
+    decision = MemObject::SwapOut::swPossible;
     return true;
 }

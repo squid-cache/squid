@@ -33,7 +33,7 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "acl/Method.h"
 #include "acl/MethodData.h"
 #include "acl/Checklist.h"

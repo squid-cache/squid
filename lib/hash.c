@@ -33,7 +33,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "hash.h"
 #include "profiler/Profiler.h"
 

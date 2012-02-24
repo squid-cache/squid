@@ -35,7 +35,7 @@
  \ingroup ServerProtocolICPAPI
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "Store.h"
 #include "comm.h"
 #include "comm/Loops.h"
@@ -46,6 +46,7 @@
 #include "acl/Acl.h"
 #include "AccessLogEntry.h"
 #include "wordlist.h"
+#include "StatCounters.h"
 #include "SquidTime.h"
 #include "SwapDir.h"
 #include "icmp/net_db.h"
@@ -810,7 +811,7 @@ icpCount(void *buf, int which, size_t len, int delay)
             statCounter.icp.replies_sent++;
             kb_incr(&statCounter.icp.r_kbytes_sent, len);
             /* this is the sent-reply service time */
-            statHistCount(&statCounter.icp.reply_svc_time, delay);
+            statCounter.icp.replySvcTime.count(delay);
         }
 
         if (ICP_HIT == icp->opcode)
@@ -825,7 +826,7 @@ icpCount(void *buf, int which, size_t len, int delay)
         } else {
             statCounter.icp.replies_recv++;
             kb_incr(&statCounter.icp.r_kbytes_recv, len);
-            /* statCounter.icp.query_svc_time set in clientUpdateCounters */
+            /* statCounter.icp.querySvcTime set in clientUpdateCounters */
         }
 
         if (ICP_HIT == icp->opcode)

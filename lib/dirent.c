@@ -48,10 +48,10 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 
 /* The following code section is part of the native Windows Squid port */
-#if defined(_SQUID_MSWIN_)
+#if _SQUID_MSWIN_
 
 #include "util.h"
 #include <stdlib.h>

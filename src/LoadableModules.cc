@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "wordlist.h"
 #include "LoadableModule.h"
 #include "LoadableModules.h"

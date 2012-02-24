@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "squid-old.h"
 #include "Module.h"
 #if defined(HAVE_FS_UFS) || defined(HAVE_FS_AUFS) || defined(HAVE_FS_DISKD)
 #include "fs/ufs/StoreFSufs.h"

@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 
 /*
  * Copyright (c) 1987, 1993, 1994

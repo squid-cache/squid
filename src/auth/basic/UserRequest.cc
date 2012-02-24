@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "auth/basic/auth_basic.h"
 #include "auth/basic/User.h"
 #include "auth/basic/UserRequest.h"
@@ -12,7 +12,7 @@
 #endif
 
 int
-AuthBasicUserRequest::authenticated() const
+Auth::Basic::UserRequest::authenticated() const
 {
     Auth::Basic::User const *basic_auth = dynamic_cast<Auth::Basic::User const *>(user().getRaw());
 
@@ -25,7 +25,7 @@ AuthBasicUserRequest::authenticated() const
 /* log a basic user in
  */
 void
-AuthBasicUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
+Auth::Basic::UserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
 {
     assert(user() != NULL);
 
@@ -50,9 +50,9 @@ AuthBasicUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, 
 }
 
 Auth::Direction
-AuthBasicUserRequest::module_direction()
+Auth::Basic::UserRequest::module_direction()
 {
-    /* null auth_user is checked for by AuthUserRequest::direction() */
+    /* null auth_user is checked for by Auth::UserRequest::direction() */
     if (user()->auth_type != Auth::AUTH_BASIC)
         return Auth::CRED_ERROR;
 
@@ -77,7 +77,7 @@ AuthBasicUserRequest::module_direction()
 
 /* send the initial data to a basic authenticator module */
 void
-AuthBasicUserRequest::module_start(RH * handler, void *data)
+Auth::Basic::UserRequest::module_start(RH * handler, void *data)
 {
     assert(user()->auth_type == Auth::AUTH_BASIC);
     Auth::Basic::User *basic_auth = dynamic_cast<Auth::Basic::User *>(user().getRaw());
@@ -129,12 +129,12 @@ AuthBasicUserRequest::module_start(RH * handler, void *data)
         debugs(9, DBG_CRITICAL, "ERROR: Basic Authentication Failure. user:password exceeds " << sizeof(buf) << " bytes.");
         handler(data, NULL);
     } else
-        helperSubmit(basicauthenticators, buf, AuthBasicUserRequest::HandleReply,
+        helperSubmit(basicauthenticators, buf, Auth::Basic::UserRequest::HandleReply,
                      new Auth::StateData(this, handler, data));
 }
 
 void
-AuthBasicUserRequest::HandleReply(void *data, char *reply)
+Auth::Basic::UserRequest::HandleReply(void *data, char *reply)
 {
     Auth::StateData *r = static_cast<Auth::StateData *>(data);
     BasicAuthQueueNode *tmpnode;

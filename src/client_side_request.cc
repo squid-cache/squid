@@ -42,7 +42,7 @@
  * From that point on it's up to reply management.
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #if USE_ADAPTATION
@@ -553,6 +553,21 @@ ClientRequestContext::hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLooku
 void
 ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
 {
+    // IP address validation for Host: failed. Admin wants to ignore them.
+    // NP: we do not yet handle CONNECT tunnels well, so ignore for them
+    if (!Config.onoff.hostStrictVerify && http->request->method != METHOD_CONNECT) {
+        debugs(85, 3, "SECURITY ALERT: Host header forgery detected on " << http->getConn()->clientConnection <<
+               " (" << A << " does not match " << B << ") on URL: " << urlCanonical(http->request));
+
+        // NP: it is tempting to use 'flags.nocache' but that is all about READing cache data.
+        // The problems here are about WRITE for new cache content, which means flags.cachable
+        http->request->flags.cachable = 0; // MUST NOT cache (for now)
+        // XXX: when we have updated the cache key to base on raw-IP + URI this cacheable limit can go.
+        http->request->flags.hierarchical = 0; // MUST NOT pass to peers (for now)
+        // XXX: when we have sorted out the best way to relay requests properly to peers this hierarchical limit can go.
+        return;
+    }
+
     debugs(85, DBG_IMPORTANT, "SECURITY ALERT: Host header forgery detected on " <<
            http->getConn()->clientConnection << " (" << A << " does not match " << B << ")");
     debugs(85, DBG_IMPORTANT, "SECURITY ALERT: By user agent: " << http->request->header.getStr(HDR_USER_AGENT));
@@ -562,7 +577,7 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
     clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
     clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
     assert (repContext);
-    repContext->setReplyToError(ERR_INVALID_REQ, HTTP_CONFLICT,
+    repContext->setReplyToError(ERR_CONFLICT_HOST, HTTP_CONFLICT,
                                 http->request->method, NULL,
                                 http->getConn()->clientConnection->remote,
                                 http->request,
@@ -657,6 +672,7 @@ ClientRequestContext::hostHeaderVerify()
     } else {
         // Okay no problem.
         debugs(85, 3, HERE << "validate passed.");
+        http->request->flags.hostVerified = 1;
         http->doCallouts();
     }
     safe_free(hostB);
@@ -722,17 +738,12 @@ clientAccessCheckDoneWrapper(allow_t answer, void *data)
     calloutContext->clientAccessCheckDone(answer);
 }
 
-void
-ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
+bool
+ClientRequestContext::maybeSendAuthChallenge(const allow_t &answer)
 {
     acl_checklist = NULL;
     err_type page_id;
     http_status status;
-    debugs(85, 2, "The request " <<
-           RequestMethodStr(http->request->method) << " " <<
-           http->uri << " is " << answer <<
-           ", because it matched '" <<
-           (AclMatchedName ? AclMatchedName : "NO ACL's") << "'" );
 
 #if USE_AUTH
     char const *proxy_auth_msg = "<null>";
@@ -742,72 +753,102 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
         proxy_auth_msg = http->request->auth_user_request->denyMessage("<null>");
 #endif
 
-    if (answer != ACCESS_ALLOWED && answer != ACCESS_AUTH_EXPIRED_OK) {
-        // auth has a grace period where credentials can be expired but okay not to challenge.
+    bool auth_challenge = false;
+    switch (answer) {
+    case ACCESS_ALLOWED:
+    case ACCESS_AUTH_EXPIRED_OK:
+        // No authentication challenge on these ACL results
+        return auth_challenge;
 
-        /* Send an auth challenge or error */
-        // XXX: do we still need aclIsProxyAuth() ?
-        bool auth_challenge = (answer == ACCESS_AUTH_REQUIRED || answer == ACCESS_AUTH_EXPIRED_BAD || aclIsProxyAuth(AclMatchedName));
-        debugs(85, 5, "Access Denied: " << http->uri);
-        debugs(85, 5, "AclMatchedName = " << (AclMatchedName ? AclMatchedName : "<null>"));
-#if USE_AUTH
-        if (auth_challenge)
-            debugs(33, 5, "Proxy Auth Message = " << (proxy_auth_msg ? proxy_auth_msg : "<null>"));
-#endif
+    case ACCESS_DENIED:
+    case ACCESS_DUNNO:
+        // MAYBE challenge on these ACL results
+        auth_challenge |= aclIsProxyAuth(AclMatchedName);
+        break;
 
-        /*
-         * NOTE: get page_id here, based on AclMatchedName because if
-         * USE_DELAY_POOLS is enabled, then AclMatchedName gets clobbered in
-         * the clientCreateStoreEntry() call just below.  Pedro Ribeiro
-         * <pribeiro@isel.pt>
-         */
-        page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, answer != ACCESS_AUTH_REQUIRED);
-
-        http->logType = LOG_TCP_DENIED;
-
-        if (auth_challenge) {
-#if USE_AUTH
-            if (!http->flags.accel) {
-                /* Proxy authorisation needed */
-                status = HTTP_PROXY_AUTHENTICATION_REQUIRED;
-            } else {
-                /* WWW authorisation needed */
-                status = HTTP_UNAUTHORIZED;
-            }
-#else
-            // need auth, but not possible to do.
-            status = HTTP_FORBIDDEN;
-#endif
-            if (page_id == ERR_NONE)
-                page_id = ERR_CACHE_ACCESS_DENIED;
-        } else {
-            status = HTTP_FORBIDDEN;
-
-            if (page_id == ERR_NONE)
-                page_id = ERR_ACCESS_DENIED;
-        }
-
-        clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
-        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert (repContext);
-        Ip::Address tmpnoaddr;
-        tmpnoaddr.SetNoAddr();
-        repContext->setReplyToError(page_id, status,
-                                    http->request->method, NULL,
-                                    http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmpnoaddr,
-                                    http->request,
-                                    NULL,
-#if USE_AUTH
-                                    http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
-                                    http->getConn()->auth_user_request : http->request->auth_user_request);
-#else
-                                    NULL);
-#endif
-        http->getConn()->flags.readMore = true; // resume any pipeline reads.
-        node = (clientStreamNode *)http->client_stream.tail->data;
-        clientStreamRead(node, http, node->readBuffer);
-        return;
+    case ACCESS_AUTH_REQUIRED:
+    case ACCESS_AUTH_EXPIRED_BAD:
+        // Send an auth challenge or error
+        auth_challenge = true;
     }
+
+    // auth has a grace period where credentials can be expired but okay not to challenge.
+    debugs(85, 5, "Access Denied: " << http->uri);
+    debugs(85, 5, "AclMatchedName = " << (AclMatchedName ? AclMatchedName : "<null>"));
+#if USE_AUTH
+    if (auth_challenge)
+        debugs(33, 5, "Proxy Auth Message = " << (proxy_auth_msg ? proxy_auth_msg : "<null>"));
+#endif
+
+    /*
+     * NOTE: get page_id here, based on AclMatchedName because if
+     * USE_DELAY_POOLS is enabled, then AclMatchedName gets clobbered in
+     * the clientCreateStoreEntry() call just below.  Pedro Ribeiro
+     * <pribeiro@isel.pt>
+     */
+    page_id = aclGetDenyInfoPage(&Config.denyInfoList, AclMatchedName, auth_challenge);
+
+    http->logType = LOG_TCP_DENIED;
+
+    if (auth_challenge) {
+#if USE_AUTH
+        if (http->request->flags.sslBumped) {
+            /*SSL Bumped request, authentication is not possible*/
+            status = HTTP_FORBIDDEN;
+        } else if (!http->flags.accel) {
+            /* Proxy authorisation needed */
+            status = HTTP_PROXY_AUTHENTICATION_REQUIRED;
+        } else {
+            /* WWW authorisation needed */
+            status = HTTP_UNAUTHORIZED;
+        }
+#else
+        // need auth, but not possible to do.
+        status = HTTP_FORBIDDEN;
+#endif
+        if (page_id == ERR_NONE)
+            page_id = ERR_CACHE_ACCESS_DENIED;
+    } else {
+        status = HTTP_FORBIDDEN;
+
+        if (page_id == ERR_NONE)
+            page_id = ERR_ACCESS_DENIED;
+    }
+
+    clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
+    clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+    assert (repContext);
+    Ip::Address tmpnoaddr;
+    tmpnoaddr.SetNoAddr();
+    repContext->setReplyToError(page_id, status,
+                                http->request->method,
+                                NULL,
+                                http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmpnoaddr,
+                                http->request,
+                                NULL,
+#if USE_AUTH
+                                http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
+                                http->getConn()->auth_user_request : http->request->auth_user_request);
+#else
+                                NULL);
+#endif
+    http->getConn()->flags.readMore = true; // resume any pipeline reads.
+    node = (clientStreamNode *)http->client_stream.tail->data;
+    clientStreamRead(node, http, node->readBuffer);
+    return true;
+}
+
+void
+ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
+{
+    debugs(85, 2, "The request " <<
+           RequestMethodStr(http->request->method) << " " <<
+           http->uri << " is " << answer <<
+           ", because it matched '" <<
+           (AclMatchedName ? AclMatchedName : "NO ACL's") << "'" );
+
+    if (maybeSendAuthChallenge(answer))
+        return;
 
     /* ACCESS_ALLOWED (or auth in grace period ACCESS_AUTH_EXPIRED_OK) continues here ... */
     safe_free(http->uri);
@@ -853,11 +894,12 @@ static void
 clientRedirectAccessCheckDone(allow_t answer, void *data)
 {
     ClientRequestContext *context = (ClientRequestContext *)data;
-    ClientHttpRequest *http = context->http;
-    context->acl_checklist = NULL;
+
+    if (context->maybeSendAuthChallenge(answer))
+        return;
 
     if (answer == ACCESS_ALLOWED)
-        redirectStart(http, clientRedirectDoneWrapper, context);
+        redirectStart(context->http, clientRedirectDoneWrapper, context);
     else
         context->clientRedirectDone(NULL);
 }
@@ -881,6 +923,10 @@ clientHierarchical(ClientHttpRequest * http)
     HttpRequest *request = http->request;
     HttpRequestMethod method = request->method;
     const wordlist *p = NULL;
+
+    // intercepted requests MUST NOT (yet) be sent to peers unless verified
+    if (!request->flags.hostVerified && (request->flags.intercepted || request->flags.spoof_client_ip))
+        return 0;
 
     /*
      * IMS needs a private key, so we can use the hierarchy for IMS only if our
@@ -1278,16 +1324,19 @@ static void
 sslBumpAccessCheckDoneWrapper(allow_t answer, void *data)
 {
     ClientRequestContext *calloutContext = static_cast<ClientRequestContext *>(data);
-
-    if (!calloutContext->httpStateIsValid())
-        return;
-    calloutContext->sslBumpAccessCheckDone(answer == ACCESS_ALLOWED);
+    calloutContext->sslBumpAccessCheckDone(answer);
 }
 
 void
-ClientRequestContext::sslBumpAccessCheckDone(bool doSslBump)
+ClientRequestContext::sslBumpAccessCheckDone(const allow_t &answer)
 {
-    http->sslBumpNeeded(doSslBump);
+    if (!httpStateIsValid())
+        return;
+
+    if (maybeSendAuthChallenge(answer))
+        return;
+
+    http->sslBumpNeeded(answer == ACCESS_ALLOWED);
     http->doCallouts();
 }
 #endif
@@ -1376,6 +1425,12 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
     // We lack HttpReply which logRequest() uses to log the status code.
     // TODO: Use HttpReply instead of the "200 Connection established" string.
     al.http.code = 200;
+
+#if USE_AUTH
+    // Preserve authentication info for the ssl-bumped request
+    if (request->auth_user_request != NULL)
+        getConn()->auth_user_request = request->auth_user_request;
+#endif
 
     getConn()->switchToHttps(request->GetHost(), request->port);
 }
