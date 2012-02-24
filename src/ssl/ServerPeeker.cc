@@ -21,7 +21,9 @@ Ssl::ServerPeeker::ServerPeeker(ConnStateData *anInitiator,
     AsyncJob("Ssl::ServerPeeker"),
     initiator(anInitiator),
     clientConnection(anInitiator->clientConnection),
-    request(new HttpRequest)
+    request(new HttpRequest),
+    entry(NULL),
+    sc(NULL)
 {
     debugs(33, 4, HERE << "will peek at " << host << ':' << port);
     request->flags.sslPeek = 1;
@@ -31,12 +33,18 @@ Ssl::ServerPeeker::ServerPeeker(ConnStateData *anInitiator,
     request->clientConnectionManager = initiator;
     const char *uri = urlCanonical(request);
     entry = storeCreateEntry(uri, uri, request->flags, request->method);
+    // We do not need to be a client because the error contents will be used
+    // later, but an entry without any client will trim all its contents away.
+    sc = storeClientListAdd(entry, this);
 }
 
 Ssl::ServerPeeker::~ServerPeeker()
 {
-    if (entry)
+    if (entry) {
+        debugs(33, 4, HERE << "stopped peeking via " << *entry);
+        storeUnregister(sc, entry, this);
         entry->unlock();
+    }
 }
 
 void
