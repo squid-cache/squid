@@ -265,7 +265,6 @@ main(int argc, char *argv[])
                 exit(1);
             }
             IFDEFS.push(ptr);
-            std::cerr << "Entering IFDEF " << ptr << std::endl;
             continue;
         } else if (strcmp(buff, "ENDIF") == 0) {
             if (IFDEFS.size() == 0) {
