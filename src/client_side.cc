@@ -816,9 +816,9 @@ ConnStateData::~ConnStateData()
 #if USE_SSL 
     if (bumpErrorEntry)
         bumpErrorEntry->unlock();
-#endif
 
     cbdataReferenceDone(bumpSslErrorNoList);
+#endif
 }
 
 /**
