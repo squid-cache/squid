@@ -353,6 +353,9 @@ static  BIGNUM *createCertSerial(unsigned char *md, unsigned int n)
     if (BN_is_zero(serial))
         BN_one(serial);
 
+    // serial size does not exceed 20 bytes
+    assert(BN_num_bits(serial) <= 160);
+
     // According the RFC 5280, serial is an 20 bytes ASN.1 INTEGER (a signed big integer)
     // and the maximum value for X.509 certificate serial number is 2^159-1 and
     // the minimum 0. If the first bit of the serial is '1' ( eg 2^160-1),
