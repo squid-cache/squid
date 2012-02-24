@@ -50,6 +50,7 @@ private:
     HttpRequest::Pointer request;
 
     StoreEntry *entry; ///< for receiving Squid-generated error messages
+    store_client *sc; ///< dummy client to prevent entry trimming
 
     CBDATA_CLASS2(ServerPeeker);
 };
