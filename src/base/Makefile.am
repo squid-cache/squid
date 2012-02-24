@@ -7,6 +7,7 @@ noinst_LTLIBRARIES = libbase.la
 libbase_la_SOURCES = \
 	AsyncCall.cc \
 	AsyncCall.h \
+	AsyncCbdataCalls.h \
 	AsyncJob.h \
 	AsyncJob.cc \
 	AsyncJobCalls.h \

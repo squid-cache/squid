@@ -165,9 +165,9 @@ public:
     bool IsLocalhost() const;
 
     /** Test whether content is an IPv6 Site-Local address.
-     \retval true  if address begins with fe80::/10.
+     \retval true  if address begins with fd00::/8.
      \retval false if --disable-ipv6 has been compiled.
-     \retval false if address does not match fe80::/10
+     \retval false if address does not match fd00::/8
      */
     bool IsSiteLocal6() const;
 

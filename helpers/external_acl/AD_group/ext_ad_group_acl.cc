@@ -57,7 +57,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "helpers/defines.h"
 #include "include/util.h"
 

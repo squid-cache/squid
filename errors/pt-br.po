@@ -7,16 +7,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-11-20 11:40+1300\n"
-"PO-Revision-Date: 2009-09-25 09:18+1300\n"
-"Last-Translator: Aecio F. Neto <aecioneto@gmail.com>\n"
+"POT-Creation-Date: 2012-02-06 18:41+1300\n"
+"PO-Revision-Date: 2010-11-11 02:01+0200\n"
+"Last-Translator: Amos <squid3@treenet.co.nz>\n"
 "Language-Team: Brazilian Portuguese <pt_BR@li.org>\n"
 "Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Pootle 1.2.1\n"
+"X-Generator: Pootle 2.1.6\n"
 "X-Launchpad-Export-Date: 2008-07-27 05:12+0000\n"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:29
@@ -147,6 +147,10 @@ msgstr ""
 "permitida neste momento. Por favor, contate seu provedor de serviço se você "
 "acha que isso está incorreto."
 
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:31
+msgid "All configured parent caches may be currently unreachable."
+msgstr ""
+
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.p:20
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
@@ -167,6 +171,12 @@ msgstr ""
 #: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:33
 msgid "An Illegal response was received from the ICAP server."
 msgstr "Uma resposta ilegal foi recebida do servidor ICAP."
+
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:30
+msgid ""
+"An Internet connection needed to access this domains origin servers may be "
+"down."
+msgstr ""
 
 #: templates/ERR_READ_ERROR+html.body.div.p:28
 #, fuzzy
@@ -297,6 +307,7 @@ msgstr "Directório: <a href=\"%U\">%U</a>/"
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h1:14
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h1:14
 #: templates/ERR_CANNOT_FORWARD+html.body.div.h1:14
+#: templates/ERR_CONFLICT_HOST+html.body.div.h1:14
 #: templates/ERR_CONNECT_FAIL+html.body.div.h1:14
 #: templates/ERR_DNS_FAIL+html.body.div.h1:14
 #: templates/ERR_ESI+html.body.div.h1:14
@@ -345,6 +356,7 @@ msgstr "ERRO: upload via FTP falhou"
 #: templates/ERR_ACCESS_DENIED+html.head.title:4
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.head.title:4
 #: templates/ERR_CANNOT_FORWARD+html.head.title:4
+#: templates/ERR_CONFLICT_HOST+html.head.title:4
 #: templates/ERR_CONNECT_FAIL+html.head.title:4
 #: templates/ERR_DNS_FAIL+html.head.title:4
 #: templates/ERR_ESI+html.head.title:4
@@ -457,7 +469,8 @@ msgstr ""
 #: templates/ERR_AGENT_WPAD+html.body.div.p:56
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:35
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:35
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:35
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:42
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:40
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:37
 #: templates/ERR_DIR_LISTING+html.body.div.p:38
 #: templates/ERR_DNS_FAIL+html.body.div.p:39
@@ -700,6 +713,8 @@ msgstr "Falha de socket"
 msgid "Some aspect of the requested URL is incorrect."
 msgstr "Alguma característica da URL requisitada é incorreta."
 
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:28
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:28
 #: templates/ERR_ICAP_FAILURE+html.body.div.p:30
 #: templates/ERR_INVALID_REQ+html.body.div.p:26
 #: templates/ERR_INVALID_URL+html.body.div.p:28
@@ -789,6 +804,17 @@ msgstr ""
 msgid "The ICAP server is not reachable."
 msgstr "O servidor ICAP não é alcançável."
 
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:32
+msgid ""
+"The administrator may not allow this cache to make direct connections to "
+"origin servers."
+msgstr ""
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:30
+msgid ""
+"The domain may have moved very recently. Trying again will resolve that."
+msgstr ""
+
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.p:20
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
 msgstr "A seguinte URL não pôde ser recuperada: <a href=\"%U\">%U</a>"
@@ -798,6 +824,7 @@ msgstr "A seguinte URL não pôde ser recuperada: <a href=\"%U\">%U</a>"
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:20
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:20
 #: templates/ERR_CANNOT_FORWARD+html.body.div.p:20
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:20
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:20
 #: templates/ERR_DNS_FAIL+html.body.div.p:20
 #: templates/ERR_ESI+html.body.div.p:20
@@ -849,6 +876,7 @@ msgstr "A requisição ou a resposta é muito grande."
 #: templates/ERR_ACCESS_DENIED+html.body.div.h2:15
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h2:15
 #: templates/ERR_CANNOT_FORWARD+html.body.div.h2:15
+#: templates/ERR_CONFLICT_HOST+html.body.div.h2:15
 #: templates/ERR_CONNECT_FAIL+html.body.div.h2:15
 #: templates/ERR_DNS_FAIL+html.body.div.h2:15
 #: templates/ERR_ESI+html.body.div.h2:15
@@ -896,6 +924,12 @@ msgstr "O servidor respondeu com:"
 #: templates/ERR_WRITE_ERROR+html.body.div.p:26
 msgid "The system returned: <i>%E</i>"
 msgstr "O sistema retornou: <i>%E</i>"
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:31
+msgid ""
+"The website may require you to use a local country-based version. Using your "
+"ISP provided DNS server(s) should resolve that."
+msgstr ""
 
 #: templates/ERR_NO_RELAY+html.body.div.p:26
 #, fuzzy
@@ -984,6 +1018,12 @@ msgstr ""
 "Isto significa que o surrogate não pode processar o modelo do ESI. Por "
 "favor, informe este erro ao webmaster."
 
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:26
+msgid ""
+"This means the domain name you are trying to access apparently no longer "
+"exists on the machine you are requesting it from."
+msgstr ""
+
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.p:26
 msgid "This means:"
 msgstr ""
@@ -1018,17 +1058,10 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_CANNOT_FORWARD+html.body.div.p:26
-#, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches. The most likely cause for this error is that the cache administrator "
-"does not allow this cache to make direct connections to origin servers, and "
-"all configured parent caches are currently unreachable."
+"caches."
 msgstr ""
-"Esta requisição não pode ser encaminhada ao servidor de origem ou para "
-"nenhum cache pai. A causa mais provável para este erro é que o administrador "
-"do cache não permite que este cache faça conexões diretas aos servidores de "
-"origem e que todos caches superiores estão inalcançáveis no momento."
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.blockquote.p:23
 msgid "Time Quota Exceeded."
@@ -1050,6 +1083,10 @@ msgstr ""
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:45
 msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
+msgstr ""
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.blockquote.pre:23
+msgid "URI Host Conflict"
 msgstr ""
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:25
@@ -1144,7 +1181,8 @@ msgstr ""
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:29
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:50
 #: templates/ERR_AGENT_WPAD+html.body.div.p:50
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:28
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:35
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:34
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:30
 #: templates/ERR_DNS_FAIL+html.body.div.p:33
 #: templates/ERR_FORWARDING_DENIED+html.body.div.p:28
@@ -1199,6 +1237,20 @@ msgstr "Resposta de tamanho zero"
 
 #~ msgid "Parent Directory"
 #~ msgstr "Diretório pai"
+
+#, fuzzy
+msgid ""
+"This request could not be forwarded to the origin server or to any parent "
+"caches. The most likely cause for this error is that the cache "
+"administrator does not allow this cache to make direct connections to "
+"origin servers, and all configured parent caches are currently "
+"unreachable."
+msgstr ""
+"Esta requisição não pode ser encaminhada ao servidor de origem ou para "
+"nenhum cache pai. A causa mais provável para este erro é que o "
+"administrador do cache não permite que este cache faça conexões diretas "
+"aos servidores de origem e que todos caches superiores estão "
+"inalcançáveis no momento."
 
 #~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
 #~ msgstr "Ao tentar executar o PUT na seguinte URL: <a href=\"%U\">%U</a>"

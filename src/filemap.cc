@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * DEBUG: section 08    Swap File Bitmap
  * AUTHOR: Harvest Derived
  *
@@ -33,6 +31,8 @@
  */
 
 #include "squid.h"
+#include "Debug.h"
+#include "FileMap.h"
 
 /* Number of bits in a long */
 #if SIZEOF_LONG == 8
@@ -54,133 +54,107 @@
 
 #define FM_INITIAL_NUMBER (1<<14)
 
-fileMap *
-file_map_create(void)
+FileMap::FileMap() :
+        capacity_(FM_INITIAL_NUMBER), usedSlots_(0),
+        nwords(capacity_ >> LONG_BIT_SHIFT)
 {
-    fileMap *fm = (fileMap *)xcalloc(1, sizeof(fileMap));
-    fm->max_n_files = FM_INITIAL_NUMBER;
-    fm->nwords = fm->max_n_files >> LONG_BIT_SHIFT;
-    debugs(8, 3, "file_map_create: creating space for " << fm->max_n_files << " files");
-    debugs(8, 5, "--> " << fm->nwords << " words of " << sizeof(*fm->file_map) << " bytes each");
-    fm->file_map = (unsigned long *)xcalloc(fm->nwords, sizeof(*fm->file_map));
-    /* XXX account fm->file_map */
-    return fm;
+    debugs(8, 3, HERE << "creating space for " << capacity_ << " files");
+    debugs(8, 5, "--> " << nwords << " words of " << sizeof(*bitmap) << " bytes each");
+    bitmap = (unsigned long *)xcalloc(nwords, sizeof(*bitmap));
 }
 
-static void
-file_map_grow(fileMap * fm)
+void
+FileMap::grow()
 {
-    int old_sz = fm->nwords * sizeof(*fm->file_map);
-    void *old_map = fm->file_map;
-    fm->max_n_files <<= 1;
-    assert(fm->max_n_files <= (1 << 24));	/* swap_filen is 25 bits, signed */
-    fm->nwords = fm->max_n_files >> LONG_BIT_SHIFT;
-    debugs(8, 3, "file_map_grow: creating space for " << fm->max_n_files << " files");
-    debugs(8, 5, "--> " << fm->nwords << " words of " << sizeof(*fm->file_map) << " bytes each");
-    fm->file_map = (unsigned long *)xcalloc(fm->nwords, sizeof(*fm->file_map));
+    int old_sz = nwords * sizeof(*bitmap);
+    void *old_map = bitmap;
+    capacity_ <<= 1;
+    assert(capacity_ <= (1 << 24));	/* swap_filen is 25 bits, signed */
+    nwords = capacity_ >> LONG_BIT_SHIFT;
+    debugs(8, 3, HERE << " creating space for " << capacity_ << " files");
+    debugs(8, 5, "--> " << nwords << " words of " << sizeof(*bitmap) << " bytes each");
+    bitmap = (unsigned long *)xcalloc(nwords, sizeof(*bitmap));
     debugs(8, 3, "copying " << old_sz << " old bytes");
-    memcpy(fm->file_map, old_map, old_sz);
+    memcpy(bitmap, old_map, old_sz);
     xfree(old_map);
-    /* XXX account fm->file_map */
+    /* XXX account fm->bitmap */
 }
 
-int
-file_map_bit_set(fileMap * fm, int file_number)
+bool
+FileMap::setBit(sfileno file_number)
 {
     unsigned long bitmask = (1L << (file_number & LONG_BIT_MASK));
 
-    while (file_number >= fm->max_n_files)
-        file_map_grow(fm);
+    while (file_number >= capacity_)
+        grow();
 
-    fm->file_map[file_number >> LONG_BIT_SHIFT] |= bitmask;
+    bitmap[file_number >> LONG_BIT_SHIFT] |= bitmask;
 
-    fm->n_files_in_map++;
+    usedSlots_++;
 
     return file_number;
 }
 
 /*
- * WARNING: file_map_bit_reset does not perform array bounds
+ * WARNING: clearBit does not perform array bounds
  * checking!  It assumes that 'file_number' is valid, and that the
  * bit is already set.  The caller must verify both of those
- * conditions by calling file_map_bit_test() first.
+ * conditions by calling testBit
+ * () first.
  */
 void
-file_map_bit_reset(fileMap * fm, int file_number)
+FileMap::clearBit(sfileno file_number)
 {
     unsigned long bitmask = (1L << (file_number & LONG_BIT_MASK));
-    fm->file_map[file_number >> LONG_BIT_SHIFT] &= ~bitmask;
-    fm->n_files_in_map--;
+    bitmap[file_number >> LONG_BIT_SHIFT] &= ~bitmask;
+    usedSlots_--;
 }
 
-int
-file_map_bit_test(fileMap * fm, int file_number)
+bool
+FileMap::testBit(sfileno file_number) const
 {
     unsigned long bitmask = (1L << (file_number & LONG_BIT_MASK));
 
-    if (file_number >= fm->max_n_files)
+    if (file_number >= capacity_)
         return 0;
 
     /* be sure the return value is an int, not a u_long */
-    return (fm->file_map[file_number >> LONG_BIT_SHIFT] & bitmask ? 1 : 0);
+    return (bitmap[file_number >> LONG_BIT_SHIFT] & bitmask ? 1 : 0);
 }
 
-int
-file_map_allocate(fileMap * fm, int suggestion)
+sfileno
+FileMap::allocate(sfileno suggestion)
 {
     int word;
-    int bit;
-    int count;
 
-    if (suggestion >= fm->max_n_files)
+    if (suggestion >= capacity_)
         suggestion = 0;
 
-    if (!file_map_bit_test(fm, suggestion))
+    if (!testBit(suggestion))
         return suggestion;
 
     word = suggestion >> LONG_BIT_SHIFT;
 
-    for (count = 0; count < fm->nwords; count++) {
-        if (fm->file_map[word] != ALL_ONES)
+    for (unsigned int count = 0; count < nwords; count++) {
+        if (bitmap[word] != ALL_ONES)
             break;
 
-        word = (word + 1) % fm->nwords;
+        word = (word + 1) % nwords;
     }
 
-    for (bit = 0; bit < BITS_IN_A_LONG; bit++) {
+    for (unsigned char bit = 0; bit < BITS_IN_A_LONG; bit++) {
         suggestion = ((unsigned long) word << LONG_BIT_SHIFT) | bit;
 
-        if (!file_map_bit_test(fm, suggestion)) {
+        if (!testBit(suggestion)) {
             return suggestion;
         }
     }
 
-    debugs(8, 3, "growing from file_map_allocate");
-    file_map_grow(fm);
-    return file_map_allocate(fm, fm->max_n_files >> 1);
+    grow();
+    return allocate(capacity_ >> 1);
 }
 
-void
-filemapFreeMemory(fileMap * fm)
+FileMap::~FileMap()
 {
-    safe_free(fm->file_map);
-    safe_free(fm);
+    safe_free(bitmap);
 }
-
-#ifdef TEST
-
-#define TEST_SIZE 1<<16
-main(argc, argv)
-{
-    int i;
-
-    fm = file_map_create(TEST_SIZE);
-
-    for (i = 0; i < TEST_SIZE; ++i) {
-        file_map_bit_set(i);
-        assert(file_map_bit_test(i));
-        file_map_bit_reset(i);
-    }
-}
-
-#endif

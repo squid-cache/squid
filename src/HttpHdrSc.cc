@@ -6,6 +6,7 @@
  * AUTHOR: Alex Rousskov
  *         Robert Collins (Surrogate-Control is derived from
  *         		   Cache-Control).
+ *         Francesco Chemolli (c++ refactoring)
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -35,15 +36,28 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "Store.h"
 #include "HttpHeader.h"
+#include "HttpHeaderStat.h"
 #include "HttpHdrSc.h"
 
+#if HAVE_MAP
+#include <map>
+#endif
+
+/* a row in the table used for parsing surrogate-control header and statistics */
+typedef struct {
+    const char *name;
+    http_hdr_sc_type id;
+    HttpHeaderFieldStat stat;
+} HttpHeaderScFields;
+
 /* this table is used for parsing surrogate control header */
+/* order must match that of enum http_hdr_sc_type. The constraint is verified at initialization time */
+//todo: implement constraint
 static const HttpHeaderFieldAttrs ScAttrs[SC_ENUM_END] = {
     {"no-store", (http_hdr_type)SC_NO_STORE},
-
     {"no-store-remote", (http_hdr_type)SC_NO_STORE_REMOTE},
     {"max-age", (http_hdr_type)SC_MAX_AGE},
     {"content", (http_hdr_type)SC_CONTENT},
@@ -65,9 +79,6 @@ int operator - (http_hdr_sc_type const &anSc, http_hdr_sc_type const &anSc2)
 }
 
 
-/* local prototypes */
-static int httpHdrScParseInit(HttpHdrSc * sc, const String * str);
-
 /* module initialization */
 
 void
@@ -85,20 +96,14 @@ httpHdrScCleanModule(void)
 
 /* implementation */
 
-HttpHdrSc *
-httpHdrScCreate(void)
-{
-    return new HttpHdrSc();
-}
-
 /* creates an sc object from a 0-terminating string */
 HttpHdrSc *
-httpHdrScParseCreate(const String * str)
+httpHdrScParseCreate(const String & str)
 {
-    HttpHdrSc *sc = httpHdrScCreate();
+    HttpHdrSc *sc = new HttpHdrSc();
 
-    if (!httpHdrScParseInit(sc, str)) {
-        httpHdrScDestroy(sc);
+    if (!sc->parse(&str)) {
+        delete sc;
         sc = NULL;
     }
 
@@ -106,9 +111,10 @@ httpHdrScParseCreate(const String * str)
 }
 
 /* parses a 0-terminating string and inits sc */
-static int
-httpHdrScParseInit(HttpHdrSc * sc, const String * str)
+bool
+HttpHdrSc::parse(const String * str)
 {
+    HttpHdrSc * sc=this;
     const char *item;
     const char *p;		/* '=' parameter */
     const char *pos = NULL;
@@ -118,7 +124,7 @@ httpHdrScParseInit(HttpHdrSc * sc, const String * str)
     int ilen, vlen;
     int initiallen;
     HttpHdrScTarget *sct;
-    assert(sc && str);
+    assert(str);
 
     /* iterate through comma separated list */
 
@@ -138,6 +144,7 @@ httpHdrScParseInit(HttpHdrSc * sc, const String * str)
             ilen = p++ - item;
 
         /* find type */
+        /* TODO: use a type-safe map-based lookup */
         type = httpHeaderIdByName(item, ilen,
                                   ScFieldsInfo, SC_ENUM_END);
 
@@ -147,7 +154,7 @@ httpHdrScParseInit(HttpHdrSc * sc, const String * str)
         }
 
         /* Is this a targeted directive? */
-        /* TODO sometime: implement a strnrchr that looks at a substring */
+        /* TODO: remove the temporary useage and use memrchr and the information we have instead */
         temp = xstrndup (item, initiallen + 1);
 
         if (!((target = strrchr (temp, ';')) && !strchr (target, '"') && *(target + 1) != '\0'))
@@ -155,16 +162,16 @@ httpHdrScParseInit(HttpHdrSc * sc, const String * str)
         else
             ++target;
 
-        sct = httpHdrScFindTarget (sc, target);
+        sct = sc->findTarget(target);
 
         if (!sct) {
-            sct = httpHdrScTargetCreate (target);
-            dlinkAdd(sct, &sct->node, &sc->targets);
+            sct = new HttpHdrScTarget(target);
+            addTarget(sct);
         }
 
         safe_free (temp);
 
-        if (EBIT_TEST(sct->mask, type)) {
+        if (sct->isSet(static_cast<http_hdr_sc_type>(type))) {
             if (type != SC_OTHER)
                 debugs(90, 2, "hdr sc: ignoring duplicate control-directive: near '" << item << "' in '" << str << "'");
 
@@ -173,37 +180,50 @@ httpHdrScParseInit(HttpHdrSc * sc, const String * str)
             continue;
         }
 
-        /* update mask */
-        EBIT_SET(sct->mask, type);
-
-        /* post-processing special cases */
+        /* process directives */
         switch (type) {
+        case SC_NO_STORE:
+            sct->noStore(true);
+            break;
 
-        case SC_MAX_AGE:
+        case SC_NO_STORE_REMOTE:
+            sct->noStoreRemote(true);
+            break;
 
-            if (!p || !httpHeaderParseInt(p, &sct->max_age)) {
+        case SC_MAX_AGE: {
+            int ma;
+            if (p && httpHeaderParseInt(p, &ma)) {
+                sct->maxAge(ma);
+            } else {
                 debugs(90, 2, "sc: invalid max-age specs near '" << item << "'");
-                sct->max_age = -1;
-                EBIT_CLR(sct->mask, type);
+                sct->clearMaxAge();
             }
 
-            if ((p = strchr (p, '+')))
-                if (!httpHeaderParseInt(++p, &sct->max_stale)) {
+            if ((p = strchr (p, '+'))) {
+                int ms;
+                ++p; //skip the + char
+                if (httpHeaderParseInt(p, &ms)) {
+                    sct->maxStale(ms);
+                } else {
                     debugs(90, 2, "sc: invalid max-stale specs near '" << item << "'");
-                    sct->max_stale = 0;
+                    sct->clearMaxStale();
                     /* leave the max-age alone */
                 }
-
+            }
             break;
+        }
 
         case SC_CONTENT:
 
-            if (!p || !httpHeaderParseQuotedString(p, vlen, &sct->content)) {
+            if ( p && httpHeaderParseQuotedString(p, vlen, &sct->content_)) {
+                sct->setMask(SC_CONTENT,true); // ugly but saves a copy
+            } else {
                 debugs(90, 2, "sc: invalid content= quoted string near '" << item << "'");
-                sct->content.clean();
-                EBIT_CLR(sct->mask, type);
+                sct->clearContent();
             }
+            break;
 
+        case SC_OTHER:
         default:
             break;
         }
@@ -212,53 +232,41 @@ httpHdrScParseInit(HttpHdrSc * sc, const String * str)
     return sc->targets.head != NULL;
 }
 
-void
-httpHdrScDestroy(HttpHdrSc * sc)
+HttpHdrSc::~HttpHdrSc()
 {
-    assert(sc);
-
-    if (sc->targets.head) {
-        dlink_node *sct = sc->targets.head;
+    if (targets.head) {
+        dlink_node *sct = targets.head;
 
         while (sct) {
-            HttpHdrScTarget *t = (HttpHdrScTarget *)sct->data;
+            HttpHdrScTarget *t = static_cast<HttpHdrScTarget *>(sct->data);
             sct = sct->next;
-            dlinkDelete (&t->node, &sc->targets);
-            httpHdrScTargetDestroy (t);
+            dlinkDelete (&t->node, &targets);
+            delete t;
         }
     }
-
-    delete sc;
 }
 
-HttpHdrSc *
-httpHdrScDup(const HttpHdrSc * sc)
+
+HttpHdrSc::HttpHdrSc(const HttpHdrSc &sc)
 {
-    HttpHdrSc *dup;
-    dlink_node *node;
-    assert(sc);
-    node = sc->targets.head;
-    dup = httpHdrScCreate();
+    dlink_node *node = sc.targets.head;
 
     while (node) {
-        HttpHdrScTarget *dupsct;
-        dupsct = httpHdrScTargetDup ((HttpHdrScTarget *)node->data);
-        dlinkAddTail (dupsct, &dupsct->node, &dup->targets);
+        HttpHdrScTarget *dupsct = new HttpHdrScTarget(*static_cast<HttpHdrScTarget *>(node->data));
+        addTargetAtTail(dupsct);
         node = node->next;
     }
-
-    return dup;
 }
 
 void
-httpHdrScTargetPackInto(const HttpHdrScTarget * sc, Packer * p)
+HttpHdrScTarget::packInto(Packer * p) const
 {
     http_hdr_sc_type flag;
     int pcount = 0;
-    assert(sc && p);
+    assert (p);
 
     for (flag = SC_NO_STORE; flag < SC_ENUM_END; ++flag) {
-        if (EBIT_TEST(sc->mask, flag) && flag != SC_OTHER) {
+        if (isSet(flag) && flag != SC_OTHER) {
 
             /* print option name */
             packerPrintf(p, (pcount ? ", " SQUIDSTRINGPH : SQUIDSTRINGPH),
@@ -267,73 +275,53 @@ httpHdrScTargetPackInto(const HttpHdrScTarget * sc, Packer * p)
             /* handle options with values */
 
             if (flag == SC_MAX_AGE)
-                packerPrintf(p, "=%d", (int) sc->max_age);
+                packerPrintf(p, "=%d", (int) max_age);
 
             if (flag == SC_CONTENT)
-                packerPrintf(p, "=\"" SQUIDSTRINGPH "\"", SQUIDSTRINGPRINT(sc->content));
+                packerPrintf(p, "=\"" SQUIDSTRINGPH "\"", SQUIDSTRINGPRINT(content_));
 
             pcount++;
         }
     }
 
-    if (sc->target.size())
-        packerPrintf (p, ";" SQUIDSTRINGPH, SQUIDSTRINGPRINT(sc->target));
+    if (hasTarget())
+        packerPrintf (p, ";" SQUIDSTRINGPH, SQUIDSTRINGPRINT(target));
 }
 
 void
-httpHdrScPackInto(const HttpHdrSc * sc, Packer * p)
+HttpHdrSc::packInto(Packer * p) const
 {
     dlink_node *node;
-    assert(sc && p);
-    node = sc->targets.head;
+    assert(p);
+    node = targets.head;
 
     while (node) {
-        httpHdrScTargetPackInto((HttpHdrScTarget *)node->data, p);
+        static_cast<HttpHdrScTarget *>(node->data)->packInto(p);
         node = node->next;
     }
 }
 
-void
-httpHdrScJoinWith(HttpHdrSc * sc, const HttpHdrSc * new_sc)
-{
-    assert(sc && new_sc);
-#if 0
-    /* RC TODO: check that both have the same target */
-
-    if (sc->max_age < 0)
-        sc->max_age = new_sc->max_age;
-
-    /* RC TODO: copy unique missing stringlist entries */
-    cc->mask |= new_cc->mask;
-
-#endif
-}
-
 /* negative max_age will clean old max_Age setting */
 void
-httpHdrScSetMaxAge(HttpHdrSc * sc, char const *target, int max_age)
+HttpHdrSc::setMaxAge(char const *target, int max_age)
 {
-    HttpHdrScTarget *sct;
-    assert(sc);
-    sct = httpHdrScFindTarget (sc, target);
+    HttpHdrScTarget *sct = findTarget(target);
 
     if (!sct) {
-        sct = httpHdrScTargetCreate (target);
-        dlinkAddTail (sct, &sct->node, &sc->targets);
+        sct = new HttpHdrScTarget(target);
+        dlinkAddTail (sct, &sct->node, &targets);
     }
 
-    httpHdrScTargetSetMaxAge(sct, max_age);
+    sct->maxAge(max_age);
 }
 
 void
-httpHdrScUpdateStats(const HttpHdrSc * sc, StatHist * hist)
+HttpHdrSc::updateStats(StatHist * hist) const
 {
-    dlink_node *sct;
-    assert(sc);
-    sct = sc->targets.head;
+    dlink_node *sct = targets.head;
 
     while (sct) {
-        httpHdrScTargetUpdateStats((HttpHdrScTarget *)sct->data, hist);
+        static_cast<HttpHdrScTarget *>(sct->data)->updateStats(hist);
         sct = sct->next;
     }
 }
@@ -365,11 +353,10 @@ httpHdrScStatDumper(StoreEntry * sentry, int idx, double val, double size, int c
 }
 
 HttpHdrScTarget *
-httpHdrScFindTarget (HttpHdrSc *sc, const char *target)
+HttpHdrSc::findTarget(const char *target)
 {
     dlink_node *node;
-    assert (sc);
-    node = sc->targets.head;
+    node = targets.head;
 
     while (node) {
         HttpHdrScTarget *sct = (HttpHdrScTarget *)node->data;
@@ -386,19 +373,19 @@ httpHdrScFindTarget (HttpHdrSc *sc, const char *target)
 }
 
 HttpHdrScTarget *
-httpHdrScGetMergedTarget (HttpHdrSc *sc, const char *ourtarget)
+HttpHdrSc::getMergedTarget(const char *ourtarget)
 {
-    HttpHdrScTarget *sctus = httpHdrScFindTarget (sc, ourtarget);
-    HttpHdrScTarget *sctgeneric = httpHdrScFindTarget (sc, NULL);
+    HttpHdrScTarget *sctus = findTarget(ourtarget);
+    HttpHdrScTarget *sctgeneric = findTarget(NULL);
 
     if (sctgeneric || sctus) {
-        HttpHdrScTarget *sctusable = httpHdrScTargetCreate (NULL);
+        HttpHdrScTarget *sctusable = new HttpHdrScTarget(NULL);
 
         if (sctgeneric)
-            httpHdrScTargetMergeWith (sctusable, sctgeneric);
+            sctusable->mergeWith(sctgeneric);
 
         if (sctus)
-            httpHdrScTargetMergeWith (sctusable, sctus);
+            sctusable->mergeWith(sctus);
 
         return sctusable;
     }

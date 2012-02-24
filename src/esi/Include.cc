@@ -34,7 +34,7 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid.h"
+#include "squid-old.h"
 
 /* MS Visual Studio Projects are monolithic, so we need the following
  * #if to exclude the ESI code from compile process when not needed.

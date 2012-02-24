@@ -4,7 +4,7 @@
  * DEBUG: section 79    Disk IO Routines
  */
 
-#include "config.h"
+#include "squid.h"
 #include "fs/rock/RockIoRequests.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Rock, ReadRequest);

@@ -33,7 +33,8 @@
 #ifndef SQUID_HELPER_H
 #define SQUID_HELPER_H
 
-#include "squid.h"
+#include "squid-old.h"
+#include "base/AsyncCall.h"
 #include "cbdata.h"
 #include "comm/forward.h"
 #include "ip/Address.h"
@@ -144,6 +145,9 @@ public:
         int uses;
         unsigned int pending;
     } stats;
+
+private:
+    CBDATA_CLASS2(helper_server);
 };
 
 class helper_stateful_request;
@@ -163,6 +167,9 @@ public:
         int releases;
     } stats;
     void *data;			/* State data used by the calling routines */
+
+private:
+    CBDATA_CLASS2(helper_stateful_server);
 };
 
 class helper_request

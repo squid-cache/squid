@@ -30,7 +30,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "ProtoPort.h"
 #include "acl/FilledChecklist.h"
 #include "comm/Connection.h"

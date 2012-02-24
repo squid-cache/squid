@@ -30,11 +30,13 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "base/StringArea.h"
-#include "Store.h"
 #include "HttpHeader.h"
+#include "HttpHeaderStat.h"
 #include "HttpHdrCc.h"
+#include "StatHist.h"
+#include "Store.h"
 
 #if HAVE_MAP
 #include <map>
@@ -285,7 +287,7 @@ httpHdrCcUpdateStats(const HttpHdrCc * cc, StatHist * hist)
 
     for (c = CC_PUBLIC; c < CC_ENUM_END; ++c)
         if (cc->isSet(c))
-            statHistCount(hist, c);
+            hist->count(c);
 }
 
 void

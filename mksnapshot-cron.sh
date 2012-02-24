@@ -66,6 +66,9 @@ make_snapshot()
 	rm -f ${dst}/*-${f} ${dst}/*-${f}.md5
     done
 
+    # update dynamic index pages Last-Modified info
+    touch ${dst}/index.dyn
+
     # Special cases
     case ${file} in
     *-cfgman.tar.gz)

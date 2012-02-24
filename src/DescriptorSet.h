@@ -1,7 +1,7 @@
 #ifndef SQUID_DESCRIPTOR_SET_H
 #define SQUID_DESCRIPTOR_SET_H
 
-#include "squid.h"
+#include "squid-old.h"
 
 /** \ingroup Comm
 

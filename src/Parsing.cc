@@ -32,7 +32,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "compat/strtoll.h"
 #include "Parsing.h"
 

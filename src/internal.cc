@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "errorpage.h"
@@ -76,7 +76,7 @@ internalStart(const Comm::ConnectionPointer &clientConn, HttpRequest * request, 
     } else {
         debugObj(76, 1, "internalStart: unknown request:\n",
                  request, (ObjPackMethod) & httpRequestPack);
-        err = errorCon(ERR_INVALID_REQ, HTTP_NOT_FOUND, request);
+        err = new ErrorState(ERR_INVALID_REQ, HTTP_NOT_FOUND, request);
         errorAppendEntry(entry, err);
     }
 }

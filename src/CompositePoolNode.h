@@ -37,7 +37,7 @@
 #define COMPOSITEPOOLNODE_H
 
 #if USE_DELAY_POOLS
-#include "squid.h"
+#include "squid-old.h"
 #include "auth/UserRequest.h"
 #include "DelayPools.h"
 #include "DelayIdComposite.h"
@@ -74,7 +74,7 @@ public:
 
         Ip::Address src_addr;
 #if USE_AUTH
-        AuthUserRequest::Pointer user;
+        Auth::UserRequest::Pointer user;
 #endif
         String tag;
     };

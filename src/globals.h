@@ -41,7 +41,7 @@
 /* for ERROR_BUF_SZ, BUFSIZ, MAXHTTPPORTS */
 #include "defines.h"
 
-/* for iostats, StatCounters */
+/* for iostats */
 #include "structs.h"
 
 
@@ -109,7 +109,6 @@ extern "C" {
     extern int shutting_down;	/* 0 */
     extern int reconfiguring;	/* 0 */
     extern time_t hit_only_mode_until;	/* 0 */
-    extern StatCounters statCounter;
     extern double request_failure_ratio;	/* 0.0 */
     extern int store_hash_buckets;	/* 0 */
     extern hash_table *store_table;	/* NULL */

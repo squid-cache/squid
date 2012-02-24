@@ -34,7 +34,7 @@
 
 #define _etext etext
 
-#include "config.h"
+#include "squid.h"
 #include "profiler/Profiler.h"
 #include "util.h"
 
@@ -98,7 +98,6 @@ int xmalloc_trace = 0;		/* Enable with -m option */
 size_t xmalloc_total = 0;
 #undef xmalloc
 #undef xfree
-#undef xxfree
 #undef xrealloc
 #undef xcalloc
 #undef xstrdup

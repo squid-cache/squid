@@ -29,7 +29,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#include "squid.h"
+#include "squid-old.h"
 #include "acl/FilledChecklist.h"
 #include "base/CbcPointer.h"
 #include "comm.h"
@@ -236,15 +236,9 @@ snmpInit(void)
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.2", FQDN_GHBN, snmp_netFqdnFn, static_Inst, atSum);
 
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.4", NET_DNS_CACHE, NULL, NULL);
-#if USE_DNSSERVERS
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.3", DNS_REQ, snmp_netDnsFn, static_Inst, atSum);
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.3", DNS_REP, snmp_netDnsFn, static_Inst, atSum);
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.3", DNS_SERVERS, snmp_netDnsFn, static_Inst, atSum);
-#else
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.3", DNS_REQ, snmp_netIdnsFn, static_Inst, atSum);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.3", DNS_REP, snmp_netIdnsFn, static_Inst, atSum);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.3", DNS_SERVERS, snmp_netIdnsFn, static_Inst, atSum);
-#endif
 
     /* SQ_MESH - 1.3.6.1.4.1.3495.1.5 */
     snmpAddNodeStr("1.3.6.1.4.1.3495.1", 5, NULL, NULL);

@@ -33,7 +33,7 @@
 #ifndef SQUID_STOREFILESYSTEM_H
 #define SQUID_STOREFILESYSTEM_H
 
-#include "squid.h"
+#include "squid-old.h"
 #include "Array.h"
 
 /* ****** DOCUMENTATION ***** */

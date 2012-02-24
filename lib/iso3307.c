@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "util.h"
 
 #if HAVE_STDIO_H

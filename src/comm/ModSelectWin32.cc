@@ -31,15 +31,17 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 
 #if USE_SELECT_WIN32
 
-#include "squid.h"
+#include "squid-old.h"
 #include "comm/Loops.h"
 #include "fde.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
+#include "StatHist.h"
 #include "Store.h"
 
 static int MAX_POLL_TIME = 1000;	/* see also Comm::QuickPollRequired() */
@@ -302,7 +304,7 @@ comm_select_icp_incoming(void)
     if (nevents > INCOMING_ICP_MAX)
         nevents = INCOMING_ICP_MAX;
 
-    statHistCount(&statCounter.comm_icp_incoming, nevents);
+    statCounter.comm_icp_incoming.count(nevents);
 }
 
 static void
@@ -333,7 +335,7 @@ comm_select_http_incoming(void)
     if (nevents > INCOMING_HTTP_MAX)
         nevents = INCOMING_HTTP_MAX;
 
-    statHistCount(&statCounter.comm_http_incoming, nevents);
+    statCounter.comm_http_incoming.count(nevents);
 }
 
 #define DEBUG_FDBITS 0
@@ -470,7 +472,7 @@ Comm::DoSelect(int msec)
 
         debugs(5, num ? 5 : 8, "comm_select: " << num << "+" << pending << " FDs ready");
 
-        statHistCount(&statCounter.select_fds_hist, num);
+        statCounter.select_fds_hist.count(num);
 
         if (num == 0 && pending == 0)
             continue;
@@ -682,7 +684,7 @@ comm_select_dns_incoming(void)
     if (nevents > INCOMING_DNS_MAX)
         nevents = INCOMING_DNS_MAX;
 
-    statHistCount(&statCounter.comm_dns_incoming, nevents);
+    statCounter.comm_dns_incoming.count(nevents);
 }
 
 void
@@ -774,7 +776,6 @@ examine_select(fd_set * readfds, fd_set * writefds)
 static void
 commIncomingStats(StoreEntry * sentry)
 {
-    StatCounters *f = &statCounter;
     storeAppendPrintf(sentry, "Current incoming_icp_interval: %d\n",
                       incoming_icp_interval >> INCOMING_FACTOR);
     storeAppendPrintf(sentry, "Current incoming_dns_interval: %d\n",
@@ -784,11 +785,11 @@ commIncomingStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\n");
     storeAppendPrintf(sentry, "Histogram of events per incoming socket type\n");
     storeAppendPrintf(sentry, "ICP Messages handled per comm_select_icp_incoming() call:\n");
-    statHistDump(&f->comm_icp_incoming, sentry, statHistIntDumper);
+    statCounter.comm_icp_incoming.dump(sentry, statHistIntDumper);
     storeAppendPrintf(sentry, "DNS Messages handled per comm_select_dns_incoming() call:\n");
-    statHistDump(&f->comm_dns_incoming, sentry, statHistIntDumper);
+    statCounter.comm_dns_incoming.dump(sentry, statHistIntDumper);
     storeAppendPrintf(sentry, "HTTP Messages handled per comm_select_http_incoming() call:\n");
-    statHistDump(&f->comm_http_incoming, sentry, statHistIntDumper);
+    statCounter.comm_http_incoming.dump(sentry, statHistIntDumper);
 }
 
 void

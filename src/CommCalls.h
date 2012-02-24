@@ -21,6 +21,8 @@
  *     - I/O (IOCB)
  *     - timeout (CTCB)
  *     - close (CLCB)
+ * and a special callback kind for passing pipe FD, disk FD or fd_table index 'FD' to the handler:
+ *     - FD passing callback (FDECB)
  */
 
 class CommAcceptCbParams;
@@ -34,6 +36,9 @@ typedef void CTCB(const CommTimeoutCbParams &params);
 
 class CommCloseCbParams;
 typedef void CLCB(const CommCloseCbParams &params);
+
+class FdeCbParams;
+typedef void FDECB(const FdeCbParams &params);
 
 /*
  * TODO: When there are no function-pointer-based callbacks left, all
@@ -79,7 +84,7 @@ public:
     comm_err_t flag;  ///< comm layer result status.
     int xerrno;      ///< The last errno to occur. non-zero if flag is COMM_ERR.
 
-    int fd; // raw FD which the call was about. use conn instead for new code.
+    int fd; ///< FD which the call was about. Set by the async call creator.
 private:
     // should not be needed and not yet implemented
     CommCommonCbParams &operator =(const CommCommonCbParams &params);
@@ -126,6 +131,16 @@ class CommTimeoutCbParams: public  CommCommonCbParams
 {
 public:
     CommTimeoutCbParams(void *aData);
+};
+
+/// Special Calls parameter, for direct use of an FD without a controlling Comm::Connection
+/// This is used for pipe() FD with helpers, and internally by Comm when handling some special FD actions.
+class FdeCbParams: public CommCommonCbParams
+{
+public:
+    FdeCbParams(void *aData);
+    // TODO make this a standalone object with FD value and pointer to fde table entry.
+    // that requires all the existing Comm handlers to be updated first though
 };
 
 // Interface to expose comm callback parameters of all comm dialers.
@@ -266,6 +281,21 @@ public:
 
 public:
     CTCB *handler;
+};
+
+/// FD event (FDECB) dialer
+class FdeCbPtrFun: public CallDialer,
+        public CommDialerParamsT<FdeCbParams>
+{
+public:
+    typedef FdeCbParams Params;
+
+    FdeCbPtrFun(FDECB *aHandler, const Params &aParams);
+    void dial();
+    virtual void print(std::ostream &os) const;
+
+public:
+    FDECB *handler;
 };
 
 // AsyncCall to comm handlers implemented as global functions.

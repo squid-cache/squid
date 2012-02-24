@@ -2,7 +2,7 @@
  * DEBUG: section 93    ICAP (RFC 3507) Client
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
@@ -234,8 +234,7 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommTimedout",
                                       TimeoutDialer(this,&Adaptation::Icap::Xaction::noteCommTimedout));
-    commSetTimeout(io.conn->fd, TheConfig.connect_timeout(
-                       service().cfg().bypass), timeoutCall);
+    commSetConnTimeout(io.conn, TheConfig.connect_timeout(service().cfg().bypass), timeoutCall);
 
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommCloseCbParams> CloseDialer;
     closer =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommClosed",

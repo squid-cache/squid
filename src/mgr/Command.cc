@@ -5,7 +5,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "mgr/ActionProfile.h"
 #include "mgr/Command.h"
 

@@ -33,7 +33,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "util.h"
 
 #include "libntlmauth/ntlmauth.h"

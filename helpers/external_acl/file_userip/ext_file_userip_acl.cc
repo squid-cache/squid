@@ -18,7 +18,7 @@
 * Author: Rodrigo Campos (rodrigo@geekbunker.org)
 *
 */
-#include "config.h"
+#include "squid.h"
 #include "helpers/defines.h"
 #include "rfc1738.h"
 #include "util.h"

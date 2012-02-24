@@ -1,7 +1,7 @@
 /*
  * DEBUG: section 93    eCAP Interface
  */
-#include "squid.h"
+#include "squid-old.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "BodyPipe.h"

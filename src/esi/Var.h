@@ -36,7 +36,7 @@
 #ifndef SQUID_ESIVAR_H
 #define SQUID_ESIVAR_H
 
-#include "squid.h"
+#include "squid-old.h"
 #include "esi/Element.h"
 #include "esi/Sequence.h"
 

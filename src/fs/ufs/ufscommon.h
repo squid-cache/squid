@@ -40,6 +40,7 @@ class UFSStrategy;
 class ConfigOptionVector;
 class DiskIOModule;
 class StoreSearch;
+class FileMap;
 
 #include "SwapDir.h"
 
@@ -116,7 +117,7 @@ public:
     void replacementRemove(StoreEntry *e);
 
 protected:
-    fileMap *map;
+    FileMap *map;
     int suggest;
     int l1;
     int l2;
@@ -371,18 +372,6 @@ public:
     RebuildState(RefCount<UFSSwapDir> sd);
     ~RebuildState();
 
-    /** \todo Iterator API - garh, wrong place */
-    /**
-     * callback the client when a new StoreEntry is available
-     * or an error occurs
-     */
-    virtual void next(void (callback)(void *cbdata), void *cbdata);
-
-    /**
-     \retval true if a new StoreEntry is immediately available
-     \retval false if a new StoreEntry is NOT immediately available
-     */
-    virtual bool next();
     virtual bool error() const;
     virtual bool isDone() const;
     virtual StoreEntry *currentItem();
@@ -391,7 +380,6 @@ public:
     int n_read;
     /*    FILE *log;*/
     UFSSwapLogParser *LogParser;
-    int speed;
     int curlvl1;
     int curlvl2;
 

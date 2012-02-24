@@ -14,7 +14,7 @@ BEGIN {
 	print "/*"
 	print " * Auto-Generated File. Changes will be destroyed."
 	print " */"
-	print "#include \"config.h\""
+	print "#include \"squid.h\""
         codeSkip = 1
         e = 0
         nspath = ""

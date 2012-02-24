@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "AccessLogEntry.h"
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
@@ -66,6 +66,7 @@
 #include "format/Token.h"
 #include "fs/Module.h"
 #include "PeerSelectState.h"
+#include "SquidDns.h"
 #include "Store.h"
 #include "ICP.h"
 #include "ident/Ident.h"
@@ -82,6 +83,7 @@
 #include "ipc/Strand.h"
 #include "ip/tools.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 #include "SwapDir.h"
 #include "forward.h"
 #include "MemPool.h"
@@ -734,13 +736,7 @@ mainReconfigureStart(void)
 
     htcpSocketClose();
 #endif
-#if USE_DNSSERVERS
-
     dnsShutdown();
-#else
-
-    idnsShutdown();
-#endif
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
@@ -823,13 +819,7 @@ mainReconfigureFinish(void *)
     icapLogOpen();
 #endif
     storeLogOpen();
-#if USE_DNSSERVERS
-
     dnsInit();
-#else
-
-    idnsInit();
-#endif
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Init();
 #endif
@@ -878,8 +868,6 @@ mainReconfigureFinish(void *)
 
     writePidFile();		/* write PID file */
 
-    debugs(1, 1, "Ready to serve requests.");
-
     reconfiguring = 0;
 }
 
@@ -887,7 +875,7 @@ static void
 mainRotate(void)
 {
     icmpEngine.Close();
-#if USE_DNSSERVERS
+#if USE_DNSHELPER
     dnsShutdown();
 #endif
     redirectShutdown();
@@ -904,7 +892,7 @@ mainRotate(void)
     icapLogRotate();               /*icap.log*/
 #endif
     icmpEngine.Open();
-#if USE_DNSSERVERS
+#if USE_DNSHELPER
     dnsInit();
 #endif
     redirectInit();
@@ -1028,15 +1016,7 @@ mainInitialize(void)
 
     parseEtcHosts();
 
-#if USE_DNSSERVERS
-
     dnsInit();
-
-#else
-
-    idnsInit();
-
-#endif
 
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Init();
@@ -1188,8 +1168,6 @@ mainInitialize(void)
 #if USE_DELAY_POOLS
     Config.ClientDelay.finalize();
 #endif
-
-    debugs(1, 1, "Ready to serve requests.");
 
     if (!configured_once) {
         eventAdd("storeMaintain", Store::Maintain, NULL, 1.0, 1);
@@ -1437,6 +1415,7 @@ SquidMain(int argc, char **argv)
 
     debugs(1,2, HERE << "Doing post-config initialization\n");
     leave_suid();
+    ActivateRegistered(rrFinalizeConfig);
     ActivateRegistered(rrClaimMemoryNeeds);
     ActivateRegistered(rrAfterConfig);
     enter_suid();
@@ -1808,6 +1787,7 @@ watch_child(char *argv[])
             leave_suid();
             DeactivateRegistered(rrAfterConfig);
             DeactivateRegistered(rrClaimMemoryNeeds);
+            DeactivateRegistered(rrFinalizeConfig);
             enter_suid();
 
             if (TheKids.someSignaled(SIGINT) || TheKids.someSignaled(SIGTERM)) {
@@ -1846,13 +1826,7 @@ SquidShutdown()
 #endif
 
     debugs(1, 1, "Shutting down...");
-#if USE_DNSSERVERS
-
     dnsShutdown();
-#else
-
-    idnsShutdown();
-#endif
 #if USE_SSL_CRTD
     Ssl::Helper::GetInstance()->Shutdown();
 #endif
@@ -1910,6 +1884,7 @@ SquidShutdown()
     DiskIOModule::FreeAllModules();
     DeactivateRegistered(rrAfterConfig);
     DeactivateRegistered(rrClaimMemoryNeeds);
+    DeactivateRegistered(rrFinalizeConfig);
 #if LEAK_CHECK_MODE && 0 /* doesn't work at the moment */
 
     configFreeMemory();

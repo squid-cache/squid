@@ -25,7 +25,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "charset.h"
 
 /** Convert ISO-LATIN-1 to UTF-8 */

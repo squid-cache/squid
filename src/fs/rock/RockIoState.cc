@@ -4,7 +4,7 @@
  * DEBUG: section 79    Disk IO Routines
  */
 
-#include "config.h"
+#include "squid.h"
 #include "MemObject.h"
 #include "Parsing.h"
 #include "DiskIO/DiskIOModule.h"

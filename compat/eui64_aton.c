@@ -74,7 +74,7 @@
  * Columbia University, New York City
  */
 
-#include "config.h"
+#include "squid.h"
 #include "compat/eui64_aton.h"
 
 /*

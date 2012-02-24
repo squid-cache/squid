@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "Store.h"
 #include "HttpHeaderRange.h"
 #include "client_side_request.h"

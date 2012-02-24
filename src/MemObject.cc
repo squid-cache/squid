@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "comm/Connection.h"
 #include "MemObject.h"
 #include "HttpRequest.h"
@@ -492,3 +492,9 @@ MemObject::mostBytesAllowed() const
 }
 
 #endif
+
+int64_t
+MemObject::availableForSwapOut() const
+{
+    return endOffset() - swapout.queue_offset;
+}

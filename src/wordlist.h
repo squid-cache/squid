@@ -32,7 +32,7 @@
 #ifndef SQUID_WORDLIST_H
 #define SQUID_WORDLIST_H
 
-#include "squid.h"
+#include "squid-old.h"
 #include "MemPool.h"
 
 class wordlist

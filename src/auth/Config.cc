@@ -32,7 +32,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "auth/Config.h"
 #include "auth/UserRequest.h"
 
@@ -45,7 +45,7 @@ Auth::ConfigVector Auth::TheConfig;
  * It may be a cached AuthUser or a new Unauthenticated object.
  * It may also be NULL reflecting that no user could be created.
  */
-AuthUserRequest::Pointer
+Auth::UserRequest::Pointer
 Auth::Config::CreateAuthUser(const char *proxy_auth)
 {
     assert(proxy_auth != NULL);

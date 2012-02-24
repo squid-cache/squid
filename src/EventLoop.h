@@ -33,7 +33,7 @@
 #ifndef SQUID_EVENTLOOP_H
 #define SQUID_EVENTLOOP_H
 
-#include "squid.h"
+#include "squid-old.h"
 #include "Array.h"
 #include "AsyncEngine.h"
 #include "SquidTime.h"

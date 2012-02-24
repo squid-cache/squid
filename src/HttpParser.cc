@@ -1,4 +1,4 @@
-#include "config.h"
+#include "squid.h"
 #include "Debug.h"
 #include "HttpParser.h"
 #include "structs.h"

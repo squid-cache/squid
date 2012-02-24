@@ -32,7 +32,7 @@
  *
  */
 
-#include "config.h"
+#include "squid.h"
 #include "EventLoop.h"
 #include "base/AsyncCallQueue.h"
 

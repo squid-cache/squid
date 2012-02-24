@@ -39,15 +39,11 @@
  * They DO NOT perform access control or auditing.
  * See acl.c for access control and client_side.c for auditing */
 
-#include "squid.h"
-#include "auth/UserRequest.h"
-#include "auth/User.h"
-/*#include "auth/Gadgets.h"
-#include "acl/Acl.h"
-#include "client_side.h"
-*/
+#include "squid-old.h"
 #include "auth/Config.h"
 #include "auth/Scheme.h"
+#include "auth/UserRequest.h"
+#include "auth/User.h"
 #include "comm/Connection.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -55,7 +51,7 @@
 /* Generic Functions */
 
 char const *
-AuthUserRequest::username() const
+Auth::UserRequest::username() const
 {
     if (user() != NULL)
         return user()->username();
@@ -67,18 +63,18 @@ AuthUserRequest::username() const
 
 /* send the initial data to an authenticator module */
 void
-AuthUserRequest::start(RH * handler, void *data)
+Auth::UserRequest::start(RH * handler, void *data)
 {
     assert(handler);
     assert(data);
-    debugs(29, 9, "authenticateStart: auth_user_request '" << this << "'");
+    debugs(29, 9, HERE << "auth_user_request '" << this << "'");
     module_start(handler, data);
 }
 
 bool
-AuthUserRequest::valid() const
+Auth::UserRequest::valid() const
 {
-    debugs(29, 9, HERE << "Validating AuthUserRequest '" << this << "'.");
+    debugs(29, 9, HERE << "Validating Auth::UserRequest '" << this << "'.");
 
     if (user() == NULL) {
         debugs(29, 4, HERE << "No associated Auth::User data");
@@ -98,35 +94,35 @@ AuthUserRequest::valid() const
     /* any other sanity checks that we need in the future */
 
     /* finally return ok */
-    debugs(29, 5, HERE << "Validated. AuthUserRequest '" << this << "'.");
+    debugs(29, 5, HERE << "Validated. Auth::UserRequest '" << this << "'.");
     return true;
 }
 
 void *
-AuthUserRequest::operator new (size_t byteCount)
+Auth::UserRequest::operator new (size_t byteCount)
 {
-    fatal ("AuthUserRequest not directly allocatable\n");
+    fatal("Auth::UserRequest not directly allocatable\n");
     return (void *)1;
 }
 
 void
-AuthUserRequest::operator delete (void *address)
+Auth::UserRequest::operator delete (void *address)
 {
-    fatal ("AuthUserRequest child failed to override operator delete\n");
+    fatal("Auth::UserRequest child failed to override operator delete\n");
 }
 
-AuthUserRequest::AuthUserRequest():
+Auth::UserRequest::UserRequest():
         _auth_user(NULL),
         message(NULL),
         lastReply(AUTH_ACL_CANNOT_AUTHENTICATE)
 {
-    debugs(29, 5, "AuthUserRequest::AuthUserRequest: initialised request " << this);
+    debugs(29, 5, HERE << "initialised request " << this);
 }
 
-AuthUserRequest::~AuthUserRequest()
+Auth::UserRequest::~UserRequest()
 {
     assert(RefCountCount()==0);
-    debugs(29, 5, "AuthUserRequest::~AuthUserRequest: freeing request " << this);
+    debugs(29, 5, HERE << "freeing request " << this);
 
     if (user() != NULL) {
         /* release our references to the user credentials */
@@ -137,20 +133,20 @@ AuthUserRequest::~AuthUserRequest()
 }
 
 void
-AuthUserRequest::setDenyMessage(char const *aString)
+Auth::UserRequest::setDenyMessage(char const *aString)
 {
     safe_free(message);
     message = xstrdup(aString);
 }
 
 char const *
-AuthUserRequest::getDenyMessage()
+Auth::UserRequest::getDenyMessage()
 {
     return message;
 }
 
 char const *
-AuthUserRequest::denyMessage(char const * const default_message)
+Auth::UserRequest::denyMessage(char const * const default_message)
 {
     if (this == NULL || getDenyMessage() == NULL) {
         return default_message;
@@ -160,7 +156,7 @@ AuthUserRequest::denyMessage(char const * const default_message)
 }
 
 static void
-authenticateAuthUserRequestSetIp(AuthUserRequest::Pointer auth_user_request, Ip::Address &ipaddr)
+authenticateAuthUserRequestSetIp(Auth::UserRequest::Pointer auth_user_request, Ip::Address &ipaddr)
 {
     Auth::User::Pointer auth_user = auth_user_request->user();
 
@@ -171,7 +167,7 @@ authenticateAuthUserRequestSetIp(AuthUserRequest::Pointer auth_user_request, Ip:
 }
 
 void
-authenticateAuthUserRequestRemoveIp(AuthUserRequest::Pointer auth_user_request, Ip::Address const &ipaddr)
+authenticateAuthUserRequestRemoveIp(Auth::UserRequest::Pointer auth_user_request, Ip::Address const &ipaddr)
 {
     Auth::User::Pointer auth_user = auth_user_request->user();
 
@@ -182,14 +178,14 @@ authenticateAuthUserRequestRemoveIp(AuthUserRequest::Pointer auth_user_request, 
 }
 
 void
-authenticateAuthUserRequestClearIp(AuthUserRequest::Pointer auth_user_request)
+authenticateAuthUserRequestClearIp(Auth::UserRequest::Pointer auth_user_request)
 {
     if (auth_user_request != NULL)
         auth_user_request->user()->clearIp();
 }
 
 int
-authenticateAuthUserRequestIPCount(AuthUserRequest::Pointer auth_user_request)
+authenticateAuthUserRequestIPCount(Auth::UserRequest::Pointer auth_user_request)
 {
     assert(auth_user_request != NULL);
     assert(auth_user_request->user() != NULL);
@@ -201,7 +197,7 @@ authenticateAuthUserRequestIPCount(AuthUserRequest::Pointer auth_user_request)
  * authenticateUserAuthenticated: is this auth_user structure logged in ?
  */
 int
-authenticateUserAuthenticated(AuthUserRequest::Pointer auth_user_request)
+authenticateUserAuthenticated(Auth::UserRequest::Pointer auth_user_request)
 {
     if (auth_user_request == NULL || !auth_user_request->valid())
         return 0;
@@ -210,7 +206,7 @@ authenticateUserAuthenticated(AuthUserRequest::Pointer auth_user_request)
 }
 
 Auth::Direction
-AuthUserRequest::direction()
+Auth::UserRequest::direction()
 {
     if (user() == NULL)
         return Auth::CRED_ERROR; // No credentials. Should this be a CHALLENGE instead?
@@ -222,21 +218,21 @@ AuthUserRequest::direction()
 }
 
 void
-AuthUserRequest::addAuthenticationInfoHeader(HttpReply * rep, int accelerated)
+Auth::UserRequest::addAuthenticationInfoHeader(HttpReply * rep, int accelerated)
 {}
 
 void
-AuthUserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int accelerated)
+Auth::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int accelerated)
 {}
 
 void
-AuthUserRequest::onConnectionClose(ConnStateData *)
+Auth::UserRequest::onConnectionClose(ConnStateData *)
 {}
 
 const char *
-AuthUserRequest::connLastHeader()
+Auth::UserRequest::connLastHeader()
 {
-    fatal("AuthUserRequest::connLastHeader should always be overridden by conn based auth schemes");
+    fatal("Auth::UserRequest::connLastHeader should always be overridden by conn based auth schemes");
     return NULL;
 }
 
@@ -247,15 +243,15 @@ AuthUserRequest::connLastHeader()
  * This is basically a handle approach.
  */
 static void
-authenticateAuthenticateUser(AuthUserRequest::Pointer auth_user_request, HttpRequest * request, ConnStateData * conn, http_hdr_type type)
+authenticateAuthenticateUser(Auth::UserRequest::Pointer auth_user_request, HttpRequest * request, ConnStateData * conn, http_hdr_type type)
 {
     assert(auth_user_request.getRaw() != NULL);
 
     auth_user_request->authenticate(request, conn, type);
 }
 
-static AuthUserRequest::Pointer
-authTryGetUser(AuthUserRequest::Pointer auth_user_request, ConnStateData * conn, HttpRequest * request)
+static Auth::UserRequest::Pointer
+authTryGetUser(Auth::UserRequest::Pointer auth_user_request, ConnStateData * conn, HttpRequest * request)
 {
     if (auth_user_request != NULL)
         return auth_user_request;
@@ -289,7 +285,7 @@ authTryGetUser(AuthUserRequest::Pointer auth_user_request, ConnStateData * conn,
  * Caller is responsible for locking and unlocking their *auth_user_request!
  */
 AuthAclState
-AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, Ip::Address &src_addr)
+Auth::UserRequest::authenticate(Auth::UserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, Ip::Address &src_addr)
 {
     const char *proxy_auth;
     assert(headertype != 0);
@@ -355,7 +351,7 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
             Auth::Config * scheme = Auth::Config::Find(proxy_auth);
 
             if (conn->auth_user_request->user() == NULL || conn->auth_user_request->user()->config != scheme) {
-                debugs(29, 1, "WARNING: Unexpected change of authentication scheme from '" <<
+                debugs(29, DBG_IMPORTANT, "WARNING: Unexpected change of authentication scheme from '" <<
                        conn->auth_user_request->user()->config->type() <<
                        "' to '" << proxy_auth << "' (client " <<
                        src_addr << ")");
@@ -455,14 +451,14 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
 }
 
 AuthAclState
-AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, Ip::Address &src_addr)
+Auth::UserRequest::tryToAuthenticateAndSetAuthUser(Auth::UserRequest::Pointer * aUR, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, Ip::Address &src_addr)
 {
-    /* If we have already been called, return the cached value */
-    AuthUserRequest::Pointer t = authTryGetUser(*auth_user_request, conn, request);
+    // If we have already been called, return the cached value
+    Auth::UserRequest::Pointer t = authTryGetUser(*aUR, conn, request);
 
     if (t != NULL && t->lastReply != AUTH_ACL_CANNOT_AUTHENTICATE && t->lastReply != AUTH_ACL_HELPER) {
-        if (*auth_user_request == NULL)
-            *auth_user_request = t;
+        if (*aUR == NULL)
+            *aUR = t;
 
         if (request->auth_user_request == NULL && t->lastReply == AUTH_AUTHENTICATED) {
             request->auth_user_request = t;
@@ -470,10 +466,11 @@ AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest::Pointer * auth
         return t->lastReply;
     }
 
-    /* ok, call the actual authenticator routine. */
-    AuthAclState result = authenticate(auth_user_request, headertype, request, conn, src_addr);
+    // ok, call the actual authenticator routine.
+    AuthAclState result = authenticate(aUR, headertype, request, conn, src_addr);
 
-    t = authTryGetUser(*auth_user_request, conn, request);
+    // auth process may have changed the UserRequest we are dealing with
+    t = authTryGetUser(*aUR, conn, request);
 
     if (t != NULL && result != AUTH_ACL_CANNOT_AUTHENTICATE && result != AUTH_ACL_HELPER)
         t->lastReply = result;
@@ -482,7 +479,7 @@ AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest::Pointer * auth
 }
 
 void
-AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal)
+Auth::UserRequest::addReplyAuthHeader(HttpReply * rep, Auth::UserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal)
 /* send the auth types we are configured to support (and have compiled in!) */
 {
     http_hdr_type type;
@@ -506,7 +503,7 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer au
         break;
     }
 
-    debugs(29, 9, "authenticateFixHeader: headertype:" << type << " authuser:" << auth_user_request);
+    debugs(29, 9, HERE << "headertype:" << type << " authuser:" << auth_user_request);
 
     if (((rep->sline.status == HTTP_PROXY_AUTHENTICATION_REQUIRED)
             || (rep->sline.status == HTTP_UNAUTHORIZED)) && internal)
@@ -525,7 +522,7 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer au
                 if (scheme->active())
                     scheme->fixHeader(NULL, rep, type, request);
                 else
-                    debugs(29, 4, "authenticateFixHeader: Configured scheme " << scheme->type() << " not Active");
+                    debugs(29, 4, HERE << "Configured scheme " << scheme->type() << " not Active");
             }
         }
 
@@ -542,22 +539,24 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer au
     }
 }
 
+// TODO remove wrapper.
 void
-authenticateFixHeader(HttpReply * rep, AuthUserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal)
+authenticateFixHeader(HttpReply * rep, Auth::UserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal)
 {
-    AuthUserRequest::addReplyAuthHeader(rep, auth_user_request, request, accelerated, internal);
+    Auth::UserRequest::addReplyAuthHeader(rep, auth_user_request, request, accelerated, internal);
 }
 
 /* call the active auth module and allow it to add a trailer to the request */
+// TODO remove wrapper
 void
-authenticateAddTrailer(HttpReply * rep, AuthUserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated)
+authenticateAddTrailer(HttpReply * rep, Auth::UserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated)
 {
     if (auth_user_request != NULL)
         auth_user_request->addAuthenticationInfoTrailer(rep, accelerated);
 }
 
 Auth::Scheme::Pointer
-AuthUserRequest::scheme() const
+Auth::UserRequest::scheme() const
 {
     return Auth::Scheme::Find(user()->config->type());
 }

@@ -33,7 +33,7 @@
  *
  */
 
-#include "squid.h"
+#include "squid-old.h"
 #include "comm.h"
 #include "fde.h"
 #include "ip/Address.h"
@@ -303,7 +303,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
     hello_buf[x] = '\0';
     pid = atol(hello_buf);
-    commSetTimeout(prfd, -1, NULL, NULL);
+    commUnsetFdTimeout(prfd);
     commSetNonBlocking(prfd);
     commSetNonBlocking(pwfd);
     commSetCloseOnExec(prfd);
