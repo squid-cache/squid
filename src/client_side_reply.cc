@@ -135,6 +135,7 @@ void clientReplyContext::setReplyToError(const HttpRequestMethod& method, ErrorS
 
 void clientReplyContext::setReplyToStoreEntry(StoreEntry *entry)
 {
+    entry->lock(); // removeClientStoreReference() unlocks
     sc = storeClientListAdd(entry, this);
 #if USE_DELAY_POOLS
     sc->setDelayId(DelayId::DelayClient(http));
