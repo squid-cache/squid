@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-02-06 18:42+1400\n"
-"PO-Revision-Date: 2011-11-09 23:58+0200\n"
+"PO-Revision-Date: 2012-02-24 15:49+0200\n"
 "Last-Translator: Amos <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: en\n"
@@ -1109,6 +1109,8 @@ msgid ""
 "This authenticator accepts: * MD5 - with optional salt and magic strings * "
 "DES - for passwords 8 characters or less in length"
 msgstr ""
+"This authenticator accepts: * MD5 - with optional salt and magic strings * "
+"DES - for passwords 8 characters or less in length"
 
 #. type: Plain text
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:30
@@ -1142,6 +1144,10 @@ msgid ""
 "desired.  This authenticator will reject login with long passwords when "
 "using DES."
 msgstr ""
+"DES functionality (used by htpasswd by default) silently truncates passwords "
+"to 8 characters.  Allowing login with password values shorter than the one "
+"desired.  This authenticator will reject login with long passwords when "
+"using DES."
 
 #. type: Plain text
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:50
@@ -2366,7 +2372,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:7
 msgid "Restrict users to certain IP addresses, using a text file backend."
-msgstr ""
+msgstr "Restrict users to certain IP addresses, using a text file backend."
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:14
@@ -2384,7 +2390,6 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:22
-#, fuzzy
 msgid ""
 "It works by reading a pair composed by an IP address and an username on "
 "STDIN and matching it against a configuration file."
@@ -2395,7 +2400,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:33
 msgid "Configuration B<file> to load."
-msgstr ""
+msgstr "Configuration B<file> to load."
 
 #. type: Plain text
 #: helpers/external_acl/file_userip/ext_file_userip_acl.8:43
@@ -2477,6 +2482,12 @@ msgid ""
 "is available from the username the LDAP server will be determined through "
 "the command line options."
 msgstr ""
+"B<ext_kerberos_ldap_group_acl> will determine the ldap server name from DNS "
+"SRV and/or A records or a local hosts file (e.g. for the Kerberos Realm "
+"B<SUSE.HOME> it will look for an SRV record B<_ldap._tcp.SUSE.HOME> and an A "
+"record B<SUSE.HOME> or a B<SUSE.HOME> hosts entry). If no domain "
+"information is available from the username the LDAP server will be "
+"determined through the command line options."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:51
@@ -2487,6 +2498,11 @@ msgid ""
 "specified by B<-m> depth. For other LDAP servers a RFC2307bis schema of "
 "groups is assumed."
 msgstr ""
+"B<ext_kerberos_ldap_group_acl> requires as a minimum the B<-g> , B<-t> or "
+"B<-T> option which provides the LDAP group name the user has to belong too. "
+"For Active Directory a recursive group lookup is implemented until a max "
+"depth specified by B<-m> depth. For other LDAP servers a RFC2307bis schema "
+"of groups is assumed."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:64
@@ -2497,6 +2513,11 @@ msgid ""
 "helper will produce either B<OK> or B<ERR> on the following line to show if "
 "the user is a member of the specified group."
 msgstr ""
+"Different group names can be specified for different domains using a "
+"group@domain syntax.  As expected by the B<external_acl_type> construct of "
+"Squid, after specifying a username and group followed by a new line, this "
+"helper will produce either B<OK> or B<ERR> on the following line to show if "
+"the user is a member of the specified group."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:72
@@ -2512,7 +2533,6 @@ msgstr "Write informational messages to stderr."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:78
-#, fuzzy
 #| msgid "Use persistent connections."
 msgid "Use SSL for the LDAP connection."
 msgstr "Use SSL for the LDAP connection."
@@ -2523,6 +2543,8 @@ msgid ""
 "The CA certificate file can be set via the environment variable "
 "TLS_CACERTFILE (default /etc/ssl/certs/cert.pem) (OpenLDAP)."
 msgstr ""
+"The CA certificate file can be set via the environment variable "
+"TLS_CACERTFILE (default /etc/ssl/certs/cert.pem) (OpenLDAP)."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:82
@@ -2530,11 +2552,13 @@ msgid ""
 "The SSL certificate database can be set via the environment variable "
 "SSL_CERTDBPATH (default /etc/certs) (Sun and Mozilla LDAP SDK)."
 msgstr ""
+"The SSL certificate database can be set via the environment variable "
+"SSL_CERTDBPATH (default /etc/certs) (Sun and Mozilla LDAP SDK)."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:85
 msgid "Allow SSL without certificate verification."
-msgstr ""
+msgstr "Allow SSL without certificate verification."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:89
@@ -2542,6 +2566,8 @@ msgid ""
 "Default Kerberos domain to use for usernames which do not contain domain "
 "information (e.g. for users using basic authentication)."
 msgstr ""
+"Default Kerberos domain to use for usernames which do not contain domain "
+"information (e.g. for users using basic authentication)."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:94
@@ -2550,6 +2576,9 @@ msgid ""
 "Name@Kerberos-Realm[:Netbios-Name@Kerberos-Realm] (e.g. for users using NTLM "
 "authentication)."
 msgstr ""
+"A list of Netbios name mappings to Kerberos domain names of the form "
+"Netbios-Name@Kerberos-Realm[:Netbios-Name@Kerberos-Realm] (e.g. for users "
+"using NTLM authentication)."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:97
@@ -2583,7 +2612,7 @@ msgid ""
 "used from a process listing."
 msgstr ""
 "As the password needs to be printed in plain text in your Squid "
-"configuration it is strongly recommended to use a account with minimal "
+"configuration it is strongly recommended to use an account with minimal "
 "associated privileges.  This to limit the damage in case someone could get "
 "hold of a copy of your Squid configuration file or extracts the password "
 "used from a process listing."
@@ -2596,7 +2625,7 @@ msgstr "LDAP server bind path."
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:115
 msgid "LDAP server URL in form ldap[s]://server:port"
-msgstr ""
+msgstr "LDAP server URL in form ldap[s]://server:port"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:119
@@ -2604,6 +2633,8 @@ msgid ""
 "list of ldap servers of the form lserver|lserver@|lserver@Realm[:lserver@|"
 "lserver@Realm]"
 msgstr ""
+"list of ldap servers of the form "
+"lserver|lserver@|lserver@Realm[:lserver@|lserver@Realm]"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:123
@@ -2611,6 +2642,8 @@ msgid ""
 "A list of group name per Kerberos domain of the form Group|Group@|Group@Realm"
 "[:Group@|Group@Realm]"
 msgstr ""
+"A list of group name per Kerberos domain of the form "
+"Group|Group@|Group@Realm[:Group@|Group@Realm]"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:128
@@ -2618,6 +2651,9 @@ msgid ""
 "A list of group name per Kerberos domain of the form Group|Group@|Group@Realm"
 "[:Group@|Group@Realm] where group is in UTF-8 hex format"
 msgstr ""
+"A list of group name per Kerberos domain of the form "
+"Group|Group@|Group@Realm[:Group@|Group@Realm] where group is in UTF-8 hex "
+"format"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:133
@@ -2625,6 +2661,9 @@ msgid ""
 "A list of group name per Kerberos domain of the form Group|Group@|Group@Realm"
 "[:Group@|Group@Realm] where group and domain is in UTF-8 hex format"
 msgstr ""
+"A list of group name per Kerberos domain of the form "
+"Group|Group@|Group@Realm[:Group@|Group@Realm] where group and domain is in "
+"UTF-8 hex format"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:140
@@ -2651,6 +2690,10 @@ msgid ""
 "Kerberos domain. The fqdn must be the proxy name set in IE or firefox. You "
 "can not use an IP address."
 msgstr ""
+"Add the following lines to the squid startup script to point squid to a "
+"keytab file which contains the HTTP/fqdn service principal for the default "
+"Kerberos domain. The fqdn must be the proxy name set in IE or firefox. You "
+"can not use an IP address."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:170
@@ -2660,6 +2703,9 @@ msgid ""
 "point squid to the seperate Kerberos config file by setting the following "
 "environmnet variable in the startup script."
 msgstr ""
+"If you use a different Kerberos domain than the machine itself is in you can "
+"point squid to the seperate Kerberos config file by setting the following "
+"environmnet variable in the startup script."
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:180
@@ -2667,6 +2713,8 @@ msgid ""
 "B<ext_kerberos_ldap_group_acl> will determine automagically the right ldap "
 "server. The following method is used:"
 msgstr ""
+"B<ext_kerberos_ldap_group_acl> will determine automagically the right ldap "
+"server. The following method is used:"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:185
@@ -2677,6 +2725,10 @@ msgid ""
 "   b) Query DNS for A record REALM\n"
 "   c) Use LDAP_URL if given\n"
 msgstr ""
+"1) For user@REALM\n"
+"   a) Query DNS for SRV record _ldap._tcp.REALM\n"
+"   b) Query DNS for A record REALM\n"
+"   c) Use LDAP_URL if given\n"
 
 #. type: Plain text
 #: helpers/external_acl/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:189
