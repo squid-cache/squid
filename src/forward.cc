@@ -830,6 +830,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
         debugs(17, 3, HERE << "repinning " << serverConn);
         request->clientConnectionManager->pinConnection(serverConn,
             request, serverConn->getPeer(), request->flags.auth);
+        request->flags.pinned = 1;
     }
 
 #if USE_SSL
