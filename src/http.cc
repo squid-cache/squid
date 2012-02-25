@@ -1115,24 +1115,10 @@ HttpStateData::readReply(const CommIoCbParams &io)
      * doing so breaks HTTP/0.9 replies beginning with witespace, and in addition
      * the response splitting countermeasures is extremely likely to trigger on this,
      * not allowing connection reuse in the first place.
+     *
+     * 2012-02-10: which RFC? not 2068 or 2616,
+     *     tolerance there is all about whitespace between requests and header tokens.
      */
-#if DONT_DO_THIS
-    if (!flags.headers_parsed && len > 0 && fd_table[serverConnection->fd].uses > 1) {
-        /* Skip whitespace between replies */
-
-        while (len > 0 && xisspace(*buf))
-            memmove(buf, buf + 1, len--);
-
-        if (len == 0) {
-            /* Continue to read... */
-            /* Timeout NOT increased. This whitespace was from previous reply */
-            flags.do_next_read = 1;
-            maybeReadVirginBody();
-            return;
-        }
-    }
-
-#endif
 
     if (len == 0) { // reached EOF?
         eof = 1;
