@@ -271,7 +271,7 @@ static bool buildCertificate(Ssl::X509_Pointer & cert, Ssl::CertificatePropertie
     } else if (!X509_gmtime_adj(X509_get_notAfter(cert.get()), 60*60*24*356*3))
         return false;
 
-    // If the common name is not adapted, also mimic the aliases and subjectAltName
+    // mimic the alias and possibly subjectAltName
     if (properties.mimicCert.get()) {
         unsigned char *alStr;
         int alLen;
@@ -280,8 +280,9 @@ static bool buildCertificate(Ssl::X509_Pointer & cert, Ssl::CertificatePropertie
             X509_alias_set1(cert.get(), alStr, alLen);
         }
 
+        // Mimic subjectAltName unless we used a configured CN: browsers reject
+        // certificates with CN unrelated to subjectAltNames.
         if (!properties.setCommonName) {
-            // Add subjectAltName extension used to support multiple hostnames with one certificate
             int pos=X509_get_ext_by_NID (properties.mimicCert.get(), OBJ_sn2nid("subjectAltName"), -1);
             X509_EXTENSION *ext=X509_get_ext(properties.mimicCert.get(), pos); 
             if (ext)
