@@ -363,6 +363,7 @@ StoreEntry::mayStartSwapOut()
 
     // must be checked in the caller
     assert(!EBIT_TEST(flags, ENTRY_ABORTED));
+    assert(!swappingOut());
 
     if (!Config.cacheSwap.n_configured)
         return false;
@@ -382,11 +383,11 @@ StoreEntry::mayStartSwapOut()
         return true;
     }
 
-    // if we are swapping out already, do not repeat same checks
-    if (swap_status != SWAPOUT_NONE) {
-        debugs(20, 3,  HERE << " already started");
-        decision = MemObject::SwapOut::swPossible;
-        return true;
+    // if we swapped out already, do not start over
+    if (swap_status == SWAPOUT_DONE) {
+        debugs(20, 3,  HERE << "already did");
+        decision = MemObject::SwapOut::swImpossible;
+        return false;
     }
 
     if (!checkCachable()) {
