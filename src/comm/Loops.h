@@ -3,6 +3,9 @@
 
 #include "comm_err_t.h"
 
+// for PF
+#include "typedefs.h"
+
 /* Comm layer select loops API.
  *
  * These API functions must be implemented by all FD IO loops used by Squid.

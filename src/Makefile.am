@@ -173,7 +173,9 @@ endif
 if USE_AIOPS_WIN32
 AIOPS_SOURCE = DiskIO/DiskThreads/aiops_win32.cc
 else
-AIOPS_SOURCE = DiskIO/DiskThreads/aiops.cc
+AIOPS_SOURCE = DiskIO/DiskThreads/aiops.cc \
+	DiskIO/DiskThreads/CommIO.cc \
+	DiskIO/DiskThreads/CommIO.h
 endif
 
 EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a \
@@ -284,7 +286,6 @@ squid_SOURCES = \
 	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
-	CommIO.h \
 	CompletionDispatcher.cc \
 	CompletionDispatcher.h \
 	CommRead.h \
@@ -518,9 +519,7 @@ EXTRA_squid_SOURCES = \
 	$(SNMP_ALL_SOURCE) \
 	$(UNLINKDSOURCE) \
 	$(WIN32_ALL_SOURCE) \
-	$(LOADABLE_MODULES_SOURCES) \
-	DiskIO/DiskThreads/aiops.cc \
-	DiskIO/DiskThreads/aiops_win32.cc
+	$(LOADABLE_MODULES_SOURCES)
 
 noinst_HEADERS = \
 	client_side_request.cci \
@@ -830,6 +829,12 @@ libDiskThreads_a_SOURCES = \
 		DiskIO/DiskThreads/DiskThreadsDiskIOModule.h \
 		DiskIO/DiskThreads/DiskThreadsIOStrategy.cc \
 		DiskIO/DiskThreads/DiskThreadsIOStrategy.h
+
+EXTRA_libDiskThreads_a_SOURCES = \
+	DiskIO/DiskThreads/aiops.cc \
+	DiskIO/DiskThreads/aiops_win32.cc \
+	DiskIO/DiskThreads/CommIO.cc \
+	DiskIO/DiskThreads/CommIO.h
 
 DiskIO_DiskDaemon_diskd_SOURCES = DiskIO/DiskDaemon/diskd.cc
 nodist_DiskIO_DiskDaemon_diskd_SOURCES = time.cc
@@ -1438,8 +1443,6 @@ tests_testCacheManager_DEPENDENCIES = \
 	$(REPL_OBJS) \
 	$(SQUID_CPPUNIT_LA)
 
-#	tests/stub_CommIO.cc \
-#	tests/stub_comm.cc
 tests_testDiskIO_SOURCES = \
 	CacheDigest.cc \
 	cbdata.cc \
@@ -2963,7 +2966,6 @@ tests_testNull_SOURCES = \
 	tests/testMain.cc \
 	tests/testNull.h \
 	tests/stub_internal.cc \
-	tests/stub_CommIO.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	fd.cc \
