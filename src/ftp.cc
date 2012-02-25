@@ -2767,11 +2767,13 @@ static void
 ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
 {
     /// Close old data channels, if any. We may open a new one below.
-    if ((ftpState->data.conn->flags & COMM_REUSEADDR))
-        // NP: in fact it points to the control channel. just clear it.
-        ftpState->data.clear();
-    else
-        ftpState->data.close();
+    if (ftpState->data.conn != NULL) {
+        if ((ftpState->data.conn->flags & COMM_REUSEADDR))
+            // NP: in fact it points to the control channel. just clear it.
+            ftpState->data.clear();
+        else
+            ftpState->data.close();
+    }
     safe_free(ftpState->data.host);
 
     /*
@@ -3907,10 +3909,9 @@ FtpChannel::close()
     // channels with active listeners will be closed when the listener handler dies.
     if (Comm::IsConnOpen(conn)) {
         comm_remove_close_handler(conn->fd, closer);
-        closer = NULL;
         conn->close(); // we do not expect to be called back
     }
-    conn = NULL;
+    clear();
 }
 
 void
