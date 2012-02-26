@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-02-06 18:41+1300\n"
-"PO-Revision-Date: 2012-02-26 01:33+0200\n"
+"PO-Revision-Date: 2012-02-26 10:02+0200\n"
 "Last-Translator: Gergely <mail.gery@gmail.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: hu\n"
@@ -97,14 +97,14 @@ msgstr "<a href=\"../\">Szülőkönyvtár</a> (<a href=\"/\">Gyökérkönyvtár<
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
-msgstr "<b>Érvénytelen kérés</b><br>Hiba történt a kérés feldolgozása közben:"
+msgstr "<b>Érvénytelen kérés</b> - hiba történt a kérés feldolgozása közben:"
 
 # had to use a line break as I couldn't insert the text in bold into the other part of the sentence
 #: templates/ERR_INVALID_RESP+html.body.div.p:20
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
-msgstr "<b>Érvénytelen válasz</b><br>Hiba történt a kérés feldolgozása közben:"
+msgstr "<b>Érvénytelen válasz</b> - hiba történt a kérés feldolgozása közben:"
 
 #: templates/ERR_READ_TIMEOUT+html.body.div.p:28
 msgid ""
