@@ -43,15 +43,12 @@
 void
 Log::Format::SquidReferer(AccessLogEntry *al, Logfile *logfile)
 {
-    // do not log unless there is something to be displayed
-    if (!al || !al->request)
-        return;
+    const char *referer = NULL;
+    if (al && al->request)
+        referer = al->request->header.getStr(HDR_REFERER);
 
-    const char *referer = al->request->header.getStr(HDR_REFERER);
-
-    // do not log unless there is something to be displayed
     if (!referer || *referer == '\0')
-        return;
+        referer = "-";
 
     char clientip[MAX_IPSTRLEN];
     al->getLogClientIp(clientip, MAX_IPSTRLEN);
