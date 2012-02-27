@@ -43,15 +43,13 @@
 void
 Log::Format::SquidUserAgent(AccessLogEntry * al, Logfile * logfile)
 {
-    // do not log unless there is something to be displayed.
-    if (!al || !al->request)
-        return;
+    const char *agent = NULL;
 
-    const char *agent = al->request->header.getStr(HDR_USER_AGENT);
+    if (al && al->request)
+        agent = al->request->header.getStr(HDR_USER_AGENT);
 
-    // do not log unless there is something to be displayed.
     if (!agent || *agent == '\0')
-        return;
+        agent = "-";
 
     char clientip[MAX_IPSTRLEN];
     al->getLogClientIp(clientip, MAX_IPSTRLEN);
