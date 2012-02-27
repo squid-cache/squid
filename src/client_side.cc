@@ -3895,7 +3895,14 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
         debugs(33, 5, HERE << "bumped HTTPS server: " << sslConnectHostOrIp);
     } else {
         debugs(33, 5, HERE << "Error while bumping: " << sslConnectHostOrIp);
-        if (bumpServerCert.get())
+        Ip::Address intendedDest;
+        intendedDest = sslConnectHostOrIp.termedBuf();
+        // Squid serves its own error page and closes, so we want
+        // a CN that causes no additional browser errors. Possible
+        // only when bumping CONNECT which uses a host name.
+        if (intendedDest.IsAnyAddr())
+            sslCommonName = sslConnectHostOrIp;
+        else if (bumpServerCert.get())
             sslCommonName = Ssl::CommonHostName(bumpServerCert.get());
     }
 
