@@ -48,11 +48,17 @@ Log::Format::HttpdCombined(AccessLogEntry * al, Logfile * logfile)
 
     const char *user_auth = ::Format::QuoteUrlEncodeUsername(al->cache.authuser);
 
-    const char *referer = al->request->header.getStr(HDR_REFERER);
+    const char *referer = NULL;
+    const char *agent = NULL;
+
+    if (al && al->request) {
+        referer = al->request->header.getStr(HDR_REFERER);
+        agent = al->request->header.getStr(HDR_USER_AGENT);
+    }
+
     if (!referer || *referer == '\0')
         referer = "-";
 
-    const char *agent = al->request->header.getStr(HDR_USER_AGENT);
     if (!agent || *agent == '\0')
         agent = "-";
 
