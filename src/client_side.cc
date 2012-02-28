@@ -3233,7 +3233,7 @@ httpAccept(const CommAcceptCbParams &params)
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
                                       TimeoutDialer, connState, ConnStateData::requestTimeout);
-    commSetConnTimeout(params.conn, Config.Timeout.read, timeoutCall);
+    commSetConnTimeout(params.conn, Config.Timeout.request, timeoutCall);
 
     connState->readSomeData();
 
