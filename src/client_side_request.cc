@@ -1333,9 +1333,6 @@ ClientRequestContext::sslBumpAccessCheckDone(const allow_t &answer)
     if (!httpStateIsValid())
         return;
 
-    if (maybeSendAuthChallenge(answer))
-        return;
-
     http->sslBumpNeeded(answer == ACCESS_ALLOWED);
     http->doCallouts();
 }
