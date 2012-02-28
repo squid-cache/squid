@@ -47,10 +47,18 @@
 
 #define HELPER_MAX_ARGS 64
 
-/* size of helper read buffer (maximum?). no reason given for this size */
-/* though it has been seen to be too short for some requests */
-/* it is dynamic, so increasng should not have side effects */
-#define BUF_8KB	8192
+
+/** Initial Squid input buffer size. Helper responses may exceed this, and
+ * Squid will grow the input buffer as needed, up to ReadBufMaxSize.
+ */
+const size_t ReadBufMinSize(4*1024);
+
+/** Maximum safe size of a helper-to-Squid response message plus one.
+ * Squid will warn and close the stream if a helper sends a too-big response.
+ * ssl_crtd helper is known to produce responses of at least 10KB in size.
+ * Some undocumented helpers are known to produce responses exceeding 8KB.
+ */
+const size_t ReadBufMaxSize(32*1024);
 
 static IOCB helperHandleRead;
 static IOCB helperStatefulHandleRead;
@@ -212,7 +220,7 @@ helperOpenServers(helper * hlp)
         srv->readPipe->fd = rfd;
         srv->writePipe = new Comm::Connection;
         srv->writePipe->fd = wfd;
-        srv->rbuf = (char *)memAllocBuf(BUF_8KB, &srv->rbuf_sz);
+        srv->rbuf = (char *)memAllocBuf(ReadBufMinSize, &srv->rbuf_sz);
         srv->wqueue = new MemBuf;
         srv->roffset = 0;
         srv->requests = (helper_request **)xcalloc(hlp->childs.concurrency ? hlp->childs.concurrency : 1, sizeof(*srv->requests));
@@ -331,7 +339,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
         srv->readPipe->fd = rfd;
         srv->writePipe = new Comm::Connection;
         srv->writePipe->fd = wfd;
-        srv->rbuf = (char *)memAllocBuf(BUF_8KB, &srv->rbuf_sz);
+        srv->rbuf = (char *)memAllocBuf(ReadBufMinSize, &srv->rbuf_sz);
         srv->roffset = 0;
         srv->parent = cbdataReference(hlp);
 
@@ -904,9 +912,30 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
     }
 
     if (Comm::IsConnOpen(srv->readPipe)) {
+        int spaceSize = srv->rbuf_sz - srv->roffset - 1;
+        assert(spaceSize >= 0);
+
+        // grow the input buffer if needed and possible
+        if (!spaceSize && srv->rbuf_sz + 4096 <= ReadBufMaxSize) {
+            srv->rbuf = (char *)memReallocBuf(srv->rbuf, srv->rbuf_sz + 4096, &srv->rbuf_sz);
+            debugs(84, 3, HERE << "Grew read buffer to " << srv->rbuf_sz);
+            spaceSize = srv->rbuf_sz - srv->roffset - 1;
+            assert(spaceSize >= 0);
+        }
+
+        // quit reading if there is no space left
+        if (!spaceSize) {
+            debugs(84, DBG_IMPORTANT, "ERROR: Disconnecting from a " <<
+                   "helper that overflowed " << srv->rbuf_sz << "-byte " <<
+                   "Squid input buffer: " << hlp->id_name << " #" <<
+                   (srv->index + 1));
+            srv->closePipesSafely();
+            return;
+        }
+
         AsyncCall::Pointer call = commCbCall(5,4, "helperHandleRead",
                                              CommIoCbPtrFun(helperHandleRead, srv));
-        comm_read(srv->readPipe, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1, call);
+        comm_read(srv->readPipe, srv->rbuf + srv->roffset, spaceSize, call);
     }
 }
 
@@ -984,9 +1013,30 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
     }
 
     if (Comm::IsConnOpen(srv->readPipe)) {
+        int spaceSize = srv->rbuf_sz - srv->roffset - 1;
+        assert(spaceSize >= 0);
+
+        // grow the input buffer if needed and possible
+        if (!spaceSize && srv->rbuf_sz + 4096 <= ReadBufMaxSize) {
+            srv->rbuf = (char *)memReallocBuf(srv->rbuf, srv->rbuf_sz + 4096, &srv->rbuf_sz);
+            debugs(84, 3, HERE << "Grew read buffer to " << srv->rbuf_sz);
+            spaceSize = srv->rbuf_sz - srv->roffset - 1;
+            assert(spaceSize >= 0);
+        }
+
+        // quit reading if there is no space left
+        if (!spaceSize) {
+            debugs(84, DBG_IMPORTANT, "ERROR: Disconnecting from a " <<
+                   "helper that overflowed " << srv->rbuf_sz << "-byte " <<
+                   "Squid input buffer: " << hlp->id_name << " #" <<
+                   (srv->index + 1));
+            srv->closePipesSafely();
+            return;
+        }
+
         AsyncCall::Pointer call = commCbCall(5,4, "helperStatefulHandleRead",
                                              CommIoCbPtrFun(helperStatefulHandleRead, srv));
-        comm_read(srv->readPipe, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1, call);
+        comm_read(srv->readPipe, srv->rbuf + srv->roffset, spaceSize, call);
     }
 }
 
