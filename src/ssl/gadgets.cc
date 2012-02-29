@@ -401,6 +401,10 @@ static bool createSerial(Ssl::BIGNUM_Pointer &serial, Ssl::CertificateProperties
     Ssl::X509_Pointer fakeCert;
 
     serial.reset(x509Pubkeydigest(properties.signWithX509));
+    if (!serial.get()) {
+        serial.reset(BN_new());
+        BN_is_zero(serial.get());
+    }
 
     if (!generateFakeSslCertificate(fakeCert, fakePkey, properties, serial))
         return false;

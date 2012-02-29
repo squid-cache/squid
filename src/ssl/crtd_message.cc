@@ -213,8 +213,7 @@ bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, 
     else
         certProperties.signAlgorithm = Ssl::algSignTrusted;
 
-    if (certProperties.signAlgorithm != Ssl::algSignSelf && 
-        !Ssl::readCertAndPrivateKeyFromMemory(certProperties.signWithX509, certProperties.signWithPkey, certs_part.c_str())) {
+    if (!Ssl::readCertAndPrivateKeyFromMemory(certProperties.signWithX509, certProperties.signWithPkey, certs_part.c_str())) {
         error = "Broken signing certificate!";
         return false;
     }
