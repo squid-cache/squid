@@ -2510,6 +2510,8 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
                 clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
                 assert (repContext);
 
+                // Fill the server ip address and server hostname for use with ErrorState
+                request->hier.note(pinning.serverConnection, request->GetHost());
                 // Create an error object and fill it
                 ErrorState *err = new ErrorState(ERR_SECURE_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
 
