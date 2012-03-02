@@ -1340,8 +1340,13 @@ parse_address(Ip::Address *addr)
     } else if ( (!strcmp(token,"no_addr")) || (!strcmp(token,"full_mask")) ) {
         addr->SetNoAddr();
         (void) 0;
-    } else
-        *addr = token;
+    } else if ( (*addr = token) ) // try parse numeric/IPA
+        (void) 0;
+    } else if ( addr->GetHostByName(token) ) // dont use ipcache
+        (void) 0;
+    } else {
+        self_destruct();
+    }
 }
 
 static void
