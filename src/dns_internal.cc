@@ -1710,12 +1710,12 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
     if (addr.IsIPv6()) {
         struct in6_addr addr6;
         addr.GetInAddr(addr6);
-        q->sz = rfc3596BuildPTRQuery6(addr6, q->buf, sizeof(q->buf), 0, &q->query, Config.dns.packet_max);
+        q->sz = rfc3596BuildPTRQuery6(addr6, q->buf, sizeof(q->buf), q->query_id, &q->query, Config.dns.packet_max);
     } else {
         struct in_addr addr4;
         addr.GetInAddr(addr4);
         // see EDNS notes at top of file why this sends 0
-        q->sz = rfc3596BuildPTRQuery4(addr4, q->buf, sizeof(q->buf), 0, &q->query, 0);
+        q->sz = rfc3596BuildPTRQuery4(addr4, q->buf, sizeof(q->buf), q->query_id, &q->query, 0);
     }
 
     if (q->sz < 0) {
