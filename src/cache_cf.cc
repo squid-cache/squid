@@ -1123,14 +1123,14 @@ parse_address(IpAddress *addr)
         return;
     }
 
-    if (!strcmp(token,"any_addr")) {
+    if (!strcmp(token,"any_addr"))
         addr->SetAnyAddr();
-        (void) 0;
-    } else if ( (!strcmp(token,"no_addr")) || (!strcmp(token,"full_mask")) ) {
+    else if ( (!strcmp(token,"no_addr")) || (!strcmp(token,"full_mask")) )
         addr->SetNoAddr();
+    else if ( (*addr = token) ) // try parse numeric/IPA
         (void) 0;
-    } else
-        *addr = token;
+    else
+        addr->GetHostByName(token); // dont use ipcache
 }
 
 static void
