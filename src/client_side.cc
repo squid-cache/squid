@@ -107,6 +107,7 @@
 #include "errorpage.h"
 #include "eui/Config.h"
 #include "fde.h"
+#include "forward.h"
 #include "HttpHdrContRange.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -124,7 +125,7 @@
 #if USE_SSL
 #include "ssl/context_storage.h"
 #include "ssl/helper.h"
-#include "ssl/ServerPeeker.h"
+#include "ssl/ServerBump.h"
 #include "ssl/support.h"
 #include "ssl/gadgets.h"
 #endif
@@ -813,11 +814,8 @@ ConnStateData::~ConnStateData()
     if (bodyPipe != NULL)
         stopProducingFor(bodyPipe, false);
    
-#if USE_SSL 
-    if (bumpErrorEntry)
-        bumpErrorEntry->unlock();
-
-    cbdataReferenceDone(bumpSslErrorNoList);
+#if USE_SSL
+    delete sslServerBump;
 #endif
 }
 
@@ -2469,11 +2467,12 @@ ConnStateData::quitAfterError(HttpRequest *request)
 bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 {
     ClientHttpRequest *http = context->http;
-    StoreEntry *e = bumpServerFirstErrorEntry();
-    if (!e)
+
+    if (!sslServerBump)
         return false;
 
-    if (!e->isEmpty()) {
+    assert(sslServerBump->entry);
+    if (!sslServerBump->entry->isEmpty()) {
         quitAfterError(http->request);
 
         //Failed? Here we should get the error from conn and send it to client
@@ -2483,16 +2482,16 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         debugs(33, 5, "Connection first has failed for " << http->uri << ". Respond with an error");
-        repContext->setReplyToStoreEntry(e);
+        repContext->setReplyToStoreEntry(sslServerBump->entry);
         context->pullData();
         return true;
     }
 
     // We are in ssl-bump first mode. We have not the server connect name when
     // we connected to server so we have to check certificates subject with our server name
-    if (X509 *server_cert = getBumpServerCert()) {
+    if (sslServerBump && sslServerBump->serverCert.get()) {
         HttpRequest *request = http->request;
-        if (!Ssl::checkX509ServerValidity(server_cert, request->GetHost())) {
+        if (!Ssl::checkX509ServerValidity(sslServerBump->serverCert.get(), request->GetHost())) {
             debugs(33, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate does not match domainname " << request->GetHost());
 
             ACLFilledChecklist check(Config.ssl_client.cert_error, request, dash_str);
@@ -2511,7 +2510,8 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
                 assert (repContext);
 
                 // Fill the server ip address and server hostname for use with ErrorState
-                request->hier.note(pinning.serverConnection, request->GetHost());
+                HttpRequest::Pointer const & peekerRequest = sslServerBump->request;
+                request->hier.note(peekerRequest->hier.tcpServer, request->GetHost());
                 // Create an error object and fill it
                 ErrorState *err = new ErrorState(ERR_SECURE_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
 
@@ -2521,7 +2521,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 #else
                 err->xerrno = EACCES;
 #endif
-                Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail( SQUID_X509_V_ERR_DOMAIN_MISMATCH, server_cert, NULL);
+                Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail( SQUID_X509_V_ERR_DOMAIN_MISMATCH, sslServerBump->serverCert.get(), NULL);
                 err->detail = errDetail;
                 repContext->setReplyToError(request->method, err);
                 assert(context->http->out.offset == 0);
@@ -3677,13 +3677,14 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
     certProperties.commonName =  sslCommonName.defined() ? sslCommonName.termedBuf() : sslConnectHostOrIp.termedBuf();
 
     // fake certificate adaptation requires bump-server-first mode
-    if (!bumpServerFirstErrorEntry())
+    if (!sslServerBump)
         return;
 
     // In the case of error while connecting to secure server, use a fake trusted certificate,
     // with no mimicked fields and no adaptation algorithms
-    if (bumpServerFirstErrorEntry()->isEmpty()) {
-        if (X509 *mimicCert = bumpServerCert.get())
+    assert(sslServerBump->entry);
+    if (sslServerBump->entry->isEmpty()) {
+        if (X509 *mimicCert = sslServerBump->serverCert.get())
             certProperties.mimicCert.resetAndLock(mimicCert);
 
         HttpRequest *fakeRequest =  new HttpRequest();
@@ -3696,7 +3697,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
         checklist.conn(this);
         checklist.src_addr = clientConnection->remote;
         checklist.my_addr = clientConnection->local;
-        checklist.sslErrorList = cbdataReference(bumpSslErrorNoList);
+        checklist.sslErrorList = cbdataReference(sslServerBump->bumpSslErrorNoList);
 
         for (sslproxy_cert_adapt *ca = Config.ssl_client.cert_adapt; ca != NULL; ca = ca->next) {
             if (ca->aclList && checklist.fastCheck(ca->aclList) == ACCESS_ALLOWED) {
@@ -3729,7 +3730,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
                 break;
             }
         }
-    } else {// if (!bumpServerFirstErrorEntry()->isEmpty())
+    } else {// if (!sslServerBump->entry->isEmpty())
         // Use trusted certificate for a Squid-generated error
         // or the user would have to add a security exception
         // just to see the error page. We will close the connection
@@ -3864,13 +3865,17 @@ ConnStateData::switchToHttps(const char *host, const int port)
 
     const bool alwaysBumpServerFirst = true;
     if (alwaysBumpServerFirst) {
-        Must(!httpsPeeker.set());
-        httpsPeeker = new Ssl::ServerPeeker(this, sslConnectHostOrIp.termedBuf(), port);
-        bumpErrorEntry = httpsPeeker->storeEntry();
-        Must(bumpErrorEntry);
-        bumpErrorEntry->lock();
+        Must(!sslServerBump);
+        HttpRequest *fakeRequest = new HttpRequest;
+        fakeRequest->flags.sslPeek = 1;
+        fakeRequest->SetHost(sslConnectHostOrIp.termedBuf());
+        fakeRequest->port = port;
+        fakeRequest->protocol = AnyP::PROTO_HTTPS;
+        fakeRequest->clientConnectionManager = this;
+        sslServerBump = new Ssl::ServerBump(fakeRequest);
+
         // will call httpsPeeked() with certificate and connection, eventually
-        AsyncJob::Start(httpsPeeker.raw());
+        FwdState::fwdStart(clientConnection, sslServerBump->entry, sslServerBump->request);
         return;
     }
 
@@ -3881,7 +3886,7 @@ ConnStateData::switchToHttps(const char *host, const int port)
 void
 ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
 {
-    Must(httpsPeeker.set());
+    Must(sslServerBump != NULL);
 
     if (Comm::IsConnOpen(serverConnection)) {
         SSL *ssl = fd_table[serverConnection->fd].ssl;
@@ -3904,13 +3909,10 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
         // only when bumping CONNECT which uses a host name.
         if (intendedDest.IsAnyAddr())
             sslCommonName = sslConnectHostOrIp;
-        else if (bumpServerCert.get())
-            sslCommonName = Ssl::CommonHostName(bumpServerCert.get());
+        else if (sslServerBump->serverCert.get())
+            sslCommonName = Ssl::CommonHostName(sslServerBump->serverCert.get());
     }
 
-    if (httpsPeeker.valid())
-        httpsPeeker->noteHttpsPeeked(serverConnection);
-    httpsPeeker.clear();
     getSslContextStart();
 }
 
@@ -4206,6 +4208,7 @@ ConnStateData::ConnStateData() :
         AsyncJob("ConnStateData"),
 #if USE_SSL
         switchedToHttps_(false),
+        sslServerBump(NULL),
 #endif
         stoppedSending_(NULL),
         stoppedReceiving_(NULL)
