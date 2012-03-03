@@ -68,6 +68,7 @@
 #include "protos.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 #include "Store.h"
 
 
@@ -1095,8 +1096,8 @@ HttpStateData::readReply(const CommIoCbParams &io)
         delayId.bytesIn(len);
 #endif
 
-        kb_incr(&statCounter.server.all.kbytes_in, len);
-        kb_incr(&statCounter.server.http.kbytes_in, len);
+        kb_incr(&(statCounter.server.all.kbytes_in), len);
+        kb_incr(&(statCounter.server.http.kbytes_in), len);
         IOStats.Http.reads++;
 
         for (clen = len - 1, bin = 0; clen; bin++)
@@ -1451,8 +1452,8 @@ HttpStateData::wroteLast(const CommIoCbParams &io)
 
     if (io.size > 0) {
         fd_bytes(io.fd, io.size, FD_WRITE);
-        kb_incr(&statCounter.server.all.kbytes_out, io.size);
-        kb_incr(&statCounter.server.http.kbytes_out, io.size);
+        kb_incr(&(statCounter.server.all.kbytes_out), io.size);
+        kb_incr(&(statCounter.server.http.kbytes_out), io.size);
     }
 
     if (io.flag == COMM_ERR_CLOSING)

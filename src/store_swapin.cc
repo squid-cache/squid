@@ -34,6 +34,7 @@
  */
 
 #include "squid-old.h"
+#include "StatCounters.h"
 #include "StoreClient.h"
 #include "Store.h"
 
@@ -84,7 +85,7 @@ storeSwapInFileClosed(void *data, int errflag, StoreIOState::Pointer self)
         sc->callback(0, errflag ? true : false);
     }
 
-    statCounter.swap.ins++;
+    ++statCounter.swap.ins;
 }
 
 static void

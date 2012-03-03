@@ -44,6 +44,7 @@
 #include "ip/Intercept.h"
 #include "protos.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 
 namespace Comm
 {
@@ -296,7 +297,7 @@ comm_err_t
 Comm::TcpAcceptor::oldAccept(Comm::ConnectionPointer &details)
 {
     PROF_start(comm_accept);
-    statCounter.syscalls.sock.accepts++;
+    ++statCounter.syscalls.sock.accepts;
     int sock;
     struct addrinfo *gai = NULL;
     details->local.InitAddrInfo(gai);

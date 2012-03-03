@@ -358,6 +358,7 @@ squid_SOURCES = \
 	HttpHdrScTarget.h \
 	HttpHdrContRange.cc \
 	HttpHdrContRange.h \
+	HttpHeaderStat.h \
 	HttpHeader.cc \
 	HttpHeader.h \
 	HttpHeaderMask.h \
@@ -429,6 +430,9 @@ squid_SOURCES = \
 	SquidMath.cc \
 	SquidNew.cc \
 	stat.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	String.cc \
 	stmem.cc \
@@ -1016,6 +1020,7 @@ check_PROGRAMS+=\
 	tests/testString \
 	tests/testURL \
 	tests/testConfigParser \
+	tests/testStatHist \
 	$(STORE_TESTS)
 
 ## NP: required to run the above list. check_PROGRAMS only builds the binaries...
@@ -1086,6 +1091,9 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
 	tests/stub_HelperChildConfig.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	tests/stub_StatHist.cc \
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
@@ -1112,27 +1120,7 @@ tests_testHttpReply_LDADD=\
 	$(XTRA_LIBS)
 tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
 
-## Tests for the ACLMaxUserIP class
-## acl needs wordlist. wordlist needs MemBug
-## MemBuf needs mem, MemBuf needs event,
-## event needs cbdata.
-## ACLMaxUserUP needs $(AUTH_LIBS)
-## ACLMaxUserIP needs ACLChecklist
-## AuthUser request needs HttpHeader, which brings in 
-##	ETag.cc \
-##	HttpHeader.cc \
-##	HttpHeaderTools.cc \
-##	HttpHdrContRange.cc \
-##	HttpHdrCc.cc \
-##	HttpHdrRange.cc \
-##	HttpHdrSc.cc \
-##	HttpHdrScTarget.cc \
-##	Packer.cc \
-##	StatHist.cc \
-##	String.cc \
-##
-##	disk.cc \
-##	fs/libfs.la \
+
 tests_testACLMaxUserIP_SOURCES= \
 	cbdata.cc \
 	ClientInfo.h \
@@ -1163,7 +1151,9 @@ tests_testACLMaxUserIP_SOURCES= \
 	Packer.cc \
 	Parsing.cc \
 	SquidMath.cc \
-	StatHist.cc \
+	StatCounters.h \
+	StatHist.h \
+	tests/stub_StatHist.cc \
 	stmem.cc \
 	String.cc \
 	store_dir.cc \
@@ -1362,7 +1352,10 @@ tests_testCacheManager_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
-	StatHist.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
+	tests/stub_StatHist.cc \
 	stmem.cc \
 	store.cc \
 	store_client.cc \
@@ -1483,7 +1476,10 @@ tests_testDiskIO_SOURCES = \
 	Parsing.cc \
 	refresh.cc \
 	RemovalPolicy.cc \
-	StatHist.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
+	tests/stub_StatHist.cc \
 	stmem.cc \
 	StoreFileSystem.cc \
 	StoreIOState.cc \
@@ -1688,6 +1684,9 @@ tests_testEvent_SOURCES = \
 	SquidMath.cc \
 	SquidMath.h \
 	stat.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
 	store.cc \
@@ -1879,6 +1878,9 @@ tests_testEventLoop_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
 	store.cc \
@@ -2066,6 +2068,9 @@ tests_test_http_range_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
 	store.cc \
@@ -2291,6 +2296,9 @@ tests_testHttpRequest_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
 	store.cc \
@@ -2406,6 +2414,9 @@ tests_testStore_SOURCES= \
 	Parsing.cc \
 	RemovalPolicy.cc \
 	refresh.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	stmem.cc \
 	store.cc \
@@ -2638,6 +2649,9 @@ tests_testUfs_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
 	StatHist.cc \
 	HttpHdrRange.cc \
 	ETag.cc \
@@ -2731,7 +2745,10 @@ tests_testRock_SOURCES = \
 	Packer.cc \
 	Parsing.cc \
 	RemovalPolicy.cc \
-	StatHist.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
+	tests/stub_StatHist.cc \
 	stmem.cc \
 	store.cc \
 	StoreFileSystem.cc \
@@ -2899,9 +2916,10 @@ tests_testCoss_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
-	StatHist.cc \
-	HttpHdrRange.cc \
-	ETag.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
+	tests/stub_StatHist.cc \
 	tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_access_log.cc \
@@ -3033,9 +3051,10 @@ tests_testNull_SOURCES = \
 	HttpHdrSc.cc \
 	HttpHdrScTarget.cc \
 	url.cc \
-	StatHist.cc \
-	HttpHdrRange.cc \
-	ETag.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
+	tests/stub_StatHist.cc \
 	tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_access_log.cc \
@@ -3184,7 +3203,10 @@ tests_testURL_SOURCES = \
 	SquidMath.h \
 	SquidMath.cc \
 	stat.cc \
-	StatHist.cc \
+	StatCounters.h \
+	StatCounters.cc \
+	StatHist.h \
+	tests/stub_StatHist.cc \
 	stmem.cc \
 	store.cc \
 	store_client.cc \
@@ -3304,6 +3326,41 @@ tests_testConfigParser_LDADD = \
 tests_testConfigParser_LDFLAGS = $(LIBADD_DL)
 tests_testConfigParser_DEPENDENCIES = \
 	$(SQUID_CPPUNIT_LA)
+	
+tests_testStatHist_SOURCES = \
+	cbdata.cc \
+	MemBuf.cc \
+	StatHist.cc \
+	StatHist.h \
+	String.cc \
+	tests/stub_cache_manager.cc \
+	tests/stub_comm.cc \
+	tests/stub_debug.cc \
+	tests/stub_DelayId.cc \
+	tests/stub_HelperChildConfig.cc \
+	tests/stub_mem.cc \
+	tests/stub_MemObject.cc \
+	tests/stub_mime.cc \
+	tests/stub_pconn.cc \
+	tests/stub_stmem.cc \
+	tests/stub_store.cc \
+	tests/stub_store_stats.cc \
+	tests/stub_tools.cc \
+	tests/testMain.cc \
+	tests/testStatHist.cc \
+	tests/testStatHist.h \
+	time.cc
+nodist_tests_testStatHist_SOURCES = \
+	$(TESTSOURCES)
+tests_testStatHist_LDFLAGS = $(LIBADD_DL)
+tests_testStatHist_LDADD = \
+	base/libbase.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(SQUID_CPPUNIT_LIBS) \
+	$(SQUID_CPPUNIT_LA) \
+	$(COMPAT_LIB)
+tests_testStatHist_DEPENDENCIES = $(SQUID_CPPUNIT_LA)
+
 
 TESTS += testHeaders
 

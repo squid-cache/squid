@@ -59,6 +59,8 @@
 #include "fde.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
+#include "StatHist.h"
 #include "Store.h"
 
 #if HAVE_SYS_DEVPOLL_H
@@ -172,10 +174,9 @@ comm_update_fd(int fd, int events)
 
 static void commIncomingStats(StoreEntry *sentry)
 {
-    StatCounters *f = &statCounter;
     storeAppendPrintf(sentry, "Total number of devpoll loops: %ld\n", statCounter.select_loops);
     storeAppendPrintf(sentry, "Histogram of returned filedescriptors\n");
-    statHistDump(&f->select_fds_hist, sentry, statHistIntDumper);
+    statCounter.select_fds_hist.dump(sentry, statHistIntDumper);
 }
 
 
@@ -377,7 +378,7 @@ Comm::DoSelect(int msec)
     PROF_stop(comm_check_incoming);
     getCurrentTime();
 
-    statHistCount(&statCounter.select_fds_hist, num);
+    statCounter.select_fds_hist.count(num);
 
     if (num == 0)
         return COMM_TIMEOUT; /* no error */

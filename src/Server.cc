@@ -44,6 +44,7 @@
 #include "HttpReply.h"
 #include "errorpage.h"
 #include "err_detail_type.h"
+#include "StatCounters.h"
 #include "SquidTime.h"
 
 #if USE_ADAPTATION
@@ -365,7 +366,7 @@ ServerStateData::sentRequestBody(const CommIoCbParams &io)
 
     if (io.size > 0) {
         fd_bytes(io.fd, io.size, FD_WRITE);
-        kb_incr(&statCounter.server.all.kbytes_out, io.size);
+        kb_incr(&(statCounter.server.all.kbytes_out), io.size);
         // kids should increment their counters
     }
 

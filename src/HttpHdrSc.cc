@@ -39,6 +39,7 @@
 #include "squid-old.h"
 #include "Store.h"
 #include "HttpHeader.h"
+#include "HttpHeaderStat.h"
 #include "HttpHdrSc.h"
 
 #if HAVE_MAP

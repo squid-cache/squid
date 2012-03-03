@@ -57,6 +57,7 @@
 #include "ip/QosConfig.h"
 #include "ip/tools.h"
 #include "ClientInfo.h"
+#include "StatCounters.h"
 #if USE_SSL
 #include "ssl/support.h"
 #endif

@@ -40,6 +40,7 @@
 #include "Store.h"
 #include "HttpReply.h"
 #include "MemObject.h"
+#include "StatCounters.h"
 #include "StoreMeta.h"
 #include "StoreMetaUnpacker.h"
 #if USE_DELAY_POOLS

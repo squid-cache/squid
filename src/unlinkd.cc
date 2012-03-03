@@ -35,6 +35,7 @@
 
 #include "squid-old.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 #include "SwapDir.h"
 #include "fde.h"
 #include "xusleep.h"
@@ -131,13 +132,13 @@ unlinkdUnlink(const char *path)
         return;
     }
 
-    statCounter.unlink.requests++;
+    ++statCounter.unlink.requests;
     /*
     * Increment this syscalls counter here, even though the syscall
     * is executed by the helper process.  We try to be consistent
     * in counting unlink operations.
     */
-    statCounter.syscalls.disk.unlinks++;
+    ++statCounter.syscalls.disk.unlinks;
     queuelen++;
 }
 

@@ -117,6 +117,8 @@
 #include "MemObject.h"
 #include "ProtoPort.h"
 #include "rfc1738.h"
+#include "StatCounters.h"
+#include "StatHist.h"
 #include "SquidTime.h"
 #if USE_SSL
 #include "ssl/context_storage.h"
@@ -425,21 +427,21 @@ clientIdentDone(const char *ident, void *data)
 void
 clientUpdateStatCounters(log_type logType)
 {
-    statCounter.client_http.requests++;
+    ++statCounter.client_http.requests;
 
     if (logTypeIsATcpHit(logType))
-        statCounter.client_http.hits++;
+        ++statCounter.client_http.hits;
 
     if (logType == LOG_TCP_HIT)
-        statCounter.client_http.disk_hits++;
+        ++statCounter.client_http.disk_hits;
     else if (logType == LOG_TCP_MEM_HIT)
-        statCounter.client_http.mem_hits++;
+        ++statCounter.client_http.mem_hits;
 }
 
 void
 clientUpdateStatHistCounters(log_type logType, int svc_time)
 {
-    statHistCount(&statCounter.client_http.all_svc_time, svc_time);
+    statCounter.client_http.allSvcTime.count(svc_time);
     /**
      * The idea here is not to be complete, but to get service times
      * for only well-defined types.  For example, we don't include
@@ -450,11 +452,11 @@ clientUpdateStatHistCounters(log_type logType, int svc_time)
     switch (logType) {
 
     case LOG_TCP_REFRESH_UNMODIFIED:
-        statHistCount(&statCounter.client_http.nh_svc_time, svc_time);
+        statCounter.client_http.nearHitSvcTime.count(svc_time);
         break;
 
     case LOG_TCP_IMS_HIT:
-        statHistCount(&statCounter.client_http.nm_svc_time, svc_time);
+        statCounter.client_http.nearMissSvcTime.count(svc_time);
         break;
 
     case LOG_TCP_HIT:
@@ -462,13 +464,13 @@ clientUpdateStatHistCounters(log_type logType, int svc_time)
     case LOG_TCP_MEM_HIT:
 
     case LOG_TCP_OFFLINE_HIT:
-        statHistCount(&statCounter.client_http.hit_svc_time, svc_time);
+        statCounter.client_http.hitSvcTime.count(svc_time);
         break;
 
     case LOG_TCP_MISS:
 
     case LOG_TCP_CLIENT_REFRESH_MISS:
-        statHistCount(&statCounter.client_http.miss_svc_time, svc_time);
+        statCounter.client_http.missSvcTime.count(svc_time);
         break;
 
     default:
@@ -512,8 +514,7 @@ clientUpdateHierCounters(HierarchyLogEntry * someEntry)
         i = &someEntry->ping;
 
         if (clientPingHasFinished(i))
-            statHistCount(&statCounter.icp.query_svc_time,
-                          tvSubUsec(i->start, i->stop));
+            statCounter.icp.querySvcTime.count(tvSubUsec(i->start, i->stop));
 
         if (i->timeout)
             statCounter.icp.query_timeouts++;
@@ -2832,7 +2833,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
 
     if (io.flag == COMM_OK) {
         if (io.size > 0) {
-            kb_incr(&statCounter.client_http.kbytes_in, io.size);
+            kb_incr(&(statCounter.client_http.kbytes_in), io.size);
 
             // may comm_close or setReplyToError
             if (!handleReadData(io.buf, io.size))

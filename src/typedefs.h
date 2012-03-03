@@ -55,8 +55,6 @@ typedef struct _dwrite_q dwrite_q;
 
 typedef struct _HttpHeaderFieldAttrs HttpHeaderFieldAttrs;
 
-typedef struct _HttpHeaderStat HttpHeaderStat;
-
 typedef struct _domain_ping domain_ping;
 
 typedef struct _domain_type domain_type;
@@ -83,13 +81,7 @@ typedef struct _refresh_t refresh_t;
 
 typedef struct _CommWriteStateData CommWriteStateData;
 
-typedef struct _StatCounters StatCounters;
-
 typedef struct _storeSwapLogData storeSwapLogData;
-
-typedef struct _StatHist StatHist;
-
-typedef struct _cd_guess_stats cd_guess_stats;
 
 typedef struct _CacheDigest CacheDigest;
 
@@ -146,9 +138,6 @@ typedef int HLPSAVAIL(void *);
 typedef void HLPSONEQ(void *);
 typedef void HLPCMDOPTS(int *argc, char **argv);
 typedef void IDNSCB(void *, rfc1035_rr *, int, const char *);
-
-typedef double hbase_f(double);
-typedef void StatHistBinDumper(StoreEntry *, int idx, double val, double size, int count);
 
 /* MD5 cache keys */
 typedef unsigned char cache_key;

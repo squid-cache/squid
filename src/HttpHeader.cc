@@ -39,9 +39,11 @@
 #include "HttpHdrCc.h"
 #include "HttpHdrSc.h"
 #include "HttpHeader.h"
+#include "HttpHeaderStat.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "rfc1123.h"
+#include "StatHist.h"
 #include "Store.h"
 #include "TimeOrTag.h"
 
@@ -374,10 +376,10 @@ httpHeaderStatInit(HttpHeaderStat * hs, const char *label)
     assert(label);
     memset(hs, 0, sizeof(HttpHeaderStat));
     hs->label = label;
-    statHistEnumInit(&hs->hdrUCountDistr, 32);	/* not a real enum */
-    statHistEnumInit(&hs->fieldTypeDistr, HDR_ENUM_END);
-    statHistEnumInit(&hs->ccTypeDistr, CC_ENUM_END);
-    statHistEnumInit(&hs->scTypeDistr, SC_ENUM_END);
+    hs->hdrUCountDistr.enumInit(32);	/* not a real enum */
+    hs->fieldTypeDistr.enumInit(HDR_ENUM_END);
+    hs->ccTypeDistr.enumInit(CC_ENUM_END);
+    hs->scTypeDistr.enumInit(SC_ENUM_END);
 }
 
 /*
@@ -444,7 +446,7 @@ HttpHeader::clean()
 
     if (owner <= hoReply) {
         if (0 != entries.count)
-            statHistCount(&HttpHeaderStats[owner].hdrUCountDistr, entries.count);
+            HttpHeaderStats[owner].hdrUCountDistr.count(entries.count);
 
         HttpHeaderStats[owner].destroyedCount++;
 
@@ -456,7 +458,7 @@ HttpHeader::clean()
             if (e->id < 0 || e->id >= HDR_ENUM_END) {
                 debugs(55, 0, "HttpHeader::clean BUG: entry[" << pos << "] is invalid (" << e->id << "). Ignored.");
             } else {
-                statHistCount(&HttpHeaderStats[owner].fieldTypeDistr, e->id);
+                HttpHeaderStats[owner].fieldTypeDistr.count(e->id);
                 /* yes, this deletion leaves us in an inconsistent state */
                 delete e;
             }
@@ -1691,19 +1693,19 @@ httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e)
     storeAppendPrintf(e, "\nField type distribution\n");
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
                       "id", "name", "count", "#/header");
-    statHistDump(&hs->fieldTypeDistr, e, httpHeaderFieldStatDumper);
+    hs->fieldTypeDistr.dump(e, httpHeaderFieldStatDumper);
     storeAppendPrintf(e, "\nCache-control directives distribution\n");
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
                       "id", "name", "count", "#/cc_field");
-    statHistDump(&hs->ccTypeDistr, e, httpHdrCcStatDumper);
+    hs->ccTypeDistr.dump(e, httpHdrCcStatDumper);
     storeAppendPrintf(e, "\nSurrogate-control directives distribution\n");
     storeAppendPrintf(e, "%2s\t %-20s\t %5s\t %6s\n",
                       "id", "name", "count", "#/sc_field");
-    statHistDump(&hs->scTypeDistr, e, httpHdrScStatDumper);
+    hs->scTypeDistr.dump(e, httpHdrScStatDumper);
     storeAppendPrintf(e, "\nNumber of fields per header distribution\n");
     storeAppendPrintf(e, "%2s\t %-5s\t %5s\t %6s\n",
                       "id", "#flds", "count", "%total");
-    statHistDump(&hs->hdrUCountDistr, e, httpHeaderFldsPerHdrDumper);
+    hs->hdrUCountDistr.dump(e, httpHeaderFldsPerHdrDumper);
     dump_stat = NULL;
 }
 

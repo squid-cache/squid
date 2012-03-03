@@ -47,6 +47,7 @@
 #include "HttpRequest.h"
 #include "MemObject.h"
 #include "mem_node.h"
+#include "StatCounters.h"
 #include "StoreMeta.h"
 #include "SwapDir.h"
 #include "StoreIOState.h"

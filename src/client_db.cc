@@ -40,6 +40,7 @@
 #include "mgr/Registration.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 #include "Store.h"
 
 
@@ -92,7 +93,7 @@ clientdbAdd(const Ip::Address &addr)
     c->prevTime=current_dtime;/* put current time to have something sensible here */
 #endif
     hash_join(client_table, &c->hash);
-    statCounter.client_http.clients++;
+    ++statCounter.client_http.clients;
 
     if ((statCounter.client_http.clients > max_clients) && !cleanup_running && cleanup_scheduled < 2) {
         cleanup_scheduled++;
@@ -404,7 +405,7 @@ clientdbGC(void *unused)
 
         clientdbFreeItem(c);
 
-        statCounter.client_http.clients--;
+        --statCounter.client_http.clients;
 
         cleanup_removed++;
     }

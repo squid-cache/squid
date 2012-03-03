@@ -54,6 +54,7 @@
 #include "Server.h"
 #include "SquidString.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 #include "Store.h"
 #include "URLScheme.h"
 #include "wordlist.h"
@@ -1257,8 +1258,8 @@ FtpStateData::dataRead(const CommIoCbParams &io)
     debugs(9, 3, HERE << "ftpDataRead: FD " << io.fd << " Read " << io.size << " bytes");
 
     if (io.size > 0) {
-        kb_incr(&statCounter.server.all.kbytes_in, io.size);
-        kb_incr(&statCounter.server.ftp.kbytes_in, io.size);
+        kb_incr(&(statCounter.server.all.kbytes_in), io.size);
+        kb_incr(&(statCounter.server.ftp.kbytes_in), io.size);
     }
 
     if (io.flag == COMM_ERR_CLOSING)
@@ -1613,8 +1614,8 @@ FtpStateData::ftpWriteCommandCallback(const CommIoCbParams &io)
 
     if (io.size > 0) {
         fd_bytes(io.fd, io.size, FD_WRITE);
-        kb_incr(&statCounter.server.all.kbytes_out, io.size);
-        kb_incr(&statCounter.server.ftp.kbytes_out, io.size);
+        kb_incr(&(statCounter.server.all.kbytes_out), io.size);
+        kb_incr(&(statCounter.server.ftp.kbytes_out), io.size);
     }
 
     if (io.flag == COMM_ERR_CLOSING)
@@ -1754,8 +1755,8 @@ void FtpStateData::ftpReadControlReply(const CommIoCbParams &io)
     debugs(9, 3, "ftpReadControlReply: FD " << io.fd << ", Read " << io.size << " bytes");
 
     if (io.size > 0) {
-        kb_incr(&statCounter.server.all.kbytes_in, io.size);
-        kb_incr(&statCounter.server.ftp.kbytes_in, io.size);
+        kb_incr(&(statCounter.server.all.kbytes_in), io.size);
+        kb_incr(&(statCounter.server.ftp.kbytes_in), io.size);
     }
 
     if (io.flag == COMM_ERR_CLOSING)
@@ -3319,7 +3320,7 @@ void
 FtpStateData::sentRequestBody(const CommIoCbParams &io)
 {
     if (io.size > 0)
-        kb_incr(&statCounter.server.ftp.kbytes_out, io.size);
+        kb_incr(&(statCounter.server.ftp.kbytes_out), io.size);
     ServerStateData::sentRequestBody(io);
 }
 

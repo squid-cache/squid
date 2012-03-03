@@ -45,6 +45,7 @@
 #include "Parsing.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 #include "SwapDir.h"
 #include "swap_log_op.h"
 
@@ -1146,7 +1147,7 @@ UFSSwapDir::DirClean(int swap_index)
         debugs(36, 3, "storeDirClean: Cleaning file "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << files[n]);
         snprintf(p2, MAXPATHLEN + 1, "%s/%08X", p1, files[n]);
         safeunlink(p2, 0);
-        statCounter.swap.files_cleaned++;
+        ++statCounter.swap.files_cleaned;
     }
 
     debugs(36, 3, "Cleaned " << k << " unused files from " << p1);
