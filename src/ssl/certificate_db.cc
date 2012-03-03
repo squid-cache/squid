@@ -175,7 +175,6 @@ const std::string Ssl::CertificateDb::serial_file("serial");
 const std::string Ssl::CertificateDb::db_file("index.txt");
 const std::string Ssl::CertificateDb::cert_dir("certs");
 const std::string Ssl::CertificateDb::size_file("size");
-const size_t Ssl::CertificateDb::min_db_size(4096);
 
 Ssl::CertificateDb::CertificateDb(std::string const & aDb_path, size_t aMax_db_size, size_t aFs_block_size)
         :  db_path(aDb_path),
@@ -207,7 +206,7 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
 {
     const Locker locker(dbLock, Here);
     load();
-    if (!db || !cert || !pkey || min_db_size > max_db_size)
+    if (!db || !cert || !pkey)
         return false;
     Row row;
     ASN1_INTEGER * ai = X509_get_serialNumber(cert.get());
@@ -227,14 +226,18 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
         if (pure_find(subject.get(), cert, pkey))
             return true;
     }
-    // check db size.
-    while (max_db_size < size()) {
-        if (!deleteInvalidCertificate())
-            break;
-    }
 
-    while (max_db_size < size()) {
-        deleteOldestCertificate();
+    // check db size while trying to minimize calls to size()
+    while (size() > max_db_size) {
+        if (deleteInvalidCertificate())
+            continue; // try to find another invalid certificate if needed
+
+        // there are no more invalid ones, but there must be valid certificates
+        do {
+            if (!deleteOldestCertificate())
+                return false; // errors prevented us from freeing enough space
+        } while (size() > max_db_size);
+        break;
     }
 
     row.setValue(cnlType, "V");
@@ -408,11 +411,12 @@ void Ssl::CertificateDb::subSize(std::string const & filename)
 
 size_t Ssl::CertificateDb::readSize() const
 {
-    size_t db_size;
     std::ifstream size_file(size_full.c_str());
     if (!size_file && enabled_disk_store)
-        throw std::runtime_error("cannot read \"" + size_full + "\" file");
-    size_file >> db_size;
+        throw std::runtime_error("cannot open for reading: " + size_full);
+    size_t db_size = 0;
+    if (!(size_file >> db_size))
+        throw std::runtime_error("error while reading " + size_full);
     return db_size;
 }
 
