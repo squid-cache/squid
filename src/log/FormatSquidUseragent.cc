@@ -43,6 +43,10 @@
 void
 Log::Format::SquidUserAgent(AccessLogEntry * al, Logfile * logfile)
 {
+    // do not log unless there is something to be displayed.
+    if (!al || !al->request)
+        return;
+
     const char *agent = al->request->header.getStr(HDR_USER_AGENT);
 
     // do not log unless there is something to be displayed.
