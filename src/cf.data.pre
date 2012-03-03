@@ -4113,7 +4113,7 @@ TYPE: time_t
 LOC: Config.Timeout.request
 DEFAULT: 5 minutes
 DOC_START
-	How long to wait for an HTTP request after initial
+	How long to wait for complete HTTP request headers after initial
 	connection establishment.
 DOC_END
 

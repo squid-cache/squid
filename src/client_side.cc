@@ -3161,7 +3161,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
                                       TimeoutDialer, connState, ConnStateData::requestTimeout);
-    commSetTimeout(newfd, Config.Timeout.read, timeoutCall);
+    commSetTimeout(newfd, Config.Timeout.request, timeoutCall);
 
 #if USE_IDENT
     if (Ident::TheConfig.identLookup) {
