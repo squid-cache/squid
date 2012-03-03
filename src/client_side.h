@@ -165,7 +165,7 @@ private:
 class ConnectionDetail;
 #if USE_SSL
 namespace Ssl {
-    class ServerPeeker;
+    class ServerBump;
 }
 #endif
 /**
@@ -324,7 +324,7 @@ public:
     void quitAfterError(HttpRequest *request); // meant to be private
 
 #if USE_SSL
-    /// called by Ssl::ServerPeeker when it is done bumping the server
+    /// called by FwdState when it is done bumping the server
     void httpsPeeked(Comm::ConnectionPointer serverConnection);
 
     /// Start to create dynamic SSL_CTX for host or uses static port SSL context.
@@ -342,11 +342,7 @@ public:
 
     void switchToHttps(const char *host, const int port);
     bool switchedToHttps() const { return switchedToHttps_; }
-    /// Holds the squid error reply in the case of bump server first error 
-    StoreEntry *bumpServerFirstErrorEntry() const {return bumpErrorEntry;}
-    void setBumpServerCert(X509 *serverCert) {bumpServerCert.reset(serverCert);}
-    X509 *getBumpServerCert() {return bumpServerCert.get();}
-    void setBumpSslErrorList(Ssl::Errors *errNoList) {bumpSslErrorNoList = cbdataReference(errNoList);}
+    Ssl::ServerBump *serverBump() {return sslServerBump;}
     /// Fill the certAdaptParams with the required data for certificate adaptation
     /// and create the key for storing/retrieve the certificate to/from the cache
     void buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties);
@@ -379,11 +375,8 @@ private:
     String sslCommonName; ///< CN name for SSL certificate generation
     String sslBumpCertKey; ///< Key to use to store/retrieve generated certificate
 
-    /// a job that connects to the HTTPS server to get its SSL certificate
-    CbcPointer<Ssl::ServerPeeker> httpsPeeker;
-    StoreEntry *bumpErrorEntry;
-    Ssl::X509_Pointer bumpServerCert;
-    Ssl::Errors *bumpSslErrorNoList; ///< The list of SSL certificate errors which ignored
+    /// HTTPS server cert. fetching state for bump-ssl-server-first
+    Ssl::ServerBump *sslServerBump;
     Ssl::CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
 #endif
 

@@ -59,7 +59,7 @@
 #if USE_SSL
 #include "ssl/support.h"
 #include "ssl/ErrorDetail.h"
-#include "ssl/ServerPeeker.h"
+#include "ssl/ServerBump.h"
 #endif
 
 static PSC fwdPeerSelectionCompleteWrapper;
@@ -670,11 +670,13 @@ FwdState::negotiateSSL(int fd)
             if (request->clientConnectionManager.valid()) {
                 // Get the server certificate from ErrorDetail object and store it 
                 // to connection manager
-                request->clientConnectionManager->setBumpServerCert(X509_dup(errDetails->peerCert()));
+                if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
+                    serverBump->serverCert.resetAndLock(errDetails->peerCert());
 
                 // if there is a list of ssl errors, pass it to connection manager
-                if (Ssl::Errors *errNoList = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_sslerrno)))
-                    request->clientConnectionManager->setBumpSslErrorList(errNoList);
+                    if (Ssl::Errors *errNoList = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_sslerrno)))
+                        serverBump->bumpSslErrorNoList = cbdataReference(errNoList);
+                }
             }
 
             if (request->flags.sslPeek) {
@@ -701,9 +703,12 @@ FwdState::negotiateSSL(int fd)
     }
     
     if (request->clientConnectionManager.valid()) {
-        request->clientConnectionManager->setBumpServerCert(SSL_get_peer_certificate(ssl));
-        if (Ssl::Errors *errNoList = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_sslerrno)))
-            request->clientConnectionManager->setBumpSslErrorList(errNoList);
+        if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
+            serverBump->serverCert.reset(SSL_get_peer_certificate(ssl));
+
+            if (Ssl::Errors *errNoList = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_sslerrno)))
+                serverBump->bumpSslErrorNoList = cbdataReference(errNoList);
+        }
     }
 
     if (serverConnection()->getPeer() && !SSL_session_reused(ssl)) {
@@ -785,7 +790,9 @@ FwdState::initiateSSL()
 
     // store peeked cert to check SQUID_X509_V_ERR_CERT_CHANGE
     X509 *peeked_cert;
-    if (request->clientConnectionManager.valid() &&  (peeked_cert = request->clientConnectionManager->getBumpServerCert())) {
+    if (request->clientConnectionManager.valid() &&
+        request->clientConnectionManager->serverBump() &&
+        (peeked_cert = request->clientConnectionManager->serverBump()->serverCert.get())) {
         CRYPTO_add(&(peeked_cert->references),1,CRYPTO_LOCK_X509);
         SSL_set_ex_data(ssl, ssl_ex_index_ssl_peeked_cert, peeked_cert);
     }
