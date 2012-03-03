@@ -230,10 +230,10 @@ static bool buildCertificate(Ssl::X509_Pointer & cert, Ssl::CertificatePropertie
     // returns a pointer to the existing subject name. Nothing to clean here.
     if (properties.mimicCert.get()) {
         X509_NAME *name = X509_get_subject_name(properties.mimicCert.get());
-        if (!name)
-            return false;
-        // X509_set_subject_name will call X509_dup for name 
-        X509_set_subject_name(cert.get(), name);
+        if (name) {
+            // X509_set_subject_name will call X509_dup for name 
+            X509_set_subject_name(cert.get(), name);
+        }
     }
 
     if (properties.setCommonName || !properties.mimicCert.get()) {
