@@ -4520,6 +4520,11 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
     else if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetCommonName]) == 0) {
         ca->alg = Ssl::algSetCommonName;
         if (param) {
+            if (strlen(param) > 64) {
+                debugs(3, DBG_CRITICAL, "FATAL: sslproxy_cert_adapt: setCommonName{" <<param << "} : using common name longer than 64 bytes is not supported");
+                self_destruct();
+                return;
+            }
             ca->param = strdup(param);
         }
     } else {
