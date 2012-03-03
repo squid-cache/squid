@@ -229,8 +229,8 @@ static bool buildCertificate(Ssl::X509_Pointer & cert, Ssl::CertificatePropertie
     // not an Ssl::X509_NAME_Pointer because X509_REQ_get_subject_name()
     // returns a pointer to the existing subject name. Nothing to clean here.
     if (properties.mimicCert.get()) {
-        X509_NAME *name = X509_get_subject_name(properties.mimicCert.get());
-        if (name) {
+        // Leave subject empty if we cannot extract it from true cert.
+        if (X509_NAME *name = X509_get_subject_name(properties.mimicCert.get())) {
             // X509_set_subject_name will call X509_dup for name 
             X509_set_subject_name(cert.get(), name);
         }
