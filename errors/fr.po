@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-02-06 18:41+1300\n"
-"PO-Revision-Date: 2012-03-04 18:24+0200\n"
+"PO-Revision-Date: 2012-03-04 19:05+0200\n"
 "Last-Translator: Bernard <fli4l.charrier@free.fr>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: fr\n"
@@ -120,7 +120,7 @@ msgstr ""
 
 #: templates/ERR_URN_RESOLVE+html.body.div.h2:15
 msgid "A URL for the requested URN could not be retrieved"
-msgstr "L'URL n'a pas pu être chargée pour l'URN demandé."
+msgstr "L'URL n'a pas pu être chargée pour une demande URN"
 
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.p:26
 msgid ""
