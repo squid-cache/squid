@@ -2,16 +2,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-11-20 11:40+1300\n"
-"PO-Revision-Date: 2010-11-29 07:32+0200\n"
-"Last-Translator: Amos <squid3@treenet.co.nz>\n"
+"POT-Creation-Date: 2012-02-06 18:41+1300\n"
+"PO-Revision-Date: 2012-02-02 00:54+0200\n"
+"Last-Translator: Evgeni <etg@setcom.bg>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: bg\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Pootle 2.0.5\n"
+"X-Generator: Pootle 2.1.6\n"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:29
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:29
@@ -19,16 +19,16 @@ msgstr ""
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:29
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:30
 msgid "%F"
-msgstr ""
+msgstr "%F"
 
 #: templates/ERR_INVALID_REQ+html.body.div.blockquote.pre:23
 #: templates/ERR_INVALID_RESP+html.body.div.blockquote.pre:23
 msgid "%R"
-msgstr ""
+msgstr "%R"
 
 #: templates/ERR_ESI+html.body.div.blockquote.pre:28
 msgid "%Z"
-msgstr ""
+msgstr "%Z"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:24
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:24
@@ -36,14 +36,14 @@ msgstr ""
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:24
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:25
 msgid "%f"
-msgstr ""
+msgstr "%f"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:31
 msgid "%g"
-msgstr ""
+msgstr "%g"
 
 #: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:69
 msgid "%ssl_error_descr"
@@ -86,7 +86,7 @@ msgstr "%ssl_error_descr: %ssl_subject"
 #: templates/ERR_DIR_LISTING+html.body.div.blockquote.pre:22
 #: templates/ERR_DNS_FAIL+html.body.div.blockquote.pre:28
 msgid "%z"
-msgstr ""
+msgstr "%z"
 
 #: templates/ERR_DIR_LISTING+html.body.div.table.tr.th:28
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -127,6 +127,8 @@ msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
 "request from being completed."
 msgstr ""
+"Непоправима софтуерна грешка или проблем в конфигурацията не позволява тази "
+"заявка да бъде завършена."
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.blockquote.p:23
 msgid "Access Denied."
@@ -141,6 +143,10 @@ msgstr ""
 "Конфигурацията за контрол на достъпа не позволява да бъде изпълнена Вашата "
 "заявка в този момент. Моля, ако считате, че това е неправилно, да се "
 "обърнете към Вашия Интернет доставчик."
+
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:31
+msgid "All configured parent caches may be currently unreachable."
+msgstr ""
 
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.p:20
 msgid ""
@@ -162,6 +168,12 @@ msgstr ""
 #: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:33
 msgid "An Illegal response was received from the ICAP server."
 msgstr "Невалиден отговор от ICAP сървъра."
+
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:30
+msgid ""
+"An Internet connection needed to access this domains origin servers may be "
+"down."
+msgstr ""
 
 #: templates/ERR_READ_ERROR+html.body.div.p:28
 msgid ""
@@ -188,6 +200,8 @@ msgid ""
 "At least one precondition specified by the HTTP client in the request header "
 "has failed."
 msgstr ""
+"Поне едно необходимо условие, указано от клиента в хедъра на заявката, не е "
+"изпълнено."
 
 #: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:125
 msgid "Authority and issuer serial number mismatch"
@@ -291,6 +305,7 @@ msgstr "директория: <a href=\"%U\">%U</a>/"
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h1:14
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h1:14
 #: templates/ERR_CANNOT_FORWARD+html.body.div.h1:14
+#: templates/ERR_CONFLICT_HOST+html.body.div.h1:14
 #: templates/ERR_CONNECT_FAIL+html.body.div.h1:14
 #: templates/ERR_DNS_FAIL+html.body.div.h1:14
 #: templates/ERR_ESI+html.body.div.h1:14
@@ -339,6 +354,7 @@ msgstr "ГРЕШКА: Неуспешен опит за качване на фа�
 #: templates/ERR_ACCESS_DENIED+html.head.title:4
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.head.title:4
 #: templates/ERR_CANNOT_FORWARD+html.head.title:4
+#: templates/ERR_CONFLICT_HOST+html.head.title:4
 #: templates/ERR_CONNECT_FAIL+html.head.title:4
 #: templates/ERR_DNS_FAIL+html.head.title:4
 #: templates/ERR_ESI+html.head.title:4
@@ -450,7 +466,8 @@ msgstr ""
 #: templates/ERR_AGENT_WPAD+html.body.div.p:56
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:35
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:35
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:35
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:42
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:40
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:37
 #: templates/ERR_DIR_LISTING+html.body.div.p:38
 #: templates/ERR_DNS_FAIL+html.body.div.p:39
@@ -697,6 +714,8 @@ msgstr "Грешка при Socket операция"
 msgid "Some aspect of the requested URL is incorrect."
 msgstr "Неправилен адрес."
 
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:28
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:28
 #: templates/ERR_ICAP_FAILURE+html.body.div.p:30
 #: templates/ERR_INVALID_REQ+html.body.div.p:26
 #: templates/ERR_INVALID_URL+html.body.div.p:28
@@ -785,6 +804,17 @@ msgstr ""
 msgid "The ICAP server is not reachable."
 msgstr "ICAP сървърът е недостъпен."
 
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:32
+msgid ""
+"The administrator may not allow this cache to make direct connections to "
+"origin servers."
+msgstr ""
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:30
+msgid ""
+"The domain may have moved very recently. Trying again will resolve that."
+msgstr ""
+
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.p:20
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
 msgstr "Следният адрес е недостъпен: <a href=\"%U\">%U</a>"
@@ -794,6 +824,7 @@ msgstr "Следният адрес е недостъпен: <a href=\"%U\">%U</
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:20
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:20
 #: templates/ERR_CANNOT_FORWARD+html.body.div.p:20
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:20
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:20
 #: templates/ERR_DNS_FAIL+html.body.div.p:20
 #: templates/ERR_ESI+html.body.div.p:20
@@ -840,6 +871,7 @@ msgstr "Заявката или отговорът са прекалено го�
 #: templates/ERR_ACCESS_DENIED+html.body.div.h2:15
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h2:15
 #: templates/ERR_CANNOT_FORWARD+html.body.div.h2:15
+#: templates/ERR_CONFLICT_HOST+html.body.div.h2:15
 #: templates/ERR_CONNECT_FAIL+html.body.div.h2:15
 #: templates/ERR_DNS_FAIL+html.body.div.h2:15
 #: templates/ERR_ESI+html.body.div.h2:15
@@ -887,6 +919,12 @@ msgstr "Сървърът даде следния отговор:"
 #: templates/ERR_WRITE_ERROR+html.body.div.p:26
 msgid "The system returned: <i>%E</i>"
 msgstr "Операционната система даде следното съобщение: <i>%E</i>"
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:31
+msgid ""
+"The website may require you to use a local country-based version. Using your "
+"ISP provided DNS server(s) should resolve that."
+msgstr ""
 
 #: templates/ERR_NO_RELAY+html.body.div.p:26
 msgid ""
@@ -971,6 +1009,12 @@ msgstr ""
 "ESI шаблонът не може да бъде обработен. Обърнете се към администратора на "
 "web сървъра"
 
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:26
+msgid ""
+"This means the domain name you are trying to access apparently no longer "
+"exists on the machine you are requesting it from."
+msgstr ""
+
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.p:26
 msgid "This means:"
 msgstr ""
@@ -1006,14 +1050,8 @@ msgstr ""
 #: templates/ERR_CANNOT_FORWARD+html.body.div.p:26
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches. The most likely cause for this error is that the cache administrator "
-"does not allow this cache to make direct connections to origin servers, and "
-"all configured parent caches are currently unreachable."
+"caches."
 msgstr ""
-"Заявката не може да бъде пренасочена към сървъра източник или към някой от "
-"висшестоящите кеш сървъри.  Най-вероятно причината за тази грешка е, че "
-"администратора не позволява директни обръщения към сървъра източник, и "
-"всички кеш сървъри от по-горно ниво в момента са недостъпни."
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.blockquote.p:23
 msgid "Time Quota Exceeded."
@@ -1037,6 +1075,10 @@ msgstr ""
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:45
 msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
+msgstr ""
+
+#: templates/ERR_CONFLICT_HOST+html.body.div.blockquote.pre:23
+msgid "URI Host Conflict"
 msgstr ""
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:25
@@ -1132,7 +1174,8 @@ msgstr ""
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:29
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:50
 #: templates/ERR_AGENT_WPAD+html.body.div.p:50
-#: templates/ERR_CANNOT_FORWARD+html.body.div.p:28
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:35
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:34
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:30
 #: templates/ERR_DNS_FAIL+html.body.div.p:33
 #: templates/ERR_FORWARDING_DENIED+html.body.div.p:28
@@ -1187,6 +1230,18 @@ msgstr "Отговор с нулева големина"
 
 #~ msgid "Parent Directory"
 #~ msgstr "Горна директория"
+
+msgid ""
+"This request could not be forwarded to the origin server or to any parent "
+"caches. The most likely cause for this error is that the cache "
+"administrator does not allow this cache to make direct connections to "
+"origin servers, and all configured parent caches are currently "
+"unreachable."
+msgstr ""
+"Заявката не може да бъде пренасочена към сървъра източник или към някой "
+"от висшестоящите кеш сървъри.  Най-вероятно причината за тази грешка е, "
+"че администратора не позволява директни обръщения към сървъра източник, и "
+"всички кеш сървъри от по-горно ниво в момента са недостъпни."
 
 #~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
 #~ msgstr "При опит да бъде записан файлът: <a href=\"%U\">%U</a>"
