@@ -144,7 +144,7 @@ static int ipcacheExpiredEntry(ipcache_entry *);
 #if USE_DNSHELPER
 static int ipcacheParse(ipcache_entry *, const char *buf);
 #else
-static int ipcacheParse(ipcache_entry *, rfc1035_rr *, int, const char *error);
+static int ipcacheParse(ipcache_entry *, const rfc1035_rr *, int, const char *error);
 #endif
 static ipcache_entry *ipcache_get(const char *);
 static void ipcacheLockEntry(ipcache_entry *);
@@ -458,7 +458,7 @@ ipcacheParse(ipcache_entry *i, const char *inbuf)
 
 #else
 static int
-ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_message)
+ipcacheParse(ipcache_entry *i, const rfc1035_rr * answers, int nr, const char *error_message)
 {
     int k;
     int j = 0;
@@ -592,7 +592,7 @@ static void
 #if USE_DNSHELPER
 ipcacheHandleReply(void *data, char *reply)
 #else
-ipcacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error_message)
+ipcacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char *error_message)
 #endif
 {
     ipcache_entry *i;
