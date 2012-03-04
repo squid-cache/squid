@@ -616,6 +616,12 @@ ErrorState::Convert(char token, bool allowRecursion)
 
         break;
 
+    case 'b':
+        // NP: dynamic location of proxy-port not supported on 3.1
+        // display the generic well-known port instead
+        p = "3128";
+        break;
+
     case 'B':
         p = request ? ftpUrlWith2f(request) : "[no URL]";
 
@@ -834,6 +840,10 @@ ErrorState::Convert(char token, bool allowRecursion)
         if (Config.adminEmail && Config.onoff.emailErrData)
             Dump(&mb);
 
+        break;
+
+    case 'x':
+        p = "[Not Available]"; // not supported by 3.1
         break;
 
     case 'z':
