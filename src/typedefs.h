@@ -137,7 +137,7 @@ typedef void HLPCB(void *, char *buf);
 typedef int HLPSAVAIL(void *);
 typedef void HLPSONEQ(void *);
 typedef void HLPCMDOPTS(int *argc, char **argv);
-typedef void IDNSCB(void *, rfc1035_rr *, int, const char *);
+typedef void IDNSCB(void *, const rfc1035_rr *, int, const char *);
 
 /* MD5 cache keys */
 typedef unsigned char cache_key;
