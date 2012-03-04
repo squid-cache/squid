@@ -199,8 +199,8 @@ Adaptation::Ecap::XactionRep::visitEachMetaHeader(libecap::NamedValueVisitor &vi
 
     typedef Adaptation::Config::MetaHeaders::iterator ACAMLI;
     for (ACAMLI i = Adaptation::Config::metaHeaders.begin(); i != Adaptation::Config::metaHeaders.end(); ++i) {
-        const char *v;
-        if (v = (*i)->match(request, reply)) {
+        const char *v = (*i)->match(request, reply);
+        if (v) {
             const libecap::Name name((*i)->name.termedBuf());
             const libecap::Area value = libecap::Area::FromTempString(v);
             visitor.visit(name, value);
