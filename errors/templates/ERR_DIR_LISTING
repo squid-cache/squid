@@ -7,7 +7,7 @@
 
 body
 :lang(fa) { direction: rtl; font-size: 100%; font-family: Tahoma, Roya, sans-serif; float: right; }
-:lang(he) { direction: rtl; float: right; }
+:lang(he) { direction: rtl; }
  --></style>
 </head><body id=%c>
 <div id="titles">
@@ -24,7 +24,7 @@ body
 
 <table id="dirlisting" summary="Directory Listing">
 <tr>
-<th><a href="../"><img border="0" src="/squid-internal-static/icons/anthony-dirup.gif" alt="Parent Directory"></a></th>
+<th><a href="../"><img border="0" src="/squid-internal-static/icons/silk/arrow_up.png" alt=""></a></th>
 <th nowrap="nowrap"><a href="../">Parent Directory</a> (<a href="/">Root Directory</a>)</th>
 </tr>
 

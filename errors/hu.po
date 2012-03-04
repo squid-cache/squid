@@ -2,762 +2,1234 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-11-06 03:26+1300\n"
-"PO-Revision-Date: 2009-09-30 09:51+0000\n"
-"Last-Translator: Muszela Balázs <bazsi86@gmail.com>\n"
+"POT-Creation-Date: 2012-02-06 18:41+1300\n"
+"PO-Revision-Date: 2012-02-28 20:29+0200\n"
+"Last-Translator: Gergely <mail.gery@gmail.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: hu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Pootle 2.1.6\n"
 "X-Launchpad-Export-Date: 2009-10-04 07:48+0000\n"
-"X-Generator: Launchpad (build Unknown)\n"
 
-#: templates/ERR_DIR_LISTING:6
+#: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:29
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:29
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:29
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:29
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:30
+msgid "%F"
+msgstr "%F"
+
+#: templates/ERR_INVALID_REQ+html.body.div.blockquote.pre:23
+#: templates/ERR_INVALID_RESP+html.body.div.blockquote.pre:23
+msgid "%R"
+msgstr "%R"
+
+#: templates/ERR_ESI+html.body.div.blockquote.pre:28
+msgid "%Z"
+msgstr "%Z"
+
+#: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:24
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:24
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:24
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:24
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:25
+msgid "%f"
+msgstr "%f"
+
+#: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:30
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:30
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:30
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:31
+msgid "%g"
+msgstr "%g"
+
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:69
+msgid "%ssl_error_descr"
+msgstr "%ssl_error_descr"
+
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.detail:97
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.detail:117
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.detail:125
+msgid "%ssl_error_descr: %ssl_ca_name"
+msgstr "%ssl_error_descr: %ssl_ca_name"
+
+#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.detail:1
+msgid "%ssl_error_descr: %ssl_lib_error"
+msgstr "%ssl_error_descr: %ssl_lib_error"
+
+#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.detail:5
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:13
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.detail:17
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.detail:21
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.detail:29
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.detail:33
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.detail:45
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.detail:49
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.detail:61
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.detail:65
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.detail:85
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.detail:89
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.detail:93
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.detail:101
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.detail:105
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.detail:109
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.detail:113
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.detail:121
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.detail:129
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.detail:133
+msgid "%ssl_error_descr: %ssl_subject"
+msgstr "%ssl_error_descr: %ssl_subject"
+
+#: templates/ERR_DIR_LISTING+html.body.div.blockquote.pre:22
+#: templates/ERR_DNS_FAIL+html.body.div.blockquote.pre:28
+msgid "%z"
+msgstr "%z"
+
+#: templates/ERR_DIR_LISTING+html.body.div.table.tr.th:28
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
-msgstr ""
+msgstr "<a href=\"../\">Szülőkönyvtár</a> (<a href=\"/\">Gyökérkönyvtár</a>)"
 
-#: templates/ERR_INVALID_REQ:4
+# I didn't find any good way to keep the original formatting, so I inserted a line break after the text in bold
+#: templates/ERR_INVALID_REQ+html.body.div.p:20
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
-msgstr ""
+msgstr "<b>Érvénytelen kérés</b> - hiba történt a kérés feldolgozása közben:"
 
-#: templates/ERR_INVALID_RESP:4
+# had to use a line break as I couldn't insert the text in bold into the other part of the sentence
+#: templates/ERR_INVALID_RESP+html.body.div.p:20
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
-msgstr ""
+msgstr "<b>Érvénytelen válasz</b> - hiba történt a kérés feldolgozása közben:"
 
-#: templates/ERR_READ_TIMEOUT:7
-#, fuzzy
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:28
 msgid ""
 "A Timeout occurred while waiting to read data from the network. The network "
 "or server may be down or congested. Please retry your request."
 msgstr ""
-"Időtúllépés történt mialatt az adatok hálózatról való olvasására várakozott "
-"a cache. A hálózat vagy a szerver nem elérhető vagy túlterhelt állapotban "
-"van. Ismételje meg kérését!"
+"Időtúllépés történt az adatok fogadása közben. A távoli szerver vagy hálózat "
+"nem érhető el vagy túl van terhelve, kérem, próbálja újra később."
 
-#: templates/ERR_URN_RESOLVE:3
+#: templates/ERR_URN_RESOLVE+html.body.div.h2:15
 msgid "A URL for the requested URN could not be retrieved"
-msgstr "Az URN egy URL-je nem tölthető le"
+msgstr "Az URN-hez tartozó URL nem tölthető be"
 
-#: templates/ERR_ACCESS_DENIED:5
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:26
+msgid ""
+"A non-recoverable internal failure or configuration problem prevents this "
+"request from being completed."
+msgstr ""
+"Egy belső hiba vagy konfigurációs probléma miatt a kérés nem dolgozható fel."
+
+#: templates/ERR_ACCESS_DENIED+html.body.div.blockquote.p:23
 msgid "Access Denied."
-msgstr "Hozzáférés megtagadva."
+msgstr "Hozzáférés megtagadva"
 
-#: templates/ERR_ACCESS_DENIED:6
-#, fuzzy
+#: templates/ERR_ACCESS_DENIED+html.body.div.p:26
 msgid ""
 "Access control configuration prevents your request from being allowed at "
 "this time. Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
-"A hozzáférési konfigurációban beállítottak alapján kérését jelenleg nem "
-"tudjuk teljesíteni. Kérjük, forduljon szolgáltatójához amennyiben a szerver "
-"helytelen beállításában látja a hiba okát."
+"Jelen pillanatban nincs jogosultsága a kért tartalom eléréséhez. A "
+"jogosultságok kiosztásával kapcsolatban a szerver üzemeltetőjét keresheti "
+"meg."
 
-#: templates/ERR_FTP_FORBIDDEN:4
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:31
+msgid "All configured parent caches may be currently unreachable."
+msgstr "Egyetlen parent cache sem érhető el jelenleg."
+
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:20
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"FTP autentikációs hiba történt az alábbi URL letöltésekor: <a href=\"%U\">"
-"%U</a>"
+"Authentikációs hiba történt a(z) <a href=\"%U\">%U</a> URL betöltése közben."
 
-#: templates/ERR_FTP_FAILURE:4 templates/ERR_FTP_PUT_ERROR:4
+#: templates/ERR_FTP_FAILURE+html.body.div.p:20
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:20
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
-msgstr ""
-"FTP protokoll hiba történt az alábbi URL letöltésekor: <a href=\"%U\">%U</a>"
+msgstr "Protokollhiba történt a(z) <a href=\"%U\">%U</a> URL betöltése közben."
 
-#: templates/ERR_ICAP_FAILURE:10
+#: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:33
 msgid "An Illegal response was received from the ICAP server."
-msgstr ""
+msgstr "Az ICAP szerver érvénytelen választ küldött"
 
-#: templates/ERR_READ_ERROR:7
-#, fuzzy
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:30
+msgid ""
+"An Internet connection needed to access this domains origin servers may be "
+"down."
+msgstr "Az URL-ben szereplő szerver hálózati hiba miatt nem érhető el."
+
+#: templates/ERR_READ_ERROR+html.body.div.p:28
 msgid ""
 "An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr ""
-"Hiba történt az adatok hálózatról való olvasásakor. Ismételje meg kérését!"
+"Hálózati hiba történt az adatok fogadása közben, kérem, ismételje meg a "
+"műveletet."
 
-#: templates/ERR_WRITE_ERROR:7
-#, fuzzy
+#: templates/ERR_WRITE_ERROR+html.body.div.p:28
 msgid ""
 "An error condition occurred while writing to the network. Please retry your "
 "request."
-msgstr "Hiba történt az adatok hálózatra való írásakor. Ismételje meg kérését!"
+msgstr ""
+"Hálózati hiba történt az adatok küldése közben, kérem, ismételje meg a "
+"műveletet."
 
-#: templates/ERR_PRECONDITION_FAILED:7
+#: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:133
+msgid "Application verification failure"
+msgstr "A tanúsítvány kibocsátásának ellenőrzése nem sikerült."
+
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:28
 msgid ""
 "At least one precondition specified by the HTTP client in the request header "
 "has failed."
+msgstr "A HTTP-kérésben szereplő előfeltételek nem teljesíthetők."
+
+#: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:125
+msgid "Authority and issuer serial number mismatch"
 msgstr ""
+"A kibocsátói tanúsítvány sorozatszáma nem egyezik a kiadott tanúsítványban "
+"megadott sorozatszámmal."
 
-#: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
+#: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:121
+msgid "Authority and subject key identifier mismatch"
+msgstr ""
+"A kibocsátói tanúsítvány kulcsazonosítója nem egyezik a kiadott "
+"tanúsítványban szereplő kulcsazonosítóval."
+
+#: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:49
+msgid "CRL has expired"
+msgstr "Lejárt CRL"
+
+#: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.descr:45
+msgid "CRL is not yet valid"
+msgstr "A CRL érvényességi ideje még nem kezdődött el"
+
+#: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:33
+msgid "CRL signature failure"
+msgstr "Hibás aláírás a CRL-ben"
+
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h2:15
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.blockquote.p:23
 msgid "Cache Access Denied."
-msgstr "Cache hozzáférés megtagadva."
+msgstr "A proxyszerver használatához bejelentkezés szükséges"
 
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:3
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:5
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h2:15
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.blockquote.p:23
 msgid "Cache Manager Access Denied."
-msgstr "Cache vezérlőpult hozzáférés megtagadva."
+msgstr "Adminisztrátori hozzáférés megtagadva"
 
-#: templates/ERR_URN_RESOLVE:5
+#: templates/ERR_URN_RESOLVE+html.body.div.blockquote.p:23
 msgid "Cannot Resolve URN"
-msgstr "Az URN-t nem lehet feloldani"
+msgstr "Az URN nem oldható fel"
 
-#: templates/ERR_LIFETIME_EXP:5
+#: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:89
+msgid "Certificate chain too long"
+msgstr "A tanúsítványlánc túl hosszú"
+
+#: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.descr:5
+msgid "Certificate does not match domainname"
+msgstr "A tanúsítvány nem érvényes a kérésben szereplő a domainnévre"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:41
+msgid "Certificate has expired"
+msgstr "A tanúsítvány lejárt"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:37
+msgid "Certificate is not yet valid"
+msgstr "A tanúsítvány érvényességi ideje még nem kezdődött el"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:109
+msgid "Certificate not trusted"
+msgstr "A tanúsítvány nem megbízható"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:113
+msgid "Certificate rejected"
+msgstr "A tanúsítvány vissza lett utasítva"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:93
+msgid "Certificate revoked"
+msgstr "A tanúsítvány visszavonásra került"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:29
+msgid "Certificate signature failure"
+msgstr "A tanúsítvány aláírása hibás"
+
+#: templates/ERR_LIFETIME_EXP+html.body.div.blockquote.p:23
 msgid "Connection Lifetime Expired"
-msgstr "Kapcsolat maximális időtartama lejárt"
+msgstr "A kapcsolat élettartama lejárt"
 
-#: templates/ERR_CONNECT_FAIL:5
+#: templates/ERR_CONNECT_FAIL+html.body.div.blockquote.p:23
 msgid "Connection to %I failed."
-msgstr "Csatlakozás a(z) %I-hez/hoz meghiúsult."
+msgstr "Nem sikerült kapcsolódni a(z) %I szerverhez"
 
-#: templates/ERR_INVALID_REQ:10
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:32
 msgid "Content-Length missing for POST or PUT requests."
-msgstr "Content-Length hiányzik a POST vagy PUT kérésből"
+msgstr "Hiányzó „Content-Length” fejléc a POST vagy PUT kérésben"
 
-#: templates/ERR_DIR_LISTING:3
+#: templates/ERR_DIR_LISTING+html.body.div.h4:19
 msgid "Directory Content:"
-msgstr "Könyvtár tartalom:"
+msgstr "A könyvtár tartalma:"
 
-#: templates/ERR_DIR_LISTING:4
+#: templates/ERR_DIR_LISTING+html.body.div.table:-1
 msgid "Directory Listing"
-msgstr "Könyvtár listázás"
+msgstr "Könyvtárlista"
 
-#: templates/ERR_DIR_LISTING:1
+#: templates/ERR_DIR_LISTING+html.head.title:4
 msgid "Directory: %U"
 msgstr "Könyvtár: %U"
 
-#: templates/ERR_DIR_LISTING:2
-#, fuzzy
+#: templates/ERR_DIR_LISTING+html.body.div.h2:14
 msgid "Directory: <a href=\"%U\">%U</a>/"
-msgstr "FTP Könyvtár: <a href=\"/\">%U</a>/"
+msgstr "Könyvtár: <a href=\"%U\">%U</a>/"
 
-#: templates/ERR_ACCESS_DENIED:2 templates/ERR_AGENT_CONFIGURE:2
-#: templates/ERR_AGENT_WPAD:2 templates/ERR_CACHE_ACCESS_DENIED:2
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
-#: templates/ERR_CONNECT_FAIL:2 templates/ERR_DNS_FAIL:2 templates/ERR_ESI:2
-#: templates/ERR_FORWARDING_DENIED:2 templates/ERR_FTP_DISABLED:2
-#: templates/ERR_FTP_FAILURE:2 templates/ERR_FTP_FORBIDDEN:2
-#: templates/ERR_FTP_NOT_FOUND:2 templates/ERR_FTP_PUT_ERROR:2
-#: templates/ERR_FTP_UNAVAILABLE:2 templates/ERR_ICAP_FAILURE:2
-#: templates/ERR_INVALID_REQ:2 templates/ERR_INVALID_RESP:2
-#: templates/ERR_INVALID_URL:2 templates/ERR_LIFETIME_EXP:2
-#: templates/ERR_NO_RELAY:2 templates/ERR_ONLY_IF_CACHED_MISS:2
-#: templates/ERR_PRECONDITION_FAILED:2 templates/ERR_READ_ERROR:2
-#: templates/ERR_READ_TIMEOUT:2 templates/ERR_SECURE_CONNECT_FAIL:2
-#: templates/ERR_SHUTTING_DOWN:2 templates/ERR_SOCKET_FAILURE:2
-#: templates/ERR_TOO_BIG:2 templates/ERR_UNSUP_HTTPVERSION:2
-#: templates/ERR_UNSUP_REQ:2 templates/ERR_URN_RESOLVE:2
-#: templates/ERR_WRITE_ERROR:2 templates/ERR_ZERO_SIZE_OBJECT:2
+#: templates/ERR_ACCESS_DENIED+html.body.div.h1:14
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h1:14
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.h1:14
+#: templates/ERR_AGENT_WPAD+html.body.div.h1:14
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h1:14
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.h1:14
+#: templates/ERR_CANNOT_FORWARD+html.body.div.h1:14
+#: templates/ERR_CONFLICT_HOST+html.body.div.h1:14
+#: templates/ERR_CONNECT_FAIL+html.body.div.h1:14
+#: templates/ERR_DNS_FAIL+html.body.div.h1:14
+#: templates/ERR_ESI+html.body.div.h1:14
+#: templates/ERR_FORWARDING_DENIED+html.body.div.h1:14
+#: templates/ERR_FTP_DISABLED+html.body.div.h1:14
+#: templates/ERR_FTP_FAILURE+html.body.div.h1:14
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.h1:14
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.h1:14
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.h1:14
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.h1:14
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.h1:14
+#: templates/ERR_ICAP_FAILURE+html.body.div.h1:14
+#: templates/ERR_INVALID_REQ+html.body.div.h1:14
+#: templates/ERR_INVALID_RESP+html.body.div.h1:14
+#: templates/ERR_INVALID_URL+html.body.div.h1:14
+#: templates/ERR_LIFETIME_EXP+html.body.div.h1:14
+#: templates/ERR_NO_RELAY+html.body.div.h1:14
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.h1:14
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.h1:14
+#: templates/ERR_READ_ERROR+html.body.div.h1:14
+#: templates/ERR_READ_TIMEOUT+html.body.div.h1:14
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.h1:14
+#: templates/ERR_SHUTTING_DOWN+html.body.div.h1:14
+#: templates/ERR_SOCKET_FAILURE+html.body.div.h1:14
+#: templates/ERR_TOO_BIG+html.body.div.h1:14
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h1:14
+#: templates/ERR_UNSUP_REQ+html.body.div.h1:14
+#: templates/ERR_URN_RESOLVE+html.body.div.h1:14
+#: templates/ERR_WRITE_ERROR+html.body.div.h1:14
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h1:14
 msgid "ERROR"
 msgstr "HIBA"
 
-#: templates/ERR_CACHE_ACCESS_DENIED:1
+#: templates/ERR_CACHE_ACCESS_DENIED+html.head.title:4
 msgid "ERROR: Cache Access Denied"
-msgstr "HIBA: Cache hozzáférés megtagadva"
+msgstr "HIBA: Nincs jogosultsága a proxyszerver eléréséhez"
 
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:1
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.head.title:4
 msgid "ERROR: Cache Manager Access Denied"
-msgstr "HIBA: Cache vezérlőpult hozzáférés megtagadva"
+msgstr "HIBA: Adminisztrátori hozzáférés megtagadva"
 
-#: templates/ERR_FTP_PUT_ERROR:1
+#: templates/ERR_FTP_PUT_ERROR+html.head.title:4
 msgid "ERROR: FTP upload failed"
-msgstr "HIBA: FTP feltöltési hiba"
+msgstr "HIBA: Sikertelen feltöltés"
 
-#: templates/ERR_ACCESS_DENIED:1 templates/ERR_CANNOT_FORWARD:1
-#: templates/ERR_CONNECT_FAIL:1 templates/ERR_DNS_FAIL:1 templates/ERR_ESI:1
-#: templates/ERR_FORWARDING_DENIED:1 templates/ERR_FTP_DISABLED:1
-#: templates/ERR_FTP_FAILURE:1 templates/ERR_FTP_FORBIDDEN:1
-#: templates/ERR_FTP_NOT_FOUND:1 templates/ERR_FTP_UNAVAILABLE:1
-#: templates/ERR_ICAP_FAILURE:1 templates/ERR_INVALID_REQ:1
-#: templates/ERR_INVALID_RESP:1 templates/ERR_INVALID_URL:1
-#: templates/ERR_LIFETIME_EXP:1 templates/ERR_NO_RELAY:1
-#: templates/ERR_ONLY_IF_CACHED_MISS:1 templates/ERR_PRECONDITION_FAILED:1
-#: templates/ERR_READ_ERROR:1 templates/ERR_READ_TIMEOUT:1
-#: templates/ERR_SECURE_CONNECT_FAIL:1 templates/ERR_SHUTTING_DOWN:1
-#: templates/ERR_SOCKET_FAILURE:1 templates/ERR_TOO_BIG:1
-#: templates/ERR_UNSUP_HTTPVERSION:1 templates/ERR_UNSUP_REQ:1
-#: templates/ERR_WRITE_ERROR:1 templates/ERR_ZERO_SIZE_OBJECT:1
+#: templates/ERR_ACCESS_DENIED+html.head.title:4
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.head.title:4
+#: templates/ERR_CANNOT_FORWARD+html.head.title:4
+#: templates/ERR_CONFLICT_HOST+html.head.title:4
+#: templates/ERR_CONNECT_FAIL+html.head.title:4
+#: templates/ERR_DNS_FAIL+html.head.title:4
+#: templates/ERR_ESI+html.head.title:4
+#: templates/ERR_FORWARDING_DENIED+html.head.title:4
+#: templates/ERR_FTP_DISABLED+html.head.title:4
+#: templates/ERR_FTP_FAILURE+html.head.title:4
+#: templates/ERR_FTP_FORBIDDEN+html.head.title:4
+#: templates/ERR_FTP_NOT_FOUND+html.head.title:4
+#: templates/ERR_FTP_UNAVAILABLE+html.head.title:4
+#: templates/ERR_GATEWAY_FAILURE+html.head.title:4
+#: templates/ERR_ICAP_FAILURE+html.head.title:4
+#: templates/ERR_INVALID_REQ+html.head.title:4
+#: templates/ERR_INVALID_RESP+html.head.title:4
+#: templates/ERR_INVALID_URL+html.head.title:4
+#: templates/ERR_LIFETIME_EXP+html.head.title:4
+#: templates/ERR_NO_RELAY+html.head.title:4
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.head.title:4
+#: templates/ERR_PRECONDITION_FAILED+html.head.title:4
+#: templates/ERR_READ_ERROR+html.head.title:4
+#: templates/ERR_READ_TIMEOUT+html.head.title:4
+#: templates/ERR_SECURE_CONNECT_FAIL+html.head.title:4
+#: templates/ERR_SHUTTING_DOWN+html.head.title:4
+#: templates/ERR_SOCKET_FAILURE+html.head.title:4
+#: templates/ERR_TOO_BIG+html.head.title:4
+#: templates/ERR_UNSUP_HTTPVERSION+html.head.title:4
+#: templates/ERR_UNSUP_REQ+html.head.title:4
+#: templates/ERR_WRITE_ERROR+html.head.title:4
+#: templates/ERR_ZERO_SIZE_OBJECT+html.head.title:4
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr "HIBA: A kért URL nem tölthető le"
+msgstr "HIBA: Az oldal nem tölthető be"
 
-#: templates/ERR_URN_RESOLVE:1
-#, fuzzy
+#: templates/ERR_URN_RESOLVE+html.head.title:4
 msgid "ERROR: The requested URN could not be retrieved"
-msgstr "HIBA: A kért URL nem tölthető le"
+msgstr "HIBA: A kért URN nem tölthető be"
 
-#: templates/ERR_ESI:5
+#: templates/ERR_ESI+html.body.div.blockquote.p:23
 msgid "ESI Processing failed."
-msgstr ""
+msgstr "Az ESI feldolgozás nem sikerült"
 
-#: templates/ERR_FTP_PUT_CREATED:1 templates/ERR_FTP_PUT_MODIFIED:1
-#, fuzzy
+#: templates/ERR_FTP_PUT_CREATED+html.head.title:4
+#: templates/ERR_FTP_PUT_MODIFIED+html.head.title:4
 msgid "FTP PUT Successful."
-msgstr "FTP PUT sikeresen megtörtént: az állományt létrehoztuk"
+msgstr "Sikeres PUT művelet"
 
-#: templates/ERR_FTP_PUT_ERROR:3
-#, fuzzy
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.h2:15
 msgid "FTP PUT upload failed"
-msgstr "FTP PUT/feltöltés hiba"
+msgstr "Sikertelen PUT művelet"
 
-#: templates/ERR_FTP_DISABLED:5
+#: templates/ERR_FTP_DISABLED+html.body.div.blockquote.p:23
 msgid "FTP is Disabled"
-msgstr "FTP tiltás"
+msgstr "Az FTP protokoll használata nem engedélyezett"
 
-#: templates/ERR_SECURE_CONNECT_FAIL:5
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.blockquote.p:23
 msgid "Failed to establish a secure connection to %I"
-msgstr ""
+msgstr "Nem sikerült a titkosított kapcsolat kiépítése a(z) %I szerverrel"
 
-#: templates/ERR_FTP_PUT_CREATED:3
+#: templates/ERR_FTP_PUT_CREATED+html.body.div.h2:15
 msgid "File created"
-msgstr "Az állományt létrehoztuk"
+msgstr "A fájl létrehozása sikeresen megtörtént"
 
-#: templates/ERR_FTP_PUT_MODIFIED:3
+#: templates/ERR_FTP_PUT_MODIFIED+html.body.div.h2:15
 msgid "File updated"
-msgstr "Az állomány frissítése megtörtént"
+msgstr "A fájl frissítése sikeresen megtörtént"
 
-#: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:26
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:26
 msgid "For Firefox browsers go to: <ul>"
-msgstr ""
+msgstr "Ha Firefoxot használ: <ul>"
 
-#: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:34
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:34
 msgid "For Internet Explorer browsers go to: <ul>"
-msgstr ""
+msgstr "Ha Internet Explorert használ: <ul>"
 
-#: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:42
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:42
 msgid "For Opera browsers go to: <ul>"
-msgstr ""
+msgstr "Ha Operát használ: <ul>"
 
-#: templates/ERR_FORWARDING_DENIED:5
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:61
+msgid "Format error in CRL's lastUpdate field"
+msgstr "A CRL-ben szereplő lastUpdate mező formátuma hibás"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:65
+msgid "Format error in CRL's nextUpdate field"
+msgstr "A CRL-ben szereplő nextUpdate mező formátuma hibás"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:57
+msgid "Format error in certificate's notAfter field"
+msgstr "A tanúsítványban szereplő notAfter mező hibás formátumú"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:53
+msgid "Format error in certificate's notBefore field"
+msgstr "A tanúsítványban szereplő notBefore mező hibás formátumú"
+
+#: templates/ERR_FORWARDING_DENIED+html.body.div.blockquote.p:23
 msgid "Forwarding Denied."
-msgstr "Kéréstovábbítás megtagadva."
+msgstr "A kérés továbbítása tiltott"
 
-#: templates/ERR_ACCESS_DENIED:8 templates/ERR_AGENT_CONFIGURE:16
-#: templates/ERR_AGENT_WPAD:15 templates/ERR_CACHE_ACCESS_DENIED:8
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
-#: templates/ERR_CONNECT_FAIL:9 templates/ERR_DIR_LISTING:7
-#: templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
-#: templates/ERR_FORWARDING_DENIED:8 templates/ERR_FTP_DISABLED:8
-#: templates/ERR_FTP_FAILURE:8 templates/ERR_FTP_FORBIDDEN:8
-#: templates/ERR_FTP_NOT_FOUND:9 templates/ERR_FTP_PUT_CREATED:4
-#: templates/ERR_FTP_PUT_ERROR:9 templates/ERR_FTP_PUT_MODIFIED:4
-#: templates/ERR_FTP_UNAVAILABLE:8 templates/ERR_ICAP_FAILURE:11
-#: templates/ERR_INVALID_REQ:14 templates/ERR_INVALID_RESP:8
-#: templates/ERR_INVALID_URL:13 templates/ERR_LIFETIME_EXP:8
-#: templates/ERR_NO_RELAY:8 templates/ERR_ONLY_IF_CACHED_MISS:8
-#: templates/ERR_PRECONDITION_FAILED:8 templates/ERR_READ_ERROR:9
-#: templates/ERR_READ_TIMEOUT:9 templates/ERR_SECURE_CONNECT_FAIL:9
-#: templates/ERR_SHUTTING_DOWN:7 templates/ERR_SOCKET_FAILURE:9
-#: templates/ERR_TOO_BIG:10 templates/ERR_UNSUP_HTTPVERSION:8
-#: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
-#: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.blockquote.p:23
+msgid "Gateway Proxy Failure"
+msgstr "Átjáróhiba"
+
+#: templates/ERR_ACCESS_DENIED+html.body.div.p:34
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:35
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.p:56
+#: templates/ERR_AGENT_WPAD+html.body.div.p:56
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:35
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:35
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:42
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:40
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:37
+#: templates/ERR_DIR_LISTING+html.body.div.p:38
+#: templates/ERR_DNS_FAIL+html.body.div.p:39
+#: templates/ERR_ESI+html.body.div.p:39
+#: templates/ERR_FORWARDING_DENIED+html.body.div.p:35
+#: templates/ERR_FTP_DISABLED+html.body.div.p:35
+#: templates/ERR_FTP_FAILURE+html.body.div.p:39
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:39
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:41
+#: templates/ERR_FTP_PUT_CREATED+html.body.div.p:23
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:40
+#: templates/ERR_FTP_PUT_MODIFIED+html.body.div.p:23
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:40
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:36
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:41
+#: templates/ERR_INVALID_REQ+html.body.div.p:49
+#: templates/ERR_INVALID_RESP+html.body.div.p:36
+#: templates/ERR_INVALID_URL+html.body.div.p:42
+#: templates/ERR_LIFETIME_EXP+html.body.div.p:34
+#: templates/ERR_NO_RELAY+html.body.div.p:34
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:34
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.p:36
+#: templates/ERR_READ_ERROR+html.body.div.p:36
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:36
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:36
+#: templates/ERR_SHUTTING_DOWN+html.body.div.p:30
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:36
+#: templates/ERR_TOO_BIG+html.body.div.p:36
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:34
+#: templates/ERR_UNSUP_REQ+html.body.div.p:34
+#: templates/ERR_URN_RESOLVE+html.body.div.p:34
+#: templates/ERR_WRITE_ERROR+html.body.div.p:36
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:34
 msgid "Generated %T by %h (%s)"
-msgstr ""
+msgstr "Dátum: %T, szerveradatok: %h (%s)"
 
-#: templates/ERR_INVALID_REQ:12
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:34
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
+"A kérésben szereplő <q>Expect:</q> fejléc nem támogatott a HTTP/1.0 "
+"protokollban."
 
-#: templates/ERR_URN_RESOLVE:6
+#: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:1
+msgid "Handshake with SSL server failed"
+msgstr "Sikertelen SSL-kézfogás"
+
+#: templates/ERR_URN_RESOLVE+html.body.div.p:26
 msgid "Hey, don't expect too much from URNs on %T :)"
-msgstr "Nem érdemes túl sokat várni a %T-n lévő URN-ektől :)"
+msgstr "Ne várjon túl sokat a %T-n lévő URN-ektől! :)"
 
-#: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.p:24
+#: templates/ERR_AGENT_WPAD+html.body.div.p:24
 msgid "How to find these settings in your browser:"
-msgstr ""
+msgstr "Ezeket a beállításokat az alábbi menüpontokon keresztül találhatja meg:"
 
-#: templates/ERR_ICAP_FAILURE:5
+#: templates/ERR_ICAP_FAILURE+html.body.div.blockquote.p:23
 msgid "ICAP protocol error."
-msgstr "ICAP protokoll hiba."
+msgstr "ICAP protokollhiba"
 
-#: templates/ERR_TOO_BIG:7
-#, fuzzy
+#: templates/ERR_TOO_BIG+html.body.div.p:27
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
 msgstr ""
-"Ha GET típusú kérésről van szó, akkor a válasz törzse (az az anyag amit "
-"éppen letöltene) túl nagy méretű."
+"GET kérés esetén a letölteni próbált fájl mérete meghaladja a megengedett "
+"maximumot"
 
-#: templates/ERR_TOO_BIG:6
-#, fuzzy
+#: templates/ERR_TOO_BIG+html.body.div.p:26
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
 msgstr ""
-"POST vagy PUT kérés esetén a kérés törzse (az az anyag amit feltöltene) túl "
-"nagy méretű."
+"POST vagy PUT kérés esetén valószínűleg túl nagy a feltölteni kívánt fájl "
+"mérete"
 
-#: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:33
+#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:33
 msgid "Illegal character in hostname; underscores are not allowed."
 msgstr ""
-"A szervernévben nem megengedett karakter található; az aláhúzás karakter "
-"például ilyen"
+"Érvénytelen karakter a hosztnévben: a „_” karakter használata nem "
+"engedélyezett"
 
-#: templates/ERR_INVALID_URL:10
+#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:32
 msgid "Illegal double-escape in the URL-Path"
-msgstr "Az URL elérési út részében dupla escape szekvencia található"
+msgstr "Érvénytelen double-escape az URL-Path-ban"
 
-#: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
-#: templates/ERR_AGENT_CONFIGURE:14
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:30
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:38
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:46
 msgid "In the HTTP proxy box type the proxy name %h and port 3128."
-msgstr ""
+msgstr "A HTTP proxy mezőben adja meg a proxy nevét (%h) és portszámát (3128)."
 
-#: templates/ERR_INVALID_URL:5
+#: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:97
+msgid "Invalid CA certificate"
+msgstr "Érvénytelen CA-tanúsítvány"
+
+#: templates/ERR_INVALID_URL+html.body.div.blockquote.p:23
 msgid "Invalid URL"
 msgstr "Érvénytelen URL"
 
-#: templates/ERR_INVALID_REQ:8
-msgid "Missing HTTP Identifier (HTTP/1.0)."
-msgstr "Hiányzó HTTP azonosító (HTTP/1.0)"
+#: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:129
+msgid "Key usage does not include certificate signing"
+msgstr ""
+"A tanúsítványban megadott kulcshasználati jogosultság nem engedi meg "
+"tanúsítványok aláírását."
 
-#: templates/ERR_INVALID_REQ:7
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:30
+msgid "Missing HTTP Identifier (HTTP/1.0)."
+msgstr "Hiányzó HTTP-azonosító (HTTP/1.0)"
+
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:29
 msgid "Missing URL."
 msgstr "Hiányzó URL"
 
-#: templates/ERR_INVALID_URL:9
+#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:31
 msgid "Missing hostname"
-msgstr "Hiányzó szervernév"
+msgstr "Hiányzó hosztnév"
 
-#: templates/ERR_INVALID_URL:8
+#: templates/ERR_INVALID_URL+html.body.div.ul.li.p:30
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
 msgstr ""
-"Hiányzó vagy hibás elérési protokoll (<q>http://</q>-nek vagy valami "
-"hasonlónak kell lennie)"
+"Az elérési protokoll (pl. <q>http://</q>) nincs megadva vagy hibás formátumú"
 
-#: templates/ERR_INVALID_REQ:6
-#, fuzzy
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:28
 msgid "Missing or unknown request method."
-msgstr "Hiányzó vagy nem létező kérési metódus (GET, POST)"
+msgstr "A kérés típusa nincs megadva vagy hibás formátumú"
 
-#: templates/ERR_NO_RELAY:5
+#: templates/ERR_NO_RELAY+html.body.div.blockquote.p:23
 msgid "No Wais Relay"
-msgstr "Nincs WAIS szerver"
+msgstr "Hiányzó WAIS továbbító"
 
-#: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
+#: templates/ERR_FTP_PUT_CREATED+html.body.div.h1:14
+#: templates/ERR_FTP_PUT_MODIFIED+html.body.div.h1:14
 msgid "Operation successful"
-msgstr "Művelet sikeresen végrehajtva"
+msgstr "Sikeres művelet"
 
-#: templates/ERR_DIR_LISTING:5
-msgid "Parent Directory"
-msgstr "Szülőkönyvtár"
+#: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.descr:69
+msgid "Out of memory"
+msgstr "Nincs elég memória a tanúsítvány ellenőrzéséhez"
 
-#: templates/ERR_CACHE_ACCESS_DENIED:7
-msgid ""
-"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
-"have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
-"chpasswd.cgi\">change</a> your default password."
-msgstr ""
-"Kérjük, forduljon a <a href=\"mailto:%w%W\">cache adminisztrátorhoz</a> "
-"amennyiben nem sikerül bejelentkeznie vagy <a ref=\"http://%h/cgi-bin/"
-"chpasswd.cgi\">megváltoztatnia</a>eredetileg beállított jelszavát."
+#: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:101
+msgid "Path length constraint exceeded"
+msgstr "Túl hosszú elérési útvonal"
 
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:28
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
 "have difficulties authenticating yourself or, if you <em>are</em> the "
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 msgstr ""
-"Kérjük, forduljon a <a href=\"mailto:%w%W\">cache adminisztrátorhoz</a> "
-"amennyiben nem sikerül bejelentkeznie vagy ha <em>Ön</em> a cache "
-"adminisztrátor, olvassa el alaposana Squid dokumentáció cache vezérlőpulttal "
-"kapcsolatos fejezetét és ellenőrizze a cachenaplóállományát, ha részletesebb "
-"hibaüzenetekre van szüksége a probléma felderítéséhez."
+"Kérem, lépjen kapcsolatba a <a href=\"mailto:%w%W\">szerver "
+"üzemeltetőjével</a>, ha nem tud bejelentkezni. Ha Ön a szerver "
+"adminisztrátora, akkor olvassa el a Squid dokumentációját a "
+"gyorsítótár-kezelő interfész használatáról. A hiba pontos okáról a Squid "
+"logfájljából tájékozódhat."
 
-#: templates/ERR_PRECONDITION_FAILED:5
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:28
+msgid ""
+"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
+"have difficulties authenticating yourself."
+msgstr ""
+"Kérem, lépjen kapcsolatba a <a href=\"mailto:%w%W\">szerver "
+"üzemeltetőjével</a>, ha nem tud bejelentkezni."
+
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:23
 msgid "Precondition Failed."
-msgstr ""
+msgstr "Egy előfeltétel nem teljesült"
 
-#: templates/ERR_READ_ERROR:5
+#: templates/ERR_READ_ERROR+html.body.div.blockquote.p:23
 msgid "Read Error"
-msgstr "Olvasási hiba"
+msgstr "Fogadási hiba"
 
-#: templates/ERR_READ_TIMEOUT:5
+#: templates/ERR_READ_TIMEOUT+html.body.div.blockquote.p:23
 msgid "Read Timeout"
-msgstr "Olvasási időtúllépés"
+msgstr "Időtúllépés történt az adatok fogadása közben"
 
-#: templates/ERR_INVALID_REQ:9
+#: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:31
 msgid "Request is too large."
-msgstr "A kérés vagy a válasz túl nagy méretű."
+msgstr "A kérés mérete túllépte a szerveren beállított limitet"
 
-#: templates/ERR_AGENT_WPAD:10
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:9
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:81
+msgid "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
+msgstr "SSL-tanúsítványhiba: a tanúsítvány kibocsátója ismeretlen: %ssl_ca_name"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:37
+msgid "SSL Certficate is not valid before: %ssl_notbefore"
+msgstr ""
+"Az SSL-tanúsítvány nem érvényes a következő időpont előtt: %ssl_notbefore"
+
+#: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.detail:41
+msgid "SSL Certificate expired on: %ssl_notafter"
+msgstr "Az SSL-tanúsítvány lejárt. Az érvényességi idő vége: %ssl_notafter"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.detail:57
+msgid ""
+"SSL Certificate has invalid expiration date (the 'not after' field): "
+"%ssl_subject"
+msgstr ""
+"Az SSL-tanúsítványban megadott lejárati dátum („not after” mező) "
+"érvénytelen: %ssl_subject"
+
+#: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:53
+msgid ""
+"SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
+msgstr ""
+"Az SSL-tanúsítványban megadott érvényességi dátum kezdete („not before” "
+"mező) érvénytelen: %ssl_subject"
+
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:30
+msgid "Select Auto-detect proxy settings for this network"
+msgstr ""
+"Válassza ki a „Proxybeállítások automatikus felismerése ehhez a hálózathoz” "
+"jelölőnégyzetet"
+
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:38
 msgid "Select Automatically detect settings"
-msgstr ""
+msgstr "Válassza ki az „Automatikus felismerés” opciót"
 
-#: templates/ERR_AGENT_WPAD:13
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:46
 msgid "Select Use Automatic proxy configuration"
-msgstr ""
+msgstr "Válassza ki az \"Automatikus proxybeállítás használata\" opciót"
 
-#: templates/ERR_SOCKET_FAILURE:5
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:73
+msgid "Self signed certificate"
+msgstr "Self-signed tanúsítvány"
+
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.descr:77
+msgid "Self signed certificate in certificate chain"
+msgstr "A tanúsítványlánc self-signed tanúsítványt tartalmaz"
+
+#: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.detail:77
+msgid "Self-signed SSL Certificate in chain: %ssl_subject"
+msgstr "Self-signed SSL-tanúsítvány a láncban: %ssl_subject"
+
+#: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.detail:73
+msgid "Self-signed SSL Certificate: %ssl_subject"
+msgstr "Self-signed tanúsítvány: %ssl_subject"
+
+#: templates/ERR_SOCKET_FAILURE+html.body.div.blockquote.p:23
 msgid "Socket Failure"
-msgstr "Socket hiba"
+msgstr "A socket nem hozható létre"
 
-#: templates/ERR_INVALID_URL:6
-#, fuzzy
+#: templates/ERR_INVALID_URL+html.body.div.p:26
 msgid "Some aspect of the requested URL is incorrect."
-msgstr "A megadott URL formátuma bizonyos szempontból nem megfelelő."
+msgstr "Az URL hibás formátumú."
 
-#: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
-#: templates/ERR_INVALID_URL:7
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:28
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:28
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:30
+#: templates/ERR_INVALID_REQ+html.body.div.p:26
+#: templates/ERR_INVALID_URL+html.body.div.p:28
 msgid "Some possible problems are:"
-msgstr "Néhány lehetséges probléma:"
+msgstr "A probléma lehetséges okai:"
 
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:26
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 msgstr ""
-"Sajnos az alábbi URL-t nem töltheti le cache szerverünktől %U amíg nem "
-"jelentkezik be rendszerünkbe."
+"A(z) %U URL gyorsítótár-kezelői eléréséhez be kell jelentkeznie a "
+"proxyszerverre."
 
-#: templates/ERR_CACHE_ACCESS_DENIED:6
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:26
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
-msgstr ""
-"Sajnos az alábbi URL-t nem töltheti le cache szerverünktől %U amíg nem "
-"jelentkezik be rendszerünkbe."
+msgstr "A(z) %U URL eléréséhez be kell jelentkeznie a proxyszerverre."
 
-#: templates/ERR_ZERO_SIZE_OBJECT:6
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:26
 msgid "Squid did not receive any data for this request."
-msgstr "A Squid nem kapott semmilyen választ a fenti kérésre."
+msgstr "A proxyszerver üres választ kapott a kérésre."
 
-#: templates/ERR_UNSUP_REQ:6
+#: templates/ERR_UNSUP_REQ+html.body.div.p:26
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
-"A Squid nem támogat minden kérési metódust minden protokolltípushoz. Például "
-"nem lehet Gopher protokollhoz POST metódust alkalmazni."
+"A proxyszerver nem támogat minden létező kéréstípus és protokoll "
+"kombinációt, így pl. nem lehet POST kéréstípust használni egy Gopher "
+"kérésben."
 
-#: templates/ERR_LIFETIME_EXP:6
+#: templates/ERR_LIFETIME_EXP+html.body.div.p:26
 msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
 msgstr ""
-"A Squid megszakította a kérés kiszolgálását mivel a kérés feldolgozásának "
-"ideje a maximális kapcsolatfenntartás időtartamának értékét meghaladta."
+"A kapcsolat élettartama lejárt, ezért a proxyszerver bontotta a kapcsolatot."
 
-#: templates/ERR_SOCKET_FAILURE:7
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:28
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
-"A Squid nem tud TCP socket-et létrehozni, valószínűleg a nagy terheltség "
-"következtében. Ismételje meg kérését!"
+"A proxyszerver nem tudott új TCP socketet nyitni, vélhetően a magas terhelés "
+"miatt. Kérem, ismételje meg a kérést később."
 
-#: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
-#: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
-#: templates/ERR_FTP_UNAVAILABLE:5
+#: templates/ERR_FTP_FAILURE+html.body.div.p:22
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:22
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:22
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:22
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:22
 msgid "Squid sent the following FTP command:"
-msgstr "A Squid az alábbi FTP parancsot küldte:"
+msgstr "A proxyszerver által küldött FTP-parancs:"
 
-#: templates/ERR_DNS_FAIL:6
-#, fuzzy
-msgid "The DNS server returned:"
-msgstr "A DNS server válasza:"
-
-#: templates/ERR_ESI:6
-msgid "The ESI processor returned:"
+#: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:117
+msgid "Subject issuer mismatch"
 msgstr ""
+"A kibocsátó tanúsítványában szereplő név nem egyezik a kiadott "
+"tanúsítványban szereplő névvel."
 
-#: templates/ERR_FTP_UNAVAILABLE:4
+#: templates/ERR_DNS_FAIL+html.body.div.p:26
+msgid "The DNS server returned:"
+msgstr "A DNS-szerver válasza:"
+
+#: templates/ERR_ESI+html.body.div.p:26
+msgid "The ESI processor returned:"
+msgstr "Az ESI feldolgozó által visszaadott üzenet:"
+
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:20
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"Az FTP kiszolgáló túlterheltsége miatt az alábbi URL nem tölthető le: <a "
-"href=\"%U\">%U</a>"
+"Az FTP-szerver túlterheltség miatt nem tudta kiszolgálni a(z) <a href=\"%U\">%"
+"U</a> kérést."
 
-#: templates/ERR_INVALID_RESP:5
+#: templates/ERR_INVALID_RESP+html.body.div.p:26
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
+"A távoli szerver által küldött HTTP-válasz megsérült vagy értelmezhetetlen. "
+"Kérem, jelezze a hibát a szerver üzemeltetőjének."
 
-#: templates/ERR_ICAP_FAILURE:9
+#: templates/ERR_ICAP_FAILURE+html.body.div.ul.li.p:32
 msgid "The ICAP server is not reachable."
+msgstr "Az ICAP szerver nem elérhető"
+
+#: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:32
+msgid ""
+"The administrator may not allow this cache to make direct connections to "
+"origin servers."
 msgstr ""
+"A rendszergazda nem engedélyezte a proxyszerveren más szerverek közvetlen "
+"elérését."
 
-#: templates/ERR_FTP_NOT_FOUND:4
+#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:30
+msgid ""
+"The domain may have moved very recently. Trying again will resolve that."
+msgstr ""
+"Előfordulhat, hogy a domain elköltözött. Kérem, küldje el a kérést újra."
+
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:20
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
-msgstr "Az alábbi URL nem tölthető le: <a href=\"%U\">%U</a>"
+msgstr "A(z) <a href=\"%U\">%U</a> URL nem tölthető be."
 
-#: templates/ERR_ACCESS_DENIED:4 templates/ERR_CACHE_ACCESS_DENIED:4
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
-#: templates/ERR_CONNECT_FAIL:4 templates/ERR_DNS_FAIL:4 templates/ERR_ESI:4
-#: templates/ERR_FORWARDING_DENIED:4 templates/ERR_FTP_DISABLED:4
-#: templates/ERR_ICAP_FAILURE:4 templates/ERR_INVALID_URL:4
-#: templates/ERR_LIFETIME_EXP:4 templates/ERR_NO_RELAY:4
-#: templates/ERR_ONLY_IF_CACHED_MISS:4 templates/ERR_PRECONDITION_FAILED:4
-#: templates/ERR_READ_ERROR:4 templates/ERR_READ_TIMEOUT:4
-#: templates/ERR_SECURE_CONNECT_FAIL:4 templates/ERR_SHUTTING_DOWN:4
-#: templates/ERR_SOCKET_FAILURE:4 templates/ERR_TOO_BIG:4
-#: templates/ERR_UNSUP_HTTPVERSION:4 templates/ERR_UNSUP_REQ:4
-#: templates/ERR_WRITE_ERROR:4 templates/ERR_ZERO_SIZE_OBJECT:4
+#: templates/ERR_ACCESS_DENIED+html.body.div.p:20
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:20
+#: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:20
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:20
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:20
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:20
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:20
+#: templates/ERR_DNS_FAIL+html.body.div.p:20
+#: templates/ERR_ESI+html.body.div.p:20
+#: templates/ERR_FORWARDING_DENIED+html.body.div.p:20
+#: templates/ERR_FTP_DISABLED+html.body.div.p:20
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:20
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:20
+#: templates/ERR_INVALID_URL+html.body.div.p:20
+#: templates/ERR_LIFETIME_EXP+html.body.div.p:20
+#: templates/ERR_NO_RELAY+html.body.div.p:20
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:20
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.p:20
+#: templates/ERR_READ_ERROR+html.body.div.p:20
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:20
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:20
+#: templates/ERR_SHUTTING_DOWN+html.body.div.p:20
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:20
+#: templates/ERR_TOO_BIG+html.body.div.p:20
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:20
+#: templates/ERR_UNSUP_REQ+html.body.div.p:20
+#: templates/ERR_WRITE_ERROR+html.body.div.p:20
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:20
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
-msgstr ""
+msgstr "Hiba történt a(z) <a href=\"%U\">%U</a> URL betöltése közben:"
 
-#: templates/ERR_URN_RESOLVE:4
+#: templates/ERR_URN_RESOLVE+html.body.div.p:20
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
-msgstr ""
+msgstr "Hiba történt a(z) <a href=\"%U\">%U</a> URN betöltése közben:"
 
-#: templates/ERR_CONNECT_FAIL:7
-#, fuzzy
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:28
 msgid "The remote host or network may be down. Please try the request again."
 msgstr ""
-"A kiszolgáló szerver vagy az adott hálózat valószínűleg nem működik. Kérjük, "
-"ismételje meg kérését!"
+"A hiba legvalószínűbb oka, hogy a távoli szerver vagy hálózat épp nem "
+"elérhető. Kérem, próbálja meg elérni a szervert később."
 
-#: templates/ERR_TOO_BIG:5
+#: templates/ERR_TOO_BIG+html.body.div.blockquote.p:23
 msgid "The request or reply is too large."
-msgstr "A kérés vagy a válasz túl nagy méretű."
+msgstr "A kérés vagy a válasz mérete meghaladja a szerveren beállított limitet."
 
-#: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
-#: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
-#: templates/ERR_FORWARDING_DENIED:3 templates/ERR_FTP_DISABLED:3
-#: templates/ERR_FTP_FAILURE:3 templates/ERR_FTP_FORBIDDEN:3
-#: templates/ERR_FTP_NOT_FOUND:3 templates/ERR_FTP_UNAVAILABLE:3
-#: templates/ERR_ICAP_FAILURE:3 templates/ERR_INVALID_REQ:3
-#: templates/ERR_INVALID_RESP:3 templates/ERR_INVALID_URL:3
-#: templates/ERR_LIFETIME_EXP:3 templates/ERR_NO_RELAY:3
-#: templates/ERR_ONLY_IF_CACHED_MISS:3 templates/ERR_PRECONDITION_FAILED:3
-#: templates/ERR_READ_ERROR:3 templates/ERR_READ_TIMEOUT:3
-#: templates/ERR_SECURE_CONNECT_FAIL:3 templates/ERR_SHUTTING_DOWN:3
-#: templates/ERR_SOCKET_FAILURE:3 templates/ERR_TOO_BIG:3
-#: templates/ERR_UNSUP_REQ:3 templates/ERR_WRITE_ERROR:3
-#: templates/ERR_ZERO_SIZE_OBJECT:3
+#: templates/ERR_ACCESS_DENIED+html.body.div.h2:15
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h2:15
+#: templates/ERR_CANNOT_FORWARD+html.body.div.h2:15
+#: templates/ERR_CONFLICT_HOST+html.body.div.h2:15
+#: templates/ERR_CONNECT_FAIL+html.body.div.h2:15
+#: templates/ERR_DNS_FAIL+html.body.div.h2:15
+#: templates/ERR_ESI+html.body.div.h2:15
+#: templates/ERR_FORWARDING_DENIED+html.body.div.h2:15
+#: templates/ERR_FTP_DISABLED+html.body.div.h2:15
+#: templates/ERR_FTP_FAILURE+html.body.div.h2:15
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.h2:15
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.h2:15
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.h2:15
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.h2:15
+#: templates/ERR_ICAP_FAILURE+html.body.div.h2:15
+#: templates/ERR_INVALID_REQ+html.body.div.h2:15
+#: templates/ERR_INVALID_RESP+html.body.div.h2:15
+#: templates/ERR_INVALID_URL+html.body.div.h2:15
+#: templates/ERR_LIFETIME_EXP+html.body.div.h2:15
+#: templates/ERR_NO_RELAY+html.body.div.h2:15
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.h2:15
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.h2:15
+#: templates/ERR_READ_ERROR+html.body.div.h2:15
+#: templates/ERR_READ_TIMEOUT+html.body.div.h2:15
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.h2:15
+#: templates/ERR_SHUTTING_DOWN+html.body.div.h2:15
+#: templates/ERR_SOCKET_FAILURE+html.body.div.h2:15
+#: templates/ERR_TOO_BIG+html.body.div.h2:15
+#: templates/ERR_UNSUP_REQ+html.body.div.h2:15
+#: templates/ERR_WRITE_ERROR+html.body.div.h2:15
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.h2:15
 msgid "The requested URL could not be retrieved"
-msgstr "A kért URL nem tölthető le"
+msgstr "Az oldal nem tölthető be"
 
-#: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
-#: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
-#: templates/ERR_FTP_UNAVAILABLE:6
+#: templates/ERR_FTP_FAILURE+html.body.div.p:27
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:27
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:27
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:27
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:28
 msgid "The server responded with:"
-msgstr ""
+msgstr "A távoli szerver válasza:"
 
-#: templates/ERR_CONNECT_FAIL:6 templates/ERR_ICAP_FAILURE:6
-#: templates/ERR_READ_ERROR:6 templates/ERR_READ_TIMEOUT:6
-#: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
-#: templates/ERR_WRITE_ERROR:6
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:26
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:26
+#: templates/ERR_READ_ERROR+html.body.div.p:26
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:26
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:26
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:26
+#: templates/ERR_WRITE_ERROR+html.body.div.p:26
 msgid "The system returned: <i>%E</i>"
-msgstr "A rendszer válasza: <i>%E</i>"
+msgstr "A rendszer által visszaadott hibaüzenet: <i>%E</i>"
 
-#: templates/ERR_NO_RELAY:6
-#, fuzzy
+#: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:31
+msgid ""
+"The website may require you to use a local country-based version. Using your "
+"ISP provided DNS server(s) should resolve that."
+msgstr ""
+"Előfordulhat, hogy az elérni kívánt weboldal megköveteli a helyi, "
+"országspecifikus verzió használatát. Az internetszolgáltató DNS-szervereinek "
+"használata megoldja a problémát."
+
+#: templates/ERR_NO_RELAY+html.body.div.p:26
 msgid ""
 "There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
-"Nincs a cache számára WAIS szerver megadva! Szóljon az adminisztrátornak."
+"A proxyszerveren nincs beállítva WAIS továbbító. Kérem, jelezze a problémát "
+"a rendszergazdának."
 
-#: templates/ERR_TOO_BIG:8
-#, fuzzy
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:27
+#: templates/ERR_TOO_BIG+html.body.div.p:28
 msgid ""
 "These limits have been established by the Internet Service Provider who "
 "operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
-"A cache-t működtető Internet szolgáltató vezette be ezeket a korlátozásokat. "
-"Kérjük, forduljon közvetlenül szolgáltatójához amennyiben a szerver "
-"helytelen beállításában látja a hiba okát."
+"Ezeket a korlátozásokat a proxyszervert üzemeltető internetszolgáltató "
+"szabályozza. Bővebb információért vegye fel a kapcsolatot a szolgáltatóval."
 
-#: templates/ERR_UNSUP_HTTPVERSION:6
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:26
 msgid "This Squid does not accept the HTTP version you are attempting to use."
-msgstr ""
+msgstr "A proxyszerver nem támogatja a kérésben szereplő HTTP-verziót."
 
-#: templates/ERR_FTP_DISABLED:6
+#: templates/ERR_FTP_DISABLED+html.body.div.p:26
 msgid "This cache does not support FTP."
-msgstr "Ez a cache szerver nem szolgál ki FTP kéréseket."
+msgstr "A proxyszerver nem támogatja az FTP-protokoll használatát."
 
-#: templates/ERR_SHUTTING_DOWN:5
-#, fuzzy
+#: templates/ERR_SHUTTING_DOWN+html.body.div.p:22
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time. Please retry your request again soon."
 msgstr ""
-"A cache leállásra készül és ezért nem tudja kiszolgálni a kérését. Kérjük, "
-"rövid idő múlva ismételje meg kérését!"
+"A proxyszerver leállítás alatt van, így jelen pillanatban nem tudja "
+"kiszolgálni a kérést. Kérem, próbálja újra később."
 
-#: templates/ERR_FORWARDING_DENIED:6
-#, fuzzy
+#: templates/ERR_FORWARDING_DENIED+html.body.div.p:26
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
 "sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
-"Ez a cache szerver nem továbbítja kérését mivel szomszédsági kapcsolatot "
-"szeretne kierőszakolni a klienstől. Feltehetőleg a kliens (%i) egy olyan "
-"cache szerver, amelyik félre lett konfigurálva."
+"A kérés nem továbbítható, mivel az egy testvéri kapcsolatot eredményezne. A "
+"kliens (%i) valószínűleg egy másik proxyszerver, ami hibásan van "
+"konfigurálva."
 
-#: templates/ERR_ICAP_FAILURE:7
-msgid "This means that some aspect of the ICAP communication failed."
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:28
+msgid ""
+"This may be due to limits established by the Internet Service Provider who "
+"operates this cache. Please contact them directly for more information."
 msgstr ""
+"Ezeket a korlátozásokat a proxyszervert üzemeltető internetszolgáltató "
+"szabályozza. Bővebb információért vegye fel a kapcsolatot a szolgáltatóval."
 
-#: templates/ERR_FTP_PUT_ERROR:7
+#: templates/ERR_ICAP_FAILURE+html.body.div.p:28
+msgid "This means that some aspect of the ICAP communication failed."
+msgstr "Az ICAP kommunikáció során hiba lépett fel."
+
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:32
 msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
+"A hibát az okozhatja, hogy az FTP-szerveren elfogyott a szabad hely vagy "
+"jogosultság hiányában a fájl nem írható a háttértárolóra. Kérem, ellenőrizze "
+"a jogosultságokat és a szerveren rendelkezésre álló szabad tárkapacitás "
+"mennyiségét, majd ismételje meg a műveletet."
 
-#: templates/ERR_DNS_FAIL:7
-#, fuzzy
+#: templates/ERR_DNS_FAIL+html.body.div.p:31
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
-"Ez azt jelenti, hogy A cache képtelen volt feloldani az URL-ben szereplő "
-"szerver nevét. Ellenőrizze a cím helyességét!"
+"A proxyszerver nem tudta feloldani az URL-ben szereplő hosztnevet. Kérem, "
+"ellenőrizze, hogy a cím helyes-e."
 
-#: templates/ERR_ESI:7
+#: templates/ERR_ESI+html.body.div.p:31
 msgid ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 msgstr ""
+"Ez a hiba arra utal, hogy a helyettesítő nem tudta feldolgozni az ESI-"
+"sablont. Kérem, jelezze a hibát a szerver üzemeltetőjének."
 
-#: templates/ERR_PRECONDITION_FAILED:6
-msgid "This means:"
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:26
+msgid ""
+"This means the domain name you are trying to access apparently no longer "
+"exists on the machine you are requesting it from."
 msgstr ""
+"Ez a hiba arra utal, hogy az elérni kívánt domainnév nem érhető el az Ön "
+"számítógépéről."
 
-#: templates/ERR_FTP_NOT_FOUND:7
-#, fuzzy
+#: templates/ERR_PRECONDITION_FAILED+html.body.div.p:26
+msgid "This means:"
+msgstr "A hiba lehetséges okai:"
+
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:33
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
 "comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
-"A hibát lehet hogy az okozta, hogy az FTP URL abszolút elérési utat "
-"tartalmaz (ami nem felel meg az RFC 1738 előírásnak). Amennyiben ez a hiba "
-"oka, akkor az állományt a <a href=\"%B\">%B</a> címen lehet megtalálni."
+"A hibát abszolút elérési útvonal használata okozhatja, ami nem felel meg az "
+"RFC 1738 szabványnak. Ha valóban ez a hiba forrása, akkor próbálja meg "
+"elérni a fájlt itt: <a href=\"%B\">%B</a>."
 
-#: templates/ERR_SECURE_CONNECT_FAIL:7
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:28
 msgid ""
 "This proxy and the remote host failed to negotiate a mutually acceptable "
 "security settings for handling your request. It is possible that the remote "
 "host does not support secure connections, or the proxy is not satisfied with "
 "the host security credentials."
 msgstr ""
+"Nem sikerült kiépíteni a titkosított kapcsolatot a proxyszerver és a távoli "
+"kiszolgáló között. Lehet, hogy a távoli szerver nem támogatja a titkosított "
+"kapcsolatokat vagy olyan protokollt használ, ami a proxyszerveren nem "
+"engedélyezett."
 
-#: templates/ERR_CANNOT_FORWARD:6
-#, fuzzy
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:26
+msgid ""
+"This proxy limits your time online with a quota. Your time budget is now "
+"empty but will be refilled when the configured time period starts again."
+msgstr ""
+"A proxyszerver kvóták használatával korlátozza a gépek hálózati idejét. A "
+"szerveren beállított időkeret elfogyott, és az csak a rendszergazda által "
+"megadott időintervallum kezdetekor lesz ismét felhasználható."
+
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:26
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
-"caches. The most likely cause for this error is that the cache administrator "
-"does not allow this cache to make direct connections to origin servers, and "
-"all configured parent caches are currently unreachable."
+"caches."
 msgstr ""
-"A kérés nem továbbítható a forrás, illetve egyik szülő cache szerverhez sem. "
-"A hiba oka valószínűleg alábbiakban rejlik a cache adminisztrátor nem "
-"engedélyezi a forrás szerverekhez való közvetlen kapcsolat felépítését és "
-"egyik általunk használt szülő cache szerver sem érhető el jelenleg."
+"A kérés nem továbbítható a forrásszerver vagy valamelyik parent cache felé."
 
-#: templates/ERR_AGENT_CONFIGURE:10 templates/ERR_AGENT_WPAD:9
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.blockquote.p:23
+msgid "Time Quota Exceeded."
+msgstr "Az időkvóta elfogyott"
+
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:37
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:37
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
 msgstr ""
+"Eszközök -&gt; Internetbeállítások -&gt; Kapcsolat -&gt; Helyi hálózat "
+"beállításai -&gt; Proxy"
 
-#: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:29
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:29
 msgid ""
 "Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
 msgstr ""
+"Eszközök -&gt; Beállítások -&gt; Fejlett -&gt; Hálózat -&gt; "
+"Kapcsolatbeállítások"
 
-#: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:45
+#: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:45
 msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
 msgstr ""
+"Eszközök -&gt; Beállítások -&gt; Fejlett -&gt; Hálózat -&gt; Proxyszerverek"
 
-#: templates/ERR_DNS_FAIL:5
-#, fuzzy
+#: templates/ERR_CONFLICT_HOST+html.body.div.blockquote.pre:23
+msgid "URI Host Conflict"
+msgstr "Ütköző URI-hosztok"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:25
+msgid "Unable to decode issuer (CA) public key: %ssl_ca_name"
+msgstr "A kibocsátó publikus kulcsa nem dekódolható: %ssl_ca_name"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.descr:25
+msgid "Unable to decode issuer public key"
+msgstr "A kibocsátó publikus kulcsa nem dekódolható"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:21
+msgid "Unable to decrypt CRL's signature"
+msgstr "A CRL aláírása nem dekódolható"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.descr:17
+msgid "Unable to decrypt certificate's signature"
+msgstr "A tanúsítvány aláírása nem dekódolható"
+
+#: templates/ERR_DNS_FAIL+html.body.div.blockquote.p:23
 msgid "Unable to determine IP address from host name <q>%H</q>"
-msgstr "A(z) <q>%H</q> szervernévhez nem lehet meghatározni az IP címet."
+msgstr "A(z) <q>%H</q> DNS-névhez tartozó IP-cím nem oldható fel"
 
-#: templates/ERR_CANNOT_FORWARD:5
+#: templates/ERR_CANNOT_FORWARD+html.body.div.blockquote.p:23
 msgid "Unable to forward this request at this time."
-msgstr "A kérést jelenleg nem lehet továbbítani."
+msgstr "A kérés jelenleg nem továbbítható"
 
-#: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.descr:13
+msgid "Unable to get certificate CRL"
+msgstr "A tanúsítványhoz tartozó CRL nem érhető el"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.descr:9
+msgid "Unable to get issuer certificate"
+msgstr "A kibocsátó tanúsítványa nem érhető el"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:81
+msgid "Unable to get local issuer certificate"
+msgstr "A helyi kibocsátó tanúsítványa nem érhető el"
+
+#: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:85
+msgid "Unable to verify the first certificate"
+msgstr "A tanúsítvány aláírása nem ellenőrizhető"
+
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h2:15
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.blockquote.p:23
 msgid "Unsupported HTTP version"
-msgstr ""
+msgstr "Nem támogatott HTTP-verzió"
 
-#: templates/ERR_UNSUP_REQ:5
+#: templates/ERR_UNSUP_REQ+html.body.div.blockquote.p:23
 msgid "Unsupported Request Method and Protocol"
-msgstr "Nem támogatott kérési metódus és protokoll"
+msgstr "Nem támogatott kéréstípus vagy protokoll"
 
-#: templates/ERR_ONLY_IF_CACHED_MISS:5
+#: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:105
+msgid "Unsupported certificate purpose"
+msgstr "A tanúsítvány nem használható a kért művelet elvégzéséhez"
+
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.blockquote.p:23
 msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
 msgstr ""
-"A cache-ben érvényes dokumentum nem található és a kérésben <q>only-if-"
-"cached</q> direktíva volt beállítva."
+"Az <q>only-if-cached</q> direktíva szerepel a kérésben, azonban a kért "
+"tartalom nem található meg a gyorsítótárban."
 
-#: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
-#: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
+#: templates/ERR_AGENT_CONFIGURE+html.head.title:4
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.h2:15
+#: templates/ERR_AGENT_WPAD+html.head.title:4
+#: templates/ERR_AGENT_WPAD+html.body.div.h2:15
 msgid "Web Browser Configuration"
-msgstr "Webböngésző konfiguráció"
+msgstr "A böngésző konfigurálása"
 
-#: templates/ERR_WRITE_ERROR:5
+#: templates/ERR_WRITE_ERROR+html.body.div.blockquote.p:23
 msgid "Write Error"
-msgstr "Írási hiba"
+msgstr "Küldési hiba"
 
-#: templates/ERR_ONLY_IF_CACHED_MISS:6
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:26
 msgid ""
 "You have issued a request with a <q>only-if-cached</q> cache control "
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
-"Olyan kérést küldött el, amelyben <q>only-if-cached</q> cache vezérlő "
-"direktíva található. A dokumentum nincs a cache-ben <em>vagy</em> a "
-"dokumentum érvényesség-ellenőrzést igényelt volna, ezt azonban az <q>only-if-"
-"cached</q> direktíva megtiltotta."
+"A böngésző által küldött kérés tartalmazza az <q>only-if-cached</q> "
+"direktívát, de a kért tartalom nem szerepel a gyorsítótárban. A tartalom "
+"ismételt letöltésére lenne szükség, ezt azonban tiltja az <q>only-if-"
+"cached</q> direktíva."
 
-#: templates/ERR_AGENT_CONFIGURE:4 templates/ERR_AGENT_WPAD:4
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.blockquote.p:21
+#: templates/ERR_AGENT_WPAD+html.body.div.blockquote.p:21
 msgid ""
 "Your Web Browser configuration needs to be corrected to use this network."
-msgstr ""
+msgstr "A hálózat használatához módosítania kell a böngésző beállításait."
 
-#: templates/ERR_ACCESS_DENIED:7 templates/ERR_AGENT_CONFIGURE:15
-#: templates/ERR_AGENT_WPAD:14 templates/ERR_CANNOT_FORWARD:7
-#: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
-#: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
-#: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
-#: templates/ERR_FTP_NOT_FOUND:8 templates/ERR_FTP_PUT_ERROR:8
-#: templates/ERR_FTP_UNAVAILABLE:7 templates/ERR_INVALID_REQ:13
-#: templates/ERR_INVALID_RESP:7 templates/ERR_INVALID_URL:12
-#: templates/ERR_LIFETIME_EXP:7 templates/ERR_NO_RELAY:7
-#: templates/ERR_ONLY_IF_CACHED_MISS:7 templates/ERR_READ_ERROR:8
-#: templates/ERR_READ_TIMEOUT:8 templates/ERR_SECURE_CONNECT_FAIL:8
-#: templates/ERR_SHUTTING_DOWN:6 templates/ERR_SOCKET_FAILURE:8
-#: templates/ERR_TOO_BIG:9 templates/ERR_UNSUP_HTTPVERSION:7
-#: templates/ERR_UNSUP_REQ:7 templates/ERR_URN_RESOLVE:7
-#: templates/ERR_WRITE_ERROR:8 templates/ERR_ZERO_SIZE_OBJECT:7
+# replaced the theeing form, as it is not widely accepted in Hungary
+#: templates/ERR_ACCESS_DENIED+html.body.div.p:28
+#: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:29
+#: templates/ERR_AGENT_CONFIGURE+html.body.div.p:50
+#: templates/ERR_AGENT_WPAD+html.body.div.p:50
+#: templates/ERR_CANNOT_FORWARD+html.body.div.p:35
+#: templates/ERR_CONFLICT_HOST+html.body.div.p:34
+#: templates/ERR_CONNECT_FAIL+html.body.div.p:30
+#: templates/ERR_DNS_FAIL+html.body.div.p:33
+#: templates/ERR_FORWARDING_DENIED+html.body.div.p:28
+#: templates/ERR_FTP_DISABLED+html.body.div.p:28
+#: templates/ERR_FTP_FAILURE+html.body.div.p:33
+#: templates/ERR_FTP_FORBIDDEN+html.body.div.p:33
+#: templates/ERR_FTP_NOT_FOUND+html.body.div.p:35
+#: templates/ERR_FTP_PUT_ERROR+html.body.div.p:34
+#: templates/ERR_FTP_UNAVAILABLE+html.body.div.p:34
+#: templates/ERR_GATEWAY_FAILURE+html.body.div.p:30
+#: templates/ERR_INVALID_REQ+html.body.div.p:37
+#: templates/ERR_INVALID_RESP+html.body.div.p:30
+#: templates/ERR_INVALID_URL+html.body.div.p:36
+#: templates/ERR_LIFETIME_EXP+html.body.div.p:28
+#: templates/ERR_NO_RELAY+html.body.div.p:28
+#: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.p:28
+#: templates/ERR_READ_ERROR+html.body.div.p:30
+#: templates/ERR_READ_TIMEOUT+html.body.div.p:30
+#: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:30
+#: templates/ERR_SHUTTING_DOWN+html.body.div.p:24
+#: templates/ERR_SOCKET_FAILURE+html.body.div.p:30
+#: templates/ERR_TOO_BIG+html.body.div.p:30
+#: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:28
+#: templates/ERR_UNSUP_REQ+html.body.div.p:28
+#: templates/ERR_URN_RESOLVE+html.body.div.p:28
+#: templates/ERR_WRITE_ERROR+html.body.div.p:30
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:28
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
 msgstr ""
+"A proxyszerver üzemeltetőjének e-mail címe: <a href=\"mailto:%w%W\">%w</a>."
 
-#: templates/ERR_INVALID_RESP:6
+#: templates/ERR_INVALID_RESP+html.body.div.p:28
 msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
+"Forduljon a proxyszerver üzemeltetőjéhez, ha többet szeretne megtudni a "
+"problémáról."
 
-#: templates/ERR_ESI:8
+#: templates/ERR_ESI+html.body.div.p:33
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
-msgstr ""
+msgstr "A webszerver üzemeltetőjének e-mail címe: <a href=\"mailto:%w\">%w</a>."
 
-#: templates/ERR_ZERO_SIZE_OBJECT:5
+#: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.blockquote.p:23
 msgid "Zero Sized Reply"
 msgstr "Üres válasz"
 
@@ -766,6 +1238,21 @@ msgstr "Üres válasz"
 
 #~ msgid "FTP PUT Successful: File Updated"
 #~ msgstr "FTP PUT sikeresen megtörtént: az állományt frissítettük"
+
+#~ msgid "Parent Directory"
+#~ msgstr "Szülőkönyvtár"
+
+msgid ""
+"This request could not be forwarded to the origin server or to any parent "
+"caches. The most likely cause for this error is that the cache "
+"administrator does not allow this cache to make direct connections to "
+"origin servers, and all configured parent caches are currently "
+"unreachable."
+msgstr ""
+"A kérés nem továbbítható a forrásszerver vagy valamelyik parent cache felé. "
+"A hiba legvalószínűbb oka, hogy a rendszergazda nem engedélyezte a közvetlen "
+"kapcsolatokat a távoli szerverek felé, és jelenleg minden parent cache "
+"elérhetetlen."
 
 #~ msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
 #~ msgstr "Az alábbi URL-re történő PUT műveletnél: <a href=\"%U\">%U</a>"
