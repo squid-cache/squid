@@ -143,8 +143,8 @@ struct _idns_query {
     int attempt;
     int rcode;
     idns_query *queue;
-    idns_query *slave;  // AAAA
-    idns_query *master; // A
+    idns_query *slave;  // single linked list
+    idns_query *master; // single pointer to a shared master
     unsigned short domain;
     unsigned short do_searchpath;
     rfc1035_message *message;
@@ -1180,7 +1180,9 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
             return;
         }
 
-        // Do searchpath processing on the master A query only, ignoring any AAAA query
+        // Do searchpath processing on the master A query only to keep
+        // things simple. NXDOMAIN is authorative for the label, not
+        // the record type.
         if (q->rcode == 3 && !q->master && q->do_searchpath && q->attempt < MAX_ATTEMPT) {
             assert(NULL == message->answer);
             strcpy(q->name, q->orig);
