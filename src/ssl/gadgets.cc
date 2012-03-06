@@ -150,9 +150,31 @@ bool Ssl::readCertFromMemory(X509_Pointer & cert, char const * bufferToRead)
     return true;
 }
 
+// According to RFC 5280 (Section A.1), the common name length in a certificate
+// can be at most 64 characters
+static const size_t MaxCnLen = 64;
+
 // Replace certs common name with the given
-static bool replaceCommonName(Ssl::X509_Pointer & cert, const char *cn)
+static bool replaceCommonName(Ssl::X509_Pointer & cert, std::string const &cn)
 {
+    std::string fixedCn;
+    if (cn.length() > MaxCnLen) {
+        // In the case the length od CN is more than the maximum supported size
+        // try to use the first upper level domain.
+        size_t pos = 0;
+        do {
+            pos = cn.find('.', pos + 1);
+        } while(pos != std::string::npos && (cn.length() - pos + 2) > MaxCnLen);
+
+        // If no short domain found or this domain is a toplevel domain
+        // we failed to find a good cn name.
+        if (pos == std::string::npos || cn.find('.', pos + 1) == std::string::npos)
+            return false;
+
+        fixedCn.append(1,'*');
+        fixedCn.append(cn.c_str() + pos);
+    }
+
     X509_NAME *name = X509_get_subject_name(cert.get());
     if (!name)
         return false;
@@ -166,7 +188,7 @@ static bool replaceCommonName(Ssl::X509_Pointer & cert, const char *cn)
 
     // Add a new CN
     return X509_NAME_add_entry_by_NID(name, NID_commonName, MBSTRING_ASC,
-                                      (unsigned char *)cn, -1, -1, 0);
+                                      (unsigned char *)(fixedCn.empty() ? cn.c_str() : fixedCn.c_str()), -1, -1, 0);
 }
 
 const char *Ssl::CertSignAlgorithmStr[] = {
@@ -238,8 +260,10 @@ static bool buildCertificate(Ssl::X509_Pointer & cert, Ssl::CertificatePropertie
 
     if (properties.setCommonName || !properties.mimicCert.get()) {
         // In this case the CN of the certificate given by the user
-        if (!replaceCommonName(cert, properties.commonName.c_str()))
-            return false;
+        // Ignore errors: it is better to make a certificate with no CN
+        // than to quit ssl_crtd because we cannot make a certificate.
+        // Most errors are caused by user input such as huge domain names.
+        (void)replaceCommonName(cert, properties.commonName);
     }
 
     // We should get caCert notBefore and notAfter fields and do not allow 
