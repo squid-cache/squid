@@ -61,6 +61,7 @@
 #include "fde.h"
 #include "Store.h"
 #include "SquidTime.h"
+#include "StatCounters.h"
 
 #if HAVE_SYS_EVENT_H
 #include <sys/event.h>
