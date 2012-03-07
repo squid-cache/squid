@@ -1637,7 +1637,8 @@ StoreEntry::setMemStatus(mem_status_t new_status)
 
     // are we using a shared memory cache?
     if (Config.memShared && IamWorkerProcess()) {
-        assert(new_status != IN_MEMORY); // we do not call this otherwise
+        // enumerate calling cases if shared memory is enabled
+        assert(new_status != IN_MEMORY || EBIT_TEST(flags, ENTRY_SPECIAL));
         // This method was designed to update replacement policy, not to
         // actually purge something from the memory cache (TODO: rename?).
         // Shared memory cache does not have a policy that needs updates.
@@ -1901,6 +1902,9 @@ StoreEntry::trimMemory(const bool preserveSwappable)
      */
     if (mem_status == IN_MEMORY)
         return;
+
+    if (EBIT_TEST(flags, ENTRY_SPECIAL))
+        return; // cannot trim because we do not load them again
 
     if (!preserveSwappable) {
         if (mem_obj->policyLowestOffsetToKeep(0) == 0) {
