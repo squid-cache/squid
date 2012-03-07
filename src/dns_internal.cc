@@ -143,12 +143,13 @@ struct _idns_query {
     int attempt;
     int rcode;
     idns_query *queue;
-    idns_query *slave;  // AAAA
-    idns_query *master; // A
+    idns_query *slave;  // single linked list
+    idns_query *master; // single pointer to a shared master
     unsigned short domain;
     unsigned short do_searchpath;
     rfc1035_message *message;
     int ancount;
+    const char *error;
 };
 InstanceIdDefinitions(idns_query,  "dns");
 
@@ -232,7 +233,7 @@ static void idnsParseResolvConf(void);
 static void idnsParseWIN32Registry(void);
 static void idnsParseWIN32SearchList(const char *);
 #endif
-static void idnsCacheQuery(idns_query * q);
+static void idnsStartQuery(idns_query * q, IDNSCB * callback, void *data);
 static void idnsSendQuery(idns_query * q);
 static IOCB idnsReadVCHeader;
 static void idnsDoSendQueryVC(nsvc *vc);
@@ -906,8 +907,6 @@ idnsSendQuery(idns_query * q)
     int x = -1, y = -1;
     int ns;
 
-    q->start_t = current_time;
-
     do {
         ns = q->nsends % nns;
 
@@ -923,7 +922,7 @@ idnsSendQuery(idns_query * q)
 
         q->nsends++;
 
-        q->queue_t = q->sent_t = current_time;
+        q->sent_t = current_time;
 
         if (y < 0 && nameservers[ns].S.IsIPv6())
             debugs(50, 1, "idnsSendQuery: FD " << DnsSocketB << ": sendto: " << xstrerror());
@@ -999,13 +998,70 @@ idnsQueryID(void)
 }
 
 static void
-idnsCallback(idns_query *q, rfc1035_rr *answers, int n, const char *error)
+idnsCallback(idns_query *q, const char *error)
 {
     IDNSCB *callback;
     void *cbdata;
 
+    if (error)
+        q->error = error;
+
+    if (q->master)
+        q = q->master;
+
+    idns_query *q2;
+    // If any of our subqueries are still pending then wait for them to complete before continuing
+    for ( q2 = q; q2; q2 = q2->slave) {
+        if (q2->pending) {
+            return;
+        }
+    }
+
+    /* Merge results */
+    rfc1035_message *message = q->message;
+    q->message = NULL;
+    int n = q->ancount;
+    error = q->error;
+
+    while ( (q2 = q->slave) ) {
+        debugs(78, 6, HERE << "Merging DNS results " << q->name << " A has " << n << " RR, AAAA has " << q2->ancount << " RR");
+        q->slave = q2->slave;
+        if ( !q2->error ) {
+            if (n > 0) {
+                // two sets of RR need merging
+                rfc1035_rr *result = (rfc1035_rr*) xmalloc( sizeof(rfc1035_rr)*(n + q2->ancount) );
+                if (Config.dns.v4_first) {
+                    memcpy(result, message->answer, (sizeof(rfc1035_rr)*n) );
+                    memcpy(result+n, q2->message->answer, (sizeof(rfc1035_rr)*q2->ancount) );
+                } else {
+                    memcpy(result, q2->message->answer, (sizeof(rfc1035_rr)*q2->ancount) );
+                    memcpy(result+q2->ancount, message->answer, (sizeof(rfc1035_rr)*n) );
+                }
+                n += q2->ancount;
+                // HACK WARNING, the answer rr:s have been copied in-place to
+                // result, do not free them here
+                safe_free(message->answer);
+                safe_free(q2->message->answer);
+                message->answer = result;
+                message->ancount += q2->message->ancount;
+            } else {
+                // first response empty or failed, just use the second
+                rfc1035MessageDestroy(&message);
+                message = q2->message;
+                q2->message = NULL;
+                n = q2->ancount;
+                error = NULL;
+            }
+        }
+        rfc1035MessageDestroy(&q2->message);
+        cbdataFree(q2);
+    }
+
+    debugs(78, 6, HERE << "Sending " << n << " (" << (error ? error : "OK") << ") DNS results to caller.");
+
     callback = q->callback;
     q->callback = NULL;
+    const rfc1035_rr *answers = message ? message->answer : NULL;
 
     if (cbdataReferenceValidDone(q->callback_data, &cbdata))
         callback(cbdata, answers, n, error);
@@ -1026,6 +1082,9 @@ idnsCallback(idns_query *q, rfc1035_rr *answers, int n, const char *error)
         hash_remove_link(idns_lookup_hash, &q->hash);
         q->hash.key = NULL;
     }
+
+    rfc1035MessageDestroy(&message);
+    cbdataFree(q);
 }
 
 static void
@@ -1097,8 +1156,7 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
             // Strange: A TCP DNS response with the truncation bit (TC) set.
             // Return an error and cleanup; no point in trying TCP again.
             debugs(78, 3, HERE << "TCP DNS response");
-            idnsCallback(q, NULL, 0, "Truncated TCP DNS response");
-            cbdataFree(q);
+            idnsCallback(q, "Truncated TCP DNS response");
         }
 
         return;
@@ -1122,6 +1180,9 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
             return;
         }
 
+        // Do searchpath processing on the master A query only to keep
+        // things simple. NXDOMAIN is authorative for the label, not
+        // the record type.
         if (q->rcode == 3 && !q->master && q->do_searchpath && q->attempt < MAX_ATTEMPT) {
             assert(NULL == message->answer);
             strcpy(q->name, q->orig);
@@ -1139,7 +1200,7 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
 
             rfc1035MessageDestroy(&message);
 
-            // cleanup stale AAAA query
+            // cleanup slave AAAA query
             while (idns_query *slave = q->slave) {
                 dlinkDelete(&slave->lru, &lru_list);
                 q->slave = slave->slave;
@@ -1154,10 +1215,11 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
             q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query, 0);
             if (q->sz < 0) {
                 /* problem with query data -- query not sent */
-                idnsCallback(static_cast<idns_query *>(q->callback_data), NULL, 0, "Internal error");
-                cbdataFree(q);
+                idnsCallback(q, "Internal error");
                 return;
             }
+
+            q->nsends = 0;
 
             idnsSendQuery(q);
             if (Ip::EnableIpv6)
@@ -1169,57 +1231,11 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
     q->message = message;
     q->ancount = n;
 
-    if (q->master)
-        q = q->master;
+    if (n >= 0)
+        idnsCallback(q, NULL);
+    else
+        idnsCallback(q, rfc1035ErrorMessage(q->rcode));
 
-    idns_query *q2;
-    // If any of our subqueries are still pending then wait for them to complete before continuing
-    for ( q2 = q; q2; q2 = q2->slave) {
-        if (q2->pending) {
-            return;
-        }
-    }
-
-    /* Merge results */
-    message = q->message;
-    n = q->ancount;
-
-    while ( (q2 = q->slave) ) {
-        debugs(78, 6, HERE << "Merging DNS results " << q->name << " A has " << n << " RR, AAAA has " << q2->ancount << " RR");
-        q->slave = q2->slave;
-        if ( q2->ancount >= 0 ) {
-            if (n > 0 ) {
-                // two sets of RR need merging
-                rfc1035_rr *result = (rfc1035_rr*) xmalloc( sizeof(rfc1035_rr)*(n + q2->ancount) );
-                if (Config.dns.v4_first) {
-                    memcpy(result, message->answer, (sizeof(rfc1035_rr)*n) );
-                    memcpy(result+n, q2->message->answer, (sizeof(rfc1035_rr)*q2->ancount) );
-                } else {
-                    memcpy(result, q2->message->answer, (sizeof(rfc1035_rr)*q2->ancount) );
-                    memcpy(result+q2->ancount, message->answer, (sizeof(rfc1035_rr)*n) );
-                }
-                n += q2->ancount;
-                safe_free(message->answer);
-                message->answer = result;
-                message->ancount += q2->message->ancount;
-                safe_free(q2->message->answer);
-                q2->message->answer = NULL;
-            } else if (n < 0 || q2->ancount > 0) {
-                // first set empty / failed
-                rfc1035MessageDestroy(&message);
-                message = q->message = q2->message;
-                q2->message = NULL;
-                n = q2->ancount;
-            }
-        }
-        rfc1035MessageDestroy(&q2->message);
-        cbdataFree(q2);
-    }
-
-    debugs(78, 6, HERE << "Sending " << n << " DNS results to caller.");
-    idnsCallback(q, message->answer, n, rfc1035ErrorMessage(n));
-    rfc1035MessageDestroy(&message);
-    cbdataFree(q);
 }
 
 static void
@@ -1328,7 +1344,7 @@ idnsCheckQueue(void *unused)
         if ((time_msec_t)tvSubMsec(q->queue_t, current_time) < Config.Timeout.idns_retransmit )
             break;
 
-        /* Query timer expired? */
+        /* Query timer still running? */
         if ((time_msec_t)tvSubMsec(q->sent_t, current_time) < (Config.Timeout.idns_retransmit * 1 << ((q->nsends - 1) / nns))) {
             dlinkDelete(&q->lru, &lru_list);
             q->queue_t = current_time;
@@ -1341,6 +1357,7 @@ idnsCheckQueue(void *unused)
                std::setw(4) << q->query_id << ": timeout" );
 
         dlinkDelete(&q->lru, &lru_list);
+        q->pending = 0;
 
         if ((time_msec_t)tvSubMsec(q->start_t, current_time) < Config.Timeout.idns_query) {
             idnsSendQuery(q);
@@ -1351,11 +1368,9 @@ idnsCheckQueue(void *unused)
                    std::setw(5)<< std::setprecision(2) << tvSubDsec(q->start_t, current_time) << " seconds");
 
             if (q->rcode != 0)
-                idnsCallback(q, NULL, -q->rcode, rfc1035ErrorMessage(q->rcode));
+                idnsCallback(q, rfc1035ErrorMessage(q->rcode));
             else
-                idnsCallback(q, NULL, -16, "Timeout");
-
-            cbdataFree(q);
+                idnsCallback(q, "Timeout");
         }
     }
 
@@ -1606,10 +1621,16 @@ idnsCachedLookup(const char *key, IDNSCB * callback, void *data)
 }
 
 static void
-idnsCacheQuery(idns_query *q)
+idnsStartQuery(idns_query *q, IDNSCB * callback, void *data)
 {
+    q->start_t = current_time;
+    q->callback = callback;
+    q->callback_data = cbdataReference(data);
+
     q->hash.key = q->orig;
     hash_join(idns_lookup_hash, &q->hash);
+
+    idnsSendQuery(q);
 }
 
 static void
@@ -1621,9 +1642,10 @@ idnsSendSlaveAAAAQuery(idns_query *master)
     q->master = master;
     q->query_id = idnsQueryID();
     q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query, Config.dns.packet_max);
+    q->start_t = master->start_t;
     q->slave = master->slave;
 
-    debugs(78, 3, "idnsALookup: buf is " << q->sz << " bytes for " << q->name <<
+    debugs(78, 3, HERE << "buf is " << q->sz << " bytes for " << q->name <<
            ", id = 0x" << std::hex << q->query_id);
     if (!q->sz) {
         cbdataFree(q);
@@ -1681,11 +1703,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     debugs(78, 3, "idnsALookup: buf is " << q->sz << " bytes for " << q->name <<
            ", id = 0x" << std::hex << q->query_id);
 
-    q->callback = callback;
-    q->callback_data = cbdataReference(data);
-
-    idnsCacheQuery(q);
-    idnsSendQuery(q);
+    idnsStartQuery(q, callback, data);
 
     if (Ip::EnableIpv6)
         idnsSendSlaveAAAAQuery(q);
@@ -1733,11 +1751,7 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
     debugs(78, 3, "idnsPTRLookup: buf is " << q->sz << " bytes for " << ip <<
            ", id = 0x" << std::hex << q->query_id);
 
-    q->callback = callback;
-    q->callback_data = cbdataReference(data);
-
-    idnsCacheQuery(q);
-    idnsSendQuery(q);
+    idnsStartQuery(q, callback, data);
 }
 
 #if SQUID_SNMP
