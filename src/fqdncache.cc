@@ -134,7 +134,7 @@ static HLPCB fqdncacheHandleReply;
 static int fqdncacheParse(fqdncache_entry *, const char *buf);
 #else
 static IDNSCB fqdncacheHandleReply;
-static int fqdncacheParse(fqdncache_entry *, rfc1035_rr *, int, const char *error_message);
+static int fqdncacheParse(fqdncache_entry *, const rfc1035_rr *, int, const char *error_message);
 #endif
 static void fqdncacheRelease(fqdncache_entry *);
 static fqdncache_entry *fqdncacheCreateEntry(const char *name);
@@ -417,7 +417,7 @@ fqdncacheParse(fqdncache_entry *f, const char *inbuf)
 
 #else
 static int
-fqdncacheParse(fqdncache_entry *f, rfc1035_rr * answers, int nr, const char *error_message)
+fqdncacheParse(fqdncache_entry *f, const rfc1035_rr * answers, int nr, const char *error_message)
 {
     int k;
     int ttl = 0;
@@ -496,7 +496,7 @@ static void
 #if USE_DNSHELPER
 fqdncacheHandleReply(void *data, char *reply)
 #else
-fqdncacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error_message)
+fqdncacheHandleReply(void *data, const rfc1035_rr * answers, int na, const char *error_message)
 #endif
 {
     fqdncache_entry *f;

@@ -20,6 +20,7 @@ CBDATA_CLASS_INIT(ConnOpener);
 Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &c, AsyncCall::Pointer &handler, time_t ctimeout) :
         AsyncJob("Comm::ConnOpener"),
         host_(NULL),
+        temporaryFd_(-1),
         conn_(c),
         callback_(handler),
         totalTries_(0),
@@ -63,21 +64,18 @@ Comm::ConnOpener::swanSong()
         calls_.timeout_ = NULL;
     }
 
-    // rollback what we can from the job state
-    if (conn_ != NULL && conn_->isOpen()) {
-        // drop any handlers now to save a lot of cycles later
-        Comm::SetSelect(conn_->fd, COMM_SELECT_WRITE, NULL, NULL, 0);
-        commUnsetConnTimeout(conn_);
-        // it never reached fully open, so abort the FD
-        conn_->close();
-    }
-
     if (callback_ != NULL) {
         if (callback_->canceled())
             callback_ = NULL;
         else
             // inform the still-waiting caller we are dying
             doneConnecting(COMM_ERR_CONNECT, 0);
+    }
+
+    // rollback what we can from the job state
+    if (temporaryFd_ >= 0) {
+        // doneConnecting() handles partial FD connection cleanup
+        doneConnecting(COMM_ERR_CONNECT, 0);
     }
 
     AsyncJob::swanSong();
@@ -104,7 +102,7 @@ Comm::ConnOpener::getHost() const
 /**
  * Connection attempt are completed. One way or the other.
  * Pass the results back to the external handler.
- * NP: on connection errors the connection close() must be called first.
+ * NP: on errors the earlyAbort call should be cancelled first with a reason.
  */
 void
 Comm::ConnOpener::doneConnecting(comm_err_t status, int xerrno)
@@ -132,6 +130,21 @@ Comm::ConnOpener::doneConnecting(comm_err_t status, int xerrno)
         callback_ = NULL;
     }
 
+    if (temporaryFd_ >= 0) {
+        // it never reached fully open, so cleanup the FD handlers
+        // Note that comm_close() sequence does not happen for partially open FD
+        Comm::SetSelect(temporaryFd_, COMM_SELECT_WRITE, NULL, NULL, 0);
+        calls_.earlyAbort_ = NULL;
+        if (calls_.timeout_ != NULL) {
+            calls_.timeout_->cancel("Comm::ConnOpener::doneConnecting");
+            calls_.timeout_ = NULL;
+        }
+        fd_table[temporaryFd_].timeoutHandler = NULL;
+        fd_table[temporaryFd_].timeout = 0;
+        fd_close(temporaryFd_);
+        temporaryFd_ = -1;
+    }
+
     /* ensure cleared local state, we are done. */
     conn_ = NULL;
 }
@@ -142,15 +155,15 @@ Comm::ConnOpener::start()
     Must(conn_ != NULL);
 
     /* get a socket open ready for connecting with */
-    if (!conn_->isOpen()) {
+    if (temporaryFd_ < 0) {
 #if USE_IPV6
         /* outbound sockets have no need to be protocol agnostic. */
         if (conn_->remote.IsIPv4()) {
             conn_->local.SetIPv4();
         }
 #endif
-        conn_->fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, conn_->local, conn_->flags, conn_->tos, conn_->nfmark, host_);
-        if (!conn_->isOpen()) {
+        temporaryFd_ = comm_openex(SOCK_STREAM, IPPROTO_TCP, conn_->local, conn_->flags, conn_->tos, conn_->nfmark, host_);
+        if (temporaryFd_ < 0) {
             doneConnecting(COMM_ERR_CONNECT, 0);
             return;
         }
@@ -158,12 +171,20 @@ Comm::ConnOpener::start()
 
     typedef CommCbMemFunT<Comm::ConnOpener, CommCloseCbParams> abortDialer;
     calls_.earlyAbort_ = JobCallback(5, 4, abortDialer, this, Comm::ConnOpener::earlyAbort);
-    comm_add_close_handler(conn_->fd, calls_.earlyAbort_);
+    comm_add_close_handler(temporaryFd_, calls_.earlyAbort_);
 
     typedef CommCbMemFunT<Comm::ConnOpener, CommTimeoutCbParams> timeoutDialer;
     calls_.timeout_ = JobCallback(5, 4, timeoutDialer, this, Comm::ConnOpener::timeout);
     debugs(5, 3, HERE << conn_ << " timeout " << connectTimeout_);
-    commSetConnTimeout(conn_, connectTimeout_, calls_.timeout_);
+
+    // Update the fd_table directly because conn_ is not yet storing the FD
+    assert(temporaryFd_ < Squid_MaxFD);
+    assert(fd_table[temporaryFd_].flags.open);
+    typedef CommTimeoutCbParams Params;
+    Params &params = GetCommParams<Params>(calls_.timeout_);
+    params.conn = conn_;
+    fd_table[temporaryFd_].timeoutHandler = calls_.timeout_;
+    fd_table[temporaryFd_].timeout = squid_curtime + (time_t) connectTimeout_;
 
     connectStart_ = squid_curtime;
     connect();
@@ -172,6 +193,9 @@ Comm::ConnOpener::start()
 void
 Comm::ConnOpener::connected()
 {
+    conn_->fd = temporaryFd_;
+    temporaryFd_ = -1;
+
     /*
      * stats.conn_open is used to account for the number of
      * connections that we have open to the peer, so we can limit
@@ -206,20 +230,18 @@ Comm::ConnOpener::connect()
 
     totalTries_++;
 
-    switch (comm_connect_addr(conn_->fd, conn_->remote) ) {
+    switch (comm_connect_addr(temporaryFd_, conn_->remote) ) {
 
     case COMM_INPROGRESS:
         // check for timeout FIRST.
         if (squid_curtime - connectStart_ > connectTimeout_) {
             debugs(5, 5, HERE << conn_ << ": * - ERR took too long already.");
             calls_.earlyAbort_->cancel("Comm::ConnOpener::connect timed out");
-            calls_.earlyAbort_ = NULL;
-            conn_->close();
             doneConnecting(COMM_TIMEOUT, errno);
             return;
         } else {
             debugs(5, 5, HERE << conn_ << ": COMM_INPROGRESS");
-            Comm::SetSelect(conn_->fd, COMM_SELECT_WRITE, Comm::ConnOpener::InProgressConnectRetry, this, 0);
+            Comm::SetSelect(temporaryFd_, COMM_SELECT_WRITE, Comm::ConnOpener::InProgressConnectRetry, this, 0);
         }
         break;
 
@@ -236,8 +258,6 @@ Comm::ConnOpener::connect()
         if (squid_curtime - connectStart_ > connectTimeout_) {
             debugs(5, 5, HERE << conn_ << ": * - ERR took too long to receive response.");
             calls_.earlyAbort_->cancel("Comm::ConnOpener::connect timed out");
-            calls_.earlyAbort_ = NULL;
-            conn_->close();
             doneConnecting(COMM_TIMEOUT, errno);
         } else if (failRetries_ < Config.connect_retries) {
             debugs(5, 5, HERE << conn_ << ": * - try again");
@@ -247,8 +267,6 @@ Comm::ConnOpener::connect()
             // send ERROR back to the upper layer.
             debugs(5, 5, HERE << conn_ << ": * - ERR tried too many times already.");
             calls_.earlyAbort_->cancel("Comm::ConnOpener::connect failed");
-            calls_.earlyAbort_ = NULL;
-            conn_->close();
             doneConnecting(COMM_ERR_CONNECT, errno);
         }
     }
