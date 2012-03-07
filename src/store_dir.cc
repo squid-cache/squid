@@ -685,6 +685,10 @@ free_cachedir(SquidConfig::_cacheSwap * swap)
 void
 StoreController::reference(StoreEntry &e)
 {
+    // special entries do not belong to any specific Store, but are IN_MEMORY
+    if (EBIT_TEST(e.flags, ENTRY_SPECIAL))
+        return;
+
     /* Notify the fs that we're referencing this object again */
 
     if (e.swap_dirn > -1)
@@ -705,6 +709,10 @@ bool
 StoreController::dereference(StoreEntry & e)
 {
     bool keepInStoreTable = true; // keep if there are no objections
+
+    // special entries do not belong to any specific Store, but are IN_MEMORY
+    if (EBIT_TEST(e.flags, ENTRY_SPECIAL))
+        return keepInStoreTable;
 
     /* Notify the fs that we're not referencing this object any more */
 
@@ -777,6 +785,13 @@ void
 StoreController::handleIdleEntry(StoreEntry &e)
 {
     bool keepInLocalMemory = false;
+
+    if (EBIT_TEST(e.flags, ENTRY_SPECIAL)) {
+        // Icons (and cache digests?) should stay in store_table until we
+        // have a dedicated storage for them (that would not purge them).
+        // They are not managed [well] by any specific Store handled below.
+        keepInLocalMemory = true;
+    } else
     if (memStore) {
         memStore->considerKeeping(e);
         // leave keepInLocalMemory false; memStore maintains its own cache
@@ -793,6 +808,8 @@ StoreController::handleIdleEntry(StoreEntry &e)
         destroyStoreEntry(static_cast<hash_link*>(&e));
         return;
     }
+
+    debugs(20, 5, HERE << "keepInLocalMemory: " << keepInLocalMemory);
 
     // TODO: move this into [non-shared] memory cache class when we have one
     if (keepInLocalMemory) {
