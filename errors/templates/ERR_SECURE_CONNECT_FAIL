@@ -23,7 +23,13 @@ body
 <p><b>Failed to establish a secure connection to %I</b></p>
 </blockquote>
 
-<p id="sysmsg">The system returned: <i>%E</i></p>
+<div id="sysmsg">
+<p>The system returned:</p>
+<blockquote id="data">
+<pre>%E (TLS code: %x)</pre>
+<p>%D</p>
+</blockquote>
+</div>
 
 <p>This proxy and the remote host failed to negotiate a mutually acceptable security settings for handling your request. It is possible that the remote host does not support secure connections, or the proxy is not satisfied with the host security credentials.</p>
 

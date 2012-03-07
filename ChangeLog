@@ -1,3 +1,21 @@
+Changes to squid-3.2.0.16 (07 Mar 2011):
+
+	- Bug 3508: Correct DNS timeout handling.
+	- Bug 3503: DNS PTR queries timeout due to wrong QIDs.
+	- Bug 3497: Bad ssl_crtd db size file causes infinite loop
+	- Bug 3490: part 1: SegFault opening FTP active data connections
+	- Bug 3490: Crash writing Apache Common and Referer/Useragent logs
+	- Bug 3458: Icon Serving (squid-internal-static) Broken
+	- Bug 3457: Display TLS error details in ERR_SECURE_CONNECT_FAIL
+	- Bug 3381: 32-bit overflow assertion in StatHist
+	- Bug 3324: loadFromFile: parse error while reading template file
+	- Support sslpassword_program for ssl-bump HTTP ports
+	- Support CoAP protocol coap:// and coaps:// URL schemes in HTTP requests
+	- Retry requests that failed due to a persistent connection race
+	- Log '-' on requests with no Referer or User-Agent headers
+	- ... and several fixes related to in-transit object performance
+	- ... and some structural design changes for portability
+
 Changes to squid-3.2.0.15 (06 Feb 2011):
 
 	- Bug 3472: segfault with the message 'urlParse: URL too large'
