@@ -45,7 +45,8 @@ private:
 
 private:
     char *host_;                         ///< domain name we are trying to connect to.
-    Comm::ConnectionPointer conn_;       ///< single connection currently being opened.
+    int temporaryFd_;                    ///< the FD being opened. Do NOT set conn_->fd until it is fully open.
+    Comm::ConnectionPointer conn_;       ///< single connection currently to be opened.
     AsyncCall::Pointer callback_;        ///< handler to be called on connection completion.
 
     int totalTries_;   ///< total number of connection attempts over all destinations so far.
