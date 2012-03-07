@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-02-06 18:41+1300\n"
-"PO-Revision-Date: 2010-11-11 02:01+0200\n"
-"Last-Translator: Amos <squid3@treenet.co.nz>\n"
+"PO-Revision-Date: 2012-03-07 05:29+0200\n"
+"Last-Translator: Fred <fred.maranhao@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <pt_BR@li.org>\n"
 "Language: pt_BR\n"
 "MIME-Version: 1.0\n"
@@ -131,6 +131,8 @@ msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
 "request from being completed."
 msgstr ""
+"Uma falha interna ou problema de configuração irrecuperáveis evitam que esta "
+"requisição seja completada."
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.blockquote.p:23
 msgid "Access Denied."
@@ -197,7 +199,7 @@ msgstr ""
 
 #: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:133
 msgid "Application verification failure"
-msgstr "Application verification failure"
+msgstr "Falha de verificação de aplicação"
 
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:28
 msgid ""
