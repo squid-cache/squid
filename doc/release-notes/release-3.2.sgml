@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.0.15 release notes</title>
+<title>Squid 3.2.0.16 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.0.15 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.0.16 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -311,7 +311,7 @@ Most user-facing changes are reflected in squid.conf (see below).
   direct filesystem logging (stdio, daemon) to network logging (syslog, UDP and TCP). The daemon logging
   interface allows for a custom helper to be written to process logs in real-time.
 
-<p>Upgrading: the <em>access_log</em> was previously logge via what is now called the <em>stdio</em> module.
+<p>Upgrading: the <em>access_log</em> was previously logged via what is now called the <em>stdio</em> module.
   This is still supported and used by default if no module is named. For best performance particularly in SMP
   environments we recommend the <em>daemon</em> be used. The provided <em>log_file_daemon</em> helper
   performs the traditional logging to local filesystem.
@@ -325,6 +325,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p>The referer_log and useragent_log directives have been converted to built-in log formats.
   These logs are now created using an access_log line with the format "referrer" or "useragent".
+  They also now log all client requests, if there was no Referer or User-Agent header a dash (-) is logged.
 
 
 <sect1> Client Bandwidth Limits
@@ -575,9 +576,6 @@ This section gives a thorough account of those changes in three categories:
 	   3xx status only available when redirecting to a URI.
 	   Other status only available when supplying an error template body.
 
-	<tag>dns_v4_fallback</tag>
-	<p>Obsoleted by DNS parallel lookups.
-
 	<tag>external_acl_type</tag>
 	<p>New format tags and option parameters:
 	<p><em>%SRCEUI48</em> EUI-48 / MAC address of client from ARP lookup.
@@ -673,6 +671,9 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Removed tags<label id="removedtags">
 <p>
 <descrip>
+	<tag>dns_v4_fallback</tag>
+	<p>Obsolete. Replaced by DNS parallel lookups.
+
 	<tag>emulate_httpd_log</tag>
 	<p>Replaced by <em>common</em> format option on an <em>access_log</em> directive.
 

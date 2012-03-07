@@ -277,7 +277,7 @@ BodyPipe::expectNoConsumption()
 
     if (!abortedConsumption && !exhausted()) {
         // Before we abort, any regular consumption should be over and auto
-		// consumption must not be started.
+        // consumption must not be started.
         Must(!theConsumer);
 
         AsyncCall::Pointer call= asyncCall(91, 7,
