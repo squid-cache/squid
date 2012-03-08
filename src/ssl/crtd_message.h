@@ -65,7 +65,7 @@ public:
     void composeBody(BodyParams const & map, std::string const & other_part);
 
     bool parseRequest(Ssl::CertificateProperties &, std::string &error);
-    void composeRequest(Ssl::CertificateProperties const &);
+    void composeRequest(Ssl::CertificateProperties const &); // throws
 
     /// String code for "new_certificate" messages
     static const std::string code_new_certificate;
