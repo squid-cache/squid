@@ -1108,13 +1108,12 @@ NOCOMMENT_START
 
         <tag>external_acl_type</tag>
         <p>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between Squid and its helpers.
-           Please be aware of some limits to these options. These options only affet the transport protocol used
+           Please be aware of some limits to these options. These options only affect the transport protocol used
 	   to send data to and from the helpers. Squid in IPv6-mode may still send %SRC addresses in IPv4 or IPv6
 	   format, so all helpers will need to be checked and converted to cope with such information cleanly.
         <verb>
-          ipv4 / ipv6   IP-mode used to communicate to this helper.
-                        For compatability with older configurations and helpers
-                        the default is 'ipv4'.
+          ipv4 / ipv6   IP protocol used to communicate with this helper.
+                        The default is to auto-detect IPv6 and use it when available.
         </verb>
 	<p>New header input format specifiers. To seperate Request and Reply headers when both passed back.
 	<verb>
