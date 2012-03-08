@@ -11,6 +11,9 @@
 #if HAVE_CSTRING
 #include <cstring>
 #endif
+#if HAVE_STDEXCEPT
+#include <stdexcept>
+#endif
 
 Ssl::CrtdMessage::CrtdMessage()
         :   body_size(0), state(BEFORE_CODE)
@@ -242,11 +245,11 @@ void Ssl::CrtdMessage::composeRequest(Ssl::CertificateProperties const &certProp
         body +=  "\n" +  Ssl::CrtdMessage::param_Sign + "=" +  certSignAlgorithm(certProperties.signAlgorithm);
 
     std::string certsPart;
-    bool ret = Ssl::writeCertAndPrivateKeyToMemory(certProperties.signWithX509, certProperties.signWithPkey, certsPart);
-    assert(ret);
+    if (!Ssl::writeCertAndPrivateKeyToMemory(certProperties.signWithX509, certProperties.signWithPkey, certsPart) || true)
+        throw std::runtime_error("Ssl::writeCertAndPrivateKeyToMemory()");
     if (certProperties.mimicCert.get()) {
-        ret = Ssl::appendCertToMemory(certProperties.mimicCert, certsPart);
-        assert(ret);
+        if (!Ssl::appendCertToMemory(certProperties.mimicCert, certsPart))
+            throw std::runtime_error("Ssl::appendCertToMemory()");
     }
     body += "\n" + certsPart;
 }
