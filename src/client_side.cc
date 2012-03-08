@@ -3781,6 +3781,7 @@ ConnStateData::getSslContextStart()
         }
 
 #if USE_SSL_CRTD
+        try {
         debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName << " using ssl_crtd.");
         Ssl::CrtdMessage request_message;
         request_message.setCode(Ssl::CrtdMessage::code_new_certificate);
@@ -3788,12 +3789,20 @@ ConnStateData::getSslContextStart()
         debugs(33, 5, HERE << "SSL crtd request: " << request_message.compose().c_str());
         Ssl::Helper::GetInstance()->sslSubmit(request_message, sslCrtdHandleReplyWrapper, this);
         return;
-#else
+        }
+        catch (const std::exception &e) {
+            debugs(33, DBG_IMPORTANT, "ERROR: Failed to compose ssl_crtd " <<
+                   "request for " << certProperties.commonName <<
+                   " certificate: " << e.what() << "; will now block to " <<
+                   "generate that certificate.");
+            // fall through to do blocking in-process generation.
+        }
+#endif // USE_SSL_CRTD
+
         debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName);
         dynCtx = Ssl::generateSslContext(certProperties);
         getSslContextDone(dynCtx, true);
         return;
-#endif //USE_SSL_CRTD
     }
     getSslContextDone(NULL);
 }
