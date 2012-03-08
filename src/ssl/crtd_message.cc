@@ -245,7 +245,7 @@ void Ssl::CrtdMessage::composeRequest(Ssl::CertificateProperties const &certProp
         body +=  "\n" +  Ssl::CrtdMessage::param_Sign + "=" +  certSignAlgorithm(certProperties.signAlgorithm);
 
     std::string certsPart;
-    if (!Ssl::writeCertAndPrivateKeyToMemory(certProperties.signWithX509, certProperties.signWithPkey, certsPart) || true)
+    if (!Ssl::writeCertAndPrivateKeyToMemory(certProperties.signWithX509, certProperties.signWithPkey, certsPart))
         throw std::runtime_error("Ssl::writeCertAndPrivateKeyToMemory()");
     if (certProperties.mimicCert.get()) {
         if (!Ssl::appendCertToMemory(certProperties.mimicCert, certsPart))
