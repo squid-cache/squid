@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-02-06 18:41+1300\n"
-"PO-Revision-Date: 2012-03-07 05:29+0200\n"
+"PO-Revision-Date: 2012-03-09 05:32+0200\n"
 "Last-Translator: Fred <fred.maranhao@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <pt_BR@li.org>\n"
 "Language: pt_BR\n"
@@ -25,16 +25,16 @@ msgstr ""
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:29
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:30
 msgid "%F"
-msgstr ""
+msgstr "%F"
 
 #: templates/ERR_INVALID_REQ+html.body.div.blockquote.pre:23
 #: templates/ERR_INVALID_RESP+html.body.div.blockquote.pre:23
 msgid "%R"
-msgstr ""
+msgstr "%R"
 
 #: templates/ERR_ESI+html.body.div.blockquote.pre:28
 msgid "%Z"
-msgstr ""
+msgstr "%Z"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:24
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:24
@@ -42,14 +42,14 @@ msgstr ""
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:24
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:25
 msgid "%f"
-msgstr ""
+msgstr "%f"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:31
 msgid "%g"
-msgstr ""
+msgstr "%g"
 
 #: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:69
 msgid "%ssl_error_descr"
@@ -92,7 +92,7 @@ msgstr "%ssl_error_descr: %ssl_subject"
 #: templates/ERR_DIR_LISTING+html.body.div.blockquote.pre:22
 #: templates/ERR_DNS_FAIL+html.body.div.blockquote.pre:28
 msgid "%z"
-msgstr ""
+msgstr "%z"
 
 #: templates/ERR_DIR_LISTING+html.body.div.table.tr.th:28
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -151,7 +151,7 @@ msgstr ""
 
 #: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:31
 msgid "All configured parent caches may be currently unreachable."
-msgstr ""
+msgstr "Parece que todos os caches-pais estão no momento fora de alcance."
 
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.p:20
 msgid ""
@@ -175,10 +175,13 @@ msgid "An Illegal response was received from the ICAP server."
 msgstr "Uma resposta ilegal foi recebida do servidor ICAP."
 
 #: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:30
+#, fuzzy
 msgid ""
 "An Internet connection needed to access this domains origin servers may be "
 "down."
 msgstr ""
+"Uma conexão à Internet necessária para acessar estes 'domains origin "
+"servers' parece estar fora."
 
 #: templates/ERR_READ_ERROR+html.body.div.p:28
 #, fuzzy
@@ -206,6 +209,8 @@ msgid ""
 "At least one precondition specified by the HTTP client in the request header "
 "has failed."
 msgstr ""
+"Pelo menos uma pré-condição especificada pelo cliente HTTP no cabeçalho da "
+"requisição falhou."
 
 #: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:125
 msgid "Authority and issuer serial number mismatch"
@@ -429,17 +434,17 @@ msgstr "Arquivo atualizado"
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:26
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:26
 msgid "For Firefox browsers go to: <ul>"
-msgstr ""
+msgstr "Para navegadores Firefox vá para: <ul>"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:34
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:34
 msgid "For Internet Explorer browsers go to: <ul>"
-msgstr ""
+msgstr "Para navegadores Internet Explorer vá para: <ul>"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:42
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:42
 msgid "For Opera browsers go to: <ul>"
-msgstr ""
+msgstr "Para navegadores Opera vá para: <ul>"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:61
 msgid "Format error in CRL's lastUpdate field"
@@ -463,7 +468,7 @@ msgstr "Encaminhamento Negado."
 
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.blockquote.p:23
 msgid "Gateway Proxy Failure"
-msgstr ""
+msgstr "Falha de Proxy de Gateway"
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:34
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:35
@@ -510,13 +515,17 @@ msgid "Generated %T by %h (%s)"
 msgstr "Gerado %T por %h (%s)"
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:34
+#, fuzzy
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
+"<q>Esperando</q> HTTP/1.1: funcionalidade está sendo pedida de um software "
+"HTTP/1.0."
 
 #: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:1
+#, fuzzy
 msgid "Handshake with SSL server failed"
-msgstr ""
+msgstr "Handshake com servidor SSL falhou"
 
 #: templates/ERR_URN_RESOLVE+html.body.div.p:26
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -525,7 +534,7 @@ msgstr "Olha, não espere muito por URNs em %T :)"
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:24
 #: templates/ERR_AGENT_WPAD+html.body.div.p:24
 msgid "How to find these settings in your browser:"
-msgstr ""
+msgstr "Como achar estas configurações no seu navegador:"
 
 #: templates/ERR_ICAP_FAILURE+html.body.div.blockquote.p:23
 msgid "ICAP protocol error."
@@ -560,7 +569,7 @@ msgstr "Escape duplo ilegal na URL-Path"
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:38
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:46
 msgid "In the HTTP proxy box type the proxy name %h and port %b."
-msgstr ""
+msgstr "Na caixa de proxy HTTP digite o nome do proxy %h e a porta %b."
 
 #: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:97
 msgid "Invalid CA certificate"
@@ -638,7 +647,7 @@ msgstr ""
 
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:23
 msgid "Precondition Failed."
-msgstr ""
+msgstr "Pré-condição Falhou."
 
 #: templates/ERR_READ_ERROR+html.body.div.blockquote.p:23
 msgid "Read Error"
@@ -681,15 +690,15 @@ msgstr ""
 
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:30
 msgid "Select Auto-detect proxy settings for this network"
-msgstr ""
+msgstr "Selecione Autodetectart as configurações de proxy para esta rede"
 
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:38
 msgid "Select Automatically detect settings"
-msgstr ""
+msgstr "Selecione Detectar configurações automaticamente"
 
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:46
 msgid "Select Use Automatic proxy configuration"
-msgstr ""
+msgstr "Selecione Usar configuração automática de proxy"
 
 #: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:73
 msgid "Self signed certificate"
@@ -811,11 +820,15 @@ msgid ""
 "The administrator may not allow this cache to make direct connections to "
 "origin servers."
 msgstr ""
+"O administrador pode não ter permitido que este cache fizesse conexoes "
+"diretas a servidores de origem."
 
 #: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:30
 msgid ""
 "The domain may have moved very recently. Trying again will resolve that."
 msgstr ""
+"O domínio pode ter se movido muito recentemente. Tentar de novo pode "
+"resolver isto."
 
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.p:20
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
@@ -928,10 +941,13 @@ msgid "The system returned: <i>%E</i>"
 msgstr "O sistema retornou: <i>%E</i>"
 
 #: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:31
+#, fuzzy
 msgid ""
 "The website may require you to use a local country-based version. Using your "
 "ISP provided DNS server(s) should resolve that."
 msgstr ""
+"O website pode exigir que você use uma versão 'country-based' local. Usar os "
+"servidores DNS fornecidos por seu provedor pode resolver isto."
 
 #: templates/ERR_NO_RELAY+html.body.div.p:26
 #, fuzzy
@@ -1025,10 +1041,12 @@ msgid ""
 "This means the domain name you are trying to access apparently no longer "
 "exists on the machine you are requesting it from."
 msgstr ""
+"Isto significa que o nome de domínio que você está tentando acessar "
+"aparentemente não existe mais na máquina onde você está requisitando."
 
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.p:26
 msgid "This means:"
-msgstr ""
+msgstr "Isto significa:"
 
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.p:33
 #, fuzzy
@@ -1058,38 +1076,49 @@ msgid ""
 "This proxy limits your time online with a quota. Your time budget is now "
 "empty but will be refilled when the configured time period starts again."
 msgstr ""
+"Este proxy limita seu tempo conectado com uma cota. Sua cota de tempo está "
+"vazia agora mas será recarregada quando o período de tempo configurado "
+"recomeçar."
 
 #: templates/ERR_CANNOT_FORWARD+html.body.div.p:26
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches."
 msgstr ""
+"Esta requisição não pode ser repassada para o servidor de origem ou para "
+"qualquer cache pai."
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.blockquote.p:23
 msgid "Time Quota Exceeded."
-msgstr ""
+msgstr "Quota de Tempo Excedida."
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:37
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:37
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
 msgstr ""
+"Ferramentas -&gt; Opções de Internet -&gt; Conexão -&gt; Configurações da "
+"LAN -&gt;Proxy"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:29
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:29
 msgid ""
 "Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
 msgstr ""
+"Ferramentas -&gt; Opções -&gt; Avançado -&gt; Rede -&gt; Configurações da "
+"Conexão"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:45
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:45
 msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
 msgstr ""
+"Ferramentas -&gt; Preferências -&gt; Avançado -&gt; Rede -&gt; Servidores "
+"Proxy"
 
 #: templates/ERR_CONFLICT_HOST+html.body.div.blockquote.pre:23
 msgid "URI Host Conflict"
-msgstr ""
+msgstr "Conflito de máquina de URI"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:25
 msgid "Unable to decode issuer (CA) public key: %ssl_ca_name"
@@ -1157,7 +1186,7 @@ msgstr ""
 #: templates/ERR_AGENT_WPAD+html.head.title:4
 #: templates/ERR_AGENT_WPAD+html.body.div.h2:15
 msgid "Web Browser Configuration"
-msgstr ""
+msgstr "Configuração de Navegador Web"
 
 #: templates/ERR_WRITE_ERROR+html.body.div.blockquote.p:23
 msgid "Write Error"
@@ -1178,6 +1207,7 @@ msgstr ""
 msgid ""
 "Your Web Browser configuration needs to be corrected to use this network."
 msgstr ""
+"A configuração de seu navegador precisa ser corrigida para usar esta rede."
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:28
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:29
