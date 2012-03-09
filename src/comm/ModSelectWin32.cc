@@ -30,14 +30,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #include "squid.h"
 
 #if USE_SELECT_WIN32
 
 #include "squid-old.h"
+#include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "fde.h"
+#include "ICP.h"
 #include "mgr/Registration.h"
 #include "SquidTime.h"
 #include "StatCounters.h"
@@ -168,10 +169,10 @@ Comm::ResetSelect(int fd)
 static int
 fdIsIcp(int fd)
 {
-    if (fd == theInIcpConnection)
+    if (icpIncomingConn != NULL && fd == icpIncomingConn->fd)
         return 1;
 
-    if (fd == theOutIcpConnection)
+    if (icpOutgoingConn != NULL && fd == icpOutgoingConn->fd)
         return 1;
 
     return 0;
@@ -281,12 +282,11 @@ comm_select_icp_incoming(void)
     int nevents;
     icp_io_events = 0;
 
-    if (theInIcpConnection >= 0)
-        fds[nfds++] = theInIcpConnection;
+    if (Comm::IsConnOpen(icpIncomingConn))
+        fds[nfds++] = icpIncomingConn->fd;
 
-    if (theInIcpConnection != theOutIcpConnection)
-        if (theOutIcpConnection >= 0)
-            fds[nfds++] = theOutIcpConnection;
+    if (Comm::IsConnOpen(icpOutgoingConn) && icpIncomingConn != icpOutgoingConn)
+        fds[nfds++] = icpOutgoingConn->fd;
 
     if (nfds == 0)
         return;
