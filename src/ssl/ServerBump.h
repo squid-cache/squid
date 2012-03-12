@@ -19,7 +19,7 @@ namespace Ssl
 class ServerBump
 {
 public:
-    explicit ServerBump(HttpRequest *fakeRequest);
+    explicit ServerBump(HttpRequest *fakeRequest, StoreEntry *e = NULL);
     ~ServerBump();
     /// faked, minimal request; required by server-side API
     HttpRequest::Pointer request;
