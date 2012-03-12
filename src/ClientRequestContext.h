@@ -68,6 +68,8 @@ public:
 #if USE_SSL
     bool sslBumpCheckDone;
 #endif
+    ErrorState *error;
+    bool readNextRequest;
 
     /// Send authentication response (challenge or error) if ACL result indicates one is needed
     /// \return true if an error page of any kind has been sent back to the client.

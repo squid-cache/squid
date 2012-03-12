@@ -3873,8 +3873,10 @@ ConnStateData::switchToHttps(const char *host, const int port)
     debugs(33, 5, HERE << "converting " << clientConnection << " to SSL");
 
     const bool alwaysBumpServerFirst = true;
-    if (alwaysBumpServerFirst) {
-        Must(!sslServerBump);
+    // If sslServerBump is set, then we have decided to deny CONNECT
+    // and now want to switch to SSL to send the error to the client
+    // without even peeking at the origin server certificate.
+    if (alwaysBumpServerFirst && !sslServerBump) {
         HttpRequest *fakeRequest = new HttpRequest;
         fakeRequest->flags.sslPeek = 1;
         fakeRequest->SetHost(sslConnectHostOrIp.termedBuf());
