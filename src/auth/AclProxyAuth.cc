@@ -80,7 +80,12 @@ int
 ACLProxyAuth::match(ACLChecklist *checklist)
 {
     allow_t answer = AuthenticateAcl(checklist);
-    checklist->currentAnswer(answer);
+    if (answer != ACCESS_DENIED && answer != ACCESS_ALLOWED) {
+        // If the answer is not allowed or denied (matches/not matches), requires 
+        // authentication (ACCESS_AUTH_*) or the authentication is in progress (ACCESS_DUNNO)
+        // so change the state in the related checklist.
+        checklist->currentAnswer(answer);
+    }
 
     // convert to tri-state ACL match 1,0,-1
     switch (answer) {
