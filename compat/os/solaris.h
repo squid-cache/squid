@@ -85,6 +85,12 @@ SQUIDCEXTERN int gethostname(char *, int);
 #include "compat/os/opensolaris_10_netdb.h"
 #endif
 
+/* Solaris 10 lacks SUN_LEN */
+#if !defined(SUN_LEN)
+#define SUN_LEN(su) (sizeof(*(su)) - sizeof((su)->sun_path) + strlen((su)->sun_path))
+#endif
+
+
 /* Solaris lacks paths.h by default */
 #if HAVE_PATHS_H
 #include <paths.h>
