@@ -455,9 +455,8 @@ DOC_START
 			cached entry should be initiated without needing to
 			wait for a new reply. (default 0 for no grace period)
 	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers
-	  ipv4 / ipv6	IP-mode used to communicate to this helper.
-			For compatability with older configurations and helpers
-			the default is currently 'ipv4'.
+	  ipv4 / ipv6	IP protocol used to communicate with this helper.
+			The default is to auto-detect IPv6 and use it when available.
 
 	FORMAT specifications
 
