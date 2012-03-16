@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-02-06 18:41+1300\n"
-"PO-Revision-Date: 2012-03-16 13:02+0200\n"
+"PO-Revision-Date: 2012-03-16 13:18+0200\n"
 "Last-Translator: Aecio F. <aecioneto@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <pt_BR@li.org>\n"
 "Language: pt_BR\n"
@@ -250,27 +250,27 @@ msgstr "Certificate is not yet valid"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:41
 msgid "Certificate has expired"
-msgstr "Certificate has expired"
+msgstr "O certificado expirou"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:37
 msgid "Certificate is not yet valid"
-msgstr "Certificate is not yet valid"
+msgstr "O certificado ainda não é válido"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:109
 msgid "Certificate not trusted"
-msgstr "Certificate not trusted"
+msgstr "O certificado não é confiável"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:113
 msgid "Certificate rejected"
-msgstr "Certificate rejected"
+msgstr "Certificado rejeitado"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:93
 msgid "Certificate revoked"
-msgstr "Certificate revoked"
+msgstr "Certificado revogado"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:29
 msgid "Certificate signature failure"
-msgstr "Certificate signature failure"
+msgstr "Falha de assinatura do certificado"
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.blockquote.p:23
 msgid "Connection Lifetime Expired"
@@ -389,9 +389,8 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "ERRO: A URL requisitada não pode ser recuperada"
 
 #: templates/ERR_URN_RESOLVE+html.head.title:4
-#, fuzzy
 msgid "ERROR: The requested URN could not be retrieved"
-msgstr "ERRO: A URL requisitada não pode ser recuperada"
+msgstr "ERRO: A URL requisitada não pode ser recebida"
 
 #: templates/ERR_ESI+html.body.div.blockquote.p:23
 msgid "ESI Processing failed."
@@ -399,14 +398,12 @@ msgstr "O processamento de ESI falhou."
 
 #: templates/ERR_FTP_PUT_CREATED+html.head.title:4
 #: templates/ERR_FTP_PUT_MODIFIED+html.head.title:4
-#, fuzzy
 msgid "FTP PUT Successful."
-msgstr "FTP - PUT bem sucedido: Arquivo Criado"
+msgstr "PUT FTP bem sucedido."
 
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.h2:15
-#, fuzzy
 msgid "FTP PUT upload failed"
-msgstr "FTP - PUT/envio falhou"
+msgstr "Upload de FTP PUT falhou"
 
 #: templates/ERR_FTP_DISABLED+html.body.div.blockquote.p:23
 msgid "FTP is Disabled"
@@ -427,33 +424,33 @@ msgstr "Arquivo atualizado"
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:26
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:26
 msgid "For Firefox browsers go to: <ul>"
-msgstr "Para navegadores Firefox vá para: <ul>"
+msgstr "Para navegadores Firefox vá para: <url>"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:34
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:34
 msgid "For Internet Explorer browsers go to: <ul>"
-msgstr "Para navegadores Internet Explorer vá para: <ul>"
+msgstr "Para navegadores Internet Expĺorer vá para: <url>"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:42
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:42
 msgid "For Opera browsers go to: <ul>"
-msgstr "Para navegadores Opera vá para: <ul>"
+msgstr "Para navegadores Opera vá para: <url>"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:61
 msgid "Format error in CRL's lastUpdate field"
-msgstr "Format error in CRL's lastUpdate field"
+msgstr "Erro de formato no campo lastUpdate do CRL"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:65
 msgid "Format error in CRL's nextUpdate field"
-msgstr "Format error in CRL's nextUpdate field"
+msgstr "Erro de formato no campo nextUpdate do CRL"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:57
 msgid "Format error in certificate's notAfter field"
-msgstr "Format error in certificate's notAfter field"
+msgstr "Erro de formato nos certificados no campo notAfter"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:53
 msgid "Format error in certificate's notBefore field"
-msgstr "Format error in certificate's notBefore field"
+msgstr "Erro de formato no campo notBefore do certificado"
 
 #: templates/ERR_FORWARDING_DENIED+html.body.div.blockquote.p:23
 msgid "Forwarding Denied."
@@ -461,7 +458,7 @@ msgstr "Encaminhamento Negado."
 
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.blockquote.p:23
 msgid "Gateway Proxy Failure"
-msgstr "Falha de Proxy de Gateway"
+msgstr "Falha de Gateway Proxy"
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:34
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:35
@@ -508,12 +505,9 @@ msgid "Generated %T by %h (%s)"
 msgstr "Gerado %T por %h (%s)"
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:34
-#, fuzzy
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
-msgstr ""
-"<q>Esperando</q> HTTP/1.1: funcionalidade está sendo pedida de um software "
-"HTTP/1.0."
+msgstr "HTTP/1.1 <q>Expect:</q> requisição proveniente de um software HTTP/1.0"
 
 #: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:1
 #, fuzzy
@@ -527,7 +521,7 @@ msgstr "Olha, não espere muito por URNs em %T :)"
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:24
 #: templates/ERR_AGENT_WPAD+html.body.div.p:24
 msgid "How to find these settings in your browser:"
-msgstr "Como achar estas configurações no seu navegador:"
+msgstr "Como encontrar estas configurações no seu navegador"
 
 #: templates/ERR_ICAP_FAILURE+html.body.div.blockquote.p:23
 msgid "ICAP protocol error."
@@ -562,11 +556,11 @@ msgstr "Escape duplo ilegal na URL-Path"
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:38
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:46
 msgid "In the HTTP proxy box type the proxy name %h and port %b."
-msgstr "Na caixa de proxy HTTP digite o nome do proxy %h e a porta %b."
+msgstr "Na caixa HTTP proxy digite o nome do proxy %h e porta %b."
 
 #: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:97
 msgid "Invalid CA certificate"
-msgstr "Invalid CA certificate"
+msgstr "Certificado CA inválido"
 
 #: templates/ERR_INVALID_URL+html.body.div.blockquote.p:23
 msgid "Invalid URL"
@@ -574,7 +568,7 @@ msgstr "URL inválida"
 
 #: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:129
 msgid "Key usage does not include certificate signing"
-msgstr "Key usage does not include certificate signing"
+msgstr "O uso das chaves não inclui assinatura de certificado"
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:30
 msgid "Missing HTTP Identifier (HTTP/1.0)."
