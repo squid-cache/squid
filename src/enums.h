@@ -250,6 +250,8 @@ typedef enum {
     PROTO_NONE,
     PROTO_HTTP,
     PROTO_FTP,
+    PROTO_COAP,
+    PROTO_COAPS,
     PROTO_GOPHER,
     PROTO_WAIS,
     PROTO_CACHEOBJ,
