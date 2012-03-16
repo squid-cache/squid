@@ -1,3 +1,4 @@
+
 /*
  * $Id$
  *
@@ -974,7 +975,25 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
                    "helper that overflowed " << srv->rbuf_sz << "-byte " <<
                    "Squid input buffer: " << hlp->id_name << " #" <<
                    (srv->index + 1));
-            srv->closePipesSafely();
+
+            int wfd = srv->wfd;
+            srv->wfd = -1;
+            if (srv->rfd == wfd)
+                srv->rfd = -1;
+            srv->flags.closing=1;
+            comm_close(wfd);
+
+#if _SQUID_MSWIN_
+            if (srv->hIpc) {
+                if (WaitForSingleObject(srv->hIpc, 5000) != WAIT_OBJECT_0) {
+                    getCurrentTime();
+                    debugs(84, 1, "helperShutdown: WARNING: " << hlp->id_name <<
+                           " #" << no << " (" << hlp->cmdline->key << "," <<
+                           (long int)srv->pid << ") didn't exit in 5 seconds");
+                }
+                CloseHandle(srv->hIpc);
+            }
+#endif
             return;
         }
 
@@ -1073,7 +1092,24 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
                    "helper that overflowed " << srv->rbuf_sz << "-byte " <<
                    "Squid input buffer: " << hlp->id_name << " #" <<
                    (srv->index + 1));
-            srv->closePipesSafely();
+            int wfd = srv->wfd;
+            srv->wfd = -1;
+            if (srv->rfd == wfd)
+                srv->rfd = -1;
+            srv->flags.closing=1;
+            comm_close(wfd);
+
+#if _SQUID_MSWIN_
+            if (srv->hIpc) {
+                if (WaitForSingleObject(srv->hIpc, 5000) != WAIT_OBJECT_0) {
+                    getCurrentTime();
+                    debugs(84, 1, "helperShutdown: WARNING: " << hlp->id_name <<
+                           " #" << no << " (" << hlp->cmdline->key << "," <<
+                           (long int)srv->pid << ") didn't exit in 5 seconds");
+                }
+                CloseHandle(srv->hIpc);
+            }
+#endif
             return;
         }
 
