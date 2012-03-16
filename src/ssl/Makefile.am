@@ -16,20 +16,23 @@ SSL_CRTD =
 SSL_CRTD_SOURCE =
 endif
 
+## SSL stuff used by main Squid but not by ssl_crtd
 libsslsquid_la_SOURCES = \
 	context_storage.cc \
 	context_storage.h \
 	Config.cc \
 	Config.h \
 	ErrorDetail.cc \
-	ErrorDetail.h
+	ErrorDetail.h \
+	\
+	$(SSL_CRTD_SOURCE)
 
+## SSL stuff used by main Squid and ssl_crtd
 libsslutil_la_SOURCES = \
 	gadgets.cc \
 	gadgets.h \
 	crtd_message.cc \
-	crtd_message.h \
-	$(SSL_CRTD_SOURCE)
+	crtd_message.h
 
 libexec_PROGRAMS = \
 	$(SSL_CRTD)

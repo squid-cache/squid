@@ -6,7 +6,6 @@
 #define SQUID_SSL_CERTIFICATE_DB_H
 
 #include "ssl/gadgets.h"
-#include "ssl_support.h"
 #if HAVE_STRING
 #include <string>
 #endif
