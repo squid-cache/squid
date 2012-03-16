@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-02-06 18:41+1300\n"
-"PO-Revision-Date: 2012-03-09 05:32+0200\n"
-"Last-Translator: Fred <fred.maranhao@gmail.com>\n"
+"PO-Revision-Date: 2012-03-16 13:02+0200\n"
+"Last-Translator: Aecio F. <aecioneto@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <pt_BR@li.org>\n"
 "Language: pt_BR\n"
 "MIME-Version: 1.0\n"
@@ -62,9 +62,8 @@ msgid "%ssl_error_descr: %ssl_ca_name"
 msgstr "%ssl_error_descr: %ssl_ca_name"
 
 #: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.detail:1
-#, fuzzy
 msgid "%ssl_error_descr: %ssl_lib_error"
-msgstr "%ssl_error_descr: %ssl_ca_name"
+msgstr "%ssl_error_descr: %ssl_lib_error"
 
 #: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.detail:5
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:13
@@ -131,12 +130,12 @@ msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
 "request from being completed."
 msgstr ""
-"Uma falha interna ou problema de configuração irrecuperáveis evitam que esta "
-"requisição seja completada."
+"Uma falha interna ou problema de configuração irrecuperáveis impedem que "
+"esta requisição seja completada."
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.blockquote.p:23
 msgid "Access Denied."
-msgstr "Acesso Negado."
+msgstr "Acesso negado."
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:26
 #, fuzzy
@@ -151,7 +150,7 @@ msgstr ""
 
 #: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:31
 msgid "All configured parent caches may be currently unreachable."
-msgstr "Parece que todos os caches-pais estão no momento fora de alcance."
+msgstr "Todos os caches-pais parecem estar fora de alcance no momento."
 
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.p:20
 msgid ""
@@ -175,30 +174,24 @@ msgid "An Illegal response was received from the ICAP server."
 msgstr "Uma resposta ilegal foi recebida do servidor ICAP."
 
 #: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:30
-#, fuzzy
 msgid ""
 "An Internet connection needed to access this domains origin servers may be "
 "down."
 msgstr ""
-"Uma conexão à Internet necessária para acessar estes 'domains origin "
-"servers' parece estar fora."
+"Uma conexão à Internet necessária para acessar estes servidores de origem de "
+"domínios parece estar fora."
 
 #: templates/ERR_READ_ERROR+html.body.div.p:28
-#, fuzzy
 msgid ""
 "An error condition occurred while reading data from the network. Please "
 "retry your request."
-msgstr ""
-"Uma condição de erro ocorreu ao ler dados da rede. Por favor, repita sua "
-"requisição."
+msgstr "Ocorreu um erro ao ler dados da rede. Por favor, repita sua requisição."
 
 #: templates/ERR_WRITE_ERROR+html.body.div.p:28
-#, fuzzy
 msgid ""
 "An error condition occurred while writing to the network. Please retry your "
 "request."
-msgstr ""
-"Ocorreu um erro ao tentar escrever na rede. Por favor, repita sua requisição."
+msgstr "Ocorreu um erro ao escrever na rede. Por favor, repita sua requisição."
 
 #: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:133
 msgid "Application verification failure"
@@ -214,23 +207,23 @@ msgstr ""
 
 #: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:125
 msgid "Authority and issuer serial number mismatch"
-msgstr "Authority and issuer serial number mismatch"
+msgstr "Autoridade e número serial do emissor não coincidem"
 
 #: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:121
 msgid "Authority and subject key identifier mismatch"
-msgstr "Authority and subject key identifier mismatch"
+msgstr "Chave identificadora de autoridade e assunto não coincidem"
 
 #: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:49
 msgid "CRL has expired"
-msgstr "CRL has expired"
+msgstr "CRL expirou"
 
 #: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.descr:45
 msgid "CRL is not yet valid"
-msgstr "CRL is not yet valid"
+msgstr "CRL ainda não é válido"
 
 #: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:33
 msgid "CRL signature failure"
-msgstr "CRL signature failure"
+msgstr "Falha na assinatura CRL"
 
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h2:15
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.blockquote.p:23
@@ -248,7 +241,7 @@ msgstr "Não é possível resolver URN"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:89
 msgid "Certificate chain too long"
-msgstr "Certificate chain too long"
+msgstr "Cadeia de certificados longa demais"
 
 #: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.descr:5
 #, fuzzy
