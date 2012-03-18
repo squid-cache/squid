@@ -764,6 +764,8 @@ LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
+include $(srcdir)/tests/Stub.list
+
 EXTRA_DIST = \
 	cf_gen_defines \
 	cf.data.pre \
@@ -774,7 +776,7 @@ EXTRA_DIST = \
 	mk-string-arrays.pl \
 	mk-string-arrays.awk \
 	repl_modules.sh \
-	tests/STUB.h \
+	$(STUB_SOURCE) \
 	mib.txt \
 	mime.conf.default
 
