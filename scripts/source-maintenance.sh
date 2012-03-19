@@ -181,7 +181,7 @@ echo " "
 
 # Build STUB framework include from current stub_* available
 (
-echo -n "STUB_SOURCE= tests\STUB.h"
+echo -n "STUB_SOURCE= tests/STUB.h"
 for f in `ls -1 ${ROOT}/src/tests/stub_*.cc`
 do
 	echo " \\"
