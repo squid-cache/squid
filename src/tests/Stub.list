@@ -1,4 +1,4 @@
-STUB_SOURCE= tests\STUB.h \
+STUB_SOURCE= tests/STUB.h \
 	tests/stub_CommIO.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_DiskIOModule.cc \
