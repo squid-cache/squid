@@ -3741,12 +3741,13 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
     assert(certProperties.signAlgorithm != Ssl::algSignEnd);
 
     if (certProperties.signAlgorithm == Ssl::algSignUntrusted) {
+        assert(port->untrustedSigningCert.get());
         certProperties.signWithX509.resetAndLock(port->untrustedSigningCert.get());
         certProperties.signWithPkey.resetAndLock(port->untrustedSignPkey.get());
     }
     else {
-        if (port->signingCert.get())
-            certProperties.signWithX509.resetAndLock(port->signingCert.get());
+        assert(port->signingCert.get());
+        certProperties.signWithX509.resetAndLock(port->signingCert.get());
 
         if (port->signPkey.get())
             certProperties.signWithPkey.resetAndLock(port->signPkey.get());
