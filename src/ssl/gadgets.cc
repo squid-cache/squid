@@ -554,6 +554,7 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
 
     // For non self-signed certificates we have to check if the signing certificate changed
     if (properties.signAlgorithm != Ssl::algSignSelf) {
+        assert(properties.signWithX509.get());
         if (X509_check_issued(properties.signWithX509.get(), cert) != X509_V_OK)
             return false;
     }
