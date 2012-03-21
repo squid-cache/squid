@@ -15,6 +15,9 @@
 struct http_port_list {
     http_port_list(const char *aProtocol);
     ~http_port_list();
+#if USE_SSL
+    void configureSslServerContext();
+#endif
 
     http_port_list *next;
 

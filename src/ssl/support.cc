@@ -707,6 +707,11 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
     if (!CAfile)
         CAfile = clientCA;
 
+    if (!certfile) {
+        debugs(83, DBG_CRITICAL, "ERROR: No certificate file");
+        return NULL;
+    }
+
     switch (version) {
 
     case 2:
@@ -741,8 +746,8 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
 
     if (sslContext == NULL) {
         ssl_error = ERR_get_error();
-        fatalf("Failed to allocate SSL context: %s\n",
-               ERR_error_string(ssl_error, NULL));
+        debugs(83, DBG_CRITICAL, "ERROR: Failed to allocate SSL context: " << ERR_error_string(ssl_error, NULL));
+        return NULL;
     }
 
     SSL_CTX_set_options(sslContext, ssl_parse_options(options));
@@ -766,8 +771,9 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
 
         if (!SSL_CTX_set_cipher_list(sslContext, cipher)) {
             ssl_error = ERR_get_error();
-            fatalf("Failed to set SSL cipher suite '%s': %s\n",
-                   cipher, ERR_error_string(ssl_error, NULL));
+            debugs(83, DBG_CRITICAL, "ERROR: Failed to set SSL cipher suite '" << cipher << "': " << ERR_error_string(ssl_error, NULL));
+            SSL_CTX_free(sslContext);
+            return NULL;
         }
     }
 

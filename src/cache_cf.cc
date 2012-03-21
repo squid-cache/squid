@@ -906,24 +906,11 @@ configDoConfigure(void)
         http_port_list *s;
 
         for (s = Config.Sockaddr.http; s != NULL; s = (http_port_list *) s->next) {
-            if (!s->cert)
+            if (!s->sslBump)
                 continue;
 
             debugs(3, 1, "Initializing http_port " << s->s << " SSL context");
-
-            s->staticSslContext.reset(
-                sslCreateServerContext(s->cert, s->key,
-                                       s->version, s->cipher, s->options, s->sslflags, s->clientca,
-                                       s->cafile, s->capath, s->crlfile, s->dhfile,
-                                       s->sslContextSessionId));
-
-            Ssl::readCertChainAndPrivateKeyFromFiles(s->signingCert, s->signPkey, s->certsToChain, s->cert, s->key);
-
-            if (!s->signPkey)
-                debugs(3, DBG_IMPORTANT, "No SSL private key configured for  http_port " << s->s);
-
-            Ssl::generateUntrustedCert(s->untrustedSigningCert, s->untrustedSignPkey,
-                                       s->signingCert, s->signPkey);
+            s->configureSslServerContext();
         }
     }
 
@@ -933,21 +920,7 @@ configDoConfigure(void)
 
         for (s = Config.Sockaddr.https; s != NULL; s = s->next) {
             debugs(3, 1, "Initializing https_port " << s->s << " SSL context");
-
-            s->staticSslContext.reset(
-                sslCreateServerContext(s->cert, s->key,
-                                       s->version, s->cipher, s->options, s->sslflags, s->clientca,
-                                       s->cafile, s->capath, s->crlfile, s->dhfile,
-                                       s->sslContextSessionId));
-
-            if (s->cert && s->sslBump) {
-                Ssl::readCertChainAndPrivateKeyFromFiles(s->signingCert, s->signPkey, s->certsToChain, s->cert, s->key);
-                if (!s->signPkey)
-                    debugs(3, DBG_IMPORTANT, "No SSL private key configured for  https_port " << s->s);
-
-                Ssl::generateUntrustedCert(s->untrustedSigningCert, s->untrustedSignPkey,
-                                           s->signingCert, s->signPkey);
-            }
+            s->configureSslServerContext();
         }
     }
 
