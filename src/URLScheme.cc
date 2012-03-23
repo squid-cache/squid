@@ -41,6 +41,8 @@ const char *ProtocolStr[] = {
     "NONE",
     "http",
     "ftp",
+    "coap",
+    "coaps",
     "gopher",
     "wais",
     "cache_object",
