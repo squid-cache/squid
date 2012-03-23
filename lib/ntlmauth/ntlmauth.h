@@ -224,7 +224,7 @@ extern "C" {
         strhdr user;		/**< Username */
         strhdr workstation;		/**< Workstation name */
         strhdr sessionkey;		/**< Session key for server's use */
-        int32_t flags;		/**< Request flags */
+        uint32_t flags;		/**< Request flags */
         char payload[256 * 6];	/**< String data */
     } ntlm_authenticate;
 
