@@ -309,8 +309,14 @@ static bool buildCertificate(Ssl::X509_Pointer & cert, Ssl::CertificatePropertie
         if (!properties.setCommonName) {
             int pos=X509_get_ext_by_NID (properties.mimicCert.get(), OBJ_sn2nid("subjectAltName"), -1);
             X509_EXTENSION *ext=X509_get_ext(properties.mimicCert.get(), pos); 
-            if (ext)
+            if (ext) {
                 X509_add_ext(cert.get(), ext, -1);
+                /* According the RFC 5280 using extensions requires version 3
+                   certificate.
+                   Set version value to 2 for version 3 certificates.
+                 */
+                X509_set_version(cert.get(), 2);
+            }
         }
     }
 
