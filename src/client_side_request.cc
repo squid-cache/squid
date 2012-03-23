@@ -1370,6 +1370,18 @@ ClientHttpRequest::doCallouts()
         }
     }
 
+    if (!calloutContext->clientside_tos_done) {
+        calloutContext->clientside_tos_done = true;
+        if (getConn() != NULL) {
+            ACLFilledChecklist ch(NULL, request, NULL);
+            ch.src_addr = request->client_addr;
+            ch.my_addr = request->my_addr;
+            int tos = aclMapTOS(Config.accessList.clientside_tos, &ch);
+            if (tos)
+                comm_set_tos(getConn()->fd, tos);
+        }
+    }
+
 #if USE_SSL
     if (!calloutContext->sslBumpCheckDone) {
         calloutContext->sslBumpCheckDone = true;

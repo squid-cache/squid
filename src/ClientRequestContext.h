@@ -60,6 +60,7 @@ public:
     bool redirect_done;
     bool no_cache_done;
     bool interpreted_req_hdrs;
+    bool clientside_tos_done;
 #if USE_SSL
     bool sslBumpCheckDone;
 #endif
