@@ -21,7 +21,8 @@ EXTRA_DIST = \
 	nextstep/info.in \
 	nextstep/makepkg \
 	nextstep/post_install \
-	nextstep/pre_install
+	nextstep/pre_install \
+	solaris/solaris-krb5-include.patch
 
 all: 
 

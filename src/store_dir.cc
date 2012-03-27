@@ -791,8 +791,7 @@ StoreController::handleIdleEntry(StoreEntry &e)
         // have a dedicated storage for them (that would not purge them).
         // They are not managed [well] by any specific Store handled below.
         keepInLocalMemory = true;
-    } else
-    if (memStore) {
+    } else if (memStore) {
         memStore->considerKeeping(e);
         // leave keepInLocalMemory false; memStore maintains its own cache
     } else {
