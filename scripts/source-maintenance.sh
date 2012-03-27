@@ -179,6 +179,17 @@ done
 echo " "
 )| sed s%${ROOT}/doc/manuals/%%g | sed s%\.po%\.lang%g >${ROOT}/doc/manuals/language.list
 
+# Build STUB framework include from current stub_* available
+(
+echo -n "STUB_SOURCE= tests/STUB.h"
+for f in `ls -1 ${ROOT}/src/tests/stub_*.cc`
+do
+	echo " \\"
+	echo -n "	${f}"
+done
+echo " "
+)| sed s%${ROOT}/src/%%g >${ROOT}/src/tests/Stub.list
+
 # Run formating
 echo "" >${ROOT}/doc/debug-sections.tmp
 srcformat || exit 1

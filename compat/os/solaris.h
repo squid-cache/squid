@@ -4,7 +4,6 @@
 
 #if _SQUID_SOLARIS_
 
-
 /*
  * ugly hack. System headers require wcsstr, but don't define it.
  */
@@ -85,6 +84,16 @@ SQUIDCEXTERN int gethostname(char *, int);
 #include "compat/os/opensolaris_10_netdb.h"
 #endif
 
+/* Solaris 10 lacks SUN_LEN */
+#if !defined(SUN_LEN)
+#define SUN_LEN(su) (sizeof(*(su)) - sizeof((su)->sun_path) + strlen((su)->sun_path))
+#endif
+
+/* Soaris 10 does not define POSIX AF_LOCAL, but does define the Unix name */
+#if !defined(AF_LOCAL)
+#define AF_LOCAL AF_UNIX
+#endif
+
 /* Solaris lacks paths.h by default */
 #if HAVE_PATHS_H
 #include <paths.h>
@@ -92,6 +101,9 @@ SQUIDCEXTERN int gethostname(char *, int);
 #if !defined(_PATH_DEVNULL)
 #define _PATH_DEVNULL "/dev/null"
 #endif
+
+/* Solaris 10 does not define strsep() */
+#include "compat/strsep.h"
 
 #endif /* _SQUID_SOLARIS_ */
 #endif /* SQUID_OS_SOALRIS_H */
