@@ -38,9 +38,10 @@
 #include "squid-old.h"
 #include "Store.h"
 #include "comm.h"
-#include "comm/Loops.h"
-#include "ICP.h"
 #include "comm/Connection.h"
+#include "comm/Loops.h"
+#include "comm/UdpOpenDialer.h"
+#include "ICP.h"
 #include "HttpRequest.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Acl.h"
@@ -52,28 +53,10 @@
 #include "icmp/net_db.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
-#include "ipc/StartListening.h"
 #include "ipcache.h"
 #include "rfc1738.h"
 
-/// dials icpIncomingConnectionOpened call
-class IcpListeningStartedDialer: public CallDialer,
-        public Ipc::StartListeningCb
-{
-public:
-    typedef void (*Handler)(int errNo);
-    IcpListeningStartedDialer(Handler aHandler):
-            handler(aHandler) {}
-
-    virtual void print(std::ostream &os) const { startPrint(os) << ')'; }
-    virtual bool canDial(AsyncCall &) const { return true; }
-    virtual void dial(AsyncCall &) { (handler)(errNo); }
-
-public:
-    Handler handler;
-};
-
-static void icpIncomingConnectionOpened(int errNo);
+static void icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpLogIcp(const Ip::Address &, log_type, int, const char *, int);
@@ -696,7 +679,7 @@ icpConnectionsOpen(void)
 
     AsyncCall::Pointer call = asyncCall(12, 2,
                                         "icpIncomingConnectionOpened",
-                                        IcpListeningStartedDialer(&icpIncomingConnectionOpened));
+                                        Comm::UdpOpenDialer(&icpIncomingConnectionOpened));
 
     Ipc::StartListening(SOCK_DGRAM,
                         IPPROTO_UDP,
@@ -732,22 +715,22 @@ icpConnectionsOpen(void)
 }
 
 static void
-icpIncomingConnectionOpened(int errNo)
+icpIncomingConnectionOpened(const Comm::ConnectionPointer &conn, int errNo)
 {
-    if (!Comm::IsConnOpen(icpIncomingConn))
+    if (!Comm::IsConnOpen(conn))
         fatal("Cannot open ICP Port");
 
-    Comm::SetSelect(icpIncomingConn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
+    Comm::SetSelect(conn->fd, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
 
     for (const wordlist *s = Config.mcast_group_list; s; s = s->next)
-        ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL); // XXX: pass the icpIncomingConn for mcastJoinGroups usage.
+        ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL); // XXX: pass the conn for mcastJoinGroups usage.
 
-    debugs(12, DBG_IMPORTANT, "Accepting ICP messages on " << icpIncomingConn->local);
+    debugs(12, DBG_IMPORTANT, "Accepting ICP messages on " << conn->local);
 
-    fd_note(icpIncomingConn->fd, "Incoming ICP port");
+    fd_note(conn->fd, "Incoming ICP port");
 
     if (Config.Addrs.udp_outgoing.IsNoAddr()) {
-        icpOutgoingConn = icpIncomingConn;
+        icpOutgoingConn = conn;
         debugs(12, DBG_IMPORTANT, "Sending ICP messages from " << icpOutgoingConn->local);
     }
 }
