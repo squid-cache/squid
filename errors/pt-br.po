@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-02-06 18:41+1300\n"
-"PO-Revision-Date: 2012-03-28 15:59+0200\n"
+"PO-Revision-Date: 2012-03-30 20:25+0200\n"
 "Last-Translator: Aecio F. <aecioneto@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <pt_BR@li.org>\n"
 "Language: pt_BR\n"
@@ -136,7 +136,6 @@ msgid "Access Denied."
 msgstr "Acesso negado."
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:26
-#, fuzzy
 msgid ""
 "Access control configuration prevents your request from being allowed at "
 "this time. Please contact your service provider if you feel this is "
@@ -624,7 +623,6 @@ msgstr ""
 "cache e cheque o log para maiores detalhes sobre mensagens de erro."
 
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:28
-#, fuzzy
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
 "have difficulties authenticating yourself."
@@ -974,7 +972,6 @@ msgstr ""
 "momento. Por favor, tente novamente em breve."
 
 #: templates/ERR_FORWARDING_DENIED+html.body.div.p:26
-#, fuzzy
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
 "sibling relationship. Perhaps the client at %i is a cache which has been "
@@ -1254,7 +1251,6 @@ msgstr "Resposta de tamanho zero"
 #~ msgid "Parent Directory"
 #~ msgstr "Diretório pai"
 
-#, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches. The most likely cause for this error is that the cache "
