@@ -11,7 +11,7 @@ class UdpOpenDialer: public CallDialer,
         public Ipc::StartListeningCb
 {
 public:
-    typedef void (*Handler)((const Comm::ConnectionPointer &conn, int errNo);
+    typedef void (*Handler)(const Comm::ConnectionPointer &conn, int errNo);
     UdpOpenDialer(Handler aHandler): handler(aHandler) {}
 
     virtual void print(std::ostream &os) const { startPrint(os) << ')'; }
