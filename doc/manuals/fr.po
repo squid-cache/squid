@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-02-13 00:05+1400\n"
-"PO-Revision-Date: 2012-02-02 16:58+0200\n"
+"PO-Revision-Date: 2012-04-02 19:50+0200\n"
 "Last-Translator: Bernard <fli4l.charrier@free.fr>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: fr\n"
@@ -321,7 +321,7 @@ msgstr "OPTIONS"
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:67
 msgid "B<REQUIRED.> Specifies the base DN under which the users are located."
 msgstr ""
-"B<REQUIRED.> permet de spécifie la base DN dans laquelle se trouve les "
+"B<REQUIRED> permet de spécifie la base DN dans laquelle se trouve les "
 "utilisateurs."
 
 #. type: Plain text
@@ -489,9 +489,9 @@ msgid ""
 "used for searching for the user DN is kept persistent but a new connection "
 "is opened to verify each users password once the DN is found."
 msgstr ""
-"Effectuer seulement une connexion LDAP à la fois. Certains serveurs LDAP ne "
+"Effectue seulement une connexion LDAP à la fois. Certains serveurs LDAP ne "
 "permettent pas de rajouter un autre utilisateur après une connexion réussi. "
-"I<ldap_bind> L'utilisation de cette option ouvre toujours une nouvelle "
+"Avec I<ldap_bind> l'utilisation de cette option ouvre toujours une nouvelle "
 "connexion après chaque identifiant connecté. Si cette option est combiné "
 "avec l'option B<-P> pour une connexion LDAP persistante, la connexion "
 "utilisée pour la recherche d'utilisateur DN sera maintenu persistant mais "
@@ -514,9 +514,9 @@ msgid ""
 "B<never> dereference aliases (default), B<always> dereference aliases, only "
 "while B<search ing> or only to B<find> the base object."
 msgstr ""
-"B<never> Ne jamais résoudre les alias, par (défaut), B<always> résous en "
-"plus les alias, B<search> uniquement pendant une recherche ou B<find> "
-"uniquement pour une recherche dans une base d'objets."
+"B<never> ne jamais résoudre les alias par (défaut), B<always> résous en plus "
+"les alias, B<search> uniquement pendant une recherche ou B<find> uniquement "
+"pour une recherche dans une base d'objets."
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:201
@@ -525,8 +525,8 @@ msgid ""
 "libraries).  Servers can also be specified last on the command line."
 msgstr ""
 "Spécifier un serveur LDAP, avec une connexion LDAP par URI (nécessite une "
-"bibliothèque OpenLDAP). Les serveurs peuvent également être spécifiée sur la "
-"dernière ligne de commande."
+"bibliothèque OpenLDAP). Les serveurs peuvent également être spécifiée en "
+"dernier par ligne de commande."
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:206
@@ -607,10 +607,10 @@ msgid ""
 "locate your user DNs as these can no longer be constructed direcly from the "
 "base DN and login name alone:"
 msgstr ""
-"Si vous avez des sous-domaines, vous devez utiliser une Méthode de filtre de "
+"Si vous avez des sous-domaines, vous devez utiliser une méthode de filtre de "
 "recherche pour localiser vos utilisateurs DNs, car ils ne pourront plus "
-"être construits directement seulement à partir de l'identifiant dans la base "
-"DN :"
+"être directement construits dans la base DN seulement à partir du nom "
+"d'utilisateur:"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:257
@@ -653,10 +653,10 @@ msgid ""
 "the filter using B<ldapsearch> before you attempt to use B<basic_ldap_auth.> "
 "This to verify that the filter matches what you expect."
 msgstr ""
-"B<NOTE:> Lors de la construction du filtre de recherche, il est fortement "
+"B<NOTE:> lors de la construction du filtre de recherche, il est fortement "
 "recommandé de tester le filtre en utilisant B<ldapsearch>, avant d'essayer "
-"d'utiliser B<basic_ldap_auth.> Ceci pour vérifier que le filtre correspond "
-"à ce que vous attendiez."
+"d'utiliser B<basic_ldap_auth>. Ceci pour vérifier que le filtre correspond "
+"bien à ce que vous attendez."
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:290 helpers/basic_auth/RADIUS/basic_radius_auth.8:87
@@ -835,9 +835,9 @@ msgid ""
 "B<auth> and B<account> management groups to verify the password and the "
 "accounts validity."
 msgstr ""
-"Le nom du service par défaut est B<squid>, le programme utilise les groupes "
-"de gestion B<auth> et B<account> qui vérifie la validité du mot de passe et "
-"du comptes."
+"Le nom du service par défaut est B<squid>, le programme de gestion utilise "
+"B<auth> et B<account> pour vérifier la validité du mot de passe et du "
+"comptes."
 
 #. type: Plain text
 #: helpers/basic_auth/PAM/basic_pam_auth.8:58
@@ -923,8 +923,8 @@ msgid ""
 "the user name and password of Basic HTTP authentication."
 msgstr ""
 "B<basic_radius_auth> permet à Squid de se connecter à un serveur RADIUS pour "
-"valider le nom d'utilisateur et le mot de passe de l'authentification HTTP "
-"de base."
+"valider le nom d'utilisateur et le mot de passe avec l'authentification "
+"HTTP de base."
 
 #. type: Plain text
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:36
@@ -1028,7 +1028,7 @@ msgstr ""
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:121
 msgid "B<RFC2058> - Remote Authentication Dial In User Service (RADIUS)"
 msgstr ""
-"B<RFC2058> - connexion à distance au service d'authentification des "
+"B<RFC2058> - Connexion à distance au service d'authentification des "
 "utilisateurs (RADIUS)"
 
 #. type: Plain text
@@ -1059,7 +1059,7 @@ msgstr ""
 "l'autorisation les utilisateurs à travers des groupes LDAP. Les options LDAP "
 "sont spécifiées par des paramètres en ligne de commande, le nom(s) "
 "d'utilisateur(s) et le groupe(s), seront vérifiés depuis l'annuaire LDAP et "
-"précisés sur la ligne suivante après une Entrée, le couple nom "
+"précisés sur la ligne suivante après avoir appuyé sur entrée, le couple nom "
 "d'utilisateur/groupe seront sur une même ligne et séparées par un espace."
 
 #. type: Plain text
@@ -1072,9 +1072,9 @@ msgid ""
 msgstr ""
 "Comme prévu, on utilise B<external_acl_type> pour la construction de Squid, "
 "on spécifie pour chaque nouvelle ligne le nom d'utilisateur et le groupe "
-"suivis d'une entrée, sur la ligne suivante il sera alors indiqué soit B<OK> "
-"soit B<ERR>, pour aider l'utilisateur à vérifier si le membre appartient "
-"bien au groupe spécifié."
+"suivis de la touche entrée, sur la ligne suivante il sera alors indiqué soit "
+"B<OK> soit B<ERR>, pour aider l'utilisateur à vérifier si le membre "
+"appartient bien au groupe spécifié."
 
 #. type: Plain text
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:48
@@ -1105,13 +1105,14 @@ msgstr ""
 #. type: Plain text
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:67
 msgid "B<REQUIRED.> Specifies the base DN under which the groups are located."
-msgstr "B<REQUIRED.> spécifie la base DN sous laquel les groupes sont situés."
+msgstr "B<REQUIRED> spécifie la base DN sous laquelle les groupes sont situés."
 
 #. type: Plain text
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:71
 msgid "Specifies the base DN under which the users are located (if different)"
 msgstr ""
-"Spécifie la base DN sous laquel les utilisateurs sont situés (si différent)"
+"Spécifie la base DN sous laquelle les utilisateurs sont situés (si "
+"différent)"
 
 #. type: Plain text
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:76
@@ -1119,7 +1120,7 @@ msgid ""
 "Specify timeout used when connecting to LDAP servers (requires Netscape LDAP "
 "API libraries)"
 msgstr ""
-"Spécifier le temps de pause, lors d'une connexion aux serveurs LDAP (requies "
+"Spécifier le temps de pause, lors d'une connexion aux serveurs LDAP (requis "
 "une bibliothèques API pour Netscape LDAP)"
 
 #. type: Plain text
@@ -1128,7 +1129,7 @@ msgid ""
 "The DN and password to bind as while performing searches. Required if the "
 "directory does not allow anonymous searches."
 msgstr ""
-"Le DN et le mot de passe doivent être liès pour des recherches, si "
+"Le DN et le mot de passe doivent être liés pour des recherches, si "
 "l'annuaire ne permet pas de faire des recherches anonymes."
 
 #. type: Plain text
@@ -1157,9 +1158,9 @@ msgid ""
 "name."
 msgstr ""
 "Utiliser le filtre de recherche LDAP pour rechercher tous les membres du "
-"groupe correspondant dans l'annuaire LDAP. Le Filtre B<%u> sera remplacé "
-"par le nom d'utilisateur (ou utiliser le option B<-F> ou B<-u> pour les DN "
-"(Non de Domaine)) et B<%g> sera remplacé par le nom du groupe demandé."
+"groupe correspondant dans l'annuaire LDAP. Le filtre B<%u> sera remplacé par "
+"le nom d'utilisateur (ou utiliser le option B<-F> ou B<-u> pour les DN (Non "
+"de Domaine)) et B<%g> sera remplacé par le nom du groupe demandé."
 
 #. type: Plain text
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:135
@@ -1169,8 +1170,9 @@ msgid ""
 "be included literally in the filter then use B<%%>"
 msgstr ""
 "Utiliser le filtre de recherche LDAP pour rechercher tous les utilisateurs "
-"dans l'annuaire LDAP. Le filtre B<%s> sera remplacé par le nom d'utilisateur. "
-"Si le signe B<%> est inclu littéralement dans le filtre, utiliser alors B<%%>"
+"dans l'annuaire LDAP. Le filtre B<%s> sera remplacé par le nom "
+"d'utilisateur. Si le signe B<%> est inclus littéralement dans le filtre, "
+"utiliser alors B<%%>"
 
 #. type: Plain text
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:141
@@ -1268,10 +1270,10 @@ msgid ""
 "the filter using B<ldapsearch> to verify that the filter matches what you "
 "expect before you attempt to use B<squid_ldap_group>"
 msgstr ""
-"B<NOTE:> Lors de la construction du filtre de recherche, il est recommandé "
-"de tester d'abord le filtre à l'aide du paramètre B<ldapsearch> pour vérifier "
-"que le filtre correspond bien à vos attentent et avant de tenter d'utiliser "
-"le paramètre B<squid_ldap_group>"
+"B<NOTE:> lors de la construction du filtre de recherche, il est recommandé "
+"de tester d'abord le filtre à l'aide du paramètre B<ldapsearch> pour "
+"vérifier que le filtre correspond bien à vos attentent et avant de tenter "
+"d'utiliser le paramètre B<squid_ldap_group>"
 
 #. type: Plain text
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:240
@@ -1359,8 +1361,8 @@ msgid ""
 "Without this flag the helper automatically starts the session after the "
 "first request."
 msgstr ""
-"Sans ce repère l'aide démarre automatiquement la session après "
-"la première requête."
+"Sans ce repère, l'aide démarre automatiquement la session après la première "
+"requête."
 
 #. type: Plain text
 #: helpers/external_acl/session/squid_session.8:53
@@ -1494,8 +1496,9 @@ msgid ""
 msgstr ""
 "B<squid> est un serveur proxy de haute performance cachant les clients sur "
 "le web, il supporte les protocoles FTP, Gopher, ICAP, ICP, HTCP et HTTP pour "
-"les données. Contrairement aux logiciels de mise en cache traditionnelle, "
-"Squid gère toutes les requêtes en un seul processus non-bloquant."
+"le transfert des données. Contrairement aux logiciels de mise en cache "
+"traditionnelle, Squid gère toutes les requêtes en un seul processus non-"
+"bloquant."
 
 #. type: Plain text
 #: src/squid.8.in:36
@@ -1505,8 +1508,8 @@ msgid ""
 "of failed requests."
 msgstr ""
 "Squid conserve au chaud (la mis en cache) des meta-données et des données "
-"les plus utilisées cachées dans la RAM, il conserve aussi les DNS dans la "
-"mémoire, les DNS sont non bloquante et applique la mise en cache négative "
+"les plus utilisées sont cachées dans la RAM, il conserve aussi les DNS dans "
+"la mémoire, les DNS sont non bloquante et applique la mise en cache négative "
 "des requêtes ayant échouées."
 
 #. type: Plain text
@@ -2038,14 +2041,14 @@ msgstr "Dans l'en-tête ne PAS inclure Accept:"
 #: tools/squidclient.1:66
 msgid "Ping mode, perform I<count> iterations (0 to loop until interrupted)."
 msgstr ""
-"Mode ping, I<count> permet une répétition (boucle de 0 à ..., jusqu'à "
-"l'interrompu)."
+"Mode ping, I<count> permet une répétition (boucle de 0 à ..., jusqu'à son "
+"interruption)."
 
 #. type: Plain text
 #: tools/squidclient.1:71
 msgid "Retrieve URL from cache on hostname.  Default is B<localhost>"
 msgstr ""
-"Accéde à l'URL du nom d'hôte dans la mémoire cache. Par défaut B<localhost>"
+"Accède à l'URL du nom d'hôte dans la mémoire cache. Par défaut B<localhost>"
 
 #. type: Plain text
 #: tools/squidclient.1:77
@@ -2091,11 +2094,11 @@ msgid ""
 "I<manager>\n"
 " access. Here is an example:\n"
 msgstr ""
-"Méthode de requête par défaut\n"
+"Méthode de requête par défaut.\n"
 "I<GET.>\n"
-"Squid prend également en charge une méthode non-standard appelé\n"
+"Squid prend également en charge une méthode non-standard appelé.\n"
 "I<PURGE.>\n"
-"Vous pouvez l'utiliser avec purger une URL spécifique à partir du cache.\n"
+"Vous pouvez l'utiliser pour purger une URL spécifique à partir du cache.\n"
 "Vous devez avoir\n"
 "I<purge>\n"
 "pour accéder au setup dans\n"
