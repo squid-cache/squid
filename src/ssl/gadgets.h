@@ -254,5 +254,20 @@ bool sslDateIsInTheFuture(char const * date);
  \return true if the certificates matches false otherwise.
 */
 bool certificateMatchesProperties(X509 *peer_cert, CertificateProperties const &properties);
+
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Returns CN from the certificate, suitable for use as a host name.
+   * Uses static memory to temporary store the extracted name.
+*/
+const char *CommonHostName(X509 *x509);
+
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Returns Organization from the certificate.
+   * Uses static memory to temporary store the extracted name.
+*/
+const char *getOrganization(X509 *x509);
+
 } // namespace Ssl
 #endif // SQUID_SSL_GADGETS_H
