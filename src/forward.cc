@@ -679,8 +679,9 @@ FwdState::negotiateSSL(int fd)
                 }
             }
 
-            if (request->flags.sslPeek) {
-                // If possible, set host name to server certificate CN.
+            if (request->flags.sslPeek && request->GetHostIsNumeric()) {
+                // If possible, set host name to server certificate CN unless
+                // we already got the right name (from the CONNECT request).
                 if (X509 *srvX509 = errDetails->peerCert()) {
                     if (const char *name = Ssl::CommonHostName(srvX509)) {
                         request->SetHost(name);
@@ -767,17 +768,19 @@ FwdState::initiateSSL()
             SSL_set_session(ssl, peer->sslSession);
 
     } else {
-        // While we are peeking at the certificate, we do not know the server
-        // name that the client will request (after interception or CONNECT).
-        if (!request->flags.sslPeek) {
-            const char *hostname = request->GetHost();
+        // While we are peeking at the certificate, we may not know the server
+        // name that the client will request (after interception or CONNECT)
+        // unless it was the CONNECT request which used a host name. Some
+        // browsers are using IP addresses in CONNECT requests.
+        const char *hostname = request->GetHost();
+        const bool hostnameIsIp = request->GetHostIsNumeric();
+        if (!request->flags.sslPeek || !hostnameIsIp)
             SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostname);
 
-            // Use SNI TLS extension only when we connect directly
-            // to the origin server and we know the server host name
-            if (!request->GetHostIsNumeric())
-                Ssl::setClientSNI(ssl, hostname);
-        }
+        // Use SNI TLS extension only when we connect directly
+        // to the origin server and we know the server host name
+        if (!hostnameIsIp)
+            Ssl::setClientSNI(ssl, hostname);
     }
 
     // Create the ACL check list now, while we have access to more info.
