@@ -1384,34 +1384,6 @@ void Ssl::readCertChainAndPrivateKeyFromFiles(X509_Pointer & cert, EVP_PKEY_Poin
     }
 }
 
-static const char *getSubjectEntry(X509 *x509, int nid)
-{
-    static char name[1024] = ""; // stores common name (CN)
-
-    if (!x509)
-        return NULL;
-
-    // TODO: What if the entry is a UTF8String? See X509_NAME_get_index_by_NID(3ssl).
-    const int nameLen = X509_NAME_get_text_by_NID(
-        X509_get_subject_name(x509),
-        nid,  name, sizeof(name));
-
-    if (nameLen > 0)
-        return name;
-
-    return NULL;
-}
-
-const char *Ssl::CommonHostName(X509 *x509)
-{
-    return getSubjectEntry(x509, NID_commonName);
-}
-
-static const char *getOrganization(X509 *x509)
-{
-    return getSubjectEntry(x509, NID_organizationName);
-}
-
 bool Ssl::generateUntrustedCert(X509_Pointer &untrustedCert, EVP_PKEY_Pointer &untrustedPkey, X509_Pointer const  &cert, EVP_PKEY_Pointer const & pkey)
 {
     // Generate the self-signed certificate, using a hard-coded subject prefix

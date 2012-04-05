@@ -576,22 +576,17 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
         if (X509_NAME_cmp(cert1_name, cert2_name) != 0)
             return false;
     }
-    /* else {
-       if (properties.commonName != Ssl::CommonHostName(cert))
+    else if (properties.commonName != CommonHostName(cert))
            return false;
-       This function normaly called to verify a cached certificate matches the 
-       specifications given by properties parameter.
-       The cached certificate retrieved from the cache using a key which has
-       as part the properties.commonName. This is enough to assume that the 
-       cached cert has in its subject the properties.commonName as cn field.
-       }
-     */
  
     if (!properties.setValidBefore) {
         ASN1_TIME *aTime = X509_get_notBefore(cert);
         ASN1_TIME *bTime = X509_get_notBefore(cert2);
         if (asn1time_cmp(aTime, bTime) != 0)
             return false;
+    } else if (X509_cmp_current_time(X509_get_notBefore(cert)) >= 0) {
+        // notBefore does not exist (=0) or it is in the future (>0)
+        return false;
     }
 
     if (!properties.setValidAfter) {
@@ -599,7 +594,11 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
         ASN1_TIME *bTime = X509_get_notAfter(cert2);
         if (asn1time_cmp(aTime, bTime) != 0)
             return false;
+    } else if (X509_cmp_current_time(X509_get_notAfter(cert)) <= 0) {
+        // notAfter does not exist (0) or  it is in the past (<0)
+        return false;
     }
+
     
     char *alStr1;
     int alLen;
@@ -630,3 +629,32 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
 
     return match;
 }
+
+static const char *getSubjectEntry(X509 *x509, int nid)
+{
+    static char name[1024] = ""; // stores common name (CN)
+
+    if (!x509)
+        return NULL;
+
+    // TODO: What if the entry is a UTF8String? See X509_NAME_get_index_by_NID(3ssl).
+    const int nameLen = X509_NAME_get_text_by_NID(
+        X509_get_subject_name(x509),
+        nid,  name, sizeof(name));
+
+    if (nameLen > 0)
+        return name;
+
+    return NULL;
+}
+
+const char *Ssl::CommonHostName(X509 *x509)
+{
+    return getSubjectEntry(x509, NID_commonName);
+}
+
+const char *Ssl::getOrganization(X509 *x509)
+{
+    return getSubjectEntry(x509, NID_organizationName);
+}
+
