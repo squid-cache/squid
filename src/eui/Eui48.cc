@@ -193,7 +193,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
     struct arpreq arpReq;
     memset(&arpReq, '\0', sizeof(arpReq));
 
-    struct sockaddr_in *sa = static_cast<struct sockaddr_in*>(&arpReq.arp_pa);
+    struct sockaddr_in *sa = (struct sockaddr_in*)&arpReq.arp_pa;
     ipAddr.GetSockAddr(*sa);
 
     /* Query ARP table */
@@ -318,7 +318,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
     struct arpreq arpReq;
     memset(&arpReq, '\0', sizeof(arpReq));
 
-    struct sockaddr_in *sa = static_cast<struct sockaddr_in*>(&arpReq.arp_pa);
+    struct sockaddr_in *sa = (struct sockaddr_in*)&arpReq.arp_pa;
     ipAddr.GetSockAddr(*sa);
 
     /* Query ARP table */
@@ -370,7 +370,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
     struct arpreq arpReq;
     memset(&arpReq, '\0', sizeof(arpReq));
 
-    struct sockaddr_in *sa = static_cast<struct sockaddr_in*>(&arpReq.arp_pa);
+    struct sockaddr_in *sa = (struct sockaddr_in*)&arpReq.arp_pa;
     ipAddr.GetSockAddr(*sa);
 
     /* Query ARP table */
