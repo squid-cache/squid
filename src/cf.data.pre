@@ -2167,8 +2167,12 @@ DOC_START
 	When the acl(s) match, the corresponding signing algorithm is used to
 	generate the certificate. Otherwise, the default signing algorithm used
 
-	BUG: The SQUID_X509_V_ERR_DOMAIN_MISMATCH and ssl:certDomainMismatch ssl
-	errors can not be used with ssl_error acl type.
+	WARNING: SQUID_X509_V_ERR_DOMAIN_MISMATCH and ssl:certDomainMismatch can
+	be used with sslproxy_cert_adapt, but if and only if Squid is bumping a
+	CONNECT request that carries a domain name. In all other cases (CONNECT
+	to an IP address or an intercepted SSL connection), Squid cannot detect
+	the domain mismatch at certificate generation time when
+	bump-server-first is used.
 DOC_END
 
 NAME: sslproxy_cert_adapt 
@@ -2201,8 +2205,12 @@ DOC_START
 	applied to the fake/generated certificate. Otherwise, the
 	default mimicking action takes place.
 
-	BUG: The SQUID_X509_V_ERR_DOMAIN_MISMATCH and ssl:certDomainMismatch ssl
-	errors can not be used with ssl_error acl type
+	WARNING: SQUID_X509_V_ERR_DOMAIN_MISMATCH and ssl:certDomainMismatch can
+	be used with sslproxy_cert_adapt, but if and only if Squid is bumping a
+	CONNECT request that carries a domain name. In all other cases (CONNECT
+	to an IP address or an intercepted SSL connection), Squid cannot detect
+	the domain mismatch at certificate generation time when
+	bump-server-first is used.
 DOC_END
 
 NAME: sslpassword_program
