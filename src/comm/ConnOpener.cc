@@ -241,7 +241,7 @@ Comm::ConnOpener::connect()
             return;
         } else {
             debugs(5, 5, HERE << conn_ << ": COMM_INPROGRESS");
-            Comm::SetSelect(temporaryFd_, COMM_SELECT_WRITE, Comm::ConnOpener::InProgressConnectRetry, this, 0);
+            Comm::SetSelect(temporaryFd_, COMM_SELECT_WRITE, Comm::ConnOpener::InProgressConnectRetry, new Pointer(this), 0);
         }
         break;
 
@@ -261,7 +261,7 @@ Comm::ConnOpener::connect()
             doneConnecting(COMM_TIMEOUT, errno);
         } else if (failRetries_ < Config.connect_retries) {
             debugs(5, 5, HERE << conn_ << ": * - try again");
-            eventAdd("Comm::ConnOpener::DelayedConnectRetry", Comm::ConnOpener::DelayedConnectRetry, this, 0.05, 0);
+            eventAdd("Comm::ConnOpener::DelayedConnectRetry", Comm::ConnOpener::DelayedConnectRetry, new Pointer(this), 0.05, 0);
             return;
         } else {
             // send ERROR back to the upper layer.
@@ -319,14 +319,16 @@ Comm::ConnOpener::timeout(const CommTimeoutCbParams &)
 void
 Comm::ConnOpener::InProgressConnectRetry(int fd, void *data)
 {
-    ConnOpener *cs = static_cast<Comm::ConnOpener *>(data);
-    assert(cs);
-
-    // Ew. we are now outside the all AsyncJob protections.
-    // get back inside by scheduling another call...
-    typedef NullaryMemFunT<Comm::ConnOpener> Dialer;
-    AsyncCall::Pointer call = JobCallback(5, 4, Dialer, cs, Comm::ConnOpener::connect);
-    ScheduleCallHere(call);
+    Pointer *ptr = static_cast<Pointer*>(data);
+    assert(ptr);
+    if (ConnOpener *cs = ptr->valid()) {
+        // Ew. we are now outside the all AsyncJob protections.
+        // get back inside by scheduling another call...
+        typedef NullaryMemFunT<Comm::ConnOpener> Dialer;
+        AsyncCall::Pointer call = JobCallback(5, 4, Dialer, cs, Comm::ConnOpener::connect);
+        ScheduleCallHere(call);
+    }
+    delete ptr;
 }
 
 /* Legacy Wrapper for the retry event with small delay after errors.
@@ -335,12 +337,14 @@ Comm::ConnOpener::InProgressConnectRetry(int fd, void *data)
 void
 Comm::ConnOpener::DelayedConnectRetry(void *data)
 {
-    ConnOpener *cs = static_cast<Comm::ConnOpener *>(data);
-    assert(cs);
-
-    // Ew. we are now outside the all AsyncJob protections.
-    // get back inside by scheduling another call...
-    typedef NullaryMemFunT<Comm::ConnOpener> Dialer;
-    AsyncCall::Pointer call = JobCallback(5, 4, Dialer, cs, Comm::ConnOpener::connect);
-    ScheduleCallHere(call);
+    Pointer *ptr = static_cast<Pointer*>(data);
+    assert(ptr);
+    if (ConnOpener *cs = ptr->valid()) {
+        // Ew. we are now outside the all AsyncJob protections.
+        // get back inside by scheduling another call...
+        typedef NullaryMemFunT<Comm::ConnOpener> Dialer;
+        AsyncCall::Pointer call = JobCallback(5, 4, Dialer, cs, Comm::ConnOpener::connect);
+        ScheduleCallHere(call);
+    }
+    delete ptr;
 }
