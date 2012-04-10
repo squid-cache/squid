@@ -35,33 +35,13 @@
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
-#include "ipc/StartListening.h"
+#include "comm/UdpOpenDialer.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
 #include "snmp_core.h"
 #include "snmp/Forwarder.h"
 
-
-/// dials snmpConnectionOpened call
-class SnmpListeningStartedDialer: public CallDialer,
-        public Ipc::StartListeningCb
-{
-public:
-    typedef void (*Handler)(const Comm::ConnectionPointer &conn, int errNo);
-    SnmpListeningStartedDialer(Handler aHandler): handler(aHandler) {}
-
-    virtual void print(std::ostream &os) const { startPrint(os) << ')'; }
-
-    virtual bool canDial(AsyncCall &) const { return true; }
-    virtual void dial(AsyncCall &) { (handler)(conn, errNo); }
-
-public:
-    Handler handler;
-};
-
-
 static void snmpPortOpened(const Comm::ConnectionPointer &conn, int errNo);
-
 
 mib_tree_entry *mib_tree_head;
 mib_tree_entry *mib_tree_last;
@@ -308,7 +288,7 @@ snmpConnectionOpen(void)
     }
 
     AsyncCall::Pointer call = asyncCall(49, 2, "snmpIncomingConnectionOpened",
-                                        SnmpListeningStartedDialer(&snmpPortOpened));
+                                        Comm::UdpOpenDialer(&snmpPortOpened));
     Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpIncomingConn, Ipc::fdnInSnmpSocket, call);
 
     if (!Config.Addrs.snmp_outgoing.IsNoAddr()) {
@@ -325,7 +305,7 @@ snmpConnectionOpen(void)
             snmpOutgoingConn->local.SetIPv4();
         }
         AsyncCall::Pointer call = asyncCall(49, 2, "snmpOutgoingConnectionOpened",
-                                            SnmpListeningStartedDialer(&snmpPortOpened));
+                                            Comm::UdpOpenDialer(&snmpPortOpened));
         Ipc::StartListening(SOCK_DGRAM, IPPROTO_UDP, snmpOutgoingConn, Ipc::fdnOutSnmpSocket, call);
     } else {
         snmpOutgoingConn = snmpIncomingConn;

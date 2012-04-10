@@ -23,6 +23,7 @@ libcomm_la_SOURCES= \
 	ModSelectWin32.cc \
 	TcpAcceptor.cc \
 	TcpAcceptor.h \
+	UdpOpenDialer.h \
 	Write.cc \
 	Write.h \
 	\
