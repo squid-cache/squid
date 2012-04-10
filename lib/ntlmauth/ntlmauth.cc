@@ -95,7 +95,7 @@ ntlm_validate_packet(const ntlmhdr * hdr, const int32_t type)
 
     if ((int32_t)le32toh(hdr->type) != type) {
         /* don't report this error - it's ok as we do a if() around this function */
-//      fprintf(stderr, "ntlmCheckHeader: type is %d, wanted %d\n", le32toh(hdr->type), type);
+        debug("ntlm_validate_packet: type is %d, wanted %d\n", le32toh(hdr->type), type);
         return NTLM_ERR_PROTOCOL;
     }
     return NTLM_ERR_NONE;
@@ -119,27 +119,26 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
     int32_t o;			/* offset */
     static char buf[NTLM_MAX_FIELD_LENGTH];
     lstring rv;
-    unsigned short *s, c;
-    char *d, *sc;
+    char *d;
 
     lstring_zero(rv);
 
     l = le16toh(str->len);
     o = le32toh(str->offset);
-    /* debug("fetch_string(plength=%d,l=%d,o=%d)\n",packet_size,l,o); */
+    // debug("ntlm_fetch_string(plength=%d,l=%d,o=%d)\n",packet_size,l,o);
 
     if (l < 0 || l > NTLM_MAX_FIELD_LENGTH || o + l > packet_size || o == 0) {
-        /* debug("ntlmssp: insane data (l: %d, o: %d)\n", l,o); */
+        debug("ntlm_fetch_string: insane data (pkt-sz: %d, fetch len: %d, offset: %d)\n", packet_size,l,o);
         return rv;
     }
     rv.str = (char *)packet + o;
     if ((flags & NTLM_NEGOTIATE_ASCII) == 0) {
         /* UNICODE string */
-        s = (unsigned short *) ((char *) packet + o);
+        unsigned short *s = (unsigned short *)rv.str;
         rv.str = d = buf;
 
         for (l >>= 1; l; s++, l--) {
-            c = le16toh(*s);
+            unsigned short c = le16toh(*s);
             if (c > 254 || c == '\0') {
                 fprintf(stderr, "ntlmssp: bad unicode: %04x\n", c);
                 return rv;
@@ -149,9 +148,9 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
         }
     } else {
         /* ASCII/OEM string */
-        sc = (char *) packet + o;
+        char *sc = rv.str;
 
-        for (; l; l--) {
+        for (; l>=0; sc++, l--) {
             if (*sc == '\0' || !xisprint(*sc)) {
                 fprintf(stderr, "ntlmssp: bad ascii: %04x\n", *sc);
                 return rv;
@@ -261,18 +260,23 @@ ntlm_unpack_auth(const ntlm_authenticate *auth, char *user, char *domain, const 
     lstring rv;
 
     if (ntlm_validate_packet(&auth->hdr, NTLM_AUTHENTICATE)) {
-        fprintf(stderr, "ntlmDecodeAuth: header check fails\n");
+        fprintf(stderr, "ntlm_unpack_auth: header check fails\n");
         return NTLM_ERR_PROTOCOL;
     }
-    debug("ntlmDecodeAuth: size of %d\n", size);
-    debug("ntlmDecodeAuth: flg %08x\n", auth->flags);
-    debug("ntlmDecodeAuth: usr o(%d) l(%d)\n", auth->user.offset, auth->user.len);
+    debug("ntlm_unpack_auth: size of %d\n", size);
+    debug("ntlm_unpack_auth: flg %08x\n", auth->flags);
+    debug("ntlm_unpack_auth: lmr o(%d) l(%d)\n", le32toh(auth->lmresponse.offset), auth->lmresponse.len);
+    debug("ntlm_unpack_auth: ntr o(%d) l(%d)\n", le32toh(auth->ntresponse.offset), auth->ntresponse.len);
+    debug("ntlm_unpack_auth: dom o(%d) l(%d)\n", le32toh(auth->domain.offset), auth->domain.len);
+    debug("ntlm_unpack_auth: usr o(%d) l(%d)\n", le32toh(auth->user.offset), auth->user.len);
+    debug("ntlm_unpack_auth: wst o(%d) l(%d)\n", le32toh(auth->workstation.offset), auth->workstation.len);
+    debug("ntlm_unpack_auth: key o(%d) l(%d)\n", le32toh(auth->sessionkey.offset), auth->sessionkey.len);
 
     rv = ntlm_fetch_string(&auth->hdr, size, &auth->domain, auth->flags);
     if (rv.l > 0) {
-        memcpy(rv.str, domain, rv.l);
+        memcpy(domain, rv.str, rv.l);
         domain[rv.l] = '\0';
-        debug("ntlm_unpack_auth: Domain '%s'.\n", domain);
+        debug("ntlm_unpack_auth: Domain '%s' (len=%d).\n", domain, rv.l);
     }
     if (rv.l >= size) {
         debug("ntlm_unpack_auth: Domain length %d too big for %d byte packet.\n", rv.l , size);
@@ -281,9 +285,9 @@ ntlm_unpack_auth(const ntlm_authenticate *auth, char *user, char *domain, const 
 
     rv = ntlm_fetch_string(&auth->hdr, size, &auth->user, auth->flags);
     if (rv.l > 0) {
-        memcpy(rv.str, user, rv.l);
+        memcpy(user, rv.str, rv.l);
         user[rv.l] = '\0';
-        debug("ntlm_unpack_auth: Username '%s'.\n", user);
+        debug("ntlm_unpack_auth: Username '%s' (len=%d).\n", user, rv.l);
     } else
         return NTLM_ERR_LOGON;
 
