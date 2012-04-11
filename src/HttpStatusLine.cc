@@ -220,6 +220,10 @@ httpStatusString(http_status status)
         p = "Temporary Redirect";
         break;
 
+    case HTTP_PERMANENT_REDIRECT:
+        p = "Permanent Redirect";
+        break;
+
     case HTTP_BAD_REQUEST:
         p = "Bad Request";
         break;
