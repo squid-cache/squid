@@ -412,6 +412,7 @@ HttpStateData::cacheableReply()
     case HTTP_MULTIPLE_CHOICES:
 
     case HTTP_MOVED_PERMANENTLY:
+    case HTTP_PERMANENT_REDIRECT:
 
     case HTTP_GONE:
         /*
