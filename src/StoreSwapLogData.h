@@ -62,15 +62,16 @@
 #include "squid-old.h"
 
 /// maintains a 24-bit checksum over integer fields
-class SwapChecksum24 {
+class SwapChecksum24
+{
 public:
     SwapChecksum24() { raw[0] = raw[1] = raw[2] = 0; }
 
-	bool operator ==(const SwapChecksum24 &o) const {
+    bool operator ==(const SwapChecksum24 &o) const {
         return raw[0] == o.raw[0] && raw[1] == o.raw[1] && raw[2] == o.raw[2];
     }
 
-	bool operator !=(const SwapChecksum24 &o) const {
+    bool operator !=(const SwapChecksum24 &o) const {
         return !(*this == o);
     }
 

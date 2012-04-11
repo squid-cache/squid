@@ -366,7 +366,7 @@ RebuildState::RebuildState (RefCount<UFSSwapDir> aSwapDir) : sd (aSwapDir),LogPa
         flags.need_to_validate = 1;
 
     debugs(47, DBG_IMPORTANT, "Rebuilding storage in " << sd->path << " (" <<
-        (clean ? "clean log" : (LogParser ? "dirty log" : "no log")) << ")");
+           (clean ? "clean log" : (LogParser ? "dirty log" : "no log")) << ")");
 }
 
 RebuildState::~RebuildState()
