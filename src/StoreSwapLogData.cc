@@ -36,16 +36,53 @@
 #include "StoreSwapLogData.h"
 #include "swap_log_op.h"
 
-StoreSwapLogData::StoreSwapLogData(): op(0), swap_filen (0), timestamp (0), lastref (0), expires (0), lastmod(0), swap_file_sz (0), refcount (0), flags (0)
+// Based on Internet Checksum (RFC 1071) algorithm but takes three 32bit ints.
+// TODO: Consider Fletcher's checksum algorithm as a higher quality alternative
+void
+SwapChecksum24::set(uint32_t f1, uint32_t f2, uint32_t f3)
 {
-    memset (key, '\0', sizeof(key));
+    uint64_t sum = f1;
+    sum += f2;
+    sum += f3;
+
+    while (const uint64_t higherBits = sum >> 24)
+        sum = (sum & 0xFFFFFF) + higherBits;
+
+    sum = ~sum;
+
+    raw[0] = static_cast<uint8_t>(sum);
+    raw[1] = static_cast<uint8_t>(sum >> 8);
+    raw[2] = static_cast<uint8_t>(sum >> 16);
+}
+
+/// Same as 3-argument SwapChecksum24::set() but for int32_t and uint64_t
+void
+SwapChecksum24::set(int32_t f1, uint64_t f2)
+{
+    // split the second 64bit word into two 32bit words
+    set(static_cast<uint32_t>(f1),
+        static_cast<uint32_t>(f2 >> 32),
+        static_cast<uint32_t>(f2 & 0xFFFFFFFF));
+}
+
+std::ostream &
+SwapChecksum24::print(std::ostream &os) const
+{
+    return os << raw[0] << '-' << raw[1] << '-' << raw[2];
+}
+
+StoreSwapLogData::StoreSwapLogData()
+{
+    memset(this, 0, sizeof(*this));
 }
 
 bool
 StoreSwapLogData::sane() const
 {
-    // TODO: These checks are rather weak. A corrupted swap.state may still
-    // cause havoc (e.g., cur_size may become astronomical). Add checksums?
+    SwapChecksum24 actualSum;
+    actualSum.set(swap_filen, swap_file_sz);
+    if (checksum != actualSum)
+        return false;
 
     const time_t minTime = -2; // -1 is common; expires sometimes uses -2
 
@@ -59,7 +96,33 @@ StoreSwapLogData::sane() const
            swap_file_sz > 0; // because swap headers ought to consume space
 }
 
-StoreSwapLogHeader::StoreSwapLogHeader():op(SWAP_LOG_VERSION), version(1)
+void
+StoreSwapLogData::finalize()
 {
-    record_size = sizeof(StoreSwapLogData);
+    checksum.set(swap_filen, swap_file_sz);
+}
+
+StoreSwapLogHeader::StoreSwapLogHeader(): op(SWAP_LOG_VERSION), version(2),
+        record_size(sizeof(StoreSwapLogData))
+{
+    checksum.set(version, record_size, 0);
+}
+
+bool
+StoreSwapLogHeader::sane() const
+{
+    SwapChecksum24 actualSum;
+    actualSum.set(version, record_size, 0);
+    if (checksum != actualSum)
+        return false;
+
+    return op == SWAP_LOG_VERSION && version >= 2 && record_size > 0;
+}
+
+size_t
+StoreSwapLogHeader::gapSize() const
+{
+    assert(record_size > 0);
+    assert(static_cast<size_t>(record_size) > sizeof(*this));
+    return static_cast<size_t>(record_size) - sizeof(*this);
 }

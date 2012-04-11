@@ -95,6 +95,7 @@ public:
     }
 };
 
+#if UNUSED_CODE
 /// Parse a swap header entry created on a system with 32-bit size_t, time_t and sfileno
 /// this is typical of 32-bit systems without large file support and with old kernels
 /// NP: SQUID_MD5_DIGEST_LENGTH is very risky still.
@@ -213,6 +214,20 @@ bool UFSSwapLogParser_v1::ReadRecord(StoreSwapLogData &swapData)
     }
     return true;
 }
+#endif /* UNUSED_CODE */
+
+/// swap.state v2 log parser
+class UFSSwapLogParser_v2: public UFSSwapLogParser
+{
+public:
+    UFSSwapLogParser_v2(FILE *fp): UFSSwapLogParser(fp) {
+        record_size = sizeof(StoreSwapLogData);
+    }
+    bool ReadRecord(StoreSwapLogData &swapData) {
+        assert(log);
+        return fread(&swapData, sizeof(StoreSwapLogData), 1, log) == 1;
+    }
+};
 
 
 UFSSwapLogParser *UFSSwapLogParser::GetUFSSwapLogParser(FILE *fp)
@@ -230,10 +245,18 @@ UFSSwapLogParser *UFSSwapLogParser::GetUFSSwapLogParser(FILE *fp)
         return new UFSSwapLogParser_v1_32bs(fp); // Um. 32-bits except time_t, and can't determine that.
     }
 
+    debugs(47, 2, "Swap file version: " << header.version);
+
     if (header.version == 1) {
         if (fseek(fp, header.record_size, SEEK_SET) != 0)
             return NULL;
 
+        debugs(47, DBG_IMPORTANT, "Rejecting swap file v1 to avoid cache " <<
+               "index corruption. Forcing a full cache index rebuild. " <<
+               "See Squid bug #3441.");
+        return NULL;
+
+#if UNUSED_CODE
         // baseline
         // 32-bit sfileno
         // native time_t (hopefully 64-bit)
@@ -272,11 +295,26 @@ UFSSwapLogParser *UFSSwapLogParser::GetUFSSwapLogParser(FILE *fp)
         debugs(47, 1, "WARNING: The swap file has wrong format!... ");
         debugs(47, 1, "NOTE: Cannot safely downgrade caches to short (32-bit) timestamps.");
         return NULL;
+#endif
     }
 
-    // XXX: version 2 of swapfile. This time use fixed-bit sizes for everything!!
-    // and preferrably write to disk in network-order bytes for the larger fields.
+    if (header.version >= 2) {
+        if (!header.sane()) {
+            debugs(47, DBG_IMPORTANT, "ERROR: Corrupted v" << header.version <<
+                   " swap file header.");
+            return NULL;
+        }
 
+        if (fseek(fp, header.record_size, SEEK_SET) != 0)
+            return NULL;
+
+        if (header.version == 2)
+            return new UFSSwapLogParser_v2(fp);
+    }
+
+    // TODO: v3: write to disk in network-order bytes for the larger fields?
+
+    debugs(47, DBG_IMPORTANT, "Unknown swap file version: " << header.version);
     return NULL;
 }
 
@@ -327,7 +365,8 @@ RebuildState::RebuildState (RefCount<UFSSwapDir> aSwapDir) : sd (aSwapDir),LogPa
     if (!clean)
         flags.need_to_validate = 1;
 
-    debugs(47, 1, "Rebuilding storage in " << sd->path << " (" << (clean ? "CLEAN" : "DIRTY") << ")");
+    debugs(47, DBG_IMPORTANT, "Rebuilding storage in " << sd->path << " (" <<
+           (clean ? "clean log" : (LogParser ? "dirty log" : "no log")) << ")");
 }
 
 RebuildState::~RebuildState()
@@ -407,7 +446,8 @@ RebuildState::rebuildFromDirectory()
     fd = getNextFile(&filn, &size);
 
     if (fd == -2) {
-        debugs(47, 1, "Done scanning " << sd->path << " swaplog (" << n_read << " entries)");
+        debugs(47, DBG_IMPORTANT, "Done scanning " << sd->path << " dir (" <<
+               n_read << " entries)");
         _done = true;
         return;
     } else if (fd < 0) {
@@ -416,6 +456,8 @@ RebuildState::rebuildFromDirectory()
 
     assert(fd > -1);
     /* lets get file stats here */
+
+    n_read++;
 
     if (fstat(fd, &sb) < 0) {
         debugs(47, 1, "commonUfsDirRebuildFromDirectory: fstat(FD " << fd << "): " << xstrerror());
