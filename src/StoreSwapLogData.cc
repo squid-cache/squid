@@ -46,7 +46,7 @@ SwapChecksum24::set(uint32_t f1, uint32_t f2, uint32_t f3)
     sum += f3;
 
     while (const uint64_t higherBits = sum >> 24)
-       sum = (sum & 0xFFFFFF) + higherBits;
+        sum = (sum & 0xFFFFFF) + higherBits;
 
     sum = ~sum;
 
@@ -103,7 +103,7 @@ StoreSwapLogData::finalize()
 }
 
 StoreSwapLogHeader::StoreSwapLogHeader(): op(SWAP_LOG_VERSION), version(2),
-    record_size(sizeof(StoreSwapLogData))
+        record_size(sizeof(StoreSwapLogData))
 {
     checksum.set(version, record_size, 0);
 }
