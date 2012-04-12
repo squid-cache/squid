@@ -1977,10 +1977,10 @@ DOC_START
 	Use this ACL to bypass server certificate validation errors.
 
 	For example, the following lines will bypass all validation errors
-	when talking to servers located at 172.16.0.0/16. All other
+	when talking to servers for example.com. All other
 	validation errors will result in ERR_SECURE_CONNECT_FAIL error.
 
-		acl BrokenServersAtTrustedIP dst 172.16.0.0/16
+		acl BrokenServersAtTrustedIP dstdomain example.com
 		sslproxy_cert_error allow BrokenServersAtTrustedIP
 		sslproxy_cert_error deny all
 
