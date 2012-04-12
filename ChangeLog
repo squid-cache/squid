@@ -1,3 +1,15 @@
+Changes to squid-3.2.0.17 (12 Apr 2011):
+
+	- Bug 3527: EUI compile errors on Mac OS X 10.5.8 PPC
+	- Bug 3509: kQueue compile error
+	- Bug 3505: crash in CbcPointer<Comm::ConnOpener> constructor
+	- Bug 3441: Part 3: Replace corrupted v1 swap.state with new v2 format.
+	- Bug 3397: do not mark connection as opened until after SYN-ACK
+	- Bug 3193: NTLM decoder truncating strings
+	- Windows FD handling polish and some fixes
+	- Solaris 9/10 various build fixes
+	- ... and some more code polish
+
 Changes to squid-3.2.0.16 (07 Mar 2011):
 
 	- Bug 3508: Correct DNS timeout handling.
