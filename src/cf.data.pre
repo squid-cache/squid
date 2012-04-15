@@ -1980,8 +1980,8 @@ DOC_START
 	when talking to servers for example.com. All other
 	validation errors will result in ERR_SECURE_CONNECT_FAIL error.
 
-		acl BrokenServersAtTrustedIP dstdomain example.com
-		sslproxy_cert_error allow BrokenServersAtTrustedIP
+		acl BrokenButTrustedServers dstdomain example.com
+		sslproxy_cert_error allow BrokenButTrustedServers
 		sslproxy_cert_error deny all
 
 	This clause only supports fast acl types.
