@@ -3717,9 +3717,8 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
                 else if(ca->alg == Ssl::algSetValidBefore && !certProperties.setValidBefore)
                     certProperties.setValidBefore = true;
 
-                assert(alg && param);
                 debugs(33, 5, HERE << "Matches certificate adaptation aglorithm: " << 
-                       alg << " param: " << param);
+                       alg << " param: " << (param ? param : "-"));
             }
         }
 
