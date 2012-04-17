@@ -3915,10 +3915,12 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
         debugs(33, 5, HERE << "Error while bumping: " << sslConnectHostOrIp);
         Ip::Address intendedDest;
         intendedDest = sslConnectHostOrIp.termedBuf();
+        const bool isConnectRequest = !port->spoof_client_ip && !port->intercepted;
+
         // Squid serves its own error page and closes, so we want
         // a CN that causes no additional browser errors. Possible
-        // only when bumping CONNECT which uses a host name.
-        if (intendedDest.IsAnyAddr())
+        // only when bumping CONNECT with a user-typed address.
+        if (intendedDest.IsAnyAddr() || isConnectRequest)
             sslCommonName = sslConnectHostOrIp;
         else if (sslServerBump->serverCert.get())
             sslCommonName = Ssl::CommonHostName(sslServerBump->serverCert.get());

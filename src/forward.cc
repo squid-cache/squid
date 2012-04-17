@@ -50,6 +50,7 @@
 #include "MemObject.h"
 #include "pconn.h"
 #include "PeerSelectState.h"
+#include "ProtoPort.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "icmp/net_db.h"
@@ -679,9 +680,12 @@ FwdState::negotiateSSL(int fd)
                 }
             }
 
-            if (request->flags.sslPeek && request->GetHostIsNumeric()) {
-                // If possible, set host name to server certificate CN unless
-                // we already got the right name (from the CONNECT request).
+            const bool isConnectRequest = !request->clientConnectionManager->port->spoof_client_ip && 
+                !request->clientConnectionManager->port->intercepted;
+            // For intercepted connections, set host name to server
+            // certificate CN. Otherwise, we hope that CONNECT is using
+            // a user-entered address (a host name or a user-entered IP).
+            if (request->flags.sslPeek && !isConnectRequest) {
                 if (X509 *srvX509 = errDetails->peerCert()) {
                     if (const char *name = Ssl::CommonHostName(srvX509)) {
                         request->SetHost(name);
@@ -770,11 +774,12 @@ FwdState::initiateSSL()
     } else {
         // While we are peeking at the certificate, we may not know the server
         // name that the client will request (after interception or CONNECT)
-        // unless it was the CONNECT request which used a host name. Some
-        // browsers are using IP addresses in CONNECT requests.
+        // unless it was the CONNECT request with a user-typed address.
         const char *hostname = request->GetHost();
         const bool hostnameIsIp = request->GetHostIsNumeric();
-        if (!request->flags.sslPeek || !hostnameIsIp)
+        const bool isConnectRequest = !request->clientConnectionManager->port->spoof_client_ip && 
+            !request->clientConnectionManager->port->intercepted;
+        if (!request->flags.sslPeek || isConnectRequest)
             SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostname);
 
         // Use SNI TLS extension only when we connect directly
