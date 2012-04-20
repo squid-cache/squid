@@ -832,7 +832,7 @@ ServerStateData::handleAdaptationAborted(bool bypassable)
     if (entry->isEmpty()) {
         debugs(11,9, HERE << "creating ICAP error entry after ICAP failure");
         ErrorState *err = new ErrorState(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
-        err->xerrno = ERR_DETAIL_ICAP_RESPMOD_EARLY;
+        err->detailError(ERR_DETAIL_ICAP_RESPMOD_EARLY);
         fwd->fail(err);
         fwd->dontRetry(true);
     } else if (request) { // update logged info directly
@@ -866,7 +866,7 @@ ServerStateData::handleAdaptationBlocked(const Adaptation::Answer &answer)
         page_id = ERR_ACCESS_DENIED;
 
     ErrorState *err = new ErrorState(page_id, HTTP_FORBIDDEN, request);
-    err->xerrno = ERR_DETAIL_RESPMOD_BLOCK_EARLY;
+    err->detailError(ERR_DETAIL_RESPMOD_BLOCK_EARLY);
     fwd->fail(err);
     fwd->dontRetry(true);
 
@@ -905,7 +905,6 @@ void
 ServerStateData::sendBodyIsTooLargeError()
 {
     ErrorState *err = new ErrorState(ERR_TOO_BIG, HTTP_FORBIDDEN, request);
-    err->xerrno = errno;
     fwd->fail(err);
     fwd->dontRetry(true);
     abortTransaction("Virgin body too large.");

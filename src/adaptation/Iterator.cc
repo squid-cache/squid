@@ -57,6 +57,12 @@ void Adaptation::Iterator::step()
         return;
     }
 
+    HttpRequest *request = dynamic_cast<HttpRequest*>(theMsg);
+    if (!request)
+        request = theCause;
+    assert(request);
+    request->clearError();
+
     if (iterations > Adaptation::Config::service_iteration_limit) {
         debugs(93,DBG_CRITICAL, "Adaptation iterations limit (" <<
                Adaptation::Config::service_iteration_limit << ") exceeded:\n" <<

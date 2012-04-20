@@ -1889,7 +1889,7 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
 
         calloutContext->error->auth_user_request = 
             c != NULL && c->auth_user_request != NULL ? c->auth_user_request : request->auth_user_request;
-        request->detailError(ERR_ICAP_FAILURE, errDetail);
+        calloutContext->error->detailError(errDetail);
         calloutContext->readNextRequest = true;
         c->expectNoForwarding();
         doCallouts();

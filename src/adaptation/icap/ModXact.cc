@@ -1914,6 +1914,17 @@ void Adaptation::Icap::ModXact::detailError(int errDetail)
         request->detailError(ERR_ICAP_FAILURE, errDetail);
 }
 
+void Adaptation::Icap::ModXact::clearError()
+{
+   HttpRequest *request = dynamic_cast<HttpRequest*>(adapted.header);
+    // if no adapted request, update virgin (and inherit its properties later)
+    if (!request)
+        request = const_cast<HttpRequest*>(&virginRequest());
+
+    if (request)
+        request->clearError();
+}
+
 /* Adaptation::Icap::ModXactLauncher */
 
 Adaptation::Icap::ModXactLauncher::ModXactLauncher(HttpMsg *virginHeader, HttpRequest *virginCause, Adaptation::ServicePointer aService):
