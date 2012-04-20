@@ -40,6 +40,7 @@
 #endif
 #include "cbdata.h"
 #include "comm/forward.h"
+#include "err_detail_type.h"
 #include "ip/Address.h"
 #include "MemBuf.h"
 #if USE_SSL
@@ -103,6 +104,11 @@ public:
      * Allocates and initializes an error response
      */
     HttpReply *BuildHttpReply(void);
+
+    /**
+     * Sets the error details
+     */
+    void detailError(int detailCode);
 
 private:
     /**
@@ -182,6 +188,9 @@ public:
 #if USE_SSL
     Ssl::ErrorDetail *detail;
 #endif
+    /// type-specific detail about the transaction error;
+    /// overwrites xerrno; overwritten by detail, if any.
+    int detailCode;
 private:
     CBDATA_CLASS2(ErrorState);
 };

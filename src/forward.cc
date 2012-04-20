@@ -324,13 +324,13 @@ FwdState::startConnectionOrFail()
         // this server link regardless of what happens when connecting to it.
         // IF sucessfuly connected this top destination will become the serverConnection().
         request->hier.note(serverDestinations[0], request->GetHost());
+        request->clearError();
 
         connectStart();
     } else {
         debugs(17, 3, HERE << "Connection failed: " << entry->url());
         if (!err) {
             ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, HTTP_INTERNAL_SERVER_ERROR, request);
-            anErr->xerrno = errno;
             fail(anErr);
         } // else use actual error from last connection attempt
 #if USE_SSL
@@ -360,13 +360,6 @@ FwdState::fail(ErrorState * errorState)
         debugs(17, 5, HERE << "pconn race happened");
         pconnRace = raceHappened;
     }
-
-#if USE_SSL
-    if (errorState->type == ERR_SECURE_CONNECT_FAIL && errorState->detail)
-        request->detailError(errorState->type, errorState->detail->errorNo());
-    else
-#endif
-        request->detailError(errorState->type, errorState->xerrno);
 }
 
 /**
@@ -746,7 +739,7 @@ FwdState::initiateSSL()
     if ((ssl = SSL_new(sslContext)) == NULL) {
         debugs(83, 1, "fwdInitiateSSL: Error allocating handle: " << ERR_error_string(ERR_get_error(), NULL)  );
         ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
-        anErr->xerrno = errno;
+        // TODO: create Ssl::ErrorDetail with OpenSSL-supplied error code
         fail(anErr);
         self = NULL;		// refcounted
         return;

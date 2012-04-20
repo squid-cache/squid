@@ -134,6 +134,8 @@ public:
     // custom exception handling and end-of-call checks
     virtual void callException(const std::exception  &e);
     virtual void callEnd();
+    // clear the error details on retries/repeats
+    virtual void clearError() {}
     void dnsLookupDone(const ipcache_addrs *ia);
 
 protected:
