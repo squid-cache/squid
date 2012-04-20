@@ -3703,21 +3703,27 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
         checklist.sslErrorList = cbdataReference(sslServerBump->bumpSslErrorNoList);
 
         for (sslproxy_cert_adapt *ca = Config.ssl_client.cert_adapt; ca != NULL; ca = ca->next) {
+            // If the algorithm already set ignore.
+            if ((ca->alg == Ssl::algSetCommonName && certProperties.setCommonName) ||
+                (ca->alg == Ssl::algSetValidAfter && certProperties.setValidAfter) ||
+                (ca->alg == Ssl::algSetValidBefore && certProperties.setValidBefore) )
+                continue;
+
             if (ca->aclList && checklist.fastCheck(ca->aclList) == ACCESS_ALLOWED) {
                 const char *alg = Ssl::CertAdaptAlgorithmStr[ca->alg];
                 const char *param = ca->param;
   
                 // if not param defined for Common Name adaptation use hostname from 
                 // the CONNECT request
-                if (ca->alg == Ssl::algSetCommonName && !certProperties.setCommonName) {
+                if (ca->alg == Ssl::algSetCommonName) {
                     if (!param)
                         param = sslConnectHostOrIp.termedBuf();
                     certProperties.commonName = param;
                     certProperties.setCommonName = true;
                 }
-                else if(ca->alg == Ssl::algSetValidAfter && !certProperties.setValidAfter)
+                else if(ca->alg == Ssl::algSetValidAfter)
                     certProperties.setValidAfter = true;
-                else if(ca->alg == Ssl::algSetValidBefore && !certProperties.setValidBefore)
+                else if(ca->alg == Ssl::algSetValidBefore)
                     certProperties.setValidBefore = true;
 
                 debugs(33, 5, HERE << "Matches certificate adaptation aglorithm: " << 
