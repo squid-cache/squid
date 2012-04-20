@@ -2149,23 +2149,30 @@ TYPE: sslproxy_cert_sign
 LOC: Config.ssl_client.cert_sign
 DOC_START
 
-        sslproxy_cert_sign <adaptation algorithm> acl ...
+        sslproxy_cert_sign <signing algorithm> acl ...
 
-        The following certificate signing algorithms supported:
+        The following certificate signing algorithms are supported:
 	   signTrusted
-		the current signing algorithm using a configured CA certificate
-		that is usually placed in and trusted by end-user browsers
+		Sign using the configured CA certificate which is usually
+		placed in and trusted by end-user browsers. This is the
+		default for trusted origin server certificates.
 	   signUntrusted
-		sign to guarantee an X509_V_ERR_CERT_UNTRUSTED browser error
+		Sign to guarantee an X509_V_ERR_CERT_UNTRUSTED browser error.
+		This is the default for untrusted origin server certificates
+		that are not self-signed (see ssl::certUntrusted).
 	   signSelf
-		sign using a self-signed certificate with the right CN to
+		Sign using a self-signed certificate with the right CN to
 		generate a X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT error in the
-		browser.
+		browser. This is the default for self-signed origin server
+		certificates (see ssl::certSelfSigned).
 
 	This clause only supports fast acl types.
 
-	When the acl(s) match, the corresponding signing algorithm is used to
-	generate the certificate. Otherwise, the default signing algorithm used
+	When sslproxy_cert_sign acl(s) match, Squid uses the corresponding
+	signing algorithm to generate the certificate and ignores all
+	subsequent sslproxy_cert_sign options (the first match wins). If no
+	acl(s) match, the default signing algorithm is determined by errors
+	detected when obtaining and validating the origin server certificate.
 
 	WARNING: SQUID_X509_V_ERR_DOMAIN_MISMATCH and ssl:certDomainMismatch can
 	be used with sslproxy_cert_adapt, but if and only if Squid is bumping a
@@ -2184,26 +2191,28 @@ DOC_START
 	
 	sslproxy_cert_adapt <adaptation algorithm> acl ...
 
-	The following certificate adaptation algorithms supported:
+	The following certificate adaptation algorithms are supported:
 	   setValidAfter
-		sets the "Not After" property to the "Not After" propery of
-		the ca certificate used to sign generated certificates
+		Sets the "Not After" property to the "Not After" property of
+		the CA certificate used to sign generated certificates.
 	   setValidBefore
-		sets the "Not Before" property to the "Not Before" property of
-		the ca certificate used to sign generated certificates
-	   setCommonName
-		sets certificate Subject.CN property to the
-		host name  from specified as a CN parameter (setCommonName{CN})
-		or, if no explicit CN parameter was specified, extracted from
-		the CONNECT request. It is a misconfiguration to use setName
-	 	without an explicit parameter for intercepted or tproxied SSL
-		transactions. 
+		Sets the "Not Before" property to the "Not Before" property of
+		the CA certificate used to sign generated certificates.
+	   setCommonName or setCommonName{CN}
+		Sets Subject.CN property to the host name specified as a 
+		CN parameter or, if no explicit CN parameter was specified,
+		extracted from the CONNECT request. It is a misconfiguration
+		to use setCommonName without an explicit parameter for
+		intercepted or tproxied SSL connections.
 		
 	This clause only supports fast acl types.
 
-	When the acl(s) match, the corresponding adaptation algorithm is
-	applied to the fake/generated certificate. Otherwise, the
-	default mimicking action takes place.
+	Squid first groups sslproxy_cert_adapt options by adaptation algorithm.
+	Within a group, when sslproxy_cert_adapt acl(s) match, Squid uses the
+	corresponding adaptation algorithm to generate the certificate and
+	ignores all subsequent sslproxy_cert_adapt options in that algorithm's
+	group (i.e., the first match wins within each algorithm group). If no
+	acl(s) match, the default mimicking action takes place.
 
 	WARNING: SQUID_X509_V_ERR_DOMAIN_MISMATCH and ssl:certDomainMismatch can
 	be used with sslproxy_cert_adapt, but if and only if Squid is bumping a
