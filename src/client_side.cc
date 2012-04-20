@@ -2483,6 +2483,11 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
         assert (repContext);
         debugs(33, 5, "Connection first has failed for " << http->uri << ". Respond with an error");
         repContext->setReplyToStoreEntry(sslServerBump->entry);
+        /*Save the original request for logging purposes*/
+        if (!context->http->al.request)
+            context->http->al.request = HTTPMSGLOCK(http->request);
+        /*Get the error details from the fake request used to retrieve SSL server certificate*/
+        http->request->detailError(sslServerBump->request->errType, sslServerBump->request->errDetail);
         context->pullData();
         return true;
     }
@@ -2516,13 +2521,11 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
                 ErrorState *err = new ErrorState(ERR_SECURE_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
 
                 err->src_addr = clientConnection->remote;
-#ifdef EPROTO
-                err->xerrno = EPROTO;
-#else
-                err->xerrno = EACCES;
-#endif
                 Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail( SQUID_X509_V_ERR_DOMAIN_MISMATCH, sslServerBump->serverCert.get(), NULL);
                 err->detail = errDetail;
+                /*Save the original request for logging purposes*/
+                if (!context->http->al.request)
+                    context->http->al.request = HTTPMSGLOCK(request);
                 repContext->setReplyToError(request->method, err);
                 assert(context->http->out.offset == 0);
                 context->pullData();
@@ -3757,6 +3760,10 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
 void
 ConnStateData::getSslContextStart()
 {
+    assert(areAllContextsForThisConnection());
+    freeAllContexts();
+    /* careful: freeAllContexts() above frees request, host, etc. */
+
     if (port->generateHostCertificates) {
         Ssl::CertificateProperties certProperties;
         buildSslCertGenerationParams(certProperties);
@@ -3861,13 +3868,6 @@ ConnStateData::switchToHttps(const char *host, const int port)
     sslConnectHostOrIp = host;
     sslCommonName = host;
 
-    //HTTPMSGLOCK(currentobject->http->request);
-    assert(areAllContextsForThisConnection());
-    freeAllContexts();
-    //currentobject->connIsFinished();
-
-    /* careful: freeAllContexts() above frees request, host, etc. */
-
     // We are going to read new request
     flags.readMore = true;
     debugs(33, 5, HERE << "converting " << clientConnection << " to SSL");
@@ -3924,6 +3924,10 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
             sslCommonName = sslConnectHostOrIp;
         else if (sslServerBump->serverCert.get())
             sslCommonName = Ssl::CommonHostName(sslServerBump->serverCert.get());
+
+        //  copy error detail from bump-server-first request to CONNECT request
+        if (currentobject != NULL && currentobject->http != NULL && currentobject->http->request)
+            currentobject->http->request->detailError(sslServerBump->request->errType, sslServerBump->request->errDetail);
     }
 
     getSslContextStart();
