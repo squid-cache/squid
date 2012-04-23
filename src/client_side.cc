@@ -3889,6 +3889,11 @@ ConnStateData::switchToHttps(const char *host, const int port)
         fakeRequest->port = port;
         fakeRequest->protocol = AnyP::PROTO_HTTPS;
         fakeRequest->clientConnectionManager = this;
+        fakeRequest->client_addr = clientConnection->remote;
+#if FOLLOW_X_FORWARDED_FOR
+        fakeRequest->indirect_client_addr = clientConnection->remote;
+#endif
+        fakeRequest->my_addr = clientConnection->local;
         sslServerBump = new Ssl::ServerBump(fakeRequest);
 
         // will call httpsPeeked() with certificate and connection, eventually
