@@ -54,6 +54,7 @@
 #include "adaptation/icap/History.h"
 #endif
 #endif
+#include "anyp/PortCfg.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
@@ -72,7 +73,6 @@
 #include "HttpRequest.h"
 #include "ip/QosConfig.h"
 #include "MemObject.h"
-#include "ProtoPort.h"
 #include "Store.h"
 #include "SquidTime.h"
 #include "wordlist.h"

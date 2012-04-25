@@ -267,7 +267,7 @@ snmpInit(void)
 }
 
 void
-snmpConnectionOpen(void)
+snmpOpenPorts(void)
 {
     debugs(49, 5, "snmpConnectionOpen: Called");
 
@@ -330,7 +330,7 @@ snmpPortOpened(const Comm::ConnectionPointer &conn, int errNo)
 }
 
 void
-snmpConnectionClose(void)
+snmpClosePorts(void)
 {
     if (Comm::IsConnOpen(snmpIncomingConn)) {
         debugs(49, DBG_IMPORTANT, "Closing SNMP receiving port " << snmpIncomingConn->local);
