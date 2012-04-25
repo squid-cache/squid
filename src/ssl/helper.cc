@@ -3,7 +3,7 @@
  */
 
 #include "squid.h"
-#include "ProtoPort.h"
+#include "anyp/PortCfg.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
 #include "SquidTime.h"
@@ -29,7 +29,7 @@ void Ssl::Helper::Init()
     assert(ssl_crtd == NULL);
 
     bool useSslBump = false;
-    for (http_port_list *s = ::Config.Sockaddr.http; s; s = s->next) {
+    for (AnyP::PortCfg *s = ::Config.Sockaddr.http; s; s = s->next) {
         if (s->sslBump) {
             useSslBump = true;
             break;
