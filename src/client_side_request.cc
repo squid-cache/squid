@@ -566,6 +566,7 @@ ClientRequestContext::hostHeaderVerifyFailed(const char *A, const char *B)
         // XXX: when we have updated the cache key to base on raw-IP + URI this cacheable limit can go.
         http->request->flags.hierarchical = 0; // MUST NOT pass to peers (for now)
         // XXX: when we have sorted out the best way to relay requests properly to peers this hierarchical limit can go.
+        http->doCallouts();
         return;
     }
 
