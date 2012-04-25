@@ -31,8 +31,6 @@ hostdomain		cache_peer
 hostdomaintype		cache_peer
 http_header_access	acl
 http_header_replace
-http_port_list
-https_port_list
 adaptation_access_type	adaptation_service_set adaptation_service_chain acl icap_service icap_class
 adaptation_service_set_type	icap_service ecap_service
 adaptation_service_chain_type	icap_service ecap_service
@@ -52,6 +50,7 @@ obsolete
 onoff
 peer
 peer_access		cache_peer acl
+PortCfg
 QosConfig
 refreshpattern
 removalpolicy

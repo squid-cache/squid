@@ -667,13 +667,12 @@ serverConnectionsOpen(void)
     // start various proxying services if we are responsible for them
     if (IamWorkerProcess()) {
         clientOpenListenSockets();
-        icpConnectionsOpen();
+        icpOpenPorts();
 #if USE_HTCP
-
-        htcpInit();
+        htcpOpenPorts();
 #endif
 #if SQUID_SNMP
-        snmpConnectionOpen();
+        snmpOpenPorts();
 #endif
 
         clientdbInit();
@@ -710,13 +709,12 @@ serverConnectionsClose(void)
         clientHttpConnectionsClose();
         icpConnectionShutdown();
 #if USE_HTCP
-
         htcpSocketShutdown();
 #endif
 
         icmpEngine.Close();
 #if SQUID_SNMP
-        snmpConnectionClose();
+        snmpClosePorts();
 #endif
 
         asnFreeMemory();
@@ -731,10 +729,9 @@ mainReconfigureStart(void)
 
     // Initiate asynchronous closing sequence
     serverConnectionsClose();
-    icpConnectionClose();
+    icpClosePorts();
 #if USE_HTCP
-
-    htcpSocketClose();
+    htcpClosePorts();
 #endif
     dnsShutdown();
 #if USE_SSL_CRTD
@@ -1832,13 +1829,12 @@ SquidShutdown()
 #endif
     redirectShutdown();
     externalAclShutdown();
-    icpConnectionClose();
+    icpClosePorts();
 #if USE_HTCP
-
-    htcpSocketClose();
+    htcpClosePorts();
 #endif
 #if SQUID_SNMP
-    snmpConnectionClose();
+    snmpClosePorts();
 #endif
 #if USE_WCCP
 

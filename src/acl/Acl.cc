@@ -37,7 +37,7 @@
 #include "ConfigParser.h"
 #include "Debug.h"
 #include "dlink.h"
-#include "ProtoPort.h"
+#include "anyp/PortCfg.h"
 
 const char *AclMatchedName = NULL;
 
@@ -123,7 +123,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
 
     // Is this ACL going to work?
     if (strcmp(theType, "myip") == 0) {
-        http_port_list *p = Config.Sockaddr.http;
+        AnyP::PortCfg *p = Config.Sockaddr.http;
         while (p) {
             // Bug 3239: not reliable when there is interception traffic coming
             if (p->intercepted)
@@ -133,7 +133,7 @@ ACL::ParseAclLine(ConfigParser &parser, ACL ** head)
         debugs(28, DBG_IMPORTANT, "UPGRADE: ACL 'myip' type is has been renamed to 'localip' and matches the IP the client connected to.");
         theType = "localip";
     } else if (strcmp(theType, "myport") == 0) {
-        http_port_list *p = Config.Sockaddr.http;
+        AnyP::PortCfg *p = Config.Sockaddr.http;
         while (p) {
             // Bug 3239: not reliable when there is interception traffic coming
             // Bug 3239: myport - not reliable (yet) when there is interception traffic coming

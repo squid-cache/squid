@@ -262,8 +262,6 @@ squid_SOURCES = \
 	AsyncEngine.cc \
 	AsyncEngine.h \
 	cache_cf.cc \
-	ProtoPort.cc \
-	ProtoPort.h \
 	CacheDigest.cc \
 	cache_manager.cc \
 	CacheManager.h \
@@ -650,7 +648,7 @@ recv_announce_SOURCES = recv-announce.cc
 ## ACLProxyAuth.cc wants ACLRegexData
 ## cache_cf.cc wants $(AUTH_LIBS)
 ## cache_cf.cc wants Swapdir
-## cache_cf.cc wants ProtoPort
+## cache_cf.cc wants AnyP::PortCfg
 ## client_side wants client_db
 ## client_db wants SNMP_SOURCE
 ## snmp_core wants ACLStringData
@@ -1268,8 +1266,6 @@ tests_testCacheManager_SOURCES = \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
-	ProtoPort.cc \
-	ProtoPort.h \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
@@ -1546,7 +1542,6 @@ nodist_tests_testDiskIO_SOURCES= \
 	SquidMath.h \
 	swap_log_op.cc
 tests_testDiskIO_LDADD = \
-	anyp/libanyp.la \
 	SquidConfig.o \
 	CommCalls.o \
 	DnsLookupDetails.o \
@@ -1558,6 +1553,7 @@ tests_testDiskIO_LDADD = \
 	$(AUTH_LIBS) \
 	libsquid.la \
 	comm/libcomm.la \
+	anyp/libanyp.la \
 	ip/libip.la \
 	fs/libfs.la \
 	ipc/libipc.la \
@@ -1677,8 +1673,6 @@ tests_testEvent_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
-	ProtoPort.cc \
-	ProtoPort.h \
 	redirect.cc \
 	refresh.cc \
 	RemovalPolicy.cc \
@@ -1871,8 +1865,6 @@ tests_testEventLoop_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
-	ProtoPort.cc \
-	ProtoPort.h \
 	RemovalPolicy.cc \
 	redirect.cc \
 	refresh.cc \
@@ -1976,8 +1968,6 @@ tests_test_http_range_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
 	BodyPipe.cc \
 	cache_cf.cc \
-	ProtoPort.cc \
-	ProtoPort.h \
 	cache_manager.cc \
 	CacheDigest.cc \
 	carp.cc \
@@ -2217,8 +2207,6 @@ tests_testHttpRequest_SOURCES = \
 	cache_manager.cc \
 	cache_cf.cc \
 	debug.cc \
-	ProtoPort.cc \
-	ProtoPort.h \
 	CacheDigest.cc \
 	carp.cc \
 	cbdata.cc \
@@ -2695,13 +2683,13 @@ tests_testUfs_LDADD = \
 	mgr/libmgr.la \
 	$(REPL_OBJS) \
 	acl/libacls.la \
-	anyp/libanyp.la \
 	$(DISK_LIBS) \
 	$(DISK_OS_LIBS) \
 	acl/libapi.la \
 	ipc/libipc.la \
 	$(SSL_LIBS) \
 	comm/libcomm.la \
+	anyp/libanyp.la \
 	base/libbase.la \
 	ip/libip.la \
 	$(top_builddir)/lib/libmisccontainers.la \
@@ -2814,9 +2802,9 @@ nodist_tests_testRock_SOURCES = \
 	SquidMath.h \
 	$(TESTSOURCES)
 tests_testRock_LDADD = \
-	anyp/libanyp.la \
 	libsquid.la \
 	comm/libcomm.la \
+	anyp/libanyp.la \
 	ip/libip.la \
 	fs/libfs.la \
 	$(AUTH_LIBS) \
@@ -3197,8 +3185,6 @@ tests_testURL_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
-	ProtoPort.cc \
-	ProtoPort.h \
 	redirect.cc \
 	refresh.cc \
 	RemovalPolicy.cc \
