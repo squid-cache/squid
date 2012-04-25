@@ -254,7 +254,7 @@ public:
         AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
     } pinning;
 
-    http_port_list *port;
+    AnyP::PortCfg *port;
 
     bool transparent() const;
     bool reading() const;

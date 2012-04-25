@@ -38,6 +38,7 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Acl.h"
 #include "comm.h"
+#include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "comm/UdpOpenDialer.h"
 #include "htcp.h"
@@ -1469,7 +1470,7 @@ htcpRecv(int fd, void *data)
  */
 
 void
-htcpInit(void)
+htcpOpenPorts(void)
 {
     if (Config.Port.htcp <= 0) {
         debugs(31, DBG_IMPORTANT, "HTCP Disabled.");
@@ -1703,7 +1704,7 @@ htcpSocketShutdown(void)
 }
 
 void
-htcpSocketClose(void)
+htcpClosePorts(void)
 {
     htcpSocketShutdown();
 

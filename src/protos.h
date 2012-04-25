@@ -239,8 +239,8 @@ SQUIDCEXTERN int httpReqHdrManglersConfigured();
 #if SQUID_SNMP
 SQUIDCEXTERN PF snmpHandleUdp;
 SQUIDCEXTERN void snmpInit(void);
-SQUIDCEXTERN void snmpConnectionOpen(void);
-SQUIDCEXTERN void snmpConnectionClose(void);
+SQUIDCEXTERN void snmpOpenPorts(void);
+SQUIDCEXTERN void snmpClosePorts(void);
 SQUIDCEXTERN const char * snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf);
 
 SQUIDCEXTERN void addr2oid(Ip::Address &addr, oid *Dest);
