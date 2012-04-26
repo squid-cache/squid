@@ -873,37 +873,37 @@ configDoConfigure(void)
 
     Config.ssl_client.sslContext = sslCreateClientContext(Config.ssl_client.cert, Config.ssl_client.key, Config.ssl_client.version, Config.ssl_client.cipher, Config.ssl_client.options, Config.ssl_client.flags, Config.ssl_client.cafile, Config.ssl_client.capath, Config.ssl_client.crlfile);
 
-        for (peer *p = Config.peers; p != NULL; p = p->next) {
-            if (p->use_ssl) {
-                debugs(3, 1, "Initializing cache_peer " << p->name << " SSL context");
-                p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath, p->sslcrlfile);
-            }
+    for (peer *p = Config.peers; p != NULL; p = p->next) {
+        if (p->use_ssl) {
+            debugs(3, 1, "Initializing cache_peer " << p->name << " SSL context");
+            p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath, p->sslcrlfile);
         }
+    }
 
-        for (AnyP::PortCfg *s = Config.Sockaddr.http; s != NULL; s = s->next) {
-            if (!s->cert && !s->key)
-                continue;
+    for (AnyP::PortCfg *s = Config.Sockaddr.http; s != NULL; s = s->next) {
+        if (!s->cert && !s->key)
+            continue;
 
-            debugs(3, 1, "Initializing http_port " << s->s << " SSL context");
+        debugs(3, 1, "Initializing http_port " << s->s << " SSL context");
 
-            s->staticSslContext.reset(
-                sslCreateServerContext(s->cert, s->key,
-                                       s->version, s->cipher, s->options, s->sslflags, s->clientca,
-                                       s->cafile, s->capath, s->crlfile, s->dhfile,
-                                       s->sslContextSessionId));
+        s->staticSslContext.reset(
+            sslCreateServerContext(s->cert, s->key,
+                                   s->version, s->cipher, s->options, s->sslflags, s->clientca,
+                                   s->cafile, s->capath, s->crlfile, s->dhfile,
+                                   s->sslContextSessionId));
 
-            Ssl::readCertChainAndPrivateKeyFromFiles(s->signingCert, s->signPkey, s->certsToChain, s->cert, s->key);
-        }
+        Ssl::readCertChainAndPrivateKeyFromFiles(s->signingCert, s->signPkey, s->certsToChain, s->cert, s->key);
+    }
 
-        for (AnyP::PortCfg *s = Config.Sockaddr.https; s != NULL; s = s->next) {
-            debugs(3, 1, "Initializing https_port " << s->s << " SSL context");
+    for (AnyP::PortCfg *s = Config.Sockaddr.https; s != NULL; s = s->next) {
+        debugs(3, 1, "Initializing https_port " << s->s << " SSL context");
 
-            s->staticSslContext.reset(
-                sslCreateServerContext(s->cert, s->key,
-                                       s->version, s->cipher, s->options, s->sslflags, s->clientca,
-                                       s->cafile, s->capath, s->crlfile, s->dhfile,
-                                       s->sslContextSessionId));
-        }
+        s->staticSslContext.reset(
+            sslCreateServerContext(s->cert, s->key,
+                                   s->version, s->cipher, s->options, s->sslflags, s->clientca,
+                                   s->cafile, s->capath, s->crlfile, s->dhfile,
+                                   s->sslContextSessionId));
+    }
 
 #endif
 
