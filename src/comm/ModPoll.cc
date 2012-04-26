@@ -328,7 +328,7 @@ comm_poll_tcp_incoming(void)
 
     nevents = comm_check_incoming_poll_handlers(nfds, fds);
     incoming_tcp_interval = incoming_tcp_interval
-                             + Config.comm_incoming.tcp.average - nevents;
+                            + Config.comm_incoming.tcp.average - nevents;
 
     if (incoming_tcp_interval < Config.comm_incoming.tcp.min_poll)
         incoming_tcp_interval = Config.comm_incoming.tcp.min_poll;
