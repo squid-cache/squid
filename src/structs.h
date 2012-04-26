@@ -145,7 +145,8 @@ class CpuAffinityMap;
 class RemovalPolicySettings;
 class external_acl;
 class Store;
-namespace AnyP {
+namespace AnyP
+{
 struct PortCfg;
 }
 class SwapDir;
