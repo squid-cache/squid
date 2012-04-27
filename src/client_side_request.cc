@@ -1423,7 +1423,7 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
         getConn()->auth_user_request = request->auth_user_request;
 #endif
 
-    getConn()->switchToHttps(request->GetHost(), request->port);
+    getConn()->switchToHttps(request);
 }
 
 void
