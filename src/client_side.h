@@ -340,7 +340,7 @@ public:
     /// Proccess response from ssl_crtd.
     void sslCrtdHandleReply(const char * reply);
 
-    void switchToHttps(const char *host, const int port);
+    void switchToHttps(HttpRequest *request);
     bool switchedToHttps() const { return switchedToHttps_; }
     Ssl::ServerBump *serverBump() {return sslServerBump;}
     void setServerBump(Ssl::ServerBump *srvBump) {if (!sslServerBump) sslServerBump = srvBump;}

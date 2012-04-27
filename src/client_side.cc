@@ -3552,8 +3552,18 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext)
         Comm::SetSelect(details->fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
     else {
         char buf[MAX_IPSTRLEN];
+        HttpRequest *fakeRequest = new HttpRequest;
+        fakeRequest->SetHost(details->local.NtoA(buf, sizeof(buf)));
+        fakeRequest->port = details->local.GetPort();
+        fakeRequest->clientConnectionManager = connState;
+        fakeRequest->client_addr = connState->clientConnection->remote;
+#if FOLLOW_X_FORWARDED_FOR
+        fakeRequest->indirect_client_addr = connState->clientConnection->remote;
+#endif
+        fakeRequest->my_addr = connState->clientConnection->local;
+
         debugs(33, 4, HERE << details << " try to generate a Dynamic SSL CTX");
-        connState->switchToHttps(details->local.NtoA(buf, sizeof(buf)), details->local.GetPort());
+        connState->switchToHttps(fakeRequest);
     }
 }
 
@@ -3690,16 +3700,9 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
         if (X509 *mimicCert = sslServerBump->serverCert.get())
             certProperties.mimicCert.resetAndLock(mimicCert);
 
-        HttpRequest *fakeRequest =  new HttpRequest();
-        fakeRequest->SetHost(sslConnectHostOrIp.termedBuf());
-        fakeRequest->port = clientConnection->local.GetPort();
-        fakeRequest->protocol = AnyP::PROTO_HTTPS;
- 
-        ACLFilledChecklist checklist(NULL, fakeRequest, 
+        ACLFilledChecklist checklist(NULL, sslServerBump->request, 
                                      clientConnection != NULL ? clientConnection->rfc931 : dash_str);
         checklist.conn(this);
-        checklist.src_addr = clientConnection->remote;
-        checklist.my_addr = clientConnection->local;
         checklist.sslErrorList = cbdataReference(sslServerBump->bumpSslErrorNoList);
 
         for (sslproxy_cert_adapt *ca = Config.ssl_client.cert_adapt; ca != NULL; ca = ca->next) {
@@ -3867,12 +3870,12 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
 }
 
 void
-ConnStateData::switchToHttps(const char *host, const int port)
+ConnStateData::switchToHttps(HttpRequest *request)
 {
     assert(!switchedToHttps_);
 
-    sslConnectHostOrIp = host;
-    sslCommonName = host;
+    sslConnectHostOrIp = request->GetHost();
+    sslCommonName = request->GetHost();
 
     // We are going to read new request
     flags.readMore = true;
@@ -3883,18 +3886,8 @@ ConnStateData::switchToHttps(const char *host, const int port)
     // and now want to switch to SSL to send the error to the client
     // without even peeking at the origin server certificate.
     if (alwaysBumpServerFirst && !sslServerBump) {
-        HttpRequest *fakeRequest = new HttpRequest;
-        fakeRequest->flags.sslPeek = 1;
-        fakeRequest->SetHost(sslConnectHostOrIp.termedBuf());
-        fakeRequest->port = port;
-        fakeRequest->protocol = AnyP::PROTO_HTTPS;
-        fakeRequest->clientConnectionManager = this;
-        fakeRequest->client_addr = clientConnection->remote;
-#if FOLLOW_X_FORWARDED_FOR
-        fakeRequest->indirect_client_addr = clientConnection->remote;
-#endif
-        fakeRequest->my_addr = clientConnection->local;
-        sslServerBump = new Ssl::ServerBump(fakeRequest);
+        request->flags.sslPeek = 1;
+        sslServerBump = new Ssl::ServerBump(request);
 
         // will call httpsPeeked() with certificate and connection, eventually
         FwdState::fwdStart(clientConnection, sslServerBump->entry, sslServerBump->request);
