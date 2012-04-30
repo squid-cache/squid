@@ -542,7 +542,7 @@ tunnelErrorComplete(int fdnotused, void *data, size_t sizenotused)
     if (!fd_closed(tunnelState->client.fd()))
         comm_close(tunnelState->client.fd());
 
-    if (fd_closed(tunnelState->server.fd()))
+    if (!fd_closed(tunnelState->server.fd()))
         comm_close(tunnelState->server.fd());
 
     cbdataInternalUnlock(tunnelState);
