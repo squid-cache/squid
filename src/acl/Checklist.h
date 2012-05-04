@@ -131,8 +131,8 @@ public:
     bool finished() const;
     void markFinished();
 
-    allow_t const & currentAnswer() const;
-    void currentAnswer(allow_t const);
+    const allow_t &currentAnswer() const { return allow_; }
+    void currentAnswer(const allow_t &newAnswer) { allow_ = newAnswer; }
 
     void changeState(AsyncState *);
     AsyncState *asyncState() const;
