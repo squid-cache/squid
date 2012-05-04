@@ -36,18 +36,6 @@
 #include "squid-old.h"
 #include "acl/Checklist.h"
 
-allow_t const &
-ACLChecklist::currentAnswer() const
-{
-    return allow_;
-}
-
-void
-ACLChecklist::currentAnswer(allow_t const newAnswer)
-{
-    allow_ = newAnswer;
-}
-
 void
 ACLChecklist::matchNonBlocking()
 {
