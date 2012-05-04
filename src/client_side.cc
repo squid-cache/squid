@@ -3534,7 +3534,7 @@ clientNegotiateSSL(int fd, void *data)
  * Otherwise, calls switchToHttps to generate a dynamic SSL_CTX.
  */
 static void
-httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext)
+httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext, Ssl::BumpMode bumpMode)
 {
     SSL *ssl = NULL;
     assert(connState);
@@ -3552,6 +3552,7 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext)
         Comm::SetSelect(details->fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
     else {
         char buf[MAX_IPSTRLEN];
+        assert(bumpMode != Ssl::bumpNone && bumpMode != Ssl::bumpEnd);
         HttpRequest *fakeRequest = new HttpRequest;
         fakeRequest->SetHost(details->local.NtoA(buf, sizeof(buf)));
         fakeRequest->port = details->local.GetPort();
@@ -3563,7 +3564,7 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext)
         fakeRequest->my_addr = connState->clientConnection->local;
 
         debugs(33, 4, HERE << details << " try to generate a Dynamic SSL CTX");
-        connState->switchToHttps(fakeRequest);
+        connState->switchToHttps(fakeRequest, bumpMode);
     }
 }
 
@@ -3581,9 +3582,11 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
     if (!connState->isOpen())
         return;
 
-    if (answer == ACCESS_ALLOWED) {
+    // Require both a match and a positive mode to work around exceptional
+    // cases where ACL code may return ACCESS_ALLOWED with zero answer.kind.
+    if (answer == ACCESS_ALLOWED && answer.kind != Ssl::bumpNone) {
         debugs(33, 2, HERE << " sslBump done data: " << connState->clientConnection);
-        httpsEstablish(connState, NULL);
+        httpsEstablish(connState, NULL, (Ssl::BumpMode)answer.kind);
     } else {
         // fake a CONNECT request to force connState to tunnel
 
@@ -3651,7 +3654,7 @@ httpsAccept(const CommAcceptCbParams &params)
         return;
     } else {
         SSL_CTX *sslContext = s->staticSslContext.get();
-        httpsEstablish(connState, sslContext);
+        httpsEstablish(connState, sslContext, Ssl::bumpNone);
     }
 }
 
@@ -3690,8 +3693,14 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
     certProperties.commonName =  sslCommonName.defined() ? sslCommonName.termedBuf() : sslConnectHostOrIp.termedBuf();
 
     // fake certificate adaptation requires bump-server-first mode
-    if (!sslServerBump)
+    if (!sslServerBump) {
+        assert(port->signingCert.get());
+        certProperties.signWithX509.resetAndLock(port->signingCert.get());
+        if (port->signPkey.get())
+            certProperties.signWithPkey.resetAndLock(port->signPkey.get());
+        certProperties.signAlgorithm = Ssl::algSignTrusted;
         return;
+    }
 
     // In the case of error while connecting to secure server, use a fake trusted certificate,
     // with no mimicked fields and no adaptation algorithms
@@ -3870,7 +3879,7 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
 }
 
 void
-ConnStateData::switchToHttps(HttpRequest *request)
+ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
 {
     assert(!switchedToHttps_);
 
@@ -3881,11 +3890,10 @@ ConnStateData::switchToHttps(HttpRequest *request)
     flags.readMore = true;
     debugs(33, 5, HERE << "converting " << clientConnection << " to SSL");
 
-    const bool alwaysBumpServerFirst = true;
     // If sslServerBump is set, then we have decided to deny CONNECT
     // and now want to switch to SSL to send the error to the client
     // without even peeking at the origin server certificate.
-    if (alwaysBumpServerFirst && !sslServerBump) {
+    if (bumpServerMode == Ssl::bumpServerFirst && !sslServerBump) {
         request->flags.sslPeek = 1;
         sslServerBump = new Ssl::ServerBump(request);
 
