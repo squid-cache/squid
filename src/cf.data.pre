@@ -1347,14 +1347,14 @@ DOC_START
 
 	   accel	Accelerator / reverse proxy mode
 
-	   ssl-bump 	Intercept each CONNECT request matching ssl_bump ACL,
+	   ssl-bump	For each CONNECT request allowed by ssl_bump ACLs,
 			establish secure connection with the client and with
-			the server, decrypt HTTP messages as they pass through
+			the server, decrypt HTTPS messages as they pass through
 			Squid, and treat them as unencrypted HTTP messages,
 			becoming the man-in-the-middle.
 
-			The ssl_bump option is required to fully enable
-			the SslBump feature.
+			The "ssl_bump" option is required to fully enable
+			bumping of CONNECT requests.
 
 	Omitting the mode flag causes default forward proxy mode to be used.
 
@@ -1564,14 +1564,14 @@ DOC_START
 			connections using the client IP address.
 			NP: disables authentication and maybe IPv6 on the port.
 
-	   ssl-bump     Intercept each SSL request matching ssl_bump ACL,
-			establish secure connection with the client and with
-			the server, decrypt HTTP messages as they pass through
+	   ssl-bump	For each intercepted connection allowed by ssl_bump
+		    ACLs, establish a secure connection with the client and with
+			the server, decrypt HTTPS messages as they pass through
 			Squid, and treat them as unencrypted HTTP messages,
 			becoming the man-in-the-middle.
 
-			The ssl_bump option is required to fully enable
-			the SslBump feature.
+			An "ssl_bump server-first" match is required to
+			fully enable bumping of intercepted SSL	connections.
 
 			Requires tproxy.
 
@@ -2068,32 +2068,60 @@ DOC_END
 
 NAME: ssl_bump
 IFDEF: USE_SSL
-TYPE: acl_access
+TYPE: sslproxy_ssl_bump
 LOC: Config.accessList.ssl_bump
 DEFAULT: none
 DOC_START
-	This ACL controls which CONNECT requests to an http_port
-	marked with an sslBump flag are actually "bumped". Please 
-	see the sslBump flag of an http_port option for more details
-	about decoding proxied SSL connections.
+	This option is consulted when a CONNECT request is received on
+	an http_port (or a new connection is intercepted at an
+	https_port), provided that port was configured with an ssl-bump
+	flag. The subsequent data on the connection is either treated as
+	HTTPS and decrypted OR tunneled at TCP level without decryption,
+	depending on the first bumping "mode" which ACLs match.
 
-	By default, no requests are bumped.
+	ssl_bump <mode> [!]acl ...
 
-	See also: http_port ssl-bump
-   
+	The following bumping modes are supported:
+
+	    client-first
+		Allow bumping of the connection. Establish a secure connection
+		with the client first, then connect to the server. This old mode
+		does not allow Squid to mimic server SSL certificate and does
+		not work with intercepted SSL connections.
+
+	    server-first
+		Allow bumping of the connection. Establish a secure connection
+		with the server first, then establish a secure connection with
+		the client, using a mimicked server certificate. Works with both
+		CONNECT requests and intercepted SSL connections.
+
+	    none
+		Become a TCP tunnel without decoding the connection.
+		Works with both CONNECT requests and intercepted SSL
+		connections. This is the default behavior when no
+		ssl_bump option is given or no ssl_bump ACLs match.
+
+	By default, no connections are bumped.
+
+	The first matching ssl_bump option wins. If no ACLs match, the
+	connection is not bumped. Unlike most allow/deny ACL lists, ssl_bump
+	does not have an implicit "negate the last given option" rule. You
+	must make that rule explicit if you convert old ssl_bump allow/deny
+	rules that rely on such an implicit rule.
+
 	This clause supports both fast and slow acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
+	See also: http_port ssl-bump, https_port ssl-bump
 
-	# Example: Bump all requests except those originating from localhost and 
-	# those going to webax.com or example.com sites.
 
-	acl localhost src 127.0.0.1/32
-	acl broken_sites dstdomain .webax.com
+	# Example: Bump all requests except those originating from
+	# localhost and those going to example.com.
+
 	acl broken_sites dstdomain .example.com
-	ssl_bump deny localhost
-	ssl_bump deny broken_sites
-	ssl_bump allow all
+	ssl_bump none localhost
+	ssl_bump none broken_sites
+	ssl_bump server-first all
 DOC_END
 
 NAME: sslproxy_flags

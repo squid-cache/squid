@@ -187,7 +187,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     request_satisfaction_mode = false;
 #endif
 #if USE_SSL
-    sslBumpNeed = needUnknown;
+    sslBumpNeed = Ssl::bumpEnd;
 #endif
 }
 
@@ -1305,7 +1305,7 @@ ClientRequestContext::sslBumpAccessCheck()
         acl_checklist->nonBlockingCheck(sslBumpAccessCheckDoneWrapper, this);
         return true;
     } else {
-        http->sslBumpNeeded(false);
+        http->sslBumpNeeded(Ssl::bumpNone);
         return false;
     }
 }
@@ -1327,7 +1327,11 @@ ClientRequestContext::sslBumpAccessCheckDone(const allow_t &answer)
     if (!httpStateIsValid())
         return;
 
-    http->sslBumpNeeded(answer == ACCESS_ALLOWED);
+    if (answer == ACCESS_ALLOWED)
+        http->sslBumpNeeded(static_cast<Ssl::BumpMode>(answer.kind));
+    else
+        http->sslBumpNeeded(Ssl::bumpNone);
+
     http->doCallouts();
 }
 #endif
@@ -1375,18 +1379,18 @@ ClientHttpRequest::httpStart()
 
 #if USE_SSL
 
-bool
+Ssl::BumpMode
 ClientHttpRequest::sslBumpNeeded() const
 {
-    assert(sslBumpNeed != needUnknown);
-    return (sslBumpNeed == needConfirmed);
+    assert(sslBumpNeed != Ssl::bumpEnd);
+    return sslBumpNeed;
 }
 
 void
-ClientHttpRequest::sslBumpNeeded(bool isNeeded)
+ClientHttpRequest::sslBumpNeeded(Ssl::BumpMode mode)
 {
-    debugs(83, 3, HERE << "sslBump required: "<< (isNeeded ? "Yes" : "No"));
-    sslBumpNeed = (isNeeded ? needConfirmed : needNot);
+    debugs(83, 3, HERE << "sslBump required: "<< Ssl::bumpMode(mode));
+    sslBumpNeed = mode;
 }
 
 // called when comm_write has completed
@@ -1423,7 +1427,7 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
         getConn()->auth_user_request = request->auth_user_request;
 #endif
 
-    getConn()->switchToHttps(request);
+    getConn()->switchToHttps(request, sslBumpNeeded());
 }
 
 void

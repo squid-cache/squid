@@ -46,6 +46,13 @@
 #include "ssl/support.h"
 #include "ssl/gadgets.h"
 
+const char *Ssl::BumpModeStr[] = {
+    "none",
+    "client-first",
+    "server-first",
+    NULL
+};
+
 /**
  \defgroup ServerProtocolSSLInternal Server-Side SSL Internals
  \ingroup ServerProtocolSSLAPI
