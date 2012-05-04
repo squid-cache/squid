@@ -118,7 +118,33 @@ typedef enum {
     ACCESS_AUTH_REQUIRED,    // Missing Credentials
     ACCESS_AUTH_EXPIRED_OK,  // Expired now. Were Okay.
     ACCESS_AUTH_EXPIRED_BAD  // Expired now. Were Failed.
-} allow_t;
+} aclMatchCode;
+
+/// \ingroup ACLAPI
+/// ACL check answer; TODO: Rename to Acl::Answer
+class allow_t {
+public:
+    // not explicit: allow "aclMatchCode to allow_t" conversions (for now)
+    allow_t(const aclMatchCode aCode): code(aCode), kind(0) {}
+
+    allow_t(): code(ACCESS_DUNNO), kind(0) {}
+
+    bool operator ==(const aclMatchCode aCode) const {
+        return code == aCode;
+    }
+
+    bool operator !=(const aclMatchCode aCode) const {
+        return !(*this == aCode);
+    }
+
+    operator aclMatchCode() const {
+        return code;
+    }
+
+    aclMatchCode code; ///< ACCESS_* code
+    int kind; ///< which custom access list verb matched
+};
+
 
 inline std::ostream &
 operator <<(std::ostream &o, const allow_t a)
