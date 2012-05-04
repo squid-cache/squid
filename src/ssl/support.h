@@ -111,6 +111,27 @@ namespace Ssl
 {
 /**
   \ingroup ServerProtocolSSLAPI
+ * Supported ssl-bump modes
+ */
+enum BumpMode {bumpNone = 0, bumpClientFirst, bumpServerFirst, bumpEnd};
+
+/**
+ \ingroup  ServerProtocolSSLAPI
+ * Short names for ssl-bump modes
+ */
+extern const char *BumpModeStr[];
+
+/**
+ \ingroup ServerProtocolSSLAPI
+ * Return the short name of the ssl-bump mode "bm"
+ */
+inline const char *bumpMode(int bm)
+{
+    return (0 <= bm && bm < Ssl::bumpEnd) ? Ssl::BumpModeStr[bm] : NULL;
+}
+
+/**
+  \ingroup ServerProtocolSSLAPI
   * Generate a certificate to be used as untrusted signing certificate, based on a trusted CA
 */
 bool generateUntrustedCert(X509_Pointer & untrustedCert, EVP_PKEY_Pointer & untrustedPkey, X509_Pointer const & cert, EVP_PKEY_Pointer const & pkey);

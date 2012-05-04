@@ -155,14 +155,14 @@ private:
     ConnStateData * conn_;
 
 #if USE_SSL
-    /// whether the request needs to be bumped
-    enum { needUnknown,  needConfirmed,  needNot } sslBumpNeed;
+    /// whether (and how) the request needs to be bumped
+    Ssl::BumpMode sslBumpNeed;
 
 public:
     /// return true if the request needs to be bumped
-    bool sslBumpNeeded() const;
+    Ssl::BumpMode sslBumpNeeded() const;
     /// set the sslBumpNeeded state
-    void sslBumpNeeded(bool isNeeded);
+    void sslBumpNeeded(Ssl::BumpMode mode);
     void sslBumpStart();
     void sslBumpEstablish(comm_err_t errflag);
 #endif
