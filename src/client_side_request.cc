@@ -540,6 +540,7 @@ ClientRequestContext::hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLooku
         for (int i = 0; i < ia->count; i++) {
             if (clientConn->local.matchIPAddr(ia->in_addrs[i]) == 0) {
                 debugs(85, 3, HERE << "validate IP " << clientConn->local << " possible from Host:");
+                http->request->flags.hostVerified = 1;
                 http->doCallouts();
                 return;
             }
