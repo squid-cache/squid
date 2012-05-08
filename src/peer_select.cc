@@ -188,8 +188,6 @@ peerCheckNeverDirectDone(allow_t answer, void *data)
     case ACCESS_DUNNO:  // not relevant.
         break;
     case ACCESS_AUTH_REQUIRED:
-    case ACCESS_AUTH_EXPIRED_OK:
-    case ACCESS_AUTH_EXPIRED_BAD:
         debugs(44, DBG_IMPORTANT, "WARNING: never_direct resulted in " << answer << ". Username ACLs are not reliable here.");
         break;
     }
@@ -213,8 +211,6 @@ peerCheckAlwaysDirectDone(allow_t answer, void *data)
     case ACCESS_DUNNO:  // not relevant.
         break;
     case ACCESS_AUTH_REQUIRED:
-    case ACCESS_AUTH_EXPIRED_OK:
-    case ACCESS_AUTH_EXPIRED_BAD:
         debugs(44, DBG_IMPORTANT, "WARNING: always_direct resulted in " << answer << ". Username ACLs are not reliable here.");
         break;
     }

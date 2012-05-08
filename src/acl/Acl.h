@@ -116,8 +116,6 @@ typedef enum {
 
     // Authentication ACL result states
     ACCESS_AUTH_REQUIRED,    // Missing Credentials
-    ACCESS_AUTH_EXPIRED_OK,  // Expired now. Were Okay.
-    ACCESS_AUTH_EXPIRED_BAD  // Expired now. Were Failed.
 } allow_t;
 
 inline std::ostream &
@@ -135,12 +133,6 @@ operator <<(std::ostream &o, const allow_t a)
         break;
     case ACCESS_AUTH_REQUIRED:
         o << "AUTH_REQUIRED";
-        break;
-    case ACCESS_AUTH_EXPIRED_OK:
-        o << "AUTH_EXPIRED_OK";
-        break;
-    case ACCESS_AUTH_EXPIRED_BAD:
-        o << "AUTH_EXPIRED_BAD";
         break;
     }
     return o;
