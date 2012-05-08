@@ -760,12 +760,12 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
         proxy_auth_msg = http->request->auth_user_request->denyMessage("<null>");
 #endif
 
-    if (answer != ACCESS_ALLOWED && answer != ACCESS_AUTH_EXPIRED_OK) {
+    if (answer != ACCESS_ALLOWED) {
         // auth has a grace period where credentials can be expired but okay not to challenge.
 
         /* Send an auth challenge or error */
         // XXX: do we still need aclIsProxyAuth() ?
-        bool auth_challenge = (answer == ACCESS_AUTH_REQUIRED || answer == ACCESS_AUTH_EXPIRED_BAD || aclIsProxyAuth(AclMatchedName));
+        bool auth_challenge = (answer == ACCESS_AUTH_REQUIRED || aclIsProxyAuth(AclMatchedName));
         debugs(85, 5, "Access Denied: " << http->uri);
         debugs(85, 5, "AclMatchedName = " << (AclMatchedName ? AclMatchedName : "<null>"));
 #if USE_AUTH
@@ -830,7 +830,7 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
         return;
     }
 
-    /* ACCESS_ALLOWED (or auth in grace period ACCESS_AUTH_EXPIRED_OK) continues here ... */
+    /* ACCESS_ALLOWED continues here ... */
     safe_free(http->uri);
 
     http->uri = xstrdup(urlCanonical(http->request));
