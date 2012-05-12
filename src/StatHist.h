@@ -57,7 +57,7 @@ public:
      */
     StatHist();
     StatHist(const StatHist&); //not needed
-    ~StatHist();
+    ~StatHist() { clear(); };
 
     typedef uint64_t bins_type;
 
@@ -147,13 +147,5 @@ StatHist::StatHist() :
         bins(NULL), capacity_(0), min_(0), max_(0),
         scale_(1.0), val_in(NULL), val_out(NULL)
 {}
-
-inline
-StatHist::~StatHist()
-{
-    xfree(bins); //can handle case of bins being NULL
-    bins=NULL;
-    capacity_=0; //mark as destructed, may be needed for troubleshooting
-}
 
 #endif /* STATHIST_H_ */
