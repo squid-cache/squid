@@ -59,14 +59,6 @@ StatHist::init(unsigned int newCapacity, hbase_f * val_in_, hbase_f * val_out_, 
     scale_ = capacity_ / val_in(max_ - min_);
 }
 
-void
-StatHist::clear()
-{
-    xfree(bins); // can handle case of bins being NULL
-    bins=NULL;
-    capacity_=0; // mark as destructed, may be needed for troubleshooting
-}
-
 StatHist::StatHist(const StatHist &src) :
         capacity_(src.capacity_), min_(src.min_), max_(src.max_),
         scale_(src.scale_), val_in(src.val_in), val_out(src.val_out)
