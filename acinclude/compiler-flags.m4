@@ -47,6 +47,33 @@ AC_DEFUN([SQUID_CC_CHECK_ARGUMENT],[
   }])
 ])
 
+# Check if the compiler requires a supplied flag to build a test program.
+# When cross-compiling set flags explicitly.
+#
+# first argument is the variable containing the result 
+# (will be set to "yes" or "no")
+# second argument is the flag to be tested, verbatim
+# third is the #include and global setup for test program, verbatim
+# fourth is the test program to compile, verbatim
+#
+AC_DEFUN([SQUID_CC_REQUIRE_ARGUMENT],[
+  AC_CACHE_CHECK([whether compiler requires $2],[$1],
+  [{
+    AC_REQUIRE([AC_PROG_CC])
+    SAVED_FLAGS="$CFLAGS"
+    SAVED_CXXFLAGS="$CXXFLAGS"
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM($3,$4)],[$1=no],[],[$1=no])
+    if test "$1" != "no" ; then
+      CFLAGS="$CXXFLAGS $2"
+      CXXFLAGS="$CXXFLAGS $2"
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM($3,$4)],[$1=yes],[$1=no],[$1=no])
+    fi
+    CFLAGS="$SAVED_CFLAGS"
+    CXXFLAGS="$SAVED_CXXFLAGS"
+  }])
+  AC_MSG_RESULT([$1])
+])
+
 # detect what kind of compiler we're using, either by using hints from
 # autoconf itself, or by using predefined preprocessor macros
 # sets the variable squid_cv_compiler to one of

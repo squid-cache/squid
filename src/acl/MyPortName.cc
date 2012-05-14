@@ -34,10 +34,10 @@
  */
 
 #include "squid-old.h"
-#include "ProtoPort.h"
 #include "acl/MyPortName.h"
 #include "acl/StringData.h"
 #include "acl/Checklist.h"
+#include "anyp/PortCfg.h"
 #include "HttpRequest.h"
 
 /* for ConnStateData */

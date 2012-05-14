@@ -61,20 +61,45 @@
 
 #include "squid-old.h"
 
-/*
- * Do we need to have the dirn in here? I don't think so, since we already
- * know the dirn ..
- */
+/// maintains a 24-bit checksum over integer fields
+class SwapChecksum24
+{
+public:
+    SwapChecksum24() { raw[0] = raw[1] = raw[2] = 0; }
+
+    bool operator ==(const SwapChecksum24 &o) const {
+        return raw[0] == o.raw[0] && raw[1] == o.raw[1] && raw[2] == o.raw[2];
+    }
+
+    bool operator !=(const SwapChecksum24 &o) const {
+        return !(*this == o);
+    }
+
+    /// compute and store checksum based on three 32bit integers
+    void set(uint32_t f1, uint32_t f2, uint32_t f3);
+
+    /// compute and store checksum based on int32_t and uint64_t integers
+    void set(int32_t f1, uint64_t f2);
+
+    // printing for debugging
+    std::ostream &print(std::ostream &os) const;
+
+private:
+    uint8_t raw[3]; // designed to follow "op" members, in pading space
+};
+
+inline std::ostream &
+operator <<(std::ostream &os, const SwapChecksum24 &sum)
+{
+    return sum.print(os);
+}
+
 /**
  \ingroup FielFormatSwapStateAPI
- \note This information is current as of version 2.2.STABLE4
- *
- \li		Binary format on disk.
- \li		DO NOT randomly alter.
- \li		DO NOT add ANY virtual's.
  *
  \par
- * Defines the structure of a binary swap.state file entry.
+ * Defines the structure of a binary swap.state file entry for UFS stores.
+ * TODO: Move to fs/ufs (and remove from COSS).
  *
  \note StoreSwapLogData entries are written in native machine byte order
  *     They are not necessarily portable across architectures.
@@ -84,16 +109,28 @@ class StoreSwapLogData
 
 public:
     MEMPROXY_CLASS(StoreSwapLogData);
+
+    /// type to use for storing time-related members; must be signed
+    typedef int64_t SwappedTime;
+
     StoreSwapLogData();
 
     /// consistency self-check: whether the data appears to make sense
     bool sane() const;
 
+    /// call this before storing the log entry
+    void finalize();
+
     /**
      * Either SWAP_LOG_ADD when an object is added to the disk storage,
      * or SWAP_LOG_DEL when an object is deleted.
      */
-    char op;
+    uint8_t op;
+
+    /**
+     * Fingerprint to weed out bogus/corrupted swap.state entries.
+     */
+    SwapChecksum24 checksum; // follows "op" because compiler will pad anyway
 
     /**
      * The 32-bit file number which maps to a pathname.
@@ -105,20 +142,20 @@ public:
     sfileno swap_filen;
 
     /**
-     * A 32-bit Unix time value that represents the time when
+     * A Unix time value that represents the time when
      * the origin server generated this response. If the response
      * has a valid Date: header, this timestamp corresponds
      * to that time. Otherwise, it is set to the Squid process time
      * when the response is read (as soon as the end of headers are found).
      */
-    time_t timestamp;
+    SwappedTime timestamp;
 
     /**
      * The last time that a client requested this object.
      * Strictly speaking, this time is set whenever the StoreEntry
      * is locked (via storeLockObject()).
      */
-    time_t lastref;
+    SwappedTime lastref;
 
     /**
      * The value of the response's Expires: header, if any.
@@ -129,14 +166,14 @@ public:
      * where Squid sets expires to -2. This happens for the
      * internal "netdb" object and for FTP URL responses.
      */
-    time_t expires;
+    SwappedTime expires;
 
     /**
      * The value of the response's Last-modified: header, if any.
      * This is set to -1 if there is no Last-modified: header,
      * or if it is unparseable.
      */
-    time_t lastmod;
+    SwappedTime lastmod;
 
     /**
      * This is the number of bytes that the object occupies on
@@ -167,13 +204,23 @@ public:
 MEMPROXY_CLASS_INLINE(StoreSwapLogData);
 
 /// \ingroup FileFormatSwapStateAPI
+/// Swap log starts with this binary structure.
 class StoreSwapLogHeader
 {
 public:
+    // sets default values for this Squid version; loaded values may differ
     StoreSwapLogHeader();
-    char op;
-    int version;
-    int record_size;
+
+    /// consistency self-check: whether the data appears to make sense
+    bool sane() const;
+
+    /// number of bytes after the log header before the first log entry
+    size_t gapSize() const;
+
+    uint8_t op;
+    SwapChecksum24 checksum; // follows "op" because compiler will pad anyway
+    int32_t version;
+    int32_t record_size;
 };
 
 

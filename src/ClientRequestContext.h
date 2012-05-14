@@ -71,11 +71,7 @@ public:
     ErrorState *error;
     bool readNextRequest;
 
-    /// Send authentication response (challenge or error) if ACL result indicates one is needed
-    /// \return true if an error page of any kind has been sent back to the client.
-    // NP: public only until ACLChecklist::nonBlockingCheck() takes Async::Pointer to a call
-    bool maybeSendAuthChallenge(const allow_t &answer);
-
+private:
     CBDATA_CLASS(ClientRequestContext);
 };
 

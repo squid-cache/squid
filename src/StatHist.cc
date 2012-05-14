@@ -62,8 +62,9 @@ StatHist::init(unsigned int newCapacity, hbase_f * val_in_, hbase_f * val_out_, 
 void
 StatHist::clear()
 {
-    for (unsigned int i=0; i<capacity_; ++i)
-        bins[i]=0;
+    xfree(bins); // can handle case of bins being NULL
+    bins=NULL;
+    capacity_=0; // mark as destructed, may be needed for troubleshooting
 }
 
 StatHist::StatHist(const StatHist &src) :
@@ -71,7 +72,7 @@ StatHist::StatHist(const StatHist &src) :
         scale_(src.scale_), val_in(src.val_in), val_out(src.val_out)
 {
     if (src.bins!=NULL) {
-        bins = static_cast<bins_type *>(xcalloc(src.capacity_, sizeof(int)));
+        bins = static_cast<bins_type *>(xcalloc(src.capacity_, sizeof(bins_type)));
         memcpy(bins,src.bins,capacity_*sizeof(*bins));
     }
 }

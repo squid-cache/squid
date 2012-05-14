@@ -56,8 +56,6 @@
 #define ACL_ALLWEEK	0x7F
 #define ACL_WEEKDAYS	0x3E
 
-#define MAXHTTPPORTS			128
-
 /* Select types. */
 #define COMM_SELECT_READ   (0x1)
 #define COMM_SELECT_WRITE  (0x2)
@@ -207,33 +205,6 @@
 
 /* handy to determine the #elements in a static array */
 #define countof(arr) (sizeof(arr)/sizeof(*arr))
-
-/*
- * Max number of ICP messages to receive per call to icpHandleUdp
- */
-#if _SQUID_MSWIN_
-#define INCOMING_ICP_MAX 1
-#else
-#define INCOMING_ICP_MAX 15
-#endif
-/*
- * Max number of DNS messages to receive per call to DNS read handler
- */
-#if _SQUID_MSWIN_
-#define INCOMING_DNS_MAX 1
-#else
-#define INCOMING_DNS_MAX 15
-#endif
-/*
- * Max number of HTTP connections to accept per call to httpAccept
- * and PER HTTP PORT
- */
-#if _SQUID_MSWIN_
-#define INCOMING_HTTP_MAX 1
-#else
-#define INCOMING_HTTP_MAX 10
-#endif
-#define INCOMING_TOTAL_MAX (INCOMING_ICP_MAX+INCOMING_HTTP_MAX)
 
 /*
  * This many TCP connections must FAIL before we mark the

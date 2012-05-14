@@ -158,9 +158,7 @@ Eui::Eui48::encode(char *buf, const int len)
 bool
 Eui::Eui48::lookup(const Ip::Address &c)
 {
-    struct arpreq arpReq;
 #if !_SQUID_WINDOWS_
-    struct sockaddr_in *sa = NULL;
 #endif /* !_SQUID_WINDOWS_ */
 
     Ip::Address ipAddr = c;
@@ -192,9 +190,10 @@ Eui::Eui48::lookup(const Ip::Address &c)
     /*
      * Set up structures for ARP lookup with blank interface name
      */
+    struct arpreq arpReq;
     memset(&arpReq, '\0', sizeof(arpReq));
 
-    sa = (sockaddr_in*)&arpReq.arp_pa;
+    struct sockaddr_in *sa = (struct sockaddr_in*)&arpReq.arp_pa;
     ipAddr.GetSockAddr(*sa);
 
     /* Query ARP table */
@@ -316,10 +315,10 @@ Eui::Eui48::lookup(const Ip::Address &c)
     int tmpSocket = socket(AF_INET,SOCK_STREAM,0);
 
     /* Set up structures for ARP lookup with blank interface name */
-
+    struct arpreq arpReq;
     memset(&arpReq, '\0', sizeof(arpReq));
 
-    sa = (sockaddr_in*)&arpReq.arp_pa;
+    struct sockaddr_in *sa = (struct sockaddr_in*)&arpReq.arp_pa;
     ipAddr.GetSockAddr(*sa);
 
     /* Query ARP table */
@@ -368,10 +367,10 @@ Eui::Eui48::lookup(const Ip::Address &c)
     /*
     * Set up structures for ARP lookup with blank interface name
     */
-
+    struct arpreq arpReq;
     memset(&arpReq, '\0', sizeof(arpReq));
 
-    sa = (struct sockaddr_in*) &arpReq.arp_pa;
+    struct sockaddr_in *sa = (struct sockaddr_in*)&arpReq.arp_pa;
     ipAddr.GetSockAddr(*sa);
 
     /* Query ARP table */
@@ -460,6 +459,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
 
     DWORD            i;
 
+    struct arpreq arpReq;
     memset(&arpReq, '\0', sizeof(arpReq));
 
     /* Get size of Windows ARP table */
