@@ -1063,6 +1063,7 @@ Auth::Digest::Config::decode(char const *proxy_auth)
     } else {
         debugs(29, 9, HERE << "Found user '" << username << "' in the user cache as '" << auth_user << "'");
         digest_user = static_cast<Auth::Digest::User *>(auth_user.getRaw());
+        digest_user->credentials(Auth::Unchecked);
         xfree(username);
     }
 
