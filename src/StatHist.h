@@ -148,4 +148,12 @@ StatHist::StatHist() :
         scale_(1.0), val_in(NULL), val_out(NULL)
 {}
 
+inline void
+StatHist::clear()
+{
+    xfree(bins); // can handle case of bins being NULL
+    bins=NULL;
+    capacity_=0; // mark as destructed, may be needed for troubleshooting
+}
+
 #endif /* STATHIST_H_ */
