@@ -1907,7 +1907,7 @@ MainSafe(int argc, char **argv)
                     }
                 }
             } else {
-                debug("StringSplit() -> Error: %Zu\n", i);
+                debug("StringSplit() -> Error: %zu\n", i);
                 local_printfx("ERR (StringSplit Error %d)\n", i);
             }
         } else {
