@@ -30,6 +30,7 @@
 #ifndef SQUID_HTTPACCESSLOGENTRY_H
 #define SQUID_HTTPACCESSLOGENTRY_H
 
+#include "anyp/PortCfg.h"
 #include "comm/Connection.h"
 #include "HttpVersion.h"
 #include "HttpRequestMethod.h"
@@ -39,7 +40,6 @@
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
 #endif
-#include "ProtoPort.h"
 
 /* forward decls */
 class HttpReply;
@@ -154,7 +154,7 @@ public:
 
         const char *ssluser;
 #endif
-        http_port_list *port;
+        AnyP::PortCfg *port;
 
     } cache;
 

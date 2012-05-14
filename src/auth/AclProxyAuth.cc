@@ -90,12 +90,10 @@ ACLProxyAuth::match(ACLChecklist *checklist)
     // convert to tri-state ACL match 1,0,-1
     switch (answer) {
     case ACCESS_ALLOWED:
-    case ACCESS_AUTH_EXPIRED_OK:
         // check for a match
         return matchProxyAuth(checklist);
 
     case ACCESS_DENIED:
-    case ACCESS_AUTH_EXPIRED_BAD:
         return 0; // non-match
 
     case ACCESS_DUNNO:

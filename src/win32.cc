@@ -159,9 +159,8 @@ int WIN32_getrusage(int who, struct rusage *usage)
     return 0;
 }
 
-
-int Win32__WSAFDIsSet(int fd, fd_set FAR * set
-                     )
+int
+Win32__WSAFDIsSet(int fd, fd_set FAR * set)
 {
     fde *F = &fd_table[fd];
     SOCKET s = F->win32.handle;

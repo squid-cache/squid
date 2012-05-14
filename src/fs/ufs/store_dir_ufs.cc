@@ -804,9 +804,8 @@ UFSSwapDir::openTmpSwapLog(int *clean_flag, int *zero_flag)
         buf.init(header.record_size, header.record_size);
         buf.append(reinterpret_cast<const char*>(&header), sizeof(header));
         // Pad to keep in sync with UFSSwapDir::writeCleanStart().
-        // TODO: When MemBuf::spaceSize() is fixed not to subtract one,
-        // memset() space() with zeroes and use spaceSize() below.
-        buf.appended(static_cast<size_t>(header.record_size) - sizeof(header));
+        memset(buf.space(), 0, header.gapSize());
+        buf.appended(header.gapSize());
         file_write(swaplog_fd, -1, buf.content(), buf.contentSize(),
                    NULL, NULL, buf.freeFunc());
     }
@@ -895,6 +894,7 @@ UFSSwapDir::writeCleanStart()
     /*copy the header */
     memcpy(state->outbuf, &header, sizeof(StoreSwapLogHeader));
     // Leave a gap to keep in sync with UFSSwapDir::openTmpSwapLog().
+    memset(state->outbuf + sizeof(StoreSwapLogHeader), 0, header.gapSize());
     state->outbuf_offset += header.record_size;
 
     state->walker = repl->WalkInit(repl);
@@ -944,6 +944,7 @@ UFSCleanLog::write(StoreEntry const &e)
     s.refcount = e.refcount;
     s.flags = e.flags;
     memcpy(&s.key, e.key, SQUID_MD5_DIGEST_LENGTH);
+    s.finalize();
     memcpy(outbuf + outbuf_offset, &s, ss);
     outbuf_offset += ss;
     /* buffered write */
@@ -1052,6 +1053,7 @@ UFSSwapDir::logEntry(const StoreEntry & e, int op) const
     s->refcount = e.refcount;
     s->flags = e.flags;
     memcpy(s->key, e.key, SQUID_MD5_DIGEST_LENGTH);
+    s->finalize();
     file_write(swaplog_fd,
                -1,
                s,

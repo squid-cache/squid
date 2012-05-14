@@ -1310,7 +1310,7 @@ COMMENT_START
 COMMENT_END
 
 NAME: http_port ascii_port
-TYPE: http_port_list
+TYPE: PortCfg
 DEFAULT: none
 LOC: Config.Sockaddr.http
 DOC_START
@@ -1433,7 +1433,9 @@ DOC_START
 			    1	automatic (default)
 			    2	SSLv2 only
 			    3	SSLv3 only
-			    4	TLSv1 only
+			    4	TLSv1.0 only
+			    5	TLSv1.1 only
+			    6	TLSv1.2 only
 
 	   cipher=	Colon separated list of supported ciphers.
 			NOTE: some ciphers such as EDH ciphers depend on
@@ -1443,9 +1445,11 @@ DOC_START
 
 	   options=	Various SSL implementation options. The most important
 			being:
-			    NO_SSLv2  Disallow the use of SSLv2
-			    NO_SSLv3  Disallow the use of SSLv3
-			    NO_TLSv1  Disallow the use of TLSv1
+			    NO_SSLv2    Disallow the use of SSLv2
+			    NO_SSLv3    Disallow the use of SSLv3
+			    NO_TLSv1    Disallow the use of TLSv1.0
+			    NO_TLSv1_1  Disallow the use of TLSv1.1
+			    NO_TLSv1_2  Disallow the use of TLSv1.2
 			    SINGLE_DH_USE Always create a new key when using
 				      temporary/ephemeral DH key exchanges
 			    ALL       Enable various bug workarounds
@@ -1541,7 +1545,7 @@ DOC_END
 
 NAME: https_port
 IFDEF: USE_SSL
-TYPE: https_port_list
+TYPE: PortCfg
 DEFAULT: none
 LOC: Config.Sockaddr.https
 DOC_START
@@ -2005,6 +2009,15 @@ LOC: Config.ssl_client.version
 TYPE: int
 DOC_START
 	SSL version level to use when proxying https:// URLs
+
+	The versions of SSL/TLS supported:
+
+	    1	automatic (default)
+	    2	SSLv2 only
+	    3	SSLv3 only
+	    4	TLSv1.0 only
+	    5	TLSv1.1 only
+	    6	TLSv1.2 only
 DOC_END
 
 NAME: sslproxy_options
@@ -2017,9 +2030,11 @@ DOC_START
 	
 	The most important being:
 
-	    NO_SSLv2  Disallow the use of SSLv2
-	    NO_SSLv3  Disallow the use of SSLv3
-	    NO_TLSv1  Disallow the use of TLSv1
+	    NO_SSLv2    Disallow the use of SSLv2
+	    NO_SSLv3    Disallow the use of SSLv3
+	    NO_TLSv1    Disallow the use of TLSv1.0
+	    NO_TLSv1_1  Disallow the use of TLSv1.1
+	    NO_TLSv1_2  Disallow the use of TLSv1.2
 	    SINGLE_DH_USE
 		      Always create a new key when using temporary/ephemeral
 		      DH key exchanges
@@ -2146,11 +2161,11 @@ DOC_START
 	Use this ACL to bypass server certificate validation errors.
 
 	For example, the following lines will bypass all validation errors
-	when talking to servers located at 172.16.0.0/16. All other
+	when talking to servers for example.com. All other
 	validation errors will result in ERR_SECURE_CONNECT_FAIL error.
 
-		acl BrokenServersAtTrustedIP dst 172.16.0.0/16
-		sslproxy_cert_error allow BrokenServersAtTrustedIP
+		acl BrokenButTrustedServers dstdomain example.com
+		sslproxy_cert_error allow BrokenButTrustedServers
 		sslproxy_cert_error deny all
 
 	This clause only supports fast acl types.
@@ -2581,21 +2596,25 @@ DOC_START
 			reference a combined file containing both the
 			certificate and the key.
 	
-	sslversion=1|2|3|4
+	sslversion=1|2|3|4|5|6
 			The SSL version to use when connecting to this peer
 				1 = automatic (default)
 				2 = SSL v2 only
 				3 = SSL v3 only
-				4 = TLS v1 only
+				4 = TLS v1.0 only
+				5 = TLS v1.1 only
+				6 = TLS v1.2 only
 	
 	sslcipher=...	The list of valid SSL ciphers to use when connecting
 			to this peer.
 	
 	ssloptions=... 	Specify various SSL implementation options:
 
-			    NO_SSLv2  Disallow the use of SSLv2
-			    NO_SSLv3  Disallow the use of SSLv3
-			    NO_TLSv1  Disallow the use of TLSv1
+			    NO_SSLv2    Disallow the use of SSLv2
+			    NO_SSLv3    Disallow the use of SSLv3
+			    NO_TLSv1    Disallow the use of TLSv1.0
+			    NO_TLSv1_1  Disallow the use of TLSv1.1
+			    NO_TLSv1_2  Disallow the use of TLSv1.2
 			    SINGLE_DH_USE
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
@@ -6557,40 +6576,60 @@ COMMENT_START
  -----------------------------------------------------------------------------
 COMMENT_END
 
-NAME: incoming_icp_average
+NAME: incoming_udp_average incoming_icp_average
 TYPE: int
 DEFAULT: 6
-LOC: Config.comm_incoming.icp_average
-DOC_NONE
+LOC: Config.comm_incoming.udp.average
+DOC_START
+	Heavy voodoo here.  I can't even believe you are reading this.
+	Are you crazy?  Don't even think about adjusting these unless
+	you understand the algorithms in comm_select.c first!
+DOC_END
 
-NAME: incoming_http_average
+NAME: incoming_tcp_average  incoming_http_average
 TYPE: int
 DEFAULT: 4
-LOC: Config.comm_incoming.http_average
-DOC_NONE
+LOC: Config.comm_incoming.tcp.average
+DOC_START
+	Heavy voodoo here.  I can't even believe you are reading this.
+	Are you crazy?  Don't even think about adjusting these unless
+	you understand the algorithms in comm_select.c first!
+DOC_END
 
 NAME: incoming_dns_average
 TYPE: int
 DEFAULT: 4
-LOC: Config.comm_incoming.dns_average
-DOC_NONE
+LOC: Config.comm_incoming.dns.average
+DOC_START
+	Heavy voodoo here.  I can't even believe you are reading this.
+	Are you crazy?  Don't even think about adjusting these unless
+	you understand the algorithms in comm_select.c first!
+DOC_END
 
-NAME: min_icp_poll_cnt
+NAME: min_udp_poll_cnt min_icp_poll_cnt
 TYPE: int
 DEFAULT: 8
-LOC: Config.comm_incoming.icp_min_poll
-DOC_NONE
+LOC: Config.comm_incoming.udp.min_poll
+DOC_START
+	Heavy voodoo here.  I can't even believe you are reading this.
+	Are you crazy?  Don't even think about adjusting these unless
+	you understand the algorithms in comm_select.c first!
+DOC_END
 
 NAME: min_dns_poll_cnt
 TYPE: int
 DEFAULT: 8
-LOC: Config.comm_incoming.dns_min_poll
-DOC_NONE
+LOC: Config.comm_incoming.dns.min_poll
+DOC_START
+	Heavy voodoo here.  I can't even believe you are reading this.
+	Are you crazy?  Don't even think about adjusting these unless
+	you understand the algorithms in comm_select.c first!
+DOC_END
 
-NAME: min_http_poll_cnt
+NAME: min_tcp_poll_cnt min_http_poll_cnt
 TYPE: int
 DEFAULT: 8
-LOC: Config.comm_incoming.http_min_poll
+LOC: Config.comm_incoming.tcp.min_poll
 DOC_START
 	Heavy voodoo here.  I can't even believe you are reading this.
 	Are you crazy?  Don't even think about adjusting these unless
