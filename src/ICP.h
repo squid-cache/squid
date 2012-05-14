@@ -109,7 +109,10 @@ public:
 
 /// \ingroup ServerProtocolICPAPI
 struct icpUdpData {
+
+    /// IP address for the remote end. Because we reply to packets from unknown non-peers.
     Ip::Address address;
+
     void *msg;
     size_t len;
     icpUdpData *next;
@@ -128,10 +131,10 @@ extern Comm::ConnectionPointer icpOutgoingConn;
 extern Ip::Address theIcpPublicHostID;
 
 /// \ingroup ServerProtocolICPAPI
-HttpRequest* icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from);
+extern HttpRequest* icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from);
 
 /// \ingroup ServerProtocolICPAPI
-bool icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request);
+extern bool icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request);
 
 /// \ingroup ServerProtocolICPAPI
 SQUIDCEXTERN void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from);
@@ -161,13 +164,13 @@ SQUIDCEXTERN void icpHandleIcpV3(int, Ip::Address &, char *, int);
 SQUIDCEXTERN int icpCheckUdpHit(StoreEntry *, HttpRequest * request);
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN void icpConnectionsOpen(void);
+SQUIDCEXTERN void icpOpenPorts(void);
 
 /// \ingroup ServerProtocolICPAPI
 SQUIDCEXTERN void icpConnectionShutdown(void);
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN void icpConnectionClose(void);
+SQUIDCEXTERN void icpClosePorts(void);
 
 /// \ingroup ServerProtocolICPAPI
 SQUIDCEXTERN int icpSetCacheKey(const cache_key * key);

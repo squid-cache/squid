@@ -145,7 +145,10 @@ class CpuAffinityMap;
 class RemovalPolicySettings;
 class external_acl;
 class Store;
-struct http_port_list;
+namespace AnyP
+{
+struct PortCfg;
+}
 class SwapDir;
 
 /// Used for boolean enabled/disabled options with complex default logic.
@@ -244,11 +247,10 @@ struct SquidConfig {
     } Port;
 
     struct {
-        http_port_list *http;
+        AnyP::PortCfg *http;
 #if USE_SSL
-        http_port_list *https;
+        AnyP::PortCfg *https;
 #endif
-
     } Sockaddr;
 #if SQUID_SNMP
 
@@ -556,12 +558,10 @@ struct SquidConfig {
 #endif
 
     struct {
-        int icp_average;
-        int dns_average;
-        int http_average;
-        int icp_min_poll;
-        int dns_min_poll;
-        int http_min_poll;
+        struct {
+            int average;
+            int min_poll;
+        } dns, udp, tcp;
     } comm_incoming;
     int max_open_disk_fds;
     int uri_whitespace;

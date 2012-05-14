@@ -31,8 +31,8 @@
  */
 
 #include "squid-old.h"
-#include "ProtoPort.h"
 #include "acl/FilledChecklist.h"
+#include "anyp/PortCfg.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
 #include "event.h"
@@ -540,13 +540,12 @@ neighbors_init(void)
     if (Comm::IsConnOpen(icpIncomingConn)) {
 
         for (thisPeer = Config.peers; thisPeer; thisPeer = next) {
-            http_port_list *s = NULL;
             next = thisPeer->next;
 
             if (0 != strcmp(thisPeer->host, me))
                 continue;
 
-            for (s = Config.Sockaddr.http; s; s = s->next) {
+            for (AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
                 if (thisPeer->http_port != s->s.GetPort())
                     continue;
 
@@ -629,7 +628,8 @@ neighborsUdpPing(HttpRequest * request,
             }
 
             debugs(15, 3, "neighborsUdpPing: sending HTCP query");
-            if (htcpQuery(entry, request, p) <= 0) continue; // unable to send.
+            if (htcpQuery(entry, request, p) <= 0)
+                continue; // unable to send.
         } else
 #endif
         {

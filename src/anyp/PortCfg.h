@@ -1,9 +1,5 @@
-/*
- * $Id$
- */
-
-#ifndef SQUID_PROTO_PORT_H
-#define SQUID_PROTO_PORT_H
+#ifndef SQUID_ANYP_PORTCFG_H
+#define SQUID_ANYP_PORTCFG_H
 
 #include "cbdata.h"
 #include "comm/Connection.h"
@@ -12,14 +8,18 @@
 #include "ssl/gadgets.h"
 #endif
 
-struct http_port_list {
-    http_port_list(const char *aProtocol);
-    ~http_port_list();
+namespace AnyP
+{
+
+struct PortCfg {
+    PortCfg(const char *aProtocol);
+    ~PortCfg();
+    AnyP::PortCfg *clone() const;
 #if USE_SSL
     void configureSslServerContext();
 #endif
 
-    http_port_list *next;
+    PortCfg *next;
 
     Ip::Address s;
     char *protocol;            /* protocol name */
@@ -77,7 +77,16 @@ struct http_port_list {
     Ssl::EVP_PKEY_Pointer untrustedSignPkey; ///< private key for signing untrusted generated certificates
 #endif
 
-    CBDATA_CLASS2(http_port_list);
+    CBDATA_CLASS2(PortCfg); // namespaced
 };
 
-#endif /* SQUID_PROTO_PORT_H */
+} // namespace AnyP
+
+// Max number of TCP listening ports
+#define MAXTCPLISTENPORTS 128
+
+// TODO: kill this global array. Need to check performance of array vs list though.
+extern int NHttpSockets;
+extern int HttpSockets[MAXTCPLISTENPORTS];
+
+#endif /* SQUID_ANYP_PORTCFG_H */

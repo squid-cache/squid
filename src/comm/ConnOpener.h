@@ -21,6 +21,8 @@ protected:
     virtual void swanSong();
 
 public:
+    typedef CbcPointer<ConnOpener> Pointer;
+
     virtual bool doneAll() const;
 
     ConnOpener(Comm::ConnectionPointer &, AsyncCall::Pointer &handler, time_t connect_timeout);

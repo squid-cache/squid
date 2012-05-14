@@ -33,6 +33,7 @@
  */
 
 #include "squid-old.h"
+#include "comm/Loops.h"
 #include "event.h"
 #include "format/Token.h"
 #include "StoreClient.h"
@@ -1504,9 +1505,9 @@ statCountersInitSpecial(StatCounters * C)
      * Cache Digest Stuff
      */
     C->cd.on_xition_count.enumInit(CacheDigestHashFuncCount);
-    C->comm_icp_incoming.enumInit(INCOMING_ICP_MAX);
+    C->comm_udp_incoming.enumInit(INCOMING_UDP_MAX);
     C->comm_dns_incoming.enumInit(INCOMING_DNS_MAX);
-    C->comm_http_incoming.enumInit(INCOMING_HTTP_MAX);
+    C->comm_tcp_incoming.enumInit(INCOMING_TCP_MAX);
     C->select_fds_hist.enumInit(256);	/* was SQUID_MAXFD, but it is way too much. It is OK to crop this statistics */
 }
 
@@ -1524,9 +1525,9 @@ statCountersClean(StatCounters * C)
     C->icp.replySvcTime.clear();
     C->dns.svcTime.clear();
     C->cd.on_xition_count.clear();
-    C->comm_icp_incoming.clear();
+    C->comm_udp_incoming.clear();
     C->comm_dns_incoming.clear();
-    C->comm_http_incoming.clear();
+    C->comm_tcp_incoming.clear();
     C->select_fds_hist.clear();
 }
 
@@ -1551,8 +1552,9 @@ statCountersCopy(StatCounters * dest, const StatCounters * orig)
     dest->icp.replySvcTime=orig->icp.replySvcTime;
     dest->dns.svcTime=orig->dns.svcTime;
     dest->cd.on_xition_count=orig->cd.on_xition_count;
-    dest->comm_icp_incoming=orig->comm_icp_incoming;
-    dest->comm_http_incoming=orig->comm_http_incoming;
+    dest->comm_udp_incoming=orig->comm_udp_incoming;
+    dest->comm_dns_incoming=orig->comm_dns_incoming;
+    dest->comm_tcp_incoming=orig->comm_tcp_incoming;
     dest->select_fds_hist=orig->select_fds_hist;
 }
 

@@ -3,7 +3,7 @@
  */
 
 #include "squid.h"
-#include "ProtoPort.h"
+#include "anyp/PortCfg.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
 #include "SquidTime.h"
@@ -28,12 +28,15 @@ void Ssl::Helper::Init()
 {
     assert(ssl_crtd == NULL);
 
-    bool found = false;
-    for (http_port_list *s = ::Config.Sockaddr.http; s && !found; s = s->next)
-        found = s->sslBump;
-    for (http_port_list *s = ::Config.Sockaddr.https; s && !found; s = s->next)
-        found = s->sslBump;
-    if (!found)
+    bool useSslBump = false;
+    for (AnyP::PortCfg *s = ::Config.Sockaddr.http; s; s = s->next) {
+        if (s->sslBump) {
+            useSslBump = true;
+            break;
+        }
+    }
+
+    if (!useSslBump)
         return;
 
     ssl_crtd = new helper("ssl_crtd");

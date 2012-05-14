@@ -58,6 +58,7 @@ make_snapshot()
     rm -f ${dst}/squid-${ver}.snapshot${type}.md5
     ln -s ${file}.md5 ${dst}/squid-${ver}.snapshot${type}.md5
 
+  set +e
     # cleanup old snapshots
     ls ${dst}/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-r*[0-9]${type} | \
 		sed -e 's/.*-\([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-r[0-9]+'${type}'\)/\1/' | \
@@ -65,6 +66,8 @@ make_snapshot()
     while read f; do
 	rm -f ${dst}/*-${f} ${dst}/*-${f}.md5
     done
+
+  set -e
 
     # update dynamic index pages Last-Modified info
     touch ${dst}/index.dyn

@@ -62,7 +62,7 @@ typedef class HtcpReplyData htcpReplyData;
 SQUIDCEXTERN void neighborsHtcpReply(const cache_key *, htcpReplyData *, const Ip::Address &);
 
 /// \ingroup ServerProtocolHTCP
-SQUIDCEXTERN void htcpInit(void);
+SQUIDCEXTERN void htcpOpenPorts(void);
 
 /**
  * \ingroup ServerProtocolHTCP
@@ -86,7 +86,7 @@ SQUIDCEXTERN void htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, 
 SQUIDCEXTERN void htcpSocketShutdown(void);
 
 /// \ingroup ServerProtocolHTCP
-SQUIDCEXTERN void htcpSocketClose(void);
+SQUIDCEXTERN void htcpClosePorts(void);
 
 #endif /* USE_HTCP */
 
