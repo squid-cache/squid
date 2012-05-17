@@ -185,6 +185,7 @@ authenticateDigestNonceNew(void)
     while ((temp = authenticateDigestNonceFindNonce((char const *) (newnonce->key)))) {
         /* create a new nonce */
         newnonce->noncedata.randomdata = squid_random();
+        newnonce->noncedata.creationtime = current_time.tv_sec;
         authDigestNonceEncode(newnonce);
     }
 
