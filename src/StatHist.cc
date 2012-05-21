@@ -59,19 +59,12 @@ StatHist::init(unsigned int newCapacity, hbase_f * val_in_, hbase_f * val_out_, 
     scale_ = capacity_ / val_in(max_ - min_);
 }
 
-void
-StatHist::clear()
-{
-    for (unsigned int i=0; i<capacity_; ++i)
-        bins[i]=0;
-}
-
 StatHist::StatHist(const StatHist &src) :
         capacity_(src.capacity_), min_(src.min_), max_(src.max_),
         scale_(src.scale_), val_in(src.val_in), val_out(src.val_out)
 {
     if (src.bins!=NULL) {
-        bins = static_cast<bins_type *>(xcalloc(src.capacity_, sizeof(int)));
+        bins = static_cast<bins_type *>(xcalloc(src.capacity_, sizeof(bins_type)));
         memcpy(bins,src.bins,capacity_*sizeof(*bins));
     }
 }

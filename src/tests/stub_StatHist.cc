@@ -25,10 +25,6 @@ statHistDeltaPctile(const StatHist & A, const StatHist & B, double pctile)
 STUB_RETVAL(0.0)
 
 void
-StatHist::clear()
-STUB
-
-void
 StatHist::logInit(unsigned int i, double d1, double d2)
 STUB
 
