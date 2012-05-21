@@ -1187,6 +1187,7 @@ ClientRequestContext::clientRedirectDone(char *result)
         if (status == HTTP_MOVED_PERMANENTLY
                 || status == HTTP_MOVED_TEMPORARILY
                 || status == HTTP_SEE_OTHER
+                || status == HTTP_PERMANENT_REDIRECT
                 || status == HTTP_TEMPORARY_REDIRECT) {
             char *t = result;
 
@@ -1195,10 +1196,7 @@ ClientRequestContext::clientRedirectDone(char *result)
                 http->redirect.location = xstrdup(t + 1);
                 // TODO: validate the URL produced here is RFC 2616 compliant absolute URI
             } else {
-                if (old_request->http_ver < HttpVersion(1,1))
-                    debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid 302 redirect Location: " << result);
-                else
-                    debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid 303 redirect Location: " << result);
+                debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid " << status << " redirect Location: " << result);
             }
         } else if (strcmp(result, http->uri)) {
             // XXX: validate the URL properly *without* generating a whole new request object right here.
