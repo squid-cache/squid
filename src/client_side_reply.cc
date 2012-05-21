@@ -646,11 +646,7 @@ clientReplyContext::processMiss()
 
         if (http->redirect.status) {
             HttpReply *rep = new HttpReply;
-#if LOG_TCP_REDIRECTS
-
             http->logType = LOG_TCP_REDIRECT;
-#endif
-
             http->storeEntry()->releaseRequest();
             rep->redirect(http->redirect.status, http->redirect.location);
             http->storeEntry()->replaceHttpReply(rep);
@@ -1611,9 +1607,9 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     if (http->redirect.status) {
         /** \li If redirection status is True force this to be a MISS */
-        debugs(85, 3, "clientProcessRequest2: redirectStatus forced StoreEntry to NULL -  MISS");
+        debugs(85, 3, HERE << "REDIRECT status forced StoreEntry to NULL (no body on 3XX responses)");
         http->storeEntry(NULL);
-        http->logType = LOG_TCP_MISS;
+        http->logType = LOG_TCP_REDIRECT;
         doGetMoreData();
         return;
     }
