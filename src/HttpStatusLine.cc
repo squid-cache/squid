@@ -320,7 +320,7 @@ httpStatusString(http_status status)
         p = "HTTP Version not supported";
         break;
 
-    // RFC 6585
+        // RFC 6585
     case HTTP_PRECONDITION_REQUIRED: // 428
         p = "Precondition Required";
         break;
