@@ -3777,8 +3777,19 @@ add_http_port(char *portspec)
 }
 
 static void
-parsePortCfg(AnyP::PortCfg ** head, const char *protocol)
+parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
 {
+    const char *protocol = NULL;
+    if (strcmp(optionName, "http_port") == 0 ||
+        strcmp(optionName, "ascii_port") == 0)
+        protocol = "http";
+    else if (strcmp(optionName, "https_port") == 0)
+        protocol = "https";
+    if (!protocol) {
+        self_destruct();
+        return;
+    }
+
     char *token = strtok(NULL, w_space);
 
     if (!token) {
