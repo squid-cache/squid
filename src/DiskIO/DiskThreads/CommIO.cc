@@ -33,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "squid-old.h"
 #include "comm/Loops.h"
 #include "DiskIO/DiskThreads/CommIO.h"
 
