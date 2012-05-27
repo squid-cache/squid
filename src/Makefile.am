@@ -171,7 +171,9 @@ AIO_WIN32_SOURCES =
 endif
 
 if USE_AIOPS_WIN32
-AIOPS_SOURCE = DiskIO/DiskThreads/aiops_win32.cc
+AIOPS_SOURCE = DiskIO/DiskThreads/aiops_win32.cc \
+	DiskIO/DiskThreads/CommIO.cc \
+	DiskIO/DiskThreads/CommIO.h
 else
 AIOPS_SOURCE = DiskIO/DiskThreads/aiops.cc \
 	DiskIO/DiskThreads/CommIO.cc \
