@@ -72,3 +72,25 @@ regex_t t; regcomp(&t,"",0);]])],
     [ squid_cv_regex_works=no ])
   ])
 ])
+
+
+AC_DEFUN([SQUID_CHECK_LIBIPHLPAPI],[
+  AC_CACHE_CHECK([for libIpHlpApi],squid_cv_have_libiphlpapi,[
+    SQUID_STATE_SAVE(iphlpapi)
+    LIBS="$LIBS -liphlpapi"
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <windows.h>
+#include <winsock2.h>
+#include <iphlpapi.h>
+]], [[
+  MIB_IPNETTABLE i;
+  unsigned long isz=sizeof(i);
+  GetIpNetTable(&i,&isz,FALSE);
+    ]])],
+    [squid_cv_have_libiphlpapi=yes
+     SQUID_STATE_COMMIT(iphlpapi)],
+    [squid_cv_have_libiphlpapi=no
+     SQUID_STATE_ROLLBACK(iphlpapi)])
+  ])
+  SQUID_STATE_ROLLBACK(iphlpapi)
+])
