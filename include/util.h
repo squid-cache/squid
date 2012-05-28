@@ -57,7 +57,7 @@ SQUIDCEXTERN void Tolower(char *);
  * for the extern version in squid
  */
 #if !defined(_SQUID_EXTERNNEW_)
-#if defined(__GNUC_STDC_INLINE__)
+#if defined(__GNUC_STDC_INLINE__) || defined(__GNUC_GNU_INLINE__)
 #define _SQUID_EXTERNNEW_ extern inline __attribute__((gnu_inline))
 #else
 #define _SQUID_EXTERNNEW_ extern inline
