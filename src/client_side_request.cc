@@ -813,26 +813,19 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
                 page_id = ERR_ACCESS_DENIED;
         }
 
-        clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
-        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert (repContext);
         Ip::Address tmpnoaddr;
         tmpnoaddr.SetNoAddr();
-        repContext->setReplyToError(page_id, status,
-                                    http->request->method, NULL,
-                                    http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmpnoaddr,
-                                    http->request,
-                                    NULL,
-#if USE_AUTH
-                                    http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
-                                    http->getConn()->auth_user_request : http->request->auth_user_request);
-#else
-                                    NULL);
-#endif
-        http->getConn()->flags.readMore = true; // resume any pipeline reads.
-        node = (clientStreamNode *)http->client_stream.tail->data;
-        clientStreamRead(node, http, node->readBuffer);
-        return;
+        error = clientBuildError(page_id, status, 
+                                 NULL,
+                                 http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmpnoaddr,
+                                 http->request
+            );
+
+        error->auth_user_request = 
+            http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
+            http->getConn()->auth_user_request : http->request->auth_user_request;
+
+        readNextRequest = true;
     }
 
     /* ACCESS_ALLOWED continues here ... */
