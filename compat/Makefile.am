@@ -13,6 +13,7 @@ noinst_LIBRARIES = libcompat-squid.a
 libcompat_squid_a_SOURCES = \
 	assert.cc \
 	assert.h \
+	cmsg.h \
 	compat.cc \
 	compat.h \
 	compat_shared.h \
