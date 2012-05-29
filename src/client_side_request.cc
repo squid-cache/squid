@@ -1504,10 +1504,7 @@ ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
     assert(adaptedBodySource != NULL);
 
     if (size_t contentSize = adaptedBodySource->buf().contentSize()) {
-        // XXX: entry->bytesWanted returns contentSize-1 if entry can accept data.
-        // We have to add 1 to avoid suspending forever.
-        const size_t bytesWanted = storeEntry()->bytesWanted(Range<size_t>(0,contentSize));
-        const size_t spaceAvailable = bytesWanted >  0 ? (bytesWanted + 1) : 0;
+        const size_t spaceAvailable = storeEntry()->bytesWanted(Range<size_t>(0,contentSize));
 
         if (spaceAvailable < contentSize ) {
             // No or partial body data consuming
@@ -1517,8 +1514,7 @@ ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
             storeEntry()->deferProducer(call);
         }
 
-        // XXX: bytesWanted API does not allow us to write just one byte!
-        if (!spaceAvailable && contentSize > 1)
+        if (!spaceAvailable)
             return;
 
         if (spaceAvailable < contentSize )

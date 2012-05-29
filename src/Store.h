@@ -224,7 +224,7 @@ public:
 
     bool isEmpty () const {return true;}
 
-    virtual size_t bytesWanted(Range<size_t> const aRange) const { assert (aRange.size()); return aRange.end - 1;}
+    virtual size_t bytesWanted(Range<size_t> const aRange) const { return aRange.end; }
 
     void operator delete(void *address);
     void complete() {}
