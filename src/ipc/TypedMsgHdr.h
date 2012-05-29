@@ -90,7 +90,8 @@ private:
     } data; ///< same as .msg_iov[0].iov_base
 
     struct CtrlBuffer {
-        char raw[CMSG_SPACE(sizeof(int))]; ///< control buffer space for one fd
+        /// control buffer space for one fd
+        char raw[SQUID_CMSG_SPACE(sizeof(int))];
     } ctrl; ///< same as .msg_control
 
     /// data offset for the next get/put*() to start with
