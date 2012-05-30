@@ -637,7 +637,9 @@ unlinkd_LDADD = \
 
 ## dnsserver is a standalone helper. Do not link to any internal libraries
 dnsserver_SOURCES = dnsserver.cc
-dnsserver_LDADD = $(COMPAT_LIB)
+dnsserver_LDADD = \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 recv_announce_SOURCES = recv-announce.cc
 
