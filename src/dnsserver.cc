@@ -214,8 +214,10 @@ lookup(const char *buf)
     const bool isDomain = (getaddrinfo(buf,NULL,&hints,&AI) != 0);
 
     // reset for real lookup
-    freeaddrinfo(AI);
-    AI = NULL;
+    if (AI != NULL) {
+        freeaddrinfo(AI);
+        AI = NULL;
+    }
 
     // resolve the address/name
     memset(&hints, '\0', sizeof(struct addrinfo));
@@ -351,7 +353,8 @@ lookup(const char *buf)
         printf("$fail A system error occured looking up Domain/IP '%s': %s.\n", buf, xgai_strerror(res));
     }
 
-    xfreeaddrinfo(AI);
+    if (AI != NULL)
+        xfreeaddrinfo(AI);
 }
 
 /**
@@ -452,7 +455,8 @@ squid_res_setservers(int reset)
         fprintf(stderr, "IPv6 nameservers not supported on this resolver\n");
 #endif
     }
-    freeaddrinfo(AI);
+    if (AI != NULL)
+        freeaddrinfo(AI);
 
 #else /* !HAVE_RES_INIT || !defined(_SQUID_RES_NSADDR_LIST) */
 
