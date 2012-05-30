@@ -991,7 +991,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
                       AnyP::ProtocolType_str[request->http_ver.protocol],
                       request->http_ver.major, request->http_ver.minor);
             packerToMemInit(&pck, &mb);
-            request->header.packInto(&pck);
+            request->header.packInto(&pck, true); //hide authorization data
             packerClean(&pck);
         } else if (request_hdrs) {
             p = request_hdrs;
