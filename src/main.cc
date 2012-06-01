@@ -1906,6 +1906,9 @@ SquidShutdown()
     }
 
 #endif
+    // clear StoreController
+    Store::Root(NULL);
+
     fdDumpOpen();
 
     comm_exit();
