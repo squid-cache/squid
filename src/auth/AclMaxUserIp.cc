@@ -151,13 +151,6 @@ ACLMaxUserIP::match(ACLChecklist *cl)
 {
     ACLFilledChecklist *checklist = Filled(cl);
     allow_t answer = AuthenticateAcl(checklist);
-    if (answer != ACCESS_DENIED && answer != ACCESS_ALLOWED) {
-        // If the answer is not allowed or denied (matches/not matches), requires 
-        // authentication (ACCESS_AUTH_*) or the authentication is in progress (ACCESS_DUNNO)
-        // so change the state in the related checklist.
-        checklist->currentAnswer(answer);
-    }
-
     int ti;
 
     // convert to tri-state ACL match 1,0,-1
@@ -174,6 +167,10 @@ ACLMaxUserIP::match(ACLChecklist *cl)
     case ACCESS_DUNNO:
     case ACCESS_AUTH_REQUIRED:
     default:
+        // If the answer is not allowed or denied (matches/not matches) and
+        // async authentication is not needed (asyncNeeded), then we are done.
+        if (!checklist->asyncNeeded())
+            checklist->markFinished(answer, "AuthenticateAcl exception");
         return -1; // other
     }
 }
