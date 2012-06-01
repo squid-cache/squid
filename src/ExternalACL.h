@@ -36,7 +36,8 @@
 
 #include "acl/Checklist.h"
 
-class external_acl;
+/** \todo CLEANUP: kill this typedef. */
+typedef struct _external_acl_data external_acl_data;
 
 class ExternalACLLookup : public ACLChecklist::AsyncState
 {
@@ -45,13 +46,14 @@ public:
     static ExternalACLLookup *Instance();
     virtual void checkForAsync(ACLChecklist *)const;
 
+    // If possible, starts an asynchronous lookup of an external ACL.
+    // Otherwise, asserts (or bails if background refresh is requested).
+    static void Start(ACLChecklist *checklist, external_acl_data *acl, bool bg);
+
 private:
     static ExternalACLLookup instance_;
     static void LookupDone(void *data, void *result);
 };
-
-/** \todo CLEANUP: kill this typedef. */
-typedef struct _external_acl_data external_acl_data;
 
 #include "acl/Acl.h"
 
@@ -61,7 +63,7 @@ class ACLExternal : public ACL
 public:
     MEMPROXY_CLASS(ACLExternal);
 
-    static void ExternalAclLookup(ACLChecklist * ch, ACLExternal *, EAH * callback, void *callback_data);
+    static void ExternalAclLookup(ACLChecklist * ch, ACLExternal *);
 
 
     ACLExternal(char const *);

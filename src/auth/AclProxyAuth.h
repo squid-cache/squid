@@ -53,17 +53,6 @@ private:
     static void LookupDone(void *data, char *result);
 };
 
-class ProxyAuthNeeded : public ACLChecklist::AsyncState
-{
-
-public:
-    static ProxyAuthNeeded *Instance();
-    virtual void checkForAsync(ACLChecklist *)const;
-
-private:
-    static ProxyAuthNeeded instance_;
-};
-
 class ACLProxyAuth : public ACL
 {
 
