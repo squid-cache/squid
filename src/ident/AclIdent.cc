@@ -89,10 +89,14 @@ ACLIdent::match(ACLChecklist *cl)
         return data->match(checklist->rfc931);
     } else if (checklist->conn() != NULL && checklist->conn()->clientConnection != NULL && checklist->conn()->clientConnection->rfc931[0]) {
         return data->match(checklist->conn()->clientConnection->rfc931);
-    } else {
+    } else if (checklist->conn() != NULL && Comm::IsConnOpen(checklist->conn()->clientConnection)) {
         debugs(28, 3, HERE << "switching to ident lookup state");
         checklist->changeState(IdentLookup::Instance());
         return 0;
+    } else {
+        debugs(28, DBG_IMPORTANT, HERE << "Can't start ident lookup. No client connection" );
+        checklist->markFinished(ACCESS_DUNNO, "cannot start ident lookup");
+        return -1;
     }
 }
 
@@ -127,15 +131,12 @@ void
 IdentLookup::checkForAsync(ACLChecklist *cl)const
 {
     ACLFilledChecklist *checklist = Filled(cl);
-    if (checklist->conn() != NULL && Comm::IsConnOpen(checklist->conn()->clientConnection)) {
+    const ConnStateData *conn = checklist->conn();
+    // check that ACLIdent::match() tested this lookup precondition
+    assert(conn && Comm::IsConnOpen(conn->clientConnection));
         debugs(28, 3, HERE << "Doing ident lookup" );
         checklist->asyncInProgress(true);
         Ident::Start(checklist->conn()->clientConnection, LookupDone, checklist);
-    } else {
-        debugs(28, DBG_IMPORTANT, "IdentLookup::checkForAsync: Can't start ident lookup. No client connection" );
-        checklist->currentAnswer(ACCESS_DENIED);
-        checklist->markFinished();
-    }
 }
 
 void
