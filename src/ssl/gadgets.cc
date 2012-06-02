@@ -155,9 +155,10 @@ bool Ssl::readCertFromMemory(X509_Pointer & cert, char const * bufferToRead)
 static const size_t MaxCnLen = 64;
 
 // Replace certs common name with the given
-static bool replaceCommonName(Ssl::X509_Pointer & cert, std::string const &cn)
+static bool replaceCommonName(Ssl::X509_Pointer & cert, std::string const &rawCn)
 {
-    std::string fixedCn;
+    std::string cn = rawCn;
+
     if (cn.length() > MaxCnLen) {
         // In the case the length od CN is more than the maximum supported size
         // try to use the first upper level domain.
@@ -171,9 +172,15 @@ static bool replaceCommonName(Ssl::X509_Pointer & cert, std::string const &cn)
         if (pos == std::string::npos || cn.find('.', pos + 1) == std::string::npos)
             return false;
 
-        fixedCn.append(1,'*');
+        std::string fixedCn(1, '*');
         fixedCn.append(cn.c_str() + pos);
+        cn = fixedCn;
     }
+
+    // Assume [] surround an IPv6 address and strip them because browsers such
+    // as Firefox, Chromium, and Safari prefer bare IPv6 addresses in CNs.
+    if (cn.length() > 2 && *cn.begin() == '[' && *cn.rbegin() == ']')
+        cn = cn.substr(1, cn.size()-2);
 
     X509_NAME *name = X509_get_subject_name(cert.get());
     if (!name)
@@ -188,7 +195,7 @@ static bool replaceCommonName(Ssl::X509_Pointer & cert, std::string const &cn)
 
     // Add a new CN
     return X509_NAME_add_entry_by_NID(name, NID_commonName, MBSTRING_ASC,
-                                      (unsigned char *)(fixedCn.empty() ? cn.c_str() : fixedCn.c_str()), -1, -1, 0);
+                                      (unsigned char *)(cn.c_str()), -1, -1, 0);
 }
 
 const char *Ssl::CertSignAlgorithmStr[] = {
