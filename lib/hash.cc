@@ -66,13 +66,13 @@ static void hash_next_bucket(hash_table * hid);
 unsigned int
 hash_string(const void *data, unsigned int size)
 {
-    const char *s = data;
+    const unsigned char *s = static_cast<const unsigned char *>(data);
     unsigned int n = 0;
     unsigned int j = 0;
     unsigned int i = 0;
     while (*s) {
         j++;
-        n ^= 271 * (unsigned) *s++;
+        n ^= 271 * (*s++);
     }
     i = n ^ (j * 271);
     return i % size;
@@ -85,7 +85,7 @@ hash_string(const void *data, unsigned int size)
 unsigned int
 hash4(const void *data, unsigned int size)
 {
-    const char *key = data;
+    const char *key = static_cast<const char *>(data);
     size_t loop;
     unsigned int h;
     size_t len;
@@ -134,7 +134,7 @@ hash4(const void *data, unsigned int size)
     return h % size;
 }
 
-/*
+/**
  *  hash_create - creates a new hash table, uses the cmp_func
  *  to compare keys.  Returns the identification for the hash table;
  *  otherwise returns a negative number on error.
@@ -142,13 +142,13 @@ hash4(const void *data, unsigned int size)
 hash_table *
 hash_create(HASHCMP * cmp_func, int hash_sz, HASHHASH * hash_func)
 {
-    hash_table *hid = xcalloc(1, sizeof(hash_table));
+    hash_table *hid = (hash_table *)xcalloc(1, sizeof(hash_table));
     if (!hash_sz)
         hid->size = (unsigned int) DEFAULT_HASH_SIZE;
     else
         hid->size = (unsigned int) hash_sz;
     /* allocate and null the buckets */
-    hid->buckets = xcalloc(hid->size, sizeof(hash_link *));
+    hid->buckets = (hash_link **)xcalloc(hid->size, sizeof(hash_link *));
     hid->cmp = cmp_func;
     hid->hash = hash_func;
     hid->next = NULL;
@@ -156,7 +156,7 @@ hash_create(HASHCMP * cmp_func, int hash_sz, HASHHASH * hash_func)
     return hid;
 }
 
-/*
+/**
  *  hash_join - joins a hash_link under its key lnk->key
  *  into the hash table 'hid'.
  *
@@ -172,7 +172,7 @@ hash_join(hash_table * hid, hash_link * lnk)
     hid->count++;
 }
 
-/*
+/**
  *  hash_lookup - locates the item under the key 'k' in the hash table
  *  'hid'.  Returns a pointer to the hash bucket on success; otherwise
  *  returns NULL.
@@ -180,12 +180,11 @@ hash_join(hash_table * hid, hash_link * lnk)
 hash_link *
 hash_lookup(hash_table * hid, const void *k)
 {
-    hash_link *walker;
     int b;
     PROF_start(hash_lookup);
     assert(k != NULL);
     b = hid->hash(k, hid->size);
-    for (walker = hid->buckets[b]; walker != NULL; walker = walker->next) {
+    for (hash_link *walker = hid->buckets[b]; walker != NULL; walker = walker->next) {
         if ((hid->cmp) (k, walker->key) == 0) {
             PROF_stop(hash_lookup);
             return (walker);
@@ -203,7 +202,7 @@ hash_next_bucket(hash_table * hid)
         hid->next = hid->buckets[hid->current_slot];
 }
 
-/*
+/**
  *  hash_first - initializes the hash table for the hash_next()
  *  function.
  */
@@ -217,7 +216,7 @@ hash_first(hash_table * hid)
         hash_next_bucket(hid);
 }
 
-/*
+/**
  *  hash_next - returns the next item in the hash table 'hid'.
  *  Otherwise, returns NULL on error or end of list.
  *
@@ -226,16 +225,16 @@ hash_first(hash_table * hid)
 hash_link *
 hash_next(hash_table * hid)
 {
-    hash_link *this = hid->next;
-    if (NULL == this)
+    hash_link *p = hid->next;
+    if (NULL == p)
         return NULL;
-    hid->next = this->next;
+    hid->next = p->next;
     if (NULL == hid->next)
         hash_next_bucket(hid);
-    return this;
+    return p;
 }
 
-/*
+/**
  *  hash_last - resets hash traversal state to NULL
  *
  */
@@ -247,7 +246,7 @@ hash_last(hash_table * hid)
     hid->current_slot = 0;
 }
 
-/*
+/**
  *  hash_remove_link - deletes the given hash_link node from the
  *  hash table 'hid'.  Does not free the item, only removes it
  *  from the list.
@@ -258,11 +257,9 @@ hash_last(hash_table * hid)
 void
 hash_remove_link(hash_table * hid, hash_link * hl)
 {
-    hash_link **P;
-    int i;
     assert(hl != NULL);
-    i = hid->hash(hl->key, hid->size);
-    for (P = &hid->buckets[i]; *P; P = &(*P)->next) {
+    int i = hid->hash(hl->key, hid->size);
+    for (hash_link **P = &hid->buckets[i]; *P; P = &(*P)->next) {
         if (*P != hl)
             continue;
         *P = hl->next;
@@ -277,7 +274,7 @@ hash_remove_link(hash_table * hid, hash_link * hl)
     assert(0);
 }
 
-/*
+/**
  *  hash_get_bucket - returns the head item of the bucket
  *  in the hash table 'hid'. Otherwise, returns NULL on error.
  */
@@ -293,16 +290,14 @@ void
 hashFreeItems(hash_table * hid, HASHFREE * free_func)
 {
     hash_link *l;
-    hash_link **list;
     int i = 0;
-    int j;
-    list = xcalloc(hid->count, sizeof(hash_link *));
+    hash_link **list = (hash_link **)xcalloc(hid->count, sizeof(hash_link *));
     hash_first(hid);
     while ((l = hash_next(hid)) && i < hid->count) {
         *(list + i) = l;
         i++;
     }
-    for (j = 0; j < i; j++)
+    for (int j = 0; j < i; j++)
         free_func(*(list + j));
     xfree(list);
 }
@@ -336,11 +331,10 @@ int
 hashPrime(int n)
 {
     int I = sizeof(hash_primes) / sizeof(int);
-    int i;
     int best_prime = hash_primes[0];
     double min = fabs(log((double) n) - log((double) hash_primes[0]));
     double d;
-    for (i = 0; i < I; i++) {
+    for (int i = 0; i < I; i++) {
         d = fabs(log((double) n) - log((double) hash_primes[i]));
         if (d > min)
             continue;
@@ -350,7 +344,7 @@ hashPrime(int n)
     return best_prime;
 }
 
-/*
+/**
  * return the key of a hash_link as a const string
  */
 const char *
@@ -361,7 +355,7 @@ hashKeyStr(hash_link * hl)
 
 
 #if USE_HASH_DRIVER
-/*
+/**
  *  hash-driver - Run with a big file as stdin to insert each line into the
  *  hash table, then prints the whole hash table, then deletes a random item,
  *  and prints the table again...
@@ -370,7 +364,6 @@ int
 main(void)
 {
     hash_table *hid;
-    int i;
     LOCAL_ARRAY(char, buf, BUFSIZ);
     LOCAL_ARRAY(char, todelete, BUFSIZ);
     hash_link *walker = NULL;
@@ -395,7 +388,7 @@ main(void)
     }
 
     printf("walking hash table...\n");
-    for (i = 0, walker = hash_first(hid); walker; walker = hash_next(hid)) {
+    for (int i = 0, walker = hash_first(hid); walker; walker = hash_next(hid)) {
         printf("item %5d: key: '%s' item: %p\n", i++, walker->key,
                walker->item);
     }
@@ -407,7 +400,7 @@ main(void)
             printf("hash_delete error\n");
     }
     printf("walking hash table...\n");
-    for (i = 0, walker = hash_first(hid); walker; walker = hash_next(hid)) {
+    for (int i = 0, walker = hash_first(hid); walker; walker = hash_next(hid)) {
         printf("item %5d: key: '%s' item: %p\n", i++, walker->key,
                walker->item);
     }

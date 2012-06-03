@@ -50,7 +50,7 @@ libmiscencoding_la_SOURCES = \
 	uudecode.c
 
 libmisccontainers_la_SOURCES = \
-	hash.c
+	hash.cc
 
 libmiscutil_la_SOURCES = \
 	malloc_trace.cc \
