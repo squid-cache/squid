@@ -3246,6 +3246,20 @@ if test "x$squid_cv_resuid_works" = "xyes" ; then
   AC_DEFINE(HAVE_SETRESUID,1,[Yay! Another Linux brokenness. Knowing that setresuid() exists is not enough, because RedHat 5.0 declares setresuid() but does not implement it.])
 fi
 
+AC_MSG_CHECKING([for constant CMSG_SPACE])
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+  #if HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+  #endif
+
+  int a[CMSG_SPACE(int)];
+]])], [
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_CONSTANT_CMSG_SPACE, 1, [Define to 1 if CMSG_SPACE is constant])
+], [
+  AC_MSG_RESULT(no)
+])
+
 SQUID_CHECK_FUNC_STRNSTR
 SQUID_CHECK_FUNC_VACOPY
 SQUID_CHECK_FUNC___VACOPY
