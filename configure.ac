@@ -533,11 +533,18 @@ for module in $squid_disk_module_candidates none; do
   fi
   case "$module" in
     DiskDaemon)
-      AC_MSG_NOTICE([Enabling DiskDaemon DiskIO module])
-      DISK_LIBS="$DISK_LIBS libDiskDaemon.a"
-      DISK_MODULES="$DISK_MODULES DiskDaemon"
-      DISK_PROGRAMS="$DISK_PROGRAMS DiskIO/DiskDaemon/diskd"
-      DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskDaemon/DiskDaemonDiskIOModule.o"
+      case "$squid_host_os" in
+        mingw)
+          AC_MSG_NOTICE(["DiskDaemon not supported on MinGW"])
+          ;;
+        *)
+          AC_MSG_NOTICE([Enabling DiskDaemon DiskIO module])
+          DISK_LIBS="$DISK_LIBS libDiskDaemon.a"
+          DISK_MODULES="$DISK_MODULES DiskDaemon"
+          DISK_PROGRAMS="$DISK_PROGRAMS DiskIO/DiskDaemon/diskd"
+          DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskDaemon/DiskDaemonDiskIOModule.o"
+          ;;
+        esac
       ;;
     DiskThreads)
       squid_opt_use_diskthreads="yes"
@@ -1023,6 +1030,7 @@ dnl   fi
 dnl ])
 
 
+test "x$squid_host_os" = "xmingw" && enable_wccp=no
 AC_ARG_ENABLE(wccp,
   AS_HELP_STRING([--disable-wccp],[Disable Web Cache Coordination Protocol]), [
 SQUID_YESNO([$enableval],[unrecognized argument to --disable-wccp: $enableval])
@@ -1030,6 +1038,7 @@ SQUID_YESNO([$enableval],[unrecognized argument to --disable-wccp: $enableval])
 SQUID_DEFINE_BOOL(USE_WCCP, ${enable_wccp:=yes}, [Define to enable WCCP])
 AC_MSG_NOTICE([Web Cache Coordination Protocol enabled: $enable_wccp])
 
+test "x$squid_host_os" = "xmingw" && enable_wccpv2=no
 AC_ARG_ENABLE(wccpv2,
   AS_HELP_STRING([--disable-wccpv2],
                  [Disable Web Cache Coordination V2 Protocol]), [ 
