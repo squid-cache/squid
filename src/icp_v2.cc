@@ -595,7 +595,7 @@ icpHandleUdp(int sock, void *data)
     LOCAL_ARRAY(char, buf, SQUID_UDP_SO_RCVBUF);
     int len;
     int icp_version;
-    int max = INCOMING_ICP_MAX;
+    int max = INCOMING_UDP_MAX;
     Comm::SetSelect(sock, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
 
     while (max--) {
@@ -657,7 +657,7 @@ icpHandleUdp(int sock, void *data)
 }
 
 void
-icpConnectionsOpen(void)
+icpOpenPorts(void)
 {
     uint16_t port;
 
@@ -765,7 +765,7 @@ icpConnectionShutdown(void)
 }
 
 void
-icpConnectionClose(void)
+icpClosePorts(void)
 {
     icpConnectionShutdown();
 

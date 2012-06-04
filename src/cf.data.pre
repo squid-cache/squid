@@ -1277,7 +1277,7 @@ COMMENT_START
 COMMENT_END
 
 NAME: http_port ascii_port
-TYPE: http_port_list
+TYPE: PortCfg
 DEFAULT: none
 LOC: Config.Sockaddr.http
 DOC_START
@@ -1508,7 +1508,7 @@ DOC_END
 
 NAME: https_port
 IFDEF: USE_SSL
-TYPE: https_port_list
+TYPE: PortCfg
 DEFAULT: none
 LOC: Config.Sockaddr.https
 DOC_START
@@ -6305,40 +6305,60 @@ COMMENT_START
  -----------------------------------------------------------------------------
 COMMENT_END
 
-NAME: incoming_icp_average
+NAME: incoming_udp_average incoming_icp_average
 TYPE: int
 DEFAULT: 6
-LOC: Config.comm_incoming.icp_average
-DOC_NONE
+LOC: Config.comm_incoming.udp.average
+DOC_START
+	Heavy voodoo here.  I can't even believe you are reading this.
+	Are you crazy?  Don't even think about adjusting these unless
+	you understand the algorithms in comm_select.c first!
+DOC_END
 
-NAME: incoming_http_average
+NAME: incoming_tcp_average  incoming_http_average
 TYPE: int
 DEFAULT: 4
-LOC: Config.comm_incoming.http_average
-DOC_NONE
+LOC: Config.comm_incoming.tcp.average
+DOC_START
+	Heavy voodoo here.  I can't even believe you are reading this.
+	Are you crazy?  Don't even think about adjusting these unless
+	you understand the algorithms in comm_select.c first!
+DOC_END
 
 NAME: incoming_dns_average
 TYPE: int
 DEFAULT: 4
-LOC: Config.comm_incoming.dns_average
-DOC_NONE
+LOC: Config.comm_incoming.dns.average
+DOC_START
+	Heavy voodoo here.  I can't even believe you are reading this.
+	Are you crazy?  Don't even think about adjusting these unless
+	you understand the algorithms in comm_select.c first!
+DOC_END
 
-NAME: min_icp_poll_cnt
+NAME: min_udp_poll_cnt min_icp_poll_cnt
 TYPE: int
 DEFAULT: 8
-LOC: Config.comm_incoming.icp_min_poll
-DOC_NONE
+LOC: Config.comm_incoming.udp.min_poll
+DOC_START
+	Heavy voodoo here.  I can't even believe you are reading this.
+	Are you crazy?  Don't even think about adjusting these unless
+	you understand the algorithms in comm_select.c first!
+DOC_END
 
 NAME: min_dns_poll_cnt
 TYPE: int
 DEFAULT: 8
-LOC: Config.comm_incoming.dns_min_poll
-DOC_NONE
+LOC: Config.comm_incoming.dns.min_poll
+DOC_START
+	Heavy voodoo here.  I can't even believe you are reading this.
+	Are you crazy?  Don't even think about adjusting these unless
+	you understand the algorithms in comm_select.c first!
+DOC_END
 
-NAME: min_http_poll_cnt
+NAME: min_tcp_poll_cnt min_http_poll_cnt
 TYPE: int
 DEFAULT: 8
-LOC: Config.comm_incoming.http_min_poll
+LOC: Config.comm_incoming.tcp.min_poll
 DOC_START
 	Heavy voodoo here.  I can't even believe you are reading this.
 	Are you crazy?  Don't even think about adjusting these unless

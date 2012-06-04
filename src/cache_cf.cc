@@ -46,6 +46,7 @@
 #if USE_ECAP
 #include "adaptation/ecap/Config.h"
 #endif
+#include "anyp/PortCfg.h"
 #if USE_SSL
 #include "ssl/support.h"
 #include "ssl/Config.h"
@@ -71,7 +72,6 @@
 #include "MemBuf.h"
 #include "mgr/Registration.h"
 #include "Parsing.h"
-#include "ProtoPort.h"
 #include "rfc1738.h"
 #if SQUID_SNMP
 #include "snmp.h"
@@ -189,17 +189,10 @@ static int check_null_IpAddress_list(const Ip::Address_list *);
 #endif /* CURRENTLY_UNUSED */
 #endif /* USE_WCCPv2 */
 
-static void parsePortList(http_port_list **, const char *protocol);
-#define parse_http_port_list(l) parsePortList((l),"http")
-static void dump_http_port_list(StoreEntry *, const char *, const http_port_list *);
-static void free_http_port_list(http_port_list **);
-
-#if USE_SSL
-#define parse_https_port_list(l) parsePortList((l),"https")
-#define dump_https_port_list(e,n,l) dump_http_port_list((e),(n),(l))
-#define free_https_port_list(l) free_http_port_list((l))
-#define check_null_https_port_list(l) check_null_http_port_list((l))
-#endif /* USE_SSL */
+static void parsePortCfg(AnyP::PortCfg **, const char *protocol);
+#define parse_PortCfg(l) parsePortCfg((l), token)
+static void dump_PortCfg(StoreEntry *, const char *, const AnyP::PortCfg *);
+static void free_PortCfg(AnyP::PortCfg **);
 
 static void parse_b_size_t(size_t * var);
 static void parse_b_int64_t(int64_t * var);
@@ -880,51 +873,36 @@ configDoConfigure(void)
 
     Config.ssl_client.sslContext = sslCreateClientContext(Config.ssl_client.cert, Config.ssl_client.key, Config.ssl_client.version, Config.ssl_client.cipher, Config.ssl_client.options, Config.ssl_client.flags, Config.ssl_client.cafile, Config.ssl_client.capath, Config.ssl_client.crlfile);
 
-    {
-
-        peer *p;
-
-        for (p = Config.peers; p != NULL; p = p->next) {
-            if (p->use_ssl) {
-                debugs(3, 1, "Initializing cache_peer " << p->name << " SSL context");
-                p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath, p->sslcrlfile);
-            }
+    for (peer *p = Config.peers; p != NULL; p = p->next) {
+        if (p->use_ssl) {
+            debugs(3, 1, "Initializing cache_peer " << p->name << " SSL context");
+            p->sslContext = sslCreateClientContext(p->sslcert, p->sslkey, p->sslversion, p->sslcipher, p->ssloptions, p->sslflags, p->sslcafile, p->sslcapath, p->sslcrlfile);
         }
     }
 
-    {
+    for (AnyP::PortCfg *s = Config.Sockaddr.http; s != NULL; s = s->next) {
+        if (!s->cert && !s->key)
+            continue;
 
-        http_port_list *s;
+        debugs(3, 1, "Initializing http_port " << s->s << " SSL context");
 
-        for (s = Config.Sockaddr.http; s != NULL; s = (http_port_list *) s->next) {
-            if (!s->cert && !s->key)
-                continue;
+        s->staticSslContext.reset(
+            sslCreateServerContext(s->cert, s->key,
+                                   s->version, s->cipher, s->options, s->sslflags, s->clientca,
+                                   s->cafile, s->capath, s->crlfile, s->dhfile,
+                                   s->sslContextSessionId));
 
-            debugs(3, 1, "Initializing http_port " << s->s << " SSL context");
-
-            s->staticSslContext.reset(
-                sslCreateServerContext(s->cert, s->key,
-                                       s->version, s->cipher, s->options, s->sslflags, s->clientca,
-                                       s->cafile, s->capath, s->crlfile, s->dhfile,
-                                       s->sslContextSessionId));
-
-            Ssl::readCertChainAndPrivateKeyFromFiles(s->signingCert, s->signPkey, s->certsToChain, s->cert, s->key);
-        }
+        Ssl::readCertChainAndPrivateKeyFromFiles(s->signingCert, s->signPkey, s->certsToChain, s->cert, s->key);
     }
 
-    {
+    for (AnyP::PortCfg *s = Config.Sockaddr.https; s != NULL; s = s->next) {
+        debugs(3, 1, "Initializing https_port " << s->s << " SSL context");
 
-        http_port_list *s;
-
-        for (s = Config.Sockaddr.https; s != NULL; s = s->next) {
-            debugs(3, 1, "Initializing https_port " << s->s << " SSL context");
-
-            s->staticSslContext.reset(
-                sslCreateServerContext(s->cert, s->key,
-                                       s->version, s->cipher, s->options, s->sslflags, s->clientca,
-                                       s->cafile, s->capath, s->crlfile, s->dhfile,
-                                       s->sslContextSessionId));
-        }
+        s->staticSslContext.reset(
+            sslCreateServerContext(s->cert, s->key,
+                                   s->version, s->cipher, s->options, s->sslflags, s->clientca,
+                                   s->cafile, s->capath, s->crlfile, s->dhfile,
+                                   s->sslContextSessionId));
     }
 
 #endif
@@ -3511,10 +3489,8 @@ check_null_IpAddress_list(const Ip::Address_list * s)
 #endif /* CURRENTLY_UNUSED */
 #endif /* USE_WCCPv2 */
 
-CBDATA_CLASS_INIT(http_port_list);
-
 static void
-parsePortSpecification(http_port_list * s, char *token)
+parsePortSpecification(AnyP::PortCfg * s, char *token)
 {
     char *host = NULL;
     unsigned short port = 0;
@@ -3588,7 +3564,7 @@ parsePortSpecification(http_port_list * s, char *token)
 }
 
 static void
-parse_http_port_option(http_port_list * s, char *token)
+parse_port_option(AnyP::PortCfg * s, char *token)
 {
     /* modes first */
 
@@ -3789,67 +3765,28 @@ parse_http_port_option(http_port_list * s, char *token)
 void
 add_http_port(char *portspec)
 {
-    http_port_list *s = new http_port_list("http");
+    AnyP::PortCfg *s = new AnyP::PortCfg("http_port");
     parsePortSpecification(s, portspec);
-    // we may need to merge better of the above returns a list with clones
+    // we may need to merge better if the above returns a list with clones
     assert(s->next == NULL);
     s->next = Config.Sockaddr.http;
     Config.Sockaddr.http = s;
 }
 
-http_port_list *
-clone_http_port_list(http_port_list *a)
-{
-    http_port_list *b = new http_port_list(a->protocol);
-
-    b->s = a->s;
-    if (a->name)
-        b->name = xstrdup(a->name);
-    if (a->defaultsite)
-        b->defaultsite = xstrdup(a->defaultsite);
-
-    b->intercepted = a->intercepted;
-    b->spoof_client_ip = a->spoof_client_ip;
-    b->accel = a->accel;
-    b->allow_direct = a->allow_direct;
-    b->vhost = a->vhost;
-    b->sslBump = a->sslBump;
-    b->vport = a->vport;
-    b->connection_auth_disabled = a->connection_auth_disabled;
-    b->disable_pmtu_discovery = a->disable_pmtu_discovery;
-
-    memcpy( &(b->tcp_keepalive), &(a->tcp_keepalive), sizeof(a->tcp_keepalive));
-
-#if 0
-    // AYJ: 2009-07-18: for now SSL does not clone. Configure separate ports with IPs and SSL settings
-
-#if USE_SSL
-    // XXX: temporary hack to ease move of SSL options to http_port
-    http_port_list &http;
-
-    char *cert;
-    char *key;
-    int version;
-    char *cipher;
-    char *options;
-    char *clientca;
-    char *cafile;
-    char *capath;
-    char *crlfile;
-    char *dhfile;
-    char *sslflags;
-    char *sslContextSessionId;
-    SSL_CTX *sslContext;
-#endif
-
-#endif /*0*/
-
-    return b;
-}
-
 static void
-parsePortList(http_port_list ** head, const char *protocol)
+parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
 {
+    const char *protocol = NULL;
+    if (strcmp(optionName, "http_port") == 0 ||
+            strcmp(optionName, "ascii_port") == 0)
+        protocol = "http";
+    else if (strcmp(optionName, "https_port") == 0)
+        protocol = "https";
+    if (!protocol) {
+        self_destruct();
+        return;
+    }
+
     char *token = strtok(NULL, w_space);
 
     if (!token) {
@@ -3857,17 +3794,17 @@ parsePortList(http_port_list ** head, const char *protocol)
         return;
     }
 
-    http_port_list *s = new http_port_list(protocol);
+    AnyP::PortCfg *s = new AnyP::PortCfg(protocol);
     parsePortSpecification(s, token);
 
     /* parse options ... */
     while ((token = strtok(NULL, w_space))) {
-        parse_http_port_option(s, token);
+        parse_port_option(s, token);
     }
 
     if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && s->s.IsAnyAddr()) {
         // clone the port options from *s to *(s->next)
-        s->next = clone_http_port_list(s);
+        s->next = s->clone();
         s->next->s.SetIPv4();
         debugs(3, 3, protocol << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
     }
@@ -3879,7 +3816,7 @@ parsePortList(http_port_list ** head, const char *protocol)
 }
 
 static void
-dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
+dump_generic_port(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
 {
     char buf[MAX_IPSTRLEN];
 
@@ -4002,19 +3939,19 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
 }
 
 static void
-dump_http_port_list(StoreEntry * e, const char *n, const http_port_list * s)
+dump_PortCfg(StoreEntry * e, const char *n, const AnyP::PortCfg * s)
 {
     while (s) {
-        dump_generic_http_port(e, n, s);
+        dump_generic_port(e, n, s);
         storeAppendPrintf(e, "\n");
         s = s->next;
     }
 }
 
 static void
-free_http_port_list(http_port_list ** head)
+free_PortCfg(AnyP::PortCfg ** head)
 {
-    http_port_list *s;
+    AnyP::PortCfg *s;
 
     while ((s = *head) != NULL) {
         *head = s->next;

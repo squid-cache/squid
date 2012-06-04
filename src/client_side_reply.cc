@@ -40,6 +40,7 @@
 #include "squid-old.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#include "anyp/PortCfg.h"
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
@@ -61,7 +62,6 @@
 #include "ip/QosConfig.h"
 #include "ipcache.h"
 #include "MemObject.h"
-#include "ProtoPort.h"
 #include "SquidTime.h"
 #include "StoreClient.h"
 #include "Store.h"

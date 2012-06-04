@@ -87,6 +87,7 @@
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
+#include "anyp/PortCfg.h"
 #include "base/Subscription.h"
 #include "base/TextException.h"
 #include "ChunkedCodingParser.h"
@@ -115,7 +116,6 @@
 #include "ipc/StartListening.h"
 #include "MemBuf.h"
 #include "MemObject.h"
-#include "ProtoPort.h"
 #include "rfc1738.h"
 #include "StatCounters.h"
 #include "StatHist.h"
@@ -145,8 +145,8 @@
 class ListeningStartedDialer: public CallDialer, public Ipc::StartListeningCb
 {
 public:
-    typedef void (*Handler)(http_port_list *portCfg, const Ipc::FdNoteId note, const Subscription::Pointer &sub);
-    ListeningStartedDialer(Handler aHandler, http_port_list *aPortCfg, const Ipc::FdNoteId note, const Subscription::Pointer &aSub):
+    typedef void (*Handler)(AnyP::PortCfg *portCfg, const Ipc::FdNoteId note, const Subscription::Pointer &sub);
+    ListeningStartedDialer(Handler aHandler, AnyP::PortCfg *aPortCfg, const Ipc::FdNoteId note, const Subscription::Pointer &aSub):
             handler(aHandler), portCfg(aPortCfg), portTypeNote(note), sub(aSub) {}
 
     virtual void print(std::ostream &os) const {
@@ -161,12 +161,12 @@ public:
     Handler handler;
 
 private:
-    http_port_list *portCfg;   ///< from Config.Sockaddr.http
+    AnyP::PortCfg *portCfg;   ///< from Config.Sockaddr.http
     Ipc::FdNoteId portTypeNote;    ///< Type of IPC socket being opened
     Subscription::Pointer sub; ///< The handler to be subscribed for this connetion listener
 };
 
-static void clientListenerConnectionOpened(http_port_list *s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub);
+static void clientListenerConnectionOpened(AnyP::PortCfg *s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub);
 
 /* our socket-related context */
 
@@ -225,7 +225,7 @@ static void clientUpdateSocketStats(log_type logType, size_t size);
 char *skipLeadingSpace(char *aString);
 static void connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount);
 
-static ConnStateData *connStateCreate(const Comm::ConnectionPointer &client, http_port_list *port);
+static ConnStateData *connStateCreate(const Comm::ConnectionPointer &client, AnyP::PortCfg *port);
 
 
 clientStreamNode *
@@ -3148,7 +3148,7 @@ clientLifetimeTimeout(const CommTimeoutCbParams &io)
 }
 
 ConnStateData *
-connStateCreate(const Comm::ConnectionPointer &client, http_port_list *port)
+connStateCreate(const Comm::ConnectionPointer &client, AnyP::PortCfg *port)
 {
     ConnStateData *result = new ConnStateData;
 
@@ -3210,7 +3210,7 @@ connStateCreate(const Comm::ConnectionPointer &client, http_port_list *port)
 void
 httpAccept(const CommAcceptCbParams &params)
 {
-    http_port_list *s = (http_port_list *)params.data;
+    AnyP::PortCfg *s = static_cast<AnyP::PortCfg *>(params.data);
 
     if (params.flag != COMM_OK) {
         // Its possible the call was still queued when the client disconnected
@@ -3431,7 +3431,7 @@ clientNegotiateSSL(int fd, void *data)
 static void
 httpsAccept(const CommAcceptCbParams &params)
 {
-    http_port_list *s = (http_port_list *)params.data;
+    AnyP::PortCfg *s = static_cast<AnyP::PortCfg *>(params.data);
 
     if (params.flag != COMM_OK) {
         // Its possible the call was still queued when the client disconnected
@@ -3632,12 +3632,12 @@ AddOpenedHttpSocket(const Comm::ConnectionPointer &conn)
 static void
 clientHttpConnectionsOpen(void)
 {
-    http_port_list *s = NULL;
+    AnyP::PortCfg *s = NULL;
 
     for (s = Config.Sockaddr.http; s; s = s->next) {
-        if (MAXHTTPPORTS == NHttpSockets) {
+        if (MAXTCPLISTENPORTS == NHttpSockets) {
             debugs(1, 1, "WARNING: You have too many 'http_port' lines.");
-            debugs(1, 1, "         The limit is " << MAXHTTPPORTS);
+            debugs(1, 1, "         The limit is " << MAXTCPLISTENPORTS << " HTTP ports.");
             continue;
         }
 
@@ -3680,12 +3680,12 @@ clientHttpConnectionsOpen(void)
 static void
 clientHttpsConnectionsOpen(void)
 {
-    http_port_list *s;
+    AnyP::PortCfg *s;
 
     for (s = Config.Sockaddr.https; s; s = s->next) {
-        if (MAXHTTPPORTS == NHttpSockets) {
+        if (MAXTCPLISTENPORTS == NHttpSockets) {
             debugs(1, 1, "Ignoring 'https_port' lines exceeding the limit.");
-            debugs(1, 1, "The limit is " << MAXHTTPPORTS << " HTTPS ports.");
+            debugs(1, 1, "The limit is " << MAXTCPLISTENPORTS << " HTTPS ports.");
             continue;
         }
 
@@ -3717,7 +3717,7 @@ clientHttpsConnectionsOpen(void)
 
 /// process clientHttpConnectionsOpen result
 static void
-clientListenerConnectionOpened(http_port_list *s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub)
+clientListenerConnectionOpened(AnyP::PortCfg *s, const Ipc::FdNoteId portTypeNote, const Subscription::Pointer &sub)
 {
     if (!OpenedHttpSocket(s->listenConn, portTypeNote))
         return;
@@ -3754,7 +3754,7 @@ clientOpenListenSockets(void)
 void
 clientHttpConnectionsClose(void)
 {
-    for (http_port_list *s = Config.Sockaddr.http; s; s = s->next) {
+    for (AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
         if (s->listenConn != NULL) {
             debugs(1, 1, "Closing HTTP port " << s->listenConn->local);
             s->listenConn->close();
@@ -3763,7 +3763,7 @@ clientHttpConnectionsClose(void)
     }
 
 #if USE_SSL
-    for (http_port_list *s = Config.Sockaddr.https; s; s = s->next) {
+    for (AnyP::PortCfg *s = Config.Sockaddr.https; s; s = s->next) {
         if (s->listenConn != NULL) {
             debugs(1, 1, "Closing HTTPS port " << s->listenConn->local);
             s->listenConn->close();

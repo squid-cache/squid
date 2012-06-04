@@ -35,6 +35,7 @@
 #if USE_POLL
 
 #include "squid-old.h"
+#include "anyp/PortCfg.h"
 #include "comm/Connection.h"
 #include "comm/Loops.h"
 #include "fde.h"
@@ -70,8 +71,8 @@ static int MAX_POLL_TIME = 1000;	/* see also Comm::QuickPollRequired() */
 #define FD_MASK_BITS (FD_MASK_BYTES*NBBY)
 
 /* STATIC */
-static int fdIsHttp(int fd);
-static int fdIsIcp(int fd);
+static int fdIsTcpListen(int fd);
+static int fdIsUdpListen(int fd);
 static int fdIsDns(int fd);
 static OBJH commIncomingStats;
 static int comm_check_incoming_poll_handlers(int nfds, int *fds);
@@ -92,7 +93,7 @@ static void comm_poll_dns_incoming(void);
  * multipled by a factor of (2^INCOMING_FACTOR) to have some
  * pseudo-floating point precision.
  *
- * The variable 'icp_io_events' and 'http_io_events' counts how many normal
+ * The variable 'udp_io_events' and 'tcp_io_events' counts how many normal
  * I/O events have been processed since the last check on the incoming
  * sockets.  When io_events > incoming_interval, its time to check incoming
  * sockets.
@@ -106,7 +107,7 @@ static void comm_poll_dns_incoming(void);
  *
  *  incoming_interval = incoming_interval + target_average - number_of_events_processed
  *
- * There are separate incoming_interval counters for both HTTP and ICP events
+ * There are separate incoming_interval counters for TCP-based, UDP-based, and DNS events
  *
  * You can see the current values of the incoming_interval's, as well as
  * a histogram of 'incoming_events' by asking the cache manager
@@ -128,15 +129,15 @@ static void comm_poll_dns_incoming(void);
 #define MAX_INCOMING_INTEGER 256
 #define INCOMING_FACTOR 5
 #define MAX_INCOMING_INTERVAL (MAX_INCOMING_INTEGER << INCOMING_FACTOR)
-static int icp_io_events = 0;
-static int dns_io_events = 0;
-static int http_io_events = 0;
-static int incoming_icp_interval = 16 << INCOMING_FACTOR;
+static int udp_io_events = 0; ///< I/O events passed since last UDP receiver socket poll
+static int dns_io_events = 0; ///< I/O events passed since last DNS socket poll
+static int tcp_io_events = 0; ///< I/O events passed since last TCP listening socket poll
+static int incoming_udp_interval = 16 << INCOMING_FACTOR;
 static int incoming_dns_interval = 16 << INCOMING_FACTOR;
-static int incoming_http_interval = 16 << INCOMING_FACTOR;
-#define commCheckICPIncoming (++icp_io_events > (incoming_icp_interval>> INCOMING_FACTOR))
-#define commCheckDNSIncoming (++dns_io_events > (incoming_dns_interval>> INCOMING_FACTOR))
-#define commCheckHTTPIncoming (++http_io_events > (incoming_http_interval>> INCOMING_FACTOR))
+static int incoming_tcp_interval = 16 << INCOMING_FACTOR;
+#define commCheckUdpIncoming (++udp_io_events > (incoming_udp_interval>> INCOMING_FACTOR))
+#define commCheckDnsIncoming (++dns_io_events > (incoming_dns_interval>> INCOMING_FACTOR))
+#define commCheckTcpIncoming (++tcp_io_events > (incoming_tcp_interval>> INCOMING_FACTOR))
 
 
 void
@@ -169,7 +170,7 @@ Comm::ResetSelect(int fd)
 }
 
 static int
-fdIsIcp(int fd)
+fdIsUdpListen(int fd)
 {
     if (icpIncomingConn != NULL && icpIncomingConn->fd == fd)
         return 1;
@@ -193,12 +194,10 @@ fdIsDns(int fd)
 }
 
 static int
-fdIsHttp(int fd)
+fdIsTcpListen(int fd)
 {
-    int j;
-
-    for (j = 0; j < NHttpSockets; j++) {
-        if (fd == HttpSockets[j])
+    for (const AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
+        if (s->listenConn != NULL && s->listenConn->fd == fd)
             return 1;
     }
 
@@ -213,7 +212,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
     PF *hdl = NULL;
     int npfds;
 
-    struct pollfd pfds[3 + MAXHTTPPORTS];
+    struct pollfd pfds[3 + MAXTCPLISTENPORTS];
     PROF_start(comm_check_incoming);
     incoming_sockets_accepted = 0;
 
@@ -277,12 +276,12 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
 }
 
 static void
-comm_poll_icp_incoming(void)
+comm_poll_udp_incoming(void)
 {
     int nfds = 0;
     int fds[2];
     int nevents;
-    icp_io_events = 0;
+    udp_io_events = 0;
 
     if (Comm::IsConnOpen(icpIncomingConn))
         fds[nfds++] = icpIncomingConn->fd;
@@ -295,30 +294,30 @@ comm_poll_icp_incoming(void)
 
     nevents = comm_check_incoming_poll_handlers(nfds, fds);
 
-    incoming_icp_interval += Config.comm_incoming.icp_average - nevents;
+    incoming_udp_interval += Config.comm_incoming.udp.average - nevents;
 
-    if (incoming_icp_interval < Config.comm_incoming.icp_min_poll)
-        incoming_icp_interval = Config.comm_incoming.icp_min_poll;
+    if (incoming_udp_interval < Config.comm_incoming.udp.min_poll)
+        incoming_udp_interval = Config.comm_incoming.udp.min_poll;
 
-    if (incoming_icp_interval > MAX_INCOMING_INTERVAL)
-        incoming_icp_interval = MAX_INCOMING_INTERVAL;
+    if (incoming_udp_interval > MAX_INCOMING_INTERVAL)
+        incoming_udp_interval = MAX_INCOMING_INTERVAL;
 
-    if (nevents > INCOMING_ICP_MAX)
-        nevents = INCOMING_ICP_MAX;
+    if (nevents > INCOMING_UDP_MAX)
+        nevents = INCOMING_UDP_MAX;
 
-    statCounter.comm_icp_incoming.count(nevents);
+    statCounter.comm_udp_incoming.count(nevents);
 }
 
 static void
-comm_poll_http_incoming(void)
+comm_poll_tcp_incoming(void)
 {
     int nfds = 0;
-    int fds[MAXHTTPPORTS];
+    int fds[MAXTCPLISTENPORTS];
     int j;
     int nevents;
-    http_io_events = 0;
+    tcp_io_events = 0;
 
-    /* only poll sockets that won't be deferred */
+    // XXX: only poll sockets that won't be deferred. But how do we identify them?
 
     for (j = 0; j < NHttpSockets; j++) {
         if (HttpSockets[j] < 0)
@@ -328,19 +327,19 @@ comm_poll_http_incoming(void)
     }
 
     nevents = comm_check_incoming_poll_handlers(nfds, fds);
-    incoming_http_interval = incoming_http_interval
-                             + Config.comm_incoming.http_average - nevents;
+    incoming_tcp_interval = incoming_tcp_interval
+                            + Config.comm_incoming.tcp.average - nevents;
 
-    if (incoming_http_interval < Config.comm_incoming.http_min_poll)
-        incoming_http_interval = Config.comm_incoming.http_min_poll;
+    if (incoming_tcp_interval < Config.comm_incoming.tcp.min_poll)
+        incoming_tcp_interval = Config.comm_incoming.tcp.min_poll;
 
-    if (incoming_http_interval > MAX_INCOMING_INTERVAL)
-        incoming_http_interval = MAX_INCOMING_INTERVAL;
+    if (incoming_tcp_interval > MAX_INCOMING_INTERVAL)
+        incoming_tcp_interval = MAX_INCOMING_INTERVAL;
 
-    if (nevents > INCOMING_HTTP_MAX)
-        nevents = INCOMING_HTTP_MAX;
+    if (nevents > INCOMING_TCP_MAX)
+        nevents = INCOMING_TCP_MAX;
 
-    statCounter.comm_http_incoming.count(nevents);
+    statCounter.comm_tcp_incoming.count(nevents);
 }
 
 /* poll all sockets; call handlers for those that are ready. */
@@ -355,8 +354,7 @@ Comm::DoSelect(int msec)
     unsigned long nfds;
     unsigned long npending;
     int num;
-    int callicp = 0, callhttp = 0;
-    int calldns = 0;
+    int calldns = 0, calludp = 0, calltcp = 0;
     double timeout = current_dtime + (msec / 1000.0);
 
     do {
@@ -364,18 +362,18 @@ Comm::DoSelect(int msec)
         getCurrentTime();
         start = current_dtime;
 
-        if (commCheckICPIncoming)
-            comm_poll_icp_incoming();
+        if (commCheckUdpIncoming)
+            comm_poll_udp_incoming();
 
-        if (commCheckDNSIncoming)
+        if (commCheckDnsIncoming)
             comm_poll_dns_incoming();
 
-        if (commCheckHTTPIncoming)
-            comm_poll_http_incoming();
+        if (commCheckTcpIncoming)
+            comm_poll_tcp_incoming();
 
         PROF_start(comm_poll_prep_pfds);
 
-        callicp = calldns = callhttp = 0;
+        calldns = calludp = calltcp = 0;
 
         nfds = 0;
 
@@ -474,8 +472,8 @@ Comm::DoSelect(int msec)
             if (revents == 0)
                 continue;
 
-            if (fdIsIcp(fd)) {
-                callicp = 1;
+            if (fdIsUdpListen(fd)) {
+                calludp = 1;
                 continue;
             }
 
@@ -484,8 +482,8 @@ Comm::DoSelect(int msec)
                 continue;
             }
 
-            if (fdIsHttp(fd)) {
-                callhttp = 1;
+            if (fdIsTcpListen(fd)) {
+                calltcp = 1;
                 continue;
             }
 
@@ -494,9 +492,7 @@ Comm::DoSelect(int msec)
             if (revents & (POLLRDNORM | POLLIN | POLLHUP | POLLERR)) {
                 debugs(5, 6, "comm_poll: FD " << fd << " ready for reading");
 
-                if (NULL == (hdl = F->read_handler))
-                    (void) 0;
-                else {
+                if ((hdl = F->read_handler)) {
                     PROF_start(comm_read_handler);
                     F->read_handler = NULL;
                     F->flags.read_pending = 0;
@@ -504,14 +500,14 @@ Comm::DoSelect(int msec)
                     PROF_stop(comm_read_handler);
                     statCounter.select_fds++;
 
-                    if (commCheckICPIncoming)
-                        comm_poll_icp_incoming();
+                    if (commCheckUdpIncoming)
+                        comm_poll_udp_incoming();
 
-                    if (commCheckDNSIncoming)
+                    if (commCheckDnsIncoming)
                         comm_poll_dns_incoming();
 
-                    if (commCheckHTTPIncoming)
-                        comm_poll_http_incoming();
+                    if (commCheckTcpIncoming)
+                        comm_poll_tcp_incoming();
                 }
             }
 
@@ -525,14 +521,14 @@ Comm::DoSelect(int msec)
                     PROF_stop(comm_write_handler);
                     statCounter.select_fds++;
 
-                    if (commCheckICPIncoming)
-                        comm_poll_icp_incoming();
+                    if (commCheckUdpIncoming)
+                        comm_poll_udp_incoming();
 
-                    if (commCheckDNSIncoming)
+                    if (commCheckDnsIncoming)
                         comm_poll_dns_incoming();
 
-                    if (commCheckHTTPIncoming)
-                        comm_poll_http_incoming();
+                    if (commCheckTcpIncoming)
+                        comm_poll_tcp_incoming();
                 }
             }
 
@@ -566,14 +562,14 @@ Comm::DoSelect(int msec)
 
         PROF_stop(comm_handle_ready_fd);
 
-        if (callicp)
-            comm_poll_icp_incoming();
+        if (calludp)
+            comm_poll_udp_incoming();
 
         if (calldns)
             comm_poll_dns_incoming();
 
-        if (callhttp)
-            comm_poll_http_incoming();
+        if (calltcp)
+            comm_poll_tcp_incoming();
 
         getCurrentTime();
 
@@ -610,10 +606,10 @@ comm_poll_dns_incoming(void)
     if (nevents < 0)
         return;
 
-    incoming_dns_interval += Config.comm_incoming.dns_average - nevents;
+    incoming_dns_interval += Config.comm_incoming.dns.average - nevents;
 
-    if (incoming_dns_interval < Config.comm_incoming.dns_min_poll)
-        incoming_dns_interval = Config.comm_incoming.dns_min_poll;
+    if (incoming_dns_interval < Config.comm_incoming.dns.min_poll)
+        incoming_dns_interval = Config.comm_incoming.dns.min_poll;
 
     if (incoming_dns_interval > MAX_INCOMING_INTERVAL)
         incoming_dns_interval = MAX_INCOMING_INTERVAL;
@@ -642,20 +638,20 @@ Comm::SelectLoopInit(void)
 static void
 commIncomingStats(StoreEntry * sentry)
 {
-    storeAppendPrintf(sentry, "Current incoming_icp_interval: %d\n",
-                      incoming_icp_interval >> INCOMING_FACTOR);
+    storeAppendPrintf(sentry, "Current incoming_udp_interval: %d\n",
+                      incoming_udp_interval >> INCOMING_FACTOR);
     storeAppendPrintf(sentry, "Current incoming_dns_interval: %d\n",
                       incoming_dns_interval >> INCOMING_FACTOR);
-    storeAppendPrintf(sentry, "Current incoming_http_interval: %d\n",
-                      incoming_http_interval >> INCOMING_FACTOR);
+    storeAppendPrintf(sentry, "Current incoming_tcp_interval: %d\n",
+                      incoming_tcp_interval >> INCOMING_FACTOR);
     storeAppendPrintf(sentry, "\n");
     storeAppendPrintf(sentry, "Histogram of events per incoming socket type\n");
-    storeAppendPrintf(sentry, "ICP Messages handled per comm_poll_icp_incoming() call:\n");
-    statCounter.comm_icp_incoming.dump(sentry, statHistIntDumper);
+    storeAppendPrintf(sentry, "ICP Messages handled per comm_poll_udp_incoming() call:\n");
+    statCounter.comm_udp_incoming.dump(sentry, statHistIntDumper);
     storeAppendPrintf(sentry, "DNS Messages handled per comm_poll_dns_incoming() call:\n");
     statCounter.comm_dns_incoming.dump(sentry, statHistIntDumper);
-    storeAppendPrintf(sentry, "HTTP Messages handled per comm_poll_http_incoming() call:\n");
-    statCounter.comm_http_incoming.dump(sentry, statHistIntDumper);
+    storeAppendPrintf(sentry, "HTTP Messages handled per comm_poll_tcp_incoming() call:\n");
+    statCounter.comm_tcp_incoming.dump(sentry, statHistIntDumper);
 }
 
 /* Called by async-io or diskd to speed up the polling */
