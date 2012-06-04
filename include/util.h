@@ -46,7 +46,6 @@
 
 SQUIDCEXTERN int tvSubUsec(struct timeval, struct timeval);
 SQUIDCEXTERN double tvSubDsec(struct timeval, struct timeval);
-SQUIDCEXTERN size_t xcountws(const char *str);
 SQUIDCEXTERN void Tolower(char *);
 #if defined(__cplusplus)
 /*
