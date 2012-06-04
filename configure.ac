@@ -1125,6 +1125,7 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
 #endif
   ]])
 fi
+AC_SUBST(EUILIB)
 AC_MSG_NOTICE([EUI (MAC address) controls enabled: $enable_eui])
 SQUID_DEFINE_BOOL(USE_SQUID_EUI,$enable_eui,
    [Define this to include code which lets you use ethernet addresses. This code uses API initially defined in 4.4-BSD.])
