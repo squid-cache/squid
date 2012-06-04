@@ -2501,6 +2501,8 @@ AC_CHECK_TYPE([bool])
 #need the defines for PRId64
 AC_CHECK_SIZEOF(int64_t)
 AC_CHECK_SIZEOF(long)
+#need the defines for PRIuSIZE
+AC_CHECK_SIZEOF(size_t)
 #need the define for overflow checks
 AC_CHECK_SIZEOF(off_t)
 AC_CHECK_SIZEOF(size_t)
@@ -2531,6 +2533,17 @@ AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,
    [mtyp_t is defined by the system headers]),,[#include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>])
+
+# check for compiler support of %zu printf macro
+AH_TEMPLATE(PRIuSIZE,[Compiler supports %zu printf macro])
+AC_MSG_CHECKING([for compiler %zu support])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <stdio.h>
+  ]],[[size_t n=1;printf("%zu",n);]])],[
+    AC_DEFINE(PRIuSIZE,"zu")
+    AC_MSG_RESULT(yes)
+  ],[AC_MSG_RESULT(no)],[AC_MSG_RESULT(no)])
+
 
 dnl Check for special functions
 AC_FUNC_ALLOCA
