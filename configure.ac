@@ -2987,19 +2987,36 @@ dnl Please change your configure script.  AIX doesn't need -lbsd.
   *-ibm-aix*)
     AC_MSG_NOTICE([Removing -lbsd for AIX...])
     LIBS=`echo $LIBS | sed -e s/-lbsd//`
-    AC_MSG_CHECKING(for aix xlc c++ comments support)
-    AC_LANG_PUSH([C])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[//c++ cmt]])],
-      [AIX_CPPCMT_SUPPORT=yes],[AIX_CPPCMT_SUPPORT=no])	
-    AC_MSG_RESULT($AIX_CPPCMT_SUPPORT)
-    if test -n `echo $CC | grep cc` 2>/dev/null && \
-      test -n `cc -qversion 2>/dev/null | grep "IBM XL C/C++ for AIX"` 2>/dev/null; then
-        if test "$AIX_CPPCMT_SUPPORT"="no";then
-          SQUID_CFLAGS="-qcpluscmt $SQUID_CFLAGS"
-        fi
+
+    SQUID_CC_REQUIRE_ARGUMENT([ac_cv_require_rtti],[-rtti],[[
+#include <assert.h>
+#ifndef NULL
+#define NULL 0
+#endif
+class Foo{
+public:virtual ~Foo(){}
+};
+class Bar:public Foo{
+public:Bar():Foo(){}
+};
+      ]],[[
+Foo * myFoo=new Bar();
+Bar * myBar=dynamic_cast<Bar *>(myFoo);
+assert(myBar != NULL);
+      ]])
+    if test "$ac_cv_require_rtti" = "yes"; then
+      SQUID_CFLAGS="-rtti $SQUID_CFLAGS"
+      SQUID_CXXFLAGS="-rtti $SQUID_CXXFLAGS"
     fi
+
+    AC_LANG_PUSH([C])
+    SQUID_CC_REQUIRE_ARGUMENT([ac_cv_require_qcpluscmt],[-qcpluscmt],[[]],[[//c++ cmt]])
     AC_LANG_POP([C])
+    if test "$ac_cv_require_qcpluscmt" = "yes"; then
+      SQUID_CFLAGS="-qcpluscmt $SQUID_CFLAGS"
+    fi
     ;;
+
     *m88k*)
       SQUID_CFLAGS="$SQUID_CFLAGS -D_SQUID_MOTOROLA_"
       SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_SQUID_MOTOROLA_"
