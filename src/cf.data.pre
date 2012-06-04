@@ -1400,7 +1400,9 @@ DOC_START
 			    1	automatic (default)
 			    2	SSLv2 only
 			    3	SSLv3 only
-			    4	TLSv1 only
+			    4	TLSv1.0 only
+			    5	TLSv1.1 only
+			    6	TLSv1.2 only
 
 	   cipher=	Colon separated list of supported ciphers.
 			NOTE: some ciphers such as EDH ciphers depend on
@@ -1410,9 +1412,11 @@ DOC_START
 
 	   options=	Various SSL implementation options. The most important
 			being:
-			    NO_SSLv2  Disallow the use of SSLv2
-			    NO_SSLv3  Disallow the use of SSLv3
-			    NO_TLSv1  Disallow the use of TLSv1
+			    NO_SSLv2    Disallow the use of SSLv2
+			    NO_SSLv3    Disallow the use of SSLv3
+			    NO_TLSv1    Disallow the use of TLSv1.0
+			    NO_TLSv1_1  Disallow the use of TLSv1.1
+			    NO_TLSv1_2  Disallow the use of TLSv1.2
 			    SINGLE_DH_USE Always create a new key when using
 				      temporary/ephemeral DH key exchanges
 			    ALL       Enable various bug workarounds
@@ -1864,6 +1868,15 @@ LOC: Config.ssl_client.version
 TYPE: int
 DOC_START
 	SSL version level to use when proxying https:// URLs
+
+	The versions of SSL/TLS supported:
+
+	    1	automatic (default)
+	    2	SSLv2 only
+	    3	SSLv3 only
+	    4	TLSv1.0 only
+	    5	TLSv1.1 only
+	    6	TLSv1.2 only
 DOC_END
 
 NAME: sslproxy_options
@@ -1876,9 +1889,11 @@ DOC_START
 	
 	The most important being:
 
-	    NO_SSLv2  Disallow the use of SSLv2
-	    NO_SSLv3  Disallow the use of SSLv3
-	    NO_TLSv1  Disallow the use of TLSv1
+	    NO_SSLv2    Disallow the use of SSLv2
+	    NO_SSLv3    Disallow the use of SSLv3
+	    NO_TLSv1    Disallow the use of TLSv1.0
+	    NO_TLSv1_1  Disallow the use of TLSv1.1
+	    NO_TLSv1_2  Disallow the use of TLSv1.2
 	    SINGLE_DH_USE
 		      Always create a new key when using temporary/ephemeral
 		      DH key exchanges
@@ -2329,21 +2344,25 @@ DOC_START
 			reference a combined file containing both the
 			certificate and the key.
 	
-	sslversion=1|2|3|4
+	sslversion=1|2|3|4|5|6
 			The SSL version to use when connecting to this peer
 				1 = automatic (default)
 				2 = SSL v2 only
 				3 = SSL v3 only
-				4 = TLS v1 only
+				4 = TLS v1.0 only
+				5 = TLS v1.1 only
+				6 = TLS v1.2 only
 	
 	sslcipher=...	The list of valid SSL ciphers to use when connecting
 			to this peer.
 	
 	ssloptions=... 	Specify various SSL implementation options:
 
-			    NO_SSLv2  Disallow the use of SSLv2
-			    NO_SSLv3  Disallow the use of SSLv3
-			    NO_TLSv1  Disallow the use of TLSv1
+			    NO_SSLv2    Disallow the use of SSLv2
+			    NO_SSLv3    Disallow the use of SSLv3
+			    NO_TLSv1    Disallow the use of TLSv1.0
+			    NO_TLSv1_1  Disallow the use of TLSv1.1
+			    NO_TLSv1_2  Disallow the use of TLSv1.2
 			    SINGLE_DH_USE
 				      Always create a new key when using
 				      temporary/ephemeral DH key exchanges
