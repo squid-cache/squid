@@ -81,7 +81,7 @@ SQUIDCEXTERN void xxfree(const void *);
  * for the extern version in squid
  */
 #ifndef _SQUID_EXTERNNEW_
-#ifdef __GNUC_STDC_INLINE__
+#if defined(__GNUC_STDC_INLINE__) || defined(__GNUC_GNU_INLINE__)
 #define _SQUID_EXTERNNEW_ extern inline __attribute__((gnu_inline))
 #else
 #define _SQUID_EXTERNNEW_ extern inline
