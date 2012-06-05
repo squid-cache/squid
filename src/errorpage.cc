@@ -777,7 +777,7 @@ ErrorState::Convert(char token, bool allowRecursion)
                       SQUIDSTRINGPRINT(urlpath_or_slash),
                       request->http_ver.major, request->http_ver.minor);
             packerToMemInit(&pck, &mb);
-            request->header.packInto(&pck);
+            request->header.packInto(&pck, true); //hide authorization data
             packerClean(&pck);
         } else if (request_hdrs) {
             p = request_hdrs;

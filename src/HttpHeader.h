@@ -215,7 +215,7 @@ public:
     void compact();
     int reset();
     int parse(const char *header_start, const char *header_end);
-    void packInto(Packer * p) const;
+    void packInto(Packer * p, bool mask_sensitive_info=false) const;
     HttpHeaderEntry *getEntry(HttpHeaderPos * pos) const;
     HttpHeaderEntry *findEntry(http_hdr_type id) const;
     int delByName(const char *name);
