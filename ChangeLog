@@ -1,3 +1,23 @@
+Changes to squid-3.1.20 (08 Jun 2011):
+
+	- Regression Bug 3545: FreeBSD dnsserver segfaults
+	- Regression Bug 3504: clientside_tos fails to mark traffic
+	- Bug 3539: CONNECT server connection not closed correctly on errors
+	- Bug 3502: client timeout uses server-side read_timeout, not request_timeout
+	- Bug 3466: Adaptation stuck on last single-byte body piece
+	- Bug 3463: dnsserver fails to compile
+	- Bug 3439: correct external_acl_type documented default for ipv4/ipv6 option
+	- Bug 3390: Proxy auth data visible to scripts
+	- Bug 3263: ssl_crtd: undefined references to squid_curtime
+	- Bug 3233: Invalid URL accepted with url host is white spaces
+	- Bug 3133: Memory leak handling requests for sites that don't exist
+	- Bug 3074: Improper URL handling with empty path (RFC 3986)
+	- Bug 3013: segmentation fault on shutdown commSetCloseOnExec at comm.cc:1889
+	- Regression: snmp/udp address directives not resolving hostname
+	- Better helper-to-Squid buffer size management.
+	- Support CoAP over HTTP (coap:// and coaps:// URLs)
+	- Support for 3.2 error template codes
+
 Changes to squid-3.1.19 (06 Feb 2011):
 
 	- Regression Bug 3441: part 2: Prevent further cache size corruption of swap.state
