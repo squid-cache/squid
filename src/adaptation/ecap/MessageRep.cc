@@ -162,6 +162,8 @@ Adaptation::Ecap::FirstLineRep::protocol() const
         return protocolInternal;
     case AnyP::PROTO_ICY:
         return protocolIcy;
+    case AnyP::PROTO_COAP:
+    case AnyP::PROTO_COAPS: // use 'unknown' until libecap supports coap:// and coaps://
     case AnyP::PROTO_UNKNOWN:
         return protocolUnknown; // until we remember the protocol image
     case AnyP::PROTO_NONE:
