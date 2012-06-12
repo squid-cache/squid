@@ -3595,6 +3595,7 @@ AC_CONFIG_FILES([\
 	helpers/external_acl/LDAP_group/Makefile \
 	helpers/external_acl/LM_group/Makefile \
 	helpers/external_acl/session/Makefile \
+	helpers/external_acl/SQL_session/Makefile \
 	helpers/external_acl/unix_group/Makefile \
 	helpers/external_acl/wbinfo_group/Makefile \
 	helpers/external_acl/time_quota/Makefile \
