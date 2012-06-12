@@ -1279,16 +1279,6 @@ getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
     // TODO use the connection details in ACL.
     // needs a bit of rework in ACLFilledChecklist to use Comm::Connection instead of ConnStateData
 
-    if (request) {
-#if FOLLOW_X_FORWARDED_FOR
-        if (Config.onoff.acl_uses_indirect_client)
-            ch.src_addr = request->indirect_client_addr;
-        else
-#endif
-            ch.src_addr = request->client_addr;
-        ch.my_addr = request->my_addr;
-    }
-
     acl_address *l;
     for (l = Config.accessList.outgoing_address; l; l = l->next) {
 
