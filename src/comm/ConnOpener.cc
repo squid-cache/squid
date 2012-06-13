@@ -261,7 +261,7 @@ Comm::ConnOpener::connect()
             doneConnecting(COMM_TIMEOUT, errno);
         } else if (failRetries_ < Config.connect_retries) {
             debugs(5, 5, HERE << conn_ << ": * - try again");
-            eventAdd("Comm::ConnOpener::DelayedConnectRetry", Comm::ConnOpener::DelayedConnectRetry, new Pointer(this), 0.05, 0);
+            eventAdd("Comm::ConnOpener::DelayedConnectRetry", Comm::ConnOpener::DelayedConnectRetry, new Pointer(this), 0.05, 0, false);
             return;
         } else {
             // send ERROR back to the upper layer.
