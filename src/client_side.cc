@@ -3563,6 +3563,7 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext, Ssl::BumpMode bum
 #endif
         fakeRequest->my_addr = connState->clientConnection->local;
         fakeRequest->flags.spoof_client_ip = ((connState->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
+        fakeRequest->flags.intercepted = ((connState->clientConnection->flags & COMM_INTERCEPTION) != 0);
         debugs(33, 4, HERE << details << " try to generate a Dynamic SSL CTX");
         connState->switchToHttps(fakeRequest, bumpMode);
     }
