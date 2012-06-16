@@ -92,47 +92,85 @@ public:
     virtual ~ACLChecklist();
 
     /**
-     * Trigger off a non-blocking access check for a set of *_access options..
-     * The callback specified will be called with true/false
-     * when the results of the ACL tests are known.
+     * Start a non-blocking (async) check for a list of allow/deny rules.
+     * Each rule comes with a list of ACLs.
+     *
+     * The callback specified will be called with the result of the check.
+     *
+     * The first rule where all ACLs match wins. If there is such a rule,
+     * the result becomes that rule keyword (ACCESS_ALLOWED or ACCESS_DENIED).
+     *
+     * If there are rules but all ACL lists mismatch, an implicit rule is used.
+     * Its result is the negation of the keyword of the last seen rule.
+     *
+     * Some ACLs may stop the check prematurely by setting an exceptional
+     * check result (e.g., ACCESS_AUTH_REQUIRED) instead of declaring a
+     * match or mismatch.
+     *
+     * If there are no rules to check at all, the result becomes ACCESS_DUNNO.
+     * Calling this method with no rules to check wastes a lot of CPU cycles
+     * and will result in a DBG_CRITICAL debugging message.
      */
     void nonBlockingCheck(ACLCB * callback, void *callback_data);
 
     /**
-     * Trigger a blocking access check for a set of *_access options.
+     * Perform a blocking (immediate) check for a list of allow/deny rules.
+     * Each rule comes with a list of ACLs.
      *
-     * ACLs which cannot be satisfied directly from available data are ignored.
-     * This means any proxy_auth, external_acl, DNS lookups, Ident lookups etc
-     * which have not already been performed and cached will not be checked.
+     * The first rule where all ACLs match wins. If there is such a rule,
+     * the result becomes that rule keyword (ACCESS_ALLOWED or ACCESS_DENIED).
      *
-     * If there is no access list to check the default is to return ALLOWED.
-     * However callers should perform their own check and default based on local
-     * knowledge of the ACL usage rather than depend on this default.
-     * That will also save on work setting up ACLChecklist fields for a no-op.
+     * If there are rules but all ACL lists mismatch, an implicit rule is used
+     * Its result is the negation of the keyword of the last seen rule.
      *
-     * \retval ACCESS_DUNNO     Unable to determine any result
-     * \retval ACCESS_ALLOWED   Access Allowed
-     * \retval ACCESS_DENIED    Access Denied
+     * Some ACLs may stop the check prematurely by setting an exceptional
+     * check result (e.g., ACCESS_AUTH_REQUIRED) instead of declaring a
+     * match or mismatch.
+     *
+     * Some ACLs may require an async lookup which is prohibited by this
+     * method. In this case, the exceptional check result of ACCESS_DUNNO is
+     * immediately returned.
+     *
+     * If there are no rules to check at all, the result becomes ACCESS_DUNNO.
      */
     allow_t const & fastCheck();
 
     /**
-     * A version of fastCheck() for use when there is a one-line set of ACLs
-     * to be tested and a match determins the result action to be done.
+     * Perform a blocking (immediate) check whether a list of ACLs matches.
+     * This method is meant to be used with squid.conf ACL-driven options that
+     * lack allow/deny keywords and are tested one ACL list at a time. Whether
+     * the checks for other occurrences of the same option continue after this
+     * call is up to the caller and option semantics.
      *
-     * \retval ACCESS_DUNNO     Unable to determine any result
-     * \retval ACCESS_ALLOWED   ACLs all matched
+     * If all ACLs match, the result becomes ACCESS_ALLOWED.
+     *
+     * If all ACLs mismatch, the result becomes ACCESS_DENIED.
+     *
+     * Some ACLs may stop the check prematurely by setting an exceptional
+     * check result (e.g., ACCESS_AUTH_REQUIRED) instead of declaring a
+     * match or mismatch.
+     *
+     * Some ACLs may require an async lookup which is prohibited by this
+     * method. In this case, the exceptional check result of ACCESS_DUNNO is
+     * immediately returned.
+     *
+     * If there are no ACLs to check at all, the result becomes ACCESS_ALLOWED.
      */
     allow_t const & fastCheck(const ACLList * list);
 
+    // whether the last checked ACL of the current rule needs
+    // an async operation to determine whether there was a match
+    bool asyncNeeded() const;
     bool asyncInProgress() const;
     void asyncInProgress(bool const);
 
+    /// whether markFinished() was called
     bool finished() const;
-    void markFinished();
+    /// called when no more ACLs should be checked; sets the final answer and
+    /// prints a debugging message explaining the reason for that answer
+    void markFinished(const allow_t &newAnswer, const char *reason);
 
-    allow_t const & currentAnswer() const;
-    void currentAnswer(allow_t const);
+    const allow_t &currentAnswer() const { return allow_; }
 
     void changeState(AsyncState *);
     AsyncState *asyncState() const;
@@ -156,20 +194,25 @@ public:
     void *callback_data;
 
     /**
-     * Attempt to check the current checklist against current data.
-     * This is the core routine behind all ACL test routines.
-     * As much as possible of current tests are performed immediately
-     * and the result is maybe delayed to wait for async lookups.
-     *
-     * When all tests are done callback is presented with one of:
-     *  - ACCESS_ALLOWED     Access explicitly Allowed
-     *  - ACCESS_DENIED      Access explicitly Denied
+     * Performs non-blocking check starting with the current rule.
+     * Used by nonBlockingCheck() to initiate the checks and by
+     * async operation callbacks to resume checks after the async
+     * operation updates the current Squid state. See nonBlockingCheck()
+     * for details on final result determination.
      */
     void matchNonBlocking();
 
 private: /* internal methods */
-    void preCheck();
-    void matchAclList(const ACLList * list, bool const fast);
+    /// possible outcomes when trying to match a single ACL node in a list
+    typedef enum { nmrMatch, nmrMismatch, nmrFinished, nmrNeedsAsync }
+        NodeMatchingResult;
+
+    /// prepare for checking ACLs; called once per check
+    void preCheck(const char *what);
+    bool matchAclList(const ACLList * list, bool const fast);
+    bool matchNodes(const ACLList * head, bool const fast);
+    NodeMatchingResult matchNode(const ACLList &node, bool const fast);
+    void calcImplicitAnswer(const allow_t &lastSeenAction);
 
     bool async_;
     bool finished_;
@@ -180,13 +223,7 @@ private: /* internal methods */
     bool checking() const;
     void checking (bool const);
 
-    bool lastACLResult_;
     bool callerGone();
-
-public:
-    bool lastACLResult(bool x) { return lastACLResult_ = x; }
-
-    bool lastACLResult() const { return lastACLResult_; }
 };
 
 #endif /* SQUID_ACLCHECKLIST_H */

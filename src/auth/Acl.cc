@@ -57,13 +57,16 @@ AuthenticateAcl(ACLChecklist *ch)
         break;
 
     case AUTH_ACL_HELPER:
-        debugs(28, 4, HERE << "returning " << ACCESS_DENIED << " sending credentials to helper.");
+        debugs(28, 4, HERE << "returning " << ACCESS_DUNNO << " sending credentials to helper.");
         checklist->changeState(ProxyAuthLookup::Instance());
         return ACCESS_DUNNO; // XXX: break this down into DUNNO, EXPIRED_OK, EXPIRED_BAD states
 
     case AUTH_ACL_CHALLENGE:
-        debugs(28, 4, HERE << "returning " << ACCESS_DENIED << " sending authentication challenge.");
-        checklist->changeState(ProxyAuthNeeded::Instance());
+        debugs(28, 4, HERE << "returning " << ACCESS_AUTH_REQUIRED << " sending authentication challenge.");
+        /* Client is required to resend the request with correct authentication
+         * credentials. (This may be part of a stateful auth protocol.)
+         * The request is denied.
+         */
         return ACCESS_AUTH_REQUIRED;
 
     default:

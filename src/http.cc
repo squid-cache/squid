@@ -745,7 +745,7 @@ HttpStateData::handle1xx(HttpReply *reply)
     if (Config.accessList.reply) {
         ACLFilledChecklist ch(Config.accessList.reply, originalRequest(), NULL);
         ch.reply = HTTPMSGLOCK(reply);
-        if (!ch.fastCheck()) { // TODO: support slow lookups?
+        if (ch.fastCheck() != ACCESS_ALLOWED) { // TODO: support slow lookups?
             debugs(11, 3, HERE << "ignoring denied 1xx");
             proceedAfter1xx();
             return;
@@ -2191,7 +2191,7 @@ HttpStateData::finishingBrokenPost()
     }
 
     ACLFilledChecklist ch(Config.accessList.brokenPosts, originalRequest(), NULL);
-    if (!ch.fastCheck()) {
+    if (ch.fastCheck() != ACCESS_ALLOWED) {
         debugs(11, 5, HERE << "didn't match brokenPosts");
         return false;
     }
