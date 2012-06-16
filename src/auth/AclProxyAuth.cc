@@ -80,7 +80,6 @@ int
 ACLProxyAuth::match(ACLChecklist *checklist)
 {
     allow_t answer = AuthenticateAcl(checklist);
-    checklist->currentAnswer(answer);
 
     // convert to tri-state ACL match 1,0,-1
     switch (answer) {
@@ -94,6 +93,10 @@ ACLProxyAuth::match(ACLChecklist *checklist)
     case ACCESS_DUNNO:
     case ACCESS_AUTH_REQUIRED:
     default:
+        // If the answer is not allowed or denied (matches/not matches) and
+        // async authentication is not needed (asyncNeeded), then we are done.
+        if (!checklist->asyncNeeded())
+            checklist->markFinished(answer, "AuthenticateAcl exception");
         return -1; // other
     }
 }
@@ -124,14 +127,6 @@ ACLProxyAuth::valid () const
     }
 
     return true;
-}
-
-ProxyAuthNeeded ProxyAuthNeeded::instance_;
-
-ProxyAuthNeeded *
-ProxyAuthNeeded::Instance()
-{
-    return &instance_;
 }
 
 ProxyAuthLookup ProxyAuthLookup::instance_;
@@ -180,19 +175,6 @@ ProxyAuthLookup::LookupDone(void *data, char *result)
     checklist->asyncInProgress(false);
     checklist->changeState (ACLChecklist::NullState::Instance());
     checklist->matchNonBlocking();
-}
-
-void
-ProxyAuthNeeded::checkForAsync(ACLChecklist *checklist) const
-{
-    /* Client is required to resend the request with correct authentication
-     * credentials. (This may be part of a stateful auth protocol.)
-     * The request is denied.
-     */
-    debugs(28, 6, "ACLChecklist::checkForAsync: requiring Proxy Auth header.");
-    checklist->currentAnswer(ACCESS_AUTH_REQUIRED);
-    checklist->changeState (ACLChecklist::NullState::Instance());
-    checklist->markFinished();
 }
 
 ACL *
