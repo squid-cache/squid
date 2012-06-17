@@ -1398,7 +1398,7 @@ void
 ExternalACLLookup::Start(ACLChecklist *checklist, external_acl_data *acl, bool inBackground)
 {
     external_acl *def = acl->def;
- 
+
     ACLFilledChecklist *ch = Filled(checklist);
     const char *key = makeExternalAclKey(ch, acl);
     assert(key);
