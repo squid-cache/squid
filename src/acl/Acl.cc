@@ -323,7 +323,7 @@ ACLList::matches (ACLChecklist *checklist) const
 {
     assert (_acl);
     // XXX: AclMatchedName does not contain a matched ACL name when the acl
-    // does not match (or contains stale name if no ACLs are checked). In 
+    // does not match (or contains stale name if no ACLs are checked). In
     // either case, we get misleading debugging and possibly incorrect error
     // messages. Unfortunately, deny_info's "when none http_access
     // lines match" exception essentially requires this mess.

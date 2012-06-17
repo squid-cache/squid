@@ -205,7 +205,7 @@ public:
 private: /* internal methods */
     /// possible outcomes when trying to match a single ACL node in a list
     typedef enum { nmrMatch, nmrMismatch, nmrFinished, nmrNeedsAsync }
-        NodeMatchingResult;
+    NodeMatchingResult;
 
     /// prepare for checking ACLs; called once per check
     void preCheck(const char *what);
