@@ -85,7 +85,7 @@ public:
     void trimSwappable();
     void trimUnSwappable();
     bool isContiguous() const;
-    int mostBytesWanted(int max) const;
+    int mostBytesWanted(int max, bool ignoreDelayPools) const;
     void setNoDelay(bool const newValue);
 #if USE_DELAY_POOLS
     DelayId mostBytesAllowed() const;
