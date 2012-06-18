@@ -3769,8 +3769,9 @@ add_http_port(char *portspec)
     parsePortSpecification(s, portspec);
     // we may need to merge better if the above returns a list with clones
     assert(s->next == NULL);
-    s->next = Config.Sockaddr.http;
-    Config.Sockaddr.http = s;
+    s->next = cbdataReference(Config.Sockaddr.http);
+    cbdataReferenceDone(Config.Sockaddr.http);
+    Config.Sockaddr.http = cbdataReference(s);
 }
 
 static void
@@ -3804,7 +3805,7 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
 
     if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && s->s.IsAnyAddr()) {
         // clone the port options from *s to *(s->next)
-        s->next = s->clone();
+        s->next = cbdataReference(s->clone());
         s->next->s.SetIPv4();
         debugs(3, 3, protocol << "_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
     }
@@ -3812,7 +3813,7 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
     while (*head)
         head = &(*head)->next;
 
-    *head = s;
+    *head = cbdataReference(s);
 }
 
 static void
@@ -3955,7 +3956,7 @@ free_PortCfg(AnyP::PortCfg ** head)
 
     while ((s = *head) != NULL) {
         *head = s->next;
-        delete s;
+        cbdataReferenceDone(s);
     }
 }
 
