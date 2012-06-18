@@ -415,16 +415,17 @@ MemObject::isContiguous() const
 }
 
 int
-MemObject::mostBytesWanted(int max) const
+MemObject::mostBytesWanted(int max, bool ignoreDelayPools) const
 {
 #if USE_DELAY_POOLS
-    /* identify delay id with largest allowance */
-    DelayId largestAllowance = mostBytesAllowed ();
-    return largestAllowance.bytesWanted(0, max);
-#else
+    if (!ignoreDelayPools) {
+        /* identify delay id with largest allowance */
+        DelayId largestAllowance = mostBytesAllowed ();
+        return largestAllowance.bytesWanted(0, max);
+    }
+#endif
 
     return max;
-#endif
 }
 
 void

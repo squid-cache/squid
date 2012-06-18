@@ -32,7 +32,7 @@ void MemObject::delayRead(DeferredRead const &aRead) STUB
 bool MemObject::readAheadPolicyCanRead() const STUB_RETVAL(false)
 void MemObject::setNoDelay(bool const newValue) STUB
 MemObject::~MemObject() STUB
-int MemObject::mostBytesWanted(int max) const STUB_RETVAL(-1)
+int MemObject::mostBytesWanted(int max, bool ignoreDelayPools) const STUB_RETVAL(-1)
 #if USE_DELAY_POOLS
 DelayId MemObject::mostBytesAllowed() const STUB_RETVAL(DelayId())
 #endif
