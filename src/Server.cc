@@ -734,7 +734,7 @@ ServerStateData::handleMoreAdaptedBodyAvailable()
     if (!contentSize)
         return; // XXX: bytesWanted asserts on zero-size ranges
 
-    const size_t spaceAvailable = entry->bytesWanted(Range<size_t>(0, contentSize));
+    const size_t spaceAvailable = entry->bytesWanted(Range<size_t>(0, contentSize), true);
 
     if (spaceAvailable < contentSize ) {
         // No or partial body data consuming
