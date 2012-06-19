@@ -41,7 +41,7 @@ $1_LIBS="${LIBS}"
 $1_CC="${CC}"
 $1_CXX="${CXX}"
 $1_squid_saved_vars="$2"
-for squid_util_var_tosave in $2
+for squid_util_var_tosave in $$1_squid_saved_vars
 do
     squid_util_var_tosave2="$1_${squid_util_var_tosave}"
     eval "${squid_util_var_tosave2}=\"${squid_util_var_tosave}\""
