@@ -1433,7 +1433,7 @@ HttpHeader::getAuth(http_hdr_type id, const char *auth_scheme) const
         return NULL;
 
     /* skip white space */
-    field += xcountws(field);
+    for (; field && xisspace(*field); field++);
 
     if (!*field)		/* no authorization cookie */
         return NULL;
