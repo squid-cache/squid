@@ -347,6 +347,10 @@ public:
     /// Fill the certAdaptParams with the required data for certificate adaptation
     /// and create the key for storing/retrieve the certificate to/from the cache
     void buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties);
+    /// Called when the client sends the first request on a bumped connection.
+    /// Returns false if no [delayed] error should be written to the client.
+    /// Otherwise, writes the error to the client and returns true. Also checks
+    /// for SQUID_X509_V_ERR_DOMAIN_MISMATCH on bumped requests.
     bool serveDelayedError(ClientSocketContext *context);
 #else
     bool switchedToHttps() const { return false; }

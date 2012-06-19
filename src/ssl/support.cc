@@ -244,7 +244,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     }
 
     if (ok && peeked_cert) {
-        /*Check if the already peeked certificate match the new one*/
+        // Check whether the already peeked certificate matches the new one.
         if (X509_cmp(peer_cert, peeked_cert) != 0) {
             debugs(83, 2, "SQUID_X509_V_ERR_CERT_CHANGE: Certificate " << buffer << " does not match peeked certificate");
             ok = 0;
@@ -253,17 +253,17 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     }
 
     if (!ok) {
-        Ssl::Errors *errNoList = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_sslerrno));
-        if (!errNoList) {
-            errNoList = new Ssl::Errors(error_no);
-            if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_error_sslerrno,  (void *)errNoList)) {
+        Ssl::Errors *errs = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors));
+        if (!errs) {
+            errs = new Ssl::Errors(error_no);
+            if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_errors,  (void *)errs)) {
                 debugs(83, 2, "Failed to set ssl error_no in ssl_verify_cb: Certificate " << buffer);
-                delete errNoList;
-                errNoList = NULL;
+                delete errs;
+                errs = NULL;
             }
         }
-        else // Append the err no to the SSL errors lists.
-            errNoList->push_back_unique(error_no);
+        else // remember another error number
+            errs->push_back_unique(error_no);
 
         if (const char *err_descr = Ssl::GetErrorDescr(error_no))
             debugs(83, 5, err_descr << ": " << buffer);
@@ -272,17 +272,16 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
 
         if (check) {
             ACLFilledChecklist *filledCheck = Filled(check);
-            assert(filledCheck->sslErrorList == NULL);
-            filledCheck->sslErrorList = new Ssl::Errors(error_no);
+            assert(!filledCheck->sslErrors);
+            filledCheck->sslErrors = new Ssl::Errors(error_no);
             if (check->fastCheck() == ACCESS_ALLOWED) {
                 debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
                 ok = 1;
             } else {
                 debugs(83, 5, "confirming SSL error " << error_no);
             }
-            // Delete the ssl error list
-            delete filledCheck->sslErrorList;
-            filledCheck->sslErrorList = NULL;
+            delete filledCheck->sslErrors;
+            filledCheck->sslErrors = NULL;
         }
     }
 
@@ -615,11 +614,11 @@ ssl_free_ErrorDetail(void *, void *ptr, CRYPTO_EX_DATA *,
 }
 
 static void
-ssl_free_SslErrNoList(void *, void *ptr, CRYPTO_EX_DATA *,
+ssl_free_SslErrors(void *, void *ptr, CRYPTO_EX_DATA *,
                      int, long, void *)
 {
-    Ssl::Errors *errNo = static_cast <Ssl::Errors *>(ptr);
-    delete errNo;
+    Ssl::Errors *errs = static_cast <Ssl::Errors*>(ptr);
+    delete errs;
 }
 
 // "free" function for X509 certificates
@@ -671,7 +670,7 @@ ssl_initialize(void)
     ssl_ex_index_cert_error_check = SSL_get_ex_new_index(0, (void *) "cert_error_check", NULL, &ssl_dupAclChecklist, &ssl_freeAclChecklist);
     ssl_ex_index_ssl_error_detail = SSL_get_ex_new_index(0, (void *) "ssl_error_detail", NULL, NULL, &ssl_free_ErrorDetail);
     ssl_ex_index_ssl_peeked_cert  = SSL_get_ex_new_index(0, (void *) "ssl_peeked_cert", NULL, NULL, &ssl_free_X509);
-    ssl_ex_index_ssl_error_sslerrno =  SSL_get_ex_new_index(0, (void *) "ssl_error_sslerrno", NULL, NULL, &ssl_free_SslErrNoList);
+    ssl_ex_index_ssl_errors =  SSL_get_ex_new_index(0, (void *) "ssl_errors", NULL, NULL, &ssl_free_SslErrors);
 }
 
 /// \ingroup ServerProtocolSSLInternal

@@ -14,18 +14,19 @@ namespace Ssl
 
 /**
   \ingroup ServerProtocolSSLAPI
-  * Used to store bump-server-first related informations
+ * Maintains bump-server-first related information.
  */
 class ServerBump
 {
 public:
     explicit ServerBump(HttpRequest *fakeRequest, StoreEntry *e = NULL);
     ~ServerBump();
+
     /// faked, minimal request; required by server-side API
     HttpRequest::Pointer request;
     StoreEntry *entry; ///< for receiving Squid-generated error messages
     Ssl::X509_Pointer serverCert; ///< HTTPS server certificate
-    Ssl::Errors *bumpSslErrorNoList; ///< The list of SSL certificate errors which ignored
+    Ssl::Errors *sslErrors; ///< SSL [certificate validation] errors
 
 private:
     store_client *sc; ///< dummy client to prevent entry trimming

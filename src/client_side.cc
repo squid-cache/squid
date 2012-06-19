@@ -2471,40 +2471,45 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
         return false;
 
     assert(sslServerBump->entry);
+    // Did we create an error entry while processing CONNECT?
     if (!sslServerBump->entry->isEmpty()) {
         quitAfterError(http->request);
 
-        //Failed? Here we should get the error from conn and send it to client
-        // The error stored in ConnStateData::bumpFirstEntry, replace the
-        // ClientHttpRequest store entry with this.
+        // Get the saved error entry and send it to the client by replacing the
+        // ClientHttpRequest store entry with it.
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
-        assert (repContext);
-        debugs(33, 5, "Connection first has failed for " << http->uri << ". Respond with an error");
+        assert(repContext);
+        debugs(33, 5, "Responding with delated error for " << http->uri);
         repContext->setReplyToStoreEntry(sslServerBump->entry);
-        /*Save the original request for logging purposes*/
+
+        // save the original request for logging purposes
         if (!context->http->al.request)
             context->http->al.request = HTTPMSGLOCK(http->request);
-        /*Get the error details from the fake request used to retrieve SSL server certificate*/
+
+        // Get error details from the fake certificate-peeking request.
         http->request->detailError(sslServerBump->request->errType, sslServerBump->request->errDetail);
         context->pullData();
         return true;
     }
 
-    // We are in ssl-bump first mode. We have not the server connect name when
-    // we connected to server so we have to check certificates subject with our server name
-    if (sslServerBump && sslServerBump->serverCert.get()) {
+    // In bump-server-first mode, we have not necessarily seen the intended
+    // server name at certificate-peeking time. Check for domain mismatch now,
+    // when we can extract the intended name from the bumped HTTP request.
+    if (sslServerBump->serverCert.get()) {
         HttpRequest *request = http->request;
         if (!Ssl::checkX509ServerValidity(sslServerBump->serverCert.get(), request->GetHost())) {
-            debugs(33, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate does not match domainname " << request->GetHost());
+            debugs(33, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " <<
+                   "does not match domainname " << request->GetHost());
 
             ACLFilledChecklist check(Config.ssl_client.cert_error, request, dash_str);
-            check.sslErrorList = new Ssl::Errors(SQUID_X509_V_ERR_DOMAIN_MISMATCH);
+            check.sslErrors = new Ssl::Errors(SQUID_X509_V_ERR_DOMAIN_MISMATCH);
             if (Comm::IsConnOpen(pinning.serverConnection))
                 check.fd(pinning.serverConnection->fd);
-            bool allowDomainMismatch = (check.fastCheck() == ACCESS_ALLOWED);
-            delete check.sslErrorList;
-            check.sslErrorList = NULL;
+            const bool allowDomainMismatch =
+                check.fastCheck() == ACCESS_ALLOWED;
+            delete check.sslErrors;
+            check.sslErrors = NULL;
 
             if (!allowDomainMismatch) {
                 quitAfterError(request);
@@ -2513,16 +2518,18 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
                 clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
                 assert (repContext);
 
-                // Fill the server ip address and server hostname for use with ErrorState
+                // Fill the server IP and hostname for error page generation.
                 HttpRequest::Pointer const & peekerRequest = sslServerBump->request;
                 request->hier.note(peekerRequest->hier.tcpServer, request->GetHost());
+
                 // Create an error object and fill it
                 ErrorState *err = new ErrorState(ERR_SECURE_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
-
                 err->src_addr = clientConnection->remote;
-                Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail( SQUID_X509_V_ERR_DOMAIN_MISMATCH, sslServerBump->serverCert.get(), NULL);
+                Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail(
+                    SQUID_X509_V_ERR_DOMAIN_MISMATCH,
+                    sslServerBump->serverCert.get(), NULL);
                 err->detail = errDetail;
-                /*Save the original request for logging purposes*/
+                // Save the original request for logging purposes.
                 if (!context->http->al.request)
                     context->http->al.request = HTTPMSGLOCK(request);
                 repContext->setReplyToError(request->method, err);
@@ -2535,7 +2542,7 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
 
     return false;
 }
-#endif //USE_SSL
+#endif // USE_SSL
 
 static void
 clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *context, const HttpRequestMethod& method, HttpVersion http_ver)
@@ -3542,9 +3549,9 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext, Ssl::BumpMode bum
     if (sslContext && !(ssl = httpsCreate(details, sslContext)))
         return;
 
-     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
-                                      TimeoutDialer, connState, ConnStateData::requestTimeout);
+    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
+    AsyncCall::Pointer timeoutCall = JobCallback(33, 5, TimeoutDialer,
+        connState, ConnStateData::requestTimeout);
     commSetConnTimeout(details, Config.Timeout.request, timeoutCall);
 
     if (ssl) 
@@ -3570,22 +3577,22 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext, Ssl::BumpMode bum
 
 /**
  * A callback function to use with the ACLFilledChecklist callback. 
- * In the case of ACCES_ALLOWED answer initializes an ssl bumped connection,
- * else revert the connection to tunnel mode.
+ * In the case of ACCES_ALLOWED answer initializes a bumped SSL connection,
+ * else reverts the connection to tunnel mode.
  */
 static void
 httpsSslBumpAccessCheckDone(allow_t answer, void *data)
 {
     ConnStateData *connState = (ConnStateData *) data;
 
-    //if connection closed/closing just return.
+    // if the connection is closed or closing, just return.
     if (!connState->isOpen())
         return;
 
-    // Require both a match and a positive mode to work around exceptional
+    // Require both a match and a positive bump mode to work around exceptional
     // cases where ACL code may return ACCESS_ALLOWED with zero answer.kind.
     if (answer == ACCESS_ALLOWED && answer.kind != Ssl::bumpNone) {
-        debugs(33, 2, HERE << " sslBump done data: " << connState->clientConnection);
+        debugs(33, 2, HERE << "sslBump done data: " << connState->clientConnection);
         httpsEstablish(connState, NULL, (Ssl::BumpMode)answer.kind);
     } else {
         // fake a CONNECT request to force connState to tunnel
@@ -3702,8 +3709,10 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
         return;
     }
 
-    // In the case of error while connecting to secure server, use a fake trusted certificate,
-    // with no mimicked fields and no adaptation algorithms
+    // In case of an error while connecting to the secure server, use a fake
+    // trusted certificate, with no mimicked fields and no adaptation
+    // algorithms. There is nothing we can mimic so we want to minimize the
+    // number of warnings the user will have to see to get to the error page.
     assert(sslServerBump->entry);
     if (sslServerBump->entry->isEmpty()) {
         if (X509 *mimicCert = sslServerBump->serverCert.get())
@@ -3712,10 +3721,10 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
         ACLFilledChecklist checklist(NULL, sslServerBump->request, 
                                      clientConnection != NULL ? clientConnection->rfc931 : dash_str);
         checklist.conn(this);
-        checklist.sslErrorList = cbdataReference(sslServerBump->bumpSslErrorNoList);
+        checklist.sslErrors = cbdataReference(sslServerBump->sslErrors);
 
         for (sslproxy_cert_adapt *ca = Config.ssl_client.cert_adapt; ca != NULL; ca = ca->next) {
-            // If the algorithm already set ignore.
+            // If the algorithm already set, then ignore it.
             if ((ca->alg == Ssl::algSetCommonName && certProperties.setCommonName) ||
                 (ca->alg == Ssl::algSetValidAfter && certProperties.setValidAfter) ||
                 (ca->alg == Ssl::algSetValidBefore && certProperties.setValidBefore) )
@@ -3725,8 +3734,8 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
                 const char *alg = Ssl::CertAdaptAlgorithmStr[ca->alg];
                 const char *param = ca->param;
   
-                // if not param defined for Common Name adaptation use hostname from 
-                // the CONNECT request
+                // For parameterless CN adaptation, use hostname from the
+                // CONNECT request.
                 if (ca->alg == Ssl::algSetCommonName) {
                     if (!param)
                         param = sslConnectHostOrIp.termedBuf();
@@ -4398,8 +4407,8 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
 void
 ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
 {
-    // it might be possible for FwdState to repin a failed connection sooner
-    // than this close callback is called for the failed connection
+    // FwdState might repin a failed connection sooner than this close
+    // callback is called for the failed connection.
     if (pinning.serverConnection == io.conn) {
         pinning.closeHandler = NULL; // Comm unregisters handlers before calling
         unpinConnection();
@@ -4416,7 +4425,7 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
             return;
     }
 
-    unpinConnection(); // closes pinned connection, if any, and resets fields.
+    unpinConnection(); // closes pinned connection, if any, and resets fields
 
     pinning.serverConnection = pinServer;
 

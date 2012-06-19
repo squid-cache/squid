@@ -67,7 +67,7 @@ ACLFilledChecklist::ACLFilledChecklist() :
         snmp_community(NULL),
 #endif
 #if USE_SSL
-        sslErrorList(NULL),
+        sslErrors(NULL),
 #endif
         extacl_entry (NULL),
         conn_(NULL),
@@ -98,7 +98,7 @@ ACLFilledChecklist::~ACLFilledChecklist()
     cbdataReferenceDone(conn_);
 
 #if USE_SSL
-    cbdataReferenceDone(sslErrorList);
+    cbdataReferenceDone(sslErrors);
 #endif
 
     debugs(28, 4, HERE << "ACLFilledChecklist destroyed " << this);
@@ -183,7 +183,7 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
         snmp_community(NULL),
 #endif
 #if USE_SSL
-        sslErrorList(NULL),
+        sslErrors(NULL),
 #endif
         extacl_entry (NULL),
         conn_(NULL),

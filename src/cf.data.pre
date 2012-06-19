@@ -881,25 +881,24 @@ DOC_START
 IFDEF USE_SSL
 	acl aclname ssl_error errorname
 	  # match against SSL certificate validation error [fast]
-	  # For valid error names see in @DEFAULT_ERROR_DIR@/templates/error-details.txt template file
-	  # The user aditionaly can use as error name the following error name
-	  # shortcuts:
-	  #  [ssl::]certHasExpired: certificate "not after" field is in the past
-	  #  [ssl::]certNotYetValid: certificate "not before" field is in the 
-	  #       future
-	  #  [ssl::]certDomainMismatch: The certificate CN domain does not match
-	  #       connecting host name
-	  #  [ssl::]certUntrusted: The certificate is untrusted because of an
-	  #       error says that the certificate issuer is not trusted.
-	  #  [ssl::]certSelfSigned: The certificate is self signed
 	  #
-	  # The ssl::certHasExpired, ssl::certNotYetValid ssl::certDomainMismatch,
-	  # ssl::certUntrusted and ssl::certSelfSigned also exists as predefined
-	  # acl lists.
+	  # For valid error names see in @DEFAULT_ERROR_DIR@/templates/error-details.txt
+	  # template file.
 	  #
-	  # NOTE: The ssl_error acl has effect only when used with
-	  # sslproxy_cert_error, sslproxy_cert_sign and sslproxy_cert_adapt
-	  # access lists.
+	  # The following can be used as shortcuts for certificate properties:
+	  #  [ssl::]certHasExpired: the "not after" field is in the past
+	  #  [ssl::]certNotYetValid: the "not before" field is in the future
+	  #  [ssl::]certUntrusted: The certificate issuer is not to be trusted.
+	  #  [ssl::]certSelfSigned: The certificate is self signed.
+	  #  [ssl::]certDomainMismatch: The certificate CN domain does not
+	  #         match the name the name of the host we are connecting to.
+	  #
+	  # The ssl::certHasExpired, ssl::certNotYetValid, ssl::certDomainMismatch,
+	  # ssl::certUntrusted, and ssl::certSelfSigned can also be used as
+	  # predefined ACLs, just like the 'all' ACL.
+	  #
+	  # NOTE: The ssl_error ACL is only supported with sslproxy_cert_error,
+	  # sslproxy_cert_sign, and sslproxy_cert_adapt options.
 ENDIF
 
 	Examples:
@@ -1353,7 +1352,7 @@ DOC_START
 			Squid, and treat them as unencrypted HTTP messages,
 			becoming the man-in-the-middle.
 
-			The "ssl_bump" option is required to fully enable
+			The ssl_bump option is required to fully enable
 			bumping of CONNECT requests.
 
 	Omitting the mode flag causes default forward proxy mode to be used.
@@ -1569,7 +1568,7 @@ DOC_START
 			NP: disables authentication and maybe IPv6 on the port.
 
 	   ssl-bump	For each intercepted connection allowed by ssl_bump
-		    ACLs, establish a secure connection with the client and with
+			ACLs, establish a secure connection with the client and with
 			the server, decrypt HTTPS messages as they pass through
 			Squid, and treat them as unencrypted HTTP messages,
 			becoming the man-in-the-middle.

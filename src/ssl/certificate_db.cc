@@ -229,9 +229,8 @@ bool Ssl::CertificateDb::addCertAndPrivateKey(Ssl::X509_Pointer & cert, Ssl::EVP
     }
     row.setValue(cnlSerial, serial_string.c_str());
     char ** rrow = TXT_DB_get_by_index(db.get(), cnlSerial, row.getRow());
-    // We are creating certificates with unique serial number. If the serial
-    // number found in the database, means that the certificate already exist
-    // in the database
+    // We are creating certificates with unique serial numbers. If the serial
+    // number is found in the database, the same certificate is already stored.
     if (rrow != NULL)
         return true;
 
