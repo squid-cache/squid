@@ -150,6 +150,8 @@ Adaptation::Ecap::FirstLineRep::protocol() const
         return protocolInternal;
     case PROTO_ICY:
         return Name();
+    case PROTO_COAP:
+    case PROTO_COAPS: // use 'unknown'/none until libecap supports coap:// and coaps://
     case PROTO_NONE:
         return Name();
 
