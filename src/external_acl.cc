@@ -882,6 +882,7 @@ int
 ACLExternal::match(ACLChecklist *checklist)
 {
     allow_t answer = aclMatchExternal(data, Filled(checklist));
+
     // convert to tri-state ACL match 1,0,-1
     switch (answer) {
     case ACCESS_ALLOWED:
@@ -1397,7 +1398,7 @@ void
 ExternalACLLookup::Start(ACLChecklist *checklist, external_acl_data *acl, bool inBackground)
 {
     external_acl *def = acl->def;
- 
+
     ACLFilledChecklist *ch = Filled(checklist);
     const char *key = makeExternalAclKey(ch, acl);
     assert(key);

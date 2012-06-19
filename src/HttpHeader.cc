@@ -698,16 +698,29 @@ reset:
 
 /* packs all the entries using supplied packer */
 void
-HttpHeader::packInto(Packer * p) const
+HttpHeader::packInto(Packer * p, bool mask_sensitive_info) const
 {
     HttpHeaderPos pos = HttpHeaderInitPos;
     const HttpHeaderEntry *e;
     assert(p);
     debugs(55, 7, "packing hdr: (" << this << ")");
     /* pack all entries one by one */
-    while ((e = getEntry(&pos)))
-        e->packInto(p);
-
+    while ((e = getEntry(&pos))) {
+        if (!mask_sensitive_info) {
+            e->packInto(p);
+            continue;
+        }
+        switch (e->id) {
+        case HDR_AUTHORIZATION:
+        case HDR_PROXY_AUTHORIZATION:
+            packerAppend(p, e->name.rawBuf(), e->name.size());
+            packerAppend(p, ": ** NOT DISPLAYED **\r\n", 23);
+            break;
+        default:
+            e->packInto(p);
+            break;
+        }
+    }
     /* Pack in the "special" entries */
 
     /* Cache-Control */
@@ -1420,7 +1433,7 @@ HttpHeader::getAuth(http_hdr_type id, const char *auth_scheme) const
         return NULL;
 
     /* skip white space */
-    field += xcountws(field);
+    for (; field && xisspace(*field); field++);
 
     if (!*field)		/* no authorization cookie */
         return NULL;

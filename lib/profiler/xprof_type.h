@@ -73,7 +73,6 @@ typedef enum {
     XPROF_storeWriteComplete,
     XPROF_write,
     XPROF_xcalloc,
-    XPROF_xcountws,
     XPROF_xmalloc,
     XPROF_xrealloc,
     XPROF_LAST

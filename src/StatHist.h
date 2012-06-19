@@ -130,15 +130,18 @@ StatHist::operator =(const StatHist & src)
 {
     if (this==&src) //handle self-assignment
         return *this;
-    xfree(bins); // xfree can handle NULL pointers, no need to check
-    capacity_=src.capacity_;
-    bins = static_cast<bins_type *>(xcalloc(src.capacity_, sizeof(bins_type)));
+    if (capacity_ != src.capacity_) {
+        xfree(bins); // xfree can handle NULL pointers, no need to check
+        capacity_=src.capacity_;
+        bins = static_cast<bins_type *>(xcalloc(src.capacity_, sizeof(bins_type)));
+    }
     min_=src.min_;
     max_=src.max_;
     scale_=src.scale_;
     val_in=src.val_in;
     val_out=src.val_out;
-    memcpy(bins,src.bins,capacity_*sizeof(*bins));
+    if (bins != NULL)
+        memcpy(bins,src.bins,capacity_*sizeof(*bins));
     return *this;
 }
 

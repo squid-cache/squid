@@ -185,6 +185,8 @@ authenticateDigestNonceNew(void)
     while ((temp = authenticateDigestNonceFindNonce((char const *) (newnonce->key)))) {
         /* create a new nonce */
         newnonce->noncedata.randomdata = squid_random();
+        /* Bug 3526 high performance fix: add 1 second to creationtime to avoid duplication */
+        newnonce->noncedata.creationtime++;
         authDigestNonceEncode(newnonce);
     }
 

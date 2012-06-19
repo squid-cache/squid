@@ -218,7 +218,7 @@ ACLChecklist::matchNodes(const ACLList * head, bool const fast)
 
         if (resultBeforeAsync == nmrMatch)
             continue;
-        
+
         if (resultBeforeAsync == nmrMismatch || resultBeforeAsync == nmrFinished)
             return false;
 
@@ -236,7 +236,7 @@ ACLChecklist::matchNodes(const ACLList * head, bool const fast)
         // This is inefficient and ugly, but fixing all match() code, including
         // the code it calls, such as ipcache_nbgethostbyname(), takes time.
         if (!asyncInProgress()) { // failed to start an async operation
-            
+
             if (finished()) {
                 debugs(28, 3, HERE << this << " finished after failing to go async: " << currentAnswer());
                 return false; // an exceptional case
@@ -294,7 +294,7 @@ ACLChecklist::matchNode(const ACLList &node, bool const fast)
         assert(!needsAsync);
         debugs(28, 3, HERE << this << " exception: " << currentAnswer());
         return nmrFinished;
-     }
+    }
 
     if (!needsAsync) {
         debugs(28, 3, HERE << this << " simple mismatch");
@@ -379,7 +379,7 @@ ACLChecklist::asyncState() const
 void
 ACLChecklist::nonBlockingCheck(ACLCB * callback_, void *callback_data_)
 {
-    preCheck("nonBlocking");
+    preCheck("slow rules");
     callback = callback_;
     callback_data = cbdataReference(callback_data_);
     matchNonBlocking();
@@ -390,13 +390,12 @@ ACLChecklist::fastCheck(const ACLList * list)
 {
     PROF_start(aclCheckFast);
 
-    preCheck("fast single-rule");
+    preCheck("fast ACLs");
 
     // assume DENY/ALLOW on mis/matches due to not having acl_access object
     if (matchAclList(list, true))
         markFinished(ACCESS_ALLOWED, "all ACLs matched");
-    else
-    if (!finished())
+    else if (!finished())
         markFinished(ACCESS_DENIED, "ACL mismatched");
     PROF_stop(aclCheckFast);
     return currentAnswer();
@@ -410,7 +409,7 @@ ACLChecklist::fastCheck()
 {
     PROF_start(aclCheckFast);
 
-    preCheck("fast multi-rule");
+    preCheck("fast rules");
 
     allow_t lastSeenKeyword = ACCESS_DUNNO;
     debugs(28, 5, "aclCheckFast: list: " << accessList);
@@ -442,7 +441,7 @@ ACLChecklist::fastCheck()
 }
 
 /// When no rules matched, the answer is the inversion of the last seen rule
-/// action (or ACCESS_DUNNO if the reversal is not possible). The caller 
+/// action (or ACCESS_DUNNO if the reversal is not possible). The caller
 /// should set lastSeenAction to ACCESS_DUNNO if there were no rules to see.
 void
 ACLChecklist::calcImplicitAnswer(const allow_t &lastSeenAction)

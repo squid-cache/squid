@@ -6,6 +6,7 @@ DIST_SUBDIRS= \
 	LDAP_group \
 	LM_group \
 	session \
+	SQL_session \
 	time_quota \
 	unix_group \
 	wbinfo_group

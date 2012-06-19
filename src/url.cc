@@ -268,8 +268,10 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         src += 3;
 
         /* Then everything until first /; thats host (and port; which we'll look for here later) */
-        /* bug 1881: If we don't get a "/" then we imply it was there */
-        for (dst = host; i < l && *src != '/' && *src != '\0'; i++, src++, dst++) {
+        // bug 1881: If we don't get a "/" then we imply it was there
+        // bug 3074: We could just be given a "?" or "#". These also imply "/"
+        // bug 3233: whitespace is also a hostname delimiter.
+        for (dst = host; i < l && *src != '/' && *src != '?' && *src != '#' && *src != '\0' && !xisspace(*src); i++, src++, dst++) {
             *dst = *src;
         }
 
@@ -282,8 +284,15 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
             return NULL;
         *dst = '\0';
 
+        // bug 3074: received 'path' starting with '?', '#', or '\0' implies '/'
+        if (*src == '?' || *src == '#' || *src == '\0') {
+            urlpath[0] = '/';
+            dst = &urlpath[1];
+        } else {
+            dst = urlpath;
+        }
         /* Then everything from / (inclusive) until \r\n or \0 - thats urlpath */
-        for (dst = urlpath; i < l && *src != '\r' && *src != '\n' && *src != '\0'; i++, src++, dst++) {
+        for (; i < l && *src != '\r' && *src != '\n' && *src != '\0'; i++, src++, dst++) {
             *dst = *src;
         }
 
