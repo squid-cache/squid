@@ -153,3 +153,10 @@ rfc4559.txt
 	Microsoft Negotiate "HTTP" authentication scheme
 	Microsoft connection pinning HTTP extension to support
 	connection oriented authentication over proxies
+
+rfc6585.txt
+	Additional HTTP Status Codes
+	428 (Precondition Required),
+	429 (Too Many Requests),
+	431 (Request Header Fields Too Large),
+	511 (Network Authentication Required)
