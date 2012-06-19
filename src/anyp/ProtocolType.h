@@ -29,7 +29,7 @@ typedef enum {
 #endif
     PROTO_URN,
     PROTO_WHOIS,
-    PROTO_INTERNAL, // miss on an internal object such as an icon
+    PROTO_INTERNAL,
     PROTO_ICY,
     PROTO_UNKNOWN,
     PROTO_MAX

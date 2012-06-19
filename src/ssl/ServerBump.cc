@@ -18,7 +18,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Ssl, ServerBump);
 
 Ssl::ServerBump::ServerBump(HttpRequest *fakeRequest, StoreEntry *e):
     request(fakeRequest),
-    bumpSslErrorNoList(NULL)
+    sslErrors(NULL)
 {
     debugs(33, 4, HERE << "will peek at " << request->GetHost() << ':' << request->port);
     const char *uri = urlCanonical(request);
@@ -40,6 +40,6 @@ Ssl::ServerBump::~ServerBump()
         storeUnregister(sc, entry, this);
         entry->unlock();
     }
-    cbdataReferenceDone(bumpSslErrorNoList);
+    cbdataReferenceDone(sslErrors);
 }
 

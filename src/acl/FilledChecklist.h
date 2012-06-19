@@ -66,7 +66,8 @@ public:
 #endif
 
 #if USE_SSL
-    Ssl::Errors *sslErrorList;
+    /// SSL [certificate validation] errors in undefined order
+    Ssl::Errors *sslErrors;
 #endif
 
     ExternalACLEntry *extacl_entry;

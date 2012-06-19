@@ -44,10 +44,13 @@ public:
     CbDataList (C const &);
     ~CbDataList();
 
-    bool push_back_unique(C const &);
+    /// If element is already in the list return false.
+    /// Otherwise, adds the element to the end of the list and returns true.
+    /// Exists to avoid double iteration of find() and push() combo.
+    bool push_back_unique(C const &element);
     bool find(C const &)const;
     bool findAndTune(C const &);
-    /// iterates entire list to return the last element holder
+    /// Iterates the entire list to return the last element holder.
     CbDataList *tail();
     CbDataList *next;
     C element;

@@ -16,6 +16,7 @@ struct PortCfg {
     ~PortCfg();
     AnyP::PortCfg *clone() const;
 #if USE_SSL
+    /// creates, configures, and validates SSL context and related port options
     void configureSslServerContext();
 #endif
 

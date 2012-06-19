@@ -649,10 +649,10 @@ FwdState::negotiateSSL(int fd)
             if (errFromFailure != NULL) {
                 // The errFromFailure is attached to the ssl object
                 // and will be released when ssl object destroyed.
-                // Copy errFromFailure to a new Ssl::ErrorDetail object
+                // Copy errFromFailure to a new Ssl::ErrorDetail object.
                 errDetails = new Ssl::ErrorDetail(*errFromFailure);
             } else {
-                // server_cert can be be NULL
+                // server_cert can be NULL here
                 X509 *server_cert = SSL_get_peer_certificate(ssl);
                 errDetails = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, server_cert, NULL);
                 X509_free(server_cert);
@@ -662,22 +662,21 @@ FwdState::negotiateSSL(int fd)
                 errDetails->setLibError(ssl_lib_error);
 
             if (request->clientConnectionManager.valid()) {
-                // Get the server certificate from ErrorDetail object and store it 
-                // to connection manager
+                // remember the server certificate from the ErrorDetail object
                 if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
                     serverBump->serverCert.resetAndLock(errDetails->peerCert());
 
-                // if there is a list of ssl errors, pass it to connection manager
-                    if (Ssl::Errors *errNoList = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_sslerrno)))
-                        serverBump->bumpSslErrorNoList = cbdataReference(errNoList);
-                }
+                    // remember validation errors, if any
+                    if (Ssl::Errors *errs = static_cast<Ssl::Errors*>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
+                        serverBump->sslErrors = cbdataReference(errs);
+				}
             }
 
+            // For intercepted connections, set the host name to the server
+            // certificate CN. Otherwise, we just hope that CONNECT is using
+            // a user-entered address (a host name or a user-entered IP).
             const bool isConnectRequest = !request->clientConnectionManager->port->spoof_client_ip && 
                 !request->clientConnectionManager->port->intercepted;
-            // For intercepted connections, set host name to server
-            // certificate CN. Otherwise, we hope that CONNECT is using
-            // a user-entered address (a host name or a user-entered IP).
             if (request->flags.sslPeek && !isConnectRequest) {
                 if (X509 *srvX509 = errDetails->peerCert()) {
                     if (const char *name = Ssl::CommonHostName(srvX509)) {
@@ -686,6 +685,7 @@ FwdState::negotiateSSL(int fd)
                     }
                 }
             }
+
             ErrorState *const anErr = makeConnectingError(ERR_SECURE_CONNECT_FAIL);
             anErr->xerrno = sysErrNo;
             anErr->detail = errDetails;
@@ -701,11 +701,13 @@ FwdState::negotiateSSL(int fd)
     }
     
     if (request->clientConnectionManager.valid()) {
+        // remember the server certificate from the ErrorDetail object
         if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
             serverBump->serverCert.reset(SSL_get_peer_certificate(ssl));
 
-            if (Ssl::Errors *errNoList = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_sslerrno)))
-                serverBump->bumpSslErrorNoList = cbdataReference(errNoList);
+            // remember validation errors, if any
+            if (Ssl::Errors *errs = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
+                serverBump->sslErrors = cbdataReference(errs);
         }
     }
 
@@ -776,7 +778,7 @@ FwdState::initiateSSL()
             SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostname);
 
         // Use SNI TLS extension only when we connect directly
-        // to the origin server and we know the server host name
+        // to the origin server and we know the server host name.
         if (!hostnameIsIp)
             Ssl::setClientSNI(ssl, hostname);
     }

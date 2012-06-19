@@ -68,8 +68,8 @@ public:
 #if USE_SSL
     bool sslBumpCheckDone;
 #endif
-    ErrorState *error;
-    bool readNextRequest;
+    ErrorState *error; ///< saved error page for centralized/delayed processing
+    bool readNextRequest; ///< whether Squid should read after error handling
 
 private:
     CBDATA_CLASS(ClientRequestContext);

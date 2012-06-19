@@ -109,7 +109,7 @@ static const Ssl::ssl_error_t certSelfSigned[] = {X509_V_ERR_DEPTH_ZERO_SELF_SIG
 // The list of error name shortcuts  for use with ssl_error acls.
 // The keys without the "ssl::" scope prefix allow shorter error
 // names within the SSL options scope. This is easier than
-// carefully stripping the scope prefix in Ssl::ParseErrorString()
+// carefully stripping the scope prefix in Ssl::ParseErrorString().
 static SslErrorAlias TheSslErrorShortcutsArray[] = {
     {"ssl::certHasExpired", hasExpired},
     {"certHasExpired", hasExpired},
@@ -124,7 +124,7 @@ static SslErrorAlias TheSslErrorShortcutsArray[] = {
     {NULL, NULL}
 };
 
-//Use std::map to optimize search
+// Use std::map to optimize search.
 typedef std::map<std::string, const Ssl::ssl_error_t *> SslErrorShortcuts;
 SslErrorShortcuts TheSslErrorShortcuts;
 
@@ -340,7 +340,7 @@ const char *Ssl::ErrorDetail::err_lib_error() const
 }
 
 /**
- * It converts the code to a string value. Supported formating codes are:
+ * Converts the code to a string value. Supported formating codes are:
  *
  * Error meta information:
  * %err_name: The name of a high-level SSL error (e.g., X509_V_ERR_*)

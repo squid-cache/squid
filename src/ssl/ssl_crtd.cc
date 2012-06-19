@@ -207,6 +207,7 @@ static bool proccessNewRequest(Ssl::CrtdMessage & request_message, std::string c
         throw std::runtime_error("Error while parsing the crtd request: " + error);
 
     Ssl::CertificateDb db(db_path, max_db_size, fs_block_size);
+
     Ssl::X509_Pointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
     std::string &cert_subject = certProperties.dbKey();
