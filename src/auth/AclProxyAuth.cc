@@ -80,6 +80,7 @@ int
 ACLProxyAuth::match(ACLChecklist *checklist)
 {
     allow_t answer = AuthenticateAcl(checklist);
+
     // convert to tri-state ACL match 1,0,-1
     switch (answer) {
     case ACCESS_ALLOWED:

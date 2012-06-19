@@ -171,7 +171,9 @@ AIO_WIN32_SOURCES =
 endif
 
 if USE_AIOPS_WIN32
-AIOPS_SOURCE = DiskIO/DiskThreads/aiops_win32.cc
+AIOPS_SOURCE = DiskIO/DiskThreads/aiops_win32.cc \
+	DiskIO/DiskThreads/CommIO.cc \
+	DiskIO/DiskThreads/CommIO.h
 else
 AIOPS_SOURCE = DiskIO/DiskThreads/aiops.cc \
 	DiskIO/DiskThreads/CommIO.cc \
@@ -635,7 +637,9 @@ unlinkd_LDADD = \
 
 ## dnsserver is a standalone helper. Do not link to any internal libraries
 dnsserver_SOURCES = dnsserver.cc
-dnsserver_LDADD = $(COMPAT_LIB)
+dnsserver_LDADD = \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
 
 recv_announce_SOURCES = recv-announce.cc
 

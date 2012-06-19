@@ -320,6 +320,23 @@ httpStatusString(http_status status)
         p = "HTTP Version not supported";
         break;
 
+        // RFC 6585
+    case HTTP_PRECONDITION_REQUIRED: // 428
+        p = "Precondition Required";
+        break;
+
+    case HTTP_TOO_MANY_REQUESTS: // 429
+        p = "Too Many Requests";
+        break;
+
+    case HTTP_REQUEST_HEADER_FIELDS_TOO_LARGE: // 431
+        p = "Request Header Fields Too Large";
+        break;
+
+    case HTTP_NETWORK_AUTHENTICATION_REQUIRED: // 511
+        p = "Network Authentication Required";
+        break;
+
     default:
         p = "Unknown";
         debugs(57, 3, "Unknown HTTP status code: " << status);

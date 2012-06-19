@@ -543,11 +543,18 @@ for module in $squid_disk_module_candidates none; do
   fi
   case "$module" in
     DiskDaemon)
-      AC_MSG_NOTICE([Enabling DiskDaemon DiskIO module])
-      DISK_LIBS="$DISK_LIBS libDiskDaemon.a"
-      DISK_MODULES="$DISK_MODULES DiskDaemon"
-      DISK_PROGRAMS="$DISK_PROGRAMS DiskIO/DiskDaemon/diskd"
-      DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskDaemon/DiskDaemonDiskIOModule.o"
+      case "$squid_host_os" in
+        mingw)
+          AC_MSG_NOTICE(["DiskDaemon not supported on MinGW"])
+          ;;
+        *)
+          AC_MSG_NOTICE([Enabling DiskDaemon DiskIO module])
+          DISK_LIBS="$DISK_LIBS libDiskDaemon.a"
+          DISK_MODULES="$DISK_MODULES DiskDaemon"
+          DISK_PROGRAMS="$DISK_PROGRAMS DiskIO/DiskDaemon/diskd"
+          DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskDaemon/DiskDaemonDiskIOModule.o"
+          ;;
+        esac
       ;;
     DiskThreads)
       squid_opt_use_diskthreads="yes"
@@ -1033,6 +1040,7 @@ dnl   fi
 dnl ])
 
 
+test "x$squid_host_os" = "xmingw" && enable_wccp=no
 AC_ARG_ENABLE(wccp,
   AS_HELP_STRING([--disable-wccp],[Disable Web Cache Coordination Protocol]), [
 SQUID_YESNO([$enableval],[unrecognized argument to --disable-wccp: $enableval])
@@ -1040,6 +1048,7 @@ SQUID_YESNO([$enableval],[unrecognized argument to --disable-wccp: $enableval])
 SQUID_DEFINE_BOOL(USE_WCCP, ${enable_wccp:=yes}, [Define to enable WCCP])
 AC_MSG_NOTICE([Web Cache Coordination Protocol enabled: $enable_wccp])
 
+test "x$squid_host_os" = "xmingw" && enable_wccpv2=no
 AC_ARG_ENABLE(wccpv2,
   AS_HELP_STRING([--disable-wccpv2],
                  [Disable Web Cache Coordination V2 Protocol]), [ 
@@ -1135,6 +1144,7 @@ if test "x${enable_eui:=yes}" = "xyes" ; then
 #endif
   ]])
 fi
+AC_SUBST(EUILIB)
 AC_MSG_NOTICE([EUI (MAC address) controls enabled: $enable_eui])
 SQUID_DEFINE_BOOL(USE_SQUID_EUI,$enable_eui,
    [Define this to include code which lets you use ethernet addresses. This code uses API initially defined in 4.4-BSD.])
@@ -2505,6 +2515,8 @@ AC_CHECK_TYPE([bool])
 #need the defines for PRId64
 AC_CHECK_SIZEOF(int64_t)
 AC_CHECK_SIZEOF(long)
+#need the defines for PRIuSIZE
+AC_CHECK_SIZEOF(size_t)
 #need the define for overflow checks
 AC_CHECK_SIZEOF(off_t)
 AC_CHECK_SIZEOF(size_t)
@@ -2539,6 +2551,17 @@ AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,
    [mtyp_t is defined by the system headers]),,[#include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>])
+
+# check for compiler support of %zu printf macro
+AH_TEMPLATE(PRIuSIZE,[Compiler supports %zu printf macro])
+AC_MSG_CHECKING([for compiler %zu support])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <stdio.h>
+  ]],[[size_t n=1;printf("%zu",n);]])],[
+    AC_DEFINE(PRIuSIZE,"zu")
+    AC_MSG_RESULT(yes)
+  ],[AC_MSG_RESULT(no)],[AC_MSG_RESULT(no)])
+
 
 dnl Check for special functions
 AC_FUNC_ALLOCA
@@ -3241,6 +3264,20 @@ if test "x$squid_cv_resuid_works" = "xyes" ; then
   AC_DEFINE(HAVE_SETRESUID,1,[Yay! Another Linux brokenness. Knowing that setresuid() exists is not enough, because RedHat 5.0 declares setresuid() but does not implement it.])
 fi
 
+AC_MSG_CHECKING([for constant CMSG_SPACE])
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+  #if HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+  #endif
+
+  int a[CMSG_SPACE(int)];
+]])], [
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_CONSTANT_CMSG_SPACE, 1, [Define to 1 if CMSG_SPACE is constant])
+], [
+  AC_MSG_RESULT(no)
+])
+
 SQUID_CHECK_FUNC_STRNSTR
 SQUID_CHECK_FUNC_VACOPY
 SQUID_CHECK_FUNC___VACOPY
@@ -3558,6 +3595,7 @@ AC_CONFIG_FILES([\
 	helpers/external_acl/LDAP_group/Makefile \
 	helpers/external_acl/LM_group/Makefile \
 	helpers/external_acl/session/Makefile \
+	helpers/external_acl/SQL_session/Makefile \
 	helpers/external_acl/unix_group/Makefile \
 	helpers/external_acl/wbinfo_group/Makefile \
 	helpers/external_acl/time_quota/Makefile \
