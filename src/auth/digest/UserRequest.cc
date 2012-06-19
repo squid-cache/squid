@@ -245,7 +245,7 @@ Auth::Digest::UserRequest::addAuthenticationInfoTrailer(HttpReply * rep, int acc
 
 /* send the initial data to a digest authenticator module */
 void
-Auth::Digest::UserRequest::module_start(RH * handler, void *data)
+Auth::Digest::UserRequest::module_start(AUTHCB * handler, void *data)
 {
     char buf[8192];
 
@@ -254,7 +254,7 @@ Auth::Digest::UserRequest::module_start(RH * handler, void *data)
 
     if (static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: No Digest authentication program configured.");
-        handler(data, NULL);
+        handler(data);
         return;
     }
 
@@ -309,7 +309,7 @@ Auth::Digest::UserRequest::HandleReply(void *data, char *reply)
     }
 
     if (cbdataReferenceValidDone(replyData->data, &cbdata))
-        replyData->handler(cbdata, NULL);
+        replyData->handler(cbdata);
 
     delete replyData;
 }

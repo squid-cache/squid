@@ -79,7 +79,7 @@ Auth::Negotiate::UserRequest::module_direction()
 }
 
 void
-Auth::Negotiate::UserRequest::module_start(RH * handler, void *data)
+Auth::Negotiate::UserRequest::module_start(AUTHCB * handler, void *data)
 {
     static char buf[MAX_AUTHTOKEN_LEN];
 
@@ -91,7 +91,7 @@ Auth::Negotiate::UserRequest::module_start(RH * handler, void *data)
 
     if (static_cast<Auth::Negotiate::Config*>(Auth::Config::Find("negotiate"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: No Negotiate authentication program configured.");
-        handler(data, NULL);
+        handler(data);
         return;
     }
 
@@ -360,7 +360,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
     }
 
     lm_request->request = NULL;
-    r->handler(r->data, NULL);
+    r->handler(r->data);
     delete r;
 }
 
