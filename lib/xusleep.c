@@ -1,5 +1,4 @@
 #include "squid.h"
-#include "profiler/Profiler.h"
 #include "xusleep.h"
 
 #if HAVE_UNISTD_H
