@@ -6,12 +6,22 @@
 class testHttpParser : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( testHttpParser );
-    CPPUNIT_TEST( testParseRequestLine );
+    CPPUNIT_TEST( testParseRequestLineTerminators );
+    CPPUNIT_TEST( testParseRequestLineMethods );
+    CPPUNIT_TEST( testParseRequestLineProtocols );
+    CPPUNIT_TEST( testParseRequestLineStrange );
+    CPPUNIT_TEST( testParseRequestLineInvalid );
     CPPUNIT_TEST_SUITE_END();
 
 protected:
     void globalSetup(); // MemPools init etc.
-    void testParseRequestLine();
+
+    // request-line unit tests
+    void testParseRequestLineTerminators(); // terminator detection correct
+    void testParseRequestLineMethods();     // methoid detection correct
+    void testParseRequestLineProtocols();   // protocol tokens handled correctly
+    void testParseRequestLineStrange();     // strange but valid lines accepted
+    void testParseRequestLineInvalid();     // rejection of invalid lines happens
 };
 
 #endif
