@@ -759,7 +759,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
         peerConnectSucceded(serverConnection()->getPeer());
 
 #if USE_SSL
-    if (!request->flag.pinned) {
+    if (!request->flags.pinned) {
         if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
                 (!serverConnection()->getPeer() && request->protocol == AnyP::PROTO_HTTPS)) {
             initiateSSL();
