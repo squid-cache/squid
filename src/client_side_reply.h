@@ -71,15 +71,17 @@ public:
     void identifyFoundObject(StoreEntry *entry);
     int storeOKTransferDone() const;
     int storeNotOKTransferDone() const;
-    /// Replaces the store entry with the given and awaiting the client side to read it
-    void setReplyToStoreEntry(StoreEntry *entry);
+    /// replaces current response store entry with the given one
+    void setReplyToStoreEntry(StoreEntry *e);
+    /// builds error using clientBuildError() and calls setReplyToError() below
     void setReplyToError(err_type, http_status, const HttpRequestMethod&, char const *, Ip::Address &, HttpRequest *, const char *,
 #if USE_AUTH
                          Auth::UserRequest::Pointer);
 #else
                          void * unused);
 #endif
-    void setReplyToError(const HttpRequestMethod& method, ErrorState *errstate);
+    /// creates a store entry for the reply and appends err to it
+    void setReplyToError(const HttpRequestMethod& method, ErrorState *err);
     void createStoreEntry(const HttpRequestMethod& m, request_flags flags);
     void removeStoreReference(store_client ** scp, StoreEntry ** ep);
     void removeClientStoreReference(store_client **scp, ClientHttpRequest *http);

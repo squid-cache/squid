@@ -1278,7 +1278,7 @@ bool
 ClientRequestContext::sslBumpAccessCheck()
 {
     if (http->request->method == METHOD_CONNECT &&
-            !http->request->flags.spoof_client_ip && // is not a fake ssl-bumped request from a https port
+            !http->request->flags.spoof_client_ip && // not a fake bumped request from an https port
             Config.accessList.ssl_bump && http->getConn()->port->sslBump) {
         debugs(85, 5, HERE << "SslBump possible, checking ACL");
 
@@ -1591,8 +1591,8 @@ ClientHttpRequest::doCallouts()
     }
 
 #if USE_SSL
-    // We need to check for SSL bump even if the calloutContext->error is set
-    // because we are handling with different way the error inside SSL-bump
+    // We need to check for SslBump even if the calloutContext->error is set
+    // because bumping may require delaying the error until after CONNECT.
     if (!calloutContext->sslBumpCheckDone) {
         calloutContext->sslBumpCheckDone = true;
         if (calloutContext->sslBumpAccessCheck())
@@ -1616,7 +1616,7 @@ ClientHttpRequest::doCallouts()
         } else 
 #endif
         {
-            // send the error to the client
+            // send the error to the client now
             clientStreamNode *node = (clientStreamNode *)client_stream.tail->prev->data;
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
@@ -1628,7 +1628,6 @@ ClientHttpRequest::doCallouts()
             node = (clientStreamNode *)client_stream.tail->data;
             clientStreamRead(node, this, node->readBuffer);
             e->unlock();
-            // Stop here.
             return;
         }
     }

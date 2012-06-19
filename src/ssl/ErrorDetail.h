@@ -15,10 +15,10 @@ namespace Ssl
 {
 /**
   \ingroup ServerProtocolSSLAPI
- * The Ssl::Errors representation of the error described by "name".
- * The result may be a single element of a list of errors, and needs to be
+ * Converts user-friendly error "name" into an Ssl::Errors list.
+ * The resulting list may have one or more elements, and needs to be
  * released by the caller.
- * This function also parses numeric arguments.
+ * This function can handle numeric error numbers as well as names.
  */
 Ssl::Errors *ParseErrorString(const char *name);
 
@@ -59,7 +59,7 @@ public:
     ssl_error_t errorNo() const {return error_no;}
     ///Sets the low-level error returned by OpenSSL ERR_get_error()
     void setLibError(unsigned long lib_err_no) {lib_error_no = lib_err_no;}
-    ///The peer certificate
+    /// the peer certificate
     X509 *peerCert() { return peer_cert.get(); }
     /// peer or intermediate certificate that failed validation
     X509 *brokenCert() {return broken_cert.get(); }

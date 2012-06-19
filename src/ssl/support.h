@@ -210,7 +210,6 @@ int asn1timeToString(ASN1_TIME *tm, char *buf, int len);
    \return true if SNI set false otherwise
 */
 bool setClientSNI(SSL *ssl, const char *fqdn);
-
 } //namespace Ssl
 
 #if _SQUID_MSWIN_

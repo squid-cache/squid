@@ -24,9 +24,8 @@ ACLSslErrorData::~ACLSslErrorData()
 bool
 ACLSslErrorData::match(const Ssl::Errors *toFind)
 {
-    const Ssl::Errors * err;
-    for (err = toFind ; err != NULL; err = err->next ) {
-        if (values->findAndTune (err->element))
+    for (const Ssl::Errors *err = toFind; err; err = err->next ) {
+        if (values->findAndTune(err->element))
             return true;
     }
     return false;

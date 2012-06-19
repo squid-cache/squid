@@ -1219,7 +1219,8 @@ ErrorState::BuildHttpReply()
         /* do not memBufClean() or delete the content, it was absorbed by httpBody */
     }
 
-    /* Make sure error codes get back to the client side for logging and error tracking */
+    // Make sure error codes get back to the client side for logging and
+    // error tracking.
     if (request) {
         int edc = ERR_DETAIL_NONE; // error detail code
 #if USE_SSL
