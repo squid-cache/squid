@@ -44,7 +44,7 @@ public:
     CbDataList (C const &);
     ~CbDataList();
 
-    /// If element is already in the list return false.
+    /// If element is already in the list, returns false.
     /// Otherwise, adds the element to the end of the list and returns true.
     /// Exists to avoid double iteration of find() and push() combo.
     bool push_back_unique(C const &element);
@@ -141,7 +141,7 @@ CbDataList<C>::push_back_unique(C const &toAdd)
             return false;
     }
 
-    last->next = new CbDataList<C> (toAdd);
+    last->next = new CbDataList<C>(toAdd);
     return true;
 }
 
