@@ -1416,8 +1416,7 @@ DOC_START
 	   dynamic_cert_mem_cache_size=SIZE
 			Approximate total RAM size spent on cached generated
 			certificates. If set to zero, caching is disabled. The
-			default value is 4MB. An average XXX-bit certificate
-			consumes about XXX bytes of RAM.
+			default value is 4MB.
 
 	TLS / SSL Options:
 
@@ -1664,8 +1663,7 @@ DOC_START
 	   dynamic_cert_mem_cache_size=SIZE
 			Approximate total RAM size spent on cached generated
 			certificates. If set to zero, caching is disabled. The
-			default value is 4MB. An average XXX-bit certificate
-			consumes about XXX bytes of RAM.
+			default value is 4MB.
 
 	See http_port for a list of available options.
 DOC_END
