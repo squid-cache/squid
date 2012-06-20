@@ -836,7 +836,10 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
     if (serverConnection()->getPeer())
         peerConnectSucceded(serverConnection()->getPeer());
 
-    if (request->flags.canRePin && request->clientConnectionManager.valid()) {
+    // some requests benefit from pinning but do not require it and can "repin"
+    const bool rePin = request->flags.canRePin &&
+        request->clientConnectionManager.valid();
+    if (rePin) {
         debugs(17, 3, HERE << "repinning " << serverConn);
         request->clientConnectionManager->pinConnection(serverConn,
             request, serverConn->getPeer(), request->flags.auth);
@@ -844,7 +847,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
     }
 
 #if USE_SSL
-    if (!request->flags.pinned) {
+    if (!request->flags.pinned || rePin) {
         if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
                 (!serverConnection()->getPeer() && request->protocol == AnyP::PROTO_HTTPS) ||
                 request->flags.sslPeek) {
