@@ -66,7 +66,7 @@ public:
 #endif
 
 #if USE_SSL
-    /// SSL [certificate validation] errors in undefined order
+    /// SSL [certificate validation] errors, in undefined order
     Ssl::Errors *sslErrors;
 #endif
 
