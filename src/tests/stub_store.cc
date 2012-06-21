@@ -21,7 +21,7 @@ StoreEntry::~StoreEntry() STUB
 HttpReply const *StoreEntry::getReply() const STUB_RETVAL(NULL)
 void StoreEntry::write(StoreIOBuffer) STUB
 bool StoreEntry::isAccepting() const STUB_RETVAL(false)
-size_t StoreEntry::bytesWanted(Range<size_t> const) const STUB_RETVAL(0)
+size_t StoreEntry::bytesWanted(Range<size_t> const, bool) const STUB_RETVAL(0)
 void StoreEntry::complete() STUB
 store_client_t StoreEntry::storeClientType() const STUB_RETVAL(STORE_NON_CLIENT)
 char const *StoreEntry::getSerialisedMetaData() STUB_RETVAL(NULL)
