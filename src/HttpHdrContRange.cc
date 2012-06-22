@@ -129,7 +129,7 @@ httpHdrRangeRespSpecPackInto(const HttpHdrRangeSpec * spec, Packer * p)
     if (!known_spec(spec->offset) || !known_spec(spec->length))
         packerPrintf(p, "*");
     else
-        packerPrintf(p, "bytes %"PRId64"-%"PRId64,
+        packerPrintf(p, "bytes %" PRId64 "-%" PRId64,
                      spec->offset, spec->offset + spec->length - 1);
 }
 
@@ -233,7 +233,7 @@ httpHdrContRangePackInto(const HttpHdrContRange * range, Packer * p)
     if (!known_spec(range->elength))
         packerPrintf(p, "/*");
     else
-        packerPrintf(p, "/%"PRId64, range->elength);
+        packerPrintf(p, "/%" PRId64, range->elength);
 }
 
 void
