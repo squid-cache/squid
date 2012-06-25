@@ -1434,6 +1434,7 @@ clientReplyContext::buildReplyHeader()
 #endif
 
     const bool maySendChunkedReply = !request->multipartRangeRequest() &&
+                                     reply->sline.protocol == AnyP::PROTO_HTTP && // response is HTTP
                                      (request->http_ver >= HttpVersion(1, 1));
 
     /* Check whether we should send keep-alive */
