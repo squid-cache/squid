@@ -974,6 +974,7 @@ ErrorState::Convert(char token, bool building_deny_info_url, bool allowRecursion
     case 'R':
         if (building_deny_info_url) {
             p = (request->urlpath.size() != 0 ? request->urlpath.termedBuf() : "/");
+            no_urlescape = 1;
             break;
         }
         if (NULL != request) {
