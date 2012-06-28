@@ -63,7 +63,7 @@ Auth::UserRequest::username() const
 
 /* send the initial data to an authenticator module */
 void
-Auth::UserRequest::start(RH * handler, void *data)
+Auth::UserRequest::start(AUTHCB * handler, void *data)
 {
     assert(handler);
     assert(data);

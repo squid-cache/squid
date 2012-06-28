@@ -50,7 +50,7 @@ public:
 
 private:
     static ProxyAuthLookup instance_;
-    static void LookupDone(void *data, char *result);
+    static void LookupDone(void *data);
 };
 
 class ProxyAuthNeeded : public ACLChecklist::AsyncState
