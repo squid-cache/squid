@@ -181,9 +181,10 @@ public:
     virtual bool hasRequest() const = 0;
     virtual bool hasReply() const = 0;
 
-protected:
-    virtual void checkCallback(allow_t answer);
 private:
+    /// Calls non-blocking check callback with the answer and destroys self.
+    void checkCallback(allow_t answer);
+
     void checkAccessList();
     void checkForAsync();
 

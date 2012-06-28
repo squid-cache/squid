@@ -73,9 +73,6 @@ public:
     ExternalACLEntry *extacl_entry;
 
 private:
-    virtual void checkCallback(allow_t answer);
-
-private:
     CBDATA_CLASS(ACLFilledChecklist);
 
     ConnStateData * conn_;          /**< hack for ident and NTLM */
