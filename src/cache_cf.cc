@@ -3035,7 +3035,7 @@ static void
 dump_time_msec(StoreEntry * entry, const char *name, time_msec_t var)
 {
     if (var % 1000)
-        storeAppendPrintf(entry, "%s %"PRId64" milliseconds\n", name, var);
+        storeAppendPrintf(entry, "%s %" PRId64 " milliseconds\n", name, var);
     else
         storeAppendPrintf(entry, "%s %d seconds\n", name, (int)(var/1000) );
 }
@@ -3086,13 +3086,13 @@ dump_kb_size_t(StoreEntry * entry, const char *name, size_t var)
 static void
 dump_b_int64_t(StoreEntry * entry, const char *name, int64_t var)
 {
-    storeAppendPrintf(entry, "%s %"PRId64" %s\n", name, var, B_BYTES_STR);
+    storeAppendPrintf(entry, "%s %" PRId64 " %s\n", name, var, B_BYTES_STR);
 }
 
 static void
 dump_kb_int64_t(StoreEntry * entry, const char *name, int64_t var)
 {
-    storeAppendPrintf(entry, "%s %"PRId64" %s\n", name, var, B_KBYTES_STR);
+    storeAppendPrintf(entry, "%s %" PRId64 " %s\n", name, var, B_KBYTES_STR);
 }
 
 #if UNUSED_CODE
