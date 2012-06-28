@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-02-06 18:41+1300\n"
-"PO-Revision-Date: 2010-11-11 02:01+0200\n"
-"Last-Translator: Amos <squid3@treenet.co.nz>\n"
+"PO-Revision-Date: 2012-03-30 20:25+0200\n"
+"Last-Translator: Aecio F. <aecioneto@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <pt_BR@li.org>\n"
 "Language: pt_BR\n"
 "MIME-Version: 1.0\n"
@@ -25,16 +25,16 @@ msgstr ""
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:29
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:30
 msgid "%F"
-msgstr ""
+msgstr "%F"
 
 #: templates/ERR_INVALID_REQ+html.body.div.blockquote.pre:23
 #: templates/ERR_INVALID_RESP+html.body.div.blockquote.pre:23
 msgid "%R"
-msgstr ""
+msgstr "%R"
 
 #: templates/ERR_ESI+html.body.div.blockquote.pre:28
 msgid "%Z"
-msgstr ""
+msgstr "%Z"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:24
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:24
@@ -42,14 +42,14 @@ msgstr ""
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.blockquote.pre:24
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:25
 msgid "%f"
-msgstr ""
+msgstr "%f"
 
 #: templates/ERR_FTP_FAILURE+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.blockquote.pre:30
 #: templates/ERR_FTP_UNAVAILABLE+html.body.div.blockquote.pre:31
 msgid "%g"
-msgstr ""
+msgstr "%g"
 
 #: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.detail:69
 msgid "%ssl_error_descr"
@@ -62,9 +62,8 @@ msgid "%ssl_error_descr: %ssl_ca_name"
 msgstr "%ssl_error_descr: %ssl_ca_name"
 
 #: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.detail:1
-#, fuzzy
 msgid "%ssl_error_descr: %ssl_lib_error"
-msgstr "%ssl_error_descr: %ssl_ca_name"
+msgstr "%ssl_error_descr: %ssl_lib_error"
 
 #: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.detail:5
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.detail:13
@@ -92,7 +91,7 @@ msgstr "%ssl_error_descr: %ssl_subject"
 #: templates/ERR_DIR_LISTING+html.body.div.blockquote.pre:22
 #: templates/ERR_DNS_FAIL+html.body.div.blockquote.pre:28
 msgid "%z"
-msgstr ""
+msgstr "%z"
 
 #: templates/ERR_DIR_LISTING+html.body.div.table.tr.th:28
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -113,14 +112,12 @@ msgstr ""
 "<b>Resposta Inválida</b> erro encontrado ao tentar processar a requisição:"
 
 #: templates/ERR_READ_TIMEOUT+html.body.div.p:28
-#, fuzzy
 msgid ""
 "A Timeout occurred while waiting to read data from the network. The network "
 "or server may be down or congested. Please retry your request."
 msgstr ""
 "Tempo esgotado esperando a leitura de dados pela rede. A rede ou o servidor "
-"pode estar desconectado ou congestionado. Por favor, tente novamente sua "
-"requisição."
+"pode estar desconectado ou congestionado. Por favor, repita sua requisição."
 
 #: templates/ERR_URN_RESOLVE+html.body.div.h2:15
 msgid "A URL for the requested URN could not be retrieved"
@@ -131,13 +128,14 @@ msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
 "request from being completed."
 msgstr ""
+"Uma falha interna ou problema de configuração irrecuperáveis impedem que "
+"esta requisição seja completada."
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.blockquote.p:23
 msgid "Access Denied."
-msgstr "Acesso Negado."
+msgstr "Acesso negado."
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:26
-#, fuzzy
 msgid ""
 "Access control configuration prevents your request from being allowed at "
 "this time. Please contact your service provider if you feel this is "
@@ -150,6 +148,7 @@ msgstr ""
 #: templates/ERR_CANNOT_FORWARD+html.body.div.ul.li:31
 msgid "All configured parent caches may be currently unreachable."
 msgstr ""
+"Todos os caches-pais configurados parecem estar fora de alcance no momento."
 
 #: templates/ERR_FTP_FORBIDDEN+html.body.div.p:20
 msgid ""
@@ -177,53 +176,56 @@ msgid ""
 "An Internet connection needed to access this domains origin servers may be "
 "down."
 msgstr ""
+"Uma conexão à Internet necessária para acessar estes servidores de origem de "
+"domínios parece estar fora."
 
 #: templates/ERR_READ_ERROR+html.body.div.p:28
-#, fuzzy
 msgid ""
 "An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr ""
-"Uma condição de erro ocorreu ao ler dados da rede. Por favor, repita sua "
+"Ocorreu uma condição de erro ao ler dados da rede. Por favor, repita sua "
 "requisição."
 
 #: templates/ERR_WRITE_ERROR+html.body.div.p:28
-#, fuzzy
 msgid ""
 "An error condition occurred while writing to the network. Please retry your "
 "request."
 msgstr ""
-"Ocorreu um erro ao tentar escrever na rede. Por favor, repita sua requisição."
+"Ocorreu uma condição de erro ao escrever na rede. Por favor, repita sua "
+"requisição."
 
 #: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:133
 msgid "Application verification failure"
-msgstr "Application verification failure"
+msgstr "Verificação do aplicativo falhou"
 
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:28
 msgid ""
 "At least one precondition specified by the HTTP client in the request header "
 "has failed."
 msgstr ""
+"Pelo menos uma pré-condição especificada pelo cliente HTTP no cabeçalho da "
+"requisição falhou."
 
 #: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:125
 msgid "Authority and issuer serial number mismatch"
-msgstr "Authority and issuer serial number mismatch"
+msgstr "Autoridade e número serial do emissor não coincidem"
 
 #: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:121
 msgid "Authority and subject key identifier mismatch"
-msgstr "Authority and subject key identifier mismatch"
+msgstr "Chave identificadora de autoridade e assunto não coincidem"
 
 #: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:49
 msgid "CRL has expired"
-msgstr "CRL has expired"
+msgstr "CRL expirou"
 
 #: templates/error-details.txt+X509_V_ERR_CRL_NOT_YET_VALID.descr:45
 msgid "CRL is not yet valid"
-msgstr "CRL is not yet valid"
+msgstr "CRL ainda não é válido"
 
 #: templates/error-details.txt+X509_V_ERR_CRL_SIGNATURE_FAILURE.descr:33
 msgid "CRL signature failure"
-msgstr "CRL signature failure"
+msgstr "Falha na assinatura CRL"
 
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.h2:15
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.blockquote.p:23
@@ -241,36 +243,35 @@ msgstr "Não é possível resolver URN"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_CHAIN_TOO_LONG.descr:89
 msgid "Certificate chain too long"
-msgstr "Certificate chain too long"
+msgstr "Cadeia de certificados longa demais"
 
 #: templates/error-details.txt+SQUID_X509_V_ERR_DOMAIN_MISMATCH.descr:5
-#, fuzzy
 msgid "Certificate does not match domainname"
-msgstr "Certificate is not yet valid"
+msgstr "Certificado não combina com nome de domínio"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.descr:41
 msgid "Certificate has expired"
-msgstr "Certificate has expired"
+msgstr "O certificado expirou"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.descr:37
 msgid "Certificate is not yet valid"
-msgstr "Certificate is not yet valid"
+msgstr "O certificado ainda não é válido"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_UNTRUSTED.descr:109
 msgid "Certificate not trusted"
-msgstr "Certificate not trusted"
+msgstr "O certificado não é confiável"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_REJECTED.descr:113
 msgid "Certificate rejected"
-msgstr "Certificate rejected"
+msgstr "Certificado rejeitado"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_REVOKED.descr:93
 msgid "Certificate revoked"
-msgstr "Certificate revoked"
+msgstr "Certificado revogado"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_SIGNATURE_FAILURE.descr:29
 msgid "Certificate signature failure"
-msgstr "Certificate signature failure"
+msgstr "Falha de assinatura do certificado"
 
 #: templates/ERR_LIFETIME_EXP+html.body.div.blockquote.p:23
 msgid "Connection Lifetime Expired"
@@ -298,7 +299,7 @@ msgstr "Diretório: %U"
 
 #: templates/ERR_DIR_LISTING+html.body.div.h2:14
 msgid "Directory: <a href=\"%U\">%U</a>/"
-msgstr "Directório: <a href=\"%U\">%U</a>/"
+msgstr "Diretório: <a href=\"%U\">%U</a>/"
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.h1:14
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.h1:14
@@ -343,11 +344,11 @@ msgstr "ERRO"
 
 #: templates/ERR_CACHE_ACCESS_DENIED+html.head.title:4
 msgid "ERROR: Cache Access Denied"
-msgstr "ERRO: Acesso ao cache negado "
+msgstr "ERRO: Acesso negado ao cache"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.head.title:4
 msgid "ERROR: Cache Manager Access Denied"
-msgstr "ERRO: Acesso ao gerenciador de cache negado"
+msgstr "ERRO: Acesso negado ao gerenciador de cache"
 
 #: templates/ERR_FTP_PUT_ERROR+html.head.title:4
 msgid "ERROR: FTP upload failed"
@@ -389,9 +390,8 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "ERRO: A URL requisitada não pode ser recuperada"
 
 #: templates/ERR_URN_RESOLVE+html.head.title:4
-#, fuzzy
 msgid "ERROR: The requested URN could not be retrieved"
-msgstr "ERRO: A URL requisitada não pode ser recuperada"
+msgstr "ERRO: A URN requisitada não pode ser recuperada"
 
 #: templates/ERR_ESI+html.body.div.blockquote.p:23
 msgid "ESI Processing failed."
@@ -399,14 +399,12 @@ msgstr "O processamento de ESI falhou."
 
 #: templates/ERR_FTP_PUT_CREATED+html.head.title:4
 #: templates/ERR_FTP_PUT_MODIFIED+html.head.title:4
-#, fuzzy
 msgid "FTP PUT Successful."
-msgstr "FTP - PUT bem sucedido: Arquivo Criado"
+msgstr "PUT FTP bem sucedido."
 
 #: templates/ERR_FTP_PUT_ERROR+html.body.div.h2:15
-#, fuzzy
 msgid "FTP PUT upload failed"
-msgstr "FTP - PUT/envio falhou"
+msgstr "Upload de FTP PUT falhou"
 
 #: templates/ERR_FTP_DISABLED+html.body.div.blockquote.p:23
 msgid "FTP is Disabled"
@@ -427,33 +425,33 @@ msgstr "Arquivo atualizado"
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:26
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:26
 msgid "For Firefox browsers go to: <ul>"
-msgstr ""
+msgstr "Para navegadores Firefox vá para: <ul>"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:34
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:34
 msgid "For Internet Explorer browsers go to: <ul>"
-msgstr ""
+msgstr "Para navegadores Internet Expĺorer vá para: <ul>"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:42
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:42
 msgid "For Opera browsers go to: <ul>"
-msgstr ""
+msgstr "Para navegadores Opera vá para: <ul>"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:61
 msgid "Format error in CRL's lastUpdate field"
-msgstr "Format error in CRL's lastUpdate field"
+msgstr "Erro de formato no campo lastUpdate do CRL"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:65
 msgid "Format error in CRL's nextUpdate field"
-msgstr "Format error in CRL's nextUpdate field"
+msgstr "Erro de formato no campo nextUpdate do CRL"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:57
 msgid "Format error in certificate's notAfter field"
-msgstr "Format error in certificate's notAfter field"
+msgstr "Erro de formato no campo notAfter do certificado"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:53
 msgid "Format error in certificate's notBefore field"
-msgstr "Format error in certificate's notBefore field"
+msgstr "Erro de formato no campo notBefore do certificado"
 
 #: templates/ERR_FORWARDING_DENIED+html.body.div.blockquote.p:23
 msgid "Forwarding Denied."
@@ -461,7 +459,7 @@ msgstr "Encaminhamento Negado."
 
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.blockquote.p:23
 msgid "Gateway Proxy Failure"
-msgstr ""
+msgstr "Falha de Gateway Proxy"
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:34
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:35
@@ -510,11 +508,11 @@ msgstr "Gerado %T por %h (%s)"
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:34
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
-msgstr ""
+msgstr "HTTP/1.1 <q>Expect:</q> requisição proveniente de um software HTTP/1.0."
 
 #: templates/error-details.txt+SQUID_ERR_SSL_HANDSHAKE.descr:1
 msgid "Handshake with SSL server failed"
-msgstr ""
+msgstr "Negociação com servidor SSL falhou"
 
 #: templates/ERR_URN_RESOLVE+html.body.div.p:26
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -523,7 +521,7 @@ msgstr "Olha, não espere muito por URNs em %T :)"
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.p:24
 #: templates/ERR_AGENT_WPAD+html.body.div.p:24
 msgid "How to find these settings in your browser:"
-msgstr ""
+msgstr "Como encontrar estas configurações no seu navegador:"
 
 #: templates/ERR_ICAP_FAILURE+html.body.div.blockquote.p:23
 msgid "ICAP protocol error."
@@ -558,11 +556,11 @@ msgstr "Escape duplo ilegal na URL-Path"
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:38
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:46
 msgid "In the HTTP proxy box type the proxy name %h and port %b."
-msgstr ""
+msgstr "Na caixa HTTP proxy digite o nome do proxy %h e porta %b."
 
 #: templates/error-details.txt+X509_V_ERR_INVALID_CA.descr:97
 msgid "Invalid CA certificate"
-msgstr "Invalid CA certificate"
+msgstr "Certificado CA inválido"
 
 #: templates/ERR_INVALID_URL+html.body.div.blockquote.p:23
 msgid "Invalid URL"
@@ -570,7 +568,7 @@ msgstr "URL inválida"
 
 #: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CERTSIGN.descr:129
 msgid "Key usage does not include certificate signing"
-msgstr "Key usage does not include certificate signing"
+msgstr "O uso das chaves não inclui assinatura de certificado"
 
 #: templates/ERR_INVALID_REQ+html.body.div.ul.li.p:30
 msgid "Missing HTTP Identifier (HTTP/1.0)."
@@ -606,11 +604,11 @@ msgstr "Operação bem sucedida"
 
 #: templates/error-details.txt+X509_V_ERR_OUT_OF_MEM.descr:69
 msgid "Out of memory"
-msgstr "Out of memory"
+msgstr "Memória insuficiente"
 
 #: templates/error-details.txt+X509_V_ERR_PATH_LENGTH_EXCEEDED.descr:101
 msgid "Path length constraint exceeded"
-msgstr "Path length constraint exceeded"
+msgstr "Limite de comprimento do Path excedido"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED+html.body.div.p:28
 msgid ""
@@ -625,7 +623,6 @@ msgstr ""
 "cache e cheque o log para maiores detalhes sobre mensagens de erro."
 
 #: templates/ERR_CACHE_ACCESS_DENIED+html.body.div.p:28
-#, fuzzy
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
 "have difficulties authenticating yourself."
@@ -636,7 +633,7 @@ msgstr ""
 
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.blockquote.p:23
 msgid "Precondition Failed."
-msgstr ""
+msgstr "Précondição falhou."
 
 #: templates/ERR_READ_ERROR+html.body.div.blockquote.p:23
 msgid "Read Error"
@@ -653,57 +650,60 @@ msgstr "Requisição é muito grande."
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.detail:9
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:81
 msgid "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
-msgstr "SSL Certficate error: certificate issuer (CA) not known: %ssl_ca_name"
+msgstr ""
+"Erro de Certificado SSL: emissor do certificado (CA) desconhecido: %"
+"ssl_ca_name"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:37
 msgid "SSL Certficate is not valid before: %ssl_notbefore"
-msgstr "SSL Certficate is not valid before: %ssl_notbefore"
+msgstr "O Certificado SSL não é válido antes: %ssl_notbefore"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.detail:41
 msgid "SSL Certificate expired on: %ssl_notafter"
-msgstr "SSL Certificate expired on: %ssl_notafter"
+msgstr "O Certificado SSL expirou em: %ssl_notafter"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.detail:57
 msgid ""
 "SSL Certificate has invalid expiration date (the 'not after' field): "
 "%ssl_subject"
 msgstr ""
-"SSL Certificate has invalid expiration date (the 'not after' field): "
-"%ssl_subject"
+"O Certificado SSL tem data de expiração inválida (o campo 'not after'): %"
+"ssl_subject"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:53
 msgid ""
 "SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
 msgstr ""
-"SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
+"O Certificado SSL tem data de início inválida (o campo 'not before'): %"
+"ssl_subject"
 
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:30
 msgid "Select Auto-detect proxy settings for this network"
-msgstr ""
+msgstr "Selecionar configurações de auto-detecção de proxy para esta rede"
 
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:38
 msgid "Select Automatically detect settings"
-msgstr ""
+msgstr "Selecione Detectar configurações automaticamente"
 
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:46
 msgid "Select Use Automatic proxy configuration"
-msgstr ""
+msgstr "Selecione Usar configuração automática de proxy"
 
 #: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:73
 msgid "Self signed certificate"
-msgstr "Self signed certificate"
+msgstr "Certificado próprio"
 
 #: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.descr:77
 msgid "Self signed certificate in certificate chain"
-msgstr "Self signed certificate in certificate chain"
+msgstr "Certificado próprio na cadeia de certificados"
 
 #: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.detail:77
 msgid "Self-signed SSL Certificate in chain: %ssl_subject"
-msgstr "Self-signed SSL Certificate in chain: %ssl_subject"
+msgstr "Certificado SSL próprio na cadeia: %ssl_subject"
 
 #: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.detail:73
 msgid "Self-signed SSL Certificate: %ssl_subject"
-msgstr "Self-signed SSL Certificate: %ssl_subject"
+msgstr "Certificado SSL próprio: %ssl_subject"
 
 #: templates/ERR_SOCKET_FAILURE+html.body.div.blockquote.p:23
 msgid "Socket Failure"
@@ -734,7 +734,7 @@ msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
 msgstr ""
-"Desculpe. Atualmente, você não está permitido a requisitar %U desse cache "
+"Desculpe. Atualmente, você não tem permissáo para requisitar %U deste cache "
 "até que você tenha se autenticado."
 
 #: templates/ERR_ZERO_SIZE_OBJECT+html.body.div.p:26
@@ -776,7 +776,7 @@ msgstr "Squid enviou o seguinte comando FTP:"
 
 #: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:117
 msgid "Subject issuer mismatch"
-msgstr "Subject issuer mismatch"
+msgstr "Emissor do assunto não coincide"
 
 #: templates/ERR_DNS_FAIL+html.body.div.p:26
 msgid "The DNS server returned:"
@@ -809,11 +809,15 @@ msgid ""
 "The administrator may not allow this cache to make direct connections to "
 "origin servers."
 msgstr ""
+"O administrador pode não ter permitido que este cache fizesse conexoes "
+"diretas a servidores de origem."
 
 #: templates/ERR_CONFLICT_HOST+html.body.div.ul.li:30
 msgid ""
 "The domain may have moved very recently. Trying again will resolve that."
 msgstr ""
+"O domínio pode ter se movido muito recentemente. Tentar de novo pode "
+"resolver isto."
 
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.p:20
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
@@ -863,10 +867,9 @@ msgstr ""
 "a>"
 
 #: templates/ERR_CONNECT_FAIL+html.body.div.p:28
-#, fuzzy
 msgid "The remote host or network may be down. Please try the request again."
 msgstr ""
-"O host remoto ou a rede pode estar fora do ar. Por favor, faça a requisição "
+"O host ou rede remota pode estar fora do ar. Por favor, faça a requisição "
 "novamente."
 
 #: templates/ERR_TOO_BIG+html.body.div.blockquote.p:23
@@ -930,26 +933,26 @@ msgid ""
 "The website may require you to use a local country-based version. Using your "
 "ISP provided DNS server(s) should resolve that."
 msgstr ""
+"O website pode exigir que você use uma versão baseada no país local. Usar "
+"o(s) servidore(s) DNS fornecido(s) por seu provedor pode resolver isto."
 
 #: templates/ERR_NO_RELAY+html.body.div.p:26
-#, fuzzy
 msgid ""
 "There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
-"Não há nenhum host de WAIS Relay definido para esse Cache!  Contate o "
+"Não há nenhum host de relay de WAIS definido para esse Cache! Contate o "
 "administrador."
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:27
 #: templates/ERR_TOO_BIG+html.body.div.p:28
-#, fuzzy
 msgid ""
 "These limits have been established by the Internet Service Provider who "
 "operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
-"Esses limites foram estabelecidos pelo Provedor de Serviço Internet em que "
-"este cache opera. Por favor, contate-os diretamente se você acha que isso é "
+"Esses limites foram estabelecidos pelo Provedor de Serviço Internet que "
+"opera este cache. Por favor, contate-os diretamente se você acha que isso é "
 "um erro."
 
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.p:26
@@ -961,16 +964,14 @@ msgid "This cache does not support FTP."
 msgstr "Esse cache não suporta FTP."
 
 #: templates/ERR_SHUTTING_DOWN+html.body.div.p:22
-#, fuzzy
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time. Please retry your request again soon."
 msgstr ""
 "Este cache está sendo desligado e não pode atender sua requisição neste "
-"momento.  Por favor, tente novamente em breve."
+"momento. Por favor, tente novamente em breve."
 
 #: templates/ERR_FORWARDING_DENIED+html.body.div.p:26
-#, fuzzy
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
 "sibling relationship. Perhaps the client at %i is a cache which has been "
@@ -980,14 +981,12 @@ msgstr ""
 "relacionamento. Talvez o cliente em %i é um cache que está mal configurado."
 
 #: templates/ERR_GATEWAY_FAILURE+html.body.div.p:28
-#, fuzzy
 msgid ""
 "This may be due to limits established by the Internet Service Provider who "
 "operates this cache. Please contact them directly for more information."
 msgstr ""
-"Esses limites foram estabelecidos pelo Provedor de Serviço Internet em que "
-"este cache opera. Por favor, contate-os diretamente se você acha que isso é "
-"um erro."
+"Isto pode ser devido aos limites estabelecidos pelo provedor de internet que "
+"opera este cache. Por favor contate-os para mais informações."
 
 #: templates/ERR_ICAP_FAILURE+html.body.div.p:28
 msgid "This means that some aspect of the ICAP communication failed."
@@ -1023,21 +1022,22 @@ msgid ""
 "This means the domain name you are trying to access apparently no longer "
 "exists on the machine you are requesting it from."
 msgstr ""
+"Isto significa que o nome de domínio que você está tentando acessar "
+"aparentemente não existe mais na máquina onde você está requisitando."
 
 #: templates/ERR_PRECONDITION_FAILED+html.body.div.p:26
 msgid "This means:"
-msgstr ""
+msgstr "Isto significa:"
 
 #: templates/ERR_FTP_NOT_FOUND+html.body.div.p:33
-#, fuzzy
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
 "comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
-"Isto pode ter sido causado por uma URL de FTP com um caminho absoluto (que "
-"não é conforme com a RFC 1738). Se esta for a causa, então o arquivo pode "
-"ser encontrado em <a href=\"%B\">%B</a>."
+"Isto pode ser causa de uma URL de FTP com um caminho absoluto (que não é "
+"conforme com a RFC 1738). Se esta for a causa, então o arquivo pode ser "
+"encontrado em <a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL+html.body.div.p:28
 msgid ""
@@ -1056,54 +1056,66 @@ msgid ""
 "This proxy limits your time online with a quota. Your time budget is now "
 "empty but will be refilled when the configured time period starts again."
 msgstr ""
+"Este proxy limita seu tempo conectado com uma cota. Sua cota de tempo está "
+"vazia agora mas será recarregada quando o período de tempo configurado "
+"recomeçar."
 
 #: templates/ERR_CANNOT_FORWARD+html.body.div.p:26
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches."
 msgstr ""
+"Esta requisição não pode ser repassada para o servidor de origem ou para "
+"qualquer cache pai."
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.blockquote.p:23
 msgid "Time Quota Exceeded."
-msgstr ""
+msgstr "Quota de tempo Excedida."
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:37
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:37
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
 msgstr ""
+"Ferramentas -&gt; Opções de Internet -&gt; Conexão -&gt; Configurações da "
+"LAN -&gt;Proxy"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:29
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:29
 msgid ""
 "Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
 msgstr ""
+"Ferramentas -&gt; Opções -&gt; Avançado -&gt; Rede -&gt; Configurações da "
+"Conexão"
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.div.ul.li:45
 #: templates/ERR_AGENT_WPAD+html.body.div.div.ul.li:45
 msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
 msgstr ""
+"Ferramentas -&gt; Preferências -&gt; Avançado -&gt; Rede -&gt; Servidores "
+"Proxy"
 
 #: templates/ERR_CONFLICT_HOST+html.body.div.blockquote.pre:23
 msgid "URI Host Conflict"
-msgstr ""
+msgstr "Conflito de máquina de URI"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:25
 msgid "Unable to decode issuer (CA) public key: %ssl_ca_name"
-msgstr "Unable to decode issuer (CA) public key: %ssl_ca_name"
+msgstr ""
+"Não foi possível decodificar a chave pública do emissor (CA): %ssl_ca_name"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.descr:25
 msgid "Unable to decode issuer public key"
-msgstr "Unable to decode issuer public key"
+msgstr "Não foi possível decodificar a chave pública do emissor"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:21
 msgid "Unable to decrypt CRL's signature"
-msgstr "Unable to decrypt CRL's signature"
+msgstr "Não foi possível descriptografar a assinatura CRL"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE.descr:17
 msgid "Unable to decrypt certificate's signature"
-msgstr "Unable to decrypt certificate's signature"
+msgstr "Não foi possível descriptografar a assinatura do certificado"
 
 #: templates/ERR_DNS_FAIL+html.body.div.blockquote.p:23
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -1115,24 +1127,24 @@ msgstr "Impossível encaminhar esta requisição nesse momento."
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL.descr:13
 msgid "Unable to get certificate CRL"
-msgstr "Unable to get certificate CRL"
+msgstr "Não foi possível obter certificado CRL"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT.descr:9
 msgid "Unable to get issuer certificate"
-msgstr "Unable to get issuer certificate"
+msgstr "Não foi possível obter o certificado do emissor"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:81
 msgid "Unable to get local issuer certificate"
-msgstr "Unable to get local issuer certificate"
+msgstr "Não foi possível obter o certificado do emissor local"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:85
 msgid "Unable to verify the first certificate"
-msgstr "Unable to verify the first certificate"
+msgstr "Não foi possível verificar o primeiro certificado"
 
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.h2:15
 #: templates/ERR_UNSUP_HTTPVERSION+html.body.div.blockquote.p:23
 msgid "Unsupported HTTP version"
-msgstr "Versão do HTTP não é suportada."
+msgstr "Versão do HTTP não é suportada"
 
 #: templates/ERR_UNSUP_REQ+html.body.div.blockquote.p:23
 msgid "Unsupported Request Method and Protocol"
@@ -1140,7 +1152,7 @@ msgstr "Método e Protocolo de Requisição Não-Suportado"
 
 #: templates/error-details.txt+X509_V_ERR_INVALID_PURPOSE.descr:105
 msgid "Unsupported certificate purpose"
-msgstr "Unsupported certificate purpose"
+msgstr "Propósito do certificado não é suportado"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS+html.body.div.blockquote.p:23
 msgid ""
@@ -1155,7 +1167,7 @@ msgstr ""
 #: templates/ERR_AGENT_WPAD+html.head.title:4
 #: templates/ERR_AGENT_WPAD+html.body.div.h2:15
 msgid "Web Browser Configuration"
-msgstr ""
+msgstr "Configuração do Navegador Web"
 
 #: templates/ERR_WRITE_ERROR+html.body.div.blockquote.p:23
 msgid "Write Error"
@@ -1169,13 +1181,14 @@ msgid ""
 msgstr ""
 "Você enviou uma requisição com a diretiva de controle de cache <q>only-if-"
 "cached</q>. O documento não foi encontrado no cache <em>ou</em> o cache "
-"requer uma revalidação, que é proibida por esta diretiva."
+"requer uma revalidação, que é proibida pela diretiva <q>only-if-cached</q>."
 
 #: templates/ERR_AGENT_CONFIGURE+html.body.div.blockquote.p:21
 #: templates/ERR_AGENT_WPAD+html.body.div.blockquote.p:21
 msgid ""
 "Your Web Browser configuration needs to be corrected to use this network."
 msgstr ""
+"A configuração de seu navegador precisa ser corrigida para usar esta rede."
 
 #: templates/ERR_ACCESS_DENIED+html.body.div.p:28
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED+html.body.div.p:29
@@ -1238,7 +1251,6 @@ msgstr "Resposta de tamanho zero"
 #~ msgid "Parent Directory"
 #~ msgstr "Diretório pai"
 
-#, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches. The most likely cause for this error is that the cache "
