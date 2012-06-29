@@ -1,3 +1,26 @@
+Changes to squid-3.2.0.18 (29 Jun 2011):
+
+	- Bug 3576: ICY streams being Transfer-Encoding:chunked
+	- Bug 3537: statistics histogram leaks memory
+	- Bug 3526: digest authentication crash
+	- Bug 3484: Docs: sslproxy_cert_error example flawed
+	- Bug 3462: Delay Pools and ICAP
+	- Bug 3405: ssl_crtd crashes failing to remove certificate
+	- Bug 3380: Mac OSX compile errors with CMSG_SPACE
+	- Bug 3258: Requests hang when Host forgery verify fails
+	- Bug 3186: Digest auth caches failed state without revalidating
+	- Bug 2976: ERR_INVALID_URL for transparently captured requests when reconfiguring
+	- Bug 2885: AIX: check and set required compiler flags
+	- Fix ssl_crtd compile issues with libsslutil
+	- Fix build with GCC 4.7 (and probably other C++11 compilers).
+	- Fix double-escape of %R on deny_info redirect responses
+	- Support status 308 Permanent Redirect
+	- Support for TLSv1.1 and TLSv1.2 options and methods
+	- Support passing external_acl_type credentials on ICAP
+	- Language Updates: fr, hy, pt_BR
+	- ... and many compile issues on Windows
+	- ... and some minor code polish
+
 Changes to squid-3.2.0.17 (12 Apr 2011):
 
 	- Bug 3527: EUI compile errors on Mac OS X 10.5.8 PPC
@@ -520,7 +543,7 @@ Changes to squid-3.1.12 (04 Apr 2011):
 	- Bug 3164: Total memory info display 32-bit overflows
 	- Bug 3155: Werror is hard-coded in libTrie build
 	- Bug 3151: squid_kerb_auth: use autoconf LIBS instead of FLAGS for library linkage
-	- Bug 2976: invalid URL on intercepted requests during reconfigure
+	- Bug 2976: invalid URL on intercepted requests during reconfigure (workaround)
 	- Bug 2720: comment in same line as cache/mem_replacement_policy causes error
 	- Bug 2621: Provide request headers to RESPMOD when using cache_peer.
 	- Bug 2330: AuthUser objects are never unlocked
