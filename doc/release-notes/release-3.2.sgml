@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.0.17 release notes</title>
+<title>Squid 3.2.0.18 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.0.17 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.0.18 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -25,6 +25,17 @@ report with a stack trace.
 <sect1>Known issues
 <p>
 Although this release is deemed good enough for use in many setups, please note the existence of <url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.2&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=" name="open bugs against Squid-3.2">.
+
+<p>Currently known issues which only depends on available developer time and may still be resolved in a future 3.2 release are:
+
+<itemize>
+	<item>CVE-2009-0801 : interception proxies cannot relay certain requests to peers. see the CVE section below for details.
+	<item>SMP Support still has a number of important bugs needing to be resolved. see the bugs list above for details.
+	<item>Windows support is still incomplete.
+	<item>TCP logging of access.log does not recover from broken connections well.
+	<item>The lack of some features available in Squid-2.x series. See the regression sections below for full details.
+</itemize>
+
 
 <sect1>Changes since earlier releases of Squid-3.2
 <p>
@@ -41,7 +52,7 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 	<item>Helper Multiplexer and On-Demand
 	<item>Helper Name Changes
 	<item>Multi-Lingual manuals
-	<item>Solaris 10 pthreads Support (Experimental)
+	<item>Solaris 10 pthreads Support
 	<item>Surrogate/1.0 protocol extensions to HTTP
 	<item>Logging Infrastructure Updated
 	<item>Client Bandwidth Limits
@@ -62,8 +73,20 @@ Most user-facing changes are reflected in squid.conf (see below).
   DNS entries.
 
 <p>When the Host: authority contradicts another authority source Squid will log
-  "SECURITY ALERT: Host: header forgery detected" and respond with a 409 Conflict
-  error status page.
+  "SECURITY ALERT: Host: header forgery detected". The response will then be determined
+  by the <url url="http://www.squid-cache.org/Doc/config/host_verify_strict/" name="host_verify_strict">
+  directive. Squid will respond with 409 Conflict error response when strict validation
+  fails and handles the request normally when strict validation succeeds or is OFF (default).
+
+<p>Relaying of messages which FAIL non-strct Host: validation are permitted through Squid but
+  only to the original destination IP the client was requesting. This means interception proxies
+  can not be used as feeder gateways into a cluster or peer hierarchy without strict validation.
+
+<p>Known Issue: When non-strict validation fails Squid will relay the request, but can only do
+  so to the orginal destination IP the client was contacting. This means that interception
+  proxy Squid are unable to pass traffic reliably to peers in a cache hierarchy.
+  Developer time is required to implement safe transit of these requests.
+  Please contact squid-dev if you are able to assist or sponsor the development.
 
 
 <sect1>NCSA helper DES algorithm password limits
@@ -327,6 +350,9 @@ Most user-facing changes are reflected in squid.conf (see below).
   These logs are now created using an access_log line with the format "referrer" or "useragent".
   They also now log all client requests, if there was no Referer or User-Agent header a dash (-) is logged.
 
+<p>Known Issue: The TCP logging module does not recover from broken connections well.
+  At present it will restart the affected Squid instance if the TCP connection is broken.
+
 
 <sect1> Client Bandwidth Limits
 <p>In mobile environments, Squid may need to limit Squid-to-client bandwidth
@@ -361,6 +387,9 @@ Most user-facing changes are reflected in squid.conf (see below).
 <sect1>Better eCAP Suport
 <p>Support for libecap version 0.2.0 has been added with this series of Squid. Bringing
    better support for body handling, and logging.
+
+<p>Known Issue: Due to API changes in libecap this release of Squid will not build
+  against any older libecap releases.
 
 
 <sect1>Cache Manager access changes
@@ -470,6 +499,14 @@ This section gives a thorough account of those changes in three categories:
 	<tag>eui_lookup</tag>
 	<p>Whether to lookup the EUI or MAC address of a connected client.
 
+	<tag>host_verify_strict</tag>
+	<p>New option to enable super-strict HTTP and DNS information match.
+	Ensuring the HTTP URI details, DNS records, and TCP connection layers all match in a
+	three-legged security verification. Preventing domain hijacking or malicious poisoning
+	attacks by malicious scripts.
+	<p>The default is to verify only intercepted traffic, to log all issues and let failed
+	traffic through when doing so can be done safely.
+
 	<tag>icap_206_enable</tag>
 	<p>New option to toggle whether the ICAP 206 (Partial Content) responses extension.
 	   Default is on.
@@ -557,6 +594,7 @@ This section gives a thorough account of those changes in three categories:
 	   <em>idle=N</em> determines how many helper to retain as buffer against sudden traffic loads.
 	   <em>concurrency=N</em> previously called <em>auth_param ... concurrency</em> as a separate option.
 	<p>Removed Basic, Digest, NTLM, Negotiate <em>auth_param ... concurrency</em> setting option.
+	<p>Known Issue: NTLM and Negotiate protocols do not support concurrency. When set this option is ignored.
 
 	<tag>cache_dir</tag>
 	<p><em>min-size</em> option ported from Squid-2
