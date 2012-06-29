@@ -73,7 +73,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p>When the Host: authority contradicts another authority source Squid will log
   "SECURITY ALERT: Host: header forgery detected". The response will then be determined
-  by the <a href="http://www.squid-cache.org/Doc/config/host_verify_strict/">host_verify_strict</a>
+  by the <url url="http://www.squid-cache.org/Doc/config/host_verify_strict/" name="host_verify_strict">
   directive. Squid will respond with 409 Conflict error response when strict validation
   fails and handles the request normally when strict validation succeeds or is OFF (default).
 
