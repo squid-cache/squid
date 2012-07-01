@@ -3,9 +3,11 @@
 #include "HttpRequest.h"
 #include "ssl/support.h"
 
+#if USE_SSL
 AccessLogEntry::Ssl::Ssl(): user(NULL), bumpMode(::Ssl::bumpEnd)
 {
 }
+#endif /* USE_SSL */
 
 
 void
