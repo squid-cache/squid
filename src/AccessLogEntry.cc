@@ -1,6 +1,12 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "HttpRequest.h"
+#include "ssl/support.h"
+
+AccessLogEntry::Ssl::Ssl(): user(NULL), bumpMode(::Ssl::bumpEnd)
+{
+}
+
 
 void
 AccessLogEntry::getLogClientIp(char *buf, size_t bufsz) const

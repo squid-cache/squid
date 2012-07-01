@@ -111,6 +111,17 @@ public:
         const char *opcode;
     } htcp;
 
+#if USE_SSL
+    /// logging information specific to the SSL protocol
+    class Ssl {
+    public:
+        Ssl();
+
+        const char *user; ///< emailAddress from the SSL client certificate
+        int bumpMode; ///< whether and how the request was SslBumped
+    } ssl;
+#endif
+
     /** \brief This subclass holds log info for Squid internal stats
      * \todo Inner class declarations should be moved outside
      * \todo some details relevant to particular protocols need shuffling to other sub-classes
