@@ -1004,6 +1004,15 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             dooff = 1;
             break;
 
+#if USE_SSL
+        case LFT_SSL_BUMP_MODE: {
+            const Ssl::BumpMode mode = static_cast<Ssl::BumpMode>(al->ssl.bumpMode);
+            // for Ssl::bumpEnd, Ssl::bumpMode() returns NULL and we log '-'
+            out = Ssl::bumpMode(mode);
+            break;
+        }
+#endif
+
         case LFT_PERCENT:
             out = "%";
 

@@ -3338,6 +3338,24 @@ DOC_START
 		Ss	Squid request status (TCP_MISS etc)
 		Sh	Squid hierarchy status (DEFAULT_PARENT etc)
 
+	SSL-related format codes:
+
+		ssl::bump_mode	SslBump decision for the transaction:
+
+				For CONNECT requests that initiated bumping of
+				a connection and for any request received on
+				an already bumped connection, Squid logs the
+				corresponding SslBump mode ("server-first" or
+				"client-first"). See the ssl_bump option for
+				more information about these modes.
+
+				A "none" token is logged for requests that
+				triggered "ssl_bump" ACL evaluation matching
+				either a "none" rule or no rules at all.
+
+				In all other cases, a single dash ("-") is
+				logged.
+
 	If ICAP is enabled, the following code becomes available (as
 	well as ICAP log codes documented with the icap_log option):
 

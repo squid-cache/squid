@@ -187,7 +187,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
     request_satisfaction_mode = false;
 #endif
 #if USE_SSL
-    sslBumpNeed = Ssl::bumpEnd;
+    sslBumpNeed_ = Ssl::bumpEnd;
 #endif
 }
 
@@ -1277,18 +1277,40 @@ ClientRequestContext::checkNoCacheDone(const allow_t &answer)
 bool
 ClientRequestContext::sslBumpAccessCheck()
 {
-    if (http->request->method == METHOD_CONNECT &&
-            !http->request->flags.spoof_client_ip && // not a fake bumped request from an https port
-            Config.accessList.ssl_bump && http->getConn()->port->sslBump) {
-        debugs(85, 5, HERE << "SslBump possible, checking ACL");
-
-        ACLFilledChecklist *acl_checklist = clientAclChecklistCreate(Config.accessList.ssl_bump, http);
-        acl_checklist->nonBlockingCheck(sslBumpAccessCheckDoneWrapper, this);
-        return true;
-    } else {
-        http->sslBumpNeeded(Ssl::bumpNone);
+    // If SSL connection tunneling or bumping decision has been made, obey it.
+    const Ssl::BumpMode bumpMode = http->getConn()->sslBumpMode;
+    if (bumpMode != Ssl::bumpEnd) {
+        debugs(85, 5, HERE << "SslBump already decided (" << bumpMode <<
+               "), " << "ignoring ssl_bump for " << http->getConn());
+        http->al.ssl.bumpMode = bumpMode; // inherited from bumped connection
         return false;
     }
+
+    // If we have not decided yet, decide whether to bump now.
+
+    // Bumping here can only start with a CONNECT request on a bumping port
+    // (bumping of intercepted SSL conns is decided before we get 1st request).
+    // We also do not bump redirected CONNECT requests.
+    if (http->request->method != METHOD_CONNECT || http->redirect.status ||
+        !Config.accessList.ssl_bump || !http->getConn()->port->sslBump) {
+        http->al.ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
+        debugs(85, 5, HERE << "cannot SslBump this request");
+        return false;
+    }
+
+    // Do not bump during authentication: clients would not proxy-authenticate
+    // if we delay a 407 response and respond with 200 OK to CONNECT.
+    if (error && error->httpStatus == HTTP_PROXY_AUTHENTICATION_REQUIRED) {
+        http->al.ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
+        debugs(85, 5, HERE << "no SslBump during proxy authentication");
+        return false;
+    }
+
+    debugs(85, 5, HERE << "SslBump possible, checking ACL");
+
+    ACLFilledChecklist *acl_checklist = clientAclChecklistCreate(Config.accessList.ssl_bump, http);
+    acl_checklist->nonBlockingCheck(sslBumpAccessCheckDoneWrapper, this);
+    return true;
 }
 
 /**
@@ -1311,10 +1333,10 @@ ClientRequestContext::sslBumpAccessCheckDone(const allow_t &answer)
     if (!httpStateIsValid())
         return;
 
-    if (answer == ACCESS_ALLOWED)
-        http->sslBumpNeeded(static_cast<Ssl::BumpMode>(answer.kind));
-    else
-        http->sslBumpNeeded(Ssl::bumpNone);
+    const Ssl::BumpMode bumpMode = answer == ACCESS_ALLOWED ?
+        static_cast<Ssl::BumpMode>(answer.kind) : Ssl::bumpNone;
+    http->sslBumpNeed(bumpMode); // for processRequest() to bump if needed
+    http->al.ssl.bumpMode = bumpMode; // for logging
 
     http->doCallouts();
 }
@@ -1363,18 +1385,11 @@ ClientHttpRequest::httpStart()
 
 #if USE_SSL
 
-Ssl::BumpMode
-ClientHttpRequest::sslBumpNeeded() const
-{
-    assert(sslBumpNeed != Ssl::bumpEnd);
-    return sslBumpNeed;
-}
-
 void
-ClientHttpRequest::sslBumpNeeded(Ssl::BumpMode mode)
+ClientHttpRequest::sslBumpNeed(Ssl::BumpMode mode)
 {
     debugs(83, 3, HERE << "sslBump required: "<< Ssl::bumpMode(mode));
-    sslBumpNeed = mode;
+    sslBumpNeed_ = mode;
 }
 
 // called when comm_write has completed
@@ -1411,16 +1426,18 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
         getConn()->auth_user_request = request->auth_user_request;
 #endif
 
-    getConn()->switchToHttps(request, sslBumpNeeded());
+    assert(sslBumpNeeded());
+    getConn()->switchToHttps(request, sslBumpNeed_);
 }
 
 void
 ClientHttpRequest::sslBumpStart()
 {
-    debugs(85, 5, HERE << "Confirming CONNECT tunnel on FD " << getConn()->clientConnection);
-    // send an HTTP 200 response to kick client SSL negotiation
-    debugs(33, 7, HERE << "Confirming CONNECT tunnel on FD " << getConn()->clientConnection);
+    debugs(85, 5, HERE << "Confirming " << Ssl::bumpMode(sslBumpNeed_) <<
+           "-bumped CONNECT tunnel on FD " << getConn()->clientConnection);
+    getConn()->sslBumpMode = sslBumpNeed_;
 
+    // send an HTTP 200 response to kick client SSL negotiation
     // TODO: Unify with tunnel.cc and add a Server(?) header
     static const char *const conn_established = "HTTP/1.1 200 Connection established\r\n\r\n";
     AsyncCall::Pointer call = commCbCall(85, 5, "ClientSocketContext::sslBumpEstablish",
@@ -1605,8 +1622,7 @@ ClientHttpRequest::doCallouts()
         const char *uri = urlCanonical(request);
         StoreEntry *e= storeCreateEntry(uri, uri, request->flags, request->method);
 #if USE_SSL
-        if (sslBumpNeeded() && 
-            calloutContext->error->httpStatus != HTTP_PROXY_AUTHENTICATION_REQUIRED) {
+        if (sslBumpNeeded()) {
             // set final error but delay sending until we bump
             Ssl::ServerBump *srvBump = new Ssl::ServerBump(request, e);
             errorAppendEntry(e, calloutContext->error);

@@ -3592,12 +3592,14 @@ httpsSslBumpAccessCheckDone(allow_t answer, void *data)
     // Require both a match and a positive bump mode to work around exceptional
     // cases where ACL code may return ACCESS_ALLOWED with zero answer.kind.
     if (answer == ACCESS_ALLOWED && answer.kind != Ssl::bumpNone) {
-        debugs(33, 2, HERE << "sslBump done data: " << connState->clientConnection);
+        debugs(33, 2, HERE << "sslBump needed for " << connState->clientConnection);
+        connState->sslBumpMode = static_cast<Ssl::BumpMode>(answer.kind);
         httpsEstablish(connState, NULL, (Ssl::BumpMode)answer.kind);
     } else {
-        // fake a CONNECT request to force connState to tunnel
+        debugs(33, 2, HERE << "sslBump not needed for " << connState->clientConnection);
+        connState->sslBumpMode = Ssl::bumpNone;
 
-        debugs(33, 2, HERE << " SslBump denied: " << connState->clientConnection << " revert to tunnel mode");
+        // fake a CONNECT request to force connState to tunnel
         static char ip[MAX_IPSTRLEN];
         static char reqStr[MAX_IPSTRLEN + 80];
         connState->clientConnection->local.NtoA(ip, sizeof(ip));
@@ -4245,6 +4247,7 @@ CBDATA_CLASS_INIT(ConnStateData);
 ConnStateData::ConnStateData() :
         AsyncJob("ConnStateData"),
 #if USE_SSL
+        sslBumpMode(Ssl::bumpEnd),
         switchedToHttps_(false),
         sslServerBump(NULL),
 #endif
