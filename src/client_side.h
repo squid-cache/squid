@@ -352,6 +352,9 @@ public:
     /// Otherwise, writes the error to the client and returns true. Also checks
     /// for SQUID_X509_V_ERR_DOMAIN_MISMATCH on bumped requests.
     bool serveDelayedError(ClientSocketContext *context);
+
+    Ssl::BumpMode sslBumpMode; ///< ssl_bump decision (Ssl::bumpEnd if n/a).
+
 #else
     bool switchedToHttps() const { return false; }
 #endif

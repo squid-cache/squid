@@ -186,6 +186,13 @@ static TokenTableEntry TokenTableIcap[] = {
 };
 #endif
 
+#if USE_SSL
+// SSL (ssl::) tokens
+static TokenTableEntry TokenTableSsl[] = {
+    {"bump_mode", LFT_SSL_BUMP_MODE},
+    {NULL, LFT_NONE}
+};
+#endif
 } // namespace Format
 
 /// Register all components custom format tokens
@@ -201,8 +208,9 @@ Format::Token::Init()
 #if ICAP_CLIENT
     TheConfig.registerTokens(String("icap"),::Format::TokenTableIcap);
 #endif
-
-    // TODO tokens for OpenSSL errors in "ssl::"
+#if USE_SSL
+    TheConfig.registerTokens(String("ssl"),::Format::TokenTableSsl);
+#endif
 }
 
 /// Scans a token table to see if the next token exists there
