@@ -229,7 +229,7 @@ wcstrcmparray(const wchar_t * str, const char **array)
         debug("Windows group: %S, Squid group: %S\n", str, wszGroup);
         if ((use_case_insensitive_compare ? _wcsicmp(str, wszGroup) : wcscmp(str, wszGroup)) == 0)
             return 0;
-        array++;
+        ++array;
     }
     return -1;
 }
@@ -295,8 +295,8 @@ Valid_Local_Groups(char *UserName, const char **Groups)
                     result = 1;
                     break;
                 }
-                pTmpBuf++;
-                dwTotalCount++;
+                ++pTmpBuf;
+                ++dwTotalCount;
             }
         }
     } else
@@ -432,8 +432,8 @@ Valid_Global_Groups(char *UserName, const char **Groups)
                         result = 1;
                         break;
                     }
-                    pTmpBuf++;
-                    dwTotalCount++;
+                    ++pTmpBuf;
+                    ++dwTotalCount;
                 }
             }
         } else {

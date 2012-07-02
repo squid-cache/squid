@@ -67,7 +67,7 @@ create_ls(struct main_args *margs)
     }
     while (*p) {		/* loop over group list */
         if (*p == '\n' || *p == '\r') {		/* Ignore CR and LF if exist */
-            p++;
+            ++p;
             continue;
         }
         if (*p == '@') {	/* end of group name - start of domain name */
@@ -76,7 +76,7 @@ create_ls(struct main_args *margs)
                 return (1);
             }
             *p = '\0';
-            p++;
+            ++p;
             lssp = init_ls();
             lssp->lserver = xstrdup(np);
             if (lsspn)		/* Have already an existing structure */
@@ -88,7 +88,7 @@ create_ls(struct main_args *margs)
                 return (1);
             }
             *p = '\0';
-            p++;
+            ++p;
             if (dp) {		/* end of domain name */
                 lssp->domain = xstrdup(dp);
                 dp = NULL;
@@ -102,7 +102,7 @@ create_ls(struct main_args *margs)
             np = p;		/* after : starts new group name */
             debug((char *) "%s| %s: DEBUG: ldap server %s Domain %s\n", LogTime(), PROGRAM, lssp->lserver, lssp->domain?lssp->domain:"NULL");
         } else
-            p++;
+            ++p;
     }
     if (p == np) {		/* empty group name not allowed */
         debug((char *) "%s| %s: DEBUG: No ldap servers defined for domain %s\n", LogTime(), PROGRAM, p);

@@ -385,7 +385,7 @@ main(int argc, char *const argv[])
         if (nuser || nuser8) {
             if (nuser) {
                 *nuser = '\0';
-                nuser++;
+                ++nuser;
             } else {
                 *nuser8 = '\0';
                 nuser = nuser8 + 3;
@@ -400,7 +400,7 @@ main(int argc, char *const argv[])
         } else if (domain) {
             strup(domain);
             *domain = '\0';
-            domain++;
+            ++domain;
         }
         if (!domain && margs.ddomain) {
             domain = xstrdup(margs.ddomain);
@@ -435,7 +435,7 @@ strup(char *s)
 {
     while (*s) {
         *s = toupper((unsigned char) *s);
-        s++;
+        ++s;
     }
 }
 

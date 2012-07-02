@@ -137,7 +137,7 @@ main(int argc, char *const argv[])
         j = 2;
     }
 
-    for (i=j; i<argc; i++) {
+    for (i=j; i<argc; ++i) {
         if (!strncasecmp(argv[i],"--ntlm",6))
             nstart = i;
         if (!strncasecmp(argv[i],"--kerberos",10))
@@ -167,7 +167,7 @@ main(int argc, char *const argv[])
     nargs[nend-nstart]=NULL;
     if (debug) {
         fprintf(stderr, "%s| %s: NTLM command: ", LogTime(), PROGRAM);
-        for (i=0; i<nend-nstart; i++)
+        for (i=0; i<nend-nstart; ++i)
             fprintf(stderr, "%s ", nargs[i]);
         fprintf(stderr, "\n");
     }
@@ -179,7 +179,7 @@ main(int argc, char *const argv[])
     kargs[kend-kstart]=NULL;
     if (debug) {
         fprintf(stderr, "%s| %s: Kerberos command: ", LogTime(), PROGRAM);
-        for (i=0; i<kend-kstart; i++)
+        for (i=0; i<kend-kstart; ++i)
             fprintf(stderr, "%s ", kargs[i]);
         fprintf(stderr, "\n");
     }
@@ -381,7 +381,7 @@ main(int argc, char *const argv[])
             if (strlen(tbuff) >= 3 && (!strncmp(tbuff,"AF ",3) || !strncmp(tbuff,"NA ",3))) {
                 strncpy(buff,tbuff,3);
                 buff[3]='=';
-                for (unsigned int i=2; i<=strlen(tbuff); i++)
+                for (unsigned int i=2; i<=strlen(tbuff); ++i)
                     buff[i+2] = tbuff[i];
             } else {
                 strcpy(buff,tbuff);
