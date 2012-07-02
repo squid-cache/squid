@@ -38,7 +38,7 @@ static void
 free_names(usersfile * uf)
 {
     int i;
-    for (i = 0; i < uf->Inuse; i++) {
+    for (i = 0; i < uf->Inuse; ++i) {
         if (uf->names[i])
             free(uf->names[i]);
         uf->names[i] = NULL;
@@ -115,7 +115,7 @@ Read_usersfile(const char *path, usersfile * uf)
                    (uf->Alloc >> 1) * sizeof(*uf->names));
         }
         uf->names[uf->Inuse] = xstrdup(buf);
-        uf->Inuse++;
+        ++uf->Inuse;
     }
     fclose(fp);
     fp = NULL;
