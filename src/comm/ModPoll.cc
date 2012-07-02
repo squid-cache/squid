@@ -231,7 +231,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
             pfds[npfds].fd = fd;
             pfds[npfds].events = events;
             pfds[npfds].revents = 0;
-            npfds++;
+            ++npfds;
         }
     }
 
@@ -241,14 +241,14 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
     }
 
     getCurrentTime();
-    statCounter.syscalls.selects++;
+    ++statCounter.syscalls.selects;
 
     if (poll(pfds, npfds, 0) < 1) {
         PROF_stop(comm_check_incoming);
         return incoming_sockets_accepted;
     }
 
-    for (i = 0; i < npfds; i++) {
+    for (i = 0; i < npfds; ++i) {
         int revents;
 
         if (((revents = pfds[i].revents) == 0) || ((fd = pfds[i].fd) == -1))
@@ -396,10 +396,10 @@ Comm::DoSelect(int msec)
                 pfds[nfds].fd = i;
                 pfds[nfds].events = events;
                 pfds[nfds].revents = 0;
-                nfds++;
+                ++nfds;
 
                 if ((events & POLLRDNORM) && fd_table[i].flags.read_pending)
-                    npending++;
+                    ++npending;
             }
         }
 
@@ -498,7 +498,7 @@ Comm::DoSelect(int msec)
                     F->flags.read_pending = 0;
                     hdl(fd, F->read_data);
                     PROF_stop(comm_read_handler);
-                    statCounter.select_fds++;
+                    ++statCounter.select_fds;
 
                     if (commCheckUdpIncoming)
                         comm_poll_udp_incoming();
@@ -519,7 +519,7 @@ Comm::DoSelect(int msec)
                     F->write_handler = NULL;
                     hdl(fd, F->write_data);
                     PROF_stop(comm_write_handler);
-                    statCounter.select_fds++;
+                    ++statCounter.select_fds;
 
                     if (commCheckUdpIncoming)
                         comm_poll_udp_incoming();
