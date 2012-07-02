@@ -201,12 +201,14 @@ CBDATA_TYPE(ASState);
 void
 asnInit(void)
 {
-    static int inited = 0;
+    static bool inited = false;
     squid_max_keylen = 40;
     CBDATA_INIT_TYPE(ASState);
 
-    if (0 == inited++)
+    if (!inited) {
+        inited = true;
         squid_rn_init();
+    }
 
     squid_rn_inithead(&AS_tree_head, 8);
 
@@ -310,9 +312,9 @@ asHandleReply(void *data, StoreIOBuffer result)
 
     while ((size_t)(s - buf) < result.length + asState->reqofs && *s != '\0') {
         while (*s && xisspace(*s))
-            s++;
+            ++s;
 
-        for (t = s; *t; t++) {
+        for (t = s; *t; ++t) {
             if (xisspace(*t))
                 break;
         }
@@ -635,7 +637,7 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist
     const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->GetHost(), IP_LOOKUP_IF_MISS);
 
     if (ia) {
-        for (int k = 0; k < (int) ia->count; k++) {
+        for (int k = 0; k < (int) ia->count; ++k) {
             if (data->match(ia->in_addrs[k]))
                 return 1;
         }

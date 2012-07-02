@@ -140,10 +140,10 @@ Auth::User::absorb(Auth::User::Pointer from)
             if (!found) {
                 /* This ip is not in the seen list. Add it. */
                 dlinkAddTail(&new_ipdata->node, &ipdata->node, &ip_list);
-                ipcount++;
+                ++ipcount;
                 /* remove from the source list */
                 dlinkDelete(&new_ipdata->node, &(from->ip_list));
-                from->ipcount--;
+                ++from->ipcount;
             }
         }
     }
@@ -334,7 +334,7 @@ Auth::User::addIp(Ip::Address ipaddr)
 
     dlinkAddTail(ipdata, &ipdata->node, &ip_list);
 
-    ipcount++;
+    ++ipcount;
 
     debugs(29, 2, HERE << "user '" << username() << "' has been seen at a new IP address (" << ipaddr << ")");
 }
