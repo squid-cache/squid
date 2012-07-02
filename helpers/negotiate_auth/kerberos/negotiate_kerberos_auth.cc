@@ -135,7 +135,7 @@ gethost_name(void)
     hres_list = hres;
     count = 0;
     while (hres_list) {
-        count++;
+        ++count;
         hres_list = hres_list->ai_next;
     }
     rc = getnameinfo(hres->ai_addr, hres->ai_addrlen, hostname,

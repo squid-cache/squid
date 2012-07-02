@@ -187,7 +187,7 @@ lutil_sasl_interact(
 
         if (rc)
             return rc;
-        interact++;
+        ++interact;
     }
 
     return LDAP_SUCCESS;
