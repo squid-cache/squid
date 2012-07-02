@@ -202,8 +202,8 @@ Comm::ConnOpener::connected()
      * based on the max-conn option.  We need to increment here,
      * even if the connection may fail.
      */
-    if (conn_->getPeer())
-        conn_->getPeer()->stats.conn_open++;
+    if (peer *peer=(conn_->getPeer()))
+        ++peer->stats.conn_open;
 
     lookupLocalAddress();
 
