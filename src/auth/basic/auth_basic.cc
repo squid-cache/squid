@@ -223,11 +223,11 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader)
 
     /* trim BASIC from string */
     while (xisgraph(*proxy_auth))
-        proxy_auth++;
+        ++proxy_auth;
 
     /* Trim leading whitespace before decoding */
     while (xisspace(*proxy_auth))
-        proxy_auth++;
+        ++proxy_auth;
 
     /* Trim trailing \n before decoding */
     // XXX: really? is the \n actually still there? does the header parse not drop it?
