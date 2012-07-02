@@ -173,13 +173,13 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
     /* if proxy_auth is actually NULL, we'd better not manipulate it. */
     if (blob) {
         while (xisspace(*blob) && *blob)
-            blob++;
+            ++blob;
 
         while (!xisspace(*blob) && *blob)
-            blob++;
+            ++blob;
 
         while (xisspace(*blob) && *blob)
-            blob++;
+            ++blob;
     }
 
     switch (user()->credentials()) {
@@ -262,7 +262,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, void *lastserver, char *reply)
     /* seperate out the useful data */
     blob = strchr(reply, ' ');
     if (blob)
-        blob++;
+        ++blob;
 
     if (strncasecmp(reply, "TT ", 3) == 0) {
         /* we have been given a blob to send to the client */

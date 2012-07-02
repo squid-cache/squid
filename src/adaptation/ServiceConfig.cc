@@ -187,7 +187,7 @@ Adaptation::ServiceConfig::grokUri(const char *value)
         if ((t = strchr(s, ']')) == NULL)
             return false;
 
-        s++;
+        ++s;
         len = t - s;
         if ((e = strchr(t, ':')) != NULL) {
             have_port = true;
@@ -212,7 +212,7 @@ Adaptation::ServiceConfig::grokUri(const char *value)
 
     port = -1;
     if (have_port) {
-        s++;
+        ++s;
 
         if ((e = strchr(s, '/')) != NULL) {
             char *t;
@@ -235,7 +235,7 @@ Adaptation::ServiceConfig::grokUri(const char *value)
 
     // if no port, the caller may use service_configConfigs or supply the default if neeeded
 
-    s++;
+    ++s;
     e = strchr(s, '\0');
     len = e - s;
 

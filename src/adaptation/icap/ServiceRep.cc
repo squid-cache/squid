@@ -479,7 +479,7 @@ void Adaptation::Icap::ServiceRep::checkOptions()
 
             method_list.append(ICAP::methodStr(*iter));
             method_list.append(" ", 1);
-            iter++;
+            ++iter;
         }
 
         if (!method_found) {

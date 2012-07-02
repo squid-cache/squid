@@ -71,7 +71,7 @@ hash_string(const void *data, unsigned int size)
     unsigned int j = 0;
     unsigned int i = 0;
     while (*s) {
-        j++;
+        ++j;
         n ^= 271 * (*s++);
     }
     i = n ^ (j * 271);
@@ -169,7 +169,7 @@ hash_join(hash_table * hid, hash_link * lnk)
     i = hid->hash(lnk->key, hid->size);
     lnk->next = hid->buckets[i];
     hid->buckets[i] = lnk;
-    hid->count++;
+    ++hid->count;
 }
 
 /**
@@ -268,7 +268,7 @@ hash_remove_link(hash_table * hid, hash_link * hl)
             if (NULL == hid->next)
                 hash_next_bucket(hid);
         }
-        hid->count--;
+        --hid->count;
         return;
     }
     assert(0);
@@ -295,9 +295,9 @@ hashFreeItems(hash_table * hid, HASHFREE * free_func)
     hash_first(hid);
     while ((l = hash_next(hid)) && i < hid->count) {
         *(list + i) = l;
-        i++;
+        ++i;
     }
-    for (int j = 0; j < i; j++)
+    for (int j = 0; j < i; ++j)
         free_func(*(list + j));
     xfree(list);
 }
@@ -334,7 +334,7 @@ hashPrime(int n)
     int best_prime = hash_primes[0];
     double min = fabs(log((double) n) - log((double) hash_primes[0]));
     double d;
-    for (int i = 0; i < I; i++) {
+    for (int i = 0; i < I; ++i) {
         d = fabs(log((double) n) - log((double) hash_primes[i]));
         if (d > min)
             continue;

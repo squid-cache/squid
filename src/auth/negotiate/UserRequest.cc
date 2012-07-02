@@ -179,13 +179,13 @@ Auth::Negotiate::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData
 
     if (blob) {
         while (xisspace(*blob) && *blob)
-            blob++;
+            ++blob;
 
         while (!xisspace(*blob) && *blob)
-            blob++;
+            ++blob;
 
         while (xisspace(*blob) && *blob)
-            blob++;
+            ++blob;
     }
 
     switch (user()->credentials()) {
