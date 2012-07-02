@@ -264,16 +264,16 @@ urldecode(char *dst, const char *src, int size)
     tmp[2] = '\0';
     while (*src && size > 1) {
         if (*src == '%' && src[1] != '\0' && src[2] != '\0') {
-            src++;
+            ++src;
             tmp[0] = *src++;
             tmp[1] = *src++;
             *dst++ = strtol(tmp, NULL, 16);
         } else {
             *dst++ = *src++;
         }
-        size--;
+        --size;
     }
-    *dst++ = '\0';
+    *dst = '\0';
 }
 
 static int
@@ -348,7 +348,7 @@ authenticate(int socket_fd, const char *username, const char *passwd)
         md5_calc(cbc, md5buf, secretlen + AUTH_VECTOR_LEN);
 
         /* Xor the password into the MD5 digest */
-        for (i = 0; i < AUTH_VECTOR_LEN; i++) {
+        for (i = 0; i < AUTH_VECTOR_LEN; ++i) {
             *ptr++ = (cbc[i] ^= passbuf[j + i]);
         }
     }
@@ -397,7 +397,8 @@ authenticate(int socket_fd, const char *username, const char *passwd)
      */
     auth->length = htons(total_length);
 
-    while (retry--) {
+    while (retry) {
+        --retry;
         int time_spent;
         struct timeval sent;
         /*
@@ -566,7 +567,7 @@ main(int argc, char **argv)
         /* Parse out the username and password */
         ptr = buf;
         while (isspace(*ptr))
-            ptr++;
+            ++ptr;
         if ((end = strchr(ptr, ' ')) == NULL) {
             SEND_ERR("No password");
             continue;
@@ -575,7 +576,7 @@ main(int argc, char **argv)
         urldecode(username, ptr, MAXPWNAM);
         ptr = end + 1;
         while (isspace(*ptr))
-            ptr++;
+            ++ptr;
         urldecode(passwd, ptr, MAXPASS);
 
         if (authenticate(sockfd, username, passwd))
