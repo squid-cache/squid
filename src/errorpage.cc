@@ -511,8 +511,7 @@ errorStateFree(ErrorState * err)
 #if USE_SSL
     delete err->detail;
 #endif
-    err->dnsError.clean();
-    cbdataFree(err);
+    delete err;
 }
 
 int
