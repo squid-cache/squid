@@ -234,7 +234,6 @@ SQUIDCEXTERN void httpHeaderCleanModule(void);
 /* store report about current header usage and other stats */
 void httpHeaderStoreReport(StoreEntry * e);
 SQUIDCEXTERN void httpHdrMangleList(HttpHeader *, HttpRequest *, int req_or_rep);
-SQUIDCEXTERN int httpReqHdrManglersConfigured();
 
 #if SQUID_SNMP
 SQUIDCEXTERN PF snmpHandleUdp;

@@ -363,6 +363,7 @@ squid_SOURCES = \
 	HttpHeader.h \
 	HttpHeaderMask.h \
 	HttpHeaderRange.h \
+	HttpHeaderTools.h \
 	HttpHeaderTools.cc \
 	HttpBody.h \
 	HttpBody.cc \
@@ -1055,6 +1056,7 @@ TESTS += $(check_PROGRAMS)
 
 # - add other component .(h|cc) files needed to link and run tests
 tests_testHttpReply_SOURCES=\
+	anyp/ProtocolType.cc \
 	cbdata.cc \
 	cbdata.h \
 	ETag.cc \
@@ -1091,9 +1093,11 @@ tests_testHttpReply_SOURCES=\
 	SquidString.h \
 	SquidTime.h \
 	String.cc \
+	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
 	tests/stub_cache_manager.cc \
 	tests/stub_debug.cc \
+	tests/stub_errorpage.cc \
 	tests/stub_HelperChildConfig.cc \
 	StatCounters.h \
 	StatCounters.cc \
@@ -1102,25 +1106,31 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_store.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_tools.cc \
+	tests/stub_HttpRequest.cc \
 	tests/testHttpReply.cc \
 	tests/testHttpReply.h \
 	tests/testMain.cc \
 	time.cc \
+	url.cc \
+	URLScheme.cc \
 	wordlist.cc
 nodist_tests_testHttpReply_SOURCES=\
 	$(TESTSOURCES)
 tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 tests_testHttpReply_LDADD=\
+	acl/libacls.la \
 	acl/libapi.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
 	ip/libip.la \
 	base/libbase.la \
+	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
+	$(SSLLIB) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA)
@@ -1182,6 +1192,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_debug.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_DiskIOModule.cc \
+	tests/stub_errorpage.cc \
 	tests/stub_fd.cc \
 	tests/stub_HttpRequest.cc \
 	tests/stub_MemObject.cc \
@@ -1218,6 +1229,7 @@ tests_testACLMaxUserIP_LDADD= \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
+	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
@@ -2499,6 +2511,7 @@ tests_testStore_LDADD= \
 	mgr/libmgr.la \
 	ipc/libipc.la \
 	anyp/libanyp.la \
+	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
