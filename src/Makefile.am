@@ -1056,7 +1056,6 @@ TESTS += $(check_PROGRAMS)
 
 # - add other component .(h|cc) files needed to link and run tests
 tests_testHttpReply_SOURCES=\
-	anyp/ProtocolType.cc \
 	cbdata.cc \
 	cbdata.h \
 	ETag.cc \
@@ -1122,6 +1121,7 @@ tests_testHttpReply_LDADD=\
 	acl/libapi.la \
 	acl/libstate.la \
 	$(AUTH_LIBS) \
+	anyp/libanyp.la \
 	ip/libip.la \
 	base/libbase.la \
 	$(SSL_LIBS) \
