@@ -1229,7 +1229,6 @@ tests_testACLMaxUserIP_LDADD= \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
-	$(SSL_LIBS) \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
