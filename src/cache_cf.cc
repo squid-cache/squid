@@ -169,12 +169,13 @@ static void free_all(void);
 void requirePathnameExists(const char *name, const char *path);
 static OBJH dump_config;
 #if USE_HTTP_VIOLATIONS
-static void dump_http_header_access(StoreEntry * entry, const char *name, header_mangler header[]);
-static void parse_http_header_access(header_mangler header[]);
-static void free_http_header_access(header_mangler header[]);
-static void dump_http_header_replace(StoreEntry * entry, const char *name, header_mangler header[]);
-static void parse_http_header_replace(header_mangler * header);
-static void free_http_header_replace(header_mangler * header);
+static void free_HeaderManglers(HeaderManglers **pm);
+static void dump_http_header_access(StoreEntry * entry, const char *name, const HeaderManglers *manglers);
+static void parse_http_header_access(HeaderManglers **manglers);
+#define free_http_header_access free_HeaderManglers
+static void dump_http_header_replace(StoreEntry * entry, const char *name, const HeaderManglers *manglers);
+static void parse_http_header_replace(HeaderManglers **manglers);
+#define free_http_header_replace free_HeaderManglers
 #endif
 static void parse_denyinfo(acl_deny_info_list ** var);
 static void dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var);
@@ -810,7 +811,7 @@ configDoConfigure(void)
     // TODO: replace with a dedicated "purge" ACL option?
     Config2.onoff.enable_purge = (ACLMethodData::ThePurgeCount > 0);
 
-    Config2.onoff.mangle_request_headers = httpReqHdrManglersConfigured();
+    Config2.onoff.mangle_request_headers = (Config.request_header_access != NULL);
 
     if (geteuid() == 0) {
         if (NULL != Config.effectiveUser) {
@@ -1675,23 +1676,15 @@ parse_client_delay_pool_access(ClientDelayConfig * cfg)
 
 #if USE_HTTP_VIOLATIONS
 static void
-dump_http_header_access(StoreEntry * entry, const char *name, header_mangler header[])
+dump_http_header_access(StoreEntry * entry, const char *name, const HeaderManglers *manglers)
 {
-    int i;
-
-    for (i = 0; i < HDR_ENUM_END; i++) {
-        if (header[i].access_list != NULL) {
-            storeAppendPrintf(entry, "%s ", name);
-            dump_acl_access(entry, httpHeaderNameById(i),
-                            header[i].access_list);
-        }
-    }
+    if (manglers)
+        manglers->dumpAccess(entry, name);
 }
 
 static void
-parse_http_header_access(header_mangler header[])
+parse_http_header_access(HeaderManglers **pm)
 {
-    int id, i;
     char *t = NULL;
 
     if ((t = strtok(NULL, w_space)) == NULL) {
@@ -1700,64 +1693,34 @@ parse_http_header_access(header_mangler header[])
         return;
     }
 
-    /* Now lookup index of header. */
-    id = httpHeaderIdByNameDef(t, strlen(t));
+    if (!*pm)
+        *pm = new HeaderManglers;
+    HeaderManglers *manglers = *pm;
+    header_mangler *mangler = manglers->track(t);
+    assert(mangler);
+    parse_acl_access(&mangler->access_list);
+}
 
-    if (strcmp(t, "All") == 0)
-        id = HDR_ENUM_END;
-    else if (strcmp(t, "Other") == 0)
-        id = HDR_OTHER;
-    else if (id == -1) {
-        debugs(3, 0, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(3, 0, "parse_http_header_access: unknown header name '" << t << "'");
-        return;
-    }
-
-    if (id != HDR_ENUM_END) {
-        parse_acl_access(&header[id].access_list);
-    } else {
-        char *next_string = t + strlen(t) - 1;
-        *next_string = 'A';
-        *(next_string + 1) = ' ';
-
-        for (i = 0; i < HDR_ENUM_END; i++) {
-            char *new_string = xstrdup(next_string);
-            strtok(new_string, w_space);
-            parse_acl_access(&header[i].access_list);
-            safe_free(new_string);
-        }
+static void
+free_HeaderManglers(HeaderManglers **pm)
+{
+    // we delete the entire http_header_* mangler configuration at once
+    if (const HeaderManglers *manglers = *pm) {
+        delete manglers;
+        *pm = NULL;
     }
 }
 
 static void
-free_http_header_access(header_mangler header[])
+dump_http_header_replace(StoreEntry * entry, const char *name, const HeaderManglers *manglers)
 {
-    int i;
-
-    for (i = 0; i < HDR_ENUM_END; i++) {
-        free_acl_access(&header[i].access_list);
-    }
+    if (manglers)
+        manglers->dumpReplacement(entry, name);
 }
 
 static void
-dump_http_header_replace(StoreEntry * entry, const char *name, header_mangler
-                         header[])
+parse_http_header_replace(HeaderManglers **pm)
 {
-    int i;
-
-    for (i = 0; i < HDR_ENUM_END; i++) {
-        if (NULL == header[i].replacement)
-            continue;
-
-        storeAppendPrintf(entry, "%s %s %s\n", name, httpHeaderNameById(i),
-                          header[i].replacement);
-    }
-}
-
-static void
-parse_http_header_replace(header_mangler header[])
-{
-    int id, i;
     char *t = NULL;
 
     if ((t = strtok(NULL, w_space)) == NULL) {
@@ -1766,44 +1729,12 @@ parse_http_header_replace(header_mangler header[])
         return;
     }
 
-    /* Now lookup index of header. */
-    id = httpHeaderIdByNameDef(t, strlen(t));
+    const char *value = t + strlen(t) + 1;
 
-    if (strcmp(t, "All") == 0)
-        id = HDR_ENUM_END;
-    else if (strcmp(t, "Other") == 0)
-        id = HDR_OTHER;
-    else if (id == -1) {
-        debugs(3, 0, "" << cfg_filename << " line " << config_lineno << ": " << config_input_line);
-        debugs(3, 0, "parse_http_header_replace: unknown header name " << t << ".");
-
-        return;
-    }
-
-    if (id != HDR_ENUM_END) {
-        if (header[id].replacement != NULL)
-            safe_free(header[id].replacement);
-
-        header[id].replacement = xstrdup(t + strlen(t) + 1);
-    } else {
-        for (i = 0; i < HDR_ENUM_END; i++) {
-            if (header[i].replacement != NULL)
-                safe_free(header[i].replacement);
-
-            header[i].replacement = xstrdup(t + strlen(t) + 1);
-        }
-    }
-}
-
-static void
-free_http_header_replace(header_mangler header[])
-{
-    int i;
-
-    for (i = 0; i < HDR_ENUM_END; i++) {
-        if (header[i].replacement != NULL)
-            safe_free(header[i].replacement);
-    }
+    if (!*pm)
+        *pm = new HeaderManglers;
+    HeaderManglers *manglers = *pm;
+    manglers->setReplacement(t, value);
 }
 
 #endif
