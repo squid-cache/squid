@@ -486,7 +486,7 @@ void header_mangler_clean(header_mangler &m)
 
 static
 void header_mangler_dump_access(StoreEntry * entry, const char *option,
-    const header_mangler &m, const char *name)
+                                const header_mangler &m, const char *name)
 {
     if (m.access_list != NULL) {
         storeAppendPrintf(entry, "%s ", option);
@@ -496,7 +496,7 @@ void header_mangler_dump_access(StoreEntry * entry, const char *option,
 
 static
 void header_mangler_dump_replacement(StoreEntry * entry, const char *option,
-    const header_mangler &m, const char *name)
+                                     const header_mangler &m, const char *name)
 {
     if (m.replacement)
         storeAppendPrintf(entry, "%s %s %s\n", option, name, m.replacement);
@@ -567,8 +567,7 @@ HeaderManglers::track(const char *name)
     header_mangler *m = NULL;
     if (id == HDR_ENUM_END) {
         m = &all;
-    } else
-    if (id == HDR_BAD_HDR) {
+    } else if (id == HDR_BAD_HDR) {
         m = &custom[name];
     } else {
         m = &known[id]; // including HDR_OTHER
@@ -594,7 +593,7 @@ HeaderManglers::find(const HttpHeaderEntry &e) const
 {
     // a known header with a configured ACL list
     if (e.id != HDR_OTHER && 0 <= e.id && e.id < HDR_ENUM_END &&
-        known[e.id].access_list)
+            known[e.id].access_list)
         return &known[e.id];
 
     // a custom header
