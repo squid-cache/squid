@@ -18,7 +18,8 @@ typedef struct _header_mangler header_mangler;
 class StoreEntry;
 
 /// A collection of header_mangler objects for a given message kind.
-class HeaderManglers {
+class HeaderManglers
+{
 public:
     HeaderManglers();
     ~HeaderManglers();
