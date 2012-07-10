@@ -270,7 +270,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
     blob = strchr(reply, ' ');
 
     if (blob) {
-        blob++;
+        ++blob;
         arg = strchr(blob + 1, ' ');
     } else {
         arg = NULL;

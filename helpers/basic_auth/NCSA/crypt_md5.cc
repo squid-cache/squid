@@ -59,7 +59,8 @@ char *crypt_md5(const char *pw, const char *salt)
     unsigned long l;
 
     if (*salt == '$') {
-        magic = salt++;
+        magic = salt;
+        ++salt;
         while (*salt && *salt != '$')
             ++salt;
         if (*salt == '$') {
