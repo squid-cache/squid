@@ -187,7 +187,7 @@ krb5_create_cache(struct main_args *margs, char *domain)
         creds = (krb5_creds *) xmalloc(sizeof(*creds));
         memset(creds, 0, sizeof(*creds));
 
-        for (i = 0; i < nprinc; i++) {
+        for (i = 0; i < nprinc; ++i) {
             /*
              * get credentials
              */
@@ -324,7 +324,7 @@ cleanup:
         xfree(mem_cache);
     if (principal)
         krb5_free_principal(kparam.context, principal);
-    for (i = 0; i < nprinc; i++) {
+    for (i = 0; i < nprinc; ++i) {
         if (principal_list[i])
             krb5_free_principal(kparam.context, principal_list[i]);
     }

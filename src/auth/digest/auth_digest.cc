@@ -320,7 +320,7 @@ authDigestNonceUnlink(digest_nonce_h * nonce)
     assert(nonce != NULL);
 
     if (nonce->references > 0) {
-        nonce->references--;
+        -- nonce->references;
     } else {
         debugs(29, 1, "authDigestNonceUnlink; Attempt to lower nonce " << nonce << " refcount below 0!");
     }
