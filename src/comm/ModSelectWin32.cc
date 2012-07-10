@@ -217,7 +217,7 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
     FD_ZERO(&write_mask);
     incoming_sockets_accepted = 0;
 
-    for (i = 0; i < nfds; i++) {
+    for (i = 0; i < nfds; ++i) {
         fd = fds[i];
 
         if (fd_table[fd].read_handler) {
@@ -240,13 +240,13 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
 
     getCurrentTime();
 
-    statCounter.syscalls.selects++;
+    ++ statCounter.syscalls.selects;
 
     if (select(maxfd, &read_mask, &write_mask, &errfds, &zero_tv) < 1)
 
         return incoming_sockets_accepted;
 
-    for (i = 0; i < nfds; i++) {
+    for (i = 0; i < nfds; ++i) {
         fd = fds[i];
 
         if (FD_ISSET(fd, &read_mask)) {
@@ -393,7 +393,7 @@ Comm::DoSelect(int msec)
 
         FD_ZERO(&pendingfds);
 
-        for (j = 0; j < (int) readfds.fd_count; j++) {
+        for (j = 0; j < (int) readfds.fd_count; ++j) {
             register int readfds_handle = readfds.fd_array[j];
             no_bits = 1;
 
@@ -411,12 +411,12 @@ Comm::DoSelect(int msec)
 
             if (FD_ISSET(fd, &readfds) && fd_table[fd].flags.read_pending) {
                 FD_SET(fd, &pendingfds);
-                pending++;
+                ++pending;
             }
         }
 
 #if DEBUG_FDBITS
-        for (i = 0; i < maxfd; i++) {
+        for (i = 0; i < maxfd; ++i) {
             /* Check each open socket for a handler. */
 
             if (fd_table[i].read_handler) {
@@ -478,7 +478,7 @@ Comm::DoSelect(int msec)
         assert(readfds.fd_count <= (unsigned int) Biggest_FD);
         assert(pendingfds.fd_count <= (unsigned int) Biggest_FD);
 
-        for (j = 0; j < (int) readfds.fd_count; j++) {
+        for (j = 0; j < (int) readfds.fd_count; ++j) {
             register int readfds_handle = readfds.fd_array[j];
             register int pendingfds_handle = pendingfds.fd_array[j];
             register int osfhandle;
@@ -530,7 +530,7 @@ Comm::DoSelect(int msec)
                 F->flags.read_pending = 0;
                 commUpdateReadBits(fd, NULL);
                 hdl(fd, F->read_data);
-                statCounter.select_fds++;
+                ++ statCounter.select_fds;
 
                 if (commCheckUdpIncoming)
                     comm_select_udp_incoming();
@@ -545,7 +545,7 @@ Comm::DoSelect(int msec)
 
         assert(errfds.fd_count <= (unsigned int) Biggest_FD);
 
-        for (j = 0; j < (int) errfds.fd_count; j++) {
+        for (j = 0; j < (int) errfds.fd_count; ++j) {
             register int errfds_handle = errfds.fd_array[j];
 
             for ( fd = Biggest_FD; fd; fd-- ) {
@@ -560,14 +560,14 @@ Comm::DoSelect(int msec)
                     F->write_handler = NULL;
                     commUpdateWriteBits(fd, NULL);
                     hdl(fd, F->write_data);
-                    statCounter.select_fds++;
+                    ++ statCounter.select_fds;
                 }
             }
         }
 
         assert(writefds.fd_count <= (unsigned int) Biggest_FD);
 
-        for (j = 0; j < (int) writefds.fd_count; j++) {
+        for (j = 0; j < (int) writefds.fd_count; ++j) {
             register int writefds_handle = writefds.fd_array[j];
             no_bits = 1;
 
@@ -613,7 +613,7 @@ Comm::DoSelect(int msec)
                 F->write_handler = NULL;
                 commUpdateWriteBits(fd, NULL);
                 hdl(fd, F->write_data);
-                statCounter.select_fds++;
+                ++ statCounter.select_fds;
 
                 if (commCheckUdpIncoming)
                     comm_select_udp_incoming();
@@ -720,7 +720,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
     struct stat sb;
     debugs(5, 0, "examine_select: Examining open file descriptors...");
 
-    for (fd = 0; fd < Squid_MaxFD; fd++) {
+    for (fd = 0; fd < Squid_MaxFD; ++fd) {
         FD_ZERO(&read_x);
         FD_ZERO(&write_x);
         tv.tv_sec = tv.tv_usec = 0;
@@ -732,7 +732,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
         else
             continue;
 
-        statCounter.syscalls.selects++;
+        ++ statCounter.syscalls.selects;
         errno = 0;
 
         if (!fstat(fd, &sb)) {
@@ -792,10 +792,10 @@ commUpdateReadBits(int fd, PF * handler)
 {
     if (handler && !FD_ISSET(fd, &global_readfds)) {
         FD_SET(fd, &global_readfds);
-        nreadfds++;
+        ++nreadfds;
     } else if (!handler && FD_ISSET(fd, &global_readfds)) {
         FD_CLR(fd, &global_readfds);
-        nreadfds--;
+        --nreadfds;
     }
 }
 
@@ -804,10 +804,10 @@ commUpdateWriteBits(int fd, PF * handler)
 {
     if (handler && !FD_ISSET(fd, &global_writefds)) {
         FD_SET(fd, &global_writefds);
-        nwritefds++;
+        ++nwritefds;
     } else if (!handler && FD_ISSET(fd, &global_writefds)) {
         FD_CLR(fd, &global_writefds);
-        nwritefds--;
+        --nwritefds;
     }
 }
 

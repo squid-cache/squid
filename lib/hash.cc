@@ -121,7 +121,7 @@ hash4(const void *data, unsigned int size)
     case 1:
         HASH4;
     }
-    while (loop--) {
+    while (--loop) {
         HASH4;
         HASH4;
         HASH4;
