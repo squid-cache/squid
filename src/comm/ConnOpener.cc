@@ -131,6 +131,7 @@ Comm::ConnOpener::doneConnecting(comm_err_t status, int xerrno)
     }
 
     if (temporaryFd_ >= 0) {
+        debugs(5, 4, HERE << conn_ << " closing temp FD " << temporaryFd_);
         // it never reached fully open, so cleanup the FD handlers
         // Note that comm_close() sequence does not happen for partially open FD
         Comm::SetSelect(temporaryFd_, COMM_SELECT_WRITE, NULL, NULL, 0);
@@ -141,6 +142,7 @@ Comm::ConnOpener::doneConnecting(comm_err_t status, int xerrno)
         }
         fd_table[temporaryFd_].timeoutHandler = NULL;
         fd_table[temporaryFd_].timeout = 0;
+        close(temporaryFd_);
         fd_close(temporaryFd_);
         temporaryFd_ = -1;
     }
