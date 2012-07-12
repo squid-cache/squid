@@ -99,7 +99,7 @@ AIODiskFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
         error(true);
     } else {
         closed = false;
-        store_open_disk_fd++;
+        ++store_open_disk_fd;
         debugs(79, 3, HERE << ": opened FD " << fd);
     }
 
@@ -159,7 +159,7 @@ AIODiskFile::read(ReadRequest *request)
     qe->aq_e_aiocb.aio_buf =  request->buf;
 
     /* Account */
-    strategy->aq.aq_numpending++;
+    ++ strategy->aq.aq_numpending;
 
     /* Initiate aio */
     if (aio_read(&qe->aq_e_aiocb) < 0) {

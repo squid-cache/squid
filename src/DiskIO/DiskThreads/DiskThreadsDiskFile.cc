@@ -96,7 +96,7 @@ DiskThreadsDiskFile::open(int flags, mode_t mode, RefCount<IORequestor> callback
     }
 
 #endif
-    Opening_FD++;
+    ++Opening_FD;
 
     ioRequestor = callback;
 
@@ -145,7 +145,7 @@ DiskThreadsDiskFile::create(int flags, mode_t mode, RefCount<IORequestor> callba
     }
 
 #endif
-    Opening_FD++;
+    ++Opening_FD;
 
     ioRequestor = callback;
 
@@ -189,7 +189,7 @@ DiskThreadsDiskFile::openDone(int unused, const char *unused2, int anFD, int err
         debugs(79, 1, "\t" << path_);
         errorOccured = true;
     } else {
-        store_open_disk_fd++;
+        ++store_open_disk_fd;
         commSetCloseOnExec(fd);
         fd_open(fd, FD_FILE, path_);
     }

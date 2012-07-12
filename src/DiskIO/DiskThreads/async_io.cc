@@ -57,7 +57,7 @@ aioOpen(const char *path, int oflag, mode_t mode, AIOCB * callback, void *callba
     squidaio_ctrl_t *ctrlp;
 
     assert(DiskThreadsIOStrategy::Instance.initialised);
-    squidaio_counts.open_start++;
+    ++squidaio_counts.open_start;
     ctrlp = (squidaio_ctrl_t *)DiskThreadsIOStrategy::Instance.squidaio_ctrl_pool->alloc();
     ctrlp->fd = -2;
     ctrlp->done_handler = callback;
@@ -75,7 +75,7 @@ aioClose(int fd)
     squidaio_ctrl_t *ctrlp;
 
     assert(DiskThreadsIOStrategy::Instance.initialised);
-    squidaio_counts.close_start++;
+    ++squidaio_counts.close_start;
     aioCancel(fd);
     ctrlp = (squidaio_ctrl_t *)DiskThreadsIOStrategy::Instance.squidaio_ctrl_pool->alloc();
     ctrlp->fd = fd;
@@ -95,7 +95,7 @@ aioCancel(int fd)
     dlink_node *m, *next;
 
     assert(DiskThreadsIOStrategy::Instance.initialised);
-    squidaio_counts.cancel++;
+    ++squidaio_counts.cancel;
 
     for (m = used_list.head; m; m = next) {
         next = m->next;
@@ -137,7 +137,7 @@ aioWrite(int fd, off_t offset, char *bufp, size_t len, AIOCB * callback, void *c
     int seekmode;
 
     assert(DiskThreadsIOStrategy::Instance.initialised);
-    squidaio_counts.write_start++;
+    ++squidaio_counts.write_start;
     ctrlp = (squidaio_ctrl_t *)DiskThreadsIOStrategy::Instance.squidaio_ctrl_pool->alloc();
     ctrlp->fd = fd;
     ctrlp->done_handler = callback;
@@ -166,7 +166,7 @@ aioRead(int fd, off_t offset, size_t len, AIOCB * callback, void *callback_data)
     int seekmode;
 
     assert(DiskThreadsIOStrategy::Instance.initialised);
-    squidaio_counts.read_start++;
+    ++squidaio_counts.read_start;
     ctrlp = (squidaio_ctrl_t *)DiskThreadsIOStrategy::Instance.squidaio_ctrl_pool->alloc();
     ctrlp->fd = fd;
     ctrlp->done_handler = callback;
@@ -195,7 +195,7 @@ aioStat(char *path, struct stat *sb, AIOCB * callback, void *callback_data)
     squidaio_ctrl_t *ctrlp;
 
     assert(DiskThreadsIOStrategy::Instance.initialised);
-    squidaio_counts.stat_start++;
+    ++squidaio_counts.stat_start;
     ctrlp = (squidaio_ctrl_t *)DiskThreadsIOStrategy::Instance.squidaio_ctrl_pool->alloc();
     ctrlp->fd = -2;
     ctrlp->done_handler = callback;
@@ -212,7 +212,7 @@ aioUnlink(const char *path, AIOCB * callback, void *callback_data)
 {
     squidaio_ctrl_t *ctrlp;
     assert(DiskThreadsIOStrategy::Instance.initialised);
-    squidaio_counts.unlink_start++;
+    ++squidaio_counts.unlink_start;
     ctrlp = (squidaio_ctrl_t *)DiskThreadsIOStrategy::Instance.squidaio_ctrl_pool->alloc();
     ctrlp->fd = -2;
     ctrlp->done_handler = callback;
