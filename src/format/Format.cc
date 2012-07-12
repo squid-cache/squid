@@ -263,30 +263,30 @@ log_quoted_string(const char *str, char *out)
         case '\r':
             *p++ = '\\';
             *p++ = 'r';
-            str++;
+            ++str;
             break;
 
         case '\n':
             *p++ = '\\';
             *p++ = 'n';
-            str++;
+            ++str;
             break;
 
         case '\t':
             *p++ = '\\';
             *p++ = 't';
-            str++;
+            ++str;
             break;
 
         default:
             *p++ = '\\';
             *p++ = *str;
-            str++;
+            ++str;
             break;
         }
     }
 
-    *p++ = '\0';
+    *p = '\0';
 }
 
 void
