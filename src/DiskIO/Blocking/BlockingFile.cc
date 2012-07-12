@@ -82,7 +82,7 @@ BlockingFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
         error(true);
     } else {
         closed = false;
-        store_open_disk_fd++;
+        ++store_open_disk_fd;
         debugs(79, 3, "BlockingFile::open: opened FD " << fd);
     }
 
@@ -106,7 +106,7 @@ void BlockingFile::doClose()
     if (fd > -1) {
         closed = true;
         file_close(fd);
-        store_open_disk_fd--;
+        --store_open_disk_fd;
         fd = -1;
     }
 }

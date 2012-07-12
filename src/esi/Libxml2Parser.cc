@@ -56,8 +56,8 @@ void esi_startElementSAXFunc(void * ctx, const xmlChar * name, const xmlChar ** 
     xmlChar **tmp = (xmlChar **)atts;
 
     while (tmp && *tmp != NULL) {
-        count++;
-        tmp++;
+        ++count;
+        ++tmp;
     }
 
     // we increased on every key and value

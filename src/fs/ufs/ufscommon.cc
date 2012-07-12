@@ -386,7 +386,7 @@ RebuildState::RebuildStep(void *data)
     if (!rb->isDone())
         eventAdd("storeRebuild", RebuildStep, rb, 0.01, 1);
     else {
-        StoreController::store_dirs_rebuilding--;
+        -- StoreController::store_dirs_rebuilding;
         storeRebuildComplete(&rb->counts);
         delete rb;
     }
@@ -457,12 +457,12 @@ RebuildState::rebuildFromDirectory()
     assert(fd > -1);
     /* lets get file stats here */
 
-    n_read++;
+    ++n_read;
 
     if (fstat(fd, &sb) < 0) {
         debugs(47, 1, "commonUfsDirRebuildFromDirectory: fstat(FD " << fd << "): " << xstrerror());
         file_close(fd);
-        store_open_disk_fd--;
+        --store_open_disk_fd;
         fd = -1;
         return;
     }
@@ -477,7 +477,7 @@ RebuildState::rebuildFromDirectory()
                         (int64_t)sb.st_size);
 
     file_close(fd);
-    store_open_disk_fd--;
+    --store_open_disk_fd;
     fd = -1;
 
     if (!loaded) {
@@ -489,7 +489,7 @@ RebuildState::rebuildFromDirectory()
     if (!storeRebuildKeepEntry(tmpe, key, counts))
         return;
 
-    counts.objcount++;
+    ++counts.objcount;
     // tmpe.dump(5);
     currentEntry(sd->addDiskRestore(key,
                                     filn,
@@ -531,10 +531,10 @@ RebuildState::rebuildFromSwapLog()
         return;
     }
 
-    n_read++;
+    ++n_read;
 
     if (!swapData.sane()) {
-        counts.invalid++;
+        ++counts.invalid;
         return;
     }
 
@@ -586,8 +586,8 @@ RebuildState::rebuildFromSwapLog()
             }
 
             currentEntry()->release();
-            counts.objcount--;
-            counts.cancelcount++;
+            --counts.objcount;
+            ++counts.cancelcount;
         }
         return;
     } else {
@@ -597,7 +597,7 @@ RebuildState::rebuildFromSwapLog()
         if (0.0 == x - (double) (int) x)
             debugs(47, 1, "WARNING: " << counts.bad_log_op << " invalid swap log entries found");
 
-        counts.invalid++;
+        ++counts.invalid;
 
         return;
     }
@@ -605,12 +605,12 @@ RebuildState::rebuildFromSwapLog()
     ++counts.scancount; // XXX: should not this be incremented earlier?
 
     if (!sd->validFileno(swapData.swap_filen, 0)) {
-        counts.invalid++;
+        ++counts.invalid;
         return;
     }
 
     if (EBIT_TEST(swapData.flags, KEY_PRIVATE)) {
-        counts.badflags++;
+        ++counts.badflags;
         return;
     }
 
@@ -634,7 +634,7 @@ RebuildState::rebuildFromSwapLog()
 
     if (used && !disk_entry_newer) {
         /* log entry is old, ignore it */
-        counts.clashcount++;
+        ++counts.clashcount;
         return;
     } else if (used && currentEntry() && currentEntry()->swap_filen == swapData.swap_filen && currentEntry()->swap_dirn == sd->index) {
         /* swapfile taken, same URL, newer, update meta */
@@ -672,12 +672,12 @@ RebuildState::rebuildFromSwapLog()
          * were in a slow rebuild and the the swap file number got taken
          * and the validation procedure hasn't run. */
         assert(flags.need_to_validate);
-        counts.clashcount++;
+        ++counts.clashcount;
         return;
     } else if (currentEntry() && !disk_entry_newer) {
         /* key already exists, current entry is newer */
         /* keep old, ignore new */
-        counts.dupcount++;
+        ++counts.dupcount;
         return;
     } else if (currentEntry()) {
         /* key already exists, this swapfile not being used */
@@ -695,14 +695,14 @@ RebuildState::rebuildFromSwapLog()
         }
 
         currentEntry()->release();
-        counts.dupcount++;
+        ++counts.dupcount;
     } else {
         /* URL doesnt exist, swapfile not in use */
         /* load new */
         (void) 0;
     }
 
-    counts.objcount++;
+    ++counts.objcount;
 
     currentEntry(sd->addDiskRestore(swapData.key,
                                     swapData.swap_filen,
@@ -753,7 +753,7 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
 
             td = opendir(fullpath);
 
-            dirs_opened++;
+            ++dirs_opened;
 
             if (td == NULL) {
                 debugs(47, 1, "commonUfsDirGetNextFile: opendir: " << fullpath << ": " << xstrerror());
@@ -768,7 +768,7 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
         }
 
         if (td != NULL && (entry = readdir(td)) != NULL) {
-            in_dir++;
+            ++in_dir;
 
             if (sscanf(entry->d_name, "%x", &fn) != 1) {
                 debugs(47, 3, "commonUfsDirGetNextFile: invalid " << entry->d_name);
@@ -797,7 +797,7 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
             if (fd < 0)
                 debugs(47, 1, "commonUfsDirGetNextFile: " << fullfilename << ": " << xstrerror());
             else
-                store_open_disk_fd++;
+                ++store_open_disk_fd;
 
             continue;
         }

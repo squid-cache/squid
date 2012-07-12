@@ -313,7 +313,7 @@ squidaio_init(void)
 
     assert(NUMTHREADS);
 
-    for (i = 0; i < NUMTHREADS; i++) {
+    for (i = 0; i < NUMTHREADS; ++i) {
         threadp = (squidaio_thread_t *)squidaio_thread_pool->alloc();
         threadp->status = _THREAD_STARTING;
         threadp->current_req = NULL;
@@ -473,7 +473,7 @@ squidaio_thread_loop(void *ptr)
         done_queue.tailp = &request->next;
         pthread_mutex_unlock(&done_queue.mutex);
         CommIO::NotifyIOCompleted();
-        threadp->requests++;
+        ++ threadp->requests;
     }				/* while forever */
 
     return NULL;
@@ -1040,7 +1040,7 @@ squidaio_stats(StoreEntry * sentry)
 
     threadp = threads;
 
-    for (i = 0; i < NUMTHREADS; i++) {
+    for (i = 0; i < NUMTHREADS; ++i) {
         storeAppendPrintf(sentry, "%i\t0x%lx\t%ld\n", i + 1, (unsigned long)threadp->thread, threadp->requests);
         threadp = threadp->next;
     }
