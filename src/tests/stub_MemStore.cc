@@ -13,6 +13,7 @@
 
 MemStore::MemStore() STUB
 MemStore::~MemStore() STUB
+bool MemStore::keepInLocalMemory(const StoreEntry &) const STUB_RETVAL(false)
 void MemStore::considerKeeping(StoreEntry &) STUB
 void MemStore::reference(StoreEntry &) STUB
 void MemStore::maintain() STUB
