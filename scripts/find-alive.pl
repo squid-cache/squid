@@ -51,6 +51,10 @@ my %Pairs = (
 		'HttpStateData (\S+) created',
 		'cbdataFree: Freeing (\S+)',
 	],
+	FD => [
+		'fd_open.*\sFD (\d+)',
+		'fd_close\s+FD (\d+)',
+	],
 );
 
 if (!$Pairs{$Thing}) {
