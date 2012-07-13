@@ -100,7 +100,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     if (hIpc)
         *hIpc = NULL;
 
- // NP: no wrapping around d and c usage since we *want* code expansion
+// NP: no wrapping around d and c usage since we *want* code expansion
 #define IPC_CHECK_FAIL(f,d,c) \
     if ((f) < 0) { \
         debugs(54, DBG_CRITICAL, "ERROR: Failed to create helper " d " FD: " << c); \
