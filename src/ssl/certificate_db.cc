@@ -109,14 +109,14 @@ Ssl::CertificateDb::Row::Row()
         :   width(cnlNumber)
 {
     row = new char *[width + 1];
-    for (size_t i = 0; i < width + 1; i++)
+    for (size_t i = 0; i < width + 1; ++i)
         row[i] = NULL;
 }
 
 Ssl::CertificateDb::Row::~Row()
 {
     if (row) {
-        for (size_t i = 0; i < width + 1; i++) {
+        for (size_t i = 0; i < width + 1; ++i) {
             delete[](row[i]);
         }
         delete[](row);
@@ -149,15 +149,16 @@ char ** Ssl::CertificateDb::Row::getRow()
 unsigned long Ssl::CertificateDb::index_serial_hash(const char **a)
 {
     const char *n = a[Ssl::CertificateDb::cnlSerial];
-    while (*n == '0') n++;
+    while (*n == '0')
+        ++n;
     return lh_strhash(n);
 }
 
 int Ssl::CertificateDb::index_serial_cmp(const char **a, const char **b)
 {
     const char *aa, *bb;
-    for (aa = a[Ssl::CertificateDb::cnlSerial]; *aa == '0'; aa++);
-    for (bb = b[Ssl::CertificateDb::cnlSerial]; *bb == '0'; bb++);
+    for (aa = a[Ssl::CertificateDb::cnlSerial]; *aa == '0'; ++aa);
+    for (bb = b[Ssl::CertificateDb::cnlSerial]; *bb == '0'; ++bb);
     return strcmp(aa, bb);
 }
 
@@ -495,7 +496,7 @@ void Ssl::CertificateDb::deleteRow(const char **row, int rowIndex)
 #endif
 
     const Columns db_indexes[]={cnlSerial, cnlName};
-    for (unsigned int i = 0; i < countof(db_indexes); i++) {
+    for (unsigned int i = 0; i < countof(db_indexes); ++i) {
 #if OPENSSL_VERSION_NUMBER >= 0x1000004fL
         if (LHASH_OF(OPENSSL_STRING) *fieldIndex =  db.get()->index[db_indexes[i]])
             lh_OPENSSL_STRING_delete(fieldIndex, (char **)row);
@@ -518,10 +519,10 @@ bool Ssl::CertificateDb::deleteInvalidCertificate()
 
     bool removed_one = false;
 #if OPENSSL_VERSION_NUMBER >= 0x1000004fL
-    for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); i++) {
+    for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); ++i) {
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
 #else
-    for (int i = 0; i < sk_num(db.get()->data); i++) {
+    for (int i = 0; i < sk_num(db.get()->data); ++i) {
         const char ** current_row = ((const char **)sk_value(db.get()->data, i));
 #endif
 
@@ -566,10 +567,10 @@ bool Ssl::CertificateDb::deleteByHostname(std::string const & host)
         return false;
 
 #if OPENSSL_VERSION_NUMBER >= 0x1000004fL
-    for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); i++) {
+    for (int i = 0; i < sk_OPENSSL_PSTRING_num(db.get()->data); ++i) {
         const char ** current_row = ((const char **)sk_OPENSSL_PSTRING_value(db.get()->data, i));
 #else
-    for (int i = 0; i < sk_num(db.get()->data); i++) {
+    for (int i = 0; i < sk_num(db.get()->data); ++i) {
         const char ** current_row = ((const char **)sk_value(db.get()->data, i));
 #endif
         if (host == current_row[cnlName]) {

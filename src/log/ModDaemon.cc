@@ -89,7 +89,7 @@ logfileNewBuffer(Logfile * lf)
     b->written_len = 0;
     b->len = 0;
     dlinkAddTail(b, &b->node, &ll->bufs);
-    ll->nbufs++;
+    ++ ll->nbufs;
 }
 
 static void

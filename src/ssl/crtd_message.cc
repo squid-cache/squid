@@ -22,7 +22,7 @@ Ssl::CrtdMessage::ParseResult Ssl::CrtdMessage::parse(const char * buffer, size_
         switch (state) {
         case BEFORE_CODE: {
             if (xisspace(*current_pos)) {
-                current_pos++;
+                ++current_pos;
                 break;
             }
             if (xisalpha(*current_pos)) {
@@ -35,7 +35,7 @@ Ssl::CrtdMessage::ParseResult Ssl::CrtdMessage::parse(const char * buffer, size_
         case CODE: {
             if (xisalnum(*current_pos) || *current_pos == '_') {
                 current_block += *current_pos;
-                current_pos++;
+                ++current_pos;
                 break;
             }
             if (xisspace(*current_pos)) {
@@ -49,7 +49,7 @@ Ssl::CrtdMessage::ParseResult Ssl::CrtdMessage::parse(const char * buffer, size_
         }
         case BEFORE_LENGTH: {
             if (xisspace(*current_pos)) {
-                current_pos++;
+                ++current_pos;
                 break;
             }
             if (xisdigit(*current_pos)) {
@@ -62,7 +62,7 @@ Ssl::CrtdMessage::ParseResult Ssl::CrtdMessage::parse(const char * buffer, size_
         case LENGTH: {
             if (xisdigit(*current_pos)) {
                 current_block += *current_pos;
-                current_pos++;
+                ++current_pos;
                 break;
             }
             if (xisspace(*current_pos)) {
@@ -80,7 +80,7 @@ Ssl::CrtdMessage::ParseResult Ssl::CrtdMessage::parse(const char * buffer, size_
                 break;
             }
             if (xisspace(*current_pos)) {
-                current_pos++;
+                ++current_pos;
                 break;
             } else {
                 state = BODY;
@@ -164,7 +164,7 @@ void Ssl::CrtdMessage::parseBody(CrtdMessage::BodyParams & map, std::string & ot
 void Ssl::CrtdMessage::composeBody(CrtdMessage::BodyParams const & map, std::string const & other_part)
 {
     body.clear();
-    for (BodyParams::const_iterator i = map.begin(); i != map.end(); i++) {
+    for (BodyParams::const_iterator i = map.begin(); i != map.end(); ++i) {
         if (i != map.begin())
             body += "\n";
         body += i->first + "=" + i->second;

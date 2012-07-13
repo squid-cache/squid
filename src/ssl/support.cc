@@ -171,7 +171,7 @@ int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_fun
 
     if (altnames) {
         int numalts = sk_GENERAL_NAME_num(altnames);
-        for (int i = 0; i < numalts; i++) {
+        for (int i = 0; i < numalts; ++i) {
             const GENERAL_NAME *check = sk_GENERAL_NAME_value(altnames, i);
             if (check->type != GEN_DNS) {
                 continue;
@@ -438,12 +438,12 @@ ssl_parse_options(const char *options)
 
         case '-':
             mode = MODE_REMOVE;
-            option++;
+            ++option;
             break;
 
         case '+':
             mode = MODE_ADD;
-            option++;
+            ++option;
             break;
 
         default:
@@ -451,7 +451,7 @@ ssl_parse_options(const char *options)
             break;
         }
 
-        for (opttmp = ssl_options; opttmp->name; opttmp++) {
+        for (opttmp = ssl_options; opttmp->name; ++opttmp) {
             if (strcmp(opttmp->name, option) == 0) {
                 opt = opttmp;
                 break;
@@ -636,7 +636,7 @@ ssl_load_crl(SSL_CTX *sslContext, const char *CRLfile)
         if (!X509_STORE_add_crl(st, crl))
             debugs(83, 2, "WARNING: Failed to add CRL from file '" << CRLfile << "'");
         else
-            count++;
+            ++count;
 
         X509_CRL_free(crl);
     }
@@ -1218,7 +1218,7 @@ sslGetUserCertificateChainPEM(SSL *ssl)
 
     mem = BIO_new(BIO_s_mem());
 
-    for (i = 0; i < sk_X509_num(chain); i++) {
+    for (i = 0; i < sk_X509_num(chain); ++i) {
         X509 *cert = sk_X509_value(chain, i);
         PEM_write_bio_X509(mem, cert);
     }
@@ -1312,7 +1312,7 @@ void Ssl::addChainToSslContext(SSL_CTX *sslContext, STACK_OF(X509) *chain)
     if (!chain)
         return;
 
-    for (int i = 0; i < sk_X509_num(chain); i++) {
+    for (int i = 0; i < sk_X509_num(chain); ++i) {
         X509 *cert = sk_X509_value(chain, i);
         if (SSL_CTX_add_extra_chain_cert(sslContext, cert)) {
             // increase the certificate lock

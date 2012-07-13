@@ -244,7 +244,7 @@ try_again:
 
     if (entry->locked()) {
         /* Shit, it is locked. we can't return this one */
-        walker->locked++;
+        ++ walker->locked;
         dlinkAddTail(entry, &lru_node->node, &lru->list);
         goto try_again;
     }
