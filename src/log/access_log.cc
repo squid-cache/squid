@@ -411,7 +411,7 @@ fvdbCount(hash_table * hash, const char *key)
         hash_join(hash, &fv->hash);
     }
 
-    fv->n++;
+    ++ fv->n;
 }
 
 void

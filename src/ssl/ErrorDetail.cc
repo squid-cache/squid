@@ -98,7 +98,8 @@ static void loadSslErrorMap()
 
 Ssl::ssl_error_t Ssl::GetErrorCode(const char *name)
 {
-    for (int i = 0; TheSslErrorArray[i].name != NULL; i++) {
+    //TODO: use a std::map?
+    for (int i = 0; TheSslErrorArray[i].name != NULL; ++i) {
         if (strcmp(name, TheSslErrorArray[i].name) == 0)
             return TheSslErrorArray[i].value;
     }
@@ -294,7 +295,7 @@ const char *Ssl::ErrorDetail::err_lib_error() const
 int Ssl::ErrorDetail::convert(const char *code, const char **value) const
 {
     *value = "-";
-    for (int i=0; ErrorFormatingCodes[i].code!=NULL; i++) {
+    for (int i=0; ErrorFormatingCodes[i].code!=NULL; ++i) {
         const int len = strlen(ErrorFormatingCodes[i].code);
         if (strncmp(code,ErrorFormatingCodes[i].code, len)==0) {
             ErrorDetail::fmt_action_t action  = ErrorFormatingCodes[i].fmt_action;

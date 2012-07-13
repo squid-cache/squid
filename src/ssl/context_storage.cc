@@ -31,7 +31,7 @@ void Ssl::CertificateStorageAction::dump (StoreEntry *sentry)
     stream << "Port" << delimiter << "Max mem(KB)" << delimiter << "Cert number" << delimiter << "KB/cert" << delimiter << "Mem used(KB)" << delimiter << "Mem free(KB)" << endString;
 
     // Add info for each port.
-    for (std::map<Ip::Address, LocalContextStorage *>::iterator i = TheGlobalContextStorage.storage.begin(); i != TheGlobalContextStorage.storage.end(); i++) {
+    for (std::map<Ip::Address, LocalContextStorage *>::iterator i = TheGlobalContextStorage.storage.begin(); i != TheGlobalContextStorage.storage.end(); ++i) {
         stream << i->first << delimiter;
         LocalContextStorage & ssl_store_policy(*(i->second));
         stream << ssl_store_policy.max_memory / 1024 << delimiter;
@@ -50,7 +50,7 @@ Ssl::LocalContextStorage::LocalContextStorage(size_t aMax_memory)
 
 Ssl::LocalContextStorage::~LocalContextStorage()
 {
-    for (QueueIterator i = lru_queue.begin(); i != lru_queue.end(); i++) {
+    for (QueueIterator i = lru_queue.begin(); i != lru_queue.end(); ++i) {
         delete *i;
     }
 }
@@ -131,7 +131,7 @@ Ssl::GlobalContextStorage::GlobalContextStorage()
 
 Ssl::GlobalContextStorage::~GlobalContextStorage()
 {
-    for (std::map<Ip::Address, LocalContextStorage *>::iterator i = storage.begin(); i != storage.end(); i++) {
+    for (std::map<Ip::Address, LocalContextStorage *>::iterator i = storage.begin(); i != storage.end(); ++i) {
         delete i->second;
     }
 }
@@ -161,7 +161,7 @@ void Ssl::GlobalContextStorage::reconfigureFinish()
         reconfiguring = false;
 
         // remove or change old local storages.
-        for (std::map<Ip::Address, LocalContextStorage *>::iterator i = storage.begin(); i != storage.end(); i++) {
+        for (std::map<Ip::Address, LocalContextStorage *>::iterator i = storage.begin(); i != storage.end(); ++i) {
             std::map<Ip::Address, size_t>::iterator conf_i = configureStorage.find(i->first);
             if (conf_i == configureStorage.end()) {
                 storage.erase(i);
