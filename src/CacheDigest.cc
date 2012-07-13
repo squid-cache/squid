@@ -159,35 +159,35 @@ cacheDigestAdd(CacheDigest * cd, const cache_key * key)
 
         if (!CBIT_TEST(cd->mask, hashed_keys[0])) {
             CBIT_SET(cd->mask, hashed_keys[0]);
-            on_xition_cnt++;
+            ++on_xition_cnt;
         }
 
         if (!CBIT_TEST(cd->mask, hashed_keys[1])) {
             CBIT_SET(cd->mask, hashed_keys[1]);
-            on_xition_cnt++;
+            ++on_xition_cnt;
         }
 
         if (!CBIT_TEST(cd->mask, hashed_keys[2])) {
             CBIT_SET(cd->mask, hashed_keys[2]);
-            on_xition_cnt++;
+            ++on_xition_cnt;
         }
 
         if (!CBIT_TEST(cd->mask, hashed_keys[3])) {
             CBIT_SET(cd->mask, hashed_keys[3]);
-            on_xition_cnt++;
+            ++on_xition_cnt;
         }
 
         statCounter.cd.on_xition_count.count(on_xition_cnt);
     }
 #endif
-    cd->count++;
+    ++ cd->count;
 }
 
 void
 cacheDigestDel(CacheDigest * cd, const cache_key * key)
 {
     assert(cd && key);
-    cd->del_count++;
+    ++ cd->del_count;
     /* we do not support deletions from the digest */
 }
 
@@ -208,16 +208,16 @@ cacheDigestStats(const CacheDigest * cd, CacheDigestStats * stats)
         const int is_on = 0 != CBIT_TEST(cd->mask, pos);
 
         if (is_on)
-            on_count++;
+            ++on_count;
 
         if (is_on != cur_seq_type || !pos) {
             seq_len_sum += cur_seq_len;
-            seq_count++;
+            ++seq_count;
             cur_seq_type = is_on;
             cur_seq_len = 0;
         }
 
-        cur_seq_len++;
+        ++cur_seq_len;
     }
 
     stats->bit_count = cd->mask_size * 8;

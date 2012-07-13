@@ -50,7 +50,7 @@ find_proxy_auth(char const *type)
         {"negotiate", "Negotiate "}
     };
 
-    for (unsigned count = 0; count < 4 ; count++) {
+    for (unsigned count = 0; count < 4 ; ++count) {
         if (strcasecmp(type, proxy_auths[count][0]) == 0)
             return proxy_auths[count][1];
     }
@@ -89,7 +89,7 @@ setup_scheme(Auth::Config *scheme, char const **params, unsigned param_count)
 {
     Auth::ConfigVector &config = Auth::TheConfig;
 
-    for (unsigned position=0; position < param_count; position++) {
+    for (unsigned position=0; position < param_count; ++position) {
         char *param_str=xstrdup(params[position]);
         strtok(param_str, w_space);
         scheme->parse(scheme, config.size(), param_str);
@@ -133,7 +133,7 @@ fake_auth_setup()
         {"negotiate", negotiate_parms, 1}
     };
 
-    for (unsigned scheme=0; scheme < 4; scheme++) {
+    for (unsigned scheme=0; scheme < 4; ++scheme) {
         Auth::Config *schemeConfig;
         schemeConfig = getConfig(params[scheme].name);
         if (schemeConfig != NULL)
