@@ -795,8 +795,8 @@ StoreController::keepForLocalMemoryCache(const StoreEntry &e) const
     const int64_t expectedSize = e.mem_obj->expectedReplySize(); // may be < 0
     const int64_t ramSize = max(loadedSize, expectedSize);
     const int64_t ramLimit = min(
-        static_cast<int64_t>(Config.memMaxSize),
-		static_cast<int64_t>(Config.Store.maxInMemObjSize));
+                                 static_cast<int64_t>(Config.memMaxSize),
+                                 static_cast<int64_t>(Config.Store.maxInMemObjSize));
     return ramSize <= ramLimit;
 }
 
