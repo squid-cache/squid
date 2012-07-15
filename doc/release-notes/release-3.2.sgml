@@ -662,6 +662,18 @@ This section gives a thorough account of those changes in three categories:
 	<p>New option <em>max-stale=</em> to provide a maximum staleness factor. Squid won't
 	   serve objects more stale than this even if it failed to validate the object.
 
+	<tag>reply_header_access</tag>
+	<p>Added support for custom header header names.</p>
+
+	<tag>request_header_access</tag>
+	<p>Added support for custom header header names.</p>
+
+	<tag>reply_header_replace</tag>
+	<p>Added support for custom header header names.</p>
+
+	<tag>request_header_replace</tag>
+	<p>Added support for custom header header names.</p>
+
 	<tag>tcp_outgoing_address</tag>
 	<p>This parameter is now compatible with persistent server connections.
 	   The IPv6 magic 'to_ipv6' hacks needed in 3.1 are now no longer necessary.
