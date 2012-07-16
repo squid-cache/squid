@@ -47,9 +47,10 @@ AsyncCall::make()
 bool
 AsyncCall::cancel(const char *reason)
 {
-    if (isCanceled)
-        debugs(debugSection, debugLevel, HERE << "will not call " << name <<
-               " [" << id << ']' << " also because " << reason);
+    debugs(debugSection, debugLevel, HERE << "will not call " << name <<
+           " [" << id << "] " << (isCanceled ? "also " : "") <<
+           "because " << reason);
+
     isCanceled = reason;
     return false;
 }
