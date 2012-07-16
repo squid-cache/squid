@@ -829,14 +829,21 @@ void squid_getprotobynumber(void) {
   SQUID_STATE_ROLLBACK(winsock)
 ])
 
-
 dnl check that setresuid is properly implemented.
 dnl sets squid_cv_resuid_works to "yes" or "no"
 AC_DEFUN([SQUID_CHECK_SETRESUID_WORKS],[
   AC_CACHE_CHECK(if setresuid is actually implemented, squid_cv_resuid_works,
     AC_RUN_IFELSE([
       AC_LANG_SOURCE([[
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#if HAVE_STDIO_H
+#include <stdio.h>
+#endif
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
   int main(int argc, char **argv) {
     if(setresuid(-1,-1,-1)) {
       perror("setresuid:");

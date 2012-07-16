@@ -60,6 +60,7 @@ public:
 
     /* Store parent API */
     virtual void handleIdleEntry(StoreEntry &e);
+    virtual void maybeTrimMemory(StoreEntry &e, const bool preserveSwappable);
 
     virtual void init();
 
@@ -91,6 +92,7 @@ public:
 
 private:
     void createOneStore(Store &aStore);
+    bool keepForLocalMemoryCache(const StoreEntry &e) const;
 
     StorePointer swapDir; ///< summary view of all disk caches
     MemStore *memStore; ///< memory cache

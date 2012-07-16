@@ -31,12 +31,14 @@ Although this release is deemed good enough for use in many setups, please note 
 
 <itemize>
 	<item>The lack of some features available in Squid-2.x series. See the regression sections below for full details.
+	<item>eCAP library version 0.2.0 and later are not supported. See eCAP section below for details.
+	<item>CVE-2009-0801 : NAT interception vulnerability to malicious clients. This is fixed in 3.2 series.
+		Some attempts have been made to port for 3.1, but the unreliability of NAT handling in 3.1 makes this unsafe.
 </itemize>
 
 <p>Currently known issues which only depends on available developer time and may still be resolved in a future 3.1 release are:
 
 <itemize>
-	<item>CVE-2009-0801 : NAT interception vulnerability to malicious clients. This is fixed in 3.2 series.
 	<item>Windows support is still largely missing.
 	<item>AIX support for building with the IBM compiler is broken.
 	<item>OpenSSL 1.0.0 support is incomplete.
@@ -318,6 +320,9 @@ reduce the number of warnings by blocking some embedded content.
   a c-icap server wrapper. This enables faster processing.
 
 <p>Currently known and available eCAP modules are listed in the wiki feature page on eCAP.
+
+<p><em>Known Issue:</em> libecap version 0.0.3 (exactly) is required to build this series
+  of Squid. Other versions of libecap contain significant interface differences.
 
 
 <sect1>ICAP Bypass and Retry enhancements
