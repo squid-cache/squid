@@ -1249,7 +1249,7 @@ void Adaptation::Icap::ModXact::swanSong()
     Adaptation::Icap::Xaction::swanSong();
 }
 
-void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry *);
+void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry::Pointer &);
 
 void Adaptation::Icap::ModXact::finalizeLogInfo()
 {
@@ -1313,7 +1313,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
         packerClean(&p);
         mb.clean();
     }
-    prepareLogWithRequestDetails(request_, &al);
+    prepareLogWithRequestDetails(request_, alep);
     Xaction::finalizeLogInfo();
 }
 

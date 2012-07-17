@@ -180,7 +180,8 @@ protected:
     AsyncCall::Pointer writer;
     AsyncCall::Pointer closer;
 
-    AccessLogEntry al;
+    AccessLogEntry::Pointer alep; ///< icap.log entry
+    AccessLogEntry &al; ///< short for *alep
 
     timeval icap_tr_start;     /*time when the ICAP transaction was created */
     timeval icap_tio_start;    /*time when the first ICAP request byte was scheduled for sending*/

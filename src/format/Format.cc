@@ -290,7 +290,7 @@ log_quoted_string(const char *str, char *out)
 }
 
 void
-Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) const
+Format::Format::assemble(MemBuf &mb, const AccessLogEntryPointer &al, int logSequenceNumber) const
 {
     char tmp[1024];
     String sb;
