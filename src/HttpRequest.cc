@@ -35,6 +35,7 @@
  */
 
 #include "squid-old.h"
+#include "AccessLogEntry.h"
 #include "DnsLookupDetails.h"
 #include "HttpRequest.h"
 #include "HttpHdrCc.h"
@@ -262,6 +263,8 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
 
     // main property is which connection the request was received on (if any)
     clientConnectionManager = aReq->clientConnectionManager;
+
+    al = aReq->al;
     return true;
 }
 

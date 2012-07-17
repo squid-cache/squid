@@ -41,6 +41,9 @@
 #include "adaptation/icap/Elements.h"
 #endif
 #include "RefCount.h"
+#if USE_SSL
+#include "ssl/gadgets.h"
+#endif
 
 /* forward decls */
 class HttpReply;
@@ -158,6 +161,7 @@ public:
 #if USE_SSL
 
         const char *ssluser;
+        Ssl::X509_Pointer sslClientCert; ///< cert received from the client
 #endif
         AnyP::PortCfg *port;
 

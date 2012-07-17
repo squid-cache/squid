@@ -35,7 +35,7 @@ public:
     /* First off, let's tokenize, we'll optimize in a second pass.
      * A token can either be a %-prefixed sequence (usually a dynamic
      * token but it can be an escaped sequence), or a string. */
-    bool parse(char *def);
+    bool parse(const char *def);
 
     /// assemble the state information into a formatted line.
     void assemble(MemBuf &mb, const AccessLogEntryPointer &al, int logSequenceNumber) const;
