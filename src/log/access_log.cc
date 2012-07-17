@@ -91,7 +91,7 @@ static void fvdbRegisterWithCacheManager();
 int LogfileStatus = LOG_DISABLE;
 
 void
-accessLogLogTo(customlog* log, AccessLogEntry * al, ACLChecklist * checklist)
+accessLogLogTo(customlog* log, AccessLogEntry::Pointer &al, ACLChecklist * checklist)
 {
 
     if (al->url == NULL)
@@ -167,7 +167,7 @@ accessLogLogTo(customlog* log, AccessLogEntry * al, ACLChecklist * checklist)
 }
 
 void
-accessLogLog(AccessLogEntry * al, ACLChecklist * checklist)
+accessLogLog(AccessLogEntry::Pointer &al, ACLChecklist * checklist)
 {
     if (LogfileStatus != LOG_ENABLE)
         return;
@@ -574,30 +574,6 @@ headersLog(int cs, int pq, const HttpRequestMethod& method, void *data)
 }
 
 #endif
-
-void
-accessLogFreeMemory(AccessLogEntry * aLogEntry)
-{
-    safe_free(aLogEntry->headers.request);
-
-#if ICAP_CLIENT
-    safe_free(aLogEntry->adapt.last_meta);
-#endif
-
-    safe_free(aLogEntry->headers.reply);
-    safe_free(aLogEntry->cache.authuser);
-
-    safe_free(aLogEntry->headers.adapted_request);
-    HTTPMSGUNLOCK(aLogEntry->adapted_request);
-
-    HTTPMSGUNLOCK(aLogEntry->reply);
-    HTTPMSGUNLOCK(aLogEntry->request);
-#if ICAP_CLIENT
-    HTTPMSGUNLOCK(aLogEntry->icap.reply);
-    HTTPMSGUNLOCK(aLogEntry->icap.request);
-#endif
-    cbdataReferenceDone(aLogEntry->cache.port);
-}
 
 int
 logTypeIsATcpHit(log_type code)

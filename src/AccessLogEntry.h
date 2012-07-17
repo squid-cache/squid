@@ -40,17 +40,21 @@
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
 #endif
+#include "RefCount.h"
 
 /* forward decls */
 class HttpReply;
 class HttpRequest;
 
-class AccessLogEntry
+class AccessLogEntry: public RefCountable
 {
 
 public:
+    typedef RefCount<AccessLogEntry> Pointer;
+
     AccessLogEntry() : url(NULL), tcpClient(), reply(NULL), request(NULL),
             adapted_request(NULL) {}
+    ~AccessLogEntry();
 
     /// Fetch the client IP log string into the given buffer.
     /// Knows about several alternate locations of the IP
@@ -131,10 +135,11 @@ public:
                 msec(0),
                 rfc931 (NULL),
                 authuser (NULL),
-                extuser(NULL)
+                extuser(NULL),
 #if USE_SSL
-                ,ssluser(NULL)
+                ssluser(NULL),
 #endif
+                port(NULL)
         {;
         }
 
@@ -254,12 +259,11 @@ class ACLChecklist;
 class StoreEntry;
 
 /* Should be in 'AccessLog.h' as the driver */
-extern void accessLogLogTo(customlog* log, AccessLogEntry* al, ACLChecklist* checklist = NULL);
-extern void accessLogLog(AccessLogEntry *, ACLChecklist * checklist);
+extern void accessLogLogTo(customlog* log, AccessLogEntry::Pointer &al, ACLChecklist* checklist = NULL);
+extern void accessLogLog(AccessLogEntry::Pointer &, ACLChecklist * checklist);
 extern void accessLogRotate(void);
 extern void accessLogClose(void);
 extern void accessLogInit(void);
-extern void accessLogFreeMemory(AccessLogEntry * aLogEntry);
 extern const char *accessLogTime(time_t);
 
 #endif /* SQUID_HTTPACCESSLOGENTRY_H */
