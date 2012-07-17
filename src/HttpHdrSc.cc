@@ -136,7 +136,7 @@ HttpHdrSc::parse(const String * str)
         if ((p = strchr(item, '=')) && (p - item < ilen)) {
             vlen = ilen - (p + 1 - item);
             ilen = p - item;
-            p++;
+            ++p;
         }
 
         /* decrease ilen to still match the token for ';' qualified non '=' statments */
@@ -175,7 +175,7 @@ HttpHdrSc::parse(const String * str)
             if (type != SC_OTHER)
                 debugs(90, 2, "hdr sc: ignoring duplicate control-directive: near '" << item << "' in '" << str << "'");
 
-            ScFieldsInfo[type].stat.repCount++;
+            ++ ScFieldsInfo[type].stat.repCount;
 
             continue;
         }
@@ -280,7 +280,7 @@ HttpHdrScTarget::packInto(Packer * p) const
             if (flag == SC_CONTENT)
                 packerPrintf(p, "=\"" SQUIDSTRINGPH "\"", SQUIDSTRINGPRINT(content_));
 
-            pcount++;
+            ++pcount;
         }
     }
 

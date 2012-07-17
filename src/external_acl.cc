@@ -659,7 +659,7 @@ external_acl::add(ExternalACLEntry *anEntry)
     anEntry->def = this;
     hash_join(cache, anEntry);
     dlinkAdd(anEntry, &anEntry->lru, &lru_list);
-    cache_entries++;
+    ++cache_entries;
 }
 
 void
