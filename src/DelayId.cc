@@ -105,7 +105,7 @@ DelayId::DelayClient(ClientHttpRequest * http)
         return DelayId();
     }
 
-    for (pool = 0; pool < DelayPools::pools(); pool++) {
+    for (pool = 0; pool < DelayPools::pools(); ++pool) {
 
         /* pools require explicit 'allow' to assign a client into them */
         if (!DelayPools::delay_data[pool].access) {

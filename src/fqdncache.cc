@@ -175,7 +175,7 @@ fqdncacheRelease(fqdncache_entry * f)
     int k;
     hash_remove_link(fqdn_table, (hash_link *) f);
 
-    for (k = 0; k < (int) f->name_count; k++)
+    for (k = 0; k < (int) f->name_count; ++k)
         safe_free(f->names[k]);
 
     debugs(35, 5, "fqdncacheRelease: Released FQDN record for '" << hashKeyStr(&f->hash) << "'.");
@@ -247,7 +247,7 @@ fqdncache_purgelru(void *notused)
 
         fqdncacheRelease(f);
 
-        removed++;
+        ++removed;
     }
 
     debugs(35, 9, "fqdncache_purgelru: removed " << removed << " entries");
@@ -440,7 +440,7 @@ fqdncacheParse(fqdncache_entry *f, const rfc1035_rr * answers, int nr, const cha
     debugs(35, 3, "fqdncacheParse: " << nr << " answers for '" << name << "'");
     assert(answers);
 
-    for (k = 0; k < nr; k++) {
+    for (k = 0; k < nr; ++k) {
         if (answers[k]._class != RFC1035_CLASS_IN)
             continue;
 
@@ -535,7 +535,7 @@ fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handle
     generic_cbdata *c;
     addr.NtoA(name,MAX_IPSTRLEN);
     debugs(35, 4, "fqdncache_nbgethostbyaddr: Name '" << name << "'.");
-    FqdncacheStats.requests++;
+    ++FqdncacheStats.requests;
 
     if (name[0] == '\0') {
         debugs(35, 4, "fqdncache_nbgethostbyaddr: Invalid name!");
@@ -559,9 +559,9 @@ fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handle
         debugs(35, 4, "fqdncache_nbgethostbyaddr: HIT for '" << name << "'");
 
         if (f->flags.negcached)
-            FqdncacheStats.negative_hits++;
+            ++ FqdncacheStats.negative_hits;
         else
-            FqdncacheStats.hits++;
+            ++ FqdncacheStats.hits;
 
         f->handler = handler;
 
@@ -573,7 +573,7 @@ fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handle
     }
 
     debugs(35, 5, "fqdncache_nbgethostbyaddr: MISS for '" << name << "'");
-    FqdncacheStats.misses++;
+    ++ FqdncacheStats.misses;
     f = fqdncacheCreateEntry(name);
     f->handler = handler;
     f->handlerData = cbdataReference(handlerData);
@@ -654,7 +654,7 @@ fqdncache_gethostbyaddr(const Ip::Address &addr, int flags)
     }
 
     addr.NtoA(name,MAX_IPSTRLEN);
-    FqdncacheStats.requests++;
+    ++ FqdncacheStats.requests;
     f = fqdncache_get(name);
 
     if (NULL == f) {
@@ -663,11 +663,11 @@ fqdncache_gethostbyaddr(const Ip::Address &addr, int flags)
         fqdncacheRelease(f);
         f = NULL;
     } else if (f->flags.negcached) {
-        FqdncacheStats.negative_hits++;
+        ++ FqdncacheStats.negative_hits;
         // ignore f->error_message: the caller just checks FQDN cache presence
         return NULL;
     } else {
-        FqdncacheStats.hits++;
+        ++ FqdncacheStats.hits;
         f->lastref = squid_curtime;
         // ignore f->error_message: the caller just checks FQDN cache presence
         return f->names[0];
@@ -675,7 +675,7 @@ fqdncache_gethostbyaddr(const Ip::Address &addr, int flags)
 
     /* no entry [any more] */
 
-    FqdncacheStats.misses++;
+    ++ FqdncacheStats.misses;
 
     if (flags & FQDN_LOOKUP_IF_MISS) {
         fqdncache_nbgethostbyaddr(addr, NULL, NULL);
@@ -736,7 +736,7 @@ fqdnStats(StoreEntry * sentry)
                           ttl,
                           (int) f->name_count);
 
-        for (k = 0; k < (int) f->name_count; k++)
+        for (k = 0; k < (int) f->name_count; ++k)
             storeAppendPrintf(sentry, " %s", f->names[k]);
 
         storeAppendPrintf(sentry, "\n");
@@ -788,7 +788,7 @@ fqdncacheFreeEntry(void *data)
     fqdncache_entry *f = (fqdncache_entry *)data;
     int k;
 
-    for (k = 0; k < (int) f->name_count; k++)
+    for (k = 0; k < (int) f->name_count; ++k)
         safe_free(f->names[k]);
 
     safe_free(f->hash.key);
@@ -857,7 +857,7 @@ fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
     while (hostnames) {
         fce->names[j] = xstrdup(hostnames->key);
         Tolower(fce->names[j]);
-        j++;
+        ++j;
         hostnames = hostnames->next;
 
         if (j >= FQDN_MAX_NAMES)
