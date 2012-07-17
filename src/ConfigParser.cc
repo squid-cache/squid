@@ -116,15 +116,15 @@ ConfigParser::strtokFile(void)
 }
 
 void
-ConfigParser::ParseQuotedString(char **var)
+ConfigParser::ParseQuotedString(char **var, bool *wasQuoted)
 {
     String sVar;
-    ParseQuotedString(&sVar);
+    ParseQuotedString(&sVar, wasQuoted);
     *var = xstrdup(sVar.termedBuf());
 }
 
 void
-ConfigParser::ParseQuotedString(String *var)
+ConfigParser::ParseQuotedString(String *var, bool *wasQuoted)
 {
     // Get all of the remaining string
     char *token = strtok(NULL, "");
@@ -134,8 +134,11 @@ ConfigParser::ParseQuotedString(String *var)
     if (*token != '"') {
         token = strtok(token, w_space);
         var->reset(token);
+        if (wasQuoted)
+            *wasQuoted = false;
         return;
-    }
+    } else if (wasQuoted)
+        *wasQuoted = true;
 
     char  *s = token + 1;
     /* scan until the end of the quoted string, unescaping " and \  */

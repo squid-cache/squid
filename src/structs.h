@@ -574,6 +574,8 @@ struct SquidConfig {
     HeaderManglers *request_header_access;
     /// reply_header_access and reply_header_replace
     HeaderManglers *reply_header_access;
+    ///request_header_add access list
+    HeaderWithAclList *request_header_add;
     char *coredump_dir;
     char *chroot_dir;
 #if USE_CACHE_DIGESTS

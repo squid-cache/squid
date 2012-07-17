@@ -35,13 +35,24 @@
 #include "squid-old.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#include "client_side.h"
+#include "client_side_request.h"
+#include "comm/Connection.h"
 #include "compat/strtoll.h"
+#include "fde.h"
 #include "HttpHdrContRange.h"
 #include "HttpHeader.h"
 #include "HttpHeaderTools.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#if USE_SSL
+#include "ssl/support.h"
+#endif
 #include "Store.h"
+#include <algorithm>
+#if HAVE_STRING
+#include <string>
+#endif
 
 static void httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list vargs);
 
@@ -616,3 +627,31 @@ HeaderManglers::find(const HttpHeaderEntry &e) const
     return NULL;
 }
 
+void
+httpHdrAdd(HttpHeader *heads, HttpRequest *request, HeaderWithAclList &headersAdd)
+{
+    ACLFilledChecklist checklist(NULL, request, NULL);
+
+    for (HeaderWithAclList::const_iterator hwa = headersAdd.begin(); hwa != headersAdd.end(); ++hwa) {
+        if (!hwa->aclList || checklist.fastCheck(hwa->aclList) == ACCESS_ALLOWED) {
+            const char *fieldValue = NULL;
+            MemBuf mb;
+            if (hwa->quoted) {
+                if (request->al != NULL) {
+                    mb.init();
+                    hwa->valueFormat->assemble(mb, request->al, 0);
+                    fieldValue = mb.content();
+                }
+            } else {
+                fieldValue = hwa->fieldValue.c_str();
+            }
+
+            if (!fieldValue || fieldValue[0] == '\0')
+                fieldValue = "-";
+
+            HttpHeaderEntry *e = new HttpHeaderEntry(hwa->fieldId, hwa->fieldName.c_str(), 
+                                                     fieldValue);
+            heads->addEntry(e);
+        }
+    }
+}
