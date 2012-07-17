@@ -267,7 +267,7 @@ fd_open(int fd, unsigned int type, const char *desc)
     if (desc)
         xstrncpy(F->desc, desc, FD_DESC_SZ);
 
-    Number_FD++;
+    ++Number_FD;
 }
 
 void
@@ -299,7 +299,7 @@ fdDumpOpen(void)
     int i;
     fde *F;
 
-    for (i = 0; i < Squid_MaxFD; i++) {
+    for (i = 0; i < Squid_MaxFD; ++i) {
         F = &fd_table[i];
 
         if (!F->flags.open)

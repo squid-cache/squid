@@ -65,7 +65,7 @@ mcastJoinGroups(const ipcache_addrs *ia, const DnsLookupDetails &, void *datanot
         return;
     }
 
-    for (i = 0; i < (int) ia->count; i++) {
+    for (i = 0; i < (int) ia->count; ++i) {
         debugs(7, 9, "Listening for ICP requests on " << ia->in_addrs[i] );
 
         if ( ! ia->in_addrs[i].IsIPv4() ) {

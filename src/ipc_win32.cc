@@ -547,7 +547,7 @@ ipc_thread_1(void *in_params)
     si.dwFlags = STARTF_USESTDHANDLES;
 
     /* Make sure all other valid handles are not inerithable */
-    for (x = 3; x < Squid_MaxFD; x++) {
+    for (x = 3; x < Squid_MaxFD; ++x) {
         if ((F = _get_osfhandle(x)) == -1)
             continue;
 
