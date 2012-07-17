@@ -1,6 +1,7 @@
 #ifndef _SQUID_FORMAT_FORMAT_H
 #define _SQUID_FORMAT_FORMAT_H
 
+#include "RefCount.h"
 /*
  * Squid configuration allows users to define custom formats in
  * several components.
@@ -14,6 +15,7 @@
  */
 
 class AccessLogEntry;
+typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class MemBuf;
 class StoreEntry;
 
@@ -36,7 +38,7 @@ public:
     bool parse(char *def);
 
     /// assemble the state information into a formatted line.
-    void assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) const;
+    void assemble(MemBuf &mb, const AccessLogEntryPointer &al, int logSequenceNumber) const;
 
     /// dump this whole list of formats into the provided StoreEntry
     void dump(StoreEntry * entry, const char *name);

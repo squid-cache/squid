@@ -40,7 +40,9 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Icap::Serv
         isRetriable(true),
         isRepeatable(true),
         ignoreLastWrite(false),
-        connector(NULL), reader(NULL), writer(NULL), closer(NULL)
+        connector(NULL), reader(NULL), writer(NULL), closer(NULL),
+        alep(new AccessLogEntry),
+        al(*alep)
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
@@ -540,9 +542,8 @@ void Adaptation::Icap::Xaction::maybeLog()
         ACLChecklist *checklist = new ACLFilledChecklist(::Config.accessList.icap, al.request, dash_str);
         if (!::Config.accessList.icap || checklist->fastCheck() == ACCESS_ALLOWED) {
             finalizeLogInfo();
-            icapLogLog(&al, checklist);
+            icapLogLog(alep, checklist);
         }
-        accessLogFreeMemory(&al);
         delete checklist;
     }
 }
