@@ -90,6 +90,10 @@
 #include <limits>
 #endif
 
+#if HAVE_LIST
+#include <list>
+#endif
+
 #if USE_SSL
 #include "ssl/gadgets.h"
 #endif
@@ -177,6 +181,9 @@ static void dump_http_header_replace(StoreEntry * entry, const char *name, const
 static void parse_http_header_replace(HeaderManglers **manglers);
 #define free_http_header_replace free_HeaderManglers
 #endif
+static void dump_HeaderWithAclList(StoreEntry * entry, const char *name, HeaderWithAclList *headers);
+static void parse_HeaderWithAclList(HeaderWithAclList **header);
+static void free_HeaderWithAclList(HeaderWithAclList **header);
 static void parse_denyinfo(acl_deny_info_list ** var);
 static void dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_list * var);
 static void free_denyinfo(acl_deny_info_list ** var);
@@ -4314,3 +4321,68 @@ static void free_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
 }
 
 #endif
+
+static void dump_HeaderWithAclList(StoreEntry * entry, const char *name, HeaderWithAclList *headers)
+{
+    if (!headers)
+        return;
+
+    for (HeaderWithAclList::iterator hwa = headers->begin(); hwa != headers->end(); ++hwa) {
+        storeAppendPrintf(entry, "%s ", hwa->fieldName.c_str());
+        storeAppendPrintf(entry, "%s ", hwa->fieldValue.c_str());
+        if (hwa->aclList)
+            dump_acl_list(entry, hwa->aclList);
+        storeAppendPrintf(entry, "\n");
+    }
+}
+
+static void parse_HeaderWithAclList(HeaderWithAclList **headers)
+{
+    char *fn;
+    if (!*headers) {
+        *headers = new HeaderWithAclList;
+    }
+    if ((fn = strtok(NULL, w_space)) == NULL) {
+        self_destruct();
+        return;
+    }
+    HeaderWithAcl hwa;
+    hwa.fieldName = fn;
+    hwa.fieldId = httpHeaderIdByNameDef(fn, strlen(fn));
+    if (hwa.fieldId == HDR_BAD_HDR)
+        hwa.fieldId = HDR_OTHER;
+
+    String buf;
+    bool wasQuoted;
+    ConfigParser::ParseQuotedString(&buf, &wasQuoted);
+    hwa.fieldValue = buf.termedBuf();
+    hwa.quoted = wasQuoted;
+    if (hwa.quoted) {
+        Format::Format *nlf =  new ::Format::Format("hdrWithAcl");
+        if (!nlf->parse(hwa.fieldValue.c_str())) {
+            self_destruct();
+            return;
+        }
+        hwa.valueFormat = nlf;
+    }
+    aclParseAclList(LegacyParser, &hwa.aclList);
+    (*headers)->push_back(hwa);
+}
+
+static void free_HeaderWithAclList(HeaderWithAclList **header)
+{
+    if (!(*header))
+        return;
+
+    for (HeaderWithAclList::iterator hwa = (*header)->begin(); hwa != (*header)->end(); ++hwa) {
+        if (hwa->aclList)
+            aclDestroyAclList(&hwa->aclList);
+
+        if (hwa->valueFormat) {
+            delete hwa->valueFormat;
+            hwa->valueFormat = NULL;
+        }
+    }
+    delete *header;
+    *header = NULL;
+}

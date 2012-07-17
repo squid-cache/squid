@@ -3129,6 +3129,20 @@ DOC_START
 	service name in curly braces to record response time(s) specific
 	to that service. For example: %{my_service}adapt::sum_trs
 
+	If SSL is enabled, the following formating codes become available:
+
+		%ssl::>cert_subject The Subject field of the received client
+				SSL certificate or a dash ('-') if Squid has
+				received an invalid/malformed certificate or
+				no certificate at all. Consider encoding the
+				logged value because Subject often has spaces.
+
+		%ssl::>cert_issuer The Issuer field of the received client
+				SSL certificate or a dash ('-') if Squid has
+				received an invalid/malformed certificate or
+				no certificate at all. Consider encoding the
+				logged value because Issuer often has spaces.
+
 	The default formats available (which do not need re-defining) are:
 
 logformat squid      %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %[un %Sh/%<a %mt
@@ -4577,6 +4591,47 @@ DOC_START
         This only applies to reply headers, not request headers.
 
         By default, headers are removed if denied.
+DOC_END
+
+NAME: request_header_add
+TYPE: HeaderWithAclList
+LOC: Config.request_header_add
+DEFAULT: none
+DOC_START
+	Usage:   request_header_add field-name field-value acl1 [acl2] ...
+	Example: request_header_add X-Client-CA "CA=%ssl::>cert_issuer" all
+
+	This option adds header fields to outgoing HTTP requests (i.e.,
+	request headers sent by Squid to the next HTTP hop such as a
+	cache peer or an origin server). The option has no effect during
+	cache hit detection. The equivalent adaptation vectoring point
+	in ICAP terminology is post-cache REQMOD.
+
+	Field-name is a token specifying an HTTP header name. If a
+	standard HTTP header name is used, Squid does not check whether
+	the new header conflicts with any existing headers or violates
+	HTTP rules. If the request to be modified already contains a
+	field with the same name, the old field is preserved but the
+	header field values are not merged.
+
+	Field-value is either a token or a quoted string. If quoted
+	string format is used, then the surrounding quotes are removed
+	while escape sequences and %macros are processed.
+
+	In theory, all of the logformat codes can be used as %macros.
+	However, unlike logging (which happens at the very end of
+	transaction lifetime), the transaction may not yet have enough
+	information to expand a macro when the new header value is needed.
+	And some information may already be available to Squid but not yet
+	committed where the macro expansion code can access it (report
+	such instances!). The macro will be expanded into a single dash
+	('-') in such cases. Not all macros have been tested.
+
+	One or more Squid ACLs may be specified to restrict header
+	injection to matching requests. As always in squid.conf, all
+	ACLs in an option ACL list must be satisfied for the insertion
+	to happen. The request_header_add option supports fast ACLs
+	only.
 DOC_END
 
 NAME: relaxed_header_parser

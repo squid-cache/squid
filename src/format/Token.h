@@ -48,7 +48,7 @@ public:
      * and fills in this item with the token information.
      * def is for sure null-terminated.
      */
-    int parse(char *def, enum Quoting *quote);
+    int parse(const char *def, enum Quoting *quote);
 
     ByteCode_t type;
     const char *label;
@@ -72,7 +72,7 @@ public:
     Token *next;	/* todo: move from linked list to array */
 
 private:
-    char *scanForToken(TokenTableEntry const table[], char *cur);
+    const char *scanForToken(TokenTableEntry const table[], const char *cur);
 };
 
 extern const char *log_tags[];
