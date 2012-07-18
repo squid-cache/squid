@@ -125,7 +125,7 @@ storeSwapMetaPack(tlv * tlv_list, int *length)
     int j = 0;
     char *buf;
     assert(length != NULL);
-    buflen++;			/* STORE_META_OK */
+    ++buflen;			/* STORE_META_OK */
     buflen += sizeof(int);	/* size of header to follow */
 
     for (t = tlv_list; t; t = t->next)
@@ -133,14 +133,16 @@ storeSwapMetaPack(tlv * tlv_list, int *length)
 
     buf = (char *)xmalloc(buflen);
 
-    buf[j++] = (char) STORE_META_OK;
+    buf[j] = (char) STORE_META_OK;
+    ++j;
 
     memcpy(&buf[j], &buflen, sizeof(int));
 
     j += sizeof(int);
 
     for (t = tlv_list; t; t = t->next) {
-        buf[j++] = t->getType();
+        buf[j] = t->getType();
+        ++j;
         memcpy(&buf[j], &t->length, sizeof(int));
         j += sizeof(int);
         memcpy(&buf[j], t->value, t->length);

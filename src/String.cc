@@ -363,7 +363,7 @@ strwordtok(char *buf, char **t)
         goto error;
 
     while (*p && xisspace(*p))
-        p++;
+        ++p;
 
     if (!*p)
         goto error;
@@ -374,7 +374,7 @@ strwordtok(char *buf, char **t)
         switch (ch) {
 
         case '\\':
-            p++;
+            ++p;
 
             switch (*p) {
 
@@ -395,23 +395,24 @@ strwordtok(char *buf, char **t)
 
             }
 
-            *d++ = ch;
+            *d = ch;
+            ++d;
 
             if (ch)
-                p++;
+                ++p;
 
             break;
 
         case '"':
             quoted = !quoted;
 
-            p++;
+            ++p;
 
             break;
 
         default:
             if (!quoted && xisspace(*p)) {
-                p++;
+                ++p;
                 goto done;
             }
 
@@ -421,7 +422,7 @@ strwordtok(char *buf, char **t)
     }
 
 done:
-    *d++ = '\0';
+    *d = '\0';
 
 error:
     *t = (char *) p;

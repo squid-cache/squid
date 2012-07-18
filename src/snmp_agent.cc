@@ -210,7 +210,7 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
     *ErrP = SNMP_ERR_NOERROR;
 
     u_int index = Var->name[LEN_SQ_MESH + 3] ;
-    for (p = Config.peers; p != NULL; p = p->next, cnt++) {
+    for (p = Config.peers; p != NULL; p = p->next, ++cnt) {
         if (p->index == index) {
             laddr = p->in_addr ;
             break;
