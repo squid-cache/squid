@@ -649,8 +649,8 @@ httpHdrAdd(HttpHeader *heads, HttpRequest *request, HeaderWithAclList &headersAd
             if (!fieldValue || fieldValue[0] == '\0')
                 fieldValue = "-";
 
-            HttpHeaderEntry *e = new HttpHeaderEntry(hwa->fieldId, hwa->fieldName.c_str(), 
-                                                     fieldValue);
+            HttpHeaderEntry *e = new HttpHeaderEntry(hwa->fieldId, hwa->fieldName.c_str(),
+                    fieldValue);
             heads->addEntry(e);
         }
     }

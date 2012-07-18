@@ -242,7 +242,7 @@ public:
     CbcPointer<ConnStateData> clientConnectionManager;
 
     /**
-     * The AccessLogEntry for the current ClientHttpRequest/Server HttpRequest 
+     * The AccessLogEntry for the current ClientHttpRequest/Server HttpRequest
      * pair, if known;
      */
     AccessLogEntryPointer al;
