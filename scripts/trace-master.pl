@@ -106,6 +106,8 @@ sub getJob {
 
 		start => undef(),
 		history => '',
+
+		reported => 0,
 	};
 
 	$Jobs{$id} = $job;
@@ -117,6 +119,10 @@ sub reportJob {
 	my ($id, $recursive) = @_;
 
 	my $job = $Jobs{$id} or die("Did not see job$id\n");
+
+	# several kids may try to report their common parent
+	return if $job->{reported};
+	$job->{reported} = 1;
 
 	&reportJob($job->{parent}, 0) if $job->{parent};
 

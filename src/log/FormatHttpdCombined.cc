@@ -42,7 +42,7 @@
 #include "SquidTime.h"
 
 void
-Log::Format::HttpdCombined(AccessLogEntry * al, Logfile * logfile)
+Log::Format::HttpdCombined(const AccessLogEntry::Pointer &al, Logfile * logfile)
 {
     const char *user_ident = ::Format::QuoteUrlEncodeUsername(al->cache.rfc931);
 
@@ -51,7 +51,7 @@ Log::Format::HttpdCombined(AccessLogEntry * al, Logfile * logfile)
     const char *referer = NULL;
     const char *agent = NULL;
 
-    if (al && al->request) {
+    if (al->request) {
         referer = al->request->header.getStr(HDR_REFERER);
         agent = al->request->header.getStr(HDR_USER_AGENT);
     }
@@ -65,7 +65,7 @@ Log::Format::HttpdCombined(AccessLogEntry * al, Logfile * logfile)
     char clientip[MAX_IPSTRLEN];
     al->getLogClientIp(clientip, MAX_IPSTRLEN);
 
-    logfilePrintf(logfile, "%s %s %s [%s] \"%s %s %s/%d.%d\" %d %"PRId64" \"%s\" \"%s\" %s%s:%s%s",
+    logfilePrintf(logfile, "%s %s %s [%s] \"%s %s %s/%d.%d\" %d %" PRId64 " \"%s\" \"%s\" %s%s:%s%s",
                   clientip,
                   user_ident ? user_ident : dash_str,
                   user_auth ? user_auth : dash_str,

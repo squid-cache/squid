@@ -351,6 +351,11 @@ public:
     /// called when the entry is no longer needed by any transaction
     virtual void handleIdleEntry(StoreEntry &e) {}
 
+    // XXX: This method belongs to Store::Root/StoreController, but it is here
+    // because test cases use non-StoreController derivatives as Root
+    /// called to get rid of no longer needed entry data in RAM, if any
+    virtual void maybeTrimMemory(StoreEntry &e, const bool preserveSwappable) {}
+
 private:
     static RefCount<Store> CurrentRoot;
 };

@@ -192,6 +192,8 @@ typedef enum {
 
 #if USE_SSL
     LFT_SSL_BUMP_MODE,
+    LFT_SSL_USER_CERT_SUBJECT,
+    LFT_SSL_USER_CERT_ISSUER,
 #endif
 
     LFT_PERCENT			/* special string cases for escaped chars */

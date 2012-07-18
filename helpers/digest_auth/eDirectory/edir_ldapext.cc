@@ -181,7 +181,7 @@ static int berEncodeLoginData(
         err = (ber_printf(requestBer, "{i{", methodIDLen) < 0) ? LDAP_ENCODING_ERROR : 0;
     }
 
-    for (i = 0; !err && i < elemCnt; i++) {
+    for (i = 0; !err && i < elemCnt; ++i) {
         err = (ber_printf(requestBer, "i", methodID[i]) < 0) ? LDAP_ENCODING_ERROR : 0;
     }
 

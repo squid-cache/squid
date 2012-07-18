@@ -76,7 +76,7 @@ MemStore::stat(StoreEntry &e) const
         const int limit = map->entryLimit();
         storeAppendPrintf(&e, "Maximum entries: %9d\n", limit);
         if (limit > 0) {
-            storeAppendPrintf(&e, "Current entries: %"PRId64" %.2f%%\n",
+            storeAppendPrintf(&e, "Current entries: %" PRId64 " %.2f%%\n",
                               currentCount(), (100.0 * currentCount() / limit));
 
             if (limit < 100) { // XXX: otherwise too expensive to count
@@ -251,13 +251,39 @@ MemStore::copyFromShm(StoreEntry &e, const MemStoreMap::Extras &extras)
     return true;
 }
 
-void
-MemStore::considerKeeping(StoreEntry &e)
+bool
+MemStore::keepInLocalMemory(const StoreEntry &e) const
 {
     if (!e.memoryCachable()) {
         debugs(20, 7, HERE << "Not memory cachable: " << e);
-        return; // cannot keep due to entry state or properties
+        return false; // will not cache due to entry state or properties
     }
+
+    assert(e.mem_obj);
+    const int64_t loadedSize = e.mem_obj->endOffset();
+    const int64_t expectedSize = e.mem_obj->expectedReplySize(); // may be < 0
+    const int64_t ramSize = max(loadedSize, expectedSize);
+
+    if (ramSize > static_cast<int64_t>(Config.Store.maxInMemObjSize)) {
+        debugs(20, 5, HERE << "Too big max(" <<
+               loadedSize << ", " << expectedSize << "): " << e);
+        return false; // will not cache due to cachable entry size limits
+    }
+
+    if (!willFit(ramSize)) {
+        debugs(20, 5, HERE << "Wont fit max(" <<
+               loadedSize << ", " << expectedSize << "): " << e);
+        return false; // will not cache due to memory cache slot limit
+    }
+
+    return true;
+}
+
+void
+MemStore::considerKeeping(StoreEntry &e)
+{
+    if (!keepInLocalMemory(e))
+        return;
 
     // since we copy everything at once, we can only keep complete entries
     if (e.store_status != STORE_OK) {
@@ -270,6 +296,12 @@ MemStore::considerKeeping(StoreEntry &e)
     const int64_t loadedSize = e.mem_obj->endOffset();
     const int64_t expectedSize = e.mem_obj->expectedReplySize();
 
+    // objects of unknown size are not allowed into memory cache, for now
+    if (expectedSize < 0) {
+        debugs(20, 5, HERE << "Unknown expected size: " << e);
+        return;
+    }
+
     // since we copy everything at once, we can only keep fully loaded entries
     if (loadedSize != expectedSize) {
         debugs(20, 7, HERE << "partially loaded: " << loadedSize << " != " <<
@@ -277,18 +309,12 @@ MemStore::considerKeeping(StoreEntry &e)
         return;
     }
 
-    if (!willFit(expectedSize)) {
-        debugs(20, 5, HERE << "No mem-cache space for " << e);
-        return; // failed to free enough space
-    }
-
     keep(e); // may still fail
 }
 
 bool
-MemStore::willFit(int64_t need)
+MemStore::willFit(int64_t need) const
 {
-    // TODO: obey configured maximum entry size (with page-based rounding)
     return need <= static_cast<int64_t>(Ipc::Mem::PageSize());
 }
 

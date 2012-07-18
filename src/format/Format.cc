@@ -3,6 +3,7 @@
 #include "comm/Connection.h"
 #include "err_detail_type.h"
 #include "errorpage.h"
+#include "fde.h"
 #include "format/Format.h"
 #include "format/Quoting.h"
 #include "format/Token.h"
@@ -43,9 +44,9 @@ Format::Format::~Format()
 }
 
 bool
-Format::Format::parse(char *def)
+Format::Format::parse(const char *def)
 {
-    char *cur, *eos;
+    const char *cur, *eos;
     Token *new_lt, *last_lt;
     enum Quoting quote = LOG_QUOTE_NONE;
 
@@ -290,7 +291,7 @@ log_quoted_string(const char *str, char *out)
 }
 
 void
-Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) const
+Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logSequenceNumber) const
 {
     char tmp[1024];
     String sb;
@@ -1011,6 +1012,24 @@ Format::Format::assemble(MemBuf &mb, AccessLogEntry *al, int logSequenceNumber) 
             out = Ssl::bumpMode(mode);
             break;
         }
+
+        case LFT_SSL_USER_CERT_SUBJECT:
+            if (X509 *cert = al->cache.sslClientCert.get()) {
+                if (X509_NAME *subject = X509_get_subject_name(cert)) {
+                    X509_NAME_oneline(subject, tmp, sizeof(tmp));
+                    out = tmp;
+                }
+            }
+            break;
+
+        case LFT_SSL_USER_CERT_ISSUER:
+            if (X509 *cert = al->cache.sslClientCert.get()) {
+                if (X509_NAME *issuer = X509_get_issuer_name(cert)) {
+                    X509_NAME_oneline(issuer, tmp, sizeof(tmp));
+                    out = tmp;
+                }
+            }
+            break;
 #endif
 
         case LFT_PERCENT:

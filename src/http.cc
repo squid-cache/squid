@@ -88,6 +88,8 @@ static const char *const crlf = "\r\n";
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request,
         HttpHeader * hdr_out, const int we_do_ranges, const http_state_flags);
+//Declared in HttpHeaderTools.cc
+void httpHdrAdd(HttpHeader *heads, HttpRequest *request, HeaderWithAclList &headers_add);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"), ServerStateData(theFwdState),
         lastChunk(0), header_bytes_read(0), reply_bytes_read(0),
@@ -1067,7 +1069,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
     }
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        // TODO: should we call abortTransaction() here?
+        abortTransaction("store entry aborted while reading reply");
         return;
     }
 
@@ -1346,12 +1348,9 @@ HttpStateData::processReplyBody()
     }
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
-        /*
-         * The above writeReplyBody() call could ABORT this entry,
-         * in that case, the server FD should already be closed.
-         * there's nothing for us to do.
-         */
-        (void) 0;
+        // The above writeReplyBody() call may have aborted the store entry.
+        abortTransaction("store entry aborted while storing reply");
+        return;
     } else
         switch (persistentConnStatus()) {
         case INCOMPLETE_MSG: {
@@ -1784,6 +1783,9 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     /* Now mangle the headers. */
     if (Config2.onoff.mangle_request_headers)
         httpHdrMangleList(hdr_out, request, ROR_REQUEST);
+
+    if (Config.request_header_add && !Config.request_header_add->empty())
+        httpHdrAdd(hdr_out, request, *Config.request_header_add);
 
     strConnection.clean();
 }

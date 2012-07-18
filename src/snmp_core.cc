@@ -765,7 +765,7 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
         int no = name[current->len] ;
         int i;
         // Note: This works because the Config.peers keeps its index according to its position.
-        for ( i=0 ; peers && (i < no) ; peers = peers->next , i++ ) ;
+        for ( i=0 ; peers && (i < no) ; peers = peers->next , ++i ) ;
 
         if (peers) {
             debugs(49, 6, "snmp peer_Inst: Encode peer #" << i);

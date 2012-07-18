@@ -116,7 +116,7 @@ public:
     log_type logType;
 
     struct timeval start_time;
-    AccessLogEntry al;
+    AccessLogEntry::Pointer al; ///< access.log entry
 
     struct {
         unsigned int accel:1;

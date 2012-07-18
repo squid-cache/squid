@@ -82,7 +82,7 @@ print_esc(FILE * p, char *s)
     char *t;
     int i = 0;
 
-    for (t = s; *t != '\0'; t++) {
+    for (t = s; *t != '\0'; ++t) {
         if (i > HELPER_INPUT_BUFFER-2) {
             buf[i] = '\0';
             (void) fputs(buf, p);
@@ -118,7 +118,7 @@ main(int argc, char *argv[])
         return 1;
 
     /* parse command line arguments */
-    for (i = 1; i < argc; i++) {
+    for (i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "-d") == 0) {
             debug_enabled = 1;
             continue;
@@ -178,13 +178,13 @@ main(int argc, char *argv[])
                     return 1;
 
                 /* convert backslashes to forward slashes */
-                for (s = lastdom->authshare; *s != '\0'; s++)
+                for (s = lastdom->authshare; *s != '\0'; ++s)
                     if (*s == '\\')
                         *s = '/';
 
                 /* strip leading forward slash from share name */
                 if (*lastdom->authshare == '/')
-                    lastdom->authshare++;
+                    ++lastdom->authshare;
 
                 if ((s = strchr(lastdom->authshare, '/')) != NULL) {
                     *s = '\0';

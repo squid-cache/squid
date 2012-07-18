@@ -27,6 +27,9 @@ public:
     /// cache the entry or forget about it until the next considerKeeping call
     void considerKeeping(StoreEntry &e);
 
+    /// whether e should be kept in local RAM for possible future caching
+    bool keepInLocalMemory(const StoreEntry &e) const;
+
     /* Store API */
     virtual int callback();
     virtual StoreEntry * get(const cache_key *);
@@ -47,7 +50,7 @@ public:
     static int64_t EntryLimit();
 
 protected:
-    bool willFit(int64_t needed);
+    bool willFit(int64_t needed) const;
     void keep(StoreEntry &e);
 
     bool copyToShm(StoreEntry &e, MemStoreMap::Extras &extras);
