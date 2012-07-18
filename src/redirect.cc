@@ -135,7 +135,7 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
 
     if (Config.onoff.redirector_bypass && redirectors->stats.queue_size) {
         /* Skip redirector if there is one request queued */
-        n_bypassed++;
+        ++n_bypassed;
         handler(data, NULL);
         return;
     }

@@ -91,7 +91,7 @@ storeCleanup(void *datanotused)
 
         if (opt_store_doublecheck)
             if (storeCleanupDoubleCheck(e))
-                store_errors++;
+                ++store_errors;
 
         EBIT_SET(e->flags, ENTRY_VALIDATED);
 
@@ -222,7 +222,7 @@ storeRebuildProgress(int sd_index, int total, int sofar)
     if (squid_curtime - last_report < 15)
         return;
 
-    for (sd_index = 0; sd_index < Config.cacheSwap.n_configured; sd_index++) {
+    for (sd_index = 0; sd_index < Config.cacheSwap.n_configured; ++sd_index) {
         n += (double) RebuildProgress[sd_index].scanned;
         d += (double) RebuildProgress[sd_index].total;
     }
@@ -292,7 +292,7 @@ storeRebuildLoadEntry(int fd, int diskIndex, MemBuf &buf,
     assert(buf.hasSpace()); // caller must allocate
 
     const int len = FD_READ_METHOD(fd, buf.space(), buf.spaceSize());
-    statCounter.syscalls.disk.reads++;
+    ++ statCounter.syscalls.disk.reads;
     if (len < 0) {
         const int xerrno = errno;
         debugs(47, DBG_IMPORTANT, "WARNING: cache_dir[" << diskIndex << "]: " <<
@@ -363,7 +363,7 @@ storeRebuildParseEntry(MemBuf &buf, StoreEntry &tmpe, cache_key *key,
     }
 
     if (EBIT_TEST(tmpe.flags, KEY_PRIVATE)) {
-        counts.badflags++;
+        ++ counts.badflags;
         return false;
     }
 
@@ -397,7 +397,7 @@ storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key,
         if (e->lastref >= tmpe.lastref) {
             /* key already exists, old entry is newer */
             /* keep old, ignore new */
-            counts.dupcount++;
+            ++counts.dupcount;
 
             // For some stores, get() creates/unpacks a store entry. Signal
             // such stores that we will no longer use the get() result:
@@ -409,7 +409,7 @@ storeRebuildKeepEntry(const StoreEntry &tmpe, const cache_key *key,
             /* URL already exists, this swapfile not being used */
             /* junk old, load new */
             e->release();	/* release old entry */
-            counts.dupcount++;
+            ++counts.dupcount;
         }
     }
 

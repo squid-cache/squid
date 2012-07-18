@@ -443,8 +443,8 @@ refreshIsCachable(const StoreEntry * entry)
      * be refreshed.
      */
     int reason = refreshCheck(entry, NULL, Config.minimum_expiry_time);
-    refreshCounts[rcStore].total++;
-    refreshCounts[rcStore].status[reason]++;
+    ++ refreshCounts[rcStore].total;
+    ++ refreshCounts[rcStore].status[reason];
 
     if (reason < STALE_MUST_REVALIDATE)
         /* Does not need refresh. This is certainly cachable */
@@ -491,8 +491,8 @@ int
 refreshCheckHTTP(const StoreEntry * entry, HttpRequest * request)
 {
     int reason = refreshCheck(entry, request, 0);
-    refreshCounts[rcHTTP].total++;
-    refreshCounts[rcHTTP].status[reason]++;
+    ++ refreshCounts[rcHTTP].total;
+    ++ refreshCounts[rcHTTP].status[reason];
     request->flags.stale_if_hit = refreshIsStaleIfHit(reason);
     return (Config.onoff.offline || reason < 200) ? 0 : 1;
 }
@@ -501,8 +501,8 @@ int
 refreshCheckICP(const StoreEntry * entry, HttpRequest * request)
 {
     int reason = refreshCheck(entry, request, 30);
-    refreshCounts[rcICP].total++;
-    refreshCounts[rcICP].status[reason]++;
+    ++ refreshCounts[rcICP].total;
+    ++ refreshCounts[rcICP].status[reason];
     return (reason < 200) ? 0 : 1;
 }
 
@@ -511,8 +511,8 @@ int
 refreshCheckHTCP(const StoreEntry * entry, HttpRequest * request)
 {
     int reason = refreshCheck(entry, request, 10);
-    refreshCounts[rcHTCP].total++;
-    refreshCounts[rcHTCP].status[reason]++;
+    ++ refreshCounts[rcHTCP].total;
+    ++ refreshCounts[rcHTCP].status[reason];
     return (reason < 200) ? 0 : 1;
 }
 
@@ -525,8 +525,8 @@ refreshCheckDigest(const StoreEntry * entry, time_t delta)
     int reason = refreshCheck(entry,
                               entry->mem_obj ? entry->mem_obj->request : NULL,
                               delta);
-    refreshCounts[rcCDigest].total++;
-    refreshCounts[rcCDigest].status[reason]++;
+    ++ refreshCounts[rcCDigest].total;
+    ++ refreshCounts[rcCDigest].status[reason];
     return (reason < 200) ? 0 : 1;
 }
 

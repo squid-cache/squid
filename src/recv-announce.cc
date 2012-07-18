@@ -89,7 +89,7 @@ main(int argc, char *argv[])
     const char *logfile;
     char ip[4];
 
-    for (len = 0; len < 32; len++) {
+    for (len = 0; len < 32; ++len) {
         signal(len, sig_handle);
     }
 
