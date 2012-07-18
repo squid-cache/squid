@@ -165,7 +165,7 @@ comm_update_fd(int fd, int events)
         comm_flush_updates();
 
     /* Push new event onto array */
-    devpoll_update.cur++;
+    ++devpoll_update.cur;
     devpoll_update.pfds[devpoll_update.cur].fd = fd;
     devpoll_update.pfds[devpoll_update.cur].events = events;
     devpoll_update.pfds[devpoll_update.cur].revents = 0;
@@ -385,7 +385,7 @@ Comm::DoSelect(int msec)
 
     PROF_start(comm_handle_ready_fd);
 
-    for (i = 0; i < num; i++) {
+    for (i = 0; i < num; ++i) {
         int fd = (int)do_poll.dp_fds[i].fd;
         F = &fd_table[fd];
         debugs(
@@ -421,7 +421,7 @@ Comm::DoSelect(int msec)
                 F->read_handler = NULL;
                 hdl(fd, F->read_data);
                 PROF_stop(comm_read_handler);
-                statCounter.select_fds++;
+                ++statCounter.select_fds;
             } else {
                 debugs(
                     5,
@@ -445,7 +445,7 @@ Comm::DoSelect(int msec)
                 F->write_handler = NULL;
                 hdl(fd, F->write_data);
                 PROF_stop(comm_write_handler);
-                statCounter.select_fds++;
+                ++statCounter.select_fds;
             } else {
                 debugs(
                     5,

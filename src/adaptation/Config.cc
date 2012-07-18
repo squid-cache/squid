@@ -226,7 +226,7 @@ Adaptation::Config::finalize()
         ServicePointer s = createService(cfg);
         if (s != NULL) {
             AllServices().push_back(s);
-            created++;
+            ++created;
         }
     }
 
@@ -285,7 +285,7 @@ Adaptation::Config::ParseMetaHeader(ConfigParser &parser)
     ConfigParser::ParseQuotedString(&value);
 
     // TODO: Find a way to move this check to ICAP
-    for (int i = 0; warnFor[i] != NULL; i++) {
+    for (int i = 0; warnFor[i] != NULL; ++i) {
         if (name.caseCmp(warnFor[i]) == 0) {
             fatalf("%s:%d: meta name \"%s\" is a reserved ICAP header name",
                    cfg_filename, config_lineno, name.termedBuf());

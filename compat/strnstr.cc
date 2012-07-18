@@ -87,7 +87,7 @@ squid_strnstr(const char *s, const char *find, size_t slen)
             if (len > slen)
                 return (NULL);
         } while (strncmp(s, find, len) != 0);
-        s--;
+        --s;
     }
     return s;
 }

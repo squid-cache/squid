@@ -189,7 +189,7 @@ get_hostname_list(struct main_args *margs, struct hstruct **hlist, int nhosts, c
     hres_list = hres;
     count = 0;
     while (hres_list) {
-        count++;
+        ++count;
         hres_list = hres_list->ai_next;
     }
     hres_list = hres;
@@ -202,7 +202,7 @@ get_hostname_list(struct main_args *margs, struct hstruct **hlist, int nhosts, c
             *hlist = hp;
             return (nhosts);
         }
-        count++;
+        ++count;
         debug((char *) "%s| %s: DEBUG: Resolved address %d of %s to %s\n", LogTime(), PROGRAM, count, name, host);
 
         hp = (struct hstruct *) xrealloc(hp, sizeof(struct hstruct) * (nhosts + 1));
@@ -210,7 +210,7 @@ get_hostname_list(struct main_args *margs, struct hstruct **hlist, int nhosts, c
         hp[nhosts].port = -1;
         hp[nhosts].priority = -1;
         hp[nhosts].weight = -1;
-        nhosts++;
+        ++nhosts;
 
         hres_list = hres_list->ai_next;
     }
@@ -251,7 +251,7 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nh, 
             hp[nhosts].port = -1;
             hp[nhosts].priority = -2;
             hp[nhosts].weight = -2;
-            nhosts++;
+            ++nhosts;
         } else if ( !ls->domain || !strcasecmp(ls->domain, "") ) {
             debug((char *) "%s| %s: DEBUG: Found lserver@domain %s@%s\n", LogTime(), PROGRAM, ls->lserver, ls->domain?ls->domain:"NULL");
             hp = (struct hstruct *) xrealloc(hp, sizeof(struct hstruct) * (nhosts + 1));
@@ -259,7 +259,7 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nh, 
             hp[nhosts].port = -1;
             hp[nhosts].priority = -2;
             hp[nhosts].weight = -2;
-            nhosts++;
+            ++nhosts;
 
         }
         ls = ls->next;
@@ -381,7 +381,7 @@ get_ldap_hostname_list(struct main_args *margs, struct hstruct **hlist, int nh, 
             hp[nh].port = port;
             hp[nh].priority = priority;
             hp[nh].weight = weight;
-            nh++;
+            ++nh;
             p += size;
         } else {
             p += rdlength;
@@ -410,24 +410,24 @@ cleanup:
     hp[nhosts].port = -1;
     hp[nhosts].priority = -2;
     hp[nhosts].weight = -2;
-    nhosts++;
+    ++nhosts;
 
     /* Remove duplicates */
-    for (i = 0; i < nhosts; i++) {
-        for (j = i + 1; j < nhosts; j++) {
+    for (i = 0; i < nhosts; ++i) {
+        for (j = i + 1; j < nhosts; ++j) {
             if (!strcasecmp(hp[i].host, hp[j].host)) {
                 if (hp[i].port == hp[j].port ||
                         (hp[i].port == -1 && hp[j].port == 389) ||
                         (hp[i].port == 389 && hp[j].port == -1)) {
                     xfree(hp[j].host);
-                    for (k = j + 1; k < nhosts; k++) {
+                    for (k = j + 1; k < nhosts; ++k) {
                         hp[k - 1].host = hp[k].host;
                         hp[k - 1].port = hp[k].port;
                         hp[k - 1].priority = hp[k].priority;
                         hp[k - 1].weight = hp[k].weight;
                     }
-                    j--;
-                    nhosts--;
+                    --j;
+                    --nhosts;
                     hp = (struct hstruct *) xrealloc(hp, sizeof(struct hstruct) * (nhosts + 1));
                 }
             }
@@ -439,7 +439,7 @@ cleanup:
 
     if (debug_enabled) {
         debug((char *) "%s| %s: DEBUG: Sorted ldap server names for domain %s:\n", LogTime(), PROGRAM, domain);
-        for (i = 0; i < nhosts; i++) {
+        for (i = 0; i < nhosts; ++i) {
             debug((char *) "%s| %s: DEBUG: Host: %s Port: %d Priority: %d Weight: %d\n", LogTime(), PROGRAM, hp[i].host, hp[i].port, hp[i].priority, hp[i].weight);
         }
     }

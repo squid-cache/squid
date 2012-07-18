@@ -238,12 +238,12 @@ comm_check_incoming_select_handlers(int nfds, int *fds)
 
     getCurrentTime();
 
-    statCounter.syscalls.selects++;
+    ++statCounter.syscalls.selects;
 
     if (select(maxfd, &read_mask, &write_mask, NULL, &zero_tv) < 1)
         return incoming_sockets_accepted;
 
-    for (i = 0; i < nfds; i++) {
+    for (i = 0; i < nfds; ++i) {
         fd = fds[i];
 
         if (FD_ISSET(fd, &read_mask)) {

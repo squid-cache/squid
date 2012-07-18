@@ -41,11 +41,11 @@
 #include "SquidTime.h"
 
 void
-Log::Format::SquidUserAgent(AccessLogEntry * al, Logfile * logfile)
+Log::Format::SquidUserAgent(const AccessLogEntry::Pointer &al, Logfile * logfile)
 {
     const char *agent = NULL;
 
-    if (al && al->request)
+    if (al->request)
         agent = al->request->header.getStr(HDR_USER_AGENT);
 
     if (!agent || *agent == '\0')

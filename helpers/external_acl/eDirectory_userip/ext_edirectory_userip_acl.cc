@@ -237,7 +237,7 @@ local_printfx(const char *msg,...)
     va_end(ap);
     if (x > 0) {
         dbuf[x] = '\0';
-        x++;
+        ++x;
         fputs(dbuf, stdout);
         *(dbuf) = '\0';
     } else {
@@ -267,7 +267,7 @@ StringSplit(char *In_Str, char chr, char *Out_Str, size_t Out_Sz)
     // find the char delimiter position...
     char *p = In_Str;
     while (*p != chr && *p != '\0' && (In_Str+In_Len) > p) {
-        p++;
+        ++p;
     }
 
     size_t i = (p-In_Str);
@@ -283,8 +283,8 @@ StringSplit(char *In_Str, char chr, char *Out_Str, size_t Out_Sz)
 
     // omit the delimiter
     if (*p == chr) {
-        p++;
-        i++;
+        ++p;
+        ++i;
     } else {
         // chr not found (or \0 found first). Wipe whole input buffer.
         memset(In_Str, 0, In_Len);
@@ -320,7 +320,7 @@ BinarySplit(void *In_Obj, size_t In_Sz, char chr, void *Out_Obj, size_t Out_Sz)
     // find the char delimiter position...
     char *p = static_cast<char*>(In_Obj);
     while (*p != chr && (in+In_Sz) > p) {
-        p++;
+        ++p;
     }
 
     size_t i = (p-in);
@@ -336,8 +336,8 @@ BinarySplit(void *In_Obj, size_t In_Sz, char chr, void *Out_Obj, size_t Out_Sz)
 
     // omit the delimiter
     if (*p == chr) {
-        p++;
-        i++;
+        ++p;
+        ++i;
     } else {
         // chr not found
         memset(In_Obj, 0, In_Sz);
@@ -853,13 +853,13 @@ ConvertIP(edui_ldap_t *l, char *ip)
             /* bufa starts with a ::, so just copy and clear */
             xstrncpy(bufb, bufa, sizeof(bufb));
             *(bufa) = '\0';
-            swi++;								/* Indicates that there is a bufb */
+            ++swi;								/* Indicates that there is a bufb */
         } else if ((bufa[0] == ':') && (bufa[1] != ':')) {
             /* bufa starts with a :, a typo so just fill in a ':', cat and clear */
             bufb[0] = ':';
             strncat(bufb, bufa, strlen(bufa));
             *(bufa) = '\0';
-            swi++;								/* Indicates that there is a bufb */
+            ++swi;								/* Indicates that there is a bufb */
         } else {
             p = strstr(bufa, "::");
             if (p != NULL) {
@@ -869,7 +869,7 @@ ConvertIP(edui_ldap_t *l, char *ip)
                 memcpy(bufb, p, i);
                 *p = '\0';
                 bufb[i] = '\0';
-                swi++;								/* Indicates that there is a bufb */
+                ++swi;								/* Indicates that there is a bufb */
             }
         }
     }
@@ -973,21 +973,21 @@ ConvertIP(edui_ldap_t *l, char *ip)
                 t = strlen(bufb);
                 /* How many ':' exist in bufb ? */
                 j = 0;
-                for (i = 0; i < t; i++) {
+                for (i = 0; i < t; ++i) {
                     if (bufb[i] == ':')
-                        j++;
+                        ++j;
                 }
-                j--;								/* Preceeding "::" doesn't count */
+                --j;								/* Preceeding "::" doesn't count */
                 t = 8 - (strlen(l->search_ip) / 4) - j;			/* Remainder */
                 if (t > 0) {
-                    for (i = 0; i < t; i++)
+                    for (i = 0; i < t; ++i)
                         strncat(l->search_ip, "0000", 4);
                 }
             }
         }
         if ((bufa[0] == '\0') && (swi > 0)) {
             s = strlen(bufb);
-            swi++;
+            ++swi;
         } else
             s = strlen(bufa);
     }
@@ -1095,14 +1095,14 @@ SearchFilterLDAP(edui_ldap_t *l, char *group)
     for (i = 0; i < s; i++) {
         if (swi == 2) {
             bufc[j] = '\134';
-            j++;
+            ++j;
             bufc[j] = l->search_ip[i];
-            j++;
+            ++j;
             swi = 1;
         } else {
             bufc[j] = l->search_ip[i];
-            j++;
-            swi++;
+            ++j;
+            ++swi;
         }
     }
     if (group == NULL) {
@@ -1570,7 +1570,7 @@ MainSafe(int argc, char **argv)
                             edui_conf.mode |= EDUI_MODE_PERSIST;	/* Don't set mode more than once */
                         break;
                     case 'v':
-                        i++;						/* Set LDAP version */
+                        ++i;						/* Set LDAP version */
                         if (argv[i] != NULL) {
                             edui_conf.ver = atoi(argv[i]);
                             if (edui_conf.ver < 1)
@@ -1584,7 +1584,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 't':
-                        i++;						/* Set Persistent timeout */
+                        ++i;						/* Set Persistent timeout */
                         if (argv[i] != NULL) {
                             edui_conf.persist_timeout = atoi(argv[i]);
                             if (edui_conf.persist_timeout < 0)
@@ -1596,7 +1596,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'b':
-                        i++;						/* Set Base DN */
+                        ++i;						/* Set Base DN */
                         if (argv[i] != NULL)
                             xstrncpy(edui_conf.basedn, argv[i], sizeof(edui_conf.basedn));
                         else {
@@ -1606,7 +1606,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'H':
-                        i++;						/* Set Hostname */
+                        ++i;						/* Set Hostname */
                         if (argv[i] != NULL)
                             xstrncpy(edui_conf.host, argv[i], sizeof(edui_conf.host));
                         else {
@@ -1616,7 +1616,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'p':
-                        i++;						/* Set port */
+                        ++i;						/* Set port */
                         if (argv[i] != NULL)
                             edui_conf.port = atoi(argv[i]);
                         else {
@@ -1626,7 +1626,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'D':
-                        i++;						/* Set Bind DN */
+                        ++i;						/* Set Bind DN */
                         if (argv[i] != NULL)
                             xstrncpy(edui_conf.dn, argv[i], sizeof(edui_conf.dn));
                         else {
@@ -1636,7 +1636,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'W':
-                        i++;						/* Set Bind PWD */
+                        ++i;						/* Set Bind PWD */
                         if (argv[i] != NULL)
                             xstrncpy(edui_conf.passwd, argv[i], sizeof(edui_conf.passwd));
                         else {
@@ -1646,7 +1646,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'F':
-                        i++;						/* Set Search Filter */
+                        ++i;						/* Set Search Filter */
                         if (argv[i] != NULL)
                             xstrncpy(edui_conf.search_filter, argv[i], sizeof(edui_conf.search_filter));
                         else {
@@ -1660,7 +1660,7 @@ MainSafe(int argc, char **argv)
                             edui_conf.mode |= EDUI_MODE_GROUP;		/* Don't set mode more than once */
                         break;
                     case 's':
-                        i++;						/* Set Scope Level */
+                        ++i;						/* Set Scope Level */
                         if (argv[i] != NULL) {
                             if (!strncmp(argv[i], "base", 4))
                                 edui_conf.scope = 0;
@@ -1677,7 +1677,7 @@ MainSafe(int argc, char **argv)
                         }
                         break;
                     case 'u':
-                        i++;						/* Set Search Attribute */
+                        ++i;						/* Set Search Attribute */
                         if (argv[i] != NULL) {
                             xstrncpy(edui_conf.attrib, argv[i], sizeof(edui_conf.attrib));
                         } else {

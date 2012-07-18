@@ -1090,7 +1090,11 @@ _comm_close(int fd, char const *file, int line)
         return;
 
     /* The following fails because ipc.c is doing calls to pipe() to create sockets! */
-    assert(isOpen(fd));
+    if (!isOpen(fd)) {
+        debugs(50, DBG_IMPORTANT, HERE << "BUG 3556: FD " << fd << " is not an open socket.");
+        // XXX: do we need to run close(fd) or fd_close(fd) here?
+        return;
+    }
 
     assert(F->type != FD_FILE);
 

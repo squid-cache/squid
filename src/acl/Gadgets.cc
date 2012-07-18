@@ -214,7 +214,7 @@ aclParseAclList(ConfigParser &parser, ACLList ** head)
 
         if (*t == '!') {
             L->negated (true);
-            t++;
+            ++t;
         }
 
         debugs(28, 3, "aclParseAclList: looking for ACL name '" << t << "'");

@@ -161,7 +161,7 @@ xprof_update(xprof_stats_data * head)
     if (head->worst < head->delta)
         head->worst = head->delta;
     head->summ += head->delta;
-    head->count++;
+    ++head->count;
 }
 
 static xprof_stats_data *xp_UNACCOUNTED;
@@ -209,7 +209,7 @@ xprof_start(xprof_type type, const char *timer)
     cstack[cstack_head].accum = 0;
     cstack[cstack_head].timer = type;
     cstack[cstack_head].name = timer;
-    cstack_head++;
+    ++cstack_head;
     assert(cstack_head < MAXSTACKDEPTH);
 
 }
@@ -219,7 +219,7 @@ xprof_stop(xprof_type type, const char *timer)
 {
     hrtime_t tt = get_tick();
     assert(cstack_head > 0);
-    cstack_head--;
+    --cstack_head;
     assert(cstack[cstack_head].timer == type);
 
     /* Record timer details */

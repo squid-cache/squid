@@ -238,11 +238,11 @@ compileOptimisedREs(relist **curlist, wordlist * wl)
             if (largeREindex > 0)
                 largeRE[largeREindex++] = '|';
             largeRE[largeREindex++] = '(';
-            for (char * t = wl->key; *t != '\0'; t++)
+            for (char * t = wl->key; *t != '\0'; ++t)
                 largeRE[largeREindex++] = *t;
             largeRE[largeREindex++] = ')';
             largeRE[largeREindex] = '\0';
-            numREs++;
+            ++numREs;
         } else {
             debugs(28, 2, "compileOptimisedREs: buffer full, generating new optimised RE..." );
             newlistp = compileRE( newlistp, largeRE, flags );

@@ -186,7 +186,7 @@ authenticateDigestNonceNew(void)
         /* create a new nonce */
         newnonce->noncedata.randomdata = squid_random();
         /* Bug 3526 high performance fix: add 1 second to creationtime to avoid duplication */
-        newnonce->noncedata.creationtime++;
+        ++newnonce->noncedata.creationtime;
         authDigestNonceEncode(newnonce);
     }
 
@@ -298,7 +298,7 @@ static void
 authDigestNonceLink(digest_nonce_h * nonce)
 {
     assert(nonce != NULL);
-    nonce->references++;
+    ++nonce->references;
     debugs(29, 9, "authDigestNonceLink: nonce '" << nonce << "' now at '" << nonce->references << "'.");
 }
 
@@ -379,7 +379,7 @@ authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
 
     /* is the nonce-count ok ? */
     if (!static_cast<Auth::Digest::Config*>(Auth::Config::Find("digest"))->CheckNonceCount) {
-        nonce->nc++;
+        ++nonce->nc;
         return -1;              /* forced OK by configuration */
     }
 
@@ -796,11 +796,11 @@ Auth::Digest::Config::decode(char const *proxy_auth)
     /* trim DIGEST from string */
 
     while (xisgraph(*proxy_auth))
-        proxy_auth++;
+        ++proxy_auth;
 
     /* Trim leading whitespace before decoding */
     while (xisspace(*proxy_auth))
-        proxy_auth++;
+        ++proxy_auth;
 
     String temp(proxy_auth);
 

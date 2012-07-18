@@ -100,6 +100,13 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     if (hIpc)
         *hIpc = NULL;
 
+// NP: no wrapping around d and c usage since we *want* code expansion
+#define IPC_CHECK_FAIL(f,d,c) \
+    if ((f) < 0) { \
+        debugs(54, DBG_CRITICAL, "ERROR: Failed to create helper " d " FD: " << c); \
+        return ipcCloseAllFD(prfd, pwfd, crfd, cwfd); \
+    } else void(0)
+
     if (type == IPC_TCP_SOCKET) {
         crfd = cwfd = comm_open(SOCK_STREAM,
                                 0,
@@ -111,6 +118,8 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
                                 local_addr,
                                 0,			/* blocking */
                                 name);
+        IPC_CHECK_FAIL(crfd, "child read", "TCP " << local_addr);
+        IPC_CHECK_FAIL(prfd, "parent read", "TCP " << local_addr);
     } else if (type == IPC_UDP_SOCKET) {
         crfd = cwfd = comm_open(SOCK_DGRAM,
                                 0,
@@ -122,6 +131,8 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
                                 local_addr,
                                 0,
                                 name);
+        IPC_CHECK_FAIL(crfd, "child read", "UDP" << local_addr);
+        IPC_CHECK_FAIL(prfd, "parent read", "UDP" << local_addr);
     } else if (type == IPC_FIFO) {
         int p2c[2];
         int c2p[2];
@@ -140,6 +151,9 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         fd_open(crfd = c2p[0], FD_PIPE, "IPC FIFO Child Read");
         fd_open(pwfd = c2p[1], FD_PIPE, "IPC FIFO Parent Write");
 
+        IPC_CHECK_FAIL(crfd, "child read", "FIFO pipe");
+        IPC_CHECK_FAIL(prfd, "parent read", "FIFO pipe");
+
 #if HAVE_SOCKETPAIR && defined(AF_UNIX)
 
     } else if (type == IPC_UNIX_STREAM) {
@@ -157,6 +171,9 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         setsockopt(fds[1], SOL_SOCKET, SO_RCVBUF, (void *) &buflen, sizeof(buflen));
         fd_open(prfd = pwfd = fds[0], FD_PIPE, "IPC UNIX STREAM Parent");
         fd_open(crfd = cwfd = fds[1], FD_PIPE, "IPC UNIX STREAM Parent");
+        IPC_CHECK_FAIL(crfd, "child read", "UDS socket");
+        IPC_CHECK_FAIL(prfd, "parent read", "UDS socket");
+
     } else if (type == IPC_UNIX_DGRAM) {
         int fds[2];
 
@@ -167,6 +184,9 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
 
         fd_open(prfd = pwfd = fds[0], FD_PIPE, "IPC UNIX DGRAM Parent");
         fd_open(crfd = cwfd = fds[1], FD_PIPE, "IPC UNIX DGRAM Parent");
+
+        IPC_CHECK_FAIL(crfd, "child read", "UDS datagram");
+        IPC_CHECK_FAIL(prfd, "parent read", "UDS datagram");
 #endif
 
     } else {
@@ -177,16 +197,6 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     debugs(54, 3, "ipcCreate: pwfd FD " << pwfd);
     debugs(54, 3, "ipcCreate: crfd FD " << crfd);
     debugs(54, 3, "ipcCreate: cwfd FD " << cwfd);
-
-    if (crfd < 0) {
-        debugs(54, 0, "ipcCreate: Failed to create child FD.");
-        return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
-    }
-
-    if (pwfd < 0) {
-        debugs(54, 0, "ipcCreate: Failed to create server FD.");
-        return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
-    }
 
     if (type == IPC_TCP_SOCKET || type == IPC_UDP_SOCKET) {
         PaS.InitAddrInfo(AI);
