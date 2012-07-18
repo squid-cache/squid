@@ -3580,9 +3580,6 @@ ftpSendReply(FtpStateData * ftpState)
         http_code = HTTP_INTERNAL_SERVER_ERROR;
     }
 
-    if (ftpState->request)
-        ftpState->request->detailError(err_code, code);
-
     ErrorState err(err_code, http_code, ftpState->request);
 
     if (ftpState->old_request)
@@ -3596,6 +3593,9 @@ ftpSendReply(FtpStateData * ftpState)
         err.ftp.reply = xstrdup(ftpState->ctrl.last_reply);
     else
         err.ftp.reply = xstrdup("");
+
+    // TODO: interpret as FTP-specific error code
+    err.detailError(code);
 
     ftpState->entry->replaceHttpReply( err.BuildHttpReply() );
 

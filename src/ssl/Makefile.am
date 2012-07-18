@@ -31,6 +31,8 @@ libsslsquid_la_SOURCES = \
 	ErrorDetail.h \
 	ErrorDetailManager.cc \
 	ErrorDetailManager.h \
+	ServerBump.cc \
+	ServerBump.h \
 	support.cc \
 	support.h \
 	\

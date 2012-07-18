@@ -5,6 +5,9 @@
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
+#if USE_SSL
+#include "ssl/support.h"
+#endif
 
 class ExternalACLEntry;
 class ConnStateData;
@@ -63,13 +66,11 @@ public:
 #endif
 
 #if USE_SSL
-    int ssl_error;
+    /// SSL [certificate validation] errors, in undefined order
+    Ssl::Errors *sslErrors;
 #endif
 
     ExternalACLEntry *extacl_entry;
-
-private:
-    virtual void checkCallback(allow_t answer);
 
 private:
     CBDATA_CLASS(ACLFilledChecklist);

@@ -2291,7 +2291,7 @@ HttpStateData::handleRequestBodyProducerAborted()
         // should not matter because either client-side will provide its own or
         // there will be no response at all (e.g., if the the client has left).
         ErrorState *err = new ErrorState(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, fwd->request);
-        err->xerrno = ERR_DETAIL_SRV_REQMOD_REQ_BODY;
+        err->detailError(ERR_DETAIL_SRV_REQMOD_REQ_BODY);
         fwd->fail(err);
     }
 

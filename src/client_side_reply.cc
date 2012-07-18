@@ -113,19 +113,37 @@ clientReplyContext::setReplyToError(
     if (unparsedrequest)
         errstate->request_hdrs = xstrdup(unparsedrequest);
 
-    if (status == HTTP_NOT_IMPLEMENTED && http->request)
+#if USE_AUTH
+    errstate->auth_user_request = auth_user_request;
+#endif
+    setReplyToError(method, errstate);
+}
+
+void clientReplyContext::setReplyToError(const HttpRequestMethod& method, ErrorState *errstate)
+{
+    if (errstate->httpStatus == HTTP_NOT_IMPLEMENTED && http->request)
         /* prevent confusion over whether we default to persistent or not */
         http->request->flags.proxy_keepalive = 0;
 
     http->al->http.code = errstate->httpStatus;
 
     createStoreEntry(method, request_flags());
-#if USE_AUTH
-    errstate->auth_user_request = auth_user_request;
-#endif
     assert(errstate->callback_data == NULL);
     errorAppendEntry(http->storeEntry(), errstate);
     /* Now the caller reads to get this */
+}
+
+void clientReplyContext::setReplyToStoreEntry(StoreEntry *entry)
+{
+    entry->lock(); // removeClientStoreReference() unlocks
+    sc = storeClientListAdd(entry, this);
+#if USE_DELAY_POOLS
+    sc->setDelayId(DelayId::DelayClient(http));
+#endif
+    reqofs = 0;
+    reqsize = 0;
+    flags.storelogiccomplete = 1;
+    http->storeEntry(entry);
 }
 
 void
@@ -1455,6 +1473,10 @@ clientReplyContext::buildReplyHeader()
         request->flags.proxy_keepalive = 0;
     } else if (fdUsageHigh()&& !request->flags.must_keepalive) {
         debugs(88, 3, "clientBuildReplyHeader: Not many unused FDs, can't keep-alive");
+        request->flags.proxy_keepalive = 0;
+    } else if (request->flags.sslBumped && !reply->persistent()) {
+        // We do not really have to close, but we pretend we are a tunnel.
+        debugs(88, 3, "clientBuildReplyHeader: bumped reply forces close");
         request->flags.proxy_keepalive = 0;
     }
 

@@ -758,7 +758,6 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
         return;
     }
 
-    errno = 0;
 #if USE_DELAY_POOLS
     read_sz = delayId.bytesWanted(1, read_sz);
 #endif
@@ -796,13 +795,13 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
     if (flag != COMM_OK) {
         debugs(50, 1, "gopherReadReply: error reading: " << xstrerror());
 
-        if (ignoreErrno(errno)) {
+        if (ignoreErrno(xerrno)) {
             AsyncCall::Pointer call = commCbCall(5,4, "gopherReadReply",
                                                  CommIoCbPtrFun(gopherReadReply, gopherState));
             comm_read(conn, buf, read_sz, call);
         } else {
             ErrorState *err = new ErrorState(ERR_READ_ERROR, HTTP_INTERNAL_SERVER_ERROR, gopherState->fwd->request);
-            err->xerrno = errno;
+            err->xerrno = xerrno;
             gopherState->fwd->fail(err);
             gopherState->serverConn->close();
         }
@@ -852,7 +851,7 @@ gopherSendComplete(const Comm::ConnectionPointer &conn, char *buf, size_t size, 
     if (errflag) {
         ErrorState *err;
         err = new ErrorState(ERR_WRITE_ERROR, HTTP_SERVICE_UNAVAILABLE, gopherState->fwd->request);
-        err->xerrno = errno;
+        err->xerrno = xerrno;
         err->port = gopherState->fwd->request->port;
         err->url = xstrdup(entry->url());
         gopherState->fwd->fail(err);

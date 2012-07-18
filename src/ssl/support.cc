@@ -46,6 +46,13 @@
 #include "ssl/support.h"
 #include "ssl/gadgets.h"
 
+const char *Ssl::BumpModeStr[] = {
+    "none",
+    "client-first",
+    "server-first",
+    NULL
+};
+
 /**
  \defgroup ServerProtocolSSLInternal Server-Side SSL Internals
  \ingroup ServerProtocolSSLAPI
@@ -200,6 +207,11 @@ static int check_domain( void *check_data, ASN1_STRING *cn_data)
     return matchDomainName(server, cn[0] == '*' ? cn + 1 : cn);
 }
 
+bool Ssl::checkX509ServerValidity(X509 *cert, const char *server)
+{
+    return matchX509CommonNames(cert, (void *)server, check_domain);
+}
+
 /// \ingroup ServerProtocolSSLInternal
 static int
 ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
@@ -213,6 +225,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
     const char *server = (const char *)SSL_get_ex_data(ssl, ssl_ex_index_server);
     void *dont_verify_domain = SSL_CTX_get_ex_data(sslctx, ssl_ctx_ex_index_dont_verify_domain);
     ACLChecklist *check = (ACLChecklist*)SSL_get_ex_data(ssl, ssl_ex_index_cert_error_check);
+    X509 *peeked_cert = (X509 *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_peeked_cert);
     X509 *peer_cert = ctx->cert;
 
     X509_NAME_oneline(X509_get_subject_name(peer_cert), buffer,
@@ -222,9 +235,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         debugs(83, 5, "SSL Certificate signature OK: " << buffer);
 
         if (server) {
-            int found = Ssl::matchX509CommonNames(peer_cert, (void *)server, check_domain);
-
-            if (!found) {
+            if (!Ssl::checkX509ServerValidity(peer_cert, server)) {
                 debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << buffer << " does not match domainname " << server);
                 ok = 0;
                 error_no = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
@@ -232,20 +243,45 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         }
     }
 
+    if (ok && peeked_cert) {
+        // Check whether the already peeked certificate matches the new one.
+        if (X509_cmp(peer_cert, peeked_cert) != 0) {
+            debugs(83, 2, "SQUID_X509_V_ERR_CERT_CHANGE: Certificate " << buffer << " does not match peeked certificate");
+            ok = 0;
+            error_no =  SQUID_X509_V_ERR_CERT_CHANGE;
+        }
+    }
+
     if (!ok) {
+        Ssl::Errors *errs = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors));
+        if (!errs) {
+            errs = new Ssl::Errors(error_no);
+            if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_errors,  (void *)errs)) {
+                debugs(83, 2, "Failed to set ssl error_no in ssl_verify_cb: Certificate " << buffer);
+                delete errs;
+                errs = NULL;
+            }
+        }
+        else // remember another error number
+            errs->push_back_unique(error_no);
+
         if (const char *err_descr = Ssl::GetErrorDescr(error_no))
             debugs(83, 5, err_descr << ": " << buffer);
         else
             debugs(83, DBG_IMPORTANT, "SSL unknown certificate error " << error_no << " in " << buffer);
 
         if (check) {
-            Filled(check)->ssl_error = error_no;
+            ACLFilledChecklist *filledCheck = Filled(check);
+            assert(!filledCheck->sslErrors);
+            filledCheck->sslErrors = new Ssl::Errors(error_no);
             if (check->fastCheck() == ACCESS_ALLOWED) {
                 debugs(83, 3, "bypassing SSL error " << error_no << " in " << buffer);
                 ok = 1;
             } else {
                 debugs(83, 5, "confirming SSL error " << error_no);
             }
+            delete filledCheck->sslErrors;
+            filledCheck->sslErrors = NULL;
         }
     }
 
@@ -262,7 +298,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         }
 
         Ssl::ErrorDetail *errDetail =
-            new Ssl::ErrorDetail(error_no, broken_cert);
+            new Ssl::ErrorDetail(error_no, peer_cert, broken_cert);
 
         if (!SSL_set_ex_data(ssl, ssl_ex_index_ssl_error_detail,  errDetail)) {
             debugs(83, 2, "Failed to set Ssl::ErrorDetail in ssl_verify_cb: Certificate " << buffer);
@@ -577,6 +613,23 @@ ssl_free_ErrorDetail(void *, void *ptr, CRYPTO_EX_DATA *,
     delete errDetail;
 }
 
+static void
+ssl_free_SslErrors(void *, void *ptr, CRYPTO_EX_DATA *,
+                     int, long, void *)
+{
+    Ssl::Errors *errs = static_cast <Ssl::Errors*>(ptr);
+    delete errs;
+}
+
+// "free" function for X509 certificates
+static void
+ssl_free_X509(void *, void *ptr, CRYPTO_EX_DATA *,
+                     int, long, void *)
+{
+    X509  *cert = static_cast <X509 *>(ptr);
+    X509_free(cert);
+}
+
 /// \ingroup ServerProtocolSSLInternal
 static void
 ssl_initialize(void)
@@ -616,6 +669,8 @@ ssl_initialize(void)
     ssl_ctx_ex_index_dont_verify_domain = SSL_CTX_get_ex_new_index(0, (void *) "dont_verify_domain", NULL, NULL, NULL);
     ssl_ex_index_cert_error_check = SSL_get_ex_new_index(0, (void *) "cert_error_check", NULL, &ssl_dupAclChecklist, &ssl_freeAclChecklist);
     ssl_ex_index_ssl_error_detail = SSL_get_ex_new_index(0, (void *) "ssl_error_detail", NULL, NULL, &ssl_free_ErrorDetail);
+    ssl_ex_index_ssl_peeked_cert  = SSL_get_ex_new_index(0, (void *) "ssl_peeked_cert", NULL, NULL, &ssl_free_X509);
+    ssl_ex_index_ssl_errors =  SSL_get_ex_new_index(0, (void *) "ssl_errors", NULL, NULL, &ssl_free_SslErrors);
 }
 
 /// \ingroup ServerProtocolSSLInternal
@@ -667,6 +722,11 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
 
     if (!CAfile)
         CAfile = clientCA;
+
+    if (!certfile) {
+        debugs(83, DBG_CRITICAL, "ERROR: No certificate file");
+        return NULL;
+    }
 
     switch (version) {
 
@@ -722,8 +782,8 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
 
     if (sslContext == NULL) {
         ssl_error = ERR_get_error();
-        fatalf("Failed to allocate SSL context: %s\n",
-               ERR_error_string(ssl_error, NULL));
+        debugs(83, DBG_CRITICAL, "ERROR: Failed to allocate SSL context: " << ERR_error_string(ssl_error, NULL));
+        return NULL;
     }
 
     SSL_CTX_set_options(sslContext, ssl_parse_options(options));
@@ -747,8 +807,9 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
 
         if (!SSL_CTX_set_cipher_list(sslContext, cipher)) {
             ssl_error = ERR_get_error();
-            fatalf("Failed to set SSL cipher suite '%s': %s\n",
-                   cipher, ERR_error_string(ssl_error, NULL));
+            debugs(83, DBG_CRITICAL, "ERROR: Failed to set SSL cipher suite '" << cipher << "': " << ERR_error_string(ssl_error, NULL));
+            SSL_CTX_free(sslContext);
+            return NULL;
         }
     }
 
@@ -1261,13 +1322,13 @@ SSL_CTX * Ssl::generateSslContextUsingPkeyAndCertFromMemory(const char * data)
     return createSSLContext(cert, pkey);
 }
 
-SSL_CTX * Ssl::generateSslContext(char const *host, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey)
+SSL_CTX * Ssl::generateSslContext(CertificateProperties const &properties)
 {
     Ssl::X509_Pointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
-    if (!generateSslCertificateAndPrivateKey(host, signedX509, signedPkey, cert, pkey, NULL)) {
+    if (!generateSslCertificate(cert, pkey, properties))
         return NULL;
-    }
+
     if (!cert)
         return NULL;
 
@@ -1277,7 +1338,7 @@ SSL_CTX * Ssl::generateSslContext(char const *host, Ssl::X509_Pointer const & si
     return createSSLContext(cert, pkey);
 }
 
-bool Ssl::verifySslCertificateDate(SSL_CTX * sslContext)
+bool Ssl::verifySslCertificate(SSL_CTX * sslContext, CertificateProperties const &properties)
 {
     // Temporary ssl for getting X509 certificate from SSL_CTX.
     Ssl::SSL_Pointer ssl(SSL_new(sslContext));
@@ -1285,7 +1346,10 @@ bool Ssl::verifySslCertificateDate(SSL_CTX * sslContext)
     ASN1_TIME * time_notBefore = X509_get_notBefore(cert);
     ASN1_TIME * time_notAfter = X509_get_notAfter(cert);
     bool ret = (X509_cmp_current_time(time_notBefore) < 0 && X509_cmp_current_time(time_notAfter) > 0);
-    return ret;
+    if (!ret)
+        return false;
+
+    return certificateMatchesProperties(cert, properties);
 }
 
 bool
@@ -1374,6 +1438,31 @@ void Ssl::readCertChainAndPrivateKeyFromFiles(X509_Pointer & cert, EVP_PKEY_Poin
         pkey.reset(NULL);
         cert.reset(NULL);
     }
+}
+
+bool Ssl::generateUntrustedCert(X509_Pointer &untrustedCert, EVP_PKEY_Pointer &untrustedPkey, X509_Pointer const  &cert, EVP_PKEY_Pointer const & pkey)
+{
+    // Generate the self-signed certificate, using a hard-coded subject prefix
+    Ssl::CertificateProperties certProperties;
+    if (const char *cn = CommonHostName(cert.get())) {
+        certProperties.commonName = "Not trusted by \"";
+        certProperties.commonName += cn;
+        certProperties.commonName += "\"";
+    }
+    else if (const char *org = getOrganization(cert.get())) {
+        certProperties.commonName =  "Not trusted by \"";
+        certProperties.commonName += org;
+        certProperties.commonName += "\"";
+    }
+    else
+        certProperties.commonName =  "Not trusted";
+    certProperties.setCommonName = true;
+    // O, OU, and other CA subject fields will be mimicked
+    // Expiration date and other common properties will be mimicked
+    certProperties.signAlgorithm = Ssl::algSignSelf;
+    certProperties.signWithPkey.resetAndLock(pkey.get());
+    certProperties.mimicCert.resetAndLock(cert.get());
+    return Ssl::generateSslCertificate(untrustedCert, untrustedPkey, certProperties);
 }
 
 #endif /* USE_SSL */
