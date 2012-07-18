@@ -1,4 +1,5 @@
 #include "squid.h"
+#include "AccessLogEntry.h"
 #include "HttpRequest.h"
 
 #define STUB_API "HttpRequest.cc"

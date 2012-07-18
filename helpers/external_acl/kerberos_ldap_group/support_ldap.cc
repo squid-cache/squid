@@ -229,7 +229,7 @@ convert_domain_to_bind_path(char *domain)
 
     for (dp = domain; *dp; dp++) {
         if (*dp == '.')
-            i++;
+            ++i;
     }
     /*
      * add dc= and
@@ -282,7 +282,7 @@ escape_filter(char *filter)
             ldf = ldf + 3;
         } else {
             *ldf = *filter;
-            ldf++;
+            ++ldf;
         }
     }
     *ldf = '\0';
@@ -933,7 +933,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
         port = 389;
         if ((p = strchr(host, ':'))) {
             *p = '\0';
-            p++;
+            ++p;
             port = atoi(p);
         }
         nhosts = get_hostname_list(margs, &hlist, 0, host);

@@ -1,4 +1,27 @@
-Changes to squid-3.2.0.17 (12 Apr 2011):
+Changes to squid-3.2.0.18 (29 Jun 2012):
+
+	- Bug 3576: ICY streams being Transfer-Encoding:chunked
+	- Bug 3537: statistics histogram leaks memory
+	- Bug 3526: digest authentication crash
+	- Bug 3484: Docs: sslproxy_cert_error example flawed
+	- Bug 3462: Delay Pools and ICAP
+	- Bug 3405: ssl_crtd crashes failing to remove certificate
+	- Bug 3380: Mac OSX compile errors with CMSG_SPACE
+	- Bug 3258: Requests hang when Host forgery verify fails
+	- Bug 3186: Digest auth caches failed state without revalidating
+	- Bug 2976: ERR_INVALID_URL for transparently captured requests when reconfiguring
+	- Bug 2885: AIX: check and set required compiler flags
+	- Fix ssl_crtd compile issues with libsslutil
+	- Fix build with GCC 4.7 (and probably other C++11 compilers).
+	- Fix double-escape of %R on deny_info redirect responses
+	- Support status 308 Permanent Redirect
+	- Support for TLSv1.1 and TLSv1.2 options and methods
+	- Support passing external_acl_type credentials on ICAP
+	- Language Updates: fr, hy, pt_BR
+	- ... and many compile issues on Windows
+	- ... and some minor code polish
+
+Changes to squid-3.2.0.17 (12 Apr 2012):
 
 	- Bug 3527: EUI compile errors on Mac OS X 10.5.8 PPC
 	- Bug 3509: kQueue compile error
@@ -10,7 +33,7 @@ Changes to squid-3.2.0.17 (12 Apr 2011):
 	- Solaris 9/10 various build fixes
 	- ... and some more code polish
 
-Changes to squid-3.2.0.16 (07 Mar 2011):
+Changes to squid-3.2.0.16 (07 Mar 2012):
 
 	- Bug 3508: Correct DNS timeout handling.
 	- Bug 3503: DNS PTR queries timeout due to wrong QIDs.
@@ -28,7 +51,7 @@ Changes to squid-3.2.0.16 (07 Mar 2011):
 	- ... and several fixes related to in-transit object performance
 	- ... and some structural design changes for portability
 
-Changes to squid-3.2.0.15 (06 Feb 2011):
+Changes to squid-3.2.0.15 (06 Feb 2012):
 
 	- Bug 3472: segfault with the message 'urlParse: URL too large'
 	- Bug 3471: segfault when %la formating code used
@@ -363,7 +386,7 @@ Changes to squid-3.2.0.1 (03 Aug 2010):
 	- ... and a great many testing improvements
 	- ... and many documentation updates
 
-Changes to squid-3.1.20 (08 Jun 2011):
+Changes to squid-3.1.20 (08 Jun 2012):
 
 	- Regression Bug 3545: FreeBSD dnsserver segfaults
 	- Regression Bug 3504: clientside_tos fails to mark traffic
@@ -383,7 +406,7 @@ Changes to squid-3.1.20 (08 Jun 2011):
 	- Support CoAP over HTTP (coap:// and coaps:// URLs)
 	- Support for 3.2 error template codes
 
-Changes to squid-3.1.19 (06 Feb 2011):
+Changes to squid-3.1.19 (06 Feb 2012):
 
 	- Regression Bug 3441: part 2: Prevent further cache size corruption of swap.state
 	- Bug 3473: erase last uses of obsolete auth_user_hash_pointer
@@ -520,7 +543,7 @@ Changes to squid-3.1.12 (04 Apr 2011):
 	- Bug 3164: Total memory info display 32-bit overflows
 	- Bug 3155: Werror is hard-coded in libTrie build
 	- Bug 3151: squid_kerb_auth: use autoconf LIBS instead of FLAGS for library linkage
-	- Bug 2976: invalid URL on intercepted requests during reconfigure
+	- Bug 2976: invalid URL on intercepted requests during reconfigure (workaround)
 	- Bug 2720: comment in same line as cache/mem_replacement_policy causes error
 	- Bug 2621: Provide request headers to RESPMOD when using cache_peer.
 	- Bug 2330: AuthUser objects are never unlocked

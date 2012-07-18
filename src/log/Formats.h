@@ -1,6 +1,9 @@
 #ifndef _SQUID_LOG_FORMATS_H
 #define _SQUID_LOG_FORMATS_H
 
+#include "RefCount.h"
+
+typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class AccessLogEntry;
 class Logfile;
 
@@ -25,25 +28,25 @@ typedef enum {
 } log_type;
 
 /// Native Squid Format Display
-void SquidNative(AccessLogEntry * al, Logfile * logfile);
+void SquidNative(const AccessLogEntryPointer &al, Logfile * logfile);
 
 /// Display log details in Squid ICAP format.
-void SquidIcap(AccessLogEntry * al, Logfile * logfile);
+void SquidIcap(const AccessLogEntryPointer &al, Logfile * logfile);
 
 /// Display log details in useragent format.
-void SquidUserAgent(AccessLogEntry * al, Logfile * logfile);
+void SquidUserAgent(const AccessLogEntryPointer &al, Logfile * logfile);
 
 /// Display log details in Squid old refererlog format.
-void SquidReferer(AccessLogEntry * al, Logfile * logfile);
+void SquidReferer(const AccessLogEntryPointer &al, Logfile * logfile);
 
 /// Log with a local custom format
-void SquidCustom(AccessLogEntry * al, customlog * log);
+void SquidCustom(const AccessLogEntryPointer &al, customlog * log);
 
 /// Log with Apache httpd common format
-void HttpdCommon(AccessLogEntry * al, Logfile * logfile);
+void HttpdCommon(const AccessLogEntryPointer &al, Logfile * logfile);
 
 /// Log with Apache httpd combined format
-void HttpdCombined(AccessLogEntry * al, Logfile * logfile);
+void HttpdCombined(const AccessLogEntryPointer &al, Logfile * logfile);
 
 }; // namespace Format
 }; // namespace Log

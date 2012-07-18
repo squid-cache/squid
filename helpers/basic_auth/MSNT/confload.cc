@@ -199,7 +199,7 @@ AddServer(char *ParamPDC, char *ParamBDC, char *ParamDomain)
     strncpy(ServerArray[Serversqueried].pdc, ParamPDC, NTHOSTLEN - 1);
     strncpy(ServerArray[Serversqueried].bdc, ParamBDC, NTHOSTLEN - 1);
     strncpy(ServerArray[Serversqueried].domain, ParamDomain, NTHOSTLEN - 1);
-    Serversqueried++;
+    ++Serversqueried;
 }
 
 /*
@@ -212,7 +212,7 @@ int
 QueryServers(char *username, char *password)
 {
     int i;
-    for (i = 0; i < Serversqueried; i++) {
+    for (i = 0; i < Serversqueried; ++i) {
         if (0 == QueryServerForUser(i, username, password))
             return 0;
     }

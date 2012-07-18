@@ -41,10 +41,10 @@
 #include "SquidTime.h"
 
 void
-Log::Format::SquidReferer(AccessLogEntry *al, Logfile *logfile)
+Log::Format::SquidReferer(const AccessLogEntry::Pointer &al, Logfile *logfile)
 {
     const char *referer = NULL;
-    if (al && al->request)
+    if (al->request)
         referer = al->request->header.getStr(HDR_REFERER);
 
     if (!referer || *referer == '\0')

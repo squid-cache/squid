@@ -182,7 +182,7 @@ int
 match_group(char *dict_group, char *username)
 {
     struct group *g;		/* a struct to hold group entries */
-    dict_group++;			/* the @ should be the first char
+    ++dict_group;			/* the @ should be the first char
 				   so we rip it off by incrementing
 				   * the pointer by one */
 

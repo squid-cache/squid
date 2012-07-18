@@ -181,7 +181,14 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 {
     start_time = current_time;
     setConn(aConn);
-    al.tcpClient = clientConnection = aConn->clientConnection;
+    al = new AccessLogEntry;
+    al->tcpClient = clientConnection = aConn->clientConnection;
+#if USE_SSL
+    if (aConn->clientConnection != NULL && aConn->clientConnection->isOpen()) {
+        if (SSL *ssl = fd_table[aConn->clientConnection->fd].ssl)
+            al->cache.sslClientCert.reset(SSL_get_peer_certificate(ssl));
+    }
+#endif
     dlinkAdd(this, &active, &ClientActiveRequests);
 #if USE_ADAPTATION
     request_satisfaction_mode = false;
@@ -285,7 +292,7 @@ ClientHttpRequest::~ClientHttpRequest()
     loggingEntry(NULL);
 
     if (request)
-        checkFailureRatio(request->errType, al.hier.code);
+        checkFailureRatio(request->errType, al->hier.code);
 
     freeResources();
 
@@ -1282,7 +1289,7 @@ ClientRequestContext::sslBumpAccessCheck()
     if (bumpMode != Ssl::bumpEnd) {
         debugs(85, 5, HERE << "SslBump already decided (" << bumpMode <<
                "), " << "ignoring ssl_bump for " << http->getConn());
-        http->al.ssl.bumpMode = bumpMode; // inherited from bumped connection
+        http->al->ssl.bumpMode = bumpMode; // inherited from bumped connection
         return false;
     }
 
@@ -1293,7 +1300,7 @@ ClientRequestContext::sslBumpAccessCheck()
     // We also do not bump redirected CONNECT requests.
     if (http->request->method != METHOD_CONNECT || http->redirect.status ||
         !Config.accessList.ssl_bump || !http->getConn()->port->sslBump) {
-        http->al.ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
+        http->al->ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
         debugs(85, 5, HERE << "cannot SslBump this request");
         return false;
     }
@@ -1301,7 +1308,7 @@ ClientRequestContext::sslBumpAccessCheck()
     // Do not bump during authentication: clients would not proxy-authenticate
     // if we delay a 407 response and respond with 200 OK to CONNECT.
     if (error && error->httpStatus == HTTP_PROXY_AUTHENTICATION_REQUIRED) {
-        http->al.ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
+        http->al->ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
         debugs(85, 5, HERE << "no SslBump during proxy authentication");
         return false;
     }
@@ -1336,7 +1343,7 @@ ClientRequestContext::sslBumpAccessCheckDone(const allow_t &answer)
     const Ssl::BumpMode bumpMode = answer == ACCESS_ALLOWED ?
         static_cast<Ssl::BumpMode>(answer.kind) : Ssl::bumpNone;
     http->sslBumpNeed(bumpMode); // for processRequest() to bump if needed
-    http->al.ssl.bumpMode = bumpMode; // for logging
+    http->al->ssl.bumpMode = bumpMode; // for logging
 
     http->doCallouts();
 }
@@ -1361,7 +1368,7 @@ ClientHttpRequest::processRequest()
 #endif
         logType = LOG_TCP_MISS;
         getConn()->stopReading(); // tunnels read for themselves
-        tunnelStart(this, &out.size, &al.http.code);
+        tunnelStart(this, &out.size, &al->http.code);
         return;
     }
 
@@ -1418,7 +1425,7 @@ ClientHttpRequest::sslBumpEstablish(comm_err_t errflag)
 
     // We lack HttpReply which logRequest() uses to log the status code.
     // TODO: Use HttpReply instead of the "200 Connection established" string.
-    al.http.code = 200;
+    al->http.code = 200;
 
 #if USE_AUTH
     // Preserve authentication info for the ssl-bumped request
@@ -1520,8 +1527,8 @@ ClientHttpRequest::doCallouts()
     assert(calloutContext);
 
     /*Save the original request for logging purposes*/
-    if (!calloutContext->http->al.request)
-        calloutContext->http->al.request = HTTPMSGLOCK(request);
+    if (!calloutContext->http->al->request)
+        calloutContext->http->al->request = HTTPMSGLOCK(request);
 
     if (!calloutContext->error) {
     // CVE-2009-0801: verify the Host: header is consistent with other known details.

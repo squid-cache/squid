@@ -20,7 +20,7 @@ class BasicAuthQueueNode
 public:
     BasicAuthQueueNode *next;
     Auth::UserRequest::Pointer auth_user_request;
-    RH *handler;
+    AUTHCB *handler;
     void *data;
 };
 

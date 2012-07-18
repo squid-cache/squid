@@ -99,7 +99,7 @@ acl_ip_data::toStr(char *buf, int len) const
 
     if (!addr2.IsAnyAddr()) {
         b2[0] = '-';
-        rlen++;
+        ++rlen;
         addr2.NtoA(&(b2[1]), len - rlen );
         rlen = strlen(buf);
     } else
@@ -109,7 +109,7 @@ acl_ip_data::toStr(char *buf, int len) const
 
     if (!mask.IsNoAddr()) {
         b3[0] = '/';
-        rlen++;
+        ++rlen;
         int cidr =  mask.GetCIDR() - (addr1.IsIPv4()?96:0);
         snprintf(&(b3[1]), (len-rlen), "%u", (unsigned int)(cidr<0?0:cidr) );
     } else

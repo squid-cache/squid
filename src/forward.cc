@@ -86,6 +86,11 @@ FwdState::abort(void* d)
 
     if (Comm::IsConnOpen(fwd->serverConnection())) {
         comm_remove_close_handler(fwd->serverConnection()->fd, fwdServerClosedWrapper, fwd);
+        debugs(17, 3, HERE << "store entry aborted; closing " <<
+               fwd->serverConnection());
+        fwd->serverConnection()->close();
+    } else {
+        debugs(17, 7, HERE << "store entry aborted; no connection to close");
     }
     fwd->serverDestinations.clean();
     fwd->self = NULL;
@@ -503,14 +508,14 @@ FwdState::checkRetry()
     if (flags.dont_retry)
         return false;
 
+    if (request->bodyNibbled())
+        return false;
+
     // NP: not yet actually connected anywhere. retry is safe.
     if (!flags.connected_okay)
         return true;
 
     if (!checkRetriable())
-        return false;
-
-    if (request->bodyNibbled())
         return false;
 
     return true;
@@ -828,6 +833,7 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
     }
 
     serverConn = conn;
+    flags.connected_okay = true;
 
     debugs(17, 3, HERE << serverConnection() << ": '" << entry->url() << "'" );
 
@@ -857,7 +863,6 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
     }
 #endif
 
-    flags.connected_okay = true;
     dispatch();
 }
 
@@ -934,6 +939,7 @@ FwdState::connectStart()
         else
             serverConn = NULL;
         if (Comm::IsConnOpen(serverConn)) {
+            flags.connected_okay = true;
 #if 0
             if (!serverConn->getPeer())
                 serverConn->peerType = HIER_DIRECT;
@@ -981,6 +987,7 @@ FwdState::connectStart()
     // if we found an open persistent connection to use. use it.
     if (openedPconn) {
         serverConn = temp;
+        flags.connected_okay = true;
         debugs(17, 3, HERE << "reusing pconn " << serverConnection());
         n_tries++;
 

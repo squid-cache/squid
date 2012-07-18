@@ -77,7 +77,7 @@ Auth::Ntlm::UserRequest::module_direction()
 }
 
 void
-Auth::Ntlm::UserRequest::module_start(RH * handler, void *data)
+Auth::Ntlm::UserRequest::module_start(AUTHCB * handler, void *data)
 {
     static char buf[MAX_AUTHTOKEN_LEN];
 
@@ -86,7 +86,7 @@ Auth::Ntlm::UserRequest::module_start(RH * handler, void *data)
 
     if (static_cast<Auth::Ntlm::Config*>(Auth::Config::Find("ntlm"))->authenticateProgram == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: NTLM Start: no NTLM program configured.");
-        handler(data, NULL);
+        handler(data);
         return;
     }
 
@@ -173,13 +173,13 @@ Auth::Ntlm::UserRequest::authenticate(HttpRequest * aRequest, ConnStateData * co
     /* if proxy_auth is actually NULL, we'd better not manipulate it. */
     if (blob) {
         while (xisspace(*blob) && *blob)
-            blob++;
+            ++blob;
 
         while (!xisspace(*blob) && *blob)
-            blob++;
+            ++blob;
 
         while (xisspace(*blob) && *blob)
-            blob++;
+            ++blob;
     }
 
     switch (user()->credentials()) {
@@ -262,7 +262,7 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, void *lastserver, char *reply)
     /* seperate out the useful data */
     blob = strchr(reply, ' ');
     if (blob)
-        blob++;
+        ++blob;
 
     if (strncasecmp(reply, "TT ", 3) == 0) {
         /* we have been given a blob to send to the client */
@@ -340,6 +340,6 @@ Auth::Ntlm::UserRequest::HandleReply(void *data, void *lastserver, char *reply)
         HTTPMSGUNLOCK(lm_request->request);
         lm_request->request = NULL;
     }
-    r->handler(r->data, NULL);
+    r->handler(r->data);
     delete r;
 }

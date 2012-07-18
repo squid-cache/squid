@@ -267,7 +267,7 @@ log_extended( const char* fn, int code, long size, const SquidMetaList* meta )
 
     if ( meta && (findings = meta->search( STORE_META_KEY_MD5 )) ) {
         unsigned char* s = (unsigned char*) findings->data;
-        for ( int j=0; j<16; j++, s++ ) {
+        for ( int j=0; j<16; ++j, ++s ) {
             md5[j*2+0] = hexdigit[ *s >> 4 ];
             md5[j*2+1] = hexdigit[ *s & 15 ];
         }

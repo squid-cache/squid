@@ -217,7 +217,7 @@ static void clientUpdateStatHistCounters(log_type logType, int svc_time);
 static void clientUpdateStatCounters(log_type logType);
 static void clientUpdateHierCounters(HierarchyLogEntry *);
 static bool clientPingHasFinished(ping_data const *aPing);
-void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry *);
+void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry::Pointer &);
 #ifndef PURIFY
 static bool connIsUsable(ConnStateData * conn);
 #endif
@@ -551,10 +551,10 @@ ClientHttpRequest::updateCounters()
 }
 
 void
-prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
+prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry::Pointer &aLogEntry)
 {
     assert(request);
-    assert(aLogEntry);
+    assert(aLogEntry != NULL);
 
     if (Config.onoff.log_mime_hdrs) {
         Packer p;
@@ -625,47 +625,47 @@ ClientHttpRequest::logRequest()
     if (!out.size && !logType)
         debugs(33, 5, HERE << "logging half-baked transaction: " << log_uri);
 
-    al.icp.opcode = ICP_INVALID;
-    al.url = log_uri;
-    debugs(33, 9, "clientLogRequest: al.url='" << al.url << "'");
+    al->icp.opcode = ICP_INVALID;
+    al->url = log_uri;
+    debugs(33, 9, "clientLogRequest: al.url='" << al->url << "'");
 
-    if (al.reply) {
-        al.http.code = al.reply->sline.status;
-        al.http.content_type = al.reply->content_type.termedBuf();
+    if (al->reply) {
+        al->http.code = al->reply->sline.status;
+        al->http.content_type = al->reply->content_type.termedBuf();
     } else if (loggingEntry() && loggingEntry()->mem_obj) {
-        al.http.code = loggingEntry()->mem_obj->getReply()->sline.status;
-        al.http.content_type = loggingEntry()->mem_obj->getReply()->content_type.termedBuf();
+        al->http.code = loggingEntry()->mem_obj->getReply()->sline.status;
+        al->http.content_type = loggingEntry()->mem_obj->getReply()->content_type.termedBuf();
     }
 
-    debugs(33, 9, "clientLogRequest: http.code='" << al.http.code << "'");
+    debugs(33, 9, "clientLogRequest: http.code='" << al->http.code << "'");
 
     if (loggingEntry() && loggingEntry()->mem_obj)
-        al.cache.objectSize = loggingEntry()->contentLen();
+        al->cache.objectSize = loggingEntry()->contentLen();
 
-    al.cache.caddr.SetNoAddr();
+    al->cache.caddr.SetNoAddr();
 
     if (getConn() != NULL) {
-        al.cache.caddr = getConn()->log_addr;
-        al.cache.port =  cbdataReference(getConn()->port);
+        al->cache.caddr = getConn()->log_addr;
+        al->cache.port =  cbdataReference(getConn()->port);
     }
 
-    al.cache.requestSize = req_sz;
-    al.cache.requestHeadersSize = req_sz;
+    al->cache.requestSize = req_sz;
+    al->cache.requestHeadersSize = req_sz;
 
-    al.cache.replySize = out.size;
-    al.cache.replyHeadersSize = out.headers_sz;
+    al->cache.replySize = out.size;
+    al->cache.replyHeadersSize = out.headers_sz;
 
-    al.cache.highOffset = out.offset;
+    al->cache.highOffset = out.offset;
 
-    al.cache.code = logType;
+    al->cache.code = logType;
 
-    al.cache.msec = tvSubMsec(start_time, current_time);
+    al->cache.msec = tvSubMsec(start_time, current_time);
 
     if (request)
-        prepareLogWithRequestDetails(request, &al);
+        prepareLogWithRequestDetails(request, al);
 
     if (getConn() != NULL && getConn()->clientConnection != NULL && getConn()->clientConnection->rfc931[0])
-        al.cache.rfc931 = getConn()->clientConnection->rfc931;
+        al->cache.rfc931 = getConn()->clientConnection->rfc931;
 
 #if USE_SSL && 0
 
@@ -673,19 +673,19 @@ ClientHttpRequest::logRequest()
      * to snarf the ssl details some place earlier..
      */
     if (getConn() != NULL)
-        al.cache.ssluser = sslGetUserEmail(fd_table[getConn()->fd].ssl);
+        al->cache.ssluser = sslGetUserEmail(fd_table[getConn()->fd].ssl);
 
 #endif
 
     ACLFilledChecklist *checklist = clientAclChecklistCreate(Config.accessList.log, this);
 
-    if (al.reply)
-        checklist->reply = HTTPMSGLOCK(al.reply);
+    if (al->reply)
+        checklist->reply = HTTPMSGLOCK(al->reply);
 
     if (!Config.accessList.log || checklist->fastCheck() == ACCESS_ALLOWED) {
         if (request)
-            al.adapted_request = HTTPMSGLOCK(request);
-        accessLogLog(&al, checklist);
+            al->adapted_request = HTTPMSGLOCK(request);
+        accessLogLog(al, checklist);
         updateCounters();
 
         if (getConn() != NULL && getConn()->clientConnection != NULL)
@@ -693,8 +693,6 @@ ClientHttpRequest::logRequest()
     }
 
     delete checklist;
-
-    accessLogFreeMemory(&al);
 }
 
 void
@@ -1008,7 +1006,7 @@ ClientSocketContext::packChunk(const StoreIOBuffer &bodyData, MemBuf &mb)
         static_cast<uint64_t>(lengthToSend(bodyData.range()));
     noteSentBodyBytes(length);
 
-    mb.Printf("%"PRIX64"\r\n", length);
+    mb.Printf("%" PRIX64 "\r\n", length);
     mb.append(bodyData.data, length);
     mb.Printf("\r\n");
 }
@@ -1448,7 +1446,7 @@ clientSocketRecipient(clientStreamNode * node, ClientHttpRequest * http,
         context->sendBody(rep, receivedData);
     else {
         assert(rep);
-        http->al.reply = HTTPMSGLOCK(rep);
+        http->al->reply = HTTPMSGLOCK(rep);
         context->sendStartOfMessage(rep, receivedData);
     }
 
@@ -1794,9 +1792,9 @@ ClientSocketContext::noteIoError(const int xerrno)
 {
     if (http) {
         if (xerrno == ETIMEDOUT)
-            http->al.http.timedout = true;
+            http->al->http.timedout = true;
         else // even if xerrno is zero (which means read abort/eof)
-            http->al.http.aborted = true;
+            http->al->http.aborted = true;
     }
 }
 
@@ -2484,8 +2482,8 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
         repContext->setReplyToStoreEntry(sslServerBump->entry);
 
         // save the original request for logging purposes
-        if (!context->http->al.request)
-            context->http->al.request = HTTPMSGLOCK(http->request);
+        if (!context->http->al->request)
+            context->http->al->request = HTTPMSGLOCK(http->request);
 
         // Get error details from the fake certificate-peeking request.
         http->request->detailError(sslServerBump->request->errType, sslServerBump->request->errDetail);
@@ -2530,8 +2528,8 @@ bool ConnStateData::serveDelayedError(ClientSocketContext *context)
                     sslServerBump->serverCert.get(), NULL);
                 err->detail = errDetail;
                 // Save the original request for logging purposes.
-                if (!context->http->al.request)
-                    context->http->al.request = HTTPMSGLOCK(request);
+                if (!context->http->al->request)
+                    context->http->al->request = HTTPMSGLOCK(request);
                 repContext->setReplyToError(request->method, err);
                 assert(context->http->out.offset == 0);
                 context->pullData();
@@ -2636,6 +2634,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     }
 
     request->clientConnectionManager = conn;
+    request->al = http->al;
 
     request->flags.accelerated = http->flags.accel;
     request->flags.sslBumped = conn->switchedToHttps();
@@ -3250,7 +3249,7 @@ clientLifetimeTimeout(const CommTimeoutCbParams &io)
     ClientHttpRequest *http = static_cast<ClientHttpRequest *>(io.data);
     debugs(33, DBG_IMPORTANT, "WARNING: Closing client connection due to lifetime timeout");
     debugs(33, DBG_IMPORTANT, "\t" << http->uri);
-    http->al.http.timedout = true;
+    http->al->http.timedout = true;
     if (Comm::IsConnOpen(io.conn))
         io.conn->close();
 }

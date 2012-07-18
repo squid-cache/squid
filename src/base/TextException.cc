@@ -51,12 +51,12 @@ unsigned int TextException::FileNameHash(const char *fname)
     s = strrchr(fname, '/');
 
     if (s)
-        s++;
+        ++s;
     else
         s = fname;
 
     while (*s) {
-        j++;
+        ++j;
         n ^= 271 * (unsigned) *s++;
     }
     i = n ^ (j * 271);
