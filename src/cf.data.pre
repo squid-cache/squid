@@ -647,6 +647,13 @@ DOC_END
 NAME: acl
 TYPE: acl
 LOC: Config.aclList
+IF USE_SSL
+DEFAULT: ssl::certHasExpired ssl_error X509_V_ERR_CERT_HAS_EXPIRED
+DEFAULT: ssl::certNotYetValid ssl_error X509_V_ERR_CERT_NOT_YET_VALID
+DEFAULT: ssl::certDomainMismatch ssl_error SQUID_X509_V_ERR_DOMAIN_MISMATCH
+DEFAULT: ssl::certUntrusted ssl_error X509_V_ERR_INVALID_CA X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY X509_V_ERR_CERT_UNTRUSTED
+DEFAULT: ssl::certSelfSigned ssl_error X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT
+ENDIF
 DEFAULT: all src all
 DEFAULT: manager url_regex -i ^cache_object:// +i ^https?://[^/]+/squid-internal-mgr/
 DEFAULT: localhost src 127.0.0.1/32 ::1
@@ -870,6 +877,29 @@ DOC_START
 	  # NOTE: This has no effect in http_access rules. It only has
 	  # effect in rules that affect the reply data stream such as
 	  # http_reply_access.
+
+IF USE_SSL
+	acl aclname ssl_error errorname
+	  # match against SSL certificate validation error [fast]
+	  #
+	  # For valid error names see in @DEFAULT_ERROR_DIR@/templates/error-details.txt
+	  # template file.
+	  #
+	  # The following can be used as shortcuts for certificate properties:
+	  #  [ssl::]certHasExpired: the "not after" field is in the past
+	  #  [ssl::]certNotYetValid: the "not before" field is in the future
+	  #  [ssl::]certUntrusted: The certificate issuer is not to be trusted.
+	  #  [ssl::]certSelfSigned: The certificate is self signed.
+	  #  [ssl::]certDomainMismatch: The certificate CN domain does not
+	  #         match the name the name of the host we are connecting to.
+	  #
+	  # The ssl::certHasExpired, ssl::certNotYetValid, ssl::certDomainMismatch,
+	  # ssl::certUntrusted, and ssl::certSelfSigned can also be used as
+	  # predefined ACLs, just like the 'all' ACL.
+	  #
+	  # NOTE: The ssl_error ACL is only supported with sslproxy_cert_error,
+	  # sslproxy_cert_sign, and sslproxy_cert_adapt options.
+ENDIF
 
 	Examples:
 		acl macaddress arp 09:00:2b:23:45:67
@@ -1316,14 +1346,14 @@ DOC_START
 
 	   accel	Accelerator / reverse proxy mode
 
-	   ssl-bump 	Intercept each CONNECT request matching ssl_bump ACL,
+	   ssl-bump	For each CONNECT request allowed by ssl_bump ACLs,
 			establish secure connection with the client and with
-			the server, decrypt HTTP messages as they pass through
+			the server, decrypt HTTPS messages as they pass through
 			Squid, and treat them as unencrypted HTTP messages,
 			becoming the man-in-the-middle.
 
 			The ssl_bump option is required to fully enable
-			the SslBump feature.
+			bumping of CONNECT requests.
 
 	Omitting the mode flag causes default forward proxy mode to be used.
 
@@ -1386,8 +1416,7 @@ DOC_START
 	   dynamic_cert_mem_cache_size=SIZE
 			Approximate total RAM size spent on cached generated
 			certificates. If set to zero, caching is disabled. The
-			default value is 4MB. An average XXX-bit certificate
-			consumes about XXX bytes of RAM.
+			default value is 4MB.
 
 	TLS / SSL Options:
 
@@ -1528,6 +1557,117 @@ DOC_START
 
 	You may specify multiple socket addresses on multiple lines,
 	each with their own SSL certificate and/or options.
+
+	Modes:
+
+	   accel	Accelerator / reverse proxy mode
+
+	   intercept	Support for IP-Layer interception of
+			outgoing requests without browser settings.
+			NP: disables authentication and IPv6 on the port.
+
+	   tproxy	Support Linux TPROXY for spoofing outgoing
+			connections using the client IP address.
+			NP: disables authentication and maybe IPv6 on the port.
+
+	   ssl-bump	For each intercepted connection allowed by ssl_bump
+			ACLs, establish a secure connection with the client and with
+			the server, decrypt HTTPS messages as they pass through
+			Squid, and treat them as unencrypted HTTP messages,
+			becoming the man-in-the-middle.
+
+			An "ssl_bump server-first" match is required to
+			fully enable bumping of intercepted SSL	connections.
+
+			Requires tproxy or intercept.
+
+	Omitting the mode flag causes default forward proxy mode to be used.
+
+
+	See http_port for a list of generic options
+
+
+	SSL Options:
+
+	   cert=	Path to SSL certificate (PEM format).
+
+	   key=		Path to SSL private key file (PEM format)
+			if not specified, the certificate file is
+			assumed to be a combined certificate and
+			key file.
+
+	   version=	The version of SSL/TLS supported
+			    1	automatic (default)
+			    2	SSLv2 only
+			    3	SSLv3 only
+			    4	TLSv1 only
+
+	   cipher=	Colon separated list of supported ciphers.
+
+	   options=	Various SSL engine options. The most important
+			being:
+			    NO_SSLv2  Disallow the use of SSLv2
+			    NO_SSLv3  Disallow the use of SSLv3
+			    NO_TLSv1  Disallow the use of TLSv1
+			    SINGLE_DH_USE Always create a new key when using
+				      temporary/ephemeral DH key exchanges
+			See src/ssl_support.c or OpenSSL SSL_CTX_set_options
+			documentation for a complete list of options.
+
+	   clientca=	File containing the list of CAs to use when
+			requesting a client certificate.
+
+	   cafile=	File containing additional CA certificates to
+			use when verifying client certificates. If unset
+			clientca will be used.
+
+	   capath=	Directory containing additional CA certificates
+			and CRL lists to use when verifying client certificates.
+
+	   crlfile=	File of additional CRL lists to use when verifying
+			the client certificate, in addition to CRLs stored in
+			the capath. Implies VERIFY_CRL flag below.
+
+	   dhparams=	File containing DH parameters for temporary/ephemeral
+			DH key exchanges.
+
+	   sslflags=	Various flags modifying the use of SSL:
+			    DELAYED_AUTH
+				Don't request client certificates
+				immediately, but wait until acl processing
+				requires a certificate (not yet implemented).
+			    NO_DEFAULT_CA
+				Don't use the default CA lists built in
+				to OpenSSL.
+			    NO_SESSION_REUSE
+				Don't allow for session reuse. Each connection
+				will result in a new SSL session.
+			    VERIFY_CRL
+				Verify CRL lists when accepting client
+				certificates.
+			    VERIFY_CRL_ALL
+				Verify CRL lists for all certificates in the
+				client certificate chain.
+
+	   sslcontext=	SSL session ID context identifier.
+
+	   generate-host-certificates[=<on|off>]
+			Dynamically create SSL server certificates for the
+			destination hosts of bumped SSL requests.When
+			enabled, the cert and key options are used to sign
+			generated certificates. Otherwise generated
+			certificate will be selfsigned.
+			If there is CA certificate life time of generated
+			certificate equals lifetime of CA certificate. If
+			generated certificate is selfsigned lifetime is three
+			years.
+			This option is enabled by default when SslBump is used.
+			See the sslBump option above for more information.
+
+	   dynamic_cert_mem_cache_size=SIZE
+			Approximate total RAM size spent on cached generated
+			certificates. If set to zero, caching is disabled. The
+			default value is 4MB.
 
 	See http_port for a list of available options.
 DOC_END
@@ -1944,32 +2084,60 @@ DOC_END
 
 NAME: ssl_bump
 IFDEF: USE_SSL
-TYPE: acl_access
+TYPE: sslproxy_ssl_bump
 LOC: Config.accessList.ssl_bump
 DEFAULT: none
 DOC_START
-	This ACL controls which CONNECT requests to an http_port
-	marked with an sslBump flag are actually "bumped". Please 
-	see the sslBump flag of an http_port option for more details
-	about decoding proxied SSL connections.
+	This option is consulted when a CONNECT request is received on
+	an http_port (or a new connection is intercepted at an
+	https_port), provided that port was configured with an ssl-bump
+	flag. The subsequent data on the connection is either treated as
+	HTTPS and decrypted OR tunneled at TCP level without decryption,
+	depending on the first bumping "mode" which ACLs match.
 
-	By default, no requests are bumped.
+	ssl_bump <mode> [!]acl ...
 
-	See also: http_port ssl-bump
-   
+	The following bumping modes are supported:
+
+	    client-first
+		Allow bumping of the connection. Establish a secure connection
+		with the client first, then connect to the server. This old mode
+		does not allow Squid to mimic server SSL certificate and does
+		not work with intercepted SSL connections.
+
+	    server-first
+		Allow bumping of the connection. Establish a secure connection
+		with the server first, then establish a secure connection with
+		the client, using a mimicked server certificate. Works with both
+		CONNECT requests and intercepted SSL connections.
+
+	    none
+		Become a TCP tunnel without decoding the connection.
+		Works with both CONNECT requests and intercepted SSL
+		connections. This is the default behavior when no
+		ssl_bump option is given or no ssl_bump ACLs match.
+
+	By default, no connections are bumped.
+
+	The first matching ssl_bump option wins. If no ACLs match, the
+	connection is not bumped. Unlike most allow/deny ACL lists, ssl_bump
+	does not have an implicit "negate the last given option" rule. You
+	must make that rule explicit if you convert old ssl_bump allow/deny
+	rules that rely on such an implicit rule.
+
 	This clause supports both fast and slow acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
+	See also: http_port ssl-bump, https_port ssl-bump
 
-	# Example: Bump all requests except those originating from localhost and 
-	# those going to webax.com or example.com sites.
 
-	acl localhost src 127.0.0.1/32
-	acl broken_sites dstdomain .webax.com
+	# Example: Bump all requests except those originating from
+	# localhost and those going to example.com.
+
 	acl broken_sites dstdomain .example.com
-	ssl_bump deny localhost
-	ssl_bump deny broken_sites
-	ssl_bump allow all
+	ssl_bump none localhost
+	ssl_bump none broken_sites
+	ssl_bump server-first all
 DOC_END
 
 NAME: sslproxy_flags
@@ -2013,6 +2181,89 @@ DOC_START
 	See also: sslproxy_flags and DONT_VERIFY_PEER.
 
 	Default setting:  sslproxy_cert_error deny all
+DOC_END
+
+NAME: sslproxy_cert_sign
+IFDEF: USE_SSL
+DEFAULT: none
+POSTSCRIPTUM: signUntrusted ssl::certUntrusted
+POSTSCRIPTUM: signSelf ssl::certSelfSigned
+POSTSCRIPTUM: signTrusted all
+TYPE: sslproxy_cert_sign
+LOC: Config.ssl_client.cert_sign
+DOC_START
+
+        sslproxy_cert_sign <signing algorithm> acl ...
+
+        The following certificate signing algorithms are supported:
+	   signTrusted
+		Sign using the configured CA certificate which is usually
+		placed in and trusted by end-user browsers. This is the
+		default for trusted origin server certificates.
+	   signUntrusted
+		Sign to guarantee an X509_V_ERR_CERT_UNTRUSTED browser error.
+		This is the default for untrusted origin server certificates
+		that are not self-signed (see ssl::certUntrusted).
+	   signSelf
+		Sign using a self-signed certificate with the right CN to
+		generate a X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT error in the
+		browser. This is the default for self-signed origin server
+		certificates (see ssl::certSelfSigned).
+
+	This clause only supports fast acl types.
+
+	When sslproxy_cert_sign acl(s) match, Squid uses the corresponding
+	signing algorithm to generate the certificate and ignores all
+	subsequent sslproxy_cert_sign options (the first match wins). If no
+	acl(s) match, the default signing algorithm is determined by errors
+	detected when obtaining and validating the origin server certificate.
+
+	WARNING: SQUID_X509_V_ERR_DOMAIN_MISMATCH and ssl:certDomainMismatch can
+	be used with sslproxy_cert_adapt, but if and only if Squid is bumping a
+	CONNECT request that carries a domain name. In all other cases (CONNECT
+	to an IP address or an intercepted SSL connection), Squid cannot detect
+	the domain mismatch at certificate generation time when
+	bump-server-first is used.
+DOC_END
+
+NAME: sslproxy_cert_adapt 
+IFDEF: USE_SSL
+DEFAULT: none
+TYPE: sslproxy_cert_adapt
+LOC: Config.ssl_client.cert_adapt
+DOC_START
+	
+	sslproxy_cert_adapt <adaptation algorithm> acl ...
+
+	The following certificate adaptation algorithms are supported:
+	   setValidAfter
+		Sets the "Not After" property to the "Not After" property of
+		the CA certificate used to sign generated certificates.
+	   setValidBefore
+		Sets the "Not Before" property to the "Not Before" property of
+		the CA certificate used to sign generated certificates.
+	   setCommonName or setCommonName{CN}
+		Sets Subject.CN property to the host name specified as a 
+		CN parameter or, if no explicit CN parameter was specified,
+		extracted from the CONNECT request. It is a misconfiguration
+		to use setCommonName without an explicit parameter for
+		intercepted or tproxied SSL connections.
+		
+	This clause only supports fast acl types.
+
+	Squid first groups sslproxy_cert_adapt options by adaptation algorithm.
+	Within a group, when sslproxy_cert_adapt acl(s) match, Squid uses the
+	corresponding adaptation algorithm to generate the certificate and
+	ignores all subsequent sslproxy_cert_adapt options in that algorithm's
+	group (i.e., the first match wins within each algorithm group). If no
+	acl(s) match, the default mimicking action takes place.
+
+	WARNING: SQUID_X509_V_ERR_DOMAIN_MISMATCH and ssl:certDomainMismatch can
+	be used with sslproxy_cert_adapt, but if and only if Squid is bumping a
+	CONNECT request that carries a domain name. In all other cases (CONNECT
+	to an IP address or an intercepted SSL connection), Squid cannot detect
+	the domain mismatch at certificate generation time when
+	bump-server-first is used.
 DOC_END
 
 NAME: sslpassword_program
@@ -3090,6 +3341,24 @@ DOC_START
 
 		Ss	Squid request status (TCP_MISS etc)
 		Sh	Squid hierarchy status (DEFAULT_PARENT etc)
+
+	SSL-related format codes:
+
+		ssl::bump_mode	SslBump decision for the transaction:
+
+				For CONNECT requests that initiated bumping of
+				a connection and for any request received on
+				an already bumped connection, Squid logs the
+				corresponding SslBump mode ("server-first" or
+				"client-first"). See the ssl_bump option for
+				more information about these modes.
+
+				A "none" token is logged for requests that
+				triggered "ssl_bump" ACL evaluation matching
+				either a "none" rule or no rules at all.
+
+				In all other cases, a single dash ("-") is
+				logged.
 
 	If ICAP is enabled, the following code becomes available (as
 	well as ICAP log codes documented with the icap_log option):

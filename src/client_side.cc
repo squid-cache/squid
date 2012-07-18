@@ -105,8 +105,10 @@
 #include "comm/Loops.h"
 #include "comm/Write.h"
 #include "comm/TcpAcceptor.h"
+#include "errorpage.h"
 #include "eui/Config.h"
 #include "fde.h"
+#include "forward.h"
 #include "HttpHdrContRange.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -123,6 +125,7 @@
 #if USE_SSL
 #include "ssl/context_storage.h"
 #include "ssl/helper.h"
+#include "ssl/ServerBump.h"
 #include "ssl/support.h"
 #include "ssl/gadgets.h"
 #endif
@@ -808,6 +811,10 @@ ConnStateData::~ConnStateData()
 
     if (bodyPipe != NULL)
         stopProducingFor(bodyPipe, false);
+   
+#if USE_SSL
+    delete sslServerBump;
+#endif
 }
 
 /**
@@ -2441,6 +2448,100 @@ ConnStateData::clientAfterReadingRequests()
         readSomeData();
 }
 
+void
+ConnStateData::quitAfterError(HttpRequest *request)
+{
+    // From HTTP p.o.v., we do not have to close after every error detected
+    // at the client-side, but many such errors do require closure and the
+    // client-side code is bad at handling errors so we play it safe.
+    if (request)
+        request->flags.proxy_keepalive = 0;
+    flags.readMore = false;
+    debugs(33,4, HERE << "Will close after error: " << clientConnection);
+}
+
+#if USE_SSL
+bool ConnStateData::serveDelayedError(ClientSocketContext *context)
+{
+    ClientHttpRequest *http = context->http;
+
+    if (!sslServerBump)
+        return false;
+
+    assert(sslServerBump->entry);
+    // Did we create an error entry while processing CONNECT?
+    if (!sslServerBump->entry->isEmpty()) {
+        quitAfterError(http->request);
+
+        // Get the saved error entry and send it to the client by replacing the
+        // ClientHttpRequest store entry with it.
+        clientStreamNode *node = context->getClientReplyContext();
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert(repContext);
+        debugs(33, 5, "Responding with delated error for " << http->uri);
+        repContext->setReplyToStoreEntry(sslServerBump->entry);
+
+        // save the original request for logging purposes
+        if (!context->http->al->request)
+            context->http->al->request = HTTPMSGLOCK(http->request);
+
+        // Get error details from the fake certificate-peeking request.
+        http->request->detailError(sslServerBump->request->errType, sslServerBump->request->errDetail);
+        context->pullData();
+        return true;
+    }
+
+    // In bump-server-first mode, we have not necessarily seen the intended
+    // server name at certificate-peeking time. Check for domain mismatch now,
+    // when we can extract the intended name from the bumped HTTP request.
+    if (sslServerBump->serverCert.get()) {
+        HttpRequest *request = http->request;
+        if (!Ssl::checkX509ServerValidity(sslServerBump->serverCert.get(), request->GetHost())) {
+            debugs(33, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " <<
+                   "does not match domainname " << request->GetHost());
+
+            ACLFilledChecklist check(Config.ssl_client.cert_error, request, dash_str);
+            check.sslErrors = new Ssl::Errors(SQUID_X509_V_ERR_DOMAIN_MISMATCH);
+            if (Comm::IsConnOpen(pinning.serverConnection))
+                check.fd(pinning.serverConnection->fd);
+            const bool allowDomainMismatch =
+                check.fastCheck() == ACCESS_ALLOWED;
+            delete check.sslErrors;
+            check.sslErrors = NULL;
+
+            if (!allowDomainMismatch) {
+                quitAfterError(request);
+
+                clientStreamNode *node = context->getClientReplyContext();
+                clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+                assert (repContext);
+
+                // Fill the server IP and hostname for error page generation.
+                HttpRequest::Pointer const & peekerRequest = sslServerBump->request;
+                request->hier.note(peekerRequest->hier.tcpServer, request->GetHost());
+
+                // Create an error object and fill it
+                ErrorState *err = new ErrorState(ERR_SECURE_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
+                err->src_addr = clientConnection->remote;
+                Ssl::ErrorDetail *errDetail = new Ssl::ErrorDetail(
+                    SQUID_X509_V_ERR_DOMAIN_MISMATCH,
+                    sslServerBump->serverCert.get(), NULL);
+                err->detail = errDetail;
+                // Save the original request for logging purposes.
+                if (!context->http->al->request)
+                    context->http->al->request = HTTPMSGLOCK(request);
+                repContext->setReplyToError(request->method, err);
+                assert(context->http->out.offset == 0);
+                context->pullData();
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+#endif // USE_SSL
+
 static void
 clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *context, const HttpRequestMethod& method, HttpVersion http_ver)
 {
@@ -2459,6 +2560,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if (context->flags.parsed_ok == 0) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 2, "clientProcessRequest: Invalid Request");
+        conn->quitAfterError(NULL);
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
@@ -2477,13 +2579,13 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         }
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMore = false;
         goto finish;
     }
 
     if ((request = HttpRequest::CreateFromUrlAndMethod(http->uri, method)) == NULL) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Invalid URL: " << http->uri);
+        conn->quitAfterError(request);
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
@@ -2491,7 +2593,6 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         repContext->setReplyToError(ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMore = false;
         goto finish;
     }
 
@@ -2503,6 +2604,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Unsupported HTTP version discovered. :\n" << HttpParserHdrBuf(hp));
+        conn->quitAfterError(request);
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
@@ -2511,7 +2613,6 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
                                     conn->clientConnection->remote, NULL, HttpParserHdrBuf(hp), NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMore = false;
         goto finish;
     }
 
@@ -2521,6 +2622,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     if (http_ver.major >= 1 && !request->parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp))) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Failed to parse request headers:\n" << HttpParserHdrBuf(hp));
+        conn->quitAfterError(request);
         // setLogUri should called before repContext->setReplyToError
         setLogUri(http, http->uri,  true);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
@@ -2528,7 +2630,6 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, http->uri, conn->clientConnection->remote, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMore = false;
         goto finish;
     }
 
@@ -2537,8 +2638,11 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     request->flags.accelerated = http->flags.accel;
     request->flags.sslBumped = conn->switchedToHttps();
+    request->flags.canRePin = request->flags.sslBumped && conn->pinning.pinned;
     request->flags.ignore_cc = conn->port->ignore_cc;
-    request->flags.no_direct = request->flags.accelerated ? !conn->port->allow_direct : 0;
+    // TODO: decouple http->flags.accel from request->flags.sslBumped
+    request->flags.no_direct = (request->flags.accelerated && !request->flags.sslBumped) ?
+        !conn->port->allow_direct : 0;
 #if USE_AUTH
     if (request->flags.sslBumped) {
         if (conn->auth_user_request != NULL)
@@ -2599,13 +2703,13 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
                          (request->header.getInt64(HDR_MAX_FORWARDS) == 0);
     if (!urlCheckRequest(request) || mustReplyToOptions || unsupportedTe) {
         clientStreamNode *node = context->getClientReplyContext();
+        conn->quitAfterError(request);
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(ERR_UNSUP_REQ, HTTP_NOT_IMPLEMENTED, request->method, NULL,
                                     conn->clientConnection->remote, request, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMore = false;
         goto finish;
     }
 
@@ -2614,12 +2718,12 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
+        conn->quitAfterError(request);
         repContext->setReplyToError(ERR_INVALID_REQ,
                                     HTTP_LENGTH_REQUIRED, request->method, NULL,
                                     conn->clientConnection->remote, request, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
-        conn->flags.readMore = false;
         goto finish;
     }
 
@@ -2630,11 +2734,11 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             clientStreamNode *node = context->getClientReplyContext();
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
+            conn->quitAfterError(request);
             repContext->setReplyToError(ERR_INVALID_REQ, HTTP_EXPECTATION_FAILED, request->method, http->uri,
                                         conn->clientConnection->remote, request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
-            conn->flags.readMore = false;
             goto finish;
         }
     }
@@ -2647,6 +2751,11 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         context->mayUseConnection(true);
         conn->flags.readMore = false;
     }
+
+#if USE_SSL
+    if (conn->switchedToHttps() && conn->serveDelayedError(context))
+        goto finish;
+#endif
 
     /* Do we expect a request-body? */
     expectBody = chunked || request->content_length > 0;
@@ -2664,12 +2773,12 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             clientStreamNode *node = context->getClientReplyContext();
             clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
             assert (repContext);
+            conn->quitAfterError(request);
             repContext->setReplyToError(ERR_TOO_BIG,
                                         HTTP_REQUEST_ENTITY_TOO_LARGE, METHOD_NONE, NULL,
                                         conn->clientConnection->remote, http->request, NULL, NULL);
             assert(context->http->out.offset == 0);
             context->pullData();
-            conn->flags.readMore = false;
             goto finish;
         }
 
@@ -3425,6 +3534,86 @@ clientNegotiateSSL(int fd, void *data)
     conn->readSomeData();
 }
 
+/**
+ * If SSL_CTX is given, starts reading the SSL handshake.
+ * Otherwise, calls switchToHttps to generate a dynamic SSL_CTX.
+ */
+static void
+httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext, Ssl::BumpMode bumpMode)
+{
+    SSL *ssl = NULL;
+    assert(connState);
+    const Comm::ConnectionPointer &details = connState->clientConnection;
+
+    if (sslContext && !(ssl = httpsCreate(details, sslContext)))
+        return;
+
+    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
+    AsyncCall::Pointer timeoutCall = JobCallback(33, 5, TimeoutDialer,
+        connState, ConnStateData::requestTimeout);
+    commSetConnTimeout(details, Config.Timeout.request, timeoutCall);
+
+    if (ssl) 
+        Comm::SetSelect(details->fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
+    else {
+        char buf[MAX_IPSTRLEN];
+        assert(bumpMode != Ssl::bumpNone && bumpMode != Ssl::bumpEnd);
+        HttpRequest *fakeRequest = new HttpRequest;
+        fakeRequest->SetHost(details->local.NtoA(buf, sizeof(buf)));
+        fakeRequest->port = details->local.GetPort();
+        fakeRequest->clientConnectionManager = connState;
+        fakeRequest->client_addr = connState->clientConnection->remote;
+#if FOLLOW_X_FORWARDED_FOR
+        fakeRequest->indirect_client_addr = connState->clientConnection->remote;
+#endif
+        fakeRequest->my_addr = connState->clientConnection->local;
+        fakeRequest->flags.spoof_client_ip = ((connState->clientConnection->flags & COMM_TRANSPARENT) != 0 ) ;
+        fakeRequest->flags.intercepted = ((connState->clientConnection->flags & COMM_INTERCEPTION) != 0);
+        debugs(33, 4, HERE << details << " try to generate a Dynamic SSL CTX");
+        connState->switchToHttps(fakeRequest, bumpMode);
+    }
+}
+
+/**
+ * A callback function to use with the ACLFilledChecklist callback. 
+ * In the case of ACCES_ALLOWED answer initializes a bumped SSL connection,
+ * else reverts the connection to tunnel mode.
+ */
+static void
+httpsSslBumpAccessCheckDone(allow_t answer, void *data)
+{
+    ConnStateData *connState = (ConnStateData *) data;
+
+    // if the connection is closed or closing, just return.
+    if (!connState->isOpen())
+        return;
+
+    // Require both a match and a positive bump mode to work around exceptional
+    // cases where ACL code may return ACCESS_ALLOWED with zero answer.kind.
+    if (answer == ACCESS_ALLOWED && answer.kind != Ssl::bumpNone) {
+        debugs(33, 2, HERE << "sslBump needed for " << connState->clientConnection);
+        connState->sslBumpMode = static_cast<Ssl::BumpMode>(answer.kind);
+        httpsEstablish(connState, NULL, (Ssl::BumpMode)answer.kind);
+    } else {
+        debugs(33, 2, HERE << "sslBump not needed for " << connState->clientConnection);
+        connState->sslBumpMode = Ssl::bumpNone;
+
+        // fake a CONNECT request to force connState to tunnel
+        static char ip[MAX_IPSTRLEN];
+        static char reqStr[MAX_IPSTRLEN + 80];
+        connState->clientConnection->local.NtoA(ip, sizeof(ip));
+        snprintf(reqStr, sizeof(reqStr), "CONNECT %s:%d HTTP/1.1\r\nHost: %s\r\n\r\n", ip, connState->clientConnection->local.GetPort(), ip);
+        bool ret = connState->handleReadData(reqStr, strlen(reqStr));
+        if (ret)
+            ret = connState->clientParseRequests();
+
+        if (!ret) {
+            debugs(33, 2, HERE << "Failed to start fake CONNECT request for ssl bumped connection: " << connState->clientConnection);
+            connState->clientConnection->close();
+        }
+    }
+}
+
 /** handle a new HTTPS connection */
 static void
 httpsAccept(const CommAcceptCbParams &params)
@@ -3436,11 +3625,6 @@ httpsAccept(const CommAcceptCbParams &params)
         debugs(33, 2, "httpsAccept: " << s->listenConn << ": accept failure: " << xstrerr(params.xerrno));
         return;
     }
-
-    SSL_CTX *sslContext = s->staticSslContext.get();
-    SSL *ssl = NULL;
-    if (!(ssl = httpsCreate(params.conn, sslContext)))
-        return;
 
     debugs(33, 4, HERE << params.conn << " accepted, starting SSL negotiation.");
     fd_note(params.conn->fd, "client https connect");
@@ -3454,12 +3638,32 @@ httpsAccept(const CommAcceptCbParams &params)
     // Socket is ready, setup the connection manager to start using it
     ConnStateData *connState = connStateCreate(params.conn, s);
 
-    typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  JobCallback(33, 5,
-                                      TimeoutDialer, connState, ConnStateData::requestTimeout);
-    commSetConnTimeout(params.conn, Config.Timeout.request, timeoutCall);
+    if (s->sslBump) {
+        debugs(33, 5, "httpsAccept: accept transparent connection: " << params.conn);
 
-    Comm::SetSelect(params.conn->fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
+        if (!Config.accessList.ssl_bump) {
+            httpsSslBumpAccessCheckDone(ACCESS_DENIED, connState);
+            return;
+        }
+  
+        // Create a fake HTTP request for ssl_bump ACL check,
+        // using tproxy/intercept provided destination IP and port.
+        HttpRequest *request = new HttpRequest();
+        static char ip[MAX_IPSTRLEN];
+        assert(params.conn->flags & (COMM_TRANSPARENT | COMM_INTERCEPTION));
+        request->SetHost(params.conn->local.NtoA(ip, sizeof(ip)));
+        request->port = params.conn->local.GetPort();
+        request->myportname = s->name;
+ 
+        ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request, NULL);
+        acl_checklist->src_addr = params.conn->remote;
+        acl_checklist->my_addr = s->s;
+        acl_checklist->nonBlockingCheck(httpsSslBumpAccessCheckDone, connState);
+        return;
+    } else {
+        SSL_CTX *sslContext = s->staticSslContext.get();
+        httpsEstablish(connState, sslContext, Ssl::bumpNone);
+    }
 }
 
 void
@@ -3477,12 +3681,12 @@ ConnStateData::sslCrtdHandleReply(const char * reply)
     } else {
         Ssl::CrtdMessage reply_message;
         if (reply_message.parse(reply, strlen(reply)) != Ssl::CrtdMessage::OK) {
-            debugs(33, 5, HERE << "Reply from ssl_crtd for " << sslHostName << " is incorrect");
+            debugs(33, 5, HERE << "Reply from ssl_crtd for " << sslConnectHostOrIp << " is incorrect");
         } else {
             if (reply_message.getCode() != "OK") {
-                debugs(33, 5, HERE << "Certificate for " << sslHostName << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
+                debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " cannot be generated. ssl_crtd response: " << reply_message.getBody());
             } else {
-                debugs(33, 5, HERE << "Certificate for " << sslHostName << " was successfully recieved from ssl_crtd");
+                debugs(33, 5, HERE << "Certificate for " << sslConnectHostOrIp << " was successfully recieved from ssl_crtd");
                 SSL_CTX *ctx = Ssl::generateSslContextUsingPkeyAndCertFromMemory(reply_message.getBody().c_str());
                 getSslContextDone(ctx, true);
                 return;
@@ -3492,63 +3696,171 @@ ConnStateData::sslCrtdHandleReply(const char * reply)
     getSslContextDone(NULL);
 }
 
-bool
+void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties)
+{
+    certProperties.commonName =  sslCommonName.defined() ? sslCommonName.termedBuf() : sslConnectHostOrIp.termedBuf();
+
+    // fake certificate adaptation requires bump-server-first mode
+    if (!sslServerBump) {
+        assert(port->signingCert.get());
+        certProperties.signWithX509.resetAndLock(port->signingCert.get());
+        if (port->signPkey.get())
+            certProperties.signWithPkey.resetAndLock(port->signPkey.get());
+        certProperties.signAlgorithm = Ssl::algSignTrusted;
+        return;
+    }
+
+    // In case of an error while connecting to the secure server, use a fake
+    // trusted certificate, with no mimicked fields and no adaptation
+    // algorithms. There is nothing we can mimic so we want to minimize the
+    // number of warnings the user will have to see to get to the error page.
+    assert(sslServerBump->entry);
+    if (sslServerBump->entry->isEmpty()) {
+        if (X509 *mimicCert = sslServerBump->serverCert.get())
+            certProperties.mimicCert.resetAndLock(mimicCert);
+
+        ACLFilledChecklist checklist(NULL, sslServerBump->request, 
+                                     clientConnection != NULL ? clientConnection->rfc931 : dash_str);
+        checklist.conn(this);
+        checklist.sslErrors = cbdataReference(sslServerBump->sslErrors);
+
+        for (sslproxy_cert_adapt *ca = Config.ssl_client.cert_adapt; ca != NULL; ca = ca->next) {
+            // If the algorithm already set, then ignore it.
+            if ((ca->alg == Ssl::algSetCommonName && certProperties.setCommonName) ||
+                (ca->alg == Ssl::algSetValidAfter && certProperties.setValidAfter) ||
+                (ca->alg == Ssl::algSetValidBefore && certProperties.setValidBefore) )
+                continue;
+
+            if (ca->aclList && checklist.fastCheck(ca->aclList) == ACCESS_ALLOWED) {
+                const char *alg = Ssl::CertAdaptAlgorithmStr[ca->alg];
+                const char *param = ca->param;
+  
+                // For parameterless CN adaptation, use hostname from the
+                // CONNECT request.
+                if (ca->alg == Ssl::algSetCommonName) {
+                    if (!param)
+                        param = sslConnectHostOrIp.termedBuf();
+                    certProperties.commonName = param;
+                    certProperties.setCommonName = true;
+                }
+                else if(ca->alg == Ssl::algSetValidAfter)
+                    certProperties.setValidAfter = true;
+                else if(ca->alg == Ssl::algSetValidBefore)
+                    certProperties.setValidBefore = true;
+
+                debugs(33, 5, HERE << "Matches certificate adaptation aglorithm: " << 
+                       alg << " param: " << (param ? param : "-"));
+            }
+        }
+
+        certProperties.signAlgorithm = Ssl::algSignEnd;
+        for (sslproxy_cert_sign *sg = Config.ssl_client.cert_sign; sg != NULL; sg = sg->next) {
+            if (sg->aclList && checklist.fastCheck(sg->aclList) == ACCESS_ALLOWED) {
+                certProperties.signAlgorithm = (Ssl::CertSignAlgorithm)sg->alg;
+                break;
+            }
+        }
+    } else {// if (!sslServerBump->entry->isEmpty())
+        // Use trusted certificate for a Squid-generated error
+        // or the user would have to add a security exception
+        // just to see the error page. We will close the connection
+        // so that the trust is not extended to non-Squid content.
+        certProperties.signAlgorithm = Ssl::algSignTrusted;
+    }
+
+    assert(certProperties.signAlgorithm != Ssl::algSignEnd);
+
+    if (certProperties.signAlgorithm == Ssl::algSignUntrusted) {
+        assert(port->untrustedSigningCert.get());
+        certProperties.signWithX509.resetAndLock(port->untrustedSigningCert.get());
+        certProperties.signWithPkey.resetAndLock(port->untrustedSignPkey.get());
+    }
+    else {
+        assert(port->signingCert.get());
+        certProperties.signWithX509.resetAndLock(port->signingCert.get());
+
+        if (port->signPkey.get())
+            certProperties.signWithPkey.resetAndLock(port->signPkey.get());
+    }
+    signAlgorithm = certProperties.signAlgorithm;
+}
+
+void
 ConnStateData::getSslContextStart()
 {
-    char const * host = sslHostName.termedBuf();
-    if (port->generateHostCertificates && host && strcmp(host, "") != 0) {
-        debugs(33, 5, HERE << "Finding SSL certificate for " << host << " in cache");
+    assert(areAllContextsForThisConnection());
+    freeAllContexts();
+    /* careful: freeAllContexts() above frees request, host, etc. */
+
+    if (port->generateHostCertificates) {
+        Ssl::CertificateProperties certProperties;
+        buildSslCertGenerationParams(certProperties);
+        sslBumpCertKey = certProperties.dbKey().c_str();
+        assert(sslBumpCertKey.defined() && sslBumpCertKey[0] != '\0');
+
+        debugs(33, 5, HERE << "Finding SSL certificate for " << sslBumpCertKey << " in cache");
         Ssl::LocalContextStorage & ssl_ctx_cache(Ssl::TheGlobalContextStorage.getLocalStorage(port->s));
-        SSL_CTX * dynCtx = ssl_ctx_cache.find(host);
+        SSL_CTX * dynCtx = ssl_ctx_cache.find(sslBumpCertKey.termedBuf());
         if (dynCtx) {
-            debugs(33, 5, HERE << "SSL certificate for " << host << " have found in cache");
-            if (Ssl::verifySslCertificateDate(dynCtx)) {
-                debugs(33, 5, HERE << "Cached SSL certificate for " << host << " is valid");
-                return getSslContextDone(dynCtx);
+            debugs(33, 5, HERE << "SSL certificate for " << sslBumpCertKey << " have found in cache");
+            if (Ssl::verifySslCertificate(dynCtx, certProperties)) {
+                debugs(33, 5, HERE << "Cached SSL certificate for " << sslBumpCertKey << " is valid");
+                getSslContextDone(dynCtx);
+                return;
             } else {
-                debugs(33, 5, HERE << "Cached SSL certificate for " << host << " is out of date. Delete this certificate from cache");
-                ssl_ctx_cache.remove(host);
+                debugs(33, 5, HERE << "Cached SSL certificate for " << sslBumpCertKey << " is out of date. Delete this certificate from cache");
+                ssl_ctx_cache.remove(sslBumpCertKey.termedBuf());
             }
         } else {
-            debugs(33, 5, HERE << "SSL certificate for " << host << " haven't found in cache");
+            debugs(33, 5, HERE << "SSL certificate for " << sslBumpCertKey << " haven't found in cache");
         }
 
 #if USE_SSL_CRTD
-        debugs(33, 5, HERE << "Generating SSL certificate for " << host << " using ssl_crtd.");
+        try {
+        debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName << " using ssl_crtd.");
         Ssl::CrtdMessage request_message;
         request_message.setCode(Ssl::CrtdMessage::code_new_certificate);
-        Ssl::CrtdMessage::BodyParams map;
-        map.insert(std::make_pair(Ssl::CrtdMessage::param_host, host));
-        std::string bufferToWrite;
-        Ssl::writeCertAndPrivateKeyToMemory(port->signingCert, port->signPkey, bufferToWrite);
-        request_message.composeBody(map, bufferToWrite);
+        request_message.composeRequest(certProperties);
+        debugs(33, 5, HERE << "SSL crtd request: " << request_message.compose().c_str());
         Ssl::Helper::GetInstance()->sslSubmit(request_message, sslCrtdHandleReplyWrapper, this);
-        return true;
-#else
-        debugs(33, 5, HERE << "Generating SSL certificate for " << host);
-        dynCtx = Ssl::generateSslContext(host, port->signingCert, port->signPkey);
-        return getSslContextDone(dynCtx, true);
-#endif //USE_SSL_CRTD
+        return;
+        }
+        catch (const std::exception &e) {
+            debugs(33, DBG_IMPORTANT, "ERROR: Failed to compose ssl_crtd " <<
+                   "request for " << certProperties.commonName <<
+                   " certificate: " << e.what() << "; will now block to " <<
+                   "generate that certificate.");
+            // fall through to do blocking in-process generation.
+        }
+#endif // USE_SSL_CRTD
+
+        debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName);
+        dynCtx = Ssl::generateSslContext(certProperties);
+        getSslContextDone(dynCtx, true);
+        return;
     }
-    return getSslContextDone(NULL);
+    getSslContextDone(NULL);
 }
 
-bool
+void
 ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
 {
     // Try to add generated ssl context to storage.
     if (port->generateHostCertificates && isNew) {
 
-        Ssl::addChainToSslContext(sslContext, port->certsToChain.get());
+        if (signAlgorithm == Ssl::algSignTrusted)
+            Ssl::addChainToSslContext(sslContext, port->certsToChain.get());
+        //else it is self-signed or untrusted do not attrach any certificate
 
         Ssl::LocalContextStorage & ssl_ctx_cache(Ssl::TheGlobalContextStorage.getLocalStorage(port->s));
-        if (sslContext && sslHostName != "") {
-            if (!ssl_ctx_cache.add(sslHostName.termedBuf(), sslContext)) {
+        assert(sslBumpCertKey.defined() && sslBumpCertKey[0] != '\0');
+        if (sslContext) {
+            if (!ssl_ctx_cache.add(sslBumpCertKey.termedBuf(), sslContext)) {
                 // If it is not in storage delete after using. Else storage deleted it.
                 fd_table[clientConnection->fd].dynamicSslContext = sslContext;
             }
         } else {
-            debugs(33, 2, HERE << "Failed to generate SSL cert for " << sslHostName);
+            debugs(33, 2, HERE << "Failed to generate SSL cert for " << sslConnectHostOrIp);
         }
     }
 
@@ -3557,7 +3869,7 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
         if (!port->staticSslContext) {
             debugs(83, 1, "Closing SSL " << clientConnection->remote << " as lacking SSL context");
             clientConnection->close();
-            return false;
+            return;
         } else {
             debugs(33, 5, HERE << "Using static ssl context.");
             sslContext = port->staticSslContext.get();
@@ -3566,7 +3878,7 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
 
     SSL *ssl = NULL;
     if (!(ssl = httpsCreate(clientConnection, sslContext)))
-        return false;
+        return;
 
     // commSetConnTimeout() was called for this request before we switched.
 
@@ -3574,26 +3886,73 @@ ConnStateData::getSslContextDone(SSL_CTX * sslContext, bool isNew)
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, NULL, NULL, 0);
     Comm::SetSelect(clientConnection->fd, COMM_SELECT_READ, clientNegotiateSSL, this, 0);
     switchedToHttps_ = true;
-    return true;
 }
 
-bool
-ConnStateData::switchToHttps(const char *host)
+void
+ConnStateData::switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode)
 {
     assert(!switchedToHttps_);
 
-    sslHostName = host;
-
-    //HTTPMSGLOCK(currentobject->http->request);
-    assert(areAllContextsForThisConnection());
-    freeAllContexts();
-    //currentobject->connIsFinished();
+    sslConnectHostOrIp = request->GetHost();
+    sslCommonName = request->GetHost();
 
     // We are going to read new request
     flags.readMore = true;
     debugs(33, 5, HERE << "converting " << clientConnection << " to SSL");
 
-    return getSslContextStart();
+    // If sslServerBump is set, then we have decided to deny CONNECT
+    // and now want to switch to SSL to send the error to the client
+    // without even peeking at the origin server certificate.
+    if (bumpServerMode == Ssl::bumpServerFirst && !sslServerBump) {
+        request->flags.sslPeek = 1;
+        sslServerBump = new Ssl::ServerBump(request);
+
+        // will call httpsPeeked() with certificate and connection, eventually
+        FwdState::fwdStart(clientConnection, sslServerBump->entry, sslServerBump->request);
+        return;
+    }
+
+    // otherwise, use sslConnectHostOrIp
+    getSslContextStart();
+}
+
+void
+ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
+{
+    Must(sslServerBump != NULL);
+
+    if (Comm::IsConnOpen(serverConnection)) {
+        SSL *ssl = fd_table[serverConnection->fd].ssl;
+        assert(ssl);
+        Ssl::X509_Pointer serverCert(SSL_get_peer_certificate(ssl));
+        assert(serverCert.get() != NULL);
+        sslCommonName = Ssl::CommonHostName(serverCert.get());
+        debugs(33, 5, HERE << "HTTPS server CN: " << sslCommonName << 
+               " bumped: " << *serverConnection);
+
+        pinConnection(serverConnection, NULL, NULL, false);
+
+        debugs(33, 5, HERE << "bumped HTTPS server: " << sslConnectHostOrIp);
+    } else {
+        debugs(33, 5, HERE << "Error while bumping: " << sslConnectHostOrIp);
+        Ip::Address intendedDest;
+        intendedDest = sslConnectHostOrIp.termedBuf();
+        const bool isConnectRequest = !port->spoof_client_ip && !port->intercepted;
+
+        // Squid serves its own error page and closes, so we want
+        // a CN that causes no additional browser errors. Possible
+        // only when bumping CONNECT with a user-typed address.
+        if (intendedDest.IsAnyAddr() || isConnectRequest)
+            sslCommonName = sslConnectHostOrIp;
+        else if (sslServerBump->serverCert.get())
+            sslCommonName = Ssl::CommonHostName(sslServerBump->serverCert.get());
+
+        //  copy error detail from bump-server-first request to CONNECT request
+        if (currentobject != NULL && currentobject->http != NULL && currentobject->http->request)
+            currentobject->http->request->detailError(sslServerBump->request->errType, sslServerBump->request->errDetail);
+    }
+
+    getSslContextStart();
 }
 
 #endif /* USE_SSL */
@@ -3691,6 +4050,22 @@ clientHttpsConnectionsOpen(void)
             debugs(1, 1, "Ignoring https_port " << s->s <<
                    " due to SSL initialization failure.");
             continue;
+        }
+
+        // TODO: merge with similar code in clientHttpConnectionsOpen()
+        if (s->sslBump && !Config.accessList.ssl_bump) {
+            debugs(33, DBG_IMPORTANT, "WARNING: No ssl_bump configured. Disabling ssl-bump on " << s->protocol << "_port " << s->s);
+            s->sslBump = 0;
+        }
+
+        if (s->sslBump && !s->staticSslContext && !s->generateHostCertificates) {
+            debugs(1, DBG_IMPORTANT, "Will not bump SSL at http_port " << s->s << " due to SSL initialization failure.");
+            s->sslBump = 0;
+        }
+
+        if (s->sslBump) {
+            // Create ssl_ctx cache for this port.
+            Ssl::TheGlobalContextStorage.addLocalStorage(s->s, s->dynamicCertMemCacheSize == std::numeric_limits<size_t>::max() ? 4194304 : s->dynamicCertMemCacheSize);
         }
 
         // Fill out a Comm::Connection which IPC will open as a listener for us
@@ -3870,7 +4245,11 @@ CBDATA_CLASS_INIT(ConnStateData);
 
 ConnStateData::ConnStateData() :
         AsyncJob("ConnStateData"),
+#if USE_SSL
+        sslBumpMode(Ssl::bumpEnd),
         switchedToHttps_(false),
+        sslServerBump(NULL),
+#endif
         stoppedSending_(NULL),
         stoppedReceiving_(NULL)
 {
@@ -4026,11 +4405,16 @@ ConnStateData::sendControlMsg(HttpControlMsg msg)
     clientConnection->close();
 }
 
-/* This is a comm call normally scheduled by comm_close() */
+/// Our close handler called by Comm when the pinned connection is closed
 void
 ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
 {
-    unpinConnection();
+    // FwdState might repin a failed connection sooner than this close
+    // callback is called for the failed connection.
+    if (pinning.serverConnection == io.conn) {
+        pinning.closeHandler = NULL; // Comm unregisters handlers before calling
+        unpinConnection();
+    }
 }
 
 void
@@ -4041,33 +4425,49 @@ ConnStateData::pinConnection(const Comm::ConnectionPointer &pinServer, HttpReque
     if (Comm::IsConnOpen(pinning.serverConnection)) {
         if (pinning.serverConnection->fd == pinServer->fd)
             return;
+    }
 
-        unpinConnection(); // clears fields ready for re-use. Prevent close() scheduling our close handler.
-        pinning.serverConnection->close();
-    } else
-        unpinConnection(); // clears fields ready for re-use.
+    unpinConnection(); // closes pinned connection, if any, and resets fields
 
     pinning.serverConnection = pinServer;
-    pinning.host = xstrdup(request->GetHost());
-    pinning.port = request->port;
+
+    debugs(33, 3, HERE << pinning.serverConnection);
+
+    // when pinning an SSL bumped connection, the request may be NULL
+    const char *pinnedHost = "[unknown]";
+    if (request) {
+        pinning.host = xstrdup(request->GetHost());
+        pinning.port = request->port;
+        pinnedHost = pinning.host;
+    } else {
+        pinning.port = pinServer->remote.GetPort();
+    }
     pinning.pinned = true;
     if (aPeer)
         pinning.peer = cbdataReference(aPeer);
     pinning.auth = auth;
     char stmp[MAX_IPSTRLEN];
     snprintf(desc, FD_DESC_SZ, "%s pinned connection for %s (%d)",
-             (auth || !aPeer) ? request->GetHost() : aPeer->name, clientConnection->remote.ToURL(stmp,MAX_IPSTRLEN), clientConnection->fd);
+             (auth || !aPeer) ? pinnedHost : aPeer->name,
+             clientConnection->remote.ToURL(stmp,MAX_IPSTRLEN),
+             clientConnection->fd);
     fd_note(pinning.serverConnection->fd, desc);
 
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
     pinning.closeHandler = JobCallback(33, 5,
                                        Dialer, this, ConnStateData::clientPinnedConnectionClosed);
+    // remember the pinned connection so that cb does not unpin a fresher one
+    typedef CommCloseCbParams Params;
+    Params &params = GetCommParams<Params>(pinning.closeHandler);
+    params.conn = pinning.serverConnection;
     comm_add_close_handler(pinning.serverConnection->fd, pinning.closeHandler);
 }
 
 const Comm::ConnectionPointer
 ConnStateData::validatePinnedConnection(HttpRequest *request, const struct peer *aPeer)
 {
+    debugs(33, 7, HERE << pinning.serverConnection);
+
     bool valid = true;
     if (!Comm::IsConnOpen(pinning.serverConnection))
         valid = false;
@@ -4095,15 +4495,21 @@ ConnStateData::validatePinnedConnection(HttpRequest *request, const struct peer 
 void
 ConnStateData::unpinConnection()
 {
+    debugs(33, 3, HERE << pinning.serverConnection);
+
     if (pinning.peer)
         cbdataReferenceDone(pinning.peer);
 
+    if (Comm::IsConnOpen(pinning.serverConnection)) {
     if (pinning.closeHandler != NULL) {
         comm_remove_close_handler(pinning.serverConnection->fd, pinning.closeHandler);
         pinning.closeHandler = NULL;
     }
     /// also close the server side socket, we should not use it for any future requests...
+    // TODO: do not close if called from our close handler?
     pinning.serverConnection->close();
+    }
+
     safe_free(pinning.host);
 
     /* NOTE: pinning.pinned should be kept. This combined with fd == -1 at the end of a request indicates that the host

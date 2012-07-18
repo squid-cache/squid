@@ -15,10 +15,12 @@ namespace Ssl
 {
 /**
   \ingroup ServerProtocolSSLAPI
- * The ssl_error_t representation of the error described by "name".
- * This function also parses numeric arguments.
+ * Converts user-friendly error "name" into an Ssl::Errors list.
+ * The resulting list may have one or more elements, and needs to be
+ * released by the caller.
+ * This function can handle numeric error numbers as well as names.
  */
-ssl_error_t ParseErrorString(const char *name);
+Ssl::Errors *ParseErrorString(const char *name);
 
 /**
    \ingroup ServerProtocolSSLAPI
@@ -46,7 +48,8 @@ const char *GetErrorDescr(ssl_error_t value);
 class ErrorDetail
 {
 public:
-    ErrorDetail(ssl_error_t err_no, X509 *cert);
+    // if broken certificate is nil, the peer certificate is broken
+    ErrorDetail(ssl_error_t err_no, X509 *peer, X509 *broken);
     ErrorDetail(ErrorDetail const &);
     const String &toString() const;  ///< An error detail string to embed in squid error pages
     void useRequest(HttpRequest *aRequest) { if (aRequest != NULL) request = aRequest;}
@@ -56,7 +59,10 @@ public:
     ssl_error_t errorNo() const {return error_no;}
     ///Sets the low-level error returned by OpenSSL ERR_get_error()
     void setLibError(unsigned long lib_err_no) {lib_error_no = lib_err_no;}
-
+    /// the peer certificate
+    X509 *peerCert() { return peer_cert.get(); }
+    /// peer or intermediate certificate that failed validation
+    X509 *brokenCert() {return broken_cert.get(); }
 private:
     typedef const char * (ErrorDetail::*fmt_action_t)() const;
     /**
@@ -86,6 +92,7 @@ private:
     ssl_error_t error_no;   ///< The error code
     unsigned long lib_error_no; ///< low-level error returned by OpenSSL ERR_get_error(3SSL)
     X509_Pointer peer_cert; ///< A pointer to the peer certificate
+    X509_Pointer broken_cert; ///< A pointer to the broken certificate (peer or intermediate)
     mutable ErrorDetailEntry detailEntry;
     HttpRequest::Pointer request;
 };

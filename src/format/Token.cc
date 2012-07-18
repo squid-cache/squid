@@ -189,6 +189,7 @@ static TokenTableEntry TokenTableIcap[] = {
 #if USE_SSL
 // SSL (ssl::) tokens
 static TokenTableEntry TokenTableSsl[] = {
+    {"bump_mode", LFT_SSL_BUMP_MODE},
     {">cert_subject", LFT_SSL_USER_CERT_SUBJECT},
     {">cert_issuer", LFT_SSL_USER_CERT_ISSUER},
     {NULL, LFT_NONE}
@@ -209,7 +210,6 @@ Format::Token::Init()
 #if ICAP_CLIENT
     TheConfig.registerTokens(String("icap"),::Format::TokenTableIcap);
 #endif
-
 #if USE_SSL
     TheConfig.registerTokens(String("ssl"),::Format::TokenTableSsl);
 #endif

@@ -35,6 +35,7 @@
 #include "forward.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#include "anyp/PortCfg.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
@@ -59,6 +60,7 @@
 #if USE_SSL
 #include "ssl/support.h"
 #include "ssl/ErrorDetail.h"
+#include "ssl/ServerBump.h"
 #endif
 
 static PSC fwdPeerSelectionCompleteWrapper;
@@ -327,15 +329,23 @@ FwdState::startConnectionOrFail()
         // this server link regardless of what happens when connecting to it.
         // IF sucessfuly connected this top destination will become the serverConnection().
         request->hier.note(serverDestinations[0], request->GetHost());
+        request->clearError();
 
         connectStart();
     } else {
         debugs(17, 3, HERE << "Connection failed: " << entry->url());
         if (!err) {
             ErrorState *anErr = new ErrorState(ERR_CANNOT_FORWARD, HTTP_INTERNAL_SERVER_ERROR, request);
-            anErr->xerrno = errno;
             fail(anErr);
         } // else use actual error from last connection attempt
+#if USE_SSL
+        if (request->flags.sslPeek && request->clientConnectionManager.valid()) {
+            errorAppendEntry(entry, err); // will free err
+            err = NULL;
+            CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
+                         ConnStateData::httpsPeeked, Comm::ConnectionPointer(NULL));
+        }
+#endif
         self = NULL;       // refcounted
     }
 }
@@ -355,13 +365,6 @@ FwdState::fail(ErrorState * errorState)
         debugs(17, 5, HERE << "pconn race happened");
         pconnRace = raceHappened;
     }
-
-#if USE_SSL
-    if (errorState->type == ERR_SECURE_CONNECT_FAIL && errorState->detail)
-        request->detailError(errorState->type, errorState->detail->errorNo());
-    else
-#endif
-        request->detailError(errorState->type, errorState->xerrno);
 }
 
 /**
@@ -645,26 +648,52 @@ FwdState::negotiateSSL(int fd)
             // falling through to complete error handling
 
         default:
-            ErrorState *const anErr = makeConnectingError(ERR_SECURE_CONNECT_FAIL);
-            anErr->xerrno = sysErrNo;
-
+            // TODO: move into a method before merge
+            Ssl::ErrorDetail *errDetails;
             Ssl::ErrorDetail *errFromFailure = (Ssl::ErrorDetail *)SSL_get_ex_data(ssl, ssl_ex_index_ssl_error_detail);
             if (errFromFailure != NULL) {
                 // The errFromFailure is attached to the ssl object
                 // and will be released when ssl object destroyed.
-                // Copy errFromFailure to a new Ssl::ErrorDetail object
-                anErr->detail = new Ssl::ErrorDetail(*errFromFailure);
+                // Copy errFromFailure to a new Ssl::ErrorDetail object.
+                errDetails = new Ssl::ErrorDetail(*errFromFailure);
             } else {
-                // clientCert can be be NULL
-                X509 *client_cert = SSL_get_peer_certificate(ssl);
-                anErr->detail = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, client_cert);
-                if (client_cert)
-                    X509_free(client_cert);
+                // server_cert can be NULL here
+                X509 *server_cert = SSL_get_peer_certificate(ssl);
+                errDetails = new Ssl::ErrorDetail(SQUID_ERR_SSL_HANDSHAKE, server_cert, NULL);
+                X509_free(server_cert);
             }
 
             if (ssl_lib_error != SSL_ERROR_NONE)
-                anErr->detail->setLibError(ssl_lib_error);
+                errDetails->setLibError(ssl_lib_error);
 
+            if (request->clientConnectionManager.valid()) {
+                // remember the server certificate from the ErrorDetail object
+                if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
+                    serverBump->serverCert.resetAndLock(errDetails->peerCert());
+
+                    // remember validation errors, if any
+                    if (Ssl::Errors *errs = static_cast<Ssl::Errors*>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
+                        serverBump->sslErrors = cbdataReference(errs);
+				}
+            }
+
+            // For intercepted connections, set the host name to the server
+            // certificate CN. Otherwise, we just hope that CONNECT is using
+            // a user-entered address (a host name or a user-entered IP).
+            const bool isConnectRequest = !request->clientConnectionManager->port->spoof_client_ip && 
+                !request->clientConnectionManager->port->intercepted;
+            if (request->flags.sslPeek && !isConnectRequest) {
+                if (X509 *srvX509 = errDetails->peerCert()) {
+                    if (const char *name = Ssl::CommonHostName(srvX509)) {
+                        request->SetHost(name);
+                        debugs(83, 3, HERE << "reset request host: " << name);
+                    }
+                }
+            }
+
+            ErrorState *const anErr = makeConnectingError(ERR_SECURE_CONNECT_FAIL);
+            anErr->xerrno = sysErrNo;
+            anErr->detail = errDetails;
             fail(anErr);
 
             if (serverConnection()->getPeer()) {
@@ -673,6 +702,17 @@ FwdState::negotiateSSL(int fd)
 
             serverConn->close();
             return;
+        }
+    }
+    
+    if (request->clientConnectionManager.valid()) {
+        // remember the server certificate from the ErrorDetail object
+        if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
+            serverBump->serverCert.reset(SSL_get_peer_certificate(ssl));
+
+            // remember validation errors, if any
+            if (Ssl::Errors *errs = static_cast<Ssl::Errors *>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
+                serverBump->sslErrors = cbdataReference(errs);
         }
     }
 
@@ -706,7 +746,7 @@ FwdState::initiateSSL()
     if ((ssl = SSL_new(sslContext)) == NULL) {
         debugs(83, 1, "fwdInitiateSSL: Error allocating handle: " << ERR_error_string(ERR_get_error(), NULL)  );
         ErrorState *anErr = new ErrorState(ERR_SOCKET_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
-        anErr->xerrno = errno;
+        // TODO: create Ssl::ErrorDetail with OpenSSL-supplied error code
         fail(anErr);
         self = NULL;		// refcounted
         return;
@@ -732,11 +772,20 @@ FwdState::initiateSSL()
             SSL_set_session(ssl, peer->sslSession);
 
     } else {
-        SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)request->GetHost());
+        // While we are peeking at the certificate, we may not know the server
+        // name that the client will request (after interception or CONNECT)
+        // unless it was the CONNECT request with a user-typed address.
+        const char *hostname = request->GetHost();
+        const bool hostnameIsIp = request->GetHostIsNumeric();
+        const bool isConnectRequest = !request->clientConnectionManager->port->spoof_client_ip && 
+            !request->clientConnectionManager->port->intercepted;
+        if (!request->flags.sslPeek || isConnectRequest)
+            SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostname);
 
-        // We need to set SNI TLS extension only in the case we are
-        // connecting direct to origin server
-        Ssl::setClientSNI(ssl, request->GetHost());
+        // Use SNI TLS extension only when we connect directly
+        // to the origin server and we know the server host name.
+        if (!hostnameIsIp)
+            Ssl::setClientSNI(ssl, hostname);
     }
 
     // Create the ACL check list now, while we have access to more info.
@@ -745,6 +794,15 @@ FwdState::initiateSSL()
         ACLFilledChecklist *check = new ACLFilledChecklist(acl, request, dash_str);
         check->fd(fd);
         SSL_set_ex_data(ssl, ssl_ex_index_cert_error_check, check);
+    }
+
+    // store peeked cert to check SQUID_X509_V_ERR_CERT_CHANGE
+    X509 *peeked_cert;
+    if (request->clientConnectionManager.valid() &&
+        request->clientConnectionManager->serverBump() &&
+        (peeked_cert = request->clientConnectionManager->serverBump()->serverCert.get())) {
+        CRYPTO_add(&(peeked_cert->references),1,CRYPTO_LOCK_X509);
+        SSL_set_ex_data(ssl, ssl_ex_index_ssl_peeked_cert, peeked_cert);
     }
 
     fd_table[fd].ssl = ssl;
@@ -784,10 +842,21 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
     if (serverConnection()->getPeer())
         peerConnectSucceded(serverConnection()->getPeer());
 
+    // some requests benefit from pinning but do not require it and can "repin"
+    const bool rePin = request->flags.canRePin &&
+        request->clientConnectionManager.valid();
+    if (rePin) {
+        debugs(17, 3, HERE << "repinning " << serverConn);
+        request->clientConnectionManager->pinConnection(serverConn,
+            request, serverConn->getPeer(), request->flags.auth);
+        request->flags.pinned = 1;
+    }
+
 #if USE_SSL
-    if (!request->flags.pinned) {
+    if (!request->flags.pinned || rePin) {
         if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
-                (!serverConnection()->getPeer() && request->protocol == AnyP::PROTO_HTTPS)) {
+                (!serverConnection()->getPeer() && request->protocol == AnyP::PROTO_HTTPS) ||
+                request->flags.sslPeek) {
             initiateSSL();
             return;
         }
@@ -879,16 +948,22 @@ FwdState::connectStart()
             request->flags.pinned = 1;
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = 1;
+            comm_add_close_handler(serverConn->fd, fwdServerClosedWrapper, this);
             // the server may close the pinned connection before this request
             pconnRace = racePossible;
             dispatch();
             return;
         }
-        /* Failure. Fall back on next path */
-        debugs(17,2,HERE << " Pinned connection " << pinned_connection << " not valid.");
-        serverDestinations.shift();
-        startConnectionOrFail();
-        return;
+        /* Failure. Fall back on next path unless we can re-pin */
+        debugs(17,2,HERE << "Pinned connection failed: " << pinned_connection);
+        if (pconnRace != raceHappened || !request->flags.canRePin) {
+            serverDestinations.shift();
+            pconnRace = raceImpossible;
+            startConnectionOrFail();
+            return;
+        }
+        debugs(17,3, HERE << "There was a pconn race. Will try to repin.");
+        // and fall through to regular handling
     }
 
     // Use pconn to avoid opening a new connection.
@@ -1013,12 +1088,23 @@ FwdState::dispatch()
     }
 #endif
 
+#if USE_SSL
+    if (request->flags.sslPeek) {
+        CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
+                     ConnStateData::httpsPeeked, serverConnection());
+        unregister(serverConn); // async call owns it now
+        complete(); // destroys us
+        return;
+    }
+#endif
+
     if (serverConnection()->getPeer() != NULL) {
         serverConnection()->getPeer()->stats.fetches++;
         request->peer_login = serverConnection()->getPeer()->login;
         request->peer_domain = serverConnection()->getPeer()->domain;
         httpStart(this);
     } else {
+        assert(!request->flags.sslPeek);
         request->peer_login = NULL;
         request->peer_domain = NULL;
 

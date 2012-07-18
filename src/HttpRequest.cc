@@ -531,6 +531,14 @@ HttpRequest::detailError(err_type aType, int aDetail)
         errDetail = aDetail;
 }
 
+void
+HttpRequest::clearError()
+{
+    debugs(11, 7, HERE << "old error details: " << errType << '/' << errDetail);
+    errType = ERR_NONE;
+    errDetail = ERR_DETAIL_NONE;
+}
+
 const char *HttpRequest::packableURI(bool full_uri) const
 {
     if (full_uri)

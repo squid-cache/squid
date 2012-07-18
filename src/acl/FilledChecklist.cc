@@ -12,31 +12,6 @@
 
 CBDATA_CLASS_INIT(ACLFilledChecklist);
 
-void
-ACLFilledChecklist::checkCallback(allow_t answer)
-{
-    debugs(28, 5, HERE << this << " answer=" << answer);
-
-#if USE_AUTH
-    /* During reconfigure, we can end up not finishing call
-     * sequences into the auth code */
-
-    if (auth_user_request != NULL) {
-        /* the filled_checklist lock */
-        auth_user_request = NULL;
-        // It might have been connection based
-        // In the case of sslBump we need to preserve authentication info
-        // XXX: need to re-evaluate this. ACL tests should not be playing with
-        // XXX: wider scoped TCP connection state, even if the helper lookup is stuck.
-        if (conn() && !conn()->switchedToHttps()) {
-            conn()->auth_user_request = NULL;
-        }
-    }
-#endif
-
-    ACLChecklist::checkCallback(answer); // may delete us
-}
-
 
 void *
 ACLFilledChecklist::operator new (size_t size)
@@ -67,7 +42,7 @@ ACLFilledChecklist::ACLFilledChecklist() :
         snmp_community(NULL),
 #endif
 #if USE_SSL
-        ssl_error(0),
+        sslErrors(NULL),
 #endif
         extacl_entry (NULL),
         conn_(NULL),
@@ -96,6 +71,10 @@ ACLFilledChecklist::~ACLFilledChecklist()
     HTTPMSGUNLOCK(reply);
 
     cbdataReferenceDone(conn_);
+
+#if USE_SSL
+    cbdataReferenceDone(sslErrors);
+#endif
 
     debugs(28, 4, HERE << "ACLFilledChecklist destroyed " << this);
 }
@@ -179,7 +158,7 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_re
         snmp_community(NULL),
 #endif
 #if USE_SSL
-        ssl_error(0),
+        sslErrors(NULL),
 #endif
         extacl_entry (NULL),
         conn_(NULL),
