@@ -343,7 +343,12 @@ public:
     void switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode);
     bool switchedToHttps() const { return switchedToHttps_; }
     Ssl::ServerBump *serverBump() {return sslServerBump;}
-    void setServerBump(Ssl::ServerBump *srvBump) {if (!sslServerBump) sslServerBump = srvBump;}
+    inline void setServerBump(Ssl::ServerBump *srvBump) {
+        if (!sslServerBump)
+            sslServerBump = srvBump;
+        else
+            assert(sslServerBump == srvBump);
+    }
     /// Fill the certAdaptParams with the required data for certificate adaptation
     /// and create the key for storing/retrieve the certificate to/from the cache
     void buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties);

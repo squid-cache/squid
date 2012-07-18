@@ -106,7 +106,7 @@ public:
     HttpReply *BuildHttpReply(void);
 
     /// set error type-specific detail code
-    void detailError(int detailCode);
+    void detailError(int dCode) {detailCode = dCode;}
 
 private:
     /**

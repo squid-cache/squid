@@ -259,16 +259,16 @@ main(int argc, char *argv[])
         if ((t = strchr(buff, '\n')))
             *t = '\0';
 
-        if(strncmp(buff, "IFDEF ", 6) == 0) {
-            if ((ptr = strtok(buff + 6, WS)) == NULL) {
-                std::cerr << "Missing IFDEF parameter on line" << linenum << std::endl;
+        if(strncmp(buff, "IF ", 3) == 0) {
+            if ((ptr = strtok(buff + 3, WS)) == NULL) {
+                std::cerr << "Missing IF parameter on line" << linenum << std::endl;
                 exit(1);
             }
             IFDEFS.push(ptr);
             continue;
         } else if (strcmp(buff, "ENDIF") == 0) {
             if (IFDEFS.size() == 0) {
-                std::cerr << "ENDIF without IFDEF before on line " << linenum << std::endl;
+                std::cerr << "ENDIF without IF before on line " << linenum << std::endl;
                 exit(1);
             }
             IFDEFS.pop();
