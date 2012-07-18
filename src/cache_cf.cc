@@ -55,6 +55,7 @@
 #include "auth/Config.h"
 #include "auth/Scheme.h"
 #endif
+#include "base/RunnersRegistry.h"
 #include "ConfigParser.h"
 #include "CpuAffinityMap.h"
 #include "DiskIO/DiskIOModule.h"
@@ -3808,14 +3809,14 @@ parsePortCfg(AnyP::PortCfg ** head, const char *optionName)
 
 #if USE_SSL
     if (strcasecmp(protocol, "https") == 0) {
-        /* ssl-bump on https_port configuration requires either tproxy or intercepted, and vice versa */
+        /* ssl-bump on https_port configuration requires either tproxy or intercept, and vice versa */
         const bool hijacked = s->spoof_client_ip || s->intercepted;
         if (s->sslBump && !hijacked) {
-            debugs(3, DBG_CRITICAL, "FATAL: ssl-bump on https_port requires tproxy/intercepted which is missing.");
+            debugs(3, DBG_CRITICAL, "FATAL: ssl-bump on https_port requires tproxy/intercept which is missing.");
             self_destruct();
         }
         if (hijacked && !s->sslBump) {
-            debugs(3, DBG_CRITICAL, "FATAL: tproxy/intercepted on https_port requires ssl-bump which is missing.");
+            debugs(3, DBG_CRITICAL, "FATAL: tproxy/intercept on https_port requires ssl-bump which is missing.");
             self_destruct();
         }
     }
@@ -4537,35 +4538,100 @@ static void free_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
     }
 }
 
+class sslBumpCfgRr: public ::RegisteredRunner
+{
+public:
+    static Ssl::BumpMode lastDeprecatedRule;
+    /* RegisteredRunner API */
+    virtual void run(const RunnerRegistry &);
+};
+
+Ssl::BumpMode sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;
+
+RunnerRegistrationEntry(rrFinalizeConfig, sslBumpCfgRr);
+
+void sslBumpCfgRr::run(const RunnerRegistry &r)
+{
+    if (lastDeprecatedRule != Ssl::bumpEnd) {
+        assert( lastDeprecatedRule == Ssl::bumpClientFirst || lastDeprecatedRule == Ssl::bumpNone);
+        static char buf[1024];
+        if (lastDeprecatedRule == Ssl::bumpClientFirst) {
+            strcpy(buf, "ssl_bump deny all");
+            debugs(3, DBG_CRITICAL, "WARNING: auto-converting deprecated implicit "
+                   "\"ssl_bump deny all\" to \"ssl_bump none all\". New ssl_bump configurations "
+                   "must not use implicit rules. Update your ssl_bump rules.");
+        } else {
+            strcpy(buf, "ssl_bump allow all");
+            debugs(3, DBG_CRITICAL, "SECURITY NOTICE: auto-converting deprecated implicit "
+                   "\"ssl_bump allow all\" to \"ssl_bump client-first all\" which is usually "
+                   "inferior to the newer server-first bumping mode. New ssl_bump"
+                   " configurations must not use implicit rules. Update your ssl_bump rules.");
+        }
+        parse_line(buf);
+    }
+}
+
 static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
 {
+    typedef const char *BumpCfgStyle;
+    BumpCfgStyle bcsNone = NULL;
+    BumpCfgStyle bcsNew = "new client/server-first/none";
+    BumpCfgStyle bcsOld = "deprecated allow/deny";
+    static BumpCfgStyle bumpCfgStyleLast = bcsNone;
+    BumpCfgStyle bumpCfgStyleNow = bcsNone;
     char *bm;
     if ((bm = strtok(NULL, w_space)) == NULL) {
         self_destruct();
         return;
     }
 
+    // if this is the first rule proccessed
+    if (*ssl_bump == NULL) {
+        bumpCfgStyleLast = bcsNone;
+        sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpEnd;
+    }
+
     acl_access *A = new acl_access;
     A->allow = allow_t(ACCESS_ALLOWED);
 
-    if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpClientFirst]) == 0)
+    if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpClientFirst]) == 0) {
         A->allow.kind = Ssl::bumpClientFirst;
-    else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpServerFirst]) == 0)
+        bumpCfgStyleNow = bcsNew;
+    } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpServerFirst]) == 0) {
         A->allow.kind = Ssl::bumpServerFirst;
-    else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpNone]) == 0)
+        bumpCfgStyleNow = bcsNew;
+    } else if (strcmp(bm, Ssl::BumpModeStr[Ssl::bumpNone]) == 0) {
         A->allow.kind = Ssl::bumpNone;
-    else if (strcmp(bm, "allow") == 0 || strcmp(bm, "deny") == 0) {
-        // allow/deny rule sets may rely on an implicit "negate the last one"
-        // rule which we cannot support due to multuple "allow" keywords
-        debugs(3, DBG_CRITICAL, "FATAL: ssl_bump allow/deny rule(s) " <<
-               "must be CAREFULLY converted to specify bump mode(s).");
-        self_destruct();
-        return;
+        bumpCfgStyleNow = bcsNew;
+    } else if (strcmp(bm, "allow") == 0) {
+        debugs(3, DBG_CRITICAL, "SECURITY NOTICE: auto-converting deprecated "
+               "\"ssl_bump allow <acl>\" to \"ssl_bump client-first <acl>\" which "
+               "is usually inferior to the newer server-first "
+               "bumping mode. Update your ssl_bump rules.");
+        A->allow.kind = Ssl::bumpClientFirst;
+        bumpCfgStyleNow = bcsOld;
+        sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpClientFirst;
+    } else if (strcmp(bm, "deny") == 0) {
+        debugs(3, DBG_CRITICAL, "WARNING: auto-converting deprecated "
+               "\"ssl_bump deny <acl>\" to \"ssl_bump none <acl>\". Update "
+               "your ssl_bump rules.");
+        A->allow.kind = Ssl::bumpNone;
+        bumpCfgStyleNow = bcsOld;
+        sslBumpCfgRr::lastDeprecatedRule = Ssl::bumpNone;
     } else {
         debugs(3, DBG_CRITICAL, "FATAL: unknown ssl_bump mode: " << bm);
         self_destruct();
         return;
     }
+
+    if (bumpCfgStyleLast != bcsNone && bumpCfgStyleNow != bumpCfgStyleLast) {
+        debugs(3, DBG_CRITICAL, "FATAL: do not mix " << bumpCfgStyleNow << " actions with " << 
+               bumpCfgStyleLast << " actions. Update your ssl_bump rules.");
+        self_destruct();
+        return;
+    }
+
+    bumpCfgStyleLast = bumpCfgStyleNow;
 
     aclParseAclList(LegacyParser, &A->aclList);
 
