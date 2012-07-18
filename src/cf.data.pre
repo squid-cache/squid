@@ -647,7 +647,7 @@ DOC_END
 NAME: acl
 TYPE: acl
 LOC: Config.aclList
-IFDEF USE_SSL
+IF USE_SSL
 DEFAULT: ssl::certHasExpired ssl_error X509_V_ERR_CERT_HAS_EXPIRED
 DEFAULT: ssl::certNotYetValid ssl_error X509_V_ERR_CERT_NOT_YET_VALID
 DEFAULT: ssl::certDomainMismatch ssl_error SQUID_X509_V_ERR_DOMAIN_MISMATCH
@@ -878,7 +878,7 @@ DOC_START
 	  # effect in rules that affect the reply data stream such as
 	  # http_reply_access.
 
-IFDEF USE_SSL
+IF USE_SSL
 	acl aclname ssl_error errorname
 	  # match against SSL certificate validation error [fast]
 	  #
@@ -1562,6 +1562,10 @@ DOC_START
 
 	   accel	Accelerator / reverse proxy mode
 
+	   intercept	Support for IP-Layer interception of
+			outgoing requests without browser settings.
+			NP: disables authentication and IPv6 on the port.
+
 	   tproxy	Support Linux TPROXY for spoofing outgoing
 			connections using the client IP address.
 			NP: disables authentication and maybe IPv6 on the port.
@@ -1575,7 +1579,7 @@ DOC_START
 			An "ssl_bump server-first" match is required to
 			fully enable bumping of intercepted SSL	connections.
 
-			Requires tproxy.
+			Requires tproxy or intercept.
 
 	Omitting the mode flag causes default forward proxy mode to be used.
 

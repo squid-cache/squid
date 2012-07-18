@@ -598,12 +598,6 @@ ErrorState::ErrorState(err_type t, http_status status, HttpRequest * req) :
 }
 
 void
-ErrorState::detailError(int detailCode)
-{
-    detailCode = detailCode;
-}
-
-void
 errorAppendEntry(StoreEntry * entry, ErrorState * err)
 {
     assert(entry->mem_obj != NULL);

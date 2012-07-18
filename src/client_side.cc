@@ -3648,7 +3648,7 @@ httpsAccept(const CommAcceptCbParams &params)
         }
   
         // Create a fake HTTP request for ssl_bump ACL check,
-        // using tproxy-provided destination IP and port.
+        // using tproxy/intercept provided destination IP and port.
         HttpRequest *request = new HttpRequest();
         static char ip[MAX_IPSTRLEN];
         assert(params.conn->flags & (COMM_TRANSPARENT | COMM_INTERCEPTION));

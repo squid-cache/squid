@@ -462,6 +462,7 @@ urlParseFinish(const HttpRequestMethod& method,
         request = new HttpRequest(method, protocol, urlpath);
     else {
         request->initHTTP(method, protocol, urlpath);
+        safe_free(request->canonical);
     }
 
     request->SetHost(host);

@@ -1523,65 +1523,67 @@ ClientHttpRequest::doCallouts()
     if (!calloutContext->http->al.request)
         calloutContext->http->al.request = HTTPMSGLOCK(request);
 
+    if (!calloutContext->error) {
     // CVE-2009-0801: verify the Host: header is consistent with other known details.
-    if (!calloutContext->error && !calloutContext->host_header_verify_done) {
-        debugs(83, 3, HERE << "Doing calloutContext->hostHeaderVerify()");
-        calloutContext->host_header_verify_done = true;
-        calloutContext->hostHeaderVerify();
-        return;
-    }
+        if (!calloutContext->host_header_verify_done) {
+            debugs(83, 3, HERE << "Doing calloutContext->hostHeaderVerify()");
+            calloutContext->host_header_verify_done = true;
+            calloutContext->hostHeaderVerify();
+            return;
+        }
 
-    if (!calloutContext->error && !calloutContext->http_access_done) {
-        debugs(83, 3, HERE << "Doing calloutContext->clientAccessCheck()");
-        calloutContext->http_access_done = true;
-        calloutContext->clientAccessCheck();
-        return;
-    }
+        if (!calloutContext->http_access_done) {
+            debugs(83, 3, HERE << "Doing calloutContext->clientAccessCheck()");
+            calloutContext->http_access_done = true;
+            calloutContext->clientAccessCheck();
+            return;
+        }
 
 #if USE_ADAPTATION
-    if (!calloutContext->error && !calloutContext->adaptation_acl_check_done) {
-        calloutContext->adaptation_acl_check_done = true;
-        if (Adaptation::AccessCheck::Start(
+        if (!calloutContext->adaptation_acl_check_done) {
+            calloutContext->adaptation_acl_check_done = true;
+            if (Adaptation::AccessCheck::Start(
                     Adaptation::methodReqmod, Adaptation::pointPreCache,
                     request, NULL, this))
-            return; // will call callback
-    }
+                return; // will call callback
+        }
 #endif
 
-    if (!calloutContext->error && !calloutContext->redirect_done) {
-        calloutContext->redirect_done = true;
-        assert(calloutContext->redirect_state == REDIRECT_NONE);
+        if (!calloutContext->redirect_done) {
+            calloutContext->redirect_done = true;
+            assert(calloutContext->redirect_state == REDIRECT_NONE);
 
-        if (Config.Program.redirect) {
-            debugs(83, 3, HERE << "Doing calloutContext->clientRedirectStart()");
-            calloutContext->redirect_state = REDIRECT_PENDING;
-            calloutContext->clientRedirectStart();
+            if (Config.Program.redirect) {
+                debugs(83, 3, HERE << "Doing calloutContext->clientRedirectStart()");
+                calloutContext->redirect_state = REDIRECT_PENDING;
+                calloutContext->clientRedirectStart();
+                return;
+            }
+        }
+
+        if (!calloutContext->adapted_http_access_done) {
+            debugs(83, 3, HERE << "Doing calloutContext->clientAccessCheck2()");
+            calloutContext->adapted_http_access_done = true;
+            calloutContext->clientAccessCheck2();
             return;
         }
-    }
 
-    if (!calloutContext->error && !calloutContext->adapted_http_access_done) {
-        debugs(83, 3, HERE << "Doing calloutContext->clientAccessCheck2()");
-        calloutContext->adapted_http_access_done = true;
-        calloutContext->clientAccessCheck2();
-        return;
-    }
-
-    if (!calloutContext->error && !calloutContext->interpreted_req_hdrs) {
-        debugs(83, 3, HERE << "Doing clientInterpretRequestHeaders()");
-        calloutContext->interpreted_req_hdrs = 1;
-        clientInterpretRequestHeaders(this);
-    }
-
-    if (!calloutContext->error && !calloutContext->no_cache_done) {
-        calloutContext->no_cache_done = true;
-
-        if (Config.accessList.noCache && request->flags.cachable) {
-            debugs(83, 3, HERE << "Doing calloutContext->checkNoCache()");
-            calloutContext->checkNoCache();
-            return;
+        if (!calloutContext->interpreted_req_hdrs) {
+            debugs(83, 3, HERE << "Doing clientInterpretRequestHeaders()");
+            calloutContext->interpreted_req_hdrs = 1;
+            clientInterpretRequestHeaders(this);
         }
-    }
+
+        if (!calloutContext->no_cache_done) {
+            calloutContext->no_cache_done = true;
+
+            if (Config.accessList.noCache && request->flags.cachable) {
+                debugs(83, 3, HERE << "Doing calloutContext->checkNoCache()");
+                calloutContext->checkNoCache();
+                return;
+            }
+        }
+    } //  if !calloutContext->error
 
     if (!calloutContext->tosToClientDone) {
         calloutContext->tosToClientDone = true;
