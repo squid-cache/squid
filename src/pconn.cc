@@ -99,7 +99,7 @@ IdleConnList::removeAt(int index)
         return false;
 
     // shuffle the remaining entries to fill the new gap.
-    for (; index < size_ - 1; index++)
+    for (; index < size_ - 1; ++index)
         theList_[index] = theList_[index + 1];
     theList_[--size_] = NULL;
 
@@ -136,7 +136,7 @@ IdleConnList::closeN(size_t n)
 
         size_t index;
         // ensure the first N entries are closed
-        for (index = 0; index < n; index++) {
+        for (index = 0; index < n; ++index) {
             const Comm::ConnectionPointer conn = theList_[index];
             theList_[index] = NULL;
             clearHandlers(conn);
@@ -145,7 +145,7 @@ IdleConnList::closeN(size_t n)
                 parent_->noteConnectionRemoved();
         }
         // shuffle the list N down.
-        for (index = 0; index < (size_t)size_ - n; index++) {
+        for (index = 0; index < (size_t)size_ - n; ++index) {
             theList_[index] = theList_[index + n];
         }
         // ensure the last N entries are unset
@@ -177,7 +177,7 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
         capacity_ <<= 1;
         const Comm::ConnectionPointer *oldList = theList_;
         theList_ = new Comm::ConnectionPointer[capacity_];
-        for (int index = 0; index < size_; index++)
+        for (int index = 0; index < size_; ++index)
             theList_[index] = oldList[index];
 
         delete[] oldList;
@@ -349,7 +349,7 @@ PconnPool::dumpHist(StoreEntry * e) const
                       "\t----  ---------\n",
                       descr);
 
-    for (int i = 0; i < PCONN_HIST_SZ; i++) {
+    for (int i = 0; i < PCONN_HIST_SZ; ++i) {
         if (hist[i] == 0)
             continue;
 
@@ -365,7 +365,8 @@ PconnPool::dumpHash(StoreEntry *e) const
 
     int i = 0;
     for (hash_link *walker = hid->next; walker; walker = hash_next(hid)) {
-        storeAppendPrintf(e, "\t item %5d: %s\n", i++, (char *)(walker->key));
+        storeAppendPrintf(e, "\t item %5d: %s\n", i, (char *)(walker->key));
+        ++i;
     }
 }
 
@@ -377,7 +378,7 @@ PconnPool::PconnPool(const char *aDescr) : table(NULL), descr(aDescr),
     int i;
     table = hash_create((HASHCMP *) strcmp, 229, hash_string);
 
-    for (i = 0; i < PCONN_HIST_SZ; i++)
+    for (i = 0; i < PCONN_HIST_SZ; ++i)
         hist[i] = 0;
 
     PconnModule::GetInstance()->add(this);
@@ -465,7 +466,7 @@ PconnPool::noteUses(int uses)
     if (uses >= PCONN_HIST_SZ)
         uses = PCONN_HIST_SZ - 1;
 
-    hist[uses]++;
+    ++hist[uses];
 }
 
 /* ========== PconnModule ============================================ */
@@ -504,7 +505,7 @@ PconnModule::add(PconnPool *aPool)
 {
     assert(poolCount < MAX_NUM_PCONN_POOLS);
     *(pools+poolCount) = aPool;
-    poolCount++;
+    ++poolCount;
 }
 
 void
@@ -512,7 +513,7 @@ PconnModule::dump(StoreEntry *e)
 {
     int i;
 
-    for (i = 0; i < poolCount; i++) {
+    for (i = 0; i < poolCount; ++i) {
         storeAppendPrintf(e, "\n Pool %d Stats\n", i);
         (*(pools+i))->dumpHist(e);
         storeAppendPrintf(e, "\n Pool %d Hash Table\n",i);

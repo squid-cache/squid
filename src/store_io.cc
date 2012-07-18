@@ -16,7 +16,7 @@ storeCreate(StoreEntry * e, StoreIOState::STFNCB * file_callback, StoreIOState::
 {
     assert (e);
 
-    store_io_stats.create.calls++;
+    ++store_io_stats.create.calls;
 
     /*
      * Pick the swapdir
@@ -26,7 +26,7 @@ storeCreate(StoreEntry * e, StoreIOState::STFNCB * file_callback, StoreIOState::
 
     if (dirn == -1) {
         debugs(20, 2, "storeCreate: no swapdirs for " << *e);
-        store_io_stats.create.select_fail++;
+        ++store_io_stats.create.select_fail;
         return NULL;
     }
 
@@ -37,9 +37,9 @@ storeCreate(StoreEntry * e, StoreIOState::STFNCB * file_callback, StoreIOState::
     StoreIOState::Pointer sio = SD->createStoreIO(*e, file_callback, close_callback, callback_data);
 
     if (sio == NULL)
-        store_io_stats.create.create_fail++;
+        ++store_io_stats.create.create_fail;
     else
-        store_io_stats.create.success++;
+        ++store_io_stats.create.success;
 
     return sio;
 }

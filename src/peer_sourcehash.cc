@@ -66,7 +66,7 @@ peerSourceHashInit(void)
     char *t;
     /* Clean up */
 
-    for (k = 0; k < n_sourcehash_peers; k++) {
+    for (k = 0; k < n_sourcehash_peers; ++k) {
         cbdataReferenceDone(sourcehash_peers[k]);
     }
 
@@ -83,7 +83,7 @@ peerSourceHashInit(void)
         if (p->weight == 0)
             continue;
 
-        n_sourcehash_peers++;
+        ++n_sourcehash_peers;
 
         W += p->weight;
     }
@@ -106,7 +106,7 @@ peerSourceHashInit(void)
         /* calculate this peers hash */
         p->sourcehash.hash = 0;
 
-        for (t = p->name; *t != 0; t++)
+        for (t = p->name; *t != 0; ++t)
             p->sourcehash.hash += ROTATE_LEFT(p->sourcehash.hash, 19) + (unsigned int) *t;
 
         p->sourcehash.hash += p->sourcehash.hash * 0x62531965;
@@ -142,7 +142,7 @@ peerSourceHashInit(void)
 
     X_last = 0.0;		/* Empty X_0, nullifies the first pow statement */
 
-    for (k = 1; k <= K; k++) {
+    for (k = 1; k <= K; ++k) {
         double Kk1 = (double) (K - k + 1);
         p = sourcehash_peers[k - 1];
         p->sourcehash.load_multiplier = (Kk1 * (p->sourcehash.load_factor - P_last)) / Xn;
@@ -183,11 +183,11 @@ peerSourceHashSelectParent(HttpRequest * request)
     /* calculate hash key */
     debugs(39, 2, "peerSourceHashSelectParent: Calculating hash for " << key);
 
-    for (c = key; *c != 0; c++)
+    for (c = key; *c != 0; ++c)
         user_hash += ROTATE_LEFT(user_hash, 19) + *c;
 
     /* select peer */
-    for (k = 0; k < n_sourcehash_peers; k++) {
+    for (k = 0; k < n_sourcehash_peers; ++k) {
         tp = sourcehash_peers[k];
         combined_hash = (user_hash ^ tp->sourcehash.hash);
         combined_hash += combined_hash * 0x62531965;
