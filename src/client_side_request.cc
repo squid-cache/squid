@@ -828,9 +828,11 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
                                  http->request
             );
 
+#if USE_AUTH
         error->auth_user_request = 
             http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
             http->getConn()->auth_user_request : http->request->auth_user_request;
+#endif
 
         readNextRequest = true;
     }
