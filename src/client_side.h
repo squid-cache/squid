@@ -44,6 +44,9 @@
 #include "HttpParser.h"
 #include "RefCount.h"
 #include "StoreIOBuffer.h"
+#if USE_SSL
+#include "ssl/support.h"
+#endif
 
 class ConnStateData;
 class ClientHttpRequest;
@@ -160,7 +163,11 @@ private:
 
 
 class ConnectionDetail;
-
+#if USE_SSL
+namespace Ssl {
+    class ServerBump;
+}
+#endif
 /**
  * Manages a connection to a client.
  *
@@ -312,22 +319,47 @@ public:
     virtual bool doneAll() const { return BodyProducer::doneAll() && false;}
     virtual void swanSong();
 
+    /// Changes state so that we close the connection and quit after serving
+    /// the client-side-detected error response instead of getting stuck.
+    void quitAfterError(HttpRequest *request); // meant to be private
+
 #if USE_SSL
+    /// called by FwdState when it is done bumping the server
+    void httpsPeeked(Comm::ConnectionPointer serverConnection);
+
     /// Start to create dynamic SSL_CTX for host or uses static port SSL context.
-    bool getSslContextStart();
+    void getSslContextStart();
     /**
      * Done create dynamic ssl certificate.
      *
      * \param[in] isNew if generated certificate is new, so we need to add this certificate to storage.
      */
-    bool getSslContextDone(SSL_CTX * sslContext, bool isNew = false);
+    void getSslContextDone(SSL_CTX * sslContext, bool isNew = false);
     /// Callback function. It is called when squid receive message from ssl_crtd.
     static void sslCrtdHandleReplyWrapper(void *data, char *reply);
     /// Proccess response from ssl_crtd.
     void sslCrtdHandleReply(const char * reply);
 
-    bool switchToHttps(const char *host);
+    void switchToHttps(HttpRequest *request, Ssl::BumpMode bumpServerMode);
     bool switchedToHttps() const { return switchedToHttps_; }
+    Ssl::ServerBump *serverBump() {return sslServerBump;}
+    inline void setServerBump(Ssl::ServerBump *srvBump) {
+        if (!sslServerBump)
+            sslServerBump = srvBump;
+        else
+            assert(sslServerBump == srvBump);
+    }
+    /// Fill the certAdaptParams with the required data for certificate adaptation
+    /// and create the key for storing/retrieve the certificate to/from the cache
+    void buildSslCertGenerationParams(Ssl::CertificateProperties &certProperties);
+    /// Called when the client sends the first request on a bumped connection.
+    /// Returns false if no [delayed] error should be written to the client.
+    /// Otherwise, writes the error to the client and returns true. Also checks
+    /// for SQUID_X509_V_ERR_DOMAIN_MISMATCH on bumped requests.
+    bool serveDelayedError(ClientSocketContext *context);
+
+    Ssl::BumpMode sslBumpMode; ///< ssl_bump decision (Ssl::bumpEnd if n/a).
+
 #else
     bool switchedToHttps() const { return false; }
 #endif
@@ -349,14 +381,23 @@ private:
     // XXX: CBDATA plays with public/private and leaves the following 'private' fields all public... :(
     CBDATA_CLASS2(ConnStateData);
 
+#if USE_SSL
     bool switchedToHttps_;
+    /// The SSL server host name appears in CONNECT request or the server ip address for the intercepted requests
+    String sslConnectHostOrIp; ///< The SSL server host name as passed in the CONNECT request
+    String sslCommonName; ///< CN name for SSL certificate generation
+    String sslBumpCertKey; ///< Key to use to store/retrieve generated certificate
+
+    /// HTTPS server cert. fetching state for bump-ssl-server-first
+    Ssl::ServerBump *sslServerBump;
+    Ssl::CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
+#endif
 
     /// the reason why we no longer write the response or nil
     const char *stoppedSending_;
     /// the reason why we no longer read the request or nil
     const char *stoppedReceiving_;
 
-    String sslHostName; ///< Host name for SSL certificate generation
     AsyncCall::Pointer reader; ///< set when we are reading
     BodyPipe::Pointer bodyPipe; // set when we are reading request body
 };

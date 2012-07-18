@@ -1006,6 +1006,13 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
             break;
 
 #if USE_SSL
+        case LFT_SSL_BUMP_MODE: {
+            const Ssl::BumpMode mode = static_cast<Ssl::BumpMode>(al->ssl.bumpMode);
+            // for Ssl::bumpEnd, Ssl::bumpMode() returns NULL and we log '-'
+            out = Ssl::bumpMode(mode);
+            break;
+        }
+
         case LFT_SSL_USER_CERT_SUBJECT:
             if (X509 *cert = al->cache.sslClientCert.get()) {
                 if (X509_NAME *subject = X509_get_subject_name(cert)) {
