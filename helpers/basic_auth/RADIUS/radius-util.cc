@@ -120,7 +120,9 @@ static uint32_t ipstr2long(char *ip_str)
             if (!isdigit(*ip_str)) {
                 return((uint32_t)0);
             }
-            *ptr++ = *ip_str++;
+            *ptr = *ip_str;
+            ++ptr;
+            ++ip_str;
             ++count;
         }
         if (count >= 4 || count == 0) {

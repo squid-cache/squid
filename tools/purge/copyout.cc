@@ -157,7 +157,8 @@ copy_out( size_t filesize, size_t metasize, unsigned debug,
         } else if ( debug & 0x02 ) {
             fprintf( stderr, "# creating %s\n", filename );
         }
-        *t++ = '/';
+        *t = '/';
+        ++t;
     }
 
     // create file
