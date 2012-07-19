@@ -164,8 +164,9 @@ private:
 
 class ConnectionDetail;
 #if USE_SSL
-namespace Ssl {
-    class ServerBump;
+namespace Ssl
+{
+class ServerBump;
 }
 #endif
 /**

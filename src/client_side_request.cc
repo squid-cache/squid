@@ -822,14 +822,14 @@ ClientRequestContext::clientAccessCheckDone(const allow_t &answer)
 
         Ip::Address tmpnoaddr;
         tmpnoaddr.SetNoAddr();
-        error = clientBuildError(page_id, status, 
+        error = clientBuildError(page_id, status,
                                  NULL,
                                  http->getConn() != NULL ? http->getConn()->clientConnection->remote : tmpnoaddr,
                                  http->request
-            );
+                                );
 
 #if USE_AUTH
-        error->auth_user_request = 
+        error->auth_user_request =
             http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
             http->getConn()->auth_user_request : http->request->auth_user_request;
 #endif
@@ -1301,7 +1301,7 @@ ClientRequestContext::sslBumpAccessCheck()
     // (bumping of intercepted SSL conns is decided before we get 1st request).
     // We also do not bump redirected CONNECT requests.
     if (http->request->method != METHOD_CONNECT || http->redirect.status ||
-        !Config.accessList.ssl_bump || !http->getConn()->port->sslBump) {
+            !Config.accessList.ssl_bump || !http->getConn()->port->sslBump) {
         http->al->ssl.bumpMode = Ssl::bumpEnd; // SslBump does not apply; log -
         debugs(85, 5, HERE << "cannot SslBump this request");
         return false;
@@ -1343,7 +1343,7 @@ ClientRequestContext::sslBumpAccessCheckDone(const allow_t &answer)
         return;
 
     const Ssl::BumpMode bumpMode = answer == ACCESS_ALLOWED ?
-        static_cast<Ssl::BumpMode>(answer.kind) : Ssl::bumpNone;
+                                   static_cast<Ssl::BumpMode>(answer.kind) : Ssl::bumpNone;
     http->sslBumpNeed(bumpMode); // for processRequest() to bump if needed
     http->al->ssl.bumpMode = bumpMode; // for logging
 
@@ -1533,7 +1533,7 @@ ClientHttpRequest::doCallouts()
         calloutContext->http->al->request = HTTPMSGLOCK(request);
 
     if (!calloutContext->error) {
-    // CVE-2009-0801: verify the Host: header is consistent with other known details.
+        // CVE-2009-0801: verify the Host: header is consistent with other known details.
         if (!calloutContext->host_header_verify_done) {
             debugs(83, 3, HERE << "Doing calloutContext->hostHeaderVerify()");
             calloutContext->host_header_verify_done = true;
@@ -1552,8 +1552,8 @@ ClientHttpRequest::doCallouts()
         if (!calloutContext->adaptation_acl_check_done) {
             calloutContext->adaptation_acl_check_done = true;
             if (Adaptation::AccessCheck::Start(
-                    Adaptation::methodReqmod, Adaptation::pointPreCache,
-                    request, NULL, this))
+                        Adaptation::methodReqmod, Adaptation::pointPreCache,
+                        request, NULL, this))
                 return; // will call callback
         }
 #endif
@@ -1640,7 +1640,7 @@ ClientHttpRequest::doCallouts()
             calloutContext->error = NULL;
             getConn()->setServerBump(srvBump);
             e->unlock();
-        } else 
+        } else
 #endif
         {
             // send the error to the client now
@@ -1892,12 +1892,12 @@ ClientHttpRequest::handleAdaptationFailure(int errDetail, bool bypassable)
         noAddr.SetNoAddr();
         ConnStateData * c = getConn();
         calloutContext->error = clientBuildError(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR,
-                                 NULL,
-                                 c != NULL ? c->clientConnection->remote : noAddr,
-                                 request
-            );
+                                NULL,
+                                c != NULL ? c->clientConnection->remote : noAddr,
+                                request
+                                                );
 #if USE_AUTH
-        calloutContext->error->auth_user_request = 
+        calloutContext->error->auth_user_request =
             c != NULL && c->auth_user_request != NULL ? c->auth_user_request : request->auth_user_request;
 #endif
         calloutContext->error->detailError(errDetail);

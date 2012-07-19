@@ -17,9 +17,9 @@ SslErrors TheSslErrors;
 
 static SslErrorEntry TheSslErrorArray[] = {
     {SQUID_X509_V_ERR_CERT_CHANGE,
-     "SQUID_X509_V_ERR_CERT_CHANGE"},
+        "SQUID_X509_V_ERR_CERT_CHANGE"},
     {SQUID_ERR_SSL_HANDSHAKE,
-        "SQUID_ERR_SSL_HANDSHAKE"},
+     "SQUID_ERR_SSL_HANDSHAKE"},
     {SQUID_X509_V_ERR_DOMAIN_MISMATCH,
      "SQUID_X509_V_ERR_DOMAIN_MISMATCH"},
     {X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
@@ -99,11 +99,12 @@ static const Ssl::ssl_error_t hasExpired[] = {X509_V_ERR_CERT_HAS_EXPIRED, SSL_E
 static const Ssl::ssl_error_t notYetValid[] = {X509_V_ERR_CERT_NOT_YET_VALID, SSL_ERROR_NONE};
 static const Ssl::ssl_error_t domainMismatch[] = {SQUID_X509_V_ERR_DOMAIN_MISMATCH, SSL_ERROR_NONE};
 static const Ssl::ssl_error_t certUntrusted[] = {X509_V_ERR_INVALID_CA,
-                                                X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN,
-                                                X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE,
-                                                X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
-                                                X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY,
-                                                X509_V_ERR_CERT_UNTRUSTED, SSL_ERROR_NONE};
+        X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN,
+        X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE,
+        X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
+        X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY,
+        X509_V_ERR_CERT_UNTRUSTED, SSL_ERROR_NONE
+                                                };
 static const Ssl::ssl_error_t certSelfSigned[] = {X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT, SSL_ERROR_NONE};
 
 // The list of error name shortcuts  for use with ssl_error acls.
@@ -174,7 +175,7 @@ Ssl::ParseErrorString(const char *name)
     const SslErrorShortcuts::const_iterator it = TheSslErrorShortcuts.find(name);
     if (it != TheSslErrorShortcuts.end()) {
         // Should not be empty...
-        assert(it->second[0] != SSL_ERROR_NONE); 
+        assert(it->second[0] != SSL_ERROR_NONE);
         Ssl::Errors *errors = new Ssl::Errors(it->second[0]);
         for (int i =1; it->second[i] != SSL_ERROR_NONE; i++) {
             errors->push_back_unique(it->second[i]);
@@ -353,7 +354,7 @@ const char *Ssl::ErrorDetail::err_lib_error() const
  * %ssl_ca_name: The certificate issuer name
  * %ssl_notbefore: The certificate "not before" field
  * %ssl_notafter: The certificate "not after" field
- * 
+ *
  \retval  the length of the code (the number of characters will be replaced by value)
 */
 int Ssl::ErrorDetail::convert(const char *code, const char **value) const

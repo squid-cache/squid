@@ -261,8 +261,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
                 delete errs;
                 errs = NULL;
             }
-        }
-        else // remember another error number
+        } else // remember another error number
             errs->push_back_unique(error_no);
 
         if (const char *err_descr = Ssl::GetErrorDescr(error_no))
@@ -615,7 +614,7 @@ ssl_free_ErrorDetail(void *, void *ptr, CRYPTO_EX_DATA *,
 
 static void
 ssl_free_SslErrors(void *, void *ptr, CRYPTO_EX_DATA *,
-                     int, long, void *)
+                   int, long, void *)
 {
     Ssl::Errors *errs = static_cast <Ssl::Errors*>(ptr);
     delete errs;
@@ -624,7 +623,7 @@ ssl_free_SslErrors(void *, void *ptr, CRYPTO_EX_DATA *,
 // "free" function for X509 certificates
 static void
 ssl_free_X509(void *, void *ptr, CRYPTO_EX_DATA *,
-                     int, long, void *)
+              int, long, void *)
 {
     X509  *cert = static_cast <X509 *>(ptr);
     X509_free(cert);
@@ -1448,13 +1447,11 @@ bool Ssl::generateUntrustedCert(X509_Pointer &untrustedCert, EVP_PKEY_Pointer &u
         certProperties.commonName = "Not trusted by \"";
         certProperties.commonName += cn;
         certProperties.commonName += "\"";
-    }
-    else if (const char *org = getOrganization(cert.get())) {
+    } else if (const char *org = getOrganization(cert.get())) {
         certProperties.commonName =  "Not trusted by \"";
         certProperties.commonName += org;
         certProperties.commonName += "\"";
-    }
-    else
+    } else
         certProperties.commonName =  "Not trusted";
     certProperties.setCommonName = true;
     // O, OU, and other CA subject fields will be mimicked

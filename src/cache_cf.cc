@@ -4349,7 +4349,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
         self_destruct();
         return;
     }
-    
+
     const char *param;
     if ( char *s = strchr(al, '{')) {
         *s = '\0'; // terminate the al string
@@ -4361,19 +4361,16 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
             return;
         }
         *s = '\0';
-    }
-    else
+    } else
         param = NULL;
 
     if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetValidAfter]) == 0) {
         ca->alg = Ssl::algSetValidAfter;
         ca->param = strdup("on");
-    }
-    else if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetValidBefore]) == 0) {
+    } else if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetValidBefore]) == 0) {
         ca->alg = Ssl::algSetValidBefore;
         ca->param = strdup("on");
-    }
-    else if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetCommonName]) == 0) {
+    } else if (strcmp(al, Ssl::CertAdaptAlgorithmStr[Ssl::algSetCommonName]) == 0) {
         ca->alg = Ssl::algSetCommonName;
         if (param) {
             if (strlen(param) > 64) {
@@ -4391,7 +4388,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 
     aclParseAclList(LegacyParser, &ca->aclList);
 
-    while(*cert_adapt)
+    while (*cert_adapt)
         cert_adapt = &(*cert_adapt)->next;
 
     *cert_adapt = ca;
@@ -4410,7 +4407,7 @@ static void dump_sslproxy_cert_adapt(StoreEntry *entry, const char *name, sslpro
 
 static void free_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
 {
-    while(*cert_adapt) {
+    while (*cert_adapt) {
         sslproxy_cert_adapt *ca = *cert_adapt;
         *cert_adapt = ca->next;
         safe_free(ca->param);
@@ -4445,7 +4442,7 @@ static void parse_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
 
     aclParseAclList(LegacyParser, &cs->aclList);
 
-    while(*cert_sign)
+    while (*cert_sign)
         cert_sign = &(*cert_sign)->next;
 
     *cert_sign = cs;
@@ -4465,7 +4462,7 @@ static void dump_sslproxy_cert_sign(StoreEntry *entry, const char *name, sslprox
 
 static void free_sslproxy_cert_sign(sslproxy_cert_sign **cert_sign)
 {
-    while(*cert_sign) {
+    while (*cert_sign) {
         sslproxy_cert_sign *cs = *cert_sign;
         *cert_sign = cs->next;
 
@@ -4563,7 +4560,7 @@ static void parse_sslproxy_ssl_bump(acl_access **ssl_bump)
     }
 
     if (bumpCfgStyleLast != bcsNone && bumpCfgStyleNow != bumpCfgStyleLast) {
-        debugs(3, DBG_CRITICAL, "FATAL: do not mix " << bumpCfgStyleNow << " actions with " << 
+        debugs(3, DBG_CRITICAL, "FATAL: do not mix " << bumpCfgStyleNow << " actions with " <<
                bumpCfgStyleLast << " actions. Update your ssl_bump rules.");
         self_destruct();
         return;
