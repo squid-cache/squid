@@ -481,7 +481,7 @@ TunnelStateData::copyRead(Connection &from, IOCB *completion)
 }
 
 /**
- * Set the HTTP status for this request and sets the read handlers for client 
+ * Set the HTTP status for this request and sets the read handlers for client
  * and server side connections.
  */
 static void

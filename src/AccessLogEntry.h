@@ -120,7 +120,8 @@ public:
 
 #if USE_SSL
     /// logging information specific to the SSL protocol
-    class SslDetails {
+    class SslDetails
+    {
     public:
         SslDetails();
 

@@ -211,7 +211,7 @@ static bool proccessNewRequest(Ssl::CrtdMessage & request_message, std::string c
     Ssl::X509_Pointer cert;
     Ssl::EVP_PKEY_Pointer pkey;
     std::string &cert_subject = certProperties.dbKey();
-    
+
     db.find(cert_subject, cert, pkey);
 
     if (cert.get()) {
@@ -224,7 +224,7 @@ static bool proccessNewRequest(Ssl::CrtdMessage & request_message, std::string c
         }
     }
 
-    if (!cert || !pkey) {        
+    if (!cert || !pkey) {
         if (!Ssl::generateSslCertificate(cert, pkey, certProperties))
             throw std::runtime_error("Cannot create ssl certificate or private key.");
 

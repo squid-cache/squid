@@ -259,7 +259,7 @@ main(int argc, char *argv[])
         if ((t = strchr(buff, '\n')))
             *t = '\0';
 
-        if(strncmp(buff, "IF ", 3) == 0) {
+        if (strncmp(buff, "IF ", 3) == 0) {
             if ((ptr = strtok(buff + 3, WS)) == NULL) {
                 std::cerr << "Missing IF parameter on line" << linenum << std::endl;
                 exit(1);
@@ -272,147 +272,146 @@ main(int argc, char *argv[])
                 exit(1);
             }
             IFDEFS.pop();
-        }
-        else if (!IFDEFS.size() || isDefined(IFDEFS.top()))
-        switch (state) {
+        } else if (!IFDEFS.size() || isDefined(IFDEFS.top()))
+            switch (state) {
 
-        case sSTART:
+            case sSTART:
 
-            if ((strlen(buff) == 0) || (!strncmp(buff, "#", 1))) {
-                /* ignore empty and comment lines */
-                (void) 0;
-            } else if (!strncmp(buff, "NAME:", 5)) {
-                char *name, *aliasname;
+                if ((strlen(buff) == 0) || (!strncmp(buff, "#", 1))) {
+                    /* ignore empty and comment lines */
+                    (void) 0;
+                } else if (!strncmp(buff, "NAME:", 5)) {
+                    char *name, *aliasname;
 
-                if ((name = strtok(buff + 5, WS)) == NULL) {
-                    std::cerr << "Error in input file\n";
+                    if ((name = strtok(buff + 5, WS)) == NULL) {
+                        std::cerr << "Error in input file\n";
+                        exit(1);
+                    }
+
+                    entries.push_back(name);
+
+                    while ((aliasname = strtok(NULL, WS)) != NULL)
+                        entries.back().alias.push_front(aliasname);
+
+                    state = s1;
+                } else if (!strcmp(buff, "EOF")) {
+                    state = sEXIT;
+                } else if (!strcmp(buff, "COMMENT_START")) {
+                    entries.push_back("comment");
+                    entries.back().loc = "none";
+                    state = sDOC;
+                } else {
+                    std::cerr << "Error on line " << linenum << std::endl <<
+                              "--> " << buff << std::endl;
                     exit(1);
                 }
 
-                entries.push_back(name);
+                break;
 
-                while ((aliasname = strtok(NULL, WS)) != NULL)
-                    entries.back().alias.push_front(aliasname);
+            case s1: {
+                Entry &curr = entries.back();
 
-                state = s1;
-            } else if (!strcmp(buff, "EOF")) {
-                state = sEXIT;
-            } else if (!strcmp(buff, "COMMENT_START")) {
-                entries.push_back("comment");
-                entries.back().loc = "none";
-                state = sDOC;
-            } else {
-                std::cerr << "Error on line " << linenum << std::endl <<
-                          "--> " << buff << std::endl;
-                exit(1);
-            }
+                if ((strlen(buff) == 0) || (!strncmp(buff, "#", 1))) {
+                    /* ignore empty and comment lines */
+                    (void) 0;
+                } else if (!strncmp(buff, "COMMENT:", 8)) {
+                    ptr = buff + 8;
 
-            break;
+                    while (isspace((unsigned char)*ptr))
+                        ptr++;
 
-        case s1: {
-            Entry &curr = entries.back();
+                    curr.comment = ptr;
+                } else if (!strncmp(buff, "DEFAULT:", 8)) {
+                    ptr = buff + 8;
 
-            if ((strlen(buff) == 0) || (!strncmp(buff, "#", 1))) {
-                /* ignore empty and comment lines */
-                (void) 0;
-            } else if (!strncmp(buff, "COMMENT:", 8)) {
-                ptr = buff + 8;
+                    while (isspace((unsigned char)*ptr))
+                        ptr++;
 
-                while (isspace((unsigned char)*ptr))
-                    ptr++;
+                    curr.defaults.preset.push_back(ptr);
+                } else if (!strncmp(buff, "DEFAULT_IF_NONE:", 16)) {
+                    ptr = buff + 16;
 
-                curr.comment = ptr;
-            } else if (!strncmp(buff, "DEFAULT:", 8)) {
-                ptr = buff + 8;
+                    while (isspace((unsigned char)*ptr))
+                        ptr++;
 
-                while (isspace((unsigned char)*ptr))
-                    ptr++;
+                    curr.defaults.if_none.push_back(ptr);
+                } else if (!strncmp(buff, "POSTSCRIPTUM:", 13)) {
+                    ptr = buff + 13;
 
-                curr.defaults.preset.push_back(ptr);
-            } else if (!strncmp(buff, "DEFAULT_IF_NONE:", 16)) {
-                ptr = buff + 16;
+                    while (isspace((unsigned char)*ptr))
+                        ptr++;
 
-                while (isspace((unsigned char)*ptr))
-                    ptr++;
+                    curr.defaults.postscriptum.push_back(ptr);
+                } else if (!strncmp(buff, "DEFAULT_DOC:", 12)) {
+                    ptr = buff + 12;
 
-                curr.defaults.if_none.push_back(ptr);
-            } else if (!strncmp(buff, "POSTSCRIPTUM:", 13)) {
-                ptr = buff + 13;
+                    while (isspace((unsigned char)*ptr))
+                        ptr++;
 
-                while (isspace((unsigned char)*ptr))
-                    ptr++;
+                    curr.defaults.docs.push_back(ptr);
+                } else if (!strncmp(buff, "LOC:", 4)) {
+                    if ((ptr = strtok(buff + 4, WS)) == NULL) {
+                        std::cerr << "Error on line " << linenum << std::endl;
+                        exit(1);
+                    }
 
-                curr.defaults.postscriptum.push_back(ptr);
-            } else if (!strncmp(buff, "DEFAULT_DOC:", 12)) {
-                ptr = buff + 12;
+                    curr.loc = ptr;
+                } else if (!strncmp(buff, "TYPE:", 5)) {
+                    if ((ptr = strtok(buff + 5, WS)) == NULL) {
+                        std::cerr << "Error on line " << linenum << std::endl;
+                        exit(1);
+                    }
 
-                while (isspace((unsigned char)*ptr))
-                    ptr++;
+                    /* hack to support arrays, rather than pointers */
+                    if (0 == strcmp(ptr + strlen(ptr) - 2, "[]")) {
+                        curr.array_flag = 1;
+                        *(ptr + strlen(ptr) - 2) = '\0';
+                    }
 
-                curr.defaults.docs.push_back(ptr);
-            } else if (!strncmp(buff, "LOC:", 4)) {
-                if ((ptr = strtok(buff + 4, WS)) == NULL) {
+                    checkDepend(curr.name, ptr, types, entries);
+                    curr.type = ptr;
+                } else if (!strncmp(buff, "IFDEF:", 6)) {
+                    if ((ptr = strtok(buff + 6, WS)) == NULL) {
+                        std::cerr << "Error on line " << linenum << std::endl;
+                        exit(1);
+                    }
+
+                    curr.ifdef = ptr;
+                } else if (!strcmp(buff, "DOC_START")) {
+                    state = sDOC;
+                } else if (!strcmp(buff, "DOC_NONE")) {
+                    state = sSTART;
+                } else {
                     std::cerr << "Error on line " << linenum << std::endl;
                     exit(1);
                 }
-
-                curr.loc = ptr;
-            } else if (!strncmp(buff, "TYPE:", 5)) {
-                if ((ptr = strtok(buff + 5, WS)) == NULL) {
-                    std::cerr << "Error on line " << linenum << std::endl;
-                    exit(1);
-                }
-
-                /* hack to support arrays, rather than pointers */
-                if (0 == strcmp(ptr + strlen(ptr) - 2, "[]")) {
-                    curr.array_flag = 1;
-                    *(ptr + strlen(ptr) - 2) = '\0';
-                }
-
-                checkDepend(curr.name, ptr, types, entries);
-                curr.type = ptr;
-            } else if (!strncmp(buff, "IFDEF:", 6)) {
-                if ((ptr = strtok(buff + 6, WS)) == NULL) {
-                    std::cerr << "Error on line " << linenum << std::endl;
-                    exit(1);
-                }
-
-                curr.ifdef = ptr;
-            } else if (!strcmp(buff, "DOC_START")) {
-                state = sDOC;
-            } else if (!strcmp(buff, "DOC_NONE")) {
-                state = sSTART;
-            } else {
-                std::cerr << "Error on line " << linenum << std::endl;
-                exit(1);
-            }
-        }
-        break;
-
-        case sDOC:
-            if (!strcmp(buff, "DOC_END") || !strcmp(buff, "COMMENT_END")) {
-                state = sSTART;
-            } else if (!strcmp(buff, "NOCOMMENT_START")) {
-                state = sNOCOMMENT;
-            } else { // if (buff != NULL) {
-                assert(buff != NULL);
-                entries.back().doc.push_back(buff);
             }
             break;
 
-        case sNOCOMMENT:
-            if (!strcmp(buff, "NOCOMMENT_END")) {
-                state = sDOC;
-            } else { // if (buff != NULL) {
-                assert(buff != NULL);
-                entries.back().nocomment.push_back(buff);
-            }
-            break;
+            case sDOC:
+                if (!strcmp(buff, "DOC_END") || !strcmp(buff, "COMMENT_END")) {
+                    state = sSTART;
+                } else if (!strcmp(buff, "NOCOMMENT_START")) {
+                    state = sNOCOMMENT;
+                } else { // if (buff != NULL) {
+                    assert(buff != NULL);
+                    entries.back().doc.push_back(buff);
+                }
+                break;
 
-        case sEXIT:
-            assert(0);		/* should never get here */
-            break;
-        }
+            case sNOCOMMENT:
+                if (!strcmp(buff, "NOCOMMENT_END")) {
+                    state = sDOC;
+                } else { // if (buff != NULL) {
+                    assert(buff != NULL);
+                    entries.back().nocomment.push_back(buff);
+                }
+                break;
+
+            case sEXIT:
+                assert(0);		/* should never get here */
+                break;
+            }
 
     }
 

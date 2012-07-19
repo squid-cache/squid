@@ -674,14 +674,14 @@ FwdState::negotiateSSL(int fd)
                     // remember validation errors, if any
                     if (Ssl::Errors *errs = static_cast<Ssl::Errors*>(SSL_get_ex_data(ssl, ssl_ex_index_ssl_errors)))
                         serverBump->sslErrors = cbdataReference(errs);
-				}
+                }
             }
 
             // For intercepted connections, set the host name to the server
             // certificate CN. Otherwise, we just hope that CONNECT is using
             // a user-entered address (a host name or a user-entered IP).
-            const bool isConnectRequest = !request->clientConnectionManager->port->spoof_client_ip && 
-                !request->clientConnectionManager->port->intercepted;
+            const bool isConnectRequest = !request->clientConnectionManager->port->spoof_client_ip &&
+                                          !request->clientConnectionManager->port->intercepted;
             if (request->flags.sslPeek && !isConnectRequest) {
                 if (X509 *srvX509 = errDetails->peerCert()) {
                     if (const char *name = Ssl::CommonHostName(srvX509)) {
@@ -704,7 +704,7 @@ FwdState::negotiateSSL(int fd)
             return;
         }
     }
-    
+
     if (request->clientConnectionManager.valid()) {
         // remember the server certificate from the ErrorDetail object
         if (Ssl::ServerBump *serverBump = request->clientConnectionManager->serverBump()) {
@@ -777,8 +777,8 @@ FwdState::initiateSSL()
         // unless it was the CONNECT request with a user-typed address.
         const char *hostname = request->GetHost();
         const bool hostnameIsIp = request->GetHostIsNumeric();
-        const bool isConnectRequest = !request->clientConnectionManager->port->spoof_client_ip && 
-            !request->clientConnectionManager->port->intercepted;
+        const bool isConnectRequest = !request->clientConnectionManager->port->spoof_client_ip &&
+                                      !request->clientConnectionManager->port->intercepted;
         if (!request->flags.sslPeek || isConnectRequest)
             SSL_set_ex_data(ssl, ssl_ex_index_server, (void*)hostname);
 
@@ -799,8 +799,8 @@ FwdState::initiateSSL()
     // store peeked cert to check SQUID_X509_V_ERR_CERT_CHANGE
     X509 *peeked_cert;
     if (request->clientConnectionManager.valid() &&
-        request->clientConnectionManager->serverBump() &&
-        (peeked_cert = request->clientConnectionManager->serverBump()->serverCert.get())) {
+            request->clientConnectionManager->serverBump() &&
+            (peeked_cert = request->clientConnectionManager->serverBump()->serverCert.get())) {
         CRYPTO_add(&(peeked_cert->references),1,CRYPTO_LOCK_X509);
         SSL_set_ex_data(ssl, ssl_ex_index_ssl_peeked_cert, peeked_cert);
     }
@@ -844,11 +844,11 @@ FwdState::connectDone(const Comm::ConnectionPointer &conn, comm_err_t status, in
 
     // some requests benefit from pinning but do not require it and can "repin"
     const bool rePin = request->flags.canRePin &&
-        request->clientConnectionManager.valid();
+                       request->clientConnectionManager.valid();
     if (rePin) {
         debugs(17, 3, HERE << "repinning " << serverConn);
         request->clientConnectionManager->pinConnection(serverConn,
-            request, serverConn->getPeer(), request->flags.auth);
+                request, serverConn->getPeer(), request->flags.auth);
         request->flags.pinned = 1;
     }
 
