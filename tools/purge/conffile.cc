@@ -136,7 +136,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
                     cd.type = CacheDir::CDT_DISKD;
                 else
                     cd.type = CacheDir::CDT_OTHER;
-                offset++;
+                ++offset;
             }
 
             // extract base directory
@@ -146,7 +146,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
                                       (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
             cd.base = strdup( line+subs[offset].rm_so );
-            offset++;
+            ++offset;
 
             // extract size information
             line[ subs[offset].rm_eo ] = '\0';
@@ -155,7 +155,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
                                       (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
             cd.size = strtoul( line+subs[offset].rm_so, 0, 10 );
-            offset++;
+            ++offset;
 
             // extract 1st level directories
             line[ subs[offset].rm_eo ] = '\0';
@@ -164,7 +164,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
                                       (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
             cd.level[0] = strtoul( line+subs[offset].rm_so, 0, 10 );
-            offset++;
+            ++offset;
 
             // extract 2nd level directories
             line[ subs[offset].rm_eo ] = '\0';
@@ -173,7 +173,7 @@ readConfigFile( CacheDirVector& cachedir, const char* fn, FILE* debug )
                                       (int)subs[offset].rm_eo,
                                       line+subs[offset].rm_so );
             cd.level[1] = strtoul( line+subs[offset].rm_so, 0, 10 );
-            offset++;
+            ++offset;
 
             cachedir.push_back( cd );
         }

@@ -128,8 +128,8 @@ urnFindMinRtt(url_entry * urls, const HttpRequestMethod& m, int *rtt_ret)
     debugs(52, 3, "urnFindMinRtt");
     assert(urls != NULL);
 
-    for (i = 0; NULL != urls[i].url; i++)
-        urlcnt++;
+    for (i = 0; NULL != urls[i].url; ++i)
+        ++urlcnt;
 
     debugs(53, 3, "urnFindMinRtt: Counted " << i << " URLs");
 
@@ -138,7 +138,7 @@ urnFindMinRtt(url_entry * urls, const HttpRequestMethod& m, int *rtt_ret)
         return urls;
     }
 
-    for (i = 0; i < urlcnt; i++) {
+    for (i = 0; i < urlcnt; ++i) {
         u = &urls[i];
         debugs(52, 3, "urnFindMinRtt: " << u->host << " rtt=" << u->rtt);
 
@@ -384,12 +384,12 @@ urnHandleReply(void *data, StoreIOBuffer result)
     delete rep;
 
     while (xisspace(*s))
-        s++;
+        ++s;
 
     urls = urnParseReply(s, urnState->request->method);
 
-    for (i = 0; NULL != urls[i].url; i++)
-        urlcnt++;
+    for (i = 0; NULL != urls[i].url; ++i)
+        ++urlcnt;
 
     debugs(53, 3, "urnFindMinRtt: Counted " << i << " URLs");
 
@@ -412,7 +412,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
                 "<H2>Select URL for %s</H2>\n"
                 "<TABLE BORDER=\"0\" WIDTH=\"100%%\">\n", e->url(), e->url());
 
-    for (i = 0; i < urlcnt; i++) {
+    for (i = 0; i < urlcnt; ++i) {
         u = &urls[i];
         debugs(52, 3, "URL {" << u->url << "}");
         mb->Printf(
@@ -449,7 +449,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     e->replaceHttpReply(rep);
     e->complete();
 
-    for (i = 0; i < urlcnt; i++) {
+    for (i = 0; i < urlcnt; ++i) {
         safe_free(urls[i].url);
         safe_free(urls[i].host);
     }
@@ -508,7 +508,7 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
         // TODO: Use storeHas() or lock/unlock entry to avoid creating unlocked
         // ones.
         list[i].flags.cached = storeGetPublic(url, m) ? 1 : 0;
-        i++;
+        ++i;
     }
 
     debugs(52, 3, "urnParseReply: Found " << i << " URLs");

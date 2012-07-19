@@ -632,12 +632,15 @@ ldap_escape_value(char *escaped, int size, const char *src)
             size -= 3;
             if (size > 0) {
                 *escaped++ = '\\';
-                snprintf(escaped, 3, "%02x", (unsigned char) *src++);
+                snprintf(escaped, 3, "%02x", (unsigned char) *src);
+                ++src;
                 escaped += 2;
             }
             break;
         default:
-            *escaped++ = *src++;
+            *escaped = *src;
+            ++escaped;
+            ++src;
             ++n;
             --size;
         }

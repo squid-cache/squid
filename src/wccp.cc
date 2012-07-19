@@ -283,7 +283,7 @@ wccpLowestIP(void)
      * We sanity checked wccp_i_see_you.number back in wccpHandleUdp()
      */
 
-    for (loop = 0; loop < (unsigned) ntohl(wccp_i_see_you.number); loop++) {
+    for (loop = 0; loop < (unsigned) ntohl(wccp_i_see_you.number); ++loop) {
         assert(loop < WCCP_ACTIVE_CACHES);
 
         if (local_ip > wccp_i_see_you.wccp_cache_entry[loop].ip_addr)
@@ -351,20 +351,22 @@ wccpAssignBuckets(void)
 
     buckets_per_cache = WCCP_BUCKETS / number_caches;
 
-    for (loop = 0; loop < number_caches; loop++) {
+    for (loop = 0; loop < number_caches; ++loop) {
         int i;
         memcpy(&caches[loop],
                &wccp_i_see_you.wccp_cache_entry[loop].ip_addr,
                sizeof(*caches));
 
-        for (i = 0; i < buckets_per_cache; i++) {
+        for (i = 0; i < buckets_per_cache; ++i) {
             assert(bucket < WCCP_BUCKETS);
-            buckets[bucket++] = loop;
+            buckets[bucket] = loop;
+            ++bucket;
         }
     }
 
     while (bucket < WCCP_BUCKETS) {
-        buckets[bucket++] = number_caches - 1;
+        buckets[bucket] = number_caches - 1;
+        ++bucket;
     }
 
     wccp_assign_bucket->type = htonl(WCCP_ASSIGN_BUCKET);

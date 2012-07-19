@@ -265,11 +265,15 @@ urldecode(char *dst, const char *src, int size)
     while (*src && size > 1) {
         if (*src == '%' && src[1] != '\0' && src[2] != '\0') {
             ++src;
-            tmp[0] = *src++;
-            tmp[1] = *src++;
+            tmp[0] = *src;
+            ++src;
+            tmp[1] = *src;
+            ++src;
             *dst++ = strtol(tmp, NULL, 16);
         } else {
-            *dst++ = *src++;
+            *dst = *src;
+            ++dst;
+            ++src;
         }
         --size;
     }
