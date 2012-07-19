@@ -70,7 +70,7 @@ int WIN32_pipe(int handles[2])
 
     handles[0] = handles[1] = -1;
 
-    statCounter.syscalls.sock.sockets++;
+    ++statCounter.syscalls.sock.sockets;
 
     handle0 = localhost;
     handle0.SetPort(0);

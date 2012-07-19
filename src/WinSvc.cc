@@ -160,7 +160,7 @@ WIN32_create_key(void)
         }
 
         hKey = hKeyNext;
-        index++;
+        ++index;
     }
 
     if (keys[index] == NULL) {
@@ -268,7 +268,7 @@ static void WIN32_build_argv(char *cmd)
         /* Ignore spaces */
 
         if (xisspace(*cmd)) {
-            cmd++;
+            ++cmd;
             continue;
         }
 
@@ -276,7 +276,7 @@ static void WIN32_build_argv(char *cmd)
         word = cmd;
 
         while (*cmd) {
-            cmd++;		/* Skip over this character */
+            ++cmd;		/* Skip over this character */
 
             if (xisspace(*cmd))	/* End of argument if space */
                 break;
@@ -602,7 +602,7 @@ void
 WIN32_svcstatusupdate(DWORD svcstate, DWORD WaitHint)
 {
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
-        svcStatus.dwCheckPoint++;
+        ++svcStatus.dwCheckPoint;
         svcStatus.dwWaitHint = WaitHint;
         svcStatus.dwCurrentState = svcstate;
         SetServiceStatus(svcHandle, &svcStatus);
@@ -987,7 +987,7 @@ static int Win32SockInit(void)
     int optlen = sizeof(opt);
 
     if (s_iInitCount > 0) {
-        s_iInitCount++;
+        ++s_iInitCount;
         return (0);
     } else if (s_iInitCount < 0)
         return (s_iInitCount);
@@ -1026,7 +1026,7 @@ static int Win32SockInit(void)
     }
 
     WIN32_Socks_initialized = 1;
-    s_iInitCount++;
+    ++s_iInitCount;
     return (s_iInitCount);
 }
 

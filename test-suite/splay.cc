@@ -142,7 +142,7 @@ main(int argc, char *argv[])
         splayNode *top = NULL;
         squid_srandom(time(NULL));
 
-        for (i = 0; i < 100; i++) {
+        for (i = 0; i < 100; ++i) {
             I = (intnode *)xcalloc(sizeof(intnode), 1);
             I->i = squid_random();
             top = top->insert(I, compareintvoid);
@@ -164,7 +164,7 @@ main(int argc, char *argv[])
         /* intnode* */
         SplayNode<intnode *> *safeTop = NULL;
 
-        for ( int i = 0; i < 100; i++) {
+        for ( int i = 0; i < 100; ++i) {
             intnode *I;
             I = new intnode;
             I->i = squid_random();
@@ -183,7 +183,7 @@ main(int argc, char *argv[])
         /* intnode */
         SplayNode<intnode> *safeTop = NULL;
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 100; ++i) {
             intnode I;
             I.i = squid_random();
             safeTop = safeTop->insert(I, compareintref);
@@ -219,7 +219,7 @@ main(int argc, char *argv[])
         if (safeTop->finish() != NULL)
             exit (1);
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 100; ++i) {
             intnode I;
             I.i = squid_random();
 
