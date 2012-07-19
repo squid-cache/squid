@@ -92,7 +92,7 @@ bool Ssl::appendCertToMemory(Ssl::X509_Pointer const & cert, std::string & buffe
     if (!ptr)
         return false;
 
-    if (!bufferToWrite.empty()) 
+    if (!bufferToWrite.empty())
         bufferToWrite.append(" "); // add a space...
 
     bufferToWrite.append(ptr, len);
@@ -165,7 +165,7 @@ static bool replaceCommonName(Ssl::X509_Pointer & cert, std::string const &rawCn
         size_t pos = 0;
         do {
             pos = cn.find('.', pos + 1);
-        } while(pos != std::string::npos && (cn.length() - pos + 2) > MaxCnLen);
+        } while (pos != std::string::npos && (cn.length() - pos + 2) > MaxCnLen);
 
         // If no short domain found or this domain is a toplevel domain
         // we failed to find a good cn name.
@@ -200,7 +200,7 @@ static bool replaceCommonName(Ssl::X509_Pointer & cert, std::string const &rawCn
 
 const char *Ssl::CertSignAlgorithmStr[] = {
     "signTrusted",
-    "signUntrusted", 
+    "signUntrusted",
     "signSelf",
     NULL
 };
@@ -213,10 +213,10 @@ const char *Ssl::CertAdaptAlgorithmStr[] = {
 };
 
 Ssl::CertificateProperties::CertificateProperties():
-                                                     setValidAfter(false),
-                                                     setValidBefore(false),
-                                                     setCommonName(false),
-                                                     signAlgorithm(Ssl::algSignEnd)
+        setValidAfter(false),
+        setValidBefore(false),
+        setCommonName(false),
+        signAlgorithm(Ssl::algSignEnd)
 {}
 
 std::string & Ssl::CertificateProperties::dbKey() const
@@ -254,13 +254,13 @@ std::string & Ssl::CertificateProperties::dbKey() const
 }
 
 static bool buildCertificate(Ssl::X509_Pointer & cert, Ssl::CertificateProperties const &properties)
-{ 
+{
     // not an Ssl::X509_NAME_Pointer because X509_REQ_get_subject_name()
     // returns a pointer to the existing subject name. Nothing to clean here.
     if (properties.mimicCert.get()) {
         // Leave subject empty if we cannot extract it from true cert.
         if (X509_NAME *name = X509_get_subject_name(properties.mimicCert.get())) {
-            // X509_set_subject_name will call X509_dup for name 
+            // X509_set_subject_name will call X509_dup for name
             X509_set_subject_name(cert.get(), name);
         }
     }
@@ -273,10 +273,10 @@ static bool buildCertificate(Ssl::X509_Pointer & cert, Ssl::CertificatePropertie
         (void)replaceCommonName(cert, properties.commonName);
     }
 
-    // We should get caCert notBefore and notAfter fields and do not allow 
+    // We should get caCert notBefore and notAfter fields and do not allow
     // notBefore/notAfter values from certToMimic before/after notBefore/notAfter
     // fields from caCert.
-    // Currently there is not any way in openssl tollkit to compare two ASN1_TIME 
+    // Currently there is not any way in openssl tollkit to compare two ASN1_TIME
     // objects.
     ASN1_TIME *aTime = NULL;
     if (!properties.setValidBefore && properties.mimicCert.get())
@@ -287,8 +287,7 @@ static bool buildCertificate(Ssl::X509_Pointer & cert, Ssl::CertificatePropertie
     if (aTime) {
         if (!X509_set_notBefore(cert.get(), aTime))
             return false;
-    }
-    else if (!X509_gmtime_adj(X509_get_notBefore(cert.get()), (-2)*24*60*60))
+    } else if (!X509_gmtime_adj(X509_get_notBefore(cert.get()), (-2)*24*60*60))
         return false;
 
     aTime = NULL;
@@ -315,7 +314,7 @@ static bool buildCertificate(Ssl::X509_Pointer & cert, Ssl::CertificatePropertie
         // certificates with CN unrelated to subjectAltNames.
         if (!properties.setCommonName) {
             int pos=X509_get_ext_by_NID (properties.mimicCert.get(), OBJ_sn2nid("subjectAltName"), -1);
-            X509_EXTENSION *ext=X509_get_ext(properties.mimicCert.get(), pos); 
+            X509_EXTENSION *ext=X509_get_ext(properties.mimicCert.get(), pos);
             if (ext) {
                 X509_add_ext(cert.get(), ext, -1);
                 /* According the RFC 5280 using extensions requires version 3
@@ -381,7 +380,7 @@ static bool generateFakeSslCertificate(Ssl::X509_Pointer & certToStore, Ssl::EVP
 
 static  BIGNUM *createCertSerial(unsigned char *md, unsigned int n)
 {
-    
+
     assert(n == 20); //for sha1 n is 20 (for md5 n is 16)
 
     BIGNUM *serial = NULL;
@@ -430,8 +429,8 @@ static BIGNUM *x509Pubkeydigest(Ssl::X509_Pointer const & cert)
     return createCertSerial(md, n);
 }
 
-/// Generate a unique serial number based on a Ssl::CertificateProperties object 
-/// for a new generated certificate 
+/// Generate a unique serial number based on a Ssl::CertificateProperties object
+/// for a new generated certificate
 static bool createSerial(Ssl::BIGNUM_Pointer &serial, Ssl::CertificateProperties const &properties)
 {
     Ssl::EVP_PKEY_Pointer fakePkey;
@@ -522,7 +521,7 @@ bool Ssl::sslDateIsInTheFuture(char const * date)
 /// Print the time represented by a ASN1_TIME struct to a string using GeneralizedTime format
 static bool asn1timeToGeneralizedTimeStr(ASN1_TIME *aTime, char *buf, int bufLen)
 {
-    // ASN1_Time  holds time to UTCTime or GeneralizedTime form. 
+    // ASN1_Time  holds time to UTCTime or GeneralizedTime form.
     // UTCTime has the form YYMMDDHHMMSS[Z | [+|-]offset]
     // GeneralizedTime has the form YYYYMMDDHHMMSS[Z | [+|-] offset]
 
@@ -541,8 +540,7 @@ static bool asn1timeToGeneralizedTimeStr(ASN1_TIME *aTime, char *buf, int bufLen
             buf[1] = '0';
         }
         str = buf +2;
-    }
-    else // if (aTime->type == V_ASN1_GENERALIZEDTIME)
+    } else // if (aTime->type == V_ASN1_GENERALIZEDTIME)
         str = buf;
 
     memcpy(str, aTime->data, aTime->length);
@@ -557,7 +555,7 @@ static int asn1time_cmp(ASN1_TIME *asnTime1, ASN1_TIME *asnTime2)
         return -1;
     if (!asn1timeToGeneralizedTimeStr(asnTime2, strTime2, sizeof(strTime2)))
         return -1;
-    
+
     return strcmp(strTime1, strTime2);
 }
 
@@ -571,7 +569,7 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
         if (X509_check_issued(properties.signWithX509.get(), cert) != X509_V_OK)
             return false;
     }
-    
+
     X509 *cert2 = properties.mimicCert.get();
     // If there is not certificate to mimic stop here
     if (!cert2)
@@ -582,10 +580,9 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
         X509_NAME *cert2_name = X509_get_subject_name(cert2);
         if (X509_NAME_cmp(cert1_name, cert2_name) != 0)
             return false;
-    }
-    else if (properties.commonName != CommonHostName(cert))
-           return false;
- 
+    } else if (properties.commonName != CommonHostName(cert))
+        return false;
+
     if (!properties.setValidBefore) {
         ASN1_TIME *aTime = X509_get_notBefore(cert);
         ASN1_TIME *bTime = X509_get_notBefore(cert2);
@@ -606,15 +603,15 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
         return false;
     }
 
-    
+
     char *alStr1;
     int alLen;
     alStr1 = (char *)X509_alias_get0(cert, &alLen);
     char *alStr2  = (char *)X509_alias_get0(cert2, &alLen);
     if ((!alStr1 && alStr2) || (alStr1 && !alStr2) ||
-        (alStr1 && alStr2 && strcmp(alStr1, alStr2)) != 0)
+            (alStr1 && alStr2 && strcmp(alStr1, alStr2)) != 0)
         return false;
-    
+
     // Compare subjectAltName extension
     STACK_OF(GENERAL_NAME) * cert1_altnames;
     cert1_altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
@@ -627,10 +624,9 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
             const GENERAL_NAME *aName = sk_GENERAL_NAME_value(cert1_altnames, i);
             match = sk_GENERAL_NAME_find(cert2_altnames, aName);
         }
-    }
-    else if (cert2_altnames)
+    } else if (cert2_altnames)
         match = false;
- 
+
     sk_GENERAL_NAME_pop_free(cert1_altnames, GENERAL_NAME_free);
     sk_GENERAL_NAME_pop_free(cert2_altnames, GENERAL_NAME_free);
 
@@ -646,8 +642,8 @@ static const char *getSubjectEntry(X509 *x509, int nid)
 
     // TODO: What if the entry is a UTF8String? See X509_NAME_get_index_by_NID(3ssl).
     const int nameLen = X509_NAME_get_text_by_NID(
-        X509_get_subject_name(x509),
-        nid,  name, sizeof(name));
+                            X509_get_subject_name(x509),
+                            nid,  name, sizeof(name));
 
     if (nameLen > 0)
         return name;

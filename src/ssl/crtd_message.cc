@@ -189,18 +189,18 @@ bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, 
         return false;
     }
     certProperties.commonName = i->second;
-    
-     i = map.find(Ssl::CrtdMessage::param_SetValidAfter);
+
+    i = map.find(Ssl::CrtdMessage::param_SetValidAfter);
     if (i != map.end() && strcasecmp(i->second.c_str(), "on") == 0)
         certProperties.setValidAfter = true;
-    
+
     i = map.find(Ssl::CrtdMessage::param_SetValidBefore);
     if (i != map.end() && strcasecmp(i->second.c_str(), "on") == 0)
         certProperties.setValidBefore = true;
 
     i = map.find(Ssl::CrtdMessage::param_SetCommonName);
     if (i != map.end()) {
-        // use this as Common Name  instead of the hostname 
+        // use this as Common Name  instead of the hostname
         // defined with host or Common Name from mimic cert
         certProperties.commonName = i->second;
         certProperties.setCommonName = true;
@@ -212,8 +212,7 @@ bool Ssl::CrtdMessage::parseRequest(Ssl::CertificateProperties &certProperties, 
             error = "Wrong signing algoritm: " + i->second;
             return false;
         }
-    }
-    else
+    } else
         certProperties.signAlgorithm = Ssl::algSignTrusted;
 
     if (!Ssl::readCertAndPrivateKeyFromMemory(certProperties.signWithX509, certProperties.signWithPkey, certs_part.c_str())) {
@@ -241,7 +240,7 @@ void Ssl::CrtdMessage::composeRequest(Ssl::CertificateProperties const &certProp
         body +=  "\n" + Ssl::CrtdMessage::param_SetValidAfter + "=on";
     if (certProperties.setValidBefore)
         body +=  "\n" + Ssl::CrtdMessage::param_SetValidBefore + "=on";
-    if(certProperties.signAlgorithm != Ssl::algSignEnd)
+    if (certProperties.signAlgorithm != Ssl::algSignEnd)
         body +=  "\n" +  Ssl::CrtdMessage::param_Sign + "=" +  certSignAlgorithm(certProperties.signAlgorithm);
 
     std::string certsPart;

@@ -811,7 +811,7 @@ ConnStateData::~ConnStateData()
 
     if (bodyPipe != NULL)
         stopProducingFor(bodyPipe, false);
-   
+
 #if USE_SSL
     delete sslServerBump;
 #endif
@@ -2642,7 +2642,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->flags.ignore_cc = conn->port->ignore_cc;
     // TODO: decouple http->flags.accel from request->flags.sslBumped
     request->flags.no_direct = (request->flags.accelerated && !request->flags.sslBumped) ?
-        !conn->port->allow_direct : 0;
+                               !conn->port->allow_direct : 0;
 #if USE_AUTH
     if (request->flags.sslBumped) {
         if (conn->auth_user_request != NULL)
@@ -3550,10 +3550,10 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext, Ssl::BumpMode bum
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall = JobCallback(33, 5, TimeoutDialer,
-        connState, ConnStateData::requestTimeout);
+                                     connState, ConnStateData::requestTimeout);
     commSetConnTimeout(details, Config.Timeout.request, timeoutCall);
 
-    if (ssl) 
+    if (ssl)
         Comm::SetSelect(details->fd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
     else {
         char buf[MAX_IPSTRLEN];
@@ -3575,7 +3575,7 @@ httpsEstablish(ConnStateData *connState,  SSL_CTX *sslContext, Ssl::BumpMode bum
 }
 
 /**
- * A callback function to use with the ACLFilledChecklist callback. 
+ * A callback function to use with the ACLFilledChecklist callback.
  * In the case of ACCES_ALLOWED answer initializes a bumped SSL connection,
  * else reverts the connection to tunnel mode.
  */
@@ -3645,7 +3645,7 @@ httpsAccept(const CommAcceptCbParams &params)
             httpsSslBumpAccessCheckDone(ACCESS_DENIED, connState);
             return;
         }
-  
+
         // Create a fake HTTP request for ssl_bump ACL check,
         // using tproxy/intercept provided destination IP and port.
         HttpRequest *request = new HttpRequest();
@@ -3654,7 +3654,7 @@ httpsAccept(const CommAcceptCbParams &params)
         request->SetHost(params.conn->local.NtoA(ip, sizeof(ip)));
         request->port = params.conn->local.GetPort();
         request->myportname = s->name;
- 
+
         ACLFilledChecklist *acl_checklist = new ACLFilledChecklist(Config.accessList.ssl_bump, request, NULL);
         acl_checklist->src_addr = params.conn->remote;
         acl_checklist->my_addr = s->s;
@@ -3719,7 +3719,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
         if (X509 *mimicCert = sslServerBump->serverCert.get())
             certProperties.mimicCert.resetAndLock(mimicCert);
 
-        ACLFilledChecklist checklist(NULL, sslServerBump->request, 
+        ACLFilledChecklist checklist(NULL, sslServerBump->request,
                                      clientConnection != NULL ? clientConnection->rfc931 : dash_str);
         checklist.conn(this);
         checklist.sslErrors = cbdataReference(sslServerBump->sslErrors);
@@ -3727,14 +3727,14 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
         for (sslproxy_cert_adapt *ca = Config.ssl_client.cert_adapt; ca != NULL; ca = ca->next) {
             // If the algorithm already set, then ignore it.
             if ((ca->alg == Ssl::algSetCommonName && certProperties.setCommonName) ||
-                (ca->alg == Ssl::algSetValidAfter && certProperties.setValidAfter) ||
-                (ca->alg == Ssl::algSetValidBefore && certProperties.setValidBefore) )
+                    (ca->alg == Ssl::algSetValidAfter && certProperties.setValidAfter) ||
+                    (ca->alg == Ssl::algSetValidBefore && certProperties.setValidBefore) )
                 continue;
 
             if (ca->aclList && checklist.fastCheck(ca->aclList) == ACCESS_ALLOWED) {
                 const char *alg = Ssl::CertAdaptAlgorithmStr[ca->alg];
                 const char *param = ca->param;
-  
+
                 // For parameterless CN adaptation, use hostname from the
                 // CONNECT request.
                 if (ca->alg == Ssl::algSetCommonName) {
@@ -3742,13 +3742,12 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
                         param = sslConnectHostOrIp.termedBuf();
                     certProperties.commonName = param;
                     certProperties.setCommonName = true;
-                }
-                else if(ca->alg == Ssl::algSetValidAfter)
+                } else if (ca->alg == Ssl::algSetValidAfter)
                     certProperties.setValidAfter = true;
-                else if(ca->alg == Ssl::algSetValidBefore)
+                else if (ca->alg == Ssl::algSetValidBefore)
                     certProperties.setValidBefore = true;
 
-                debugs(33, 5, HERE << "Matches certificate adaptation aglorithm: " << 
+                debugs(33, 5, HERE << "Matches certificate adaptation aglorithm: " <<
                        alg << " param: " << (param ? param : "-"));
             }
         }
@@ -3774,8 +3773,7 @@ void ConnStateData::buildSslCertGenerationParams(Ssl::CertificateProperties &cer
         assert(port->untrustedSigningCert.get());
         certProperties.signWithX509.resetAndLock(port->untrustedSigningCert.get());
         certProperties.signWithPkey.resetAndLock(port->untrustedSignPkey.get());
-    }
-    else {
+    } else {
         assert(port->signingCert.get());
         certProperties.signWithX509.resetAndLock(port->signingCert.get());
 
@@ -3817,15 +3815,14 @@ ConnStateData::getSslContextStart()
 
 #if USE_SSL_CRTD
         try {
-        debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName << " using ssl_crtd.");
-        Ssl::CrtdMessage request_message;
-        request_message.setCode(Ssl::CrtdMessage::code_new_certificate);
-        request_message.composeRequest(certProperties);
-        debugs(33, 5, HERE << "SSL crtd request: " << request_message.compose().c_str());
-        Ssl::Helper::GetInstance()->sslSubmit(request_message, sslCrtdHandleReplyWrapper, this);
-        return;
-        }
-        catch (const std::exception &e) {
+            debugs(33, 5, HERE << "Generating SSL certificate for " << certProperties.commonName << " using ssl_crtd.");
+            Ssl::CrtdMessage request_message;
+            request_message.setCode(Ssl::CrtdMessage::code_new_certificate);
+            request_message.composeRequest(certProperties);
+            debugs(33, 5, HERE << "SSL crtd request: " << request_message.compose().c_str());
+            Ssl::Helper::GetInstance()->sslSubmit(request_message, sslCrtdHandleReplyWrapper, this);
+            return;
+        } catch (const std::exception &e) {
             debugs(33, DBG_IMPORTANT, "ERROR: Failed to compose ssl_crtd " <<
                    "request for " << certProperties.commonName <<
                    " certificate: " << e.what() << "; will now block to " <<
@@ -3927,7 +3924,7 @@ ConnStateData::httpsPeeked(Comm::ConnectionPointer serverConnection)
         Ssl::X509_Pointer serverCert(SSL_get_peer_certificate(ssl));
         assert(serverCert.get() != NULL);
         sslCommonName = Ssl::CommonHostName(serverCert.get());
-        debugs(33, 5, HERE << "HTTPS server CN: " << sslCommonName << 
+        debugs(33, 5, HERE << "HTTPS server CN: " << sslCommonName <<
                " bumped: " << *serverConnection);
 
         pinConnection(serverConnection, NULL, NULL, false);
@@ -4501,13 +4498,13 @@ ConnStateData::unpinConnection()
         cbdataReferenceDone(pinning.peer);
 
     if (Comm::IsConnOpen(pinning.serverConnection)) {
-    if (pinning.closeHandler != NULL) {
-        comm_remove_close_handler(pinning.serverConnection->fd, pinning.closeHandler);
-        pinning.closeHandler = NULL;
-    }
-    /// also close the server side socket, we should not use it for any future requests...
-    // TODO: do not close if called from our close handler?
-    pinning.serverConnection->close();
+        if (pinning.closeHandler != NULL) {
+            comm_remove_close_handler(pinning.serverConnection->fd, pinning.closeHandler);
+            pinning.closeHandler = NULL;
+        }
+        /// also close the server side socket, we should not use it for any future requests...
+        // TODO: do not close if called from our close handler?
+        pinning.serverConnection->close();
     }
 
     safe_free(pinning.host);

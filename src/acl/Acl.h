@@ -120,7 +120,8 @@ typedef enum {
 
 /// \ingroup ACLAPI
 /// ACL check answer; TODO: Rename to Acl::Answer
-class allow_t {
+class allow_t
+{
 public:
     // not explicit: allow "aclMatchCode to allow_t" conversions (for now)
     allow_t(const aclMatchCode aCode): code(aCode), kind(0) {}
