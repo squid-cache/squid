@@ -681,12 +681,16 @@ build_filter(char *filter, int size, const char *templ, const char *user, const 
         case '\\':
             ++templ;
             if (*templ) {
-                *filter++ = *templ++;
+                *filter = *templ;
+                ++filter;
+                ++templ;
                 --size;
             }
             break;
         default:
-            *filter++ = *templ++;
+            *filter = *templ;
+            ++filter;
+            ++templ;
             --size;
             break;
         }
