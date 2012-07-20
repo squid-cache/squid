@@ -729,6 +729,19 @@ UFSSwapDir::addDiskRestore(const cache_key * key,
 }
 
 void
+UFSSwapDir::undoAddDiskRestore(StoreEntry *e)
+{
+    debugs(47, 5, HERE << *e);
+    replacementRemove(e); // checks swap_dirn so do it before we invalidate it
+    // Do not unlink the file as it might be used by a subsequent entry.
+    mapBitReset(e->swap_filen);
+    e->swap_filen = -1;
+    e->swap_dirn = -1;
+    cur_size -= fs.blksize * sizeInBlocks(e->swap_file_sz);
+    --n_disk_objects;
+}
+
+void
 UFSSwapDir::rebuild()
 {
     ++StoreController::store_dirs_rebuilding;
@@ -1305,7 +1318,7 @@ UFSSwapDir::unlink(StoreEntry & e)
 {
     debugs(79, 3, "storeUfsUnlink: dirno " << index  << ", fileno "<<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << e.swap_filen);
-    if (e.swap_status == SWAPOUT_DONE && EBIT_TEST(e.flags, ENTRY_VALIDATED)) {
+    if (e.swap_status == SWAPOUT_DONE) {
         cur_size -= fs.blksize * sizeInBlocks(e.swap_file_sz);
         --n_disk_objects;
     }
