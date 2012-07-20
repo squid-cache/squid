@@ -216,7 +216,7 @@ IdleConnList::isAvailable(int i) const
 Comm::ConnectionPointer
 IdleConnList::pop()
 {
-    for (int i=size_-1; i>=0; i--) {
+    for (int i=size_-1; i>=0; --i) {
 
         if (!isAvailable(i))
             continue;
@@ -254,7 +254,7 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &key)
     const bool keyCheckAddr = !key->local.IsAnyAddr();
     const bool keyCheckPort = key->local.GetPort() > 0;
 
-    for (int i=size_-1; i>=0; i--) {
+    for (int i=size_-1; i>=0; --i) {
 
         if (!isAvailable(i))
             continue;

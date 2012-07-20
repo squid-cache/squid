@@ -179,7 +179,7 @@ void
 DiskThreadsDiskFile::openDone(int unused, const char *unused2, int anFD, int errflag)
 {
     debugs(79, 3, "DiskThreadsDiskFile::openDone: FD " << anFD << ", errflag " << errflag);
-    Opening_FD--;
+    --Opening_FD;
 
     fd = anFD;
 
@@ -215,7 +215,7 @@ void DiskThreadsDiskFile::doClose()
         file_close(fd);
 #endif
 
-        store_open_disk_fd--;
+        --store_open_disk_fd;
         fd = -1;
     }
 }

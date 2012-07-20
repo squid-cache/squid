@@ -151,7 +151,7 @@ HttpParser::parseRequestFirstLine()
         // otherwise last whitespace is somewhere after end of URI.
         req.u_end = last_whitespace;
         // crop any trailing whitespace in the area we think of as URI
-        for (; req.u_end >= req.u_start && xisspace(buf[req.u_end]); req.u_end--);
+        for (; req.u_end >= req.u_start && xisspace(buf[req.u_end]); --req.u_end);
     }
     if (req.u_end < req.u_start) {
         request_parse_status = HTTP_BAD_REQUEST; // missing URI

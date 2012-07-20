@@ -555,7 +555,7 @@ StoreEntry::releaseRequest()
 int
 StoreEntry::unlock()
 {
-    lock_count--;
+    --lock_count;
     debugs(20, 3, "StoreEntry::unlock: key '" << getMD5Text() << "' count=" << lock_count);
 
     if (lock_count)
@@ -1653,7 +1653,7 @@ StoreEntry::setMemStatus(mem_status_t new_status)
             debugs(20, 4, "StoreEntry::setMemStatus: removed mem node " << mem_obj->url);
         }
 
-        hot_obj_count--;
+        --hot_obj_count;
     }
 
     mem_status = new_status;

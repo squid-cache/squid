@@ -210,7 +210,7 @@ main(int argc, char *argv[])
     int ping, pcount;
     int keep_alive = 0;
     int opt_noaccept = 0;
-    int opt_verbose = 0;
+    bool opt_verbose = false;
 #if HAVE_GSSAPI
     int www_neg = 0, proxy_neg = 0;
 #endif
@@ -375,7 +375,7 @@ main(int argc, char *argv[])
 #endif
             case 'v':
                 /* undocumented: may increase verb-level by giving more -v's */
-                ++opt_verbose;
+                opt_verbose=true;
                 break;
 
             case '?':		/* usage */

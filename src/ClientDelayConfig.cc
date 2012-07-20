@@ -66,7 +66,7 @@ void ClientDelayConfig::parsePoolRates()
         return;
     }
 
-    pool--;
+    --pool;
 
     pools[pool].rate = GetInteger();
     pools[pool].highwatermark = GetInteger64();

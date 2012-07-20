@@ -110,7 +110,7 @@ unlinkdUnlink(const char *path)
 
             for (i = 0; i < bytes_read; ++i)
                 if ('\n' == rbuf[i])
-                    queuelen--;
+                    --queuelen;
 
             assert(queuelen >= 0);
         }

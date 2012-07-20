@@ -67,8 +67,7 @@ ssl_ask_password_cb(char *buf, int size, int rwflag, void *userdata)
         len = strlen(buf);
 
     while (len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r'))
-
-        len--;
+        --len;
 
     buf[len] = '\0';
 

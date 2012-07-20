@@ -987,7 +987,7 @@ ipcacheUnlockEntry(ipcache_entry * i)
         return;
     }
 
-    i->locks--;
+    -- i->locks;
 
     if (ipcacheExpiredEntry(i))
         ipcacheRelease(i);
@@ -1123,7 +1123,7 @@ ipcacheMarkGoodAddr(const char *name, const Ip::Address &addr)
 
     ia->bad_mask[k] = FALSE;
 
-    ia->badcount--;
+    -- ia->badcount;
 
     debugs(14, 2, "ipcacheMarkGoodAddr: " << name << " " << addr );
 }

@@ -507,7 +507,7 @@ neighborRemove(peer * target)
     if (p) {
         *P = p->next;
         cbdataFree(p);
-        Config.npeers--;
+        --Config.npeers;
     }
 
     first_ping = Config.peers;
@@ -1267,7 +1267,7 @@ peerConnectFailedSilent(peer * p)
         return;
     }
 
-    p->tcp_up--;
+    -- p->tcp_up;
 
     if (!p->tcp_up) {
         debugs(15, 1, "Detected DEAD " << neighborTypeStr(p) << ": " << p->name);
@@ -1341,7 +1341,7 @@ peerProbeConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int
         peerConnectFailedSilent(p);
     }
 
-    p->testing_now--;
+    -- p->testing_now;
     conn->close();
     // TODO: log this traffic.
 }

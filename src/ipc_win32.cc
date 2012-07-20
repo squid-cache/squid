@@ -832,7 +832,7 @@ ipc_thread_2(void *in_params)
             if ((buf2[x - 1] == '\n') && (buf2[x - 2] == '\r')) {
                 buf2[x - 2] = '\n';
                 buf2[x - 1] = '\0';
-                x--;
+                --x;
             }
         }
 

@@ -1923,7 +1923,7 @@ findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end)
         assert(end);
     }
 
-    for (; end > uriAndHTTPVersion; end--) {
+    for (; end > uriAndHTTPVersion; --end) {
         if (*end == '\n' || *end == '\r')
             continue;
 
@@ -2713,7 +2713,7 @@ connStripBufferWhitespace (ConnStateData * conn)
 {
     while (conn->in.notYetUsed > 0 && xisspace(conn->in.buf[0])) {
         memmove(conn->in.buf, conn->in.buf + 1, conn->in.notYetUsed - 1);
-        --conn->in.notYetUsed;
+        -- conn->in.notYetUsed;
     }
 }
 

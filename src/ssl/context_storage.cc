@@ -90,7 +90,7 @@ void Ssl::LocalContextStorage::remove(char const * host_name)
 void Ssl::LocalContextStorage::purgeOne()
 {
     QueueIterator i = lru_queue.end();
-    i--;
+    --i;
     if (i != lru_queue.end()) {
         remove((*i)->host_name.c_str());
     }

@@ -479,11 +479,11 @@ clientFollowXForwardedForCheck(allow_t answer, void *data)
         */
         /* skip trailing space and commas */
         while (l > 0 && (p[l-1] == ',' || xisspace(p[l-1])))
-            l--;
+            --l;
         request->x_forwarded_for_iterator.cut(l);
         /* look for start of last item in list */
         while (l > 0 && ! (p[l-1] == ',' || xisspace(p[l-1])))
-            l--;
+            --l;
         asciiaddr = p+l;
         if ((addr = asciiaddr)) {
             request->indirect_client_addr = addr;

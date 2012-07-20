@@ -201,7 +201,7 @@ cacheIndexScan(CacheIndex * idx, const char *fname, FILE * file)
                 assert(idx->count);
                 hash_remove_link(idx->hash, (hash_link *) olde);
                 cacheEntryDestroy(olde);
-                idx->count--;
+                -- idx->count;
             }
         } else {
             fprintf(stderr, "%s:%d: unknown swap log action\n", fname, count);
