@@ -567,25 +567,7 @@ RebuildState::rebuildFromSwapLog()
         currentEntry (Store::Root().get(swapData.key));
 
         if (currentEntry() != NULL && swapData.lastref >= e->lastref) {
-            /*
-             * Make sure we don't unlink the file, it might be
-             * in use by a subsequent entry.  Also note that
-             * we don't have to subtract from cur_size because
-             * adding to cur_size happens in the cleanup procedure.
-             */
-            currentEntry()->expireNow();
-            currentEntry()->releaseRequest();
-
-            if (currentEntry()->swap_filen > -1) {
-                UFSSwapDir *sdForThisEntry = dynamic_cast<UFSSwapDir *>(INDEXSD(currentEntry()->swap_dirn));
-                assert (sdForThisEntry);
-                sdForThisEntry->replacementRemove(currentEntry());
-                sdForThisEntry->mapBitReset(currentEntry()->swap_filen);
-                currentEntry()->swap_filen = -1;
-                currentEntry()->swap_dirn = -1;
-            }
-
-            currentEntry()->release();
+            undoAdd();
             counts.objcount--;
             counts.cancelcount++;
         }
@@ -682,19 +664,8 @@ RebuildState::rebuildFromSwapLog()
     } else if (currentEntry()) {
         /* key already exists, this swapfile not being used */
         /* junk old, load new */
-        currentEntry()->expireNow();
-        currentEntry()->releaseRequest();
-
-        if (currentEntry()->swap_filen > -1) {
-            UFSSwapDir *sdForThisEntry = dynamic_cast<UFSSwapDir *>(INDEXSD(currentEntry()->swap_dirn));
-            sdForThisEntry->replacementRemove(currentEntry());
-            /* Make sure we don't actually unlink the file */
-            sdForThisEntry->mapBitReset(currentEntry()->swap_filen);
-            currentEntry()->swap_filen = -1;
-            currentEntry()->swap_dirn = -1;
-        }
-
-        currentEntry()->release();
+        undoAdd();
+        counts.objcount--;
         counts.dupcount++;
     } else {
         /* URL doesnt exist, swapfile not in use */
@@ -716,6 +687,27 @@ RebuildState::rebuildFromSwapLog()
                                     (int) flags.clean));
 
     storeDirSwapLog(currentEntry(), SWAP_LOG_ADD);
+}
+
+/// undo the effects of adding an entry in rebuildFromSwapLog()
+void
+RebuildState::undoAdd()
+{
+    StoreEntry *added = currentEntry();
+    assert(added);
+    currentEntry(NULL);
+
+    // TODO: Why bother with these two if we are going to release?!
+    added->expireNow();
+    added->releaseRequest();
+
+    if (added->swap_filen > -1) {
+        UFSSwapDir *sde = dynamic_cast<UFSSwapDir *>(INDEXSD(added->swap_dirn));
+        assert(sde);
+        sde->undoAddDiskRestore(added);
+    }
+
+    added->release();
 }
 
 int
