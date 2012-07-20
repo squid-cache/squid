@@ -1037,14 +1037,16 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
                     assert( xstrncpy(position, "&quot;", sizeof(localbuf) + (position-localbuf)) );
                     position += 6;
                 } else {
-                    *(position++) = ch;
+                    *position = ch;
+                    ++position;
                 }
             }
             position += strlen (position);
             *position++ = '\"';
         }
 
-        *position++ = '>';
+        *position = '>';
+        ++position;
         *position = '\0';
 
         addLiteral (localbuf, position - localbuf);

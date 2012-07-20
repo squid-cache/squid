@@ -375,7 +375,7 @@ main(int argc, char *argv[])
 #endif
             case 'v':
                 /* undocumented: may increase verb-level by giving more -v's */
-                opt_verbose++;
+                ++opt_verbose;
                 break;
 
             case '?':		/* usage */
@@ -564,7 +564,7 @@ main(int argc, char *argv[])
     }
     loops = ping ? pcount : 1;
 
-    for (i = 0; loops == 0 || i < loops; i++) {
+    for (i = 0; loops == 0 || i < loops; ++i) {
         int fsize = 0;
         struct addrinfo *AI = NULL;
 
