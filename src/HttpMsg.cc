@@ -76,7 +76,7 @@ httpMsgIsolateHeaders(const char **parse_start, int l, const char **blk_start, c
         assert(**blk_end == '\n');
 
         while (*(*blk_end - 1) == '\r')
-            (*blk_end)--;
+            --(*blk_end);
 
         assert(*(*blk_end - 1) == '\n');
 

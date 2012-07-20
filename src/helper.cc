@@ -599,7 +599,7 @@ helperShutdown(helper * hlp)
         }
 
         assert(hlp->childs.n_active > 0);
-        hlp->childs.n_active--;
+        -- hlp->childs.n_active;
         srv->flags.shutdown = 1;	/* request it to shut itself down */
 
         if (srv->flags.closing) {
@@ -636,7 +636,7 @@ helperStatefulShutdown(statefulhelper * hlp)
         }
 
         assert(hlp->childs.n_active > 0);
-        hlp->childs.n_active--;
+        -- hlp->childs.n_active;
         srv->flags.shutdown = 1;	/* request it to shut itself down */
 
         if (srv->flags.busy) {
@@ -709,11 +709,11 @@ helperServerFree(helper_server *srv)
     dlinkDelete(&srv->link, &hlp->servers);
 
     assert(hlp->childs.n_running > 0);
-    hlp->childs.n_running--;
+    -- hlp->childs.n_running;
 
     if (!srv->flags.shutdown) {
         assert(hlp->childs.n_active > 0);
-        hlp->childs.n_active--;
+        -- hlp->childs.n_active;
         debugs(84, DBG_CRITICAL, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " exited");
 
         if (hlp->childs.needNew() > 0) {
@@ -770,11 +770,11 @@ helperStatefulServerFree(helper_stateful_server *srv)
     dlinkDelete(&srv->link, &hlp->servers);
 
     assert(hlp->childs.n_running > 0);
-    hlp->childs.n_running--;
+    -- hlp->childs.n_running;
 
     if (!srv->flags.shutdown) {
         assert( hlp->childs.n_active > 0);
-        hlp->childs.n_active--;
+        -- hlp->childs.n_active;
         debugs(84, 0, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " exited");
 
         if (hlp->childs.needNew() > 0) {
@@ -822,7 +822,7 @@ static void helperReturnBuffer(int request_number, helper_server * srv, helper *
         if (cbdataReferenceValidDone(r->data, &cbdata))
             callback(cbdata, msg);
 
-        srv->stats.pending--;
+        -- srv->stats.pending;
 
         ++ hlp->stats.replies;
 
@@ -1116,7 +1116,7 @@ Dequeue(helper * hlp)
         r = (helper_request *)link->data;
         dlinkDelete(link, &hlp->queue);
         memFree(link, MEM_DLINK_NODE);
-        hlp->stats.queue_size--;
+        -- hlp->stats.queue_size;
     }
 
     return r;
@@ -1132,7 +1132,7 @@ StatefulDequeue(statefulhelper * hlp)
         r = (helper_stateful_request *)link->data;
         dlinkDelete(link, &hlp->queue);
         memFree(link, MEM_DLINK_NODE);
-        hlp->stats.queue_size--;
+        -- hlp->stats.queue_size;
     }
 
     return r;

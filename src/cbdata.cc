@@ -358,7 +358,7 @@ cbdataInternalFree(void *p)
         return NULL;
     }
 
-    cbdataCount--;
+    --cbdataCount;
     debugs(45, 9, "cbdataFree: Freeing " << p);
 #if USE_CBDATA_DEBUG
 
@@ -460,12 +460,12 @@ cbdataInternalUnlock(const void *p)
 
     assert(c->locks > 0);
 
-    c->locks--;
+    -- c->locks;
 
     if (c->valid || c->locks)
         return;
 
-    cbdataCount--;
+    --cbdataCount;
 
     debugs(45, 9, "cbdataUnlock: Freeing " << p);
 

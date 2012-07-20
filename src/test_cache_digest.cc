@@ -465,7 +465,7 @@ accessLogReader(FileIterator * fi)
     }
 
     while (*url)
-        url--;
+        --url;
 
     ++url;
 
@@ -515,7 +515,7 @@ cachePurge(Cache * cache, storeSwapLogData * s, int update_digest)
 
         cacheEntryDestroy(olde);
 
-        cache->count--;
+        -- cache->count;
     }
 }
 

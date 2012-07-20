@@ -598,7 +598,8 @@ icpHandleUdp(int sock, void *data)
     int max = INCOMING_UDP_MAX;
     Comm::SetSelect(sock, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
 
-    while (max--) {
+    while (max) {
+        --max;
         len = comm_udp_recvfrom(sock,
                                 buf,
                                 SQUID_UDP_SO_RCVBUF - 1,

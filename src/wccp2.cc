@@ -1831,7 +1831,7 @@ wccp2AssignBuckets(void *voidnotused)
                             int n;
                             unsigned long step;
 
-                            for (n = num_caches; n; n--) {
+                            for (n = num_caches; n; --n) {
                                 ++cache;
 
                                 if (cache >= num_caches)

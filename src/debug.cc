@@ -484,7 +484,7 @@ _db_rotate_log(void)
      */
     /* Rotate numbers 0 through N up one */
     for (int i = Debug::rotateNumber; i > 1;) {
-        i--;
+        --i;
         snprintf(from, MAXPATHLEN, "%s.%d", debug_log_file, i - 1);
         snprintf(to, MAXPATHLEN, "%s.%d", debug_log_file, i);
 #if _SQUID_MSWIN_
@@ -718,7 +718,7 @@ ctx_print(void)
     }
 
     /* unlock */
-    Ctx_Lock--;
+    --Ctx_Lock;
 }
 
 /* checks for nulls and overflows */

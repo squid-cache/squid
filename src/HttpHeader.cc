@@ -571,7 +571,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
             ++field_ptr;	/* Move to next line */
 
             if (field_end > this_line && field_end[-1] == '\r') {
-                field_end--;	/* Ignore CR LF */
+                --field_end;	/* Ignore CR LF */
 
                 if (owner == hoRequest && field_end > this_line) {
                     bool cr_only = true;
@@ -1518,7 +1518,7 @@ HttpHeaderEntry::~HttpHeaderEntry()
 
     assert(Headers[id].stat.aliveCount);
 
-    Headers[id].stat.aliveCount--;
+    -- Headers[id].stat.aliveCount;
 
     id = HDR_BAD_HDR;
 }
@@ -1551,7 +1551,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
                "NOTICE: Whitespace after header name in '" << getStringPrefix(field_start, field_end) << "'");
 
         while (name_len > 0 && xisspace(field_start[name_len - 1]))
-            name_len--;
+            --name_len;
 
         if (!name_len)
             return NULL;
@@ -1584,7 +1584,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
         ++value_start;
 
     while (value_start < field_end && xisspace(field_end[-1]))
-        field_end--;
+        --field_end;
 
     if (field_end - value_start > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */

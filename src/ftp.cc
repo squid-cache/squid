@@ -1124,7 +1124,7 @@ FtpStateData::parseListing()
     end = sbuf + len - 1;
 
     while (*end != '\r' && *end != '\n' && end > sbuf)
-        end--;
+        --end;
 
     usable = end - sbuf;
 
@@ -1652,7 +1652,7 @@ FtpStateData::ftpParseControlReply(char *buf, size_t len, int *codep, size_t *us
     end = sbuf + len - 1;
 
     while (*end != '\r' && *end != '\n' && end > sbuf)
-        end--;
+        --end;
 
     usable = end - sbuf;
 

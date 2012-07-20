@@ -1150,7 +1150,7 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
 
         if (!q->need_vc) {
             q->need_vc = 1;
-            q->nsends--;
+            -- q->nsends;
             idnsSendQuery(q);
         } else {
             // Strange: A TCP DNS response with the truncation bit (TC) set.
@@ -1263,7 +1263,8 @@ idnsRead(int fd, void *data)
      */
     Ip::Address bugbypass;
 
-    while (max--) {
+    while (max) {
+        --max;
         len = comm_udp_recvfrom(fd, rbuf, SQUID_UDP_SO_RCVBUF, 0, bugbypass);
 
         from = bugbypass; // BUG BYPASS. see notes above.
