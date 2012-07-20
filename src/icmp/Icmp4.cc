@@ -117,7 +117,8 @@ Icmp4::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     icmp->icmp_code = 0;
     icmp->icmp_cksum = 0;
     icmp->icmp_id = icmp_ident;
-    icmp->icmp_seq = (unsigned short) icmp_pkts_sent++;
+    icmp->icmp_seq = (unsigned short) icmp_pkts_sent;
+    ++icmp_pkts_sent;
 
     // Construct ICMP packet data content
     echo = (icmpEchoData *) (icmp + 1);

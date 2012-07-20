@@ -1291,7 +1291,7 @@ idnsRead(int fd, void *data)
         fd_bytes(fd, len, FD_READ);
 
         assert(N);
-        (*N)++;
+        ++(*N);
 
         debugs(78, 3, "idnsRead: FD " << fd << ": received " << len << " bytes from " << from);
 

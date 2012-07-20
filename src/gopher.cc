@@ -492,7 +492,8 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
         case gopher_ds::HTML_DIR: {
             tline = line;
-            gtype = *tline++;
+            gtype = *tline;
+            ++tline;
             name = tline;
             selector = strchr(tline, TAB);
 

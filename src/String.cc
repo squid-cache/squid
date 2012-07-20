@@ -416,7 +416,9 @@ strwordtok(char *buf, char **t)
                 goto done;
             }
 
-            *d++ = *p++;
+            *d = *p;
+            ++d;
+            ++p;
             break;
         }
     }
