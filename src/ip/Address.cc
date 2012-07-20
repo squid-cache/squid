@@ -90,7 +90,7 @@ Ip::Address::GetCIDR() const
             continue ;  /* A short-cut */
         }
 
-        for (caught = 0 , bit= 7 ; !caught && (bit <= 7); bit--) {
+        for (caught = 0 , bit= 7 ; !caught && (bit <= 7); --bit) {
             caught = ((byte & 0x80) == 0x00);  /* Found a '0' at 'bit' ? */
 
             if (!caught)
@@ -151,7 +151,7 @@ Ip::Address::ApplyMask(const unsigned int cidr, int mtype)
 
     p = (uint8_t*)(&m_SocketAddr.sin6_addr) + 15;
 
-    for (; clearbits>0 && p >= (uint8_t*)&m_SocketAddr.sin6_addr ; p-- ) {
+    for (; clearbits>0 && p >= (uint8_t*)&m_SocketAddr.sin6_addr ; --p ) {
         if (clearbits < 8) {
             *p &= ((0xFF << clearbits) & 0xFF);
             clearbits = 0;
@@ -315,7 +315,7 @@ Ip::Address::GetReverseString6(char buf[MAX_IPSTRLEN], const struct in6_addr &da
 
     /* Compile Err: 'Too many arguments for format. */
 
-    for (int i = 15; i >= 0; i--, p+=4) {
+    for (int i = 15; i >= 0; --i, p+=4) {
         snprintf(p, 5, "%x.%x.", ((r[i])&0xf), (((r[i])>>4)&0xf) );
     }
 

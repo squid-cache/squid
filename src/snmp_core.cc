@@ -654,7 +654,7 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
     }
 
     if ((mibTreeEntry) && (mibTreeEntry->parsefunction)) {
-        count--;
+        --count;
         nextoid = snmpTreeSiblingEntry(Current[count], count, mibTreeEntry->parent);
         if (nextoid) {
             debugs(49, 5, "snmpTreeNext: Next OID found for sibling" << nextoid );
@@ -664,7 +664,7 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
             debugs(49, 5, "snmpTreeNext: Attempting to recurse up for next object");
 
             while (!nextoid) {
-                count--;
+                --count;
 
                 if (mibTreeEntry->parent->parent) {
                     nextoid = mibTreeEntry->parent;

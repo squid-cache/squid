@@ -109,7 +109,7 @@ storeCleanup(void *datanotused)
         debugs(20, 1, "  Completed Validation Procedure");
         debugs(20, 1, "  Validated " << validated << " Entries");
         debugs(20, 1, "  store_swap_size = " << Store::Root().currentSize() / 1024.0 << " KB");
-        StoreController::store_dirs_rebuilding--;
+        --StoreController::store_dirs_rebuilding;
         assert(0 == StoreController::store_dirs_rebuilding);
 
         if (opt_store_doublecheck)

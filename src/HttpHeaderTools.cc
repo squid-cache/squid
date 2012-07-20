@@ -279,7 +279,7 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
 
     /* rtrim */
     while (len > 0 && xisspace((*item)[len - 1]))
-        len--;
+        --len;
 
     if (ilen)
         *ilen = len;

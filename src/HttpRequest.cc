@@ -312,7 +312,7 @@ HttpRequest::parseFirstLine(const char *start, const char *end)
         end = ver - 1;
 
         while (xisspace(*end)) // find prev non-space
-            end--;
+            --end;
 
         ++end;                 // back to space
 

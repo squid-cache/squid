@@ -97,7 +97,7 @@ fdUpdateBiggest(int fd, int opening)
     assert(!opening);
 
     while (Biggest_FD >= 0 && !fd_table[Biggest_FD].flags.open)
-        Biggest_FD--;
+        --Biggest_FD;
 }
 
 void
@@ -118,7 +118,7 @@ fd_close(int fd)
     Comm::SetSelect(fd, COMM_SELECT_WRITE, NULL, NULL, 0);
     F->flags.open = 0;
     fdUpdateBiggest(fd, 0);
-    Number_FD--;
+    --Number_FD;
     *F = fde();
 }
 

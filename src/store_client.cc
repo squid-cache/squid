@@ -701,7 +701,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     }
 
     dlinkDelete(&sc->node, &mem->clients);
-    mem->nclients--;
+    -- mem->nclients;
 
     if (e->store_status == STORE_OK && e->swap_status != SWAPOUT_DONE)
         e->swapOut();

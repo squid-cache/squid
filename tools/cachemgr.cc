@@ -935,14 +935,14 @@ main(int argc, char *argv[])
             } else if (argc > 2) {
                 value = args[2];
                 ++args;
-                argc--;
+                --argc;
             } else
                 value = "";
 #endif
             break;
         }
         ++args;
-        argc--;
+        --argc;
     }
 
     req = read_request();
