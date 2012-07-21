@@ -3312,8 +3312,9 @@ add_http_port(char *portspec)
     http_port_list *s = create_http_port(portspec);
     // we may need to merge better of the above returns a list with clones
     assert(s->next == NULL);
-    s->next = Config.Sockaddr.http;
-    Config.Sockaddr.http = s;
+    s->next = cbdataReference(Config.Sockaddr.http);
+    cbdataReferenceDone(Config.Sockaddr.http);
+    Config.Sockaddr.http = cbdataReference(s);
 }
 
 http_port_list *
@@ -3385,7 +3386,7 @@ parse_http_port_list(http_port_list ** head)
 
     if (Ip::EnableIpv6&IPV6_SPECIAL_SPLITSTACK && s->s.IsAnyAddr()) {
         // clone the port options from *s to *(s->next)
-        s->next = clone_http_port_list(s);
+        s->next = cbdataReference(clone_http_port_list(s));
         s->next->s.SetIPv4();
         debugs(3, 3, "http(s)_port: clone wildcard address for split-stack: " << s->s << " and " << s->next->s);
     }
@@ -3393,7 +3394,7 @@ parse_http_port_list(http_port_list ** head)
     while (*head)
         head = &(*head)->next;
 
-    *head = s;
+    *head = cbdataReference(s);
 }
 
 static void
@@ -3531,7 +3532,7 @@ free_http_port_list(http_port_list ** head)
 
     while ((s = *head) != NULL) {
         *head = s->next;
-        delete s;
+        cbdataReferenceDone(s);
     }
 }
 
