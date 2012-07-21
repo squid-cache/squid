@@ -129,18 +129,38 @@ void FwdState::start(Pointer aSelf)
     const bool isIntercepted = request && !request->flags.redirected && (request->flags.intercepted || request->flags.spoof_client_ip);
     const bool useOriginalDst = Config.onoff.client_dst_passthru || (request && !request->flags.hostVerified);
     if (isIntercepted && useOriginalDst) {
-        Comm::ConnectionPointer p = new Comm::Connection();
-        p->remote = clientConn->local;
-        p->peerType = ORIGINAL_DST;
-        getOutgoingAddress(request, p);
-        serverDestinations.push_back(p);
-
+        selectPeerForIntercepted();
         // destination "found". continue with the forwarding.
         startConnectionOrFail();
     } else {
         // do full route options selection
         peerSelect(&serverDestinations, request, entry, fwdPeerSelectionCompleteWrapper, this);
     }
+}
+
+/// bypasses peerSelect() when dealing with intercepted requests
+void
+FwdState::selectPeerForIntercepted()
+{
+    // use pinned connection if available
+    Comm::ConnectionPointer p;
+    if (ConnStateData *client = request->pinnedConnection())
+        p = client->validatePinnedConnection(request, NULL);
+
+    if (p != NULL && Comm::IsConnOpen(p)) {
+        debugs(17, 3, HERE << "reusing a pinned conn: " << *p);
+        /* duplicate peerSelectPinned() effects */
+        p->peerType = PINNED;
+        entry->ping_status = PING_DONE;     /* Skip ICP */
+    } else {
+        p = new Comm::Connection();
+        p->peerType = ORIGINAL_DST;
+        p->remote = clientConn->local;
+        getOutgoingAddress(request, p);
+        debugs(17, 3, HERE << "opening a new conn: " << *p);
+    }
+
+    serverDestinations.push_back(p);
 }
 
 void
