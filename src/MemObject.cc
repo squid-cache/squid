@@ -438,10 +438,6 @@ MemObject::mostBytesAllowed() const
 
 #endif
 
-        if (sc->getType() != STORE_MEM_CLIENT)
-            /* reading off disk */
-            continue;
-
         j = sc->delayId.bytesWanted(0, sc->copyInto.length);
 
         if (j > jmax) {
