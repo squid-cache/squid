@@ -105,7 +105,12 @@ MemObject::~MemObject()
     fatal ("Not implemented");
 }
 
-int MemObject::mostBytesWanted(int max, bool ignoreDelayPools) const STUB_RETVAL(-1)
+int
+MemObject::mostBytesWanted(int max, bool ignoreDelayPools) const
+{
+    fatal ("Not implemented");
+    return -1;
+}
 
 #if DELAY_POOLS
 DelayId
