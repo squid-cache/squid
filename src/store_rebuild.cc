@@ -74,6 +74,7 @@ storeCleanup(void *datanotused)
 
     size_t statCount = 500;
 
+    // TODO: Avoid the loop (and ENTRY_VALIDATED) unless opt_store_doublecheck.
     while (statCount-- && !currentSearch->isDone() && currentSearch->next()) {
         StoreEntry *e;
 
