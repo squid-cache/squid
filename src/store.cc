@@ -257,7 +257,7 @@ StoreEntry::delayAwareRead(int fd, char *buf, int len, AsyncCall::Pointer callba
 }
 
 size_t
-StoreEntry::bytesWanted (Range<size_t> const aRange) const
+StoreEntry::bytesWanted (Range<size_t> const aRange, bool ignoreDelayPools) const
 {
     if (mem_obj == NULL)
         return aRange.end;
@@ -268,14 +268,10 @@ StoreEntry::bytesWanted (Range<size_t> const aRange) const
 
 #endif
 
-    /* Always read *something* here - we haven't got the header yet */
-    if (EBIT_TEST(flags, ENTRY_FWD_HDR_WAIT))
-        return aRange.end;
-
     if (!mem_obj->readAheadPolicyCanRead())
         return 0;
 
-    return mem_obj->mostBytesWanted(aRange.end);
+    return mem_obj->mostBytesWanted(aRange.end, ignoreDelayPools);
 }
 
 bool

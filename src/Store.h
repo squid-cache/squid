@@ -79,7 +79,7 @@ public:
     virtual void write (StoreIOBuffer);
     virtual _SQUID_INLINE_ bool isEmpty() const;
     virtual bool isAccepting() const;
-    virtual size_t bytesWanted(Range<size_t> const) const;
+    virtual size_t bytesWanted(Range<size_t> const aRange, bool ignoreDelayPool = false) const;
     virtual void complete();
     virtual store_client_t storeClientType() const;
     virtual char const *getSerialisedMetaData();
@@ -224,7 +224,7 @@ public:
 
     bool isEmpty () const {return true;}
 
-    virtual size_t bytesWanted(Range<size_t> const aRange) const { return aRange.end; }
+    virtual size_t bytesWanted(Range<size_t> const aRange, bool ignoreDelayPool = false) const { return aRange.end; }
 
     void operator delete(void *address);
     void complete() {}
