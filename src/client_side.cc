@@ -2634,7 +2634,6 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     }
 
     request->clientConnectionManager = conn;
-    request->al = http->al;
 
     request->flags.accelerated = http->flags.accel;
     request->flags.sslBumped = conn->switchedToHttps();

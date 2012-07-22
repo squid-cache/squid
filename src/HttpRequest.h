@@ -55,8 +55,6 @@ extern void httpRequestPack(void *obj, Packer *p);
 
 class HttpHdrRange;
 class DnsLookupDetails;
-class AccessLogEntry;
-typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 
 class HttpRequest: public HttpMsg
 {
@@ -243,12 +241,6 @@ public:
      * ie 1xx forwarding or connection pinning state changes
      */
     CbcPointer<ConnStateData> clientConnectionManager;
-
-    /**
-     * The AccessLogEntry for the current ClientHttpRequest/Server HttpRequest
-     * pair, if known;
-     */
-    AccessLogEntryPointer al;
 
     int64_t getRangeOffsetLimit(); /* the result of this function gets cached in rangeOffsetLimit */
 
