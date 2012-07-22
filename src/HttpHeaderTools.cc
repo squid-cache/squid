@@ -628,7 +628,7 @@ HeaderManglers::find(const HttpHeaderEntry &e) const
 }
 
 void
-httpHdrAdd(HttpHeader *heads, HttpRequest *request, HeaderWithAclList &headersAdd)
+httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headersAdd)
 {
     ACLFilledChecklist checklist(NULL, request, NULL);
 
@@ -637,9 +637,9 @@ httpHdrAdd(HttpHeader *heads, HttpRequest *request, HeaderWithAclList &headersAd
             const char *fieldValue = NULL;
             MemBuf mb;
             if (hwa->quoted) {
-                if (request->al != NULL) {
+                if (al != NULL) {
                     mb.init();
-                    hwa->valueFormat->assemble(mb, request->al, 0);
+                    hwa->valueFormat->assemble(mb, al, 0);
                     fieldValue = mb.content();
                 }
             } else {
