@@ -1145,7 +1145,8 @@ UFSSwapDir::DirClean(int swap_index)
                 if (UFSSwapDir::FilenoBelongsHere(fn, D0, D1, D2))
                     continue;
 
-        files[k++] = swapfileno;
+        files[k] = swapfileno;
+        ++k;
     }
 
     closedir(dir_pointer);
@@ -1201,7 +1202,8 @@ UFSSwapDir::CleanEvent(void *unused)
 
             assert (usd);
 
-            UFSDirToGlobalDirMapping[n++] = i;
+            UFSDirToGlobalDirMapping[n] = i;
+            ++n;
 
             j += (usd->l1 * usd->l2);
         }

@@ -140,8 +140,10 @@ HttpHdrSc::parse(const String * str)
         }
 
         /* decrease ilen to still match the token for ';' qualified non '=' statments */
-        else if ((p = strchr(item, ';')) && (p - item < ilen))
-            ilen = p++ - item;
+        else if ((p = strchr(item, ';')) && (p - item < ilen)) {
+            ilen = p - item;
+            ++p;
+        }
 
         /* find type */
         /* TODO: use a type-safe map-based lookup */

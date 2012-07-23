@@ -596,8 +596,10 @@ HttpHeader::parse(const char *header_start, const char *header_end)
                 if (Config.onoff.relaxed_header_parser) {
                     char *p = (char *) this_line;	/* XXX Warning! This destroys original header content and violates specifications somewhat */
 
-                    while ((p = (char *)memchr(p, '\r', field_end - p)) != NULL)
-                        *p++ = ' ';
+                    while ((p = (char *)memchr(p, '\r', field_end - p)) != NULL) {
+                        *p = ' ';
+                        ++p;
+                    }
                 } else
                     goto reset;
             }
