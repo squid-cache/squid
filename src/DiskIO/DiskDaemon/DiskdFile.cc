@@ -75,7 +75,8 @@ DiskdFile::DiskdFile(char const *aPath, DiskdIOStrategy *anIO) : errorOccured (f
     assert (aPath);
     debugs(79, 3, "DiskdFile::DiskdFile: " << aPath);
     path_ = xstrdup (aPath);
-    id = diskd_stats.sio_id++;
+    id = diskd_stats.sio_id;
+    ++diskd_stats.sio_id;
 }
 
 DiskdFile::~DiskdFile()
