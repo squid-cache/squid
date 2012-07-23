@@ -663,16 +663,16 @@ This section gives a thorough account of those changes in three categories:
 	   serve objects more stale than this even if it failed to validate the object.
 
 	<tag>reply_header_access</tag>
-	<p>Added support for custom header header names.</p>
+	<p>Added support for custom response header names.</p>
 
 	<tag>request_header_access</tag>
-	<p>Added support for custom header header names.</p>
+	<p>Added support for custom request header names.</p>
 
 	<tag>reply_header_replace</tag>
-	<p>Added support for custom header header names.</p>
+	<p>Added support for custom response header names.</p>
 
 	<tag>request_header_replace</tag>
-	<p>Added support for custom header header names.</p>
+	<p>Added support for custom request header names.</p>
 
 	<tag>tcp_outgoing_address</tag>
 	<p>This parameter is now compatible with persistent server connections.

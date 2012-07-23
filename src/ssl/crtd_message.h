@@ -14,6 +14,8 @@
 
 namespace Ssl
 {
+class CertificateProperties;
+
 /**
  * This class is responsible for composing and parsing messages destined to, or comming
  * from an ssl_crtd server. Format of these mesages is:
@@ -61,10 +63,23 @@ public:
          The other multistring part of body.  \endverbatim
     */
     void composeBody(BodyParams const & map, std::string const & other_part);
+
+    /// orchestrates entire request parsing
+    bool parseRequest(Ssl::CertificateProperties &, std::string &error);
+    void composeRequest(Ssl::CertificateProperties const &); // throws
+
     /// String code for "new_certificate" messages
     static const std::string code_new_certificate;
     /// Parameter name for passing hostname
     static const std::string param_host;
+    /// Parameter name for passing SetValidAfter cert adaptation variable
+    static const std::string param_SetValidAfter;
+    /// Parameter name for passing SetValidBefore cert adaptation variable
+    static const std::string param_SetValidBefore;
+    /// Parameter name for passing SetCommonName cert adaptation variable
+    static const std::string param_SetCommonName;
+    /// Parameter name for passing signing algorithm
+    static const std::string param_Sign;
 private:
     enum ParseState {
         BEFORE_CODE,

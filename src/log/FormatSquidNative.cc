@@ -41,7 +41,7 @@
 #include "SquidTime.h"
 
 void
-Log::Format::SquidNative(AccessLogEntry * al, Logfile * logfile)
+Log::Format::SquidNative(const AccessLogEntry::Pointer &al, Logfile * logfile)
 {
     char hierHost[MAX_IPSTRLEN];
 

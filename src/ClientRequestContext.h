@@ -47,7 +47,7 @@ public:
      */
     bool sslBumpAccessCheck();
     /// The callback function for ssl-bump access check list
-    void sslBumpAccessCheckDone(bool doSslBump);
+    void sslBumpAccessCheckDone(const allow_t &answer);
 #endif
 
     ClientHttpRequest *http;
@@ -68,6 +68,8 @@ public:
 #if USE_SSL
     bool sslBumpCheckDone;
 #endif
+    ErrorState *error; ///< saved error page for centralized/delayed processing
+    bool readNextRequest; ///< whether Squid should read after error handling
 
 private:
     CBDATA_CLASS(ClientRequestContext);

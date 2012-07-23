@@ -3,6 +3,8 @@
 
 /* forward decls */
 
+class AccessLogEntry;
+typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class ErrorState;
 class HttpRequest;
 
@@ -32,6 +34,9 @@ public:
     ~FwdState();
     static void initModule();
 
+    /// Initiates request forwarding to a peer or origin server.
+    static void Start(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *, const AccessLogEntryPointer &alp);
+    /// Same as Start() but no master xaction info (AccessLogEntry) available.
     static void fwdStart(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *);
 
     /// This is the real beginning of server connection. Call it whenever
@@ -66,9 +71,10 @@ public:
 
 private:
     // hidden for safer management of self; use static fwdStart
-    FwdState(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *);
+    FwdState(const Comm::ConnectionPointer &client, StoreEntry *, HttpRequest *, const AccessLogEntryPointer &alp);
     void start(Pointer aSelf);
 
+    void selectPeerForIntercepted();
     static void logReplyStatus(int tries, http_status status);
     void doneWithRetries();
     void completed();
@@ -79,6 +85,8 @@ private:
 public:
     StoreEntry *entry;
     HttpRequest *request;
+    AccessLogEntryPointer al; ///< info for the future access.log entry
+
     static void abort(void*);
 
 private:

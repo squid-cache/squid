@@ -582,10 +582,11 @@ ErrorState::ErrorState(err_type t, http_status status, HttpRequest * req) :
         callback(NULL),
         callback_data(NULL),
         request_hdrs(NULL),
-        err_msg(NULL)
+        err_msg(NULL),
 #if USE_SSL
-        , detail(NULL)
+        detail(NULL),
 #endif
+        detailCode(ERR_DETAIL_NONE)
 {
     memset(&flags, 0, sizeof(flags));
     memset(&ftp, 0, sizeof(ftp));
@@ -596,7 +597,6 @@ ErrorState::ErrorState(err_type t, http_status status, HttpRequest * req) :
     if (req != NULL) {
         request = HTTPMSGLOCK(req);
         src_addr = req->client_addr;
-        request->detailError(type, ERR_DETAIL_NONE);
     }
 }
 
@@ -647,13 +647,6 @@ errorSend(const Comm::ConnectionPointer &conn, ErrorState * err)
     HttpReply *rep;
     debugs(4, 3, HERE << conn << ", err=" << err);
     assert(Comm::IsConnOpen(conn));
-    /*
-     * ugh, this is how we make sure error codes get back to
-     * the client side for logging and error tracking.
-     */
-
-    if (err->request)
-        err->request->detailError(err->type, err->xerrno);
 
     /* moved in front of errorBuildBuf @?@ */
     err->flags.flag_cbdata = 1;
@@ -1222,6 +1215,22 @@ ErrorState::BuildHttpReply()
 
         rep->body.setMb(content);
         /* do not memBufClean() or delete the content, it was absorbed by httpBody */
+    }
+
+    // Make sure error codes get back to the client side for logging and
+    // error tracking.
+    if (request) {
+        int edc = ERR_DETAIL_NONE; // error detail code
+#if USE_SSL
+        if (detail)
+            edc = detail->errorNo();
+        else
+#endif
+            if (detailCode)
+                edc = detailCode;
+            else
+                edc = xerrno;
+        request->detailError(type, edc);
     }
 
     return rep;

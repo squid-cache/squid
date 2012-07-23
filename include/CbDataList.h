@@ -44,8 +44,14 @@ public:
     CbDataList (C const &);
     ~CbDataList();
 
+    /// If element is already in the list, returns false.
+    /// Otherwise, adds the element to the end of the list and returns true.
+    /// Exists to avoid double iteration of find() and push() combo.
+    bool push_back_unique(C const &element);
     bool find(C const &)const;
     bool findAndTune(C const &);
+    /// Iterates the entire list to return the last element holder.
+    CbDataList *tail();
     CbDataList *next;
     C element;
     bool empty() const { return this == NULL; }
@@ -124,6 +130,30 @@ CbDataList<C>::~CbDataList()
     if (next)
         delete next;
 }
+
+template <class C>
+bool
+CbDataList<C>::push_back_unique(C const &toAdd)
+{
+    CbDataList<C> *last;
+    for (last = this; last->next; last = last->next) {
+        if (last->element == toAdd)
+            return false;
+    }
+
+    last->next = new CbDataList<C>(toAdd);
+    return true;
+}
+
+template <class C>
+CbDataList<C> *
+CbDataList<C>::tail()
+{
+    CbDataList<C> *last;
+    for (last = this; last->next; last = last->next);
+    return last;
+}
+
 
 template <class C>
 bool

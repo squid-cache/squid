@@ -44,7 +44,7 @@
 #include "SquidTime.h"
 
 void
-Log::Format::SquidIcap(AccessLogEntry * al, Logfile * logfile)
+Log::Format::SquidIcap(const AccessLogEntry::Pointer &al, Logfile * logfile)
 {
     const char *client = NULL;
     const char *user = NULL;

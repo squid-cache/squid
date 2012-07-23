@@ -50,6 +50,7 @@ public:
 
     static void httpBuildRequestHeader(HttpRequest * request,
                                        StoreEntry * entry,
+                                       const AccessLogEntryPointer &al,
                                        HttpHeader * hdr_out,
                                        const http_state_flags flags);
 

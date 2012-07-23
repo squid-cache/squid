@@ -1249,7 +1249,7 @@ void Adaptation::Icap::ModXact::swanSong()
     Adaptation::Icap::Xaction::swanSong();
 }
 
-void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry *);
+void prepareLogWithRequestDetails(HttpRequest *, AccessLogEntry::Pointer &);
 
 void Adaptation::Icap::ModXact::finalizeLogInfo()
 {
@@ -1313,7 +1313,7 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
         packerClean(&p);
         mb.clean();
     }
-    prepareLogWithRequestDetails(request_, &al);
+    prepareLogWithRequestDetails(request_, alep);
     Xaction::finalizeLogInfo();
 }
 
@@ -1921,6 +1921,17 @@ void Adaptation::Icap::ModXact::detailError(int errDetail)
 
     if (request)
         request->detailError(ERR_ICAP_FAILURE, errDetail);
+}
+
+void Adaptation::Icap::ModXact::clearError()
+{
+    HttpRequest *request = dynamic_cast<HttpRequest*>(adapted.header);
+    // if no adapted request, update virgin (and inherit its properties later)
+    if (!request)
+        request = const_cast<HttpRequest*>(&virginRequest());
+
+    if (request)
+        request->clearError();
 }
 
 /* Adaptation::Icap::ModXactLauncher */

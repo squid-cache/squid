@@ -100,6 +100,7 @@ public:
             debugs(23, 3, "HttpRequest::SetHost() given IP: " << host_addr);
             host_is_numeric = 1;
         }
+        safe_free(canonical); // force its re-build
     };
     inline const char* GetHost(void) const { return host; };
     inline int GetHostIsNumeric(void) const { return host_is_numeric; };
@@ -121,6 +122,8 @@ public:
 
     /// sets error detail if no earlier detail was available
     void detailError(err_type aType, int aDetail);
+    /// clear error details, useful for retries/repeats
+    void clearError();
 
 protected:
     void clean();
