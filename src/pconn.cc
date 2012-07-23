@@ -150,7 +150,8 @@ IdleConnList::closeN(size_t n)
         }
         // ensure the last N entries are unset
         while (index < ((size_t)size_)) {
-            theList_[index++] = NULL;
+            theList_[index] = NULL;
+            ++index;
         }
         size_ -= n;
     }
@@ -186,7 +187,8 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
     if (parent_)
         parent_->noteConnectionAdded();
 
-    theList_[size_++] = conn;
+    theList_[size_] = conn;
+    ++size_;
     AsyncCall::Pointer readCall = commCbCall(5,4, "IdleConnList::Read",
                                   CommIoCbPtrFun(IdleConnList::Read, this));
     comm_read(conn, fakeReadBuf_, sizeof(fakeReadBuf_), readCall);

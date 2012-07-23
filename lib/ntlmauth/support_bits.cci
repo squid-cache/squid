@@ -18,7 +18,7 @@ uc(char *string)
     char *p = string, c;
     while ((c = *p)) {
         *p = xtoupper(c);
-        p++;
+        ++p;
     }
 }
 
@@ -29,7 +29,7 @@ lc(char *string)
     char *p = string, c;
     while ((c = *p)) {
         *p = xtolower(c);
-        p++;
+        ++p;
     }
 }
 
@@ -53,7 +53,7 @@ hex_dump(unsigned char *data, int size)
         char addrstr[10] = {0};
         char hexstr[16 * 3 + 5] = {0};
         char charstr[16 * 1 + 5] = {0};
-        for (n = 1; n <= size; n++) {
+        for (n = 1; n <= size; ++n) {
             if (n % 16 == 1) {
                 /* store address for this line */
                 snprintf(addrstr, sizeof(addrstr), "%.4x", (int) (p - data));
@@ -80,7 +80,7 @@ hex_dump(unsigned char *data, int size)
                 strncat(hexstr, "  ", sizeof(hexstr) - strlen(hexstr) - 1);
                 strncat(charstr, " ", sizeof(charstr) - strlen(charstr) - 1);
             }
-            p++;                /* next byte */
+            ++p;                /* next byte */
         }
 
         if (strlen(hexstr) > 0) {

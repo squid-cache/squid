@@ -92,7 +92,8 @@ StoreMetaUnpacker::StoreMetaUnpacker (char const *aBuffer, ssize_t aLen, int *an
 void
 StoreMetaUnpacker::getType()
 {
-    type = buf[position++];
+    type = buf[position];
+    ++position;
 }
 
 void

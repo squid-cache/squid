@@ -1160,7 +1160,7 @@ public:
     virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
     static ACLSNMPCommunityStrategy *Instance();
     /* Not implemented to prevent copies of the instance. */
-    /* Not private to prevent brain dead g+++ warnings about
+    /* Not private to prevent brain dead g++ warnings about
      * private constructors with no friends */
     ACLSNMPCommunityStrategy(ACLSNMPCommunityStrategy const &);
 

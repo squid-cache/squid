@@ -49,7 +49,7 @@ Ip::Qos::Config::isAclNfmarkActive() const
 {
     acl_nfmark * nfmarkAcls [] = { nfmarkToServer, nfmarkToClient };
 
-    for (int i=0; i<2; i++) {
+    for (int i=0; i<2; ++i) {
         while (nfmarkAcls[i]) {
             acl_nfmark *l = nfmarkAcls[i];
             if (l->nfmark > 0)
@@ -66,7 +66,7 @@ Ip::Qos::Config::isAclTosActive() const
 {
     acl_tos * tosAcls [] = { tosToServer, tosToClient };
 
-    for (int i=0; i<2; i++) {
+    for (int i=0; i<2; ++i) {
         while (tosAcls[i]) {
             acl_tos *l = tosAcls[i];
             if (l->tos > 0)

@@ -244,8 +244,10 @@ SwapDir::parseOptions(int isaReconfig)
     while ((name = strtok(NULL, w_space)) != NULL) {
         value = strchr(name, '=');
 
-        if (value)
-            *value++ = '\0';	/* cut on = */
+        if (value) {
+            *value = '\0';	/* cut on = */
+            ++value;
+        }
 
         debugs(3,2, "SwapDir::parseOptions: parsing store option '" << name << "'='" << (value ? value : "") << "'");
 
