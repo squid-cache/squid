@@ -243,8 +243,10 @@ convert_domain_to_bind_path(char *domain)
         if (*dp == '.') {
             strcpy(bp, ",dc=");
             bp += 4;
-        } else
-            *bp++ = *dp;
+        } else {
+            *bp = *dp;
+            ++bp;
+        }
     }
     *bp = '\0';
     return bindp;

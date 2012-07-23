@@ -40,7 +40,8 @@ xstrncpy(char *dst, const char *src, size_t n)
 
     if (src)
         while (--n != 0 && *src != '\0') {
-            *dst++ = *src;
+            *dst = *src;
+            ++dst;
             ++src;
         }
 

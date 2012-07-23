@@ -169,7 +169,8 @@ main(int argc, char *argv[])
             break;
         case 'g':
             grents = (char**)realloc(grents, sizeof(*grents) * (ngroups+1));
-            grents[ngroups++] = optarg;
+            grents[ngroups] = optarg;
+            ++ngroups;
             break;
         case '?':
             if (xisprint(optopt)) {

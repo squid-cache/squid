@@ -243,7 +243,8 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     }
     memcpy(domain, tmp.str, tmp.l);
     user = domain + tmp.l;
-    *user++ = '\0';
+    *user = '\0';
+    ++user;
 
     /*      debug("fetching user name\n"); */
     tmp = ntlm_fetch_string(&(auth->hdr), auth_length, &auth->user, auth->flags);
@@ -429,7 +430,8 @@ process_options(int argc, char *argv[])
             free(d);
             continue;
         }
-        *c++ = '\0';
+        *c= '\0';
+        ++c;
         new_dc = (dc *) malloc(sizeof(dc));
         if (!new_dc) {
             fprintf(stderr, "Malloc error while parsing DC options\n");
