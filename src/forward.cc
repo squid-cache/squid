@@ -100,7 +100,7 @@ FwdState::abort(void* d)
 /**** PUBLIC INTERFACE ********************************************************/
 
 FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRequest * r, const AccessLogEntryPointer &alp):
-                   al(alp)
+        al(alp)
 {
     debugs(17, 2, HERE << "Forwarding client request " << client << ", url=" << e->url() );
     entry = e;
