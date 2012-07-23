@@ -178,7 +178,8 @@ logfile_mod_syslog_open(Logfile * lf, const char *path, size_t bufsz, int fatal_
         if (!facility)
             facility = (char *) strchr(priority, '|');
         if (facility) {
-            *facility++ = '\0';
+            *facility = '\0';
+            ++facility;
             ll->syslog_priority |= syslog_ntoa(facility);
         }
         ll->syslog_priority |= syslog_ntoa(priority);

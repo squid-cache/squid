@@ -182,12 +182,16 @@ helperOpenServers(helper * hlp)
 
     snprintf(procname, strlen(shortname) + 3, "(%s)", shortname);
 
-    args[nargs++] = procname;
+    args[nargs] = procname;
+    ++nargs;
 
-    for (w = hlp->cmdline->next; w && nargs < HELPER_MAX_ARGS; w = w->next)
-        args[nargs++] = w->key;
+    for (w = hlp->cmdline->next; w && nargs < HELPER_MAX_ARGS; w = w->next) {
+        args[nargs] = w->key;
+        ++nargs;
+    }
 
-    args[nargs++] = NULL;
+    args[nargs] = NULL;
+    ++nargs;
 
     assert(nargs <= HELPER_MAX_ARGS);
 
@@ -296,12 +300,16 @@ helperStatefulOpenServers(statefulhelper * hlp)
 
     snprintf(procname, strlen(shortname) + 3, "(%s)", shortname);
 
-    args[nargs++] = procname;
+    args[nargs] = procname;
+    ++nargs;
 
-    for (wordlist *w = hlp->cmdline->next; w && nargs < HELPER_MAX_ARGS; w = w->next)
-        args[nargs++] = w->key;
+    for (wordlist *w = hlp->cmdline->next; w && nargs < HELPER_MAX_ARGS; w = w->next) {
+        args[nargs] = w->key;
+        ++nargs;
+    }
 
-    args[nargs++] = NULL;
+    args[nargs] = NULL;
+    ++nargs;
 
     assert(nargs <= HELPER_MAX_ARGS);
 
@@ -899,7 +907,8 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
         if (t > srv->rbuf && t[-1] == '\r' && hlp->eom == '\n')
             t[-1] = '\0';
 
-        *t++ = '\0';
+        *t = '\0';
+        ++t;
 
         if (hlp->childs.concurrency) {
             i = strtol(msg, &msg, 10);

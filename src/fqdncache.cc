@@ -455,7 +455,8 @@ fqdncacheParse(fqdncache_entry *f, const rfc1035_rr * answers, int nr, const cha
                 continue;
             }
 
-            f->names[f->name_count++] = xstrdup(answers[k].rdata);
+            f->names[f->name_count] = xstrdup(answers[k].rdata);
+            ++ f->name_count;
         } else if (answers[k].type != RFC1035_TYPE_CNAME)
             continue;
 
