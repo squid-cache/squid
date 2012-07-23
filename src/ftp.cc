@@ -779,8 +779,10 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
         return p;
     }
 
-    for (t = strtok(xbuf, w_space); t && n_tokens < MAX_TOKENS; t = strtok(NULL, w_space))
-        tokens[n_tokens++] = xstrdup(t);
+    for (t = strtok(xbuf, w_space); t && n_tokens < MAX_TOKENS; t = strtok(NULL, w_space)) {
+        tokens[n_tokens] = xstrdup(t);
+        ++n_tokens;
+    }
 
     xfree(xbuf);
 
@@ -1564,13 +1566,17 @@ escapeIAC(const char *buf)
     ret = (char *)xmalloc(n);
 
     for (p = (unsigned const char *)buf, r=(unsigned char *)ret; *p; ++p) {
-        *r++ = *p;
+        *r = *p;
+        ++r;
 
-        if (*p == 255)
-            *r++ = 255;
+        if (*p == 255) {
+            *r = 255;
+            ++r;
+        }
     }
 
-    *r++ = '\0';
+    *r = '\0';
+    ++r;
     assert((r - (unsigned char *)ret) == n );
     return ret;
 }
@@ -2105,8 +2111,10 @@ ftpReadType(FtpStateData * ftpState)
             d = p;
             p += strcspn(p, "/");
 
-            if (*p)
-                *p++ = '\0';
+            if (*p) {
+                *p = '\0';
+                ++p;
+            }
 
             rfc1738_unescape(d);
 

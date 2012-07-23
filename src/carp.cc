@@ -128,7 +128,8 @@ carpInit(void)
             p->carp.load_factor = 0.0;
 
         /* add it to our list of peers */
-        *P++ = cbdataReference(p);
+        *P = cbdataReference(p);
+        ++P;
     }
 
     /* Sort our list on weight */

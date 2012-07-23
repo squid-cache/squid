@@ -498,11 +498,13 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
             selector = strchr(tline, TAB);
 
             if (selector) {
-                *selector++ = '\0';
+                *selector = '\0';
+                ++selector;
                 host = strchr(selector, TAB);
 
                 if (host) {
-                    *host++ = '\0';
+                    *host = '\0';
+                    ++host;
                     port = strchr(host, TAB);
 
                     if (port) {

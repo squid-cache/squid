@@ -1979,8 +1979,10 @@ setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl)
             char *q = tmp_uri;
             t = uri;
             while (*t) {
-                if (!xisspace(*t))
-                    *q++ = *t;
+                if (!xisspace(*t)) {
+                    *q = *t;
+                    ++q;
+                }
                 ++t;
             }
             *q = '\0';
@@ -4025,7 +4027,8 @@ clientHttpConnectionsOpen(void)
                                         ListeningStartedDialer(&clientListenerConnectionOpened, s, Ipc::fdnHttpSocket, sub));
         Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpSocket, listenCall);
 
-        HttpSockets[NHttpSockets++] = -1; // set in clientListenerConnectionOpened
+        HttpSockets[NHttpSockets] = -1; // set in clientListenerConnectionOpened
+        ++NHttpSockets;
     }
 }
 
@@ -4079,7 +4082,8 @@ clientHttpsConnectionsOpen(void)
                                         ListeningStartedDialer(&clientListenerConnectionOpened,
                                                                s, Ipc::fdnHttpsSocket, sub));
         Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpsSocket, listenCall);
-        HttpSockets[NHttpSockets++] = -1;
+        HttpSockets[NHttpSockets] = -1;
+        ++NHttpSockets;
     }
 }
 #endif

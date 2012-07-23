@@ -414,7 +414,8 @@ bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &p
             }
             ++pos;
         }
-        *dt++ = '\0'; // nul-terminated the filename content string before system use.
+        *dt = '\0'; // nul-terminated the filename content string before system use.
+        ++dt;
 
         debugs(4, 9, HERE << "STATE: dt='" << dt << "', lang='" << lang << "', pos=" << pos << ", buf='" << ((pos < hdr.size()) ? hdr.substr(pos,hdr.size()) : "") << "'");
 

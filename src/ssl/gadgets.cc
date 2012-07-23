@@ -620,7 +620,7 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
     bool match = true;
     if (cert1_altnames) {
         int numalts = sk_GENERAL_NAME_num(cert1_altnames);
-        for (int i = 0; match && i < numalts; i++) {
+        for (int i = 0; match && i < numalts; ++i) {
             const GENERAL_NAME *aName = sk_GENERAL_NAME_value(cert1_altnames, i);
             match = sk_GENERAL_NAME_find(cert2_altnames, aName);
         }

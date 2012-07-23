@@ -1018,8 +1018,10 @@ netdbDump(StoreEntry * sentry)
     i = 0;
     hash_first(addr_table);
 
-    while ((n = (netdbEntry *) hash_next(addr_table)))
-        *(list + i++) = n;
+    while ((n = (netdbEntry *) hash_next(addr_table))) {
+        *(list + i) = n;
+        ++i;
+    }
 
     if (i != memInUse(MEM_NETDBENTRY))
         debugs(38, 0, "WARNING: netdb_addrs count off, found " << i <<
@@ -1245,14 +1247,16 @@ netdbBinaryExchange(StoreEntry * s)
         if ( !addr.IsIPv4() )
             continue;
 
-        buf[i++] = (char) NETDB_EX_NETWORK;
+        buf[i] = (char) NETDB_EX_NETWORK;
+        ++i;
 
         addr.GetInAddr(line_addr);
         memcpy(&buf[i], &line_addr, sizeof(struct in_addr));
 
         i += sizeof(struct in_addr);
 
-        buf[i++] = (char) NETDB_EX_RTT;
+        buf[i] = (char) NETDB_EX_RTT;
+        ++i;
 
         j = htonl((int) (n->rtt * 1000));
 
@@ -1260,7 +1264,8 @@ netdbBinaryExchange(StoreEntry * s)
 
         i += sizeof(int);
 
-        buf[i++] = (char) NETDB_EX_HOPS;
+        buf[i] = (char) NETDB_EX_HOPS;
+        ++i;
 
         j = htonl((int) (n->hops * 1000));
 

@@ -429,12 +429,15 @@ done:
             char *cp = strchr(header, ':');
 
             if (cp) {
-                *cp++ = '\0';
+                *cp = '\0';
+                ++cp;
 
-                if (*cp == ',' || *cp == ';' || *cp == ':')
-                    data.header.separator = *cp++;
-                else
+                if (*cp == ',' || *cp == ';' || *cp == ':') {
+                    data.header.separator = *cp;
+                    ++cp;
+                } else {
                     data.header.separator = ',';
+                }
 
                 data.header.element = cp;
 

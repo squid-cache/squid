@@ -121,10 +121,12 @@ HttpHdrCc::parse(const String & str)
     while (strListGetItem(&str, ',', &item, &ilen, &pos)) {
         /* isolate directive name */
 
-        if ((p = (const char *)memchr(item, '=', ilen)) && (p - item < ilen))
-            nlen = p++ - item;
-        else
+        if ((p = (const char *)memchr(item, '=', ilen)) && (p - item < ilen)) {
+            nlen = p - item;
+            ++p;
+        } else {
             nlen = ilen;
+        }
 
         /* find type */
         const CcNameToIdMap_t::const_iterator i=CcNameToIdMap.find(StringArea(item,nlen));
