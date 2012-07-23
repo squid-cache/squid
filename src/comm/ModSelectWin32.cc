@@ -281,11 +281,15 @@ comm_select_udp_incoming(void)
     int nevents;
     udp_io_events = 0;
 
-    if (Comm::IsConnOpen(icpIncomingConn))
-        fds[nfds++] = icpIncomingConn->fd;
+    if (Comm::IsConnOpen(icpIncomingConn)) {
+        fds[nfds] = icpIncomingConn->fd;
+        ++nfds;
+    }
 
-    if (Comm::IsConnOpen(icpOutgoingConn) && icpIncomingConn != icpOutgoingConn)
-        fds[nfds++] = icpOutgoingConn->fd;
+    if (Comm::IsConnOpen(icpOutgoingConn) && icpIncomingConn != icpOutgoingConn) {
+        fds[nfds] = icpOutgoingConn->fd;
+        ++nfds;
+    }
 
     if (nfds == 0)
         return;
@@ -317,8 +321,10 @@ comm_select_tcp_incoming(void)
     // XXX: only poll sockets that won't be deferred. But how do we identify them?
 
     for (const AnyP::PortCfg *s = Config.Sockaddr.http; s; s = s->next) {
-        if (Comm::IsConnOpen(s->listenConn))
-            fds[nfds++] = s->listenConn->fd;
+        if (Comm::IsConnOpen(s->listenConn)) {
+            fds[nfds] = s->listenConn->fd;
+            ++nfds;
+        }
     }
 
     nevents = comm_check_incoming_select_handlers(nfds, fds);
@@ -657,11 +663,15 @@ comm_select_dns_incoming(void)
     if (DnsSocketA < 0 && DnsSocketB < 0)
         return;
 
-    if (DnsSocketA >= 0)
-        fds[nfds++] = DnsSocketA;
+    if (DnsSocketA >= 0) {
+        fds[nfds] = DnsSocketA;
+        ++nfds;
+    }
 
-    if (DnsSocketB >= 0)
-        fds[nfds++] = DnsSocketB;
+    if (DnsSocketB >= 0) {
+        fds[nfds] = DnsSocketB;
+        ++nfds;
+    }
 
     nevents = comm_check_incoming_select_handlers(nfds, fds);
 

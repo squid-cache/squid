@@ -170,7 +170,8 @@ ldap_escape_value(char *escaped, int size, const char *src)
             n += 3;
             size -= 3;
             if (size > 0) {
-                *escaped++ = '\\';
+                *escaped = '\\';
+                ++escaped;
                 snprintf(escaped, 3, "%02x", (int) *src);
                 ++src;
                 escaped += 2;

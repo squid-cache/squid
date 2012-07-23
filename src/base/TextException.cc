@@ -57,7 +57,8 @@ unsigned int TextException::FileNameHash(const char *fname)
 
     while (*s) {
         ++j;
-        n ^= 271 * (unsigned) *s++;
+        n ^= 271 * (unsigned) *s;
+        ++s;
     }
     i = n ^ (j * 271);
     /*18bits of a 32 bit integer used  for filename hash (max hash=262143),

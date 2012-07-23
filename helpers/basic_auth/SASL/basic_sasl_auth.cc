@@ -99,7 +99,8 @@ main(int argc, char *argv[])
             SEND_ERR("No Password");
             continue;
         }
-        *password++ = '\0';
+        *password = '\0';
+        ++password;
 
         rfc1738_unescape(username);
         rfc1738_unescape(password);
