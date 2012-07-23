@@ -8,44 +8,6 @@
 #include <openssl/x509v3.h>
 #endif
 
-/**
- \ingroup ServerProtocolSSLInternal
- * Add CN to subject in request.
- */
-static bool addCnToRequest(Ssl::X509_REQ_Pointer & request, char const * cn)
-{
-    // not an Ssl::X509_NAME_Pointer because X509_REQ_get_subject_name()
-    // returns a pointer to the existing subject name. Nothing to clean here.
-    X509_NAME *name = X509_REQ_get_subject_name(request.get());
-    if (!name)
-        return false;
-
-    // The second argument of the X509_NAME_add_entry_by_txt declared as
-    // "char *" on some OS. Use cn_name to avoid compile warnings.
-    static char cn_name[3] = "CN";
-    if (!X509_NAME_add_entry_by_txt(name, cn_name, MBSTRING_ASC, (unsigned char *)cn, -1, -1, 0))
-        return false;
-
-    return true;
-}
-
-/**
- \ingroup ServerProtocolSSLInternal
- * Make request on sign using private key and hostname.
- */
-static bool makeRequest(Ssl::X509_REQ_Pointer & request, Ssl::EVP_PKEY_Pointer const & pkey, char const * host)
-{
-    if (!X509_REQ_set_version(request.get(), 0L))
-        return false;
-
-    if (!addCnToRequest(request, host))
-        return false;
-
-    if (!X509_REQ_set_pubkey(request.get(), pkey.get()))
-        return false;
-    return true;
-}
-
 EVP_PKEY * Ssl::createSslPrivateKey()
 {
     Ssl::EVP_PKEY_Pointer pkey(EVP_PKEY_new());
@@ -63,18 +25,6 @@ EVP_PKEY * Ssl::createSslPrivateKey()
 
     rsa.release();
     return pkey.release();
-}
-
-X509_REQ * Ssl::createNewX509Request(Ssl::EVP_PKEY_Pointer const & pkey, const char * hostname)
-{
-    Ssl::X509_REQ_Pointer request(X509_REQ_new());
-
-    if (!request)
-        return NULL;
-
-    if (!makeRequest(request, pkey, hostname))
-        return NULL;
-    return request.release();
 }
 
 /**
@@ -101,41 +51,6 @@ static bool setSerialNumber(ASN1_INTEGER *ai, BIGNUM const* serial)
     return true;
 }
 
-X509 * Ssl::signRequest(Ssl::X509_REQ_Pointer const & request, Ssl::X509_Pointer const & x509, Ssl::EVP_PKEY_Pointer const & pkey, ASN1_TIME * timeNotAfter, BIGNUM const * serial)
-{
-    Ssl::X509_Pointer cert(X509_new());
-    if (!cert)
-        return NULL;
-
-    if (!setSerialNumber(X509_get_serialNumber(cert.get()), serial))
-        return NULL;
-
-    if (!X509_set_issuer_name(cert.get(), x509.get() ? X509_get_subject_name(x509.get()) : X509_REQ_get_subject_name(request.get())))
-        return NULL;
-
-    if (!X509_gmtime_adj(X509_get_notBefore(cert.get()), (-2)*24*60*60))
-        return NULL;
-
-    if (timeNotAfter) {
-        if (!X509_set_notAfter(cert.get(), timeNotAfter))
-            return NULL;
-    } else if (!X509_gmtime_adj(X509_get_notAfter(cert.get()), 60*60*24*356*3))
-        return NULL;
-
-    if (!X509_set_subject_name(cert.get(), X509_REQ_get_subject_name(request.get())))
-        return NULL;
-
-    Ssl::EVP_PKEY_Pointer tmppkey(X509_REQ_get_pubkey(request.get()));
-
-    if (!tmppkey || !X509_set_pubkey(cert.get(), tmppkey.get()))
-        return NULL;
-
-    if (!X509_sign(cert.get(), pkey.get(), EVP_sha1()))
-        return NULL;
-
-    return cert.release();
-}
-
 bool Ssl::writeCertAndPrivateKeyToMemory(Ssl::X509_Pointer const & cert, Ssl::EVP_PKEY_Pointer const & pkey, std::string & bufferToWrite)
 {
     bufferToWrite.clear();
@@ -157,6 +72,30 @@ bool Ssl::writeCertAndPrivateKeyToMemory(Ssl::X509_Pointer const & cert, Ssl::EV
         return false;
 
     bufferToWrite = std::string(ptr, len);
+    return true;
+}
+
+bool Ssl::appendCertToMemory(Ssl::X509_Pointer const & cert, std::string & bufferToWrite)
+{
+    if (!cert)
+        return false;
+
+    BIO_Pointer bio(BIO_new(BIO_s_mem()));
+    if (!bio)
+        return false;
+
+    if (!PEM_write_bio_X509 (bio.get(), cert.get()))
+        return false;
+
+    char *ptr = NULL;
+    long len = BIO_get_mem_data(bio.get(), &ptr);
+    if (!ptr)
+        return false;
+
+    if (!bufferToWrite.empty())
+        bufferToWrite.append(" "); // add a space...
+
+    bufferToWrite.append(ptr, len);
     return true;
 }
 
@@ -198,25 +137,332 @@ bool Ssl::readCertAndPrivateKeyFromMemory(Ssl::X509_Pointer & cert, Ssl::EVP_PKE
     return true;
 }
 
-bool Ssl::generateSslCertificateAndPrivateKey(char const *host, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey, Ssl::X509_Pointer & cert, Ssl::EVP_PKEY_Pointer & pkey, BIGNUM const * serial)
+bool Ssl::readCertFromMemory(X509_Pointer & cert, char const * bufferToRead)
 {
-    pkey.reset(createSslPrivateKey());
-    if (!pkey)
-        return false;
+    Ssl::BIO_Pointer bio(BIO_new(BIO_s_mem()));
+    BIO_puts(bio.get(), bufferToRead);
 
-    Ssl::X509_REQ_Pointer request(createNewX509Request(pkey, host));
-    if (!request)
-        return false;
-
-    if (signedX509.get() && signedPkey.get())
-        cert.reset(signRequest(request, signedX509, signedPkey, X509_get_notAfter(signedX509.get()), serial));
-    else
-        cert.reset(signRequest(request, signedX509, pkey, NULL, serial));
-
+    X509 * certPtr = NULL;
+    cert.reset(PEM_read_bio_X509(bio.get(), &certPtr, 0, 0));
     if (!cert)
         return false;
 
     return true;
+}
+
+// According to RFC 5280 (Section A.1), the common name length in a certificate
+// can be at most 64 characters
+static const size_t MaxCnLen = 64;
+
+// Replace certs common name with the given
+static bool replaceCommonName(Ssl::X509_Pointer & cert, std::string const &rawCn)
+{
+    std::string cn = rawCn;
+
+    if (cn.length() > MaxCnLen) {
+        // In the case the length od CN is more than the maximum supported size
+        // try to use the first upper level domain.
+        size_t pos = 0;
+        do {
+            pos = cn.find('.', pos + 1);
+        } while (pos != std::string::npos && (cn.length() - pos + 2) > MaxCnLen);
+
+        // If no short domain found or this domain is a toplevel domain
+        // we failed to find a good cn name.
+        if (pos == std::string::npos || cn.find('.', pos + 1) == std::string::npos)
+            return false;
+
+        std::string fixedCn(1, '*');
+        fixedCn.append(cn.c_str() + pos);
+        cn = fixedCn;
+    }
+
+    // Assume [] surround an IPv6 address and strip them because browsers such
+    // as Firefox, Chromium, and Safari prefer bare IPv6 addresses in CNs.
+    if (cn.length() > 2 && *cn.begin() == '[' && *cn.rbegin() == ']')
+        cn = cn.substr(1, cn.size()-2);
+
+    X509_NAME *name = X509_get_subject_name(cert.get());
+    if (!name)
+        return false;
+    // Remove the CN part:
+    int loc = X509_NAME_get_index_by_NID(name, NID_commonName, -1);
+    if (loc >=0) {
+        X509_NAME_ENTRY *tmp = X509_NAME_get_entry(name, loc);
+        X509_NAME_delete_entry(name, loc);
+        X509_NAME_ENTRY_free(tmp);
+    }
+
+    // Add a new CN
+    return X509_NAME_add_entry_by_NID(name, NID_commonName, MBSTRING_ASC,
+                                      (unsigned char *)(cn.c_str()), -1, -1, 0);
+}
+
+const char *Ssl::CertSignAlgorithmStr[] = {
+    "signTrusted",
+    "signUntrusted",
+    "signSelf",
+    NULL
+};
+
+const char *Ssl::CertAdaptAlgorithmStr[] = {
+    "setValidAfter",
+    "setValidBefore",
+    "setCommonName",
+    NULL
+};
+
+Ssl::CertificateProperties::CertificateProperties():
+        setValidAfter(false),
+        setValidBefore(false),
+        setCommonName(false),
+        signAlgorithm(Ssl::algSignEnd)
+{}
+
+std::string & Ssl::CertificateProperties::dbKey() const
+{
+    static std::string certKey;
+    certKey.clear();
+    certKey.reserve(4096);
+    if (mimicCert.get()) {
+        char buf[1024];
+        certKey.append(X509_NAME_oneline(X509_get_subject_name(mimicCert.get()), buf, sizeof(buf)));
+    }
+
+    if (certKey.empty()) {
+        certKey.append("/CN=", 4);
+        certKey.append(commonName);
+    }
+
+    if (setValidAfter)
+        certKey.append("+SetValidAfter=on", 17);
+
+    if (setValidBefore)
+        certKey.append("+SetValidBefore=on", 18);
+
+    if (setCommonName) {
+        certKey.append("+SetCommonName=", 15);
+        certKey.append(commonName);
+    }
+
+    if (signAlgorithm != Ssl::algSignEnd) {
+        certKey.append("+Sign=", 6);
+        certKey.append(certSignAlgorithm(signAlgorithm));
+    }
+
+    return certKey;
+}
+
+static bool buildCertificate(Ssl::X509_Pointer & cert, Ssl::CertificateProperties const &properties)
+{
+    // not an Ssl::X509_NAME_Pointer because X509_REQ_get_subject_name()
+    // returns a pointer to the existing subject name. Nothing to clean here.
+    if (properties.mimicCert.get()) {
+        // Leave subject empty if we cannot extract it from true cert.
+        if (X509_NAME *name = X509_get_subject_name(properties.mimicCert.get())) {
+            // X509_set_subject_name will call X509_dup for name
+            X509_set_subject_name(cert.get(), name);
+        }
+    }
+
+    if (properties.setCommonName || !properties.mimicCert.get()) {
+        // In this case the CN of the certificate given by the user
+        // Ignore errors: it is better to make a certificate with no CN
+        // than to quit ssl_crtd because we cannot make a certificate.
+        // Most errors are caused by user input such as huge domain names.
+        (void)replaceCommonName(cert, properties.commonName);
+    }
+
+    // We should get caCert notBefore and notAfter fields and do not allow
+    // notBefore/notAfter values from certToMimic before/after notBefore/notAfter
+    // fields from caCert.
+    // Currently there is not any way in openssl tollkit to compare two ASN1_TIME
+    // objects.
+    ASN1_TIME *aTime = NULL;
+    if (!properties.setValidBefore && properties.mimicCert.get())
+        aTime = X509_get_notBefore(properties.mimicCert.get());
+    if (!aTime && properties.signWithX509.get())
+        aTime = X509_get_notBefore(properties.signWithX509.get());
+
+    if (aTime) {
+        if (!X509_set_notBefore(cert.get(), aTime))
+            return false;
+    } else if (!X509_gmtime_adj(X509_get_notBefore(cert.get()), (-2)*24*60*60))
+        return false;
+
+    aTime = NULL;
+    if (!properties.setValidAfter && properties.mimicCert.get())
+        aTime = X509_get_notAfter(properties.mimicCert.get());
+    if (!aTime && properties.signWithX509.get())
+        aTime = X509_get_notAfter(properties.signWithX509.get());
+    if (aTime) {
+        if (!X509_set_notAfter(cert.get(), aTime))
+            return false;
+    } else if (!X509_gmtime_adj(X509_get_notAfter(cert.get()), 60*60*24*356*3))
+        return false;
+
+    // mimic the alias and possibly subjectAltName
+    if (properties.mimicCert.get()) {
+        unsigned char *alStr;
+        int alLen;
+        alStr = X509_alias_get0(properties.mimicCert.get(), &alLen);
+        if (alStr) {
+            X509_alias_set1(cert.get(), alStr, alLen);
+        }
+
+        // Mimic subjectAltName unless we used a configured CN: browsers reject
+        // certificates with CN unrelated to subjectAltNames.
+        if (!properties.setCommonName) {
+            int pos=X509_get_ext_by_NID (properties.mimicCert.get(), OBJ_sn2nid("subjectAltName"), -1);
+            X509_EXTENSION *ext=X509_get_ext(properties.mimicCert.get(), pos);
+            if (ext) {
+                X509_add_ext(cert.get(), ext, -1);
+                /* According the RFC 5280 using extensions requires version 3
+                   certificate.
+                   Set version value to 2 for version 3 certificates.
+                 */
+                X509_set_version(cert.get(), 2);
+            }
+        }
+    }
+
+    return true;
+}
+
+static bool generateFakeSslCertificate(Ssl::X509_Pointer & certToStore, Ssl::EVP_PKEY_Pointer & pkeyToStore, Ssl::CertificateProperties const &properties,  Ssl::BIGNUM_Pointer const &serial)
+{
+    Ssl::EVP_PKEY_Pointer pkey;
+    // Use signing certificates private key as generated certificate private key
+    if (properties.signWithPkey.get())
+        pkey.resetAndLock(properties.signWithPkey.get());
+    else // if not exist generate one
+        pkey.reset(Ssl::createSslPrivateKey());
+
+    if (!pkey)
+        return false;
+
+    Ssl::X509_Pointer cert(X509_new());
+    if (!cert)
+        return false;
+
+    // Set pub key and serial given by the caller
+    if (!X509_set_pubkey(cert.get(), pkey.get()))
+        return false;
+    if (!setSerialNumber(X509_get_serialNumber(cert.get()), serial.get()))
+        return false;
+
+    // Fill the certificate with the required properties
+    if (!buildCertificate(cert, properties))
+        return false;
+
+    int ret = 0;
+    // Set issuer name, from CA or our subject name for self signed cert
+    if (properties.signAlgorithm != Ssl::algSignSelf && properties.signWithX509.get())
+        ret = X509_set_issuer_name(cert.get(), X509_get_subject_name(properties.signWithX509.get()));
+    else // Self signed certificate, set issuer to self
+        ret = X509_set_issuer_name(cert.get(), X509_get_subject_name(cert.get()));
+    if (!ret)
+        return false;
+
+    /*Now sign the request */
+    if (properties.signAlgorithm != Ssl::algSignSelf && properties.signWithPkey.get())
+        ret = X509_sign(cert.get(), properties.signWithPkey.get(), EVP_sha1());
+    else //else sign with self key (self signed request)
+        ret = X509_sign(cert.get(), pkey.get(), EVP_sha1());
+
+    if (!ret)
+        return false;
+
+    certToStore.reset(cert.release());
+    pkeyToStore.reset(pkey.release());
+    return true;
+}
+
+static  BIGNUM *createCertSerial(unsigned char *md, unsigned int n)
+{
+
+    assert(n == 20); //for sha1 n is 20 (for md5 n is 16)
+
+    BIGNUM *serial = NULL;
+    serial = BN_bin2bn(md, n, NULL);
+
+    // if the serial is "0" set it to '1'
+    if (BN_is_zero(serial))
+        BN_one(serial);
+
+    // serial size does not exceed 20 bytes
+    assert(BN_num_bits(serial) <= 160);
+
+    // According the RFC 5280, serial is an 20 bytes ASN.1 INTEGER (a signed big integer)
+    // and the maximum value for X.509 certificate serial number is 2^159-1 and
+    // the minimum 0. If the first bit of the serial is '1' ( eg 2^160-1),
+    // will result to a negative integer.
+    // To handle this, if the produced serial is greater than 2^159-1
+    // truncate the last bit
+    if (BN_is_bit_set(serial, 159))
+        BN_clear_bit(serial, 159);
+
+    return serial;
+}
+
+/// Return the SHA1 digest of the DER encoded version of the certificate
+/// stored in a BIGNUM
+static BIGNUM *x509Digest(Ssl::X509_Pointer const & cert)
+{
+    unsigned int n;
+    unsigned char md[EVP_MAX_MD_SIZE];
+
+    if (!X509_digest(cert.get(),EVP_sha1(),md,&n))
+        return NULL;
+
+    return createCertSerial(md, n);
+}
+
+static BIGNUM *x509Pubkeydigest(Ssl::X509_Pointer const & cert)
+{
+    unsigned int n;
+    unsigned char md[EVP_MAX_MD_SIZE];
+
+    if (!X509_pubkey_digest(cert.get(),EVP_sha1(),md,&n))
+        return NULL;
+
+    return createCertSerial(md, n);
+}
+
+/// Generate a unique serial number based on a Ssl::CertificateProperties object
+/// for a new generated certificate
+static bool createSerial(Ssl::BIGNUM_Pointer &serial, Ssl::CertificateProperties const &properties)
+{
+    Ssl::EVP_PKEY_Pointer fakePkey;
+    Ssl::X509_Pointer fakeCert;
+
+    serial.reset(x509Pubkeydigest(properties.signWithX509));
+    if (!serial.get()) {
+        serial.reset(BN_new());
+        BN_is_zero(serial.get());
+    }
+
+    if (!generateFakeSslCertificate(fakeCert, fakePkey, properties, serial))
+        return false;
+
+    // The x509Fingerprint return an SHA1 hash.
+    // both SHA1 hash and maximum serial number size are 20 bytes.
+    BIGNUM *r = x509Digest(fakeCert);
+    if (!r)
+        return false;
+
+    serial.reset(r);
+    return true;
+}
+
+bool Ssl::generateSslCertificate(Ssl::X509_Pointer & certToStore, Ssl::EVP_PKEY_Pointer & pkeyToStore, Ssl::CertificateProperties const &properties)
+{
+    Ssl::BIGNUM_Pointer serial;
+
+    if (!createSerial(serial, properties))
+        return false;
+
+    return  generateFakeSslCertificate(certToStore, pkeyToStore, properties, serial);
 }
 
 /**
@@ -271,3 +517,147 @@ bool Ssl::sslDateIsInTheFuture(char const * date)
 
     return (X509_cmp_current_time(&tm) > 0);
 }
+
+/// Print the time represented by a ASN1_TIME struct to a string using GeneralizedTime format
+static bool asn1timeToGeneralizedTimeStr(ASN1_TIME *aTime, char *buf, int bufLen)
+{
+    // ASN1_Time  holds time to UTCTime or GeneralizedTime form.
+    // UTCTime has the form YYMMDDHHMMSS[Z | [+|-]offset]
+    // GeneralizedTime has the form YYYYMMDDHHMMSS[Z | [+|-] offset]
+
+    // length should have space for data plus 2 extra bytes for the two extra year fields
+    // plus the '\0' char.
+    if ((aTime->length + 3) > bufLen)
+        return false;
+
+    char *str;
+    if (aTime->type == V_ASN1_UTCTIME) {
+        if (aTime->data[0] > '5') { // RFC 2459, section 4.1.2.5.1
+            buf[0] = '1';
+            buf[1] = '9';
+        } else {
+            buf[0] = '2';
+            buf[1] = '0';
+        }
+        str = buf +2;
+    } else // if (aTime->type == V_ASN1_GENERALIZEDTIME)
+        str = buf;
+
+    memcpy(str, aTime->data, aTime->length);
+    str[aTime->length] = '\0';
+    return true;
+}
+
+static int asn1time_cmp(ASN1_TIME *asnTime1, ASN1_TIME *asnTime2)
+{
+    char strTime1[64], strTime2[64];
+    if (!asn1timeToGeneralizedTimeStr(asnTime1, strTime1, sizeof(strTime1)))
+        return -1;
+    if (!asn1timeToGeneralizedTimeStr(asnTime2, strTime2, sizeof(strTime2)))
+        return -1;
+
+    return strcmp(strTime1, strTime2);
+}
+
+bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &properties)
+{
+    assert(cert);
+
+    // For non self-signed certificates we have to check if the signing certificate changed
+    if (properties.signAlgorithm != Ssl::algSignSelf) {
+        assert(properties.signWithX509.get());
+        if (X509_check_issued(properties.signWithX509.get(), cert) != X509_V_OK)
+            return false;
+    }
+
+    X509 *cert2 = properties.mimicCert.get();
+    // If there is not certificate to mimic stop here
+    if (!cert2)
+        return true;
+
+    if (!properties.setCommonName) {
+        X509_NAME *cert1_name = X509_get_subject_name(cert);
+        X509_NAME *cert2_name = X509_get_subject_name(cert2);
+        if (X509_NAME_cmp(cert1_name, cert2_name) != 0)
+            return false;
+    } else if (properties.commonName != CommonHostName(cert))
+        return false;
+
+    if (!properties.setValidBefore) {
+        ASN1_TIME *aTime = X509_get_notBefore(cert);
+        ASN1_TIME *bTime = X509_get_notBefore(cert2);
+        if (asn1time_cmp(aTime, bTime) != 0)
+            return false;
+    } else if (X509_cmp_current_time(X509_get_notBefore(cert)) >= 0) {
+        // notBefore does not exist (=0) or it is in the future (>0)
+        return false;
+    }
+
+    if (!properties.setValidAfter) {
+        ASN1_TIME *aTime = X509_get_notAfter(cert);
+        ASN1_TIME *bTime = X509_get_notAfter(cert2);
+        if (asn1time_cmp(aTime, bTime) != 0)
+            return false;
+    } else if (X509_cmp_current_time(X509_get_notAfter(cert)) <= 0) {
+        // notAfter does not exist (0) or  it is in the past (<0)
+        return false;
+    }
+
+
+    char *alStr1;
+    int alLen;
+    alStr1 = (char *)X509_alias_get0(cert, &alLen);
+    char *alStr2  = (char *)X509_alias_get0(cert2, &alLen);
+    if ((!alStr1 && alStr2) || (alStr1 && !alStr2) ||
+            (alStr1 && alStr2 && strcmp(alStr1, alStr2)) != 0)
+        return false;
+
+    // Compare subjectAltName extension
+    STACK_OF(GENERAL_NAME) * cert1_altnames;
+    cert1_altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
+    STACK_OF(GENERAL_NAME) * cert2_altnames;
+    cert2_altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(cert2, NID_subject_alt_name, NULL, NULL);
+    bool match = true;
+    if (cert1_altnames) {
+        int numalts = sk_GENERAL_NAME_num(cert1_altnames);
+        for (int i = 0; match && i < numalts; i++) {
+            const GENERAL_NAME *aName = sk_GENERAL_NAME_value(cert1_altnames, i);
+            match = sk_GENERAL_NAME_find(cert2_altnames, aName);
+        }
+    } else if (cert2_altnames)
+        match = false;
+
+    sk_GENERAL_NAME_pop_free(cert1_altnames, GENERAL_NAME_free);
+    sk_GENERAL_NAME_pop_free(cert2_altnames, GENERAL_NAME_free);
+
+    return match;
+}
+
+static const char *getSubjectEntry(X509 *x509, int nid)
+{
+    static char name[1024] = ""; // stores common name (CN)
+
+    if (!x509)
+        return NULL;
+
+    // TODO: What if the entry is a UTF8String? See X509_NAME_get_index_by_NID(3ssl).
+    const int nameLen = X509_NAME_get_text_by_NID(
+                            X509_get_subject_name(x509),
+                            nid,  name, sizeof(name));
+
+    if (nameLen > 0)
+        return name;
+
+    return NULL;
+}
+
+const char *Ssl::CommonHostName(X509 *x509)
+{
+    return getSubjectEntry(x509, NID_commonName);
+}
+
+const char *Ssl::getOrganization(X509 *x509)
+{
+    return getSubjectEntry(x509, NID_organizationName);
+}
+

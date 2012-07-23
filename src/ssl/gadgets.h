@@ -6,6 +6,7 @@
 #define SQUID_SSL_GADGETS_H
 
 #include "base/TidyPointer.h"
+#include "ssl/crtd_message.h"
 
 #if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
@@ -25,6 +26,28 @@ namespace Ssl
  because they are used by ssl_crtd.
  */
 
+/**
+   \ingroup SslCrtdSslAPI
+  * Add SSL locking (a.k.a. reference counting) to TidyPointer
+  */
+template <typename T, void (*DeAllocator)(T *t), int lock>
+class LockingPointer: public TidyPointer<T, DeAllocator>
+{
+public:
+    typedef TidyPointer<T, DeAllocator> Parent;
+
+    LockingPointer(T *t = NULL): Parent(t) {
+    }
+
+    void resetAndLock(T *t) {
+        if (t != this->get()) {
+            reset(t);
+            if (t)
+                CRYPTO_add(&t->references, 1, lock);
+        }
+    }
+};
+
 // Macro to be used to define the C++ equivalent function of an extern "C"
 // function. The C++ function suffixed with the _cpp extension
 #define CtoCpp1(function, argument) \
@@ -37,13 +60,13 @@ namespace Ssl
  * TidyPointer typedefs for  common SSL objects
  */
 CtoCpp1(X509_free, X509 *)
-typedef TidyPointer<X509, X509_free_cpp> X509_Pointer;
+typedef LockingPointer<X509, X509_free_cpp, CRYPTO_LOCK_X509> X509_Pointer;
 
 CtoCpp1(sk_X509_free, STACK_OF(X509) *)
 typedef TidyPointer<STACK_OF(X509), sk_X509_free_cpp> X509_STACK_Pointer;
 
 CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
-typedef TidyPointer<EVP_PKEY, EVP_PKEY_free_cpp> EVP_PKEY_Pointer;
+typedef LockingPointer<EVP_PKEY, EVP_PKEY_free_cpp, CRYPTO_LOCK_EVP_PKEY> EVP_PKEY_Pointer;
 
 CtoCpp1(BN_free, BIGNUM *)
 typedef TidyPointer<BIGNUM, BN_free_cpp> BIGNUM_Pointer;
@@ -81,15 +104,15 @@ EVP_PKEY * createSslPrivateKey();
 
 /**
  \ingroup SslCrtdSslAPI
- * Create request on certificate for a host.
- */
-X509_REQ * createNewX509Request(EVP_PKEY_Pointer const & pkey, const char * hostname);
-
-/**
- \ingroup SslCrtdSslAPI
  * Write private key and SSL certificate to memory.
  */
 bool writeCertAndPrivateKeyToMemory(X509_Pointer const & cert, EVP_PKEY_Pointer const & pkey, std::string & bufferToWrite);
+
+/**
+ \ingroup SslCrtdSslAPI
+ * Append SSL certificate to bufferToWrite.
+ */
+bool appendCertToMemory(X509_Pointer const & cert, std::string & bufferToWrite);
 
 /**
  \ingroup SslCrtdSslAPI
@@ -105,19 +128,104 @@ bool readCertAndPrivateKeyFromMemory(X509_Pointer & cert, EVP_PKEY_Pointer & pke
 
 /**
  \ingroup SslCrtdSslAPI
- * Sign SSL request.
- * \param x509 if this param equals NULL, returning certificate will be selfsigned.
- * \return X509 Signed certificate.
+ * Read SSL certificate from memory.
  */
-X509 * signRequest(X509_REQ_Pointer const & request, X509_Pointer const & x509, EVP_PKEY_Pointer const & pkey, ASN1_TIME * timeNotAfter, BIGNUM const * serial);
+bool readCertFromMemory(X509_Pointer & cert, char const * bufferToRead);
+
+/**
+  \ingroup SslCrtdSslAPI
+ * Supported certificate signing algorithms
+ */
+enum CertSignAlgorithm {algSignTrusted = 0, algSignUntrusted, algSignSelf, algSignEnd};
+
+/**
+ \ingroup SslCrtdSslAPI
+ * Short names for certificate signing algorithms
+ */
+
+extern const char *CertSignAlgorithmStr[];
+
+/**
+ \ingroup SslCrtdSslAPI
+ * Return the short name of the signing algorithm "sg"
+ */
+inline const char *certSignAlgorithm(int sg)
+{
+    if (sg >=0 && sg < Ssl::algSignEnd)
+        return Ssl::CertSignAlgorithmStr[sg];
+
+    return NULL;
+}
+
+/**
+ \ingroup SslCrtdSslAPI
+ * Return the id of the signing algorithm "sg"
+ */
+inline CertSignAlgorithm certSignAlgorithmId(const char *sg)
+{
+    for (int i = 0; i < algSignEnd && Ssl::CertSignAlgorithmStr[i] != NULL; i++)
+        if (strcmp(Ssl::CertSignAlgorithmStr[i], sg) == 0)
+            return (CertSignAlgorithm)i;
+
+    return algSignEnd;
+}
+
+/**
+ \ingroup SslCrtdSslAPI
+ * Supported certificate adaptation algorithms
+ */
+enum CertAdaptAlgorithm {algSetValidAfter = 0, algSetValidBefore, algSetCommonName, algSetEnd};
+
+/**
+ \ingroup SslCrtdSslAPI
+ * Short names for certificate adaptation algorithms
+ */
+extern const char *CertAdaptAlgorithmStr[];
+
+/**
+ \ingroup SslCrtdSslAPI
+ * Return the short name of the adaptation algorithm "alg"
+ */
+inline const char *sslCertAdaptAlgoritm(int alg)
+{
+    if (alg >=0 && alg < Ssl::algSetEnd)
+        return Ssl::CertAdaptAlgorithmStr[alg];
+
+    return NULL;
+}
+
+/**
+ \ingroup SslCrtdSslAPI
+ * Simple struct to pass certificate generation parameters to generateSslCertificate function.
+ */
+class CertificateProperties
+{
+public:
+    CertificateProperties();
+    X509_Pointer mimicCert; ///< Certificate to mimic
+    X509_Pointer signWithX509; ///< Certificate to sign the generated request
+    EVP_PKEY_Pointer signWithPkey; ///< The key of the signing certificate
+    bool setValidAfter; ///< Do not mimic "Not Valid After" field
+    bool setValidBefore; ///< Do not mimic "Not Valid Before" field
+    bool setCommonName; ///< Replace the CN field of the mimicing subject with the given
+    std::string commonName; ///< A CN to use for the generated certificate
+    CertSignAlgorithm signAlgorithm; ///< The signing algorithm to use
+    /// Returns certificate database primary key. New fake certificates
+    /// purge old fake certificates with the same key.
+    std::string & dbKey() const;
+private:
+    CertificateProperties(CertificateProperties &);
+    CertificateProperties &operator =(CertificateProperties const &);
+};
 
 /**
  \ingroup SslCrtdSslAPI
  * Decide on the kind of certificate and generate a CA- or self-signed one.
+ * The  generated certificate will inherite properties from certToMimic
  * Return generated certificate and private key in resultX509 and resultPkey
  * variables.
  */
-bool generateSslCertificateAndPrivateKey(char const *host, X509_Pointer const & signedX509, EVP_PKEY_Pointer const & signedPkey, X509_Pointer & cert, EVP_PKEY_Pointer & pkey, BIGNUM const* serial);
+bool generateSslCertificate(X509_Pointer & cert, EVP_PKEY_Pointer & pkey, CertificateProperties const &properties);
 
 /**
  \ingroup SslCrtdSslAPI
@@ -139,6 +247,28 @@ void readCertAndPrivateKeyFromFiles(X509_Pointer & cert, EVP_PKEY_Pointer & pkey
  * return false.
 */
 bool sslDateIsInTheFuture(char const * date);
+
+/**
+ \ingroup SslCrtdSslAPI
+ * Check if the major fields of a certificates matches the properties given by
+ * a CertficateProperties object
+ \return true if the certificates matches false otherwise.
+*/
+bool certificateMatchesProperties(X509 *peer_cert, CertificateProperties const &properties);
+
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Returns CN from the certificate, suitable for use as a host name.
+   * Uses static memory to temporary store the extracted name.
+*/
+const char *CommonHostName(X509 *x509);
+
+/**
+   \ingroup ServerProtocolSSLAPI
+   * Returns Organization from the certificate.
+   * Uses static memory to temporary store the extracted name.
+*/
+const char *getOrganization(X509 *x509);
 
 } // namespace Ssl
 #endif // SQUID_SSL_GADGETS_H

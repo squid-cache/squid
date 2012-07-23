@@ -39,7 +39,7 @@
 #include "MemBuf.h"
 
 void
-Log::Format::SquidCustom(AccessLogEntry * al, customlog * log)
+Log::Format::SquidCustom(const AccessLogEntry::Pointer &al, customlog * log)
 {
     static MemBuf mb;
     mb.reset();

@@ -574,6 +574,8 @@ struct SquidConfig {
     HeaderManglers *request_header_access;
     /// reply_header_access and reply_header_replace
     HeaderManglers *reply_header_access;
+    ///request_header_add access list
+    HeaderWithAclList *request_header_add;
     char *coredump_dir;
     char *chroot_dir;
 #if USE_CACHE_DIGESTS
@@ -620,6 +622,8 @@ struct SquidConfig {
         char *flags;
         acl_access *cert_error;
         SSL_CTX *sslContext;
+        sslproxy_cert_sign *cert_sign;
+        sslproxy_cert_adapt *cert_adapt;
     } ssl_client;
 #endif
 
@@ -956,9 +960,7 @@ struct _iostats {
 
 
 struct request_flags {
-    request_flags(): range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),fail_on_validation_err(0),stale_if_hit(0),accelerated(0),ignore_cc(0),intercepted(0),
-            hostVerified(0),
-            spoof_client_ip(0),internal(0),internalclient(0),must_keepalive(0),chunked_reply(0),stream_error(0),sslBumped(0),destinationIPLookedUp_(0) {
+    request_flags(): range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),fail_on_validation_err(0),stale_if_hit(0),accelerated(0),ignore_cc(0),intercepted(0),hostVerified(0),spoof_client_ip(0),internal(0),internalclient(0),must_keepalive(0),pinned(0),canRePin(0),chunked_reply(0),stream_error(0),sslPeek(0),sslBumped(0),destinationIPLookedUp_(0) {
 #if USE_HTTP_VIOLATIONS
         nocache_hack = 0;
 #endif
@@ -997,10 +999,12 @@ unsigned int proxying:
     unsigned int connection_auth_disabled:1; /** Connection oriented auth can not be supported */
     unsigned int connection_proxy_auth:1; /** Request wants connection oriented auth */
     unsigned int pinned:1;      /* Request sent on a pinned connection */
+    unsigned int canRePin:1; ///< OK to reopen a failed pinned connection
     unsigned int auth_sent:1;   /* Authentication forwarded */
     unsigned int no_direct:1;	/* Deny direct forwarding unless overriden by always_direct. Used in accelerator mode */
     unsigned int chunked_reply:1; /**< Reply with chunked transfer encoding */
     unsigned int stream_error:1; /**< Whether stream error has occured */
+    unsigned int sslPeek:1; ///< internal ssl-bump request to get server cert
     unsigned int sslBumped:1; /**< ssl-bumped request*/
 
     // When adding new flags, please update cloneAdaptationImmune() as needed.
@@ -1087,6 +1091,21 @@ struct _store_rebuild_data {
     int bad_log_op;
     int zero_object_sz;
 };
+
+#if USE_SSL
+struct _sslproxy_cert_sign {
+    int alg;
+    ACLList *aclList;
+    sslproxy_cert_sign *next;
+};
+
+struct _sslproxy_cert_adapt {
+    int alg;
+    char *param;
+    ACLList *aclList;
+    sslproxy_cert_adapt *next;
+};
+#endif
 
 class Logfile;
 

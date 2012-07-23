@@ -1574,7 +1574,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
     stuff.S.method = (char *) RequestMethodStr(req->method);
     stuff.S.uri = (char *) e->url();
     stuff.S.version = vbuf;
-    HttpStateData::httpBuildRequestHeader(req, e, &hdr, flags);
+    HttpStateData::httpBuildRequestHeader(req, e, NULL, &hdr, flags);
     mb.init();
     packerToMemInit(&pa, &mb);
     hdr.packInto(&pa);
@@ -1645,7 +1645,7 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     }
     stuff.S.version = vbuf;
     if (reason != HTCP_CLR_INVALIDATION) {
-        HttpStateData::httpBuildRequestHeader(req, e, &hdr, flags);
+        HttpStateData::httpBuildRequestHeader(req, e, NULL, &hdr, flags);
         mb.init();
         packerToMemInit(&pa, &mb);
         hdr.packInto(&pa);
@@ -1717,15 +1717,15 @@ htcpClosePorts(void)
 static void
 htcpLogHtcp(Ip::Address &caddr, int opcode, log_type logcode, const char *url)
 {
-    AccessLogEntry al;
+    AccessLogEntry::Pointer al = new AccessLogEntry;
     if (LOG_TAG_NONE == logcode)
         return;
     if (!Config.onoff.log_udp)
         return;
-    al.htcp.opcode = htcpOpcodeStr[opcode];
-    al.url = url;
-    al.cache.caddr = caddr;
-    al.cache.code = logcode;
-    al.cache.msec = 0;
-    accessLogLog(&al, NULL);
+    al->htcp.opcode = htcpOpcodeStr[opcode];
+    al->url = url;
+    al->cache.caddr = caddr;
+    al->cache.code = logcode;
+    al->cache.msec = 0;
+    accessLogLog(al, NULL);
 }

@@ -953,6 +953,7 @@ cf.data: cf.data.pre Makefile
 	-e "s%[@]DEFAULT_SSL_DB_DIR[@]%$(DEFAULT_SSL_DB_DIR)%g" \
 	-e "s%[@]DEFAULT_ICON_DIR[@]%$(DEFAULT_ICON_DIR)%g" \
 	-e "s%[@]DEFAULT_CONFIG_DIR[@]%$(DEFAULT_CONFIG_DIR)%g" \
+	-e "s%[@]DEFAULT_ERROR_DIR[@]%$(DEFAULT_ERROR_DIR)%g" \
 	-e "s%[@]DEFAULT_PREFIX[@]%$(DEFAULT_PREFIX)%g" \
 	-e "s%[@]DEFAULT_HOSTS[@]%$(DEFAULT_HOSTS)%g" \
 	-e "s%[@]SQUID[@]%SQUID\ $(VERSION)%g" \
@@ -1098,6 +1099,7 @@ tests_testHttpReply_SOURCES=\
 	tests/stub_debug.cc \
 	tests/stub_errorpage.cc \
 	tests/stub_HelperChildConfig.cc \
+	tests/stub_libformat.cc \
 	StatCounters.h \
 	StatCounters.cc \
 	StatHist.h \
@@ -1195,6 +1197,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_errorpage.cc \
 	tests/stub_fd.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_libformat.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_mime.cc \
@@ -1529,6 +1532,7 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_internal.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
+	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_mime.cc \
@@ -2457,6 +2461,7 @@ tests_testStore_SOURCES= \
 	tests/stub_helper.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_http.cc \
+	tests/stub_libformat.cc \
 	HttpBody.h \
 	HttpBody.cc \
 	tests/stub_HttpReply.cc \
@@ -2592,6 +2597,7 @@ tests_testUfs_SOURCES = \
 	tests/stub_Port.cc \
 	tests/stub_UdsOp.cc \
 	tests/stub_internal.cc \
+	tests/stub_libformat.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	fd.cc \
@@ -2795,6 +2801,7 @@ tests_testRock_SOURCES = \
 	tests/stub_icp.cc \
 	tests/stub_ipc.cc \
 	tests/stub_ipcache.cc \
+	tests/stub_libformat.cc \
 	tests/stub_libicmp.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_mime.cc \

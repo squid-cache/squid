@@ -1,13 +1,16 @@
 #ifndef ICAP_LOG_H_
 #define ICAP_LOG_H_
 
+#include "RefCount.h"
+
+typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
 class AccessLogEntry;
 class ACLChecklist;
 
 void icapLogClose();
 void icapLogOpen();
 void icapLogRotate();
-void icapLogLog(AccessLogEntry *al, ACLChecklist * checklist);
+void icapLogLog(AccessLogEntryPointer &al, ACLChecklist * checklist);
 
 extern int IcapLogfileStatus;
 

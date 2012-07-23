@@ -1,12 +1,20 @@
 #ifndef SQUID_HTTPHEADERTOOLS_H
 #define SQUID_HTTPHEADERTOOLS_H
 
+#include "format/Format.h"
+
+#if HAVE_LIST
+#include <list>
+#endif
 #if HAVE_MAP
 #include <map>
 #endif
 #if HAVE_STRING
 #include <string>
 #endif
+
+class HeaderWithAcl;
+typedef std::list<HeaderWithAcl> HeaderWithAclList;
 
 class acl_access;
 struct _header_mangler {
@@ -55,5 +63,30 @@ private:
     /* not implemented */
     HeaderManglers(const HeaderManglers &);
     HeaderManglers &operator =(const HeaderManglers &);
+};
+
+class ACLList;
+class HeaderWithAcl
+{
+public:
+    HeaderWithAcl() :  aclList(NULL), fieldId (HDR_BAD_HDR), quoted(false) {}
+
+    /// HTTP header field name
+    std::string fieldName;
+
+    /// HTTP header field value, possibly with macros
+    std::string fieldValue;
+
+    /// when the header field should be added (always if nil)
+    ACLList *aclList;
+
+    /// compiled HTTP header field value (no macros)
+    Format::Format *valueFormat;
+
+    /// internal ID for "known" headers or HDR_OTHER
+    http_hdr_type fieldId;
+
+    /// whether fieldValue may contain macros
+    bool quoted;
 };
 #endif

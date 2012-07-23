@@ -331,6 +331,8 @@ static struct wccp2_capability_element_t wccp2_capability_element;
 #define WCCP2_CAPABILITY_FORWARDING_METHOD	0x01
 #define WCCP2_CAPABILITY_ASSIGNMENT_METHOD	0x02
 #define WCCP2_CAPABILITY_RETURN_METHOD		0x03
+// 0x04 ?? - advertised by a 4507 (ios v15.1) Cisco switch
+// 0x05 ?? - advertised by a 4507 (ios v15.1) Cisco switch
 
 /* capability values */
 #define WCCP2_METHOD_GRE		0x00000001
@@ -1383,6 +1385,10 @@ wccp2HandleUdp(int sock, void *not_used)
                 }
 
                 break;
+
+            case 4:
+            case 5:
+                break; // ignore silently for now
 
             default:
                 debugs(80, 1, "Unknown capability type in WCCPv2 Packet (" << ntohs(router_capability_element->capability_type) << ").");
