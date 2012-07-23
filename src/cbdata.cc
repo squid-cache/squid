@@ -319,6 +319,8 @@ cbdataInternalAlloc(cbdata_type type)
     c->addHistory("Alloc", file, line);
     dlinkAdd(c, &c->link, &cbdataEntries);
     debugs(45, 3, "cbdataAlloc: " << p << " " << file << ":" << line);
+#else
+    debugs(45, 9, "cbdataAlloc: " << p);
 #endif
 
     return p;

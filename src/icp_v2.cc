@@ -186,7 +186,7 @@ ICP2State::created(StoreEntry *newEntry)
 static void
 icpLogIcp(const Ip::Address &caddr, log_type logcode, int len, const char *url, int delay)
 {
-    AccessLogEntry al;
+    AccessLogEntry::Pointer al = new AccessLogEntry();
 
     if (LOG_TAG_NONE == logcode)
         return;
@@ -199,19 +199,19 @@ icpLogIcp(const Ip::Address &caddr, log_type logcode, int len, const char *url, 
     if (!Config.onoff.log_udp)
         return;
 
-    al.icp.opcode = ICP_QUERY;
+    al->icp.opcode = ICP_QUERY;
 
-    al.url = url;
+    al->url = url;
 
-    al.cache.caddr = caddr;
+    al->cache.caddr = caddr;
 
-    al.cache.replySize = len;
+    al->cache.replySize = len;
 
-    al.cache.code = logcode;
+    al->cache.code = logcode;
 
-    al.cache.msec = delay;
+    al->cache.msec = delay;
 
-    accessLogLog(&al, NULL);
+    accessLogLog(al, NULL);
 }
 
 /// \ingroup ServerProtocolICPInternal2

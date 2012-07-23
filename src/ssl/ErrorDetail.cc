@@ -16,8 +16,10 @@ typedef std::map<Ssl::ssl_error_t, const SslErrorEntry *> SslErrors;
 SslErrors TheSslErrors;
 
 static SslErrorEntry TheSslErrorArray[] = {
+    {SQUID_X509_V_ERR_CERT_CHANGE,
+        "SQUID_X509_V_ERR_CERT_CHANGE"},
     {SQUID_ERR_SSL_HANDSHAKE,
-        "SQUID_ERR_SSL_HANDSHAKE"},
+     "SQUID_ERR_SSL_HANDSHAKE"},
     {SQUID_X509_V_ERR_DOMAIN_MISMATCH,
      "SQUID_X509_V_ERR_DOMAIN_MISMATCH"},
     {X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
@@ -88,12 +90,58 @@ static SslErrorEntry TheSslErrorArray[] = {
     {SSL_ERROR_NONE, NULL}
 };
 
+struct SslErrorAlias {
+    const char *name;
+    const Ssl::ssl_error_t *errors;
+};
+
+static const Ssl::ssl_error_t hasExpired[] = {X509_V_ERR_CERT_HAS_EXPIRED, SSL_ERROR_NONE};
+static const Ssl::ssl_error_t notYetValid[] = {X509_V_ERR_CERT_NOT_YET_VALID, SSL_ERROR_NONE};
+static const Ssl::ssl_error_t domainMismatch[] = {SQUID_X509_V_ERR_DOMAIN_MISMATCH, SSL_ERROR_NONE};
+static const Ssl::ssl_error_t certUntrusted[] = {X509_V_ERR_INVALID_CA,
+        X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN,
+        X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE,
+        X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
+        X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY,
+        X509_V_ERR_CERT_UNTRUSTED, SSL_ERROR_NONE
+                                                };
+static const Ssl::ssl_error_t certSelfSigned[] = {X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT, SSL_ERROR_NONE};
+
+// The list of error name shortcuts  for use with ssl_error acls.
+// The keys without the "ssl::" scope prefix allow shorter error
+// names within the SSL options scope. This is easier than
+// carefully stripping the scope prefix in Ssl::ParseErrorString().
+static SslErrorAlias TheSslErrorShortcutsArray[] = {
+    {"ssl::certHasExpired", hasExpired},
+    {"certHasExpired", hasExpired},
+    {"ssl::certNotYetValid", notYetValid},
+    {"certNotYetValid", notYetValid},
+    {"ssl::certDomainMismatch", domainMismatch},
+    {"certDomainMismatch", domainMismatch},
+    {"ssl::certUntrusted", certUntrusted},
+    {"certUntrusted", certUntrusted},
+    {"ssl::certSelfSigned", certSelfSigned},
+    {"certSelfSigned", certSelfSigned},
+    {NULL, NULL}
+};
+
+// Use std::map to optimize search.
+typedef std::map<std::string, const Ssl::ssl_error_t *> SslErrorShortcuts;
+SslErrorShortcuts TheSslErrorShortcuts;
+
 static void loadSslErrorMap()
 {
     assert(TheSslErrors.empty());
     for (int i = 0; TheSslErrorArray[i].name; ++i) {
         TheSslErrors[TheSslErrorArray[i].value] = &TheSslErrorArray[i];
     }
+}
+
+static void loadSslErrorShortcutsMap()
+{
+    assert(TheSslErrorShortcuts.empty());
+    for (int i = 0; TheSslErrorShortcutsArray[i].name; i++)
+        TheSslErrorShortcuts[TheSslErrorShortcutsArray[i].name] = TheSslErrorShortcutsArray[i].errors;
 }
 
 Ssl::ssl_error_t Ssl::GetErrorCode(const char *name)
@@ -106,24 +154,38 @@ Ssl::ssl_error_t Ssl::GetErrorCode(const char *name)
     return SSL_ERROR_NONE;
 }
 
-Ssl::ssl_error_t
+Ssl::Errors *
 Ssl::ParseErrorString(const char *name)
 {
     assert(name);
 
     const Ssl::ssl_error_t ssl_error = GetErrorCode(name);
     if (ssl_error != SSL_ERROR_NONE)
-        return ssl_error;
+        return new Ssl::Errors(ssl_error);
 
     if (xisdigit(*name)) {
         const long int value = strtol(name, NULL, 0);
         if (SQUID_SSL_ERROR_MIN <= value && value <= SQUID_SSL_ERROR_MAX)
-            return value;
+            return new Ssl::Errors(value);
         fatalf("Too small or too bug SSL error code '%s'", name);
     }
 
+    if (TheSslErrorShortcuts.empty())
+        loadSslErrorShortcutsMap();
+
+    const SslErrorShortcuts::const_iterator it = TheSslErrorShortcuts.find(name);
+    if (it != TheSslErrorShortcuts.end()) {
+        // Should not be empty...
+        assert(it->second[0] != SSL_ERROR_NONE);
+        Ssl::Errors *errors = new Ssl::Errors(it->second[0]);
+        for (int i =1; it->second[i] != SSL_ERROR_NONE; i++) {
+            errors->push_back_unique(it->second[i]);
+        }
+        return errors;
+    }
+
     fatalf("Unknown SSL error name '%s'", name);
-    return SSL_ERROR_SSL; // not reached
+    return NULL; // not reached
 }
 
 const char *Ssl::GetErrorName(Ssl::ssl_error_t value)
@@ -161,11 +223,11 @@ Ssl::ErrorDetail::err_frm_code Ssl::ErrorDetail::ErrorFormatingCodes[] = {
  */
 const char  *Ssl::ErrorDetail::subject() const
 {
-    if (!peer_cert)
+    if (!broken_cert)
         return "[Not available]";
 
     static char tmpBuffer[256]; // A temporary buffer
-    X509_NAME_oneline(X509_get_subject_name(peer_cert.get()), tmpBuffer,
+    X509_NAME_oneline(X509_get_subject_name(broken_cert.get()), tmpBuffer,
                       sizeof(tmpBuffer));
     return tmpBuffer;
 }
@@ -187,12 +249,12 @@ static int copy_cn(void *check_data,  ASN1_STRING *cn_data)
  */
 const char *Ssl::ErrorDetail::cn() const
 {
-    if (!peer_cert)
+    if (!broken_cert)
         return "[Not available]";
 
     static String tmpStr;  ///< A temporary string buffer
     tmpStr.clean();
-    Ssl::matchX509CommonNames(peer_cert.get(), &tmpStr, copy_cn);
+    Ssl::matchX509CommonNames(broken_cert.get(), &tmpStr, copy_cn);
     return tmpStr.termedBuf();
 }
 
@@ -201,11 +263,11 @@ const char *Ssl::ErrorDetail::cn() const
  */
 const char *Ssl::ErrorDetail::ca_name() const
 {
-    if (!peer_cert)
+    if (!broken_cert)
         return "[Not available]";
 
     static char tmpBuffer[256]; // A temporary buffer
-    X509_NAME_oneline(X509_get_issuer_name(peer_cert.get()), tmpBuffer, sizeof(tmpBuffer));
+    X509_NAME_oneline(X509_get_issuer_name(broken_cert.get()), tmpBuffer, sizeof(tmpBuffer));
     return tmpBuffer;
 }
 
@@ -214,11 +276,11 @@ const char *Ssl::ErrorDetail::ca_name() const
  */
 const char *Ssl::ErrorDetail::notbefore() const
 {
-    if (!peer_cert)
+    if (!broken_cert)
         return "[Not available]";
 
     static char tmpBuffer[256]; // A temporary buffer
-    ASN1_UTCTIME * tm = X509_get_notBefore(peer_cert.get());
+    ASN1_UTCTIME * tm = X509_get_notBefore(broken_cert.get());
     Ssl::asn1timeToString(tm, tmpBuffer, sizeof(tmpBuffer));
     return tmpBuffer;
 }
@@ -228,11 +290,11 @@ const char *Ssl::ErrorDetail::notbefore() const
  */
 const char *Ssl::ErrorDetail::notafter() const
 {
-    if (!peer_cert)
+    if (!broken_cert)
         return "[Not available]";
 
     static char tmpBuffer[256]; // A temporary buffer
-    ASN1_UTCTIME * tm = X509_get_notAfter(peer_cert.get());
+    ASN1_UTCTIME * tm = X509_get_notAfter(broken_cert.get());
     Ssl::asn1timeToString(tm, tmpBuffer, sizeof(tmpBuffer));
     return tmpBuffer;
 }
@@ -280,16 +342,20 @@ const char *Ssl::ErrorDetail::err_lib_error() const
 }
 
 /**
- * It converts the code to a string value. Currently the following
- * formating codes are supported:
+ * Converts the code to a string value. Supported formating codes are:
+ *
+ * Error meta information:
  * %err_name: The name of a high-level SSL error (e.g., X509_V_ERR_*)
  * %ssl_error_descr: A short description of the SSL error
+ * %ssl_lib_error: human-readable low-level error string by ERR_error_string(3SSL)
+ *
+ * Certificate information extracted from broken (not necessarily peer!) cert
  * %ssl_cn: The comma-separated list of common and alternate names
  * %ssl_subject: The certificate subject
  * %ssl_ca_name: The certificate issuer name
  * %ssl_notbefore: The certificate "not before" field
  * %ssl_notafter: The certificate "not after" field
- * %ssl_lib_error: human-readable low-level error string by ERR_error_string(3SSL)
+ *
  \retval  the length of the code (the number of characters will be replaced by value)
 */
 int Ssl::ErrorDetail::convert(const char *code, const char **value) const
@@ -345,15 +411,15 @@ const String &Ssl::ErrorDetail::toString() const
     return errDetailStr;
 }
 
-/* We may do not want to use X509_dup but instead
-   internal SSL locking:
-   CRYPTO_add(&(cert->references),1,CRYPTO_LOCK_X509);
-   peer_cert.reset(cert);
-*/
-Ssl::ErrorDetail::ErrorDetail( Ssl::ssl_error_t err_no, X509 *cert): error_no (err_no), lib_error_no(SSL_ERROR_NONE)
+Ssl::ErrorDetail::ErrorDetail( Ssl::ssl_error_t err_no, X509 *cert, X509 *broken): error_no (err_no), lib_error_no(SSL_ERROR_NONE)
 {
     if (cert)
-        peer_cert.reset(X509_dup(cert));
+        peer_cert.resetAndLock(cert);
+
+    if (broken)
+        broken_cert.resetAndLock(broken);
+    else
+        broken_cert.resetAndLock(cert);
 
     detailEntry.error_no = SSL_ERROR_NONE;
 }
@@ -364,7 +430,11 @@ Ssl::ErrorDetail::ErrorDetail(Ssl::ErrorDetail const &anErrDetail)
     request = anErrDetail.request;
 
     if (anErrDetail.peer_cert.get()) {
-        peer_cert.reset(X509_dup(anErrDetail.peer_cert.get()));
+        peer_cert.resetAndLock(anErrDetail.peer_cert.get());
+    }
+
+    if (anErrDetail.broken_cert.get()) {
+        broken_cert.resetAndLock(anErrDetail.broken_cert.get());
     }
 
     detailEntry = anErrDetail.detailEntry;

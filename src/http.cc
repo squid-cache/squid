@@ -88,6 +88,8 @@ static const char *const crlf = "\r\n";
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
 static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, const HttpRequest * request,
         HttpHeader * hdr_out, const int we_do_ranges, const http_state_flags);
+//Declared in HttpHeaderTools.cc
+void httpHdrAdd(HttpHeader *heads, HttpRequest *request, const AccessLogEntryPointer &al, HeaderWithAclList &headers_add);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"), ServerStateData(theFwdState),
         lastChunk(0), header_bytes_read(0), reply_bytes_read(0),
@@ -1606,6 +1608,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
 void
 HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                                       StoreEntry * entry,
+                                      const AccessLogEntryPointer &al,
                                       HttpHeader * hdr_out,
                                       const http_state_flags flags)
 {
@@ -1781,6 +1784,9 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     /* Now mangle the headers. */
     if (Config2.onoff.mangle_request_headers)
         httpHdrMangleList(hdr_out, request, ROR_REQUEST);
+
+    if (Config.request_header_add && !Config.request_header_add->empty())
+        httpHdrAdd(hdr_out, request, al, *Config.request_header_add);
 
     strConnection.clean();
 }
@@ -2003,7 +2009,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
     {
         HttpHeader hdr(hoRequest);
         Packer p;
-        httpBuildRequestHeader(request, entry, &hdr, flags);
+        httpBuildRequestHeader(request, entry, fwd->al, &hdr, flags);
 
         if (request->flags.pinned && request->flags.connection_auth)
             request->flags.auth_sent = 1;
@@ -2286,7 +2292,7 @@ HttpStateData::handleRequestBodyProducerAborted()
         // should not matter because either client-side will provide its own or
         // there will be no response at all (e.g., if the the client has left).
         ErrorState *err = new ErrorState(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, fwd->request);
-        err->xerrno = ERR_DETAIL_SRV_REQMOD_REQ_BODY;
+        err->detailError(ERR_DETAIL_SRV_REQMOD_REQ_BODY);
         fwd->fail(err);
     }
 

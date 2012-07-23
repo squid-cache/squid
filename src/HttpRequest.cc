@@ -35,6 +35,7 @@
  */
 
 #include "squid-old.h"
+#include "AccessLogEntry.h"
 #include "DnsLookupDetails.h"
 #include "HttpRequest.h"
 #include "HttpHdrCc.h"
@@ -262,6 +263,7 @@ HttpRequest::inheritProperties(const HttpMsg *aMsg)
 
     // main property is which connection the request was received on (if any)
     clientConnectionManager = aReq->clientConnectionManager;
+
     return true;
 }
 
@@ -526,6 +528,14 @@ HttpRequest::detailError(err_type aType, int aDetail)
         errType = aType;
     if (!errDetail)
         errDetail = aDetail;
+}
+
+void
+HttpRequest::clearError()
+{
+    debugs(11, 7, HERE << "old error details: " << errType << '/' << errDetail);
+    errType = ERR_NONE;
+    errDetail = ERR_DETAIL_NONE;
 }
 
 const char *HttpRequest::packableURI(bool full_uri) const
