@@ -674,8 +674,10 @@ parseCommandline( int argc, char* argv[], REList*& head,
                     }
 
                     // remove trailing line breaks
-                    while ( len > 0 && ( line[len] == '\n' || line[len] == '\r' ) )
-                        line[len--] = '\0';
+                    while ( len > 0 && ( line[len] == '\n' || line[len] == '\r' ) ) {
+                        line[len] = '\0';
+                        --len;
+                    }
 
                     // insert into list of expressions
                     if ( head == 0 ) tail = head = new REList(line,option=='F');

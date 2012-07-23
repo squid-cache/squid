@@ -403,7 +403,7 @@ Comm::DoSelect(int msec)
             register int readfds_handle = readfds.fd_array[j];
             no_bits = 1;
 
-            for ( fd = Biggest_FD; fd; fd-- ) {
+            for ( fd = Biggest_FD; fd; --fd ) {
                 if ( fd_table[fd].win32.handle == readfds_handle ) {
                     if (fd_table[fd].flags.open) {
                         no_bits = 0;
@@ -490,7 +490,7 @@ Comm::DoSelect(int msec)
             register int osfhandle;
             no_bits = 1;
 
-            for ( fd = Biggest_FD; fd; fd-- ) {
+            for ( fd = Biggest_FD; fd; --fd ) {
                 osfhandle = fd_table[fd].win32.handle;
 
                 if (( osfhandle == readfds_handle ) ||
@@ -554,7 +554,7 @@ Comm::DoSelect(int msec)
         for (j = 0; j < (int) errfds.fd_count; ++j) {
             register int errfds_handle = errfds.fd_array[j];
 
-            for ( fd = Biggest_FD; fd; fd-- ) {
+            for ( fd = Biggest_FD; fd; --fd ) {
                 if ( fd_table[fd].win32.handle == errfds_handle )
                     break;
             }
@@ -577,7 +577,7 @@ Comm::DoSelect(int msec)
             register int writefds_handle = writefds.fd_array[j];
             no_bits = 1;
 
-            for ( fd = Biggest_FD; fd; fd-- ) {
+            for ( fd = Biggest_FD; fd; --fd ) {
                 if ( fd_table[fd].win32.handle == writefds_handle ) {
                     if (fd_table[fd].flags.open) {
                         no_bits = 0;

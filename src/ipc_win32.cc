@@ -566,7 +566,8 @@ ipc_thread_1(void *in_params)
     x = 1;
 
     while (args[x]) {
-        strcat(buf1, args[x++]);
+        strcat(buf1, args[x]);
+        ++x;
         strcat(buf1, " ");
     }
 
