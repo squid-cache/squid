@@ -91,7 +91,8 @@ print_esc(FILE * p, char *s)
         if (*t == '\\')
             buf[i++] = '\\';
 
-        buf[i++] = *t;
+        buf[i] = *t;
+        ++i;
     }
 
     if (i > 0) {

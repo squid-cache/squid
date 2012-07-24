@@ -108,9 +108,9 @@ unlinkdUnlink(const char *path)
         if (bytes_read > 0) {
             rbuf[bytes_read] = '\0';
 
-            for (i = 0; i < bytes_read; i++)
+            for (i = 0; i < bytes_read; ++i)
                 if ('\n' == rbuf[i])
-                    queuelen--;
+                    --queuelen;
 
             assert(queuelen >= 0);
         }
@@ -119,7 +119,8 @@ unlinkdUnlink(const char *path)
     l = strlen(path);
     assert(l < MAXPATHLEN);
     xstrncpy(buf, path, MAXPATHLEN);
-    buf[l++] = '\n';
+    buf[l] = '\n';
+    ++l;
     bytes_written = write(unlinkd_wfd, buf, l);
 
     if (bytes_written < 0) {
@@ -139,7 +140,7 @@ unlinkdUnlink(const char *path)
     * in counting unlink operations.
     */
     ++statCounter.syscalls.disk.unlinks;
-    queuelen++;
+    ++queuelen;
 }
 
 void

@@ -46,10 +46,10 @@ HttpParser::parseRequestFirstLine()
                    "Whitespace bytes received ahead of method. " <<
                    "Ignored due to relaxed_header_parser.");
         // Be tolerant of prefix spaces (other bytes are valid method values)
-        for (; req.start < bufsiz && buf[req.start] == ' '; req.start++);
+        for (; req.start < bufsiz && buf[req.start] == ' '; ++req.start);
     }
     req.end = -1;
-    for (int i = 0; i < bufsiz; i++) {
+    for (int i = 0; i < bufsiz; ++i) {
         // track first and last whitespace (SP only)
         if (buf[i] == ' ') {
             last_whitespace = i;
@@ -79,7 +79,7 @@ HttpParser::parseRequestFirstLine()
                 if (buf[i + 1] == '\n' || buf[i + 1] == '\r')
                     line_end = i - 1;
                 while (i < bufsiz - 1 && buf[i + 1] == '\r')
-                    i++;
+                    ++i;
 
                 if (buf[i + 1] == '\n') {
                     req.end = i + 1;
@@ -151,7 +151,7 @@ HttpParser::parseRequestFirstLine()
         // otherwise last whitespace is somewhere after end of URI.
         req.u_end = last_whitespace;
         // crop any trailing whitespace in the area we think of as URI
-        for (; req.u_end >= req.u_start && xisspace(buf[req.u_end]); req.u_end--);
+        for (; req.u_end >= req.u_start && xisspace(buf[req.u_end]); --req.u_end);
     }
     if (req.u_end < req.u_start) {
         request_parse_status = HTTP_BAD_REQUEST; // missing URI
@@ -191,7 +191,7 @@ HttpParser::parseRequestFirstLine()
         return -1;
     }
     int maj = 0;
-    for (; i <= line_end && (isdigit(buf[i])) && maj < 65536; i++) {
+    for (; i <= line_end && (isdigit(buf[i])) && maj < 65536; ++i) {
         maj = maj * 10;
         maj = maj + (buf[i]) - '0';
     }
@@ -218,7 +218,7 @@ HttpParser::parseRequestFirstLine()
         return -1;
     }
     int min = 0;
-    for (; i <= line_end && (isdigit(buf[i])) && min < 65536; i++) {
+    for (; i <= line_end && (isdigit(buf[i])) && min < 65536; ++i) {
         min = min * 10;
         min = min + (buf[i]) - '0';
     }

@@ -90,7 +90,7 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
         return 0;
     }
 
-    p++;
+    ++p;
 
     /* do we have last-pos ? */
     if (p - field >= flen) {
@@ -182,7 +182,7 @@ httpHdrContRangeParseInit(HttpHdrContRange * range, const char *str)
     else if (!httpHdrRangeRespSpecParseInit(&range->spec, str, p - str))
         return 0;
 
-    p++;
+    ++p;
 
     if (*p == '*')
         range->elength = range_spec_unknown;

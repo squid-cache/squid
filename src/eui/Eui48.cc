@@ -485,7 +485,7 @@ Eui::Eui48::lookup(const Ip::Address &c)
     }
 
     /* Find MAC address from net table */
-    for (i = 0 ; i < NetTable->dwNumEntries ; i++) {
+    for (i = 0 ; i < NetTable->dwNumEntries ; ++i) {
         in_addr a;
         a.s_addr = NetTable->table[i].dwAddr;
         if (c == a && (NetTable->table[i].dwType > 2)) {

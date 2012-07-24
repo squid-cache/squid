@@ -71,7 +71,7 @@ mime_get_header_field(const char *mime, const char *name, const char *prefix)
             return NULL;
 
         while (xisspace(*p))
-            p++;
+            ++p;
 
         if (strncasecmp(p, name, namelen))
             continue;
@@ -92,11 +92,15 @@ mime_get_header_field(const char *mime, const char *name, const char *prefix)
 
         q += namelen;
 
-        if (*q == ':')
-            q++, got = 1;
+        if (*q == ':') {
+            ++q;
+            got = 1;
+        }
 
-        while (xisspace(*q))
-            q++, got = 1;
+        while (xisspace(*q)) {
+            ++q;
+            got = 1;
+        }
 
         if (got && prefix) {
             /* we could process list entries here if we had strcasestr(). */
@@ -153,7 +157,7 @@ headersEnd(const char *mime, size_t l)
             break;
         }
 
-        e++;
+        ++e;
     }
     PROF_stop(headersEnd);
 

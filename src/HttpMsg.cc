@@ -76,7 +76,7 @@ httpMsgIsolateHeaders(const char **parse_start, int l, const char **blk_start, c
         assert(**blk_end == '\n');
 
         while (*(*blk_end - 1) == '\r')
-            (*blk_end)--;
+            --(*blk_end);
 
         assert(*(*blk_end - 1) == '\n');
 
@@ -102,11 +102,11 @@ httpMsgIsolateHeaders(const char **parse_start, int l, const char **blk_start, c
 
     *blk_end = *blk_start;
 
-    for (nnl = 0; nnl == 0; (*parse_start)++) {
+    for (nnl = 0; nnl == 0; ++(*parse_start)) {
         if (**parse_start == '\r')
             (void) 0;
         else if (**parse_start == '\n')
-            nnl++;
+            ++nnl;
         else
             break;
     }
@@ -128,10 +128,10 @@ httpMsgIsolateStart(const char **parse_start, const char **blk_start, const char
     *blk_end = *blk_start + slen;
 
     while (**blk_end == '\r')   /* CR */
-        (*blk_end)++;
+        ++(*blk_end);
 
     if (**blk_end == '\n')      /* LF */
-        (*blk_end)++;
+        ++(*blk_end);
 
     *parse_start = *blk_end;
 
@@ -360,7 +360,7 @@ void HttpMsg::firstLineBuf(MemBuf& mb)
 HttpMsg *
 HttpMsg::_lock()
 {
-    lock_count++;
+    ++lock_count;
     return this;
 }
 

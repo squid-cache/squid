@@ -270,7 +270,7 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
     blob = strchr(reply, ' ');
 
     if (blob) {
-        blob++;
+        ++blob;
         arg = strchr(blob + 1, ' ');
     } else {
         arg = NULL;
@@ -278,8 +278,10 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
 
     if (strncasecmp(reply, "TT ", 3) == 0) {
         /* we have been given a blob to send to the client */
-        if (arg)
-            *arg++ = '\0';
+        if (arg) {
+            *arg = '\0';
+            ++arg;
+        }
         safe_free(lm_request->server_blob);
         lm_request->request->flags.must_keepalive = 1;
         if (lm_request->request->flags.proxy_keepalive) {
@@ -294,8 +296,10 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
     } else if (strncasecmp(reply, "AF ", 3) == 0 && arg != NULL) {
         /* we're finished, release the helper */
 
-        if (arg)
-            *arg++ = '\0';
+        if (arg) {
+            *arg = '\0';
+            ++arg;
+        }
 
         auth_user_request->user()->username(arg);
         auth_user_request->denyMessage("Login successful");
@@ -334,8 +338,10 @@ Auth::Negotiate::UserRequest::HandleReply(void *data, void *lastserver, char *re
     } else if (strncasecmp(reply, "NA ", 3) == 0 && arg != NULL) {
         /* authentication failure (wrong password, etc.) */
 
-        if (arg)
-            *arg++ = '\0';
+        if (arg) {
+            *arg = '\0';
+            ++arg;
+        }
 
         auth_user_request->denyMessage(arg);
         auth_user_request->user()->credentials(Auth::Failed);

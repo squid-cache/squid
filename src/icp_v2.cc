@@ -319,10 +319,10 @@ icpUdpSend(int fd,
         }
 
         Comm::SetSelect(fd, COMM_SELECT_WRITE, icpUdpSendQueue, NULL, 0);
-        statCounter.icp.replies_queued++;
+        ++statCounter.icp.replies_queued;
     } else {
         /* don't queue it */
-        statCounter.icp.replies_dropped++;
+        ++statCounter.icp.replies_dropped;
     }
 
     return x;
@@ -598,7 +598,8 @@ icpHandleUdp(int sock, void *data)
     int max = INCOMING_UDP_MAX;
     Comm::SetSelect(sock, COMM_SELECT_READ, icpHandleUdp, NULL, 0);
 
-    while (max--) {
+    while (max) {
+        --max;
         len = comm_udp_recvfrom(sock,
                                 buf,
                                 SQUID_UDP_SO_RCVBUF - 1,
@@ -625,7 +626,7 @@ icpHandleUdp(int sock, void *data)
             break;
         }
 
-        (*N)++;
+        ++(*N);
         icpCount(buf, RECV, (size_t) len, 0);
         buf[len] = '\0';
         debugs(12, 4, "icpHandleUdp: FD " << sock << ": received " <<
@@ -784,36 +785,36 @@ icpCount(void *buf, int which, size_t len, int delay)
         return;
 
     if (SENT == which) {
-        statCounter.icp.pkts_sent++;
+        ++statCounter.icp.pkts_sent;
         kb_incr(&statCounter.icp.kbytes_sent, len);
 
         if (ICP_QUERY == icp->opcode) {
-            statCounter.icp.queries_sent++;
+            ++statCounter.icp.queries_sent;
             kb_incr(&statCounter.icp.q_kbytes_sent, len);
         } else {
-            statCounter.icp.replies_sent++;
+            ++statCounter.icp.replies_sent;
             kb_incr(&statCounter.icp.r_kbytes_sent, len);
             /* this is the sent-reply service time */
             statCounter.icp.replySvcTime.count(delay);
         }
 
         if (ICP_HIT == icp->opcode)
-            statCounter.icp.hits_sent++;
+            ++statCounter.icp.hits_sent;
     } else if (RECV == which) {
-        statCounter.icp.pkts_recv++;
+        ++statCounter.icp.pkts_recv;
         kb_incr(&statCounter.icp.kbytes_recv, len);
 
         if (ICP_QUERY == icp->opcode) {
-            statCounter.icp.queries_recv++;
+            ++statCounter.icp.queries_recv;
             kb_incr(&statCounter.icp.q_kbytes_recv, len);
         } else {
-            statCounter.icp.replies_recv++;
+            ++statCounter.icp.replies_recv;
             kb_incr(&statCounter.icp.r_kbytes_recv, len);
             /* statCounter.icp.querySvcTime set in clientUpdateCounters */
         }
 
         if (ICP_HIT == icp->opcode)
-            statCounter.icp.hits_recv++;
+            ++statCounter.icp.hits_recv;
     }
 }
 

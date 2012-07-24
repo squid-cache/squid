@@ -80,7 +80,7 @@ MmappedFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
         debugs(79,3, HERE << "open error: " << xstrerror());
         error_ = true;
     } else {
-        store_open_disk_fd++;
+        ++store_open_disk_fd;
         debugs(79,3, HERE << "FD " << fd);
 
         // setup mapping boundaries
@@ -108,7 +108,7 @@ void MmappedFile::doClose()
     if (fd >= 0) {
         file_close(fd);
         fd = -1;
-        store_open_disk_fd--;
+        --store_open_disk_fd;
     }
 }
 

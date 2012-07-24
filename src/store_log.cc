@@ -68,7 +68,7 @@ storeLog(int tag, const StoreEntry * e)
     if (NULL == storelog)
         return;
 
-    storeLogTagsCounts[tag]++;
+    ++storeLogTagsCounts[tag];
     if (mem != NULL) {
         if (mem->log_url == NULL) {
             debugs(20, 1, "storeLog: NULL log_url for " << mem->url);
@@ -161,7 +161,7 @@ void
 storeLogTagsHist(StoreEntry *e)
 {
     int tag;
-    for (tag = 0; tag <= STORE_LOG_SWAPOUTFAIL; tag++) {
+    for (tag = 0; tag <= STORE_LOG_SWAPOUTFAIL; ++tag) {
         storeAppendPrintf(e, "%s %d\n",
                           storeLogTags[tag],
                           storeLogTagsCounts[tag]);

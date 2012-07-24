@@ -230,7 +230,7 @@ Comm::ConnOpener::connect()
     if (callback_ == NULL || callback_->canceled())
         return;
 
-    totalTries_++;
+    ++ totalTries_;
 
     switch (comm_connect_addr(temporaryFd_, conn_->remote) ) {
 
@@ -254,7 +254,7 @@ Comm::ConnOpener::connect()
         break;
 
     default:
-        failRetries_++;
+        ++failRetries_;
 
         // check for timeout FIRST.
         if (squid_curtime - connectStart_ > connectTimeout_) {

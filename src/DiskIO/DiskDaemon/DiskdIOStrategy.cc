@@ -87,7 +87,7 @@ DiskdIOStrategy::load()
 void
 DiskdIOStrategy::openFailed()
 {
-    diskd_stats.open_fail_queue_len++;
+    ++diskd_stats.open_fail_queue_len;
 }
 
 DiskFile::Pointer
@@ -151,7 +151,7 @@ DiskdIOStrategy::unlinkFile(char const *path)
         //        shm.put (shm_offset);
     }
 
-    diskd_stats.unlink.ops++;
+    ++diskd_stats.unlink.ops;
 }
 
 void
@@ -238,7 +238,7 @@ SharedMemory::get(ssize_t * shm_offset)
     char *aBuf = NULL;
     int i;
 
-    for (i = 0; i < nbufs; i++) {
+    for (i = 0; i < nbufs; ++i) {
         if (CBIT_TEST(inuse_map, i))
             continue;
 
@@ -254,7 +254,7 @@ SharedMemory::get(ssize_t * shm_offset)
     assert(aBuf);
     assert(aBuf >= buf);
     assert(aBuf < buf + (nbufs * SHMBUF_BLKSZ));
-    diskd_stats.shmbuf_count++;
+    ++diskd_stats.shmbuf_count;
 
     if (diskd_stats.max_shmuse < diskd_stats.shmbuf_count)
         diskd_stats.max_shmuse = diskd_stats.shmbuf_count;
@@ -284,7 +284,7 @@ SharedMemory::init(int ikey, int magic2)
     inuse_map = (char *)xcalloc((nbufs + 7) / 8, 1);
     diskd_stats.shmbuf_count += nbufs;
 
-    for (int i = 0; i < nbufs; i++) {
+    for (int i = 0; i < nbufs; ++i) {
         CBIT_SET(inuse_map, i);
         put (i * SHMBUF_BLKSZ);
     }
@@ -297,9 +297,9 @@ DiskdIOStrategy::unlinkDone(diomsg * M)
     ++statCounter.syscalls.disk.unlinks;
 
     if (M->status < 0)
-        diskd_stats.unlink.fail++;
+        ++diskd_stats.unlink.fail;
     else
-        diskd_stats.unlink.success++;
+        ++diskd_stats.unlink.success;
 }
 
 void
@@ -400,8 +400,8 @@ DiskdIOStrategy::SEND(diomsg *M, int mtype, int id, size_t size, off_t offset, s
     last_seq_no = M->seq_no;
 
     if (0 == x) {
-        diskd_stats.sent_count++;
-        away++;
+        ++diskd_stats.sent_count;
+        ++away;
     } else {
         debugs(79, 1, "storeDiskdSend: msgsnd: " << xstrerror());
         cbdataReferenceDone(M->callback_data);
@@ -549,7 +549,7 @@ DiskdIOStrategy::callback()
     int retval = 0;
 
     if (away >= magic2) {
-        diskd_stats.block_queue_len++;
+        ++diskd_stats.block_queue_len;
         retval = 1;
         /* We might not have anything to do, but our queue
          * is full.. */
@@ -574,7 +574,7 @@ DiskdIOStrategy::callback()
             break;
         }
 
-        diskd_stats.recv_count++;
+        ++diskd_stats.recv_count;
         --away;
         handle(&M);
         retval = 1;		/* Return that we've actually done some work */

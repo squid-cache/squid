@@ -953,7 +953,7 @@ FwdState::connectStart()
             if (!serverConn->getPeer())
                 serverConn->peerType = HIER_DIRECT;
 #endif
-            n_tries++;
+            ++n_tries;
             request->flags.pinned = 1;
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = 1;
@@ -998,10 +998,10 @@ FwdState::connectStart()
         serverConn = temp;
         flags.connected_okay = true;
         debugs(17, 3, HERE << "reusing pconn " << serverConnection());
-        n_tries++;
+        ++n_tries;
 
         if (!serverConnection()->getPeer())
-            origin_tries++;
+            ++origin_tries;
 
         comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
 
@@ -1108,7 +1108,7 @@ FwdState::dispatch()
 #endif
 
     if (serverConnection()->getPeer() != NULL) {
-        serverConnection()->getPeer()->stats.fetches++;
+        ++ serverConnection()->getPeer()->stats.fetches;
         request->peer_login = serverConnection()->getPeer()->login;
         request->peer_domain = serverConnection()->getPeer()->domain;
         httpStart(this);
@@ -1238,19 +1238,19 @@ fwdStats(StoreEntry * s)
     int j;
     storeAppendPrintf(s, "Status");
 
-    for (j = 0; j <= MAX_FWD_STATS_IDX; j++) {
-        storeAppendPrintf(s, "\ttry#%d", j + 1);
+    for (j = 1; j < MAX_FWD_STATS_IDX; ++j) {
+        storeAppendPrintf(s, "\ttry#%d", j);
     }
 
     storeAppendPrintf(s, "\n");
 
-    for (i = 0; i <= (int) HTTP_INVALID_HEADER; i++) {
+    for (i = 0; i <= (int) HTTP_INVALID_HEADER; ++i) {
         if (FwdReplyCodes[0][i] == 0)
             continue;
 
         storeAppendPrintf(s, "%3d", i);
 
-        for (j = 0; j <= MAX_FWD_STATS_IDX; j++) {
+        for (j = 0; j <= MAX_FWD_STATS_IDX; ++j) {
             storeAppendPrintf(s, "\t%d", FwdReplyCodes[j][i]);
         }
 
@@ -1326,7 +1326,7 @@ FwdState::logReplyStatus(int tries, http_status status)
     if (tries > MAX_FWD_STATS_IDX)
         tries = MAX_FWD_STATS_IDX;
 
-    FwdReplyCodes[tries][status]++;
+    ++ FwdReplyCodes[tries][status];
 }
 
 /**** PRIVATE NON-MEMBER FUNCTIONS ********************************************/

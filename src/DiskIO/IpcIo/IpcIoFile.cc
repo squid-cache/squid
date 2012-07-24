@@ -835,7 +835,7 @@ DiskerOpen(const String &path, int flags, mode_t mode)
         return false;
     }
 
-    store_open_disk_fd++;
+    ++store_open_disk_fd;
     debugs(79,3, HERE << "rock db opened " << path << ": FD " << TheFile);
     return true;
 }
@@ -847,7 +847,7 @@ DiskerClose(const String &path)
         file_close(TheFile);
         debugs(79,3, HERE << "rock db closed " << path << ": FD " << TheFile);
         TheFile = -1;
-        store_open_disk_fd--;
+        --store_open_disk_fd;
     }
 }
 

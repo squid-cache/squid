@@ -140,13 +140,14 @@ static void loadSslErrorMap()
 static void loadSslErrorShortcutsMap()
 {
     assert(TheSslErrorShortcuts.empty());
-    for (int i = 0; TheSslErrorShortcutsArray[i].name; i++)
+    for (int i = 0; TheSslErrorShortcutsArray[i].name; ++i)
         TheSslErrorShortcuts[TheSslErrorShortcutsArray[i].name] = TheSslErrorShortcutsArray[i].errors;
 }
 
 Ssl::ssl_error_t Ssl::GetErrorCode(const char *name)
 {
-    for (int i = 0; TheSslErrorArray[i].name != NULL; i++) {
+    //TODO: use a std::map?
+    for (int i = 0; TheSslErrorArray[i].name != NULL; ++i) {
         if (strcmp(name, TheSslErrorArray[i].name) == 0)
             return TheSslErrorArray[i].value;
     }
@@ -177,7 +178,7 @@ Ssl::ParseErrorString(const char *name)
         // Should not be empty...
         assert(it->second[0] != SSL_ERROR_NONE);
         Ssl::Errors *errors = new Ssl::Errors(it->second[0]);
-        for (int i =1; it->second[i] != SSL_ERROR_NONE; i++) {
+        for (int i =1; it->second[i] != SSL_ERROR_NONE; ++i) {
             errors->push_back_unique(it->second[i]);
         }
         return errors;
@@ -360,7 +361,7 @@ const char *Ssl::ErrorDetail::err_lib_error() const
 int Ssl::ErrorDetail::convert(const char *code, const char **value) const
 {
     *value = "-";
-    for (int i=0; ErrorFormatingCodes[i].code!=NULL; i++) {
+    for (int i=0; ErrorFormatingCodes[i].code!=NULL; ++i) {
         const int len = strlen(ErrorFormatingCodes[i].code);
         if (strncmp(code,ErrorFormatingCodes[i].code, len)==0) {
             ErrorDetail::fmt_action_t action  = ErrorFormatingCodes[i].fmt_action;

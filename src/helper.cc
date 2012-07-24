@@ -182,16 +182,20 @@ helperOpenServers(helper * hlp)
 
     snprintf(procname, strlen(shortname) + 3, "(%s)", shortname);
 
-    args[nargs++] = procname;
+    args[nargs] = procname;
+    ++nargs;
 
-    for (w = hlp->cmdline->next; w && nargs < HELPER_MAX_ARGS; w = w->next)
-        args[nargs++] = w->key;
+    for (w = hlp->cmdline->next; w && nargs < HELPER_MAX_ARGS; w = w->next) {
+        args[nargs] = w->key;
+        ++nargs;
+    }
 
-    args[nargs++] = NULL;
+    args[nargs] = NULL;
+    ++nargs;
 
     assert(nargs <= HELPER_MAX_ARGS);
 
-    for (k = 0; k < need_new; k++) {
+    for (k = 0; k < need_new; ++k) {
         getCurrentTime();
         rfd = wfd = -1;
         pid = ipcCreate(hlp->ipc_type,
@@ -208,8 +212,8 @@ helperOpenServers(helper * hlp)
             continue;
         }
 
-        hlp->childs.n_running++;
-        hlp->childs.n_active++;
+        ++ hlp->childs.n_running;
+        ++ hlp->childs.n_active;
         CBDATA_INIT_TYPE(helper_server);
         srv = cbdataAlloc(helper_server);
         srv->hIpc = hIpc;
@@ -296,16 +300,20 @@ helperStatefulOpenServers(statefulhelper * hlp)
 
     snprintf(procname, strlen(shortname) + 3, "(%s)", shortname);
 
-    args[nargs++] = procname;
+    args[nargs] = procname;
+    ++nargs;
 
-    for (wordlist *w = hlp->cmdline->next; w && nargs < HELPER_MAX_ARGS; w = w->next)
-        args[nargs++] = w->key;
+    for (wordlist *w = hlp->cmdline->next; w && nargs < HELPER_MAX_ARGS; w = w->next) {
+        args[nargs] = w->key;
+        ++nargs;
+    }
 
-    args[nargs++] = NULL;
+    args[nargs] = NULL;
+    ++nargs;
 
     assert(nargs <= HELPER_MAX_ARGS);
 
-    for (int k = 0; k < need_new; k++) {
+    for (int k = 0; k < need_new; ++k) {
         getCurrentTime();
         int rfd = -1;
         int wfd = -1;
@@ -324,8 +332,8 @@ helperStatefulOpenServers(statefulhelper * hlp)
             continue;
         }
 
-        hlp->childs.n_running++;
-        hlp->childs.n_active++;
+        ++ hlp->childs.n_running;
+        ++ hlp->childs.n_active;
         CBDATA_INIT_TYPE(helper_stateful_server);
         helper_stateful_server *srv = cbdataAlloc(helper_stateful_server);
         srv->hIpc = hIpc;
@@ -456,7 +464,7 @@ helperStatefulReleaseServer(helper_stateful_server * srv)
     if (!srv->flags.reserved)
         return;
 
-    srv->stats.releases++;
+    ++ srv->stats.releases;
 
     srv->flags.reserved = 0;
     if (srv->parent->OnEmptyQueue != NULL && srv->data)
@@ -599,7 +607,7 @@ helperShutdown(helper * hlp)
         }
 
         assert(hlp->childs.n_active > 0);
-        hlp->childs.n_active--;
+        -- hlp->childs.n_active;
         srv->flags.shutdown = 1;	/* request it to shut itself down */
 
         if (srv->flags.closing) {
@@ -636,7 +644,7 @@ helperStatefulShutdown(statefulhelper * hlp)
         }
 
         assert(hlp->childs.n_active > 0);
-        hlp->childs.n_active--;
+        -- hlp->childs.n_active;
         srv->flags.shutdown = 1;	/* request it to shut itself down */
 
         if (srv->flags.busy) {
@@ -709,11 +717,11 @@ helperServerFree(helper_server *srv)
     dlinkDelete(&srv->link, &hlp->servers);
 
     assert(hlp->childs.n_running > 0);
-    hlp->childs.n_running--;
+    -- hlp->childs.n_running;
 
     if (!srv->flags.shutdown) {
         assert(hlp->childs.n_active > 0);
-        hlp->childs.n_active--;
+        -- hlp->childs.n_active;
         debugs(84, DBG_CRITICAL, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " exited");
 
         if (hlp->childs.needNew() > 0) {
@@ -727,7 +735,7 @@ helperServerFree(helper_server *srv)
         }
     }
 
-    for (i = 0; i < concurrency; i++) {
+    for (i = 0; i < concurrency; ++i) {
         if ((r = srv->requests[i])) {
             void *cbdata;
 
@@ -770,11 +778,11 @@ helperStatefulServerFree(helper_stateful_server *srv)
     dlinkDelete(&srv->link, &hlp->servers);
 
     assert(hlp->childs.n_running > 0);
-    hlp->childs.n_running--;
+    -- hlp->childs.n_running;
 
     if (!srv->flags.shutdown) {
         assert( hlp->childs.n_active > 0);
-        hlp->childs.n_active--;
+        -- hlp->childs.n_active;
         debugs(84, 0, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " exited");
 
         if (hlp->childs.needNew() > 0) {
@@ -822,9 +830,9 @@ static void helperReturnBuffer(int request_number, helper_server * srv, helper *
         if (cbdataReferenceValidDone(r->data, &cbdata))
             callback(cbdata, msg);
 
-        srv->stats.pending--;
+        -- srv->stats.pending;
 
-        hlp->stats.replies++;
+        ++ hlp->stats.replies;
 
         srv->answer_time = current_time;
 
@@ -899,13 +907,14 @@ helperHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t len, com
         if (t > srv->rbuf && t[-1] == '\r' && hlp->eom == '\n')
             t[-1] = '\0';
 
-        *t++ = '\0';
+        *t = '\0';
+        ++t;
 
         if (hlp->childs.concurrency) {
             i = strtol(msg, &msg, 10);
 
             while (*msg && xisspace(*msg))
-                msg++;
+                ++msg;
         }
 
         helperReturnBuffer(i, srv, hlp, msg, t);
@@ -999,7 +1008,7 @@ helperStatefulHandleRead(const Comm::ConnectionPointer &conn, char *buf, size_t 
         srv->roffset = 0;
         helperStatefulRequestFree(r);
         srv->request = NULL;
-        hlp->stats.replies++;
+        ++ hlp->stats.replies;
         srv->answer_time = current_time;
         hlp->stats.avg_svc_time =
             Math::intAverage(hlp->stats.avg_svc_time,
@@ -1045,7 +1054,7 @@ Enqueue(helper * hlp, helper_request * r)
 {
     dlink_node *link = (dlink_node *)memAllocate(MEM_DLINK_NODE);
     dlinkAddTail(r, link, &hlp->queue);
-    hlp->stats.queue_size++;
+    ++ hlp->stats.queue_size;
 
     /* do this first so idle=N has a chance to grow the child pool before it hits critical. */
     if (hlp->childs.needNew() > 0) {
@@ -1078,7 +1087,7 @@ StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r)
 {
     dlink_node *link = (dlink_node *)memAllocate(MEM_DLINK_NODE);
     dlinkAddTail(r, link, &hlp->queue);
-    hlp->stats.queue_size++;
+    ++ hlp->stats.queue_size;
 
     /* do this first so idle=N has a chance to grow the child pool before it hits critical. */
     if (hlp->childs.needNew() > 0) {
@@ -1116,7 +1125,7 @@ Dequeue(helper * hlp)
         r = (helper_request *)link->data;
         dlinkDelete(link, &hlp->queue);
         memFree(link, MEM_DLINK_NODE);
-        hlp->stats.queue_size--;
+        -- hlp->stats.queue_size;
     }
 
     return r;
@@ -1132,7 +1141,7 @@ StatefulDequeue(statefulhelper * hlp)
         r = (helper_stateful_request *)link->data;
         dlinkDelete(link, &hlp->queue);
         memFree(link, MEM_DLINK_NODE);
-        hlp->stats.queue_size--;
+        -- hlp->stats.queue_size;
     }
 
     return r;
@@ -1258,7 +1267,7 @@ helperDispatch(helper_server * srv, helper_request * r)
         return;
     }
 
-    for (slot = 0; slot < (hlp->childs.concurrency ? hlp->childs.concurrency : 1); slot++) {
+    for (slot = 0; slot < (hlp->childs.concurrency ? hlp->childs.concurrency : 1); ++slot) {
         if (!srv->requests[slot]) {
             ptr = &srv->requests[slot];
             break;
@@ -1290,8 +1299,8 @@ helperDispatch(helper_server * srv, helper_request * r)
 
     debugs(84, 5, "helperDispatch: Request sent to " << hlp->id_name << " #" << srv->index + 1 << ", " << strlen(r->buf) << " bytes");
 
-    srv->stats.uses++;
-    hlp->stats.requests++;
+    ++ srv->stats.uses;
+    ++ hlp->stats.requests;
 }
 
 static void
@@ -1343,8 +1352,8 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
            hlp->id_name << " #" << srv->index + 1 << ", " <<
            (int) strlen(r->buf) << " bytes");
 
-    srv->stats.uses++;
-    hlp->stats.requests++;
+    ++ srv->stats.uses;
+    ++ hlp->stats.requests;
 }
 
 

@@ -58,7 +58,7 @@
 	if(!(b)){	printf("assert \"%s\" at line %d\n", a, __LINE__); \
 		printf("Ip::Address invalid? with IsIPv4()=%c, IsIPv6()=%c\n",(IsIPv4()?'T':'F'),(IsIPv6()?'T':'F')); \
 		printf("ADDRESS:"); \
-		for(unsigned int i = 0; i < sizeof(m_SocketAddr.sin6_addr); i++) { \
+		for(unsigned int i = 0; i < sizeof(m_SocketAddr.sin6_addr); ++i) { \
 			printf(" %x", m_SocketAddr.sin6_addr.s6_addr[i]); \
 		} printf("\n"); assert(b); \
 	}
@@ -82,7 +82,7 @@ Ip::Address::GetCIDR() const
         shift = 12;
     }
 
-    for (; shift<sizeof(m_SocketAddr.sin6_addr) ; shift++) {
+    for (; shift<sizeof(m_SocketAddr.sin6_addr) ; ++shift) {
         byte= *(ptr+shift);
 
         if (byte == 0xFF) {
@@ -90,11 +90,11 @@ Ip::Address::GetCIDR() const
             continue ;  /* A short-cut */
         }
 
-        for (caught = 0 , bit= 7 ; !caught && (bit <= 7); bit--) {
+        for (caught = 0 , bit= 7 ; !caught && (bit <= 7); --bit) {
             caught = ((byte & 0x80) == 0x00);  /* Found a '0' at 'bit' ? */
 
             if (!caught)
-                len++;
+                ++len;
 
             byte <<= 1;
         }
@@ -114,9 +114,9 @@ Ip::Address::ApplyMask(Ip::Address const &mask_addr)
     unsigned int blen = sizeof(m_SocketAddr.sin6_addr)/sizeof(uint32_t);
     unsigned int changes = 0;
 
-    for (unsigned int i = 0; i < blen; i++) {
+    for (unsigned int i = 0; i < blen; ++i) {
         if ((p1[i] & p2[i]) != p1[i])
-            changes++;
+            ++changes;
 
         p1[i] &= p2[i];
     }
@@ -151,7 +151,7 @@ Ip::Address::ApplyMask(const unsigned int cidr, int mtype)
 
     p = (uint8_t*)(&m_SocketAddr.sin6_addr) + 15;
 
-    for (; clearbits>0 && p >= (uint8_t*)&m_SocketAddr.sin6_addr ; p-- ) {
+    for (; clearbits>0 && p >= (uint8_t*)&m_SocketAddr.sin6_addr ; --p ) {
         if (clearbits < 8) {
             *p &= ((0xFF << clearbits) & 0xFF);
             clearbits = 0;
@@ -315,7 +315,7 @@ Ip::Address::GetReverseString6(char buf[MAX_IPSTRLEN], const struct in6_addr &da
 
     /* Compile Err: 'Too many arguments for format. */
 
-    for (int i = 15; i >= 0; i--, p+=4) {
+    for (int i = 15; i >= 0; --i, p+=4) {
         snprintf(p, 5, "%x.%x.", ((r[i])&0xf), (((r[i])>>4)&0xf) );
     }
 
@@ -729,7 +729,7 @@ Ip::Address::matchIPAddr(const Ip::Address &rhs) const
     // loop a byte-wise compare
     // NP: match MUST be R-to-L : L-to-R produces inconsistent gt/lt results at varying CIDR
     //     expected difference on CIDR is gt/eq or lt/eq ONLY.
-    for (unsigned int i = 0 ; i < sizeof(m_SocketAddr.sin6_addr) ; i++) {
+    for (unsigned int i = 0 ; i < sizeof(m_SocketAddr.sin6_addr) ; ++i) {
 
         if (l[i] < r[i])
             return -1;
@@ -876,7 +876,7 @@ Ip::Address::ToHostname(char *buf, const unsigned int blen) const
 
     if (IsIPv6() && blen > 0) {
         *p = '[';
-        p++;
+        ++p;
     }
 
     /* 8 being space for [ ] : and port digits */
@@ -887,11 +887,11 @@ Ip::Address::ToHostname(char *buf, const unsigned int blen) const
 
     // find the end of the new string
     while (*p != '\0' && p < buf+blen)
-        p++;
+        ++p;
 
     if (IsIPv6() && p < (buf+blen-1) ) {
         *p = ']';
-        p++;
+        ++p;
     }
 
     /* terminate just in case. */
