@@ -79,7 +79,7 @@ file_open(const char *path, int mode)
 
     fd = open(path, mode, 0644);
 
-    statCounter.syscalls.disk.opens++;
+    ++ statCounter.syscalls.disk.opens;
 
     if (fd < 0) {
         debugs(50, 3, "file_open: error opening file " << path << ": " << xstrerror());
@@ -145,7 +145,7 @@ file_close(int fd)
 
     fd_close(fd);
 
-    statCounter.syscalls.disk.closes++;
+    ++ statCounter.syscalls.disk.closes;
 
     PROF_stop(file_close);
 }
@@ -247,7 +247,7 @@ diskHandleWrite(int fd, void *notused)
 
     debugs(6, 3, "diskHandleWrite: FD " << fd << " len = " << len);
 
-    statCounter.syscalls.disk.writes++;
+    ++ statCounter.syscalls.disk.writes;
 
     fd_bytes(fd, len, FD_WRITE);
 
@@ -443,7 +443,7 @@ diskHandleRead(int fd, void *data)
 #endif
         debugs(6, 3, "diskHandleRead: FD " << fd << " seeking to offset " << ctrl_dat->offset);
         lseek(fd, ctrl_dat->offset, SEEK_SET);	/* XXX ignore return? */
-        ++statCounter.syscalls.disk.seeks;
+        ++ statCounter.syscalls.disk.seeks;
         F->disk.offset = ctrl_dat->offset;
     }
 
@@ -453,7 +453,7 @@ diskHandleRead(int fd, void *data)
     if (len > 0)
         F->disk.offset += len;
 
-    statCounter.syscalls.disk.reads++;
+    ++ statCounter.syscalls.disk.reads;
 
     fd_bytes(fd, len, FD_READ);
 
@@ -507,7 +507,7 @@ file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *cl
 void
 safeunlink(const char *s, int quiet)
 {
-    statCounter.syscalls.disk.unlinks++;
+    ++ statCounter.syscalls.disk.unlinks;
 
     if (unlink(s) < 0 && !quiet)
         debugs(50, 1, "safeunlink: Couldn't delete " << s << ": " << xstrerror());

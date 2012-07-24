@@ -89,7 +89,7 @@ logfileNewBuffer(Logfile * lf)
     b->written_len = 0;
     b->len = 0;
     dlinkAddTail(b, &b->node, &ll->bufs);
-    ll->nbufs++;
+    ++ ll->nbufs;
 }
 
 static void
@@ -98,7 +98,7 @@ logfileFreeBuffer(Logfile * lf, logfile_buffer_t * b)
     l_daemon_t *ll = (l_daemon_t *) lf->data;
     assert(b != NULL);
     dlinkDelete(&b->node, &ll->bufs);
-    ll->nbufs--;
+    -- ll->nbufs;
     xfree(b->buf);
     xfree(b);
 }

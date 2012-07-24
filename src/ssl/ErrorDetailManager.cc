@@ -196,9 +196,10 @@ Ssl::ErrorDetailFile::parse(const char *buffer, int len, bool eof)
 
         //ignore spaces, new lines and comment lines (starting with #) at the beggining
         const char *s;
-        for (s = buf.content(); (*s == '\n' || *s == ' '  || *s == '\t' || *s == '#')  && s < e; s++) {
+        for (s = buf.content(); (*s == '\n' || *s == ' '  || *s == '\t' || *s == '#')  && s < e; ++s) {
             if (*s == '#')
-                while (s<e &&  *s != '\n') s++; // skip untill the end of line
+                while (s<e &&  *s != '\n')
+                    ++s; // skip untill the end of line
         }
 
         if ( s != e) {

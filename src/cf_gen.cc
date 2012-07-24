@@ -254,7 +254,7 @@ main(int argc, char *argv[])
     while (fp.getline(buff,MAX_LINE), fp.good() && state != sEXIT) {
         char *t;
 
-        linenum++;
+        ++linenum;
 
         if ((t = strchr(buff, '\n')))
             *t = '\0';
@@ -318,35 +318,35 @@ main(int argc, char *argv[])
                     ptr = buff + 8;
 
                     while (isspace((unsigned char)*ptr))
-                        ptr++;
+                        ++ptr;
 
                     curr.comment = ptr;
                 } else if (!strncmp(buff, "DEFAULT:", 8)) {
                     ptr = buff + 8;
 
                     while (isspace((unsigned char)*ptr))
-                        ptr++;
+                        ++ptr;
 
                     curr.defaults.preset.push_back(ptr);
                 } else if (!strncmp(buff, "DEFAULT_IF_NONE:", 16)) {
                     ptr = buff + 16;
 
                     while (isspace((unsigned char)*ptr))
-                        ptr++;
+                        ++ptr;
 
                     curr.defaults.if_none.push_back(ptr);
                 } else if (!strncmp(buff, "POSTSCRIPTUM:", 13)) {
                     ptr = buff + 13;
 
                     while (isspace((unsigned char)*ptr))
-                        ptr++;
+                        ++ptr;
 
                     curr.defaults.postscriptum.push_back(ptr);
                 } else if (!strncmp(buff, "DEFAULT_DOC:", 12)) {
                     ptr = buff + 12;
 
                     while (isspace((unsigned char)*ptr))
-                        ptr++;
+                        ++ptr;
 
                     curr.defaults.docs.push_back(ptr);
                 } else if (!strncmp(buff, "LOC:", 4)) {
@@ -737,7 +737,7 @@ isDefined(const std::string &name)
     if (!name.size())
         return true;
 
-    for (int i = 0; defines[i].name; i++) {
+    for (int i = 0; defines[i].name; ++i) {
         if (name.compare(defines[i].name) == 0)
             return defines[i].defined;
     }
@@ -750,7 +750,7 @@ available_if(const std::string &name)
 {
     assert(name.size());
 
-    for (int i = 0; defines[i].name; i++) {
+    for (int i = 0; defines[i].name; ++i) {
         if (name.compare(defines[i].name) == 0)
             return defines[i].enable;
     }

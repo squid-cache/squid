@@ -96,7 +96,7 @@ storeCossDirSwapLogFile(SwapDir * sd, const char *ext)
         while (strlen(pathtmp) && pathtmp[strlen(pathtmp) - 1] == '.')
             pathtmp[strlen(pathtmp) - 1] = '\0';
 
-        for (pathtmp2 = pathtmp; *pathtmp2 == '.'; pathtmp2++);
+        for (pathtmp2 = pathtmp; *pathtmp2 == '.'; ++pathtmp2);
         snprintf(path, MAXPATHLEN - 64, Config.Log.swap, pathtmp2);
 
         if (strncmp(path, Config.Log.swap, MAXPATHLEN - 64) == 0) {
@@ -174,7 +174,7 @@ CossSwapDir::readCompleted(const char *buf, int len, int errflag, RefCount<ReadR
     cstate->flags.reading = 0;
 
     if (errflag) {
-        StoreFScoss::GetInstance().stats.read.fail++;
+        ++ StoreFScoss::GetInstance().stats.read.fail;
 
         if (errflag > 0) {
             errno = errflag;
@@ -185,7 +185,7 @@ CossSwapDir::readCompleted(const char *buf, int len, int errflag, RefCount<ReadR
 
         rlen = -1;
     } else {
-        StoreFScoss::GetInstance().stats.read.success++;
+        ++ StoreFScoss::GetInstance().stats.read.success;
 
         if (cstate->readbuffer == NULL) {
             cstate->readbuffer = (char *)xmalloc(cstate->st_size);
@@ -217,17 +217,17 @@ CossSwapDir::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> writ
 
 
     if (errflag) {
-        StoreFScoss::GetInstance().stats.stripe_write.fail++;
+        ++ StoreFScoss::GetInstance().stats.stripe_write.fail;
         debugs(79, 1, "storeCossWriteMemBufDone: got failure (" << errflag << ")");
         debugs(79, 1, "size=" << cossWrite->membuf->diskend - cossWrite->membuf->diskstart);
     } else {
-        StoreFScoss::GetInstance().stats.stripe_write.success++;
+        ++ StoreFScoss::GetInstance().stats.stripe_write.success;
     }
 
 
     dlinkDelete(&cossWrite->membuf->node, &membufs);
     cbdataFree(cossWrite->membuf);
-    StoreFScoss::GetInstance().stats.stripes--;
+    -- StoreFScoss::GetInstance().stats.stripes;
 }
 
 void
@@ -368,7 +368,7 @@ storeCossRebuildComplete(void *data)
     RebuildState *rb = (RebuildState *)data;
     CossSwapDir *sd = rb->sd;
     sd->startMembuf();
-    StoreController::store_dirs_rebuilding--;
+    -- StoreController::store_dirs_rebuilding;
     storeCossDirCloseTmpSwapLog(rb->sd);
     storeRebuildComplete(&rb->counts);
     cbdataFree(rb);
@@ -385,7 +385,7 @@ storeCossRebuildFromSwapLog(void *data)
     assert(rb != NULL);
     /* load a number of objects per invocation */
 
-    for (int aCount = 0; aCount < rb->speed; aCount++) {
+    for (int aCount = 0; aCount < rb->speed; ++aCount) {
         if (fread(&s, ss, 1, rb->log) != 1) {
             debugs(47, 1, "Done reading " << rb->sd->path << " swaplog (" << rb->n_read << " entries)");
             fclose(rb->log);
@@ -394,7 +394,7 @@ storeCossRebuildFromSwapLog(void *data)
             return;
         }
 
-        rb->n_read++;
+        ++ rb->n_read;
 
         if (s.op <= SWAP_LOG_NOP)
             continue;
@@ -430,8 +430,8 @@ storeCossRebuildFromSwapLog(void *data)
                 e->release();
                 /* Fake an unlink here, this is a bad hack :( */
                 storeCossRemove(rb->sd, e);
-                rb->counts.objcount--;
-                rb->counts.cancelcount++;
+                -- rb->counts.objcount;
+                ++ rb->counts.cancelcount;
             }
             continue;
         } else {
@@ -441,7 +441,7 @@ storeCossRebuildFromSwapLog(void *data)
                     (int) x)
                 debugs(47, 1, "WARNING: " << rb->counts.bad_log_op << " invalid swap log entries found");
 
-            rb->counts.invalid++;
+            ++ rb->counts.invalid;
 
             continue;
         }
@@ -456,7 +456,7 @@ storeCossRebuildFromSwapLog(void *data)
         }
 
         if (EBIT_TEST(s.flags, KEY_PRIVATE)) {
-            rb->counts.badflags++;
+            ++ rb->counts.badflags;
             continue;
         }
 
@@ -466,11 +466,11 @@ storeCossRebuildFromSwapLog(void *data)
         if (e) {
             /* key already exists, current entry is newer */
             /* keep old, ignore new */
-            rb->counts.dupcount++;
+            ++ rb->counts.dupcount;
             continue;
         }
 
-        rb->counts.objcount++;
+        ++ rb->counts.objcount;
 
         e = rb->sd->addDiskRestore(s.key,
                                    s.swap_filen,
@@ -557,7 +557,7 @@ storeCossDirRebuild(CossSwapDir * sd)
     fp = storeCossDirOpenTmpSwapLog(sd, &clean, &zero);
     debugs(47, 1, "Rebuilding COSS storage in " << sd->path << " (" << (clean ? "CLEAN" : "DIRTY") << ")");
     rb->log = fp;
-    StoreController::store_dirs_rebuilding++;
+    ++ StoreController::store_dirs_rebuilding;
 
     if (!clean || fp == NULL) {
         /* COSS cannot yet rebuild from a dirty state. If the log
@@ -941,7 +941,7 @@ CossSwapDir::~CossSwapDir()
 
     closeLog();
 
-    n_coss_dirs--;
+    --n_coss_dirs;
 
     safe_free(ioModule);
 
@@ -1106,7 +1106,7 @@ CossSwapDir::optionBlockSizeParse(const char *option, const char *value, int rec
     int check = blksz;
 
     while (check > 1) {
-        nbits++;
+        ++nbits;
         check >>= 1;
     }
 

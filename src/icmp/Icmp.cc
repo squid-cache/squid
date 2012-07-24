@@ -69,7 +69,8 @@ Icmp::CheckSum(unsigned short *ptr, int size)
     sum = 0;
 
     while (size > 1) {
-        sum += *ptr++;
+        sum += *ptr;
+        ++ptr;
         size -= 2;
     }
 

@@ -53,8 +53,10 @@ ACLIntRange::parse()
         char *b = strchr(a, '-');
         unsigned short port1, port2;
 
-        if (b)
-            *b++ = '\0';
+        if (b) {
+            *b = '\0';
+            ++b;
+        }
 
         port1 = xatos(a);
 

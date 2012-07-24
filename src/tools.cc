@@ -1313,12 +1313,12 @@ strwordquote(MemBuf * mb, const char *str)
 
         case '\n':
             mb->append("\\n", 2);
-            str++;
+            ++str;
             break;
 
         case '\r':
             mb->append("\\r", 2);
-            str++;
+            ++str;
             break;
 
         case '\0':
@@ -1327,7 +1327,7 @@ strwordquote(MemBuf * mb, const char *str)
         default:
             mb->append("\\", 1);
             mb->append(str, 1);
-            str++;
+            ++str;
             break;
         }
     }
@@ -1363,9 +1363,11 @@ restoreCapabilities(int keep)
         int ncaps = 0;
         int rc = 0;
         cap_value_t cap_list[10];
-        cap_list[ncaps++] = CAP_NET_BIND_SERVICE;
+        cap_list[ncaps] = CAP_NET_BIND_SERVICE;
+        ++ncaps;
         if (Ip::Interceptor.TransparentActive() || Ip::Qos::TheConfig.isHitNfmarkActive() || Ip::Qos::TheConfig.isAclNfmarkActive()) {
-            cap_list[ncaps++] = CAP_NET_ADMIN;
+            cap_list[ncaps] = CAP_NET_ADMIN;
+            ++ncaps;
         }
 
         cap_clear_flag(caps, CAP_EFFECTIVE);

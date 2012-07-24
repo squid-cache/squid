@@ -104,7 +104,7 @@ HttpHdrRangeSpec::parseInit(const char *field, int flen)
             if (!httpHeaderParseOffset(field, &offset))
                 return false;
 
-            p++;
+            ++p;
 
             /* do we have last-pos ? */
             if (p - field < flen) {

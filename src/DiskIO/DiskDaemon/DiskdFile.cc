@@ -75,7 +75,8 @@ DiskdFile::DiskdFile(char const *aPath, DiskdIOStrategy *anIO) : errorOccured (f
     assert (aPath);
     debugs(79, 3, "DiskdFile::DiskdFile: " << aPath);
     path_ = xstrdup (aPath);
-    id = diskd_stats.sio_id++;
+    id = diskd_stats.sio_id;
+    ++diskd_stats.sio_id;
 }
 
 DiskdFile::~DiskdFile()
@@ -112,7 +113,7 @@ DiskdFile::open(int flags, mode_t aMode, RefCount< IORequestor > callback)
         ioRequestor = NULL;
     }
 
-    diskd_stats.open.ops++;
+    ++diskd_stats.open.ops;
 }
 
 void
@@ -145,7 +146,7 @@ DiskdFile::create(int flags, mode_t aMode, RefCount< IORequestor > callback)
         return;
     }
 
-    diskd_stats.create.ops++;
+    ++diskd_stats.create.ops;
 }
 
 void
@@ -174,7 +175,7 @@ DiskdFile::read(ReadRequest *aRead)
         return;
     }
 
-    diskd_stats.read.ops++;
+    ++diskd_stats.read.ops;
 }
 
 void
@@ -200,7 +201,7 @@ DiskdFile::close()
         return;
     }
 
-    diskd_stats.close.ops++;
+    ++diskd_stats.close.ops;
 }
 
 bool
@@ -280,10 +281,10 @@ DiskdFile::openDone(diomsg *M)
     debugs(79, 3, "storeDiskdOpenDone: status " << M->status);
 
     if (M->status < 0) {
-        diskd_stats.open.fail++;
+        ++diskd_stats.open.fail;
         errorOccured = true;
     } else {
-        diskd_stats.open.success++;
+        ++diskd_stats.open.success;
     }
 
     ioCompleted();
@@ -297,10 +298,10 @@ DiskdFile::createDone(diomsg *M)
     debugs(79, 3, "storeDiskdCreateDone: status " << M->status);
 
     if (M->status < 0) {
-        diskd_stats.create.fail++;
+        ++diskd_stats.create.fail;
         errorOccured = true;
     } else {
-        diskd_stats.create.success++;
+        ++diskd_stats.create.success;
     }
 
     ioCompleted();
@@ -338,7 +339,7 @@ DiskdFile::write(WriteRequest *aRequest)
         return;
     }
 
-    diskd_stats.write.ops++;
+    ++diskd_stats.write.ops;
 }
 
 void
@@ -360,10 +361,10 @@ DiskdFile::closeDone(diomsg * M)
     debugs(79, 3, "DiskdFile::closeDone: status " << M->status);
 
     if (M->status < 0) {
-        diskd_stats.close.fail++;
+        ++diskd_stats.close.fail;
         errorOccured = true;
     } else {
-        diskd_stats.close.success++;
+        ++diskd_stats.close.success;
     }
 
     ioCompleted();
@@ -385,14 +386,14 @@ DiskdFile::readDone(diomsg * M)
     readRequest->RefCountDereference();
 
     if (M->status < 0) {
-        diskd_stats.read.fail++;
+        ++diskd_stats.read.fail;
         ioCompleted();
         errorOccured = true;
         ioRequestor->readCompleted(NULL, -1, DISK_ERROR, readRequest);
         return;
     }
 
-    diskd_stats.read.success++;
+    ++diskd_stats.read.success;
 
     ioCompleted();
     ioRequestor->readCompleted (IO->shm.buf + M->shm_offset,  M->status, DISK_OK, readRequest);
@@ -410,13 +411,13 @@ DiskdFile::writeDone(diomsg *M)
 
     if (M->status < 0) {
         errorOccured = true;
-        diskd_stats.write.fail++;
+        ++diskd_stats.write.fail;
         ioCompleted();
         ioRequestor->writeCompleted (DISK_ERROR,0, writeRequest);
         return;
     }
 
-    diskd_stats.write.success++;
+    ++diskd_stats.write.success;
     ioCompleted();
     ioRequestor->writeCompleted (DISK_OK,M->status, writeRequest);
 }

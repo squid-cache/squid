@@ -485,8 +485,8 @@ FtpStateData::FtpStateData(FwdState *theFwdState, const Comm::ConnectionPointer 
 {
     const char *url = entry->url();
     debugs(9, 3, HERE << "'" << url << "'" );
-    statCounter.server.all.requests++;
-    statCounter.server.ftp.requests++;
+    ++ statCounter.server.all.requests;
+    ++ statCounter.server.ftp.requests;
     theSize = -1;
     mdtm = -1;
 
@@ -711,7 +711,7 @@ is_month(const char *buf)
 {
     int i;
 
-    for (i = 0; i < 12; i++)
+    for (i = 0; i < 12; ++i)
         if (!strcasecmp(buf, Month[i]))
             return 1;
 
@@ -779,13 +779,15 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
         return p;
     }
 
-    for (t = strtok(xbuf, w_space); t && n_tokens < MAX_TOKENS; t = strtok(NULL, w_space))
-        tokens[n_tokens++] = xstrdup(t);
+    for (t = strtok(xbuf, w_space); t && n_tokens < MAX_TOKENS; t = strtok(NULL, w_space)) {
+        tokens[n_tokens] = xstrdup(t);
+        ++n_tokens;
+    }
 
     xfree(xbuf);
 
     /* locate the Month field */
-    for (i = 3; i < n_tokens - 2; i++) {
+    for (i = 3; i < n_tokens - 2; ++i) {
         char *size = tokens[i - 1];
         char *month = tokens[i];
         char *day = tokens[i + 1];
@@ -821,7 +823,7 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
                 copyFrom += strlen(tbuf);
 
                 while (strchr(w_space, *copyFrom))
-                    copyFrom++;
+                    ++copyFrom;
             } else {
                 /* XXX assumes a single space between date and filename
                  * suggested by:  Nathan.Bailey@cc.monash.edu.au and
@@ -862,7 +864,7 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
             ct += strlen(tokens[2]);
 
             while (xisspace(*ct))
-                ct++;
+                ++ct;
 
             if (!*ct)
                 ct = NULL;
@@ -936,7 +938,7 @@ blank:
             ct = strstr(ct, ",");
 
             if (ct) {
-                ct++;
+                ++ct;
             }
         }
 
@@ -952,7 +954,7 @@ blank:
 
 found:
 
-    for (i = 0; i < n_tokens; i++)
+    for (i = 0; i < n_tokens; ++i)
         xfree(tokens[i]);
 
     if (!p->name)
@@ -998,7 +1000,7 @@ FtpStateData::htmlifyListEntry(const char *line)
         html->init();
         html->Printf("<tr class=\"entry\"><td colspan=\"5\">%s</td></tr>\n", line);
 
-        for (p = line; *p && xisspace(*p); p++);
+        for (p = line; *p && xisspace(*p); ++p);
         if (*p && !xisspace(*p))
             flags.listformat_unknown = 1;
 
@@ -1124,7 +1126,7 @@ FtpStateData::parseListing()
     end = sbuf + len - 1;
 
     while (*end != '\r' && *end != '\n' && end > sbuf)
-        end--;
+        --end;
 
     usable = end - sbuf;
 
@@ -1145,7 +1147,7 @@ FtpStateData::parseListing()
     debugs(9, 3, HERE << (unsigned long int)len << " bytes to play with");
 
     line = (char *)memAllocate(MEM_4K_BUF);
-    end++;
+    ++end;
     s = sbuf;
     s += strspn(s, crlf);
 
@@ -1279,12 +1281,12 @@ FtpStateData::dataRead(const CommIoCbParams &io)
         DelayId delayId = entry->mem_obj->mostBytesAllowed();
         delayId.bytesIn(io.size);
 #endif
-        IOStats.Ftp.reads++;
+        ++ IOStats.Ftp.reads;
 
-        for (j = io.size - 1, bin = 0; j; bin++)
+        for (j = io.size - 1, bin = 0; j; ++bin)
             j >>= 1;
 
-        IOStats.Ftp.read_hist[bin]++;
+        ++ IOStats.Ftp.read_hist[bin];
     }
 
     if (io.flag != COMM_OK) {
@@ -1557,20 +1559,24 @@ escapeIAC(const char *buf)
     unsigned const char *p;
     unsigned char *r;
 
-    for (p = (unsigned const char *)buf, n = 1; *p; n++, p++)
+    for (p = (unsigned const char *)buf, n = 1; *p; ++n, ++p)
         if (*p == 255)
-            n++;
+            ++n;
 
     ret = (char *)xmalloc(n);
 
-    for (p = (unsigned const char *)buf, r=(unsigned char *)ret; *p; p++) {
-        *r++ = *p;
+    for (p = (unsigned const char *)buf, r=(unsigned char *)ret; *p; ++p) {
+        *r = *p;
+        ++r;
 
-        if (*p == 255)
-            *r++ = 255;
+        if (*p == 255) {
+            *r = 255;
+            ++r;
+        }
     }
 
-    *r++ = '\0';
+    *r = '\0';
+    ++r;
     assert((r - (unsigned char *)ret) == n );
     return ret;
 }
@@ -1652,7 +1658,7 @@ FtpStateData::ftpParseControlReply(char *buf, size_t len, int *codep, size_t *us
     end = sbuf + len - 1;
 
     while (*end != '\r' && *end != '\n' && end > sbuf)
-        end--;
+        --end;
 
     usable = end - sbuf;
 
@@ -1665,7 +1671,7 @@ FtpStateData::ftpParseControlReply(char *buf, size_t len, int *codep, size_t *us
     }
 
     debugs(9, 3, HERE << len << " bytes to play with");
-    end++;
+    ++end;
     s = sbuf;
     s += strspn(s, crlf);
 
@@ -1865,7 +1871,7 @@ ftpReadWelcome(FtpStateData * ftpState)
     debugs(9, 3, HERE);
 
     if (ftpState->flags.pasv_only)
-        ftpState->login_att++;
+        ++ ftpState->login_att;
 
     if (code == 220) {
         if (ftpState->ctrl.message) {
@@ -2099,14 +2105,16 @@ ftpReadType(FtpStateData * ftpState)
         p = path = xstrdup(ftpState->request->urlpath.termedBuf());
 
         if (*p == '/')
-            p++;
+            ++p;
 
         while (*p) {
             d = p;
             p += strcspn(p, "/");
 
-            if (*p)
-                *p++ = '\0';
+            if (*p) {
+                *p = '\0';
+                ++p;
+            }
 
             rfc1738_unescape(d);
 
@@ -2395,8 +2403,10 @@ ftpReadEPSV(FtpStateData* ftpState)
          * which means close data + control without self-destructing and re-open from scratch. */
         debugs(9, 5, HERE << "scanning: " << ftpState->ctrl.last_reply);
         buf = ftpState->ctrl.last_reply;
-        while (buf != NULL && *buf != '\0' && *buf != '\n' && *buf != '(') ++buf;
-        if (buf != NULL && *buf == '\n') ++buf;
+        while (buf != NULL && *buf != '\0' && *buf != '\n' && *buf != '(')
+            ++buf;
+        if (buf != NULL && *buf == '\n')
+            ++buf;
 
         if (buf == NULL || *buf == '\0') {
             /* handle broken server (RFC 2428 says MUST specify supported protocols in 522) */

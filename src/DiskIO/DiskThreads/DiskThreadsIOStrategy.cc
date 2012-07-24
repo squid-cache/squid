@@ -94,7 +94,7 @@ DiskThreadsIOStrategy::callback()
     int retval = 0;
 
     assert(initialised);
-    squidaio_counts.check_callback++;
+    ++squidaio_counts.check_callback;
 
     for (;;) {
         if ((resultp = squidaio_poll_done()) == NULL)

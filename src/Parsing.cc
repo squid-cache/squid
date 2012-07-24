@@ -179,7 +179,8 @@ GetHostWithPort(char *token, Ip::Address *ipa)
         t = strchr(host, ']');
         if (!t)
             return false;
-        *t++ = '\0';
+        *t = '\0';
+        ++t;
         if (*t != ':')
             return false;
         port = xatos(t + 1);

@@ -142,7 +142,7 @@ netdbHostInsert(netdbEntry * n, const char *hostname)
     x->net_db_entry = n;
     assert(hash_lookup(host_table, hostname) == NULL);
     hash_join(host_table, &x->hash);
-    n->link_count++;
+    ++ n->link_count;
 }
 
 static void
@@ -153,7 +153,7 @@ netdbHostDelete(const net_db_name * x)
     assert(x != NULL);
     assert(x->net_db_entry != NULL);
     n = x->net_db_entry;
-    n->link_count--;
+    -- n->link_count;
 
     for (X = &n->hosts; *X; X = &(*X)->next) {
         if (*X == x) {
@@ -226,7 +226,7 @@ netdbPurgeLRU(void)
     while ((n = (netdbEntry *) hash_next(addr_table))) {
         assert(list_count < memInUse(MEM_NETDBENTRY));
         *(list + list_count) = n;
-        list_count++;
+        ++list_count;
     }
 
     qsort((char *) list,
@@ -234,13 +234,13 @@ netdbPurgeLRU(void)
           sizeof(netdbEntry *),
           netdbLRU);
 
-    for (k = 0; k < list_count; k++) {
+    for (k = 0; k < list_count; ++k) {
         if (memInUse(MEM_NETDBENTRY) < Config.Netdb.low)
             break;
 
         netdbRelease(*(list + k));
 
-        removed++;
+        ++removed;
     }
 
     xfree(list);
@@ -320,20 +320,20 @@ netdbSendPing(const ipcache_addrs *ia, const DnsLookupDetails &, void *data)
             }
         }
 
-        n->link_count--;
+        -- n->link_count;
         /* point to 'network na' from host entry */
         x->net_db_entry = na;
         /* link net_db_name to 'network na' */
         x->next = na->hosts;
         na->hosts = x;
-        na->link_count++;
+        ++ na->link_count;
         n = na;
     }
 
     if (n->next_ping_time <= squid_curtime) {
         debugs(38, 3, "netdbSendPing: pinging " << hostname);
         icmpEngine.DomainPing(addr, hostname);
-        n->pings_sent++;
+        ++ n->pings_sent;
         n->next_ping_time = squid_curtime + Config.Netdb.period;
         n->last_use_time = squid_curtime;
     }
@@ -400,7 +400,7 @@ netdbPeerByName(const netdbEntry * n, const char *peername)
     int i;
     net_db_peer *p = n->peers;
 
-    for (i = 0; i < n->n_peers; i++, p++) {
+    for (i = 0; i < n->n_peers; ++i, ++p) {
         if (!strcmp(p->peername, peername))
             return p;
     }
@@ -429,7 +429,7 @@ netdbPeerAdd(netdbEntry * n, peer * e)
 
         n->peers = (net_db_peer *)xcalloc(n->n_peers_alloc, sizeof(net_db_peer));
 
-        for (i = 0; i < osize; i++)
+        for (i = 0; i < osize; ++i)
             *(n->peers + i) = *(o + i);
 
         if (osize) {
@@ -439,7 +439,7 @@ netdbPeerAdd(netdbEntry * n, peer * e)
 
     p = n->peers + n->n_peers;
     p->peername = netdbPeerName(e->host);
-    n->n_peers++;
+    ++ n->n_peers;
     return p;
 }
 
@@ -506,7 +506,7 @@ netdbSaveState(void *foo)
 
         logfilePrintf(lf, "\n");
 
-        count++;
+        ++count;
 
 #undef RBUF_SZ
 
@@ -632,7 +632,7 @@ netdbReloadState(void)
             netdbHostInsert(n, q);
         }
 
-        count++;
+        ++count;
     }
 
     xfree(buf);
@@ -777,7 +777,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
             switch ((int) *(p + o)) {
 
             case NETDB_EX_NETWORK:
-                o++;
+                ++o;
                 /* FIXME INET6 : NetDB can still ony send IPv4 */
                 memcpy(&line_addr, p + o, sizeof(struct in_addr));
                 addr = line_addr;
@@ -785,14 +785,14 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
                 break;
 
             case NETDB_EX_RTT:
-                o++;
+                ++o;
                 memcpy(&j, p + o, sizeof(int));
                 o += sizeof(int);
                 rtt = (double) ntohl(j) / 1000.0;
                 break;
 
             case NETDB_EX_HOPS:
-                o++;
+                ++o;
                 memcpy(&j, p + o, sizeof(int));
                 o += sizeof(int);
                 hops = (double) ntohl(j) / 1000.0;
@@ -816,7 +816,7 @@ netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 
         p += rec_sz;
 
-        nused++;
+        ++nused;
     }
 
     /*
@@ -1018,8 +1018,10 @@ netdbDump(StoreEntry * sentry)
     i = 0;
     hash_first(addr_table);
 
-    while ((n = (netdbEntry *) hash_next(addr_table)))
-        *(list + i++) = n;
+    while ((n = (netdbEntry *) hash_next(addr_table))) {
+        *(list + i) = n;
+        ++i;
+    }
 
     if (i != memInUse(MEM_NETDBENTRY))
         debugs(38, 0, "WARNING: netdb_addrs count off, found " << i <<
@@ -1030,7 +1032,7 @@ netdbDump(StoreEntry * sentry)
           sizeof(netdbEntry *),
           sortByRtt);
 
-    for (k = 0; k < i; k++) {
+    for (k = 0; k < i; ++k) {
         n = *(list + k);
         storeAppendPrintf(sentry, "%-46.46s %4d/%4d %7.1f %5.1f", /* Max between 16 (IPv4) or 46 (IPv6)   */
                           n->network,
@@ -1046,7 +1048,7 @@ netdbDump(StoreEntry * sentry)
 
         p = n->peers;
 
-        for (j = 0; j < n->n_peers; j++, p++) {
+        for (j = 0; j < n->n_peers; ++j, ++p) {
             storeAppendPrintf(sentry, "    %-22.22s %7.1f %5.1f\n",
                               p->peername,
                               p->rtt,
@@ -1245,14 +1247,16 @@ netdbBinaryExchange(StoreEntry * s)
         if ( !addr.IsIPv4() )
             continue;
 
-        buf[i++] = (char) NETDB_EX_NETWORK;
+        buf[i] = (char) NETDB_EX_NETWORK;
+        ++i;
 
         addr.GetInAddr(line_addr);
         memcpy(&buf[i], &line_addr, sizeof(struct in_addr));
 
         i += sizeof(struct in_addr);
 
-        buf[i++] = (char) NETDB_EX_RTT;
+        buf[i] = (char) NETDB_EX_RTT;
+        ++i;
 
         j = htonl((int) (n->rtt * 1000));
 
@@ -1260,7 +1264,8 @@ netdbBinaryExchange(StoreEntry * s)
 
         i += sizeof(int);
 
-        buf[i++] = (char) NETDB_EX_HOPS;
+        buf[i] = (char) NETDB_EX_HOPS;
+        ++i;
 
         j = htonl((int) (n->hops * 1000));
 
@@ -1374,7 +1379,7 @@ netdbClosestParent(HttpRequest * request)
      * Make sure we don't return a parent who is farther away than
      * we are.  Note, the n->peers list is pre-sorted by RTT.
      */
-    for (i = 0; i < n->n_peers; i++) {
+    for (i = 0; i < n->n_peers; ++i) {
         h = &n->peers[i];
 
         if (n->rtt > 0)

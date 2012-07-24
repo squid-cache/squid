@@ -160,7 +160,7 @@ HttpRequestMethod::Configure(SquidConfig &cfg)
     while (w) {
         char *s;
 
-        for (s = w->key; *s; s++)
+        for (s = w->key; *s; ++s)
             *s = xtoupper(*s);
 
         AddExtension(w->key);

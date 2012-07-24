@@ -631,13 +631,17 @@ ldap_escape_value(char *escaped, int size, const char *src)
             n += 3;
             size -= 3;
             if (size > 0) {
-                *escaped++ = '\\';
-                snprintf(escaped, 3, "%02x", (unsigned char) *src++);
+                *escaped = '\\';
+                ++escaped;
+                snprintf(escaped, 3, "%02x", (unsigned char) *src);
+                ++src;
                 escaped += 2;
             }
             break;
         default:
-            *escaped++ = *src++;
+            *escaped = *src;
+            ++escaped;
+            ++src;
             ++n;
             --size;
         }
@@ -678,12 +682,16 @@ build_filter(char *filter, int size, const char *templ, const char *user, const 
         case '\\':
             ++templ;
             if (*templ) {
-                *filter++ = *templ++;
+                *filter = *templ;
+                ++filter;
+                ++templ;
                 --size;
             }
             break;
         default:
-            *filter++ = *templ++;
+            *filter = *templ;
+            ++filter;
+            ++templ;
             --size;
             break;
         }

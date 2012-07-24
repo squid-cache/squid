@@ -340,7 +340,7 @@ MemBuf::vPrintf(const char *fmt, va_list vargs)
     if (!size || buf[size - 1]) {
         assert(!buf[size]);
     } else {
-        size--;
+        --size;
     }
 }
 
