@@ -764,10 +764,13 @@ Mem::Report(std::ostream &stream)
         if (!mp_stats.pool)	/* pool destroyed */
             continue;
 
-        if (mp_stats.pool->getMeter().gb_allocated.count > 0)	/* this pool has been used */
-            sortme[npools++] = mp_stats;
-        else
+        if (mp_stats.pool->getMeter().gb_allocated.count > 0) {
+            /* this pool has been used */
+            sortme[npools] = mp_stats;
+            ++npools;
+        } else {
             ++not_used;
+        }
     }
 
     memPoolIterateDone(&iter);

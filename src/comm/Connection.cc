@@ -61,8 +61,8 @@ Comm::Connection::close()
     if (isOpen()) {
         comm_close(fd);
         fd = -1;
-        if (getPeer())
-            getPeer()->stats.conn_open--;
+        if (peer *p=getPeer())
+            -- p->stats.conn_open;
     }
 }
 

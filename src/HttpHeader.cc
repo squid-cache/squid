@@ -340,7 +340,7 @@ httpHeaderInitModule(void)
     /* init header stats */
     assert(HttpHeaderStatCount == hoReply + 1);
 
-    for (i = 0; i < HttpHeaderStatCount; i++)
+    for (i = 0; i < HttpHeaderStatCount; ++i)
         httpHeaderStatInit(HttpHeaderStats + i, HttpHeaderStats[i].label);
 
     HttpHeaderStats[hoRequest].owner_mask = &RequestHeadersMask;
@@ -448,7 +448,7 @@ HttpHeader::clean()
         if (0 != entries.count)
             HttpHeaderStats[owner].hdrUCountDistr.count(entries.count);
 
-        HttpHeaderStats[owner].destroyedCount++;
+        ++ HttpHeaderStats[owner].destroyedCount;
 
         HttpHeaderStats[owner].busyDestroyedCount += entries.count > 0;
 
@@ -544,7 +544,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
 
     assert(header_start && header_end);
     debugs(55, 7, "parsing hdr: (" << this << ")" << std::endl << getStringPrefix(header_start, header_end));
-    HttpHeaderStats[owner].parsedCount++;
+    ++ HttpHeaderStats[owner].parsedCount;
 
     char *nulpos;
     if ((nulpos = (char*)memchr(header_start, '\0', header_end - header_start))) {
@@ -568,10 +568,10 @@ HttpHeader::parse(const char *header_start, const char *header_end)
 
             field_end = field_ptr;
 
-            field_ptr++;	/* Move to next line */
+            ++field_ptr;	/* Move to next line */
 
             if (field_end > this_line && field_end[-1] == '\r') {
-                field_end--;	/* Ignore CR LF */
+                --field_end;	/* Ignore CR LF */
 
                 if (owner == hoRequest && field_end > this_line) {
                     bool cr_only = true;
@@ -596,8 +596,10 @@ HttpHeader::parse(const char *header_start, const char *header_end)
                 if (Config.onoff.relaxed_header_parser) {
                     char *p = (char *) this_line;	/* XXX Warning! This destroys original header content and violates specifications somewhat */
 
-                    while ((p = (char *)memchr(p, '\r', field_end - p)) != NULL)
-                        *p++ = ' ';
+                    while ((p = (char *)memchr(p, '\r', field_end - p)) != NULL) {
+                        *p = ' ';
+                        ++p;
+                    }
                 } else
                     goto reset;
             }
@@ -733,7 +735,7 @@ HttpHeader::getEntry(HttpHeaderPos * pos) const
     assert(pos);
     assert(*pos >= HttpHeaderInitPos && *pos < (ssize_t)entries.count);
 
-    for ((*pos)++; *pos < (ssize_t)entries.count; (*pos)++) {
+    for (++(*pos); *pos < (ssize_t)entries.count; ++(*pos)) {
         if (entries.items[*pos])
             return (HttpHeaderEntry*)entries.items[*pos];
     }
@@ -900,7 +902,7 @@ HttpHeader::addEntry(HttpHeaderEntry * e)
     debugs(55, 7, HERE << this << " adding entry: " << e->id << " at " << entries.count);
 
     if (CBIT_TEST(mask, e->id))
-        Headers[e->id].stat.repCount++;
+        ++ Headers[e->id].stat.repCount;
     else
         CBIT_SET(mask, e->id);
 
@@ -922,7 +924,7 @@ HttpHeader::insertEntry(HttpHeaderEntry * e)
     debugs(55, 7, HERE << this << " adding entry: " << e->id << " at " << entries.count);
 
     if (CBIT_TEST(mask, e->id))
-        Headers[e->id].stat.repCount++;
+        ++ Headers[e->id].stat.repCount;
     else
         CBIT_SET(mask, e->id);
 
@@ -1344,7 +1346,7 @@ HttpHeader::getCc() const
         cc = NULL;
     }
 
-    HttpHeaderStats[owner].ccParsedCount++;
+    ++ HttpHeaderStats[owner].ccParsedCount;
 
     if (cc)
         httpHdrCcUpdateStats(cc, &HttpHeaderStats[owner].ccTypeDistr);
@@ -1387,7 +1389,7 @@ HttpHeader::getSc() const
 
     HttpHdrSc *sc = httpHdrScParseCreate(s);
 
-    ++HttpHeaderStats[owner].ccParsedCount;
+    ++ HttpHeaderStats[owner].ccParsedCount;
 
     if (sc)
         sc->updateStats(&HttpHeaderStats[owner].scTypeDistr);
@@ -1433,7 +1435,7 @@ HttpHeader::getAuth(http_hdr_type id, const char *auth_scheme) const
         return NULL;
 
     /* skip white space */
-    for (; field && xisspace(*field); field++);
+    for (; field && xisspace(*field); ++field);
 
     if (!*field)		/* no authorization cookie */
         return NULL;
@@ -1500,7 +1502,7 @@ HttpHeaderEntry::HttpHeaderEntry(http_hdr_type anId, const char *aName, const ch
 
     value = aValue;
 
-    Headers[id].stat.aliveCount++;
+    ++ Headers[id].stat.aliveCount;
 
     debugs(55, 9, "created HttpHeaderEntry " << this << ": '" << name << " : " << value );
 }
@@ -1518,7 +1520,7 @@ HttpHeaderEntry::~HttpHeaderEntry()
 
     assert(Headers[id].stat.aliveCount);
 
-    Headers[id].stat.aliveCount--;
+    -- Headers[id].stat.aliveCount;
 
     id = HDR_BAD_HDR;
 }
@@ -1533,7 +1535,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
     const char *value_start = field_start + name_len + 1;	/* skip ':' */
     /* note: value_end == field_end */
 
-    HeaderEntryParsedCount++;
+    ++ HeaderEntryParsedCount;
 
     /* do we have a valid field name within this field? */
 
@@ -1551,7 +1553,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
                "NOTICE: Whitespace after header name in '" << getStringPrefix(field_start, field_end) << "'");
 
         while (name_len > 0 && xisspace(field_start[name_len - 1]))
-            name_len--;
+            --name_len;
 
         if (!name_len)
             return NULL;
@@ -1581,10 +1583,10 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     /* trim field value */
     while (value_start < field_end && xisspace(*value_start))
-        value_start++;
+        ++value_start;
 
     while (value_start < field_end && xisspace(field_end[-1]))
-        field_end--;
+        --field_end;
 
     if (field_end - value_start > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
@@ -1599,7 +1601,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
     /* set field value */
     value.limitInit(value_start, field_end - value_start);
 
-    Headers[id].stat.seenCount++;
+    ++ Headers[id].stat.seenCount;
 
     debugs(55, 9, "parsed HttpHeaderEntry: '" << name << ": " << value << "'");
 
@@ -1653,10 +1655,10 @@ HttpHeaderEntry::getInt64() const
 static void
 httpHeaderNoteParsedEntry(http_hdr_type id, String const &context, int error)
 {
-    Headers[id].stat.parsCount++;
+    ++ Headers[id].stat.parsCount;
 
     if (error) {
-        Headers[id].stat.errCount++;
+        ++ Headers[id].stat.errCount;
         debugs(55, 2, "cannot parse hdr field: '" << Headers[id].name << ": " << context << "'");
     }
 }
@@ -1738,7 +1740,7 @@ httpHeaderStoreReport(StoreEntry * e)
     HttpHeaderStats[0].busyDestroyedCount =
         HttpHeaderStats[hoRequest].busyDestroyedCount + HttpHeaderStats[hoReply].busyDestroyedCount;
 
-    for (i = 1; i < HttpHeaderStatCount; i++) {
+    for (i = 1; i < HttpHeaderStatCount; ++i) {
         httpHeaderStatDump(HttpHeaderStats + i, e);
         storeAppendPrintf(e, "%s\n", "<br>");
     }

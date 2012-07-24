@@ -320,7 +320,7 @@ authDigestNonceUnlink(digest_nonce_h * nonce)
     assert(nonce != NULL);
 
     if (nonce->references > 0) {
-        nonce->references--;
+        -- nonce->references;
     } else {
         debugs(29, 1, "authDigestNonceUnlink; Attempt to lower nonce " << nonce << " refcount below 0!");
     }
@@ -809,7 +809,8 @@ Auth::Digest::Config::decode(char const *proxy_auth)
         size_t nlen;
         size_t vlen;
         if ((p = (const char *)memchr(item, '=', ilen)) && (p - item < ilen)) {
-            nlen = p++ - item;
+            nlen = p - item;
+            ++p;
             vlen = ilen - (p - item);
         } else {
             nlen = ilen;

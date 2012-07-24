@@ -221,7 +221,8 @@ start:
             debug("ERROR: %s: Unexpected input '%s'\n", argv[0], buf);
             goto error;
         }
-        *password_buf++ = '\0';
+        *password_buf = '\0';
+        ++password_buf;
         rfc1738_unescape(user);
         rfc1738_unescape(password_buf);
         conv.appdata_ptr = (char *) password_buf;	/* from buf above. not allocated */

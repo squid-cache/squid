@@ -44,7 +44,7 @@ storeKeyText(const cache_key *key)
     static char buf[SQUID_MD5_DIGEST_LENGTH * 2+1];
     int i;
 
-    for (i = 0; i < SQUID_MD5_DIGEST_LENGTH; i++)
+    for (i = 0; i < SQUID_MD5_DIGEST_LENGTH; ++i)
         snprintf(&buf[i*2],sizeof(buf) - i*2, "%02X", *(key + i));
 
     return buf;
@@ -58,7 +58,7 @@ storeKeyScan(const char *buf)
     int j = 0;
     char t[3];
 
-    for (i = 0; i < SQUID_MD5_DIGEST_LENGTH; i++) {
+    for (i = 0; i < SQUID_MD5_DIGEST_LENGTH; ++i) {
         t[0] = *(buf + (j++));
         t[1] = *(buf + (j++));
         t[2] = '\0';
@@ -75,7 +75,7 @@ storeKeyHashCmp(const void *a, const void *b)
     const unsigned char *B = (const unsigned char *)b;
     int i;
 
-    for (i = 0; i < SQUID_MD5_DIGEST_LENGTH; i++) {
+    for (i = 0; i < SQUID_MD5_DIGEST_LENGTH; ++i) {
         if (A[i] < B[i])
             return -1;
 

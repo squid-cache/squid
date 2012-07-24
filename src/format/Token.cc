@@ -220,7 +220,7 @@ Format::Token::Init()
 const char *
 Format::Token::scanForToken(TokenTableEntry const table[], const char *cur)
 {
-    for (TokenTableEntry const *lte = table; lte->configTag != NULL; lte++) {
+    for (TokenTableEntry const *lte = table; lte->configTag != NULL; ++lte) {
         debugs(46, 8, HERE << "compare tokens '" << lte->configTag << "' with '" << cur << "'");
         if (strncmp(lte->configTag, cur, strlen(lte->configTag)) == 0) {
             type = lte->tokenType;
@@ -278,8 +278,8 @@ Format::Token::parse(const char *def, Quoting *quoting)
                 break;
             }
 
-            cur++;
-            l--;
+            ++cur;
+            --l;
         }
 
         goto done;
@@ -288,29 +288,29 @@ Format::Token::parse(const char *def, Quoting *quoting)
     if (!*cur)
         goto done;
 
-    cur++;
+    ++cur;
 
     // select quoting style for his particular token
     switch (*cur) {
 
     case '"':
         quote = LOG_QUOTE_QUOTES;
-        cur++;
+        ++cur;
         break;
 
     case '\'':
         quote = LOG_QUOTE_RAW;
-        cur++;
+        ++cur;
         break;
 
     case '[':
         quote = LOG_QUOTE_MIMEBLOB;
-        cur++;
+        ++cur;
         break;
 
     case '#':
         quote = LOG_QUOTE_URL;
-        cur++;
+        ++cur;
         break;
 
     default:
@@ -320,12 +320,12 @@ Format::Token::parse(const char *def, Quoting *quoting)
 
     if (*cur == '-') {
         left = 1;
-        cur++;
+        ++cur;
     }
 
     if (*cur == '0') {
         zero = 1;
-        cur++;
+        ++cur;
     }
 
     char *endp;
@@ -341,7 +341,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
 
     if (*cur == '{') {
         char *cp;
-        cur++;
+        ++cur;
         l = strcspn(cur, "}");
         cp = (char *)xmalloc(l + 1);
         xstrncpy(cp, cur, l + 1);
@@ -349,14 +349,14 @@ Format::Token::parse(const char *def, Quoting *quoting)
         cur += l;
 
         if (*cur == '}')
-            cur++;
+            ++cur;
     }
 
     type = LFT_NONE;
 
     // Scan each registered token namespace
     debugs(46, 9, HERE << "check for token in " << TheConfig.tokens.size() << " namespaces.");
-    for (std::list<TokenNamespace>::const_iterator itr = TheConfig.tokens.begin(); itr != TheConfig.tokens.end(); itr++) {
+    for (std::list<TokenNamespace>::const_iterator itr = TheConfig.tokens.begin(); itr != TheConfig.tokens.end(); ++itr) {
         debugs(46, 7, HERE << "check for possible " << itr->prefix << ":: token");
         const size_t len = itr->prefix.size();
         if (itr->prefix.cmp(cur, len) == 0 && cur[len] == ':' && cur[len+1] == ':') {
@@ -401,7 +401,7 @@ Format::Token::parse(const char *def, Quoting *quoting)
 
     if (*cur == ' ') {
         space = 1;
-        cur++;
+        ++cur;
     }
 
 done:
@@ -429,12 +429,15 @@ done:
             char *cp = strchr(header, ':');
 
             if (cp) {
-                *cp++ = '\0';
+                *cp = '\0';
+                ++cp;
 
-                if (*cp == ',' || *cp == ';' || *cp == ':')
-                    data.header.separator = *cp++;
-                else
+                if (*cp == ',' || *cp == ';' || *cp == ':') {
+                    data.header.separator = *cp;
+                    ++cp;
+                } else {
                     data.header.separator = ',';
+                }
 
                 data.header.element = cp;
 
@@ -514,7 +517,7 @@ done:
             int i;
             divisor = 1000000;
 
-            for (i = widthMax; i > 1; i--)
+            for (i = widthMax; i > 1; --i)
                 divisor /= 10;
 
             if (!divisor)

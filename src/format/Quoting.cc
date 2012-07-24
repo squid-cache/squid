@@ -46,21 +46,29 @@ username_quote(const char *header)
 
     while ((c = *(const unsigned char *) header++) != '\0') {
         if (c == '\r') {
-            *buf_cursor++ = '\\';
-            *buf_cursor++ = 'r';
+            *buf_cursor = '\\';
+            ++buf_cursor;
+            *buf_cursor = 'r';
+            ++buf_cursor;
         } else if (c == '\n') {
-            *buf_cursor++ = '\\';
-            *buf_cursor++ = 'n';
+            *buf_cursor = '\\';
+            ++buf_cursor;
+            *buf_cursor = 'n';
+            ++buf_cursor;
         } else if (c <= 0x1F
                    || c >= 0x7F
                    || c == '%'
                    || c == ' ') {
-            *buf_cursor++ = '%';
+            *buf_cursor = '%';
+            ++buf_cursor;
             i = c * 2;
-            *buf_cursor++ = c2x[i];
-            *buf_cursor++ = c2x[i + 1];
+            *buf_cursor = c2x[i];
+            ++buf_cursor;
+            *buf_cursor = c2x[i + 1];
+            ++buf_cursor;
         } else {
-            *buf_cursor++ = (char) c;
+            *buf_cursor = (char) c;
+            ++buf_cursor;
         }
     }
 
@@ -108,11 +116,15 @@ Format::QuoteMimeBlob(const char *header)
     while ((c = *(const unsigned char *) header++) != '\0') {
 #if !OLD_LOG_MIME
         if (c == '\r') {
-            *buf_cursor++ = '\\';
-            *buf_cursor++ = 'r';
+            *buf_cursor = '\\';
+            ++buf_cursor;
+            *buf_cursor = 'r';
+            ++buf_cursor;
         } else if (c == '\n') {
-            *buf_cursor++ = '\\';
-            *buf_cursor++ = 'n';
+            *buf_cursor = '\\';
+            ++buf_cursor;
+            *buf_cursor = 'n';
+            ++buf_cursor;
         } else
 #endif
             if (c <= 0x1F
@@ -135,19 +147,25 @@ Format::QuoteMimeBlob(const char *header)
 #endif
                     || c == '['
                     || c == ']') {
-                *buf_cursor++ = '%';
+                *buf_cursor = '%';
+                ++buf_cursor;
                 i = c * 2;
-                *buf_cursor++ = c2x[i];
-                *buf_cursor++ = c2x[i + 1];
+                *buf_cursor = c2x[i];
+                ++buf_cursor;
+                *buf_cursor = c2x[i + 1];
+                ++buf_cursor;
 #if !OLD_LOG_MIME
 
             } else if (c == '\\') {
-                *buf_cursor++ = '\\';
-                *buf_cursor++ = '\\';
+                *buf_cursor = '\\';
+                ++buf_cursor;
+                *buf_cursor = '\\';
+                ++buf_cursor;
 #endif
 
             } else {
-                *buf_cursor++ = (char) c;
+                *buf_cursor = (char) c;
+                ++buf_cursor;
             }
     }
 

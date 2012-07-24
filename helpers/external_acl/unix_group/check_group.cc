@@ -169,7 +169,8 @@ main(int argc, char *argv[])
             break;
         case 'g':
             grents = (char**)realloc(grents, sizeof(*grents) * (ngroups+1));
-            grents[ngroups++] = optarg;
+            grents[ngroups] = optarg;
+            ++ngroups;
             break;
         case '?':
             if (xisprint(optopt)) {
@@ -223,7 +224,7 @@ main(int argc, char *argv[])
         }
 
         /* check groups supplied on the command line */
-        for (i = 0; i < ngroups; i++) {
+        for (i = 0; i < ngroups; ++i) {
             if (check_pw == 1) {
                 j += validate_user_pw(user, grents[i]);
             }

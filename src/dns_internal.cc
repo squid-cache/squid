@@ -299,7 +299,7 @@ idnsAddNameserver(const char *buf)
     // TODO generate a test packet to probe this NS from EDNS size and ability.
 #endif
     debugs(78, 3, "idnsAddNameserver: Added nameserver #" << nns << " (" << A << ")");
-    nns++;
+    ++nns;
 }
 
 static void
@@ -327,7 +327,7 @@ idnsAddPathComponent(const char *buf)
     strcpy(searchpath[npc].domain, buf);
     Tolower(searchpath[npc].domain);
     debugs(78, 3, "idnsAddPathComponent: Added domain #" << npc << ": " << searchpath[npc].domain);
-    npc++;
+    ++npc;
 }
 
 
@@ -559,7 +559,7 @@ idnsParseWIN32Registry(void)
 
             if (RegQueryInfoKey(hndKey, NULL, NULL, NULL, &InterfacesCount, &MaxSubkeyLen, NULL, NULL, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
                 keyname = (char *) xmalloc(++MaxSubkeyLen);
-                for (i = 0; i < (int) InterfacesCount; i++) {
+                for (i = 0; i < (int) InterfacesCount; ++i) {
                     DWORD j;
                     j = MaxSubkeyLen;
                     if (RegEnumKeyEx(hndKey, i, keyname, &j, NULL, NULL, NULL, &ftLastWriteTime) == ERROR_SUCCESS) {
@@ -686,7 +686,7 @@ idnsStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "IP ADDRESS                                     # QUERIES # REPLIES\n");
     storeAppendPrintf(sentry, "---------------------------------------------- --------- ---------\n");
 
-    for (i = 0; i < nns; i++) {
+    for (i = 0; i < nns; ++i) {
         storeAppendPrintf(sentry, "%-45s %9d %9d\n",  /* Let's take the maximum: (15 IPv4/45 IPv6) */
                           nameservers[i].S.NtoA(buf,MAX_IPSTRLEN),
                           nameservers[i].nqueries,
@@ -696,18 +696,18 @@ idnsStats(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\nRcode Matrix:\n");
     storeAppendPrintf(sentry, "RCODE");
 
-    for (i = 0; i < MAX_ATTEMPT; i++)
+    for (i = 0; i < MAX_ATTEMPT; ++i)
         storeAppendPrintf(sentry, " ATTEMPT%d", i + 1);
 
     storeAppendPrintf(sentry, " PROBLEM\n");
 
-    for (j = 0; j < MAX_RCODE; j++) {
+    for (j = 0; j < MAX_RCODE; ++j) {
         if (j > 10 && j < 16)
             continue; // unassigned by IANA.
 
         storeAppendPrintf(sentry, "%5d", j);
 
-        for (i = 0; i < MAX_ATTEMPT; i++)
+        for (i = 0; i < MAX_ATTEMPT; ++i)
             storeAppendPrintf(sentry, " %8d", RcodeMatrix[j][i]);
 
         storeAppendPrintf(sentry, " : %s\n",Rcodes[j]);
@@ -716,7 +716,7 @@ idnsStats(StoreEntry * sentry)
     if (npc) {
         storeAppendPrintf(sentry, "\nSearch list:\n");
 
-        for (i=0; i < npc; i++)
+        for (i=0; i < npc; ++i)
             storeAppendPrintf(sentry, "%s\n", searchpath[i].domain);
 
         storeAppendPrintf(sentry, "\n");
@@ -920,7 +920,7 @@ idnsSendQuery(idns_query * q)
                 x = comm_udp_sendto(DnsSocketA, nameservers[ns].S, q->buf, q->sz);
         }
 
-        q->nsends++;
+        ++ q->nsends;
 
         q->sent_t = current_time;
 
@@ -938,7 +938,7 @@ idnsSendQuery(idns_query * q)
         fd_bytes(DnsSocketA, x, FD_WRITE);
     }
 
-    nameservers[ns].nqueries++;
+    ++ nameservers[ns].nqueries;
     q->queue_t = current_time;
     dlinkAdd(q, &q->lru, &lru_list);
     q->pending = 1;
@@ -950,7 +950,7 @@ idnsFromKnownNameserver(Ip::Address const &from)
 {
     int i;
 
-    for (i = 0; i < nns; i++) {
+    for (i = 0; i < nns; ++i) {
         if (nameservers[i].S != from)
             continue;
 
@@ -986,7 +986,7 @@ idnsQueryID(void)
     unsigned short first_id = id;
 
     while (idnsFindQuery(id)) {
-        id++;
+        ++id;
 
         if (id == first_id) {
             debugs(78, 1, "idnsQueryID: Warning, too many pending DNS requests");
@@ -1129,7 +1129,7 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
             // the altered NS was limiting the whole group.
             max_shared_edns = q->edns_seen;
             // may be limited by one of the others still
-            for (int i = 0; i < nns; i++)
+            for (int i = 0; i < nns; ++i)
                 max_shared_edns = min(max_shared_edns, nameservers[i].last_seen_edns);
         } else {
             nameservers[from_ns].last_seen_edns = q->edns_seen;
@@ -1150,7 +1150,7 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
 
         if (!q->need_vc) {
             q->need_vc = 1;
-            q->nsends--;
+            -- q->nsends;
             idnsSendQuery(q);
         } else {
             // Strange: A TCP DNS response with the truncation bit (TC) set.
@@ -1168,7 +1168,7 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
         q->rcode = -n;
         debugs(78, 3, "idnsGrokReply: error " << rfc1035ErrorMessage(n) << " (" << q->rcode << ")");
 
-        if (q->rcode == 2 && ++q->attempt < MAX_ATTEMPT) {
+        if (q->rcode == 2 && (++ q->attempt) < MAX_ATTEMPT) {
             /*
              * RCODE 2 is "Server failure - The name server was
              * unable to process this query due to a problem with
@@ -1193,9 +1193,9 @@ idnsGrokReply(const char *buf, size_t sz, int from_ns)
                 strcat(q->name, ".");
                 strcat(q->name, searchpath[q->domain].domain);
                 debugs(78, 3, "idnsGrokReply: searchpath used for " << q->name);
-                q->domain++;
+                ++ q->domain;
             } else {
-                q->attempt++;
+                ++ q->attempt;
             }
 
             rfc1035MessageDestroy(&message);
@@ -1263,7 +1263,8 @@ idnsRead(int fd, void *data)
      */
     Ip::Address bugbypass;
 
-    while (max--) {
+    while (max) {
+        --max;
         len = comm_udp_recvfrom(fd, rbuf, SQUID_UDP_SO_RCVBUF, 0, bugbypass);
 
         from = bugbypass; // BUG BYPASS. see notes above.
@@ -1291,7 +1292,7 @@ idnsRead(int fd, void *data)
         fd_bytes(fd, len, FD_READ);
 
         assert(N);
-        (*N)++;
+        ++(*N);
 
         debugs(78, 3, "idnsRead: FD " << fd << ": received " << len << " bytes from " << from);
 
@@ -1299,7 +1300,7 @@ idnsRead(int fd, void *data)
         ns = idnsFromKnownNameserver(from);
 
         if (ns >= 0) {
-            nameservers[ns].nreplies++;
+            ++ nameservers[ns].nreplies;
         }
 
         // Before unknown_nameservers check to avoid flooding cache.log on attacks,
@@ -1458,7 +1459,7 @@ idnsRcodeCount(int rcode, int attempt)
 
     if (rcode < MAX_RCODE)
         if (attempt < MAX_ATTEMPT)
-            RcodeMatrix[rcode][attempt]++;
+            ++ RcodeMatrix[rcode][attempt];
 }
 
 /* ====================================================================== */
@@ -1553,7 +1554,7 @@ dnsInit(void)
         memDataInit(MEM_IDNS_QUERY, "idns_query", sizeof(idns_query), 0);
         memset(RcodeMatrix, '\0', sizeof(RcodeMatrix));
         idns_lookup_hash = hash_create((HASHCMP *) strcmp, 103, hash_string);
-        init++;
+        ++init;
     }
 
 #if WHEN_EDNS_RESPONSES_ARE_PARSED
@@ -1582,7 +1583,7 @@ dnsShutdown(void)
         DnsSocketB = -1;
     }
 
-    for (int i = 0; i < nns; i++) {
+    for (int i = 0; i < nns; ++i) {
         if (nsvc *vc = nameservers[i].vc) {
             if (Comm::IsConnOpen(vc->conn))
                 vc->conn->close();
@@ -1670,9 +1671,9 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     q->xact_id.change();
     q->query_id = idnsQueryID();
 
-    for (i = 0; i < strlen(name); i++)
+    for (i = 0; i < strlen(name); ++i)
         if (name[i] == '.')
-            nd++;
+            ++nd;
 
     if (Config.onoff.res_defnames && npc > 0 && name[strlen(name)-1] != '.') {
         q->do_searchpath = 1;
@@ -1771,7 +1772,7 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
 
     case DNS_REQ:
 
-        for (i = 0; i < nns; i++)
+        for (i = 0; i < nns; ++i)
             n += nameservers[i].nqueries;
 
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
@@ -1781,7 +1782,7 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
         break;
 
     case DNS_REP:
-        for (i = 0; i < nns; i++)
+        for (i = 0; i < nns; ++i)
             n += nameservers[i].nreplies;
 
         Answer = snmp_var_new_integer(Var->name, Var->name_length,

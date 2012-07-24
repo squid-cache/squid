@@ -140,7 +140,7 @@ logfile_mod_stdio_rotate(Logfile * lf)
 
     /* Rotate numbers 0 through N up one */
     for (i = Config.Log.rotateNumber; i > 1;) {
-        i--;
+        --i;
         snprintf(from, MAXPATHLEN, "%s.%d", realpath, i - 1);
         snprintf(to, MAXPATHLEN, "%s.%d", realpath, i);
         xrename(from, to);

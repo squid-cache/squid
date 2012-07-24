@@ -123,7 +123,7 @@ commHandleRead(int fd, void *data)
     assert(data == COMMIO_FD_READCB(fd));
     assert(ccb->active());
     /* Attempt a read */
-    statCounter.syscalls.sock.reads++;
+    ++ statCounter.syscalls.sock.reads;
     errno = 0;
     int retval;
     retval = FD_READ_METHOD(fd, ccb->buf, ccb->size);
@@ -316,7 +316,7 @@ comm_read_cancel(int fd, AsyncCall::Pointer &callback)
 int
 comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, Ip::Address &from)
 {
-    statCounter.syscalls.sock.recvfroms++;
+    ++ statCounter.syscalls.sock.recvfroms;
     int x = 0;
     struct addrinfo *AI = NULL;
 
@@ -407,7 +407,7 @@ comm_local_port(int fd)
 static comm_err_t
 commBind(int s, struct addrinfo &inaddr)
 {
-    statCounter.syscalls.sock.binds++;
+    ++ statCounter.syscalls.sock.binds;
 
     if (bind(s, inaddr.ai_addr, inaddr.ai_addrlen) == 0) {
         debugs(50, 6, "commBind: bind socket FD " << s << " to " << fd_table[s].local_addr);
@@ -519,7 +519,7 @@ comm_openex(int sock_type,
 
     PROF_start(comm_open);
     /* Create socket for accepting new connections. */
-    statCounter.syscalls.sock.sockets++;
+    ++ statCounter.syscalls.sock.sockets;
 
     /* Setup the socket addrinfo details for use */
     addr.GetAddrInfo(AI);
@@ -820,7 +820,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
 
     if (!F->flags.called_connect) {
         F->flags.called_connect = 1;
-        statCounter.syscalls.sock.connects++;
+        ++ statCounter.syscalls.sock.connects;
 
         x = connect(sock, AI->ai_addr, AI->ai_addrlen);
 
@@ -1055,7 +1055,7 @@ comm_close_complete(const FdeCbParams &params)
     fd_close(params.fd);		/* update fdstat */
     close(params.fd);
 
-    statCounter.syscalls.sock.closes++;
+    ++ statCounter.syscalls.sock.closes;
 
     /* When one connection closes, give accept() a chance, if need be */
     Comm::AcceptLimiter::Instance().kick();
@@ -1167,7 +1167,7 @@ comm_udp_sendto(int fd,
     struct addrinfo *AI = NULL;
 
     PROF_start(comm_udp_sendto);
-    statCounter.syscalls.sock.sendtos++;
+    ++ statCounter.syscalls.sock.sendtos;
 
     debugs(50, 3, "comm_udp_sendto: Attempt to send UDP packet to " << to_addr <<
            " using FD " << fd << " using Port " << comm_local_port(fd) );
@@ -1739,7 +1739,7 @@ commCloseAllSockets(void)
     int fd;
     fde *F = NULL;
 
-    for (fd = 0; fd <= Biggest_FD; fd++) {
+    for (fd = 0; fd <= Biggest_FD; ++fd) {
         F = &fd_table[fd];
 
         if (!F->flags.open)
@@ -1797,7 +1797,7 @@ checkTimeouts(void)
     fde *F = NULL;
     AsyncCall::Pointer callback;
 
-    for (fd = 0; fd <= Biggest_FD; fd++) {
+    for (fd = 0; fd <= Biggest_FD; ++fd) {
         F = &fd_table[fd];
 
         if (writeTimedOut(fd)) {
@@ -2100,7 +2100,7 @@ comm_open_uds(int sock_type,
 
     PROF_start(comm_open);
     /* Create socket for accepting new connections. */
-    statCounter.syscalls.sock.sockets++;
+    ++ statCounter.syscalls.sock.sockets;
 
     /* Setup the socket addrinfo details for use */
     struct addrinfo AI;

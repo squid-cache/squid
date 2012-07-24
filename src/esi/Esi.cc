@@ -993,7 +993,8 @@ ESIContext::addStackElement (ESIElement::Pointer element)
         flags.error = 1;
     } else {
         /* added ok, push onto the stack */
-        parserState.stack[parserState.stackdepth++] = element;
+        parserState.stack[parserState.stackdepth] = element;
+        ++parserState.stackdepth;
     }
 }
 
@@ -1024,12 +1025,15 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
         position = localbuf + strlen (localbuf);
 
         for (i = 0; i < specifiedattcount && attr[i]; i += 2) {
-            *position++ = ' ';
+            *position = ' ';
+            ++position;
             /* TODO: handle thisNode gracefully */
             assert (xstrncpy (position, attr[i], sizeof(localbuf) + (position - localbuf)));
             position += strlen (position);
-            *position++ = '=';
-            *position++ = '\"';
+            *position = '=';
+            ++position;
+            *position = '\"';
+            ++position;
             const char *chPtr = attr[i + 1];
             char ch;
             while ((ch = *chPtr++) != '\0') {
@@ -1037,14 +1041,17 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
                     assert( xstrncpy(position, "&quot;", sizeof(localbuf) + (position-localbuf)) );
                     position += 6;
                 } else {
-                    *(position++) = ch;
+                    *position = ch;
+                    ++position;
                 }
             }
             position += strlen (position);
-            *position++ = '\"';
+            *position = '\"';
+            ++position;
         }
 
-        *position++ = '>';
+        *position = '>';
+        ++position;
         *position = '\0';
 
         addLiteral (localbuf, position - localbuf);
@@ -1134,7 +1141,8 @@ ESIContext::end(const char *el)
         localbuf[1] = '/';
         assert (xstrncpy (&localbuf[2], el, sizeof(localbuf) - 3));
         position = localbuf + strlen (localbuf);
-        *position++ = '>';
+        *position = '>';
+        ++position;
         *position = '\0';
         addLiteral (localbuf, position - localbuf);
         break;
@@ -1283,7 +1291,8 @@ ESIContext::parse()
     if (!parserState.stackdepth) {
         debugs(86, 5, "empty parser stack, inserting the top level node");
         assert (tree.getRaw());
-        parserState.stack[parserState.stackdepth++] = tree;
+        parserState.stack[parserState.stackdepth] = tree;
+        ++parserState.stackdepth;
     }
 
     if (rep && !parserState.inited())

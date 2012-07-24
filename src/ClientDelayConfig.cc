@@ -38,7 +38,7 @@ void ClientDelayConfig::dumpPoolCount(StoreEntry * entry, const char *name) cons
 {
     if (pools.size()) {
         storeAppendPrintf(entry, "%s %d\n", name, (int)pools.size());
-        for (unsigned int i = 0; i < pools.size(); i++)
+        for (unsigned int i = 0; i < pools.size(); ++i)
             pools[i].dump(entry, i);
     }
 }
@@ -51,7 +51,7 @@ void ClientDelayConfig::parsePoolCount()
     }
     unsigned short pools_;
     ConfigParser::ParseUShort(&pools_);
-    for (int i = 0; i < pools_; i++) {
+    for (int i = 0; i < pools_; ++i) {
         pools.push_back(ClientDelayPool());
     }
 }
@@ -66,7 +66,7 @@ void ClientDelayConfig::parsePoolRates()
         return;
     }
 
-    pool--;
+    --pool;
 
     pools[pool].rate = GetInteger();
     pools[pool].highwatermark = GetInteger64();
@@ -89,7 +89,7 @@ void ClientDelayConfig::parsePoolAccess(ConfigParser &parser)
 
 void ClientDelayConfig::clean()
 {
-    for (unsigned int i = 0; i < pools.size(); i++) {
+    for (unsigned int i = 0; i < pools.size(); ++i) {
         aclDestroyAccessList(&pools[i].access);
     }
 }

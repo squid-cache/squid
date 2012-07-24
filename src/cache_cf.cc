@@ -247,7 +247,7 @@ update_maxobjsize(void)
     int i;
     int64_t ms = -1;
 
-    for (i = 0; i < Config.cacheSwap.n_configured; i++) {
+    for (i = 0; i < Config.cacheSwap.n_configured; ++i) {
         assert (Config.cacheSwap.swapDirs[i].getRaw());
 
         if (dynamic_cast<SwapDir *>(Config.cacheSwap.swapDirs[i].getRaw())->
@@ -295,7 +295,7 @@ parseManyConfigFiles(char* files, int depth)
                    path, xstrerror());
         }
     }
-    for (i = 0; i < (int)globbuf.gl_pathc; i++) {
+    for (i = 0; i < (int)globbuf.gl_pathc; ++i) {
         error_count += parseOneConfigFile(globbuf.gl_pathv[i], depth);
     }
     globfree(&globbuf);
@@ -453,7 +453,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
 
     Vector<bool> if_states;
     while (fgets(config_input_line, BUFSIZ, fp)) {
-        config_lineno++;
+        ++config_lineno;
 
         if ((token = strchr(config_input_line, '\n')))
             *token = '\0';
@@ -477,7 +477,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                 continue;	/* Not a valid #line directive, may be a comment */
 
             while (*file && xisspace((unsigned char) *file))
-                file++;
+                ++file;
 
             if (*file) {
                 if (*file != '"')
@@ -538,7 +538,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
                 err_count += parseManyConfigFiles(tmp_line + 8, depth + 1);
             } else if (!parse_line(tmp_line)) {
                 debugs(3, 0, HERE << cfg_filename << ":" << config_lineno << " unrecognized: '" << tmp_line << "'");
-                err_count++;
+                ++err_count;
             }
         }
 
@@ -1188,7 +1188,7 @@ static void parseBytesOptionValue(size_t * bptr, const char *units, char const *
     char const * number_end = value;
 
     while ((*number_end >= '0' && *number_end <= '9')) {
-        number_end++;
+        ++number_end;
     }
 
     String number;
@@ -1757,7 +1757,7 @@ dump_cachedir(StoreEntry * entry, const char *name, SquidConfig::_cacheSwap swap
     int i;
     assert (entry);
 
-    for (i = 0; i < swap.n_configured; i++) {
+    for (i = 0; i < swap.n_configured; ++i) {
         s = dynamic_cast<SwapDir *>(swap.swapDirs[i].getRaw());
         if (!s) continue;
         storeAppendPrintf(entry, "%s %s %s", name, s->type(), s->path);
@@ -1866,7 +1866,7 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
 
     /* reconfigure existing dir */
 
-    for (i = 0; i < swap->n_configured; i++) {
+    for (i = 0; i < swap->n_configured; ++i) {
         assert (swap->swapDirs[i].getRaw());
 
         if ((strcasecmp(path_str, dynamic_cast<SwapDir *>(swap->swapDirs[i].getRaw())->path)) == 0) {
@@ -1993,7 +1993,7 @@ isUnsignedNumeric(const char *str, size_t len)
 {
     if (len < 1) return false;
 
-    for (; len >0 && *str; str++, len--) {
+    for (; len >0 && *str; ++str, --len) {
         if (! isdigit(*str))
             return false;
     }
@@ -2129,8 +2129,10 @@ parse_peer(peer ** head)
             char *mode, *nextmode;
             for (mode = nextmode = tmp; mode; mode = nextmode) {
                 nextmode = strchr(mode, ',');
-                if (nextmode)
-                    *nextmode++ = '\0';
+                if (nextmode) {
+                    *nextmode = '\0';
+                    ++nextmode;
+                }
                 if (!strcasecmp(mode, "no-clr")) {
                     if (p->options.htcp_only_clr)
                         fatalf("parse_peer: can't set htcp-no-clr and htcp-only-clr simultaneously");
@@ -2497,7 +2499,7 @@ parse_hostdomain(void)
 
         if (*domain == '!') {	/* check for !.edu */
             l->do_ping = 0;
-            domain++;
+            ++domain;
         }
 
         l->domain = xstrdup(domain);
@@ -2939,7 +2941,7 @@ parse_eol(char *volatile *var)
     }
 
     while (*token && xisspace(*token))
-        token++;
+        ++token;
 
     if (!*token) {
         self_destruct();
@@ -3451,7 +3453,8 @@ parsePortSpecification(AnyP::PortCfg * s, char *token)
             debugs(3, DBG_CRITICAL, s->protocol << "_port: missing ']' on IPv6 address: " << token);
             self_destruct();
         }
-        *t++ = '\0';
+        *t = '\0';
+        ++t;
         if (*t != ':') {
             debugs(3, DBG_CRITICAL, s->protocol << "_port: missing Port in: " << token);
             self_destruct();
@@ -3637,12 +3640,12 @@ parse_port_option(AnyP::PortCfg * s, char *token)
         s->tcp_keepalive.idle = atoi(t);
         t = strchr(t, ',');
         if (t) {
-            t++;
+            ++t;
             s->tcp_keepalive.interval = atoi(t);
             t = strchr(t, ',');
         }
         if (t) {
-            t++;
+            ++t;
             s->tcp_keepalive.timeout = atoi(t);
             t = strchr(t, ',');
         }
@@ -4353,7 +4356,7 @@ static void parse_sslproxy_cert_adapt(sslproxy_cert_adapt **cert_adapt)
     const char *param;
     if ( char *s = strchr(al, '{')) {
         *s = '\0'; // terminate the al string
-        s++;
+        ++s;
         param = s;
         s = strchr(s, '}');
         if (!s) {

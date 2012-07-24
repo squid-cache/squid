@@ -175,7 +175,7 @@ int Win32SockInit(void)
     int err;
 
     if (s_iInitCount > 0) {
-        s_iInitCount++;
+        ++s_iInitCount;
         return (0);
     } else if (s_iInitCount < 0)
         return (s_iInitCount);
@@ -197,7 +197,7 @@ int Win32SockInit(void)
         return (s_iInitCount);
     }
 
-    s_iInitCount++;
+    ++s_iInitCount;
     return (s_iInitCount);
 }
 
@@ -245,7 +245,7 @@ xstrtok(char **str, char del)
             tok[--len] = '\0';
 
         while (xisspace(*tok))
-            tok++;
+            ++tok;
 
         return tok;
     } else
@@ -352,7 +352,7 @@ auth_html(const char *host, int port, const char *user_name)
 
             if (comment)
                 while (*comment == ' ' || *comment == '\t')
-                    comment++;
+                    ++comment;
 
             if (!comment || !*comment)
                 comment = server;
@@ -361,7 +361,7 @@ auth_html(const char *host, int port, const char *user_name)
                 printf("<TR><TH ALIGN=\"left\">Cache Server:</TH><TD><SELECT id=\"server\" NAME=\"server\">\n");
 
             printf("<OPTION VALUE=\"%s\"%s>%s</OPTION>\n", server, (servers || *host) ? "" : " SELECTED", comment);
-            servers++;
+            ++servers;
         }
 
         if (servers) {
@@ -566,8 +566,8 @@ munge_other_line(const char *buf, cachemgr_request * req)
         const char *cell = xstrtok(&x, '\t');
 
         while (x && *x == '\t') {
-            column_span++;
-            x++;
+            ++column_span;
+            ++x;
         }
 
         l += snprintf(html + l, sizeof(html) - l, "<%s colspan=\"%d\" align=\"%s\">%s</%s>",
@@ -580,7 +580,7 @@ munge_other_line(const char *buf, cachemgr_request * req)
     /* record ends */
     snprintf(html + l, sizeof(html) - l, "</tr>\n");
     next_is_header = is_header && strstr(buf, "\t\t");
-    table_line_num++;
+    ++table_line_num;
     return html;
 }
 
@@ -934,15 +934,15 @@ main(int argc, char *argv[])
                 value = args[1] + 2;
             } else if (argc > 2) {
                 value = args[2];
-                args++;
-                argc--;
+                ++args;
+                --argc;
             } else
                 value = "";
 #endif
             break;
         }
-        args++;
-        argc--;
+        ++args;
+        --argc;
     }
 
     req = read_request();
@@ -1027,7 +1027,8 @@ read_request(void)
         if ((q = strchr(t, '=')) == NULL)
             continue;
 
-        *q++ = '\0';
+        *q = '\0';
+        ++q;
 
         rfc1738_unescape(t);
 

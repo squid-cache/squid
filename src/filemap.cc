@@ -90,7 +90,7 @@ FileMap::setBit(sfileno file_number)
 
     bitmap[file_number >> LONG_BIT_SHIFT] |= bitmask;
 
-    usedSlots_++;
+    ++usedSlots_;
 
     return file_number;
 }
@@ -107,7 +107,7 @@ FileMap::clearBit(sfileno file_number)
 {
     unsigned long bitmask = (1L << (file_number & LONG_BIT_MASK));
     bitmap[file_number >> LONG_BIT_SHIFT] &= ~bitmask;
-    usedSlots_--;
+    --usedSlots_;
 }
 
 bool
@@ -135,14 +135,14 @@ FileMap::allocate(sfileno suggestion)
 
     word = suggestion >> LONG_BIT_SHIFT;
 
-    for (unsigned int count = 0; count < nwords; count++) {
+    for (unsigned int count = 0; count < nwords; ++count) {
         if (bitmap[word] != ALL_ONES)
             break;
 
         word = (word + 1) % nwords;
     }
 
-    for (unsigned char bit = 0; bit < BITS_IN_A_LONG; bit++) {
+    for (unsigned char bit = 0; bit < BITS_IN_A_LONG; ++bit) {
         suggestion = ((unsigned long) word << LONG_BIT_SHIFT) | bit;
 
         if (!testBit(suggestion)) {

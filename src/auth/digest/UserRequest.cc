@@ -279,8 +279,10 @@ Auth::Digest::UserRequest::HandleReply(void *data, char *reply)
     debugs(29, 9, HERE << "{" << (reply ? reply : "<NULL>") << "}");
 
     if (reply) {
-        if ((t = strchr(reply, ' ')))
-            *t++ = '\0';
+        if ((t = strchr(reply, ' '))) {
+            *t = '\0';
+            ++t;
+        }
 
         if (*reply == '\0' || *reply == '\n')
             reply = NULL;

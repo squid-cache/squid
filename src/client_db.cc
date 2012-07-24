@@ -96,7 +96,7 @@ clientdbAdd(const Ip::Address &addr)
     ++statCounter.client_http.clients;
 
     if ((statCounter.client_http.clients > max_clients) && !cleanup_running && cleanup_scheduled < 2) {
-        cleanup_scheduled++;
+        ++cleanup_scheduled;
         eventAdd("client_db garbage collector", clientdbScheduledGC, NULL, 90, 0);
     }
 
@@ -163,15 +163,15 @@ clientdbUpdate(const Ip::Address &addr, log_type ltype, AnyP::ProtocolType p, si
         debug_trap("clientdbUpdate: Failed to add entry");
 
     if (p == AnyP::PROTO_HTTP) {
-        c->Http.n_requests++;
-        c->Http.result_hist[ltype]++;
+        ++ c->Http.n_requests;
+        ++ c->Http.result_hist[ltype];
         kb_incr(&c->Http.kbytes_out, size);
 
         if (logTypeIsATcpHit(ltype))
             kb_incr(&c->Http.hit_kbytes_out, size);
     } else if (p == AnyP::PROTO_ICP) {
-        c->Icp.n_requests++;
-        c->Icp.result_hist[ltype]++;
+        ++ c->Icp.n_requests;
+        ++ c->Icp.result_hist[ltype];
         kb_incr(&c->Icp.kbytes_out, size);
 
         if (LOG_UDP_HIT == ltype)
@@ -407,7 +407,7 @@ clientdbGC(void *unused)
 
         --statCounter.client_http.clients;
 
-        cleanup_removed++;
+        ++cleanup_removed;
     }
 
     if (bucket < CLIENT_DB_HASH_SIZE)

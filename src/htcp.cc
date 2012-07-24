@@ -290,7 +290,7 @@ htcpHexdump(const char *tag, const char *s, int sz)
     debugs(31, 3, "htcpHexdump " << tag);
     memset(hex, '\0', 80);
 
-    for (i = 0; i < sz; i++) {
+    for (i = 0; i < sz; ++i) {
         k = i % 16;
         snprintf(&hex[k * 3], 4, " %02x", (int) *(s + i));
 
@@ -608,7 +608,7 @@ htcpSend(const char *buf, int len, Ip::Address &to)
     if (comm_udp_sendto(htcpOutgoingConn->fd, to, buf, len) < 0)
         debugs(31, 3, HERE << htcpOutgoingConn << " sendto: " << xstrerror());
     else
-        statCounter.htcp.pkts_sent++;
+        ++statCounter.htcp.pkts_sent;
 }
 
 /*
@@ -1057,7 +1057,7 @@ htcpClrStore(const htcpSpecifier * s)
     while ((e = storeGetPublicByRequest(request)) != NULL) {
         if (e != NULL) {
             htcpClrStoreEntry(e);
-            released++;
+            ++released;
         }
     }
 
@@ -1456,7 +1456,7 @@ htcpRecv(int fd, void *data)
     debugs(31, 3, "htcpRecv: FD " << fd << ", " << len << " bytes from " << from );
 
     if (len)
-        statCounter.htcp.pkts_recv++;
+        ++statCounter.htcp.pkts_recv;
 
     htcpHandleMsg(buf, len, from);
 

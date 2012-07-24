@@ -177,8 +177,8 @@ cacheIndexScan(CacheIndex * idx, const char *fname, FILE * file)
     fprintf(stderr, "%s scanning\n", fname);
 
     while (fread(&s, sizeof(s), 1, file) == 1) {
-        count++;
-        idx->scanned_count++;
+        ++count;
+        ++ idx->scanned_count;
         /* if (!s.sane())
          * continue; */
 
@@ -186,22 +186,22 @@ cacheIndexScan(CacheIndex * idx, const char *fname, FILE * file)
             CacheEntry *olde = (CacheEntry *) hash_lookup(idx->hash, s.key);
 
             if (olde) {
-                idx->bad_add_count++;
+                ++ idx->bad_add_count;
             } else {
                 CacheEntry *e = cacheEntryCreate(&s);
                 hash_join(idx->hash, &e->hash);
-                idx->count++;
+                ++ idx->count;
             }
         } else if (s.op == SWAP_LOG_DEL) {
             CacheEntry *olde = (CacheEntry *) hash_lookup(idx->hash, s.key);
 
             if (!olde)
-                idx->bad_del_count++;
+                ++ idx->bad_del_count;
             else {
                 assert(idx->count);
                 hash_remove_link(idx->hash, (hash_link *) olde);
                 cacheEntryDestroy(olde);
-                idx->count--;
+                -- idx->count;
             }
         } else {
             fprintf(stderr, "%s:%d: unknown swap log action\n", fname, count);
@@ -249,10 +249,10 @@ cacheIndexCmp(CacheIndex * idx1, CacheIndex * idx2)
     hash_first(small_idx->hash);
 
     for (hashr = hash_next(small_idx->hash)) {
-        hashed_count++;
+        ++hashed_count;
 
         if (hash_lookup(large_idx->hash, hashr->key))
-            shared_count++;
+            ++shared_count;
     }
 
     assert(hashed_count == small_idx->count);
@@ -288,7 +288,7 @@ main(int argc, char *argv[])
             return usage(argv[0]);
 
         if (argv[i][len - 1] == ':') {
-            idxCount++;
+            ++idxCount;
 
             if (len < 2 || idxCount > 2)
                 return usage(argv[0]);
