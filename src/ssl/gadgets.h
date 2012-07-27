@@ -41,7 +41,7 @@ public:
 
     void resetAndLock(T *t) {
         if (t != this->get()) {
-            reset(t);
+            this->reset(t);
             if (t)
                 CRYPTO_add(&t->references, 1, lock);
         }
