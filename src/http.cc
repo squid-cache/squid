@@ -1606,6 +1606,7 @@ httpFixupAuthentication(HttpRequest * request, const HttpHeader * hdr_in, HttpHe
 void
 HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                                       StoreEntry * entry,
+                                      const AccessLogEntryPointer &al,
                                       HttpHeader * hdr_out,
                                       const http_state_flags flags)
 {
@@ -2003,7 +2004,7 @@ HttpStateData::buildRequestPrefix(MemBuf * mb)
     {
         HttpHeader hdr(hoRequest);
         Packer p;
-        httpBuildRequestHeader(request, entry, &hdr, flags);
+        httpBuildRequestHeader(request, entry, fwd->al, &hdr, flags);
 
         if (request->flags.pinned && request->flags.connection_auth)
             request->flags.auth_sent = 1;

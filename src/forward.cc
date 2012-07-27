@@ -33,6 +33,7 @@
 
 #include "squid-old.h"
 #include "forward.h"
+#include "AccessLogEntry.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "CacheManager.h"
@@ -96,7 +97,8 @@ FwdState::abort(void* d)
 
 /**** PUBLIC INTERFACE ********************************************************/
 
-FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRequest * r)
+FwdState::FwdState(const Comm::ConnectionPointer &client, StoreEntry * e, HttpRequest * r, const AccessLogEntryPointer &alp):
+        al(alp)
 {
     debugs(17, 2, HERE << "Forwarding client request " << client << ", url=" << e->url() );
     entry = e;
@@ -241,7 +243,7 @@ FwdState::~FwdState()
  * allocate a FwdState.
  */
 void
-FwdState::fwdStart(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, HttpRequest *request)
+FwdState::Start(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, HttpRequest *request, const AccessLogEntryPointer &al)
 {
     /** \note
      * client_addr == no_addr indicates this is an "internal" request
@@ -303,12 +305,19 @@ FwdState::fwdStart(const Comm::ConnectionPointer &clientConn, StoreEntry *entry,
         return;
 
     default:
-        FwdState::Pointer fwd = new FwdState(clientConn, entry, request);
+        FwdState::Pointer fwd = new FwdState(clientConn, entry, request, al);
         fwd->start(fwd);
         return;
     }
 
     /* NOTREACHED */
+}
+
+void
+FwdState::fwdStart(const Comm::ConnectionPointer &clientConn, StoreEntry *entry, HttpRequest *request)
+{
+    // Hides AccessLogEntry.h from code that does not supply ALE anyway.
+    Start(clientConn, entry, request, NULL);
 }
 
 void

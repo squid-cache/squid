@@ -680,6 +680,7 @@ tunnelRelayConnectRequest(const Comm::ConnectionPointer &srv, void *data)
     mb.Printf("CONNECT %s HTTP/1.1\r\n", tunnelState->url);
     HttpStateData::httpBuildRequestHeader(tunnelState->request,
                                           NULL,			/* StoreEntry */
+                                          NULL,			/* AccessLogEntry */
                                           &hdr_out,
                                           flags);			/* flags */
     packerToMemInit(&p, &mb);

@@ -117,7 +117,7 @@ clientReplyContext::setReplyToError(
         /* prevent confusion over whether we default to persistent or not */
         http->request->flags.proxy_keepalive = 0;
 
-    http->al.http.code = errstate->httpStatus;
+    http->al->http.code = errstate->httpStatus;
 
     createStoreEntry(method, request_flags());
 #if USE_AUTH
@@ -277,7 +277,7 @@ clientReplyContext::processExpired()
      * this clientReplyContext does
      */
     Comm::ConnectionPointer conn = http->getConn() != NULL ? http->getConn()->clientConnection : NULL;
-    FwdState::fwdStart(conn, http->storeEntry(), http->request);
+    FwdState::Start(conn, http->storeEntry(), http->request, http->al);
 
     /* Register with storage manager to receive updates when data comes in. */
 
@@ -633,7 +633,7 @@ clientReplyContext::processMiss()
     /// Deny loops for accelerator and interceptor. TODO: deny in all modes?
     if (r->flags.loopdetect &&
             (http->flags.accel || http->flags.intercepted)) {
-        http->al.http.code = HTTP_FORBIDDEN;
+        http->al->http.code = HTTP_FORBIDDEN;
         err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->clientConnection->remote, http->request);
         createStoreEntry(r->method, request_flags());
         errorAppendEntry(http->storeEntry(), err);
@@ -662,7 +662,7 @@ clientReplyContext::processMiss()
 
         /** Start forwarding to get the new object from network */
         Comm::ConnectionPointer conn = http->getConn() != NULL ? http->getConn()->clientConnection : NULL;
-        FwdState::fwdStart(conn, http->storeEntry(), r);
+        FwdState::Start(conn, http->storeEntry(), r, http->al);
     }
 }
 
@@ -677,7 +677,7 @@ clientReplyContext::processOnlyIfCachedMiss()
 {
     debugs(88, 4, "clientProcessOnlyIfCachedMiss: '" <<
            RequestMethodStr(http->request->method) << " " << http->uri << "'");
-    http->al.http.code = HTTP_GATEWAY_TIMEOUT;
+    http->al->http.code = HTTP_GATEWAY_TIMEOUT;
     ErrorState *err = clientBuildError(ERR_ONLY_IF_CACHED_MISS, HTTP_GATEWAY_TIMEOUT, NULL,
                                        http->getConn()->clientConnection->remote, http->request);
     removeClientStoreReference(&sc, http);
@@ -2122,9 +2122,9 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         size_t k;
 
         if ((k = headersEnd(buf, reqofs))) {
-            safe_free(http->al.headers.reply);
-            http->al.headers.reply = (char *)xcalloc(k + 1, 1);
-            xstrncpy(http->al.headers.reply, buf, k);
+            safe_free(http->al->headers.reply);
+            http->al->headers.reply = (char *)xcalloc(k + 1, 1);
+            xstrncpy(http->al->headers.reply, buf, k);
         }
     }
 

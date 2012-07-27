@@ -176,7 +176,8 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
 {
     start_time = current_time;
     setConn(aConn);
-    al.tcpClient = clientConnection = aConn->clientConnection;
+    al = new AccessLogEntry;
+    al->tcpClient = clientConnection = aConn->clientConnection;
     dlinkAdd(this, &active, &ClientActiveRequests);
 #if USE_ADAPTATION
     request_satisfaction_mode = false;
@@ -280,7 +281,7 @@ ClientHttpRequest::~ClientHttpRequest()
     loggingEntry(NULL);
 
     if (request)
-        checkFailureRatio(request->errType, al.hier.code);
+        checkFailureRatio(request->errType, al->hier.code);
 
     freeResources();
 
@@ -1330,7 +1331,7 @@ ClientHttpRequest::processRequest()
 #endif
         logType = LOG_TCP_MISS;
         getConn()->stopReading(); // tunnels read for themselves
-        tunnelStart(this, &out.size, &al.http.code);
+        tunnelStart(this, &out.size, &al->http.code);
         return;
     }
 
@@ -1489,8 +1490,8 @@ ClientHttpRequest::doCallouts()
     assert(calloutContext);
 
     /*Save the original request for logging purposes*/
-    if (!calloutContext->http->al.request)
-        calloutContext->http->al.request = HTTPMSGLOCK(request);
+    if (!calloutContext->http->al->request)
+        calloutContext->http->al->request = HTTPMSGLOCK(request);
 
     // CVE-2009-0801: verify the Host: header is consistent with other known details.
     if (!calloutContext->host_header_verify_done) {
