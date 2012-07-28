@@ -209,7 +209,7 @@ int Adaptation::Icap::ServiceRep::excessConnections() const
 
 void Adaptation::Icap::ServiceRep::noteGoneWaiter()
 {
-    theAllWaiters--;
+    --theAllWaiters;
 
     // in case the notified transaction did not take the connection slot
     busyCheckpoint();

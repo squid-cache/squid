@@ -638,8 +638,8 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     }
 
     debugs(26, 3, HERE << "'" << RequestMethodStr(request->method) << " " << url << " " << request->http_ver << "'");
-    statCounter.server.all.requests++;
-    statCounter.server.other.requests++;
+    ++statCounter.server.all.requests;
+    ++statCounter.server.other.requests;
 
     tunnelState = new TunnelStateData;
 #if USE_DELAY_POOLS

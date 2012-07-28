@@ -152,7 +152,7 @@ free_hostname_list(struct hstruct **hlist, int nhosts)
     int i;
 
     hp = *hlist;
-    for (i = 0; i < nhosts; i++) {
+    for (i = 0; i < nhosts; ++i) {
         if (hp[i].host)
             xfree(hp[i].host);
         hp[i].host = NULL;

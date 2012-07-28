@@ -66,7 +66,7 @@ parse_eol(char *volatile *var)
         self_destruct();
 
     while (*token && xisspace(*token))
-        token++;
+        ++token;
 
     if (!*token)
         self_destruct();

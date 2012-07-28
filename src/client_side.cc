@@ -499,7 +499,7 @@ clientUpdateHierCounters(HierarchyLogEntry * someEntry)
     case CD_PARENT_HIT:
 
     case CD_SIBLING_HIT:
-        statCounter.cd.times_used++;
+        ++ statCounter.cd.times_used;
         break;
 #endif
 
@@ -510,21 +510,21 @@ clientUpdateHierCounters(HierarchyLogEntry * someEntry)
     case FIRST_PARENT_MISS:
 
     case CLOSEST_PARENT_MISS:
-        statCounter.icp.times_used++;
+        ++ statCounter.icp.times_used;
         i = &someEntry->ping;
 
         if (clientPingHasFinished(i))
             statCounter.icp.querySvcTime.count(tvSubUsec(i->start, i->stop));
 
         if (i->timeout)
-            statCounter.icp.query_timeouts++;
+            ++ statCounter.icp.query_timeouts;
 
         break;
 
     case CLOSEST_PARENT:
 
     case CLOSEST_DIRECT:
-        statCounter.netdb.times_used++;
+        ++ statCounter.netdb.times_used;
 
         break;
 
@@ -539,7 +539,7 @@ ClientHttpRequest::updateCounters()
     clientUpdateStatCounters(logType);
 
     if (request->errType != ERR_NONE)
-        statCounter.client_http.errors++;
+        ++ statCounter.client_http.errors;
 
     clientUpdateStatHistCounters(logType,
                                  tvSubMsec(start_time, current_time));
@@ -1921,7 +1921,7 @@ findTrailingHTTPVersion(const char *uriAndHTTPVersion, const char *end)
         assert(end);
     }
 
-    for (; end > uriAndHTTPVersion; end--) {
+    for (; end > uriAndHTTPVersion; --end) {
         if (*end == '\n' || *end == '\r')
             continue;
 
@@ -1972,9 +1972,11 @@ setLogUri(ClientHttpRequest * http, char const *uri, bool cleanUrl)
             char *q = tmp_uri;
             t = uri;
             while (*t) {
-                if (!xisspace(*t))
-                    *q++ = *t;
-                t++;
+                if (!xisspace(*t)) {
+                    *q = *t;
+                    ++q;
+                }
+                ++t;
             }
             *q = '\0';
             http->log_uri = xstrndup(rfc1738_escape_unescaped(tmp_uri), MAX_URL);
@@ -2711,7 +2713,7 @@ connStripBufferWhitespace (ConnStateData * conn)
 {
     while (conn->in.notYetUsed > 0 && xisspace(conn->in.buf[0])) {
         memmove(conn->in.buf, conn->in.buf + 1, conn->in.notYetUsed - 1);
-        --conn->in.notYetUsed;
+        -- conn->in.notYetUsed;
     }
 }
 
@@ -3222,7 +3224,7 @@ httpAccept(const CommAcceptCbParams &params)
         commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
     }
 
-    incoming_sockets_accepted++;
+    ++ incoming_sockets_accepted;
 
     // Socket is ready, setup the connection manager to start using it
     ConnStateData *connState = connStateCreate(params.conn, s);
@@ -3249,7 +3251,7 @@ httpAccept(const CommAcceptCbParams &params)
         ch.src_addr = params.conn->remote;
         ch.my_addr = params.conn->local;
 
-        for (unsigned int pool = 0; pool < pools.size(); pool++) {
+        for (unsigned int pool = 0; pool < pools.size(); ++pool) {
 
             /* pools require explicit 'allow' to assign a client into them */
             if (pools[pool].access) {
@@ -3448,7 +3450,7 @@ httpsAccept(const CommAcceptCbParams &params)
         commSetTcpKeepalive(params.conn->fd, s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
     }
 
-    incoming_sockets_accepted++;
+    ++incoming_sockets_accepted;
 
     // Socket is ready, setup the connection manager to start using it
     ConnStateData *connState = connStateCreate(params.conn, s);
@@ -3619,7 +3621,7 @@ static bool
 AddOpenedHttpSocket(const Comm::ConnectionPointer &conn)
 {
     bool found = false;
-    for (int i = 0; i < NHttpSockets && !found; i++) {
+    for (int i = 0; i < NHttpSockets && !found; ++i) {
         if ((found = HttpSockets[i] < 0))
             HttpSockets[i] = conn->fd;
     }
@@ -3669,7 +3671,8 @@ clientHttpConnectionsOpen(void)
                                         ListeningStartedDialer(&clientListenerConnectionOpened, s, Ipc::fdnHttpSocket, sub));
         Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpSocket, listenCall);
 
-        HttpSockets[NHttpSockets++] = -1; // set in clientListenerConnectionOpened
+        HttpSockets[NHttpSockets] = -1; // set in clientListenerConnectionOpened
+        ++NHttpSockets;
     }
 }
 
@@ -3707,7 +3710,8 @@ clientHttpsConnectionsOpen(void)
                                         ListeningStartedDialer(&clientListenerConnectionOpened,
                                                                s, Ipc::fdnHttpsSocket, sub));
         Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->listenConn, Ipc::fdnHttpsSocket, listenCall);
-        HttpSockets[NHttpSockets++] = -1;
+        HttpSockets[NHttpSockets] = -1;
+        ++NHttpSockets;
     }
 }
 #endif
@@ -3770,7 +3774,7 @@ clientHttpConnectionsClose(void)
 #endif
 
     // TODO see if we can drop HttpSockets array entirely */
-    for (int i = 0; i < NHttpSockets; i++) {
+    for (int i = 0; i < NHttpSockets; ++i) {
         HttpSockets[i] = -1;
     }
 

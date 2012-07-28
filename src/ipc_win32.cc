@@ -547,7 +547,7 @@ ipc_thread_1(void *in_params)
     si.dwFlags = STARTF_USESTDHANDLES;
 
     /* Make sure all other valid handles are not inerithable */
-    for (x = 3; x < Squid_MaxFD; x++) {
+    for (x = 3; x < Squid_MaxFD; ++x) {
         if ((F = _get_osfhandle(x)) == -1)
             continue;
 
@@ -566,7 +566,8 @@ ipc_thread_1(void *in_params)
     x = 1;
 
     while (args[x]) {
-        strcat(buf1, args[x++]);
+        strcat(buf1, args[x]);
+        ++x;
         strcat(buf1, " ");
     }
 
@@ -832,7 +833,7 @@ ipc_thread_2(void *in_params)
             if ((buf2[x - 1] == '\n') && (buf2[x - 2] == '\r')) {
                 buf2[x - 2] = '\n';
                 buf2[x - 1] = '\0';
-                x--;
+                --x;
             }
         }
 

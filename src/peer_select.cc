@@ -254,7 +254,7 @@ peerSelectDnsPaths(ps_state *psstate)
         debugs(44, 2, "Found sources for '" << psstate->entry->url() << "'");
         debugs(44, 2, "  always_direct = " << psstate->always_direct);
         debugs(44, 2, "   never_direct = " << psstate->never_direct);
-        for (size_t i = 0; i < psstate->paths->size(); i++) {
+        for (size_t i = 0; i < psstate->paths->size(); ++i) {
             if ((*psstate->paths)[i]->peerType == HIER_DIRECT)
                 debugs(44, 2, "         DIRECT = " << (*psstate->paths)[i]);
             else
@@ -289,7 +289,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
 
         // loop over each result address, adding to the possible destinations.
         int ip = ia->cur;
-        for (int n = 0; n < ia->count; n++, ip++) {
+        for (int n = 0; n < ia->count; ++n, ++ip) {
             Comm::ConnectionPointer p;
 
             if (ip >= ia->count) ip = 0; // looped back to zero.
@@ -710,7 +710,7 @@ peerPingTimeout(void *data)
         return;
     }
 
-    PeerStats.timeouts++;
+    ++PeerStats.timeouts;
     psstate->ping.timedout = 1;
     peerSelectFoo(psstate);
 }
@@ -778,7 +778,7 @@ peerHandleIcpReply(peer * p, peer_t type, icp_common_t * header, void *data)
 
 #endif
 
-    psstate->ping.n_recv++;
+    ++ psstate->ping.n_recv;
 
     if (op == ICP_MISS || op == ICP_DECHO) {
         if (type == PEER_PARENT)
@@ -804,7 +804,7 @@ peerHandleHtcpReply(peer * p, peer_t type, htcpReplyData * htcp, void *data)
     debugs(44, 3, "peerHandleHtcpReply: " <<
            (htcp->hit ? "HIT" : "MISS") << " " <<
            psstate->entry->url()  );
-    psstate->ping.n_recv++;
+    ++ psstate->ping.n_recv;
 
     if (htcp->hit) {
         psstate->hit = p;

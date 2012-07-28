@@ -583,7 +583,7 @@ Valid_Local_Groups(char *UserName, const char **Groups)
      */
     if (nStatus == NERR_Success) {
         if ((pTmpBuf = pBuf) != NULL) {
-            for (i = 0; i < dwEntriesRead; i++) {
+            for (i = 0; i < dwEntriesRead; ++i) {
                 assert(pTmpBuf != NULL);
                 if (pTmpBuf == NULL) {
                     result = 0;
@@ -629,7 +629,7 @@ Valid_Global_Groups(char *UserName, const char **Groups)
 
     strncpy(NTDomain, UserName, sizeof(NTDomain));
 
-    for (j = 0; j < strlen(NTV_VALID_DOMAIN_SEPARATOR); j++) {
+    for (j = 0; j < strlen(NTV_VALID_DOMAIN_SEPARATOR); ++j) {
         if ((domain_qualify = strchr(NTDomain, NTV_VALID_DOMAIN_SEPARATOR[j])) != NULL)
             break;
     }
@@ -850,7 +850,7 @@ main(int argc, char *argv[])
             continue;
         }
         username = strtok(buf, " ");
-        for (n = 0; (group = strtok(NULL, " ")) != NULL; n++) {
+        for (n = 0; (group = strtok(NULL, " ")) != NULL; ++n) {
             rfc1738_unescape(group);
             groups[n] = group;
         }

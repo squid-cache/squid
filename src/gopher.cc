@@ -274,7 +274,7 @@ gopher_request_parse(const HttpRequest * req, char *type_id, char *request)
         request[0] = '\0';
 
     if (path && (*path == '/'))
-        path++;
+        ++path;
 
     if (!path || !*path) {
         *type_id = GOPHER_DIRECTORY;
@@ -448,7 +448,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
         int left = len - (pos - inbuf);
         lpos = (char *)memchr(pos, '\n', left);
         if (lpos) {
-            lpos++;             /* Next line is after \n */
+            ++lpos;             /* Next line is after \n */
             llen = lpos - pos;
         } else {
             llen = left;
@@ -492,16 +492,19 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
 
         case gopher_ds::HTML_DIR: {
             tline = line;
-            gtype = *tline++;
+            gtype = *tline;
+            ++tline;
             name = tline;
             selector = strchr(tline, TAB);
 
             if (selector) {
-                *selector++ = '\0';
+                *selector = '\0';
+                ++selector;
                 host = strchr(selector, TAB);
 
                 if (host) {
-                    *host++ = '\0';
+                    *host = '\0';
+                    ++host;
                     port = strchr(host, TAB);
 
                     if (port) {
@@ -779,12 +782,12 @@ gopherReadReply(const Comm::ConnectionPointer &conn, char *buf, size_t len, comm
     if (flag == COMM_OK && len > 0) {
         AsyncCall::Pointer nil;
         commSetConnTimeout(conn, Config.Timeout.read, nil);
-        IOStats.Gopher.reads++;
+        ++IOStats.Gopher.reads;
 
-        for (clen = len - 1, bin = 0; clen; bin++)
+        for (clen = len - 1, bin = 0; clen; ++bin)
             clen >>= 1;
 
-        IOStats.Gopher.read_hist[bin]++;
+        ++IOStats.Gopher.read_hist[bin];
 
         HttpRequest *req = gopherState->fwd->request;
         if (req->hier.bodyBytesRead < 0)
@@ -921,7 +924,7 @@ gopherSendRequest(int fd, void *data)
         const char *t = strchr(gopherState->request, '?');
 
         if (t != NULL)
-            t++;		/* skip the ? */
+            ++t;		/* skip the ? */
         else
             t = "";
 
@@ -966,9 +969,9 @@ gopherStart(FwdState * fwd)
 
     debugs(10, 3, "gopherStart: " << entry->url()  );
 
-    statCounter.server.all.requests++;
+    ++ statCounter.server.all.requests;
 
-    statCounter.server.other.requests++;
+    ++ statCounter.server.other.requests;
 
     /* Parse url. */
     gopher_request_parse(fwd->request,

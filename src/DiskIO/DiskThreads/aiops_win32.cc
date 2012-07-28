@@ -305,7 +305,7 @@ squidaio_init(void)
 
     assert(NUMTHREADS);
 
-    for (i = 0; i < NUMTHREADS; i++) {
+    for (i = 0; i < NUMTHREADS; ++i) {
         threadp = (squidaio_thread_t *)squidaio_thread_pool->alloc();
         threadp->status = _THREAD_STARTING;
         threadp->current_req = NULL;
@@ -364,7 +364,7 @@ squidaio_shutdown(void)
 
     threadp = threads;
 
-    for (i = 0; i < NUMTHREADS; i++) {
+    for (i = 0; i < NUMTHREADS; ++i) {
         threadp->exit = 1;
         hthreads[i] = threadp->thread;
         threadp = threadp->next;
@@ -378,7 +378,7 @@ squidaio_shutdown(void)
 
     WaitForMultipleObjects(NUMTHREADS, hthreads, TRUE, 2000);
 
-    for (i = 0; i < NUMTHREADS; i++) {
+    for (i = 0; i < NUMTHREADS; ++i) {
         CloseHandle(hthreads[i]);
     }
 
@@ -550,7 +550,7 @@ squidaio_thread_loop(LPVOID lpParam)
 
         CommIO::NotifyIOCompleted();
         Sleep(0);
-        threadp->requests++;
+        ++ threadp->requests;
     }				/* while forever */
 
     CloseHandle(cond);
@@ -1153,7 +1153,7 @@ squidaio_stats(StoreEntry * sentry)
 
     threadp = threads;
 
-    for (i = 0; i < NUMTHREADS; i++) {
+    for (i = 0; i < NUMTHREADS; ++i) {
         storeAppendPrintf(sentry, "%i\t0x%lx\t%ld\n", i + 1, threadp->dwThreadId, threadp->requests);
         threadp = threadp->next;
     }

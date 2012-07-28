@@ -71,8 +71,9 @@ hash_string(const void *data, unsigned int size)
     unsigned int j = 0;
     unsigned int i = 0;
     while (*s) {
-        j++;
-        n ^= 271 * (*s++);
+        ++j;
+        n ^= 271 * *s;
+        ++s;
     }
     i = n ^ (j * 271);
     return i % size;
@@ -121,7 +122,8 @@ hash4(const void *data, unsigned int size)
     case 1:
         HASH4;
     }
-    while (loop--) {
+    while (loop) {
+        --loop;
         HASH4;
         HASH4;
         HASH4;

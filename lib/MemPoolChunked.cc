@@ -184,7 +184,7 @@ MemChunk::~MemChunk()
 {
     memMeterDel(pool->getMeter().alloc, pool->chunk_capacity);
     memMeterDel(pool->getMeter().idle, pool->chunk_capacity);
-    pool->chunkCount--;
+    -- pool->chunkCount;
     pool->allChunks.remove(this, memCompChunks);
     xfree(objCache);
 }
@@ -230,7 +230,7 @@ MemPoolChunked::get()
     /* then try perchunk freelist chain */
     if (nextFreeChunk == NULL) {
         /* no chunk with frees, so create new one */
-        saved_calls--; // compensate for the ++ above
+        -- saved_calls; // compensate for the ++ above
         createChunk();
     }
     /* now we have some in perchunk freelist chain */
@@ -371,7 +371,7 @@ MemPoolChunked::convertFreeCacheToChunkFreeCache()
         chunk = const_cast<MemChunk *>(*allChunks.find(Free, memCompObjChunks));
         assert(splayLastResult == 0);
         assert(chunk->inuse_count > 0);
-        chunk->inuse_count--;
+        -- chunk->inuse_count;
         (void) VALGRIND_MAKE_MEM_DEFINED(Free, sizeof(void *));
         freeCache = *(void **)Free;	/* remove from global cache */
         *(void **)Free = chunk->freeList;	/* stuff into chunks freelist */

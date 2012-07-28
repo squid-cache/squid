@@ -143,7 +143,8 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
                 fprintf(stderr, "ntlmssp: bad unicode: %04x\n", c);
                 return rv;
             }
-            *d++ = c;
+            *d = c;
+            ++d;
             rv.l++;
         }
     } else {

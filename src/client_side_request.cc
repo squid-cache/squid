@@ -236,11 +236,11 @@ checkFailureRatio(err_type etype, hier_code hcode)
     case ERR_SECURE_CONNECT_FAIL:
 
     case ERR_READ_ERROR:
-        n_bad++;
+        ++n_bad;
         break;
 
     default:
-        n_good++;
+        ++n_good;
     }
 
     request_failure_ratio = n_bad / n_good;
@@ -480,11 +480,11 @@ clientFollowXForwardedForCheck(allow_t answer, void *data)
         */
         /* skip trailing space and commas */
         while (l > 0 && (p[l-1] == ',' || xisspace(p[l-1])))
-            l--;
+            --l;
         request->x_forwarded_for_iterator.cut(l);
         /* look for start of last item in list */
         while (l > 0 && ! (p[l-1] == ',' || xisspace(p[l-1])))
-            l--;
+            --l;
         asciiaddr = p+l;
         if ((addr = asciiaddr)) {
             request->indirect_client_addr = addr;
@@ -538,7 +538,7 @@ ClientRequestContext::hostHeaderIpVerify(const ipcache_addrs* ia, const DnsLooku
 
     if (ia != NULL && ia->count > 0) {
         // Is the NAT destination IP in DNS?
-        for (int i = 0; i < ia->count; i++) {
+        for (int i = 0; i < ia->count; ++i) {
             if (clientConn->local.matchIPAddr(ia->in_addrs[i]) == 0) {
                 debugs(85, 3, HERE << "validate IP " << clientConn->local << " possible from Host:");
                 http->request->flags.hostVerified = 1;
@@ -1014,7 +1014,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 {
     HttpRequest *request = http->request;
     HttpHeader *req_hdr = &request->header;
-    int no_cache = 0;
+    bool no_cache = false;
     const char *str;
 
     request->imslen = -1;
@@ -1028,14 +1028,14 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             String s = req_hdr->getList(HDR_PRAGMA);
 
             if (strListIsMember(&s, "no-cache", ','))
-                no_cache++;
+                no_cache=true;
 
             s.clean();
         }
 
         if (request->cache_control)
             if (request->cache_control->noCache())
-                no_cache++;
+                no_cache=true;
 
         /*
         * Work around for supporting the Reload button in IE browsers when Squid
@@ -1048,20 +1048,20 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             if (http->flags.accel && request->flags.ims) {
                 if ((str = req_hdr->getStr(HDR_USER_AGENT))) {
                     if (strstr(str, "MSIE 5.01") != NULL)
-                        no_cache++;
+                        no_cache=true;
                     else if (strstr(str, "MSIE 5.0") != NULL)
-                        no_cache++;
+                        no_cache=true;
                     else if (strstr(str, "MSIE 4.") != NULL)
-                        no_cache++;
+                        no_cache=true;
                     else if (strstr(str, "MSIE 3.") != NULL)
-                        no_cache++;
+                        no_cache=true;
                 }
             }
         }
     }
 
     if (request->method == METHOD_OTHER) {
-        no_cache++;
+        no_cache=true;
     }
 
     if (no_cache) {

@@ -1092,7 +1092,7 @@ SearchFilterLDAP(edui_ldap_t *l, char *group)
     bufc[0] = '\134';
     swi = 0;
     j = 1;
-    for (i = 0; i < s; i++) {
+    for (i = 0; i < s; ++i) {
         if (swi == 2) {
             bufc[j] = '\134';
             j++;
@@ -1256,20 +1256,20 @@ SearchIPLDAP(edui_ldap_t *l)
             l->num_val = x;
             if (x > 0) {
                 /* Display all values */
-                for (i = 0; i < x; i++) {
+                for (i = 0; i < x; ++i) {
                     j = l->val[i]->bv_len;
                     memcpy(bufa, l->val[i]->bv_val, j);
                     z = BinarySplit(bufa, j, '#', bufb, sizeof(bufb));
                     /* BINARY DEBUGGING *
                                         	  local_printfx("value[%" PRIuSIZE "]: BinarySplit(", (size_t) i);
-                                        	  for (k = 0; k < z; k++) {
+                                        	  for (k = 0; k < z; ++k) {
                                         	    c = (int) bufb[k];
                                         	    if (c < 0)
                                         	      c = c + 256;
                                         	    local_printfx("%02X", c);
                                         	  }
                                         	  local_printfx(", ");
-                                        	  for (k = 0; k < (j - z - 1); k++) {
+                                        	  for (k = 0; k < (j - z - 1); ++k) {
                                         	    c = (int) bufa[k];
                                         	    if (c < 0)
                                         	      c = c + 256;
@@ -1284,7 +1284,7 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa is the address, just compare it */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
                             break;							/* Not looking for IPv4 */
-                        for (k = 0; k < z; k++) {
+                        for (k = 0; k < z; ++k) {
                             c = (int) bufa[k];
                             if (c < 0)
                                 c = c + 256;
@@ -1299,7 +1299,7 @@ SearchIPLDAP(edui_ldap_t *l)
                         if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
-                            for (j = 0; j < z; j++) {
+                            for (j = 0; j < z; ++j) {
 // broken?                        xstrncpy(l->userid, ber[j]->bv_val, min(sizeof(l->userid),static_cast<size_t>(ber[j]->bv_len)));
                                 xstrncpy(l->userid, ber[j]->bv_val, sizeof(l->userid));
                                 /* Using bv_len of min() breaks the result by 2 chars */
@@ -1319,7 +1319,7 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV4_S) || (l->status & LDAP_IPV6_S))
                             break;							/* Not looking for IPv4 */
-                        for (k = 2; k < z; k++) {
+                        for (k = 2; k < z; ++k) {
                             c = (int) bufa[k];
                             if (c < 0)
                                 c = c + 256;
@@ -1334,7 +1334,7 @@ SearchIPLDAP(edui_ldap_t *l)
                         if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
-                            for (j = 0; j < z; j++) {
+                            for (j = 0; j < z; ++j) {
 // broken?                        xstrncpy(l->userid, ber[j]->bv_val, min(sizeof(l->userid),static_cast<size_t>(ber[j]->bv_len)));
                                 xstrncpy(l->userid, ber[j]->bv_val, sizeof(l->userid));
                                 /* Using bv_len of min() breaks the result by 2 chars */
@@ -1354,7 +1354,7 @@ SearchIPLDAP(edui_ldap_t *l)
                         /* bufa + 2 is the address (skip 2 digit port) */
                         if (!(l->status & LDAP_IPV6_S))
                             break;							/* Not looking for IPv6 */
-                        for (k = 2; k < z; k++) {
+                        for (k = 2; k < z; ++k) {
                             c = (int) bufa[k];
                             if (c < 0)
                                 c = c + 256;
@@ -1369,7 +1369,7 @@ SearchIPLDAP(edui_ldap_t *l)
                         if (memcmp(l->search_ip, bufb, y) == 0) {
                             /* We got a match! - Scan 'ber' for 'cn' values */
                             z = ldap_count_values_len(ber);
-                            for (j = 0; j < z; j++) {
+                            for (j = 0; j < z; ++j) {
 // broken?                        xstrncpy(l->userid, ber[j]->bv_val, min(sizeof(l->userid),static_cast<size_t>(ber[j]->bv_len)));
                                 xstrncpy(l->userid, ber[j]->bv_val, sizeof(l->userid));
                                 /* Using bv_len of min() breaks the result by 2 chars */
@@ -1527,7 +1527,7 @@ MainSafe(int argc, char **argv)
 
     /* Scan args */
     if (k > 1) {
-        for (i = 1; i < k; i++) {
+        for (i = 1; i < k; ++i) {
             /* Classic / novelty usage schemes */
             if (!strcmp(argv[i], "--help")) {
                 DisplayUsage();
@@ -1540,7 +1540,7 @@ MainSafe(int argc, char **argv)
                 return 1;
             } else if (argv[i][0] == '-') {
                 s = strlen(argv[i]);
-                for (j = 1; j < s; j++) {
+                for (j = 1; j < s; ++j) {
                     switch (argv[i][j]) {
                     case 'h':
                         DisplayUsage();
@@ -1760,7 +1760,7 @@ MainSafe(int argc, char **argv)
         k = strlen(bufa);
         /* BINARY DEBUGGING *
                     local_printfx("while() -> bufa[%" PRIuSIZE "]: %s", k, bufa);
-                    for (i = 0; i < k; i++)
+                    for (i = 0; i < k; ++i)
                       local_printfx("%02X", bufa[i]);
                     local_printfx("\n");
         * BINARY DEBUGGING */

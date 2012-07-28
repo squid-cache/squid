@@ -53,7 +53,7 @@ void
 Snmp::Pdu::aggregate(const Pdu& pdu)
 {
     Must(varCount() == pdu.varCount());
-    aggrCount++;
+    ++aggrCount;
     for (variable_list* p_aggr = variables, *p_var = pdu.variables; p_var != NULL;
             p_aggr = p_aggr->next_variable, p_var = p_var->next_variable) {
         Must(p_aggr != NULL);

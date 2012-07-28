@@ -66,7 +66,7 @@ ConfigParser::strtokFile(void)
                 fn = ++t;
 
                 while (*t && *t != '\"' && *t != '\'')
-                    t++;
+                    ++t;
 
                 *t = '\0';
 
@@ -144,7 +144,7 @@ ConfigParser::ParseQuotedString(String *var)
             const char * next = s+1; // may point to 0
             memmove(s, next, strlen(next) + 1);
         }
-        s++;
+        ++s;
     }
 
     if (*s != '"') {
@@ -164,7 +164,7 @@ ConfigParser::QuoteString(String &var)
     const char *s = var.termedBuf();
     bool  needQuote = false;
 
-    for (const char *l = s; !needQuote &&  *l != '\0'; l++  )
+    for (const char *l = s; !needQuote &&  *l != '\0'; ++l  )
         needQuote = !isalnum(*l);
 
     if (!needQuote)
@@ -172,7 +172,7 @@ ConfigParser::QuoteString(String &var)
 
     quotedStr.clean();
     quotedStr.append('"');
-    for (; *s != '\0'; s++) {
+    for (; *s != '\0'; ++s) {
         if (*s == '"' || *s == '\\')
             quotedStr.append('\\');
         quotedStr.append(*s);

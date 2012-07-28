@@ -279,7 +279,7 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
 
     /* rtrim */
     while (len > 0 && xisspace((*item)[len - 1]))
-        len--;
+        --len;
 
     if (ilen)
         *ilen = len;
@@ -348,7 +348,7 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
     while (*pos != '"' && len > (pos-start)) {
 
         if (*pos =='\r') {
-            pos++;
+            ++pos;
             if ((pos-start) > len || *pos != '\n') {
                 debugs(66, 2, HERE << "failed to parse a quoted-string header field with '\\r' octet " << (start-pos)
                        << " bytes into '" << start << "'");
@@ -358,7 +358,7 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
         }
 
         if (*pos == '\n') {
-            pos++;
+            ++pos;
             if ( (pos-start) > len || (*pos != ' ' && *pos != '\t')) {
                 debugs(66, 2, HERE << "failed to parse multiline quoted-string header field '" << start << "'");
                 val->clean();
@@ -366,14 +366,14 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
             }
             // TODO: replace the entire LWS with a space
             val->append(" ");
-            pos++;
+            ++pos;
             debugs(66, 2, HERE << "len < pos-start => " << len << " < " << (pos-start));
             continue;
         }
 
         bool quoted = (*pos == '\\');
         if (quoted) {
-            pos++;
+            ++pos;
             if (!*pos || (pos-start) > len) {
                 debugs(66, 2, HERE << "failed to parse a quoted-string header field near '" << start << "'");
                 val->clean();
@@ -382,7 +382,7 @@ httpHeaderParseQuotedString(const char *start, const int len, String *val)
         }
         end = pos;
         while (end < (start+len) && *end != '\\' && *end != '\"' && (unsigned char)*end > 0x1F && *end != 0x7F)
-            end++;
+            ++end;
         if (((unsigned char)*end <= 0x1F && *end != '\r' && *end != '\n') || *end == 0x7F) {
             debugs(66, 2, HERE << "failed to parse a quoted-string header field with CTL octet " << (start-pos)
                    << " bytes into '" << start << "'");
@@ -510,7 +510,7 @@ HeaderManglers::HeaderManglers()
 
 HeaderManglers::~HeaderManglers()
 {
-    for (int i = 0; i < HDR_ENUM_END; i++)
+    for (int i = 0; i < HDR_ENUM_END; ++i)
         header_mangler_clean(known[i]);
 
     typedef ManglersByName::iterator MBNI;
@@ -523,7 +523,7 @@ HeaderManglers::~HeaderManglers()
 void
 HeaderManglers::dumpAccess(StoreEntry * entry, const char *name) const
 {
-    for (int i = 0; i < HDR_ENUM_END; i++) {
+    for (int i = 0; i < HDR_ENUM_END; ++i) {
         header_mangler_dump_access(entry, name, known[i],
                                    httpHeaderNameById(i));
     }
@@ -538,7 +538,7 @@ HeaderManglers::dumpAccess(StoreEntry * entry, const char *name) const
 void
 HeaderManglers::dumpReplacement(StoreEntry * entry, const char *name) const
 {
-    for (int i = 0; i < HDR_ENUM_END; i++) {
+    for (int i = 0; i < HDR_ENUM_END; ++i) {
         header_mangler_dump_replacement(entry, name, known[i],
                                         httpHeaderNameById(i));
     }

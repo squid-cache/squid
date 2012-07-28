@@ -319,7 +319,7 @@ int aio_open(const char *path, int mode)
                            FILE_FLAG_OVERLAPPED,	/* file attributes         */
                            NULL			            /* handle to template file */
                           )) != INVALID_HANDLE_VALUE) {
-        statCounter.syscalls.disk.opens++;
+        ++ statCounter.syscalls.disk.opens;
         fd = _open_osfhandle((long) hndl, 0);
         commSetCloseOnExec(fd);
         fd_open(fd, FD_FILE, path);
@@ -336,7 +336,7 @@ void aio_close(int fd)
 {
     CloseHandle((HANDLE)_get_osfhandle(fd));
     fd_close(fd);
-    statCounter.syscalls.disk.closes++;
+    ++ statCounter.syscalls.disk.closes;
 }
 
 

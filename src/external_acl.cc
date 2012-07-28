@@ -264,12 +264,15 @@ parse_header_token(external_acl_format *format, char *header, const _external_ac
 
     if (member) {
         /* Split in header and member */
-        *member++ = '\0';
+        *member = '\0';
+        ++member;
 
-        if (!xisalnum(*member))
-            format->separator = *member++;
-        else
+        if (!xisalnum(*member)) {
+            format->separator = *member;
+            ++member;
+        } else {
             format->separator = ',';
+        }
 
         format->member = xstrdup(member);
 
@@ -652,7 +655,7 @@ external_acl::add(ExternalACLEntry *anEntry)
     anEntry->def = this;
     hash_join(cache, anEntry);
     dlinkAdd(anEntry, &anEntry->lru, &lru_list);
-    cache_entries++;
+    ++cache_entries;
 }
 
 void
@@ -1290,7 +1293,8 @@ externalAclHandleReply(void *data, char *reply)
             value = strchr(token, '=');
 
             if (value) {
-                *value++ = '\0';	/* terminate the token, and move up to the value */
+                *value = '\0';	/* terminate the token, and move up to the value */
+                ++value;
 
                 if (state->def->quote == external_acl::QUOTE_METHOD_URL)
                     rfc1738_unescape(value);

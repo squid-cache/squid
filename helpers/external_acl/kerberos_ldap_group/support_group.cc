@@ -55,13 +55,13 @@ utf8dup(struct main_args *margs)
     src = margs->glist;
     if (!src)
         return NULL;
-    for (n = 0; n < strlen(src); n++)
+    for (n = 0; n < strlen(src); ++n)
         if ((unsigned char) src[n] > 127)
             c++;
     if (c != 0) {
         p = (unsigned char *) xmalloc(strlen(src) + c);
         dupp = p;
-        for (n = 0; n < strlen(src); n++) {
+        for (n = 0; n < strlen(src); ++n) {
             s = (unsigned char) src[n];
             if (s > 127 && s < 192) {
                 *p = 194;

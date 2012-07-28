@@ -227,7 +227,7 @@ convert_domain_to_bind_path(char *domain)
     if (!domain)
         return NULL;
 
-    for (dp = domain; *dp; dp++) {
+    for (dp = domain; *dp; ++dp) {
         if (*dp == '.')
             i++;
     }
@@ -239,12 +239,14 @@ convert_domain_to_bind_path(char *domain)
     bp = bindp;
     strcpy(bp, "dc=");
     bp += 3;
-    for (dp = domain; *dp; dp++) {
+    for (dp = domain; *dp; ++dp) {
         if (*dp == '.') {
             strcpy(bp, ",dc=");
             bp += 4;
-        } else
-            *bp++ = *dp;
+        } else {
+            *bp = *dp;
+            ++bp;
+        }
     }
     *bp = '\0';
     return bindp;
@@ -257,7 +259,7 @@ escape_filter(char *filter)
     char *ldap_filter_esc, *ldf;
 
     i = 0;
-    for (ldap_filter_esc = filter; *ldap_filter_esc; ldap_filter_esc++) {
+    for (ldap_filter_esc = filter; *ldap_filter_esc; ++ldap_filter_esc) {
         if ((*ldap_filter_esc == '*') ||
                 (*ldap_filter_esc == '(') ||
                 (*ldap_filter_esc == ')') ||
@@ -267,7 +269,7 @@ escape_filter(char *filter)
 
     ldap_filter_esc = (char *) xcalloc(strlen(filter) + i + 1, sizeof(char));
     ldf = ldap_filter_esc;
-    for (; *filter; filter++) {
+    for (; *filter; ++filter) {
         if (*filter == '*') {
             strcpy(ldf, "\\2a");
             ldf = ldf + 3;
@@ -328,7 +330,7 @@ check_AD(struct main_args *margs, LDAP * ld)
      * Cleanup
      */
     if (attr_value) {
-        for (j = 0; j < max_attr; j++) {
+        for (j = 0; j < max_attr; ++j) {
             xfree(attr_value[j]);
         }
         xfree(attr_value);
@@ -398,7 +400,7 @@ search_group_tree(struct main_args *margs, LDAP * ld, char *bindp, char *ldap_gr
      */
     retval = 0;
     ldepth = depth + 1;
-    for (j = 0; j < max_attr; j++) {
+    for (j = 0; j < max_attr; ++j) {
 
         /* Compare first CN= value assuming it is the same as the group name itself */
         av = attr_value[j];
@@ -411,7 +413,7 @@ search_group_tree(struct main_args *margs, LDAP * ld, char *bindp, char *ldap_gr
         if (debug_enabled) {
             int n;
             debug((char *) "%s| %s: DEBUG: Entry %d \"%s\" in hex UTF-8 is ", LogTime(), PROGRAM, j + 1, av);
-            for (n = 0; av[n] != '\0'; n++)
+            for (n = 0; av[n] != '\0'; ++n)
                 fprintf(stderr, "%02x", (unsigned char) av[n]);
             fprintf(stderr, "\n");
         }
@@ -446,7 +448,7 @@ search_group_tree(struct main_args *margs, LDAP * ld, char *bindp, char *ldap_gr
      * Cleanup
      */
     if (attr_value) {
-        for (j = 0; j < max_attr; j++) {
+        for (j = 0; j < max_attr; ++j) {
             xfree(attr_value[j]);
         }
         xfree(attr_value);
@@ -597,7 +599,7 @@ get_attributes(struct main_args *margs, LDAP * ld, LDAPMessage * res, const char
                     int il;
 
                     if ((values = ldap_get_values_len(ld, msg, attr)) != NULL) {
-                        for (il = 0; values[il] != NULL; il++) {
+                        for (il = 0; values[il] != NULL; ++il) {
 
                             attr_value = (char **) xrealloc(attr_value, (il + 1) * sizeof(char *));
                             if (!attr_value)
@@ -871,7 +873,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
          * Loop over list of ldap servers of users domain
          */
         nhosts = get_ldap_hostname_list(margs, &hlist, 0, domain);
-        for (i = 0; i < nhosts; i++) {
+        for (i = 0; i < nhosts; ++i) {
             port = 389;
             if (hlist[i].port != -1)
                 port = hlist[i].port;
@@ -940,7 +942,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
         if (host)
             xfree(host);
         host = NULL;
-        for (i = 0; i < nhosts; i++) {
+        for (i = 0; i < nhosts; ++i) {
 
             ld = tool_ldap_open(margs, hlist[i].host, port, ssl);
             if (!ld)
@@ -1035,7 +1037,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
          * Compare group names
          */
         retval = 0;
-        for (j = 0; j < max_attr; j++) {
+        for (j = 0; j < max_attr; ++j) {
 
             /* Compare first CN= value assuming it is the same as the group name itself */
             av = attr_value[j];
@@ -1048,7 +1050,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
             if (debug_enabled) {
                 int n;
                 debug((char *) "%s| %s: DEBUG: Entry %d \"%s\" in hex UTF-8 is ", LogTime(), PROGRAM, j + 1, av);
-                for (n = 0; av[n] != '\0'; n++)
+                for (n = 0; av[n] != '\0'; ++n)
                     fprintf(stderr, "%02x", (unsigned char) av[n]);
                 fprintf(stderr, "\n");
             }
@@ -1068,7 +1070,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
             if (debug_enabled && max_attr > 0) {
                 debug((char *) "%s| %s: DEBUG: Perform recursive group search\n", LogTime(), PROGRAM);
             }
-            for (j = 0; j < max_attr; j++) {
+            for (j = 0; j < max_attr; ++j) {
 
                 av = attr_value[j];
                 if (search_group_tree(margs, ld, bindp, av, group, 1)) {
@@ -1090,7 +1092,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
          * Cleanup
          */
         if (attr_value) {
-            for (j = 0; j < max_attr; j++) {
+            for (j = 0; j < max_attr; ++j) {
                 xfree(attr_value[j]);
             }
             xfree(attr_value);
@@ -1176,7 +1178,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
              * Cleanup
              */
             if (attr_value_2) {
-                for (j = 0; j < max_attr_2; j++) {
+                for (j = 0; j < max_attr_2; ++j) {
                     xfree(attr_value_2[j]);
                 }
                 xfree(attr_value_2);
@@ -1192,7 +1194,7 @@ get_memberof(struct main_args *margs, char *user, char *domain, char *group)
          * Cleanup
          */
         if (attr_value) {
-            for (j = 0; j < max_attr; j++) {
+            for (j = 0; j < max_attr; ++j) {
                 xfree(attr_value[j]);
             }
             xfree(attr_value);

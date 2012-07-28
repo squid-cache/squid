@@ -395,7 +395,7 @@ UFSSwapDir::maintain()
         if (!e)
             break;		/* no more objects */
 
-        removed++;
+        ++removed;
 
         e->release();
     }
@@ -557,7 +557,7 @@ UFSSwapDir::verifyCacheDirs()
     if (!pathIsDirectory(path))
         return true;
 
-    for (int j = 0; j < l1; j++) {
+    for (int j = 0; j < l1; ++j) {
         char const *aPath = swapSubDir(j);
 
         if (!pathIsDirectory(aPath))
@@ -572,7 +572,7 @@ UFSSwapDir::createSwapSubDirs()
 {
     LOCAL_ARRAY(char, name, MAXPATHLEN);
 
-    for (int i = 0; i < l1; i++) {
+    for (int i = 0; i < l1; ++i) {
         snprintf(name, MAXPATHLEN, "%s/%02X", path, i);
 
         int should_exist;
@@ -584,7 +584,7 @@ UFSSwapDir::createSwapSubDirs()
 
         debugs(47, 1, "Making directories in " << name);
 
-        for (int k = 0; k < l2; k++) {
+        for (int k = 0; k < l2; ++k) {
             snprintf(name, MAXPATHLEN, "%s/%02X/%02X", path, i, k);
             createDirectory(name, should_exist);
         }
@@ -609,7 +609,7 @@ UFSSwapDir::logFile(char const *ext) const
         while (strlen(pathtmp) && pathtmp[strlen(pathtmp) - 1] == '.')
             pathtmp[strlen(pathtmp) - 1] = '\0';
 
-        for (pathtmp2 = pathtmp; *pathtmp2 == '.'; pathtmp2++);
+        for (pathtmp2 = pathtmp; *pathtmp2 == '.'; ++pathtmp2);
         snprintf(lpath, MAXPATHLEN - 64, Config.Log.swap, pathtmp2);
 
         if (strncmp(lpath, Config.Log.swap, MAXPATHLEN - 64) == 0) {
@@ -1145,7 +1145,8 @@ UFSSwapDir::DirClean(int swap_index)
                 if (UFSSwapDir::FilenoBelongsHere(fn, D0, D1, D2))
                     continue;
 
-        files[k++] = swapfileno;
+        files[k] = swapfileno;
+        ++k;
     }
 
     closedir(dir_pointer);
@@ -1158,7 +1159,7 @@ UFSSwapDir::DirClean(int swap_index)
     if (k > 10)
         k = 10;
 
-    for (n = 0; n < k; n++) {
+    for (n = 0; n < k; ++n) {
         debugs(36, 3, "storeDirClean: Cleaning file "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << files[n]);
         snprintf(p2, MAXPATHLEN + 1, "%s/%08X", p1, files[n]);
         safeunlink(p2, 0);
@@ -1190,7 +1191,7 @@ UFSSwapDir::CleanEvent(void *unused)
          */
         UFSDirToGlobalDirMapping = (int *)xcalloc(NumberOfUFSDirs, sizeof(*UFSDirToGlobalDirMapping));
 
-        for (i = 0, n = 0; i < Config.cacheSwap.n_configured; i++) {
+        for (i = 0, n = 0; i < Config.cacheSwap.n_configured; ++i) {
             /* This is bogus, the controller should just clean each instance once */
             sd = dynamic_cast <SwapDir *>(INDEXSD(i));
 
@@ -1201,7 +1202,8 @@ UFSSwapDir::CleanEvent(void *unused)
 
             assert (usd);
 
-            UFSDirToGlobalDirMapping[n++] = i;
+            UFSDirToGlobalDirMapping[n] = i;
+            ++n;
 
             j += (usd->l1 * usd->l2);
         }
@@ -1218,7 +1220,7 @@ UFSSwapDir::CleanEvent(void *unused)
     /* if the rebuild is finished, start cleaning directories. */
     if (0 == StoreController::store_dirs_rebuilding) {
         n = DirClean(swap_index);
-        swap_index++;
+        ++swap_index;
     }
 
     eventAdd("storeDirClean", CleanEvent, NULL,

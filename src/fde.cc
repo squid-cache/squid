@@ -99,7 +99,7 @@ fde::DumpStats (StoreEntry *dumpEntry)
     storeAppendPrintf(dumpEntry, "---- ------ ---- -------- -------- --------------------- ------------------------------\n");
 #endif
 
-    for (i = 0; i < Squid_MaxFD; i++) {
+    for (i = 0; i < Squid_MaxFD; ++i) {
         fd_table[i].dumpStats(*dumpEntry, i);
     }
 }
@@ -123,6 +123,6 @@ fde::remoteAddr() const
 void
 fde::noteUse(PconnPool *pool)
 {
-    pconn.uses++;
+    ++ pconn.uses;
     pconn.pool = pool;
 }

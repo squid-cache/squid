@@ -411,7 +411,7 @@ fvdbCount(hash_table * hash, const char *key)
         hash_join(hash, &fv->hash);
     }
 
-    fv->n++;
+    ++ fv->n;
 }
 
 void
@@ -505,7 +505,7 @@ mcast_encode(unsigned int *ibuf, size_t isize, const unsigned int *key)
         z = htonl(ibuf[i + 1]);
         sum = 0;
 
-        for (n = 32; n; n--) {
+        for (n = 32; n; --n) {
             sum += delta;
             y += (z << 4) + (k0 ^ z) + (sum ^ (z >> 5)) + k1;
             z += (y << 4) + (k2 ^ y) + (sum ^ (y >> 5)) + k3;

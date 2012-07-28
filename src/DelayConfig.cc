@@ -77,7 +77,7 @@ DelayConfig::parsePoolClass()
         return;
     }
 
-    pool--;
+    --pool;
 
     DelayPools::delay_data[pool].createPool(delay_class_);
 }
@@ -93,7 +93,7 @@ DelayConfig::parsePoolRates()
         return;
     }
 
-    pool--;
+    --pool;
 
     if (!DelayPools::delay_data[pool].theComposite().getRaw()) {
         debugs(3, 0, "parse_delay_pool_rates: Ignoring pool " << pool + 1 << " attempt to set rates with class not set");
@@ -138,7 +138,7 @@ DelayConfig::dumpPoolCount(StoreEntry * entry, const char *name) const
 
     storeAppendPrintf(entry, "%s %d\n", name, DelayPools::pools());
 
-    for (i = 0; i < DelayPools::pools(); i++)
+    for (i = 0; i < DelayPools::pools(); ++i)
         DelayPools::delay_data[i].dump (entry, i);
 }
 

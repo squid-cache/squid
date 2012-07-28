@@ -165,7 +165,7 @@ comm_update_fd(int fd, int events)
         comm_flush_updates();
 
     /* Push new event onto array */
-    devpoll_update.cur++;
+    ++ devpoll_update.cur;
     devpoll_update.pfds[devpoll_update.cur].fd = fd;
     devpoll_update.pfds[devpoll_update.cur].events = events;
     devpoll_update.pfds[devpoll_update.cur].revents = 0;
@@ -361,7 +361,7 @@ Comm::DoSelect(int msec)
         comm_flush_updates(); /* ensure latest changes are sent to /dev/poll */
 
         num = ioctl(devpoll_fd, DP_POLL, &do_poll);
-        ++statCounter.select_loops;
+        ++ statCounter.select_loops;
 
         if (num >= 0)
             break; /* no error, skip out of loop */
@@ -421,7 +421,7 @@ Comm::DoSelect(int msec)
                 F->read_handler = NULL;
                 hdl(fd, F->read_data);
                 PROF_stop(comm_read_handler);
-                statCounter.select_fds++;
+                ++ statCounter.select_fds;
             } else {
                 debugs(
                     5,
@@ -445,7 +445,7 @@ Comm::DoSelect(int msec)
                 F->write_handler = NULL;
                 hdl(fd, F->write_data);
                 PROF_stop(comm_write_handler);
-                statCounter.select_fds++;
+                ++ statCounter.select_fds;
             } else {
                 debugs(
                     5,

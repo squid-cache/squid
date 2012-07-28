@@ -246,7 +246,8 @@ isxstring( const char* s, size_t testlen )
     if ( strlen(s) != testlen ) return false;
 
     size_t i=0;
-    while ( i<testlen && isxdigit(s[i]) ) i++;
+    while ( i<testlen && isxdigit(s[i]) )
+        ++i;
     return (i==testlen);
 }
 
@@ -618,8 +619,10 @@ parseCommandline( int argc, char* argv[], REList*& head,
     FILE* rfile;
 
     // program basename
-    if ( (ptr = strrchr(argv[0],'/')) == NULL ) ptr=argv[0];
-    else ptr++;
+    if ( (ptr = strrchr(argv[0],'/')) == NULL )
+        ptr=argv[0];
+    else
+        ++ptr;
     ::programname = ptr;
 
     // extract commandline parameters
@@ -662,7 +665,7 @@ parseCommandline( int argc, char* argv[], REList*& head,
 #define LINESIZE 512
                 char line[LINESIZE];
                 while ( fgets( line, LINESIZE, rfile ) != NULL ) {
-                    lineno++;
+                    ++lineno;
                     int len = strlen(line)-1;
                     if ( len+2 >= LINESIZE ) {
                         fprintf( stderr, "%s:%lu: line too long, sorry.\n",
@@ -671,8 +674,10 @@ parseCommandline( int argc, char* argv[], REList*& head,
                     }
 
                     // remove trailing line breaks
-                    while ( len > 0 && ( line[len] == '\n' || line[len] == '\r' ) )
-                        line[len--] = '\0';
+                    while ( len > 0 && ( line[len] == '\n' || line[len] == '\r' ) ) {
+                        line[len] = '\0';
+                        --len;
+                    }
 
                     // insert into list of expressions
                     if ( head == 0 ) tail = head = new REList(line,option=='F');
@@ -712,7 +717,8 @@ parseCommandline( int argc, char* argv[], REList*& head,
                 }
             } else {
                 // colon used, port is extra
-                *colon++ = 0;
+                *colon = 0;
+                ++colon;
                 if ( convertHostname(optarg,serverHost) == -1 ) {
                     fprintf( stderr, "unable to resolve host %s!\n", optarg );
                     exit(1);
@@ -779,7 +785,8 @@ parseCommandline( int argc, char* argv[], REList*& head,
 
         unsigned count(0);
         for ( tail = head; tail != NULL; tail = tail->next ) {
-            if ( count++ ) printf( "#%22u", count );
+            if ( count++ )
+                printf( "#%22u", count );
 #if defined(LINUX) && putc==_IO_putc
             // I HATE BROKEN LINUX HEADERS!
             // purge.o(.text+0x1040): undefined reference to `_IO_putc'

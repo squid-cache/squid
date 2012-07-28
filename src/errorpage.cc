@@ -236,7 +236,7 @@ errorClean(void)
     if (error_text) {
         int i;
 
-        for (i = ERR_NONE + 1; i < error_page_count; i++)
+        for (i = ERR_NONE + 1; i < error_page_count; ++i)
             safe_free(error_text[i]);
 
         safe_free(error_text);
@@ -258,7 +258,7 @@ errorFindHardText(err_type type)
 {
     int i;
 
-    for (i = 0; i < error_hard_text_count; i++)
+    for (i = 0; i < error_hard_text_count; ++i)
         if (error_hard_text[i].type == type)
             return error_hard_text[i].text;
 
@@ -378,11 +378,14 @@ bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &p
 
         if (!pos) {
             /* skip any initial whitespace. */
-            while (pos < hdr.size() && xisspace(hdr[pos])) pos++;
+            while (pos < hdr.size() && xisspace(hdr[pos]))
+                ++pos;
         } else {
             // IFF we terminated the tag on whitespace or ';' we need to skip to the next ',' or end of header.
-            while (pos < hdr.size() && hdr[pos] != ',') pos++;
-            if (hdr[pos] == ',') pos++;
+            while (pos < hdr.size() && hdr[pos] != ',')
+                ++pos;
+            if (hdr[pos] == ',')
+                ++pos;
         }
 
         /*
@@ -407,11 +410,12 @@ bool strHdrAcptLangGetItem(const String &hdr, char *lang, int langLen, size_t &p
                 if (*dt != '-' && *dt != '*' && (*dt < 'a' || *dt > 'z') )
                     invalid_byte = true;
                 else
-                    dt++; // move to next destination byte.
+                    ++dt; // move to next destination byte.
             }
-            pos++;
+            ++pos;
         }
-        *dt++ = '\0'; // nul-terminated the filename content string before system use.
+        *dt = '\0'; // nul-terminated the filename content string before system use.
+        ++dt;
 
         debugs(4, 9, HERE << "STATE: dt='" << dt << "', lang='" << lang << "', pos=" << pos << ", buf='" << ((pos < hdr.size()) ? hdr.substr(pos,hdr.size()) : "") << "'");
 
@@ -519,12 +523,12 @@ errorDynamicPageInfoDestroy(ErrorDynamicPageInfo * info)
 static int
 errorPageId(const char *page_name)
 {
-    for (int i = 0; i < ERR_MAX; i++) {
+    for (int i = 0; i < ERR_MAX; ++i) {
         if (strcmp(err_type_str[i], page_name) == 0)
             return i;
     }
 
-    for (size_t j = 0; j < ErrorDynamicPages.size(); j++) {
+    for (size_t j = 0; j < ErrorDynamicPages.size(); ++j) {
         if (strcmp(ErrorDynamicPages.items[j]->page_name, page_name) == 0)
             return j + ERR_MAX;
     }

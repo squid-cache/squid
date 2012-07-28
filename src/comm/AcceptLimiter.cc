@@ -14,7 +14,7 @@ Comm::AcceptLimiter &Comm::AcceptLimiter::Instance()
 void
 Comm::AcceptLimiter::defer(Comm::TcpAcceptor *afd)
 {
-    afd->isLimited++;
+    ++ afd->isLimited;
     debugs(5, 5, HERE << afd->conn << " x" << afd->isLimited);
     deferred.push_back(afd);
 }
@@ -24,7 +24,7 @@ Comm::AcceptLimiter::removeDead(const Comm::TcpAcceptor *afd)
 {
     for (unsigned int i = 0; i < deferred.size() && afd->isLimited > 0; i++) {
         if (deferred[i] == afd) {
-            deferred[i]->isLimited--;
+            -- deferred[i]->isLimited;
             deferred[i] = NULL; // fast. kick() will skip empty entries later.
             debugs(5, 5, HERE << afd->conn << " x" << afd->isLimited);
         }
@@ -44,7 +44,7 @@ Comm::AcceptLimiter::kick()
         TcpAcceptor *temp = deferred.shift();
         if (temp != NULL) {
             debugs(5, 5, HERE << " doing one.");
-            temp->isLimited--;
+            -- temp->isLimited;
             temp->acceptNext();
             break;
         }

@@ -215,19 +215,19 @@ GetIoStats(Mgr::IoActionData& stats)
 
     stats.http_reads = IOStats.Http.reads;
 
-    for (i = 0; i < _iostats::histSize; i++) {
+    for (i = 0; i < _iostats::histSize; ++i) {
         stats.http_read_hist[i] = IOStats.Http.read_hist[i];
     }
 
     stats.ftp_reads = IOStats.Ftp.reads;
 
-    for (i = 0; i < _iostats::histSize; i++) {
+    for (i = 0; i < _iostats::histSize; ++i) {
         stats.ftp_read_hist[i] = IOStats.Ftp.read_hist[i];
     }
 
     stats.gopher_reads = IOStats.Gopher.reads;
 
-    for (i = 0; i < _iostats::histSize; i++) {
+    for (i = 0; i < _iostats::histSize; ++i) {
         stats.gopher_read_hist[i] = IOStats.Gopher.read_hist[i];
     }
 }
@@ -241,7 +241,7 @@ DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "number of reads: %.0f\n", stats.http_reads);
     storeAppendPrintf(sentry, "Read Histogram:\n");
 
-    for (i = 0; i < _iostats::histSize; i++) {
+    for (i = 0; i < _iostats::histSize; ++i) {
         storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
                           i ? (1 << (i - 1)) + 1 : 1,
                           1 << i,
@@ -254,7 +254,7 @@ DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "number of reads: %.0f\n", stats.ftp_reads);
     storeAppendPrintf(sentry, "Read Histogram:\n");
 
-    for (i = 0; i < _iostats::histSize; i++) {
+    for (i = 0; i < _iostats::histSize; ++i) {
         storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
                           i ? (1 << (i - 1)) + 1 : 1,
                           1 << i,
@@ -267,7 +267,7 @@ DumpIoStats(Mgr::IoActionData& stats, StoreEntry* sentry)
     storeAppendPrintf(sentry, "number of reads: %.0f\n", stats.gopher_reads);
     storeAppendPrintf(sentry, "Read Histogram:\n");
 
-    for (i = 0; i < _iostats::histSize; i++) {
+    for (i = 0; i < _iostats::histSize; ++i) {
         storeAppendPrintf(sentry, "%5d-%5d: %9.0f %2.0f%%\n",
                           i ? (1 << (i - 1)) + 1 : 1,
                           1 << i,
@@ -1385,10 +1385,10 @@ statInit(void)
     int i;
     debugs(18, 5, "statInit: Initializing...");
 
-    for (i = 0; i < N_COUNT_HIST; i++)
+    for (i = 0; i < N_COUNT_HIST; ++i)
         statCountersInit(&CountHist[i]);
 
-    for (i = 0; i < N_COUNT_HOUR_HIST; i++)
+    for (i = 0; i < N_COUNT_HOUR_HIST; ++i)
         statCountersInit(&CountHourHist[i]);
 
     statCountersInit(&statCounter);
@@ -1419,7 +1419,7 @@ statAvgTick(void *notused)
     statCountersClean(CountHist + N_COUNT_HIST - 1);
     memmove(p, t, (N_COUNT_HIST - 1) * sizeof(StatCounters));
     statCountersCopy(t, c);
-    NCountHist++;
+    ++NCountHist;
 
     if ((NCountHist % COUNT_INTERVAL) == 0) {
         /* we have an hours worth of readings.  store previous hour */
@@ -1429,7 +1429,7 @@ statAvgTick(void *notused)
         statCountersClean(CountHourHist + N_COUNT_HOUR_HIST - 1);
         memmove(p2, t2, (N_COUNT_HOUR_HIST - 1) * sizeof(StatCounters));
         statCountersCopy(t2, c2);
-        NCountHourHist++;
+        ++NCountHourHist;
     }
 
     if (Config.warnings.high_rptm > 0) {
@@ -1795,10 +1795,10 @@ statFreeMemory(void)
 {
     int i;
 
-    for (i = 0; i < N_COUNT_HIST; i++)
+    for (i = 0; i < N_COUNT_HIST; ++i)
         statCountersClean(&CountHist[i]);
 
-    for (i = 0; i < N_COUNT_HOUR_HIST; i++)
+    for (i = 0; i < N_COUNT_HOUR_HIST; ++i)
         statCountersClean(&CountHourHist[i]);
 }
 
@@ -2081,7 +2081,7 @@ statClientRequests(StoreEntry * s)
  */
 
 #define GRAPH_PER_MIN(Y) \
-    for (i=0;i<(N_COUNT_HIST-2);i++) { \
+    for (i=0;i<(N_COUNT_HIST-2);++i) { \
 	dt = tvSubDsec(CountHist[i+1].timestamp, CountHist[i].timestamp); \
 	if (dt <= 0.0) \
 	    break; \
@@ -2091,7 +2091,7 @@ statClientRequests(StoreEntry * s)
     }
 
 #define GRAPH_PER_HOUR(Y) \
-    for (i=0;i<(N_COUNT_HOUR_HIST-2);i++) { \
+    for (i=0;i<(N_COUNT_HOUR_HIST-2);++i) { \
 	dt = tvSubDsec(CountHourHist[i+1].timestamp, CountHourHist[i].timestamp); \
 	if (dt <= 0.0) \
 	    break; \

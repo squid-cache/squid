@@ -211,7 +211,8 @@ struct StoreClientStats : public unary_function<store_client, void> {
     StoreClientStats(MemBuf *anEntry):where(anEntry),index(0) {}
 
     void operator()(store_client const &x) {
-        x.dumpStats(where, index++);
+        x.dumpStats(where, index);
+        ++index;
     }
 
     MemBuf *where;

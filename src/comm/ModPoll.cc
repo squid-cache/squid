@@ -216,7 +216,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
     PROF_start(comm_check_incoming);
     incoming_sockets_accepted = 0;
 
-    for (i = npfds = 0; i < nfds; i++) {
+    for (i = npfds = 0; i < nfds; ++i) {
         int events;
         fd = fds[i];
         events = 0;
@@ -241,7 +241,7 @@ comm_check_incoming_poll_handlers(int nfds, int *fds)
     }
 
     getCurrentTime();
-    statCounter.syscalls.selects++;
+    ++ statCounter.syscalls.selects;
 
     if (poll(pfds, npfds, 0) < 1) {
         PROF_stop(comm_check_incoming);
@@ -283,11 +283,15 @@ comm_poll_udp_incoming(void)
     int nevents;
     udp_io_events = 0;
 
-    if (Comm::IsConnOpen(icpIncomingConn))
-        fds[nfds++] = icpIncomingConn->fd;
+    if (Comm::IsConnOpen(icpIncomingConn)) {
+        fds[nfds] = icpIncomingConn->fd;
+        ++nfds;
+    }
 
-    if (icpIncomingConn != icpOutgoingConn && Comm::IsConnOpen(icpOutgoingConn))
-        fds[nfds++] = icpOutgoingConn->fd;
+    if (icpIncomingConn != icpOutgoingConn && Comm::IsConnOpen(icpOutgoingConn)) {
+        fds[nfds] = icpOutgoingConn->fd;
+        ++nfds;
+    }
 
     if (nfds == 0)
         return;
@@ -319,11 +323,12 @@ comm_poll_tcp_incoming(void)
 
     // XXX: only poll sockets that won't be deferred. But how do we identify them?
 
-    for (j = 0; j < NHttpSockets; j++) {
+    for (j = 0; j < NHttpSockets; ++j) {
         if (HttpSockets[j] < 0)
             continue;
 
-        fds[nfds++] = HttpSockets[j];
+        fds[nfds] = HttpSockets[j];
+        ++nfds;
     }
 
     nevents = comm_check_incoming_poll_handlers(nfds, fds);
@@ -381,7 +386,7 @@ Comm::DoSelect(int msec)
 
         maxfd = Biggest_FD + 1;
 
-        for (int i = 0; i < maxfd; i++) {
+        for (int i = 0; i < maxfd; ++i) {
             int events;
             events = 0;
             /* Check each open socket for a handler. */
@@ -425,9 +430,9 @@ Comm::DoSelect(int msec)
 
         for (;;) {
             PROF_start(comm_poll_normal);
-            ++statCounter.syscalls.selects;
+            ++ statCounter.syscalls.selects;
             num = poll(pfds, nfds, msec);
-            ++statCounter.select_loops;
+            ++ statCounter.select_loops;
             PROF_stop(comm_poll_normal);
 
             if (num >= 0 || npending > 0)
@@ -458,7 +463,7 @@ Comm::DoSelect(int msec)
          * limit in SunOS */
         PROF_start(comm_handle_ready_fd);
 
-        for (size_t loopIndex = 0; loopIndex < nfds; loopIndex++) {
+        for (size_t loopIndex = 0; loopIndex < nfds; ++loopIndex) {
             fde *F;
             int revents = pfds[loopIndex].revents;
             fd = pfds[loopIndex].fd;
@@ -498,7 +503,7 @@ Comm::DoSelect(int msec)
                     F->flags.read_pending = 0;
                     hdl(fd, F->read_data);
                     PROF_stop(comm_read_handler);
-                    statCounter.select_fds++;
+                    ++ statCounter.select_fds;
 
                     if (commCheckUdpIncoming)
                         comm_poll_udp_incoming();
@@ -519,7 +524,7 @@ Comm::DoSelect(int msec)
                     F->write_handler = NULL;
                     hdl(fd, F->write_data);
                     PROF_stop(comm_write_handler);
-                    statCounter.select_fds++;
+                    ++ statCounter.select_fds;
 
                     if (commCheckUdpIncoming)
                         comm_poll_udp_incoming();
@@ -595,11 +600,15 @@ comm_poll_dns_incoming(void)
     if (DnsSocketA < 0 && DnsSocketB < 0)
         return;
 
-    if (DnsSocketA >= 0)
-        fds[nfds++] = DnsSocketA;
+    if (DnsSocketA >= 0) {
+        fds[nfds] = DnsSocketA;
+        ++nfds;
+    }
 
-    if (DnsSocketB >= 0)
-        fds[nfds++] = DnsSocketB;
+    if (DnsSocketB >= 0) {
+        fds[nfds] = DnsSocketB;
+        ++nfds;
+    }
 
     nevents = comm_check_incoming_poll_handlers(nfds, fds);
 

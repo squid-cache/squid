@@ -139,7 +139,7 @@ static bool parseBytesOptionValue(size_t * bptr, char const * value)
     char const * number_end = value;
 
     while ((*number_end >= '0' && *number_end <= '9')) {
-        number_end++;
+        ++number_end;
     }
 
     std::string number(number_begin, number_end - number_begin);

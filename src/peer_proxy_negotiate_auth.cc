@@ -327,7 +327,7 @@ restart:
                 krb5_kt_default_name(kparam.context, buf, KT_PATH_MAX);
                 p = strchr(buf, ':');
                 if (p)
-                    p++;
+                    ++p;
                 if (keytab_filename)
                     xfree(keytab_filename);
                 keytab_filename = xstrdup(p ? p : buf);

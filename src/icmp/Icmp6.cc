@@ -158,7 +158,8 @@ Icmp6::SendEcho(Ip::Address &to, int opcode, const char *payload, int len)
     icmp->icmp6_code = 0;
     icmp->icmp6_cksum = 0;
     icmp->icmp6_id = icmp_ident;
-    icmp->icmp6_seq = (unsigned short) icmp_pkts_sent++;
+    icmp->icmp6_seq = (unsigned short) icmp_pkts_sent;
+    ++icmp_pkts_sent;
 
     icmp6_pktsize = sizeof(struct icmp6_hdr);
 

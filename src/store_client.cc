@@ -190,7 +190,7 @@ store_client::store_client(StoreEntry *e) : entry (e)
 {
     cmp_offset = 0;
     flags.disk_io_pending = 0;
-    entry->refcount++;
+    ++ entry->refcount;
 
     if (getType() == STORE_DISK_CLIENT)
         /* assert we'll be able to get the data we want */
@@ -701,7 +701,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     }
 
     dlinkDelete(&sc->node, &mem->clients);
-    mem->nclients--;
+    -- mem->nclients;
 
     if (e->store_status == STORE_OK && e->swap_status != SWAPOUT_DONE)
         e->swapOut();
@@ -709,7 +709,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     if (sc->swapin_sio != NULL) {
         storeClose(sc->swapin_sio, StoreIOState::readerDone);
         sc->swapin_sio = NULL;
-        statCounter.swap.ins++;
+        ++statCounter.swap.ins;
     }
 
     if (sc->_callback.pending()) {
@@ -758,7 +758,8 @@ StoreEntry::invokeHandlers()
     for (node = mem_obj->clients.head; node; node = nx) {
         sc = (store_client *)node->data;
         nx = node->next;
-        debugs(90, 3, "StoreEntry::InvokeHandlers: checking client #" << i++  );
+        debugs(90, 3, "StoreEntry::InvokeHandlers: checking client #" << i  );
+        ++i;
 
         if (!sc->_callback.pending())
             continue;
