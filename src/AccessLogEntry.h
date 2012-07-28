@@ -139,8 +139,8 @@ public:
 #if USE_SSL
                 ssluser(NULL),
 #endif
-                port(NULL)
-        {;
+                port(NULL) {
+            ;
         }
 
         Ip::Address caddr;
