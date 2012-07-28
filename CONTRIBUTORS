@@ -1,6 +1,6 @@
 Special thanks go to people who have volunteered their time, effort,
 and ideas to make this software available.
-    
+
     Adam Ciarcinski
     Adrian Chadd <adrian@squid-cache.org>
     Alex Rousskov <rousskov@measurement-factory.com>
@@ -9,6 +9,7 @@ and ideas to make this software available.
     Alexey Veselovsky <alexey.veselovsky@eykontech.com>
     Alin Nastac <mrness@gentoo.org>
     Alter <alter@alter.org.ua>
+    Amos Jeffries <amosjeffries@squid-cache.org>
     Amos Jeffries <squid3@treenet.co.nz>
     Andreas Lamprecht <Andreas.Lamprecht@siemens.at>
     Andres Kroonmaa <andre@ml.ee>
@@ -74,7 +75,9 @@ and ideas to make this software available.
     Graham Keeling <graham@equiinet.com>
     Guido Serassio <serassio@squid-cache.org>
     Hasso Tepper <hasso@estpak.ee>
+    Henrik Nordstr?m <henrik@hlaptop.localdomain>
     Henrik Nordstrom <henrik@henriknordstrom.net>
+    Henrik Nordstrom <hno@squid-cache.org>
     Hide Nagaoka <hide@cc.meisei-u.ac.jp>
     Ian Castle <ian.castle@coldcomfortfarm.net>
     Ian Turner <vectro@pipeline.com>
@@ -99,6 +102,7 @@ and ideas to make this software available.
     Jonathan Larmour <JLarmour@origin-at.co.uk>
     Joshua Root <josh+squid@root.id.au>
     Kieran Whitbread <k.j.whitbread@qmul.ac.uk>
+    Kinkie <kinkie@squid-cache.org>
     Klaubert Herr <klaubert@gmail.com>
     Klaus Singvogel <kssingvo@suse.de>
     Kolics Bertold <bertold@tohotom.vein.hu>
@@ -188,5 +192,7 @@ and ideas to make this software available.
     Wesha <wesha@iname.com>
     Wojtek Sylwestrzak <W.Sylwestrzak@icm.edu.pl>
     Wolfgang Nothdurft <wolfgang@linogate.de>
+    benno@jeamland.net
     fancyrabbit <fancyrabbit@gmail.com>
+    rousskov
     vollkommen <vollkommen@gmx.net>
