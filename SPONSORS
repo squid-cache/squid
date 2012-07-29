@@ -1,7 +1,107 @@
 In addition to the numerous volunteer developers (see CONTRIBUTORS),
-the following organizations have provided financial or other support for
-Squid:
+the following organizations have provided non-financial support for
+the Squid Project:
 
+@Squid-3.2:
+iiNet Ltd - http://www.iinet.net.au/
+
+	iiNet Ltd contributed significant development resources to
+	Squid during its early stages and was instrumental in its
+	early adoption in the local internet community.
+	In Squid-2.6 and 3.0 iiNet supplied equipment to help develop
+	and test the WCCPv2 implementation.
+	In Squid-3.2 iiNet sponsored development time to resolve
+	authentication problems.
+
+LaunchPad - http://launchpad.net/
+
+	Provide Bazaar mirroring services and host the Squid-3 developer
+	project code.
+
+Messagenet - http://messagenet.it/
+
+	Messagenet donated hardware and bandwidth for the wiki server
+	and most continuous integration testing.
+
+Palisade Systems - http://www.palisadesys.com/
+
+	Palisade Systems funded SSL Bump feature development in Squid3.
+
+The Measurement Factory - http://www.measurement-factory.com/
+
+	Measurement Factory has constributed significant resources
+	toward Squid-3 development and server maintenance.
+
+Treehouse Networks, NZ - http://treenet.co.nz/
+
+	Treehouse Networks has contributed significant resources
+	toward Squid-3 development and maintenance for their customer
+	gateways and CDN.
+
+@Squid-3.1:
+Barefruit - http://www.barefruit.com/
+
+	Barefruit has funded Squid-3.0 and 3.1 development and maintenance,
+	with a focus on content adaptation (ICAP and eCAP) support.
+
+BBC (UK) and Siemens IT Solutions and Services (UK)
+
+	Provided developement and testing resources for Solaris /dev/poll
+	support in Squid-3.1.
+
+webwasher AG - http://www.webwasher.com/
+
+	webwasher AG paid for improvements to Squid-3.1 ICAP client
+	implementation.
+
+SourceForge - http://www.sourceforge.net/
+
+	Provide CVS mirroring services and hosted the Squid-2 developer
+	project code.
+
+@Squid-3.0:
+Kaspersky Lab - http://www.kaspersky.com/
+
+	Kaspersky Lab funded initial development of ICAP support in
+	Squid-3.0
+
+MARA Systems AB - http://www.marasystems.com/
+
+	MARA systems has sponsored the bug fixing and maintenance for
+	most Squid-2.5 releases, and a number of new features to be found
+	in Squid-3.0.
+
+Zope Corporation - http://www.zope.com/
+
+	Zope Corporation funded the development of the ESI protocol
+	(http://www.esi.org) in Squid-3.0 to provide greater cachability
+	of dynamic and personalized pages by caching common page
+	components.
+
+@Squid-2.7:
+Picture IQ - http://www.pictureiq.com/
+
+	Picture IQ bought simple support for the Vary header to Squid-2.7,
+	to help their accelerator setups.
+
+Yahoo! Inc. - http://www.yahoo.com/
+
+	Yahoo! Inc. supported the development of improved refresh
+	logics. Many thanks to Yahoo! Inc. for supporting the development
+	of these features.
+
+@Squid-2.6:
+Swell Technology - http://www.swelltech.com/
+
+	Swell Technology provided development and testing support to the
+	Squid-2 project, as well as hardware donations for Squid developers.
+
+@Squid-2.4:
+SGI - http://www.sgi.com/
+
+	SGI has provided hardware donations for Squid developers.
+
+@Squid-2.3:
 The National Science Foundation
 
 	The NSF was the primary funding source for Squid development
@@ -9,82 +109,3 @@ The National Science Foundation
 	received through the Advanced Networking Infrastructure
 	and Research (ANIR) Division were administered by the
 	University of California San Diego.
-
-MARA Systems AB - http://www.marasystems.com/
-
-	MARA systems has sponsored the bug fixing and maintentnance for
-	most Squid-2.5 releases, and a number of new features to be found
-	in Squid-3.
-
-Swell Technology - http://www.swelltech.com/
-
-	Swell Technology provides ongoing development and testing
-	support to the Squid project, as well as hardware donations
-	for Squid developers.
-
-Picture IQ - http://www.pictureiq.com/
-
-        Bought simple support for the Vary header, to help their
-	accelerator setups.
-
-SGI - http://www.sgi.com/
-
-	SGI has provided hardware donations for Squid developers.
-
-Zope Corporation - http://www.zope.com/
-
-	Zope Corporation funded the development of the ESI protocol
-	(http://www.esi.org) in Squid to provide greater cachability
-	of dynamic and personalized pages by caching common page
-	components. Zope engaged one of the core Squid developers
-	for the project.
-
-craigslist - http://www.craigslist.org/
-
-	craigslist has provided funding in recognition of the vital
-	role squid plays in their web serving architecture.
-
-webwasher AG - http://www.webwasher.com/
-
-	webwasher AG paid for improvements to Squid's iCAP client
-	implementation.  You can find the results of this work
-	at http://devel.squid-cache.org/icap/
-
-iiNet Ltd - http://www.iinet.net.au/
-
-        iiNet Ltd contributed significant development resources to
-        Squid during its early stages and was instrumental in its
-        early adoption in the local internet community. iiNet has also
-        recently supplied equipment to help develop and test the WCCPv2
-        implementation in Squid-2.6 and Squid-3.
-
-Kaspersky Lab - http://www.kaspersky.com/
-
-	Kaspersky Lab funded initial development of ICAP support in
-	Squid-3.
-
-Barefruit - http://www.barefruit.com/
-
-	Barefruit has funded Squid3 development and maintenance,
-	with a focus on content adaptation (ICAP and eCAP) support.
-
-Palisade Systems - http://www.palisadesys.com/
-
-	Palisade Systems funded SSL Bump feature development in Squid3.
-
-Treehouse Networks, NZ - http://treenet.co.nz/
-
-	Treehouse Networks has contributed significant development resources
-	toward Squid-3 development and maintenance for their customer
-	gateways and CDN.
-
-BBC (UK) and Siemens IT Solutions and Services (UK)
-
-	Provided developement and testing resources for Solaris /dev/poll
-	support.
-
-Yahoo! Inc. - http://www.yahoo.com/
-
-	Yahoo! Inc. supported the development of improved refresh
-	logics. Many thanks to Yahoo! Inc. for supporting the development
-	of these features.
