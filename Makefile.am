@@ -43,9 +43,12 @@ EXTRA_DIST = \
 	INSTALL \
 	QUICKSTART \
 	README \
-	SPONSORS \
+	SPONSORS.txt \
 	bootstrap.sh \
 	po4a.conf
+
+SPONSORS.txt: SPONSORS
+	sed -e 's/@Squid-[0-9\.]*://' <$(top_srcdir)/SPONSORS > $@ || ($(RM) -f $@ && exit 1)
 
 install-pinger:
 	chown root $(DESTDIR)$(DEFAULT_PINGER)
