@@ -132,12 +132,15 @@ void FwdState::start(Pointer aSelf)
     const bool useOriginalDst = Config.onoff.client_dst_passthru || (request && !request->flags.hostVerified);
     if (isIntercepted && useOriginalDst) {
         selectPeerForIntercepted();
-        // destination "found". continue with the forwarding.
+#if STRICT_ORIGINAL_DST
+        // 3.2 does not suppro re-wrapping inside CONNECT.
+        // our only alternative is to fake destination "found" and continue with the forwarding.
         startConnectionOrFail();
-    } else {
-        // do full route options selection
-        peerSelect(&serverDestinations, request, entry, fwdPeerSelectionCompleteWrapper, this);
+        return;
+#endif
     }
+    // do full route options selection
+    peerSelect(&serverDestinations, request, entry, fwdPeerSelectionCompleteWrapper, this);
 }
 
 /// bypasses peerSelect() when dealing with intercepted requests
@@ -149,19 +152,22 @@ FwdState::selectPeerForIntercepted()
     if (ConnStateData *client = request->pinnedConnection())
         p = client->validatePinnedConnection(request, NULL);
 
-    if (p != NULL && Comm::IsConnOpen(p)) {
-        debugs(17, 3, HERE << "reusing a pinned conn: " << *p);
+    if (Comm::IsConnOpen(p)) {
         /* duplicate peerSelectPinned() effects */
         p->peerType = PINNED;
         entry->ping_status = PING_DONE;     /* Skip ICP */
-    } else {
-        p = new Comm::Connection();
-        p->peerType = ORIGINAL_DST;
-        p->remote = clientConn->local;
-        getOutgoingAddress(request, p);
-        debugs(17, 3, HERE << "opening a new conn: " << *p);
+
+        debugs(17, 3, HERE << "reusing a pinned conn: " << *p);
+        serverDestinations.push_back(p);
     }
 
+    // use client original destination as second preferred choice
+    p = new Comm::Connection();
+    p->peerType = ORIGINAL_DST;
+    p->remote = clientConn->local;
+    getOutgoingAddress(request, p);
+
+    debugs(17, 3, HERE << "using client original destination: " << *p);
     serverDestinations.push_back(p);
 }
 

@@ -1780,30 +1780,15 @@ DOC_START
 		 * Intercepted traffic which passes verification is handled
 		   normally.
 	
-		For now it also forces suspicious requests to go DIRECT to the
-		original destination, overriding client_dst_passthru for
-		intercepted requests which fail Host: verification.
+		 * Intercepted requests which fail verification are sent
+		   to the client original destination instead of DIRECT.
+		   This overrides 'client_dst_passthru off'.
 	
 		For now suspicious intercepted CONNECT requests are always
 		responded to with an HTTP 409 (Conflict) error page.
-DOC_END
-
-NAME: client_dst_passthru
-TYPE: onoff
-DEFAULT: on
-LOC: Config.onoff.client_dst_passthru
-DOC_START
-	With NAT or TPROXY intercepted traffic Squid may pass the request
-	directly to the original client destination IP or seek a faster
-	source.
 	
-	This option (on by default) prevents cache_peer and alternative DNS
-	entries being used on intercepted traffic. Both of which lead to
-	the security vulnerability outlined below.
 	
-	SECURITY WARNING:
-	
-	This directive should only be disabled if cache_peer are required.
+	SECURITY NOTE:
 	
 	As described in CVE-2009-0801 when the Host: header alone is used
 	to determine the destination of a request it becomes trivial for
@@ -1815,7 +1800,32 @@ DOC_START
 	sandbox only verifies that the applet tries to contact the same IP
 	as from where it was loaded at the IP level. The Host: header may
 	be different from the connected IP and approved origin.
+	
+DOC_END
 
+NAME: client_dst_passthru
+TYPE: onoff
+DEFAULT: on
+LOC: Config.onoff.client_dst_passthru
+DOC_START
+	With NAT or TPROXY intercepted traffic Squid may pass the request
+	directly to the original client destination IP or seek a faster
+	source using the HTTP Host header.
+	
+	Using Host to locate alternative servers can provide faster
+	connectivity with a range of failure recovery options.
+	But can also lead to connectivity trouble when the client and
+	server are attempting stateful interactions unaware of the proxy.
+	
+	This option (on by default) prevents alternative DNS entries being
+	located to send intercepted traffic DIRECT to an origin server.
+	The clients original destination IP and port will be used instead.
+	
+	Regardless of this option setting, when dealing with intercepted
+	traffic Squid will verify the Host: header and any traffic which
+	fails Host verification will be treated as if this option were ON.
+	
+	see host_verify_strict for details on the verification process.
 DOC_END
 
 COMMENT_START

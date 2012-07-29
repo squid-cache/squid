@@ -232,6 +232,34 @@ peerSelectDnsPaths(ps_state *psstate)
 {
     FwdServer *fs = psstate->servers;
 
+    // Bug 3243: CVE 2009-0801
+    // Bypass of browser same-origin access control in intercepted communication
+    // To resolve this we must use only the original client destination when going DIRECT
+    // on intercepted traffic which failed Host verification
+    const HttpRequest *req = psstate->request;
+    const bool isIntercepted = !req->flags.redirected &&
+                               (req->flags.intercepted || req->flags.spoof_client_ip);
+    const bool useOriginalDst = Config.onoff.client_dst_passthru || !req->flags.hostVerified;
+    const bool choseDirect = fs && fs->code == HIER_DIRECT;
+    if (isIntercepted && useOriginalDst && choseDirect) {
+        // construct a "result" adding the ORIGINAL_DST to the set instead of DIRECT
+        Comm::ConnectionPointer p = new Comm::Connection();
+        p->remote = req->clientConnectionManager->clientConnection->local;
+        p->peerType = fs->code;
+        p->setPeer(fs->_peer);
+
+        // check for a configured outgoing address for this destination...
+        getOutgoingAddress(psstate->request, p);
+        psstate->paths->push_back(p);
+
+        // clear the used fs and continue
+        psstate->servers = fs->next;
+        cbdataReferenceDone(fs->_peer);
+        memFree(fs, MEM_FWD_SERVER);
+        peerSelectDnsPaths(psstate);
+        return;
+    }
+
     // convert the list of FwdServer destinations into destinations IP addresses
     if (fs && psstate->paths->size() < (unsigned int)Config.forward_max_tries) {
         // send the next one off for DNS lookup.
@@ -257,6 +285,10 @@ peerSelectDnsPaths(ps_state *psstate)
         for (size_t i = 0; i < psstate->paths->size(); ++i) {
             if ((*psstate->paths)[i]->peerType == HIER_DIRECT)
                 debugs(44, 2, "         DIRECT = " << (*psstate->paths)[i]);
+            else if ((*psstate->paths)[i]->peerType == ORIGINAL_DST)
+                debugs(44, 2, "   ORIGINAL_DST = " << (*psstate->paths)[i]);
+            else if ((*psstate->paths)[i]->peerType == PINNED)
+                debugs(44, 2, "         PINNED = " << (*psstate->paths)[i]);
             else
                 debugs(44, 2, "     cache_peer = " << (*psstate->paths)[i]);
         }
