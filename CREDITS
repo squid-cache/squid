@@ -453,7 +453,7 @@ helpers/url_rewrite/fake/ fake.h, fake.cc, url_fake_rewrite.sh:
 
 ==============================================================================
 
-helprs/negotiate_auth/kerberos/ *
+helpers/negotiate_auth/kerberos/ *
 
 /*
  * -----------------------------------------------------------------------------
