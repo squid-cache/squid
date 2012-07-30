@@ -1188,7 +1188,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	SwapDir.h \
 	tests/stub_access_log.cc \
 	tests/stub_cache_cf.cc \
-	tests/stub_comm.cc \
 	tests/stub_debug.cc \
 	tests/stub_DelayId.cc \
 	tests/stub_DiskIOModule.cc \
