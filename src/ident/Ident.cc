@@ -31,11 +31,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
-#include "squid-old.h"
+#include "squid.h"
 
 #if USE_IDENT
-
+#include "squid-old.h"
 #include "comm.h"
 #include "comm/Connection.h"
 #include "comm/ConnOpener.h"
