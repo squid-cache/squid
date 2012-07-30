@@ -21,9 +21,12 @@ peer * Comm::Connection::getPeer() const STUB_RETVAL(NULL)
 void Comm::Connection::setPeer(peer * p) STUB
 
 #include "comm/ConnOpener.h"
+CBDATA_NAMESPACED_CLASS_INIT(Comm, ConnOpener);
 bool Comm::ConnOpener::doneAll() const STUB_RETVAL(false)
-//Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &, AsyncCall::Pointer &, time_t) STUB
-//Comm::ConnOpener::~ConnOpener() STUB
+void Comm::ConnOpener::start() STUB
+void Comm::ConnOpener::swanSong() STUB
+Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &, AsyncCall::Pointer &, time_t) : AsyncJob("STUB Comm::ConnOpener") STUB
+Comm::ConnOpener::~ConnOpener() STUB
 void Comm::ConnOpener::setHost(const char *) STUB
 const char * Comm::ConnOpener::getHost() const STUB_RETVAL(NULL)
 
