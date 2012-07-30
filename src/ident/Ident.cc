@@ -156,7 +156,7 @@ Ident::ConnectDone(const Comm::ConnectionPointer &conn, comm_err_t status, int x
               conn->remote.GetPort(),
               conn->local.GetPort());
     AsyncCall::Pointer writeCall = commCbCall(5,4, "Ident::WriteFeedback",
-                                  CommIoCbPtrFun(Ident::WriteFeedback, state));
+                                   CommIoCbPtrFun(Ident::WriteFeedback, state));
     Comm::Write(conn, &mb, writeCall);
     AsyncCall::Pointer readCall = commCbCall(5,4, "Ident::ReadReply",
                                   CommIoCbPtrFun(Ident::ReadReply, state));
