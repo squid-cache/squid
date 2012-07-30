@@ -1165,6 +1165,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	Packer.cc \
 	Parsing.cc \
 	SquidMath.cc \
+	StatCounters.cc \
 	StatCounters.h \
 	StatHist.h \
 	tests/stub_StatHist.cc \
@@ -1194,9 +1195,11 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_errorpage.cc \
 	tests/stub_fd.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_libcomm.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_mime.cc \
+	tests/stub_pconn.cc \
 	tests/stub_store.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
@@ -1238,8 +1241,8 @@ tests_testACLMaxUserIP_LDADD= \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
-tests_testACLMaxUserIP_DEPENDENCIES = \
-	$(SQUID_CPPUNIT_LA)
+##tests_testACLMaxUserIP_DEPENDENCIES = \
+##	$(SQUID_CPPUNIT_LA)
 
 ## a demonstration test that does nothing but shows the salient points
 ## involved in writing tests.
