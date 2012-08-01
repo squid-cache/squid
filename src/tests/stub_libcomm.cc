@@ -60,4 +60,4 @@ void Comm::TcpAcceptor::notify(const comm_err_t flag, const Comm::ConnectionPoin
 void Comm::Write(const Comm::ConnectionPointer &, const char *, int, AsyncCall::Pointer &, FREE *) STUB
 void Comm::Write(const Comm::ConnectionPointer &conn, MemBuf *mb, AsyncCall::Pointer &callback) STUB
 void Comm::WriteCancel(const Comm::ConnectionPointer &conn, const char *reason) STUB
-//PF Comm::HandleWrite STUB
+/*PF*/ void Comm::HandleWrite(int, void*) STUB
