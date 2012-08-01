@@ -10,7 +10,7 @@ endif
 SUBDIRS += scripts icons errors doc helpers src tools test-suite
 
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
-DEFAULT_PINGER		= $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`
+DEFAULT_PINGER = $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`
 
 dist-hook:
 	@ for subdir in include; do \
@@ -46,9 +46,6 @@ EXTRA_DIST = \
 	SPONSORS.txt \
 	bootstrap.sh \
 	po4a.conf
-
-SPONSORS.txt: SPONSORS
-	sed -e 's/@Squid-[0-9\.]*://' <$(top_srcdir)/SPONSORS > $@ || ($(RM) -f $@ && exit 1)
 
 install-pinger:
 	chown root $(DESTDIR)$(DEFAULT_PINGER)
