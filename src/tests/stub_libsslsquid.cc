@@ -38,7 +38,7 @@ void Ssl::GlobalContextStorage::reconfigureStart() STUB
 #include "ssl/ErrorDetail.h"
 Ssl::ssl_error_t parseErrorString(const char *name) STUB_RETVAL(0)
 //const char *Ssl::getErrorName(ssl_error_t value) STUB_RETVAL(NULL)
-Ssl::ErrorDetail::ErrorDetail(ssl_error_t err_no, X509 *cert) STUB
+Ssl::ErrorDetail::ErrorDetail(ssl_error_t err_no, X509 *, X509 *) STUB
 Ssl::ErrorDetail::ErrorDetail(ErrorDetail const &) STUB
 const String & Ssl::ErrorDetail::toString() const STUB_RETSTATREF(String)
 
@@ -54,8 +54,7 @@ const char *sslGetUserEmail(SSL *ssl) STUB_RETVAL(NULL)
 // SSLGETATTRIBUTE sslGetCAAttribute;
 const char *sslGetUserCertificatePEM(SSL *ssl) STUB_RETVAL(NULL)
 const char *sslGetUserCertificateChainPEM(SSL *ssl) STUB_RETVAL(NULL)
-SSL_CTX *Ssl::generateSslContext(char const *host, Ssl::X509_Pointer const & signedX509, Ssl::EVP_PKEY_Pointer const & signedPkey) STUB_RETVAL(NULL)
-bool Ssl::verifySslCertificateDate(SSL_CTX * sslContext) STUB_RETVAL(false)
+SSL_CTX * Ssl::generateSslContext(CertificateProperties const &properties) STUB_RETVAL(NULL)
 SSL_CTX * Ssl::generateSslContextUsingPkeyAndCertFromMemory(const char * data) STUB_RETVAL(NULL)
 int Ssl::matchX509CommonNames(X509 *peer_cert, void *check_data, int (*check_func)(void *check_data,  ASN1_STRING *cn_data)) STUB_RETVAL(0)
 int Ssl::asn1timeToString(ASN1_TIME *tm, char *buf, int len) STUB_RETVAL(0)
