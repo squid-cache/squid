@@ -3199,6 +3199,8 @@ dnl
 AC_CACHE_CHECK(if setresuid is implemented, ac_cv_func_setresuid,
   AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
   int main(int argc, char **argv) {
     if(setresuid(-1,-1,-1)) {
       perror("setresuid:");
