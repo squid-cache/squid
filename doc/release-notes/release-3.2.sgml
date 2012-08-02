@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.2.0.18 release notes</title>
+<title>Squid 3.2.0.19 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.2.0.18 for testing.
+The Squid Team are pleased to announce the release of Squid-3.2.0.19 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.2/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -26,13 +26,18 @@ report with a stack trace.
 <p>
 Although this release is deemed good enough for use in many setups, please note the existence of <url url="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.2&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=" name="open bugs against Squid-3.2">.
 
+<p>Some issues to note as currently known in this release which are not able to be fixed in the 3.2 series are:
+
+<itemize>
+	<item>CVE-2009-0801 : interception proxies cannot relay certain requests to peers safely. see the CVE section below for details.
+	<item>TCP logging of access.log does not recover from broken connections well.
+</itemize>
+
 <p>Currently known issues which only depends on available developer time and may still be resolved in a future 3.2 release are:
 
 <itemize>
-	<item>CVE-2009-0801 : interception proxies cannot relay certain requests to peers. see the CVE section below for details.
 	<item>SMP Support still has a number of important bugs needing to be resolved. see the bugs list above for details.
 	<item>Windows support is still incomplete.
-	<item>TCP logging of access.log does not recover from broken connections well.
 	<item>The lack of some features available in Squid-2.x series. See the regression sections below for full details.
 </itemize>
 
@@ -46,7 +51,7 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 
 <p>The most important of these new features are:
 <itemize>
-	<item>Fixed CVE-2009-0801 : NAT interception vulnerability to malicious clients.
+	<item>CVE-2009-0801 : NAT interception vulnerability to malicious clients.
 	<item>NCSA helper DES algorithm password limits
 	<item>SMP scalability
 	<item>Helper Multiplexer and On-Demand
@@ -63,7 +68,7 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 Most user-facing changes are reflected in squid.conf (see below).
 
 
-<sect1>Fixed CVE-2009-0801 : NAT interception vulnerability to malicious clients.
+<sect1>CVE-2009-0801 : NAT interception vulnerability to malicious clients.
 <p>Details in Advisory <url url="http://www.squid-cache.org/Advisories/SQUID-2011_1.txt" name="SQUID-2011:1">
 
 <p>Squid locates the authority-URL details available in an HTTP request as
@@ -83,14 +88,15 @@ Most user-facing changes are reflected in squid.conf (see below).
   can not be used as feeder gateways into a cluster or peer hierarchy without strict validation.
 
 <p>Known Issue: When non-strict validation fails Squid will relay the request, but can only do
-  so to the orginal destination IP the client was contacting. This means that interception
-  proxy Squid are unable to pass traffic reliably to peers in a cache hierarchy.
+  so safely to the orginal destination IP the client was contacting. The client original
+  destinatio IP is lost when relayign to peers in a hierarchy. This means the upstream peers
+  are at risk of cache poisoning from CVE-2009-0801 vulnerability.
   Developer time is required to implement safe transit of these requests.
   Please contact squid-dev if you are able to assist or sponsor the development.
 
 
 <sect1>NCSA helper DES algorithm password limits
-<p>Details in Advisory <url url="http://www.squid-cache.org/Advisories/SQUID-2011_1.txt" name="SQUID-2011:2">
+<p>Details in Advisory <url url="http://www.squid-cache.org/Advisories/SQUID-2011_2.txt" name="SQUID-2011:2">
 
 <p>The DES algorithm used by the NCSA Basic authentication helper has an
    limit of 8 bytes but some implementations do not error when truncating
@@ -679,6 +685,18 @@ This section gives a thorough account of those changes in three categories:
 	<tag>refresh_pattern</tag>
 	<p>New option <em>max-stale=</em> to provide a maximum staleness factor. Squid won't
 	   serve objects more stale than this even if it failed to validate the object.
+
+	<tag>reply_header_access</tag>
+	<p>Added support for custom response header names.</p>
+
+	<tag>request_header_access</tag>
+	<p>Added support for custom request header names.</p>
+
+	<tag>reply_header_replace</tag>
+	<p>Added support for custom response header names.</p>
+
+	<tag>request_header_replace</tag>
+	<p>Added support for custom request header names.</p>
 
 	<tag>tcp_outgoing_address</tag>
 	<p>This parameter is now compatible with persistent server connections.
