@@ -199,7 +199,7 @@ ClientHttpRequest::onlyIfCached()const
            request->cache_control->onlyIfCached();
 }
 
-/*
+/**
  * This function is designed to serve a fairly specific purpose.
  * Occasionally our vBNS-connected caches can talk to each other, but not
  * the rest of the world.  Here we try to detect frequent failures which
@@ -211,12 +211,14 @@ ClientHttpRequest::onlyIfCached()const
  *
  * Duane W., Sept 16, 1996
  */
-
-#define FAILURE_MODE_TIME 300
-
 static void
 checkFailureRatio(err_type etype, hier_code hcode)
 {
+    // Can be set at compile time with -D compiler flag
+#ifndef FAILURE_MODE_TIME
+#define FAILURE_MODE_TIME 300
+#endif
+
     static double magic_factor = 100.0;
     double n_good;
     double n_bad;
@@ -251,10 +253,10 @@ checkFailureRatio(err_type etype, hier_code hcode)
     if (request_failure_ratio < 1.0)
         return;
 
-    debugs(33, 0, "Failure Ratio at "<< std::setw(4)<<
+    debugs(33, DBG_CRITICAL, "WARNING: Failure Ratio at "<< std::setw(4)<<
            std::setprecision(3) << request_failure_ratio);
 
-    debugs(33, 0, "Going into hit-only-mode for " <<
+    debugs(33, DBG_CRITICAL, "WARNING: Going into hit-only-mode for " <<
            FAILURE_MODE_TIME / 60 << " minutes...");
 
     hit_only_mode_until = squid_curtime + FAILURE_MODE_TIME;
