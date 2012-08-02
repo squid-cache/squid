@@ -1,3 +1,16 @@
+Changes to squid-3.2.0.19 (02 Aug 2012):
+
+	- Regression Bug 3580: IDENT request makes squid crash
+	- Regression Bug 3577: File Descriptors not properly closed
+	- Regression Bug 3478: Allow peer selection and connection auth on intercepted traffic
+	- Regression Fix: Restore memory caching ability
+	- Bug 3556 Workaround: epoll assertion failed: comm.cc:1093: isOpen(fd)
+	- Bug 3551: store_rebuild.cc:116: "store_errors == 0" assertion
+	- Bug 3525: Do not resend nibbled PUTs and avoid "mustAutoConsume" assertion.
+	- Avoid bogus "Disk space over limit" warnings when rebuidling dirty ufs index
+	- Support custom headers in [request|reply]_header_* manglers
+	- ... and much code polishing
+
 Changes to squid-3.2.0.18 (29 Jun 2012):
 
 	- Bug 3576: ICY streams being Transfer-Encoding:chunked
