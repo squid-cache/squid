@@ -1148,6 +1148,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	filemap.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
+	HttpBody.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
 	HttpHdrContRange.cc \
@@ -1194,17 +1195,22 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_errorpage.cc \
 	tests/stub_fd.cc \
 	tests/stub_HttpRequest.cc \
+	tests/stub_HttpReply.cc \
+	tests/stub_ipc_TypedMsgHdr.cc \
 	tests/stub_libcomm.cc \
+	tests/stub_libsslsquid.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_MemStore.cc \
 	tests/stub_mime.cc \
 	tests/stub_pconn.cc \
+	tests/stub_Port.cc \
 	tests/stub_store.cc \
 	tests/stub_store_rebuild.cc \
 	tests/stub_store_stats.cc \
 	tests/stub_store_swapout.cc \
 	tests/stub_tools.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_UdsOp.cc \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h \
 	tests/testMain.cc \
@@ -1230,6 +1236,8 @@ tests_testACLMaxUserIP_LDADD= \
 	base/libbase.la \
 	libsquid.la \
 	ip/libip.la \
+	ipc/libipc.la \
+	mgr/libmgr.la \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \

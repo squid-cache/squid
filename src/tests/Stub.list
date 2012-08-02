@@ -31,6 +31,8 @@ STUB_SOURCE= tests/STUB.h \
 	tests/stub_ipcache.cc \
 	tests/stub_libcomm.cc \
 	tests/stub_libicmp.cc \
+	tests/stub_libmgr.cc \
+	tests/stub_libsslsquid.cc \
 	tests/stub_main_cc.cc \
 	tests/stub_mem.cc \
 	tests/stub_mem_node.cc \
