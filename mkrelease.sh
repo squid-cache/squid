@@ -81,6 +81,7 @@ inst $tmpdir/CONTRIBUTORS	$dst/CONTRIBUTORS.txt
 inst $tmpdir/COPYING		$dst/COPYING.txt
 inst $tmpdir/COPYRIGHT		$dst/COPYRIGHT.txt
 inst $tmpdir/CREDITS		$dst/CREDITS.txt
+inst $tmpdir/SPONSORS		$dst/SPONSORS.txt
 inst $tmpdir/ChangeLog		$dst/ChangeLog.txt
 if [ -f $tmpdir/doc/release-notes/release-$RELEASE.html ]; then
     cat $tmpdir/doc/release-notes/release-$RELEASE.html | sed -e '
